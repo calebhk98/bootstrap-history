@@ -78,7 +78,7 @@ check("once the animals are held the same line shows them held and no supply blo
 
 # --- 97: the opening state reads situation, goal, risks, then the detail
 opening = sim(civ="rome_100ad")
-opening_text = render_state(S._agent_dispatch(opening, NODES, {"cmd": "state"})).splitlines()
+opening_text = render_state(S._agent_dispatch(opening, NODES, {"cmd": "state", "full": True})).splitlines()
 
 
 def first_line_starting(prefix):

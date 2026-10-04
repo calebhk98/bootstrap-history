@@ -1,36 +1,9 @@
-"""The rest of the state screen (goal, completed and events head, trailing notes) and render_state, the assembler of every state block."""
+"""The rest of the state screen (completed and events head, trailing notes) and render_state, the assembler of every state block."""
 
-from .render_screen_state_blocks import (
-    _state_header, _state_money, _state_founder, _state_conditions, _state_at_risk,
-    _state_knowledge_warning, _state_running, _state_stuck, _state_concerns,
-    _state_employ, _state_living_stock, _state_standing,
-)
+from .render_screen_state_views import render_view
 from .util import _fmt_num, _wrap
 from .wave_summary import summary_line
 from .event_severity import event_marker, order_events
-
-
-def _state_goal(out):
-    lines = []
-    if out.get("fog_of_war"):
-        lines.append("")
-        lines.append("Fog of war is on: you see the next step, never the road. "
-                 "%s of your own built so far." % _fmt_num(out.get("done_earned")))
-        if out.get("goal_in_words"):
-            lines.append("Aiming at: %s%s" % (out["goal_in_words"],
-                     ("  -- REACHED in %s AD" % out.get("goal_year"))
-                     if out.get("goal_reached") else ""))
-        # HOW MANY, NEVER HOW MANY OF HOW MANY. See the field's own comment
-        # in _agent_state for why the total stays withheld until the run is
-        # over.
-        if out.get("on_the_road_to_the_goal_so_far") is not None:
-            lines.append("On the road there so far: %s of its nodes"
-                     % _fmt_num(out["on_the_road_to_the_goal_so_far"]))
-    elif out.get("goal"):
-        lines.append("")
-        lines.append("Goal: %s%s" % (out["goal"],
-                 ("  -- REACHED in %s AD" % out.get("goal_year")) if out.get("goal_reached") else ""))
-    return lines
 
 
 def _events_without_completion_repeats(completed, events):
@@ -153,17 +126,15 @@ def render_state(out):
 
     Works on both the short state() and state(full=true), and on step()'s
     reply, which is this same shape with completed/events stitched on front.
+    A reply carrying `state_view` ("short", "full" or a section name) is
+    rendered that way; one without it prints every section.
     """
-    renderers = (
-        _state_header, _state_money, _state_founder, _state_conditions, _state_goal,
-        _state_at_risk, _state_knowledge_warning, _state_running, _state_stuck,
-        _state_concerns, _state_employ, _state_living_stock, _state_standing,
-    )
-    lines = _render_sections(out, renderers)
+    lines = render_view(out, out.get("state_view"))
     lines = _state_completed_head(out, lines)
     emergency = out.get("demographic_emergency")
     if emergency:
         lines = ["DEMOGRAPHIC EMERGENCY: population %+.0f%% in the last year" % (100 * emergency["population_change"]),
                  "  fewer people to farm, hire and pay taxes; expect wages and food prices to move", ""] + lines
-    lines += _state_also(out)
+    if out.get("state_view") in (None, "full"):
+        lines += _state_also(out)
     return "\n".join(lines)

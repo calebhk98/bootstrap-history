@@ -125,7 +125,7 @@ from sim.engine.tree_source import load_base_tree as _load_base_tree
 _tree_text = json.dumps(_load_base_tree())
 check("236.2: the algebra note's sentence matches its equation",
       "add 5 and triple it" not in _tree_text and "triple it and add 5" in _tree_text)
-_text = _play("han_china_100ad", ["available", "labour laborer", "help commands"])
+_text = _play("han_china_100ad", ["available", "labour laborer", "help commands all"])
 check("236.3: the digest title counts the rows it prints",
       "CHEAPEST SIX RIGHT NOW" not in _text, _text[-600:])
 _labour = proto([{"cmd": "labour", "trade": "laborer"}], civ="han_china_100ad", kit="poor_scholar")[0][-1]
