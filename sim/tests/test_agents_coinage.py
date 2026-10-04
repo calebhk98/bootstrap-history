@@ -9,8 +9,11 @@ from sim.agents.tuning_coinage import COIN_RESTRIKE_SHARE_PER_YEAR, DEBASEMENT_S
 from .agents_fake_world import FakeWorld
 
 
-class State(CoinageMixin, Government):
-	"""The government with the coinage policy wired in, as the engine's class will have it."""
+class State(Government):
+	"""The government, which carries the coinage policy."""
+
+
+check("the government carries the coinage policy", issubclass(Government, CoinageMixin))
 
 
 class CoinWorld(FakeWorld):
