@@ -17,7 +17,7 @@ def one_year(game):
 
 def purchases(treasury):
     """Every purpose a state may pay for: a line it keeps up, or a named purchase or payment."""
-    return set(treasury.record.need) | {"interest", "patronage", "works"}
+    return set(treasury.record.need) | {"interest", "patronage", "works", "relief"}
 
 
 # ---- no outlay without a recipient --------------------------------------------------------------

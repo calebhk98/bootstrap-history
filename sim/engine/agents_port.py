@@ -15,10 +15,13 @@ from .agents_port_capital import CapitalView
 from .agents_port_disclosure import DisclosureView
 from .agents_port_groups import GroupView
 from .agents_port_revenue import RevenueView
+from .agents_port_cast import CastView
+from .agents_port_coinage import CoinageView
+from .agents_port_trade import TradeView
 from .data import TRADES_ABSENT
 
 
-class SimWorld(BudgetView, RevenueView, GroupView, DisclosureView, CapitalView, CapacityView):
+class SimWorld(BudgetView, RevenueView, GroupView, DisclosureView, CapitalView, CapacityView, TradeView, CastView, CoinageView):
 	"""The `Sim`'s answers to the questions actors ask."""
 
 	def __init__(self, sim: Any) -> None:
@@ -74,7 +77,7 @@ class SimWorld(BudgetView, RevenueView, GroupView, DisclosureView, CapitalView, 
 		visibility = self.base_visibility(node_id)
 		if location is None:
 			return visibility
-		distance = self._sim.labour.distance_to_tile_km(location)
+		distance = self.distance_km(location, None)  # type: ignore[attr-defined]
 		return visibility / (1.0 + distance / OBSERVATION_RANGE_KM)
 
 	def state_weights(self) -> Dict[str, float]:

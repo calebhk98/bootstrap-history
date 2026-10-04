@@ -144,6 +144,10 @@ check("...and an actor with no concern making the material asks the world about 
 # --- the staffing tally survives an actor's turn that left staff as it was found.
 _registry = _registry_of_firms(10)
 _registry.consider_entry = lambda world: []
+# the stub world answers only what firms and interest groups ask; the other spawners stay out of it
+from sim.agents import registry as _registry_module
+_registry_module.SPAWNERS[:] = [entry for entry in _registry_module.SPAWNERS
+                                if entry[0] in ("firm_entry", "interest_groups")]
 for _actor in _registry.actors.values():
     _actor.advance = lambda world: None
 _registry.staff_by_trade()
@@ -257,13 +261,13 @@ check("the kept per-trade staff sums equal a fresh sum bit for bit after turns t
       not _mismatch, _mismatch)
 
 
-# --- counting concerns by category walks the firms once until a concern changes.
+# --- counting concerns by category walks the operators once until a concern changes.
 _registry = _registry_of_firms(20)
 for _identifier, _actor in _registry.actors.items():
     _actor.record.concerns.clear()
     _actor.record.concerns.add("loom")
 _loom_nodes = {"loom": {"cat": "cloth"}, "forge": {"cat": "metal"}}
-_walked = _count_calls(_registry, "active_firms", lambda: [_registry.concerns_in("cloth", _loom_nodes) for _ in range(50)])
+_walked = _count_calls(_registry, "market_operators", lambda: [_registry.concerns_in("cloth", _loom_nodes) for _ in range(50)])
 check("concerns of a category are counted from one walk of the firms", _walked == 1, _walked)
 check("...and the count is right", _registry.concerns_in("cloth", _loom_nodes) == 20 and _registry.concerns_in("metal", _loom_nodes) == 0)
 _registry.actors["firm:003"].record.concerns.add("forge")
