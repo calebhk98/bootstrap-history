@@ -479,6 +479,8 @@ def _cmd_rush(sim, nodes, cmd, ended):
     # decide what to show you. Ranking by it here leaks nothing, because
     # the ranking itself is never printed, only which ids got started.
     _ok.sort(key=lambda k: (-downstream_count(nodes, k), sim.project_cost(k)))
+    if cmd.get("in_given_order") and "ids" in filters:   # a caller that ranked the ids itself (pursue)
+        _ok.sort(key=filters["ids"].index)
     # Discovery must not mutate dozens of portfolio entries. A numeric limit
     # is an explicit bounded instruction; an unbounded run needs confirmation.
     if limit is None and not capped and not cmd.get("force"):
