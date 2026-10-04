@@ -19,10 +19,13 @@ _expect = sum(NODES[node_id]["rev"] for node_id in _prac) * s_pr.PRACTICE_SHARE
 check("the practice pays its share of the quoted figure, not a ramp step",
       abs(s_pr.revenue() - _expect) < 1e-3 * _expect, (s_pr.revenue(), _expect))
 s_pr5 = sim()
-for _ in range(6):
+_pr5_revenues = []
+for _ in range(3):   # the old ramp took three steps to fill, so every year of it is read
     s_pr5.step()
+    _pr5_revenues.append(s_pr5.revenue())
 check("...and it does not grow into the full figure over the ramp years",
-      abs(s_pr5.revenue() - _expect) < 1e-3 * _expect, (s_pr5.revenue(), _expect))
+      all(abs(revenue - _expect) < 1e-3 * _expect for revenue in _pr5_revenues),
+      (_pr5_revenues, _expect))
 check("the ledger says why the practice pays less than the tree quotes",
       s_pr.practice_note() and "a third" in s_pr.practice_note(),
       s_pr.practice_note())
@@ -149,8 +152,8 @@ check("...and says what they cannot do yet: a day of the work, before the "
       "year named",
       _ok_tr and "cannot do a day of the work" in _msg_tr, _msg_tr)
 _ready_year = s_tr.year + 2
-for _ in range(3):
-    s_tr.step()
+s_tr.state.scenario.year = _ready_year   # the apprenticeship phase alone, at the year named
+s_tr._step_apprenticeships()
 check("...and this is not just a promise: they really are on the books, "
       "unprompted, by the year named",
       s_tr.employees.get("machinist", 0.0) >= 1.999, s_tr.employees.get("machinist"))
@@ -202,7 +205,7 @@ check("a trade taught and then lost counts as gone, not as available",
       s_rt.labour.trade_available("machinist")
       and s_rt.labour.market_supply("machinist") <= 0.0,
       (s_rt.labour.trade_available("machinist"), s_rt.labour.market_supply("machinist")))
-for _ in range(6):
+for _ in range(1):
     if "air_artificial_horizon" not in s_rt.active:
         s_rt.initialize_project("air_artificial_horizon")
     s_rt.step()

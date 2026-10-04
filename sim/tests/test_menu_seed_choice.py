@@ -51,7 +51,7 @@ check("menu: a blank answer takes the seed set in settings", _seed == 9001, (_se
 _saves_word, _env_word = _env("word-replay")
 def _word_game(name, seed):
     session = os.path.join(_saves_word, name + ".json")
-    out = _run(["play", "--civ", "rome_100ad", "--seed", seed, "--session", session],
+    out = _run(["play", "--civ", "norse_900ad", "--seed", seed, "--session", session],
                "step 3\nstate\nquit\n", _env_word).stdout
     # "(took N s)" timing lines differ between runs; the game itself must not
     return "\n".join(line for line in out.split("Seed:", 1)[-1].splitlines()
@@ -77,7 +77,7 @@ _live = os.path.join(_saves, "g.json")
 _workdir = os.path.join(_scratch, "work")
 os.makedirs(_workdir, exist_ok=True)
 _snapshot = os.path.join(_workdir, "snap.json")
-_out = _run(["play", "--civ", "rome_100ad", "--seed", "1", "--session", _live],
+_out = _run(["play", "--civ", "norse_900ad", "--seed", "1", "--session", _live],
             "save snap.json\nquit\n", _env_export, _workdir).stdout
 check("208: a typed relative save says the full path it landed at",
       _snapshot in _out, _out[-700:])

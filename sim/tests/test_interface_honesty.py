@@ -202,6 +202,9 @@ for _k_se in _ok_se:
     if _started_se >= 15:
         break
     _started_se += bool(S._agent_dispatch(s_se, NODES, {"cmd": "start", "id": _k_se}).get("ok"))
+# Begin just short of the credit limit so exhaustion falls in the first years
+# instead of after decades of simulated drawdown.
+s_se.capital = -(0.97 * s_se.credit_limit())
 _step_ce = S._agent_dispatch(s_se, NODES, {"cmd": "step", "years": 100})
 # CLOSE TO THE LIMIT now interrupts a batched step too (see the dedicated
 # check below), and it fires strictly BEFORE exhaustion by design - so this

@@ -9,6 +9,7 @@ see CLAUDE.md's test-file reorganisation note. Checks moved verbatim; each
 one's own comment explains the break it guards.
 """
 from .harness import *  # noqa: F401,F403
+from .inprocess_agent import proto_in_process as proto
 
 
 # --- BREAK: `available` carried nine numbers and not one of them was the
@@ -274,8 +275,7 @@ check("...and names the cheapest thing you could actually begin",
       _rs[0].get("and_the_cheapest_thing_you_could_start_now"))
 _s_red = sim(capital=round(0.3 * sim().project_cost("identity_cover")))   # thin purse at any wage scale
 _s_red.start_project("identity_cover")
-for _ in range(3):
-    _s_red.step()
+_s_red.step()  # one year already leaves arrears on a thin purse
 _rs2 = [S._agent_dispatch(_s_red, NODES, {"cmd": "stuck"})]
 _held = _rs2[-1]["what_is_holding_you_up"]
 check("...and once you are committed and in the red it names both",
