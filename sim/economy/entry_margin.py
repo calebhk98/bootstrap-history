@@ -9,7 +9,9 @@ ENTRY_PRICE_MARGIN_SHARE, the band a margin must clear before founders risk a ne
 entry needs more than cost, so prices inside the band move nobody). Where last year's price is above the
 entry price, the gap is what the year's bids would take at the entry price less the area's makers'
 capacity, plant on the way included. Newcomers are built for a share of the gap, at most a share of the
-capacity already there in a year, so an industry grows fast but does not jump past its buyers. A market
+capacity already there in a year, so an industry grows fast but does not jump past its buyers. The price
+must stay above the entry price for as many years in a row as a losing producer waits before it exits
+(LOSS_YEARS_BEFORE_EXIT), so a harvest's spike draws nobody and entry and exit wait alike. A market
 with buyers and no maker at all gets a trial newcomer whenever the bids would take its output at the
 entry price, whatever price it remembers: a price nobody has sold at says nothing about cost.
 """
@@ -23,6 +25,8 @@ from . import unit_cost
 from .entry import EntryPlan, UnmetDemand
 from .entry_sizing import ENTRY_SHARE_OF_UNTRADED_DEMAND
 from .goods_market import quantity_at
+from .market_memory import market_key
+from .producers_close import LOSS_YEARS_BEFORE_EXIT
 from .producers import OUTPUT_CHANGE_SHARE_PER_YEAR, Producer, live_input_prices, live_wages
 from .types import AreaId, Bid, GoodId, Recipe
 
@@ -105,8 +109,12 @@ def margin_entry_plans(setup, record, view, area_map, bids_by_market: Mapping[Tu
         recipe_id, cost = best
         entry_price = cost * (1.0 + ENTRY_PRICE_MARGIN_SHARE)
         capacity = capacity_in_area(record.producers, setup.recipes, good, area.tiles, record.expansion_runs)
-        if price <= entry_price and capacity > 0.0:
-            continue        # with no maker at all the remembered price is stale: the bids decide
+        key = market_key(good, area_id)
+        if capacity > 0.0:
+            above = record.margin_years.get(key, 0) + 1 if price > entry_price else 0
+            record.margin_years[key] = above
+            if above < LOSS_YEARS_BEFORE_EXIT:
+                continue    # a margin must last before founders trust it; with no maker the bids decide
         gap = demand_at(bids, entry_price) - capacity
         if gap <= 0.0:
             continue
