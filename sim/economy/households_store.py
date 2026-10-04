@@ -2,12 +2,13 @@
 Pure functions: which goods qualify and how the holding is split among them, and how much of savings
 goes into the holding. Goods are chosen by their physical properties and price, never by id."""
 import math
-from typing import Dict, Mapping
+from typing import Dict, List, Mapping, Tuple
 
 from sim.constants import declare
 
 from .households_orders import HOUSEHOLD_TIME_PREFERENCE
-from .types import GoodId, GoodSpec
+from .inventory import holding_reservation
+from .types import Bid, GoodId, GoodSpec, Offer
 
 STORE_MAX_SPOILAGE = declare(
     "STORE_MAX_SPOILAGE", 0.01, kind="temporary_heuristic", unit="share of a stock lost a year",
@@ -39,6 +40,18 @@ STORE_SHARE_LIMIT = declare(
     confidence="D",
     why="Even when inflation is expected a household keeps some savings as claims or cash; the bound is "
         "an assumption standing in for a portfolio choice that is not modelled.")
+STORE_REBALANCE_BAND = declare(
+    "STORE_REBALANCE_BAND", 0.2, kind="temporary_heuristic", unit="share of the target value",
+    source=None, confidence="D",
+    why="A household buys more of its store only when it holds this much less than it wants, and sells "
+        "only when it holds this much more, so small price moves do not make it trade every year. "
+        "Dealing costs and habit are not modelled; the width is an assumption.")
+STORE_LIQUIDATION_RESERVATION_SHARE = declare(
+    "STORE_LIQUIDATION_RESERVATION_SHARE", 0.7, kind="temporary_heuristic",
+    unit="share of last year's price", source=None, confidence="D",
+    why="A household short of cash for its food sells part of its store at a discount, as pawned plate "
+        "fetched less than its worth. The discount is an assumption; pawnbrokers' margins would bound it.")
+STORE_PRIORITY = 2          # after the need tiers (floors, then surplus)
 
 assert STORE_CHOICE_ELASTICITY < 1.0, "an elasticity of 1 or more makes a price rise raise its own demand"
 
@@ -72,3 +85,79 @@ def store_value_target(savings: float, expected_inflation: float, real_rate: flo
     lending_pull = 1.0 + max(0.0, real_rate - HOUSEHOLD_TIME_PREFERENCE) / HOUSEHOLD_TIME_PREFERENCE
     share = min(STORE_SHARE_LIMIT, STORE_SAVINGS_SHARE * inflation_pull / lending_pull)
     return share * max(0.0, savings)
+
+
+def staple_price_per_kg(priced, specs: Mapping[GoodId, GoodSpec]) -> float:
+    """Cheapest price per kg among the goods that meet a need with a subsistence floor (inf if none)."""
+    cheapest = math.inf
+    for need in priced:
+        if need.spec.subsistence_per_person <= 0.0:
+            continue
+        for good, price, _effect, _share in need.goods:
+            spec = specs.get(good)
+            if spec is not None and math.isfinite(spec.unit_mass_kg) and spec.unit_mass_kg > 0.0 and price > 0.0:
+                cheapest = min(cheapest, price / spec.unit_mass_kg)
+    return cheapest
+
+
+def store_holding(cohort, view, specs: Mapping[GoodId, GoodSpec], priced) -> Tuple[Dict[GoodId, float], Dict[GoodId, float], Dict[GoodId, float]]:
+    """(weights, last prices, quantities held) of the store goods at this cohort's tile; empty if none."""
+    staple = staple_price_per_kg(priced, specs)
+    if not math.isfinite(staple):
+        return {}, {}, {}
+    prices = {}
+    for good in specs:
+        price = view.price(good, view.area_of(good, cohort.tile))
+        if price:
+            prices[good] = price
+    weights = store_candidates(specs, prices, staple)
+    return (weights, {good: prices[good] for good in weights},
+            {good: view.stock(cohort.agent_id, good, cohort.tile) for good in weights})
+
+
+def store_bids(cohort, view, specs, basket, weights, prices, held, wealth_above_buffer: float,
+               real_rate: float, pot: float) -> Tuple[List[Bid], float]:
+    """Bids for the store when its value is below the target less the band, paid from `pot` (money the
+    household would otherwise lend); returns the bids and the money they may spend."""
+    if not weights or pot <= 0.0:
+        return [], 0.0
+    held_value = math.fsum(held[good] * prices[good] for good in weights)
+    target = store_value_target(wealth_above_buffer, cohort.expected_inflation, real_rate)
+    if held_value >= target * (1.0 - STORE_REBALANCE_BAND):
+        return [], 0.0
+    spend = min(pot, target - held_value)
+    bids = []
+    for good, weight in weights.items():
+        budget = spend * weight
+        if budget > 0.0:
+            bids.append(Bid(cohort.agent_id, good, view.area_of(good, cohort.tile), cohort.tile, 0.0,
+                            budget / prices[good], prices[good], basket.substitution, budget, STORE_PRIORITY))
+    return bids, math.fsum(bid.budget for bid in bids)
+
+
+def store_offers(cohort, view, specs, weights, prices, held, wealth_above_buffer: float, real_rate: float,
+                 cash: float, floor_cost: float) -> List[Offer]:
+    """Offers of the store: the excess over the target plus the band at the holding reservation, and
+    enough at a low reservation to cover a shortfall of cash against the floor cost."""
+    held_value = math.fsum(held[good] * prices[good] for good in weights)
+    if held_value <= 0.0:
+        return []
+    rate = view.interest_rate(view.currency_of(view.area_of(next(iter(weights)), cohort.tile)))
+    target = store_value_target(wealth_above_buffer, cohort.expected_inflation, real_rate)
+    excess = max(0.0, held_value - target * (1.0 + STORE_REBALANCE_BAND))
+    shortfall = max(0.0, floor_cost - cash)
+    offers = []
+    for good in sorted(weights):
+        share = held[good] * prices[good] / held_value
+        spec = specs[good]
+        low = prices[good] * STORE_LIQUIDATION_RESERVATION_SHARE
+        urgent = min(held[good], shortfall * share / low) if shortfall > 0.0 else 0.0
+        patient = min(held[good] - urgent, excess * share / prices[good])
+        area = view.area_of(good, cohort.tile)
+        if urgent > 0.0:
+            offers.append(Offer(cohort.agent_id, good, area, cohort.tile, urgent, low))
+        if patient > 0.0:
+            reservation = holding_reservation(prices[good], rate, spec.spoilage_per_year,
+                                              STORE_STORAGE_COST_PER_KG_YEAR * spec.unit_mass_kg)
+            offers.append(Offer(cohort.agent_id, good, area, cohort.tile, patient, reservation))
+    return offers

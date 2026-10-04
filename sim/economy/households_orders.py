@@ -107,10 +107,13 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
     # what it has lent counts toward the wealth it spends from, so a loss to default cuts its spending;
     # it spends down only wealth above its cash buffer and the savings it wants to keep
     claims = claims_of(view, cohort.agent_id, area_currency)
+    from . import households_store            # imported here: that module needs this one's constants
+    weights, store_prices, held = households_store.store_holding(cohort, view, specs, priced)
+    store_value = math.fsum(held[good] * store_prices[good] for good in weights)
     keep = target + savings_target(income_this_year - floor_cost, view.interest_rate(area_currency),
                                    cohort.expected_inflation)
     spending = max(0.0, min(cash, income_this_year
-                            + currency.spending_adjustment(cash + claims, keep, income_this_year)))
+                            + currency.spending_adjustment(cash + claims + store_value, keep, income_this_year)))
     floors, totals = _need_units(priced, basket, cohort.people, spending - floor_cost)
     rows = []
     for need in priced:
@@ -152,7 +155,18 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
                         maximum_price=ceiling))
     funds = ()
     savings = cash - budget_total - target
+    offers = ()
+    if weights:
+        real_rate = view.interest_rate(area_currency) - cohort.expected_inflation
+        above_buffer = cash + claims + store_value - target
+        store_bids, store_spend = households_store.store_bids(
+            cohort, view, specs, basket, weights, store_prices, held, above_buffer, real_rate,
+            min(savings, usable - budget_total))
+        bids.extend(store_bids)
+        savings -= store_spend
+        offers = tuple(households_store.store_offers(cohort, view, specs, weights, store_prices, held,
+                                                     above_buffer, real_rate, cash, floor_cost))
     if savings > 0.0:
         funds = (FundsOffer(cohort.agent_id, area_currency, savings,
                             max(0.0, HOUSEHOLD_TIME_PREFERENCE + cohort.expected_inflation)),)
-    return AgentOrders(bids=tuple(bids), funds_offers=funds)
+    return AgentOrders(bids=tuple(bids), offers=offers, funds_offers=funds)
