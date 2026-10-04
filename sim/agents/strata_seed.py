@@ -37,7 +37,7 @@ def strata_definitions(profile: CountryProfile) -> List[Dict[str, Any]]:
 		{"name": "artisans", "share": artisans, "trade": DEFAULT_TRADES["artisans"], "literacy": general,
 		 "rises_to": "merchants", "falls_to": "labourers"},
 		{"name": "labourers", "share": labourers, "trade": DEFAULT_TRADES["labourers"], "literacy": general,
-		 "rises_to": "artisans", "falls_to": "poor"},
+		 "own_plot": True, "rises_to": "artisans", "falls_to": "poor"},
 		{"name": "poor", "share": DEFAULT_POOR_SHARE, "trade": DEFAULT_TRADES["poor"],
 		 "work_share": DEFAULT_POOR_WORK_SHARE, "literacy": general, "rises_to": "labourers"},
 	]

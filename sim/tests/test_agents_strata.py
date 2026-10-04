@@ -1,7 +1,7 @@
 """Strata: bodies of people as actors. Seeding from data, needs, growth, schooling, mobility, keep."""
 from .harness import check
 
-from sim.agents.api import ActorRegistry, ActorsState, CountryProfile
+from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, CountryProfile
 from sim.agents import registry as registry_module
 from sim.agents.strata_seed import seed_strata, strata_definitions, strata_spawner
 from sim.agents.stratum import Stratum
@@ -211,3 +211,18 @@ for _year in range(3):
 check("a stratum never researches or copies",
 	  not toilers.knowledge and not toilers.works and not toilers.workforce
 	  and toilers.imitation_candidates(world) == [] and toilers.consider_imitation(world) == [])
+
+# ---- people with land of their own eat from it when wages fall short ------------------------
+plot_world = StrataWorld()
+plot_world.pay = {"labourer": 1.0}
+plot_registry = ActorRegistry(ActorsState(home_country="home"))
+landed = plot_registry.add("stratum:home:farmers", ActorRecord(kind="stratum", stratum="farmers", members=1000.0,
+	plan={"name": "farmers", "trade": "labourer", "own_plot": True}))
+landless = plot_registry.add("stratum:home:poor", ActorRecord(kind="stratum", stratum="poor", members=1000.0,
+	plan={"name": "poor", "trade": "labourer"}))
+landed.advance(plot_world)
+landless.advance(plot_world)
+check("people with their own plot are fed when wages are below subsistence",
+	  landed.record.shortfall.get("food") == 0.0, landed.record.shortfall)
+check("people without land go hungry at the same wage", landless.record.shortfall.get("food", 0.0) > 0.0,
+	  landless.record.shortfall)

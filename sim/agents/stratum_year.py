@@ -32,7 +32,12 @@ def own_income(stratum: Any, world: Any) -> float:
 	trade = plan.get("trade")
 	if trade:
 		working = float(plan.get("work_share", STRATUM_WORKING_SHARE))
-		income += stratum.record.members * working * world.pay_per_person_year(trade)
+		wages = stratum.record.members * working * world.pay_per_person_year(trade)
+		if plan.get("own_plot"):
+			# people with land earn at least what keeps those they support fed, from their own plot when
+			# no employer pays that much: the classical floor under wages the agent economy also uses
+			wages = max(wages, stratum.record.members * world.subsistence_cost_per_person_year())
+		income += wages
 	property_share = float(plan.get("property_share") or 0.0)
 	if property_share > 0.0:
 		income += world.society_output() * property_share

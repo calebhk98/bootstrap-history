@@ -125,3 +125,9 @@ DEFAULT_BONDED_SHARE = declare(
 	"DEFAULT_BONDED_SHARE", 0.1, kind="temporary_heuristic",
 	unit="share of population", source=None, confidence="D",
 	why="People in bondage when a profile states that debt bondage exists and no strata.")
+
+HOUSING_FLOOR_AREA_PER_PERSON_M2 = declare(
+	"HOUSING_FLOOR_AREA_PER_PERSON_M2", 10.0, kind="temporary_heuristic",
+	unit="m2 of dwelling per person", source=None, confidence="D",
+	why="Floor space one person lives in, which with the masonry labour per square metre prices a "
+		"body of people's housing. Stands in for a dwelling stock with rents set by the market.")

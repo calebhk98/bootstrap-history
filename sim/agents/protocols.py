@@ -342,3 +342,55 @@ class World(Protocol):
 	def rng_for(self, *parts: Any) -> random.Random:
 		"""A random stream keyed by its inputs, so actors never disturb the world's own."""
 		...
+
+	# ---- What a trader asks (sim/engine/agents_port_trade.py)
+
+	def trade_places(self, location: Optional[str]) -> List[str]:
+		"""Places with a market a trader at `location` can reach; None for every place."""
+		...
+
+	def trade_materials(self) -> List[str]:
+		"""Materials that may be carried between places."""
+		...
+
+	def price_at(self, material: str, place: str) -> Optional[float]:
+		"""Money per tonne of a material at a place, in home money; None where it has no price."""
+		...
+
+	def freight_between(self, source: str, destination: str, material: str, tonnes: float) -> float:
+		"""Money to carry `tonnes` of a material from one place to another."""
+		...
+
+	def market_depth(self, material: str, place: str) -> float:
+		"""Tonnes a year buyers at a place take of a material."""
+		...
+
+	def shipped_this_year(self, material: str, source: str, destination: str) -> float:
+		"""Tonnes every shipper has carried on a route so far this year."""
+		...
+
+	def ship(self, trader_id: str, material: str, tonnes: float, source: str, destination: str) -> Tuple[float, float]:
+		"""Buy at the source and sell at the destination: (money paid, money received)."""
+		...
+
+	def country_of_place(self, place: str) -> Optional[str]:
+		"""The country a place belongs to; None for the home country."""
+		...
+
+	# ---- What a country, a body of people and the cast ask (sim/engine/agents_port_cast.py)
+
+	def distance_km(self, place_a: Optional[str], place_b: Optional[str]) -> float:
+		"""Kilometres between two places (tile or region ids); None is where the founder operates from."""
+		...
+
+	def subsistence_cost_per_person_year(self) -> float:
+		"""Money for one person's food at subsistence for a year."""
+		...
+
+	def housing_cost_per_person_year(self) -> float:
+		"""Money for one person's housing for a year."""
+		...
+
+	def observed_stratum(self, country: Optional[str], name: str) -> Optional[Dict[str, float]]:
+		"""Headcount and income ("members", "income") another model already keeps for a body of people."""
+		...

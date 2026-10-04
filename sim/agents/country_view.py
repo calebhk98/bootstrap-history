@@ -13,7 +13,7 @@ from .registry import register_world_scope
 from .tuning_country import ARMY_SHARE_OF_POPULATION, COUNTRY_OBSERVATION_RANGE_KM
 
 # members the shared world answers that the protocol does not name yet
-EXTRA_FORWARDED = ("distance_km",)
+EXTRA_FORWARDED: tuple = ()
 # the word a civilisation's values use for a weight, as in `w_military`
 WEIGHT_PREFIX = "w_"
 

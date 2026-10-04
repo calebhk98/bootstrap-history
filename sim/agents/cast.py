@@ -13,7 +13,7 @@ from .records import ActorRecord, CastEntry, CountryProfile
 # keys under "cast" this module reads itself; any others end up in the profile's `extra`
 CONSUMED_CAST_KEYS = ("strata", "countries", "actors", "treasury", "location")
 # civilisation keys kept in a profile's `extra` for the mechanisms that read them
-CARRIED_CIVILISATION_KEYS = ("standing_army", "values")
+CARRIED_CIVILISATION_KEYS = ("standing_army", "values", "debt_bondage", "bondage_years")
 GOVERNMENT_PREFIX = "government:"
 HOME_GOVERNMENT_KIND = "government"
 FOREIGN_GOVERNMENT_KIND = "foreign_government"

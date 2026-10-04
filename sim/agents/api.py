@@ -13,7 +13,10 @@ from .registry import ActorRegistry, register_actor_kind, register_spawner, regi
 from .saving import SAVING_SHARE_OF_SURPLUS
 from .sector import CONCESSION_PREFIX, Sector, sector_key
 from .tuning import MANAGEMENT_SPAN_EXPONENT, OBSERVATION_RANGE_KM, PROOF_YEARS, SECRET_EXPOSURE
-from .tuning_spending import THREAT_ARMY_RESPONSE
+from .tuning_spending import PUBLIC_BUILDING_LIFE_YEARS, THREAT_ARMY_RESPONSE
+from .budget_lines import DOLE_MATERIAL
+from .tuning_spending import MASONRY_PERSON_YEARS_PER_M2
+from .tuning_strata import HOUSING_FLOOR_AREA_PER_PERSON_M2
 # importing these registers their kinds, spawners, commands and the country scope
 from .cast import cast_from_civilisations, profile_from_civilisation, seed_cast
 from .country_view import CountryWorld
@@ -32,7 +35,7 @@ __all__ = ["Actor", "RecordedActor", "Household", "Firm", "Government",
            "register_spawner", "register_world_scope", "ledger", "licence", "supply", "imitation", "revenue",
            "SAVING_SHARE_OF_SURPLUS", "CONCESSION_PREFIX", "Sector", "sector_key",
            "MANAGEMENT_SPAN_EXPONENT", "OBSERVATION_RANGE_KM", "PROOF_YEARS", "SECRET_EXPOSURE",
-           "THREAT_ARMY_RESPONSE", "cast_from_civilisations", "profile_from_civilisation", "seed_cast",
+           "THREAT_ARMY_RESPONSE", "PUBLIC_BUILDING_LIFE_YEARS", "DOLE_MATERIAL", "MASONRY_PERSON_YEARS_PER_M2", "HOUSING_FLOOR_AREA_PER_PERSON_M2", "cast_from_civilisations", "profile_from_civilisation", "seed_cast",
            "CountryWorld", "ForeignGovernment", "Player", "Stratum", "stratum_id", "seed_strata",
            "strata_definitions", "strata_spawner", "CommandRejected", "register_command", "Trader",
            "trader_entry"]
