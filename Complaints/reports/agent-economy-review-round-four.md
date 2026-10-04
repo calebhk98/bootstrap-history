@@ -109,6 +109,26 @@ Reading it:
   several kg an hour.
 - **Margin entry without the elasticity condition, or with a smaller share or a wider band.** Grain
   volatility stayed at 0.19-0.38.
+- **Margin entry with the elasticity condition** (`b81201d`, taken out in `4babb5a`).
+  - **Ablation** (England and Norse, seed 1, one variant switched off at a time, each a real source
+    edit with its own spin-up cache): margin entry alone raised grain volatility from about 0.08 to
+    0.18 (England) and from 0.11 to 0.21 (Norse), lowered the wage and added hunger. The climate gate,
+    land continuity, the foreign-bid fix and the trial branch did not.
+  - **What entered** (England seed 1, every plan logged; spin-up and game together): household
+    organic and fuel goods such as milk, wine, firewood, peat, coal, starch, olive oil and fat. Most
+    are land recipes competing with wheat for rent. Wheat itself barely entered, and the iron chain's
+    plans were near zero runs.
+  - **Buyers:** households, about 98% of the projected spending; merchants were not the cause.
+  - **The gate was nearly vacuous.** Treating surplus spending as unit-elastic let it pass for almost
+    every plan. Entry prices sat far below market, perhaps because land rent at the anchor tile
+    understates the cost of a land recipe.
+  - **Organic entry alone reproduced the instability. Mineral entry alone kept grain steady but
+    swung metals.**
+  - **Next attempt, for the next round:**
+    - gate on observed spending growth;
+    - treat goods in a floor chain or using land as staples, with a Nerlove planted-area response
+      and rent in the entry cost;
+    - keep a mineral path only for a lasting, observed shortfall.
 
 ## Left to do
 
