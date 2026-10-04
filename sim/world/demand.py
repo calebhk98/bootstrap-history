@@ -99,7 +99,7 @@ or a cost-side price for anything - it turns those, plus a household's
 preferences and a producer's recipe, into a quantity or a value share.
 
 STANDALONE ON PURPOSE, LIKE ITS SIBLINGS. Nothing here imports sim/engine/,
-sim/solve_prices.py, or any other sim/world/ module - see
+sim/engine/solve_prices.py, or any other sim/world/ module - see
 sim/world/__init__.py and sim/world/deposits.py's own docstring for why a
 module built this way survives other agents editing those paths
 concurrently with this one's construction. It reads data/production/*.json
@@ -904,7 +904,7 @@ def _illustrative_recursive_labour_content_price_per_kg(
     THIS IS NOT PART OF THIS MODULE'S DEMAND MECHANISM. It exists only so
     this module's own __main__ block and sim/tests/test_demand.py have
     SOME cost-side price to anchor a demo against, without reading
-    data/prices.json (a book value) or importing sim/solve_prices.py (out
+    data/prices.json (a book value) or importing sim/engine/solve_prices.py (out
     of scope - see the module docstring's STANDALONE section). It is
     deliberately a leading-underscore helper: no production code above
     this line calls it, and market_clearing_price and
@@ -916,7 +916,7 @@ def _illustrative_recursive_labour_content_price_per_kg(
     computed higher up the call stack contributes zero ADDITIONAL cost
     from the cyclic edge rather than recursing forever - a crude but
     honest way to terminate, not a claim that the cycle is resolved
-    correctly (sim/solve_prices.py's own resolvability pass is where that
+    correctly (sim/engine/solve_prices.py's own resolvability pass is where that
     is actually handled).
     """
     production = production if production is not None else production_data()

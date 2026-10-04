@@ -6,7 +6,7 @@ re-solved cheapest route). The market receives the result as a reservation price
 """
 from typing import Any, Dict, FrozenSet, Mapping, Optional
 
-from sim import joint_allocation, solve_prices, solve_prices_core
+from sim.engine import joint_allocation, solve_prices, solve_prices_core
 
 from . import prices as price_solver
 

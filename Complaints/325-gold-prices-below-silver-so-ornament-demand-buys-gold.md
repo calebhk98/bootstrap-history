@@ -11,8 +11,8 @@ trade. Related to `Complaints/305`.
 
 ## Evidence
 
-`python3 sim/foreign_trade_report.py` shows gold among Rome's exports; compare
-the solved gold and silver prices with `python3 sim/audit_costs.py`.
+`python3 sim/foreign_trade_report.py` (script since removed; recover with `git show 97473f1:sim/foreign_trade_report.py`) shows gold among Rome's exports; compare
+the solved gold and silver prices with `python3 sim/audit_costs.py` (script since removed; recover with `git show 97473f1:sim/audit_costs.py`).
 
 ## What it would take
 

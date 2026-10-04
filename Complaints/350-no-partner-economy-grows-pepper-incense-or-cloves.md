@@ -12,7 +12,7 @@ the Malabar coast, not Han.
 
 ## Evidence
 
-`python3 sim/foreign_trade_report.py --years 100 --partner han_china_100ad`
+`python3 sim/foreign_trade_report.py --years 100 --partner han_china_100ad` (script since removed; recover with `git show 97473f1:sim/foreign_trade_report.py`)
 lists silk and cassia among Rome's imports and no pepper.
 
 ## What it would take

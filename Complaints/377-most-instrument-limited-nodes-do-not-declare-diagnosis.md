@@ -2,7 +2,7 @@
 
 **Status:** open
 
-Split from 274. The `diagnosis_instrument` mechanic is in place but only two capability nodes use it. Every other node whose failure depends on purity, tolerance, vacuum or temperature measurement still teaches by brute repetition. `python3 sim/treetool.py judge` reports nodes that need such a rung; none yet reports a missing diagnosis instrument.
+Split from 274. The `diagnosis_instrument` mechanic is in place but only two capability nodes use it. Every other node whose failure depends on purity, tolerance, vacuum or temperature measurement still teaches by brute repetition. `python3 sim/treetool.py judge` (script since removed; recover with `git show 97473f1:sim/treetool.py`) reports nodes that need such a rung; none yet reports a missing diagnosis instrument.
 
 ## What it would take
 

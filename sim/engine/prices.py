@@ -1,7 +1,7 @@
 """Ask the price solver for a price.
 
 Prices are calculated from recipes, land rent, wages and transport by
-`sim/solve_prices.py`, gated to what a civilization has reached
+`sim/engine/solve_prices.py`, gated to what a civilization has reached
 (Complaints/38). This module is the engine's one call into the solver. It is
 thin: it imports the solver rather than re-implementing it. There is no price
 book; a material nothing can make has no price.
@@ -78,7 +78,7 @@ before trusting it. A caller that hands in a DIFFERENT `production_entries`
 object (a test building synthetic data, mainly) can never collide with a
 real one that happens to reuse the same gate-node ids.
 
-LABOUR-HOURS TO DENARII. `sim/solve_prices.py` prices everything in
+LABOUR-HOURS TO DENARII. `sim/engine/solve_prices.py` prices everything in
 labour-hours - one hour of `labourer`, its numeraire, equals 1.0 - because a
 recipe graph can produce relative amounts of unskilled effort. Money enters
 only here, at the edge: the wage document carries `money_per_labour_hour`,
@@ -98,7 +98,7 @@ cares can already recover the distinction by re-running
 kind of downstream question.
 
 RENT MUST BE THREADED THROUGH HERE THE SAME WAY `main()` DOES IT (see
-Complaints/42). `sim/solve_prices.py`'s own `main()` computes
+Complaints/42). `sim/engine/solve_prices.py`'s own `main()` computes
 `rent_hours_per_kg_by_ore_material` and `land_rent_hours_per_hectare` once
 per run and threads the result through `compute_resolvable_materials` and
 `solve` as `rent_hours_per_kg_by_material` - that is how `python3 sim/
@@ -174,8 +174,8 @@ REPO_ROOT = os.path.dirname(SIMDIR)                             # repo root
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 
-from sim import joint_allocation, solve_prices, solve_prices_reach  # noqa: E402
-from sim.validate_production import load_production             # noqa: E402
+from sim.engine import joint_allocation, solve_prices, solve_prices_reach  # noqa: E402
+from sim.engine.validate_production import load_production             # noqa: E402
 from sim.labour.api import wages                                     # noqa: E402
 from sim.labour.api import wage_provider                # noqa: E402
 from sim.engine import solve_cache                              # noqa: E402
@@ -358,7 +358,7 @@ def _solve_to_json(production_entries: ProductionEntries,
     wage_by_trade = solver_wage_ratios(production_entries, document_ratios)
 
     # RENT. See RENT WAS MISSING FROM THIS FILE in the module docstring:
-    # `main()` in sim/solve_prices.py computes exactly these two dicts and
+    # `main()` in sim/engine/solve_prices.py computes exactly these two dicts and
     # merges them the same way before ever calling `compute_resolvable_
     # materials` or `solve` - this mirrors that, rather than re-deriving a
     # third way to combine them.

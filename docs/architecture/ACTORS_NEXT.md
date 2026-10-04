@@ -64,8 +64,8 @@ from outside, and nothing outside can be attributed to them.
 Each names what it reads, what it changes, the player-visible behaviour it
 replaces, and how it is checked. Fingerprint check for all of them:
 
-    python3 sim/perf_fingerprint.py record before.json --quick    (before the change)
-    python3 sim/perf_fingerprint.py check before.json --quick     (after; every divergence explained)
+    python3 -m sim.tests.fingerprint record before.json --quick    (before the change)
+    python3 -m sim.tests.fingerprint check before.json --quick     (after; every divergence explained)
 
 Run `--quick` for iteration and the full set before merging.
 
@@ -82,7 +82,7 @@ Tests: `sim/tests/test_actor_treasury.py`. Fingerprint: identical on every
 household field, because the founder is charged exactly as before (measured
 with the `--quick` set).
 
-What the ledger showed (`python3 sim/actor_ledger.py <civ> <years> <seed>`):
+What the ledger showed:
 the state's income is almost entirely the modelled tax base, its outlays are a
 tiny fraction of it, and the founder's levies are a small part of income. So
 the treasury accumulates and nothing spends it. That is the measured argument

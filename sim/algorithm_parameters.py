@@ -8,11 +8,11 @@ computation runs, not what it claims about the simulated world.
 
 WHAT BELONGS HERE. A fixed-point solver's damping factor, its convergence
 tolerance, its iteration cap; a search's maximum period count. Gathered
-from sim/solve_prices_core.py (the price solver's own damped-Jacobi loop)
+from sim/engine/solve_prices_core.py (the price solver's own damped-Jacobi loop)
 and sim/labour/labour_market.py (the labour-reallocation fixed point), the
 two places in this project that run an iterative numerical search rather
 than a closed-form calculation. The strongly-connected-components pass
-sim/solve_prices_core.py's own resolvability check runs
+sim/engine/solve_prices_core.py's own resolvability check runs
 (`_strongly_connected_components`, Tarjan's algorithm) was also examined
 for this task and holds nothing that belongs here: it is deliberately
 iterative rather than recursive specifically to avoid Python's recursion
@@ -70,12 +70,11 @@ file. Each constant's own original comment moved WITH it, verbatim
 them), so nothing explaining WHY a value is what it is was lost in the
 move - only WHERE it lives changed.
 
-WHY THE OLD LOCATIONS STILL WORK UNCHANGED. sim/solve_prices.py and sim/
-solve_prices_report.py both do `from solve_prices_core import (...,
-DAMPING_FACTOR, CONVERGENCE_TOLERANCE, ...)` - a real, working import this
-task did not want to edit two files, outside its own ownership boundary in
+WHY THE OLD LOCATIONS STILL WORK UNCHANGED. sim/engine/solve_prices.py does
+`from solve_prices_core import (..., DAMPING_FACTOR, CONVERGENCE_TOLERANCE,
+...)` - a real, working import this task did not want to edit, outside its own ownership boundary in
 spirit if not in the letter of CLAUDE.md's file list, just to relocate a
-number. sim/solve_prices_core.py therefore re-imports each moved name from
+number. sim/engine/solve_prices_core.py therefore re-imports each moved name from
 this file and keeps it bound at its own old attribute name (see that
 file's own comment at the import), so `solve_prices_core.DAMPING_FACTOR`
 still resolves exactly as it always did and neither sibling file needed to
@@ -92,9 +91,9 @@ THESE section).
 """
 
 # ============================================================================
-# sim/solve_prices_core.py - the damped-Jacobi price solver
+# sim/engine/solve_prices_core.py - the damped-Jacobi price solver
 # ============================================================================
-# Moved here verbatim, comments included, from sim/solve_prices_core.py's
+# Moved here verbatim, comments included, from sim/engine/solve_prices_core.py's
 # own "Damped Jacobi fixed-point iteration" section. See that file's own
 # import of these five names for why its own module attributes still work
 # unchanged.
@@ -122,7 +121,7 @@ DAMPING_FACTOR = 0.5
 # room before compute_resolvable_materials gives up and reports it as
 # unresolved. Lowering it enough to cut off a component BEFORE it would
 # have converged is the one way this stops being inert - see the loop at
-# sim/solve_prices_core.py's own use of this name for where that boundary
+# sim/engine/solve_prices_core.py's own use of this name for where that boundary
 # is checked.
 MAXIMUM_ITERATIONS = 2000
 
@@ -187,26 +186,3 @@ MAXIMUM_REALLOCATION_PERIODS = 500
 # reports a workforce as settled while real hours are still moving between
 # trades.
 CONVERGENCE_TOLERANCE_HOURS = 1e-6
-
-
-def _print_report():
-    entries = (
-        ("DAMPING_FACTOR", DAMPING_FACTOR, "OUTCOME-SENSITIVE"),
-        ("MAXIMUM_ITERATIONS", MAXIMUM_ITERATIONS, "safety ceiling only"),
-        ("CONVERGENCE_TOLERANCE", CONVERGENCE_TOLERANCE, "OUTCOME-SENSITIVE"),
-        ("INITIAL_PRICE_GUESS_HOURS", INITIAL_PRICE_GUESS_HOURS,
-         "outcome-inert (see docstring)"),
-        ("GROWTH_BOUND_HOURS", GROWTH_BOUND_HOURS, "safety ceiling only"),
-        ("MAXIMUM_REALLOCATION_PERIODS", MAXIMUM_REALLOCATION_PERIODS,
-         "safety ceiling only"),
-        ("CONVERGENCE_TOLERANCE_HOURS", CONVERGENCE_TOLERANCE_HOURS,
-         "OUTCOME-SENSITIVE"),
-    )
-    print("ALGORITHM PARAMETERS - how a computation runs, not what it claims")
-    print("=" * 72)
-    for name, value, sensitivity in entries:
-        print("   %-30s %-12s %s" % (name, value, sensitivity))
-
-
-if __name__ == "__main__":
-    _print_report()

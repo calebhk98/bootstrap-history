@@ -15,7 +15,7 @@ households' demand (`FOREIGN_OPENING_IN_BALANCE`).
 
 ## Evidence
 
-`python3 sim/foreign_trade_report.py` trades only commodities with sourced
+`python3 sim/foreign_trade_report.py` (script since removed; recover with `git show 97473f1:sim/foreign_trade_report.py`) trades only commodities with sourced
 output (minerals, wool, cloth, cotton) plus goods this society cannot make.
 
 ## What it would take

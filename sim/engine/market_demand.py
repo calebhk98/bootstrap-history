@@ -25,7 +25,7 @@ MEAN_INCOME_HOURS_PER_CAPITA = declare(
     unit="labour-hours/person/year at the opening economy", source=None,
     confidence="D",
     why="Household income scale, the same figure the price solver's demand "
-        "anchors use (sim/joint_allocation.py); income then moves with the "
+        "anchors use (sim/engine/joint_allocation.py); income then moves with the "
         "wage the labour market pays (household_income_hours_per_capita). Returns to land and capital "
         "are not yet in it.")
 

@@ -171,7 +171,7 @@ every heuristic you cannot yet derive).
     doing it right means carrying the grid's own column count and wrapping
     modulo it, which is a small but real change this script does not make
     to keep the adjacency rule the same one sentence for every tile.
-  - NO WIRING INTO sim/world/land.py, sim/solve_prices.py OR
+  - NO WIRING INTO sim/world/land.py, sim/engine/solve_prices.py OR
     data/civilizations/*.json. Those files are out of this task's
     ownership (another agent is concurrently adding land.py's own
     intensive margin) and Complaints/45 itself recommends re-tiling as

@@ -2,7 +2,7 @@
 
 Written as unittest.TestCase classes, like sim/tests/test_agriculture.py
 and sim/tests/test_deposits.py: this module has no dependency on
-sim/engine/, sim/solve_prices.py, or any other sim/world/ module (see
+sim/engine/, sim/engine/solve_prices.py, or any other sim/world/ module (see
 demand.py's own STANDALONE section), so importing sim/tests/harness.py
 would pull in the whole engine for no reason. sim/tests/__main__.py's
 _run_topic already runs both styles identically.
@@ -366,7 +366,7 @@ class NoBookPriceHardcodeTests(unittest.TestCase):
 
 
 class StandaloneImportTests(unittest.TestCase):
-    """sim/world/demand.py must not import sim/engine/, sim/solve_prices.py,
+    """sim/world/demand.py must not import sim/engine/, sim/engine/solve_prices.py,
     or any other sim/world/ module - see its own docstring's STANDALONE
     section and sim/world/__init__.py for why every module in this package
     holds to this independently.
@@ -393,7 +393,7 @@ class StandaloneImportTests(unittest.TestCase):
                 name.startswith("sim.world.") and name != "sim.world.demand",
                 "sim/world/demand.py imports another sim/world/ module: %r" % name)
             self.assertNotEqual(
-                name, "sim.solve_prices",
+                name, "sim.engine.solve_prices",
                 "sim/world/demand.py imports the price solver directly")
 
 

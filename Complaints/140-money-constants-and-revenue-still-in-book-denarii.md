@@ -66,9 +66,9 @@ Find them with `grep -rn "denari" sim/engine --include=*.py` and the
   (converted once, at full precision, so every figure is bit-identical to the
   old division). `money_units.price_nodes` multiplies by the civilisation's
   money per labour hour; there is no `NODE_MONEY_FIELDS` and no book-denarii
-  node converter left. Tools (`tool_costs`, `audit_costs`, `treetool`,
+  node converter left. Tools (`tool_costs` (script since removed; recover with `git show 97473f1:sim/tool_costs.py`), `audit_costs` (script since removed; recover with `git show 97473f1:sim/audit_costs.py`), `treetool` (script since removed; recover with `git show 97473f1:sim/treetool.py`),
   `civ_start_check`) read the hour fields.
-- [x] `python3 sim/perf_fingerprint.py check --quick` is byte-identical for
+- [x] `python3 -m sim.tests.fingerprint check --quick` is byte-identical for
   this move alone.
 
 ## Remains

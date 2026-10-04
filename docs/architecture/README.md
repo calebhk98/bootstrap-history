@@ -15,14 +15,14 @@ is now. None of this is an approved plan yet.
 | `ACTORS_NEXT.md` | What the government and firm actors produce that nothing reads, and the ordered increments that make the country a real player. | Ours |
 | `SIM_STATE_INVENTORY.md` | Every `Sim` instance attribute, measured, classified household / world / scenario / internal. The input to the extraction. | Ours |
 | `NAMING_PLAN.md` | The short identifiers, what they mean, and how to rename them safely. Tiered by risk. | Ours |
-| `STATE_OF_THE_PROJECT.md` | The milestones in `ENDOGENOUS_COSTS_AND_DOMAINS.md` and what to do next, each with the command that measures it. The issue table is not kept here: run `python3 sim/issue_status.py`. | Ours |
+| `STATE_OF_THE_PROJECT.md` | The milestones in `ENDOGENOUS_COSTS_AND_DOMAINS.md` and what to do next, each with the command that measures it. The issue table is not kept here: list `Complaints/` and read each `**Status:**` line. | Ours |
 | `SIM_DECOMPOSITION_REVISITED.md` | Reopens, on the stakeholder's request, the "no full decomposition" decision in `sim/ARCHITECTURE.md`; checks which of that decision's reasons still hold and recommends a staged, partial alternative. | Ours |
 | `WIRING_MILESTONE_4.md` | What wiring demography and agriculture into the engine actually broke and fixed, commit by commit. Feeds Milestone 4 in `STATE_OF_THE_PROJECT.md`. | Ours |
 | `DEMAND_AT_SCALE.md` | Whether `sim/world/demand.py`'s household-demand model holds outside Roman Egypt, against the stakeholder's own critique. | Ours |
 | `MAP_AND_WEATHER.md` | Why the map and the weather model are two disconnected systems, and what it would take to join them. | Ours |
 | `ECONOMY_MODEL_SURVEY.md` | How other models and games price goods, set wages, split joint products and create starting conditions, with what to borrow for each of our modules. | Ours, from external sources |
 | `ECONOMY_AGENTS.md` | The agent economy being built in `sim/economy/`: agents with money and goods, markets clearing within the year, money as a stock, tile market areas, and the port that keeps it apart from the engine. | Ours |
-| `CODE_ANALYSIS_TOOLING.md` | What checks the code's maintainability (`sim/code_health.py`, pylint, the rename prover), which parts are hand-written and which library sits under each. | Ours |
+| `CODE_ANALYSIS_TOOLING.md` | What checks the code's maintainability (pylint and the naming plan), which parts are hand-written and which library sits under each. | Ours |
 | `PACKAGE_WALLS.md` | The walled packages (economy, agents, labour, geography, ui): the rule, each package's surface and port, and how to extend one. | Ours |
 
 Read them in that order. `ENDOGENOUS_COSTS_AND_DOMAINS.md` is the live plan and
@@ -37,8 +37,8 @@ are inputs to all of them.
 Open problems, playtest reports and bug reports live in `Complaints/`, not
 here. Numbered files (`NN-slug.md`) are issues, each with a `**Status:**` line
 right after its title; finished ones are in `Complaints/closed/`; playtest and
-audit reports are in `Complaints/reports/`. `python3 sim/issue_status.py`
-prints the table and `--check` validates it. Decisions that are not defects
+audit reports are in `Complaints/reports/`. `grep -m1 '^\*\*Status' Complaints/*.md`
+lists the statuses. Decisions that are not defects
 belong in `DESIGN_PRINCIPLES.md`.
 
 The requirement conflict `PM_ASSESSMENT.md` §4 raised has been settled with the

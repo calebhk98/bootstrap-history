@@ -20,10 +20,6 @@ CIVILISATION_DIR = os.path.join(ROOT, "data", "civilizations")
 
 # Offline tools that may name a civilisation, each with the reason.
 TOOL_ALLOW_LIST = {
-    # The fixed scenario matrix a behaviour fingerprint is recorded against.
-    "perf_fingerprint.py",
-    # A demonstration printout that compares two named societies.
-    "demo_commodities.py",
 }
 # The one place a default may name a civilisation: the setting itself.
 ENGINE_ALLOW_LIST = {os.path.join("engine", "settings.py")}

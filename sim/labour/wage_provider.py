@@ -23,7 +23,7 @@ REFERENCE_POPULATION = 10000.0
 def reference_civilisation() -> Dict[str, Any]:
     """The default civilisation's own file, for the context-free wage table
     tools and the price solver use when no civilisation is in play."""
-    from sim.solve_prices_core import DEFAULT_LAND_CIVILIZATION, REPO_ROOT
+    from sim.engine.solve_prices_core import DEFAULT_LAND_CIVILIZATION, REPO_ROOT
     path = os.path.join(REPO_ROOT, "data", "civilizations", DEFAULT_LAND_CIVILIZATION + ".json")
     with open(path, encoding="utf-8") as handle:
         return json.load(handle)

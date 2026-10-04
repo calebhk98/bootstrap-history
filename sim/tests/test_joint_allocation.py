@@ -6,7 +6,8 @@ import functools
 import unittest
 import warnings
 
-from sim import joint_allocation, simulator, solve_prices
+from sim import simulator
+from sim.engine import joint_allocation, solve_prices
 from sim.world import demand, need_demand
 
 

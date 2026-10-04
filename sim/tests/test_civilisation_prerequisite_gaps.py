@@ -5,7 +5,7 @@ Complaints/41. The declaration lives in the civilisation's `prerequisite_gaps`
 import os
 import unittest
 
-from sim import civ_start_check as start_check
+from sim.engine import civ_start_check as start_check
 from sim.engine.catalog import load_production_catalog
 from sim.engine.tree_source import load_base_tree
 

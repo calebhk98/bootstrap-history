@@ -6,9 +6,9 @@ game. This records a hash of the ENTIRE simulation state after every single
 year of a set of reference runs - several civilisations, several seeds, fog
 on and off, optimiser and manual - and writes them to a JSON file.
 
-    python3 sim/perf_fingerprint.py record baseline.json
+    python3 -m sim.tests.fingerprint record baseline.json
     ...make a change...
-    python3 sim/perf_fingerprint.py check baseline.json
+    python3 -m sim.tests.fingerprint check baseline.json
 
 `check` re-runs the same scenarios and reports the FIRST year at which any
 run diverges, and which fields differ. A year-by-year hash rather than a
@@ -23,11 +23,9 @@ you how much faster it got.
 import argparse, concurrent.futures, hashlib, json, os, random, sys, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-REPO_ROOT = os.path.dirname(HERE)
+REPO_ROOT = os.path.dirname(os.path.dirname(HERE))
 if REPO_ROOT not in sys.path:
 	sys.path.insert(0, REPO_ROOT)
-while HERE in sys.path:
-	sys.path.remove(HERE)
 from sim import simulator as S
 from sim.engine.saveload import SAVE_FIELDS
 

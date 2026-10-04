@@ -121,9 +121,9 @@ searching blindly over 168! orderings to rediscover a fact already visible
 in `s.active`/`s.capital` would be slower and no more honest than reading it
 off the Sim directly.
 """
-import argparse, os, random, sys, time
+import os, random, sys
 
-_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if _REPO_ROOT not in sys.path:
     sys.path.insert(0, _REPO_ROOT)
 
@@ -133,7 +133,7 @@ from sim.engine.core import Sim
 from sim.engine.default_civilisation import default_civilisation_id
 from sim.engine.run_setup import DetRNG, ensure_fixed_hash_seed
 
-from sim import planner as _planner
+from sim.engine import planner as _planner
 
 
 def deterministic_sim(nodes, order, goal, civ, horizon, bounty_set=None):
@@ -494,38 +494,6 @@ def search(civ=default_civilisation_id(), goal=None, side_branches=12, side_bran
 # CLI
 # ----------------------------------------------------------------------------
 
-def main():
-    parser = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--civ", default=default_civilisation_id())
-    parser.add_argument("--goal", default=None)
-    parser.add_argument("--out", required=True, help="strategy file to write")
-    parser.add_argument("--side-branches", type=int, default=12)
-    parser.add_argument("--side-branch-every", type=int, default=8)
-    parser.add_argument("--rounds", type=int, default=6)
-    parser.add_argument("--horizon", type=int, default=500,
-                    help="dice-free horizon used WHILE searching - kept short "
-                         "for speed; verify the winner separately at a longer "
-                         "horizon and then against real seeds")
-    parser.add_argument("--backlog-ratio", type=float, default=6.0)
-    parser.add_argument("--seed-strategy", default=None,
-                    help="a strategy name or path whose order breaks ties "
-                         "among nodes the critical path ranks as equally "
-                         "urgent, same as planner.py's own --seed-strategy")
-    parser.add_argument("--no-grow-supply", action="store_true",
-                    help="skip move 3 (founding institutions one at a time, "
-                         "kept only if measured better) and reproduce this "
-                         "module's behaviour before it existed - moves 1 and "
-                         "2 (pulling/resequencing what is already named) only")
-    args = parser.parse_args()
-    start_time = time.time()
-    order, rationale = plan_and_write(
-        args.civ, args.goal, args.out, args.side_branches, args.side_branch_every, args.rounds,
-        args.horizon, args.backlog_ratio, args.seed_strategy, args.no_grow_supply)
-    print("wrote %d nodes to %s in %.1fs" % (len(order), args.out, time.time() - start_time))
-    for line in rationale:
-        print("  - " + line)
-
 
 def plan_and_write(civ=default_civilisation_id(), goal=None, out=None, side_branches=12,
                     side_branch_every=8, rounds=6, horizon=500,
@@ -556,7 +524,7 @@ def plan_and_write(civ=default_civilisation_id(), goal=None, out=None, side_bran
     grown = [round_entry for round_entry in history if round_entry["grow_supply_tried"]]
     kept = [trial["institution"] for round_entry in grown for trial in round_entry["grow_supply_tried"] if trial["kept"]]
     rationale = [
-        "Deterministic search (sim/path_search.py): CPM order, then up "
+        "Deterministic search (sim/engine/path_search.py): CPM order, then up "
         "to %d rounds of diagnosing the binding constraint against a "
         "dice-free trial (no events, no project failures, immortal founder) "
         "and relaxing it, keeping whichever round scored best." % rounds,
@@ -580,7 +548,3 @@ def plan_and_write(civ=default_civilisation_id(), goal=None, out=None, side_bran
                             "scarce-trade bottleneck" % (goal, civ),
                             rationale, order)
     return order, rationale
-
-
-if __name__ == "__main__":
-    main()

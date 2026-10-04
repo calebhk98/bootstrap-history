@@ -247,7 +247,7 @@ check("Cache reset after load", _ok, _detail)
 def _test_save_load_continuation_parity():
 	"""Verify saving a simulation, loading into a fresh instance, and stepping both produces identical states."""
 	from sim.engine.saveload import load_state, save_state
-	from sim.perf_fingerprint import digest, state_of
+	from sim.tests.fingerprint import digest, state_of
 
 	sim1 = _make_sim("rome_100ad", seed=42, events=True, fog=False)
 	sim1.goal = "printing_press"

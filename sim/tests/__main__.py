@@ -1,7 +1,6 @@
 """Runner for the split regression suite.
 
-`python3 -m sim.tests` (or `python3 sim/tests/__main__.py`, or the
-`sim/test_regressions.py` shim) runs every sim/tests/test_*.py topic in
+`python3 -m sim.tests` (or `python3 sim/tests/__main__.py`) runs every sim/tests/test_*.py topic in
 sorted order, discovered from disk (nothing is registered), and prints a
 summary line. `--only economy,labour` (comma-separated topic
 names, as `--list` prints them) runs just those modules - everything else about
@@ -38,8 +37,7 @@ from concurrent.futures import ThreadPoolExecutor
 # context) works exactly like `python3 -m sim.tests`: put the repo root on
 # sys.path and import everything below by its absolute dotted name, never
 # relatively, so it does not matter whether this module itself was reached
-# via -m, via this file's own __main__ guard, or via the test_regressions.py
-# shim.
+# via -m or via this file's own __main__ guard.
 #
 # THE DOTTED NAME MUST NOT DEPEND ON THE CHECKOUT'S DIRECTORY NAME: rooting
 # it at `rome.sim.tests` would mean the suite only runs if the checkout
@@ -67,8 +65,8 @@ def _run_topic(slug, harness):
     time, so importing it IS running it. One - tierless_schema - is written as
     unittest.TestCase classes instead, which import cleanly and then do
     nothing. It sat in sim/tests/ unregistered and unrun for its whole life,
-    and it could not have run even if registered: it does `from sim import
-    treetool`, which needed the repository root on sys.path, which is exactly
+    and it could not have run even if registered: it imported the tree
+    merge, which needed the repository root on sys.path, which is exactly
     what the old `rome.sim.tests` rooting did not provide.
 
     Rather than rewrite six working tests into the other style, the runner
@@ -294,8 +292,7 @@ def main(argv=None):
     # reads sys.argv at import time) sees the real sys.argv main() was
     # called with. Absolute dotted names throughout (never a relative
     # "from . import"), so this runs the
-    # same way whether reached via -m, via this file's own __main__ guard,
-    # or via the test_regressions.py shim.
+    # same way whether reached via -m or via this file's own __main__ guard.
     from sim.tests import harness
 
     # SLOW TOPICS ARE OPT-IN, THE SAME WAY SLOW CHECKS ARE: same --slow flag

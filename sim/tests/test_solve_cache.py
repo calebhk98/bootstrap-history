@@ -121,7 +121,7 @@ class ColdWarmTests(unittest.TestCase):
 
 _IMPORT_PROBE = (
     "import sys, warnings; warnings.simplefilter('ignore'); sys.path.insert(0, %r)\n"
-    "from sim import solve_prices\n"
+    "from sim.engine import solve_prices\n"
     "original, calls = solve_prices.solve, []\n"
     "solve_prices.solve = lambda *a, **k: (calls.append(1), original(*a, **k))[1]\n"
     "import sim.simulator\n"

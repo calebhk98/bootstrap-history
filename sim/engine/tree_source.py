@@ -19,7 +19,7 @@ MERGED_DUPLICATE_IDS_FILE = "_MERGED_DUPLICATE_IDS.json"
 # The base tree is checked against base data only; mods apply on top of it afterwards.
 NO_MODS_DIRECTORY = os.path.join(ROOT, "data", "_no_mods")
 
-_CODE_FILES = (("sim", "treetool.py"), ("sim", "engine", "tree_source.py"),
+_CODE_FILES = (("sim", "engine", "tree_merge.py"), ("sim", "engine", "tree_source.py"),
                ("sim", "engine", "catalog.py"))
 _DATA_DIRECTORIES = (("data", "production"),)
 _DATA_FILES = (("data", "world", "trades.json"), ("data", "world", "trade_families.json"))
@@ -28,8 +28,8 @@ _text_by_digest: Dict[str, str] = {}
 
 
 def _branch_directory() -> str:
-    from sim import treetool
-    return treetool.BR
+    from sim.engine import tree_merge
+    return tree_merge.BR
 
 
 def _input_paths(branch_directory: str) -> Iterator[str]:
@@ -79,8 +79,8 @@ def _write_cached(directory: str, key: str, text: str) -> None:
 
 
 def _build_text() -> str:
-    from sim import treetool
-    built = treetool.build_tree()
+    from sim.engine import tree_merge
+    built = tree_merge.build_tree()
     if built.collisions:
         raise ValueError("branch files define an id more than once: " + "; ".join(built.collisions))
     return json.dumps(built.tree)

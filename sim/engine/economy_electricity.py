@@ -441,7 +441,7 @@ class ElectricityMixin:
         # mine output; repeated queries within that year must not. A test,
         # or a player, building a mine or a nitre bed mid-year and asking
         # again in the SAME year must see the new answer immediately, not a
-        # stale replay - see test_regressions.py's own
+        # stale replay - see the test suite's own
         # "...and stops once your own supply covers the need", which does
         # exactly that). Unchanged content means replaying the cached
         # (worst, who) is not a shortcut, it is the actual answer.

@@ -4,7 +4,7 @@ now actually calls `solve_prices.rent_hours_per_kg_by_ore_material` and
 RENT WAS MISSING FROM THIS FILE in that module's own docstring, and
 Complaints/42's own update sections for the finding this closes (the switch
 would have made land free the moment it was flipped, even though
-`sim/solve_prices.py`'s own CLI had already fixed that).
+`sim/engine/solve_prices.py`'s own CLI had already fixed that).
 
 Three things pinned here, because getting any of them wrong silently
 reintroduces the bug or introduces a new one of the same shape:
@@ -63,8 +63,8 @@ class RentIsWiredInTests(unittest.TestCase):
         # docstring, UPDATE (stakeholder maintainability item 6...)
         # section), not the seven hand-drawn `regions` records. The
         # tile-grain figure is lower than the old region-grain one (55.779
-        # hours/hectare, Complaints/42's own CLI
-        # measurement from `python3 sim/solve_prices.py --civ rome_100ad`)
+        # hours/hectare, Complaints/42's own
+        # measurement of a Roman gated solve)
         # for two measured, physically sensible reasons, not because
         # anything here broke:
         #   1. north_africa's own single blended fertility_quality_
@@ -92,7 +92,7 @@ class RentIsWiredInTests(unittest.TestCase):
             civilization_id="rome_100ad")
         self.assertIn("hectare_land", result.prices_in_labour_hours)
         # Moves with tile fertility (arable-weighted, Complaints/130); re-read
-        # with `python3 sim/solve_prices.py --civ rome_100ad` when tile data moves.
+        # from this test's own failure message when tile data moves.
         self.assertAlmostEqual(
             result.prices_in_labour_hours["hectare_land"], 145.65, places=2)
 

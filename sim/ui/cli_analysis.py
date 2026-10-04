@@ -38,7 +38,7 @@ def cmd_plan(args):
     goal's prerequisite closure, instead of either hand-writing a guess
     (recommended.json, 0% on Rome at a 700-year horizon) or capturing
     whatever a lucky trial happened to do (captured_han_386.json - a floor,
-    not a method). See sim/planner.py for the reasoning in full; this is
+    not a method). See sim/engine/planner.py for the reasoning in full; this is
     a thin CLI wrapper, the same relationship `cmd_run` has to `Sim.run`.
 
     NEVER REACHED FROM `play` OR `agent`. Both of those are how a fogged
@@ -50,7 +50,7 @@ def cmd_plan(args):
     _repodir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     if _repodir not in sys.path:
         sys.path.insert(0, _repodir)
-    from sim import planner as _planner
+    from sim.engine.ui_port import planner as _planner
     tree, _prices, nodes, _wages, _goods = load()
     goal = resolve_goal(tree, nodes, args.goal)
     if not args.search_rounds:
@@ -70,14 +70,14 @@ def cmd_plan(args):
         for line in rationale:
             print("  - " + line)
         return 0
-    # SOLVE THE DICE-FREE PROBLEM FIRST (see sim/path_search.py):
+    # SOLVE THE DICE-FREE PROBLEM FIRST (see sim/engine/path_search.py):
     # diagnose the binding constraint against a trial with the dice removed
     # entirely and relax it, round by round, and USE that order directly -
     # not merely as a --seed-strategy tie-break for a fresh CPM pass, which
     # would silently re-run `pick_side_branches`/`interleave` and put every
     # side branch the search pulled to the end right back into the middle of
     # the spine, undoing the one relaxation move that does that.
-    from sim import path_search as _search
+    from sim.engine.ui_port import path_search as _search
     _search.ensure_fixed_hash_seed()
     seed_order = _planner.load_seed(args.seed_strategy, nodes)
     order, extras, history = _search.search(
@@ -147,7 +147,7 @@ def cmd_search(args):
     this file's own docstring: "does the current plan even get there with
     the dice off?", asked on its own, at path_search.py's own standalone
     defaults, without also having to think about CPM seeding or refinement.
-    See sim/path_search.py for the full reasoning - the scarce named
+    See sim/engine/path_search.py for the full reasoning - the scarce named
     trades, the capital trap, and the three moves (pull, resequence, grow
     supply) this measures against a real Sim with the dice removed rather
     than guesses at.
@@ -165,7 +165,7 @@ def cmd_search(args):
     _repodir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     if _repodir not in sys.path:
         sys.path.insert(0, _repodir)
-    from sim import path_search as _search
+    from sim.engine.ui_port import path_search as _search
     order, rationale = _search.plan_and_write(
         args.civ, args.goal, args.out, args.side_branches, args.side_branch_every, args.rounds,
         args.horizon, args.backlog_ratio, args.seed_strategy, args.no_grow_supply)

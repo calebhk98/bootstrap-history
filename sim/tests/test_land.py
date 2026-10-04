@@ -65,9 +65,9 @@ class ReferenceYieldTests(unittest.TestCase):
             land.reference_yield_kg_per_hectare(0.5), base * 0.5)
 
     def test_a_caller_supplied_reference_overrides_the_module_default(self):
-        # sim/solve_prices.py passes the LIVE wheat_kg yield rather than
+        # sim/engine/solve_prices.py passes the LIVE wheat_kg yield rather than
         # relying on this module's own duplicate - see the module
-        # docstring's WHY THE HOURS CONVERSION LIVES IN sim/solve_prices.py
+        # docstring's WHY THE HOURS CONVERSION LIVES IN sim/engine/solve_prices.py
         # section.
         default = land.reference_yield_kg_per_hectare(1.0)
         overridden = land.reference_yield_kg_per_hectare(

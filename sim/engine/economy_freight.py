@@ -303,7 +303,7 @@ class FreightMixin:
         book price for animal feed, plus driver_hours_per_tonne_km times an
         unskilled wage, both read from this file's OWN existing book-price
         and wage tables rather than new ones invented for this crossing -
-        the same numeraire (an hour of unskilled labour) sim/solve_prices.py
+        the same numeraire (an hour of unskilled labour) sim/engine/solve_prices.py
         already uses, per transport.py's own docstring pointing at it.
 
         FEED PRICE IS A LABELLED STAND-IN. transport.py's own FEED_ENERGY_

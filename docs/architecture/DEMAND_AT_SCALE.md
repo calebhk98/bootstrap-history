@@ -370,12 +370,12 @@ than doing quietly inside this task's scope.
 
 ### 3.1 The claim, verified rather than assumed
 
-`sim/solve_prices.py`'s own header states its numeraire is one hour of
+`sim/engine/solve_prices.py`'s own header states its numeraire is one hour of
 unskilled labour (the `labourer` trade), not a coin - confirmed by reading
 that file rather than taking it on the task's word:
 
 ```
-sim/solve_prices.py:26-38 (excerpted):
+sim/engine/solve_prices.py:26-38 (excerpted):
 NUMERAIRE: one hour of UNSKILLED labour, per the design doc's Part 2.1. The
 `labourer` trade is the unskilled one ... Every wage is expressed as a
 ratio against `labourer`'s rate, so `wage_of("labourer") == 1.0` by
@@ -456,7 +456,7 @@ mechanism only ever consumes ratios between prices and income, never an
 absolute figure denominated in a particular unit. This holds precisely
 because the module never reads `data/prices.json`'s wage or purchase-price
 tables and the numeraire question is settled one layer down, in
-`sim/solve_prices.py`, which already made the harder decision (a labour-hour
+`sim/engine/solve_prices.py`, which already made the harder decision (a labour-hour
 numeraire rather than a metal-weight one) for reasons unrelated to this
 task. `sim/tests/test_demand_at_scale.py`'s
 `NumeraireInvarianceConfirmsTheAtlantisCaseTests` keeps both checks above as
@@ -473,7 +473,7 @@ or income value's absolute size rather than a ratio between two of them).
 |---|---|
 | Below-subsistence household with a cheap phone available | The model predicts **exactly zero** demand for the phone at any income below the food floor, with a discontinuous jump to a specific positive quantity (3.069328 units at this document's own worked numbers) the instant income crosses the floor by as little as one percent. This is the sharp, real defect the task flagged it as. |
 | Does it scale to industrial Britain / modern USA (Engel's Law)? | Direction is right (food's budget share falls monotonically as income rises across six orders of magnitude, `0.99` down to `0.30`); magnitude is structurally wrong (the curve asymptotes at food's own fixed marginal budget share, `0.30`, and cannot fall below it at any income - real modern-US food shares run `0.10`-`0.13`, entirely outside what this functional form can ever reach). |
-| Atlantis and the shells | **Confirmed, no change needed.** The module is homogeneous of degree zero in prices and income together (verified directly, not assumed), and never reads a currency file at all. The numeraire question is fully and correctly settled one layer down, in `sim/solve_prices.py`'s own choice of one hour of unskilled labour. |
+| Atlantis and the shells | **Confirmed, no change needed.** The module is homogeneous of degree zero in prices and income together (verified directly, not assumed), and never reads a currency file at all. The numeraire question is fully and correctly settled one layer down, in `sim/engine/solve_prices.py`'s own choice of one hour of unskilled labour. |
 
 **Ranked recommendation for what to build first: soften the subsistence
 floor (candidate (a) in SS1.3)**, ahead of treating a good as investment,

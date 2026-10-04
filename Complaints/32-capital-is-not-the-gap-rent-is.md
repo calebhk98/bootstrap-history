@@ -7,7 +7,7 @@
 
 ## The claim this replaces
 
-This project recorded, after `sim/solve_prices.py` first converged, that
+This project recorded, after `sim/engine/solve_prices.py` first converged, that
 `iron_bar_kg` came out about 14x below its book price and that the reason was
 structural: `data/production/_SCHEMA.md` had **no field for fixed capital**, so
 a blast furnace cost a process nothing. That was stated here as the diagnosis.
@@ -97,7 +97,7 @@ materials (800 kg of it, for the finery hearth and hammer), and `pig_iron_kg`'s
 hearth lining lists 3,000 kg of `iron_bar_kg` while `iron_bar_kg` is made from
 `pig_iron_kg`. Both are correct physics and both are cycles. They are harmless
 while nothing reads the field. The moment the amortisation formula is wired
-into `sim/solve_prices.py`, they meet the resolvability defect in
+into `sim/engine/solve_prices.py`, they meet the resolvability defect in
 `Complaints/31`, which refuses every cycle - so 31 is now a prerequisite for
 wiring capital in, not a someday item. It took under an hour from writing that
 complaint for its predicted case to appear in real data.

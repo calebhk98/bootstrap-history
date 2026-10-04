@@ -131,15 +131,15 @@ which fields this applies to.
 This is a refactor whose entire claim is that behaviour is identical, so the
 proof matters more than the diff.
 
-1. `python3 sim/test_regressions.py` - 1608 checks, 0 failures.
-2. `python3 sim/perf_fingerprint.py record` before, `check` after, byte
+1. `python3 -m sim.tests` - 1608 checks, 0 failures.
+2. `python3 -m sim.tests.fingerprint record` before, `check` after, byte
    identical across all nine reference scenarios.
 3. Save/load round trip: a save written before the change loads after it, and
    a field absent before is still absent after.
-4. Timing from `perf_fingerprint`'s own per-scenario CPU numbers, to confirm
+4. Timing from `sim.tests.fingerprint`'s own per-scenario CPU numbers, to confirm
    the 1.7x lookup cost does not show up as a wall-clock regression.
 
-**Step 2 cannot be done yet.** `perf_fingerprint.py` does not currently
+**Step 2 cannot be done yet.** `sim/tests/fingerprint.py` does not currently
 reproduce its own recording - see
 `Complaints/closed/27-nondeterministic-simulation.md`. The determinism bug is being
 fixed first, and this extraction does not land until a clean `check` means

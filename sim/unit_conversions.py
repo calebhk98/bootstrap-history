@@ -122,7 +122,7 @@ FLOATING POINT: WHY EVERY MIGRATED CALL SITE KEEPS ITS ORIGINAL OPERATION.
 guaranteed to be the same float for every `x` - 0.001 is not exactly
 representable in binary, so multiplying by the (also inexact) rounded
 reciprocal can differ from dividing by the exact literal in the last bit,
-for some values of `x`. sim/perf_fingerprint.py's byte-identical check
+for some values of `x`. sim/tests/fingerprint.py's byte-identical check
 exists to catch precisely this class of change, so every call site this
 task's report lists as migrated keeps whichever operation (multiply or
 divide) the original bare literal was already part of, using whichever of
@@ -228,19 +228,3 @@ PERCENT_SCALE = declare(
         "recovery) or only a printed message - see this module's own "
         "docstring for why a display-only use is still a unit conversion, "
         "not a presentation parameter.")
-
-
-def _print_report():
-    print("UNIT CONVERSIONS - definitional, not modelled")
-    print("=" * 72)
-    from sim.constants import REGISTRY
-    for name, meta in REGISTRY.items():
-        if meta["declared_in"] not in ("sim.unit_conversions", "__main__",
-                                        "unit_conversions"):
-            continue
-        print("   %-24s %-10s %-24s conf %s"
-              % (name, meta["value"], meta["unit"], meta["confidence"]))
-
-
-if __name__ == "__main__":
-    _print_report()

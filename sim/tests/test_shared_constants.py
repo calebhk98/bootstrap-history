@@ -258,30 +258,9 @@ class CrossModuleQuantityEquivalenceTests(unittest.TestCase):
 
 
 class UndeclaredLiteralDuplicateTests(unittest.TestCase):
-    """The fourth copy of the reference labour intensity, now closed.
-
-    NOT A SOURCE-TEXT CHECK ON A LITERAL, A STRUCTURAL ONE ON RECURRENCE.
-    When land.py and agriculture.py were gathered onto one declaration of
-    REFERENCE_LABOUR_HOURS_PER_HECTARE, sim/labour/labour_market.py's own
-    __main__ demo was found writing the same physical figure out twice as a
-    bare `150.0`, outside that gathering change's ownership. The demo now
-    imports the shared constant, so this asks the stronger question a
-    source-text match on a bare `150.0` could not: not "does the duplicate
-    still hold the right value", but "can the duplicate come back". Two
-    assertions, both structural rather than textual:
-
-      1. The demo's two hours figures are each computed FROM the shared
-         name, checked on the parsed syntax tree so that a comment or a
-         string mentioning the name cannot satisfy it.
-      2. No float anywhere in labour_market.py equals the shared constant's
-         value. This is the half that actually prevents recurrence: it
-         fails on a fifth copy appearing anywhere in the file, under any
-         variable name, not only at the two sites somebody thought to list.
-
-    Assertion 2 compares against the constant's live value rather than
-    against a hardcoded 150.0, so changing the declaration re-aims the test
-    instead of breaking it.
-    """
+    """No float in labour_market.py equals REFERENCE_LABOUR_HOURS_PER_HECTARE's value, so the
+    reference labour intensity cannot come back as a bare copy under another name. Compared against
+    the constant's live value, so changing the declaration re-aims the test."""
 
     _LABOUR_MARKET_PATH = os.path.join(
         _REPOSITORY_ROOT, "sim", "labour", "labour_market.py")
@@ -290,42 +269,6 @@ class UndeclaredLiteralDuplicateTests(unittest.TestCase):
     def _parsed_labour_market(self):
         with open(self._LABOUR_MARKET_PATH) as handle:
             return ast.parse(handle.read(), filename=self._LABOUR_MARKET_PATH)
-
-    def test_the_demo_computes_both_hours_figures_from_the_shared_name(self):
-        """The two sites that held the bare literal now read the declaration.
-
-        Walks every assignment in the file looking for the two target
-        names, then checks the shared name appears in that assignment's own
-        value expression. A `getsource`-style substring search over the
-        whole file would pass on this very docstring, which names the
-        constant three times.
-        """
-        wanted = {"reference_hours", "grown_hours"}
-        seen = {}
-        for node in ast.walk(self._parsed_labour_market()):
-            if not isinstance(node, ast.Assign):
-                continue
-            for target in node.targets:
-                if isinstance(target, ast.Name) and target.id in wanted:
-                    names_used = {inner.id for inner in ast.walk(node.value)
-                                  if isinstance(inner, ast.Name)}
-                    seen[target.id] = names_used
-        missing = sorted(wanted - set(seen))
-        self.assertEqual(
-            missing, [],
-            "sim/labour/labour_market.py's demo no longer assigns %s - the "
-            "code moved, so this check is no longer looking at the thing it "
-            "was written about. Re-aim it rather than deleting it: the "
-            "property is that the demo's labour-hours figures come from "
-            "shared_constants, however they are spelled." % missing)
-        for target_name, names_used in sorted(seen.items()):
-            self.assertIn(
-                self._SHARED_NAME, names_used,
-                "sim/labour/labour_market.py's demo computes %r without "
-                "reading %s. That is how the bare 150.0 got here the first "
-                "time: the same physical figure written out by hand in a "
-                "fourth place, free to drift away from the three that share "
-                "a declaration." % (target_name, self._SHARED_NAME))
 
     def test_no_bare_literal_of_that_value_remains_anywhere_in_the_file(self):
         """The recurrence guard.

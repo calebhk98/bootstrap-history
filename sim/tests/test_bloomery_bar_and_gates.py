@@ -7,7 +7,7 @@ import json
 import os
 import unittest
 
-from sim import civ_start_check as start_check
+from sim.engine import civ_start_check as start_check
 from sim.engine.tree_source import load_base_tree
 from sim.engine.catalog import load_production_catalog
 

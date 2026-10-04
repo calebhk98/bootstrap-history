@@ -1,22 +1,11 @@
 """The UI's only door: code outside sim/ui/ imports from here, never from a submodule.
 
-The presentation constants load eagerly: tools that run while the engine is still importing
-(treetool, through the tree build) need them. The protocol and command names load on first use,
-because importing them pulls in the engine.
+The protocol and command names load on first use, because importing them pulls in the engine.
 """
 import importlib
 from typing import TYPE_CHECKING
 
 WALL = "two-way"  # sim/ui/ reaches the engine only through sim/engine/ui_port.py
-
-from sim.ui.presentation import (  # noqa: F401
-    MERGE_ERRORS_SHOWN, MERGE_WARNINGS_SHOWN,
-    JUDGE_UNOBTAINABLE_DEPENDENCIES_SHOWN, JUDGE_NEAR_MATCH_SUGGESTIONS_SHOWN,
-    JUDGE_WORST_NODES_SHOWN, JUDGE_NODE_ID_COLUMN_WIDTH_CHARS,
-    JUDGE_DEFECT_CODES_SHOWN, APPLY_CAPS_SAMPLE_SHOWN,
-    APPLY_CAPS_PREREQ_LIST_TRUNCATE_CHARS, APPLY_CAPS_REASON_TRUNCATE_CHARS,
-    AUDIT_BAR_WIDTH_CHARS, AUDIT_UNPRICED_MATERIALS_SHOWN,
-    AUDIT_RECIPE_LIST_TRUNCATE_CHARS)
 
 _PROTOCOL_NAMES = (
     "_agent_available", "_agent_dispatch", "_agent_end_reason", "_agent_help", "_agent_state",

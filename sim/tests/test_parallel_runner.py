@@ -20,7 +20,7 @@ def _link_entries(source_dir, target_dir, skip=()):
 
 def _run_suite(*args):
     completed = subprocess.run(
-        [sys.executable, os.path.join(_alias_root, "sim", "test_regressions.py")] + list(args),
+        [sys.executable, os.path.join(_alias_root, "sim", "tests", "__main__.py")] + list(args),
         capture_output=True, text=True, timeout=600, cwd=_alias_root)
     return completed
 
@@ -48,7 +48,7 @@ try:
     with open(os.path.join(_fake_dir, "test_zz_fake_crash.py"), "w") as handle:
         handle.write("raise RuntimeError('boom at import')\n")
 
-    _topics = "issue_status,mod_namespaces,mod_overrides"
+    _topics = "parallelism_note,mod_namespaces,mod_overrides"
     _sequential = _run_suite("--only", _topics, "--jobs", "1")
     _parallel = _run_suite("--only", _topics, "--jobs", "4")
     check("parallel run of a topic set prints the same content and order as --jobs 1",
@@ -59,8 +59,8 @@ try:
           _sequential.returncode == 0 and _parallel.returncode == 0,
           (_sequential.returncode, _parallel.returncode, _sequential.stdout[-500:], _sequential.stderr[-500:]))
 
-    _failing = _run_suite("--only", "issue_status,zz_fake_fail,mod_overrides", "--jobs", "4")
-    _failing_sequential = _run_suite("--only", "issue_status,zz_fake_fail,mod_overrides",
+    _failing = _run_suite("--only", "mod_namespaces,zz_fake_fail,mod_overrides", "--jobs", "4")
+    _failing_sequential = _run_suite("--only", "mod_namespaces,zz_fake_fail,mod_overrides",
                                      "--jobs", "1")
     check("a failing check in one parallel topic is reported by name, in order, with exit 1",
           _failing.returncode == 1
@@ -68,7 +68,7 @@ try:
           and _without_timing(_failing.stdout) == _without_timing(_failing_sequential.stdout),
           (_failing.returncode, _failing.stdout[-400:]))
 
-    _crashing = _run_suite("--only", "issue_status,zz_fake_crash", "--jobs", "4")
+    _crashing = _run_suite("--only", "mod_namespaces,zz_fake_crash", "--jobs", "4")
     check("a topic that crashes on import is reported as a failure naming it, exit 1",
           _crashing.returncode == 1 and "zz_fake_crash: worker crashed" in _crashing.stdout
           and "boom at import" in _crashing.stdout,

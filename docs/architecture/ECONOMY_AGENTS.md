@@ -3,7 +3,7 @@
 Status: the game's economy by default. A game opts out with `cfg["agent_economy"] = False`;
 `ROME_AGENT_ECONOMY=0` (off) or `=1` (on) overrides either way (`switch_requested`,
 `sim/engine/economy_port_year.py`). Tests of the old economy's own mechanisms opt out explicitly.
-`python3 sim/economy_validate.py --years 40 --seeds 1,2,3` measures it against plausible ranges.
+The yearly economy checks measure it against plausible ranges.
 
 ## What it is
 
@@ -88,7 +88,7 @@ capacity, plant coming or debt closes. A good with no known recipe gets no maker
 
 **Prices that have not traded are not market prices.** Each market remembers how long ago it cleared;
 the price index counts only goods traded recently, and the game shows an untraded good at its cost
-of making at live prices, or flags it stale (`notional.py`; `python3 sim/economy_untraded.py`). A
+of making at live prices, or flags it stale (`notional.py`). A
 year's trade moves a remembered price in proportion to its volume against the market's usual volume, so
 a sliver of trade at a freak price does not become the price everyone plans from.
 

@@ -6,7 +6,7 @@ import tempfile
 import unittest
 import warnings
 
-from sim import solve_prices
+from sim.engine import solve_prices
 from sim.engine import need_data
 from sim.engine.mods import ModError
 from sim.world import demand, need_demand
@@ -348,7 +348,7 @@ class RealDataTests(unittest.TestCase):
         self.assertFalse(hasattr(demand, "PLATINUM"))
 
     def test_platinum_is_wanted_because_it_satisfies_ornament_and_has_a_supply(self):
-        from sim import joint_allocation
+        from sim.engine import joint_allocation
         anchors = joint_allocation.build_demand_anchors()
         self.assertIn("platinum_g", anchors.supply_by_material)
 
@@ -367,7 +367,7 @@ class RealDataTests(unittest.TestCase):
         self.assertGreater(model.byproduct_supply(prices)["germanium_g"], 0.0)
 
     def test_germanium_has_no_demand_for_a_civilisation_far_from_semiconductors(self):
-        from sim import joint_allocation
+        from sim.engine import joint_allocation
         anchors = joint_allocation.build_demand_anchors()
         production = demand.production_data()
         prices = {material: 1.0 for entry in production.values() for material in entry["outputs"]}

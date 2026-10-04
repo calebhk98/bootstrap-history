@@ -3,14 +3,14 @@
 The goods table prices a carrier (`thermal_mj`, `mechanical_mj`, `electrical_mj`) once, at
 the cheapest technique that clears the carrier's universal floor. An entry that states the
 temperature it needs pays the cheapest technique that reaches that temperature instead
-(`sim/solve_prices_core.py`, per-consumer grading). This module recomputes those graded
+(`sim/engine/solve_prices_core.py`, per-consumer grading). This module recomputes those graded
 prices from the finished solve so a node's revenue values the energy it buys, and the
 energy it sells, the way the solver charged the goods it makes.
 """
 from typing import Any, Callable, Dict, Mapping, Optional, Tuple
 
-from sim import solve_prices
-from sim.solve_prices_core import CAPABILITY_CAP_FIELDS, capability_required_grades, recipe_cost_and_allocation
+from sim.engine import solve_prices
+from sim.engine.solve_prices_core import CAPABILITY_CAP_FIELDS, capability_required_grades, recipe_cost_and_allocation
 from sim.engine.identity_cache import IdentityCache
 
 ENERGY_CARRIERS = ("thermal_mj", "mechanical_mj", "electrical_mj")

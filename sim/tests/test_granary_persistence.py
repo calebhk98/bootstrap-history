@@ -240,8 +240,8 @@ class CenturyMeasurementTests(unittest.TestCase):
     """The actual number Complaints/44 is about. Loose bounds, deliberately
     - see CLAUDE.md SS3.2: the baseline is not required to be flat, and
     must never be forced flat by tuning a physical quantity (this test
-    would not catch that kind of cheat anyway; sim/audit_costs.py and
-    hand review are what guard against it). What this DOES guard is the
+    would not catch that kind of cheat anyway; hand review is what
+    guards against it). What this DOES guard is the
     granary regressing back to inert (a fresh `Storage(stock_kg=0.0, ...)`
     built every year again) or the double-seed-deduction bug returning,
     either of which would drag the century-end fraction back down toward

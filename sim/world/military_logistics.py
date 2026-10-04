@@ -37,8 +37,8 @@ either Firearm's numbers.
 
 STILL STANDALONE FROM sim/world/agriculture.py AND sim/geography/transport.py,
 FOR THE SAME REASON AS BEFORE. Other agents are editing sim/engine/core.py,
-sim/engine/economy.py, sim/world/agriculture.py, sim/geography/transport.py,
-sim/treetool.py and sim/constants.py concurrently with this crossing's
+sim/engine/economy.py, sim/world/agriculture.py, sim/geography/transport.py
+and sim/constants.py concurrently with this crossing's
 construction; a module that does not import those paths cannot be broken
 by their edits or break their tests, whichever lands first. society.py
 importing this module is a one-way dependency this module does not return
@@ -939,74 +939,3 @@ CALIBRATION_MAX_SUPPLY_RANGE_DAYS_HIGH = declare(
     source="Same as CALIBRATION_MAX_SUPPLY_RANGE_DAYS_LOW.",
     confidence="C",
     why="The high end of the same range.")
-
-
-if __name__ == "__main__":
-    # A quick, human-readable readout - the same kind of thing
-    # sim/world/agriculture.py's own __main__ block prints.
-    print("--- ration and water ---")
-    print("soldier campaign energy requirement: %.0f kcal/day"
-          % soldier_campaign_energy_requirement_kcal_per_day())
-    print("ration:                              %.2f kg grain/day"
-          % ration_kg_grain_per_day())
-    print("documented Roman ration (calibration): %.2f-%.2f kg/day"
-          % (CALIBRATION_LEGION_RATION_KG_GRAIN_PER_DAY_LOW,
-             CALIBRATION_LEGION_RATION_KG_GRAIN_PER_DAY_HIGH))
-    print("water, temperate march:              %.1f L/day"
-          % water_requirement_liters_per_day(desert=False))
-    print("water, desert march:                 %.1f L/day"
-          % water_requirement_liters_per_day(desert=True))
-
-    print("\n--- baggage train ---")
-    print("pack animal load capacity:  %.1f kg" % pack_animal_load_capacity_kg())
-    print("pack animal daily fodder:   %.1f kg/day" % pack_animal_daily_fodder_kg())
-    zero_net_days = pack_animal_max_one_way_days(delivered_fraction=0.0)
-    half_net_days = pack_animal_max_one_way_days(delivered_fraction=0.5)
-    print("max one-way range (zero net delivered):  %.2f days, %.0f km"
-          % (zero_net_days, pack_animal_max_one_way_range_km(0.0)))
-    print("max one-way range (half capacity delivered): %.2f days, %.0f km"
-          % (half_net_days, pack_animal_max_one_way_range_km(0.5)))
-    print("documented 'a few days' calibration:     %.0f-%.0f days"
-          % (CALIBRATION_MAX_SUPPLY_RANGE_DAYS_LOW,
-             CALIBRATION_MAX_SUPPLY_RANGE_DAYS_HIGH))
-
-    print("\n--- foraging ---")
-    example_surplus_kg_per_km2 = 100.0
-    # Illustrative only - NOT a constant of this module and not fitted to
-    # anything. Deliberately modest: agriculture.py's own net yield is
-    # several hundred kg/ha (tens of thousands of kg/km^2) on FULLY
-    # CULTIVATED land, but a real landscape an army crosses is a mix of
-    # arable, pasture, waste and forest, and most of even the arable
-    # fraction's output is claimed by local subsistence before anything is
-    # "surplus" - this module has no land-per-capita or land-use mechanism
-    # to compute that discount (agriculture.py names the same gap for its
-    # own headline number), so a small round figure stands in for it. A
-    # real figure belongs to a geography/agriculture domain and would vary
-    # enormously by place - see sustainable_foraging_army_size()'s own
-    # docstring for why it is a parameter here, never a constant.
-    print("(illustrative surplus: %.0f kg/km^2 - see __main__ source comment)"
-          % example_surplus_kg_per_km2)
-    print("sustainable foraging army size: %.0f soldiers"
-          % sustainable_foraging_army_size(example_surplus_kg_per_km2))
-    print("(this scales LINEARLY with the surplus figure chosen above, and "
-          "assumes an endless corridor of never-before-stripped land - see "
-          "WHERE THIS MODEL IS WRONG (c) for the depletion mechanism that "
-          "would cap it in reality)")
-
-    print("\n--- equipment ---")
-    print("iron per equipped soldier:         %.1f kg" % IRON_KG_PER_EQUIPPED_SOLDIER)
-    print("annual iron replacement/soldier:   %.2f kg/year"
-          % annual_iron_replacement_kg_per_soldier())
-
-    print("\n--- firearms (same structure, different numbers) ---")
-    for firearm in (FLINTLOCK_MUSKET, MODERN_SERVICE_RIFLE):
-        print("%-20s ammunition/engagement: %.2f kg/soldier, "
-              "maintenance items/engagement: %.2f"
-              % (firearm.name,
-                 ammunition_mass_kg_per_soldier_per_engagement(firearm),
-                 maintenance_items_per_soldier_per_engagement(firearm)))
-
-    print("\n--- one day, one legion (5,000 soldiers) ---")
-    requirement = daily_supply_requirement_kg(
-        5000.0, desert=False, firearm=FLINTLOCK_MUSKET, engagements_per_day=0.1)
-    print(requirement)

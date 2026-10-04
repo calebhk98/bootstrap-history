@@ -2,7 +2,7 @@
 
 **Status:** partly - the same gap as 349, which carries the remaining work; the Strabo-Polybius cross-check is kept there; reopened: the remaining work belongs to this complaint too, the related one is a cross-reference, not a replacement
 
-After costing ore dressing, roasting, cupellation bellows and hearth attendance, assay-weighted silver per lead and the silver recoveries (143, 288, 337), Rome's solved silver is about 320 labour hours per kg (`python3 sim/solve_prices.py --civ rome_100ad --why silver_kg`). One denarius (2.7 g) is then below one labour hour and the opening unskilled wage is more than one denarius per hour, so a ten-hour day pays about a dozen denarii against the attested one denarius a day.
+After costing ore dressing, roasting, cupellation bellows and hearth attendance, assay-weighted silver per lead and the silver recoveries (143, 288, 337), Rome's solved silver is about 320 labour hours per kg (`python3 sim/engine/solve_prices.py --civ rome_100ad --why silver_kg`). One denarius (2.7 g) is then below one labour hour and the opening unskilled wage is more than one denarius per hour, so a ten-hour day pays about a dozen denarii against the attested one denarius a day.
 
 An independent cross-check that is not a price: Strabo (3.2.10, citing Polybius) gives about 40,000 workers at the New Carthage mines and about 25,000 drachmae a day to Rome. At about 4.3 g of silver per drachma that is about 107 kg a day over 40,000 worker-days, about 370 worker-days (about 3,700 hours at ten a day) per kg. That is the same order as one denarius per ten-hour day, and about twelve times the solved cost. Polybius's figure is state revenue, so the output was at least that, and not every worker was a miner; both push the true labour per kg somewhat lower, not by a factor of twelve.
 
@@ -25,7 +25,7 @@ Source the Iberian ore assays and check the grade first; then derive drainage pe
 
 ## Update (silver-and-gold-cost)
 
-Grade was checked first and is not the lever: Laurion lead is reported at about 2 kg of silver per tonne of lead and Rio Tinto jarosite ore at about 0.2 percent silver (Wood et al., Internet Archaeology 56), the same order as the recipe's roughly 3 kg per tonne of lead. Rome's silver is still about 319 labour hours per kg (`python3 sim/solve_prices.py --civ rome_100ad --why silver_kg`), unchanged; about 120 of it is the galena the deposits' supply curve prices, about 60 charcoal, the rest furnace and dressing labour. What is still not costed is filed as 333.
+Grade was checked first and is not the lever: Laurion lead is reported at about 2 kg of silver per tonne of lead and Rio Tinto jarosite ore at about 0.2 percent silver (Wood et al., Internet Archaeology 56), the same order as the recipe's roughly 3 kg per tonne of lead. Rome's silver is still about 319 labour hours per kg (`python3 sim/engine/solve_prices.py --civ rome_100ad --why silver_kg`), unchanged; about 120 of it is the galena the deposits' supply curve prices, about 60 charcoal, the rest furnace and dressing labour. What is still not costed is filed as 333.
 
 ## Update (mine-labour-per-tonne)
 

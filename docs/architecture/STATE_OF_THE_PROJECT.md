@@ -12,18 +12,15 @@ Read this file, then `ENDOGENOUS_COSTS_AND_DOMAINS.md` (the live plan).
 
 Not kept here. Every issue file in `Complaints/` (not finished) and
 `Complaints/closed/` (finished) starts with a status line, and the table is
-printed from those files:
+read from those files:
 
-    python3 sim/issue_status.py                 every issue: number, title, status, folder
-    python3 sim/issue_status.py --status open   only one status
-    python3 sim/issue_status.py --check         exits non-zero on a missing or invalid
-                                                status line, or a status in the wrong folder
+    grep -m1 '^\*\*Status' Complaints/*.md     every issue's status line
 
 Statuses are `open`, `partly`, `pinned` and `closed`. `pinned` is a parked
 state held on purpose by a regression test, not an unresolved bug. Playtest
 and audit reports live in `Complaints/reports/`; standing design decisions
 that are not defects are in `DESIGN_PRINCIPLES.md`. Closing an issue means
-editing its status and moving the file to `closed/`; `--check` enforces both.
+editing its status and moving the file to `closed/`.
 
 ## Milestones
 
@@ -32,20 +29,18 @@ Measure with these; none of their output is copied here.
     python3 sim/simulator.py validate           the tree is a valid DAG and fully priced
     python3 sim/constants.py --burndown         declared numbers, temporary heuristics,
                                                 named hardcoded outcomes (target: none)
-    python3 sim/validate_production.py          production coverage and errors (--todo for gaps)
-    python3 sim/audit_costs.py                  where the cost base comes from
-    grep -rn "from sim.world import\|import sim.world" sim/engine sim/solve_prices*.py
+    grep -rn "from sim.world import\|import sim.world" sim/engine
                                                 which domain modules the engine or solver import
 
 | | milestone | state |
 |---|---|---|
-| 0 | the production side (`data/production/`) | Built and validated by `validate_production.py`. The remaining gaps are joint-byproduct materials that cannot be priced from the cost side (`Complaints/29`). |
+| 0 | the production side (`data/production/`) | Built and validated by `python3 sim/simulator.py validate`. The remaining gaps are joint-byproduct materials that cannot be priced from the cost side (`Complaints/29`). |
 | 1 | provenance and a burndown | Working. A rising count of declared heuristics means the audit is finding more, not that the project is regressing. |
 | 2 | the synthetic world | Not started and not needed: domain models were built standalone under `sim/world/` and wired in afterwards. |
 | 3 | actors | `Actor` base with `Household`, `Government` and `Firm` in `sim/agents/` (see `ACTORS.md`). Governments and firms imitate founder inventions; firms do not yet compete for labour or inputs (`Complaints/103`). |
 | 4 | food and people | Wired: agriculture and demography run through the engine's yearly demographic step, with a persistent granary and weather pooling. See `WIRING_MILESTONE_4.md`. |
 | 5 | the wage and the price solve | Wages come from the labour market (subsistence floor, training premium, tightness), and money is anchored to each civilisation's coin metal; neither reads the book file. Every material price is solved; the book file is deleted. Authored node revenue is not yet derived from output everywhere (`Complaints/283`). |
-| 5b | when a technique exists (era gate) | Built; every technique states what it needs and when, and the solver refuses techniques that cannot reach a needed temperature. Coverage: `validate_production.py`. |
+| 5b | when a technique exists (era gate) | Built; every technique states what it needs and when, and the solver refuses techniques that cannot reach a needed temperature. Coverage: `python3 sim/simulator.py validate`. |
 | 6+ | transport, settlements, state finance, war | Transport is wired into freight cost. Military logistics is wired into state pressure. Settlements, state finance and war have no dedicated module (`Complaints/105`, `Complaints/107`). |
 
 ## What is not built or not linked
@@ -97,13 +92,13 @@ agents it leaves free. What is left, in order:
    `211` to `213`, `215`, `271`, `273` to `278`.
 5. **The roadmap** below, items 1 to 5 required before the next playtest.
 
-`python3 sim/issue_status.py --status open` and `--status partly` list what
+`grep -l '^\*\*Status:\*\* \(open\|partly\)' Complaints/*.md` lists what
 is still to do.
 
 ## Roadmap, in order
 
 Ordered by what each item unblocks. Decisions on the roadmap issues
-(104-116) are in their status lines; `python3 sim/issue_status.py` lists
+(104-116) are in their status lines; `grep -m1 '^\*\*Status' Complaints/*.md` lists
 everything.
 
 1. **Make every civilisation independent** (`Complaints/131`, `136`): no

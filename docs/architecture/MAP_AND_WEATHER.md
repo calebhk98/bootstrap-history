@@ -152,14 +152,14 @@ that reason.
 grep -rn "land_tiles" sim/ --include=*.py | grep -v test
 -> only sim/engine/core.py (comments and the weather-cell builder)
 
-grep -n "land_tiles" sim/world/land.py sim/solve_prices.py
+grep -n "land_tiles" sim/world/land.py sim/engine/solve_prices.py
 -> no matches in either file
 ```
 
 | Mechanism | File | Reads | Confirmed by |
 |---|---|---|---|
 | Land rent (extensive + intensive margin) | `sim/world/land.py` | `regions` only | grep, zero `land_tiles` hits |
-| Price solver's land-rent wiring | `sim/solve_prices.py` | `regions`, via `land.py` | grep for `land_tiles` (none), `from sim.world import land` at line 779 |
+| Price solver's land-rent wiring | `sim/engine/solve_prices.py` | `regions`, via `land.py` | grep for `land_tiles` (none), `from sim.world import land` at line 779 |
 | Mineral deposit locations and rent | `sim/world/deposits.py` | `regions` (`geography["regions"].get(region)`, lines 825, 957) | direct read |
 | Forest/coppice land ceiling | `sim/engine/economy_mining.py` `home_land_area_km2`/`forest_land_ceiling` | `regions`, summed by `land_area_km2` (NOT region count) | direct read, see 1.3 |
 | Home centroid, region-name lookups | `sim/geography/geography.py` | `regions` (`self._regions`) | direct read |
@@ -568,8 +568,8 @@ described - it does not show up as a crash, it shows up as a routine command
 taking twelve minutes longer than it used to, on top of whatever else that
 run does.
 
-**What does NOT break, for contrast: `perf_fingerprint.py`.** Its 9
-scenarios (`sim/perf_fingerprint.py`'s own `SCENARIOS` list: 4 at n=88, 2 at
+**What does NOT break, for contrast: `sim/tests/fingerprint.py`.** Its 9
+scenarios (`sim/tests/fingerprint.py`'s own `SCENARIOS` list: 4 at n=88, 2 at
 n=69, one each at n=14/13/32) each construct exactly ONE `Sim()`, not 200.
 Today's weather-only cost across all nine, summed from the measured
 per-civilisation figures in 3.3 (4 Rome constructions - three 200-year, one
@@ -578,7 +578,7 @@ against a total suite time CLAUDE.md §5 gives as about six minutes -
 unmeasurable. At 10,000 tiles, the same nine-scenario weather-only cost
 rises to roughly 34 seconds (summing the 3.4 figures the same way): about
 118x more, but still a small fraction of a six-minute suite, because
-`perf_fingerprint` never multiplies by `--mc`. The Monte Carlo commands are
+`sim.tests.fingerprint` never multiplies by `--mc`. The Monte Carlo commands are
 where this actually hurts.
 
 **What definitely does NOT scale this way: the price solver.** Land rent's
@@ -588,9 +588,9 @@ reading the function (it sorts, then does one linear pass; no nested loop
 over parcels at all). Measured directly:
 
 ```
-time python3 sim/solve_prices.py --civ rome_100ad > /dev/null
+time python3 sim/engine/solve_prices.py --civ rome_100ad > /dev/null
 -> real 0m0.220s
-time python3 sim/solve_prices.py > /dev/null
+time python3 sim/engine/solve_prices.py > /dev/null
 -> real 0m0.247s
 ```
 
@@ -635,7 +635,7 @@ port of the same kernel and the same random draws feeding the same seeds -
 the maths is identical, only the arithmetic engine changes. It WOULD change
 bit-for-bit output if floating-point summation order differs (BLAS routines
 do not sum in the same order a hand-written Python loop does), which is
-exactly what `perf_fingerprint.py`'s byte-identical check would catch - see
+exactly what `sim/tests/fingerprint.py`'s byte-identical check would catch - see
 section 6.
 
 **The real obstacle, and it is not technical:** `sim/simulator.py`'s own
@@ -825,7 +825,7 @@ a tile-keyed version, feeding `find_margin_of_cultivation` many small
 parcels instead of 7-to-21 large ones. Cheap computationally (section 3.4:
 O(n log n), confirmed by reading the sort-and-walk function) even at 10,000
 tiles. **This WILL change `iugerum_land`'s price, and every price that
-depends on land rent through `sim/solve_prices.py` - which per Complaints/
+depends on land rent through `sim/engine/solve_prices.py` - which per Complaints/
 32 and 43 is not a side channel, it is close to the center of the price
 system.** Call this out explicitly when shipped; do not present it as a
 neutral refactor.
@@ -860,7 +860,7 @@ support via their own `old_region` field). Not urgent; freight
 
 ## 6. The verification story
 
-`perf_fingerprint.py record`/`check` proves nine scenarios byte-identical
+`sim/tests/fingerprint.py record`/`check` proves nine scenarios byte-identical
 and takes about six minutes (CLAUDE.md §5's own figure; I did not re-run the
 full six-minute suite myself for this document, since section 3's isolated
 timings of the two hot functions already give a real, directly-measured
@@ -869,13 +869,13 @@ whole suite would not add a number this document needs). It compares
 FULL-PRECISION SIMULATION OUTPUT, so it is the wrong tool wherever a stage
 is EXPECTED to move a number, and the right one everywhere else.
 
-| Stage | Will `perf_fingerprint` pass? | What to check instead |
+| Stage | Will `sim.tests.fingerprint` pass? | What to check instead |
 |---|---|---|
 | 0 (intensive margin) | No - `iugerum_land` and downstream prices move | `sim/tests/test_land.py`'s own targeted assertions (`test_han_china_no_longer_prices_at_zero` and neighbours); re-record a NEW fingerprint baseline after, so future stages compare against the post-stage-0 world, not pre-stage-0 |
 | 0.5 (weather correlation) | No - harvest variance changes for every civilisation with >1 region | `sim/tests/test_growing_season_weather_correlation.py` (15 tests, confirmed passing, see below); re-record baseline |
 | 1 (cap weather cells) | No, for any civilisation whose cell count today exceeds the chosen cap | A targeted variance test per affected civilisation (does capped-n variance still sit close to the uncapped-n figure it approximates?), not the fingerprint |
-| 2 (land rent onto tiles) | No - this is the stage most likely to move the most prices, per Complaints/32/43 | `sim/tests/test_land.py`, `sim/tests/test_price_solver_land.py` (confirmed registered as topic `price_solver_land` in `sim/test_regressions.py --list`), and a fresh `audit_costs.py` pass to see where the cost base actually moved |
-| 3 (deposits onto tiles) | No, if it changes ore rent | Whatever `sim/world/deposits.py`'s own test module asserts, plus a before/after `audit_costs.py --materials` |
+| 2 (land rent onto tiles) | No - this is the stage most likely to move the most prices, per Complaints/32/43 | `sim/tests/test_land.py`, `sim/tests/test_price_solver_land.py` (confirmed registered as topic `price_solver_land` in `sim/tests/__main__.py --list`) |
+| 3 (deposits onto tiles) | No, if it changes ore rent | Whatever `sim/world/deposits.py`'s own test module asserts |
 | 4 (10,000 tiles) | No - land rent granularity changes again | `sim/tests/test_geography_tiles.py`'s STRUCTURAL checks (its own docstring: "orderings and structural properties, not particular numbers" - it is written to survive exactly this kind of regeneration) |
 | 5 (retire `regions`) | Depends - if every consumer already reads `land_tiles` identically, this can be a true no-op and SHOULD pass the fingerprint | If it does not pass, something was still silently reading `regions` |
 
@@ -919,7 +919,7 @@ Registered topics touching this area, confirmed via `python3 sim/test_
 regressions.py --list`: `land`, `geography_tiles`, `regional_weather_
 wiring`, `growing_season_weather_correlation`, `price_solver_land` - all
 five exist today and can be run narrowly with `--only` during any of the
-staged work above, e.g. `python3 sim/test_regressions.py --only land,
+staged work above, e.g. `python3 -m sim.tests --only land,
 growing_season_weather_correlation`.
 
 ---

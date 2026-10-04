@@ -1,13 +1,8 @@
-#!/usr/bin/env python3
 """Check data/production/ against the tree, the trades and itself.
 
-    python3 sim/validate_production.py            errors, then a coverage line
-    python3 sim/validate_production.py --todo     what is still missing, worst first
-    python3 sim/validate_production.py --entry copper_kg
-
-Exit 0 when every entry present is well formed. Missing entries are reported
-as coverage, not as errors: this file is being filled in, and a validator that
-fails until it is finished is a validator nobody can run.
+`python3 sim/simulator.py validate` reports every problem `production_problems`
+finds as an error. Missing entries are not errors: a material with no entry yet
+is a gap in coverage, not a malformed entry.
 
 WHAT IT CHECKS, and why each one is here rather than left to review:
 
@@ -29,7 +24,7 @@ WHAT IT CHECKS, and why each one is here rather than left to review:
     is an authoring slip rather than an economy.
   * `thermal_mj`, `mechanical_mj`, `electrical_mj` and `energy_mj`, if
     present, are non-negative numbers. See data/production/70_energy.json
-    and ENERGY in sim/solve_prices.py's module docstring for what the first
+    and ENERGY in sim/engine/solve_prices.py's module docstring for what the first
     three are priced against, and why the fourth stays deliberately
     uncosted.
   * `capital`, if present, is held to the same standard as everything else:
@@ -48,25 +43,19 @@ function, taking exactly the data it needs and returning the problems it
 found; `check()` itself just walks the sorted entries and calls each check
 function in a fixed order, so the order problems are reported in is stable.
 """
-import argparse
 import collections
-import json
 import os
-import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(HERE)
+ROOT = os.path.dirname(os.path.dirname(HERE))
 PRODUCTION_DIR = os.path.join(ROOT, "data", "production")
 
-# The three energy carriers (see ENERGY in sim/solve_prices.py's module
+# The three energy carriers (see ENERGY in sim/engine/solve_prices.py's module
 # docstring). Kept as a separate copy of the same tuple that file declares
 # as ENERGY_CARRIER_FIELDS, rather than imported from it, because
-# sim/solve_prices.py imports FROM this module - importing the other way
+# sim/engine/solve_prices.py imports FROM this module - importing the other way
 # too would be circular.
 ENERGY_CARRIER_FIELDS = ("thermal_mj", "mechanical_mj", "electrical_mj")
-
-if ROOT not in sys.path:
-    sys.path.insert(0, ROOT)
 
 
 def load_production():
@@ -150,7 +139,7 @@ def check_energy_carrier_fields(where, entry):
     problems = []
 
     # ENERGY. thermal_mj, mechanical_mj and electrical_mj are all priced,
-    # through sim/solve_prices.py's three-way energy market
+    # through sim/engine/solve_prices.py's three-way energy market
     # (data/production/70_energy.json) - a typo turning one into a
     # string or a negative number would silently vanish into `or 0.0`
     # there exactly like a bad `inputs` quantity would. energy_mj is the
@@ -183,7 +172,7 @@ def check_requires_node(where, entry, known_nodes):
     #                 growing wheat. A deliberate statement, not a gap.
     #   "node_id"   - available once that node is reached.
     #
-    # This exists because sim/solve_prices.py had no notion of WHEN: a
+    # This exists because sim/engine/solve_prices.py had no notion of WHEN: a
     # 100 AD scenario priced its electricity off a photovoltaic panel,
     # which is the defect Complaints/38 records. A typo here reads as
     # "this technique is never available", which is why the id is
@@ -428,118 +417,11 @@ def check(entries, known_materials, known_trades, known_nodes=None):
     return problems
 
 
-def run_entry_mode(arguments, entries, known_materials, known_trades, nodes):
-    """--entry: show one entry and check only it."""
-    entry = entries.get(arguments.entry)
-    if entry is None:
-        print("no entry for %r" % arguments.entry)
-        return 1
-    print(json.dumps(entry, indent=1))
-    problems = check({arguments.entry: entry}, known_materials, known_trades,
-                     known_nodes=set(nodes))
-    for problem in problems:
-        print("  PROBLEM %s" % problem)
-    return 1 if problems else 0
-
-
-def run_todo_mode(consumed, entries):
-    """--todo: list materials with no entry yet, worst first."""
-    missing = [(name, count) for name, count in consumed.most_common()
-               if name not in entries]
-    print("%d materials still have no production entry, worst first:"
-          % len(missing))
-    for name, count in missing:
-        print("   %-26s consumed by %4d nodes" % (name, count))
-    return 0
-
-
-def run_default_mode(entries, duplicates, known_materials, known_trades, nodes, consumed):
-    """No flags: run every check, then report coverage."""
-    problems = check(entries, known_materials, known_trades,
-                     known_nodes=set(nodes)) + duplicates
-    for problem in problems:
-        print("  %s" % problem)
-
-    # conf D IS A DELETION QUEUE, NOT A REFINEMENT QUEUE. It marks an entry
-    # that is wrong in kind - the thing it describes is not a material, has no
-    # mass, or is a person - rather than one whose number is merely uncertain.
-    # Listed separately because the two call for opposite responses and the
-    # first round of authoring had no way to say which it meant.
-    placeholders = sorted(name for name, entry in entries.items()
-                          if entry.get("conf") == "D")
-    if placeholders:
-        print()
-        print("%d entry(s) marked conf D - PLACEHOLDERS, wrong in kind rather "
-              "than uncertain in degree." % len(placeholders))
-        print("These want DELETING once whatever consumes them is fixed, not "
-              "refining:")
-        for name in placeholders:
-            print("   %s" % name)
-
-    covered = sum(count for name, count in consumed.items() if name in entries)
-    total = sum(consumed.values())
-    print()
-    print("%d of %d materials have a production entry (%.1f%%)"
-          % (len(set(entries) & set(consumed)), len(consumed),
-             100.0 * len(set(entries) & set(consumed)) / max(1, len(consumed))))
-    print("weighted by how often the tree consumes them: %.1f%% (%d of %d "
-          "consumption sites)" % (100.0 * covered / max(1, total), covered, total))
-    # ERA COVERAGE. Separate from material coverage and deliberately printed
-    # next to it: an entry can be complete in every physical respect and
-    # still be unusable by a gated solve, because nothing says when the
-    # technique becomes available. Unclassified entries are silently
-    # DROPPED from a gated solve, so this number is the one that says how
-    # much of the cost base a dated question can actually see.
-    classified = [name for name, entry in entries.items()
-                  if "requires_node" in entry]
-    always = [name for name in classified if entries[name]["requires_node"] is None]
-    print("%d of %d entries say when they become available (%.1f%%); %d of "
-          "those need no technology at all"
-          % (len(classified), len(entries),
-             100.0 * len(classified) / max(1, len(entries)), len(always)))
-    print("%d problem(s)" % len(problems))
-    return 1 if problems else 0
-
-
-def main(argv=None):
-    from sim.tool_costs import load_tree_nodes
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--todo", action="store_true",
-                        help="list materials with no entry yet, worst first")
-    parser.add_argument("--entry", help="show one entry and check only it")
-    arguments = parser.parse_args(argv)
-
-    nodes = load_tree_nodes()
-
-    entries, duplicates = load_production()
-    consumed = materials_the_tree_consumes(nodes)
+def production_problems(nodes):
+    """Every malformed entry in the production catalogue, checked against `nodes` ({id: node})."""
     from sim.engine.catalog import load_trade_registry, material_namespace
+    entries, duplicates = load_production()
     known_trades = set(load_trade_registry(ROOT, entries))
-    # A material is known if the tree consumes it, if some entry's own key
-    # names it (true for most single-technique materials), OR if some
-    # entry's `outputs` produces it - the case a recipe-id-vs-material-key
-    # split (salt_solar_kg -> salt_kg, zinc_electrolytic_kg -> zinc_kg) had
-    # been getting right only by accident, because those materials also
-    # happen to be tree-consumed. data/production/70_energy.json's
-    # thermal_mj, mechanical_mj and electrical_mj are produced by entries
-    # keyed thermal_mj_charcoal/_coal/_electrical_resistance/_friction,
-    # mechanical_mj_waterwheel/_human_muscle/_motor/_heat_engine_* and
-    # electrical_mj_dynamo/_photovoltaic, consumed only by OTHER production
-    # entries rather than by the tree, so they need the `outputs` half of
-    # this union to be seen as known at all.
     known_materials = material_namespace(entries, nodes.values())
-
-    for duplicate in duplicates:
-        print("  DUPLICATE %s" % duplicate)
-
-    if arguments.entry:
-        return run_entry_mode(arguments, entries, known_materials, known_trades, nodes)
-
-    if arguments.todo:
-        return run_todo_mode(consumed, entries)
-
-    return run_default_mode(entries, duplicates, known_materials, known_trades, nodes, consumed)
-
-
-if __name__ == "__main__":
-    sys.exit(main())
+    return (["duplicate %s" % duplicate for duplicate in duplicates]
+            + check(entries, known_materials, known_trades, known_nodes=set(nodes)))

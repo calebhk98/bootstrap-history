@@ -23,7 +23,7 @@ import tempfile
 from typing import Any, Dict, Iterable, Mapping, Optional, Set
 
 from sim.constants import declare
-from sim.solve_prices_core import techniques_available_to
+from sim.engine.solve_prices_core import techniques_available_to
 from sim.world import demand, need_demand
 from sim.labour import labour_market
 

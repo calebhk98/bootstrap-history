@@ -13,7 +13,7 @@ a few percent, so the foreign economy does little in the default game.
 
 ## Evidence
 
-`python3 sim/foreign_trade_report.py --years 100 --partner <han civilisation id>`
+`python3 sim/foreign_trade_report.py --years 100 --partner <han civilisation id>` (script since removed; recover with `git show 97473f1:sim/foreign_trade_report.py`)
 shows near-zero flows and a constant coin stock; cut a commodity's capacity and
 step the game to see a small import build over years and fade as home capacity
 recovers. Without a partner the same years run faster.

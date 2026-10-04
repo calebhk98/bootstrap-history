@@ -30,10 +30,10 @@ done:
     land.py                 imported by sim/engine/core.py
     transport.py            imported by sim/engine/economy.py (as freight_physics)
     military_logistics.py   imported by sim/engine/society.py
-    deposits.py             imported ONLY by sim/solve_prices.py (a standalone tool);
+    deposits.py             imported ONLY by sim/engine/solve_prices.py (a standalone tool);
                              reaches the engine only when use_solved_prices=True,
                              which is False everywhere by default
-    demand.py               imported by NOTHING under sim/engine/ or sim/solve_prices.py
+    demand.py               imported by NOTHING under sim/engine/ or sim/engine/solve_prices.py
     labour_market.py        imported by NOTHING under sim/engine/
 
 So: five of the eight `sim/world/` domain modules are already authoritative
@@ -53,7 +53,7 @@ and neither reads the standalone module.
 intended migration path for the two fully-unwired modules, in priority
 order: wire `labour_market.py` into the engine first (named the single
 most-referenced missing piece across the open complaints), then wire
-`demand.py` into `sim/solve_prices.py` in place of the current mass-split
+`demand.py` into `sim/engine/solve_prices.py` in place of the current mass-split
 joint-byproduct allocation. Neither module is a dead research artifact
 awaiting a retire decision; both are complete, tested, and simply not called
 from production code yet, per that same document's own framing ("a wiring

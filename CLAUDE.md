@@ -70,12 +70,12 @@ Check with `ls` before trusting this; directories move.
 | Actors (households, firms, states, interest groups) | `sim/agents/` |
 | Labour market: hiring, wages, staff, the trade split | `sim/labour/` |
 | Map, tiles, regions, climate, routes and freight | `sim/geography/` |
-| Price solver | `sim/solve_prices*.py`, `sim/engine/prices.py` |
+| Price solver | `sim/engine/solve_prices*.py`, `sim/engine/prices.py` |
 | CLI, menus, screens and agent/JSON protocol | `sim/simulator.py`, `sim/ui/`, `sim/PROTOCOL.md` |
-| Tests | `sim/tests/`, run through `sim/test_regressions.py` |
+| Tests | `sim/tests/`, run with `python3 -m sim.tests` |
 | Engine shape, measured | `sim/ARCHITECTURE.md` |
 | Design direction, plans, current status | `docs/architecture/` - read its `README.md` first; it names the live plan and the status document |
-| Open problems, bug reports (each has a `**Status:**` line) | `Complaints/` (open), `Complaints/closed/` (done); `python3 sim/issue_status.py` prints the table, `--check` validates it; a new issue takes its number from `--next`, and if two branches collide, run `--renumber --write` after merging |
+| Open problems, bug reports (each has a `**Status:**` line) | `Complaints/` (open), `Complaints/closed/` (done); `Complaints/README.md` says how a new issue is numbered |
 | Playtest and audit reports; standing design decisions | `Complaints/reports/`; `docs/architecture/DESIGN_PRINCIPLES.md` |
 | Mods: loader, contract, backlog | `sim/engine/mods.py`, `mods/README.md`, `mods/TASKS.md` |
 | Playtest setup for agent players | `playtest/` |
@@ -137,6 +137,10 @@ scenarios work without engine edits.
 
 ## 5. Coding patterns
 
+- **No loose scripts in `sim/`.** The top level holds `simulator.py` (the
+  only command) and modules that every package shares. Everything else
+  belongs to a package. A measurement worth keeping becomes a test or a
+  `simulator.py` subcommand, never a new script.
 - **Short files.** Many agents edit this repo at once, and a large file is a
   merge conflict waiting to happen. Split a growing module by topic using the
   existing pattern (`labour.py`, `labour_wages.py`, `labour_training.py`, ...).
@@ -173,10 +177,8 @@ prose, docstrings and formulas in design documents too:
 not `q_i = gamma_i + (beta_i / p_i) * (Y - sum_j p_j * gamma_j)`.
 
 Rename a bad local you pass through once you have worked out what it means.
-Tooling: `python3 sim/code_health.py --names` (burndown),
-`python3 -m pylint sim/ | grep C0103` (worklist), `python3 sim/pylint_blind_spots.py`
-(what pylint cannot see), `python3 sim/prove_rename_safe.py <ref>` (proves a
-rename changed only names, via bytecode). Plan: `docs/architecture/NAMING_PLAN.md`.
+Tooling: `python3 -m pylint sim/ | grep C0103` (worklist). Plan:
+`docs/architecture/NAMING_PLAN.md`.
 
 ---
 
@@ -195,23 +197,22 @@ rename changed only names, via bytecode). Plan: `docs/architecture/NAMING_PLAN.m
   stay fast for local work; run `--slow` before opening a PR (and now and then
   on a long branch), and fix what it finds there.
 - **Green tests do not mean unchanged behaviour.** The suite asserts on
-  outputs and messages. `sim/perf_fingerprint.py` checks the simulation
-  itself (it does not cover the protocol layer).
+  outputs and messages. `python3 -m sim.tests.fingerprint` checks the
+  simulation itself (it does not cover the protocol layer).
 - **The tree is built, not committed.** `data/tech_tree.json` is generated from
-  `data/branches/` at load and is not in git. `treetool.py` reports; only
-  `judge --write` writes to data files.
+  `data/branches/` at load (`sim/engine/tree_merge.py`) and is not in git.
+  `simulator.py validate` reports a merge that would lose branch data.
 
 ---
 
 ## 7. Commands
 
-Most scripts take `--help`. The ones used most:
+`sim/simulator.py` is the one command; its subcommands take `--help`. The
+test runner and the fingerprint live in the test package.
 
 ```bash
-python3 sim/simulator.py validate          # after EVERY edit to data/
-python3 sim/validate_production.py         # production data errors and coverage (--todo for gaps)
-python3 sim/test_regressions.py            # full suite, parallel across available cores (--jobs 1 sequential, --list, --only a,b, --slow)
-python3 sim/perf_fingerprint.py record before.json   # then `check before.json` to prove behaviour unchanged
-python3 sim/audit_costs.py                 # how much of the cost base is calculated
-python3 sim/treetool.py judge              # judge tree nodes (--write to commit)
+python3 sim/simulator.py validate          # after EVERY edit to data/ (tree, merge, production data, civilisation starts)
+python3 -m sim.tests                       # full suite, parallel across available cores (--jobs 1 sequential, --list, --only a,b, --slow)
+python3 -m sim.tests.fingerprint record before.json   # then `check before.json` to prove behaviour unchanged
+python3 sim/constants.py --burndown        # declared numbers and temporary heuristics still to derive
 ```

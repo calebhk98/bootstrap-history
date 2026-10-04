@@ -55,8 +55,7 @@ check("a civilization with less reach to copper gets a worse chain report "
 # kilogram-scale wire draws (the largest, el2_ring_main_distribution, is
 # 8,000 kg spread over 4 years) actually reaches the hundreds of tonnes a
 # year it takes to outrun Rome's own copper market - the same reason
-# COMMODITIES.md section 7.1's own worked example and demo_commodities.py
-# both had to use an illustrative industrial-scale figure rather than sum
+# COMMODITIES.md section 7.1's own worked example had to use an illustrative industrial-scale figure rather than sum
 # real nodes. This proves the WIRING (a large copper_wire_kg demand binds
 # resource_throttle on "copper"), not a claim about ordinary play.
 s_thr = sim(capital=1e9)

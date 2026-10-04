@@ -294,7 +294,7 @@ class LandRentPerformanceTests(unittest.TestCase):
         land.find_margin_of_cultivation(region_lands, quantity_demanded)
         elapsed = time.perf_counter() - start
         # Measured around 1-2ms on this environment for ~1,100 tiles,
-        # against sim/solve_prices.py's own ~370ms whole-solve budget
+        # against sim/engine/solve_prices.py's own ~370ms whole-solve budget
         # (Complaints/45). 250ms is a generous ceiling, not a tuned figure.
         self.assertLess(elapsed, 0.25,
                         "rent computation over the whole tile set took %.4fs" % elapsed)

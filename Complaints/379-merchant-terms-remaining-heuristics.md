@@ -17,7 +17,7 @@ the labour market and the capital market. What is left is stated, not derived:
 
 ## Evidence
 
-`python3 sim/foreign_trade_report.py --years 100 --partner han_china_100ad`: cloth imports rise
+`python3 sim/foreign_trade_report.py --years 100 --partner han_china_100ad` (script since removed; recover with `git show 97473f1:sim/foreign_trade_report.py`): cloth imports rise
 to thousands of tonnes a year as the fleet grows, limited by lift, not by capital; compare the
 earlier figures in `Complaints/346`.
 

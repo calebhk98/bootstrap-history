@@ -38,9 +38,8 @@ ignore = [
 ]
 
 # WHY THESE FOUR AND NOT THE REST OF `B`/`SIM`/OTHER FAMILIES.
-# python3 sim/code_health.py and its sibling tools already found what this
-# repo's actual maintainability problems are (docs/architecture/
-# CODE_ANALYSIS_TOOLING.md has the survey). Everything below is a rule this
+# docs/architecture/CODE_ANALYSIS_TOOLING.md has the survey of this repo's
+# actual maintainability problems. Everything below is a rule this
 # project measured, on this codebase, and kept BECAUSE each one is a finding
 # a developer can act on - not a family enabled because the ecosystem offers
 # it.
@@ -69,9 +68,7 @@ ignore = [
 #   longer. Fix is wrapping the call in `with open(...) as handle:`, always
 #   the same shape, usually mechanical.
 #
-#   RUF100 unused-noqa (85 findings, matching the count `python3 sim/
-#   code_health.py --misc` already reports independently - see
-#   CODE_ANALYSIS_TOOLING.md). A `# noqa: F401` on a line ruff does not
+#   RUF100 unused-noqa (see CODE_ANALYSIS_TOOLING.md). A `# noqa: F401` on a line ruff does not
 #   currently flag is either stale (the code it was guarding moved or was
 #   fixed) or wrong (guarding a different rule than the one that actually
 #   fires there) - both are worth knowing, and `ruff check --fix` removes
@@ -110,20 +107,14 @@ ignore = [
 #   PERF (54 findings, all PERF401 manual-list-comprehension). A real
 #   optimisation opportunity in a tight loop, and noise everywhere else;
 #   this codebase's loops are rarely the bottleneck the simulator's own
-#   profiling has found (see sim/perf_fingerprint.py), and rewriting a
+#   profiling has found (see sim/tests/fingerprint.py), and rewriting a
 #   readable `for` loop into a comprehension for a speed difference nobody
 #   has measured is exactly the kind of "check nobody will act on" this
 #   section exists to avoid enabling.
 #
-#   C90 complex-structure (mccabe via ruff; 49 findings at ruff's own
-#   default threshold of 10). This project already has a complexity check -
-#   `sim/code_health.py --complexity`, which imports `radon.complexity`
-#   directly rather than reimplementing it (see that file's own docstring)
-#   - and it uses threshold 15, chosen and recorded there, not ruff's
-#   default of 10. Enabling C90 here as well would give the codebase two
-#   disagreeing definitions of "too complex" advertised in two different
-#   places; one is enough, and the existing one already composes a real
-#   library rather than mccabe's ruff port.
+#   C90 complex-structure (mccabe via ruff). Left off: at ruff's default
+#   threshold it reports far more functions than anyone will split, so it
+#   would be a check nobody acts on.
 #
 #   The rest of `B` and `SIM` beyond the four rules above (e.g. B007's
 #   sibling B905 aside, SIM300 yoda-conditions, SIM105
@@ -144,18 +135,6 @@ ignore = [
 # sim/ui/protocol.py is a re-export shim for the sim/ui/proto/ package
 # split. All 178 of its imports are its public surface.
 "sim/ui/protocol.py" = ["F401"]
-# sim/solve_prices.py became the third file of exactly this shape when the
-# 2,761-line price solver split into solve_prices_core.py (the algebra) and
-# solve_prices_report.py (the reporting front end). It keeps the name every
-# caller and every `python3 sim/solve_prices.py` invocation already uses, and
-# its 64 "unused" imports are the whole point of it.
-#
-# IT WAS MISSING FROM THIS LIST FOR A WHILE, AND NOTHING NOTICED, which is
-# worth recording because it says what this list is worth. The suite's ruff
-# topic only selects F821, so 64 F401 findings sat there reported by nobody
-# until sim/code_health.py was written and counted them. A per-file-ignore
-# that has to be remembered by hand, for a pattern this project has now used
-# three times, will be forgotten a fourth time. If a fourth composition point
-# appears, consider marking the pattern in the files themselves rather than
-# maintaining this list.
-"sim/solve_prices.py" = ["F401"]
+# sim/engine/solve_prices.py re-exports the price algebra in solve_prices_core.py,
+# so every `solve_prices.<name>` call site keeps one module to import.
+"sim/engine/solve_prices.py" = ["F401"]
