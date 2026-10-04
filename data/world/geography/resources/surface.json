@@ -1,0 +1,311 @@
+{
+ "_doc": "Resource definitions per sim/geography/resources_catalogue.py. mechanism: mineral_deposit | point_occurrence | surface_stock | biotic_stand. unit: the quantity unit; with grade_basis true, contained quantity = ore tonnes x grade in that unit per tonne (key median_<unit>_per_tonne). deposit_types: {id, deposits_per_million_km2 (per million km2 of fully permissive land, before clustering), tonnage_lognormal {median_tonnes, sigma (ln)}, grade_lognormal, depth_class, small_scale, permissive_when [conditions], envelope [suitability entries], layer_weights [{layer, weights, default, if_missing}], provincial_only (only near catalogue deposits of that type), clusters (false: no boost from neighbours), gem_fraction {median, sigma}}. Densities are tile averages, heuristic stand-ins for a geologic-province layer (e.g. Hasterok 2022) that would replace the relief and climate proxies. Giants beyond the truncation of the lognormal come only from the known-deposit catalogue. Stocks lying on or in the first metres of ground; renewable true marks stocks that refill (solar salt, nitre efflorescence), informational until a regrowth mechanism reads it.",
+ "entries": [
+  {
+   "id": "salt",
+   "mechanism": "surface_stock",
+   "unit": "tonnes",
+   "deposit_types": [
+    {
+     "id": "sea_salt_pan",
+     "deposits_per_million_km2": 30,
+     "tonnage_lognormal": {
+      "median_tonnes": 3000.0,
+      "sigma": 1.0
+     },
+     "depth_class": "surface",
+     "small_scale": true,
+     "renewable": true,
+     "permissive_when": [
+      {
+       "layer": "coastal",
+       "in": [
+        true
+       ]
+      }
+     ],
+     "envelope": [
+      {
+       "layer": "annual_precipitation_mm",
+       "optimal": [
+        0,
+        800
+       ],
+       "tolerated": [
+        0,
+        2000
+       ],
+       "if_missing": true
+      },
+      {
+       "layer": "mean_temperature_c",
+       "optimal": [
+        15,
+        40
+       ],
+       "tolerated": [
+        5,
+        45
+       ],
+       "if_missing": true
+      }
+     ],
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    },
+    {
+     "id": "inland_playa_salt",
+     "deposits_per_million_km2": 10,
+     "tonnage_lognormal": {
+      "median_tonnes": 100000.0,
+      "sigma": 1.5
+     },
+     "depth_class": "surface",
+     "small_scale": true,
+     "layer_weights": [
+      {
+       "layer": "koppen_group",
+       "weights": {
+        "A": 0.1,
+        "B": 1,
+        "C": 0,
+        "D": 0,
+        "E": 0
+       },
+       "default": 0.0,
+       "if_missing": 0.5
+      }
+     ],
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    },
+    {
+     "id": "brine_spring",
+     "deposits_per_million_km2": 15,
+     "tonnage_lognormal": {
+      "median_tonnes": 5000.0,
+      "sigma": 1.2
+     },
+     "depth_class": "surface",
+     "small_scale": true,
+     "layer_weights": [
+      {
+       "layer": "koppen_group",
+       "weights": {
+        "A": 0.5,
+        "B": 0.8,
+        "C": 1,
+        "D": 1,
+        "E": 0.2
+       },
+       "default": 0.0,
+       "if_missing": 0.5
+      }
+     ],
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    },
+    {
+     "id": "rock_salt_basin",
+     "deposits_per_million_km2": 3,
+     "tonnage_lognormal": {
+      "median_tonnes": 500000000.0,
+      "sigma": 1.5
+     },
+     "depth_class": "shallow_vein",
+     "layer_weights": [
+      {
+       "layer": "koppen_group",
+       "weights": {
+        "A": 0.3,
+        "B": 1,
+        "C": 0.6,
+        "D": 0.6,
+        "E": 0
+       },
+       "default": 0.0,
+       "if_missing": 0.5
+      }
+     ],
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    },
+    {
+     "id": "salt_dome_or_mine_province",
+     "deposits_per_million_km2": 0.3,
+     "tonnage_lognormal": {
+      "median_tonnes": 1000000000.0,
+      "sigma": 1.2
+     },
+     "depth_class": "shallow_vein",
+     "provincial_only": true,
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    }
+   ]
+  },
+  {
+   "id": "saltpetre",
+   "mechanism": "surface_stock",
+   "unit": "tonnes",
+   "deposit_types": [
+    {
+     "id": "nitre_efflorescence_soil",
+     "deposits_per_million_km2": 20,
+     "tonnage_lognormal": {
+      "median_tonnes": 200,
+      "sigma": 1.2
+     },
+     "depth_class": "surface",
+     "small_scale": true,
+     "renewable": true,
+     "layer_weights": [
+      {
+       "layer": "koppen_group",
+       "weights": {
+        "A": 0.3,
+        "B": 1,
+        "C": 0.3,
+        "D": 0,
+        "E": 0
+       },
+       "default": 0.0,
+       "if_missing": 0.5
+      }
+     ],
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    },
+    {
+     "id": "cave_nitre",
+     "deposits_per_million_km2": 5,
+     "tonnage_lognormal": {
+      "median_tonnes": 100,
+      "sigma": 1.2
+     },
+     "depth_class": "surface",
+     "small_scale": true,
+     "envelope": [
+      {
+       "layer": "elevation_std_m",
+       "optimal": [
+        200,
+        3000
+       ],
+       "tolerated": [
+        0,
+        5000
+       ],
+       "if_missing": true
+      }
+     ],
+     "layer_weights": [
+      {
+       "layer": "koppen_group",
+       "weights": {
+        "A": 0.7,
+        "B": 1,
+        "C": 0.7,
+        "D": 0,
+        "E": 0
+       },
+       "default": 0.0,
+       "if_missing": 0.5
+      }
+     ],
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    },
+    {
+     "id": "nitrate_caliche",
+     "deposits_per_million_km2": 1,
+     "tonnage_lognormal": {
+      "median_tonnes": 100000000.0,
+      "sigma": 1.2
+     },
+     "depth_class": "shallow_vein",
+     "provincial_only": true,
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    }
+   ]
+  },
+  {
+   "id": "sulfur",
+   "mechanism": "surface_stock",
+   "unit": "tonnes",
+   "deposit_types": [
+    {
+     "id": "volcanic_native_sulfur",
+     "deposits_per_million_km2": 1.5,
+     "tonnage_lognormal": {
+      "median_tonnes": 50000.0,
+      "sigma": 1.5
+     },
+     "depth_class": "surface",
+     "small_scale": true,
+     "provincial_only": true,
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    },
+    {
+     "id": "evaporite_native_sulfur",
+     "deposits_per_million_km2": 0.5,
+     "tonnage_lognormal": {
+      "median_tonnes": 2000000.0,
+      "sigma": 1.5
+     },
+     "depth_class": "shallow_vein",
+     "provincial_only": true,
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    }
+   ]
+  },
+  {
+   "id": "bitumen",
+   "mechanism": "surface_stock",
+   "unit": "tonnes",
+   "deposit_types": [
+    {
+     "id": "bitumen_seep",
+     "deposits_per_million_km2": 2,
+     "tonnage_lognormal": {
+      "median_tonnes": 2000.0,
+      "sigma": 1.3
+     },
+     "depth_class": "surface",
+     "small_scale": true,
+     "layer_weights": [
+      {
+       "layer": "koppen_group",
+       "weights": {
+        "A": 0.5,
+        "B": 1,
+        "C": 0.8,
+        "D": 0.5,
+        "E": 0
+       },
+       "default": 0.0,
+       "if_missing": 0.5
+      }
+     ],
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    },
+    {
+     "id": "asphalt_lake",
+     "deposits_per_million_km2": 0.5,
+     "tonnage_lognormal": {
+      "median_tonnes": 10000000.0,
+      "sigma": 1.2
+     },
+     "depth_class": "surface",
+     "provincial_only": true,
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    }
+   ]
+  }
+ ]
+}
