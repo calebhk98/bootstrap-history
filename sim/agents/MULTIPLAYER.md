@@ -46,6 +46,22 @@ player has `controller` set and queues commands in `record.orders`. The player's
 order and writes each result to `record.journal`. A command is plain data, so a save carries
 whatever is pending and a replay reproduces it.
 
+## The kinds
+
+| Kind | Module | Created by | Decides with |
+|---|---|---|---|
+| `government` | `government.py` | cast (home country) | budget, levy, `ValuePolicy` copies |
+| `foreign_government` | `government_foreign.py` | cast (each partner) | revenue from its profile, army and officials, copies under fog |
+| `player` | `player.py`, `player_commands.py` | cast `"actors"`, or added by a command | queued orders; `controller == "ai"` adds a simple research-and-open rule |
+| `firm` | `firm.py`, `concern_ops.py` | spawner `firm_entry` after any player's proven concern | entry value, exit on losses |
+| `trader` | `trader.py`, `trader_entry.py` | spawner `trader_entry` when a route's gap pays | best margin within capital, sized to a share of depth |
+| `stratum` | `stratum.py`, `stratum_year.py`, `strata_seed.py` | spawner `strata` for every country | income against needs in tiers; growth, schooling and mobility follow |
+| `interest_group` | `group.py` | spawner `interest_groups` | presses the state |
+
+A stratum's data says what its people earn by. `trade` gives wages, `property_share` gives a share
+of output, `bonded` means kept by an `owner` stratum, and `own_plot` means it falls back on its own
+land when wages fall short. `rises_to` and `falls_to` name where its members move.
+
 ## Money
 
 Every payment between actors goes through `ledger.transfer`. Money enters or leaves only at a named
@@ -56,6 +72,10 @@ actor). Tests check that the sum of purses is conserved across a year apart from
 
 - **Goods-level clearing, cohorts and merchants of the agent economy:** `sim/economy/`.
 - **The founder's projects and household:** the engine (Complaint 382).
+
+Open problems are in Complaints 401 (no protocol command reaches a second player), 402 (the
+founder is not a `Player`), 403 (strata income figures disagree), 404 (cast data undocumented, no
+slaves declared) and 405 (traders beside the other merchant models).
 
 The actors here decide and own. Where the agent economy already models the same people or trade,
 the adapter reads it rather than this package modelling it twice. Open complaints track where the
