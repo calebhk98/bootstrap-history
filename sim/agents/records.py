@@ -96,6 +96,11 @@ class ActorRecord:
 	offers: List[Dict[str, Any]] = field(default_factory=list)
 	offer_serial: int = 0
 
+	# ---- coinage policy (a state): the share of its coin's metal it chose to cut this year, and the
+	# share of the opening metal its coin still holds after every cut so far
+	coin_cut_share: float = 0.0
+	coin_metal_kept: float = 1.0
+
 
 @dataclass
 class CapitalMarketRecord:
