@@ -11,9 +11,10 @@ unit may both be omitted (location known, size not). Known deposits are not hidd
 their coordinates.
 """
 import math
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Tuple
 
 from sim.geography import mechanisms, parameters
+from sim.geography.distance import haversine_km
 from sim.geography.map_source import MapDataError, WorldMap
 
 DEPOSIT_MECHANISMS = ("mineral_deposit", "point_occurrence", "surface_stock")
@@ -140,10 +141,34 @@ def _check_known(world_map: WorldMap, deposit_id: str, entry: Dict[str, Any], re
         known_quantity(dict(entry, id=deposit_id), resource(world_map, resource_id))
 
 
+def position(entry: Dict[str, Any]) -> Tuple[float, float]:
+    """Where a catalogued deposit is: its surveyed position when it has one, else its stated one."""
+    return float(entry.get("surveyed_lat", entry["lat"])), float(entry.get("surveyed_lon", entry["lon"]))
+
+
+def on_map_tile(world_map: WorldMap, entry: Dict[str, Any]) -> Optional[str]:
+    """The tile holding a catalogued deposit, or None when it lies farther from every tile than the
+    map resolves (a small island the grid dropped)."""
+    latitude, longitude = position(entry)
+    tile_id = _nearest_tile(world_map, latitude, longitude)
+    tile = world_map.tiles[tile_id]
+    if haversine_km(latitude, longitude, tile["lat"], tile["lon"]) > parameters.parameter(
+            world_map, "resources_off_map_distance_km"):
+        return None
+    return tile_id
+
+
+def off_map_deposits(world_map: WorldMap) -> List[str]:
+    """Ids of catalogued deposits no tile of this map holds."""
+    return [deposit_id for deposit_id, entry in sorted(world_map.catalogue("deposits").items())
+            if "lat" in entry and "lon" in entry and on_map_tile(world_map, entry) is None]
+
+
 def known_deposits(world_map: WorldMap, resource_id: str) -> List[Dict[str, Any]]:
     """Catalogue deposits of one resource as plain dicts with tile_id, quantity (resource unit), lat and lon.
 
-    A deposit with no endowment is a known location of unknown size: quantity is None.
+    A deposit with no endowment is a known location of unknown size: quantity is None. A deposit
+    no tile holds (see `off_map_deposits`) is left out.
     """
     cache = _cache(world_map).setdefault("known", {})
     if resource_id not in cache:
@@ -153,10 +178,14 @@ def known_deposits(world_map: WorldMap, resource_id: str) -> List[Dict[str, Any]
             if entry.get("resource") != resource_id:
                 continue
             _check_known(world_map, deposit_id, entry, resource_id)
+            tile_id = on_map_tile(world_map, entry)
+            if tile_id is None:
+                continue
             has_quantity = "endowment" in entry
+            latitude, longitude = position(entry)
             rows.append({"id": deposit_id, "name": entry.get("name", deposit_id), "resource": resource_id,
-                         "deposit_type": entry.get("deposit_type"), "lat": entry["lat"], "lon": entry["lon"],
-                         "tile_id": _nearest_tile(world_map, entry["lat"], entry["lon"]),
+                         "deposit_type": entry.get("deposit_type"), "lat": latitude, "lon": longitude,
+                         "tile_id": tile_id,
                          "quantity": known_quantity(entry, resource_entry) if has_quantity else None,
                          "unit": resource_entry["unit"],
                          "depth_class": entry.get("depth_class"), "status": entry.get("status", "modern")})

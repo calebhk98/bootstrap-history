@@ -199,6 +199,13 @@ class BioticTests(unittest.TestCase):
 
 
 class EarthTests(unittest.TestCase):
+    def test_a_deposit_on_an_island_the_grid_dropped_is_off_the_map(self):
+        world_map = earth_map()
+        off_map = resources_catalogue.off_map_deposits(world_map)
+        self.assertIn("nauru_phosphate", off_map)
+        self.assertNotIn("nauru_phosphate", [row["id"] for row in resources_catalogue.known_deposits(world_map, "phosphate")])
+        self.assertLess(len(off_map), 5)
+
     def test_gold_is_orders_of_magnitude_richer_where_geology_has_it(self):
         world_map = earth_map()
         rich = resources_endowment.endowment(world_map, "south_africa_09", "gold")["total"]
