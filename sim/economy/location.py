@@ -101,9 +101,14 @@ def opening_split(setup, recipe: Recipe, area: MarketArea, runs: float) -> Dict[
     (sites.UNSITED_EXTRACTION_ANYWHERE)."""
     by_recipe = sites.limits_by_recipe(setup.site_limits)
     population = setup.opening_population_by_tile
+    suited = sites.suited_tiles(recipe, setup.tiles, area.tiles)
+    if not suited:
+        return {}
     if recipe.site_bound and not by_recipe.get(recipe.recipe_id):
-        return {area.anchor_tile: runs}
-    tiles = sites.allowed_tiles(recipe, by_recipe, area.tiles)
+        if area.anchor_tile in suited:
+            return {area.anchor_tile: runs}
+        return split_runs(runs, {tile: population.get(tile, 0.0) for tile in suited}, {})
+    tiles = sites.allowed_tiles(recipe, by_recipe, suited)
     weights = {tile: population.get(tile, 0.0) for tile in tiles}
     if sites.is_sited(recipe, by_recipe):
         limits = by_recipe[recipe.recipe_id]
@@ -127,13 +132,14 @@ def entry_siting(setup, record, view, area_map, carriage) -> Siting:
 
     def siting(recipe_id, demand, runs):
         recipe = setup.recipes[recipe_id]
-        if recipe.site_bound and not by_recipe.get(recipe_id):
-            return demand.anchor_tile, runs
         area = area_map.market_area_of(demand.good, demand.anchor_tile)
+        if recipe.site_bound and not by_recipe.get(recipe_id) and sites.climate_allows(
+                recipe, setup.tiles.get(demand.anchor_tile)):
+            return demand.anchor_tile, runs
         tonnes = output_tonnes(recipe, setup.specs)
         candidates: List[Candidate] = []
-        for tile in sites.allowed_tiles(recipe, by_recipe, area.tiles if not sites.is_sited(recipe, by_recipe)
-                                        else tuple(setup.tiles)):
+        for tile in sites.suited_tiles(recipe, setup.tiles, sites.allowed_tiles(
+                recipe, by_recipe, area.tiles if not sites.is_sited(recipe, by_recipe) else tuple(setup.tiles))):
             probe = Producer("probe", "probe", recipe_id, tile, 1.0)
             wages = {trade: _wage(setup, view, trade, tile) for trade in recipe.labour_hours}
             factor = sites.yield_at(recipe, tile, by_recipe, setup.yield_factor_by_recipe_tile.get(

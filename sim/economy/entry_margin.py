@@ -9,7 +9,9 @@ ENTRY_PRICE_MARGIN_SHARE, the band a margin must clear before founders risk a ne
 entry needs more than cost, so prices inside the band move nobody). Where last year's price is above the
 entry price, the gap is what the year's bids would take at the entry price less the area's makers'
 capacity, plant on the way included. Newcomers are built for a share of the gap, at most a share of the
-capacity already there in a year, so an industry grows fast but does not jump past its buyers.
+capacity already there in a year, so an industry grows fast but does not jump past its buyers. A market
+with buyers and no maker at all gets a trial newcomer whenever the bids would take its output at the
+entry price, whatever price it remembers: a price nobody has sold at says nothing about cost.
 """
 import math
 from typing import Dict, List, Mapping, Optional, Sequence, Tuple
@@ -93,18 +95,18 @@ def margin_entry_plans(setup, record, view, area_map, bids_by_market: Mapping[Tu
     for (good, area_id), bids in sorted(bids_by_market.items()):
         if (good, area_id) in skip or good not in makers or good not in area_map.goods():
             continue
-        price = view.price(good, area_id)
+        price = view.price(good, area_id) or 0.0
         area = next((each for each in area_map.areas(good) if each.area_id == area_id), None)
-        if price is None or price <= 0.0 or area is None:
+        if area is None:
             continue
         best = _cheapest(setup, record, view, good, area.anchor_tile, makers[good])
         if best is None:
             continue
         recipe_id, cost = best
         entry_price = cost * (1.0 + ENTRY_PRICE_MARGIN_SHARE)
-        if price <= entry_price:
-            continue
         capacity = capacity_in_area(record.producers, setup.recipes, good, area.tiles, record.expansion_runs)
+        if price <= entry_price and capacity > 0.0:
+            continue        # with no maker at all the remembered price is stale: the bids decide
         gap = demand_at(bids, entry_price) - capacity
         if gap <= 0.0:
             continue

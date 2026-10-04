@@ -69,6 +69,7 @@ class TileSpec:
     borders: Tuple[TileId, ...]
     arable_fraction: float
     fertility: float
+    climate_class: str = ""          # a climate label from data (Koppen); empty when not known
 
 
 @dataclass(frozen=True)
@@ -90,6 +91,7 @@ class Recipe:
     plant_goods: Mapping[GoodId, float] = field(default_factory=dict)        # tied up per run a year of capacity
     plant_labour_hours: Mapping[TradeId, float] = field(default_factory=dict)  # building that capacity
     plant_life_years: float = 0.0
+    climate_classes: Tuple[str, ...] = ()   # climates it can be worked in, from data; empty: any
     site_bound: bool = False         # runs only where a site is declared (sites.py); the economy knows nothing else of it
 
 

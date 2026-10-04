@@ -23,6 +23,18 @@ UNSITED_EXTRACTION_ANYWHERE = declare(
 LimitsByRecipe = Dict[str, Dict[TileId, SiteLimit]]
 
 
+def climate_allows(recipe: Recipe, tile_spec) -> bool:
+    """Whether the tile's climate is one the recipe can be worked in (data names the climates; a recipe
+    naming none, or a tile whose climate is not known, is allowed)."""
+    classes = recipe.climate_classes
+    climate = getattr(tile_spec, "climate_class", "") if tile_spec is not None else ""
+    return not classes or not climate or climate in classes
+
+
+def suited_tiles(recipe: Recipe, tile_specs, tiles: Sequence[TileId]) -> Tuple[TileId, ...]:
+    return tuple(tile for tile in tiles if climate_allows(recipe, tile_specs.get(tile)))
+
+
 def limits_by_recipe(limits: Iterable[SiteLimit]) -> LimitsByRecipe:
     """The limits grouped by recipe, then tile (a later limit for the same pair replaces an earlier)."""
     grouped: LimitsByRecipe = {}

@@ -39,7 +39,8 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
     plans = entry_plans(setup.recipes, view, unmet, record.land_rent, setup.land_per_run,
                         _traded_volume(record, view, area_map), siting)
     if bids_by_market:
-        plans += margin_entry_plans(setup, record, view, area_map, bids_by_market, tuple(unmet), siting)
+        planned = tuple((plan.good, view.area_of(plan.good, plan.tile)) for plan in plans)
+        plans += margin_entry_plans(setup, record, view, area_map, bids_by_market, planned, siting)
     for plan in plans:
         recipe = setup.recipes[plan.recipe_id]
         key = recipe_tile_key(plan.recipe_id, plan.tile)

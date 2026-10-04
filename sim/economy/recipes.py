@@ -13,11 +13,12 @@ ids. Mapping, field by field:
                                     the shorter-lived parts by how often they are rebuilt in it
 
 `extracted_from` only sets `site_bound`: the recipe runs only where a site is declared (sites.py); which
-site, and its grade, come from outside as a `SiteLimit`.
+site, and its grade, come from outside as a `SiteLimit`. `grown_in_climate_classes` becomes
+`climate_classes`: the recipe runs only on tiles of those climates (sites.climate_allows).
 
 Not mapped, and why: `land_hectare_years` (a site's fertility is the producer's yield factor, so rent
 appears as profit); `energy_mj` (the uncosted
-residual); `requires_node`, `grown_in_climate_classes`, `temperature_*` (gates the caller applies);
+residual); `requires_node`, `temperature_*` (gates the caller applies);
 `disposal_value_hours` (a surplus by-product's value is whatever its market clears at); the prose
 fields. `unmapped_field_counts` measures this.
 
@@ -29,7 +30,8 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Set
 from .types import GoodId, Recipe
 
 ENERGY_CARRIER_FIELDS = ("thermal_mj", "mechanical_mj", "electrical_mj")
-MAPPED_FIELDS = frozenset(("outputs", "inputs", "labour_hours", "capital", "extracted_from") + ENERGY_CARRIER_FIELDS)
+MAPPED_FIELDS = frozenset(("outputs", "inputs", "labour_hours", "capital", "extracted_from",
+                           "grown_in_climate_classes") + ENERGY_CARRIER_FIELDS)
 
 
 def _basis_output(recipe_id: str, outputs: Mapping[GoodId, float]) -> float:
@@ -66,7 +68,8 @@ def recipe_from_entry(recipe_id: str, entry: Mapping[str, Any]) -> Recipe:
     labour = {trade: float(hours) for trade, hours in (entry.get("labour_hours") or {}).items() if hours > 0}
     plant_goods, plant_labour, plant_life = _plant(recipe_id, entry, outputs)
     return Recipe(recipe_id, outputs, inputs, labour, plant_goods, plant_labour, plant_life,
-                  site_bound=bool(entry.get("extracted_from")))
+                  site_bound=bool(entry.get("extracted_from")),
+                  climate_classes=tuple(entry.get("grown_in_climate_classes") or ()))
 
 
 def recipes_from_production_data(data: Mapping[str, Mapping[str, Any]],
