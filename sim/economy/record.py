@@ -37,7 +37,6 @@ class EconomyRecord:
     worn_runs: Dict[AgentId, float] = field(default_factory=dict)        # plant that wore out last year, to rebuild
     state_budget: StateBudget = field(default_factory=StateBudget)       # the state's revenue and this year's plan
     land_rent: Dict[TileId, float] = field(default_factory=dict)         # rent per hectare producers paid, by tile
-    margin_years: Dict[str, int] = field(default_factory=dict)           # market_key -> years in a row above entry price
     hours_hired: Dict[str, float] = field(default_factory=dict)          # labour market_key -> hours hired last year
 
     def to_record(self) -> Dict[str, Any]:
@@ -61,7 +60,6 @@ class EconomyRecord:
             "worn_runs": self.worn_runs,
             "state_budget": plain(self.state_budget),
             "land_rent": self.land_rent,
-            "margin_years": self.margin_years,
             "hours_hired": self.hours_hired,
         }
 
@@ -87,7 +85,6 @@ class EconomyRecord:
             worn_runs=dict(record["worn_runs"]),
             state_budget=StateBudget(**record["state_budget"]),
             land_rent=dict(record["land_rent"]),
-            margin_years=dict(record["margin_years"]),
             hours_hired=dict(record["hours_hired"]),
         )
 
