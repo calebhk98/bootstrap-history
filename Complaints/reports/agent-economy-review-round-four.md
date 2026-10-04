@@ -74,30 +74,50 @@ Follows `agent-economy-review-round-three.md`. Again only `sim/economy/`, new te
 
 ## Measured, 30 years, seeds 1-2
 
-Baseline is the branch start (`d9e3295`). "Exit and location" is commit `ee5a42f`. "Now" is the
-branch tip. Rome is shown for seed 1 only where a run was not repeated.
+- **Rows:**
+  - "baseline" is the branch start (`d9e3295`);
+  - "exit and location" is `ee5a42f`;
+  - "tip" is the branch tip, with margin entry taken out and the trial newcomer, the cost memory
+    and the durables spending cap in.
+- **Command:** scratch driver (Complaint 416).
+- **Spin-up:** seeds share one spin-up (400), so read the ranges as indications.
 
 | | grain vol. | iron vol. | wage, kg wheat/h | hungry | gold/silver |
 |---|---|---|---|---|---|
 | england, baseline | 0.08-0.19 | 0.36-0.41 | 0.27 | 0-0.0005 | ~930 |
 | england, exit and location | 0.05-0.13 | 0.14-0.30 | 0.41 | 0 | ~6 |
-| england, now | 0.18-0.22 | 0.14-0.18 | 0.28 | 0.002 | ~2600 |
+| england, tip | 0.12-0.22 | 0.27-0.38 | 0.55-0.63 | 0.0004-0.005 | ~5700 |
 | norse, baseline | 0.12-0.19 | 0.32-1.35 | 0.27 | 0.001 | ~3500 |
-| norse, now | 0.20-0.21 | 0.19-0.31 | 0.67 | 0.0001-0.001 | ~2e5 |
+| norse, tip | 0.10-0.17 | 0.25-0.28 | 0.46 | 0.001-0.002 | ~4e4 |
 | rome, baseline | 0.07-0.08 | 0.36-0.39 | 0.16 | 0.009 | ~148 |
-| rome, now | 0.12-0.13 | 0.09 | 0.13 | 0.008-0.02 | ~800-1600 |
+| rome, tip | 0.06-0.08 | 0.24-0.25 | 0.25 | 0.004-0.005 | ~7700 |
 | mexica, baseline | 0.10 | n/a | 0.09 | 0.005 | ~1300 |
-| mexica, now | 0.09-0.10 | n/a | 0.07 | 0.017-0.033 | ~2800 |
+| mexica, exit and location | 0.07-0.08 | n/a | 0.14 | 0.05-0.09 | ~7000 |
+| mexica, tip | 0.06-0.12 | n/a | 0.04-0.05 | 0.02-0.03 | ~8e4 |
 | han, baseline | 0.08-0.14 | 0.20-0.23 | 0.31 | 0.004 | ~2000 |
-| han, now | 0.17 | 0.19-0.21 | 0.34 | 0.001-0.004 | ~400 |
+| han, tip | 0.04-0.08 | 0.23-0.28 | 0.33-0.34 | 0.012 | ~1.4e4 |
 
 Reading it:
-- Iron and metal swings fell everywhere and the Norse outliers are gone.
-- Grain swings more than with exit and location alone. Whether that is margin entry or another
-  change is being measured; this section is updated with the answer below.
-- Mexica's hunger is worse than the baseline and is being traced.
-- Gold is still wrong everywhere: Complaint 413 (gold valued like silver per kg, no store-of-value
-  demand) and 414 (no good is durable in the economy). Neither is a market-clearing defect.
+- **Iron and metal swings** fell in England, Norse and Rome, and the Norse outliers are gone.
+- **Wages:** the wage in wheat rose in England, Norse and Rome, and fell in Mexica, where wheat is a
+  minor food (Complaint 388).
+- **Grain** is steadier than the baseline in Rome, Norse and Han. In England it swings more than with
+  exit and location alone.
+  - An ablation (one switch at a time, seed 1) puts most of that on the trial newcomer and some on the
+    durables spending cap.
+  - Without the trial newcomer, Mexica's hunger roughly doubles, so it stays.
+  - Grain volatility of 0.12-0.22 may be historical (`economy-research-staple-volatility.md`, from
+    memory), but England's harvest correlation weakened. Part of the swing is the economy's own
+    cycling: the first thing to fix next round.
+- **Hunger:**
+  - Mexica's rose with exit and location (wheat makers left the cacao-rented highlands), and the
+    climate gate, the cost memory and the trial newcomer brought it down again, still above the
+    baseline.
+  - Han's is above its baseline and has not been traced.
+- **Gold** is wrong everywhere, and its ratio to silver moved further off at the tip: Complaint 413 (gold valued like silver per kg, no store-of-value
+  demand) and 414 (no good is durable in the economy). The store-of-value design is built and tested
+  on the fixture (`households_store.py`; `agent-economy-store-of-value-design.md`). It is inert until
+  the port passes service lives (414). Opening stocks and its behaviour checks (steps 6-7) remain.
 
 ## Tried and not merged
 

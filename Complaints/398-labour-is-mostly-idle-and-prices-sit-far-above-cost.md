@@ -1,6 +1,6 @@
 # Labour is mostly idle and prices sit far above cost on the agent economy
 
-**Status:** open
+**Status:** partly - producers now sit where labour is, losers exit and plantless capacity follows use (round four); margins on goods with makers are still not competed away
 
 In every civilisation only a small share of the hours households offer is hired, and the rest go unhired or to own plots, so the unskilled wage sits at the workers' ask (the family's subsistence floor per offered hour) almost everywhere. Wages are a small part of household income; most of it is property income (dividends) and food grown for itself. At the same time goods sell far above the cost of the labour in them, with little land rent, and few makers enter. An economy with idle hands, free land and wide margins is not in competition: entry fires only where buyers are turned away (`sim/economy/entry.py`), so incumbents keep their margins and pay them out as dividends.
 
@@ -14,3 +14,8 @@ What it would take:
 - A validation wage measured against the household basket, not wheat alone (`sim/economy_validate.py`).
 
 Related: 388, 393, 395.
+
+
+## Round four
+
+See `Complaints/reports/agent-economy-review-round-four.md`. Producers were all on each market's anchor tile while each tile is its own labour market, so most people off the anchor could not be hired: they are now spread by labour, cost and site limits (`sim/economy/location.py`). Losers now exit (`producers_close.py`, `producer_exit.py`). Entry drawn by a lasting margin was built and taken out: it made grain prices swing; the report records what it drew in and the design for the next attempt.
