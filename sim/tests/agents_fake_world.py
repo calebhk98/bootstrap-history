@@ -136,6 +136,9 @@ class FakeWorld:
 	def concern_takings(self, node_id: str, opened_year: int, rivals: float = 0.0, capacity: float = 1.0) -> float:
 		return capacity * float(self.nodes[node_id].get("rev", 0.0)) / (1.0 + rivals)
 
+	def plant_cost(self, node_id: str, actor: Any = None, capacity: float = 1.0) -> float:
+		return capacity * float(self.nodes[node_id].get("cap", 0.0))
+
 	def upkeep(self, node_id: str, capacity: float = 1.0) -> float:
 		return capacity * float(self.nodes[node_id].get("up", 0.0))
 
