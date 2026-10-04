@@ -11,32 +11,41 @@ from . import aptitude
 from .records import TradeSpec
 
 
+def field_of(entry: Any, name: str, default: Any = None) -> Any:
+    """A field of a registry entry, whether the entry is a dict (data, mods) or a record with
+    attributes (the engine's merged registry)."""
+    if isinstance(entry, Mapping):
+        return entry.get(name, default)
+    return getattr(entry, name, default)
+
+
 def _median(values: List[float]) -> float:
     ordered = sorted(values)
     return ordered[len(ordered) // 2] if ordered else 0.0
 
 
-def trade_specs(registry: Mapping[str, Mapping[str, Any]]) -> Dict[str, TradeSpec]:
+def trade_specs(registry: Mapping[str, Any]) -> Dict[str, TradeSpec]:
     years_by_family: Dict[str, List[float]] = {}
     for entry in registry.values():
-        if entry.get("training_years") is not None:
-            years_by_family.setdefault(entry.get("family", ""), []).append(float(entry["training_years"]))
+        if field_of(entry, "training_years") is not None:
+            years_by_family.setdefault(field_of(entry, "family", ""), []).append(
+                float(field_of(entry, "training_years")))
     years: Dict[str, float] = {}
     for trade_id, entry in registry.items():
-        stated = entry.get("training_years")
+        stated = field_of(entry, "training_years")
         years[trade_id] = float(stated) if stated is not None else _median(
-            years_by_family.get(entry.get("family", ""), []))
-    flagged = {trade_id for trade_id, entry in registry.items() if entry.get("fallback")}
+            years_by_family.get(field_of(entry, "family", ""), []))
+    flagged = {trade_id for trade_id, entry in registry.items() if field_of(entry, "fallback")}
     if not flagged and years:
         fewest = min(years.values())
         flagged = {trade_id for trade_id, value in years.items() if value == fewest}
     return {
         trade_id: TradeSpec(
             trade_id=trade_id,
-            family=str(entry.get("family", "")),
+            family=str(field_of(entry, "family", "")),
             training_years=years[trade_id],
-            difficulty=aptitude.difficulty_from(years[trade_id], entry.get("difficulty")),
-            fatality_risk_per_year=float(entry.get("fatality_risk_per_year", 0.0) or 0.0),
+            difficulty=aptitude.difficulty_from(years[trade_id], field_of(entry, "difficulty")),
+            fatality_risk_per_year=float(field_of(entry, "fatality_risk_per_year", 0.0) or 0.0),
             fallback=trade_id in flagged)
         for trade_id, entry in sorted(registry.items())}
 
