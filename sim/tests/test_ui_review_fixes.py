@@ -94,3 +94,8 @@ check("one read per game", len(calls) == 1, calls)
 goals_watch._catalog(second)
 check("another game reads its own", len(calls) == 2, calls)
 check("the cache does not keep a game alive", isinstance(goals_watch._TREES, weakref.WeakKeyDictionary))
+
+from sim.ui.proto.typed import parse_typed as _parse_typed
+check("a typed note keeps the words json and compact as written",
+      _parse_typed("note keep the json export compact")[0] == {"cmd": "note", "text": "keep the json export compact"})
+check("other commands still read json as the output mode", _parse_typed("state json")[0].get("json") is True)

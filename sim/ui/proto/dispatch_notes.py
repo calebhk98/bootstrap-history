@@ -40,7 +40,8 @@ def _whole_number(text):
                   "--": "put before the text so a leading project name is read as plain text",
                   "drop <n>": "remove note number n"},
          description="Notes are yours alone: the game never reads them. 'notes' lists them, newest "
-                     "first, and can show those of one project.")
+                     "first, and can show those of one project.",
+         shape="text")
 def _cmd_note(sim, nodes, cmd, ended):
     text = str(cmd.get("text") or "")
     words = text.split()

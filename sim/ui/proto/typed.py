@@ -212,7 +212,10 @@ def parse_typed(line):
     # THE OUTPUT-MODE WORDS, STRIPPED ONCE, FOR EVERY COMMAND - see
     # _split_json_flag's own comment for why this has to happen here, before
     # any command's own parser reads `rest`, rather than inside each one.
-    rest, want_json, want_compact = _split_json_flag(rest)
+    if command_registry.COMMANDS[command]["shape"] == "text":
+        want_json = want_compact = False   # free prose: every word is the player's
+    else:
+        rest, want_json, want_compact = _split_json_flag(rest)
     words = [word for word in rest if _typed_number(word) is None]
     nums = [_typed_number(word) for word in rest if _typed_number(word) is not None]
 
