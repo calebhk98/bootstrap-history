@@ -11,7 +11,7 @@ from typing import Dict
 
 from sim.constants import declare
 
-from . import currency
+from . import currency, metal_stock
 from .types import EDGE_EXTERNAL, EDGE_MINT, EDGE_PRODUCTION, EDGE_WEAR, Bid, GoodsMove, Offer, Transfer
 
 MINT_PRIORITY = 9          # the mint is served after every other buyer at the same price
@@ -79,6 +79,33 @@ def _lose_worn_metal(record) -> None:
                            for tile, quantity in sorted(held.items())])
 
 
+def yearly_monetisation(setup, record) -> float:
+    """Most money the mint turns metal or a commodity into in a year.
+
+    A struck coin's mint strikes up to its capacity (MINT_YEARLY_STRIKE_SHARE of the money in
+    circulation), and the price level then decides whether striking pays. Money with no issuer (weighed
+    metal, a commodity such as cacao) is only metal or beans held as cash: holders take into money what
+    they want to add to their cash balances, plus what wears out or spoils, and no more. Otherwise growing
+    the money commodity would always sell at parity, and it would take land from food without limit
+    (Complaints/reports/economy-research-commodity-money.md)."""
+    spec = record.currency
+    supply = record.book.money_supply(spec.currency_id)
+    if currency.has_mint(spec):
+        return MINT_YEARLY_STRIKE_SHARE * supply
+    wanted = (math.fsum(cohort.cash_target for cohort in getattr(record, "cohorts", {}).values())
+              + math.fsum(producer.cash_target for producer in getattr(record, "producers", {}).values())
+              + math.fsum(merchant.capital_base for merchant in getattr(record, "merchants", {}).values()))
+    return max(0.0, wanted - supply) + _loss_share(setup, spec) * supply
+
+
+def _loss_share(setup, spec) -> float:
+    """Share of money lost in a year: weighed metal as metal, a commodity as the good spoils."""
+    if spec.regime == "weighed_metal":
+        return metal_stock.METAL_GOODS_LOSS_PER_YEAR
+    backing = getattr(setup, "specs", {}).get(spec.backing_good)
+    return backing.spoilage_per_year if backing is not None else 0.0
+
+
 def mint_orders(setup, record, area_map, order_book) -> Dict[str, float]:
     """Post the mint's bids and offers; returns the metal it holds by tile, for `settle_mint`."""
     spec = record.currency
@@ -91,9 +118,9 @@ def mint_orders(setup, record, area_map, order_book) -> Dict[str, float]:
         offer = Offer(EDGE_MINT, metal, area_map.area_of(metal, tile), tile, quantity, currency.mint_parity(spec))
         order_book.setdefault((metal, offer.area), ([], []))[1].append(offer)
     strike_price = currency.mint_price(spec)
-    coin_metal = record.book.money_supply(spec.currency_id) * spec.backing_per_unit
+    coin_metal = yearly_monetisation(setup, record) * spec.backing_per_unit
     for area in area_map.areas(metal):
-        capacity = MINT_YEARLY_STRIKE_SHARE * coin_metal * len(area.tiles) / max(1, len(setup.tiles))
+        capacity = coin_metal * len(area.tiles) / max(1, len(setup.tiles))
         bid = Bid(EDGE_MINT, metal, area.area_id, area.anchor_tile, 0.0, capacity, strike_price, 0.0,
                   math.inf, MINT_PRIORITY, maximum_price=strike_price)
         order_book.setdefault((metal, area.area_id), ([], []))[0].append(bid)
