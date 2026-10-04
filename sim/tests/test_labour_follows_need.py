@@ -61,15 +61,16 @@ class HoursFollowNeedTests(unittest.TestCase):
 
 class TrainingPremiumUsesCivilisationRateTests(unittest.TestCase):
 
+    def test_the_schedule_prices_training_at_the_civilisations_rate(self):
+        civ = load_civ("rome_100ad")
+        engine = S.Sim(NODES, ORDER, random.Random(1), events=False, manual=True, civ=civ)
+        schedule = engine.labour.wage_schedule()
+        years = schedule.training_years["smith"]
+        self.assertAlmostEqual(schedule.premium("smith"),
+                               wages.training_premium(years, civ["starting_interest_rate"]))
+
     def test_higher_interest_rate_gives_a_larger_premium(self):
-        premiums = {}
-        for rate in (0.05, 0.30):
-            civ = load_civ("rome_100ad")
-            civ["starting_interest_rate"] = rate
-            engine = S.Sim(NODES, ORDER, random.Random(1), events=False,
-                           manual=True, civ=civ)
-            premiums[rate] = engine.labour.wage_schedule().premium("smith")
-        self.assertGreater(premiums[0.30], premiums[0.05])
+        self.assertGreater(wages.training_premium(5.0, 0.30), wages.training_premium(5.0, 0.05))
 
     def test_the_default_constant_is_gone(self):
         self.assertFalse(hasattr(wages, "DEFAULT_DISCOUNT_RATE"))
