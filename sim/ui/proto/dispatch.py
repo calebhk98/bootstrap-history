@@ -17,7 +17,8 @@ from .help import _agent_help
 from .nodes import NODE_NAME_NORM, _did_you_mean, _norm_name, _resolve_by_name
 from sim.ui.memory import load_state, save_state
 from .score import victory_report
-from .state import (_agent_end_reason, _agent_state)
+from .state_waiting import _agent_end_reason
+from .state import _agent_state
 from .wave_summary import wave_summary
 from . import step_progress
 from .guidance import delay_kinds, delay_phrase

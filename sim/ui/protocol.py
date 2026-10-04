@@ -22,12 +22,17 @@ from sim.ui.proto.nodes import (
 from sim.ui.proto.ventures import (
     _VENTURE_SUPERVISION_NOTE
 )
-from sim.ui.proto.state import (
-    _agent_end_reason, _risk_without_the_essays, _staff_fraction_note,
-    _waiting_on, _goal_progress_count, _founder_death_info,
-    _worth_knowing_early, _agent_state, _FAILURE_MARKERS, _is_failure_line,
-    _log_scrub, _agent_log
+from sim.ui.proto.state_waiting import (
+    _agent_end_reason,
+    _risk_without_the_essays,
+    _staff_fraction_note,
+    _waiting_on,
+    _goal_progress_count,
+    _founder_death_info,
+    _worth_knowing_early,
 )
+from sim.ui.proto.state import _agent_state
+from sim.ui.proto.state_log import _FAILURE_MARKERS, _is_failure_line, _log_scrub, _agent_log
 from sim.ui.proto.score import (
     final_report, SCORE_WEIGHTS, _score_goal_floor_years, _score_components,
     _score_achievements, score_report, _SCORE_COMPONENT_ORDER, _score_lines

@@ -5,7 +5,7 @@ import math
 
 from sim.engine.ui_port import closure, critical_path, topo_order
 
-from .state import _agent_end_reason
+from .state_waiting import _agent_end_reason
 from .util import _fmt_num, _wrap
 
 def final_report(sim, nodes):

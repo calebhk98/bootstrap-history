@@ -4,7 +4,7 @@ import re
 from .harness import *  # noqa: F401,F403
 
 from sim.engine.data import TRADE_FAMILY
-from sim.ui.proto.render_screens_big import _staffing_warning_sentences
+from sim.ui.proto.render_screen_state_blocks import _staffing_warning_sentences
 
 CLOSING_NODE = concern_needing_craftsmen_to_supervise()
 

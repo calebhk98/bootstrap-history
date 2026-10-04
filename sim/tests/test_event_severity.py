@@ -3,7 +3,7 @@ import unittest
 
 from .harness import *  # noqa: F401,F403
 from sim.ui.proto import event_severity
-from sim.ui.proto.render_screens_big import render_step
+from sim.ui.proto.render_screen_step import render_step
 
 
 class EventTiers(unittest.TestCase):

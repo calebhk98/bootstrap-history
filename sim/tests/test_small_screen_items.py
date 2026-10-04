@@ -1,7 +1,8 @@
 """Small screen items: Complaints/92 (hazard hedge timing), 93 (four funding concepts),
 86 (knowledge apart from held living stock), 97 (opening state hierarchy)."""
 from .harness import *  # noqa: F401,F403
-from sim.ui.proto.render_screens_big import render_state, render_why
+from sim.ui.proto.render_screen_state import render_state
+from sim.ui.proto.render_screen_why import render_why
 from sim.ui.proto.render_screens_economy import render_money
 from sim.ui.proto.render_screens_status import render_risk
 

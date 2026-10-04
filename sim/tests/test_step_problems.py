@@ -1,6 +1,6 @@
 """step_problems: the end-of-step problem list, the risk screen's confiscation block, lapsed-hedge naming."""
 from .harness import *  # noqa: F401,F403
-from sim.ui.proto import render_screens_big as _render_big
+from sim.ui.proto import render_screen_step as _render_big
 from sim.ui.proto.render_screens_status import render_risk
 from sim.ui.proto.step_problems import step_problems, problems_lines, route_nodes, route_startable
 

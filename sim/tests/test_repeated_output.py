@@ -6,8 +6,9 @@ import sys
 
 from .harness import *  # noqa: F401,F403
 from sim.ui import protocol as _protocol
-from sim.ui.proto.render_screens_big import (
-    _available_row, _state_completed_head_lines, _state_founder)
+from sim.ui.proto.render_screen_available import _available_row
+from sim.ui.proto.render_screen_state import _state_completed_head_lines
+from sim.ui.proto.render_screen_state_blocks import _state_founder
 
 _STAFF_PARAGRAPH = "not the crew that"
 _PRACTICE_PARAGRAPH = "rented room"
