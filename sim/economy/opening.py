@@ -11,7 +11,7 @@ from typing import Dict, List, Mapping, Tuple
 
 from sim.constants import declare
 
-from . import currency, goods_market, households, mint, ownership, unit_cost
+from . import currency, goods_market, households, location, mint, ownership, sites, unit_cost
 from .accounts import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
@@ -58,6 +58,7 @@ def open_economy(setup: EconomySetup) -> Tuple[EconomyRecord, AreaMap, CarriageT
     incumbents = incumbent_recipes(setup.recipes, priced_goods, setup.opening_wages, setup.opening_rate)
     runs = required_runs(final_by_tile, incumbents, setup.recipes)
     _place_producers(setup, record, area_map, final_by_tile, incumbents, runs)
+    sites.apply_site_limits(record, setup)
     _open_workforce(setup, record)
     _open_merchants(setup, record, priced_goods, final_by_tile)
     _strike_opening_cash(setup, record)
@@ -172,9 +173,11 @@ def _main_output(recipe: Recipe, prices: Mapping[GoodId, float]) -> GoodId:
 
 
 def _place_producers(setup, record, area_map, final_by_tile, incumbents, runs) -> None:
-    """One producer per market area of the recipe's main output, at the area's anchor, sized by the
-    area's share of demand for that good (its people's share when no household buys it)."""
+    """Each market area of the recipe's main output gets its share of the runs, sized by the area's share
+    of demand for that good (its people's share when no household buys it), spread over its tiles by
+    location.opening_split: one producer per (recipe, tile)."""
     population = setup.opening_population_by_tile
+    by_limits = sites.limits_by_recipe(setup.site_limits)
     for recipe_id, count in sorted(runs.items()):
         recipe = setup.recipes[recipe_id]
         main = _main_output(recipe, setup.opening_prices)
@@ -189,17 +192,26 @@ def _place_producers(setup, record, area_map, final_by_tile, incumbents, runs) -
             weights = {area.area_id: (area, math.fsum(population.get(tile, 0.0) for tile in area.tiles))
                        for area in areas}
         total = math.fsum(weight for _area, weight in weights.values())
-        for area_id, (area, weight) in sorted(weights.items()):
-            if total <= 0.0 or weight <= 0.0:
-                continue
-            tile = area.anchor_tile
-            producer_id = "producer:" + recipe_tile_key(recipe_id, tile)
-            record.producers[producer_id] = Producer(
-                agent_id=producer_id, owner=households.cohort_id(tile, _richest_class(record, tile)),
-                recipe_id=recipe_id, tile=tile,
-                capacity_runs=count * weight / total * (1.0 + OPENING_SPARE_CAPACITY_SHARE),
-                expected_sales=count * weight / total,
-                yield_factor=setup.yield_factor_by_recipe_tile.get(recipe_tile_key(recipe_id, tile), 1.0))
+        shares = [(area, count * weight / total) for _id, (area, weight) in sorted(weights.items())
+                  if total > 0.0 and weight > 0.0]
+        if sites.is_sited(recipe, by_limits) and shares:
+            shares = [(shares[0][0], count)]               # a sited recipe's tiles are the limits', in any area
+        for area, area_runs in shares:
+            capacity_by_tile = location.opening_split(setup, recipe, area, area_runs * (1.0 + OPENING_SPARE_CAPACITY_SHARE))
+            for tile, capacity in capacity_by_tile.items():
+                producer_id = "producer:" + recipe_tile_key(recipe_id, tile)
+                if capacity <= 0.0 or producer_id in record.producers or not _has_people(record, tile):
+                    continue
+                record.producers[producer_id] = Producer(
+                    agent_id=producer_id, owner=households.cohort_id(tile, _richest_class(record, tile)),
+                    recipe_id=recipe_id, tile=tile, capacity_runs=capacity,
+                    expected_sales=capacity / (1.0 + OPENING_SPARE_CAPACITY_SHARE),
+                    yield_factor=sites.yield_at(recipe, tile, by_limits, setup.yield_factor_by_recipe_tile.get(
+                        recipe_tile_key(recipe_id, tile), 1.0)))
+
+
+def _has_people(record, tile) -> bool:
+    return any(cohort.tile == tile for cohort in record.cohorts.values())
 
 
 def _richest_class(record, tile) -> int:

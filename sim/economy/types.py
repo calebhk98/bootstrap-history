@@ -90,6 +90,16 @@ class Recipe:
     plant_goods: Mapping[GoodId, float] = field(default_factory=dict)        # tied up per run a year of capacity
     plant_labour_hours: Mapping[TradeId, float] = field(default_factory=dict)  # building that capacity
     plant_life_years: float = 0.0
+    site_bound: bool = False         # runs only where a site is declared (sites.py); the economy knows nothing else of it
+
+
+@dataclass(frozen=True)
+class SiteLimit:
+    """What a site imposes on a recipe, declared from outside the economy (geography owns deposits)."""
+    recipe_id: str
+    tile: TileId
+    capacity_runs_per_year: float    # most runs a year the site allows
+    yield_factor: float = 1.0        # output per run against the recipe's own, at this site
 
 
 # ---- moving money and goods --------------------------------------------------------------------
