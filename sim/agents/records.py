@@ -92,6 +92,10 @@ class ActorRecord:
 	allowance: float = 0.0
 	moving: Dict[str, float] = field(default_factory=dict)
 
+	# ---- exchange: offers other actors have made to this one, and how many it has made itself
+	offers: List[Dict[str, Any]] = field(default_factory=list)
+	offer_serial: int = 0
+
 
 @dataclass
 class CapitalMarketRecord:
