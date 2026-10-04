@@ -6,6 +6,7 @@ Derived rules live in the map's `derived_layers` catalogue, so a map with only c
     {"id": "biome", "rule": "lookup", "key_layer": "koppen_class", "catalogue": "climate_classes",
      "field": "biome"}
     {"id": "koppen_group", "rule": "prefix", "source_layer": "koppen_class", "length": 1}
+    {"id": "region", "rule": "alias", "source_layer": "old_region"}
 """
 from typing import Any, Callable, Dict, Optional
 
@@ -23,6 +24,8 @@ def _derive(world_map: WorldMap, tile_id: str, rule: Dict[str, Any], seen: froze
     if kind == "prefix":
         source = value(world_map, tile_id, rule["source_layer"], seen)
         return None if source is None else str(source)[:int(rule["length"])]
+    if kind == "alias":
+        return value(world_map, tile_id, rule["source_layer"], seen)
     raise MapDataError("derived layer %r: unknown rule %r" % (rule.get("id"), kind))
 
 

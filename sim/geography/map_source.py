@@ -32,8 +32,9 @@ class WorldMap:
 
     def __init__(self, map_id: str, tiles: Dict[str, Dict[str, Any]],
                  layers: Dict[str, Dict[str, Any]], catalogues: Dict[str, Dict[str, Dict[str, Any]]],
-                 folders: Tuple[str, ...]):
+                 folders: Tuple[str, ...], properties: Optional[Dict[str, Any]] = None):
         self.map_id = map_id
+        self.properties = properties or {}  # scalar facts stated beside the tiles, such as their nominal area
         self.tiles = tiles
         self.layers = layers
         self.catalogues = catalogues
@@ -104,12 +105,17 @@ def _apply_entry(items: Dict[str, Dict[str, Any]], entry: Dict[str, Any], owner:
         items[entry_id] = body
 
 
-def _load_tiles(folder: str, manifest: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
+def _load_tiles(folder: str, manifest: Dict[str, Any]) -> Tuple[Dict[str, Dict[str, Any]], Dict[str, Any]]:
+    """(tiles, the scalar values stored beside them) from the file the manifest names."""
     source = manifest["tiles"]
-    content = _read_json(os.path.normpath(os.path.join(folder, source["file"])))
+    container = _read_json(os.path.normpath(os.path.join(folder, source["file"])))
+    content = container
     for key in source.get("path", []):
-        content = content[key]
-    return {tile_id: dict(record, id=tile_id) for tile_id, record in content.items()}
+        container, content = content, content[key]
+    properties = {key: value for key, value in container.items()
+                  if content is not container and isinstance(value, (int, float, str)) and not key.startswith("_")}
+    properties.update(manifest.get("properties", {}))
+    return {tile_id: dict(record, id=tile_id) for tile_id, record in content.items()}, properties
 
 
 def _merge_layer(layers: Dict[str, Dict[str, Any]], layer: Dict[str, Any], owner: Optional[str],
@@ -138,7 +144,7 @@ def merge_folders(folders: Iterable[Tuple[Optional[str], str]]) -> WorldMap:
     folders = tuple(folders)
     if not folders:
         raise MapDataError("a map needs at least one folder")
-    map_id, tiles = None, {}
+    map_id, tiles, properties = None, {}, {}
     layers: Dict[str, Dict[str, Any]] = {}
     catalogues: Dict[str, Dict[str, Dict[str, Any]]] = {}
     for owner, folder in folders:
@@ -146,7 +152,8 @@ def merge_folders(folders: Iterable[Tuple[Optional[str], str]]) -> WorldMap:
         if os.path.exists(manifest_path):
             manifest = _read_json(manifest_path)
             if "tiles" in manifest:
-                map_id, tiles = manifest.get("id", map_id), _load_tiles(folder, manifest)
+                tiles, properties = _load_tiles(folder, manifest)
+                map_id = manifest.get("id", map_id)
                 if owner is not None:
                     layers = {}  # a replacement map's layers describe other tiles
         elif owner is None:
@@ -165,7 +172,7 @@ def merge_folders(folders: Iterable[Tuple[Optional[str], str]]) -> WorldMap:
                     _apply_entry(items, entry, owner, path)
     if map_id is None:
         raise MapDataError("no folder named the map's tiles in its map.json")
-    return WorldMap(map_id, tiles, layers, catalogues, tuple(folder for _owner, folder in folders))
+    return WorldMap(map_id, tiles, layers, catalogues, tuple(folder for _owner, folder in folders), properties)
 
 
 def mod_overlay_folders(mods: Iterable[Tuple[str, str]]) -> List[Tuple[str, str]]:
