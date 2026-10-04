@@ -6,6 +6,7 @@ from . import available_args, command_registry
 from .buy_targets import canonical_target
 from .dispatch import KNOWN_COMMANDS
 from .nodes import NODE_IDS, NODE_IDS_LOWER
+from .render_screen_state_views import SECTIONS
 from .quote_spending import SPENDING_QUOTERS
 
 # ---------------------------------------------------------------------------
@@ -204,15 +205,17 @@ def parse_typed(line):
     rest = parts[1:]
     command = command_registry.alias_map().get(head, head)
     if command not in command_registry.COMMANDS:
-        near = [candidate for candidate in command_registry.COMMANDS
-                if candidate.startswith(head[:3])]
+        near = command_registry.close_matches(head)
         return None, ("no command called %r. Type 'help' for the list%s."
                       % (head, (", or did you mean: " + ", ".join(near)) if near else ""))
 
     # THE OUTPUT-MODE WORDS, STRIPPED ONCE, FOR EVERY COMMAND - see
     # _split_json_flag's own comment for why this has to happen here, before
     # any command's own parser reads `rest`, rather than inside each one.
-    rest, want_json, want_compact = _split_json_flag(rest)
+    if command_registry.COMMANDS[command]["shape"] == "text":
+        want_json = want_compact = False   # free prose: every word is the player's
+    else:
+        rest, want_json, want_compact = _split_json_flag(rest)
     words = [word for word in rest if _typed_number(word) is None]
     nums = [_typed_number(word) for word in rest if _typed_number(word) is not None]
 
@@ -356,8 +359,15 @@ def _parse_state(command, rest, words, nums, want_json):
     # parsing text, and several have lost runs to parsing prose that was
     # never meant to be machine-readable.
     low_rest = [word.lower() for word in rest]
-    want_full = bool(rest) and low_rest[0].split(":")[0] == "full"
-    return {"cmd": "state", "full": want_full, "json": want_json}, None
+    first = low_rest[0].split(":")[0] if rest else ""
+    want_full = first == "full"
+    if first and not want_full and first not in SECTIONS:
+        return None, ("no state section called %r; try 'state full' or 'state <section>': %s"
+                      % (first, ", ".join(SECTIONS)))
+    out = {"cmd": "state", "full": want_full, "json": want_json}
+    if first in SECTIONS:
+        out["view"] = first
+    return out, None
 
 
 def _parse_available(command, rest, words, nums, want_json):
@@ -373,7 +383,13 @@ def _parse_available(command, rest, words, nums, want_json):
 
 
 def _parse_help(command, rest, words, nums, want_json):
-    return {"cmd": "help", "topic": (rest[0].lower() if rest else None)}, None
+    topic = rest[0].lower() if rest else None
+    if topic in ("commands", "command"):
+        # the trailing words (group, all, limit, offset) travel in the topic string
+        topic = " ".join(["commands"] + [str(word).lower() for word in rest[1:]] or ["index"])
+        if len(rest) == 1:
+            topic = "commands index"
+    return {"cmd": "help", "topic": topic}, None
 
 
 def _parse_step(command, rest, words, nums, want_json):
@@ -884,8 +900,13 @@ _COMMAND_PARSERS = {
 
 # The parser for each argument shape a command can declare with
 # @command(shape=...); a command that needs more has its own entry above.
+def _parse_free_text(command, rest, words, nums, want_json):
+    return {"cmd": command, "text": " ".join(str(word) for word in rest)}, None
+
+
 _SHAPE_PARSERS = {
     "bare": _parse_bare_command,
+    "text": _parse_free_text,
     "tech": _parse_open_or_named_tech,
     "tech_done": _parse_open_or_named_tech,
     "file": _parse_save_or_load,
@@ -916,3 +937,15 @@ def _parse_command_body(command, rest, words, nums, want_json):
     # Any command added to KNOWN_COMMANDS that this parser has not been taught
     # about still reaches the dispatcher rather than being refused here.
     return {"cmd": command}, None
+
+
+# Every parse_*.py module in this package adds its commands' parsers to _COMMAND_PARSERS when
+# imported; they are found by name, so a new command's parser needs no edit here.
+def _load_parser_modules():
+    import importlib, os, pkgutil
+    for module_info in sorted(pkgutil.iter_modules([os.path.dirname(__file__)]), key=lambda info: info.name):
+        if module_info.name.startswith("parse_"):
+            importlib.import_module("%s.%s" % (__package__, module_info.name))
+
+
+_load_parser_modules()

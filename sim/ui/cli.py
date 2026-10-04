@@ -35,7 +35,7 @@ from sim.engine.ui_port import default_civilisation_id
 from sim.engine.ui_port import (
     ROOT, MODDIR, CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog,
     selectable_goals, hard_pre, load, load_civ, resolve_goal, STARTING_KITS, STRATS, topo_order,
-    win_condition_describe)
+    win_condition_describe, money_word)
 
 
 import argparse, sys
@@ -76,7 +76,7 @@ from sim.engine.ui_port import DetRNG, ensure_fixed_hash_seed, load_strategy, to
 # (key, label, years-or-None, one-line description)
 HORIZON_MODES = (
     ("challenge", "Challenge", 400,
-     "a tight run - enough calendar for the transistor if you play well, "
+     "a tight run - enough calendar for the default goal if you play well, "
      "with little room left over for bad luck"),
     ("standard", "Standard", 500,
      "the game's own long-standing default"),
@@ -148,7 +148,7 @@ VALIDATE_DEEP_PROBE_HORIZON_MAX_YEARS = declare(
     "VALIDATE_DEEP_PROBE_HORIZON_MAX_YEARS", 350, kind="temporary_heuristic",
     unit="years", source=None, confidence="D",
     why="Ceiling on the scaled probe horizon above, so a goal with a long "
-        "critical-path floor (the transistor's own structural floor runs "
+        "critical-path floor (the default goal's own structural floor runs "
         "well past a century) does not turn this structural-checks command "
         "into a multi-minute run - see this command's own comment on why "
         "--deep is opt-in at all. Picked for speed, not because 350 years "
@@ -483,6 +483,8 @@ def cmd_path(args):
     need = closure(nodes, goal)
     order = topo_order(nodes, need)
     cum_cost = cum_ph = 0.0
+    civ = load_civ(default_civilisation_id())
+    money_unit = money_word(civ)
     print("%-4s %-39s %8s %9s %6s %5s %5s" %
           ("#", "node", "yourhrs", "cost(den)", "years", "risk", "conf"))
     print("-" * 88)
@@ -492,8 +494,8 @@ def cmd_path(args):
         print("%-4d %-39s %8d %9s %6.1f %5.2f %5s" %
               (i, node_id[:39], node_record["ph"], f"{node_record['_total_cost']:,.0f}", node_record["yrs"], node_record["risk"], node_record["conf"]))
     print("-" * 88)
-    print("TOTAL  %d nodes   %s founder-hours   %s denarii" %
-          (len(order), f"{cum_ph:,.0f}", f"{cum_cost:,.0f}"))
+    print("TOTAL  %d nodes   %s founder-hours   %s %s" %
+          (len(order), f"{cum_ph:,.0f}", f"{cum_cost:,.0f}", money_unit))
     yrs, chain = critical_path(nodes, goal)
     print("\nLongest serial chain (%.1f yr floor, cannot be bought down with money):" % yrs)
     for node_id in chain:
@@ -1180,7 +1182,7 @@ def _print_sweep_footer(any_thin, any_success, axis, strategy):
 
 
 def cmd_goals(args):
-    """List every selectable goal: the transistor and every alternative in
+    """List every selectable goal: the default goal and every alternative in
     data/branches/_META.json meta.goals, with its closure size and dice-free
     critical-path floor - the same pair of numbers 'validate' prints, on
     their own, for picking a goal rather than auditing the tree. See
@@ -1352,13 +1354,13 @@ def main():
     subparser = sub.add_parser("why", help="explain what a node does and costs"); subparser.add_argument("node")
     subparser.add_argument("--goal", default=None,
                    help="which goal to report 'on the critical path' against. "
-                        "Default: the tree's own default goal (the transistor).")
+                        "Default: the tree's own default goal.")
     subparser = sub.add_parser("sweep", help="test how changes to a parameter affect the outcome")
     subparser.add_argument("axis", choices=["capital", "lifespan", "hours", "mortality"])
     subparser.add_argument("--strategy", default="recommended")
     subparser.add_argument("--goal", default=None,
                    help="which goal to sweep against. See 'goals' for the roster; "
-                        "default is the tree's own default (the transistor).")
+                        "default is the tree's own default goal.")
     subparser.add_argument("--mc", type=int, default=200)
     subparser.add_argument("--seed", type=int, default=1)
     subparser.add_argument("--horizon", type=int, default=500)
@@ -1368,7 +1370,7 @@ def main():
         subparser.add_argument("--strategy", default="recommended")
         subparser.add_argument("--goal", default=None,
                        help="which goal to aim at. See 'goals' for the roster; "
-                            "default is the tree's own default (the transistor).")
+                            "default is the tree's own default goal.")
         subparser.add_argument("--mc", type=int, default=200)
         subparser.add_argument("--seed", type=int, default=1)
         subparser.add_argument("--horizon", type=int, default=500)
@@ -1421,8 +1423,7 @@ def main():
     subparser.add_argument("--strategy", default="recommended")
     subparser.add_argument("--goal", default=None,
                    help="which goal to measure sensitivity against. See 'goals' "
-                        "for the roster; default is the tree's own default "
-                        "(the transistor).")
+                        "for the roster; default is the tree's own default goal.")
     subparser.add_argument("--mc", type=int, default=200)
     subparser.add_argument("--seed", type=int, default=1)
     subparser.add_argument("--horizon", type=int, default=500)
@@ -1520,7 +1521,7 @@ def main():
     subparser.add_argument("--strategy", default="recommended")
     subparser.add_argument("--goal", default=None,
                    help="which goal to play toward. See 'goals' for the roster "
-                        "(the transistor and every alternative); default is the "
+                        "of all goals; default is the "
                         "tree's own default. Omit when resuming a --session: "
                         "the save says which goal it is.")
     subparser.add_argument("--seed", default=None,
@@ -1535,6 +1536,9 @@ def main():
     subparser.add_argument("--kit", default="poor_scholar",
                    help="starting wealth: " + ", ".join(STARTING_KITS))
     subparser.add_argument("--fog", action="store_true")
+    subparser.add_argument("--known-routes", dest="known_routes", default=None,
+                   help="a known-routes file written at the end of an earlier run: lifts fog "
+                        "only for the technologies it names (needs --fog); nothing is given")
     subparser.add_argument("--fuzzy-estimates", dest="fuzzy_estimates", action="store_true",
                    default=None,
                    help="show what unfinished work will need as estimates that tighten as you go; overrides the settings default")
@@ -1589,6 +1593,9 @@ def main():
     subparser.add_argument("--fog", action="store_true",
                    help="fog of war: you see what you have built and what you could "
                         "begin next, and nothing about where any of it leads")
+    subparser.add_argument("--known-routes", dest="known_routes", default=None,
+                   help="a known-routes file written at the end of an earlier run: lifts fog "
+                        "only for the technologies it names (needs --fog); nothing is given")
     subparser.add_argument("--fuzzy-estimates", dest="fuzzy_estimates", action="store_true",
                    help="staff, hours, money and calendar needs of unfinished work are "
                         "shown as labelled estimates that tighten as you start and finish "

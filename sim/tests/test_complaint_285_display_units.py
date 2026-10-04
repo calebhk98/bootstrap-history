@@ -14,6 +14,8 @@ import tempfile as _tempfile
 from sim.engine import units as U
 from sim.ui.proto.dispatch import _agent_dispatch
 from sim.ui.proto.render_typed import render_pretty
+from sim.ui.proto.util import _coin_hoard_line
+from sim.ui.units_text import for_text
 
 # Screens covered, by dimension: (render command name, command dict).
 COVERED = {
@@ -23,6 +25,12 @@ COVERED = {
     "money": [("state", {"cmd": "state"}), ("money", {"cmd": "money"}),
               ("buy", {"cmd": "buy", "what": "farm", "n": 5})],
 }
+# Mass quantities in tonnes: 14 t is 2 blob (7 kg each); the number printed is the converted one.
+HAND_REPLIES = [
+    ("why", {"ok": True, "id": "x", "name": "x", "material_rows": [
+        {"material": "iron", "needed_tonnes": 14.0, "held_tonnes": 7.0,
+         "missing_tonnes": 7.0, "cost_of_missing": 1.0}]}, "need 2,000"),
+]
 FAKE = {"area": "blob_area", "mass": "blob_mass", "money": "blob_money",
         "temperature": "blob_degree"}
 FAKE_UNITS = {
@@ -83,6 +91,21 @@ def _run(registry, label, fake_ids, fake_specs):
                 shown_lines = [line for line in text.splitlines() if "<" not in line]
                 leaked = _re.findall(NATIVE_WORDS[dimension], "\n".join(shown_lines))
                 check(screen + " text keeps no native label", not leaked, (leaked, text))
+    # Hand-written replies for screens that print their own mass labels.
+    U.set_preferences({"mass": fake_ids["mass"]})
+    for name, reply, expect in HAND_REPLIES:
+        shown = U.add_display(_json.loads(_json.dumps(reply)), None)
+        text = render_pretty(name, shown)
+        screen = "%s: hand-written %s" % (label, name)
+        leaked = _re.findall(NATIVE_WORDS["mass"], text)
+        check(screen + " keeps no tonne label", not leaked, (leaked, text))
+        check(screen + " says blob", "blob" in text, text)
+        check(screen + " number converted", expect in text, (expect, text))
+    hoard = U.add_display({"coin_hoard": {"metal": "silver_kg", "tonnes": 14.0,
+                                          "keeping_cost_per_year": 1.0}}, None)
+    hoard_text = "\n".join(_coin_hoard_line(for_text(hoard, False)))
+    check(label + ": coin hoard line labelled blob", "2000 blob of silver" in hoard_text
+          or "2,000 blob of silver" in hoard_text, hoard_text)
     # Temperature has no screen in the game yet: the formatter and field rule
     # are exercised on a synthetic reply (see Complaint 285's remains).
     U.set_preferences({"temperature": fake_ids["temperature"]})

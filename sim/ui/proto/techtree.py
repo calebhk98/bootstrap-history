@@ -8,7 +8,7 @@ from sim.engine.ui_port import strip_self_play_advice
 
 from . import available_economics, tree_filters
 from .nodes import _downstream_of, _unlocked_by
-from .state import _waiting_on
+from .state_waiting import _waiting_on
 from .why_benefit import benefit_block
 from .ventures import _VENTURE_SUPERVISION_NOTE
 # DEFAULT_AVAILABLE_LIMIT is NOT imported here: cli.py patches

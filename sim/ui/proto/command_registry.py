@@ -21,7 +21,8 @@ def register_command(name, group, summary, usage, description,
     maps an argument or option to its meaning. `shape` names the typed
     argument form when it is a plain one (typed.py maps shapes to parsers):
     "bare" takes none, "tech" names a technology (fog-guarded), "tech_done"
-    names one already done, "file" a file name, "word" one word. A command
+    names one already done, "file" a file name, "word" one word, "text" free
+    prose kept verbatim (the words json and compact are not read as output modes). A command
     with its own parser in typed.py leaves it unset."""
     assert name not in COMMANDS, "command %r registered twice" % name
     COMMANDS[name] = {

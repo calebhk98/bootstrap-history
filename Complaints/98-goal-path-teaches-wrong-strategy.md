@@ -1,6 +1,6 @@
 # Goal/path UI can accidentally teach the wrong strategy
 
-**Status:** partly - `leverage` and `path` show the system levers beside the chain's calendar floor; what remains is 294; reopened: the remaining work belongs to this complaint too, the related one is a cross-reference, not a replacement
+**Status:** partly - `leverage` and `path` show the system levers; `stuck` adds a lever line, says when every goal-route project is waiting on the calendar and suggests side work, and marks the cheapest-startable suggestion as filler (`sim/ui/proto/stuck_advice.py`, test `sim/tests/test_portfolio_scale_stuck_advice.py`); remains: an optional warning before a multi-year step with many unused hours and startable projects, beyond the existing `multi_year_hours_warning` case
 
 The Rome transistor run became extremely inefficient because the visible goal/path information encouraged a direct prerequisite-chain mindset. The player focused on completing prerequisites in order rather than building a strong civilization first.
 

@@ -3,7 +3,7 @@ list, not from the record written when hours were last allocated."""
 import unittest
 
 from .harness import *  # noqa: F401,F403
-from sim.ui.proto import state as proto_state
+from sim.ui.proto import state_projects as proto_state
 
 
 def _household_with_projects(count):

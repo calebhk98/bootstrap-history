@@ -3,7 +3,7 @@ from .harness import *  # noqa: F401,F403
 from sim.engine import shortage_conditions
 from sim.ui.protocol import _agent_dispatch
 from sim.ui.proto.event_groups import group_disaster_events
-from sim.ui.proto.render_screens_big import render_state
+from sim.ui.proto.render_screen_state import render_state
 
 # --- 79: a shortage that persists is one standing condition, not a message a year
 shortage_sim = sim()

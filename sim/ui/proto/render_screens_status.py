@@ -7,7 +7,7 @@ is wrong, rather than reporting a ledger table. Pure presentation, same as
 every module in this split: nothing here touches the live Sim - see render.py
 and ARCHITECTURE.md.
 
-render_path borrows _available_row from render_screens_big.py for its own
+render_path borrows _available_row from render_screen_available.py for its own
 table of startable-today nodes, the one place here that reaches into the
 "big" group.
 """
@@ -16,7 +16,7 @@ from .score import _score_lines
 from sim.engine.ui_port import warning_lines
 from .util import _factor, _fmt_num, _pct, _wrap
 from .hazard_words import advice_header
-from .render_screens_big import _available_row, available_header
+from .render_screen_available import _available_row, available_header
 
 def render_values(out):
     lines = ["WHAT THIS SOCIETY BELIEVES"]
@@ -77,6 +77,20 @@ def render_error(resp):
     return "REFUSED: %s" % resp.get("error", "unknown error")
 
 
+def _stuck_advice_lines(out):
+    lines = []
+    calendar = out.get("goal_path_is_calendar_bound")
+    if calendar:
+        lines += ["", "  THE GOAL PATH IS WAITING ON THE CALENDAR", _wrap(calendar["text"], indent="    ")]
+        lines += [_wrap("- " + item, indent="    ") for item in calendar.get("side_work") or []]
+    if out.get("the_cheapest_start_is_filler"):
+        lines += ["", _wrap(out["the_cheapest_start_is_filler"], indent="  ")]
+    figures = (calendar or {}).get("lever_figures") or out.get("lever_figures")
+    if figures:
+        lines += ["", _wrap("levers now - " + figures, indent="  ")]
+    return lines
+
+
 def render_stuck(out):
     lines = ["WHY YOU ARE NOT GETTING ON"]
     lines.append("  %s things you could begin, %s of them you could pay for"
@@ -105,6 +119,7 @@ def render_stuck(out):
             if reason.get("the_nearest_few"):
                 lines.append(_wrap("nearest first: " + ", ".join(reason["the_nearest_few"]),
                                indent="    "))
+    lines += _stuck_advice_lines(out)
     hole = out.get("and_you_are_in_a_hole")
     if hole:
         lines.append("")

@@ -2,7 +2,7 @@
 themselves in sim/ui/figures_headline.py; this only reads the registry."""
 
 import sim.engine.ui_port as ui_port
-from sim.ui import figures_headline  # noqa: F401  (registers the figures)
+from sim.ui import figures_headline, figures_world  # noqa: F401  (register the figures)
 from sim.ui.figures import FIGURES, explain_figure
 from .command_registry import command
 
@@ -25,8 +25,7 @@ def figure_reply(sim, name):
 @command("figures", group="overview", aliases=("whychanged", "numbers"),
          summary="why a headline number changed",
          usage=["figures", "figures <name>", "why <name>"],
-         options={"<name>": "cash, income, upkeep, recurring_net, population, literacy_general, "
-                            "literacy_elite, price_index or hazard"},
+         options={"<name>": "a figure name; plain 'figures' lists every one"},
          description="Last year's value, this year's and the named causes with their "
                      "contributions, read from the functions that compute each figure. "
                      "What the named causes leave out is shown as its own line.")

@@ -341,3 +341,12 @@ The geography branch and the multiplayer branch both filed 401-407; the geograph
 409 -> 416  reach-and-built-roads-are-not-read-by-the-engine
 410 -> 417  map-checks-and-heuristics-are-not-in-validate-or-the-burndown
 411 -> 418  the-fast-suite-fails-on-main
+
+Filed on `ui-disclosure-and-inspectors` at the same time as main's 401-418; moved twice, final numbers here. The branch's 414 (suite failures on main) was folded into 418.
+
+401 -> 419  ui-needs-its-own-slot-in-the-save
+402 -> 420  engine-keeps-no-causes-for-wages-closures-and-notice
+403 -> 421  automation-records-no-skipped-actions-or-modes
+404 -> 422  goals-have-one-id-one-reach-year-and-no-anatomy-hook
+405 -> 423  mods-cannot-add-figures-or-screen-rows-through-data
+406 -> 424  units-json-has-no-rule-for-mass-per-year-fields

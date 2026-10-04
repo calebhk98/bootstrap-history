@@ -12,3 +12,5 @@ With `--slow`, main (pull request 31) also fails `regional_weather_wiring` (the 
 A further check, "a cached price-table lookup costs well under rebuilding the done set", is a wall-clock comparison that failed once under load in a full run and passes alone; a timing ratio is not a stable assertion.
 
 What it would take: point the automation audit at wherever hiring lives now (`sim/labour/`), find what the `lab` key became for the capital charge, and make the price-table timing check measure work rather than seconds.
+
+Also seen on main at pull request 31 (from the UI branch's full run): `complaint_45_forest_area_not_region_count` crashes with `'Sim' object has no attribute 'geo'` (geography moved behind `sim.geography`).

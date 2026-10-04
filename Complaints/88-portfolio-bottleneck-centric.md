@@ -1,6 +1,6 @@
 # Portfolio should become bottleneck-centric at large scale
 
-**Status:** partly - `portfolio` leads with bottlenecks grouped by blocker kind; what remains is 293; reopened: the remaining work belongs to this complaint too, the related one is a cross-reference, not a replacement
+**Status:** partly - `portfolio` leads with bottlenecks grouped by blocker kind, shows the most pressing rows with 'and M more' paging (`portfolio all`, `offset:K`), drills into one group (`portfolio <blocker or trade>`), and gives each project its remaining founder-hours, money still to pay, annual draw and earliest finish, with last year's allocation labelled apart from this year's forecast (`sim/ui/proto/portfolio_scale.py`, test `sim/tests/test_portfolio_scale_stuck_advice.py`); remains: one dashboard joining finance, research, materials and workforce
 
 With 100+ projects active or startable, messages such as "priority #129 of 181" cease to be useful for decision making. The valuable information becomes aggregate trade pressure and resource consumption: for example, "Scribes: 9,034 h demand / 8,939 h supply, affecting 18 projects."
 

@@ -83,3 +83,5 @@ def _hazard(sim):
             drivers[entry["label"] + " (multiplies the harm by)"] = entry["factor"]
         return {"value": sim.hazard_figure(kind, hazard), "drivers": drivers}
     return {"value": None}
+
+from . import figures_world  # noqa: E402,F401  (registers the society figures beside these)
