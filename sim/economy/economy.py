@@ -125,7 +125,8 @@ class Economy:
         close_view = CreditView(record.memory, record.book, self.area_map, money, labour_area,
                                 loans=lambda: record.loans)
         close_agents(setup, record, close_view, ledger, self.area_map)
-        open_entrants(setup, record, close_view, self.area_map, ledger.unmet_demand, self.carriage)
+        open_entrants(setup, record, close_view, self.area_map, ledger.unmet_demand, self.carriage,
+                      ledger.bids_by_market)
         restake_owners(setup, record, close_view)
         extraction = sites.extraction_by_tile(record, setup)
         close_idle_producers(setup, record)

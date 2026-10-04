@@ -146,6 +146,7 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
                 for shortfall in done_settlement.shortfalls:
                     ledger.unpaid[shortfall.agent] = ledger.unpaid.get(shortfall.agent, 0.0) + shortfall.unpaid_amount
             ledger.note_clearing(result)
+            ledger.bids_by_market[(good, area)] = bids
             unmet = unmet_quantity(bids, result.price, result.quantity)
             if unmet > 0.0:
                 ledger.unmet_demand[(good, area)] = unmet

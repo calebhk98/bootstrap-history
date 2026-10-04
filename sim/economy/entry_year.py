@@ -8,6 +8,7 @@ from dataclasses import replace
 from typing import Dict, Tuple
 
 from . import location, ownership, sites, unit_cost
+from .entry_margin import margin_entry_plans
 from .entry import (ENTRANT_OWNER_STAKE_SHARE, UnmetDemand, entrant_loan, entry_plans, gap_beyond_spare,
                     producers_to_close, restake)
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
@@ -19,9 +20,10 @@ from .types import GoodsMove, LoanRequest, Transfer
 
 
 def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str, str], float],
-                  carriage=None) -> int:
+                  carriage=None, bids_by_market=None) -> int:
     """Start the year's new producers; returns how many started. With the carriage table a newcomer is
-    sited by location.entry_siting; without it one is built from the setup (slower on a large map)."""
+    sited by location.entry_siting; without it one is built from the setup (slower on a large map). With
+    the year's bids, markets selling well above cost draw newcomers too (entry_margin.py)."""
     spare = _spare_output(setup, record, view)
     unmet = {}
     for (good, area_id), quantity in sorted(unmet_by_market.items()):
@@ -33,9 +35,12 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
     money = setup.currency_id
     started = 0
     by_limits = sites.limits_by_recipe(setup.site_limits)
-    for plan in entry_plans(setup.recipes, view, unmet, record.land_rent, setup.land_per_run,
-                         _traded_volume(record, view, area_map),
-                         location.entry_siting(setup, record, view, area_map, carriage or _carriage(setup))):
+    siting = location.entry_siting(setup, record, view, area_map, carriage or _carriage(setup))
+    plans = entry_plans(setup.recipes, view, unmet, record.land_rent, setup.land_per_run,
+                        _traded_volume(record, view, area_map), siting)
+    if bids_by_market:
+        plans += margin_entry_plans(setup, record, view, area_map, bids_by_market, tuple(unmet), siting)
+    for plan in plans:
         recipe = setup.recipes[plan.recipe_id]
         key = recipe_tile_key(plan.recipe_id, plan.tile)
         producer_id = "producer:" + key

@@ -32,6 +32,7 @@ class YearLedger:
     exports_received: Dict[Tuple[AgentId, GoodId], float] = field(default_factory=dict)   # money received from them
     plant_spend: Dict[AgentId, float] = field(default_factory=dict)    # paid for plant goods, a build not a running cost
     unmet_demand: Dict[Tuple[GoodId, str], float] = field(default_factory=dict)   # (good, area): quantity
+    bids_by_market: Dict[Tuple[GoodId, str], list] = field(default_factory=dict)  # (good, area): the year's bids
 
     def note_postings(self, postings: Iterable[object], purpose_kind: str = "") -> None:
         for posting in postings:
