@@ -98,3 +98,10 @@ def bands_of(mapping: Mapping, key) -> List[float]:
     if key not in mapping:
         mapping[key] = empty_bands()
     return mapping[key]
+
+
+def add_to(bands, extra: Sequence[float]) -> List[float]:
+    """A new band list: `bands` (or none) plus `extra`."""
+    total = list(bands) if bands is not None else empty_bands()
+    add_bands(total, extra)
+    return total

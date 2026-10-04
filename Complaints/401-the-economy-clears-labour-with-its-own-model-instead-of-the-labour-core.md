@@ -23,6 +23,7 @@ What it would take (all in `sim/economy/`, owner of that package):
 - `subsistence_per_worker_year` comes from `outside_option_by_tile`. `entrants` and `attrition_share`
   come from the demography cohorts. `routes` come from the tile neighbours and freight cost already used
   for market areas.
+- The opening workforce comes from `sim.labour.api.opening_labour_market` (hard trades staffed from the able).
 - `clear_labour` then calls `sim.labour.api.clear_labour_markets` and settles each `Clearing`'s
   `hired_by_employer` × `paid_by_employer`. `move_workers` and `follow_asks` are replaced by the rest of
   `run_labour_year`.

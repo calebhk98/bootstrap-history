@@ -11,6 +11,7 @@ WALL = "two-way"  # nothing here reaches sim/engine/; the engine hands it what i
 
 from . import wage_provider, wages
 from .market.clearing import clear_all as clear_labour_markets
+from .market.opening import opening_state as opening_labour_market
 from .market.records import (Bid, Clearing, MarketState, Route, School, TradeSpec, YearInputs, YearReport,
                              from_plain as market_state_from_plain, people_in, to_plain as market_state_to_plain)
 from .market.trades import fallback_trade, trade_specs
@@ -23,7 +24,7 @@ __all__ = [
     "wage_provider", "wages", "Labour", "production_data",
     "people_fed_per_worker", "CAREER_YEARS", "HOURS_PER_WORKER_YEAR",
     # the labour-market core (sim/labour/market/DESIGN.md): plain records in, plain records out
-    "run_labour_year", "clear_labour_markets", "trade_specs", "fallback_trade", "people_in",
+    "run_labour_year", "clear_labour_markets", "opening_labour_market", "trade_specs", "fallback_trade", "people_in",
     "Bid", "Clearing", "MarketState", "Route", "School", "TradeSpec", "YearInputs", "YearReport",
     "market_state_to_plain", "market_state_from_plain",
 ]
