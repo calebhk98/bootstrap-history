@@ -1,7 +1,7 @@
 """What the labour package knows about a trade, read from the registry where it can be.
 
 The registry reaches labour as the wage schedule's training years and the world's trade families
-(the engine's trade record keeps no other field yet, Complaints/402). A field the registry does not
+(the engine's trade record keeps no other field yet, Complaints/413). A field the registry does not
 state comes from legacy_trade_defaults.py, and a trade absent there too gets the generic answer, so a
 mod's trade works without code.
 """

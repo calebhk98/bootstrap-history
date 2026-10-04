@@ -10,7 +10,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 LABOUR_DIR = os.path.join(ROOT, "sim", "labour")
 MARKET_DIR = os.path.join(LABOUR_DIR, "market")
 
-# Existing engine imports in sim/labour, pinned so new ones fail (Complaints/404 removes them).
+# Existing engine imports in sim/labour, pinned so new ones fail (Complaints/415 removes them).
 KNOWN_VIOLATIONS = {
     ("sim/labour/wage_provider.py", "sim.engine.solve_prices_core"),
     ("sim/labour/workforce_spinup.py", "sim.engine.solve_prices_core"),
@@ -91,7 +91,7 @@ class LabourWallTests(unittest.TestCase):
         self.assertEqual(self._content_ids_named_in(python_files(MARKET_DIR)), set())
 
     def test_only_the_legacy_table_names_trades_in_the_labour_package(self):
-        """Trade facts still held in code live in legacy_trade_defaults.py (Complaints/402), nowhere else."""
+        """Trade facts still held in code live in legacy_trade_defaults.py (Complaints/413), nowhere else."""
         paths = [path for path in python_files(LABOUR_DIR)
                  if os.path.basename(path) != "legacy_trade_defaults.py"]
         self.assertEqual(self._content_ids_named_in(paths), set())

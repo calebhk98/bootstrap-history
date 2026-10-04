@@ -22,7 +22,7 @@ So the household-side verbs still read the older mechanisms:
 
 What is missing, all outside `sim/labour/`:
 - A saved field, for example `EconomyState.labour_market: dict` holding `market_state_to_plain(...)`.
-  It isn't needed if Complaint 401 puts the state in the agent economy's record instead.
+  It isn't needed if Complaint 412 puts the state in the agent economy's record instead.
 - A yearly call that builds `YearInputs` and stores the new state.
   - Bids come from every actor's staff and concerns.
   - Subsistence and entrants come from demography.

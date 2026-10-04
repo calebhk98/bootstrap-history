@@ -325,3 +325,13 @@ Old issue numbers (in commit messages, reports and history) and the number each 
 663 -> 353  goods-only-a-partner-makes-open-at-the-ceiling-price
 675 -> 354  the-founders-takeoff-needs-costs-that-lag-the-economy-index
 690 -> 355  engine-code-reads-a-civilisation-from-disk-by-id
+
+## 2026-10-04 (labour-market-core merged with main's multiplayer complaints)
+
+401 -> 412  the-economy-clears-labour-with-its-own-model-instead-of-the-labour-core
+402 -> 413  the-trade-registry-drops-fields-labour-needs
+403 -> 414  the-labour-core-has-no-save-field-and-no-yearly-call
+404 -> 415  the-labour-package-imports-the-engine
+405 -> 416  the-subsistence-staple-is-wheat-for-every-civilisation
+406 -> 417  ui-cannot-offer-pay-over-the-market
+407 -> 418  recipe-need-shares-overweight-mining-and-omit-transport-and-building-trades

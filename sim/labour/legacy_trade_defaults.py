@@ -3,7 +3,7 @@
 Each table here answers a question the registry should answer, and is used only for trades whose
 registry entry does not state the field (trade_data.py reads the registry first). A mod's trade is never
 in these tables, so it gets the generic answer until it states the field. The engine's trade record does
-not yet carry these fields (Complaints/402); when it does, each table moves into data/world/trades.json
+not yet carry these fields (Complaints/413); when it does, each table moves into data/world/trades.json
 and is deleted here. sim/tests/test_labour_core_walls.py pins this file as the only labour module that
 names trades.
 """
@@ -13,7 +13,7 @@ LEGACY_TRADE_TABLES = declare(
     "LEGACY_TRADE_TABLES", 1, kind="temporary_heuristic", unit="marker", source=None, confidence="D",
     why="Marks the hand-written trade tables below as transitional: the registry field for each "
         "(`literate`, `taught_from`, `tool_basket`, `staff_resource`) replaces it once the engine's trade "
-        "record keeps unknown fields (Complaints/402).")
+        "record keeps unknown fields (Complaints/413).")
 
 # Trades whose practice is reading and writing, so the civilisation's literacy caps how many there are.
 LITERATE = frozenset({"scholar", "scribe", "engineer", "chemist", "machinist", "optician", "electrician"})

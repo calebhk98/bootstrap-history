@@ -9,4 +9,4 @@ premium, and the hire screen does not show how many of the people asked for can 
 What it would take (in `sim/ui/`):
 - `hire <trade> <count> [premium%]` passes the premium through.
 - The quote line shows `recruitable` beside the price.
-- Both depend on Complaint 403 for the premium to be charged every year.
+- Both depend on Complaint 414 for the premium to be charged every year.

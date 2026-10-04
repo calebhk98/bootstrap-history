@@ -9,7 +9,7 @@ that grows with the gap, along paths weighted by skill family (the registry's `f
 
 This allocator is the engine's yearly society-hours split (labour_allocation.reallocate). The labour
 core in sim/labour/market/ models the same market with wages, ability, training and migration, and
-replaces it once the engine keeps the core's state (Complaints/401 and 403).
+replaces it once the engine keeps the core's state (Complaints/412 and 414).
 """
 import collections
 import json
