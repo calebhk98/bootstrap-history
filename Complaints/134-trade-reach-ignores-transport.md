@@ -1,6 +1,6 @@
 # How many tradesmen you can reach ignores transport
 
-**Status:** partly - geography can now give a travel-time reach over tiles by the modes held (`api.reach`); labour reach does not read it yet (Complaint 409)
+**Status:** partly - geography can now give a travel-time reach over tiles by the modes held (`api.reach`); labour reach does not read it yet (Complaint 416)
 
 The number of people in a trade the founder can reach is a share of the
 local town and nation. It should depend on how far people can travel to work

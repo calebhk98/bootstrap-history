@@ -1,6 +1,6 @@
 # Land that cannot be farmed leaves a society no other food source
 
-**Status:** partly - geography now gives each tile hunting, herding, foraging and fishing food (`api.food_potential`); the engine does not read it yet (Complaint 407)
+**Status:** partly - geography now gives each tile hunting, herding, foraging and fishing food (`api.food_potential`); the engine does not read it yet (Complaint 414)
 
 Found by pushing the farm model to its edges (`sim/tests/test_farm_edges.py`).
 When ground yields nothing, or a farmer nets less than one person-year of
