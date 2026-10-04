@@ -6,6 +6,7 @@ the market with every other operator.
 """
 from typing import Any, Callable, List, Optional
 
+from . import concern_ops
 from .base import RecordedActor
 from .firm_expansion import ExpansionMixin
 from .borrowing import TRACK_RECORD_YEARS
@@ -42,37 +43,10 @@ class Firm(ExpansionMixin, RecordedActor):
 		self.concerns.add(node_id)
 		self.record.opened_year[node_id] = world.year
 
-	def staff_concern(self, node_id: str, world: Any) -> float:
-		"""Take on the people running a concern needs from the shared pool; the share of
-		them found, which is the share of its output that gets made."""
-		found = 1.0
-		capacity = self.capacity_of(node_id)
-		for trade, wanted in sorted(world.concern_staff(node_id).items()):
-			wanted *= capacity
-			free = world.free_fte(trade, self.actor_id)
-			if free is None:
-				continue
-			free -= self.workforce.get(trade, 0.0)
-			taken = min(wanted, max(0.0, free))
-			self.workforce[trade] = self.workforce.get(trade, 0.0) + taken
-			found = min(found, taken / wanted)
-		return found
-
 	def operate(self, world: Any) -> None:
 		for node_id in sorted(self.concerns):
 			rivals = self.rivals_of(node_id, self.actor_id) if self.rivals_of else 0.0
-			capacity = self.capacity_of(node_id)
-			found = self.staff_concern(node_id, world)
-			self.record.staffing[node_id] = found
-			takings = found * world.concern_takings(node_id, self.record.opened_year[node_id], rivals, capacity)
-			upkeep = world.upkeep(node_id, capacity)
-			wages = found * world.concern_wage_bill(node_id, capacity)
-			self.credit(takings, "takings")
-			self.debit(upkeep, "upkeep")
-			self.debit(wages, "wages")
-			levy = world.government().collect(self, takings, world)
-			royalty = world.collect_royalty(self, node_id, takings)
-			margin = takings - upkeep - wages - levy - royalty
+			margin = concern_ops.operate_concern(self, node_id, world, rivals)
 			self.record.last_margin = margin
 			self.record.loss_years = self.record.loss_years + 1 if margin < 0 else 0
 

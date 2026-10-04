@@ -72,6 +72,8 @@ class ActorRecord:
 	# ---- a player: commands waiting for its next turn, and what happened to the ones it gave
 	orders: List[Dict[str, Any]] = field(default_factory=list)
 	journal: List[Dict[str, Any]] = field(default_factory=list)
+	# node id -> what each concern a player runs made last year, after levy and royalty
+	margins: Dict[str, float] = field(default_factory=dict)
 
 	# ---- a trader: route key -> what it has committed there (cargo, capital, last margin, ...)
 	routes: Dict[str, Dict[str, Any]] = field(default_factory=dict)
