@@ -136,7 +136,8 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
     floor_wanted = floor_spend * (1.0 + FLOOR_BUDGET_PRICE_MARGIN)
     usable = cash * (1.0 - BUDGET_SAFETY_SHARE)
     floor_scale = min(1.0, usable / floor_wanted) if floor_wanted > 0.0 else 0.0
-    left = usable - floor_wanted * floor_scale
+    # surplus goes on only what the year's spending allows, so stocking up a durable is paid from income
+    left = min(usable, max(spending, floor_wanted * floor_scale)) - floor_wanted * floor_scale
     flexible_scale = min(1.0, left / flexible_spend) if flexible_spend > 0.0 else 0.0
     bids = []
     budget_total = 0.0

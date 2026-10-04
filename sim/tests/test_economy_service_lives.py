@@ -43,12 +43,14 @@ class ServiceLifeTests(unittest.TestCase):
         rows = years_of(fixture.small_setup(), 3)
         self.assertEqual(rows[2][0], 0.0)
 
-    @unittest.expectedFailure
     def test_it_is_not_bought_again_in_full(self):
-        # finding: household purchases of the durable do not fall after the first stock-up year
-        rows = years_of(durable_setup(), 4)
-        self.assertLess(rows[3][2], 0.5 * rows[0][2])
-
+        # households fill the stock over years of income, then buy about the wear
+        rows = years_of(durable_setup(), 13)
+        bought = [rows[year][0] - rows[year - 1][0] + rows[year][1] for year in range(1, 13)]
+        self.assertGreater(bought[0], 8.0 * rows[1][1])
+        late_bought = sum(bought[-3:]) / 3.0
+        late_wear = sum(rows[year][1] for year in range(10, 13)) / 3.0
+        self.assertLess(late_bought, 2.5 * late_wear)
 
 if __name__ == "__main__":
     unittest.main()
