@@ -1,0 +1,5 @@
+{"entries": [
+ {"id": "big_gold", "name": "Big Gold", "resource": "gold", "lat": 40.2, "lon": 10.1, "deposit_type": "giant", "endowment": 5000, "endowment_unit": "tonnes_contained", "status": "modern", "source": "fixture", "conf": "D"},
+ {"id": "old_vein", "name": "Old Vein", "resource": "gold", "lat": 36.0, "lon": 14.0, "deposit_type": "vein", "endowment": 100000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 0.01, "depth_class": "shallow_vein", "status": "historic", "first_worked": -300, "source": "fixture", "conf": "D"},
+ {"id": "pit_coal", "name": "Pit", "resource": "coal", "lat": 36.1, "lon": 10.2, "deposit_type": "seam", "endowment": 2000000, "endowment_unit": "tonnes_ore", "status": "modern", "source": "fixture", "conf": "D"}
+]}

@@ -328,11 +328,25 @@ Old issue numbers (in commit messages, reports and history) and the number each 
 
 ## 2026-10-04
 
-Filed on `ui-disclosure-and-inspectors` at the same time as main's 401-407.
+The geography branch and the multiplayer branch both filed 401-407; the geography ones moved up.
 
-401 -> 408  ui-needs-its-own-slot-in-the-save
-402 -> 409  engine-keeps-no-causes-for-wages-closures-and-notice
-403 -> 410  automation-records-no-skipped-actions-or-modes
-404 -> 411  goals-have-one-id-one-reach-year-and-no-anatomy-hook
-405 -> 412  mods-cannot-add-figures-or-screen-rows-through-data
-406 -> 413  units-json-has-no-rule-for-mass-per-year-fields
+401 -> 408  economy-keeps-its-own-tile-freight-graph
+402 -> 409  economy-setup-opens-the-geography-file-by-path
+403 -> 410  the-engine-does-not-pass-active-mods-to-the-map
+404 -> 411  food-potential-gaps-shelf-cold-pasture-slope-and-competition
+405 -> 412  deposits-have-no-geology-layer
+406 -> 413  sea-routes-have-no-land-mask-and-few-lanes
+407 -> 414  food-potential-is-not-read-by-demography-or-settlement
+408 -> 415  mining-does-not-read-endowment-or-prospecting
+409 -> 416  reach-and-built-roads-are-not-read-by-the-engine
+410 -> 417  map-checks-and-heuristics-are-not-in-validate-or-the-burndown
+411 -> 418  the-fast-suite-fails-on-main
+
+Filed on `ui-disclosure-and-inspectors` at the same time as main's 401-418; moved twice, final numbers here. The branch's 414 (suite failures on main) was folded into 418.
+
+401 -> 419  ui-needs-its-own-slot-in-the-save
+402 -> 420  engine-keeps-no-causes-for-wages-closures-and-notice
+403 -> 421  automation-records-no-skipped-actions-or-modes
+404 -> 422  goals-have-one-id-one-reach-year-and-no-anatomy-hook
+405 -> 423  mods-cannot-add-figures-or-screen-rows-through-data
+406 -> 424  units-json-has-no-rule-for-mass-per-year-fields

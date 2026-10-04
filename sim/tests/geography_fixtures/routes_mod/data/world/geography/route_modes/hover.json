@@ -1,0 +1,1 @@
+{"entries": [{"id": "test_routes_k9:hovercart", "label": "Hover cart", "edge_classes": ["land"], "requires_nodes": ["test_routes_k9:hover_node"], "needs_improvement": null, "model": "fixed", "carrier": {"km_per_day": 80, "labour_hours_per_tonne_km": 0.01}, "source": "test", "why": "A modded mode unlocked by a modded node."}]}

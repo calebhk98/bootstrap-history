@@ -1,0 +1,5 @@
+{"entries": [
+ {"id": "test_resources_m4n8:unobtainium", "mechanism": "mineral_deposit", "unit": "kg", "grade_basis": true, "unit_factors": {"tonnes_contained": 1000.0},
+  "deposit_types": [{"id": "test_resources_m4n8:lode", "deposits_per_million_km2": 30, "provincial_only": true,
+   "tonnage_lognormal": {"median_tonnes": 10000, "sigma": 0.8}, "grade_lognormal": {"median_kg_per_tonne": 2.0, "sigma": 0.3}, "depth_class": "surface"}]}
+]}

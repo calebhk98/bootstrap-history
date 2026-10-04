@@ -363,6 +363,7 @@ import os
 from typing import Any, Dict, List, Optional
 
 from sim.constants import declare
+from sim.geography.api import GEOFILE, load_geography
 from sim.world.shared_constants import (
     ANNUAL_LABOUR_HOURS_PER_FARM_WORKER as _SHARED_ANNUAL_LABOUR_HOURS_PER_FARM_WORKER,
     FALLOW_SHARE_OF_HOLDING as _SHARED_FALLOW_SHARE_OF_HOLDING,
@@ -390,7 +391,7 @@ from sim.world.shared_constants import (
 
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 _ROOT = os.path.dirname(os.path.dirname(_THIS_DIR))
-GEOGRAPHY_FILE = os.path.join(_ROOT, "data", "world", "geography.json")
+GEOGRAPHY_FILE = GEOFILE  # the geography package owns where the map lives
 CIVILIZATIONS_DIR = os.path.join(_ROOT, "data", "civilizations")
 
 
@@ -803,7 +804,7 @@ def load_region_lands(geography: Optional[Dict[str, Any]] = None) -> Dict[str, R
     fertility is the arable-weighted mean. A region with no tiles has no
     land. Nothing is read from the region record itself.
     """
-    geography = geography if geography is not None else _load_json(GEOGRAPHY_FILE)
+    geography = geography if geography is not None else load_geography()
     land_tiles = geography.get("land_tiles") or {}
     tiles = land_tiles.get("tiles") or {}
     out = {}
@@ -857,7 +858,7 @@ def load_tile_lands(geography: Optional[Dict[str, Any]] = None) -> Dict[str, Reg
     The rule itself, and where it is declared, is `tools/generate_
     geography_tiles.py`'s own concern, out of this module's ownership.
     """
-    geography = geography if geography is not None else _load_json(GEOGRAPHY_FILE)
+    geography = geography if geography is not None else load_geography()
     land_tiles = geography.get("land_tiles")
     if land_tiles is None:
         # No land_tiles block at all - real data/world/geography.json
@@ -965,7 +966,7 @@ def cultivable_land_for_civilization(
     home_regions = civilization.get("home_regions") or []
     if not home_regions:
         return []
-    geography = geography if geography is not None else _load_json(GEOGRAPHY_FILE)
+    geography = geography if geography is not None else load_geography()
     land_tiles = geography.get("land_tiles")
     if land_tiles is None:
         raise KeyError(
@@ -989,7 +990,7 @@ def territory_farmland(home_regions: List[str],
     """Arable hectares and arable-weighted mean fertility over the tiles
     the named regions resolve to. A region with no tiles raises KeyError;
     territory with no farmable ground comes back empty."""
-    geography = geography if geography is not None else _load_json(GEOGRAPHY_FILE)
+    geography = geography if geography is not None else load_geography()
     land_tiles = geography.get("land_tiles")
     if land_tiles is None:
         raise KeyError("geography has no 'land_tiles' block")
@@ -1026,7 +1027,7 @@ def territory_land_area_km2(home_regions: List[str],
                             geography: Optional[Dict[str, Any]] = None) -> float:
     """Total land area, km2, of the tiles the named regions resolve to.
     Zero when none of them has tiles."""
-    geography = geography if geography is not None else _load_json(GEOGRAPHY_FILE)
+    geography = geography if geography is not None else load_geography()
     land_tiles = geography.get("land_tiles") or {}
     tiles = land_tiles.get("tiles") or {}
     return sum(float(tiles[tile_id].get("land_area_km2", 0.0))

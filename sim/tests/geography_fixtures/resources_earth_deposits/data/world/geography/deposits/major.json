@@ -1,0 +1,7 @@
+{"entries": [
+ {"id": "test_resources_e5r1:witwatersrand", "name": "Witwatersrand", "resource": "gold", "lat": -26.2, "lon": 27.9, "deposit_type": "paleoplacer_conglomerate_gold", "endowment": 50000, "endowment_unit": "tonnes_contained", "status": "modern", "source": "fixture, from memory", "conf": "D"},
+ {"id": "test_resources_e5r1:muruntau", "name": "Muruntau", "resource": "gold", "lat": 41.5, "lon": 64.6, "deposit_type": "orogenic_vein_gold", "endowment": 5000, "endowment_unit": "tonnes_contained", "status": "modern", "source": "fixture, from memory", "conf": "D"},
+ {"id": "test_resources_e5r1:ruhr", "name": "Ruhr", "resource": "coal", "lat": 51.5, "lon": 7.2, "deposit_type": "coal_basin_giant", "endowment": 20000000000, "endowment_unit": "tonnes_ore", "status": "historic", "source": "fixture, from memory", "conf": "D"},
+ {"id": "test_resources_e5r1:hamersley", "name": "Hamersley", "resource": "iron", "lat": -22.6, "lon": 117.8, "deposit_type": "banded_iron_formation", "endowment": 20000000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 600, "status": "modern", "source": "fixture, from memory", "conf": "D"},
+ {"id": "test_resources_e5r1:kimberley", "name": "Kimberley", "resource": "diamond", "lat": -28.7, "lon": 24.8, "deposit_type": "kimberlite_pipe", "endowment": 14500000, "endowment_unit": "carats", "status": "historic", "source": "fixture, from memory", "conf": "D"}
+]}

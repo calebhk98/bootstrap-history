@@ -10,7 +10,7 @@ by one.
 
 **Since this was written:** land rent's extensive margin reads tiles (section
 2.2 is stale); deposits carry a latitude and longitude and the holding tile is
-found at load (`data/world/deposits.json`; section 2.3 and the deposit stage of
+found at load (`data/world/geography/deposits/ancient.json`; section 2.3 and the deposit stage of
 section 5 are done); the forest ceiling sums tile areas; the stage-1 weather
 cell cap exists. The region layer is now a derived view (`sim/geography/regions.py`):
 region land is a sum over tiles and region records hold no land. Reach and

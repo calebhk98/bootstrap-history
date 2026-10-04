@@ -1,0 +1,10 @@
+{"_doc": "Words for a climate class in tile descriptions: the entry whose id is the longest prefix of the tile's koppen_class names it.",
+ "entries": [
+  {"id": "A", "name": "tropical"},
+  {"id": "B", "name": "dry"},
+  {"id": "BW", "name": "dry desert"},
+  {"id": "BS", "name": "dry steppe"},
+  {"id": "C", "name": "temperate"},
+  {"id": "D", "name": "cold continental"},
+  {"id": "E", "name": "polar"}
+ ]}

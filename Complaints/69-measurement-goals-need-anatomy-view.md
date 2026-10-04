@@ -1,6 +1,6 @@
 # Measurement goals need a dedicated "anatomy" view
 
-**Status:** partly - `anatomy` (`sim/ui/proto/anatomy.py`, test `sim/tests/test_ui_anatomy.py`) explains a measurement goal or a named metric: literacy from the education figures, epidemic relief from the defences, attribute and generation-share goals by their source, and a generic answer for any other metric; remains: the engine hook that would make every metric generic (411), and no shipped goal exercises the attribute or generation-share builders
+**Status:** partly - `anatomy` (`sim/ui/proto/anatomy.py`, test `sim/tests/test_ui_anatomy.py`) explains a measurement goal or a named metric: literacy from the education figures, epidemic relief from the defences, attribute and generation-share goals by their source, and a generic answer for any other metric; remains: the engine hook that would make every metric generic (422), and no shipped goal exercises the attribute or generation-share builders
 
 For the literacy goal, the most useful information was scattered across `state`, `why`, population/labor screens, and technology effects. The goal card showed current literacy and a ceiling, but not enough explanation of why the ceiling was where it was or what was moving it.
 

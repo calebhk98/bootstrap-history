@@ -1,0 +1,3 @@
+{"entries": [
+ {"id": "test_resources_m4n8:first_lode", "resource": "test_resources_m4n8:unobtainium", "lat": 40.0, "lon": 14.0, "deposit_type": "test_resources_m4n8:lode", "endowment": 50, "endowment_unit": "tonnes_contained", "status": "modern", "source": "fixture", "conf": "D"}
+]}

@@ -8,7 +8,14 @@ A per-tile monthly temperature field from a climate dataset would replace all of
 import math
 
 from sim.constants import declare
-from sim.world.demand import DAYS_PER_YEAR
+
+DAYS_PER_YEAR = declare(
+    "DAYS_PER_YEAR", 365.25,
+    kind="physical_constant",
+    unit="days/year",
+    source="Julian calendar year average, the same figure sim/world/demand.py declares.",
+    confidence="A",
+    why="How many daily temperatures make one year.")
 
 MONTHS_PER_YEAR = 12
 

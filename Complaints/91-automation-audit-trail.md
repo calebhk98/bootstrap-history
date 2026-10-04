@@ -1,6 +1,6 @@
 # Automation needs a per-turn audit trail
 
-**Status:** partly - `automation [years]` lists each automatic action, and each `step` reply carries the actions of the years it played (`automation` key, one AUTOMATION line on the screen; test `sim/tests/test_ui_step_automation_line.py`); remains (engine, 410): skipped actions with their reason, replace-only versus expand `auto_hire`, the reopening as a policy, tranche payments tied to the mine row
+**Status:** partly - `automation [years]` lists each automatic action, and each `step` reply carries the actions of the years it played (`automation` key, one AUTOMATION line on the screen; test `sim/tests/test_ui_step_automation_line.py`); remains (engine, 421): skipped actions with their reason, replace-only versus expand `auto_hire`, the reopening as a policy, tranche payments tied to the mine row
 
 Auto-hire, auto-open, auto-mine, auto-forest and other automation policies can spend money or change staffing. While the policy screen explains the heuristics, the player needs to know what actually happened on this turn and why.
 

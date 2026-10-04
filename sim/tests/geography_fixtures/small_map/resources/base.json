@@ -1,0 +1,4 @@
+{"entries": [
+ {"id": "gold", "mechanism": "mineral_deposit", "unit": "kg"},
+ {"id": "salt", "mechanism": "surface_stock", "unit": "kg"}
+]}
