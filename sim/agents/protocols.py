@@ -400,3 +400,13 @@ class World(Protocol):
 	def coin_regime(self) -> str:
 		"""The civilisation's coin standard regime: "struck_coin", "weighed_metal", "commodity" or "fiat"."""
 		...
+
+	# ---- What patents ask (sim/engine/agents_port_disclosure.py)
+
+	def state_grants_patents(self, actor: Any) -> bool:
+		"""Whether the state over an actor knows a technique declaring the patent mechanic."""
+		...
+
+	def patent_entry(self, node_id: str) -> Optional[Dict[str, Any]]:
+		"""The live patent on a node ({"holder", "expires", "licensees"}), else None."""
+		...
