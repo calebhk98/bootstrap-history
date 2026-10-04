@@ -16,11 +16,12 @@ from .agents_port_disclosure import DisclosureView
 from .agents_port_groups import GroupView
 from .agents_port_revenue import RevenueView
 from .agents_port_cast import CastView
+from .agents_port_coinage import CoinageView
 from .agents_port_trade import TradeView
 from .data import TRADES_ABSENT
 
 
-class SimWorld(BudgetView, RevenueView, GroupView, DisclosureView, CapitalView, CapacityView, TradeView, CastView):
+class SimWorld(BudgetView, RevenueView, GroupView, DisclosureView, CapitalView, CapacityView, TradeView, CastView, CoinageView):
 	"""The `Sim`'s answers to the questions actors ask."""
 
 	def __init__(self, sim: Any) -> None:

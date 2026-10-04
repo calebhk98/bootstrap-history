@@ -394,3 +394,9 @@ class World(Protocol):
 	def observed_stratum(self, country: Optional[str], name: str) -> Optional[Dict[str, float]]:
 		"""Headcount and income ("members", "income") another model already keeps for a body of people."""
 		...
+
+	# ---- What a state asks about its coin (sim/engine/agents_port_coinage.py)
+
+	def coin_regime(self) -> str:
+		"""The civilisation's coin standard regime: "struck_coin", "weighed_metal", "commodity" or "fiat"."""
+		...
