@@ -4,7 +4,7 @@ many people they speak for, what they lost and to what, and what the state is do
 Methods of Sim. The groups themselves are actors (`sim/agents/group.py`); this is the
 reading side, plus the one prohibition check the start gate calls.
 """
-from sim.agents.api import supply
+from sim.agents.api import Sector, supply
 from .blockers import blocker_kind
 
 
@@ -64,27 +64,34 @@ class InterestGroupsMixin:
         return reasons
 
     def group_prohibition_of(self, node_id):
-        """(group name, commodity) for the interest group whose demand has the state forbid
-        starting this node, or None. A node the state itself values is not forbidden."""
+        """(group name, subject, group pull) for the interest group whose demand has the state forbid
+        starting this node, or None. The node is reached through what it makes, its own goods category
+        and the line of techniques it refines (see `Sector.reached_by`). A node the state itself values
+        is not forbidden."""
         state = self.state.actors
         if state is None or not state.records:
             return None
         banned = self.actors.prohibitions()
-        if not banned:
+        if not banned or self.state_interest(self.nodes[node_id]) > 0.0:
             return None
-        for material in supply.materials_made_by(node_id):
-            commodity = self._material_tag(material)[0]
-            if commodity in banned and self.state_interest(self.nodes[node_id]) <= 0.0:
-                return banned[commodity], commodity
+        reached = Sector.reached_by(node_id, self.nodes, supply.materials_made_by,
+                                    lambda material: self._material_tag(material)[0])
+        for subject in sorted(reached & set(banned)):
+            strength = max((group.record.strength for group in self.actors.of_kind("interest_group")
+                            if group.record.subject == subject and group.record.demands), default=0.0)
+            return banned[subject], subject, strength
         return None
 
 
 @blocker_kind("politics")
 def check_group_prohibition(self, node_id, node, ignore_trade, _memo, _why):
     banned = self.group_prohibition_of(node_id)
-    if banned is None or self.state.household.protection > self.STATE_OPPOSITION_PROTECTION_OVERRIDE:
+    if banned is None:
+        return None
+    needed = Sector.protection_needed(banned[2], self.STATE_OPPOSITION_PROTECTION_OVERRIDE)
+    if self.state.household.protection > needed:
         return None
     return False, (("the state has forbidden this at the petition of %s, who lose their living to "
                     "what it makes (%s); protection above %.2f (you have %.2f) lets you build "
-                    "regardless" % (banned[0], banned[1], self.STATE_OPPOSITION_PROTECTION_OVERRIDE,
-                                    self.state.household.protection)) if _why else None)
+                    "regardless" % (banned[0], banned[1], needed, self.state.household.protection))
+                   if _why else None)

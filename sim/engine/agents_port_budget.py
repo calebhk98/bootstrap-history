@@ -21,6 +21,10 @@ class BudgetView:
 		"""Frontier, coast and road length of the tiles the state holds."""
 		return territory.holdings(list(self._sim.civ.get("home_regions") or []))
 
+	def country_strata(self) -> List[Any]:
+		"""The bodies of people (strata actors) of the state's own country, in id order."""
+		return [stratum for stratum in self._sim.actors.of_kind("stratum") if stratum.record.country is None]
+
 	def urban_population(self) -> float:
 		return self.population_total() * float(self._sim.civ.get("urban_fraction", 0.0))
 

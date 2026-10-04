@@ -1,11 +1,11 @@
 """The set of actors other than the founder's household, and their yearly turn."""
 from bisect import bisect_left
 from itertools import accumulate
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 from .records import ActorRecord, ActorsState
 
-from . import imitation
+from . import firm_entry, imitation, ledger
 from .base import RecordedActor
 from .firm import Firm
 from .government import Government
@@ -13,7 +13,35 @@ from .group import InterestGroup
 from .policy import make_policy
 from .tuning import ENTREPRENEURIAL_CAPITAL_SHARE, ENTRY_STAKE_BUFFER, VALUE_HORIZON_YEARS
 
-ACTOR_CLASSES = {"firm": Firm, "government": Government, "interest_group": InterestGroup}
+# kind -> class; `register_actor_kind` adds to it, so a mod can bring its own kind of actor
+ACTOR_CLASSES: Dict[str, Any] = {"firm": Firm, "government": Government, "interest_group": InterestGroup}
+
+# what founds new actors after every actor has had its year, in the order registered: (name, spawner),
+# each spawner a function (registry, world) -> ids of the actors it founded
+SPAWNERS: List[Tuple[str, Callable[["ActorRegistry", Any], List[str]]]] = []
+
+# builds the world an actor of another country sees from the shared world, that country's profile
+# and the registry; None until a scope is registered, when every actor sees the shared world
+WORLD_SCOPE: List[Optional[Callable[[Any, Any, "ActorRegistry"], Any]]] = [None]
+
+
+def register_actor_kind(kind: str, actor_class: Any) -> None:
+	"""Make records of `kind` build `actor_class` objects."""
+	ACTOR_CLASSES[kind] = actor_class
+
+
+def register_spawner(name: str, spawner: Callable[["ActorRegistry", Any], List[str]]) -> None:
+	"""Run `spawner` every year after the actors' turns; registering a name again replaces it."""
+	for index, (existing, _old) in enumerate(SPAWNERS):
+		if existing == name:
+			SPAWNERS[index] = (name, spawner)
+			return
+	SPAWNERS.append((name, spawner))
+
+
+def register_world_scope(scope: Callable[[Any, Any, "ActorRegistry"], Any]) -> None:
+	"""`scope(world, profile, registry)` is the world an actor of the country `profile` sees."""
+	WORLD_SCOPE[0] = scope
 
 
 class _ConcernWatch:
@@ -63,6 +91,8 @@ class ActorRegistry:
 		# bumped whenever any firm's concerns change, so market caches keyed on it stay honest
 		self.version: List[int] = [0]
 		self._capacity_totals: Optional[Any] = None
+		# country -> the world its actors see this year (rebuilt every `advance`)
+		self._scoped: Dict[str, Any] = {}
 		for actor_id in sorted(state.records):
 			self._wrap(actor_id)
 
@@ -76,9 +106,13 @@ class ActorRegistry:
 				for holding in self._holders.values():
 					holding.discard(actor_id)
 		actor = ACTOR_CLASSES[record.kind](actor_id, record, make_policy(record.policy_kind))
-		if isinstance(actor, Firm):
+		if hasattr(type(actor), "rivals_of"):
+			# an actor that runs concerns in the shared market: it counts its rivals and is counted as one
 			actor.rivals_of = self.rivals_of
-			actor.on_capacity_change = self.note_capacity_change
+			if hasattr(type(actor), "on_capacity_change"):
+				actor.on_capacity_change = self.note_capacity_change
+			if hasattr(type(actor), "find_actor"):
+				actor.find_actor = self.get
 			from sim.invalidating import _InvalidatingSet
 			watch = _ConcernWatch(actor_id, self._holders, self.version)
 			record.concerns = _InvalidatingSet(record.concerns, on_change=watch)
@@ -103,9 +137,9 @@ class ActorRegistry:
 		key = (self.version[0], len(self.actors))
 		if self._capacity_totals is None or self._capacity_totals[0] != key:
 			totals: Dict[str, float] = {}
-			for firm in self.active_firms():
-				for held in firm.concerns:
-					totals[held] = totals.get(held, 0.0) + firm.record.capacity.get(held, 1.0)
+			for operator in self.market_operators():
+				for held in operator.concerns:
+					totals[held] = totals.get(held, 0.0) + operator.record.capacity.get(held, 1.0)
 			self._capacity_totals = (key, totals)
 		return self._capacity_totals[1].get(node_id, 0.0)
 
@@ -116,10 +150,10 @@ class ActorRegistry:
 		key = (self.version[0], len(self.actors))
 		if self._category_counts is None or self._category_counts[0] != key:
 			counts: Dict[Any, float] = {}
-			for firm in self.active_firms():
-				for node_id in firm.concerns:
+			for operator in self.market_operators():
+				for node_id in operator.concerns:
 					node_category = nodes[node_id].get("cat")
-					counts[node_category] = counts.get(node_category, 0.0) + firm.record.capacity.get(node_id, 1.0)
+					counts[node_category] = counts.get(node_category, 0.0) + operator.record.capacity.get(node_id, 1.0)
 			self._category_counts = (key, counts)
 		return self._category_counts[1].get(category, 0)
 
@@ -236,6 +270,47 @@ class ActorRegistry:
 	def government(self, civ_id: str) -> Government:
 		return self.ensure_government(civ_id)
 
+	def country_of(self, actor: Any) -> str:
+		"""The country an actor answers to: its own, else the home country."""
+		record = getattr(actor, "record", None)
+		country = None if record is None else record.country
+		return country or self.state.home_country
+
+	def government_of(self, country: Optional[str]) -> Optional[Government]:
+		"""The government of a country (the home country for None), if it has one."""
+		return self.actors.get("government:" + str(country or self.state.home_country))  # type: ignore[return-value]
+
+	def world_for(self, actor: Any, world: Any) -> Any:
+		"""The world an actor sees: the shared one for the home country, else its country's scope."""
+		country = self.country_of(actor)
+		scope = WORLD_SCOPE[0]
+		if scope is None or not country or country == self.state.home_country or country not in self.state.countries:
+			return world
+		scoped = self._scoped.get(country)
+		if scoped is None:
+			scoped = scope(world, self.state.countries[country], self)
+			self._scoped[country] = scoped
+		return scoped
+
+	def market_operators(self) -> List[RecordedActor]:
+		"""Every actor still in business that runs concerns in the shared market: firms and players."""
+		return [actor for actor in (self.actors[actor_id] for actor_id in self._sorted_ids())
+				if hasattr(type(actor), "rivals_of") and actor.record.exited_year is None]
+
+	def _sorted_ids(self) -> List[str]:
+		if self._ordered_ids is None:
+			self._ordered_ids = sorted(self.actors)
+		return self._ordered_ids
+
+	def proven_concerns(self, world: Any) -> List[str]:
+		"""Concerns some player has shown to pay, the founder's and every player actor's, in id order."""
+		proven = set(world.proven_concerns())
+		for actor in self.actors.values():
+			shown = getattr(actor, "proven_concerns", None)
+			if shown is not None and actor.record.exited_year is None:
+				proven.update(shown(world))
+		return sorted(proven)
+
 	def active_firms(self) -> List[Firm]:
 		return [firm for firm in self.of_kind("firm") if firm.record.exited_year is None]  # type: ignore[misc]
 
@@ -253,17 +328,19 @@ class ActorRegistry:
 
 	def advance(self, world: Any) -> None:
 		self.world = world
+		self._scoped = {}
 		first = True
 		before = self._workforces()
 		for actor_id in sorted(self.actors):
 			actor = self.actors[actor_id]
 			world.market_forget(actor_id)
-			if actor.kind == "firm" and actor.record.exited_year is not None:
+			if actor.record.exited_year is not None:
 				continue
 			# the tally is a count of everyone's staff as of the acting actor's staff in `_staff_basis`
 			self._acting, self._staff_basis = actor, dict(actor.workforce)
-			actor.advance(world)
-			actor.sell_output(world)
+			seen = self.world_for(actor, world)
+			actor.advance(seen)
+			actor.sell_output(seen)
 			# it stays when the acting actor's staff is what the count saw; the first actor of a
 			# year always recounts, since anything between years is unseen
 			if first:
@@ -274,8 +351,8 @@ class ActorRegistry:
 				self._columns_synced = False
 			first = False
 		self._acting = None
-		self.consider_entry(world)
-		self.consider_groups(world)
+		for _name, spawner in list(SPAWNERS):
+			spawner(self, world)
 		# entry and group formation change staff after the last count; whatever reads before the next
 		# year's first actor (the founder's own turn) sees what is there, as a reloaded game does.
 		# A year in which no actor's staff differs from the year's start leaves the tally standing.
@@ -297,7 +374,8 @@ class ActorRegistry:
 			if target is not None and target not in firm.concerns:
 				key = world.market_key(target)
 				waiting[key] = waiting.get(key, 0) + 1
-		for node_id in world.proven_concerns():
+		strata_exist = bool(self.of_kind("stratum"))
+		for node_id in self.proven_concerns(world):
 			key = world.market_key(node_id)
 			rivals = self.rivals_of(node_id, "")
 			expected = (world.entry_gross(node_id, rivals, waiting.get(key, 0) + 1)
@@ -309,21 +387,32 @@ class ActorRegistry:
 			if not chain:
 				continue
 			plan = imitation.copy_plan(probe, chain, world)
-			chance = imitation.copy_chance(chain, world)
+			founders = firm_entry.founder_candidates(self) if strata_exist else []
+			founder = founders[0] if founders else None
+			chance = imitation.copy_chance(chain, world) * firm_entry.copy_ease(founder)
 			worth = expected * VALUE_HORIZON_YEARS * chance
-			stake = plan["total"] * ENTRY_STAKE_BUFFER
-			pooled = min(stake, capital_limit)
-			borrowed = stake - pooled  # the rest of the stake is raised as credit, on what the entrant expects to earn
+			premium = firm_entry.entry_premium(plan["total"], rivals + waiting.get(key, 0))
+			stake = plan["total"] * ENTRY_STAKE_BUFFER + premium
+			pooled, borrowed = firm_entry.stake_split(stake, founder, strata_exist, capital_limit)
 			if borrowed > probe.spare_credit(world):
 				continue
 			capital_cost = pooled * capital_rate + (borrowed * probe.rate_on_loan(world, borrowed) if borrowed > 0.0 else 0.0)
-			if worth <= plan["total"] or expected * chance <= capital_cost:
+			if worth <= plan["total"] + premium or expected * chance <= capital_cost:
 				continue
-			firm_id = "firm:%d" % (len(self.state.records) + 1)
+			serial = len(self.state.records) + 1
+			while "firm:%d" % serial in self.state.records:
+				serial += 1
+			firm_id = "firm:%d" % serial
 			founded_firm = self.add(firm_id, ActorRecord(
 				kind="firm", name=firm_id, target=node_id,
 				last_margin=expected, founded_year=world.year))
-			founded_firm.credit(pooled, "pooled capital")
+			if founder is not None:
+				founded_firm.record.plan["founder"] = founder.actor_id
+				ledger.transfer(founder, founded_firm, pooled, "founding stake")
+			else:
+				founded_firm.credit(pooled, "edge:pooled capital")
+			if premium > 0.0:
+				founded_firm.debit(premium, "edge:entry premium")
 			waiting[key] = waiting.get(key, 0) + 1
 			founded.append(firm_id)
 		return founded
@@ -356,3 +445,7 @@ class ActorRegistry:
 			self._bans = {group.record.subject: group.record.name for group in self.of_kind("interest_group")
 						  if group.record.exited_year is None and group.record.demands}
 		return self._bans
+
+
+register_spawner("firm_entry", lambda registry, world: registry.consider_entry(world))
+register_spawner("interest_groups", lambda registry, world: registry.consider_groups(world))

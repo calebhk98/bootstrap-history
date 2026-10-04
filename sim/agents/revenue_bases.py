@@ -6,7 +6,7 @@ people able to work, the goods that crossed the border, the coin held. Adding a 
 here and one line in `BASES`; no civilisation's id appears.
 """
 from dataclasses import dataclass
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, Tuple
 
 # The grain the harvest is counted in, as a material in the tree's own terms.
 HARVEST_MATERIAL = "wheat_kg"
@@ -17,6 +17,7 @@ class Base:
 	value: float  # money's worth of the base this year
 	tonnes: float = 0.0  # physical amount where the base is a good, so a share of it can be paid in kind
 	material: str = ""  # that good
+	payers: Tuple[Tuple[Any, float], ...] = ()  # (actor, income) where the base is held by actors the state taxes
 
 
 def harvest(world: Any) -> Base:
@@ -44,10 +45,26 @@ def coin_stock(world: Any) -> Base:
 	return Base(world.coin_stock_value())
 
 
+def earned_income(stratum: Any) -> float:
+	"""What a body of people has earned from outside the modelled actors over its life (wages, property,
+	harvest): what flows between actors (migration, keep, relief) is not earned."""
+	return sum(amount for purpose, amount in stratum.record.income.items() if purpose.startswith("edge:"))
+
+
+def stratum_income(world: Any) -> Base:
+	"""What each of the country's bodies of people earned since the state last assessed it; the money is
+	taken from the bodies themselves (`ledger.transfer`), so the payers go with the base."""
+	assessed = world.government().record.income_assessed
+	payers = tuple((stratum, max(0.0, earned_income(stratum) - assessed.get(stratum.actor_id, 0.0)))
+				   for stratum in world.country_strata())
+	return Base(sum(income for _stratum, income in payers), payers=payers)
+
+
 BASES: Dict[str, Callable[[Any], Base]] = {
 	"harvest": harvest,
 	"adult_labour_years": adult_labour_years,
 	"imports_value": imports_value,
 	"exports_value": exports_value,
 	"coin_stock": coin_stock,
+	"stratum_income": stratum_income,
 }
