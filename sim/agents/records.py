@@ -82,6 +82,13 @@ class ActorRecord:
 	literacy: float = 0.0
 	shortfall: Dict[str, float] = field(default_factory=dict)
 	last_growth: float = 0.0
+	# its definition as data (name, share, trade, property_share, bonded, owner, rises_to, falls_to,
+	# ...), last year's welfare ratio, what its keepers handed it for the year, and the people it
+	# has decided to send to another stratum this year (stratum id -> people), settled by the registry
+	plan: Dict[str, Any] = field(default_factory=dict)
+	welfare: float = 0.0
+	allowance: float = 0.0
+	moving: Dict[str, float] = field(default_factory=dict)
 
 
 @dataclass
