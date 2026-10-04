@@ -96,6 +96,9 @@ class ActorRecord:
 	offers: List[Dict[str, Any]] = field(default_factory=list)
 	offer_serial: int = 0
 
+	# ---- firm entry and exit: consecutive years a firm earned less than its plant would lend for
+	weak_years: int = 0
+
 
 @dataclass
 class CapitalMarketRecord:

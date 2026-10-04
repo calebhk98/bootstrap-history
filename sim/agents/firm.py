@@ -6,7 +6,7 @@ the market with every other operator.
 """
 from typing import Any, Callable, List, Optional
 
-from . import concern_ops
+from . import concern_ops, firm_exit
 from .base import RecordedActor
 from .firm_expansion import ExpansionMixin
 from .borrowing import TRACK_RECORD_YEARS
@@ -21,6 +21,8 @@ class Firm(ExpansionMixin, RecordedActor):
 	rivals_of: Optional[Callable[[str, str], float]] = None
 	# Set by the registry: told when a firm changes the size it runs a concern at.
 	on_capacity_change: Optional[Callable[[], None]] = None
+	# Set by the registry: finds another actor by id (the founder whose stake the firm returns).
+	find_actor: Optional[Callable[[str], Any]] = None
 
 	def imitation_candidates(self, world: Any) -> List[str]:
 		# a firm values only the concern it is aiming at
@@ -49,6 +51,9 @@ class Firm(ExpansionMixin, RecordedActor):
 			margin = concern_ops.operate_concern(self, node_id, world, rivals)
 			self.record.last_margin = margin
 			self.record.loss_years = self.record.loss_years + 1 if margin < 0 else 0
+		if self.record.loss_years == 0 and self.concerns:
+			weak = firm_exit.earns_less_than_plant_would_lend_for(self, world)
+			self.record.weak_years = self.record.weak_years + 1 if weak else 0
 
 	def credit_earning(self, world: Any) -> float:
 		return max(0.0, self.record.last_margin)
@@ -63,9 +68,7 @@ class Firm(ExpansionMixin, RecordedActor):
 		self.pay_interest(world)
 		super().act(world)
 		self.operate(world)
-		if self.record.loss_years >= EXIT_LOSS_YEARS:
-			self.concerns.clear()
-			self.record.capacity.clear()
-			self.record.exited_year = world.year
+		if self.record.loss_years >= EXIT_LOSS_YEARS or self.record.weak_years >= EXIT_LOSS_YEARS:
+			firm_exit.close_firm(self, world)
 		else:
 			self.expand(world)

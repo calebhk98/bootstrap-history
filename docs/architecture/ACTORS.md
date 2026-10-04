@@ -66,10 +66,15 @@ step. Failure costs what was spent and is counted.
 
 `ActorRegistry.consider_entry`: a founder concern that has run at a profit
 for long enough is proven. An entrant is founded if the profit share it
-expects, over the horizon and weighted by copy success, exceeds its cost, and
-the society's pooled capital can fund the stake. The firm then copies the
-concern through the ordinary imitation path, opens it, shares its takings with
-every other operator, and closes after consecutive losing years.
+expects, over the horizon and weighted by copy success (which the founder's
+literacy shifts), exceeds its cost, and a founder can fund the stake: a member
+of a stratum that holds savings puts up their share (`sim/agents/firm_entry.py`),
+lenders back the rest only against that equity, and a market crowded with
+operators adds a fixed entry premium. Without strata the society's pooled
+capital funds it. The firm then copies the concern through the ordinary
+imitation path, opens it, shares its takings with every other operator, and
+closes after consecutive losing years or years of earning less than its plant
+would lend for (`sim/agents/firm_exit.py`), returning its purse to its founder.
 
 ## Government
 
