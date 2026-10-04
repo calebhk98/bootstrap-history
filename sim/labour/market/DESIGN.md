@@ -29,11 +29,18 @@ area × trade: `[years_left, people per band, completion_bonus]`. Market wages a
      `incumbent workers * apprentices_per_master / training_years + school seats`.
    - A trade with no incumbents and no school cannot reproduce.
 4. **Entrants** (`entrants.py`). The coming-of-age cohort chooses a trade, band by band, by logit over:
-   `completion_chance * present_value(expected_wage after training) + (1 - completion_chance) * present_value(fallback expected_wage after training)`.
+   `completion_chance * present_value(income_at_graduation) + (1 - completion_chance) * present_value(fallback income) + taste_scale * log(jobs in the trade)`.
+   - The log-jobs term (a size variable) makes a trade with many places draw many and one nobody employs
+     draw almost nobody, however many trades a mod adds. Without it, a logit over many alternatives spreads
+     entrants evenly.
+   - `income_at_graduation` keeps today's premium only for the part of today's shortage that those
+     already training will not fill. Without it, entrants answer today's wage, the trade gluts a
+     training-length later, and wages cycle between floor and ceiling.
    - `expected_wage = average_wage * employment_share * hours_per_worker_year`. This is Harris-Todaro: idle markets look worse.
    - Applicants beyond a trade's intake go to their next choice, and finally to the fallback trade.
    - The training premium of a trade is not written anywhere. It is the wage at which enough able people choose the trade.
 5. **Switching** (`switching.py`). Workers re-weigh their trade against the others, with a stay option.
+   - Only moves worth more than staying are considered. Otherwise float noise and the logit's taste spread leak a large idle trade into a glutted one.
    - The gain is the present value of the expected-wage difference, less the retraining time, in units of a year's subsistence.
    - Retraining within a skill family takes a share of the full training.
    - Switchers become trainees of the new trade and use the same intake.
@@ -63,7 +70,29 @@ create aptitude. Its bonus shifts the completion curve.
 Every tuning number is declared with `kind="temporary_heuristic"` beside the code that uses it.
 `python3 sim/constants.py --burndown` lists them.
 
+## Opening
+
+`opening.py` places each area's working people in the trades its work needs. Hard trades are staffed
+first from the bands able to finish them; the rest go to the fallback trade.
+
+## Demand must slope
+
+Clearing finds the wage where hours offered meet employers' bids. If every bid for a trade sits far above
+the workers' ask, demand is vertical over the range that matters. A one-percent swing in supply then
+moves the wage from floor to ceiling. Callers should bid in tranches of falling value: the marginal
+worker is worth less than the first.
+
 ## Status and what is outside this folder
 
-See `Complaints/` for the switches the economy and engine owners need to make. The file numbers are listed in
-`sim/labour/README.md` once written.
+The core is complete and tested (`python3 -m sim.tests --only labour_core_training,labour_core_clearing,labour_core_entrants,labour_core_switching,labour_core_migration,labour_core_opening,labour_core_year,labour_core_walls`).
+Nothing in the running game calls it yet. That needs changes outside `sim/labour/`:
+
+- Complaint 401: the agent economy delegates its labour clearing and worker movement to the core.
+- Complaint 402: the trade registry keeps `difficulty`, `literate`, `taught_from`, `tool_basket`,
+  `fallback`, `fatality_risk_per_year`, and labour can read it. Then `legacy_trade_defaults.py` goes.
+- Complaint 403: a saved field and a yearly call, plus the household fields for a standing pay premium and
+  school cohorts.
+- Complaint 404: the two engine imports left in the labour package.
+- Complaint 405: the subsistence staple is wheat for every civilisation.
+- Complaint 406: the player's hire command takes a premium and shows how many can be found.
+- Complaint 407: recipe need shares behind trade populations overweight mining and omit transport.
