@@ -1,6 +1,6 @@
 # Hiring a large crew of master craftsmen takes one year and no search
 
-**Status:** open
+**Status:** resolved in `sim/labour/labour_market_api.py` (`whole_recruits`, `hire_cost`) and `labour_training.py` (`hire_check`/`hire`): a hire finds only the whole people the market's matching form yields this year (at least one), prices each extra person at the scarcity the earlier ones leave, and takes an optional `pay_premium`. The rest are sought next year; callers that loop (`hire_to_cover`) should count the people actually hired. Test: `sim/tests/test_recruitment_friction.py`.
 
 Source: `Complaints/reports/playthrough-review-han-china-100-to-400ad.md`, item 3 (instantaneous hiring pools).
 
