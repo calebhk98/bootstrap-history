@@ -14,6 +14,7 @@ with buyers and no maker at all gets a trial newcomer whenever the bids would ta
 entry price, whatever price it remembers: a price nobody has sold at says nothing about cost.
 """
 import math
+from dataclasses import replace
 from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
 from sim.constants import declare
@@ -22,7 +23,7 @@ from . import unit_cost
 from .entry import EntryPlan, UnmetDemand
 from .entry_sizing import ENTRY_SHARE_OF_UNTRADED_DEMAND
 from .goods_market import quantity_at
-from .producers import Producer, live_input_prices, live_wages
+from .producers import OUTPUT_CHANGE_SHARE_PER_YEAR, Producer, live_input_prices, live_wages
 from .types import AreaId, Bid, GoodId, Recipe
 
 ENTRY_PRICE_MARGIN_SHARE = declare(
@@ -40,13 +41,9 @@ MARGIN_ENTRY_SHARE_OF_GAP = declare(
     why="Several founders see the same gap and each expects the others to take part of it; free entry "
         "overshoots when each acts on the whole (Mankiw and Whinston 1986). How much of a gap one "
         "year's founders fill is not measured.")
-MARGIN_ENTRY_GROWTH_SHARE = declare(
-    "MARGIN_ENTRY_GROWTH_SHARE", 0.5, kind="temporary_heuristic",
-    unit="most capacity newcomers drawn by a margin add in a year, as a share of the area's capacity",
-    source=None, confidence="D",
-    why="New workshops need hands trained, tools made and customers found, so an industry grows by a "
-        "share of what it already is; the share follows how fast skills and tools spread, which is "
-        "not modelled.")
+# newcomers drawn by a margin add at most this share of the area's capacity a year: the speed at which
+# a producer can change its own output, so entry and growth are held to one pace
+MARGIN_ENTRY_GROWTH_SHARE = OUTPUT_CHANGE_SHARE_PER_YEAR
 
 
 def full_cost_per_unit(recipe: Recipe, good: GoodId, output_prices: Mapping[GoodId, float],
@@ -68,7 +65,10 @@ def full_cost_per_unit(recipe: Recipe, good: GoodId, output_prices: Mapping[Good
 
 
 def demand_at(bids: Sequence[Bid], price: float) -> float:
-    return math.fsum(quantity_at(bid, price) for bid in bids)
+    """What the bids would take at `price` by their own price response. Each budget was planned at this
+    year's price, so it is left out: at a much lower price a household spends less on a staple, not the
+    same sum on more of it. A buyer's ceiling still holds."""
+    return math.fsum(quantity_at(replace(bid, budget=math.inf), price) for bid in bids if bid.budget > 0.0)
 
 
 def capacity_in_area(producers: Mapping[str, Producer], recipes: Mapping[str, Recipe], good: GoodId,
