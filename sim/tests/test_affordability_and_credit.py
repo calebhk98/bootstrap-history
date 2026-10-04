@@ -7,6 +7,10 @@ one's own comment explains the break it guards.
 """
 from .harness import *  # noqa: F401,F403
 
+# One untouched game for checks that only read (credit line, project cost, spending power): a game costs
+# about half a second to build, and a read leaves it as it was.
+_pristine = sim()
+
 
 # --- BREAK: auto_open threw away every refusal open_venture handed it, so a
 # concern earning 150 against 15 of upkeep sat shut for six years in silence.
@@ -71,15 +75,23 @@ check("there is ONE affordability rule, and it says which it is using",
       abs(s_af.spending_power("buy") - (400.0 + s_af.credit_limit() * 0.5)) < 1e-6
       and abs(s_af.spending_power("start") - (400.0 + s_af.credit_limit())) < 1e-6,
       (s_af.spending_power("buy"), s_af.spending_power("start")))
-_q, _, _ = proto([{"cmd": "quote", "what": "mine", "material": "coal", "n": 500},
-                  {"cmd": "available"}])
+# One Rome protocol session serves the read-only checks below and the debt-clearing one near the end.
+_session, _, _ = proto([{"cmd": "quote", "what": "mine", "material": "coal", "n": 500},
+                        {"cmd": "available"},
+                        {"cmd": "money"},
+                        {"cmd": "start", "id": "arithmetic_positional"},
+                        {"cmd": "step", "years": 1},
+                        {"cmd": "work", "trade": "scholar", "hours": 2000},
+                        {"cmd": "step", "years": 1},
+                        {"cmd": "state"}])
+_q = _session[:2]
 check("quote counts the credit a lender would actually advance",
       _q[0].get("you_could_raise", 0) > _q[0].get("you_have", 0), _q[0].get("you_could_raise"))
 check("...and says what its 'afford' figure means",
       "credit" in str(_q[0].get("afford_means")), _q[0].get("afford_means"))
 _hint = str((_q[1].get("to_see_more") or {}).get("what you can pay for", ""))
 check("the AFFORD hint uses the rule `start` uses, since it is about starting",
-      str(int(sim().spending_power("start"))).replace(",", "")
+      str(int(_pristine.spending_power("start"))).replace(",", "")
       in _hint.replace(",", ""), _hint)
 
 # --- BREAK: the arrears banner quoted 46 a year against a ledger Net/yr of
@@ -140,7 +152,7 @@ s_ok = sim()
 s_ok.warn_near_the_limit(105)
 check("a solvent player is not warned about a limit they are nowhere near",
       not s_ok.log, [message for _, message in s_ok.log])
-_rm, _, _ = proto([{"cmd": "money"}])
+_rm = [_session[2]]
 check("the ledger says how much of the credit line is used",
       _rm[0].get("of_that_limit_you_have_used") is not None,
       _rm[0].get("of_that_limit_you_have_used"))
@@ -187,9 +199,7 @@ check("train's cash-short refusal uses the identical reasoning as hire's, "
       "not a second wording for the same rule",
       _ok_t is False and "50%" in _msg_t and "lender advances against a purchase" in _msg_t,
       _msg_t)
-s_asym2 = sim(capital=0.0)
-s_asym2.capital = -50000.0
-_ok_c, _msg_c = s_asym2.labour.commission("smith", 3500.0)
+_ok_c, _msg_c = s_asym.labour.commission("smith", 3500.0)
 check("commission's cash-short refusal uses the same reasoning too",
       _ok_c is False and "50%" in _msg_c and "lender advances against a purchase" in _msg_c,
       _msg_c)
@@ -402,19 +412,13 @@ check("...and it is still capital plus half the line when there is no hole "
       _sp_solvent.spending_power("buy"))
 _fph_bug = WAGES["smith"] * 1.6 * s_bug.wage_index * s_bug.price_index \
     * s_bug.labour.market.price_factor("smith")
-s_bug_u = sim(capital=0.0)
-s_bug_u.capital = -500.0
-s_bug_u.credit_limit = lambda: 210.0
-_ok_bu, _msg_bu = s_bug_u.labour.commission("smith", 1.0)
+_ok_bu, _msg_bu = s_bug.labour.commission("smith", 1.0)   # a refusal leaves the game as it was
 check("...and commission() refuses a household already past its line, which "
       "is what it always did - the fix made the SCREEN agree with it, not "
       "the other way round",
       _ok_bu is False, (_ok_bu, _msg_bu))
-s_bug_o = sim(capital=0.0)
-s_bug_o.capital = -500.0
-s_bug_o.credit_limit = lambda: 210.0
-s_bug_o.capital = 400.0            # out of the hole, same 210 line
-_ok_bo, _msg_bo = s_bug_o.labour.commission("smith", 9999.0)
+s_bug.capital = 400.0              # out of the hole, same 210 line
+_ok_bo, _msg_bo = s_bug.labour.commission("smith", 9999.0)
 check("...and still refuses a fee over the half-line once the household is "
       "solvent again - the rule itself is unchanged, only how it is computed",
       _ok_bo is False, (_ok_bo, _msg_bo))
@@ -477,9 +481,7 @@ _ok_sok, _msg_sok = s_sym_ok.labour.hire("smith", 1)
 check("...and a solvent household the screen says can raise thousands really "
       "is let through by hire(), so the agreement is not just 'both refuse'",
       _quoted_ok > 1000.0 and _ok_sok is True, (_quoted_ok, _ok_sok, _msg_sok))
-s_sym_o = sim(capital=0.0)
-s_sym_o.capital = -50000.0
-_ok_so, _msg_so = s_sym_o.labour.hire("smith", _n_over_sym)
+_ok_so, _msg_so = s_sym.labour.hire("smith", _n_over_sym)
 check("...and a hire past what the quote screen says the household could "
       "raise really is refused, so the two numbers cannot silently disagree "
       "again",
@@ -521,8 +523,8 @@ check("...and the interest on the whole line stays under what you earn",
       s_cl.credit_limit() * s_cl.debt_interest_rate() < s_cl.revenue(),
       (s_cl.credit_limit() * s_cl.debt_interest_rate(), s_cl.revenue()))
 check("...while a founder with a practice can still just reach a cover identity",
-      sim().capital + sim().credit_limit() >= sim().project_cost("identity_cover"),
-      (sim().capital + sim().credit_limit(), sim().project_cost("identity_cover")))
+      _pristine.capital + _pristine.credit_limit() >= _pristine.project_cost("identity_cover"),
+      (_pristine.capital + _pristine.credit_limit(), _pristine.project_cost("identity_cover")))
 
 # --- BREAK: status upkeep was unconditional - 1,100 a year for a citizenship
 # and a senatorial patron a ruined household could not afford and had no way
@@ -534,8 +536,8 @@ _rich.done.update({"citizenship", "patron_senatorial"}); _rich._done_changed()
 # The two ranks are worth 1,100 a year of show at Rome's prices; a household
 # with 233 of income does not pay it.
 check("a ruined household stops keeping up appearances",
-      s_st.living_cost() < sim().living_cost() + 50.0,
-      (s_st.living_cost(), sim().living_cost()))
+      s_st.living_cost() < _pristine.living_cost() + 50.0,
+      (s_st.living_cost(), _pristine.living_cost()))
 check("...and a household that can afford the show still pays for it",
       _rich.living_cost() > s_st.living_cost() * 2, (_rich.living_cost(),
                                                      s_st.living_cost()))
@@ -546,7 +548,7 @@ check("...and a household that can afford the show still pays for it",
 # exist.
 # 20000 coin was about 74,600 labour hours of debt; stated in hours so the
 # test does not move with what the coin metal costs.
-s_bd = sim(capital=-74600.0 * sim().labour.money_per_labour_hour(), manual=False)
+s_bd = sim(capital=-74600.0 * _pristine.labour.money_per_labour_hour(), manual=False)
 s_bd.insolvent_years = 20
 _before = len(s_bd.active)
 s_bd.step()
@@ -559,11 +561,7 @@ check("a household deep in arrears does not commit to new work",
 # the middle of a step - and the project spending already committed against
 # the old line breached the new one. Owing 628 was safe; owing nothing was
 # ruin.
-_rd, _, _ = proto([{"cmd": "start", "id": "arithmetic_positional"},
-                   {"cmd": "step", "years": 1},
-                   {"cmd": "work", "trade": "scholar", "hours": 2000},
-                   {"cmd": "step", "years": 1},
-                   {"cmd": "state"}])
+_rd = _session[3:]
 check("clearing your debt by working does not make you insolvent",
       not any("INSOLVENCY" in json.dumps(reply) for reply in _rd),
       [event for reply in _rd for event in (reply.get("events") or []) if "INSOLVENCY" in str(event)])
@@ -580,10 +578,9 @@ check("a lender does not cut your line because you took a job this year",
 # denarii and about 800 founder-hours vanish, with scientific_method dying 115
 # denarii short of done and every hour already spent, and `stop` losing the
 # same thing so no branch saved it.
-s_ce = sim(capital=round(0.3 * sim().project_cost("identity_cover")))   # part-payable, whatever the wage scale
+s_ce = sim(capital=round(0.3 * _pristine.project_cost("identity_cover")))   # part-payable, whatever the wage scale
 s_ce.start_project("identity_cover")
-for _ in range(3):
-    s_ce.step()
+s_ce.step()   # the first year pays in what the money allows
 _spent = s_ce.active["identity_cover"]["spent"]
 check("a project part-paid for has really been part-paid for",
       _spent > 100, _spent)
