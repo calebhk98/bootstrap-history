@@ -13,6 +13,16 @@ class SetupContentIdTests(unittest.TestCase):
         self.assertEqual(defaults["hunger_need"], "food")
 
 
+class HungerNeedTests(unittest.TestCase):
+    def test_hunger_counts_the_need_the_setup_names(self):
+        from sim.tests import economy_fixture
+        _economy, named_food = economy_fixture.run(economy_fixture.small_setup(), years=3)
+        _economy, named_other = economy_fixture.run(
+            economy_fixture.small_setup(hunger_need=economy_fixture.ORNAMENT), years=3)
+        self.assertGreater(sum(named_food[-1].hunger_by_tile.values()), 0.0)
+        self.assertEqual(sum(named_other[-1].hunger_by_tile.values()), 0.0)
+
+
 class DangerPayTests(unittest.TestCase):
     def test_trade_spec_carries_a_fatality_risk_that_defaults_to_none(self):
         self.assertEqual(TradeSpec("miner").fatality_risk_per_year, 0.0)

@@ -328,7 +328,7 @@ class Economy:
                       for trade, rows in sorted(wages.items())}
         hunger: Dict[str, float] = {}
         for cohort in record.cohorts.values():
-            short = cohort.unmet_floor_by_need.get("food", 0.0)
+            short = cohort.unmet_floor_by_need.get(self.setup.hunger_need, 0.0)
             if short > 0.0:
                 hunger[cohort.tile] = hunger.get(cohort.tile, 0.0) + short
         output: Dict[str, float] = {}
