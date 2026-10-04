@@ -25,6 +25,7 @@ from .event_groups import group_disaster_events
 from .event_severity import tag_events
 from .step_alerts import step_alerts
 from .step_stops import newly_startable_goal, severe_stop_reason
+from .programme import programme_before_year
 from .step_problems import route_nodes, route_startable, stalled_projects, step_problems
 from .util import (_clean, _localise_money, _localise_words, _unsafe_path)
 
@@ -216,6 +217,7 @@ def _cmd_step(sim, nodes, cmd, ended):
     goal_year_before = sim.goal_year
     route = route_nodes(sim) if years > 1 else set()
     snapshots = []
+    programme_log = []
     for _ in range(years):
         if sim.dead_reason or sim.year >= end_year:
             break
@@ -231,6 +233,7 @@ def _cmd_step(sim, nodes, cmd, ended):
         stalled_before = set(stalled_projects(sim))
         goal_was_startable = sim.goal in nodes and sim.can_start(sim.goal)
         population_before = sim.population.total
+        programme_log.extend(programme_before_year(sim, nodes))
         sim.step()
         ran += 1
         population_change = sim.population.total / population_before - 1.0 if population_before > 0 else 0.0
@@ -322,6 +325,8 @@ def _cmd_step(sim, nodes, cmd, ended):
                              "Step again when you have had a look." % (ran, years, severe_reason))
             break
     out = dict(ok=True, completed=completed, lost=lost, events=events)
+    if programme_log:
+        out["programme"] = programme_log
     if years > 1 and lone_dependencies:
         out["multi_year_staffing_warning"] = (
             "before stepping %d years: %s each rest on one person; a single departure closes them. "
