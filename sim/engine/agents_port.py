@@ -76,7 +76,7 @@ class SimWorld(BudgetView, RevenueView, GroupView, DisclosureView, CapitalView, 
 		visibility = self.base_visibility(node_id)
 		if location is None:
 			return visibility
-		distance = self._sim.labour.distance_to_tile_km(location)
+		distance = self.distance_km(location, None)  # type: ignore[attr-defined]
 		return visibility / (1.0 + distance / OBSERVATION_RANGE_KM)
 
 	def state_weights(self) -> Dict[str, float]:
