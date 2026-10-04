@@ -58,7 +58,7 @@ slow_check("the same seed gives the same run, twice in one process",
 #       at year 107, 121 or 196 depending which seed was tried, and did not
 #       diverge at ALL within 200 years for 3 of 6 seeds tried - a coin
 #       flip, for the one thing it exists to catch.
-#   sim/perf_fingerprint.py's state_of()/digest() (nine scenarios,
+#   sim/tests/fingerprint.py's state_of()/digest() (nine scenarios,
 #       five civilisations, hashing the FULL save-file state every year):
 #       diverged within 1-7 years on ALL NINE scenarios, every time.
 #
@@ -93,7 +93,7 @@ def _start_fingerprint(hash_seed, years_cap):
     script = (
         "import json, sys\n"
         "sys.path.insert(0, %r)\n"
-        "import perf_fingerprint as F\n"
+        "from sim.tests import fingerprint as F\n"
         "out = []\n"
         "for sc in F.SCENARIOS:\n"
         "    nm = F.name_of(sc)\n"
@@ -107,7 +107,7 @@ def _start_fingerprint(hash_seed, years_cap):
         "        digs.append(F.digest(F.state_of(s)))\n"
         "    out.append([nm, digs])\n"
         "print(json.dumps(out))\n"
-    ) % (HERE, years_cap)
+    ) % (ROOT, years_cap)
     return hash_seed, subprocess.Popen(
         [sys.executable, "-c", script], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         text=True, env=dict(os.environ, PYTHONHASHSEED=str(hash_seed)))

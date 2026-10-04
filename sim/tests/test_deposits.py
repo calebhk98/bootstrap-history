@@ -16,8 +16,6 @@ sim/world/deposits.py standalone: Ricardian rent from ore grade, depth and hardn
 import ast
 import json
 import os
-import subprocess
-import sys
 import unittest
 
 from sim.world import deposits
@@ -804,7 +802,7 @@ class StandaloneImportTests(unittest.TestCase):
                 "sim/world/deposits.py imports another sim/world/ module: %r"
                 % name)
             self.assertNotEqual(
-                name, "sim.solve_prices",
+                name, "sim.engine.solve_prices",
                 "sim/world/deposits.py imports the price solver directly")
 
 
@@ -837,21 +835,6 @@ class CalibrationReportTests(unittest.TestCase):
         lead = self._price_at_margin("lead")
         print("\nsilver:lead ratio from derived margin costs: %.1fx" % (silver / lead))
         self.assertGreater(silver / lead, 1.0)
-
-
-class ModuleRunsCleanlyTests(unittest.TestCase):
-    """python3 -m sim.world.deposits must print a readable summary - the
-    same bar sim/world/agriculture.py's own __main__ block is held to.
-    """
-
-    def test_main_block_runs_and_names_every_metal(self):
-        result = subprocess.run(
-            [sys.executable, "-m", "sim.world.deposits"],
-            cwd=_REPO_ROOT, capture_output=True, text=True)
-        self.assertEqual(result.returncode, 0, result.stderr)
-        for metal in deposits.METALS:
-            self.assertIn(metal.upper(), result.stdout)
-        self.assertIn("MARGINAL", result.stdout)
 
 
 if __name__ == "__main__":

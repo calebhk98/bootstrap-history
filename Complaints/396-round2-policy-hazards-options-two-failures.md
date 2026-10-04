@@ -9,6 +9,6 @@ Two checks in `round2_policy_hazards_options` fail:
 
 Both fail identically at commit `12d8d0e` (after the package moves, before labour's two-way split) and after the labour split. They were not checked on `main` before the package split (`da86abf`), so whether they predate that work is unconfirmed.
 
-Evidence: `python3 sim/test_regressions.py --only round2_policy_hazards_options` (slow: give it about 25 minutes).
+Evidence: `python3 -m sim.tests --only round2_policy_hazards_options` (slow: give it about 25 minutes).
 
 What it would take: run the topic on `da86abf` first to place the regression, then read why auto-hire declines for a founder with ample capital, and what the England state-screen check measures.

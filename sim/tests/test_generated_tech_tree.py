@@ -14,7 +14,7 @@ import tempfile
 import unittest
 from unittest import mock
 
-from sim import treetool
+from sim.engine import tree_merge
 from sim.engine import tree_source
 from sim.ui import cli
 
@@ -36,7 +36,7 @@ class FixtureBranches(unittest.TestCase):
         self.branches = os.path.join(self.directory, "branches")
         self.cache = os.path.join(self.directory, "cache")
         os.makedirs(self.branches)
-        patch = mock.patch.object(treetool, "BR", self.branches)
+        patch = mock.patch.object(tree_merge, "BR", self.branches)
         patch.start()
         self.addCleanup(patch.stop)
         self.write_meta({"goal_node": "fx_alpha", "goals": []})
@@ -71,7 +71,7 @@ class LoaderBuildsFromBranches(FixtureBranches):
 
     def test_a_warm_cache_skips_the_build_and_returns_the_same_tree(self):
         cold = self.load()
-        with mock.patch.object(treetool, "build_tree",
+        with mock.patch.object(tree_merge, "build_tree",
                                side_effect=AssertionError("rebuilt on a warm cache")):
             warm = self.load()
         self.assertEqual(cold, warm)
@@ -111,7 +111,7 @@ class RepositoryDoesNotCommitTheTree(unittest.TestCase):
             subdirectories[:] = [name for name in subdirectories if name != "__pycache__"]
             for filename in filenames:
                 path = os.path.join(directory, filename)
-                if not filename.endswith(".py") or filename == "treetool.py" \
+                if not filename.endswith(".py") or filename == "tree_merge.py" \
                         or path == os.path.abspath(__file__):
                     continue
                 with open(path, encoding="utf-8") as handle:
@@ -134,7 +134,7 @@ class RealBranchesBuildTheWholeTree(unittest.TestCase):
         self.assertIn("lnd_whippletree", nodes)
 
     def test_building_the_real_branches_loses_nothing(self):
-        result = treetool.build_tree()
+        result = tree_merge.build_tree()
         self.assertEqual(result.losses, [])
         self.assertEqual(result.collisions, [])
 
@@ -173,7 +173,7 @@ class OptionIdsNameRealThings(unittest.TestCase):
     def test_no_node_in_the_real_tree_has_a_misspelt_option(self):
         tree = tree_source.load_base_tree()
         nodes = {node["id"]: node for node in tree["nodes"]}
-        goods = treetool.load_material_namespace(tree["nodes"])
+        goods = tree_merge.load_material_namespace(tree["nodes"])
         errors = [error for node_id, node in nodes.items()
                   for error in cli._check_node_option_ids(node_id, node, nodes, goods)]
         self.assertEqual(errors, [])
@@ -190,7 +190,7 @@ class LaterFilePrerequisites(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.built = {node["id"]: node for node in treetool.build_tree().tree["nodes"]}
+        cls.built = {node["id"]: node for node in tree_merge.build_tree().tree["nodes"]}
         branch_directory = os.path.join(os.path.dirname(HERE), "..", "data", "branches")
         cls.authored = {}
         for filename in sorted(os.listdir(branch_directory)):

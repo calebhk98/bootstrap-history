@@ -160,7 +160,7 @@
     {"node": "mt2_cyanidation", "kind": "multiplier", "output_multiplier": 7.0,
      "note": "[C] estimate. Cyanide leaching (historically, the 1890s Witwatersrand) is commonly credited with making previously uneconomic LOW-GRADE ore worth processing at all, effectively multiplying recoverable gold from a given tonnage of rock by a large factor; 7x is an order-of-magnitude figure for that jump, not a measured Roman one, since the process is a millennium and a half early."}
    ],
-   "notes": "met_mine_pumping and mt2_cyanidation together give roughly 21x baseline (3.0 * 7.0), which is where the brief's '20x the gold of the rest of the country combined' figure comes from: a single mine holding both technologies, sized comparably to a typical Roman working, plausibly outproduces the rest of the empire's ungraded, unpumped workings combined. See sim/demo_commodities.py for the worked arithmetic. This is illustrative, not a claim that Roman Spain could actually have supported a mine 20x its historical output; it is the exact kind of asymmetry this whole game is built to let one person create."
+   "notes": "met_mine_pumping and mt2_cyanidation together give roughly 21x baseline (3.0 * 7.0), which is where the brief's '20x the gold of the rest of the country combined' figure comes from: a single mine holding both technologies, sized comparably to a typical Roman working, plausibly outproduces the rest of the empire's ungraded, unpumped workings combined. This is illustrative, not a claim that Roman Spain could actually have supported a mine 20x its historical output; it is the exact kind of asymmetry this whole game is built to let one person create."
   },
 
   "wool": {
@@ -226,7 +226,7 @@
     {"node": "tex_power_loom", "kind": "manufacture", "output_multiplier": 20.0,
      "note": "[C]: order-of-magnitude figure for a power-loom operator minding several machines versus one hand-weaver, roughly where the historical Industrial Revolution progression from Cartwright's 1785 loom to mid-19th-century multi-loom minding landed; not pinned to a single citation, see COMMODITIES.md section 4.2"}
    ],
-   "notes": "This is the commodity the brief's loom-and-balloon example is built on. hot_air_balloon needs 400 kg of linen_kg; see COMMODITIES.md section 4.2 for the worked demonstration and sim/demo_commodities.py / sim/test_regressions.py for the code that proves it."
+   "notes": "This is the commodity the brief's loom-and-balloon example is built on. hot_air_balloon needs 400 kg of linen_kg; see COMMODITIES.md section 4.2 for the worked demonstration and the regression suite (python3 -m sim.tests) for the code that proves it."
   },
 
   "cotton": {

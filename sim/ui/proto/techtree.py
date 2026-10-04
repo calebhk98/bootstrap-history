@@ -877,7 +877,7 @@ def _explain_identity(sim, nodes, node_id, node):
         # "...#ag2_norfolk_course" on a completely unrelated, visible node
         # names a hidden node's id in plain sight, the same class of leak
         # `bounty` had with a raw prerequisite list. The generic fog
-        # scanner in test_regressions.py exists to catch exactly this
+        # scanner in the test suite exists to catch exactly this
         # class of leak on future commands too. fog_scrub is the one
         # filter every such free-text field goes through.
         "kb": sim.fog_scrub(node["kb"]),

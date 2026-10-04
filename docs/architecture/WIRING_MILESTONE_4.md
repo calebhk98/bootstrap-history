@@ -2,8 +2,8 @@
 
 **Status:** analysis, not a plan anyone has approved. Written against anchor
 commit `798a027` (branch `claude/youthful-goldberg-9ay3su`) while four other
-agents edited `sim/world/deposits.py`, `sim/solve_prices.py`,
-`sim/prove_rename_safe.py` and `sim/engine/economy.py` concurrently in the
+agents edited `sim/world/deposits.py`, `sim/engine/solve_prices.py`,
+a rename-proving script and `sim/engine/economy.py` concurrently in the
 same checkout; every count below that touches those four files was taken by
 reading `798a027`'s own copy of them (`git show 798a027:<path>`), not the
 live working tree, so it cannot have been perturbed by that concurrent work.
@@ -293,7 +293,7 @@ things a save restores. Every downstream number that depends on `pop_scale`/
 `wage_index` (hiring caps, mineral access, credit-line tau, the capital
 ceiling) is correspondingly wrong for one command and then self-heals, which
 is a second, quieter symptom of the same gap. **This is exactly the
-`perf_fingerprint.py`-catches-what-tests-miss situation `sim/ARCHITECTURE.md`
+`sim/tests/fingerprint.py`-catches-what-tests-miss situation `sim/ARCHITECTURE.md`
 §6 warns about, except no regression test caught it because none of
 `test_round10.py`/`test_complaints_17_24.py`/`test_demography.py`/
 `test_demographics.py` drives a hazard through an actual save/reload cycle —
@@ -460,7 +460,7 @@ explicitly as a known, labelled simplification. **OPEN.**
 
 ## 5. What the fingerprint will do
 
-`sim/perf_fingerprint.py`'s `FIELDS` is `SAVE_FIELDS` minus `"log"` — it
+`sim/tests/fingerprint.py`'s `FIELDS` is `SAVE_FIELDS` minus `"log"` — it
 compares exactly, and only, the tuple examined in §3. Two consequences
 follow directly from §3's finding that none of the nine mechanism attributes
 are in that tuple today, and both are worth stating before anyone runs
@@ -474,7 +474,7 @@ the mechanism's DOWNSTREAM footprint — `economy`, `capital`, `employees`,
 `SAVE_FIELDS` that a `pop_scale`-driven formula eventually feeds. This is
 not a gap in the tool; it is exactly why §3's commit ordering puts "add the
 cohort fields to `SAVE_FIELDS`" as its own, separately-checked step (§6) —
-once they're there, `perf_fingerprint` starts hashing the actual state that
+once they're there, `sim.tests.fingerprint` starts hashing the actual state that
 matters, not just its shadow.
 
 **Once the mechanism is swapped, divergence should appear at year INDEX 0,
@@ -499,7 +499,7 @@ happens rather than rationalised afterwards:
   construction (`scale = total_population / probe.total`, then rescaling
   three separate floats and re-summing them) cannot be guaranteed to
   reproduce `total_population` to the last bit of a `repr()`-compared float
-  — `perf_fingerprint`'s `_canon()` uses `repr()`, not `round()`, precisely
+  — `sim.tests.fingerprint`'s `_canon()` uses `repr()`, not `round()`, precisely
   so a last-bit change counts as a real difference (see `_canon`'s own
   comment: "a change that alters the last bit of a float IS a change, and
   this harness exists to catch exactly that"). So even the STARTING value
@@ -550,7 +550,7 @@ wiring is wrong":**
   Three of the nine scenarios (both `han_china_100ad` runs and
   `norse_900ad/seed1`) have NO population-wide hazard inside their horizon
   at all, purely as an artefact of how long each one runs — that was not
-  designed into `perf_fingerprint.py`'s scenario list for this purpose, but
+  designed into `sim/tests/fingerprint.py`'s scenario list for this purpose, but
   it means those three are, by accident, additional controls: any large,
   sudden divergence in them would need a different explanation than "a
   plague fired", because none does.
@@ -559,7 +559,7 @@ wiring is wrong":**
   trend, that specifically means `_shocks()`'s rewritten `staff_loss` branch
   (§1.3 item 1) was not actually connected to the new `Population` object —
   the mechanism swap happened but the hazard wiring did not, which
-  `perf_fingerprint` alone cannot distinguish from "nothing happened" without
+  `sim.tests.fingerprint` alone cannot distinguish from "nothing happened" without
   this table to compare against.
 
 None of this can be checked without the new code existing; it is written
@@ -575,7 +575,7 @@ Each step is independently verifiable and, until the step marked below,
 provably inert — every step before it must show ZERO fingerprint
 divergence, because nothing has been read yet.
 
-**Step 0 (not a commit).** `python3 sim/perf_fingerprint.py record
+**Step 0 (not a commit).** `python3 -m sim.tests.fingerprint record
 milestone4_start.json` at the true starting point, kept outside the repo
 (these baseline files are working artefacts, not committed data). Every
 `check` below is against this one file until Step 3 explicitly re-baselines.
@@ -586,7 +586,7 @@ milestone4_start.json` at the true starting point, kept outside the repo
 (`sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))`), which is
 why running `sim/world/agriculture.py` directly fails outright
 (`ModuleNotFoundError: No module named 'sim'` — reproduced directly). Add a
-second, repo-root insert, the same pattern `sim/test_regressions.py` already
+second, repo-root insert, the same pattern `sim/tests/__main__.py` already
 uses for `_ROOT`. This is required, not optional, because
 `sim/world/demography.py` and `agriculture.py` import `sim.constants`
 (fully-qualified) internally, and that never resolves under the engine's
@@ -610,8 +610,8 @@ Construct `self.population = demography.Population.stationary(civ_pop)` in
 own generator and should not perturb the shared one this early, and this is
 what makes this commit provably inert. Do not read `self.population`
 anywhere else. Do not touch `SAVE_FIELDS`.
-**Check:** `python3 sim/perf_fingerprint.py check milestone4_start.json` →
-0 of 9 diverge, byte-identical. `python3 sim/test_regressions.py` → same
+**Check:** `python3 -m sim.tests.fingerprint check milestone4_start.json` →
+0 of 9 diverge, byte-identical. `python3 -m sim.tests` → same
 pass/fail counts as before the commit (module import alone changes
 nothing). This is the LAST commit in the sequence required to pass that
 check with zero divergence.
@@ -629,7 +629,7 @@ must not repeat it. Decide and document (§3's open item) whether
 `Population`'s own RNG needs a save slot — recommendation: not yet, as long
 as the engine never passes `jitter=True`.
 **Check:** the new round-trip test, run standalone. Then
-`python3 sim/perf_fingerprint.py record milestone4_after_savefields.json` —
+`python3 -m sim.tests.fingerprint record milestone4_after_savefields.json` —
 this is expected to differ from `milestone4_start.json` for a trivial reason
 (the state DICTIONARY now has three more keys, always present with a
 constant value, since nothing writes them yet) rather than a behavioural
@@ -651,7 +651,7 @@ named in §1.3 and left open here on purpose. Turn `pop_scale` and
 in economy/labour/projects/geography do not need to change in this commit).
 Retire or rewrite the five `test_round10.py` assertions and the
 `test_complaints_17_24.py` one that assert on the deleted names (§2).
-**Check:** `python3 sim/perf_fingerprint.py check
+**Check:** `python3 -m sim.tests.fingerprint check
 milestone4_after_savefields.json` → **required** to show 9 of 9 diverging at
 year index 0, matching §5's prediction table; a run that shows FEWER than 9
 diverging, or divergence starting later than year 0 on any scenario, means
@@ -707,7 +707,7 @@ Commits 3-5.
 **I would not decompose `Sim`.** `sim/ARCHITECTURE.md` already considered
 and rejected a full decomposition — 157(→165) shared fields needing explicit
 owners, ~200 implicit `self.x` couplings becoming arguments, most of 30,000
-lines rewritten, against a small payoff, with `perf_fingerprint.py` not
+lines rewritten, against a small payoff, with `sim/tests/fingerprint.py` not
 covering `protocol.py` (a third of the code) at all. Nothing in this
 milestone needs that. The smallest structural change that actually does the
 job is **one new instance attribute** (`self.population`, a

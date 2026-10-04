@@ -69,9 +69,9 @@ no new way for a live, fogged session to see past what it has legitimately
 discovered. It is a developer and optimizer tool, the same category
 `compare`, `sweep` and `sensitivity` already are.
 """
-import argparse, json, os, random, sys, tempfile
+import json, os, random, sys, tempfile
 
-_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if _REPO_ROOT not in sys.path:
     sys.path.insert(0, _REPO_ROOT)
 
@@ -150,7 +150,7 @@ def cpm(nodes, need):
 # already runs every strategy file through before the engine ever sees it -
 # `topo_stable`, which repairs exactly this while disturbing the preferred
 # order as little as possible - so the repair is not duplicated here. Verified
-# empirically (see test_regressions.py): zero violations remain in the order
+# empirically (see sim/tests/): zero violations remain in the order
 # `load_strategy` actually hands to `Sim` for every plan this module writes.
 
 
@@ -587,40 +587,3 @@ def plan(civ=default_civilisation_id(), goal=None, seed_strategy=None, side_bran
             "round: %d/%d trials reached the goal."
             % (refine_rounds, trial_count, horizon, seed, score[0], trial_count))
     return order, rationale, cpm_result
-
-
-def main():
-    parser = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--civ", default=default_civilisation_id())
-    parser.add_argument("--goal", default=None)
-    parser.add_argument("--out", required=True, help="strategy file to write")
-    parser.add_argument("--seed-strategy", default=None,
-                    help="a strategy name or path (e.g. captured_han_386, or "
-                         "a previous plan) to seed ties with")
-    parser.add_argument("--side-branches", type=int, default=12)
-    parser.add_argument("--side-branch-every", type=int, default=8)
-    parser.add_argument("--refine-rounds", type=int, default=0,
-                    help="plan, run --mc trials, capture the winner, re-plan; "
-                         "repeat this many times. 0 (default) skips it and "
-                         "stays purely structural/instant.")
-    parser.add_argument("--mc", type=int, default=12)
-    parser.add_argument("--horizon", type=int, default=700)
-    parser.add_argument("--seed", type=int, default=1)
-    args = parser.parse_args()
-    order, rationale, cpm_result = plan(args.civ, args.goal, args.seed_strategy, args.side_branches,
-                               args.side_branch_every, args.refine_rounds, args.mc,
-                               args.horizon, args.seed)
-    tree, _prices, nodes, _wages, _goods = load()
-    goal = resolve_goal(tree, nodes, args.goal)
-    label = ("PLANNED (CPM): backward-chained from %s over its prerequisite "
-            "closure for %s%s" % (goal, args.civ,
-                                  ", refined against real trials" if args.refine_rounds else ""))
-    write_strategy(args.out, label, rationale, order)
-    print("wrote %d nodes to %s" % (len(order), args.out))
-    for line in rationale:
-        print("  - " + line)
-
-
-if __name__ == "__main__":
-    main()

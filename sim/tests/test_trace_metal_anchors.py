@@ -2,7 +2,7 @@
 import unittest
 import warnings
 
-from sim import joint_allocation, solve_prices
+from sim.engine import joint_allocation, solve_prices
 from sim.tests.test_joint_allocation import solve_ungated
 from sim.world import demand
 

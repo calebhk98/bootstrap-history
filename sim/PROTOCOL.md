@@ -453,5 +453,5 @@ the credit limit):
 with the share of `credit_limit` used, less the founder's standing (which only removes premium; the rate is never below the market rate); it is not a
 fixed number for the game. `credit_limit` falls as the market rate rises and is
 bounded by `lenders_will_still_advance_you`. The state's own debt and interest
-appear in `sim/actor_ledger.py` (outlay purpose `interest`; a negative purse is
+appear in the state's outlays (purpose `interest`; a negative purse is
 debt) and nowhere in the founder's replies.

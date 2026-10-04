@@ -1,13 +1,13 @@
 """A civilisation's starting state must agree with itself (Complaints/124).
 
-sim/civ_start_check.py is the check; `simulator.py validate` prints it per
+sim/engine/civ_start_check.py is the check; `simulator.py validate` prints it per
 civilisation. Here: a deliberately broken fixture proves each class is caught,
 and the shipped civilisations must have no free-but-unheld node.
 """
 import os
 import unittest
 
-from sim import civ_start_check as start_check
+from sim.engine import civ_start_check as start_check
 from sim.engine.tree_source import load_base_tree
 
 HERE = os.path.dirname(os.path.abspath(__file__))

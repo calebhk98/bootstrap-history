@@ -29,7 +29,8 @@ from collections import defaultdict
 
 from sim.engine.ui_port import load_production_catalog
 from sim.engine.ui_port import (
-    validate_material_gating, validate_output_bounds, validate_unheld_gates)
+    tree_merge, validate_material_gating, validate_output_bounds, validate_production,
+    validate_unheld_gates)
 from sim.engine.ui_port import default_civilisation_id
 from sim.engine.ui_port import (
     ROOT, MODDIR, CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog,
@@ -108,7 +109,6 @@ def _is_endless_horizon(end_year, start_year):
     purposes only - nothing about how the game actually runs checks this;
     it only decides whether a screen says 'no deadline' or a specific year."""
     return (end_year - start_year) >= ENDLESS_HORIZON_YEARS
-
 
 
 # ----------------------------------------------------------------------------
@@ -343,8 +343,8 @@ def _validate_reachability(args, errs, nodes, goal_rows):
         _repodir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         if _repodir not in sys.path:
             sys.path.insert(0, _repodir)
-        from sim import planner as _planner
-        from sim.path_search import deterministic_sim
+        from sim.engine.ui_port import planner as _planner, path_search
+        deterministic_sim = path_search.deterministic_sim
         civ_ids = civilization_ids()
         for goal, node, need, yrs, chain in goal_rows:
             probe_horizon = min(VALIDATE_DEEP_PROBE_HORIZON_MAX_YEARS,
@@ -369,6 +369,12 @@ def _print_validate_ok(errs):
               "closure and critical path compute cleanly.")
 
 
+def _data_source_errors(nodes):
+    """Malformed production entries, and branch-merge collisions or data-loss events."""
+    return (["data/production: " + problem for problem in validate_production.production_problems(nodes)]
+            + ["data/branches: " + problem for problem in tree_merge.merge_problems(tree_merge.build_tree())])
+
+
 def cmd_validate(args):
     tree, prices, nodes, wages, goods = load()
     production = load_production_catalog(ROOT, MODDIR)
@@ -378,8 +384,9 @@ def cmd_validate(args):
     errs, warns = _validate_nodes(nodes, goods, wages, producible)
     errs += _validate_topo_order(nodes)
     errs += validate_output_bounds.check_output_bounds(nodes, production)
+    errs += _data_source_errors(nodes)
     errs += validate_material_gating.check_material_gating(nodes, validate_material_gating.load_gating(ROOT))
-    from sim import civ_start_check
+    from sim.engine.ui_port import civ_start_check
     errs += validate_unheld_gates.check_unheld_gates(nodes, civ_start_check.load_civilisations(ROOT), production)
     goal_errs, default_goal, goal_rows = _validate_goal_rows(tree, nodes)
     errs += goal_errs
@@ -396,7 +403,7 @@ def _validate_civilisation_starts(nodes, production):
     """Complaints/124: each civilisation's start must agree with itself.
     A free node it neither holds nor gates is an error; the other two classes
     are reported (held-without-prerequisite is pinned by its own test)."""
-    from sim import civ_start_check
+    from sim.engine.ui_port import civ_start_check
     results = civ_start_check.check_all(
         nodes, civ_start_check.load_civilisations(ROOT), production)
     print()
@@ -1423,7 +1430,7 @@ def main():
                                     "closure (critical-path method) and write a strategy "
                                     "file, instead of hand-writing one or gambling on a "
                                     "Monte Carlo run until one happens to win. See "
-                                    "sim/planner.py. A developer/optimizer tool, "
+                                    "sim/engine/planner.py. A developer/optimizer tool, "
                                     "like compare/sweep/sensitivity - never reached from "
                                     "play or agent.")
     subparser.add_argument("--civ", default=default_civilisation_id())
@@ -1447,7 +1454,7 @@ def main():
     subparser.add_argument("--horizon", type=int, default=700)
     subparser.add_argument("--seed", type=int, default=1)
     # DETERMINISTIC SEARCH: solve the dice-free problem first (see
-    # sim/path_search.py), instead of only computing one structural CPM
+    # sim/engine/path_search.py), instead of only computing one structural CPM
     # pass. --search-rounds 0 (the default) leaves `plan` doing only the
     # structural CPM pass; a nonzero value diagnoses the binding constraint against a dice-free
     # trial of the CPM order (no events, no project failures, immortal
@@ -1477,7 +1484,7 @@ def main():
                                       "pipeline. Answers 'does this order even get "
                                       "there with the dice off' and relaxes the "
                                       "binding constraint it finds, round by round. "
-                                      "See sim/path_search.py. A developer/"
+                                      "See sim/engine/path_search.py. A developer/"
                                       "optimizer tool, like plan/compare/sweep/"
                                       "sensitivity - never reached from play or agent.")
     subparser.add_argument("--civ", default=default_civilisation_id())
@@ -1620,10 +1627,6 @@ def main():
             "run": cmd_run, "compare": cmd_compare, "play": cmd_play, "agent": cmd_agent,
             "sensitivity": cmd_sensitivity, "plan": cmd_plan,
             "search": cmd_search}[args.cmd](args)
-
-
-if __name__ == "__main__":
-    sys.exit(main() or 0)
 
 
 # ----------------------------------------------------------------------------

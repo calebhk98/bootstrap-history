@@ -1,6 +1,6 @@
 """The same scenario, same seed, must give the same answer. Every time.
 
-For a long time it did not. `perf_fingerprint.py` - the tool
+For a long time it did not. `sim/tests/fingerprint.py` - the tool
 `sim/ARCHITECTURE.md` names as the way to prove a change altered nothing - did
 not reproduce its own recording: a pristine checkout recorded and then checked
 against itself failed two of nine scenarios, at a different scenario and a
@@ -163,7 +163,7 @@ _YEARS = 40
 
 
 def _repeated_runs_agree():
-    from sim import perf_fingerprint as fingerprint
+    from sim.tests import fingerprint as fingerprint
     scenario = dict(fingerprint.SCENARIOS[0], years=_YEARS)
     digests = [fingerprint.digest(fingerprint.run(scenario)[0]) for _ in range(_REPEATS)]
     return len(set(digests)) == 1, sorted(set(digests))

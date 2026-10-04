@@ -6,7 +6,7 @@
 
 The state borrows only when its need exceeds its revenue and reserve, which no baseline civilisation does; the borrowing path is exercised by a stress army (`standing_army` raised several times) and `sim/tests/test_capital_market.py`.
 
-Update: the discretionary sweep is gone (Complaint 327). A reserve beyond `RESERVE_CEILING_YEARS_OF_NEED` years of need buys works, so the reserve stays within a small multiple of the need and the state's supply stays a small share of the pool; measure with `python3 sim/budget_series.py <civilisation id> <years> <seed>` (works and discretionary lines) and each decade's `market_rate()`. Left: replace `LENDABLE_RESERVE_SHARE` with the state's own lending decision through a policy.
+Update: the discretionary sweep is gone (Complaint 327). A reserve beyond `RESERVE_CEILING_YEARS_OF_NEED` years of need buys works, so the reserve stays within a small multiple of the need and the state's supply stays a small share of the pool; measure with `python3 sim/budget_series.py <civilisation id> <years> <seed>` (script since removed; recover with `git show 97473f1:sim/budget_series.py`) (works and discretionary lines) and each decade's `market_rate()`. Left: replace `LENDABLE_RESERVE_SHARE` with the state's own lending decision through a policy.
 
 Related: 106, 308, 332.
 

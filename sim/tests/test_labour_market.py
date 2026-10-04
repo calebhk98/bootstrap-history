@@ -19,8 +19,6 @@ sim/labour/labour_market.py: fixed point over trade allocation in labour-hours, 
 """
 import ast
 import os
-import subprocess
-import sys
 import unittest
 
 from sim.labour import labour_market
@@ -944,48 +942,19 @@ class StandaloneImportTests(unittest.TestCase):
                 "sim/labour/labour_market.py imports another sim/world/ "
                 "module at module level: %r" % name)
             self.assertNotEqual(
-                name, "sim.solve_prices",
+                name, "sim.engine.solve_prices",
                 "sim/labour/labour_market.py imports the price solver "
                 "directly at module level")
 
-    def test_the_only_other_sim_world_import_is_inside_the_main_guard(self):
+    def test_nothing_imports_sim_world_agriculture(self):
         path = os.path.join(_REPO_ROOT, "sim", "labour", "labour_market.py")
         with open(path) as handle:
             tree = ast.parse(handle.read(), filename=path)
-        top_level_kinds = {type(node) for node in tree.body}
-        # There must be at least one `if __name__ == "__main__":` block
-        # for the demo's own import to live inside, or this test would be
-        # vacuously trusting an import that is not actually confined.
-        self.assertIn(ast.If, top_level_kinds)
-
-        agriculture_imports_outside_main_guard = []
-        for node in tree.body:
-            if isinstance(node, ast.If):
-                continue   # the demo block - permitted to import agriculture
-            for inner in ast.walk(node):
-                if isinstance(inner, ast.ImportFrom) and inner.module == "sim.world":
-                    for alias in inner.names:
-                        if alias.name == "agriculture":
-                            agriculture_imports_outside_main_guard.append(node)
-        self.assertEqual(agriculture_imports_outside_main_guard, [])
-
-
-# ============================================================================
-# python3 -m sim.labour.labour_market MUST RUN CLEANLY
-# ============================================================================
-
-class ModuleRunsCleanlyTests(unittest.TestCase):
-
-    def test_main_block_runs_and_tells_both_scenarios(self):
-        result = subprocess.run(
-            [sys.executable, "-m", "sim.labour.labour_market"],
-            cwd=_REPO_ROOT, capture_output=True, text=True)
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("SCENARIO 1", result.stdout)
-        self.assertIn("SCENARIO 2", result.stdout)
-        self.assertIn("SCENARIO 5", result.stdout)
-        self.assertIn("smith", result.stdout)
-        self.assertIn("labourer", result.stdout)
+        agriculture_imports = [
+            inner for inner in ast.walk(tree)
+            if isinstance(inner, ast.ImportFrom) and inner.module == "sim.world"
+            and any(alias.name == "agriculture" for alias in inner.names)]
+        self.assertEqual(agriculture_imports, [])
 
 
 if __name__ == "__main__":

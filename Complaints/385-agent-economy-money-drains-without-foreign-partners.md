@@ -8,7 +8,7 @@ Why it matters:
 - Real economies of these eras gained and lost bullion mainly through trade (wool and tin exports, the Baltic and Islamic silver trades, tribute). Without it, the price level of a civilisation without mines is decided by wear alone, which CLAUDE.md 4.1 forbids as an outcome nobody chose.
 - The founder's choices about exports have no effect on the money stock.
 
-Evidence: `python3 sim/economy_validate.py --years 40 --seeds 1 --civs <civilisation>` prints `money_drift`, the mean yearly log change of the money stock. A civilisation the foreign-economies file gives no partner shows a steady negative drift.
+Evidence: `python3 sim/economy_validate.py --years 40 --seeds 1 --civs <civilisation>` (script since removed; recover with `git show 97473f1:sim/economy_validate.py`) prints `money_drift`, the mean yearly log change of the money stock. A civilisation the foreign-economies file gives no partner shows a steady negative drift.
 
 What it would take:
 - Partner economies (or a generic "rest of the world" seller and buyer at landed prices) for each era a civilisation starts in, as data.

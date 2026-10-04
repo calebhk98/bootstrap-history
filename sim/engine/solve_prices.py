@@ -1,10 +1,6 @@
-#!/usr/bin/env python3
 """Solve for the price of every material from physical structure, not a book.
 
-    python3 sim/solve_prices.py                        every price, in labour-hours
-    python3 sim/solve_prices.py --why iron_bar_kg       full recursive cost breakdown
-
-READ-ONLY. This tool computes prices; `sim/engine/prices.py` is the engine's
+READ-ONLY. This module computes prices; `sim/engine/prices.py` is the engine's
 one call into it, and every price in play comes from there.
 
 THE MECHANISM, from docs/architecture/ENDOGENOUS_COSTS_AND_DOMAINS.md Part 2:
@@ -497,8 +493,7 @@ and grades the price behind the name rather than the name itself. If a
 future round DOES own every consumer (or the split is judged worth a
 coordinated rewrite anyway), separate band materials remain available
 and would give each band its own resolvable price for `--why` to show directly, rather than the graded price computed on
-demand the way this round shows it (see print_why's own ENERGY section
-below) - a real trade-off, not a decision this round claims to have
+demand the way this round shows it - a real trade-off, not a decision this round claims to have
 closed.
 
 A SECOND PHYSICAL LIMIT SLOTS IN THE SAME WAY, WITHOUT REDESIGN (the
@@ -611,7 +606,7 @@ of a process's cost belongs to a given unit of a given output - and this
 script answers both with one mechanism: cost the whole process, then split
 that cost across its outputs in proportion to each output's value (price times
 quantity). An output with a household demand curve is valued at its
-market-clearing price (sim/joint_allocation.py, sim/world/demand.py); the rest
+market-clearing price (sim/engine/joint_allocation.py, sim/world/demand.py); the rest
 at their current price, or at the batch's standalone unit cost when mixed with
 anchored ones. A single-output recipe is just the case
 where one output holds 100% of the value share. Where a material has several
@@ -673,10 +668,8 @@ nonsense, because nobody in 100 AD has a panel.
 The fix is a gate, not a deletion. Each entry may carry `requires_node`: the
 tech-tree node that has to be reached before anyone can run that technique
 (see WHEN A TECHNIQUE BECOMES AVAILABLE in `data/production/_SCHEMA.md`).
-A civilisation's `starting_techs` is a set of exactly those ids, so
-
-    python3 sim/solve_prices.py --civ <civilisation_id>
-
+A civilisation's `starting_techs` is a set of exactly those ids, so a
+gated solve (`sim/engine/prices.py`'s `solved_prices` with that civilisation)
 filters the entries down to what Rome can actually do and then solves that
 smaller system. The whole rest of the mechanism is unchanged: the same
 resolvability pass, the same fixed point, the same choice of technique -
@@ -737,31 +730,15 @@ import os
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-REPO_ROOT = os.path.dirname(HERE)
+REPO_ROOT = os.path.dirname(os.path.dirname(HERE))
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
-from sim.validate_production import load_production, materials_the_tree_consumes  # noqa: E402
+from sim.engine.validate_production import load_production, materials_the_tree_consumes  # noqa: E402
 
-# THIS FILE IS A PURE COMPOSITION POINT over two sibling modules - the same
-# shape sim/engine/society.py and sim/engine/economy.py already use for the
-# same reason (see either one's own module docstring): every name below is
-# defined in one of the two sibling modules, not here, so that
-# `python3 sim/solve_prices.py ...`, `from sim import solve_prices`, and
-# every existing `solve_prices.<name>` call site keep working unmodified.
-#
-#     sim/solve_prices_core.py     the price algebra: resolvability, the
-#                                   ore and land rent mechanisms, capital
-#                                   and energy cost, choice of technique,
-#                                   and the damped fixed-point `solve` loop
-#     sim/solve_prices_report.py   the reporting front end: `print_why`,
-#                                   the default price table, and the
-#                                   CLI's own `main`
-#
-# This docstring above - THE mechanism essay - lives here rather than with
-# either sibling: every "see the module docstring" comment in both sibling
-# files means THIS docstring, and splitting it apart by topic would break
-# every one of those cross references for no benefit.
-from sim.solve_prices_core import (                  # noqa: E402
+# The price algebra lives in sim/engine/solve_prices_core.py; this module
+# re-exports it so `solve_prices.<name>` call sites and the mechanism essay
+# above stay in one place.
+from sim.engine.solve_prices_core import (                  # noqa: E402
     CAPABILITY_CAP_FIELDS,
     CONVERGENCE_TOLERANCE,
     DAMPING_FACTOR,
@@ -798,36 +775,4 @@ from sim.solve_prices_core import (                  # noqa: E402
     techniques_available_to,
     wage_ratios_by_trade,
 )
-from sim.solve_prices_report import (                # noqa: E402
-    _apply_era_gate,
-    _default_capability_band_price_by_carrier,
-    _next_recursion_targets,
-    _print_capital,
-    _print_convergence_summary,
-    _print_default_report_header,
-    _print_energy,
-    _print_energy_gap,
-    _print_energy_summaries,
-    _print_extraction_rent_explanation,
-    _print_inputs,
-    _print_joint_output_note,
-    _print_labour,
-    _print_land,
-    _print_price_table,
-    _print_rejected_techniques,
-    _print_rent_summary,
-    _print_rent_this_batch,
-    _print_unanchored_byproducts_summary,
-    _print_unproductive_cycles,
-    _print_unpriceable_materials,
-    _print_value_share_or_total,
-    _resolved_recipe_id_or_none,
-    _run_default_report,
-    _run_why_report,
-    format_hours,
-    main,
-    print_why,
-)
 
-if __name__ == "__main__":
-    sys.exit(main())

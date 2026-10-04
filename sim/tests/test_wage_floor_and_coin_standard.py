@@ -7,7 +7,7 @@ import unittest
 
 from sim.engine import catalog, data, prices as engine_prices, wage_schedule
 from sim.labour import wage_provider
-from sim.validate_production import load_production
+from sim.engine.validate_production import load_production
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 CIVILISATIONS = ["rome_100ad", "han_china_100ad", "england_1300",

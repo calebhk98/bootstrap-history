@@ -35,7 +35,7 @@ this note assumes it.
    couple a cheaper, more saturated essential (food/`processing`) market to
    more spending on discretionary categories - the brief's own worked
    example, verified against a real gambling-house node in
-   `test_regressions.py`.
+   `sim/tests/__main__.py`.
 5. Player visibility: `money` now surfaces `materials_costing_you_a_premium`
    (new) alongside the existing `the_market_you_sell_into`, and
    `goods_market_note()`/`goods_market_summary()` both say when competition,
@@ -78,7 +78,7 @@ this note assumes it.
 
 ## What was and was not measured
 
-`timeout 1800 python3 rome/sim/test_regressions.py` (788 checks, 0
+`timeout 1800 python3 -m sim.tests` (788 checks, 0
 failures, ~110s) and `python3 rome/sim/simulator.py validate` (OK) were
 both run to completion and passed, repeatedly, through this work.
 

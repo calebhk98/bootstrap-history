@@ -33,7 +33,7 @@ Quoting the current text, `sim/ARCHITECTURE.md` lines 168-184:
 >   * it means giving 157 shared fields explicit owners and converting ~200
 >     implicit `self.x` couplings into arguments - a rewrite of most of
 >     30,000 lines;
->   * the safety net does not exist for it. `perf_fingerprint.py` covers the
+>   * the safety net does not exist for it. `sim/tests/fingerprint.py` covers the
 >     simulation loop well and covers `protocol.py` not at all, and protocol
 >     is where a third of the code lives;
 >   * the payoff is small, for the reason above.
@@ -60,7 +60,7 @@ that touches `self.x` into an argument pass. It does not reject decomposition
 in general, and the project has since done two smaller decompositions
 successfully under the same standing rule (section 4 below). The three
 reasons given were, at the time: the coupling is real and moving it does not
-remove it; the safety net (`perf_fingerprint.py`) does not reach a third of
+remove it; the safety net (`sim/tests/fingerprint.py`) does not reach a third of
 the code; and the payoff for a full field-by-field split is small relative
 to a ~30,000-line rewrite. All three were true when written. Section 2 checks
 each of them against what exists now.
@@ -80,7 +80,7 @@ the same reason it was wrong before, and none of what follows tries to.
 
 **"The safety net does not reach a third of the code" still holds, exactly
 as stated**, and is the single most important fact in this document. Verified
-by reading `perf_fingerprint.py` itself (section 5) rather than by trusting
+by reading `sim/tests/fingerprint.py` itself (section 5) rather than by trusting
 the old claim: it hashes `SAVE_FIELDS` after every simulated year across nine
 scenarios, and its own header says nothing about `protocol.py`. This reason
 does not get weaker with age; if anything, `protocol.py`'s share of the code
@@ -174,7 +174,7 @@ and easy to lose track of mid-edit; the same rename split across two
 Two more independent, dated observations from documents already in this
 tree confirm this is routine rather than a one-off: `docs/architecture/
 WIRING_MILESTONE_4.md` was written "while four other agents edited
-`sim/world/deposits.py`, `sim/solve_prices.py`, `sim/prove_rename_safe.py`
+`sim/world/deposits.py`, `sim/engine/solve_prices.py`, a rename-proving script
 and `sim/engine/economy.py` concurrently in the same checkout," to the point
 that its author had to read every cited file's content from a fixed anchor
 commit rather than the live working tree, specifically because the working
@@ -357,17 +357,17 @@ unchanged behaviour (`CLAUDE.md` section 6), and the suite "asserts on
 outputs and messages... not that the simulation is the same simulation"
 (`sim/ARCHITECTURE.md`, "Two things that will bite you").
 
-**`prove_rename_safe.py` does not apply to Stage 1, and this needs to be
+**The rename prover (since removed) does not apply to Stage 1, and this needs to be
 said plainly because it is easy to assume otherwise.** It proves that a
 change to a function's bytecode is *only* a local-variable rename, by
 comparing `co_code` name-aware, `co_names` and `co_consts` exactly
-(`sim/prove_rename_safe.py` header, "co_code, name-aware... co_names...
+(the prover's header, "co_code, name-aware... co_names...
 co_consts... must be identical"). Pulling a block of code out of `step()`
 into `self._step_staff()` changes `step()`'s own code object: it now
 contains a method call that was not there before, in place of the inlined
 instructions. That is a real difference by design, and the tool correctly
 reports it as one rather than as a safe rename. There is no way to make
-`prove_rename_safe.py` bless a method extraction, and no version of Stage 1
+the rename prover bless a method extraction, and no version of Stage 1
 should try to lean on it for that purpose. It remains the right tool for a
 different job this proposal does not need: if any stage also renames local
 variables while it is in a function anyway (`CLAUDE.md` section 7 already
@@ -375,11 +375,11 @@ invites this - "fix bad names you pass through, where it is cheap" - and
 several one-letter locals live inside `step()`), that rename, and only that
 rename, can be proven by this tool, separately from the extraction itself.
 
-**`perf_fingerprint.py record`/`check` is the tool that actually covers
+**`sim/tests/fingerprint.py record`/`check` is the tool that actually covers
 Stage 1, and it covers it well.** It hashes every `SAVE_FIELDS` value after
 every simulated year, across nine scenarios spanning five civilisations,
 fog on and off, random events on and off, seeded for determinism
-(`sim/perf_fingerprint.py`, `SCENARIOS`), and reports the first year any run
+(`sim/tests/fingerprint.py`, `SCENARIOS`), and reports the first year any run
 diverges. `step()` is exactly the function those nine scenarios exercise
 every single year, so this is close to the best-matched case this repo has
 for the tool: `Sim.step()` is not a cold path buried behind rarely-hit
@@ -398,15 +398,15 @@ blocks.
 
 **Stage 2 needs the same tool, for the same reason**, because moving a
 method between classes is exactly as much a change to `step()`'s call graph
-as extracting it in place was, and `prove_rename_safe.py` is equally unable
+as extracting it in place was, and the rename prover is equally unable
 to bless it.
 
 **What neither tool covers, honestly:**
 
-* `perf_fingerprint.py` compares `SAVE_FIELDS`, and `log` is explicitly
+* `sim/tests/fingerprint.py` compares `SAVE_FIELDS`, and `log` is explicitly
   excluded from the compared fields ("`log` is dropped: it is prose, it is
   enormous, and a change to the wording of a message is not a change to the
-  simulation" - `sim/perf_fingerprint.py`). A phase extraction that
+  simulation" - `sim/tests/fingerprint.py`). A phase extraction that
   accidentally reordered two independent side effects in a way that changed
   only what gets printed, and not any `SAVE_FIELDS` value, would not be
   caught. This is a narrow gap and the kind of thing a diff read catches,
@@ -419,12 +419,12 @@ to bless it.
   tool has always carried and is why the suite runs alongside it, not
   instead of it.
 * Nothing here proves `protocol.py` unchanged, because `step()` is not
-  called from `protocol.py`'s hot paths in a way `perf_fingerprint`
+  called from `protocol.py`'s hot paths in a way `sim.tests.fingerprint`
   exercises directly, and the original rejection's own bar - "propose it
   with a plan for proving `protocol.py` unchanged" - is still unmet by this
   proposal, on purpose. This proposal does not touch `protocol.py`, and
   should not until that bar has a real answer. `protocol.py`'s own dispatch
-  split (section 4) shipped without `perf_fingerprint` coverage and caught
+  split (section 4) shipped without `sim.tests.fingerprint` coverage and caught
   its one dead-code bug through the test suite and the code becoming
   legible enough to notice on read, not through a mechanical proof - which
   is weaker verification than Stage 1 gets here, not a precedent that
@@ -432,10 +432,10 @@ to bless it.
 * Save/load round-tripping needs its own explicit check per stage, the way
   `HOUSEHOLD_EXTRACTION.md` section 4 already lists it: a save written
   before a stage's change loads after it, and a field absent before stays
-  absent after. Neither `perf_fingerprint` nor `prove_rename_safe` verifies
+  absent after. Neither `sim.tests.fingerprint` nor the rename prover verifies
   this on its own; it is a `--session` round trip run by hand or by the
   suite's own save/load tests.
-* Wall-clock cost: `perf_fingerprint`'s per-scenario timing output should be
+* Wall-clock cost: `sim.tests.fingerprint`'s per-scenario timing output should be
   compared before and after each phase move, specifically to check that
   fifteen to twenty extra Python-level method calls per simulated year do
   not show up as a measurable regression. Given `revenue()` alone runs 61
@@ -454,7 +454,7 @@ to bless it.
   face, per the 51x measurement in section 4. If this happens, it is not a
   risk to weigh, it is a rejected design, full stop, the same way it was
   rejected the first two times it was proposed.
-* **A `perf_fingerprint` divergence that cannot be explained.** If `check`
+* **A `sim.tests.fingerprint` divergence that cannot be explained.** If `check`
   reports a mismatch after a phase extraction and the cause is not obvious
   from the named field and year within, say, one focused debugging session,
   the right move is to revert that one commit, not to keep pushing forward
@@ -501,7 +501,7 @@ here changes that comparison's conclusion, only the size of the file it was
 made about.
 
 Stage 1 is cheap, independently revertible phase by phase, has a
-well-matched verification tool (`perf_fingerprint.py`, run once per phase,
+well-matched verification tool (`sim/tests/fingerprint.py`, run once per phase,
 roughly six minutes each), and is valuable even if Stage 2 never happens:
 `step()` at 1,760 lines is unreadable and un-review-able regardless of which
 file it lives in, and `Complaints/33` already shows what that costs in a

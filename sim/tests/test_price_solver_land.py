@@ -1,6 +1,6 @@
 """Pins the fix for Complaints/48 ("land rent reaches no crop"): two rounds of
 work built a real, per-civilization Ricardian rent on `hectare_land` in
-`sim/world/land.py`, and `sim/solve_prices.py` already turned that into
+`sim/world/land.py`, and `sim/engine/solve_prices.py` already turned that into
 `hectare_land`'s own solved price - but nothing in `data/production/` ever
 consumed `hectare_land`. `wheat_kg` had `inputs={}`, and so did every other
 material whose own prose said it came "from arable land", "from pasture" or
@@ -23,8 +23,8 @@ Land-limited materials state land_hectare_years and the solver charges rent for 
 """
 import unittest
 
-from sim import solve_prices
-from sim.tests.price_solver_helpers import solver_context
+from sim.engine import solve_prices
+from sim.tests.price_solver_helpers import engine_solve_converges, solver_context
 
 
 class LandCostIsZeroByDefaultTests(unittest.TestCase):
@@ -275,15 +275,14 @@ class WhichMaterialsCarryLandTests(unittest.TestCase):
 
 class WiringDoesNotBreakTheSolveTests(unittest.TestCase):
     """The whole point is a converging, honest solve - not a price number in
-    isolation. These exercise main()'s own two commanded shapes, the same
-    way test_price_solver_rent.py's own analogous class does.
+    isolation. These run the engine's own solve, ungated and gated.
     """
 
     def test_the_ungated_solve_still_converges_with_land_wired_in(self):
-        self.assertEqual(solve_prices.main([]), 0)
+        self.assertTrue(engine_solve_converges())
 
     def test_the_roman_gated_solve_still_converges_with_land_wired_in(self):
-        self.assertEqual(solve_prices.main(["--civ", "rome_100ad"]), 0)
+        self.assertTrue(engine_solve_converges("rome_100ad"))
 
     def test_land_never_lowers_a_price_relative_to_the_old_zero_land_answer(self):
         # A monotonicity check on the real data: adding a nonnegative land

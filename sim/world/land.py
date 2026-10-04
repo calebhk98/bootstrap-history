@@ -1,7 +1,7 @@
 """Ricardian rent on ARABLE LAND: why a field is not priced like a mine.
 
 WHAT THIS IS FOR. Complaints/42 measured `hectare_land` solving to exactly
-0.0 in `sim/solve_prices.py`: land has no cost of production (its own
+0.0 in `sim/engine/solve_prices.py`: land has no cost of production (its own
 `data/production/40_organics.json` entry says so directly - "essentially no
 labour... a rent set by the worst hectare still worth taking"), and nothing
 in the solver computed a rent on land, so it defaulted to zero and land came
@@ -124,7 +124,7 @@ THE MECHANISM, IN ORDER.
      marginal land, valued at the market price of the crop" Ricardo's own
      argument makes, just read off a coarse 21-region ranking instead of
      an English parish's own field-by-field one. `rent_hours_per_hectare`
-     (in `sim/solve_prices.py`, not here - see WHY THE HOURS CONVERSION
+     (in `sim/engine/solve_prices.py`, not here - see WHY THE HOURS CONVERSION
      LIVES IN solve_prices.py, NOT HERE below) turns the physical surplus
      this module returns (kilograms of grain-equivalent per hectare) into
      the solver's own labour-hour price unit, using wheat_kg's own
@@ -135,7 +135,7 @@ THE MECHANISM, IN ORDER.
 WHY A CIVILIZATION'S PRICE IS THE SUPPLY-WEIGHTED AVERAGE ACROSS ITS OWN
 REGIONS, NOT THE MARGIN'S OWN RENT (WHICH IS ZERO BY DEFINITION). Ore's
 single reported price ends up EXACTLY the marginal deposit's own cost (see
-`sim/world/deposits.py`'s `find_marginal_deposit` and `sim/solve_prices.py`'s
+`sim/world/deposits.py`'s `find_marginal_deposit` and `sim/engine/solve_prices.py`'s
 `rent_hours_per_kg_by_ore_material` docstring for the algebra) because
 extracting ore genuinely costs labour even at the margin, so "price equals
 marginal cost" is a real, nonzero number. Land's cost of "production" is
@@ -201,9 +201,9 @@ region's own rent computation downstream of it is already wired to take
 whatever number it produces, exactly the promise `sim/world/deposits.py`'s
 own docstring makes for its sibling parameter.
 
-WHY THE HOURS CONVERSION LIVES IN sim/solve_prices.py, NOT HERE.
+WHY THE HOURS CONVERSION LIVES IN sim/engine/solve_prices.py, NOT HERE.
 `sim/world/deposits.py` never imports `data/production/`'s own recipe data
-and never computes a labour-hours price - `sim/solve_prices.py`'s own
+and never computes a labour-hours price - `sim/engine/solve_prices.py`'s own
 `rent_hours_per_kg_by_ore_material` does that conversion, reading
 `production_entries` and `wage_by_trade` this module has never heard of.
 This module follows the identical split for the identical reason (see
@@ -231,7 +231,7 @@ list of region-key strings is about as simple a field as that mechanism
 ever has to carry). It does NOT need to touch this module, `sim/solve_
 prices.py`'s land-rent wiring, or `data/world/geography.json` at all:
 call `cultivable_land_for_civilization` (or `land_rent_hours_per_hectare`
-in `sim/solve_prices.py`) again with the updated list and every number
+in `sim/engine/solve_prices.py`) again with the updated list and every number
 downstream - endowment, margin, rent, price - updates with no further
 change, because "the regions a civilization holds" was never anything
 more than a plain list this module reads, never a constant it assumes.
@@ -354,7 +354,7 @@ WHAT THIS MODULE DELIBERATELY DOES NOT DO.
     linen, olive oil - see `data/production/40_organics.json`'s own
     `_note`). `hectare_land` is not consumed as an `inputs` entry by any
     of them today, so there is no structural link for rent to travel
-    along even if this module wanted to send it - see `sim/solve_prices.py`
+    along even if this module wanted to send it - see `sim/engine/solve_prices.py`
     for where that wiring, if it existed, would need to attach.
 """
 import collections
@@ -423,10 +423,10 @@ def reference_yield_kg_per_hectare(
     calculation in this module bottoms out in. Takes both reference
     figures as optional explicit arguments (defaulting to this module's own
     declared constants) so a caller with the LIVE `wheat_kg` yield in hand
-    - `sim/solve_prices.py`, which already loaded `data/production/` for
+    - `sim/engine/solve_prices.py`, which already loaded `data/production/` for
     other reasons - can pass it instead of relying on this module's own
     duplicate staying in sync; see the module docstring's WHY THE HOURS
-    CONVERSION LIVES IN sim/solve_prices.py section.
+    CONVERSION LIVES IN sim/engine/solve_prices.py section.
     """
     kg_per_hectare_at_quality_1 = (
         REFERENCE_WHEAT_YIELD_KG_PER_HECTARE if kg_per_hectare_at_quality_1 is None
@@ -1210,7 +1210,7 @@ def margin_outcome_for_civilization(
     find_margin_of_cultivation's own EXTENSIVE-margin outcome, for one
     civilization's own territory and population, with the INTENSIVE
     margin's own rent (see the LABOUR INTENSITY section above) added on
-    top of every worked parcel - the single call sim/solve_prices.py's own
+    top of every worked parcel - the single call sim/engine/solve_prices.py's own
     land-rent wiring makes, and the one place in this module where the two
     margins actually combine.
 
@@ -1292,49 +1292,3 @@ def margin_outcome_for_civilization(
         allocations=combined_allocations,
         price_kg_grain_equivalent_per_hectare=combined_price,
         labour_hours_per_hectare=labour_hours_per_hectare)
-
-
-if __name__ == "__main__":
-    # A quick, human-readable readout - the same kind of thing
-    # sim/world/deposits.py's own __main__ block prints.
-    print("LAND - Ricardian rent from regional fertility and territory")
-    print("=" * 72)
-    civilization_ids = sorted(
-        name[:-len(".json")] for name in os.listdir(CIVILIZATIONS_DIR)
-        if name.endswith(".json") and not name.startswith("_"))
-    for civilization_id in civilization_ids:
-        outcome = margin_outcome_for_civilization(civilization_id)
-        civilization = _load_civilization(civilization_id)
-        print("\n%s (population %s, holds %d region(s), %d land_tiles parcel(s))"
-              % (civilization_id, format(civilization["population"], ","),
-                 len(civilization.get("home_regions") or []),
-                 len(outcome.allocations)))
-        print("  quantity demanded: %.4g kg grain-equivalent/yr"
-              % outcome.quantity_demanded_kg)
-        print("  labour intensity (civ-wide): %.4g hours/hectare applied "
-              "across the whole held endowment (reference is %.4g)"
-              % (outcome.labour_hours_per_hectare,
-                 LAND_REFERENCE_LABOUR_HOURS_PER_HECTARE))
-        for allocation in sorted(
-                outcome.allocations,
-                key=lambda a: -a.fertility_quality_multiplier):
-            marker = (" <- MARGINAL" if allocation.region_land.region
-                      == outcome.marginal_region else "")
-            print("  %-20s fertility=%5.2f  arable=%14.4g hectares  "
-                  "used=%14.4g hectares  rent=%8.4f (ext=%7.4f + int=%7.4f) "
-                  "kg/hectare%s"
-                  % (allocation.region_land.region,
-                     allocation.fertility_quality_multiplier,
-                     allocation.region_land.arable_hectares,
-                     allocation.arable_hectares_supplied,
-                     allocation.rent_kg_grain_equivalent_per_hectare,
-                     allocation.extensive_rent_kg_grain_equivalent_per_hectare,
-                     allocation.intensive_rent_kg_grain_equivalent_per_hectare,
-                     marker))
-        print("  PRICE (supply-weighted average rent, extensive + "
-              "intensive): %.4f kg grain-equivalent/hectare"
-              % outcome.price_kg_grain_equivalent_per_hectare)
-        if outcome.unmet_demand_kg > 0.0:
-            print("  UNMET DEMAND: %.4g kg/yr beyond this civilization's "
-                  "whole territory's combined capacity"
-                  % outcome.unmet_demand_kg)

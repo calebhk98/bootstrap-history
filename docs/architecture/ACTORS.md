@@ -86,8 +86,8 @@ way a loss becomes a gain. A recorded actor keeps `income` and `outlays` by
 purpose, so its purse equals its opening money plus income less outlays. The
 founder's household pays the state through `Sim.pay_state`, and the government
 of the founder's civilisation receives requisition, the pressed office,
-military supply and confiscation. `python3 sim/actor_ledger.py` prints each
-purpose's share of a run's income and outlays.
+military supply and confiscation. Each
+purpose's share of a run's income and outlays is in the actor ledger.
 
 ## State and persistence
 

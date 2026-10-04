@@ -1,4 +1,4 @@
-"""Pins the era gate that Complaints/38 asked for: `sim/solve_prices.py` had
+"""Pins the era gate that Complaints/38 asked for: `sim/engine/solve_prices.py` had
 no notion of WHEN, so a 100 AD Roman scenario priced all three of its energy
 carriers off a photovoltaic panel. The panel was correct data and the
 cheapest source of electricity at solved prices; it was simply not available
@@ -20,7 +20,7 @@ Pins the technique-to-node link the price solver gates on, so a Roman technique 
 """
 import unittest
 
-from sim import solve_prices
+from sim.engine import solve_prices
 
 
 def entry(requires_node="__absent__"):

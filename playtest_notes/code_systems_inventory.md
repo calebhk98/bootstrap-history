@@ -125,7 +125,7 @@ Global notes
 ================================================================
 ## B. PARTIALLY WIRED
 
-54. **Price solver** - solve_prices.py, solve_prices_core.py (recipe cost, SCC-based fixed point, capability grading), solve_prices_report.py, joint_allocation.py (joint costs split by demand), engine/prices.py, engine/solve_cache.py, world/deposits.py (Ricardian ore rent), world/land.py (land rent), world/demand.py. Evidence: wage schedule always calls `solved_prices` (engine/wage_provider.build_schedule) and `data.load` fills materials missing from prices.json; but `load(use_solved_prices=False)` is the default and every play/CLI caller uses `load()` with defaults, so node costs and goods come from data/prices.json. Notable: prices.json still the live price source; several mod paths force solver.
+54. **Price solver** - engine/solve_prices.py, engine/solve_prices_core.py (recipe cost, SCC-based fixed point, capability grading), engine/joint_allocation.py (joint costs split by demand), engine/prices.py, engine/solve_cache.py, world/deposits.py (Ricardian ore rent), world/land.py (land rent), world/demand.py. Evidence: wage schedule always calls `solved_prices` (engine/wage_provider.build_schedule) and `data.load` fills materials missing from prices.json; but `load(use_solved_prices=False)` is the default and every play/CLI caller uses `load()` with defaults, so node costs and goods come from data/prices.json. Notable: prices.json still the live price source; several mod paths force solver.
 
 55. **Military logistics** - world/military_logistics.py: only `annual_iron_and_ammunition_burden_kg_per_soldier` and `MODERN_SERVICE_RIFLE` are called by the engine (society_state_pressure.py ~286). Rest is standalone/test-only; `foraging_corridor_width_km` has no caller; two CALIBRATION_LEGION_* constants unreferenced.
 
@@ -142,7 +142,7 @@ Global notes
 ================================================================
 ## C. PRESENT BUT UNUSED / OFFLINE ONLY
 
-61. **Offline planners and strategies** - planner.py (CPM/backward plan), path_search.py, strategies/*.json; reached only from CLI `plan`, `search`, `sweep` (not the play loop); they drive Sim through `bounty_set` and ordered project lists.
+61. **Offline planners and strategies** - engine/planner.py (CPM/backward plan), engine/path_search.py, strategies/*.json; reached only from CLI `plan`, `search`, `sweep` (not the play loop); they drive Sim through `bounty_set` and ordered project lists.
 62. **Dead functions/classes with no live caller (from an AST reference scan of engine/ and world/)** - sim/agents/household.py `MineWorking` (TypedDict); economy_materials `capacity_reserves`; state.py `add_reputation`, `add_scandal`, `deduct_reputation`, `done_keys_sorted`, `operating_keys_sorted`, `record_spend` (used only by tests or nowhere); commodities `on_hand`; world/demography `working_age_population`; world/demand `consumers_of`, `joint_output_value_shares_for_recipe`, `aggregate_household_demand_all_goods`; world/military_logistics `pack_animals_required_for_daily_delivery`; world/deposits `shafts_needed_fractional`; world/wages `adjusted_tightness_factor`; engine/cli_analysis `granary_projection`.
 63. **Unused constants** - `MINE_OPEX_PER_T_*` per-metal constants are referenced once (probably assembled via a table); military_logistics CALIBRATION_LEGION_MARCH_RATE_* and demand HOUSEHOLD_FOOD_BUDGET_SHARE_HIGH, SILVER_TO_LEAD_PRICE_RATIO_HISTORICAL are declared but read only in tests.
 

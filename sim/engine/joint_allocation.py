@@ -13,11 +13,11 @@ import warnings
 
 from sim.constants import declare
 from sim.engine.default_civilisation import default_civilisation_id
-from sim.joint_floor import JOINT_BYPRODUCT_FLOOR_SHARE, lift_to_floor  # noqa: F401
+from sim.engine.joint_floor import JOINT_BYPRODUCT_FLOOR_SHARE, lift_to_floor  # noqa: F401
 from sim.world import demand, deposits
 
 DEFAULT_CIVILIZATION = default_civilisation_id()
-_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 MEAN_INCOME_LABOUR_HOURS_PER_CAPITA_PER_YEAR = declare(
     "MEAN_INCOME_LABOUR_HOURS_PER_CAPITA_PER_YEAR", 550.0,

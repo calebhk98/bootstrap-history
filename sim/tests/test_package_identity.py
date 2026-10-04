@@ -166,11 +166,9 @@ def _test_supported_entry_points_package_identity():
 
 	entry_points = [
 		"sim.simulator",
-		"sim.audit_costs",
-		"sim.validate_production",
-		"sim.solve_prices",
-		"sim.perf_fingerprint",
-		"sim.demo_commodities",
+		"sim.engine.validate_production",
+		"sim.engine.solve_prices",
+		"sim.tests.fingerprint",
 	]
 
 	for ep in entry_points:

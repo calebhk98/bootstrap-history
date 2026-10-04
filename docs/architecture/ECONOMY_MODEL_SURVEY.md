@@ -8,10 +8,10 @@ commands in `CLAUDE.md` §5.
 ## 0. What we have, in one paragraph
 
 Prices are solved as a damped fixed point over the recipes in
-`data/production/` (`sim/solve_prices_core.py`), in labour-hours with the
+`data/production/` (`sim/engine/solve_prices_core.py`), in labour-hours with the
 `labourer` trade as numeraire, plus two rent mechanisms (ore deposits, arable
 land). Joint outputs split the shared cost using demand anchors
-(`sim/joint_allocation.py`, `sim/world/demand.py`). Labour moves between trades
+(`sim/engine/joint_allocation.py`, `sim/world/demand.py`). Labour moves between trades
 through a gap-driven, skill-distance-weighted flow (`sim/labour/labour_market.py`,
 `sim/labour/labour_allocation.py`): NEED comes from planned output, HAVE from a
 workforce that drifts toward the gap. There is no wage bargaining, no
@@ -255,7 +255,7 @@ outputs covers the joint cost, with each output's price set by its own demand;
 if one output is in surplus its price falls to its disposal value (Marshall's
 joint supply; the same result as the von Neumann free-good rule in section 1).
 
-Relevance to our design: `joint_allocation.py` already follows the economist's
+Relevance to our design: `engine/joint_allocation.py` already follows the economist's
 view (demand anchors set the split, standalone cost for outputs with no
 anchor). Its weak points are physical-units fallbacks (`mass_in_kg` treats
 non-gram units as kilograms) and the single hand-set income scale. The
@@ -294,7 +294,7 @@ solver produce the per-trade split.
 ## 8. Ranked recommendations, mapped to modules
 
 1. **Keep the labour-hour fixed point for prices; change how it treats joint
-   outputs and surpluses** (`solve_prices_core.py`, `joint_allocation.py`).
+   outputs and surpluses** (`engine/solve_prices_core.py`, `engine/joint_allocation.py`).
    Adopt von Neumann activity choice: a process runs only if it is not
    loss-making at the solved prices; an output in surplus prices to disposal
    value, including zero; do not clamp the solver into positive prices.
@@ -319,7 +319,7 @@ solver produce the per-trade split.
    shares. This also answers §3.2: different seeds give an ensemble.
 4. **Close the loop with CGE-style closure and budget shares** (`demand.py`).
    Household income becomes the wage bill plus rents from the same run,
-   replacing the single household income constant in `joint_allocation.py`.
+   replacing the single household income constant in `engine/joint_allocation.py`.
    Write the closure (numeraire, what is exogenous, subsistence floor) in one
    place so every domain reads the same one.
 5. **Decentralise clearing for multiple actors** (later, when countries become

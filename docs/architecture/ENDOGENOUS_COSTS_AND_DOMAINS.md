@@ -3,7 +3,7 @@
 **Status:** proposed plan. Supersedes the sequencing sketch in `PM_ASSESSMENT.md` §5.
 **For "is this done yet":** `docs/architecture/STATE_OF_THE_PROJECT.md` holds
 the milestone table with the commands that measure it and an ordered
-next-steps list; the issue table is `python3 sim/issue_status.py` - read it alongside Part 4 below, which is the
+next-steps list; the issue table is the status lines in `Complaints/` - read it alongside Part 4 below, which is the
 short version of the same thing.
 **Settled with the stakeholder:** the historical record must be a *plausible*
 outcome, not the only one, and not one produced by feeding history back in. The
@@ -51,7 +51,7 @@ input-output matrix, authored, validated and in the repository already.
 
 ## 1.1a Half, though. The tree has no production side
 
-Run `python3 sim/audit_costs.py`. The finding that reorders this whole plan:
+The cost-audit script (since removed) found this. The finding that reorders this whole plan:
 
 > **The tree records what every process CONSUMES and almost never what
 > anything PRODUCES.**
@@ -295,7 +295,7 @@ this table stays the short version.
 
 | | milestone | state, re-measured 2026-09-18 |
 |---|---|---|
-| 0 | the production side | **done.** 98.1% of materials individually, 99.7% weighted by consumption site; `sim/validate_production.py`. The remaining 3 (germanium_g, coal_tar_kg, indium_g) are the deliberate joint-byproduct gaps CLAUDE.md §4 already names |
+| 0 | the production side | **done.** 98.1% of materials individually, 99.7% weighted by consumption site; `python3 sim/simulator.py validate`. The remaining 3 (germanium_g, coal_tar_kg, indium_g) are the deliberate joint-byproduct gaps CLAUDE.md §4 already names |
 | 1 | provenance and a burndown | **under way, and it works, and the count is expected to keep growing.** `sim/constants.py --burndown`: **877 numbers declared, 697 temporary heuristics (79.5%), 11 hardcoded outcomes**, named individually including `SLAVE_BASE_PRICE_DENARII` and `WAGE_SCARCITY_ELASTICITY` - a rising count here is the audit mechanism catching more as `core.py`/`labour.py`/`society.py` get declared, not a regression. Six of the eleven are still the mine-capex family, still fixable the same way: derive them from `sim/world/deposits.py`'s own sinking-cost figures instead of a multiple of book price |
 | 2 | the synthetic world | not started, and not needed - see the note below |
 | 3 | the household extraction | **done.** `sim/agents/household.py` |
@@ -312,9 +312,9 @@ asking which of `sim/world/`'s modules `sim/engine/` imports at all:**
     land.py                 imported by sim/engine/core.py
     transport.py            imported by sim/engine/economy.py (as freight_physics)
     military_logistics.py   imported by sim/engine/society.py
-    deposits.py             imported ONLY by sim/solve_prices.py - reaches the
+    deposits.py             imported ONLY by sim/engine/solve_prices.py - reaches the
                              engine only through the (currently off) solved-price path
-    demand.py               imported by NOTHING under sim/engine/ or sim/solve_prices.py
+    demand.py               imported by NOTHING under sim/engine/ or sim/engine/solve_prices.py
     labour_market.py        imported by NOTHING under sim/engine/
 
 Five of eight wired directly, one reachable only through a switch that
@@ -332,7 +332,7 @@ land) and capital are in; the gap barely moved where the margin is not
 forced - mercury stays ~1,440x below book, attributed to an unmodelled
 state monopoly rather than a missing mechanism. `sim/world/demand.py` now
 exists and, in isolation, reverses the silver/lead joint-byproduct result
-exactly as predicted - but it is not imported by `sim/solve_prices.py`,
+exactly as predicted - but it is not imported by `sim/engine/solve_prices.py`,
 so the solver's production code path still uses a plain mass split. Wiring
 `demand.py` into the solver is therefore now the single most direct way to
 close `Complaints/29` and move the needle described in this paragraph,
@@ -365,8 +365,7 @@ do that first.
 
 ## Milestone 0 - Build the production side
 
-**Done, in part:** `sim/audit_costs.py` now measures the gap and will keep
-measuring it, so progress here has a number rather than an impression.
+**Done, in part:** a cost-audit script measured the gap, so progress here had a number rather than an impression.
 
 **The work:** every one of the 162 consumed materials needs a producing
 process with inputs and, above all, a **yield**. Today 0 of 162 have one.
@@ -470,11 +469,11 @@ is a biological parameter takes judgement, so it is done by agents, once, per
 parameter, and the answer is written into the source next to the number.
 
 Reading those tags back and printing a percentage is arithmetic. It is a
-script, like `sim/audit_costs.py`, and it runs in a second with no agents
+script, and it runs in a second with no agents
 involved. Nothing in this project should ever need a fleet of agents to
 answer the same question twice - if a measurement is worth having, it gets
 committed as a script the first time somebody works it out, and after that
-anyone can run it. That is the whole reason `audit_costs.py` exists rather
+anyone can run it. That is the whole reason such a script exists rather
 than a paragraph in a document saying what its numbers were on the day
 someone looked.
 
@@ -491,7 +490,7 @@ subsystems must satisfy before they are allowed near `economy.py`.
 
 Move the ~80 founder-specific attributes onto an `Actor` object; `sim.capital`
 becomes a property proxying `self.founder.capital`. Mechanical, textual, and
-verifiable - once `perf_fingerprint.py` can be trusted again, which it
+verifiable - once `sim/tests/fingerprint.py` can be trusted again, which it
 currently cannot (see Part 5).
 
 This is what makes a government, a firm or a second player possible, and it is
@@ -508,7 +507,7 @@ machinery, with no famine modifier anywhere.
 
 ## Milestone 5 - The wage, and the price solve
 
-**The material half is done.** `sim/solve_prices.py` solves the system in
+**The material half is done.** `sim/engine/solve_prices.py` solves the system in
 Part 2 and converges: 1,076 iterations, residual 0.0, all 182 materials
 priced in labour-hours, none unreachable. `--why` gives a recursive cost
 breakdown, which matters more than the headline number because it is what
@@ -553,7 +552,7 @@ order, for the reasons in Part 3.
 
 # Part 5 - What is in the way
 
-**`perf_fingerprint.py` does not reproduce its own recording.** This is the
+**`sim/tests/fingerprint.py` does not reproduce its own recording.** This is the
 most serious thing on this list, because it is the tool `sim/ARCHITECTURE.md`
 names as the way to prove a change altered nothing, and it currently cannot
 prove it. Milestone 3 must not start behind it.
@@ -593,8 +592,8 @@ Recorded so the next person does not repeat it:
 
 ### It now reproduces in ten seconds
 
-`python3 sim/repro_nondeterminism.py`. One scenario, four runs, one process,
-same seed, nothing changed in between, and they disagree. Which run is the odd
+A reproduction script (since removed) ran one scenario four times in one process with
+the same seed, nothing changed in between, and the runs disagree. Which run is the odd
 one out varies between invocations, so it is sporadic rather than ordered -
 "the first run is different" is the obvious guess and it is wrong.
 
@@ -623,7 +622,7 @@ previous commit - but worth remembering as a prior on the rest of the
 infrastructure: the green light had been partly decorative for a long time.
 
 **`protocol.py` is unguarded.** Roughly a third of the code, covered by neither
-`perf_fingerprint` nor anything else that proves behaviour. Milestone 3 touches
+`sim.tests.fingerprint` nor anything else that proves behaviour. Milestone 3 touches
 it.
 
 **Scope.** Sixteen domains is a destination. Six of them, done properly, is a

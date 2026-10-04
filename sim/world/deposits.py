@@ -1,7 +1,7 @@
 """Ricardian rent: why a scarce deposit is not priced at its own digging cost.
 
 WHAT THIS IS FOR. Complaints/32 measured the actual defect in this project's
-price solver: `sim/solve_prices.py` fixes rent on every extracted material at
+price solver: `sim/engine/solve_prices.py` fixes rent on every extracted material at
 zero (`RENT_IS_ZERO`), so a computed price is exactly the labour embodied in
 the good, valued at relative wages, with no claim on it from scarcity at all.
 Cinnabar comes out at 0.035 labour-hours/kg - two minutes of digging -
@@ -31,8 +31,8 @@ because it is the only quantity this project already has for these metals.
 
 STANDALONE ON PURPOSE, LIKE ITS SIBLINGS. Nothing here imports sim/engine/
 or any other sim/world/ module - see sim/world/__init__.py for why a module
-built this way survives other agents editing sim/engine/economy.py,
-sim/solve_prices.py and sim/prove_rename_safe.py concurrently with this
+built this way survives other agents editing sim/engine/economy.py and
+sim/engine/solve_prices.py concurrently with this
 file's construction. It reads two data files that already exist
 (data/world/geography.json, data/world/resources.json) and one new one this
 task adds (data/world/deposits.json), as plain JSON - that is data, not an
@@ -1413,84 +1413,3 @@ def simulate_depletion(
 for _metal in METALS:
     load_deposits(_metal)
 del _metal
-
-
-if __name__ == "__main__":
-    # A quick, human-readable readout - the same kind of thing
-    # sim/world/agriculture.py's own __main__ block prints, for whoever
-    # next wants to see this module's headline numbers without opening a
-    # test file. Uses data/world/resources.json's own empire_output_100ad
-    # as an illustrative quantity demanded - see the module docstring's
-    # DEMAND IS A PARAMETER section for why that is a real historical
-    # output level being used as a stand-in, not a claim that this module
-    # invented a demand figure.
-    resources = _load_json(RESOURCES_FILE)
-    print("DEPOSITS - Ricardian rent from physical ore-body properties")
-    print("=" * 72)
-    for metal in METALS:
-        deposits = load_deposits(metal)
-        demand = empire_output_net_of_byproducts_tonnes_per_year(metal)
-        outcome = find_marginal_deposit(deposits, demand)
-        print("\n%s (stated Roman output: %.4g t/yr)" % (metal.upper(), demand))
-        for allocation in sorted(outcome.allocations,
-                                  key=lambda a: a.own_cost_labour_hours_per_kg):
-            marker = " <- MARGINAL" if allocation.deposit is outcome.marginal_deposit else ""
-            print("  %-26s cost=%10.5f h/kg  supplies=%9.2f t/yr  "
-                  "rent=%10.5f h/kg%s"
-                  % (allocation.deposit.name,
-                     allocation.own_cost_labour_hours_per_kg,
-                     allocation.quantity_supplied_tonnes_per_year,
-                     allocation.rent_labour_hours_per_kg,
-                     marker))
-        print("  price at margin: %.5f labour-hours/kg" % outcome.price_at_margin_labour_hours_per_kg)
-        if outcome.unmet_demand_tonnes_per_year > 0.0:
-            print("  UNMET DEMAND: %.2f t/yr beyond every named deposit's "
-                  "combined capacity" % outcome.unmet_demand_tonnes_per_year)
-
-    print("\n" + "=" * 72)
-    print("Depletion demo: silver at its stated output, over %d years"
-          % int(DEPOSIT_ASSUMED_WORKING_LIFE_YEARS * 1.2))
-    print("(price now creeps up WITHIN a deposit's life too - the intensive "
-          "margin - not only when one is exhausted)")
-    silver_deposits = load_deposits("silver")
-    silver_demand = empire_output_net_of_byproducts_tonnes_per_year("silver")
-    silver_outcomes = simulate_depletion(
-        silver_deposits, silver_demand,
-        years=int(DEPOSIT_ASSUMED_WORKING_LIFE_YEARS * 1.2))
-    milestone_years = {1, 25, 50, 75, 100}
-    for year_outcome in silver_outcomes:
-        if (year_outcome.exhausted_this_year
-                or year_outcome.year in milestone_years):
-            print("  year %3d: price at margin %.4f h/kg (%s)%s%s"
-                  % (year_outcome.year,
-                     year_outcome.price_at_margin_labour_hours_per_kg,
-                     year_outcome.marginal_deposit_name,
-                     ("  EXHAUSTED: %s" % ", ".join(year_outcome.exhausted_this_year)
-                      if year_outcome.exhausted_this_year else ""),
-                     ("  UNMET %.2f t/yr" % year_outcome.unmet_demand_tonnes_per_year
-                      if year_outcome.unmet_demand_tonnes_per_year > 0 else "")))
-
-    print("\n" + "=" * 72)
-    print("Waste rock and gravel - what has to be lifted alongside the metal")
-    for metal in METALS:
-        deposits = load_deposits(metal)
-        richest = min(deposits, key=lambda d: 1.0 / d.ore_grade_kg_per_tonne)
-        leanest = max(deposits, key=lambda d: 1.0 / d.ore_grade_kg_per_tonne)
-        for label, deposit in (("richest", richest), ("leanest", leanest)):
-            print("  %-8s %-9s %-26s grade=%10.6g kg/t   "
-                  "waste=%14.1f t/kg metal   waste=%15.1f t/yr"
-                  % (metal, label, deposit.name, deposit.ore_grade_kg_per_tonne,
-                     waste_tonnes_per_kg_metal(deposit),
-                     annual_waste_rock_tonnes(deposit)))
-
-    print("\n" + "=" * 72)
-    print("Polymetallic by-products - fixed by geology, not chosen")
-    for metal in METALS:
-        for deposit in load_deposits(metal):
-            if not deposit.byproducts:
-                continue
-            joint = joint_output_quantities_kg(deposit)
-            print("  %s (%s): %s"
-                  % (deposit.name, metal,
-                     ", ".join("%s=%.4g kg/yr" % (key, value)
-                               for key, value in sorted(joint.items()))))

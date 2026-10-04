@@ -1,35 +1,23 @@
-"""`treetool.py merge` must not lose anything a branch author wrote.
+"""The merge of the branch files must not lose anything a branch author wrote.
 
 Complaints/52. The merge refuses to write while any event would drop a
 requirement. Unknown trades, unresolvable prerequisites, dependency cycles and
 undeclared materials must all be zero.
 """
 import collections
-import os
 import re
-import subprocess
-import sys
 import unittest
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(os.path.dirname(HERE))
+from sim.engine import tree_merge
 
 ZERO_CATEGORIES = ("unknown_trade", "unresolvable_prerequisite", "material_is_technology", "dependency_cycle")
 
 
 def measure_merge_events():
-    """{category: [message, ...]} from a dry-run merge."""
-    result = subprocess.run(
-        [sys.executable, os.path.join(ROOT, "sim", "treetool.py"), "merge", "--dry-run"],
-        cwd=ROOT, capture_output=True, text=True, check=False)
+    """{category: [message, ...]} from one merge of the real branch files."""
     events = collections.defaultdict(list)
-    category = None
-    for line in result.stdout.splitlines():
-        header = re.match(r"  (\w+) \(\d+\)$", line)
-        if header:
-            category = header.group(1)
-        elif category and line.startswith("     "):
-            events[category].append(line.strip())
+    for category, message in tree_merge.build_tree().losses:
+        events[category].append(message)
     return events
 
 
@@ -50,7 +38,7 @@ class BranchMergeBlockingEventTests(unittest.TestCase):
     def test_no_unknown_trades_prerequisites_or_cycles(self):
         for category in ZERO_CATEGORIES:
             self.assertEqual(self.events.get(category, []), [], (
-                "merge --dry-run reports %s events. Fix the branch source "
+                "the merge reports %s events. Fix the branch source "
                 "(trade name, prerequisite id, or the cycle edge)."
                 % category))
 

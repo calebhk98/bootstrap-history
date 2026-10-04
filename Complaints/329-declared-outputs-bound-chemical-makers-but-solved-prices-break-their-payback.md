@@ -2,7 +2,7 @@
 
 **Status:** open
 
-Declaring `annual_output_t` with an `annual_output_basis` moved a node from authored to derived revenue (`python3 sim/node_revenue_report.py`). Some declarations were withdrawn because the derivation then gave a wrong answer, and these nodes carry `output_unbounded_reason` in the tree data (`grep -l output_unbounded_reason data/branches/*.json`):
+Declaring `annual_output_t` with an `annual_output_basis` moved a node from authored to derived revenue (`python3 sim/node_revenue_report.py` (script since removed; recover with `git show 97473f1:sim/node_revenue_report.py`)). Some declarations were withdrawn because the derivation then gave a wrong answer, and these nodes carry `output_unbounded_reason` in the tree data (`grep -l output_unbounded_reason data/branches/*.json`):
 
 - Makers whose entries add less than their staff cost at solved prices derive zero revenue (caustic soda, glycerol, superphosphate, polyethylene, gunpowder, mirror amalgam). Either the inputs of their entries are priced too high against the product, or the entries understate yield. Mirror amalgam's entry also states no labour hours.
 - Makers whose derived payback fell under the floor, because the solved price of the product follows the incumbent labour-heavy route (Solvay soda against Leblanc, bleaching powder, hand papermaking whose revenue is only its wages). This is the cost-priced concern problem of `Complaints/319`.

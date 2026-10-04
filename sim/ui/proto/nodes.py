@@ -105,7 +105,7 @@ def _downstream_of(node_id, nodes):
 # mutated afterward (a repo-wide grep for assignments into a node's "pre" or
 # "req_any" - see the report accompanying this change - turns up only
 # offline tree-authoring tools that run before the tree is ever loaded, plus
-# two places in test_regressions.py that mutate a small synthetic dict, and
+# two places in the test suite that mutate a small synthetic dict, and
 # both do it before that dict's first use, never after these functions have
 # already seen it). The test suite DOES build many short-lived synthetic
 # node dicts, though, and id() is only unique among currently-alive objects:

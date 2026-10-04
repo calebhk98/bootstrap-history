@@ -1,4 +1,4 @@
-"""Pins the fix for Complaints/32's own follow-up finding: `sim/solve_prices.py`
+"""Pins the fix for Complaints/32's own follow-up finding: `sim/engine/solve_prices.py`
 printed "Rent on extracted materials is fixed at 0.0 this round (RENT_IS_ZERO)"
 on every run, although `sim/world/deposits.py` sat unimported next to it with a
 complete, tested Ricardian rent model (extensive margin, intensive margin,
@@ -24,7 +24,8 @@ Pins rent_hours_per_kg_by_ore_material and the iron blast-furnace/bloomery fallb
 import unittest
 from unittest import mock
 
-from sim import solve_prices
+from sim.engine import solve_prices
+from sim.tests.price_solver_helpers import engine_solve_converges
 from sim import simulator
 from sim.world import deposits
 
@@ -229,14 +230,14 @@ class IronFallsBackToTheAvailableSmeltingRouteTests(unittest.TestCase):
 
 class WiringDoesNotBreakTheSolveTests(unittest.TestCase):
     """The whole point is a converging, honest solve - not a rent number in
-    isolation. These exercise main()'s own two commanded shapes.
+    isolation. These run the engine's own solve, ungated and gated.
     """
 
     def test_the_ungated_solve_still_converges_with_rent_wired_in(self):
-        self.assertEqual(solve_prices.main([]), 0)
+        self.assertTrue(engine_solve_converges())
 
     def test_the_roman_gated_solve_still_converges_with_rent_wired_in(self):
-        self.assertEqual(solve_prices.main(["--civ", "rome_100ad"]), 0)
+        self.assertTrue(engine_solve_converges("rome_100ad"))
 
     def test_rent_never_lowers_a_price_relative_to_the_old_zero_rent_answer(self):
         # A monotonicity check on the real data: adding a nonnegative cost

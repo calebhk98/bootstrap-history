@@ -39,9 +39,9 @@ from typing import (Any, cast, Dict, Iterable, List, Optional, Protocol,
 # avoids this file loading a second time under a second sys.modules key.
 # Unlike core.py (which is only ever reached through an entry point that
 # has already put the repository root on sys.path - simulator.py, cli.py,
-# sim/tests/harness.py), this file is also imported directly by sim/
-# demo_commodities.py, whose own sys.path setup adds sim/ and sim/engine/
-# but not the repository root - so this file adds it itself, the same
+# sim/tests/harness.py), this file may be imported by a caller that put
+# sim/ and sim/engine/ on sys.path but not the repository root - so this
+# file adds it itself, the same
 # guarded, idempotent snippet core.py uses, rather than depending on every
 # caller to have done it first. (`os` is already imported above; only `sys`
 # is new here.)

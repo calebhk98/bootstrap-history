@@ -24,7 +24,7 @@ solver was asked which technique is cheapest, and it answered correctly.
 
 ## The actual defect, which is older than the panels
 
-**`sim/solve_prices.py` has no notion of WHEN.** It has always solved the
+**`sim/engine/solve_prices.py` has no notion of WHEN.** It has always solved the
 whole tree with every technique in it simultaneously available. Hall-Heroult
 aluminium and bloomery iron sit in the same solve, and the bloomery only
 survives because nobody had yet added a technique that undercut it
@@ -128,7 +128,7 @@ there is no fourth one waiting to be found.
 
 ## The mechanism is built; the labelling is not
 
-The gate exists as of this branch. `sim/solve_prices.py --civ rome_100ad`
+The gate exists as of this branch. `sim/engine/solve_prices.py --civ rome_100ad`
 filters the technique set down to what that civilization can run and solves
 the smaller system, and `sim/tests/test_price_solver_era_gate.py` pins it.
 
@@ -143,7 +143,7 @@ requires_node and are dropped unclassified).
 That is the honest reading, not a bug. The gate needs each production entry
 to say which tech-tree node lets anyone run it, and until this round the
 production data had no link to the tree at all - `data/production/_SCHEMA.md`
-says so outright, and `sim/audit_costs.py` has been guessing the link by
+says so outright, and `sim/audit_costs.py` (script since removed; recover with `git show 97473f1:sim/audit_costs.py`) has been guessing the link by
 stripping a unit suffix off a material key and hoping a node id matches,
 which works for 47 of 162. So the missing piece was never a solver
 mechanism. It was a field.
@@ -152,14 +152,14 @@ mechanism. It was a field.
 three (schema, validator and solver all agree on them): absent means nobody
 has classified the entry and a gated solve drops it; `null` means no
 technology is needed at all; a node id means available once that node is
-reached. `validate_production.py` checks every id against the tree, because
+reached. `engine/validate_production.py` checks every id against the tree, because
 a typo here reads as "never available" and would price a material out of
 existence in every dated scenario without a word.
 
 The remaining work is 196 judgements, one per entry, and it is the kind that
 wants care rather than a sweep: the gate on electrolytic zinc is whatever
 supplies an industrial current, not the node that first roasts an ore.
-Coverage is printed by `validate_production.py` on every run, so the
+Coverage is printed by `engine/validate_production.py` on every run, so the
 progress is measurable from zero.
 
 ### What the labelling must not turn into

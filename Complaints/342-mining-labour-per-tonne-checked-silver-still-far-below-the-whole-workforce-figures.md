@@ -2,7 +2,7 @@
 
 **Status:** partly - mine works are decomposed and charged (348); the remaining gap is 349; reopened: the remaining work belongs to this complaint too, the related one is a cross-reference, not a replacement
 
-The suspicion in 305 and 333 was that the deposit model charges too little labour per tonne of rock. Checked (`python3 sim/solve_prices.py --civ rome_100ad --why silver_kg`, `python3 sim/test_regressions.py --only mine_labour_per_tonne`):
+The suspicion in 305 and 333 was that the deposit model charges too little labour per tonne of rock. Checked (`python3 sim/engine/solve_prices.py --civ rome_100ad --why silver_kg`, `python3 -m sim.tests --only mine_labour_per_tonne`):
 
 - Hard-rock face breaking (20 h per tonne of rock) agrees with the Kongsberg fire-set drive, 37.5 man-days per fathom of a 6.5 by 5 foot drive, about 385 kg of rock per man-day (Timberlake 1990 quoting Collins 1883, as tabulated in Bettenay 2022, Metalla 26.2, Table 2). Pinned by a test.
 - Deep hard workings (Hispania lead and silver, Rio Tinto copper, Dacian gold) now charge breaking, a hoist and drainage multiplier, and fire-setting wood, about 80 h per tonne of rock, about 100 kg of rock per eight-hour miner-shift. That sits inside Bettenay's 25-250 kg per miner per day all-in range for Melle (probably 50-150). So for those deposits the labour per tonne of rock is not the miss.

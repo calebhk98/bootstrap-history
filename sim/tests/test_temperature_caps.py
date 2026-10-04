@@ -24,7 +24,7 @@ once. Both follow from conflating "what the hottest job needs" with "what
 every job may use."
 
 THE FIX IS PER-CONSUMER GRADING, not a second global number and not several
-separate carrier materials (see TEMPERATURE in sim/solve_prices.py's module
+separate carrier materials (see TEMPERATURE in sim/engine/solve_prices.py's module
 docstring for why a materials-per-band split was rejected specifically
 because it would need every OTHER consuming entry - most of them in files
 this task does not own - rewritten to name a band rather than the plain
@@ -50,8 +50,8 @@ Techniques state the temperature they reach and processes the temperature they n
 """
 import unittest
 
-from sim import solve_prices
-from sim.tests.price_solver_helpers import solver_context
+from sim.engine import solve_prices
+from sim.tests.price_solver_helpers import engine_solve_converges, solver_context
 
 
 class CapabilityFloorByCarrierTests(unittest.TestCase):
@@ -352,11 +352,11 @@ class RealDataAcceptanceTests(unittest.TestCase):
                 solve_prices.THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C)
 
     def test_the_ungated_solve_still_converges(self):
-        self.assertEqual(solve_prices.main([]), 0)
+        self.assertTrue(engine_solve_converges())
 
     def test_the_gated_solves_still_converge(self):
-        self.assertEqual(solve_prices.main(["--civ", "england_1300"]), 0)
-        self.assertEqual(solve_prices.main(["--civ", "rome_100ad"]), 0)
+        self.assertTrue(engine_solve_converges("england_1300"))
+        self.assertTrue(engine_solve_converges("rome_100ad"))
 
     def _real_data_solve(self, civilization_id, extra_entries=None):
         production_entries, _duplicates = solve_prices.load_production()

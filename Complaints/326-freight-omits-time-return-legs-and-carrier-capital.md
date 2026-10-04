@@ -12,7 +12,7 @@ but unused.
 
 ## Evidence
 
-`python3 sim/foreign_trade_report.py` prints each leg's distance and cost per
+`python3 sim/foreign_trade_report.py` (script since removed; recover with `git show 97473f1:sim/foreign_trade_report.py`) prints each leg's distance and cost per
 tonne; none carries a duration.
 
 ## What it would take (remaining)

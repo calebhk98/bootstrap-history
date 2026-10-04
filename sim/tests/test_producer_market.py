@@ -76,7 +76,7 @@ class MarketKnowsNothingOfTheTreeTests(unittest.TestCase):
     ENGINE_MARKET = ("sim/engine/goods_market_api.py", "sim/engine/market_clearing.py",
                      "sim/engine/market_demand.py")
     TREE_MODULES = ("prices", "solve_prices", "solve_prices_core", "solve_prices_reach", "node_output",
-                    "techniques_in_use", "concern_volume", "entry_cost", "treetool", "catalog", "joint_allocation")
+                    "techniques_in_use", "concern_volume", "entry_cost", "tree_merge", "catalog", "joint_allocation")
     TREE_WORDS = ("requires_node", "techniques_in_use", "production_entries", "nodes_gated")
 
     def imported(self, path):

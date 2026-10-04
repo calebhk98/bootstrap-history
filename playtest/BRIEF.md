@@ -18,7 +18,7 @@ that pipes commands into it and reads the replies.
 this without them:
 
 - `simulator.py run`, `compare`, `sensitivity`, `sweep`, `path` (the CLI one),
-  `costs`, `why` (the CLI one), or `treetool.py` in any form
+  `costs`, or `why` (the CLI one)
 - importing `simulator` as a module and calling `load_strategy`, `Sim`, or
   anything else directly
 - reading `data/strategies/`, or any file that encodes the optimizer's

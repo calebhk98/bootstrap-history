@@ -72,7 +72,7 @@ BUG-008, SUSPECT-010/011, REVIEW-012, BUG/INVARIANT-013):
 problem: "green tests do not mean unchanged behaviour... the suite asserts
 on outputs and messages, not on the simulation being the same simulation."
 Cross-system invariants are a different and complementary kind of test from
-both the message-level regression suite and `perf_fingerprint.py`'s byte-
+both the message-level regression suite and `sim/tests/fingerprint.py`'s byte-
 identical behaviour proof: they check a relationship between two subsystems'
 outputs that neither subsystem's own local tests can see, which is exactly
 the gap CLAUDE.md's own traps section describes for the `id()`/cache bug

@@ -272,10 +272,10 @@ excluding `__pycache__`), grouped by what it does rather than alphabetically:
                         (321 lines).
     sim/ui/cli_agent.py        `agent` mode's CLI entry point (202 lines).
 
-    test_regressions.py a 41-line shim over `sim/tests/`, topic-named
-                        modules plus a harness and a runner. `--only
+    sim/tests/__main__.py  the runner (`python3 -m sim.tests`) over `sim/tests/`'s
+                        topic-named modules and a harness. `--only
                         <topics>` runs part of it; `--list` names them.
-    perf_fingerprint.py proves a change did not alter the simulation.
+    sim/tests/fingerprint.py proves a change did not alter the simulation.
 
 All line counts above are `wc -l sim/engine/<file>.py` (or
 `sim/ui/proto/<file>.py`), run against this HEAD; re-run the same
@@ -303,7 +303,7 @@ harness.py` does the same (`HERE`). This is why every bare `from .data
 import X` inside `sim/engine/*.py` works: those files load as
   top-level `engine.data`, not `sim.engine.data`.
 - **The repository root**, one level up from `sim/`. `sim/
-test_regressions.py` adds it (`_ROOT`) so `from sim.tests.__main__
+sim/tests/__main__.py` adds it (`_ROOT`) so `from sim.tests.__main__
 import main` resolves - `sim.tests` is a real package (has
   `__init__.py`), reached through the namespace package `sim`. `sim/
 engine/core.py` adds it too, defensively, with its own guarded
@@ -683,7 +683,7 @@ so that the next person does not silently restart it:
 - it means giving every shared field an explicit owner and converting the
   couplings mixins currently reach through `self` into arguments, a
   rewrite of most of the engine;
-- the safety net does not fully exist for it. `perf_fingerprint.py`
+- the safety net does not fully exist for it. `sim/tests/fingerprint.py`
   covers the simulation loop well and covers `protocol.py` not at all,
   and roughly a quarter of the engine's code lives under `sim/ui/proto/`
   (11,246 of 41,746 lines, 27% -
@@ -780,7 +780,7 @@ no single right answer. The comments are how agents hand each other the
 reason a thing is the way it is; they are load-bearing, and must not be
 stripped to "clean up" regardless of which way a percentage falls.
 
-`test_regressions.py` and `protocol.py` are split for cyclomatic reasons,
+`sim/tests/__main__.py` and `protocol.py` are split for cyclomatic reasons,
 not line-count ones. `protocol.py` itself is a 78-line re-export shim; the
 command dispatcher lives in `sim/ui/proto/dispatch.py`, as
 `_agent_dispatch_inner` - a single function that resolves a command name
@@ -811,14 +811,14 @@ the dict itself, not this function, is what actually grew to 55 entries as
 commands were added; this script measures only the resolution logic that
 stays constant size regardless of how many commands the table holds.
 
-`test_regressions.py` was a flat script, so checks ran at import in file
+`sim/tests/__main__.py` was a flat script, so checks ran at import in file
 order and nothing could be run selectively. `--only mines,demographics`
 runs a handful of checks in about a second where the whole suite runs
 **2,141** checks in the time printed at its own end (12 slow checks
 skipped, 3 slow topics not run):
 
-    python3 sim/test_regressions.py --only mines,demographics 2>&1 | tail -1
-    python3 sim/test_regressions.py 2>&1 | tail -1
+    python3 -m sim.tests --only mines,demographics 2>&1 | tail -1
+    python3 -m sim.tests 2>&1 | tail -1
 
 Measure the full-suite figure against a clean checkout of HEAD rather than
 a working tree with other agents' edits in it: a single uncommitted test
@@ -899,25 +899,17 @@ is `StepPhasesMixin`'s 19 methods in "The method count" above.
                            ore grades) `sim/engine/prices.py` reads to
                            compute every price; there is no book table.
 
-                           python3 sim/audit_costs.py --materials
     data/civilizations/    five playable civs. data.py, cli.py.
     data/world/            geography and commodities. data.py, geography.py,
                            commodities.py.
     data/branches/         the only source of the tree, merged by
-                           treetool.py's `build_tree`; `_META.json` holds
+                           `build_tree` in `sim/engine/tree_merge.py`; `_META.json` holds
                            the tree-level metadata
                            (`ls data/branches/*.json | wc -l` counts files).
-    data/judgement.json    written by `treetool.py judge`. READ BY NOTHING.
-                           A report artifact that is committed.
 
-## Four things that will bite you
+## Things that will bite you
 
-**`judge --write` rewrites a committed data file.** `judge` reads like a
-report command, so it reports by default and `--write` is what commits
-`data/judgement.json` (`ls -la data/judgement.json` to see whether it did).
-`merge`, `repair` and `apply-caps` write nothing: the tree is generated from
-the branch files, so a change to it is a change to a branch file;
-`merge --out FILE` exports the merged tree.
+**The tree is generated, not edited.** It is built from the branch files at load, so a change to it is a change to a branch file.
 
 **Green tests do not mean unchanged behaviour.** The suite asserts on
 outputs and messages. It does not assert that the simulation is the same
@@ -927,12 +919,12 @@ suite while silently breaking save-file semantics, because several of
 those names are in `SAVE_FIELDS` where a _missing_ attribute is
 meaningful; `Household.__init__`'s own docstring (`sim/agents/
 household.py`) still calls this out by name for exactly the fields it
-deliberately leaves unassigned. `perf_fingerprint.py` catches this
+deliberately leaves unassigned. `sim/tests/fingerprint.py` catches this
 class of bug and the suite alone does not. Run it:
 
-    python3 sim/perf_fingerprint.py record before.json
+    python3 -m sim.tests.fingerprint record before.json
     ...make your change...
-    python3 sim/perf_fingerprint.py check before.json
+    python3 -m sim.tests.fingerprint check before.json
 
 It hashes every field of state after every year of nine runs across five
 civilisations, fog on and off, and names the first year that differs. It

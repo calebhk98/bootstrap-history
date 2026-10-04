@@ -50,7 +50,7 @@ against household demand (population and income, through
 purchase bill multiply the solver's long-run cost by that year's ratio, which
 can fall below one down to a running-cost floor (sunk capital is not in it)
 and rise to a ceiling. A stock windfall lowers the price at once; capacity
-that does not exist yet plays no part. `python3 sim/audit_costs.py` still
+that does not exist yet plays no part. `python3 sim/audit_costs.py` (script since removed; recover with `git show 97473f1:sim/audit_costs.py`) still
 measures where the long-run anchor comes from; `market_state(material)` on a
 live game shows the year's clearing.
 

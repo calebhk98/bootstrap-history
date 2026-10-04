@@ -48,6 +48,11 @@ Full per-name and per-file counts are reproducible with the scanner at
 
 ## PART A — Code identifiers
 
+The scan below is a dated snapshot. Several scripts it names (`treetool.py`,
+`build_index.py`, `audit_costs.py`, `repro_nondeterminism.py`,
+`demo_commodities.py`, `prove_rename_safe.py`) have since been removed or
+moved into `sim/engine/`; the counts are not re-measurable for them.
+
 ### A.1 Per-file counts, worst first (72 of 83 files have ≥1)
 
 ```
@@ -67,7 +72,7 @@ Full per-name and per-file counts are reproducible with the scanner at
 122  sim/engine/core.py
 119  sim/engine/data.py
 103  sim/labour/labour.py
- 92  sim/planner.py
+ 92  sim/engine/planner.py
  88  sim/tests/test_labour_productivity.py
  86  sim/ui/proto/economy.py
  82  sim/build_index.py
@@ -75,7 +80,7 @@ Full per-name and per-file counts are reproducible with the scanner at
  72  sim/tests/test_people_attrition_scholars.py
  71  sim/tests/test_craftsmen_wording.py
  67  sim/ui/proto/state.py
- 65  sim/path_search.py
+ 65  sim/engine/path_search.py
  61  sim/engine/saveload.py
  59  sim/ui/proto/typed.py
  59  sim/tests/test_round8g_display.py
@@ -86,7 +91,7 @@ Full per-name and per-file counts are reproducible with the scanner at
  39  sim/tests/harness.py
  38  sim/ui/proto/nodes.py
  36  sim/tests/test_allocate.py
- 34  sim/perf_fingerprint.py
+ 34  sim/tests/fingerprint.py
  32  sim/ui/proto/util.py
  32  sim/tests/test_names_and_fog.py
  31  sim/tests/test_interface_honesty.py
@@ -127,7 +132,7 @@ Full per-name and per-file counts are reproducible with the scanner at
 
 The 11 files with zero short bindings: `sim/engine/__init__.py`,
 `sim/ui/proto/__init__.py`, `sim/ui/proto/ventures.py`,
-`sim/ui/protocol.py`, `sim/simulator.py`, `sim/test_regressions.py`,
+`sim/ui/protocol.py`, `sim/simulator.py`, `sim/tests/__main__.py`,
 `sim/tests/__init__.py`, `sim/tests/test_commodities_wired_in.py`,
 `sim/tests/test_explicit_starting_techs.py`, `sim/tests/test_realism_part03.py`,
 `sim/tests/test_realism_part04.py`. Nearly half the total (about 2,150 of
@@ -167,7 +172,7 @@ Three incompatible meanings under one letter; every site must be read.
 
 **`m` — 290 bindings, 31 files. Verdict: VARIES.**
 - `sim/ui/cli.py:314` — `for m in dependants.get(k, ())`: `m` is a node id.
-- `sim/planner.py:127` — `for m in need: for p in nodes[m]["pre"]:`: `m` is
+- `sim/engine/planner.py:127` — `for m in need: for p in nodes[m]["pre"]:`: `m` is
   also a node id here — consistent with the line above.
 - `sim/engine/society.py:16` — `m = dict(self.STATE_WEIGHTS)`: `m` is a fresh
   local mapping, not an id at all.
@@ -217,7 +222,7 @@ The value half of a `(k, v)`/`(key, value)` pair, everywhere sampled:
 to treat as one concept.
 
 **`p` — 166 bindings, 30 files. Verdict: VARIES.**
-- `sim/planner.py:118` — `for p in n["pre"] if p in need`: a prerequisite
+- `sim/engine/planner.py:118` — `for p in n["pre"] if p in need`: a prerequisite
   node id.
 - `sim/treetool.py:32` — `p = json.load(open(os.path.join(DATA, "prices.json")))`:
   the entire prices *file*, a dict, not an id.
@@ -231,7 +236,7 @@ never actually a coordinate.**
 `grep` of `sim/geography/geography.py` (the one file that does real lat/long
 math) turns up zero uses of `x` or `y` as coordinates — `haversine_km` uses
 `lat1, lat2` spelled out. Every sampled `x` is a generic loop item: a
-filename (`sim/engine/data.py:219`), a node id (`sim/path_search.py:366`,
+filename (`sim/engine/data.py:219`), a node id (`sim/engine/path_search.py:366`,
 `sim/engine/society.py:2429`), a closure-search stack element. CLAUDE.md
 §7's exemption for `x`/`y` "as coordinates" describes an aspiration, not
 current usage; there is no coordinate `x`/`y` in this codebase to protect.
@@ -246,7 +251,7 @@ confirming it (done).
 - `sim/audit_costs.py:155` — `c = a["fields_populated"][f]`: a count.
 - `sim/engine/commodities.py:80` — `for cid, c in self.commodities.items()`:
   a commodity record dict.
-- `sim/path_search.py:418-420` — `order, c, extras, staffing = _planner.backward_plan(...)`:
+- `sim/engine/path_search.py:418-420` — `order, c, extras, staffing = _planner.backward_plan(...)`:
   an opaque return-tuple element (cost, from context — undocumented at the
   call site, itself a readability problem independent of the short name).
 - `sim/treetool.py:287-288` — `stack = [k]; ... c = stack.pop()`: a
@@ -440,7 +445,7 @@ Breakdown of the Tier 2 bucket:
 ### A.5 Specific hazards found
 
 **Found the hard way in round 2, on the six standalone tools. Both make a
-rename that is correct in isolation fail `prove_rename_safe.py`, and both
+rename that is correct in isolation fail the bytecode rename prover, and both
 look like the prover is broken. It is not; it is right, and these are real
 bytecode changes.**
 
@@ -508,7 +513,7 @@ bytecode changes.**
   will also rewrite the name inside a nested `lambda`, comprehension or
   `def` that has its OWN binding of it. Where the nested binding is that
   scope's own local or parameter, the result is harmless but is a PARAMETER
-  rename, which `prove_rename_safe.py` reports separately and does not
+  rename, which the rename prover reports separately and does not
   cover. Where the nested use is a free variable, it changes which binding
   is read. Resolve each name through a real scope analysis - libcst's
   `ScopeProvider` was used successfully for `proto/` in round 2 - rather
@@ -713,8 +718,8 @@ since it travels with this group semantically.)
 Not designed here — only bounded. A shim would need to:
 1. Accept both old and new field names when loading `data/tech_tree.json`
    and each of the 41 `data/branches/*.json` files (or run the rename once,
-   as a `treetool.py` migration command, and require regeneration —
-   `treetool.py merge` already exists as the choke point all 41 files pass
+   as a one-off migration, and require regeneration —
+   `sim/engine/tree_merge.py` already exists as the choke point all 41 files pass
    through).
 2. Update every one of the ~13 files in the read-site table above that does
    `n["<short field>"]` or `n.get("<short field>", ...)`, on the order of
@@ -724,7 +729,7 @@ Not designed here — only bounded. A shim would need to:
    schema-field rename at all, it's an unrelated attribute that happens to
    share the string.
 4. Re-run `python3 sim/simulator.py validate` and the full
-   `sim/test_regressions.py` suite (~68s) after each field, not all 14 at
+   `sim/tests/__main__.py` suite (~68s) after each field, not all 14 at
    once — the tests assert on structure derived from these fields (e.g.
    `test_tierless_schema.py`), so a batched rename that breaks one field
    would be hard to attribute.
@@ -801,6 +806,6 @@ it would silently delete the majority of several files' content on save.
    `i` stays. Defer `r`, `c`, `q`, `g`, `d`, `p`, `t`, `m`, `w`, `f`, `h` — the
    VARIES names — until each has been read site-by-site and given a per-site
    name, since no tool can choose "node_id" vs "material_id" vs "prices" for
-   you. Run `python3 sim/test_regressions.py` after each name, not after a
+   you. Run `python3 -m sim.tests` after each name, not after a
    batch, matching CLAUDE.md's own instruction to re-measure rather than
    assume.

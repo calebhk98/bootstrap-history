@@ -79,8 +79,7 @@ _RUFF = _ruff_is_available()
 #
 # it rewrites the `for` target and the later uses and leaves the FIRST
 # occurrence alone, producing a NameError that `py_compile` and `pylint`
-# both pass. Four instances were made during one pass over these files, two
-# of them in `sim/code_health.py` and `sim/validate_production.py`, and this
+# both pass. Four instances were made during one pass over these files, and this
 # check could not have caught any of them, because it was not looking here.
 # They were found by running pyflakes by hand.
 #
@@ -89,7 +88,8 @@ _RUFF = _ruff_is_available()
 # is as exact as it is over the engine. Listed individually rather than as
 # the `sim` directory, which would pull in `sim/tests` and defeat the
 # exclusion reasoned about above.
-_CHECKED_PATHS = ["sim/engine", "sim/world", "tools"] + sorted(
+_CHECKED_PATHS = ["sim/agents", "sim/economy", "sim/engine", "sim/geography", "sim/labour",
+                  "sim/ui", "sim/world", "tools"] + sorted(
     os.path.join("sim", entry) for entry in os.listdir(os.path.join(ROOT, "sim"))
     if entry.endswith(".py"))
 
@@ -112,8 +112,8 @@ else:
           "exit %s, stderr: %s" % (_finished.returncode, _finished.stderr[-400:]))
 
     _undefined = [line for line in _finished.stdout.splitlines() if "F821" in line]
-    check("no undefined name anywhere in sim/engine, sim/world, tools or the "
-          "top-level sim/ tools - this is the check that `import` and "
+    check("no undefined name anywhere in the sim/ packages, tools or the "
+          "top-level sim/ modules - this is the check that `import` and "
           "`validate` cannot make, the one a mixin split breaks by moving a "
           "module-global reference, and the one that catches a refactoring "
           "tool silently half-renaming a comprehension",

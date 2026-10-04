@@ -172,7 +172,7 @@ behaves the same" - is satisfied by writing zero useful code.
 mechanical `Household` extraction. Move the ~80 founder attributes onto an
 `Actor` object, give `Sim` a `self.founder`, and keep `sim.capital` working as
 a property that proxies `self.founder.capital`. That is a scriptable,
-diff-reviewable, `perf_fingerprint`-verifiable change - it is textual, not
+diff-reviewable, `sim.tests.fingerprint`-verifiable change - it is textual, not
 semantic, and it does not require any call site to be re-reasoned. It is
 perhaps 10% of the cost of the "give 157 fields explicit owners" rewrite and
 it buys the entire actor axis. It is the one large refactor I would actually
@@ -325,7 +325,7 @@ about book prices is a way to fail slowly. Every mechanism below gets built
 against the toy world first and promoted into the main world second.
 
 **Step 3 - the `Household` extraction** (§3.1). Mechanical, proxy-guarded,
-verified by `perf_fingerprint`. Unlocks the actor axis, therefore the state as
+verified by `sim.tests.fingerprint`. Unlocks the actor axis, therefore the state as
 an actor, therefore knowledge diffusion, therefore multiplayer.
 
 **Step 4 - actor-scoped knowledge.** `self.done` / `self.granted` become
@@ -359,7 +359,7 @@ most parallelisable single item.
    many asserting on book-price outputs. The review is right that these should
    be reclassified rather than deleted, but reclassifying 1,498 assertions is
    itself real work nobody has costed.
-3. **`perf_fingerprint.py` does not cover `protocol.py`**, where roughly a
+3. **`sim/tests/fingerprint.py` does not cover `protocol.py`**, where roughly a
    third of the code lives. Any refactor touching the protocol layer is
    unguarded. This should be fixed before Step 3, not during it.
 4. **Scope inflation is the most likely way this dies.** The target document

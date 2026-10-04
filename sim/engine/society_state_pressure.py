@@ -1146,7 +1146,7 @@ class StatePressureMixin:
         the brief's own fairness standard: a confiscation with no warning is
         the same unfairness as the silent staffing cliff an earlier round
         fixed. Deliberately terse - `state full` has a hard readability
-        budget this engine already enforces (see test_regressions.py's own
+        budget this engine already enforces (see the test suite's own
         "state full stays readable") - so a dormant household (the common
         case for most of a run under the measured trajectories) gets a bare
         null and nothing else, and only what is actually live gets a field
@@ -1158,7 +1158,7 @@ class StatePressureMixin:
         conf_p, conf_why = self.confiscation_risk()
         state_pressure_cfg = self.civ.get("state_pressure") or {}
         # NULL, NOT A SENTENCE, WHEN DORMANT. `state full` has a measured
-        # 9,000-byte readability budget (test_regressions.py's own "state
+        # 9,000-byte readability budget (the test suite's own "state
         # full stays readable") that the densest civilisation files already
         # sit close to; most of a run has nothing live to report here (see
         # this mechanic's own commit message for how late these thresholds

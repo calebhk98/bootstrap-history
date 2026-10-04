@@ -1,4 +1,4 @@
-"""A labour market: what `sim/solve_prices.py` does for MATERIALS, done for
+"""A labour market: what `sim/engine/solve_prices.py` does for MATERIALS, done for
 TRADES.
 
 THE QUESTION THIS ANSWERS, IN THE STAKEHOLDER'S OWN WORDS. "We have a
@@ -56,7 +56,7 @@ see that function's own docstring.
 
 THE STAKEHOLDER'S OWN KEY INSIGHT, WHICH IS WHY THIS IS TRACTABLE NOW.
 "Even without wages, we should know the labour hours for demand to get a
-good estimate right." That is exactly the trick `sim/solve_prices.py`
+good estimate right." That is exactly the trick `sim/engine/solve_prices.py`
 already plays for materials: it solves in LABOUR-HOURS, not money, because
 the numeraire only needs to be A unit, not a currency (see that file's own
 NUMERAIRE section). This module solves in the same unit for the same
@@ -173,7 +173,7 @@ THE STAKEHOLDER'S OWN REMAINING FIVE POINTS, AND WHERE EACH IS ANSWERED.
      iron goods, growing a smith trade from nothing.
 
 WHY THIS IS A STEP PROCESS AND NOT AN INSTANT FIXED POINT, UNLIKE
-`sim/solve_prices.py`'s PRICES. A price can update the instant a recipe's
+`sim/engine/solve_prices.py`'s PRICES. A price can update the instant a recipe's
 inputs change; nothing physical stops it. A WORKER cannot: a farmer does not
 become a blacksmith in a day, and a blacksmith becomes a farmer only a
 little faster (farm labour needs less specific training, so the ceiling on
@@ -323,7 +323,7 @@ from sim.constants import declare
 # sim.unit_conversions carries the same "imports nothing but sim.constants"
 # property sim.constants itself already has, so importing it is not the
 # cross-domain wiring this module's own STANDALONE section forbids.
-from sim.unit_conversions import KILOGRAMS_PER_TONNE, KILOGRAMS_PER_GRAM, PERCENT_SCALE
+from sim.unit_conversions import KILOGRAMS_PER_TONNE, KILOGRAMS_PER_GRAM
 from sim.algorithm_parameters import MAXIMUM_REALLOCATION_PERIODS, CONVERGENCE_TOLERANCE_HOURS
 
 # ============================================================================
@@ -932,7 +932,7 @@ SKILL_DISTANCE_BALANCING_ITERATIONS = 25
 # flow matrix that respects every trade's own mobility ceiling as closely as
 # the proximity weights allow. With at most a few dozen trades this
 # converges to floating-point stability in far fewer rounds than this; the
-# margin costs nothing sim/test_regressions.py's ~68s budget would notice.
+# margin costs nothing the test suite's time budget would notice.
 
 
 # ============================================================================
@@ -1391,341 +1391,3 @@ def solve_to_stable_allocation(
         unmet_demand_by_trade=unmet_demand_by_trade(
             workforce.hours_by_trade, hours_required_by_trade),
         history=history)
-
-
-if __name__ == "__main__":
-    # ========================================================================
-    # THE STAKEHOLDER'S OWN SCENARIOS, WORKED END TO END.
-    # ========================================================================
-    # Deliberately NOT part of the module's importable surface - a
-    # demonstration, not a function another module should call. It imports
-    # sim.world.agriculture ONLY here, in the demo, to get a REAL marginal-
-    # product number for the food-shortfall scenario's `additional_hours_
-    # to_close_a_shortfall` call; the module above never does this itself
-    # (see the module docstring's STANDALONE section) - a caller with no
-    # agriculture.py in scope can run every function above with a bare
-    # float instead.
-    import sys
-    sys.path.insert(0, _REPOSITORY_ROOT)
-    from sim.world import agriculture
-    # INSIDE THE GUARD, FOR THE SAME REASON agriculture IS. The demo below
-    # needs wheat's reference labour intensity twice; sim.world.shared_
-    # constants's own declaration is the one place the figure lives, so
-    # both uses read the same number rather than each carrying its own
-    # bare 150.0 literal.
-    #
-    # It is imported here rather than at module level because the STANDALONE
-    # section's rule is a blanket one: nothing above may import a sibling
-    # sim/world/ module, and sim/tests/test_labour_market.py enforces exactly
-    # that with no carve-out for shared_constants. land.py and agriculture.py
-    # DO import it at module level, and could argue for one (it holds
-    # physical facts and imports nothing but sim.constants.declare, so it
-    # cannot drag a model in behind it). That argument was not needed here:
-    # both uses are in this demo block, so the narrower placement costs
-    # nothing and leaves the rule intact.
-    from sim.world.shared_constants import REFERENCE_LABOUR_HOURS_PER_HECTARE
-
-    production = production_data()
-
-    def hours_line(flow):
-        return ("  %-12s required %9.0f h  before %9.0f h  after %9.0f h  "
-               "tightness %6.3f" % (flow.trade, flow.hours_required, flow.hours_before,
-                                    flow.hours_after, flow.tightness_ratio))
-
-    # A small toy economy: mostly wheat (booked, in data/production/
-    # 40_organics.json, to the generic `labourer` trade - see the module
-    # docstring's item 1 under WHAT THIS DOES NOT MODEL for why farm
-    # labour and every other unskilled task share one trade in this
-    # project's own data), a little iron, a little ceramic.
-    baseline_output_levels = {"wheat_kg": 2_000_000.0, "iron_bar_kg": 20_000.0,
-                              "ceramic_kg": 30_000.0}
-    baseline_hours_required, baseline_contributors = labour_hours_required_by_trade(
-        baseline_output_levels, production)
-    print("Hours required at baseline output (NEED):")
-    for trade in sorted(baseline_hours_required):
-        print("  %-12s %9.0f h" % (trade, baseline_hours_required[trade]))
-
-    # THE STARTING ALLOCATION (HAVE) - AN INITIAL CONDITION (CLAUDE.md
-    # SS3.1), exactly like sim.world.land.py's per-civilisation territory:
-    # this demo's own choice of how a society happens to be staffed on day
-    # one, not something this module derives. `labourer` starts with NO
-    # slack (realistic for a subsistence economy: virtually everyone not in
-    # a craft is already doing SOME unskilled task, farm or otherwise);
-    # every craft trade starts with a modest 20% margin above what this
-    # narrow three-recipe plan strictly needs, standing in for the many
-    # OTHER things a real craft sector spends part of its time on that
-    # this toy economy does not model (illustrative, not measured - see
-    # OCCUPATIONAL_MOBILITY_RATE_PER_YEAR's own declaration for the same
-    # honesty about a different number in this same demo).
-    settled_workforce = {trade: (hours if trade == "labourer" else hours * 1.2)
-                         for trade, hours in baseline_hours_required.items()}
-
-    print("=" * 78)
-    print("SCENARIO 1: A BAD HARVEST PULLS HOURS TOWARD FARM LABOUR - AND "
-         "STABILISES SHORT, WITH THE SHORTFALL NAMED, NOT REFUSED")
-    print("=" * 78)
-    # THE SHOCK: an ordinary bad-weather year (weather_multiplier < 1.0,
-    # the same mechanism sim.world.agriculture.Storage.step draws its own
-    # weather from every year), not the catastrophic 85% land loss sim.
-    # tests.test_agriculture_wiring.py's own FamineHasAPhysicalCauseTests
-    # uses - THAT shock is cited here only as the measured proof the gap
-    # is real (see this module's own docstring), because an 85% land loss
-    # asks for MORE extra labour-hours than the entire economy has ever
-    # had, which this demo shows below is already true of a comparatively
-    # mild 10% bad year.
-    reference_land = agriculture.Land(10_000.0)
-    # wheat_kg's own reference labour intensity, at the reference area. This
-    # was the bare literal 150.0, one of the two occurrences shared_constants.
-    # py's own declaration names as an outstanding finding.
-    reference_hours = REFERENCE_LABOUR_HOURS_PER_HECTARE * 10_000.0
-    harvest_normal = agriculture.gross_harvest_kg(reference_land, reference_hours)
-    weather_multiplier = 0.9
-    harvest_bad_year = agriculture.gross_harvest_kg(
-        reference_land, reference_hours, weather_multiplier=weather_multiplier)
-    shortfall_kg = harvest_normal - harvest_bad_year
-    marginal_product_now = agriculture.marginal_product_of_labour_kg_per_hour(
-        reference_land, reference_hours, weather_multiplier=weather_multiplier)
-    print("A 10%% bad-weather year drops the wheat harvest from %.0f kg to "
-         "%.0f kg - a shortfall of %.0f kg." % (
-             harvest_normal, harvest_bad_year, shortfall_kg))
-    print("marginal_product_of_labour_kg_per_hour on the SAME land, at the "
-         "SAME labour already applied, is %.4f kg/hour (diminishing "
-         "returns have already pushed it below the %.4f kg/hour the land "
-         "averaged before the bad year)." % (
-             marginal_product_now, harvest_normal / reference_hours))
-
-    extra_hours_needed = additional_hours_to_close_a_shortfall(
-        shortfall_kg, marginal_product_now)
-    print("additional_hours_to_close_a_shortfall: %.0f extra hours of farm "
-         "(labourer-trade) labour would close it - %.1f%% of the ENTIRE "
-         "peacetime labourer pool (%.0f h), just to claw back a 10%% "
-         "weather loss, because diminishing returns make the last hour "
-         "on already-worked land produce far less than the average hour "
-         "did." % (extra_hours_needed,
-                   PERCENT_SCALE * extra_hours_needed / baseline_hours_required["labourer"],
-                   baseline_hours_required["labourer"]))
-
-    craft_slack_hours = sum(settled_workforce[trade] - baseline_hours_required[trade]
-                            for trade in settled_workforce if trade != "labourer")
-    print("The WHOLE craft sector's slack (every hour smith, furnaceman, "
-         "potter, mason, millwright and carpenter have beyond this plan's "
-         "own baseline) totals only %.0f h - %.2f%% of what the shortfall "
-         "needs. Even fully drained into farm work, crafts cannot answer "
-         "a bad harvest in an economy this farm-heavy; that is not a "
-         "limit of the search below, it is the physical shape of the "
-         "economy." % (craft_slack_hours, PERCENT_SCALE * craft_slack_hours / extra_hours_needed))
-
-    shocked_hours_required = dict(baseline_hours_required)
-    shocked_hours_required["labourer"] += extra_hours_needed
-    outcome_1 = solve_to_stable_allocation(
-        settled_workforce, shocked_hours_required, tolerance_hours=1.0)
-    print("\nReallocating the settled workforce toward the shocked demand, "
-         "one year at a time (labourer only, for space):")
-    shown_periods = sorted(set(min(index, outcome_1.periods_used - 1)
-                              for index in (0, 1, 4, 9, outcome_1.periods_used - 1)))
-    for year_index in shown_periods:
-        print(" year %2d: %s" % (year_index + 1, hours_line(outcome_1.history[year_index]["labourer"])))
-    labourer_unmet = outcome_1.unmet_demand_by_trade.get("labourer", 0.0)
-    print("Stabilised after %d year(s): %s. unmet_demand_by_trade['labourer'] "
-         "= %.0f h (%.1f%% of what was asked) - `stabilized=True` here means "
-         "the craft sector has ALREADY given up every hour its own mobility "
-         "ceiling allows and nothing more is moving, NOT that the shortfall "
-         "closed. That remaining %.0f h is exactly the honest answer the "
-         "stakeholder's telephone-wire example asked for: an allocation, "
-         "plus a named shortfall, never a refusal to solve. The load-"
-         "bearing response to a bad harvest in this model is still sim."
-         "world.agriculture.Storage's own granary and sim.world."
-         "demography's nutrition-driven mortality, not occupational "
-         "reallocation - see this module's docstring's WHAT THIS DOES NOT "
-         "MODEL for why crafts are too small a pool to matter much against "
-         "a farm-scale shock." % (
-             outcome_1.periods_used, outcome_1.stabilized, labourer_unmet,
-             PERCENT_SCALE * labourer_unmet / extra_hours_needed, labourer_unmet))
-
-    print()
-    print("=" * 78)
-    print("SCENARIO 2: WAR RAISES DEMAND FOR IRON - SMITHS GO UP FAR FASTER "
-         "THAN A FLAT 5%/YEAR EVER ALLOWED")
-    print("=" * 78)
-    # data/production/ has no finished "sword" material of its own - it
-    # covers MATERIALS, not fabricated end products - so this scenario
-    # states the war's demand the way it actually reaches a smith: more
-    # iron_bar_kg (the material a smith forges into blades and fittings),
-    # the same smith-heavy recipe sim.solve_prices.py's own RENT_BEARING_
-    # ORE_MATERIALS section names for the identical reason.
-    war_output_levels = dict(baseline_output_levels)
-    war_output_levels["iron_bar_kg"] = baseline_output_levels["iron_bar_kg"] * 2.0
-    war_hours_required, war_contributors = labour_hours_required_by_trade(
-        war_output_levels, production)
-    print("Hours required once wartime iron output is DOUBLE peacetime (NEED):")
-    for trade in sorted(war_hours_required):
-        delta = war_hours_required[trade] - baseline_hours_required.get(trade, 0.0)
-        print("  %-12s %9.0f h  (%+.0f h vs peacetime)" % (
-            trade, war_hours_required[trade], delta))
-    print("smith hours are pulled by: %r" % (war_contributors.get("smith"),))
-
-    outcome_2 = solve_to_stable_allocation(
-        settled_workforce, war_hours_required, tolerance_hours=1.0)
-    print("\nsmith, year by year - climbing every year, never in one jump, "
-         "but now at a rate that responds to how far short it still is:")
-    shown_periods_2 = sorted(set(min(index, outcome_2.periods_used - 1)
-                                for index in (0, 1, 2, 4, 9, outcome_2.periods_used - 1)))
-    for year_index in shown_periods_2:
-        print(" year %2d: %s" % (year_index + 1, hours_line(outcome_2.history[year_index]["smith"])))
-    final_smith_hours = outcome_2.workforce.hours_by_trade["smith"]
-    smith_unmet = outcome_2.unmet_demand_by_trade.get("smith", 0.0)
-    print("Stabilised after %d year(s) (stabilized=%s): smith settles at "
-         "%.0f h against %.0f h required - reallocation alone closes %.0f%% "
-         "of the gap. The remaining %.0f h of unmet demand is exactly the "
-         "kind of persistent scarcity that (in a wired-in engine) should "
-         "show up as a rising smith wage, an incentive for a founder to "
-         "open a smithy school, or a push to import iron goods rather than "
-         "smith them locally - none of which this module invents; it only "
-         "says how large the gap still is, in unmet_demand_by_trade." % (
-             outcome_2.periods_used, outcome_2.stabilized, final_smith_hours,
-             war_hours_required["smith"],
-             PERCENT_SCALE * final_smith_hours / war_hours_required["smith"], smith_unmet))
-
-    print()
-    print("=" * 78)
-    print("SCENARIO 3: MONSTER TOWERS APPEAR - A WALKABLE TRADE CAN SEED "
-         "FROM ZERO, A TRADE THAT NEEDS A MASTER STILL CANNOT")
-    print("=" * 78)
-    # A synthetic economy, not data/production/-derived: neither `adventurer`
-    # nor `optician` has a recipe in this project's data, and this scenario
-    # does not need one - it is testing the SEEDING mechanism itself, not a
-    # real material's numbers. `labourer` is given a real 20,000h surplus
-    # here (unlike scenario 1's settled_workforce, which has none) so there
-    # is something in this toy economy for either new trade to draw on
-    # under this module's own strict conservation of hours (see `Workforce.
-    # step`'s own docstring, step 5) - without ANY surplus anywhere, no
-    # trade can grow, walkable or not, which is a fact about this
-    # mechanism's honesty, not a defect this scenario is built to hide.
-    tower_workforce = Workforce({"labourer": 120_000.0, "adventurer": 0.0, "optician": 0.0})
-    tower_hours_required = {"labourer": 100_000.0, "adventurer": 50_000.0, "optician": 50_000.0}
-    tower_walkable = WALKABLE_TRADES | {"adventurer"}
-    print("`labourer` has a real 20,000 h surplus to give up. `adventurer` "
-         "and `optician` both start at 0 h against a 50,000 h shortage each "
-         "- `adventurer` is walkable (people can simply take up monster-"
-         "hunting), `optician` is not (see WALKABLE_TRADES).")
-    for _ in range(5):
-        tower_flows = tower_workforce.step(tower_hours_required, walkable_trades=tower_walkable)
-    print("  after 5 years: adventurer %8.0f h   optician %8.0f h" % (
-        tower_workforce.hours_by_trade["adventurer"],
-        tower_workforce.hours_by_trade["optician"]))
-    print("`adventurer` moved because WALKABLE_TRADE_SEED_SHARE_OF_ECONOMY_"
-         "HOURS gave it a seed reference to grow from even at zero; "
-         "`optician` did not move AT ALL, which is this module's own "
-         "documented, correct behaviour for a trade that needs a master "
-         "who does not exist yet - not a bug this scenario is hiding. A "
-         "founder wanting opticians has to found the trade "
-         "(sim/labour/labour.py's `trade_schools`), then hand this "
-         "mechanism a `minimum_absorption_hours_by_trade` floor, exactly "
-         "as WHAT THIS DOES NOT MODEL item 2 describes.")
-
-    print()
-    print("=" * 78)
-    print("SCENARIO 4: CULTIVABLE LAND GROWS - NEED MOVES, HAVE DOES NOT, "
-         "UNTIL SOMETHING CALLS Workforce.step")
-    print("=" * 78)
-    # Directly answers the stakeholder's point 7 ("so nobody can farm on
-    # new land?") and the module docstring's structural reframe: this
-    # module never assumes a trade's workforce is a population share, so
-    # growing the land here changes NEED (via a bigger harvest target) and
-    # leaves HAVE (the workforce dict) untouched until asked - the exact
-    # gap sim.world.agriculture.py's own fixed population share papers over.
-    grown_land = agriculture.Land(reference_land.hectares * 1.5)
-    grown_hours = REFERENCE_LABOUR_HOURS_PER_HECTARE * grown_land.hectares
-    harvest_on_grown_land = agriculture.gross_harvest_kg(grown_land, grown_hours)
-    # A fair NEED comparison needs the SAME wage/output convention this
-    # module already uses elsewhere: convert the bigger harvest into a
-    # bigger wheat_kg output level and re-run labour_hours_required_by_trade,
-    # exactly as SCENARIO 2 does for a bigger iron output level.
-    grown_output_levels = dict(baseline_output_levels)
-    grown_output_levels["wheat_kg"] = baseline_output_levels["wheat_kg"] * (
-        harvest_on_grown_land / harvest_normal)
-    grown_hours_required, _ = labour_hours_required_by_trade(  # type: ignore[assignment]
-        grown_output_levels, production)
-    comparison = have_versus_need(settled_workforce, grown_hours_required)
-    labourer_comparison = comparison["labourer"]
-    print("50%% more cultivable land raises the harvest this land could grow "
-         "from %.0f kg to %.0f kg, which raises NEED for labourer from "
-         "%.0f h to %.0f h - a %.1f%% jump this module computed from land "
-         "and a labour coefficient, not from population." % (
-             harvest_normal, harvest_on_grown_land,
-             baseline_hours_required["labourer"], grown_hours_required["labourer"],
-             PERCENT_SCALE * (grown_hours_required["labourer"] / baseline_hours_required["labourer"] - 1.0)))
-    print("have_versus_need (before any reallocation): hours_have=%.0f h  "
-         "hours_need=%.0f h  gap=%.0f h - HAVE has not moved at all, because "
-         "nothing has called Workforce.step yet. This is exactly the "
-         "divergence sim.world.agriculture.farm_workers_fte_for_population's "
-         "fixed population share hides: it would report a workforce number "
-         "for the NEW land instantly, as though the labour to work it "
-         "simply existed, where this module reports the gap and lets "
-         "solve_to_stable_allocation close it at the speed labour can "
-         "actually move." % (labourer_comparison.hours_have, labourer_comparison.hours_need,
-                             labourer_comparison.gap))
-    outcome_4 = solve_to_stable_allocation(settled_workforce, grown_hours_required,
-                                          tolerance_hours=1.0)
-    print("Reallocating toward the grown-land target (labourer is walkable, "
-         "so this is bounded by its own size, not blocked by needing a "
-         "master): stabilised after %d year(s), labourer reaches %.0f h "
-         "against %.0f h needed (%.1f%% closed)." % (
-             outcome_4.periods_used, outcome_4.workforce.hours_by_trade["labourer"],
-             grown_hours_required["labourer"],
-             PERCENT_SCALE * outcome_4.workforce.hours_by_trade["labourer"] / grown_hours_required["labourer"]))
-
-    print()
-    print("=" * 78)
-    print("SCENARIO 5: AN EARLY CIVILISATION WITH ZERO SMITHS WANTS IRON "
-         "GOODS - THE STAKEHOLDER'S BLACKSMITH QUESTION, ANSWERED WITH A "
-         "MEASUREMENT")
-    print("=" * 78)
-    # Directly answers "is the current labour market making it impossible
-    # for new trades to appear ... does this make blacksmiths impossible?"
-    # A civilisation on day one of this project's own scenario (NO tech
-    # reached yet - trades_reachable_given_technology()'s own default,
-    # which is exactly what WALKABLE_TRADES already equals) that has NEVER
-    # had a smith still has `smith` in WALKABLE_TRADES, because data/
-    # production/10_ferrous.json's own `iron_sheet_kg` needs no invented
-    # technology at all (`requires_node: null` - hammering an iron bar
-    # into a sheet is mechanical, learnable by trial with a hammer and a
-    # fire, not a secret only an existing smith can pass down) - a real,
-    # measured fact about this project's own data, not an assumption this
-    # module makes about smiths.
-    print("`smith` in WALKABLE_TRADES (no technology reached yet): %s" % (
-        "smith" in WALKABLE_TRADES,))
-    early_civilisation_workforce = {"labourer": 200_000.0, "smith": 0.0}
-    iron_goods_output_levels = {"iron_sheet_kg": 100_000.0}
-    iron_goods_hours_required, iron_goods_contributors = labour_hours_required_by_trade(
-        iron_goods_output_levels, production)
-    print("Wanting 100,000 kg/year of hand-forged iron sheet requires %.0f h "
-         "of smith labour a year (%r) - and this early civilisation starts "
-         "with EXACTLY ZERO smiths." % (
-             iron_goods_hours_required.get("smith", 0.0),
-             iron_goods_contributors.get("smith"),))
-    outcome_5 = solve_to_stable_allocation(
-        early_civilisation_workforce, iron_goods_hours_required, tolerance_hours=1.0)
-    print("smith, year by year, from a standing start of nobody:")
-    shown_periods_5 = sorted(set(min(index, outcome_5.periods_used - 1)
-                                for index in (0, 1, 2, 4, 9, outcome_5.periods_used - 1)))
-    for year_index in shown_periods_5:
-        print(" year %2d: %s" % (year_index + 1, hours_line(outcome_5.history[year_index]["smith"])))
-    final_smith_hours = outcome_5.workforce.hours_by_trade.get("smith", 0.0)
-    smith_required = iron_goods_hours_required.get("smith", 0.0)
-    print("Stabilised after %d year(s) (stabilized=%s): smith reaches %.0f h "
-         "against %.0f h required (%.1f%% closed) - starting from a "
-         "civilisation that had never had one. Under the OLD, hand-written "
-         "WALKABLE_TRADES = {\"labourer\", \"miner\"}, `smith` would have "
-         "stayed at exactly 0.0 h forever, however large this demand grew: "
-         "that is the defect the stakeholder's question named, and this "
-         "run is the measurement that it is fixed." % (
-             outcome_5.periods_used, outcome_5.stabilized, final_smith_hours,
-             smith_required, PERCENT_SCALE * final_smith_hours / smith_required))
-    print("The genuine limit the stakeholder also named is still real: "
-         "`optician` (SCENARIO 3 above) has NO data/production/ entry at "
-         "all, so it is unclassified rather than gate-satisfied, and stays "
-         "out of WALKABLE_TRADES at any reached_node_ids - this project "
-         "records nothing that would make it otherwise. The line between "
-         "the two is now the tech tree's own `requires_node` field, not a "
-         "hand-written list of exactly two names.")

@@ -43,8 +43,7 @@ os.environ.setdefault("ROME_DEFAULT_SEED", "1")
 # the suite writes (_loadtest_tmp, _playtest_tmp, and every subprocess run
 # with cwd=ROOT) would land OUTSIDE the checkout, in whatever directory the
 # checkout happens to sit in. And a check that globs
-# os.path.join(ROOT, "data", ...) - the natural spelling, and the one
-# build_index.py already uses - would silently match nothing, so assertions
+# os.path.join(ROOT, "data", ...) - the natural spelling - would silently match nothing, so assertions
 # about the civilization files' event coverage would run zero times without
 # anyone noticing, because a for-loop over an empty glob does not fail, it
 # just says nothing.
@@ -63,7 +62,7 @@ from sim import simulator as S
 # the note above: test_people_attrition_scholars.py and test_reputation.py
 # use PLANNER, and test_literacy_market_pricing.py and
 # test_commodities_wired_in.py use COMMOD, bare and without their own import.
-from sim import planner as PLANNER
+from sim.engine import planner as PLANNER
 from sim.engine import commodities as COMMOD
 
 TREE, PRICES, NODES, WAGES, GOODS = S.load()

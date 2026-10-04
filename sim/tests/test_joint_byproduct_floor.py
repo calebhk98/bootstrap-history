@@ -1,7 +1,7 @@
 """Complaints/309: a joint by-product with no demand keeps a positive floor price and never underflows."""
 import unittest
 
-from sim import joint_allocation
+from sim.engine import joint_allocation
 from sim.engine import prices as price_engine
 from sim.engine.data import load_civ
 

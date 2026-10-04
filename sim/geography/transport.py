@@ -27,7 +27,7 @@ gives for its own HUMAN_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY: a cross-import
 between standalone modules is exactly the wiring none of them are supposed
 to do yet.
 
-NOT A MONEY FIGURE. `sim/solve_prices.py`'s numeraire is one hour of
+NOT A MONEY FIGURE. `sim/engine/solve_prices.py`'s numeraire is one hour of
 unskilled labour (see its own docstring, "PRICE SOLVER - numeraire is one
 hour of unskilled..."), and this module's job stops one step short of a
 price: every function here returns PHYSICAL quantities per tonne-km -
@@ -102,7 +102,7 @@ from typing import Optional
 
 from sim.constants import declare
 # unit_conversions is infrastructure, not cross-domain wiring.
-from sim.unit_conversions import KILOGRAMS_PER_TONNE, METERS_PER_KILOMETER, PERCENT_SCALE
+from sim.unit_conversions import KILOGRAMS_PER_TONNE, METERS_PER_KILOMETER
 
 # ============================================================================
 # PHYSICAL CONSTANTS
@@ -208,7 +208,7 @@ FEED_ENERGY_DENSITY_KCAL_PER_KG = declare(
            "such a mixed ration implies.",
     confidence="C",
     why="Converts every feed requirement this module computes from kcal "
-        "into kilograms - the physical unit `sim/solve_prices.py`'s "
+        "into kilograms - the physical unit `sim/engine/solve_prices.py`'s "
         "numeraire (an hour of unskilled labour) can eventually be asked "
         "to price, the same role WHEAT_ENERGY_KCAL_PER_KG plays in "
         "sim/world/agriculture.py.")
@@ -1149,74 +1149,3 @@ def maximum_one_way_range_before_self_defeating_km(
         team_size * maintenance_kcal_per_day(animal), work_joules)
 
     return max_load_kg * distance_km / feed_kg_per_day
-
-
-if __name__ == "__main__":
-    # A human-readable readout, the same kind of thing sim/world/
-    # agriculture.py's own __main__ block prints - see the module docstring
-    # for the reading of what these numbers mean and where they disagree
-    # with the calibration range.
-    ox_cart_paved = draught_freight_physical_inputs(OX, 2, CART, PAVED_ROAD)
-    ox_cart_dirt = draught_freight_physical_inputs(OX, 2, CART, DIRT_TRACK)
-    ox_cart_mud = draught_freight_physical_inputs(OX, 2, CART, MUD)
-    ox_wagon_dirt = draught_freight_physical_inputs(OX, 4, WAGON, DIRT_TRACK)
-    mule_pack = pack_freight_physical_inputs(MULE, 1)
-    mule_pack_mountain = pack_freight_physical_inputs(
-        MULE, 1, grade_fraction=TYPICAL_MOUNTAIN_PASS_GRADE_FRACTION)
-    horse_barge_calm = barge_freight_physical_inputs(HORSE, 1, current_km_per_hour=0.0)
-    horse_barge_downstream = barge_freight_physical_inputs(
-        HORSE, 1, current_km_per_hour=TYPICAL_NAVIGABLE_RIVER_CURRENT_KM_PER_HOUR)
-    horse_barge_upstream = barge_freight_physical_inputs(
-        HORSE, 1, current_km_per_hour=-TYPICAL_NAVIGABLE_RIVER_CURRENT_KM_PER_HOUR)
-
-    def _line(inputs):
-        print("  %-58s cargo %5.2f t  %6.1f t-km/day  feed %6.3f kg/t-km  "
-              "driver %6.3f h/t-km  wear %.2e /t-km"
-              % (inputs.mode, inputs.cargo_tonnes, inputs.tonne_km_per_day,
-                 inputs.feed_kg_per_tonne_km, inputs.driver_hours_per_tonne_km,
-                 inputs.vehicle_wear_fraction_per_tonne_km))
-
-    print("LAND, WHEELED (2 oxen, cart, by surface):")
-    _line(ox_cart_paved)
-    _line(ox_cart_dirt)
-    _line(ox_cart_mud)
-    print("LAND, WHEELED (4 oxen, wagon, dirt track):")
-    _line(ox_wagon_dirt)
-    print("LAND, PACK (1 mule, no vehicle, no road):")
-    _line(mule_pack)
-    _line(mule_pack_mountain)
-    print("WATER (1 horse towing a barge):")
-    _line(horse_barge_calm)
-    _line(horse_barge_downstream)
-    _line(horse_barge_upstream)
-
-    print()
-    cart_dirt_cap = max_cargo_mass_kg(OX, 2, CART, DIRT_TRACK,
-                                       TYPICAL_MOUNTAIN_PASS_GRADE_FRACTION)
-    print("2-ox cart on dirt track at an %.0f%% mountain-pass grade can haul: "
-          "%.1f kg - the grade nearly defeats the team on its own, before "
-          "any cargo (compare to %.0f kg with no grade, and to the mule "
-          "pack's unaffected 70 kg above)"
-          % (PERCENT_SCALE * TYPICAL_MOUNTAIN_PASS_GRADE_FRACTION, cart_dirt_cap,
-             max_cargo_mass_kg(OX, 2, CART, DIRT_TRACK, 0.0)))
-
-    print()
-    print("feed_kg_per_tonne_km ratio, dirt cart : calm-water barge = %.1f"
-          % (ox_cart_dirt.feed_kg_per_tonne_km / horse_barge_calm.feed_kg_per_tonne_km))
-    print("driver_hours_per_tonne_km ratio, dirt cart : calm-water barge = %.1f"
-          % (ox_cart_dirt.driver_hours_per_tonne_km
-             / horse_barge_calm.driver_hours_per_tonne_km))
-    print("calibration target (Diocletian's Edict, land:sea): %.0f-%.0fx"
-          % (LAND_TO_SEA_FREIGHT_COST_RATIO_LOW, LAND_TO_SEA_FREIGHT_COST_RATIO_HIGH))
-
-    print()
-    range_paved = maximum_one_way_range_before_self_defeating_km(OX, 2, CART, PAVED_ROAD)
-    range_dirt = maximum_one_way_range_before_self_defeating_km(OX, 2, CART, DIRT_TRACK)
-    range_mud = maximum_one_way_range_before_self_defeating_km(OX, 2, CART, MUD)
-    print("one-way self-defeating range, 2-ox cart, no fodder en route:")
-    print("  paved road: %8.0f km" % range_paved)
-    print("  dirt track: %8.0f km" % range_dirt)
-    print("  mud:        %8.0f km" % range_mud)
-    print("calibration target (historical max economic land haul): %.0f-%.0f km"
-          % (HISTORICAL_MAX_ECONOMIC_LAND_HAUL_KM_LOW,
-             HISTORICAL_MAX_ECONOMIC_LAND_HAUL_KM_HIGH))

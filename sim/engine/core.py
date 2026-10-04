@@ -319,7 +319,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
             self.state.economy.agent_economy["on"] = True
         # SET HERE SO EVERY READER CAN READ THEM DIRECTLY. Both are assigned
         # afterwards by whoever builds the game - cli_interactive, cli_agent,
-        # perf_fingerprint - and both round-trip through saveload's `_fog`
+        # sim/tests/fingerprint.py - and both round-trip through saveload's `_fog`
         # and `_goal` keys rather than through SAVE_FIELDS. Without these two
         # lines neither attribute exists until somebody assigns it, so all 44
         # readers had to supply a fallback of their own.

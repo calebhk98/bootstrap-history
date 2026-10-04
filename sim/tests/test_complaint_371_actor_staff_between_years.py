@@ -3,7 +3,7 @@ employ. Entry and group formation change staff after the last actor has acted, a
 own turn reads the count before the next year's first actor recounts, so a count kept from before
 those changes made an unbroken game read a different pool from the one a reloaded game reads."""
 from .harness import *  # noqa: F401,F403
-from sim import perf_fingerprint
+from sim.tests import fingerprint as perf_fingerprint
 
 game = perf_fingerprint.build(dict(civ="rome_100ad", seed=1, years=36, events=True, fog=False))
 stale = []

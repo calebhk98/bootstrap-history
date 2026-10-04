@@ -10,14 +10,13 @@ import tempfile
 import unittest
 from unittest import mock
 
-from sim import treetool
-from sim import build_index
+from sim.engine import tree_merge
 from sim.engine import data
 from sim.engine.tree_source import load_base_tree
 
 
 def branch_files():
-    return sorted(glob.glob(os.path.join(treetool.BR, "[0-9]*.json")))
+    return sorted(glob.glob(os.path.join(tree_merge.BR, "[0-9]*.json")))
 
 
 def review_snapshots():
@@ -35,7 +34,7 @@ def node_lists(paths):
 
 class TierlessSchemaTests(unittest.TestCase):
     def test_generated_index_does_not_render_tiers(self):
-        readme = os.path.join(build_index.KB, "README.md")
+        readme = os.path.join(data.KNOWLEDGE_DIR, "README.md")
         with open(readme) as source:
             text = source.read()
         self.assertNotIn("| Node | Tier |", text)
@@ -61,7 +60,7 @@ class TierlessSchemaTests(unittest.TestCase):
             with self.subTest(filename=os.path.basename(path)):
                 self.assertFalse([node.get("id") for node in nodes if "tier" in node])
 
-    def test_treetool_accepts_and_normalises_a_tierless_node(self):
+    def test_tree_merge_accepts_and_normalises_a_tierless_node(self):
         node = {
             "id": "test_tierless",
             "name": "Tierless test node",
@@ -70,8 +69,8 @@ class TierlessSchemaTests(unittest.TestCase):
             "note": "Exercises the transitional schema.",
         }
 
-        self.assertFalse(set(treetool.REQUIRED) - set(node))
-        normalised = treetool.normalise_v2(copy.deepcopy(node))
+        self.assertFalse(set(tree_merge.REQUIRED) - set(node))
+        normalised = tree_merge.normalise_v2(copy.deepcopy(node))
         self.assertNotIn("tier", normalised)
 
     def test_runtime_loads_a_tierless_node(self):

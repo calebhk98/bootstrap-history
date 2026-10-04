@@ -88,7 +88,7 @@ but is still a book figure. The commodity ledger's own base prices
 
 ### 3. Make endogenous material prices the only runtime path (done, with one labelled heuristic)
 
-- [x] `data.load()` returns solved prices only; `sim.engine.prices.priced_goods_table` no longer takes a book table. Every material a recipe makes has a price; ten production entries that had no technology gate (so every gated solve dropped them) now name one, and the iodine entry has labour. `python3 sim/validate_production.py` and `python3 sim/simulator.py validate` report no unpriced material the tree needs.
+- [x] `data.load()` returns solved prices only; `sim.engine.prices.priced_goods_table` no longer takes a book table. Every material a recipe makes has a price; ten production entries that had no technology gate (so every gated solve dropped them) now name one, and the iodine entry has labour. `python3 sim/simulator.py validate` and `python3 sim/simulator.py validate` report no unpriced material the tree needs.
 - [x] A material only a technology not yet held can make is priced as if every gate technology were held (provenance `gated`). This is a labelled transitional import price (CLAUDE.md 4.4), not a book figure; it goes when trade and availability decide what a civilisation can buy.
 
 `data.load()` defaults to the book goods table and overlays solved prices only
@@ -117,16 +117,16 @@ built.
 
 ### 5. Separate namespaces from prices in every tool (done)
 
-- [x] `sim/treetool.py` takes material identity from the production catalogue
+- [x] `sim/treetool.py` (script since removed; recover with `git show 97473f1:sim/treetool.py`) takes material identity from the production catalogue
   plus what tree nodes require (`load_material_namespace`); `judge` and
-  `repair` cost nodes through `sim/tool_costs.py`, which uses the runtime wage
+  `repair` cost nodes through `sim/tool_costs.py` (script since removed; recover with `git show 97473f1:sim/tool_costs.py`), which uses the runtime wage
   provider and `sim/engine/prices.py`'s solver, and reports costs as
   unavailable or as a lower bound with the unresolved materials named.
-- [x] `sim/validate_production.py` loads the tree, production catalogue and
+- [x] `sim/engine/validate_production.py` loads the tree, production catalogue and
   trade registry without the main loader, so it never initialises prices.
-- [x] `sim/audit_costs.py` prices its cost base through the same service and
+- [x] `sim/audit_costs.py` (script since removed; recover with `git show 97473f1:sim/audit_costs.py`) prices its cost base through the same service and
   drops the book-confidence section.
-- [x] `sim/solve_prices_report.py` takes wage ratios from the live wage
+- [x] `sim/solve_prices_report.py` (script since removed; recover with `git show 97473f1:sim/solve_prices_report.py`) takes wage ratios from the live wage
   provider and says prices are unavailable when it cannot; `--compare` is gone.
 - [x] `sim/tests/test_tools_without_price_book.py` runs each tool with the file
   unreadable.

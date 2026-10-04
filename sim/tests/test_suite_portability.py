@@ -11,7 +11,7 @@ its own README gives produced:
 before a single check executed. That is the loudest possible version of the
 failure. The quiet version did more damage: `harness.ROOT` pointed at the
 parent too, so a check that globbed `os.path.join(ROOT, "data", ...)` - the
-natural spelling, and the one build_index.py already used - matched nothing at
+natural spelling - matched nothing at
 all. Nine assertions about the civilization files' event coverage ran zero
 times, for as long as they had existed, because iterating an empty glob does
 not fail. It says nothing, and silence reads exactly like success.
@@ -76,8 +76,8 @@ for _scratch in (_LOADTEST_DIR, _PLAY_DIR):
 # also a perfectly good civilisation id (`S.load_civ("rome")`) and `_rome` is a
 # perfectly good local variable, and neither has anything to do with where
 # files live; a check that cannot tell those apart would be turned off within
-# the week. Comment lines are skipped because this file, harness.py and
-# test_regressions.py all have to quote the old name to explain it.
+# the week. Comment lines are skipped because this file and harness.py have
+# to quote the old name to explain it.
 _PATHY_ROME = re.compile(
     r"""["']rome/                # "rome/sim/..." - a path with the old prefix
       | ["']rome["']\s*,         # os.path.join(ROOT, "rome", ...) - a component
@@ -194,7 +194,7 @@ try:
             shutil.copytree(os.path.join(ROOT, _sub), os.path.join(_alias, _sub))
 
     _run = subprocess.run(
-        [sys.executable, os.path.join(_alias, "sim", "test_regressions.py"),
+        [sys.executable, os.path.join(_alias, "sim", "tests", "__main__.py"),
          "--only", "parallelism_note"],
         capture_output=True, text=True, timeout=300, cwd=_alias_parent)
 

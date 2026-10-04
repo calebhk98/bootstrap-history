@@ -116,4 +116,4 @@ a status line, what went wrong and the command that shows it.
 
 Read [CLAUDE.md](CLAUDE.md) first, then the design documents in
 [docs/architecture/](docs/architecture/). The regression suite is
-`python3 sim/test_regressions.py`.
+`python3 -m sim.tests`.

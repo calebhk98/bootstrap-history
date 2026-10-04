@@ -4,7 +4,7 @@ come from it and move, money is conserved, the state's tax grain no longer swamp
 from .harness import *  # noqa: F401,F403
 import os
 
-from sim import perf_fingerprint
+from sim.tests import fingerprint as perf_fingerprint
 from sim.engine.economy_port_year import SWITCH_ENVIRONMENT, switch_requested
 from sim.engine.saveload import save_state, load_state
 

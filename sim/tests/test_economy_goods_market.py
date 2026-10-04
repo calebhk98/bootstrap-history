@@ -223,9 +223,23 @@ class MatchesReferenceTests(unittest.TestCase):
         self.compare(bids, offers, None, "ties")
 
 
+def make_market(bid_count, offer_count, seed=7):
+    """A market whose demand crosses supply inside the offers' price range."""
+    rng = random.Random(seed)
+    classes = [(1.0, 0.8), (1.5, 1.2), (2.5, 0.6)]
+    bids = []
+    for number in range(bid_count):
+        reference, elasticity = classes[number % len(classes)]
+        bids.append(Bid("buyer%d" % number, "grain", "area", "tile%d" % (number % 90), rng.uniform(0.5, 2.0),
+                        rng.uniform(1.0, 6.0), reference, elasticity, rng.uniform(50.0, 400.0), number % 2))
+    offers = [Offer("seller%d" % number, "grain", "area", "farm%d" % number,
+                    rng.uniform(0.3, 1.0) * 3.5 * bid_count / offer_count, rng.uniform(0.4, 2.0))
+              for number in range(offer_count)]
+    return bids, offers
+
+
 class SpeedBoundTests(unittest.TestCase):
     def test_a_thousand_bids_clear_well_inside_a_generous_bound(self):
-        from sim.economy_timing import make_market
         bids, offers = make_market(1000, 10)
         start = time.perf_counter()
         for _ in range(5):

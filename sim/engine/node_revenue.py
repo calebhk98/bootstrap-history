@@ -110,7 +110,7 @@ def for_civilisation(nodes: Mapping[str, dict], civ: Mapping[str, Any], schedule
     """Copies of `nodes` with revenue and upkeep derived at this civilisation's prices and wages, in its
     coin. Cached on what the figures depend on: the civilisation, the gate technologies it holds, its
     wages and the nodes."""
-    from sim import solve_prices
+    from sim.engine import solve_prices
     from . import prices as price_solver
     civilization_id = civ["id"]
     document = schedule.document()

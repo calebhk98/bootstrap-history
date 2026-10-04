@@ -10,7 +10,7 @@ from pathlib import Path
 
 from sim.engine import catalog, data, prices as engine_prices, wage_schedule
 from sim.labour import wage_provider
-from sim.solve_prices_core import wage_ratios_by_trade
+from sim.engine.solve_prices_core import wage_ratios_by_trade
 from sim.labour import wages
 from .source_dirs import engine_and_world_dirs
 
@@ -188,7 +188,7 @@ class NoBookWagesTests(unittest.TestCase):
                     with open(os.path.join(directory, name), encoding="utf-8") as source:
                         if "wage_rates_denarii_per_hour" in source.read():
                             offenders.append(name)
-        self.assertLessEqual(set(offenders), {"prices.py", "wages.py"})
+        self.assertLessEqual(set(offenders), {"prices.py", "solve_prices_core.py", "wages.py"})
 
 
 if __name__ == "__main__":

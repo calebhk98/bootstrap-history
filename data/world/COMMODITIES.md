@@ -67,7 +67,7 @@ over ITS OWN reachable-copper figure (`_own_material_supply("mine:copper")
 + _material_market_tonnes("copper")`) instead of `commodities.json`'s
 separate national estimate. Rome and the Norse get genuinely different
 numbers out of the same call, because they do not share one coastline --
-see `demo_commodities.py` section 7 for both printed side by side.
+the two coastlines give different numbers.
 `MATERIAL_CHECKS` also gained `copper_wire_kg`, `wire_drawn_kg` (both ->
 copper) and `gold_kg` (a tracked commodity `open_mine("gold", ...)` already
 supported, with no material key ever throttling demand for it), and
@@ -117,8 +117,8 @@ in three tiers, cheapest-and-most-specific first:
    priced against before (cloth, wool, cotton, copper_wire): now read
    through `CommodityLedger.country_output()` for real, so a built power
    loom genuinely raising cloth's national output (`produced_by`'s own
-   multiplier) is a real input to a live price, not only to the standalone
-   `demo_commodities.py` demonstration section 0 above described.
+   multiplier) is a real input to a live price, not only to a standalone
+   demonstration.
 3. Everything else (silk, glass, aluminium, the acids and dyes and
    alloys of the industrial and chemical ages) -- a generic fallback
    derived from the one number every material already has, its own book
@@ -332,7 +332,7 @@ small fraction of a twenty-times-larger national capacity, so the ratio
 drops, and price falls toward (and can hit) `price_floor_factor`. That fall
 is then visible to `hot_air_balloon`, which needs 400 kg of `linen_kg`
 (lumped into `cloth` here): its material cost genuinely falls. This is
-proven in `sim/test_regressions.py` and in `sim/demo_commodities.py`.
+proven in the regression suite (`python3 -m sim.tests`).
 
 ### 4.3 Fluctuation
 
@@ -455,8 +455,8 @@ in one build. `copper_wire`'s recipe is `{"copper": 1.05}`, so the request
 propagates up as "5.25 t of copper, please." Roman copper output is 15,000
 t/yr (`resources.json`, `[C]`), and an ordinary buyer's market share of that
 is 3% (`economy.py.MARKET_SHARE["copper"]`, reused, not re-derived) --
-450 t/yr reachable, which comfortably covers 5.25 t on its own. So the demo
-in `sim/demo_commodities.py` and the regression check both ALSO simulate a
+450 t/yr reachable, which comfortably covers 5.25 t on its own. So the
+regression check ALSO simulate a
 much larger ask (kilometres of wire at industrial scale, tens of tonnes,
 against a buyer with no elevated standing and no mine of their own) to
 produce the actual shortfall the brief describes, and shows:

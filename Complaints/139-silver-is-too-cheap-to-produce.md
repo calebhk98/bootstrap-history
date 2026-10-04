@@ -12,7 +12,7 @@ cupellation losses, mining labour per tonne at the deposit depths) is likely
 too low.
 
 Measure with the solved silver price in labour-hours
-(`python3 sim/solve_prices.py`) and the opening wage (`help` / `state` in a
+(`python3 sim/engine/solve_prices.py`) and the opening wage (`help` / `state` in a
 Rome game), and compare to the attested day wage.
 
 ## What it would take
@@ -24,7 +24,7 @@ number to hit the day wage.
 
 ## Progress
 
-- [x] Measured (`python3 sim/solve_prices.py --civ rome_100ad --why silver_kg`,
+- [x] Measured (`python3 sim/engine/solve_prices.py --civ rome_100ad --why silver_kg`,
   the figure the engine anchors money to): Rome's solved silver cost fell
   from about 1112 to about 1381 labour hours per kg after the fix below, so
   one denarius went from 3.00 to 3.73 labour hours (the coin is 2.7 g).
@@ -61,14 +61,14 @@ number to hit the day wage.
 ## Progress: the lead recipe agrees with the deposits (fourth increment)
 
 - [x] The lead recipe yields about 3.33 kg of silver per tonne of lead (it was 0.46), which is what `data/world/deposits.json` carries (the argentiferous deposit's 0.5 kg per tonne of rock over 150 kg of lead per tonne of rock) and is the right order against the empire totals in `data/world/resources.json`. `sim/tests/test_silver_chain_physics.py` pins the agreement.
-- Solved silver, labour hours per kg (`python3 sim/solve_prices.py --civ <civ> --why silver_kg`; here read through `engine.prices.solved_prices`): Rome 1449 before, 237 after; Han 1456 before, 235 after; England 413 before, 157 after; Norse 202 before, 112 after. Lead per kg also falls (Rome 0.150 to 0.025 hours). Mexica has no silver price.
+- Solved silver, labour hours per kg (`python3 sim/engine/solve_prices.py --civ <civ> --why silver_kg`; here read through `engine.prices.solved_prices`): Rome 1449 before, 237 after; Han 1456 before, 235 after; England 413 before, 157 after; Norse 202 before, 112 after. Lead per kg also falls (Rome 0.150 to 0.025 hours). Mexica has no silver price.
 - Money is anchored to the coin metal, so for Rome one denarius is now worth about a sixth of what it was in labour hours and the opening wage is correspondingly higher in coin terms than the attested day wage. The first-order reason is the joint-cost split (silver bears most of a batch whatever its physical effort) together with uncosted ore dressing; those are where to look, see 291. Tests that fixed absolute coin amounts now state them in labour hours (`test_affordability_and_credit`, `test_complaint_173_credit_forecast_once`).
 
 ## Progress: dressing, roasting and cupellation costed (fifth increment)
 
 - [x] `lead_kg` gains labourer hours for dressing the rock to concentrate (about 8.5 tonnes of rock per tonne of lead from the deposits' grades), roasting and cupellation bellows air (from 2 Pb + O2 -> 2 PbO and a blast excess), and furnaceman hours for the attended cupel; `copper_kg` gains dressing and roasting. The rates are labelled conf D in each `yield_basis`; the tests pin floors (`sim/tests/test_silver_chain_physics.py`).
 - [x] The 0.90 and 0.92 silver recoveries stated in the recipe's text are now applied (see 291).
-- Solved silver, labour hours per kg (`python3 sim/solve_prices.py --civ <civ> --why silver_kg`): Rome 224 before, 319 after; Han 233 to 333; England 156 to 205; Norse 112 to 135. One Rome denarius went from about 0.61 to about 0.86 labour hours.
+- Solved silver, labour hours per kg (`python3 sim/engine/solve_prices.py --civ <civ> --why silver_kg`): Rome 224 before, 319 after; Han 233 to 333; England 156 to 205; Norse 112 to 135. One Rome denarius went from about 0.61 to about 0.86 labour hours.
 - Rome silver breakdown per kg after (319): charcoal about 56, galena (mining, from deposit cost) about 113, furnaceman about 74, dressing, roasting and bellows about 68, smith about 8, capital under 1.
 - Drainage and ventilation are not a missing step: they are inside `HAULAGE_MULTIPLIER_DEEP_VEIN`, underived. Left as is, filed in 305.
 - Rome's opening wage is still about twelve denarii for a ten-hour day against the attested one. The physics at the deposits' grades does not close the gap; 305 lists where it may lie (grade, drainage, mine ownership and the state's take) without tuning.

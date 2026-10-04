@@ -61,7 +61,7 @@ checks it, so the two cannot drift apart unnoticed.
 The physically right form of that entry lists seed among wheat's own inputs
 and outputs the gross 742.5 kg/ha, which would make seed corn a visible first
 claim on the harvest (and a famine eating next year's seed a representable
-event). It is written net instead because `sim/solve_prices.py`'s
+event). It is written net instead because `sim/engine/solve_prices.py`'s
 resolvability pass refuses any material that appears among its own inputs -
 see Complaints/31.
 
@@ -1431,36 +1431,9 @@ from .agriculture_storage import (
 from .agriculture_labour import (
     farm_workers_fte_for_population,
     farmland_for_population,
-    fraction_of_population_that_must_farm,
-    hectares_cropped_per_farm_worker,
-    hectares_per_worker_annual_hours_ceiling,
-    hectares_per_worker_harvest_window_ceiling,
-    holding_hectares_required_per_farm_worker,
+    fraction_of_population_that_must_farm,  # noqa: F401  (re-exported)
+    hectares_cropped_per_farm_worker,  # noqa: F401  (re-exported)
+    hectares_per_worker_annual_hours_ceiling,  # noqa: F401  (re-exported)
+    hectares_per_worker_harvest_window_ceiling,  # noqa: F401  (re-exported)
+    holding_hectares_required_per_farm_worker,  # noqa: F401  (re-exported)
 )
-
-
-if __name__ == "__main__":
-    # A quick, human-readable readout - the same kind of thing
-    # sim/constants.py and sim/audit_costs.py print on demand, for whoever
-    # next wants to see this module's headline number without opening a
-    # test file.
-    fraction = fraction_of_population_that_must_farm()
-    print("gross yield at reference labour: %.1f kg/ha"
-          % GROSS_YIELD_AT_REFERENCE_LABOUR_KG_PER_HA)
-    print("net of seed, net of spoilage:     %.1f kg/ha"
-          % ((GROSS_YIELD_AT_REFERENCE_LABOUR_KG_PER_HA - SEED_SOWING_RATE_KG_PER_HA)
-             * (1.0 - GRAIN_SPOILAGE_RATE_PER_YEAR)))
-    print("hectares one worker could work on annual hours alone: %.2f"
-          % hectares_per_worker_annual_hours_ceiling())
-    print("hectares one worker can reap inside the harvest window: %.2f"
-          % hectares_per_worker_harvest_window_ceiling())
-    print("hectares actually cropped per worker (the binding one): %.2f"
-          % hectares_cropped_per_farm_worker())
-    print("holding needed per worker, grossed up for fallow: %.2f ha"
-          % holding_hectares_required_per_farm_worker())
-    print("people fed per full-time farm worker: %.1f"
-          % (1.0 / fraction))
-    print("fraction of population that must farm: %.1f%%" % (100.0 * fraction))
-    print("historical calibration target:        %.0f-%.0f%%"
-          % (100.0 * HISTORICAL_FARM_POPULATION_SHARE_LOW,
-             100.0 * HISTORICAL_FARM_POPULATION_SHARE_HIGH))

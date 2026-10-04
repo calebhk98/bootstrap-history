@@ -4,7 +4,7 @@
 
 The lead recipe's silver yield now equals what the single lead deposit that carries a silver byproduct implies (`britannia_lead`, a conf D worked example). The other lead deposits carry none, so a lead-output-weighted average over all of them would be about a third of the recipe's figure. Which is right is not settled: the empire totals in `data/world/resources.json` favour the higher figure, attested British lead is leaner in silver than the deposit's grade, and the recipe has one yield for all galena.
 
-Silver also became much cheaper to produce (139), so money anchored to silver is worth much less in labour hours. Measure with `python3 sim/solve_prices.py --civ rome_100ad --why silver_kg`.
+Silver also became much cheaper to produce (139), so money anchored to silver is worth much less in labour hours. Measure with `python3 sim/engine/solve_prices.py --civ rome_100ad --why silver_kg`.
 
 ## What it would take
 

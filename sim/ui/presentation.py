@@ -10,8 +10,7 @@ are governed differently on purpose rather than by oversight.
 WHAT BELONGS HERE. A number a REPORT or TABLE function uses to decide how
 much of its own output to print - "show the worst 20", "truncate this
 column to 34 characters", "draw the bar 28 characters wide" - gathered from
-the standalone report/table functions in this project's tools (`sim/
-audit_costs.py`, `sim/treetool.py`, `sim/ui/cli_analysis.py`) where the
+the report/table functions in sim/ui/ where the
 value is not already defended by, or inseparable from, one specific
 sentence of surrounding prose.
 
@@ -74,70 +73,6 @@ spelling avoids loading it twice under two sys.modules keys - see that
 module's own HOW A CONSUMER USES ONE OF THESE section for the full
 argument, which applies here unchanged).
 """
-
-# ============================================================================
-# sim/audit_costs.py - the tech-tree cost audit report
-# ============================================================================
-
-AUDIT_BAR_WIDTH_CHARS = 28
-# Width, in characters, of the "####...." coverage bar _bar() draws next to
-# each input-side field's populated-node percentage.
-
-AUDIT_UNPRICED_MATERIALS_SHOWN = 6
-# How many "still nothing makes this" materials the OUTPUT SIDE section
-# lists by name (worst-consumed first) before falling silent.
-
-AUDIT_RECIPE_LIST_TRUNCATE_CHARS = 30
-# How many characters of a material's own comma-joined competing-recipe
-# list the per-material table shows before cutting it off.
-
-# ============================================================================
-# sim/treetool.py - merge, judge, repair, apply-caps reports
-# ============================================================================
-
-MERGE_ERRORS_SHOWN = 40
-# How many merge errors _merge_report_collisions() and the ordinary merge
-# summary print by name before "... N more" territory (neither currently
-# prints that tail for errors specifically - see MERGE_WARNINGS_SHOWN below
-# for the sibling count that does).
-
-MERGE_WARNINGS_SHOWN = 25
-# How many merge warnings the summary prints by name; the merge report
-# itself prints "... %d more" once the real count exceeds this.
-
-JUDGE_UNOBTAINABLE_DEPENDENCIES_SHOWN = 3
-# How many of a BLOCKED node's own unobtainable dependencies the structural-
-# defect message names, comma-joined, before falling back to "and others"
-# territory (the message itself does not currently add a tail either).
-
-JUDGE_NEAR_MATCH_SUGGESTIONS_SHOWN = 10
-# How many "did you mean" node-id suggestions `judge --id <unknown>` offers
-# when the id typed does not exist.
-
-JUDGE_WORST_NODES_SHOWN = 20
-# How many nodes the WORST NODES section of the judge summary lists,
-# lowest score first.
-
-JUDGE_NODE_ID_COLUMN_WIDTH_CHARS = 34
-# Fixed column width the worst-nodes and grade-filter tables truncate a
-# node id to, so every row's defect list starts in the same column.
-
-JUDGE_DEFECT_CODES_SHOWN = 4
-# How many defect codes the WORST NODES table shows per node (the grade-
-# filter table below it, by contrast, shows every defect code a node has -
-# a deliberate difference, not an oversight, since that table is already
-# filtered to a small grade band).
-
-APPLY_CAPS_SAMPLE_SHOWN = 12
-# How many reviewer-assigned-prerequisite edges apply-caps prints as a
-# "sample of what was added" after applying every edge, not only these.
-
-APPLY_CAPS_PREREQ_LIST_TRUNCATE_CHARS = 38
-# Column width the apply-caps sample table truncates a node's own added-
-# prerequisite list to.
-
-APPLY_CAPS_REASON_TRUNCATE_CHARS = 70
-# Column width the same table truncates the reviewer's stated reason to.
 
 # ============================================================================
 # sim/ui/cli_analysis.py - the `explain` command's "unknown node" reply

@@ -1,25 +1,22 @@
-"""The merge of the branch files (`treetool.py merge`, `treetool.build_tree`).
+"""The merge of the branch files (`sim/engine/tree_merge.py`).
 
 The branch files are the only source: a merge seeds nothing from an earlier
 tree, so editing a branch node always changes the tree, and an id defined by
 two different files is an error that names both files and builds nothing
-(the same rule `sim/validate_production.py` applies to `data/production/`).
+(the same rule `sim/engine/validate_production.py` applies to `data/production/`).
 An id listed in `_MERGED_DUPLICATE_IDS.json` stays retired wherever a file
 still defines it. Fields no branch schema defaults (`kind`, `_internal`)
 are carried through exactly as written.
 
 Every test runs against a temporary branches directory.
 """
-import contextlib
-import io
 import json
 import os
 import tempfile
-import types
 import unittest
 from unittest import mock
 
-from sim import treetool
+from sim.engine import tree_merge
 
 
 def _node(node_id, **overrides):
@@ -43,12 +40,12 @@ class BranchMergeAuthorityTests(unittest.TestCase):
         self.out_path = os.path.join(self.tmpdir, "merged.json")
         self.branches_dir = os.path.join(self.tmpdir, "branches")
         os.makedirs(self.branches_dir)
-        patch = mock.patch.object(treetool, "BR", self.branches_dir)
+        patch = mock.patch.object(tree_merge, "BR", self.branches_dir)
         patch.start()
         self.addCleanup(patch.stop)
 
     def _write_merged_duplicate_ids(self, mapping):
-        path = os.path.join(self.branches_dir, treetool.MERGED_DUPLICATE_IDS_FILE)
+        path = os.path.join(self.branches_dir, tree_merge.MERGED_DUPLICATE_IDS_FILE)
         with open(path, "w") as file:
             json.dump({"_readme": "fixture", "merged_duplicate_ids": mapping}, file)
 
@@ -60,13 +57,16 @@ class BranchMergeAuthorityTests(unittest.TestCase):
         with open(self.out_path) as file:
             return json.load(file)
 
-    def _merge(self, accept_data_loss=False):
-        """Run `merge --out`; the output file exists only if the merge went through."""
-        buf = io.StringIO()
-        with contextlib.redirect_stdout(buf):
-            return_code = treetool.cmd_merge(types.SimpleNamespace(
-                out=self.out_path, accept_data_loss=accept_data_loss))
-        return return_code, buf.getvalue()
+    def _merge(self):
+        """(1, the problems) when `merge_problems` refuses the merge; otherwise (0, the ordinary
+        errors) with the merged tree written to `out_path`."""
+        self.built = tree_merge.build_tree()
+        problems = tree_merge.merge_problems(self.built)
+        if problems:
+            return 1, "\n".join(problems)
+        with open(self.out_path, "w") as file:
+            json.dump(self.built.tree, file, indent=2)
+        return 0, "\n".join(self.built.errs)
 
     def test_merge_is_a_fixed_point_with_no_branch_edits(self):
         self._write_branch("10_fixture.json", [
@@ -116,7 +116,7 @@ class BranchMergeAuthorityTests(unittest.TestCase):
 
     def test_meta_comes_from_the_branch_metadata_file(self):
         self._write_branch("10_fixture.json", [_node("fx_alpha")])
-        with open(os.path.join(self.branches_dir, treetool.META_FILE), "w") as file:
+        with open(os.path.join(self.branches_dir, tree_merge.META_FILE), "w") as file:
             json.dump({"goal_node": "fx_alpha", "goals": [{"node": "fx_alpha"}]}, file)
         self.assertEqual(self._merge()[0], 0)
         self.assertEqual(self._merged()["meta"]["goal_node"], "fx_alpha")
@@ -130,7 +130,6 @@ class BranchMergeAuthorityTests(unittest.TestCase):
 
         self.assertEqual(return_code, 1, "a cross-file collision must refuse, "
                                 "not silently pick a winner")
-        self.assertIn("MERGE REFUSED", out)
         self.assertIn("fx_shared", out)
         self.assertIn("10_first.json", out)
         self.assertIn("20_second.json", out)
@@ -158,7 +157,6 @@ class BranchMergeAuthorityTests(unittest.TestCase):
         return_code, out = self._merge()
 
         self.assertEqual(return_code, 0)
-        self.assertNotIn("MERGE REFUSED", out)
         self.assertEqual({node["id"] for node in self._merged()["nodes"]}, {"tl_survivor"})
 
     def test_missing_required_field_is_still_an_ordinary_error_not_a_collision(self):
@@ -173,7 +171,7 @@ class BranchMergeAuthorityTests(unittest.TestCase):
         self._write_branch("10_fixture.json", [_node("fx_alpha")])
         return_code, out = self._merge()
         self.assertEqual(return_code, 0, out)
-        self.assertEqual(treetool.load_merged_duplicate_ids(), {})
+        self.assertEqual(tree_merge.load_merged_duplicate_ids(), {})
 
     def test_merge_writes_dedup_mapping_from_source_into_tree_meta(self):
         self._write_branch("00_survivor.json", [_node("tl_survivor", cap_hours=300)])
@@ -192,24 +190,21 @@ class BranchMergeAuthorityTests(unittest.TestCase):
         return_code, out = self._merge()
 
         self.assertEqual(return_code, 1)
-        self.assertIn("MERGE REFUSED", out)
         self.assertIn("undeclared_material", out)
         self.assertIn("UNDECLARED material 'unobtainium_kg'", out)
-        self.assertIn("--accept-data-loss", out)
         self.assertFalse(os.path.exists(self.out_path))
 
-    def test_accept_data_loss_writes_anyway_and_still_reports_every_event(self):
+    def test_a_refused_merge_still_reports_every_event_and_drops_what_it_names(self):
         self._write_branch("10_fixture.json", [
             _node("fx_alpha", mat={"unobtainium_kg": 3}, lab={"nonexistent_trade": 5}),
         ])
 
-        return_code, out = self._merge(accept_data_loss=True)
+        return_code, out = self._merge()
 
-        self.assertEqual(return_code, 0)
-        self.assertNotIn("MERGE REFUSED", out)
+        self.assertEqual(return_code, 1)
         self.assertIn("UNDECLARED material 'unobtainium_kg'", out)
         self.assertIn("unknown trade 'nonexistent_trade'", out)
-        nodes = {node["id"]: node for node in self._merged()["nodes"]}
+        nodes = {node["id"]: node for node in self.built.tree["nodes"]}
         self.assertEqual(nodes["fx_alpha"]["mat"], {})
         self.assertEqual(nodes["fx_alpha"]["lab"], {})
 
@@ -221,7 +216,6 @@ class BranchMergeAuthorityTests(unittest.TestCase):
         return_code, out = self._merge()
 
         self.assertEqual(return_code, 1)
-        self.assertIn("MERGE REFUSED", out)
         self.assertIn("unresolvable_prerequisite", out)
         self.assertIn("dropped unresolvable prereq 'nonexistent_prereq'", out)
 
@@ -234,7 +228,6 @@ class BranchMergeAuthorityTests(unittest.TestCase):
         return_code, out = self._merge()
 
         self.assertEqual(return_code, 1)
-        self.assertIn("MERGE REFUSED", out)
         self.assertIn("dependency_cycle", out)
         self.assertIn("CYCLE broken", out)
 
@@ -243,11 +236,7 @@ class RealBranchCorpusMergesCleanly(unittest.TestCase):
     """The real branch files merge with no collision and no data-loss event."""
 
     def test_real_merge_reports_nothing_lost(self):
-        buf = io.StringIO()
-        with contextlib.redirect_stdout(buf):
-            return_code = treetool.cmd_merge(types.SimpleNamespace(accept_data_loss=False))
-        self.assertEqual(return_code, 0, buf.getvalue())
-        self.assertNotIn("COLLISION", buf.getvalue())
+        self.assertEqual(tree_merge.merge_problems(tree_merge.build_tree()), [])
 
 
 if __name__ == "__main__":

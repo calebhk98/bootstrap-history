@@ -11,9 +11,9 @@ The issue tracker, kept as files.
 
 ## Filing an issue
 
-Take the number from `python3 sim/issue_status.py --next` (numbers run 1..N
-without gaps), name the file `NN-slug.md`,
-and write, in this order:
+Take the next number after the highest existing number in `Complaints/` and
+`Complaints/closed/` (`ls Complaints Complaints/closed | grep -oE '^[0-9]+' | sort -n | tail -1`),
+name the file `NN-slug.md`, and write, in this order:
 
     # Title
     <blank line>
@@ -28,11 +28,6 @@ the title. Statuses: `open`, `partly`, `pinned` (parked on purpose, held by a
 regression test), `closed`. To close an issue set its status to `closed` and
 `git mv` it into `closed/`.
 
-    python3 sim/issue_status.py           the table
-    python3 sim/issue_status.py --check   validate status lines, folders and numbering
-
-If two branches file the same number, run
-`python3 sim/issue_status.py --renumber --write` after merging: it closes gaps
-and duplicates (oldest keeps the lowest number), rewrites every reference, and
-appends the old -> new map to [RENUMBERED.md](RENUMBERED.md), which resolves old
-numbers found in commit messages, `reports/` and history.
+If two branches file the same number, rename one by hand after merging. The
+old -> new map in [RENUMBERED.md](RENUMBERED.md) resolves old numbers found in
+commit messages, `reports/` and history.

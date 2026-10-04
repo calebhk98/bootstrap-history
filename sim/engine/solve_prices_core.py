@@ -2,19 +2,16 @@
 capital and energy cost terms, choice of technique, and the damped
 fixed-point `solve` loop itself.
 
-sim/solve_prices.py is the thin composition point that every import and
-every `python3 sim/solve_prices.py` invocation names, and ITS module
-docstring - not this file's - is what every "see the module docstring"
-comment below, and every one in sim/solve_prices_report.py, actually means:
+sim/engine/solve_prices.py is the thin composition point every import
+names, and ITS module docstring - not this file's - is what every "see the
+module docstring" comment below actually means:
 that essay is the design reasoning for the whole tool (rent, energy,
 capital, land, cycles, era gates, choice of technique), and splitting it
 apart by function would break every one of those cross references for no
 benefit. This file holds everything that computes a price: the
 resolvability pass (`compute_resolvable_materials` and its helpers), the
 ore and land rent mechanisms, `recipe_cost_and_allocation`, and `solve`
-itself. sim/solve_prices_report.py holds everything that only formats and
-prints a price once this file has computed it (`print_why`, the
-`--compare` report, the default price table) plus the CLI's own `main`.
+itself.
 """
 import collections
 import json
@@ -24,10 +21,10 @@ import sys
 import warnings
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-REPO_ROOT = os.path.dirname(HERE)
+REPO_ROOT = os.path.dirname(os.path.dirname(HERE))
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
-from sim.joint_allocation import allocate_joint_cost, cap_anchors  # noqa: E402
+from sim.engine.joint_allocation import allocate_joint_cost, cap_anchors  # noqa: E402
 from sim.engine.default_civilisation import default_civilisation_id  # noqa: E402
 from sim.world import deposits                  # noqa: E402  (RENT ON EXTRACTED MATERIALS)
 from sim.world import land                      # noqa: E402  (RENT ON ARABLE LAND)
@@ -35,9 +32,9 @@ from sim.world.capital_market import capital_recovery_factor  # noqa: E402  (CAP
 # DAMPING_FACTOR, MAXIMUM_ITERATIONS, CONVERGENCE_TOLERANCE, INITIAL_PRICE_
 # GUESS_HOURS and GROWTH_BOUND_HOURS live in sim/algorithm_parameters.py and
 # are imported back here under their original names, so every existing
-# `solve_prices_core.NAME` reference - including sim/solve_prices.py's and
-# sim/solve_prices_report.py's own `from solve_prices_core import (...,
-# DAMPING_FACTOR, CONVERGENCE_TOLERANCE, ...)` - keeps resolving unchanged.
+# `solve_prices_core.NAME` reference - including sim/engine/solve_prices.py's
+# own `from solve_prices_core import (..., DAMPING_FACTOR, ...)` - keeps
+# resolving unchanged.
 # See that module's own docstring for the full reasoning, including the
 # OUTCOME-SENSITIVE / safety-ceiling-only distinction each one is given
 # there.
@@ -313,7 +310,7 @@ def wage_ratios_by_trade(prices_json):
 def load_starting_interest_rate(civilization_id):
     """The yearly rate on loans the civilization starts at (an initial condition, as its starting
     technologies are): the market rate its plant must earn over depreciation, until a market has met."""
-    path = os.path.join(HERE, os.pardir, "data", "civilizations", "%s.json" % civilization_id)
+    path = os.path.join(REPO_ROOT, "data", "civilizations", "%s.json" % civilization_id)
     if os.path.exists(path):
         with open(path) as handle:
             return float(json.load(handle)["starting_interest_rate"])
@@ -331,7 +328,7 @@ def load_starting_technologies(civilization_id):
     techniques were invented; there is no such table here and there must not
     be one.
     """
-    path = os.path.join(HERE, os.pardir, "data", "civilizations",
+    path = os.path.join(REPO_ROOT, "data", "civilizations",
                         "%s.json" % civilization_id)
     if not os.path.exists(path):
         available = sorted(name[:-len(".json")]
@@ -905,7 +902,7 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
     productiveness test and any other caller that has no opinion about rent
     is not forced to pass an empty dict everywhere.
 
-    The split is value allocation (see sim/joint_allocation.py): outputs in
+    The split is value allocation (see sim/engine/joint_allocation.py): outputs in
     `demand_anchor_price_by_material` are valued at their demand-clearing
     price, the rest at current price (or standalone unit cost when mixed
     with anchored ones). This is the standard answer
@@ -1131,7 +1128,7 @@ def land_rent_hours_per_hectare(production_entries, wage_by_trade,
     THE ALGEBRA. sim/world/land.py's own `margin_outcome_for_civilization`
     returns a supply-weighted average rent in kilograms of grain-equivalent
     per hectare - a PHYSICAL quantity, not a price (see that module's own
-    WHY THE HOURS CONVERSION LIVES IN sim/solve_prices.py, NOT HERE
+    WHY THE HOURS CONVERSION LIVES IN sim/engine/solve_prices.py, NOT HERE
     section for why the conversion happens here rather than there).
     Multiplying by wheat_kg's own ZERO-LAND-RENT price (labour only, exactly
     like rent_hours_per_kg_by_ore_material's own `ore_base_price_per_kg`)

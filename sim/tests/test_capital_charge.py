@@ -7,7 +7,7 @@ selling at the solved price earns its wages plus that return."""
 import unittest
 from unittest import mock
 
-from sim import solve_prices
+from sim.engine import solve_prices
 from sim.engine import data, energy_prices, node_output, node_revenue
 from sim.world import capital_market
 from sim.labour.labour_market import production_data

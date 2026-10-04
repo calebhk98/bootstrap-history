@@ -611,7 +611,7 @@ class ProductionMixin:
         Three signals already relied on elsewhere in this file, not a new
         one - and this cache's OWN staleness, if any one of them were wrong,
         would show up as a wrong revenue or upkeep total, which
-        perf_fingerprint.py's byte-for-byte, per-year state hash across nine
+        sim/tests/fingerprint.py's byte-for-byte, per-year state hash across nine
         reference runs (five civilisations, several seeds, fog on and off,
         events on and off) is built to catch.
         """
