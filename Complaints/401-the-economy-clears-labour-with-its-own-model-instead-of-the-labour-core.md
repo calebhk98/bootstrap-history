@@ -18,7 +18,9 @@ What it would take (all in `sim/economy/`, owner of that package):
 - `record.workforce[tile][trade]` becomes a `sim.labour.api.MarketState` (people per ability band, trainee
   cohorts, wages, each employer's hours), kept in the record. Use `market_state_to_plain` and
   `market_state_from_plain` for the save.
-- Each year's `LabourBid`s become `sim.labour.api.Bid` records: employer, trade, area (the labour area
+- Each year's `LabourBid`s become `sim.labour.api.Bid` records, one per tranche of falling marginal value
+  (a single flat bid per producer makes demand vertical and the wage jump floor-to-ceiling; DESIGN.md
+  "Demand must slope"): employer, trade, area (the labour area
   key), hours, `maximum_wage`, and `pay_premium` (zero unless the employer chooses one).
 - `subsistence_per_worker_year` comes from `outside_option_by_tile`. `entrants` and `attrition_share`
   come from the demography cohorts. `routes` come from the tile neighbours and freight cost already used
