@@ -1,4 +1,4 @@
-"""CLI: python3 -m sim.geography.build [--layers a,b] [--cache DIR]"""
+"""CLI: python3 -m sim.geography.layer_build [--layers a,b] [--cache DIR]"""
 import argparse
 import json
 import os
