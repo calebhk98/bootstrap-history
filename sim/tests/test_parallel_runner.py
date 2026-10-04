@@ -4,6 +4,7 @@ import shutil
 import tempfile
 
 from .harness import *
+from .alias_checkout import link_build_caches
 
 # A throwaway checkout whose sim/ and sim/tests/ are symlink farms, so extra
 # fake topics can sit beside real ones without touching this checkout.
@@ -37,6 +38,7 @@ try:
     for entry in ("data", "docs", "mods", "playtest", "Complaints"):
         if os.path.exists(os.path.join(ROOT, entry)):
             os.symlink(os.path.join(ROOT, entry), os.path.join(_alias_root, entry))
+    link_build_caches(ROOT, _alias_root)
     _link_entries(os.path.join(ROOT, "sim"), os.path.join(_alias_root, "sim"), skip=("tests",))
     _link_entries(os.path.join(ROOT, "sim", "tests"), os.path.join(_alias_root, "sim", "tests"),
                   skip=("test_parallel_runner.py",))
@@ -48,7 +50,7 @@ try:
     with open(os.path.join(_fake_dir, "test_zz_fake_crash.py"), "w") as handle:
         handle.write("raise RuntimeError('boom at import')\n")
 
-    _topics = "parallelism_note,mod_namespaces,mod_overrides"
+    _topics = "agriculture,market_clearing,mod_overrides"
     _sequential = _run_suite("--only", _topics, "--jobs", "1")
     _parallel = _run_suite("--only", _topics, "--jobs", "4")
     check("parallel run of a topic set prints the same content and order as --jobs 1",
@@ -59,8 +61,8 @@ try:
           _sequential.returncode == 0 and _parallel.returncode == 0,
           (_sequential.returncode, _parallel.returncode, _sequential.stdout[-500:], _sequential.stderr[-500:]))
 
-    _failing = _run_suite("--only", "mod_namespaces,zz_fake_fail,mod_overrides", "--jobs", "4")
-    _failing_sequential = _run_suite("--only", "mod_namespaces,zz_fake_fail,mod_overrides",
+    _failing = _run_suite("--only", "agriculture,zz_fake_fail,mod_overrides", "--jobs", "4")
+    _failing_sequential = _run_suite("--only", "agriculture,zz_fake_fail,mod_overrides",
                                      "--jobs", "1")
     check("a failing check in one parallel topic is reported by name, in order, with exit 1",
           _failing.returncode == 1
@@ -68,7 +70,7 @@ try:
           and _without_timing(_failing.stdout) == _without_timing(_failing_sequential.stdout),
           (_failing.returncode, _failing.stdout[-400:]))
 
-    _crashing = _run_suite("--only", "mod_namespaces,zz_fake_crash", "--jobs", "4")
+    _crashing = _run_suite("--only", "agriculture,zz_fake_crash", "--jobs", "4")
     check("a topic that crashes on import is reported as a failure naming it, exit 1",
           _crashing.returncode == 1 and "zz_fake_crash: worker crashed" in _crashing.stdout
           and "boom at import" in _crashing.stdout,

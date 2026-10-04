@@ -32,6 +32,7 @@ import tempfile
 from .harness import *
 from .harness import ROOT, HERE, SLOW_TOPICS, _LOADTEST_DIR, _PLAY_DIR
 from .__main__ import TOPICS
+from .alias_checkout import link_build_caches
 
 
 # --- ROOT means the repository, not something near it. Every relative path in
@@ -192,10 +193,11 @@ try:
             os.symlink(os.path.join(ROOT, _sub), os.path.join(_alias, _sub))
         except (OSError, AttributeError):
             shutil.copytree(os.path.join(ROOT, _sub), os.path.join(_alias, _sub))
+    link_build_caches(ROOT, _alias)
 
     _run = subprocess.run(
         [sys.executable, os.path.join(_alias, "sim", "tests", "__main__.py"),
-         "--only", "parallelism_note"],
+         "--only", "agriculture"],
         capture_output=True, text=True, timeout=300, cwd=_alias_parent)
 
     check("the whole suite runs from a checkout named something other than "
