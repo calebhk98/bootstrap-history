@@ -9,14 +9,15 @@ ENTRY_PRICE_MARGIN_SHARE, the band a margin must clear before founders risk a ne
 entry needs more than cost, so prices inside the band move nobody). Where last year's price is above the
 entry price, the gap is what the year's bids would take at the entry price less the area's makers'
 capacity, plant on the way included. Newcomers are built for a share of the gap, at most a share of the
-capacity already there in a year, so an industry grows fast but does not jump past its buyers. The price
+capacity already there in a year, so an industry grows fast but does not jump past its buyers. Only where
+buyers would spend more at the lower price (their demand is elastic over the gap) does a margin draw
+anyone: a staple bought to a floor would take little more, and makers chasing its margin set off a cobweb. The price
 must stay above the entry price for as many years in a row as a losing producer waits before it exits
 (LOSS_YEARS_BEFORE_EXIT), so a harvest's spike draws nobody and entry and exit wait alike. A market
 with buyers and no maker at all gets a trial newcomer whenever the bids would take its output at the
 entry price, whatever price it remembers: a price nobody has sold at says nothing about cost.
 """
 import math
-from dataclasses import replace
 from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
 from sim.constants import declare
@@ -24,7 +25,6 @@ from sim.constants import declare
 from . import unit_cost
 from .entry import EntryPlan, UnmetDemand
 from .entry_sizing import ENTRY_SHARE_OF_UNTRADED_DEMAND
-from .goods_market import quantity_at
 from .market_memory import market_key
 from .producers_close import LOSS_YEARS_BEFORE_EXIT
 from .producers import OUTPUT_CHANGE_SHARE_PER_YEAR, Producer, live_input_prices, live_wages
@@ -68,11 +68,31 @@ def full_cost_per_unit(recipe: Recipe, good: GoodId, output_prices: Mapping[Good
     return run_cost * share / made
 
 
-def demand_at(bids: Sequence[Bid], price: float) -> float:
-    """What the bids would take at `price` by their own price response. Each budget was planned at this
-    year's price, so it is left out: at a much lower price a household spends less on a staple, not the
-    same sum on more of it. A buyer's ceiling still holds."""
-    return math.fsum(quantity_at(replace(bid, budget=math.inf), price) for bid in bids if bid.budget > 0.0)
+def demand_at(bids: Sequence[Bid], price: float, price_now: float) -> float:
+    """What the bids, made at `price_now`, would take at `price`. A bid's floor is needed whatever the
+    price; the rest of its budget, beyond what the floor costs now, is spending a buyer shares out by
+    budget, so at a lower price it buys proportionally more. A staple bought to its floor gains little,
+    a good bought for variety gains in proportion. A buyer's ceiling still holds."""
+    total = 0.0
+    for bid in bids:
+        if bid.budget <= 0.0 or price > bid.maximum_price:
+            continue
+        surplus = max(0.0, bid.budget - bid.floor_quantity * price_now)
+        total += bid.floor_quantity + surplus / price
+    return total
+
+
+ROUNDING = 1e-9      # spending equal to a few parts in a billion counts as equal
+
+
+def demand_is_elastic(quantity_now: float, price_now: float, quantity_then: float, price_then: float) -> bool:
+    """Whether buyers would spend at least as much at the lower price: the arc elasticity of their demand
+    between the two prices is one or more. Where it is below, supply that chases a margin overshoots: the cobweb is
+    stable only while supply responds less than demand does (Complaints/reports/economy-research-price-
+    stability-and-entry.md)."""
+    if quantity_now <= 0.0 or price_now <= price_then or price_then <= 0.0:
+        return quantity_then > 0.0
+    return quantity_then * price_then >= quantity_now * price_now * (1.0 - ROUNDING)
 
 
 def capacity_in_area(producers: Mapping[str, Producer], recipes: Mapping[str, Recipe], good: GoodId,
@@ -115,9 +135,12 @@ def margin_entry_plans(setup, record, view, area_map, bids_by_market: Mapping[Tu
             record.margin_years[key] = above
             if above < LOSS_YEARS_BEFORE_EXIT:
                 continue    # a margin must last before founders trust it; with no maker the bids decide
-        gap = demand_at(bids, entry_price) - capacity
+        wanted = demand_at(bids, entry_price, price if price > 0.0 else entry_price)
+        gap = wanted - capacity
         if gap <= 0.0:
             continue
+        if capacity > 0.0 and not demand_is_elastic(demand_at(bids, price, price), price, wanted, entry_price):
+            continue        # a cheaper good buyers would spend less on: more makers only feed a cobweb
         added = gap * MARGIN_ENTRY_SHARE_OF_GAP
         added = min(added, MARGIN_ENTRY_GROWTH_SHARE * capacity) if capacity > 0.0 else gap * ENTRY_SHARE_OF_UNTRADED_DEMAND
         runs = added / setup.recipes[recipe_id].outputs[good]
