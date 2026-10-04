@@ -3,26 +3,28 @@ household can reach.
 
 Split out of labour.py (see that file's own docstring for why). These are
 methods of Labour; they are a mixin only so that they can live in a file of
-their own. Behaviour is unchanged and moved verbatim.
-
+their own. 
 What leaning on a trade does to its price lives in labour_market_api.py.
-trade_available,
-found_trade_school and _trade_market_class decide whether a trade can be
-had here AT ALL and which reachable-population class it falls in, which
-market_supply, reachable_trade_population and national_trade_population -
-the actual depth of that market, this household's own reach into it, and
-the whole country's rough total - all read from. TOWN_POPULATION_REFERENCE
-and TRADE_DENSITY size the one provincial town this household's own labour
-market represents; SCHOLAR_ENGAGEMENT_FRACTION, SCRIBE_ENGAGEMENT_FRACTION
-and MERCHANT_DENSITY are the same idea for the trades literacy already
-bounds. population_report and home_town_population_estimate are what the
-'population' command shows, built entirely from the numbers above.
+trade_available and found_trade_school decide whether a trade can be had here
+AT ALL; market_supply, reachable_trade_population and national_trade_population
+give the depth of that market, this household's reach into it, and the whole
+country's rough total. A trade's people are the working people of one
+provincial town (TOWN_POPULATION_REFERENCE sizes it) times the trade's share of
+non-farm labour, read from society's hours or the recipe graph's need, so a
+trade a mod adds is sized without code. SCHOLAR_ENGAGEMENT_FRACTION,
+SCRIBE_ENGAGEMENT_FRACTION and MERCHANT_DENSITY size the trades literacy
+bounds; NO_DEMAND_TRADE_SHARE and UNSKILLED_POOL_TOWN_SHARE cover the rest.
+population_report and home_town_population_estimate are what the 'population'
+command shows, built from the numbers above.
 effective_scholars and scholar_hands_available answer "how many scholars
 can this household actually put to work this year", the population-side
 half of the same question hours_you_can_call_on (labour_training.py)
 answers for craft hours.
 """
 from sim.constants import declare, REGISTRY
+
+from . import legacy_trade_defaults, trade_data
+from .workforce_spinup import FARM_TRADE
 
 
 class PopulationMixin:
@@ -62,7 +64,7 @@ class PopulationMixin:
         """
         contracted = sum(hours for trade, hours
                          in getattr(self._world.household, "contract_hours", {}).items()
-                         if self._world.trade_family(trade) == "scholar")
+                         if self._world.trade_family(trade) == self._world.trade_family(trade_data.scholar_trade()))
         return (self.effective_scholars()
                 + contracted / self._world.HOURS_PER_PERSON_YEAR)
 
@@ -97,50 +99,61 @@ class PopulationMixin:
         household.trades_created.add(trade)
         return True, None
 
-    def _trade_market_class(self, trade):
-        """Which reachable-labour-pool class a trade falls in - read ONCE,
-        here, so market_supply's own hiring ceiling and
-        national_trade_population's country-wide estimate (used by the
-        'population' command) cannot say two different things about the
-        same trade. See TRADE_DENSITY for what each class is worth, and
-        why, and TOWN_POPULATION_REFERENCE for the town size it is a
-        fraction OF.
+    def _is_lettered(self, trade):
+        """Whether the trade's pool is bounded by who can read and write, not by what
+        the town's households need made."""
+        scholar_family = self._world.trade_family(trade_data.scholar_trade())
+        return (bool(trade_data.literate_trades((trade,)))
+                or trade in legacy_trade_defaults.LETTERED_BUT_NOT_LITERATE
+                or self._world.trade_family(trade) == scholar_family)
 
-        Unchanged in substance from the keyword/list check this replaced;
-        only pulled out to one place instead of being reasoned about twice.
-        """
-        note = self._world.trade_notes.get(trade, "").lower()
-        if "abundance" in note or "abundant" in note or "numerous" in note:
-            return "abundant"
-        if "scarcest" in note:
-            return "scarce"
-        if self._world.trade_family(trade) == "scholar":
-            return "scholar"
-        if trade in ("labourer", "artisan", "carpenter", "mason", "potter", "smith",
-                 "sailor", "miner", "furnaceman", "soldier"):
-            return "common"
-        return "uncommon"          # glassblowers, engravers, opticians' forebears
+    def _share_of_town_work(self, trade):
+        """The trade's share of non-farm labour: society's current hours when it has
+        them, else the need the recipe graph puts on it; 0.0 with neither."""
+        hours = self._world.state.economy.society_labour_hours
+        rest = sum(value for name, value in hours.items() if name != FARM_TRADE)
+        if rest > 0.0 and hours.get(trade, 0.0) > 0.0 and trade != FARM_TRADE:
+            return hours[trade] / rest
+        return self._non_farm_need_shares().get(trade, 0.0)
+
+    def _is_demand_derived(self, trade):
+        return (not self._is_lettered(trade) and not self._is_unskilled_pool(trade)
+                and self._share_of_town_work(trade) > self.NO_DEMAND_TRADE_SHARE)
+
+    def _is_unskilled_pool(self, trade):
+        return trade == FARM_TRADE or trade_data.drawn_from_unskilled_pool(trade)
+
+    def _working_fraction(self):
+        population = self._world.population
+        return population.working_age / population.total if population.total > 0 else 0.0
+
+    def _town_people_of_trade(self, trade):
+        """People of an ordinary trade in the one town this household reaches: the
+        town's working people times the trade's share of work, never below the
+        declared floor share."""
+        working = self.home_town_population_estimate() * self._working_fraction()
+        if self._is_unskilled_pool(trade):
+            return working * self.UNSKILLED_POOL_TOWN_SHARE
+        return working * max(self._share_of_town_work(trade), self.NO_DEMAND_TRADE_SHARE)
 
     def _trade_density_source(self, trade):
-        """Which declared constant this trade's population estimate comes from.
-        Returns the constant's name as a string (e.g., "TRADE_DENSITY_SCARCE",
-        "SCHOLAR_ENGAGEMENT_FRACTION", "MERCHANT_DENSITY"). Used by
-        population_report and _density_is_placeholder to look up metadata.
+        """Name of the declared constant this trade's population estimate rests on,
+        None when it is derived from need or unavailable. Used by population_report
+        and _density_is_placeholder to look up metadata.
         """
-        if not self.trade_available(trade):
+        if not self.trade_available(trade) or trade in self._world.trades_absent:
             return None
-        if trade == "scholar":
+        if trade == trade_data.scholar_trade():
             return "SCHOLAR_ENGAGEMENT_FRACTION"
-        if trade == "scribe":
+        if trade_data.literate_trades((trade,)):
             return "SCRIBE_ENGAGEMENT_FRACTION"
-        if trade == "merchant":
+        if trade in legacy_trade_defaults.LETTERED_BUT_NOT_LITERATE:
             return "MERCHANT_DENSITY"
-        if trade in self._world.trades_absent:
-            # Taught trades have their own density not yet declared
+        if self._is_unskilled_pool(trade):
+            return "UNSKILLED_POOL_TOWN_SHARE"
+        if self._is_demand_derived(trade):
             return None
-        # Craft trades use TRADE_DENSITY
-        cls = self._trade_market_class(trade)
-        return f"TRADE_DENSITY_{cls.upper()}"
+        return "NO_DEMAND_TRADE_SHARE"
 
     def _density_is_placeholder(self, trade):
         """Whether a trade's population estimate is a placeholder
@@ -207,69 +220,25 @@ class PopulationMixin:
             "meant to reproduce - see this constant's own long comment "
             "above for the full derivation.")
 
-    # What SHARE of that town plies each class of trade - feeding BOTH
-    # market_supply's ceiling for 'abundant' and 'common' (the classes the
-    # break report was actually about) and national_trade_population's
-    # country-wide estimate for every class. 'scarce', 'uncommon' and
-    # 'scholar' keep their PRE-EXISTING, separately-tuned hiring ceilings
-    # below (0.08 x base, 0.25 x base, and the literacy-bound 0.35 x base
-    # literate_capacity's own docstring explains at length) - this fix
-    # targets the trades that were wrongly sharp, not the ones that are
-    # correctly so, and changing a density entry for those three classes
-    # moves only what 'population' reports the COUNTRY holds, never this
-    # household's hiring cap or the regression coverage tuned against it
-    # (FINDINGS_ROUND2 section R's millwright checks, literate_capacity's
-    # own scholar-ceiling checks).
-    #
-    #   common:    anchored directly on the Ostia figure above.
-    #   abundant:  the trades the wage table's OWN notes call abundant or
-    #              numerous (mason, plumber, sailor) - set higher again,
-    #              matching the stronger language, still no more than an
-    #              order of magnitude's worth of judgement on top of a real
-    #              attestation.
-    #   uncommon, scarce: NO COMPARABLE FIGURE FOUND for engraver,
-    #              glassblower, master (uncommon) or for millwright, which
-    #              its own note already calls "the scarcest useful trade
-    #              you can hire" (scarce). These two are honest
-    #              order-of-magnitude placeholders for the population
-    #              report only, smaller than an attested trade and smaller
-    #              again for the one the game already singles out as
-    #              rarest - not research, and said so here rather than
-    #              dressed up as data.
-    _TRADE_DENSITY_WHY = (
-        "Share of TOWN_POPULATION_REFERENCE plying a trade of this class - "
-        "'common' is anchored directly on the Ostia guild figure "
-        "(TOWN_POPULATION_REFERENCE's own citation); 'abundant' is set "
-        "higher again to match the wage table's own language calling "
-        "those trades abundant or numerous, still within an order of "
-        "magnitude of the real attestation; 'uncommon' and 'scarce' have "
-        "NO comparable figure found for the trades in them and are "
-        "honest, explicitly-labelled order-of-magnitude placeholders, not "
-        "research - see this table's own long comment above.")
-    TRADE_DENSITY_ABUNDANT = declare(
-        "TRADE_DENSITY_ABUNDANT", 0.014, kind="engineering_estimate",
-        unit="fraction of the town's population", source=None,
-        confidence="C", why=_TRADE_DENSITY_WHY)
-    TRADE_DENSITY_COMMON = declare(
-        "TRADE_DENSITY_COMMON", 0.007, kind="engineering_estimate",
-        unit="fraction of the town's population",
-        source="CIL XIV 4569 (see TOWN_POPULATION_REFERENCE): about 0.7% "
-               "of the town registered in one common building trade.",
-        confidence="C", why=_TRADE_DENSITY_WHY)
-    TRADE_DENSITY_UNCOMMON = declare(
-        "TRADE_DENSITY_UNCOMMON", 0.001, kind="temporary_heuristic",
-        unit="fraction of the town's population", source=None,
-        confidence="D", why=_TRADE_DENSITY_WHY)
-    TRADE_DENSITY_SCARCE = declare(
-        "TRADE_DENSITY_SCARCE", 0.00015, kind="temporary_heuristic",
-        unit="fraction of the town's population", source=None,
-        confidence="D", why=_TRADE_DENSITY_WHY)
-    TRADE_DENSITY = {
-        "abundant": TRADE_DENSITY_ABUNDANT,
-        "common": TRADE_DENSITY_COMMON,
-        "uncommon": TRADE_DENSITY_UNCOMMON,
-        "scarce": TRADE_DENSITY_SCARCE,
-    }
+    # A trade's people in the town = the town's working people x its share of
+    # non-farm labour (society's hours, else the recipe graph's need). The two
+    # shares below cover trades that share cannot size.
+    NO_DEMAND_TRADE_SHARE = declare(
+        "NO_DEMAND_TRADE_SHARE", 0.00005, kind="temporary_heuristic",
+        unit="fraction of the town's working people", source=None,
+        confidence="D",
+        why="Floor share for a trade no available recipe puts need on (a "
+            "specialist whose work is not in the household-demand graph yet): "
+            "a few people always practise it. An order-of-magnitude "
+            "placeholder until every trade's work is in the recipe graph.")
+    UNSKILLED_POOL_TOWN_SHARE = declare(
+        "UNSKILLED_POOL_TOWN_SHARE", 0.05, kind="temporary_heuristic",
+        unit="fraction of the town's working people", source=None,
+        confidence="D",
+        why="Town people for hire from the unskilled pool (farm labour and "
+            "the trades drawn from it, such as an army): the farm trade's "
+            "hours are decided by the farm logic, not the non-farm need "
+            "split, so the town's share of them is an authored guess.")
     # scholar and scribe are bound by literacy, not by town population (see
     # literacy_factor, literate_capacity) - their NATIONAL estimate uses the
     # same idea applied to the literate pool instead of the town: what
@@ -302,7 +271,7 @@ class PopulationMixin:
         "MERCHANT_DENSITY", 0.004, kind="temporary_heuristic",
         unit="fraction of urban population", source=None, confidence="D",
         why="Merchant density, treated like an ordinary craft density "
-            "(TRADE_DENSITY) rather than a literacy-bound one, because "
+            "(a share of work) rather than a literacy-bound one, because "
             "merchant is deliberately excluded from LITERATE_TRADES (an "
             "agent working on commission is not, in this period, chiefly "
             "a reader). No specific count found; an order-of-magnitude "
@@ -318,51 +287,20 @@ class PopulationMixin:
             "themselves - approximated as half again your own headcount's "
             "hours, standing in for that second generation, rather than "
             "modelling who-taught-whom explicitly.")
-    SCARCE_TRADE_HIRING_SHARE = declare(
-        "SCARCE_TRADE_HIRING_SHARE", 0.08, kind="temporary_heuristic",
-        unit="fraction of hired_hours_cap_base", source=None,
-        confidence="D",
-        why="Hiring ceiling share for the 'scarce' trade class (today, "
-            "just millwright, this tree's own 'scarcest useful trade you "
-            "can hire') - tighter than TRADE_DENSITY_UNCOMMON's already-"
-            "tight share. Pre-existing, separately-tuned figure kept as "
-            "the fix that widened 'abundant'/'common' left it (see "
-            "TRADE_DENSITY's own comment on why these three keep their "
-            "own tuning).")
-    UNCOMMON_TRADE_HIRING_SHARE = declare(
-        "UNCOMMON_TRADE_HIRING_SHARE", 0.25, kind="temporary_heuristic",
-        unit="fraction of hired_hours_cap_base", source=None,
-        confidence="D",
-        why="As SCARCE_TRADE_HIRING_SHARE, for the 'uncommon' class "
-            "(glassblowers, engravers, masters).")
-
     def _hiring_cap_before_actors(self, trade):
         """Hours a year of a trade the town's people offer, before firms' and governments' staff
         are taken out of it."""
         base = (self._world.cfg["hired_hours_cap_base"] * self.local_market_share()
                 * (self.POP_SCALE_FLOOR_SHARE
                    + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self._world.pop_scale)))
-        cls = self._trade_market_class(trade)
-        if cls in ("abundant", "common"):
-            # A REAL TOWN'S WORTH, not base's village-sized share of it (see
-            # this function's own docstring and the comment above
-            # TOWN_POPULATION_REFERENCE for the full account and its
-            # citation).
-            town = self.home_town_population_estimate()
-            cap = town * self.TRADE_DENSITY[cls] * self._world.HOURS_PER_PERSON_YEAR
-        elif cls == "scholar":
+        if self._is_lettered(trade):
             cap = base * self.SCHOLAR_MARKET_SHARE   # literate men are a small fraction of anywhere
-        elif cls == "scarce":
-            cap = base * self.SCARCE_TRADE_HIRING_SHARE
         else:
-            cap = base * self.UNCOMMON_TRADE_HIRING_SHARE   # uncommon: glassblowers, engravers, masters
+            cap = self._town_people_of_trade(trade) * self._world.HOURS_PER_PERSON_YEAR
         cap = self._world.effect_factor("market_hiring_factor", cap, self.HIRING_MULTIPLIER_EXPONENT)
         # A trade that needs reading cannot be bought past how many people
-        # here can read (FINDINGS_ROUND2 section Q). scholar and scribe are
-        # the only literate trades that reach this branch - the taught ones
-        # (engineer, chemist, machinist, optician) are all in TRADES_ABSENT
-        # and returned above, bounded instead by literate_capacity() in
-        # train().
+        # here can read; taught literate trades are absent and bounded by
+        # literate_capacity() in train() instead.
         if trade in self.LITERATE_TRADES:
             cap *= self.literacy_factor(trade)
         return cap
@@ -374,7 +312,7 @@ class PopulationMixin:
         game puts you in charge of draws on one town's labour, the way a
         real Roman, Han or Norse founder would have. See
         TOWN_POPULATION_REFERENCE's own comment for why that is a
-        defensible modelling choice and TRADE_DENSITY for how big 'one
+        defensible modelling choice and _town_people_of_trade for how big 'one
         town's worth' of each trade actually is; national_trade_population
         answers the country-wide question this number is not trying to.
         """
@@ -410,7 +348,7 @@ class PopulationMixin:
         player hire one - exactly the kind of false "nobody's there"
         reading literate_capacity's own floor exists to prevent.
         """
-        if trade in ("scholar", "scribe"):
+        if trade_data.literate_trades((trade,)):
             return self.literate_capacity(trade)
         return self.market_supply(trade) / self._world.HOURS_PER_PERSON_YEAR
 
@@ -441,7 +379,7 @@ class PopulationMixin:
                         and self.trade_available(trade))
         working_age = self._world.population.working_age
         craft_supply = sum(self.people_who_exist(trade) for trade in trades)
-        scholar_supply = self.people_who_exist("scholar")
+        scholar_supply = self.people_who_exist(trade_data.scholar_trade())
         empty = [trade for trade in trades if self.people_who_exist(trade) < 1.0]
         craft_need = float(node["art"])
         scholar_need = float(node["sch"])
@@ -466,39 +404,34 @@ class PopulationMixin:
                 % ("; ".join(short), working_age))
 
     def national_trade_population(self, trade):
-        """A rough ESTIMATE of how many people ply this trade across the
-        WHOLE COUNTRY - not this household's reach (reachable_trade_
-        population, above) and not a second population model: the same
-        TRADE_DENSITY this file's own market_supply reads, applied to the
-        country's urban population instead of to one town, because a
-        craft trade is overwhelmingly a town trade (see civ['urban_
-        fraction'], which core.py already reads for pop_scale). 0.0 for a
-        trade that does not exist in this society at all - trade_
-        available() already says so.
-
-        Every number this returns is explicitly an estimate and the
-        'population' command says so on the screen; nobody has published a
-        trade-by-trade occupational census of Rome, Han China or Viking-age
-        Scandinavia, and TRADE_DENSITY's own comment already says, for two
-        of its four classes, that no comparable figure was found at all.
+        """A rough ESTIMATE of how many people ply this trade across the whole
+        country - not this household's reach: the same share of work
+        _town_people_of_trade reads, applied to the country's urban working
+        people instead of one town's. 0.0 for a trade this society does not
+        have (trade_available says so). Nobody has published an occupational
+        census of the ancient world, so every figure is an estimate and the
+        'population' command says so.
         """
         if not self.trade_available(trade):
             return 0.0
         # The age-cohort model's running headcount is the actual population.
         pop = self._world.population.total
         urban = pop * float(self._world.civ.get("urban_fraction", 0.0))
-        if trade == "soldier":
-            # any of the working age may be called up
-            return self._world.population.working_age
-        if trade == "scholar":
+        working = self._world.population.working_age
+        if trade_data.drawn_from_unskilled_pool(trade):
+            return working   # any of the working age may be called up
+        if trade == trade_data.scholar_trade():
             return pop * float(self._world.civ.get("literacy_elite", 0.0)) * self.SCHOLAR_ENGAGEMENT_FRACTION
-        if trade == "scribe":
+        if trade_data.literate_trades((trade,)):
             return pop * float(self._world.civ.get("literacy_general", 0.0)) * self.SCRIBE_ENGAGEMENT_FRACTION
-        if trade == "merchant":
+        if trade in legacy_trade_defaults.LETTERED_BUT_NOT_LITERATE:
             return urban * self.MERCHANT_DENSITY
         if trade in self._world.trades_absent:
             return self._taught_trade_people(trade)
-        return urban * self.TRADE_DENSITY.get(self._trade_market_class(trade), 0.0)
+        if trade == FARM_TRADE:
+            return working * (1.0 - float(self._world.civ.get("urban_fraction", 0.0)))
+        return (urban * self._working_fraction()
+                * max(self._share_of_town_work(trade), self.NO_DEMAND_TRADE_SHARE))
 
     def population_report(self):
         """Everything the 'population' command (protocol.py) shows, worked
