@@ -35,6 +35,16 @@ class DisclosureView:
 			return PROOF_YEARS / self.secret_exposure(node_id)
 		return float(PROOF_YEARS)
 
+	def state_grants_patents(self, actor: Any) -> bool:
+		"""Whether the state holds a technology that declares the `patent_grant` mechanic, in its own
+		knowledge or in what its society already knows."""
+		state = self.government()
+		return any(state.knows(node_id, self) for node_id in self._sim.nodes_with_mechanic("patent_grant"))
+
+	def patent_entry(self, node_id: str) -> Any:
+		"""The live patent on an invention as {"holder", "expires", "licensees"}, or None."""
+		return licence.live_patent(self._sim.actors.actors.values(), node_id, self.year)
+
 	def collect_royalty(self, firm: Any, node_id: str, takings: float) -> float:
 		"""The founder's royalty on a licensed firm's takings; the amount paid."""
 		record = self._sim.disclosure_of(node_id)["licensees"].get(firm.actor_id)

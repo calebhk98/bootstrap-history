@@ -1,6 +1,7 @@
 """Actors other than the founder, run once a year inside the simulation."""
 from sim.agents.api import ActorRegistry, ledger
 from .agents_port import SimWorld
+from .agents_port_cast import seed_opening_cast
 from .state import ActorsState
 
 
@@ -78,7 +79,8 @@ class ActorsMixin:
         ledger.transfer(self.household, self.state_treasury(), amount, purpose)
 
     def advance_actors(self, year):
-        """Give the country's government and every firm their year."""
+        """Give every actor its year: the countries, players, firms, traders and bodies of people."""
+        seed_opening_cast(self)
         self.state_treasury()
         self.update_capital_market()
         self.actors.advance(SimWorld(self))

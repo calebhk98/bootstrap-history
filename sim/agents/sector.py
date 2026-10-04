@@ -15,6 +15,36 @@ class Sector:
 		self.members = members
 		# the share of the state's revenue that comes from the territory the group lives in
 		self.scope = scope
+		# the share of this loss for which the founder is blamed
+		self.blame_share = 1.0
+
+	# the sources of sectors beyond the founder's sales and hiring, reached through this class
+	@staticmethod
+	def of_strata(strata, world):
+		from .group_strata import stratum_sectors
+		return stratum_sectors(strata, world)
+
+	@staticmethod
+	def remember_welfare(strata):
+		from .group_strata import remember_welfare
+		remember_welfare(strata)
+
+	@staticmethod
+	def of_goods(strata, categories, world):
+		from .group_goods import goods_sectors
+		return goods_sectors(strata, categories, world)
+
+	@staticmethod
+	def protection_needed(group_strength, opposition_line):
+		"""The protection that lets the founder build despite a prohibition a group of this pull obtained."""
+		from .group import protection_needed
+		return protection_needed(group_strength, opposition_line)
+
+	@staticmethod
+	def reached_by(node_id, nodes, made_by, commodity_of):
+		"""The commodities and goods categories a technique touches."""
+		from .group_reach import subjects_reached
+		return subjects_reached(node_id, nodes, made_by, commodity_of)
 
 
 CONCESSION_PREFIX = "concession: "
@@ -22,3 +52,4 @@ CONCESSION_PREFIX = "concession: "
 
 def sector_key(kind: str, subject: str) -> str:
 	return kind + ":" + subject
+
