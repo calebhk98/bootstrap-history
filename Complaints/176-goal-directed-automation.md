@@ -1,6 +1,6 @@
 # Request: goal-directed automation (`pursue <goal>`), and smarter policies
 
-**Status:** partly - done: auto_replace_foreman policy, the state depends_on_one_person warning, and the reserve part (`policy reserve_staff on` with `reserve craftsmen N` / `reserve scholars N`); still open: pursue-goal, a policy following stuck route-blocker advice, per-goal allocate
+**Status:** partly - done: auto_replace_foreman, the depends_on_one_person warning, the reserve policy, and `pursue <goal>` (starts what is startable on the goal's route through `rush`, with its caps; `sim/ui/proto/pursue.py`, test `sim/tests/test_pursue_programme.py`); still open: a policy following stuck's route-blocker advice, per-goal allocate, auto_hire modes (403)
 
 Mid-game I wrote ~40 lines of shell to do each year what the game could: open concerns that pay, hire when short, follow `stuck`'s route-blocker advice, start what `path` lists within cash, step. `rush` is not a substitute: it picks from hundreds of startable nodes "with no idea what you are building toward".
 

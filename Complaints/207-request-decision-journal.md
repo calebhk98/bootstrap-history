@@ -1,6 +1,6 @@
 # Request: a decision journal ("why did I build this forty years ago?")
 
-**Status:** open
+**Status:** partly - `note <text>` / `note <project> <text>`, `notes`, `note drop <n>`; notes join `log` in their year and show under `why <project>` (`sim/ui/proto/notes_store.py`, test `sim/tests/test_ui_notes.py`); remains: notes live in the save's sidecar until the save has a UI slot (401), and typed note text loses the words `json` and `compact`, which the typed parser strips
 
 Requested three times by the tester (around 1320, 1335 and the 1350 retrospective): an in-game founder journal that auto-records starts, failures, openings and closures, staffing changes and major events, with optional player notes, plus a generated yearly retrospective. By 1335 there were enough overlapping projects that remembering why a five-year project was started was nontrivial. `log` and `recap` exist and were praised, but they record what happened, not what the player intended.
 
