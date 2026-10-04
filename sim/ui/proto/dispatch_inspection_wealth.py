@@ -32,7 +32,9 @@ def _cmd_capacity(sim, nodes, cmd, ended):
 
 @command("portfolio", group="overview",
          summary="every active project and what limits it",
-         usage=["portfolio", "portfolio json"], options={"json": "the raw reply"},
+         usage=["portfolio", "portfolio <blocker kind or trade>", "portfolio all", "portfolio offset:K", "portfolio json"],
+         options={"json": "the raw reply", "<group>": "only the projects behind one blocker kind or trade",
+                  "all": "every project row", "offset:K / limit:N": "page position and size"},
          description="The founder hours each project actually gets this year and why, "
                      "the reason it is not moving faster, and each hired trade's "
                      "demand against supply.")

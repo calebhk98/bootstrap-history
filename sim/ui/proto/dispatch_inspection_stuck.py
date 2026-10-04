@@ -5,6 +5,7 @@ from .route_blockers import route_blockers
 from .saving_plan import saving_reason
 from sim.engine.ui_port import closure
 from .state_waiting import _waiting_on
+from .stuck_advice import calendar_bound_advice, filler_note, lever_line
 
 
 def _stuck_work_in_hand(sim, nodes):
@@ -93,7 +94,7 @@ def _stuck_started_nothing(sim, _startable, _afford, saving=False):
             "why": ("no project is in hand, so no year of yours "
                     "is being spent on one. %s"
                     % ("'start %s' would begin the cheapest "
-                       "thing you can pay for today." % _cheap
+                       "thing you can pay for today (filler: cheapest, not a step toward the goal)." % _cheap
                        if _cheap else
                        "and nothing in front of you can be "
                        "begun, which the rows below explain."))}
@@ -280,6 +281,14 @@ def _cmd_stuck(sim, nodes, cmd, ended):
            "and_the_cheapest_thing_you_could_start_now": (
                min(_startable, key=lambda k: sim.project_cost(k))
                if _startable and not _saving else None)}
+    _calendar = calendar_bound_advice(sim, nodes)
+    if _calendar:
+        out["goal_path_is_calendar_bound"] = _calendar
+    else:
+        out["lever_figures"] = lever_line(sim)
+    _filler = filler_note(sim, out["and_the_cheapest_thing_you_could_start_now"])
+    if _filler:
+        out["the_cheapest_start_is_filler"] = _filler
     if _stall:
         out["and_you_are_in_a_hole"] = _stall
     if _goal_routing_off_under_fog:
