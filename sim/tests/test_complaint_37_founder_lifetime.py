@@ -7,6 +7,7 @@ import argparse
 import contextlib
 import io
 import re
+import types
 
 from .harness import *  # noqa: F401,F403
 import sim.ui.cli as ENGINE_CLI
@@ -131,6 +132,10 @@ class _RecordingSim(ENGINE_CLI.Sim):
     def __init__(self, *args, **kwargs):
         _RecordingSim.captured_cfgs.append(dict(kwargs.get("cfg") or {}))
         super().__init__(*args, **kwargs)
+
+    def run(self, goal, horizon):
+        # Only the constructed config is inspected; no years need playing.
+        return types.SimpleNamespace(goal_year=None, dead_reason=None)
 
 
 _original_sim_cls = ENGINE_CLI.Sim
