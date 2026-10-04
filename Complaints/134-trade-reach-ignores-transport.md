@@ -1,6 +1,6 @@
 # How many tradesmen you can reach ignores transport
 
-**Status:** open
+**Status:** partly - reach counts towns within a travel-time budget; speed still stands in for held technologies (408)
 
 The number of people in a trade the founder can reach is a share of the
 local town and nation. It should depend on how far people can travel to work
@@ -18,3 +18,11 @@ already models travel cost and speed by technology but reach does not read it.
 Derive a reach radius (or travel-time budget) from the transport technologies
 held and the land tiles around the base, and count the people in each trade
 within it.
+
+## Done
+
+`reach_population_estimate` (sim/labour/labour_settlement.py) sums the towns
+of every tile within `HIRE_TRAVEL_DAYS` at `travel_speed_km_per_day`; the
+trade's people (`_town_people_of_trade`) read it. At walking pace this is the
+home town, as before. Remaining: the speed should come from technologies held
+(Complaints/408-geography-api-for-reach-by-transport.md).

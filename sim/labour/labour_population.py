@@ -131,10 +131,10 @@ class PopulationMixin:
         return population.working_age / population.total if population.total > 0 else 0.0
 
     def _town_people_of_trade(self, trade):
-        """People of an ordinary trade in the one town this household reaches: the
-        town's working people times the trade's share of work, never below the
-        declared floor share."""
-        working = self.home_town_population_estimate() * self._working_fraction()
+        """People of an ordinary trade in the towns this household reaches by
+        travel: their working people times the trade's share of work, never
+        below the declared floor share."""
+        working = self.reach_population_estimate() * self._working_fraction()
         if self._is_unskilled_pool(trade):
             return working * self.UNSKILLED_POOL_TOWN_SHARE
         return working * max(self._share_of_town_work(trade), self.NO_DEMAND_TRADE_SHARE)

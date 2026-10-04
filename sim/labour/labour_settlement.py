@@ -23,6 +23,14 @@ class SettlementMixin:
         why="How fast a household with its goods and staff moves overland "
             "before the civilisation's own travel tradition (base_reach) "
             "speeds it up. A walking caravan pace, not fitted to a source.")
+    HIRE_TRAVEL_DAYS = declare(
+        "HIRE_TRAVEL_DAYS", 1.0, kind="temporary_heuristic",
+        unit="days of travel", source=None, confidence="D",
+        why="How far a hire will travel to work for you (and goods to reach "
+            "you), as days at the actor's travel speed. Sets how many "
+            "tiles' towns the labour market reaches; one day at a walking "
+            "pace stays inside the base's own tile, a faster way of "
+            "travelling reaches neighbouring tiles.")
     RELOCATION_STANDING_RETAINED = declare(
         "RELOCATION_STANDING_RETAINED", 0.3, kind="temporary_heuristic",
         unit="fraction of familiarity and protection kept", source=None,
@@ -59,15 +67,38 @@ class SettlementMixin:
                 * (self.POP_SCALE_FLOOR_SHARE
                    + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self._world.pop_scale)))
 
-    def home_town_population_estimate(self):
-        """People in the base's town: the nominal town, never more than a
-        set share of the tile's own people (and so never more than the
-        nation's)."""
+    def _town_population_at(self, tile):
+        """People in `tile`'s town: the nominal town there, never more than a
+        set share of the tile's own people (and so never more than the nation's)."""
         homes = self._world.civ.get("home_regions") or []
-        tile_people = self._world.population.total * settlement.population_share(
-            homes, self.base_tile())
-        return min(self._nominal_town_population(),
-                   tile_people * self.TOWN_MAX_SHARE_OF_TILE)
+        tile_people = self._world.population.total * settlement.population_share(homes, tile)
+        place = settlement.relative_capacity(homes, tile)
+        nominal = (self.TOWN_POPULATION_REFERENCE * place
+                   * (self.POP_SCALE_FLOOR_SHARE
+                      + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self._world.pop_scale)))
+        return min(nominal, tile_people * self.TOWN_MAX_SHARE_OF_TILE)
+
+    def home_town_population_estimate(self):
+        """People in the base's town."""
+        return self._town_population_at(self.base_tile())
+
+    def travel_speed_km_per_day(self):
+        """How fast this actor's people and goods cover ground: the walking
+        pace, sped up by the civilisation's travel tradition (base_reach).
+        The one place the transport the actor holds sets its reach."""
+        return self.RELOCATION_KM_PER_DAY * (
+            1.0 + Geography.REACH_SPEED_COEF * float(self._world.civ.get("base_reach", 2)))
+
+    def reach_population_estimate(self, speed_km_per_day=None):
+        """People in the towns within a hire's travel budget of the base:
+        every tile whose centre lies within HIRE_TRAVEL_DAYS at the given
+        speed (default: the actor's own), the base's tile always included."""
+        speed = self.travel_speed_km_per_day() if speed_km_per_day is None else speed_km_per_day
+        radius_km = self.HIRE_TRAVEL_DAYS * speed
+        base = self.base_tile()
+        homes = self._world.civ.get("home_regions") or []
+        return sum(self._town_population_at(tile) for tile in settlement.tile_ids(homes)
+                   if tile == base or settlement.distance_km(homes, base, tile) <= radius_km)
 
     def local_market_share(self):
         """How much of a full-size market the base's town offers (1.0 at the
@@ -86,8 +117,7 @@ class SettlementMixin:
     def relocation_quote(self, tile):
         """(days, hours lost, money) to move the base to `tile`."""
         km = self.distance_to_tile_km(tile)
-        speed = 1.0 + Geography.REACH_SPEED_COEF * float(self._world.civ.get("base_reach", 2))
-        days = km / (self.RELOCATION_KM_PER_DAY * speed)
+        days = km / self.travel_speed_km_per_day()
         year_share = min(1.0, days / 365.0)
         hours = year_share * self.director_pool()
         # The whole payroll is paid while it walks, and does no other work.
