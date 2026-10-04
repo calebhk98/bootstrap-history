@@ -71,18 +71,30 @@ class LabourWallTests(unittest.TestCase):
                 allowed = root in standard or module == "sim.constants"
                 self.assertTrue(allowed, "%s imports %s" % (os.path.relpath(path, ROOT), module))
 
-    def test_market_core_names_no_trade_or_civilisation(self):
+    def _content_ids_named_in(self, paths):
         with open(os.path.join(ROOT, "data", "world", "trades.json"), encoding="utf-8") as handle:
             forbidden = set(json.load(handle)["trades"])
         for path in glob.glob(os.path.join(ROOT, "data", "civilizations", "*.json")):
             forbidden.add(os.path.splitext(os.path.basename(path))[0])
-        for path in python_files(MARKET_DIR):
+        named = set()
+        for path in paths:
             with open(path, encoding="utf-8") as handle:
                 tree = ast.parse(handle.read(), filename=path)
             skipped = docstring_nodes(tree)
             for node in ast.walk(tree):
-                if isinstance(node, ast.Constant) and isinstance(node.value, str) and id(node) not in skipped:
-                    self.assertNotIn(node.value, forbidden, "%s names a content id" % os.path.relpath(path, ROOT))
+                if (isinstance(node, ast.Constant) and isinstance(node.value, str) and id(node) not in skipped
+                        and node.value in forbidden):
+                    named.add((os.path.relpath(path, ROOT), node.value))
+        return named
+
+    def test_market_core_names_no_trade_or_civilisation(self):
+        self.assertEqual(self._content_ids_named_in(python_files(MARKET_DIR)), set())
+
+    def test_only_the_legacy_table_names_trades_in_the_labour_package(self):
+        """Trade facts still held in code live in legacy_trade_defaults.py (Complaints/402), nowhere else."""
+        paths = [path for path in python_files(LABOUR_DIR)
+                 if os.path.basename(path) != "legacy_trade_defaults.py"]
+        self.assertEqual(self._content_ids_named_in(paths), set())
 
 
 if __name__ == "__main__":
