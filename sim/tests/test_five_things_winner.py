@@ -93,15 +93,38 @@ check("...and says plainly that a real run takes longer than the floor, "
 _endless_dir = tempfile.mkdtemp()
 _endless_saves = tempfile.mkdtemp()
 _endless_env = dict(os.environ, ROME_SAVE_DIR=_endless_saves)
+# The wizard plays one year only; the save is then moved to three years before
+# the 500-year Standard horizon, because the crossing is what matters and
+# playing the five centuries before it costs minutes.
 _endless_wiz = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
-                              input="1\n2\ny\n\n\nn\n\n4\n\nstep 600\nstate\nquit\n",
+                              input="1\n2\ny\n\n\nn\n\n4\n\nstep 1\nquit\n",
                               capture_output=True, text=True, timeout=120,
                               env=_endless_env)
+_endless_save_path = os.path.join(_endless_saves, "rome_100ad.json")
+_endless_state = json.load(open(_endless_save_path))
+_endless_state["scenario"]["year"] = 100 + 500 - 3
+json.dump(_endless_state, open(_endless_save_path, "w"))
+_standard_dir = tempfile.mkdtemp()
+_standard_path = os.path.join(_standard_dir, "rome_100ad.json")
+shutil.copy(_endless_save_path, _standard_path)
+json.dump({"horizon_years": 500}, open(_standard_path + ".meta.json", "w"))
+_standard_cross = subprocess.run(
+    [sys.executable, os.path.join(HERE, "simulator.py"), "play", "--session", _standard_path],
+    input="step 4\nquit\n", capture_output=True, text=True, timeout=120, env=_endless_env)
+_endless_cross = subprocess.run(
+    [sys.executable, os.path.join(HERE, "simulator.py"), "play", "--session", _endless_save_path],
+    input="step 4\nquit\n", capture_output=True, text=True, timeout=120, env=_endless_env)
+check("a 500-year Standard horizon refuses a step that would cross it (so the "
+      "Endless check below is a real contrast)",
+      "REFUSED" in _standard_cross.stdout and "before the horizon" in _standard_cross.stdout,
+      _standard_cross.stdout[-600:])
 check("choosing Endless lets a `step` cross where a 500-year Standard "
       "horizon would already have ended the run",
-      "THE RUN HAS ENDED" not in _endless_wiz.stdout
-      and "ran out of horizon" not in _endless_wiz.stdout,
-      _endless_wiz.stdout[-1500:])
+      "REFUSED" not in _endless_cross.stdout
+      and "THE RUN HAS ENDED" not in _endless_cross.stdout
+      and "ran out of horizon" not in _endless_cross.stdout
+      and "[%d AD" % (100 + 500 + 1) in _endless_cross.stdout,
+      _endless_cross.stdout[-1500:])
 _endless_written = [filename for filename in os.listdir(_endless_saves)
                     if filename.endswith(".json")
                     and not filename.endswith(".meta.json")]
