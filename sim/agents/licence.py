@@ -1,7 +1,7 @@
 """Licensing a know-how from one actor to another: the fee and the royalty go through the ledger."""
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
-from . import imitation, ledger
+from . import imitation, ledger, patent
 
 
 def terms_problem(licensee: Any, fee: float, royalty: float) -> str:
@@ -17,13 +17,22 @@ def terms_problem(licensee: Any, fee: float, royalty: float) -> str:
 
 def grant(licensor: Any, licensee: Any, node_id: str, fee: float, world: Any) -> bool:
 	"""The licensee pays `fee` to the licensor and can make `node_id` at once. False, and nothing
-	moves, when there is nothing the licensee still lacks."""
+	moves, when there is nothing the licensee still lacks or when someone else holds the patent."""
+	entry = getattr(world, "patent_entry", lambda _node: None)(node_id)
+	if entry is not None and entry["holder"] != getattr(licensor, "actor_id", None):
+		return False
 	chain = imitation.missing_chain(node_id, world, licensee)
 	if not chain:
 		return False
 	ledger.transfer(licensee, licensor, fee, "licence")
 	licensee.accept_licence(node_id, chain, world)
+	patent.note_licence(licensor, licensee, node_id)
 	return True
+
+
+def live_patent(actors: Any, node_id: str, year: int) -> Optional[Dict[str, Any]]:
+	"""The live patent on `node_id` held by one of `actors`, with its holder's id, or None."""
+	return patent.entry_among(actors, node_id, year)
 
 
 def royalty_due(takings: float, record: Dict[str, Any]) -> float:
