@@ -35,7 +35,7 @@ built this way survives other agents editing sim/engine/economy.py and
 sim/engine/solve_prices.py concurrently with this
 file's construction. It reads two data files that already exist
 (data/world/geography.json, data/world/resources.json) and one new one this
-task adds (data/world/deposits.json), as plain JSON - that is data, not an
+task adds (the geography deposit catalogue), as plain JSON - that is data, not an
 import of another module's code, and cannot be broken by or break any of
 those agents' work.
 
@@ -91,7 +91,7 @@ independent physical facts:
                              (or, for gravel, per tonne of gravel) actually
                              raised. A geological fact about the rock, never
                              derived from what the metal sells for - see
-                             data/world/deposits.json's own _doc for the same
+                             the geography deposit catalogue's own _doc for the same
                              discipline applied to every entry there.
   hardness_class             "soft" (friable, weathered, earthy ore - bog
                              iron, oxidised copper), "medium" (ordinary
@@ -121,7 +121,7 @@ independent physical facts:
                              for a fraction of the labour per tonne moved).
 
 ALLUVIAL GOLD AND DEEP VEIN GOLD ARE NOT THE SAME COST, AND THIS IS WHY.
-data/world/deposits.json's two gold entries are the sharpest illustration
+the geography deposit catalogue's two gold entries are the sharpest illustration
 this module has: Las Medulas (Hispania, alluvial_hydraulic, grade 0.0003
 kg/t) costs a little over 166 labour-hours per kilogram of gold by this
 module's own arithmetic; Dacia (deep_vein, hard rock, grade 0.008 kg/t)
@@ -258,7 +258,7 @@ only what the empire total leaves after the byproduct
 (`empire_output_net_of_byproducts_tonnes_per_year`), so silver raised with
 lead is not also asked of the silver-only deposits. A byproduct is stated as
 an assay per tonne of the primary metal contained (`kg_per_tonne_of_primary_
-metal` in data/world/deposits.json), one figure per deposit.
+metal` in the geography deposit catalogue), one figure per deposit.
 """
 import collections
 import json
@@ -269,7 +269,7 @@ from typing import Any, Dict, List, Optional
 from sim.constants import declare
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import mine_fire_setting, mine_works
-from sim.geography.api import tile_lookup
+from sim.geography.api import deposit_records, tile_lookup
 
 # ============================================================================
 # DATA FILE LOCATIONS
@@ -282,9 +282,8 @@ from sim.geography.api import tile_lookup
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 _ROOT = os.path.dirname(os.path.dirname(_THIS_DIR))
 RESOURCES_FILE = os.path.join(_ROOT, "data", "world", "resources.json")
-DEPOSITS_FILE = os.path.join(_ROOT, "data", "world", "deposits.json")
 
-# The seven metals this module and data/world/deposits.json cover -
+# The seven metals this module and the geography deposit catalogue cover -
 # exactly the metals data/world/resources.json's empire_output_100ad table
 # gives a Roman-era annual output for. Declared as a plain tuple, not
 # through declare(): it is a list of names, not a fact with a value that
@@ -332,7 +331,7 @@ BREAKING_HOURS_PER_TONNE_MEDIUM = declare(
            "the easier end.",
     confidence="C",
     why="The middle hardness class, and the one most named deposits in "
-        "data/world/deposits.json actually use - most pre-modern ore was "
+        "the geography deposit catalogue actually use - most pre-modern ore was "
         "neither loose earth nor the hardest vein quartz.")
 
 BREAKING_HOURS_PER_TONNE_HARD = declare(
@@ -364,7 +363,7 @@ ALLUVIAL_HAND_PROCESSING_HOURS_PER_TONNE = declare(
     confidence="C",
     why="What makes alluvial deposits worth working at much lower grades "
         "than hard-rock ones - see hardness_class in the module docstring "
-        "and the tin entries in data/world/deposits.json, none of which "
+        "and the tin entries in the geography deposit catalogue, none of which "
         "needed a vein-mining alternative in the Roman period at all.")
 
 ALLUVIAL_HYDRAULIC_PROCESSING_HOURS_PER_TONNE = declare(
@@ -395,7 +394,7 @@ DEPOSIT_ASSUMED_WORKING_LIFE_YEARS = declare(
     kind="temporary_heuristic",
     unit="years",
     source="Several of the major Roman mining districts named in "
-           "data/world/deposits.json (Rio Tinto, Almaden, Las Medulas) "
+           "the geography deposit catalogue (Rio Tinto, Almaden, Las Medulas) "
            "were worked for centuries; 150 years is a round order-of-"
            "magnitude figure for how long a deposit sustains its derived "
            "annual quantity before running out, used only to give "
@@ -465,7 +464,7 @@ SHAFT_CROSS_SECTION_SQUARE_METRES = declare(
 SHAFT_DEPTH_METRES_SHALLOW_VEIN = declare(
     "SHAFT_DEPTH_METRES_SHALLOW_VEIN", 30.0, kind="temporary_heuristic",
     unit="metres", source=None, confidence="D",
-    why="deposits.json gives a depth class, not a depth; this is the depth "
+    why="the deposit catalogue gives a depth class, not a depth; this is the depth "
         "assumed for the shallow class until the data carries metres.")
 
 SHAFT_DEPTH_METRES_DEEP_VEIN = declare(
@@ -930,7 +929,7 @@ _GRADE_DECLARED: set = set()
 
 def _declare_grade(deposit_entry: Dict[str, Any], metal: str) -> float:
     """Run every deposit's ore_grade_kg_per_tonne through declare(), with
-    the provenance data/world/deposits.json already carries per entry -
+    the provenance the geography deposit catalogue already carries per entry -
     see that file's own _doc for why the grade itself lives in JSON (a
     table of ~20 deposits) while still going through the same provenance
     registry every other physical fact in this project does.
@@ -950,7 +949,7 @@ def _declare_grade(deposit_entry: Dict[str, Any], metal: str) -> float:
         confidence=confidence,
         why="This deposit's ore grade, the dominant term in its extraction "
             "cost (see extraction_cost_labour_hours_per_kg) - a physical "
-            "fact about the rock, read from data/world/deposits.json's "
+            "fact about the rock, read from the geography deposit catalogue's "
             "%r entry and never derived from what %s sells for."
             % (deposit_entry["name"], metal))
 
@@ -1011,7 +1010,19 @@ def _declare_explicit_share(deposit_entry: Dict[str, Any], metal: str) -> float:
         why="Stands in for a located production figure per deposit: the "
             "share of the %s output of the Roman world worked at this "
             "site, normalised so the deposits of one metal sum to about "
-            "1.0 (see data/world/deposits.json's own _doc)." % metal)
+            "1.0 (see the geography deposit catalogue's own _doc)." % metal)
+
+
+def load_deposit_data() -> Dict[str, Any]:
+    """{"deposits": {metal: [entry]}}: the geography catalogue's named deposits that carry a share of the
+    empire's output, in the catalogue's order (metals by first appearance), each entry's `name` the catalogue id."""
+    data: Dict[str, Any] = {"deposits": {}}
+    for row in deposit_records():
+        if row.get("resource") in METALS and "share_of_empire_output" in row:
+            data["deposits"].setdefault(row["resource"], []).append(dict(row, name=row["id"]))
+    for metal in METALS:
+        data["deposits"].setdefault(metal, [])
+    return data
 
 
 def empire_output_net_of_byproducts_tonnes_per_year(
@@ -1025,7 +1036,7 @@ def empire_output_net_of_byproducts_tonnes_per_year(
     no grade."""
     resources = resources if resources is not None else _load_json(RESOURCES_FILE)
     deposits_data = (deposits_data if deposits_data is not None
-                      else _load_json(DEPOSITS_FILE))
+                     else load_deposit_data())
     total = resources["empire_output_100ad"][metal]["t_per_yr"]
     for other_metal, entries in deposits_data["deposits"].items():
         if other_metal == metal:
@@ -1058,7 +1069,7 @@ def load_deposits(
         raise ValueError("unknown metal %r; must be one of %s" % (metal, METALS))
     resources = resources if resources is not None else _load_json(RESOURCES_FILE)
     deposits_data = (deposits_data if deposits_data is not None
-                      else _load_json(DEPOSITS_FILE))
+                     else load_deposit_data())
 
     empire_total_tonnes = empire_output_net_of_byproducts_tonnes_per_year(
         metal, resources, deposits_data)

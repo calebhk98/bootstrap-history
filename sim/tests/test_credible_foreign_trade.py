@@ -11,10 +11,11 @@ from .harness import *  # noqa: F401,F403
 
 from sim.engine import foreign_economies as _foreign_module
 from sim.engine import foreign_capacity as _capacity
-from sim.engine.data import haversine_km, load_civ, load_geography, starting_schedule
+from sim.engine.data import load_civ, load_geography, starting_schedule
 from sim.engine.project_materials import tonnes_per_unit
 from sim.world import market, trade_between
-from sim.geography import sea_freight, trade_routes, transport
+from sim.geography import api as geography_api
+from sim.geography import sea_freight, transport
 
 PARTNER = "han_china_100ad"
 
@@ -36,59 +37,37 @@ check("a sailing hull needs far fewer hours per tonne-km than an ox cart",
 check("...and the hull's distance per day follows its voyage speed",
       abs(sea.distance_per_day_km - sea_freight.ground_km_per_day()) < 1e-9, None)
 
-# --- the route graph, on a stated map.
-_REGIONS = {
-    "a": {"lat": 0.0, "lon": 0.0, "coastal": True, "route_difficulty": 1.0},
-    "b": {"lat": 0.0, "lon": 10.0, "coastal": True, "route_difficulty": 1.0},
-    "c": {"lat": 0.0, "lon": 20.0, "coastal": True, "route_difficulty": 1.0},
-    "inland": {"lat": 5.0, "lon": 10.0, "coastal": False, "route_difficulty": 1.0},
-}
-_NETWORK = {
-    "modes": {"sea": {"requires_node": "sail", "needs_ports": True},
-              "cart": {"requires_node": "wheel", "needs_ports": False}},
-    "links": [{"from": "a", "to": "b", "modes": ["sea", "cart"]},
-              {"from": "b", "to": "c", "modes": ["sea", "cart"], "requires_node": "monsoon"},
-              {"from": "a", "to": "inland", "modes": ["sea", "cart"]},
-              {"from": "inland", "to": "c", "modes": ["cart"]}],
-}
-_COSTS = {"sea": 0.03, "cart": 1.0}
+# --- routes over tiles, from the geography contract.
+_ROME_TILES = geography_api.tiles_of_regions(load_civ("rome_100ad")["home_regions"])
+_HAN_TILES = geography_api.tiles_of_regions(load_civ(PARTNER)["home_regions"])
+_COSTS = {"sail": 0.03, "cart": 1.0}
+_SAIL_NODE = "sea_square_sail"
+_CART_NODE = "lnd_two_wheel_cart"
 
 
-def _route(ends_hold, modes=None, origins=("a",), destinations=("c",), costs=_COSTS):
+def _tile_route(ends_hold, costs=_COSTS, origins=_HAN_TILES, destinations=_ROME_TILES):
     held = [frozenset(end) for end in ends_hold]
-    return trade_routes.cheapest_route(
-        _NETWORK, _REGIONS, origins, destinations,
-        trade_routes.usable_modes(_NETWORK, held) if modes is None else modes,
-        frozenset().union(*held), haversine_km, costs)
+    modes = [mode for mode in geography_api.usable_modes(held) if mode in costs]
+    return geography_api.route(origins, destinations, modes, mode_costs=costs,
+                               held_nodes=frozenset().union(*held))
 
 
-route = _route([{"sail", "wheel"}, {"sail", "wheel", "monsoon"}])
-check("the cheapest route takes the sea where both ends can sail",
-      route is not None and [leg.mode for leg in route.legs] == ["sea", "sea"],
-      route and route.describe())
-check("...and keeps its legs in order from origin to destination",
-      [(leg.origin, leg.destination) for leg in route.legs] == [("a", "b"), ("b", "c")], None)
-check("a leg's extra node held by one end is enough",
-      route is not None, None)
-check("without the node on either end that leg cannot be sailed; the cart route serves",
-      [leg.mode for leg in _route([{"sail", "wheel"}, {"sail", "wheel"}]).legs]
-      == ["cart", "cart"], None)
-check("a mode only one end holds is not used",
-      [leg.mode for leg in _route([{"sail", "wheel", "monsoon"}, {"wheel"}]).legs]
-      == ["cart", "cart"], None)
-check("a route is None when no usable mode joins the regions",
-      _route([{"sail"}, {"sail"}], origins=("a",), destinations=("inland",)) is None, None)
-check("a sea leg needs ports at both ends",
-      all(leg.mode != "sea" for leg in _route([{"sail", "wheel", "monsoon"}] * 2,
-                                               destinations=("c",)).legs
-          if "inland" in (leg.origin, leg.destination)), None)
+both_sail = {_SAIL_NODE, _CART_NODE}
+route = _tile_route([both_sail, both_sail])
+check("Rome to Han China has a route over tiles with sail legs and a finite cost",
+      route is not None and route["cost_per_tonne"] < float("inf")
+      and any(leg["mode"] == "sail" for leg in route["legs"]), route and route["cost_per_tonne"])
+check("...its legs run in order from origin to destination",
+      route["legs"][0]["from"] in _HAN_TILES and route["legs"][-1]["to"] in _ROME_TILES
+      and all(first["to"] == second["from"] for first, second in zip(route["legs"], route["legs"][1:])), None)
 check("the route's cost is the sum of its legs'",
-      abs(route.cost_per_tonne - sum(leg.cost_per_tonne for leg in route.legs)) < 1e-9, None)
-check("a dear sea can make the overland chain cheaper",
-      all(leg.mode == "cart" for leg in _route(
-          [{"sail", "wheel", "monsoon"}] * 2, costs={"sea": 50.0, "cart": 1.0}).legs), None)
-check("a shared region needs no legs",
-      _route([{"sail"}, {"sail"}], origins=("a",), destinations=("a",)).legs == (), None)
+      abs(route["cost_per_tonne"] - sum(leg["cost_per_tonne"] for leg in route["legs"])) < 1e-6, None)
+check("a mode only one end holds is not used",
+      "sail" not in geography_api.usable_modes([both_sail, {_CART_NODE}]), None)
+check("a partner with no mode the map can carry between them has no route",
+      _tile_route([set(), set()], costs={"sail": 0.03, "cart": 1.0}) is None, None)
+check("a shared tile needs no legs",
+      _tile_route([both_sail, both_sail], origins=_ROME_TILES, destinations=_ROME_TILES)["legs"] == [], None)
 
 # --- Rome and Han on the shipped map.
 s = rome_with_partner()
@@ -96,13 +75,14 @@ facts = s._foreign_economy_facts(PARTNER)
 route = facts["route"]
 check("the route to the partner is a chain of legs on the map",
       route is not None and route.legs and all(
-          leg.origin in s.geography.regions and leg.destination in s.geography.regions for leg in route.legs),
+          leg.origin in geography_api.tile_ids() and leg.destination in geography_api.tile_ids()
+          for leg in route.legs),
       route and route.describe())
 check("...joining its regions to this society's",
-      route.legs[0].origin in load_civ(PARTNER)["home_regions"]
-      and route.legs[-1].destination in s.civ["home_regions"], route.describe())
+      route.legs[0].origin in _HAN_TILES and route.legs[-1].destination in _ROME_TILES,
+      route.describe())
 check("...by sea, which both can sail, rather than the whole way by cart",
-      any(leg.mode == "sea" for leg in route.legs), route.describe())
+      any(leg.mode == "sail" for leg in route.legs), route.describe())
 centroid_cart_freight = (s._freight_mode_costs()["cart"] * route.distance_km)
 check("freight over the chosen route is far below hauling the same distance by cart",
       facts["freight_per_tonne"] < 0.2 * centroid_cart_freight,
@@ -115,7 +95,7 @@ no_sea = dict(load_civ(PARTNER),
                               if node != "sea_square_sail"])
 overland = s._foreign_route(no_sea)
 check("a partner that cannot sail is reached overland, and dearly",
-      overland is not None and all(leg.mode != "sea" for leg in overland.legs)
+      overland is not None and all(leg.mode != "sail" for leg in overland.legs)
       and overland.cost_per_tonne > 5 * route.cost_per_tonne,
       overland and overland.describe())
 
@@ -223,14 +203,8 @@ check("a commodity with a sourced output table is eligible",
       generic._output_is_sourced("iron"), None)
 
 # --- the shipped data.
-_network = trade_routes.load_network()
-_geography = load_geography()["regions"]
-for _link in _network["links"]:
-    check("a link joins regions geography.json has: %s - %s" % (_link["from"], _link["to"]),
-          _link["from"] in _geography and _link["to"] in _geography
-          and set(_link["modes"]) <= set(_network["modes"]), None)
-for _mode, _rule in _network["modes"].items():
-    check("a freight mode's node is in the tree: " + _mode, _rule["requires_node"] in NODES, None)
+check("every mode the engine prices is one the map knows and the tree can unlock",
+      set(s._freight_mode_costs()) <= set(geography_api.usable_modes([set(NODES)])), None)
 check("the shipped data still leaves foreign economies to a decision by measurement",
       all(isinstance(record.get("enabled", False), bool)
           for record in _foreign_module.foreign_economy_records()), None)

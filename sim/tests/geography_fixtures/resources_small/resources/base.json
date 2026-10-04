@@ -1,0 +1,16 @@
+{"entries": [
+ {"id": "gold", "mechanism": "mineral_deposit", "unit": "kg", "grade_basis": true, "unit_factors": {"tonnes_contained": 1000.0}, "crustal_abundance_ppm": 0.004,
+  "deposit_types": [
+   {"id": "vein", "deposits_per_million_km2": 20, "tonnage_lognormal": {"median_tonnes": 100000, "sigma": 1.0},
+    "grade_lognormal": {"median_kg_per_tonne": 0.005, "sigma": 0.3}, "depth_class": "shallow_vein"},
+   {"id": "giant", "deposits_per_million_km2": 1, "provincial_only": true, "tonnage_lognormal": {"median_tonnes": 100000000, "sigma": 1.0},
+    "grade_lognormal": {"median_kg_per_tonne": 0.003, "sigma": 0.3}, "depth_class": "deep_vein"}]},
+ {"id": "coal", "mechanism": "mineral_deposit", "unit": "tonnes",
+  "deposit_types": [
+   {"id": "seam", "deposits_per_million_km2": 40, "small_scale": true, "tonnage_lognormal": {"median_tonnes": 300000, "sigma": 1.5},
+    "depth_class": "surface", "layer_weights": [{"layer": "koppen_group", "weights": {"B": 0.0, "C": 1.0, "D": 1.0}, "default": 0.0}]}]},
+ {"id": "timber", "mechanism": "biotic_stand", "unit": "m3_stemwood",
+  "envelope": [{"layer": "koppen_group", "in": ["C", "D"]}],
+  "stand": {"stock_per_hectare_at_full_suitability": 100.0, "regrowth_per_hectare_per_year_at_full_suitability": 4.0}},
+ {"id": "goat", "mechanism": "herd_animal", "unit": "head"}
+]}

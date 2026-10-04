@@ -1,0 +1,1 @@
+{"_doc": "Six tiles of ../small_map with relief and a river along the top row; route data comes from the real map data folders (see test_geography_routes.py).", "id": "routes_small", "tiles": {"file": "../small_map/base_tiles.json", "path": []}}

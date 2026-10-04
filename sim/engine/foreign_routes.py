@@ -1,5 +1,5 @@
 """Freight between this society and another economy: the cheapest route over
-the map's links, each leg by the cheapest mode both economies can use.
+the map's tiles (`sim.geography.api.route`), each leg by a mode both economies can use.
 
 Mode costs come from the physical models (`sim/geography/transport.py` for cart,
 pack string and towed barge; `sim/geography/sea_freight.py` for a sailing hull),
@@ -9,13 +9,17 @@ The legs of the chosen route are kept, with their travel days, so a player can
 see where goods travel.
 """
 import functools
+from dataclasses import dataclass
+from typing import Tuple
 
 from sim.constants import declare
 from sim.world import trader_response
-from sim.geography.api import cargo_cost, freight_cost, sea_freight, trade_routes
+from sim.geography.api import cargo_cost, freight_cost, sea_freight, tiles_of_regions
+from sim.geography.api import route as route_over_tiles
+from sim.geography.api import usable_modes as usable_route_modes
 from sim.geography.api import transport as freight_physics
 
-from .data import haversine_km, load_civ
+from .data import load_civ
 
 CARAVAN_STRING_SIZE = declare(
     "CARAVAN_STRING_SIZE", 10.0, kind="engineering_estimate",
@@ -27,8 +31,48 @@ CARAVAN_STRING_SIZE = declare(
         "the driver hours per tonne-km of a caravan.")
 
 SEA_CREW_WAGE_TRADE = "sailor"
+SEA_MODE = "sail"
 # Vehicles and hulls are priced as their timber (their iron fittings are left out).
 FREIGHT_VEHICLE_MATERIAL = "wood_kg"
+
+
+@dataclass(frozen=True)
+class Leg:
+    origin: str
+    destination: str
+    mode: str
+    distance_km: float
+    cost_per_tonne: float
+    travel_days: float = 0.0
+
+
+@dataclass(frozen=True)
+class Route:
+    """A haul over tiles: legs in order from the partner's tiles to this society's."""
+    legs: Tuple[Leg, ...]
+
+    @property
+    def cost_per_tonne(self):
+        return sum(leg.cost_per_tonne for leg in self.legs)
+
+    @property
+    def distance_km(self):
+        return sum(leg.distance_km for leg in self.legs)
+
+    @property
+    def travel_days(self):
+        return sum(leg.travel_days for leg in self.legs)
+
+    def describe(self):
+        return " > ".join("%s -%s-> %s" % (leg.origin, leg.mode, leg.destination) for leg in self.legs)
+
+
+def route_from_geography(found):
+    """A `Route` from the geography contract's answer (its handling days count as travel)."""
+    return Route(tuple(
+        Leg(leg["from"], leg["to"], leg["mode"], leg["km"], leg["cost_per_tonne"],
+            leg["days"] + leg.get("handling_days", 0.0))
+        for leg in found["legs"]))
 
 
 @functools.lru_cache(maxsize=None)
@@ -60,14 +104,14 @@ class ForeignRoutesMixin:
             "cart": (self._land_freight_physical_inputs(),
                      freight_cost.CarrierPrices(freight_physics.CART.self_mass_kg * vehicle_wood,
                                                 team * ox_price), land_days, 0.0),
-            "caravan": (_caravan_inputs(),
+            "pack": (_caravan_inputs(),
                         freight_cost.CarrierPrices(
                             string * freight_physics.PACK_SADDLE.self_mass_kg * vehicle_wood,
                             string * mule_price), land_days, 0.0),
-            "river": (_river_inputs(),
+            "river_boat": (_river_inputs(),
                       freight_cost.CarrierPrices(freight_physics.BARGE.self_mass_kg * vehicle_wood,
                                                  2.0 * ox_price), land_days, 0.0),
-            "sea": (hull_inputs, freight_cost.CarrierPrices(hull_kg * vehicle_wood),
+            SEA_MODE: (hull_inputs, freight_cost.CarrierPrices(hull_kg * vehicle_wood),
                     sea_freight.SAILING_DAYS_PER_YEAR, freight_cost.HULL_LOSS_PER_THOUSAND_KM)}
 
     def _freight_mode_costs(self, imbalance=1.0, modes=None):
@@ -79,15 +123,10 @@ class ForeignRoutesMixin:
         sea_wage = self.labour.wage_per_hour(SEA_CREW_WAGE_TRADE)
         rate = self.market_rate()
         return {mode: freight_cost.freight_money_per_tonne_km(
-                    inputs, feed_price, sea_wage if mode == "sea" else land_wage, prices, rate,
+                    inputs, feed_price, sea_wage if mode == SEA_MODE else land_wage, prices, rate,
                     working_days, imbalance, loss)
                 for mode, (inputs, prices, working_days, loss) in self._carrier_models().items()
                 if modes is None or mode in modes}
-
-    def _freight_days_per_km(self):
-        """{mode: days of travel per km over level ground}."""
-        return {mode: 1.0 / inputs.distance_per_day_km
-                for mode, (inputs, _prices, _days, _loss) in self._carrier_models().items()}
 
     def land_freight_money_per_tonne_km(self, imbalance=1.0):
         """Home money per tonne-km for a domestic cart haul: the foreign routes' freight function,
@@ -115,26 +154,26 @@ class ForeignRoutesMixin:
 
     def _freight_handling_costs(self):
         """{mode: home money per tonne} charged once per leg of that mode."""
-        return {"sea": (sea_freight.PORT_HANDLING_HOURS_PER_TONNE
+        return {SEA_MODE: (sea_freight.PORT_HANDLING_HOURS_PER_TONNE
                         * self.labour.wage_per_hour(self.FREIGHT_DRIVER_WAGE_TRADE))}
 
     def _foreign_route(self, civilization, imbalance=None):
-        """The cheapest `trade_routes.Route` from the foreign economy's home
-        regions to this society's, or None when the map does not join them.
-        `imbalance` is how one-sided the flows are (last year's, by default)."""
-        network = trade_routes.load_network()
+        """The cheapest `Route` from the foreign economy's home tiles to this society's, or None
+        when no mode both can use joins them. `imbalance` is how one-sided the flows are
+        (last year's, by default)."""
         civilization_record = civilization if isinstance(civilization, dict) else load_civ(civilization)
         foreign_techs = frozenset(civilization_record.get("starting_techs") or ())
         home_techs = frozenset(self.state.projects.done)
         if imbalance is None:
             imbalance = self._foreign_flow_imbalance(civilization_record.get("id"))
-        return trade_routes.cheapest_route(
-            network, self.geography.regions,
-            civilization_record.get("home_regions") or [], self.civ.get("home_regions") or [],
-            trade_routes.usable_modes(network, (home_techs, foreign_techs)),
-            home_techs | foreign_techs, haversine_km,
-            self._freight_mode_costs(imbalance), self._freight_handling_costs(),
-            days_per_km=self._freight_days_per_km())
+        mode_costs = self._freight_mode_costs(imbalance)
+        modes = [mode for mode in usable_route_modes((home_techs, foreign_techs)) if mode in mode_costs]
+        found = route_over_tiles(
+            tiles_of_regions(civilization_record.get("home_regions") or []),
+            tiles_of_regions(self.civ.get("home_regions") or []), modes,
+            mode_costs=mode_costs, handling_costs=self._freight_handling_costs(),
+            held_nodes=home_techs | foreign_techs)
+        return None if found is None else route_from_geography(found)
 
     def _route_freight_per_tonne(self, civilization, imbalance=None):
         """Home money to haul a tonne over the cheapest route; infinite when

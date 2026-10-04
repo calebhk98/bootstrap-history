@@ -5,7 +5,7 @@ adapter, sim/engine/geography_port.py) and holds the regions, home centroid and 
 computes from the geography file.
 """
 
-from typing import Any, cast, Dict, NotRequired, Tuple, TypedDict
+from typing import Any, Dict, NotRequired, Tuple, TypedDict
 
 from sim.geography.distance import haversine_km
 
@@ -13,25 +13,7 @@ from sim.geography.distance import haversine_km
 JSONDict = Dict[str, Any]
 
 
-class MineralShares(TypedDict):
-    """One region's rough share of each mineral's total output
-    (geography.json's per-region `minerals` block). Fixed at exactly the
-    seven minerals this simulation ever computes a `mineral_scale` for -
-    see core.py's own `("iron", "coal", "copper", "lead", "tin", "silver",
-    "saltpetre")` tuple, the only place that set is spelled out, and
-    `_compute_mineral_scale` below, the only reader of this dict. Marked
-    NotRequired rather than required outright because `_compute_mineral_scale`
-    already reads every one of them through `.get(material, 0.0)`, i.e. the
-    code was already written to tolerate a region omitting one - even
-    though every region in data/world/geography.json today happens to
-    state all seven explicitly."""
-    iron: NotRequired[float]
-    coal: NotRequired[float]
-    copper: NotRequired[float]
-    lead: NotRequired[float]
-    tin: NotRequired[float]
-    silver: NotRequired[float]
-    saltpetre: NotRequired[float]
+MineralShares = Dict[str, float]  # one region's rough share of each mineral's output, by mineral id
 
 
 class RegionRecord(TypedDict):
@@ -73,9 +55,8 @@ class Geography:
         homes = [region_id for region_id in (self._world.civ.get("home_regions") or []) if region_id in self._regions]
         if not homes:
             # A civ file with no valid home_regions would otherwise crash
-            # region_reach for everyone; falling back to Italy or to
-            # whatever region exists keeps this from being a hard wall.
-            homes = ["italia"] if "italia" in self._regions else list(self._regions)[:1]
+            # region_reach for everyone; the first region keeps it from being a hard wall.
+            homes = sorted(self._regions)[:1]
         lat = sum(self._regions[region_id]["lat"] for region_id in homes) / len(homes)
         lon = sum(self._regions[region_id]["lon"] for region_id in homes) / len(homes)
         return lat, lon
@@ -254,15 +235,8 @@ class Geography:
         home = set(self._world.civ.get("home_regions") or [])
         total = 0.0
         for rid, reg in self._regions.items():
-            # MineralShares's own fields are typed float, but looking one
-            # up by a variable key (`material` is not a string literal
-            # mypy can match against a specific field) only lets mypy infer
-            # `object` for the result, not `float`, even though every
-            # field really is one - see MineralShares's own docstring.
-            # `cast` here changes nothing at runtime, same as `float()`
-            # itself already did on the line below before this pass.
             minerals: MineralShares = reg.get("minerals") or {}
-            share = float(cast(float, minerals.get(material, 0.0)))
+            share = float(minerals.get(material, 0.0))
             if share <= 0:
                 continue
             if rid in home:
@@ -299,9 +273,9 @@ class Geography:
         # can you buy" must scale with where the deposits ARE, not with how
         # many people this civilisation has. See _compute_mineral_scale(). It depends only on
         # home_regions and reach, neither of which change during a run, so it is computed once.
-        self._mineral_scale = {material: self._compute_mineral_scale(material)
-                                for material in ("iron", "coal", "copper", "lead",
-                                          "tin", "silver", "saltpetre")}
+        # Every mineral some region's table names; others fall back to population scale.
+        minerals = sorted({material for record in self._regions.values() for material in (record.get("minerals") or {})})
+        self._mineral_scale = {material: self._compute_mineral_scale(material) for material in minerals}
 
     @property
     def data(self) -> JSONDict:

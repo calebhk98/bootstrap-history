@@ -325,3 +325,19 @@ Old issue numbers (in commit messages, reports and history) and the number each 
 663 -> 353  goods-only-a-partner-makes-open-at-the-ceiling-price
 675 -> 354  the-founders-takeoff-needs-costs-that-lag-the-economy-index
 690 -> 355  engine-code-reads-a-civilisation-from-disk-by-id
+
+## 2026-10-04
+
+The geography branch and the multiplayer branch both filed 401-407; the geography ones moved up.
+
+401 -> 408  economy-keeps-its-own-tile-freight-graph
+402 -> 409  economy-setup-opens-the-geography-file-by-path
+403 -> 410  the-engine-does-not-pass-active-mods-to-the-map
+404 -> 411  food-potential-gaps-shelf-cold-pasture-slope-and-competition
+405 -> 412  deposits-have-no-geology-layer
+406 -> 413  sea-routes-have-no-land-mask-and-few-lanes
+407 -> 414  food-potential-is-not-read-by-demography-or-settlement
+408 -> 415  mining-does-not-read-endowment-or-prospecting
+409 -> 416  reach-and-built-roads-are-not-read-by-the-engine
+410 -> 417  map-checks-and-heuristics-are-not-in-validate-or-the-burndown
+411 -> 418  the-fast-suite-fails-on-main

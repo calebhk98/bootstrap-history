@@ -576,7 +576,7 @@ class PolymetallicByproductTests(unittest.TestCase):
         self.assertEqual(deposits.byproduct_quantities_tonnes_per_year(deposit), {})
 
     def test_britannia_lead_carries_a_silver_byproduct(self):
-        # This module's own worked example - see data/world/deposits.json's
+        # This module's own worked example - see the geography deposit catalogue's
         # britannia_lead entry and the module docstring's POLYMETALLIC
         # DEPOSITS section for why this one and not a new load_deposits
         # ('silver') entry.
@@ -656,7 +656,7 @@ class PolymetallicByproductTests(unittest.TestCase):
 
 
 class LoadDepositsUsesGeographyAndResourcesTests(unittest.TestCase):
-    """load_deposits joins data/world/deposits.json's physical facts with
+    """load_deposits joins the geography deposit catalogue's physical facts with
     data/world/geography.json's regional shares and data/world/
     resources.json's empire totals - this checks that join, not the
     numbers each file independently carries (which belong to those files'
@@ -694,7 +694,7 @@ class LoadDepositsUsesGeographyAndResourcesTests(unittest.TestCase):
     def test_explicit_share_metals_sum_to_the_full_empire_output(self):
         # gold, mercury: this file's own explicit share_of_empire_output
         # entries are written to sum to exactly 1.0 - see
-        # data/world/deposits.json's gold and mercury entries.
+        # the geography deposit catalogue's gold and mercury entries.
         resources = deposits._load_json(deposits.RESOURCES_FILE)
         for metal in ("gold", "mercury"):
             total = sum(deposit.quantity_tonnes_per_year
@@ -707,7 +707,7 @@ class LoadDepositsUsesGeographyAndResourcesTests(unittest.TestCase):
         # southeast_asia with a real tin share (0.3) that the file's own
         # note says is ADDITIONAL to Rome's output, not a slice of it -
         # load_deposits must not pull either in, since data/world/
-        # deposits.json names no china or southeast_asia deposit at all
+        # the catalogue names no china or southeast_asia deposit at all
         # and resources.json's empire_output_100ad is Rome's own figure.
         with open(os.path.join(_REPO_ROOT, "data", "world", "geography.json")) as handle:
             land_tiles = json.load(handle)["land_tiles"]
@@ -729,13 +729,13 @@ class NoPriceDataTests(unittest.TestCase):
     """
 
     def test_module_never_opens_the_price_file(self):
-        # deposits.py's docstring and data/world/deposits.json's own _doc
+        # deposits.py's docstring and the geography deposit catalogue's own _doc
         # both TALK ABOUT data/prices.json in prose, to explain why they
         # never read it - so a literal substring ban on "prices.json"
         # would fail on the very sentences documenting this discipline.
         # What actually matters is that the module never OPENS that file
         # or reads its wage/purchase-price tables, which is what this
-        # checks: the only two _FILE constants this module defines, and
+        # checks: the only _FILE constant this module defines, and
         # the only paths handed to _load_json / open() anywhere in it.
         path = os.path.join(_REPO_ROOT, "sim", "world", "deposits.py")
         with open(path) as handle:
@@ -747,9 +747,9 @@ class NoPriceDataTests(unittest.TestCase):
                 if node.value.endswith(".json"):
                     opened_paths.add(node.value)
         self.assertEqual(
-            opened_paths, {"resources.json", "deposits.json"},
+            opened_paths, {"resources.json"},
             "sim/world/deposits.py references a JSON filename other than "
-            "the two data files it is meant to read: %s" % opened_paths)
+            "the data file it is meant to read: %s" % opened_paths)
         self.assertNotIn("purchase_prices_denarii", source)
         self.assertNotIn("wage_rates_denarii_per_hour", source)
 
@@ -808,7 +808,7 @@ class StandaloneImportTests(unittest.TestCase):
 
 class CalibrationReportTests(unittest.TestCase):
     """The derived price at the margin, reported in labour hours per kg and
-    never fed back into deposits.py or data/world/deposits.json."""
+    never fed back into deposits.py or the geography deposit catalogue."""
 
     def setUp(self):
         # Instance-level setUp, not setUpClass: sim/tests/__main__.py's

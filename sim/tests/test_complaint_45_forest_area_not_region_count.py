@@ -26,8 +26,8 @@ def _fresh_sim():
 # resolve to - not a count of how many regions there are, and not the region
 # record's own coarse land.land_area_km2.
 def _tile_area(sim_under_test, region_ids):
-    tiles = sim_under_test.geo["land_tiles"]["tiles"]
-    region_to_tiles = sim_under_test.geo["land_tiles"]["region_to_tiles"]
+    tiles = sim_under_test.geography.data["land_tiles"]["tiles"]
+    region_to_tiles = sim_under_test.geography.data["land_tiles"]["region_to_tiles"]
     return sum(tiles[tile_id]["land_area_km2"]
                for region_id in region_ids for tile_id in region_to_tiles[region_id])
 
