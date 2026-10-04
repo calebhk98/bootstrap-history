@@ -51,3 +51,7 @@ DRAWN_FROM_UNSKILLED_POOL = frozenset({"soldier"})
 
 # Trades that need letters but not reading as their practice, so literacy does not cap them.
 LETTERED_BUT_NOT_LITERATE = frozenset({"merchant"})
+
+# The trade whose hours the farm-labour logic owns (its recipe hours are kept out of the non-farm
+# split). It is the fallback trade of the shipped registry; workforce_spinup.py has no registry to ask.
+FARM_TRADE = "labourer"

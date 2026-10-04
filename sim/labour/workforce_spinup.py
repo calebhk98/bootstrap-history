@@ -25,11 +25,9 @@ from typing import Any, Dict, Iterable, Mapping, Optional, Set
 from sim.constants import declare
 from sim.engine.solve_prices_core import techniques_available_to
 from sim.world import demand, need_demand
-from sim.labour import labour_market
+from sim.labour import labour_market, legacy_trade_defaults
 
-# Trade whose hours the farm-labour logic owns; its recipe hours are not part
-# of the non-farm split.
-FARM_TRADE = "labourer"
+FARM_TRADE = legacy_trade_defaults.FARM_TRADE
 
 _REPOSITORY_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DEFAULT_CACHE_DIRECTORY = os.path.join(_REPOSITORY_ROOT, ".cache", "workforce_spinup")
