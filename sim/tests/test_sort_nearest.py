@@ -45,6 +45,7 @@ check("...and says nothing of the kind with fog off, where the goal-aware "
 s_fd = S.Sim(NODES, ORDER, random.Random(1), events=False, manual=True,
              civ=S.load_civ("rome_100ad"), cfg={"immortal": False, "start_capital": 1e9})
 s_fd.goal, s_fd.done_year = GOAL, {}
+s_fd.life_left = 3.0  # dies in the first years; the step must stop there, not run on
 s_fd.end_year = s_fd.cfg["start_year"] + 200
 _step_fd = S._agent_dispatch(s_fd, NODES, {"cmd": "step", "years": 150})
 check("the founder's death gets a field of its own in the step that carries "
@@ -95,8 +96,8 @@ _ru = S._agent_dispatch(s_ru, NODES, {"cmd": "rush", "force": True})
 _s_die = sim(capital=1000000.0, events=True)
 _s_die.cfg["immortal"] = False
 _s_die.life_left = 1.0
-for _ in range(6):
-    _s_die.step()
+for _ in range(3):  # the countdown first speaks on the third year without a director
+    _s_die._step_founder_mortality()
 check("the founder's death says what it means for the run, not only that it happened",
       any("THE FOUNDER DIES" in message and "no deputy" in message
           for _, message in _s_die.log),
@@ -253,8 +254,8 @@ check("...and says why it stopped rather than silently starting fewer",
 _s_att = sim(capital=10000000.0, events=False)
 run_it(_s_att, "workshop_first", "school_founded", "freedman_staff")
 _s_att.labour.hire("scholar", 8)
-for _ in range(12):
-    _s_att.step()
+for _ in range(12):  # the staff phase alone: attrition and its report live there
+    _s_att._step_staff()
 check("losing people to death and better offers is announced, not silent",
       any("lose" in message and "scholar" in message for _, message in _s_att.log),
       [message for _, message in _s_att.log if "lose" in message][:2])
