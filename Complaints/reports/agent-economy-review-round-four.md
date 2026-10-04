@@ -88,7 +88,7 @@ Follows `agent-economy-review-round-three.md`. Again only `sim/economy/`, new te
 | england, exit and location | 0.05-0.13 | 0.14-0.30 | 0.41 | 0 | ~6 |
 | england, tip | 0.12-0.15 | 0.40-0.49 | 0.37-0.38 | 0 | ~1500 |
 | norse, baseline | 0.12-0.19 | 0.32-1.35 | 0.27 | 0.001 | ~3500 |
-| norse, tip | 0.12-0.19 | 0.34-0.46 | 0.40-0.43 | 0.0001 | ~4e3-1.6e4 |
+| norse, tip | 0.12-0.19 | not re-measured | 0.40-0.43 | 0.0001 | ~4e3-1.6e4 |
 | rome, baseline | 0.07-0.08 | 0.36-0.39 | 0.16 | 0.009 | ~148 |
 | rome, tip | 0.05-0.07 | 0.29-0.30 | 0.23 | 0.0007-0.0009 | ~1300 |
 | mexica, baseline | 0.10 | n/a | 0.09 | 0.005 | ~1300 |
