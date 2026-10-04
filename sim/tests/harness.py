@@ -279,22 +279,62 @@ def check(name, passed, detail=""):
         FAILURES.append(name + " " + detail)
 
 
+_IN_PROCESS_LOCK = threading.Lock()
+
+
+def _main_in_process(argv, stdin_text):
+    """Run simulator.py's main() in this process with argv and stdin; (stdout, stderr, exit code).
+    Saves the cost of a fresh interpreter, imports and caches per call. Serialised, because it
+    swaps the process-wide sys.stdin/stdout/stderr and working directory."""
+    import io
+    import traceback
+    with _IN_PROCESS_LOCK:
+        saved = (sys.argv, sys.stdin, sys.stdout, sys.stderr, os.getcwd())
+        out, err = io.StringIO(), io.StringIO()
+        code = 0
+        try:
+            sys.argv = [os.path.join(HERE, "simulator.py")] + list(argv)
+            sys.stdin, sys.stdout, sys.stderr = io.StringIO(stdin_text), out, err
+            os.chdir(ROOT)
+            S.main()
+        except SystemExit as stop:
+            code = stop.code if isinstance(stop.code, int) else (0 if stop.code is None else 1)
+        except Exception:
+            err.write(traceback.format_exc())
+            code = 1
+        finally:
+            sys.argv, sys.stdin, sys.stdout, sys.stderr = saved[:4]
+            os.chdir(saved[4])
+        return out.getvalue(), err.getvalue(), code
+
+
+# Set to 1 to drive the protocol through a real subprocess, as before.
+_PROTO_SUBPROCESS = os.environ.get("SIM_TESTS_PROTO_SUBPROCESS") == "1"
+
+
 def proto(lines, civ="rome_100ad", kit=None, fog=False):
-    """Drive the real protocol in a real subprocess, as a player would."""
-    cmd = [sys.executable, os.path.join(HERE, "simulator.py"), "agent", "--civ", civ]
+    """Drive the real protocol (simulator.py agent) as a player would; in this process unless
+    SIM_TESTS_PROTO_SUBPROCESS=1."""
+    argv = ["agent", "--civ", civ]
     if kit:
-        cmd += ["--kit", kit]
+        argv += ["--kit", kit]
     if fog:
-        cmd += ["--fog"]
-    completed_process = subprocess.run(cmd, input="\n".join(json.dumps(command) for command in lines) + "\n",
-                       capture_output=True, text=True, timeout=300, cwd=ROOT)
+        argv += ["--fog"]
+    stdin_text = "\n".join(json.dumps(command) for command in lines) + "\n"
+    if _PROTO_SUBPROCESS:
+        completed_process = subprocess.run(
+            [sys.executable, os.path.join(HERE, "simulator.py")] + argv, input=stdin_text,
+            capture_output=True, text=True, timeout=300, cwd=ROOT)
+        stdout, returncode = completed_process.stdout, completed_process.returncode
+    else:
+        stdout, _stderr, returncode = _main_in_process(argv, stdin_text)
     parsed_lines = []
-    for line in completed_process.stdout.splitlines():
+    for line in stdout.splitlines():
         try:
             parsed_lines.append(json.loads(line))
         except ValueError:
             pass
-    return parsed_lines, completed_process.stdout, completed_process.returncode
+    return parsed_lines, stdout, returncode
 
 
 # ============================================================================
