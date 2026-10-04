@@ -1,6 +1,6 @@
 # Add deeper capital markets
 
-**Status:** partly - a loanable-funds market per civilisation is built (rate, premium, credit ceilings, the state borrows, interest shared among lenders); banks, bonds, equity, insurance and crises remain; next: 308 (firms raise capital), 307
+**Status:** partly - the agent economy has a pooled household-funded credit market; banks, deposits, bonds, equity, insurance and crises remain (design note: Complaints/reports/agent-economy-capital-markets.md)
 
 **Source:** playtest findings document, LATE-004. **Type:** Major
 roadmap-sized feature recommendation. Genuinely new; not currently named in
@@ -68,3 +68,7 @@ Every constant that is not derived is declared a `temporary_heuristic` (`RATE_EL
 Still open: firms raising capital on purpose (308), the state reserve that dominates supply (307), and everything in the original finding beyond a pooled loan market: banks and deposits, bonds, equity and joint-stock firms, insurance, investment funds, crises.
 
 Related: 332.
+
+## Agent economy (current)
+
+The first increment above describes the old engine market, which the game no longer runs. The agent economy has pooled credit with household lenders only (`sim/economy/credit.py`, `credit_claims.py`, `lending.py`); no banks, bonds, equity or insurance. What exists, what is missing, a first step (a bank as an ordinary agent, deposits and loans as claims in `credit_claims`) and the heuristics it needs are in `Complaints/reports/agent-economy-capital-markets.md`. Complaint 307 no longer applies there (the state offers no funds).
