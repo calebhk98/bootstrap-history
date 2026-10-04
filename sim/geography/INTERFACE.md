@@ -58,6 +58,7 @@ mode and `handling_costs` money per tonne per change of mode; without them costs
 | `resources_at(tile_id)` | `{resource_id: summary}` of what lies in or grows on a tile. |
 | `endowment(tile_id, resource_id)` | `{resource, unit, known, undiscovered_expected, total, expected_undiscovered_count, ceiling}` |
 | `known_deposits(resource_id)` | `[{id, name, tile_id, lat, lon, deposit_type, quantity, unit, depth_class, status}]` |
+| `deposit_records(resource_id=None)` | the catalogue rows as copied dicts with every field the data carries, for one resource or all, sorted by `order` (rows without one last) then id |
 | `prospect(tile_id, resource_id, effort, seed)` | `[deposit]` found with `effort` person-days: `{id, deposit_type, tile_id, lat, lon, ore_tonnes, contained, unit, depth_class, small_scale}`. The same seed and effort give the same finds, and more effort finds a superset. |
 | `supports(tile_id, resource_id)` | 0 to 1: how well a tile suits a living resource. |
 | `stand(tile_id, resource_id)` | Area, standing stock and regrowth of a living resource on a tile. |

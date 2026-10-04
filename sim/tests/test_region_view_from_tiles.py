@@ -82,8 +82,7 @@ class RegionViewTests(unittest.TestCase):
 class DepositsArePlacedByPositionTests(unittest.TestCase):
 
     def test_no_deposit_names_a_tile_id(self):
-        with open(deposits.DEPOSITS_FILE) as handle:
-            data = json.load(handle)
+        data = deposits.load_deposit_data()
         for metal, entries in data["deposits"].items():
             if metal.startswith("_"):
                 continue
@@ -111,8 +110,7 @@ class DepositsArePlacedByPositionTests(unittest.TestCase):
         original = geography["land_tiles"]["tiles"]
         renamed = {"renamed_%d" % index: tile
                    for index, tile in enumerate(reversed(list(original.values())))}
-        with open(deposits.DEPOSITS_FILE) as handle:
-            data = json.load(handle)
+        data = deposits.load_deposit_data()
         for entries in data["deposits"].values():
             if not isinstance(entries, list):
                 continue
@@ -125,8 +123,7 @@ class DepositsArePlacedByPositionTests(unittest.TestCase):
 
     def test_regional_totals_use_the_position_resolved_tile(self):
         geography = _geography()
-        with open(deposits.DEPOSITS_FILE) as handle:
-            data = json.load(handle)
+        data = deposits.load_deposit_data()
         tiles = geography["land_tiles"]["tiles"]
         other_tile = next(tile_id for tile_id in tiles if tiles[tile_id]["country_majority"] == "China")
         moved = copy.deepcopy(data)

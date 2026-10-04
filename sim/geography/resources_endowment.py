@@ -106,6 +106,8 @@ def crustal_ceiling(world_map: WorldMap, tile_id: str, resource_entry: Dict[str,
 def endowment(world_map: WorldMap, tile_id: str, resource_id: str) -> Dict[str, Any]:
     """{"unit", "known", "undiscovered_expected", "total", "expected_undiscovered_count", "ceiling"}.
 
+    "known" sums the catalogue quantities in the tile; a catalogue deposit with no endowment figure counts
+    as known for clustering and the hidden count but adds nothing to "known".
     For a biotic stand the answer is resources_biotic.stand instead.
     """
     resource_entry = resource(world_map, resource_id)
@@ -121,7 +123,7 @@ def endowment(world_map: WorldMap, tile_id: str, resource_id: str) -> Dict[str, 
     if ceiling is not None:
         undiscovered = min(undiscovered, ceiling)
     known = sum(deposit["quantity"] for deposit in known_deposits(world_map, resource_id)
-                if deposit["tile_id"] == tile_id)
+                if deposit["tile_id"] == tile_id and deposit["quantity"] is not None)
     return {"resource": resource_id, "unit": resource_entry["unit"], "known": known,
             "undiscovered_expected": undiscovered, "total": known + undiscovered,
             "expected_undiscovered_count": count, "ceiling": ceiling}

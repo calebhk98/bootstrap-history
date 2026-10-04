@@ -228,7 +228,10 @@
      "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
      "conf": "D"
     }
-   ]
+   ],
+   "unit_factors": {
+    "tonnes_contained": 1.0
+   }
   },
   {
    "id": "sulfur",
@@ -305,7 +308,78 @@
      "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
      "conf": "D"
     }
-   ]
+   ],
+   "unit_factors": {
+    "barrels": 0.159
+   }
+  },
+  {
+   "id": "potash",
+   "mechanism": "surface_stock",
+   "unit": "tonnes",
+   "deposit_types": [
+    {
+     "id": "evaporite_potash",
+     "deposits_per_million_km2": 0.3,
+     "tonnage_lognormal": {
+      "median_tonnes": 500000000.0,
+      "sigma": 1.5
+     },
+     "depth_class": "deep_vein",
+     "provincial_only": true,
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    },
+    {
+     "id": "evaporite_potash_polyhalite",
+     "deposits_per_million_km2": 0.1,
+     "tonnage_lognormal": {
+      "median_tonnes": 200000000.0,
+      "sigma": 1.4
+     },
+     "depth_class": "deep_vein",
+     "provincial_only": true,
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    }
+   ],
+   "unit_factors": {
+    "tonnes_ore": 1.0
+   }
+  },
+  {
+   "id": "phosphate",
+   "mechanism": "surface_stock",
+   "unit": "tonnes",
+   "deposit_types": [
+    {
+     "id": "sedimentary_phosphate",
+     "deposits_per_million_km2": 0.5,
+     "tonnage_lognormal": {
+      "median_tonnes": 300000000.0,
+      "sigma": 1.5
+     },
+     "depth_class": "shallow_vein",
+     "provincial_only": true,
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    },
+    {
+     "id": "island_phosphate",
+     "deposits_per_million_km2": 0.3,
+     "tonnage_lognormal": {
+      "median_tonnes": 20000000.0,
+      "sigma": 1.3
+     },
+     "depth_class": "surface",
+     "provincial_only": true,
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    }
+   ],
+   "unit_factors": {
+    "tonnes_ore": 1.0
+   }
   }
  ]
 }

@@ -136,7 +136,10 @@
      "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
      "conf": "D"
     }
-   ]
+   ],
+   "unit_factors": {
+    "tonnes_coal": 1.0
+   }
   },
   {
    "id": "oil",
@@ -212,7 +215,7 @@
    }
   },
   {
-   "id": "gas",
+   "id": "natural_gas",
    "mechanism": "mineral_deposit",
    "unit": "tonnes_oil_equivalent",
    "deposit_types": [
@@ -281,7 +284,8 @@
     }
    ],
    "unit_factors": {
-    "cubic_metres": 0.0009
+    "cubic_metres": 0.0009,
+    "cubic_metres_gas": 0.0009
    }
   }
  ]
