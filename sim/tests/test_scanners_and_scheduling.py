@@ -947,7 +947,7 @@ from sim.ui.protocol import _agent_portfolio as _APORT
 # full 150 hours against the WHOLE 2,000-hour pool; sc2_institution_
 # curriculum is priority #2, offered its 120 against what was left AFTER
 # the first one's share, 1,850.
-_s_alloc = sim(civ="rome_100ad", capital=5_000_000.0)
+_s_alloc = sim(civ="norse_900ad", capital=5_000_000.0)
 _s_alloc.done.update({"school_founded", "fin_university",
                       "sc2_institution_examination"})
 _s_alloc._done_changed()
@@ -1162,21 +1162,19 @@ check("'your hours', enriched with the allocator's own rank/pool figures "
 # it does not partly bank, it does not bank at all, which is exactly the
 # player's own assumption, so the warning below says so plainly rather than
 # hedging on a partial-banking case that does not exist.
-_s_idle = sim(civ="rome_100ad", capital=5_000_000.0)
-_s_idle.done.update({"school_founded", "fin_university",
-                     "sc2_institution_examination"})
-_s_idle._done_changed()
+# The allocator game above (same projects, already stepped one year) is reused here.
+_s_idle = _s_alloc
 _s_idle.end_year = _s_idle.cfg["start_year"] + _s_idle.cfg["horizon_years"]
-_s_idle.start_project("sc2_institution_curriculum")
-_s_idle.start_project("sc2_institution_doctorate")
-_s_idle.step()
-_year_before_multi_step = _s_idle.year
-# CAPTURED BEFORE THE STEP RUNS. Once step(years=5) executes it changes the
-# pool this year's idle-hours figure was about; the warning has to be
-# checked against what the pool was BEFORE any of the five years ran.
+# The single-year contrast runs first on this same idle game, so no second game
+# is built and stepped for it; the multi-year warning must still fire after it.
+_resp_1yr = S._agent_dispatch(_s_idle, NODES, {"cmd": "step", "years": 1})
+# CAPTURED BEFORE THE STEP RUNS: the multi-year step changes the pool this
+# idle-hours figure is about.
 _pre_idle_hours = max(0.0, _s_idle.labour.director_pool()
                       - _s_idle.labour.director_hours_committed())
-_resp_idle = S._agent_dispatch(_s_idle, NODES, {"cmd": "step", "years": 5})
+_year_before_multi_step = _s_idle.year
+# Two years are already "multi-year"; the warning is decided before any year runs.
+_resp_idle = S._agent_dispatch(_s_idle, NODES, {"cmd": "step", "years": 2})
 check("a multi-year step warns, up front, when this year alone already has "
       "substantial founder-hours going to waste and something is genuinely "
       "startable that could use them",
@@ -1194,15 +1192,6 @@ check("...and says plainly that hours do not bank AT ALL, checked against "
 check("it warns and proceeds - the years still actually run",
       _resp_idle.get("ok") is True and _resp_idle["year"] > _year_before_multi_step,
       _resp_idle.get("year"))
-_s_idle1 = sim(civ="rome_100ad", capital=5_000_000.0)
-_s_idle1.done.update({"school_founded", "fin_university",
-                      "sc2_institution_examination"})
-_s_idle1._done_changed()
-_s_idle1.end_year = _s_idle1.cfg["start_year"] + _s_idle1.cfg["horizon_years"]
-_s_idle1.start_project("sc2_institution_curriculum")
-_s_idle1.start_project("sc2_institution_doctorate")
-_s_idle1.step()
-_resp_1yr = S._agent_dispatch(_s_idle1, NODES, {"cmd": "step", "years": 1})
 check("a single-year step never carries this warning - it exists only to "
       "protect a MULTI-year request from spending the same idle year "
       "more than once unnoticed",

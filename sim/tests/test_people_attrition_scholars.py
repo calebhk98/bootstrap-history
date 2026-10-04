@@ -17,13 +17,18 @@ from .harness import *  # noqa: F401,F403
 # (`_stochastic_round`).
 # =============================================================================
 
-s = sim(capital=50_000_000.0)
+# A fraction shows in the first roll, so a few real years on a cheap civilisation
+# cover the whole step; the long attrition-only run calls the staff phase directly.
+s = sim(civ="norse_900ad", capital=50_000_000.0)
 s.policy["auto_hire"] = False
 s.employees["artisan"] = 500.0
 s.labour._resync_pools()
 _whole_every_year, _never_grew, _prev = True, True, 500.0
-for _ in range(150):
-    s.step()
+for _year in range(160):
+    if _year < 3:
+        s.step()
+    else:
+        s._step_staff()
     _cur = s.employees.get("artisan", 0.0)
     if abs(_cur - round(_cur)) > 1e-9:
         _whole_every_year = False
@@ -42,14 +47,14 @@ check("...and with auto_hire off and nobody hiring, the headcount only ever "
 # comment elsewhere in this file quotes - a per-person roll that happened to
 # be biased would quietly make every one of those comments false.
 _before_att, _after_att = 0.0, 0.0
+# The roll lives in the staff phase, so one game is rolled repeatedly from a fresh headcount.
+_s = sim(civ="norse_900ad", capital=5e7)
+_s.policy["auto_hire"] = False
 for _seed in range(1, 31):
-    _s = S.Sim(NODES, ORDER, random.Random(_seed), manual=True,
-               civ=S.load_civ("rome_100ad"), cfg={"start_capital": 5e7})
-    _s.goal, _s.done_year = GOAL, {}
-    _s.policy["auto_hire"] = False
+    _s.rng = random.Random(_seed)
     _s.employees["artisan"] = 2000.0
     _s.labour._resync_pools()
-    _s.step()
+    _s._step_staff()
     _before_att += 2000.0
     _after_att += _s.employees.get("artisan", 0.0)
 _att_rate = 1.0 - _after_att / _before_att
