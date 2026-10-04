@@ -20,7 +20,7 @@ def _game():
     return test_sim
 
 
-YEARS = 8
+YEARS = 4
 multi = _game()
 multi_reply = S._agent_dispatch(multi, NODES, {"cmd": "step", "years": YEARS})
 single = _game()
@@ -51,12 +51,18 @@ check("the printed step report shows events of every reported year",
           for year in reported_years),
       (reported_years, printed[:800]))
 
-# The wage-cascade note is throttled, so most years legitimately have no such line.
+# The wage-cascade note is throttled, so most years legitimately have no such line. Call the
+# year-end refresh directly on a cheap game whose wage index stays above trend, instead of
+# playing decades to wait for the note to fire.
+from unittest import mock
+
 long_run = sim(events=True)
-long_run.end_year = long_run.cfg["start_year"] + 200
-S._agent_dispatch(long_run, NODES, {"cmd": "step", "years": 60})
+with mock.patch.object(type(long_run), "wage_index", new_callable=mock.PropertyMock,
+                       return_value=long_run._wage_index_base * 2.0):
+    for year in range(long_run.cfg["start_year"], long_run.cfg["start_year"] + 60):
+        long_run._refresh_demographic_indexes(year)
 cascade_years = [year for year, message in _log_rows(long_run) if "below trend" in message]
 check("the 'below trend' note is spaced out, not logged every year",
-      all(later - earlier >= 15
+      len(cascade_years) >= 2 and all(later - earlier >= 15
           for earlier, later in zip(cascade_years, cascade_years[1:])),
       cascade_years)

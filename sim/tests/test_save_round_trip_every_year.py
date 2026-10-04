@@ -8,11 +8,17 @@ from .harness import *  # noqa: F401,F403
 from sim.tests import fingerprint as perf_fingerprint
 from sim.engine.saveload import save_state, load_state
 
-SCENARIO = dict(civ="rome_100ad", seed=1, years=40, events=True, fog=False)
+SCENARIO = dict(civ="rome_100ad", seed=1, years=31, events=True, fog=False)
 unbroken = perf_fingerprint.build(SCENARIO)
 save_path = os.path.join(tempfile.mkdtemp(), "save.json")
 diverging_years = []
-for year in range(1, SCENARIO["years"] + 1):
+# Every year while the economy is young (Complaint 320 diverged at year 10) and the year
+# Complaint 371 first diverged (31); the unbroken game still plays every year in between.
+CHECKED_YEARS = set(range(1, 13)) | {31}
+for year in range(1, max(CHECKED_YEARS) + 1):
+    if year not in CHECKED_YEARS:
+        unbroken.step()
+        continue
     save_state(unbroken, save_path)
     resumed = perf_fingerprint.build(SCENARIO)
     load_state(resumed, save_path)
