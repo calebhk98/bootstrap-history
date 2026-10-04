@@ -132,11 +132,11 @@ class SpatialCorrelationTests(unittest.TestCase):
     def test_two_nearby_cells_correlate_far_more_than_two_distant_ones(self):
         # Operationalises Complaints/49's own worked example: "Gaul and
         # Hispania share weather systems; Britannia and Mesopotamia do
-        # not." Read the real centroids off geography.json rather than
+        # not." Read the real region anchors (from the tiles) rather than
         # hand-picking new coordinates, so this test tracks the actual
         # data this mechanism runs on.
         test_sim = _rome_sim()
-        regions = test_sim.geography.data["regions"]
+        regions = test_sim.geography.regions  # records with their anchor, derived from the tiles
         gaul, hispania = regions["gaul_germania"], regions["hispania"]
         britannia, levant = regions["britannia"], regions["levant_mesopotamia"]
         cells = [
