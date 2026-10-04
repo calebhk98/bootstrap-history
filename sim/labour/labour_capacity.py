@@ -502,11 +502,13 @@ class CapacityMixin:
             "single year rather than holding back - a caution constant, "
             "not a measured savings rate.")
     def staff_wage_reference(self):
-        """Blended annual wage of the trades that exist from the start, used
-        to turn an affordability budget into a headcount."""
-        wages = [self.base_annual_wage(trade) for trade in sorted(self._world.wages)
+        """Blended annual wage, in current money, of the trades that exist from
+        the start: what hiring costs the market now, so an affordability
+        budget turns into a headcount in the money it is paid in."""
+        market = self.labour_market
+        wages = [market.unscarce_annual(trade) for trade in sorted(self._world.wages)
                  if trade not in self._world.trades_absent]
-        return sum(wages) / len(wages) if wages else self.base_annual_wage(
+        return sum(wages) / len(wages) if wages else market.unscarce_annual(
             trade_data.fallback_trade(self.wage_schedule().training_years, self._world.trade_family))
 
     STAFF_EXTRA_HEADROOM_WEIGHT = declare(
@@ -621,7 +623,7 @@ class CapacityMixin:
                     * self._world.rep_factor()
                     + max(0.0, self._world.state.household.capital) * self.STAFF_CAPITAL_INCOME_RATE)
         budget = spare * self.STAFF_BUDGET_SHARE_OF_SPARE
-        afford = budget / self.labour_market.in_current_money(self.staff_wage_reference())
+        afford = budget / self.staff_wage_reference()
         # EXTRA is supervision_room(), the headroom auto_hire adds on top of
         # this institutional ceiling (see step(), section 1). It must be
         # folded into the SAME denominator this ceiling is scaled against,
