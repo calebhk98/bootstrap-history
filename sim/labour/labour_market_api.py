@@ -213,10 +213,24 @@ class LabourMarket:
                 * (searchers / vacancies) ** MATCHING_SEARCHER_ELASTICITY)
         return min(people, people * (1.0 - math.exp(-rate)))
 
-    def hire_cost(self, trade, people):
+    def hire_cost(self, trade, people, pay_premium=0.0):
         """The finder's fee for taking on `people` of a trade: the first year's wage at the table
-        rate times the premium as the market stands, which is what payroll charges once they are in."""
-        return people * self.unscarce_annual(trade) * self.price_factor(trade)
+        rate, which is what payroll charges once they are in. The first person is found at the
+        going scarcity; each further one costs more because those before them have thinned the
+        pool, so the fee uses the mean of the scarcity now and after all but the last are taken."""
+        if people <= 0:
+            return 0.0
+        scarcity = 0.5 * (self.price_factor(trade) + self.price_factor_after(trade, people - 1.0))
+        return people * self.unscarce_annual(trade) * scarcity * (1.0 + pay_premium)
+
+    def whole_recruits(self, trade, people, pay_premium=0.0):
+        """Whole people of the `people` asked for that a search finds this year: the matching
+        outcome rounded to nearest, never fewer than one so a single hire is never refused for
+        search alone (its scarcity shows in the price)."""
+        if people <= 0:
+            return 0
+        found = self.recruitable(trade, people, pay_premium)
+        return int(min(people, max(1, math.floor(found + 0.5))))
 
     def commission_cost(self, trade, hours, premium):
         """What a one-off job of `hours` costs: the hour the market quotes, times a shop's `premium`."""
