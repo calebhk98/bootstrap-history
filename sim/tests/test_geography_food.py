@@ -58,7 +58,8 @@ class FoodTests(unittest.TestCase):
         world_map, results = earth()
         for prefix in ("Cs", "Cf"):
             tiles = [t for t, tile in world_map.tiles.items() if tile["koppen_class"].startswith(prefix)
-                     and tile["arable_fraction"] >= 0.2 and tile_layers.number(world_map, t, "mean_temperature_c", 0) >= 8]
+                     and tile["arable_fraction"] >= 0.2 and tile_layers.number(world_map, t, "mean_temperature_c", 0) >= 8
+                     and tile_layers.number(world_map, t, "annual_precipitation_mm", 0) >= 400]
             self.assertTrue(tiles)
             for tile_id in tiles:
                 kcal = results[tile_id]["kcal_per_year"]
@@ -66,6 +67,17 @@ class FoodTests(unittest.TestCase):
         everything = ("crops", "pastoral") + FORAGER_SOURCES
         self.assertLess(10 * class_median(world_map, results, "BWh", everything),
                         class_median(world_map, results, "Cs", everything))
+
+    def test_a_large_river_feeds_a_desert(self):
+        world_map, results = earth()
+        desert = [t for t, tile in world_map.tiles.items() if tile["koppen_class"] == "BWh"
+                  and tile_layers.number(world_map, t, "annual_precipitation_mm", 0) < 100]
+        watered = [t for t in desert if tile_layers.number(world_map, t, "river_km_navigable", 0) > 300]
+        dry = [t for t in desert if tile_layers.number(world_map, t, "river_km_all", 0) == 0
+               and not world_map.tiles[t]["coastal"]]
+        self.assertTrue(watered and dry)
+        density = lambda t: results[t]["people_supported"] / world_map.tiles[t]["land_area_km2"]
+        self.assertGreater(min(density(t) for t in watered), 10 * max(density(t) for t in dry))
 
     def test_only_coastal_tiles_get_marine_fish(self):
         world_map, results = earth()
