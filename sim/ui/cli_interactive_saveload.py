@@ -30,6 +30,7 @@ import json, os
 
 from sim.engine.ui_port import CIVDIR, civilization_ids, closure, load, load_civ
 from sim.engine.ui_port import settings
+from .memory import merge_session_meta
 from .protocol import load_state, save_state
 
 from .cli import _pick_session_filename, _wrap
@@ -116,7 +117,7 @@ def _ingame_save_milestone(sim, session):
     # later renamed through the game's own "move this save" option, which
     # already carries a sidecar's fields to the new name
     # (settings.move_session_meta).
-    settings.save_session_meta(path, {"checkpoint": True})
+    merge_session_meta(path, {"checkpoint": True})
     print("   -- saved a copy of %d AD to %s" % (sim.year, path))
     if session:
         print("      (this game's ongoing save at %s is untouched, and keeps "

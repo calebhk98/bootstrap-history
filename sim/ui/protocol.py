@@ -48,10 +48,11 @@ from sim.ui.proto.help import (
     HELP_TOPICS, _agent_help
 )
 from sim.engine.ui_port import (
-    SAVE_FIELDS, save_state, REQUIRED_SAVE_FIELDS,
+    SAVE_FIELDS, REQUIRED_SAVE_FIELDS,
     SET_FIELDS_OF_NODE_IDS as _SET_FIELDS_OF_NODE_IDS,
     SET_FIELDS_OF_TRADE_NAMES as _SET_FIELDS_OF_TRADE_NAMES, validate_save as _validate_save,
-    civ_of_save, goal_of_save, load_state)
+    civ_of_save, goal_of_save)
+from sim.ui.memory import load_state, save_state
 from sim.ui.proto.render import (
     render_values, render_capacity, render_portfolio, render_economy,
     render_changes, render_final, render_score, render_error, render_state,

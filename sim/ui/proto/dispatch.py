@@ -15,7 +15,7 @@ from .command_registry import command
 from .compact import compact_state, compact_stuck, compact_why
 from .help import _agent_help
 from .nodes import NODE_NAME_NORM, _did_you_mean, _norm_name, _resolve_by_name
-from sim.engine.ui_port import load_state, save_state
+from sim.ui.memory import load_state, save_state
 from .score import victory_report
 from .state import (_agent_end_reason, _agent_state)
 from .wave_summary import wave_summary

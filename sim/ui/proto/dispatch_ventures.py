@@ -18,7 +18,7 @@ import tempfile
 from sim.engine.ui_port import TRADE_FAMILY, downstream_count
 from sim.engine.ui_port import purchase_budget
 from .nodes import _did_you_mean
-from sim.engine.ui_port import load_state, save_state
+from sim.ui.memory import load_state, save_state
 from .util import _flag
 from .rush_filters import parse_rush_filters, passes_rush_filters, rush_exposure
 from .ventures import _VENTURE_SUPERVISION_NOTE
