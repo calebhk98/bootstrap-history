@@ -2,6 +2,8 @@
 import ast
 import unittest
 
+from sim.labour.workforce_spinup import FARM_TRADE
+
 from .harness import *  # noqa: F401,F403
 from sim.labour import labour_population
 
@@ -27,6 +29,17 @@ class DerivedPopulationTests(unittest.TestCase):
         self.assertGreater(self.labour._town_people_of_trade("moddedtrade"), 0.0)
         self.assertEqual(self.labour._trade_density_source("moddedtrade"),
                          "NO_DEMAND_TRADE_SHARE")
+
+    def test_a_trade_in_the_farm_trades_family_draws_on_the_unskilled_pool(self):
+        self._with_shares({})
+        world = self.labour._world
+        farm_family = world.trade_family(FARM_TRADE)
+        original = world.trade_family
+        world.trade_family = lambda trade: farm_family if trade == "moddedhand" else original(trade)
+        self.addCleanup(world.__dict__.pop, "trade_family", None)
+        self.assertEqual(self.labour._trade_density_source("moddedhand"), "UNSKILLED_POOL_TOWN_SHARE")
+        self.assertGreater(self.labour._town_people_of_trade("moddedhand"),
+                           self.labour._town_people_of_trade("moddedtrade"))
 
     def test_more_need_means_more_people(self):
         self._with_shares({"moddedtrade": 0.05})

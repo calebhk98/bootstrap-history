@@ -121,7 +121,10 @@ class PopulationMixin:
                 and self._share_of_town_work(trade) > self.NO_DEMAND_TRADE_SHARE)
 
     def _is_unskilled_pool(self, trade):
-        return trade == FARM_TRADE or trade_data.drawn_from_unskilled_pool(trade)
+        """Work drawn from the unskilled pool: the farm trade, those under arms, and every trade the
+        registry puts in the farm trade's family (hands anyone can become in a season or two)."""
+        return (trade == FARM_TRADE or trade_data.drawn_from_unskilled_pool(trade)
+                or self._world.trade_family(trade) == self._world.trade_family(FARM_TRADE))
 
     def _working_fraction(self):
         population = self._world.population
@@ -430,6 +433,8 @@ class PopulationMixin:
             return self._taught_trade_people(trade)
         if trade == FARM_TRADE:
             return working * (1.0 - float(self._world.civ.get("urban_fraction", 0.0)))
+        if self._is_unskilled_pool(trade):
+            return urban * self._working_fraction() * self.UNSKILLED_POOL_TOWN_SHARE
         return (urban * self._working_fraction()
                 * max(self._share_of_town_work(trade), self.NO_DEMAND_TRADE_SHARE))
 
