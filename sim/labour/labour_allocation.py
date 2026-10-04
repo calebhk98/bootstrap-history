@@ -116,20 +116,19 @@ class LabourAllocationMixin:
                 if trade != FARM_TRADE and rest > 0.0}
 
     def _hours_needed_by_trade(self, total_hours=None):
-        """Hours each trade is needed for, read by both the labour
-        allocation and the wage rule."""
+        """Hours each trade is needed for out of the society's hours (the labour allocation)."""
         economy = self._world.state.economy
         hours = economy.society_labour_hours
-        allocating = total_hours is not None
         if total_hours is None:
             total_hours = sum(hours.values())
         farm_now = hours.get(FARM_TRADE, 0.0)
         farm_needed = farm_now if economy.farm_hours_needed is None else economy.farm_hours_needed
-        needed = hours_needed_by_trade(self._non_farm_need_shares(), total_hours, farm_needed)
-        if allocating:
-            return needed
-        # The wage rule also sees the people under arms: they are demand on the unskilled pool
-        # that the society's hours no longer cover.
+        return hours_needed_by_trade(self._non_farm_need_shares(), total_hours, farm_needed)
+
+    def _hours_needed_for_wages(self):
+        """What the wage rule weighs against the hours worked: the allocation's need, plus the people
+        under arms as demand on the unskilled pool that the society's hours no longer cover."""
+        needed = self._hours_needed_by_trade()
         fallback = trade_data.fallback_trade(self.wage_schedule().training_years, self._world.trade_family)
         needed[fallback] = needed.get(fallback, 0.0) + self._people_under_arms() * HOURS_PER_FARM_WORKER_YEAR
         return needed
@@ -229,11 +228,23 @@ class LabourAllocationMixin:
             technique=technique)
 
     def _people_under_arms(self):
-        """People of trades drawn from the unskilled pool that actors hold on staff:
-        they have left production and farming while they serve."""
+        """People nationwide of trades drawn from the unskilled pool that actors hold on staff: they
+        have left production and farming while they serve. Actors' staff reaches labour as the slice
+        that comes out of the reachable pool (the nation's share of the trade applied to the reach),
+        so the nationwide number is that slice scaled back up by nation over reach. A port member for
+        the nationwide figure would replace this (Complaints/410)."""
         world = self._world
-        return sum(world.actor_staff_fte(trade) for trade in world.wages
-                   if trade_data.drawn_from_unskilled_pool(trade))
+        total = 0.0
+        for trade in sorted(world.wages):
+            if not trade_data.drawn_from_unskilled_pool(trade):
+                continue
+            local = world.actor_staff_fte(trade)
+            if local <= 0.0:
+                continue
+            reach = self.reachable_trade_population(trade) + local
+            if reach > 0.0:
+                total += local * self.national_trade_population(trade) / reach
+        return total
 
     def _society_hours_available(self):
         """Hours the society can put into farm work and trades: the working age

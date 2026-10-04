@@ -16,12 +16,17 @@ def run_years(game, years):
 
 
 def with_army(share_of_working_age):
-    """A game whose actors hold this share of the working age under arms (the state's own hiring
-    raises only a few hundred in a year, so the staff is stated outright)."""
+    """A game whose state holds this share of the working age under arms nationwide. Actors' staff
+    reaches labour as the slice drawn from the founder's reachable pool (the state's BudgetView.local_staff:
+    the nation's share of the trade applied to the pool before any actor's staff), so that slice is
+    what is stated here."""
     game = sim()
     drawn = sorted(trade for trade in game.labour._world.wages if trade_data.drawn_from_unskilled_pool(trade))[0]
     held = share_of_working_age * game.population.working_age
-    game.actor_staff_fte = lambda trade: held if trade == drawn else 0.0
+    share = held / game.labour.national_trade_population(drawn)
+    local = share * game.labour.reachable_trade_population(drawn)   # the pool before any actor's staff
+    game.actor_staff_fte = lambda trade: local if trade == drawn else 0.0
+    game.army_held_nationwide = held
     return game
 
 
@@ -35,10 +40,15 @@ run_years(armed, 1)
 soldiers = armed.labour._people_under_arms()
 check("a standing army holds people of an unskilled-pool trade", soldiers > 0.0, soldiers)
 check("nobody is under arms without one", unarmed.labour._people_under_arms() == 0.0)
+check("the army counted is the nationwide one, not the local slice the founder's pool shares",
+      abs(soldiers - armed.army_held_nationwide) < 0.01 * armed.army_held_nationwide,
+      (soldiers, armed.army_held_nationwide))
 gap = total_hours(unarmed) - total_hours(armed)
 expected = (unarmed.population.working_age - armed.population.working_age + soldiers) \
     * labour_allocation.HOURS_PER_FARM_WORKER_YEAR
-check("the society's hours fall by the soldiers' hours", abs(gap - expected) < 1e-6 * total_hours(unarmed), (gap, expected))
+# The stated slice is fixed while the year's demography moves the nation and the reach a little, so the
+# nationwide count read after the year differs slightly from the one the allocation used during it.
+check("the society's hours fall by the soldiers' hours", abs(gap - expected) < 0.01 * expected, (gap, expected))
 check("hours stay positive under a large army", total_hours(armed) > 0.0)
 farm = labour_allocation.FARM_TRADE
 need = armed.state.economy.farm_hours_needed

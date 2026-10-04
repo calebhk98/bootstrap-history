@@ -322,4 +322,4 @@ class WagesMixin(WageLedgerMixin):
         hours = self._world.state.economy.society_labour_hours
         if not hours:
             return
-        self.wage_schedule().step(self._hours_needed_by_trade(), hours)
+        self.wage_schedule().step(self._hours_needed_for_wages(), hours)
