@@ -4,9 +4,12 @@ Land edges join bordering tiles (km is the great circle between centres times a 
 edge carries a grade from the tile layers (`elevation_std_m`, else `ruggedness_index`, plus the
 slope between `elevation_mean_m` values), else a labelled default. River edges join bordering
 tiles that both have `river_km_navigable` above a threshold or share a `river_id`; the current runs
-toward the lower `elevation_mean_m`. Sea edges join coastal tiles within range whose chord does not
-cross another tile's land; a chord up to the coast range is `coast`, a longer one `open_sea` and may
-need tech nodes by a sea lane (as may a coast leg). Coefficients are map parameters (`parameters/routes.json`).
+toward the lower `elevation_mean_m`. Sea edges come from the map's `sea_links` catalogue when it has one
+(water paths over a rasterised ocean: km is the water distance, the class is `coast` while the path stays
+within the offshore limit of a coast, else `open_sea`, and the lane boxes use the path midpoint); a map
+without the catalogue joins coastal tiles within range whose chord does not cross another tile's land,
+a chord up to the coast range being `coast`, a longer one `open_sea`. A sea leg may need tech nodes by a
+sea lane. Coefficients are map parameters (`parameters/routes.json`).
 
 An edge key is the sorted "tile_a|tile_b" string callers use for improvements. Built once per map.
 
@@ -168,14 +171,31 @@ def _midpoint(coordinates, tile_a, tile_b) -> Tuple[float, float]:
             math.degrees(math.atan2(middle[1], middle[0])))
 
 
+def _catalogue_sea_edges(world_map: WorldMap) -> List[Edge]:
+    offshore_limit = parameters.parameter(world_map, "route_coast_offshore_max_km")
+    edges = []
+    for _link_id, link in sorted(world_map.catalogue("sea_links").items()):
+        tile_a, tile_b = link["tile_a"], link["tile_b"]
+        if tile_a not in world_map.tiles or tile_b not in world_map.tiles:
+            continue
+        edge_class = "coast" if link["max_offshore_km"] <= offshore_limit else "open_sea"
+        lane_nodes = routes_modes.lane_requirements(world_map, link["midpoint_lat"], link["midpoint_lon"], edge_class)
+        edges.append(Edge(tile_a, tile_b, edge_class, float(link["water_km"]), lane_nodes=lane_nodes))
+    return edges
+
+
 def _sea_edges(world_map: WorldMap, coordinates) -> List[Edge]:
+    if world_map.catalogue("sea_links"):
+        return _catalogue_sea_edges(world_map)
     coast_range = parameters.parameter(world_map, "route_coast_link_range_km")
     open_range = parameters.parameter(world_map, "route_open_sea_link_range_km")
     coast_detour = parameters.parameter(world_map, "route_coast_detour_factor")
     open_detour = parameters.parameter(world_map, "route_open_sea_detour_factor")
     clearance = parameters.parameter(world_map, "route_sea_chord_land_clearance_km")
     land = _LandCells(coordinates, clearance)
-    coastal = sorted(tile_id for tile_id, tile in world_map.tiles.items() if tile.get("coastal"))
+    has_port_layer = "is_port" in world_map.layers
+    coastal = sorted(tile_id for tile_id, tile in world_map.tiles.items() if tile.get("coastal")
+                     and (not has_port_layer or tile_layers.value(world_map, tile_id, "is_port")))
     edges = []
     for index, tile_a in enumerate(coastal):
         for tile_b in coastal[index + 1:]:
