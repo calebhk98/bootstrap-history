@@ -2,6 +2,7 @@
 
 from .render_screen_state import _render_sections
 from .util import _factor, _fmt_num, _fmt_range, _pct, _wrap
+from sim.ui import units_text
 from .render_screens_market import why_goods_market_lines
 from .hazard_words import why_hazard_lines, why_standing_lines
 
@@ -146,7 +147,7 @@ def _why_labour_materials(out):
             lines.append(_wrap("  " + out["estimates_note"], indent="  "))
     rows = out.get("material_rows") or []
     if rows:
-        lines.append("MATERIALS (tonnes; missing part priced at today's market):")
+        lines.append("MATERIALS (%s; missing part priced at today's market):" % units_text.text_label("mass", "tonnes"))
         for row in rows:
             years = row.get("years_of_supply_it_takes")
             lines.append("  %-22s need %s, hold %s, missing %s -> %s den%s"
