@@ -96,6 +96,11 @@ class ActorRecord:
 	offers: List[Dict[str, Any]] = field(default_factory=list)
 	offer_serial: int = 0
 
+	# ---- an interest group of strata: the share of its loss the founder is blamed for; and a stratum's
+	# remembered welfare (what it has come to expect)
+	blame_share: float = 1.0
+	welfare_reference: float = 0.0
+
 
 @dataclass
 class CapitalMarketRecord:

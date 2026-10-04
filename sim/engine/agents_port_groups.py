@@ -70,11 +70,44 @@ class GroupView:
 				sim.labour.local_market_share()))
 		return sectors
 
+	def goods_categories(self) -> Dict[str, Dict[str, Any]]:
+		"""Each goods category the founder's and the firms' concerns sell into: how far the price of
+		what it sells has fallen from its opening level, and the share of each trade's work that goes
+		to it (TEMPORARY HEURISTIC, CLAUDE.md 4.4: the trade's hours in the category's techniques over
+		its hours in every technique of the tree, until recipes give each trade's work by good)."""
+		sim = self._sim
+		hours: Dict[str, Dict[str, float]] = {}
+		for category in sorted(sim.GOODS_CATEGORIES):
+			for node_id in sim._nodes_in_cat(category):
+				for trade, trade_hours in (sim.nodes[node_id].get("lab") or {}).items():
+					hours.setdefault(category, {})[trade] = hours.get(category, {}).get(trade, 0.0) + trade_hours
+		totals: Dict[str, float] = {}
+		for node in sim.nodes.values():
+			for trade, trade_hours in (node.get("lab") or {}).items():
+				totals[trade] = totals.get(trade, 0.0) + trade_hours
+		categories = {}
+		for category in sorted(hours):
+			ratio = sim.goods_category_price_ratio(category)
+			if ratio is None or ratio >= 1.0:
+				continue
+			categories[category] = {"price_depression": 1.0 - ratio, "trade_weights": {
+				trade: trade_hours / totals[trade] for trade, trade_hours in hours[category].items()}}
+		return categories
+
 	def sectors(self) -> Dict[str, Sector]:
 		"""Everyone hurt this year, by key."""
 		def compute() -> Dict[str, Sector]:
-			return {sector_key(sector.kind, sector.subject): sector
-					for sector in self.displaced_producers() + self.squeezed_employers()}
+			strata = [stratum for stratum in self._sim.actors.of_kind("stratum")]  # type: ignore[attr-defined]
+			goods = Sector.of_goods(strata, self.goods_categories(), self) if strata else []
+			caused = self.displaced_producers() + goods + self.squeezed_employers()
+			falling = Sector.of_strata(strata, self)
+			total_fall = sum(sector.lost_income for sector in falling)
+			# what the founder is blamed for in a body's loss: the share of it his measured doing explains
+			share = min(1.0, sum(sector.lost_income for sector in caused) / total_fall) if total_fall > 0.0 else 0.0
+			for sector in falling:
+				sector.blame_share = share
+			Sector.remember_welfare(strata)
+			return {sector_key(sector.kind, sector.subject): sector for sector in caused + falling}
 		return self._once("sectors", compute)  # type: ignore[attr-defined,no-any-return]
 
 	def group_claims(self) -> Dict[str, float]:

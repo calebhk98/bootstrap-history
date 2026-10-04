@@ -26,7 +26,7 @@ def a_year(game):
 
 
 def the_group(game):
-    rows = game.interest_groups()
+    rows = [row for row in game.interest_groups() if row["kind"] == "displaced_producers"]
     return rows[0] if rows else None
 
 
