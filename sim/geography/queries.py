@@ -1,0 +1,125 @@
+"""The geography contract: every question the rest of the game asks about places, in plain data.
+
+Arguments and answers are ids, numbers, strings, lists and dicts, so another implementation (a
+finer map, a fantasy map, another language) can answer the same calls. `sim/geography/INTERFACE.md`
+describes each answer's shape. Every call takes an optional `world_map` from `open_map`; without
+one it uses the base map.
+"""
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
+
+from sim.geography import (food_capacity, map_source, mechanisms, parameters, resources_biotic,
+                           resources_catalogue, resources_endowment, resources_prospecting,
+                           resources_summary, routes_graph, routes_modes, routes_search, tile_layers)
+
+WorldMap = map_source.WorldMap
+
+
+def open_map(mods: Iterable[Tuple[str, str]] = ()) -> WorldMap:
+    """The base map with each mod's overlay merged, mods given as (mod_id, mod_root) in load order."""
+    return map_source.load_map(tuple(mods))
+
+
+def _map(world_map: Optional[WorldMap]) -> WorldMap:
+    return world_map if world_map is not None else map_source.load_map()
+
+
+def tile_ids(world_map: Optional[WorldMap] = None) -> List[str]:
+    return sorted(_map(world_map).tiles)
+
+
+def tile_facts(tile_id: str, world_map: Optional[WorldMap] = None) -> Dict[str, Any]:
+    """{id, lat, lon, land_area_km2, coastal, neighbours, climate_class, region}."""
+    world_map = _map(world_map)
+    tile = world_map.tiles[tile_id]
+    return {"id": tile_id, "lat": tile["lat"], "lon": tile["lon"], "land_area_km2": tile["land_area_km2"],
+            "coastal": bool(tile.get("coastal")), "neighbours": list(tile.get("borders", [])),
+            "climate_class": tile_layers.value(world_map, tile_id, "koppen_class"),
+            "region": tile_layers.value(world_map, tile_id, "region")}
+
+
+def layer_value(tile_id: str, layer_id: str, world_map: Optional[WorldMap] = None) -> Any:
+    """A per-tile value by name (measured layer, tile field or derived rule), or None."""
+    return tile_layers.value(_map(world_map), tile_id, layer_id)
+
+
+def food_potential(tile_id: str, technique_factors: Optional[Mapping[str, float]] = None,
+                   world_map: Optional[WorldMap] = None) -> Dict[str, Any]:
+    """Sustainable food energy of a tile by source, and the people it feeds."""
+    return food_capacity.food_potential(_map(world_map), tile_id, dict(technique_factors or {}) or None)
+
+
+def usable_modes(known_nodes_per_party: Iterable[Iterable[str]], world_map: Optional[WorldMap] = None) -> List[str]:
+    """Route modes every party can use, from the tech nodes each holds."""
+    return sorted(routes_modes.usable_modes(_map(world_map), known_nodes_per_party))
+
+
+def route(origin_tiles: Iterable[str], destination_tiles: Iterable[str], modes: Iterable[str],
+          improvements: Optional[Mapping[str, Mapping[str, Any]]] = None,
+          mode_costs: Optional[Mapping[str, float]] = None, handling_costs: Optional[Mapping[str, float]] = None,
+          held_nodes: Optional[Iterable[str]] = None, world_map: Optional[WorldMap] = None) -> Optional[Dict[str, Any]]:
+    """The least-cost haul between two sets of tiles, or None when nothing joins them."""
+    return routes_search.route(_map(world_map), origin_tiles, destination_tiles, modes, improvements,
+                               mode_costs, handling_costs, held_nodes)
+
+
+def reach(origin_tiles: Iterable[str], modes: Iterable[str], days_budget: float,
+          improvements: Optional[Mapping[str, Mapping[str, Any]]] = None, held_nodes: Optional[Iterable[str]] = None,
+          world_map: Optional[WorldMap] = None) -> Dict[str, float]:
+    """{tile: fewest days} within a travel-time budget."""
+    return routes_search.reach(_map(world_map), origin_tiles, modes, days_budget, improvements,
+                               held_nodes=held_nodes)
+
+
+def freight_links(mode_ids: Iterable[str], world_map: Optional[WorldMap] = None) -> List[Tuple[str, str, str, float]]:
+    """(tile_a, tile_b, mode, km) for every edge these modes use without anything built."""
+    return routes_graph.links(_map(world_map), tuple(mode_ids))
+
+
+def edge_key(tile_a: str, tile_b: str) -> str:
+    """The key an improvement (a built road or track) between two tiles is stored under."""
+    return routes_graph.edge_key(tile_a, tile_b)
+
+
+def resource_ids(world_map: Optional[WorldMap] = None) -> List[str]:
+    return sorted(_map(world_map).catalogue("resources"))
+
+
+def resources_at(tile_id: str, world_map: Optional[WorldMap] = None) -> Dict[str, Dict[str, Any]]:
+    """What lies in or grows on a tile: endowment of each deposit resource and each stand."""
+    return resources_summary.resources_at(_map(world_map), tile_id)
+
+
+def endowment(tile_id: str, resource_id: str, world_map: Optional[WorldMap] = None) -> Dict[str, Any]:
+    """Known and expected undiscovered quantity of a resource in a tile."""
+    return resources_endowment.endowment(_map(world_map), tile_id, resource_id)
+
+
+def known_deposits(resource_id: str, world_map: Optional[WorldMap] = None) -> List[Dict[str, Any]]:
+    return resources_catalogue.known_deposits(_map(world_map), resource_id)
+
+
+def prospect(tile_id: str, resource_id: str, effort: float, seed: Any,
+             world_map: Optional[WorldMap] = None) -> List[Dict[str, Any]]:
+    """Hidden deposits found with `effort` person-days; the same seed and effort give the same finds."""
+    return resources_prospecting.prospect(_map(world_map), tile_id, resource_id, effort, seed)
+
+
+def supports(tile_id: str, resource_id: str, world_map: Optional[WorldMap] = None) -> float:
+    """0 to 1: how well a tile suits a living resource (a forest, a fibre plant)."""
+    return resources_biotic.supports(_map(world_map), tile_id, resource_id)
+
+
+def stand(tile_id: str, resource_id: str, world_map: Optional[WorldMap] = None) -> Dict[str, Any]:
+    """Area, standing stock and regrowth of a living resource on a tile."""
+    return resources_biotic.stand(_map(world_map), tile_id, resource_id)
+
+
+def problems(world_map: Optional[WorldMap] = None) -> List[str]:
+    """Everything wrong with the map's data, as messages; empty when sound."""
+    world_map = _map(world_map)
+    found = ["parameter %r lacks a value, kind, source or reason" % parameter_id
+             for parameter_id in parameters.invalid_entries(world_map)]
+    found += ["resource %r names an unknown mechanism" % row_id for row_id in mechanisms.unknown_rows(world_map)]
+    found += ["route mode %r is incomplete" % mode_id for mode_id in routes_modes.invalid_entries(world_map)]
+    found += resources_catalogue.validate(world_map)
+    return found
