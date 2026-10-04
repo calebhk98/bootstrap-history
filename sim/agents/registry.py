@@ -1,7 +1,7 @@
 """The set of actors other than the founder's household, and their yearly turn."""
 from bisect import bisect_left
 from itertools import accumulate
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 from .records import ActorRecord, ActorsState
 
@@ -13,7 +13,35 @@ from .group import InterestGroup
 from .policy import make_policy
 from .tuning import ENTREPRENEURIAL_CAPITAL_SHARE, ENTRY_STAKE_BUFFER, VALUE_HORIZON_YEARS
 
-ACTOR_CLASSES = {"firm": Firm, "government": Government, "interest_group": InterestGroup}
+# kind -> class; `register_actor_kind` adds to it, so a mod can bring its own kind of actor
+ACTOR_CLASSES: Dict[str, Any] = {"firm": Firm, "government": Government, "interest_group": InterestGroup}
+
+# what founds new actors after every actor has had its year, in the order registered: (name, spawner),
+# each spawner a function (registry, world) -> ids of the actors it founded
+SPAWNERS: List[Tuple[str, Callable[["ActorRegistry", Any], List[str]]]] = []
+
+# builds the world an actor of another country sees from the shared world and that country's
+# profile; None until a scope is registered, when every actor sees the shared world
+WORLD_SCOPE: List[Optional[Callable[[Any, Any, "ActorsState"], Any]]] = [None]
+
+
+def register_actor_kind(kind: str, actor_class: Any) -> None:
+	"""Make records of `kind` build `actor_class` objects."""
+	ACTOR_CLASSES[kind] = actor_class
+
+
+def register_spawner(name: str, spawner: Callable[["ActorRegistry", Any], List[str]]) -> None:
+	"""Run `spawner` every year after the actors' turns; registering a name again replaces it."""
+	for index, (existing, _old) in enumerate(SPAWNERS):
+		if existing == name:
+			SPAWNERS[index] = (name, spawner)
+			return
+	SPAWNERS.append((name, spawner))
+
+
+def register_world_scope(scope: Callable[[Any, Any, "ActorsState"], Any]) -> None:
+	"""`scope(world, profile, state)` is the world an actor of the country `profile` sees."""
+	WORLD_SCOPE[0] = scope
 
 
 class _ConcernWatch:
@@ -63,6 +91,8 @@ class ActorRegistry:
 		# bumped whenever any firm's concerns change, so market caches keyed on it stay honest
 		self.version: List[int] = [0]
 		self._capacity_totals: Optional[Any] = None
+		# country -> the world its actors see this year (rebuilt every `advance`)
+		self._scoped: Dict[str, Any] = {}
 		for actor_id in sorted(state.records):
 			self._wrap(actor_id)
 
@@ -236,6 +266,28 @@ class ActorRegistry:
 	def government(self, civ_id: str) -> Government:
 		return self.ensure_government(civ_id)
 
+	def country_of(self, actor: Any) -> str:
+		"""The country an actor answers to: its own, else the home country."""
+		record = getattr(actor, "record", None)
+		country = None if record is None else record.country
+		return country or self.state.home_country
+
+	def government_of(self, country: Optional[str]) -> Optional[Government]:
+		"""The government of a country (the home country for None), if it has one."""
+		return self.actors.get("government:" + str(country or self.state.home_country))  # type: ignore[return-value]
+
+	def world_for(self, actor: Any, world: Any) -> Any:
+		"""The world an actor sees: the shared one for the home country, else its country's scope."""
+		country = self.country_of(actor)
+		scope = WORLD_SCOPE[0]
+		if scope is None or not country or country == self.state.home_country or country not in self.state.countries:
+			return world
+		scoped = self._scoped.get(country)
+		if scoped is None:
+			scoped = scope(world, self.state.countries[country], self.state)
+			self._scoped[country] = scoped
+		return scoped
+
 	def active_firms(self) -> List[Firm]:
 		return [firm for firm in self.of_kind("firm") if firm.record.exited_year is None]  # type: ignore[misc]
 
@@ -253,6 +305,7 @@ class ActorRegistry:
 
 	def advance(self, world: Any) -> None:
 		self.world = world
+		self._scoped = {}
 		first = True
 		before = self._workforces()
 		for actor_id in sorted(self.actors):
@@ -262,8 +315,9 @@ class ActorRegistry:
 				continue
 			# the tally is a count of everyone's staff as of the acting actor's staff in `_staff_basis`
 			self._acting, self._staff_basis = actor, dict(actor.workforce)
-			actor.advance(world)
-			actor.sell_output(world)
+			seen = self.world_for(actor, world)
+			actor.advance(seen)
+			actor.sell_output(seen)
 			# it stays when the acting actor's staff is what the count saw; the first actor of a
 			# year always recounts, since anything between years is unseen
 			if first:
@@ -274,8 +328,8 @@ class ActorRegistry:
 				self._columns_synced = False
 			first = False
 		self._acting = None
-		self.consider_entry(world)
-		self.consider_groups(world)
+		for _name, spawner in list(SPAWNERS):
+			spawner(self, world)
 		# entry and group formation change staff after the last count; whatever reads before the next
 		# year's first actor (the founder's own turn) sees what is there, as a reloaded game does.
 		# A year in which no actor's staff differs from the year's start leaves the tally standing.
@@ -356,3 +410,7 @@ class ActorRegistry:
 			self._bans = {group.record.subject: group.record.name for group in self.of_kind("interest_group")
 						  if group.record.exited_year is None and group.record.demands}
 		return self._bans
+
+
+register_spawner("firm_entry", lambda registry, world: registry.consider_entry(world))
+register_spawner("interest_groups", lambda registry, world: registry.consider_groups(world))

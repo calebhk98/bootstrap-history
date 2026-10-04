@@ -64,6 +64,24 @@ class ActorRecord:
 	last_logged_year: Optional[int] = None
 	# what the treasury paid the founder as patron this year
 	patron_grant: float = 0.0
+	# ---- every actor: the country whose government it answers to and whose techniques it starts
+	# with (None = the home country), and who drives it ("ai", "human", "llm")
+	country: Optional[str] = None
+	controller: str = "ai"
+
+	# ---- a player: commands waiting for its next turn, and what happened to the ones it gave
+	orders: List[Dict[str, Any]] = field(default_factory=list)
+	journal: List[Dict[str, Any]] = field(default_factory=list)
+
+	# ---- a trader: route key -> what it has committed there (cargo, capital, last margin, ...)
+	routes: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+
+	# ---- a stratum: which body of people it is, their literacy share, last year's unmet share of
+	# each need, and last year's growth rate of `members`
+	stratum: str = ""
+	literacy: float = 0.0
+	shortfall: Dict[str, float] = field(default_factory=dict)
+	last_growth: float = 0.0
 
 
 @dataclass
@@ -91,8 +109,54 @@ class CapitalMarketRecord:
 
 
 @dataclass
+class CountryProfile:
+	"""What one country starts a game with: read from its civilisation file when the cast is seeded,
+	then saved with the game, so every save keeps the countries it began with."""
+	country: str = ""
+	name: str = ""
+	population: float = 0.0
+	urban_fraction: float = 0.0
+	state_capacity: float = 0.0
+	tax_share: float = 0.0
+	wage_index: float = 1.0
+	price_index: float = 1.0
+	literacy_general: float = 0.0
+	literacy_elite: float = 0.0
+	home_regions: List[str] = field(default_factory=list)
+	# where the country is on the map (a tile or region id the world can measure distance to)
+	location: Optional[str] = None
+	# the techniques the country knows at the start: its actors' baseline tree
+	starting_techs: Set[str] = field(default_factory=set)
+	# bodies of people the country starts with, as data ({"name", "share", "income", ...}); empty
+	# means derive them from what the world can see
+	strata: List[Dict[str, Any]] = field(default_factory=list)
+	# anything else the scenario or a mod declares for the country
+	extra: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class CastEntry:
+	"""One actor a scenario starts with: who it is, what kind, whose country, who drives it."""
+	actor_id: str = ""
+	kind: str = "government"
+	country: Optional[str] = None
+	name: str = ""
+	controller: str = "ai"
+	policy_kind: str = "value"
+	money: float = 0.0
+	location: Optional[str] = None
+	# anything else the kind reads when it is created
+	params: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
 class ActorsState:
 	"""Every actor other than the founder's household, keyed by actor id."""
 	records: Dict[str, ActorRecord] = field(default_factory=dict)
 	# civilisation id -> its loanable-funds market
 	markets: Dict[str, CapitalMarketRecord] = field(default_factory=dict)
+	# the game's roster as seeded at its first actor year, and the countries in it; empty until then
+	cast: Dict[str, CastEntry] = field(default_factory=dict)
+	countries: Dict[str, CountryProfile] = field(default_factory=dict)
+	# the founder's own country (the civilisation the game was started with)
+	home_country: str = ""
