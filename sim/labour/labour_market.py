@@ -126,7 +126,7 @@ THE STAKEHOLDER'S OWN REMAINING FIVE POINTS, AND WHERE EACH IS ANSWERED.
 
   6. "It thinks you can't ever teach yourself a skill, and nothing
      transfers." One mobility rate for every trade PAIR treated a farmer
-     and a mason as equally far from becoming a smith. TRADE_SKILL_FAMILY
+     and a mason as equally far from becoming a smith. the registry family
      and the proximity rule below are this module's answer - crude, stated
      as a rule rather than measured (CLAUDE.md SS3.4), and still not the
      real matrix WHAT THIS DOES NOT MODEL's item 3 says this project does
@@ -212,7 +212,7 @@ import of the module that will eventually read the same file. `WALKABLE_
 TRADES` is now COMPUTED from that same production data (its own
 `requires_node` field - see `trades_reachable_given_technology`), the same
 discipline applied to a derived classification instead of a hand-picked
-one; `TRADE_SKILL_FAMILY` remains a hand-stated classification, for the
+one; the trade registry's `family` remains a hand-stated classification, for the
 identical STANDALONE reason this module keeps its own copy of anything it
 cannot yet compute: `sim/engine/data.py` keeps its own `TRADE_FAMILY`
 (three buckets: scholar, labour, craft) for a different purpose (staffing
@@ -254,7 +254,7 @@ is missing").
 
   3. SKILL DISTANCE IS STILL A HANDFUL OF FAMILIES, NOT A REAL MATRIX. A
      smith and a scribe are now farther apart than a smith and a
-     furnaceman - see TRADE_SKILL_FAMILY - which is a real improvement over
+     furnaceman - see the registry family - which is a real improvement over
      one global number for every pair, and still a coarse, stated RULE
      rather than measured data: every pair inside a family is exactly as
      close as every other pair inside it (a smith is not, in this module,
@@ -542,7 +542,7 @@ def additional_hours_to_close_a_shortfall(
 #
 # and a fifth, CROSS_FAMILY_PROXIMITY, that answers point 6 by making the
 # rate ALSO depend on which trade the hours are coming from, not only on the
-# size of the gap - see TRADE_SKILL_FAMILY below.
+# size of the gap - see the registry family below.
 
 OCCUPATIONAL_MOBILITY_RATE_PER_YEAR = declare(
     "OCCUPATIONAL_MOBILITY_RATE_PER_YEAR", 0.05,
@@ -678,7 +678,7 @@ CROSS_FAMILY_PROXIMITY = declare(
     why="Answers the stakeholder's point 6: 'it thinks you can't ever "
         "teach yourself a skill, and nothing transfers' - true before this "
         "constant existed, because one mobility rate covered every trade "
-        "pair identically. TRADE_SKILL_FAMILY below groups trades into a "
+        "pair identically. the registry family below groups trades into a "
         "handful of families; this is the discount applied whenever the "
         "origin and destination trade are in different families and the "
         "destination is not a WALKABLE one. sim.tests.test_labour_"
@@ -850,44 +850,10 @@ WALKABLE_TRADES = trades_reachable_given_technology()
 # hand - this frozenset is a default for what the DATA already says, not a
 # closed list the mechanism enforces.
 
-TRADE_SKILL_FAMILY = {
-    "labourer": "labour", "miner": "labour",
-    "furnaceman": "metal", "smith": "metal", "machinist": "metal",
-    "mason": "building", "carpenter": "building", "millwright": "building",
-    "plumber": "building",
-    "chemist": "technical", "engineer": "technical", "electrician": "technical",
-    "scribe": "technical",
-    "artisan": "artisan_craft", "potter": "artisan_craft",
-    "glassblower": "artisan_craft",
-}
-# A STATED RULE (CLAUDE.md SS3.4), not measured data - see CROSS_FAMILY_
-# PROXIMITY's own declaration for what evidence does and does not exist
-# behind it, and WHAT THIS DOES NOT MODEL item 3 for exactly how coarse this
-# still is. Grouped by what the two trades physically DO, the closest proxy
-# this project has for how much of one trade's practice transfers to
-# another: METAL (furnace heat and force applied to metal), BUILDING
-# (structures and their fittings in wood, stone and pipe), TECHNICAL
-# (calculation, formal knowledge, literacy-bearing work), ARTISAN_CRAFT
-# (fine handwork on a single small piece at a time), and LABOUR (general
-# unskilled effort - see WALKABLE_TRADES; every trade in this family is
-# already walkable, so its own family membership rarely matters). A trade
-# `data/production/*.json` names that is not listed here (the loader only
-# sees whatever the data actually uses, and new materials can add new
-# trades) falls back to its own singleton family via `trade_skill_family`
-# below, which means it is treated as equidistant (CROSS_FAMILY_PROXIMITY)
-# from every other classified trade until someone places it - the same
-# "no data, so no bonus claimed" discipline `sim.engine.data.trade_family`
-# applies with its own "craft" fallback.
-
-
 def trade_skill_family(trade: str) -> str:
-    """TRADE_SKILL_FAMILY's own lookup, with the honest fallback described
-    at that dict's own declaration: an unlisted trade gets a family of one
-    (itself), which is indistinguishable from any other family for
-    `_flow_proximity`'s purposes - it is never treated as automatically
-    close to anything, on the ground that this module has no basis to
-    claim it is."""
-    return TRADE_SKILL_FAMILY.get(trade, trade)
+    """With no registry to hand every trade is its own skill family, so no switch is assumed easier
+    than another. Callers that have the registry pass its `family` as `skill_family_of`."""
+    return trade
 
 
 def _flow_proximity(
@@ -901,7 +867,7 @@ def _flow_proximity(
     DOWN into unskilled work needs no specific prior skill, so the origin
     trade's own family is irrelevant - see the module docstring's point 7
     answer for the general shape of this asymmetry) OR the two trades share
-    a TRADE_SKILL_FAMILY. `cross_family_proximity` otherwise - the
+    a the registry family. `cross_family_proximity` otherwise - the
     stakeholder's point 6 answer: moving INTO a trade that DOES need a
     master, from a family that trade's own practice has little in common
     with, is real but throttled.

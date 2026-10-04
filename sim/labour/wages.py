@@ -19,7 +19,6 @@ from typing import Any, Dict, Iterable, Mapping, Optional
 
 from sim.constants import declare
 
-UNSKILLED_TRADE = "labourer"
 
 HOURS_PER_WORKER_YEAR = declare(
     "HOURS_PER_WORKER_YEAR", 2000.0, kind="engineering_estimate",

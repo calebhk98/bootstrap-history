@@ -83,14 +83,16 @@ def hours_needed_by_trade(need_shares, total_hours, farm_hours_needed):
     return needed
 
 
-def reallocate(hours_by_trade, total_hours, needed_by_trade):
+def reallocate(hours_by_trade, total_hours, needed_by_trade,
+               skill_family_of=labour_market.trade_skill_family):
     """One year of labour_market.Workforce.step toward the stated need of
-    every trade, under its mobility limits."""
+    every trade, under its mobility limits; `skill_family_of` is the trade
+    registry's family."""
     current_total = sum(hours_by_trade[trade] for trade in sorted(hours_by_trade))
     scale = total_hours / current_total if current_total > 0.0 else 0.0
     workforce = labour_market.Workforce(
         {trade: hours * scale for trade, hours in hours_by_trade.items()})
-    workforce.step(needed_by_trade)
+    workforce.step(needed_by_trade, skill_family_of=skill_family_of)
     return workforce.hours_by_trade
 
 
@@ -245,7 +247,7 @@ class LabourAllocationMixin:
         economy.farm_hours_needed = need_fte * HOURS_PER_FARM_WORKER_YEAR
         economy.society_labour_hours = reallocate(
             economy.society_labour_hours, total_hours,
-            self._hours_needed_by_trade(total_hours))
+            self._hours_needed_by_trade(total_hours), self._world.trade_family)
         farm_fte = economy.society_labour_hours[FARM_TRADE] / HOURS_PER_FARM_WORKER_YEAR
         crop_limit_fte = (self._world.farm_land.hectares / agriculture.hectares_cropped_per_farm_worker(
             technique.crop, technique.toolkit))
