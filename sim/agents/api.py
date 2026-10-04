@@ -25,6 +25,7 @@ from .player import Player
 from .stratum import Stratum, stratum_id
 from .strata_seed import seed_strata, strata_definitions, strata_spawner
 from .player_commands import CommandRejected, register_command
+from . import exchange, exchange_commands  # noqa: F401  (registers the offer commands and the answers spawner)
 from .trader import Trader
 from .trader_entry import trader_entry
 
@@ -37,5 +38,5 @@ __all__ = ["Actor", "RecordedActor", "Household", "Firm", "Government",
            "MANAGEMENT_SPAN_EXPONENT", "OBSERVATION_RANGE_KM", "PROOF_YEARS", "SECRET_EXPOSURE",
            "THREAT_ARMY_RESPONSE", "PUBLIC_BUILDING_LIFE_YEARS", "DOLE_MATERIAL", "MASONRY_PERSON_YEARS_PER_M2", "HOUSING_FLOOR_AREA_PER_PERSON_M2", "cast_from_civilisations", "profile_from_civilisation", "seed_cast",
            "CountryWorld", "ForeignGovernment", "Player", "Stratum", "stratum_id", "seed_strata",
-           "strata_definitions", "strata_spawner", "CommandRejected", "register_command", "Trader",
+           "strata_definitions", "strata_spawner", "CommandRejected", "register_command", "exchange", "Trader",
            "trader_entry"]
