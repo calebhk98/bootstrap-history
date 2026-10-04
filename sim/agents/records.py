@@ -115,6 +115,9 @@ class ActorRecord:
 	# already assessed, so each year's income is assessed once
 	income_assessed: Dict[str, float] = field(default_factory=dict)
 
+	# ---- firm entry and exit: consecutive years a firm earned less than its plant would lend for
+	weak_years: int = 0
+
 
 @dataclass
 class CapitalMarketRecord:

@@ -5,7 +5,7 @@ from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 from .records import ActorRecord, ActorsState
 
-from . import imitation
+from . import firm_entry, imitation, ledger
 from .base import RecordedActor
 from .firm import Firm
 from .government import Government
@@ -374,6 +374,7 @@ class ActorRegistry:
 			if target is not None and target not in firm.concerns:
 				key = world.market_key(target)
 				waiting[key] = waiting.get(key, 0) + 1
+		strata_exist = bool(self.of_kind("stratum"))
 		for node_id in self.proven_concerns(world):
 			key = world.market_key(node_id)
 			rivals = self.rivals_of(node_id, "")
@@ -386,15 +387,17 @@ class ActorRegistry:
 			if not chain:
 				continue
 			plan = imitation.copy_plan(probe, chain, world)
-			chance = imitation.copy_chance(chain, world)
+			founders = firm_entry.founder_candidates(self) if strata_exist else []
+			founder = founders[0] if founders else None
+			chance = imitation.copy_chance(chain, world) * firm_entry.copy_ease(founder)
 			worth = expected * VALUE_HORIZON_YEARS * chance
-			stake = plan["total"] * ENTRY_STAKE_BUFFER
-			pooled = min(stake, capital_limit)
-			borrowed = stake - pooled  # the rest of the stake is raised as credit, on what the entrant expects to earn
+			premium = firm_entry.entry_premium(plan["total"], rivals + waiting.get(key, 0))
+			stake = plan["total"] * ENTRY_STAKE_BUFFER + premium
+			pooled, borrowed = firm_entry.stake_split(stake, founder, strata_exist, capital_limit)
 			if borrowed > probe.spare_credit(world):
 				continue
 			capital_cost = pooled * capital_rate + (borrowed * probe.rate_on_loan(world, borrowed) if borrowed > 0.0 else 0.0)
-			if worth <= plan["total"] or expected * chance <= capital_cost:
+			if worth <= plan["total"] + premium or expected * chance <= capital_cost:
 				continue
 			serial = len(self.state.records) + 1
 			while "firm:%d" % serial in self.state.records:
@@ -403,7 +406,13 @@ class ActorRegistry:
 			founded_firm = self.add(firm_id, ActorRecord(
 				kind="firm", name=firm_id, target=node_id,
 				last_margin=expected, founded_year=world.year))
-			founded_firm.credit(pooled, "pooled capital")
+			if founder is not None:
+				founded_firm.record.plan["founder"] = founder.actor_id
+				ledger.transfer(founder, founded_firm, pooled, "founding stake")
+			else:
+				founded_firm.credit(pooled, "edge:pooled capital")
+			if premium > 0.0:
+				founded_firm.debit(premium, "edge:entry premium")
 			waiting[key] = waiting.get(key, 0) + 1
 			founded.append(firm_id)
 		return founded

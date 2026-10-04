@@ -31,7 +31,7 @@ Specific disconnects, each with the player-visible behaviour it duplicates:
 
 | Actor output | What the engine does instead |
 |---|---|
-| The state's purse and what it learns | Done: the state's armies carry the founder's military work as far as the government's own copies reach (`state_military_diffusion`, `society_diffusion.py`); see increment 3. |
+| The state's purse and what it learns | The state's armies carry the founder's military work at a rate from a generic half-life curve (`state_military_diffusion`, `society_diffusion.py`); the government's own copies are ignored. |
 | The state's take from the founder | Requisition, pressed office, military supply and confiscation (`_state_pressure`, `society_state_pressure.py`) are shares of the founder's revenue set by civilisation data and a notice score. The founder's capital is reduced and the money vanishes: the government actor never receives it. |
 | The state's payments to the founder | Patron funding (`state_funding`, `economy_production.py`) is a labelled heuristic formula; its own `why` says a real answer needs a state budget. |
 | A firm's takings | Firms split takings with "rivals", but the founder's concern earns the same as before. Money appears in the firm's purse without leaving anyone's. The goods market (`economy_goods.py`) counts only the founder's own concerns as supply. |
