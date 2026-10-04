@@ -9,7 +9,7 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
 from sim.geography import (food_capacity, map_source, mechanisms, parameters, resources_biotic,
                            resources_catalogue, resources_endowment, resources_prospecting,
-                           resources_summary, routes_graph, routes_modes, routes_search, tile_layers)
+                           resources_summary, routes_graph, routes_modes, routes_search, tile_holdings, tile_layers)
 
 WorldMap = map_source.WorldMap
 
@@ -46,6 +46,11 @@ def food_potential(tile_id: str, technique_factors: Optional[Mapping[str, float]
                    world_map: Optional[WorldMap] = None) -> Dict[str, Any]:
     """Sustainable food energy of a tile by source, and the people it feeds."""
     return food_capacity.food_potential(_map(world_map), tile_id, dict(technique_factors or {}) or None)
+
+
+def tiles_of_regions(region_labels: Iterable[str], world_map: Optional[WorldMap] = None) -> List[str]:
+    """Sorted tiles carrying any of these region labels (unknown labels add none)."""
+    return tile_holdings.tiles_of_regions(region_labels, _map(world_map))
 
 
 def usable_modes(known_nodes_per_party: Iterable[Iterable[str]], world_map: Optional[WorldMap] = None) -> List[str]:

@@ -14,7 +14,8 @@ sim = partial(sim, agent_economy=False)   # these checks pin the engine's own ye
 
 from sim.engine.data import load_civ
 from sim.world import balance_of_payments, trade_between
-from sim.geography import freight_cost, sea_freight, trade_routes, transport
+from sim.geography import api as geography_api
+from sim.geography import freight_cost, sea_freight, transport
 from sim.world.market import MarketConditions
 
 PARTNER = "han_china_100ad"
@@ -49,25 +50,22 @@ check("travel days follow the carrier's pace over the distance",
       abs(freight_cost.days_on_leg(2000.0, _cart) - 2.0 * freight_cost.days_on_leg(1000.0, _cart)) < 1e-9,
       None)
 
-_regions = {"a": {"lat": 0.0, "lon": 0.0, "coastal": True},
-            "b": {"lat": 0.0, "lon": 10.0, "coastal": True},
-            "c": {"lat": 0.0, "lon": 30.0, "coastal": True}}
-_network = {"modes": {"cart": {"requires_node": "wheel", "needs_ports": False}},
-            "links": [{"from": "a", "to": "b", "modes": ["cart"]},
-                      {"from": "b", "to": "c", "modes": ["cart"]}]}
+def _route(destination_tiles):
+    held = {"lnd_two_wheel_cart"}
+    return geography_api.route(
+        _HAN_TILES[:1], destination_tiles, ["cart"],
+        mode_costs={"cart": _rate_of(imbalance=1.0)}, held_nodes=held)
 
 
-def _route(destination):
-    return trade_routes.cheapest_route(
-        _network, _regions, ["a"], [destination], frozenset({"cart"}), frozenset({"wheel"}),
-        lambda lat0, lon0, lat1, lon1: abs(lon1 - lon0) * 100.0, {"cart": _rate_of(imbalance=1.0)},
-        days_per_km={"cart": 1.0 / _cart.distance_per_day_km}, difficulty=lambda a, b: 1.0)
-
-
+_HAN_TILES = geography_api.tiles_of_regions(load_civ(PARTNER)["home_regions"])
+_NEAR = geography_api.reach(_HAN_TILES[:1], ["cart"], 60.0, held_nodes={"lnd_two_wheel_cart"})
+_FAR = geography_api.reach(_HAN_TILES[:1], ["cart"], 250.0, held_nodes={"lnd_two_wheel_cart"})
+_near_tile = sorted((tile for tile in _NEAR if tile != _HAN_TILES[0]), key=_NEAR.get)[-1]
+_far_tile = sorted((tile for tile in _FAR if tile != _HAN_TILES[0]), key=_FAR.get)[-1]
 check("a longer route costs more per tonne and takes more days",
-      _route("c").cost_per_tonne > _route("b").cost_per_tonne
-      and _route("c").travel_days > _route("b").travel_days > 0.0,
-      (_route("b").cost_per_tonne, _route("c").cost_per_tonne))
+      _route([_far_tile])["cost_per_tonne"] > _route([_near_tile])["cost_per_tonne"]
+      and _route([_far_tile])["days"] > _route([_near_tile])["days"] > 0.0,
+      (_route([_near_tile])["cost_per_tonne"], _route([_far_tile])["cost_per_tonne"]))
 
 # --- the engine prices it from this society's prices, wages and market rate.
 s = sim(civ="rome_100ad", capital=1e9)
@@ -80,7 +78,7 @@ check("a cart costs more than its feed and driver alone: the oxen and the cart a
                           + s._land_freight_physical_inputs().driver_hours_per_tonne_km
                           * s.labour.wage_per_hour("labourer")), None)
 check("the sea is still far cheaper than land per tonne-km",
-      balanced["sea"] < 0.2 * balanced["cart"], balanced)
+      balanced["sail"] < 0.2 * balanced["cart"], balanced)
 _market_rate = s.market_rate
 s.market_rate = lambda: 4.0 * _market_rate()
 dearer = s._freight_mode_costs(0.0)

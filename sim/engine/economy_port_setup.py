@@ -15,8 +15,8 @@ from sim.world import demand, land
 from sim.geography.api import settlement
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data")
-FREIGHT_MODE_OF_CARRIER = {"cart": tile_costs.DRAUGHT_MODE, "caravan": tile_costs.PACK_MODE,
-                           "sea": tile_costs.SEA_MODE}
+FREIGHT_MODE_OF_CARRIER = {"cart": tile_costs.DRAUGHT_MODE, "pack": tile_costs.PACK_MODE,
+                           "sail": tile_costs.SEA_MODE}
 
 
 def _load(*parts):
