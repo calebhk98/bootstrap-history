@@ -18,7 +18,7 @@ from .capacity_remedies import render_remedies
 # returns its own LINES rather than a dict: the ordering between and within
 # sections IS the output a player reads, and merging dicts the way
 # _agent_state's own screens do would lose exactly that (see render_state,
-# render_screens_big.py, for the same split on the `state` screen).
+# the render_screen_* modules, for the same split on the `state` screen).
 
 def _capacity_resources(out):
     lines = []

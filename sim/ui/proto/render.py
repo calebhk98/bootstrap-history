@@ -3,7 +3,7 @@
 # Split by subject across four siblings so no one file holds more than about
 # a thousand lines of code: the big per-screen renderers (render_state,
 # render_why, render_available, render_step, and the row helpers only they
-# need) in render_screens_big.py; the economic and production accounting
+# need) in the render_screen_* modules; the economic and production accounting
 # screens in render_screens_economy.py; the situational and meta screens in
 # render_screens_status.py; and the typed-command rendering plus the
 # render_pretty entry point in render_typed.py. This file stays the
@@ -13,10 +13,10 @@
 # `from ui.protocol import X` and `from ui.proto.render import X`
 # both go on working unchanged.
 
-from .render_screens_big import (
-    render_state, render_step, render_available, render_why,
-    _RESTS_SHORT, _cost_marker, _available_row,
-)
+from .render_screen_state import render_state
+from .render_screen_step import render_step
+from .render_screen_available import render_available, _RESTS_SHORT, _cost_marker, _available_row
+from .render_screen_why import render_why
 from .render_screens_economy import (
     render_capacity, render_materials, render_portfolio, render_economy,
     render_changes, render_money, render_mines, render_labour,

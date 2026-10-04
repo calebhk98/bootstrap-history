@@ -14,7 +14,10 @@ from sim.ui import units_text
 from .render_screens_automation import render_automation
 from .util import _fmt_num
 from .render_screens_start import render_start
-from .render_screens_big import render_state, render_step, render_available, render_why
+from .render_screen_state import render_state
+from .render_screen_step import render_step
+from .render_screen_available import render_available
+from .render_screen_why import render_why
 from .render_screens_economy import (
     render_capacity, render_materials, render_portfolio, render_economy,
     render_changes, render_money, render_mines, render_labour,

@@ -7,7 +7,7 @@ is wrong, rather than reporting a ledger table. Pure presentation, same as
 every module in this split: nothing here touches the live Sim - see render.py
 and ARCHITECTURE.md.
 
-render_path borrows _available_row from render_screens_big.py for its own
+render_path borrows _available_row from render_screen_available.py for its own
 table of startable-today nodes, the one place here that reaches into the
 "big" group.
 """
@@ -16,7 +16,7 @@ from .score import _score_lines
 from sim.engine.ui_port import warning_lines
 from .util import _factor, _fmt_num, _pct, _wrap
 from .hazard_words import advice_header
-from .render_screens_big import _available_row, available_header
+from .render_screen_available import _available_row, available_header
 
 def render_values(out):
     lines = ["WHAT THIS SOCIETY BELIEVES"]
