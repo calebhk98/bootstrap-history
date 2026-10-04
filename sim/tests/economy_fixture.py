@@ -39,11 +39,13 @@ def recipes():
     }
 
 
-def specs():
+def specs(service_lives=None):
+    """The goods; `service_lives` maps a good to the years it lasts (default: used up within the year)."""
+    lives = service_lives or {}
     return {
-        GRAIN: GoodSpec(GRAIN, 1.0, 0.1, 0.0, "food"),
-        ORE: GoodSpec(ORE, 1.0, 0.0, 0.0, "ore"),
-        METAL: GoodSpec(METAL, 1.0, 0.0, 0.0, "metal"),
+        GRAIN: GoodSpec(GRAIN, 1.0, 0.1, lives.get(GRAIN, 0.0), "food"),
+        ORE: GoodSpec(ORE, 1.0, 0.0, lives.get(ORE, 0.0), "ore"),
+        METAL: GoodSpec(METAL, 1.0, 0.0, lives.get(METAL, 0.0), "metal"),
     }
 
 
