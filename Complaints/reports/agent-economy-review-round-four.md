@@ -88,12 +88,12 @@ Follows `agent-economy-review-round-three.md`. Again only `sim/economy/`, new te
 | england, exit and location | 0.05-0.13 | 0.14-0.30 | 0.41 | 0 | ~6 |
 | england, tip | 0.12-0.15 | 0.40-0.49 | 0.37-0.38 | 0 | ~1500 |
 | norse, baseline | 0.12-0.19 | 0.32-1.35 | 0.27 | 0.001 | ~3500 |
-| norse, tip | 0.12-0.22 | 0.34-0.46 | 0.38-0.39 | 0.0001 | ~4e3-2e4 |
+| norse, tip | 0.12-0.19 | 0.34-0.46 | 0.40-0.43 | 0.0001 | ~4e3-1.6e4 |
 | rome, baseline | 0.07-0.08 | 0.36-0.39 | 0.16 | 0.009 | ~148 |
 | rome, tip | 0.05-0.07 | 0.29-0.30 | 0.23 | 0.0007-0.0009 | ~1300 |
 | mexica, baseline | 0.10 | n/a | 0.09 | 0.005 | ~1300 |
 | mexica, exit and location | 0.07-0.08 | n/a | 0.14 | 0.05-0.09 | ~7000 |
-| mexica, tip | 0.09 | n/a | 0.20-0.21 | 0.13 | ~2e4 |
+| mexica, tip | 0.07-0.10 | n/a | 0.22-0.23 | 0 | ~1000-1100 |
 | han, baseline | 0.08-0.14 | 0.20-0.23 | 0.31 | 0.004 | ~2000 |
 | han, tip | 0.07-0.12 | 0.23-0.34 | 0.38-0.39 | 0.003-0.005 | ~7e4 |
 
@@ -104,9 +104,12 @@ Reading it (tip measured after the idle-capacity fix below; seeds 1-2):
     no hunger.
   - Han and Norse: higher wages.
 - **Worse than the baseline:**
-  - Mexica's hunger, about 0.13 against 0.005: the largest open regression. The cause is
-    probably still households budgeting for foods nobody offers on their tile (the trace above) and
-    wheat being a minor food there. It needs a trace on this tip.
+  - (Mexica's hunger, about 0.13 at the previous tip, is fixed. Cacao is both Mexica's money and a
+    food, and the mint for a money with no issuer bought up to a whole money stock of beans a year at
+    parity, so growing money always paid and took the food land. Money with no issuer is now
+    monetised only as holders want more cash, plus what is lost
+    (`economy-research-commodity-money.md`). Mexica's hunger is now 0 in both seeds, its money no
+    longer grows by itself, and its wage is above the baseline.)
   - Iron swings more in England and Norse than at the baseline. Its level is still far above cost,
     the stuck chain of 398.
 - **Gold** is wrong everywhere: Complaint 413 (valued like silver per kg, no store-of-value demand)
