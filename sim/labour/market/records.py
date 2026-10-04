@@ -152,6 +152,6 @@ def people_in(state: MarketState, area: Optional[AreaId] = None, include_trainee
             total += sum(bands)
         if include_trainees:
             for cohorts in state.trainees.get(each_area, {}).values():
-                for _years_left, bands in cohorts:
-                    total += sum(bands)
+                for cohort in cohorts:
+                    total += sum(cohort[1])
     return total
