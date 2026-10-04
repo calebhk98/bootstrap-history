@@ -137,8 +137,12 @@ check("a country with declared values weighs inventions by them",
 	  home_view.state_weights()["military"] == 0.9 and beta_world.state_weights() == {"military": 1.0})
 own_view = CountryWorld(world, profiles["beta"], registry)
 check("a country's government is its own actor in the registry", own_view.government() is beta_actor)
-check("without a registry the country's government takes nothing from anyone",
-	  beta_world.government().collect(object(), 100.0, beta_world) == 0.0)
+beta_firm = registry.add("firm:beta", ActorRecord(kind="firm", country="beta", money=100.0))
+beta_purse = beta_actor.money
+taken = registry.world_for(beta_firm, world).government().collect(beta_firm, 100.0, beta_world)
+check("a foreign state levies a firm of its own country at its tax share and capacity, money moving across",
+	  abs(taken - 100.0 * 0.2 * 0.5) < 1e-9 and abs(beta_firm.money - (100.0 - taken)) < 1e-9
+	  and abs(beta_actor.money - (beta_purse + taken)) < 1e-9, (taken, beta_firm.money, beta_actor.money))
 world.rate = 0.07
 check("an arbitrary shared member passes straight through", beta_world.market_rate() == 0.07)
 check("shared attributes pass through as properties",

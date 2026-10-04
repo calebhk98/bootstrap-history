@@ -20,9 +20,9 @@ ACTOR_CLASSES: Dict[str, Any] = {"firm": Firm, "government": Government, "intere
 # each spawner a function (registry, world) -> ids of the actors it founded
 SPAWNERS: List[Tuple[str, Callable[["ActorRegistry", Any], List[str]]]] = []
 
-# builds the world an actor of another country sees from the shared world and that country's
-# profile; None until a scope is registered, when every actor sees the shared world
-WORLD_SCOPE: List[Optional[Callable[[Any, Any, "ActorsState"], Any]]] = [None]
+# builds the world an actor of another country sees from the shared world, that country's profile
+# and the registry; None until a scope is registered, when every actor sees the shared world
+WORLD_SCOPE: List[Optional[Callable[[Any, Any, "ActorRegistry"], Any]]] = [None]
 
 
 def register_actor_kind(kind: str, actor_class: Any) -> None:
@@ -39,8 +39,8 @@ def register_spawner(name: str, spawner: Callable[["ActorRegistry", Any], List[s
 	SPAWNERS.append((name, spawner))
 
 
-def register_world_scope(scope: Callable[[Any, Any, "ActorsState"], Any]) -> None:
-	"""`scope(world, profile, state)` is the world an actor of the country `profile` sees."""
+def register_world_scope(scope: Callable[[Any, Any, "ActorRegistry"], Any]) -> None:
+	"""`scope(world, profile, registry)` is the world an actor of the country `profile` sees."""
 	WORLD_SCOPE[0] = scope
 
 
@@ -106,9 +106,13 @@ class ActorRegistry:
 				for holding in self._holders.values():
 					holding.discard(actor_id)
 		actor = ACTOR_CLASSES[record.kind](actor_id, record, make_policy(record.policy_kind))
-		if isinstance(actor, Firm):
+		if hasattr(type(actor), "rivals_of"):
+			# an actor that runs concerns in the shared market: it counts its rivals and is counted as one
 			actor.rivals_of = self.rivals_of
-			actor.on_capacity_change = self.note_capacity_change
+			if hasattr(type(actor), "on_capacity_change"):
+				actor.on_capacity_change = self.note_capacity_change
+			if hasattr(type(actor), "find_actor"):
+				actor.find_actor = self.get
 			from sim.invalidating import _InvalidatingSet
 			watch = _ConcernWatch(actor_id, self._holders, self.version)
 			record.concerns = _InvalidatingSet(record.concerns, on_change=watch)
@@ -133,9 +137,9 @@ class ActorRegistry:
 		key = (self.version[0], len(self.actors))
 		if self._capacity_totals is None or self._capacity_totals[0] != key:
 			totals: Dict[str, float] = {}
-			for firm in self.active_firms():
-				for held in firm.concerns:
-					totals[held] = totals.get(held, 0.0) + firm.record.capacity.get(held, 1.0)
+			for operator in self.market_operators():
+				for held in operator.concerns:
+					totals[held] = totals.get(held, 0.0) + operator.record.capacity.get(held, 1.0)
 			self._capacity_totals = (key, totals)
 		return self._capacity_totals[1].get(node_id, 0.0)
 
@@ -146,10 +150,10 @@ class ActorRegistry:
 		key = (self.version[0], len(self.actors))
 		if self._category_counts is None or self._category_counts[0] != key:
 			counts: Dict[Any, float] = {}
-			for firm in self.active_firms():
-				for node_id in firm.concerns:
+			for operator in self.market_operators():
+				for node_id in operator.concerns:
 					node_category = nodes[node_id].get("cat")
-					counts[node_category] = counts.get(node_category, 0.0) + firm.record.capacity.get(node_id, 1.0)
+					counts[node_category] = counts.get(node_category, 0.0) + operator.record.capacity.get(node_id, 1.0)
 			self._category_counts = (key, counts)
 		return self._category_counts[1].get(category, 0)
 
@@ -284,9 +288,28 @@ class ActorRegistry:
 			return world
 		scoped = self._scoped.get(country)
 		if scoped is None:
-			scoped = scope(world, self.state.countries[country], self.state)
+			scoped = scope(world, self.state.countries[country], self)
 			self._scoped[country] = scoped
 		return scoped
+
+	def market_operators(self) -> List[RecordedActor]:
+		"""Every actor still in business that runs concerns in the shared market: firms and players."""
+		return [actor for actor in (self.actors[actor_id] for actor_id in self._sorted_ids())
+				if hasattr(type(actor), "rivals_of") and actor.record.exited_year is None]
+
+	def _sorted_ids(self) -> List[str]:
+		if self._ordered_ids is None:
+			self._ordered_ids = sorted(self.actors)
+		return self._ordered_ids
+
+	def proven_concerns(self, world: Any) -> List[str]:
+		"""Concerns some player has shown to pay, the founder's and every player actor's, in id order."""
+		proven = set(world.proven_concerns())
+		for actor in self.actors.values():
+			shown = getattr(actor, "proven_concerns", None)
+			if shown is not None and actor.record.exited_year is None:
+				proven.update(shown(world))
+		return sorted(proven)
 
 	def active_firms(self) -> List[Firm]:
 		return [firm for firm in self.of_kind("firm") if firm.record.exited_year is None]  # type: ignore[misc]
@@ -351,7 +374,7 @@ class ActorRegistry:
 			if target is not None and target not in firm.concerns:
 				key = world.market_key(target)
 				waiting[key] = waiting.get(key, 0) + 1
-		for node_id in world.proven_concerns():
+		for node_id in self.proven_concerns(world):
 			key = world.market_key(node_id)
 			rivals = self.rivals_of(node_id, "")
 			expected = (world.entry_gross(node_id, rivals, waiting.get(key, 0) + 1)

@@ -1,7 +1,7 @@
 """`ForeignGovernment`: the state of a country other than the founder's, kept deliberately simple.
 
 It is its own kind, not `Government` with a country set: the home `Government` levies the people the
-founder's economy models and the founder himself, and every loop over governments in the engine means the
+founder's economy models and the founder, and every loop over governments in the engine means the
 home one. This one never sees them. Each year it takes the revenue its country's taxpayers yield (people the
 simulation does not model actor by actor, so the money enters at the edge "edge:foreign_taxpayers"), pays its
 army and officials (leaving at "edge:foreign_payroll_*"), keeps what is left, and copies the founder's
@@ -9,7 +9,7 @@ inventions it values through its country's scoped world, so distance and its own
 """
 from typing import Any, Dict
 
-from . import budget
+from . import budget, ledger
 from .base import RecordedActor
 from .registry import register_actor_kind
 from .tuning import GOVERNMENT_WORTH_SHARE_PER_GAIN
@@ -60,6 +60,16 @@ class ForeignGovernment(RecordedActor):
 		self.record.army = budget.army_next_year(soldiers, wanted, share)
 		self.record.need = need
 		self.record.unfunded = {name: money * (1.0 - share) for name, money in need.items()}
+
+	def collect(self, payer: Any, taxable: float, world: Any) -> float:
+		"""Levy an actor of its own country (a firm, a player) at the share it takes of every taxpayer;
+		the amount taken."""
+		tax_share = getattr(world, "tax_share", None)
+		if tax_share is None:
+			return 0.0
+		levy = max(0.0, taxable) * tax_share() * world.state_capacity()
+		ledger.transfer(payer, self, levy, "levy")
+		return levy
 
 	def advance(self, world: Any) -> None:
 		"""One year: take the revenue, pay the standing need, then copy what is worth copying. Its staff

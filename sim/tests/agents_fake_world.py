@@ -161,6 +161,13 @@ class FakeWorld:
 	def sectors(self) -> Dict[str, Any]:
 		return {}
 
+	# ---- what traders ask: no places to trade between unless a test subclass names some
+	def trade_places(self, location: Optional[str]) -> List[str]:
+		return []
+
+	def trade_materials(self) -> List[str]:
+		return []
+
 	# ---- the goods market
 	def market_forget(self, actor_id: str) -> None:
 		pass

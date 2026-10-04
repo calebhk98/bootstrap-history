@@ -51,11 +51,14 @@ state.countries["far"] = CountryProfile(country="far", name="Far", starting_tech
 foreign = registry.add("dragon:far", ActorRecord(kind="dragon", country="far"))
 check("an actor with no country answers to the home country", registry.country_of(dragon) == "home")
 check("an actor's own country is its country", registry.country_of(foreign) == "far")
-check("with no scope registered every actor sees the shared world", registry.world_for(foreign, world) is world)
 previous_scope = registry_module.WORLD_SCOPE[0]
 try:
+	registry_module.WORLD_SCOPE[0] = None
+	registry._scoped = {}
+	check("with no scope registered every actor sees the shared world", registry.world_for(foreign, world) is world)
 	registry_module.register_world_scope(lambda shared, profile, actors_state: ("scoped", profile.country))
 	check("a home actor still sees the shared world", registry.world_for(dragon, world) is world)
+	registry._scoped = {}
 	check("a foreign actor sees its country's scope", registry.world_for(foreign, world) == ("scoped", "far"))
 finally:
 	registry_module.WORLD_SCOPE[0] = previous_scope

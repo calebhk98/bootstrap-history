@@ -14,6 +14,16 @@ from .saving import SAVING_SHARE_OF_SURPLUS
 from .sector import CONCESSION_PREFIX, Sector, sector_key
 from .tuning import MANAGEMENT_SPAN_EXPONENT, OBSERVATION_RANGE_KM, PROOF_YEARS, SECRET_EXPOSURE
 from .tuning_spending import THREAT_ARMY_RESPONSE
+# importing these registers their kinds, spawners, commands and the country scope
+from .cast import cast_from_civilisations, profile_from_civilisation, seed_cast
+from .country_view import CountryWorld
+from .government_foreign import ForeignGovernment
+from .player import Player
+from .stratum import Stratum, stratum_id
+from .strata_seed import seed_strata, strata_definitions, strata_spawner
+from .player_commands import CommandRejected, register_command
+from .trader import Trader
+from .trader_entry import trader_entry
 
 __all__ = ["Actor", "RecordedActor", "Household", "Firm", "Government",
            "Policy", "ValuePolicy", "CallbackPolicy", "IdlePolicy", "Option",
@@ -22,4 +32,7 @@ __all__ = ["Actor", "RecordedActor", "Household", "Firm", "Government",
            "register_spawner", "register_world_scope", "ledger", "licence", "supply", "imitation", "revenue",
            "SAVING_SHARE_OF_SURPLUS", "CONCESSION_PREFIX", "Sector", "sector_key",
            "MANAGEMENT_SPAN_EXPONENT", "OBSERVATION_RANGE_KM", "PROOF_YEARS", "SECRET_EXPOSURE",
-           "THREAT_ARMY_RESPONSE"]
+           "THREAT_ARMY_RESPONSE", "cast_from_civilisations", "profile_from_civilisation", "seed_cast",
+           "CountryWorld", "ForeignGovernment", "Player", "Stratum", "stratum_id", "seed_strata",
+           "strata_definitions", "strata_spawner", "CommandRejected", "register_command", "Trader",
+           "trader_entry"]
