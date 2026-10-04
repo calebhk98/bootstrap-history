@@ -10,6 +10,7 @@ split: nothing here touches the live Sim - see render.py and ARCHITECTURE.md.
 from sim.ui import units_text
 from .util import _coin_hoard_line, _factor, _fmt_num, _pct, _wrap
 from .capacity_remedies import render_remedies
+from .render_portfolio_rows import paging_line, project_lines
 
 # render_capacity is split into one function per screen section - resources,
 # power, mines, project portfolio, spare capacity - concatenated by
@@ -219,25 +220,10 @@ def render_portfolio(out):
     lines += _waiting_lines(out.get("waiting_to_start") or [])
     if rows:
         for row in rows:
-            _rank = row.get("pool_rank_this_year")
-            _count = row.get("pool_active_count_this_year")
-            _directed = row.get("hours_directed_this_year")
-            lines.append("")
-            lines.append("  %-28s [%s]%s" % (row["name"], row["constraint"].replace("_", " "),
-                                         "  (allocate: %s hrs/yr)" % _fmt_num(_directed)
-                                         if _directed else ""))
-            lines.append("    this year: %s offered, %s effective, of %s hrs "
-                     "total to go%s"
-                     % (_fmt_num(row.get("hours_offered_this_year")),
-                        _fmt_num(row.get("hours_effective_this_year")),
-                        _fmt_num(row.get("founder_hours_total")),
-                        ("  (priority #%s of %s active)" % (_rank, _count))
-                        if _rank and _count else ""))
-            if row.get("hours_effective_last_year") is not None:
-                lines.append("    last year: %s effective" % _fmt_num(row["hours_effective_last_year"]))
-            lines.append(_wrap("waiting on: " + str(row.get("waiting_on")), indent="      "))
-            if row.get("why_underfunded"):
-                lines.append(_wrap(row["why_underfunded"], indent="      "))
+            lines += project_lines(row)
+        more = paging_line(out.get("paging"))
+        if more:
+            lines += ["", more]
     else:
         lines.append("  nothing in hand - 'available' or 'stuck' says what you "
                  "could begin today")
