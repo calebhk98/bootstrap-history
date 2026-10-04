@@ -1,6 +1,6 @@
 # Interest groups: landholders, organised workers, firm owners and the rest are not modelled
 
-**Status:** open
+**Status:** partly - strata (sim/agents/group_strata.py): a free home-country stratum whose welfare falls more than a declared threshold below what it has come to expect organises as `falling_incomes` (rents for a propertied stratum); bonded strata cannot; the founder is blamed only for the share of the fall his measured displacement explains. Landholder rents still have no year-to-year mover (a stratum's welfare is the only rent signal), organised-worker unrest, firm-owner margins as group members, clergy/military/bureaucracy are not done. Measured: 4-year Rome run (sim(civ='rome_100ad'), iron sale each year): the first draft formed a 193M 'rich' group from a 1.3% swing; with the threshold only the iron group forms (scratchpad c_run.py). Needs api.py export of group_strata/group_goods/group_reach if the `Sector` static handles are replaced.
 
 Complaint 110's first increment builds interest groups as actors (`sim/agents/group.py`) from two measured sources only: producers of a commodity whose sales the founder displaces (the market's `displaced_by_founder_tonnes`) and employers of a trade whose price the founder's and the firms' hiring pushed above the wage table (`labour_price_factor`). Every other body of people 110 names has no source yet:
 
