@@ -8,7 +8,7 @@ Both run in the yearly staff step, ahead of the closure rule, and hire through
 import math
 from collections import defaultdict
 
-GENERIC_RESOURCE_TRADES = {"scholars": "scholar", "craftsmen": "artisan"}
+from . import trade_data
 
 
 class StaffControlsMixin:
@@ -42,7 +42,7 @@ class StaffControlsMixin:
         shortfalls = self._world.staffing_shortfalls(totals, strict=True)
         for resource in sorted(claimed):
             short = math.ceil(min(shortfalls.get(resource, 0.0), claimed[resource]) - 0.01)
-            self.hire_to_cover(GENERIC_RESOURCE_TRADES.get(resource, resource), short,
+            self.hire_to_cover(trade_data.staff_resource_trade(resource), short,
                                "keep_staffed", partial=True)
 
     def hold_staff_reserve(self):
@@ -54,8 +54,8 @@ class StaffControlsMixin:
             return
         household = self._world.state.household
         scholars_free, craftsmen_free = self._world.venture_staff_free()
-        for trade, target, free in (("artisan", household.reserve_craftsmen, craftsmen_free),
-                                    ("scholar", household.reserve_scholars, scholars_free)):
+        for trade, target, free in ((trade_data.generic_craft_trade(), household.reserve_craftsmen, craftsmen_free),
+                                    (trade_data.scholar_trade(), household.reserve_scholars, scholars_free)):
             short = math.ceil(target - free - 0.01)
             if short <= 0:
                 continue

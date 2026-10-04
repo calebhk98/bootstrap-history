@@ -6,7 +6,7 @@ against the household actor's `employees`, so a firm or state can use them.
 """
 import math
 
-GENERIC_TRADES = ("artisan", "scholar", "labourer", "slave")
+from . import trade_data
 
 
 class StaffLedgerMixin:
@@ -44,7 +44,7 @@ class StaffLedgerMixin:
             lab_left = (record.get("lab_left") if isinstance(record, dict)
                         else getattr(record, "lab_left", None)) or node.get("lab") or {}
             for trade, hours in lab_left.items():
-                if trade not in GENERIC_TRADES and hours > 0:
+                if not trade_data.is_generic_staff(trade) and hours > 0:
                     drawn.setdefault(trade, []).append("project " + node_id)
         for trade in sorted(self._world.venture_foremen_used()):
             drawn.setdefault(trade, []).append("open concern")
@@ -56,7 +56,7 @@ class StaffLedgerMixin:
         drawn = self.trades_drawn_on()
         rows = []
         for trade, count in sorted(self._world.state.household.employees.items()):
-            if trade in GENERIC_TRADES or trade in drawn or count < 0.5:
+            if trade_data.is_generic_staff(trade) or trade in drawn or count < 0.5:
                 continue
             rows.append({"trade": trade, "count": round(count, 1),
                          "wage_bill_per_year": round(count * self.labour_market.quote_annual(trade), 1),
@@ -100,13 +100,16 @@ class StaffLedgerMixin:
             short = min(short, max(0, int(self.household_room() + 1e-9)))
             if short <= 0:
                 return 0
+        household = self._world.state.household
+        before = household.employees.get(trade, 0.0)
         hired, _why = self.hire(trade, short)
-        if not hired:
+        found = int(round(household.employees.get(trade, 0.0) - before))
+        if not hired or found <= 0:
             return 0
-        self._world.state.household.log.append((self._world.state.scenario.year,
-                                         "%s: you hire %d %s%s to keep your concerns supervised"
-                                         % (label, short, trade, "" if short == 1 else "s")))
-        return short
+        household.log.append((self._world.state.scenario.year,
+                              "%s: you hire %d %s%s to keep your concerns supervised"
+                              % (label, found, trade, "" if found == 1 else "s")))
+        return found
 
     def replace_lost_foremen(self):
         """auto_replace_foreman: hire the specialists open concerns need and lack."""

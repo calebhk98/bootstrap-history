@@ -8,12 +8,13 @@ founder selling their own hours at the going rate, and a household paying
 its standing staff that same rate every year. Both ask the labour market (labour_market_api.py), which
 starts from the labour-market schedule (wage_per_hour: subsistence floor,
 training premium, tightness) and applies wage_cost_factors - the food,
-housing and trade-tool multipliers (TRADE_TOOL_BASKETS, HOUSING_PRESSURE_*,
+housing and trade-tool multipliers (trade_data.tool_basket, HOUSING_PRESSURE_*,
 WAGE_SHARE_*) that follow live market prices. Nothing here decides WHO can be hired or how many -
 that is labour_population.py's market depth and labour_capacity.py's
 household-room ceiling; this file only prices the trade once a person is
 in it.
 """
+from . import trade_data
 from .labour_market_api import LabourMarket
 from .labour_wage_ledger import WageLedgerMixin
 from sim.constants import declare
@@ -183,22 +184,6 @@ class WagesMixin(WageLedgerMixin):
             total += count * self.labour_market.quote_annual(trade)
         return total
 
-    # Materials a worker must replace to remain in their trade. These are not
-    # the inputs of the employer's current project (project_cost already pays
-    # those); they are the ordinary tools, fuel and consumables borne by a
-    # self-equipped pre-industrial worker. Missing entries have no distinct
-    # tool basket rather than inheriting an unrelated material. [C]
-    TRADE_TOOL_BASKETS = {
-        "artisan": ("timber", "iron"), "carpenter": ("timber", "iron"),
-        "chemist": ("glass", "charcoal"), "electrician": ("copper",),
-        "engineer": ("iron", "paper"), "engraver": ("iron",),
-        "furnaceman": ("charcoal",), "glassblower": ("glass", "charcoal"),
-        "machinist": ("iron",), "mason": ("stone", "timber"),
-        "millwright": ("timber", "iron"), "miner": ("iron", "timber"),
-        "optician": ("glass",), "plumber": ("lead",), "potter": ("clay", "charcoal"),
-        "scribe": ("paper",), "smith": ("iron", "charcoal"),
-    }
-
     HOUSING_PRESSURE_START_OCCUPANCY = declare(
         "HOUSING_PRESSURE_START_OCCUPANCY", 0.75, kind="temporary_heuristic",
         unit="fraction of supervision_room occupied", source=None,
@@ -272,7 +257,7 @@ class WagesMixin(WageLedgerMixin):
         """
         food = self._world.essential_price_ratio()
         housing = self.labour_market.town_housing_factor()
-        basket = self.TRADE_TOOL_BASKETS.get(trade, ())
+        basket = trade_data.tool_basket(trade)
         tools = (sum(self._world.material_price_factor(material) for material in basket) / len(basket)
                  if basket else 1.0)
         return {"food": food, "housing": housing, "tools": tools,
@@ -337,4 +322,4 @@ class WagesMixin(WageLedgerMixin):
         hours = self._world.state.economy.society_labour_hours
         if not hours:
             return
-        self.wage_schedule().step(self._hours_needed_by_trade(), hours)
+        self.wage_schedule().step(self._hours_needed_for_wages(), hours)

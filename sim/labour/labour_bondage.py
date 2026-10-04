@@ -17,6 +17,7 @@ rebuilds self.household.scholars/artisans from the trades actually on the
 books - does not overwrite the grant out of existence.
 """
 from sim.constants import declare
+from . import trade_data
 
 
 class BondageMixin:
@@ -101,8 +102,8 @@ class BondageMixin:
         the grant back rather than let it be overwritten out of existence.
         """
         household = self._world.state.household
-        craft = sum(count for trade, count in household.employees.items() if self._world.trade_family(trade) == "craft")
-        schol = household.employees.get("scholar", 0.0)
+        craft = sum(count for trade, count in household.employees.items() if self.is_craft_trade(trade))
+        schol = household.employees.get(trade_data.scholar_trade(), 0.0)
         granted = getattr(household, "granted_staff", None) or {}
         # PEOPLE STILL LEARNING ARE NOT YET CRAFTSMEN. This function
         # recomputes self.household.artisans from scratch on every call, so

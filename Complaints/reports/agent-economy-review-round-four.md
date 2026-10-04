@@ -1,13 +1,13 @@
 # The agent economy, round four
 
 Follows `agent-economy-review-round-three.md`. Again only `sim/economy/`, new tests and new files in
-`Complaints/` could change; what needs other folders is filed as complaints 425-433.
+`Complaints/` could change; what needs other folders is filed as complaints 439-447.
 
 ## How it was measured
 
 - **Whole games:** a scratch driver replaying the deleted `sim/economy_validate.py` (`git show
   97473f1:sim/economy_validate.py`). It plays 30 years per civilisation and seed and adds gold, silver
-  and iron columns. No committed command prints these yet (Complaint 431). The figures are now pure
+  and iron columns. No committed command prints these yet (Complaint 445). The figures are now pure
   functions in `sim/economy/diagnostics.py`, ready for that command.
 - **Caution on seeds:** they still share one spin-up per civilisation (Complaint 400), so a seed is
   not an independent draw.
@@ -37,7 +37,7 @@ Follows `agent-economy-review-round-three.md`. Again only `sim/economy/`, new te
 - **Mines could not be sited.**
   - Deposits are geography's. The economy takes `SiteLimit`s (capacity and yield per recipe and
     tile) and reports `YearOutcome.extraction` (`sites.py`).
-  - Until the port is wired (Complaint 426), sited recipes keep today's placement under the
+  - Until the port is wired (Complaint 440), sited recipes keep today's placement under the
     declared heuristic `UNSITED_EXTRACTION_ANYWHERE`.
 - **Crops grew in any climate.**
   - Cacao, Mexica's money and a food, filled highland tiles.
@@ -69,7 +69,7 @@ Follows `agent-economy-review-round-three.md`. Again only `sim/economy/`, new te
   - the hunger need and unskilled trade come from the setup.
 - **Tests:** the 19 round-three scratch tests are in the suite (396). Agent-economy equivalents
   cover the state budget, the loanable rate and foreign balances (389, partly). The economy has a
-  published surface, `api.py` (Complaint 425 holds the port patch), with hours-weighted trade wages
+  published surface, `api.py` (Complaint 439 holds the port patch), with hours-weighted trade wages
   for 394.
 
 ## Measured, 30 years, seeds 1-2
@@ -79,7 +79,7 @@ Follows `agent-economy-review-round-three.md`. Again only `sim/economy/`, new te
   - "exit and location" is `ee5a42f`;
   - "tip" is the branch tip, with margin entry taken out and the trial newcomer, the cost memory
     and the durables spending cap in.
-- **Command:** scratch driver (Complaint 431).
+- **Command:** scratch driver (Complaint 445).
 - **Spin-up:** seeds share one spin-up (400), so read the ranges as indications.
 
 | | grain vol. | iron vol. | wage, kg wheat/h | hungry | gold/silver |
@@ -112,10 +112,10 @@ Reading it (tip measured after the idle-capacity fix below; seeds 1-2):
     longer grows by itself, and its wage is above the baseline.)
   - Iron swings more in England and Norse than at the baseline. Its level is still far above cost,
     the stuck chain of 398.
-- **Gold** is wrong everywhere: Complaint 428 (valued like silver per kg, no store-of-value demand)
-  and 429 (no durable goods in the economy). The store-of-value mechanism is built and tested on the
+- **Gold** is wrong everywhere: Complaint 442 (valued like silver per kg, no store-of-value demand)
+  and 443 (no durable goods in the economy). The store-of-value mechanism is built and tested on the
   fixture (`households_store.py`; `agent-economy-store-of-value-design.md`) and is inert until the
-  port passes service lives (429). Opening stocks and behaviour checks (steps 6-7) remain.
+  port passes service lives (443). Opening stocks and behaviour checks (steps 6-7) remain.
 - **The trial newcomer** was the main cause of England's grain swing before the idle-capacity fix.
   Whether it still is, and what it does for Mexica, needs re-measuring.
 
@@ -166,8 +166,8 @@ Reading it (tip measured after the idle-capacity fix below; seeds 1-2):
 
 ## Left to do
 
-- Complaints 426-432 (port, geography and data).
-- 428/429 (gold and durables).
+- Complaints 440-446 (port, geography and data).
+- 442/443 (gold and durables).
 - 392 (several moneys: design in `agent-economy-several-moneys.md`).
 - 106 (banks: design in `agent-economy-capital-markets.md`).
 - 385 (needs an owner decision).

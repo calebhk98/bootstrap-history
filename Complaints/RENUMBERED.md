@@ -351,15 +351,40 @@ Filed on `ui-disclosure-and-inspectors` at the same time as main's 401-418; move
 405 -> 423  mods-cannot-add-figures-or-screen-rows-through-data
 406 -> 424  units-json-has-no-rule-for-mass-per-year-fields
 
-Economy round four filed 401-409 while the multiplayer and geography work filed theirs on main; main's
-numbers stand, and the economy's moved twice (to 410-418, then here). Final numbers:
+## 2026-10-04 (labour-market-core, merged twice with main)
 
-401 -> 425  the-engine-port-reaches-past-the-economy-surface
-402 -> 426  the-port-does-not-hand-the-economy-site-limits-or-read-its-extraction
-403 -> 427  ore-and-metal-content-tables-in-the-engine-block-mods
-404 -> 428  gold-is-valued-like-silver-and-nobody-holds-it-as-wealth
-405 -> 429  goods-service-lives-never-reach-the-economy
-406 -> 430  danger-pay-is-always-zero
-407 -> 431  no-command-prints-the-economys-health
-408 -> 432  the-port-names-the-labourer-trade
-409 -> 433  economy-agents-doc-predates-exit-location-and-margin-entry
+This branch first filed 401-407, moved them to 412-418 when main's multiplayer complaints took 401-407, then
+filed 408-426 alongside. Main's geography and UI branches took 408-424, so every labour-branch complaint moved
+again. Final numbers, from the branch's own numbers:
+
+401 -> 428  the-economy-clears-labour-with-its-own-model-instead-of-the-labour-core (412 on the branch)
+402 -> 429  the-trade-registry-drops-fields-labour-needs (413)
+403 -> 430  the-labour-core-has-no-save-field-and-no-yearly-call (414)
+404 -> 431  the-labour-package-imports-the-engine (415)
+405 -> 432  the-subsistence-staple-is-wheat-for-every-civilisation (416)
+406 -> 433  ui-cannot-offer-pay-over-the-market (417)
+407 -> 434  recipe-need-shares-overweight-mining-and-omit-transport-and-building-trades (418)
+408 -> (416)  geography-api-for-reach-by-transport: dropped, main's 416 asks for the same and geography now has api.reach
+409 -> 425  hire-replies-report-the-count-asked-not-the-count-found
+410 -> 426  labour-cannot-read-how-many-people-actors-hold-nationwide
+411 -> 427  a-partly-covered-payroll-is-neither-trimmed-nor-emptied
+419-422 -> (418)  four test failures present on main: dropped, main's 418 lists the same
+423 -> 435  han-opening-wages-spread-over-two-orders-of-magnitude
+424 -> 436  han-founders-are-denounced-within-about-thirty-years-on-every-seed
+425 -> 437  growing-season-weather-test-reads-a-region-latitude-the-data-no-longer-has
+426 -> 438  spending-can-run-past-the-credit-limit-when-upkeep-nears-revenue
+
+## 2026-10-04 (economy round four, merged three times with main)
+
+Economy round four filed 401-409; the multiplayer, geography, UI and labour branches took numbers on
+main first, so the economy's moved three times (to 410-418, then 425-433, then here). Final numbers:
+
+401 -> 439  the-engine-port-reaches-past-the-economy-surface
+402 -> 440  the-port-does-not-hand-the-economy-site-limits-or-read-its-extraction
+403 -> 441  ore-and-metal-content-tables-in-the-engine-block-mods
+404 -> 442  gold-is-valued-like-silver-and-nobody-holds-it-as-wealth
+405 -> 443  goods-service-lives-never-reach-the-economy
+406 -> 444  danger-pay-is-always-zero
+407 -> 445  no-command-prints-the-economys-health
+408 -> 446  the-port-names-the-labourer-trade
+409 -> 447  economy-agents-doc-predates-exit-location-and-margin-entry

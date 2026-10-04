@@ -19,6 +19,7 @@ worth, without hiring anyone new.
 import math
 
 from sim.constants import declare
+from . import trade_data
 
 
 class TrainingMixin:
@@ -189,9 +190,11 @@ class TrainingMixin:
         again when buying deep into what the local market can spare."""
         return self.labour_market.commission_cost(trade, hours, self.COMMISSION_PREMIUM_MULTIPLIER)
 
-    def hire_check(self, trade, count):
+    def hire_check(self, trade, count, pay_premium=0.0):
         """Everything `hire` and `quote hire` agree on before money moves: the
-        whole-person count and the fee, or a refusal. Returns (count, fee, refusal)."""
+        whole-person count and the fee, or a refusal. Returns (count, fee, refusal).
+        A big search finds fewer than asked in a year (the market's matching), so `count`
+        returned may be below the request; `pay_premium` is the fraction paid over the market."""
         trade = str(trade or "").strip().lower()
         if trade not in self._world.wages:
             return None, None, ("no such trade: %s. Trades: %s"
@@ -242,7 +245,9 @@ class TrainingMixin:
         # or hiring your way to a bigger supply of the trade brings the price
         # back down).
         _lpf_now = self.labour_market.price_factor(trade)
-        fee = self.hire_fee(trade, count)
+        asked = count
+        count = float(self.labour_market.whole_recruits(trade, asked, pay_premium))
+        fee = self.labour_market.hire_cost(trade, count, pay_premium)
         if fee > self._world.spending_power("buy"):
             _msg = self._cash_in_hand_refusal(
                 "hiring %g %s%s" % (count, trade, "" if count == 1 else "s"), fee)
@@ -279,10 +284,12 @@ class TrainingMixin:
                               self._room_advice()))
         return count, fee, None
 
-    def hire(self, trade, count):
-        """Take someone onto the staff permanently. They are paid every year."""
+    def hire(self, trade, count, pay_premium=0.0):
+        """Take someone onto the staff permanently. They are paid every year. A large search finds
+        only part of the crew in a year; the rest must be sought again next year."""
         trade = str(trade or "").strip().lower()
-        count, fee, refusal = self.hire_check(trade, count)
+        asked = count
+        count, fee, refusal = self.hire_check(trade, count, pay_premium)
         if refusal:
             return False, refusal
         household = self._world.state.household
@@ -291,18 +298,21 @@ class TrainingMixin:
         # See step() 2, where it is netted off living_cost.
         household.wages_prepaid = (household.wages_prepaid or 0.0) + fee
         household.employees[trade] = household.employees.get(trade, 0.0) + float(count)
-        self.labour_market.hire(self._world.state.household, trade, float(count) * self._world.HOURS_PER_PERSON_YEAR)
+        self.labour_market.hire(self._world.state.household, trade, float(count) * self._world.HOURS_PER_PERSON_YEAR,
+                                pay_premium)
         self._resync_pools()
+        unfound = (" Found %g of the %g asked for; the rest must be sought next year." % (count, asked)
+                   if count < asked - 1e-6 else "")
         # SAY HOW MANY, AND HOW MANY YOU NOW HAVE: a reply that only names
         # the trade, with no number, gives a player no way to notice a
         # request for eight landing as one. A verb that takes a quantity
         # has to report the quantity.
         return True, ("%g %s%s taken on for %s denarii (a finder's fee and the "
                       "first year in advance). You now have %.1f, and %.2f "
-                      "household place(s) left"
+                      "household place(s) left.%s"
                       % (count, trade, "" if count == 1 else "s",
                          "{:,.0f}".format(fee), household.employees[trade],
-                         max(0.0, self.household_room())))
+                         max(0.0, self.household_room()), unfound))
 
     def fire(self, trade, count):
         """Let staff go. Their wages stop; so does what they were doing.
@@ -404,10 +414,7 @@ class TrainingMixin:
             return None, ("you teach whole people, not %g of one. Teach %d or %d."
                            % (count, math.floor(count), math.ceil(count)))
         count = float(round(count))
-        frm = (frm or ("smith" if trade in ("machinist", "engineer")
-                       else "glassblower" if trade == "optician"
-                       else "scribe" if trade == "chemist"
-                       else "smith")).strip().lower()
+        frm = (frm or trade_data.taught_from(trade)).strip().lower()
         if frm in self._world.trades_absent and frm not in self._world.state.household.trades_created:
             return None, "you cannot teach from %ss; there are none" % frm
         # LITERACY BOUNDS TEACHING TOO, and this is where it bites hardest:
@@ -553,7 +560,7 @@ class TrainingMixin:
             # spare the time: a workshop needs hands, not a particular guild.
             best = None
             for trade in sorted(self._world.wages):
-                if self._world.trade_family(trade) != "craft" or not self.trade_available(trade):
+                if not self.is_craft_trade(trade) or not self.trade_available(trade):
                     continue
                 spare = self.market_supply(trade) - household.contract_hours.get(trade, 0.0)
                 if spare < hours:
@@ -577,7 +584,7 @@ class TrainingMixin:
         person is the whole point of `commission`."""
         household = self._world.state.household
         contracted = sum(hours for trade, hours in getattr(household, "contract_hours", {}).items()
-                         if self._world.trade_family(trade) == "craft")
+                         if self.is_craft_trade(trade))
         # AND YOURSELF. effective_scholars() has always counted the founder as
         # one of the scholars - "you are your own natural philosopher" - and
         # nothing counted them as a pair of hands, though the premise of the

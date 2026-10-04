@@ -10,7 +10,7 @@ service life as a durable: households hold a stock, buy only to keep it up, and 
 bought: an iron tool, a bronze pot and a gold ring are bought afresh every year like bread.
 
 Why it matters: metal demand is then a large yearly flow instead of the upkeep of a stock, and metal
-prices are formed on flows (Complaint 387); gold and silver cannot be held as wealth (428).
+prices are formed on flows (Complaint 387); gold and silver cannot be held as wealth (442).
 
 What it would take: a service life per good in data (for example beside the spoilage rates in
 `data/world/spoilage.json`), and the port passing it. The port also passes an empty category for

@@ -638,25 +638,30 @@ class EarlyCivilisationBlacksmithTests(unittest.TestCase):
             reached_node_ids={"anything", "everything"}))
 
 
+FAMILY = {"furnaceman": "metal", "smith": "metal", "scribe": "letters"}
+
+
 class SkillFamilyProximityTests(unittest.TestCase):
     """Stakeholder point 6: 'it thinks you can't ever teach yourself a
     skill, and nothing transfers'. A single surplus trade whose outflow
     cannot fill BOTH of two shortage trades' full requirement should
-    favour the skill-close one - see TRADE_SKILL_FAMILY and
+    favour the skill-close one - see the registry family and
     `_flow_proximity`."""
 
     def test_same_family_destination_is_never_discounted(self):
-        self.assertEqual(labour_market.trade_skill_family("furnaceman"), "metal")
-        self.assertEqual(labour_market.trade_skill_family("smith"), "metal")
         self.assertEqual(
-            labour_market._flow_proximity("furnaceman", "smith", destination_is_walkable=False),
+            labour_market._flow_proximity("furnaceman", "smith", destination_is_walkable=False,
+                                          skill_family_of=FAMILY.get),
             1.0)
 
     def test_cross_family_destination_is_discounted_by_the_stated_constant(self):
-        self.assertEqual(labour_market.trade_skill_family("scribe"), "technical")
         self.assertEqual(
-            labour_market._flow_proximity("furnaceman", "scribe", destination_is_walkable=False),
+            labour_market._flow_proximity("furnaceman", "scribe", destination_is_walkable=False,
+                                          skill_family_of=FAMILY.get),
             labour_market.CROSS_FAMILY_PROXIMITY)
+
+    def test_without_a_registry_every_trade_is_its_own_family(self):
+        self.assertEqual(labour_market.trade_skill_family("any_mod:trade"), "any_mod:trade")
 
     def test_a_walkable_destination_is_never_discounted_regardless_of_family(self):
         self.assertEqual(

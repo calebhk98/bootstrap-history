@@ -25,7 +25,19 @@ onto a whole person without biasing which way growth heads.
 import math
 
 from sim.constants import declare
+from . import legacy_trade_defaults, trade_data
 from .wage_provider import reference_civilisation
+
+
+
+
+class _LiterateTrades:
+    """The trades whose practice is reading: this world's own on an instance, the shipped set on the class."""
+
+    def __get__(self, instance, owner=None):
+        if instance is None:
+            return frozenset(legacy_trade_defaults.LITERATE)
+        return trade_data.literate_trades(instance._world.wages)
 
 
 class CapacityMixin:
@@ -103,8 +115,10 @@ class CapacityMixin:
     # drawings, exactly like the other four, so excluding it would let it
     # bypass the literacy ceiling that caps machinists, chemists,
     # engineers and opticians.
-    LITERATE_TRADES = frozenset({"scholar", "scribe", "engineer", "chemist",
-                                 "machinist", "optician", "electrician"})
+    LITERATE_TRADES = _LiterateTrades()
+
+    def is_craft_trade(self, trade):
+        return self._world.trade_family(trade) == legacy_trade_defaults.CRAFT_FAMILY
     # The literacy this file's trade shares and staff ceilings were already
     # tuned against, before literacy was read anywhere: the default
     # civilisation's own numbers, because every other constant in this economy -
@@ -147,7 +161,7 @@ class CapacityMixin:
         can actually fill. 1.0 for anything that is not a literate trade."""
         if trade not in self.LITERATE_TRADES:
             return 1.0
-        if trade == "scholar":
+        if trade == trade_data.scholar_trade():
             lit, ref = self._world.civ.get("literacy_elite", 0.0), self.LITERACY_REFERENCE_ELITE
         else:
             lit, ref = self._world.civ.get("literacy_general", 0.0), self.LITERACY_REFERENCE_GENERAL
@@ -279,7 +293,7 @@ class CapacityMixin:
         # no floor. The rune-carver and the priest are always findable; the POOL
         # on top of them is what literacy buys, and it is what teaching moves.
         cap = self.LITERATE_CAPACITY_FLOOR + people * self.literacy_factor(trade)
-        if trade == "scholar":
+        if trade == trade_data.scholar_trade():
             # THE SAME POOL auto_hire ALREADY TRUSTED. staff_capacity()'s `sc`
             # is schools, academies, patrons and the industrial cascade that
             # trains scholars outright and carries their keep on the
@@ -323,7 +337,7 @@ class CapacityMixin:
             "school, an academy, an imperial patron - is what actually "
             "moves this number; printing, paper and libraries raise "
             "literacy itself, which by itself is the smaller of the two."
-            if trade == "scholar" else
+            if trade == trade_data.scholar_trade() else
             "Printing, paper, schools and academies widen the pool - they "
             "raise how many people here can read, and this ceiling rises "
             "with it.")
@@ -488,11 +502,14 @@ class CapacityMixin:
             "single year rather than holding back - a caution constant, "
             "not a measured savings rate.")
     def staff_wage_reference(self):
-        """Blended annual wage of the trades that exist from the start, used
-        to turn an affordability budget into a headcount."""
-        wages = [self.base_annual_wage(trade) for trade in sorted(self._world.wages)
+        """Blended annual wage, in current money, of the trades that exist from
+        the start: what hiring costs the market now, so an affordability
+        budget turns into a headcount in the money it is paid in."""
+        market = self.labour_market
+        wages = [market.unscarce_annual(trade) for trade in sorted(self._world.wages)
                  if trade not in self._world.trades_absent]
-        return sum(wages) / len(wages) if wages else self.base_annual_wage("labourer")
+        return sum(wages) / len(wages) if wages else market.unscarce_annual(
+            trade_data.fallback_trade(self.wage_schedule().training_years, self._world.trade_family))
 
     STAFF_EXTRA_HEADROOM_WEIGHT = declare(
         "STAFF_EXTRA_HEADROOM_WEIGHT", 1.35, kind="temporary_heuristic",
@@ -585,7 +602,7 @@ class CapacityMixin:
         # printing, schools and libraries raise literacy_elite
         # (apply_tech_effects, society.py) and widen it again as a run goes
         # on, which is the entire point of building them.
-        scholars *= self.literacy_factor("scholar")
+        scholars *= self.literacy_factor(trade_data.scholar_trade())
         # you cannot keep staff you cannot pay
         # a famous school attracts students and patrons it did not have to pay for
         # WAGES ARE A REAL CHARGE (see wage_bill), so this ceiling must be
@@ -606,7 +623,7 @@ class CapacityMixin:
                     * self._world.rep_factor()
                     + max(0.0, self._world.state.household.capital) * self.STAFF_CAPITAL_INCOME_RATE)
         budget = spare * self.STAFF_BUDGET_SHARE_OF_SPARE
-        afford = budget / self.labour_market.in_current_money(self.staff_wage_reference())
+        afford = budget / self.staff_wage_reference()
         # EXTRA is supervision_room(), the headroom auto_hire adds on top of
         # this institutional ceiling (see step(), section 1). It must be
         # folded into the SAME denominator this ceiling is scaled against,

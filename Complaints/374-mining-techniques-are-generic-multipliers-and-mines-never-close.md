@@ -7,4 +7,4 @@
 
 ## Round four
 
-The agent economy's producers exit after their loss years when they have no variable margin, repaying lenders first (`sim/economy/producers_close.py`, `producer_exit.py`); idle plantless capacity decays toward runs worked; a mine that left can return once wages fall (`python3 -m sim.tests --only economy_exit`). Sites and depletion come from geography through site limits (Complaint 426).
+The agent economy's producers exit after their loss years when they have no variable margin, repaying lenders first (`sim/economy/producers_close.py`, `producer_exit.py`); idle plantless capacity decays toward runs worked; a mine that left can return once wages fall (`python3 -m sim.tests --only economy_exit`). Sites and depletion come from geography through site limits (Complaint 440).
