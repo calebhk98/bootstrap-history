@@ -88,7 +88,6 @@ class ImportTests(unittest.TestCase):
         paid = foreign.balance_of_payments(economy.record.book, COIN).exports_received
         self.assertGreater(paid / bought.output[fixture.GRAIN], control.prices[fixture.GRAIN])
 
-    @unittest.expectedFailure   # finding: with a partner bidding far above home, the recorded grain price falls to the opening seed instead of rising
     def test_a_partner_buying_exports_does_not_lower_the_domestic_price_of_the_good(self):
         _economy, control, _change = first_year()
         _economy, bought, _change = first_year(exports={fixture.GRAIN: (3.0, 7 * GRAIN_OUTPUT_SCALE)})

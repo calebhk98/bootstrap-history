@@ -10,7 +10,7 @@ from typing import Optional, Sequence
 from sim.constants import declare
 
 from .goods_market_demand import DemandSchedule
-from .types import Bid, Offer
+from .types import EDGE_EXTERNAL, Bid, Offer
 
 NO_BID_MEMORY_SHARE = declare(
     "NO_BID_MEMORY_SHARE", 0.3, kind="temporary_heuristic",
@@ -94,7 +94,10 @@ def price_after_resumed_trade(old: Optional[float], volume_rule_price: float, ye
 
 
 def wanted_at(bids: Sequence[Bid], price: Optional[float]) -> float:
-    """What the buyers would have taken at a price (budgets and ceilings applied); zero without a price."""
+    """What the market's own buyers would have taken at a price (budgets and ceilings applied); zero
+    without a price. A foreign partner's order is sized by the partner, not by what the market usually
+    trades, so it does not count: left in, it makes any home trade a sliver and freezes the memory."""
+    bids = [bid for bid in bids if bid.buyer != EDGE_EXTERNAL]
     if not price or price <= 0.0 or not bids:
         return 0.0
     return DemandSchedule(sorted(bids, key=lambda bid: (bid.priority, bid.buyer, bid.tile))).total_at(price)
