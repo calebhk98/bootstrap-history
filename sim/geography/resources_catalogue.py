@@ -12,7 +12,7 @@ deposits are not hidden: they sit in the tile nearest their coordinates.
 import math
 from typing import Any, Dict, List
 
-from sim.geography import parameters
+from sim.geography import mechanisms, parameters
 from sim.geography.map_source import MapDataError, WorldMap
 
 DEPOSIT_MECHANISMS = ("mineral_deposit", "point_occurrence", "surface_stock")
@@ -26,7 +26,7 @@ def _cache(world_map: WorldMap) -> Dict[Any, Any]:
 
 def is_foreign(world_map: WorldMap, resource: Dict[str, Any]) -> bool:
     """True for entries another model owns (animals, wild plants): present in the catalogue, not ours."""
-    return resource.get("mechanism") in parameters.parameter(world_map, "resources_foreign_mechanisms")
+    return mechanisms.owner(resource.get("mechanism"), resource.get("id", "?")) != "resources"
 
 
 def grade_key(resource: Dict[str, Any]) -> str:

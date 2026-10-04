@@ -37,9 +37,6 @@
    "unit": "factor per depth class", "kind": "heuristic",
    "source": "research notes section 7 step 6 (outcrop and placer 1, gossan vein 0.3-0.5, blind 0.05) [mem]", "conf": "D",
    "why": "How readily prospecting without geophysics turns up a deposit of each depth class."},
-  {"id": "resources_foreign_mechanisms", "value": ["herd", "wild_stand", "wild_plant", "animal_population"], "unit": "mechanism names", "kind": "heuristic",
-   "source": "mechanisms owned by the food model's resource files", "conf": "D",
-   "why": "Resource entries with these mechanisms share the catalogue but are not handled by the endowment model; any other unknown mechanism is an error."},
   {"id": "resources_stand_cover_when_forest_layer_missing", "value": 0.5, "unit": "fraction of tile area under the stand at full suitability", "kind": "heuristic",
    "source": "none; used only when the forest_fraction layer is missing", "conf": "D",
    "why": "Cover of a biotic stand on a tile with no measured forest layer, scaled by the envelope suitability."}

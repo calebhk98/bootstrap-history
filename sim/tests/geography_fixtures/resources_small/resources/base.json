@@ -12,5 +12,5 @@
  {"id": "timber", "mechanism": "biotic_stand", "unit": "m3_stemwood",
   "envelope": [{"layer": "koppen_group", "in": ["C", "D"]}],
   "stand": {"stock_per_hectare_at_full_suitability": 100.0, "regrowth_per_hectare_per_year_at_full_suitability": 4.0}},
- {"id": "goat", "mechanism": "herd", "unit": "head"}
+ {"id": "goat", "mechanism": "herd_animal", "unit": "head"}
 ]}

@@ -2,7 +2,7 @@
 import os
 import unittest
 
-from sim.geography import content_rules, map_source, parameters, tile_layers
+from sim.geography import content_rules, map_source, mechanisms, parameters, tile_layers
 
 FIXTURES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "geography_fixtures")
 SMALL_MAP = os.path.join(FIXTURES, "small_map")
@@ -73,6 +73,9 @@ class RuleTests(unittest.TestCase):
 class EarthMapTests(unittest.TestCase):
     def test_every_parameter_states_kind_source_and_reason(self):
         self.assertEqual(parameters.invalid_entries(map_source.load_map()), [])
+
+    def test_every_resource_row_names_a_known_mechanism(self):
+        self.assertEqual(mechanisms.unknown_rows(map_source.load_map()), [])
 
     def test_every_tile_has_a_climate_group(self):
         world_map = map_source.load_map()

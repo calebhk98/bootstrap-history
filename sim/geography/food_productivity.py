@@ -5,7 +5,7 @@ Standalone: imports only the geography map modules.
 import math
 from typing import Callable, List
 
-from sim.geography import content_rules, tile_layers
+from sim.geography import content_rules, mechanisms, tile_layers
 from sim.geography.map_source import WorldMap
 from sim.geography.parameters import parameter
 
@@ -25,7 +25,7 @@ def rows_of_mechanism(world_map: WorldMap, mechanism: str) -> List[dict]:
     """Every content row of the `resources` catalogue with this mechanism, in id order."""
     cache = food_cache(world_map, "rows")
     if mechanism not in cache:
-        cache[mechanism] = [row for _row_id, row in sorted(world_map.catalogue("resources").items())
+        cache[mechanism] = [row for _row_id, row in sorted(mechanisms.rows_owned_by(world_map, "food").items())
                             if row.get("mechanism") == mechanism]
     return cache[mechanism]
 
