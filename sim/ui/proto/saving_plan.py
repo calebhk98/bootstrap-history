@@ -4,6 +4,7 @@ One function builds the plan; the `saving` reply and the `stuck` row both read i
 """
 
 import math
+from sim.engine.ui_port import money_word
 
 
 def saving_plan(sim):
@@ -36,5 +37,6 @@ def saving_reason(sim):
                     "the year %d" % plan["year_affordable"] if plan["year_affordable"] is not None
                     else "never: income does not cover your costs"))
     return {"what": "saving for %s" % plan["id"], "kind": "saving",
-            "why": "you are putting money by on purpose: %s denarii target, %s in hand; %s"
-                   % ("{:,.0f}".format(plan["target"]), "{:,.0f}".format(plan["cash"]), when)}
+            "why": "you are putting money by on purpose: %s %s target, %s in hand; %s"
+                   % ("{:,.0f}".format(plan["target"]), money_word(sim.civ),
+                      "{:,.0f}".format(plan["cash"]), when)}

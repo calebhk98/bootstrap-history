@@ -1153,7 +1153,7 @@ def _new_game_pick_goal(tree, nodes, cfg):
                 "is the whole reason the founder does not age by default. The "
                 "others are alternatives: achievements a single lifetime can "
                 "actually finish, and a handful almost as large as the "
-                "transistor itself. 'closure' is how many other things it needs "
+                "default goal itself. 'closure' is how many other things it needs "
                 "first; 'floor' is the fewest calendar years that work could "
                 "possibly take, with every dice roll going your way."
                 % nodes[goals[0]["node"]].get("name", goals[0]["node"]),
