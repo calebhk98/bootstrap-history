@@ -328,14 +328,38 @@ Old issue numbers (in commit messages, reports and history) and the number each 
 
 ## 2026-10-04
 
-Economy round four filed 401-409 while the multiplayer work filed 401-407 on main; main's numbers stand.
+The geography branch and the multiplayer branch both filed 401-407; the geography ones moved up.
 
-401 -> 410  the-engine-port-reaches-past-the-economy-surface
-402 -> 411  the-port-does-not-hand-the-economy-site-limits-or-read-its-extraction
-403 -> 412  ore-and-metal-content-tables-in-the-engine-block-mods
-404 -> 413  gold-is-valued-like-silver-and-nobody-holds-it-as-wealth
-405 -> 414  goods-service-lives-never-reach-the-economy
-406 -> 415  danger-pay-is-always-zero
-407 -> 416  no-command-prints-the-economys-health
-408 -> 417  the-port-names-the-labourer-trade
-409 -> 418  economy-agents-doc-predates-exit-location-and-margin-entry
+401 -> 408  economy-keeps-its-own-tile-freight-graph
+402 -> 409  economy-setup-opens-the-geography-file-by-path
+403 -> 410  the-engine-does-not-pass-active-mods-to-the-map
+404 -> 411  food-potential-gaps-shelf-cold-pasture-slope-and-competition
+405 -> 412  deposits-have-no-geology-layer
+406 -> 413  sea-routes-have-no-land-mask-and-few-lanes
+407 -> 414  food-potential-is-not-read-by-demography-or-settlement
+408 -> 415  mining-does-not-read-endowment-or-prospecting
+409 -> 416  reach-and-built-roads-are-not-read-by-the-engine
+410 -> 417  map-checks-and-heuristics-are-not-in-validate-or-the-burndown
+411 -> 418  the-fast-suite-fails-on-main
+
+Filed on `ui-disclosure-and-inspectors` at the same time as main's 401-418; moved twice, final numbers here. The branch's 414 (suite failures on main) was folded into 418.
+
+401 -> 419  ui-needs-its-own-slot-in-the-save
+402 -> 420  engine-keeps-no-causes-for-wages-closures-and-notice
+403 -> 421  automation-records-no-skipped-actions-or-modes
+404 -> 422  goals-have-one-id-one-reach-year-and-no-anatomy-hook
+405 -> 423  mods-cannot-add-figures-or-screen-rows-through-data
+406 -> 424  units-json-has-no-rule-for-mass-per-year-fields
+
+Economy round four filed 401-409 while the multiplayer and geography work filed theirs on main; main's
+numbers stand, and the economy's moved twice (to 410-418, then here). Final numbers:
+
+401 -> 425  the-engine-port-reaches-past-the-economy-surface
+402 -> 426  the-port-does-not-hand-the-economy-site-limits-or-read-its-extraction
+403 -> 427  ore-and-metal-content-tables-in-the-engine-block-mods
+404 -> 428  gold-is-valued-like-silver-and-nobody-holds-it-as-wealth
+405 -> 429  goods-service-lives-never-reach-the-economy
+406 -> 430  danger-pay-is-always-zero
+407 -> 431  no-command-prints-the-economys-health
+408 -> 432  the-port-names-the-labourer-trade
+409 -> 433  economy-agents-doc-predates-exit-location-and-margin-entry

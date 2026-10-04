@@ -1,0 +1,297 @@
+{
+ "_doc": "Resource definitions per sim/geography/resources_catalogue.py. mechanism: mineral_deposit | point_occurrence | surface_stock | biotic_stand. unit: the quantity unit; with grade_basis true, contained quantity = ore tonnes x grade in that unit per tonne (key median_<unit>_per_tonne). deposit_types: {id, deposits_per_million_km2 (per million km2 of fully permissive land, before clustering), tonnage_lognormal {median_tonnes, sigma (ln)}, grade_lognormal, depth_class, small_scale, permissive_when [conditions], envelope [suitability entries], layer_weights [{layer, weights, default, if_missing}], provincial_only (only near catalogue deposits of that type), clusters (false: no boost from neighbours), gem_fraction {median, sigma}}. Densities are tile averages, heuristic stand-ins for a geologic-province layer (e.g. Hasterok 2022) that would replace the relief and climate proxies. Giants beyond the truncation of the lognormal come only from the known-deposit catalogue. Gems are point occurrences (pipes, gravels, veins) with gem_fraction of carats of cuttable quality; all gated to known provinces because no geology layer exists.",
+ "entries": [
+  {
+   "id": "diamond",
+   "mechanism": "point_occurrence",
+   "unit": "carats",
+   "deposit_types": [
+    {
+     "id": "kimberlite_pipe",
+     "deposits_per_million_km2": 0.8,
+     "tonnage_lognormal": {
+      "median_tonnes": 5000000.0,
+      "sigma": 1.2
+     },
+     "depth_class": "deep_vein",
+     "grade_lognormal": {
+      "median_carats_per_tonne": 0.2,
+      "sigma": 0.6
+     },
+     "provincial_only": true,
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    },
+    {
+     "id": "alluvial_diamond_gravel",
+     "deposits_per_million_km2": 2,
+     "tonnage_lognormal": {
+      "median_tonnes": 1000000.0,
+      "sigma": 1.5
+     },
+     "depth_class": "alluvial",
+     "grade_lognormal": {
+      "median_carats_per_tonne": 0.02,
+      "sigma": 0.6
+     },
+     "provincial_only": true,
+     "small_scale": true,
+     "gem_fraction": {
+      "median": 0.3,
+      "sigma": 0.5
+     },
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    }
+   ],
+   "grade_basis": true
+  },
+  {
+   "id": "emerald",
+   "mechanism": "point_occurrence",
+   "unit": "carats",
+   "deposit_types": [
+    {
+     "id": "emerald_vein",
+     "deposits_per_million_km2": 2,
+     "tonnage_lognormal": {
+      "median_tonnes": 20000.0,
+      "sigma": 1.4
+     },
+     "depth_class": "shallow_vein",
+     "grade_lognormal": {
+      "median_carats_per_tonne": 20,
+      "sigma": 0.6
+     },
+     "provincial_only": true,
+     "gem_fraction": {
+      "median": 0.05,
+      "sigma": 0.6
+     },
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    }
+   ],
+   "grade_basis": true
+  },
+  {
+   "id": "jade",
+   "mechanism": "point_occurrence",
+   "unit": "tonnes",
+   "deposit_types": [
+    {
+     "id": "jade_boulder_field",
+     "deposits_per_million_km2": 2,
+     "tonnage_lognormal": {
+      "median_tonnes": 50,
+      "sigma": 1.0
+     },
+     "depth_class": "alluvial",
+     "provincial_only": true,
+     "small_scale": true,
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    }
+   ]
+  },
+  {
+   "id": "ruby",
+   "mechanism": "point_occurrence",
+   "unit": "carats",
+   "deposit_types": [
+    {
+     "id": "marble_hosted",
+     "deposits_per_million_km2": 0.3,
+     "tonnage_lognormal": {
+      "median_tonnes": 50000.0,
+      "sigma": 1.4
+     },
+     "depth_class": "shallow_vein",
+     "grade_lognormal": {
+      "median_carats_per_tonne": 3,
+      "sigma": 0.6
+     },
+     "provincial_only": true,
+     "gem_fraction": {
+      "median": 0.1,
+      "sigma": 0.6
+     },
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    }
+   ],
+   "grade_basis": true
+  },
+  {
+   "id": "sapphire",
+   "mechanism": "point_occurrence",
+   "unit": "carats",
+   "deposit_types": [
+    {
+     "id": "alluvial_gems",
+     "deposits_per_million_km2": 1,
+     "tonnage_lognormal": {
+      "median_tonnes": 100000.0,
+      "sigma": 1.5
+     },
+     "depth_class": "alluvial",
+     "grade_lognormal": {
+      "median_carats_per_tonne": 5,
+      "sigma": 0.6
+     },
+     "provincial_only": true,
+     "small_scale": true,
+     "gem_fraction": {
+      "median": 0.1,
+      "sigma": 0.6
+     },
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    },
+    {
+     "id": "igneous_sapphire",
+     "deposits_per_million_km2": 0.2,
+     "tonnage_lognormal": {
+      "median_tonnes": 200000.0,
+      "sigma": 1.4
+     },
+     "depth_class": "shallow_vein",
+     "grade_lognormal": {
+      "median_carats_per_tonne": 2,
+      "sigma": 0.6
+     },
+     "provincial_only": true,
+     "gem_fraction": {
+      "median": 0.1,
+      "sigma": 0.6
+     },
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    }
+   ],
+   "grade_basis": true
+  },
+  {
+   "id": "tanzanite",
+   "mechanism": "point_occurrence",
+   "unit": "carats",
+   "deposit_types": [
+    {
+     "id": "metamorphic_zoisite",
+     "deposits_per_million_km2": 0.1,
+     "tonnage_lognormal": {
+      "median_tonnes": 100000.0,
+      "sigma": 1.3
+     },
+     "depth_class": "shallow_vein",
+     "grade_lognormal": {
+      "median_carats_per_tonne": 10,
+      "sigma": 0.6
+     },
+     "provincial_only": true,
+     "gem_fraction": {
+      "median": 0.2,
+      "sigma": 0.6
+     },
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    }
+   ],
+   "grade_basis": true
+  },
+  {
+   "id": "peridot",
+   "mechanism": "point_occurrence",
+   "unit": "carats",
+   "deposit_types": [
+    {
+     "id": "mantle_xenolith_peridot",
+     "deposits_per_million_km2": 0.2,
+     "tonnage_lognormal": {
+      "median_tonnes": 100000.0,
+      "sigma": 1.3
+     },
+     "depth_class": "surface",
+     "grade_lognormal": {
+      "median_carats_per_tonne": 20,
+      "sigma": 0.6
+     },
+     "provincial_only": true,
+     "gem_fraction": {
+      "median": 0.1,
+      "sigma": 0.6
+     },
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    }
+   ],
+   "grade_basis": true
+  },
+  {
+   "id": "opal",
+   "mechanism": "point_occurrence",
+   "unit": "carats",
+   "deposit_types": [
+    {
+     "id": "sedimentary_opal",
+     "deposits_per_million_km2": 0.3,
+     "tonnage_lognormal": {
+      "median_tonnes": 100000.0,
+      "sigma": 1.4
+     },
+     "depth_class": "shallow_vein",
+     "grade_lognormal": {
+      "median_carats_per_tonne": 5,
+      "sigma": 0.6
+     },
+     "provincial_only": true,
+     "gem_fraction": {
+      "median": 0.1,
+      "sigma": 0.6
+     },
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    }
+   ],
+   "grade_basis": true
+  },
+  {
+   "id": "lapis_lazuli",
+   "mechanism": "point_occurrence",
+   "unit": "tonnes",
+   "deposit_types": [
+    {
+     "id": "contact_metamorphic",
+     "deposits_per_million_km2": 0.2,
+     "tonnage_lognormal": {
+      "median_tonnes": 100.0,
+      "sigma": 1.2
+     },
+     "depth_class": "shallow_vein",
+     "provincial_only": true,
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    }
+   ]
+  },
+  {
+   "id": "turquoise",
+   "mechanism": "point_occurrence",
+   "unit": "tonnes",
+   "deposit_types": [
+    {
+     "id": "secondary_copper",
+     "deposits_per_million_km2": 0.5,
+     "tonnage_lognormal": {
+      "median_tonnes": 100.0,
+      "sigma": 1.2
+     },
+     "depth_class": "shallow_vein",
+     "provincial_only": true,
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    }
+   ]
+  }
+ ]
+}

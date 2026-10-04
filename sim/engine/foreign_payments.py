@@ -15,6 +15,7 @@ from sim.geography.api import freight_cost, sea_freight
 from sim.labour.api import HOURS_PER_WORKER_YEAR
 
 from .data import load_civ
+from .foreign_routes import SEA_MODE
 from sim.labour.api import people_fed_per_worker
 
 OPENING_CARRIERS_PER_ROUTE = declare(
@@ -208,7 +209,7 @@ class ForeignPaymentsMixin:
             opening = OPENING_CARRIERS_PER_ROUTE / self._route_lift_years_per_tonne(route)
             built = min(ledger["lift_unmet"],
                         max(capacity, opening) * YARD_GROWTH_SHARE_PER_YEAR)
-            life = (sea_freight.HULL_SERVICE_LIFE_YEARS if any(leg.mode == "sea" for leg in route.legs)
+            life = (sea_freight.HULL_SERVICE_LIFE_YEARS if any(leg.mode == SEA_MODE for leg in route.legs)
                     else freight_cost.ANIMAL_WORKING_LIFE_YEARS)
             ledger["fleet_capital"] += built * self._route_capital_per_lift_tonne(route)
             ledger["lift_tonnes_per_year"] = capacity * (1.0 - 1.0 / life) + built

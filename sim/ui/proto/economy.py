@@ -11,6 +11,7 @@ from .state import _agent_state
 from .capacity_remedies import capacity_remedies
 from .portfolio_bottlenecks import blocker_kind_of, bottleneck_groups
 from .portfolio_waiting import waiting_to_start
+from .portfolio_scale import add_readouts, page_rows
 
 # WHAT EACH TRAIT IN self.value_weights ACTUALLY DOES, in the player's own words. Event
 # text names these fields directly - "corpus_dispersed changes the society:
@@ -627,18 +628,23 @@ def _agent_portfolio(sim, nodes, cmd=None):
     active_out = state_out.get("active") or {}
     rows = _portfolio_rows(nodes, active_out)
     _add_last_year_hours(sim, rows)
+    add_readouts(sim, nodes, rows)
     pool_total = state_out.get("founder_hours_available")
     count = len(active_out)
     trade_rows = _trade_demand_rows(sim)
+    shown, paging, error = page_rows(rows, trade_rows, cmd)
+    if error:
+        return {"ok": False, "error": error}
     return {
         "ok": True,
         "active_project_count": count,
+        "paging": paging,
         "founder_hours_available_this_year": pool_total,
         "free_hours_going_unused": state_out.get("free_hours_going_unused"),
         "bottlenecks": bottleneck_groups(sim, rows, trade_rows, pool_total,
                                          state_out.get("resource_throttle"), state_out.get("throttle_binding")),
         "waiting_to_start": waiting_to_start(sim, nodes),
-        "projects": rows,
+        "projects": shown,
         "trade_hours_demand_vs_supply": trade_rows,
         "note": ("%d active project%s %s sharing this year's %s directed "
                 "hours; each row above shows what IT got and why. "

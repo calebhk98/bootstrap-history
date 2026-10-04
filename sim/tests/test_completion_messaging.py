@@ -1,6 +1,6 @@
 """completion_messaging: failure severity, goal deltas, built-not-open status and summary-first waves."""
 from .harness import *  # noqa: F401,F403
-from sim.ui.proto import render_screens_big as _render_big
+from sim.ui.proto import render_screen_step as _render_big
 from sim.ui.proto.wave_summary import wave_summary
 
 

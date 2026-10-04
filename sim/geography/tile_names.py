@@ -7,24 +7,25 @@ specific to one actor.
 import functools
 from typing import Any, Dict, List
 
-from sim.world import land
-
-_CLIMATE_GROUPS = {
-    "A": "tropical", "B": "dry", "C": "temperate", "D": "cold continental",
-    "E": "polar",
-}
-_DRY_KINDS = {"W": "desert", "S": "steppe"}
+from sim.geography import map_source
+from sim.geography.loading import load_geography
 
 
-@functools.lru_cache(maxsize=1)
 def _tiles() -> Dict[str, Dict[str, Any]]:
-    geography = land._load_json(land.GEOGRAPHY_FILE)
-    return geography.get("land_tiles", {}).get("tiles", {})
+    return map_source.load_map().tiles
+
+
+def _climate_words(code: str) -> str:
+    groups = map_source.load_map().catalogue("climate_groups")
+    for length in range(len(code), 0, -1):
+        if code[:length] in groups:
+            return groups[code[:length]]["name"]
+    return "unclassified"
 
 
 @functools.lru_cache(maxsize=1)
 def _region_names() -> Dict[str, str]:
-    geography = land._load_json(land.GEOGRAPHY_FILE)
+    geography = load_geography()
     return {region_id: record.get("name", region_id)
             for region_id, record in geography.get("regions", {}).items()
             if isinstance(record, dict)}
@@ -55,11 +56,7 @@ def terrain(tile_id: str) -> str:
     record = _tiles().get(tile_id)
     if not record:
         return ""
-    code = record.get("koppen_class", "")
-    climate = _CLIMATE_GROUPS.get(code[:1], "unclassified")
-    if code[:1] == "B" and code[1:2] in _DRY_KINDS:
-        climate = "dry %s" % _DRY_KINDS[code[1:2]]
-    parts = [climate]
+    parts = [_climate_words(record.get("koppen_class", ""))]
     if record.get("coastal"):
         parts.append("coastal")
     parts.append("%d%% arable" % round(100 * record.get("arable_fraction", 0.0)))

@@ -1,6 +1,6 @@
 # A deposit's tile is a hand assignment onto a 150,000 km2 grid
 
-**Status:** partly - a deposit carries a position and the holding tile is found at load; the positions are still the old tile centres, not surveyed mine sites
+**Status:** partly - a deposit carries a position and the holding tile is found at load; named sites now also carry a surveyed position in `data/world/geography/deposits/ancient.json`, which geography uses; the engine's deposit model still reads the old positions
 
 Each deposit in `data/world/deposits.json` names one tile (Complaints/136). The tile was chosen as the one nearest the mine among the tiles of the region that held the deposit's share, so that a region's total, and with it `mineral_scale` for every civilisation, did not move. The grid is coarse, so some choices are poor: the Noricum iron mine is in Austria, but the Austrian tile belongs to no region, so the deposit sits on a Czech tile; Elba is placed on the Sardinian tile. The generic placeholder deposits sit on a representative tile of their region, not at a place.
 

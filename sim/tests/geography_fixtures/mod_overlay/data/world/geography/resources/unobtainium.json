@@ -1,0 +1,5 @@
+{"entries": [
+ {"id": "test_overlay_k3f9:unobtainium", "mechanism": "mineral_deposit", "unit": "kg"},
+ {"id": "gold", "override": true, "unit": "troy_ounce"},
+ {"id": "salt", "remove": true}
+]}

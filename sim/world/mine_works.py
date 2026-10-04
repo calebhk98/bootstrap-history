@@ -4,7 +4,7 @@ labourer-hours out. Ventilation shafts are charged with the shaft build in
 sim/world/deposits.py (VENTILATION_OPENINGS_PER_WORKING_SHAFT).
 
 Basis of grade: a deposit's grade is metal per tonne of ORE as stoped and
-presented to dressing (the figures in data/world/deposits.json are described
+presented to dressing (the figures in the geography deposit catalogue are described
 as ore grades). Rock broken per tonne of ore is higher by the barren rock
 that comes with it (Complaints/348). Barren rock is broken but stowed
 underground, so only breaking, fire-setting and timbering scale with rock;
@@ -58,7 +58,7 @@ HAUL_DISTANCE_METRES_BY_DEPTH = declare(
            "workings driven fifteen hundred paces, so a face is not at the "
            "shaft foot.",
     confidence="D",
-    why="deposits.json carries a depth class, not a plan; replace with "
+    why="the deposit catalogue carries a depth class, not a plan; replace with "
         "layout data.")
 
 WATER_LIFTED_TONNES_PER_TONNE_ORE_BY_DEPTH = declare(

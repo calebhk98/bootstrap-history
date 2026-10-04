@@ -11,6 +11,7 @@ import json
 from sim.engine.ui_port import money_unit_note
 from sim.engine.ui_port import Sim
 from . import command_registry
+from .help_commands import JSON_MODE_NOTE, _command_text, commands_page, full_listing
 
 TOPICS = {}          # topic name -> builder(sim) returning the page dict
 TOPIC_ALIASES = {}   # other word -> topic name
@@ -26,44 +27,10 @@ def help_topic(name, aliases=()):
     return register
 
 
-JSON_MODE_NOTE = (
-    "add the word 'json' to almost any command (or \"json\":true in a JSON "
-    "command) to get its reply as the raw structured object instead of the "
-    "rendered screen. 'compact' implies 'json' but is a short summary, not the "
-    "full reply: 'state' and 'step' give year, money, net_per_year, "
-    "founder_hours_free, projects (id, name, blocker), concerns (running, "
-    "shut), standing, danger, goal, nearest_goal_blocker (and, for 'step', "
-    "completed, lost and events); 'why' gives status, blocked_by and "
-    "explanation; 'stuck' gives blockers. Other commands ignore 'compact'")
-
-
-def _command_text(name, fog):
-    entry = command_registry.COMMANDS[name]
-    if fog and entry["fog_hidden"]:
-        return "not available under fog of war"
-    return "%s. %s" % (entry["summary"], entry["description"])
-
-
 @help_topic("commands", aliases=("command", "all"))
 def _topic_commands(sim):
-    """The command index: every registered command, grouped, with aliases."""
-    names = list(command_registry.COMMANDS)
-    return {
-        "start here": {
-            "state": "where you stand", "available": "what you could begin today",
-            "why <id>": "what a thing is for and what it costs", "start <id>": "begin it",
-            "step <years>": "let time pass", "stuck": "why you are not getting on",
-            "help sittings": "playing one command per process, saved between runs",
-            "the rest": "everything below; help <command> shows one command's usage",
-        },
-        "commands": {"json / compact": JSON_MODE_NOTE,
-                     **{name: _command_text(name, sim.fog) for name in names}},
-        "usage": {name: command_registry.COMMANDS[name]["usage"] for name in names},
-        "groups": command_registry.grouped(),
-        "aliases": command_registry.alias_map(),
-        "more": 'help <command> or help <alias> for one command\'s usage, '
-                'options and description',
-    }
+    """The full command index; `help commands <group>` and the short index come from commands_page."""
+    return full_listing(sim)
 
 
 def _front_page(sim, typed_hints):
@@ -430,9 +397,12 @@ def _topic_fog(sim):
 def _agent_help(sim, topic=None):
     """The help reply: the front page, a topic, or one command's page."""
     from sim.ui import protocol as _protocol      # read live: cli.py patches TYPED_HINTS
-    topic = (topic or "").strip().lower()
+    words = (topic or "").strip().lower().split()
+    topic, arguments = (words[0] if words else ""), words[1:]
     if not topic:
         return _front_page(sim, _protocol.TYPED_HINTS)
+    if arguments and TOPIC_ALIASES.get(topic, topic) == "commands":
+        return commands_page(sim, arguments)
     topic_name = topic if topic in TOPICS else TOPIC_ALIASES.get(topic)
     entry = command_registry.resolve(topic)
     if topic_name is None and entry is None:
@@ -448,10 +418,11 @@ def _agent_help(sim, topic=None):
 command_registry.register_command(
     "help", group="game", aliases=("h", "?", "commands"),
     summary="this index, a topic, or one command's page",
-    usage=["help", "help commands", "help <command>", "help <topic>"],
+    usage=["help", "help commands", "help commands <group>", "help commands all limit 20", "help <command>", "help <topic>"],
     options={"<command>": "any command or alias: shows its usage, options and description",
              "<topic>": "a topic page; the front page lists them"},
-    description="Bare help is the front page. `help commands` lists every command by "
-                "group. An unknown word gets close matches.")
+    description="Bare help is the front page. `help commands` is a short index of the "
+                "command groups, `help commands <group>` lists one group and `help commands all` "
+                "lists every command (page it with limit and offset). An unknown word gets close matches.")
 
 HELP_TOPICS = tuple(TOPICS)

@@ -1,0 +1,61 @@
+"""Which tiles a holding resolves to, and each tile's land figures, read from the map.
+
+A holding is still named by region labels in civilisation files; a region is the per-tile
+`region` value, so the set of tiles is whatever the map says carries that label.
+"""
+import functools
+import math
+from typing import Dict, Iterable, List, Optional, Tuple
+
+from sim.geography import map_source, tile_layers
+
+HECTARES_PER_KM2 = 100.0
+
+
+def _map(world_map: Optional[map_source.WorldMap]) -> map_source.WorldMap:
+    return world_map if world_map is not None else map_source.load_map()
+
+
+@functools.lru_cache(maxsize=8)
+def _tiles_by_region(world_map: map_source.WorldMap) -> Dict[str, Tuple[str, ...]]:
+    grouped: Dict[str, List[str]] = {}
+    for tile_id in world_map.tiles:
+        region = tile_layers.value(world_map, tile_id, "region")
+        if region:
+            grouped.setdefault(region, []).append(tile_id)
+    return {region: tuple(sorted(tile_ids)) for region, tile_ids in grouped.items()}
+
+
+def tiles_of_regions(regions: Iterable[str], world_map: Optional[map_source.WorldMap] = None) -> List[str]:
+    """Sorted, deduplicated tiles carrying any of these region labels (unknown labels add none)."""
+    grouped = _tiles_by_region(_map(world_map))
+    return sorted({tile_id for region in regions for tile_id in grouped.get(region, ())})
+
+
+def region_has_tiles(region: str, world_map: Optional[map_source.WorldMap] = None) -> bool:
+    return bool(_tiles_by_region(_map(world_map)).get(region))
+
+
+def tile_land(tile_id: str, world_map: Optional[map_source.WorldMap] = None) -> Dict[str, float]:
+    """{land_area_km2, arable_fraction, fertility_quality_multiplier, arable_hectares} of a tile."""
+    world_map = _map(world_map)
+    area = tile_layers.number(world_map, tile_id, "land_area_km2", 0.0)
+    arable_fraction = tile_layers.number(world_map, tile_id, "arable_fraction", 0.0)
+    return {"land_area_km2": area, "arable_fraction": arable_fraction,
+            "fertility_quality_multiplier": tile_layers.number(
+                world_map, tile_id, "fertility_quality_multiplier", 0.0),
+            "arable_hectares": area * arable_fraction * HECTARES_PER_KM2}
+
+
+def tile_centre(tile_id: str, world_map: Optional[map_source.WorldMap] = None) -> Tuple[float, float]:
+    tile = _map(world_map).tiles[tile_id]
+    return float(tile["lat"]), float(tile["lon"])
+
+
+def neighbours(tile_id: str, world_map: Optional[map_source.WorldMap] = None) -> List[str]:
+    return list(_map(world_map).tiles.get(tile_id, {}).get("borders", []))
+
+
+def edge_km(world_map: Optional[map_source.WorldMap] = None) -> float:
+    """Width of a nominal tile: the side of a square of the map's nominal tile area."""
+    return math.sqrt(float(_map(world_map).properties.get("target_tile_area_km2", 0.0)))
