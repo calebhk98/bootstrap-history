@@ -19,7 +19,6 @@ from typing import Any, Dict, Iterable, Mapping, Optional
 
 from sim.constants import declare
 
-UNSKILLED_TRADE = "labourer"
 
 HOURS_PER_WORKER_YEAR = declare(
     "HOURS_PER_WORKER_YEAR", 2000.0, kind="engineering_estimate",
@@ -154,6 +153,7 @@ class WageSchedule(object):
         self.subsistence_hours_per_hour = subsistence_hours_per_hour
         self.hours_per_year = hours_per_year
         self.tightness_factors = tightness_factors if tightness_factors is not None else {}
+        self.training_years = dict(training_years)
         self._premium = {trade: training_premium(years, discount_rate, career_years)
                          for trade, years in training_years.items()}
 

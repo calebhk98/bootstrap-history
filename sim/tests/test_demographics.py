@@ -14,14 +14,15 @@ from .harness import *  # noqa: F401,F403
 # =============================================================================
 
 # --- a common, urban trade (smith - no special note, on the explicit
-# "common" list) now reads a real town's worth, not a village's. Pinned to
-# the formula itself (TOWN_POPULATION_REFERENCE x TRADE_DENSITY["common"] x
-# HOURS_PER_PERSON_YEAR at Rome's own pop_scale of 1.0) rather than to a
+# need share) now reads a real town's worth, not a village's. Pinned to
+# the formula itself (the town's working people x the trade's share of
+# non-farm need x HOURS_PER_PERSON_YEAR) rather than to a
 # bare "> 11.25", so a future recalibration of the constants moves this
 # check's expectation with it instead of silently drifting out of sync.
 s_dm = sim(capital=1e9)
-_expect_common = (s_dm.labour.TOWN_POPULATION_REFERENCE * s_dm.labour.TRADE_DENSITY["common"]
-                  * s_dm.HOURS_PER_PERSON_YEAR)
+_expect_common = (s_dm.labour.home_town_population_estimate()
+                  * s_dm.population.working_age / s_dm.population.total
+                  * s_dm.labour._non_farm_need_shares()["smith"] * s_dm.HOURS_PER_PERSON_YEAR)
 check("a common trade's reachable pool is a real town's worth, not the old "
       "11.25-person village",
       abs(s_dm.labour.market_supply("smith") - s_dm.employees.get("smith", 0.0)
@@ -108,6 +109,9 @@ check("'population' is in KNOWN_COMMANDS and survives the fog/pointer "
 # which already said this before this fix existed).
 s_fr = sim(capital=50.0, agent_economy=False)
 s_fr.labour.market.press("millwright", 10 * s_fr.HOURS_PER_PERSON_YEAR)
+# Nothing left to spend: a squeezed market now finds only some of a big hire (Complaint 271), and the
+# one it finds would otherwise be affordable, so the refusal this check reads needs an empty purse.
+s_fr.capital = -s_fr.credit_limit()
 ok_fr, msg_fr = s_fr.labour.hire("millwright", 3)
 check("a cash refusal driven by a real price premium says this is one "
       "household's reach into one town's market, not a national figure",

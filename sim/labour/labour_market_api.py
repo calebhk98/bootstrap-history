@@ -11,7 +11,13 @@ training premium, tightness), the cost-of-living factors, the economy's price
 and wage indices, and the local supply a trade has (labour_population.py).
 The pressure record is stored on the household state so a save carries it.
 """
+import math
+
 from sim.constants import declare
+
+from . import trade_data
+from .market.clearing import (FIRM_LABOUR_SUPPLY_ELASTICITY, MATCHING_EFFICIENCY_PER_YEAR,
+                              MATCHING_SEARCHER_ELASTICITY)
 
 
 class LabourMarket:
@@ -67,11 +73,13 @@ class LabourMarket:
         return self._world.state.household.labour_pressure_records
 
     def standing_draw(self, trade):
-        """Hours a year of this trade that soldiers under arms already take out of its pool: they are
-        drawn from the unskilled pool and stay drawn while they serve, so they do not decay."""
-        if trade != "labourer":
+        """Hours a year of this trade that standing staff already take out of its pool: trades drawn
+        from the unskilled pool stay drawn while they serve, so they do not decay."""
+        world = self._world
+        if trade != trade_data.fallback_trade(self._labour.wage_schedule().training_years, world.trade_family):
             return 0.0
-        return self._world.actor_staff_fte("soldier") * self._world.HOURS_PER_PERSON_YEAR
+        drawn = [name for name in world.wages if trade_data.drawn_from_unskilled_pool(name)]
+        return sum(world.actor_staff_fte(name) for name in drawn) * world.HOURS_PER_PERSON_YEAR
 
     def recent_pressure(self, trade):
         """Hours a year of this trade recently leaned on, decayed to this year."""
@@ -174,28 +182,55 @@ class LabourMarket:
         return (base * factors["weighted"] * world.price_index
                 * world.wage_index * scarcity * self.pay_scale())
 
-    def quote_annual(self, trade, people=0.0, employer=None):
+    def quote_annual(self, trade, people=0.0, employer=None, pay_premium=0.0):
         """Money one person-year of a trade costs `employer` now. `people` more taken on first move
         the local scarcity premium to what it will be once they are on the books (zero: as it
         stands). The rate does not depend on who asks; `employer` is accepted so a market that
         one day prices one buyer differently has the buyer to hand."""
         scarcity = self.price_factor_after(trade, people) if people else self.price_factor(trade)
-        return self._annual(trade, scarcity)
+        return self._annual(trade, scarcity) * (1.0 + pay_premium)
 
     def unscarce_annual(self, trade):
         """One person-year of a trade before the local scarcity premium (a screen's 'wage table' figure)."""
         return self._annual(trade, 1.0)
 
-    def quote(self, trade, hours=0.0, employer=None):
-        """Money one hour of a trade costs `employer` now, once `hours` a year more are taken on."""
+    def quote(self, trade, hours=0.0, employer=None, pay_premium=0.0):
+        """Money one hour of a trade costs `employer` now, once `hours` a year more are taken on;
+        `pay_premium` is the fraction the employer pays over the market."""
         world = self._world
         people = hours / world.HOURS_PER_PERSON_YEAR
-        return self.quote_annual(trade, people, employer) / world.HOURS_PER_PERSON_YEAR
+        return self.quote_annual(trade, people, employer, pay_premium) / world.HOURS_PER_PERSON_YEAR
 
-    def hire_cost(self, trade, people):
+    def recruitable(self, trade, people, pay_premium=0.0):
+        """How many of `people` an employer can expect to find this year in the local market: the
+        matching form of the market core, with searchers the local hours not already taken."""
+        people = max(0.0, people)
+        if people <= 0.0:
+            return 0.0
+        searchers = max(0.0, self._labour.market_supply(trade) - self.pressure(trade))
+        vacancies = people * self._world.HOURS_PER_PERSON_YEAR
+        rate = (MATCHING_EFFICIENCY_PER_YEAR * (1.0 + pay_premium) ** FIRM_LABOUR_SUPPLY_ELASTICITY
+                * (searchers / vacancies) ** MATCHING_SEARCHER_ELASTICITY)
+        return min(people, people * (1.0 - math.exp(-rate)))
+
+    def hire_cost(self, trade, people, pay_premium=0.0):
         """The finder's fee for taking on `people` of a trade: the first year's wage at the table
-        rate times the premium as the market stands, which is what payroll charges once they are in."""
-        return people * self.unscarce_annual(trade) * self.price_factor(trade)
+        rate, which is what payroll charges once they are in. The first person is found at the
+        going scarcity; each further one costs more because those before them have thinned the
+        pool, so the fee uses the mean of the scarcity now and after all but the last are taken."""
+        if people <= 0:
+            return 0.0
+        scarcity = 0.5 * (self.price_factor(trade) + self.price_factor_after(trade, people - 1.0))
+        return people * self.unscarce_annual(trade) * scarcity * (1.0 + pay_premium)
+
+    def whole_recruits(self, trade, people, pay_premium=0.0):
+        """Whole people of the `people` asked for that a search finds this year: the matching
+        outcome rounded to nearest, never fewer than one so a single hire is never refused for
+        search alone (its scarcity shows in the price)."""
+        if people <= 0:
+            return 0
+        found = self.recruitable(trade, people, pay_premium)
+        return int(min(people, max(1, math.floor(found + 0.5))))
 
     def commission_cost(self, trade, hours, premium):
         """What a one-off job of `hours` costs: the hour the market quotes, times a shop's `premium`."""
@@ -206,9 +241,13 @@ class LabourMarket:
         world = self._world
         return schedule_amount * world.wage_index * world.price_index
 
-    def hire(self, employer, trade, hours):
-        """Take on `hours` a year of a trade. Returns the rate an hour cost, and records the pressure."""
-        rate = self.quote(trade, 0.0, employer)
+    def hire(self, employer, trade, hours, pay_premium=0.0):
+        """Take on `hours` a year of a trade. Returns the rate an hour cost (premium included), and
+        records the pressure; a better payer draws from rivals rather than idle hands, so its
+        premium scales the pressure down."""
+        rate = self.quote(trade, 0.0, employer, pay_premium)
+        if pay_premium > 0.0:
+            hours = hours / (1.0 + pay_premium) ** FIRM_LABOUR_SUPPLY_ELASTICITY
         self.press(trade, hours)
         return rate
 

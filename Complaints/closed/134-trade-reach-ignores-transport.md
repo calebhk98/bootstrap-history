@@ -1,6 +1,6 @@
 # How many tradesmen you can reach ignores transport
 
-**Status:** partly - geography can now give a travel-time reach over tiles by the modes held (`api.reach`); labour reach does not read it yet (Complaint 416)
+**Status:** closed - labour reach is geography's `api.reach` from the base over the modes the held technologies open (`reachable_tiles`, `reach_population_estimate` in sim/labour/labour_settlement.py); test trade_reach_transport
 
 The number of people in a trade the founder can reach is a share of the
 local town and nation. It should depend on how far people can travel to work
@@ -18,3 +18,14 @@ already models travel cost and speed by technology but reach does not read it.
 Derive a reach radius (or travel-time budget) from the transport technologies
 held and the land tiles around the base, and count the people in each trade
 within it.
+
+## Done
+
+`reach_population_estimate` (sim/labour/labour_settlement.py) sums the towns
+of every tile within `HIRE_TRAVEL_DAYS` at `travel_speed_km_per_day`; the
+trade's people (`_town_people_of_trade`) read it. At walking pace this is the
+home town, as before.
+
+Then: the straight-line radius and stand-in speed were replaced by geography's
+`api.reach([base], api.usable_modes([held]), HIRE_TRAVEL_DAYS, held_nodes=held)`.
+Built roads and track are not passed yet, because the engine keeps none (Complaint 416).
