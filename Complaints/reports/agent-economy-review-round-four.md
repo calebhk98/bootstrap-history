@@ -86,38 +86,35 @@ Follows `agent-economy-review-round-three.md`. Again only `sim/economy/`, new te
 |---|---|---|---|---|---|
 | england, baseline | 0.08-0.19 | 0.36-0.41 | 0.27 | 0-0.0005 | ~930 |
 | england, exit and location | 0.05-0.13 | 0.14-0.30 | 0.41 | 0 | ~6 |
-| england, tip | 0.12-0.22 | 0.27-0.38 | 0.55-0.63 | 0.0004-0.005 | ~5700 |
+| england, tip | 0.12-0.15 | 0.40-0.49 | 0.37-0.38 | 0 | ~1500 |
 | norse, baseline | 0.12-0.19 | 0.32-1.35 | 0.27 | 0.001 | ~3500 |
-| norse, tip | 0.10-0.17 | 0.25-0.28 | 0.46 | 0.001-0.002 | ~4e4 |
+| norse, tip | 0.12-0.22 | 0.34-0.46 | 0.38-0.39 | 0.0001 | ~4e3-2e4 |
 | rome, baseline | 0.07-0.08 | 0.36-0.39 | 0.16 | 0.009 | ~148 |
-| rome, tip | 0.06-0.08 | 0.24-0.25 | 0.25 | 0.004-0.005 | ~7700 |
+| rome, tip | 0.05-0.07 | 0.29-0.30 | 0.23 | 0.0007-0.0009 | ~1300 |
 | mexica, baseline | 0.10 | n/a | 0.09 | 0.005 | ~1300 |
 | mexica, exit and location | 0.07-0.08 | n/a | 0.14 | 0.05-0.09 | ~7000 |
-| mexica, tip | 0.06-0.12 | n/a | 0.04-0.05 | 0.02-0.03 | ~8e4 |
+| mexica, tip | 0.09 | n/a | 0.20-0.21 | 0.13 | ~2e4 |
 | han, baseline | 0.08-0.14 | 0.20-0.23 | 0.31 | 0.004 | ~2000 |
-| han, tip | 0.04-0.08 | 0.23-0.28 | 0.33-0.34 | 0.012 | ~1.4e4 |
+| han, tip | 0.07-0.12 | 0.23-0.34 | 0.38-0.39 | 0.003-0.005 | ~7e4 |
 
-Reading it:
-- **Iron and metal swings** fell in England, Norse and Rome, and the Norse outliers are gone.
-- **Wages:** the wage in wheat rose in England, Norse and Rome, and fell in Mexica, where wheat is a
-  minor food (Complaint 388).
-- **Grain** is steadier than the baseline in Rome, Norse and Han. In England it swings more than with
-  exit and location alone.
-  - An ablation (one switch at a time, seed 1) puts most of that on the trial newcomer and some on the
-    durables spending cap.
-  - Without the trial newcomer, Mexica's hunger roughly doubles, so it stays.
-  - Grain volatility of 0.12-0.22 may be historical (`economy-research-staple-volatility.md`, from
-    memory), but England's harvest correlation weakened. Part of the swing is the economy's own
-    cycling: the first thing to fix next round.
-- **Hunger:**
-  - Mexica's rose with exit and location (wheat makers left the cacao-rented highlands), and the
-    climate gate, the cost memory and the trial newcomer brought it down again, still above the
-    baseline.
-  - Han's is above its baseline and has not been traced.
-- **Gold** is wrong everywhere, and its ratio to silver moved further off at the tip: Complaint 413 (gold valued like silver per kg, no store-of-value
-  demand) and 414 (no good is durable in the economy). The store-of-value design is built and tested
-  on the fixture (`households_store.py`; `agent-economy-store-of-value-design.md`). It is inert until
-  the port passes service lives (414). Opening stocks and its behaviour checks (steps 6-7) remain.
+Reading it (tip measured after the idle-capacity fix below; seeds 1-2):
+- **Better than the baseline:**
+  - Rome: grain, iron and hunger, and a higher wage.
+  - England: grain steadier, with the harvest correlation back near the baseline's; a higher wage;
+    no hunger.
+  - Han and Norse: higher wages.
+- **Worse than the baseline:**
+  - Mexica's hunger, about 0.13 against 0.005: the largest open regression. The cause is
+    probably still households budgeting for foods nobody offers on their tile (the trace above) and
+    wheat being a minor food there. It needs a trace on this tip.
+  - Iron swings more in England and Norse than at the baseline. Its level is still far above cost,
+    the stuck chain of 398.
+- **Gold** is wrong everywhere: Complaint 413 (valued like silver per kg, no store-of-value demand)
+  and 414 (no durable goods in the economy). The store-of-value mechanism is built and tested on the
+  fixture (`households_store.py`; `agent-economy-store-of-value-design.md`) and is inert until the
+  port passes service lives (414). Opening stocks and behaviour checks (steps 6-7) remain.
+- **The trial newcomer** was the main cause of England's grain swing before the idle-capacity fix.
+  Whether it still is, and what it does for Mexica, needs re-measuring.
 
 ## Found by the full suite after merging main
 
