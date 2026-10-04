@@ -71,11 +71,28 @@ def seed_strata(registry: Any, world: Any) -> List[str]:
 	return founded
 
 
+def follow_population(registry: Any, world: Any) -> float:
+	"""Scale the home country's strata so their members add up to the people the world counts: the
+	population model owns how many there are, the strata only how they are split. The factor applied."""
+	home = [stratum for stratum in registry.of_kind("stratum")
+			if stratum.record.country is None and stratum.record.exited_year is None]
+	counted = sum(stratum.record.members for stratum in home)
+	people = world.population_total()
+	if counted <= 0.0 or people <= 0.0:
+		return 1.0
+	factor = people / counted
+	for stratum in home:
+		stratum.record.members *= factor
+	return factor
+
+
 def strata_spawner(registry: Any, world: Any) -> List[str]:
-	"""The yearly step after every actor's turn: found missing strata, then settle moves and keep."""
+	"""The yearly step after every actor's turn: found missing strata, settle moves and keep, then
+	hold the home strata to the population the world counts."""
 	founded = seed_strata(registry, world)
 	if registry.of_kind("stratum"):
 		settle_strata(registry, world)
+		follow_population(registry, world)
 	return founded
 
 

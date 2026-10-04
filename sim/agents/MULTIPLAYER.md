@@ -60,7 +60,9 @@ whatever is pending and a replay reproduces it.
 
 A stratum's data says what its people earn by. `trade` gives wages, `property_share` gives a share
 of output, `bonded` means kept by an `owner` stratum, and `own_plot` means it falls back on its own
-land when wages fall short. `rises_to` and `falls_to` name where its members move.
+land when wages fall short. `rises_to` and `falls_to` name where its members move. The home
+country's strata are scaled each year to the population the engine counts: demography owns how many
+people there are, the strata only how they are split.
 
 ## One goods market for now
 

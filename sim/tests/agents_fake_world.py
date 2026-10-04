@@ -68,6 +68,7 @@ class FakeWorld:
 		self.purchases: List[Any] = []
 		self.interest_paid = 0.0
 		self.output = 1_000_000.0
+		self.population = 0.0
 		# concerns that have run at a profit where entrants can see them
 		self.proven: Set[str] = set()
 
@@ -150,6 +151,10 @@ class FakeWorld:
 
 	def concern_output_tonnes(self, node_id: str, material: str, opened_year: int, staffed: float) -> float:
 		return staffed
+
+	# ---- the country's people (0 = the world does not count them)
+	def population_total(self) -> float:
+		return self.population
 
 	# ---- what the built-in spawners ask (firm entry, interest groups)
 	def society_output(self) -> float:

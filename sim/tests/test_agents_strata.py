@@ -226,3 +226,17 @@ check("people with their own plot are fed when wages are below subsistence",
 	  landed.record.shortfall.get("food") == 0.0, landed.record.shortfall)
 check("people without land go hungry at the same wage", landless.record.shortfall.get("food", 0.0) > 0.0,
 	  landless.record.shortfall)
+
+# ---- the population model owns the headcount; strata only split it ------------------------------
+from sim.agents.strata_seed import follow_population
+
+counted_world = StrataWorld()
+counted_world.population = 3000.0
+counted_registry = ActorRegistry(ActorsState(home_country="home"))
+first = counted_registry.add("stratum:home:a", ActorRecord(kind="stratum", stratum="a", members=1000.0, plan={"name": "a"}))
+second = counted_registry.add("stratum:home:b", ActorRecord(kind="stratum", stratum="b", members=1000.0, plan={"name": "b"}))
+abroad = counted_registry.add("stratum:far:a", ActorRecord(kind="stratum", stratum="a", country="far", members=500.0, plan={"name": "a"}))
+follow_population(counted_registry, counted_world)
+check("home strata add up to the people the world counts, in the shares they had",
+	  first.record.members == 1500.0 and second.record.members == 1500.0, (first.record.members, second.record.members))
+check("a foreign country's strata keep their own count", abroad.record.members == 500.0)
