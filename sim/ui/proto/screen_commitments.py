@@ -1,6 +1,7 @@
 """The `commitments` screen (Complaints/94): the chosen goal, literacy against
 its ceiling, the staff reserve target and which institutions are open or closed,
 gathered from figures other screens already compute."""
+from .goals_watch import watched_rows
 from .screen_education import _fraction_of
 
 
@@ -47,7 +48,9 @@ def _institutions(sim):
 
 
 def commitments_report(sim):
+    watched = watched_rows(sim)
+    note = ("tracked here only; the formal goal stays the one the score uses" if watched else
+            "the game has one goal; 'goals watch <goal>' tracks others")
     return {"ok": True, "goal": _goal(sim), "literacy": _literacy(sim),
-            "secondary_goals": [],
-            "secondary_goals_note": "the game has one goal; there are no secondary goals to list",
+            "secondary_goals": watched, "secondary_goals_note": note,
             "reserve": _reserve(sim), "institutions": _institutions(sim)}
