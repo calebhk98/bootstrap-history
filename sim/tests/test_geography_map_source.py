@@ -2,7 +2,7 @@
 import os
 import unittest
 
-from sim.geography import content_rules, map_source, tile_layers
+from sim.geography import content_rules, map_source, parameters, tile_layers
 
 FIXTURES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "geography_fixtures")
 SMALL_MAP = os.path.join(FIXTURES, "small_map")
@@ -68,6 +68,16 @@ class RuleTests(unittest.TestCase):
         self.assertEqual(content_rules.suitability(envelope, tile_layers.reader(world_map, "a3")), 0.0)
         self.assertAlmostEqual(content_rules.suitability(
             envelope, lambda name: 300), 0.5)
+
+
+class EarthMapTests(unittest.TestCase):
+    def test_every_parameter_states_kind_source_and_reason(self):
+        self.assertEqual(parameters.invalid_entries(map_source.load_map()), [])
+
+    def test_every_tile_has_a_climate_group(self):
+        world_map = map_source.load_map()
+        missing = [tile_id for tile_id in world_map.tiles if not tile_layers.value(world_map, tile_id, "koppen_group")]
+        self.assertEqual(missing, [])
 
 
 if __name__ == "__main__":
