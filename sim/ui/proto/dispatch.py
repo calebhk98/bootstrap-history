@@ -219,6 +219,7 @@ def _cmd_step(sim, nodes, cmd, ended):
     route = route_nodes(sim) if years > 1 else set()
     snapshots = []
     programme_log = []
+    first_year_stepped = sim.year
     for _ in range(years):
         if sim.dead_reason or sim.year >= end_year:
             break
@@ -328,6 +329,10 @@ def _cmd_step(sim, nodes, cmd, ended):
     out = dict(ok=True, completed=completed, lost=lost, events=events)
     if programme_log:
         out["programme"] = programme_log
+    automation_rows = [row for row in ui_port.automation_audit.rows(sim, years)
+                       if row["year"] >= first_year_stepped]
+    if automation_rows:
+        out["automation"] = automation_rows
     if years > 1 and lone_dependencies:
         out["multi_year_staffing_warning"] = (
             "before stepping %d years: %s each rest on one person; a single departure closes them. "

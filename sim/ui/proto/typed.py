@@ -6,7 +6,6 @@ from . import available_args, command_registry
 from .buy_targets import canonical_target
 from .dispatch import KNOWN_COMMANDS
 from .nodes import NODE_IDS, NODE_IDS_LOWER
-from .pursue_parse import parse_programme, parse_pursue
 from .quote_spending import SPENDING_QUOTERS
 
 # ---------------------------------------------------------------------------
@@ -880,8 +879,6 @@ _COMMAND_PARSERS = {
     "reserve": _parse_reserve,
     "saving": _parse_saving,
     "automation": _parse_automation,
-    "pursue": parse_pursue,
-    "programme": parse_programme,
 }
 
 

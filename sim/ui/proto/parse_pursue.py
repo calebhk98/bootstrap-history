@@ -1,4 +1,5 @@
 """Typed-line parsing for pursue and programme: key:value caps, `preview`, and the goal in the rest."""
+from . import typed
 
 NUMBER_KEYS = ("max_total_cost", "max_annual_draw", "reserve_cash", "limit")
 
@@ -41,3 +42,7 @@ def parse_programme(command, rest, words, nums, want_json):
     if len(remaining) > 1:
         out["target"] = " ".join(remaining[1:])
     return out, None
+
+
+typed._COMMAND_PARSERS.setdefault("pursue", parse_pursue)
+typed._COMMAND_PARSERS.setdefault("programme", parse_programme)

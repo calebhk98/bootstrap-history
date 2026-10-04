@@ -3,6 +3,8 @@
 from .render_screen_state import render_state
 from .step_problems import problems_lines
 from .step_alerts import alert_lines
+from .step_automation import automation_lines
+from .render_programme import render_programme_rows
 
 
 def render_step(out):
@@ -12,5 +14,8 @@ def render_step(out):
     alerts = alert_lines(out.get("alerts"))
     if alerts:
         rendered = "\n".join(alerts) + "\n\n" + rendered
-    problems = problems_lines(out.get("problems"))
-    return rendered + "\n" + "\n".join(problems) if problems else rendered
+    programme = render_programme_rows(out.get("programme") or [])
+    if programme:
+        programme = ["PROGRAMME:"] + ["  " + line for line in programme]
+    trailing = automation_lines(out.get("automation")) + programme + problems_lines(out.get("problems"))
+    return rendered + "\n" + "\n".join(trailing) if trailing else rendered
