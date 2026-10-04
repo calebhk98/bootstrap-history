@@ -1,13 +1,14 @@
 """The land market: what a tile's arable land is worth to the producers who want it.
 
-Supply on a tile is its arable hectares, spread over quality bands (LAND_BAND_*). Demand is each
-producer's land per run times the runs it wants, plus the hectares households work for themselves.
-The best bands are used first, so hectares worked on a worse band than the best yield less: land is
-let at a Ricardian differential rent, per hectare the value of the extra output a band gives over the
-marginal band in use, at the output price producers expected. Where demand exceeds all the arable land
-the marginal band is the worst and rent also rises to ration it: LAND_SCARCITY_RENT_SHARE of what a
-hectare of the worst band still earns above the other costs of working it. Producers are then granted
-only a share of what they asked for, which caps their runs.
+Supply on a tile is its arable hectares, whose quality falls smoothly from the best land to the worst
+(LAND_BAND_* give the spread). Demand is each producer's land per run times the runs it wants, plus the
+hectares households work for themselves. The best land is used first, so hectares worked on worse land
+yield less: land is let at a Ricardian differential rent, per hectare the value of the extra output the
+land in use gives over the marginal hectare, at the output price producers expected; it rises
+continuously with the land used. Where demand exceeds all the arable land the marginal hectare is the
+worst and rent also rises to ration it: LAND_SCARCITY_RENT_SHARE of what a hectare of the worst land
+still earns above the other costs of working it. Producers are then granted only a share of what they
+asked for, which caps their runs.
 
 Pure functions: `clear_land` and `rent_postings`. `settle_year` applies them to an economy record.
 Households pay no rent on the plots they work (they own them); producers pay the tile's owner cohort,
@@ -73,10 +74,36 @@ def _weighted(demands: Sequence[LandDemand], attribute: str) -> float:
     return sum(getattr(demand, attribute) * demand.hectares for demand in demands) / total if total > 0.0 else 0.0
 
 
-def _bands(hectares: float):
-    """(relative fertility, hectares) from the best band down."""
-    return sorted(((fertility, hectares * share) for share, fertility
-                   in zip(LAND_BAND_AREA_SHARES, LAND_BAND_RELATIVE_FERTILITY)), reverse=True)
+def _fertility_knots():
+    """(cumulative share of the tile's land, relative fertility) from the best land down: each band's
+    fertility sits at the middle of the band and the fertility of the land between is interpolated, so
+    the quality of the marginal hectare falls smoothly as more land is used."""
+    knots, taken = [(0.0, None)], 0.0
+    for fertility, share in sorted(zip(LAND_BAND_RELATIVE_FERTILITY, LAND_BAND_AREA_SHARES), reverse=True):
+        knots.append((taken + share / 2.0, fertility))
+        taken += share
+    knots[0] = (0.0, knots[1][1])
+    knots.append((1.0, knots[-1][1]))
+    return knots
+
+
+def _used_land_quality(fraction: float):
+    """(fertility of the marginal hectare, mean fertility of all the land used) when `fraction` of the
+    tile's land is in use, the best land first."""
+    knots = _fertility_knots()
+    fraction = min(max(fraction, 0.0), 1.0)
+    area = 0.0
+    for (start, high), (end, low) in zip(knots, knots[1:]):
+        if end <= start:
+            continue
+        reach = min(fraction, end)
+        if reach <= start:
+            break
+        marginal = high + (low - high) * (reach - start) / (end - start)
+        area += (high + marginal) / 2.0 * (reach - start)
+        if fraction <= end:
+            return marginal, area / fraction
+    return knots[-1][1], area / fraction if fraction > 0.0 else knots[0][1]
 
 
 def _clear_tile(supply: float, own_plots: float, demands: Sequence[LandDemand]):
@@ -90,14 +117,8 @@ def _clear_tile(supply: float, own_plots: float, demands: Sequence[LandDemand]):
     if in_use <= 0.0 or wanted <= 0.0:
         return 0.0, granted
     value, cost = _weighted(demands, "output_value_per_hectare"), _weighted(demands, "other_cost_per_hectare")
-    remaining, extra_output, marginal = in_use, [], LAND_BAND_RELATIVE_FERTILITY[-1]
-    for fertility, band_hectares in _bands(supply):
-        used = min(remaining, band_hectares)
-        if used <= 0.0:
-            break
-        extra_output.append((fertility, used))
-        marginal, remaining = fertility, remaining - used
-    differential = value * sum(used * (fertility - marginal) for fertility, used in extra_output) / in_use
+    marginal, mean_fertility = _used_land_quality(in_use / supply if supply > 0.0 else 1.0)
+    differential = value * max(0.0, mean_fertility - marginal)
     short = own + wanted > supply * (1.0 + 1e-12)
     scarcity = LAND_SCARCITY_RENT_SHARE * max(0.0, value * marginal - cost) if short else 0.0
     return differential + scarcity, granted

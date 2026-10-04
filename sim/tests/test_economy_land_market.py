@@ -38,14 +38,14 @@ class ClearLandTests(unittest.TestCase):
         self.assertEqual(result.granted_hectares["p1"], 20.0)
         self.assertAlmostEqual(result.rent_per_hectare_by_tile["t"], 0.0)
 
-    def test_demand_spilling_into_a_worse_band_pays_the_differential(self):
-        shares, fertilities = band_spread()
+    def test_demand_spilling_into_worse_land_pays_a_differential_that_grows_with_the_spill(self):
+        shares, _ = band_spread()
         best_band = 100.0 * shares[0]
-        wanted = best_band + 10.0              # ten hectares into the second band
-        result = clear_land({"t": 100.0}, [demand(hectares=wanted)])
-        self.assertEqual(result.granted_hectares["p1"], wanted)
-        extra = VALUE * (fertilities[0] - fertilities[1])
-        self.assertAlmostEqual(result.rent_per_hectare_by_tile["t"], best_band * extra / wanted)
+        rents = [clear_land({"t": 100.0}, [demand(hectares=best_band + spill)]).rent_per_hectare_by_tile["t"]
+                 for spill in (0.0, 5.0, 10.0, 20.0)]
+        self.assertAlmostEqual(rents[0], 0.0, delta=VALUE * 0.2)
+        self.assertEqual(rents, sorted(rents))
+        self.assertGreater(rents[-1], 0.0)
 
     def test_a_land_short_tile_charges_scarcity_rent_and_grants_a_share(self):
         shares, fertilities = band_spread()
