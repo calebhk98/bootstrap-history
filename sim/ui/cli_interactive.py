@@ -41,7 +41,7 @@ from sim.engine.ui_port import (
 from sim.engine.ui_port import Sim
 from . import protocol as _protocol
 from sim.engine.ui_port import settings
-from . import cli_options, cli_units_options
+from . import cli_options, cli_units_options, replay
 from sim.engine.ui_port import normal_seed, valid_seed_text
 from sim.ui.proto import step_progress
 from sim.ui.proto import util as proto_util
@@ -218,6 +218,7 @@ def _play_build_sim(args):
         asked_fuzzy = fresh_game and bool(app_cfg.get("default_fuzzy_estimates", False))
     sim.fuzzy_estimates = bool(asked_fuzzy)
     sim.revealed = set()
+    _carry_known_routes(sim, args, nodes)
     # The reader is a person typing words, so the worked examples inside every
     # reply should be words too. See protocol.to_typed_hints.
     _protocol.TYPED_HINTS = True
@@ -226,6 +227,21 @@ def _play_build_sim(args):
     _protocol.COMMISSION_DISPLAY = settings.resolve_commission_display(app_cfg)
     cli_units_options.apply_saved_preferences(app_cfg)
     return sim, nodes, session, app_cfg, kit, horizon
+
+
+def _carry_known_routes(sim, args, nodes):
+    """Apply --known-routes (a file) or the wizard's carried ids to a fresh game."""
+    route_ids = list(getattr(args, "known_routes_ids", None) or [])
+    route_file = getattr(args, "known_routes", None)
+    if route_file:
+        route_ids += replay.read_known_routes(route_file)
+    if not route_ids:
+        return
+    if not sim.fog:
+        print("   " + replay.fog_off_note())
+        return
+    applied = replay.apply_known_routes(sim, route_ids, nodes)
+    print("   Carrying over %d known routes: the fog is lifted for them, nothing is given." % len(applied))
 
 
 def _play_resolve_session(args, sim, session):
@@ -432,6 +448,14 @@ def _play_handle_session_command(_word0, _tokens, sim, session, app_cfg, args):
         # straight back to it.
         print()
         return True, session, True, cmd_menu(args)
+    if _word0 == "again" and len(_tokens) == 1:
+        if not _agent_end_reason(sim):
+            print("   'again' is for once this game has ended. 'restart' starts a different game now.")
+            return True, session, False, None
+        known = replay.write_known_routes(sim, replay.routes_path(session)) if session \
+            else sorted(set(replay.built_routes(sim)) | set(replay.remembered(sim, replay.TOPIC).get("carried", [])))
+        print()
+        return True, session, True, _new_game(_load_civ_list(), app_cfg, known_routes=known)
     if _word0 == "restart" and len(_tokens) == 1:
         _confirm = _ask("   Start a different game? This one stays "
                         "exactly as saved, and you can resume it later. "
@@ -550,6 +574,9 @@ def _play_report_end_if_new(sim, nodes, args):
         # THE SCOREBOARD, not one sentence. See protocol.final_report.
         print(render_final(final_report(sim, nodes)))
         print()
+        print(_wrap("Type 'again' to start a new game knowing the routes you built "
+                    "(fog lifted only for them)."))
+        print()
         print(_wrap("You can still look at anything; 'quit' when you are "
                     "done."))
         print()
@@ -565,6 +592,11 @@ def _play_finish(sim, nodes, args, session):
         print(render_final(final_report(sim, nodes)))
         print()
     print("Ended %d AD. %s" % (sim.year, _agent_end_reason(sim) or "stopped"))
+    if _agent_end_reason(sim) and session:
+        replay.record_end_of_run(sim, session)
+        print("Routes you built: %s" % replay.routes_path(session))
+        print("   python3 sim/simulator.py play --fog --known-routes %s"
+              % replay.routes_path(session))
     if session:
         print("Saved to %s. Come back with:" % session)
         print("   python3 sim/simulator.py play --session %s" % session)
@@ -876,7 +908,7 @@ def _ask(prompt, options, default=None):
         print("   -- I did not understand that. Options: %s" % ", ".join(options))
 
 
-def _new_game(civs, cfg):
+def _new_game(civs, cfg, known_routes=None):
     """The wizard: pick a civilisation, read where you have landed, choose
     fog/fuzzy/kit/mortality/goal/horizon, and start. Returns cmd_play's exit code once a
     game has actually begun, or None if the player backed out first - in
@@ -890,6 +922,9 @@ def _new_game(civs, cfg):
     fog = _new_game_ask_fog(cfg)
     if fog is None:
         return None
+    if known_routes and fog != "y":
+        print("   " + replay.fog_off_note())
+        known_routes = None
     print()
     fuzzy = _new_game_ask_fuzzy(cfg)
     if fuzzy is None:
@@ -973,6 +1008,7 @@ def _new_game(civs, cfg):
     args.fuzzy_estimates = (fuzzy == "y")
     args.session = session
     args.manual = True
+    args.known_routes_ids = known_routes
     return cmd_play(args)
 
 
