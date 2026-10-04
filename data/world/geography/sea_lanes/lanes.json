@@ -1,0 +1,11 @@
+{"_doc": "Open-sea legs whose midpoint lies in a box need the listed tech nodes held by a party to the trade (not necessarily by every carrier). Coast legs are restricted only by a lane that names edge_classes.",
+ "entries": [
+  {"id": "arctic_sea_ice", "box": {"lat_min": 66.5, "lat_max": 90, "lon_min": -180, "lon_max": 180}, "edge_classes": ["coast", "open_sea"],
+   "requires_nodes": ["sea_iron_hull"], "kind": "heuristic", "conf": "D",
+   "source": "North of the Arctic circle sea ice closes the coast most of the year; an iron hull stands in for ice-capable shipping until a sea-ice layer exists.",
+   "why": "Without it the graph would send wooden sailing ships along the Arctic coast of Russia."},
+  {"id": "monsoon_indian_ocean", "box": {"lat_min": -15, "lat_max": 30, "lon_min": 45, "lon_max": 125},
+   "requires_nodes": ["sea_monsoon_route"], "kind": "measured", "conf": "C",
+   "source": "data/world/trade_routes.json monsoon links (Arabia to India, India to Southeast Asia); research notes section 6 on seasonal monsoon sailing.",
+   "why": "Blue-water crossings of the Indian Ocean need the seasonal wind pattern."}
+ ]}
