@@ -1,25 +1,49 @@
 """early_playtest: regression checks, run individually with `--only early_playtest`."""
 from .harness import *  # noqa: F401,F403
 
+# One Rome protocol session answers every check that only needs a fresh Rome game and a few commands
+# (a process launch costs far more than the commands). Order matters: read-only commands before the first
+# step, the one command that steps last. Bare non-object JSON goes after everything else, so a process
+# killed by it cannot hide the other checks.
+_rome_commands = [
+    {"cmd": "available"}, {"cmd": "state"}, {"cmd": "help"},                  # 0-2: before the first step
+    {"cmd": "available", "all": True},                                         # 3
+    {"cmd": "state"}, {"cmd": "available"}, {"cmd": "help"}, {"cmd": "labour"},  # 4-7: reply sizes
+    {"cmd": "why", "id": {"a": 1}}, {"cmd": "state"},                          # 8-9: non-string id
+    {"cmd": "state"}, {"cmd": "buy", "what": "forest", "n": -5}, {"cmd": "state"},  # 10-12
+    {"cmd": "save", "file": "/etc/should_not_happen.json"},                    # 13-15
+    {"cmd": "save", "file": "../../escape.json"},
+    {"cmd": "save", "file": "notasave.txt"},
+    {"cmd": "step", "years": 100000}, {"cmd": "step", "years": True},          # 16-17
+    {"cmd": "hire", "trade": "smith", "n": "banana"},                          # 18-20
+    {"cmd": "bribe", "amount": "lots"}, {"cmd": "state"},
+    {"cmd": "quote", "what": "mine", "material": "gold", "n": 1},              # 21
+    {"cmd": "why", "id": "blast_furnace"},                                     # 22
+    {"cmd": "buy", "what": "mine", "material": "coal", "n": 20},               # 23-27
+    {"cmd": "step", "years": 5}, {"cmd": "state"},
+    {"cmd": "close", "material": "coal"}, {"cmd": "state"},
+    None, 42, "x", [1, 2], {"cmd": "state"},                                   # 28-32: bare JSON values
+]
+_rome_replies, _rome_raw, _rome_rc = proto(_rome_commands)
+
+
+def _rome_reply(index):
+    return _rome_replies[index] if index < len(_rome_replies) else {}
+
+
 # --- Rome BREAK: negative quantity minted money while reporting failure
-r, _, _ = proto([{"cmd": "state"},
-                 {"cmd": "buy", "what": "forest", "n": -5},
-                 {"cmd": "state"}])
 check("negative buy quantity changes nothing",
-      r[0]["capital"] == r[-1]["capital"] and r[-1]["forest_ha"] == 0,
-      "capital %s -> %s" % (r[0]["capital"], r[-1]["capital"]))
+      _rome_reply(10).get("capital") == _rome_reply(12).get("capital")
+      and _rome_reply(12).get("forest_ha") == 0,
+      "capital %s -> %s" % (_rome_reply(10).get("capital"), _rome_reply(12).get("capital")))
 
 # --- Rome BREAK: a non-string id killed the process
-r, _, rc = proto([{"cmd": "why", "id": {"a": 1}}, {"cmd": "state"}])
-check("non-string id does not kill the session", rc == 0 and len(r) == 2)
+check("non-string id does not kill the session",
+      _rome_rc == 0 and len(_rome_replies) == len(_rome_commands) and _rome_reply(9).get("ok"))
 
 # --- Norse BREAK: bare non-object JSON killed the process one line later
-_, raw, rc = proto([])  # placeholder to keep the helper simple
-p = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"), "agent"],
-                   input='null\n42\n"x"\n[1,2]\n{"cmd":"state"}\n',
-                   capture_output=True, text=True, timeout=300, cwd=ROOT)
 check("bare null/number/string/list does not kill the session",
-      p.returncode == 0 and p.stdout.count("\n") >= 5)
+      _rome_rc == 0 and _rome_raw.count("\n") >= len(_rome_commands))
 
 # --- Norse BREAK: `why` crashed on nodes missing the v1 scalars
 missing = [x["id"] for x in TREE["nodes"]
@@ -57,12 +81,9 @@ check("freeing untrained people does not skip the training lag",
       s.artisans - a0 < 0.01, "instant gain %.2f" % (s.artisans - a0))
 
 # --- Han BREAK: why quoted a civilization-blind cost
-# Each civ gets its own fresh subprocess (proto() never takes a session
-# file), so the two calls are independent and safe to overlap under --jobs.
-_q_civs = ("rome_100ad", "han_china_100ad")
-_q_results = _par_map(lambda civ: proto([{"cmd": "why", "id": "blast_furnace"}],
-                                        civ=civ)[0], _q_civs)
-q = dict(zip(_q_civs, (results[0]["cost"]["total"] for results in _q_results)))
+q = {"rome_100ad": _rome_reply(22)["cost"]["total"],
+     "han_china_100ad": proto([{"cmd": "why", "id": "blast_furnace"}],
+                              civ="han_china_100ad")[0][0]["cost"]["total"]}
 check("why quotes a civilization-specific cost",
       q["rome_100ad"] != q["han_china_100ad"], str(q))
 
@@ -77,9 +98,7 @@ for f in sorted(os.listdir(S.CIVDIR)):
 check("every civilization's starting techs exist", not bad, str(bad))
 
 # --- Han BREAK: one society was granted another's institutions
-s = sim(civ="han_china_100ad", manual=False)
-for _ in range(2):
-    s.step()
+s = sim(civ="han_china_100ad", manual=False)   # grants are made when the game is built, so no step is needed
 foreign = [node_id for node_id in s.granted if "_roman" in node_id or "annona" in node_id]
 check("a society is not granted another society's institutions",
       not foreign, str(foreign[:4]))
@@ -111,19 +130,20 @@ check("standing a general staff up raises what the state can organise and "
       s.civ["state_capacity"] > sc0, "%.3f -> %.3f" % (sc0, s.civ["state_capacity"]))
 
 # --- Norse WEIRD: abandonment shed a persona and softlocked the run
-s = sim(civ="norse_900ad", capital=1000000.0)
-s.start_project("identity_cover")
-for _ in range(4):
-    s.step()
-s.labour.buy_slaves(150)
-for _ in range(40):
+# Put the household in arrears directly rather than playing into them (Rome: Norse debt bondage would clear
+# the debt), then let the year's insolvency rules run. A shed persona shows as closed, not forgotten.
+s = sim(capital=1000000.0)
+run_it(s, "identity_cover")
+s.labour.hire("artisan", 2)
+s.capital, s.insolvent_years, s.revenue = -3.0 * s.credit_limit(), 30, lambda: 0.0
+for _ in range(2):
     s.step()
 check("bankruptcy never abandons a persona or institution",
-      "identity_cover" in s.done, "identity_cover was shed")
+      "identity_cover" in s.done and "identity_cover" in s.operating, "identity_cover was shed")
 
 # --- Norse BREAK: topping up a mine reset the whole pool's clock
-s = sim(capital=5e6)
-for _ in range(8):
+s = sim(civ="norse_900ad", capital=5e6)
+for _ in range(5):          # a mine's first capacity arrives after its sinking lag; a reset clock never gets there
     s.open_mine("coal", 200)
     s.step()
 check("topping up a mine still delivers capacity",
@@ -136,14 +156,13 @@ check("no loss risk is reported where nothing sacks",
       kr["expected_technologies_lost_per_sacking"] == 0.0, str(kr)[:80])
 
 # --- naive BREAK: read-only commands before the first step
-r, _, rc = proto([{"cmd": "available"}, {"cmd": "state"}, {"cmd": "help"}])
 check("state/available/help work before the first step",
-      rc == 0 and all(x.get("ok") for x in r), str(r[:1])[:90])
+      _rome_rc == 0 and all(_rome_reply(index).get("ok") for index in range(3)),
+      str(_rome_replies[:1])[:90])
 
 # --- naive C/A/BREAK: save then restart must not brick the game
 import tempfile
 sp = os.path.join(tempfile.mkdtemp(), "sess.json")
-proto([{"cmd": "state"}], )  # warm
 subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"), "agent",
                 "--session", sp], input='{"cmd":"state"}\n',
                capture_output=True, text=True, timeout=300, cwd=ROOT)
@@ -157,8 +176,7 @@ check("a saved game reloads without bricking",
 early = {"sc2_physics_nuclear_fission", "sc2_physics_wave_mechanics",
          "el2_sonar_acoustic_detection_ranging", "el2_photomultiplier_single_photon"}
 # all:true, because `available` is a digest by default now
-r, _, _ = proto([{"cmd": "available", "all": True}])
-offered = {entry["id"] for entry in r[0]["available"]} & early
+offered = {entry["id"] for entry in _rome_reply(3).get("available", [])} & early
 check("no advanced physics is startable in year one", not offered, str(offered))
 
 # --- naive A: debasement must not make everything cheaper
@@ -200,11 +218,22 @@ slow_check("ruin never deletes a step the goal needs",
            lambda: ("identity_cover" in _ruin()[0].done, ""))
 
 # --- naive B: the game must not buy people on the player's behalf
-s = sim(capital=200000.0, manual=True)
-for _ in range(40):
-    s.step()
-check("manual play never buys people for you", s.slaves == 0 and s.freedmen == 0,
-      "slaves %d freedmen %d" % (s.slaves, s.freedmen))
+# Room and the mechanic are made available, so only the policy switch stands between the game and a purchase;
+# the same setup with the optimizer playing buys in its first year.
+def _bought_people(manual):
+    game = sim(civ="norse_900ad", capital=2e6, manual=manual)
+    run_it(game, "workshop_first", "freedman_staff")
+    game.running_with_mechanic = lambda name: [name]
+    for _ in range(3 if manual else 1):
+        game.step()
+    return game.slaves + game.freedmen
+
+
+check("the optimizer does buy people when it is playing (the control for the next check)",
+      _bought_people(False) > 0)
+s = sim(civ="norse_900ad")
+check("manual play never buys people for you", _bought_people(True) == 0,
+      "bought %d" % _bought_people(True))
 
 # --- naive WEIRD: nothing should repay its whole cost in weeks. Skilled-trade
 # wages now come from the training premium rather than the book's wage table,
@@ -217,8 +246,8 @@ check("no node repays its entire cost in under three months", not pumps,
       "%d pumps, e.g. %s" % (len(pumps), pumps[:3]))
 
 # --- naive WEIRD 7 / Han BREAK 5: a project must actually be PAID for
-s = sim(capital=book_money(400.0), manual=True)
-ok, why = s.start_project("identity_cover")         # 1,580 den against 400
+s = sim(civ="england_1300", capital=book_money(400.0, civ="england_1300"), manual=True)
+ok, why = s.start_project("identity_cover")         # far more than the money in hand
 for _ in range(6):
     s.step()
 paid = s.active.get("identity_cover", {}).get("spent", 0.0)
@@ -369,8 +398,8 @@ check("military technology gives no relief against staff loss - most "
       "plague",
       staff_bare == staff_mil, (staff_bare, staff_mil))
 
-s_rec_bare = sim(); s_rec_bare.output_factor = 0.7
-s_rec_mil = sim()
+s_rec_bare = sim(civ="norse_900ad"); s_rec_bare.output_factor = 0.7
+s_rec_mil = sim(civ="norse_900ad")
 for k in _MIL_NODES:
     s_rec_mil.done.add(k)
 s_rec_mil.output_factor = 0.7
@@ -428,10 +457,8 @@ check("debt bondage follows the society, and is a term of years",
                           S.load_civ("han_china_100ad").get("debt_bondage")))
 
 # --- the user: a reply nobody can read is a reply nobody reads
-r, _, _ = proto([{"cmd": "state"}, {"cmd": "available"}, {"cmd": "help"},
-                 {"cmd": "labour"}])
-sizes = {reply_name: len(json.dumps(x)) for reply_name, x in
-         zip(("state", "available", "help", "labour"), r)}
+sizes = {reply_name: len(json.dumps(_rome_reply(index))) for reply_name, index in
+         (("state", 4), ("available", 5), ("help", 6), ("labour", 7))}
 check("no ordinary reply is a wall of text",
       all(value < 6000 for value in sizes.values()), str(sizes))
 
@@ -473,8 +500,10 @@ def _tree_opens_up():
 slow_check("available stays a summary as the tree opens up", _tree_opens_up)
 
 # --- the menu: a bare invocation must open it, and every civ must be playable
+# One launch shows the main menu, opens the civilisation list one door in ("1"), backs out ("b",
+# so no save file is written) and leaves ("q").
 p = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
-                   input="q\n", capture_output=True, text=True, timeout=120, cwd=ROOT)
+                   input="1\nb\nq\n", capture_output=True, text=True, timeout=120, cwd=ROOT)
 check("a bare invocation opens the menu rather than a usage error",
       p.returncode == 0 and "ONE PERSON" in p.stdout, p.stdout[:80] + p.stderr[:80])
 check("the bare menu is a main menu (New game / Load / Options), not "
@@ -482,14 +511,8 @@ check("the bare menu is a main menu (New game / Load / Options), not "
       all(option in p.stdout for option in ("New game", "Load a saved game", "Options")),
       p.stdout[:1500])
 
-# The civilisation list itself lives one door in, behind "New game" - "1"
-# opens it, "b" backs out again without starting anything (so this writes no
-# save file at all) and "q" leaves the main menu.
-p2 = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
-                    input="1\nb\nq\n", capture_output=True, text=True, timeout=120,
-                    cwd=ROOT)
 check("the menu offers every civilisation with its lore",
-      all(option in p2.stdout for option in ("Later Han", "Trajan", "Viking", "Edward I", "Mexica")),
+      all(option in p.stdout for option in ("Later Han", "Trajan", "Viking", "Edward I", "Mexica")),
       "missing one of the five")
 
 # `play` was Rome-only and its loop ended at 100+horizon, so any civ that does
@@ -524,43 +547,35 @@ for f in civ_files:
 check("every civilisation has its opening written", not missing_lore, str(missing_lore))
 
 # --- round two, section M: the robustness batch
-r, _, _ = proto([{"cmd": "save", "file": "/etc/should_not_happen.json"},
-                 {"cmd": "save", "file": "../../escape.json"},
-                 {"cmd": "save", "file": "notasave.txt"}])
 check("a save cannot be written outside the game directory",
-      all(not x.get("ok") for x in r), str([x.get("ok") for x in r]))
+      len(_rome_replies) > 15 and all(not _rome_reply(index).get("ok") for index in (13, 14, 15)),
+      str([_rome_reply(index).get("ok") for index in (13, 14, 15)]))
 check("/etc was not written to", not os.path.exists("/etc/should_not_happen.json"))
 
-r, _, _ = proto([{"cmd": "step", "years": 100000}, {"cmd": "step", "years": True}])
-check("step refuses more years than the game contains", not r[0].get("ok"),
-      str(r[0])[:80])
-check("step refuses true as a number of years", not r[1].get("ok"), str(r[1])[:80])
+check("step refuses more years than the game contains",
+      len(_rome_replies) > 16 and not _rome_reply(16).get("ok"), str(_rome_reply(16))[:80])
+check("step refuses true as a number of years",
+      len(_rome_replies) > 17 and not _rome_reply(17).get("ok"), str(_rome_reply(17))[:80])
 
-r, _, _ = proto([{"cmd": "hire", "trade": "smith", "n": "banana"},
-                 {"cmd": "bribe", "amount": "lots"},
-                 {"cmd": "state"}])
 check("a quantity that is not a number is refused, not defaulted",
-      not r[0].get("ok") and not r[1].get("ok") and not r[2].get("employees"),
-      str(r[0].get("error"))[:70])
+      len(_rome_replies) > 20 and not _rome_reply(18).get("ok") and not _rome_reply(19).get("ok")
+      and not _rome_reply(20).get("employees"),
+      str(_rome_reply(18).get("error"))[:70])
 
-r, _, _ = proto([{"cmd": "quote", "what": "mine", "material": "gold", "n": 1}])
 check("a mine can be priced before it is bought",
-      r[0].get("ok") and r[0].get("to_sink_it", 0) > 0
-      and r[0].get("every_year_it_stands", 0) > 0, str(r[0])[:90])
+      _rome_reply(21).get("ok") and _rome_reply(21).get("to_sink_it", 0) > 0
+      and _rome_reply(21).get("every_year_it_stands", 0) > 0, str(_rome_reply(21))[:90])
 
-r, _, _ = proto([{"cmd": "buy", "what": "mine", "material": "coal", "n": 20},
-                 {"cmd": "step", "years": 5}, {"cmd": "state"},
-                 {"cmd": "close", "material": "coal"}, {"cmd": "state"}])
 check("a mine can be closed, and stops costing",
-      r[2].get("mine_operating_cost", 0) > 0 and r[4].get("mine_operating_cost") == 0,
-      "before %s after %s" % (r[2].get("mine_operating_cost"),
-                              r[4].get("mine_operating_cost")))
+      _rome_reply(25).get("mine_operating_cost", 0) > 0 and _rome_reply(27).get("mine_operating_cost") == 0,
+      "before %s after %s" % (_rome_reply(25).get("mine_operating_cost"),
+                              _rome_reply(27).get("mine_operating_cost")))
 
 # --- Mexica WEIRD: the unknown-command message advertised ten commands while
 #     the game had twenty-four, so a player who mistyped was handed a list that
 #     silently omitted labour, hire, train, money, risk, policy and the rest.
-r, _, _ = proto([{"cmd": "definitely_not_a_command"}], civ="mexica_1500")
-_advertised = r[0].get("error", "")
+_mexica_replies, _, _ = proto([{"cmd": "definitely_not_a_command"}, {"cmd": "why"}], civ="mexica_1500")
+_advertised = _mexica_replies[0].get("error", "")
 _real = [command for command in S.KNOWN_COMMANDS]
 check("the unknown-command message advertises every command there is",
       all(command in _advertised for command in _real),
@@ -582,10 +597,9 @@ def _every_advertised_command_answers():
 slow_check("every advertised command is one the game answers to",
            _every_advertised_command_answers)
 
-r, _, _ = proto([{"cmd": "why"}], civ="mexica_1500")
 check("a missing id asks for one rather than naming a Python type",
-      "NoneType" not in r[0].get("error", "") and "available" in r[0].get("error", ""),
-      r[0].get("error", "")[:90])
+      "NoneType" not in _mexica_replies[1].get("error", "") and "available" in _mexica_replies[1].get("error", ""),
+      _mexica_replies[1].get("error", "")[:90])
 
 # --- reproducibility: the same seed must give the same answer, and it must not
 #     depend on PYTHONHASHSEED.

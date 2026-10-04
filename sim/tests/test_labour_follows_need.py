@@ -1,12 +1,10 @@
 """Non-farm hours move toward what each trade is needed for, so a wage that
 signals scarcity is answered by hours and then eases back; the training
 premium uses the civilisation's own interest rate."""
-import random
 import unittest
 
 from sim.labour import labour_allocation
-from sim.engine.data import load_civ
-from sim.tests.harness import S, NODES, ORDER
+from sim.engine.data import load_civ, schedule_of_civilisation
 from sim.labour import labour_market, wages
 
 FARM = labour_allocation.FARM_TRADE
@@ -66,9 +64,8 @@ class TrainingPremiumUsesCivilisationRateTests(unittest.TestCase):
         for rate in (0.05, 0.30):
             civ = load_civ("rome_100ad")
             civ["starting_interest_rate"] = rate
-            engine = S.Sim(NODES, ORDER, random.Random(1), events=False,
-                           manual=True, civ=civ)
-            premiums[rate] = engine.labour.wage_schedule().premium("smith")
+            # The schedule the household builds from the civilisation record, without a whole game.
+            premiums[rate] = schedule_of_civilisation(civ).premium("smith")
         self.assertGreater(premiums[0.30], premiums[0.05])
 
     def test_the_default_constant_is_gone(self):
