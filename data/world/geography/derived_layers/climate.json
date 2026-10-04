@@ -2,5 +2,6 @@
  "entries": [
   {"id": "koppen_group", "rule": "prefix", "source_layer": "koppen_class", "length": 1},
   {"id": "region", "rule": "alias", "source_layer": "old_region"},
+  {"id": "aridity_index", "rule": "ratio", "numerator": "annual_precipitation_mm", "denominator": "mean_temperature_c", "denominator_offset": 10, "denominator_floor": 1, "_doc": "De Martonne (1926) aridity index: under about 5 desert, 5-10 steppe, 10-20 dry woodland, above about 20 humid enough for forest."},
   {"id": "biome", "rule": "lookup", "key_layer": "koppen_class", "catalogue": "climate_classes", "field": "biome"}
  ]}

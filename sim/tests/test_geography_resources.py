@@ -192,8 +192,8 @@ class BioticTests(unittest.TestCase):
         self.assertTrue(forested)
         stand = resources_biotic.stand(world_map, forested[0], "timber")
         self.assertGreater(stand["standing_stock"], 0)
-        deserts = [tile for tile in world_map.tiles if tile_layers.value(world_map, tile, "koppen_class") == "BWh"
-                   and tile_layers.number(world_map, tile, "annual_precipitation_mm", 0) < 250]
+        deserts = [tile for tile in world_map.tiles  # De Martonne's desert class
+                   if tile_layers.number(world_map, tile, "aridity_index", 0) < 5]
         self.assertTrue(deserts)
         self.assertTrue(all(resources_biotic.stand(world_map, tile, "timber")["standing_stock"] == 0 for tile in deserts))
 

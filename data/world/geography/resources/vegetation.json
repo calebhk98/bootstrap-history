@@ -7,14 +7,14 @@
    "unit": "m3_stemwood",
    "envelope": [
     {
-     "layer": "annual_precipitation_mm",
+     "layer": "aridity_index",
      "optimal": [
-      600,
-      3000
+      25,
+      100000
      ],
      "tolerated": [
-      250,
-      6000
+      8,
+      100000
      ],
      "if_missing": true
     },
@@ -36,7 +36,7 @@
     "regrowth_per_hectare_per_year_at_full_suitability": 5,
     "cover_layer": "forest_fraction"
    },
-   "source": "Tree line follows a warmest month near 10 C (Koppen's own boundary between D and E climates); closed forest needs roughly 250 mm or more of rain in cool climates; stand figures from memory; heuristic",
+   "source": "Tree line follows a warmest month near 10 C (Koppen's boundary between D and E climates); closed forest needs a De Martonne aridity index above about 20, open woodland about 10 (De Martonne 1926); stand figures from memory; heuristic",
    "conf": "D"
   },
   {
