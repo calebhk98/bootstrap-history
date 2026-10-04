@@ -19,9 +19,9 @@ Three of these matter more than their count:
 
 1. `MarketView.currency_of(area)` (`market_memory.py:105`, `protocols.py:61`) looks like the hook for several moneys, but nothing ever writes `currency_of_area` (`market_memory.py:45`), so it always returns the setup's currency. Its five callers already ask the right question (which money does this area price in); everything else just does not ask.
 2. Markets are keyed `(good, area)` and an order carries no currency. `year_goods.py:141` and `year_labour.py:90` stamp the one currency on the clearing result, and `settlement.py:37,43` pays in it. A market therefore has exactly one money.
-3. The mint, the metal audit and the state's finance take one `CurrencySpec`: `mint.py` reconciles one coin against one metal, and `money_audit._metal_gap` returns a gap for one currency. Foreign trade (`foreign.py:66`, `api.py:71`) reads `edge:external` in one currency; partners already settle in "the partners' coin ledgers", so foreign money exists in the book only as a flow through the edge.
+3. The mint, the metal audit and the state's finance take one `CurrencySpec`: `mint.py` reconciles one coin against one metal, and `money_audit._metal_gap` returns a gap for one currency. Foreign trade (`foreign.py:66`, `api.py:71`) reads `edge:external` in one currency.
 
-Already generic, needing no change: `credit.py` matches requests to offers by currency (`credit.py:70,72`), `credit_claims.py` filters by currency, `metal_stock.yearly_wear` takes a spec, `currency.exchange_rate` gives the parity of two metal-backed specs, `producer_exit.py` repays loans in each loan's own currency.
+Already generic: `credit.py:70,72` and `credit_claims.py` match by currency, `metal_stock.yearly_wear` takes a spec, `currency.exchange_rate` gives the parity of two metal-backed specs.
 
 ## Options
 
@@ -32,7 +32,7 @@ Already generic, needing no change: `credit.py` matches requests to offers by cu
 
 **(b) Markets quoted per currency with exchange markets between currencies; money changers as agents.** Each good's market clears in one or more currencies; a currency pair has its own market where changers hold both purses and quote a rate.
 - Cost: high. Market keys and memory (`prices`, `wages`, last price) gain a currency; every consumer of price memory changes; the exchange market needs changers with inventory, risk and arbitrage limits, plus a rule for which currency an order is made in.
-- Risk: the largest; two-sided price memory doubles the stale-price problem, and exchange rates could diverge from metal parity with no anchor before changers exist.
+- Risk: the largest; price memory per currency doubles the stale-price problem, and rates have no anchor before changers exist.
 - Unlocks: everything in (a) as an outcome rather than an input (the parity emerges from changers arbitraging metal), floating rates between players and fiat issuers, price-specie flow between currencies.
 
 **(c) Per-area currency only.** Each area (a country's territory) prices and settles in one currency, using the dormant `currency_of_area` map; a cross-area trade is paid in the seller's currency by an exchange at the border, using `exchange_rate` (parity for coin, a rate for fiat).
@@ -42,14 +42,14 @@ Already generic, needing no change: `credit.py` matches requests to offers by cu
 
 ## Recommended order
 
-Take (c) first as the foundation, then (a) for in-area plurality; leave (b) until players trade enough to need real exchange markets. (c) removes the single-currency reads, which both of the others need.
+Take (c) first, since it removes the single-currency reads the others need; then (a); leave (b) until players trade enough to need real exchange markets.
 
 1. **Name the currency per area.** Make `currency_of(area)` the only reader of the setup's currency; add `currency_of_area` to the setup and fill it from the civilisation. Test: a two-area setup where an area is given another currency id and `view.currency_of` returns it; single-currency runs unchanged under `python3 -m sim.tests.fingerprint`.
 2. **Replace `setup.currency_id` in year steps** with the area's currency (`year_goods`, `year_labour`, `year_close`, `entry_year`, `lending`, `state_budget`, `land_market`, `notional`), one file group per agent. Test: a two-area economy clears each market in its area's money and `money_audit` residual is zero in both.
 3. **Make `record.currency` a map** and loop `mint`, `money_audit._metal_gap`, `metal_stock.yearly_wear` and `state_finance` over it. Test: two struck-coin currencies, each with its own mint stock, each audit gap zero.
 4. **Per-currency rates, price levels and wage memory** in the opening spin-up (`opening.py:71`). Test: spin-up settles an interest rate per currency; the single-currency fingerprint is unchanged.
 5. **Border exchange.** Trade across areas settles via an exchange agent holding both purses at `exchange_rate` plus a margin. Test: money conserved per currency; the changer's two purses net to its margin.
-6. **Several media in one area (option a).** A household's cash is the sum of its purses at derived parity; settlement draws from the purses by a stated rule. Test: with a mint ratio away from the market ratio, the over-valued metal accumulates and the other leaves (Gresham), without a scripted flow. Then give Mexica cacao and cloaks.
+6. **Several media in one area (option a).** A household's cash is the sum of its purses at derived parity; settlement draws from the purses by a stated rule. Test: with a mint ratio away from the market ratio, the over-valued metal accumulates and the other leaves (Gresham), without a scripted flow.
 7. **Floating exchange markets (option b)** only after 5 and 6, with changers who may profit or lose. Test: an exchange rate that departs from parity brings arbitrage back.
 
 ## What stays invariant
@@ -58,6 +58,5 @@ Take (c) first as the foundation, then (a) for in-area plurality; leave (b) unti
 - Money and goods enter or leave only through named edge accounts. Each currency gets its own `EDGE_ISSUE`, `EDGE_WEAR`, `EDGE_MINT` and `EDGE_EXTERNAL` records (the book already tracks edges by currency); `edge:legacy` volume stays measured and falling.
 - Metal embodied in coin equals the mint's metal stock plus awaited wear, per spec.
 - No content ids in the engine (4.7): which currencies exist and which areas use them are data.
-- Save and load round-trip within a build; no migration (4.6).
 
 Counts: `grep -n "setup.currency_id" sim/economy/*.py | wc -l`; `grep -n "record.currency\b" sim/economy/*.py | wc -l`; `grep -n "currency_of" sim/economy/*.py`.
