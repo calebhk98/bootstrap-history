@@ -80,11 +80,21 @@ def restake(shortfall: float, owner_cash: float, pays: bool) -> float:
     return min(shortfall, ENTRANT_OWNER_STAKE_SHARE * max(0.0, owner_cash))
 
 
+CLOSED_CAPACITY_SHARE_OF_PAST_SCALE = declare(
+    "CLOSED_CAPACITY_SHARE_OF_PAST_SCALE", 0.01, kind="temporary_heuristic",
+    unit="share of the runs a producer last worked or expected to sell", source=None, confidence="D",
+    why="Capacity decays geometrically and never reaches nothing, so a producer is closed once what is "
+        "left is a sliver of its own past scale; the sliver stands for a workshop too small to keep open.")
+
+
 def producers_to_close(producers: Mapping[str, Producer], pending, debtors) -> List[str]:
-    """Producers with no capacity, no plant on the way and no debt: a newcomer whose plant was never
-    funded or a maker that exited. They close and hand what they hold to their owner."""
+    """Producers whose capacity is a negligible share of the scale they once worked, with no plant on the
+    way and no debt: a newcomer whose plant was never funded or a maker that dwindled. They close and
+    hand what they hold to their owner."""
     return [agent_id for agent_id, producer in sorted(producers.items())
-            if producer.capacity_runs <= 0.0 and agent_id not in pending and agent_id not in debtors]
+            if producer.capacity_runs <= CLOSED_CAPACITY_SHARE_OF_PAST_SCALE * max(
+                producer.last_runs, producer.expected_sales, 0.0)
+            and agent_id not in pending and agent_id not in debtors]
 
 
 def gap_beyond_spare(unmet: float, spare_output: float) -> float:

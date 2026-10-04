@@ -4,7 +4,7 @@ import dataclasses
 import math
 from typing import Dict, Tuple
 
-from . import (currency, households, inventory, merchants, metal_stock, ownership, producers, producers_close,
+from . import (currency, households, inventory, merchants, metal_stock, ownership, producer_exit, producers, producers_close,
                state_budget, taxes)
 from .households_cohort import renewed
 from .market_memory import market_key
@@ -84,19 +84,19 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map) -> None:
         recipe = setup.recipes[producer.recipe_id]
         revenue = ledger.sales_in.get(producer_id, 0.0)
         costs = ledger.running_costs(producer_id)
-        closed = producers_close.close_year(producer, recipe, revenue, costs, view)
+        per_run = recipe.outputs[producers.main_output(recipe)]
+        worked = ledger.output.get((producer_id, producers.main_output(recipe)), 0.0) / (
+            per_run * producer.yield_factor or per_run)
+        closed = producers_close.close_year(producer, recipe, revenue, costs, view, worked)
         if closed.exited:
-            # a run of losses mothballs the plant rather than scrapping it: it keeps its cash and wears
-            # out unless prices bring it back to work (share_working decides how much of it works)
-            wear = 1.0 / recipe.plant_life_years if recipe.plant_life_years > 0.0 else 0.0
-            record.producers[producer_id] = _with_sales(dataclasses.replace(
-                producer, capacity_runs=producer.capacity_runs * (1.0 - wear), years_of_loss=0,
-                expected_prices=closed.producer.expected_prices), recipe, ledger)
+            paid = producer_exit.exit_producer(record, producer_id, list(closed.transfers))
+            for transfer in paid:
+                property_income[transfer.payee] = property_income.get(transfer.payee, 0.0) + transfer.amount
             continue
         paid = ownership.spread(record, closed.transfers)
         record.book.transfer_many(paid)
         worn = producer.capacity_runs - closed.producer.capacity_runs
-        if worn > 0.0 and revenue > costs:
+        if worn > 0.0 and recipe.plant_life_years > 0.0 and revenue > costs:
             record.worn_runs[producer_id] = worn    # a producer covering its costs rebuilds what wore out
         for transfer in paid:
             property_income[transfer.payee] = property_income.get(transfer.payee, 0.0) + transfer.amount
