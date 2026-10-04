@@ -1,9 +1,5 @@
-"""Typed-line parsers for note, notes and goals, joined to the typed parser's table on import."""
+"""Typed-line parsers for notes and goals (note is a free-text command, parsed by its shape), joined to the typed parser's table on import."""
 from . import typed
-
-
-def _parse_note(command, rest, words, nums, want_json):
-    return {"cmd": "note", "text": " ".join(str(word) for word in rest)}, None
 
 
 def _parse_notes(command, rest, words, nums, want_json):
@@ -28,5 +24,5 @@ def _parse_goals(command, rest, words, nums, want_json):
     return {"cmd": "goals"}, None
 
 
-for _name, _parser in (("note", _parse_note), ("notes", _parse_notes), ("goals", _parse_goals)):
+for _name, _parser in (("notes", _parse_notes), ("goals", _parse_goals)):
     typed._COMMAND_PARSERS.setdefault(_name, _parser)

@@ -900,8 +900,13 @@ _COMMAND_PARSERS = {
 
 # The parser for each argument shape a command can declare with
 # @command(shape=...); a command that needs more has its own entry above.
+def _parse_free_text(command, rest, words, nums, want_json):
+    return {"cmd": command, "text": " ".join(str(word) for word in rest)}, None
+
+
 _SHAPE_PARSERS = {
     "bare": _parse_bare_command,
+    "text": _parse_free_text,
     "tech": _parse_open_or_named_tech,
     "tech_done": _parse_open_or_named_tech,
     "file": _parse_save_or_load,

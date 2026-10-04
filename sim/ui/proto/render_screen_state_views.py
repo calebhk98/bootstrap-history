@@ -55,8 +55,8 @@ SECTIONS = {
     "standing": (_state_standing,),
 }
 
-# The short default: the situation, the bottleneck, what to do, the goal, the risks.
-SHORT_BLOCKS = (SECTIONS["situation"] + (_state_stuck, _state_todo)
+# The short default: the situation and stock in hand, the bottleneck, what to do, the goal, the risks.
+SHORT_BLOCKS = (SECTIONS["situation"] + (_state_living_stock, _state_stuck, _state_todo)
                 + SECTIONS["goal"] + SECTIONS["risks"])
 
 
