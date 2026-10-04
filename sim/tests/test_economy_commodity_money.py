@@ -30,11 +30,12 @@ class MonetisationTests(unittest.TestCase):
         expected = max(0.0, wanted - supply) + setup.specs[fixture.METAL].spoilage_per_year * supply
         self.assertAlmostEqual(mint.yearly_monetisation(setup, record), expected)
 
-    def test_a_struck_coin_keeps_its_mint_capacity(self):
-        setup = cheap_money_setup("struck_coin")
-        record = Economy(setup).record
-        self.assertAlmostEqual(mint.yearly_monetisation(setup, record),
-                               mint.MINT_YEARLY_STRIKE_SHARE * record.book.money_supply(setup.currency_id))
+    def test_struck_coin_and_weighed_metal_keep_the_mint_capacity(self):
+        for regime in ("struck_coin", "weighed_metal"):
+            setup = cheap_money_setup(regime)
+            record = Economy(setup).record
+            self.assertAlmostEqual(mint.yearly_monetisation(setup, record),
+                                   mint.MINT_YEARLY_STRIKE_SHARE * record.book.money_supply(setup.currency_id))
 
     def test_the_mint_bids_no_more_than_holders_want_when_their_cash_is_full(self):
         setup = cheap_money_setup("commodity")

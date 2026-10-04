@@ -105,9 +105,9 @@ Reading it (tip measured after the idle-capacity fix below; seeds 1-2):
   - Han and Norse: higher wages.
 - **Worse than the baseline:**
   - (Mexica's hunger, about 0.13 at the previous tip, is fixed. Cacao is both Mexica's money and a
-    food, and the mint for a money with no issuer bought up to a whole money stock of beans a year at
-    parity, so growing money always paid and took the food land. Money with no issuer is now
-    monetised only as holders want more cash, plus what is lost
+    food, and the mint for a commodity money bought up to a whole money stock of beans a year at
+    parity, so growing money always paid and took the food land. A commodity money is now
+    monetised only as holders want more cash, plus what spoils
     (`economy-research-commodity-money.md`). Mexica's hunger is now 0 in both seeds, its money no
     longer grows by itself, and its wage is above the baseline.)
   - Iron swings more in England and Norse than at the baseline. Its level is still far above cost,

@@ -41,9 +41,9 @@ tropical tiles.
 ## What follows for the model
 - **Natural, and kept:** cacao taking the scarce tropical land; cacao regions buying food; local food
   prices rising.
-- **A modelling failure, fixed:** monetising without limit at parity. Money with no issuer now takes
-  into circulation only what holders want to add to their cash, plus what is lost
-  (`sim/economy/mint.yearly_monetisation`). A struck coin keeps its mint capacity, so a silver strike
-  can still raise prices.
+- **A modelling failure, fixed:** monetising without limit at parity. A commodity money now takes into
+  circulation only what holders want to add to their cash, plus what spoils
+  (`sim/economy/mint.yearly_monetisation`). Struck coin and weighed metal keep the mint capacity: there
+  the metal is the money, and a silver strike can still raise prices.
 - **Still to consider:** subsistence maize on cacao growers' own plots; quality and counterfeiting as
   costs of using commodity money.
