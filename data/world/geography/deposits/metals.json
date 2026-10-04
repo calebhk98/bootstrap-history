@@ -1,0 +1,102 @@
+{
+  "_doc": "Modern giant metal mines and historic deposits important since 1800 AD. Includes copper, gold, iron, silver, lead-zinc, tin, nickel, uranium, and bauxite/aluminium. Endowments represent known reserves plus historical production.",
+  "entries": [
+    {"id": "escondida_copper", "name": "Escondida", "resource": "copper", "lat": -24.3, "lon": -69.1, "deposit_type": "porphyry_copper", "endowment": 32000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 15.0, "depth_class": "open_pit", "status": "modern", "first_worked": 1990, "source": "Atacama Desert, Chile; world's largest copper mine", "conf": "A"},
+
+    {"id": "grasberg_copper", "name": "Grasberg", "resource": "copper", "lat": -4.05, "lon": 137.1, "deposit_type": "porphyry_copper", "endowment": 10500000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 10.0, "depth_class": "open_pit", "status": "modern", "first_worked": 1988, "source": "Papua, Indonesia; second largest reserves", "conf": "A"},
+
+    {"id": "bingham_copper", "name": "Bingham Canyon", "resource": "copper", "lat": 40.5, "lon": -112.15, "deposit_type": "porphyry_copper", "endowment": 20000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 6.0, "depth_class": "open_pit", "status": "modern", "first_worked": 1903, "source": "Utah, USA; world's largest open pit mine", "conf": "A"},
+
+    {"id": "collahuasi_copper", "name": "Collahuasi", "resource": "copper", "lat": -22.3, "lon": -68.5, "deposit_type": "porphyry_copper", "endowment": 25900000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 8.0, "depth_class": "open_pit", "status": "modern", "first_worked": 1997, "source": "Northern Chile; Atacama Desert", "conf": "A"},
+
+    {"id": "las_bambas_copper", "name": "Las Bambas", "resource": "copper", "lat": -14.25, "lon": -70.5, "deposit_type": "porphyry_copper", "endowment": 18000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 7.0, "depth_class": "open_pit", "status": "modern", "first_worked": 2016, "source": "Peru; major porphyry deposit", "conf": "A"},
+
+    {"id": "chuquicamata_copper", "name": "Chuquicamata", "resource": "copper", "lat": -22.3, "lon": -68.9, "deposit_type": "porphyry_copper", "endowment": 28000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 9.0, "depth_class": "open_pit", "status": "modern", "first_worked": 1915, "source": "Chile; historic major mine", "conf": "A"},
+
+    {"id": "carlin_gold", "name": "Carlin", "resource": "gold", "lat": 40.9, "lon": -116.3, "deposit_type": "orogenic_gold", "endowment": 80000, "endowment_unit": "tonnes_contained", "ore_grade_kg_per_tonne": 0.005, "depth_class": "underground", "status": "modern", "first_worked": 1964, "source": "Nevada, USA; Carlin Trend district", "conf": "A"},
+
+    {"id": "muruntau_gold", "name": "Muruntau", "resource": "gold", "lat": 41.5, "lon": 64.6, "deposit_type": "orogenic_gold", "endowment": 60000, "endowment_unit": "tonnes_contained", "ore_grade_kg_per_tonne": 0.8, "depth_class": "open_pit", "status": "modern", "first_worked": 1937, "source": "Uzbekistan; world's largest by production", "conf": "A"},
+
+    {"id": "witwatersrand_gold", "name": "Witwatersrand", "resource": "gold", "lat": -26.2, "lon": 27.9, "deposit_type": "sedimentary_gold", "endowment": 200000, "endowment_unit": "tonnes_contained", "ore_grade_kg_per_tonne": 0.005, "depth_class": "deep_underground", "status": "historic", "first_worked": 1886, "source": "South Africa; world's largest gold province", "conf": "A"},
+
+    {"id": "bushveld_pgm", "name": "Bushveld", "resource": "nickel", "lat": -25.0, "lon": 29.0, "deposit_type": "magmatic_platinum", "endowment": 500000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 3.0, "depth_class": "deep", "status": "modern", "first_worked": 1924, "source": "South Africa; world's largest PGE reserves", "conf": "A"},
+
+    {"id": "mother_lode_gold", "name": "Mother Lode", "resource": "gold", "lat": 38.0, "lon": -120.5, "deposit_type": "orogenic_gold", "endowment": 40000, "endowment_unit": "tonnes_contained", "ore_grade_kg_per_tonne": 0.004, "depth_class": "quartz_vein", "status": "historic", "first_worked": 1848, "source": "California; Gold Rush era mining", "conf": "B"},
+
+    {"id": "kolar_gold", "name": "Kolar", "resource": "gold", "lat": 12.95, "lon": 78.13, "deposit_type": "orogenic_gold", "endowment": 10000, "endowment_unit": "tonnes_contained", "ore_grade_kg_per_tonne": 0.006, "depth_class": "deep_underground", "status": "historic", "first_worked": 1880, "source": "Karnataka, India; historic deep mines", "conf": "C"},
+
+    {"id": "hamersley_iron", "name": "Hamersley", "resource": "iron", "lat": -22.6, "lon": 117.8, "deposit_type": "banded_iron_formation", "endowment": 3000000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 600.0, "depth_class": "open_pit", "status": "modern", "first_worked": 1966, "source": "Western Australia; giant BIF", "conf": "A"},
+
+    {"id": "carajas_iron", "name": "Carajas", "resource": "iron", "lat": -6.1, "lon": -50.1, "deposit_type": "banded_iron_formation", "endowment": 2000000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 550.0, "depth_class": "open_pit", "status": "modern", "first_worked": 1985, "source": "Brazil; world's largest iron ore reserves", "conf": "A"},
+
+    {"id": "kiruna_iron", "name": "Kiruna", "resource": "iron", "lat": 67.85, "lon": 20.2, "deposit_type": "apatite_iron_oxide", "endowment": 1200000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 500.0, "depth_class": "underground", "status": "modern", "first_worked": 1899, "source": "Sweden; giant IOCG deposit", "conf": "A"},
+
+    {"id": "norilsk_nickel", "name": "Norilsk", "resource": "nickel", "lat": 69.3, "lon": 88.2, "deposit_type": "magmatic_sulfide", "endowment": 50000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 3.0, "depth_class": "underground", "status": "modern", "first_worked": 1935, "source": "Siberia; nickel + PGE + copper", "conf": "A"},
+
+    {"id": "sudbury_nickel", "name": "Sudbury", "resource": "nickel", "lat": 46.6, "lon": -81.0, "deposit_type": "magmatic_sulfide", "endowment": 60000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 2.0, "depth_class": "deep_underground", "status": "modern", "first_worked": 1886, "source": "Ontario, Canada; major nickel-copper", "conf": "A"},
+
+    {"id": "broken_hill_pbzn", "name": "Broken Hill", "resource": "lead", "lat": -31.95, "lon": 141.45, "deposit_type": "vms_deposit", "endowment": 100000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 50.0, "depth_class": "deep", "status": "historic", "first_worked": 1883, "source": "NSW, Australia; giant VMS deposit", "conf": "A"},
+
+    {"id": "mt_isa_pbzn", "name": "Mount Isa", "resource": "lead", "lat": -20.7, "lon": 139.5, "deposit_type": "vms_deposit", "endowment": 80000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 40.0, "depth_class": "deep", "status": "modern", "first_worked": 1923, "source": "Queensland, Australia; giant VMS", "conf": "A"},
+
+    {"id": "copperbelt_pbzn", "name": "Copperbelt", "resource": "copper", "lat": -12.8, "lon": 28.2, "deposit_type": "sedimentary_copper", "endowment": 200000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 3.0, "depth_class": "underground", "status": "modern", "first_worked": 1920, "source": "Zambia/DRC; major copper provinces", "conf": "A"},
+
+    {"id": "kinta_tin", "name": "Kinta Valley", "resource": "tin", "lat": 4.6, "lon": 101.1, "deposit_type": "placer_cassiterite", "endowment": 5000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 2.0, "depth_class": "alluvial", "status": "modern", "first_worked": 1800, "source": "Perak, Malaysia; world's major tin", "conf": "A"},
+
+    {"id": "bangka_tin", "name": "Bangka Island", "resource": "tin", "lat": -2.1, "lon": 106.1, "deposit_type": "placer_cassiterite", "endowment": 3000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 1.5, "depth_class": "alluvial", "status": "modern", "first_worked": 1850, "source": "Indonesia; major alluvial tin", "conf": "A"},
+
+    {"id": "cornwall_tin_historic", "name": "Cornwall Historic", "resource": "tin", "lat": 50.2, "lon": -5.2, "deposit_type": "vein_cassiterite", "endowment": 500000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 10.0, "depth_class": "underground", "status": "historic", "first_worked": 1300, "source": "England; historic tin mining", "conf": "B"},
+
+    {"id": "olympic_dam_uranium", "name": "Olympic Dam", "resource": "uranium", "lat": -30.45, "lon": 136.9, "deposit_type": "unconformity_uranium", "endowment": 1700000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 3.0, "depth_class": "deep", "status": "modern", "first_worked": 1988, "source": "South Australia; giant uranium deposit", "conf": "A"},
+
+    {"id": "guinea_bauxite", "name": "Guinea Bauxite", "resource": "bauxite", "lat": 10.5, "lon": -10.5, "deposit_type": "laterite_bauxite", "endowment": 500000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 350.0, "depth_class": "open_pit", "status": "modern", "first_worked": 1960, "source": "Guinea; world's largest bauxite reserves", "conf": "A"},
+
+    {"id": "australia_bauxite", "name": "Weipa Bauxite", "resource": "bauxite", "lat": -12.7, "lon": 141.9, "deposit_type": "laterite_bauxite", "endowment": 600000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 400.0, "depth_class": "open_pit", "status": "modern", "first_worked": 1972, "source": "Queensland, Australia; major bauxite", "conf": "A"},
+
+    {"id": "santo_nino_silver", "name": "Santo Niño", "resource": "silver", "lat": 26.5, "lon": -107.5, "deposit_type": "epithermal_vein", "endowment": 100000, "endowment_unit": "tonnes_contained", "ore_grade_kg_per_tonne": 0.15, "depth_class": "shallow", "status": "modern", "first_worked": 1990, "source": "Durango, Mexico; epithermal silver", "conf": "B"},
+
+    {"id": "potosi_silver", "name": "Potosi", "resource": "silver", "lat": -19.6, "lon": -65.75, "deposit_type": "high_sulfidation_epithermal", "endowment": 500000, "endowment_unit": "tonnes_contained", "ore_grade_kg_per_tonne": 0.05, "depth_class": "deep", "status": "historic", "first_worked": 1545, "source": "Bolivia; historic colonial silver mining", "conf": "C"},
+
+    {"id": "palabora_copper", "name": "Palabora", "resource": "copper", "lat": -23.8, "lon": 31.1, "deposit_type": "porphyry_copper", "endowment": 15000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 4.5, "depth_class": "open_pit", "status": "modern", "first_worked": 1966, "source": "South Africa; porphyry complex", "conf": "A"},
+
+    {"id": "freeport_tenke", "name": "Tenke Fungurume", "resource": "copper", "lat": -10.7, "lon": 25.5, "deposit_type": "sedimentary_copper", "endowment": 50000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 4.0, "depth_class": "underground", "status": "modern", "first_worked": 1996, "source": "DRC/Zambia Copperbelt; major mine", "conf": "A"},
+
+    {"id": "antamina_copper", "name": "Antamina", "resource": "copper", "lat": -11.6, "lon": -76.0, "deposit_type": "porphyry_copper", "endowment": 30000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 7.0, "depth_class": "underground", "status": "modern", "first_worked": 1972, "source": "Peru; poly-metal porphyry", "conf": "A"},
+
+    {"id": "cerro_verde_copper", "name": "Cerro Verde", "resource": "copper", "lat": -16.3, "lon": -71.0, "deposit_type": "porphyry_copper", "endowment": 12900000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 6.0, "depth_class": "open_pit", "status": "modern", "first_worked": 1976, "source": "Peru; major porphyry", "conf": "A"},
+
+    {"id": "fort_knox_gold", "name": "Fort Knox", "resource": "gold", "lat": 64.8, "lon": -147.5, "deposit_type": "epithermal_gold", "endowment": 30000, "endowment_unit": "tonnes_contained", "ore_grade_kg_per_tonne": 0.7, "depth_class": "open_pit", "status": "modern", "first_worked": 2001, "source": "Alaska; large disseminated gold", "conf": "A"},
+
+    {"id": "boddington_gold", "name": "Boddington", "resource": "gold", "lat": -32.7, "lon": 116.0, "deposit_type": "porphyry_gold", "endowment": 25000, "endowment_unit": "tonnes_contained", "ore_grade_kg_per_tonne": 0.6, "depth_class": "open_pit", "status": "modern", "first_worked": 1987, "source": "Western Australia; porphyry gold", "conf": "A"},
+
+    {"id": "lihir_gold", "name": "Lihir", "resource": "gold", "lat": -3.1, "lon": 152.6, "deposit_type": "epithermal_gold", "endowment": 20000, "endowment_unit": "tonnes_contained", "ore_grade_kg_per_tonne": 0.9, "depth_class": "open_pit", "status": "modern", "first_worked": 1997, "source": "Papua New Guinea; epithermal", "conf": "A"},
+
+    {"id": "cadia_gold", "name": "Cadia-Ridgeway", "resource": "gold", "lat": -33.8, "lon": 149.2, "deposit_type": "porphyry_gold", "endowment": 35000, "endowment_unit": "tonnes_contained", "ore_grade_kg_per_tonne": 0.8, "depth_class": "open_pit", "status": "modern", "first_worked": 2000, "source": "NSW Australia; large porphyry", "conf": "A"},
+
+    {"id": "malartic_gold", "name": "Canadian Malartic", "resource": "gold", "lat": 48.2, "lon": -77.6, "deposit_type": "orogenic_gold", "endowment": 22000, "endowment_unit": "tonnes_contained", "ore_grade_kg_per_tonne": 0.9, "depth_class": "open_pit", "status": "modern", "first_worked": 2010, "source": "Quebec; large disseminated", "conf": "A"},
+
+    {"id": "grasberg_gold", "name": "Grasberg Gold", "resource": "gold", "lat": -4.05, "lon": 137.1, "deposit_type": "porphyry_gold", "endowment": 40000, "endowment_unit": "tonnes_contained", "ore_grade_kg_per_tonne": 1.2, "depth_class": "open_pit", "status": "modern", "first_worked": 1988, "source": "Papua; gold in porphyry copper", "conf": "A"},
+
+    {"id": "neves_lead_zinc", "name": "Neves", "resource": "lead", "lat": -19.6, "lon": -43.7, "deposit_type": "vms_deposit", "endowment": 40000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 25.0, "depth_class": "underground", "status": "modern", "first_worked": 1906, "source": "Brazil; VMS deposit", "conf": "A"},
+
+    {"id": "durango_lead", "name": "Durango District", "resource": "lead", "lat": 24.2, "lon": -104.6, "deposit_type": "vein_deposit", "endowment": 25000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 15.0, "depth_class": "underground", "status": "modern", "first_worked": 1520, "source": "Mexico; historic-modern mining", "conf": "B"},
+
+    {"id": "viburnum_trend_lead", "name": "Viburnum Trend", "resource": "lead", "lat": 38.0, "lon": -91.5, "deposit_type": "mvt_deposit", "endowment": 50000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 12.0, "depth_class": "underground", "status": "modern", "first_worked": 1959, "source": "Missouri, USA; MVT deposit", "conf": "A"},
+
+    {"id": "kinta_underground_tin", "name": "Kinta Underground", "resource": "tin", "lat": 4.8, "lon": 101.0, "deposit_type": "vein_cassiterite", "endowment": 3000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 3.0, "depth_class": "underground", "status": "modern", "first_worked": 1900, "source": "Malaysia; hard rock tin", "conf": "A"},
+
+    {"id": "collinsville_tin", "name": "Collinsville", "resource": "tin", "lat": -20.6, "lon": 146.6, "deposit_type": "vein_cassiterite", "endowment": 1500000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 2.5, "depth_class": "underground", "status": "historic", "first_worked": 1876, "source": "Queensland; historic tin", "conf": "B"},
+
+    {"id": "marcona_iron", "name": "Marcona", "resource": "iron", "lat": -15.3, "lon": -75.2, "deposit_type": "magnetite_deposit", "endowment": 500000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 400.0, "depth_class": "open_pit", "status": "modern", "first_worked": 1953, "source": "Peru; magnetite deposits", "conf": "A"},
+
+    {"id": "sishen_iron", "name": "Sishen", "resource": "iron", "lat": -27.5, "lon": 22.5, "deposit_type": "banded_iron_formation", "endowment": 800000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 480.0, "depth_class": "open_pit", "status": "modern", "first_worked": 1951, "source": "South Africa; BIF deposit", "conf": "A"},
+
+    {"id": "thabazimbi_iron", "name": "Thabazimbi", "resource": "iron", "lat": -24.5, "lon": 26.5, "deposit_type": "banded_iron_formation", "endowment": 600000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 500.0, "depth_class": "open_pit", "status": "modern", "first_worked": 1920, "source": "South Africa; BIF", "conf": "A"},
+
+    {"id": "fortescue_iron", "name": "Fortescue", "resource": "iron", "lat": -22.0, "lon": 118.0, "deposit_type": "banded_iron_formation", "endowment": 2000000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 550.0, "depth_class": "open_pit", "status": "modern", "first_worked": 2008, "source": "Western Australia; major BIF", "conf": "A"},
+
+    {"id": "paz_silver", "name": "Paz y Trabajo", "resource": "silver", "lat": 25.8, "lon": -108.3, "deposit_type": "epithermal_vein", "endowment": 30000, "endowment_unit": "tonnes_contained", "ore_grade_kg_per_tonne": 0.06, "depth_class": "shallow", "status": "modern", "first_worked": 2007, "source": "Mexico; epithermal", "conf": "B"},
+
+    {"id": "cannington_silver", "name": "Cannington", "resource": "silver", "lat": -21.5, "lon": 139.0, "deposit_type": "vms_deposit", "endowment": 60000, "endowment_unit": "tonnes_contained", "ore_grade_kg_per_tonne": 0.25, "depth_class": "underground", "status": "modern", "first_worked": 1997, "source": "Queensland; lead-zinc-silver mine", "conf": "A"}
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "_doc": "Industrial minerals: salt, potash, saltpetre/nitrate, sulfur, phosphate, gypsum, and bitumen/asphalt deposits.",
+  "entries": [
+    {"id": "dead_sea_salt", "name": "Dead Sea", "resource": "salt", "lat": 31.5, "lon": 35.5, "deposit_type": "evaporite_brine", "endowment": 1000000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 300.0, "status": "modern", "first_worked": -2000, "source": "Israel/Palestine; brine extraction", "conf": "A"},
+
+    {"id": "wieliczka_salt", "name": "Wieliczka", "resource": "salt", "lat": 50.0, "lon": 20.05, "deposit_type": "rock_salt", "endowment": 500000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 950.0, "status": "historic", "first_worked": 1290, "source": "Poland; historic rock salt mine", "conf": "B"},
+
+    {"id": "hallstatt_salt", "name": "Hallstatt", "resource": "salt", "lat": 47.6, "lon": 13.65, "deposit_type": "rock_salt", "endowment": 200000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 950.0, "status": "historic", "first_worked": -750, "source": "Austria; prehistoric salt mining", "conf": "B"},
+
+    {"id": "khewra_salt", "name": "Khewra", "resource": "salt", "lat": 32.65, "lon": 73.0, "deposit_type": "rock_salt", "endowment": 600000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 950.0, "status": "modern", "first_worked": 1840, "source": "Pakistan; major rock salt", "conf": "A"},
+
+    {"id": "stassfurt_salt", "name": "Stassfurt", "resource": "salt", "lat": 51.85, "lon": 11.6, "deposit_type": "rock_salt", "endowment": 500000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 950.0, "status": "modern", "first_worked": 1839, "source": "Germany; historic salt mining", "conf": "A"},
+
+    {"id": "great_salt_lake", "name": "Great Salt Lake", "resource": "salt", "lat": 40.7, "lon": -111.9, "deposit_type": "evaporite_brine", "endowment": 800000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 200.0, "status": "modern", "first_worked": 1847, "source": "Utah, USA; brine extraction", "conf": "A"},
+
+    {"id": "saskatchewan_potash", "name": "Saskatchewan", "resource": "potash", "lat": 52.0, "lon": -106.0, "deposit_type": "evaporite_potash", "endowment": 30000000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 150.0, "status": "modern", "first_worked": 1958, "source": "Canada; world's largest potash", "conf": "A"},
+
+    {"id": "solikamsk_potash", "name": "Solikamsk", "resource": "potash", "lat": 59.4, "lon": 56.8, "deposit_type": "evaporite_potash", "endowment": 10000000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 120.0, "status": "modern", "first_worked": 1925, "source": "Siberia; major potash province", "conf": "A"},
+
+    {"id": "stassfurt_potash", "name": "Stassfurt Potash", "resource": "potash", "lat": 51.85, "lon": 11.6, "deposit_type": "evaporite_potash", "endowment": 500000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 80.0, "status": "modern", "first_worked": 1861, "source": "Germany; historic potash", "conf": "A"},
+
+    {"id": "atacama_nitrate", "name": "Atacama Nitrate Belt", "resource": "saltpetre", "lat": -22.5, "lon": -69.0, "deposit_type": "evaporite_nitrate", "endowment": 100000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 30.0, "status": "historic", "first_worked": 1830, "source": "Chile; Tarapaca-Atacama deposits", "conf": "A"},
+
+    {"id": "gulf_coast_sulfur", "name": "Gulf Coast Frasch", "resource": "sulfur", "lat": 29.2, "lon": -95.5, "deposit_type": "salt_dome_sulfur", "endowment": 50000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 950.0, "status": "modern", "first_worked": 1895, "source": "Texas/Louisiana; Frasch process", "conf": "A"},
+
+    {"id": "sicily_sulfur", "name": "Sicily Sulfur", "resource": "sulfur", "lat": 37.5, "lon": 13.9, "deposit_type": "evaporite_sulfur", "endowment": 20000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 900.0, "status": "historic", "first_worked": 1100, "source": "Italy; historic sulfur deposits", "conf": "B"},
+
+    {"id": "etna_sulfur", "name": "Mount Etna", "resource": "sulfur", "lat": 37.7, "lon": 15.0, "deposit_type": "volcanic_sulfur", "endowment": 10000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 850.0, "status": "historic", "first_worked": 1700, "source": "Sicily; volcanic sulfur", "conf": "C"},
+
+    {"id": "florida_phosphate", "name": "Florida Phosphate", "resource": "phosphate", "lat": 28.0, "lon": -82.0, "deposit_type": "sedimentary_phosphate", "endowment": 2000000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 120.0, "status": "modern", "first_worked": 1888, "source": "Florida, USA; large phosphate deposits", "conf": "A"},
+
+    {"id": "morocco_phosphate", "name": "Phosphate Plateau", "resource": "phosphate", "lat": 33.5, "lon": -6.0, "deposit_type": "sedimentary_phosphate", "endowment": 3000000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 100.0, "status": "modern", "first_worked": 1920, "source": "Morocco; world's largest reserves", "conf": "A"},
+
+    {"id": "athabasca_bitumen", "name": "Athabasca Oil Sands", "resource": "bitumen", "lat": 57.0, "lon": -111.5, "deposit_type": "oil_sand", "endowment": 1700000000000, "endowment_unit": "barrels", "status": "modern", "first_worked": 1978, "source": "Alberta, Canada; oil sands", "conf": "A"},
+
+    {"id": "orinoco_bitumen", "name": "Orinoco Belt", "resource": "bitumen", "lat": 8.5, "lon": -65.0, "deposit_type": "oil_sand", "endowment": 1000000000000, "endowment_unit": "barrels", "status": "modern", "first_worked": 1990, "source": "Venezuela; extra-heavy oil belt", "conf": "A"},
+
+    {"id": "pitch_lake_bitumen", "name": "Trinidad Pitch Lake", "resource": "bitumen", "lat": 10.2, "lon": -61.6, "deposit_type": "asphalt_lake", "endowment": 200000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 950.0, "status": "modern", "first_worked": 1595, "source": "Trinidad; natural asphalt lake", "conf": "B"},
+
+    {"id": "hit_seeps_bitumen", "name": "Hit Seeps", "resource": "bitumen", "lat": 33.6, "lon": 42.8, "deposit_type": "seepage_bitumen", "endowment": 500000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 800.0, "status": "historic", "first_worked": -3000, "source": "Iraq; natural bitumen seeps", "conf": "C"},
+
+    {"id": "ijen_sulfur", "name": "Ijen Volcano", "resource": "sulfur", "lat": 8.06, "lon": 114.24, "deposit_type": "volcanic_sulfur", "endowment": 15000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 850.0, "status": "modern", "first_worked": 1850, "source": "Indonesia; volcanic sulfur", "conf": "B"},
+
+    {"id": "salar_uyuni_salt", "name": "Salar de Uyuni", "resource": "salt", "lat": -20.2, "lon": -67.6, "deposit_type": "evaporite_salt", "endowment": 5000000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 200.0, "status": "modern", "first_worked": 1900, "source": "Bolivia; world's largest salt flat", "conf": "A"},
+
+    {"id": "kuwait_sulfur", "name": "Kuwait Sulfur", "resource": "sulfur", "lat": 29.0, "lon": 47.8, "deposit_type": "oil_associated_sulfur", "endowment": 30000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 950.0, "status": "modern", "first_worked": 1980, "source": "Kuwait; recovered from sour oil", "conf": "A"},
+
+    {"id": "lake_assal_salt", "name": "Lake Assal", "resource": "salt", "lat": 11.8, "lon": 42.4, "deposit_type": "evaporite_brine", "endowment": 600000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 280.0, "status": "modern", "first_worked": 1920, "source": "Djibouti; world's saltiest body of water", "conf": "A"},
+
+    {"id": "qinghai_salt", "name": "Qaidam Basin Salt", "resource": "salt", "lat": 37.5, "lon": 93.5, "deposit_type": "evaporite_salt", "endowment": 1200000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 250.0, "status": "modern", "first_worked": 1950, "source": "China; massive salt flats", "conf": "A"},
+
+    {"id": "tunupa_nitrate", "name": "Tunupa", "resource": "saltpetre", "lat": -19.2, "lon": -67.5, "deposit_type": "evaporite_nitrate", "endowment": 50000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 25.0, "status": "historic", "first_worked": 1820, "source": "Bolivia; nitrate deposits", "conf": "B"},
+
+    {"id": "nauru_phosphate", "name": "Nauru Phosphate", "resource": "phosphate", "lat": -0.5, "lon": 166.9, "deposit_type": "island_phosphate", "endowment": 100000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 250.0, "status": "historic", "first_worked": 1900, "first_worked": 1906, "source": "Pacific island; mined out", "conf": "B"},
+
+    {"id": "nauru_second_phosphate", "name": "Nauru Phosphate", "resource": "phosphate", "lat": -0.5, "lon": 166.9, "deposit_type": "island_phosphate", "endowment": 100000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 250.0, "status": "historic", "first_worked": 1906, "source": "Pacific island; mined out", "conf": "B"},
+
+    {"id": "boulby_potash", "name": "Boulby", "resource": "potash", "lat": 54.6, "lon": -0.9, "deposit_type": "rock_salt_potash", "endowment": 1000000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 100.0, "status": "modern", "first_worked": 1970, "source": "England; polyhalite deposit", "conf": "A"},
+
+    {"id": "carnallite_deposit", "name": "Carnallite Mines", "resource": "potash", "lat": 54.0, "lon": 4.5, "deposit_type": "evaporite_potash", "endowment": 2000000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 80.0, "status": "modern", "first_worked": 1911, "source": "Netherlands; major potash", "conf": "A"},
+
+    {"id": "bayannur_salt", "name": "Bayannur", "resource": "salt", "lat": 41.8, "lon": 107.5, "deposit_type": "evaporite_salt", "endowment": 900000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 220.0, "status": "modern", "first_worked": 1950, "source": "Mongolia; salt deposits", "conf": "B"},
+
+    {"id": "tafelsalz_salt", "name": "Tafelsalz", "resource": "salt", "lat": 52.5, "lon": 11.5, "deposit_type": "rock_salt", "endowment": 300000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 950.0, "status": "modern", "first_worked": 1850, "source": "Germany; rock salt mining", "conf": "A"}
+  ]
+}

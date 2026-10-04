@@ -1,0 +1,52 @@
+{
+  "_doc": "Gemstone deposits: diamonds, emeralds, rubies, sapphires, jade, lapis lazuli, turquoise. Endowment measured in carats for gems, tonnes for processed rough.",
+  "entries": [
+    {"id": "kimberley_diamonds", "name": "Kimberley", "resource": "diamond", "lat": -28.7, "lon": 24.8, "deposit_type": "kimberlite", "endowment": 3000000, "endowment_unit": "carats", "status": "historic", "first_worked": 1871, "source": "South Africa; historic diamond field", "conf": "A"},
+
+    {"id": "argyle_diamonds", "name": "Argyle", "resource": "diamond", "lat": -16.7, "lon": 128.4, "deposit_type": "kimberlite", "endowment": 50000000, "endowment_unit": "carats", "status": "modern", "first_worked": 1985, "source": "Western Australia; world's largest by production", "conf": "A"},
+
+    {"id": "mir_diamond", "name": "Mir Pipe", "resource": "diamond", "lat": 62.5, "lon": 114.0, "deposit_type": "kimberlite", "endowment": 20000000, "endowment_unit": "carats", "status": "modern", "first_worked": 1964, "source": "Siberia; giant kimberlite pipe", "conf": "A"},
+
+    {"id": "jwaneng_diamonds", "name": "Jwaneng", "resource": "diamond", "lat": -24.5, "lon": 24.7, "deposit_type": "kimberlite", "endowment": 15000000, "endowment_unit": "carats", "status": "modern", "first_worked": 1972, "source": "Botswana; high-quality diamonds", "conf": "A"},
+
+    {"id": "murowa_diamonds", "name": "Murowa", "resource": "diamond", "lat": -19.8, "lon": 28.5, "deposit_type": "kimberlite", "endowment": 5000000, "endowment_unit": "carats", "status": "modern", "first_worked": 2006, "source": "Zimbabwe; kimberlite deposit", "conf": "A"},
+
+    {"id": "finsch_diamonds", "name": "Finsch", "resource": "diamond", "lat": -27.0, "lon": 25.6, "deposit_type": "kimberlite", "endowment": 8000000, "endowment_unit": "carats", "status": "modern", "first_worked": 1963, "source": "South Africa; major kimberlite", "conf": "A"},
+
+    {"id": "muzo_emerald", "name": "Muzo", "resource": "emerald", "lat": 5.5, "lon": -74.1, "deposit_type": "hydrothermal_emerald", "endowment": 500000, "endowment_unit": "carats", "status": "modern", "first_worked": 1600, "source": "Colombia; world's finest emeralds", "conf": "A"},
+
+    {"id": "chivor_emerald", "name": "Chivor", "resource": "emerald", "lat": 5.3, "lon": -73.5, "deposit_type": "hydrothermal_emerald", "endowment": 300000, "endowment_unit": "carats", "status": "modern", "first_worked": 1650, "source": "Colombia; fine emeralds", "conf": "A"},
+
+    {"id": "mogok_ruby", "name": "Mogok", "resource": "ruby", "lat": 22.9, "lon": 96.5, "deposit_type": "marble_hosted", "endowment": 500000, "endowment_unit": "carats", "status": "historic", "first_worked": 1400, "source": "Myanmar; historic ruby mining", "conf": "A"},
+
+    {"id": "mong_hsu_ruby", "name": "Mong Hsu", "resource": "ruby", "lat": 21.5, "lon": 97.5, "deposit_type": "marble_hosted", "endowment": 300000, "endowment_unit": "carats", "status": "modern", "first_worked": 1992, "source": "Myanmar; major ruby deposit", "conf": "A"},
+
+    {"id": "ratnapura_gems", "name": "Ratnapura", "resource": "sapphire", "lat": 6.7, "lon": 80.4, "deposit_type": "alluvial_gems", "endowment": 1000000, "endowment_unit": "carats", "status": "modern", "first_worked": 1800, "source": "Sri Lanka; sapphire & mixed gems", "conf": "A"},
+
+    {"id": "panna_diamond", "name": "Panna", "resource": "diamond", "lat": 24.7, "lon": 80.2, "deposit_type": "alluvial_diamond", "endowment": 500000, "endowment_unit": "carats", "status": "historic", "first_worked": 1600, "source": "India; historic placer diamonds", "conf": "C"},
+
+    {"id": "golconda_diamond", "name": "Golconda/Kollur", "resource": "diamond", "lat": 16.7, "lon": 80.0, "deposit_type": "alluvial_diamond", "endowment": 1000000, "endowment_unit": "carats", "status": "historic", "first_worked": 1400, "source": "India; historic placer diamonds", "conf": "B"},
+
+    {"id": "sar_i_sang", "name": "Sar-i Sang", "resource": "lapis_lazuli", "lat": 36.0, "lon": 70.8, "deposit_type": "contact_metamorphic", "endowment": 1000000, "endowment_unit": "carats", "status": "historic", "first_worked": -3000, "source": "Afghanistan; world's premier lapis", "conf": "B"},
+
+    {"id": "sleep_canyon_turquoise", "name": "Sleeping Beauty", "resource": "turquoise", "lat": 33.5, "lon": -110.8, "deposit_type": "secondary_copper", "endowment": 500000, "endowment_unit": "carats", "status": "modern", "first_worked": 1970, "source": "Arizona, USA; major turquoise", "conf": "A"},
+
+    {"id": "kingman_turquoise", "name": "Kingman", "resource": "turquoise", "lat": 35.2, "lon": -114.0, "deposit_type": "secondary_copper", "endowment": 300000, "endowment_unit": "carats", "status": "historic", "first_worked": 1800, "source": "Arizona, USA; historic turquoise", "conf": "A"},
+
+    {"id": "nishapur_turquoise", "name": "Nishapur", "resource": "turquoise", "lat": 36.2, "lon": 58.6, "deposit_type": "secondary_copper", "endowment": 400000, "endowment_unit": "carats", "status": "historic", "first_worked": -2000, "source": "Iran; historic turquoise mining", "conf": "B"},
+
+    {"id": "nephrite_jade", "name": "Jade Carving Areas", "resource": "jade", "lat": 36.0, "lon": 102.0, "deposit_type": "metamorphic_jade", "endowment": 2000000, "endowment_unit": "carats", "status": "historic", "first_worked": -5000, "source": "China/Central Asia; nephrite jade", "conf": "B"},
+
+    {"id": "jadeite_jade", "name": "Myanmar Jade", "resource": "jade", "lat": 25.0, "lon": 96.5, "deposit_type": "metamorphic_jade", "endowment": 1500000, "endowment_unit": "carats", "status": "modern", "first_worked": 1600, "source": "Myanmar; jadeite jade deposits", "conf": "A"},
+
+    {"id": "tanzanite_deposit", "name": "Merelani", "resource": "sapphire", "lat": -3.3, "lon": 36.7, "deposit_type": "metamorphic_gem", "endowment": 800000, "endowment_unit": "carats", "status": "modern", "first_worked": 1967, "source": "Tanzania; tanzanite gemstones", "conf": "A"},
+
+    {"id": "sapphire_montana", "name": "Sapphire Valley", "resource": "sapphire", "lat": 46.9, "lon": -112.8, "deposit_type": "alluvial_gem", "endowment": 400000, "endowment_unit": "carats", "status": "modern", "first_worked": 1887, "source": "Montana, USA; corundum deposits", "conf": "A"},
+
+    {"id": "peridot_arizona", "name": "San Carlos", "resource": "peridot", "lat": 33.0, "lon": -110.6, "deposit_type": "igneous_peridot", "endowment": 300000, "endowment_unit": "carats", "status": "modern", "first_worked": 1900, "source": "Arizona, USA; olivine gems", "conf": "A"},
+
+    {"id": "opal_australia", "name": "Coober Pedy", "resource": "opal", "lat": -26.0, "lon": 134.8, "deposit_type": "sedimentary_opal", "endowment": 1000000, "endowment_unit": "carats", "status": "modern", "first_worked": 1890, "source": "South Australia; precious opal", "conf": "A"},
+
+    {"id": "garnet_india", "name": "Karnataka Garnets", "resource": "garnet", "lat": 13.5, "lon": 76.0, "deposit_type": "metamorphic_garnet", "endowment": 500000, "endowment_unit": "carats", "status": "modern", "first_worked": 1900, "source": "India; industrial garnet", "conf": "A"}
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "_doc": "Ancient mineral deposits from Roman Empire era, converted from data/world/deposits.json. These represent historical mines worked before 1800 AD. Each entry includes geological metadata (ore type, grade, depth class) and historical first-worked dates. Endowment figures are order-of-magnitude estimates of total ore mined or known to have been present.",
+  "entries": [
+    {"id": "elba_hematite", "name": "Elba Hematite", "resource": "iron", "lat": 40.3225, "lon": 9.0644, "deposit_type": "hematite_surface", "endowment": 5000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 500.0, "depth_class": "surface", "status": "historic", "first_worked": -1000, "source": "Etruscan & Roman working; Pliny", "conf": "C"},
+
+    {"id": "noricum_siderite", "name": "Noricum Siderite", "resource": "iron", "lat": 50.0215, "lon": 14.0491, "deposit_type": "siderite_vein", "endowment": 10000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 350.0, "depth_class": "shallow", "status": "historic", "first_worked": -500, "source": "Eastern Alps; ferrum Noricum famous in antiquity", "conf": "C"},
+
+    {"id": "wealden_bog_iron", "name": "Wealden Bog Iron", "resource": "iron", "lat": 51.3195, "lon": -1.4847, "deposit_type": "bog_iron", "endowment": 3000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 250.0, "depth_class": "surface", "status": "historic", "first_worked": -100, "source": "Low-lying bog iron; easy working", "conf": "C"},
+
+    {"id": "hispania_hematite", "name": "Iberian Hematite", "resource": "iron", "lat": 41.6212, "lon": -2.007, "deposit_type": "hematite_vein", "endowment": 8000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 400.0, "depth_class": "shallow", "status": "historic", "first_worked": -1000, "source": "Iberian Pyrite Belt; oxidized cap", "conf": "C"},
+
+    {"id": "rio_tinto_copper", "name": "Rio Tinto Copper", "resource": "copper", "lat": 38.3304, "lon": -6.021, "deposit_type": "massive_sulfide", "endowment": 50000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 60.0, "depth_class": "deep", "status": "historic", "first_worked": -2000, "source": "Iberian Pyrite Belt; major VMS deposit with Roman workings", "conf": "C"},
+
+    {"id": "cyprus_copper", "name": "Cyprus Copper", "resource": "copper", "lat": 35.0741, "lon": 33.2188, "deposit_type": "oxide_copper", "endowment": 5000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 80.0, "depth_class": "surface", "status": "historic", "first_worked": -3000, "source": "Cyprus; ancient oxide/carbonate copper mining", "conf": "C"},
+
+    {"id": "britannia_lead", "name": "Mendip-Pennine Lead", "resource": "lead", "lat": 51.3195, "lon": -1.4847, "deposit_type": "galena_vein", "endowment": 3000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 150.0, "depth_class": "shallow", "status": "historic", "first_worked": 50, "source": "Roman Britain; Mendip & Pennine veins; marked pigs", "conf": "C"},
+
+    {"id": "hispania_lead", "name": "Cartagena Lead", "resource": "lead", "lat": 38.0719, "lon": -2.3395, "deposit_type": "galena_vein", "endowment": 8000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 180.0, "depth_class": "deep", "status": "historic", "first_worked": -500, "source": "Iberian Pyrite Belt; argentiferous galena", "conf": "C"},
+
+    {"id": "laurion_lead", "name": "Laurion Lead", "resource": "lead", "lat": 37.9077, "lon": 22.102, "deposit_type": "galena_vein", "endowment": 5000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 80.0, "depth_class": "deep", "status": "historic", "first_worked": -1500, "source": "Athenian silver-lead mining district; Xenophon", "conf": "C"},
+
+    {"id": "hispania_silver", "name": "Cartagena Silver", "resource": "silver", "lat": 38.0719, "lon": -2.3395, "deposit_type": "galena_vein", "endowment": 80000, "endowment_unit": "tonnes_contained", "ore_grade_kg_per_tonne": 1.0, "depth_class": "deep", "status": "historic", "first_worked": -500, "source": "Strabo on New Carthage; 40,000 workers", "conf": "B"},
+
+    {"id": "laurion_silver", "name": "Laurion Silver", "resource": "silver", "lat": 37.9077, "lon": 22.102, "deposit_type": "galena_vein", "endowment": 50000, "endowment_unit": "tonnes_contained", "ore_grade_kg_per_tonne": 0.4, "depth_class": "deep", "status": "historic", "first_worked": -1500, "source": "Athenian navy funding; Xenophon description", "conf": "C"},
+
+    {"id": "cornish_tin", "name": "Cornish Tin", "resource": "tin", "lat": 51.9728, "lon": -4.5749, "deposit_type": "placer_cassiterite", "endowment": 500000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 4.0, "depth_class": "alluvial", "status": "historic", "first_worked": -1000, "source": "Cassiterite panning; classical trade", "conf": "C"},
+
+    {"id": "las_medulas_gold", "name": "Las Medulas", "resource": "gold", "lat": 41.3753, "lon": -6.021, "deposit_type": "placer_gold", "endowment": 50000, "endowment_unit": "tonnes_contained", "ore_grade_kg_per_tonne": 0.0003, "depth_class": "alluvial_hydraulic", "status": "historic", "first_worked": 50, "source": "Pliny on ruina montium; Roman aqueduct mining", "conf": "C"},
+
+    {"id": "dacia_vein_gold", "name": "Rosia Montana", "resource": "gold", "lat": 45.5357, "lon": 22.0771, "deposit_type": "orogenic_gold", "endowment": 30000, "endowment_unit": "tonnes_contained", "ore_grade_kg_per_tonne": 0.008, "depth_class": "deep", "status": "historic", "first_worked": 106, "source": "Dacian quartz veins; post-106 AD conquest", "conf": "C"},
+
+    {"id": "almaden_cinnabar", "name": "Almaden", "resource": "mercury", "lat": 38.3304, "lon": -6.021, "deposit_type": "cinnabar_vein", "endowment": 250000, "endowment_unit": "tonnes_contained", "ore_grade_kg_per_tonne": 50.0, "depth_class": "shallow", "status": "historic", "first_worked": -100, "source": "World's richest cinnabar; Roman convict mines", "conf": "B"},
+
+    {"id": "monte_amiata_cinnabar", "name": "Monte Amiata", "resource": "mercury", "lat": 41.3548, "lon": 14.4964, "deposit_type": "cinnabar_vein", "endowment": 40000, "endowment_unit": "tonnes_contained", "ore_grade_kg_per_tonne": 6.0, "depth_class": "surface", "status": "historic", "first_worked": -1000, "source": "Tuscan Etruscan cinnabar", "conf": "C"},
+
+    {"id": "timna_copper", "name": "Timna", "resource": "copper", "lat": 29.5, "lon": 34.9, "deposit_type": "oxide_copper", "endowment": 2000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 20.0, "depth_class": "shallow", "status": "historic", "first_worked": -4000, "source": "Sinai Peninsula; Bronze Age copper mining", "conf": "C"},
+
+    {"id": "falun_copper", "name": "Falun", "resource": "copper", "lat": 60.6, "lon": 15.6, "deposit_type": "vms_deposit", "endowment": 100000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 30.0, "depth_class": "deep", "status": "historic", "first_worked": 1288, "source": "Sweden; major medieval copper mine", "conf": "C"},
+
+    {"id": "rammelsberg", "name": "Rammelsberg", "resource": "lead", "lat": 51.9, "lon": 10.4, "deposit_type": "vms_deposit", "endowment": 30000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 100.0, "depth_class": "deep", "status": "historic", "first_worked": 968, "source": "German medieval lead-zinc-copper mine", "conf": "C"}
+  ]
+}
