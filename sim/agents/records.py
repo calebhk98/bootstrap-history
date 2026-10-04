@@ -111,6 +111,10 @@ class ActorRecord:
 	# ---- a firm founded by staff leaving another: the parent's id, empty otherwise
 	spun_off_from: str = ""
 
+	# ---- a state's tax on bodies of people: stratum id -> the earned income (cumulative) it has
+	# already assessed, so each year's income is assessed once
+	income_assessed: Dict[str, float] = field(default_factory=dict)
+
 
 @dataclass
 class CapitalMarketRecord:

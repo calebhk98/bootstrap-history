@@ -410,3 +410,9 @@ class World(Protocol):
 	def patent_entry(self, node_id: str) -> Optional[Dict[str, Any]]:
 		"""The live patent on a node ({"holder", "expires", "licensees"}), else None."""
 		...
+
+	# ---- What the home state asks of its people (sim/engine/agents_port_budget.py)
+
+	def country_strata(self) -> List[Any]:
+		"""The home country's bodies of people, in id order."""
+		...
