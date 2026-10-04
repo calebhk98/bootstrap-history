@@ -14,13 +14,14 @@ from typing import Any, Dict, List, Tuple
 
 from . import budget, ledger
 from .base import Actor, RecordedActor
+from .government_coinage import CoinageMixin
 from .government_stores import StoresMixin
 from .government_surplus import SurplusMixin
 from .tuning import GOVERNMENT_WORTH_SHARE_PER_GAIN
 from .values import invention_gains, weighted_gain
 
 
-class Government(StoresMixin, SurplusMixin, RecordedActor):
+class Government(CoinageMixin, StoresMixin, SurplusMixin, RecordedActor):
 	kind = "government"
 
 	def imitation_worth(self, node_id: str, world: Any) -> float:
@@ -120,6 +121,7 @@ class Government(StoresMixin, SurplusMixin, RecordedActor):
 	def advance(self, world: Any) -> None:
 		held = dict(self.workforce)
 		lines, share = self.pay_standing_need(world)
+		self.decide_debasement(world)
 		self.pay_patron(share, world)
 		self.act(world)
 		self.build_works(lines, world)

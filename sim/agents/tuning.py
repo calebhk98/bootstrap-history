@@ -98,3 +98,30 @@ MANAGEMENT_SPAN_EXPONENT = declare(
 	unit="exponent of capacity on the wage bill beyond the people hired", source=None, confidence="D",
 	why="Wages of a concern run at several times its founding size grow faster than its staff: the "
 		"overseers and managers a larger concern needs. Stands in for a model of span of control.")
+ENTRY_PREMIUM_PER_OPERATOR = declare(
+	"ENTRY_PREMIUM_PER_OPERATOR", 0.05, kind="temporary_heuristic",
+	unit="share of the copy cost per operator already in the market", source=None, confidence="D",
+	why="A fixed cost an entrant pays however small it is (a site, a custom to win from those who "
+		"already serve it) that rises with the operators crowding the market; stands in for rents, "
+		"licences and the cost of finding customers, so that the number of firms follows what each must carry.")
+FOUNDER_WEALTH_MULTIPLE = declare(
+	"FOUNDER_WEALTH_MULTIPLE", 5.0, kind="temporary_heuristic",
+	unit="multiple of a stratum's average savings per person", source=None, confidence="D",
+	why="Who founds a firm is among the better off of their stratum, not its average member; stands "
+		"in for the spread of wealth within a body of people.")
+TACIT_SHARE_OF_COPYING = declare(
+	"TACIT_SHARE_OF_COPYING", 0.3, kind="temporary_heuristic",
+	unit="share of the copy chance", source=None, confidence="D",
+	why="How much of a copy's chance of success rests on reading, measuring and writing down what "
+		"is seen; a founder from an unlettered stratum loses that share. Stands in for declared "
+		"per-technique visibility (Complaint 376).")
+EXIT_GRACE_YEARS = declare(
+	"EXIT_GRACE_YEARS", 5, kind="temporary_heuristic",
+	unit="years", source=None, confidence="D",
+	why="Years after opening before a concern that earns less than its plant would lend for counts "
+		"against its firm; stands in for the ramp-up of a new concern.")
+ENTRY_EQUITY_SHARE = declare(
+	"ENTRY_EQUITY_SHARE", 0.3, kind="temporary_heuristic",
+	unit="share of an entrant's stake", source=None, confidence="D",
+	why="Lenders back a new firm only when its founder has put up this share of the stake from their "
+		"own savings; stands in for collateral and the lender's knowledge of the borrower.")

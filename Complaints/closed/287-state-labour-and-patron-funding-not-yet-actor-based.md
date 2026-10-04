@@ -1,6 +1,6 @@
 # The state's soldiers are not a trade, and patron funding still ignores the treasury
 
-**Status:** partly - item 1 (soldiers a trade) and item 2 (patron funding from the treasury) are built; item 3 (the state's adoption is a half-life curve) is untouched
+**Status:** closed - items 1 and 2 built earlier; item 3 was already built when re-measured (see the last note). What is left of the military share as a basis for equipment is 330.
 
 Three things the state budget does not do yet, each measurable.
 
@@ -13,3 +13,5 @@ Check 3 with `grep -rn "state_military_diffusion" sim --include=*.py`.
 Done: item 2. `Sim.state_funding` is what the treasury paid (`Government.pay_patron`, from the purse after the standing need, nothing when any need went unpaid); the old formula survives as `patron_funding_ask`, a labelled heuristic for what a patron would give. Item 1 in part: `society_output` excludes soldiers under arms, so a larger army lowers revenue; the trade itself and the wage are 314. Item 3 is untouched.
 
 Update: item 1 is built (314): the army is booked in the `soldier` trade, drawn from the working age through the one labour market. What is left is item 3 only: `grep -rn "state_military_diffusion" sim --include=*.py`.
+
+Update (item 3, re-measured): no half-life curve for the state remains. `grep -rn "HALF_LIFE_MILITARY" sim --include=*.py` finds nothing; `civ_diffusion` returns 1 for a military node the government holds (`state_treasury().knowledge`) and 0 otherwise, `state_military_diffusion` is the share of the founder's military nodes it holds, and the war relief counts the weapons it holds. The curve carries nothing the government's own copies do not already decide: whether the state adopts is its purse, its policy's worth for the node and the copy's work and risk, all in `Government`. The calendar plays no part (`sim/tests/test_invention_disclosure.py` increment 3: two centuries after the founder's invention the state holds nothing; adoption rises only as the government's knowledge does; `sim/tests/test_state_weapon_relief.py` for the relief). The actor is never absent (`state_treasury()` creates it), so no fallback is kept. The remaining oddity, that the share falls as the founder invents more weapons, is 330.

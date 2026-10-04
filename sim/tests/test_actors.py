@@ -198,7 +198,8 @@ check("a firm enters a concern that has proved profitable",
 check("no firm enters a losing concern or one not yet proved",
       all(f.record.target not in ("test_loss", "test_fresh") for f in firms))
 next_year(game)
-firm = game.actors.of_kind("firm")[0]
+# the first entrant: ids sort as text, so the earliest founded is not always the first in id order
+firm = min(game.actors.of_kind("firm"), key=lambda entrant: (entrant.record.founded_year, int(entrant.actor_id.split(":")[1])))
 check("the firm copies the concern with the ordinary rules and then runs it",
       "test_mill" in firm.knowledge and "test_mill" in firm.concerns, (firm.record.works, firm.concerns))
 check("the entrant shares the market with the founder", game.actors.rivals_of("test_mill", firm.actor_id) == 1)
