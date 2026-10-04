@@ -87,12 +87,12 @@ worker is worth less than the first.
 The core is complete and tested (`python3 -m sim.tests --only labour_core_training,labour_core_clearing,labour_core_entrants,labour_core_switching,labour_core_migration,labour_core_opening,labour_core_year,labour_core_walls`).
 Nothing in the running game calls it yet. That needs changes outside `sim/labour/`:
 
-- Complaint 412: the agent economy delegates its labour clearing and worker movement to the core.
-- Complaint 413: the trade registry keeps `difficulty`, `literate`, `taught_from`, `tool_basket`,
+- Complaint 428: the agent economy delegates its labour clearing and worker movement to the core.
+- Complaint 429: the trade registry keeps `difficulty`, `literate`, `taught_from`, `tool_basket`,
   `fallback`, `fatality_risk_per_year`, and labour can read it. Then `legacy_trade_defaults.py` goes.
-- Complaint 414: a saved field and a yearly call, plus the household fields for a standing pay premium and
+- Complaint 430: a saved field and a yearly call, plus the household fields for a standing pay premium and
   school cohorts.
-- Complaint 415: the two engine imports left in the labour package.
-- Complaint 416: the subsistence staple is wheat for every civilisation.
-- Complaint 417: the player's hire command takes a premium and shows how many can be found.
-- Complaint 418: recipe need shares behind trade populations overweight mining and omit transport.
+- Complaint 431: the two engine imports left in the labour package.
+- Complaint 432: the subsistence staple is wheat for every civilisation.
+- Complaint 433: the player's hire command takes a premium and shows how many can be found.
+- Complaint 434: recipe need shares behind trade populations overweight mining and omit transport.

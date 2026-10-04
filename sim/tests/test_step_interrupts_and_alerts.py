@@ -3,7 +3,7 @@ from .harness import *  # noqa: F401,F403
 from sim.ui.protocol import _agent_dispatch, save_state, load_state
 from sim.ui.proto import step_progress
 from sim.ui.proto.step_alerts import step_alerts, alert_lines
-from sim.ui.proto import render_screens_big as _render_big
+from sim.ui.proto import render_screen_state as _render_state, render_screen_step as _render_big
 
 def playable():
     live_sim = sim()
@@ -67,8 +67,8 @@ state_reply = _agent_dispatch(collapse, NODES, {"cmd": "state"})
 check("a population collapse is a field on the state reply",
       state_reply.get("demographic_emergency", {}).get("population_change") == -0.5, sorted(state_reply)[:5])
 check("the state screen leads with DEMOGRAPHIC EMERGENCY",
-      _render_big.render_state(state_reply).splitlines()[0].startswith("DEMOGRAPHIC EMERGENCY"),
-      _render_big.render_state(state_reply)[:200])
+      _render_state.render_state(state_reply).splitlines()[0].startswith("DEMOGRAPHIC EMERGENCY"),
+      _render_state.render_state(state_reply)[:200])
 calm = _agent_dispatch(playable(), NODES, {"cmd": "state"})
 check("no emergency without a collapse", "demographic_emergency" not in calm)
 shutil.rmtree(scratch, ignore_errors=True)

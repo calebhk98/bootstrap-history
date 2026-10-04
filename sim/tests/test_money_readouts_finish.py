@@ -1,9 +1,9 @@
 """money_readouts_finish: each preview and the action it previews call one
 function for the amount (Complaints 261, 216, 236, 210, 240, 212)."""
 from .harness import *  # noqa: F401,F403
-from sim.ui.proto.render_screens_big import render_state
+from sim.ui.proto.render_screen_state import render_state
 from sim.ui.proto.render_screens_economy import render_money
-from sim.ui.proto.state import _waiting_on
+from sim.ui.proto.state_waiting import _waiting_on
 
 
 def _ask(test_sim, **command):

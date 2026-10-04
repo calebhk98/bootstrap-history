@@ -2,7 +2,7 @@
 active projects collapses to a bounded list plus a summary by what they wait on."""
 from .harness import *  # noqa: F401,F403
 
-from sim.ui.proto.render_screens_big import _state_concerns, _state_running
+from sim.ui.proto.render_screen_state_blocks import _state_concerns, _state_running
 
 
 def ask(test_sim, **command):

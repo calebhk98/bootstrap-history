@@ -326,12 +326,50 @@ Old issue numbers (in commit messages, reports and history) and the number each 
 675 -> 354  the-founders-takeoff-needs-costs-that-lag-the-economy-index
 690 -> 355  engine-code-reads-a-civilisation-from-disk-by-id
 
-## 2026-10-04 (labour-market-core merged with main's multiplayer complaints)
+## 2026-10-04
 
-401 -> 412  the-economy-clears-labour-with-its-own-model-instead-of-the-labour-core
-402 -> 413  the-trade-registry-drops-fields-labour-needs
-403 -> 414  the-labour-core-has-no-save-field-and-no-yearly-call
-404 -> 415  the-labour-package-imports-the-engine
-405 -> 416  the-subsistence-staple-is-wheat-for-every-civilisation
-406 -> 417  ui-cannot-offer-pay-over-the-market
-407 -> 418  recipe-need-shares-overweight-mining-and-omit-transport-and-building-trades
+The geography branch and the multiplayer branch both filed 401-407; the geography ones moved up.
+
+401 -> 408  economy-keeps-its-own-tile-freight-graph
+402 -> 409  economy-setup-opens-the-geography-file-by-path
+403 -> 410  the-engine-does-not-pass-active-mods-to-the-map
+404 -> 411  food-potential-gaps-shelf-cold-pasture-slope-and-competition
+405 -> 412  deposits-have-no-geology-layer
+406 -> 413  sea-routes-have-no-land-mask-and-few-lanes
+407 -> 414  food-potential-is-not-read-by-demography-or-settlement
+408 -> 415  mining-does-not-read-endowment-or-prospecting
+409 -> 416  reach-and-built-roads-are-not-read-by-the-engine
+410 -> 417  map-checks-and-heuristics-are-not-in-validate-or-the-burndown
+411 -> 418  the-fast-suite-fails-on-main
+
+Filed on `ui-disclosure-and-inspectors` at the same time as main's 401-418; moved twice, final numbers here. The branch's 414 (suite failures on main) was folded into 418.
+
+401 -> 419  ui-needs-its-own-slot-in-the-save
+402 -> 420  engine-keeps-no-causes-for-wages-closures-and-notice
+403 -> 421  automation-records-no-skipped-actions-or-modes
+404 -> 422  goals-have-one-id-one-reach-year-and-no-anatomy-hook
+405 -> 423  mods-cannot-add-figures-or-screen-rows-through-data
+406 -> 424  units-json-has-no-rule-for-mass-per-year-fields
+
+## 2026-10-04 (labour-market-core, merged twice with main)
+
+This branch first filed 401-407, moved them to 412-418 when main's multiplayer complaints took 401-407, then
+filed 408-426 alongside. Main's geography and UI branches took 408-424, so every labour-branch complaint moved
+again. Final numbers, from the branch's own numbers:
+
+401 -> 428  the-economy-clears-labour-with-its-own-model-instead-of-the-labour-core (412 on the branch)
+402 -> 429  the-trade-registry-drops-fields-labour-needs (413)
+403 -> 430  the-labour-core-has-no-save-field-and-no-yearly-call (414)
+404 -> 431  the-labour-package-imports-the-engine (415)
+405 -> 432  the-subsistence-staple-is-wheat-for-every-civilisation (416)
+406 -> 433  ui-cannot-offer-pay-over-the-market (417)
+407 -> 434  recipe-need-shares-overweight-mining-and-omit-transport-and-building-trades (418)
+408 -> (416)  geography-api-for-reach-by-transport: dropped, main's 416 asks for the same and geography now has api.reach
+409 -> 425  hire-replies-report-the-count-asked-not-the-count-found
+410 -> 426  labour-cannot-read-how-many-people-actors-hold-nationwide
+411 -> 427  a-partly-covered-payroll-is-neither-trimmed-nor-emptied
+419-422 -> (418)  four test failures present on main: dropped, main's 418 lists the same
+423 -> 435  han-opening-wages-spread-over-two-orders-of-magnitude
+424 -> 436  han-founders-are-denounced-within-about-thirty-years-on-every-seed
+425 -> 437  growing-season-weather-test-reads-a-region-latitude-the-data-no-longer-has
+426 -> 438  spending-can-run-past-the-credit-limit-when-upkeep-nears-revenue

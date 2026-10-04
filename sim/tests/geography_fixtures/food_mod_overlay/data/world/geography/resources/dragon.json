@@ -1,0 +1,6 @@
+{"entries": [
+ {"id": "food_overlay_q7x2:dragon", "mechanism": "wild_population", "food_source": "hunting", "adult_mass_kg": 2000,
+  "envelope": [{"layer": "mean_temperature_c", "optimal": [24, 28], "tolerated": [23, 29]}],
+  "biomass_kg_per_km2_per_npp_g_m2": 3.0, "biomass_cap_kg_per_km2": 5000, "harvest_fraction": 0.2,
+  "edible_kcal_per_kg_live": 900, "conf": "D", "source": "test fixture", "why": "A test animal for the mod path."}
+]}

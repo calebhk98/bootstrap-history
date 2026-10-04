@@ -1,0 +1,8 @@
+{"_doc": "Fallbacks for the food model: a measured layer wins, then these class-typical values.",
+ "entries": [
+  {"id": "mean_temperature_c", "rule": "lookup", "key_layer": "koppen_class", "catalogue": "climate_classes", "field": "mean_temperature_c"},
+  {"id": "annual_precipitation_mm", "rule": "lookup", "key_layer": "koppen_class", "catalogue": "climate_classes", "field": "annual_precipitation_mm"},
+  {"id": "coldest_month_temperature_c", "rule": "lookup", "key_layer": "koppen_class", "catalogue": "climate_classes", "field": "coldest_month_temperature_c"},
+  {"id": "warmest_month_temperature_c", "rule": "lookup", "key_layer": "koppen_class", "catalogue": "climate_classes", "field": "warmest_month_temperature_c"},
+  {"id": "forest_fraction", "rule": "lookup", "key_layer": "koppen_class", "catalogue": "climate_classes", "field": "forest_fraction"}
+ ]}

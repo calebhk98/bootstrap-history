@@ -1,6 +1,6 @@
 # Request: a replay option that remembers which technologies you built in an earlier run, with fog lifted only for those
 
-**Status:** open
+**Status:** partly - after a run ends, `again` (play) starts a new game with the ids you built revealed, and `play`/`agent --known-routes <file>` does the same from the `<session>.routes.json` written at the end (`sim/ui/replay.py`, test `sim/tests/test_replay_known_routes.py`); checked by hand: an agent session writes the file at `finish`, and a new fog session started with it answers `why` for the carried ids; remains: no automated test drives the interactive `again` prompt in `play`
 
 C: fog resets between runs; for a mortal scenario meant to be replayed, a "lessons" carry-over after a death (a new run that remembers which nodes you built before, fog lifted only for them) would make replays less of a re-discovery grind. Not a defect; fog staying serious was praised by both Rome testers ("please retain fog").
 

@@ -14,5 +14,5 @@ Owner decision (2026-10-02): should be fixed.
 
 Built (owner decision 2026-10-02): `soldier` is in `data/world/trades.json`; the army line is people of that trade at the labour market's quote for it; its national pool is the working age; hiring presses the soldier trade, so conscription moves the soldier wage; soldiers under arms are a standing draw on the unskilled pool (`LabourMarket.standing_draw`), which raises the unskilled price factor, and they owe no poll tax. `society_labour_hours` (labour_allocation.py) now takes the working age less the people actors hold in trades drawn from the unskilled pool, and the wage rule counts their hours as need of the fallback trade, so its tightness factor rises while they serve. Measure with `python3 sim/budget_series.py rome_100ad 100 1` (soldier and unskilled wage columns).
 
-Remaining (Complaint 410): labour reads only the local slice of the state's army and scales it back up,
+Remaining (Complaint 426): labour reads only the local slice of the state's army and scales it back up,
 which recovers about 186,000 of Rome's 307,800 soldiers; an exact nationwide figure needs a port member.

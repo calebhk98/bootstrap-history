@@ -1,7 +1,7 @@
 """shut_for_staff: regression checks, run individually with `--only shut_for_staff`."""
 from .harness import *  # noqa: F401,F403
 
-from sim.ui.proto.render_screens_big import _state_concerns
+from sim.ui.proto.render_screen_state_blocks import _state_concerns
 
 # Complaint 87: state names the missing specialist behind each shut concern.
 

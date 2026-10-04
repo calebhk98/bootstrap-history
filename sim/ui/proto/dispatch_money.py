@@ -16,7 +16,7 @@ from .buy_targets import canonical_target, target_names, usage_lines
 from .quote_purchases import FLAT_QUOTERS
 from .stock_purchases import buy_living_stock
 from .quote_spending import SPENDING_QUOTERS, bounty_refusal
-from sim.engine.ui_port import cash_book, purchase_rule
+from sim.engine.ui_port import cash_book, purchase_rule, money_word
 
 
 @command("bounty", shape="tech", group="projects",
@@ -34,8 +34,8 @@ def _cmd_bounty(sim, nodes, cmd, ended):
         return {"ok": False, "error": refusal}
     price = sim.bounty_price(node_id)
     if not sim.post_bounty(node_id):
-        return {"ok": False, "error": "cannot afford the bounty: needs about %.0f denarii, "
-                                      "you have %.0f. Earn or wait, then try again" % (price, sim.capital)}
+        return {"ok": False, "error": "cannot afford the bounty: needs about %.0f %s, "
+                                      "you have %.0f. Earn or wait, then try again" % (price, money_word(sim.civ), sim.capital)}
     return {"ok": True, "posted": node_id, "price": round(price, 1),
             "paid_now": round(price, 1), "capital": round(sim.capital, 1)}
 
@@ -168,10 +168,10 @@ def _buy_slaves(sim, cmd, quantity):
         # while charging far more is the model lying to the player.
         quote = sim.labour.slave_quote(int(quantity))
         return {"ok": False,
-                "error": "cannot afford %d slaves: %.0f denarii "
+                "error": "cannot afford %d slaves: %.0f %s "
                          "(%.0f each after the market moves against a purchase "
                          "this size) and you have %.0f"
-                         % (int(quantity), quote, quote / max(1, int(quantity)), sim.capital)}
+                         % (int(quantity), quote, money_word(sim.civ), quote / max(1, int(quantity)), sim.capital)}
     return {"ok": True, "bought": got, "slaves": sim.slaves, "capital": round(sim.capital, 1)}
 
 

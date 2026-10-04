@@ -1,6 +1,6 @@
 # Opening state is informative but overloaded
 
-**Status:** partly - `help commands` opens with a short beginner index and the welcome screen points at it and at `help sittings`; the `state` screen now reads money and hours, shortages, goal, looming risks, then running work, staff and standing (test `sim/tests/test_small_screen_items.py`). Remains: no progressive disclosure (the full detail still prints in one screen, no collapsed advanced section) and `help commands` is still the full listing without pagination
+**Status:** partly - `state` is short by default (situation, what you can do now, goal, risks, then a footer naming the sections), with `state full` and `state <section>` (one section table in `sim/ui/proto/render_screen_state_views.py`); typed `help commands` is a short index of command groups, `help commands <group>` lists one, `help commands all` pages the full listing (`sim/ui/proto/help_commands.py`); unknown commands get fuzzy close matches; test `sim/tests/test_state_help_disclosure.py`; remains: the JSON `{"cmd":"help","topic":"commands"}` still returns the full listing (agents and tests rely on it), and the step reply still renders the full state
 
 Before the player makes their first decision, the initial state output can expose them to:
 

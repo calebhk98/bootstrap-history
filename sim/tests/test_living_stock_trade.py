@@ -104,7 +104,7 @@ for consumer, material in (("tx2_cashmere", "cashmere_goat_kg"), ("tx2_mohair", 
     check("%s breeds under a stated rule" % material, material in rates, None)
 
 # --- held stock on the screens (Complaints/86): `state` and `available` show it, small.
-from sim.ui.proto.render_screens_big import render_state  # noqa: E402
+from sim.ui.proto.render_screen_state import render_state  # noqa: E402
 from sim.ui.proto.tree_filters import render_state_rows  # noqa: E402
 
 shown = sim(civ=HOME, capital=1e6)

@@ -2,13 +2,13 @@
 
 References into the tile grid (a deposit, later a town) carry a latitude and
 longitude, never a tile id, so regenerating the grid at another cell size
-leaves them valid. Standalone: no engine, no data files.
+leaves them valid. Standalone: no engine; positions resolve against the base map.
 """
 import functools
-import json
 import math
-import os
 from typing import Any, Dict, Optional, Tuple
+
+from sim.geography import map_source
 
 
 def _unit_vector(latitude: float, longitude: float) -> Tuple[float, float, float]:
@@ -43,14 +43,7 @@ def region_of_tile(geography: Dict[str, Any]) -> Dict[str, str]:
             for tile_id in tile_ids}
 
 
-_GEOGRAPHY_FILE = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-    "data", "world", "geography.json")
-
-
 @functools.lru_cache(maxsize=None)
 def tile_holding(latitude: float, longitude: float) -> Optional[str]:
-    """The shipped grid's tile that holds this position."""
-    with open(_GEOGRAPHY_FILE) as handle:
-        tiles = json.load(handle)["land_tiles"]["tiles"]
-    return nearest_tile_id(tiles, latitude, longitude)
+    """The base map's tile that holds this position."""
+    return nearest_tile_id(map_source.load_map().tiles, latitude, longitude)

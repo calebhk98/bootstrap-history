@@ -232,7 +232,7 @@ class LabourAllocationMixin:
         have left production and farming while they serve. Actors' staff reaches labour as the slice
         that comes out of the reachable pool (the nation's share of the trade applied to the reach),
         so the nationwide number is that slice scaled back up by nation over reach. A port member for
-        the nationwide figure would replace this (Complaints/410)."""
+        the nationwide figure would replace this (Complaints/426)."""
         world = self._world
         total = 0.0
         for trade in sorted(world.wages):

@@ -13,7 +13,7 @@ metal `deposits.py` covers and is not among these six).
 Written as unittest.TestCase against solve_prices directly, like
 test_price_solver_cycles.py and test_price_solver_era_gate.py, so it does not
 drag in the engine. A few tests use real `data/production/` and
-`data/world/deposits.json` data (an integration check that the real tables
+`data/world/geography/deposits/ancient.json` data (an integration check that the real tables
 actually wire together and stay convergent); the rest build tiny synthetic
 entries, like test_price_solver_era_gate.py's own `entry()` helper, so the
 mechanism itself is pinned independent of any future edit to those data
@@ -156,7 +156,7 @@ class RentHoursPerKgByOreMaterialTests(unittest.TestCase):
 
     def test_the_real_solve_produces_a_sane_rent_table(self):
         # Integration check against the committed data/production/ and
-        # data/world/deposits.json - no book-price comparison, no pinned
+        # data/world/geography/deposits/ancient.json - no book-price comparison, no pinned
         # numbers (both files are owned elsewhere and can change), only the
         # structural properties this mechanism promises.
         production_entries, duplicates = solve_prices.load_production()

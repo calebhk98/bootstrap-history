@@ -28,7 +28,7 @@ class DepositsReadTilesTests(unittest.TestCase):
 
     def test_deposit_quantity_is_its_share_of_the_metal_total(self):
         resources = deposits._load_json(deposits.RESOURCES_FILE)
-        deposits_data = deposits._load_json(deposits.DEPOSITS_FILE)
+        deposits_data = deposits.load_deposit_data()
         for metal in deposits.METALS:
             # the metal's own deposits split what is left after other metals' byproduct
             # recovery (silver riding with lead), so one ounce is counted once

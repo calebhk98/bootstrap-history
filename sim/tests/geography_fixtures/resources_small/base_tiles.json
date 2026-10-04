@@ -1,0 +1,82 @@
+{
+ "a1": {
+  "arable_fraction": 0.3,
+  "borders": [
+   "a2",
+   "b1"
+  ],
+  "coastal": true,
+  "fertility_quality_multiplier": 1.0,
+  "koppen_class": "Csa",
+  "land_area_km2": 150000.0,
+  "lat": 40.0,
+  "lon": 10.0
+ },
+ "a2": {
+  "arable_fraction": 0.01,
+  "borders": [
+   "a1",
+   "a3",
+   "b2"
+  ],
+  "coastal": false,
+  "fertility_quality_multiplier": 1.0,
+  "koppen_class": "BWh",
+  "land_area_km2": 150000.0,
+  "lat": 40.0,
+  "lon": 14.0
+ },
+ "a3": {
+  "arable_fraction": 0.01,
+  "borders": [
+   "a2",
+   "b3"
+  ],
+  "coastal": false,
+  "fertility_quality_multiplier": 1.0,
+  "koppen_class": "BWh",
+  "land_area_km2": 150000.0,
+  "lat": 40.0,
+  "lon": 18.0
+ },
+ "b1": {
+  "arable_fraction": 0.3,
+  "borders": [
+   "a1",
+   "b2"
+  ],
+  "coastal": true,
+  "fertility_quality_multiplier": 1.0,
+  "koppen_class": "Cfb",
+  "land_area_km2": 150000.0,
+  "lat": 36.0,
+  "lon": 10.0
+ },
+ "b2": {
+  "arable_fraction": 0.3,
+  "borders": [
+   "a2",
+   "b1",
+   "b3"
+  ],
+  "coastal": false,
+  "fertility_quality_multiplier": 1.0,
+  "koppen_class": "Dfb",
+  "land_area_km2": 150000.0,
+  "lat": 36.0,
+  "lon": 14.0
+ },
+ "b3": {
+  "arable_fraction": 0.3,
+  "borders": [
+   "a3",
+   "b2"
+  ],
+  "coastal": false,
+  "fertility_quality_multiplier": 1.0,
+  "koppen_class": "ET",
+  "land_area_km2": 150000.0,
+  "lat": 36.0,
+  "lon": 18.0
+ }
+}

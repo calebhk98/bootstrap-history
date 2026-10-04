@@ -8,13 +8,16 @@ in this split: nothing here touches the live Sim - see render.py and
 ARCHITECTURE.md.
 """
 
-import json, re
+import importlib, json, os, pkgutil, re
 from sim.ui import units_text
 
 from .render_screens_automation import render_automation
 from .util import _fmt_num
 from .render_screens_start import render_start
-from .render_screens_big import render_state, render_step, render_available, render_why
+from .render_screen_state import render_state
+from .render_screen_step import render_step
+from .render_screen_available import render_available
+from .render_screen_why import render_why
 from .render_screens_economy import (
     render_capacity, render_materials, render_portfolio, render_economy,
     render_changes, render_money, render_mines, render_labour,
@@ -25,6 +28,7 @@ from .render_screens_world import (
     render_map, render_commitments, render_education, render_demography, render_divergence,
 )
 from .render_figures import render_figures
+from .render_registry import RENDERERS
 from .render_screens_groups import render_groups
 from .render_screens_status import (
     render_values, render_final, render_score, render_error, render_stuck,
@@ -55,6 +59,12 @@ _RENDERERS = {
     "start": render_start, "begin": render_start, "research": render_start,
     "build": render_start,
 }
+
+# Screens registered with @renders in any render_*.py module join the table; modules are found by name.
+for _module_info in sorted(pkgutil.iter_modules([os.path.dirname(__file__)]), key=lambda info: info.name):
+    if _module_info.name.startswith("render_"):
+        importlib.import_module("%s.%s" % (__package__, _module_info.name))
+_RENDERERS.update(RENDERERS)
 
 
 # A REPLY IS FULL OF WORKED EXAMPLES, all of them JSON: 'more:
