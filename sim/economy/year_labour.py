@@ -85,12 +85,14 @@ def clear_labour(setup, record, bids: Sequence[LabourBid], offers: Sequence[Labo
     for offer in offers:
         grouped.setdefault((offer.trade, offer.area), ([], []))[1].append(offer)
     memory = record.memory
+    record.hours_hired = {}
     for (trade, area), (trade_bids, trade_offers) in sorted(grouped.items()):
         key = market_key(trade, area)
         result = labour.clear(trade_bids, trade_offers, trade, area, setup.currency_id, memory.wages.get(key))
         done = settlement.settle_labour(record.book, result)
         ledger.note_postings(done.postings, "wages")
         ledger.note_labour(result, done.postings)
+        record.hours_hired[key] = result.hours_hired
         if result.wage > 0.0:
             memory.wages[key] = result.wage
 

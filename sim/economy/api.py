@@ -27,7 +27,7 @@ __all__ = [
     "YearInputs", "recipes_from_production_data", "EconomyRecord", "EconomySetup", "TradeSpec",
     "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "GoodsMove", "Offer", "Transfer",
     "variable_cost_per_run", "rebase_price_level", "trade_premium",
-    "traded_volumes", "opening_quantities", "wages_by_trade", "interest_rate", "producers_of",
+    "traded_volumes", "opening_quantities", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
 ]
 
@@ -54,6 +54,18 @@ def wages_by_trade(economy):
     for key, wage in economy.record.memory.wages.items():
         rows.setdefault(key.split(_KEY_SEPARATOR, 1)[0], []).append(wage)
     return rows
+
+
+def wages_by_trade_weighted(economy):
+    """Last year's wage per hour of each trade: the remembered wage of each of its labour markets weighted
+    by the hours hired there last year. A trade that hired nowhere falls back to the unweighted mean of
+    its remembered wages."""
+    rows = {}
+    for key, wage in economy.record.memory.wages.items():
+        rows.setdefault(key.split(_KEY_SEPARATOR, 1)[0], []).append((wage, economy.record.hours_hired.get(key, 0.0)))
+    return {trade: (sum(wage * hours for wage, hours in pairs) / sum(hours for _wage, hours in pairs)
+                    if sum(hours for _wage, hours in pairs) > 0.0 else sum(wage for wage, _hours in pairs) / len(pairs))
+            for trade, pairs in rows.items()}
 
 
 def interest_rate(economy):
