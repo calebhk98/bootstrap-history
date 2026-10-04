@@ -1,52 +1,293 @@
 {
-  "_doc": "Gemstone deposits: diamonds, emeralds, rubies, sapphires, jade, lapis lazuli, turquoise. Endowment measured in carats for gems, tonnes for processed rough.",
-  "entries": [
-    {"id": "kimberley_diamonds", "name": "Kimberley", "resource": "diamond", "lat": -28.7, "lon": 24.8, "deposit_type": "kimberlite", "endowment": 3000000, "endowment_unit": "carats", "status": "historic", "first_worked": 1871, "source": "South Africa; historic diamond field", "conf": "A"},
-
-    {"id": "argyle_diamonds", "name": "Argyle", "resource": "diamond", "lat": -16.7, "lon": 128.4, "deposit_type": "kimberlite", "endowment": 50000000, "endowment_unit": "carats", "status": "modern", "first_worked": 1985, "source": "Western Australia; world's largest by production", "conf": "A"},
-
-    {"id": "mir_diamond", "name": "Mir Pipe", "resource": "diamond", "lat": 62.5, "lon": 114.0, "deposit_type": "kimberlite", "endowment": 20000000, "endowment_unit": "carats", "status": "modern", "first_worked": 1964, "source": "Siberia; giant kimberlite pipe", "conf": "A"},
-
-    {"id": "jwaneng_diamonds", "name": "Jwaneng", "resource": "diamond", "lat": -24.5, "lon": 24.7, "deposit_type": "kimberlite", "endowment": 15000000, "endowment_unit": "carats", "status": "modern", "first_worked": 1972, "source": "Botswana; high-quality diamonds", "conf": "A"},
-
-    {"id": "murowa_diamonds", "name": "Murowa", "resource": "diamond", "lat": -19.8, "lon": 28.5, "deposit_type": "kimberlite", "endowment": 5000000, "endowment_unit": "carats", "status": "modern", "first_worked": 2006, "source": "Zimbabwe; kimberlite deposit", "conf": "A"},
-
-    {"id": "finsch_diamonds", "name": "Finsch", "resource": "diamond", "lat": -27.0, "lon": 25.6, "deposit_type": "kimberlite", "endowment": 8000000, "endowment_unit": "carats", "status": "modern", "first_worked": 1963, "source": "South Africa; major kimberlite", "conf": "A"},
-
-    {"id": "muzo_emerald", "name": "Muzo", "resource": "emerald", "lat": 5.5, "lon": -74.1, "deposit_type": "hydrothermal_emerald", "endowment": 500000, "endowment_unit": "carats", "status": "modern", "first_worked": 1600, "source": "Colombia; world's finest emeralds", "conf": "A"},
-
-    {"id": "chivor_emerald", "name": "Chivor", "resource": "emerald", "lat": 5.3, "lon": -73.5, "deposit_type": "hydrothermal_emerald", "endowment": 300000, "endowment_unit": "carats", "status": "modern", "first_worked": 1650, "source": "Colombia; fine emeralds", "conf": "A"},
-
-    {"id": "mogok_ruby", "name": "Mogok", "resource": "ruby", "lat": 22.9, "lon": 96.5, "deposit_type": "marble_hosted", "endowment": 500000, "endowment_unit": "carats", "status": "historic", "first_worked": 1400, "source": "Myanmar; historic ruby mining", "conf": "A"},
-
-    {"id": "mong_hsu_ruby", "name": "Mong Hsu", "resource": "ruby", "lat": 21.5, "lon": 97.5, "deposit_type": "marble_hosted", "endowment": 300000, "endowment_unit": "carats", "status": "modern", "first_worked": 1992, "source": "Myanmar; major ruby deposit", "conf": "A"},
-
-    {"id": "ratnapura_gems", "name": "Ratnapura", "resource": "sapphire", "lat": 6.7, "lon": 80.4, "deposit_type": "alluvial_gems", "endowment": 1000000, "endowment_unit": "carats", "status": "modern", "first_worked": 1800, "source": "Sri Lanka; sapphire & mixed gems", "conf": "A"},
-
-    {"id": "panna_diamond", "name": "Panna", "resource": "diamond", "lat": 24.7, "lon": 80.2, "deposit_type": "alluvial_diamond", "endowment": 500000, "endowment_unit": "carats", "status": "historic", "first_worked": 1600, "source": "India; historic placer diamonds", "conf": "C"},
-
-    {"id": "golconda_diamond", "name": "Golconda/Kollur", "resource": "diamond", "lat": 16.7, "lon": 80.0, "deposit_type": "alluvial_diamond", "endowment": 1000000, "endowment_unit": "carats", "status": "historic", "first_worked": 1400, "source": "India; historic placer diamonds", "conf": "B"},
-
-    {"id": "sar_i_sang", "name": "Sar-i Sang", "resource": "lapis_lazuli", "lat": 36.0, "lon": 70.8, "deposit_type": "contact_metamorphic", "endowment": 1000000, "endowment_unit": "carats", "status": "historic", "first_worked": -3000, "source": "Afghanistan; world's premier lapis", "conf": "B"},
-
-    {"id": "sleep_canyon_turquoise", "name": "Sleeping Beauty", "resource": "turquoise", "lat": 33.5, "lon": -110.8, "deposit_type": "secondary_copper", "endowment": 500000, "endowment_unit": "carats", "status": "modern", "first_worked": 1970, "source": "Arizona, USA; major turquoise", "conf": "A"},
-
-    {"id": "kingman_turquoise", "name": "Kingman", "resource": "turquoise", "lat": 35.2, "lon": -114.0, "deposit_type": "secondary_copper", "endowment": 300000, "endowment_unit": "carats", "status": "historic", "first_worked": 1800, "source": "Arizona, USA; historic turquoise", "conf": "A"},
-
-    {"id": "nishapur_turquoise", "name": "Nishapur", "resource": "turquoise", "lat": 36.2, "lon": 58.6, "deposit_type": "secondary_copper", "endowment": 400000, "endowment_unit": "carats", "status": "historic", "first_worked": -2000, "source": "Iran; historic turquoise mining", "conf": "B"},
-
-    {"id": "nephrite_jade", "name": "Jade Carving Areas", "resource": "jade", "lat": 36.0, "lon": 102.0, "deposit_type": "metamorphic_jade", "endowment": 2000000, "endowment_unit": "carats", "status": "historic", "first_worked": -5000, "source": "China/Central Asia; nephrite jade", "conf": "B"},
-
-    {"id": "jadeite_jade", "name": "Myanmar Jade", "resource": "jade", "lat": 25.0, "lon": 96.5, "deposit_type": "metamorphic_jade", "endowment": 1500000, "endowment_unit": "carats", "status": "modern", "first_worked": 1600, "source": "Myanmar; jadeite jade deposits", "conf": "A"},
-
-    {"id": "tanzanite_deposit", "name": "Merelani", "resource": "sapphire", "lat": -3.3, "lon": 36.7, "deposit_type": "metamorphic_gem", "endowment": 800000, "endowment_unit": "carats", "status": "modern", "first_worked": 1967, "source": "Tanzania; tanzanite gemstones", "conf": "A"},
-
-    {"id": "sapphire_montana", "name": "Sapphire Valley", "resource": "sapphire", "lat": 46.9, "lon": -112.8, "deposit_type": "alluvial_gem", "endowment": 400000, "endowment_unit": "carats", "status": "modern", "first_worked": 1887, "source": "Montana, USA; corundum deposits", "conf": "A"},
-
-    {"id": "peridot_arizona", "name": "San Carlos", "resource": "peridot", "lat": 33.0, "lon": -110.6, "deposit_type": "igneous_peridot", "endowment": 300000, "endowment_unit": "carats", "status": "modern", "first_worked": 1900, "source": "Arizona, USA; olivine gems", "conf": "A"},
-
-    {"id": "opal_australia", "name": "Coober Pedy", "resource": "opal", "lat": -26.0, "lon": 134.8, "deposit_type": "sedimentary_opal", "endowment": 1000000, "endowment_unit": "carats", "status": "modern", "first_worked": 1890, "source": "South Australia; precious opal", "conf": "A"},
-
-    {"id": "garnet_india", "name": "Karnataka Garnets", "resource": "garnet", "lat": 13.5, "lon": 76.0, "deposit_type": "metamorphic_garnet", "endowment": 500000, "endowment_unit": "carats", "status": "modern", "first_worked": 1900, "source": "India; industrial garnet", "conf": "A"}
-  ]
+ "_doc": "Diamond, coloured-gem, jade, lapis and turquoise sources; endowment in carats of rough, given only where a defensible figure exists. endowment is the total known resource, production to date plus remaining reserves (not only reserves, not oil or ore in place), to order of magnitude; where no defensible figure exists the key is omitted rather than guessed. conf: A = figure checked against a cited source in the audit, B = coordinate checked on Wikipedia and endowment approximate, C = from memory or a secondary summary. Entries with a status of modern are producing or recently producing; historic are worked out or pre-1800.",
+ "entries": [
+  {
+   "id": "kimberley_diamonds",
+   "name": "Kimberley (Big Hole)",
+   "resource": "diamond",
+   "lat": -28.74,
+   "lon": 24.76,
+   "deposit_type": "kimberlite",
+   "endowment": 15000000.0,
+   "endowment_unit": "carats",
+   "status": "historic",
+   "first_worked": 1871,
+   "source": "Coordinate from Wikipedia. Wikipedia: the Kimberley mine yielded three tons of diamonds, about fifteen million carats.",
+   "conf": "A"
+  },
+  {
+   "id": "argyle_diamonds",
+   "name": "Argyle",
+   "resource": "diamond",
+   "lat": -16.71,
+   "lon": 128.4,
+   "deposit_type": "lamproite",
+   "endowment": 865000000.0,
+   "endowment_unit": "carats",
+   "status": "modern",
+   "first_worked": 1983,
+   "source": "Coordinate from Wikipedia. Wikipedia: more than 865 million carats of rough produced 1983-2020; mine closed, remaining resource small.",
+   "conf": "A"
+  },
+  {
+   "id": "mir_diamond",
+   "name": "Mir",
+   "resource": "diamond",
+   "lat": 62.53,
+   "lon": 113.98,
+   "deposit_type": "kimberlite",
+   "endowment": 100000000.0,
+   "endowment_unit": "carats",
+   "status": "modern",
+   "first_worked": 1957,
+   "source": "Coordinate from Wikipedia. Wikipedia: about ten million carats a year in the 1960s falling to about two million; total of order a hundred million carats is an estimate from that, C.",
+   "conf": "C"
+  },
+  {
+   "id": "jwaneng_diamonds",
+   "name": "Jwaneng",
+   "resource": "diamond",
+   "lat": -24.52,
+   "lon": 24.68,
+   "deposit_type": "kimberlite",
+   "endowment": 500000000.0,
+   "endowment_unit": "carats",
+   "status": "modern",
+   "first_worked": 1982,
+   "source": "Coordinate from memory; annual output times mine life, order of magnitude.",
+   "conf": "C"
+  },
+  {
+   "id": "murowa_diamonds",
+   "name": "Murowa",
+   "resource": "diamond",
+   "lat": -20.49,
+   "lon": 30.4,
+   "deposit_type": "kimberlite",
+   "endowment": 30000000.0,
+   "endowment_unit": "carats",
+   "status": "modern",
+   "first_worked": 2004,
+   "source": "Coordinate from Wikipedia. Production plus resource, order of magnitude from memory. The earlier entry was nearly two degrees west.",
+   "conf": "C"
+  },
+  {
+   "id": "finsch_diamonds",
+   "name": "Finsch",
+   "resource": "diamond",
+   "lat": -28.38,
+   "lon": 23.45,
+   "deposit_type": "kimberlite",
+   "endowment": 200000000.0,
+   "endowment_unit": "carats",
+   "status": "modern",
+   "first_worked": 1967,
+   "source": "Coordinate from Wikipedia. Production plus resource, order of magnitude from memory. The earlier entry was 1.4 degrees north and 2 degrees east of the mine.",
+   "conf": "C"
+  },
+  {
+   "id": "muzo_emerald",
+   "name": "Muzo",
+   "resource": "emerald",
+   "lat": 5.53,
+   "lon": -74.11,
+   "deposit_type": "hydrothermal_emerald",
+   "status": "historic",
+   "first_worked": 1559,
+   "source": "Coordinate from Wikipedia. No defensible endowment figure, omitted.",
+   "conf": "C"
+  },
+  {
+   "id": "chivor_emerald",
+   "name": "Chivor",
+   "resource": "emerald",
+   "lat": 4.88,
+   "lon": -73.37,
+   "deposit_type": "hydrothermal_emerald",
+   "status": "historic",
+   "first_worked": 1537,
+   "source": "Coordinate from Wikipedia. No defensible endowment figure, omitted. The earlier entry was 0.4 degrees north of Chivor.",
+   "conf": "C"
+  },
+  {
+   "id": "mogok_ruby",
+   "name": "Mogok",
+   "resource": "ruby",
+   "lat": 22.92,
+   "lon": 96.5,
+   "deposit_type": "marble_hosted",
+   "status": "historic",
+   "first_worked": 1597,
+   "source": "Coordinate from Wikipedia. No defensible endowment figure, omitted.",
+   "conf": "C"
+  },
+  {
+   "id": "mong_hsu_ruby",
+   "name": "Mong Hsu",
+   "resource": "ruby",
+   "lat": 21.92,
+   "lon": 98.38,
+   "deposit_type": "marble_hosted",
+   "status": "modern",
+   "first_worked": 1991,
+   "source": "Coordinate from Wikipedia. No defensible endowment figure, omitted. The earlier entry was one degree west.",
+   "conf": "C"
+  },
+  {
+   "id": "ratnapura_gems",
+   "name": "Ratnapura",
+   "resource": "sapphire",
+   "lat": 6.68,
+   "lon": 80.4,
+   "deposit_type": "alluvial_gems",
+   "status": "historic",
+   "first_worked": -500,
+   "source": "Coordinate from Wikipedia. No defensible endowment figure, omitted.",
+   "conf": "C"
+  },
+  {
+   "id": "panna_diamond",
+   "name": "Panna",
+   "resource": "diamond",
+   "lat": 24.27,
+   "lon": 80.17,
+   "deposit_type": "kimberlite_and_alluvial",
+   "status": "historic",
+   "first_worked": -400,
+   "source": "Coordinate from Wikipedia. No defensible endowment figure, omitted.",
+   "conf": "C"
+  },
+  {
+   "id": "golconda_diamond",
+   "name": "Kollur (Golconda diamonds)",
+   "resource": "diamond",
+   "lat": 16.68,
+   "lon": 80.0,
+   "deposit_type": "alluvial_diamond",
+   "status": "historic",
+   "first_worked": -400,
+   "source": "Historic Golconda-trade alluvial diamond mines on the Krishna river; coordinate from memory (Golconda fort itself is 17.38N 78.40E per Wikipedia). No endowment figure.",
+   "conf": "C"
+  },
+  {
+   "id": "sar_i_sang_lapis",
+   "name": "Sar-i Sang",
+   "resource": "lapis_lazuli",
+   "lat": 36.21,
+   "lon": 70.79,
+   "deposit_type": "contact_metamorphic",
+   "status": "historic",
+   "first_worked": -7000,
+   "source": "Coordinate from Wikipedia. Lapis lazuli worked since the Neolithic; no endowment figure.",
+   "conf": "C"
+  },
+  {
+   "id": "sleeping_beauty_turquoise",
+   "name": "Sleeping Beauty (Globe, Arizona)",
+   "resource": "turquoise",
+   "lat": 33.4,
+   "lon": -110.78,
+   "deposit_type": "secondary_copper",
+   "status": "modern",
+   "first_worked": 1900,
+   "source": "Coordinate is Globe, Arizona per Wikipedia; mine nearby. No endowment figure. Renamed from sleep_canyon_turquoise.",
+   "conf": "C"
+  },
+  {
+   "id": "kingman_turquoise",
+   "name": "Kingman",
+   "resource": "turquoise",
+   "lat": 35.22,
+   "lon": -114.01,
+   "deposit_type": "secondary_copper",
+   "status": "historic",
+   "first_worked": 1000,
+   "source": "Coordinate from Wikipedia. No endowment figure.",
+   "conf": "C"
+  },
+  {
+   "id": "nishapur_turquoise",
+   "name": "Nishapur",
+   "resource": "turquoise",
+   "lat": 36.21,
+   "lon": 58.79,
+   "deposit_type": "secondary_copper",
+   "status": "historic",
+   "first_worked": -1000,
+   "source": "Coordinate is Nishapur city per Wikipedia; the mines lie tens of kilometres away. No endowment figure.",
+   "conf": "C"
+  },
+  {
+   "id": "hotan_nephrite_jade",
+   "name": "Hotan (Khotan) nephrite",
+   "resource": "jade",
+   "lat": 37.12,
+   "lon": 79.92,
+   "deposit_type": "metamorphic_nephrite",
+   "status": "historic",
+   "first_worked": -5000,
+   "source": "Coordinate from Wikipedia. Alluvial nephrite of the Yurungkash and Karakash rivers. No endowment figure. Replaces nephrite_jade, which sat in Qinghai.",
+   "conf": "C"
+  },
+  {
+   "id": "hpakant_jadeite",
+   "name": "Hpakant",
+   "resource": "jade",
+   "lat": 25.61,
+   "lon": 96.31,
+   "deposit_type": "metamorphic_jadeite",
+   "status": "modern",
+   "first_worked": 1800,
+   "source": "Coordinate from Wikipedia. No endowment figure.",
+   "conf": "C"
+  },
+  {
+   "id": "merelani_tanzanite",
+   "name": "Merelani Hills",
+   "resource": "tanzanite",
+   "lat": -3.37,
+   "lon": 37.0,
+   "deposit_type": "metamorphic_zoisite",
+   "status": "modern",
+   "first_worked": 1967,
+   "source": "Coordinate from memory (Mererani, Manyara Region). Replaces tanzanite_deposit, which was mislabelled sapphire and placed near Arusha. No endowment figure.",
+   "conf": "C"
+  },
+  {
+   "id": "yogo_sapphire",
+   "name": "Yogo Gulch",
+   "resource": "sapphire",
+   "lat": 46.95,
+   "lon": -110.35,
+   "deposit_type": "igneous_sapphire",
+   "status": "historic",
+   "first_worked": 1895,
+   "source": "Coordinate from memory (Judith Basin County, Montana). Replaces sapphire_montana, whose coordinate was 2.4 degrees west. No endowment figure.",
+   "conf": "C"
+  },
+  {
+   "id": "san_carlos_peridot",
+   "name": "San Carlos",
+   "resource": "peridot",
+   "lat": 33.35,
+   "lon": -110.45,
+   "deposit_type": "mantle_xenolith_peridot",
+   "status": "modern",
+   "first_worked": 1900,
+   "source": "Coordinate from memory (San Carlos Apache Reservation, Arizona). No endowment figure.",
+   "conf": "C"
+  },
+  {
+   "id": "coober_pedy_opal",
+   "name": "Coober Pedy",
+   "resource": "opal",
+   "lat": -29.01,
+   "lon": 134.76,
+   "deposit_type": "sedimentary_opal",
+   "status": "modern",
+   "first_worked": 1915,
+   "source": "Coordinate from Wikipedia. No endowment figure. The earlier entry was three degrees north.",
+   "conf": "C"
+  }
+ ]
 }

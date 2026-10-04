@@ -1,92 +1,565 @@
 {
-  "_doc": "Energy resources: oil fields, natural gas fields, and coal basins. Endowments measured in barrels (oil), cubic metres (gas), or tonnes (coal).",
-  "entries": [
-    {"id": "ghawar_oil", "name": "Ghawar", "resource": "oil", "lat": 25.0, "lon": 49.4, "deposit_type": "conventional_oil_field", "endowment": 96000000000, "endowment_unit": "barrels", "status": "modern", "first_worked": 1951, "source": "Saudi Arabia; world's largest oil field", "conf": "A"},
-
-    {"id": "burgan_oil", "name": "Burgan", "resource": "oil", "lat": 29.0, "lon": 47.9, "deposit_type": "conventional_oil_field", "endowment": 67200000000, "endowment_unit": "barrels", "status": "modern", "first_worked": 1938, "source": "Kuwait; second largest oil field", "conf": "A"},
-
-    {"id": "safaniya_oil", "name": "Safaniya", "resource": "oil", "lat": 28.2, "lon": 48.7, "deposit_type": "conventional_oil_field", "endowment": 37000000000, "endowment_unit": "barrels", "status": "modern", "first_worked": 1951, "source": "Kuwait/Saudi Arabia; major offshore field", "conf": "A"},
-
-    {"id": "ahvaz_oil", "name": "Ahvaz", "resource": "oil", "lat": 31.3, "lon": 48.7, "deposit_type": "conventional_oil_field", "endowment": 65000000000, "endowment_unit": "barrels", "status": "modern", "first_worked": 1908, "source": "Iran; giant field", "conf": "A"},
-
-    {"id": "gachsaran_oil", "name": "Gachsaran", "resource": "oil", "lat": 30.3, "lon": 50.8, "deposit_type": "conventional_oil_field", "endowment": 52900000000, "endowment_unit": "barrels", "status": "modern", "first_worked": 1928, "source": "Iran; major field", "conf": "A"},
-
-    {"id": "prudhoe_bay_oil", "name": "Prudhoe Bay", "resource": "oil", "lat": 70.3, "lon": -148.5, "deposit_type": "conventional_oil_field", "endowment": 25000000000, "endowment_unit": "barrels", "status": "modern", "first_worked": 1977, "source": "Alaska, USA; major Arctic field", "conf": "A"},
-
-    {"id": "daqing_oil", "name": "Daqing", "resource": "oil", "lat": 46.6, "lon": 125.0, "deposit_type": "conventional_oil_field", "endowment": 42000000000, "endowment_unit": "barrels", "status": "modern", "first_worked": 1960, "source": "China; major onshore field", "conf": "A"},
-
-    {"id": "cantarell_oil", "name": "Cantarell", "resource": "oil", "lat": 19.6, "lon": -92.3, "deposit_type": "conventional_oil_field", "endowment": 35000000000, "endowment_unit": "barrels", "status": "modern", "first_worked": 1979, "source": "Mexico; Gulf of Mexico giant", "conf": "A"},
-
-    {"id": "bolivar_coastal_oil", "name": "Bolivar Coastal", "resource": "oil", "lat": 10.5, "lon": -71.2, "deposit_type": "conventional_oil_field", "endowment": 32000000000, "endowment_unit": "barrels", "status": "modern", "first_worked": 1917, "source": "Venezuela; Lake Maracaibo field", "conf": "A"},
-
-    {"id": "kirkuk_oil", "name": "Kirkuk", "resource": "oil", "lat": 35.5, "lon": 44.4, "deposit_type": "conventional_oil_field", "endowment": 28000000000, "endowment_unit": "barrels", "status": "modern", "first_worked": 1927, "source": "Iraq; major field", "conf": "A"},
-
-    {"id": "east_texas_oil", "name": "East Texas", "resource": "oil", "lat": 32.3, "lon": -94.9, "deposit_type": "conventional_oil_field", "endowment": 20000000000, "endowment_unit": "barrels", "status": "modern", "first_worked": 1930, "source": "Texas, USA; major onshore field", "conf": "A"},
-
-    {"id": "baku_oil_seeps", "name": "Baku Seeps", "resource": "oil", "lat": 40.4, "lon": 49.9, "deposit_type": "seepage_field", "endowment": 5000000000, "endowment_unit": "barrels", "status": "historic", "first_worked": 1500, "source": "Azerbaijan; historic oil seeps", "conf": "C"},
-
-    {"id": "hit_iraq_seeps", "name": "Hit Seeps", "resource": "bitumen", "lat": 33.6, "lon": 42.8, "deposit_type": "seepage_bitumen", "endowment": 500000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 800.0, "status": "historic", "first_worked": -3000, "source": "Iraq; natural bitumen seeps", "conf": "C"},
-
-    {"id": "trinidad_pitch_lake", "name": "Trinidad Pitch Lake", "resource": "bitumen", "lat": 10.2, "lon": -61.6, "deposit_type": "asphalt_lake", "endowment": 200000000, "endowment_unit": "tonnes_ore", "ore_grade_kg_per_tonne": 950.0, "status": "modern", "first_worked": 1595, "source": "Trinidad; natural asphalt", "conf": "B"},
-
-    {"id": "south_pars_gas", "name": "South Pars/North Dome", "resource": "natural_gas", "lat": 26.9, "lon": 52.0, "deposit_type": "conventional_gas_field", "endowment": 50000000000000, "endowment_unit": "cubic_metres_gas", "status": "modern", "first_worked": 1989, "source": "Iran/Qatar; world's largest gas field", "conf": "A"},
-
-    {"id": "urengoy_gas", "name": "Urengoy", "resource": "natural_gas", "lat": 66.1, "lon": 76.8, "deposit_type": "conventional_gas_field", "endowment": 5000000000000, "endowment_unit": "cubic_metres_gas", "status": "modern", "first_worked": 1978, "source": "Siberia; major Soviet field", "conf": "A"},
-
-    {"id": "groningen_gas", "name": "Groningen", "resource": "natural_gas", "lat": 53.3, "lon": 6.7, "deposit_type": "conventional_gas_field", "endowment": 2800000000000, "endowment_unit": "cubic_metres_gas", "status": "modern", "first_worked": 1963, "source": "Netherlands; Europe's largest gas field", "conf": "A"},
-
-    {"id": "hassi_messaoud_gas", "name": "Hassi Messaoud", "resource": "oil", "lat": 31.7, "lon": 6.1, "deposit_type": "conventional_oil_field", "endowment": 20000000000, "endowment_unit": "barrels", "status": "modern", "first_worked": 1956, "source": "Algeria; giant field", "conf": "A"},
-
-    {"id": "samotlor_oil", "name": "Samotlor", "resource": "oil", "lat": 61.1, "lon": 76.7, "deposit_type": "conventional_oil_field", "endowment": 38000000000, "endowment_unit": "barrels", "status": "modern", "first_worked": 1965, "source": "Siberia; major Soviet field", "conf": "A"},
-
-    {"id": "romashkino_oil", "name": "Romashkino", "resource": "oil", "lat": 54.9, "lon": 52.0, "deposit_type": "conventional_oil_field", "endowment": 32000000000, "endowment_unit": "barrels", "status": "modern", "first_worked": 1948, "source": "Siberia; Tatarstan major field", "conf": "A"},
-
-    {"id": "powder_river_coal", "name": "Powder River", "resource": "coal", "lat": 44.0, "lon": -106.0, "deposit_type": "coal_basin", "endowment": 1000000000, "endowment_unit": "tonnes_coal", "status": "modern", "first_worked": 1900, "source": "Wyoming/Montana; largest US coal basin", "conf": "A"},
-
-    {"id": "appalachian_coal", "name": "Appalachian", "resource": "coal", "lat": 38.0, "lon": -81.0, "deposit_type": "coal_basin", "endowment": 800000000, "endowment_unit": "tonnes_coal", "status": "modern", "first_worked": 1742, "source": "Eastern USA; bituminous coal", "conf": "A"},
-
-    {"id": "illinois_coal", "name": "Illinois Basin", "resource": "coal", "lat": 39.0, "lon": -88.5, "deposit_type": "coal_basin", "endowment": 700000000, "endowment_unit": "tonnes_coal", "status": "modern", "first_worked": 1810, "source": "Illinois; bituminous coal", "conf": "A"},
-
-    {"id": "kuznetsk_coal", "name": "Kuznetsk", "resource": "coal", "lat": 54.5, "lon": 87.0, "deposit_type": "coal_basin", "endowment": 900000000, "endowment_unit": "tonnes_coal", "status": "modern", "first_worked": 1920, "source": "Siberia; major Soviet coal", "conf": "A"},
-
-    {"id": "ordos_coal", "name": "Ordos/Shanxi", "resource": "coal", "lat": 37.5, "lon": 111.5, "deposit_type": "coal_basin", "endowment": 1200000000, "endowment_unit": "tonnes_coal", "status": "modern", "first_worked": 1900, "source": "China; world's largest coal basin", "conf": "A"},
-
-    {"id": "donbas_coal", "name": "Donbas", "resource": "coal", "lat": 48.0, "lon": 38.0, "deposit_type": "coal_basin", "endowment": 600000000, "endowment_unit": "tonnes_coal", "status": "modern", "first_worked": 1795, "source": "Ukraine/Russia; bituminous coal", "conf": "A"},
-
-    {"id": "bowen_coal", "name": "Bowen", "resource": "coal", "lat": -22.5, "lon": 148.5, "deposit_type": "coal_basin", "endowment": 500000000, "endowment_unit": "tonnes_coal", "status": "modern", "first_worked": 1867, "source": "Queensland, Australia; black coal", "conf": "A"},
-
-    {"id": "sydney_coal", "name": "Sydney/Hunter", "resource": "coal", "lat": -32.5, "lon": 151.0, "deposit_type": "coal_basin", "endowment": 400000000, "endowment_unit": "tonnes_coal", "status": "modern", "first_worked": 1790, "source": "NSW, Australia; black coal", "conf": "A"},
-
-    {"id": "newcastle_coal", "name": "Newcastle", "resource": "coal", "lat": 55.0, "lon": -1.6, "deposit_type": "coal_basin", "endowment": 200000000, "endowment_unit": "tonnes_coal", "status": "historic", "first_worked": 1200, "source": "England; historic coal mining", "conf": "C"},
-
-    {"id": "ruhr_coal", "name": "Ruhr", "resource": "coal", "lat": 51.5, "lon": 7.2, "deposit_type": "coal_basin", "endowment": 300000000, "endowment_unit": "tonnes_coal", "status": "historic", "first_worked": 1300, "source": "Germany; historic coal", "conf": "B"},
-
-    {"id": "jharia_coal", "name": "Jharia", "resource": "coal", "lat": 23.7, "lon": 86.4, "deposit_type": "coal_basin", "endowment": 250000000, "endowment_unit": "tonnes_coal", "status": "modern", "first_worked": 1774, "source": "India; major coal basin", "conf": "A"},
-
-    {"id": "witbank_coal", "name": "Witbank/Mpumalanga", "resource": "coal", "lat": -26.0, "lon": 29.0, "deposit_type": "coal_basin", "endowment": 400000000, "endowment_unit": "tonnes_coal", "status": "modern", "first_worked": 1880, "source": "South Africa; major coal region", "conf": "A"},
-
-    {"id": "bayan_undur_oil", "name": "Bayan Undur", "resource": "oil", "lat": 48.5, "lon": 102.0, "deposit_type": "conventional_oil_field", "endowment": 15000000000, "endowment_unit": "barrels", "status": "modern", "first_worked": 1973, "source": "Mongolia; major field", "conf": "A"},
-
-    {"id": "troll_gas", "name": "Troll", "resource": "natural_gas", "lat": 60.6, "lon": 3.4, "deposit_type": "conventional_gas_field", "endowment": 4000000000000, "endowment_unit": "cubic_metres_gas", "status": "modern", "first_worked": 1996, "source": "Norway; major North Sea field", "conf": "A"},
-
-    {"id": "tengiz_oil", "name": "Tengiz", "resource": "oil", "lat": 43.2, "lon": 69.2, "deposit_type": "conventional_oil_field", "endowment": 25000000000, "endowment_unit": "barrels", "status": "modern", "first_worked": 1991, "source": "Kazakhstan; giant field", "conf": "A"},
-
-    {"id": "kashagan_oil", "name": "Kashagan", "resource": "oil", "lat": 43.2, "lon": 69.5, "deposit_type": "conventional_oil_field", "endowment": 30000000000, "endowment_unit": "barrels", "status": "modern", "first_worked": 2013, "source": "Kazakhstan; Caspian Sea", "conf": "A"},
-
-    {"id": "zagros_oil", "name": "Ahwaz Complex", "resource": "oil", "lat": 31.0, "lon": 49.0, "deposit_type": "conventional_oil_field", "endowment": 45000000000, "endowment_unit": "barrels", "status": "modern", "first_worked": 1908, "source": "Iran; multiple major fields", "conf": "A"},
-
-    {"id": "liuhua_oil", "name": "Liuhua", "resource": "oil", "lat": 21.5, "lon": 112.0, "deposit_type": "conventional_oil_field", "endowment": 12000000000, "endowment_unit": "barrels", "status": "modern", "first_worked": 2006, "source": "South China Sea; offshore field", "conf": "A"},
-
-    {"id": "bayu_undan_gas", "name": "Bayu-Undan", "resource": "natural_gas", "lat": -10.5, "lon": 132.5, "deposit_type": "conventional_gas_field", "endowment": 1500000000000, "endowment_unit": "cubic_metres_gas", "status": "modern", "first_worked": 2006, "source": "Timor Sea; offshore field", "conf": "A"},
-
-    {"id": "bluebell_coal", "name": "Bluebell Coal", "resource": "coal", "lat": -16.9, "lon": 142.5, "deposit_type": "coal_basin", "endowment": 350000000, "endowment_unit": "tonnes_coal", "status": "modern", "first_worked": 2018, "source": "Queensland; black coal", "conf": "A"},
-
-    {"id": "carmichael_coal", "name": "Carmichael", "resource": "coal", "lat": -20.8, "lon": 145.8, "deposit_type": "coal_basin", "endowment": 800000000, "endowment_unit": "tonnes_coal", "status": "modern", "first_worked": 2020, "source": "Queensland; black coal", "conf": "A"},
-
-    {"id": "seam_valley_coal", "name": "Seam Valley", "resource": "coal", "lat": -16.0, "lon": 143.0, "deposit_type": "coal_basin", "endowment": 600000000, "endowment_unit": "tonnes_coal", "status": "modern", "first_worked": 2017, "source": "Queensland; coal mining", "conf": "B"},
-
-    {"id": "silesia_coal", "name": "Silesia Coal", "resource": "coal", "lat": 50.2, "lon": 19.0, "deposit_type": "coal_basin", "endowment": 500000000, "endowment_unit": "tonnes_coal", "status": "modern", "first_worked": 1750, "source": "Poland/Czech; bituminous coal", "conf": "A"},
-
-    {"id": "lacq_gas", "name": "Lacq", "resource": "natural_gas", "lat": 43.3, "lon": -0.7, "deposit_type": "conventional_gas_field", "endowment": 800000000000, "endowment_unit": "cubic_metres_gas", "status": "historic", "first_worked": 1957, "source": "France; historic gas field", "conf": "B"}
-  ]
+ "_doc": "Oil and gas fields, bitumen deposits and coal basins. Oil in barrels and gas in cubic metres of ultimately recoverable resource, coal in tonnes of production plus reserves (coal in-place resource is far larger). endowment is the total known resource, production to date plus remaining reserves (not only reserves, not oil or ore in place), to order of magnitude; where no defensible figure exists the key is omitted rather than guessed. conf: A = figure checked against a cited source in the audit, B = coordinate checked on Wikipedia and endowment approximate, C = from memory or a secondary summary. Entries with a status of modern are producing or recently producing; historic are worked out or pre-1800.",
+ "entries": [
+  {
+   "id": "ghawar_oil",
+   "name": "Ghawar",
+   "resource": "oil",
+   "lat": 25.43,
+   "lon": 49.62,
+   "deposit_type": "conventional_oil_field",
+   "endowment": 110000000000.0,
+   "endowment_unit": "barrels",
+   "status": "modern",
+   "first_worked": 1951,
+   "source": "Coordinate from Wikipedia. Ultimately recoverable oil, production plus reserves, order of magnitude from memory.",
+   "conf": "B"
+  },
+  {
+   "id": "burgan_oil",
+   "name": "Greater Burgan",
+   "resource": "oil",
+   "lat": 29.11,
+   "lon": 47.97,
+   "deposit_type": "conventional_oil_field",
+   "endowment": 70000000000.0,
+   "endowment_unit": "barrels",
+   "status": "modern",
+   "first_worked": 1938,
+   "source": "Coordinate from Wikipedia. Ultimately recoverable, order of magnitude from memory.",
+   "conf": "B"
+  },
+  {
+   "id": "safaniya_oil",
+   "name": "Safaniya",
+   "resource": "oil",
+   "lat": 28.28,
+   "lon": 48.75,
+   "deposit_type": "conventional_oil_field",
+   "endowment": 50000000000.0,
+   "endowment_unit": "barrels",
+   "status": "modern",
+   "first_worked": 1951,
+   "source": "Coordinate from Wikipedia. Ultimately recoverable, order of magnitude from memory.",
+   "conf": "B"
+  },
+  {
+   "id": "ahvaz_oil",
+   "name": "Ahwaz-Asmari",
+   "resource": "oil",
+   "lat": 31.3,
+   "lon": 48.68,
+   "deposit_type": "conventional_oil_field",
+   "endowment": 20000000000.0,
+   "endowment_unit": "barrels",
+   "status": "modern",
+   "first_worked": 1958,
+   "source": "Coordinate: Ahvaz city per Wikipedia. Ultimately recoverable, order of magnitude from memory.",
+   "conf": "C"
+  },
+  {
+   "id": "gachsaran_oil",
+   "name": "Gachsaran",
+   "resource": "oil",
+   "lat": 30.35,
+   "lon": 50.8,
+   "deposit_type": "conventional_oil_field",
+   "endowment": 25000000000.0,
+   "endowment_unit": "barrels",
+   "status": "modern",
+   "first_worked": 1928,
+   "source": "Coordinate from Wikipedia. Wikipedia quotes 52.9 billion barrels, which is closer to oil in place; recoverable is a fraction of it, order of magnitude from memory.",
+   "conf": "C"
+  },
+  {
+   "id": "prudhoe_bay_oil",
+   "name": "Prudhoe Bay",
+   "resource": "oil",
+   "lat": 70.31,
+   "lon": -148.73,
+   "deposit_type": "conventional_oil_field",
+   "endowment": 13000000000.0,
+   "endowment_unit": "barrels",
+   "status": "modern",
+   "first_worked": 1967,
+   "source": "Coordinate from Wikipedia. Wikipedia: about 25 billion barrels originally in place; recoverable about half, from memory.",
+   "conf": "B"
+  },
+  {
+   "id": "daqing_oil",
+   "name": "Daqing",
+   "resource": "oil",
+   "lat": 46.6,
+   "lon": 124.9,
+   "deposit_type": "conventional_oil_field",
+   "endowment": 25000000000.0,
+   "endowment_unit": "barrels",
+   "status": "modern",
+   "first_worked": 1959,
+   "source": "Coordinate from Wikipedia. Cumulative production plus reserves, order of magnitude from memory.",
+   "conf": "B"
+  },
+  {
+   "id": "cantarell_oil",
+   "name": "Cantarell",
+   "resource": "oil",
+   "lat": 19.75,
+   "lon": -92.52,
+   "deposit_type": "conventional_offshore_field",
+   "endowment": 18000000000.0,
+   "endowment_unit": "barrels",
+   "status": "modern",
+   "first_worked": 1976,
+   "source": "Coordinate from Wikipedia. Ultimately recoverable, order of magnitude from memory.",
+   "conf": "B"
+  },
+  {
+   "id": "bolivar_coastal_oil",
+   "name": "Bolivar Coastal Fields",
+   "resource": "oil",
+   "lat": 9.9,
+   "lon": -71.2,
+   "deposit_type": "conventional_oil_field",
+   "endowment": 30000000000.0,
+   "endowment_unit": "barrels",
+   "status": "modern",
+   "first_worked": 1917,
+   "source": "Coordinate from Wikipedia. Lake Maracaibo east shore; ultimately recoverable, order of magnitude from memory.",
+   "conf": "B"
+  },
+  {
+   "id": "kirkuk_oil",
+   "name": "Kirkuk (Baba Gurgur)",
+   "resource": "oil",
+   "lat": 35.5,
+   "lon": 44.3,
+   "deposit_type": "conventional_oil_field",
+   "endowment": 15000000000.0,
+   "endowment_unit": "barrels",
+   "status": "modern",
+   "first_worked": 1927,
+   "source": "Coordinate from memory (Kirkuk city is 35.47N 44.39E). Ultimately recoverable, order of magnitude from memory.",
+   "conf": "C"
+  },
+  {
+   "id": "east_texas_oil",
+   "name": "East Texas",
+   "resource": "oil",
+   "lat": 32.39,
+   "lon": -94.87,
+   "deposit_type": "conventional_oil_field",
+   "endowment": 7000000000.0,
+   "endowment_unit": "barrels",
+   "status": "modern",
+   "first_worked": 1930,
+   "source": "Coordinate from Wikipedia. Wikipedia: over 5.42 billion barrels produced to date; remaining reserves small.",
+   "conf": "B"
+  },
+  {
+   "id": "samotlor_oil",
+   "name": "Samotlor",
+   "resource": "oil",
+   "lat": 61.12,
+   "lon": 76.75,
+   "deposit_type": "conventional_oil_field",
+   "endowment": 25000000000.0,
+   "endowment_unit": "barrels",
+   "status": "modern",
+   "first_worked": 1965,
+   "source": "Coordinate from Wikipedia. Ultimately recoverable, order of magnitude from memory.",
+   "conf": "B"
+  },
+  {
+   "id": "romashkino_oil",
+   "name": "Romashkino",
+   "resource": "oil",
+   "lat": 54.9,
+   "lon": 52.0,
+   "deposit_type": "conventional_oil_field",
+   "endowment": 25000000000.0,
+   "endowment_unit": "barrels",
+   "status": "modern",
+   "first_worked": 1948,
+   "source": "Coordinate from memory (Almetyevsk area, Tatarstan); ultimately recoverable order of magnitude from memory.",
+   "conf": "C"
+  },
+  {
+   "id": "hassi_messaoud_oil",
+   "name": "Hassi Messaoud",
+   "resource": "oil",
+   "lat": 31.7,
+   "lon": 6.07,
+   "deposit_type": "conventional_oil_field",
+   "endowment": 10000000000.0,
+   "endowment_unit": "barrels",
+   "status": "modern",
+   "first_worked": 1956,
+   "source": "Coordinate from Wikipedia. Renamed from hassi_messaoud_gas: it is an oil field. Ultimately recoverable, order of magnitude from memory.",
+   "conf": "B"
+  },
+  {
+   "id": "tengiz_oil",
+   "name": "Tengiz",
+   "resource": "oil",
+   "lat": 46.15,
+   "lon": 53.38,
+   "deposit_type": "carbonate_oil_field",
+   "endowment": 9000000000.0,
+   "endowment_unit": "barrels",
+   "status": "modern",
+   "first_worked": 1979,
+   "source": "Coordinate from Wikipedia. Wikipedia: recoverable 6-9 billion barrels. The earlier entry was in the wrong place (43.2N 69.2E, near Taraz).",
+   "conf": "B"
+  },
+  {
+   "id": "kashagan_oil",
+   "name": "Kashagan",
+   "resource": "oil",
+   "lat": 46.17,
+   "lon": 51.58,
+   "deposit_type": "carbonate_offshore_field",
+   "endowment": 13000000000.0,
+   "endowment_unit": "barrels",
+   "status": "modern",
+   "first_worked": 2000,
+   "source": "Coordinate from Wikipedia. Wikipedia: recoverable about 13 billion barrels. The earlier entry was 18 degrees of longitude off.",
+   "conf": "B"
+  },
+  {
+   "id": "baku_absheron_oil",
+   "name": "Baku (Absheron peninsula)",
+   "resource": "oil",
+   "lat": 40.38,
+   "lon": 49.83,
+   "deposit_type": "seepage_and_conventional_field",
+   "endowment": 5000000000.0,
+   "endowment_unit": "barrels",
+   "status": "historic",
+   "first_worked": -1000,
+   "source": "Coordinate from Wikipedia. Seeps worked since antiquity; cumulative output of the Absheron fields, order of magnitude from memory. Replaces baku_oil_seeps.",
+   "conf": "C"
+  },
+  {
+   "id": "hit_bitumen_seeps",
+   "name": "Hit bitumen seeps",
+   "resource": "bitumen",
+   "lat": 33.645,
+   "lon": 42.83,
+   "deposit_type": "seepage_bitumen",
+   "status": "historic",
+   "first_worked": -3000,
+   "source": "Coordinate from Wikipedia. Seeps worked since the Bronze Age; no defensible endowment figure, omitted. hit_iraq_seeps and hit_seeps_bitumen merged here.",
+   "conf": "C"
+  },
+  {
+   "id": "trinidad_pitch_lake",
+   "name": "Pitch Lake, Trinidad",
+   "resource": "bitumen",
+   "lat": 10.23,
+   "lon": -61.63,
+   "deposit_type": "asphalt_lake",
+   "endowment": 10000000.0,
+   "endowment_unit": "tonnes_ore",
+   "ore_grade_kg_per_tonne": 400.0,
+   "depth_class": "surface",
+   "status": "modern",
+   "first_worked": 1595,
+   "source": "Coordinate from Wikipedia. Order ten million tonnes of asphalt in production plus remaining, from memory; grade is kilograms of bitumen per tonne of lake asphalt. pitch_lake_bitumen merged here.",
+   "conf": "B"
+  },
+  {
+   "id": "athabasca_bitumen",
+   "name": "Athabasca oil sands",
+   "resource": "bitumen",
+   "lat": 57.02,
+   "lon": -111.65,
+   "deposit_type": "oil_sand",
+   "endowment": 180000000000.0,
+   "endowment_unit": "barrels",
+   "status": "modern",
+   "first_worked": 1967,
+   "source": "Coordinate from Wikipedia. Recoverable bitumen, production plus reserves; in-place figure is about an order larger. From memory.",
+   "conf": "B"
+  },
+  {
+   "id": "orinoco_bitumen",
+   "name": "Orinoco Belt",
+   "resource": "bitumen",
+   "lat": 8.5,
+   "lon": -65.0,
+   "deposit_type": "oil_sand",
+   "endowment": 240000000000.0,
+   "endowment_unit": "barrels",
+   "status": "modern",
+   "first_worked": 1990,
+   "source": "Coordinate approximate (belt centre); certified reserves of order two hundred billion barrels, USGS technically recoverable estimate is larger. From memory.",
+   "conf": "C"
+  },
+  {
+   "id": "south_pars_gas",
+   "name": "South Pars (Iranian share of North Dome)",
+   "resource": "natural_gas",
+   "lat": 26.62,
+   "lon": 52.07,
+   "deposit_type": "conventional_gas_field",
+   "endowment": 14000000000000.0,
+   "endowment_unit": "cubic_metres_gas",
+   "status": "modern",
+   "first_worked": 1990,
+   "source": "Coordinate from Wikipedia. Iranian share of the shared field, order of magnitude from memory; the whole field is about three times larger.",
+   "conf": "B"
+  },
+  {
+   "id": "urengoy_gas",
+   "name": "Urengoy",
+   "resource": "natural_gas",
+   "lat": 66.1,
+   "lon": 76.9,
+   "deposit_type": "conventional_gas_field",
+   "endowment": 10000000000000.0,
+   "endowment_unit": "cubic_metres_gas",
+   "status": "modern",
+   "first_worked": 1966,
+   "source": "Coordinate from Wikipedia. Initial reserves of order ten trillion cubic metres, from memory.",
+   "conf": "B"
+  },
+  {
+   "id": "groningen_gas",
+   "name": "Groningen",
+   "resource": "natural_gas",
+   "lat": 53.3,
+   "lon": 6.8,
+   "deposit_type": "conventional_gas_field",
+   "endowment": 2740000000000.0,
+   "endowment_unit": "cubic_metres_gas",
+   "status": "modern",
+   "first_worked": 1959,
+   "source": "Coordinate from Wikipedia. Wikipedia: estimated 2,740 billion cubic metres recoverable.",
+   "conf": "A"
+  },
+  {
+   "id": "troll_gas",
+   "name": "Troll",
+   "resource": "natural_gas",
+   "lat": 60.65,
+   "lon": 3.73,
+   "deposit_type": "conventional_gas_field",
+   "endowment": 1300000000000.0,
+   "endowment_unit": "cubic_metres_gas",
+   "status": "modern",
+   "first_worked": 1979,
+   "source": "Coordinate from Wikipedia. Recoverable gas, order of magnitude from memory.",
+   "conf": "B"
+  },
+  {
+   "id": "lacq_gas",
+   "name": "Lacq",
+   "resource": "natural_gas",
+   "lat": 43.41,
+   "lon": -0.62,
+   "deposit_type": "conventional_gas_field",
+   "endowment": 250000000000.0,
+   "endowment_unit": "cubic_metres_gas",
+   "status": "modern",
+   "first_worked": 1951,
+   "source": "Coordinate from Wikipedia. Initial reserves about a quarter of a trillion cubic metres, from memory.",
+   "conf": "B"
+  },
+  {
+   "id": "bayu_undan_gas",
+   "name": "Bayu-Undan",
+   "resource": "natural_gas",
+   "lat": -10.3,
+   "lon": 126.5,
+   "deposit_type": "conventional_gas_field",
+   "endowment": 100000000000.0,
+   "endowment_unit": "cubic_metres_gas",
+   "status": "modern",
+   "first_worked": 1995,
+   "source": "Timor Sea; coordinate and recoverable gas (about three to four trillion cubic feet) from memory.",
+   "conf": "C"
+  },
+  {
+   "id": "powder_river_coal",
+   "name": "Powder River Basin",
+   "resource": "coal",
+   "lat": 44.4,
+   "lon": -105.8,
+   "deposit_type": "coal_basin",
+   "endowment": 40000000000.0,
+   "endowment_unit": "tonnes_coal",
+   "status": "modern",
+   "first_worked": 1970,
+   "source": "Coordinate from Wikipedia. Production plus recoverable reserves, order of magnitude from memory; in-place resource is far larger.",
+   "conf": "B"
+  },
+  {
+   "id": "appalachian_coal",
+   "name": "Appalachian coalfields",
+   "resource": "coal",
+   "lat": 38.0,
+   "lon": -81.0,
+   "deposit_type": "coal_basin",
+   "endowment": 50000000000.0,
+   "endowment_unit": "tonnes_coal",
+   "status": "modern",
+   "first_worked": 1750,
+   "source": "Production plus reserves across the region, order of magnitude from memory; coordinate approximate.",
+   "conf": "C"
+  },
+  {
+   "id": "illinois_coal",
+   "name": "Illinois Basin",
+   "resource": "coal",
+   "lat": 39.75,
+   "lon": -89.5,
+   "deposit_type": "coal_basin",
+   "endowment": 40000000000.0,
+   "endowment_unit": "tonnes_coal",
+   "status": "modern",
+   "first_worked": 1810,
+   "source": "Coordinate from Wikipedia. Production plus recoverable reserves, order of magnitude from memory.",
+   "conf": "B"
+  },
+  {
+   "id": "kuznetsk_coal",
+   "name": "Kuznetsk Basin",
+   "resource": "coal",
+   "lat": 55.35,
+   "lon": 86.09,
+   "deposit_type": "coal_basin",
+   "endowment": 60000000000.0,
+   "endowment_unit": "tonnes_coal",
+   "status": "modern",
+   "first_worked": 1851,
+   "source": "Coordinate from Wikipedia. Production plus reserves, order of magnitude from memory.",
+   "conf": "B"
+  },
+  {
+   "id": "ordos_coal",
+   "name": "Ordos Basin",
+   "resource": "coal",
+   "lat": 37.5,
+   "lon": 110.0,
+   "deposit_type": "coal_basin",
+   "endowment": 200000000000.0,
+   "endowment_unit": "tonnes_coal",
+   "status": "modern",
+   "first_worked": 1900,
+   "source": "Shaanxi-Shanxi-Inner Mongolia coal; reserves plus production, order of magnitude from memory; coordinate approximate.",
+   "conf": "C"
+  },
+  {
+   "id": "donbas_coal",
+   "name": "Donets Basin",
+   "resource": "coal",
+   "lat": 48.0,
+   "lon": 38.0,
+   "deposit_type": "coal_basin",
+   "endowment": 60000000000.0,
+   "endowment_unit": "tonnes_coal",
+   "status": "modern",
+   "first_worked": 1790,
+   "source": "Resources plus production, order of magnitude from memory; coordinate approximate.",
+   "conf": "C"
+  },
+  {
+   "id": "bowen_coal",
+   "name": "Bowen Basin",
+   "resource": "coal",
+   "lat": -23.18,
+   "lon": 148.37,
+   "deposit_type": "coal_basin",
+   "endowment": 30000000000.0,
+   "endowment_unit": "tonnes_coal",
+   "status": "modern",
+   "first_worked": 1860,
+   "source": "Coordinate from Wikipedia. Resource plus production, order of magnitude from memory.",
+   "conf": "B"
+  },
+  {
+   "id": "sydney_coal",
+   "name": "Sydney Basin",
+   "resource": "coal",
+   "lat": -33.0,
+   "lon": 151.0,
+   "deposit_type": "coal_basin",
+   "endowment": 10000000000.0,
+   "endowment_unit": "tonnes_coal",
+   "status": "modern",
+   "first_worked": 1797,
+   "source": "Wikipedia gives the basin centre at 33.95S 150.76E, but the working coalfields (Newcastle, Hunter, Illawarra) lie across the whole basin; production plus resource, order of magnitude from memory.",
+   "conf": "C"
+  },
+  {
+   "id": "newcastle_coal",
+   "name": "Great Northern Coalfield (Newcastle, UK)",
+   "resource": "coal",
+   "lat": 55.0,
+   "lon": -1.6,
+   "deposit_type": "coal_basin",
+   "endowment": 5000000000.0,
+   "endowment_unit": "tonnes_coal",
+   "status": "historic",
+   "first_worked": 1200,
+   "source": "Cumulative production, order of magnitude from memory; coordinate approximate.",
+   "conf": "C"
+  },
+  {
+   "id": "ruhr_coal",
+   "name": "Ruhr coalfield",
+   "resource": "coal",
+   "lat": 51.5,
+   "lon": 7.25,
+   "deposit_type": "coal_basin",
+   "endowment": 10000000000.0,
+   "endowment_unit": "tonnes_coal",
+   "status": "historic",
+   "first_worked": 1750,
+   "source": "Coordinate from Wikipedia. Cumulative production, order of magnitude from memory.",
+   "conf": "B"
+  },
+  {
+   "id": "jharia_coal",
+   "name": "Jharia coalfield",
+   "resource": "coal",
+   "lat": 23.75,
+   "lon": 86.42,
+   "deposit_type": "coal_basin",
+   "endowment": 20000000000.0,
+   "endowment_unit": "tonnes_coal",
+   "status": "modern",
+   "first_worked": 1894,
+   "source": "Coordinate from Wikipedia. Resource of the order of twenty billion tonnes, from memory.",
+   "conf": "B"
+  },
+  {
+   "id": "witbank_coal",
+   "name": "Witbank (Mpumalanga) coalfield",
+   "resource": "coal",
+   "lat": -25.88,
+   "lon": 29.2,
+   "deposit_type": "coal_basin",
+   "endowment": 10000000000.0,
+   "endowment_unit": "tonnes_coal",
+   "status": "modern",
+   "first_worked": 1890,
+   "source": "Coordinate from Wikipedia. Production plus reserves, order of magnitude from memory.",
+   "conf": "B"
+  },
+  {
+   "id": "silesia_coal",
+   "name": "Upper Silesian Coal Basin",
+   "resource": "coal",
+   "lat": 50.25,
+   "lon": 19.0,
+   "deposit_type": "coal_basin",
+   "endowment": 40000000000.0,
+   "endowment_unit": "tonnes_coal",
+   "status": "modern",
+   "first_worked": 1780,
+   "source": "Coordinate from Wikipedia. Production plus resource, order of magnitude from memory.",
+   "conf": "B"
+  }
+ ]
 }
