@@ -178,6 +178,13 @@ class BioticTests(unittest.TestCase):
         with self.assertRaises(map_source.MapDataError):
             resources_biotic.supports(small_map(), "b1", "coal")
 
+    def test_boreal_forest_yields_timber(self):
+        world_map = earth_map()
+        taiga = [tile for tile in world_map.tiles if tile_layers.value(world_map, tile, "koppen_class") == "Dfc"
+                 and tile_layers.number(world_map, tile, "forest_fraction", 0) > 0.5]
+        self.assertTrue(taiga)
+        self.assertTrue(all(resources_biotic.stand(world_map, tile, "timber")["standing_stock"] > 0 for tile in taiga))
+
     def test_earth_timber_follows_the_measured_forest_layer(self):
         world_map = earth_map()
         forested = [tile for tile in world_map.tiles if tile_layers.number(world_map, tile, "forest_fraction", 0) > 0.8
@@ -185,7 +192,9 @@ class BioticTests(unittest.TestCase):
         self.assertTrue(forested)
         stand = resources_biotic.stand(world_map, forested[0], "timber")
         self.assertGreater(stand["standing_stock"], 0)
-        deserts = [tile for tile in world_map.tiles if tile_layers.value(world_map, tile, "koppen_class") == "BWh"]
+        deserts = [tile for tile in world_map.tiles if tile_layers.value(world_map, tile, "koppen_class") == "BWh"
+                   and tile_layers.number(world_map, tile, "annual_precipitation_mm", 0) < 250]
+        self.assertTrue(deserts)
         self.assertTrue(all(resources_biotic.stand(world_map, tile, "timber")["standing_stock"] == 0 for tile in deserts))
 
 

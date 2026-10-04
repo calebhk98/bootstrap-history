@@ -7,34 +7,26 @@
    "unit": "m3_stemwood",
    "envelope": [
     {
-     "layer": "koppen_group",
-     "in": [
-      "A",
-      "C",
-      "D"
-     ]
-    },
-    {
      "layer": "annual_precipitation_mm",
      "optimal": [
-      800,
+      600,
       3000
      ],
      "tolerated": [
-      300,
+      250,
       6000
      ],
      "if_missing": true
     },
     {
-     "layer": "mean_temperature_c",
+     "layer": "warmest_month_temperature_c",
      "optimal": [
-      5,
-      28
+      15,
+      35
      ],
      "tolerated": [
-      -8,
-      32
+      10,
+      40
      ],
      "if_missing": true
     }
@@ -44,7 +36,7 @@
     "regrowth_per_hectare_per_year_at_full_suitability": 5,
     "cover_layer": "forest_fraction"
    },
-   "source": "Typical stand figures and crop climate ranges from memory; heuristic",
+   "source": "Tree line follows a warmest month near 10 C (Koppen's own boundary between D and E climates); closed forest needs roughly 250 mm or more of rain in cool climates; stand figures from memory; heuristic",
    "conf": "D"
   },
   {
