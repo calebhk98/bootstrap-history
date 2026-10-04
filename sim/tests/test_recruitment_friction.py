@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from .harness import *  # noqa: F401,F403
 
 from sim.labour.labour_market_api import LabourMarket
+from sim.labour.labour_staff_ledger import StaffLedgerMixin
 
 HOURS = 2000.0
 POOLS = {"common": 5000.0, "rare": 30.0}
@@ -60,3 +61,24 @@ check("a premium finds more people", market.whole_recruits("rare", 20, 0.5) > ma
 check("a premium costs more", market.hire_cost("rare", 5, 0.5) > market.hire_cost("rare", 5))
 check("nothing asked costs nothing and finds nobody",
       market.hire_cost("rare", 0) == 0.0 and market.whole_recruits("rare", 0) == 0)
+
+
+class CoverLabour(StaffLedgerMixin):
+    """A labour whose market finds only some of a hire, as a scarce trade's does."""
+
+    def __init__(self, found):
+        household = SimpleNamespace(employees={}, log=[])
+        self._world = SimpleNamespace(state=SimpleNamespace(household=household,
+                                                            scenario=SimpleNamespace(year=1)))
+        self._found = found
+
+    def hire(self, trade, count):
+        employees = self._world.state.household.employees
+        employees[trade] = employees.get(trade, 0.0) + min(count, self._found)
+        return True, None
+
+
+cover = CoverLabour(found=3)
+check("a policy hire reports the people found, not the people asked for",
+      cover.hire_to_cover("carver", 10, "auto-hire") == 3
+      and "hire 3 carvers" in cover._world.state.household.log[-1][1])

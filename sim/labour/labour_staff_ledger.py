@@ -100,13 +100,16 @@ class StaffLedgerMixin:
             short = min(short, max(0, int(self.household_room() + 1e-9)))
             if short <= 0:
                 return 0
+        household = self._world.state.household
+        before = household.employees.get(trade, 0.0)
         hired, _why = self.hire(trade, short)
-        if not hired:
+        found = int(round(household.employees.get(trade, 0.0) - before))
+        if not hired or found <= 0:
             return 0
-        self._world.state.household.log.append((self._world.state.scenario.year,
-                                         "%s: you hire %d %s%s to keep your concerns supervised"
-                                         % (label, short, trade, "" if short == 1 else "s")))
-        return short
+        household.log.append((self._world.state.scenario.year,
+                              "%s: you hire %d %s%s to keep your concerns supervised"
+                              % (label, found, trade, "" if found == 1 else "s")))
+        return found
 
     def replace_lost_foremen(self):
         """auto_replace_foreman: hire the specialists open concerns need and lack."""
