@@ -6,8 +6,9 @@ A resource (map catalogue `resources`) is {"id", "mechanism", "unit", ...}:
       ({endowment_unit: multiplier into "unit"}), "crustal_abundance_ppm".
   biotic_stand: "envelope" and "stand" (see resources_biotic.py).
 A known deposit (map catalogue `deposits`) is {"id", "resource", "lat", "lon", "endowment",
-"endowment_unit", optional "deposit_type", "ore_grade_kg_per_tonne", "depth_class", "status"}. Known
-deposits are not hidden: they sit in the tile nearest their coordinates.
+"endowment_unit", optional "deposit_type", "ore_grade_kg_per_tonne", "depth_class", "status"}; endowment and its
+unit may both be omitted (location known, size not). Known deposits are not hidden: they sit in the tile nearest
+their coordinates.
 """
 import math
 from typing import Any, Dict, List
@@ -49,6 +50,24 @@ def _check_type(world_map: WorldMap, resource: Dict[str, Any], deposit_type: Dic
                            % (where, deposit_type["depth_class"]))
 
 
+def _check_definition(world_map: WorldMap, resource_id: str, resource_entry: Dict[str, Any]) -> None:
+    """Raise MapDataError when one resource definition is malformed."""
+    mechanism = resource_entry.get("mechanism")
+    if mechanism not in DEPOSIT_MECHANISMS + (BIOTIC_MECHANISM,):
+        raise MapDataError("resource %r (%s): unknown mechanism %r; known: %s" % (
+            resource_id, FOLDER, mechanism, ", ".join(DEPOSIT_MECHANISMS + (BIOTIC_MECHANISM,))))
+    if "unit" not in resource_entry:
+        raise MapDataError("resource %r (%s): missing unit" % (resource_id, FOLDER))
+    if mechanism == BIOTIC_MECHANISM:
+        if "envelope" not in resource_entry or "stand" not in resource_entry:
+            raise MapDataError("resource %r (%s): a biotic_stand needs envelope and stand" % (resource_id, FOLDER))
+    else:
+        if not resource_entry.get("deposit_types"):
+            raise MapDataError("resource %r (%s): needs deposit_types" % (resource_id, FOLDER))
+        for deposit_type in resource_entry["deposit_types"]:
+            _check_type(world_map, resource_entry, deposit_type)
+
+
 def resource_definitions(world_map: WorldMap) -> Dict[str, Dict[str, Any]]:
     """{resource_id: entry} of every resource this model handles, validated; others' entries are left out."""
     cache = _cache(world_map)
@@ -58,20 +77,7 @@ def resource_definitions(world_map: WorldMap) -> Dict[str, Dict[str, Any]]:
     for resource_id, resource in sorted(world_map.catalogue("resources").items()):
         if is_foreign(world_map, resource):
             continue
-        mechanism = resource.get("mechanism")
-        if mechanism not in DEPOSIT_MECHANISMS + (BIOTIC_MECHANISM,):
-            raise MapDataError("resource %r (%s): unknown mechanism %r; known: %s" % (
-                resource_id, FOLDER, mechanism, ", ".join(DEPOSIT_MECHANISMS + (BIOTIC_MECHANISM,))))
-        if "unit" not in resource:
-            raise MapDataError("resource %r (%s): missing unit" % (resource_id, FOLDER))
-        if mechanism == BIOTIC_MECHANISM:
-            if "envelope" not in resource or "stand" not in resource:
-                raise MapDataError("resource %r (%s): a biotic_stand needs envelope and stand" % (resource_id, FOLDER))
-        else:
-            if not resource.get("deposit_types"):
-                raise MapDataError("resource %r (%s): needs deposit_types" % (resource_id, FOLDER))
-            for deposit_type in resource["deposit_types"]:
-                _check_type(world_map, resource, deposit_type)
+        _check_definition(world_map, resource_id, resource)
         result[resource_id] = resource
     cache["definitions"] = result
     return result
@@ -122,8 +128,23 @@ def _nearest_tile(world_map: WorldMap, lat: float, lon: float) -> str:
     return best
 
 
+def _check_known(world_map: WorldMap, deposit_id: str, entry: Dict[str, Any], resource_id: str) -> None:
+    """Raise MapDataError when a known deposit lacks a location or its quantity cannot be converted."""
+    for key in ("lat", "lon"):
+        if key not in entry:
+            raise MapDataError("known deposit %r (data/world/geography/deposits/): missing %r" % (deposit_id, key))
+    if "endowment" in entry:
+        if "endowment_unit" not in entry:
+            raise MapDataError("known deposit %r (data/world/geography/deposits/): missing 'endowment_unit'"
+                               % deposit_id)
+        known_quantity(dict(entry, id=deposit_id), resource(world_map, resource_id))
+
+
 def known_deposits(world_map: WorldMap, resource_id: str) -> List[Dict[str, Any]]:
-    """Catalogue deposits of one resource as plain dicts with tile_id, quantity (resource unit), lat and lon."""
+    """Catalogue deposits of one resource as plain dicts with tile_id, quantity (resource unit), lat and lon.
+
+    A deposit with no endowment is a known location of unknown size: quantity is None.
+    """
     cache = _cache(world_map).setdefault("known", {})
     if resource_id not in cache:
         resource_entry = resource(world_map, resource_id)
@@ -131,27 +152,43 @@ def known_deposits(world_map: WorldMap, resource_id: str) -> List[Dict[str, Any]
         for deposit_id, entry in sorted(world_map.catalogue("deposits").items()):
             if entry.get("resource") != resource_id:
                 continue
-            for key in ("lat", "lon", "endowment", "endowment_unit"):
-                if key not in entry:
-                    raise MapDataError("known deposit %r (data/world/geography/deposits/): missing %r" % (deposit_id, key))
+            _check_known(world_map, deposit_id, entry, resource_id)
+            has_quantity = "endowment" in entry
             rows.append({"id": deposit_id, "name": entry.get("name", deposit_id), "resource": resource_id,
                          "deposit_type": entry.get("deposit_type"), "lat": entry["lat"], "lon": entry["lon"],
                          "tile_id": _nearest_tile(world_map, entry["lat"], entry["lon"]),
-                         "quantity": known_quantity(entry, resource_entry), "unit": resource_entry["unit"],
+                         "quantity": known_quantity(entry, resource_entry) if has_quantity else None,
+                         "unit": resource_entry["unit"],
                          "depth_class": entry.get("depth_class"), "status": entry.get("status", "modern")})
         cache[resource_id] = rows
     return cache[resource_id]
 
 
 def validate(world_map: WorldMap) -> List[str]:
-    """Problems with the resource definitions and the catalogue, as messages; empty when sound."""
-    try:
-        for resource_id in resource_definitions(world_map):
-            known_deposits(world_map, resource_id)
-        known_ids = set(resource_definitions(world_map)) | {
-            entry_id for entry_id, entry in world_map.catalogue("resources").items() if is_foreign(world_map, entry)}
-        return ["known deposit %r names unknown resource %r" % (deposit_id, entry.get("resource"))
-                for deposit_id, entry in sorted(world_map.catalogue("deposits").items())
-                if entry.get("resource") not in known_ids]
-    except MapDataError as error:
-        return [str(error)]
+    """Every problem with the resource definitions and the catalogue, as messages; empty when sound."""
+    problems = []
+    handled = []
+    for resource_id, resource_entry in sorted(world_map.catalogue("resources").items()):
+        if is_foreign(world_map, resource_entry):
+            continue
+        try:
+            _check_definition(world_map, resource_id, resource_entry)
+            handled.append(resource_id)
+        except MapDataError as error:
+            problems.append(str(error))
+    foreign = {entry_id for entry_id, entry in world_map.catalogue("resources").items()
+               if is_foreign(world_map, entry)}
+    defined = set(handled)
+    for deposit_id, entry in sorted(world_map.catalogue("deposits").items()):
+        resource_id = entry.get("resource")
+        if resource_id in foreign:
+            continue
+        if resource_id not in defined:
+            if resource_id not in world_map.catalogue("resources"):
+                problems.append("known deposit %r names unknown resource %r" % (deposit_id, resource_id))
+            continue
+        try:
+            _check_known(world_map, deposit_id, entry, resource_id)
+        except MapDataError as error:
+            problems.append(str(error))
+    return problems

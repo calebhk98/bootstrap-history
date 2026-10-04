@@ -76,7 +76,7 @@ kilogram of CONTAINED METAL raised, pre-smelting; `data/production/` prices
 its ore materials per kilogram of ORE (rock or gravel), and lets the
 smelting recipe that consumes the ore state its OWN, separate, generic
 ore-to-metal ratio (`copper_kg` assumes 50 kg ore/kg metal; no particular
-named deposit in `deposits.json` need actually run at that grade). Folding
+named deposit in the geography deposit catalogue need actually run at that grade). Folding
 a per-kg-metal rent into a per-kg-ore price therefore needs a ratio to
 convert with, and this file uses each metal's DOMINANT smelting recipe's
 own ratio for that conversion (RENT_BEARING_ORE_MATERIALS names it), which

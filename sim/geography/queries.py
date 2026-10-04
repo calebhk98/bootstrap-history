@@ -5,6 +5,8 @@ finer map, a fantasy map, another language) can answer the same calls. `sim/geog
 describes each answer's shape. Every call takes an optional `world_map` from `open_map`; without
 one it uses the base map.
 """
+import copy
+import math
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
 from sim.geography import (food_capacity, map_source, mechanisms, parameters, resources_biotic,
@@ -101,6 +103,16 @@ def endowment(tile_id: str, resource_id: str, world_map: Optional[WorldMap] = No
 
 def known_deposits(resource_id: str, world_map: Optional[WorldMap] = None) -> List[Dict[str, Any]]:
     return resources_catalogue.known_deposits(_map(world_map), resource_id)
+
+
+def deposit_records(resource_id: Optional[str] = None, world_map: Optional[WorldMap] = None) -> List[Dict[str, Any]]:
+    """Catalogue rows of the known deposits as copied dicts, every field the data carries, for one resource or all.
+
+    Sorted by the row's `order` field (rows without one after those with one), then by id.
+    """
+    rows = [copy.deepcopy(row) for row in _map(world_map).catalogue("deposits").values()
+            if resource_id is None or row.get("resource") == resource_id]
+    return sorted(rows, key=lambda row: (row.get("order", math.inf), row["id"]))
 
 
 def prospect(tile_id: str, resource_id: str, effort: float, seed: Any,

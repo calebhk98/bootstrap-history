@@ -243,6 +243,39 @@ class EarthTests(unittest.TestCase):
         self.assertEqual(resources_prospecting.hidden_deposits(world_map, "south_africa_06", "diamond", 1),
                          resources_prospecting.hidden_deposits(world_map, "south_africa_06", "diamond", 1))
 
+    def test_every_catalogue_deposit_has_a_defined_resource_and_a_convertible_unit(self):
+        world_map = earth_map()
+        defined = resources_catalogue.resource_definitions(world_map)
+        foreign = {key for key, entry in world_map.catalogue("resources").items()
+                   if resources_catalogue.is_foreign(world_map, entry)}
+        for deposit_id, entry in world_map.catalogue("deposits").items():
+            resource_id = entry["resource"]
+            if resource_id in foreign:
+                continue
+            self.assertIn(resource_id, defined, deposit_id)
+            if "endowment" in entry:
+                quantity = resources_catalogue.known_quantity(dict(entry, id=deposit_id), defined[resource_id])
+                self.assertGreater(quantity, 0, deposit_id)
+
+    def test_a_deposit_without_an_endowment_is_a_known_place_of_unknown_size(self):
+        world_map = earth_map()
+        rows = resources_catalogue.known_deposits(world_map, "silver")
+        unsized = [row for row in rows if row["quantity"] is None]
+        self.assertTrue(unsized)
+        row = unsized[0]
+        known = resources_endowment.endowment(world_map, row["tile_id"], "silver")["known"]
+        self.assertEqual(known, sum(other["quantity"] or 0.0 for other in rows if other["tile_id"] == row["tile_id"]))
+
+    def test_validate_reports_every_problem_not_only_the_first(self):
+        world_map = earth_map()
+        catalogues = dict(world_map.catalogues, deposits=dict(
+            world_map.catalogue("deposits"),
+            ghost_one={"id": "ghost_one", "resource": "ghostium", "lat": 0, "lon": 0},
+            ghost_two={"id": "ghost_two", "resource": "phantomium", "lat": 0, "lon": 0}))
+        broken = map_source.WorldMap(world_map.map_id, world_map.tiles, world_map.layers, catalogues,
+                                     world_map.folders)
+        self.assertEqual(len(resources_catalogue.validate(broken)), 2)
+
     def test_every_tile_summarises(self):
         world_map = earth_map()
         for tile_id in list(world_map.tiles)[::10]:

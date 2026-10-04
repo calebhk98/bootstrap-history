@@ -638,6 +638,617 @@
     "tonnes_contained": 1000.0
    },
    "crustal_abundance_ppm": 14
+  },
+  {
+   "id": "silver",
+   "mechanism": "mineral_deposit",
+   "unit": "kg",
+   "deposit_types": [
+    {
+     "id": "epithermal_vein_silver_tin",
+     "deposits_per_million_km2": 1.5,
+     "tonnage_lognormal": {
+      "median_tonnes": 1000000.0,
+      "sigma": 1.6
+     },
+     "depth_class": "shallow_vein",
+     "grade_lognormal": {
+      "median_kg_per_tonne": 0.15,
+      "sigma": 0.5
+     },
+     "envelope": [
+      {
+       "layer": "elevation_std_m",
+       "optimal": [
+        200,
+        3000
+       ],
+       "tolerated": [
+        0,
+        5000
+       ],
+       "if_missing": true
+      }
+     ],
+     "layer_weights": [
+      {
+       "layer": "koppen_group",
+       "weights": {
+        "A": 1,
+        "B": 1,
+        "C": 1,
+        "D": 1,
+        "E": 0.3
+       },
+       "default": 0.0,
+       "if_missing": 0.5
+      }
+     ],
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    },
+    {
+     "id": "carbonate_replacement_silver_lead_zinc",
+     "deposits_per_million_km2": 0.5,
+     "tonnage_lognormal": {
+      "median_tonnes": 5000000.0,
+      "sigma": 1.6
+     },
+     "depth_class": "deep_vein",
+     "grade_lognormal": {
+      "median_kg_per_tonne": 0.08,
+      "sigma": 0.5
+     },
+     "envelope": [
+      {
+       "layer": "elevation_std_m",
+       "optimal": [
+        200,
+        3000
+       ],
+       "tolerated": [
+        0,
+        5000
+       ],
+       "if_missing": true
+      }
+     ],
+     "layer_weights": [
+      {
+       "layer": "koppen_group",
+       "weights": {
+        "A": 1,
+        "B": 1,
+        "C": 1,
+        "D": 1,
+        "E": 0.3
+       },
+       "default": 0.0,
+       "if_missing": 0.5
+      }
+     ],
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    },
+    {
+     "id": "galena_vein",
+     "deposits_per_million_km2": 3,
+     "tonnage_lognormal": {
+      "median_tonnes": 300000.0,
+      "sigma": 1.5
+     },
+     "depth_class": "deep_vein",
+     "grade_lognormal": {
+      "median_kg_per_tonne": 0.3,
+      "sigma": 0.5
+     },
+     "small_scale": true,
+     "envelope": [
+      {
+       "layer": "elevation_std_m",
+       "optimal": [
+        200,
+        3000
+       ],
+       "tolerated": [
+        0,
+        5000
+       ],
+       "if_missing": true
+      }
+     ],
+     "layer_weights": [
+      {
+       "layer": "koppen_group",
+       "weights": {
+        "A": 1,
+        "B": 1,
+        "C": 1,
+        "D": 1,
+        "E": 0.3
+       },
+       "default": 0.0,
+       "if_missing": 0.5
+      }
+     ],
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    },
+    {
+     "id": "gossan_jarosite",
+     "deposits_per_million_km2": 1,
+     "tonnage_lognormal": {
+      "median_tonnes": 500000.0,
+      "sigma": 1.4
+     },
+     "depth_class": "surface",
+     "grade_lognormal": {
+      "median_kg_per_tonne": 0.5,
+      "sigma": 0.5
+     },
+     "small_scale": true,
+     "envelope": [
+      {
+       "layer": "elevation_std_m",
+       "optimal": [
+        200,
+        3000
+       ],
+       "tolerated": [
+        0,
+        5000
+       ],
+       "if_missing": true
+      }
+     ],
+     "layer_weights": [
+      {
+       "layer": "koppen_group",
+       "weights": {
+        "A": 1,
+        "B": 1,
+        "C": 1,
+        "D": 1,
+        "E": 0.3
+       },
+       "default": 0.0,
+       "if_missing": 0.5
+      }
+     ],
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    }
+   ],
+   "grade_basis": true,
+   "unit_factors": {
+    "tonnes_contained": 1000.0
+   }
+  },
+  {
+   "id": "mercury",
+   "mechanism": "mineral_deposit",
+   "unit": "kg",
+   "deposit_types": [
+    {
+     "id": "strata_bound_cinnabar",
+     "deposits_per_million_km2": 0.2,
+     "tonnage_lognormal": {
+      "median_tonnes": 2000000.0,
+      "sigma": 1.5
+     },
+     "depth_class": "shallow_vein",
+     "grade_lognormal": {
+      "median_kg_per_tonne": 5.0,
+      "sigma": 0.5
+     },
+     "envelope": [
+      {
+       "layer": "elevation_std_m",
+       "optimal": [
+        200,
+        3000
+       ],
+       "tolerated": [
+        0,
+        5000
+       ],
+       "if_missing": true
+      }
+     ],
+     "layer_weights": [
+      {
+       "layer": "koppen_group",
+       "weights": {
+        "A": 1,
+        "B": 1,
+        "C": 1,
+        "D": 1,
+        "E": 0.3
+       },
+       "default": 0.0,
+       "if_missing": 0.5
+      }
+     ],
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    },
+    {
+     "id": "volcanic_hydrothermal_cinnabar",
+     "deposits_per_million_km2": 0.3,
+     "tonnage_lognormal": {
+      "median_tonnes": 500000.0,
+      "sigma": 1.5
+     },
+     "depth_class": "surface",
+     "grade_lognormal": {
+      "median_kg_per_tonne": 3.0,
+      "sigma": 0.5
+     },
+     "envelope": [
+      {
+       "layer": "elevation_std_m",
+       "optimal": [
+        200,
+        3000
+       ],
+       "tolerated": [
+        0,
+        5000
+       ],
+       "if_missing": true
+      }
+     ],
+     "layer_weights": [
+      {
+       "layer": "koppen_group",
+       "weights": {
+        "A": 1,
+        "B": 1,
+        "C": 1,
+        "D": 1,
+        "E": 0.3
+       },
+       "default": 0.0,
+       "if_missing": 0.5
+      }
+     ],
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    }
+   ],
+   "grade_basis": true,
+   "unit_factors": {
+    "tonnes_contained": 1000.0
+   }
+  },
+  {
+   "id": "nickel",
+   "mechanism": "mineral_deposit",
+   "unit": "kg",
+   "deposit_types": [
+    {
+     "id": "magmatic_sulfide",
+     "deposits_per_million_km2": 0.3,
+     "tonnage_lognormal": {
+      "median_tonnes": 50000000.0,
+      "sigma": 1.5
+     },
+     "depth_class": "deep_vein",
+     "grade_lognormal": {
+      "median_kg_per_tonne": 10.0,
+      "sigma": 0.5
+     },
+     "provincial_only": true,
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    },
+    {
+     "id": "laterite_nickel",
+     "deposits_per_million_km2": 0.4,
+     "tonnage_lognormal": {
+      "median_tonnes": 50000000.0,
+      "sigma": 1.3
+     },
+     "depth_class": "surface",
+     "grade_lognormal": {
+      "median_kg_per_tonne": 12.0,
+      "sigma": 0.5
+     },
+     "envelope": [
+      {
+       "layer": "elevation_std_m",
+       "optimal": [
+        200,
+        3000
+       ],
+       "tolerated": [
+        0,
+        5000
+       ],
+       "if_missing": true
+      }
+     ],
+     "layer_weights": [
+      {
+       "layer": "koppen_group",
+       "weights": {
+        "A": 1,
+        "B": 0.1,
+        "C": 0.4,
+        "D": 0,
+        "E": 0
+       },
+       "default": 0.0,
+       "if_missing": 0.5
+      }
+     ],
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    }
+   ],
+   "grade_basis": true,
+   "unit_factors": {
+    "tonnes_contained": 1000.0
+   }
+  },
+  {
+   "id": "platinum_group_metals",
+   "mechanism": "mineral_deposit",
+   "unit": "kg",
+   "deposit_types": [
+    {
+     "id": "layered_intrusion_pge",
+     "deposits_per_million_km2": 0.05,
+     "tonnage_lognormal": {
+      "median_tonnes": 100000000.0,
+      "sigma": 1.5
+     },
+     "depth_class": "deep_vein",
+     "grade_lognormal": {
+      "median_kg_per_tonne": 0.004,
+      "sigma": 0.5
+     },
+     "provincial_only": true,
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    }
+   ],
+   "grade_basis": true,
+   "unit_factors": {
+    "tonnes_contained": 1000.0
+   }
+  },
+  {
+   "id": "uranium",
+   "mechanism": "mineral_deposit",
+   "unit": "kg",
+   "deposit_types": [
+    {
+     "id": "sandstone_hosted_uranium",
+     "deposits_per_million_km2": 0.8,
+     "tonnage_lognormal": {
+      "median_tonnes": 2000000.0,
+      "sigma": 1.4
+     },
+     "depth_class": "shallow_vein",
+     "grade_lognormal": {
+      "median_kg_per_tonne": 1.0,
+      "sigma": 0.5
+     },
+     "envelope": [
+      {
+       "layer": "elevation_std_m",
+       "optimal": [
+        200,
+        3000
+       ],
+       "tolerated": [
+        0,
+        5000
+       ],
+       "if_missing": true
+      }
+     ],
+     "layer_weights": [
+      {
+       "layer": "koppen_group",
+       "weights": {
+        "A": 1,
+        "B": 1,
+        "C": 1,
+        "D": 1,
+        "E": 0.3
+       },
+       "default": 0.0,
+       "if_missing": 0.5
+      }
+     ],
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    },
+    {
+     "id": "unconformity_uranium",
+     "deposits_per_million_km2": 0.2,
+     "tonnage_lognormal": {
+      "median_tonnes": 1000000.0,
+      "sigma": 1.4
+     },
+     "depth_class": "deep_vein",
+     "grade_lognormal": {
+      "median_kg_per_tonne": 3.0,
+      "sigma": 0.5
+     },
+     "envelope": [
+      {
+       "layer": "elevation_std_m",
+       "optimal": [
+        200,
+        3000
+       ],
+       "tolerated": [
+        0,
+        5000
+       ],
+       "if_missing": true
+      }
+     ],
+     "layer_weights": [
+      {
+       "layer": "koppen_group",
+       "weights": {
+        "A": 1,
+        "B": 1,
+        "C": 1,
+        "D": 1,
+        "E": 0.3
+       },
+       "default": 0.0,
+       "if_missing": 0.5
+      }
+     ],
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    },
+    {
+     "id": "iron_oxide_copper_gold",
+     "deposits_per_million_km2": 0.1,
+     "tonnage_lognormal": {
+      "median_tonnes": 500000000.0,
+      "sigma": 1.3
+     },
+     "depth_class": "deep_vein",
+     "grade_lognormal": {
+      "median_kg_per_tonne": 0.25,
+      "sigma": 0.5
+     },
+     "provincial_only": true,
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    }
+   ],
+   "grade_basis": true,
+   "unit_factors": {
+    "tonnes_contained": 1000.0
+   }
+  },
+  {
+   "id": "lithium",
+   "mechanism": "mineral_deposit",
+   "unit": "kg",
+   "deposit_types": [
+    {
+     "id": "pegmatite_lithium",
+     "deposits_per_million_km2": 0.5,
+     "tonnage_lognormal": {
+      "median_tonnes": 1000000.0,
+      "sigma": 1.5
+     },
+     "depth_class": "shallow_vein",
+     "grade_lognormal": {
+      "median_kg_per_tonne": 5.0,
+      "sigma": 0.5
+     },
+     "envelope": [
+      {
+       "layer": "elevation_std_m",
+       "optimal": [
+        200,
+        3000
+       ],
+       "tolerated": [
+        0,
+        5000
+       ],
+       "if_missing": true
+      }
+     ],
+     "layer_weights": [
+      {
+       "layer": "koppen_group",
+       "weights": {
+        "A": 1,
+        "B": 1,
+        "C": 1,
+        "D": 1,
+        "E": 0.3
+       },
+       "default": 0.0,
+       "if_missing": 0.5
+      }
+     ],
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    },
+    {
+     "id": "evaporite_brine_lithium",
+     "deposits_per_million_km2": 0.1,
+     "tonnage_lognormal": {
+      "median_tonnes": 10000000000.0,
+      "sigma": 1.2
+     },
+     "depth_class": "surface",
+     "grade_lognormal": {
+      "median_kg_per_tonne": 0.0005,
+      "sigma": 0.5
+     },
+     "provincial_only": true,
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    }
+   ],
+   "grade_basis": true,
+   "unit_factors": {
+    "tonnes_contained": 1000.0
+   }
+  },
+  {
+   "id": "bauxite",
+   "mechanism": "mineral_deposit",
+   "unit": "tonnes",
+   "deposit_types": [
+    {
+     "id": "laterite_bauxite",
+     "deposits_per_million_km2": 1,
+     "tonnage_lognormal": {
+      "median_tonnes": 30000000.0,
+      "sigma": 1.5
+     },
+     "depth_class": "surface",
+     "envelope": [
+      {
+       "layer": "elevation_std_m",
+       "optimal": [
+        200,
+        3000
+       ],
+       "tolerated": [
+        0,
+        5000
+       ],
+       "if_missing": true
+      }
+     ],
+     "layer_weights": [
+      {
+       "layer": "koppen_group",
+       "weights": {
+        "A": 1,
+        "B": 0.1,
+        "C": 0.5,
+        "D": 0,
+        "E": 0
+       },
+       "default": 0.0,
+       "if_missing": 0.5
+      }
+     ],
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    }
+   ],
+   "unit_factors": {
+    "tonnes_ore": 1.0
+   }
   }
  ]
 }

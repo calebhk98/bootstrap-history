@@ -1,5 +1,5 @@
 {
- "_doc": "The 31 named historical deposits of data/world/deposits.json (every original field kept unchanged, including its lat/lon placeholders tracked by Complaints/281 and its own conf, which describes the grade and share figures) plus three extra ancient sites. surveyed_lat/surveyed_lon give the real location where the deposit is a real named place; ids ending in _generic are placeholders and have none. endowment appears only where it could be justified and is production plus remaining resource, to order of magnitude; endowment_source says how. Entries without an endowment key have none that can be defended.",
+ "_doc": "The 31 named historical deposits (formerly a separate file; every original field kept unchanged, including its lat/lon placeholders tracked by Complaints/281 and its own conf, which describes the grade and share figures) plus three extra ancient sites. surveyed_lat/surveyed_lon give the real location where the deposit is a real named place; ids ending in _generic are placeholders and have none. endowment appears only where it could be justified and is production plus remaining resource, to order of magnitude; endowment_source says how. Entries without an endowment key have none that can be defended. order: position in this file's sequence, so a consumer can list the named deposits in a fixed order (resources by first appearance, deposits within a resource as listed).",
  "entries": [
   {
    "id": "elba_hematite",
@@ -18,7 +18,8 @@
    "status": "historic",
    "surveyed_lat": 42.81,
    "surveyed_lon": 10.43,
-   "surveyed_source": "Rio Marina, Elba (Wikipedia names the island 42.8N 10.4E)"
+   "surveyed_source": "Rio Marina, Elba (Wikipedia names the island 42.8N 10.4E)",
+   "order": 1
   },
   {
    "id": "noricum_siderite",
@@ -37,7 +38,8 @@
    "status": "historic",
    "surveyed_lat": 46.94,
    "surveyed_lon": 14.55,
-   "surveyed_source": "Huttenberg, Carinthia, Wikipedia"
+   "surveyed_source": "Huttenberg, Carinthia, Wikipedia",
+   "order": 2
   },
   {
    "id": "wealden_bog_iron",
@@ -56,7 +58,8 @@
    "status": "historic",
    "surveyed_lat": 51.0,
    "surveyed_lon": 0.3,
-   "surveyed_source": "The Weald, Sussex and Kent; approximate, from memory"
+   "surveyed_source": "The Weald, Sussex and Kent; approximate, from memory",
+   "order": 3
   },
   {
    "id": "hispania_hematite",
@@ -75,7 +78,8 @@
    "status": "historic",
    "surveyed_lat": 40.73,
    "surveyed_lon": -1.5,
-   "surveyed_source": "Ojos Negros, Teruel, Wikipedia"
+   "surveyed_source": "Ojos Negros, Teruel, Wikipedia",
+   "order": 4
   },
   {
    "id": "north_africa_iron_generic",
@@ -91,7 +95,8 @@
    "conf": "D",
    "source": "No specific ancient North African iron mine identified by this file's author; a generic mid-range ore-grade placeholder standing in for geography.json's 0.1 regional share so the region is not silently dropped from the supply curve.",
    "deposit_type": "unspecified_placeholder",
-   "status": "historic"
+   "status": "historic",
+   "order": 5
   },
   {
    "id": "anatolian_iron",
@@ -107,7 +112,8 @@
    "conf": "C",
    "source": "Anatolia is the traditional heartland of early iron metallurgy (Hittite ironworking predates Rome by over a thousand years), so a working iron-ore tradition there by the Roman period is well attested even without a single named mine; 350 kg/t is a round mid-range figure.",
    "deposit_type": "iron_oxide_unspecified",
-   "status": "historic"
+   "status": "historic",
+   "order": 6
   },
   {
    "id": "levant_iron_generic",
@@ -123,7 +129,8 @@
    "conf": "D",
    "source": "No specific ancient Levantine/Mesopotamian iron mine identified; generic placeholder for geography.json's 0.05 regional share, same reasoning as north_africa_iron_generic.",
    "deposit_type": "unspecified_placeholder",
-   "status": "historic"
+   "status": "historic",
+   "order": 7
   },
   {
    "id": "italia_copper_generic",
@@ -139,7 +146,8 @@
    "conf": "D",
    "source": "Minor Etruscan-era copper working in Tuscany/Campania is attested but not at Rio Tinto's scale; generic 3% ore-grade placeholder for geography.json's small 0.02 share.",
    "deposit_type": "unspecified_placeholder",
-   "status": "historic"
+   "status": "historic",
+   "order": 8
   },
   {
    "id": "gaul_germania_copper_generic",
@@ -155,7 +163,8 @@
    "conf": "D",
    "source": "Generic placeholder; pre-Roman Alpine/Rhineland copper working existed but no single dominant ancient mine identified by this file's author.",
    "deposit_type": "unspecified_placeholder",
-   "status": "historic"
+   "status": "historic",
+   "order": 9
   },
   {
    "id": "britannia_copper_generic",
@@ -171,7 +180,8 @@
    "conf": "D",
    "source": "Generic placeholder for geography.json's 0.05 British copper share.",
    "deposit_type": "unspecified_placeholder",
-   "status": "historic"
+   "status": "historic",
+   "order": 10
   },
   {
    "id": "rio_tinto_copper",
@@ -194,7 +204,8 @@
    "endowment_source": "Copper in the Rio Tinto district, production plus resource, order of magnitude from memory; Roman share not separable.",
    "surveyed_lat": 37.7,
    "surveyed_lon": -6.6,
-   "surveyed_source": "Riotinto, Huelva; from memory (coordinate known to Wikipedia only for the river)"
+   "surveyed_source": "Riotinto, Huelva; from memory (coordinate known to Wikipedia only for the river)",
+   "order": 11
   },
   {
    "id": "north_africa_copper_generic",
@@ -210,7 +221,8 @@
    "conf": "D",
    "source": "Generic placeholder for geography.json's 0.05 share.",
    "deposit_type": "unspecified_placeholder",
-   "status": "historic"
+   "status": "historic",
+   "order": 12
   },
   {
    "id": "anatolian_copper",
@@ -229,7 +241,8 @@
    "status": "historic",
    "surveyed_lat": 38.27,
    "surveyed_lon": 39.76,
-   "surveyed_source": "Ergani Maden, Wikipedia (Ergani)"
+   "surveyed_source": "Ergani Maden, Wikipedia (Ergani)",
+   "order": 13
   },
   {
    "id": "cyprus_copper",
@@ -252,7 +265,8 @@
    "endowment_source": "Often-quoted order of two hundred thousand tonnes of copper smelted in antiquity, from memory.",
    "surveyed_lat": 35.09,
    "surveyed_lon": 32.88,
-   "surveyed_source": "Skouriotissa, Wikipedia"
+   "surveyed_source": "Skouriotissa, Wikipedia",
+   "order": 14
   },
   {
    "id": "italia_lead_generic",
@@ -277,7 +291,8 @@
     }
    ],
    "deposit_type": "unspecified_placeholder",
-   "status": "historic"
+   "status": "historic",
+   "order": 15
   },
   {
    "id": "gaul_germania_lead_generic",
@@ -293,7 +308,8 @@
    "conf": "D",
    "source": "Generic placeholder; pre-Roman central European galena working existed but no single dominant ancient mine identified.",
    "deposit_type": "unspecified_placeholder",
-   "status": "historic"
+   "status": "historic",
+   "order": 16
   },
   {
    "id": "britannia_lead",
@@ -321,7 +337,8 @@
    "status": "historic",
    "surveyed_lat": 51.3,
    "surveyed_lon": -2.73,
-   "surveyed_source": "Mendip Hills, Wikipedia"
+   "surveyed_source": "Mendip Hills, Wikipedia",
+   "order": 17
   },
   {
    "id": "hispania_lead",
@@ -349,7 +366,8 @@
    "status": "historic",
    "surveyed_lat": 38.08,
    "surveyed_lon": -3.63,
-   "surveyed_source": "Linares, Jaen, Wikipedia"
+   "surveyed_source": "Linares, Jaen, Wikipedia",
+   "order": 18
   },
   {
    "id": "laurion_lead",
@@ -378,7 +396,8 @@
    "first_worked": -600,
    "surveyed_lat": 37.72,
    "surveyed_lon": 24.05,
-   "surveyed_source": "Laurion, Wikipedia (37.70N 24.05E for Lavrio)"
+   "surveyed_source": "Laurion, Wikipedia (37.70N 24.05E for Lavrio)",
+   "order": 19
   },
   {
    "id": "italia_silver_generic",
@@ -394,7 +413,8 @@
    "conf": "D",
    "source": "Generic placeholder for geography.json's small 0.02 Italian silver share; silver is a trace constituent of argentiferous galena, not its own separate ore.",
    "deposit_type": "unspecified_placeholder",
-   "status": "historic"
+   "status": "historic",
+   "order": 20
   },
   {
    "id": "britannia_silver_generic",
@@ -410,7 +430,8 @@
    "conf": "D",
    "source": "Silver content of British argentiferous lead ore (see britannia_lead); generic figure, no assay.",
    "deposit_type": "unspecified_placeholder",
-   "status": "historic"
+   "status": "historic",
+   "order": 21
   },
   {
    "id": "hispania_silver",
@@ -429,7 +450,8 @@
    "status": "historic",
    "surveyed_lat": 37.6,
    "surveyed_lon": -0.98,
-   "surveyed_source": "Cartagena (Carthago Nova) silver district, Wikipedia"
+   "surveyed_source": "Cartagena (Carthago Nova) silver district, Wikipedia",
+   "order": 22
   },
   {
    "id": "laurion_silver",
@@ -452,7 +474,8 @@
    "endowment_source": "Ancient production about 3,000-4,000 t silver (range supplied by project owner).",
    "surveyed_lat": 37.72,
    "surveyed_lon": 24.05,
-   "surveyed_source": "Laurion, Wikipedia"
+   "surveyed_source": "Laurion, Wikipedia",
+   "order": 23
   },
   {
    "id": "rio_tinto_jarosite",
@@ -472,7 +495,8 @@
    "status": "historic",
    "surveyed_lat": 37.7,
    "surveyed_lon": -6.6,
-   "surveyed_source": "Riotinto, Huelva; from memory"
+   "surveyed_source": "Riotinto, Huelva; from memory",
+   "order": 24
   },
   {
    "id": "gaul_germania_tin_generic",
@@ -488,7 +512,8 @@
    "conf": "D",
    "source": "Generic placeholder for geography.json's small 0.1 share; alluvial cassiterite in Rhine-system gravels, no specific ancient working identified.",
    "deposit_type": "unspecified_placeholder",
-   "status": "historic"
+   "status": "historic",
+   "order": 25
   },
   {
    "id": "cornish_tin_streaming",
@@ -510,7 +535,8 @@
    "endowment_source": "Tin metal of the whole Cornwall and Devon district, production plus remaining, order of magnitude from memory; alluvial streaming was the earliest part.",
    "surveyed_lat": 50.4,
    "surveyed_lon": -4.9,
-   "surveyed_source": "Cornwall tin district, approximate"
+   "surveyed_source": "Cornwall tin district, approximate",
+   "order": 26
   },
   {
    "id": "hispania_tin_generic",
@@ -526,7 +552,8 @@
    "conf": "D",
    "source": "Iberian alluvial cassiterite is attested (geography.json's own located_materials lists hispania among tin's regions) but without a single named ancient working; generic mid-range placer grade.",
    "deposit_type": "unspecified_placeholder",
-   "status": "historic"
+   "status": "historic",
+   "order": 27
   },
   {
    "id": "las_medulas_alluvial",
@@ -549,7 +576,8 @@
    "endowment_source": "Wikipedia (Las Medulas): 5 million Roman pounds (1.64 million kg) in 250 years, a Pliny-based estimate that is probably generous.",
    "surveyed_lat": 42.46,
    "surveyed_lon": -6.77,
-   "surveyed_source": "Las Medulas, Wikipedia"
+   "surveyed_source": "Las Medulas, Wikipedia",
+   "order": 28
   },
   {
    "id": "dacia_vein_gold",
@@ -571,7 +599,8 @@
    "endowment_source": "Rosia Montana gold, historic production plus resource, order of magnitude from memory; regional total not known.",
    "surveyed_lat": 46.31,
    "surveyed_lon": 23.13,
-   "surveyed_source": "Rosia Montana, Wikipedia"
+   "surveyed_source": "Rosia Montana, Wikipedia",
+   "order": 29
   },
   {
    "id": "almaden_cinnabar",
@@ -594,7 +623,8 @@
    "endowment_source": "Mercury produced at Almaden over about two thousand years, order of magnitude from memory.",
    "surveyed_lat": 38.77,
    "surveyed_lon": -4.84,
-   "surveyed_source": "Almaden, Wikipedia"
+   "surveyed_source": "Almaden, Wikipedia",
+   "order": 30
   },
   {
    "id": "monte_amiata_cinnabar",
@@ -616,7 +646,8 @@
    "endowment_source": "Mercury produced at Monte Amiata, order of magnitude from memory.",
    "surveyed_lat": 42.9,
    "surveyed_lon": 11.63,
-   "surveyed_source": "Monte Amiata, Wikipedia"
+   "surveyed_source": "Monte Amiata, Wikipedia",
+   "order": 31
   },
   {
    "id": "timna_copper",
@@ -627,7 +658,8 @@
    "deposit_type": "sandstone_hosted_copper",
    "status": "historic",
    "source": "Wikipedia coordinate; one of the oldest copper workings; no endowment figure.",
-   "conf": "B"
+   "conf": "B",
+   "order": 32
   },
   {
    "id": "falun_copper",
@@ -638,7 +670,8 @@
    "deposit_type": "volcanogenic_massive_sulfide",
    "status": "historic",
    "source": "Wikipedia coordinate; no endowment figure.",
-   "conf": "B"
+   "conf": "B",
+   "order": 33
   },
   {
    "id": "rammelsberg",
@@ -649,7 +682,8 @@
    "deposit_type": "sedimentary_exhalative_lead_zinc",
    "status": "historic",
    "source": "Wikipedia coordinate; no endowment figure.",
-   "conf": "B"
+   "conf": "B",
+   "order": 34
   }
  ]
 }

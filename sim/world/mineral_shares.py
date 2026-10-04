@@ -1,7 +1,7 @@
 """Each region's share of a metal's output, from the tiles its deposits sit on.
 
 A named deposit carries its own share and a position, which resolves to the
-land tile that holds it (data/world/deposits.json). geography.json's region records keep only the
+land tile that holds it (the geography deposit catalogue). geography.json's region records keep only the
 shares not tied to a deposit. A region's total is its own table plus the
 deposits whose tile belongs to it, so a share is stored once, at one place.
 Standalone: reads data files only, never the engine.
@@ -20,7 +20,7 @@ def regional_mineral_shares(
     deposits; a metal the table never lists (gold, mercury) stays out of the
     regional view, as before."""
     deposits_data = (deposits_data if deposits_data is not None
-                     else deposits._load_json(deposits.DEPOSITS_FILE))
+                     else deposits.load_deposit_data())
     regions = {region_id: record for region_id, record in geography["regions"].items()
                if not region_id.startswith("_")}
     shares = {region_id: dict(record.get("minerals") or {})
