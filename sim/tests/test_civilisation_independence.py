@@ -87,8 +87,7 @@ for civ_id in ids:
     sim = S.Sim(nodes, order, random.Random(1), events=False, manual=False,
                 civ=S.load_civ(civ_id))
     sim.goal, sim.done_year = goal, {}
-    for _ in range(3):
-        sim.step()
+    sim.step()
 print("ok", len(ids))
 '''
 

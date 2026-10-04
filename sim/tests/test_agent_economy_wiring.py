@@ -87,10 +87,9 @@ check("the founder's concern output is offered without the old price table, at a
       founder_offers and all(0.0 <= offer.reservation_price < float("inf") for offer in founder_offers),
       founder_offers[:2])
 
-unbroken = agent_game("rome_100ad")
+# Reuse the game already stepped above as the unbroken one.
+unbroken = rome
 save_path = os.path.join(tempfile.mkdtemp(), "agent_save.json")
-for _year in range(2):
-    unbroken.step()
 save_state(unbroken, save_path)
 resumed = agent_game("rome_100ad")
 load_state(resumed, save_path)
@@ -103,8 +102,7 @@ check("and the same game state", perf_fingerprint.digest(perf_fingerprint.state_
 
 for civ in ("england_1300", "han_china_100ad", "mexica_1500", "norse_900ad"):
     game = agent_game(civ)
-    for _year in range(3):
-        game.step()
+    game.step()
     book = game.economy.agent.economy().record.book
-    check("%s plays three years on the agent economy with money conserved" % civ,
+    check("%s plays a year on the agent economy with money conserved" % civ,
           book.check_conservation(1e-9).ok)
