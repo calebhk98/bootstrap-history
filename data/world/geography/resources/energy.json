@@ -1,0 +1,288 @@
+{
+ "_doc": "Resource definitions per sim/geography/resources_catalogue.py. mechanism: mineral_deposit | point_occurrence | surface_stock | biotic_stand. unit: the quantity unit; with grade_basis true, contained quantity = ore tonnes x grade in that unit per tonne (key median_<unit>_per_tonne). deposit_types: {id, deposits_per_million_km2 (per million km2 of fully permissive land, before clustering), tonnage_lognormal {median_tonnes, sigma (ln)}, grade_lognormal, depth_class, small_scale, permissive_when [conditions], envelope [suitability entries], layer_weights [{layer, weights, default, if_missing}], provincial_only (only near catalogue deposits of that type), clusters (false: no boost from neighbours), gem_fraction {median, sigma}}. Densities are tile averages, heuristic stand-ins for a geologic-province layer (e.g. Hasterok 2022) that would replace the relief and climate proxies. Giants beyond the truncation of the lognormal come only from the known-deposit catalogue. Coal, oil and gas: unit tonnes (gas as oil equivalent); barrels and cubic metres convert by unit_factors (heuristic, density-dependent).",
+ "entries": [
+  {
+   "id": "coal",
+   "mechanism": "mineral_deposit",
+   "unit": "tonnes",
+   "deposit_types": [
+    {
+     "id": "coal_seam_outcrop",
+     "deposits_per_million_km2": 50,
+     "tonnage_lognormal": {
+      "median_tonnes": 300000.0,
+      "sigma": 1.8
+     },
+     "depth_class": "surface",
+     "small_scale": true,
+     "envelope": [
+      {
+       "layer": "elevation_mean_m",
+       "optimal": [
+        0,
+        1500
+       ],
+       "tolerated": [
+        0,
+        3500
+       ],
+       "if_missing": true
+      }
+     ],
+     "layer_weights": [
+      {
+       "layer": "koppen_group",
+       "weights": {
+        "A": 0.4,
+        "B": 0.25,
+        "C": 1,
+        "D": 1,
+        "E": 0.1
+       },
+       "default": 0.0,
+       "if_missing": 0.5
+      }
+     ],
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    },
+    {
+     "id": "coal_basin_seams",
+     "deposits_per_million_km2": 5,
+     "tonnage_lognormal": {
+      "median_tonnes": 30000000.0,
+      "sigma": 2.0
+     },
+     "depth_class": "shallow_vein",
+     "envelope": [
+      {
+       "layer": "elevation_mean_m",
+       "optimal": [
+        0,
+        1500
+       ],
+       "tolerated": [
+        0,
+        3500
+       ],
+       "if_missing": true
+      }
+     ],
+     "layer_weights": [
+      {
+       "layer": "koppen_group",
+       "weights": {
+        "A": 0.4,
+        "B": 0.25,
+        "C": 1,
+        "D": 1,
+        "E": 0.1
+       },
+       "default": 0.0,
+       "if_missing": 0.5
+      }
+     ],
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    },
+    {
+     "id": "lignite_beds",
+     "deposits_per_million_km2": 8,
+     "tonnage_lognormal": {
+      "median_tonnes": 10000000.0,
+      "sigma": 1.8
+     },
+     "depth_class": "surface",
+     "envelope": [
+      {
+       "layer": "elevation_mean_m",
+       "optimal": [
+        0,
+        1500
+       ],
+       "tolerated": [
+        0,
+        3500
+       ],
+       "if_missing": true
+      }
+     ],
+     "layer_weights": [
+      {
+       "layer": "koppen_group",
+       "weights": {
+        "A": 0.5,
+        "B": 0,
+        "C": 1,
+        "D": 1,
+        "E": 0
+       },
+       "default": 0.0,
+       "if_missing": 0.5
+      }
+     ],
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    },
+    {
+     "id": "coal_basin_giant",
+     "deposits_per_million_km2": 0.3,
+     "tonnage_lognormal": {
+      "median_tonnes": 500000000.0,
+      "sigma": 1.3
+     },
+     "depth_class": "shallow_vein",
+     "provincial_only": true,
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    }
+   ]
+  },
+  {
+   "id": "oil",
+   "mechanism": "mineral_deposit",
+   "unit": "tonnes",
+   "deposit_types": [
+    {
+     "id": "oil_seep_field",
+     "deposits_per_million_km2": 1.5,
+     "tonnage_lognormal": {
+      "median_tonnes": 50000.0,
+      "sigma": 1.5
+     },
+     "depth_class": "surface",
+     "small_scale": true,
+     "layer_weights": [
+      {
+       "layer": "koppen_group",
+       "weights": {
+        "A": 0.5,
+        "B": 1,
+        "C": 0.8,
+        "D": 0.5,
+        "E": 0
+       },
+       "default": 0.0,
+       "if_missing": 0.5
+      }
+     ],
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    },
+    {
+     "id": "basin_oil_field",
+     "deposits_per_million_km2": 4,
+     "tonnage_lognormal": {
+      "median_tonnes": 2000000.0,
+      "sigma": 2.0
+     },
+     "depth_class": "blind",
+     "layer_weights": [
+      {
+       "layer": "koppen_group",
+       "weights": {
+        "A": 0.6,
+        "B": 1,
+        "C": 1,
+        "D": 1,
+        "E": 0.1
+       },
+       "default": 0.0,
+       "if_missing": 0.5
+      }
+     ],
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    },
+    {
+     "id": "giant_oil_field",
+     "deposits_per_million_km2": 0.3,
+     "tonnage_lognormal": {
+      "median_tonnes": 100000000.0,
+      "sigma": 1.2
+     },
+     "depth_class": "blind",
+     "provincial_only": true,
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    }
+   ],
+   "unit_factors": {
+    "barrels": 0.136
+   }
+  },
+  {
+   "id": "gas",
+   "mechanism": "mineral_deposit",
+   "unit": "tonnes_oil_equivalent",
+   "deposit_types": [
+    {
+     "id": "gas_seep",
+     "deposits_per_million_km2": 1,
+     "tonnage_lognormal": {
+      "median_tonnes": 10000.0,
+      "sigma": 1.5
+     },
+     "depth_class": "surface",
+     "small_scale": true,
+     "layer_weights": [
+      {
+       "layer": "koppen_group",
+       "weights": {
+        "A": 0.5,
+        "B": 1,
+        "C": 0.8,
+        "D": 0.5,
+        "E": 0
+       },
+       "default": 0.0,
+       "if_missing": 0.5
+      }
+     ],
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    },
+    {
+     "id": "basin_gas_field",
+     "deposits_per_million_km2": 3,
+     "tonnage_lognormal": {
+      "median_tonnes": 1500000.0,
+      "sigma": 2.0
+     },
+     "depth_class": "blind",
+     "layer_weights": [
+      {
+       "layer": "koppen_group",
+       "weights": {
+        "A": 0.6,
+        "B": 1,
+        "C": 1,
+        "D": 1,
+        "E": 0.1
+       },
+       "default": 0.0,
+       "if_missing": 0.5
+      }
+     ],
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    },
+    {
+     "id": "giant_gas_field",
+     "deposits_per_million_km2": 0.3,
+     "tonnage_lognormal": {
+      "median_tonnes": 100000000.0,
+      "sigma": 1.2
+     },
+     "depth_class": "blind",
+     "provincial_only": true,
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    }
+   ],
+   "unit_factors": {
+    "cubic_metres": 0.0009
+   }
+  }
+ ]
+}

@@ -1,0 +1,1 @@
+{"_doc": "Six tiles (copied from small_map) with a small resource model and a known-deposit catalogue in the shape the real catalogue uses.", "id": "test_resources_small", "tiles": {"file": "base_tiles.json", "path": []}}
