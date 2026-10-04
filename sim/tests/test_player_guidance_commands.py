@@ -9,7 +9,6 @@ see CLAUDE.md's test-file reorganisation note. Checks moved verbatim; each
 one's own comment explains the break it guards.
 """
 from .harness import *  # noqa: F401,F403
-from .inprocess_agent import proto_in_process as proto
 
 
 # --- BREAK: `available` carried nine numbers and not one of them was the
