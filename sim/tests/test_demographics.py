@@ -109,6 +109,9 @@ check("'population' is in KNOWN_COMMANDS and survives the fog/pointer "
 # which already said this before this fix existed).
 s_fr = sim(capital=50.0, agent_economy=False)
 s_fr.labour.market.press("millwright", 10 * s_fr.HOURS_PER_PERSON_YEAR)
+# Nothing left to spend: a squeezed market now finds only some of a big hire (Complaint 271), and the
+# one it finds would otherwise be affordable, so the refusal this check reads needs an empty purse.
+s_fr.capital = -s_fr.credit_limit()
 ok_fr, msg_fr = s_fr.labour.hire("millwright", 3)
 check("a cash refusal driven by a real price premium says this is one "
       "household's reach into one town's market, not a national figure",
