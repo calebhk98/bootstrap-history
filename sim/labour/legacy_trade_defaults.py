@@ -55,3 +55,6 @@ LETTERED_BUT_NOT_LITERATE = frozenset({"merchant"})
 # The trade whose hours the farm-labour logic owns (its recipe hours are kept out of the non-farm
 # split). It is the fallback trade of the shipped registry; workforce_spinup.py has no registry to ask.
 FARM_TRADE = "labourer"
+
+# The family whose trades count as the household's craftsmen.
+CRAFT_FAMILY = "craft"

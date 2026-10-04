@@ -28,7 +28,7 @@ from sim.constants import declare
 from . import legacy_trade_defaults, trade_data
 from .wage_provider import reference_civilisation
 
-_CRAFT_FAMILY = "craft"  # moves to legacy_trade_defaults
+
 
 
 class _LiterateTrades:
@@ -118,7 +118,7 @@ class CapacityMixin:
     LITERATE_TRADES = _LiterateTrades()
 
     def is_craft_trade(self, trade):
-        return self._world.trade_family(trade) == _CRAFT_FAMILY
+        return self._world.trade_family(trade) == legacy_trade_defaults.CRAFT_FAMILY
     # The literacy this file's trade shares and staff ceilings were already
     # tuned against, before literacy was read anywhere: the default
     # civilisation's own numbers, because every other constant in this economy -
