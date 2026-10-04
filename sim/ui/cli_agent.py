@@ -12,7 +12,8 @@ import json, os, random, sys
 
 from sim.engine.ui_port import load, load_civ, STARTING_KITS
 from sim.engine.ui_port import Sim
-from .protocol import _agent_dispatch, _agent_help, load_state, render_pretty, save_state
+from . import replay
+from .protocol import _agent_dispatch, _agent_end_reason, _agent_help, load_state, render_pretty, save_state
 from sim.engine.ui_port import settings
 from sim.ui.proto import step_progress
 
@@ -64,6 +65,13 @@ def cmd_agent(args):
     sim.fog = bool(getattr(args, "fog", False))
     sim.fuzzy_estimates = bool(getattr(args, "fuzzy_estimates", False))
     sim.revealed = set()
+    route_file = getattr(args, "known_routes", None)
+    if route_file:
+        if not sim.fog:
+            sys.stderr.write(json.dumps({"known_routes": replay.fog_off_note()}) + "\n")
+        else:
+            applied = replay.apply_known_routes(sim, replay.read_known_routes(route_file), nodes)
+            sys.stderr.write(json.dumps({"known_routes_carried": len(applied)}) + "\n")
     pretty = bool(getattr(args, "pretty", False))
 
     session = getattr(args, "session", None)
@@ -143,6 +151,8 @@ def cmd_agent(args):
             # happened, the same as the stdin loop below.
             if session:
                 save_state(sim, session)
+                if _agent_end_reason(sim):
+                    replay.record_end_of_run(sim, session)
             try:
                 emit(resp, command_obj.get("cmd") if isinstance(command_obj, dict) else None)
             except BrokenPipeError:
@@ -193,6 +203,8 @@ def cmd_agent(args):
         # that promise.
         if session:
             save_state(sim, session)
+            if _agent_end_reason(sim):
+                replay.record_end_of_run(sim, session)
         try:
             emit(resp, cmd.get("cmd") if isinstance(cmd, dict) else None)
         except (BrokenPipeError, OSError):

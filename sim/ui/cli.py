@@ -1536,6 +1536,9 @@ def main():
     subparser.add_argument("--kit", default="poor_scholar",
                    help="starting wealth: " + ", ".join(STARTING_KITS))
     subparser.add_argument("--fog", action="store_true")
+    subparser.add_argument("--known-routes", dest="known_routes", default=None,
+                   help="a known-routes file written at the end of an earlier run: lifts fog "
+                        "only for the technologies it names (needs --fog); nothing is given")
     subparser.add_argument("--fuzzy-estimates", dest="fuzzy_estimates", action="store_true",
                    default=None,
                    help="show what unfinished work will need as estimates that tighten as you go; overrides the settings default")
@@ -1590,6 +1593,9 @@ def main():
     subparser.add_argument("--fog", action="store_true",
                    help="fog of war: you see what you have built and what you could "
                         "begin next, and nothing about where any of it leads")
+    subparser.add_argument("--known-routes", dest="known_routes", default=None,
+                   help="a known-routes file written at the end of an earlier run: lifts fog "
+                        "only for the technologies it names (needs --fog); nothing is given")
     subparser.add_argument("--fuzzy-estimates", dest="fuzzy_estimates", action="store_true",
                    help="staff, hours, money and calendar needs of unfinished work are "
                         "shown as labelled estimates that tighten as you start and finish "
