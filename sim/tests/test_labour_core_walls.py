@@ -10,7 +10,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 LABOUR_DIR = os.path.join(ROOT, "sim", "labour")
 MARKET_DIR = os.path.join(LABOUR_DIR, "market")
 
-# Existing engine imports in sim/labour, pinned so new ones fail; a complaint is to be filed to remove them.
+# Existing engine imports in sim/labour, pinned so new ones fail (Complaints/404 removes them).
 KNOWN_VIOLATIONS = {
     ("sim/labour/wage_provider.py", "sim.engine.solve_prices_core"),
     ("sim/labour/workforce_spinup.py", "sim.engine.solve_prices_core"),
