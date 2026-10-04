@@ -1,7 +1,7 @@
 """Progress toward the formal goal and any goals the player chooses to watch (Complaint 268).
 
 A watched goal is tracked here only; `sim.goal`, the score and the end text stay with the formal
-goal (Complaint 404). Under fog a goal the player cannot know is a count, never a name."""
+goal (Complaint 411). Under fog a goal the player cannot know is a count, never a name."""
 import weakref
 
 from sim.engine import ui_port

@@ -1,4 +1,4 @@
-"""What controls a measurement goal's number right now (Complaints/69, 404).
+"""What controls a measurement goal's number right now (Complaints/69, 411).
 
 A registry maps a metric name, or a win_condition `source` kind, to a function
 returning rows {label, value, unit, note}. A metric with no entry gets the
@@ -164,7 +164,7 @@ def anatomy_for(sim, condition, description=None):
              "current": None if current is None else round(current, 4),
              "target": _target(condition, current), "rows": rows, "generic": builder is None}
     if builder is None:
-        reply["note"] = ("no breakdown is available for this metric yet (Complaint 404); "
+        reply["note"] = ("no breakdown is available for this metric yet (Complaint 411); "
                          "the target and current value are all the game reports")
     return reply
 

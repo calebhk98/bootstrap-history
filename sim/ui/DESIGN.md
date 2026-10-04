@@ -11,7 +11,7 @@ in `docs/architecture/PACKAGE_WALLS.md`.
 - **Logic stays out of renderers.** If a screen needs a number, the handler puts it in the reply.
 - **What the UI remembers beyond the engine's save** (notes, extra goals, programmes) goes through
   `memory.remembered(sim, topic)`, and every save and load goes through `memory.save_state` /
-  `memory.load_state`. Where it is stored is that module's business (Complaint 401).
+  `memory.load_state`. Where it is stored is that module's business (Complaint 408).
 - **No content ids.** Screens read names, currencies, goals, trades and materials from data or the
   engine. Mods add content without touching `sim/ui/`.
 

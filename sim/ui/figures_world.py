@@ -1,6 +1,6 @@
 """Figures about the society around the founder: wages, state notice, epidemics, project throughput.
 
-The engine records no cause for these (Complaints/402), so each gives the value and the live
+The engine records no cause for these (Complaints/409), so each gives the value and the live
 drivers; whatever the change leaves unexplained shows as the "not itemised" line.
 """
 import sim.engine.ui_port as ui_port

@@ -2,7 +2,7 @@
 
 Each feature asks `remembered(sim, topic)` for its own JSON-shaped dict and never sees where it is
 kept. It lives in memory beside the `Sim` and is written into the save's session sidecar under one
-key, until the save carries a slot the UI owns (Complaint 401). `save_state` and `load_state` here
+key, until the save carries a slot the UI owns (Complaint 408). `save_state` and `load_state` here
 wrap the engine's, so every save the UI makes carries the memory with it, forks included.
 """
 import copy

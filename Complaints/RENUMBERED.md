@@ -325,3 +325,14 @@ Old issue numbers (in commit messages, reports and history) and the number each 
 663 -> 353  goods-only-a-partner-makes-open-at-the-ceiling-price
 675 -> 354  the-founders-takeoff-needs-costs-that-lag-the-economy-index
 690 -> 355  engine-code-reads-a-civilisation-from-disk-by-id
+
+## 2026-10-04
+
+Filed on `ui-disclosure-and-inspectors` at the same time as main's 401-407.
+
+401 -> 408  ui-needs-its-own-slot-in-the-save
+402 -> 409  engine-keeps-no-causes-for-wages-closures-and-notice
+403 -> 410  automation-records-no-skipped-actions-or-modes
+404 -> 411  goals-have-one-id-one-reach-year-and-no-anatomy-hook
+405 -> 412  mods-cannot-add-figures-or-screen-rows-through-data
+406 -> 413  units-json-has-no-rule-for-mass-per-year-fields
