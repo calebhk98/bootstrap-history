@@ -16,6 +16,7 @@ from sim.geography.api import cargo_cost, freight_cost
 from .data import STARTING_KITS
 from sim.agents.api import SAVING_SHARE_OF_SURPLUS
 from .foreign_payments import OPENING_CARRIERS_PER_ROUTE
+from .foreign_routes import SEA_MODE
 
 MERCHANTS_BORROWER = "merchants"
 
@@ -62,7 +63,7 @@ class ForeignTradersMixin:
         """Share of cargo lost on the route: the hull loss rate over its sea legs."""
         if route is None:
             return 0.0
-        sailed_km = sum(leg.distance_km for leg in route.legs if leg.mode == "sea")
+        sailed_km = sum(leg.distance_km for leg in route.legs if leg.mode == SEA_MODE)
         return cargo_cost.sea_loss_share(freight_cost.HULL_LOSS_PER_THOUSAND_KM, sailed_km)
 
     def _cargo_lost_share(self, route, material=None, civilization_id=None):
