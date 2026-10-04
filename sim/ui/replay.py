@@ -50,7 +50,8 @@ def apply_known_routes(sim, route_ids, node_ids):
         return []
     applied = sorted(set(route_ids) & set(node_ids))
     sim.revealed = set(sim.revealed) | set(applied)
-    remembered(sim, TOPIC)["carried"] = applied
+    memory = remembered(sim, TOPIC)
+    memory["carried"] = sorted(set(memory.get("carried", [])) | set(applied))
     return applied
 
 

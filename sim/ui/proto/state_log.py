@@ -1,5 +1,5 @@
 """The event log reply: failure markers, filters, paging and _agent_log."""
-from .notes_store import note_log_rows
+from .notes_store import NoteLine, note_log_rows
 
 
 
@@ -23,6 +23,8 @@ def _is_failure_line(msg):
     # death MEANS rather than only that it happened, and silently stopped
     # being a failure line here, in `log failures`, which is the one screen a
     # player checks to find out what went wrong.
+    if isinstance(msg, NoteLine):
+        return False
     _low = msg.lower()
     return any(marker.lower() in _low for marker in _FAILURE_MARKERS)
 
@@ -39,6 +41,8 @@ def _log_scrub(sim, text):
     id - "completed: Horizontal loom", not "completed: tex_horizontal_loom" -
     so this also strips NAMES of anything not currently visible.
     """
+    if isinstance(text, NoteLine):
+        return text
     text = sim.fog_scrub(text)
     if not sim.fog or not text:
         return text

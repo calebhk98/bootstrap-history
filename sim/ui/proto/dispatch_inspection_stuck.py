@@ -286,7 +286,7 @@ def _cmd_stuck(sim, nodes, cmd, ended):
         out["goal_path_is_calendar_bound"] = _calendar
     else:
         out["lever_figures"] = lever_line(sim)
-    _filler = filler_note(sim, out["and_the_cheapest_thing_you_could_start_now"])
+    _filler = filler_note(sim, out["and_the_cheapest_thing_you_could_start_now"], nodes)
     if _filler:
         out["the_cheapest_start_is_filler"] = _filler
     if _stall:

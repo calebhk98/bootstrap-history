@@ -65,13 +65,6 @@ def cmd_agent(args):
     sim.fog = bool(getattr(args, "fog", False))
     sim.fuzzy_estimates = bool(getattr(args, "fuzzy_estimates", False))
     sim.revealed = set()
-    route_file = getattr(args, "known_routes", None)
-    if route_file:
-        if not sim.fog:
-            sys.stderr.write(json.dumps({"known_routes": replay.fog_off_note()}) + "\n")
-        else:
-            applied = replay.apply_known_routes(sim, replay.read_known_routes(route_file), nodes)
-            sys.stderr.write(json.dumps({"known_routes_carried": len(applied)}) + "\n")
     pretty = bool(getattr(args, "pretty", False))
 
     session = getattr(args, "session", None)
@@ -100,6 +93,15 @@ def cmd_agent(args):
                  "into it. This run is autosaving to %s instead."
                  % (checkpoint_source, session)}) + "\n")
             sys.stderr.flush()
+
+    # after the load, so a resumed game keeps its carried routes
+    route_file = getattr(args, "known_routes", None)
+    if route_file:
+        if not sim.fog:
+            sys.stderr.write(json.dumps({"known_routes": replay.fog_off_note()}) + "\n")
+        else:
+            applied = replay.apply_known_routes(sim, replay.read_known_routes(route_file), nodes)
+            sys.stderr.write(json.dumps({"known_routes_carried": len(applied)}) + "\n")
 
     def emit(obj, command_name=None):
         # THE JSON LINE IS UNCHANGED, ALWAYS, REGARDLESS OF --pretty. It is

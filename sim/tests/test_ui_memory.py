@@ -57,3 +57,10 @@ with tempfile.TemporaryDirectory() as folder:
     memory.load_state(later, bare)
     check("loading a save with no sidecar forgets the previous game's memory",
           memory.remembered(later, "notes") == {})
+
+with tempfile.TemporaryDirectory() as folder:
+    read_only = _Game()
+    memory.remembered(read_only, "programme")  # a read creates an empty topic
+    path = os.path.join(folder, "read.json")
+    memory.save_state(read_only, path)
+    check("topics only read, never written, leave no sidecar", not os.path.exists(path + ".meta.json"))

@@ -37,7 +37,7 @@ def merge_session_meta(path, fields):
 
 def save_state(sim, path):
     engine_save_state(sim, path)
-    memory = _MEMORY.get(sim) or {}
+    memory = {topic: kept for topic, kept in (_MEMORY.get(sim) or {}).items() if kept}  # reads create empties
     meta = dict(settings.load_session_meta(path))
     if not memory and SIDECAR_KEY not in meta:
         return

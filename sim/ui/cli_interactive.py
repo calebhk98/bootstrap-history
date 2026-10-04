@@ -218,7 +218,7 @@ def _play_build_sim(args):
         asked_fuzzy = fresh_game and bool(app_cfg.get("default_fuzzy_estimates", False))
     sim.fuzzy_estimates = bool(asked_fuzzy)
     sim.revealed = set()
-    _carry_known_routes(sim, args, nodes)
+    # known routes are applied in _play_resolve_session, after any save is loaded
     # The reader is a person typing words, so the worked examples inside every
     # reply should be words too. See protocol.to_typed_hints.
     _protocol.TYPED_HINTS = True
@@ -291,6 +291,8 @@ def _play_resolve_session(args, sim, session):
             session = _pick_session_filename(sim.civ.get("id") or "game")
         else:
             print("Resumed from %s: %d AD." % (session, sim.year))
+    # after the load, so a resumed game keeps its carried routes (the load restores its own)
+    _carry_known_routes(sim, args, sim.nodes)
 
     if (fresh or checkpoint_source) and session:
         # WRITE IT NOW, not after the first command. The menu tells the player

@@ -2,6 +2,7 @@
 
 from sim.ui.memory import remembered
 from .dispatch_ventures import _cmd_rush
+from .programme_draw import remember_starts, standing_draw
 from .pursue import CAP_KEYS, route_order, rush_command
 
 TOPIC = "programme"
@@ -31,6 +32,8 @@ def pause_reason(sim, programme):
     floor = programme.get("caps", {}).get("reserve_cash")
     if floor is not None and sim.capital < floor:
         return "cash is below the reserve floor"
+    if floor is not None and sim.capital - standing_draw(sim, programme) < floor:
+        return "cash after this year's standing draw would fall below the reserve floor"
     return None
 
 
@@ -43,6 +46,11 @@ def _year_rush(sim, programme):
         if left <= 1e-9:
             return None, "total cap reached"
         caps["max_total_cost"] = left
+    if caps.get("max_annual_draw") is not None:
+        room = caps["max_annual_draw"] - standing_draw(sim, programme)
+        if room <= 1e-9:
+            return None, "annual draw cap used up by projects it already started"
+        caps["max_annual_draw"] = room
     target = programme["target"]
     if target["kind"] == "goal":
         if target["value"] in sim.done:
@@ -75,6 +83,7 @@ def programme_before_year(sim, nodes):
     row["spent"] = result["total_cost"]
     row["skipped"] = [{"id": item["id"], "why": item["why"]} for item in result["not_started"][:SKIPPED_SHOWN]]
     row["skipped_count"] = result["count_not_started"]
+    remember_starts(programme, result["started"])
     programme["committed"] = programme.get("committed", 0.0) + result["total_cost"]
     if not row["started"]:
         row["did_nothing_because"] = "nothing fit the caps or exclusions"

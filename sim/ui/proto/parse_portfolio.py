@@ -15,7 +15,7 @@ def _parse_portfolio(command, rest, words, nums, want_json):
         elif text not in ("json", "compact"):
             group_words.append(text)
     if group_words:
-        out["group"] = "_".join(group_words)
+        out["group"] = " ".join(group_words)
     return out, None
 
 

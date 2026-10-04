@@ -55,9 +55,14 @@ def calendar_bound_advice(sim, nodes):
             "side_work": list(SIDE_WORK), "lever_figures": lever_line(sim)}
 
 
-def filler_note(sim, cheapest_id):
-    """Tell the player when the suggested start is only the cheapest thing, and name a savings target."""
-    if cheapest_id is None:
+def filler_note(sim, cheapest_id, nodes):
+    """Tell the player when the suggested start is off the goal's route, and name a savings target.
+
+    Silent under fog (the route is hidden) and for a start that is on the remaining route.
+    """
+    if cheapest_id is None or sim.fog or sim.goal not in nodes:
+        return None
+    if cheapest_id in closure(nodes, sim.goal) - sim.done:
         return None
     note = ("%s is only the cheapest startable thing, not a step toward your goal: filler unless you "
             "want it for its own sake." % cheapest_id)

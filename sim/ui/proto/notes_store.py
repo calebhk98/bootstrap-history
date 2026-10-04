@@ -46,9 +46,13 @@ def all_notes(sim):
     return [dict(row) for row in _store(sim)["rows"]]
 
 
+class NoteLine(str):
+    """A log line that is the player's own note: never a failure line, never fog-scrubbed."""
+
+
 def note_log_rows(sim):
     """(year, text) rows in the shape of the household log, for merging into `log`."""
-    return [(row["year"], NOTE_PREFIX + row["text"]) for row in _store(sim)["rows"]]
+    return [(row["year"], NoteLine(NOTE_PREFIX + row["text"])) for row in _store(sim)["rows"]]
 
 
 def notes_for(sim, node_id):

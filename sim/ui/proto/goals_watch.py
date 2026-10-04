@@ -2,13 +2,15 @@
 
 A watched goal is tracked here only; `sim.goal`, the score and the end text stay with the formal
 goal (Complaint 404). Under fog a goal the player cannot know is a count, never a name."""
+import weakref
+
 from sim.engine import ui_port
 from sim.ui import memory
 from .nodes import _norm_name
 
 TOPIC = "goals_watch"
 MAX_WATCHED = 25
-_TREE = []   # the tree is read once, on first use
+_TREES = weakref.WeakKeyDictionary()  # sim -> its tree, read once per game
 
 
 def _watched_ids(sim):
@@ -16,9 +18,9 @@ def _watched_ids(sim):
 
 
 def _catalog(sim):
-    if not _TREE:
-        _TREE.append(ui_port.load()[0])
-    return [goal for goal in ui_port.selectable_goals(_TREE[0], sim.nodes) if goal["node"] in sim.nodes]
+    if sim not in _TREES:
+        _TREES[sim] = ui_port.load()[0]
+    return [goal for goal in ui_port.selectable_goals(_TREES[sim], sim.nodes) if goal["node"] in sim.nodes]
 
 
 def _knowable(sim, node_id):

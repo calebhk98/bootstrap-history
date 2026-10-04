@@ -59,8 +59,11 @@ def _set(sim, cmd):
         if limit < 1:
             return {"ok": False, "error": "limit must be at least 1"}
     programme = state(sim)
+    same = programme.get("target") == target and programme.get("caps") == caps
+    kept = {key: programme[key] for key in ("committed", "started_ids") if same and key in programme}
     programme.clear()
     programme.update(target=target, caps=caps, limit=limit, paused=False, committed=0.0)
+    programme.update(kept)
     return dict(_describe(sim), note="programme set; it acts each year inside 'step'")
 
 
