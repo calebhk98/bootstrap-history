@@ -453,7 +453,7 @@ _named = [line.split("--session")[1].strip()
 check("the menu's chosen session file actually exists on disk after playing",
       _named and os.path.exists(_named[0]), (_named[:1], len(_saved)))
 check("the menu drops straight into a playable session, no extra prompt",
-      _pm.returncode == 0 and "YEAR" in _pm.stdout and "RUNNING" in _pm.stdout,
+      _pm.returncode == 0 and "YEAR" in _pm.stdout and "WHAT YOU CAN DO NOW" in _pm.stdout,
       _pm.stdout[-300:])
 check("the mortality choice made in the menu reaches the actual game",
       "aged about" in _pm.stdout, _pm.stdout[-300:])
@@ -2271,7 +2271,7 @@ check("...and says so plainly when it took nothing",
 
 # 6. `bribe` sells protection, protection decides whether strange work reads as
 #    learning or as sorcery, and it appeared on no screen and in no help topic.
-_pr, _ = _play(["state", "bribe 700", "state", "quit"],
+_pr, _ = _play(["state full", "bribe 700", "state full", "quit"],
                civ="rome_100ad", extra=["--kit", "equestrian"])
 _lines = [line for line in _pr.splitlines() if "STANDING:" in line]
 check("protection is on the screen that shows your standing",

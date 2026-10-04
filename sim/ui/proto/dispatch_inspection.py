@@ -10,6 +10,7 @@ from .nodes import _did_you_mean
 from .notes_store import notes_for
 from .score import final_report, score_report
 from .score_change import attach_change_since_last_score
+from .render_screen_state_views import SECTIONS
 from .state import _agent_state
 from .state_log import _agent_log
 from .techtree import _agent_available, _node_explain
@@ -18,12 +19,18 @@ from .techtree import _agent_available, _node_explain
 @command("state", group="overview", aliases=("s", "st", "status"),
          summary="where you stand",
          usage=["state", "state full", "state compact"],
-         options={"full": "include every field, not only the headline ones",
+         options={"full": "every section and field, not only the headline ones",
+                  "<section>": "one section of the screen (the reply's `sections` lists them)",
                   "json / compact": "json is the raw reply; compact is a short summary (year, money, net_per_year, founder_hours_free, projects with blockers, concerns, standing, danger, nearest_goal_blocker)"},
          description="Year, money, income, founder hours, active projects with "
                      "what each is waiting on, and what to look at next.")
 def _cmd_state(sim, nodes, cmd, ended):
     out = dict(ok=True, **_agent_state(sim, nodes, cmd))
+    # a screen view: short unless `full` or a section name was asked for
+    view = cmd.get("view") or ("full" if cmd.get("full") else "short")
+    if view != "full":
+        out["state_view"] = view
+        out["sections"] = list(SECTIONS)
     if out.get("you_know_how_to_run_but_have_not_opened") and already_explained(sim, "shut_concerns_pointer", cmd):
         out["shut_concerns_pointer_seen"] = True
     return out
