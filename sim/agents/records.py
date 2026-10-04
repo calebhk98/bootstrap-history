@@ -96,6 +96,10 @@ class ActorRecord:
 	offers: List[Dict[str, Any]] = field(default_factory=list)
 	offer_serial: int = 0
 
+	# ---- a state's tax on bodies of people: stratum id -> the earned income (cumulative) it has
+	# already assessed, so each year's income is assessed once
+	income_assessed: Dict[str, float] = field(default_factory=dict)
+
 
 @dataclass
 class CapitalMarketRecord:
