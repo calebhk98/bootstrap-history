@@ -3,7 +3,7 @@
 **Status:** open - data (`data/world/needs.json`) and an economy mechanism to design
 
 Measured on the agent economy (scratch driver replaying the deleted `sim/economy_validate.py`,
-30 years, seeds 1-3; no command prints it yet, Complaint 407): the median gold-to-silver price ratio
+30 years, seeds 1-3; no command prints it yet, Complaint 416): the median gold-to-silver price ratio
 is about 6 in England, far below one in Rome, and in the thousands to tens of thousands in Han,
 Mexica and Norse, where gold barely trades; the attested ratio is around 10-15 (see
 `Complaints/reports/economy-research-extraction-and-money-metals.md`, weak sources). Gold's price
@@ -17,7 +17,7 @@ Why:
   only in coin and loans (`households_orders.savings_target`), so a metal's price is set by a year's
   flow against a thin ornament demand, not by willingness to hold the stock, which was dozens of years
   of output;
-- goods are not durable in the economy at all (Complaint 405), so an ornament bought is used up.
+- goods are not durable in the economy at all (Complaint 414), so an ornament bought is used up.
 
 What it would take:
 - data: an ornament effectiveness that is not equal per kg, or better, none needed: a store-of-value

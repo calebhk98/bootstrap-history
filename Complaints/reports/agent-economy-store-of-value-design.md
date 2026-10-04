@@ -1,4 +1,4 @@
-# Design: households hold part of their savings in durable stores of value (Complaint 404)
+# Design: households hold part of their savings in durable stores of value (Complaint 413)
 
 A design written by a research agent in economy round four. Labels: **[read]**, **[snippet]**,
 **[memory]** (unverified). Steps 1-3 are being built; steps 4-7 wait for measurement.
@@ -22,7 +22,7 @@ A design written by a research agent in economy round four. Labels: **[read]**, 
 
 ## The rule (sim/economy only, keyed on GoodSpec fields and prices)
 - **Candidates.** A good counts when it is durable (`service_life_years > 0`, which needs Complaint
-  405), barely spoils, has a mass, and is dense in value against the staple per kg.
+  414), barely spoils, has a mass, and is dense in value against the staple per kg.
 - **Choice.** Each candidate is weighted by (1 / carry cost share) ** an elasticity. The carry cost
   share counts spoilage, wear and storage per unit of value. The elasticity must stay below one:
   otherwise a price rise raises its own demand.

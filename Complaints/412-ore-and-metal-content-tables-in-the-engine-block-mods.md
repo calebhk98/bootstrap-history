@@ -14,4 +14,4 @@ smelting link is already in the production data (a recipe's inputs).
 
 What it would take: a `feeds` (or `ore_good`) field on deposit entries, read by geography; the
 solver and the founder's mines read the link from data; the three tables go. The agent economy
-needs none of this: it takes site limits per recipe (Complaint 402).
+needs none of this: it takes site limits per recipe (Complaint 411).

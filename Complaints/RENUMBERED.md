@@ -325,3 +325,17 @@ Old issue numbers (in commit messages, reports and history) and the number each 
 663 -> 353  goods-only-a-partner-makes-open-at-the-ceiling-price
 675 -> 354  the-founders-takeoff-needs-costs-that-lag-the-economy-index
 690 -> 355  engine-code-reads-a-civilisation-from-disk-by-id
+
+## 2026-10-04
+
+Economy round four filed 401-409 while the multiplayer work filed 401-407 on main; main's numbers stand.
+
+401 -> 410  the-engine-port-reaches-past-the-economy-surface
+402 -> 411  the-port-does-not-hand-the-economy-site-limits-or-read-its-extraction
+403 -> 412  ore-and-metal-content-tables-in-the-engine-block-mods
+404 -> 413  gold-is-valued-like-silver-and-nobody-holds-it-as-wealth
+405 -> 414  goods-service-lives-never-reach-the-economy
+406 -> 415  danger-pay-is-always-zero
+407 -> 416  no-command-prints-the-economys-health
+408 -> 417  the-port-names-the-labourer-trade
+409 -> 418  economy-agents-doc-predates-exit-location-and-margin-entry

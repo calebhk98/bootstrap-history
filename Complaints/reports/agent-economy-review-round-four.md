@@ -1,13 +1,13 @@
 # The agent economy, round four
 
 Follows `agent-economy-review-round-three.md`. Again only `sim/economy/`, new tests and new files in
-`Complaints/` could change; what needs other folders is filed as complaints 401-408.
+`Complaints/` could change; what needs other folders is filed as complaints 410-418.
 
 ## How it was measured
 
 - **Whole games:** a scratch driver replaying the deleted `sim/economy_validate.py` (`git show
   97473f1:sim/economy_validate.py`). It plays 30 years per civilisation and seed and adds gold, silver
-  and iron columns. No committed command prints these yet (Complaint 407). The figures are now pure
+  and iron columns. No committed command prints these yet (Complaint 416). The figures are now pure
   functions in `sim/economy/diagnostics.py`, ready for that command.
 - **Caution on seeds:** they still share one spin-up per civilisation (Complaint 400), so a seed is
   not an independent draw.
@@ -37,7 +37,7 @@ Follows `agent-economy-review-round-three.md`. Again only `sim/economy/`, new te
 - **Mines could not be sited.**
   - Deposits are geography's. The economy takes `SiteLimit`s (capacity and yield per recipe and
     tile) and reports `YearOutcome.extraction` (`sites.py`).
-  - Until the port is wired (Complaint 402), sited recipes keep today's placement under the
+  - Until the port is wired (Complaint 411), sited recipes keep today's placement under the
     declared heuristic `UNSITED_EXTRACTION_ANYWHERE`.
 - **Crops grew in any climate.**
   - Cacao, Mexica's money and a food, filled highland tiles.
@@ -69,7 +69,7 @@ Follows `agent-economy-review-round-three.md`. Again only `sim/economy/`, new te
   - the hunger need and unskilled trade come from the setup.
 - **Tests:** the 19 round-three scratch tests are in the suite (396). Agent-economy equivalents
   cover the state budget, the loanable rate and foreign balances (389, partly). The economy has a
-  published surface, `api.py` (Complaint 401 holds the port patch), with hours-weighted trade wages
+  published surface, `api.py` (Complaint 410 holds the port patch), with hours-weighted trade wages
   for 394.
 
 ## Measured, 30 years, seeds 1-2
@@ -96,8 +96,8 @@ Reading it:
 - Grain swings more than with exit and location alone. Whether that is margin entry or another
   change is being measured; this section is updated with the answer below.
 - Mexica's hunger is worse than the baseline and is being traced.
-- Gold is still wrong everywhere: Complaint 404 (gold valued like silver per kg, no store-of-value
-  demand) and 405 (no good is durable in the economy). Neither is a market-clearing defect.
+- Gold is still wrong everywhere: Complaint 413 (gold valued like silver per kg, no store-of-value
+  demand) and 414 (no good is durable in the economy). Neither is a market-clearing defect.
 
 ## Tried and not merged
 
@@ -132,8 +132,8 @@ Reading it:
 
 ## Left to do
 
-- Complaints 402-408 (port, geography and data).
-- 404/405 (gold and durables).
+- Complaints 411-417 (port, geography and data).
+- 413/414 (gold and durables).
 - 392 (several moneys: design in `agent-economy-several-moneys.md`).
 - 106 (banks: design in `agent-economy-capital-markets.md`).
 - 385 (needs an owner decision).
