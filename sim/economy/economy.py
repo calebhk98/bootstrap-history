@@ -4,7 +4,7 @@
 `step(inputs)` runs a year and returns what the engine reads back.
 """
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Dict, Optional
 
 from . import credit, credit_claims, labour, land_market, lending, merchants_credit, producers, state_budget, unit_cost
@@ -44,6 +44,17 @@ class YearOutcome:
     conservation_residual: float = 0.0
     state_cash: float = 0.0
     money_audit: Optional[MoneyAudit] = None       # where money entered and left this year
+
+
+def plant_worth_ratio(yearly_return: float, rate: float, life_years: float) -> float:
+    """What a plant earning `yearly_return` per unit of its cost for its whole life is worth, as a multiple
+    of that cost, discounted at `rate`: an annuity, so a rate near zero is bounded by the plant's life. A
+    plant that does not wear out has no life to bound it, so it earns no ceiling above its cost."""
+    if life_years <= 0.0:
+        return 1.0
+    if rate <= 1e-9:
+        return yearly_return * life_years
+    return yearly_return * -math.expm1(-life_years * math.log1p(rate)) / rate
 
 
 class Economy:
@@ -140,8 +151,8 @@ class Economy:
             if before <= 0.0 or after == before:
                 continue
             scale = after / before
-            record.cohorts[cohort_id] = type(cohort)(**{**cohort.__dict__, "people": cohort.people * scale,
-                                                        "working_people": cohort.working_people * scale})
+            record.cohorts[cohort_id] = replace(cohort, people=cohort.people * scale,
+                                                  working_people=cohort.working_people * scale)
         for tile, workforce in record.workforce.items():
             before = people_now.get(tile, 0.0)
             after = inputs.population_by_tile.get(tile, before)
@@ -153,7 +164,7 @@ class Economy:
         for producer_id, factor in inputs.yield_factor_by_producer.items():
             producer = self.record.producers.get(producer_id)
             if producer is not None and producer.yield_factor != factor:
-                self.record.producers[producer_id] = type(producer)(**{**producer.__dict__, "yield_factor": factor})
+                self.record.producers[producer_id] = replace(producer, yield_factor=factor)
 
     def _own_plot_options(self):
         if self._own_options is None:
@@ -227,7 +238,12 @@ class Economy:
         merchants_credit.stake(record.merchants, {loan.borrower: loan.principal for loan in loans})
         lending.bid_household_loans(setup, record, view, ledger, loans, order_book, priced_by_tile)
         asked = {request.borrower: request.amount for request in requests}
-        worth = {request.borrower: request.maximum_rate / max(rate, 1e-9) for request in requests}
+        worth = {}
+        for request in requests:
+            producer = record.producers.get(request.borrower)
+            if producer is not None:
+                worth[request.borrower] = plant_worth_ratio(request.maximum_rate, rate,
+                                                            setup.recipes[producer.recipe_id].plant_life_years)
         plant_runs: Dict[str, float] = {}
         for loan in loans:
             producer = record.producers.get(loan.borrower)
@@ -261,7 +277,8 @@ class Economy:
             cash = record.book.balance(producer_id, money)
             if not earning > rate or cash <= 0.0:
                 continue
-            self._bid_for_plant(producer, runs, cash, earning / rate, view, order_book)
+            self._bid_for_plant(producer, runs, cash, plant_worth_ratio(earning, rate, recipe.plant_life_years),
+                                view, order_book)
             rebuilt[producer_id] = runs
         return rebuilt
 
@@ -287,15 +304,14 @@ class Economy:
                 continue
             recipe = setup.recipes[producer.recipe_id]
             share = 1.0
-            moves = []
-            for good, per_run in sorted(recipe.plant_goods.items()):
+            for good, per_run in recipe.plant_goods.items():
                 wanted = per_run * runs
-                held = record.book.stock(producer_id, good, producer.tile)
-                used = min(wanted, held)
-                share = min(share, used / wanted if wanted > 0.0 else 1.0)
-                if used > 0.0:
-                    moves.append(GoodsMove(producer_id, EDGE_CONSUMPTION, good, producer.tile, used, "built into plant"))
-            record.book.move_many(moves)
+                if wanted > 0.0:
+                    share = min(share, record.book.stock(producer_id, good, producer.tile) / wanted)
+            # only the goods the capacity actually built uses are consumed; the rest stays in stock
+            record.book.move_many([GoodsMove(producer_id, EDGE_CONSUMPTION, good, producer.tile, per_run * runs * share,
+                                             "built into plant")
+                                   for good, per_run in sorted(recipe.plant_goods.items()) if per_run * runs * share > 0.0])
             record.producers[producer_id] = producers.with_capacity(producer, producer.capacity_runs + runs * share)
 
     def _outcome(self, ledger: YearLedger, level: float) -> YearOutcome:

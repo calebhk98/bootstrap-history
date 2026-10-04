@@ -108,7 +108,7 @@ def clear(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: Area
     demand = _demand_function(bids)
 
     if demand(effective[0]) <= 0.0:
-        lowest = offers[0].reservation_price
+        lowest = effective[0]
         price = held_price if last_price is not None and lowest <= last_price else lowest
         supply = math.fsum(offer.quantity for offer, reservation in zip(offers, effective)
                            if reservation <= max(price, minimum_price))
