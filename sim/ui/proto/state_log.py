@@ -1,4 +1,5 @@
 """The event log reply: failure markers, filters, paging and _agent_log."""
+from .notes_store import note_log_rows
 
 
 
@@ -195,7 +196,7 @@ def _agent_log(sim, cmd=None):
     suggested, and there is no `all:true` here the way `available` has one.
     """
     cmd = cmd or {}
-    log = list(sim.log or [])
+    log = sorted(list(sim.log or []) + note_log_rows(sim), key=lambda row: row[0])  # notes join their year
     only_fail, find, since, before = _agent_log_parse_filters(cmd)
     order, limit, offset = _agent_log_parse_paging(cmd)
     rows = _agent_log_filter_rows(log, since, before, only_fail)

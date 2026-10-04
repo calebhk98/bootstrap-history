@@ -916,3 +916,15 @@ def _parse_command_body(command, rest, words, nums, want_json):
     # Any command added to KNOWN_COMMANDS that this parser has not been taught
     # about still reaches the dispatcher rather than being refused here.
     return {"cmd": command}, None
+
+
+# Every parse_*.py module in this package adds its commands' parsers to _COMMAND_PARSERS when
+# imported; they are found by name, so a new command's parser needs no edit here.
+def _load_parser_modules():
+    import importlib, os, pkgutil
+    for module_info in sorted(pkgutil.iter_modules([os.path.dirname(__file__)]), key=lambda info: info.name):
+        if module_info.name.startswith("parse_"):
+            importlib.import_module("%s.%s" % (__package__, module_info.name))
+
+
+_load_parser_modules()

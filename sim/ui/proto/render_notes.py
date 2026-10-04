@@ -1,5 +1,4 @@
 """Text views of the note and notes replies."""
-from . import parse_notes_goals  # noqa: F401  (teaches the typed parser these commands)
 from .render_registry import renders
 
 

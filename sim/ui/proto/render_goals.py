@@ -1,5 +1,4 @@
 """Text view of the goals reply."""
-from . import parse_notes_goals  # noqa: F401  (teaches the typed parser this command)
 from .render_registry import renders
 
 HIDDEN_NAME = "a goal you have not learned the name of"

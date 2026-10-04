@@ -272,6 +272,11 @@ def _why_unlocks_downstream(out):
     return lines
 
 
+def _why_notes(out):
+    notes = out.get("your_notes") or []
+    return ["", "YOUR NOTES"] + ["  " + note for note in notes] if notes else []
+
+
 def _why_trailing(out):
     lines = []
     if out.get("bounty_eligible_by_type"):
@@ -334,5 +339,5 @@ def render_why(out):
         _why_staff_keep_open, _why_labour_materials, _why_upkeep_revenue,
         why_goods_market_lines, _why_status, _why_living_stock, _why_benefit, why_standing_lines,
         why_hazard_lines, _why_chain, _why_unlocks_downstream,
-        _why_trailing,
+        _why_notes, _why_trailing,
     )))

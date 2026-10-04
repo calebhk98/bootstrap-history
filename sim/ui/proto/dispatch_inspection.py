@@ -7,6 +7,7 @@ from sim.ui.market_report import goods_market_line, opening_effect
 from sim.engine.ui_port import active_years_left, remaining_critical_path_years
 from .explain_once import already_explained
 from .nodes import _did_you_mean
+from .notes_store import notes_for
 from .score import final_report, score_report
 from .score_change import attach_change_since_last_score
 from .state import _agent_state
@@ -142,4 +143,7 @@ def _cmd_why(sim, nodes, cmd, ended):
         explained["goods_market_line"] = goods_market_line(sim, node_id)
     if opening_effect(sim, node_id):
         explained["opening_effect"] = opening_effect(sim, node_id)
+    notes = notes_for(sim, node_id)
+    if notes:
+        explained["your_notes"] = ["%s: %s" % (note["year"], note["text"]) for note in notes]
     return dict(ok=True, **explained)
