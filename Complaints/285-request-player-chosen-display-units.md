@@ -33,7 +33,7 @@ It removes a whole class of unit mix-ups (the iugerum and hectare split in `282`
 
 Registry `data/world/units.json` (mods add `<mod_id>:<name>` units the same way they add other world data), `sim/engine/units.py` (one `format_<dimension>`), `sim/ui/units_text.py`, a `display_units` setting and the options entry (main menu 5, in-game `u`). The default shows exactly what the game showed. Test: `sim/tests/test_complaint_285_display_units.py` (fake `blob` unit per dimension, in memory and from a mod).
 
-Covered: every JSON reply (any field the registry's `field_rules` match gets a `_display` sibling); text screens `buy` (farm, forest), `materials`, `state`, `money`.
+Covered: every JSON reply (any field the registry's `field_rules` match gets a `_display` sibling); text screens `buy` (farm, forest), `materials`, `state`, `money`, the `why` materials heading and the coin hoard line; money labels on every screen through `render_pretty`. Mass-per-year fields have no field rule yet (406).
 
 ## Remains
 
