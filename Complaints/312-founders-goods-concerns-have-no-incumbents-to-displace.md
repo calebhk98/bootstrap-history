@@ -1,6 +1,6 @@
 # The founder's goods concerns displace no incumbent producers, so cloth and print make no groups
 
-**Status:** open
+**Status:** partly - goods categories now have incumbents: `GroupView.goods_categories` (sim/engine/agents_port_groups.py) gives each category's price depression (goods_category_price_ratio) and each trade's share of work in it; `Sector.of_goods` (sim/agents/group_goods.py) turns the strata whose trades make it into a displaced_producers sector (loss = depression x their income in the category). Measured with three textiles-category concerns marked operating on rome_100ad (scratchpad c_goods.py): before no sector; after `displaced_producers:textiles`, about 11M lost, about 105k people. The trade-to-category share is a labelled heuristic (hours in the tree). Not done: founder concern output reaching market flows, and separating the founder's from the firms' share of the depression.
 
 Interest groups (110) form around income the founder's doing takes from others. For materials that income is measured: the market clearing says how many tonnes the society's producers sell less because the founder sells (`society_sales_displaced_by_founder`). For the goods categories (textiles, processing, printing, ...) the engine has no such figure. `goods_market_factor` is a price ratio over the founder's own takings and there is no revenue for the society's existing weavers, printers or brewers to lose, so a founder who dominates a goods category displaces nobody on screen and no group forms, however the real handloom-weaver case ran.
 

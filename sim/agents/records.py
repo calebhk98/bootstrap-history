@@ -118,6 +118,11 @@ class ActorRecord:
 	# ---- firm entry and exit: consecutive years a firm earned less than its plant would lend for
 	weak_years: int = 0
 
+	# ---- an interest group of strata: the share of its loss the founder is blamed for; and a stratum's
+	# remembered welfare (what it has come to expect)
+	blame_share: float = 1.0
+	welfare_reference: float = 0.0
+
 
 @dataclass
 class CapitalMarketRecord:
