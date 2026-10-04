@@ -42,6 +42,7 @@ class Tile:
         self.tile_id = tile_id
         self.latitude = record["lat"]
         self.longitude = record["lon"]
+        self.country = record.get("country_majority")
         self.cell = cell
         self.land = land
 

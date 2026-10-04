@@ -1,7 +1,7 @@
 """Layer registry: how each layer is computed and how it is described in its file."""
 from collections import namedtuple
 
-from . import layers_ocean, layers_raster, layers_vector
+from . import layers_ocean, layers_raster, layers_vector, sea_links
 
 Layer = namedtuple("Layer", "compute needs_side unit doc source method conf decimals")
 
@@ -85,4 +85,10 @@ LAYERS = {
         "Length of coastline inside the tile's cell.",
         NATURAL_EARTH + " (coastline)", "Coastline clipped to the cell in EPSG:6933, ellipsoidal length; "
         "depends on the 1:10m generalisation.", "C", 0),
+    "is_port": Layer(
+        sea_links.is_port, False, "flag",
+        "1 when the tile's own land touches the ocean (so ships can put in), else 0.",
+        NATURAL_EARTH + " (ocean)", "Ocean polygon rasterised on a %.1f degree grid, any touched cell counted as water, "
+        "only the largest connected body kept (lakes and the Caspian drop out); the tile is a port when a water "
+        "cell within one cell of its land is left after tiles claim cells (see sea_links)." % sea_links.CELL_DEGREES, "C", 0),
 }

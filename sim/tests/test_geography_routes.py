@@ -1,11 +1,12 @@
 """Hauls between tiles: modes from data, built ways, rivers and seas, reach, and search speed."""
+import json
 import os
 import shutil
 import tempfile
 import time
 import unittest
 
-from sim.geography import map_source, parameters, routes_graph, routes_modes, routes_search, tile_lookup
+from sim.geography import api, map_source, parameters, routes_graph, routes_modes, routes_search, tile_holdings, tile_lookup
 
 FIXTURES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "geography_fixtures")
 ROUTES_SMALL = os.path.join(FIXTURES, "routes_small")
@@ -13,6 +14,7 @@ MOD_OVERLAY = os.path.join(FIXTURES, "routes_mod", "data", "world", "geography")
 MOD_ID = "test_routes_k9"
 DATA_FOLDER = map_source.BASE_MAP_FOLDER
 ROUTE_CATALOGUES = ("route_modes", "sea_lanes", "parameters")
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ANCIENT_NODES = {"sea_square_sail", "lnd_mule_transport", "lnd_two_wheel_cart", "lnd_ox_transport"}
 
 _scratch = []
@@ -186,3 +188,54 @@ class EarthTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class EarthSeaLinkTests(unittest.TestCase):
+    """Sea edges come from the water-path catalogue, not chords between coastal tiles."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.world_map = map_source.load_map()
+        graph = routes_graph.graph(cls.world_map)
+        cls.sea_neighbours = {}
+        for edge in graph.edges:
+            if edge.edge_class in ("coast", "open_sea"):
+                cls.sea_neighbours.setdefault(edge.tile_a, set()).add(edge.tile_b)
+                cls.sea_neighbours.setdefault(edge.tile_b, set()).add(edge.tile_a)
+
+    def _tile_near(self, latitude, longitude):
+        return tile_lookup.nearest_tile_id(self.world_map.tiles, latitude, longitude)
+
+    def _civilisation(self, name):
+        with open(os.path.join(ROOT, "data", "civilizations", name + ".json"), encoding="utf-8") as handle:
+            return json.load(handle)
+
+    def test_suez_is_not_a_canal(self):
+        self.assertNotIn("saudi_arabia_10", self.sea_neighbours["egypt_08"])
+        by_sail = routes_search.route(self.world_map, ["egypt_08"], ["saudi_arabia_10"], {"sail"})
+        self.assertIsNone(by_sail)
+        round_africa = routes_search.route(self.world_map, ["egypt_08"], ["saudi_arabia_10"], {"sail"},
+                                           held_nodes={"exp_africa_circumnavigation", "exp_coastal_africa"})
+        self.assertIsNotNone(round_africa)
+
+    def test_a_landlocked_looking_tile_is_not_a_port(self):
+        self.assertEqual(self.world_map.layers["is_port"]["values"]["laos_01"], 0)
+        self.assertNotIn("laos_01", self.sea_neighbours)
+
+    def test_the_bosporus_is_open_and_panama_is_closed(self):
+        black_sea, aegean = self._tile_near(45.3, 33.0), self._tile_near(36.8, 30.5)
+        self.assertIsNotNone(routes_search.route(self.world_map, [black_sea], [aegean], {"sail"}))
+        caribbean, pacific = self._tile_near(22.0, -80.0), self._tile_near(-1.5, -80.5)
+        everything = {"exp_africa_circumnavigation", "exp_coastal_africa", "exp_atlantic_crossing"}
+        legs = routes_search.route(self.world_map, [caribbean], [pacific], {"sail"}, held_nodes=everything)["legs"]
+        self.assertNotIn("panama_01", {tile for leg in legs for tile in (leg["from"], leg["to"])})
+
+    def test_england_reaches_han_by_land_across_the_suez_isthmus(self):
+        england, han = self._civilisation("england_1300"), self._civilisation("han_china_100ad")
+        modes = api.usable_modes([england["starting_techs"], han["starting_techs"]])
+        result = api.route(tile_holdings.tiles_of_regions(england["home_regions"]),
+                           tile_holdings.tiles_of_regions(han["home_regions"]), modes,
+                           held_nodes=set(england["starting_techs"]) | set(han["starting_techs"]))
+        land_legs = [leg for leg in result["legs"] if leg["mode"] in ("pack", "cart", "foot")]
+        self.assertTrue(land_legs)
+        self.assertTrue(any(leg["from"].startswith("egypt_") or leg["to"].startswith("egypt_") for leg in land_legs))

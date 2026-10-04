@@ -7,10 +7,13 @@ import time
 
 from .cache import DEFAULT_CACHE
 from .catalog import LAYERS
+from . import sea_links
 from .tiles import load_tiles
 
 LAYER_DIRECTORY = os.path.join(
     os.path.dirname(__file__), "..", "..", "..", "data", "world", "geography", "layers")
+
+SEA_LINK_DIRECTORY = os.path.join(os.path.dirname(LAYER_DIRECTORY), "sea_links")
 
 
 def write_layer(layer_id, layer, values, directory):
@@ -27,13 +30,25 @@ def write_layer(layer_id, layer, values, directory):
         handle.write("\n".join(lines))
 
 
+def write_sea_links(entries, directory):
+    """The sea_links catalogue, one entry per line."""
+    doc = ("Water routes between port tiles from the ocean raster (layer_build/sea_links.py): water_km is the "
+           "shortest water path, max_offshore_km the farthest that path strays from any coast.")
+    lines = ['{"_doc": %s,' % json.dumps(doc), ' "entries": [']
+    lines.append(",\n".join("  " + json.dumps(entry) for entry in entries))
+    lines.append(" ]}\n")
+    os.makedirs(directory, exist_ok=True)
+    with open(os.path.join(directory, "links.json"), "w", encoding="utf-8") as handle:
+        handle.write("\n".join(lines))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--layers", help="comma-separated layer ids (default: all)")
     parser.add_argument("--cache", default=DEFAULT_CACHE, help="download cache directory")
     options = parser.parse_args()
-    wanted = options.layers.split(",") if options.layers else list(LAYERS)
-    unknown = [layer_id for layer_id in wanted if layer_id not in LAYERS]
+    wanted = options.layers.split(",") if options.layers else list(LAYERS) + ["sea_links"]
+    unknown = [layer_id for layer_id in wanted if layer_id not in LAYERS and layer_id != "sea_links"]
     if unknown:
         parser.error("unknown layers: %s (known: %s)" % (", ".join(unknown), ", ".join(LAYERS)))
     start = time.time()
@@ -41,6 +56,12 @@ def main():
     print("%d tiles, cell side %.1f km (%.0fs)" % (len(tiles), side / 1000.0, time.time() - start))
     os.makedirs(LAYER_DIRECTORY, exist_ok=True)
     for layer_id in wanted:
+        if layer_id == "sea_links":
+            stage = time.time()
+            entries = sea_links.network(tiles, options.cache)[1]
+            write_sea_links(entries, SEA_LINK_DIRECTORY)
+            print("%-30s %d links (%.0fs)" % (layer_id, len(entries), time.time() - stage))
+            continue
         layer = LAYERS[layer_id]
         stage = time.time()
         arguments = (tiles, side, options.cache) if layer.needs_side else (tiles, options.cache)
