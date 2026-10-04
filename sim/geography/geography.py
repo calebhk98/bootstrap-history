@@ -73,9 +73,8 @@ class Geography:
         homes = [region_id for region_id in (self._world.civ.get("home_regions") or []) if region_id in self._regions]
         if not homes:
             # A civ file with no valid home_regions would otherwise crash
-            # region_reach for everyone; falling back to Italy or to
-            # whatever region exists keeps this from being a hard wall.
-            homes = ["italia"] if "italia" in self._regions else list(self._regions)[:1]
+            # region_reach for everyone; the first region keeps it from being a hard wall.
+            homes = sorted(self._regions)[:1]
         lat = sum(self._regions[region_id]["lat"] for region_id in homes) / len(homes)
         lon = sum(self._regions[region_id]["lon"] for region_id in homes) / len(homes)
         return lat, lon
@@ -299,9 +298,9 @@ class Geography:
         # can you buy" must scale with where the deposits ARE, not with how
         # many people this civilisation has. See _compute_mineral_scale(). It depends only on
         # home_regions and reach, neither of which change during a run, so it is computed once.
-        self._mineral_scale = {material: self._compute_mineral_scale(material)
-                                for material in ("iron", "coal", "copper", "lead",
-                                          "tin", "silver", "saltpetre")}
+        # Every mineral some region's table names; others fall back to population scale.
+        minerals = sorted({material for record in self._regions.values() for material in (record.get("minerals") or {})})
+        self._mineral_scale = {material: self._compute_mineral_scale(material) for material in minerals}
 
     @property
     def data(self) -> JSONDict:
