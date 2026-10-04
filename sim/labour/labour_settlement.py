@@ -6,6 +6,7 @@ nation means a smaller town and a poorer tile means a smaller town.
 import math
 
 from sim.constants import declare
+from sim.geography import api as geography
 from sim.geography.api import Geography, settlement
 
 
@@ -27,10 +28,10 @@ class SettlementMixin:
         "HIRE_TRAVEL_DAYS", 1.0, kind="temporary_heuristic",
         unit="days of travel", source=None, confidence="D",
         why="How far a hire will travel to work for you (and goods to reach "
-            "you), as days at the actor's travel speed. Sets how many "
-            "tiles' towns the labour market reaches; one day at a walking "
-            "pace stays inside the base's own tile, a faster way of "
-            "travelling reaches neighbouring tiles.")
+            "you), in days over the routes the actor's technologies open "
+            "(geography's reach). Sets how many tiles' towns the labour "
+            "market reaches; a day on foot or by cart stays inside the "
+            "base's own tile, faster ways of travelling reach neighbours.")
     RELOCATION_STANDING_RETAINED = declare(
         "RELOCATION_STANDING_RETAINED", 0.3, kind="temporary_heuristic",
         unit="fraction of familiarity and protection kept", source=None,
@@ -83,22 +84,37 @@ class SettlementMixin:
         return self._town_population_at(self.base_tile())
 
     def travel_speed_km_per_day(self):
-        """How fast this actor's people and goods cover ground: the walking
-        pace, sped up by the civilisation's travel tradition (base_reach).
-        The one place the transport the actor holds sets its reach."""
+        """How fast a household with its goods and staff moves when it relocates:
+        the walking pace, sped up by the civilisation's travel tradition (base_reach)."""
         return self.RELOCATION_KM_PER_DAY * (
             1.0 + Geography.REACH_SPEED_COEF * float(self._world.civ.get("base_reach", 2)))
 
-    def reach_population_estimate(self, speed_km_per_day=None):
-        """People in the towns within a hire's travel budget of the base:
-        every tile whose centre lies within HIRE_TRAVEL_DAYS at the given
-        speed (default: the actor's own), the base's tile always included."""
-        speed = self.travel_speed_km_per_day() if speed_km_per_day is None else speed_km_per_day
-        radius_km = self.HIRE_TRAVEL_DAYS * speed
+    def held_technologies(self):
+        """Technologies this actor's people can travel with: the civilisation's own and those built."""
+        return frozenset(self._world.civ.get("starting_techs", ())) | frozenset(self._world.state.projects.done)
+
+    def reachable_tiles(self, days_budget=None):
+        """{tile: days} a hire can travel to the base from within `days_budget` (default
+        HIRE_TRAVEL_DAYS), over the routes the held technologies open (geography's reach)."""
+        days_budget = self.HIRE_TRAVEL_DAYS if days_budget is None else days_budget
+        held = self.held_technologies()
         base = self.base_tile()
+        key = (base, held, days_budget)
+        cache = self.__dict__.setdefault("_reachable_tiles_cache", {})
+        if key not in cache:
+            cache.clear()
+            modes = geography.usable_modes([held])
+            cache[key] = geography.reach([base], modes, days_budget, held_nodes=held)
+        return cache[key]
+
+    def reach_population_estimate(self, days_budget=None):
+        """People in the home territory's towns within a hire's travel budget of the base,
+        the base's own town always included."""
         homes = self._world.civ.get("home_regions") or []
+        base = self.base_tile()
+        within = self.reachable_tiles(days_budget)
         return sum(self._town_population_at(tile) for tile in settlement.tile_ids(homes)
-                   if tile == base or settlement.distance_km(homes, base, tile) <= radius_km)
+                   if tile == base or tile in within)
 
     def local_market_share(self):
         """How much of a full-size market the base's town offers (1.0 at the
