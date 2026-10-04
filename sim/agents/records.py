@@ -101,6 +101,16 @@ class ActorRecord:
 	coin_cut_share: float = 0.0
 	coin_metal_kept: float = 1.0
 
+	# ---- patents and company shares: node id -> {"granted", "expires", "licensees"} for the exclusive
+	# rights the actor holds; actor id -> share it holds in that actor's equity; and the share of
+	# its own equity the actor has issued to others (the rest is its own)
+	patents: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+	holdings: Dict[str, float] = field(default_factory=dict)
+	issued: float = 0.0
+
+	# ---- a firm founded by staff leaving another: the parent's id, empty otherwise
+	spun_off_from: str = ""
+
 
 @dataclass
 class CapitalMarketRecord:

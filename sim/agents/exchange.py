@@ -3,16 +3,17 @@
 An offer is plain data `{"id", "from", "to", "give", "take", "year", "expires"}` kept in the
 receiver's record. Each side may hold `money`, `stores` ({material: tonnes}), `knowledge` ([node ids];
 the receiver learns, the giver keeps) and `concern` (a node id; the concern, with its opened year and
-size, moves). Acceptance checks both sides again and moves nothing unless everything still holds.
+size, moves), `patent` and `licence` ([node ids]; the right, or a licence to practise it, moves to the
+receiver; see patent.py) and `shares` ({actor id: share of its equity}; see joint_stock.py). Acceptance checks both sides again and moves nothing unless everything still holds.
 """
 import math
 from typing import Any, Callable, Dict, List
 
-from . import concern_ops, ledger
+from . import concern_ops, joint_stock, ledger, patent
 from .player_commands import CommandRejected
 from .tuning_exchange import OFFER_LIFETIME_YEARS
 
-SIDE_KEYS = ("money", "stores", "knowledge", "concern")
+SIDE_KEYS = ("money", "stores", "knowledge", "concern", "patent", "licence", "shares")
 
 
 def clean_side(side: Any) -> Dict[str, Any]:
@@ -46,6 +47,19 @@ def clean_side(side: Any) -> Dict[str, Any]:
 		if not isinstance(side["concern"], str):
 			raise CommandRejected("a concern is a node id")
 		clean["concern"] = side["concern"]
+	for key in ("patent", "licence"):
+		nodes = side.get(key) or []
+		if not isinstance(nodes, (list, tuple, set)) or not all(isinstance(node, str) for node in nodes):
+			raise CommandRejected("%s is a list of node ids" % key)
+		if nodes:
+			clean[key] = sorted(set(nodes))
+	if side.get("shares"):
+		try:
+			shares = joint_stock.clean_shares(side["shares"])
+		except ValueError as reason:
+			raise CommandRejected(str(reason))
+		if shares:
+			clean["shares"] = shares
 	return clean
 
 
@@ -61,7 +75,7 @@ def holds_problem(holder: Any, side: Dict[str, Any], world: Any) -> str:
 			return "does not know " + node_id
 	if side.get("concern") and side["concern"] not in holder.concerns:
 		return "does not run " + side["concern"]
-	return ""
+	return patent.holds_problem(holder, side, world) or joint_stock.holds_problem(holder, side.get("shares", {}))
 
 
 def receives_problem(taker: Any, incoming: Dict[str, Any], world: Any) -> str:
@@ -72,7 +86,11 @@ def receives_problem(taker: Any, incoming: Dict[str, Any], world: Any) -> str:
 			return "already runs " + node_id
 		if not taker.knows(node_id, world) and node_id not in incoming.get("knowledge", ()):
 			return "cannot make " + node_id
-	return ""
+		if node_id not in incoming.get("patent", ()) and node_id not in incoming.get("licence", ()):
+			reason = patent.blocked_reason(world, taker, node_id)
+			if reason:
+				return "needs a licence: " + reason
+	return joint_stock.receives_problem(taker, incoming.get("shares", {}))
 
 
 def problem(giver: Any, receiver: Any, give: Dict[str, Any], take: Dict[str, Any], world: Any) -> str:
@@ -124,7 +142,7 @@ def move_concern(source: Any, target: Any, node_id: str, world: Any) -> None:
 
 
 def hand_over(source: Any, target: Any, side: Dict[str, Any], world: Any) -> None:
-	"""Move money, stores and a concern from `source` to `target`; knowledge is copied, not moved."""
+	"""Move money, stores, a concern, patents and shares from `source` to `target`; knowledge is copied, not moved."""
 	if side.get("money"):
 		ledger.transfer(source, target, side["money"], "exchange")
 	for material, tonnes in sorted(side.get("stores", {}).items()):
@@ -134,6 +152,8 @@ def hand_over(source: Any, target: Any, side: Dict[str, Any], world: Any) -> Non
 		target.record.stores[material] = target.record.stores.get(material, 0.0) + tonnes
 	if side.get("concern"):
 		move_concern(source, target, side["concern"], world)
+	patent.hand_over(source, target, side)
+	joint_stock.hand_over(source, target, side.get("shares", {}))
 
 
 def accept(receiver: Any, offer_id: Any, find_actor: Callable[[str], Any], world: Any) -> str:
