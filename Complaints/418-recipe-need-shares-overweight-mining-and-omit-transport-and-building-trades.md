@@ -26,3 +26,13 @@ What it would take:
 - Spin-up budget weights from need data rather than an equal split (`sim/labour/workforce_spinup.py`
   docstring heuristics).
 - Then `NO_DEMAND_TRADE_SHARE` should apply to almost nothing.
+
+Measured cost of the gap (main against this branch, rome_100ad, `population` figures): plumbers fell from
+about 109,000 nationally and 700 within the founder's reach to about 181 and 1. The water-works and
+plumbing technologies (`cn_siphon`, `cn_water_main`, `ben_civic_water_works`, which state plumber hours)
+are therefore much slower to staff in Rome. A neutral prior (unknown demand read as the family's median
+share) was tried and rejected. It restores Rome's plumbers but also gives Rome and the Mexica tens of
+thousands of millwrights, against the registry's own notes. The fix is data:
+- lead pipe and water-works demand in the recipe graph;
+- or the civilisation file stating the trades already established there, an initial condition
+  CLAUDE.md 4.1 allows.
