@@ -55,6 +55,7 @@ class EconomySetup:
     capital_tile: TileId
     port_tile: TileId
     unskilled_trade: TradeId = "labourer"
+    hunger_need: str = "food"           # the basket need whose unmet floor counts as hunger
     yield_factor_by_recipe_tile: Dict[str, float] = field(default_factory=dict)
     land_per_run: Dict[str, float] = field(default_factory=dict)      # hectare-years of land a run takes
     basket_by_tile: Dict[TileId, Any] = field(default_factory=dict)   # floors that follow the tile's climate
