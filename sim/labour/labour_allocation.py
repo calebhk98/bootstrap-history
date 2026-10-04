@@ -8,6 +8,7 @@ from sim.world import agriculture
 from sim.world import farming_technique
 from sim.world import land
 from sim.labour import labour_market
+from sim.labour import trade_data
 from sim.labour import workforce_spinup
 
 # Farm labour is the generic unskilled trade as data/production books it;
@@ -119,11 +120,19 @@ class LabourAllocationMixin:
         allocation and the wage rule."""
         economy = self._world.state.economy
         hours = economy.society_labour_hours
+        allocating = total_hours is not None
         if total_hours is None:
             total_hours = sum(hours.values())
         farm_now = hours.get(FARM_TRADE, 0.0)
         farm_needed = farm_now if economy.farm_hours_needed is None else economy.farm_hours_needed
-        return hours_needed_by_trade(self._non_farm_need_shares(), total_hours, farm_needed)
+        needed = hours_needed_by_trade(self._non_farm_need_shares(), total_hours, farm_needed)
+        if allocating:
+            return needed
+        # The wage rule also sees the people under arms: they are demand on the unskilled pool
+        # that the society's hours no longer cover.
+        fallback = trade_data.fallback_trade(self.wage_schedule().training_years, self._world.trade_family)
+        needed[fallback] = needed.get(fallback, 0.0) + self._people_under_arms() * HOURS_PER_FARM_WORKER_YEAR
+        return needed
 
     def _clearable_hectares(self):
         """Arable ground held but not yet cleared."""
@@ -219,6 +228,19 @@ class LabourAllocationMixin:
             self._clearable_hectares(), surplus_kg=max(0.0, balance_kg),
             technique=technique)
 
+    def _people_under_arms(self):
+        """People of trades drawn from the unskilled pool that actors hold on staff:
+        they have left production and farming while they serve."""
+        world = self._world
+        return sum(world.actor_staff_fte(trade) for trade in world.wages
+                   if trade_data.drawn_from_unskilled_pool(trade))
+
+    def _society_hours_available(self):
+        """Hours the society can put into farm work and trades: the working age
+        less the people standing staff hold."""
+        people = max(0.0, self._world.population.working_age - self._people_under_arms())
+        return people * HOURS_PER_FARM_WORKER_YEAR
+
     def _allocate_farm_workforce(self, adult_equivalent_population):
         """Farm FTE for this year, after the labour market reacts to last
         year's harvest."""
@@ -227,7 +249,7 @@ class LabourAllocationMixin:
         baseline_fte = self._expected_year_farm_need(
             self._share_farm_fte(adult_equivalent_population, technique),
             adult_equivalent_population, technique)
-        total_hours = self._world.population.working_age * HOURS_PER_FARM_WORKER_YEAR
+        total_hours = self._society_hours_available()
         if not economy.society_labour_hours:
             # Start from the food balance for this land.
             farm_hours = min(baseline_fte * HOURS_PER_FARM_WORKER_YEAR, total_hours)
