@@ -10,10 +10,9 @@ tile width apart). A coastal tile has one tile width of coast. Real coastlines a
 networks are not grids; the lengths are of the right order and move with what is held.
 """
 import functools
-import math
-from typing import Dict, List, NamedTuple, Tuple
+from typing import List, NamedTuple, Tuple
 
-from sim.world import land
+from sim.geography import map_source, tile_holdings
 
 
 class Holdings(NamedTuple):
@@ -24,17 +23,9 @@ class Holdings(NamedTuple):
 
 
 @functools.lru_cache(maxsize=64)
-def _tiles() -> Tuple[Dict[str, dict], float]:
-	geography = land._load_json(land.GEOGRAPHY_FILE)
-	tiles = geography.get("land_tiles", {})
-	return tiles.get("tiles", {}), math.sqrt(float(tiles.get("target_tile_area_km2", 0.0)))
-
-
-@functools.lru_cache(maxsize=64)
 def _holdings(home_regions: Tuple[str, ...]) -> Holdings:
-	geography = land._load_json(land.GEOGRAPHY_FILE)
-	tiles, edge_km = _tiles()
-	held = set(land._tile_ids_for_home_regions(list(home_regions), geography.get("land_tiles", {})))
+	tiles, edge_km = map_source.load_map().tiles, tile_holdings.edge_km()
+	held = set(tile_holdings.tiles_of_regions(home_regions))
 	frontier = sum(1 for tile_id in held for neighbour in tiles[tile_id]["borders"] if neighbour not in held)
 	links = sum(1 for tile_id in held for neighbour in tiles[tile_id]["borders"] if neighbour in held) / 2.0
 	coast = sum(1 for tile_id in held if tiles[tile_id].get("coastal"))

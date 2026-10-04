@@ -1,5 +1,6 @@
 {"_doc": "Per-tile values derived from other layers when no measured layer gives them. sim/geography/tile_layers.py lists the rule kinds.",
  "entries": [
   {"id": "koppen_group", "rule": "prefix", "source_layer": "koppen_class", "length": 1},
+  {"id": "region", "rule": "alias", "source_layer": "old_region"},
   {"id": "biome", "rule": "lookup", "key_layer": "koppen_class", "catalogue": "climate_classes", "field": "biome"}
  ]}
