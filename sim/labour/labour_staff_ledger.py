@@ -6,7 +6,7 @@ against the household actor's `employees`, so a firm or state can use them.
 """
 import math
 
-GENERIC_TRADES = ("artisan", "scholar", "labourer", "slave")
+from . import trade_data
 
 
 class StaffLedgerMixin:
@@ -44,7 +44,7 @@ class StaffLedgerMixin:
             lab_left = (record.get("lab_left") if isinstance(record, dict)
                         else getattr(record, "lab_left", None)) or node.get("lab") or {}
             for trade, hours in lab_left.items():
-                if trade not in GENERIC_TRADES and hours > 0:
+                if not trade_data.is_generic_staff(trade) and hours > 0:
                     drawn.setdefault(trade, []).append("project " + node_id)
         for trade in sorted(self._world.venture_foremen_used()):
             drawn.setdefault(trade, []).append("open concern")
@@ -56,7 +56,7 @@ class StaffLedgerMixin:
         drawn = self.trades_drawn_on()
         rows = []
         for trade, count in sorted(self._world.state.household.employees.items()):
-            if trade in GENERIC_TRADES or trade in drawn or count < 0.5:
+            if trade_data.is_generic_staff(trade) or trade in drawn or count < 0.5:
                 continue
             rows.append({"trade": trade, "count": round(count, 1),
                          "wage_bill_per_year": round(count * self.labour_market.quote_annual(trade), 1),
