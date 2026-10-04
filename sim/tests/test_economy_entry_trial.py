@@ -1,5 +1,4 @@
 """Trial newcomers: judged at their own cost, only for a market with buyers and no maker in its area."""
-import dataclasses
 import math
 import unittest
 
@@ -48,22 +47,6 @@ class TrialPlanTests(unittest.TestCase):
         economy.step(fixture.quiet_year(setup))
         bids = {(fixture.GRAIN, area.area_id): [bid(1000.0, 1e9)] for area in economy.area_map.areas(fixture.GRAIN)}
         self.assertEqual(entry_trial.trial_entry_plans(setup, economy.record, economy.view(), economy.area_map, bids), [])
-
-
-class StaleCeilingTests(unittest.TestCase):
-    def test_a_ceiling_from_stale_substitutes_does_not_veto_a_trial_in_a_market_nobody_makes_for(self):
-        setup = fixture.small_setup()
-        economy = Economy(setup)
-        economy.step(fixture.quiet_year(setup))
-        record = economy.record
-        for producer_id in [key for key, producer in record.producers.items() if producer.recipe_id == fixture.FARM]:
-            del record.producers[producer_id]
-        household = sorted(record.cohorts)[0]
-        capped = Bid(household, fixture.GRAIN, "area", fixture.TOWN, 1000.0, 0.0, 1.0, 2.0, 1e9, maximum_price=1e-9)
-        bids = {(fixture.GRAIN, area.area_id): [dataclasses.replace(capped, area=area.area_id)]
-                for area in economy.area_map.areas(fixture.GRAIN)}
-        plans = entry_trial.trial_entry_plans(setup, record, economy.view(), economy.area_map, bids)
-        self.assertTrue(plans)
 
 
 if __name__ == "__main__":

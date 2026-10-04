@@ -11,7 +11,6 @@ Entry drawn by a margin where makers already exist was tried and taken out: it m
 swing (Complaints/reports/agent-economy-review-round-four.md).
 """
 import math
-from dataclasses import replace
 from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
 from sim.constants import declare
@@ -95,11 +94,7 @@ def trial_entry_plans(setup, record, view, area_map, bids_by_market: Mapping[Tup
         recipe_id, cost = best
         entry_price = cost * (1.0 + ENTRY_PRICE_MARGIN_SHARE)
         price = view.price(good, area_id)
-        # a household's ceiling comes from what substitutes are remembered to cost; in a market nobody
-        # makes for, those memories are as stale as its own, so only its budget bounds the trial. Other
-        # buyers' ceilings (what an input is worth to a run, a cargo to its destination) stand.
-        wanted = demand_at([replace(bid, maximum_price=math.inf) if bid.buyer in record.cohorts else bid
-                            for bid in bids], entry_price, price if price and price > 0.0 else entry_price)
+        wanted = demand_at(bids, entry_price, price if price and price > 0.0 else entry_price)
         if wanted <= 0.0:
             continue
         added = wanted * ENTRY_SHARE_OF_UNTRADED_DEMAND
