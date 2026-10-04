@@ -16,6 +16,11 @@ def _store(sim):
     return store
 
 
+def _rows(sim):
+    """The notes for reading, without creating a store on a game that has none."""
+    return memory.remembered(sim, TOPIC).get("rows", [])
+
+
 def clean_text(text):
     """The player's words, kept as typed apart from line breaks and the length bound."""
     return " ".join(str(text or "").splitlines()).strip()[:MAX_TEXT]
@@ -43,7 +48,7 @@ def drop_note(sim, number):
 
 def all_notes(sim):
     """Every note, oldest first."""
-    return [dict(row) for row in _store(sim)["rows"]]
+    return [dict(row) for row in _rows(sim)]
 
 
 class NoteLine(str):
@@ -52,7 +57,7 @@ class NoteLine(str):
 
 def note_log_rows(sim):
     """(year, text) rows in the shape of the household log, for merging into `log`."""
-    return [(row["year"], NoteLine(NOTE_PREFIX + row["text"])) for row in _store(sim)["rows"]]
+    return [(row["year"], NoteLine(NOTE_PREFIX + row["text"])) for row in _rows(sim)]
 
 
 def notes_for(sim, node_id):

@@ -35,9 +35,18 @@ def merge_session_meta(path, fields):
     return settings.save_session_meta(path, meta)
 
 
+def _holds_something(value):
+    """False for a topic that reads created but nothing filled: only empty containers inside."""
+    if isinstance(value, dict):
+        return any(_holds_something(inner) for inner in value.values())
+    if isinstance(value, list):
+        return bool(value)
+    return value is not None
+
+
 def save_state(sim, path):
     engine_save_state(sim, path)
-    memory = {topic: kept for topic, kept in (_MEMORY.get(sim) or {}).items() if kept}  # reads create empties
+    memory = {topic: kept for topic, kept in (_MEMORY.get(sim) or {}).items() if _holds_something(kept)}
     meta = dict(settings.load_session_meta(path))
     if not memory and SIDECAR_KEY not in meta:
         return

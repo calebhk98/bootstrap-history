@@ -64,3 +64,10 @@ with tempfile.TemporaryDirectory() as folder:
     path = os.path.join(folder, "read.json")
     memory.save_state(read_only, path)
     check("topics only read, never written, leave no sidecar", not os.path.exists(path + ".meta.json"))
+
+with tempfile.TemporaryDirectory() as folder:
+    listed = _Game()
+    memory.remembered(listed, "goals_watch").setdefault("ids", [])
+    path = os.path.join(folder, "listed.json")
+    memory.save_state(listed, path)
+    check("a topic holding only empty lists leaves no sidecar", not os.path.exists(path + ".meta.json"))
