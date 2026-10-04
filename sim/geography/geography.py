@@ -5,7 +5,7 @@ adapter, sim/engine/geography_port.py) and holds the regions, home centroid and 
 computes from the geography file.
 """
 
-from typing import Any, cast, Dict, NotRequired, Tuple, TypedDict
+from typing import Any, Dict, NotRequired, Tuple, TypedDict
 
 from sim.geography.distance import haversine_km
 
@@ -13,25 +13,7 @@ from sim.geography.distance import haversine_km
 JSONDict = Dict[str, Any]
 
 
-class MineralShares(TypedDict):
-    """One region's rough share of each mineral's total output
-    (geography.json's per-region `minerals` block). Fixed at exactly the
-    seven minerals this simulation ever computes a `mineral_scale` for -
-    see core.py's own `("iron", "coal", "copper", "lead", "tin", "silver",
-    "saltpetre")` tuple, the only place that set is spelled out, and
-    `_compute_mineral_scale` below, the only reader of this dict. Marked
-    NotRequired rather than required outright because `_compute_mineral_scale`
-    already reads every one of them through `.get(material, 0.0)`, i.e. the
-    code was already written to tolerate a region omitting one - even
-    though every region in data/world/geography.json today happens to
-    state all seven explicitly."""
-    iron: NotRequired[float]
-    coal: NotRequired[float]
-    copper: NotRequired[float]
-    lead: NotRequired[float]
-    tin: NotRequired[float]
-    silver: NotRequired[float]
-    saltpetre: NotRequired[float]
+MineralShares = Dict[str, float]  # one region's rough share of each mineral's output, by mineral id
 
 
 class RegionRecord(TypedDict):
@@ -253,15 +235,8 @@ class Geography:
         home = set(self._world.civ.get("home_regions") or [])
         total = 0.0
         for rid, reg in self._regions.items():
-            # MineralShares's own fields are typed float, but looking one
-            # up by a variable key (`material` is not a string literal
-            # mypy can match against a specific field) only lets mypy infer
-            # `object` for the result, not `float`, even though every
-            # field really is one - see MineralShares's own docstring.
-            # `cast` here changes nothing at runtime, same as `float()`
-            # itself already did on the line below before this pass.
             minerals: MineralShares = reg.get("minerals") or {}
-            share = float(cast(float, minerals.get(material, 0.0)))
+            share = float(minerals.get(material, 0.0))
             if share <= 0:
                 continue
             if rid in home:
