@@ -67,7 +67,8 @@ class UnsoldAskTests(unittest.TestCase):
             offer, = producers.offers(producer, FARM, view, {"grain": 500.0}, 0.0, 0.05, {"grain": GoodSpec("grain", 1.0, 0.0, 0.0, "food")})
             reservations.append(offer.reservation_price)
         self.assertTrue(all(later < earlier for earlier, later in zip(reservations, reservations[1:])))
-        self.assertLess(reservations[-1], 0.2 * reservations[0])
+        # the markdown compounds; the regressive pull toward cost slows it
+        self.assertLess(reservations[-1], (1.0 - producers.UNSOLD_ASK_MARKDOWN_SHARE) ** 4 * reservations[0])
 
     def test_sales_recorded_at_too_high_an_ask_do_not_stop_runs_for_good(self):
         producer = seller(expected_sales=1e-6)
