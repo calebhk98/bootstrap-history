@@ -100,16 +100,17 @@ def pay_groups(paid: Dict[str, float], employers: Sequence[str]) -> List[List[st
 def hire_new(hired: Dict[str, float], wanted: Dict[str, float], paid: Dict[str, float], offered: float,
              wage: float) -> None:
     """Employers in descending pay take new hours from the unretained pool, limited by matching friction."""
-    pool = offered - sum(hired.values())
+    pool = max(0.0, offered - sum(hired.values()))
     unserved = sum(wanted[employer] - hired[employer] for employer in wanted)
     for group in pay_groups(paid, list(wanted)):
         needs = {employer: wanted[employer] - hired[employer] for employer in group}
-        searchers_per_vacancy = pool / unserved if unserved > 0.0 else 0.0
+        vacancies = sum(needs.values()) if unserved <= 0.0 else unserved
+        searchers_per_vacancy = max(0.0, pool) / vacancies if vacancies > 0.0 else 0.0
         rate = MATCHING_EFFICIENCY_PER_YEAR * searchers_per_vacancy ** MATCHING_SEARCHER_ELASTICITY
         takes = {employer: needs[employer] * (1.0 - math.exp(-rate * premium_factor(paid[employer], wage)))
                  for employer in group}
         total = sum(takes.values())
-        scale = pool / total if total > pool else 1.0
+        scale = pool / total if total > pool and total > 0.0 else 1.0
         for employer in group:
             hired[employer] += takes[employer] * scale
         pool = max(0.0, offered - sum(hired.values()))

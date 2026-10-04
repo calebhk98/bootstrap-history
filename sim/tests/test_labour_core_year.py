@@ -127,6 +127,31 @@ class MigrationTests(unittest.TestCase):
         self.assertGreater(workers(state, "port", "carver"), workers(state, "vale", "carver"))
 
 
+class SteadinessTests(unittest.TestCase):
+    """With demand that falls with the wage, a trained trade settles above the floor and stays there:
+    entrants weigh those already in training, and nobody switches into a trade that pays no more."""
+
+    def test_a_trained_trade_settles_at_a_premium_without_cycling(self):
+        state = records.MarketState(workers={"vale": town(digger=2400, carver=30, joiner=30)})
+        sloped = [bid("employer%d" % tranche, trade, "vale", workers / 5.0, 3.0 * (1.3 - 0.3 * tranche))
+                  for tranche in range(5) for trade, workers in (("carver", 30), ("joiner", 30), ("digger", 2000))]
+        year_inputs = inputs(sloped, entrants=85.0, attrition=1 / 30.0)
+        state, _report = run(state, year_inputs, 80)
+        wages = []
+        for _year in range(40):
+            state, report = year.run_year(state, year_inputs)
+            wages.append(report.clearing("carver", "vale").wage)
+        floor = 1.0
+        self.assertGreater(min(wages), floor)
+        self.assertLess(max(wages) - min(wages), 0.5 * (sum(wages) / len(wages) - floor) + 0.2)
+
+    def test_nobody_drifts_into_a_glutted_trade(self):
+        state = records.MarketState(workers={"vale": town(digger=1000, carver=60)})
+        year_inputs = inputs([bid("farm", "digger", "vale", 400, 0.9), bid("yard", "carver", "vale", 20, 0.9)])
+        _state, report = year.run_year(state, year_inputs)
+        self.assertLessEqual(report.switched.get("vale", {}).get("carver", 0.0), 0.0)
+
+
 class SpeedTests(unittest.TestCase):
     def test_a_year_over_many_places_stays_cheap(self):
         areas = ["area%d" % index for index in range(100)]

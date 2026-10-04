@@ -105,5 +105,13 @@ class SwitchingTests(unittest.TestCase):
         self.assertEqual(first.workers, copy.deepcopy(second.workers))
 
 
+
+class NoWorthlessSwitchTests(unittest.TestCase):
+    def test_a_trade_paying_a_hair_more_draws_nobody_who_must_retrain_for_it(self):
+        floor_wage = SUBSISTENCE / HOURS
+        state, _report = _run({"digger": 1000.0}, {"digger": floor_wage, "carver": floor_wage * (1.0 + 1e-12)})
+        self.assertEqual(_trainees(state, "carver"), 0.0)
+
+
 if __name__ == "__main__":
     unittest.main()

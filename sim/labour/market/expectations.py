@@ -63,3 +63,37 @@ def logit_shares(scores: Mapping[str, float], scale: float) -> Dict[str, float]:
     weights = {key: math.exp((value - top) / scale) for key, value in scores.items()}
     total = math.fsum(weights.values())
     return {key: weight / total for key, weight in weights.items()}
+
+
+def graduates_coming(state: MarketState, area: str, trade: str, completion_by_band) -> float:
+    """People now in training for a trade here who are expected to finish it."""
+    total = 0.0
+    for cohort in state.trainees.get(area, {}).get(trade, []):
+        total += math.fsum(count * chance for count, chance in zip(cohort[1], completion_by_band))
+    return total
+
+
+def income_at_graduation(state: MarketState, inputs: YearInputs, clearings: ClearingIndex, area: str,
+                         trade: str, completion_by_band) -> float:
+    """What a trade is expected to pay once someone starting its training now has finished.
+
+    Today's premium over the outside option is kept only for the part of today's shortage the people
+    already training will not fill (net of those leaving meanwhile): a full workshop of apprentices
+    tells the next entrant the shortage will be gone. Without this, entrants answer today's wage, the
+    trade gluts a training-length later, and wages cycle from floor to ceiling."""
+    now = expected_income(state, inputs, clearings, area, trade)
+    clearing: Optional[Clearing] = clearings.get((area, trade))
+    floor = inputs.subsistence_per_worker_year.get(area, 0.0)
+    if clearing is None or now <= floor:
+        return now
+    hours = inputs.hours_per_worker_year
+    shortage_now = clearing.hours_wanted - clearing.hours_offered
+    if shortage_now <= 0.0:
+        return now
+    years = inputs.trades[trade].training_years
+    staying = max(0.0, 1.0 - inputs.attrition_share.get(area, 0.0)) ** years
+    supply_then = (clearing.hours_offered * staying
+                   + graduates_coming(state, area, trade, completion_by_band) * hours)
+    shortage_then = clearing.hours_wanted - supply_then
+    remaining = max(0.0, min(1.0, shortage_then / shortage_now))
+    return floor + (now - floor) * remaining

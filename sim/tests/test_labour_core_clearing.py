@@ -2,7 +2,7 @@
 import copy
 import unittest
 
-from sim.labour.market import clearing, trades
+from sim.labour.market import aptitude, clearing, trades
 from sim.labour.market.records import Bid, MarketState, YearInputs
 
 SPECS = trades.trade_specs({"digger": {"family": "earth", "training_years": 0},
@@ -102,6 +102,22 @@ class Conservation(unittest.TestCase):
         state = MarketState(workers={"vale": {"healer": [4.0, 0.0, 0.0, 0.0, 0.0]}})
         found = clearing.clear_all(state, make_inputs([bid("a", 100.0, trade="healer")]))
         self.assertEqual([(each.trade, each.area) for each in found], [("healer", "vale")])
+
+
+
+class ManyTranchesTests(unittest.TestCase):
+    def test_many_employers_at_falling_wages_clear_without_error(self):
+        specs = trades.trade_specs({"digger": {"family": "toil", "training_years": 0},
+                                    "carver": {"family": "craft", "training_years": 3}})
+        state = MarketState(workers={"vale": {"carver": aptitude.split_evenly(31.0)}})
+        bids = [Bid("employer%d" % index, "carver", "vale", 6.0 * 2000.0 / 1.0, 3.0 * (1.3 - 0.15 * index))
+                for index in range(5)]
+        year_inputs = YearInputs(trades=specs, bids=bids, subsistence_per_worker_year={"vale": 1600.0},
+                                         hours_per_worker_year=2000.0, discount_rate=0.05, career_years=30.0)
+        for _year in range(5):
+            for result in clearing.clear_all(state, year_inputs):
+                self.assertIsInstance(result.hours_hired, float)
+                self.assertLessEqual(result.hours_hired, result.hours_offered + 1e-6)
 
 
 if __name__ == "__main__":

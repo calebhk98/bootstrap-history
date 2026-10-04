@@ -54,7 +54,11 @@ def switch_trades(state: MarketState, inputs: YearInputs, clearings: Mapping, re
         if not sources:
             continue
         income = {trade: expectations.expected_income(state, inputs, clearings, area, trade)
-                  for trade in set(destinations) | set(sources)}
+                  for trade in sources}
+        income.update({trade: expectations.income_at_graduation(
+                           state, inputs, clearings, area, trade,
+                           aptitude.completion_by_band(inputs.trades[trade].difficulty))
+                       for trade in destinations if trade not in income})
         vacancies = {trade for trade in destinations
                      if (area, trade) in clearings and clearings[(area, trade)].vacant_hours > 0.0}
         moves = _planned_moves(state, inputs, area, sources, destinations, income, vacancies,
@@ -85,10 +89,13 @@ def _planned_moves(state, inputs, area, sources, destinations, income, vacancies
             scores = {"": 0.0}   # staying; trade ids are never empty
             for trade in targets:
                 chance = aptitude.completion_chance(abilities[band], inputs.trades[trade].difficulty)
-                scores[trade] = (chance * gain[trade] - lost[trade]) / subsistence
+                score = (chance * gain[trade] - lost[trade]) / subsistence
+                if score > 0.0:   # a move worth less than staying is not considered at all
+                    scores[trade] = score
             shares = expectations.logit_shares(scores, SWITCHING_TASTE_SCALE)
-            for trade in targets:
-                by_target[trade][band] = count * SWITCHING_CONSIDERATION_SHARE_PER_YEAR * shares[trade]
+            for trade in scores:
+                if trade:
+                    by_target[trade][band] = count * SWITCHING_CONSIDERATION_SHARE_PER_YEAR * shares[trade]
         for trade in targets:
             if aptitude.band_total(by_target[trade]) > 0.0:
                 moves.append((source, trade, by_target[trade]))
