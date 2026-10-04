@@ -1,6 +1,7 @@
 """Small, dependency-free helpers shared across the protocol package: command-argument parsing (_qty/_num/_clean/_flag), save-path safety, and money-word localisation."""
 
 import os, re
+from sim.ui import units_text
 
 # ----------------------------------------------------------------------------
 # A rendering for a person, alongside the JSON one, not instead of it: the
@@ -303,6 +304,6 @@ def _coin_hoard_line(out):
     hoard = out.get("coin_hoard")
     if not hoard or not hoard.get("tonnes"):
         return []
-    return ["  held as coin that is %s tonnes of %s; keeping it under guard costs about %s den/yr"
-            % (_fmt_num(hoard["tonnes"]), str(hoard["metal"]).replace("_kg", "").replace("_", " "),
+    return ["  held as coin that is %s %s of %s; keeping it under guard costs about %s den/yr"
+            % (_fmt_num(hoard["tonnes"]), units_text.text_label("mass", "tonnes"), str(hoard["metal"]).replace("_kg", "").replace("_", " "),
                _fmt_num(hoard["keeping_cost_per_year"]))]
