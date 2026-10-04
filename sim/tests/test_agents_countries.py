@@ -196,3 +196,27 @@ check("revenue scales with a country's taxable people",
 	  government.revenue(own_view) > government.revenue(poor), (government.revenue(own_view), government.revenue(poor)))
 check("every actor's money other than the foreign government's is untouched", total_money(
 	[actor for actor_id, actor in registry2.actors.items() if actor_id != "government:beta"]) == 0.0)
+
+# ---- review regressions: a foreign country lives on its own output and prices -------------------
+class PricedWorld(ScenarioWorld):
+	def society_output(self):
+		return 1.0e9
+
+	def subsistence_cost_per_person_year(self):
+		return 100.0
+
+	def housing_cost_per_person_year(self):
+		return 10.0
+
+
+priced = PricedWorld()
+home_profile = registry.state.countries[registry.state.home_country]
+beta_profile = registry.state.countries["beta"]
+beta_view = CountryWorld(priced, beta_profile, registry)
+expected_output = 1.0e9 * (beta_profile.population / home_profile.population) * (beta_profile.wage_index / home_profile.wage_index)
+check("a foreign country's output is the home output per head at its own people and wage level",
+	  abs(beta_view.society_output() - expected_output) < 1e-3 * expected_output, (beta_view.society_output(), expected_output))
+check("a foreign country's food costs its own price level",
+	  abs(beta_view.subsistence_cost_per_person_year()
+		  - 100.0 * (beta_profile.price_index / home_profile.price_index if home_profile.price_index > 0 and beta_profile.price_index > 0 else 1.0)) < 1e-9)
+check("a country's techniques are read once and kept", beta_view.baseline_knowledge() is beta_view.baseline_knowledge())

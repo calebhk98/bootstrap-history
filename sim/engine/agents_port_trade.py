@@ -66,24 +66,25 @@ class TradeView:
 		return self._prices_per_tonne(place).get(material)
 
 	def freight_between(self, source: str, destination: str, material: str, tonnes: float) -> float:
-		"""Carriage between home and a partner over the partner's route; nothing within one place."""
+		"""Carriage over each partner's route between the two places; two partners trade through home, so
+		both legs are paid. Nothing within one place."""
 		if source == destination:
 			return 0.0
 		home = self._home_place()
-		partner = destination if source == home else source
-		if partner == home:
-			return 0.0
-		facts = self._sim._foreign_economy_facts(partner)  # type: ignore[attr-defined]
-		return float(facts["freight_per_tonne"] or 0.0) * tonnes
+		per_tonne = 0.0
+		for partner in (source, destination):
+			if partner != home:
+				per_tonne += float(self._sim._foreign_economy_facts(partner)["freight_per_tonne"] or 0.0)  # type: ignore[attr-defined]
+		return per_tonne * tonnes
 
 	def market_depth(self, material: str, place: str) -> float:
 		return float(self._depth_by_material(place).get(material, 0.0))
 
-	def _shipped(self) -> Dict[Tuple[str, str, str], float]:
-		return self._memo.setdefault("shipped", {})  # type: ignore[attr-defined,no-any-return]
+	def _delivered(self) -> Dict[Tuple[str, str], float]:
+		return self._memo.setdefault("delivered", {})  # type: ignore[attr-defined,no-any-return]
 
-	def shipped_this_year(self, material: str, source: str, destination: str) -> float:
-		return self._shipped().get((material, source, destination), 0.0)
+	def delivered_this_year(self, material: str, destination: str) -> float:
+		return self._delivered().get((material, destination), 0.0)
 
 	def ship(self, trader_id: str, material: str, tonnes: float, source: str, destination: str) -> Tuple[float, float]:
 		"""Buy at the source and sell at the destination; (money paid, money received). The home side
@@ -97,6 +98,6 @@ class TradeView:
 			self.market_purchase(trader_id, self.commodity_of(material), tonnes)  # type: ignore[attr-defined]
 		if destination == home:
 			self.market_sale(trader_id, material, tonnes)  # type: ignore[attr-defined]
-		key = (material, source, destination)
-		self._shipped()[key] = self._shipped().get(key, 0.0) + tonnes
+		key = (material, destination)
+		self._delivered()[key] = self._delivered().get(key, 0.0) + tonnes
 		return paid, received

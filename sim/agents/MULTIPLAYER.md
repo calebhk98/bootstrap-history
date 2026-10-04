@@ -62,6 +62,13 @@ A stratum's data says what its people earn by. `trade` gives wages, `property_sh
 of output, `bonded` means kept by an `owner` stratum, and `own_plot` means it falls back on its own
 land when wages fall short. `rises_to` and `falls_to` name where its members move.
 
+## One goods market for now
+
+There is one goods market: the home society's. A firm or player of a foreign country counts as a rival
+of home operators, and what its concerns make is sold there. A trader's sale abroad moves only money
+(Complaint 405). Markets per country come with the agent economy's partners becoming economies
+(Complaint 382, step 4).
+
 ## Money
 
 Every payment between actors goes through `ledger.transfer`. Money enters or leaves only at a named

@@ -39,8 +39,9 @@ class TradeWorld(FakeWorld):
 	def market_depth(self, material, place):
 		return self.depth.get(place, {}).get(material, 0.0)
 
-	def shipped_this_year(self, material, source, destination):
-		return self.shipped.get((material, source, destination), 0.0)
+	def delivered_this_year(self, material, destination):
+		return sum(tonnes for (good, _source, place), tonnes in self.shipped.items()
+				   if good == material and place == destination)
 
 	def ship(self, trader_id, material, tonnes, source, destination):
 		key = (material, source, destination)
@@ -129,7 +130,8 @@ check("a trader already serving the depth stops a new entrant",
 	  trader_entry(registry, world) == [] or first.record.routes["grain@town>port"]["tonnes"] == 0.0)
 registry = make_registry()
 registry.add("trader:1", ActorRecord(kind="trader", location="town", money=1.0e9, founded_year=100,
-									 routes={"grain@town>port": {"material": "grain", "tonnes": 1000.0 * TRADER_DEPTH_SHARE, "margin": 1.0, "years": 1}}))
+									 routes={"grain@town>port": {"material": "grain", "source": "town", "destination": "port",
+														  "tonnes": 1000.0 * TRADER_DEPTH_SHARE, "margin": 1.0, "years": 1}}))
 check("current traders serving the whole depth block entry", trader_entry(registry, make_world()) == [])
 
 # ---- money: the purse moves by received less paid, carriage and interest, exactly ------------
@@ -199,3 +201,25 @@ registry = make_registry()
 trader_id = trader_entry(registry, world)[0]
 check("the trader's country is the source place's country", registry.get(trader_id).record.country == "far")
 check("trader_entry is a registered spawner", "trader_entry" in [name for name, _spawner in registry_module.SPAWNERS])
+
+# ---- review regressions: room is per destination, idle traders leave, exited actors rest -------
+three = make_world()
+three.place_prices["farm"] = {"grain": 10.0}
+three.depth["farm"] = {}
+registry = make_registry()
+both_sources = registry.add("trader:9", ActorRecord(kind="trader", location="town", money=1.0e9, founded_year=100))
+three.trade_places = lambda location: ["farm", "port", "town"]
+both_sources.advance(three)
+into_port = sum(tonnes for (good, _source, place), tonnes in three.shipped.items() if good == "grain" and place == "port")
+check("cargo from two sources into one market stays within its depth share",
+	  0.0 < into_port <= 1000.0 * TRADER_DEPTH_SHARE + 1e-9, into_port)
+
+idle_world = make_world(gap_price=10.0)
+registry = make_registry()
+idle = registry.add("trader:7", ActorRecord(kind="trader", location="town", money=500.0, founded_year=100))
+for _year in range(EXIT_LOSS_YEARS):
+	registry.advance(idle_world)
+	idle_world.new_year()
+check("a trader with nothing worth carrying for long enough gives up", idle.record.exited_year is not None)
+check("a trader that gives up hands what it holds back to its owners", idle.money == 0.0
+	  and idle.record.outlays.get("edge:pooled capital") == 500.0, (idle.money, idle.record.outlays))

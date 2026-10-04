@@ -57,8 +57,10 @@ def seed_strata(registry: Any, world: Any) -> List[str]:
 		if profile is None:
 			continue
 		for entry in strata_definitions(profile):
+			if not entry.get("name") or float(entry.get("share") or 0.0) <= 0.0:
+				continue  # a declared body of people with no name or no people founds nothing
 			actor_id = stratum_id(country, entry["name"])
-			if actor_id in registry.actors or entry.get("share", 0.0) <= 0.0:
+			if actor_id in registry.actors:
 				continue
 			registry.add(actor_id, ActorRecord(
 				kind="stratum", name="%s %s" % (profile.name or country, entry["name"]),

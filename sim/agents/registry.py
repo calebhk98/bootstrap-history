@@ -334,7 +334,7 @@ class ActorRegistry:
 		for actor_id in sorted(self.actors):
 			actor = self.actors[actor_id]
 			world.market_forget(actor_id)
-			if actor.kind == "firm" and actor.record.exited_year is not None:
+			if actor.record.exited_year is not None:
 				continue
 			# the tally is a count of everyone's staff as of the acting actor's staff in `_staff_basis`
 			self._acting, self._staff_basis = actor, dict(actor.workforce)
@@ -396,7 +396,10 @@ class ActorRegistry:
 			capital_cost = pooled * capital_rate + (borrowed * probe.rate_on_loan(world, borrowed) if borrowed > 0.0 else 0.0)
 			if worth <= plan["total"] or expected * chance <= capital_cost:
 				continue
-			firm_id = "firm:%d" % (len(self.state.records) + 1)
+			serial = len(self.state.records) + 1
+			while "firm:%d" % serial in self.state.records:
+				serial += 1
+			firm_id = "firm:%d" % serial
 			founded_firm = self.add(firm_id, ActorRecord(
 				kind="firm", name=firm_id, target=node_id,
 				last_margin=expected, founded_year=world.year))

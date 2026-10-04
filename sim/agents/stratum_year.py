@@ -18,9 +18,10 @@ TIERS = ("food", "housing", "goods")
 
 
 def logistic(value: float) -> float:
-	if value < -60.0:
+	try:
+		return 1.0 / (1.0 + math.exp(-value))
+	except OverflowError:
 		return 0.0
-	return 1.0 / (1.0 + math.exp(-value))
 
 
 def own_income(stratum: Any, world: Any) -> float:
@@ -137,7 +138,8 @@ def settle_moves(registry: Any) -> None:
 			if target is None or target is actor or record.members <= 0.0:
 				continue
 			people = min(people, record.members)
-			ledger.transfer(actor, target, actor.money * people / record.members, "migration")
+			# people take their share of the savings, never of a debt the stratum as a whole owes
+			ledger.transfer(actor, target, max(0.0, actor.money) * people / record.members, "migration")
 			combined = target.record.members + people
 			target.record.literacy = (target.record.literacy * target.record.members + record.literacy * people) / combined
 			target.record.members = combined

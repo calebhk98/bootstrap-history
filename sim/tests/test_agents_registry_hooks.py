@@ -77,3 +77,20 @@ check("the cast survives save and load", loaded.cast["government:far"].money == 
 check("a player's queued orders survive save and load",
 	  loaded.records["player:2"].orders == [{"command": "research", "node": "plough"}]
 	  and loaded.records["player:2"].controller == "llm")
+
+# ---- review regressions: any exited actor rests; firm ids never collide ------------------------
+resting = ActorRegistry(ActorsState(home_country="home"))
+gone = resting.add("dragon:gone", ActorRecord(kind="dragon", money=10.0, exited_year=99))
+resting.advance(FakeWorld())
+check("an exited actor of any kind takes no more turns", gone.money == 10.0, gone.money)
+crowded = ActorRegistry(ActorsState(home_country="home"))
+crowded.add("firm:2", ActorRecord(kind="firm", money=1.0, target="kept"))
+entry_world = FakeWorld()
+entry_world.proven = {"mill"}
+entry_world.nodes["mill"] = {"id": "mill", "pre": [], "lab": {"labourer": 10.0}, "yrs": 1.0, "rev": 1.0e6, "up": 0.0}
+entry_world.demonstrated_nodes = {"mill"}
+entry_world.entry_gross = lambda node_id, rivals, entrants: 1.0e6
+entry_world.concern_wage_bill = lambda node_id, capacity=1.0: 0.0
+founded = crowded.consider_entry(entry_world)
+check("a new firm never takes an id already in use", founded and crowded.get("firm:2").record.target == "kept"
+	  and "firm:2" not in founded, founded)

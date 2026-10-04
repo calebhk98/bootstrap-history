@@ -32,6 +32,7 @@ class CountryWorld:
 		self._shared = shared
 		self.profile = profile
 		self._holder = holder
+		self._baseline: Optional[frozenset] = None
 
 	# ---- the country's own questions
 	@property
@@ -39,7 +40,9 @@ class CountryWorld:
 		return self.profile.country
 
 	def baseline_knowledge(self) -> Set[str]:
-		return set(self.profile.starting_techs)
+		if self._baseline is None:
+			self._baseline = frozenset(self.profile.starting_techs)
+		return self._baseline  # type: ignore[return-value]
 
 	def population_total(self) -> float:
 		return self.profile.population
@@ -77,12 +80,30 @@ class CountryWorld:
 					weights[key[len(WEIGHT_PREFIX):]] = float(weight)
 		return weights
 
+	def _home_profile(self) -> Optional[CountryProfile]:
+		state = getattr(self._holder, "state", self._holder)
+		return getattr(state, "countries", {}).get(getattr(state, "home_country", ""))
+
+	def _relative(self, field: str) -> float:
+		"""This country's level of a profile figure over the home country's (one when either is unknown)."""
+		home = self._home_profile()
+		home_level = getattr(home, field, 0.0) if home is not None else 0.0
+		own_level = getattr(self.profile, field, 0.0)
+		return own_level / home_level if home_level > 0.0 and own_level > 0.0 else 1.0
+
 	def pay_per_person_year(self, trade: str) -> float:
 		"""The shared pay scaled by this country's wage level relative to the home country's."""
-		state = getattr(self._holder, "state", self._holder)
-		home = getattr(state, "countries", {}).get(getattr(state, "home_country", ""))
-		home_index = home.wage_index if home is not None and home.wage_index > 0.0 else 1.0
-		return self._shared.pay_per_person_year(trade) * self.profile.wage_index / home_index
+		return self._shared.pay_per_person_year(trade) * self._relative("wage_index")
+
+	def society_output(self) -> float:
+		"""The home society's output per head, scaled by this country's people and its wage level."""
+		return self._shared.society_output() * self._relative("population") * self._relative("wage_index")
+
+	def subsistence_cost_per_person_year(self) -> float:
+		return self._shared.subsistence_cost_per_person_year() * self._relative("price_index")
+
+	def housing_cost_per_person_year(self) -> float:
+		return self._shared.housing_cost_per_person_year() * self._relative("wage_index")
 
 	def exposure(self, node_id: str, location: Optional[str]) -> float:
 		"""How much of the founder's work reaches an observer here: the shared visibility, thinned by

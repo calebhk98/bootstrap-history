@@ -15,6 +15,8 @@ CONSUMED_CAST_KEYS = ("strata", "countries", "actors", "treasury", "location")
 # civilisation keys kept in a profile's `extra` for the mechanisms that read them
 CARRIED_CIVILISATION_KEYS = ("standing_army", "values", "debt_bondage", "bondage_years")
 GOVERNMENT_PREFIX = "government:"
+# record fields a scenario may not set: the purse and its books, what the actor is, and its life
+BOOKKEEPING_FIELDS = frozenset({"money", "income", "outlays", "kind", "exited_year", "founded_year"})
 HOME_GOVERNMENT_KIND = "government"
 FOREIGN_GOVERNMENT_KIND = "foreign_government"
 
@@ -96,9 +98,9 @@ def _record_for(entry: CastEntry) -> ActorRecord:
 	"""A fresh record for an entry; `params` fill the record fields they are named after."""
 	record = ActorRecord(kind=entry.kind, name=entry.name or entry.actor_id, country=entry.country,
 						 controller=entry.controller, policy_kind=entry.policy_kind, location=entry.location)
-	field_names = {field.name for field in dataclasses.fields(ActorRecord)}
+	field_names = {field.name for field in dataclasses.fields(ActorRecord)} - BOOKKEEPING_FIELDS
 	for key, value in entry.params.items():
-		if key in field_names and key != "money":
+		if key in field_names:
 			value = copy.deepcopy(value)
 			setattr(record, key, set(value) if isinstance(getattr(record, key), set) else value)
 	return record

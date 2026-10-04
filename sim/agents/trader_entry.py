@@ -7,14 +7,15 @@ from .tuning import ENTREPRENEURIAL_CAPITAL_SHARE
 from .tuning_trader import TRADER_DEPTH_SHARE, TRADER_FOUNDINGS_PER_YEAR
 
 
-def served_tonnes(registry: Any) -> Dict[str, float]:
-	"""Route key -> tonnes the active traders carried on it last year."""
-	served: Dict[str, float] = {}
+def served_tonnes(registry: Any) -> Dict[Tuple[str, str], float]:
+	"""(material, destination) -> tonnes the active traders brought there last year, from any source."""
+	served: Dict[Tuple[str, str], float] = {}
 	for trader in registry.of_kind("trader"):
 		if trader.record.exited_year is not None:
 			continue
-		for key, route in trader.record.routes.items():
-			served[key] = served.get(key, 0.0) + route["tonnes"]
+		for route in trader.record.routes.values():
+			market = (route["material"], route.get("destination", ""))
+			served[market] = served.get(market, 0.0) + route["tonnes"]
 	return served
 
 
@@ -32,7 +33,7 @@ def candidate_routes(registry: Any, world: Any) -> List[Tuple[float, str, Dict[s
 				if terms is None or terms["gain"] <= 0.0:
 					continue
 				key = route_key(material, source, destination)
-				unserved = world.market_depth(material, destination) * TRADER_DEPTH_SHARE - served.get(key, 0.0)
+				unserved = world.market_depth(material, destination) * TRADER_DEPTH_SHARE - served.get((material, destination), 0.0)
 				tonnes = min(unserved, capital_limit / terms["outlay"])
 				if tonnes <= 0.0:
 					continue

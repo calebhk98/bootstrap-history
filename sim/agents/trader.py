@@ -4,7 +4,7 @@ It values only the margin between a good's price where it is cheap and where it 
 carriage, the interest the cargo's capital would earn and a share lost on the way. The goods move
 through the world's market; the trader books what it paid, what it got and the carriage.
 """
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from .base import RecordedActor
 from .borrowing import TRACK_RECORD_YEARS
@@ -30,10 +30,11 @@ def route_terms(world: Any, source: str, destination: str, material: str) -> Opt
 			"gain": sold - outlay - bought * TRADER_RISK_SHARE}
 
 
-def depth_room(world: Any, source: str, destination: str, material: str) -> float:
-	"""Tonnes a year that traders may still bring to the destination, by the share of buyers' depth."""
+def depth_room(world: Any, source: str, destination: str, material: str, planned: float = 0.0) -> float:
+	"""Tonnes a year that traders may still bring to the destination from any source, by the share of
+	buyers' depth, less what has already arrived there and `planned` cargo not yet shipped."""
 	depth = world.market_depth(material, destination)
-	return max(0.0, depth * TRADER_DEPTH_SHARE - world.shipped_this_year(material, source, destination))
+	return max(0.0, depth * TRADER_DEPTH_SHARE - world.delivered_this_year(material, destination) - planned)
 
 
 class Trader(RecordedActor):
@@ -65,15 +66,19 @@ class Trader(RecordedActor):
 		rate = max(world.market_rate(), 0.0)
 		options = []
 		places = self.places(world)
+		# cargo already sized for a destination this year, so two sources do not each fill its room
+		planned: Dict[Tuple[str, str], float] = {}
 		for material in sorted(world.trade_materials()):
 			for source in places:
 				for destination in places:
 					terms = route_terms(world, source, destination, material) if source != destination else None
 					if terms is None or terms["gain"] <= 0.0:
 						continue
-					tonnes = min(depth_room(world, source, destination, material), budget / terms["outlay"])
+					arriving = planned.get((material, destination), 0.0)
+					tonnes = min(depth_room(world, source, destination, material, arriving), budget / terms["outlay"])
 					if tonnes <= 0.0:
 						continue
+					planned[(material, destination)] = arriving + tonnes
 					interest = terms["bought"] * rate
 					options.append(Option(
 						subject=route_key(material, source, destination),
@@ -110,10 +115,13 @@ class Trader(RecordedActor):
 				route["tonnes"] = 0.0
 		margin = sum(self.ship_cargo(option, world) for option in chosen) - interest
 		self.record.last_margin = margin
-		self.record.loss_years = self.record.loss_years + 1 if margin < 0 else 0
+		# a year at a loss or with nothing worth carrying both count toward giving up
+		self.record.loss_years = self.record.loss_years + 1 if margin < 0 or not chosen else 0
 		if self.record.loss_years >= EXIT_LOSS_YEARS:
 			self.record.routes.clear()
 			self.record.exited_year = world.year
+			if self.money > 0.0:
+				self.debit(self.money, "edge:pooled capital")  # its owners take back what is left
 
 
 from .registry import register_actor_kind  # noqa: E402

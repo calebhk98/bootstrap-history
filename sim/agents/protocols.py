@@ -365,8 +365,8 @@ class World(Protocol):
 		"""Tonnes a year buyers at a place take of a material."""
 		...
 
-	def shipped_this_year(self, material: str, source: str, destination: str) -> float:
-		"""Tonnes every shipper has carried on a route so far this year."""
+	def delivered_this_year(self, material: str, destination: str) -> float:
+		"""Tonnes every shipper has brought to a place so far this year, from any source."""
 		...
 
 	def ship(self, trader_id: str, material: str, tonnes: float, source: str, destination: str) -> Tuple[float, float]:
