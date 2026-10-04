@@ -92,7 +92,10 @@ class CountryWorld:
 		return own_level / home_level if home_level > 0.0 and own_level > 0.0 else 1.0
 
 	def pay_per_person_year(self, trade: str) -> float:
-		"""The shared pay scaled by this country's wage level relative to the home country's."""
+		"""The shared pay scaled by this country's wage level relative to the home country's.
+
+		TEMPORARY HEURISTIC (CLAUDE.md 4.4): a wage computed outside the labour market, because a foreign
+		country has no labour market of its own yet (Complaint 407); its output below is scaled alike."""
 		return self._shared.pay_per_person_year(trade) * self._relative("wage_index")
 
 	def society_output(self) -> float:

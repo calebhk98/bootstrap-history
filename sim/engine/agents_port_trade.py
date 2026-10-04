@@ -7,7 +7,7 @@ place buy for themselves in a year is the depth a trader sizes its cargo to.
 """
 from typing import Any, Dict, List, Optional, Tuple
 
-from .foreign_capacity import household_tonnes_by_material
+from .foreign_capacity import budget_scaled_final_tonnes, household_tonnes_by_material
 from .foreign_economies import not_traded_materials
 from .project_materials import tonnes_per_unit
 
@@ -42,7 +42,17 @@ class TradeView:
 		return self._once("trade_prices:" + place, compute)  # type: ignore[attr-defined,no-any-return]
 
 	def _depth_by_material(self, place: str) -> Dict[str, float]:
-		return household_tonnes_by_material(place)
+		"""Tonnes a year households at a place buy of each good: at home from live prices and size, as the
+		engine's own foreign trade does; a partner at its own solved prices."""
+		if place != self._home_place():
+			return household_tonnes_by_material(place)
+		def compute() -> Dict[str, float]:
+			sim = self._sim  # type: ignore[attr-defined]
+			per_hour = sim.labour.money_per_labour_hour()
+			prices = sim.goods_market.household_prices()
+			return budget_scaled_final_tonnes({material: price / per_hour for material, price in prices.items()
+											   if price > 0.0}, sim._opening_population())
+		return self._once("trade_depth:home", compute)  # type: ignore[attr-defined,no-any-return]
 
 	def trade_materials(self) -> List[str]:
 		"""Goods households buy that are priced at home and at some partner and may cross a border."""
