@@ -99,8 +99,27 @@ class ExitBooksTests(unittest.TestCase):
         self.assertAlmostEqual(record.book.balance(producer_id, money), 0.0)
         self.assertAlmostEqual(record.book.holdings(owner)["goods"][ORE][HILLS], owner_ore + 7.0)
         self.assertEqual(record.loans, [])
-        self.assertAlmostEqual(record.credit_losses[lender], 110.0)
-        self.assertAlmostEqual(record.remembered_defaults[producer_id], 110.0)
+        repaid = min(held, 110.0)
+        self.assertAlmostEqual(record.credit_losses.get(lender, 0.0), 110.0 - repaid)
+        self.assertAlmostEqual(record.remembered_defaults.get(producer_id, 0.0), 110.0 - repaid)
+        self.assertGreater(held, 0.0)
+
+    def test_lenders_are_repaid_before_the_owner(self):
+        setup = small_setup()
+        economy = Economy(setup)
+        record, money = economy.record, setup.currency_id
+        producer_id = next(agent for agent, each in sorted(record.producers.items()) if each.recipe_id == MINE)
+        owner = record.producers[producer_id].owner
+        lender = next(agent for agent in sorted(record.cohorts) if agent != owner)
+        held = record.book.balance(producer_id, money)
+        record.loans.append(Loan("loan-1", lender, producer_id, money, 0.5 * held, 0.05, 5.0, 0.0))
+        owner_before = record.book.balance(owner, money)
+        lender_before = record.book.balance(lender, money)
+        producer_exit.exit_producer(record, producer_id, [Transfer(producer_id, owner, money, held, "dividend")])
+        self.assertAlmostEqual(record.book.balance(lender, money) - lender_before, 0.5 * held)
+        self.assertAlmostEqual(record.credit_losses.get(lender, 0.0), 0.0)
+        self.assertLess(record.book.balance(owner, money) - owner_before, 0.5 * held + 1e-9)
+        self.assertEqual(record.book.check_conservation(1e-6).breaches, ())
         self.assertEqual(record.book.check_conservation(1e-6).breaches, ())
 
 
