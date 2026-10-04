@@ -372,7 +372,7 @@ class _AlwaysZeroRNG:
         return list(population)[:count]
 s_kr2 = sim(capital=1_000_000.0)
 _gc2 = sorted(S.closure(NODES, GOAL))
-_on_road_cands = [node_id for node_id in _gc2 if node_id not in S.Sim(NODES, PRICES, WAGES, GOODS).granted][:6]
+_on_road_cands = [node_id for node_id in _gc2 if node_id not in s_kr2.granted][:6]
 check("a non-starting node on the actual road to the goal exists to test "
       "against - this is a property of the live tree, not a fixture",
       len(_on_road_cands) >= 1, _on_road_cands)

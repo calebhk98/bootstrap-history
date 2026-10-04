@@ -65,7 +65,10 @@ check("a fire or a raid says what it took",
 # --- BREAK: a debasement announced itself and moved no price a player could
 # see, because the model is in real terms. Say so, and name the real bite.
 s_db = sim(capital=100000.0, events=True)
-while s_db.year < 210:
+# Start two years before the debasement window opens (the hazard's own dates), so
+# the real step path fires it without playing the century that leads up to it.
+s_db.year = min(h["years"][0] for h in s_db.civ["hazards"] if "real_erosion" in h) - 1
+for _ in range(3):
     s_db.step()
 # Counterfactual at the same stepped state: the full quote (materials included)
 # with the coin as debased, and with it restored. The market moves over the
