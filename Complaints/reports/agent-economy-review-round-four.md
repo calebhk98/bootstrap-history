@@ -119,6 +119,20 @@ Reading it:
   on the fixture (`households_store.py`; `agent-economy-store-of-value-design.md`). It is inert until
   the port passes service lives (414). Opening stocks and its behaviour checks (steps 6-7) remain.
 
+## Found by the full suite after merging main
+
+- **The full suite:** 6324 checks, 10 failures. Six fail on main too:
+  - `automation_audit` and `complaint_45_forest_area_not_region_count` crash at import;
+  - `capital_charge` raises `KeyError: 'lab'`;
+  - one timing check in `complaint_141_year_cost`.
+- **The other four (`quote_matches_charge`, `ventures_lifecycle`) were this round's.** Rome's bar iron
+  after the spin-up cost about ten times main's, so a project's materials outran the test's cash.
+- **Cause:** idle plantless capacity decayed even when its runs would pay. A chain short of an
+  input (bar iron short of bloom) lost its hands, so its price rose and it sold less.
+- **Fix:** idle capacity now decays only when its runs would not pay.
+- **Result:** Rome's bar iron at the start is about 730 denarii a kg against main's about 400. Both
+  are far above its cost of making, which is the stuck chain of Complaint 398.
+
 ## Tried and not merged
 
 - **Remembering a rising price where buyers bid and nobody offers.** A household's budget for a good

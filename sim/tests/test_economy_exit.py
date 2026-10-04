@@ -15,14 +15,19 @@ def smelter_view(**changes):
 
 
 class IdleCapacityTests(unittest.TestCase):
-    def test_plantless_capacity_above_the_runs_worked_decays_toward_them_and_never_below(self):
+    def test_plantless_capacity_whose_runs_would_not_pay_decays_toward_the_runs_worked(self):
         producer = farmer(capacity_runs=10.0)
         for _year in range(40):
             before = producer.capacity_runs
-            producer = producers_close.close_year(producer, FARM, 100.0, 50.0, farm_view(2.0), 4.0).producer
+            producer = producers_close.close_year(producer, FARM, 100.0, 50.0, farm_view(1e-6), 4.0).producer
             self.assertLess(producer.capacity_runs, before + 1e-12)
             self.assertGreaterEqual(producer.capacity_runs, 4.0)
         self.assertAlmostEqual(producer.capacity_runs, 4.0, places=3)
+
+    def test_plantless_capacity_whose_runs_would_pay_is_kept_while_it_waits(self):
+        # idle for want of inputs or buyers, not of a margin: the hands are kept
+        result = producers_close.close_year(farmer(capacity_runs=10.0), FARM, 100.0, 50.0, farm_view(2.0), 4.0)
+        self.assertAlmostEqual(result.producer.capacity_runs, 10.0)
 
     def test_plantless_capacity_that_was_all_worked_is_unchanged(self):
         result = producers_close.close_year(farmer(capacity_runs=10.0), FARM, 100.0, 50.0, farm_view(2.0), 10.0)
@@ -134,15 +139,6 @@ class ScenarioTests(unittest.TestCase):
             mines_by_year.append(sum(producer.capacity_runs for producer in economy.record.producers.values()
                                      if producer.recipe_id == MINE))
         self.assertIn(0.0, mines_by_year)       # it left; it may come back once miners' wages fall
-        self.assertEqual(economy.record.book.check_conservation(1e-6).breaches, ())
-
-    def test_plantless_idle_capacity_falls_when_nothing_buys_the_output(self):
-        setup = small_setup(opening_wages={LABOURER: 1.0, MINER: 1.2, SMITH: 60.0})
-        opening = {agent: each.capacity_runs for agent, each in Economy(setup).record.producers.items()}
-        economy, _outcomes = run(setup, YEARS)
-        for agent, producer in economy.record.producers.items():
-            if producer.recipe_id == MINE:
-                self.assertLess(producer.capacity_runs, 0.2 * opening[agent])
         self.assertEqual(economy.record.book.check_conservation(1e-6).breaches, ())
 
     def test_a_healthy_economy_keeps_its_grain_producer(self):

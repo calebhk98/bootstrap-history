@@ -30,8 +30,8 @@ IDLE_CAPACITY_DECAY_SHARE = declare(
     "IDLE_CAPACITY_DECAY_SHARE", 0.25, kind="temporary_heuristic",
     unit="share of the gap between capacity and runs worked that is given up in a year", source=None,
     confidence="D",
-    why="Capacity with no plant is hands and tools kept for work: unused, the hands leave and the "
-        "workings fall in. How fast follows hiring contracts and the cost of reopening a working, "
+    why="Capacity with no plant is hands and tools kept for work: unused while its runs would not pay, "
+        "the hands leave and the workings fall in. How fast follows hiring contracts and the cost of reopening a working, "
         "which are not modelled; one share for every plantless recipe.")
 WORKING_CAPITAL_YEARS_OF_VARIABLE_COST = declare(
     "WORKING_CAPITAL_YEARS_OF_VARIABLE_COST", 1.0, kind="temporary_heuristic",
@@ -76,8 +76,8 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
     loss = worked <= 0.0 or revenue < costs + (charge if math.isfinite(charge) else 0.0)
     losses = producer.years_of_loss + 1 if loss else 0
     has_plant = recipe.plant_life_years > 0.0
-    if losses >= LOSS_YEARS_BEFORE_EXIT and _variable_margin_per_run(producer, recipe, view, expectations,
-                                                                     inputs, wages) <= 0.0:
+    margin = _variable_margin_per_run(producer, recipe, view, expectations, inputs, wages)
+    if losses >= LOSS_YEARS_BEFORE_EXIT and margin <= 0.0:
         payout = _dividend(producer, currency, cash)
         gone = replace(producer, capacity_runs=0.0, years_of_loss=losses, expected_prices=expectations,
                        cash_target=0.0)
@@ -87,7 +87,9 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
         capacity = producer.capacity_runs - wear
     else:
         wear = 0.0
-        capacity = producer.capacity_runs - IDLE_CAPACITY_DECAY_SHARE * (producer.capacity_runs - worked)
+        # hands are let go when their work would not pay; a workshop waiting on inputs or buyers keeps them
+        idle = producer.capacity_runs - worked if margin <= 0.0 else 0.0
+        capacity = producer.capacity_runs - IDLE_CAPACITY_DECAY_SHARE * idle
     target = working_capital_target(recipe, capacity, inputs, wages)
     request, rebuilt = _expansion(producer, recipe, view, currency, rate, wear, inputs, wages)
     survivor = replace(producer, capacity_runs=capacity, years_of_loss=losses,
