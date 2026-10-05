@@ -1,6 +1,6 @@
 # round2_policy_hazards_options: two checks fail
 
-**Status:** partly
+**Status:** closed - round2_policy_hazards_options (state full stays readable, auto_hire rich founder)
 
 Two checks in `round2_policy_hazards_options` fail:
 
@@ -9,4 +9,4 @@ Two checks in `round2_policy_hazards_options` fail:
 
 Resolved: "on a rich one it actually hires". `staff_wage_reference()` averaged the opening wage schedule (then converted it again with `in_current_money`), while hiring is paid at the labour market's quote, which on the agent economy is far lower. The affordability scale in `staff_capacity()` was therefore tiny and auto_hire's headroom rounded to nobody. The reference now reads the market's unscarce annual wage in current money. Regression: `sim/tests/test_auto_hire_rich_founder.py` (`python3 -m sim.tests --only auto_hire_rich_founder`).
 
-Still open: "england_1300: state full stays readable". The check wants the `state full` reply under 9000 bytes; England's is a little over (measure with the `state full` command on `england_1300` with fog on; the largest part is `knowledge_risk`). Not a labour matter: it belongs to the state screen in `sim/ui/proto/`.
+Resolved: "england_1300: state full stays readable". The embedded `knowledge_risk` in `state` carried per-hazard wave statistics that the `risk` screen already shows in full; `_RISK_ONLY_KEYS` in `sim/ui/proto/state_waiting.py` now strips them from `state`, bringing England's `state full` under the byte budget (measure with the check in `round2_policy_hazards_options`).
