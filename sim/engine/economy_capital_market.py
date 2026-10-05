@@ -49,7 +49,7 @@ class CapitalMarketMixin:
         agent economy, its credit market's rate."""
         rate = self.economy.agent_rate()
         if rate is not None:
-            return rate
+            return capital_market.bounded_rate(float(self.civ["starting_interest_rate"]), rate)
         record = self._market_record()
         if record is None or record.supply <= 0.0:
             return float(self.civ["starting_interest_rate"])

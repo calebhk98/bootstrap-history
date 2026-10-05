@@ -1798,7 +1798,7 @@ for _ in range(4):
 #    step happened to record instead of being worked out against today.
 s = sim(civ="han_china_100ad")
 # Enough of Han's own money for the hires, so the stall is about scribes.
-s.capital = 1000 * s.labour.market.quote_annual("scholar")
+s.capital = 5000 * s.labour.market.quote_annual("scholar")
 for _p in NODES["logarithms"]["pre"]:
     s.done.add(_p)
 s._done_changed()
