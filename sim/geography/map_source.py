@@ -18,6 +18,8 @@ import json
 import os
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
+from sim.json_files import json_files
+
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 BASE_MAP_FOLDER = os.path.join(ROOT, "data", "world", "geography")
 RESERVED_FOLDERS = ("tiles", "layers")
@@ -51,12 +53,6 @@ def _read_json(path: str) -> Any:
             return json.load(handle)
     except (OSError, ValueError) as error:
         raise MapDataError("%s: %s" % (path, error)) from error
-
-
-def _json_files(folder: str) -> List[str]:
-    if not os.path.isdir(folder):
-        return []
-    return [os.path.join(folder, name) for name in sorted(os.listdir(folder)) if name.endswith(".json")]
 
 
 def _entries(path: str) -> List[Dict[str, Any]]:
@@ -158,16 +154,16 @@ def merge_folders(folders: Iterable[Tuple[Optional[str], str]]) -> WorldMap:
                     layers = {}  # a replacement map's layers describe other tiles
         elif owner is None:
             raise MapDataError("%s: the base map folder needs a map.json" % folder)
-        for path in _json_files(os.path.join(folder, "tiles")):
+        for path in json_files(os.path.join(folder, "tiles")):
             for entry in _entries(path):
                 _apply_entry(tiles, entry, owner, path)
-        for path in _json_files(os.path.join(folder, "layers")):
+        for path in json_files(os.path.join(folder, "layers")):
             _merge_layer(layers, _read_json(path), owner, path)
         for name in sorted(os.listdir(folder)):
             if name in RESERVED_FOLDERS or not os.path.isdir(os.path.join(folder, name)):
                 continue
             items = catalogues.setdefault(name, {})
-            for path in _json_files(os.path.join(folder, name)):
+            for path in json_files(os.path.join(folder, name)):
                 for entry in _entries(path):
                     _apply_entry(items, entry, owner, path)
     if map_id is None:

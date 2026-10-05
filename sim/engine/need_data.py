@@ -4,18 +4,14 @@ A need is a category households spend on. A good declares which needs it
 satisfies and how well per unit. A mod adds needs (ids namespaced as
 `<mod_id>:<name>`) and adds or extends goods; merging is additive.
 """
-import json
 import os
 from typing import Any, Dict, Optional
+
+from sim.json_files import read_json
 
 from .mods import ModError, get_ordered_mods
 from .mods_base import deep_merge
 from .mods_ids import check_new_id
-
-
-def _read(path: str) -> Dict[str, Any]:
-    with open(path, encoding="utf-8") as source:
-        return json.load(source)
 
 
 def load_needs(root: str, mods_dir: Optional[str] = None) -> Dict[str, Dict[str, Any]]:
@@ -27,7 +23,7 @@ def load_needs(root: str, mods_dir: Optional[str] = None) -> Dict[str, Dict[str,
     def merge(path, manifest):
         if not os.path.isfile(path):
             return
-        content = _read(path)
+        content = read_json(path)
         for need_id, spec in (content.get("needs") or {}).items():
             if need_id not in needs:
                 if manifest:

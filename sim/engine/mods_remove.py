@@ -1,23 +1,12 @@
 """Reference checks after mods remove content, and a scan of what was removed."""
-import json
 import os
 from typing import Any, Dict, Iterable, Mapping
+
+from sim.json_files import json_files, read_json
 
 from .mods_base import ModError, ModManifest
 
 TECH, RECIPE, TRADE, GOAL = "tech node", "production recipe", "trade", "goal"
-
-
-def _read(path: str) -> Any:
-    with open(path, encoding="utf-8") as source:
-        return json.load(source)
-
-
-def _json_files(directory: str) -> Iterable[str]:
-    if os.path.isdir(directory):
-        for filename in sorted(os.listdir(directory)):
-            if filename.endswith(".json"):
-                yield os.path.join(directory, filename)
 
 
 def scan_removed(manifests: Iterable[ModManifest], kind: str) -> Dict[str, str]:
@@ -26,21 +15,21 @@ def scan_removed(manifests: Iterable[ModManifest], kind: str) -> Dict[str, str]:
     for manifest in manifests:
         data_dir = os.path.join(manifest.directory, "data")
         if kind == TECH:
-            for path in _json_files(os.path.join(data_dir, "branches")):
-                payload = _read(path)
+            for path in json_files(os.path.join(data_dir, "branches")):
+                payload = read_json(path)
                 batch = payload.get("nodes", []) if isinstance(payload, dict) else payload
                 found.update({node["id"]: manifest.id for node in batch
                               if isinstance(node, dict) and node.get("remove") is True})
         elif kind == RECIPE:
-            for path in _json_files(os.path.join(data_dir, "production")):
-                entries = _read(path).get("materials") or {}
+            for path in json_files(os.path.join(data_dir, "production")):
+                entries = read_json(path).get("materials") or {}
                 found.update({key: manifest.id for key, entry in entries.items()
                               if entry.get("remove") is True})
         elif kind == TRADE:
             path = os.path.join(data_dir, "world", "trades.json")
             if os.path.isfile(path):
                 found.update({key: manifest.id for key, entry in
-                              (_read(path).get("trades") or {}).items()
+                              (read_json(path).get("trades") or {}).items()
                               if isinstance(entry, dict) and entry.get("remove") is True})
     return found
 

@@ -12,7 +12,7 @@ import functools
 from sim.constants import declare
 from sim.world import balance_of_payments
 from sim.geography.api import freight_cost, sea_freight
-from sim.labour.api import HOURS_PER_WORKER_YEAR
+from sim.unit_conversions import HOURS_PER_PERSON_YEAR
 
 from .data import load_civ
 from .foreign_routes import SEA_MODE
@@ -41,7 +41,7 @@ def _partner_opening_units(civilization_id):
     civilization = load_civ(civilization_id)
     workers = float(civilization.get("population") or 0.0) / people_fed_per_worker()
     return balance_of_payments.opening_stock_units(
-        workers, starting_schedule(civilization_id).money_per_labour_hour * HOURS_PER_WORKER_YEAR)
+        workers, starting_schedule(civilization_id).money_per_labour_hour * HOURS_PER_PERSON_YEAR)
 
 
 class ForeignPaymentsMixin:
@@ -72,7 +72,7 @@ class ForeignPaymentsMixin:
         opening = self.__dict__.get("_opening_coin_value")
         if opening is None:
             opening = self._opening_coin_value = self._opening_coin_units(
-                self.labour.opening_wage_schedule().opening_money_per_labour_hour * HOURS_PER_WORKER_YEAR)
+                self.labour.opening_wage_schedule().opening_money_per_labour_hour * HOURS_PER_PERSON_YEAR)
         return opening
 
     def home_coin_stock_units(self):

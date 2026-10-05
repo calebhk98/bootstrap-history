@@ -15,8 +15,8 @@ from .market_areas import MarketArea
 from .producers import Producer, live_input_prices
 from .setup import labour_area
 from .types import GoodSpec, Recipe, TileId
+from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
-KILOGRAMS_PER_TONNE = 1000.0
 
 # (recipe id, demand, runs wanted) -> the tile and the runs to build there; None where no tile will do
 Siting = Callable[..., Optional[Tuple[TileId, float]]]
