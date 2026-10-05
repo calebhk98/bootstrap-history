@@ -32,8 +32,9 @@ class RateUnitTests(unittest.TestCase):
             self.assertIsNotNone(rule, field)
             self.assertEqual((rule["dimension"], rule.get("per")), ("mass", "yr"), field)
 
-    def test_a_price_per_mass_is_not_a_quantity(self):
-        self.assertIsNone(U.field_rule(U.registry(), "buy_per_tonne"))
+    def test_a_price_per_mass_is_a_compound_of_money_and_mass(self):
+        rule = U.field_rule(U.registry(), "buy_per_tonne")
+        self.assertEqual((rule["dimension"], rule["per_dimension"]), ("money", "mass"))
 
     def test_the_changes_and_market_screens_print_the_chosen_unit_per_year(self):
         U.set_preferences({"mass": "blob_mass"})

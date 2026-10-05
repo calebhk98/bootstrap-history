@@ -1,5 +1,5 @@
 {
-  "_about": "Unit registry (Complaint 285). Each unit converts to its dimension's base unit: base = value * factor + offset. `factor_from` names a context value the engine supplies (hours_per_coin: labour hours one unit of the civilisation's coin is worth). `civilisations` limits a unit to those civilisations' menus. `label_from: civ_currency` takes the name and symbol from the civilisation's currency_words. A mod adds units in data/world/units.json named <mod_id>:<name>. field_rules say which reply fields hold a quantity of a dimension and in which unit the engine writes it; a pattern is a regular expression on the field name; the first rule that matches wins, so a rule for a rate comes before the plain-quantity rule it would also match; `per` makes the rule a rate over that time word, which text screens print after the unit symbol (units_text.rate_label).",
+  "_about": "Unit registry (Complaint 285). Each unit converts to its dimension's base unit: base = value * factor + offset. `factor_from` names a context value the engine supplies (hours_per_coin: labour hours one unit of the civilisation's coin is worth). `civilisations` limits a unit to those civilisations' menus. `label_from: civ_currency` takes the name and symbol from the civilisation's currency_words. A mod adds units in data/world/units.json named <mod_id>:<name>. field_rules say which reply fields hold a quantity of a dimension and in which unit the engine writes it; a pattern is a regular expression on the field name; the first rule that matches wins, so a rule for a rate comes before the plain-quantity rule it would also match; `per` makes the rule a rate over that time word, which text screens print after the unit symbol (units_text.rate_label). `per_dimension` and `per_native` make the rule a compound (money per mass): both parts follow the player's choices and text screens read the label with rate_label(dimension, per_dimension).",
   "dimensions": {
     "area": {"base": "hectare"},
     "mass": {"base": "kilogram"},
@@ -29,6 +29,8 @@
     {"pattern": "(?<!per)(^|_)tonnes?($|_)", "word": "tonnes?", "dimension": "mass", "native": "tonne"},
     {"pattern": "(?<!per)(^|_)kg($|_)", "word": "kg", "dimension": "mass", "native": "kilogram"},
     {"pattern": "(^|_)celsius($|_)", "word": "celsius", "dimension": "temperature", "native": "celsius"},
-    {"pattern": "^(capital|revenue|net_per_year|net_after_project_spend|project_spend_this_year|sustainable_debt)$", "dimension": "money", "native": "civ_coin"}
+    {"pattern": "^(capital|revenue|net_per_year|net_after_project_spend|project_spend_this_year|sustainable_debt)$", "dimension": "money", "native": "civ_coin"},
+    {"pattern": "^(annual_wage_bill|wage_bill|wages|cash_on_hand|cash_cost|total_cost|cost|living_cost|cost_of_living_a_year|keeping_cost_per_year|mine_operating_cost|debt_still_to_work_off|interest_on_arrears(_this_year)?|interest_paid_(in_)?total|income_lost_per_year|they_cost_you_a_year_in_all|your_revenue_is|standing_net_per_year|recurring_net_per_year|earns_per_year|costs_per_year_after)$", "dimension": "money", "native": "civ_coin"},
+    {"pattern": "^(buy_per_tonne|sell_per_tonne|per_tonne|sells_back_per_tonne|average_per_tonne_for_this_order)$", "dimension": "money", "native": "civ_coin", "per_dimension": "mass", "per_native": "tonne"}
   ]
 }

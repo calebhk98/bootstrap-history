@@ -55,6 +55,9 @@ def check_registry(registry: Registry) -> None:
     for rule in registry["field_rules"]:
         if registry["units"].get(rule.get("native"), {}).get("dimension") != rule.get("dimension"):
             raise ModError("field rule %r has a native unit of another dimension" % rule.get("pattern"))
+        if rule.get("per_dimension") and (registry["units"].get(rule.get("per_native"), {}).get("dimension")
+                                          != rule["per_dimension"]):
+            raise ModError("field rule %r has a per unit of another dimension" % rule.get("pattern"))
 
 
 def registry() -> Registry:
@@ -159,9 +162,30 @@ _FORMATTERS = {"area": format_area, "mass": format_mass,
                "temperature": format_temperature, "money": format_money}
 
 
+def _format_compound(rule: Mapping[str, Any], value: float, sim: Any):
+    """(value, name, symbol) of a quantity per another dimension (money per mass), each part in its chosen unit."""
+    reg = registry()
+    context = unit_context(sim)
+    civ = getattr(sim, "civ", None)
+    parts = []
+    for dimension, native in ((rule["dimension"], rule["native"]), (rule["per_dimension"], rule["per_native"])):
+        chosen = PREFERENCES.get(dimension)
+        if not chosen or chosen not in reg["units"] or chosen == native:
+            parts.append((native, 1.0))
+        else:
+            parts.append((chosen, unit_factor(reg["units"][native], context) / unit_factor(reg["units"][chosen], context)))
+    if parts[0][0] == rule["native"] and parts[1][0] == rule["per_native"]:
+        return None
+    labels = [unit_label(reg["units"][chosen], civ) for chosen, _ in parts]
+    return (value * parts[0][1] / parts[1][1], "%s per %s" % (labels[0][0], labels[1][0]),
+            "%s/%s" % (labels[0][1], labels[1][1]))
+
+
 def format_field(rule: Mapping[str, Any], value: float, sim: Any):
     """A reply field's value as the player's chosen unit shows it, or None."""
     reg = registry()
+    if rule.get("per_dimension"):
+        return _format_compound(rule, value, sim)
     chosen = PREFERENCES.get(rule["dimension"])
     if not chosen or chosen == rule["native"] or chosen not in reg["units"]:
         return None

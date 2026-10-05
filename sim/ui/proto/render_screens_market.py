@@ -29,7 +29,7 @@ def render_market(out):
     lines += ["", "MATERIAL PRICES  (%s-%s of %s; own = you supply it)"
               % (materials.get("offset", 0) + 1, materials.get("offset", 0) + len(rows),
                  materials.get("total")),
-              "  %-26s %10s %10s %14s  %-4s %s" % ("MATERIAL", "BUY/T", "SELL/T", "MARKET " + units_text.rate_label("mass", "yr", "t/yr").upper(), "OWN", "NOTE")]
+              "  %-26s %10s %10s %14s  %-4s %s" % ("MATERIAL", units_text.per_mass_heading("BUY"), units_text.per_mass_heading("SELL"), "MARKET " + units_text.rate_label("mass", "yr", "t/yr").upper(), "OWN", "NOTE")]
     for row in rows:
         lines.append(("  %-26s %10s %10s %14s  %-4s %s"
                       % (row["material"], _fmt_num(row["buy_per_tonne"]),
