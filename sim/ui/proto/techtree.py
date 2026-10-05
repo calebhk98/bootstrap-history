@@ -854,6 +854,11 @@ def _material_row(row):
             "cost_of_missing": round(row["cost_of_missing"], 1),
             **({"years_of_supply_it_takes": round(row["years_of_supply_it_takes"], 1)}
                if row["years_of_supply_it_takes"] else {}),
+            "own_supply_tonnes_per_year": round(row["own_supply_tonnes_per_year"], 3),
+            **({"scarcity_note": "your own output of %.0f t a year of %s counts as supply against the demand "
+                                 "on it, which lowers the premium on anything you still buy"
+                                 % (row["own_supply_tonnes_per_year"], row["material"])}
+               if row["own_supply_tonnes_per_year"] > 0 else {}),
             **({} if row["priced"] else {"note": "no market price; counted as free"})}
 
 
