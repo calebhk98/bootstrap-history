@@ -33,7 +33,9 @@ class StartingMixin:
         if node_id in self.state.projects.active:
             raise ValueError("project %s is already active" % node_id)
         node = self.nodes[node_id]
+        own_output_claim = None
         if cost_left is None:
+            own_output_claim = self.project_own_output_claim(node_id)
             bill = self.settle_project_materials(node_id)
             cost_left = bill
         rebuild_factor = self.rebuild_work_factor(node_id)
@@ -46,6 +48,8 @@ class StartingMixin:
             record["rebuild_factor"] = rebuild_factor
         if bill is not None:
             record["bill"] = float(bill)
+        if own_output_claim:
+            record["own_output_claim"] = own_output_claim
         if include_labor:
             record["lab_left"] = {trade: hours * rebuild_factor
                                   for trade, hours in node["lab"].items()}

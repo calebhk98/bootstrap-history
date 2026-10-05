@@ -103,7 +103,7 @@ check("a firm ends larger than it was founded",
 fresh = settled(years=40)
 before = SimWorld(fresh).entry_gross("zz_grow", fresh.actors.rivals_of("zz_grow", ""), 1)
 fresh.actors.active_firms()[0].record.capacity["zz_grow"] = 6.0
-fresh.actors.note_capacity_change()
+fresh.actors.note_capacity_change(fresh.actors.active_firms()[0].actor_id)
 after = SimWorld(fresh).entry_gross("zz_grow", fresh.actors.rivals_of("zz_grow", ""), 1)
 check("an entrant expects less once an incumbent has expanded", after < before, (before, after))
 

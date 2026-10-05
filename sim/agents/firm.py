@@ -20,7 +20,7 @@ class Firm(ExpansionMixin, RecordedActor):
 	# Set by the registry: how many other operators share a concern's market.
 	rivals_of: Optional[Callable[[str, str], float]] = None
 	# Set by the registry: told when a firm changes the size it runs a concern at.
-	on_capacity_change: Optional[Callable[[], None]] = None
+	on_capacity_change: Optional[Callable[[str], None]] = None
 	# Set by the registry: finds another actor by id (the founder whose stake the firm returns).
 	find_actor: Optional[Callable[[str], Any]] = None
 

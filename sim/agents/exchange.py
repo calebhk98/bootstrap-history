@@ -139,6 +139,9 @@ def move_concern(source: Any, target: Any, node_id: str, world: Any) -> None:
 	target.record.opened_year[node_id] = opened
 	if capacity is not None:
 		target.record.capacity[node_id] = capacity
+		notify = getattr(target, "on_capacity_change", None)
+		if notify is not None:
+			notify(target.actor_id)
 
 
 def hand_over(source: Any, target: Any, side: Dict[str, Any], world: Any) -> None:
