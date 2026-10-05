@@ -15,7 +15,6 @@ from .producers import Producer, expected_output_prices, live_input_prices, live
 from .producers_close import working_capital_target
 from .market_memory import market_key
 from .setup import recipe_tile_key
-from .tile_costs import carriage_table
 from .types import GoodsMove, LoanRequest, Transfer
 
 
@@ -78,7 +77,7 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
 
 
 def _carriage(setup):
-    return carriage_table(setup.tiles, setup.carriage_rates, setup.handling_rates, edges=setup.edges)
+    return setup.carriage_table()
 
 
 def _traded_volume(record, view, area_map):

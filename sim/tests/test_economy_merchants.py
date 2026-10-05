@@ -6,11 +6,13 @@ from sim.economy import goods_market, merchants, settlement
 from sim.economy.accounts import Book
 from sim.economy.market_areas import AreaMap
 from sim.economy.merchants import Merchant
-from sim.economy.tile_costs import CarriageTable, Edge
-from sim.economy.types import EDGE_MINT, EDGE_PRODUCTION, Bid, Fill, GoodsMove, GoodSpec, Offer, Transfer
+from sim.tests.test_economy_tile_costs import unit_cost_table
+from sim.economy.types import EDGE_MINT, EDGE_PRODUCTION, Bid, Fill, GoodsMove, GoodSpec, Offer, TileSpec, Transfer
 
 TILES = ("a", "b")
-CARRIAGE_PER_UNIT = 1.0         # one-tonne units, 100 km at 0.01 a tonne-km
+TILE_SPECS = {"a": TileSpec("a", 40.0, 10.0, 1000.0, False, ("b",), 0.3, 1.0),
+              "b": TileSpec("b", 40.0, 11.0, 1000.0, False, ("a",), 0.3, 1.0)}
+CARRIAGE_PER_UNIT = 1.0         # one-tonne units: the money rate is set so a tonne between the tiles costs this
 INTEREST_RATE = 0.05
 SPECS = {
     "salt": GoodSpec("salt", 1000.0, 0.0, 0.0, "food"),
@@ -29,7 +31,7 @@ class View:
 
 
 def world(spec_goods=("salt",)):
-    carriage = CarriageTable(TILES, [Edge("a", "b", ("land",), 100.0)], {"land": 0.01})
+    carriage = unit_cost_table(TILE_SPECS, "a", "b")
     goods = [(SPECS[good], 2.0) for good in spec_goods]
     area_map = AreaMap(TILES, carriage, goods, {"a": 10.0, "b": 5.0}, threshold_share=0.01)
     return carriage, area_map, {good: area_map.area_of(good, "a") for good in spec_goods}, \
@@ -156,7 +158,8 @@ class DispatchAndCloseTests(unittest.TestCase):
         fills = (Fill("m1", "salt", area_a["salt"], "a", 10.0, 2.0, "buy"),)
         result = merchants.dispatch(who, fills, carriage, SPECS, "coin", 4.0, {("salt", "a"): 10.0})
         self.assertAlmostEqual(result.moves[0].quantity, 4.0)
-        self.assertEqual(result.stranded, (("salt", "a", 6.0),))
+        self.assertEqual([(good, tile) for good, tile, _quantity in result.stranded], [("salt", "a")])
+        self.assertAlmostEqual(result.stranded[0][2], 6.0)
 
     def test_close_year_moves_expectations_and_pays_the_owner_half_the_profit(self):
         who = merchant(prices={("salt", "x"): 2.0})

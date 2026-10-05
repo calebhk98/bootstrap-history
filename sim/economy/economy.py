@@ -20,7 +20,6 @@ from .opening import open_economy
 from .protocols import YearInputs
 from .record import EconomyRecord
 from .setup import EconomySetup, labour_area
-from .tile_costs import carriage_table
 from .types import Bid, EDGE_CONSUMPTION, GoodsMove, is_edge
 from .year_close import (check_money, close_agents, dispatch_merchants, money_taxes, national_prices,
                          remember_price_level, wear_and_spoilage)
@@ -65,7 +64,7 @@ class Economy:
         if record is None:
             record, area_map, carriage = open_economy(setup)
         else:
-            carriage = carriage_table(setup.tiles, setup.carriage_rates, setup.handling_rates, edges=setup.edges)
+            carriage = setup.carriage_table()
             area_map = AreaMap(setup.tiles, carriage,
                                [(setup.specs[good], price) for good, price in sorted(setup.opening_prices.items())
                                 if good in setup.specs and price > 0.0],

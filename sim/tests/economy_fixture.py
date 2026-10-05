@@ -13,7 +13,7 @@ from sim.world.need_demand import NEED_SUBSTITUTION_ELASTICITY
 from sim.economy.households_basket import Basket, NeedSpec
 from sim.economy.protocols import YearInputs
 from sim.economy.setup import EconomySetup, TradeSpec
-from sim.economy.tile_costs import DRAUGHT_MODE, PACK_MODE, SEA_MODE, build_edges, handling_money_per_tonne_by_mode
+from sim.economy.tile_costs import world_map_of
 from sim.economy.types import CurrencySpec, GoodSpec, Recipe, TileSpec
 
 TOWN, FARMS, HILLS = "town", "farms", "hills"
@@ -64,9 +64,9 @@ def small_setup(**changes) -> EconomySetup:
     setup = EconomySetup(
         civ_id="fixture",
         currency=CurrencySpec("coin", "struck_coin", METAL, 0.01, "state:fixture", 0.05),
-        state_agent="state:fixture", tiles=the_tiles, edges=build_edges(the_tiles),
-        carriage_rates={DRAUGHT_MODE: 0.002, PACK_MODE: 0.004, SEA_MODE: 0.0005},
-        handling_rates=handling_money_per_tonne_by_mode(wages[LABOURER]),
+        state_agent="state:fixture", tiles=the_tiles, world_map=world_map_of(the_tiles),
+        carriage_rates={"cart": 0.002, "pack": 0.004, "sail": 0.0005},
+        handling_rates={"sail": 2.0 * wages[LABOURER]},
         specs=specs(), recipes=recipes(), basket=basket(),
         trades={trade: TradeSpec(trade) for trade in wages},
         tax_forms=(), state_capacity=0.5, working_hours_per_year=2000.0, working_share=0.5,

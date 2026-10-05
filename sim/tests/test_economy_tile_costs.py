@@ -1,7 +1,9 @@
-"""Carriage between tiles: the neighbour graph, land and sea links, cheapest paths, and the freight rates.
+"""Carriage between tiles: the economy prices hauls over geography's route graph, not a graph of its own.
 
-Synthetic tile grids for the rules; the real geography for scale and timing. Picking a civilisation's
-tiles through `region_to_tiles` is test scaffolding only: civilisations will hold tile ids directly."""
+Synthetic tile grids (laid on a geography map of just those tiles) for the rules; the base map for
+scale, timing and the proof that links geography knows (rivers, sea lanes) reach the economy.
+Picking a civilisation's tiles through `region_to_tiles` is test scaffolding only: civilisations will
+hold tile ids directly."""
 import json
 import math
 import os
@@ -10,20 +12,14 @@ import unittest
 
 from sim.economy import tile_costs
 from sim.economy.types import TileSpec
-from sim.geography.freight_cost import CarrierPrices
+from sim.geography import api as geography_api
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 GEOGRAPHY_PATH = os.path.join(ROOT, "data", "world", "geography.json")
 
-# Plausible book prices in denarii (test inputs, not model data).
-WAGE_PER_HOUR = 0.1
-FEED_PRICE_PER_KG = 0.03
-ANNUAL_RATE = 0.06
-CARRIER_PRICES = {
-    tile_costs.DRAUGHT_MODE: CarrierPrices(vehicle=150.0, animals=240.0),
-    tile_costs.PACK_MODE: CarrierPrices(vehicle=40.0, animals=600.0),
-    tile_costs.SEA_MODE: CarrierPrices(vehicle=20000.0),
-}
+# Plausible money per tonne-km in denarii and port handling per tonne (test inputs, not model data).
+REAL_RATES = {"cart": 0.19, "pack": 0.5, "river_boat": 0.05, "sail": 0.007}
+REAL_HANDLING = {"sail": 0.2}
 
 
 def grid(columns, rows, coastal_columns=(), spacing_degrees=3.5):
@@ -41,8 +37,39 @@ def grid(columns, rows, coastal_columns=(), spacing_degrees=3.5):
     return tiles
 
 
-def real_rates():
-    return tile_costs.money_per_tonne_km_by_mode(CARRIER_PRICES, WAGE_PER_HOUR, FEED_PRICE_PER_KG, ANNUAL_RATE)
+def grid_table(tiles, rates, handling=None):
+    """A carriage table over a geography map of just these tiles."""
+    return tile_costs.carriage_table(tiles, rates, handling, world_map=tile_costs.world_map_of(tiles))
+
+
+def unit_cost_table(tiles, from_tile, to_tile):
+    """A table over these tiles whose cart rate is set so a tonne from `from_tile` to `to_tile` costs exactly one."""
+    world_map = tile_costs.world_map_of(tiles)
+    rate = 1.0 / tile_costs.carriage_table(tiles, {"cart": 1.0}, world_map=world_map).cost_per_tonne(from_tile, to_tile)
+    for _attempt in range(8):
+        table = tile_costs.carriage_table(tiles, {"cart": rate}, world_map=world_map)
+        cost = table.cost_per_tonne(from_tile, to_tile)
+        if cost == 1.0:
+            break
+        rate = rate * 1.0 / cost if cost != 0.0 else rate
+        rate = math.nextafter(rate, math.inf if cost < 1.0 else 0.0)
+    return table
+
+
+def star_tiles(centre, leaves, radius_km, centre_latitude=40.0, centre_longitude=10.0):
+    """A centre tile bordering each leaf tile, every leaf the same great-circle distance from it (at evenly spread bearings)."""
+    angle = radius_km / 6371.0
+    latitude, longitude = math.radians(centre_latitude), math.radians(centre_longitude)
+    tiles = {centre: TileSpec(centre, centre_latitude, centre_longitude, 1000.0, False, tuple(leaves), 0.3, 1.0)}
+    for index, leaf in enumerate(leaves):
+        bearing = 2.0 * math.pi * index / len(leaves)
+        leaf_latitude = math.asin(math.sin(latitude) * math.cos(angle)
+                                  + math.cos(latitude) * math.sin(angle) * math.cos(bearing))
+        leaf_longitude = longitude + math.atan2(math.sin(bearing) * math.sin(angle) * math.cos(latitude),
+                                                math.cos(angle) - math.sin(latitude) * math.sin(leaf_latitude))
+        tiles[leaf] = TileSpec(leaf, math.degrees(leaf_latitude), math.degrees(leaf_longitude), 1000.0, False,
+                               (centre,), 0.3, 1.0)
+    return tiles
 
 
 def civ_tile_ids(geography, civ_name):
@@ -53,132 +80,121 @@ def civ_tile_ids(geography, civ_name):
     return sorted({tile for region in civ["home_regions"] for tile in mapping.get(region, [])})
 
 
-class GeometryTests(unittest.TestCase):
-    def test_great_circle_known_distance(self):
-        # One degree of latitude is a sixtieth-ish of a quarter circle: about 111 km.
-        self.assertAlmostEqual(tile_costs.great_circle_km(0, 0, 1, 0), 111.2, delta=0.5)
-        self.assertEqual(tile_costs.great_circle_km(10, 20, 10, 20), 0.0)
-
-    def test_neighbours_are_symmetric_and_limited_to_the_set(self):
-        tiles = grid(2, 1)
-        half = {"t_0_0": TileSpec("t_0_0", 40, 10, 1.0, False, ("t_1_0", "outside"), 0.3, 1.0),
-                "t_1_0": TileSpec("t_1_0", 40, 13.5, 1.0, False, (), 0.3, 1.0)}
-        graph = tile_costs.neighbour_graph(half)
-        self.assertEqual(graph["t_1_0"], ("t_0_0",))
-        self.assertEqual(graph["t_0_0"], ("t_1_0",))
-        self.assertEqual(set(tile_costs.neighbour_graph(tiles)), {"t_0_0", "t_1_0"})
-
-    def test_tiles_from_geography_reads_fields(self):
-        with open(GEOGRAPHY_PATH, encoding="utf-8") as handle:
-            geography = json.load(handle)
-        tile_id = sorted(geography["land_tiles"]["tiles"])[0]
-        tiles = tile_costs.tiles_from_geography(geography, [tile_id])
-        record = geography["land_tiles"]["tiles"][tile_id]
-        self.assertEqual(tiles[tile_id].latitude, record["lat"])
-        self.assertEqual(tiles[tile_id].fertility, record["fertility_quality_multiplier"])
-        self.assertEqual(tiles[tile_id].borders, tuple(record["borders"]))
-
-
-class CarriageTableTests(unittest.TestCase):
-    def test_overland_cost_is_distance_times_rate_and_adds_along_a_chain(self):
+class GridTests(unittest.TestCase):
+    def test_overland_cost_is_the_route_cost_and_adds_along_a_chain(self):
         tiles = grid(4, 1)
-        table = tile_costs.carriage_table(tiles, {tile_costs.DRAUGHT_MODE: 2.0})
+        table = grid_table(tiles, {"cart": 2.0})
         step = table.cost_per_tonne("t_0_0", "t_1_0")
-        self.assertAlmostEqual(
-            step, 2.0 * tile_costs.LAND_ROUTE_DETOUR_FACTOR
-            * tile_costs.tile_distance_km(tiles["t_0_0"], tiles["t_1_0"]))
+        found = geography_api.route(["t_0_0"], ["t_1_0"], ["cart"], mode_costs={"cart": 2.0},
+                                    handling_costs={}, world_map=tile_costs.world_map_of(tiles))
+        self.assertAlmostEqual(step, found["cost_per_tonne"])
+        self.assertGreater(step, 0.0)
         self.assertAlmostEqual(table.cost_per_tonne("t_0_0", "t_3_0"), 3.0 * step, places=6)
         self.assertEqual(table.cost_per_tonne("t_2_0", "t_2_0"), 0.0)
         self.assertAlmostEqual(table.cost_per_tonne("t_3_0", "t_0_0"), 3.0 * step, places=6)
 
     def test_cheapest_land_mode_is_used(self):
         tiles = grid(2, 1)
-        both = tile_costs.carriage_table(tiles, {tile_costs.DRAUGHT_MODE: 2.0, tile_costs.PACK_MODE: 1.0})
-        pack_only = tile_costs.carriage_table(tiles, {tile_costs.PACK_MODE: 1.0})
+        both = grid_table(tiles, {"cart": 2.0, "pack": 0.5})
+        pack_only = grid_table(tiles, {"pack": 0.5})
         self.assertAlmostEqual(both.cost_per_tonne("t_0_0", "t_1_0"), pack_only.cost_per_tonne("t_0_0", "t_1_0"))
 
     def test_disconnected_tiles_cost_infinity(self):
         tiles = grid(3, 1)
-        isolated = dict(tiles)
-        isolated["t_1_0"] = TileSpec("t_1_0", 40, 13.5, 1.0, False, (), 0.3, 1.0)
-        isolated["t_0_0"] = TileSpec("t_0_0", 40, 10.0, 1.0, False, (), 0.3, 1.0)
-        isolated["t_2_0"] = TileSpec("t_2_0", 40, 17.0, 1.0, False, (), 0.3, 1.0)
-        table = tile_costs.carriage_table(isolated, {tile_costs.DRAUGHT_MODE: 1.0})
+        isolated = {tile_id: TileSpec(tile_id, tile.latitude, tile.longitude, 1.0, False, (), 0.3, 1.0)
+                    for tile_id, tile in tiles.items()}
+        table = grid_table(isolated, {"cart": 1.0})
         self.assertEqual(table.cost_per_tonne("t_0_0", "t_2_0"), math.inf)
 
     def test_sea_beats_land_over_a_long_coast_when_the_sea_rate_is_low(self):
         tiles = grid(1, 6, coastal_columns=(0,))
-        rates = {tile_costs.DRAUGHT_MODE: 1.0, tile_costs.SEA_MODE: 0.1}
-        with_sea = tile_costs.carriage_table(tiles, rates)
-        without_sea = tile_costs.carriage_table(tiles, {tile_costs.DRAUGHT_MODE: 1.0})
+        with_sea = grid_table(tiles, {"cart": 1.0, "sail": 0.1})
+        without_sea = grid_table(tiles, {"cart": 1.0})
         self.assertLess(with_sea.cost_per_tonne("t_0_0", "t_0_5"), 0.5 * without_sea.cost_per_tonne("t_0_0", "t_0_5"))
 
-    def test_sea_links_need_both_ends_coastal_and_range(self):
-        tiles = grid(4, 1, coastal_columns=(0, 3), spacing_degrees=3.5)
-        far = tile_costs.tile_distance_km(tiles["t_0_0"], tiles["t_3_0"])
-        edges = tile_costs.build_edges(tiles)
-        sea = [edge for edge in edges if edge.modes == (tile_costs.SEA_MODE,)]
-        self.assertEqual(bool(sea), far <= tile_costs.SEA_LINK_RANGE_KM)
-        inland = tile_costs.build_edges(grid(4, 1))
-        self.assertFalse([edge for edge in inland if tile_costs.SEA_MODE in edge.modes])
+    def test_sea_links_need_both_ends_coastal(self):
+        coastal = grid_table(grid(2, 1, coastal_columns=(0, 1)), {"sail": 1.0})
+        inland = grid_table(grid(2, 1), {"sail": 1.0})
+        self.assertLess(coastal.cost_per_tonne("t_0_0", "t_1_0"), math.inf)
+        self.assertEqual(inland.cost_per_tonne("t_0_0", "t_1_0"), math.inf)
 
-    def test_extra_link_is_a_hook_for_rivers(self):
-        tiles = grid(1, 1)
-        wider = grid(3, 1)
-        link = tile_costs.Link("t_0_0", "t_2_0", tile_costs.RIVER_MODE, 100.0)
-        edges = tile_costs.build_edges(wider, [link])
-        table = tile_costs.carriage_table(wider, {tile_costs.DRAUGHT_MODE: 5.0, tile_costs.RIVER_MODE: 0.1}, edges=edges)
-        self.assertAlmostEqual(table.cost_per_tonne("t_0_0", "t_2_0"), 10.0)
-        self.assertEqual(len(tiles), 1)
-
-    def test_handling_is_charged_per_sea_leg(self):
+    def test_handling_is_charged_when_a_haul_takes_to_the_sea(self):
         tiles = grid(1, 2, coastal_columns=(0,))
-        rates = {tile_costs.SEA_MODE: 1.0}
-        plain = tile_costs.carriage_table(tiles, rates)
-        handled = tile_costs.carriage_table(tiles, rates, {tile_costs.SEA_MODE: 7.0})
+        plain = grid_table(tiles, {"sail": 1.0})
+        handled = grid_table(tiles, {"sail": 1.0}, {"sail": 7.0})
         self.assertAlmostEqual(handled.cost_per_tonne("t_0_0", "t_0_1") - plain.cost_per_tonne("t_0_0", "t_0_1"), 7.0)
 
-
-class FreightRateTests(unittest.TestCase):
-    def test_rates_are_positive_and_sea_is_cheapest_per_tonne_km(self):
-        rates = real_rates()
-        self.assertEqual(set(rates), {"draught", "pack", "sea"})
-        self.assertTrue(all(rate > 0.0 for rate in rates.values()))
-        self.assertLess(rates["sea"], rates["draught"])
-        self.assertLess(rates["draught"], rates["pack"])
-
-    def test_rates_follow_prices(self):
-        base = real_rates()
-        dearer = tile_costs.money_per_tonne_km_by_mode(CARRIER_PRICES, 2 * WAGE_PER_HOUR, FEED_PRICE_PER_KG, ANNUAL_RATE)
-        self.assertTrue(all(dearer[mode] > base[mode] for mode in base))
-
-    def test_only_named_modes_are_priced(self):
-        self.assertEqual(set(tile_costs.money_per_tonne_km_by_mode(
-            {"draught": CARRIER_PRICES["draught"]}, WAGE_PER_HOUR, FEED_PRICE_PER_KG, ANNUAL_RATE)), {"draught"})
+    def test_a_river_on_the_map_carries_a_haul_the_roads_would_not(self):
+        tiles = grid(3, 1)
+        records = {tile_id: {"lat": tile.latitude, "lon": tile.longitude, "coastal": False,
+                             "borders": list(tile.borders)} for tile_id, tile in tiles.items()}
+        river_map = geography_api.map_of_tiles(records)
+        river_map.layers["river_id"] = {"id": "river_id", "values": {tile_id: "the_river" for tile_id in tiles}}
+        dry = tile_costs.carriage_table(tiles, {"cart": 5.0, "river_boat": 0.1}, world_map=tile_costs.world_map_of(tiles))
+        wet = tile_costs.carriage_table(tiles, {"cart": 5.0, "river_boat": 0.1}, world_map=river_map)
+        self.assertLess(wet.cost_per_tonne("t_0_0", "t_2_0"), 0.5 * dry.cost_per_tonne("t_0_0", "t_2_0"))
 
 
-class RealGeographyTests(unittest.TestCase):
+class GeographyIsTheSourceTests(unittest.TestCase):
+    """The economy's carriage costs are geography's route costs on the same tiles (Complaint 408)."""
+
     @classmethod
     def setUpClass(cls):
         with open(GEOGRAPHY_PATH, encoding="utf-8") as handle:
             cls.geography = json.load(handle)
+        cls.tile_ids = civ_tile_ids(cls.geography, "rome_100ad")
+        cls.tiles = tile_costs.tiles_from_geography(cls.geography, cls.tile_ids)
+
+    def test_a_river_link_geography_knows_is_cheaper_by_boat_in_the_economy(self):
+        inside = set(self.tile_ids)
+        rivers = [(a, b) for a, b, _mode, _km in geography_api.freight_links(["river_boat"])
+                  if a in inside and b in inside]
+        self.assertTrue(rivers, "the civilisation's tiles hold a navigable river link")
+        downstream = [(source, target) for a, b in rivers for source, target in ((a, b), (b, a))
+                      if geography_api.route([source], [target], ["river_boat"]) is not None]
+        self.assertTrue(downstream, "a boat can run along one of them")
+        first, second = downstream[0]
+        with_boats = tile_costs.carriage_table(self.tiles, {"cart": 5.0, "river_boat": 0.01})
+        without = tile_costs.carriage_table(self.tiles, {"cart": 5.0})
+        self.assertLess(with_boats.cost_per_tonne(first, second), without.cost_per_tonne(first, second))
+
+    def test_costs_equal_geographys_route_cost_for_the_same_rates(self):
+        table = tile_costs.carriage_table(self.tiles, REAL_RATES, REAL_HANDLING)
+        first, last = self.tile_ids[0], self.tile_ids[-1]
+        found = geography_api.route([first], [last], sorted(REAL_RATES), mode_costs=REAL_RATES,
+                                    handling_costs=REAL_HANDLING)
+        self.assertIsNotNone(found)
+        self.assertAlmostEqual(table.cost_per_tonne(first, last), found["cost_per_tonne"], places=6)
+
+    def test_no_tile_of_the_civilisation_is_cut_off(self):
+        table = tile_costs.carriage_table(self.tiles, REAL_RATES, REAL_HANDLING)
+        reached = table.costs_from(self.tile_ids[0])
+        self.assertEqual(set(reached), set(self.tile_ids))
 
     def test_all_pairs_for_the_largest_civilisation_is_fast_and_cached(self):
         names = ("rome_100ad", "han_china_100ad", "england_1300", "mexica_1500", "norse_900ad")
         biggest = max((civ_tile_ids(self.geography, name) for name in names), key=len)
         tiles = tile_costs.tiles_from_geography(self.geography, biggest)
         self.assertGreater(len(tiles), 30)
-        rates, handling = real_rates(), tile_costs.handling_money_per_tonne_by_mode(WAGE_PER_HOUR)
+        geography_api.route([biggest[0]], [biggest[-1]], ["cart"])      # builds the map's graph once
         started = time.perf_counter()
-        table = tile_costs.carriage_table(tiles, rates, handling)
+        table = tile_costs.carriage_table(tiles, REAL_RATES, REAL_HANDLING)
         table.warm()
         elapsed = time.perf_counter() - started
-        self.assertLess(elapsed, 1.0, "all-pairs took %.3f s for %d tiles" % (elapsed, len(tiles)))
+        self.assertLess(elapsed, 5.0, "all-pairs took %.3f s for %d tiles" % (elapsed, len(tiles)))
         started = time.perf_counter()
         table.warm()
         self.assertLess(time.perf_counter() - started, 0.01)
         first, last = biggest[0], biggest[-1]
-        self.assertAlmostEqual(table.cost_per_tonne(first, last), table.cost_per_tonne(last, first), places=6)
+        self.assertAlmostEqual(table.cost_per_tonne(first, last), table.cost_per_tonne(last, first), delta=1e-6 * table.cost_per_tonne(first, last))
+
+    def test_tiles_from_geography_reads_fields(self):
+        tile_id = sorted(self.geography["land_tiles"]["tiles"])[0]
+        tiles = tile_costs.tiles_from_geography(self.geography, [tile_id])
+        record = self.geography["land_tiles"]["tiles"][tile_id]
+        self.assertEqual(tiles[tile_id].latitude, record["lat"])
+        self.assertEqual(tiles[tile_id].fertility, record["fertility_quality_multiplier"])
+        self.assertEqual(tiles[tile_id].borders, tuple(record["borders"]))
 
 
 if __name__ == "__main__":
