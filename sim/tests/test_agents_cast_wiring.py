@@ -7,7 +7,7 @@ from .harness import *  # noqa: F401,F403
 from sim.agents.api import ActorRecord, Player
 
 GAME = S.Sim(NODES, list(ORDER), random.Random(1), events=False, manual=True,
-             civ=S.load_civ("rome_100ad"), cfg={"agent_economy": False})
+             civ=S.load_civ("rome_100ad"))
 
 
 def actor_year(game):

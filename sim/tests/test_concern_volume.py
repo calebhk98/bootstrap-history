@@ -4,7 +4,7 @@ output per head, and a good offered after the opening becomes demand when a need
 from .harness import *  # noqa: F401,F403
 from functools import partial
 
-sim = partial(sim, agent_economy=False)   # these checks pin the engine's own yearly material market
+sim = partial(sim, agent_economy=False)   # legacy: pins concern takings through the engine's yearly material market
 
 
 import copy

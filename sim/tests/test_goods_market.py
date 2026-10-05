@@ -75,7 +75,7 @@ check("fin_gambling_house is a real, revenue-bearing tree node - not a "
       and NODES[_ENT_NODE].get("cat") == "luxury", NODES[_ENT_NODE])
 
 def _mk_income_sim(with_cheap_food):
-    income_sim = sim(civ="han_china_100ad", capital=5_000_000.0, agent_economy=False)
+    income_sim = sim(civ="han_china_100ad", capital=5_000_000.0, agent_economy=False)   # legacy: the engine's goods-market saturation factor
     income_sim.artisans = income_sim.scholars = 200.0
     if with_cheap_food:
         income_sim.done.add(_PROC_NODE)

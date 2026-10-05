@@ -185,10 +185,9 @@
   "standing_army": 2000,
   "price_index": 1.4,
   "prerequisite_gaps": {
-    "ag2_refrigeration_ice": "unreviewed",
-    "exp_openocean_navigation": "unreviewed",
-    "med_trepanation": "unreviewed",
-    "med_wound_suturing": "unreviewed"
+    "exp_openocean_navigation": "Norse crossings to Iceland and Greenland used latitude sailing, sun compass, landmarks and bird and whale cues; the instrument prerequisites name the later European method. A separate non-instrumental node is not yet authored.",
+    "med_trepanation": "Norse leech-craft worked with smiths tools and bone needles; the Mediterranean kit named as prerequisite is gated behind kt_mediterranean_crafts.",
+    "med_wound_suturing": "Norse leech-craft sewed wounds with bone needles and linen or sinew; the Mediterranean kit named as prerequisite is gated behind kt_mediterranean_crafts."
   },
   "starting_techs": [
     "ag2_composting",
@@ -197,7 +196,6 @@
     "ag2_marling",
     "ag2_oil_pressing",
     "ag2_potash",
-    "ag2_refrigeration_ice",
     "cap_heat_0700",
     "cap_heat_1100",
     "cap_power_human",

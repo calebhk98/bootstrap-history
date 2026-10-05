@@ -2,7 +2,7 @@
 from .harness import *
 from functools import partial
 
-sim = partial(sim, agent_economy=False)   # these checks pin the engine's own loanable-funds market, wage table and state budget
+sim = partial(sim, agent_economy=False)   # legacy: pins the engine's wage table and loanable-funds rate; the agent economy sets both in sim/economy
 
 from sim.engine.data import ANNUAL_WAGE
 

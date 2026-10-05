@@ -126,7 +126,7 @@ check("a multi-word typed name is not truncated to its first word",
 # money early on, but the profit should decrease over time once supply
 # starts going up... up to some point." See economy.py's GOODS_CATEGORIES
 # and goods_market_factor() for the model this exercises.
-s_lm = sim(civ="rome_100ad", capital=500000.0, agent_economy=False)
+s_lm = sim(civ="rome_100ad", capital=500000.0, agent_economy=False)   # legacy: the engine's goods-market saturation factor
 s_lm.done.add("tex_power_loom")
 s_lm.done_year["tex_power_loom"] = 100
 s_lm._done_changed()
@@ -158,7 +158,7 @@ check("...and once the market is saturated it flattens, rather than "
 # --- The brief's own worked example, almost to the denarius: a concern that
 # earned 400 a year now earning about 280, and a player told why rather
 # than left to notice the number moved.
-s_nt = sim(civ="rome_100ad", capital=500000.0, agent_economy=False)
+s_nt = sim(civ="rome_100ad", capital=500000.0, agent_economy=False)   # legacy: the engine's goods-market saturation factor
 s_nt.done.add("tex_horizontal_loom")
 s_nt.done_year["tex_horizontal_loom"] = 100
 s_nt._done_changed()
@@ -222,7 +222,7 @@ check("the ledger's parts still add up to the revenue it states, with an "
 # size "should depend on the population, on what that society can pay, and
 # on how far your goods can travel." A smaller, poorer, less-connected
 # civilization should see the SAME concern's margin erode faster.
-s_small = sim(civ="norse_900ad", capital=500000.0, agent_economy=False)
+s_small = sim(civ="norse_900ad", capital=500000.0, agent_economy=False)   # legacy: the engine's goods-market saturation factor
 s_small.done.add("tex_power_loom")
 s_small.done_year["tex_power_loom"] = 100
 s_small._done_changed()

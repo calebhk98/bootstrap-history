@@ -4,7 +4,7 @@ spent on works, a named purchase that hires people; no outlay of the state goes 
 from .harness import *  # noqa: F401,F403
 from functools import partial
 
-sim = partial(sim, agent_economy=False)   # these checks pin the engine's own loanable-funds market, wage table and state budget
+sim = partial(sim, agent_economy=False)   # legacy: pins how the engine's budget spends a surplus; the agent-economy budget is test_economy_agent_state.py
 
 
 from sim.agents.tuning_spending import RESERVE_CEILING_YEARS_OF_NEED

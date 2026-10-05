@@ -8,7 +8,7 @@ import tempfile
 from .harness import *  # noqa: F401,F403
 from functools import partial
 
-sim = partial(sim, agent_economy=False)   # these checks pin the engine's own loanable-funds market, wage table and state budget
+sim = partial(sim, agent_economy=False)   # legacy: pins the engine's own loanable-funds rate; the agent-economy credit market is test_economy_agent_credit.py
 
 
 from sim.engine.agents_port import SimWorld

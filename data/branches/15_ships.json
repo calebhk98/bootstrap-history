@@ -333,11 +333,7 @@
   "name": "Sternpost rudder",
   "cat": "ships",
   "kind": "ENGINEERING",
-  "pre": [
-   "sea_steering_oars",
-   "cap_tol_1mm",
-   "sea_skeleton_first"
-  ],
+  "pre": ["sea_steering_oars", "cap_tol_1mm"],
   "kb": "85_transport_civil.md",
   "ph": 120,
   "lab": {

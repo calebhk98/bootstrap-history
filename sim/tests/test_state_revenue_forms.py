@@ -4,7 +4,7 @@ arrive as goods in the state's stores, to be used or sold through the goods mark
 from .harness import *  # noqa: F401,F403
 from functools import partial
 
-sim = partial(sim, agent_economy=False)   # these checks pin the engine's own loanable-funds market, wage table and state budget
+sim = partial(sim, agent_economy=False)   # legacy: pins surplus grain sold into the engine's goods market, which the agent economy does not run
 
 
 from sim.engine.agents_port import SimWorld

@@ -1,9 +1,5 @@
 """Food, housing, trade schools, demographics, and durable material stock."""
 from .harness import *
-from functools import partial
-
-sim = partial(sim, agent_economy=False)   # these checks pin the engine's own loanable-funds market, wage table and state budget
-
 from sim.ui.proto.render import render_pretty
 from sim.ui.proto.typed import parse_typed
 
@@ -18,11 +14,13 @@ check("typed economic levers reach their protocol actions",
 
 
 s = sim(capital=1_000_000)
-wage0 = s.labour.market.quote_annual("artisan")
 reply = S._agent_dispatch(s, NODES, {"cmd": "buy", "what": "farm", "n": 120})
-check("farmland is a direct lever that lowers food costs and wages",
-      reply["ok"] and reply["food_cost_factor"] < 1
-      and s.labour.market.quote_annual("artisan") < wage0, reply)
+check("farmland is a direct lever that lowers food costs", reply["ok"] and reply["food_cost_factor"] < 1, reply)
+legacy = sim(capital=1_000_000, agent_economy=False)   # legacy: the wage quote follows the engine's own food-cost table
+wage0 = legacy.labour.market.quote_annual("artisan")
+legacy_reply = S._agent_dispatch(legacy, NODES, {"cmd": "buy", "what": "farm", "n": 120})
+check("...and, on the engine's own wage table, lowers wages",
+      legacy.labour.market.quote_annual("artisan") < wage0, legacy_reply)
 
 room0 = s.labour.supervision_room()
 reply = S._agent_dispatch(s, NODES, {"cmd": "buy", "what": "housing", "n": 5})

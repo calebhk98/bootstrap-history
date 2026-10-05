@@ -25,6 +25,7 @@ check("after the hidden spin-up households expect stable prices, so the rebased 
 default = perf_fingerprint.build(dict(civ="rome_100ad", seed=1, years=1, events=True, fog=False))
 check("a game that says nothing runs on the agent economy", default.economy.agent is not None
       and default.state.economy.agent_economy.get("on"))
+# the opt-out is the subject here: the switch itself is under test
 off = S.Sim(NODES, ORDER, random.Random(1), events=True, manual=False, civ=S.load_civ("rome_100ad"),
             cfg={"agent_economy": False})
 check("a game that opts out keeps the engine's own economy", off.economy.agent is None

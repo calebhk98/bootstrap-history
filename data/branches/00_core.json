@@ -6776,9 +6776,7 @@
     "name": "Large watermill system: overshot wheels, millponds and leats",
     "note": "Build and manage a substantial watermill site: impound water, control it through leats, and drive one or more overshot wheels at useful power. Medieval England inherits this civil and hydraulic capability. General-purpose line shafts that distribute power among unrelated industrial machines are not included.",
     "ph": 450.0,
-    "pre": [
-      "crank_conrod"
-    ],
+    "pre": [],
     "req_any": [],
     "rev_hours": 44356.13418308451,
     "risk": 0.15,

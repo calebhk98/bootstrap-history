@@ -548,10 +548,7 @@
   "name": "Indigo dyeing",
   "cat": "textiles",
   "kind": "ENGINEERING",
-  "pre": [
-   "tex_dye_woad",
-   "mat_natron"
-  ],
+  "pre": ["tex_dye_woad", "mat_lime"],
   "kb": "90_textiles.md",
   "ph": 60,
   "lab": {
