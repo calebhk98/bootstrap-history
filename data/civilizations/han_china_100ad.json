@@ -32,6 +32,7 @@
       ]
     }
   ],
+  "staple": "millet_kg",
   "coin_standard": {
     "regime": "struck_coin",
     "material": "bronze_kg",

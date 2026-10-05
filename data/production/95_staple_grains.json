@@ -1,0 +1,35 @@
+{
+ "_note": "Staple grains other than wheat, so a civilisation whose people live on another grain can price its subsistence basket (a civilisation file names its `staple`). Each is a GROWN, land-limited entry shaped like wheat_kg: no material inputs, one hectare-year charged against hectare_land.",
+ "materials": {
+  "millet_kg": {
+   "outputs": {
+    "millet_kg": 900.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 200.0
+   },
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "arable land",
+   "basis": "per hectare CROPPED with foxtail or broomcorn millet for one growing season, as kg of threshed grain net of seed",
+   "yield_basis": "GROWN. Dry-farmed millet of the northern Chinese plains, sown in rows and hoed, returned on the order of a tonne of grain per hectare before the seed (a few kilograms per hectare) is held back, so 900 is taken net (conf C). Labour: hoeing and thinning the rows, hand reaping the heads and threshing by flail, about 200 hours per hectare, above wheat's because the crop is weeded by hand (conf C). LAND: the batch is the one hectare-year the basis states, charged at hectare_land's rent like wheat_kg. SOURCES: general archaeobotanical and agronomic orders of magnitude for Han-period millet farming, recalled and not opened for this entry (Complaints/347).",
+   "conf": "C",
+   "requires_node": null
+  },
+  "maize_kg": {
+   "outputs": {
+    "maize_kg": 900.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 250.0
+   },
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "arable land",
+   "basis": "per hectare CROPPED with maize for one growing season, as kg of shelled grain net of seed",
+   "yield_basis": "GROWN. Hand-planted maize in hills with the digging stick and no draught animal returned on the order of nine hundred kilograms of shelled grain per hectare in traditional Mesoamerican fields, net of the seed kernels (conf C). Labour: planting each hill by hand, repeated hoeing, hand husking and shelling, about 250 hours per hectare, more than wheat's because every operation is by hand (conf C). LAND: the batch is the one hectare-year the basis states, charged at hectare_land's rent like wheat_kg. SOURCES: general agronomic orders of magnitude for traditional milpa yields, recalled and not opened for this entry (Complaints/347).",
+   "conf": "C",
+   "requires_node": "fud_maize"
+  }
+ }
+}

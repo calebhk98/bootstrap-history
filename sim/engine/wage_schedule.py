@@ -2,8 +2,16 @@
 import warnings
 from typing import Any, Dict, Mapping, Optional
 
+from sim.default_civilisation import REPOSITORY_ROOT
+from sim.engine import need_data
 from sim.labour.api import wage_provider, wages
 from sim.world import demand
+
+
+def _food_per_kg(staple: str) -> float:
+    """Food value of a kilogram of the staple in the subsistence quantity's unit (kg wheat equivalent)."""
+    goods = need_data.load_needs(REPOSITORY_ROOT)["goods"]
+    return float(((goods.get(staple) or {}).get("satisfies") or {}).get("food", 1.0))
 
 
 def build_schedule(registry: Mapping[str, Any], civ: Mapping[str, Any],
@@ -35,7 +43,8 @@ def build_schedule(registry: Mapping[str, Any], civ: Mapping[str, Any],
             civ["starting_techs"], opening.ratio_document(),
             production_entries=production_entries, civilization_id=civilisation_id,
             civilization=civ)
-    for role, material in (("staple", wage_provider.FOOD_PRICE_MATERIAL), ("coin", standard["material"])):
+    staple = wage_provider.staple_material(civ)
+    for role, material in (("staple", staple), ("coin", standard["material"])):
         if material not in solved.resolvable_materials:
             raise ValueError(
                 "civilization %r cannot price its %s %s with its starting technologies"
@@ -43,8 +52,8 @@ def build_schedule(registry: Mapping[str, Any], civ: Mapping[str, Any],
     hours_per_kg = solved.prices_in_labour_hours
     coin_hours = standard["kg_per_unit"] * hours_per_kg[standard["material"]]
     subsistence_hours = wages.subsistence_wage_per_hour(
-        demand.FOOD_SUBSISTENCE_QUANTITY_KG_PER_CAPITA_PER_YEAR,
-        hours_per_kg[wage_provider.FOOD_PRICE_MATERIAL], wage_provider.people_fed_per_worker())
+        demand.FOOD_SUBSISTENCE_QUANTITY_KG_PER_CAPITA_PER_YEAR / _food_per_kg(staple),
+        hours_per_kg[staple], wage_provider.people_fed_per_worker())
     return wages.WageSchedule(
         wage_provider.training_years_by_trade(registry), 1.0 / coin_hours, subsistence_hours,
         civ["starting_interest_rate"], tightness_factors=tightness_factors)

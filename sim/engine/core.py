@@ -38,6 +38,7 @@ from sim.unit_conversions import PERCENT_SCALE
 
 
 from .economy import EconomyMixin
+from .node_rederive import NodeRederiveMixin
 from .market_clearing import MarketClearingMixin
 from .foreign_economies import ForeignEconomiesMixin
 from .living_stock import LivingStockMixin
@@ -216,7 +217,7 @@ YEARLY_RECORD_LIMIT = 300
 class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, LabourPortMixin,
           ProjectsMixin, SocietyMixin, ActorsMixin, DisclosureMixin, InterestGroupsMixin, ForwardingPropertiesMixin,
           StepPhasesMixin, LivingStockMixin, CoinHoardMixin,
-          LivingStockTradeMixin, LivingStockYearlyMixin, EconomyPortMixin):
+          LivingStockTradeMixin, LivingStockYearlyMixin, EconomyPortMixin, NodeRederiveMixin):
     STATE_CAPACITY_DEFAULT = declare(
         "STATE_CAPACITY_DEFAULT", 0.7, kind="temporary_heuristic",
         unit="dimensionless (0..1)", source=None, confidence="D",
@@ -297,6 +298,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         self.civ = civ or load_civ()
         self.start_civ = copy.deepcopy(self.civ)    # the opening values, kept while self.civ drifts
         self.nodes = nodes_in_civ_money(nodes, self.civ)
+        self._remember_derived_gates(self.civ["starting_techs"])
         self._localise_book_money_constants()
         # Authoritative live SimulationState hierarchy
         from sim.engine.state import (
@@ -2114,6 +2116,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         # knows both.
         self.state.household.scandal_last_year = self.state.household.scandal
         automation_audit.begin_year(self)
+        self.refresh_derived_nodes()
 
         # step() is a readable sequence of phase calls, in the same order the
         # phases always ran in; the phases themselves are below, and each still

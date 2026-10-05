@@ -298,4 +298,5 @@ def load_state(sim, path):
 		sim.value_weights.update(state._weights)
 	if state._civ_live and "state_capacity" in state._civ_live:
 		sim.state_capacity = float(state._civ_live["state_capacity"])
+	sim.refresh_derived_nodes()
 	return sim

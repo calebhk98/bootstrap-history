@@ -52,6 +52,8 @@
  },
  "goods": {
   "wheat_kg": {"satisfies": {"food": 1.0}},
+  "millet_kg": {"satisfies": {"food": 1.11}},
+  "maize_kg": {"satisfies": {"food": 1.08}},
   "milk_kg": {"satisfies": {"food": 0.2}},
   "olive_oil_kg": {"satisfies": {"food": 2.7}},
   "fat_kg": {"satisfies": {"food": 2.4}},

@@ -121,6 +121,18 @@ def check_has_source(where, entry):
     return problems
 
 
+def check_unit_mass(where, entry):
+    """A stated `unit_mass_kg` is a positive finite number of kilograms for one unit of the entry's own good."""
+    if "unit_mass_kg" not in entry:
+        return []
+    mass = entry["unit_mass_kg"]
+    if isinstance(mass, bool) or not isinstance(mass, (int, float)) or not 0 < mass < float("inf"):
+        return ["%s: unit_mass_kg is %r, not a positive number of kilograms" % (where, mass)]
+    if where not in (entry.get("outputs") or {}):
+        return ["%s: unit_mass_kg is stated but the entry does not output %s" % (where, where)]
+    return []
+
+
 def check_labour_hours(where, entry, known_trades):
     """Every labour trade has registered identity and sane non-negative hours."""
     problems = []
@@ -405,6 +417,7 @@ def check(entries, known_materials, known_trades, known_nodes=None):
         problems.extend(check_outputs(where, entry, known_materials))
         problems.extend(check_inputs(where, entry, known_materials))
         problems.extend(check_has_source(where, entry))
+        problems.extend(check_unit_mass(where, entry))
         problems.extend(check_labour_hours(where, entry, known_trades))
         problems.extend(check_energy_carrier_fields(where, entry))
         problems.extend(check_requires_node(where, entry, known_nodes))

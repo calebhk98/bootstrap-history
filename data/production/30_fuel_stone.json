@@ -280,6 +280,7 @@
     "mason": 10.0,
     "labourer": 2.0
    },
+   "unit_mass_kg": 140.0,
    "basis": "per dressed ashlar block, taken as roughly 0.3 x 0.3 x 0.6 m at 2600 kg/m3, i.e. about 140 kg finished",
    "yield_basis": "MANUFACTURED by dressing rough-quarried stone to precise, square faces. Cutting a block down to true faces from a rough-broken lump loses roughly a quarter of the mass as chips and spalls, so a 140 kg finished block needs about 190 kg of rough stone; 200 kg is used here to leave a small margin for a spoiled block. Ashlar dressing by hammer and chisel is slow, skilled work - a mason finishing one or two blocks a day is consistent with the historical record, hence 10 mason-hours per block.",
    "conf": "C",
@@ -532,6 +533,7 @@
    "labour_hours": {
     "labourer": 18.0
    },
+   "unit_mass_kg": 2500.0,
    "basis": "per 1000 fired common bricks, each about 2.5 kg (1000 bricks = 2500 kg fired mass)",
    "yield_basis": "As-dug brick clay carries roughly 20-25% free water; drying removes most of it, and firing then drives off the clay minerals' chemically bound water and burns out any organic matter, together costing perhaps another 5-10% of the dried mass - overall the fired brick keeps roughly 78% of the wet clay's mass, so 2500 kg of fired brick needs about 3200 kg of pit clay. Firing a simple clamp or kiln to the 900-1000 C common brick needs, on commonly-cited pre-industrial efficiency figures, on the order of 0.2 kg of fuel per kg of fired brick - 500 kg of firewood for 2500 kg of brick. Labour covers hand-moulding (a moulder and off-bearer team historically set around 1000 bricks a day, hence roughly 10 hours per 1000 here) plus kiln setting, firing and drawing, amortised over a large kiln batch.",
    "conf": "C",
