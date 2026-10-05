@@ -271,6 +271,7 @@ class ScenarioState:
 	"""Simulation scenario configuration and timeline."""
 	year: int = 100
 	goal_year: Optional[int] = None
+	goal_years: Dict[str, int] = field(default_factory=dict)  # goal id -> year it was reached as the formal goal
 	weather_salt: int = 0     # this game's own weather history, drawn from its dice (Complaint 384)
 	_said_debasement: Optional[int] = None
 	_said_output: Optional[Dict[str, int]] = None

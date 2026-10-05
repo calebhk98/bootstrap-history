@@ -156,6 +156,18 @@ def set_goal_closure(sim, closure_set):
     sim._goal_closure = closure_set
 
 
+def goal_years(sim):
+    return dict(sim.state.scenario.goal_years)
+
+
+def set_goal(sim, node_id):
+    sim.set_goal(node_id)
+
+
+def win_condition_anatomy(sim, condition):
+    return sim.win_condition_anatomy(condition)
+
+
 def goal_critical_floor(sim):
     return getattr(sim, "_goal_critical_floor", None)
 

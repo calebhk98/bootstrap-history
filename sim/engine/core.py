@@ -60,6 +60,7 @@ from .society_actors import ActorsMixin
 from .society_disclosure import DisclosureMixin
 from .interest_groups import InterestGroupsMixin
 from .core_properties import ForwardingPropertiesMixin
+from .goals import GoalsMixin
 from .core_step_phases import StepContext, StepPhasesMixin
 from .economy_port import EconomyPortMixin, switch_requested
 from .data import trade_family
@@ -214,7 +215,7 @@ YEARLY_RECORD_LIMIT = 300
 
 
 class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, LabourPortMixin,
-          ProjectsMixin, SocietyMixin, ActorsMixin, DisclosureMixin, InterestGroupsMixin, ForwardingPropertiesMixin,
+          ProjectsMixin, SocietyMixin, ActorsMixin, DisclosureMixin, InterestGroupsMixin, ForwardingPropertiesMixin, GoalsMixin,
           StepPhasesMixin, LivingStockMixin, CoinHoardMixin,
           LivingStockTradeMixin, LivingStockYearlyMixin, EconomyPortMixin):
     STATE_CAPACITY_DEFAULT = declare(
@@ -2236,8 +2237,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
             self._done_changed()
             self.state.projects.done_year[node_id] = year
             self.state.household.log.append((year, "achieved: " + self.nodes[node_id]["name"]))
-            if node_id == self.goal and self.state.scenario.goal_year is None:
-                self.state.scenario.goal_year = year
+            self.record_goal_reached(node_id, year)
 
     def run(self, goal, horizon=None):
         self.goal = goal

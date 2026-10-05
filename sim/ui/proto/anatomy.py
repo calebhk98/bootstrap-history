@@ -160,6 +160,13 @@ def anatomy_for(sim, condition, description=None):
             rows = builder(sim, condition)
         except _READ_ERRORS:
             builder = None
+    if builder is None:
+        try:
+            hooked = [_row(label, value, unit) for label, value, unit in ui_port.win_condition_anatomy(sim, condition)]
+        except _READ_ERRORS:
+            hooked = []
+        if any(row["label"] != "current" for row in hooked):
+            rows, builder = hooked, True
     reply = {"ok": True, "metric": condition.get("metric"), "description": description,
              "current": None if current is None else round(current, 4),
              "target": _target(condition, current), "rows": rows, "generic": builder is None}

@@ -805,6 +805,7 @@ class ForwardingPropertiesMixin:
 	@goal.setter
 	def goal(self, value):
 		self.state._goal = value
+		self.forget_goal_caches()
 
 	# =========================================================================
 	# PopulationState Compatibility Properties
