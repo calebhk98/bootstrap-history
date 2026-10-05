@@ -1,6 +1,6 @@
 # Soap has no technique England in 1300 knows
 
-**Status:** partly - soap_kg is gated on the plain lye-soap node `hom_soap_soft` (held by England, Norse and Rome; test `sim/tests/test_soap_known_to_england.py`); remains: the review of the other buyers-only goods, which needs the removed untraded-goods measurement rebuilt
+**Status:** closed - soap is gated on `hom_soap_soft` (`sim/tests/test_soap_known_to_england.py`); every basket good a civilisation cannot supply is checked by `civ_basket_check` in `simulator.py validate` and `sim/tests/test_basket_goods_supplied.py`, and each remaining one is declared with a reason in the civilisation's `unsupplied_basket_goods`
 
 On the agent economy, England's households bid for soap every year and nobody sells it: no production recipe for soap is among the techniques England 1300 starts with, though soap was made and traded in medieval England. Demand-driven entry (sim/economy/entry.py) only uses recipes the society knows, so the market stays empty.
 
