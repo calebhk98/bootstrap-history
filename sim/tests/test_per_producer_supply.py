@@ -6,7 +6,7 @@ test_producer_market.py; these run the engine."""
 from .harness import *  # noqa: F401,F403
 from functools import partial
 
-sim = partial(sim, agent_economy=False)   # these checks pin the engine's own yearly material market
+sim = partial(sim, agent_economy=False)   # legacy: pins the per-producer supply curve of the engine's yearly material market
 
 
 import copy

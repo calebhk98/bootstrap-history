@@ -9,7 +9,7 @@ from sim.agents.api import Government, Stratum, stratum_id
 from sim.agents.records import ActorRecord
 from sim.tests.agents_fake_world import FakeWorld
 
-sim = partial(sim, agent_economy=False)   # these checks pin the engine's own wage table and state budget
+sim = partial(sim, agent_economy=False)   # legacy: pins the engine's budget by stratum; the agent-economy budget is test_economy_agent_state.py
 
 
 class FiscalWorld(FakeWorld):

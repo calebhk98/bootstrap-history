@@ -14,8 +14,7 @@ LITERACY_GOAL = "goal_literacy_common"
 
 
 def _fresh_sim(goal=None):
-    sim = Sim(_NODES, [], random.Random(1), events=False, manual=True, civ=load_civ("rome_100ad"),
-              cfg={"agent_economy": False})
+    sim = Sim(_NODES, [], random.Random(1), events=False, manual=True, civ=load_civ("rome_100ad"))
     sim.done_year = {}
     if goal:
         sim.goal = goal

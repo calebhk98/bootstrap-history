@@ -9,7 +9,7 @@ households want spices through the seasoning need.
 from .harness import *  # noqa: F401,F403
 from functools import partial
 
-sim = partial(sim, agent_economy=False)   # these checks pin the engine's own yearly material market
+sim = partial(sim, agent_economy=False)   # legacy: pins luxury imports paid in coin through the engine's own foreign trade; see test_economy_agent_foreign.py
 
 
 from sim.geography import crop_climate

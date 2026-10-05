@@ -9,7 +9,7 @@ lifts only what its carriers can.
 from .harness import *  # noqa: F401,F403
 from functools import partial
 
-sim = partial(sim, agent_economy=False)   # these checks pin the engine's own yearly material market
+sim = partial(sim, agent_economy=False)   # legacy: pins freight lift and coin balances of the engine's own foreign trade; see test_economy_agent_foreign.py
 
 
 from sim.engine.data import load_civ
