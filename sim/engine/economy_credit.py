@@ -771,6 +771,9 @@ class CreditMixin:
             # months opens even while deep in arrears" and its slow-payback sibling,
             # which holds the line the other way: a concern that takes YEARS
             # to clear its own capex still does not open on this.
+            # Past the line nobody lends, so there is nothing to raise for a door fee either.
+            if self.state.household.capital < -self.credit_limit():
+                return 0.0
             return calculate_affordability(
                 self.state.household.capital, self.credit_limit(), share,
                 preserve_debt=True)

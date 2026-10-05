@@ -52,6 +52,12 @@ def rate_for_balance(starting_rate: float, current_utilisation: float, reference
     return starting_rate * max(RATE_FLOOR_SHARE, min(RATE_CEILING_SHARE, scaled))
 
 
+def bounded_rate(starting_rate: float, rate: float) -> float:
+    """A market rate held under the ceiling: however keen the queue of borrowers, lenders' own risk and the
+    borrowers' turn to other means stop the rate there."""
+    return min(rate, starting_rate * RATE_CEILING_SHARE)
+
+
 def capital_recovery_factor(rate: float, life_years: float) -> float:
     """The yearly share of a plant's cost that repays it over its life with interest at `rate` on what is
     still unpaid: one over the life when the rate is nil, the rate when the life is endless."""
