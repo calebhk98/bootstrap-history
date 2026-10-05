@@ -1027,7 +1027,7 @@ def _new_game_pick_civ(civs, cfg):
         print()
         print("   %d) %s, %d" % (i, civ_record.get("name", civ_record["id"]), civ_record.get("year", 0)))
         print(_wrap(civ_record.get("blurb", ""), indent="      "))
-        print("      %s people   state capacity %.2f   prices %.2fx Rome"
+        print("      %s people   state capacity %.2f   prices %.2fx the default scenario"
               % (f"{civ_record.get('population', 0):,}", civ_record.get("state_capacity", 0),
                  civ_record.get("price_index", 1.0)))
     print()

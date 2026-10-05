@@ -600,7 +600,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         # Starting ownership is deliberately exhausted by starting_techs.
         # Tier and zero cost describe a node's position in the universal graph;
         # they do not mean every society on Earth already owns it.  In
-        # particular, never infer Roman materials or institutions for another
+        # particular, never infer one civilization's materials or institutions for another
         # civilization from those fields.
         self._reconnect_state_hooks()
         if self.economy.runs_agent_economy():
@@ -710,9 +710,9 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
     # diverge sharply afterwards - a result a scalar deficit decaying on a
     # clock that knows nothing about WHO was lost can never produce.
     #
-    # `pop_scale` uses `DEFAULT_POPULATION_100AD` (65,000,000, Rome's own
+    # `pop_scale` uses `DEFAULT_POPULATION_100AD` (the default scenario's
     # configured population) as its reference, so `pop_scale == 1.0` means
-    # "a Rome-sized labour market" - every downstream formula is calibrated
+    # "a default-scenario-sized labour market" - every downstream formula is calibrated
     # against that. The numerator is `self.population.total`, the age-cohort
     # model's own running headcount.
     @property
@@ -1660,7 +1660,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
     # Reach must be computed from the ACTUAL civilization's own home
     # ground, never hard-coded from one fixed point such as Italy: a
     # single Italy-measured `reach` per region gets every civilization
-    # except Rome backwards - Han China would treat Chinese silk as three
+    # except the one based there backwards - for example Han China would treat Chinese silk as three
     # reach-steps away and Malaya, which Chinese and Malay traders already
     # sail to routinely, as an exotic frontier, while Italy, a place that
     # civilization has never seen, would be reach 0. Everything below

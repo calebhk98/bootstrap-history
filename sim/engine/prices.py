@@ -122,7 +122,7 @@ solved would be silently handed the first civilization's land rent.
 `solved_prices` and `priced_goods_table` below therefore take
 an explicit `civilization_id` parameter and fold it into the cache key
 alongside `gate_nodes_held`. It defaults to `None`, which resolves to
-`solve_prices.DEFAULT_LAND_CIVILIZATION` (Rome) - the same default the CLI
+`solve_prices.DEFAULT_LAND_CIVILIZATION` (the default civilisation) - the same default the CLI
 uses when `--civ` is omitted - so every existing call site (which never
 knew this parameter existed) keeps behaving exactly as it did with
 `use_solved_prices=False`, and a NEW call site that wants a different
@@ -420,10 +420,10 @@ def solved_prices(held_technology_ids: Iterable[str],
     `civilization_id` decides whose territory `land_rent_hours_per_hectare`
     prices (see RENT NEEDS A CIVILIZATION in the module docstring); it
     defaults to `None`, which resolves to `solve_prices.
-    DEFAULT_LAND_CIVILIZATION` (Rome), matching what the CLI does when
+    DEFAULT_LAND_CIVILIZATION` (the default civilisation), matching what the CLI does when
     `--civ` is omitted. Passing `held_technology_ids` from a civilization's
     `starting_techs` without ALSO passing that civilization's own id here
-    would silently price its land as Rome's - the parameter is separate
+    would silently price its land as the default civilisation's - the parameter is separate
     from `held_technology_ids` on purpose, so a caller cannot get this
     right by accident and cannot get it wrong without a value showing up
     somewhere to say so.

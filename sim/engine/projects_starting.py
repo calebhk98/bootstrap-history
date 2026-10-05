@@ -180,20 +180,18 @@ class StartingMixin:
     def bounty_eligible(self, node_id):
         """Can this be bought as a prize instead of built with your own hands?
 
-        A public prize ("ten thousand sesterces to the first glassworker who
-        brings me a clear sphere of glass the size of a millet seed") converts
-        DENARII into someone else's HOURS, which is the trade you most want to
-        make. It only works where the craft already exists in the Empire and the
+        A public prize (for example, in Rome, coin to the first glassworker who
+        brings a clear sphere of glass the size of a millet seed) converts
+        money into someone else's HOURS, which is the trade you most want to
+        make. It only works where the craft already exists in the society and the
         artisan can recognise success without understanding the theory. You
         cannot post a bounty for zone refining; nobody would know what to aim at.
         """
         node = self.nodes[node_id]
-        # THE ALLOW-LIST IS ROME'S CRAFTS, BUT NOT THE WHOLE RULE: anything
-        # this society is measurably GOOD at (its own cost multipliers say
-        # so) can be recognised by its own craftsmen, whatever Rome's craft
-        # categories happen to be - a civilisation whose own profile marks
-        # shipbuilding as what it is best at in the world should not be
-        # refused a bounty on it for want of a Roman artisan's judgement.
+        # The category list is the default scenario's crafts, not the whole rule:
+        # anything this society is measurably GOOD at (its own cost multipliers
+        # say so) can be recognised by its own craftsmen, whatever the default
+        # scenario's craft categories are.
         if node["cat"] in ("glass_optics", "metallurgy", "precision", "power",
                         "agriculture", "information", "instruments"):
             return all(prereq_id in self.state.projects.done for prereq_id in node["pre"])
