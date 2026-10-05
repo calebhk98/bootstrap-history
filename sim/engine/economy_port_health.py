@@ -3,7 +3,7 @@
 Part of the port. The staple is the good the hunger need's basket buys most of; metals default to the
 good that backs the currency, and a caller may name others.
 """
-from sim.economy import diagnostics
+from sim.economy.api import diagnostics, opening_quantities
 
 
 def staple_good(agent):
@@ -13,7 +13,7 @@ def staple_good(agent):
     need = next((spec for spec in setup.basket.needs if spec.need_id == setup.hunger_need), None)
     if need is None:
         return None
-    opening = economy.record.opening_basket
+    opening = opening_quantities(economy)
     goods = [good for good, _effect in need.goods]
     return max(goods, key=lambda good: opening.get(good, 0.0), default=None)
 

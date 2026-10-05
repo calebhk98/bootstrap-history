@@ -20,14 +20,14 @@ another package except through its `api`, and `Sim` inherits nothing from it. Wh
 from the engine is handed to it by an engine-side adapter.
 
 Nothing checks these rules automatically: keep to them by review. The packages split from the
-engine stay off `sim.economy` too (only `sim/engine/economy_port*.py` may import it);
+engine stay off `sim.economy` too (only `sim/engine/economy_port*.py` may import it, and only `sim.economy.api`);
 `sim/tests/test_economy_imports.py` holds that rule for `sim/engine/` only.
 
 ## The surfaces
 
 | Package | Import door | Object on `Sim`, and the engine adapter that feeds it |
 |---|---|---|
-| `sim/economy/` | none; the engine reaches it through `sim/engine/economy_port*.py` | `sim.economy` |
+| `sim/economy/` | `sim/economy/api.py`, imported only by `sim/engine/economy_port*.py` | `sim.economy` |
 | `sim/labour/` | `sim/labour/api.py` | `sim.labour` (a `Labour`); `LabourWorld` in `sim/engine/labour_port.py`; the labour market every employer asks is `sim.labour.market` |
 | `sim/geography/` | `sim/geography/api.py` | `sim.geography` (a `Geography`); `GeographyWorld` in `sim/engine/geography_port.py` |
 | `sim/agents/` | `sim/agents/api.py` | none; the engine adapters (`society_actors.py`, `society_disclosure.py`, `interest_groups.py`) consume the api, and `sim/engine/agents_port*.py` (`SimWorld`) is what actors ask of the world (`sim/agents/protocols.py`) |

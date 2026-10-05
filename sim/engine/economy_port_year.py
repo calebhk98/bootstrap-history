@@ -12,16 +12,9 @@ import os
 from sim.agents.api import COIN_RESTRIKE_SHARE_PER_YEAR
 from sim.constants import declare
 from sim.economy import api as economy_api
-from sim.economy.economy import Economy
-from sim.economy.producers import Producer, expected_output_prices, live_input_prices, live_wages
-from sim.economy.protocols import AgentOrders, YearInputs
-from sim.economy.foreign import external_orders
-from sim.economy.types import EDGE_EXTERNAL, EDGE_LEGACY, GoodsMove, Offer, Transfer
-from sim.economy.record import EconomyRecord
-from sim.economy.unit_cost import variable_cost_per_run
-from sim.economy.notional import shown_prices
-from sim.economy.year_close import rebase_price_level
-from sim.economy.year_labour import trade_premium
+from sim.economy.api import (EDGE_EXTERNAL, EDGE_LEGACY, AgentOrders, Economy, GoodsMove, Offer, Producer,
+                             YearInputs, expected_output_prices, external_orders, live_input_prices, live_wages,
+                             trade_premium, variable_cost_per_run)
 
 from . import solve_cache
 from .data import load_civ
@@ -92,14 +85,14 @@ class AgentEconomy:
         if self._economy is None:
             if "record" in self.stored:
                 setup = build_setup(self._sim, self.stored["opening"])
-                self._economy = Economy(setup, EconomyRecord.from_record(self.stored["record"]))
+                self._economy = economy_api.economy_from_record(setup, self.stored["record"])
             else:
                 opening = opening_values(self._sim)
                 setup = build_setup(self._sim, opening)
                 record = solve_cache.cached_json(
                     solve_cache.solve_key({"agent_economy_spin_up": in_units(opening), "civ": self._sim.civ["id"]}),
                     lambda: self._spun_up(setup), cache_dir=SPIN_UP_CACHE_DIRECTORY)
-                self._economy = Economy(setup, EconomyRecord.from_record(record))
+                self._economy = economy_api.economy_from_record(setup, record)
                 self.stored["opening"] = opening
                 self._save()
             self._built_from = self.stored
@@ -108,9 +101,9 @@ class AgentEconomy:
     def _spun_up(self, setup):
         """The record after the hidden years; the same opening always gives the same one, so it is cached
         on disk with the price solver's results (keyed on the data files and the source)."""
-        self._economy = Economy(setup)
+        self._economy = economy_api.blank_economy(setup)
         self._spin_up()
-        return self._economy.record.to_record()
+        return economy_api.export_record(self._economy)
 
     # ---- the year -----------------------------------------------------------------------------
     def run_year(self):
@@ -137,7 +130,7 @@ class AgentEconomy:
         legacy edge (the engine's purse is not yet an account in the book: Complaint 382) and offered at
         what the concern costs to make it at the economy's own prices and wages (_concern_reservation)."""
         sim, economy = self._sim, self._economy
-        book, area_map = economy.record.book, economy.area_map
+        area_map = economy.area_map
         tile = sim.labour.base_tile() if sim.labour.base_tile() in economy.setup.tiles else economy.setup.capital_tile
         projects = sim.state.projects
         view = economy.view()
@@ -156,7 +149,7 @@ class AgentEconomy:
                 moves.append(GoodsMove(EDGE_LEGACY, FOUNDER_AGENT, material, tile, quantity, "concern output"))
                 cost = self._concern_reservation(node_id, material, tile, view)
                 offers.append(Offer(FOUNDER_AGENT, material, area_map.area_of(material, tile), tile, quantity, cost))
-        book.move_many(moves)
+        economy_api.move_goods(economy, moves)
         return {FOUNDER_AGENT: AgentOrders(offers=tuple(offers))} if offers else {}
 
     def _concern_reservation(self, node_id, material, tile, view) -> float:
@@ -194,13 +187,11 @@ class AgentEconomy:
         from .project_materials import tonnes_per_unit
         offers_api = sim.goods_market
         routes = {partner: offers_api._route_from(partner) for partner in partners}
-        volumes = {}
-        for key, volume in economy.record.volumes.items():
-            good = key.split("|", 1)[0]
-            volumes[good] = volumes.get(good, 0.0) + volume
+        volumes = economy_api.traded_volumes(economy)
+        opening = economy_api.opening_quantities(economy)
         landed, export_prices, available, wanted = {}, {}, {}, {}
         for good in economy.area_map.goods():
-            market = max(volumes.get(good, 0.0), economy.record.opening_basket.get(good, 0.0))
+            market = max(volumes.get(good, 0.0), opening.get(good, 0.0))
             if market <= 0.0:
                 continue
             for partner in partners:
@@ -247,10 +238,9 @@ class AgentEconomy:
         partners = sim.foreign_economies()
         if not partners:
             return
-        book, money = economy.record.book, economy.setup.currency_id
         coin = economy.setup.coin_per_unit
-        paid_in = book.edge_net(EDGE_EXTERNAL, money)            # exports less imports
-        volume = book.edge_volume(EDGE_EXTERNAL, money)
+        paid_in = economy_api.external_trade_net(economy)            # exports less imports
+        volume = economy_api.external_trade_volume(economy)
         imports, exports = (volume - paid_in) / 2.0 * coin, (volume + paid_in) / 2.0 * coin
         for partner in partners:
             standard = load_civ(partner)["coin_standard"]
@@ -265,16 +255,7 @@ class AgentEconomy:
 
     def _settle_founder(self):
         """What the founder's goods fetched goes back to the engine; what did not sell goes back too."""
-        record = self._economy.record
-        money = self._economy.setup.currency_id
-        book = record.book
-        proceeds = book.balance(FOUNDER_AGENT, money)
-        if proceeds > 0.0:
-            book.transfer(Transfer(FOUNDER_AGENT, EDGE_LEGACY, money, proceeds, "founder's takings"))
-        returns = [GoodsMove(FOUNDER_AGENT, EDGE_LEGACY, good, tile, quantity, "unsold concern output")
-                   for good, tiles in book.holdings(FOUNDER_AGENT)["goods"].items()
-                   for tile, quantity in tiles.items() if quantity > 0.0]
-        book.move_many(returns)
+        proceeds = economy_api.settle_founder_takings(self._economy, FOUNDER_AGENT, EDGE_LEGACY)
         self.stored["founder_takings"] = proceeds * self._economy.setup.coin_per_unit
 
     def _inputs(self, engine_orders) -> YearInputs:
@@ -283,7 +264,7 @@ class AgentEconomy:
         total = float(population.total)
         weather = sim._pooled_farm_weather_multiplier(sim.state.scenario.year)
         economy = self._economy
-        yields = {producer_id: weather for producer_id, producer in economy.record.producers.items()
+        yields = {producer_id: weather for producer_id, producer in economy_api.producers_of(economy).items()
                   if economy.setup.land_per_run.get(producer.recipe_id, 0.0) > 0.0}
         return YearInputs(year=sim.state.scenario.year, population_by_tile=sim.labour.settlement_tiles(),
                           working_age_share=population.working_age / total if total > 0.0 else 0.0,
@@ -293,8 +274,7 @@ class AgentEconomy:
         """Hidden years from the opening until prices and the interest rate settle; then the price level
         is rebased to one."""
         economy = self._economy
-        record = economy.record
-        basket = record.opening_basket
+        basket = economy_api.opening_quantities(economy)
         prices = economy.setup.opening_prices
         watched = sorted(basket, key=lambda good: -basket[good] * prices.get(good, 0.0))[:SPIN_UP_WATCHED_GOODS]
         inputs = YearInputs(year=0, population_by_tile={}, working_age_share=economy.setup.working_share,
@@ -302,16 +282,15 @@ class AgentEconomy:
         before = None
         for _year in range(int(SPIN_UP_MAXIMUM_YEARS)):
             outcome = economy.step(inputs)
-            now = ([outcome.price_level, record.memory.rates.get(economy.setup.currency_id, 0.0)]
+            now = ([outcome.price_level, economy_api.interest_rate(economy) or 0.0]
                    + [outcome.prices.get(good, 0.0) for good in watched])
             if before is not None and max(abs(new / old - 1.0) for new, old in zip(now, before) if old > 0.0) < SPIN_UP_TOLERANCE:
                 break
             before = now
-        rebase_price_level(economy.setup, record)
-        record.memory.year = 0
+        economy_api.finish_spin_up(economy)
 
     def _save(self):
-        self.stored["record"] = self._economy.record.to_record()
+        self.stored["record"] = economy_api.export_record(self._economy)
 
     # ---- what the seams read ------------------------------------------------------------------
     def answers(self):
@@ -319,13 +298,13 @@ class AgentEconomy:
         whose markets have not cleared lately shows what it costs to make at today's prices and wages, or
         its last price when nothing makes it; `stale_goods()` names those."""
         if self._answers is None or self._built_from is not self.stored:
-            record = self.economy().record
+            self.economy()
             wages = economy_api.wages_by_trade_weighted(self._economy)
             coin = self._economy.setup.coin_per_unit
-            prices, self._stale = shown_prices(self._economy.setup, record)
+            prices, self._stale = economy_api.shown_prices_of(self._economy)
             self._answers = ({good: price * coin for good, price in prices.items()},
                              {trade: wage * coin for trade, wage in wages.items()},
-                             record.memory.rates.get(self._economy.setup.currency_id))
+                             economy_api.interest_rate(self._economy))
         return self._answers
 
     def stale_goods(self):

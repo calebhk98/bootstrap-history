@@ -8,9 +8,8 @@ import dataclasses
 import json
 import os
 
-from sim.economy import households, taxes, tile_costs
-from sim.economy.currency import currency_from_coin_standard
-from sim.economy.setup import EconomySetup, TradeSpec, goods_specs
+from sim.economy.api import (EconomySetup, TradeSpec, currency_from_coin_standard, goods_specs, households,
+                             recipes_from_production_data, taxes, tile_costs)
 from sim.world import demand
 from sim.geography.api import layer_value, sea_freight, settlement, tiles_of_regions
 from sim.labour import api as labour_api
@@ -124,7 +123,6 @@ def build_setup(sim, opening=None):
     tiles = tile_costs.tiles_from_map(world_map, tile_ids)
     population_by_tile = {tile: float(opening["population_by_tile"].get(tile, 0.0)) for tile in tile_ids}
     production = demand.production_data()
-    from sim.economy.recipes import recipes_from_production_data
     recipes = recipes_from_production_data(production, opening["recipes"])
     need_data = _load("world", "needs.json")
     basket = households.make_basket(need_data, production)
