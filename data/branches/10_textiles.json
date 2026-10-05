@@ -172,6 +172,33 @@
   ]
  },
  {
+  "id": "tex_backstrap_loom",
+  "name": "Backstrap loom",
+  "cat": "textiles",
+  "kind": "ENGINEERING",
+  "pre": [
+    "exp_americas_factory"
+  ],
+  "kb": "90_textiles.md#backstrap_loom",
+  "ph": 0,
+  "lab": {},
+  "mat": {},
+  "cap_hours": 0,
+  "up_hours": 0,
+  "yrs": 0,
+  "risk": 0,
+  "sus": 0,
+  "gov": 0,
+  "rev_hours": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "B",
+  "note": "Body-tensioned loom: the warp runs between a post or tree and a strap round the weaver's back, so the weaver sets the tension by leaning. No frame, narrow cloth. The loom of Mesoamerica and the Andes.",
+  "traits": [
+    "commerce"
+  ]
+ },
+ {
   "id": "tex_warp_weighted_loom",
   "name": "Warp-weighted loom",
   "cat": "textiles",
