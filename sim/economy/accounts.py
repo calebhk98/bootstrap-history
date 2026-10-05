@@ -159,17 +159,26 @@ class Book:
             currency = transfer.currency
             if not amount >= 0.0:
                 raise NegativeAmount("transfer of %r %s (%s) is negative" % (amount, currency, transfer.purpose))
-            for agent, signed in ((transfer.payer, -amount), (transfer.payee, amount)):
-                key = (agent, currency)
-                if key in after:
-                    after[key] += signed
-                    moved[key] += amount
-                else:
-                    purse = purses.get(agent)
-                    start = purse.get(currency, 0.0) if purse else 0.0
-                    before[key] = start
-                    after[key] = start + signed
-                    moved[key] = amount
+            key = (transfer.payer, currency)
+            if key in after:
+                after[key] -= amount
+                moved[key] += amount
+            else:
+                purse = purses.get(key[0])
+                start = purse.get(currency, 0.0) if purse else 0.0
+                before[key] = start
+                after[key] = start - amount
+                moved[key] = amount
+            key = (transfer.payee, currency)
+            if key in after:
+                after[key] += amount
+                moved[key] += amount
+            else:
+                purse = purses.get(key[0])
+                start = purse.get(currency, 0.0) if purse else 0.0
+                before[key] = start
+                after[key] = start + amount
+                moved[key] = amount
         # only an overdraft this batch makes or deepens fails: a residue an earlier, larger batch
         # was allowed to leave is not this batch's doing
         failing = [key for key, value in after.items()
@@ -188,16 +197,24 @@ class Book:
             good = move.good
             if not quantity >= 0.0:
                 raise NegativeAmount("move of %r %s (%s) is negative" % (quantity, good, move.purpose))
-            for agent, tile, signed in ((move.giver, move.tile, -quantity), (move.receiver, _delivery_tile(move), quantity)):
-                key = (agent, good, tile)
-                if key in after:
-                    after[key] += signed
-                    moved[key] += quantity
-                else:
-                    start = self.stock(agent, good, tile)
-                    before[key] = start
-                    after[key] = start + signed
-                    moved[key] = quantity
+            key = (move.giver, good, move.tile)
+            if key in after:
+                after[key] -= quantity
+                moved[key] += quantity
+            else:
+                start = self.stock(*key)
+                before[key] = start
+                after[key] = start - quantity
+                moved[key] = quantity
+            key = (move.receiver, good, _delivery_tile(move))
+            if key in after:
+                after[key] += quantity
+                moved[key] += quantity
+            else:
+                start = self.stock(*key)
+                before[key] = start
+                after[key] = start + quantity
+                moved[key] = quantity
         failing = [key for key, value in after.items()
                    if value < min(0.0, before[key]) - max(ROUNDING_SHARE * moved[key], UNDERFLOW) and not is_edge(key[0])]
         if failing:
@@ -295,7 +312,9 @@ class Book:
         return math.fsum(purse.get(currency, 0.0) for purse in self._money.values())
 
     def goods_total(self, good: GoodId) -> float:
-        return math.fsum(value for by_good in self._goods.values() for value in by_good.get(good, {}).values())
+        # fsum is exact, so visiting only the agents that ever held the good gives the same total
+        goods = self._goods
+        return math.fsum(value for agent in self._holders.get(good, ()) for value in goods[agent][good].values())
 
     # ---- flows this year -----------------------------------------------------------------------
 

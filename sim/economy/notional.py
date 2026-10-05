@@ -55,22 +55,43 @@ def notional_prices(setup, record) -> Dict[str, float]:
     for good in input_depth_order(setup.recipes):
         if good in recent:
             continue
-        best = math.inf
-        for recipe in setup.recipes.values():
-            quantity = recipe.outputs.get(good, 0.0)
-            if quantity <= 0.0:
-                continue
-            cost = (unit_cost.variable_cost_per_run(recipe, live, wages)
-                    + unit_cost.capital_charge_per_run(recipe, live, wages, rate))
-            if not math.isfinite(cost):
-                continue
-            values = {made: amount * live.get(made, 0.0) for made, amount in recipe.outputs.items()}
-            total_value = math.fsum(values.values())
-            share = values[good] / total_value if total_value > 0.0 else 1.0 / len(recipe.outputs)
-            best = min(best, cost * share / quantity)
-        if math.isfinite(best) and best > 0.0:
+        best = cheapest_cost(setup, good, live, wages, rate)
+        if best is not None:
             notional[good] = live[good] = best
     return notional
+
+
+def making_costs(setup, record) -> Dict[str, float]:
+    """What each good costs to make by its cheapest recipe at the live prices and wages, traded or not."""
+    memory = record.memory
+    live = national_prices(record)
+    wages = mean_wages(memory)
+    rate = memory.rates.get(setup.currency_id, 0.0)
+    costs: Dict[str, float] = {}
+    for good in input_depth_order(setup.recipes):
+        best = cheapest_cost(setup, good, live, wages, rate)
+        if best is not None:
+            costs[good] = best
+    return costs
+
+
+def cheapest_cost(setup, good, live, wages, rate):
+    """Cost per unit of the cheapest recipe making `good`, a joint run's cost shared by value; None when
+    no recipe making it can be priced."""
+    best = math.inf
+    for recipe in setup.recipes.values():
+        quantity = recipe.outputs.get(good, 0.0)
+        if quantity <= 0.0:
+            continue
+        cost = (unit_cost.variable_cost_per_run(recipe, live, wages)
+                + unit_cost.capital_charge_per_run(recipe, live, wages, rate))
+        if not math.isfinite(cost):
+            continue
+        values = {made: amount * live.get(made, 0.0) for made, amount in recipe.outputs.items()}
+        total_value = math.fsum(values.values())
+        share = values[good] / total_value if total_value > 0.0 else 1.0 / len(recipe.outputs)
+        best = min(best, cost * share / quantity)
+    return best if math.isfinite(best) and best > 0.0 else None
 
 
 def shown_prices(setup, record) -> Tuple[Dict[str, float], Set[str]]:

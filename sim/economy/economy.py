@@ -4,10 +4,10 @@
 `step(inputs)` runs a year and returns what the engine reads back.
 """
 import math
-from dataclasses import dataclass, field
-from typing import Dict, Optional
+from dataclasses import dataclass, field, replace
+from typing import Dict, Optional, Tuple
 
-from . import credit, credit_claims, labour, land_market, lending, merchants_credit, producers, state_budget, unit_cost
+from . import credit, credit_claims, labour, land_market, lending, merchants_credit, producers, sites, state_budget, unit_cost
 from .credit_view import CreditView
 from .market_areas import AreaMap
 from .market_memory import YearView
@@ -41,9 +41,22 @@ class YearOutcome:
     output: Dict[str, float] = field(default_factory=dict)
     idle_hours: float = 0.0
     vacant_hours: float = 0.0
+    hired_hours: float = 0.0
+    extraction: Dict[Tuple[str, str], float] = field(default_factory=dict)   # runs worked per (recipe, tile) on a site
     conservation_residual: float = 0.0
     state_cash: float = 0.0
     money_audit: Optional[MoneyAudit] = None       # where money entered and left this year
+
+
+def plant_worth_ratio(yearly_return: float, rate: float, life_years: float) -> float:
+    """What a plant earning `yearly_return` per unit of its cost for its whole life is worth, as a multiple
+    of that cost, discounted at `rate`: an annuity, so a rate near zero is bounded by the plant's life. A
+    plant that does not wear out has no life to bound it, so it earns no ceiling above its cost."""
+    if life_years <= 0.0:
+        return 1.0
+    if rate <= 1e-9:
+        return yearly_return * life_years
+    return yearly_return * -math.expm1(-life_years * math.log1p(rate)) / rate
 
 
 class Economy:
@@ -73,6 +86,7 @@ class Economy:
         ledger = YearLedger()
         self._follow_population(inputs)
         self._follow_yields(inputs)
+        sites.apply_site_limits(record, setup, inputs.site_limits)
         view = self.view()
         money = setup.currency_id
         plans = {producer_id: producers.plan(producer, setup.recipes[producer.recipe_id], view,
@@ -111,8 +125,10 @@ class Economy:
         close_view = CreditView(record.memory, record.book, self.area_map, money, labour_area,
                                 loans=lambda: record.loans)
         close_agents(setup, record, close_view, ledger, self.area_map)
-        open_entrants(setup, record, close_view, self.area_map, ledger.unmet_demand)
+        open_entrants(setup, record, close_view, self.area_map, ledger.unmet_demand, self.carriage,
+                      ledger.bids_by_market)
         restake_owners(setup, record, close_view)
+        extraction = sites.extraction_by_tile(record, setup)
         close_idle_producers(setup, record)
         for lender, received in interest.items():
             record.property_income[lender] = record.property_income.get(lender, 0.0) + received
@@ -123,7 +139,7 @@ class Economy:
         wear_and_spoilage(setup, record)
         level = remember_price_level(setup, record)
         record.memory.year += 1
-        return self._outcome(ledger, level)
+        return self._outcome(ledger, level, extraction)
 
     # ---- the year's pieces ------------------------------------------------------------------
     def _follow_population(self, inputs: YearInputs) -> None:
@@ -140,8 +156,8 @@ class Economy:
             if before <= 0.0 or after == before:
                 continue
             scale = after / before
-            record.cohorts[cohort_id] = type(cohort)(**{**cohort.__dict__, "people": cohort.people * scale,
-                                                        "working_people": cohort.working_people * scale})
+            record.cohorts[cohort_id] = replace(cohort, people=cohort.people * scale,
+                                                  working_people=cohort.working_people * scale)
         for tile, workforce in record.workforce.items():
             before = people_now.get(tile, 0.0)
             after = inputs.population_by_tile.get(tile, before)
@@ -153,7 +169,7 @@ class Economy:
         for producer_id, factor in inputs.yield_factor_by_producer.items():
             producer = self.record.producers.get(producer_id)
             if producer is not None and producer.yield_factor != factor:
-                self.record.producers[producer_id] = type(producer)(**{**producer.__dict__, "yield_factor": factor})
+                self.record.producers[producer_id] = replace(producer, yield_factor=factor)
 
     def _own_plot_options(self):
         if self._own_options is None:
@@ -227,7 +243,12 @@ class Economy:
         merchants_credit.stake(record.merchants, {loan.borrower: loan.principal for loan in loans})
         lending.bid_household_loans(setup, record, view, ledger, loans, order_book, priced_by_tile)
         asked = {request.borrower: request.amount for request in requests}
-        worth = {request.borrower: request.maximum_rate / max(rate, 1e-9) for request in requests}
+        worth = {}
+        for request in requests:
+            producer = record.producers.get(request.borrower)
+            if producer is not None:
+                worth[request.borrower] = plant_worth_ratio(request.maximum_rate, rate,
+                                                            setup.recipes[producer.recipe_id].plant_life_years)
         plant_runs: Dict[str, float] = {}
         for loan in loans:
             producer = record.producers.get(loan.borrower)
@@ -261,7 +282,8 @@ class Economy:
             cash = record.book.balance(producer_id, money)
             if not earning > rate or cash <= 0.0:
                 continue
-            self._bid_for_plant(producer, runs, cash, earning / rate, view, order_book)
+            self._bid_for_plant(producer, runs, cash, plant_worth_ratio(earning, rate, recipe.plant_life_years),
+                                view, order_book)
             rebuilt[producer_id] = runs
         return rebuilt
 
@@ -287,24 +309,24 @@ class Economy:
                 continue
             recipe = setup.recipes[producer.recipe_id]
             share = 1.0
-            moves = []
-            for good, per_run in sorted(recipe.plant_goods.items()):
+            for good, per_run in recipe.plant_goods.items():
                 wanted = per_run * runs
-                held = record.book.stock(producer_id, good, producer.tile)
-                used = min(wanted, held)
-                share = min(share, used / wanted if wanted > 0.0 else 1.0)
-                if used > 0.0:
-                    moves.append(GoodsMove(producer_id, EDGE_CONSUMPTION, good, producer.tile, used, "built into plant"))
-            record.book.move_many(moves)
+                if wanted > 0.0:
+                    share = min(share, record.book.stock(producer_id, good, producer.tile) / wanted)
+            # only the goods the capacity actually built uses are consumed; the rest stays in stock
+            record.book.move_many([GoodsMove(producer_id, EDGE_CONSUMPTION, good, producer.tile, per_run * runs * share,
+                                             "built into plant")
+                                   for good, per_run in sorted(recipe.plant_goods.items()) if per_run * runs * share > 0.0])
             record.producers[producer_id] = producers.with_capacity(producer, producer.capacity_runs + runs * share)
 
-    def _outcome(self, ledger: YearLedger, level: float) -> YearOutcome:
+    def _outcome(self, ledger: YearLedger, level: float, extraction) -> YearOutcome:
         record, setup = self.record, self.setup
         money = setup.currency_id
         wages: Dict[str, list] = {}
-        idle = vacant = 0.0
+        idle = vacant = hired = 0.0
         for result in ledger.labour_results:
             wages.setdefault(result.trade, []).append((result.wage, result.hours_hired))
+            hired += result.hours_hired
             idle += result.idle_hours
             vacant += result.vacant_hours
         mean_wages = {trade: (math.fsum(wage * hours for wage, hours in rows) / math.fsum(hours for _w, hours in rows)
@@ -312,7 +334,7 @@ class Economy:
                       for trade, rows in sorted(wages.items())}
         hunger: Dict[str, float] = {}
         for cohort in record.cohorts.values():
-            short = cohort.unmet_floor_by_need.get("food", 0.0)
+            short = cohort.unmet_floor_by_need.get(self.setup.hunger_need, 0.0)
             if short > 0.0:
                 hunger[cohort.tile] = hunger.get(cohort.tile, 0.0) + short
         output: Dict[str, float] = {}
@@ -321,6 +343,6 @@ class Economy:
         return YearOutcome(year=record.memory.year, price_level=level, prices=national_prices(record),
                            wages=mean_wages, rate=record.memory.rates.get(money, 0.0),
                            money_supply=record.book.money_supply(money), hunger_by_tile=hunger,
-                           output=dict(sorted(output.items())), idle_hours=idle, vacant_hours=vacant,
+                           output=dict(sorted(output.items())), idle_hours=idle, vacant_hours=vacant, hired_hours=hired, extraction=extraction,
                            conservation_residual=check_money(record), money_audit=year_report(record),
                            state_cash=record.book.balance(setup.state_agent, money))

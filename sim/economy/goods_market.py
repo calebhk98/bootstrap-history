@@ -23,7 +23,7 @@ from sim.constants import declare
 
 from .accounts import ROUNDING_SHARE
 from .goods_market_demand import DemandSchedule
-from .goods_market_fills import buyer_fills, seller_fills
+from .goods_market_fills import buyer_fills, seller_fills, without_edge_self_trades
 from .goods_market_solve import solve_price
 from .types import AreaId, Bid, ClearingResult, CurrencyId, GoodId, Offer
 
@@ -94,7 +94,7 @@ def clear(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: Area
         # set by nothing a seller meant to sell
         return _empty(good, area, currency, held_price, bids)
     if demand_at_first <= 0.0:
-        lowest = offers[0].reservation_price
+        lowest = effective[0]
         price = held_price if last_price is not None and lowest <= last_price else lowest
         supply = math.fsum(offer.quantity for offer, reservation in zip(offers, effective)
                            if reservation <= max(price, minimum_price))
@@ -120,6 +120,8 @@ def clear(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: Area
 
     fills = buyer_fills(bids, served, good, area, price)
     fills.extend(seller_fills(seller_quantities, good, area, price))
+    fills, wash = without_edge_self_trades(fills)
+    traded -= wash
     unmet = math.fsum([max(0.0, bid.floor_quantity - quantity) for bid, quantity in zip(bids, served)])
     return ClearingResult(good, area, currency, price, traded, wanted, supply, unmet, tuple(fills))
 

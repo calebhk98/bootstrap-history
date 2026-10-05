@@ -373,3 +373,18 @@ again. Final numbers, from the branch's own numbers:
 424 -> 436  han-founders-are-denounced-within-about-thirty-years-on-every-seed
 425 -> 437  growing-season-weather-test-reads-a-region-latitude-the-data-no-longer-has
 426 -> 438  spending-can-run-past-the-credit-limit-when-upkeep-nears-revenue
+
+## 2026-10-04 (economy round four, merged three times with main)
+
+Economy round four filed 401-409; the multiplayer, geography, UI and labour branches took numbers on
+main first, so the economy's moved three times (to 410-418, then 425-433, then here). Final numbers:
+
+401 -> 439  the-engine-port-reaches-past-the-economy-surface
+402 -> 440  the-port-does-not-hand-the-economy-site-limits-or-read-its-extraction
+403 -> 441  ore-and-metal-content-tables-in-the-engine-block-mods
+404 -> 442  gold-is-valued-like-silver-and-nobody-holds-it-as-wealth
+405 -> 443  goods-service-lives-never-reach-the-economy
+406 -> 444  danger-pay-is-always-zero
+407 -> 445  no-command-prints-the-economys-health
+408 -> 446  the-port-names-the-labourer-trade
+409 -> 447  economy-agents-doc-predates-exit-location-and-margin-entry

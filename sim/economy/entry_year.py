@@ -7,18 +7,23 @@ import math
 from dataclasses import replace
 from typing import Dict, Tuple
 
-from . import ownership, unit_cost
+from . import location, ownership, sites, unit_cost
+from .entry_trial import trial_entry_plans
 from .entry import (ENTRANT_OWNER_STAKE_SHARE, UnmetDemand, entrant_loan, entry_plans, gap_beyond_spare,
                     producers_to_close, restake)
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
 from .producers_close import working_capital_target
 from .market_memory import market_key
 from .setup import recipe_tile_key
+from .tile_costs import carriage_table
 from .types import GoodsMove, LoanRequest, Transfer
 
 
-def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str, str], float]) -> int:
-    """Start the year's new producers; returns how many started."""
+def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str, str], float],
+                  carriage=None, bids_by_market=None) -> int:
+    """Start the year's new producers; returns how many started. With the carriage table a newcomer is
+    sited by location.entry_siting; without it one is built from the setup (slower on a large map). With
+    the year's bids, a market with buyers and no maker draws a trial newcomer (entry_trial.py)."""
     spare = _spare_output(setup, record, view)
     unmet = {}
     for (good, area_id), quantity in sorted(unmet_by_market.items()):
@@ -29,8 +34,14 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
             unmet[(good, area_id)] = UnmetDemand(good, area_id, area.anchor_tile, gap)
     money = setup.currency_id
     started = 0
-    for plan in entry_plans(setup.recipes, view, unmet, record.land_rent, setup.land_per_run,
-                         _traded_volume(record, view, area_map)):
+    by_limits = sites.limits_by_recipe(setup.site_limits)
+    siting = location.entry_siting(setup, record, view, area_map, carriage or _carriage(setup))
+    plans = entry_plans(setup.recipes, view, unmet, record.land_rent, setup.land_per_run,
+                        _traded_volume(record, view, area_map), siting)
+    if bids_by_market:
+        planned = tuple((plan.good, view.area_of(plan.good, plan.tile)) for plan in plans)
+        plans += trial_entry_plans(setup, record, view, area_map, bids_by_market, planned, siting)
+    for plan in plans:
         recipe = setup.recipes[plan.recipe_id]
         key = recipe_tile_key(plan.recipe_id, plan.tile)
         producer_id = "producer:" + key
@@ -43,7 +54,8 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
                 continue
             producer = Producer(agent_id=producer_id, owner=owner, recipe_id=plan.recipe_id, tile=plan.tile,
                                 capacity_runs=0.0, expected_sales=plan.runs,
-                                yield_factor=setup.yield_factor_by_recipe_tile.get(key, 1.0))
+                                yield_factor=sites.yield_at(recipe, plan.tile, by_limits,
+                                                            setup.yield_factor_by_recipe_tile.get(key, 1.0)))
         elif producer_id in record.expansion_runs:
             continue                                    # plant it already asked for is still to come
         if not builds_plant:
@@ -63,6 +75,10 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
                                                         recipe.plant_life_years, loan, "enter"))
                 record.expansion_runs[producer_id] = loan / per_run
     return started
+
+
+def _carriage(setup):
+    return carriage_table(setup.tiles, setup.carriage_rates, setup.handling_rates, edges=setup.edges)
 
 
 def _traded_volume(record, view, area_map):

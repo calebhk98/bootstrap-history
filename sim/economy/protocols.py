@@ -28,7 +28,7 @@ from dataclasses import dataclass
 from typing import Mapping, Optional, Protocol, Sequence, Tuple
 
 from .types import (AgentId, AreaId, Bid, CurrencyId, FundsOffer, GoodId, LabourBid, LabourOffer,
-                    LoanRequest, Offer, TileId, TradeId)
+                    LoanRequest, Offer, SiteLimit, TileId, TradeId)
 
 
 @dataclass(frozen=True)
@@ -92,3 +92,4 @@ class YearInputs:
     engine_orders: Mapping[AgentId, AgentOrders]            # the founder, firms, the state: orders the engine decides
     legacy_transfers: Tuple = ()                            # one-sided engine postings, booked against EDGE_LEGACY
     harvest_factor: float = 1.0                             # this year's growing weather on households' own plots
+    site_limits: Tuple[SiteLimit, ...] = ()                 # the sites' limits now; empty keeps the last declared

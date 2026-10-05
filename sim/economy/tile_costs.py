@@ -79,7 +79,8 @@ def tiles_from_geography(geography: dict, tile_ids: Iterable[TileId]) -> Dict[Ti
             tile_id=tile_id, latitude=record["lat"], longitude=record["lon"],
             land_area_km2=record["land_area_km2"], coastal=bool(record["coastal"]),
             borders=tuple(record["borders"]), arable_fraction=record["arable_fraction"],
-            fertility=record["fertility_quality_multiplier"])
+            fertility=record["fertility_quality_multiplier"],
+            climate_class=str(record.get("koppen_class") or ""))
     return result
 
 

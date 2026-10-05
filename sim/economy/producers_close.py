@@ -26,6 +26,13 @@ LOSS_YEARS_BEFORE_EXIT = declare(
     why="An owner keeps a losing producer going for a while on hope, reserves and the cost of "
         "closing. How long follows the owner's wealth and credit, which are not yet tied to the "
         "decision; one count for every producer.")
+IDLE_CAPACITY_DECAY_SHARE = declare(
+    "IDLE_CAPACITY_DECAY_SHARE", 0.25, kind="temporary_heuristic",
+    unit="share of the gap between capacity and runs worked that is given up in a year", source=None,
+    confidence="D",
+    why="Capacity with no plant is hands and tools kept for work: unused while its runs would not pay, "
+        "the hands leave and the workings fall in. How fast follows hiring contracts and the cost of reopening a working, "
+        "which are not modelled; one share for every plantless recipe.")
 WORKING_CAPITAL_YEARS_OF_VARIABLE_COST = declare(
     "WORKING_CAPITAL_YEARS_OF_VARIABLE_COST", 1.0, kind="temporary_heuristic",
     unit="years of full-capacity variable cost", source=None, confidence="D",
@@ -53,8 +60,10 @@ def working_capital_target(recipe: Recipe, capacity_runs: float, input_prices, w
     return cost * capacity_runs * WORKING_CAPITAL_YEARS_OF_VARIABLE_COST
 
 
-def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float, view: MarketView
-               ) -> YearClose:
+def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float, view: MarketView,
+               worked_runs: Optional[float] = None) -> YearClose:
+    """`worked_runs` is what the producer ran this year (all its capacity when not given). Idle plant is
+    sunk, so the year's capital charge falls only on the capacity worked."""
     first_output = sorted(recipe.outputs)[0]
     currency = view.currency_of(view.area_of(first_output, producer.tile))
     rate = view.interest_rate(currency)
@@ -62,22 +71,44 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
     inputs = live_input_prices(producer, recipe, view)
     wages = live_wages(producer, recipe, view)
     expectations = next_expectations(producer, recipe, view)
-    charge = unit_cost.capital_charge_per_run(recipe, inputs, wages, rate) * producer.capacity_runs
-    loss = revenue < costs + (charge if math.isfinite(charge) else 0.0)
+    worked = producer.capacity_runs if worked_runs is None else min(max(0.0, worked_runs), producer.capacity_runs)
+    charge = unit_cost.capital_charge_per_run(recipe, inputs, wages, rate) * worked
+    loss = worked <= 0.0 or revenue < costs + (charge if math.isfinite(charge) else 0.0)
     losses = producer.years_of_loss + 1 if loss else 0
-    if losses >= LOSS_YEARS_BEFORE_EXIT:
+    has_plant = recipe.plant_life_years > 0.0
+    margin = _variable_margin_per_run(producer, recipe, view, expectations, inputs, wages)
+    if losses >= LOSS_YEARS_BEFORE_EXIT and margin <= 0.0:
         payout = _dividend(producer, currency, cash)
         gone = replace(producer, capacity_runs=0.0, years_of_loss=losses, expected_prices=expectations,
                        cash_target=0.0)
         return YearClose(gone, payout, exited=True)
-    wear = producer.capacity_runs / recipe.plant_life_years if recipe.plant_life_years > 0.0 else 0.0
-    capacity = producer.capacity_runs - wear
+    if has_plant:
+        wear = producer.capacity_runs / recipe.plant_life_years     # sunk plant is kept while it covers variable cost
+        capacity = producer.capacity_runs - wear
+    else:
+        wear = 0.0
+        # hands are let go when their work would not pay; a workshop waiting on inputs or buyers keeps them
+        idle = producer.capacity_runs - worked if margin <= 0.0 else 0.0
+        capacity = producer.capacity_runs - IDLE_CAPACITY_DECAY_SHARE * idle
     target = working_capital_target(recipe, capacity, inputs, wages)
     request, rebuilt = _expansion(producer, recipe, view, currency, rate, wear, inputs, wages)
     survivor = replace(producer, capacity_runs=capacity, years_of_loss=losses,
                        expected_prices=expectations, cash_target=target)
     surplus = max(0.0, cash - target)
     return YearClose(survivor, _dividend(producer, currency, surplus), request, rebuilt)
+
+
+def _variable_margin_per_run(producer, recipe, view, expectations, inputs, wages) -> float:
+    """Expected revenue over variable cost for one run at expected prices; plant already built is sunk
+    and left out. A cost or price that cannot be known counts as no margin."""
+    prices = {good: expectations.get(good, view.price(good, view.area_of(good, producer.tile)))
+              for good in recipe.outputs}
+    if any(price is None for price in prices.values()):
+        return -math.inf
+    cost = unit_cost.variable_cost_per_run(recipe, inputs, wages, producer.land_rent_per_run)
+    if not math.isfinite(cost):
+        return -math.inf
+    return unit_cost.revenue_per_run(recipe, prices) * producer.yield_factor - cost
 
 
 def _dividend(producer: Producer, currency: str, amount: float) -> Tuple[Transfer, ...]:

@@ -9,3 +9,12 @@ Evidence: in a game at the opening, compare `game.labour_market.quote_annual("sm
 What it would take: quote `YearOutcome.wages` (weighted by hours hired), or weight by hours hired over recent years, in the port.
 
 Related: 388, Complaints/reports/agent-economy-review.md.
+
+## Economy side
+
+`sim/economy/api.py` now publishes `wages_by_trade_weighted(economy)`: per trade, the remembered wage of each labour market weighted by last year's hours hired there (`EconomyRecord.hours_hired`, filled in `clear_labour` and saved with the record, so a resumed economy weights too). A trade that hired nowhere falls back to the unweighted mean. What remains is the port change in `sim/engine/economy_port_year.py`, `answers()`, which is outside `sim/economy`:
+
+```diff
+-sum(rows) / len(rows)
++api.wages_by_trade_weighted(economy)[trade]
+```

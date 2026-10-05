@@ -73,7 +73,7 @@ class DemandSchedule:
     def each_at(self, price: float) -> List[float]:
         """Each bid's quantity at a positive price, in the order of the bids."""
         factors = self._flexible_factors(price)
-        quantities = [min(floor + flexible * factors[group], budget / price) for floor, flexible, budget, group in self.rows]
         if self.price_capped:
-            quantities = [0.0 if price > maximum else quantity for quantity, maximum in zip(quantities, self.maximums)]
-        return quantities
+            return [0.0 if price > maximum else min(floor + flexible * factors[group], budget / price)
+                    for (floor, flexible, budget, group), maximum in zip(self.rows, self.maximums)]
+        return [min(floor + flexible * factors[group], budget / price) for floor, flexible, budget, group in self.rows]
