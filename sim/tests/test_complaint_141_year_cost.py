@@ -1,7 +1,7 @@
 """Complaint 141: the cost of a simulated year must not grow with the number of
-built nodes and firms through repeated whole-set scans. Counted work (and one
-timing measured against a baseline on the same machine with a wide margin)."""
+built nodes and firms through repeated whole-set scans. Counted work, not seconds."""
 from .harness import *  # noqa: F401,F403
+import sim.engine.data as engine_data
 from sim.agents.api import Firm
 from sim.engine.agents_port import SimWorld
 from sim.engine.state import ActorRecord
@@ -74,13 +74,20 @@ for node_id in [node for node in ORDER if node not in price_sim.done][:400]:
 price_sim._done_changed()
 price_sim._material_prices()
 lookups = 3000
-started = time.perf_counter()
-for _ in range(lookups):
-    price_sim._material_prices()
-lookup_seconds = time.perf_counter() - started
-started = time.perf_counter()
-for _ in range(lookups):
-    frozenset(price_sim.state.projects.done)
-rebuild_seconds = time.perf_counter() - started
-check("a cached price-table lookup costs well under rebuilding the done set",
-      lookup_seconds < rebuild_seconds * 0.5, (lookup_seconds, rebuild_seconds))
+
+table_builds = [0]
+real_table = engine_data.calculated_goods_table
+
+
+def counting_table(*args, **kwargs):
+    table_builds[0] += 1
+    return real_table(*args, **kwargs)
+
+
+engine_data.calculated_goods_table = counting_table
+try:
+    for _ in range(lookups):
+        price_sim._material_prices()
+finally:
+    engine_data.calculated_goods_table = real_table
+check("repeated price-table lookups rebuild the table", table_builds[0] == 0, table_builds[0])

@@ -208,8 +208,10 @@ class StaffPhaseMixin:
                     _before = self.state.household.capital
                     _hired, _ = self.labour.hire(trade, int(delta))
                     if _hired:
+                        # the people the market found, which can be fewer than sought
+                        _found = round(self.state.household.employees.get(trade, 0.0) - have)
                         automation_audit.record(
-                            self, "auto_hire", "hire", "%d %s" % (int(delta), trade),
+                            self, "auto_hire", "hire", "%d %s" % (_found, trade),
                             "staff target %.1f against %.1f held, with %.1f supervision room"
                             % (want, have, self.labour.supervision_room()), _before)
                 elif delta <= -1.0:

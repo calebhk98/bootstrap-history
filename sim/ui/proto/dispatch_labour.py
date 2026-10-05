@@ -433,6 +433,8 @@ def _cmd_hire(sim, nodes, cmd, ended):
     if err:
         return {"ok": False, "error": err + ". Nothing was changed."}
     wages_before = sim.labour.wage_bill()
+    trade_id = str(cmd.get("trade")).lower()
+    headcount_before = sim.employees.get(trade_id, 0.0)
     _count, fee_paid, _refusal = sim.labour.hire_check(cmd.get("trade"), quantity)
     hired, err = sim.labour.hire(cmd.get("trade"), quantity)
     if not hired:
@@ -445,8 +447,9 @@ def _cmd_hire(sim, nodes, cmd, ended):
     # using it here rather than rebuilding one from cmd["n"] keeps the log
     # honest about what actually happened, not just what was asked for.
     sim.log.append((sim.year, err or ("hired %s %s" % (cmd.get("n"), cmd.get("trade")))))
-    return {"ok": True, "hired": cmd.get("trade"), "n": cmd.get("n"),
-            "you_now_employ": round(sim.employees.get(str(cmd.get("trade")).lower(), 0.0), 2),
+    return {"ok": True, "hired": cmd.get("trade"), "n": round(sim.employees.get(trade_id, 0.0) - headcount_before),
+            "asked": quantity,
+            "you_now_employ": round(sim.employees.get(trade_id, 0.0), 2),
             "annual_wage_bill": round(sim.labour.wage_bill(), 1),
             "paid_now": round(fee_paid, 1),
             "from_next_year_per_year": round(sim.labour.wage_bill() - wages_before, 1),

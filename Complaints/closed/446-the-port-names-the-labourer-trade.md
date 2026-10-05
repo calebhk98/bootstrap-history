@@ -1,6 +1,6 @@
 # The economy port names the labourer trade
 
-**Status:** open - `sim/engine/economy_port_setup.py`
+**Status:** closed - `port_unskilled_trade` (the port takes the unskilled trade from the labour package's fallback trade over `data/world/trades.json`, saves it in the opening values, and passes it as `unskilled_trade`).
 
 The economy reads its unskilled trade and its hunger need from `EconomySetup.unskilled_trade` and
 `EconomySetup.hunger_need`, but the port hardcodes `"labourer"` three times in

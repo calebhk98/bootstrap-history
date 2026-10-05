@@ -13,6 +13,7 @@ from sim.economy.currency import currency_from_coin_standard
 from sim.economy.setup import EconomySetup, TradeSpec, goods_specs
 from sim.world import demand, land
 from sim.geography.api import settlement
+from sim.labour import api as labour_api
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data")
 FREIGHT_MODE_OF_CARRIER = {"cart": tile_costs.DRAUGHT_MODE, "pack": tile_costs.PACK_MODE,
@@ -37,6 +38,11 @@ def allowed_entries(production, held_nodes):
                   and (entry.get("requires_node") is None or entry.get("requires_node") in held_nodes))
 
 
+def unskilled_trade(trades_data):
+    """The trade anyone can take up at once, which the labour package names from the trade registry."""
+    return labour_api.fallback_trade(labour_api.trade_specs(trades_data))
+
+
 def opening_values(sim):
     """What the setup takes from the engine at the opening: kept in the save so a resumed game rebuilds
     the same markets, producers and price base however the engine's own tables have moved since."""
@@ -47,8 +53,9 @@ def opening_values(sim):
     production = demand.production_data()
     trades_data = _load("world", "trades.json").get("trades", {})
     allowed = allowed_entries(production, set(sim.state.projects.granted))
+    unskilled = unskilled_trade(trades_data)
     labour_trades = sorted({trade for entry_id in allowed for trade in (production[entry_id].get("labour_hours") or {})}
-                           | {"labourer"})
+                           | {unskilled})
     modes = sim._freight_mode_costs()
     return {
         "population_by_tile": {tile: people * settlement.population_share(home, tile) for tile in tile_ids},
@@ -56,6 +63,7 @@ def opening_values(sim):
         "recipes": allowed,
         "prices": {good: price for good, price in sim.economy.material_prices().items() if price > 0.0},
         "wages": {trade: sim.economy.labour.quote(trade) for trade in labour_trades if trade in trades_data},
+        "unskilled_trade": unskilled,
         "rate": float(sim.economy.base_rate()),
         "carriage": {FREIGHT_MODE_OF_CARRIER[mode]: rate for mode, rate in modes.items()
                      if mode in FREIGHT_MODE_OF_CARRIER},
@@ -83,7 +91,7 @@ def baskets_by_tile(basket, need_data, geography, tile_ids):
 def coin_per_unit(opening):
     """The economy counts money in opening unskilled labour hours: one unit is what an hour of it paid
     at the opening, in coin. So the economy is the same whatever the coin, and the port converts."""
-    return float(opening["wages"]["labourer"])
+    return float(opening["wages"][opening["unskilled_trade"]])
 
 
 def in_units(opening):
@@ -137,13 +145,13 @@ def build_setup(sim, opening=None):
         currency=_counted_currency(civ, unit),
         state_agent="state:" + str(civ["id"]), tiles=tiles, edges=tile_costs.build_edges(tiles),
         carriage_rates=dict(opening["carriage"]),
-        handling_rates=tile_costs.handling_money_per_tonne_by_mode(wages.get("labourer", 0.0)),
+        handling_rates=tile_costs.handling_money_per_tonne_by_mode(wages.get(opening["unskilled_trade"], 0.0)),
         specs=specs, recipes=recipes, basket=basket, trades=trades,
         tax_forms=taxes.forms_from_civ_data(civ.get("state_revenue") or []),
         state_capacity=min(1.0, max(0.0, float(civ.get("state_capacity", 1.0)))),
         working_hours_per_year=float(sim.HOURS_PER_PERSON_YEAR), working_share=float(opening["working_share"]),
         gini=demand.GINI_COEFFICIENT_PREINDUSTRIAL_AGRARIAN, opening_population_by_tile=population_by_tile,
-        opening_prices=prices, opening_wages=wages, opening_rate=float(opening["rate"]),
+        unskilled_trade=opening["unskilled_trade"], opening_prices=prices, opening_wages=wages, opening_rate=float(opening["rate"]),
         capital_tile=by_people[0], port_tile=(coastal or by_people)[0],
         land_per_run={recipe_id: float(production[recipe_id].get("land_hectare_years") or 0.0)
                       for recipe_id in recipes if production[recipe_id].get("land_hectare_years")},

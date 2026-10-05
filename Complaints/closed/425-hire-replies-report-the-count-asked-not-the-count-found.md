@@ -1,6 +1,6 @@
 # Hire replies and the staff audit report the count asked for, not the count found
 
-**Status:** open
+**Status:** closed - `hire_reports_count_found` (the hire reply and the staff audit row name the people the staff gained; the reply also carries `asked`).
 
 A hire now takes only the people the local market can supply this year (Complaint 271). The rule is
 `LabourMarket.whole_recruits`. `hire_check` returns the count found, and the `hire` reply says "Found N
