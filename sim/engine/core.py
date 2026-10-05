@@ -394,6 +394,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
             self._adult_equivalent_population(self.population),
             arable_hectares_ceiling=self._farm_arable_ceiling)
         self.labour.set_farm_area(sized.hectares)
+        self._opening_farmed_hectares = self.farm_land.hectares
         # WIRING THREE (Complaints/49-one-label-draws-one-coin.md), REPLACING
         # WIRING TWO'S OWN `_farm_region_weights`/`_compute_farm_region_
         # weights` (Complaints/46): this civilisation's territory is broken

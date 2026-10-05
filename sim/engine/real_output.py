@@ -30,11 +30,12 @@ class RealOutputMixin:
         cached = getattr(self.household, "_base_basket_cache", None)
         if cached is not None:
             return cached
-        from .data import calculated_goods_prices, goods_provenance
+        from .data import calculated_goods_table
+        from .prices import band_farmed_hectares
         held = frozenset(self.state.projects.granted)
-        civ = dict(civilization_id=self.civ.get("id"), civilization=self.civ)
-        in_hours = calculated_goods_prices(held, money_per_labour_hour=1.0, **civ)
-        basis = goods_provenance(held, **civ)
+        in_hours, basis = calculated_goods_table(
+            held, civilization_id=self.civ.get("id"), civilization=self.civ,
+            farmed_hectares=band_farmed_hectares(self._opening_farmed_hectares))
         prices = {material: price for material, price in sorted(in_hours.items())
                   if price > 0.0 and basis.get(material) != "mature"}
         units = market_demand.household_demand_by_material(
