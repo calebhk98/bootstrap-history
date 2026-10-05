@@ -1,6 +1,6 @@
 # The labour package imports the engine
 
-**Status:** open
+**Status:** closed - the reference civilisation comes from `sim/default_civilisation.py` and the technique filter is passed in through `LabourWorld.techniques_available_to`; `KNOWN_VIOLATIONS` is empty. Test: `sim/tests/test_labour_core_walls.py`.
 
 `sim/labour/api.py` declares the wall two-way, but two modules import `sim.engine.solve_prices_core`:
 - `sim/labour/wage_provider.py`, lazily, for `DEFAULT_LAND_CIVILIZATION` and `REPO_ROOT`

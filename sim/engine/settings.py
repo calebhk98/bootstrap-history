@@ -93,6 +93,8 @@ import shutil
 import time
 from typing import Any, cast, Dict, List, NotRequired, Optional, TypedDict
 
+from sim.default_civilisation import PREFERRED_DEFAULT_CIVILISATION
+
 
 class Config(TypedDict):
     """The application-preferences file this module reads and writes
@@ -212,7 +214,7 @@ CONFIG_DEFAULTS: Config = {
     # edited from the Options screen; they exist so a player who favours
     # one civilisation and kit is not asked to retype them, not so there is
     # a settings page for "which civilisation".
-    "default_civ": "rome_100ad",
+    "default_civ": PREFERRED_DEFAULT_CIVILISATION,
     "default_kit": "poor_scholar",
     "default_fog": True,
     # Whether a new game shows unfinished work's needs as estimates; used

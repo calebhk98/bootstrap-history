@@ -92,7 +92,6 @@ Nothing in the running game calls it yet. That needs changes outside `sim/labour
   `fallback`, `fatality_risk_per_year`, and labour can read it. Then `legacy_trade_defaults.py` goes.
 - Complaint 430: a saved field and a yearly call, plus the household fields for a standing pay premium and
   school cohorts.
-- Complaint 431: the two engine imports left in the labour package.
 - Complaint 432: the subsistence staple is wheat for every civilisation.
 - Complaint 433: the player's hire command takes a premium and shows how many can be found.
 - Complaint 434: recipe need shares behind trade populations overweight mining and omit transport.

@@ -20,10 +20,9 @@ import hashlib
 import json
 import os
 import tempfile
-from typing import Any, Dict, Iterable, Mapping, Optional, Set
+from typing import Any, Callable, Dict, Iterable, Mapping, Optional, Set
 
 from sim.constants import declare
-from sim.engine.solve_prices_core import techniques_available_to
 from sim.world import demand, need_demand
 from sim.labour import labour_market, legacy_trade_defaults
 
@@ -98,11 +97,12 @@ def _solve_levels(final_demand: Mapping[str, float], producers: Mapping[str, lis
     return levels
 
 
-def need_shares_by_trade(production: Mapping[str, Any],
-                         reached_nodes: Iterable[str]) -> Dict[str, float]:
+def need_shares_by_trade(production: Mapping[str, Any], reached_nodes: Iterable[str],
+                         techniques_available_to: Callable) -> Dict[str, float]:
     """Share of non-farm labour each trade is needed for, from the goods
     households consume and the available recipes that make them. Trades with
-    no available recipe are absent."""
+    no available recipe are absent. `techniques_available_to(production, reached)` is the engine's
+    filter, returning (available, unreached, unclassified)."""
     available, _unreached, _unclassified = techniques_available_to(
         production, set(reached_nodes))
     dominant = {recipe_id: _dominant_output(entry) for recipe_id, entry in available.items()}
@@ -174,12 +174,12 @@ SpinUpResult = collections.namedtuple(
 
 
 def spin_up(production: Mapping[str, Any], reached_nodes: Iterable[str],
-            max_years: int = SPIN_UP_MAX_YEARS,
+            techniques_available_to: Callable, max_years: int = SPIN_UP_MAX_YEARS,
             tolerance: float = SPIN_UP_SHARE_TOLERANCE) -> SpinUpResult:
     """Step an equal (neutral) split of one unit of non-farm hours toward
     the need, through labour_market.Workforce, until it stops moving."""
     reached = set(reached_nodes)
-    need = need_shares_by_trade(production, reached)
+    need = need_shares_by_trade(production, reached, techniques_available_to)
     if not need:
         return SpinUpResult({}, 0, True, 0.0)
     trades = sorted(need)
@@ -206,7 +206,8 @@ def forget_in_process_cache() -> None:
     _in_process_cache.clear()
 
 
-def _cache_key(production: Mapping[str, Any], reached_nodes: Set[str]) -> str:
+def _cache_key(production: Mapping[str, Any], reached_nodes: Set[str],
+               techniques_available_to: Callable) -> str:
     available, _unreached, _unclassified = techniques_available_to(production, reached_nodes)
     payload = json.dumps(
         {"recipes": available, "reached": sorted(reached_nodes),
@@ -220,12 +221,12 @@ def _cache_key(production: Mapping[str, Any], reached_nodes: Set[str]) -> str:
 
 
 def cached_spin_up(production: Mapping[str, Any], reached_nodes: Iterable[str],
-                   cache_dir: Optional[str] = None) -> SpinUpResult:
+                   techniques_available_to: Callable, cache_dir: Optional[str] = None) -> SpinUpResult:
     """spin_up, remembered per input set: the key hashes the available
     recipes and known technologies, so a different mod set or civilisation
     is a different entry. A cache that cannot be read or written is skipped."""
     reached = set(reached_nodes)
-    key = _cache_key(production, reached)
+    key = _cache_key(production, reached, techniques_available_to)
     directory = cache_dir or DEFAULT_CACHE_DIRECTORY
     memo_key = directory + "|" + key
     if memo_key in _in_process_cache:
@@ -238,7 +239,7 @@ def cached_spin_up(production: Mapping[str, Any], reached_nodes: Iterable[str],
     except (OSError, ValueError, TypeError):
         result = None
     if result is None:
-        result = spin_up(production, reached)
+        result = spin_up(production, reached, techniques_available_to)
         try:
             os.makedirs(directory, exist_ok=True)
             handle_fd, temporary = tempfile.mkstemp(dir=directory, suffix=".tmp")
