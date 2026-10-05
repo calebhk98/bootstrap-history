@@ -98,6 +98,14 @@ class TradeView:
 		entry = sim._foreign_entry(place, sim._material_tag(material)[0], sim._foreign_economy_facts(place))
 		return depth if entry is None else min(depth, float(entry["reference_tonnes"]))
 
+	def price_after_cargo(self, material: str, place: str, tonnes: float, landing: bool) -> Optional[float]:
+		"""Price per tonne at a place once `tonnes` more of a good land there (`landing`) or are taken from it, on
+		top of this year's cargo; None where the place's market does not answer (the home society's)."""
+		price = self.price_at(material, place)
+		if place == self._home_place() or not price:
+			return None
+		return price * self._sim.partner_price_response(place, material, tonnes, landing)  # type: ignore[attr-defined]
+
 	def _delivered(self) -> Dict[Tuple[str, str], float]:
 		return self._memo.setdefault("delivered", {})  # type: ignore[attr-defined,no-any-return]
 

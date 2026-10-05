@@ -48,6 +48,27 @@ class ForeignActorTradeMixin:
         ratio = entry["price_ratio"] if entry else 1.0
         return price * self.partner_price_level(partner) * ratio
 
+    def _partner_outcome(self, entry, commodity, sold, bought):
+        """The partner's market for a commodity cleared on `sold` tonnes landed there and `bought` taken from it."""
+        record = self._commodity_ledger().commodities.get(commodity) or {}
+        return market.clear_market(market.MarketConditions(
+            household_demand_at_anchor_tonnes=entry["reference_tonnes"], committed_demand_tonnes=0.0,
+            society_capacity_tonnes=entry["capacity_tonnes"], actor_supply_tonnes=sold,
+            founder_sales_tonnes=0.0, stock_tonnes=entry["stock_tonnes"], actor_demand_tonnes=bought,
+            floor_ratio=float(record.get("price_floor_factor", market.DEFAULT_FLOOR_RATIO)),
+            ceiling_ratio=float(record.get("price_ceiling_factor", market.DEFAULT_CEILING_RATIO))))
+
+    def partner_price_response(self, partner, material, tonnes, landing):
+        """Factor on a partner's price of a material once `tonnes` more are landed there (`landing`) or taken
+        from it, on top of the year's cargo so far; one where the partner has no book for it."""
+        commodity = self._material_tag(material)[0]
+        entry = self._foreign_entry(partner, commodity, self._foreign_economy_facts(partner))
+        if entry is None or not entry["price_ratio"] > 0.0:
+            return 1.0
+        flow = self.state.economy.foreign_actor_trade.get(partner, {}).get(material, {SOLD: 0.0, BOUGHT: 0.0})
+        sold, bought = flow[SOLD] + (tonnes if landing else 0.0), flow[BOUGHT] + (0.0 if landing else tonnes)
+        return self._partner_outcome(entry, commodity, sold, bought).price_ratio / entry["price_ratio"]
+
     def close_partner_books(self, cargo_only=False):
         """Clear each commodity in each partner's book on the year's actor cargo (none for most), so the
         partner's capacity follows its price and the price follows the cargo; then clear the tally.
@@ -68,13 +89,7 @@ class ForeignActorTradeMixin:
                 if cargo_only and commodity not in cargo:
                     continue
                 sold, bought = cargo.get(commodity, (0.0, 0.0))
-                record = self._commodity_ledger().commodities.get(commodity) or {}
-                outcome = market.clear_market(market.MarketConditions(
-                    household_demand_at_anchor_tonnes=entry["reference_tonnes"], committed_demand_tonnes=0.0,
-                    society_capacity_tonnes=entry["capacity_tonnes"], actor_supply_tonnes=sold,
-                    founder_sales_tonnes=0.0, stock_tonnes=entry["stock_tonnes"], actor_demand_tonnes=bought,
-                    floor_ratio=float(record.get("price_floor_factor", market.DEFAULT_FLOOR_RATIO)),
-                    ceiling_ratio=float(record.get("price_ceiling_factor", market.DEFAULT_CEILING_RATIO))))
+                outcome = self._partner_outcome(entry, commodity, sold, bought)
                 entry["capacity_tonnes"] = market.adjusted_capacity(entry["capacity_tonnes"], outcome.price_ratio)
                 entry["stock_tonnes"] = market.stock_after_year(outcome)
                 entry["price_ratio"] = outcome.price_ratio

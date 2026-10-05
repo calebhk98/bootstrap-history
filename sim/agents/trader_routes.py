@@ -7,6 +7,7 @@ from .tuning_trader import TRADER_RISK_SHARE
 
 # a pair at the edge of paying is priced in full, so float rounding never drops a route that gains
 GAP_SLACK = 1e-9
+PAYING_SEARCH_STEPS = 24
 
 
 def route_key(material: str, source: str, destination: str) -> str:
@@ -24,6 +25,32 @@ def route_terms(world: Any, source: str, destination: str, material: str) -> Opt
 	outlay = bought + freight
 	return {"bought": bought, "sold": sold, "freight": freight, "outlay": outlay,
 			"gain": sold - outlay - bought * TRADER_RISK_SHARE}
+
+
+def price_answers(world: Any, material: str, destination: str) -> bool:
+	"""Whether the destination's market moves with cargo, so the price limits a cargo and not a share of depth."""
+	return world.price_after_cargo(material, destination, 0.0, True) is not None
+
+
+def paying_tonnes(world: Any, source: str, destination: str, material: str, terms: Dict[str, float],
+				  tonnes: float, rate: float) -> float:
+	"""The most of `tonnes` that still pays once the cargo has moved the prices it meets: the destination's price
+	after the cargo lands, less carriage, risk and the interest on what it cost, must exceed the source's price
+	after the cargo is taken. A place whose market does not answer keeps its price. Prices move monotonically
+	with cargo, so the limit is found by halving."""
+	def pays(cargo: float) -> bool:
+		sold = world.price_after_cargo(material, destination, cargo, True)
+		bought = world.price_after_cargo(material, source, cargo, False)
+		sold = terms["sold"] if sold is None else sold
+		bought = terms["bought"] if bought is None else bought
+		return sold - bought * (1.0 + TRADER_RISK_SHARE + rate) - terms["freight"] > 0.0
+	if tonnes <= 0.0 or pays(tonnes):
+		return max(tonnes, 0.0)
+	low, high = 0.0, tonnes
+	for _step in range(PAYING_SEARCH_STEPS):
+		middle = (low + high) / 2.0
+		low, high = (middle, high) if pays(middle) else (low, middle)
+	return low
 
 
 def gaining_routes(world: Any, material: str, sources: Sequence[str],

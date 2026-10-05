@@ -10,7 +10,7 @@ from .base import RecordedActor
 from .borrowing import TRACK_RECORD_YEARS
 from .policy import Decision, Option
 from .tuning import EXIT_LOSS_YEARS
-from .trader_routes import gaining_routes, route_key, route_terms  # noqa: F401  (re-exported)
+from .trader_routes import gaining_routes, paying_tonnes, price_answers, route_key, route_terms  # noqa: F401  (re-exported)
 from .tuning_trader import TRADER_DEPTH_SHARE, TRADER_RISK_SHARE
 
 
@@ -55,14 +55,20 @@ class Trader(RecordedActor):
 		for material in sorted(world.trade_materials()):
 			for source, destination, terms in gaining_routes(world, material, places, lambda _source: places):
 				arriving = planned.get((material, destination), 0.0)
-				tonnes = min(depth_room(world, source, destination, material, arriving), budget / terms["outlay"])
+				tonnes = budget / terms["outlay"]
+				if price_answers(world, material, destination):
+					tonnes = paying_tonnes(world, source, destination, material, terms, tonnes, rate)
+				else:
+					tonnes = min(depth_room(world, source, destination, material, arriving), tonnes)
 				if tonnes <= 0.0:
 					continue
 				planned[(material, destination)] = arriving + tonnes
 				interest = terms["bought"] * rate
+				landed = world.price_after_cargo(material, destination, tonnes, True)
+				average_sold = terms["sold"] if landed is None else (terms["sold"] + landed) / 2.0
 				options.append(Option(
 					subject=route_key(material, source, destination),
-					worth=tonnes * (terms["sold"] - interest - terms["bought"] * TRADER_RISK_SHARE),
+					worth=tonnes * (average_sold - interest - terms["bought"] * TRADER_RISK_SHARE),
 					cost=tonnes * terms["outlay"],
 					detail={"material": material, "source": source, "destination": destination, "tonnes": tonnes}))
 		return options

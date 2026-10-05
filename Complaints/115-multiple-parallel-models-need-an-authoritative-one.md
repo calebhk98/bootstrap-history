@@ -120,10 +120,15 @@ The stand-ins give way where an actor is already carrying:
 
 Left to do, in order:
 
-1. Traders size a cargo as a share of the buyers' depth (`TRADER_DEPTH_SHARE`), a stand-in for the price the cargo
-   would push down. The price now does move, so the cargo overshoots: a gap closes, flips, and the next year's cargo
-   goes the other way. A trader should size a cargo against the destination's price after it (the book's clearing),
-   and the declared share then goes.
+1. Done: a trader sizes a cargo against the price it makes (`paying_tonnes` in `sim/agents/trader_routes.py`): carry
+   as far as the destination's price after the cargo lands, less carriage, risk and interest, still beats the source's
+   price after it is taken. The partner book answers (`price_after_cargo`, `partner_price_response`); the cargo no longer
+   flips year to year, and the partner's price settles at the break-even freight, risk and interest set
+   (`test_foreign_actor_trade.py`). Still open: the home society's market does not answer `price_after_cargo` (the
+   economy has no quote of the price after a sale), so cargo bound for home is still limited by `TRADER_DEPTH_SHARE`
+   and a home price that rises or falls with trader cargo is not seen by the trader. Also a cargo is sized against
+   its own route only: two routes into one market within a year each see the tally of the cargo already shipped,
+   not of the cargo planned by the other.
 2. A trader's money is booked through "edge:market sale" and "edge:market purchase", not through the foreign coin
    ledger, so a trader's exports do not draw coin from the partner or raise the home coin stock (price-specie flow
    exists only for the external edge). The cargo does not use the carrier lift either (`_record_lift`).
