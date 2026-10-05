@@ -12,7 +12,7 @@ from sim.world import demand
 
 from .good_mass import unit_mass_and_source
 from .state_policy import StatePolicy
-from .tile_costs import Edge
+from .tile_costs import CarriageTable, carriage_table
 from .types import AgentId, CurrencySpec, GoodId, GoodSpec, Recipe, SiteLimit, TileId, TileSpec, TradeId
 
 LABOUR_AREA_PREFIX = "work@"
@@ -36,8 +36,7 @@ class EconomySetup:
     currency: CurrencySpec
     state_agent: AgentId
     tiles: Dict[TileId, TileSpec]
-    edges: Tuple[Edge, ...]
-    carriage_rates: Dict[str, float]               # money per tonne-km by mode, at the opening
+    carriage_rates: Dict[str, float]               # money per tonne-km by geography mode id, at the opening
     handling_rates: Dict[str, float]               # money per tonne per leg by mode, at the opening
     specs: Dict[GoodId, GoodSpec]
     recipes: Dict[str, Recipe]
@@ -61,7 +60,13 @@ class EconomySetup:
     basket_by_tile: Dict[TileId, Any] = field(default_factory=dict)   # floors that follow the tile's climate
     state_policy: StatePolicy = field(default_factory=StatePolicy)   # how the state budgets and finances a deficit
     site_limits: Tuple[SiteLimit, ...] = ()     # where site-bound recipes can run, and how much (sites.py)
+    held_nodes: Tuple[str, ...] = ()    # tech nodes the society holds; geography's sea lanes may need them
+    world_map: Any = None               # geography's map the tiles lie on (the base map when None)
     coin_per_unit: float = 1.0          # the economy counts money in this many coins (the port converts)
+
+    def carriage_table(self) -> CarriageTable:
+        """What it costs to move a tonne between this setup's tiles, over geography's route graph."""
+        return carriage_table(self.tiles, self.carriage_rates, self.handling_rates, self.held_nodes, self.world_map)
 
     def basket_for(self, tile: TileId):
         """The needs of people living on a tile: the common basket with that tile's floors."""

@@ -41,8 +41,10 @@ caller from what the actor knows; geography does not read the tech tree.
 |---|---|
 | `usable_modes([nodes_of_party, ...])` | `[mode_id]` every party can use, from the tech nodes each holds. |
 | `route(origins, destinations, modes, improvements, mode_costs, handling_costs, held_nodes)` | `{legs: [{from, to, mode, km, days, cost_per_tonne}], km, days, cost_per_tonne, inputs: {labour_hours, feed_kg, fuel_kg}}`, or `null` when nothing joins them. |
+| `route_costs(origins, modes, improvements, mode_costs, handling_costs, held_nodes)` | `{tile_id: cost_per_tonne}`: the least cost from any origin to every tile a haul reaches (origins cost 0), priced as `route` prices a haul. One search serves all destinations; the economy's market areas take their carriage costs from it. |
 | `reach(origins, modes, days_budget, improvements, held_nodes)` | `{tile_id: days}` within the budget. |
 | `freight_links(modes)` | `[(tile_a, tile_b, mode, km)]` for edges these modes use with nothing built. |
+| `map_of_tiles({tile_id: {lat, lon, coastal, borders}})` | A map of just those tiles with the base map's modes, sea lanes and parameters, for a scenario or test that places its own tiles. |
 | `edge_key(tile_a, tile_b)` | The key a built road or track between two tiles is stored under. |
 
 `improvements` is the caller's record of what has been built, `{edge_key: {"road": true,

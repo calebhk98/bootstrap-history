@@ -12,12 +12,12 @@ from sim.economy import households, taxes, tile_costs
 from sim.economy.currency import currency_from_coin_standard
 from sim.economy.setup import EconomySetup, TradeSpec, goods_specs
 from sim.world import demand, land
-from sim.geography.api import settlement
+from sim.geography.api import sea_freight, settlement
 from sim.labour import api as labour_api
 
+from .foreign_routes import SEA_MODE
+
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data")
-FREIGHT_MODE_OF_CARRIER = {"cart": tile_costs.DRAUGHT_MODE, "pack": tile_costs.PACK_MODE,
-                           "sail": tile_costs.SEA_MODE}
 
 
 def _load(*parts):
@@ -65,8 +65,8 @@ def opening_values(sim):
         "wages": {trade: sim.economy.labour.quote(trade) for trade in labour_trades if trade in trades_data},
         "unskilled_trade": unskilled,
         "rate": float(sim.economy.base_rate()),
-        "carriage": {FREIGHT_MODE_OF_CARRIER[mode]: rate for mode, rate in modes.items()
-                     if mode in FREIGHT_MODE_OF_CARRIER},
+        "carriage": dict(modes),
+        "held_nodes": sorted(sim.state.projects.done | sim.state.projects.granted),
     }
 
 
@@ -143,9 +143,10 @@ def build_setup(sim, opening=None):
     return EconomySetup(
         civ_id=str(civ["id"]),
         currency=_counted_currency(civ, unit),
-        state_agent="state:" + str(civ["id"]), tiles=tiles, edges=tile_costs.build_edges(tiles),
+        state_agent="state:" + str(civ["id"]), tiles=tiles,
         carriage_rates=dict(opening["carriage"]),
-        handling_rates=tile_costs.handling_money_per_tonne_by_mode(wages.get(opening["unskilled_trade"], 0.0)),
+        handling_rates={SEA_MODE: sea_freight.PORT_HANDLING_HOURS_PER_TONNE * wages.get(opening["unskilled_trade"], 0.0)},
+        held_nodes=tuple(opening["held_nodes"]),
         specs=specs, recipes=recipes, basket=basket, trades=trades,
         tax_forms=taxes.forms_from_civ_data(civ.get("state_revenue") or []),
         state_capacity=min(1.0, max(0.0, float(civ.get("state_capacity", 1.0)))),

@@ -55,7 +55,9 @@ stock is derived: what the opening agents want to hold at the seeded prices.
 
 **Space is tiles.** Regions are being deleted. A good's market area is the set of tiles between which
 carriage costs less than a share of its value, so silver trades across a civilisation and grain within
-a tile or a few. Carriage is the carters' pay: it goes as wages to the poorest households of the tile
+a tile or a few. The cost of a haul between tiles is geography's route cost (`sim/economy/tile_costs.py`
+asks `route_costs`, see `sim/geography/INTERFACE.md`): rivers, coasts, grade and sea lanes come from the
+map, and the economy supplies only its money per tonne-km for each mode. Carriage is the carters' pay: it goes as wages to the poorest households of the tile
 the goods leave, until carriers hire hours in the labour market.
 
 **Stock-flow consistency.** Every movement of money or goods has a counterparty. Money and goods enter
