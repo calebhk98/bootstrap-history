@@ -48,6 +48,10 @@ class OneDeclaration(unittest.TestCase):
         self.assert_no_bare_assignment(r"\s*HOURS_PER_(PERSON|WORKER)_YEAR\s*=\s*(declare|[0-9])")
         self.assertEqual(2000.0, unit_conversions.HOURS_PER_PERSON_YEAR)
 
+    def test_no_module_restates_the_civil_year_in_days(self):
+        self.assert_no_bare_assignment(r"\s*(CIVIL_)?DAYS_PER_YEAR\s*=\s*365\.0\s*$")
+        self.assertEqual(365.0, unit_conversions.CIVIL_DAYS_PER_YEAR)
+
     def test_json_files_are_listed_in_name_order_and_only_json(self):
         folder = os.path.join(DATA_DIR, "world")
         listed = json_files.json_files(folder)

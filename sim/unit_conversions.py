@@ -203,6 +203,17 @@ HOURS_PER_PERSON_YEAR = declare(
         "to labour hours: the one working-year convention every wage quote, "
         "staff count and hours ledger uses.")
 
+CIVIL_DAYS_PER_YEAR = declare(
+    "CIVIL_DAYS_PER_YEAR", 365.0, kind="physical_constant",
+    unit="days/year",
+    source="The common calendar year, without the leap-year average.",
+    confidence="A",
+    why="Turns days of travel or of growth into years and back where the model "
+        "counts calendar years of whole days (sail and cart time against a "
+        "yearly interest rate, forage eaten a year, ocean productivity a year). "
+        "The world models declare their own 365.25 average for the daily "
+        "weather and food balance.")
+
 # ============================================================================
 # DISTANCE
 # ============================================================================

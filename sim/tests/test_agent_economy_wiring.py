@@ -7,6 +7,7 @@ import os
 from sim.tests import fingerprint as perf_fingerprint
 from sim.engine.economy_port_year import SWITCH_ENVIRONMENT, switch_requested
 from sim.engine.saveload import save_state, load_state
+from sim.economy import api as economy_api
 
 
 def agent_game(civ, seed=1):
@@ -109,3 +110,13 @@ for civ in ("england_1300", "han_china_100ad", "mexica_1500", "norse_900ad"):
     book = game.economy.agent.economy().record.book
     check("%s plays three years on the agent economy with money conserved" % civ,
           book.check_conservation(1e-9).ok)
+
+# One owner for credit: the founder's room and the rate both come from the agent economy's market.
+credit_game = agent_game("rome_100ad")
+for _year in range(2):
+    credit_game.step()
+agent_market = credit_game.economy.agent.economy()
+check("on the agent economy the credit room is the agent market's, as the rate is",
+      credit_game.market_credit_room("founder") == economy_api.credit_room(agent_market, "founder")
+      and credit_game.market_rate() == economy_api.interest_rate(agent_market),
+      (credit_game.market_credit_room("founder"), economy_api.credit_room(agent_market, "founder")))

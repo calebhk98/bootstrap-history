@@ -6,6 +6,8 @@ import shutil
 import numpy
 from rasterio.transform import from_origin
 
+from sim.unit_conversions import CIVIL_DAYS_PER_YEAR
+
 from .cache import fetch
 from .layers_vector import sea_zones
 from .zonal import Grid, weighted_mean
@@ -15,7 +17,6 @@ VGPM_YEAR = 2022
 # Start day of each month the archive holds (the April file is absent upstream).
 VGPM_DAYS = (1, 32, 60, 121, 152, 182, 213, 244, 274, 305, 335)
 MILLIGRAMS_PER_GRAM = 1000.0
-DAYS_PER_YEAR = 365.0
 
 
 def _monthly_array(cache_dir, day):
@@ -36,7 +37,7 @@ def annual_npp_grid(cache_dir):
     stack = numpy.stack([_monthly_array(cache_dir, day) for day in VGPM_DAYS])
     sea = numpy.isfinite(stack).any(axis=0)
     mean_rate = numpy.nan_to_num(stack).mean(axis=0)  # mg C per m2 per day
-    annual = mean_rate * DAYS_PER_YEAR / MILLIGRAMS_PER_GRAM
+    annual = mean_rate * CIVIL_DAYS_PER_YEAR / MILLIGRAMS_PER_GRAM
     annual[~sea] = numpy.nan
     rows, columns = annual.shape
     return Grid(annual, from_origin(-180.0, 90.0, 360.0 / columns, 180.0 / rows))
