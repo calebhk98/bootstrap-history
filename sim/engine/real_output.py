@@ -21,6 +21,18 @@ basket (re-based each year, quantity index linked), which would also credit what
 from sim.engine import market_demand
 
 
+def opening_prices_in_hours(held, civ, opening_farmed_hectares):
+    """{material: opening price in labour hours} the basket is valued at: the solved prices at the
+    opening's banded farmed area, less goods with no calculated price or only a mature-market one."""
+    from .data import calculated_goods_table
+    from .prices import band_farmed_hectares
+    in_hours, basis = calculated_goods_table(
+        held, civilization_id=civ.get("id"), civilization=civ,
+        farmed_hectares=band_farmed_hectares(opening_farmed_hectares))
+    return {material: price for material, price in sorted(in_hours.items())
+            if price > 0.0 and basis.get(material) != "mature"}
+
+
 class RealOutputMixin:
 
     def base_basket(self):
@@ -30,14 +42,8 @@ class RealOutputMixin:
         cached = getattr(self.household, "_base_basket_cache", None)
         if cached is not None:
             return cached
-        from .data import calculated_goods_table
-        from .prices import band_farmed_hectares
-        held = frozenset(self.state.projects.granted)
-        in_hours, basis = calculated_goods_table(
-            held, civilization_id=self.civ.get("id"), civilization=self.civ,
-            farmed_hectares=band_farmed_hectares(self._opening_farmed_hectares))
-        prices = {material: price for material, price in sorted(in_hours.items())
-                  if price > 0.0 and basis.get(material) != "mature"}
+        prices = opening_prices_in_hours(
+            frozenset(self.state.projects.granted), self.civ, self._opening_farmed_hectares)
         units = market_demand.household_demand_by_material(
             prices, self._opening_population(), market_demand.MEAN_INCOME_HOURS_PER_CAPITA)
         units = {material: wanted for material, wanted in sorted(units.items())
