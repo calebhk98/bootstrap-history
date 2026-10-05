@@ -19,6 +19,7 @@ from sim.engine.default_civilisation import default_civilisation_id  # noqa: F40
 from sim.engine.fog import strip_self_play_advice  # noqa: F401
 from sim.engine.hazard_window import hazards_not_yet_past  # noqa: F401
 from sim.engine.identity_cache import IdentityCache  # noqa: F401
+from sim.engine.mods import get_ordered_mods  # noqa: F401
 from sim.engine.knowledge_warning import knowledge_loss_warning, warning_lines  # noqa: F401
 from sim.engine.permanent_benefit import permanent_parts  # noqa: F401
 from sim.engine.projects_completion import FAILED_PREFIX, goal_movement, MINOR_MARK  # noqa: F401

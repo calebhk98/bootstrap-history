@@ -155,3 +155,8 @@ def problems(world_map: Optional[WorldMap] = None) -> List[str]:
     found += ["route mode %r is incomplete" % mode_id for mode_id in routes_modes.invalid_entries(world_map)]
     found += resources_catalogue.validate(world_map)
     return found
+
+
+def heuristic_parameters(world_map: Optional[WorldMap] = None) -> List[str]:
+    """Ids of the map's parameters still marked as heuristics, for the burndown."""
+    return [entry["id"] for entry in parameters.heuristics(_map(world_map))]

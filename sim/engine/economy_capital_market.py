@@ -68,7 +68,7 @@ class CapitalMarketMixin:
         loans = {FOUNDER_LOAN: max(0.0, -self.state.household.capital)}
         for actor_id in sorted(self.actors.actors):
             actor = self.actors.actors[actor_id]
-            if actor.kind == "firm" and actor.record.exited_year is not None:
+            if actor.record.exited_year is not None:
                 continue
             loans[actor_id] = actor.debt()
         return loans

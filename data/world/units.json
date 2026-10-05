@@ -1,5 +1,5 @@
 {
-  "_about": "Unit registry (Complaint 285). Each unit converts to its dimension's base unit: base = value * factor + offset. `factor_from` names a context value the engine supplies (hours_per_coin: labour hours one unit of the civilisation's coin is worth). `civilisations` limits a unit to those civilisations' menus. `label_from: civ_currency` takes the name and symbol from the civilisation's currency_words. A mod adds units in data/world/units.json named <mod_id>:<name>. field_rules say which reply fields hold a quantity of a dimension and in which unit the engine writes it; a pattern is a regular expression on the field name.",
+  "_about": "Unit registry (Complaint 285). Each unit converts to its dimension's base unit: base = value * factor + offset. `factor_from` names a context value the engine supplies (hours_per_coin: labour hours one unit of the civilisation's coin is worth). `civilisations` limits a unit to those civilisations' menus. `label_from: civ_currency` takes the name and symbol from the civilisation's currency_words. A mod adds units in data/world/units.json named <mod_id>:<name>. field_rules say which reply fields hold a quantity of a dimension and in which unit the engine writes it; a pattern is a regular expression on the field name; the first rule that matches wins, so a rule for a rate comes before the plain-quantity rule it would also match; `per` makes the rule a rate over that time word, which text screens print after the unit symbol (units_text.rate_label).",
   "dimensions": {
     "area": {"base": "hectare"},
     "mass": {"base": "kilogram"},
@@ -23,6 +23,7 @@
     "civ_coin": {"name": "the civilisation's coin", "symbol": "coin", "dimension": "money", "factor_from": "hours_per_coin", "label_from": "civ_currency"}
   },
   "field_rules": [
+    {"pattern": "(^|_)(t|tonnes?)_per_(yr|year)($|_)", "word": "(?<![a-z])(t|tonnes?)(?=_per_(yr|year))", "dimension": "mass", "native": "tonne", "per": "yr"},
     {"pattern": "(?<!per)(^|_)(hectares?|ha)($|_)", "word": "hectares?|ha", "dimension": "area", "native": "hectare"},
     {"pattern": "(?<!per)(^|_)m2($|_)", "word": "m2", "dimension": "area", "native": "square_metre"},
     {"pattern": "(?<!per)(^|_)tonnes?($|_)", "word": "tonnes?", "dimension": "mass", "native": "tonne"},

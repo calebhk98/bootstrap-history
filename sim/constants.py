@@ -234,6 +234,17 @@ def by_kind():
     return grouped
 
 
+def map_heuristics():
+    """Ids of the map's parameters still marked heuristic (data/world/geography/parameters); empty when the
+    map cannot be read."""
+    try:
+        from sim.geography import api as geography
+        return geography.heuristic_parameters()
+    except Exception as exc:                      # noqa: BLE001
+        print("  (could not read the map's parameters: %s)" % exc, file=sys.stderr)
+        return []
+
+
 def burndown():
     """What fraction of declared numbers are promises we have not kept.
 
@@ -251,7 +262,8 @@ def burndown():
     return {"declared": total, "temporary_heuristics": len(heuristics),
             "share": (len(heuristics) / total) if total else 0.0,
             "outstanding": heuristics,
-            "historical_outcomes": historical_outcomes}
+            "historical_outcomes": historical_outcomes,
+            "map_heuristics": map_heuristics()}
 
 
 def _adopt_the_canonical_registry():
@@ -377,6 +389,8 @@ def main(argv=None):
         print("%d numbers declared, %d are temporary heuristics (%.1f%%)"
               % (result["declared"], result["temporary_heuristics"],
                  100.0 * result["share"]))
+        print("%d map parameters are heuristics (data/world/geography/parameters): %s"
+              % (len(result["map_heuristics"]), ", ".join(result["map_heuristics"]) or "none"))
         print()
         # SEPARATE FROM temporary_heuristic, ON PURPOSE, AND REPORTED LOUDLY.
         # See Complaints/reports/playthrough-review-han-china-100-to-400ad.md: treating the two as one bucket meant a queue

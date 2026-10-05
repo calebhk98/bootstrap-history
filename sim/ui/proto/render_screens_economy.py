@@ -306,7 +306,8 @@ def _changes_capacity_line(out):
     cap = out.get("capacity_gained_or_lost")
     if isinstance(cap, list) and cap:
         return ["  capacity: " + ", ".join(
-            "%s %+.1f t/yr" % (row["material"], row["change_t_per_yr"]) for row in cap)]
+            "%s %+.1f %s" % (row["material"], row["change_t_per_yr"], units_text.rate_label("mass", "yr", "t/yr"))
+            for row in cap)]
     return []
 
 
