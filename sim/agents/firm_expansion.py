@@ -33,4 +33,4 @@ class ExpansionMixin:
 			self.debit(cost, "expansion")  # type: ignore[attr-defined]
 			self.record.capacity[node_id] = capacity + step  # type: ignore[attr-defined]
 			if self.on_capacity_change is not None:  # type: ignore[attr-defined]
-				self.on_capacity_change()  # type: ignore[attr-defined]
+				self.on_capacity_change(self.actor_id)  # type: ignore[attr-defined]

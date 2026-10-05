@@ -1,6 +1,6 @@
 # The trader scan grows with places squared, and the concern caches with operators
 
-**Status:** partly - the route scan prunes by price gap (sim/tests/test_trader_route_scan.py); the concern caches still rebuild from every operator
+**Status:** closed - the route scan prunes by price gap (sim/tests/test_trader_route_scan.py); the concern totals are kept incrementally (sim/tests/test_complaint_462_concern_totals.py)
 
 Split from 406.
 
@@ -20,4 +20,4 @@ There is no measurement command yet: profile `advance_actors` on a scenario with
 
 `sim/agents/trader_routes.py` finds a material's gaining pairs by a sorted search on price (a pair can only gain if the destination price exceeds the source price by the share lost on the way), and prices carriage for those pairs alone. `Trader.route_options` and `trader_entry.candidate_routes` both use it and return what the exhaustive scan returned (tests compare against it on random worlds, in order). Carriage pricing no longer grows with places squared; the sort and the price reads still grow with places.
 
-Not done: the concern caches. `capacity_in` and `concerns_in` depend on both concern sets and each firm's capacity, which changes through `note_capacity_change` without a concern change, so incremental totals need per-firm capacity deltas, not just `_ConcernWatch`. Cross-trader sharing of route terms was not needed once the scan is pruned.
+Concern totals: `sim/agents/concern_totals.py` remembers each operator's contribution and `_ConcernWatch` (concern changes) and `note_capacity_change(firm_id)` (capacity changes) re-sync only that operator, so `capacity_in` and `concerns_in` no longer walk the operators. The test compares the totals with a full recomputation after random entries, exits and capacity changes, and shows a capacity change reads the same number of capacities with few or many operators. Cross-trader sharing of route terms was not needed once the scan is pruned.
