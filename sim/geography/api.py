@@ -19,9 +19,9 @@ from sim.geography.climate_temperatures import (KOPPEN_TROPICAL_COLDEST_MONTH_MI
                                                 representative_extremes)
 from sim.geography.distance import haversine_km
 from sim.geography.geography import Geography
-from sim.geography.loading import GEOFILE, load_geography
+from sim.geography.loading import load_geography
 
-__all__ = ["Geography", "GEOFILE", "load_geography", "haversine_km", "KOPPEN_TROPICAL_COLDEST_MONTH_MINIMUM_CELSIUS",
+__all__ = ["Geography", "load_geography", "haversine_km", "KOPPEN_TROPICAL_COLDEST_MONTH_MINIMUM_CELSIUS",
            "daily_temperatures", "representative_extremes", "cargo_cost", "climate_temperatures", "crop_climate",
            "freight_cost", "regions", "sea_freight", "settlement", "territory", "tile_lookup",
            "tile_names", "transport",

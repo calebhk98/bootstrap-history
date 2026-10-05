@@ -6,6 +6,10 @@ formulas, language) is the geography package's business. Arguments and answers a
 string ids, numbers, lists and dicts. Every call takes an optional `world_map`; without it the
 base map answers.
 
+`load_geography(world_map)` (older surface) returns the regions, reach levels, located materials and the
+tile grid as one dict, assembled from the map's `tiles`, `regions`, `reach_levels` and `located_materials`
+catalogues, so a mod's overlay covers them; a region's tiles are the tiles labelled with it.
+
 Older names on `api.py` (`transport`, `freight_cost`, `settlement`, `tile_names`, the `Geography`
 object and its region reach) are outside this contract and are to be replaced by it.
 

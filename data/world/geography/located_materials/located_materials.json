@@ -1,0 +1,311 @@
+{
+ "_note": "cost_multiplier is what a kilogramme costs delivered to Italy relative to producing it locally, by TRADE, at the start, FOR ROME SPECIFICALLY (that is the civilization this number was originally written for, and reach_from_italia above is its calibration point). sim/simulator.py's Sim.material_reach() turns this into a cost multiplier for WHATEVER civilization you are actually playing, by comparing that civilization's own geometric reach to the region against reach_from_italia: at civ_reach 0 (you live there) the multiplier is 1, at civ_reach == reach_from_italia it reproduces this number exactly (which is why Rome's own numbers barely move), and at civ_reach below reach_from_italia -- the whole point of this fix -- it comes out CHEAPER, because the material genuinely is closer for that civilization. An expedition or a colony then cuts it further, which is the whole economic argument for both.",
+ "entries": [
+  {
+   "id": "rubber_latex",
+   "regions": [
+    "americas_south",
+    "west_africa"
+   ],
+   "primary": "americas_south",
+   "cost_multiplier": 40,
+   "note": "THE CLASSIC 'UNOBTAINABLE' AND IT IS NOT. Hevea brasiliensis is Amazonian, but Landolphia and Funtumia vines in West and Central Africa also yield real rubber and were the basis of a huge industry in the 1890s. West Africa is coastal sailing from the Pillars of Hercules, which Hanno did around 500 BC. You do not need to cross an ocean for rubber. You need to sail down a coast and know which vine to tap.",
+   "unlocks": [
+    "mat_natural_rubber"
+   ]
+  },
+  {
+   "id": "gutta_percha",
+   "regions": [
+    "southeast_asia"
+   ],
+   "cost_multiplier": 60,
+   "note": "Palaquium latex, Malaya. Reachable by extending the existing India route east, which Indian and Malay traders already do. Traders based IN China or India are already doing most of this journey as a matter of routine; the old Rome-only reach model could not say that.",
+   "unlocks": [
+    "mat_gutta_percha"
+   ]
+  },
+  {
+   "id": "cinchona_bark",
+   "regions": [
+    "americas_south"
+   ],
+   "primary": "americas_south",
+   "cost_multiplier": 80,
+   "note": "Andean, and genuinely only Andean until the 19th-century transplants to Java and India. Malaria is endemic around Rome, so this is worth an ocean crossing on its own. Once you have it, transplant it: the Dutch and British both did.",
+   "unlocks": [
+    "mat_quinine"
+   ]
+  },
+  {
+   "id": "sodium_nitrate",
+   "regions": [
+    "americas_south"
+   ],
+   "cost_multiplier": 50,
+   "note": "Atacama caliche. Enormous, but you do not need it: Indian saltpetre from Bengal was the world's supply for centuries and is reachable on a route Rome already sails, and nitre beds work anywhere.",
+   "unlocks": [
+    "mat_chile_nitrate"
+   ]
+  },
+  {
+   "id": "potassium_nitrate_natural",
+   "regions": [
+    "india"
+   ],
+   "cost_multiplier": 6,
+   "note": "BENGAL SALTPETRE. This is the important one and almost every bootstrap plan misses it. Natural nitre efflorescence on the Gangetic plain supplied the world's gunpowder for centuries. It is on a route Rome already sails annually. You can buy saltpetre instead of farming it, which removes the 24-month nitre-bed delay from the critical path entirely.",
+   "unlocks": [
+    "nitre_beds_bypass"
+   ]
+  },
+  {
+   "id": "cryolite",
+   "regions": [
+    "greenland_arctic"
+   ],
+   "cost_multiplier": 200,
+   "note": "Ivigtut, Greenland, essentially the only workable deposit. But synthetic fluoride baths from your own hydrofluoric acid work, which is what industry moved to anyway. Genuinely close to home for the Norse (base_reach 4, ships built for ice-bound coasts) and genuinely remote for everyone else, which is exactly the asymmetry this file exists to capture.",
+   "unlocks": [
+    "mat_cryolite"
+   ]
+  },
+  {
+   "id": "platinum",
+   "regions": [
+    "americas_south",
+    "siberia_urals"
+   ],
+   "cost_multiplier": 120,
+   "note": "Colombian placers and Ural placers. The Urals are overland-reachable through Scythian and Sarmatian trade.",
+   "unlocks": [
+    "mat_platinum_bulk"
+   ]
+  },
+  {
+   "id": "potato",
+   "regions": [
+    "americas_south"
+   ],
+   "cost_multiplier": 1,
+   "one_time": true,
+   "note": "A crop, not a commodity. You need SEED STOCK once, then you grow it. One successful voyage changes the caloric ceiling of European agriculture permanently. Potatoes yield 2 to 4 times the calories per hectare of wheat on poor ground.",
+   "unlocks": [
+    "fud_potato_tier9"
+   ]
+  },
+  {
+   "id": "maize",
+   "regions": [
+    "americas_carib"
+   ],
+   "cost_multiplier": 1,
+   "one_time": true,
+   "unlocks": [
+    "fud_maize_tier9"
+   ]
+  },
+  {
+   "id": "cacao",
+   "regions": [
+    "americas_carib"
+   ],
+   "cost_multiplier": 1,
+   "one_time": true,
+   "unlocks": [
+    "fud_chocolate_tier9"
+   ]
+  },
+  {
+   "id": "tomato_chilli_tobacco_cassava",
+   "regions": [
+    "americas_carib",
+    "americas_south"
+   ],
+   "cost_multiplier": 1,
+   "one_time": true,
+   "unlocks": [
+    "mat_newworld_crops"
+   ]
+  },
+  {
+   "id": "coca_leaf",
+   "regions": [
+    "americas_south"
+   ],
+   "cost_multiplier": 90,
+   "unlocks": [
+    "med_cocaine_unobtainable"
+   ]
+  },
+  {
+   "id": "silk_raw",
+   "regions": [
+    "china"
+   ],
+   "cost_multiplier": 30,
+   "note": "Rome already buys it. The sericulture SECRET is the valuable thing; two monks smuggled silkworm eggs to Byzantium in 552 AD, so it is stealable."
+  },
+  {
+   "id": "shellac",
+   "regions": [
+    "india"
+   ],
+   "cost_multiplier": 12
+  },
+  {
+   "id": "camphor",
+   "regions": [
+    "southeast_asia",
+    "china"
+   ],
+   "cost_multiplier": 25
+  },
+  {
+   "id": "cloves_nutmeg",
+   "regions": [
+    "southeast_asia"
+   ],
+   "cost_multiplier": 70,
+   "note": "Maluku only, until transplanted. The single highest value-per-weight cargo in the pre-modern world."
+  },
+  {
+   "id": "pepper",
+   "regions": [
+    "india"
+   ],
+   "cost_multiplier": 8,
+   "note": "Rome buys this by the shipload already."
+  },
+  {
+   "id": "cotton",
+   "regions": [
+    "india",
+    "north_africa"
+   ],
+   "cost_multiplier": 4
+  },
+  {
+   "id": "wootz_ingot",
+   "regions": [
+    "india"
+   ],
+   "cost_multiplier": 15,
+   "note": "Crucible steel ingots. Rome imports these. Buying the product is not the same as knowing the process, but it lets you reverse-engineer it."
+  },
+  {
+   "id": "tin",
+   "regions": [
+    "britannia",
+    "hispania",
+    "southeast_asia"
+   ],
+   "cost_multiplier": 1
+  },
+  {
+   "id": "amber",
+   "regions": [
+    "scandinavia"
+   ],
+   "cost_multiplier": 20,
+   "note": "Also the best natural electrical insulator available to you, and the origin of the word electricity."
+  },
+  {
+   "id": "mercury",
+   "regions": [
+    "hispania"
+   ],
+   "cost_multiplier": 1,
+   "note": "Almaden, an imperial monopoly, so this is a political cost not a distance cost."
+  },
+  {
+   "id": "bitumen_naphtha",
+   "regions": [
+    "levant_mesopotamia"
+   ],
+   "cost_multiplier": 2,
+   "note": "Surface seeps. Your entire petroleum industry starts here and needs no drilling."
+  },
+  {
+   "id": "coal",
+   "regions": [
+    "britannia",
+    "gaul_germania",
+    "china"
+   ],
+   "cost_multiplier": 1
+  },
+  {
+   "id": "boric_acid",
+   "regions": [
+    "italia"
+   ],
+   "cost_multiplier": 1,
+   "note": "Larderello fumaroles, Tuscany. Verify on arrival."
+  },
+  {
+   "id": "fluorspar",
+   "regions": [
+    "gaul_germania",
+    "britannia"
+   ],
+   "cost_multiplier": 2
+  },
+  {
+   "id": "argyrodite_germanium",
+   "regions": [
+    "gaul_germania"
+   ],
+   "cost_multiplier": 10,
+   "note": "Freiberg, Saxony, outside the Empire in free Germania. Zinc smelter flue dust is the better route anyway."
+  },
+  {
+   "id": "guano",
+   "regions": [
+    "americas_south"
+   ],
+   "cost_multiplier": 30,
+   "note": "Peruvian islands. Enormous nitrogen and phosphate resource, and it is why the guano trade mattered so much in the 19th century."
+  },
+  {
+   "id": "sugar_cane",
+   "regions": [
+    "india",
+    "southeast_asia"
+   ],
+   "cost_multiplier": 5,
+   "one_time_transplant": true
+  },
+  {
+   "id": "tea",
+   "regions": [
+    "china"
+   ],
+   "cost_multiplier": 25,
+   "one_time_transplant": true
+  },
+  {
+   "id": "coffee",
+   "regions": [
+    "arabia_horn"
+   ],
+   "cost_multiplier": 15,
+   "one_time_transplant": true
+  },
+  {
+   "id": "kola_palm_oil",
+   "regions": [
+    "west_africa"
+   ],
+   "cost_multiplier": 20
+  },
+  {
+   "id": "ivory_gold_west_africa",
+   "regions": [
+    "west_africa"
+   ],
+   "cost_multiplier": 6,
+   "note": "The West African gold trade is why the trans-Saharan routes existed. Reachable by sea, which is exactly what the Portuguese did to cut out the Saharan middlemen."
+  }
+ ]
+}

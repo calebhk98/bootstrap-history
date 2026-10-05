@@ -2,7 +2,7 @@
 
 A production entry may carry `grown_in_climate_classes`, a list of Koppen-Geiger classes in which the
 crop is grown. A civilisation can grow it when any tile of its home regions has one of them
-(`data/world/geography.json`, `land_tiles`). An entry that names none grows anywhere. Whether the
+(`the map folder (data/world/geography/)`, `land_tiles`). An entry that names none grows anywhere. Whether the
 civilisation knows how is a separate gate, the entry's `requires_node`.
 """
 import functools

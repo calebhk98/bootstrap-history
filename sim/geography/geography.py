@@ -17,11 +17,11 @@ MineralShares = Dict[str, float]  # one region's rough share of each mineral's o
 
 
 class RegionRecord(TypedDict):
-    """One entry of geography.json's `regions` block - the shape every
+    """One entry of the geography data's `regions` block - the shape every
     method below reads via `self._regions[region_id]`. Land figures are
     not here: they are sums over the region's tiles (sim/world/land.py).
     `note` is the only key genuinely absent on some
-    regions (17 of 21 in data/world/geography.json); every other key here
+    regions (17 of 21 in the map folder (data/world/geography/)); every other key here
     is present on all 21."""
     name: str
     lat: float
@@ -61,7 +61,7 @@ class Geography:
         lon = sum(self._regions[region_id]["lon"] for region_id in homes) / len(homes)
         return lat, lon
 
-    # Straight-line kilometres (after geography.json's route_difficulty and
+    # Straight-line kilometres (after the geography data's route_difficulty and
     # this civilization's own travel speed, below, have been applied) banded
     # onto the same 0-6 scale reach_levels already uses. Chosen so that
     # ROME, at its own base_reach of 2, lands close to the hand-authored
@@ -137,12 +137,12 @@ class Geography:
     def material_reach(self, material_key: str) -> Tuple[int, float]:
         """Reach and cost multiplier for `material_key`, FOR THIS CIVILIZATION.
 
-        Looks the material up in geography.json's located_materials, picks
+        Looks the material up in the geography data's located_materials, picks
         whichever of its regions is EASIEST for this civ to reach (a rational
         buyer sources from the nearest deposit, not always the "primary"
         one), and turns that region's reach into a cost multiplier.
 
-        The published cost_multiplier in geography.json was written for
+        The published cost_multiplier in the geography data was written for
         Rome: it is calibrated against that region's reach_from_italia, the
         old Roman-only reach number. So: at civ_reach 0 (you live there) the
         multiplier is 1, at civ_reach == reach_from_italia it reproduces the
@@ -196,9 +196,9 @@ class Geography:
         """Cost multiplier a located-material tech node picks up from
         geography, for the civilization in play.
 
-        Only applies to nodes geography.json actually names (via
+        Only applies to nodes the geography data actually names (via
         located_materials.*.unlocks, e.g. mat_gutta_percha, mat_natural_rubber):
-        everything else returns 1.0 and is untouched. geography.json's
+        everything else returns 1.0 and is untouched. the geography data's
         cost_multiplier field has to be read here, or gutta percha costs
         exactly the same (nothing extra) whether you are playing Rome or
         Han China, and the entire India-and-east trade advantage a
@@ -221,7 +221,7 @@ class Geography:
         actually is, would get only 7%. A coalfield does not care how many
         people live near it.
 
-        geography.json's per-region `minerals` gives each region's rough
+        the geography data's per-region `minerals` gives each region's rough
         share of a material's total output, normalised so ROME'S OWN home
         regions sum to about 1.0 -- which is what reproduces
         resources.json's Roman totals exactly for a Rome-based civ and

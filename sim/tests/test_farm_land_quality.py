@@ -1,6 +1,7 @@
 """Each civilisation's farm sits on its own soil: land quality is the
 arable-area-weighted fertility of the regions it holds, and the farm is
 sized so the starting population is still fed on that soil."""
+from sim.geography.api import load_geography
 import copy
 import json
 import os
@@ -11,8 +12,7 @@ from sim.world import agriculture
 from sim.labour import labour_allocation
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-with open(os.path.join(_ROOT, "data", "world", "geography.json"), encoding="utf-8") as _handle:
-    _GEOGRAPHY = json.load(_handle)
+_GEOGRAPHY = load_geography()
 _TILES = _GEOGRAPHY["land_tiles"]["tiles"]
 _REGION_TO_TILES = _GEOGRAPHY["land_tiles"]["region_to_tiles"]
 

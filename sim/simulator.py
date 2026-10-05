@@ -35,7 +35,7 @@ while _SIM_DIR in sys.path:
 	sys.path.remove(_SIM_DIR)
 
 from sim.engine.data import *            # noqa: F401,F403
-from sim.engine.data import (ANNUAL_WAGE, CIVDIR, DEFAULTS, GEOFILE,
+from sim.engine.data import (ANNUAL_WAGE, CIVDIR, DEFAULTS,
                          RESFILE, STARTING_KITS, STRATS, TECH_EFFECTS,
                          TRADES_ABSENT, TRADE_FAMILY, TRADE_NOTES, WAGES,
                          closure, critical_path, haversine_km, load, load_civ,

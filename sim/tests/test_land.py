@@ -23,6 +23,7 @@ import json
 import os
 import unittest
 
+from sim.geography.api import load_geography
 from sim.world import land
 
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(
@@ -36,8 +37,7 @@ def _real_geography():
     # `cultivable_land_for_civilization` resolves a civilization's
     # `home_regions` to tiles - see sim/world/land.py's own module
     # docstring, UPDATE (stakeholder maintainability item 6...) section.
-    with open(land.GEOGRAPHY_FILE) as handle:
-        return json.load(handle)
+    return load_geography()
 
 
 def _make_region(name, arable_hectares, fertility_quality_multiplier):
@@ -261,11 +261,7 @@ class RegionDataLoadsCleanlyTests(unittest.TestCase):
         # must not appear anywhere in geography.json's land data, since
         # none of these figures should have been reverse-engineered from
         # it.
-        import json
-        path = os.path.join(_REPO_ROOT, "data", "world", "geography.json")
-        with open(path) as handle:
-            raw_text = handle.read()
-        geography = json.loads(raw_text)
+        geography = load_geography()
         for region_key, region_entry in geography["regions"].items():
             if region_key.startswith("_"):
                 continue

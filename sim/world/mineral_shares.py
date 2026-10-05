@@ -1,7 +1,7 @@
 """Each region's share of a metal's output, from the tiles its deposits sit on.
 
 A named deposit carries its own share and a position, which resolves to the
-land tile that holds it (the geography deposit catalogue). geography.json's region records keep only the
+land tile that holds it (the geography deposit catalogue). the geography data's region records keep only the
 shares not tied to a deposit. A region's total is its own table plus the
 deposits whose tile belongs to it, so a share is stored once, at one place.
 Standalone: reads data files only, never the engine.

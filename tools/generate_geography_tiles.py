@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Generate data/world/geography.json's "land_tiles" section: the world's
+"""Generate the map folder (data/world/geography/)'s "land_tiles" section: the world's
 land surface cut into tiles of a fixed, roughly-150,000-km2 size, each
 tile's arable fraction and fertility derived from its real climate class,
 plus which tiles touch the sea and which tiles border which.
 
 WHY THIS EXISTS. Complaints/45 ("regions are not a unit of area") measured
-that data/world/geography.json's 21 hand-drawn regions range from 230,000
+that the map folder (data/world/geography/)'s 21 hand-drawn regions range from 230,000
 km2 (britannia) to 19,800,000 km2 (americas_north) - an 86x spread that has
 nothing to do with land scarcity and everything to do with where somebody
 drew a border. The stakeholder's own fix: make a region a FIXED quantity of
@@ -152,7 +152,7 @@ every heuristic you cannot yet derive).
     plains, the Yellow River loess belt and the Mississippi bottomlands are
     all historically exceptional farmland sitting inside a Koppen class
     (often BWh desert, for the Nile) that this table otherwise scores low.
-    The hand-written geography.json this script's output sits alongside
+    The hand-written the geography data this script's output sits alongside
     modelled this explicitly (north_africa's fertility is 1.35 specifically
     BECAUSE its arable sliver is Nile silt); a pure climate classification
     cannot see a river at all. Fixing this needs a soil dataset (e.g. the
@@ -176,7 +176,7 @@ every heuristic you cannot yet derive).
     ownership (another agent is concurrently adding land.py's own
     intensive margin) and Complaints/45 itself recommends re-tiling as
     "its own deliberate pass" separate from that work. This script adds
-    its output as data/world/geography.json's own NEW "land_tiles" key,
+    its output as the map folder (data/world/geography/)'s own NEW "land_tiles" key,
     alongside the existing "regions" key, which is left untouched - see
     that key's own "_doc" field once written for the mapping from old
     region to new tiles and exactly what a later pass would need to change
@@ -185,7 +185,7 @@ every heuristic you cannot yet derive).
 
 USAGE:
     python3 tools/generate_geography_tiles.py
-    python3 tools/generate_geography_tiles.py --cache-dir /some/dir --out data/world/geography.json
+    python3 tools/generate_geography_tiles.py --cache-dir /some/dir --out the map folder (data/world/geography/)
     python3 tools/generate_geography_tiles.py --report-only   # print stats, write nothing
 
 Runtime: under 15 seconds end to end on this environment, most of it spent
@@ -270,7 +270,7 @@ CLIMATE_SAMPLES_PER_AXIS = 5   # rule 6: a 5x5 = 25-point grid per tile,
 #
 # Values are (arable_fraction, fertility_quality_multiplier). Both are
 # engineering estimates in the same sense every non-italia region in the
-# existing geography.json is one (confidence D): the DIRECTION each one
+# existing the geography data is one (confidence D): the DIRECTION each one
 # encodes is well attested agronomically, the exact SIZE is a placeholder
 # pending a real soil survey, exactly the discipline sim/world/land.py's
 # own module docstring already states for the hand-written file this
@@ -279,7 +279,7 @@ CLIMATE_SAMPLES_PER_AXIS = 5   # rule 6: a 5x5 = 25-point grid per tile,
 #   Csa is fixed at fertility 1.0: this is the class Italy's own tiles
 #       fall in, and data/production/40_organics.json's wheat_kg entry IS
 #       Roman-Italian dry-farmed wheat - the SAME anchor the hand-written
-#       geography.json already uses, reached here by climate class instead
+#       the geography data already uses, reached here by climate class instead
 #       of by name.
 #   ET is fixed at fertility 0.05: sim/world/agriculture.py's own
 #       ARCTIC_TUNDRA quality multiplier, reused exactly rather than
@@ -295,7 +295,7 @@ CLIMATE_SAMPLES_PER_AXIS = 5   # rule 6: a 5x5 = 25-point grid per tile,
 # rainforest is never short of rain but its canopy leaches the soil below
 # it; a humid subtropical class with no dry season and a hot summer (the
 # Yangtze basin's own class) is given fertility slightly ABOVE the
-# Mediterranean anchor for the same reason data/world/geography.json's own
+# Mediterranean anchor for the same reason the map folder (data/world/geography/)'s own
 # china entry already gives China's arable sliver 1.3: this is rice
 # country, and rice yields more calories per hectare than wheat under
 # comparable technology, well attested agronomically and independent of
@@ -355,7 +355,7 @@ def arable_and_fertility_from_mix(sample_mix):
 
 # ============================================================================
 # OLD REGION MAPPING - for the report only, never for a tile's own numbers.
-# Each of the 21 hand-written geography.json regions names, in its own
+# Each of the 21 hand-written the geography data regions names, in its own
 # `land.source` text, roughly which modern countries it groups (and its own
 # stated land_area_km2 is close to summing exactly those countries' real
 # areas - checked by hand while building this map, see the report this
@@ -682,7 +682,7 @@ def build_tiles(cache_dir, verbose=True):
 
 
 # ============================================================================
-# OUTPUT - written under geography.json's own NEW "land_tiles" key, next to
+# OUTPUT - written under the geography data's own NEW "land_tiles" key, next to
 # (not instead of) the existing "regions" key - see the module docstring's
 # WHAT THIS SCRIPT DELIBERATELY DOES NOT DO section for why.
 # ============================================================================
@@ -769,8 +769,8 @@ def main():
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--out", default=os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        "data", "world", "geography.json"),
-        help="geography.json to update in place (default: the repo's own copy)")
+        "data", "world", "geography", "tile_grid.json"),
+        help="tile grid file to write (default: the base map's own copy)")
     parser.add_argument("--cache-dir", default=DEFAULT_CACHE_DIR,
         help="where to cache downloaded Natural Earth shapefiles (default: %s)"
              % DEFAULT_CACHE_DIR)
@@ -783,13 +783,13 @@ def main():
 
     if arguments.rederive:
         with open(arguments.out) as handle:
-            geography = json.load(handle)
-        for tile in geography["land_tiles"]["tiles"].values():
+            grid = json.load(handle)
+        for tile in grid["tiles"].values():
             arable, fertility = arable_and_fertility_from_mix(tile["koppen_sample_mix"])
             tile["arable_fraction"] = round(arable, 4)
             tile["fertility_quality_multiplier"] = round(fertility, 4)
         with open(arguments.out, "w") as handle:
-            json.dump(geography, handle, indent=1, sort_keys=False)
+            json.dump(grid, handle, indent=1, sort_keys=False)
         print("rederived tile arable/fertility from koppen_sample_mix")
         return
 
@@ -821,13 +821,11 @@ def main():
         print("\n--report-only: nothing written.")
         return
 
-    with open(geography_path) as handle:
-        geography = json.load(handle)
-    geography["land_tiles"] = section
+    grid = {key: value for key, value in section.items() if key != "region_to_tiles"}  # derived from the tiles at load
     with open(geography_path, "w") as handle:
-        json.dump(geography, handle, indent=1, sort_keys=False)
+        json.dump(grid, handle, indent=1, sort_keys=False)
         handle.write("\n")
-    print("\nWrote %d tiles to %s under the new \"land_tiles\" key." % (len(tiles), geography_path))
+    print("\nWrote %d tiles to %s." % (len(tiles), geography_path))
 
 
 if __name__ == "__main__":

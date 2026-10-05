@@ -1,5 +1,10 @@
 {
-  "_doc": "The base map. Tiles come from the land-tile grid in ../geography.json; layers, catalogues and content are the files and folders beside this one. sim/geography/map_source.py says how folders merge and how a mod overlays them.",
-  "id": "earth",
-  "tiles": {"file": "../geography.json", "path": ["land_tiles", "tiles"]}
+ "_doc": "The base map. Tiles come from tile_grid.json beside this file; layers, catalogues (regions, reach_levels, located_materials, deposits, ...) and content are the files and folders beside it too. geography_notes.json holds the design notes. sim/geography/map_source.py says how folders merge and how a mod overlays them.",
+ "id": "earth",
+ "tiles": {
+  "file": "tile_grid.json",
+  "path": [
+   "tiles"
+  ]
+ }
 }

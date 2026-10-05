@@ -5,9 +5,10 @@ tiles through `region_to_tiles` is test scaffolding only."""
 import json
 import unittest
 
+from sim.geography.api import load_geography
 from sim.economy import market_areas, tile_costs
 from sim.economy.types import GoodSpec
-from sim.tests.test_economy_tile_costs import GEOGRAPHY_PATH, REAL_HANDLING, REAL_RATES, civ_tile_ids, grid, grid_table
+from sim.tests.test_economy_tile_costs import REAL_HANDLING, REAL_RATES, civ_tile_ids, grid, grid_table
 
 GRAIN = GoodSpec("grain_kg", 1.0, 0.1, 0.0, "food")
 SILVER = GoodSpec("silver_kg", 1.0, 0.0, 0.0, "metal")
@@ -119,8 +120,7 @@ class AreaMapTests(unittest.TestCase):
 class RealTilesTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        with open(GEOGRAPHY_PATH, encoding="utf-8") as handle:
-            cls.geography = json.load(handle)
+        cls.geography = load_geography()
 
     def area_counts(self, civ_name):
         tile_ids = civ_tile_ids(self.geography, civ_name)
