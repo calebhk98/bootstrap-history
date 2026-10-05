@@ -1,6 +1,6 @@
 # The growing-season weather test reads a region latitude the data no longer has
 
-**Status:** open
+**Status:** closed - already read from the derived region anchors (commit 6a1a0b3); `growing_season_weather_correlation` "two nearby cells correlate far more than two distant ones" passes under `--slow`.
 
 `python3 -m sim.tests --only growing_season_weather_correlation --slow` errors in "two nearby cells correlate
 far more than two distant ones": `KeyError: 'lat'`. The test builds

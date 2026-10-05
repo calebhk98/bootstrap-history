@@ -80,10 +80,10 @@ class ConcernEarnsItsReturn(unittest.TestCase):
     def earnings(self, rate):
         """(revenue less staff, build hours of its plant) of a concern selling at its solved price."""
         node = {"id": "widget_works", "kind": "ENGINEERING", "rev_hours": 1.0, "up_hours": 1.0, "sch": 0.0,
-                "art": 0.0, "annual_output_t": 0.0}
+                "art": 0.0, "annual_output_t": 0.0, "lab": {}, "cap_hours": 0.0, "_material_hours": 0.0}
         goods = {"ore_kg": 1.0, "widget_kg": unit_price(rate)}
         table = {"widget_works_entry": works_entry()}
-        with mock.patch("sim.labour.labour_market.production_data", return_value=table):
+        with mock.patch("sim.labour.api.production_data", return_value=table):
             node_revenue.apply_revenue([node], goods, WAGES, 1.0, energy_prices.pool_only(goods))
         self.assertEqual(node["_revenue_basis"], "output")
         staff = node["_upkeep_hours_parts"]["staff"]

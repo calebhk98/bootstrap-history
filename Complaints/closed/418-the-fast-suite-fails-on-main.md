@@ -1,6 +1,6 @@
 # The test suite fails on main
 
-**Status:** open
+**Status:** closed - fast checks repaired: `automation_audit` patches the labour object's `hire`, `capital_charge` builds a node with the current fields and patches `sim.labour.api.production_data`, the price-table check in `complaint_141_year_cost` counts table rebuilds instead of seconds, and `complaint_45_forest_area_not_region_count` already passes. Of the slow items, "gaining a deputy is announced" passes and the weather seed check is Complaint 395 (regional weather); `round2_policy_hazards_options` was not re-run in this pass.
 
 On main at the merge of pull request 30, `python3 -m sim.tests --only automation_audit,capital_charge` fails before any geography change:
 
