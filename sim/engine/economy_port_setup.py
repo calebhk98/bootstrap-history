@@ -132,10 +132,13 @@ def build_setup(sim, opening=None):
     for need in basket.needs:
         goods.update(good for good, _effect in need.goods)
     spoilage = _load("world", "spoilage.json").get("rates_per_year", {})
-    specs = goods_specs({good: "" for good in goods}, spoilage)
+    service_lives = {good: float(entry["years"])
+                     for good, entry in _load("world", "service_lives.json").get("years", {}).items()}
+    specs = goods_specs({good: "" for good in goods}, spoilage, service_lives)
     prices = {good: price for good, price in opening["prices"].items() if good in specs and price > 0.0}
     trades_data = _load("world", "trades.json").get("trades", {})
-    trades = {trade: TradeSpec(trade, float(spec.get("training_years", 0.0)))
+    trades = {trade: TradeSpec(trade, float(spec.get("training_years", 0.0)),
+                               float(spec.get("fatality_risk_per_year", 0.0)))
               for trade, spec in sorted(trades_data.items())}
     wages = dict(opening["wages"])
     by_people = sorted(tile_ids, key=lambda tile: (-population_by_tile[tile], tile))

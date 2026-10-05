@@ -1,0 +1,70 @@
+{
+  "_doc": "Service life of a durable good: the years a stock of it serves before it is worn out or lost, so households hold it and buy only to keep it up (the economy reads a good with a service life as a durable; a good not listed is used up within the year). Keyed by the good ids of data/production. Estimates, confidence C or D; a wear model per good (use, material, maintenance) would derive them. Carts and ships are not goods in the production data yet, so they have no entry; timber, cloth and other materials that are also consumed as inputs are left out until a held-stock model separates the two uses.",
+  "years": {
+    "brick_1000": {
+      "years": 80,
+      "confidence": "D",
+      "source": "Fired-brick walls stand for generations when roofed and repaired; taken as most of a lifetime or more. Estimate."
+    },
+    "stone_blocks": {
+      "years": 100,
+      "confidence": "D",
+      "source": "Dressed-stone walls outlast brick; Roman and medieval masonry buildings still stand. Estimate of the time to rebuild."
+    },
+    "cement_portland_kg": {
+      "years": 50,
+      "confidence": "C",
+      "source": "Design working life of building structures, 50 years, in EN 1990 (Eurocode: Basis of structural design), table 2.1 category 4."
+    },
+    "bronze_kg": {
+      "years": 25,
+      "confidence": "D",
+      "source": "Working life of a hand tool, blade or fitting before wear, breakage or loss replaces it; harder metals outlast softer, cutting edges wear fastest. Estimate."
+    },
+    "brass_kg": {
+      "years": 20,
+      "confidence": "D",
+      "source": "Working life of a hand tool, blade or fitting before wear, breakage or loss replaces it; harder metals outlast softer, cutting edges wear fastest. Estimate."
+    },
+    "iron_bar_kg": {
+      "years": 10,
+      "confidence": "D",
+      "source": "Working life of a hand tool, blade or fitting before wear, breakage or loss replaces it; harder metals outlast softer, cutting edges wear fastest. Estimate."
+    },
+    "cast_iron_kg": {
+      "years": 15,
+      "confidence": "D",
+      "source": "Working life of a hand tool, blade or fitting before wear, breakage or loss replaces it; harder metals outlast softer, cutting edges wear fastest. Estimate."
+    },
+    "steel_plate_kg": {
+      "years": 20,
+      "confidence": "D",
+      "source": "Working life of a hand tool, blade or fitting before wear, breakage or loss replaces it; harder metals outlast softer, cutting edges wear fastest. Estimate."
+    },
+    "steel_noric_kg": {
+      "years": 15,
+      "confidence": "D",
+      "source": "Working life of a hand tool, blade or fitting before wear, breakage or loss replaces it; harder metals outlast softer, cutting edges wear fastest. Estimate."
+    },
+    "tool_steel_kg": {
+      "years": 8,
+      "confidence": "D",
+      "source": "Working life of a hand tool, blade or fitting before wear, breakage or loss replaces it; harder metals outlast softer, cutting edges wear fastest. Estimate."
+    },
+    "gold_kg": {
+      "years": 50,
+      "confidence": "D",
+      "source": "Ornament metal is durable; about 2 per cent worn or lost a year, the figure already stated in data/world/needs.json (ornament satiation_basis), is a fifty-year life."
+    },
+    "silver_kg": {
+      "years": 50,
+      "confidence": "D",
+      "source": "Ornament metal is durable; about 2 per cent worn or lost a year, the figure already stated in data/world/needs.json (ornament satiation_basis), is a fifty-year life."
+    },
+    "platinum_g": {
+      "years": 50,
+      "confidence": "D",
+      "source": "Ornament metal is durable; about 2 per cent worn or lost a year, the figure already stated in data/world/needs.json (ornament satiation_basis), is a fifty-year life."
+    }
+  }
+}

@@ -103,7 +103,7 @@ class PopulationMixin:
         """Whether the trade's pool is bounded by who can read and write, not by what
         the town's households need made."""
         scholar_family = self._world.trade_family(trade_data.scholar_trade())
-        return (bool(trade_data.literate_trades((trade,)))
+        return (bool(trade_data.literate_trades(trade_data.registry_of(self._world), (trade,)))
                 or trade in legacy_trade_defaults.LETTERED_BUT_NOT_LITERATE
                 or self._world.trade_family(trade) == scholar_family)
 
@@ -148,7 +148,7 @@ class PopulationMixin:
             return None
         if trade == trade_data.scholar_trade():
             return "SCHOLAR_ENGAGEMENT_FRACTION"
-        if trade_data.literate_trades((trade,)):
+        if trade_data.literate_trades(trade_data.registry_of(self._world), (trade,)):
             return "SCRIBE_ENGAGEMENT_FRACTION"
         if trade in legacy_trade_defaults.LETTERED_BUT_NOT_LITERATE:
             return "MERCHANT_DENSITY"
@@ -351,7 +351,7 @@ class PopulationMixin:
         player hire one - exactly the kind of false "nobody's there"
         reading literate_capacity's own floor exists to prevent.
         """
-        if trade_data.literate_trades((trade,)):
+        if trade_data.literate_trades(trade_data.registry_of(self._world), (trade,)):
             return self.literate_capacity(trade)
         return self.market_supply(trade) / self._world.HOURS_PER_PERSON_YEAR
 
@@ -425,7 +425,7 @@ class PopulationMixin:
             return working   # any of the working age may be called up
         if trade == trade_data.scholar_trade():
             return pop * float(self._world.civ.get("literacy_elite", 0.0)) * self.SCHOLAR_ENGAGEMENT_FRACTION
-        if trade_data.literate_trades((trade,)):
+        if trade_data.literate_trades(trade_data.registry_of(self._world), (trade,)):
             return pop * float(self._world.civ.get("literacy_general", 0.0)) * self.SCRIBE_ENGAGEMENT_FRACTION
         if trade in legacy_trade_defaults.LETTERED_BUT_NOT_LITERATE:
             return urban * self.MERCHANT_DENSITY

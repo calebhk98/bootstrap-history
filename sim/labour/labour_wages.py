@@ -257,7 +257,7 @@ class WagesMixin(WageLedgerMixin):
         """
         food = self._world.essential_price_ratio()
         housing = self.labour_market.town_housing_factor()
-        basket = trade_data.tool_basket(trade)
+        basket = trade_data.tool_basket(trade_data.registry_of(self._world), trade)
         tools = (sum(self._world.material_price_factor(material) for material in basket) / len(basket)
                  if basket else 1.0)
         return {"food": food, "housing": housing, "tools": tools,
