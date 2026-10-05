@@ -37,12 +37,12 @@ def record_concern(sim, kind, node_id, cause):
 
 def record_wage_shock(sim, cause, index_before):
     """A shock moved the wage index from `index_before` to now; name it."""
-    return record(sim, WAGE, "wage_index", cause, sim.wage_index - index_before)
+    return record(sim, WAGE, "wage_index", cause, sim.labour.market.wage_index_change(index_before))
 
 
 def _readings(sim):
     household = sim.state.household
-    return {"wage_index": sim.wage_index, "state_capacity": sim.state_capacity,
+    return {"wage_index": sim.labour.market.wage_index(), "state_capacity": sim.state_capacity,
             "headcount": sim.labour.headcount(), "wealth": household.capital,
             "eminence": household.eminence}
 

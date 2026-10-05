@@ -53,7 +53,7 @@ NODE = make_node("zz_entry", CATEGORY, revenue=2.0e5, upkeep=5000.0, hours=50.0)
 
 def run_entry(years, rate_scale=1.0):
 	game = actor_sim([NODE])
-	game.market_rate = lambda: 40.0 * 0.12 if rate_scale > 1.0 else 0.12
+	game.market_rate = lambda: 1000.0 * 0.12 if rate_scale > 1.0 else 0.12
 	founder_runs(game, "zz_entry", opened_ago=10)
 	counts = []
 	for _ in range(years):
@@ -70,7 +70,7 @@ check("more sellers in a market leave each an entrant less: the clearing price f
 check("some firms enter a proven concern", counts[-1] > 0, counts)
 check("entry stops by itself with no cap: the last years add no firm", counts[-1] == counts[-11], counts)
 
-_, dear = run_entry(40, rate_scale=40.0)
+_, dear = run_entry(40, rate_scale=1000.0)
 check("a dearer market rate for capital leaves fewer entrants", dear[-1] < counts[-1], (dear[-1], counts[-1]))
 
 check("the entrant's cost of capital is the capital market's rate", world.market_rate() == game.market_rate())
