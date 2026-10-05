@@ -8,6 +8,7 @@ sim = partial(sim, agent_economy=False)   # legacy: pins how the engine's budget
 
 
 from sim.agents.tuning_spending import RESERVE_CEILING_YEARS_OF_NEED
+from sim.engine.coin_hoard import KEEPING_CAUSE
 
 
 def one_year(game):
@@ -17,7 +18,7 @@ def one_year(game):
 
 def purchases(treasury):
     """Every purpose a state may pay for: a line it keeps up, or a named purchase or payment."""
-    return set(treasury.record.need) | {"interest", "patronage", "works", "relief"}
+    return set(treasury.record.need) | {"interest", "patronage", "works", "relief", KEEPING_CAUSE}
 
 
 # ---- no outlay without a recipient --------------------------------------------------------------
