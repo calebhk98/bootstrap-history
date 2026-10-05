@@ -29,3 +29,6 @@ class NodeRederiveMixin:
         money_units.price_nodes(derived.values(), schedule.wages_per_hour(), schedule.money_per_labour_hour)
         self.nodes = derived
         self._derived_gate_set = gates
+        # revenue, upkeep and capability_factor memos were read from the old figures
+        self._done_changed()
+        self._operating_changed()

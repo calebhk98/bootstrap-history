@@ -289,9 +289,9 @@ class AdoptionMixin:
         if not changed:
             return
         # Census message at most once a generation, so small yearly gains stay quiet.
-        last = self._literacy_said
+        last = self.state.scenario._literacy_said
         if year - last >= self.GENERATION_YEARS:
-            self._literacy_said = year
+            self.state.scenario._literacy_said = year
             bits = []
             if "literacy_general" in changed:
                 bits.append("general reading is now %d%% of the population"

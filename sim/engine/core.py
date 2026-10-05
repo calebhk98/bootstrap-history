@@ -541,9 +541,6 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
             "reserve_staff": False,
         }
         # World-level "last time I said X" trackers; household ones live on HouseholdState.
-        self._said_wage_cascade = -999     # last year a wage-cascade note was printed; -999 guarantees the first qualifying year always warns
-        self._literacy_said = -999            # last year a literacy-census note was printed
-        self._said_condition = set()          # hazard-condition messages already printed once
         # THE FOLLOWING EIGHT FIELDS ARE BIOGRAPHICAL TO ONE MORTAL PERSON, not
         # to a household in general, and stay on `Sim` for exactly that reason
         # - see household.py's module docstring for the full argument. Moving
@@ -1597,8 +1594,8 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         # Recover the shortfall from `premium` so the message and
         # wage_index cannot drift apart.
         shortfall = (premium / PERCENT_SCALE) / self.WAGE_SCARCITY_ELASTICITY if self.WAGE_SCARCITY_ELASTICITY else 0.0
-        if premium > 0.5 and year - self._said_wage_cascade >= 15:
-            self._said_wage_cascade = year
+        if premium > 0.5 and year - self.state.scenario._said_wage_cascade >= 15:
+            self.state.scenario._said_wage_cascade = year
             self.state.household.log.append((year, "population still %d%% below trend: wages "
                                  "(and anything billed in them) are running "
                                  "%d%% above normal for here, and will ease "
@@ -2120,6 +2117,8 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         self.state.household.scandal_last_year = self.state.household.scandal
         automation_audit.begin_year(self)
         self.refresh_derived_nodes()
+        # open every book entry at the year's start, so a read before the first step cannot open one at another state
+        self._open_market_book()
 
         # step() is a readable sequence of phase calls, in the same order the
         # phases always ran in; the phases themselves are below, and each still

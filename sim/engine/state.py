@@ -278,6 +278,9 @@ class ScenarioState:
 	_said_debasement: Optional[int] = None
 	_said_output: Optional[Dict[str, int]] = None
 	_said_scandal: int = 0
+	_said_wage_cascade: int = -999    # last year a wage-cascade note was printed
+	_literacy_said: int = -999        # last year a literacy-census note was printed
+	_said_condition: Set[str] = field(default_factory=set)  # hazard-condition messages already printed once
 	_said_parallelism: Optional[bool] = None
 	_said_command_index: Optional[bool] = None
 	_said_explanations: Optional[Dict[str, int]] = None

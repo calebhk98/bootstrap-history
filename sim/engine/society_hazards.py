@@ -451,7 +451,7 @@ class HazardsMixin:
         need = cond.get("requires_all") or []
         met = all(self.has(tech_id) for tech_id in need)
         if year == hazard_start:
-            said = self._said_condition
+            said = self.state.scenario._said_condition
             key = hazard.get("name", "hazard")
             if key not in said:
                 said.add(key)

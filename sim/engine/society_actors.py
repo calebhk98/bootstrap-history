@@ -86,6 +86,7 @@ class ActorsMixin:
 
     def state_treasury(self):
         """The government actor of the founder's civilisation."""
+        seed_opening_cast(self)  # a bare record made first would keep the cast from giving it its place and kind
         return self.actors.ensure_government(str(self.civ.get("id")), self.civ.get("name", ""))
 
     def pay_state(self, amount, purpose):
