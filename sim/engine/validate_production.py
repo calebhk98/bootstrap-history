@@ -46,6 +46,8 @@ function in a fixed order, so the order problems are reported in is stable.
 import collections
 import os
 
+from sim.world import good_dimension
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 PRODUCTION_DIR = os.path.join(ROOT, "data", "production")
@@ -130,6 +132,24 @@ def check_unit_mass(where, entry):
         return ["%s: unit_mass_kg is %r, not a positive number of kilograms" % (where, mass)]
     if where not in (entry.get("outputs") or {}):
         return ["%s: unit_mass_kg is stated but the entry does not output %s" % (where, where)]
+    return []
+
+
+def primary_output(name, entry):
+    """The good an entry is named for: its own key when it outputs it, else its first output."""
+    outputs = entry.get("outputs") or {}
+    return name if name in outputs else next(iter(outputs), name)
+
+
+def check_unit_dimension(where, entry):
+    """`unit_dimension` names what the entry's primary output counts, and agrees with a unit token in the id."""
+    good = primary_output(where, entry)
+    dimension = entry.get("unit_dimension")
+    if dimension not in good_dimension.DIMENSIONS:
+        return ["%s: unit_dimension is %r, not one of %s" % (where, dimension, ", ".join(good_dimension.DIMENSIONS))]
+    spelled = good_dimension.dimension_from_id(good)
+    if spelled is not None and spelled != dimension:
+        return ["%s: unit_dimension is %s but the id of %s spells %s" % (where, dimension, good, spelled)]
     return []
 
 
@@ -418,6 +438,7 @@ def check(entries, known_materials, known_trades, known_nodes=None):
         problems.extend(check_inputs(where, entry, known_materials))
         problems.extend(check_has_source(where, entry))
         problems.extend(check_unit_mass(where, entry))
+        problems.extend(check_unit_dimension(where, entry))
         problems.extend(check_labour_hours(where, entry, known_trades))
         problems.extend(check_energy_carrier_fields(where, entry))
         problems.extend(check_requires_node(where, entry, known_nodes))

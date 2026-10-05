@@ -2,7 +2,7 @@
 
 Order of evidence: a mass unit in the good's id; a `unit_mass_kg` stated in the good's production
 entry; a live weight in the animal table; a unit that is
-not a mass at all (ground area, energy), which cannot be carried; a volume unit at a stated bulk
+not a mass at all (a stated `unit_dimension` of area or energy, or its id token), which cannot be carried; a volume unit at a stated bulk
 density; the mass of what a one-item recipe consumes; and last, a labelled default. Each answer
 names its source so an audit can count how much of the freight base is still a guess.
 
@@ -14,7 +14,7 @@ from typing import Any, Mapping, Optional, Tuple
 from sim.constants import declare
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.geography.api import transport
-from sim.world import demand
+from sim.world import demand, good_dimension
 
 # Units written into an id the way demand reads `_kg`, `_g`, `_t`; the tonne spelled out is one more.
 EXTRA_MASS_UNIT_SUFFIXES = {"_tons": KILOGRAMS_PER_TONNE}
@@ -80,6 +80,11 @@ def _stated_unit_mass_kg(good: str, production: Optional[Mapping[str, Any]]) -> 
     return float(stated) if stated is not None else None
 
 
+def _stated_dimension(good: str, production: Optional[Mapping[str, Any]]) -> Optional[str]:
+    entry = (production if production is not None else demand.production_data()).get(good)
+    return entry.get("unit_dimension") if isinstance(entry, Mapping) else None
+
+
 def unit_mass_and_source(good: str, production: Optional[Mapping[str, Any]] = None) -> Tuple[float, str]:
     """(kg of one unit, where the figure came from); `production` defaults to the shared data."""
     mass = _mass_unit_kg(good)
@@ -91,7 +96,8 @@ def unit_mass_and_source(good: str, production: Optional[Mapping[str, Any]] = No
     living = _living_masses()
     if good in living:
         return living[good], SOURCE_ANIMAL
-    if good.endswith(IMMOBILE_UNIT_SUFFIXES) or good.startswith(IMMOBILE_UNIT_PREFIXES):
+    if (_stated_dimension(good, production) in good_dimension.IMMOBILE_DIMENSIONS
+            or good.endswith(IMMOBILE_UNIT_SUFFIXES) or good.startswith(IMMOBILE_UNIT_PREFIXES)):
         return IMMOBILE_MASS_KG, SOURCE_IMMOBILE
     if good.endswith(VOLUME_UNIT_SUFFIX):
         return BULK_DENSITY_KG_PER_M3, SOURCE_VOLUME

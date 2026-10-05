@@ -60,6 +60,12 @@ def usable_modes(known_nodes_per_party: Iterable[Iterable[str]], world_map: Opti
     return sorted(routes_modes.usable_modes(_map(world_map), known_nodes_per_party))
 
 
+def dues_hours_per_tonne(world_map: Optional[WorldMap] = None) -> Dict[str, float]:
+    """{mode_id: labour-hours of tolls or port dues per tonne, charged each time a haul changes to the mode}."""
+    return {mode_id: float(mode.get("dues_hours_per_tonne", 0.0))
+            for mode_id, mode in sorted(routes_modes.modes(_map(world_map)).items())}
+
+
 def route(origin_tiles: Iterable[str], destination_tiles: Iterable[str], modes: Iterable[str],
           improvements: Optional[Mapping[str, Mapping[str, Any]]] = None,
           mode_costs: Optional[Mapping[str, float]] = None, handling_costs: Optional[Mapping[str, float]] = None,
