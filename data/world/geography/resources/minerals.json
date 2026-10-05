@@ -6,6 +6,7 @@
    "mechanism": "mineral_deposit",
    "ore_goods": {"iron_ore_kg": ["pig_iron_kg", "iron_bloom_kg"]},
    "works_priced_from_deposits": true,
+   "mine_demand_goods": ["iron_bar_kg", "iron_ore_kg"],
    "unit": "kg",
    "deposit_types": [
     {
@@ -160,6 +161,7 @@
    "mechanism": "mineral_deposit",
    "ore_goods": {"copper_ore_kg": ["copper_kg"]},
    "works_priced_from_deposits": true,
+   "mine_demand_goods": ["copper_kg", "copper_wire_kg", "wire_drawn_kg"],
    "unit": "kg",
    "deposit_types": [
     {
@@ -306,6 +308,7 @@
    "mechanism": "mineral_deposit",
    "ore_goods": {"cassiterite_kg": ["tin_kg"]},
    "works_priced_from_deposits": true,
+   "mine_demand_goods": ["tin_kg"],
    "unit": "kg",
    "deposit_types": [
     {
@@ -407,6 +410,7 @@
    "mechanism": "mineral_deposit",
    "ore_goods": {"galena_kg": ["lead_kg"]},
    "works_priced_from_deposits": true,
+   "mine_demand_goods": ["lead_kg"],
    "unit": "kg",
    "deposit_types": [
     {
@@ -494,6 +498,7 @@
    "mechanism": "mineral_deposit",
    "ore_goods": {"silver_ore_kg": ["silver_kg"]},
    "works_priced_from_deposits": true,
+   "mine_demand_goods": ["silver_kg"],
    "unit": "kg",
    "deposit_types": [
     {
@@ -681,6 +686,7 @@
    "mechanism": "mineral_deposit",
    "ore_goods": {"gold_gravel_kg": ["gold_kg"], "gold_lode_ore_kg": ["gold_lode_kg"]},
    "works_priced_from_deposits": true,
+   "mine_demand_goods": ["gold_kg"],
    "unit": "kg",
    "deposit_types": [
     {

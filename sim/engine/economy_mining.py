@@ -30,7 +30,7 @@ from sim.constants import declare
 from . import money_units
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import deposits as deposit_model
-from sim.geography.api import parameter_value, works_priced_from_deposits
+from sim.geography.api import mine_demand_goods, parameter_value, works_priced_from_deposits
 from sim.world import land
 from . import purchase_rule
 
@@ -38,6 +38,11 @@ from . import purchase_rule
 @functools.lru_cache(maxsize=None)
 def _works_priced_materials(world_map):
     return works_priced_from_deposits(world_map)
+
+
+@functools.lru_cache(maxsize=None)
+def _demand_goods_by_material(world_map):
+    return mine_demand_goods(world_map)
 
 
 def mine_catalog_hint_for(materials):
@@ -53,6 +58,10 @@ class MiningMixin:
     def MINE_OPEX_MATERIALS(self):
         """Materials whose mine running cost comes from the deposits' physical works, from the map's catalogue."""
         return _works_priced_materials(self.world_map)
+
+    def mine_demand_goods(self, material):
+        """The goods whose annual demand a mine of `material` supplies: the catalogue row's list, else the key itself."""
+        return _demand_goods_by_material(self.world_map).get(material, (material,))
 
     @property
     def MINE_OPEX_PER_T(self):

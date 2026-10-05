@@ -47,6 +47,7 @@ caller from what the actor knows; geography does not read the tech tree.
 | `map_of_tiles({tile_id: {lat, lon, coastal, borders}})` | A map of just those tiles with the base map's modes, sea lanes and parameters, for a scenario or test that places its own tiles. |
 | `ore_goods()` | `{resource_id: {ore_good: [smelting_recipe_id, ...]}}` for the resources whose catalogue row names ore goods (`ore_goods`), in catalogue order; a mod adds a mineral by adding a row. |
 | `works_priced_from_deposits()` | `[resource_id]` whose catalogue row says its mine running cost comes from the deposits' physical works. |
+| `mine_demand_goods()` | `{resource_id: [good]}`: the goods whose annual demand a mine of that resource supplies (`mine_demand_goods` on its catalogue row). |
 | `parameter_value(parameter_id)` | The value of one map parameter (for example `mining_trade`, the trade whose wage prices mine labour). |
 | `edge_key(tile_a, tile_b)` | The key a built road or track between two tiles is stored under. |
 

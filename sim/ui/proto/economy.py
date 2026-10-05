@@ -270,18 +270,6 @@ def _power_status(sim, nodes):
     return out
 
 
-# copper_wire_kg/wire_drawn_kg and gold_kg: economy.py's MATERIAL_CHECKS now
-# tracks these against the same copper/gold supply the `mines` row is about
-# (see that table's own comment); this key map has to agree or "you actually
-# need" would silently exclude what 36 electrical nodes and a central bank
-# draw.
-_MINE_DEMAND_KEYS = {"coal": ("coal_kg",), "iron": ("iron_bar_kg", "iron_ore_kg"),
-                     "copper": ("copper_kg", "copper_wire_kg", "wire_drawn_kg"),
-                     "lead": ("lead_kg",),
-                     "tin": ("tin_kg",), "silver": ("silver_kg",),
-                     "gold": ("gold_kg",)}
-
-
 def _mine_pending_workings(sim):
     """Shafts already paid for but not yet in production, summed by
     material. PENDING WORKINGS COUNT: a shaft takes years to come into
@@ -355,7 +343,7 @@ def _mine_rows_for_material(sim, material, workings, want):
     return rows
 
 
-def _mine_pending_rows(dem, pending):
+def _mine_pending_rows(sim, dem, pending):
     """One row per material still being sunk, standing in for a working
     that does not exist yet - see _mine_pending_workings for how these are
     gathered."""
@@ -368,7 +356,7 @@ def _mine_pending_rows(dem, pending):
             "actual_output_t_per_yr": 0.0,
             "material_demand_t_per_yr":
                 round(sum(dem.get(demand_key, 0.0)
-                          for demand_key in _MINE_DEMAND_KEYS.get(material, (material,))), 2),
+                          for demand_key in sim.mine_demand_goods(material)), 2),
             "costs_you_a_year": 0.0,
             "utilization": "sinking",
             "actually_supplying_demand": False,
@@ -402,12 +390,7 @@ def _agent_mines(sim):
     from the verbs to sink one and to shut one alone.
     """
     dem = sim.annual_material_demand()
-    # GENERALISED (COMMODITY_DYNAMISM.md, economy.py's open_mine() is no
-    # longer limited to the seven names in _MINE_DEMAND_KEYS): for a mine in
-    # a material outside the curated list, the material key IS its own
-    # demand key (see economy.py's _material_tag(), same convention), so a
-    # default of "look up the key by its own name" covers it rather than
-    # silently reporting 0 tonnes needed for anything not in the table.
+    # sim.mine_demand_goods reads the resource catalogue; a material without a row is its own demand key.
     pending = _mine_pending_workings(sim)
     # GROUPED BY MATERIAL, ordered by commissioning year within it (done in
     # _mine_rows_for_material), so several workings of the same seam read as
@@ -421,9 +404,9 @@ def _agent_mines(sim):
     rows = []
     for material in sorted(by_mat):
         want = sum(dem.get(demand_key, 0.0)
-                   for demand_key in _MINE_DEMAND_KEYS.get(material, (material,)))
+                   for demand_key in sim.mine_demand_goods(material))
         rows.extend(_mine_rows_for_material(sim, material, by_mat[material], want))
-    rows.extend(_mine_pending_rows(dem, pending))
+    rows.extend(_mine_pending_rows(sim, dem, pending))
     return {"ok": True,
             "mines_you_own": rows or "none",
             "they_cost_you_a_year_in_all": round(sim.mine_operating_cost(), 1),

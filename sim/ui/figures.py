@@ -6,6 +6,7 @@ but value optional:
   components  named parts of the value; the change in each is its cause
   flows       named amounts that fed the change directly (for a stock)
   drivers     named inputs that are not additive, shown beside the causes
+A figure that only reads state paths is declared in data/ui/figures.json instead (`figures_data.py`).
 A figure that keeps a book of its own movements passes `since(sim, year)`, which
 returns the movements by cause since the snapshot of `year`; they replace `flows`.
 `figure_snapshot` records every figure once a year; `explain_figure` sets the
@@ -19,11 +20,15 @@ UNEXPLAINED_CAUSE = "not itemised (commands, hazards and one-off payments)"
 DEFAULT_DIGITS = 1
 
 
+def register_figure(name, label, unit, digits, compute, since=None):
+    FIGURES[name] = {"name": name, "label": label, "unit": unit,
+                     "digits": digits, "compute": compute, "since": since}
+
+
 def figure(name, label, unit="", digits=DEFAULT_DIGITS, since=None):
     """Decorator: register `compute(sim)` as the figure `name`."""
     def register(compute):
-        FIGURES[name] = {"name": name, "label": label, "unit": unit,
-                         "digits": digits, "compute": compute, "since": since}
+        register_figure(name, label, unit, digits, compute, since)
         return compute
     return register
 
