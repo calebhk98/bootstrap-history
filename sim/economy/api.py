@@ -127,12 +127,28 @@ def price_response(economy, good, landed_units, taken_units):
     factor = market_curves.price_response(curve, good, memory.prices.get(market_key(good, area)), landed_units, taken_units)
     if factor is None or not math.isfinite(factor):
         return factor
-    weights = memory.volume_weights or economy.record.volumes
-    values = {key: price * weights.get(key, 0.0) for key, price in memory.prices.items()
-              if key.split(_KEY_SEPARATOR, 1)[0] == good}
-    total = sum(values.values())
-    share = values.get(market_key(good, area), 0.0) / total if total > 0.0 else 1.0
-    return 1.0 + share * (factor - 1.0)
+    return 1.0 + _port_share(economy, good, area) * (factor - 1.0)
+
+
+def _port_share(economy, good, area):
+    """The port area's share of a good's usual traded value, which weighs a move at the port into the national
+    price. Kept per economy until its next year, when prices and weights change."""
+    cache = economy.__dict__.setdefault("_port_shares", {})
+    key = (economy.record.memory.prices is not None and id(economy.record.memory.prices), good, area)
+    if key not in cache:
+        memory = economy.record.memory
+        weights = memory.volume_weights or economy.record.volumes
+        total = 0.0
+        port_value = 0.0
+        port_key = market_key(good, area)
+        for market, price in memory.prices.items():
+            if market.split(_KEY_SEPARATOR, 1)[0] == good:
+                value = price * weights.get(market, 0.0)
+                total += value
+                if market == port_key:
+                    port_value = value
+        cache[key] = port_value / total if total > 0.0 else 1.0
+    return cache[key]
 
 
 def account_balance(economy, agent_id):

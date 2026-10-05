@@ -85,6 +85,7 @@ class Economy:
 
     def step(self, inputs: YearInputs) -> YearOutcome:
         setup, record = self.setup, self.record
+        self.__dict__.pop("_port_shares", None)
         record.book.start_year()
         ledger = YearLedger()
         self._follow_population(inputs)
