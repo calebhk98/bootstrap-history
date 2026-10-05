@@ -1,6 +1,6 @@
 # Roman and Mediterranean content is presented as local fact and startable in a Han campaign
 
-**Status:** partly
+**Status:** closed - the last open item, `patron_senatorial` shown by id, now shows its name in the civilisation's words (`why` carries `prerequisite_names`, the blocker sentence names each id; test `sim/tests/test_prerequisite_names_shown.py`); the Roman institutions stay ungated on purpose (see the updates)
 
 Evidence on the current branch (Han, 100 AD, `available` and the node notes):
 
