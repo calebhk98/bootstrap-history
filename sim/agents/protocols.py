@@ -357,6 +357,11 @@ class World(Protocol):
 		"""Money per tonne of a material at a place, in home money; None where it has no price."""
 		...
 
+	def price_after_cargo(self, material: str, place: str, tonnes: float, landing: bool) -> Optional[float]:
+		"""Money per tonne at a place once `tonnes` more land there (`landing`) or are taken from it, on top of
+		the year's cargo; None where the place's market does not answer."""
+		...
+
 	def freight_between(self, source: str, destination: str, material: str, tonnes: float) -> float:
 		"""Money to carry `tonnes` of a material from one place to another."""
 		...

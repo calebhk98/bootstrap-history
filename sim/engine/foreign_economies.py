@@ -21,6 +21,7 @@ import os
 from sim.world import market, trader_response
 
 from .data import ROOT, calculated_goods_prices, goods_provenance, load_civ, starting_schedule
+from .foreign_actor_trade import ForeignActorTradeMixin
 from .foreign_capacity import ForeignCapacityMixin
 from .foreign_payments import ForeignPaymentsMixin
 from .foreign_routes import ForeignRoutesMixin
@@ -72,7 +73,7 @@ def _foreign_prices_in_own_coin(civilization_id):
 
 
 class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPaymentsMixin,
-                            ForeignTradersMixin):
+                            ForeignTradersMixin, ForeignActorTradeMixin):
 
     def foreign_economies(self):
         """Economies trading with this society this year, sorted by id."""
@@ -240,6 +241,8 @@ class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPay
             if not home_makes and exports_refused(civilization_id).intersection(
                     self._commodity_materials(commodity)):
                 continue
+            if self.actors_carry_commodity(commodity, civilization_id):
+                continue   # the trader actors carry this good with this partner; one owner per flow
             entry = self._foreign_entry(civilization_id, commodity, facts)
             if entry is None:
                 continue

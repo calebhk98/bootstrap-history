@@ -224,6 +224,8 @@ class EconomyState:
 	market_flows: Optional[Dict[str, Any]] = None
 	# foreign economy id -> commodity -> its capacity, stock and price ratio (foreign_economies.py)
 	foreign_market_book: Dict[str, Dict[str, Dict[str, float]]] = field(default_factory=dict)
+	# foreign economy id -> material -> tonnes actors carried to and from it this year (foreign_actor_trade.py)
+	foreign_actor_trade: Dict[str, Dict[str, Dict[str, float]]] = field(default_factory=dict)
 	# foreign economy id -> goods and coin paid, and the route's lift (foreign_payments.py)
 	foreign_ledger: Dict[str, Dict[str, float]] = field(default_factory=dict)
 	capacity_pool: Dict[str, float] = field(default_factory=dict)
