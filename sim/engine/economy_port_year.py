@@ -13,7 +13,7 @@ from sim.agents.api import COIN_RESTRIKE_SHARE_PER_YEAR
 from sim.constants import declare
 from sim.economy import api as economy_api
 from sim.economy.api import (EDGE_EXTERNAL, EDGE_LEGACY, AgentOrders, Economy, GoodsMove, Offer, Producer,
-                             YearInputs, actor_cargo_orders, expected_output_prices, external_orders, live_input_prices, live_wages,
+                             YearInputs, expected_output_prices, external_orders, live_input_prices, live_wages,
                              trade_premium, variable_cost_per_run)
 
 from . import solve_cache
@@ -216,22 +216,7 @@ class AgentEconomy:
         stand_in = external_orders(landed, export_prices, available, wanted,
                                    economy.area_map.area_of, economy.setup.port_tile,
                                    export_budget=self._partner_spending(partners) / coin)
-        return {EDGE_EXTERNAL: self._with_actor_cargo(stand_in)}
-
-    def _with_actor_cargo(self, orders):
-        """The stand-in's orders and the cargo the trader actors landed here or took out this year, as orders at the port."""
-        from .project_materials import tonnes_per_unit
-        sim, economy = self._sim, self._economy
-        landed, taken, limits = {}, {}, {}
-        coin = economy.setup.coin_per_unit
-        for good in economy.area_map.goods():
-            in_tonnes, out_tonnes, limit = sim.actor_home_trade(good)
-            per_unit = tonnes_per_unit(good)
-            if per_unit and per_unit > 0.0:
-                landed[good], taken[good] = in_tonnes / per_unit, out_tonnes / per_unit
-                limits[good] = limit * per_unit / coin
-        cargo = actor_cargo_orders(landed, taken, limits, economy.area_map.area_of, economy.setup.port_tile)
-        return AgentOrders(bids=orders.bids + cargo.bids, offers=orders.offers + cargo.offers)
+        return {EDGE_EXTERNAL: stand_in}
 
     def price_response(self, material, landed_tonnes, taken_tonnes):
         """Factor on a material's price at the port once more tonnes land there or are taken out, from the book the

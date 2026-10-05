@@ -2,7 +2,8 @@
 
 The economy answers what a good's price would be after more of it lands in (or is taken from) the port's market,
 by clearing the book that market last cleared with one more order; the engine hands that to the traders as
-`price_after_cargo` for home, and the cargo they carry enters the economy's book as orders at the port.
+`price_after_cargo` for home. The cargo is a hypothetical order there: it is not entered in the economy's book (the
+trader's money is not an account in it), so a year with cargo moves no money in the economy or the partner's coin.
 """
 from .harness import *  # noqa: F401,F403
 
@@ -13,8 +14,10 @@ from sim.agents.tuning_trader import TRADER_RISK_SHARE
 from sim.economy import goods_market, market_curves
 from sim.economy import year_goods
 from sim.economy.api import EDGE_EXTERNAL
+from sim.economy import api as economy_api
 from sim.economy.types import Bid, Offer
 from sim.engine.agents_port import SimWorld
+from sim.engine.project_materials import tonnes_per_unit
 
 PARTNER = "han_china_100ad"
 TRADER = "trader:test"
@@ -76,28 +79,14 @@ record = game.economy.agent.economy().record.to_record()
 check("the books survive the record's round trip", record["curves"] == json.loads(json.dumps(record["curves"])),
       None)
 
-# --- (d) the cargo enters the book: the home price the economy then clears at moves as the quote said.
-def clearing_prices(played, years_of_cargo):
-    """The price each port market clears at this year, with `years_of_cargo` shipped into it first."""
-    seen = {}
-    real_clear = goods_market.clear
-
-    def spy(bids, offers, good, area, currency, last_price):
-        result = real_clear(bids, offers, good, area, currency, last_price)
-        seen[(good, area)] = result
-        return result
-    year_goods.goods_market.clear = spy
-    try:
-        world_now = SimWorld(played)
-        for material_id, tonnes, landing in years_of_cargo:
-            if landing:
-                world_now.ship(TRADER, material_id, tonnes, PARTNER, home)
-            else:
-                world_now.ship(TRADER, material_id, tonnes, home, PARTNER)
-        played.step()
-    finally:
-        year_goods.goods_market.clear = real_clear
-    return seen
+# --- (d) the cargo is quoted, not booked: a year with trader cargo moves no money in the economy or at the partner.
+def coin_imbalance(played):
+    """What the home and partner coin ledgers together gained or lost in a year: each coin paid out is one received, so
+    it is zero when the year's foreign money is posted once."""
+    ledger = played._foreign_ledger(PARTNER)
+    standard = S.load_civ(PARTNER)["coin_standard"]
+    per_coin = standard["kg_per_unit"] * played._coin_metal_price(standard["material"])
+    return ledger["home_coin_units"] + per_coin * ledger["partner_coin_units"], abs(ledger["home_coin_units"]) + 1e-9
 
 
 with_cargo, without = agent_game(), agent_game()
@@ -105,38 +94,36 @@ for each in (with_cargo, without):
     each.step()
     each.step()
 world = SimWorld(with_cargo)
+home = world._home_place()
 priced = [m for m in world.trade_materials()
           if world.price_at(m, PARTNER) and world.price_at(m, home) and world.price_after_cargo(m, home, 0.0, True)]
 check("a Rome start has goods priced at home and at the partner with a home book", bool(priced), len(priced))
-# the good whose market is thickest: a cargo of a tenth of the year's trade moves it measurably
-volumes = with_cargo.economy.agent.economy().record.volumes
-material = max(priced, key=lambda m: volumes.get(m + "|" + market_curves.port_area(
-    with_cargo.economy.agent.economy().area_map, with_cargo.economy.agent.economy().setup.port_tile, m), 0.0))
-area = market_curves.port_area(with_cargo.economy.agent.economy().area_map,
-                               with_cargo.economy.agent.economy().setup.port_tile, material)
-from sim.engine.project_materials import tonnes_per_unit
-traded_units = volumes.get(material + "|" + area, 0.0)
-tonnes = 0.2 * traded_units * tonnes_per_unit(material)
-port_economy = with_cargo.economy.agent.economy()
-port_key = material + "|" + area
-quote = market_curves.price_response(port_economy.record.curves[port_key], material,
-                                     port_economy.record.memory.prices.get(port_key), traded_units * 0.2, 0.0)
-national = world.price_after_cargo(material, home, tonnes, True) / world.price_at(material, home)
-check("the national price moves by the port's share of the port's move", quote <= national <= 1.0, (quote, national))
-cleared_without = clearing_prices(without, [])
-cleared_with = clearing_prices(with_cargo, [(material, tonnes, True)])
-realised = cleared_with[(material, area)].price / cleared_without[(material, area)].price
-check("the cargo shifted the price the economy cleared at, downward", realised < 1.0, (realised, quote))
-check("the quote matches the price the economy then clears at, within tolerance",
-      abs(realised / quote - 1.0) < 0.10, (realised, quote))
+paid_in, received_in = world.ship(TRADER, priced[0], 5.0, PARTNER, home)
+paid_out, received_out = world.ship(TRADER, priced[0], 5.0, home, PARTNER)
+check("a cargo's money is what the trader books: price times tonnes at each end",
+      abs(paid_in - world.price_at(priced[0], PARTNER) * 5.0) < 1e-6 and abs(received_in - world.price_at(priced[0], home) * 5.0) < 1e-6
+      and abs(paid_out - world.price_at(priced[0], home) * 5.0) < 1e-6, (paid_in, received_in, paid_out, received_out))
+check("the cargo is tallied at home for the quote", with_cargo.actor_home_trade(priced[0]) == (5.0, 5.0),
+      with_cargo.actor_home_trade(priced[0]))
+orders = with_cargo.economy.agent._external_orders()[EDGE_EXTERNAL]
+check("the cargo adds no order to the economy's external orders",
+      all(bid.flexible_quantity > 0.0 for bid in orders.bids) and all(offer.reservation_price > 0.0 for offer in orders.offers), None)
+with_cargo.step()
+without.step()
+with_cargo.step()
+without.step()
+check("money and goods are conserved in the economy's book with the cargo's year",
+      with_cargo.economy.agent.economy().record.book.check_conservation(1e-9).ok, None)
+for label, played in (("with", with_cargo), ("without", without)):
+    imbalance, scale = coin_imbalance(played)
+    check("coin paid between home and the partner is posted once in a year %s trader cargo" % label,
+          abs(imbalance) < 1e-6 * scale, (imbalance, scale))
 check("the traders' home tally is cleared when the year closes", not with_cargo.state.economy.home_actor_trade, None)
-settled = with_cargo.economy.agent.economy().record.book.check_conservation(1e-9)
-check("money and goods stay conserved with the cargo in the book", settled.ok, settled.breaches[:3])
 
 # --- (e) home-bound cargo sized by the price settles over the years, with no sign flips.
-def home_run(carry, material=None):
-    """Six years of a good the partner sells at a third of home's price; traders bring it home as far as it pays when
-    `carry`. Returns the good, the cargo each year and the home price at each year's start."""
+def home_run():
+    """Six years of a good the partner sells at a third of home's price; traders bring it home as far as it pays.
+    Returns the cargo each year and whether a quarter more would still have paid."""
     played = agent_game()
     played.step()
     played.step()
@@ -149,34 +136,37 @@ def home_run(carry, material=None):
     def area_of(m):
         return market_curves.port_area(economy.area_map, economy.setup.port_tile, m)
 
-    if material is None:
-        # the good with the most trade at the port among those dear enough per tonne that a gap pays after carriage
-        material = max((m for m in world.trade_materials() if world.price_after_cargo(m, home, 0.0, True)
-                        and world.price_at(m, home) * 2.0 / 3.0 > 1.2 * world.freight_between(PARTNER, home, m, 1.0)),
-                       key=lambda m: volumes.get(m + "|" + area_of(m), 0.0) * played.economy.material_prices()[m])
+    # the good with the most trade at the port among those dear enough per tonne that a gap pays after carriage
+    material = max((m for m in world.trade_materials() if world.price_after_cargo(m, home, 0.0, True)
+                    and world.price_at(m, home) * 2.0 / 3.0 > 1.2 * world.freight_between(PARTNER, home, m, 1.0)),
+                   key=lambda m: volumes.get(m + "|" + area_of(m), 0.0) * played.economy.material_prices()[m])
     cheap_per_unit = played.economy.material_prices()[material] / 3.0
     real_partner_price = played.partner_price_per_unit
     played.partner_price_per_unit = lambda partner, good: cheap_per_unit if good == material else real_partner_price(partner, good)
     # the capital of the traders together buys many times what the market trades in a year
     capital_tonnes = 10.0 * volumes.get(material + "|" + area_of(material), 0.0) * tonnes_per_unit(material)
-    backs, prices = [], []
+    backs, marginal = [], []
     for _year in range(6):
         world = SimWorld(played)
         terms = route_terms(world, PARTNER, home, material)
         back = 0.0
-        if carry and terms is not None and terms["gain"] > 0.0:
+        if terms is not None and terms["gain"] > 0.0:
             back = paying_tonnes(world, PARTNER, home, material, terms, capital_tonnes, rate)
-        prices.append(world.price_at(material, home))
+        quarter_more = back * 1.25
+        marginal.append(back > 0.0 and quarter_more < capital_tonnes and (
+            world.price_after_cargo(material, PARTNER, quarter_more, True)
+            - world.price_after_cargo(material, home, quarter_more, False) * (1.0 + TRADER_RISK_SHARE + rate)
+            - terms["freight"] > 0.0))
         if back > 0.0:
             world.ship(TRADER, material, back, PARTNER, home)
         backs.append(back)
         played.step()
-    return material, backs, prices
+    return backs, marginal
 
 
-material, backs, home_prices = home_run(True)
-_same, _none, control_prices = home_run(False, material)
+backs, marginal = home_run()
 check("cargo bound for home never flips sign once the partner's book has opened (the year after the first)",
       all(back > 0.0 for back in backs[1:]), backs)
 check("home-bound cargo stays finite", all(math.isfinite(back) for back in backs), backs)
-check("the home price ends below what it does with no cargo", home_prices[-1] < control_prices[-1], (home_prices, control_prices))
+check("each year's cargo is the marginal one at the quote: a quarter more would not pay",
+      all(not pays_year for pays_year in marginal), marginal)

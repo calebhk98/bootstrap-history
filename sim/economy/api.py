@@ -11,7 +11,7 @@ import math
 from . import diagnostics, households, market_curves, taxes, tile_costs
 from .currency import currency_from_coin_standard
 from .economy import Economy
-from .foreign import actor_cargo_orders, external_orders
+from .foreign import external_orders
 from .market_memory import market_key
 from .notional import shown_prices
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
@@ -27,7 +27,7 @@ from sim.world import capital_market
 
 __all__ = [
     "diagnostics", "households", "taxes", "tile_costs", "currency_from_coin_standard", "Economy", "external_orders",
-    "actor_cargo_orders", "price_response",
+    "price_response",
     "shown_prices", "Producer", "expected_output_prices", "live_input_prices", "live_wages", "AgentOrders",
     "YearInputs", "recipes_from_production_data", "EconomyRecord", "EconomySetup", "TradeSpec",
     "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "GoodsMove", "Offer", "Transfer",

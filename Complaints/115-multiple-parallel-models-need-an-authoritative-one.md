@@ -131,8 +131,8 @@ Left to do, in order:
    national price (the port's move times the port's share of the good's usual traded value, as `national_prices`
    weighs areas). `EconomyPort.agent_price_response` hands it to `SimWorld.price_after_cargo` for home, on top of the
    year's home tally (`Sim.actor_home_trade`). Cargo bound for home and the source side of cargo taken from home are
-   sized by it (`test_home_cargo_price.py`: the quote matches the price the economy then clears at, and home-bound cargo
-   never flips sign). `TRADER_DEPTH_SHARE` stays only as the fallback where nothing answers: the home society with
+   sized by it (`test_home_cargo_price.py`: the quote matches a re-clear of the book with the cargo, home-bound cargo
+   never flips sign and is the marginal one that pays, and a year with cargo posts the foreign coin once). `TRADER_DEPTH_SHARE` stays only as the fallback where nothing answers: the home society with
    the agent economy off, a good with no port book yet, and a partner with no book for the good. Still open: a cargo
    is sized against its own route only: two routes into one market within a year each see the tally of the cargo
    already shipped, not of the cargo planned by the other; the merged buyers add their budgets, so a market held
@@ -144,17 +144,16 @@ Left to do, in order:
 2. A trader's money is booked through "edge:market sale" and "edge:market purchase", not through the foreign coin
    ledger, so a trader's exports do not draw coin from the partner or raise the home coin stock (price-specie flow
    exists only for the external edge). The cargo does not use the carrier lift either (`_record_lift`).
-3. Trader purchases and sales at home now enter the agent economy as orders at the port on the external edge, not as
-   flows noted for the engine's own market: `ship` tallies them (`Sim.note_actor_home_trade`) and `_external_orders`
-   adds an offer for each good landed and a floor bid, capped at what the actor can pay and still cover carriage,
-   for each good taken (`actor_cargo_orders`); the tally clears when the partner books close. Only with the agent
-   economy off do they still go through `market_sale` and `market_purchase`. What is not small and stays open:
-   (a) the order carries no partner, so `_settle_foreign_coin` splits the money these orders move evenly among the
-   partners, and the actor's own "edge:market sale" and "edge:market purchase" postings are made from nowhere
-   while the book also pays or receives the edge (the trader's purse is not an account in the book); fixing both
-   needs the trader as an account in the book and a partner on each order (a per-partner edge, which touches the
-   edge records, `wanted_at`, the wash-trade filter and the coin settlement), the same gap as item 2. (b) The
-   stand-in orders and the actors' cargo for one good can meet in one market when each runs its own direction.
+3. Trader purchases and sales at home still enter the agent economy over the legacy edge (`market_sale`,
+   `market_purchase`), not as external orders; the economy cannot yet tell them from domestic trade, so a cargo
+   bound for home or out of it is quoted (`price_after_cargo` re-clears the port book with it as a hypothetical offer
+   or bid, on top of the year's tally, `Sim.actor_home_trade`) but is not in the book the year then clears: the home
+   price the trader sized against does not actually move with its cargo. Entering the cargo as external orders was
+   tried and backed out: the order carries no partner, so `_settle_foreign_coin` split the money it moved evenly among
+   the partners, and the actor's own "edge:market sale" and "edge:market purchase" postings were made from nowhere
+   while the book also paid or received the edge. A proper version needs the trader as an account in the book (its
+   purse and goods) and a partner on each order (a per-partner edge, which touches the edge records, `wanted_at`,
+   the wash-trade filter and the coin settlement); the same gap as item 2.
 4. The economy's merchants (`sim/economy/merchants.py`) were not touched: they move goods between tiles only, with no
    partner. The aggregate flow can go once the agent economy is the only economy, with the external orders; until
    then it is the opt-out game's merchant.

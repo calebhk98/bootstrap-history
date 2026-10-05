@@ -106,7 +106,7 @@ class TradeView:
 		if not price:
 			return None
 		if place == self._home_place():
-			landed, taken, _limit = self._sim.actor_home_trade(material)  # type: ignore[attr-defined]
+			landed, taken = self._sim.actor_home_trade(material)  # type: ignore[attr-defined]
 			factor = self._sim.economy.agent_price_response(  # type: ignore[attr-defined]
 				material, landed + (tonnes if landing else 0.0), taken + (0.0 if landing else tonnes))
 			return None if factor is None else price * factor
@@ -120,26 +120,20 @@ class TradeView:
 
 	def ship(self, trader_id: str, material: str, tonnes: float, source: str, destination: str) -> Tuple[float, float]:
 		"""Buy at the source and sell at the destination; (money paid, money received). The home side
-		goes through the economy: orders at the port when the agent economy runs, the goods market's flows when it does
-		not. A partner's side is tallied for its market book to close on
-		(foreign_actor_trade.py)."""
+		goes through the one goods market and is tallied for the home price quote; a partner's side is
+		tallied for its market book to close on (foreign_actor_trade.py)."""
 		if tonnes <= 0.0:
 			return 0.0, 0.0
 		paid = (self.price_at(material, source) or 0.0) * tonnes
 		received = (self.price_at(material, destination) or 0.0) * tonnes
 		home = self._home_place()
 		sim = self._sim  # type: ignore[attr-defined]
-		if sim.economy.runs_agent_economy():
-			# the agent economy takes the home side in as orders at the port when it clears the year
-			if source == home:
-				sim.note_actor_home_trade(material, tonnes, False, (received - self.freight_between(source, destination, material, tonnes)) / tonnes)
-			if destination == home:
-				sim.note_actor_home_trade(material, tonnes, True)
-		else:
-			if source == home:
-				self.market_purchase(trader_id, self.commodity_of(material), tonnes)  # type: ignore[attr-defined]
-			if destination == home:
-				self.market_sale(trader_id, material, tonnes)  # type: ignore[attr-defined]
+		if source == home:
+			self.market_purchase(trader_id, self.commodity_of(material), tonnes)  # type: ignore[attr-defined]
+			sim.note_actor_home_trade(material, tonnes, False)
+		if destination == home:
+			self.market_sale(trader_id, material, tonnes)  # type: ignore[attr-defined]
+			sim.note_actor_home_trade(material, tonnes, True)
 		if destination != home:
 			sim.note_actor_trade(destination, material, tonnes, True)
 		if source != home:

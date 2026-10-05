@@ -63,21 +63,6 @@ def external_orders(landed_prices: Mapping[GoodId, float], export_prices: Mappin
     return AgentOrders(bids=tuple(bids), offers=offers)
 
 
-def actor_cargo_orders(landed_units: Mapping[GoodId, float], taken_units: Mapping[GoodId, float],
-                       taken_limits: Mapping[GoodId, float], area_of: Callable[[GoodId, TileId], AreaId],
-                       port_tile: TileId) -> AgentOrders:
-    """The year's cargo that actors (the traders) carry, as orders at the port: an offer for each good landed here, at
-    any price, and a bid for each good carried out, at up to the most per unit the actor can pay and still cover its
-    carriage (without a ceiling a bid for more than the sellers hold has no price). The actor sizes its cargo by
-    the price; the market only takes it in or gives it up."""
-    offers = tuple(Offer(EDGE_EXTERNAL, good, area_of(good, port_tile), port_tile, units, 0.0)
-                   for good, units in sorted(landed_units.items()) if units > 0.0)
-    bids = tuple(Bid(EDGE_EXTERNAL, good, area_of(good, port_tile), port_tile, units, 0.0, 0.0, 0.0, float("inf"),
-                     0, taken_limits[good])
-                 for good, units in sorted(taken_units.items()) if units > 0.0 and taken_limits.get(good, 0.0) > 0.0)
-    return AgentOrders(bids=bids, offers=offers)
-
-
 def balance_of_payments(book: Book, currency: CurrencyId) -> BalanceOfPayments:
     """This year's money through the external edge, from the book's yearly edge records."""
     gross = book.edge_volume(EDGE_EXTERNAL, currency)
