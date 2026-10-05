@@ -4,6 +4,7 @@ import math
 from typing import Dict, List, Tuple
 
 from . import credit_claims, ownership
+from .accounts import ROUNDING_SHARE
 from .credit import Default
 from .types import GoodsMove, Transfer
 
@@ -53,11 +54,12 @@ def _repay(record, producer_id, owed) -> Tuple[List[Transfer], Dict[str, float]]
 
 
 def _less(payout: List[Transfer], repaid: float) -> List[Transfer]:
-    """The dividend left once `repaid` has gone to lenders, taken from the payments in order."""
+    """The dividend left once `repaid` has gone to lenders, taken from the payments in order; a remainder
+    that is only rounding residue is dropped."""
     left = []
     for transfer in payout:
         amount = transfer.amount - min(transfer.amount, repaid)
         repaid -= transfer.amount - amount
-        if amount > 0.0:
+        if amount > ROUNDING_SHARE * transfer.amount:
             left.append(Transfer(transfer.payer, transfer.payee, transfer.currency, amount, transfer.purpose))
     return left
