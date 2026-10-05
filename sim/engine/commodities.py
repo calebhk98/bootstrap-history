@@ -421,7 +421,7 @@ class CommodityLedger:
     # ---- trade ----------------------------------------------------------
 
     def trade_partners(self, commodity_id: str) -> TradePartners:
-        """Regions this commodity can be had from, and the flat (Roman-
+        """Regions this commodity can be had from, and the flat (default-scenario
         calibrated) cost multiplier geography.json already carries for it.
         NOT adjusted for a specific civilization's reach -- that needs a
         live Sim's region_reach()/material_reach(), which this standalone
@@ -431,7 +431,7 @@ class CommodityLedger:
             "regions": list(commodity.get("regions", [])),
             "cost_multiplier": commodity.get("cost_multiplier"),
             "reach_adjusted": False,
-            "note": ("Roman-calibrated multiplier from geography.json, not "
+            "note": ("Default-scenario multiplier from geography.json, not "
                      "adjusted for who is asking. A live Sim's material_reach() "
                      "would adjust this for a specific civilization; see "
                      "COMMODITIES.md section 6."),
