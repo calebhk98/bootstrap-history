@@ -99,6 +99,8 @@ class SettlementMixin:
         days_budget = self.HIRE_TRAVEL_DAYS if days_budget is None else days_budget
         held = self.held_technologies()
         base = self.base_tile()
+        if base is None:
+            return {}
         key = (base, held, days_budget)
         cache = self.__dict__.setdefault("_reachable_tiles_cache", {})
         if key not in cache:
