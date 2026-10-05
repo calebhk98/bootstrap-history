@@ -1,6 +1,6 @@
 # No command prints the agent economy's health figures
 
-**Status:** open - needs a `sim/simulator.py` subcommand
+**Status:** closed - `simulator.py economy-check` (sim/ui/cli_economy_check.py, figures through the port: EconomyPort.health); test sim/tests/test_economy_check_command.py. Staple and metals are not yet categories in data (443 passes empty categories), so the staple defaults to the hunger need's largest opening good and metals to the currency's backing good; `--staple` and `--metals` override.
 
 `sim/economy_validate.py` was deleted with the top-level cleanup, and with it the only way to print
 grain and metal volatility, the wage in grain, hunger, money drift and conservation over civilisations

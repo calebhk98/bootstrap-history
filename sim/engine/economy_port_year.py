@@ -5,6 +5,7 @@ Part of the port (with economy_port.py and economy_port_setup.py, the only engin
 same economy. The engine's own price, wage and rate code asks `answers()` and falls back to its old
 figures while the switch is off or before the economy has opened.
 """
+import collections
 import math
 import os
 
@@ -26,6 +27,7 @@ from .data import load_civ
 from .economy_port_setup import build_setup, in_units, opening_values
 
 SWITCH_ENVIRONMENT = "ROME_AGENT_ECONOMY"
+OUTCOMES_KEPT = 100   # yearly outcomes held in memory for the health figures
 SPIN_UP_CACHE_DIRECTORY = os.path.join(os.path.dirname(solve_cache.DEFAULT_CACHE_DIRECTORY), "agent_economy")
 SPIN_UP_TOLERANCE = declare(
     "SPIN_UP_TOLERANCE", 0.02, kind="temporary_heuristic",
@@ -70,6 +72,7 @@ class AgentEconomy:
         self._economy = None
         self._answers = None
         self._stale = set()
+        self.outcomes = collections.deque(maxlen=OUTCOMES_KEPT)   # recent yearly outcomes, for health figures; not saved
         self._built_from = None          # the stored dict the live economy belongs to; a load replaces it
 
     @property
@@ -115,6 +118,7 @@ class AgentEconomy:
         orders.update(self._external_orders())
         self._strike_state_coin(economy)
         outcome = economy.step(self._inputs(orders))
+        self.outcomes.append(outcome)
         self._settle_founder()
         self._settle_foreign_coin()
         self._answers = None

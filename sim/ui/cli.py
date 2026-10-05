@@ -1348,6 +1348,15 @@ def main():
                         "Takes real time (one Sim trial per cell); the structural "
                         "checks above run either way and are instant.")
     sub.add_parser("civs", help="list the playable civilisations")
+    subparser = sub.add_parser("economy-check", help="play a short game and print the agent economy's health: "
+                               "staple and metal price volatility, hired share, hunger, staple price over labour cost")
+    subparser.add_argument("--years", type=int, default=5, help="years to play per game (default 5)")
+    subparser.add_argument("--seeds", default="1", help="comma-separated seeds (default 1)")
+    subparser.add_argument("--civs", default="", help="comma-separated civilisation ids, or 'all' (default: the default one)")
+    subparser.add_argument("--staple", default="", help="the good to treat as the staple (default: the hunger need's "
+                           "good with the largest opening quantity, which may be an odd one; name wheat_kg to be sure)")
+    subparser.add_argument("--metals", default="", help="comma-separated metal goods for the volatility figure "
+                           "(default: the good backing the currency)")
     sub.add_parser("goals", help="list the selectable goals and their critical-path floors")
     subparser = sub.add_parser("path", help="the critical path to a goal"); subparser.add_argument("goal", nargs="?")
     subparser = sub.add_parser("costs", help="the resource costs of every node"); subparser.add_argument("--top", type=int, default=20)
@@ -1633,7 +1642,7 @@ def main():
             "goals": cmd_goals,
             "run": cmd_run, "compare": cmd_compare, "play": cmd_play, "agent": cmd_agent,
             "sensitivity": cmd_sensitivity, "plan": cmd_plan,
-            "search": cmd_search}[args.cmd](args)
+            "search": cmd_search, "economy-check": cmd_economy_check}[args.cmd](args)
 
 
 # ----------------------------------------------------------------------------
@@ -1650,3 +1659,4 @@ def main():
 from .cli_interactive import cmd_civs, cmd_menu, cmd_play
 from .cli_agent import cmd_agent
 from .cli_analysis import cmd_plan, cmd_search, cmd_why
+from .cli_economy_check import cmd_economy_check
