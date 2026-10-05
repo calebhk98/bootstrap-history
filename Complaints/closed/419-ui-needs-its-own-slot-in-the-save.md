@@ -1,6 +1,6 @@
 # The UI needs a slot of its own in the save
 
-**Status:** open
+**Status:** closed - `SimulationState.interface` with `ui_port.interface_memory` and `set_interface_memory`; `sim/ui/memory.py` reads and writes it. Test: `sim/tests/test_ui_memory.py`.
 
 What the player writes or sets up through the UI alone (journal notes, extra goals, a standing programme, routes carried into a replay) has nowhere to live in the save. `SimulationState` (`sim/engine/state.py`) is saved field by field from declared dataclasses, so an attribute the UI puts on the `Sim` is lost at the next load, and `sim/ui/` may not edit the engine.
 

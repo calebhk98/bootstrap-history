@@ -310,6 +310,7 @@ class SimulationState:
 	_immortal: bool = True
 	_rng: Optional[List[Any]] = None
 	_seed: Optional[Union[int, str]] = None
+	interface: Dict[str, Any] = field(default_factory=dict)  # the UI's own memory; the engine never reads it
 
 
 ALL_STATE_CLASSES = (

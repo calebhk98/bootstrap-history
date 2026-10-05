@@ -34,6 +34,15 @@ from sim.engine.shortage_conditions import condition_line  # noqa: F401
 from sim.engine.units_summary import summary_line  # noqa: F401
 
 
+def interface_memory(sim):
+    """The slot of the save the UI owns; the engine never reads it."""
+    return sim.state.interface
+
+
+def set_interface_memory(sim, memory):
+    sim.state.interface = memory
+
+
 # Engine reads: private methods and fields of the `Sim`, under public names.
 
 def material_prices(sim):
