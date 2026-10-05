@@ -106,16 +106,19 @@ def _held_under_floor(node: dict, authored: float, wages: Mapping[str, float],
     return min(authored, cost_hours / MINIMUM_PAYBACK_YEARS * (1.0 - 1e-9))
 
 
-def for_civilisation(nodes: Mapping[str, dict], civ: Mapping[str, Any], schedule: Any) -> Dict[str, dict]:
+def for_civilisation(nodes: Mapping[str, dict], civ: Mapping[str, Any], schedule: Any,
+                     held_techs: Optional[Iterable[str]] = None) -> Dict[str, dict]:
     """Copies of `nodes` with revenue and upkeep derived at this civilisation's prices and wages, in its
-    coin. Cached on what the figures depend on: the civilisation, the gate technologies it holds, its
-    wages and the nodes."""
+    coin, for the techniques held (default: its starting techniques). Cached on what the figures depend
+    on: the civilisation, the gate technologies held, its wages and the nodes."""
     from sim.engine import solve_prices
     from . import prices as price_solver
     civilization_id = civ["id"]
+    held = list(civ["starting_techs"] if held_techs is None else held_techs)
+    held_gates = frozenset(price_solver.all_gate_nodes()) & frozenset(held)
     document = schedule.document()
     rate = schedule.money_per_labour_hour
-    key = (civilization_id, frozenset(civ["starting_techs"]),
+    key = (civilization_id, held_gates,
            tuple(sorted(solve_prices.wage_ratios_by_trade(document).items())), rate, _what_nodes_state(nodes),
            float(civ["starting_interest_rate"]), price_solver.territory_fingerprint(civ))
     cached = _DERIVED_FOR_CIVILISATION.get(key)
@@ -123,8 +126,8 @@ def for_civilisation(nodes: Mapping[str, dict], civ: Mapping[str, Any], schedule
         derivation_calls.append(key)
         interest_rate = float(civ["starting_interest_rate"])
         goods, _provenance = price_solver.priced_goods_table(
-            civ["starting_techs"], document, civilization_id=civilization_id, civilization=civ)
-        energy = energy_prices.graded(civ["starting_techs"], document, goods, civilization_id, interest_rate,
+            held, document, civilization_id=civilization_id, civilization=civ)
+        energy = energy_prices.graded(held, document, goods, civilization_id, interest_rate,
                                       civilization=civ)
         copies = {node_id: dict(node) for node_id, node in nodes.items()}
         apply_revenue(copies.values(), goods, schedule.wages_per_hour(), rate, energy)
