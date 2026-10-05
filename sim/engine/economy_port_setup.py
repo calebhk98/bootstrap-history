@@ -11,8 +11,8 @@ import os
 from sim.economy import households, taxes, tile_costs
 from sim.economy.currency import currency_from_coin_standard
 from sim.economy.setup import EconomySetup, TradeSpec, goods_specs
-from sim.world import demand, land
-from sim.geography.api import settlement
+from sim.world import demand
+from sim.geography.api import settlement, tiles_of_regions
 from sim.labour import api as labour_api
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data")
@@ -28,7 +28,7 @@ def _load(*parts):
 def civilisation_tiles(civ):
     """The tiles a civilisation holds (through its home regions until civilisations hold tiles)."""
     geography = _load("world", "geography.json")
-    return land._tile_ids_for_home_regions(list(civ.get("home_regions") or []), geography.get("land_tiles", {})), geography
+    return tiles_of_regions(list(civ.get("home_regions") or [])), geography
 
 
 def allowed_entries(production, held_nodes):
