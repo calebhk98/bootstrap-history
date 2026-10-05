@@ -162,10 +162,6 @@ class EconomyPort:
         """A book-coin amount in this civilisation's money now."""
         return self._sim.labour.book_money(amount)
 
-    def price_level(self):
-        """The level of money prices against the opening year (1.0 at the opening)."""
-        return self._sim.home_price_level()
-
     def wage_pressure(self):
         """How far wages stand above their opening level from a shortage of people."""
         return self._sim.wage_index

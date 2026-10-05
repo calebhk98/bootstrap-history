@@ -27,7 +27,7 @@ def with_windfall(factor: float):
 
 
 def mean_price_level(outcomes):
-    return sum(outcome.price_level for outcome in outcomes) / len(outcomes)
+    return sum(outcome.basket_price_level for outcome in outcomes) / len(outcomes)
 
 
 class MoreMoneyTests(unittest.TestCase):

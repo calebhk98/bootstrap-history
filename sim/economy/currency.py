@@ -128,7 +128,7 @@ def update_expected_inflation(previous_expectation: float, observed_inflation: f
     return previous_expectation + EXPECTATION_ADJUSTMENT_SPEED * (observed_inflation - previous_expectation)
 
 
-def price_level(prices_now: Mapping[GoodId, float], prices_base: Mapping[GoodId, float],
+def basket_price_level(prices_now: Mapping[GoodId, float], prices_base: Mapping[GoodId, float],
                 quantities_base: Mapping[GoodId, float]) -> float:
     """Fixed-basket (base-quantity weighted) index; goods missing in any of the three are skipped."""
     now_cost = base_cost = 0.0

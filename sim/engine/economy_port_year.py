@@ -282,7 +282,7 @@ class AgentEconomy:
         before = None
         for _year in range(int(SPIN_UP_MAXIMUM_YEARS)):
             outcome = economy.step(inputs)
-            now = ([outcome.price_level, economy_api.interest_rate(economy) or 0.0]
+            now = ([outcome.basket_price_level, economy_api.interest_rate(economy) or 0.0]
                    + [outcome.prices.get(good, 0.0) for good in watched])
             if before is not None and max(abs(new / old - 1.0) for new, old in zip(now, before) if old > 0.0) < SPIN_UP_TOLERANCE:
                 break

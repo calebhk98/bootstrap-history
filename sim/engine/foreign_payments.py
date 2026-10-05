@@ -82,13 +82,15 @@ class ForeignPaymentsMixin:
 
     def home_price_level(self):
         """Price level of this society against its opening one: its coin stock against the opening's, the
-        level of every good and wage in the home money, traded or not."""
+        level of every good and wage in the home money, traded or not. This is the one price level the
+        engine reads (wages, caches, clearing); the agent economy's `basket_price_level` is its own
+        index of its own prices, kept for its households' and state's expectations."""
         held = self.__dict__.get("_price_level_held")
         if held is not None:
             return held
         opening = self.__dict__.get("_opening_coin_value") or self._home_opening_coin_units()
         stock = opening + sum(ledger["home_coin_units"] for ledger in self.state.economy.foreign_ledger.values())
-        return balance_of_payments.price_level(stock, opening)
+        return balance_of_payments.money_stock_price_level(stock, opening)
 
     def _partner_coin_opening_units(self, civilization_id):
         return _partner_opening_units(civilization_id)
@@ -96,7 +98,7 @@ class ForeignPaymentsMixin:
     def partner_price_level(self, civilization_id):
         ledger = self._foreign_ledger(civilization_id)
         opening = self._partner_coin_opening_units(civilization_id)
-        return balance_of_payments.price_level(opening + ledger["partner_coin_units"], opening)
+        return balance_of_payments.money_stock_price_level(opening + ledger["partner_coin_units"], opening)
 
     def foreign_balance_of_payments(self, civilization_id):
         """{goods in, goods out, net coin paid out by this society, home coin stock, price levels, the

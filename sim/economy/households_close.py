@@ -48,14 +48,14 @@ def close_year(cohort: Cohort, received_by_good: Mapping[GoodId, float], view: M
              if quantity > 0.0 and not _is_durable(good, specs)]
     unmet = unmet_floor_by_need(cohort, received_by_good, view, specs, basket)
     first_good = next((need.goods[0][0] for need in basket.needs if need.goods), None)
-    expected, level, target = cohort.expected_inflation, cohort.last_price_level, cohort.cash_target
+    expected, level, target = cohort.expected_inflation, cohort.last_basket_price_level, cohort.cash_target
     if first_good is not None:
         money = view.currency_of(view.area_of(first_good, cohort.tile))
-        level = view.price_level(money)
+        level = view.basket_price_level(money)
         expected = currency.update_expected_inflation(
-            cohort.expected_inflation, level / cohort.last_price_level - 1.0)
+            cohort.expected_inflation, level / cohort.last_basket_price_level - 1.0)
         target = currency.cash_balance_target(spent or income_received, view.interest_rate(money), expected)
-    return renewed(cohort, expected_inflation=expected, last_price_level=level, cash_target=target,
+    return renewed(cohort, expected_inflation=expected, last_basket_price_level=level, cash_target=target,
                    last_year_income=income_received, last_year_spending=spent,
                    unmet_floor_by_need=unmet,
                    own_plan_by_need=next_own_plan(cohort.own_plan_by_need, unmet, spent < income_received)), moves

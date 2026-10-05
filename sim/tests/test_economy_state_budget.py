@@ -49,7 +49,7 @@ def run(economy: Economy, years: int):
         people = sum(cohort.people for cohort in record.cohorts.values())
         expected = sum(cohort.expected_inflation * cohort.people for cohort in record.cohorts.values()) / people
         rows.append((record.book.balance(economy.setup.state_agent, money) / supply,
-                     record.memory.price_levels.get(money, 1.0), expected, supply))
+                     record.memory.basket_price_levels.get(money, 1.0), expected, supply))
     return rows
 
 

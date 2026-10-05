@@ -31,7 +31,7 @@ def play(civ, years, mined_share=0.0):
             record.book.move(GoodsMove(EDGE_PRODUCTION, merchant.agent_id, spec.backing_good, merchant.home_tile,
                                        embodied * mined_share, "mined"))
         game.step()
-    return (record.book.money_supply(spec.currency_id), record.memory.price_levels[spec.currency_id], record, setup)
+    return (record.book.money_supply(spec.currency_id), record.memory.basket_price_levels[spec.currency_id], record, setup)
 
 
 for civ_id, regime in sorted(REGIME_OF.items()):

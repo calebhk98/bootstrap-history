@@ -109,8 +109,8 @@ class StateYearTests(unittest.TestCase):
         printing = opened(("issue",), real_spending_target=0.5 * supply)
         control_levels, printing_levels = [], []
         for _year in range(4):
-            control_levels.append(control.step(fixture.quiet_year(control.setup)).price_level)
-            printing_levels.append(printing.step(fixture.quiet_year(printing.setup)).price_level)
+            control_levels.append(control.step(fixture.quiet_year(control.setup)).basket_price_level)
+            printing_levels.append(printing.step(fixture.quiet_year(printing.setup)).basket_price_level)
         self.assertGreater(sum(printing_levels), sum(control_levels))
         self.assertGreater(printing.record.book.money_supply(COIN), control.record.book.money_supply(COIN))
 

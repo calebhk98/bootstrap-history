@@ -45,7 +45,7 @@ def plan_year(setup, record, view, labour_bids: List[LabourBid]) -> None:
     planned = spendable
     if policy.real_spending_target > 0.0:
         # a stated programme is paid from every coin on hand first, then financed
-        planned = policy.real_spending_target * view.price_level(money)
+        planned = policy.real_spending_target * view.basket_price_level(money)
         spendable = min(cash, planned)
     deficit = max(0.0, planned - spendable)
     in_hand, expected, supplied = state_finance.finance_deficit(policy, record, view, setup, deficit, budget.revenue)
@@ -74,7 +74,7 @@ def _labour_bids(setup, record, view, wage_budget: float) -> List[LabourBid]:
     if total_working <= 0.0:
         return []
     trades = _trades(setup)
-    level = view.price_level(setup.currency_id)
+    level = view.basket_price_level(setup.currency_id)
     bids = []
     for trade in trades:
         for tile, people in sorted(working.items()):
