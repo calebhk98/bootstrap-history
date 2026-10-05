@@ -59,6 +59,7 @@ from .projects import ProjectsMixin
 from .society import SocietyMixin
 from .society_actors import ActorsMixin
 from .society_disclosure import DisclosureMixin
+from .founder_sales import FounderSalesMixin
 from .interest_groups import InterestGroupsMixin
 from .core_properties import ForwardingPropertiesMixin
 from .goals import GoalsMixin
@@ -216,7 +217,7 @@ YEARLY_RECORD_LIMIT = 300
 
 
 class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, LabourPortMixin,
-          ProjectsMixin, SocietyMixin, ActorsMixin, DisclosureMixin, InterestGroupsMixin, ForwardingPropertiesMixin, GoalsMixin,
+          ProjectsMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, InterestGroupsMixin, ForwardingPropertiesMixin, GoalsMixin,
           StepPhasesMixin, LivingStockMixin, CoinHoardMixin,
           LivingStockTradeMixin, LivingStockYearlyMixin, EconomyPortMixin, NodeRederiveMixin):
     STATE_CAPACITY_DEFAULT = declare(

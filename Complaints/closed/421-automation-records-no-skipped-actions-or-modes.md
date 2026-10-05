@@ -1,12 +1,12 @@
 # Automation records no skipped actions and auto_hire has no replace-only mode
 
-**Status:** partly - skipped starts, bounties and unordered mines are recorded (`sim/tests/test_automation_skips.py`); `auto_hire` modes and tranche linkage remain
+**Status:** closed - skipped starts, bounties and unordered mines are recorded (`sim/tests/test_automation_skips.py`); `auto_hire` takes a replace-only mode and a mine order id links its audit row, tranche and working (`sim/tests/test_automation_modes.py`)
 
 The UI part of 91 (the audit as a line in each `step` reply) is in `sim/ui`. The rest is engine policy code:
 
 - Done: the project start loop records, through `automation_audit.record_skip`, a candidate costing more than the room left, the active-project cap, and (once a year, for the first one in priority order) a candidate that cannot start; the mine branch records an order of nothing. Rows have action `skipped`.
-- `auto_hire` has no replace-only versus expand mode, and the reopening after a staffing closure is unconditional rather than a policy (176 asks for both).
-- A mine's later tranche payments are not tied back to the row that ordered it.
+- Done: `auto_hire` has a replace-only mode (`policy auto_hire replace`). The reopening after a staffing closure stays unconditional; 176 is closed and is not asked again here.
+- Done: a mine ordered by auto_mine carries an `order` id from its audit row to its tranche and the working.
 
 Related: 91, 176.
 

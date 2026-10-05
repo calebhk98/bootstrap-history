@@ -34,3 +34,8 @@ def rows(sim, years=1):
 def record_skip(sim, policy, what, reason):
     """Append a row for something automation looked at and did not do, with the refusal reason."""
     return record(sim, policy, "skipped", what, reason, sim.state.household.capital)
+
+
+def order_id(policy, subject, year):
+    """The id an order carries from its audit row to what it set going (a mine tranche, then the working)."""
+    return "%s:%s:%d" % (policy, subject, year)

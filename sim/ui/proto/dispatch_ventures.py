@@ -845,7 +845,7 @@ def _cmd_policy(sim, nodes, cmd, ended):
             if key not in sim.policy:
                 return {"ok": False, "error": "no such policy: %s. They are: %s"
                         % (key, ", ".join(sorted(sim.policy)))}
-            sim.policy[key] = _flag(val)
+            sim.policy[key] = "replace" if key == "auto_hire" and str(val).lower() == "replace" else _flag(val)
             changed[key] = sim.policy[key]
     # WHICH OF THESE CAN ACTUALLY ACT TODAY: negative capital silently
     # disables both hiring and opening even while the switches read ON,
@@ -894,7 +894,7 @@ def _cmd_policy(sim, nodes, cmd, ended):
                 # since the mix genuinely matters and is defended in code
                 # - a player deciding whether to switch this on should be
                 # able to read what it will do before it does it.
-                "auto_hire": "grow the staff toward what you can house and "
+                "auto_hire": "(also 'replace': only hire back people lost, never grow) grow the staff toward what you can house and "
                              "pay. Mostly craftsmen, because craftsmen are "
                              "what keep concerns open; some scholars; and "
                              "it replaces any trade you taught as its "

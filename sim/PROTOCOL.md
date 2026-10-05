@@ -209,6 +209,21 @@ Two fixes, usable separately or together:
       {"cmd":"buy","what":"mine","material":"iron","n":500}   sink a mine
       {"cmd":"buy","what":"slaves","n":4}          the economic actions the optimizer
       {"cmd":"buy","what":"manumit","n":4}         could take, exposed to the player
+      {"cmd":"policy","set":{"auto_hire":"replace"}}   auto_hire takes true, false or "replace":
+                                                    replace-only hires back only the people lost
+                                                    that year and never grows the staff; its audit
+                                                    rows (`automation`) say so. A mine ordered by
+                                                    auto_mine has an `order` id on its audit row,
+                                                    its tranche and its working
+      {"cmd":"sell","material":"iron","n":5}       sell stock at the current value
+      {"cmd":"sell","what":"concern","id":"<id>"}  sell a concern you run through the exchange: the
+                                                    buyer is the AI actor that can make it and pay
+                                                    and keeps most money after paying; the price
+                                                    is the concern's margin over the valuation
+                                                    horizon. Reply: sold, buyer, price. You keep
+                                                    the know-how
+      {"cmd":"sell","what":"farm","n":40}          return farmland to the land market at what
+                                                    `buy farm` charges per hectare, no fee
       {"cmd":"step","years":5}                     advance the calendar; returns what
                                                     completed and what happened. If
                                                     years>1 and this year alone already

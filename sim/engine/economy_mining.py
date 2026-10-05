@@ -700,7 +700,7 @@ class MiningMixin:
                       "What you spent sinking them is gone, and reopening means "
                       "sinking them again." % (mat, saved))
 
-    def open_mine(self, mat, t_per_yr, partial=True):
+    def open_mine(self, mat, t_per_yr, partial=True, order=""):
         """Open your own workings.
 
         The Empire's ATTESTED output is not a hard ceiling: a founder who
@@ -778,7 +778,7 @@ class MiningMixin:
         # a figure recomputed later against a price_index that has since moved.
         if economy.mine_tranches is None:
             economy.mine_tranches = []
-        economy.mine_tranches.append([mat, t_per_yr, scenario.year + self.MINE_LEAD_YEARS, cost])
+        economy.mine_tranches.append([mat, t_per_yr, scenario.year + self.MINE_LEAD_YEARS, cost, order])
         economy.mine_pending[mat] = economy.mine_pending.get(mat, 0.0) + t_per_yr
         return t_per_yr
 
@@ -802,9 +802,10 @@ class MiningMixin:
             # this field existed (see SAVE_FIELDS/load_state) - honestly
             # unknown, not fabricated, so 0.0 rather than a guess.
             capex_paid = tranche[3] if len(tranche) > 3 else 0.0
+            order = tranche[4] if len(tranche) > 4 else ""
             if scenario.year >= ready:
                 economy.mines.append({"material": mat, "capacity": amount,
-                                   "opened_year": ready, "capex_paid": capex_paid,
+                                   "opened_year": ready, "capex_paid": capex_paid, "order": order,
                                    "intensity_yrs": 0.0})
                 economy.mine_pending[mat] = max(0.0, economy.mine_pending.get(mat, 0.0) - amount)
                 if economy.mine_pending.get(mat, 0.0) <= 0:

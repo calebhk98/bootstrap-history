@@ -1,6 +1,6 @@
 # There is no way to sell a built concern or farmland to another actor
 
-**Status:** partly - actors (firms, players) already sell a concern to another actor through exchange (`sim/agents/exchange.py`), both sides valuing it by the holder's recorded margin over the valuation horizon (`exchange_commands.concern_worth`); a buyer that needs a patent licence for the concern is refused. Not built: selling the founder's concern, and selling land back to the land market (both need the engine, below)
+**Status:** closed - the founder sells a concern through the exchange (`sell concern <id>`, buyer and price from `sim/agents/exchange_sale.py`) and farmland to the land market at the `buy farm` price (`sell farm <ha>`); `sim/tests/test_founder_sells.py`
 
 Complaint 261 asked for a lever out of the debt trap beyond selling stock, mothballing, closing and firing. Plant and land can only be bought (`buy farm`, building a concern), never sold, so capital sunk into them cannot be recovered when cash is short.
 

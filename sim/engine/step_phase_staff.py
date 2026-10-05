@@ -6,6 +6,7 @@ import random
 
 from sim.world.demography import BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE
 from . import automation_audit
+from .staff_replacement import REPLACE_ONLY, replace_lost_staff
 
 
 class StaffPhaseMixin:
@@ -150,7 +151,11 @@ class StaffPhaseMixin:
         # says nobody when there is nothing spare.
         _hire_room = (self.state.household.capital >= 0
                       or -self.state.household.capital <= self.credit_limit() * self.AUTO_HIRE_CREDIT_ROOM_SHARE)
-        if (self.state.founder.policy.get("auto_hire", not self.manual) and _hire_room):
+        _hire_mode = self.state.founder.policy.get("auto_hire", not self.manual)
+        if _hire_mode == REPLACE_ONLY and _hire_room:
+            replace_lost_staff(self, _lost)
+            self.labour.resync_pools()
+        if (_hire_mode and _hire_mode != REPLACE_ONLY and _hire_room):
             # Scaled by the SAME affordability figure staff_capacity() just
             # used for sc_cap/ar_cap (see the comment there): supervision-room
             # headroom is not a free six people, it is six people you still
