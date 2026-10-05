@@ -9,7 +9,7 @@ import dataclasses
 import math
 from typing import Dict, List, Tuple
 
-from . import goods_market, households, merchants, producers, settlement, state_budget, taxes
+from . import goods_market, households, market_curves, merchants, producers, settlement, state_budget, taxes
 from .market_memory import market_key
 from .market_memory_asks import (memory_reference_volume, note_bids, note_offers, price_after_no_bids,
                                  price_after_resumed_trade, wanted_at)
@@ -150,6 +150,8 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
                     ledger.unpaid[shortfall.agent] = ledger.unpaid.get(shortfall.agent, 0.0) + shortfall.unpaid_amount
             ledger.note_clearing(result)
             ledger.bids_by_market[(good, area)] = bids
+            if area == market_curves.port_area(area_map, setup.port_tile, good):
+                record.curves[key] = market_curves.summarize(bids, offers)
             unmet = unmet_quantity(bids, result.price, result.quantity)
             if unmet > 0.0:
                 ledger.unmet_demand[(good, area)] = unmet

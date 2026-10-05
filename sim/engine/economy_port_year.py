@@ -213,9 +213,19 @@ class AgentEconomy:
         coin = economy.setup.coin_per_unit
         landed = {good: price / coin for good, price in landed.items()}
         export_prices = {good: price / coin for good, price in export_prices.items()}
-        return {EDGE_EXTERNAL: external_orders(landed, export_prices, available, wanted,
-                                               economy.area_map.area_of, economy.setup.port_tile,
-                                               export_budget=self._partner_spending(partners) / coin)}
+        stand_in = external_orders(landed, export_prices, available, wanted,
+                                   economy.area_map.area_of, economy.setup.port_tile,
+                                   export_budget=self._partner_spending(partners) / coin)
+        return {EDGE_EXTERNAL: stand_in}
+
+    def price_response(self, material, landed_tonnes, taken_tonnes):
+        """Factor on a material's price at the port once more tonnes land there or are taken out, from the book the
+        market last cleared; None when the market has none."""
+        from .project_materials import tonnes_per_unit
+        per_unit = tonnes_per_unit(material)
+        if not per_unit or per_unit <= 0.0 or material not in self.economy().area_map.goods():
+            return None
+        return economy_api.price_response(self.economy(), material, landed_tonnes / per_unit, taken_tonnes / per_unit)
 
     def _partner_spending(self, partners) -> float:
         """What the partners can spend on this society's goods this year, in home money: a share of the
