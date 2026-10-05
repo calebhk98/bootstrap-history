@@ -1,6 +1,6 @@
 # Economy setup opens the geography file by path
 
-**Status:** open - narrowed: the economy setup now reads tiles through `sim.geography.api` (`economy_reads_map_through_geography`); only moving `geography.json` into the map folder remains.
+**Status:** closed - `data/world/geography.json` is gone: its tile grid is `data/world/geography/tile_grid.json` (the map's tile source) and its regions, reach levels and located materials are catalogues in the map folder, so a mod's overlay covers them; `load_geography(world_map)` assembles the same dict from the map (`geography_data_in_map_folder`). The deposit loader still reads the base map's deposit records (separate).
 
 `sim/engine/economy_port_setup.py` loads `data/world/geography.json` itself (`_load("world", "geography.json")`) instead of asking the geography package. The map is meant to be replaceable (a finer grid, a fantasy map, a mod's map; `sim/geography/map_source.py`), and every reader that opens the file directly pins the map to that file and that layout. It is also why `geography.json` could not move into `data/world/geography/` with the rest of the map.
 

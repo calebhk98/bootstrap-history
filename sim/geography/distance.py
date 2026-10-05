@@ -5,7 +5,7 @@ import math
 def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Great-circle distance between two lat/lon points, in kilometres.
 
-    Coarse on purpose: geography.json's coordinates are region centroids, not
+    Coarse on purpose: the geography data's coordinates are region centroids, not
     ports, so this is a reach ESTIMATE, the same spirit as everything else in
     this file being an order-of-magnitude model rather than a survey.
     """

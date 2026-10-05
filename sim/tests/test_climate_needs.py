@@ -3,6 +3,7 @@ import json
 import os
 import unittest
 
+from sim.geography.api import load_geography
 from sim.world import climate_needs
 from sim.world.climate_needs import floors_for_civilisation_tiles, floors_for_tile
 
@@ -69,7 +70,7 @@ class RealTerritoryTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.geography = _load("data/world/geography.json")
+        cls.geography = load_geography()
         region_to_tiles = cls.geography["land_tiles"]["region_to_tiles"]
         cls.floors = {}
         for civilisation_id in ("norse_900ad", "england_1300", "rome_100ad", "mexica_1500"):

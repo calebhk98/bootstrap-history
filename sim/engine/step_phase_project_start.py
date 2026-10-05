@@ -102,7 +102,7 @@ class ProjectStartPhaseMixin:
                             self.start_refusal(node_id) or "cannot start yet")
                     continue
                 # do not start something we cannot plausibly fund this decade.
-                # material_cost_factor is geography.json's contribution: a
+                # material_cost_factor is the geography data's contribution: a
                 # located material (mat_gutta_percha and the like) costs more
                 # or less to reach depending on how far THIS civ actually is
                 # from it, not on Rome's distance to it.

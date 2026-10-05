@@ -14,7 +14,7 @@ from sim.world import agriculture
 from sim.world import farming_technique
 from sim.world import land
 from sim.geography.api import regions
-# Weather is drawn per geography.json land_tiles cell (see
+# Weather is drawn per the geography data land_tiles cell (see
 # `_compute_farm_weather_cells`).
 # Imported FULLY QUALIFIED (`sim.world.shared_constants`), not the bare
 # `from world import X` style `agriculture`/`demography` above use, and
@@ -383,7 +383,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         # offer; later clearing works down the same best-first ladder.
         home_regions = list(self.civ.get("home_regions") or [])
         if home_regions:
-            territory = land.territory_farmland(home_regions, load_geography())
+            territory = land.territory_farmland(home_regions, load_geography(self.world_map))
             self._farm_ladder = territory.ladder
             self._farm_arable_ceiling = territory.arable_hectares
         else:
@@ -398,7 +398,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         # WIRING THREE (Complaints/49-one-label-draws-one-coin.md), REPLACING
         # WIRING TWO'S OWN `_farm_region_weights`/`_compute_farm_region_
         # weights` (Complaints/46): this civilisation's territory is broken
-        # into geography.json `land_tiles` cells (see `_compute_farm_
+        # into the geography data `land_tiles` cells (see `_compute_farm_
         # weather_cells`'s own docstring for why tiles rather than region
         # records), each cell's SHARE of the civilisation's cultivable land,
         # and the CORRELATION between every pair of cells given how far
@@ -571,7 +571,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         # available.
         self.res = load_resources()
         # --- GEOGRAPHY: where things are, FOR THE CIVILIZATION IN PLAY (computed once; see sim/geography/)
-        self.geography.open(load_geography())
+        self.geography.open(load_geography(self.world_map))
         # Whatever this civilization already has is free and already done, and it
         # is GRANTED, not earned: it must never count in done_earned as though
         # the founder had built it, and it must never be "forgotten" in a
@@ -873,7 +873,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         "_WeatherCell", ("cell_id", "lat", "lon", "weight"))
     # A cell's identity is its own `cell_id` string (a land_tiles tile id,
     # e.g. "italy_02" - already globally unique across every region, per
-    # geography.json's own `land_tiles.tiles` keys), not a (region, index)
+    # the geography data's own `land_tiles.tiles` keys), not a (region, index)
     # pair. That is what lets `_farm_year_weather_seed(year, region=cell_id)`
     # below reuse that method completely unchanged (Complaints/46's WIRING
     # TWO): the parameter is documented there as "an optional region", but
@@ -883,7 +883,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
 
     def _compute_farm_weather_cells(self):
         """[Sim._WeatherCell(cell_id, lat, lon, weight), ...] over this
-        civilisation's own `home_regions`, broken into geography.json's
+        civilisation's own `home_regions`, broken into the geography data's
         150,000 km2 `land_tiles` cells rather than left as whole region
         records - Complaints/49-one-label-draws-one-coin.md, replacing
         Complaints/46's own `_compute_farm_region_weights`.
@@ -896,7 +896,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         data file itself), and already covers every one of the 21 shipped
         regions via `land_tiles.region_to_tiles` - building a fresh
         centroid-radius subdivision here would either re-derive the same
-        equal-area grid geography.json's own tiles already are (pure
+        equal-area grid the geography data's own tiles already are (pure
         duplication) or invent a DIFFERENT one with no basis for choosing
         its cell size over 150,000 km2, which is itself an arbitrary but at
         least ALREADY-CHOSEN-BY-SOMEONE-ELSE constant this task does not
@@ -906,18 +906,18 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         of region grain) as a share of this civilisation's TOTAL cell
         arable land - so a tiny cell does not count as much as a large
         fertile one, with "large" measured in actual square kilometres, not
-        in how many rows a region occupies in geography.json (weighting by
+        in how many rows a region occupies in the geography data (weighting by
         row count would let region count, not land area, predict the
         outcome - Complaints/49's own finding).
 
         DOES NOT READ sim/world/land.py (see the import comment at this
-        file's own top). `land.py`'s `arable_hectares` and geography.json's own
+        file's own top). `land.py`'s `arable_hectares` and the geography data's own
         `land`/`land_tiles` blocks are two independently-sourced estimates
         of the same physical quantity (arable land area) that happen to
         agree to within a fixed unit conversion for the 21 shipped regions
         (both ultimately cite the same `land_area_km2`/`arable_fraction`
-        pair per region - see land.py's RegionLand and geography.json's own
-        `land` block), so reading geography.json's tile-level breakdown
+        pair per region - see land.py's RegionLand and the geography data's own
+        `land` block), so reading the geography data's tile-level breakdown
         directly, instead of land.py's region-level aggregate of the same
         numbers, does not introduce a second, independent estimate to drift
         out of step - it is the same source at finer grain.
@@ -950,7 +950,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         # costs far less than reordering `__init__` while other agents are
         # concurrently editing this same method (this task's own file-
         # ownership note).
-        geography = load_geography()
+        geography = load_geography(self.world_map)
         land_tiles = geography.get("land_tiles") or {}
         tiles_by_id = land_tiles.get("tiles") or {}
         region_to_tiles = land_tiles.get("region_to_tiles") or {}

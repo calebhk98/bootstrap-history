@@ -48,7 +48,7 @@ have no coal - `sim/world/deposits.py`'s own regional shares already do
 this for ore; this module does the equivalent for the ground itself).
 
 WHERE THE PHYSICAL FACTS COME FROM. Each land tile in
-`data/world/geography.json` carries `land_area_km2`, `arable_fraction` (the
+`the map folder (data/world/geography/)` carries `land_area_km2`, `arable_fraction` (the
 share physically capable of rain-fed or simple-irrigation farming) and
 `fertility_quality_multiplier` (a yield multiplier on the arable share, 1.0
 being `data/production/40_organics.json`'s own wheat_kg baseline - see
@@ -78,7 +78,7 @@ and no caller in this round hands agriculture.py this number.
 THE MECHANISM, IN ORDER.
 
   1. TERRITORY. `cultivable_land_for_civilization` reads one civilization's
-     `home_regions` (already a plain list of `data/world/geography.json`
+     `home_regions` (already a plain list of `the map folder (data/world/geography/)`
      region keys, in every `data/civilizations/*.json` file - Rome holds
      seven, Han China and the Norse each hold exactly one) and returns that
      civilization's own list of TILE-parcels: `land_tiles["region_to_
@@ -229,7 +229,7 @@ civilization's own list of held regions somewhere a save can round-trip
 (this project's `SAVE_FIELDS` mechanism, per CLAUDE.md SS3.5 - a plain
 list of region-key strings is about as simple a field as that mechanism
 ever has to carry). It does NOT need to touch this module, `sim/solve_
-prices.py`'s land-rent wiring, or `data/world/geography.json` at all:
+prices.py`'s land-rent wiring, or `the map folder (data/world/geography/)` at all:
 call `cultivable_land_for_civilization` (or `land_rent_hours_per_hectare`
 in `sim/engine/solve_prices.py`) again with the updated list and every number
 downstream - endowment, margin, rent, price - updates with no further
@@ -260,7 +260,7 @@ of the Nile" per Complaints/45) is the concrete case: one region record
 cannot show a margin between its own good land and its own bad land,
 because it has only one fertility figure to its name.
 
-`data/world/geography.json`'s `land_tiles` block (1,139 equal-area
+`the map folder (data/world/geography/)`'s `land_tiles` block (1,139 equal-area
 150,000 km2 tiles, `tools/generate_geography_tiles.py`, Complaints/45's own
 recommended fix, `region_to_tiles` mapping each of the 21 regions to the
 tiles that fall inside it) carries the SAME `land` fields a region record
@@ -363,7 +363,7 @@ import os
 from typing import Any, Dict, List, Optional
 
 from sim.constants import declare
-from sim.geography.api import GEOFILE, load_geography
+from sim.geography.api import load_geography
 from sim.world.shared_constants import (
     ANNUAL_LABOUR_HOURS_PER_FARM_WORKER as _SHARED_ANNUAL_LABOUR_HOURS_PER_FARM_WORKER,
     FALLOW_SHARE_OF_HOLDING as _SHARED_FALLOW_SHARE_OF_HOLDING,
@@ -391,7 +391,6 @@ from sim.world.shared_constants import (
 
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 _ROOT = os.path.dirname(os.path.dirname(_THIS_DIR))
-GEOGRAPHY_FILE = GEOFILE  # the geography package owns where the map lives
 CIVILIZATIONS_DIR = os.path.join(_ROOT, "data", "civilizations")
 
 
@@ -777,11 +776,11 @@ def intensive_rent_kg_grain_equivalent_per_hectare(
 
 
 # ============================================================================
-# REGION LAND - the physical facts, read from data/world/geography.json
+# REGION LAND - the physical facts, read from the map folder (data/world/geography/)
 # ============================================================================
 
 RegionLand = collections.namedtuple("RegionLand", [
-    "region",                        # geography.json region key
+    "region",                        # the geography data region key
     "land_area_km2",
     "arable_fraction",
     "fertility_quality_multiplier",  # 1.0 = data/production/40_organics.json's
@@ -826,7 +825,7 @@ def load_region_lands(geography: Optional[Dict[str, Any]] = None) -> Dict[str, R
 
 
 def load_tile_lands(geography: Optional[Dict[str, Any]] = None) -> Dict[str, RegionLand]:
-    """{tile_id: RegionLand}, one entry per `data/world/geography.json`
+    """{tile_id: RegionLand}, one entry per `the map folder (data/world/geography/)`
     `land_tiles` tile - the TILE-GRAIN sibling of `load_region_lands`
     above, and what `cultivable_land_for_civilization` reads. See the
     module docstring's THE TWO MAP SYSTEMS section for why: a tile is a
@@ -861,7 +860,7 @@ def load_tile_lands(geography: Optional[Dict[str, Any]] = None) -> Dict[str, Reg
     geography = geography if geography is not None else load_geography()
     land_tiles = geography.get("land_tiles")
     if land_tiles is None:
-        # No land_tiles block at all - real data/world/geography.json
+        # No land_tiles block at all - real the map folder (data/world/geography/)
         # always has one (see the module docstring's THE TWO MAP SYSTEMS
         # section), so this only happens for a hand-built `geography` dict
         # a caller passed directly (a test fixture, most likely) without

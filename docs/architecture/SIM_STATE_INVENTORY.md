@@ -136,7 +136,7 @@ total every count below is built from.
 | `_operating_ver` | lazy via getattr (sim/engine/economy.py:936) | no | 1 | 4 | INTERNAL (keyed off household (tracks `operating`)) | version counter that invalidates caches when `operating` changes |
 | `_pop_recovery_years` | `__init__` (sim/engine/core.py:72) | no | 2 | 5 | WORLD | time-constant for the whole society's demographic recovery from the worst shock endured |
 | `_practice_cache` | lazy via getattr (sim/engine/economy.py:2052) | no | 1 | 2 | INTERNAL (keyed off household, but see `granted` ambiguity) | cache of which granted nodes are 'practisable', keyed on len(granted) |
-| `_regions` | `__init__` (sim/engine/core.py:302) | no | 2 | 10 | INTERNAL (keyed off world/scenario) | geography.json's regions, minus '_'-prefixed keys |
+| `_regions` | `__init__` (sim/engine/core.py:302) | no | 2 | 10 | INTERNAL (keyed off world/scenario) | the geography data's regions, minus '_'-prefixed keys |
 | `_rev_up_candidates_cache` | lazy via getattr (sim/engine/economy.py:2111) | no | 1 | 2 | INTERNAL (keyed off household) | candidate nodes for revenue/upkeep, keyed on operating/practice |
 | `_revealed` | special (see note) (sim/engine/fog.py:112) | no | 1 | 3 | INTERNAL (keyed off household (fog-of-war visibility)) | the real backing set for the `revealed` property; only ever touched via self.__dict__, never self._revealed |
 | `_said_autoopen` | lazy via getattr (sim/engine/projects.py:1194) | yes | 1 | 2 | INTERNAL (keyed off household (operating/done)) | which nodes auto-open has already announced, per node |
@@ -195,7 +195,7 @@ total every count below is built from.
 | `forgotten` | `__init__` (sim/engine/core.py:147) | yes | 5 | 8 | HOUSEHOLD | household nodes destroyed by a sacking, with the year |
 | `founder_alive` | `__init__` (sim/engine/core.py:252) | yes | 10 | 23 | HOUSEHOLD | whether the founder is alive -- **FLAG: literally a single mortal person's vital status; meaningless for a firm or government as written** |
 | `freedmen` | `__init__` (sim/engine/core.py:285) | yes | 5 | 16 | HOUSEHOLD | former slaves the household has freed |
-| `geo` | `__init__` (sim/engine/core.py:301) | no | 2 | 4 | SCENARIO | geography.json, loaded once |
+| `geo` | `__init__` (sim/engine/core.py:301) | no | 2 | 4 | SCENARIO | the geography data, loaded once |
 | `goal` | lazy via getattr (sim/ui/proto/dispatch.py:79) | no | 12 | 33 | SCENARIO | the chosen win-condition node id for this playthrough (AMBIGUOUS - see summary: a multi-actor world would want this per-actor) |
 | `goal_year` | `__init__` (sim/engine/core.py:256) | yes | 6 | 24 | HOUSEHOLD | the year THIS household reached its goal |
 | `gov` | `__init__` (sim/engine/core.py:253) | yes | 3 | 3 | HOUSEHOLD | standing/political capital with the state, accrued via state_interest() from institutions the household runs |

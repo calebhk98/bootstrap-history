@@ -8,14 +8,15 @@ import json
 import os
 import unittest
 
+from sim.geography.api import load_geography
+
 from sim.world import deposits
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 def _geography():
-    with open(os.path.join(_ROOT, "data", "world", "geography.json")) as handle:
-        return json.load(handle)
+    return load_geography()
 
 
 class DepositsReadTilesTests(unittest.TestCase):

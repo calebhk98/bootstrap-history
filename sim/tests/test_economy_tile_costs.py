@@ -15,7 +15,6 @@ from sim.economy.types import TileSpec
 from sim.geography import api as geography_api
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-GEOGRAPHY_PATH = os.path.join(ROOT, "data", "world", "geography.json")
 
 # Plausible money per tonne-km in denarii and port handling per tonne (test inputs, not model data).
 REAL_RATES = {"cart": 0.19, "pack": 0.5, "river_boat": 0.05, "sail": 0.007}
@@ -140,8 +139,7 @@ class GeographyIsTheSourceTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        with open(GEOGRAPHY_PATH, encoding="utf-8") as handle:
-            cls.geography = json.load(handle)
+        cls.geography = geography_api.load_geography()
         cls.tile_ids = civ_tile_ids(cls.geography, "rome_100ad")
         cls.tiles = tile_costs.tiles_from_geography(cls.geography, cls.tile_ids)
 

@@ -184,7 +184,7 @@ class MiningMixin:
     # limited by land area and what is actually under it, the same as the
     # market half of supply is. geography.py's mineral_scale() ALREADY
     # answers "how much of this material's national output can THIS
-    # civilisation reach," built from geography.json's per-region mineral
+    # civilisation reach," built from the geography data's per-region mineral
     # abundance and this civilization's own home_regions and reach (see
     # its own comment) -- and it already governs the MARKET half of supply
     # (_material_market_tonnes). Reusing it here, rather than inventing a
@@ -875,7 +875,7 @@ class MiningMixin:
         or dict, so this stays deterministic across hash seeds with no
         sorted() needed."""
         return sum(self.mine_operating_cost_for(working) for working in getattr(self.household, "mines", ()))
-    # Land bounds woodland too, not only mines. geography.json carries no
+    # Land bounds woodland too, not only mines. the geography data carries no
     # per-region forest figure to read the way minerals has one, so this is
     # built from the signal that IS there: how much GROUND you actually hold
     # and how good your state is at organising land tenure at all
@@ -883,12 +883,12 @@ class MiningMixin:
     # concession gates it, but fencing off and managing a woodland at scale
     # still takes an administration capable of holding the tenure.
     #
-    # KEYED ON AREA (geography.json's own `land.land_area_km2` per home
+    # KEYED ON AREA (the geography data's own `land.land_area_km2` per home
     # region - see home_land_area_km2() below), NOT ON A COUNT OF REGION
     # LABELS (len(home_regions)): Complaint 45 names the same failure here
     # that it names for rent - a region is a filing label, not a unit of
     # area, and the labels range 86x in size (americas_north 19.8M km2
-    # down to britannia's 230,000 -- data/world/geography.json). Keying
+    # down to britannia's 230,000 -- the map folder (data/world/geography/)). Keying
     # this on label count would let re-filing Rome's SAME seven regions
     # as, say, fourteen tiles double its woodland ceiling with no forest
     # gaining or losing a single hectare, while Han China's one enormous
@@ -904,7 +904,7 @@ class MiningMixin:
     # full revenue-driven scale-up, comfortably under that -- no private
     # holding should rival the entire empire's own managed woodland. The
     # per-area rate is re-derived from that SAME anchor, using Rome's own
-    # home land area (9.5175 million km2, from geography.json) as the one
+    # home land area (9.5175 million km2, from the geography data) as the one
     # data point available to convert "hectares per home region" into
     # "hectares per million km2 of home land" -- so Rome's own ceiling barely
     # moves (its real, mapped land area is what the old per-region figure was
@@ -920,12 +920,12 @@ class MiningMixin:
         "managed empire-wide at CHARCOAL_PER_HA=0.75 t/ha/yr), converted "
         "from hectares-per-region to hectares-per-million-km2 using Rome's "
         "own home land area (9.5175 million km2 across its seven home "
-        "regions, data/world/geography.json) as the calibration point, so "
+        "regions, the map folder (data/world/geography/)) as the calibration point, so "
         "that Rome's own pre-revenue ceiling is essentially unchanged by "
         "the switch from counting labels to reading area.",
         confidence="C",
         why="Base standing-woodland ceiling per million km2 of home land "
-            "held, before state capacity is applied. geography.json carries "
+            "held, before state capacity is applied. the geography data carries "
             "no per-region forest figure the way it does for minerals, so "
             "this is still built from a proxy and checked against the one "
             "real empire-wide anchor available, not measured region by "

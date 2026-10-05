@@ -13,7 +13,7 @@ from .cache import fetch_unzipped
 PLANE_CRS = 6933  # WGS 84 / NSIDC EASE-Grid 2.0 Global (cylindrical equal area)
 NATURAL_EARTH = "https://naciscdn.org/naturalearth"
 GEOGRAPHY_PATH = os.path.join(
-    os.path.dirname(__file__), "..", "..", "..", "data", "world", "geography.json")
+    os.path.dirname(__file__), "..", "..", "..", "data", "world", "geography", "tile_grid.json")
 
 _FORWARD = pyproj.Transformer.from_crs(4326, PLANE_CRS, always_xy=True)
 
@@ -48,9 +48,9 @@ class Tile:
 
 
 def load_tiles(cache_dir, geography_path=GEOGRAPHY_PATH):
-    """Tiles of geography.json's land_tiles, with cell and land geometry."""
+    """Tiles of the tile grid file, with cell and land geometry."""
     with open(geography_path, encoding="utf-8") as handle:
-        section = json.load(handle)["land_tiles"]
+        section = json.load(handle)
     side = math.sqrt(section["target_tile_area_km2"]) * 1000.0
     land_frame = read_natural_earth("50m", "physical", "land", cache_dir)
     land_index = land_frame.sindex

@@ -44,13 +44,13 @@ is in section 7.
 
 ## 1. The two systems, precisely, and who reads what
 
-### 1.1 What exists in `data/world/geography.json`
+### 1.1 What exists in `the map folder (data/world/geography/)`
 
 Both live under one file, as two independent top-level keys: `regions` and
 `land_tiles`. Confirmed:
 
 ```
-python3 -c "import json; g=json.load(open('data/world/geography.json')); print(list(g.keys()))"
+python3 -c "import json; g=json.load(open('the map folder (data/world/geography/)')); print(list(g.keys()))"
 -> ['_doc', 'regions', 'reach_levels', 'located_materials', 'land_tiles']
 ```
 
@@ -58,7 +58,7 @@ python3 -c "import json; g=json.load(open('data/world/geography.json')); print(l
 string, not a region record):
 
 ```
-python3 -c "import json; g=json.load(open('data/world/geography.json'));
+python3 -c "import json; g=json.load(open('the map folder (data/world/geography/)'));
 print(len(g['regions']), sorted(g['regions'].keys()))"
 -> 22 keys; '_note' is one of them; the other 21 are region ids
   (americas_carib, americas_north, americas_south, arabia_horn,
@@ -77,7 +77,7 @@ Sizes, read from each region's own `land.land_area_km2`:
 ```
 python3 -c "
 import json
-g = json.load(open('data/world/geography.json'))
+g = json.load(open('the map folder (data/world/geography/)'))
 areas = {k: v['land']['land_area_km2'] for k, v in g['regions'].items() if k != '_note'}
 print(min(areas.values()), max(areas.values()), max(areas.values())/min(areas.values()))
 "
@@ -90,7 +90,7 @@ spread, exactly as the starting brief said. Confirmed, not merely repeated.
 **`land_tiles`: 1,139 tiles, not "about 1,139".** Exact:
 
 ```
-python3 -c "import json; g=json.load(open('data/world/geography.json'));
+python3 -c "import json; g=json.load(open('the map folder (data/world/geography/)'));
 lt=g['land_tiles']; print(lt['tile_count'], lt['target_tile_area_km2'])"
 -> 1139 150000.0
 ```
@@ -102,7 +102,7 @@ falls inside its cell:
 ```
 python3 -c "
 import json, statistics
-g = json.load(open('data/world/geography.json'))
+g = json.load(open('the map folder (data/world/geography/)'))
 areas = [t['land_area_km2'] for t in g['land_tiles']['tiles'].values()]
 print(min(areas), max(areas), statistics.mean(areas), statistics.median(areas))
 "
@@ -122,7 +122,7 @@ the 21 hand-drawn regions) and `unmapped_tile_count`:
 ```
 python3 -c "
 import json
-g = json.load(open('data/world/geography.json'))
+g = json.load(open('the map folder (data/world/geography/)'))
 lt = g['land_tiles']
 mapped = sum(len(v) for v in lt['region_to_tiles'].values())
 print(mapped, lt['unmapped_tile_count'], mapped + lt['unmapped_tile_count'])
@@ -292,7 +292,7 @@ not hypothetical: it is the literal shape of the data today -
 ```
 python3 -c "
 import json
-g = json.load(open('data/world/geography.json'))
+g = json.load(open('the map folder (data/world/geography/)'))
 print(g['regions']['north_africa']['land'])
 "
 -> land_area_km2: 5750000, one arable_fraction, one fertility_quality_multiplier
@@ -382,7 +382,7 @@ From the data directly:
 python3 -c "
 import json
 civ = json.load(open('data/civilizations/rome_100ad.json'))
-g = json.load(open('data/world/geography.json'))
+g = json.load(open('the map folder (data/world/geography/)'))
 r2t = g['land_tiles']['region_to_tiles']
 print({r: len(r2t.get(r, [])) for r in civ['home_regions']})
 print(sum(len(r2t.get(r, [])) for r in civ['home_regions']))
@@ -403,7 +403,7 @@ n for the other shipped civilisations, same method:
 ```
 python3 -c "
 import json, glob
-g = json.load(open('data/world/geography.json'))
+g = json.load(open('the map folder (data/world/geography/)'))
 r2t = g['land_tiles']['region_to_tiles']
 for f in sorted(glob.glob('data/civilizations/*.json')):
     civ = json.load(open(f))
@@ -428,14 +428,14 @@ Isolated timing of the two hot functions, called directly (not through a
 full `Sim()` construction, to separate the weather-specific cost from
 everything else `__init__` does), using `time.perf_counter` (the same clock
 `time` reports against) with the real Rome tile positions read out of
-`geography.json`:
+`the geography data`:
 
 ```
 python3 -c "
 import sys, time, json
 sys.path.insert(0, 'sim')
 import engine.core as core
-g = json.load(open('data/world/geography.json'))
+g = json.load(open('the map folder (data/world/geography/)'))
 lt = g['land_tiles']; civ = json.load(open('data/civilizations/rome_100ad.json'))
 cells = [core.Sim._WeatherCell(cell_id=tid, lat=lt['tiles'][tid]['lat'],
          lon=lt['tiles'][tid]['lon'], weight=1.0)
@@ -698,7 +698,7 @@ python3 -c "
 import sys, json, math
 sys.path.insert(0, 'sim')
 import engine.core as core
-g = json.load(open('data/world/geography.json'))
+g = json.load(open('the map folder (data/world/geography/)'))
 lt = g['land_tiles']; civ = json.load(open('data/civilizations/rome_100ad.json'))
 cells = [(tid, lt['tiles'][tid]['lat'], lt['tiles'][tid]['lon'])
          for r in civ['home_regions'] for tid in lt['region_to_tiles'].get(r, [])]
@@ -757,7 +757,7 @@ patch to the existing one. Not recommended as the near-term fix.
 ### 4.5 Cache the factorisation
 
 The Cholesky factor depends only on a civilisation's `home_regions` and the
-(static, per-build) contents of `geography.json` - never on the random seed,
+(static, per-build) contents of `the geography data` - never on the random seed,
 the year, or anything else that varies trial to trial. Nothing prevents
 memoising it, keyed on civilisation id (plus a cheap invalidation check
 against the geography file, so a data edit does not serve a stale factor).

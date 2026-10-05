@@ -1,6 +1,6 @@
 """Regions as named groups of tiles: a derived view, never a second source.
 
-`data/world/geography.json` keeps for each region only what a tile cannot
+`the map folder (data/world/geography/)` keeps for each region only what a tile cannot
 say: its name, route difficulty, the reach figure for
 trade, and the shares of metal not yet tied to a deposit. Area, arable land
 and fertility are sums over the region's tiles (`land.load_region_lands`);

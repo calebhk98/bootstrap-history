@@ -30,14 +30,14 @@ _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(
     os.path.abspath(__file__))))
 sys.path.insert(0, os.path.join(_REPO_ROOT, "tools"))
 
+from sim.geography.api import load_geography  # noqa: E402
 import generate_geography_tiles as tiles_module  # noqa: E402
 
-GEOGRAPHY_PATH = os.path.join(_REPO_ROOT, "data", "world", "geography.json")
+GEOGRAPHY_PATH = os.path.join(_REPO_ROOT, "data", "world", "geography", "tile_grid.json")
 
 
 def _load_geography():
-    with open(GEOGRAPHY_PATH) as handle:
-        return json.load(handle)
+    return load_geography()
 
 
 class SlugifyTests(unittest.TestCase):
@@ -105,7 +105,7 @@ class GeneratedFileShapeTests(unittest.TestCase):
             self.assertIn(key, self.geography)
 
     def test_land_tiles_is_the_one_new_top_level_key(self):
-        expected = {"_doc", "regions", "reach_levels", "located_materials", "land_tiles"}
+        expected = {"regions", "reach_levels", "located_materials", "land_tiles"}
         self.assertEqual(set(self.geography.keys()), expected)
 
     def test_the_21_hand_written_regions_hold_no_land_block(self):

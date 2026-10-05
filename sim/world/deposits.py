@@ -34,7 +34,7 @@ or any other sim/world/ module - see sim/world/__init__.py for why a module
 built this way survives other agents editing sim/engine/economy.py and
 sim/engine/solve_prices.py concurrently with this
 file's construction. It reads two data files that already exist
-(data/world/geography.json, data/world/resources.json) and one new one this
+(the map folder (data/world/geography/), data/world/resources.json) and one new one this
 task adds (the geography deposit catalogue), as plain JSON - that is data, not an
 import of another module's code, and cannot be broken by or break any of
 those agents' work.
@@ -230,7 +230,7 @@ burying farmland, silting a river the way Pliny's "ruina montium" did to
 whatever lay downstream
 of Las Medulas - is deliberately NOT done here: it needs a place for the
 waste to go (a location, a downstream user of that land or river) that lives
-in data/world/geography.json and whatever eventually represents farmland and
+in the map folder (data/world/geography/) and whatever eventually represents farmland and
 water quality, neither of which this module reads (see its own STANDALONE
 section) and neither of which exists yet as a modelled stock. This is a
 labelled hook, not a silent omission: the quantity is now computed and ready
@@ -614,7 +614,7 @@ ByproductSpec = collections.namedtuple("ByproductSpec", [
 Deposit = collections.namedtuple("Deposit", [
     "name",
     "metal",
-    "tile",                       # key of geography.json's land_tiles that
+    "tile",                       # key of the geography data's land_tiles that
                                   # holds the deposit's lat/lon
     "material_moved",             # "ore" or "gravel"
     "ore_grade_kg_per_tonne",     # kg of CONTAINED METAL per tonne raised
@@ -1065,7 +1065,7 @@ def load_deposits(
     its derived `quantity_tonnes_per_year`: the deposit's own
     share_of_empire_output times data/world/resources.json's
     empire_output_100ad. Each deposit sits on the land tile holding its lat/lon
-    (a key of geography.json's land_tiles); nothing here reads the region
+    (a key of the geography data's land_tiles); nothing here reads the region
     records.
 
     The data arguments default to loading the files fresh, and are accepted
