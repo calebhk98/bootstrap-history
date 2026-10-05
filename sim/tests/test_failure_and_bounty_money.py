@@ -100,6 +100,17 @@ _guarded._step_money()
 check("the year's money flow, coin guard included, stays inside the room under the credit limit",
       _guarded_flows[0] >= -_guarded_room - 1e-6, (_guarded_flows[0], _guarded_room))
 
+# 438: what the year's later phases (the state's levy, the market) take is checked against the credit limit at year end
+_levied = sim(capital=0.0, manual=True)
+_levy_step_market = _levied._step_market
+def _levy_past_the_limit():
+    _levy_step_market()
+    _levied.state.household.debit(_levied.capital + _levied.credit_limit() + 1e5, "requisition")
+_levied._step_market = _levy_past_the_limit
+_levied.step()
+check("a year's late spending cannot leave capital past the credit limit",
+      _levied.capital >= -_levied.credit_limit() - 1e-6, (_levied.capital, _levied.credit_limit()))
+
 # --- 252: a failed bounty is neither charged to the poster nor orphaned ------
 _bounty_sim = sim(capital=5e7)
 _bounty_id = "horse_collar"

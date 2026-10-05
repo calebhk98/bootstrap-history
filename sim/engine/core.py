@@ -2149,6 +2149,8 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         if self.events and not self.state.founder.dead_reason:
             self._random_events(self.state.scenario.year)
 
+        # The state's levy, the market and the shrinking of standing all move the purse after the money phase checked it.
+        self.enforce_credit_limit(self.state.scenario.year)
         self.state.scenario.year += 1
         if self.debug:
             self.verify_step_invariants()
