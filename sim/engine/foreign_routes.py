@@ -16,6 +16,7 @@ from sim.constants import declare
 from sim.world import trader_response
 from sim.geography.api import cargo_cost, freight_cost, sea_freight, tiles_of_regions
 from sim.geography.api import route as route_over_tiles
+from sim.geography.api import dues_hours_per_tonne
 from sim.geography.api import usable_modes as usable_route_modes
 from sim.geography.api import transport as freight_physics
 
@@ -153,9 +154,12 @@ class ForeignRoutesMixin:
         return freight_cost.imbalance_of_flows(tonnes_out, tonnes_in)
 
     def _freight_handling_costs(self):
-        """{mode: home money per tonne} charged once per leg of that mode."""
-        return {SEA_MODE: (sea_freight.PORT_HANDLING_HOURS_PER_TONNE
-                        * self.labour.wage_per_hour(self.FREIGHT_DRIVER_WAGE_TRADE))}
+        """{mode: home money per tonne} charged once per leg of that mode: port handling at sea, and
+        the tolls or port dues the geography states for each mode (paid at the carrier's wage)."""
+        wage = self.labour.wage_per_hour(self.FREIGHT_DRIVER_WAGE_TRADE)
+        costs = {mode: hours * wage for mode, hours in dues_hours_per_tonne(self.world_map).items() if hours > 0.0}
+        costs[SEA_MODE] = costs.get(SEA_MODE, 0.0) + sea_freight.PORT_HANDLING_HOURS_PER_TONNE * wage
+        return costs
 
     def _foreign_route(self, civilization, imbalance=None):
         """The cheapest `Route` from the foreign economy's home tiles to this society's, or None
