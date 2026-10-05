@@ -16,16 +16,12 @@ def run_years(game, years):
 
 
 def with_army(share_of_working_age):
-    """A game whose state holds this share of the working age under arms nationwide. Actors' staff
-    reaches labour as the slice drawn from the founder's reachable pool (the state's BudgetView.local_staff:
-    the nation's share of the trade applied to the pool before any actor's staff), so that slice is
-    what is stated here."""
+    """A game whose actors hold this share of the working age under arms nationwide, as the
+    nationwide staff count labour reads (Complaints/426)."""
     game = sim()
     drawn = sorted(trade for trade in game.labour._world.wages if trade_data.drawn_from_unskilled_pool(trade))[0]
     held = share_of_working_age * game.population.working_age
-    share = held / game.labour.national_trade_population(drawn)
-    local = share * game.labour.reachable_trade_population(drawn)   # the pool before any actor's staff
-    game.actor_staff_fte = lambda trade: local if trade == drawn else 0.0
+    game.actor_staff_nationwide = lambda trade: held if trade == drawn else 0.0
     game.army_held_nationwide = held
     return game
 
@@ -40,9 +36,17 @@ run_years(armed, 1)
 soldiers = armed.labour._people_under_arms()
 check("a standing army holds people of an unskilled-pool trade", soldiers > 0.0, soldiers)
 check("nobody is under arms without one", unarmed.labour._people_under_arms() == 0.0)
-check("the army counted is the nationwide one, not the local slice the founder's pool shares",
-      abs(soldiers - armed.army_held_nationwide) < 0.01 * armed.army_held_nationwide,
+check("the army counted is the nationwide one the actors hold, with no inversion",
+      abs(soldiers - armed.army_held_nationwide) < 1e-9 * armed.army_held_nationwide,
       (soldiers, armed.army_held_nationwide))
+
+# The engine's own count: the government's army, not the slice of it in the founder's pool.
+real = sim()
+treasury = real.state_treasury()
+treasury.record.army = 0.1 * real.population.working_age
+check("the engine's nationwide staff count carries the government's whole army",
+      abs(real.labour._people_under_arms() - treasury.record.army) < 1e-6 * treasury.record.army,
+      (real.labour._people_under_arms(), treasury.record.army))
 gap = total_hours(unarmed) - total_hours(armed)
 expected = (unarmed.population.working_age - armed.population.working_age + soldiers) \
     * labour_allocation.HOURS_PER_FARM_WORKER_YEAR

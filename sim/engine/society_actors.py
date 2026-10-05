@@ -1,5 +1,5 @@
 """Actors other than the founder, run once a year inside the simulation."""
-from sim.agents.api import ActorRegistry, ledger
+from sim.agents.api import ActorRegistry, ledger, SOLDIER_TRADE
 from .agents_port import SimWorld
 from .agents_port_cast import seed_opening_cast
 from .state import ActorsState
@@ -26,6 +26,20 @@ class ActorsMixin:
         if state is None or not state.records:
             return 0.0
         return self.actors.staff_fte(trade)
+
+    def actor_staff_nationwide(self, trade):
+        """People of this trade that firms and governments hold nationwide. Staff in the founder's
+        reachable pool is the slice the actors drew from it; the government's army is its whole
+        force, so that one trade reads the army in place of the government's slice."""
+        state = self.state.actors
+        if state is None or not state.records:
+            return 0.0
+        people = self.actor_staff_fte(trade)
+        if trade == SOLDIER_TRADE:
+            record = state.records.get("government:" + str(self.civ.get("id")))
+            if record is not None:
+                people += record.army - record.workforce.get(trade, 0.0)
+        return max(0.0, people)
 
     def actor_staff_total(self):
         """People of every trade that firms and governments employ."""

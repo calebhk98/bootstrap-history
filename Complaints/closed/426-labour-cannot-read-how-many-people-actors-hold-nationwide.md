@@ -1,6 +1,6 @@
 # Labour cannot read how many people actors hold nationwide, so soldiers leave production only approximately
 
-**Status:** open
+**Status:** closed - `LabourWorld.actors_staff_nationwide` (engine `actor_staff_nationwide`) replaces the inversion. Test: `sim/tests/test_soldiers_leave_production.py`.
 
 People under arms now leave the society's labour allocation (Complaint 314,
 `sim/labour/labour_allocation.py` `_people_under_arms`). Labour reads actors' staff only through
