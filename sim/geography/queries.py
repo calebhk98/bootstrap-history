@@ -9,7 +9,7 @@ import copy
 import math
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
-from sim.geography import (food_capacity, map_source, mechanisms, parameters, resources_biotic,
+from sim.geography import (food_capacity, map_source, mechanisms, parameters, resource_links, resources_biotic,
                            resources_catalogue, resources_endowment, resources_prospecting,
                            resources_summary, routes_graph, routes_modes, routes_search, tile_holdings, tile_layers)
 
@@ -128,6 +128,21 @@ def deposit_records(resource_id: Optional[str] = None, world_map: Optional[World
     rows = [copy.deepcopy(row) for row in _map(world_map).catalogue("deposits").values()
             if resource_id is None or row.get("resource") == resource_id]
     return sorted(rows, key=lambda row: (row.get("order", math.inf), row["id"]))
+
+
+def ore_goods(world_map: Optional[WorldMap] = None) -> Dict[str, Dict[str, Tuple[str, ...]]]:
+    """{resource id: {ore good: smelting recipe ids in order of preference}} for the resources that yield ore goods."""
+    return resource_links.ore_goods(_map(world_map))
+
+
+def works_priced_from_deposits(world_map: Optional[WorldMap] = None) -> Tuple[str, ...]:
+    """Resource ids whose mine running cost comes from the deposits' physical works."""
+    return resource_links.works_priced_from_deposits(_map(world_map))
+
+
+def parameter_value(parameter_id: str, world_map: Optional[WorldMap] = None) -> Any:
+    """The value of one of the map's parameters."""
+    return parameters.parameter(_map(world_map), parameter_id)
 
 
 def prospect(tile_id: str, resource_id: str, effort: float, seed: Any,

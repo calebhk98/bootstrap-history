@@ -6,7 +6,7 @@ record's internals so that callers do not hold `economy.record.<field>` in their
 """
 WALL = "two-way"  # nothing here reaches sim/engine/; the engine hands it what it needs (sim/engine/economy_port.py)
 
-from . import households, taxes, tile_costs
+from . import diagnostics, households, taxes, tile_costs
 from .currency import currency_from_coin_standard
 from .economy import Economy
 from .foreign import external_orders
@@ -22,13 +22,15 @@ from .year_close import rebase_price_level
 from .year_labour import trade_premium
 
 __all__ = [
-    "households", "taxes", "tile_costs", "currency_from_coin_standard", "Economy", "external_orders",
+    "diagnostics", "households", "taxes", "tile_costs", "currency_from_coin_standard", "Economy", "external_orders",
     "shown_prices", "Producer", "expected_output_prices", "live_input_prices", "live_wages", "AgentOrders",
     "YearInputs", "recipes_from_production_data", "EconomyRecord", "EconomySetup", "TradeSpec",
     "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "GoodsMove", "Offer", "Transfer",
     "variable_cost_per_run", "rebase_price_level", "trade_premium",
     "traded_volumes", "opening_quantities", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
+    "economy_from_record", "blank_economy", "export_record", "finish_spin_up", "shown_prices_of",
+    "settle_founder_takings", "move_goods",
 ]
 
 _KEY_SEPARATOR = "|"
@@ -96,3 +98,47 @@ def account_balance(economy, agent_id):
 def account_holdings(economy, agent_id):
     """An agent's holdings in the book, as the book reports them."""
     return economy.record.book.holdings(agent_id)
+
+
+def economy_from_record(setup, saved):
+    """An Economy resumed from a record exported by `export_record`."""
+    return Economy(setup, EconomyRecord.from_record(saved))
+
+
+def blank_economy(setup):
+    """An Economy at its opening, before any year has run."""
+    return Economy(setup)
+
+
+def export_record(economy):
+    """The economy's record as plain data, for saving."""
+    return economy.record.to_record()
+
+
+def finish_spin_up(economy):
+    """Closes the hidden spin-up years: the price level is rebased to one and the clock returns to zero."""
+    rebase_price_level(economy.setup, economy.record)
+    economy.record.memory.year = 0
+
+
+def shown_prices_of(economy):
+    """(prices, stale goods) the game is shown for this economy; see `notional.shown_prices`."""
+    return shown_prices(economy.setup, economy.record)
+
+
+def move_goods(economy, moves):
+    """Applies goods moves to the economy's book."""
+    economy.record.book.move_many(moves)
+
+
+def settle_founder_takings(economy, agent_id, edge_id, tile_note="founder's takings"):
+    """Sends an agent's money and every unsold holding back over an edge; returns the money sent."""
+    book, money = economy.record.book, economy.setup.currency_id
+    proceeds = book.balance(agent_id, money)
+    if proceeds > 0.0:
+        book.transfer(Transfer(agent_id, edge_id, money, proceeds, tile_note))
+    returns = [GoodsMove(agent_id, edge_id, good, tile, quantity, "unsold concern output")
+               for good, tiles in book.holdings(agent_id)["goods"].items()
+               for tile, quantity in tiles.items() if quantity > 0.0]
+    book.move_many(returns)
+    return proceeds

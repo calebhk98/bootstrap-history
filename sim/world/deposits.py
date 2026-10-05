@@ -269,7 +269,7 @@ from typing import Any, Dict, List, Optional
 from sim.constants import declare
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import mine_fire_setting, mine_works
-from sim.geography.api import deposit_records, tile_lookup
+from sim.geography.api import deposit_records, ore_goods, tile_lookup
 
 # ============================================================================
 # DATA FILE LOCATIONS
@@ -283,12 +283,19 @@ _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 _ROOT = os.path.dirname(os.path.dirname(_THIS_DIR))
 RESOURCES_FILE = os.path.join(_ROOT, "data", "world", "resources.json")
 
-# The seven metals this module and the geography deposit catalogue cover -
-# exactly the metals data/world/resources.json's empire_output_100ad table
-# gives a Roman-era annual output for. Declared as a plain tuple, not
-# through declare(): it is a list of names, not a fact with a value that
-# could be wrong.
-METALS = ("iron", "copper", "tin", "lead", "silver", "gold", "mercury")
+def metals(world_map=None):
+    """The resources the map's catalogue says yield ore goods (data/world/geography/resources/*.json), in the
+    catalogue's order."""
+    return tuple(ore_goods(world_map))
+
+
+def rent_bearing_ore_materials(world_map=None):
+    """{ore good: (metal, smelting recipe ids in order of preference)} from the catalogue's `ore_goods`."""
+    return {good: (metal, recipes) for metal, goods in ore_goods(world_map).items()
+            for good, recipes in goods.items()}
+
+
+METALS = metals()  # the base map's; code holding a mod-aware map asks metals(world_map)
 
 
 # ============================================================================

@@ -38,3 +38,41 @@ with tempfile.TemporaryDirectory() as mods_dir:
     finally:
         geography_port.MODS_DIR = saved
 check("without the mod the base map is unchanged", sim().world_map.tiles[edited]["arable_fraction"] != 0.123)
+
+
+# Complaint 409: the foreign routes ask geography about the map the game opened, mods included.
+from unittest import mock
+
+from sim.engine import foreign_routes
+
+asked_maps = {}
+
+
+def _spy(name, real):
+    def spy(*args, **kwargs):
+        positional = args[-1] if name in ("modes", "tiles_of_regions") and len(args) > 1 else None
+        asked_maps.setdefault(name, []).append(kwargs.get("world_map", positional))
+        return real(*args, **kwargs)
+    return spy
+
+
+with tempfile.TemporaryDirectory() as mods_dir:
+    mod_root = os.path.join(mods_dir, "tile_edit_k3f9")
+    os.makedirs(os.path.join(mod_root, "data", "world", "geography", "tiles"))
+    with open(os.path.join(mod_root, "mod.json"), "w", encoding="utf-8") as handle:
+        json.dump({"id": "tile_edit_k3f9", "name": "Tile edit", "version": "1.0.0", "dependencies": [], "conflicts": []}, handle)
+    with open(os.path.join(mod_root, "data", "world", "geography", "tiles", "edit.json"), "w", encoding="utf-8") as handle:
+        json.dump([{"id": edited, "override": True, "arable_fraction": 0.123}], handle)
+    saved = geography_port.MODS_DIR
+    geography_port.MODS_DIR = mods_dir
+    try:
+        modded = sim()
+        with mock.patch.object(foreign_routes, "route_over_tiles", _spy("route", foreign_routes.route_over_tiles)), \
+                mock.patch.object(foreign_routes, "usable_route_modes", _spy("modes", foreign_routes.usable_route_modes)), \
+                mock.patch.object(foreign_routes, "tiles_of_regions", _spy("tiles_of_regions", foreign_routes.tiles_of_regions)):
+            modded._foreign_route("han_china_100ad")
+        check("the foreign route is searched on the engine's mod-aware map", asked_maps.get("route") == [modded.world_map])
+        check("the usable modes are read from that map", asked_maps.get("modes") == [modded.world_map])
+        check("the route's end tiles are resolved on that map", asked_maps.get("tiles_of_regions") == [modded.world_map] * 2)
+    finally:
+        geography_port.MODS_DIR = saved

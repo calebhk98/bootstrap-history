@@ -24,16 +24,27 @@ MiningMixin is composed into EconomyMixin (economy.py) alongside the
 other economy sub-mixins; see that file for the composition and for the
 grouping evidence.
 """
+import functools
+
 from sim.constants import declare
 from . import money_units
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import deposits as deposit_model
+from sim.geography.api import parameter_value, works_priced_from_deposits
 from sim.world import land
 from . import purchase_rule
 
 
+@functools.lru_cache(maxsize=None)
+def _works_priced_materials(world_map):
+    return works_priced_from_deposits(world_map)
+
+
 class MiningMixin:
-    MINE_OPEX_MATERIALS = ("coal", "iron", "copper", "lead", "tin", "silver", "gold")
+    @property
+    def MINE_OPEX_MATERIALS(self):
+        """Materials whose mine running cost comes from the deposits' physical works, from the map's catalogue."""
+        return _works_priced_materials(self.world_map)
 
     @property
     def MINE_OPEX_PER_T(self):
@@ -71,12 +82,16 @@ class MiningMixin:
         unit="hardness class of deposits.py", source=None, confidence="D",
         why="Rock hardness assumed for a material with no named deposits; "
             "replace with per-material deposit data.")
-    MINE_TRADE = "miner"
+    @property
+    def MINE_TRADE(self):
+        """The trade whose wage prices mine labour, from the map's parameters."""
+        return parameter_value("mining_trade", self.world_map)
+
     _MINE_PROFILE_CACHE = {}
 
     def _mine_reference_deposits(self, mat):
         """(deposit, weight) pairs describing a typical working of `mat`."""
-        if mat in deposit_model.METALS:
+        if mat in deposit_model.metals(self.world_map):
             pool = deposit_model.load_deposits(mat)
             total = sum(dep.quantity_tonnes_per_year for dep in pool)
             return [(dep, dep.quantity_tonnes_per_year / total) for dep in pool]

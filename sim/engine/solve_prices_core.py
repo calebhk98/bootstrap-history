@@ -970,40 +970,14 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
     return total_process_cost_hours, output_prices
 
 
-# {ore_material_key: (metal_name_in_deposits_METALS, (candidate_recipe_id,
-# ...))} - see RENT ON EXTRACTED MATERIALS in the module docstring for what
-# this table is, why gold is not in it (gold_kg has no extracted_from ore
-# stage of its own for rent to attach to), and why the "dominant" recipe
-# matters (it is the one whose own ore-to-metal ratio is used to convert a
-# per-kg-of-metal rent into a per-kg-of-ore price, and the one that ratio
-# is EXACT for - see rent_hours_per_kg_by_ore_material's own docstring).
-# copper, tin, silver and mercury each have exactly one recipe that
-# consumes their ore, so there is only one candidate for them. Iron has
-# two - pig_iron_kg (blast furnace) and iron_bloom_kg (direct bloomery) -
-# at different ore-to-metal ratios, and which of them an era can even RUN
-# differs: the default civilisation gates pig_iron_kg out entirely (blast_furnace
-# is not a Roman technology) while leaving iron_bloom_kg available, so a
-# single fixed recipe id here would silently leave iron at zero rent for
-# every Roman-era gated solve - exactly the scenario this task's own VERIFY
-# step runs. The tuple is tried in order and the first candidate present in
-# THIS solve's (possibly gated) production_entries is used, so an ungated
-# solve gets the blast-furnace ratio and a Roman-gated one falls back to
-# the bloomery ratio - both real recipes, never an invented one.
-RENT_BEARING_ORE_MATERIALS = {
-    "iron_ore_kg": ("iron", ("pig_iron_kg", "iron_bloom_kg")),
-    "copper_ore_kg": ("copper", ("copper_kg",)),
-    "cassiterite_kg": ("tin", ("tin_kg",)),
-    "galena_kg": ("lead", ("lead_kg",)),
-    "silver_ore_kg": ("silver", ("silver_kg",)),
-    "cinnabar_kg": ("mercury", ("mercury_kg",)),
-    "gold_gravel_kg": ("gold", ("gold_kg",)),
-    "gold_lode_ore_kg": ("gold", ("gold_lode_kg",)),
-}
+# The ore-to-metal links come from the catalogue (deposits.rent_bearing_ore_materials). Where an ore has several
+# smelting recipes (iron: blast furnace, bloomery) the first one present in this solve's gated entries is the
+# dominant one, so a gated era falls back to a recipe it can run.
 
 
 def rent_hours_per_kg_by_ore_material(production_entries, wage_by_trade):
     """{ore_material_key: hours of rent per kg of that ore's own output},
-    for every metal in RENT_BEARING_ORE_MATERIALS whose ore and dominant
+    for every ore the catalogue's `ore_goods` names whose ore and dominant
     smelting recipe both survive this era's gate - see RENT ON EXTRACTED
     MATERIALS in the module docstring for the mechanism this implements and
     why it is only approximate for a metal with more than one ore-consuming
@@ -1051,7 +1025,7 @@ def rent_hours_per_kg_by_ore_material(production_entries, wage_by_trade):
         resources_json = json.load(handle)
 
     rent_by_ore_material = {}
-    for ore_material, (metal, candidate_recipe_ids) in RENT_BEARING_ORE_MATERIALS.items():
+    for ore_material, (metal, candidate_recipe_ids) in deposits.rent_bearing_ore_materials().items():
         ore_entry = production_entries.get(ore_material)
         if ore_entry is None:
             # Gated out of this era (--civ), or (should not happen for a

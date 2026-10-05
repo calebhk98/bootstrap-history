@@ -43,6 +43,8 @@ class EconomyApiTests(unittest.TestCase):
         found = 0
         for path in python_files():
             for module, name in economy_imports(path):
+                if name == "api":
+                    continue
                 found += 1
                 where = "%s imports %s from %s" % (os.path.relpath(path, ROOT), name, module)
                 self.assertIsNotNone(name, where)

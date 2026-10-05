@@ -6,7 +6,7 @@ sinking cost, byproducts). `recipe_cost_and_allocation` now takes a
 `rent_hours_per_kg_by_material` table, and `rent_hours_per_kg_by_ore_material`
 builds it from `deposits.find_marginal_deposit` for the six metals
 `data/production/` represents as a standalone EXTRACTED ore material (iron,
-copper, tin, lead, silver, mercury - see RENT_BEARING_ORE_MATERIALS and RENT
+copper, tin, lead, silver, mercury - see the catalogue ore_goods and RENT
 ON EXTRACTED MATERIALS in the module docstring for why gold is the seventh
 metal `deposits.py` covers and is not among these six).
 
@@ -168,7 +168,7 @@ class RentHoursPerKgByOreMaterialTests(unittest.TestCase):
 
         # All six named ores resolve in the ungated (full) solve - none of
         # their dominant/candidate recipes are missing from the real data.
-        self.assertEqual(set(rent), set(solve_prices.RENT_BEARING_ORE_MATERIALS))
+        self.assertEqual(set(rent), set(deposits.rent_bearing_ore_materials()))
         for material, rent_per_kg in rent.items():
             self.assertGreaterEqual(rent_per_kg, 0.0, material)
         # At least one metal's margin is genuinely pushed by the fixed
@@ -179,9 +179,9 @@ class RentHoursPerKgByOreMaterialTests(unittest.TestCase):
     def test_gold_is_rented_through_its_two_ore_materials_not_gold_kg(self):
         # gold_kg is a recipe over gold_gravel_kg (hydraulic) or gold_lode_ore_kg
         # (lode), each an extracted ore drawn from a gold deposit (Complaints/334).
-        self.assertNotIn("gold_kg", solve_prices.RENT_BEARING_ORE_MATERIALS)
+        self.assertNotIn("gold_kg", deposits.rent_bearing_ore_materials())
         for ore in ("gold_gravel_kg", "gold_lode_ore_kg"):
-            self.assertEqual(solve_prices.RENT_BEARING_ORE_MATERIALS[ore][0], "gold")
+            self.assertEqual(deposits.rent_bearing_ore_materials()[ore][0], "gold")
 
 
 class IronFallsBackToTheAvailableSmeltingRouteTests(unittest.TestCase):
@@ -196,7 +196,7 @@ class IronFallsBackToTheAvailableSmeltingRouteTests(unittest.TestCase):
     """
 
     def test_pig_iron_is_preferred_when_both_are_present(self):
-        preferred, fallback = solve_prices.RENT_BEARING_ORE_MATERIALS["iron_ore_kg"][1]
+        preferred, fallback = deposits.rent_bearing_ore_materials()["iron_ore_kg"][1]
         self.assertEqual(preferred, "pig_iron_kg")
         self.assertEqual(fallback, "iron_bloom_kg")
 
@@ -212,7 +212,7 @@ class IronFallsBackToTheAvailableSmeltingRouteTests(unittest.TestCase):
             production_entries, reached)
         self.assertNotIn("pig_iron_kg", available,
                          "rome_100ad now holds the blast furnace - the "
-                         "RENT_BEARING_ORE_MATERIALS fallback this test "
+                         "ore_goods fallback this test "
                          "guards is no longer exercised by this civilization")
         self.assertIn("iron_bloom_kg", available)
 
