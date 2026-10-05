@@ -1,6 +1,6 @@
 # A game has one goal id, one reach year and no "what controls this metric" hook
 
-**Status:** open
+**Status:** closed - goals_several: goal_years per goal id (saved), `goals promote`, Sim.set_goal drops the goal caches, Sim.win_condition_anatomy hook used by `anatomy`
 
 Three engine limits block the rest of 268 and 69:
 

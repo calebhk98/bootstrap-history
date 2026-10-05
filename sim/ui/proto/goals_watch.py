@@ -1,7 +1,7 @@
 """Progress toward the formal goal and any goals the player chooses to watch (Complaint 268).
 
 A watched goal is tracked here only; `sim.goal`, the score and the end text stay with the formal
-goal (Complaint 422). Under fog a goal the player cannot know is a count, never a name."""
+goal until `promote` makes a watched goal the formal one (Complaint 422). Under fog a goal the player cannot know is a count, never a name."""
 import weakref
 
 from sim.engine import ui_port
@@ -76,7 +76,7 @@ def goals_report(sim):
     return {"ok": True, "formal": formal, "watched": watched_rows(sim), "choices": choices,
             "unknown_goals": unknown, "fog": bool(sim.fog),
             "note": "The formal goal is the one the score and the end text use. A watched goal is "
-                    "tracked here only; reaching it changes nothing else."}
+                    "tracked here only until the formal goal is reached; 'goals promote' then makes it the formal goal."}
 
 
 def watch(sim, text):
@@ -91,6 +91,24 @@ def watch(sim, text):
             return {"ok": False, "error": "watching too many goals; 'goals unwatch <goal>' first"}
         ids.append(node_id)
     return {**goals_report(sim), "changed": "watching %s" % sim.nodes[node_id].get("name", node_id)}
+
+
+def promote(sim, text=""):
+    """After the formal goal is reached, make a watched goal (the first unreached one if unnamed) the formal goal."""
+    if sim.goal_year is None:
+        return {"ok": False, "error": "the formal goal is not reached yet; only then can a watched goal take its place"}
+    ids = _watched_ids(sim)
+    if text:
+        node_id, error = resolve_goal_reference(sim, text, among=ids)
+        if error:
+            return {"ok": False, "error": "you are not watching a goal called %r" % text}
+    else:
+        node_id = next((candidate for candidate in ids if candidate in sim.nodes and candidate not in sim.done), None)
+        if node_id is None:
+            return {"ok": False, "error": "no watched goal is left to promote; 'goals watch <goal>' one first"}
+    ids.remove(node_id)
+    ui_port.set_goal(sim, node_id)
+    return {**goals_report(sim), "changed": "the formal goal is now %s" % sim.nodes[node_id].get("name", node_id)}
 
 
 def unwatch(sim, text):

@@ -323,8 +323,7 @@ class CompletionMixin:
             household.log.append((scenario.year, "completed: " + node["name"]))
         for line in self.goal_effect_lines(node_id, goal_before):
             household.log.append((scenario.year, line))
-        if node_id == self.goal and scenario.goal_year is None:
-            scenario.goal_year = scenario.year
+        self.record_goal_reached(node_id, scenario.year)
 
     # -- shocks -------------------------------------------------------------
     # WHAT YOU CAN DO ABOUT HISTORY.
