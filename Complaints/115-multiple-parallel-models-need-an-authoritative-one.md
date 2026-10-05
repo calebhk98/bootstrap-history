@@ -113,3 +113,31 @@ Overlapping issues closed into this one; each closed file keeps its full text.
   `geography/map_source.py` differ on purpose (control keys and nested-only deletion against delete-on-null), and
   `economy/labour.training_premium` and `reservation_wage` against the labour package's are different maths (item 2
   of the audit), not copies.
+
+## Unified: price level, credit room, small constants
+
+- **Price level.** The word named three different things. Each now says which: `Sim.home_price_level()` (engine,
+  `foreign_payments.py`) is the one level the engine reads for wages, caches and clearing, from the coin stock against the
+  opening stock (`balance_of_payments.money_stock_price_level`); `basket_price_level` is the agent economy's fixed-basket
+  index of its own cleared prices, read only by its households' and state's expectations; `partner_price_level` is a
+  trading partner's. The unused `EconomyPort.price_level` is gone. The engine does not read the basket index, on purpose:
+  measured over a dozen default-game years (Rome) the basket index is noisy and sits well below one after the rebase,
+  where the coin-stock level moves smoothly, so wiring wages to it would move them by a different order than the
+  disagreement being fixed. Whether wages should follow the basket index is a design change, not a dedupe (Complaints
+  273, 140).
+- **Credit.** `market_rate()` and `market_credit_room()` both ask the agent economy's credit market when it is on
+  (`economy.api.credit_room`: what lenders put out of the savings on offer at the last lending, less what other borrowers
+  took). The engine's loanable-funds record answers only when the agent economy is off. Founder credit in a default game
+  now follows the agent market's room, a real change (it used to read a record the agent economy never updates).
+- **Constants.** `tile_costs.py` no longer holds its own distance or carrier-size copies (geography owns them). The
+  bare 365-day year in `foreign_traders.py`, `food_pasture.py` and `layers_ocean.py` is `unit_conversions.CIVIL_DAYS_PER_YEAR`;
+  the 365.25 averages declared in `sim/world/` and `climate_temperatures.py` stay separate (standalone models).
+
+## Still two owners
+
+- Labour (428): the labour package's market and the agent economy's labour market each clear wages.
+- Merchants (405): engine foreign traders, economy merchants and trader actors.
+- Demand baskets: `sim/world/demand.py`, the economy's household baskets and the agents' strata baskets.
+- Strata (403): strata income against the economy's cohorts.
+- The engine's `market_loans`, `update_capital_market` and its rate still run (and set the rate) when the agent economy is off;
+  only the reading side is unified.
