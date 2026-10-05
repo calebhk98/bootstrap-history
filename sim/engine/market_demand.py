@@ -119,7 +119,8 @@ class MarketDemandMixin:
         ratios = {commodity: now_by_commodity[commodity] / total
                   for commodity, total in sorted(opening_by_commodity.items()) if total > 0.0}
         new_units = {material: wanted for material, wanted in sorted(now.items())
-                     if wanted > 0.0 and material not in basket["units"]}
+                     if wanted > 0.0 and material not in basket["units"]
+                     and material in prices_in_hours}  # derived demand reaches inputs of recipes the society cannot price
         self.household._household_demand_cache = (key, prices, ratios, new_units)
         return ratios, new_units
 
