@@ -123,6 +123,11 @@ class FogMixin:
         memo[node_id] = result
         return result
 
+    def prerequisite_label(self, prereq_id: str) -> str:
+        """The id with the node's name beside it, so the id is identifiable."""
+        name = self.nodes.get(prereq_id, {}).get("name")
+        return "%s (%s)" % (prereq_id, name) if name and name != prereq_id else prereq_id
+
     def missing_prereq_message(self, missing: List[str],
                                _memo: Optional[Dict[str, bool]] = None) -> Optional[str]:
         """Format a list of not-yet-done prerequisite ids as one player-facing
@@ -140,11 +145,11 @@ class FogMixin:
         known = [prereq_id for prereq_id in missing if self.is_visible(prereq_id, _memo=_memo)]
         hidden = len(missing) - len(known)
         if not self.state._fog or not hidden:
-            msg = "missing prerequisites: " + ", ".join(missing)
+            msg = "missing prerequisites: " + ", ".join(self.prerequisite_label(prereq_id) for prereq_id in missing)
             return msg + self._free_prereq_hint(missing)
         bits = []
         if known:
-            bits.append("missing prerequisites: " + ", ".join(known))
+            bits.append("missing prerequisites: " + ", ".join(self.prerequisite_label(prereq_id) for prereq_id in known))
         hidden_kinds = self._hidden_prerequisite_kinds([prereq_id for prereq_id in missing if prereq_id not in known])
         bits.append("%d other thing%s you have not heard of yet%s"
                     % (hidden, "" if hidden == 1 else "s",

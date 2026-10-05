@@ -1259,7 +1259,10 @@ def _explain_visible_prerequisites(sim, nodes, node_id, node):
     """Which prerequisites this node has, which are still missing, and how
     many more are hidden by fog than the visible lists let on.
     """
+    direct = ([prereq_id for prereq_id in node["pre"] if sim.is_visible(prereq_id)]
+              if sim.fog else node["pre"])
     return {
+        "prerequisite_names": {prereq_id: nodes[prereq_id]["name"] for prereq_id in direct if prereq_id in nodes},
         # ONLY WHAT YOU HAVE HEARD OF. These are read for a visible node, where
         # every prerequisite is either done or itself heard of - except on the
         # goal, which `why` answers under fog because the status line names it

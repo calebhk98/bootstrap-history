@@ -1,6 +1,6 @@
 # The `"cast"` key a scenario uses to declare countries, players and strata is undocumented, and no civilisation declares its slaves
 
-**Status:** open
+**Status:** partly - the `cast` key, the bondage fields and the foreign-economies file are documented (`data/civilizations/_SCHEMA.md`, `mods/README.md`) and `docs/architecture/README.md` links `sim/agents/MULTIPLAYER.md`; remains: a sourced enslaved share for Rome (no figure in the repo's docs) and reading a mod's `foreign_economies.json` in the loader
 
 A game's roster is seeded once and saved (`ActorsState.cast`, `ActorsState.countries`; see
 `sim/agents/MULTIPLAYER.md`). It is built from:

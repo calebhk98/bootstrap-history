@@ -465,7 +465,7 @@
    "basis": "per this batch (1 kg tallow + 3 kg wood ash) of soft soap",
    "yield_basis": "Saponification: rendered animal fat boiled for hours with a caustic lye leached from wood ash (potassium carbonate dissolved out of ash with water - this file has no separate tracked 'lye_kg', so wood_ash_kg is used directly as the alkali source, the way it is already a real material the tree consumes elsewhere). Leaching enough usable potash out of ash for a full boil traditionally needs several times the fat's weight in ash, taken here at 3:1; the finished soft soap comes out slightly heavier than the fat that went in because it retains bound water and residual alkali, taken as a 15% gain. Labour is leaching the ash (pouring water through it repeatedly and collecting the lye), then a long stirred boil with the fat over a wood fire until it saponifies and thickens.",
    "conf": "C",
-   "requires_node": "ch2_rxn_saponification"
+   "requires_node": "hom_soap_soft"
   },
   "fat_kg": {
    "outputs": {
