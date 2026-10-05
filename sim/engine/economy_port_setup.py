@@ -11,8 +11,8 @@ import os
 from sim.economy import households, taxes, tile_costs
 from sim.economy.currency import currency_from_coin_standard
 from sim.economy.setup import EconomySetup, TradeSpec, goods_specs
-from sim.world import demand, land
-from sim.geography.api import sea_freight, settlement
+from sim.world import demand
+from sim.geography.api import layer_value, sea_freight, settlement, tiles_of_regions
 from sim.labour import api as labour_api
 
 from .foreign_routes import SEA_MODE
@@ -25,10 +25,10 @@ def _load(*parts):
         return json.load(handle)
 
 
-def civilisation_tiles(civ):
-    """The tiles a civilisation holds (through its home regions until civilisations hold tiles)."""
-    geography = _load("world", "geography.json")
-    return land._tile_ids_for_home_regions(list(civ.get("home_regions") or []), geography.get("land_tiles", {})), geography
+def civilisation_tiles(civ, world_map):
+    """The tiles a civilisation holds on the engine's map (through its home regions until civilisations
+    hold tiles), and that map."""
+    return tiles_of_regions(list(civ.get("home_regions") or []), world_map), world_map
 
 
 def allowed_entries(production, held_nodes):
@@ -47,7 +47,7 @@ def opening_values(sim):
     """What the setup takes from the engine at the opening: kept in the save so a resumed game rebuilds
     the same markets, producers and price base however the engine's own tables have moved since."""
     civ = sim.civ
-    tile_ids, _geography = civilisation_tiles(civ)
+    tile_ids, _world_map = civilisation_tiles(civ, sim.world_map)
     home = list(civ.get("home_regions") or [])
     people = float(sim.population.total)
     production = demand.production_data()
@@ -70,7 +70,7 @@ def opening_values(sim):
     }
 
 
-def baskets_by_tile(basket, need_data, geography, tile_ids):
+def baskets_by_tile(basket, need_data, world_map, tile_ids):
     """The household basket on each tile, with the floors its climate sets (sim/world/climate_needs.py)
     for every need whose data names one in `subsistence_from_climate`."""
     from sim.world import climate_needs
@@ -78,10 +78,12 @@ def baskets_by_tile(basket, need_data, geography, tile_ids):
                      for need_id, spec in need_data.get("needs", {}).items() if spec.get("subsistence_from_climate")}
     if not climate_field:
         return {}
-    tiles = geography["land_tiles"]["tiles"]
     baskets = {}
     for tile in tile_ids:
-        floors = climate_needs.floors_for_tile(tiles[tile])
+        floors = climate_needs.floors_for_tile({
+            "lat": layer_value(tile, "lat", world_map),
+            "koppen_class": layer_value(tile, "koppen_class", world_map),
+            "koppen_sample_mix": layer_value(tile, "koppen_sample_mix", world_map)})
         needs = tuple(dataclasses.replace(need, subsistence_per_person=float(floors[climate_field[need.need_id]]))
                       if need.need_id in climate_field else need for need in basket.needs)
         baskets[tile] = dataclasses.replace(basket, needs=needs)
@@ -118,8 +120,8 @@ def build_setup(sim, opening=None):
     unit = coin_per_unit(opening)
     opening = in_units(opening)
     civ = sim.civ
-    tile_ids, geography = civilisation_tiles(civ)
-    tiles = tile_costs.tiles_from_geography(geography, tile_ids)
+    tile_ids, world_map = civilisation_tiles(civ, sim.world_map)
+    tiles = tile_costs.tiles_from_map(world_map, tile_ids)
     population_by_tile = {tile: float(opening["population_by_tile"].get(tile, 0.0)) for tile in tile_ids}
     production = demand.production_data()
     from sim.economy.recipes import recipes_from_production_data
@@ -156,7 +158,8 @@ def build_setup(sim, opening=None):
         capital_tile=by_people[0], port_tile=(coastal or by_people)[0],
         land_per_run={recipe_id: float(production[recipe_id].get("land_hectare_years") or 0.0)
                       for recipe_id in recipes if production[recipe_id].get("land_hectare_years")},
-        basket_by_tile=baskets_by_tile(basket, need_data, geography, tile_ids), coin_per_unit=unit)
+        basket_by_tile=baskets_by_tile(basket, need_data, world_map, tile_ids), coin_per_unit=unit,
+        world_map=world_map)
 
 
 def _counted_currency(civ, unit):

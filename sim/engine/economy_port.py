@@ -39,7 +39,7 @@ class EconomyPort:
         cached = self.__dict__.get("_territory")
         if cached is None or cached[0] != homes:
             from .economy_port_setup import civilisation_tiles
-            cached = self.__dict__["_territory"] = (homes, bool(civilisation_tiles(self._sim.civ)[0]))
+            cached = self.__dict__["_territory"] = (homes, bool(civilisation_tiles(self._sim.civ, self._sim.world_map)[0]))
         return cached[1]
 
     def _answering_agent(self):

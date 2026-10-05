@@ -143,8 +143,13 @@ it as a partner; the file's own `_doc` describes its fields. A mod can add cast
 members and strata to a game by patching a civilisation's `cast` key (see
 `data/civilizations/_SCHEMA.md`).
 
-World geography/resources, hazards, UI, and arbitrary new mechanics are not
-mod extension points yet. There is no price table: every price comes from
+A mod can ship a map overlay in `mods/<id>/data/world/geography/` (tile edits in `tiles/`, layer
+patches in `layers/`, new resources, deposits, route modes or a whole replacement map). It merges
+under the same add, override and remove rules as the rest of the mod system, new ids carry the mod's
+prefix, and `sim/geography/map_source.py` states the folder layout. The game opens the map once with
+every installed mod's overlay in load order (`sim/engine/geography_port.py`), and the agent economy's
+tiles and carriage costs come from it. Hazards, UI, and arbitrary new mechanics are not mod
+extension points yet. There is no price table: every price comes from
 production data, so a mod prices a good by giving it a production path.
 
 The three installed sample mods use only this public data contract. They add a
