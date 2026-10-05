@@ -6,7 +6,7 @@ from .nodes import _resolve_by_name
 FOG_REFUSAL = ("route planning is switched off under fog of war: nobody can lay out a road to somewhere "
                "they have not been. Use 'available' to see what you could begin now.")
 ORDER_TEXT = "longest remaining chain to the goal first (critical path), cheaper first on ties"
-CAP_KEYS = ("max_total_cost", "max_annual_draw", "reserve_cash")
+CAP_KEYS = ("max_total_cost", "max_annual_draw", "reserve_cash", "max_total_hours")
 
 
 def resolve_goal(sim, raw):

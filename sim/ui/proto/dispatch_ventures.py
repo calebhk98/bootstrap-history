@@ -355,7 +355,7 @@ def _cmd_stop(sim, nodes, cmd, ended):
 def _rush_caps(cmd):
     """The fiscal caps on a rush as (caps, error). A cap is None when not given."""
     caps = {}
-    for key in ("max_total_cost", "max_annual_draw", "reserve_cash"):
+    for key in ("max_total_cost", "max_annual_draw", "reserve_cash", "max_total_hours"):
         raw = cmd.get(key)
         if raw is None:
             caps[key] = None
@@ -377,8 +377,11 @@ def _rush_cost_left(sim, node_id):
     return price - min(price, max(0.0, paid))
 
 
-def _rush_cap_refusal(caps, budget, cost, draw, cost_so_far, draw_so_far):
-    """Why the next project breaks a fiscal cap, or None when it fits."""
+def _rush_cap_refusal(caps, budget, cost, draw, cost_so_far, draw_so_far, hours=0.0, hours_so_far=0.0):
+    """Why the next project breaks a fiscal or founder-hour cap, or None when it fits."""
+    if caps.get("max_total_hours") is not None and hours_so_far + hours > caps["max_total_hours"] + 1e-9:
+        return ("not begun: needs %s founder hours, which would take this rush past "
+                "max_total_hours" % "{:,.0f}".format(hours))
     if caps["max_total_cost"] is not None and cost_so_far + cost > caps["max_total_cost"] + 1e-9:
         return ("not begun: costs %s, which would take this rush past "
                 "max_total_cost" % "{:,.0f}".format(cost))
@@ -435,7 +438,9 @@ def _rush_preview(sim, nodes, cmd, ended, confirm=None):
                   "max_cost": "skip projects dearer than this each",
                   "max_hours": "skip projects needing more founder hours than this each",
                   "limit": "cap the count", "max_total_cost": "cap total money",
-                  "max_annual_draw": "cap yearly draw", "reserve_cash": "keep this much back",
+                  "max_annual_draw": "cap yearly draw",
+                  "max_total_hours": "cap the founder hours the rush commits",
+                  "reserve_cash": "keep this much back",
                   "preview": "show what it would start and spend, starting nothing"},
          description="Highest-leverage first. Also spelled 'start all'.")
 def _cmd_rush(sim, nodes, cmd, ended):
@@ -516,7 +521,7 @@ def _cmd_rush(sim, nodes, cmd, ended):
         cost_left = _rush_cost_left(sim, node_id)
         annual_draw = cost_left / max(1.0, nodes[node_id]["yrs"])
         cap_reason = _rush_cap_refusal(caps, budget, cost_left, annual_draw,
-                                       total_cost, total_draw)
+                                       total_cost, total_draw, nodes[node_id]["ph"], _owed)
         if cap_reason:
             not_started.append({"id": node_id, "name": nodes[node_id]["name"],
                                 "why": cap_reason})

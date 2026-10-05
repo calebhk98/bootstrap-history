@@ -119,6 +119,18 @@ Two fixes, usable separately or together:
                                                     "this_oversubscribes_a_trade" - it
                                                     still starts, this is a warning)
       {"cmd":"stop","id":"zinc_metal"}             abandon a project; sunk cost is sunk
+      {"cmd":"programme","action":"set","target":"<goal or category>",
+       "max_total_cost":..,"max_annual_draw":..,
+       "reserve_cash":..,"max_total_hours":..,       a standing plan: before each year of step it
+       "max_annual_hours":..,"pause_debt":..,        starts what the route allows through rush.
+       "pause_war_risk":..,"pause_shortage":..,      Hour caps stop starts once the founder hours
+       "auto_resume":true}                           it committed reach them. pause_debt (money
+      {"cmd":"programme","action":"show"}            owed), pause_war_risk (yearly sack chance, as
+      {"cmd":"programme","action":                   risk shows) and pause_shortage (share of
+        "pause"|"resume"|"clear"}                    planned work lost) pause it; the step reply's
+                                                    "programme" rows say why in
+                                                    did_nothing_because. It stays paused until
+                                                    resume, or resumes itself with auto_resume.
       {"cmd":"exclude","what":"freedman_staff"}    never let rush, rush preview, auto_open or
       {"cmd":"exclude","what":"trait:buys_people"}  auto_commission begin this id; also
       {"cmd":"exclude","what":"category:<cat>"}     category:<cat> and trait:<trait>. Saved with

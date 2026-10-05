@@ -1,6 +1,6 @@
 # Mature play needs a "development program" abstraction, not hundreds of individual clicks
 
-**Status:** partly - `programme set <goal or category> [caps]` / `show` / `pause` / `resume` / `clear` runs a standing programme before each year of `step`, within its total, annual-draw and reserve caps, honouring exclusions, and reports what it did in the step reply (`sim/ui/proto/programme.py`, test `sim/tests/test_pursue_programme.py`); remains: pause on war risk or a resource shortage, and a director-hour cap
+**Status:** closed - programme pause conditions (debt, war risk, shortage, auto-resume) and founder-hour caps, test `sim/tests/test_pursue_programme.py`
 
 Once the economy and institutions were mature, the meaningful decision became "Commit up to 200k capital and ~15k directed hours to broad visible development over the next several years." The UI still operates primarily at individual-project granularity.
 
