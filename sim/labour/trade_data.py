@@ -1,9 +1,9 @@
 """What the labour package knows about a trade, read from the registry where it can be.
 
-The registry reaches labour as the wage schedule's training years and the world's trade families
-(the engine's trade record keeps no other field yet, Complaints/429). A field the registry does not
-state comes from legacy_trade_defaults.py, and a trade absent there too gets the generic answer, so a
-mod's trade works without code.
+The registry reaches labour as the world's `trade_registry`: each trade's fields as a plain mapping.
+A trade that does not state a field gets the generic answer (not literate, no tools, the default
+teacher), so a mod's trade works without code. The role constants that remain are in
+legacy_trade_defaults.py.
 """
 from typing import Any, Callable, Dict, FrozenSet, Mapping, Optional, Tuple
 
@@ -22,20 +22,27 @@ def fallback_trade(training_years: Mapping[str, float], family_of: Callable[[str
     return market_trades.fallback_trade(market_trades.trade_specs(registry_view(training_years, family_of)))
 
 
-def literate_trades(trade_ids) -> FrozenSet[str]:
-    return frozenset(trade for trade in trade_ids if trade in legacy_trade_defaults.LITERATE)
+def registry_of(world) -> Mapping[str, Mapping[str, Any]]:
+    """The world's trade registry; a world that states none has no trade facts."""
+    return getattr(world, "trade_registry", None) or {}
 
 
-def taught_from(trade: str) -> str:
-    return legacy_trade_defaults.TAUGHT_FROM.get(trade, legacy_trade_defaults.TAUGHT_FROM_DEFAULT)
+def literate_trades(registry: Mapping[str, Mapping[str, Any]], trade_ids) -> FrozenSet[str]:
+    return frozenset(trade for trade in trade_ids if registry.get(trade, {}).get("literate", False))
 
 
-def tool_basket(trade: str) -> Tuple[str, ...]:
-    return legacy_trade_defaults.TOOL_BASKETS.get(trade, ())
+def taught_from(registry: Mapping[str, Mapping[str, Any]], trade: str) -> str:
+    return registry.get(trade, {}).get("taught_from", legacy_trade_defaults.TAUGHT_FROM_DEFAULT)
 
 
-def staff_resource_trade(resource: str) -> str:
-    return legacy_trade_defaults.STAFF_RESOURCE_TRADES.get(resource, resource)
+def tool_basket(registry: Mapping[str, Mapping[str, Any]], trade: str) -> Tuple[str, ...]:
+    return tuple(registry.get(trade, {}).get("tool_basket", ()))
+
+
+def staff_resource_trade(registry: Mapping[str, Mapping[str, Any]], resource: str) -> str:
+    """The trade that fills a generic staffing resource (the first by id that names it)."""
+    filling = sorted(trade for trade, fields in registry.items() if fields.get("staff_resource") == resource)
+    return filling[0] if filling else resource
 
 
 def trade_of_family(trade_ids, family_of: Callable[[str], str], family: str) -> Optional[str]:

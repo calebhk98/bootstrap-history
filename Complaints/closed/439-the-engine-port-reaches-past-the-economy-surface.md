@@ -1,6 +1,6 @@
 # The engine port reaches past the economy surface
 
-**Status:** open - narrowed: the port files import only `sim.economy.api` and read no record field (`test_economy_imports`); only the folded-in items below remain.
+**Status:** closed - the port files import only `sim.economy.api` and read no record field (`test_economy_imports`); the folded-in items are done: the trade registry keeps and passes every field (`trades.json` states literacy, teacher, tools, staffing resource and a sourced fatality risk, which the port passes to the economy's `TradeSpec`), and `data/world/service_lives.json` gives durable goods their service lives (`test_port_trade_and_goods_data`). Open remainder: `difficulty` and `fallback` of a trade are still derived in code, and carts and ships are not goods in the production data yet.
 
 Done: `sim/engine/economy_port*.py` (setup, year, health) import the economy only through `sim/economy/api.py`,
 and `sim/tests/test_economy_imports.py` fails on any other `sim.economy.*` import there or on any `.record`

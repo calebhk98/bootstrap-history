@@ -414,7 +414,7 @@ class TrainingMixin:
             return None, ("you teach whole people, not %g of one. Teach %d or %d."
                            % (count, math.floor(count), math.ceil(count)))
         count = float(round(count))
-        frm = (frm or trade_data.taught_from(trade)).strip().lower()
+        frm = (frm or trade_data.taught_from(trade_data.registry_of(self._world), trade)).strip().lower()
         if frm in self._world.trades_absent and frm not in self._world.state.household.trades_created:
             return None, "you cannot teach from %ss; there are none" % frm
         # LITERACY BOUNDS TEACHING TOO, and this is where it bites hardest:

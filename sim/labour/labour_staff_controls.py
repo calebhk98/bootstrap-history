@@ -42,7 +42,7 @@ class StaffControlsMixin:
         shortfalls = self._world.staffing_shortfalls(totals, strict=True)
         for resource in sorted(claimed):
             short = math.ceil(min(shortfalls.get(resource, 0.0), claimed[resource]) - 0.01)
-            self.hire_to_cover(trade_data.staff_resource_trade(resource), short,
+            self.hire_to_cover(trade_data.staff_resource_trade(trade_data.registry_of(self._world), resource), short,
                                "keep_staffed", partial=True)
 
     def hold_staff_reserve(self):
