@@ -1041,16 +1041,20 @@ def ladder_quality(ladder: List[Any], hectares: float) -> float:
     remaining = max(0.0, hectares)
     taken = 0.0
     weighted = 0.0
+    worst_taken = None
     for fertility, parcel_hectares in ladder:
         step = min(parcel_hectares, remaining)
         taken += step
         weighted += step * fertility
         remaining -= step
+        if step > 0.0:
+            worst_taken = fertility
         if remaining <= 0.0:
             break
     if taken <= 0.0:
         return ladder[0][0] if ladder else 1.0
-    return weighted / taken
+    # a mean lies between its extremes; rounding must not carry it past the best or worst parcel taken
+    return min(max(weighted / taken, worst_taken), ladder[0][0])
 
 
 # ============================================================================

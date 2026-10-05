@@ -6,6 +6,7 @@ import random
 import unittest
 
 from .harness import *  # noqa: F401,F403
+from sim.engine.prices import band_farmed_hectares
 from sim.ui.protocol import _agent_dispatch, KNOWN_COMMANDS
 
 _SKIP = ("quit", "save", "load")
@@ -46,8 +47,10 @@ class InMemoryCivilisation(unittest.TestCase):
         original = S.Sim(NODES, ORDER, random.Random(1), events=False, manual=False,
                          civ=S.load_civ("rome_100ad"))
         held = frozenset(sim.state.projects.done)
-        own = S.calculated_goods_prices(held, civilization_id=variant["id"], civilization=variant,
-                                        money_per_labour_hour=sim.labour.money_per_labour_hour())
+        own_hours, _basis = S.calculated_goods_table(
+            held, civilization_id=variant["id"], civilization=variant,
+            farmed_hectares=band_farmed_hectares(sim.farm_land.hectares))
+        own = {material: price * sim.labour.money_per_labour_hour() for material, price in own_hours.items()}
         self.assertTrue(sim._material_prices() == own)
         self.assertTrue(sim._material_prices() != original._material_prices())
         self.assertNotAlmostEqual(
