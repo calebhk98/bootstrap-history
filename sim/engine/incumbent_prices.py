@@ -14,6 +14,9 @@ every price here, traded or not, moves with money against goods.
 """
 
 
+from . import prices as price_solver
+
+
 # how near a producer is to making a good, least to most
 REACH = {"mature": 0, "gated": 1, "solved": 2}
 
@@ -25,16 +28,17 @@ class IncumbentPricesMixin:
         baseline for goods only a producer's own technique reaches."""
         projects = self.state.projects
         in_use = self.techniques_in_use()
+        farmed = price_solver.band_farmed_hectares(self.farm_land.hectares)
         cached = getattr(self, "_price_tables_cache", None)
         if (cached is not None and cached[0] is projects.granted and cached[1] is in_use
-                and cached[3] == len(projects.granted)):
+                and cached[3] == len(projects.granted) and cached[4] == farmed):
             return cached[2]
         granted = frozenset(projects.granted)
         from .data import calculated_goods_table
-        civ = dict(civilization_id=self.civ.get("id"), civilization=self.civ)
+        civ = dict(civilization_id=self.civ.get("id"), civilization=self.civ, farmed_hectares=farmed)
         incumbent = getattr(self, "_incumbent_table_cache", None)
-        if incumbent is None or incumbent[0] != granted:
-            incumbent = self._incumbent_table_cache = (granted, *calculated_goods_table(granted, **civ))
+        if incumbent is None or incumbent[0] != (granted, farmed):
+            incumbent = self._incumbent_table_cache = ((granted, farmed), *calculated_goods_table(granted, **civ))
         hours, basis = dict(incumbent[1]), dict(incumbent[2])
         if in_use != granted:
             run_hours, run_basis = calculated_goods_table(in_use, **civ)
@@ -42,7 +46,7 @@ class IncumbentPricesMixin:
                 if REACH.get(source, -1) > REACH.get(basis.get(material), -1):
                     hours[material], basis[material] = run_hours[material], source
         tables = (hours, basis)
-        self._price_tables_cache = (projects.granted, in_use, tables, len(projects.granted))
+        self._price_tables_cache = (projects.granted, in_use, tables, len(projects.granted), farmed)
         return tables
 
     def _material_prices(self):

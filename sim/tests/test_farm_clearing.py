@@ -124,5 +124,34 @@ class ClearingTests(unittest.TestCase):
         self.assertAlmostEqual(fresh.farm_land.quality, test_sim.farm_land.quality, places=9)
 
 
+class PriceCacheFollowsClearingTests(unittest.TestCase):
+    def _rent(self, civ, farmed_hectares):
+        from sim.engine import prices
+        from sim.engine.data import schedule_of_civilisation
+        document = schedule_of_civilisation(civ).document()
+        solved = prices.solved_prices(
+            civ["starting_techs"], document, civilization=civ, farmed_hectares=farmed_hectares)
+        return solved.prices_in_labour_hours["hectare_land"]
+
+    def test_clearing_land_changes_the_rent_the_solver_prices(self):
+        civ = S.load_civ("han_china_100ad")
+        ceiling = _ladder("han_china_100ad").arable_hectares
+        small = self._rent(civ, ceiling * 0.02)
+        large = self._rent(civ, ceiling * 0.6)
+        self.assertNotAlmostEqual(small, large, places=6)
+
+    def test_the_incumbent_price_tables_follow_the_cleared_area(self):
+        test_sim = sim("han_china_100ad", events=False)
+        before = test_sim._price_tables()[0]["hectare_land"]
+        test_sim.farm_land.hectares *= 3.0
+        after = test_sim._price_tables()[0]["hectare_land"]
+        self.assertNotAlmostEqual(before, after, places=6)
+
+    def test_nearby_areas_share_one_solve(self):
+        from sim.engine import prices
+        self.assertEqual(prices.band_farmed_hectares(1000.0), prices.band_farmed_hectares(1001.0))
+        self.assertNotEqual(prices.band_farmed_hectares(1000.0), prices.band_farmed_hectares(2000.0))
+
+
 if __name__ == "__main__":
     unittest.main()

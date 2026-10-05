@@ -1,6 +1,6 @@
 # Farmed area is fixed at the start, so labour cannot answer a food shortfall
 
-**Status:** partly - clearing, best-first ladder and the rent API landed; the price cache still keys on civilisation only
+**Status:** closed - the price solve and the incumbent price tables key on the banded cleared area; sim/tests/test_farm_clearing.py (PriceCacheFollowsClearingTests)
 
 Soil now changes only how much food a hectare yields (Complaints/50). Less food
 should make food scarcer and pull workers onto the farm, and it does, but the
@@ -26,4 +26,6 @@ the trace was a throwaway script and is not committed.
 
 ## What landed
 
-Cleared area grows when hands beyond what the farm can crop exist, paid at a declared labour cost per hectare (agriculture.CLEARING_LABOUR_HOURS_PER_HECTARE, temporary_heuristic), best ground first via land.territory_farmland ladder. land.margin_outcome_for_civilization takes farmed_hectares to read the same ladder. Not done: engine/prices.py caches solved prices per civilisation id, so the live farmed area is not yet passed into the rent solve; keying the cache on it needs a cheaper solve. Tests: sim/tests/test_farm_clearing.py.
+Cleared area grows when hands beyond what the farm can crop exist, paid at a declared labour cost per hectare (agriculture.CLEARING_LABOUR_HOURS_PER_HECTARE, temporary_heuristic), best ground first via land.territory_farmland ladder. land.margin_outcome_for_civilization takes farmed_hectares to read the same ladder.  Tests: sim/tests/test_farm_clearing.py.
+
+Rent now follows clearing: `prices.solved_prices` takes `farmed_hectares`, bands it geometrically (`band_farmed_hectares`) in the cache key so a year's small clearing re-solves only when a band is crossed, and hands the banded area to `land.margin_outcome_for_civilization`. The incumbent price tables (`incumbent_prices.py`) pass the live `farm_land.hectares` and are rebuilt when its band moves. Other callers of `solved_prices` (the opening wage schedule, `producer_costs`) still size rent to the population, which is right for an opening and a reference recipe choice.
