@@ -94,6 +94,47 @@ Overlapping issues closed into this one; each closed file keeps its full text.
 - 405 (`closed/405-trader-actors-overlap-the-other-trade-models.md`): three merchant models (engine foreign_traders, economy merchants, trader actors) trade the same gap; trader sales never move the partner's market.
 - 403 (`closed/403-strata-income-has-no-source-agreeing-with-the-economy.md`): strata income has no source agreeing with the economy; strata are another household-budget model.
 
+## Merchants (405): decision, one owner per flow
+
+Measured on a Rome start with the agent economy on (a short run, printing per year the tonnes each path carried;
+there is no command for it, the checks in `sim/tests/test_foreign_actor_trade.py` are the repeatable part):
+
+- The engine's aggregate `foreign_traders` flow is dormant in an agent-economy game: `_step_market` returns after the
+  agent year, so `foreign_trade_year_end` never books a flow. It runs only when the agent economy is off.
+- The economy's `_external_orders` and the trader actors both carried the same goods across the same gap. Felt was
+  imported by both in the same years; stone blocks were imported by the stand-in orders while the traders exported
+  them. The traders carried the same cargo every year, since a sale abroad never moved the partner's price.
+
+Decision: inter-country trade is owned by the trader actors (any actor can be one, so any country can play it).
+The stand-ins give way where an actor is already carrying:
+
+- A cargo sold to or bought from a partner is tallied (`sim/engine/foreign_actor_trade.py`) and the partner's market
+  book closes on it at the year's end, so the partner's price, capacity and stock follow the cargo (405 item 1).
+  `Sim.partner_price_per_unit` is the one price of a partner's good (solved cost, coin price level, the book's ratio),
+  read by the trader view and by the external orders. A partner's depth for a trader is capped at its book's demand,
+  the scale that price moves on.
+- `_external_orders` offers no import of a good actors carried home this year and bids for no export of one they carried
+  out. The engine's aggregate flow skips a commodity actors carry with a partner. Both stay as the owner of the goods
+  no actor carries (intermediates, ores, goods before a trader is founded) until the traders are general enough
+  to take them.
+
+Left to do, in order:
+
+1. Traders size a cargo as a share of the buyers' depth (`TRADER_DEPTH_SHARE`), a stand-in for the price the cargo
+   would push down. The price now does move, so the cargo overshoots: a gap closes, flips, and the next year's cargo
+   goes the other way. A trader should size a cargo against the destination's price after it (the book's clearing),
+   and the declared share then goes.
+2. A trader's money is booked through "edge:market sale" and "edge:market purchase", not through the foreign coin
+   ledger, so a trader's exports do not draw coin from the partner or raise the home coin stock (price-specie flow
+   exists only for the external edge). The cargo does not use the carrier lift either (`_record_lift`).
+3. Trader purchases and sales at home enter the agent economy over the legacy edge, not as external orders; the
+   economy cannot yet tell them from domestic trade. Moving them to the external edge needs the partner per order
+   (the same gap as the even split in `_settle_foreign_coin`).
+4. The economy's merchants (`sim/economy/merchants.py`) were not touched: they move goods between tiles only, with no
+   partner. The aggregate flow can go once the agent economy is the only economy, with the external orders; until
+   then it is the opt-out game's merchant.
+5. No domestic routes for trader actors (an economy-port member exposing area prices).
+
 ## Remaining after the shared-helper pass: state revenue bases
 
 `sim/agents/revenue_bases.py` and `sim/economy/taxes_bases.py` share base names (`harvest`, `adult_labour_years`,
@@ -137,7 +178,7 @@ Overlapping issues closed into this one; each closed file keeps its full text.
 ## Still two owners
 
 - Labour (428): the labour package's market and the agent economy's labour market each clear wages.
-- Merchants (405): engine foreign traders, economy merchants and trader actors.
+- Merchants (405): one owner per flow now for goods actors carry (decision above); the stand-ins still own the rest.
 - Demand baskets: `sim/world/demand.py`, the economy's household baskets and the agents' strata baskets.
 - Strata (403): strata income against the economy's cohorts.
 - The engine's `market_loans`, `update_capital_market` and its rate still run (and set the rate) when the agent economy is off;
