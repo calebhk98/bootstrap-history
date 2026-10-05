@@ -85,10 +85,21 @@ class ProjectStartPhaseMixin:
             # (O(active), not O(order)) rather than every iteration.
             _non_bountied_active = len(self.state.projects.active) - len(self.state.projects.bountied & set(self.state.projects.active))
             _room = self.funding_capacity() - self.committed_spend()
+            _said_blocked = False
+            _too_dear = []
             for node_id in candidates:
                 if _non_bountied_active >= max_active:
+                    automation_audit.record_skip(
+                        self, "auto_start", "further projects",
+                        "%d projects already active; the cap is %d" % (_non_bountied_active, max_active))
                     break
                 if not self.can_start(node_id):
+                    # one row a year, for the highest-priority candidate; the rest would flood the trail
+                    if not _said_blocked:
+                        _said_blocked = True
+                        automation_audit.record_skip(
+                            self, "auto_start", self.nodes[node_id]["name"],
+                            self.start_refusal(node_id) or "cannot start yet")
                     continue
                 # do not start something we cannot plausibly fund this decade.
                 # material_cost_factor is geography.json's contribution: a
@@ -112,8 +123,13 @@ class ProjectStartPhaseMixin:
                 # question by calling the same two functions, so the two
                 # cannot drift apart.
                 if self.project_cost(node_id) > _room:
+                    _too_dear.append((node_id, _room))
                     continue
+                _before = self.state.household.capital
                 if node_id in self.bounty_set and self.bounty_eligible(node_id) and self.post_bounty(node_id):
+                    automation_audit.record(
+                        self, "auto_start", "bounty", self.nodes[node_id]["name"],
+                        "on the bounty list and eligible, so a bounty was posted instead of starting it", _before)
                     # post_bounty() just added node_id to both self.state.projects.active and
                     # self.state.projects.bountied - the count of NON-bountied active
                     # projects is unchanged.
@@ -126,6 +142,13 @@ class ProjectStartPhaseMixin:
                 self.initialize_project(node_id)
                 _non_bountied_active += 1
                 _room = self.funding_capacity() - self.committed_spend()
+            if _too_dear:
+                # one row a year: the highest-priority candidate and how many more were dearer than their room
+                first, room = _too_dear[0]
+                automation_audit.record_skip(
+                    self, "auto_start", self.nodes[first]["name"],
+                    "costs %.0f and the room left to commit is %.0f; %d candidates in all cost more than the room"
+                    % (self.project_cost(first), room, len(_too_dear)))
         return pool, hired_left
 
     def _step_materials(self):
@@ -214,6 +237,13 @@ class ProjectStartPhaseMixin:
                         "demand %.0f t/year > active %.0f t/year; pending capacity considered %.0f t/year"
                         % (short, self.mine_capacity.get(self.state.economy.binding, 0.0), _pending),
                         _before)
+                else:
+                    automation_audit.record_skip(
+                        self, "auto_mine", "mine for %s" % self.state.economy.binding,
+                        "nothing ordered: shortfall %.0f t/year against %.0f t/year active and %.0f pending, "
+                        "a quarter of capital buys %.0f t/year"
+                        % (short, self.mine_capacity.get(self.state.economy.binding, 0.0), _pending,
+                           self.state.household.capital * 0.25 / max(1.0, self._mine_capex(self.state.economy.binding))))
                 # Iron and the base metals are smelted with charcoal, so the
                 # ore is only half the answer.
                 if self.state.economy.binding in ("iron", "copper", "lead"):
