@@ -1,6 +1,6 @@
 # Map checks and heuristics are not in validate or the burndown
 
-**Status:** open
+**Status:** closed - `validate` prints the map's problems and the burndown lists the map's heuristic parameters; pinned by sim/tests/test_complaint_417_map_checks.py
 
 Geography's coefficients live as data (`data/world/geography/parameters/*.json`, each with kind, source, confidence and reason) so mods and other maps can change them. `python3 sim/constants.py --burndown` does not read them, so the heuristic queue undercounts; and `python3 sim/simulator.py validate` does not run the map's own checks (`api.problems()`), so a broken mod map is only found when a query fails.
 
