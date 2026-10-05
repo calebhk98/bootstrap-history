@@ -11,6 +11,7 @@
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
+   "unit_dimension": "mass",
    "basis": "per hectare of maguey (agave) managed for leaf fibre per year, as kg of cleaned dry fibre",
    "yield_basis": "LABELLED HEURISTIC (conf D). Maguey leaves are cut, the pulp scraped from the fibre bundles with a stone or obsidian scraper (or retted and beaten), and the fibre washed and dried; the fibre is a few percent of the leaf mass, so a hectare of plants gives a few hundred kilograms a year, taken at 500 kg (the order of magnitude of managed henequen and ixtle fields, not a measurement of Mexica fields). Hand scraping of ixtle is slow, on the order of one kilogram of clean fibre per working day, so scraping is taken at 8 hours per kilogram (4000 hours) plus 800 hours of planting offsets, weeding and cutting. The plant also yields sap, food and thorn needles; this entry charges the whole hectare to the fibre, so it overstates fibre cost where those are co-products. Sources: Berdan, The Aztecs of Central Mexico (1982), on cotton and maguey cloth and the tribute in cloth; Brumfiel on Aztec cloth tribute and household spinning and weaving; Sahagun, Florentine Codex books 9 and 10, on the metalworkers' blowpipe and charcoal furnaces; Hosler, The Sounds and Colors of Power (1994), on pre-contact Mesoamerican metallurgy. None was read for a number here: quantities are labelled heuristics, conf D, and are the first thing to replace with a measured figure.",
    "conf": "D",
@@ -27,6 +28,7 @@
     "labourer": 40.0,
     "artisan": 50.0
    },
+   "unit_dimension": "mass",
    "basis": "per kg of plain cotton fabric woven on the backstrap loom, off the loom and unfinished",
    "yield_basis": "LABELLED HEURISTIC (conf D). Fibre loss 10 percent in cleaning, carding by hand and spinning (the same allowance as cotton_fabric_kg). Spinning fine cotton on a supported spindle with a whorl is the slowest step: taken at 25 grams of thread per hour, 40 hours per kilogram. A backstrap loom is warped, then woven a hand's breadth of shed at a time with a batten and a stick shuttle, the weaver sitting or kneeling and leaning on the strap to keep the warp taut; narrow cloth of a body's width in plain weave, taken at 20 grams of cloth per hour including warping and setting up, 50 hours per kilogram. The ethnographic backstrap weaving record gives a plain woven cloth the size of a shawl or blouse panel in days; the grams-per-hour figures here are chosen to match that order and are not read from a source. The loom itself is sticks, a strap and a batten, so no capital is charged. Sources: Berdan, The Aztecs of Central Mexico (1982), on cotton and maguey cloth and the tribute in cloth; Brumfiel on Aztec cloth tribute and household spinning and weaving; Sahagun, Florentine Codex books 9 and 10, on the metalworkers' blowpipe and charcoal furnaces; Hosler, The Sounds and Colors of Power (1994), on pre-contact Mesoamerican metallurgy. None was read for a number here: quantities are labelled heuristics, conf D, and are the first thing to replace with a measured figure.",
    "conf": "D",
@@ -43,6 +45,7 @@
     "labourer": 50.0,
     "artisan": 40.0
    },
+   "unit_dimension": "mass",
    "basis": "per kg of coarse maguey-fibre fabric woven on the backstrap loom, off the loom and unfinished",
    "yield_basis": "LABELLED HEURISTIC (conf D). Maguey (ixtle) fibre is long and coarse, so it twists to a thicker thread than cotton and a given mass of thread is shorter: fewer hours per kilogram to spin and weave than cotton, 50 and 40. Fibre loss 15 percent in combing out the short pieces and in twisting, as for coarse bast fibres in canvas_kg. Maguey cloth was the commoner's cloth, rougher and cheaper than cotton, which the nobility wore (Berdan). The loom is the same backstrap loom. Sources: Berdan, The Aztecs of Central Mexico (1982), on cotton and maguey cloth and the tribute in cloth; Brumfiel on Aztec cloth tribute and household spinning and weaving; Sahagun, Florentine Codex books 9 and 10, on the metalworkers' blowpipe and charcoal furnaces; Hosler, The Sounds and Colors of Power (1994), on pre-contact Mesoamerican metallurgy. None was read for a number here: quantities are labelled heuristics, conf D, and are the first thing to replace with a measured figure.",
    "conf": "D",
@@ -58,6 +61,7 @@
    "labour_hours": {
     "labourer": 4.0
    },
+   "unit_dimension": "mass",
    "basis": "per kg of finished cloth from backstrap-woven fabric",
    "yield_basis": "LABELLED HEURISTIC (conf D). Finishing here is washing out the sizing and dirt, beating the cloth with a smooth stone or mallet to close the weave, and drying; no fulling mill or tenter frame. The same 5 percent loss as cloth_kg. Gated on the backstrap loom because the only fabric the Mexica can make is backstrap fabric; cloth_kg's own entry needs fulling. Sources: Berdan, The Aztecs of Central Mexico (1982), on cotton and maguey cloth and the tribute in cloth; Brumfiel on Aztec cloth tribute and household spinning and weaving; Sahagun, Florentine Codex books 9 and 10, on the metalworkers' blowpipe and charcoal furnaces; Hosler, The Sounds and Colors of Power (1994), on pre-contact Mesoamerican metallurgy. None was read for a number here: quantities are labelled heuristics, conf D, and are the first thing to replace with a measured figure.",
    "conf": "D",
@@ -75,6 +79,7 @@
     "labourer": 84200.0,
     "furnaceman": 190000.0
    },
+   "unit_dimension": "mass",
    "basis": "per tonne of silver won by direct charcoal smelting of silver ore (native silver and silver sulphides) in small blowpipe-fired furnaces, no mercury and no lead collector",
    "yield_basis": "LABELLED HEURISTIC (conf D) for the quantities; the technique is attested. Pre-contact Mesoamerican and Andean metalworkers smelted and melted silver in small charcoal furnaces blown through blowpipes or by many mouths, and hammered, cast (lost wax) and soldered it (Sahagun, Florentine Codex book 9; Hosler 1994 for West Mexico), with no mercury, which arrived with the colonial patio process. Ore grade is the silver_kg entry's (the silver-only deposits of data/world/geography/deposits/ancient.json), so ore per kilogram is that entry's figure scaled from its 75 percent recovery to 80 percent for a direct smelt of native silver and rich oxidised ore that needs no amalgamation. Dressing is the same 50 labourer hours per tonne of rock as silver_kg and the lead route (sim/world/ore_dressing.py). Charcoal 0.3 kg per kg of dressed ore and furnaceman hours 0.113 per kg of ore are the silver_jarosite_kg per-kg-of-ore figures rounded, minus its lead collector and cupellation. No source gives a Mexica furnace's fuel or hours. Sources: Berdan, The Aztecs of Central Mexico (1982), on cotton and maguey cloth and the tribute in cloth; Brumfiel on Aztec cloth tribute and household spinning and weaving; Sahagun, Florentine Codex books 9 and 10, on the metalworkers' blowpipe and charcoal furnaces; Hosler, The Sounds and Colors of Power (1994), on pre-contact Mesoamerican metallurgy. None was read for a number here: quantities are labelled heuristics, conf D, and are the first thing to replace with a measured figure.",
    "conf": "D",
