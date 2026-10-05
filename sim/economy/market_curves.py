@@ -22,6 +22,8 @@ _NO_CEILING = None     # a bid with no ceiling is saved with none, not with infi
 
 def port_area(area_map, port_tile: str, good: str) -> Optional[str]:
     """The market area of a good that holds the port, where cargo enters and leaves; None if it has none."""
+    if area_map is None or port_tile is None:
+        return None
     try:
         return area_map.area_of(good, port_tile)
     except KeyError:
