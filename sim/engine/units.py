@@ -6,10 +6,11 @@ it as `base = value * factor + offset`. The engine keeps its own numbers as
 they are; this layer only converts what a player reads, following the player's
 preference per dimension (a unit id, or nothing for "as the game writes it").
 """
-import json
 import os
 import re
 from typing import Any, Dict, List, Mapping, Optional, Tuple
+
+from sim.json_files import read_json
 
 from .mods import get_ordered_mods
 from .mods_base import ModError
@@ -25,21 +26,16 @@ _registry_override: Optional[Registry] = None
 _default_registry: Optional[Registry] = None
 
 
-def _read(path: str) -> Dict[str, Any]:
-    with open(path, encoding="utf-8") as source:
-        return json.load(source)
-
-
 def load_units(root: str = ROOT, mods_dir: Optional[str] = None) -> Registry:
     """The registry from the base file and every mod's unit file."""
     mods_dir = mods_dir or os.path.join(root, "mods")
-    registry = _read(os.path.join(root, "data", "world", "units.json"))
+    registry = read_json(os.path.join(root, "data", "world", "units.json"))
     registry.setdefault("field_rules", [])
     for manifest in get_ordered_mods(mods_dir):
         path = os.path.join(manifest.directory, "data", "world", "units.json")
         if not os.path.isfile(path):
             continue
-        extra = _read(path)
+        extra = read_json(path)
         for unit_id, spec in (extra.get("units") or {}).items():
             check_new_id(manifest, unit_id, False, path)
             if unit_id in registry["units"]:

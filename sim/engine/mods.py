@@ -4,6 +4,8 @@ import json
 import os
 from typing import Any, Dict, Iterable, List
 
+from sim.json_files import json_files
+
 from .mods_base import (ModError, ModManifest, check_not_removed, claim_fields, claim_removal,
                         deep_merge, removed_by)
 from .mods_ids import check_declared_dependencies, check_mod_id, check_new_id
@@ -73,13 +75,6 @@ def get_ordered_mods(mods_dir: str) -> List[ModManifest]:
     return ordered
 
 
-def _json_files(directory: str) -> Iterable[str]:
-    if os.path.isdir(directory):
-        for filename in sorted(os.listdir(directory)):
-            if filename.endswith(".json"):
-                yield os.path.join(directory, filename)
-
-
 def _node_defaults(node: Dict[str, Any]) -> Dict[str, Any]:
     defaults = {"ph": 60, "lab": {}, "mat": {}, "cap_hours": 4032.375834825865,
                 "up_hours": 806.475166965173, "risk": 0.15, "rev_hours": 0, "sch": 0, "art": 1, "conf": "C",
@@ -115,7 +110,7 @@ def load_mod_tree(base_tree: Dict[str, Any], manifests: Iterable[ModManifest],
     origins = {node_id: "data/branches" for node_id in nodes}
     goals = list(tree.get("meta", {}).get("goals") or [])
     for manifest in manifests:
-        for path in _json_files(os.path.join(manifest.directory, "data", "branches")):
+        for path in json_files(os.path.join(manifest.directory, "data", "branches")):
             with open(path, encoding="utf-8") as source:
                 payload = json.load(source)
             batch = payload.get("nodes", []) if isinstance(payload, dict) else payload
@@ -166,7 +161,7 @@ def load_mod_production(base: Dict[str, Any], manifests: Iterable[ModManifest]) 
     by_id = {manifest.id: manifest for manifest in manifests}
     claims: Dict[Any, str] = {}
     for manifest in manifests:
-        for path in _json_files(os.path.join(manifest.directory, "data", "production")):
+        for path in json_files(os.path.join(manifest.directory, "data", "production")):
             with open(path, encoding="utf-8") as source:
                 entries = (json.load(source).get("materials") or {})
             for entry_id, entry in entries.items():
