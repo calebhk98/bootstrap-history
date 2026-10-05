@@ -49,6 +49,7 @@
       ]
     }
   ],
+  "staple": "maize_kg",
   "coin_standard": {
     "regime": "commodity",
     "material": "cacao_kg",

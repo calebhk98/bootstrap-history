@@ -1,6 +1,6 @@
 # The subsistence staple behind the opening wage is wheat for every civilisation
 
-**Status:** open
+**Status:** closed - regression test subsistence_staple_is_civilisation_data
 
 `sim/labour/wage_provider.py` `FOOD_PRICE_MATERIAL = "wheat_kg"` prices the subsistence basket that
 sets every civilisation's wage floor (`sim/engine/wage_schedule.py` reads it). That basket is wheat for
