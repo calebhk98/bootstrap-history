@@ -1,6 +1,6 @@
 # A payroll the household can only partly pay is kept whole
 
-**Status:** open
+**Status:** closed - the check's setup was wrong, not the staff step; `round2_policy_hazards_options` "an unaffordable payroll is trimmed to what you can pay, not emptied" now sets the means the way the step measures them
 
 `round2_policy_hazards_options` check "an unaffordable payroll is trimmed to what you can pay, not
 emptied" fails. A household with auto-hire off holds five smiths and means for living costs plus a bit
@@ -16,3 +16,9 @@ paper, or the check's arithmetic for "half the payroll" no longer matches what t
 
 What it would take: print the room the staff step computes against the payroll in that case. That is in
 `sim/engine/step_phase_staff.py` and `labour.wage_bill`. Then decide which of the two is wrong.
+
+Resolution: the staff step measures what can be paid as revenue less upkeep, mining and non-wage living
+costs, plus the credit left. The check set capital as living costs plus part of the payroll, ignoring revenue
+and upkeep, so the step rightly found the whole payroll affordable (the printed room, compared with the
+payroll, shows it). The check now settles capital until the step's own measure of the means is a bit over
+half the payroll, and the trimming rule fires as designed.

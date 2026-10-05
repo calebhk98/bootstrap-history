@@ -571,6 +571,11 @@ class CreditMixin:
         # are simply in arrears, which already has consequences of its own.
         if household.capital < -limit and year - getattr(household, "last_settlement", -999) >= self.SETTLEMENT_MIN_INTERVAL_YEARS:
             household.last_settlement = year
+            # The balance left is measured against the line that stands once the name has been marked down, so it never starts outside it.
+            _rep_before = household.reputation
+            household.reputation = max(0.0, _rep_before - self.SETTLEMENT_REPUTATION_HIT)
+            limit = min(limit, self.credit_limit())
+            household.reputation = _rep_before
             household.reset_cash(-limit * self.SETTLEMENT_CAPITAL_RETAINED_FRACTION, "debts written off in settlement")
             # THE NUMBER ANNOUNCED HAS TO BE THE NUMBER APPLIED: quoting a
             # fixed "reputation -12" against a reputation of 4.9 would say

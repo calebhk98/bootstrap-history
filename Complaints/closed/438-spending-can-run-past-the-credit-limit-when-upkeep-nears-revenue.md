@@ -1,6 +1,6 @@
 # Spending can run past the credit limit when upkeep of built works nears revenue
 
-**Status:** open
+**Status:** closed - spending after the money phase (the state's levy in the reputation phase, the market) was never rechecked, and a settlement was sized against a line it then shrank; `failure_and_bounty_money` checks the year-end recheck, the failure and coin-guard caps
 
 The slow check "debt stays inside a credit limit" (`sim/tests/test_early_playtest.py`,
 `python3 -m sim.tests --only early_playtest --slow`) fails on the labour-market-core branch: worst capital
@@ -33,3 +33,13 @@ What it would take: find which outflow is charged without checking the room left
 `sim/engine/step_phase_*` and the projects code: project starts, upkeep of works that cannot be closed, or
 founder-hour arrears. Either refuse it or close works to stay inside the limit, as the payroll shedding
 already does for staff (`step_phase_staff.py`).
+
+Resolution (traced with a scratch run of the check's game, printing the room under the limit after each phase):
+the breach came in the reputation phase, where `_state_pressure` bills the state's levy on revenue after the
+money phase had already enforced the limit, and where reputation decay lowers the limit itself. `step()`
+(`sim/engine/core.py`) now calls `enforce_credit_limit` again at year end. A settlement retained a share of the
+old limit although its reputation hit lowers the line, so it now measures against the lowered line
+(`sim/engine/economy_credit.py`). Two outflows that could cross the limit on their own are also capped: a
+project failure's loss (`sim/engine/projects_completion.py`, the unbearable part is added to what the project
+still costs) and the yearly coin-guard charge (`sim/engine/step_phase_money.py`). The check's game then runs
+200 years with no capital below the limit.

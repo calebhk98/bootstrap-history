@@ -1029,8 +1029,13 @@ check("staff are not let go while there is still credit to pay them",
 s = sim(capital=22400.0 * sim().labour.money_per_labour_hour())  # 6000 coin at the old coin value, in labour hours
 s.policy["auto_hire"] = False
 s.labour.hire("smith", 5)
-# Means that cover living costs and a bit over half the payroll.
-s.capital = -s.credit_limit() + (s.living_cost() - s.labour.wage_bill()) + 0.6 * s.labour.wage_bill()
+# Means that cover a bit over half the payroll: what is left of the credit line plus the year's revenue,
+# after upkeep, mining and living costs other than wages, as the staff step measures it. Living costs
+# can move with capital, so settle capital until the means match.
+for _settle in range(20):
+    _means = (s.revenue() - s.upkeep() - (s.living_cost() - s.labour.wage_bill()) - s.mine_operating_cost()
+              + s.capital + s.credit_limit())
+    s.capital += 0.6 * s.labour.wage_bill() - _means
 _b3 = sum(s.employees.values())
 s.step()
 check("an unaffordable payroll is trimmed to what you can pay, not emptied",

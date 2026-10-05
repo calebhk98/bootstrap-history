@@ -22,7 +22,9 @@ class MoneyPhaseMixin:
         mine_cost = self.mine_operating_cost()
         self.state.economy.mine_cost_paid += mine_cost
         revenue, upkeep = self.revenue(), self.upkeep()
-        keeping = self.coin_hoard()["keeping_cost_per_year"]
+        # The guard is paid from what the purse and the credit line can bear, like any other spending.
+        room = max(0.0, self.state.household.capital + self.credit_limit() + revenue - upkeep - living_cost - mine_cost)
+        keeping = min(self.coin_hoard()["keeping_cost_per_year"], room)
         self.state.household.credit(revenue - upkeep - living_cost - mine_cost - keeping, {
             "venture revenue": revenue, "running costs of concerns": -upkeep,
             "living costs": -living_cost, "mine running costs": -mine_cost,
