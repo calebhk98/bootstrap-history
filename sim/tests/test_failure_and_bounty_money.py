@@ -72,6 +72,34 @@ _han_lost = _fail_and_measure(_han, _han_node)
 check("a civilisation with a cost multiplier: charge equals quote",
       abs(_han_lost - _han_quote) <= 0.01 * max(1.0, _han_quote), (_han_node, _han_lost, _han_quote))
 
+# 438: a failure cannot take the purse past the credit limit; what the purse cannot bear is billed to the project to redo
+_capped = sim(capital=1e10)
+_capped.rng = _ForcedDraw(0.0)
+_capped.initialize_project("blast_furnace")
+_loss = _capped.failure_loss("blast_furnace")
+_capped.capital = 0.0
+_capped.capital = -_capped.credit_limit() + 0.1 * _loss
+_room_before = _capped.capital + _capped.credit_limit()
+_owed_before = _capped.active["blast_furnace"]["cost_left"]
+check("set-up: the failure is larger than the room left", 0 <= _room_before < _loss, (_room_before, _loss))
+_capped._complete("blast_furnace")
+check("a failure never takes capital past the credit limit",
+      _capped.capital >= -_capped.credit_limit() - 1e-6, (_capped.capital, _capped.credit_limit()))
+check("the part of a failure the purse could not bear is added to what the project still costs",
+      abs((_capped.active["blast_furnace"]["cost_left"] - _owed_before) - (_loss - _room_before)) <= 1e-6 * _loss,
+      (_capped.active["blast_furnace"]["cost_left"] - _owed_before, _loss - _room_before))
+
+# 438: the yearly charge for guarding coin is paid from the room under the credit limit, not past it
+_guarded = sim(capital=1e6)
+_guarded.coin_hoard = lambda: {"keeping_cost_per_year": 1e12}
+_guarded_flows = []
+_guarded_credit = _guarded.state.household.credit
+_guarded.state.household.credit = lambda amount, purpose: (_guarded_flows.append(amount), _guarded_credit(amount, purpose))[1]
+_guarded_room = _guarded.capital + _guarded.credit_limit()
+_guarded._step_money()
+check("the year's money flow, coin guard included, stays inside the room under the credit limit",
+      _guarded_flows[0] >= -_guarded_room - 1e-6, (_guarded_flows[0], _guarded_room))
+
 # --- 252: a failed bounty is neither charged to the poster nor orphaned ------
 _bounty_sim = sim(capital=5e7)
 _bounty_id = "horse_collar"

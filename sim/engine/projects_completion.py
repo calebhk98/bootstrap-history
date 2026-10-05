@@ -210,7 +210,10 @@ class CompletionMixin:
             projects.active[node_id]["yrs"] = _yrs_before * _retain
             _lost = 0.0 if claimed else self.failure_loss(node_id)
             _severity = self.failure_severity(node_id, max(0.0, _lost), self.funding_capacity())
-            household.debit(_lost, "failure losses")
+            # What the purse and the credit line left cannot bear is not forgiven: it is added to what the project still costs, paid through the gated instalments.
+            _borne = min(_lost, max(0.0, household.capital + self.credit_limit()))
+            household.debit(_borne, "failure losses")
+            projects.active[node_id]["cost_left"] = (projects.active[node_id].get("cost_left") or 0.0) + (_lost - _borne)
             # A failure always announces itself; its size sets how loudly.
             _next_risk = self.effective_risk(node_id)
             _banked = projects.active[node_id]["yrs"]
