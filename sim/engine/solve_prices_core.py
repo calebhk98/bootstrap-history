@@ -1090,7 +1090,7 @@ DEFAULT_LAND_CIVILIZATION = default_civilisation_id()
 
 
 def land_rent_hours_per_hectare(production_entries, wage_by_trade,
-                                civilization_id=None, civilizations=None):
+                                civilization_id=None, civilizations=None, farmed_hectares=None):
     """{"hectare_land": hours of rent per hectare}, or {} if there is no
     reference crop price or no priceable land to convert into one this
     round - see sim/world/land.py's own module docstring for the mechanism
@@ -1153,7 +1153,8 @@ def land_rent_hours_per_hectare(production_entries, wage_by_trade,
         return {}
 
     try:
-        outcome = land.margin_outcome_for_civilization(civilization_id, civilizations=civilizations)
+        outcome = land.margin_outcome_for_civilization(
+            civilization_id, civilizations=civilizations, farmed_hectares=farmed_hectares)
     except (FileNotFoundError, KeyError):
         # An unknown civilization id, or one missing a population field -
         # should not happen for this project's own data/civilizations/
