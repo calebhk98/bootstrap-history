@@ -110,5 +110,12 @@ class FixtureScenarioTests(unittest.TestCase):
                          {fixture.HILLS})
 
 
+class OrderTests(unittest.TestCase):
+    def test_producers_are_summed_in_id_order_whatever_order_they_were_stored_in(self):
+        # a reloaded record holds its producers in saved (sorted) order, the live one in the order they arose
+        producers = {"b": Producer("b", "owner", "farm", "town", 1.0), "a": Producer("a", "owner", "farm", "town", 2.0)}
+        self.assertEqual([each.agent_id for each in sites.in_id_order(producers)], ["a", "b"])
+
+
 if __name__ == "__main__":
     unittest.main()

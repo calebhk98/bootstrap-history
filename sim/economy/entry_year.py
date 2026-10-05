@@ -137,7 +137,7 @@ def close_idle_producers(setup, record) -> int:
 def _spare_output(setup, record, view) -> Dict[Tuple[str, str], float]:
     """Output (good, area) the market's makers could have added from idle capacity last year."""
     spare: Dict[Tuple[str, str], float] = {}
-    for producer in record.producers.values():
+    for producer in sites.in_id_order(record.producers):
         recipe = setup.recipes[producer.recipe_id]
         # capacity waiting on a plant loan counts too, so one gap does not bring a newcomer every year
         idle_runs = (producer.capacity_runs - max(0.0, producer.last_runs)

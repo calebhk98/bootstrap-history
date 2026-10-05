@@ -94,10 +94,15 @@ def apply_site_limits(record, setup, limits: Sequence[SiteLimit] = ()) -> None:
                 del record.expansion_runs[producer_id]
 
 
+def in_id_order(producers):
+    """Producers by id, so a float sum over them does not depend on the order the record was built in."""
+    return (producer for _, producer in sorted(producers.items()))
+
+
 def extraction_by_tile(record, setup) -> Dict[Tuple[str, TileId], float]:
     """Runs of each site-bound recipe worked last year on each tile, for geography to deplete by."""
     worked: Dict[Tuple[str, TileId], float] = {}
-    for producer in record.producers.values():
+    for producer in in_id_order(record.producers):
         recipe = setup.recipes.get(producer.recipe_id)
         if recipe is not None and recipe.site_bound:
             key = (producer.recipe_id, producer.tile)

@@ -33,11 +33,14 @@ check("giving that advice does not recurse into itself",
 def _deputies_are_announced():
     deputies_sim = sim(capital=2000000.0, manual=False)
     run_it(deputies_sim, "school_founded", "patron_imperial", "academy_network")
+    peak_deputies = 0.0
     for _ in range(30):
         deputies_sim.step()
+        peak_deputies = max(peak_deputies, deputies_sim.directors_extra)
     said = [message for _, message in deputies_sim.log if "deput" in message]
+    # deputies can leave again, so the bound is the most held at once, not the count at the end
     return (any("deput" in message and "your year is" in message for _, message in deputies_sim.log)
-            and len(said) <= int(deputies_sim.directors_extra) + 1, said[:1])
+            and len(said) == len(set(said)) and len(said) <= int(peak_deputies), said[:1])
 
 slow_check("gaining a deputy is announced with what it does to your year, "
            "once per whole deputy rather than every year",
