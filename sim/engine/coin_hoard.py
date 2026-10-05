@@ -12,7 +12,7 @@ COIN_GUARD_HOURS_PER_TONNE_YEAR = declare(
     unit="labour hours per tonne of coin per year", source=None, confidence="D",
     why="Watch-keeping and strongroom upkeep for a hoard, by its mass. Stands in for a vault built "
         "from stone, doors and a guard roster (a vault has no model yet), and is not measured. "
-        "It is shown, not yet charged against the purse.")
+        "The household's purse is charged it each year.")
 
 KEEPING_BASIS = ("guard hours per tonne of coin per year, a labelled heuristic "
                  "(COIN_GUARD_HOURS_PER_TONNE_YEAR), at the unskilled hour")

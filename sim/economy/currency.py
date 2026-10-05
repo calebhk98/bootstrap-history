@@ -101,6 +101,15 @@ def debase(spec: CurrencySpec, new_backing_per_unit: float) -> CurrencySpec:
     return dataclasses.replace(spec, backing_per_unit=new_backing_per_unit)
 
 
+def debase_by_cut(spec: CurrencySpec, cut_share: float, restrike_share: float) -> CurrencySpec:
+    """The issuer cuts `cut_share` of the metal from the coin it strikes again, `restrike_share` of the
+    stock this year: the average coin holds that share of the cut less metal. A coin that is not struck,
+    or no cut, leaves the spec as it was."""
+    if spec.regime != "struck_coin" or cut_share <= 0.0 or restrike_share <= 0.0:
+        return spec
+    return debase(spec, spec.backing_per_unit * (1.0 - cut_share * restrike_share))
+
+
 def cash_balance_target(yearly_spending: float, interest_rate: float, expected_inflation: float) -> float:
     """Cash an agent wants to hold: a holding period of spending that falls as the cost of holding money
     (interest plus expected inflation) rises, and stays positive."""

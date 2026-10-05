@@ -8,6 +8,7 @@ figures while the switch is off or before the economy has opened.
 import math
 import os
 
+from sim.agents.api import COIN_RESTRIKE_SHARE_PER_YEAR
 from sim.constants import declare
 from sim.economy.economy import Economy
 from sim.economy.producers import Producer, expected_output_prices, live_input_prices, live_wages
@@ -112,12 +113,18 @@ class AgentEconomy:
         economy = self.economy()
         orders = self._founder_orders()
         orders.update(self._external_orders())
+        self._strike_state_coin(economy)
         outcome = economy.step(self._inputs(orders))
         self._settle_founder()
         self._settle_foreign_coin()
         self._answers = None
         self._save()
         return outcome
+
+    def _strike_state_coin(self, economy):
+        """The cut the home state decided on this year lowers the metal in the coin it issues."""
+        cut = self._sim.state_treasury().record.coin_cut_share
+        economy.strike_lighter_coin(cut, COIN_RESTRIKE_SHARE_PER_YEAR)
 
     # ---- the founder's concerns sell in the same market ----------------------------------------
     def _founder_orders(self):

@@ -1,6 +1,6 @@
 # A treasury of coin weighs nothing and needs no vault
 
-**Status:** partly - the hoard's mass and a keeping cost show on the money and state screens; charging the cost, freight on transfers and theft exposure by mass remain
+**Status:** partly - the household is charged the keeping cost each year (`sim/tests/test_coin_keeping_charged.py`); freight on transfers and theft exposure by mass remain, and a state's or firm's coin is not yet charged
 
 Source: `Complaints/reports/playthrough-review-han-china-100-to-400ad.md`, item 5 (physical weight of bronze coinage).
 
@@ -18,4 +18,4 @@ Compute the mass of the coin held from the coin metal and the amount, charge sto
 
 ## Done and remains
 
-`Sim.coin_hoard` (`sim/engine/coin_hoard.py`) gives the money held as tonnes of the civilisation's coin metal and a yearly keeping cost from guard hours per tonne (a labelled heuristic, `COIN_GUARD_HOURS_PER_TONNE_YEAR`); both screens show it (`sim/tests/test_coin_hoard_mass.py`). Remains: the cost is shown, not yet charged to the purse; large transfers pay no freight (`sim/geography/transport.py` prices mass, nothing calls it for money); the sack hazard (`SACK_CAPITAL_LOSS` in `sim/engine/society_hazards.py`) takes a fixed share of capital and does not read the mass, so there is no hook yet for a hoard's exposure to depend on how it is kept.
+`Sim.coin_hoard` (`sim/engine/coin_hoard.py`) gives the money held as tonnes of the civilisation's coin metal and a yearly keeping cost from guard hours per tonne (a labelled heuristic, `COIN_GUARD_HOURS_PER_TONNE_YEAR`); both screens show it (`sim/tests/test_coin_hoard_mass.py`). The founder household's purse is charged the cost each year as its own line in the cash ledger (`keeping coin under guard`, `sim/engine/step_phase_money.py`). Remains: other actors' treasuries pay no keeping cost; large transfers pay no freight (`sim/geography/transport.py` prices mass, nothing calls it for money); the sack hazard (`SACK_CAPITAL_LOSS` in `sim/engine/society_hazards.py`) takes a fixed share of capital and does not read the mass, so there is no hook yet for a hoard's exposure to depend on how it is kept.

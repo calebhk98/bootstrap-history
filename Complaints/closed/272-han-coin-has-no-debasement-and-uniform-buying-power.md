@@ -1,6 +1,6 @@
 # Han coin keeps uniform buying power across three centuries
 
-**Status:** partly - the state's decision to debase is built (`sim/agents/government_coinage.py`, recorded on the government record, not applied); applying it to the coin is the economy's (`sim/economy/currency.py`, see "Economy port to build"); debasement of dated hazards stays by owner decision
+**Status:** closed - a struck-coin state short of its need cuts the metal in its coin and the economy applies the cut each year (`sim/tests/test_state_debases_coin.py`); domestic money prices fixed at load do not follow yet, and dated hazards stay by owner decision
 
 Source: `Complaints/reports/playthrough-review-han-china-100-to-400ad.md`, item 4 (currency debasement).
 
@@ -26,8 +26,6 @@ Owner decision (2026-10-02): do after the economy is fixed; the engine should ga
 
 Built (agent E, round 2): `debasement_decision(government, world) -> share` in `sim/agents/government_coinage.py`. Only a state whose civilisation's coin standard regime is struck coin decides anything. After `pay_standing_need` it looks at what its standing need left unfunded (revenue, reserve and credit already spent) and cuts the metal in its coin by the share that the part of the stock struck again would recover, up to a ceiling. Both numbers are declared heuristics in `sim/agents/tuning_coinage.py` (`COIN_RESTRIKE_SHARE_PER_YEAR`, `DEBASEMENT_SHARE_CEILING`). It is recorded on `ActorRecord.coin_cut_share` (this year's cut) and `coin_metal_kept` (share of the opening metal the coin holds after every cut). Tests: `python3 -m sim.tests --only agents_coinage`.
 
-Not wired and not applied, because the files are owned elsewhere:
-1. `Government` (`sim/agents/government.py`) must take the mixin and call it: add `CoinageMixin` to its bases and `self.decide_debasement(world)` in `advance` right after `pay_standing_need`.
-2. The engine adapter must provide `coin_regime(self) -> str`, the civilisation's `coin_standard["regime"]` (as `CurrencySpec.regime` in `sim/economy/currency.py` holds it), in a SimWorld mixin; `coin_stock_value()` already exists.
-3. The economy port must read the decision and apply it: for the home government, `coin_cut_share` each year, and lower the metal in the coin (`CurrencySpec.backing_per_unit`, `sim/economy/currency.py`) by it over the share of the stock struck again, so the price level follows through the coin standard. A new port member (for example `coin_metal_kept` or a `debase(share)` call on the currency) is needed; nothing in `sim/economy/` or `economy_port*.py` was edited.
-4. Still true from the first design: domestic money prices are fixed in the opening coin at load, so only wages and traded prices can follow.
+Applied: each year `AgentEconomy.run_year` (`sim/engine/economy_port_year.py`) reads the home government's `coin_cut_share` and calls `Economy.strike_lighter_coin`, which lowers the metal per unit through `currency.debase_by_cut` (the average coin holds the cut over the share struck again, `COIN_RESTRIKE_SHARE_PER_YEAR`, less metal). The mint then pays more coin per unit of bullion, so prices and wages follow through the economy. Any government whose coin is struck coin does this; no civilisation is named. Test: `python3 -m sim.tests --only state_debases_coin`.
+
+Not done: domestic money prices (tree nodes, book constants) are fixed in the opening coin at load, so only wages and traded prices follow a mid-game change.
