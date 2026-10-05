@@ -101,10 +101,10 @@ book.clear()
 # --- the coin that pays for goods.
 opening = 1000.0
 check("a stock at its opening level leaves traded prices where they are",
-      balance_of_payments.price_level(opening, opening) == 1.0, None)
+      balance_of_payments.money_stock_price_level(opening, opening) == 1.0, None)
 check("a drained stock lowers the price level and a swollen one raises it",
-      balance_of_payments.price_level(0.5 * opening, opening) < 1.0
-      < balance_of_payments.price_level(2.0 * opening, opening), None)
+      balance_of_payments.money_stock_price_level(0.5 * opening, opening) < 1.0
+      < balance_of_payments.money_stock_price_level(2.0 * opening, opening), None)
 check("an economy cannot pay out more coin than it holds",
       balance_of_payments.coin_paid(500.0, 200.0) == 200.0
       and balance_of_payments.coin_paid(-5.0, 200.0) == 0.0, None)

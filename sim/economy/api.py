@@ -18,18 +18,19 @@ from .record import EconomyRecord
 from .setup import EconomySetup, TradeSpec, goods_specs
 from .types import EDGE_EXTERNAL, EDGE_LEGACY, GoodsMove, Offer, Transfer
 from .unit_cost import variable_cost_per_run
-from .year_close import rebase_price_level
+from .year_close import rebase_basket_price_level
 from .year_labour import trade_premium
+from sim.world import capital_market
 
 __all__ = [
     "diagnostics", "households", "taxes", "tile_costs", "currency_from_coin_standard", "Economy", "external_orders",
     "shown_prices", "Producer", "expected_output_prices", "live_input_prices", "live_wages", "AgentOrders",
     "YearInputs", "recipes_from_production_data", "EconomyRecord", "EconomySetup", "TradeSpec",
     "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "GoodsMove", "Offer", "Transfer",
-    "variable_cost_per_run", "rebase_price_level", "trade_premium",
+    "variable_cost_per_run", "rebase_basket_price_level", "trade_premium",
     "traded_volumes", "opening_quantities", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
-    "economy_from_record", "blank_economy", "export_record", "finish_spin_up", "shown_prices_of",
+    "credit_room", "economy_from_record", "blank_economy", "export_record", "finish_spin_up", "shown_prices_of",
     "settle_founder_takings", "move_goods",
 ]
 
@@ -75,6 +76,17 @@ def interest_rate(economy):
     return economy.record.memory.rates.get(economy.setup.currency_id)
 
 
+def credit_room(economy, borrower_id):
+    """What lenders will still advance `borrower_id` beyond what others were lent at the last lending: the
+    share of the savings on offer that lenders put out, less what the other borrowers took. None before
+    lenders have met (no savings were offered yet)."""
+    record = economy.record
+    if record.funds_offered <= 0.0:
+        return None
+    others = sum(lent for borrower, lent in record.lent_by_borrower.items() if borrower != borrower_id)
+    return capital_market.headroom(capital_market.lendable_capacity(record.funds_offered), others)
+
+
 def producers_of(economy):
     """The producers by agent id."""
     return dict(economy.record.producers)
@@ -117,7 +129,7 @@ def export_record(economy):
 
 def finish_spin_up(economy):
     """Closes the hidden spin-up years: the price level is rebased to one and the clock returns to zero."""
-    rebase_price_level(economy.setup, economy.record)
+    rebase_basket_price_level(economy.setup, economy.record)
     economy.record.memory.year = 0
 
 

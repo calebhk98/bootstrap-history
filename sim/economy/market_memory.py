@@ -40,7 +40,7 @@ class MarketMemory:
     prices: Dict[str, float] = field(default_factory=dict)              # market_key(good, area)
     wages: Dict[str, float] = field(default_factory=dict)               # market_key(trade, area)
     rates: Dict[CurrencyId, float] = field(default_factory=dict)
-    price_levels: Dict[CurrencyId, float] = field(default_factory=dict)
+    basket_price_levels: Dict[CurrencyId, float] = field(default_factory=dict)
     expected_inflation: Dict[CurrencyId, float] = field(default_factory=dict)
     currency_of_area: Dict[AreaId, CurrencyId] = field(default_factory=dict)
     volume_weights: Dict[str, float] = field(default_factory=dict)      # market_key(good, area), smoothed
@@ -64,14 +64,14 @@ class MarketMemory:
         old = self.volume_weights.get(key)
         self.volume_weights[key] = quantity if old is None else old + VOLUME_WEIGHT_SPEED * (quantity - old)
 
-    def note_price_level(self, currency: CurrencyId, level: float) -> None:
+    def note_basket_price_level(self, currency: CurrencyId, level: float) -> None:
         """Record this year's price level and move the expectation of inflation after it."""
-        previous = self.price_levels.get(currency)
+        previous = self.basket_price_levels.get(currency)
         if previous and previous > 0.0:
             observed = level / previous - 1.0
             expected = self.expected_inflation.get(currency, OPENING_EXPECTED_INFLATION)
             self.expected_inflation[currency] = update_expected_inflation(expected, observed)
-        self.price_levels[currency] = level
+        self.basket_price_levels[currency] = level
 
 
 class YearView:
@@ -105,8 +105,8 @@ class YearView:
     def currency_of(self, area: AreaId) -> CurrencyId:
         return self._memory.currency_of_area.get(area, self._currency)
 
-    def price_level(self, currency: CurrencyId) -> float:
-        return self._memory.price_levels.get(currency, 1.0)
+    def basket_price_level(self, currency: CurrencyId) -> float:
+        return self._memory.basket_price_levels.get(currency, 1.0)
 
     def expected_inflation(self, currency: CurrencyId) -> float:
         return self._memory.expected_inflation.get(currency, OPENING_EXPECTED_INFLATION)

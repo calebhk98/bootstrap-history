@@ -11,8 +11,8 @@ from sim.geography.food_productivity import (SQUARE_METRES_PER_SQUARE_KM, land_a
                                              lookup, net_primary_production, rows_of_mechanism)
 from sim.geography.map_source import WorldMap
 from sim.geography.parameters import parameter
+from sim.unit_conversions import CIVIL_DAYS_PER_YEAR
 
-DAYS_PER_YEAR = 365.0
 GRAMS_PER_KG = 1000.0
 
 
@@ -47,7 +47,7 @@ def herd_contributions(world_map: WorldMap, tile_id: str) -> List[Tuple[str, str
     intake_fraction = parameter(world_map, "food_livestock_intake_fraction_per_day")
     result = []
     for row, fit in suited:
-        intake_per_head = row["adult_mass_kg"] * intake_fraction * DAYS_PER_YEAR
+        intake_per_head = row["adult_mass_kg"] * intake_fraction * CIVIL_DAYS_PER_YEAR
         heads = forage * fit / crowding / intake_per_head
         result.append((row["food_source"], row["id"], heads * kcal_per_head_year(row)))
     return result

@@ -48,6 +48,21 @@ class OneDeclaration(unittest.TestCase):
         self.assert_no_bare_assignment(r"\s*HOURS_PER_(PERSON|WORKER)_YEAR\s*=\s*(declare|[0-9])")
         self.assertEqual(2000.0, unit_conversions.HOURS_PER_PERSON_YEAR)
 
+    def test_no_module_restates_the_civil_year_in_days(self):
+        self.assert_no_bare_assignment(r"\s*(CIVIL_)?DAYS_PER_YEAR\s*=\s*365\.0\s*$")
+        self.assertEqual(365.0, unit_conversions.CIVIL_DAYS_PER_YEAR)
+
+    def test_no_price_level_goes_by_the_bare_name(self):
+        """The engine's level is `home_price_level`, the agent economy's index is `basket_price_level`, the
+        balance of payments' is `money_stock_price_level`; a bare `price_level` would not say which."""
+        found = []
+        for path in sources():
+            with open(path, encoding="utf-8") as handle:
+                for number, line in enumerate(handle, 1):
+                    if re.match(r"\s*def price_level\(", line):
+                        found.append("%s:%d" % (path, number))
+        self.assertEqual([], found)
+
     def test_json_files_are_listed_in_name_order_and_only_json(self):
         folder = os.path.join(DATA_DIR, "world")
         listed = json_files.json_files(folder)

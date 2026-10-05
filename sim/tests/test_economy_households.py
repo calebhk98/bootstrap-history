@@ -53,7 +53,7 @@ class View:
     def currency_of(self, area):
         return "coin"
 
-    def price_level(self, currency):
+    def basket_price_level(self, currency):
         return 1.0
 
     def expected_inflation(self, currency):
@@ -252,7 +252,7 @@ class CloseTests(unittest.TestCase):
 
     def test_expected_inflation_follows_the_price_level(self):
         view = View()
-        view.price_level = lambda currency: 1.1
+        view.basket_price_level = lambda currency: 1.1
         new, _ = households.close_year(cohort(), {"grain": 20000.0}, view, SPECS, BASKET,
                                        income_received=100.0, spent=90.0)
         self.assertGreater(new.expected_inflation, 0.0)

@@ -69,7 +69,7 @@ def open_economy(setup: EconomySetup) -> Tuple[EconomyRecord, AreaMap, CarriageT
 
 def _opening_memory(setup, area_map, priced_goods) -> MarketMemory:
     memory = MarketMemory(year=0, rates={setup.currency_id: setup.opening_rate},
-                          price_levels={setup.currency_id: 1.0})
+                          basket_price_levels={setup.currency_id: 1.0})
     for good, price in priced_goods.items():
         for area in area_map.areas(good):
             memory.prices[market_key(good, area.area_id)] = price

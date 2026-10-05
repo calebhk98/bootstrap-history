@@ -41,7 +41,7 @@ class Cohort:
     ownership_share: float             # share of the tile's rent and profit this class receives
     expected_inflation: float = 0.0
     cash_target: float = 0.0           # 0 until the first close; goods_orders then computes it
-    last_price_level: float = 1.0
+    last_basket_price_level: float = 1.0
     last_year_income: float = 0.0
     last_year_spending: float = 0.0
     unmet_floor_by_need: Dict[str, float] = field(default_factory=dict)   # need units short of the floor

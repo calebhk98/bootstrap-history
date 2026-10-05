@@ -22,7 +22,7 @@ from .record import EconomyRecord
 from .setup import EconomySetup, labour_area
 from .types import Bid, EDGE_CONSUMPTION, GoodsMove, is_edge
 from .year_close import (check_money, close_agents, dispatch_merchants, money_taxes, national_prices,
-                         remember_price_level, wear_and_spoilage)
+                         remember_basket_price_level, wear_and_spoilage)
 from .year_goods import add_orders, clear_goods, cohort_orders, merchant_orders, state_orders
 from .year_labour import clear_labour, follow_asks, labour_offers, move_workers, outside_option_by_tile
 from .year_ledger import YearLedger
@@ -31,7 +31,7 @@ from .year_ledger import YearLedger
 @dataclass
 class YearOutcome:
     year: int
-    price_level: float
+    basket_price_level: float
     prices: Dict[str, float]                       # each good's price over its areas, by volume
     wages: Dict[str, float]                        # each trade's mean wage per hour over its areas
     rate: float
@@ -140,7 +140,7 @@ class Economy:
         move_workers(setup, record, ledger)
         follow_asks(setup, record, view, ledger)
         wear_and_spoilage(setup, record)
-        level = remember_price_level(setup, record)
+        level = remember_basket_price_level(setup, record)
         record.memory.year += 1
         return self._outcome(ledger, level, extraction)
 
@@ -228,6 +228,8 @@ class Economy:
         requests, record.loan_requests = record.loan_requests, []
         requests = (requests + lending.household_requests(setup, record, view, ledger, priced_by_tile)
                     + lending.merchant_requests(setup, record, view, self.area_map, self.carriage))
+        record.funds_offered = sum(offer.amount for offer in funds if offer.currency == money)
+        record.lent_by_borrower = {}
         if not requests:
             if funds:
                 # savings on offer and nobody borrowing: lenders compete the rate down toward the lowest
@@ -242,6 +244,8 @@ class Economy:
                                            year=view.year)
         record.book.transfer_many(credit.disbursements(loans))
         record.loans.extend(loans)
+        for loan in loans:
+            record.lent_by_borrower[loan.borrower] = record.lent_by_borrower.get(loan.borrower, 0.0) + loan.principal
         record.memory.rates[money] = rate
         merchants_credit.stake(record.merchants, {loan.borrower: loan.principal for loan in loans})
         lending.bid_household_loans(setup, record, view, ledger, loans, order_book, priced_by_tile)
@@ -343,7 +347,7 @@ class Economy:
         output: Dict[str, float] = {}
         for (_agent, good), quantity in ledger.output.items():
             output[good] = output.get(good, 0.0) + quantity
-        return YearOutcome(year=record.memory.year, price_level=level, prices=national_prices(record),
+        return YearOutcome(year=record.memory.year, basket_price_level=level, prices=national_prices(record),
                            wages=mean_wages, rate=record.memory.rates.get(money, 0.0),
                            money_supply=record.book.money_supply(money), hunger_by_tile=hunger,
                            output=dict(sorted(output.items())), idle_hours=idle, vacant_hours=vacant, hired_hours=hired, extraction=extraction,

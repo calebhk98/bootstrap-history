@@ -64,6 +64,12 @@ class EconomyPort:
         agent = self._answering_agent()
         return None if agent is None else agent.rate()
 
+    def agent_credit_room(self, borrower_id):
+        """(True, room) when the agent economy answers, with room None before lenders have met; (False, None)
+        while it is off."""
+        agent = self._answering_agent()
+        return (False, None) if agent is None else (True, agent.credit_room(borrower_id))
+
     def runs_agent_economy(self):
         return self.agent is not None
 
@@ -155,10 +161,6 @@ class EconomyPort:
     def book_money(self, amount):
         """A book-coin amount in this civilisation's money now."""
         return self._sim.labour.book_money(amount)
-
-    def price_level(self):
-        """The level of money prices against the opening year (1.0 at the opening)."""
-        return self._sim.home_price_level()
 
     def wage_pressure(self):
         """How far wages stand above their opening level from a shortage of people."""

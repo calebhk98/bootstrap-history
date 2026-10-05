@@ -56,7 +56,11 @@ class CapitalMarketMixin:
         return record.rate
 
     def market_credit_room(self, actor_id):
-        """What lenders will advance one borrower beyond what the others owe; None before they have met."""
+        """What lenders will advance one borrower beyond what the others owe; None before they have met. On
+        the agent economy, its credit market answers, as it does for the rate."""
+        answered, room = self.economy.agent_credit_room(actor_id)
+        if answered:
+            return room
         record = self._market_record()
         if record is None or record.supply <= 0.0:
             return None
