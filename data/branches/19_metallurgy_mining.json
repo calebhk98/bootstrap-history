@@ -1303,15 +1303,15 @@
     }
    }
   ],
-   "mechanics": {
-     "diagnosis_instrument": {
-       "instrument": "met_spectroscopic_assay",
-       "quantity": "impurity",
-       "needed": 0.001,
-       "unit": "impurity fraction",
-       "needed_words": "copper of 99.9% purity"
-     }
+  "mechanics": {
+   "diagnosis_instrument": {
+    "instrument": "met_spectroscopic_assay",
+    "quantity": "impurity",
+    "needed": 0.001,
+    "unit": "impurity fraction",
+    "needed_words": "copper of 99.9% purity"
    }
+  }
  },
  {
   "id": "met_galvanizing",

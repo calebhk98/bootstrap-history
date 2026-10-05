@@ -1368,15 +1368,15 @@
   "art": 5,
   "conf": "B",
   "note": "Machine whose sole purpose is scratching tens of thousands of equally spaced lines. Demands the finest lead screw in existence, thermal stability to microns, diamond tool, and 2 years of debugging.",
-   "mechanics": {
-     "diagnosis_instrument": {
-       "instrument": "opt_michelson_interferometer",
-       "quantity": "tolerance",
-       "needed": 0.0001,
-       "unit": "mm",
-       "needed_words": "groove spacing true to a fraction of a wavelength of light"
-     }
+  "mechanics": {
+   "diagnosis_instrument": {
+    "instrument": "opt_michelson_interferometer",
+    "quantity": "tolerance",
+    "needed": 0.0001,
+    "unit": "mm",
+    "needed_words": "groove spacing true to a fraction of a wavelength of light"
    }
+  }
  },
  {
   "id": "in2_interferometer_michelson",
@@ -1517,13 +1517,11 @@
   "art": 3,
   "conf": "B",
   "note": "Synchronism between particle orbit period and RF frequency is automatic; frequency stays constant as particle spirals outward and gains energy. Enables 10-20 MeV beam, impossible with accelerators.",
-   "mechanics": {
-     "precaution": {
-       "label": "pilot plant",
-       "cost_share": 0.15,
-       "hours_share": 0.1
-     }
+  "mechanics": {
+   "precaution": {
+    "kind": "pilot_plant"
    }
+  }
  },
  {
   "id": "in2_van_de_graaff_generator",

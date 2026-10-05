@@ -45,15 +45,16 @@
   "art": 2,
   "conf": "A",
   "note": "Already reached wherever bloomery iron, bronze casting and glass melting are practised. A man on a bellows tops out near here. Everything above this rung needs a machine.",
-   "mechanics": {
-     "diagnosis_instrument": {
-       "instrument": "opt_pyrometer_contraction",
-       "quantity": "temperature uncertainty",
-       "needed": 100.0,
-       "unit": "K",
-       "needed_words": "a furnace temperature known to within 100 degrees"
-     }
+  "mechanics": {
+   "diagnosis_instrument": {
+    "instrument": "opt_pyrometer_contraction",
+    "quantity": "temperature uncertainty",
+    "needed": 100.0,
+    "unit": "K",
+    "needed_words": "a furnace temperature known to within 100 degrees",
+    "_internal": "[HEURISTIC: needed is a placeholder display figure with no source; the sim does not yet model furnace temperature control]"
    }
+  }
  },
  {
   "id": "cap_heat_1300",
@@ -79,15 +80,16 @@
   "art": 2,
   "conf": "B",
   "note": "Liquid cast iron lives here. The jump from 1100 to 1300 is not more fuel, it is more AIR, continuously. This single rung is the difference between a bloomery civilisation and a foundry civilisation.",
-   "mechanics": {
-     "diagnosis_instrument": {
-       "instrument": "opt_pyrometer_contraction",
-       "quantity": "temperature uncertainty",
-       "needed": 50.0,
-       "unit": "K",
-       "needed_words": "a furnace temperature known to within 50 degrees"
-     }
+  "mechanics": {
+   "diagnosis_instrument": {
+    "instrument": "opt_pyrometer_contraction",
+    "quantity": "temperature uncertainty",
+    "needed": 50.0,
+    "unit": "K",
+    "needed_words": "a furnace temperature known to within 50 degrees",
+    "_internal": "[HEURISTIC: needed is a placeholder display figure with no source; the sim does not yet model furnace temperature control]"
    }
+  }
  },
  {
   "id": "cap_heat_1600",
@@ -113,13 +115,11 @@
   "art": 2,
   "conf": "B",
   "note": "Siemens regenerative preheat recycles flue heat into the incoming air. Crucible steel, open hearth, porcelain. You cannot get here by burning more charcoal; you must recycle the heat you are already throwing away.",
-   "mechanics": {
-     "precaution": {
-       "label": "redundant team",
-       "cost_share": 0.1,
-       "hours_share": 0.25
-     }
+  "mechanics": {
+   "precaution": {
+    "kind": "redundant_team"
    }
+  }
  },
  {
   "id": "cap_heat_2000",
@@ -145,20 +145,19 @@
   "art": 2,
   "conf": "B",
   "note": "A flame, not a furnace: small volume only. Fused quartz working, platinum melting, lime light.",
-   "mechanics": {
-     "precaution": {
-       "label": "redundant team",
-       "cost_share": 0.1,
-       "hours_share": 0.25
-     },
-     "diagnosis_instrument": {
-       "instrument": "opt_pyrometer_optical",
-       "quantity": "temperature uncertainty",
-       "needed": 50.0,
-       "unit": "K",
-       "needed_words": "a flame temperature known to within 50 degrees"
-     }
+  "mechanics": {
+   "diagnosis_instrument": {
+    "instrument": "opt_pyrometer_optical",
+    "quantity": "temperature uncertainty",
+    "needed": 50.0,
+    "unit": "K",
+    "needed_words": "a flame temperature known to within 50 degrees",
+    "_internal": "[HEURISTIC: needed is a placeholder display figure with no source; the sim does not yet model furnace temperature control]"
+   },
+   "precaution": {
+    "kind": "redundant_team"
    }
+  }
  },
  {
   "id": "cap_heat_3000",
@@ -184,20 +183,19 @@
   "art": 20,
   "conf": "B",
   "note": "No chemical flame reaches here. Calcium carbide, ferroalloys, tungsten, artificial graphite, synthetic corundum.",
-   "mechanics": {
-     "precaution": {
-       "label": "redundant team",
-       "cost_share": 0.1,
-       "hours_share": 0.25
-     },
-     "diagnosis_instrument": {
-       "instrument": "opt_pyrometer_radiation",
-       "quantity": "temperature uncertainty",
-       "needed": 100.0,
-       "unit": "K",
-       "needed_words": "an arc temperature known to within 100 degrees"
-     }
+  "mechanics": {
+   "diagnosis_instrument": {
+    "instrument": "opt_pyrometer_radiation",
+    "quantity": "temperature uncertainty",
+    "needed": 100.0,
+    "unit": "K",
+    "needed_words": "an arc temperature known to within 100 degrees",
+    "_internal": "[HEURISTIC: needed is a placeholder display figure with no source; the sim does not yet model furnace temperature control]"
+   },
+   "precaution": {
+    "kind": "redundant_team"
    }
+  }
  },
  {
   "id": "cap_tol_1mm",
@@ -245,15 +243,15 @@
   "art": 2,
   "conf": "B",
   "note": "Needs a reference plane to scrape against and a gauge to check with. Clock wheels, lock work, decent screw threads.",
-   "mechanics": {
-     "diagnosis_instrument": {
-       "instrument": "micrometer_gauges",
-       "quantity": "tolerance",
-       "needed": 0.1,
-       "unit": "mm",
-       "needed_words": "a tolerance of 0.1 mm"
-     }
+  "mechanics": {
+   "diagnosis_instrument": {
+    "instrument": "micrometer_gauges",
+    "quantity": "tolerance",
+    "needed": 0.1,
+    "unit": "mm",
+    "needed_words": "a tolerance of 0.1 mm"
    }
+  }
  },
  {
   "id": "cap_tol_10um",
@@ -306,9 +304,7 @@
   "note": "Lapping with loose abrasive plus interference fringes to check. Gauge blocks, ball bearings, lens moulds, injector nozzles.",
  "mechanics": {
   "precaution": {
-    "label": "redundant team",
-    "cost_share": 0.1,
-    "hours_share": 0.25
+   "kind": "redundant_team"
   },
   "diagnosis_instrument": {
    "instrument": "cap_measure_light",
@@ -343,20 +339,18 @@
   "art": 10,
   "conf": "B",
   "note": "Measured in wavelengths of light. Optical surfaces, diffraction gratings, semiconductor lithography much later.",
-   "mechanics": {
-     "precaution": {
-       "label": "redundant team",
-       "cost_share": 0.1,
-       "hours_share": 0.25
-     },
-     "diagnosis_instrument": {
-       "instrument": "opt_michelson_interferometer",
-       "quantity": "tolerance",
-       "needed": 0.0001,
-       "unit": "mm",
-       "needed_words": "a tolerance of 0.1 micron"
-     }
+  "mechanics": {
+   "diagnosis_instrument": {
+    "instrument": "opt_michelson_interferometer",
+    "quantity": "tolerance",
+    "needed": 0.0001,
+    "unit": "mm",
+    "needed_words": "a tolerance of 0.1 micron"
+   },
+   "precaution": {
+    "kind": "redundant_team"
    }
+  }
  },
  {
   "id": "cap_vac_1torr",
@@ -382,15 +376,15 @@
   "art": 2,
   "conf": "B",
   "note": "A leather-sealed piston pump. Barometry, the Magdeburg demonstration, condensers. Not enough for any electron device.",
-   "mechanics": {
-     "diagnosis_instrument": {
-       "instrument": "opt_manometer",
-       "quantity": "pressure",
-       "needed": 1.0,
-       "unit": "torr",
-       "needed_words": "a vacuum of about 1 torr"
-     }
+  "mechanics": {
+   "diagnosis_instrument": {
+    "instrument": "opt_manometer",
+    "quantity": "pressure",
+    "needed": 1.0,
+    "unit": "torr",
+    "needed_words": "a vacuum of about 1 torr"
    }
+  }
  },
  {
   "id": "cap_vac_1e3",
@@ -417,15 +411,15 @@
   "art": 2,
   "conf": "B",
   "note": "THE cheap shortcut. Falling mercury drops each trap a slug of gas and carry it out. No pistons, no seals, no tolerances. Incandescent lamps and discharge tubes live here.",
-   "mechanics": {
-     "diagnosis_instrument": {
-       "instrument": "in2_mcleod_vacuum_gauge",
-       "quantity": "pressure",
-       "needed": 0.001,
-       "unit": "torr",
-       "needed_words": "a vacuum of about 1e-3 torr"
-     }
+  "mechanics": {
+   "diagnosis_instrument": {
+    "instrument": "in2_mcleod_vacuum_gauge",
+    "quantity": "pressure",
+    "needed": 0.001,
+    "unit": "torr",
+    "needed_words": "a vacuum of about 1e-3 torr"
    }
+  }
  },
  {
   "id": "cap_vac_1e6",
@@ -452,20 +446,18 @@
   "art": 8,
   "conf": "B",
   "note": "Needs a motor for the backing pump. Vacuum tubes, X-ray tubes, evaporated coatings.",
-   "mechanics": {
-     "precaution": {
-       "label": "redundant team",
-       "cost_share": 0.1,
-       "hours_share": 0.25
-     },
-     "diagnosis_instrument": {
-       "instrument": "in2_mcleod_vacuum_gauge",
-       "quantity": "pressure",
-       "needed": 1e-06,
-       "unit": "torr",
-       "needed_words": "a vacuum of about 1e-6 torr"
-     }
+  "mechanics": {
+   "diagnosis_instrument": {
+    "instrument": "in2_mcleod_vacuum_gauge",
+    "quantity": "pressure",
+    "needed": 1e-06,
+    "unit": "torr",
+    "needed_words": "a vacuum of about 1e-6 torr"
+   },
+   "precaution": {
+    "kind": "redundant_team"
    }
+  }
  },
  {
   "id": "cap_vac_1e9",
@@ -492,13 +484,11 @@
   "art": 12,
   "conf": "B",
   "note": "Metal gaskets, bakeout, ion pumps. Surface science and semiconductor processing.",
-   "mechanics": {
-     "precaution": {
-       "label": "redundant team",
-       "cost_share": 0.1,
-       "hours_share": 0.25
-     }
+  "mechanics": {
+   "precaution": {
+    "kind": "redundant_team"
    }
+  }
  },
  {
   "id": "cap_pure_2N",
@@ -523,15 +513,15 @@
   "art": 2,
   "conf": "A",
   "note": "Cupellation, fire refining, recrystallisation. Any advanced ancient metallurgical tradition nearly reaches this for silver and gold already.",
-   "mechanics": {
-     "diagnosis_instrument": {
-       "instrument": "met_fire_assay",
-       "quantity": "impurity",
-       "needed": 0.01,
-       "unit": "impurity fraction",
-       "needed_words": "purity of 99%"
-     }
+  "mechanics": {
+   "diagnosis_instrument": {
+    "instrument": "met_fire_assay",
+    "quantity": "impurity",
+    "needed": 0.01,
+    "unit": "impurity fraction",
+    "needed_words": "purity of 99%"
    }
+  }
  },
  {
   "id": "cap_pure_4N",
@@ -558,15 +548,15 @@
   "art": 5,
   "conf": "B",
   "note": "You cannot claim a purity you cannot measure, so this rung is gated on quantitative analysis as much as on process.",
-   "mechanics": {
-     "diagnosis_instrument": {
-       "instrument": "met_spectroscopic_assay",
-       "quantity": "impurity",
-       "needed": 0.0001,
-       "unit": "impurity fraction",
-       "needed_words": "purity of 99.99%"
-     }
+  "mechanics": {
+   "diagnosis_instrument": {
+    "instrument": "met_spectroscopic_assay",
+    "quantity": "impurity",
+    "needed": 0.0001,
+    "unit": "impurity fraction",
+    "needed_words": "purity of 99.99%"
    }
+  }
  },
  {
   "id": "cap_pure_6N",
@@ -593,20 +583,18 @@
   "art": 8,
   "conf": "B",
   "note": "Purify the COMPOUND, not the element. Germanium tetrachloride boils at 86 C and fractionates like brandy; germanium metal does not.",
-   "mechanics": {
-     "precaution": {
-       "label": "redundant team",
-       "cost_share": 0.1,
-       "hours_share": 0.25
-     },
-     "diagnosis_instrument": {
-       "instrument": "in2_mass_spectrograph",
-       "quantity": "impurity",
-       "needed": 1e-06,
-       "unit": "impurity fraction",
-       "needed_words": "purity of 99.9999%"
-     }
+  "mechanics": {
+   "diagnosis_instrument": {
+    "instrument": "in2_mass_spectrograph",
+    "quantity": "impurity",
+    "needed": 1e-06,
+    "unit": "impurity fraction",
+    "needed_words": "purity of 99.9999%"
+   },
+   "precaution": {
+    "kind": "redundant_team"
    }
+  }
  },
  {
   "id": "cap_pure_9N",
@@ -637,9 +625,7 @@
   "note": "No chemistry reaches here. A travelling molten zone sweeps impurities to one end because most are more soluble in liquid than in solid. This one trick is what makes semiconductors possible at all.",
  "mechanics": {
   "precaution": {
-    "label": "redundant team",
-    "cost_share": 0.1,
-    "hours_share": 0.25
+   "kind": "redundant_team"
   },
   "diagnosis_instrument": {
    "instrument": "in2_mass_spectrograph",

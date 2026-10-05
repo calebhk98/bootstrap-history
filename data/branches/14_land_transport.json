@@ -1635,13 +1635,11 @@
    "commerce",
    "infrastructure"
   ],
-   "mechanics": {
-     "precaution": {
-       "label": "pilot plant",
-       "cost_share": 0.15,
-       "hours_share": 0.1
-     }
+  "mechanics": {
+   "precaution": {
+    "kind": "pilot_plant"
    }
+  }
  },
  {
   "id": "lnd_gearbox_clutch",

@@ -865,9 +865,7 @@
   "note": "State borrows money instead of raising taxes or debasing currency. A state that can borrow can survive temporary deficits and invest in long-term projects without waiting for revenue. A state that cannot borrow must tax harder or debase, both politically costly.",
   "mechanics": {
    "precaution": {
-     "label": "redundant team",
-     "cost_share": 0.1,
-     "hours_share": 0.25
+    "kind": "redundant_team"
    },
    "state_credit": {
     "source": "A government that can commit its successors to repay and has investors to lend is the precondition (docs/knowledge/96_finance.md, public_debt); early states met a deficit by cutting, debasing or selling office, and funded debt arrives with the Italian city states (Venice's Monte Vecchio, 1167)."
@@ -906,13 +904,11 @@
   "art": 2,
   "conf": "C",
   "note": "Bank chartered by the state to manage the nation's monetary system. Acts as lender of last resort and regulates other banks. Threatens existing banking families with monopoly loss.",
-   "mechanics": {
-     "precaution": {
-       "label": "redundant team",
-       "cost_share": 0.1,
-       "hours_share": 0.25
-     }
+  "mechanics": {
+   "precaution": {
+    "kind": "redundant_team"
    }
+  }
  },
  {
   "id": "fin_paper_money",
@@ -1122,13 +1118,11 @@
   "art": 1,
   "conf": "B",
   "note": "Insurance against death, paying a benefit to the beneficiary. Requires mortality data to price correctly. Allows families to insure against the death of breadwinners.",
-   "mechanics": {
-     "precaution": {
-       "label": "redundant team",
-       "cost_share": 0.1,
-       "hours_share": 0.25
-     }
+  "mechanics": {
+   "precaution": {
+    "kind": "redundant_team"
    }
+  }
  },
  {
   "id": "fin_mortality_table",

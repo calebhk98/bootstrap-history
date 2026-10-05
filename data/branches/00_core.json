@@ -205,9 +205,7 @@
     },
     "mechanics": {
       "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
+        "kind": "pilot_plant"
       },
       "electrical_process": {
         "material": "iron_ore_kg",
@@ -286,9 +284,7 @@
     "yrs": 3.0,
     "mechanics": {
       "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
+        "kind": "pilot_plant"
       }
     }
   },
@@ -552,9 +548,7 @@
     },
     "mechanics": {
       "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
+        "kind": "pilot_plant"
       },
       "capability": {
         "lost_benefit": "Artisan training capacity"
@@ -657,9 +651,7 @@
     "yrs": 3.0,
     "mechanics": {
       "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
+        "kind": "pilot_plant"
       }
     }
   },
@@ -1512,9 +1504,7 @@
     },
     "mechanics": {
       "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
+        "kind": "pilot_plant"
       },
       "capability": {
         "lost_benefit": "Artisan training capacity"
@@ -1688,9 +1678,7 @@
     "yrs": 3.0,
     "mechanics": {
       "precaution": {
-        "label": "redundant team",
-        "cost_share": 0.1,
-        "hours_share": 0.25
+        "kind": "redundant_team"
       }
     }
   },
@@ -1736,17 +1724,15 @@
     "up_hours": 100809.39587064662,
     "yrs": 4.0,
     "mechanics": {
-      "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
-      },
       "diagnosis_instrument": {
         "instrument": "in2_mcleod_vacuum_gauge",
         "quantity": "pressure",
         "needed": 1e-06,
         "unit": "torr",
         "needed_words": "a vacuum of about 1e-6 torr"
+      },
+      "precaution": {
+        "kind": "pilot_plant"
       }
     }
   },
@@ -1801,9 +1787,7 @@
     "yrs": 4.0,
     "mechanics": {
       "precaution": {
-        "label": "redundant team",
-        "cost_share": 0.1,
-        "hours_share": 0.25
+        "kind": "redundant_team"
       }
     }
   },
@@ -1913,9 +1897,7 @@
     },
     "mechanics": {
       "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
+        "kind": "pilot_plant"
       },
       "power_generation": {
         "role": "local",
@@ -1995,9 +1977,7 @@
     },
     "mechanics": {
       "precaution": {
-        "label": "redundant team",
-        "cost_share": 0.1,
-        "hours_share": 0.25
+        "kind": "redundant_team"
       },
       "electrical_process": {
         "material": "bauxite_kg",
@@ -2343,9 +2323,7 @@
     "yrs": 12.0,
     "mechanics": {
       "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
+        "kind": "pilot_plant"
       }
     }
   },
@@ -2713,9 +2691,7 @@
     "yrs": 4.0,
     "mechanics": {
       "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
+        "kind": "pilot_plant"
       }
     }
   },
@@ -2857,9 +2833,7 @@
     "yrs": 3.0,
     "mechanics": {
       "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
+        "kind": "pilot_plant"
       }
     }
   },
@@ -2906,9 +2880,7 @@
     "yrs": 5.0,
     "mechanics": {
       "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
+        "kind": "pilot_plant"
       }
     }
   },
@@ -3037,9 +3009,7 @@
     "yrs": 5.0,
     "mechanics": {
       "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
+        "kind": "pilot_plant"
       }
     }
   },
@@ -3127,9 +3097,7 @@
     "yrs": 3.0,
     "mechanics": {
       "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
+        "kind": "pilot_plant"
       }
     }
   },
@@ -3503,9 +3471,7 @@
     "yrs": 7.0,
     "mechanics": {
       "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
+        "kind": "pilot_plant"
       }
     }
   },
@@ -3778,9 +3744,7 @@
     },
     "mechanics": {
       "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
+        "kind": "pilot_plant"
       },
       "capability": {
         "lost_benefit": "The price markup and staff-capacity bonus"
@@ -3876,9 +3840,7 @@
     "yrs": 4.0,
     "mechanics": {
       "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
+        "kind": "pilot_plant"
       }
     }
   },
@@ -3968,9 +3930,7 @@
     "yrs": 5.0,
     "mechanics": {
       "precaution": {
-        "label": "redundant team",
-        "cost_share": 0.1,
-        "hours_share": 0.25
+        "kind": "redundant_team"
       }
     }
   },
@@ -4396,9 +4356,7 @@
     "yrs": 3.0,
     "mechanics": {
       "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
+        "kind": "pilot_plant"
       }
     }
   },
@@ -4524,9 +4482,7 @@
     "yrs": 10.0,
     "mechanics": {
       "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
+        "kind": "pilot_plant"
       }
     }
   },
@@ -4680,9 +4636,7 @@
     "mat": {},
     "mechanics": {
       "precaution": {
-        "label": "redundant team",
-        "cost_share": 0.1,
-        "hours_share": 0.25
+        "kind": "redundant_team"
       },
       "capability": {
         "lost_benefit": "Protection, credit, state funding and status"
@@ -5020,9 +4974,7 @@
     "yrs": 4.0,
     "mechanics": {
       "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
+        "kind": "pilot_plant"
       }
     }
   },
@@ -5123,9 +5075,7 @@
     "yrs": 4.0,
     "mechanics": {
       "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
+        "kind": "pilot_plant"
       }
     }
   },
@@ -5193,9 +5143,7 @@
     },
     "mechanics": {
       "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
+        "kind": "pilot_plant"
       },
       "capability": {
         "lost_benefit": "The price markup and staff-capacity bonus"
@@ -5429,9 +5377,7 @@
     "yrs": 8.0,
     "mechanics": {
       "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
+        "kind": "pilot_plant"
       }
     }
   },
@@ -5503,9 +5449,7 @@
     },
     "mechanics": {
       "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
+        "kind": "pilot_plant"
       },
       "capability": {
         "lost_benefit": "The trade-reach revenue bonus and staff capacity"
@@ -5842,9 +5786,7 @@
     "yrs": 3.0,
     "mechanics": {
       "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
+        "kind": "pilot_plant"
       }
     }
   },
@@ -6012,9 +5954,7 @@
     "yrs": 4.0,
     "mechanics": {
       "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
+        "kind": "pilot_plant"
       }
     }
   },
@@ -6069,9 +6009,7 @@
     "yrs": 7.0,
     "mechanics": {
       "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
+        "kind": "pilot_plant"
       }
     }
   },
@@ -6131,9 +6069,7 @@
     "yrs": 5.0,
     "mechanics": {
       "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
+        "kind": "pilot_plant"
       }
     }
   },
@@ -6235,9 +6171,7 @@
     "yrs": 7.0,
     "mechanics": {
       "precaution": {
-        "label": "redundant team",
-        "cost_share": 0.1,
-        "hours_share": 0.25
+        "kind": "redundant_team"
       }
     }
   },
@@ -6344,9 +6278,7 @@
     },
     "mechanics": {
       "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
+        "kind": "pilot_plant"
       },
       "mining_tech": {
         "yield": 1.6,
@@ -6420,9 +6352,7 @@
     },
     "mechanics": {
       "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
+        "kind": "pilot_plant"
       },
       "capability": {
         "lost_benefit": "Artisan training capacity"
@@ -6533,9 +6463,7 @@
     "yrs": 9.0,
     "mechanics": {
       "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
+        "kind": "pilot_plant"
       }
     }
   },
@@ -6618,9 +6546,7 @@
     },
     "mechanics": {
       "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
+        "kind": "pilot_plant"
       },
       "capability": {
         "lost_benefit": "The trade-reach revenue bonus and staff capacity"
@@ -6950,9 +6876,7 @@
     "yrs": 8.0,
     "mechanics": {
       "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
+        "kind": "pilot_plant"
       }
     }
   },
@@ -7207,9 +7131,7 @@
     "yrs": 12.0,
     "mechanics": {
       "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
+        "kind": "pilot_plant"
       }
     }
   },
@@ -7267,9 +7189,7 @@
     "yrs": 3.0,
     "mechanics": {
       "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
+        "kind": "pilot_plant"
       }
     }
   },
@@ -7329,17 +7249,15 @@
     "up_hours": 0,
     "yrs": 6.0,
     "mechanics": {
-      "precaution": {
-        "label": "pilot plant",
-        "cost_share": 0.15,
-        "hours_share": 0.1
-      },
       "diagnosis_instrument": {
         "instrument": "in2_mass_spectrograph",
         "quantity": "impurity",
         "needed": 1e-09,
         "unit": "impurity fraction",
         "needed_words": "purity of 1 part in 1e9"
+      },
+      "precaution": {
+        "kind": "pilot_plant"
       }
     }
   }

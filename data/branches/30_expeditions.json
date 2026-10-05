@@ -202,13 +202,11 @@
    "infrastructure",
    "military"
   ],
-   "mechanics": {
-     "precaution": {
-       "label": "pilot plant",
-       "cost_share": 0.15,
-       "hours_share": 0.1
-     }
+  "mechanics": {
+   "precaution": {
+    "kind": "pilot_plant"
    }
+  }
  },
  {
   "id": "exp_africa_circumnavigation",
@@ -242,13 +240,11 @@
    "infrastructure",
    "military"
   ],
-   "mechanics": {
-     "precaution": {
-       "label": "pilot plant",
-       "cost_share": 0.15,
-       "hours_share": 0.1
-     }
+  "mechanics": {
+   "precaution": {
+    "kind": "pilot_plant"
    }
+  }
  },
  {
   "id": "exp_atlantic_crossing",
@@ -284,13 +280,11 @@
    "military",
    "spectacle"
   ],
-   "mechanics": {
-     "precaution": {
-       "label": "pilot plant",
-       "cost_share": 0.15,
-       "hours_share": 0.1
-     }
+  "mechanics": {
+   "precaution": {
+    "kind": "pilot_plant"
    }
+  }
  },
  {
   "id": "exp_americas_factory",
@@ -328,13 +322,11 @@
    "military",
    "spectacle"
   ],
-   "mechanics": {
-     "precaution": {
-       "label": "pilot plant",
-       "cost_share": 0.15,
-       "hours_share": 0.1
-     }
+  "mechanics": {
+   "precaution": {
+    "kind": "pilot_plant"
    }
+  }
  },
  {
   "id": "exp_colony_administration",
@@ -369,13 +361,11 @@
    "infrastructure",
    "military"
   ],
-   "mechanics": {
-     "precaution": {
-       "label": "pilot plant",
-       "cost_share": 0.15,
-       "hours_share": 0.1
-     }
+  "mechanics": {
+   "precaution": {
+    "kind": "pilot_plant"
    }
+  }
  },
  {
   "id": "exp_transplant_botany",
@@ -411,13 +401,11 @@
    "commerce",
    "military"
   ],
-   "mechanics": {
-     "precaution": {
-       "label": "pilot plant",
-       "cost_share": 0.15,
-       "hours_share": 0.1
-     }
+  "mechanics": {
+   "precaution": {
+    "kind": "pilot_plant"
    }
+  }
  },
  {
   "id": "exp_conquest_resource",
@@ -453,12 +441,10 @@
    "military",
    "weapon_democratising"
   ],
-   "mechanics": {
-     "precaution": {
-       "label": "pilot plant",
-       "cost_share": 0.15,
-       "hours_share": 0.1
-     }
+  "mechanics": {
+   "precaution": {
+    "kind": "pilot_plant"
    }
+  }
  }
 ]

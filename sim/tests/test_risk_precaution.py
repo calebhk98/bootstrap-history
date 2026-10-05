@@ -5,9 +5,11 @@ redundant team costs and what it does to the failure chance; starting with it
 adds that cost and those hours to the project and lowers the dice's chance.
 """
 from .harness import *  # noqa: F401,F403
+from sim.engine.projects_precaution import KINDS
 
 NODE_ID = "cap_heat_1600"
 SPEC = NODES[NODE_ID]["mechanics"]["precaution"]
+LABEL = SPEC["kind"].replace("_", " ")
 UNOFFERED = "cap_tol_1mm"
 
 
@@ -18,11 +20,11 @@ def _fresh():
 
 
 check("set-up: the node offers a precaution and its risk is above zero",
-      SPEC["cost_share"] > 0 and NODES[NODE_ID]["risk"] > 0)
+      SPEC["kind"] in KINDS and "cost_share" not in SPEC and NODES[NODE_ID]["risk"] > 0)
 check("a node that declares none quotes none", _fresh().precaution_quote(UNOFFERED) is None)
 
 _quote = _fresh().precaution_quote(NODE_ID)
-check("the quote names what is bought", _quote["label"] == SPEC["label"], _quote)
+check("the quote names what is bought", _quote["label"] == LABEL, _quote)
 check("the quote shows a cost", _quote["extra_cost"] > 0, _quote)
 check("the quote shows the extra hours", _quote["extra_founder_hours"] > 0, _quote)
 check("the quote shows a lower chance with the lever than without",
@@ -53,3 +55,9 @@ check("the quote after starting agrees with the lowered chance",
 _refused_ok, _refused_why = _fresh().start_project(UNOFFERED, precaution=True)
 check("buying a precaution a node does not offer is refused, and nothing starts",
       not _refused_ok and "offers no" in _refused_why, _refused_why)
+
+check("every declared precaution names a known kind and overrides figures only with a source",
+      all(node["mechanics"]["precaution"]["kind"] in KINDS
+          and ("source" in node["mechanics"]["precaution"]
+               or not {"cost_share", "hours_share", "relief_per_cost_share"} & set(node["mechanics"]["precaution"]))
+          for node in NODES.values() if "precaution" in node.get("mechanics", {})))

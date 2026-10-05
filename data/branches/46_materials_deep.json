@@ -329,13 +329,11 @@
   "up_hours": 0,
   "kb": "10_metallurgy.md",
   "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]",
-   "mechanics": {
-     "precaution": {
-       "label": "pilot plant",
-       "cost_share": 0.15,
-       "hours_share": 0.1
-     }
+  "mechanics": {
+   "precaution": {
+    "kind": "pilot_plant"
    }
+  }
  },
  {
   "id": "mt2_magnesium_extraction",
@@ -415,13 +413,11 @@
   "up_hours": 0,
   "kb": "10_metallurgy.md",
   "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]",
-   "mechanics": {
-     "precaution": {
-       "label": "pilot plant",
-       "cost_share": 0.15,
-       "hours_share": 0.1
-     }
+  "mechanics": {
+   "precaution": {
+    "kind": "pilot_plant"
    }
+  }
  },
  {
   "id": "mt2_platinum_group_metals",
@@ -723,15 +719,15 @@
   "sus": 8,
   "kb": "10_metallurgy.md",
   "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]",
-   "mechanics": {
-     "diagnosis_instrument": {
-       "instrument": "met_spectroscopic_assay",
-       "quantity": "impurity",
-       "needed": 0.0001,
-       "unit": "impurity fraction",
-       "needed_words": "metal of 99.99% purity"
-     }
+  "mechanics": {
+   "diagnosis_instrument": {
+    "instrument": "met_spectroscopic_assay",
+    "quantity": "impurity",
+    "needed": 0.0001,
+    "unit": "impurity fraction",
+    "needed_words": "metal of 99.99% purity"
    }
+  }
  },
  {
   "id": "mt2_basic_converter",
@@ -1004,15 +1000,15 @@
   "conf": "C",
   "note": "Melting under vacuum removes dissolved oxygen, nitrogen, hydrogen. Deoxidizing with aluminum and calcium then vacuum refining produces ultra-clean steel. WW1 prompted research for superior alloys; post-1920 in Germany and US for aircraft.",
   "kb": "10_metallurgy.md",
-   "mechanics": {
-     "diagnosis_instrument": {
-       "instrument": "in2_mcleod_vacuum_gauge",
-       "quantity": "pressure",
-       "needed": 1.0,
-       "unit": "torr",
-       "needed_words": "a furnace chamber held at about 1 torr or better"
-     }
+  "mechanics": {
+   "diagnosis_instrument": {
+    "instrument": "in2_mcleod_vacuum_gauge",
+    "quantity": "pressure",
+    "needed": 1.0,
+    "unit": "torr",
+    "needed_words": "a furnace chamber held at about 1 torr or better"
    }
+  }
  },
  {
   "id": "mt2_powder_metallurgy",

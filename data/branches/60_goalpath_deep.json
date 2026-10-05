@@ -157,15 +157,15 @@
   "art": 1.0,
   "conf": "B",
   "note": "A lead-in wire that carries current through the wall of an evacuated glass envelope must expand and contract with the glass across the whole firing and operating range or the seal cracks the moment it cools. Platinum happens to match soda-lime glass closely; a nickel-iron wire matches better and costs far less. Fuse the wire into the glass while both are hot, in the glassblower's flame, and check every seal by chilling it hard. Without a matched seal there is no way to get current into a vacuum tube at all.",
-   "mechanics": {
-     "diagnosis_instrument": {
-       "instrument": "in2_mcleod_vacuum_gauge",
-       "quantity": "leak rate pressure",
-       "needed": 1e-06,
-       "unit": "torr",
-       "needed_words": "a seal that holds a vacuum of 1e-6 torr"
-     }
+  "mechanics": {
+   "diagnosis_instrument": {
+    "instrument": "in2_mcleod_vacuum_gauge",
+    "quantity": "leak rate pressure",
+    "needed": 1e-06,
+    "unit": "torr",
+    "needed_words": "a seal that holds a vacuum of 1e-6 torr"
    }
+  }
  },
  {
   "id": "gp_getter",
