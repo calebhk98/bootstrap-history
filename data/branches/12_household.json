@@ -44,6 +44,31 @@
   "note": "Cheap animal-fat candles; smoky and foul-smelling but accessible to the poor. Tallow is rendered from beef and mutton fat."
  },
  {
+  "id": "hom_soap_soft",
+  "name": "Soft soap from tallow and ash lye",
+  "cat": "cleaning",
+  "kind": "ENGINEERING",
+  "pre": [
+   "ag2_potash",
+   "mat_tallow"
+  ],
+  "kb": "91_household.md",
+  "ph": 0,
+  "lab": {},
+  "mat": {},
+  "cap_hours": 0,
+  "up_hours": 0,
+  "yrs": 0,
+  "risk": 0,
+  "sus": 0,
+  "gov": 0,
+  "rev_hours": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "B",
+  "note": "Rendered fat boiled with a lye leached from wood ash gives a soft soap, a craft practice in northern Europe long before the chemistry of saponification was understood. The later saponification technique explains it and improves yield and hardness; it is not needed to make the soap."
+ },
+ {
   "id": "hom_candle_beeswax",
   "name": "Beeswax candle",
   "cat": "lighting",
