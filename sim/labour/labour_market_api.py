@@ -146,6 +146,14 @@ class LabourMarket:
         """What an hour pays against the opening schedule, at this economy's output per hour."""
         return self._world.real_output_per_head() ** self._labour.LABOUR_PAY_SHARE_OF_OUTPUT_GAIN
 
+    def wage_index(self):
+        """The scarcity-driven index every wage in this society is scaled by."""
+        return self._world.wage_index
+
+    def wage_index_change(self, index_before):
+        """How far the wage index has moved from a reading taken earlier."""
+        return self._world.wage_index - index_before
+
     def household_wage_ratio(self):
         """What an hour of the unskilled numeraire pays now against the opening, before the price level and
         the cost of living (the solver's prices carry those): the scarcity of hands against the working
