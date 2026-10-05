@@ -33,3 +33,11 @@ What it would take (all in `sim/economy/`, owner of that package):
 - After this, `sim/labour/labour_market.py`'s `Workforce.step` (society hours by trade,
   `labour_allocation.reallocate`) is a third copy. The engine should read hours by trade from the same
   state, and that module goes.
+
+## Folded in
+
+Overlapping issues closed into this one; each closed file keeps its full text.
+
+- 430 (`closed/430-the-labour-core-has-no-save-field-and-no-yearly-call.md`): the labour core has no save field and no yearly call; the same decision as this issue.
+- 435 (`closed/435-han-opening-wages-spread-over-two-orders-of-magnitude.md`): Han opening wages: carpenter outlier and a scale mismatch between the agent economy and the wage schedule, which go when one model sets wages.
+- 433 (`closed/433-ui-cannot-offer-pay-over-the-market.md`): the UI cannot offer pay over the market; blocked until the premium is charged yearly by the labour core.

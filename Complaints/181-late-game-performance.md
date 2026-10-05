@@ -21,3 +21,11 @@ Also reported (final playtests, A; `Complaints/reports/final-playtests-triage.md
 Update (Complaint 331): see `321` for the measured per-year CPU at years 100 and 150 after firms began to grow instead of multiplying.
 
 Related: 304.
+
+## Folded in
+
+Overlapping issues closed into this one; each closed file keeps its full text.
+
+- 141 (`closed/141-yearly-cost-grows-with-built-nodes.md`): yearly cost grows with built nodes.
+- 321 (`closed/321-late-rome-year-still-costs-copying-and-clearing-work-per-actor.md`): late Rome year still pays final demand per trial price, a price solve per gate set and a revenue recompute; see Complaints/reports/caching-and-algorithms-review.md (owner: fix algorithms, not caches).
+- 390 (`closed/390-the-agent-economy-is-slow.md`): the agent economy is slow (owner: wire first, optimise after).

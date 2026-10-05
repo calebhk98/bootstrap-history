@@ -13,3 +13,13 @@ walking pace (`labour_settlement.relocation_quote`). `api.route` from spain_03 t
 cheapest-freight path rather than the fastest way a household would travel. A fastest-route query, or a
 route weighted by days, would let relocation use geography too.
 
+
+## Folded in
+
+Overlapping issues closed into this one; each closed file keeps its full text.
+
+- 414 (`closed/414-food-potential-is-not-read-by-demography-or-settlement.md`): food potential is not read by demography or settlement (settlement still uses arable times fertility).
+- 415 (`closed/415-mining-does-not-read-endowment-or-prospecting.md`): mining does not read endowment or prospecting; a mine should name a found deposit.
+- 440 (`closed/440-the-port-does-not-hand-the-economy-site-limits-or-read-its-extraction.md`): the port does not hand the economy site limits or read its extraction.
+- 138 (`closed/138-barren-land-has-no-food-but-farming.md`): barren land has no food but farming: the remaining piece is 414 (above).
+- 281 (`closed/281-deposit-tile-is-a-coarse-hand-assignment.md`): deposit tile is a coarse hand assignment; surveyed positions per mine (owner: later).

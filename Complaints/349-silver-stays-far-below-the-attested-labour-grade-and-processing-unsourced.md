@@ -16,3 +16,16 @@ After 348 the model's silver is about 379 hours per kg against about 1,000-1,700
 Do not move any figure to reach the attested day wage (CLAUDE.md 4.1).
 
 Related: 139, 284, 291, 342, 343.
+
+## Folded in
+
+Overlapping issues closed into this one; each closed file keeps its full text.
+
+- 291 (`closed/291-silver-byproduct-ratio-rests-on-one-deposit.md`): per-deposit assays are done; the silver byproduct ratio still rests on unsourced grades and the joint split.
+- 305 (`closed/305-silver-still-about-a-tenth-of-the-attested-labour-cost.md`): silver cost still sits far below the attested labour grade; same gap as this issue.
+- 333 (`closed/333-silver-chain-costs-what-the-mine-works-do-not-yet-charge.md`): slag, roast fuel, hearth wear and dressing throughput are not charged; each needs a source.
+- 342 (`closed/342-mining-labour-per-tonne-checked-silver-still-far-below-the-whole-workforce-figures.md`): mining labour per tonne is checked; the remaining gap is the grades and processing here.
+- 343 (`closed/343-deposit-grade-is-per-tonne-raised-but-dead-work-timbering-and-ventilation-are-not-charged.md`): barren rock, timbering and ventilation are charged; what remains is grades and processing.
+- 139 (`closed/139-silver-is-too-cheap-to-produce.md`): silver too cheap to produce: the remaining gap is this issue.
+- 284 (`closed/284-solved-copper-and-silver-prices-look-low.md`): solved copper and silver prices look low; open sub-item: the copper recipe's ore per tonne of metal disagrees with what the deposits imply (data audit).
+- 373 (`closed/373-no-jarosite-silver-route.md`): the jarosite route is built; its grade, flux and recovery need the paper.

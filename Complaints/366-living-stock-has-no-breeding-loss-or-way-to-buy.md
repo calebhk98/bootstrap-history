@@ -45,3 +45,9 @@ missing (see What is done and What remains below):
   priced as breeding stock.
 - The partner's refusal is still a civilisation data field (`will_not_sell`); an actor-based export policy
   (`sim/agents/policy.py`) should replace it.
+
+## Folded in
+
+Overlapping issues closed into this one; each closed file keeps its full text.
+
+- 365 (`closed/365-living-stock-is-modelled-as-research.md`): living stock is modelled as research; pepper, rubber, dairy cattle, tea, coffee and sugar have no stock nodes.

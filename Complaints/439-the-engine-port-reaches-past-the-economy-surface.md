@@ -87,3 +87,11 @@ Point 2: once the patch is in, `sim/tests/test_economy_imports.py` should requir
 import only `sim.economy.api` (and fail on any other `sim.economy.*` module), the way the labour and
 geography walls are held, and `sim/tests/test_economy_api.py` already checks that everything outside
 imports is published there.
+
+## Folded in
+
+Overlapping issues closed into this one; each closed file keeps its full text.
+
+- 443 (`closed/443-goods-service-lives-never-reach-the-economy.md`): goods service lives never reach the economy (port passes empty service lives; no service life in data).
+- 444 (`closed/444-danger-pay-is-always-zero.md`): danger pay is always zero: trades.json has no fatality field and the port passes only training years.
+- 429 (`closed/429-the-trade-registry-drops-fields-labour-needs.md`): the trade registry drops fields labour needs.

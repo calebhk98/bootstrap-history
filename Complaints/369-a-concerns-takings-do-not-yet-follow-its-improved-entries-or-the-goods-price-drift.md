@@ -14,3 +14,10 @@ What was built:
 Measured (`_fp/measure.py`-style driver, seed 1, 150 years from the opening): output-derived concerns are few, and the founder runs few of them; Rome's real output per head moves by under one percent from adoption in the years before the mortality shock, Han's is unchanged. See 354.
 
 Related: 101, 112, 354, 370, 375.
+
+## Folded in
+
+Overlapping issues closed into this one; each closed file keeps its full text.
+
+- 370 (`closed/370-real-output-ignores-goods-offered-after-the-opening-and-household-income-does-not-follow-wages.md`): real output ignores goods offered after the opening; household income does not follow wages.
+- 354 (`closed/354-the-founders-takeoff-needs-costs-that-lag-the-economy-index.md`): the founder's takeoff economy index is gone; the remaining ask is aggregate labour demand cleared against the working population.

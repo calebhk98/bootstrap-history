@@ -74,3 +74,12 @@ Also reported (final playtests, A; `Complaints/reports/final-playtests-triage.md
 ## First increment (built)
 
 `groups` lists who is organised, how many people they speak for, what they lost and to what, and what the state does (`sim/PROTOCOL.md`, INTEREST GROUPS). Size and grievance are measured, never scripted: the market's displaced tonnes at the quoted price for producers, the labour pool's premium on the hands the other employers pay for employers; pull is the loss as a share of the state's revenue from the territory the group lives in. The state's answer uses its own capacity (how much of the pull it can act on) and its own budget (a state in deficit compensates and raises the money from the taxpayers it sees, a state not in deficit may also forbid the technique). Code: `sim/agents/group.py`, `sim/engine/agents_port_groups.py`, `group_tuning.py`, `sim/engine/interest_groups.py`; tests `sim/tests/test_interest_groups.py`.
+
+## Folded in
+
+Overlapping issues closed into this one; each closed file keeps its full text.
+
+- 311 (`closed/311-interest-groups-beyond-displaced-producers-and-employers.md`): interest groups beyond displaced producers and employers: landholders, organised workers, owners (owner: could be mods).
+- 312 (`closed/312-founders-goods-concerns-have-no-incumbents-to-displace.md`): founder's goods concerns have no incumbents to displace; founder concern output does not enter market flows.
+- 313 (`closed/313-group-prohibitions-reach-almost-no-technique.md`): group prohibitions reach almost no technique; needs a substitute/complement relation in the tree.
+- 114 (`closed/114-wealth-notice-saturation-too-flat.md`): wealth-notice pressure caps are deliberate and labelled; scaling consequences past saturation need an owner decision.

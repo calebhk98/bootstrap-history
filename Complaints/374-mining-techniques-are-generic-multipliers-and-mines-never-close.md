@@ -8,3 +8,8 @@
 ## Round four
 
 The agent economy's producers exit after their loss years when they have no variable margin, repaying lenders first (`sim/economy/producers_close.py`, `producer_exit.py`); idle plantless capacity decays toward runs worked; a mine that left can return once wages fall (`python3 -m sim.tests --only economy_exit`). Sites and depletion come from geography through site limits (Complaint 440).
+## Folded in
+
+Overlapping issues closed into this one; each closed file keeps its full text.
+
+- 54 (`closed/54-a-shaft-that-costs-nothing-to-sink.md`): a shaft that costs nothing to sink: derive reserve and shaft bill from ore-body volume.

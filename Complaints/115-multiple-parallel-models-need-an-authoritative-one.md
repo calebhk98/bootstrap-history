@@ -86,3 +86,10 @@ for prioritising the wiring work.
 `docs/architecture/STATE_OF_THE_PROJECT.md` (milestones, not-built and next-steps sections) answer this finding
 directly; read that document rather than re-deriving the answer.
 `Complaints/102` (ECON-004) is where the actual wiring work is tracked.
+
+## Folded in
+
+Overlapping issues closed into this one; each closed file keeps its full text.
+
+- 405 (`closed/405-trader-actors-overlap-the-other-trade-models.md`): three merchant models (engine foreign_traders, economy merchants, trader actors) trade the same gap; trader sales never move the partner's market.
+- 403 (`closed/403-strata-income-has-no-source-agreeing-with-the-economy.md`): strata income has no source agreeing with the economy; strata are another household-budget model.

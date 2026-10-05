@@ -11,3 +11,10 @@ Complaint 95 asks "why did this number change?" for wages, state notice, epidemi
 What it would take: where each is computed, append `(cause, signed amount)` rows for the year, in the style of `sim/engine/cash_book.py`, and expose them through `ui_port`. The UI side then needs only a `since=` function on the figure, as the cash figure already has.
 
 Related: 95.
+
+## Folded in
+
+Overlapping issues closed into this one; each closed file keeps its full text.
+
+- 95 (`closed/95-why-did-number-change-inspector.md`): the why-did-this-number-change inspector needs the cause rows here, plus an open/mothball effect line.
+- 117 (`closed/117-prefer-explicit-state-causes-over-overloaded-flags.md`): prefer explicit state causes over overloaded flags; remaining instance is 54.

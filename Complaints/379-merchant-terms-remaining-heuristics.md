@@ -22,3 +22,9 @@ to thousands of tonnes a year as the fleet grows, limited by lift, not by capita
 earlier figures in `Complaints/346`.
 
 Related: 346, 339.
+
+## Folded in
+
+Overlapping issues closed into this one; each closed file keeps its full text.
+
+- 346 (`closed/346-merchant-terms-and-ornament-limit-are-heuristics.md`): merchant terms are derived; the remaining heuristics are listed here, ornament held stock is in 442.

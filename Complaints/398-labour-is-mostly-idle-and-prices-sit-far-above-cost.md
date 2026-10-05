@@ -19,3 +19,10 @@ Related: 388, 393, 395.
 ## Round four
 
 See `Complaints/reports/agent-economy-review-round-four.md`. Producers were all on each market's anchor tile while each tile is its own labour market, so most people off the anchor could not be hired: they are now spread by labour, cost and site limits (`sim/economy/location.py`). Losers now exit (`producers_close.py`, `producer_exit.py`). Entry drawn by a lasting margin was built and taken out: it made grain prices swing; the report records what it drew in and the design for the next attempt.
+## Folded in
+
+Overlapping issues closed into this one; each closed file keeps its full text.
+
+- 388 (`closed/388-unskilled-wages-low-in-rome-and-mexica.md`): unskilled wages look low in Rome and Mexica; needs sourced day wages.
+- 393 (`closed/393-land-has-no-price-so-free-entry-drives-food-to-labour-cost.md`): land has a market now; entry on price is off and rents swing.
+- 395 (`closed/395-recipes-for-crops-carry-no-seed-or-draught-input.md`): crop recipes carry no seed or draught input; physical shares needed in the wheat entries and other crops.

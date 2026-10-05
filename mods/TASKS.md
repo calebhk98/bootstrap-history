@@ -48,3 +48,14 @@ Ordered by value per cost.
 - **Save-format work.** CLAUDE.md: no save migration, ever.
 - **Engine rewrites for new content.** The engine reads data and never
   special-cases content ids.
+
+## Deferred to mods (owner decisions)
+
+Features the owner decided should be mods. Each closed complaint keeps the design notes.
+
+- Organisational hierarchy for directed hours at scale (span of control, overhead, technologies that widen it). (`Complaints/closed/104-directed-hours-need-organisational-hierarchy.md`)
+- Urbanisation as a system: towns grow from jobs, food reach and mortality, with housing, disease and water costs. (`Complaints/closed/107-urbanisation-should-become-first-class.md`)
+- Industrial pollution and externalities derived from physical throughput (smoke, runoff, occupational disease, cleanup technology). (`Complaints/closed/108-add-industrial-pollution-and-externalities.md`)
+- Religious institutions as an actor kind holding land, mills and credit, with data per civilisation. (`Complaints/closed/269-religious-institutions-absent-as-economic-actors.md`)
+- A town table (name, tile, size at the start date with a source) so `map` and `move` can name places. (`Complaints/closed/289-tiles-have-no-place-names-and-no-towns.md`)
+- Sheltering cash from disasters and confiscation (deposits elsewhere, letters of credit); the display part is done. (`Complaints/closed/165-disasters-take-cash.md`)

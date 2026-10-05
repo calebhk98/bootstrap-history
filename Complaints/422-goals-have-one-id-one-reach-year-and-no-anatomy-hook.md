@@ -9,3 +9,10 @@ Three engine limits block the rest of 268 and 69:
 - **No anatomy hook for measurement goals.** `_win_condition_value` (`core.py`) computes a measurement goal's value privately and nothing returns its contributors. The UI explains the known metrics (literacy, epidemic relief) by reading their public parts; a mod adding a new metric gets only a generic explanation. A public `win_condition_anatomy(condition)` returning `[(label, value, unit)]` per metric would make the view generic.
 
 Related: 69, 268, 220.
+
+## Folded in
+
+Overlapping issues closed into this one; each closed file keeps its full text.
+
+- 268 (`closed/268-progress-toward-several-goals-and-post-victory-goals.md`): after a win, promote a watched goal; progress toward several goals.
+- 69 (`closed/69-measurement-goals-need-anatomy-view.md`): measurement goals need the anatomy view; the remaining piece is this issue's engine hook.

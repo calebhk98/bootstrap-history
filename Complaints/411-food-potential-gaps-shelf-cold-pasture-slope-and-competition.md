@@ -11,3 +11,11 @@
 - Tropical rainforest cropping (Af) is low next to savanna (Aw): the crop water envelope's wet side and the class arable fraction.
 - No labour cap: a fisher or hunter feeds a bounded number of people, which belongs to the labour model once food reads geography.
 - Most coefficients are labelled heuristic in `data/world/geography/parameters/food.json` (measure with `python3 -c "from sim.geography import map_source, parameters; print(len(parameters.heuristics(map_source.load_map())))"`).
+
+## Folded in
+
+Overlapping issues closed into this one; each closed file keeps its full text.
+
+- 412 (`closed/412-deposits-have-no-geology-layer.md`): deposits have no geology layer; needs external data (owner decision on source).
+- 413 (`closed/413-sea-routes-have-no-land-mask-and-few-lanes.md`): sea routes have no land mask and few lanes.
+- 378 (`closed/378-reach-bands-not-calibrated-against-tile-geometry.md`): reach bands are not calibrated against tile geometry; re-deriving them moves fingerprints.
