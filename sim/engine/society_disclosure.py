@@ -15,8 +15,12 @@ class DisclosureMixin:
         return record
 
     def copy_difficulty(self, node_id):
-        """How hard the know-how is to copy from sight: the trades and the materials it needs, at least one."""
+        """How hard the know-how is to copy from sight. A node declares `copy_visibility` (the share an onlooker
+        can recover from the product or the yard) and difficulty is its reciprocal; a node that does not falls
+        back to the trades and materials it needs, at least one (TRANSITIONAL, CLAUDE.md 4.4)."""
         node = self.nodes[node_id]
+        if node.get("copy_visibility"):
+            return 1.0 / float(node["copy_visibility"])
         trades = [trade for trade, hours in (node.get("lab") or {}).items() if hours > 0]
         materials = [material for material, amount in (node.get("mat") or {}).items() if amount]
         return max(1, len(trades) + len(materials))

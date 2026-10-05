@@ -2480,7 +2480,9 @@
   "conf": "B",
   "note": "11-14% Mn, 1% C. Austenitic, very tough, hardens tremendously under impact (work hardening). Used for railway switches, crusher jaws, military armor. Hadfield (1880s) patent; microstructure was mysterious (austenite + brittle carbides plus transformation). Weldable with difficulty.",
   "up_hours": 0,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "copy_visibility": 0.1,
+  "copy_visibility_reason": "The alloy content and the water quench are invisible in the casting; only testing it in use reveals the property."
  },
  {
   "id": "mt2_spring_steel",
@@ -2510,7 +2512,9 @@
   "conf": "A",
   "note": "0.5-1.0% C steel, hardened and tempered blue or straw color. Retains yield point elasticity; returns to shape after bending. Watch springs, vehicle suspensions, precision mechanisms all depend. Quality control critical; brittle fracture if over-tempered or under-tempered.",
   "up_hours": 0,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "copy_visibility": 0.1,
+  "copy_visibility_reason": "The carbon content and the tempering temperature are invisible in a finished spring, and the colour of the heat is read by eye in the shop."
  },
  {
   "id": "mt2_grey_cast_iron",
