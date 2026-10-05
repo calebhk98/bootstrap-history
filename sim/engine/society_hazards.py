@@ -18,7 +18,7 @@ byte-for-byte if draw order is preserved. These are methods of Sim; they
 are a mixin only so that they can live in a file of their own.
 """
 from sim.constants import declare
-from . import money_units
+from . import cause_book, money_units
 from .data import (closure, critical_path, money_word)
 from .hazard_window import hazards_not_yet_past
 
@@ -581,7 +581,9 @@ class HazardsMixin:
             self.labour.log_staff_reduction(hazard.get("name", "a plague"), _staff_before)
             # Cash goes with the trade that stopped.
             cash = self.lose_capital(loss * self.PLAGUE_CASH_LOSS_SHARE, "plague losses")
+            _wage_index_before = self.wage_index
             self._apply_population_mortality_shock(raw)
+            cause_book.record_wage_shock(self, hazard.get("name", "a plague"), _wage_index_before)
             # Refresh population and wage screens now, not at year end.
             self._refresh_demographic_indexes(year)
             _hit = []

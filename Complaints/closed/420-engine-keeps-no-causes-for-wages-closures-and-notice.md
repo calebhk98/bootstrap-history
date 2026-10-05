@@ -1,6 +1,6 @@
 # The engine keeps no causes for wage changes, venture closures or state notice
 
-**Status:** open
+**Status:** closed - cause rows for wages (dated shocks plus the remainder), state notice (state, headcount, wealth, eminence) and concern closures/openings in sim/engine/cause_book.py, shown by `figures wages`, `figures state_notice` and `causes`; tested in sim/tests/test_cause_book.py. Not covered: the first year before the first snapshot has no notice or remainder wage rows, the wage remainder is not split into famine versus ageing, and forgetting-driven removals are not closures.
 
 Complaint 95 asks "why did this number change?" for wages, state notice, epidemic severity, project throughput and venture shutdowns. The UI can show the value, last year's value and the live drivers for each (`sim/ui/figures*.py`), but for three of them the cause is not recorded anywhere it can read:
 

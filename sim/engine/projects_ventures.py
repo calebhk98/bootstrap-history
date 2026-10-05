@@ -18,7 +18,7 @@ of Sim; they are a mixin only so that they can live in a file of their own
 import collections
 
 from sim.constants import declare
-from . import money_units
+from . import cause_book, money_units
 
 
 class VenturesMixin:
@@ -253,6 +253,7 @@ class VenturesMixin:
         projects.operating.add(node_id)
         projects.mothballed.discard(node_id)
         self.clear_closure(node_id)
+        cause_book.record_concern(self, "opening", node_id, "opened")
         if scalable:
             inst_units = getattr(governance, "inst_units", None)
             if inst_units is None:
