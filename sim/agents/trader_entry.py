@@ -2,7 +2,7 @@
 from typing import Any, Dict, List, Tuple
 
 from .records import ActorRecord
-from .trader import route_key, route_terms
+from .trader_routes import gaining_routes, route_key
 from .tuning import ENTREPRENEURIAL_CAPITAL_SHARE
 from .tuning_trader import TRADER_DEPTH_SHARE, TRADER_FOUNDINGS_PER_YEAR
 
@@ -27,21 +27,19 @@ def candidate_routes(registry: Any, world: Any) -> List[Tuple[float, str, Dict[s
 	served = served_tonnes(registry)
 	found = []
 	for material in sorted(world.trade_materials()):
-		for source in sorted(world.trade_places(None)):
-			for destination in sorted(world.trade_places(source)):
-				terms = route_terms(world, source, destination, material) if source != destination else None
-				if terms is None or terms["gain"] <= 0.0:
-					continue
-				key = route_key(material, source, destination)
-				unserved = world.market_depth(material, destination) * TRADER_DEPTH_SHARE - served.get((material, destination), 0.0)
-				tonnes = min(unserved, capital_limit / terms["outlay"])
-				if tonnes <= 0.0:
-					continue
-				gain = tonnes * terms["gain"]
-				if gain <= tonnes * terms["outlay"] * capital_rate:
-					continue
-				found.append((gain, key, {"material": material, "source": source, "destination": destination,
-										  "tonnes": tonnes, "capital": tonnes * terms["outlay"]}))
+		sources = sorted(world.trade_places(None))
+		for source, destination, terms in gaining_routes(
+				world, material, sources, lambda place: sorted(world.trade_places(place))):
+			key = route_key(material, source, destination)
+			unserved = world.market_depth(material, destination) * TRADER_DEPTH_SHARE - served.get((material, destination), 0.0)
+			tonnes = min(unserved, capital_limit / terms["outlay"])
+			if tonnes <= 0.0:
+				continue
+			gain = tonnes * terms["gain"]
+			if gain <= tonnes * terms["outlay"] * capital_rate:
+				continue
+			found.append((gain, key, {"material": material, "source": source, "destination": destination,
+									  "tonnes": tonnes, "capital": tonnes * terms["outlay"]}))
 	found.sort(key=lambda item: (-item[0], item[1]))
 	return found
 
