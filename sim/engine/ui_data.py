@@ -11,10 +11,23 @@ from sim.json_files import read_json
 from .mods import get_ordered_mods
 from .mods_base import ModError
 from .mods_ids import check_new_id
+from .readable import is_readable
 from .tree_source import ROOT
 
 FIGURES_FILE = os.path.join("data", "ui", "figures.json")
 READ_PARTS = ("components", "flows", "drivers")
+
+
+def check_state_path(state_path: str, where: str) -> None:
+    """A state path reads only: no step starts with '_', and its first step, if a method of the Sim, is marked readable."""
+    from .core import Sim
+    steps = state_path.split(".")
+    if any(not step or step.startswith("_") for step in steps):
+        raise ModError("%s: state path %r has a private or empty step" % (where, state_path))
+    first = Sim.__dict__.get(steps[0]) or getattr(Sim, steps[0], None)
+    if callable(first) and not is_readable(first):
+        raise ModError("%s: state path %r calls %s, which is not marked readable (only attributes, properties "
+                       "and @readable methods may be read)" % (where, state_path, steps[0]))
 
 
 def _check_figure(figure_id: str, spec: Any, path: str) -> None:
@@ -29,6 +42,12 @@ def _check_figure(figure_id: str, spec: Any, path: str) -> None:
         if not isinstance(reads, dict) or not all(isinstance(read, str) for read in reads.values()):
             raise ModError("%s: figure %s field %r must be a state path or {label: state path}"
                            % (path, figure_id, part))
+    reads = [spec["value"]]
+    for part in READ_PARTS:
+        entry = spec.get(part)
+        reads += [entry] if isinstance(entry, str) else list((entry or {}).values())
+    for state_path in reads:
+        check_state_path(state_path, "%s: figure %s" % (path, figure_id))
     if "digits" in spec and not isinstance(spec["digits"], int):
         raise ModError("%s: figure %s field 'digits' must be an integer" % (path, figure_id))
 

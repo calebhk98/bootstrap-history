@@ -59,6 +59,17 @@ with tempfile.TemporaryDirectory() as mods_dir:
     figures_data.register_data_figures()
 check("a mod figure id outside its namespace is refused", refused)
 
+for bad_path in ("open_mine", "_mine_capex", "population.__class__"):
+    with tempfile.TemporaryDirectory() as mods_dir:
+        write_mod(mods_dir, {MOD_ID + ":bad": {"label": "x", "value": bad_path}})
+        try:
+            figures_data.register_data_figures(mods_dir)
+            message = ""
+        except ModError as error:
+            message = str(error)
+        figures_data.register_data_figures()
+    check("a mod figure reading %r is refused, naming the path" % bad_path, bad_path in message, message)
+
 check("the goods a mine supplies come from the catalogue and equal the old table",
       all(game.mine_demand_goods(material) == goods for material, goods in OLD_DEMAND_KEYS.items()))
 check("a material with no catalogue row is its own demand good", game.mine_demand_goods("unknown_kg") == ("unknown_kg",))

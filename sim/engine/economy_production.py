@@ -22,6 +22,7 @@ grouping evidence, and for why this lives in a separate file.
 from .data import trade_family
 from sim.constants import declare
 from . import money_units, node_revenue_market
+from .readable import readable
 
 
 class ProductionMixin:
@@ -128,6 +129,7 @@ class ProductionMixin:
         finally:
             household.wage_hours_this_year = _sold
 
+    @readable
     def revenue(self):
         """Total annual revenue across all active concerns, workshops, and state funding.
 
@@ -436,6 +438,7 @@ class ProductionMixin:
                 rows[node_id] = round(amt, 1)
         return rows
 
+    @readable
     def revenue_sources(self):
         """Where the money actually comes from, itemised.
 
@@ -645,6 +648,7 @@ class ProductionMixin:
         self.household._rev_up_candidates_cache = (seq, practice_set, operating_version, cands)
         return cands
 
+    @readable
     def upkeep(self):
         # Symmetrically, you do not pay to maintain what you do not own, but you
         # do bear the small standing cost of the practice you actually run - and
@@ -654,6 +658,7 @@ class ProductionMixin:
         # to know.
         return sum(self.upkeep_by_concern().values())
 
+    @readable
     def upkeep_by_concern(self):
         """{node id: yearly running cost} for each concern or practice that is paid for;
         `upkeep` is its sum."""

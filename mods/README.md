@@ -72,7 +72,9 @@ A mod may provide:
   inspector. A figure has a string `label`, optional `unit` and integer `digits`, and `value`, a state path:
   dotted names of `Sim` attributes or methods (a method is called with no arguments; a name after a mapping
   looks up its key), for example `population.total`. Optional `components`, `flows` and `drivers` are either a
-  path to a mapping of name to number or `{name: path}`. The base game's own file shows the shape; a figure
+  path to a mapping of name to number or `{name: path}`. A path reads only: no step starts with `_`, and a
+  method is callable only when the engine marks it `@readable` (`sim/engine/readable.py`); anything else is
+  refused at load with an error naming the file. The base game's own file shows the shape; a figure
   that needs code (a cause book) stays a `@figure` in `sim/ui`. Ids outside the mod's namespace and ids already
   taken are errors.
 

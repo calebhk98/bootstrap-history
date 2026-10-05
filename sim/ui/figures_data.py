@@ -12,6 +12,8 @@ def read_path(sim, path):
     for step in path.split("."):
         value = value[step] if isinstance(value, dict) else getattr(value, step)
         if callable(value):
+            if not ui_port.is_readable(value):
+                raise ValueError("state path %r reaches %r, which is not marked readable" % (path, step))
             value = value()
     return value
 
