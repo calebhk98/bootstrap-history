@@ -93,3 +93,23 @@ Overlapping issues closed into this one; each closed file keeps its full text.
 
 - 405 (`closed/405-trader-actors-overlap-the-other-trade-models.md`): three merchant models (engine foreign_traders, economy merchants, trader actors) trade the same gap; trader sales never move the partner's market.
 - 403 (`closed/403-strata-income-has-no-source-agreeing-with-the-economy.md`): strata income has no source agreeing with the economy; strata are another household-budget model.
+
+## Remaining after the shared-helper pass: state revenue bases
+
+`sim/agents/revenue_bases.py` and `sim/economy/taxes_bases.py` share base names (`harvest`, `adult_labour_years`,
+`imports_value`, `exports_value`, `coin_stock`) and a `Base` dataclass, but they are not one implementation twice:
+
+- The agents bases take the engine's `SimWorld` and read aggregates (`harvest_tonnes`, `national_people`, `trade_value`,
+  `coin_stock_value`), so each yields one body-wide figure. The economy bases take `YearFacts` and measure per payer
+  from the economy's own ledger records, skipping edge accounts. The inputs have no common shape, so no single
+  function can serve both without first deciding which side is authoritative.
+- The two `Base` records differ (payers and material against quantity, good and tile), and each package may import
+  the other only through its `api`; a shared base would have to live in a top-level module both packages import.
+- Only the vocabulary is common: the basis names (and the harvest material). Sharing a table of names would not
+  remove drift, because the measurement is what differs. The real fix is the one recorded above: the agents
+  `Government` reads the economy's assessed total through an economy-port member and its aggregate bases go.
+- Also still open, noted while auditing: `labour/trade_data.fallback_trade` is a thin adapter over
+  `labour/market/trades.fallback_trade` (different signature), `deep_merge` in `engine/mods_base.py` and
+  `geography/map_source.py` differ on purpose (control keys and nested-only deletion against delete-on-null), and
+  `economy/labour.training_premium` and `reservation_wage` against the labour package's are different maths (item 2
+  of the audit), not copies.
