@@ -621,6 +621,36 @@ The textile industry of the pre-industrial world is almost entirely female and l
 
 ---
 
+### backstrap_loom - Body-Tensioned Weaving (*textorium dorsale*)
+
+**What it is / why you want it.** A loom with no frame. One end of the warp is tied to a post, tree or house beam; the other end is tied to a bar that is fastened by a strap around the weaver's lower back. The weaver leans back to tighten the warp and leans forward to slacken it. It is the loom of Mesoamerica and the Andes and is still used there, and it makes the cloth that cotton and maguey fibre become in a society with no frame looms.
+
+**Why you would never guess this.** The tension is the weaver's own body, not a beam and a wedge. That is why the loom costs almost nothing, folds into a bundle and can be set up anywhere, and why the cloth is narrow: the weaver must be able to reach both selvedges by hand. Width is bought with several panels sewn together, or with a second weaver.
+
+**Prerequisites.** A spindle with a whorl for thread (`tex_drop_spindle`). No metal, no wheel and no draught animal.
+
+**Inputs.** Cotton lint or maguey (agave) fibre; sticks of hard wood for the warp bars, the shed rod, the heddle rod and the batten; a smooth bone or wooden stick shuttle; cord for the strap and the ties.
+
+**Procedure.**
+1. Spin the thread on the spindle. Cotton is cleaned of seed and carded by hand first; maguey fibre is scraped clean of pulp, dried and twisted.
+2. Wind the warp round two bars in a figure of eight so that alternate threads lie on opposite sides of a lease rod; this makes the two sheds.
+3. Tie one bar to the post and the other to the strap; sit or kneel at a distance that the warp is taut when you lean back.
+4. Raise one shed with the shed rod, and the other with a heddle rod that pulls the alternate threads up by loops.
+5. Open the shed, pass the shuttle with the weft, beat it down with the flat batten, change the shed, and repeat. Move the woven cloth round the bars as the work advances.
+6. Cut or untie the warp. The cloth has selvedges on both sides and a fringe of warp ends at both ends; finish it by washing and beating.
+
+**How you know it worked.** The cloth has even selvedges, the width does not wander in or out (the weft was not pulled too tight), and the warp lies flat when released.
+
+**Failure modes.** Weft pulled hard each pass draws the selvedges in and the cloth narrows. A weaver who does not shift her seat keeps the warp slack and the weave is open. Uneven spinning shows as bars across the cloth.
+
+**Cost & labour.** Labour is dominated by spinning, the slowest stage of hand textile work, then weaving; the tools are sticks and cord. The per-kilogram hours in `data/production/96_mesoamerican_fibre_and_silver.json` are labelled heuristics, not measurements.
+
+**Confidence: HIGH** that the technique is as described (ethnographic and archaeological record in Mesoamerica and the Andes); LOW on the labour rates.
+
+**Sources.** Berdan, *The Aztecs of Central Mexico* (1982), on cotton and maguey cloth in Aztec society and the cloth tribute; Brumfiel on household spinning and weaving and cloth tribute; Sahagun, *Florentine Codex*, on weaving practice. Not checked against the texts for this entry.
+
+---
+
 ## Sources and Confidence
 
 **Primary historical sources cited:**
