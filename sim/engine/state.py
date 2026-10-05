@@ -50,6 +50,9 @@ class HouseholdState:
 	cash_flow: Dict[str, float] = field(default_factory=dict)
 	cash_mark: Optional[float] = None
 	cash_periods: List[Dict[str, Any]] = field(default_factory=list)
+	# the cause book (sim/engine/cause_book.py): rows for wage, notice and closure changes, and the readings they are measured from
+	cause_rows: List[Dict[str, Any]] = field(default_factory=list)
+	cause_mark: Optional[Dict[str, float]] = None
 
 	# Workforce and human capital
 	scholars: float = 0.0
