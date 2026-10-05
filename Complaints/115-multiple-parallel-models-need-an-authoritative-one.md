@@ -180,11 +180,25 @@ Left to do, in order:
   bare 365-day year in `foreign_traders.py`, `food_pasture.py` and `layers_ocean.py` is `unit_conversions.CIVIL_DAYS_PER_YEAR`;
   the 365.25 averages declared in `sim/world/` and `climate_temperatures.py` stay separate (standalone models).
 
+## Strata (403): decision, the cohorts own household income
+
+With the agent economy on, a home stratum's income is read from the economy's household cohorts, not from members times
+work share times pay. The cohorts of the whole home country form an income curve over the people (poorest per head
+first, `economy.cohort_incomes`); the home strata are ranked by what their own trade or property would earn per head
+and laid end to end along the curve, each taking the income of the cohorts its members occupy
+(`sim/agents/strata_observed.py`, fed through `observed_stratum` in `sim/engine/agents_port_cast.py`). No stratum is
+named; the rule reads only a plan's trade and property share. The bonded earn nothing themselves and their slice is the
+product credited to the keeper (the hours their cohort supplied, paid by employers). Another country's strata and any game
+with the agent economy off keep the wage bridge. Membership still follows the population model.
+Measured on a Rome start (agent economy on), the bridge against the mapped cohort income per stratum is printed by
+`python3 -m sim.tests --jobs 1 --only strata_income_from_cohorts`: the bridge overstates by a few times for wage strata
+and by orders of magnitude for the propertied; the test also checks the mapped incomes add up to the cohorts' and that
+strata money moves only by what crossed the edge and the state's relief.
+
 ## Still two owners
 
 - Labour (428): the labour package's market and the agent economy's labour market each clear wages.
 - Merchants (405): one owner per flow now for goods actors carry (decision above); the stand-ins still own the rest.
 - Demand baskets: `sim/world/demand.py`, the economy's household baskets and the agents' strata baskets.
-- Strata (403): strata income against the economy's cohorts.
 - The engine's `market_loans`, `update_capital_market` and its rate still run (and set the rate) when the agent economy is off;
   only the reading side is unified.

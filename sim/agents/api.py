@@ -26,6 +26,7 @@ from .country_view import CountryWorld
 from .government_foreign import ForeignGovernment
 from .player import Player
 from .stratum import Stratum, stratum_id
+from .strata_observed import observed_incomes
 from .strata_seed import seed_strata, strata_definitions, strata_spawner
 from .player_commands import CommandRejected, register_command
 from . import exchange, exchange_commands, exchange_sale  # noqa: F401  (registers the offer commands and the answers spawner)
