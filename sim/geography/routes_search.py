@@ -138,6 +138,27 @@ def route(world_map: WorldMap, origin_tiles: Iterable[str], destination_tiles: I
     return None if end_state is None else _legs(compiled, tree, end_state)
 
 
+def costs_from(world_map: WorldMap, origin_tiles: Iterable[str], modes: Iterable[str],
+               improvements: Optional[Mapping[str, Mapping[str, Any]]] = None,
+               mode_costs: Optional[Mapping[str, float]] = None,
+               handling_costs: Optional[Mapping[str, float]] = None,
+               held_nodes: Optional[Iterable[str]] = None) -> Dict[str, float]:
+    """{tile: least cost per tonne from any origin tile} for every tile a haul reaches (origins cost 0).
+    One search serves every destination; the tree is kept like `route`'s."""
+    origins = _origin_indexes(world_map, origin_tiles)
+    compiled = routes_compile.compiled_for(world_map, routes_modes.checked_mode_ids(world_map, modes),
+                                           improvements, mode_costs, handling_costs, held_nodes)
+    cost, _days, _previous = _tree(compiled, origins, False)
+    count = len(compiled.mode_ids)
+    result: Dict[str, float] = {}
+    for tile_id, tile in compiled.tile_index.items():
+        cheapest = min(cost[tile * count:(tile + 1) * count], default=INFINITY)
+        if cheapest < INFINITY:
+            result[tile_id] = cheapest
+    result.update({tile_id: 0.0 for tile_id in origins})
+    return result
+
+
 def reach(world_map: WorldMap, origin_tiles: Iterable[str], modes: Iterable[str], days_budget: float,
           improvements: Optional[Mapping[str, Mapping[str, Any]]] = None,
           mode_costs: Optional[Mapping[str, float]] = None,

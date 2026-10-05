@@ -228,8 +228,7 @@ def graph(world_map: WorldMap) -> RouteGraph:
 
 
 def links(world_map: WorldMap, mode_ids) -> List[Tuple[str, str, str, float]]:
-    """(tile_a, tile_b, mode, km) for each edge a mode in `mode_ids` runs on without anything built,
-    the shape the economy's tile freight graph takes."""
+    """(tile_a, tile_b, mode, km) for each edge a mode in `mode_ids` runs on without anything built."""
     chosen = routes_modes.modes(world_map)
     result = []
     for edge in graph(world_map).edges:

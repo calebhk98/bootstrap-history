@@ -175,6 +175,14 @@ def merge_folders(folders: Iterable[Tuple[Optional[str], str]]) -> WorldMap:
     return WorldMap(map_id, tiles, layers, catalogues, tuple(folder for _owner, folder in folders), properties)
 
 
+def map_of_tiles(tile_records: Dict[str, Dict[str, Any]], like: WorldMap) -> WorldMap:
+    """A map of the given tiles that keeps only `like`'s route catalogues and parameters (no layers, no
+    sea_links: sea edges are then joined from the tiles' coasts)."""
+    kept = {name: like.catalogue(name) for name in ("route_modes", "sea_lanes", "parameters")}
+    tiles = {tile_id: dict(record, id=tile_id) for tile_id, record in tile_records.items()}
+    return WorldMap("tiles_of_%s" % like.map_id, tiles, {}, kept, ())
+
+
 def mod_overlay_folders(mods: Iterable[Tuple[str, str]]) -> List[Tuple[str, str]]:
     """(mod_id, folder) for each mod, in the given load order, that ships a map overlay."""
     return [(mod_id, os.path.join(mod_root, "data", "world", "geography"))

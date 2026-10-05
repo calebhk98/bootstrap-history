@@ -9,8 +9,8 @@ WALL = "two-way"  # nothing here reaches sim/engine/; the engine hands it what i
 from sim.geography import tile_lookup
 from sim.geography import queries
 from sim.geography.queries import (deposit_records, edge_key, endowment, food_potential, freight_links,
-                                   known_deposits, layer_value, open_map, problems, prospect, reach, resource_ids,
-                                   resources_at, route, stand, supports, tile_facts, tile_ids, tiles_of_regions,
+                                   known_deposits, layer_value, map_of_tiles, open_map, problems, prospect, reach,
+                                   resource_ids, resources_at, route, route_costs, stand, supports, tile_facts, tile_ids, tiles_of_regions,
                                    usable_modes)
 from sim.geography import (cargo_cost, climate_temperatures, crop_climate, freight_cost, regions, sea_freight,
                            settlement, territory, tile_names, transport)
@@ -26,5 +26,5 @@ __all__ = ["Geography", "GEOFILE", "load_geography", "haversine_km", "KOPPEN_TRO
            "tile_names", "transport",
            # the contract (sim/geography/INTERFACE.md); everything above is older surface outside it
            "queries", "open_map", "tile_ids", "tiles_of_regions", "tile_facts", "layer_value", "food_potential", "usable_modes", "route",
-           "reach", "freight_links", "edge_key", "resource_ids", "resources_at", "endowment", "known_deposits",
+           "reach", "route_costs", "map_of_tiles", "freight_links", "edge_key", "resource_ids", "resources_at", "endowment", "known_deposits",
            "deposit_records", "prospect", "supports", "stand", "problems"]
