@@ -310,12 +310,7 @@
   "standing_army": 3000,
   "price_index": 1.1,
   "prerequisite_gaps": {
-    "ag2_refrigeration_ice": "unreviewed",
-    "mat_paper": "unreviewed",
-    "sc2_institution_textbook": "unreviewed",
-    "sea_sternpost_rudder": "unreviewed",
-    "tex_indigo": "unreviewed",
-    "water_power_scale": "unreviewed"
+    "mat_paper": "Paper reaches England as an import from Italy and Spain; the stamper-mill rag-paper process (rag_paper) is not practised there."
   },
   "starting_techs": [
     "ag2_composting",
@@ -324,7 +319,6 @@
     "ag2_marling",
     "ag2_oil_pressing",
     "ag2_potash",
-    "ag2_refrigeration_ice",
     "cap_heat_0700",
     "cap_heat_1100",
     "cap_power_human",

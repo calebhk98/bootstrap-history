@@ -1,6 +1,6 @@
 # Every civilisation holds a technology whose prerequisites it lacks
 
-**Status:** open - declared per civilisation in prerequisite_gaps; unreviewed entries warn in validate
+**Status:** closed - every gap reviewed: held-in-error removed, wrong prerequisites corrected, the rest declared with a reason; validate shows no unreviewed entries
 
 **Audit note:** the pinned-count test was replaced by a `validate` rule. Each civilisation declares every held node whose prerequisites it lacks in `prerequisite_gaps` (node id to reason, see `data/civilizations/_SCHEMA.md`); an undeclared gap is an error and the reason `unreviewed` is a warning. `python3 sim/simulator.py validate | grep unreviewed` lists what is still open. Fixing means giving the civilisation the prerequisite or correcting the node's `pre`, then deleting the entry.
 
@@ -87,3 +87,18 @@ a civilisation's holdings are closed under the full transitive prerequisite
 chain, and it says nothing about whether a civilisation SHOULD hold a node it
 does not, which is `Complaints/40`'s question and needs a historian rather
 than a graph walk.
+
+## Resolution
+
+Reviewed on historical grounds; `python3 sim/simulator.py validate | grep unreviewed` prints nothing.
+
+- Removed from `starting_techs` (the holding was the error): `ag2_refrigeration_ice` for england_1300, norse_900ad and rome_100ad. An ice trade is a later commercial system than the ice houses and snow cellars those societies had.
+- Node `pre` corrected (the prerequisite was the error):
+  - `sc2_institution_textbook` no longer needs the journal or the curriculum (codified teaching texts long precede both).
+  - `sea_sternpost_rudder` no longer needs skeleton-first hulls (a rudder was fitted to plank-first ships).
+  - `tex_indigo` needs lime, which the vat uses, not natron.
+  - `water_power_scale` no longer needs the crank and connecting rod (millponds and overshot wheels drive a shaft without one).
+  - `fud_heavy_mouldboard_plough_coulter` and `fud_seed_drill` no longer need the horse collar (both are oxen-drawn), and the seed drill no longer needs the master screw.
+- Declared in `prerequisite_gaps` with a reason: england_1300 `mat_paper` (imported); han_china_100ad `bellows_water_blown`, `blast_furnace`, `mat_paper`; norse_900ad `med_trepanation`, `med_wound_suturing`, `exp_openocean_navigation`.
+
+Still open as design work, not as a validation gap: the Norse non-instrumental navigation capability the audit suggested as a second node. Until it exists the Norse hold `exp_openocean_navigation` under a written reason.

@@ -286,10 +286,6 @@
   "population": 65000000,
   "standing_army": 380000,
   "price_index": 1.0,
-  "prerequisite_gaps": {
-    "ag2_refrigeration_ice": "unreviewed",
-    "sc2_institution_textbook": "unreviewed"
-  },
   "starting_techs": [
     "ag2_composting",
     "ag2_liming",
@@ -297,7 +293,6 @@
     "ag2_marling",
     "ag2_oil_pressing",
     "ag2_potash",
-    "ag2_refrigeration_ice",
     "cap_heat_0700",
     "cap_heat_1100",
     "cap_power_human",

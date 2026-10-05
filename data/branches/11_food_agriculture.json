@@ -378,10 +378,7 @@
   "name": "Heavy mouldboard plough with coulter (regional)",
   "cat": "agriculture",
   "kind": "ENGINEERING",
-  "pre": [
-   "horse_collar",
-   "cap_tol_1mm"
-  ],
+  "pre": ["cap_tol_1mm"],
   "kb": "75_agriculture_food.md",
   "ph": 200,
   "lab": {
@@ -420,11 +417,7 @@
   "name": "Mechanical seed drill",
   "cat": "agriculture",
   "kind": "ENGINEERING",
-  "pre": [
-   "cap_tol_1mm",
-   "horse_collar",
-   "master_screw"
-  ],
+  "pre": ["cap_tol_1mm"],
   "kb": "75_agriculture_food.md",
   "ph": 180,
   "lab": {
