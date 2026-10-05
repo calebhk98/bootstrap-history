@@ -134,9 +134,10 @@ class ForeignPaymentsMixin:
         if flow_tonnes > 0.0:
             ledger["goods_in_value"] += value
             paid = balance_of_payments.coin_paid(value, self.home_coin_stock_units())
-            ledger["home_coin_units"] -= paid
             received = paid / home_money_per_partner_coin
             carriage = self.coin_carriage_units(civilization_id, received, home_money_per_partner_coin)
+            # the route's carriers are the home economy's (freight is priced in home money), so their pay stays in the home stock
+            ledger["home_coin_units"] -= paid - carriage * home_money_per_partner_coin
             ledger["partner_coin_units"] += received - carriage
             ledger["coin_carriage_units"] += carriage
         elif flow_tonnes < 0.0:
@@ -147,7 +148,7 @@ class ForeignPaymentsMixin:
             paid_units = balance_of_payments.coin_paid(partner_units, partner_stock)
             ledger["partner_coin_units"] -= paid_units
             carriage = self.coin_carriage_units(civilization_id, paid_units, home_money_per_partner_coin)
-            ledger["home_coin_units"] += (paid_units - carriage) * home_money_per_partner_coin
+            ledger["home_coin_units"] += paid_units * home_money_per_partner_coin   # sellers and carriers, both home
             ledger["coin_carriage_units"] += carriage
 
     # ---- carriers -----------------------------------------------------------

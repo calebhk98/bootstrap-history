@@ -36,9 +36,23 @@ check("the carriage paid is recorded in coin units", dear_ledger["coin_carriage_
 dearer_received, _ledger, _owed = settled(4000.0, 5.0)
 check("dearer carriage takes more of the coin", free_received - dearer_received > 1.9 * (free_received - dear_received),
       (dearer_received, dear_received))
-free_home_gain = settled(0.0, -5.0)[1]["home_coin_units"]
-dear_home_gain = settled(2000.0, -5.0)[1]["home_coin_units"]
-check("coin brought home pays carriage too", 0.0 < dear_home_gain < free_home_gain, (dear_home_gain, free_home_gain))
+
+
+def coin_total_change(carriage_per_tonne, flow_tonnes):
+    """(change in payer + receiver + carriers' coin in home money, carriage booked) over one settlement."""
+    game = sim(civ="rome_100ad", capital=1e9)
+    game.foreign_economies = lambda: [PARTNER]
+    game._coin_carriage_money_per_tonne = lambda civilization_id: carriage_per_tonne
+    per_coin = COIN["kg_per_unit"] * game._material_prices()[COIN["material"]]
+    game._settle_flow(PARTNER, flow_tonnes, 0.05 * game.home_coin_stock_units() * per_coin, per_coin)
+    ledger = game._foreign_ledger(PARTNER)
+    return ledger["home_coin_units"] + ledger["partner_coin_units"] * per_coin, ledger["coin_carriage_units"]
+
+
+for direction, flow in (("an import", 5.0), ("an export", -5.0)):
+    total, carriage = coin_total_change(2000.0, flow)
+    check("carriers are paid, so %s settlement leaves the total coin unchanged" % direction,
+          carriage > 0.0 and abs(total) <= 1e-9 * carriage * COIN["kg_per_unit"] * 1e6, (total, carriage))
 
 # --- any actor holding coin pays to keep it.
 

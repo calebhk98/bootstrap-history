@@ -1,6 +1,6 @@
 # A treasury of coin weighs nothing and needs no vault
 
-**Status:** partly - the household, every state and every firm pay the yearly keeping cost (`sim/tests/test_coin_keeping_charged.py`, `sim/tests/test_coin_carriage_and_treasury_keeping.py`) and coin settled across a foreign route pays carriage by its mass; theft exposure by mass remains
+**Status:** partly - the household, every state and every firm pay the yearly keeping cost (`sim/tests/test_coin_keeping_charged.py`, `sim/tests/test_coin_carriage_and_treasury_keeping.py`) and coin settled across a foreign route pays carriage by its mass, paid to the home carriers so the coin stock is conserved; theft exposure by mass remains
 
 Source: `Complaints/reports/playthrough-review-han-china-100-to-400ad.md`, item 5 (physical weight of bronze coinage).
 
