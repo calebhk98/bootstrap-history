@@ -168,7 +168,7 @@
       ],
       "fatality_risk_per_year": 0.004,
       "fatality_confidence": "C",
-      "fatality_source": "Royal Commission and Mines Inspectorate returns for British coal mining in the mid nineteenth century give deaths of roughly three to five per thousand miners a year (Church, History of the British Coal Industry, vol. 3; Duckham 1973); pre-industrial mining is taken as no safer."
+      "fatality_source": "British Mines Inspectorate returns for coal mining, 1850s: about five fatal accidents per thousand a year, explosions alone about one per thousand (J. E. Williams/Inspectorate series as summarised in P. E. H. Hair, 'Mortality from Violence in British Coal-Mines, 1800-50', Economic History Review 21 (1968)); late-nineteenth-century metal mines ran one to two per thousand. Victorian deep coal is a high bound for earlier mining; no pre-industrial rate found."
     },
     "optician": {
       "family": "craft",
@@ -211,8 +211,8 @@
       "note": "Cheap and abundant.",
       "training_years": 2,
       "fatality_risk_per_year": 0.02,
-      "fatality_confidence": "D",
-      "fatality_source": "Early-modern merchant seamen lost on the order of one in fifty a year to wreck, accident and shipboard disease (Davis, The Rise of the English Shipping Industry, 1962; Rediker, Between the Devil and the Deep Blue Sea, 1987). An order of magnitude, not a measured rate."
+      "fatality_confidence": "C",
+      "fatality_source": "British merchant service deaths about one in forty-eight a year in 1885 (contemporary Board of Trade return as reported in the press; primary table not checked); infectious disease at sea from M. Roberts and T. Carter, Travel Medicine and Infectious Disease (2016). Davis (1962) and Rediker (1987) give context, not the rate."
     },
     "scholar": {
       "family": "scholar",
@@ -249,9 +249,9 @@
       "family": "labour",
       "note": "A man under arms, drawn from the working age; the state's army is booked in this trade. Basic training is months, not years (Vegetius, De re militari 1.13 gives four months).",
       "training_years": 1,
-      "fatality_risk_per_year": 0.03,
-      "fatality_confidence": "D",
-      "fatality_source": "Pre-industrial armies lost a few per cent of their men a year, most to disease and some to battle (Parker, The Military Revolution; Scheidel on Roman military mortality). An order of magnitude averaged over peace and war, not a measured rate."
+      "fatality_risk_per_year": 0.02,
+      "fatality_confidence": "C",
+      "fatality_source": "Peacetime service mortality, mostly disease: about two-fifths of Roman legionaries died during a twenty-five-year term (W. Scheidel, Measuring Sex, Age and Death in the Roman Empire, JRA Suppl. 21 (1996), ch. 3, via secondary quotation). Battle deaths are not a yearly constant and belong to the conflict mechanics."
     }
   }
 }
