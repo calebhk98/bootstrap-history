@@ -31,7 +31,7 @@ __all__ = [
     "traded_volumes", "opening_quantities", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
     "credit_room", "economy_from_record", "blank_economy", "export_record", "finish_spin_up", "shown_prices_of",
-    "settle_founder_takings", "move_goods",
+    "settle_founder_takings", "move_goods", "cohort_incomes",
 ]
 
 _KEY_SEPARATOR = "|"
@@ -100,6 +100,14 @@ def external_trade_net(economy):
 def external_trade_volume(economy):
     """Money moved either way over the external edge: exports plus imports."""
     return economy.record.book.edge_volume(EDGE_EXTERNAL, economy.setup.currency_id)
+
+
+def cohort_incomes(economy):
+    """(people, last year's money income) of every household cohort, poorest per head first: the economy's
+    own answer to what its bodies of people earn."""
+    rows = [(cohort.people, cohort.last_year_income) for cohort in economy.record.cohorts.values()
+            if cohort.people > 0.0]
+    return sorted(rows, key=lambda row: (row[1] / row[0], row[0]))
 
 
 def account_balance(economy, agent_id):

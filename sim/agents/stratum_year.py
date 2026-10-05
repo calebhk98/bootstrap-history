@@ -76,8 +76,10 @@ def run_year(stratum: Any, world: Any) -> None:
 		record.members = float(observed["members"])
 	members = record.members
 	if stratum.is_bonded():
-		record.labour_product = bonded_product(stratum, world)
-	income = float(observed["income"]) if observed.get("income") is not None else own_income(stratum, world)
+		# the bonded earn nothing themselves: the hours the cohorts in their slice supplied, paid by employers, are the keeper's
+		record.labour_product = float(observed["income"]) if observed.get("income") is not None and record.plan.get("trade") else bonded_product(stratum, world)
+	income = 0.0 if stratum.is_bonded() else (
+		float(observed["income"]) if observed.get("income") is not None else own_income(stratum, world))
 	if income > 0.0:
 		stratum.credit(income, "edge:economy")
 	resources = income + record.allowance

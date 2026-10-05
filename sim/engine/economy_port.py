@@ -70,6 +70,14 @@ class EconomyPort:
         agent = self._answering_agent()
         return (False, None) if agent is None else (True, agent.credit_room(borrower_id))
 
+    def agent_cohort_incomes(self):
+        """[(people, yearly money income)] of the agent economy's household cohorts, poorest per head first,
+        or None while the agent economy is off."""
+        agent = self._answering_agent()
+        if agent is None:
+            return None
+        return agent.cohort_incomes()
+
     def runs_agent_economy(self):
         return self.agent is not None
 

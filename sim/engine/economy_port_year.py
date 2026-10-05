@@ -105,6 +105,9 @@ class AgentEconomy:
         self._spin_up()
         return economy_api.export_record(self._economy)
 
+    def cohort_incomes(self):
+        return economy_api.cohort_incomes(self.economy())
+
     # ---- the year -----------------------------------------------------------------------------
     def run_year(self):
         economy = self.economy()
