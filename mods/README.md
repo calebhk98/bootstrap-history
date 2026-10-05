@@ -136,6 +136,13 @@ rates and a new trade receives the median rate of its family through the
 wage-provider seam. These are compatibility inputs scheduled for replacement,
 not calibration targets. Labour allocation itself remains dynamic.
 
+Trading partners are listed in `data/world/foreign_economies.json` (each names a
+civilisation file and the years it exists as a trading economy). The loader does not
+read a mod's copy of that file yet, so a mod can add the civilisation but not enable
+it as a partner; the file's own `_doc` describes its fields. A mod can add cast
+members and strata to a game by patching a civilisation's `cast` key (see
+`data/civilizations/_SCHEMA.md`).
+
 World geography/resources, hazards, UI, and arbitrary new mechanics are not
 mod extension points yet. There is no price table: every price comes from
 production data, so a mod prices a good by giving it a production path.
