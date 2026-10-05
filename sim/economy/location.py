@@ -123,7 +123,7 @@ def entry_siting(setup, record, view, area_map, carriage) -> Siting:
     by_recipe = sites.limits_by_recipe(setup.site_limits)
     capacity: Dict[Tuple[str, TileId], float] = {}
     committed: Dict[TileId, float] = {}
-    for producer in record.producers.values():
+    for producer in sites.in_id_order(record.producers):
         key = (producer.recipe_id, producer.tile)
         capacity[key] = capacity.get(key, 0.0) + producer.capacity_runs + record.expansion_runs.get(producer.agent_id, 0.0)
         recipe = setup.recipes[producer.recipe_id]
