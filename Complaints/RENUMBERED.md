@@ -388,3 +388,8 @@ main first, so the economy's moved three times (to 410-418, then 425-433, then h
 407 -> 445  no-command-prints-the-economys-health
 408 -> 446  the-port-names-the-labourer-trade
 409 -> 447  economy-agents-doc-predates-exit-location-and-margin-entry
+
+## 2026-10-05
+
+394 -> 460  suite-writes-the-real-home-config  (two issues shared 394; the wage-quote issue keeps it)
+395 -> 461  regional-weather-wiring-seed-check-fails  (two issues shared 395; the crop-recipe issue keeps it)
