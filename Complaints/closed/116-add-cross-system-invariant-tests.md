@@ -1,6 +1,6 @@
 # Add cross-system invariant tests, not only local ones
 
-**Status:** partly - town <= nation and reachable tradesmen <= people in the trade are pinned by sim/tests/test_population_bounds_and_relocation.py (checked every step); the other listed invariants are still open
+**Status:** closed - a standing set exists: sim/tests/test_population_bounds_and_relocation.py (town <= nation, reachable tradesmen <= people) and sim/tests/test_cross_system_invariants.py (event losses <= population, staff survival never adds people, technology never pushes literacy past its ceiling, goal delta equals the live measure change). This is a rolling request: add a new invariant as a test in test_cross_system_invariants.py when its bug is fixed; the others in the list (quote vs purchase, fog ids, auto-investment capacity, mothball closure age) are covered by their own complaints' tests or wait on those fixes.
 
 **Source:** playtest findings document, ARCH-002. **Type:** Architecture/
 testing recommendation. High value; overlaps directly with several bugs

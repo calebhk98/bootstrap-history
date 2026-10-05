@@ -107,6 +107,7 @@ class ProjectMaterialsMixin:
                          "missing_tonnes": missing,
                          "price_per_tonne": mean_price, "cost_of_missing": cost,
                          "deliverable_now_tonnes": deliverable,
+                         "own_supply_tonnes_per_year": self._own_material_supply(tag),
                          "years_of_supply_it_takes": (
                              None if lab_scale or missing <= 0 else missing / max(
                                  1e-9, self._material_market_tonnes(emp_key)

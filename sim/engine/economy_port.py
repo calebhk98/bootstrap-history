@@ -78,6 +78,15 @@ class EconomyPort:
         agent.run_year()
         return True
 
+    def health(self, metals=(), staple=None):
+        """The agent economy's health figures over the years this game has played (economy_port_health.py);
+        None while the agent economy is off."""
+        agent = self.agent
+        if agent is None:
+            return None
+        from .economy_port_health import health_report
+        return health_report(agent, metals, staple)
+
     def open_agent(self):
         """Open the agent economy (with its hidden spin-up) on the engine's own opening figures."""
         agent = self.agent
