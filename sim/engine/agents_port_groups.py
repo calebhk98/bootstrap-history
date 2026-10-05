@@ -90,8 +90,10 @@ class GroupView:
 			ratio = sim.goods_category_price_ratio(category)
 			if ratio is None or ratio >= 1.0:
 				continue
+			sellers = sim._goods_category_state(category)[0]
 			categories[category] = {"price_depression": 1.0 - ratio, "trade_weights": {
-				trade: trade_hours / totals[trade] for trade, trade_hours in hours[category].items()}}
+				trade: trade_hours / totals[trade] for trade, trade_hours in hours[category].items()},
+				"founder_share": min(1.0, max(0.0, 1.0 - sim.actor_concerns_in(category) / sellers))}
 		return categories
 
 	def sectors(self) -> Dict[str, Sector]:
