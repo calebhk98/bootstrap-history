@@ -1,6 +1,6 @@
 # The engine quotes a trade's wage as an unweighted mean over tiles
 
-**Status:** open
+**Status:** closed - `AgentEconomy.answers` quotes `api.wages_by_trade_weighted`; pinned by sim/tests/test_complaint_394_weighted_wage_quote.py
 
 `AgentEconomy.answers` (`sim/engine/economy_port_year.py`) gives the engine each trade's wage as the plain mean of that trade's remembered wage on every tile, whether or not anyone works or is hired there. One thin tile can set the national figure: before the wage fixes in `sim/economy/labour_asks.py`, one Han tile's smith wage reached tens of thousands of labourer wages and made the quoted smith wage hundreds of times a labourer's. The fixes bound such tiles, but a mean that counts empty markets as much as busy ones still misstates what hiring costs.
 
