@@ -16,7 +16,8 @@ Ordered by value per cost.
 
 1. **World content from mods:** geography, deposits and resources, hazards
    and events, UI and currency strings, strategies. Each is read from base
-   paths only.
+   paths only. This includes `data/world/foreign_economies.json`: a mod can
+   add a civilisation but not enable it as a trading partner.
 
 2. **Manifest hardening:** a minimum game version, compared versions for
    dependencies, and rejection of unknown keys.

@@ -1,6 +1,6 @@
 # regional_weather_wiring fails its old-seed check
 
-**Status:** open
+**Status:** closed - the seed gained the game's weather salt on purpose (complaint 384), so the old expected value was stale; `test_omitting_region_mixes_in_no_region_ingredient` in `sim/tests/test_regional_weather_wiring.py` pins what still matters: no region component without a region
 
 `test omitting region reproduces the old civ year only seed` fails: `AssertionError: 4249780299 != 134060541`. It fails the same way on `main` at the merge of pull request 27 (`da86abf`), before the package split, so it is not caused by that work.
 

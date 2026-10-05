@@ -1,6 +1,6 @@
 # The `"cast"` key a scenario uses to declare countries, players and strata is undocumented, and no civilisation declares its slaves
 
-**Status:** partly - the `cast` key, the bondage fields and the foreign-economies file are documented (`data/civilizations/_SCHEMA.md`, `mods/README.md`) and `docs/architecture/README.md` links `sim/agents/MULTIPLAYER.md`; remains: a sourced enslaved share for Rome (no figure in the repo's docs) and reading a mod's `foreign_economies.json` in the loader
+**Status:** partly - cast, bondage fields and foreign economies documented; a sourced share exists (below) but bonded strata supply no labour yet, so adding it would make Rome worse; the mod loader item is in mods/TASKS.md
 
 A game's roster is seeded once and saved (`ActorsState.cast`, `ActorsState.countries`; see
 `sim/agents/MULTIPLAYER.md`). It is built from:
@@ -26,3 +26,9 @@ What it would take:
 - Give `rome_100ad.json` (and any civilisation with chattel slavery) a `"cast": {"strata": [...]}`
   entry or a population share field the default split reads, sourced.
 - Add the foreign-economy file to the mod loader.
+
+## Sourced share, held back
+
+Scheidel, "Human Mobility in Roman Italy II: The Slave Population", JRS 95 (2005) 64-79: about a tenth of the empire's people were enslaved (plausible range roughly 8-15%), Italy and the cities higher; the older third-or-more figure for Italy is unsupported. Confidence C.
+
+A trial cast for `rome_100ad` with a bonded `slaves` stratum at that share (owner `rich`) ran without engine changes, but bonded strata only consume through the owner's keep: they add no hours to the labour supply, so a tenth of Rome stopped producing and the rich stratum ran deeply negative in the opening year. Adding the share waits until bonded people work (their hours enter the labour market on the owner's account). Branch `rome-slave-stratum-and-weather-seed` holds the trial data and its test.
