@@ -298,7 +298,8 @@ class CompletionMixin:
         # (see core.py, "1. staff"). Granting it a second time here as well
         # would double-count every one of these three institutions against
         # a tree calibrated to open up much more slowly.
-        if not self.policy.get("auto_hire", not self.manual):
+        hire_mode = self.policy.get("auto_hire", not self.manual)
+        if not hire_mode or hire_mode == "replace":
             grant = self.mechanic(node_id, "staff_grant")
             if grant:
                 self.labour.grant_staff(**grant)

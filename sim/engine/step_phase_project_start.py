@@ -229,14 +229,15 @@ class ProjectStartPhaseMixin:
                 _pending = self.state.economy.mine_pending.get(self.state.economy.binding, 0.0)
                 _ordered = min(want, self.state.household.capital * 0.25
                                / max(1.0, self._mine_capex(self.state.economy.binding)))
-                self.open_mine(self.state.economy.binding, _ordered)
+                _order = automation_audit.order_id("auto_mine", self.state.economy.binding, self.state.scenario.year)
+                self.open_mine(self.state.economy.binding, _ordered, order=_order)
                 if _ordered > 0:
                     automation_audit.record(
                         self, "auto_mine", "mine",
                         "%.0f t/year of %s ordered" % (_ordered, self.state.economy.binding),
                         "demand %.0f t/year > active %.0f t/year; pending capacity considered %.0f t/year"
                         % (short, self.mine_capacity.get(self.state.economy.binding, 0.0), _pending),
-                        _before)
+                        _before, order=_order)
                 else:
                     automation_audit.record_skip(
                         self, "auto_mine", "mine for %s" % self.state.economy.binding,

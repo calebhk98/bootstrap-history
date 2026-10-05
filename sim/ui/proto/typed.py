@@ -790,12 +790,14 @@ def _parse_policy(command, rest, words, nums, want_json):
         return None, ("to change one, say which and whether, e.g. "
                       "'policy auto_hire off'. Bare 'policy' lists them.")
     val = rest[1].lower()
+    if val == "replace" and rest[0].lower() == "auto_hire":
+        return {"cmd": "policy", "set": {"auto_hire": "replace"}}, None
     if val in ("on", "true", "yes", "y", "1"):
         flag = True
     elif val in ("off", "false", "no", "n", "0"):
         flag = False
     else:
-        return None, "say 'on' or 'off', e.g. 'policy auto_hire off'."
+        return None, "say 'on' or 'off', e.g. 'policy auto_hire off' ('replace' too, for auto_hire only)."
     return {"cmd": "policy", "set": {rest[0].lower(): flag}}, None
 
 
