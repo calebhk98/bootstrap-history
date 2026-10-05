@@ -59,7 +59,9 @@ def _shorten_credit_forecast(sim, cmd, out):
 
 @command("start", shape="tech", group="projects", aliases=("begin", "research", "build"),
          summary="begin work on something",
-         usage=["start <id or name>"], options={"<id>": "a technology or concern"},
+         usage=["start <id or name> [precaution]"],
+         options={"<id>": "a technology or concern",
+                  "precaution": "pay for the pilot plant or redundant team the quote offers, for a lower chance of failing"},
          description="If it cannot start, the error says exactly what is missing. A "
                      "start that would oversubscribe a hired trade still goes ahead "
                      "and warns.")
@@ -125,7 +127,7 @@ def _cmd_start(sim, nodes, cmd, ended):
                 % (_trade, "{:,.0f}".format(_new_total), "{:,.0f}".format(_supply),
                    _competitors, "" if _competitors == 1 else "s",
                    "{:,.0f}".format(_plan["desired"])))
-    started, why = sim.start_project(node_id)
+    started, why = sim.start_project(node_id, precaution=bool(cmd.get("precaution")))
     if not started:
         return {"ok": False, "error": why}
     node = nodes[node_id]

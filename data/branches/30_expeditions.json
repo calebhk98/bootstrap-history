@@ -201,7 +201,12 @@
    "commerce",
    "infrastructure",
    "military"
-  ]
+  ],
+  "mechanics": {
+   "precaution": {
+    "kind": "pilot_plant"
+   }
+  }
  },
  {
   "id": "exp_africa_circumnavigation",
@@ -234,7 +239,12 @@
    "commerce",
    "infrastructure",
    "military"
-  ]
+  ],
+  "mechanics": {
+   "precaution": {
+    "kind": "pilot_plant"
+   }
+  }
  },
  {
   "id": "exp_atlantic_crossing",
@@ -269,7 +279,12 @@
    "infrastructure",
    "military",
    "spectacle"
-  ]
+  ],
+  "mechanics": {
+   "precaution": {
+    "kind": "pilot_plant"
+   }
+  }
  },
  {
   "id": "exp_americas_factory",
@@ -306,7 +321,12 @@
    "infrastructure",
    "military",
    "spectacle"
-  ]
+  ],
+  "mechanics": {
+   "precaution": {
+    "kind": "pilot_plant"
+   }
+  }
  },
  {
   "id": "exp_colony_administration",
@@ -340,7 +360,12 @@
    "commerce",
    "infrastructure",
    "military"
-  ]
+  ],
+  "mechanics": {
+   "precaution": {
+    "kind": "pilot_plant"
+   }
+  }
  },
  {
   "id": "exp_transplant_botany",
@@ -375,7 +400,12 @@
   "traits": [
    "commerce",
    "military"
-  ]
+  ],
+  "mechanics": {
+   "precaution": {
+    "kind": "pilot_plant"
+   }
+  }
  },
  {
   "id": "exp_conquest_resource",
@@ -410,6 +440,11 @@
    "infrastructure",
    "military",
    "weapon_democratising"
-  ]
+  ],
+  "mechanics": {
+   "precaution": {
+    "kind": "pilot_plant"
+   }
+  }
  }
 ]

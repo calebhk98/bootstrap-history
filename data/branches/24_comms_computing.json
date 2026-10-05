@@ -1650,7 +1650,12 @@
   "art": 0,
   "conf": "C",
   "note": "Babbage's design for a universal mechanical computer: a large mill (arithmetic unit) and store (memory), programmed by punched cards like Jacquard looms. It could perform any sequence of arithmetic operations, conditional on intermediate results. The killer insight: a general-purpose machine can solve many problems if programmed differently. Ada Lovelace sketched an algorithm for it (1843). It was never built (same tolerance problems as the Difference Engine), but it was the conceptual foundation of the stored-program computer.",
-  "_internal": "[FIXED after independent audit: the note itself said Babbage failed on tolerance, and the node listed no tolerance prerequisite at all.]"
+  "_internal": "[FIXED after independent audit: the note itself said Babbage failed on tolerance, and the node listed no tolerance prerequisite at all.]",
+  "mechanics": {
+   "precaution": {
+    "kind": "pilot_plant"
+   }
+  }
  },
  {
   "id": "com_jacquard_loom",
@@ -2088,7 +2093,12 @@
   "traits": [
    "information",
    "infrastructure"
-  ]
+  ],
+  "mechanics": {
+   "precaution": {
+    "kind": "pilot_plant"
+   }
+  }
  },
  {
   "id": "com_magnetic_wire_storage",

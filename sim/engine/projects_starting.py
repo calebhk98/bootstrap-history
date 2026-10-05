@@ -20,6 +20,8 @@ from .interest_groups import check_group_prohibition
 from .living_stock import check_unheld_stock
 from .data import win_condition_describe
 from sim.constants import declare
+from .projects_precaution import (spec as precaution_spec, extra_cost as precaution_extra_cost,
+                                  extra_hours as precaution_extra_hours)
 
 
 class StartingMixin:
@@ -928,7 +930,7 @@ class StartingMixin:
                        purchase_rule.remedies_text(self)))
         return None
 
-    def start_project(self, node_id):
+    def start_project(self, node_id, precaution=False):
         """PLAYER-CHOSEN start. This is the whole reason `--manual` and the
         `agent` JSON protocol exist: the old `play` command let you type a
         node id, but all that did was move it to the front of `order`, the
@@ -945,12 +947,16 @@ class StartingMixin:
         refusal = self.start_refusal(node_id)
         if refusal:
             return False, refusal
+        if precaution and precaution_spec(self, node_id) is None:
+            return False, "%s offers no pilot plant or redundant team to pay for." % self.nodes[node_id]["name"]
         projects = self.state.projects
         household = self.state.household
         scenario_year = self.state.scenario.year
         # Materials due now are bought (and banked as stock) first; what
         # is left is the bill paid in instalments.
         bill = self.settle_project_materials(node_id)
+        if precaution:
+            bill += precaution_extra_cost(self, node_id, bill)
         price = bill
         _paid_now = min(price, max(0.0, (projects.paid_towards or {}).get(node_id, 0.0)))
         price -= _paid_now
@@ -974,6 +980,10 @@ class StartingMixin:
         # nearly done too. Setting the real total here, before any of that
         # runs, is what fixed it.
         self.initialize_project(node_id, spent=_already, cost_left=price, bill=bill)
+        if precaution:
+            record = projects.active[node_id]
+            record["precaution"] = True
+            record["ph_left"] += precaution_extra_hours(self, node_id)
         # A genuinely instantaneous capability should not need an otherwise
         # empty annual turn merely to trip the completion check in step().
         # Keep anything with money, labour, risk, or a calendar floor on the

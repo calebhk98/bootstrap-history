@@ -550,7 +550,12 @@
   "dev_years": 25,
   "dev_people": 6,
   "risk": 0.3,
-  "note": "NEEDS cap_tol_100um for spindle indexing and cam cutting. MAKES cap_tol_100um. Six pieces in work at once means sixfold throughput. The spindles must run in exact synchrony or they jam and break."
+  "note": "NEEDS cap_tol_100um for spindle indexing and cam cutting. MAKES cap_tol_100um. Six pieces in work at once means sixfold throughput. The spindles must run in exact synchrony or they jam and break.",
+  "mechanics": {
+   "precaution": {
+    "kind": "pilot_plant"
+   }
+  }
  },
  {
   "id": "mfg_vertical_jig_borer",
@@ -1221,7 +1226,16 @@
   "dev_years": 10,
   "dev_people": 2,
   "risk": 0.12,
-  "note": "NEEDS cap_tol_1um (spindle, workhead and tailstock centers). MAKES cap_tol_10um easily and cap_tol_1um with practice. The workpiece rotates between centers; the wheel traverses along it. Roundness depends on center alignment."
+  "note": "NEEDS cap_tol_1um (spindle, workhead and tailstock centers). MAKES cap_tol_10um easily and cap_tol_1um with practice. The workpiece rotates between centers; the wheel traverses along it. Roundness depends on center alignment.",
+  "mechanics": {
+   "diagnosis_instrument": {
+    "instrument": "prc_gauge_blocks_johansson",
+    "quantity": "tolerance",
+    "needed": 0.005,
+    "unit": "mm",
+    "needed_words": "a ground diameter true to 5 microns"
+   }
+  }
  },
  {
   "id": "mfg_centreless_grinder",

@@ -391,7 +391,12 @@
   "sch": 3,
   "art": 5,
   "conf": "A",
-  "note": "Reaper feeds cut grain into threshing drum and winnowing mechanism; discharges bagged grain and straw bales. Steam- or petrol-powered. Requires flat or gentle ground, good visibility, and skilled operators. 20-30 acres per day vs 1 acre hand harvest."
+  "note": "Reaper feeds cut grain into threshing drum and winnowing mechanism; discharges bagged grain and straw bales. Steam- or petrol-powered. Requires flat or gentle ground, good visibility, and skilled operators. 20-30 acres per day vs 1 acre hand harvest.",
+  "mechanics": {
+   "precaution": {
+    "kind": "pilot_plant"
+   }
+  }
  },
  {
   "id": "ag2_mower",
