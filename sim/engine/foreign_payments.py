@@ -28,6 +28,12 @@ YARD_GROWTH_SHARE_PER_YEAR = declare(
     unit="share of a route's lift added per year at most", source=None, confidence="D",
     why="How fast shipwrights and breeders can add carriers; stands in for yards, timber and "
         "crews, which are not modelled.")
+FLEET_MARGIN_ADJUSTMENT_SHARE_PER_YEAR = declare(
+    "FLEET_MARGIN_ADJUSTMENT_SHARE_PER_YEAR", 0.5, kind="temporary_heuristic",
+    unit="share of the lift gap closed per year", source=None, confidence="D",
+    why="How much of the gap between the carriage asked for and the lift on offer owners close in a "
+        "year, by building (limited by yards) or laying up and selling hulls and animals; there is no "
+        "ship market or owners' expectations model yet.")
 
 
 def _lift_years_per_tonne(inputs, working_days, days_on_leg):
@@ -48,7 +54,7 @@ class ForeignPaymentsMixin:
 
     LEDGER_FIELDS = ("goods_in_value", "goods_out_value", "home_coin_units", "partner_coin_units",
                      "lift_tonnes_per_year", "lift_used_in", "lift_used_out", "lift_unmet",
-                     "lift_year", "fleet_capital", "merchant_capital_used", "merchant_retained")
+                     "lift_year", "fleet_capital", "coin_carriage_units", "merchant_capital_used", "merchant_retained")
 
     def _foreign_ledger(self, civilization_id, create=False):
         """The partner's ledger; an empty one when nothing has been recorded and `create` is false."""
@@ -130,8 +136,12 @@ class ForeignPaymentsMixin:
         if flow_tonnes > 0.0:
             ledger["goods_in_value"] += value
             paid = balance_of_payments.coin_paid(value, self.home_coin_stock_units())
-            ledger["home_coin_units"] -= paid
-            ledger["partner_coin_units"] += paid / home_money_per_partner_coin
+            received = paid / home_money_per_partner_coin
+            carriage = self.coin_carriage_units(civilization_id, received, home_money_per_partner_coin)
+            # the route's carriers are the home economy's (freight is priced in home money), so their pay stays in the home stock
+            ledger["home_coin_units"] -= paid - carriage * home_money_per_partner_coin
+            ledger["partner_coin_units"] += received - carriage
+            ledger["coin_carriage_units"] += carriage
         elif flow_tonnes < 0.0:
             ledger["goods_out_value"] += value
             partner_units = value / home_money_per_partner_coin
@@ -139,7 +149,9 @@ class ForeignPaymentsMixin:
                              + ledger["partner_coin_units"])
             paid_units = balance_of_payments.coin_paid(partner_units, partner_stock)
             ledger["partner_coin_units"] -= paid_units
-            ledger["home_coin_units"] += paid_units * home_money_per_partner_coin
+            carriage = self.coin_carriage_units(civilization_id, paid_units, home_money_per_partner_coin)
+            ledger["home_coin_units"] += paid_units * home_money_per_partner_coin   # sellers and carriers, both home
+            ledger["coin_carriage_units"] += carriage
 
     # ---- carriers -----------------------------------------------------------
 
@@ -198,8 +210,11 @@ class ForeignPaymentsMixin:
         ledger["merchant_capital_used"] += capital_tied
 
     def foreign_fleet_year_end(self):
-        """Grow each route's fleet by what could not be carried this year (within what yards can
-        build) and retire the worn share of it."""
+        """Move each route's fleet toward the carriage asked of it. The freight rate pays the carrier's
+        capital at the market rate over a full working year, so a fleet earns more than its capital
+        costs when the carriage asked for (carried plus left behind) exceeds its lift, and less when
+        it sits idle. Owners close part of that gap each year (growth within what yards can build),
+        and the worn share of the fleet is retired; a route keeps at least one carrier."""
         for civilization_id in self.foreign_economies():
             ledger = self.state.economy.foreign_ledger.get(civilization_id)
             if not ledger or ledger["lift_year"] != self.state.scenario.year:
@@ -208,11 +223,14 @@ class ForeignPaymentsMixin:
             capacity = self.foreign_lift_capacity_tonnes(civilization_id, route)
             if route is None or capacity == float("inf"):
                 continue
-            opening = OPENING_CARRIERS_PER_ROUTE / self._route_lift_years_per_tonne(route)
-            built = min(ledger["lift_unmet"],
-                        max(capacity, opening) * YARD_GROWTH_SHARE_PER_YEAR)
+            years_per_tonne = self._route_lift_years_per_tonne(route)
+            opening = OPENING_CARRIERS_PER_ROUTE / years_per_tonne
+            asked = max(ledger["lift_used_in"], ledger["lift_used_out"]) + ledger["lift_unmet"]
+            gap = (asked - capacity) * FLEET_MARGIN_ADJUSTMENT_SHARE_PER_YEAR
+            built = min(max(gap, -capacity), max(capacity, opening) * YARD_GROWTH_SHARE_PER_YEAR)
             life = (sea_freight.HULL_SERVICE_LIFE_YEARS if any(leg.mode == SEA_MODE for leg in route.legs)
                     else freight_cost.ANIMAL_WORKING_LIFE_YEARS)
-            ledger["fleet_capital"] += built * self._route_capital_per_lift_tonne(route)
-            ledger["lift_tonnes_per_year"] = capacity * (1.0 - 1.0 / life) + built
+            ledger["fleet_capital"] += max(0.0, built) * self._route_capital_per_lift_tonne(route)
+            ledger["lift_tonnes_per_year"] = max(1.0 / years_per_tonne,
+                                                 capacity * (1.0 - 1.0 / life) + built)
             ledger["lift_unmet"] = 0.0
