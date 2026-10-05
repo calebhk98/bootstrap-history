@@ -191,6 +191,19 @@ KILOGRAMS_PER_GRAM = declare(
         "its own tech-tree entry happens to be stated in.")
 
 # ============================================================================
+# WORKING TIME
+# ============================================================================
+
+HOURS_PER_PERSON_YEAR = declare(
+    "HOURS_PER_PERSON_YEAR", 2000.0, kind="engineering_estimate",
+    unit="hours/person/year",
+    source="A 10-hour day, 250 working days a year, less feasts and holidays.",
+    confidence="B",
+    why="Converts an hourly wage to an annual one and back, and a head count "
+        "to labour hours: the one working-year convention every wage quote, "
+        "staff count and hours ledger uses.")
+
+# ============================================================================
 # DISTANCE
 # ============================================================================
 

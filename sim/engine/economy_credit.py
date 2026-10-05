@@ -19,6 +19,7 @@ grouping evidence.
 """
 from .data import WAGES
 from sim.constants import declare
+from sim.unit_conversions import HOURS_PER_PERSON_YEAR
 from . import money_units
 from sim.world import capital_market
 
@@ -894,12 +895,4 @@ class CreditMixin:
             "is tuned game balance, not derived from any household-budget "
             "study.")
 
-    HOURS_PER_PERSON_YEAR = declare(
-        "HOURS_PER_PERSON_YEAR", 2000.0, kind="engineering_estimate",
-        unit="hours/person/year", source=
-        "A 10-hour day, 250 working days a year, less feasts "
-        "and holidays.",
-        confidence="B",
-        why="Converts an annual wage into an hourly rate (stall_diagnosis' "
-            "own wage-comparison arithmetic) and back - the working-"
-            "year convention the wage provider uses.")
+    HOURS_PER_PERSON_YEAR = HOURS_PER_PERSON_YEAR
