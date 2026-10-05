@@ -251,6 +251,7 @@
    "labour_hours": {
     "artisan": 3.0
    },
+   "unit_mass_kg": 0.02,
    "basis": "per finished parchment sheet (a scraped, limed and stretched animal-skin writing surface, roughly 0.3 x 0.4 m)",
    "yield_basis": "Parchment is NOT leather and is not tanned - no oak_bark_kg in this recipe. A skin is limed to loosen the hair (the same alkaline unhairing step leather uses), then scraped thin on both sides with a curved lunellum knife while stretched taut on a wooden frame, so it dries under tension into a flat, translucent sheet rather than the flexible, chemically-tanned material leather is; this is a physical/mechanical transformation (thinning + drying under tension) rather than a chemical one, which is why the process and the labour look completely different from leather despite starting from the same raw hide. Roughly two thirds of a raw hide's mass is scraped away or trimmed from the usable rectangle (the edges, legs and belly of a skin are thin, uneven or scarred and are cut off), so about 0.35 kg of raw hide is consumed per finished sheet. The labour is skilled and slow - careful scraping without cutting through the membrane, repeated re-wetting and re-tensioning on the frame, then pouncing the surface smooth with pumice or chalk - a craft with essentially no historical mechanisation before this era.",
    "conf": "C",

@@ -1,6 +1,7 @@
 """The mass of one unit of a good, for freight, from what the data and the physical models state.
 
-Order of evidence: a mass unit in the good's id; a live weight in the animal table; a unit that is
+Order of evidence: a mass unit in the good's id; a `unit_mass_kg` stated in the good's production
+entry; a live weight in the animal table; a unit that is
 not a mass at all (ground area, energy), which cannot be carried; a volume unit at a stated bulk
 density; the mass of what a one-item recipe consumes; and last, a labelled default. Each answer
 names its source so an audit can count how much of the freight base is still a guess.
@@ -43,6 +44,7 @@ UNKNOWN_UNIT_MASS_KG = declare(
         "unit weighs; one kilogram keeps it carriable until the data states a mass.")
 
 SOURCE_MASS_UNIT = "mass unit"
+SOURCE_STATED = "stated in production data"
 SOURCE_ANIMAL = "animal live weight"
 SOURCE_IMMOBILE = "immobile unit"
 SOURCE_VOLUME = "volume at bulk density"
@@ -72,11 +74,20 @@ def _consumed_mass_kg(good: str, production: Mapping[str, Any]) -> Optional[floa
     return total * PRODUCT_MASS_SHARE_OF_CONSUMED_MASS if total > 0.0 else None
 
 
+def _stated_unit_mass_kg(good: str, production: Optional[Mapping[str, Any]]) -> Optional[float]:
+    entry = (production if production is not None else demand.production_data()).get(good)
+    stated = entry.get("unit_mass_kg") if isinstance(entry, Mapping) else None
+    return float(stated) if stated is not None else None
+
+
 def unit_mass_and_source(good: str, production: Optional[Mapping[str, Any]] = None) -> Tuple[float, str]:
     """(kg of one unit, where the figure came from); `production` defaults to the shared data."""
     mass = _mass_unit_kg(good)
     if mass is not None:
         return mass, SOURCE_MASS_UNIT
+    stated = _stated_unit_mass_kg(good, production)
+    if stated is not None:
+        return stated, SOURCE_STATED
     living = _living_masses()
     if good in living:
         return living[good], SOURCE_ANIMAL
