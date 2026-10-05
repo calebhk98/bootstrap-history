@@ -8,6 +8,8 @@ the yearly share that repays the plant's value over its life.
 import math
 from typing import Mapping
 
+from sim.world import capital_market
+
 from .types import GoodId, Recipe, TradeId
 
 Prices = Mapping[GoodId, float]
@@ -38,16 +40,6 @@ def variable_cost_per_run(recipe: Recipe, input_prices: Prices, wages: Wages, re
     return input_cost_per_run(recipe, input_prices) + labour_cost_per_run(recipe, wages) + rent
 
 
-def capital_recovery_factor(interest_rate: float, life_years: float) -> float:
-    """The yearly payment, per unit borrowed, that repays it with interest over the life; one over the
-    life at a nil or negative rate."""
-    if life_years <= 0.0:
-        return 1.0
-    if interest_rate <= 0.0:
-        return 1.0 / life_years
-    return interest_rate / (1.0 - (1.0 + interest_rate) ** -life_years)
-
-
 def plant_value_per_run(recipe: Recipe, input_prices: Prices, wages: Wages) -> float:
     """What the plant for one run of yearly capacity costs to build at these prices and wages."""
     return _bill(recipe.plant_goods, input_prices) + _bill(recipe.plant_labour_hours, wages)
@@ -57,7 +49,9 @@ def capital_charge_per_run(recipe: Recipe, input_prices: Prices, wages: Wages, i
     value = plant_value_per_run(recipe, input_prices, wages)
     if value == 0.0:
         return 0.0
-    return value * capital_recovery_factor(interest_rate, recipe.plant_life_years)
+    if recipe.plant_life_years <= 0.0:
+        return value  # a plant used up within the run is repaid by that run
+    return value * capital_market.capital_recovery_factor(interest_rate, recipe.plant_life_years)
 
 
 def revenue_per_run(recipe: Recipe, expected_output_prices: Prices) -> float:
