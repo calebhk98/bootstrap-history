@@ -1634,7 +1634,14 @@
   "traits": [
    "commerce",
    "infrastructure"
-  ]
+  ],
+   "mechanics": {
+     "precaution": {
+       "label": "pilot plant",
+       "cost_share": 0.15,
+       "hours_share": 0.1
+     }
+   }
  },
  {
   "id": "lnd_gearbox_clutch",

@@ -328,7 +328,14 @@
   "sus": 2,
   "up_hours": 0,
   "kb": "10_metallurgy.md",
-  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]",
+   "mechanics": {
+     "precaution": {
+       "label": "pilot plant",
+       "cost_share": 0.15,
+       "hours_share": 0.1
+     }
+   }
  },
  {
   "id": "mt2_magnesium_extraction",
@@ -407,7 +414,14 @@
   "sus": 2,
   "up_hours": 0,
   "kb": "10_metallurgy.md",
-  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]",
+   "mechanics": {
+     "precaution": {
+       "label": "pilot plant",
+       "cost_share": 0.15,
+       "hours_share": 0.1
+     }
+   }
  },
  {
   "id": "mt2_platinum_group_metals",

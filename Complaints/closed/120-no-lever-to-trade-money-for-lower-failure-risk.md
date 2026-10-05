@@ -1,6 +1,6 @@
 # Nothing a player does before an attempt lowers its failure risk
 
-**Status:** partly - process-control nodes have one lever (a completed process controller lowers their risk); the general problem remains
+**Status:** closed - nodes declare a `precaution` mechanic (a pilot plant or a redundant team: a share of the bill and of the founder's hours added); `start ... precaution` pays it through the ordinary bill and hours, `effective_risk` divides the chance by the relief bought (a labelled heuristic, `RELIEF_PER_COST_SHARE`), and `why` quotes cost and chance with and without (`pay_to_lower_the_risk`). Regression: `sim/tests/test_risk_precaution.py`. Declared on every node whose risk and calendar floor are both high (find them with the data script in the commit); a pilot plant as its own optional input node was not built.
 
 **Source:** `reports/TOP_PROBLEMS.md` items 2 and 4 (long calendar floors with unmitigable failure rolls). The platinum placeholder risk in item 4 was fixed separately; the general problem was not.
 

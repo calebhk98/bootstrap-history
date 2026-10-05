@@ -1347,7 +1347,14 @@
   "sch": 4,
   "art": 8,
   "conf": "B",
-  "note": "Melts at 3422 C, the highest of any metal. Lamp filaments, high speed steel, carbide tooling. Needs the arc furnace or hydrogen reduction of the oxide followed by powder sintering."
+  "note": "Melts at 3422 C, the highest of any metal. Lamp filaments, high speed steel, carbide tooling. Needs the arc furnace or hydrogen reduction of the oxide followed by powder sintering.",
+   "mechanics": {
+     "precaution": {
+       "label": "pilot plant",
+       "cost_share": 0.15,
+       "hours_share": 0.1
+     }
+   }
  },
  {
   "id": "mat_aluminium",
@@ -1654,7 +1661,14 @@
   "art": 8,
   "conf": "B",
   "note": "Nitrocellulose becomes plastic when mixed with camphor. Sheet is then made by rolling between heated cylinders. Celluloid revolutionises photography by replacing glass plates, enables flexible film stock, and is used for combs, buttons, piano keys. The material is flammable and degrades over time to become increasingly brittle.",
-  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: sheet rolling requires temperature control for viscosity management]"
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: sheet rolling requires temperature control for viscosity management]",
+   "mechanics": {
+     "precaution": {
+       "label": "pilot plant",
+       "cost_share": 0.15,
+       "hours_share": 0.1
+     }
+   }
  },
  {
   "id": "mat_camphor",
@@ -1750,7 +1764,14 @@
   "sch": 4,
   "art": 8,
   "conf": "B",
-  "note": "YOUR ONLY ROUTE TO RUBBER. Butadiene from petroleum or from alcohol, polymerised. It sits behind a full petrochemical industry, which is why every plan that casually assumes rubber is wrong by about a century."
+  "note": "YOUR ONLY ROUTE TO RUBBER. Butadiene from petroleum or from alcohol, polymerised. It sits behind a full petrochemical industry, which is why every plan that casually assumes rubber is wrong by about a century.",
+   "mechanics": {
+     "precaution": {
+       "label": "pilot plant",
+       "cost_share": 0.15,
+       "hours_share": 0.1
+     }
+   }
  },
  {
   "id": "mat_petroleum_refined",
@@ -1776,7 +1797,14 @@
   "sch": 4,
   "art": 8,
   "conf": "B",
-  "note": "Mesopotamian and Caucasian seeps are workable without drilling. Fractionate into naphtha, kerosene, gas oil, lubricants, wax and residue. Kerosene lighting alone pays for the plant."
+  "note": "Mesopotamian and Caucasian seeps are workable without drilling. Fractionate into naphtha, kerosene, gas oil, lubricants, wax and residue. Kerosene lighting alone pays for the plant.",
+   "mechanics": {
+     "precaution": {
+       "label": "pilot plant",
+       "cost_share": 0.15,
+       "hours_share": 0.1
+     }
+   }
  },
  {
   "id": "mat_ammonia",
@@ -1863,7 +1891,14 @@
    "labour_saving",
    "status_threatening"
   ],
-  "_internal": "[REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: coal tar to aniline synthesis involves exothermic reactions needing temperature control] [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: coal tar to aniline synthesis involves exothermic reactions needing temperature control]"
+  "_internal": "[REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: coal tar to aniline synthesis involves exothermic reactions needing temperature control] [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: coal tar to aniline synthesis involves exothermic reactions needing temperature control]",
+   "mechanics": {
+     "precaution": {
+       "label": "pilot plant",
+       "cost_share": 0.15,
+       "hours_share": 0.1
+     }
+   }
  },
  {
   "id": "mat_nitrocellulose",
@@ -1984,6 +2019,13 @@
   "sch": 4,
   "art": 8,
   "conf": "B",
-  "note": "Ammonia or ether evaporation in a compressor cools an ice chamber. Requires a steam engine to drive the compressor. Early mechanical ice-makers (Carve, 1850s) free wealthy households from dependence on natural ice harvesting and storage."
+  "note": "Ammonia or ether evaporation in a compressor cools an ice chamber. Requires a steam engine to drive the compressor. Early mechanical ice-makers (Carve, 1850s) free wealthy households from dependence on natural ice harvesting and storage.",
+   "mechanics": {
+     "precaution": {
+       "label": "pilot plant",
+       "cost_share": 0.15,
+       "hours_share": 0.1
+     }
+   }
  }
 ]

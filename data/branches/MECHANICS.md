@@ -65,6 +65,7 @@ change; read them from the node data (no command summarises them).
 | `patron`, `patron_lost_to_eminence`, `patron_mortal`, `state_funding`, `state_approval` | patronage roles: `patron.tier`; which patrons can be lost or die; who funds work; which patron lifts the state's `wary` or `opposed` gate |
 | `workshop_site`, `hosts_bought_people` | where a workshop's output and bought workers come from |
 | `failure_relief` | `failure_kind` of node failures it reduces |
+| `precaution` | `label` (pilot plant, redundant team), `cost_share` of the bill and `hours_share` of the founder's hours added when the project is started with it; lowers the failure chance (`projects_precaution.py`). Quoted as `pay_to_lower_the_risk` in `why` |
 | `diagnosis_instrument` | `instrument` (node id whose holder can measure the work's result), `quantity`, `needed` and `unit` (larger is worse), `needed_words`; without the instrument a failure adds no retry learning and the report says which instrument was missing, with it the report gives the figure reached against `needed` |
 | `supplies_material_by_sea_route` | `materials` it brings by an existing trade route |
 | `farming_technique` | `axis` (`rotation`, `toolkit`, `crop`) and `entry` (a name in `sim/world/agriculture.py`) |

@@ -227,6 +227,7 @@ def _brief(sim, nodes, node_id, fog):
             "calendar_floor_years": round(sim.calendar_floor(node_id), 2),
             "nominal_calendar_floor_before_reputation": node["yrs"],
             "risk": sim.effective_risk(node_id),
+            "pay_to_lower_the_risk": sim.precaution_quote(node_id),
             "earns_per_year": round(sim.venture_real_earnings(node_id), 1),
             "costs_per_year_after": round(sim.venture_real_upkeep(node_id), 1),
             **available_economics.row_fields(sim, node_id, node),
@@ -1025,6 +1026,7 @@ def _explain_timing_and_risk(sim, nodes, node_id, node):
         "earliest_completion_years": round(sim.earliest_completion_years(node_id), 2),
         "earliest_completion_year": round(sim.state.scenario.year + sim.earliest_completion_years(node_id), 1),
         "risk": sim.effective_risk(node_id),
+        "pay_to_lower_the_risk": sim.precaution_quote(node_id),
         # THE EXPECTED TOTAL, RETRIES INCLUDED - not the floor and the risk
         # left for the player to combine by hand. A 45%-risk, 4-year-floor
         # node is not a 4-year project: the bare geometric series 1/(1-p) is

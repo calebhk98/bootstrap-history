@@ -107,6 +107,10 @@ Two fixes, usable separately or together:
                                                     reserve and training.
       {"cmd":"path","id":"zinc_metal"}             everything still undone on the way
                                                     to this node, in dependency order
+      {"cmd":"start","id":"zinc_metal","precaution":true}  as below, also paying for the
+                                                    pilot plant or redundant team `why` quotes
+                                                    (pay_to_lower_the_risk), for a lower chance
+                                                    of failing
       {"cmd":"start","id":"zinc_metal"}            begin a project (error explains
                                                     exactly what is missing if you can't;
                                                     if it would oversubscribe a hired

@@ -550,7 +550,14 @@
   "dev_years": 25,
   "dev_people": 6,
   "risk": 0.3,
-  "note": "NEEDS cap_tol_100um for spindle indexing and cam cutting. MAKES cap_tol_100um. Six pieces in work at once means sixfold throughput. The spindles must run in exact synchrony or they jam and break."
+  "note": "NEEDS cap_tol_100um for spindle indexing and cam cutting. MAKES cap_tol_100um. Six pieces in work at once means sixfold throughput. The spindles must run in exact synchrony or they jam and break.",
+   "mechanics": {
+     "precaution": {
+       "label": "pilot plant",
+       "cost_share": 0.15,
+       "hours_share": 0.1
+     }
+   }
  },
  {
   "id": "mfg_vertical_jig_borer",

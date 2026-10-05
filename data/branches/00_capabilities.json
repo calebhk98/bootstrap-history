@@ -112,7 +112,14 @@
   "sch": 0,
   "art": 2,
   "conf": "B",
-  "note": "Siemens regenerative preheat recycles flue heat into the incoming air. Crucible steel, open hearth, porcelain. You cannot get here by burning more charcoal; you must recycle the heat you are already throwing away."
+  "note": "Siemens regenerative preheat recycles flue heat into the incoming air. Crucible steel, open hearth, porcelain. You cannot get here by burning more charcoal; you must recycle the heat you are already throwing away.",
+   "mechanics": {
+     "precaution": {
+       "label": "redundant team",
+       "cost_share": 0.1,
+       "hours_share": 0.25
+     }
+   }
  },
  {
   "id": "cap_heat_2000",
@@ -139,6 +146,11 @@
   "conf": "B",
   "note": "A flame, not a furnace: small volume only. Fused quartz working, platinum melting, lime light.",
    "mechanics": {
+     "precaution": {
+       "label": "redundant team",
+       "cost_share": 0.1,
+       "hours_share": 0.25
+     },
      "diagnosis_instrument": {
        "instrument": "opt_pyrometer_optical",
        "quantity": "temperature uncertainty",
@@ -173,6 +185,11 @@
   "conf": "B",
   "note": "No chemical flame reaches here. Calcium carbide, ferroalloys, tungsten, artificial graphite, synthetic corundum.",
    "mechanics": {
+     "precaution": {
+       "label": "redundant team",
+       "cost_share": 0.1,
+       "hours_share": 0.25
+     },
      "diagnosis_instrument": {
        "instrument": "opt_pyrometer_radiation",
        "quantity": "temperature uncertainty",
@@ -288,6 +305,11 @@
   "conf": "B",
   "note": "Lapping with loose abrasive plus interference fringes to check. Gauge blocks, ball bearings, lens moulds, injector nozzles.",
  "mechanics": {
+  "precaution": {
+    "label": "redundant team",
+    "cost_share": 0.1,
+    "hours_share": 0.25
+  },
   "diagnosis_instrument": {
    "instrument": "cap_measure_light",
    "quantity": "tolerance",
@@ -322,6 +344,11 @@
   "conf": "B",
   "note": "Measured in wavelengths of light. Optical surfaces, diffraction gratings, semiconductor lithography much later.",
    "mechanics": {
+     "precaution": {
+       "label": "redundant team",
+       "cost_share": 0.1,
+       "hours_share": 0.25
+     },
      "diagnosis_instrument": {
        "instrument": "opt_michelson_interferometer",
        "quantity": "tolerance",
@@ -426,6 +453,11 @@
   "conf": "B",
   "note": "Needs a motor for the backing pump. Vacuum tubes, X-ray tubes, evaporated coatings.",
    "mechanics": {
+     "precaution": {
+       "label": "redundant team",
+       "cost_share": 0.1,
+       "hours_share": 0.25
+     },
      "diagnosis_instrument": {
        "instrument": "in2_mcleod_vacuum_gauge",
        "quantity": "pressure",
@@ -459,7 +491,14 @@
   "sch": 10,
   "art": 12,
   "conf": "B",
-  "note": "Metal gaskets, bakeout, ion pumps. Surface science and semiconductor processing."
+  "note": "Metal gaskets, bakeout, ion pumps. Surface science and semiconductor processing.",
+   "mechanics": {
+     "precaution": {
+       "label": "redundant team",
+       "cost_share": 0.1,
+       "hours_share": 0.25
+     }
+   }
  },
  {
   "id": "cap_pure_2N",
@@ -555,6 +594,11 @@
   "conf": "B",
   "note": "Purify the COMPOUND, not the element. Germanium tetrachloride boils at 86 C and fractionates like brandy; germanium metal does not.",
    "mechanics": {
+     "precaution": {
+       "label": "redundant team",
+       "cost_share": 0.1,
+       "hours_share": 0.25
+     },
      "diagnosis_instrument": {
        "instrument": "in2_mass_spectrograph",
        "quantity": "impurity",
@@ -592,6 +636,11 @@
   "conf": "B",
   "note": "No chemistry reaches here. A travelling molten zone sweeps impurities to one end because most are more soluble in liquid than in solid. This one trick is what makes semiconductors possible at all.",
  "mechanics": {
+  "precaution": {
+    "label": "redundant team",
+    "cost_share": 0.1,
+    "hours_share": 0.25
+  },
   "diagnosis_instrument": {
    "instrument": "in2_mass_spectrograph",
    "quantity": "impurity",
