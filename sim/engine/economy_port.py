@@ -64,6 +64,12 @@ class EconomyPort:
         agent = self._answering_agent()
         return None if agent is None else agent.rate()
 
+    def agent_credit_room(self, borrower_id):
+        """(True, room) when the agent economy answers, with room None before lenders have met; (False, None)
+        while it is off."""
+        agent = self._answering_agent()
+        return (False, None) if agent is None else (True, agent.credit_room(borrower_id))
+
     def runs_agent_economy(self):
         return self.agent is not None
 

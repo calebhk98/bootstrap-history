@@ -228,6 +228,8 @@ class Economy:
         requests, record.loan_requests = record.loan_requests, []
         requests = (requests + lending.household_requests(setup, record, view, ledger, priced_by_tile)
                     + lending.merchant_requests(setup, record, view, self.area_map, self.carriage))
+        record.funds_offered = sum(offer.amount for offer in funds if offer.currency == money)
+        record.lent_by_borrower = {}
         if not requests:
             if funds:
                 # savings on offer and nobody borrowing: lenders compete the rate down toward the lowest
@@ -242,6 +244,8 @@ class Economy:
                                            year=view.year)
         record.book.transfer_many(credit.disbursements(loans))
         record.loans.extend(loans)
+        for loan in loans:
+            record.lent_by_borrower[loan.borrower] = record.lent_by_borrower.get(loan.borrower, 0.0) + loan.principal
         record.memory.rates[money] = rate
         merchants_credit.stake(record.merchants, {loan.borrower: loan.principal for loan in loans})
         lending.bid_household_loans(setup, record, view, ledger, loans, order_book, priced_by_tile)

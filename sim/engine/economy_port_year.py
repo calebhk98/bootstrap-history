@@ -336,3 +336,8 @@ class AgentEconomy:
 
     def rate(self):
         return self.answers()[2]
+
+    def credit_room(self, borrower_id):
+        """What the credit market will still advance one borrower; None before lenders have met."""
+        self.answers()
+        return economy_api.credit_room(self._economy, borrower_id)
