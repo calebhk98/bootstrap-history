@@ -12,7 +12,7 @@ import math
 from typing import Dict, Iterable, Mapping, Optional
 
 from sim.economy.types import TileId, TileSpec
-from sim.geography.api import map_of_tiles, route_costs
+from sim.geography.api import layer_value, map_of_tiles, route_costs, tile_facts
 
 
 def tiles_from_geography(geography: dict, tile_ids: Iterable[TileId]) -> Dict[TileId, TileSpec]:
@@ -27,6 +27,20 @@ def tiles_from_geography(geography: dict, tile_ids: Iterable[TileId]) -> Dict[Ti
             borders=tuple(record["borders"]), arable_fraction=record["arable_fraction"],
             fertility=record["fertility_quality_multiplier"],
             climate_class=str(record.get("koppen_class") or ""))
+    return result
+
+
+def tiles_from_map(world_map, tile_ids: Iterable[TileId]) -> Dict[TileId, TileSpec]:
+    """TileSpecs for the named tiles read through geography's api from `world_map`; borders are kept whole."""
+    result = {}
+    for tile_id in tile_ids:
+        facts = tile_facts(tile_id, world_map)
+        result[tile_id] = TileSpec(
+            tile_id=tile_id, latitude=facts["lat"], longitude=facts["lon"],
+            land_area_km2=facts["land_area_km2"], coastal=facts["coastal"],
+            borders=tuple(facts["neighbours"]), arable_fraction=layer_value(tile_id, "arable_fraction", world_map),
+            fertility=layer_value(tile_id, "fertility_quality_multiplier", world_map),
+            climate_class=str(facts["climate_class"] or ""))
     return result
 
 

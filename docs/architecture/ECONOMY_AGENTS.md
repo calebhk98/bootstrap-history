@@ -8,13 +8,16 @@ The yearly economy checks measure it against plausible ranges.
 ## What it is
 
 `sim/economy/` is a standalone package: agents that hold money and goods, markets that clear their
-orders, and the money they pay with. It imports `sim.world` and `sim.constants`, never `sim.engine`.
+orders, and the money they pay with. It imports `sim.world`, `sim.constants` and the walled packages' `api.py` (geography, labour), never `sim.engine`.
 The engine reaches it only through `sim/engine/economy_port*.py`; the tech tree, the founder, projects
 and screens ask the port questions (a price, a wage, a rate, what a concern takes) and post
 transactions. `sim/tests/test_economy_imports.py` holds both rules.
 
 Contracts: `sim/economy/types.py` (records) and `sim/economy/protocols.py` (the year order and what
-each module offers).
+each module offers). Outside code imports only `sim/economy/api.py`, the package's published surface
+(`docs/architecture/PACKAGE_WALLS.md`). The port reads the map from the engine's geography (the base map
+with the active mods' overlays, `sim/engine/geography_port.py`) and hands the economy its tiles and that map
+through the setup.
 
 ## Choices and why
 
@@ -85,8 +88,26 @@ merchants for cargo their cash cannot buy, households for a shortfall with incom
 **Demand brings makers.** Where buyers wanted more of a good than was sold, beyond what its makers'
 idle capacity could have added, a recipe the society knows that pays at the price bid starts or grows
 the tile's producer of it (`entry.py`, `entry_year.py`), its owner staking cash and borrowing plant
-only up to that stake. Owners refill paying producers that ran out of working cash; a producer with no
-capacity, plant coming or debt closes. A good with no known recipe gets no maker.
+only up to that stake. A market with buyers and no maker in its area draws a trial newcomer judged at
+its own full cost plus a margin, since its remembered price is stale (`entry_trial.py`). A good with no
+known recipe gets no maker. Entry drawn by a lasting margin over full cost where makers already exist
+was tried and taken out because it destabilised staple prices
+(`Complaints/reports/agent-economy-review-round-four.md`, "Tried and not merged").
+
+**Producers sit on tiles.** Each tile is its own labour market, so a producer hires only its own tile's
+people. At the opening a recipe's capacity is spread over its market area's tiles by working hours;
+a newcomer goes to the tile where a run costs least (wages, land rent, carriage of the output to the
+area's anchor, over the site's yield), among tiles with a site and idle hands to staff it
+(`location.py`). Crops grow only on tiles of the climates their data names, and a site-bound recipe stays
+inside the runs and yield geography declares per recipe and tile (`sites.py`); the economy models no
+deposit and reports what it extracted so geography can deplete.
+
+**Producers leave.** A producer whose year did not cover its costs and plant charge counts a loss year;
+after enough of them, with no variable margin left, it exits: its cash repays its lenders first, the
+rest and its goods go to its owner, and what the cash could not repay is the lenders' loss
+(`producers_close.py`, `producer_exit.py`). Plantless capacity (mines, most workshops) follows use, so
+idle hands are let go instead of flooding back on a price spike; a producer whose capacity has
+dwindled to nothing, with no plant coming and no debt, closes (`entry.producers_to_close`).
 
 **Prices that have not traded are not market prices.** Each market remembers how long ago it cleared;
 the price index counts only goods traded recently, and the game shows an untraded good at its cost

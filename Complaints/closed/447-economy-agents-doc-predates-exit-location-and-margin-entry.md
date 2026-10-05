@@ -1,6 +1,6 @@
 # ECONOMY_AGENTS.md describes entry, exit and placement as they were before round four
 
-**Status:** open - `docs/architecture/` is outside the economy package
+**Status:** closed - `docs/architecture/ECONOMY_AGENTS.md` now describes placement, exit, trial entry and the api surface; the margin entry the complaint lists was taken out (round-four report, "Tried and not merged"), so the document says so.
 
 `docs/architecture/ECONOMY_AGENTS.md` says demand brings makers only where buyers were turned away,
 that a producer with no capacity closes, and nothing about where producers sit. Since round four
