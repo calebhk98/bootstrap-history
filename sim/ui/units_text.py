@@ -19,8 +19,14 @@ def text_label(dimension: str, default: str) -> str:
 
 
 def rate_label(dimension: str, per: str, default: str) -> str:
-    """The unit label of a quantity per `per` (a field rule's time word), such as mass per year."""
+    """The unit label of a quantity per `per` (a field rule's time word or a dimension), such as mass per year or money per mass."""
     return TEXT_LABELS.get("%s/%s" % (dimension, per), default)
+
+
+def per_mass_heading(word: str) -> str:
+    """Column heading of a money-per-mass price: BUY/T by default, BUY h/lb for another choice."""
+    label = TEXT_LABELS.get("money/mass")
+    return "%s %s" % (word, label) if label else "%s/T" % word
 
 
 def _renamed(key: str, rule: Mapping[str, Any], name: str) -> str:
@@ -53,7 +59,9 @@ def for_text(reply: Any, rename: bool) -> Any:
             shown = node.get(key + "_display")
             if isinstance(shown, dict) and "value" in shown:
                 rule = units.field_rule(reg, key) or {"dimension": "?"}
-                if rule.get("per"):
+                if rule.get("per_dimension"):
+                    TEXT_LABELS["%s/%s" % (rule["dimension"], rule["per_dimension"])] = shown["symbol"]
+                elif rule.get("per"):
                     TEXT_LABELS["%s/%s" % (rule["dimension"], rule["per"])] = "%s/%s" % (shown["symbol"], rule["per"])
                 else:
                     TEXT_LABELS[rule["dimension"]] = shown["symbol"]

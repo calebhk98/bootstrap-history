@@ -164,7 +164,7 @@ def render_capacity(out):
 def render_materials(out):
     lines = ["MATERIAL STOCKS  (%s on hand; flows per year)" % units_text.text_label("mass", "tonnes"),
          "  %-14s %10s %10s %10s %10s" %
-         ("MATERIAL", "ON HAND", "YOUR FLOW", "DEMAND", "BUY/T")]
+         ("MATERIAL", "ON HAND", "YOUR FLOW", "DEMAND", units_text.per_mass_heading("BUY"))]
     for row in out.get("materials") or []:
         lines.append("  %-14s %10s %10s %10s %10s" %
                  (row.get("material"), _fmt_num(row.get("stock_on_hand_tonnes")),

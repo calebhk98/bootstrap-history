@@ -1,6 +1,6 @@
 # Request: let the player choose display units (area, mass, temperature, money), with one unit layer that mods can extend and a test that proves every screen goes through it
 
-**Status:** partly - registry, formatters, per-dimension options, JSON `_display` fields, the covered text screens and the test are in; the remains below are open
+**Status:** partly - registry, formatters, options, JSON `_display` fields and the compound-unit rule are in, and every read-only text screen passes `sim/tests/test_complaint_285_text_screens.py`; the remains below are open
 
 Stakeholder request. Screens show quantities in whatever unit each piece of code happened to use: land in iugera or hectares, mass in kg or tonnes, temperatures in Celsius, money in the civilisation's coin. A player should be able to pick preferred units in the options (for example square kilometres, hectares or the civilisation's own land unit; Celsius, Fahrenheit or kelvin; kilograms, pounds or a civilisation's own weight; the civilisation's coin, labour hours, or another currency). The default stays exactly what the game shows now.
 
@@ -35,13 +35,18 @@ Registry `data/world/units.json` (mods add `<mod_id>:<name>` units the same way 
 
 Covered: every JSON reply (any field the registry's `field_rules` match gets a `_display` sibling); text screens `buy` (farm, forest), `materials`, `state`, `money`, the `why` materials heading and the coin hoard line; money labels on every screen through `render_pretty`. Mass-per-year fields have no field rule yet (424).
 
+## Second increment
+
+Compound units: a field rule with `per_dimension` and `per_native` (money per mass: `buy_per_tonne` and its siblings) converts both parts by the player's choices, and `units_text.per_mass_heading` writes the `BUY`/`SELL` column headings of the `materials` and `market` screens. Money rules now cover the wage, cost, interest, debt and revenue fields the screens show. The policy description no longer embeds a sum.
+
+Test `complaint_285_text_screens`: plays a short game, chooses a non-default unit for every dimension, renders every read-only text screen plus `quote` and `buy`, and fails on a native label (tonne, hectare, den, `/T`) or on a quantity-like numeric reply field with no field rule (`QUANTITY_KEY` in the test; counts and ratios are listed in `NOT_A_QUANTITY`).
+
 ## Remains
 
-- Text screens whose renderer writes its own labels or numbers are not routed: only the screens above. Others show base values and native labels; the test enumerates what it covers.
-- Prose strings with embedded quantities ("12 ha of coppice woodland", refusal and advice sentences) are not converted; only structured fields are.
-- Compound units (price per tonne, yield per hectare, `BUY/T`) are left in native units.
-- Temperature: the formatter and field rule exist, but no screen shows a temperature yet, so the test uses a synthetic reply.
-- Field rules are name patterns, so a new money field not in the list is not converted; tagging at the point the quantity is produced is still to do.
+- Prose built inside the engine (event log lines such as the patron-heir sentence naming denarii, refusal and advice sentences with a quantity) is not converted; the test renders only the structured screens.
+- The detector is a name heuristic: a quantity field named outside `QUANTITY_KEY` is not noticed. Tagging at the point a quantity is produced is still to do.
+- Screens that need a technology or a deposit argument (`why`, `path`, `anatomy`) are not in the test's game.
+- Temperature: the formatter and field rule exist, but no screen shows a temperature yet.
 - Commands accept native units (hectares, tonnes) whatever is displayed.
 - Civilisation units are listed in the registry with a `civilisations` limit; civ data does not yet reference its own units, and only Rome has any.
 
