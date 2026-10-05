@@ -70,6 +70,12 @@ class EconomyPort:
         agent = self._answering_agent()
         return (False, None) if agent is None else (True, agent.credit_room(borrower_id))
 
+    def agent_price_response(self, material, landed_tonnes, taken_tonnes):
+        """Factor on a material's home price once `landed_tonnes` more come to market and `taken_tonnes` more are
+        bought, by the agent economy's own demand and supply; None while it is off or has no book for the good."""
+        agent = self._answering_agent()
+        return None if agent is None else agent.price_response(material, landed_tonnes, taken_tonnes)
+
     def agent_cohort_incomes(self):
         """[(people, yearly money income)] of the agent economy's household cohorts, poorest per head first,
         or None while the agent economy is off."""

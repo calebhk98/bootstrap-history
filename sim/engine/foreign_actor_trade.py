@@ -8,6 +8,9 @@ economy's stand-in external orders leave that direction alone (`actors_carry`).
 """
 from sim.world import market
 
+LANDED = "landed_tonnes"   # carried into the home market
+TAKEN = "taken_tonnes"     # carried out of the home market
+LIMIT = "taken_limit"      # the most money per tonne actors pay at home for what they take out
 SOLD = "sold_tonnes"       # carried to the partner
 BOUGHT = "bought_tonnes"   # carried from the partner
 
@@ -19,6 +22,21 @@ class ForeignActorTradeMixin:
         by_material = self.state.economy.foreign_actor_trade.setdefault(partner, {})
         flow = by_material.setdefault(material, {SOLD: 0.0, BOUGHT: 0.0})
         flow[SOLD if to_partner else BOUGHT] += tonnes
+
+    def note_actor_home_trade(self, material, tonnes, landing, limit_per_tonne=0.0):
+        """Tally a cargo of `material` that actors landed in the home market (or took out of it) this year; the
+        agent economy takes it in as orders at the port (`_external_orders` in economy_port_year.py). A cargo taken
+        out names the most money per tonne it can pay at home and still cover its carriage."""
+        flow = self.state.economy.home_actor_trade.setdefault(material, {LANDED: 0.0, TAKEN: 0.0, LIMIT: 0.0})
+        flow[LANDED if landing else TAKEN] += tonnes
+        if not landing:
+            flow[LIMIT] = max(flow.get(LIMIT, 0.0), limit_per_tonne)
+
+    def actor_home_trade(self, material):
+        """(tonnes landed in the home market, tonnes taken out of it, most money per tonne paid for those) by actors
+        so far this year."""
+        flow = self.state.economy.home_actor_trade.get(material, {})
+        return flow.get(LANDED, 0.0), flow.get(TAKEN, 0.0), flow.get(LIMIT, 0.0)
 
     def actors_carry(self, material, to_partner, partner=None):
         """Whether actors have carried the material this year toward (or from) a partner, any partner by default."""
@@ -75,6 +93,7 @@ class ForeignActorTradeMixin:
         `cargo_only` leaves alone commodities with no cargo, which the engine's own year closes."""
         tally = self.state.economy.foreign_actor_trade
         book = self.state.economy.foreign_market_book
+        self.state.economy.home_actor_trade.clear()
         for partner in sorted(set(tally) | set(book)):
             facts = self._foreign_economy_facts(partner)
             cargo = {}

@@ -124,17 +124,37 @@ Left to do, in order:
    as far as the destination's price after the cargo lands, less carriage, risk and interest, still beats the source's
    price after it is taken. The partner book answers (`price_after_cargo`, `partner_price_response`); the cargo no longer
    flips year to year, and the partner's price settles at the break-even freight, risk and interest set
-   (`test_foreign_actor_trade.py`). Still open: the home society's market does not answer `price_after_cargo` (the
-   economy has no quote of the price after a sale), so cargo bound for home is still limited by `TRADER_DEPTH_SHARE`
-   and a home price that rises or falls with trader cargo is not seen by the trader. Also a cargo is sized against
-   its own route only: two routes into one market within a year each see the tally of the cargo already shipped,
-   not of the cargo planned by the other.
+   (`test_foreign_actor_trade.py`). Home too, now: the economy keeps the book each port market last cleared
+   (`sim/economy/market_curves.py`: the buyers' schedules merged by reference price, elasticity and ceiling, the offers
+   merged by reservation, the external edge left out; saved in `record.curves`) and `economy.api.price_response`
+   clears it again through `goods_market.clear` with the extra offer or floor bid, returning the factor on the good's
+   national price (the port's move times the port's share of the good's usual traded value, as `national_prices`
+   weighs areas). `EconomyPort.agent_price_response` hands it to `SimWorld.price_after_cargo` for home, on top of the
+   year's home tally (`Sim.actor_home_trade`). Cargo bound for home and the source side of cargo taken from home are
+   sized by it (`test_home_cargo_price.py`: the quote matches the price the economy then clears at, and home-bound cargo
+   never flips sign). `TRADER_DEPTH_SHARE` stays only as the fallback where nothing answers: the home society with
+   the agent economy off, a good with no port book yet, and a partner with no book for the good. Still open: a cargo
+   is sized against its own route only: two routes into one market within a year each see the tally of the cargo
+   already shipped, not of the cargo planned by the other; the merged buyers add their budgets, so a market held
+   back by a few budgets quotes a little off its book; the quote is from last year's book, so it lags the year's own
+   changes; the home port market is thin and its sellers' reservations make the quote a staircase (and not strictly
+   monotone where a buyer's ceiling binds), so the cargo that pays is a marginal one, not a price reached exactly
+   (`test_foreign_actor_trade.py` no longer asserts the partner's price settles at the break-even); and the first year after a partner's book opens, a good the partner does not make quotes a taken cargo
+   as unpayable (home-bound cargo was zero in the test's first year).
 2. A trader's money is booked through "edge:market sale" and "edge:market purchase", not through the foreign coin
    ledger, so a trader's exports do not draw coin from the partner or raise the home coin stock (price-specie flow
    exists only for the external edge). The cargo does not use the carrier lift either (`_record_lift`).
-3. Trader purchases and sales at home enter the agent economy over the legacy edge, not as external orders; the
-   economy cannot yet tell them from domestic trade. Moving them to the external edge needs the partner per order
-   (the same gap as the even split in `_settle_foreign_coin`).
+3. Trader purchases and sales at home now enter the agent economy as orders at the port on the external edge, not as
+   flows noted for the engine's own market: `ship` tallies them (`Sim.note_actor_home_trade`) and `_external_orders`
+   adds an offer for each good landed and a floor bid, capped at what the actor can pay and still cover carriage,
+   for each good taken (`actor_cargo_orders`); the tally clears when the partner books close. Only with the agent
+   economy off do they still go through `market_sale` and `market_purchase`. What is not small and stays open:
+   (a) the order carries no partner, so `_settle_foreign_coin` splits the money these orders move evenly among the
+   partners, and the actor's own "edge:market sale" and "edge:market purchase" postings are made from nowhere
+   while the book also pays or receives the edge (the trader's purse is not an account in the book); fixing both
+   needs the trader as an account in the book and a partner on each order (a per-partner edge, which touches the
+   edge records, `wanted_at`, the wash-trade filter and the coin settlement), the same gap as item 2. (b) The
+   stand-in orders and the actors' cargo for one good can meet in one market when each runs its own direction.
 4. The economy's merchants (`sim/economy/merchants.py`) were not touched: they move goods between tiles only, with no
    partner. The aggregate flow can go once the agent economy is the only economy, with the external orders; until
    then it is the opt-out game's merchant.

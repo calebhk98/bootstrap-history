@@ -6,10 +6,13 @@ record's internals so that callers do not hold `economy.record.<field>` in their
 """
 WALL = "two-way"  # nothing here reaches sim/engine/; the engine hands it what it needs (sim/engine/economy_port.py)
 
-from . import diagnostics, households, taxes, tile_costs
+import math
+
+from . import diagnostics, households, market_curves, taxes, tile_costs
 from .currency import currency_from_coin_standard
 from .economy import Economy
-from .foreign import external_orders
+from .foreign import actor_cargo_orders, external_orders
+from .market_memory import market_key
 from .notional import shown_prices
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
 from .protocols import AgentOrders, YearInputs
@@ -24,6 +27,7 @@ from sim.world import capital_market
 
 __all__ = [
     "diagnostics", "households", "taxes", "tile_costs", "currency_from_coin_standard", "Economy", "external_orders",
+    "actor_cargo_orders", "price_response",
     "shown_prices", "Producer", "expected_output_prices", "live_input_prices", "live_wages", "AgentOrders",
     "YearInputs", "recipes_from_production_data", "EconomyRecord", "EconomySetup", "TradeSpec",
     "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "GoodsMove", "Offer", "Transfer",
@@ -108,6 +112,27 @@ def cohort_incomes(economy):
     rows = [(cohort.people, cohort.last_year_income) for cohort in economy.record.cohorts.values()
             if cohort.people > 0.0]
     return sorted(rows, key=lambda row: (row[1] / row[0], row[0]))
+
+
+def price_response(economy, good, landed_units, taken_units):
+    """Factor on a good's national price once `landed_units` more are offered and `taken_units` more are bought at
+    the port, from the book the port's market last cleared (the economy's own demand and supply). The national price
+    weighs each market area by what it usually trades, so a move at the port shows in it by the port's share of that
+    value. None when the port's market has no book or traded nothing."""
+    area = market_curves.port_area(economy.area_map, economy.setup.port_tile, good)
+    curve = economy.record.curves.get(market_key(good, area)) if area is not None else None
+    if curve is None:
+        return None
+    memory = economy.record.memory
+    factor = market_curves.price_response(curve, good, memory.prices.get(market_key(good, area)), landed_units, taken_units)
+    if factor is None or not math.isfinite(factor):
+        return factor
+    weights = memory.volume_weights or economy.record.volumes
+    values = {key: price * weights.get(key, 0.0) for key, price in memory.prices.items()
+              if key.split(_KEY_SEPARATOR, 1)[0] == good}
+    total = sum(values.values())
+    share = values.get(market_key(good, area), 0.0) / total if total > 0.0 else 1.0
+    return 1.0 + share * (factor - 1.0)
 
 
 def account_balance(economy, agent_id):
