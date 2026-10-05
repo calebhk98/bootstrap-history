@@ -64,6 +64,19 @@ class SmallMapTests(unittest.TestCase):
         self.assertLess(road["cost_per_tonne"], track["cost_per_tonne"])
         self.assertLess(road["days"], track["days"])
 
+    def test_costs_from_one_origin_match_the_route_to_each_tile(self):
+        modes = {"foot", "cart", "sail"}
+        prices = {"foot": 3.0, "cart": 1.0, "sail": 0.2}
+        costs = routes_search.costs_from(self.world_map, ["a1"], modes, mode_costs=prices, handling_costs={})
+        self.assertEqual(costs["a1"], 0.0)
+        for tile_id, cost in costs.items():
+            found = routes_search.route(self.world_map, ["a1"], [tile_id], modes, mode_costs=prices, handling_costs={})
+            self.assertAlmostEqual(cost, found["cost_per_tonne"], msg=tile_id)
+        unreachable = set(self.world_map.tiles) - set(costs)
+        for tile_id in unreachable:
+            self.assertIsNone(routes_search.route(self.world_map, ["a1"], [tile_id], modes, mode_costs=prices,
+                                                  handling_costs={}))
+
     def test_no_route_by_rail_without_track(self):
         self.assertIsNone(routes_search.route(self.world_map, ["a1"], ["a2"], {"rail"}))
         built = {routes_search.edge_key("a1", "a2"): {"rail": True}}
