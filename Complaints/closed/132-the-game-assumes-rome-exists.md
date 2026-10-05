@@ -1,6 +1,6 @@
 # The game assumes Rome exists
 
-**Status:** partly - the game starts and steps with the default civilisation's file absent (sim/tests/test_civilisation_independence.py); no code names a civilisation id; the default comes from `default_civ`, falling back to the first civilisation present.
+**Status:** closed - the game starts without the default civilisation file (test civilisation_independence), no code names a civilisation id, and a Han player reads only Han money and terms (test player_text_names_own_civilisation); internal unit naming (iugera in production data, denarii in engine message source) moved to 140
 
 Remains: land is hectares inside `sim/world/land.py` (the allocation, yield,
 intensity and rent functions; `RegionLand.arable_hectares`), and node money is

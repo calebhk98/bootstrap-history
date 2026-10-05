@@ -96,3 +96,7 @@ Overlapping issues closed into this one; each closed file keeps its full text.
 
 - 283 (`closed/283-node-revenue-was-authored-against-book-material-costs.md`): node revenue for non-product nodes (equipment, services) is still authored against book material costs.
 - 381 (`closed/381-authored-money-amounts-are-not-revalued-by-the-price-level.md`): authored money amounts are priced once at load (`money_units.price_nodes`) and not revalued by the price level.
+
+## Moved from 132
+
+- Production data still names land in iugera (`iugerum_land`, `land_iugera_years`) and the price solver converts at that one edge; `sim/world/land.py` works in hectares. Engine message source spells money "denarii" and the display edge (`sim/ui/proto/util.py`, `_localise_money`) swaps the civilisation's own word in. Both are internal names, not what a player reads (`closed/132-the-game-assumes-rome-exists.md`).
