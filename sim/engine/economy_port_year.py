@@ -179,7 +179,8 @@ class AgentEconomy:
     def _external_orders(self):
         """Imports offered at the cheapest partner's landed price and exports bid for at the partner's
         own price less carriage, on the port tile (sim/economy/foreign.py). How much can cross is a
-        share of the home market, standing in for the carriers' capacity (FOREIGN_TRADE_SHARE)."""
+        share of the home market, standing in for the carriers' capacity (FOREIGN_TRADE_SHARE). A good the
+        trader actors carry in a direction this year is theirs to carry that way (foreign_actor_trade.py)."""
         sim, economy = self._sim, self._economy
         partners = sim.foreign_economies()
         if not partners:
@@ -197,13 +198,12 @@ class AgentEconomy:
             for partner in partners:
                 route = routes[partner]
                 price = offers_api.landed_price(good, partner, route)
-                if price is not None and price > 0.0 and price < landed.get(good, float("inf")):
+                if (price is not None and price > 0.0 and price < landed.get(good, float("inf"))
+                        and not sim.actors_carry(good, False, partner)):
                     landed[good] = price
-                facts = sim._foreign_economy_facts(partner)
-                partner_price = facts["prices_in_home_money"].get(good)
-                if route is not None and partner_price:
-                    net = (partner_price * offers_api.partner_price_level(partner)
-                           - route.cost_per_tonne * tonnes_per_unit(good))
+                partner_price = sim.partner_price_per_unit(partner, good)
+                if route is not None and partner_price and not sim.actors_carry(good, True, partner):
+                    net = partner_price - route.cost_per_tonne * tonnes_per_unit(good)
                     if net > export_prices.get(good, 0.0):
                         export_prices[good] = net
             available[good] = wanted[good] = market * FOREIGN_TRADE_SHARE

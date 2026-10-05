@@ -32,7 +32,8 @@ class TradeView:
 			if place == self._home_place():
 				per_unit = sim.economy.material_prices()
 			else:
-				per_unit = sim._foreign_economy_facts(place)["prices_in_home_money"]
+				per_unit = {material: sim.partner_price_per_unit(place, material)
+							for material in sim._foreign_economy_facts(place)["prices_in_home_money"]}
 			prices = {}
 			for material, price in per_unit.items():
 				tonnes = tonnes_per_unit(material)
@@ -88,7 +89,14 @@ class TradeView:
 		return per_tonne * tonnes
 
 	def market_depth(self, material: str, place: str) -> float:
-		return float(self._depth_by_material(place).get(material, 0.0))
+		"""Tonnes a year buyers at a place take; at a partner no more than its market book's demand, the
+		scale its price moves on when traders sell into it."""
+		depth = float(self._depth_by_material(place).get(material, 0.0))
+		if place == self._home_place():
+			return depth
+		sim = self._sim  # type: ignore[attr-defined]
+		entry = sim._foreign_entry(place, sim._material_tag(material)[0], sim._foreign_economy_facts(place))
+		return depth if entry is None else min(depth, float(entry["reference_tonnes"]))
 
 	def _delivered(self) -> Dict[Tuple[str, str], float]:
 		return self._memo.setdefault("delivered", {})  # type: ignore[attr-defined,no-any-return]
@@ -98,7 +106,8 @@ class TradeView:
 
 	def ship(self, trader_id: str, material: str, tonnes: float, source: str, destination: str) -> Tuple[float, float]:
 		"""Buy at the source and sell at the destination; (money paid, money received). The home side
-		goes through the one goods market; a partner's side is outside the modelled actors."""
+		goes through the one goods market; a partner's side is tallied for its market book to close on
+		(foreign_actor_trade.py)."""
 		if tonnes <= 0.0:
 			return 0.0, 0.0
 		paid = (self.price_at(material, source) or 0.0) * tonnes
@@ -108,6 +117,11 @@ class TradeView:
 			self.market_purchase(trader_id, self.commodity_of(material), tonnes)  # type: ignore[attr-defined]
 		if destination == home:
 			self.market_sale(trader_id, material, tonnes)  # type: ignore[attr-defined]
+		sim = self._sim  # type: ignore[attr-defined]
+		if destination != home:
+			sim.note_actor_trade(destination, material, tonnes, True)
+		if source != home:
+			sim.note_actor_trade(source, material, tonnes, False)
 		key = (material, destination)
 		self._delivered()[key] = self._delivered().get(key, 0.0) + tonnes
 		return paid, received
