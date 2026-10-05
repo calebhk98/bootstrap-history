@@ -4,6 +4,7 @@
   {
    "id": "coal",
    "mechanism": "mineral_deposit",
+   "works_priced_from_deposits": true,
    "unit": "tonnes",
    "deposit_types": [
     {

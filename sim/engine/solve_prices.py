@@ -45,7 +45,7 @@ given quantity demanded exactly the way Ricardian rent theory says to.
 This file now uses it for the six of those seven metals that
 `data/production/` represents as an EXTRACTED ore material
 (`iron_ore_kg`, `copper_ore_kg`, `cassiterite_kg`, `galena_kg`,
-`silver_ore_kg`, `cinnabar_kg` - see RENT_BEARING_ORE_MATERIALS below).
+`silver_ore_kg`, `cinnabar_kg` - see the catalogue's ore_goods).
 Gold is the exception: `gold_kg` folds placer extraction and mercury
 amalgamation into one recipe with no separate `extracted_from` ore stage
 of its own (see WHAT THIS DOES NOT REACH below), so it is left at zero
@@ -79,7 +79,7 @@ ore-to-metal ratio (`copper_kg` assumes 50 kg ore/kg metal; no particular
 named deposit in the geography deposit catalogue need actually run at that grade). Folding
 a per-kg-metal rent into a per-kg-ore price therefore needs a ratio to
 convert with, and this file uses each metal's DOMINANT smelting recipe's
-own ratio for that conversion (RENT_BEARING_ORE_MATERIALS names it), which
+own ratio for that conversion (the catalogue's ore_goods names it), which
 makes the rent embedded in THAT recipe's own final price exactly right by
 construction (see `rent_hours_per_kg_by_ore_material`'s own docstring for
 the algebra) but is only APPROXIMATE for any OTHER recipe that consumes
@@ -125,7 +125,7 @@ pays on the crop side. This section is the fix.
 
 A FIELD IS NOT A MINE (see sim/world/land.py's own module docstring), so
 this needed its own route into a recipe's cost rather than reusing
-RENT_BEARING_ORE_MATERIALS' ore-grade mechanism above: a crop is not the
+the ore-grade mechanism above: a crop is not the
 material that earns a rent, the LAND it grows on is, and the crop merely
 OCCUPIES that land for a season rather than consuming it the way a
 smelter consumes ore. `land_hectare_years` (data/production/_SCHEMA.md) is
@@ -748,7 +748,6 @@ from sim.engine.solve_prices_core import (                  # noqa: E402
     INITIAL_PRICE_GUESS_HOURS,
     MAXIMUM_ITERATIONS,
     NUMERAIRE_TRADE,
-    RENT_BEARING_ORE_MATERIALS,
     THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C,
     _build_material_dependency_graph,
     _capability_graded_price,
