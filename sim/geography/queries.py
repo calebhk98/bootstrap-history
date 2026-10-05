@@ -135,6 +135,11 @@ def ore_goods(world_map: Optional[WorldMap] = None) -> Dict[str, Dict[str, Tuple
     return resource_links.ore_goods(_map(world_map))
 
 
+def mine_demand_goods(world_map: Optional[WorldMap] = None) -> Dict[str, Tuple[str, ...]]:
+    """{resource id: goods whose demand a mine of it supplies}, from the catalogue rows that name them."""
+    return resource_links.mine_demand_goods(_map(world_map))
+
+
 def works_priced_from_deposits(world_map: Optional[WorldMap] = None) -> Tuple[str, ...]:
     """Resource ids whose mine running cost comes from the deposits' physical works."""
     return resource_links.works_priced_from_deposits(_map(world_map))

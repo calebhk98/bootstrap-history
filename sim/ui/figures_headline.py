@@ -1,7 +1,8 @@
 """The headline figures a player asks "why did this change?" about.
 
 Each reads the engine function that produces the number; nothing is
-recomputed here. Registration is the whole of adding a figure.
+recomputed here. Registration is the whole of adding a figure; the ones that only read state
+paths are declared in data/ui/figures.json (`figures_data.py`).
 """
 from sim.engine.ui_port import cash_book
 from .figures import figure
@@ -13,16 +14,6 @@ HAZARD_KINDS = ("staff_loss", "sack_chance", "output_factor", "real_erosion")
 @figure("cash", "cash on hand", unit="money", since=cash_book.causes_since)
 def _cash(sim):
     return {"value": sim.capital}
-
-
-@figure("income", "recurring revenue per year", unit="money per year")
-def _income(sim):
-    return {"value": sim.revenue(), "components": sim.revenue_sources()}
-
-
-@figure("upkeep", "running costs per year", unit="money per year")
-def _upkeep(sim):
-    return {"value": sim.upkeep(), "components": sim.upkeep_by_concern()}
 
 
 @figure("recurring_net", "recurring net per year", unit="money per year")
@@ -41,15 +32,6 @@ def _recurring_net(sim):
     }
 
 
-@figure("population", "population", unit="people", digits=0)
-def _population(sim):
-    population = sim.population
-    return {"value": population.total,
-            "components": {"children": population.children,
-                           "working age": population.working_age,
-                           "elderly": population.elderly}}
-
-
 def _literacy(sim, field, ceiling):
     return {"value": float(sim.civ.get(field, 0.0)),
             "drivers": {"effective_schooling_flow": sim.effective_schooling_flow(),
@@ -66,11 +48,6 @@ def _literacy_elite(sim):
     return _literacy(sim, "literacy_elite", sim.literacy_ceiling_elite())
 
 
-@figure("price_index", "price level against the starting one", unit="index", digits=4)
-def _price_index(sim):
-    return {"value": sim.price_index, "drivers": {"wage_index": sim.wage_index}}
-
-
 @figure("hazard", "the nearest hazard's worst harm after your defences", unit="harm", digits=4)
 def _hazard(sim):
     for hazard, _start, _end, _in_progress in hazards_not_yet_past(sim.civ, sim.year):
@@ -85,3 +62,6 @@ def _hazard(sim):
     return {"value": None}
 
 from . import figures_world  # noqa: E402,F401  (registers the society figures beside these)
+from .figures_data import register_data_figures  # noqa: E402
+
+register_data_figures()

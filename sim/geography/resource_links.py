@@ -18,3 +18,9 @@ def works_priced_from_deposits(world_map: WorldMap) -> Tuple[str, ...]:
     """Resource ids whose mine running cost comes from the deposits' physical works, with no book price needed."""
     return tuple(resource_id for resource_id, row in world_map.catalogue("resources").items()
                  if row.get("works_priced_from_deposits"))
+
+
+def mine_demand_goods(world_map: WorldMap) -> Dict[str, Tuple[str, ...]]:
+    """{resource id: goods whose annual demand a mine of it supplies}, for rows that name them."""
+    return {resource_id: tuple(row["mine_demand_goods"])
+            for resource_id, row in world_map.catalogue("resources").items() if row.get("mine_demand_goods")}

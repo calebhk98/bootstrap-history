@@ -68,6 +68,16 @@ A mod may provide:
   are hectare, kilogram, Celsius and labour hour) and optional `field_rules`.
   See `sim/PROTOCOL.md`, "Display units".
 
+* `data/ui/figures.json`: `{ "figures": { "<mod_id>:<name>": {...} } }`, figures for the `figures` / `why`
+  inspector. A figure has a string `label`, optional `unit` and integer `digits`, and `value`, a state path:
+  dotted names of `Sim` attributes or methods (a method is called with no arguments; a name after a mapping
+  looks up its key), for example `population.total`. Optional `components`, `flows` and `drivers` are either a
+  path to a mapping of name to number or `{name: path}`. A path reads only: no step starts with `_`, and a
+  method is callable only when the engine marks it `@readable` (`sim/engine/readable.py`); anything else is
+  refused at load with an error naming the file. The base game's own file shows the shape; a figure
+  that needs code (a cause book) stays a `@figure` in `sim/ui`. Ids outside the mod's namespace and ids already
+  taken are errors.
+
 New technology, recipe, civilization, and trade ids must be
 `<mod_id>:<name>`. A technology or recipe may instead deliberately patch an existing
 id with `"override": true`; an override is a deep merge that changes only the
@@ -148,7 +158,8 @@ patches in `layers/`, new resources, deposits, route modes or a whole replacemen
 under the same add, override and remove rules as the rest of the mod system, new ids carry the mod's
 prefix, and `sim/geography/map_source.py` states the folder layout. The game opens the map once with
 every installed mod's overlay in load order (`sim/engine/geography_port.py`), and the agent economy's
-tiles and carriage costs come from it. Hazards, UI, and arbitrary new mechanics are not mod
+tiles and carriage costs come from it. A mineral row may carry `mine_demand_goods`, the goods whose demand a mine of it supplies (the `mines` screen
+reads it; a material without it is its own demand good). Hazards and arbitrary new mechanics are not mod
 extension points yet. There is no price table: every price comes from
 production data, so a mod prices a good by giving it a production path.
 
