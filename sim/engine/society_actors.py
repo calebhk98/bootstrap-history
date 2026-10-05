@@ -98,3 +98,4 @@ class ActorsMixin:
         self.state_treasury()
         self.update_capital_market()
         self.actors.advance(SimWorld(self))
+        self.charge_actors_for_keeping_coin()

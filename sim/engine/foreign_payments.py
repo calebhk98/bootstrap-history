@@ -54,7 +54,7 @@ class ForeignPaymentsMixin:
 
     LEDGER_FIELDS = ("goods_in_value", "goods_out_value", "home_coin_units", "partner_coin_units",
                      "lift_tonnes_per_year", "lift_used_in", "lift_used_out", "lift_unmet",
-                     "lift_year", "fleet_capital", "merchant_capital_used", "merchant_retained")
+                     "lift_year", "fleet_capital", "coin_carriage_units", "merchant_capital_used", "merchant_retained")
 
     def _foreign_ledger(self, civilization_id, create=False):
         """The partner's ledger; an empty one when nothing has been recorded and `create` is false."""
@@ -135,7 +135,10 @@ class ForeignPaymentsMixin:
             ledger["goods_in_value"] += value
             paid = balance_of_payments.coin_paid(value, self.home_coin_stock_units())
             ledger["home_coin_units"] -= paid
-            ledger["partner_coin_units"] += paid / home_money_per_partner_coin
+            received = paid / home_money_per_partner_coin
+            carriage = self.coin_carriage_units(civilization_id, received, home_money_per_partner_coin)
+            ledger["partner_coin_units"] += received - carriage
+            ledger["coin_carriage_units"] += carriage
         elif flow_tonnes < 0.0:
             ledger["goods_out_value"] += value
             partner_units = value / home_money_per_partner_coin
@@ -143,7 +146,9 @@ class ForeignPaymentsMixin:
                              + ledger["partner_coin_units"])
             paid_units = balance_of_payments.coin_paid(partner_units, partner_stock)
             ledger["partner_coin_units"] -= paid_units
-            ledger["home_coin_units"] += paid_units * home_money_per_partner_coin
+            carriage = self.coin_carriage_units(civilization_id, paid_units, home_money_per_partner_coin)
+            ledger["home_coin_units"] += (paid_units - carriage) * home_money_per_partner_coin
+            ledger["coin_carriage_units"] += carriage
 
     # ---- carriers -----------------------------------------------------------
 
