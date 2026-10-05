@@ -69,8 +69,9 @@ def _set(sim, cmd):
             return {"ok": False, "error": "limit must be at least 1"}
     programme = state(sim)
     same = programme.get("target") == target
-    kept = {key: programme[key] for key in ("committed", "started_ids", "hours", "hours_year")
-            if same and key in programme}
+    # Money committed is judged against the caps it was committed under; founder hours carry on with the target.
+    kept_keys = ("hours", "hours_year") + (("committed", "started_ids") if programme.get("caps") == caps else ())
+    kept = {key: programme[key] for key in kept_keys if same and key in programme}
     programme.clear()
     programme.update(target=target, caps=caps, limit=limit, paused=False, committed=0.0, pauses=pauses,
                      auto_resume=str(cmd.get("auto_resume")).lower() in ("true", "1", "yes", "on"))

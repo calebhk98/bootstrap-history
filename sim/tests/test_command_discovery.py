@@ -20,7 +20,7 @@ check("every dispatch_*.py module is loaded by discovery", not _not_loaded, _not
 
 # --- every typed usage in the registry parses (and its words reach a command)
 _NUMBER_WORDS = re.compile(r"\b(n|years|hours|tonnes|count|amount|units|rate|share|number"
-                           r"|tonnes_per_year)\b")
+                           r"|tonnes_per_year|hectares)\b")
 _bad_usage = []
 for _name, _entry in _registry.COMMANDS.items():
     for _form in _entry["usage"]:
