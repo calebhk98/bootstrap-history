@@ -5,6 +5,7 @@ from functools import partial
 
 from sim.engine.data import load_civ
 from sim.engine.state import ActorRecord
+from sim.engine.coin_hoard import KEEPING_CAUSE
 
 sim = partial(sim, agent_economy=False)
 
@@ -64,7 +65,7 @@ def keeping_paid(treasury_money, firm_money):
     treasury.record.money = treasury_money
     firm = game.actors.add("firm:coin_keeper", ActorRecord(kind="firm", name="coin keeper", money=firm_money))
     game.advance_actors(game.state.scenario.year)
-    cause = "keeping coin under guard"
+    cause = KEEPING_CAUSE
     return treasury.record.outlays.get(cause, 0.0), firm.record.outlays.get(cause, 0.0)
 
 

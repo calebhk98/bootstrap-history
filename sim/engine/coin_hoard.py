@@ -17,7 +17,7 @@ COIN_GUARD_HOURS_PER_TONNE_YEAR = declare(
         "from stone, doors and a guard roster (a vault has no model yet), and is not measured. "
         "The household's purse is charged it each year.")
 
-KEEPING_CAUSE = "keeping coin under guard"
+KEEPING_CAUSE = "edge:coin guards"  # paid to the guards, people in the economy
 KEEPING_BASIS = ("guard hours per tonne of coin per year, a labelled heuristic "
                  "(COIN_GUARD_HOURS_PER_TONNE_YEAR), at the unskilled hour")
 
