@@ -1698,7 +1698,16 @@
       "spectacle"
     ],
     "up_hours": 100809.39587064662,
-    "yrs": 4.0
+    "yrs": 4.0,
+    "mechanics": {
+      "diagnosis_instrument": {
+        "instrument": "in2_mcleod_vacuum_gauge",
+        "quantity": "pressure",
+        "needed": 1e-06,
+        "unit": "torr",
+        "needed_words": "a vacuum of about 1e-6 torr"
+      }
+    }
   },
   {
     "adopt_yrs": 0.0,
@@ -6638,7 +6647,16 @@
       "spectacle"
     ],
     "up_hours": 30242.818761193987,
-    "yrs": 2.0
+    "yrs": 2.0,
+    "mechanics": {
+      "diagnosis_instrument": {
+        "instrument": "in2_mcleod_vacuum_gauge",
+        "quantity": "pressure",
+        "needed": 0.001,
+        "unit": "torr",
+        "needed_words": "a vacuum of about 1e-3 torr"
+      }
+    }
   },
   {
     "_internal": "[REVIEWED: prerequisite(s) cap_vac_1e6 added by a reviewer working node by node. Reason: triode and amplifier require very high vacuum to prevent arcing and ensure long tube life]",
@@ -7055,6 +7073,15 @@
       "inexplicable"
     ],
     "up_hours": 0,
-    "yrs": 6.0
+    "yrs": 6.0,
+    "mechanics": {
+      "diagnosis_instrument": {
+        "instrument": "in2_mass_spectrograph",
+        "quantity": "impurity",
+        "needed": 1e-09,
+        "unit": "impurity fraction",
+        "needed_words": "purity of 1 part in 1e9"
+      }
+    }
   }
 ]
