@@ -154,6 +154,28 @@ check("what leaves the owner is exactly what reaches the bonded",
 check("bonded members grow more slowly than a free stratum with food met", bondsmen.record.last_growth < 0.01,
 	  bondsmen.record.last_growth)
 
+# ---- bonded people work: their hours are paid to the owner -----------------------------------
+definitions = [{"name": "masters", "share": 0.1, "property_share": 0.0, "literacy": 0.8},
+			   {"name": "bondsmen", "share": 0.9, "bonded": True, "owner": "masters", "trade": "labourer",
+				"work_share": 0.5, "literacy": 0.0}]
+registry = build(definitions)
+world = StrataWorld()
+masters, bondsmen = stratum(registry, "masters"), stratum(registry, "bondsmen")
+hands = bondsmen.record.members
+registry.advance(world)
+product = hands * 0.5 * world.pay["labourer"]
+check("the owner is paid the wages of the bonded's working hours",
+	  abs(masters.record.income.get("edge:economy", 0.0) - product) < 1e-6, masters.record.income)
+check("the bonded themselves still earn nothing", "edge:economy" not in bondsmen.record.income, bondsmen.record.income)
+check("the bonded's recorded product is handed over, not left to be paid twice", bondsmen.record.labour_product == 0.0,
+	  bondsmen.record.labour_product)
+untrade = [dict(entry) for entry in definitions]
+del untrade[1]["trade"]
+registry = build(untrade)
+registry.advance(world)
+check("bonded people naming no trade add no labour income", "edge:economy" not in stratum(registry, "masters").record.income,
+	  stratum(registry, "masters").record.income)
+
 # ---- headcount and money are conserved -----------------------------------------------------
 definitions = [{"name": "low", "share": 0.4, "trade": "labourer", "literacy": 0.6, "rises_to": "high", "work_share": 1.0},
 			   {"name": "high", "share": 0.2, "trade": "merchant", "literacy": 0.9, "falls_to": "low"},

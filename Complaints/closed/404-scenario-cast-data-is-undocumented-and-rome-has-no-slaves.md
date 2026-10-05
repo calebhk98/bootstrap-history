@@ -1,6 +1,6 @@
 # The `"cast"` key a scenario uses to declare countries, players and strata is undocumented, and no civilisation declares its slaves
 
-**Status:** partly - cast, bondage fields and foreign economies documented; a sourced share exists (below) but bonded strata supply no labour yet, so adding it would make Rome worse; the mod loader item is in mods/TASKS.md
+**Status:** closed - bonded strata work and their keeper is paid for it (sim/tests/test_agents_strata.py, sim/tests/test_rome_slave_stratum.py); the cast-key and foreign-economy documentation items remain listed below as follow-ups in the mod loader and schema docs
 
 A game's roster is seeded once and saved (`ActorsState.cast`, `ActorsState.countries`; see
 `sim/agents/MULTIPLAYER.md`). It is built from:
@@ -27,8 +27,6 @@ What it would take:
   entry or a population share field the default split reads, sourced.
 - Add the foreign-economy file to the mod loader.
 
-## Sourced share, held back
+## Sourced share, now applied
 
-Scheidel, "Human Mobility in Roman Italy II: The Slave Population", JRS 95 (2005) 64-79: about a tenth of the empire's people were enslaved (plausible range roughly 8-15%), Italy and the cities higher; the older third-or-more figure for Italy is unsupported. Confidence C.
-
-A trial cast for `rome_100ad` with a bonded `slaves` stratum at that share (owner `rich`) ran without engine changes, but bonded strata only consume through the owner's keep: they add no hours to the labour supply, so a tenth of Rome stopped producing and the rich stratum ran deeply negative in the opening year. Adding the share waits until bonded people work (their hours enter the labour market on the owner's account). Branch `rome-slave-stratum-and-weather-seed` holds the trial data and its test.
+`rome_100ad.json` declares a bonded `slaves` stratum at the sourced share (Scheidel 2005, confidence C), naming the trade `labourer`. A bonded stratum with a trade now records the value of its year of work at the going pay of that trade, and the keeper stratum is credited it at settlement beside paying the keep (`sim/agents/stratum_year.py`, `bonded_product` and `settle_keep`). The bonded are part of the population the economy already counts as hands, so their wage bill was already paid by employers and previously reached no stratum; the credit attributes it to the owner and mints nothing beyond the `edge:economy` bridge every free stratum already uses. Measure with `PYTHONPATH=. python3` on the Rome opening as in `sim/tests/test_rome_slave_stratum.py`.
