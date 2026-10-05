@@ -1,6 +1,6 @@
 # Derived node figures are held at the techniques a civilisation starts with
 
-**Status:** partly - `node_revenue.for_civilisation(..., held_techs=)` derives and caches on the gate techniques held (`test_node_revenue_held_techs`); still open: the `Sim` calls it once at construction with the starting techniques, so nothing re-derives when research changes the held set
+**Status:** closed - regression test node_revenue_follows_research
 
 `node_revenue.for_civilisation` derives each output node's revenue and upkeep once per civilisation, at the goods table, graded energy prices and wages of the technologies it holds when the `Sim` is built (`starting_techs`). A game spans centuries: the founder's own research changes what the civilisation can make and at what cost (iron by blast furnace, cheaper heat, a cheaper carrier), and the node's revenue stays at the starting prices. The yearly market ratio (`Sim.node_output_market_factor`) moves it with the price of what it sells and buys, but not with what the civilisation has learned to make.
 
