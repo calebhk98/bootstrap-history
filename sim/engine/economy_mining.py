@@ -40,6 +40,14 @@ def _works_priced_materials(world_map):
     return works_priced_from_deposits(world_map)
 
 
+def mine_catalog_hint_for(materials):
+    """The hint naming the materials whose workings are priced from deposits, and the generic fallback."""
+    return ("well-known workings: %s - or any other material key the "
+            "tree uses (for example aluminium_kg), priced from its own "
+            "book price if nothing more specific is known about it"
+            % ", ".join(sorted(materials)))
+
+
 class MiningMixin:
     @property
     def MINE_OPEX_MATERIALS(self):
@@ -148,15 +156,15 @@ class MiningMixin:
 
     def mine_catalog_hint(self):
         """What to tell a player who typed a material name this file
-        cannot price. Names the seven hand-named metals (see
-        COMMODITY_DYNAMISM.md) as well-sourced headline cases, and also
-        points at the generic fallback below: not a hard, closed list.
-        """
-        named = ", ".join(sorted(self.MINE_OPEX_MATERIALS))
-        return ("well-known workings: %s - or any other material key the "
-                "tree uses (for example aluminium_kg), priced from its own "
-                "book price if nothing more specific is known about it"
-                % named)
+        cannot price: the materials the deposits' works price on this
+        game's map, and the generic fallback below. Not a closed list."""
+        return mine_catalog_hint_for(self.MINE_OPEX_MATERIALS)
+
+    @staticmethod
+    def base_mine_catalog_hint():
+        """The same hint on the base map, for help text written before any game exists."""
+        return mine_catalog_hint_for(_works_priced_materials(None))
+
 
     # ---- LAND: what is under your feet is geography, not standing --------
     #
