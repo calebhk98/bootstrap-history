@@ -111,7 +111,7 @@ class SchoolingMessageTimingTests(unittest.TestCase):
         sim.civ["literacy_elite"] = 0.5
 
         # Manually call _advance_literacy to generate message
-        sim._literacy_said = 0  # Reset message timer to allow message
+        sim.state.scenario._literacy_said = 0  # Reset message timer to allow message
         sim._advance_literacy(100)
 
         # The message should either:
