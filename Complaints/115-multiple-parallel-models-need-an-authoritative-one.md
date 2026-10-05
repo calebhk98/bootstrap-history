@@ -127,8 +127,9 @@ Overlapping issues closed into this one; each closed file keeps its full text.
   273, 140).
 - **Credit.** `market_rate()` and `market_credit_room()` both ask the agent economy's credit market when it is on
   (`economy.api.credit_room`: what lenders put out of the savings on offer at the last lending, less what other borrowers
-  took). The engine's loanable-funds record answers only when the agent economy is off. Founder credit in a default game
-  now follows the agent market's room, a real change (it used to read a record the agent economy never updates).
+  took). The engine's loanable-funds record answers only when the agent economy is off. Founder credit with the agent economy on
+  now follows the agent market's room (it used to read a record the agent economy never updates); the quick fingerprint
+  scenarios are byte-identical before and after, so the founder's ceiling is not bound by it there.
 - **Constants.** `tile_costs.py` no longer holds its own distance or carrier-size copies (geography owns them). The
   bare 365-day year in `foreign_traders.py`, `food_pasture.py` and `layers_ocean.py` is `unit_conversions.CIVIL_DAYS_PER_YEAR`;
   the 365.25 averages declared in `sim/world/` and `climate_temperatures.py` stay separate (standalone models).
