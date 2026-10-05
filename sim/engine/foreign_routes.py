@@ -167,12 +167,13 @@ class ForeignRoutesMixin:
         if imbalance is None:
             imbalance = self._foreign_flow_imbalance(civilization_record.get("id"))
         mode_costs = self._freight_mode_costs(imbalance)
-        modes = [mode for mode in usable_route_modes((home_techs, foreign_techs)) if mode in mode_costs]
+        modes = [mode for mode in usable_route_modes((home_techs, foreign_techs), self.world_map)
+                 if mode in mode_costs]
         found = route_over_tiles(
-            tiles_of_regions(civilization_record.get("home_regions") or []),
-            tiles_of_regions(self.civ.get("home_regions") or []), modes,
+            tiles_of_regions(civilization_record.get("home_regions") or [], self.world_map),
+            tiles_of_regions(self.civ.get("home_regions") or [], self.world_map), modes,
             mode_costs=mode_costs, handling_costs=self._freight_handling_costs(),
-            held_nodes=home_techs | foreign_techs)
+            held_nodes=home_techs | foreign_techs, world_map=self.world_map)
         return None if found is None else route_from_geography(found)
 
     def _route_freight_per_tonne(self, civilization, imbalance=None):
