@@ -12,6 +12,7 @@ from .records import ActorRecord, ActorsState, CapitalMarketRecord, CastEntry, C
 from .registry import ActorRegistry, register_actor_kind, register_spawner, register_world_scope
 from .saving import SAVING_SHARE_OF_SURPLUS
 from .sector import CONCESSION_PREFIX, Sector, sector_key
+from .tuning_coinage import COIN_RESTRIKE_SHARE_PER_YEAR
 from .tuning import MANAGEMENT_SPAN_EXPONENT, OBSERVATION_RANGE_KM, PROOF_YEARS, SECRET_EXPOSURE
 from .tuning_spending import PUBLIC_BUILDING_LIFE_YEARS, THREAT_ARMY_RESPONSE
 from .budget_lines import DOLE_MATERIAL

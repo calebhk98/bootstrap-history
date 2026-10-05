@@ -7,7 +7,7 @@ import math
 from dataclasses import dataclass, field, replace
 from typing import Dict, Optional, Tuple
 
-from . import credit, credit_claims, labour, land_market, lending, merchants_credit, producers, sites, state_budget, unit_cost
+from . import credit, credit_claims, currency, labour, land_market, lending, merchants_credit, producers, sites, state_budget, unit_cost
 from .credit_view import CreditView
 from .market_areas import AreaMap
 from .market_memory import YearView
@@ -79,6 +79,10 @@ class Economy:
     def view(self) -> YearView:
         return CreditView(self.record.memory, self.record.book, self.area_map, self.setup.currency_id, labour_area,
                           loans=lambda: self.record.loans)
+
+    def strike_lighter_coin(self, cut_share: float, restrike_share: float) -> None:
+        """The issuer of the currency cuts the metal in the coin it strikes again this year (a struck coin only)."""
+        self.record.currency = currency.debase_by_cut(self.record.currency, cut_share, restrike_share)
 
     def step(self, inputs: YearInputs) -> YearOutcome:
         setup, record = self.setup, self.record

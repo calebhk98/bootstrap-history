@@ -22,9 +22,11 @@ class MoneyPhaseMixin:
         mine_cost = self.mine_operating_cost()
         self.state.economy.mine_cost_paid += mine_cost
         revenue, upkeep = self.revenue(), self.upkeep()
-        self.state.household.credit(revenue - upkeep - living_cost - mine_cost, {
+        keeping = self.coin_hoard()["keeping_cost_per_year"]
+        self.state.household.credit(revenue - upkeep - living_cost - mine_cost - keeping, {
             "venture revenue": revenue, "running costs of concerns": -upkeep,
-            "living costs": -living_cost, "mine running costs": -mine_cost})
+            "living costs": -living_cost, "mine running costs": -mine_cost,
+            "keeping coin under guard": -keeping})
         # A mine you cannot pay for is a mine you stop working. Without this the
         # opex accrued for ever against a bankrupt enterprise: the England run
         # sank a large mine, lost its revenue and then ran three centuries at
