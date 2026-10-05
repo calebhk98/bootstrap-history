@@ -6,7 +6,7 @@ nation means a smaller town and a poorer tile means a smaller town.
 import math
 
 from sim.constants import declare
-from sim.geography import api as geography
+import sim.geography.api as geography
 from sim.geography.api import Geography, settlement
 
 
