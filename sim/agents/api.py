@@ -6,6 +6,7 @@ from .base import Actor, RecordedActor
 from .firm import Firm
 from .government import Government
 from .household import Household
+from .household_party import HouseholdParty
 from . import imitation, ledger, licence, revenue, supply
 from .policy import CallbackPolicy, Decision, IdlePolicy, Option, Policy, ValuePolicy, register_policy
 from .records import ActorRecord, ActorsState, CapitalMarketRecord, CastEntry, CountryProfile
@@ -27,11 +28,11 @@ from .player import Player
 from .stratum import Stratum, stratum_id
 from .strata_seed import seed_strata, strata_definitions, strata_spawner
 from .player_commands import CommandRejected, register_command
-from . import exchange, exchange_commands  # noqa: F401  (registers the offer commands and the answers spawner)
+from . import exchange, exchange_commands, exchange_sale  # noqa: F401  (registers the offer commands and the answers spawner)
 from .trader import Trader
 from .trader_entry import trader_entry
 
-__all__ = ["Actor", "RecordedActor", "Household", "Firm", "Government",
+__all__ = ["Actor", "RecordedActor", "Household", "HouseholdParty", "exchange_sale", "Firm", "Government",
            "Policy", "ValuePolicy", "CallbackPolicy", "IdlePolicy", "Option",
            "Decision", "register_policy", "ActorRegistry", "ActorRecord", "ActorsState",
            "CapitalMarketRecord", "CastEntry", "CountryProfile", "register_actor_kind",

@@ -230,11 +230,24 @@ def _cmd_buy(sim, nodes, cmd, ended):
 
 
 @command("sell", group="money",
-         summary="sell material you have in stock",
-         usage=["sell <material> <tonnes>"],
-         options={"<material>": "a material in stock", "<tonnes>": "amount"},
-         description="Sells at the current value; you can only sell what you hold.")
+         summary="sell material, a concern you run, or farmland",
+         usage=["sell <material> <tonnes>", "sell concern <id>", "sell farm <hectares>"],
+         options={"<material>": "a material in stock", "<tonnes>": "amount",
+                  "concern <id>": "a concern you run: the exchange picks the buyer and the price",
+                  "farm <hectares>": "farmland sold back at the price buy farm charges"},
+         description="Material sells at the current value; you can only sell what you hold. A "
+                     "concern goes to the actor the exchange prefers (one that can make it and "
+                     "pay), at its recorded margin over the valuation horizon; the know-how stays "
+                     "yours. Farmland returns to the land market at what a hectare costs to buy.")
 def _cmd_sell(sim, nodes, cmd, ended):
+    what = str(cmd.get("what") or "").lower()
+    if what == "concern":
+        return sim.sell_concern(str(cmd.get("id") or ""))
+    if what == "farm":
+        quantity, err = _qty(cmd, "n", 0)
+        if err or quantity <= 0:
+            return {"ok": False, "error": err or "n must be greater than zero"}
+        return sim.sell_farm(quantity)
     material = str(cmd.get("material") or cmd.get("what") or "").lower()
     quantity, err = _qty(cmd, "n", 0)
     if err or quantity <= 0:

@@ -277,8 +277,12 @@ def _parse_market(command, rest, words, nums, want_json):
 
 
 def _parse_sell(command, rest, words, nums, want_json):
+    if len(words) > 1 and words[0].lower() == "concern":
+        return {"cmd": "sell", "what": "concern", "id": words[1]}, None
+    if words and words[0].lower() == "farm" and nums:
+        return {"cmd": "sell", "what": "farm", "n": nums[0]}, None
     if not words or not nums:
-        return None, "sell needs a material and tonnes, e.g. 'sell iron 50'."
+        return None, "sell needs a material and tonnes ('sell iron 50'), a concern ('sell concern <id>') or farmland ('sell farm 40')."
     return {"cmd": "sell", "material": words[0].lower(), "n": nums[0]}, None
 
 
