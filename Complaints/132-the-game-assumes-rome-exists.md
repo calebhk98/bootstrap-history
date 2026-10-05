@@ -6,13 +6,18 @@ Remains: land is hectares inside `sim/world/land.py` (the allocation, yield,
 intensity and rent functions; `RegionLand.arable_hectares`), and node money is
 labour hours (`Complaints/140`). The production data still names land in
 iugera (`iugerum_land`, `land_iugera_years`), and the price solver converts at
-that one edge (`Complaints/278`). Most engine messages still spell the money
-word "denarii" and are swapped for the civilisation's own word at the display
-edge (`sim/ui/proto/util.py`); comments and tests that say "Rome" as a
-calibration baseline remain. Measure with
+that one edge (`Complaints/278`). Engine messages still spell the money word
+"denarii" and are swapped for the civilisation's own word at the display edge
+(`sim/ui/proto/util.py`, `_localise_money`); `sim/tests/test_player_text_names_own_civilisation.py`
+checks a Han game's replies carry neither Roman money nor Rome. Comments in
+`sim/engine`, `sim/world`, `sim/labour` and `sim/geography` that cite Rome as a
+calibration run or a source are the remaining text; the general-case ones were
+reworded and no code outside `sim/default_civilisation.py` falls back to Rome.
+Node notes in `data/branches/` and the goals, projects-completion, step-phase
+and credit modules were not swept. Tests still use Rome as the default fixture.
+Measure with
 `grep -rEoi "denari|iuger" sim/engine sim/world --include=*.py | wc -l` and
 `grep -rEoi "roman|\brome\b" sim/engine sim/world --include=*.py | wc -l`.
-Tests still use Rome as the default fixture.
 
 Every civilisation should be one data file that the rest of the game does not
 depend on. Rome is not: deleting `data/civilizations/rome_100ad.json` stops
