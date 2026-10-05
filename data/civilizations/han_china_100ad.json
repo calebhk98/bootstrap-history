@@ -405,6 +405,19 @@
     "w_religious_rigidity": 0.15
   },
   "wage_index": 0.7,
+  "unsupplied_basket_goods": {
+    "cacao_kg": "an American crop; no partner grows it and the cultivation node is not held, so household demand for it has no supply until a founder brings the stock",
+    "camphor_kg": "camphor came from East Asian and Indonesian trade; the distillation node it is gated on is not held and no partner supplies it",
+    "cement_portland_kg": "Portland cement is a modern industrial product far past this start; households bid for it only because the need data lists it as shelter",
+    "foxglove_leaf_kg": "medical use of foxglove leaf dates from long after this start; the need data lists it for health, so households bid without a technique or tradition to supply it",
+    "maize_kg": "an American crop unknown across the Old World before contact; no partner supplies it",
+    "mat_sugar": "cane sugar was not made here; where it was known it came from regions the model has no partner for, and the voyage node it is gated on is not held",
+    "peat_kg": "peat was not a household fuel here; firewood and charcoal meet the need and the peat-working node is not held",
+    "pepper_kg": "black pepper came from southern India or the tropics, regions the model has no partner for; the cultivation node is not held",
+    "soap_kg": "no soft soap from tallow and ash lye here; washing used other means (ash lye, plant saponins, pods) that the recipe set does not model",
+    "steel_plate_kg": "plate steel needs the later cementation and refining processes and no partner holds them; ordinary iron or bronze serves implements until a founder brings them",
+    "tool_steel_kg": "tool steel needs the later cementation process and no partner holds it; households fall back on other implement metals"
+  },
   "year": 100,
   "local_words": {
     "_doc": "Player-facing phrases this civilisation says differently. The tree is written from Rome 100 AD, which is the calibration baseline and stays; what does not have to stay is telling a player in Han China that they are writing their corpus in Greek and Latin and seeking Senatorial patronage. Applied to the words of a reply, exactly like `currency`, and only to phrases specific enough that they occur nowhere else. Historical notes ABOUT Rome are not rewritten: they are about Rome.",

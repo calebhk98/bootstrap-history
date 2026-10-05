@@ -440,6 +440,27 @@
     "w_religious_rigidity": 0.9
   },
   "wage_index": 0.5,
+  "unsupplied_basket_goods": {
+    "brass_kg": "no zinc working and no calamine brass; copper and bronze meet the need",
+    "camphor_kg": "camphor came from East Asian and Indonesian trade; the distillation node it is gated on is not held and no partner supplies it",
+    "canvas_kg": "heavy sailcloth needs the Old World frame loom and the sailing ships this society lacked",
+    "cast_iron_kg": "cast iron needs the blast furnace, which this society does not yet have and no partner supplies",
+    "cement_portland_kg": "Portland cement is a modern industrial product far past this start; households bid for it only because the need data lists it as shelter",
+    "cloth_kg": "cloth was woven on the backstrap loom, which is not a node in the tree; the loom nodes that gate the textile chain are Old World frames. Cotton cloth has its own recipe",
+    "fabric_kg": "woven on the backstrap loom, which is not a node in the tree; see cloth_kg",
+    "foxglove_leaf_kg": "medical use of foxglove leaf dates from long after this start; the need data lists it for health, so households bid without a technique or tradition to supply it",
+    "iron_bar_kg": "no ironworking; the society works stone, bronze, copper and the precious metals",
+    "mat_opium": "opium poppy cultivation and its medical use were not part of this society's tradition and no partner supplies it",
+    "mat_sugar": "cane sugar was not made here; where it was known it came from regions the model has no partner for, and the voyage node it is gated on is not held",
+    "peat_kg": "peat was not a household fuel here; firewood and charcoal meet the need and the peat-working node is not held",
+    "pepper_kg": "black pepper came from southern India or the tropics, regions the model has no partner for; the cultivation node is not held",
+    "silk_kg": "silk was a long-route import from China, which the model supplies only as a partner in the years it covers",
+    "silver_kg": "the only silver recipe in the data is mercury amalgamation, a colonial process; native and smelted silver was worked and traded by tribute, which no recipe models yet",
+    "soap_kg": "no soft soap from tallow and ash lye here; washing used other means (ash lye, plant saponins, pods) that the recipe set does not model",
+    "steel_noric_kg": "no ironworking, so no bloomery steel",
+    "steel_plate_kg": "plate steel needs the later cementation and refining processes and no partner holds them; ordinary iron or bronze serves implements until a founder brings them",
+    "tool_steel_kg": "tool steel needs the later cementation process and no partner holds it; households fall back on other implement metals"
+  },
   "year": 1500,
   "needs_first": {
     "_doc": "Things this society cannot begin at all until it has the one thing they all rest on. Distinct from cost_multipliers, which make a domain dearer: these are not dear here, they are impossible. A break tester started horse_collar in the Valley of Mexico in 1500 on the same screen as a menu describing a society with no draught animals, and `why` there still called it a collar for a draught horse. Every entry is liftable by the node it names.",

@@ -32,6 +32,16 @@ class RefusalListsRemedies(unittest.TestCase):
         household.sell_material_stock("iron", 40.0)
         self.assertAlmostEqual(household.capital - before, money, places=3)
 
+    def test_breeding_stock_is_not_offered_for_sale(self):
+        from sim.engine.living_stock_yearly import stock_rates
+        household = _indebted_household()
+        stock_material = sorted(stock_rates())[0]
+        household.grant_stock(stock_material, 5000.0)
+        household._material_stock()["iron"] = 40.0
+        text = _refusal(household)
+        self.assertIn("sell iron", text)
+        self.assertNotIn("sell " + stock_material, text)
+
     def test_mothball_remedy_quotes_the_upkeep_it_stops(self):
         household = _indebted_household()
         node_id = next(node_id for node_id in NODES if NODES[node_id].get("up", 0) > 0

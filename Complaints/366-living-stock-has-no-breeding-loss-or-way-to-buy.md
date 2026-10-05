@@ -1,6 +1,6 @@
 # Held living stock does not breed, die or spread, and a player has no command to buy it
 
-**Status:** partly - held stock breeds and dies each year and `buy living_stock` buys it from a partner; smuggling, theft, liquidation of breeding stock and an actor-based export policy remain
+**Status:** partly - held stock breeds and dies each year and `buy living_stock` buys it from a partner; the cash-remedies list no longer offers living stock for sale; smuggling, theft, feed and pasture draw, stock nodes for the folded crops and an actor-based export policy remain
 
 Living stock is now a held material (Complaints/365): `silkworm_eggs_kg`, `ramie_stock_kg`,
 `draught_animal_kg` sit in the same ledger as any stock, and nodes name them in `holds`. As first reported, this was
@@ -41,10 +41,16 @@ missing (see What is done and What remains below):
   an actor.
 - Breeding by labour (the production entries for the stock materials) is priced for a partner's sale but a held
   herd does not draw on pasture, labour or feed when it grows.
-- Emergency liquidation (`sim/engine/cash_remedies.py`) can still sell breeding stock; stock should be exempt or
-  priced as breeding stock.
+- The `sell` command still sells living stock when a player names it; only the cash-remedies list is exempt
+  (`sim/tests/test_refusal_cash_remedies.py`). Pricing it as breeding stock is open.
+- Feed and pasture: the pasture model (`sim/geography/food_pasture.py`) is per tile and a held herd has no tile, so a
+  held herd cannot draw on it yet; the herd needs a place before it can eat.
+- Stock nodes for pepper, rubber, dairy cattle, tea, coffee and sugar (folded 365): not added; each needs sourced
+  propagation and loss facts for its `data/world/living_stock.json` row, and none was gathered.
 - The partner's refusal is still a civilisation data field (`will_not_sell`); an actor-based export policy
   (`sim/agents/policy.py`) should replace it.
+
+- Done: `cash_remedies` skips every material that has a row in `data/world/living_stock.json`.
 
 ## Folded in
 

@@ -425,8 +425,23 @@ def _validate_civilisation_starts(nodes, production):
         errors += gap_errors
         for message in gap_warnings:
             print("WARNING: " + message)
+    errors += _validate_basket_supply(civ_start_check, civilisations, production)
     for message in errors:
         print("ERROR: " + message)
+    return errors
+
+
+def _validate_basket_supply(civ_start_check, civilisations, production):
+    """Complaints/391: goods households buy that no technique held at the start or partner supplies."""
+    import json
+    from sim.engine import civ_basket_check
+    from sim.engine.need_data import load_needs
+    with open(os.path.join(ROOT, "data", "world", "foreign_economies.json"), encoding="utf-8") as handle:
+        economies = json.load(handle)["economies"]
+    errors, warnings = civ_basket_check.basket_supply_findings(
+        civilisations, production, load_needs(ROOT, MODDIR)["goods"], economies)
+    for message in warnings:
+        print("WARNING: " + message)
     return errors
 
 
