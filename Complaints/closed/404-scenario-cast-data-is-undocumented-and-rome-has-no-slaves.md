@@ -1,6 +1,6 @@
 # The `"cast"` key a scenario uses to declare countries, players and strata is undocumented, and no civilisation declares its slaves
 
-**Status:** closed - bonded strata work and their keeper is paid for it (sim/tests/test_agents_strata.py, sim/tests/test_rome_slave_stratum.py); the cast-key and foreign-economy documentation items remain listed below as follow-ups in the mod loader and schema docs
+**Status:** closed - Rome opens with a bonded stratum at the sourced share and bonded strata work for their keeper (tests agents_strata, rome_slave_stratum); the cast key is documented in data/civilizations/_SCHEMA.md and reading a mod's foreign_economies.json is in mods/TASKS.md
 
 A game's roster is seeded once and saved (`ActorsState.cast`, `ActorsState.countries`; see
 `sim/agents/MULTIPLAYER.md`). It is built from:
