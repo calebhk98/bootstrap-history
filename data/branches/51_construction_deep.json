@@ -464,6 +464,8 @@
  },
  {
   "id": "cn_timber_truss",
+  "copy_visibility": 0.9,
+  "copy_visibility_reason": "The members and joints are visible from beneath the roof, and a carpenter can read the triangulation from the frame; only the joint detail needs working out.",
   "name": "Timber roof truss",
   "cat": "structural",
   "kind": "ENGINEERING",

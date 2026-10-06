@@ -634,6 +634,8 @@
  },
  {
   "id": "tl_ball_bearing",
+  "copy_visibility": 0.6,
+  "copy_visibility_reason": "Opened up, the balls and races are visible and the idea is obvious; the roundness, hardness and uniform size of the balls are what make it work and cannot be seen.",
   "name": "Ball bearing: spherical",
   "cat": "wheels_running_gear",
   "kind": "ENGINEERING",
@@ -3411,6 +3413,8 @@
  },
  {
   "id": "tl_vulcanized_rubber",
+  "copy_visibility": 0.3,
+  "copy_visibility_reason": "The cured rubber shows nothing of the sulfur or the heat; Hancock is said to have deduced the cure from samples of Goodyear's rubber and patented it in England.",
   "name": "Vulcanized rubber",
   "cat": "wheels_running_gear",
   "kind": "ENGINEERING",

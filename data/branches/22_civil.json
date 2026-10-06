@@ -1,6 +1,8 @@
 [
  {
   "id": "civ_arch_roman",
+  "copy_visibility": 0.8,
+  "copy_visibility_reason": "The voussoirs and keystone are visible on the finished arch, so a mason can copy the form; the centering and setting out are learned by working.",
   "name": "Masonry arch",
   "cat": "structures",
   "kind": "ENGINEERING",

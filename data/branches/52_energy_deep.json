@@ -2961,6 +2961,8 @@
  },
  {
   "id": "en_alternator",
+  "copy_visibility": 0.6,
+  "copy_visibility_reason": "The rotor, stator coils and slip rings are visible, but the winding layout, regulation and frequency control are not shown by the casing.",
   "name": "Alternator (AC generator)",
   "cat": "electrical_gen",
   "kind": "ENGINEERING",

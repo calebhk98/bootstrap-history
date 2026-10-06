@@ -1,6 +1,8 @@
 [
  {
   "id": "in2_simple_lens",
+  "copy_visibility": 0.8,
+  "copy_visibility_reason": "The lens is its own form and the curve is plain to see; the polish that makes it clear is the only hidden part.",
   "name": "Simple plano-convex lens",
   "cat": "optics",
   "kind": "ENGINEERING",
