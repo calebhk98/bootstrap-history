@@ -29,7 +29,7 @@
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "Not the plough itself but the cutting disc that precedes it"
+  "note": "A coulter is a sharp disc mounted at the front of a plough that cuts through soil and plants vertically before the plough blade reaches it. It is not the plough itself but a separate cutting tool that runs just ahead, slicing through roots and compacted earth to make the plough's work easier and cleaner."
  },
  {
   "id": "ag2_ridging_plough",
@@ -62,7 +62,7 @@
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "The symmetrical double-board design that builds ridges for root crops"
+  "note": "A ridging plough has two curved ploughshares angled symmetrically to throw soil up on both sides, building a raised ridge of earth. These ridges shed excess water from the soil, which benefits root crops like potatoes that rot if waterlogged. The ridges also warm faster in spring, extending the growing season in cool climates."
  },
  {
   "id": "ag2_subsoiler",
@@ -94,7 +94,7 @@
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "The innovation is running deep without a mould-board, shattering without inversion"
+  "note": "A subsoiler is a tool that runs deep into soil below the normal ploughing depth to break up hardpan, a compacted layer that restricts root growth. Unlike a normal plough with a mouldboard that inverts the soil, a subsoiler shatters the deep layer in place, allowing water to drain and roots to penetrate without turning over the topsoil."
  },
  {
   "id": "ag2_harrow",

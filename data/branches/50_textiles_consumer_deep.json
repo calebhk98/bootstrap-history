@@ -15,7 +15,7 @@
   "cap_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
-  "note": "Water or dew retting breaks down pectin binding fibre to woody core, controlled fermentation in standing water",
+  "note": "Flax and hemp stalks are soaked in water or exposed to dew for weeks to break down the pectin that binds the woody core to the long fibers. This controlled fermentation must be watched carefully, as overretting weakens the fibers and underretting leaves too much woody material to separate.",
   "up_hours": 0
  },
  {
@@ -40,7 +40,7 @@
   "cap_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
-  "note": "Scutching board and wooden scutcher blade beat retting fibre to separate long bast fibres from brittle woody break, crude mechanisation with flails",
+  "note": "After retting, flax and hemp fibers are laid on a board and beaten with a wooden blade to separate the long plant fibers from the brittle woody core that remains. Flails or a wooden block mechanize this process. The fiber quality depends on controlled beating that does not damage the fibers themselves.",
   "up_hours": 0
  },
  {
@@ -63,7 +63,7 @@
   "cap_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 0,
-  "note": "Pins set in flat boards, four grades of hecklers pull fibre through progressively finer pins, separates long line from short tow",
+  "note": "After scutching, hackling uses two boards set with sharp metal pins of increasing fineness. Fibers are pulled through the pins four times, each time removing more of the short, tangled fibers. Long fibers are separated from the short waste fibers, producing long line fibers ready for spinning into fine thread.",
   "up_hours": 0,
   "gov": -1,
   "sus": 1
@@ -195,7 +195,7 @@
   "cap_hours": 0,
   "build_yrs": 0.15,
   "adopt_yrs": 0,
-  "note": "Two and more rovings drawn together and doubled, evens out slubs, allows fibre blending and increases draft",
+  "note": "Drawing takes multiple strands of loosely twisted roving and passes them through sets of rollers at progressively faster speeds. The faster rollers stretch the fibers thin and even, removing thick lumps, and fibers can be blended by drawing multiple colors together. The stretching process, called draft, is critical for creating even yarn ready for spinning.",
   "up_hours": 0,
   "gov": -1,
   "sus": 1

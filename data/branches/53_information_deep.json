@@ -28,7 +28,7 @@
   "sch": 1,
   "art": 1,
   "conf": "C",
-  "note": "Papyrus does not cure; it works wet. Plant laminae naturally adhere without paste if pressed fresh."
+  "note": "Papyrus sheets are made by cutting papyrus plant stems into strips, laying them perpendicular in layers, and pressing them wet together. The plant's natural sap acts as adhesive, so no glue is needed, but the sheets must be pressed while still wet. As the water evaporates, the strips bond into a smooth writing surface."
  },
  {
   "id": "if_parchment",
@@ -59,7 +59,7 @@
   "sch": 1,
   "art": 2,
   "conf": "C",
-  "note": "Scraped skin accepts ink and erasure. Alkali lime wash removes hair without destroying fibre."
+  "note": "Parchment is made by taking animal skin and scraping away hair and fat with a blade while it dries under tension. The cleaned skin is whitened by washing in lime water (alkali), which removes remaining stains without damaging the fibers. The result is durable, accepts ink well, and can be erased and reused by scraping lightly, making it valuable for important documents."
  },
  {
   "id": "if_rag_paper",
@@ -90,7 +90,7 @@
   "sch": 2,
   "art": 1,
   "conf": "C",
-  "note": "China's invention: pulp beaten finer until felts into sheet on screen, without pressing to hardness."
+  "note": "Rag paper is made in China by beating cotton and hemp rags into fine pulp, then suspending the pulp in water and lifting it out on a screen. As water drains through, the fibers mat together into a sheet. Unlike modern pressing, the sheet is dried flat without heavy compression, keeping it lighter and more absorbent for writing."
  },
  {
   "id": "if_quill",
@@ -122,7 +122,7 @@
   "sch": 1,
   "art": 1,
   "conf": "C",
-  "note": "The split must hold capillary action. Quills need re-splitting every few hours."
+  "note": "A quill is a large feather cut and split at the tip to make a writing instrument. The split in the shaft creates a groove that holds ink by surface tension and feeds it down to the paper as the split point drags across it. The fine point wears and roughens quickly and must be resharpened every few hours of writing to keep marks clear and consistent."
  },
  {
   "id": "if_steel_pen_nib",
@@ -269,7 +269,7 @@
   "sch": 1,
   "art": 1,
   "conf": "C",
-  "note": "Coating must be even without clogging pores. Wax carrier keeps carbon from smudging."
+  "note": "Carbon paper is tissue paper coated with a fine layer of carbon dust held in a wax binder. Placed between sheets, the top sheet's writing pressure transfers carbon to the sheet below. The coating must be thin and even to work well without clogging the paper's pores, and the wax keeps the carbon from smudging before you want it to transfer."
  },
  {
   "id": "if_iron_gall_ink",
@@ -303,7 +303,7 @@
   "sch": 2,
   "art": 1,
   "conf": "C",
-  "note": "Tannin in galls binds iron to cellulose chemically. This is why medieval manuscripts survive."
+  "note": "Iron gall ink is made by dissolving green vitriol (ferrous sulfate) and adding plant galls, which contain tannin. The tannin and iron chemically bond, creating a durable dark compound that becomes part of the paper fibers themselves rather than sitting on the surface. This permanence is why medieval manuscripts written with iron gall ink survive centuries while other inks fade."
  },
  {
   "id": "if_printing_ink",
@@ -440,7 +440,7 @@
   "sch": 4,
   "art": 1,
   "conf": "C",
-  "note": "Single punch makes many matrices; each must be struck vertically and squared. Precision is the barrier."
+  "note": "A punch is a hardened steel tool with a letter carved in reverse. Striking it vertically into a softer metal creates a matrix, a cavity that will mold type. One master punch can make many matrices for the same letter. The matrices must be struck at exactly the same depth and angle so all the resulting type letters have identical height, which requires extreme precision in hand work."
  },
  {
   "id": "if_type_mould",
@@ -474,7 +474,7 @@
   "sch": 3,
   "art": 1,
   "conf": "C",
-  "note": "Width must adjust to cast all letters to same body height. Ejection must not deform cooling metal."
+  "note": "A type mould is a two-part brass tool that holds a matrix and adjusts its width to fit different letter shapes. Molten type metal is poured in, cools quickly, and must be ejected without warping. The mould width must be adjustable and precise so every letter emerges at exactly the same height, which is critical for the type to print evenly on a page."
  },
  {
   "id": "if_type_metal_alloy",
@@ -508,7 +508,7 @@
   "sch": 2,
   "art": 1,
   "conf": "C",
-  "note": "Lead alone is too soft; tin raises hardness. Antimony prevents shrinking as it cools."
+  "note": "Type metal is an alloy of lead, tin, and antimony. Lead alone is soft and wears quickly, but tin added to the alloy makes it harder and more durable. Antimony is a metal that prevents the alloy from shrinking as it cools, which would cause the cast type to warp or fail to lock tightly in the press."
  },
  {
   "id": "if_composing_stick",
@@ -544,7 +544,7 @@
   "sch": 1,
   "art": 1,
   "conf": "C",
-  "note": "Compositors set metal sorts in stick, proof, transfer to galley. Allows rearrangement before lock-up."
+  "note": "A composing stick is a hand-held tool where a compositor places individual metal letters (sorts) in order to build lines of text. After setting the text, it is proofed for errors, then transferred to a larger tray called a galley. The stick allows the compositor to correct mistakes and rearrange letters before the text is locked into the press frame."
  },
  {
   "id": "if_chase_and_forme",
@@ -576,7 +576,7 @@
   "sch": 2,
   "art": 1,
   "conf": "C",
-  "note": "Type must lock so tightly quoins cannot shift under press pressure. Wood swells; metal wedges must be wedged."
+  "note": "A chase is an iron frame that holds type, and a forme is the assembled page of type within it. Quoins are wooden or metal wedges driven in to lock the type tightly so it cannot shift under the press's pressure. Wood swells when damp, so the wedges must be driven tight and then loosened slightly to allow for this, preventing the type from becoming too loose to print evenly."
  },
  {
   "id": "if_screw_press",

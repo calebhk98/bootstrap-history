@@ -182,7 +182,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Already produced wherever cupellation from galena is practised."
+  "note": "Silver is extracted from galena ore by heating it in a cupel (a shallow cup made of bone ash) to oxidize lead and other impurities while silver melts at a lower temperature. The process requires high heat and careful temperature control. Silver extraction is already practiced wherever galena mining operates."
  },
  {
   "id": "mat_gold",
@@ -575,7 +575,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Linen from flax after retting and breaking. Already produced routinely wherever flax is grown and processed.",
+  "note": "Linen cloth is produced from flax plants by soaking the stalks in water to decompose the pectin that holds the woody core to long fibers, then beating the stalks to separate the fibers. The fibers are then carded, spun into thread, and woven into cloth. Rome produces linen routinely wherever flax grows.",
   "traits": [
    "commerce",
    "labour_saving"
@@ -1272,7 +1272,7 @@
   "sch": 4,
   "art": 8,
   "conf": "B",
-  "note": "Not isolated in antiquity. Coinage, plating, alloy steels, glass-to-metal seals, catalysts."
+  "note": "Nickel is not naturally isolated in ancient times but becomes important in alloys and modern applications. It is used in coinage, electroplating to coat other metals, hardening alloy steels, sealing glass to metal without cracking, and as a catalyst for chemical reactions. Nickel must be separated from ores by electrolysis or chemical reduction."
  },
  {
   "id": "mat_chromium",

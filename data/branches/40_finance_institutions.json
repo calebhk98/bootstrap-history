@@ -969,7 +969,7 @@
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "Profit from issuing new money, the difference between the value of the coin and the value of the metal in it. Tempts rulers to debase currency by reducing metal content. Short-term profit destroys long-term monetary trust."
+  "note": "When a government coins money, it profits from the difference between the cost of the metal and the coin's stated value. A gold coin containing 90% gold at face value of 100 units yields 10 units of profit. The temptation is to reduce the metal content while keeping the same face value, boosting short-term profit but destroying trust in the currency when people discover it."
  },
  {
   "id": "fin_bimetallism",
