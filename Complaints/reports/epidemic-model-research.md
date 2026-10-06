@@ -289,22 +289,25 @@ do not read it.
 
 ### 3.2 Candidate values from the literature
 
-Values below are the sourced starting points for the data files. "Checked"
-means the figure was read in a source result during this research; "recalled"
-means standard literature not re-verified and must be re-checked before it goes in
+Values below are the sourced starting points for the data files. Tags: `read`
+means the figure was read in a source actually opened (citation given);
+`snippet` means seen only in a search result, source not opened; `recalled`
+means standard literature not re-verified; `disputed` means sources disagree
+(range given); "corrected" in a row means the earlier value was wrong and has
+been replaced. Anything not `read` must be re-checked before it goes in
 a data file (CLAUDE.md: every number in prose carries its provenance). Each data file
 cites its source per field; ranges, not points, go in the `validate` check.
 
 | Pathogen | Basic reproduction number | Latent / incubation, infectious | Case fatality (untreated, historical) | Immunity | Reservoir, vector, route | Status |
 |---|---|---|---|---|---|---|
-| Plague, bubonic | Depends on the vector route; Dean et al. (2018) fit a human ectoparasite model to nine European outbreaks better than pneumonic or rodent models (Park et al. 2018 dispute the inference) | One to seven days incubation (WHO) | Thirty to sixty percent (WHO) | Partial, duration poorly constrained (open) | Rodent and flea epizootic, human lice and fleas, goods and people carry vectors | Checked for WHO figures |
-| Plague, pneumonic (secondary) | About 1.3 before control, variance about 3.1 (Gani and Leach 2004) | Latent about 4.3 days and infectious about 2.5 days, lognormal (same paper) | Always fatal untreated (WHO) | n/a | Respiratory, only from a pneumonic case | Checked |
-| Smallpox (variola major) | 3.5 to 6 in isolated pre-twentieth century populations with negligible herd immunity (Gani and Leach 2001) | Incubation averages about 12 days, range 7 to 17; infectious from rash about three weeks (CDC) | About 30 percent; variola minor 1 percent or less (CDC) | Lifelong after recovery (recalled); variolation and vaccination give protection | Respiratory and fomites; no animal reservoir | Checked |
-| Measles | Often cited 12 to 18 (Guerra et al. 2017) | Incubation and infectious periods of the order of a week or two (recalled, verify) | 2.8 percent in the 1846 Faroe epidemic, about 6100 of 7800 infected, 170 deaths (Panum, via Hektoen); higher with malnutrition and in first-contact outbreaks | Lifelong (Panum 1846) | Respiratory; needs a population of the order of a few hundred thousand to persist (critical community size, Bartlett 1957, Ferrari et al. 2008, recalled) | Checked for Faroe and R0 range |
-| Cholera | 2.06 to 2.78 in the 2010 Haiti epidemic with mixed person and water routes (Tuite et al. 2011) | Median incubation about 1.4 days, 95 percent by about 4.4 days (published estimate); hours to five days (MSF) | Up to half untreated, below one percent with rehydration (clinical guidance) | Short, months to a few years (recalled, verify) | Water, aquatic reservoir, rainfall and temperature forced (Codeco 2001; Rinaldo, Bertuzzo and coworkers' spatially explicit hydrological network models of Haiti) | Partly checked |
-| Malaria (falciparum) | Estimates range from about one to over three thousand, a wide spread driven by mosquito biting rate (Smith et al. 2007) | Mosquito extrinsic incubation temperature dependent; transmission limited to roughly 17 to 34 C with optimum near 25 C (Mordecai et al. 2013) | Concentrated in young children; adults acquire partial immunity with exposure (recalled) | Partial, maintained by repeated exposure, lost without it; genetic resistance in endemic populations: sickle haemoglobin, Duffy negativity, G6PD deficiency, thalassaemia | Anopheles vector, human reservoir; entomological inoculation rate below one to above one thousand bites per person per year across Africa | Checked |
-| Epidemic typhus | Not sourced; derive from a louse model (the Dean et al. 2018 louse parameters are a starting point) | Louse borne, Rickettsia prowazekii | 10 to 30 percent of untreated clinical cases, about 20 percent in healthy adults, about 60 percent in the elderly or debilitated (Raoult and Walker) | Long, with recrudescent Brill-Zinsser disease (recalled) | Body louse; crowding, cold, cloth and war and famine drive it | Checked for fatality |
-| Influenza (pandemic) | 1918 strain estimated 1.9 to 4.1 (Mills et al. 2004); seasonal median close to one and a third (Biggerstaff et al. 2014, recalled) | Short: a day or two latent and several days infectious (recalled, verify) | Strongly strain dependent; 1918 was far more lethal than other pandemics and age distinct (recalled) | Short to long, antigenic drift handled by waning to susceptible | Respiratory; humidity forced; animal reservoir spillover | Checked for R |
+| Plague, bubonic | Depends on the vector route; Dean et al. (2018) fit a human ectoparasite model to nine European outbreaks better than pneumonic or rodent models (Park et al. 2018 dispute the inference; `read`: Dean et al. 2018, PMC5819418, the ectoparasite model had the lowest BIC for all outbreaks except Eyam and Givry, so "better" holds for seven of nine; ectoparasite R0 1.48 to 1.91 across the nine cities) | One to seven days incubation (`read`: WHO plague fact sheet) | Thirty to sixty percent for the bubonic type (`read`: WHO plague fact sheet) | Partial, duration poorly constrained (open) | Rodent and flea epizootic, human lice and fleas, goods and people carry vectors | `read` for WHO figures and Dean outbreak count; Park critique `recalled` |
+| Plague, pneumonic (secondary) | About 1.3 before control, variance about 3.1, geometric offspring distribution (`read`: Gani and Leach 2004, EID, PMC3323083) | Latent mean 4.3 days (SD 1.8) and infectious mean 2.5 days (SD 1.2), lognormal (`read`: same paper) | Close to 100 percent in the Gani and Leach review; always fatal untreated for pneumonic and septicaemic forms (`read`: WHO plague fact sheet) | n/a | Respiratory, only from a pneumonic case | `read` |
+| Smallpox (variola major) | 3.5 to 6 in isolated pre-twentieth century populations with negligible herd immunity (`read`: Gani and Leach 2001, Nature, abstract via Europe PMC; the same abstract says earlier applied estimates ranged from 1.5 to above 20, so older estimates are `disputed`) | Incubation averages about 12 to 14 days, range 7 to 17 (corrected from "about 12"; `read`: CDC smallpox overview, stacks.cdc.gov/view/cdc/26503); contagious from fever onset, most from rash, until the last scab falls off (`read`: same CDC document) | About 30 percent overall; variola minor 1 percent or less (`read`: same CDC document) | Lifelong after recovery (`recalled`, not found in the CDC document); variolation and vaccination give protection | Respiratory and fomites; no animal reservoir (`recalled`) | `read` except immunity duration |
+| Measles | Often cited 12 to 18, but estimates vary more widely than that range (`read`: Guerra et al. 2017, Lancet Infect Dis, abstract via Europe PMC; 58 estimates from 18 studies) | Incubation about two weeks (`read`: Hektoen International summary of Panum, secondary source); infectious period `recalled`, verify | 2.8 percent in the 1846 Faroe epidemic, 6100 of 7864 residents infected, 170 deaths (`read`: Hektoen International summary of Panum, secondary source); higher with malnutrition and in first-contact outbreaks (`recalled`) | Lifelong (`read`: Panum 1846 via Hektoen, no reinfection after 65 years) | Respiratory; needs a population of the order of a few hundred thousand to persist (critical community size: Bartlett 1957 `recalled`; Ferrari et al. 2008, Nature 451, `snippet`: a search result states the classical estimate as 300 to 500 thousand, paper not opened) | `read` for Faroe and R0 range; critical community size `snippet` |
+| Cholera | 2.06 to 2.78 in the 2010 Haiti epidemic with mixed person and water routes (`read`: Tuite et al. 2011, Ann Intern Med, PDF opened: best fit about 2.78, plausible range 2.06 to 2.78; a recalibration to January 2011 data gave 2.90) | Median incubation 1.4 days (95 percent CI 1.3 to 1.6), 95 percent of cases by about 4.4 days (`read`: Azman et al. 2013, J Infect, systematic review, PMC3677557, abstract via Europe PMC); hours to five days (`read`: MSF clinical guidelines) | Up to 50 percent for untreated severe cholera; 1 percent or less when treated (`read`: MSF clinical guidelines; "below one percent" corrected to "1 percent or less") | Short, months to a few years (`recalled`, verify) | Water, aquatic reservoir, rainfall and temperature forced (Codeco 2001; Rinaldo, Bertuzzo and coworkers' spatially explicit hydrological network models of Haiti) | `read` for R0, incubation and fatality; immunity `recalled` |
+| Malaria (falciparum) | Estimates range from about one to over three thousand, a wide spread driven by mosquito biting rate (`read`: Smith et al. 2007, PLoS Biol 5:e42, PMC1802755, summary via Europe PMC: 121 African populations; the earlier link PMC3128496 was the wrong paper) | Mosquito extrinsic incubation temperature dependent; optimum transmission 25 C and a dramatic decline above 28 C (`read`: Mordecai et al. 2013, Ecol Lett, abstract via Europe PMC); the "17 to 34 C" limits are not in the abstract and stay `recalled` | Concentrated in young children; adults acquire partial immunity with exposure (`recalled`) | Partial, maintained by repeated exposure, lost without it; genetic resistance in endemic populations: sickle haemoglobin, Duffy negativity, G6PD deficiency, thalassaemia | Anopheles vector, human reservoir; entomological inoculation rate below one to above one thousand bites per person per year across Africa (`recalled`; not found in an opened source) | `read` for R0 range and optimum temperature; thermal limits and EIR range unverified |
+| Epidemic typhus | Not sourced; derive from a louse model (the Dean et al. 2018 louse parameters are a starting point; `read`, PMC5819418: body louse carrying capacity 15 per person, louse infectious period 3 days, lice growth rate 0.11 per day, human flea transmission rate 0.05) | Louse borne, Rickettsia prowazekii | 10 to 30 percent of untreated clinical cases, higher in debilitated populations and the elderly, up to 60 percent or more reported in untreated cases in the elderly or debilitated (`read`: CFSPH typhus fact sheet, which summarises the literature; Raoult and Walker chapter not opened); "about 20 percent in healthy adults" was not found and stays `recalled` | Long, with recrudescent Brill-Zinsser disease (`read`: CFSPH typhus fact sheet, reactivation years after infection when immunity wanes) | Body louse; crowding, cold, cloth and war and famine drive it | `read` for fatality and recrudescence |
+| Influenza (pandemic) | 1918 strain: median 2 (interquartile range 1.7 to 2.3) over 45 US cities from early data, 2.7 (2.3 to 3.4) over the period of fastest growth (`read`: Mills et al. 2004, PMC7095078; corrected: the earlier "1.9 to 4.1" were the assumed latent and infectious periods in days, not R); Biggerstaff et al. 2014 medians: 1918 1.80 (IQR 1.47 to 2.27), 1957 1.65, 1968 1.80, 2009 1.46, seasonal 1.28 (IQR 1.19 to 1.37) (`read`: abstract via Europe PMC; seasonal corrected from "close to one and a third"); 1918 is `disputed` between the two reviews, medians 1.8 to 2.7 | Mean latent period 1.9 days and infectious period 4.1 days (`read`: Mills et al. 2004, assumed values) | Strongly strain dependent; 1918 was far more lethal than other pandemics and age distinct (`recalled`) | Short to long, antigenic drift handled by waning to susceptible | Respiratory; humidity forced; animal reservoir spillover | `read` for R and periods |
 
 Two points for the data design, from the table:
 
@@ -463,7 +466,7 @@ no special case:
 - successive waves of the same pathogen at intervals set by the time
   susceptibles are replenished by births, roughly the inter-epidemic period
   `2 * pi * sqrt(average_age_at_infection * (latent_period + infectious_period))`
-  (Anderson and May 1991 and Keeling and Rohani 2008, recalled), with each wave
+  (Anderson and May 1982, 1991; `snippet`: formula seen in a search result citing them, books not opened), with each wave
   smaller as the immune share stays high;
 - different Old World pathogens arriving at different times (smallpox, measles,
   typhus, influenza, in any order the trade and seeding produce) so the declining
@@ -649,8 +652,7 @@ form (`python3 -m sim.tests`, plus the slow tier for ensembles):
    lost to a plague-like pandemic in a naive, dense, connected population
    falls within a published envelope, for example the scholarly range for the
    Black Death in Europe, from about a third or more to about three fifths
-   (Benedictow's upper estimate is about 60 percent of Europe's population;
-   estimates differ by up to a factor of two, historical review linked below),
+   (Benedictow's estimate is about 60 percent of Europe's population, raised to 65 percent in his later work, against a traditional third and Aberth's half; `snippet`: search results only, the History Today page returned 403; `disputed`, range one third to 65 percent),
    with high variance across seeds and dependence on region density and route
    access. Smallpox: untreated case fatality near the sourced value; attack
    rate and age pattern consistent with endemic versus first contact.
@@ -659,8 +661,7 @@ form (`python3 -m sim.tests`, plus the slow tier for ensembles):
    toll, with adult mortality much higher in the former; the cumulative decline
    across the full pathogen set for a New World start falls in the range
    discussed in the literature (decline of the order of ninety percent over about a
-   century is commonly cited, Koch et al. 2019, and Livi-Bacci 2006 discuss the
-   range and its uncertainty), as a distribution over ensemble seeds, and the
+   century is commonly cited, `recalled`: Koch et al. 2019, QSR 207, publication confirmed by search result but the figure not opened; `read`: Livi-Bacci 2006 abstract argues against single-cause disease explanations and gives no single figure there), as a distribution over ensemble seeds, and the
    endpoint has to include the contribution of famine, forced labour and war the
    scenario applies, not disease alone.
 6. Spatial: arrival time of an infection at a tile increases with route time
@@ -772,7 +773,7 @@ Model methodology
 - Keeling, M. J. and Rohani, P. (2008), Modeling Infectious Diseases in Humans and
   Animals, Princeton University Press. https://press.princeton.edu/isbn/9781400841035
 - Anderson, R. M. and May, R. M. (1991), Infectious Diseases of Humans, Oxford
-  University Press (inter-epidemic period, herd immunity; recalled, not re-fetched).
+  University Press (inter-epidemic period, herd immunity; not opened, formula seen via snippet).
 - Balcan, D. et al. (2009), Multiscale mobility networks and the spatial spreading of
   infectious diseases, PNAS (GLEaM). https://pmc.ncbi.nlm.nih.gov/articles/PMC2793313/
   and the model description https://ifisc.uib-csic.es/jramasco/text/jocs10.html
@@ -790,10 +791,10 @@ Model methodology
   (hydrological transport and human mobility on a network).
   https://pmc.ncbi.nlm.nih.gov/articles/PMC4345467
 - Bartlett (1957) critical community size; Ferrari et al. (2008), Nature, measles
-  persistence (recalled). Overview with references:
+  persistence (Ferrari: `snippet`; Bartlett: recalled). Overview with references:
   https://en.wikipedia.org/wiki/Critical_community_size (secondary source only)
 - Rader, B. et al. (2020), Crowding and the shape of COVID-19 epidemics, Nature
-  Medicine (recalled, verify).
+  Medicine (`read`: abstract via Europe PMC; crowded cities have longer, more spread epidemics and larger attack rates).
 
 Pathogen parameters
 - Dean, K. R. et al. (2018), Human ectoparasites and the spread of plague in Europe
@@ -803,7 +804,7 @@ Pathogen parameters
 - Gani, R. and Leach, S. (2004), Epidemiologic determinants for modeling pneumonic
   plague outbreaks, Emerging Infectious Diseases. https://pmc.ncbi.nlm.nih.gov/articles/PMC3323083
 - Schmid, B. V. et al. (2015), Climate-driven introduction of the Black Death and
-  successive waves of plague to Europe, PNAS (recalled, verify).
+  successive plague reintroductions into Europe, PNAS 112(10) 3020-3025, https://pmc.ncbi.nlm.nih.gov/articles/PMC4364181 (`read`: 7711 georeferenced outbreaks, 15 plus or minus 1 year lag between Asian climate fluctuation and European arrival).
 - WHO, Plague fact sheet. https://who.int/news-room/fact-sheets/detail/plague
 - Benedictow, O. J. (2021), The Complete History of the Black Death, Boydell.
   https://boydellandbrewer.com/?p=51131 ; overview of the range of estimates:
@@ -825,7 +826,7 @@ Pathogen parameters
   dramatically lower than previously predicted, Ecology Letters.
   https://pubs.usgs.gov/publication/70125667
 - Smith, D. L. et al. (2007), Revisiting the basic reproductive number for malaria,
-  PLoS Biology. https://pmc.ncbi.nlm.nih.gov/articles/PMC3128496 (EIR and R0 ranges)
+  PLoS Biology. https://pmc.ncbi.nlm.nih.gov/articles/PMC1802755 (R0 range; link corrected)
 - Raoult, D. and Walker, D. H., Rickettsia prowazekii (epidemic typhus), in
   Principles and Practice of Infectious Diseases (fatality figures);
   summaries https://www.cfsph.iastate.edu/Factsheets/pdfs/typhus_fever.pdf
@@ -853,5 +854,5 @@ Historical epidemiology and demography
   three horsemen of riches: plague, war, and urbanization in early modern Europe,
   Review of Economic Studies. https://www.jvoth.com/papers/three-horsemen-of-riches.html
 
-Items marked recalled were not re-read during this research and must be checked
+Items marked recalled or snippet were not re-read during this research and must be checked
 against the paper before a number goes into a data file.
