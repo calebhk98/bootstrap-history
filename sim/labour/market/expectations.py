@@ -9,6 +9,7 @@ from typing import Dict, Mapping, Optional, Tuple
 
 from sim.constants import declare
 
+from .clearing import reservation_wage
 from .records import Clearing, MarketState, YearInputs
 
 DECISION_ROUNDS_PER_YEAR = declare(
@@ -94,10 +95,13 @@ def income_at_graduation(state: MarketState, inputs: YearInputs, clearings: Clea
     floor = inputs.subsistence_per_worker_year.get(area, 0.0)
     if clearing is None or clearing.hours_wanted <= 0.0:
         return floor
-    # a wage lags its market (it closes part of the gap a year): weigh where it is heading
-    now = max(floor, clearing.heading_wage * inputs.hours_per_worker_year)
-    if now <= floor:
-        return now
+    # a wage lags its market (it closes part of the gap a year): weigh where it is heading, and count
+    # only what it pays over the trade's own reservation wage, which already pays for its danger
+    reservation = reservation_wage(inputs, area, inputs.trades[trade].fatality_risk_per_year)
+    rent = max(0.0, clearing.heading_wage - reservation) * inputs.hours_per_worker_year
+    now = floor + rent
+    if rent <= 0.0:
+        return floor
     hours = inputs.hours_per_worker_year
     shortage_now = clearing.hours_wanted - clearing.hours_offered
     if shortage_now <= 0.0:

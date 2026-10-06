@@ -136,5 +136,17 @@ class GluttedTradeTests(unittest.TestCase):
         self.assertGreater(heading_up, now)
 
 
+class DangerPayTests(unittest.TestCase):
+    def test_pay_that_only_compensates_danger_draws_no_more_than_the_floor_does(self):
+        floor_wage = SUBSISTENCE / HOURS
+        dangerous = _specs(carver={"fatality_risk_per_year": 0.01})
+        life_years = 20.0
+        risk_pay = floor_wage * (1.0 + 0.01 * life_years)
+        _, paid_danger = _run(_inputs(dangerous, value_of_life_years_of_income=life_years), {"digger": floor_wage, "carver": risk_pay, "healer": floor_wage})
+        _, safe_floor = _run(_inputs(_specs()), {"digger": floor_wage, "carver": floor_wage, "healer": floor_wage})
+        self.assertAlmostEqual(paid_danger.entered[AREA]["carver"], safe_floor.entered[AREA]["carver"],
+                               delta=0.01 * safe_floor.entered[AREA]["carver"])
+
+
 if __name__ == "__main__":
     unittest.main()

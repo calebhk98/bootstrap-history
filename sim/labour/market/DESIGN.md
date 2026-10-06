@@ -30,19 +30,29 @@ area × trade: `[years_left, people per band, completion_bonus]`. Market wages a
    - A trade with no incumbents and no school cannot reproduce.
 4. **Entrants** (`entrants.py`). The coming-of-age cohort chooses a trade, band by band, by logit over:
    `completion_chance * present_value(income_at_graduation) + (1 - completion_chance) * present_value(fallback income) + taste_scale * log(jobs in the trade)`.
+   - The cohort chooses in rounds (`expectations.DECISION_ROUNDS_PER_YEAR`); each round sees the places
+     the earlier ones took. Choices made all at once overshoot a shortage, the trade gluts a
+     training-length later, and wages cycle between floor and ceiling.
    - The log-jobs term (a size variable) makes a trade with many places draw many and one nobody employs
      draw almost nobody, however many trades a mod adds. Without it, a logit over many alternatives spreads
      entrants evenly.
-   - `income_at_graduation` keeps today's premium only for the part of today's shortage that those
-     already training will not fill. Without it, entrants answer today's wage, the trade gluts a
-     training-length later, and wages cycle between floor and ceiling.
-   - `expected_wage = average_wage * employment_share * hours_per_worker_year`. This is Harris-Todaro: idle markets look worse.
+   - `income_at_graduation` is the floor plus what the wage the market is heading to
+     (`Clearing.target_wage`: where hours offered meet hours wanted, not the sticky wage) pays over the
+     trade's own reservation wage, so danger pay is not a reward. It keeps today's premium only for the
+     part of today's shortage that those already training will not fill. A glut shows the floor, however
+     high the lagging wage still is.
+   - A trade's expected income today (`expected_income`) is Harris-Todaro: the hours that find work earn
+     the average wage, the rest earn the outside option. The chance of finding work is hours wanted over
+     hours offered, so a few unfilled hours beside idle hands (matching friction) are not a sure job.
    - Applicants beyond a trade's intake go to their next choice, and finally to the fallback trade.
    - The training premium of a trade is not written anywhere. It is the wage at which enough able people choose the trade.
 5. **Switching** (`switching.py`). Workers re-weigh their trade against the others, with a stay option.
    - Only moves worth more than staying are considered. Otherwise float noise and the logit's taste spread leak a large idle trade into a glutted one.
    - The gain is the present value of the expected-wage difference, less the retraining time, in units of a year's subsistence.
    - Retraining within a skill family takes a share of the full training.
+   - A destination is weighed by `income_at_graduation` whether or not it has workers already, and
+     switchers also choose in rounds. Weighing a trade that has workers by its pay today made a shortage
+     the apprentices would fill still draw switchers and flooded it.
    - Switchers become trainees of the new trade and use the same intake.
 6. **Migration** (`migration.py`). Workers re-weigh their area against the routes out of it, with a stay option.
    - The comparison is the log of real expected wage (expected wage over subsistence) in the same trade, less the moving cost in years of subsistence.
