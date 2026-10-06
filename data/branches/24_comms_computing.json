@@ -592,7 +592,7 @@
    "lead_kg": 100
   },
   "cap_hours": 302428.18761193985,
-  "up_hours": 0,
+  "up_hours": 6,
   "yrs": 2.0,
   "risk": 0.1,
   "sus": 0,
@@ -605,7 +605,7 @@
   "traits": [
    "infrastructure"
   ],
-  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
+  "_internal": "[HEURISTIC: yearly upkeep taken as one percent of the construction labour hours (repair and keeping the works in service); no wear or failure model yet.] [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "com_multiplexing",

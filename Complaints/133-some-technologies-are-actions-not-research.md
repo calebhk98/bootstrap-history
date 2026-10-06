@@ -1,6 +1,6 @@
 # Some technologies are actions, not research
 
-**Status:** partly - one expedition now returns held stock; the audit of the rest is not done
+**Status:** partly - the data fixes of the audit are done (living stock returned by the American post, upkeep on constructions that had none); the engine work in `Complaints/reports/action-and-construction-node-audit.md` (a running gate on dependents, works with a place and a size, action results other than stock, lapse of a completed work) remains
 
 Several tree nodes model something you do or build as if it were something
 you learn. Examples: an expedition to the Americas is a voyage (ships,
@@ -27,9 +27,21 @@ them as research lets a player "know" a continent or a grid into existence.
 
 ## Progress
 
-`exp_import_draught_animals` is an action (a voyage with crews and risk) and now says what it
-returns: a node's `grants` adds a founding herd to the held stock when it completes, and the Mexica
-gate on draught-animal work lifts on holding the animals (Complaints/365). Other expeditions that
-return living stock (`exp_transplant_botany`, `fud_pepper_cultivation`, `ag2_tea_voyage`,
-`ag2_coffee_voyage`) can use the same `grants` field. The audit of grids, networks, colonies and
-surveys, and the construction class, are untouched.
+`exp_import_draught_animals` is an action (a voyage with crews and risk) and says what it returns: a
+node's `grants` adds a founding herd to the held stock when it completes, and the Mexica gate on
+draught-animal work lifts on holding the animals (Complaints/365). The tea, coffee, sugar and pepper
+voyage nodes already carry `grants`, as do the cashmere, jute, angora, hop and pyrethrum stock nodes.
+`exp_americas_factory` now grants seed stock of potato, maize and cacao, and `fud_potato`, `fud_maize`
+and `fud_cacao` hold it, with rows in `data/world/living_stock.json` and production entries in
+`data/production/95_living_stock_crops.json`.
+
+Constructions that had no upkeep now carry a derived one (a stated share of construction labour,
+labelled a heuristic) so they are ventures that can be opened and closed: the semaphore chain, the
+aqueducts and latrines, trunk telephone lines, Chain Home, electric street lighting, sand filtration,
+separate sewage, activated sludge, the isolation hospital and the stormwater-separated sewer. Two
+audit entries have no construction labour to take a share of (`sea_harbours_pozzolana`,
+`hom_public_bath`) and are left until they are given a build.
+
+What remains is engine work, listed in the audit: dependents that require a work to be running, a
+place and a size for built works, action results other than living stock, and lapse of a completed
+work.

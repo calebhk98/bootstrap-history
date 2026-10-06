@@ -80,6 +80,54 @@
    "yield_basis": "GROWN. Cows calve and the heifers are reared on grass and hay to first calving. Live-weight gain on extensive pasture is taken as the draught_animal_kg entry's figure; the calving and mortality rates are sourced in data/world/living_stock.json (FAO traditional-systems review). LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. The sourced propagation facts are in data/world/living_stock.json; the per-hectare output and the labour here are estimates, not checked against a source. Conf C. Made only where the crop is already grown, so the stock cannot be had without a society that holds it.",
    "conf": "C",
    "requires_node": "fud_livestock_selective_cattle"
+  },
+  "potato_seed_tuber_kg": {
+   "outputs": {
+    "potato_seed_tuber_kg": 10000.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 400.0
+   },
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "arable land",
+   "unit_dimension": "mass",
+   "basis": "per hectare of crop grown for seed tubers per year, output as kg",
+   "yield_basis": "GROWN. A potato crop lifted and the small tubers kept for planting; 10000 kg of tubers per hectare is an order-of-magnitude estimate for hand-tilled ground, not checked against a source. LABOUR: wheat_kg's 150 labourer-hours per hectare plus an estimated allowance for hilling and lifting; storage is not added. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. The held-stock rates are in data/world/living_stock.json. Made only where the crop is already grown. Conf C.",
+   "conf": "C",
+   "requires_node": "fud_potato"
+  },
+  "maize_seed_kg": {
+   "outputs": {
+    "maize_seed_kg": 2000.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 150.0
+   },
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "arable land",
+   "unit_dimension": "mass",
+   "basis": "per hectare of crop grown for seed grain per year, output as kg",
+   "yield_basis": "GROWN. A maize crop left to ripen and the ears kept for sowing; 2000 kg of grain per hectare is an order-of-magnitude estimate for hand-tilled ground, not checked against a source. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; shelling and drying are not added. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. The held-stock rates are in data/world/living_stock.json. Made only where the crop is already grown. Conf C.",
+   "conf": "C",
+   "requires_node": "fud_maize"
+  },
+  "cacao_seed_kg": {
+   "outputs": {
+    "cacao_seed_kg": 500.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 400.0
+   },
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "arable land",
+   "unit_dimension": "mass",
+   "basis": "per hectare of crop grown for beans for planting per year, output as kg",
+   "yield_basis": "GROWN. A cacao grove with pods kept for planting; 500 kg of fresh beans per hectare is an order-of-magnitude estimate, not checked against a source. LABOUR: an estimated allowance for tending and harvesting pods by hand; the nursery is not added. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. The held-stock rates are in data/world/living_stock.json. Made only where the crop is already grown. Conf C.",
+   "conf": "C",
+   "requires_node": "fud_cacao"
   }
  }
 }
