@@ -116,7 +116,7 @@ Present in `ancient.json`: `las_medulas_alluvial` (placer), `dacia_vein_gold` (v
 ### Ready (well enough sourced to edit now)
 
 1. Add an Eastern Desert and Nubian gold deposit to `data/world/geography/deposits/ancient.json`, with grade, endowment ceiling and period from Klemm et al. 2001 (READ, conf B). The coordinates must be checked against a map before the edit; I could not confirm them.
-2. Raise `rio_tinto_jarosite.conf` from D to C and add Bettenay 2022 p. 72 to its source note. The value is unchanged.
+2. Raise `rio_tinto_jarosite.conf` from D to C and add Bettenay 2022 (supergene section) to its source note. The value is unchanged.
 3. Record the Melle model as a reference (Bettenay Table 4, READ) in the notes of `lead_kg` and `galena_kg` as an independent bound on ore per tonne of lead and on dressing and smelting losses. This changes yield_basis text only, not numbers.
 4. Record the Melle hours-per-kg derivation and the staff-share ratios (Bettenay pp. 76-77) in Complaint 349 as the target the support-work and processing constants are compared with, since the complaint already uses them.
 
