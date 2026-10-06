@@ -6,8 +6,9 @@ state dataclass. `economy.py` is the only module that calls across them, in the 
 The year (`economy.Economy.step`), one civilisation's economy:
 
     1. view      a read-only `MarketView` of last year's prices, wages, rates and this year's holdings
-    2. labour    households offer hours, producers and other employers bid for them; `labour.clear`
-                 per (trade, area); wages are paid (settlement)
+    2. labour    households offer hours, producers and other employers bid for them; the labour core
+                 (`sim.labour.api`) clears each (trade, area), then trains, moves and replaces people;
+                 wages are paid (settlement)
     3. credit    `credit.clear` matches loan requests (producers' from last close, households' and
                  merchants' from now) with savings, so the money reaches borrowers before they order
     4. goods     every agent posts bids and offers planned on the view; markets clear one good at a
@@ -93,3 +94,5 @@ class YearInputs:
     legacy_transfers: Tuple = ()                            # one-sided engine postings, booked against EDGE_LEGACY
     harvest_factor: float = 1.0                             # this year's growing weather on households' own plots
     site_limits: Tuple[SiteLimit, ...] = ()                 # the sites' limits now; empty keeps the last declared
+    entrant_share: float = 0.0                              # share of working people a year coming of working age
+    attrition_share: float = 0.0                            # share of working people a year dying or retiring

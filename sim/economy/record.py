@@ -6,6 +6,8 @@ holds last year's market outcomes. Nothing else survives a year.
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Tuple
 
+from sim.labour.api import MarketState, market_state_from_plain, market_state_to_plain
+
 from .accounts import Book
 from .households_cohort import Cohort
 from .market_memory import KEY_SEPARATOR, MarketMemory
@@ -28,7 +30,7 @@ class EconomyRecord:
     loan_requests: List[LoanRequest] = field(default_factory=list)       # made at last year's close
     remembered_defaults: Dict[AgentId, float] = field(default_factory=dict)   # losses a borrower caused, fading
     credit_losses: Dict[AgentId, float] = field(default_factory=dict)    # what each lender has lost to default
-    workforce: Dict[TileId, Dict[TradeId, float]] = field(default_factory=dict)   # workers by tile and trade
+    workforce: MarketState = field(default_factory=MarketState)          # the labour core's state: people by labour area, trade and ability band
     property_income: Dict[AgentId, float] = field(default_factory=dict)  # dividends and interest last year
     volumes: Dict[str, float] = field(default_factory=dict)              # market_key -> last year's quantity
     opening_basket: Dict[str, float] = field(default_factory=dict)       # good -> quantity at the opening
@@ -54,7 +56,7 @@ class EconomyRecord:
             "loan_requests": [plain(request) for request in self.loan_requests],
             "remembered_defaults": self.remembered_defaults,
             "credit_losses": self.credit_losses,
-            "workforce": self.workforce,
+            "workforce": market_state_to_plain(self.workforce),
             "property_income": self.property_income,
             "volumes": self.volumes,
             "opening_basket": self.opening_basket,
@@ -82,7 +84,7 @@ class EconomyRecord:
             loan_requests=[LoanRequest(**request) for request in record["loan_requests"]],
             remembered_defaults=dict(record["remembered_defaults"]),
             credit_losses=dict(record["credit_losses"]),
-            workforce={tile: dict(trades) for tile, trades in record["workforce"].items()},
+            workforce=market_state_from_plain(record["workforce"]),
             property_income=dict(record["property_income"]),
             volumes=dict(record["volumes"]),
             opening_basket=dict(record["opening_basket"]),

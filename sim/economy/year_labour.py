@@ -1,32 +1,24 @@
-"""The year's labour market: producers and other employers bid for hours, cohorts offer them, each
-(trade, labour area) clears at a sticky wage and the wages are paid at once.
+"""The year's labour market: producers and other employers bid for hours, cohorts' workers offer them, and
+the labour core (`sim.labour.api`) sets each (trade, labour area) wage, moves people between trades and
+tiles, trains and replaces them. The economy settles the wages it reports, at once.
 
-Workers move between trades on their tile toward unfilled hours, a share of the idle a year, so the
-workforce follows the wages with a lag (training is not yet a delay here).
+The training premium of a trade is not written here: it is the wage at which enough able people choose
+the trade (sim/labour/market/DESIGN.md).
 """
 import dataclasses
-import math
-from typing import Dict, List, Sequence, Tuple
+from typing import Dict, List, Mapping, Sequence, Tuple
 
-from sim.constants import declare
+from sim.labour.api import CAREER_YEARS, run_labour_year
 
-from sim.labour.api import CAREER_YEARS
-
-from . import households, labour, labour_asks, settlement
+from . import households, labour, settlement
 from .households_cohort import VALUE_OF_LIFE_YEARS_OF_INCOME
 from .households_orders import HOUSEHOLD_TIME_PREFERENCE
-from .market_memory import KEY_SEPARATOR, market_key
-from .setup import LABOUR_AREA_PREFIX
-from .types import LabourBid, LabourOffer
+from .labour_bids import sloped_bids
+from .labour_state import core_trades, give_back, hold_back, mirror_wages, people_by_trade
+from .market_memory import market_key
+from .setup import labour_area
+from .types import Fill, LabourBid, LabourOffer, LabourResult
 from .year_ledger import YearLedger
-
-TRADE_MOBILITY_SHARE_PER_YEAR = declare(
-    "TRADE_MOBILITY_SHARE_PER_YEAR", 0.2, kind="temporary_heuristic",
-    unit="share of a trade's idle workers who move to trades with unfilled hours in a year",
-    source=None, confidence="D",
-    why="People without work drift to where employers want hands, slowed by skill, custom and "
-        "guilds. The share stands in for the training and mobility model in sim/world/labour_market.py, "
-        "which the economy does not yet drive.")
 
 
 def subsistence_cost_by_tile(setup, record, view) -> Dict[str, float]:
@@ -51,6 +43,7 @@ def outside_option_by_tile(setup, record, view) -> Dict[str, float]:
 
 
 def labour_offers(setup, record, view, subsistence_by_tile) -> List[LabourOffer]:
+    """Each cohort's share of the tile's workers in each trade, as hours at the reservation wage."""
     danger = {trade: spec.fatality_risk_per_year for trade, spec in setup.trades.items()}
     offers: List[LabourOffer] = []
     working_by_tile: Dict[str, float] = {}
@@ -59,105 +52,70 @@ def labour_offers(setup, record, view, subsistence_by_tile) -> List[LabourOffer]
     for cohort in sorted(record.cohorts.values(), key=lambda each: each.agent_id):
         tile_working = working_by_tile.get(cohort.tile, 0.0)
         share = cohort.working_people / tile_working if tile_working > 0.0 else 0.0
-        workers = {trade: count * share for trade, count in record.workforce.get(cohort.tile, {}).items()}
+        area = labour_area(cohort.tile)
+        workers = {trade: count * share for trade, count in people_by_trade(record.workforce, area).items()}
         offers.extend(households.labour_offers(cohort, workers, view, subsistence_by_tile.get(cohort.tile, 0.0),
                                                setup.working_hours_per_year, danger))
-    premiums = {trade: trade_premium(setup, trade) for trade in {offer.trade for offer in offers}}
-    return [dataclasses.replace(offer, reservation_wage=offer.reservation_wage * (1.0 + premiums[offer.trade]))
-            if premiums[offer.trade] > 0.0 else offer for offer in offers]
+    return offers
 
 
 def trade_premium(setup, trade) -> float:
     """What a trade's training years add to the pay a worker asks, as a share: the years of income
     given up to learn it, repaid over a working life (labour.training_premium) at the family's own
-    time preference, since the family pays for training by going without, not by borrowing."""
+    time preference, since the family pays for training by going without, not by borrowing. Quotes
+    of a wage for a trade nobody has bid for yet use it; the clearing does not."""
     spec = setup.trades.get(trade)
     if spec is None or spec.training_years <= 0.0:
         return 0.0
     return labour.training_premium(spec.training_years, HOUSEHOLD_TIME_PREFERENCE, CAREER_YEARS)
 
 
-def clear_labour(setup, record, bids: Sequence[LabourBid], offers: Sequence[LabourOffer],
-                 ledger: YearLedger) -> None:
-    grouped: Dict[Tuple[str, str], Tuple[List[LabourBid], List[LabourOffer]]] = {}
-    for bid in bids:
-        grouped.setdefault((bid.trade, bid.area), ([], []))[0].append(bid)
+def held_share_by_area(everyone: Sequence[LabourOffer], offered: Sequence[LabourOffer]) -> Dict[str, float]:
+    """The share of each area's offered hours households kept back (offers cut by withhold_hours)."""
+    total: Dict[str, float] = {}
+    cut: Dict[str, float] = {}
+    for offer in everyone:
+        total[offer.area] = total.get(offer.area, 0.0) + offer.hours
+    for offer in offered:
+        cut[offer.area] = cut.get(offer.area, 0.0) + offer.hours
+    return {area: max(0.0, 1.0 - cut.get(area, 0.0) / hours) for area, hours in total.items() if hours > 0.0}
+
+
+def _result(clearing, currency: str, offers: Sequence[LabourOffer]) -> LabourResult:
+    """A core clearing as the economy settles it: employers buy the hours hired, the workers whose
+    hours were offered sell them in proportion to what each offered."""
+    wage = clearing.average_wage
+    fills = [Fill(employer, clearing.trade, clearing.area, "", hours, wage, "buy")
+             for employer, hours in sorted(clearing.hired_by_employer.items()) if hours > 0.0]
+    offered = sum(offer.hours for offer in offers)
+    if offered > 0.0 and clearing.hours_hired > 0.0:
+        fills.extend(Fill(offer.worker, clearing.trade, clearing.area, "", clearing.hours_hired * offer.hours / offered,
+                          wage, "sell") for offer in sorted(offers, key=lambda each: each.worker) if offer.hours > 0.0)
+    return LabourResult(trade=clearing.trade, area=clearing.area, currency=currency, wage=wage,
+                        hours_hired=clearing.hours_hired, vacant_hours=clearing.vacant_hours,
+                        idle_hours=clearing.idle_hours, fills=tuple(fills))
+
+
+def clear_labour(setup, record, bids: Sequence[LabourBid], offers: Sequence[LabourOffer], ledger: YearLedger,
+                 context, held_share: Mapping[str, float] = None) -> None:
+    """Run the core's year on the record's workforce: wages, hires, training, entry, switching and
+    migration. Then settle each market's wages. `context` is the core's inputs without trades and bids
+    (labour_inputs.labour_context). `held_share` is the share of each area's workers whose hours
+    households keep for their own plots: the market does not see them this year."""
+    core_bids = sloped_bids(bids)
+    inputs = dataclasses.replace(context, trades=core_trades(setup, {bid.trade for bid in core_bids}),
+                                 bids=core_bids)
+    seen, held = hold_back(record.workforce, held_share or {})
+    record.workforce, report = run_labour_year(seen, inputs)
+    give_back(record.workforce, held)
+    by_market: Dict[Tuple[str, str], List[LabourOffer]] = {}
     for offer in offers:
-        grouped.setdefault((offer.trade, offer.area), ([], []))[1].append(offer)
-    memory = record.memory
+        by_market.setdefault((offer.trade, offer.area), []).append(offer)
     record.hours_hired = {}
-    for (trade, area), (trade_bids, trade_offers) in sorted(grouped.items()):
-        key = market_key(trade, area)
-        result = labour.clear(trade_bids, trade_offers, trade, area, setup.currency_id, memory.wages.get(key))
+    for clearing in sorted(report.clearings, key=lambda each: (each.trade, each.area)):
+        result = _result(clearing, setup.currency_id, by_market.get((clearing.trade, clearing.area), ()))
         done = settlement.settle_labour(record.book, result)
         ledger.note_postings(done.postings, "wages")
         ledger.note_labour(result, done.postings)
-        record.hours_hired[key] = result.hours_hired
-        if result.wage > 0.0:
-            memory.wages[key] = result.wage
-
-
-def move_workers(setup, record, ledger: YearLedger) -> None:
-    """Idle workers in a trade move toward the trades on their tile that had unfilled hours."""
-    hours = setup.working_hours_per_year
-    idle: Dict[Tuple[str, str], float] = {}
-    vacant: Dict[Tuple[str, str], float] = {}
-    for result in ledger.labour_results:
-        tile = result.area[len(LABOUR_AREA_PREFIX):]
-        idle[(tile, result.trade)] = result.idle_hours / hours
-        vacant[(tile, result.trade)] = result.vacant_hours / hours
-    for tile, workforce in sorted(record.workforce.items()):
-        wanted = {trade: count for (place, trade), count in vacant.items() if place == tile and count > 0.0}
-        total_wanted = math.fsum(wanted.values())
-        if total_wanted <= 0.0:
-            continue
-        movers = math.fsum(min(idle.get((tile, trade), 0.0), workforce.get(trade, 0.0))
-                           for trade in workforce) * TRADE_MOBILITY_SHARE_PER_YEAR
-        movers = min(movers, total_wanted)
-        if movers <= 0.0:
-            continue
-        idle_total = math.fsum(min(idle.get((tile, trade), 0.0), workforce.get(trade, 0.0)) for trade in workforce)
-        for trade in sorted(workforce):
-            leaving = min(idle.get((tile, trade), 0.0), workforce[trade])
-            if idle_total > 0.0:
-                workforce[trade] -= movers * leaving / idle_total
-        for trade, count in sorted(wanted.items()):
-            workforce[trade] = workforce.get(trade, 0.0) + movers * count / total_wanted
-
-
-def trade_ask(setup, trade, outside_option: float) -> float:
-    """What a worker asks an hour to take up a trade on a tile with this outside option (a year's floors)."""
-    spec = setup.trades.get(trade)
-    danger = spec.fatality_risk_per_year if spec is not None else 0.0
-    ask = labour.reservation_wage(outside_option, setup.working_hours_per_year, danger,
-                                  VALUE_OF_LIFE_YEARS_OF_INCOME)
-    return ask * (1.0 + trade_premium(setup, trade))
-
-
-def follow_asks(setup, record, view, ledger: YearLedger) -> None:
-    """Untraded wages move toward the ask; workers drift toward trades paying well over theirs."""
-    outside = outside_option_by_tile(setup, record, view)
-    asks: Dict[str, float] = {}
-    for key in record.memory.wages:
-        trade, _separator, area = key.partition(KEY_SEPARATOR)
-        tile = area[len(LABOUR_AREA_PREFIX):] if area.startswith(LABOUR_AREA_PREFIX) else None
-        if tile in outside:
-            asks[key] = trade_ask(setup, trade, outside[tile])
-    offered = {market_key(result.trade, result.area) for result in ledger.labour_results
-               if result.hours_hired + result.idle_hours > 0.0}
-    record.memory.wages = labour_asks.untraded_wages(record.memory.wages, offered, asks)
-    hours = setup.working_hours_per_year
-    wanted: Dict[str, Dict[str, float]] = {}
-    for result in ledger.labour_results:
-        tile = result.area[len(LABOUR_AREA_PREFIX):]
-        wanted.setdefault(tile, {})[result.trade] = (result.hours_hired + result.vacant_hours) / hours
-    for tile, workforce in sorted(record.workforce.items()):
-        if tile not in outside or tile not in wanted:
-            continue
-        pay = {}
-        for trade in set(workforce) | set(wanted[tile]):
-            key = market_key(trade, LABOUR_AREA_PREFIX + tile)
-            ask = asks.get(key) or trade_ask(setup, trade, outside[tile])
-            if key in record.memory.wages and ask > 0.0:
-                pay[trade] = record.memory.wages[key] / ask
-        record.workforce[tile] = labour_asks.follow_pay(workforce, pay, wanted[tile])
+        record.hours_hired[market_key(clearing.trade, clearing.area)] = clearing.hours_hired
+    mirror_wages(record.memory.wages, record.workforce)

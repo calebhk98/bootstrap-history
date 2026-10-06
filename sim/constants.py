@@ -352,6 +352,8 @@ def _import_declaring_modules():
                    "sim.economy.households_orders",
                    "sim.economy.inventory",
                    "sim.economy.labour",
+                   "sim.economy.labour_bids",
+                   "sim.economy.labour_inputs",
                    "sim.economy.market_areas",
                    "sim.economy.market_memory",
                    "sim.economy.merchants",
