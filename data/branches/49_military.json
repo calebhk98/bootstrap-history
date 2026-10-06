@@ -3740,8 +3740,8 @@
  },
  {
   "id": "mil_incendiary_bomb",
-  "copy_visibility": 0.15,
-  "copy_visibility_reason": "The fire and its effect are visible but the mixture and the delivery are not, as with the Byzantine Greek fire that was kept secret until the knowledge was lost.",
+  "copy_visibility": 0.7,
+  "copy_visibility_reason": "An unexploded bomb shows its casing, fuse and petroleum or phosphorus filling to anyone who opens it; what stays hidden is the filling's exact mix and the fuse timing.",
   "name": "Incendiary bomb",
   "cat": "air",
   "kind": "ENGINEERING",
