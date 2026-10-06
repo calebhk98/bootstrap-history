@@ -42,9 +42,16 @@ def port_key(economy: Economy) -> str:
     return market_key(COFFEE, market_curves.port_area(economy.area_map, economy.setup.port_tile, COFFEE))
 
 
+def port_price(economy: Economy) -> float:
+    """The price the port market's last book clears at."""
+    curve = economy.record.curves[port_key(economy)]
+    return goods_market.clear(market_curves.bids_of(curve, COFFEE), market_curves.offers_of(curve, COFFEE),
+                              COFFEE, market_curves.CURVE_AREA, "", None).price
+
+
 def revenue_ceiling(economy: Economy) -> float:
     """The most coffee revenue the port market's buyers allow at any one price (from the last book)."""
-    bids = market_curves._bids(economy.record.curves[port_key(economy)], COFFEE)
+    bids = market_curves.bids_of(economy.record.curves[port_key(economy)], COFFEE)
     best = 0.0
     price = 0.01
     while price < 100.0:
@@ -73,7 +80,7 @@ def run_scenario(years: int = YEARS) -> List[Dict[str, float]]:
         outcome = economy.step(fixture.quiet_year(setup))
         producers = economy.record.producers
         rows.append({
-            "year": year, "price": outcome.prices.get(COFFEE, 0.0),
+            "year": year, "price": outcome.prices.get(COFFEE, 0.0), "port_price": port_price(economy),
             "volume": economy.record.volumes.get(port_key(economy), 0.0),
             "entrant_runs": producers[ENTRANT].capacity_runs if ENTRANT in producers else 0.0,
             "incumbent_runs": sum(producer.capacity_runs for producer in producers.values()

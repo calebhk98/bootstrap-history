@@ -53,7 +53,7 @@ class InnovatorPricingTests(unittest.TestCase):
 
     def test_the_entrants_takings_stay_within_what_demand_allows(self):
         for row in rows()[scenario.ENTRY_YEAR:]:
-            self.assertLessEqual(row["price"] * row["volume"], BOOK_MERGE_TOLERANCE * row["revenue_ceiling"])
+            self.assertLessEqual(row["port_price"] * row["volume"], BOOK_MERGE_TOLERANCE * row["revenue_ceiling"])
 
 
 if __name__ == "__main__":
