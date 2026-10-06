@@ -45,7 +45,8 @@ class RealOutputMixin:
         prices = opening_prices_in_hours(
             frozenset(self.state.projects.granted), self.civ, self._opening_farmed_hectares)
         units = market_demand.household_demand_by_material(
-            prices, self._opening_population(), market_demand.MEAN_INCOME_HOURS_PER_CAPITA)
+            prices, self._opening_population(), market_demand.MEAN_INCOME_HOURS_PER_CAPITA,
+            self.civ, self.world_map)
         units = {material: wanted for material, wanted in sorted(units.items())
                  if wanted > 0.0 and material in prices}
         basket = {"prices": prices, "units": units,
