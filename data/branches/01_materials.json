@@ -1,6 +1,8 @@
 [
  {
   "id": "mat_wrought_iron",
+  "copy_visibility": 0.3,
+  "copy_visibility_reason": "The bloom and the hammered bar are visible, and a bloomery can be watched at work, but the ore choice, the charcoal ratio and the feel for when the bloom is ready stay in the smith's hands.",
   "name": "Wrought iron (bloomery)",
   "cat": "material",
   "kind": "RESOURCE",
@@ -32,6 +34,8 @@
  },
  {
   "id": "mat_bronze",
+  "copy_visibility": 0.4,
+  "copy_visibility_reason": "The alloy colour and the casting are visible, but the tin share is not, and a founder cannot read it off the finished piece without assay.",
   "name": "Bronze",
   "cat": "material",
   "kind": "RESOURCE",
@@ -54,6 +58,8 @@
  },
  {
   "id": "mat_brass",
+  "copy_visibility": 0.2,
+  "copy_visibility_reason": "The golden metal shows nothing of the calamine and charcoal packed round the copper, and no onlooker sees that a second metal went in.",
   "name": "Brass (by cementation)",
   "cat": "material",
   "kind": "RESOURCE",
@@ -557,6 +563,8 @@
  },
  {
   "id": "mat_linen",
+  "copy_visibility": 0.6,
+  "copy_visibility_reason": "Retting ponds, scutching and hackling are done in the open and each step shows its result; the retting time and water that spare the fibre are learned by doing.",
   "name": "Linen",
   "cat": "material",
   "kind": "RESOURCE",
@@ -604,6 +612,8 @@
  },
  {
   "id": "mat_leather",
+  "copy_visibility": 0.5,
+  "copy_visibility_reason": "The tanyard and its pits are visible and smell far off, but the strength and timing of the tanning liquors, which decide the leather, are not visible.",
   "name": "Leather",
   "cat": "material",
   "kind": "RESOURCE",
@@ -737,6 +747,8 @@
  },
  {
   "id": "mat_glass_soda",
+  "copy_visibility": 0.2,
+  "copy_visibility_reason": "Clear glass shows nothing of the batch, the ash or sand choice or the annealing; Venetian glassmakers were bound by law not to leave Murano, which shows the recipe was worth guarding.",
   "name": "Soda-lime glass",
   "cat": "material",
   "kind": "RESOURCE",
@@ -1034,6 +1046,8 @@
  },
  {
   "id": "mat_cast_iron",
+  "copy_visibility": 0.5,
+  "copy_visibility_reason": "Castings and the tapping of a furnace are visible, but the burden, blast and slag control that keep a furnace running are hidden in the operation.",
   "name": "Cast iron",
   "cat": "material",
   "kind": "RESOURCE",
@@ -1108,6 +1122,8 @@
  },
  {
   "id": "mat_bulk_steel",
+  "copy_visibility": 0.3,
+  "copy_visibility_reason": "A converter blow is a spectacle anyone can watch, but the lining chemistry and the phosphorus in the ore are invisible; early Bessemer licensees failed on phosphoric ores until the cause was understood.",
   "name": "Bulk steel (converter and open hearth)",
   "cat": "material",
   "kind": "RESOURCE",
@@ -1168,6 +1184,8 @@
  },
  {
   "id": "mat_tool_steel_hss",
+  "copy_visibility": 0.2,
+  "copy_visibility_reason": "A tool cutting at red heat is a striking demonstration, but the composition and the high heat treatment cannot be read from the tool and were held as a patented secret.",
   "name": "High speed and alloy tool steel",
   "cat": "material",
   "kind": "RESOURCE",
@@ -1225,6 +1243,8 @@
  },
  {
   "id": "mat_zinc",
+  "copy_visibility": 0.2,
+  "copy_visibility_reason": "The metal reaches a buyer as ingots and shows nothing of the sealed retort and downward condensing; European users imported zinc from the East before they could make it.",
   "name": "Zinc metal",
   "cat": "material",
   "kind": "RESOURCE",
@@ -1356,6 +1376,8 @@
  },
  {
   "id": "mat_aluminium",
+  "copy_visibility": 0.2,
+  "copy_visibility_reason": "The grey metal shows nothing of the bath or the current; an onlooker at the cell sees molten salt and glow but not the bath composition or the cell control.",
   "name": "Aluminium",
   "cat": "material",
   "kind": "RESOURCE",
@@ -1610,6 +1632,8 @@
  },
  {
   "id": "mat_paper",
+  "copy_visibility": 0.3,
+  "copy_visibility_reason": "The sheet shows its fibres but not the beating, sizing or mould work; tradition has the craft crossing into the Islamic world with captured papermakers, so it moved with people rather than samples.",
   "name": "Rag paper",
   "cat": "material",
   "kind": "RESOURCE",
@@ -1773,6 +1797,8 @@
  },
  {
   "id": "mat_petroleum_refined",
+  "copy_visibility": 0.5,
+  "copy_visibility_reason": "Kerosene and wax are visible products and a still can be seen at work, but cut points and the removal of impurities are matters of operating skill.",
   "name": "Refined petroleum fractions",
   "cat": "material",
   "kind": "RESOURCE",
@@ -1828,6 +1854,8 @@
  },
  {
   "id": "mat_chlorine",
+  "copy_visibility": 0.3,
+  "copy_visibility_reason": "The bleached cloth and the smell are evident, but the generating plant, the absorption in lime and the handling of the gas are not shown by the product.",
   "name": "Chlorine and bleach",
   "cat": "material",
   "kind": "RESOURCE",
@@ -1852,6 +1880,8 @@
  },
  {
   "id": "mat_dyes_synthetic",
+  "copy_visibility": 0.4,
+  "copy_visibility_reason": "The dyed cloth can be analysed by a trained chemist, but the route from coal tar through the intermediates and the plant that runs it are not visible; imitators needed their own chemists.",
   "name": "Synthetic dyes (aniline)",
   "cat": "material",
   "kind": "RESOURCE",
@@ -1896,6 +1926,8 @@
  },
  {
   "id": "mat_nitrocellulose",
+  "copy_visibility": 0.2,
+  "copy_visibility_reason": "The fibre looks unchanged after nitration, and the acid mix, temperature and the washing that decide whether it is stable are invisible; several early plants blew up for lack of it.",
   "name": "Nitrocellulose",
   "cat": "material",
   "kind": "RESOURCE",
