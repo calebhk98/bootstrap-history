@@ -71,7 +71,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Wooden frames with wax layer. Reusable by heating. For notes, not archival.",
+  "note": "Wooden tablets are given a recessed face filled with a thin layer of wax. Marks are made by scratching the wax with the pointed end of a stylus, and the flat end smooths the wax to erase them, or gentle heating melts it level again, so a tablet can be reused many times. It is cheap and reusable, but the marks are easily rubbed or scratched away, so it suits temporary notes and calculations, not permanent records.",
   "traits": [
    "information",
    "status_threatening"
@@ -97,7 +97,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Stacked pages sewn and bound. Replaces roll. Page finding is the real gain.",
+  "note": "Pages of papyrus or parchment are stacked and sewn together along the spine, then bound in a protective cover. This replaces the scroll, where text is written on a continuous roll that must be unrolled to find passages. The real advantage is fast access, as any page can be found directly without unwinding, speeding up reference and study.",
   "traits": [
    "information",
    "status_threatening"
@@ -123,7 +123,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Trained hand copying, one manuscript at a time. Elite control of knowledge."
+  "note": "Scribes copy manuscripts by hand, one at a time, from an original text. This requires years of training to write quickly and accurately. Because every copy must be done by hand, texts are rare and expensive, and knowledge is controlled by the few who can read and the scribes who make copies available. This limits knowledge spread."
  },
  {
   "id": "prn_carbon_ink",
@@ -145,7 +145,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Lampblack or charcoal suspended in gum. For brush and reed pen on soft surfaces."
+  "note": "Carbon ink is made by suspending lampblack (fine soot collected from burning oil or wood) or ground charcoal in a plant gum, which makes it flow and stick to the writing surface. It was used with brush and reed pen on papyrus and parchment. The carbon never fades, but it sits on the surface instead of soaking in, so it can be washed or scraped off."
  },
  {
   "id": "prn_seals_stamps",
@@ -167,7 +167,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Hand-carved into stone, metal or bone. Verify identity and authenticity."
+  "note": "A seal is a design carved in reverse into stone, metal or bone. When pressed into soft wax or clay it leaves a raised image that shows the document came from the holder of that seal. Each seal has its own design, so it verifies identity and makes forgery of contracts and orders harder."
  },
  {
   "id": "prn_mosaic_fresco",
@@ -189,7 +189,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Permanent architectural image. Tesserae or pigment in plaster. Not reproducible."
+  "note": "Mosaic and fresco are two ways of making lasting images on walls and floors. A mosaic presses small coloured stone or glass pieces (tesserae) into mortar. A fresco is painted with pigment onto wet lime plaster, which then hardens chemically and locks the colour into the wall. Both need skilled artists, and each image is unique and cannot be copied or moved."
  },
  {
   "id": "prn_sculpture",

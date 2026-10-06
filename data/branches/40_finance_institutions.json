@@ -969,7 +969,7 @@
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "Profit from issuing new money, the difference between the value of the coin and the value of the metal in it. Tempts rulers to debase currency by reducing metal content. Short-term profit destroys long-term monetary trust."
+  "note": "Seigniorage is the profit a ruler makes from issuing coin: the coin is accepted at a value higher than the metal in it plus the cost of minting it. The temptation is debasement, mixing more cheap metal into the coin while keeping its stated value, which gives a quick gain. When people notice, prices rise or they refuse the coin, and trust in the money is lost."
  },
  {
   "id": "fin_bimetallism",

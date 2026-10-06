@@ -15,7 +15,7 @@
   "cap_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
-  "note": "Water or dew retting breaks down pectin binding fibre to woody core, controlled fermentation in standing water",
+  "note": "Flax and hemp stalks are soaked in water or exposed to dew for weeks to break down the pectin that binds the woody core to the long fibers. This controlled fermentation must be watched carefully, as overretting weakens the fibers and underretting leaves too much woody material to separate.",
   "up_hours": 0
  },
  {
@@ -40,7 +40,7 @@
   "cap_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
-  "note": "Scutching board and wooden scutcher blade beat retting fibre to separate long bast fibres from brittle woody break, crude mechanisation with flails",
+  "note": "After retting, the dried flax or hemp stalks are broken and then beaten over a board with a wooden blade, so the brittle woody core falls away and the long bast fibres remain. Flails give a crude mechanised version of the same beating. Quality depends on beating firmly enough to free the core without tearing the fibres.",
   "up_hours": 0
  },
  {
@@ -63,7 +63,7 @@
   "cap_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 0,
-  "note": "Pins set in flat boards, four grades of hecklers pull fibre through progressively finer pins, separates long line from short tow",
+  "note": "After scutching, hackling pulls the fibre bundle through a series of boards set with metal pins, from coarse to progressively finer. Each pass combs out more short, tangled fibre (tow) and straightens the long fibre (line). The long line is what can be spun into fine thread, while the tow makes coarser yarn.",
   "up_hours": 0,
   "gov": -1,
   "sus": 1
@@ -195,7 +195,7 @@
   "cap_hours": 0,
   "build_yrs": 0.15,
   "adopt_yrs": 0,
-  "note": "Two and more rovings drawn together and doubled, evens out slubs, allows fibre blending and increases draft",
+  "note": "Drawing feeds several slivers or rovings together (doubling) and stretches them between pairs of rollers, each pair turning faster than the one before. Doubling averages out thick and thin places so the strand becomes even, and different fibres or colours can be blended this way. The amount of stretching is called the draft, and an even strand is needed for even yarn.",
   "up_hours": 0,
   "gov": -1,
   "sus": 1

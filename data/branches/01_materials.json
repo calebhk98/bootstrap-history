@@ -182,7 +182,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Already produced wherever cupellation from galena is practised."
+  "note": "Silver is won from galena, which is first smelted to a silver-bearing lead. That lead is then heated in air in a shallow cup of porous bone ash (a cupel): the lead oxidises to litharge, which soaks into the cup, while the silver does not oxidise and stays behind as a bead. It needs a hot furnace with a steady air blast and careful heat control, and it is already practised wherever cupellation from galena is known."
  },
  {
   "id": "mat_gold",
@@ -575,7 +575,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Linen from flax after retting and breaking. Already produced routinely wherever flax is grown and processed.",
+  "note": "Linen is cloth made from flax fibre. The stalks are retted (soaked so microbes rot the pectin gluing fibre to the woody core), broken and scutched to free the long fibres, hackled (combed) to clean and align them, then spun and woven. It is already produced routinely wherever flax is grown and processed.",
   "traits": [
    "commerce",
    "labour_saving"
@@ -1272,7 +1272,7 @@
   "sch": 4,
   "art": 8,
   "conf": "B",
-  "note": "Not isolated in antiquity. Coinage, plating, alloy steels, glass-to-metal seals, catalysts."
+  "note": "Nickel was not isolated in antiquity, because its ores are hard to smelt and are easily mistaken for copper ores. It is won by roasting and smelting the ore to a metal-rich matte and refining that, by chemical routes such as the Mond process (a gas that carries nickel off as a vapour) or by electrolytic refining, and needs very high heat and chemical purification. It is used for coinage, plating, alloy steels, glass-to-metal seals and catalysts."
  },
  {
   "id": "mat_chromium",
