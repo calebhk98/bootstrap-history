@@ -71,7 +71,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Wooden tablets are coated with a thin layer of beeswax. Marks are made by scratching the wax with a stylus. The surface can be smoothed by heating the wax to erase text and reuse the tablet many times. Cheap and reusable, though the marks fade quickly, so these are used for temporary notes and calculations, not permanent records.",
+  "note": "Wooden tablets are given a recessed face filled with a thin layer of wax. Marks are made by scratching the wax with the pointed end of a stylus, and the flat end smooths the wax to erase them, or gentle heating melts it level again, so a tablet can be reused many times. It is cheap and reusable, but the marks are easily rubbed or scratched away, so it suits temporary notes and calculations, not permanent records.",
   "traits": [
    "information",
    "status_threatening"
@@ -145,7 +145,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Carbon ink is made by suspending lampblack (soot collected from burning oil or wood) or ground charcoal in a plant-based gum to make it flow and stick to writing surfaces. This ink was used by brush and reed pen on papyrus and parchment. It is permanent and black, making it ideal for important documents."
+  "note": "Carbon ink is made by suspending lampblack (fine soot collected from burning oil or wood) or ground charcoal in a plant gum, which makes it flow and stick to the writing surface. It was used with brush and reed pen on papyrus and parchment. The carbon never fades, but it sits on the surface instead of soaking in, so it can be washed or scraped off."
  },
  {
   "id": "prn_seals_stamps",
@@ -167,7 +167,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "A seal is a design carved in reverse into stone, metal, or bone. When pressed into soft wax or clay, it leaves a raised image that proves the document came from the holder of that seal. Different seals have different designs, so the seal verifies identity and prevents forgery of important documents like contracts and orders."
+  "note": "A seal is a design carved in reverse into stone, metal or bone. When pressed into soft wax or clay it leaves a raised image that shows the document came from the holder of that seal. Each seal has its own design, so it verifies identity and makes forgery of contracts and orders harder."
  },
  {
   "id": "prn_mosaic_fresco",
@@ -189,7 +189,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Mosaic and fresco are two methods of creating permanent images on walls and floors. Mosaics use tiny colored stone tiles (tesserae) pressed into mortar, while frescoes are painted with pigment onto wet plaster that dries and fixes the color permanently. Both are laborious and require skilled artists, and the images cannot be easily reproduced or moved once created."
+  "note": "Mosaic and fresco are two ways of making lasting images on walls and floors. A mosaic presses small coloured stone or glass pieces (tesserae) into mortar. A fresco is painted with pigment onto wet lime plaster, which then hardens chemically and locks the colour into the wall. Both need skilled artists, and each image is unique and cannot be copied or moved."
  },
  {
   "id": "prn_sculpture",

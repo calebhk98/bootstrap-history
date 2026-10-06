@@ -969,7 +969,7 @@
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "When a government coins money, it profits from the difference between the cost of the metal and the coin's stated value. A gold coin containing 90% gold at face value of 100 units yields 10 units of profit. The temptation is to reduce the metal content while keeping the same face value, boosting short-term profit but destroying trust in the currency when people discover it."
+  "note": "Seigniorage is the profit a ruler makes from issuing coin: the coin is accepted at a value higher than the metal in it plus the cost of minting it. The temptation is debasement, mixing more cheap metal into the coin while keeping its stated value, which gives a quick gain. When people notice, prices rise or they refuse the coin, and trust in the money is lost."
  },
  {
   "id": "fin_bimetallism",

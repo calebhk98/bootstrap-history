@@ -28,7 +28,7 @@
   "sch": 1,
   "art": 1,
   "conf": "C",
-  "note": "Papyrus sheets are made by cutting papyrus plant stems into strips, laying them perpendicular in layers, and pressing them wet together. The plant's natural sap acts as adhesive, so no glue is needed, but the sheets must be pressed while still wet. As the water evaporates, the strips bond into a smooth writing surface."
+  "note": "Papyrus sheets are made by slicing the pith of papyrus stems into thin strips, laying them side by side, then laying a second layer across the first at right angles. The layers are pressed together while still wet, and the plant's own juices glue them without paste. Once dry they form a smooth writing surface."
  },
  {
   "id": "if_parchment",
@@ -59,7 +59,7 @@
   "sch": 1,
   "art": 2,
   "conf": "C",
-  "note": "Parchment is made by taking animal skin and scraping away hair and fat with a blade while it dries under tension. The cleaned skin is whitened by washing in lime water (alkali), which removes remaining stains without damaging the fibers. The result is durable, accepts ink well, and can be erased and reused by scraping lightly, making it valuable for important documents."
+  "note": "Parchment is made from animal skin. The skin is soaked in lime, which loosens the hair and fat, then stretched on a frame and scraped with a curved blade while it dries under tension. The result is a smooth, durable sheet that takes ink well and can be scraped clean and written on again."
  },
  {
   "id": "if_rag_paper",
@@ -90,7 +90,7 @@
   "sch": 2,
   "art": 1,
   "conf": "C",
-  "note": "Rag paper is made in China by beating cotton and hemp rags into fine pulp, then suspending the pulp in water and lifting it out on a screen. As water drains through, the fibers mat together into a sheet. Unlike modern pressing, the sheet is dried flat without heavy compression, keeping it lighter and more absorbent for writing."
+  "note": "Rag paper was invented in China. Rags of hemp and other plant fibre are beaten in water to a fine pulp, and a fine screen is dipped in the pulp and lifted out, so the water drains and the fibres felt together into a sheet. The sheet is pressed only lightly and dried, not pressed hard, which leaves it soft enough to take ink."
  },
  {
   "id": "if_quill",
@@ -122,7 +122,7 @@
   "sch": 1,
   "art": 1,
   "conf": "C",
-  "note": "A quill is a large feather cut and split at the tip to make a writing instrument. The split in the shaft creates a groove that holds ink by surface tension and feeds it down to the paper as the split point drags across it. The fine point wears and roughens quickly and must be resharpened every few hours of writing to keep marks clear and consistent."
+  "note": "A quill is a large feather whose hollow shaft is cut to a point and slit at the tip. The slit works by capillary action: it holds a small reservoir of ink and draws it down to the point, and light pressure on the writing surface opens the slit to let ink flow. The point wears and roughens quickly, so it must be re-cut every few hours of writing."
  },
  {
   "id": "if_steel_pen_nib",
@@ -303,7 +303,7 @@
   "sch": 2,
   "art": 1,
   "conf": "C",
-  "note": "Iron gall ink is made by dissolving green vitriol (ferrous sulfate) and adding plant galls, which contain tannin. The tannin and iron chemically bond, creating a durable dark compound that becomes part of the paper fibers themselves rather than sitting on the surface. This permanence is why medieval manuscripts written with iron gall ink survive centuries while other inks fade."
+  "note": "Iron gall ink is made by dissolving green vitriol (iron sulphate) in water with an extract of oak galls, which are rich in tannin. The tannin and iron react to form a dark compound that darkens as it meets the air and soaks into the writing surface, so it is hard to wash off. This is why medieval manuscripts in iron gall ink survive, though the acid in it can slowly eat the paper."
  },
  {
   "id": "if_printing_ink",
@@ -440,7 +440,7 @@
   "sch": 4,
   "art": 1,
   "conf": "C",
-  "note": "A punch is a hardened steel tool with a letter carved in reverse. Striking it vertically into a softer metal creates a matrix, a cavity that will mold type. One master punch can make many matrices for the same letter. The matrices must be struck at exactly the same depth and angle so all the resulting type letters have identical height, which requires extreme precision in hand work."
+  "note": "A punch is a hardened steel rod with a single letter cut in relief at its end, in mirror image. Striking it into a softer metal makes a matrix, a cavity that will mould type, and one master punch can make many matrices of the same letter. Each matrix must be struck straight and to a consistent depth so all the cast letters match, which takes extreme precision in hand work."
  },
  {
   "id": "if_type_mould",
@@ -474,7 +474,7 @@
   "sch": 3,
   "art": 1,
   "conf": "C",
-  "note": "A type mould is a two-part brass tool that holds a matrix and adjusts its width to fit different letter shapes. Molten type metal is poured in, cools quickly, and must be ejected without warping. The mould width must be adjustable and precise so every letter emerges at exactly the same height, which is critical for the type to print evenly on a page."
+  "note": "A type mould is a two-part brass tool that clamps a matrix at one end and holds a hollow shaped like the body of one piece of type. Its width can be adjusted so narrow and wide letters all cast to the same body height. Molten type metal is poured in and cools quickly, and the halves open so the new type is ejected without deforming. Every piece must come out the same height so the whole page prints evenly."
  },
  {
   "id": "if_type_metal_alloy",
@@ -508,7 +508,7 @@
   "sch": 2,
   "art": 1,
   "conf": "C",
-  "note": "Type metal is an alloy of lead, tin, and antimony. Lead alone is soft and wears quickly, but tin added to the alloy makes it harder and more durable. Antimony is a metal that prevents the alloy from shrinking as it cools, which would cause the cast type to warp or fail to lock tightly in the press."
+  "note": "Type metal is an alloy of lead with tin and antimony. Lead alone is soft and wears quickly, so tin and antimony harden it, and tin also helps it flow into every detail of the mould. Antimony expands slightly as the alloy solidifies, which stops shrinkage leaving the letter faces poorly formed, so the type is sharp and uniform."
  },
  {
   "id": "if_composing_stick",
@@ -544,7 +544,7 @@
   "sch": 1,
   "art": 1,
   "conf": "C",
-  "note": "A composing stick is a hand-held tool where a compositor places individual metal letters (sorts) in order to build lines of text. After setting the text, it is proofed for errors, then transferred to a larger tray called a galley. The stick allows the compositor to correct mistakes and rearrange letters before the text is locked into the press frame."
+  "note": "A composing stick is a small hand-held tray in which a compositor sets individual metal letters (sorts) in order, building one line of text at a time. Each finished line is moved to a larger tray called a galley, where a proof is pulled and checked for errors. Letters can be corrected and rearranged until the text is locked into the chase for printing."
  },
  {
   "id": "if_chase_and_forme",
@@ -576,7 +576,7 @@
   "sch": 2,
   "art": 1,
   "conf": "C",
-  "note": "A chase is an iron frame that holds type, and a forme is the assembled page of type within it. Quoins are wooden or metal wedges driven in to lock the type tightly so it cannot shift under the press's pressure. Wood swells when damp, so the wedges must be driven tight and then loosened slightly to allow for this, preventing the type from becoming too loose to print evenly."
+  "note": "A chase is an iron frame that holds type, and a forme is the assembled page of type locked inside it. Quoins are wedges driven in against spacers to lock the type so tightly it cannot shift or lift under the press's pressure. Wooden spacers swell and shrink with damp, so the lock must be checked, or the type can come loose and print unevenly."
  },
  {
   "id": "if_screw_press",

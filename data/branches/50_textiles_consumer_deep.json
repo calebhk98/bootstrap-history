@@ -40,7 +40,7 @@
   "cap_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
-  "note": "After retting, flax and hemp fibers are laid on a board and beaten with a wooden blade to separate the long plant fibers from the brittle woody core that remains. Flails or a wooden block mechanize this process. The fiber quality depends on controlled beating that does not damage the fibers themselves.",
+  "note": "After retting, the dried flax or hemp stalks are broken and then beaten over a board with a wooden blade, so the brittle woody core falls away and the long bast fibres remain. Flails give a crude mechanised version of the same beating. Quality depends on beating firmly enough to free the core without tearing the fibres.",
   "up_hours": 0
  },
  {
@@ -63,7 +63,7 @@
   "cap_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 0,
-  "note": "After scutching, hackling uses two boards set with sharp metal pins of increasing fineness. Fibers are pulled through the pins four times, each time removing more of the short, tangled fibers. Long fibers are separated from the short waste fibers, producing long line fibers ready for spinning into fine thread.",
+  "note": "After scutching, hackling pulls the fibre bundle through a series of boards set with metal pins, from coarse to progressively finer. Each pass combs out more short, tangled fibre (tow) and straightens the long fibre (line). The long line is what can be spun into fine thread, while the tow makes coarser yarn.",
   "up_hours": 0,
   "gov": -1,
   "sus": 1
@@ -195,7 +195,7 @@
   "cap_hours": 0,
   "build_yrs": 0.15,
   "adopt_yrs": 0,
-  "note": "Drawing takes multiple strands of loosely twisted roving and passes them through sets of rollers at progressively faster speeds. The faster rollers stretch the fibers thin and even, removing thick lumps, and fibers can be blended by drawing multiple colors together. The stretching process, called draft, is critical for creating even yarn ready for spinning.",
+  "note": "Drawing feeds several slivers or rovings together (doubling) and stretches them between pairs of rollers, each pair turning faster than the one before. Doubling averages out thick and thin places so the strand becomes even, and different fibres or colours can be blended this way. The amount of stretching is called the draft, and an even strand is needed for even yarn.",
   "up_hours": 0,
   "gov": -1,
   "sus": 1

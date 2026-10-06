@@ -62,7 +62,7 @@
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "A ridging plough has two curved ploughshares angled symmetrically to throw soil up on both sides, building a raised ridge of earth. These ridges shed excess water from the soil, which benefits root crops like potatoes that rot if waterlogged. The ridges also warm faster in spring, extending the growing season in cool climates."
+  "note": "A ridging plough has a mouldboard on each side of a central share, so it throws soil both ways and builds a raised ridge with a furrow between. The ridges drain excess water, which helps root crops that rot if waterlogged, and they warm faster in spring. It needs strong draught animals, which the horse collar provides."
  },
  {
   "id": "ag2_subsoiler",
@@ -94,7 +94,7 @@
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "A subsoiler is a tool that runs deep into soil below the normal ploughing depth to break up hardpan, a compacted layer that restricts root growth. Unlike a normal plough with a mouldboard that inverts the soil, a subsoiler shatters the deep layer in place, allowing water to drain and roots to penetrate without turning over the topsoil."
+  "note": "A subsoiler is a narrow, strong tine that runs deep, below normal ploughing depth, to break up hardpan, a compacted layer that stops roots and water going down. Unlike a plough with a mouldboard, it shatters the deep layer in place without turning the soil over. It needs a lot of pulling power, hence the horse collar."
  },
  {
   "id": "ag2_harrow",
