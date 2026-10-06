@@ -1,6 +1,6 @@
 # Committed map layers come from non-commercial or unlicensed datasets
 
-**Status:** open - needs an owner decision: replace the sources, or ask the providers for permission
+**Status:** open - owner decision (2026-10-06): licences do not matter for this open project; remaining: each layer's source becomes one option in the generator, so swapping a dataset means changing that option and adding its files
 
 Several committed files under `data/world/geography/` are derived from datasets whose terms forbid commercial use or redistribution, or state no terms at all. The file-by-file provenance, each provider's licence page and the open replacements are in `Complaints/reports/map-data-licence-audit.md` (not legal advice).
 
