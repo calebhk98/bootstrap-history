@@ -19,8 +19,9 @@ check("problems name the stalled route, credit, closures, treasury, lapsed hedge
 check("a single-year step has no problem list", step_problems(1, snapshots, events, []) == [])
 check("a quiet multi-year step has no problem list", step_problems(3, [{"year": 1}], [], []) == [])
 rendered = _render_big.render_step(dict(ok=True, completed=[], events=[], lost=[], year=103, problems=problems))
-check("the step screen ends with the problems block",
-      rendered.splitlines()[-len(problems_lines(problems)):] == problems_lines(problems), rendered[-300:])
+check("the step screen ends with the problems block, then the one pointer line",
+      rendered.splitlines()[-len(problems_lines(problems)) - 2:-2] == problems_lines(problems)
+      and rendered.splitlines()[-1] == 'Type "state full" for the full list.', rendered[-300:])
 
 test_sim = sim()
 route = route_nodes(test_sim)

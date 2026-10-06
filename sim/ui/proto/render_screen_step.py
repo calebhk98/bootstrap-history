@@ -6,9 +6,11 @@ from .step_alerts import alert_lines
 from .step_automation import automation_lines
 from .render_programme import render_programme_rows
 
+FULL_STATE_POINTER = 'Type "state full" for the full list.'
+
 
 def render_step(out):
-    # step()'s reply is completed/events stitched onto a full state() reply;
+    # step()'s reply is completed/events stitched onto a short state() reply;
     # render_state already knows how to read completed/events off the front.
     rendered = render_state(out)
     alerts = alert_lines(out.get("alerts"))
@@ -18,4 +20,6 @@ def render_step(out):
     if programme:
         programme = ["PROGRAMME:"] + ["  " + line for line in programme]
     trailing = automation_lines(out.get("automation")) + programme + problems_lines(out.get("problems"))
-    return rendered + "\n" + "\n".join(trailing) if trailing else rendered
+    if trailing:
+        rendered = rendered + "\n" + "\n".join(trailing)
+    return rendered + "\n\n" + FULL_STATE_POINTER

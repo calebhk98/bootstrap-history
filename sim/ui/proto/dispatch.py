@@ -371,6 +371,7 @@ def _cmd_step(sim, nodes, cmd, ended):
     if multi_year_hours_warning:
         out["multi_year_hours_warning"] = multi_year_hours_warning
     out.update(_agent_state(sim, nodes))
+    out["state_view"] = "short"
     return out
 
 
