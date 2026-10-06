@@ -4,8 +4,8 @@
 Complaint 428 (one labour model sets wages and workforce).
 **Marking:** every citation is tagged. *(snippet)* means the claim comes from search-result text seen in this
 session; the page itself was not opened in full. *(recalled)* means it comes from memory of the literature and
-has not been re-read. Nothing here is tagged *(read)*; no source was fetched in full, so every figure in the
-tables should be re-checked against its paper before it becomes a constant. Where the report names code, it
+has not been re-read. *(read)* means a second pass opened the source and saw the figure; *(disputed)* means sources
+disagree. Anything still tagged snippet or recalled should be re-checked against its paper before it becomes a constant. Where the report names code, it
 was read on this branch (`structural-dedupe-and-owner-decisions`).
 
 ## 0. The question and the constraint
@@ -50,36 +50,33 @@ All learning-rate numbers are in the tables below; the prose states only the sha
 ### 2.1 Shape of the experience effect
 
 * Cost per unit falls as a power law of **cumulative output**, not of calendar time (Wright 1936 for
-  airframes, generalised by Alchian 1963 and Arrow 1962) *(recalled; Alchian's role as first empirical study
-  in the snippet at econometricsociety.org/publications/econometrica/1963/10/01/reliability-progress-curves-airframe-production)*.
+  airframes, generalised by Alchian 1963 and Arrow 1962) *(recalled for Wright 1936 and Arrow 1962; read for Alchian 1963: abstract at econometricsociety.org/publications/econometrica/1963/10/01/reliability-progress-curves-airframe-production, airframe progress curves, cost related to quantity produced and not only rate)*.
 * Across dozens of technologies Wright's law forecasts about as well as a pure time trend, because output
   usually grows exponentially so the two are indistinguishable; the cumulative-output form is the causal one
-  *(snippet: Nagy, Farmer, Bui, Trancik 2013, web.mit.edu/mitssrc/nsf/papers/Nagy_Farmer_Bui_Trancik_2013.pdf)*.
+  *(read: Nagy, Farmer, Bui, Trancik 2013, abstract, 62 technologies, Wright's law best, Moore's law close, indistinguishable when output grows exponentially, web.mit.edu/mitssrc/nsf/papers/Nagy_Farmer_Bui_Trancik_2013.pdf)*.
   In a simulator whose output is endogenous this matters: a stagnant economy must not improve with the
   calendar.
 * Counter-evidence that cumulative output is not the whole story: Lundberg's Horndal works improved without
-  investment for many years *(snippet: en.wikipedia.org/wiki/Erik_Lundberg)*, which argues for a modest
+  investment for many years *(read: Groth lecture notes Ch13, web2.econ.ku.dk/okocg/VV/VV-2015/Lectures%20and%20lecture%20notes/Ch13-VV2015-vaekstmaster2015.pdf, quoting Lundberg 1961: no new investment for 15 years, output per man-hour up close to 2 percent a year)*, which argues for a modest
   within-plant experience effect that does not need new capital. Thompson's reanalysis of the Liberty
   shipyards finds most of the celebrated learning gain was capital deepening and falling quality, leaving
-  little for learning *(snippet: econwpa.ub.uni-muenchen.de/econ-wp/dev/papers/9712/9712001.pdf)*. Design
+  little for learning *(read: Thompson 1997 working paper, abstract, capital deepening and quality change account for virtually all the labour-productivity increase at Calship, econwpa.ub.uni-muenchen.de/econ-wp/dev/papers/9712/9712001.pdf)*. Design
   consequence: the experience term must be separable from capital and from a quality change (scrap), so that
   a test can show it is not counting plant twice.
 * Experience depreciates. Organisational forgetting is large in practice and some of it travels with turnover
-  *(snippet: Benkard 2000, nber.org/papers/w7127.pdf; Argote and Epple 1990 as summarised in
-  proceedings.systemdynamics.org/2007/proceed/papers/LOPEZ502.pdf)*. The Liberty finding that hiring and
-  firing did not matter much *(snippet, same summary of Argote, Beckman and Epple 1990)* says much of the
+  *(read: Benkard 2000, nber.org/papers/w7127.pdf, section 5 text on the depreciation parameter, forgetting supported on L-1011 data; snippet: Argote and Epple 1990 as summarised in
+  proceedings.systemdynamics.org/2007/proceed/papers/LOPEZ502.pdf, not opened)*. The Liberty finding that hiring and
+  firing did not matter much *(snippet, same summary of Argote, Beckman and Epple 1990; not opened)* says much of the
   knowledge sits in the organisation and its tools, not only in heads. So the stock needs a decay and a split
   between a part that persists in the organisation and a part that leaves with workers.
-* Transfer is partial and boundary-bound. Knowledge crossed shifts in one plant only partially *(snippet:
-  Epple, Argote, Devadas 1991, ideas.repec.org/a/inm/ororsc/v2y1991i1p58-70.html)*, and crossed between
-  stores of one franchisee but not between owners *(snippet: Darr, Argote, Epple 1995,
+* Transfer is partial and boundary-bound. Knowledge crossed shifts in one plant only partially *(read, abstract: "substantial, but less than complete, transfer" when the second shift started; Epple, Argote, Devadas 1991, ideas.repec.org/a/inm/ororsc/v2y1991i1p58-70.html)*, and crossed between
+  stores of one franchisee but not between owners *(read, abstract: Darr, Argote, Epple 1995,
   ideas.repec.org/a/inm/ormnsc/v41y1995i11p1750-1762.html)*. Design consequence: experience is held per
   area (and per firm where firms exist), and leaks to neighbours through shared workers and visibility, not
   automatically to the whole society.
 * Defect rates specifically: a new assembly plant's defects fell steeply within weeks, a tenfold increase in
   cumulative output halved them, and the second shift started below the first shift's starting rate, so part
-  of the knowledge is embodied in the plant, not the workers *(snippet: Levitt, List, Syverson 2013,
-  nber.org/papers/w18017)*.
+  of the knowledge is embodied in the plant, not the workers *(read: Levitt, List, Syverson 2013, NBER w18017 working paper text, defects fell more than 80 percent in eight weeks, defect elasticity -0.3 so halving per tenfold, gains embodied in the plant's organisational capital; nber.org/papers/w18017)*.
 
 ### 2.2 Tacit knowledge and failed transfer
 
@@ -90,8 +87,8 @@ All learning-rate numbers are in the tables below; the prose states only the sha
   drawings. It conveys the explicit part. The rest is earned through operation.
 * Early weaving in Lowell: productivity per worker rose substantially over decades with no change of
   machine; literate workers learned faster but short tenure limited the gain, and firm and social
-  institutions had to change before deep skill could be built *(snippet: Bessen 2003, Journal of Economic
-  History 63(1), ideas.repec.org/a/cup/jechis/v63y2003i01p33-64_00.html; the book argues skill with a new
+  institutions had to change before deep skill could be built *(read, abstract only: Bessen 2003, Journal of Economic
+  History 63(1), ideas.repec.org/a/cup/jechis/v63y2003i01p33-64_00.html, three looms per worker from 1842, literate workers learned faster, local workers stayed longer; the book argues skill with a new
   technology takes years and is mostly learned on the job, snippet: scholarship.law.bu.edu/books/342)*.
   Tenure is a stock (workers who stay) and literacy shifts the rate, which agrees with the existing
   `copy_ease` literacy term.
@@ -112,8 +109,7 @@ All learning-rate numbers are in the tables below; the prose states only the sha
 ### 2.3 Suppliers, agglomeration and capabilities
 
 * Marshall's three sources of agglomeration (input sharing, labour pooling, knowledge spillovers) all have
-  support in co-location data, with input-output links the strongest and labour pooling next *(snippet:
-  Ellison, Glaeser, Kerr 2010, AER 100(3), nber.org/papers/w13068)*. Design consequence: the two stocks to
+  support in co-location data, with input-output links the strongest and labour pooling next *(read, abstract: "input-output dependencies are the most important factor, followed by labor pooling"; Ellison, Glaeser, Kerr 2010, AER 100(3), nber.org/papers/w13068)*. Design consequence: the two stocks to
   count are the number of operating producers of a concern's inputs in reach, and the experienced workers of
   the trades it uses in its area.
 * Hidalgo and Hausmann treat a country's output as the set of capabilities it holds; a product needs a bundle
@@ -126,15 +122,15 @@ All learning-rate numbers are in the tables below; the prose states only the sha
 
 | Quantity | Value as found | Tag and source | How it would be used |
 |---|---|---|---|
-| Typical progress ratio (cost after a doubling of cumulative output) | about four fifths, which is an exponent of about one third | snippet, ourworldindata.org/learning-curve and Nagy et al. | Prior for the unit-labour experience exponent |
-| Range of learning rates across studies | between a twentieth and two fifths per doubling | snippet, arxiv.org/pdf/0907.0036 | Bounds for a sensitivity range in tests |
-| Defects versus cumulative output | halved per tenfold of output (exponent about three tenths) | snippet, Levitt, List, Syverson | Prior for the scrap (defect) exponent |
-| Defects in the opening weeks of a new plant | fell by more than four fifths in eight weeks | snippet, same | Shape check: steep early, flat late |
-| Depreciation of organisational experience | about four percent a month for one aircraft programme | snippet, Benkard 2000 | Order of magnitude for stock decay; widely varying by industry, so a range, not a point |
-| Learning without investment | about two percent a year of output per head | snippet, Lundberg on Horndal | Lower bound check: experience alone gives modest, not dramatic, gains |
-| Transfer across owners in one franchise | none measured across owners; some across same owner | snippet, Darr, Argote, Epple | Boundary for leakage between firms |
-| Transfer across shifts | substantial but incomplete | snippet, Epple, Argote, Devadas | Share held in plant versus workers |
-| Share of Liberty-yard gain attributable to learning | small once capital and quality are controlled | snippet, Thompson | Warning, not a parameter |
+| Typical progress ratio (cost after a doubling of cumulative output) | about four fifths, which is an exponent of about one third | read, McNerney, Farmer, Trancik, arxiv.org/pdf/0907.0036, introduction: typical reported value 0.8, alpha about 0.32; ourworldindata.org/learning-curve gives 20 percent per doubling for solar and an average of 20.2 percent across studies | Prior for the unit-labour experience exponent |
+| Range of learning rates across studies | between a twentieth and two fifths per doubling | snippet, arxiv.org/pdf/0907.0036 (opened; the range is not stated in it, so unverified; Benkard 2000 cites 20 to 25 percent learning rates as common) | Bounds for a sensitivity range in tests |
+| Defects versus cumulative output | halved per tenfold of output (exponent about three tenths) | read, Levitt, List, Syverson 2013, NBER w18017, footnote 10: beta -0.3, a doubling cuts defects 18.8 percent (progress ratio 0.812) | Prior for the scrap (defect) exponent |
+| Defects in the opening weeks of a new plant | fell by more than four fifths in eight weeks | read, same, introduction: from about 70 per car to about 20 at eight weeks is a 70 percent fall in the text figure; the introduction says more than 80 percent. Internal disagreement in the paper, so treat as 70 to 85 percent | Shape check: steep early, flat late |
+| Depreciation of organisational experience | about four percent a month for one aircraft programme | read, Benkard 2000, section 5: delta = 0.96 a month, so 61 percent of experience survives a year (0.96^12). Levitt, List, Syverson find 3 to 7 percent a week at a car plant | Order of magnitude for stock decay; widely varying by industry, so a range, not a point |
+| Learning without investment | about two percent a year of output per head | read, Lundberg 1961 as quoted in Groth lecture notes Ch13 (close to 2 percent a year over 15 years, no new investment) | Lower bound check: experience alone gives modest, not dramatic, gains |
+| Transfer across owners in one franchise | none measured across owners; some across same owner | read, abstract, Darr, Argote, Epple 1995 | Boundary for leakage between firms |
+| Transfer across shifts | substantial but incomplete | read, abstract, Epple, Argote, Devadas 1991 | Share held in plant versus workers |
+| Share of Liberty-yard gain attributable to learning | small once capital and quality are controlled | read, Thompson 1997 abstract: capital deepening and quality change account for virtually all the gain | Warning, not a parameter |
 
 These are the cross-industry priors. The simulator has no right to author a per-technique rate (section 4); it
 may declare a single cross-technique prior as a labelled temporary heuristic (`kind="temporary_heuristic"`,
@@ -342,25 +338,25 @@ a pull request; an ensemble test (many seeds) checking only the relationships in
 
 ## 7. Sources
 
-* Our World in Data, learning curve: https://ourworldindata.org/learning-curve (snippet)
+* Our World in Data, learning curve: https://ourworldindata.org/learning-curve (read)
 * Nagy, Farmer, Bui, Trancik, Statistical basis for predicting technological progress:
-  https://web.mit.edu/mitssrc/nsf/papers/Nagy_Farmer_Bui_Trancik_2013.pdf (snippet)
-* McNerney, Farmer, Trancik, role of design complexity: https://arxiv.org/pdf/0907.0036 (snippet)
-* Alchian 1963: https://www.econometricsociety.org/publications/econometrica/1963/10/01/reliability-progress-curves-airframe-production (snippet)
+  https://web.mit.edu/mitssrc/nsf/papers/Nagy_Farmer_Bui_Trancik_2013.pdf (read)
+* McNerney, Farmer, Trancik, role of design complexity: https://arxiv.org/pdf/0907.0036 (read)
+* Alchian 1963: https://www.econometricsociety.org/publications/econometrica/1963/10/01/reliability-progress-curves-airframe-production (read, abstract)
 * Arrow 1962 and Wright 1936 (recalled)
-* Lundberg, Horndal effect: https://en.wikipedia.org/wiki/Erik_Lundberg (snippet)
+* Lundberg, Horndal effect: https://en.wikipedia.org/wiki/Erik_Lundberg (snippet; names the Horndal effect but gives no figure; the figure was read in the Groth lecture notes Ch13 at web2.econ.ku.dk)
 * Argote and Epple 1990 and Argote, Beckman, Epple 1990, as summarised at
   https://proceedings.systemdynamics.org/2007/proceed/papers/LOPEZ502.pdf (snippet)
-* Benkard 2000, Learning and Forgetting: https://www.nber.org/papers/w7127.pdf (snippet)
-* Thompson, Liberty ships: https://econwpa.ub.uni-muenchen.de/econ-wp/dev/papers/9712/9712001.pdf (snippet)
-* Epple, Argote, Devadas 1991: https://ideas.repec.org/a/inm/ororsc/v2y1991i1p58-70.html (snippet)
-* Darr, Argote, Epple 1995: https://ideas.repec.org/a/inm/ormnsc/v41y1995i11p1750-1762.html (snippet)
-* Levitt, List, Syverson 2013: https://nber.org/papers/w18017 (snippet)
-* Bessen 2003: https://ideas.repec.org/a/cup/jechis/v63y2003i01p33-64_00.html (snippet); Bessen 2015 book:
+* Benkard 2000, Learning and Forgetting: https://www.nber.org/papers/w7127.pdf (read)
+* Thompson, Liberty ships: https://econwpa.ub.uni-muenchen.de/econ-wp/dev/papers/9712/9712001.pdf (read)
+* Epple, Argote, Devadas 1991: https://ideas.repec.org/a/inm/ororsc/v2y1991i1p58-70.html (read, abstract)
+* Darr, Argote, Epple 1995: https://ideas.repec.org/a/inm/ormnsc/v41y1995i11p1750-1762.html (read, abstract)
+* Levitt, List, Syverson 2013: https://nber.org/papers/w18017 (read)
+* Bessen 2003: https://ideas.repec.org/a/cup/jechis/v63y2003i01p33-64_00.html (read, abstract); Bessen 2015 book:
   https://scholarship.law.bu.edu/books/342 (snippet)
 * Slater and British export controls: https://www.americanheritage.com/father-our-factory-system (snippet)
 * Springfield Armory: https://www.allaboutlean.com/230-years-interchangeability/ (snippet); Hounshell 1984 (recalled)
 * Soviet transfer: https://conversableeconomist.com/2021/08/25/how-stalin-and-the-nazis-tried-to-copy-henry-ford (snippet)
 * Japanese absorption: https://core.ac.uk/works/156032773 (snippet)
-* Ellison, Glaeser, Kerr 2010: https://nber.org/papers/w13068 (snippet); Marshall 1890 (recalled)
+* Ellison, Glaeser, Kerr 2010: https://nber.org/papers/w13068 (read, abstract); Marshall 1890 (recalled)
 * Hidalgo and Hausmann 2009: https://www.hks.harvard.edu/centers/cid/publications/faculty-working-papers/building-blocks-economic-complexity (snippet)
