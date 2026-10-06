@@ -8,13 +8,16 @@ import collections
 import dataclasses
 from dataclasses import dataclass, field
 from typing import (
-	Any, Callable, DefaultDict, Dict, List,
+	TYPE_CHECKING, Any, Callable, DefaultDict, Dict, List,
 	Optional, Set, Tuple, Union, get_args, get_origin, get_type_hints,
 )
 
 from sim.agents.api import ActorRecord, ActorsState, CapitalMarketRecord  # noqa: F401
 from sim.engine import cash_book
 from sim.invalidating import ActiveProjectState, _InvalidatingDict
+
+if TYPE_CHECKING:
+	from sim.engine.state_seat import SeatState  # set on this module at import by state_seat
 
 
 @dataclass
