@@ -83,49 +83,49 @@
   },
   "potato_seed_tuber_kg": {
    "outputs": {
-    "potato_seed_tuber_kg": 10000.0
+    "potato_seed_tuber_kg": 5600.0
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 400.0
+    "labourer": 500.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
    "unit_dimension": "mass",
    "basis": "per hectare of crop grown for seed tubers per year, output as kg",
-   "yield_basis": "GROWN. A potato crop lifted and the small tubers kept for planting; 10000 kg of tubers per hectare is an order-of-magnitude estimate for hand-tilled ground, not checked against a source. LABOUR: wheat_kg's 150 labourer-hours per hectare plus an estimated allowance for hilling and lifting; storage is not added. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. The held-stock rates are in data/world/living_stock.json. Made only where the crop is already grown. Conf C.",
+   "yield_basis": "GROWN. A potato crop lifted and the small tubers kept for planting. YIELD (read): 5.6 tonnes of tubers per hectare is Bolivia's 2007 national mean, a country of Andean smallholders (FAO, 'Latin America: Potato production, 2007' table, International Year of the Potato 2008, http://www.fao.org/4/i0500e/i0500e03f.pdf); the planting stock is taken as the whole lifted crop, so the share that is seed-sized is not modelled (TEMPORARY HEURISTIC). SEED RATE (read; held-stock row): 47.67 kg of certified seed planted 257.35 square metres, about 1850 kg per hectare, and 7.34 kg of tuber lifted per kg sown, in an organic plot at Puno (Quispe Condori and Pari Choquechambi 2025, Agroecosistemas y Ciencias Agropecuarias, doi 10.25127/agrops.20252.1087, Resultados and Methods pp. 6-9; one experimental plot with a 13.6 t/ha yield, so a ceiling, not a village mean). LABOUR: tillage with the chaquitaclla is read: 700 square metres take four hours with an ox plough, and half that area is prepared in four hours by a three-person taclla team, so about 12 person-hours per 350 square metres, about 340 hours per hectare (Gade and Rios, 'Chaquitaclla, the native footplough and its persistence in Central Andean agriculture', Tools and Tillage, c. 1972, p. 9, https://www.mot.be/webhdfs/v1/website/opzoeken/lectuur/artikels/chaquitaclla.pdf). The rest of the 500 labourer-hours (planting, hilling, lifting) is wheat_kg's 150 plus a small allowance, TEMPORARY HEURISTIC, no source opened. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. Made only where the crop is already grown. Conf C.",
    "conf": "C",
    "requires_node": "fud_potato"
   },
   "maize_seed_kg": {
    "outputs": {
-    "maize_seed_kg": 2000.0
+    "maize_seed_kg": 780.0
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 150.0
+    "labourer": 630.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
    "unit_dimension": "mass",
    "basis": "per hectare of crop grown for seed grain per year, output as kg",
-   "yield_basis": "GROWN. A maize crop left to ripen and the ears kept for sowing; 2000 kg of grain per hectare is an order-of-magnitude estimate for hand-tilled ground, not checked against a source. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; shelling and drying are not added. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. The held-stock rates are in data/world/living_stock.json. Made only where the crop is already grown. Conf C.",
+   "yield_basis": "GROWN. A maize crop left to ripen and the ears kept for sowing. YIELD (read): the average traditional milpa yield in the Mixe region of Oaxaca is about 780 kg of grain per hectare, enough to feed a family seven months of the year (Ruiz Mendoza, Jimenez Sanchez, Figueroa Rodriguez and Morales Guerra 2012, Revista Mexicana de Ciencias Agricolas 3(8):1605-1621, p. 1606, https://www.redalyc.org/pdf/2631/263124770010.pdf; the cited primary figure is Leon and Jimenez 2001, not opened). Yucatan no-burn trials gave 2151 to 3146 kg per hectare of maize under experiment management (Cuanalo-de la Cerda and Uicab-Covoh 2006, Terra Latinoamericana 24(3):401-408, https://www.redalyc.org/pdf/573/57311103012.pdf), so 780 is a village floor. SOWING DENSITY (read; held-stock row): rows 80 cm apart, a hill every 40 cm with two to three seeds, giving about 62500 plants per hectare (same Terra Latinoamericana paper); the seed mass in kilograms is not given in either paper. LABOUR: the Mixe traditional milpa took 79 day-labourer days per hectare (Ruiz Mendoza et al. 2012, p. 1618, same link; the paper's other figure, 84 days fewer than 173, gives 89, so the sourced days are 79 to 89); converted at 8 hours per day, an unsourced assumption (TEMPORARY HEURISTIC), to about 630 labourer-hours. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. Made only where the crop is already grown. Conf C.",
    "conf": "C",
    "requires_node": "fud_maize"
   },
   "cacao_seed_kg": {
    "outputs": {
-    "cacao_seed_kg": 500.0
+    "cacao_seed_kg": 300.0
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 400.0
+    "labourer": 310.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
    "unit_dimension": "mass",
-   "basis": "per hectare of crop grown for beans for planting per year, output as kg",
-   "yield_basis": "GROWN. A cacao grove with pods kept for planting; 500 kg of fresh beans per hectare is an order-of-magnitude estimate, not checked against a source. LABOUR: an estimated allowance for tending and harvesting pods by hand; the nursery is not added. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. The held-stock rates are in data/world/living_stock.json. Made only where the crop is already grown. Conf C.",
+   "basis": "per hectare of crop grown for beans for planting per year, output as kg of dry-bean-equivalent yield",
+   "yield_basis": "GROWN. A cacao grove with pods kept for planting. YIELD (read): rustic smallholdings with limited management and no fertiliser yield 200 to 400 kg of beans per hectare, taken as the midpoint 300 (Daymond, Giraldo Mendez, Hadley and Bastide, 'A Global Review of Cocoa Farming Systems', University of Reading for ICCO, farming-system table and the Ghana rustic-smallholding section, https://www.icco.org/wp-content/uploads/Global-Review-of-Cocoa-Farming-Systems_Final.pdf; yields are commercial dry fermented beans, and the fresh-bean mass a seed lot would weigh is not sourced, TEMPORARY HEURISTIC). BEARING (read): trees become productive after two to four years, reach maximal yield after about eight, and stay productive to about 25 years (same review, section 2.4, p. 15 of the PDF). LABOUR (read): cocoa is estimated to need 39 working days per hectare per year in Ecuador (Salazar et al. 2018, cited in the same review, p. 58 of the PDF); at 8 hours per working day, an unsourced assumption, about 310 labourer-hours. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. The nursery is not added. Made only where the crop is already grown. Conf C.",
    "conf": "C",
    "requires_node": "fud_cacao"
   }
