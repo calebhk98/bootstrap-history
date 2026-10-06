@@ -9,6 +9,7 @@ market like every other line the state keeps up. Nothing is paid to nobody.
 from typing import Any, List
 
 from . import budget, ledger
+from .edges import EDGE_BUILDERS
 from .tuning_spending import MAX_WORKS_SHARE_OF_WORKING_AGE, RESERVE_CEILING_YEARS_OF_NEED
 
 
@@ -46,5 +47,5 @@ class SurplusMixin:
 		if people <= 0.0:
 			return
 		works = budget.Line("works", "requisition", {"labourer": people}, people * wage)
-		self.debit(works.money, works.name)  # type: ignore[attr-defined]
+		ledger.transfer(self, world.edge(EDGE_BUILDERS), works.money, works.name)
 		self.employ_standing([works], 1.0, world)  # type: ignore[attr-defined]

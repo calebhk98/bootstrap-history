@@ -66,6 +66,7 @@ from . import purchase_rule
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from sim.geography.api import transport as freight_physics
+from sim.agents.api import edges
 
 
 class FreightMixin:
@@ -590,7 +591,7 @@ class FreightMixin:
         household = self.state.household
         if not purchase_rule.can_pay(self, cost):
             return 0.0
-        household.debit(cost, "nitre beds laid down")
+        self.pay_edge(edges.EDGE_BUILDERS, cost, "nitre beds laid down")
         self.state.economy.nitre_bed_m2 += square_metres
         return square_metres
 

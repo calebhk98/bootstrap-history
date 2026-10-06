@@ -23,6 +23,15 @@ def transfer(payer: Any, payee: Any, amount: float, purpose: Purpose) -> None:
 	payee.credit(amount, purpose)
 
 
+def settle(account: Any, other: Any, new_balance: float, purpose: Purpose) -> None:
+	"""Bring `account`'s purse to `new_balance` by moving the difference to or from `other`."""
+	difference = new_balance - account.money
+	if difference > 0.0:
+		transfer(other, account, difference, purpose)
+	elif difference < 0.0:
+		transfer(account, other, -difference, purpose)
+
+
 def parts(purpose: Purpose, amount: float) -> Mapping[str, float]:
 	"""The labelled parts of a payment."""
 	return purpose if isinstance(purpose, Mapping) else {purpose: amount}

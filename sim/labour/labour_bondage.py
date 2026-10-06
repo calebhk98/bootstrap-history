@@ -274,7 +274,7 @@ class BondageMixin:
         if not self._world.can_pay(price):
             household._last_buy_refusal = self._world.refusal_text("%d slaves" % n_people, price)
             return 0
-        household.debit(price, "slaves bought")
+        self._world.pay_edge(self._world.EDGE_SLAVE_TRADERS, price, "slaves bought")
         household.slaves += n_people
         economy.market_pressure = economy.market_pressure + n_people
         # Untrained on arrival. They become productive through household.training.

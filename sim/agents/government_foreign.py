@@ -53,8 +53,8 @@ class ForeignGovernment(RecordedActor):
 		need = self.standing_need(world)
 		share = budget.funded_share(sum(need.values()), self.money)
 		if share > 0.0:
-			self.debit(need["army"] * share, ARMY_PAY_EDGE)
-			self.debit(need["administration"] * share, OFFICIALS_PAY_EDGE)
+			ledger.transfer(self, world.edge(ARMY_PAY_EDGE), need["army"] * share, ARMY_PAY_EDGE)
+			ledger.transfer(self, world.edge(OFFICIALS_PAY_EDGE), need["administration"] * share, OFFICIALS_PAY_EDGE)
 		wanted = world.army_wanted()
 		soldiers = self.record.army if self.record.army > 0.0 else wanted
 		self.record.army = budget.army_next_year(soldiers, wanted, share)
@@ -76,7 +76,7 @@ class ForeignGovernment(RecordedActor):
 		are not drawn from the founder's labour pool."""
 		taken = self.revenue(world)
 		if taken > 0.0:
-			self.credit(taken, REVENUE_EDGE)
+			ledger.transfer(world.edge(REVENUE_EDGE), self, taken, REVENUE_EDGE)
 		self.record.revenue_by_form = {"taxpayers": taken}
 		self.pay_standing_need(world)
 		self.act(world)

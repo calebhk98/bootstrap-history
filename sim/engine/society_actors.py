@@ -19,6 +19,20 @@ class ActorsMixin:
             self._actor_registry = registry
         return registry
 
+    def edge(self, name):
+        """The named edge a posting names when its other side is not an actor the simulation models."""
+        if self.state.actors is None:
+            self.state.actors = ActorsState()
+        return self.state.actors.edge(name)
+
+    def pay_edge(self, edge_name, amount, purpose):
+        """The founder's household pays a named edge: its loss is nobody's purse, and the edge keeps it."""
+        ledger.transfer(self.state.household, self.edge(edge_name), amount, purpose)
+
+    def receive_from_edge(self, edge_name, amount, purpose):
+        """A named edge pays the founder's household."""
+        ledger.transfer(self.edge(edge_name), self.state.household, amount, purpose)
+
     def actor_staff_fte(self, trade):
         """People of this trade that firms and governments employ: they come out of the
         same reachable pool the founder hires from."""

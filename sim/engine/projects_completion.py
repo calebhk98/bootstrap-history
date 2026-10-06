@@ -19,6 +19,7 @@ from .data import closure
 from .failure_cause import failure_cause
 from .failure_diagnosis import failure_teaches, note_failure
 from .permanent_benefit import permanent_parts
+from sim.agents.api import edges
 
 FAILED_PREFIX = "FAILED at"
 MINOR_MARK = "(minor)"
@@ -212,7 +213,7 @@ class CompletionMixin:
             _severity = self.failure_severity(node_id, max(0.0, _lost), self.funding_capacity())
             # What the purse and the credit line left cannot bear is not forgiven: it is added to what the project still costs, paid through the gated instalments.
             _borne = min(_lost, max(0.0, household.capital + self.credit_limit()))
-            household.debit(_borne, "failure losses")
+            self.pay_edge(edges.EDGE_DESTROYED, _borne, "failure losses")
             projects.active[node_id]["cost_left"] = (projects.active[node_id].get("cost_left") or 0.0) + (_lost - _borne)
             # A failure always announces itself; its size sets how loudly.
             _next_risk = self.effective_risk(node_id)

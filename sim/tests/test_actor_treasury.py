@@ -147,7 +147,7 @@ drawn._state_pressure(drawn.year)
 paid = capital_before - drawn.capital
 check("military supply and confiscation, when they fall, are received too",
       treasury.record.income.get("military supply", 0.0) > 0.0
-      and treasury.record.income.get("confiscation", 0.0) > 0.0, treasury.record.income)
+      and treasury.record.income.get("confiscation by the state", 0.0) > 0.0, treasury.record.income)
 check("with every levy the founder's loss equals the treasury's gain",
       abs((treasury.money - treasury_before) - paid) < 1e-6 * max(1.0, paid),
       (treasury.money - treasury_before, paid))

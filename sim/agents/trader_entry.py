@@ -1,6 +1,8 @@
 """Founding traders: a route whose price gap pays more than the capital a cargo ties up would earn."""
 from typing import Any, Dict, List, Tuple
 
+from . import ledger
+from .edges import EDGE_POOLED_CAPITAL
 from .records import ActorRecord
 from .trader_routes import gaining_routes, paying_tonnes, price_answers, route_key
 from .tuning import ENTREPRENEURIAL_CAPITAL_SHARE
@@ -69,7 +71,7 @@ def trader_entry(registry: Any, world: Any) -> List[str]:
 		trader = registry.add(trader_id, ActorRecord(
 			kind="trader", name=trader_id, location=route["source"], founded_year=world.year,
 			country=country_of_place(route["source"]) if country_of_place else None))
-		trader.credit(route["capital"], "edge:pooled capital")
+		ledger.transfer(registry.state.edge(EDGE_POOLED_CAPITAL), trader, route["capital"], EDGE_POOLED_CAPITAL)
 		founded.append(trader_id)
 	return founded
 

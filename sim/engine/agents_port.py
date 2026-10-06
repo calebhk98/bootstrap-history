@@ -43,6 +43,10 @@ class SimWorld(BudgetView, RevenueView, GroupView, DisclosureView, CapitalView, 
 			self._memo[key] = compute()
 		return self._memo[key]
 
+	def edge(self, name: str) -> Any:
+		"""The named edge a posting names when its other side is not an actor."""
+		return self._sim.edge(name)
+
 	@property
 	def year(self) -> int:
 		return self._sim.state.scenario.year

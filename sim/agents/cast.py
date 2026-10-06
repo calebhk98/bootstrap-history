@@ -8,6 +8,8 @@ import copy
 import dataclasses
 from typing import Any, Dict, List, Mapping, Optional, Tuple
 
+from . import ledger
+from .edges import EDGE_OPENING
 from .records import ActorRecord, CastEntry, CountryProfile
 
 # keys under "cast" this module reads itself; any others end up in the profile's `extra`
@@ -126,6 +128,6 @@ def seed_cast(registry: Any, home_country: str, entries: List[CastEntry],
 			continue
 		actor = registry.add(entry.actor_id, _record_for(entry))
 		if entry.money:
-			actor.credit(_number(entry.money, 0.0), "edge:opening")
+			ledger.transfer(state.edge(EDGE_OPENING), actor, _number(entry.money, 0.0), EDGE_OPENING)
 		created.append(entry.actor_id)
 	return created

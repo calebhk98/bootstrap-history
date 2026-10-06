@@ -22,6 +22,7 @@ from .data import win_condition_describe
 from sim.constants import declare
 from .projects_precaution import (spec as precaution_spec, extra_cost as precaution_extra_cost,
                                   extra_hours as precaution_extra_hours)
+from sim.agents.api import edges
 
 
 class StartingMixin:
@@ -151,7 +152,7 @@ class StartingMixin:
         refused = 0.0
         if amount > useful + 0.5:
             refused, amount = amount - useful, useful
-        household.debit(amount, "bribes")
+        self.pay_edge(edges.EDGE_OFFICIALS, amount, "bribes")
         household.bribes_ytd = self.BRIBE_MEMORY_DECAY * household.bribes_ytd + amount
         household.scandal = max(0.0, household.scandal - amount / self.BRIBE_DENARII_PER_SCANDAL_POINT * bribability)
         self.update_protection()
@@ -228,7 +229,8 @@ class StartingMixin:
         projects = self.state.projects
         if price > household.capital:
             return False
-        household.cost_capital(price, "bounties posted")
+        self.pay_edge(edges.EDGE_WORKERS, price, "bounties posted")
+        household.total_spend += price
         household.bounties_paid += 1
         # The prize pays for all the work: no poster hours, no hired trades.
         self.initialize_project(node_id, ph_left=0.0, spent=price, cost_left=0.0,

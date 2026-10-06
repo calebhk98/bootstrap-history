@@ -16,6 +16,7 @@ from . import budget, ledger
 from .base import Actor, RecordedActor
 from .government_coinage import CoinageMixin
 from .government_stores import StoresMixin
+from .edges import EDGE_PATRONAGE, EDGE_STATE_SPENDING
 from .government_surplus import SurplusMixin
 from .tuning import GOVERNMENT_WORTH_SHARE_PER_GAIN
 from .values import invention_gains, weighted_gain
@@ -90,7 +91,7 @@ class Government(CoinageMixin, StoresMixin, SurplusMixin, RecordedActor):
 		self.record.unfunded = {line.name: line.money * (1.0 - share) for line in lines}
 		for line in lines:
 			if share > 0.0:
-				self.debit(line.money * share, line.name)
+				ledger.transfer(self, world.edge(EDGE_STATE_SPENDING), line.money * share, line.name)
 			for commodity, tonnes in line.materials.items():
 				world.market_purchase(self.actor_id, commodity, tonnes * share)
 		return lines, share
@@ -102,7 +103,7 @@ class Government(CoinageMixin, StoresMixin, SurplusMixin, RecordedActor):
 		grant = min(ask, max(0.0, self.money))
 		self.record.patron_grant = grant
 		if grant > 0.0:
-			self.debit(grant, "patronage")
+			ledger.transfer(self, world.edge(EDGE_PATRONAGE), grant, "patronage")
 
 	def employ_standing(self, lines: List[budget.Line], share: float, world: Any) -> None:
 		"""Staff of the lines it paid for, as far as they reach into the founder's labour market."""

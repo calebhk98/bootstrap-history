@@ -17,6 +17,7 @@ file of their own. Behaviour is unchanged and verified byte-identical.
 """
 from sim.constants import declare
 from . import cause_book
+from sim.agents.api import edges
 
 
 def _trim(amount):
@@ -855,7 +856,7 @@ class StaffingMixin:
         if any(prereq_id not in projects.done for prereq_id in node["pre"]):
             return False, ("you no longer have what it stands on: "
                            + ", ".join(prereq_id for prereq_id in node["pre"] if prereq_id not in projects.done))
-        household.debit(fee, "known technique restored")
+        self.pay_edge(edges.EDGE_WORKERS, fee, "known technique restored")
         projects.done.add(node_id)
         self._done_changed()
         projects.mothballed.discard(node_id)

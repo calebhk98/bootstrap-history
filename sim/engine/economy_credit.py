@@ -22,6 +22,7 @@ from sim.constants import declare
 from sim.unit_conversions import HOURS_PER_PERSON_YEAR
 from . import money_units
 from sim.world import capital_market
+from sim.agents.api import edges, ledger
 
 
 def calculate_credit_ceiling(raw_credit, running_cost_floor, serviceable, price_index=1.0, market_cap=None):
@@ -319,7 +320,7 @@ class CreditMixin:
             return 0.0
         rate = self.debt_interest_rate()
         owed = -household.capital * rate
-        household.debit(owed, "interest on arrears")
+        self.pay_edge(edges.EDGE_INTEREST, owed, "interest on arrears")
         household.interest_paid = (household.interest_paid or 0.0) + owed
         self.note_interest_paid(owed)
         if owed > 0 and (household.insolvent_years in (1, 5, 15)):
@@ -505,7 +506,7 @@ class CreditMixin:
                 #
                 # Closing it is both the fix and the more honest event: what a
                 # creditor can carry away is the shop.
-                household.credit(self.nodes[node_id]["up"] * self.CREDITOR_SEIZURE_VALUE_MULTIPLE, "concern seized by creditors")
+                self.receive_from_edge(edges.EDGE_CREDITORS, self.nodes[node_id]["up"] * self.CREDITOR_SEIZURE_VALUE_MULTIPLE, "concern seized by creditors")
                 self.close_work(node_id, self.CLOSED_CREDITOR_SEIZURE, year)
                 taken.append(node_id)
             # Only say it if it happened: firing this every year regardless
@@ -553,7 +554,7 @@ class CreditMixin:
             term = float(self.civ.get("bondage_years", self.DEBT_BONDAGE_DEFAULT_TERM_YEARS))
             household.bondage_years_left = term
             household.bondage_debt = -household.capital
-            household.reset_cash(0.0, "debt taken into bondage")
+            ledger.settle(self.household, self.edge(edges.EDGE_CREDITORS), 0.0, "debt taken into bondage")
             household.log.append((year, "BONDAGE: you cannot pay, and you enter service for "
                                  "your debt. For about %d years most of your hours "
                                  "belong to someone else. It is not the end: it is "
@@ -576,7 +577,7 @@ class CreditMixin:
             household.reputation = max(0.0, _rep_before - self.SETTLEMENT_REPUTATION_HIT)
             limit = min(limit, self.credit_limit())
             household.reputation = _rep_before
-            household.reset_cash(-limit * self.SETTLEMENT_CAPITAL_RETAINED_FRACTION, "debts written off in settlement")
+            ledger.settle(self.household, self.edge(edges.EDGE_CREDITORS), -limit * self.SETTLEMENT_CAPITAL_RETAINED_FRACTION, "debts written off in settlement")
             # THE NUMBER ANNOUNCED HAS TO BE THE NUMBER APPLIED: quoting a
             # fixed "reputation -12" against a reputation of 4.9 would say
             # the same thing twice while the second application does

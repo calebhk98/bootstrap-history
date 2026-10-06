@@ -2,6 +2,8 @@
 
 A part of the year's phases (core_step_phases.py); Sim inherits it through StepPhasesMixin."""
 
+from sim.agents.api import edges
+
 
 class ProjectProgressPhaseMixin:
 
@@ -397,7 +399,7 @@ class ProjectProgressPhaseMixin:
         # second place a standing allocation can go unhonoured, and the
         # completion check. Nothing to return - project_state carries every
         # result the caller (and the rest of the game) reads back.
-        self.state.household.debit(money, "project payments")
+        self.pay_edge(edges.EDGE_SUPPLIERS, money, "project payments")
         self.state.household.total_spend += money
         project_state["spent"] += money
         project_state["cost_left"] = max(0.0, project_state["cost_left"] - money)
