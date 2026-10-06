@@ -29,7 +29,7 @@ with tempfile.TemporaryDirectory() as mods_dir:
     saved = geography_port.MODS_DIR
     geography_port.MODS_DIR = mods_dir
     try:
-        modded = sim()
+        modded = sim(agent_economy=False)   # only the map and the setup built from it are read, so no hidden years
         check("the engine's map is the base map with the active mod's overlay",
               modded.world_map.tiles[edited]["arable_fraction"] == 0.123)
         modded_setup = economy_port_setup.build_setup(modded)
@@ -66,7 +66,7 @@ with tempfile.TemporaryDirectory() as mods_dir:
     saved = geography_port.MODS_DIR
     geography_port.MODS_DIR = mods_dir
     try:
-        modded = sim()
+        modded = sim(agent_economy=False)   # only the map and the setup built from it are read, so no hidden years
         with mock.patch.object(foreign_routes, "route_over_tiles", _spy("route", foreign_routes.route_over_tiles)), \
                 mock.patch.object(foreign_routes, "usable_route_modes", _spy("modes", foreign_routes.usable_route_modes)), \
                 mock.patch.object(foreign_routes, "tiles_of_regions", _spy("tiles_of_regions", foreign_routes.tiles_of_regions)):
