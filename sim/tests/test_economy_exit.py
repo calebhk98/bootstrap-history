@@ -4,7 +4,8 @@ import unittest
 from sim.economy import entry, producer_exit, producers, producers_close
 from sim.economy.economy import Economy
 from sim.economy.types import EDGE_PRODUCTION, GoodsMove, Loan, Transfer
-from sim.tests.economy_fixture import HILLS, LABOURER, MINE, MINER, ORE, SMITH, quiet_year, run, small_setup
+from sim.economy.types import Recipe
+from sim.tests.economy_fixture import HILLS, MINE, MINER, ORE, quiet_year, recipes, run, small_setup
 from sim.tests.test_economy_producers import FARM, SMELT, View, farm_view, farmer
 
 YEARS = 12
@@ -131,7 +132,10 @@ class ExitBooksTests(unittest.TestCase):
 
 class ScenarioTests(unittest.TestCase):
     def test_a_mine_whose_labour_costs_more_than_its_ore_is_worth_leaves_and_money_is_conserved(self):
-        setup = small_setup(opening_wages={LABOURER: 1.0, MINER: 40.0, SMITH: 1.5})
+        # A lean seam: a run takes so many miner-hours that no wage the labour market can clear at
+        # covers them from the ore it yields.
+        lean_seam = dict(recipes(), **{MINE: Recipe(MINE, {ORE: 1000.0}, {}, {MINER: 40.0 * 40.0})})
+        setup = small_setup(recipes=lean_seam)
         economy = Economy(setup)
         mines_by_year = []
         for _year in range(YEARS):
