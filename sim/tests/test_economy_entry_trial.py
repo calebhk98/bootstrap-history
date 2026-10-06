@@ -7,6 +7,7 @@ import unittest
 
 from sim.economy import entry_trial
 from sim.economy.economy import Economy
+from sim.economy.producers import Producer
 from sim.economy.types import Bid, Recipe
 from sim.tests import economy_fixture as fixture
 
@@ -34,6 +35,18 @@ class DemandAtTests(unittest.TestCase):
     def test_a_floor_stays_a_floor_and_spending_beyond_it_buys_more_at_a_lower_price(self):
         self.assertAlmostEqual(entry_trial.demand_at([bid(10.0, 20.0)], 1.0, 2.0), 10.0)
         self.assertAlmostEqual(entry_trial.demand_at([bid(0.0, 20.0)], 1.0, 2.0), 20.0)
+
+
+class CapacityTests(unittest.TestCase):
+    def test_capacity_counts_only_makers_on_the_area_tiles_and_plant_to_come(self):
+        farm = Recipe("farm", {"grain": 2.0}, {}, {})
+        producers = {"a": Producer("a", "owner", "farm", "t1", 3.0, yield_factor=0.5),
+                     "b": Producer("b", "owner", "farm", "t2", 4.0)}
+        terms = entry_trial.capacity_terms_by_good(producers, {"farm": farm}, {"a": 1.0})
+        self.assertAlmostEqual(entry_trial.capacity_in_area(terms, "grain", ["t1"]), (3.0 * 0.5 + 1.0) * 2.0)
+        self.assertAlmostEqual(entry_trial.capacity_in_area(terms, "grain", ["t1", "t2"]), 5.0 + 8.0)
+        self.assertEqual(entry_trial.capacity_in_area(terms, "grain", ["t3"]), 0.0)
+        self.assertEqual(entry_trial.capacity_in_area(terms, "iron", ["t1"]), 0.0)
 
 
 class TrialPlanTests(unittest.TestCase):
