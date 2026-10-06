@@ -28,6 +28,7 @@ import importlib
 import io
 import json
 import os
+import random
 import subprocess
 import sys
 import tempfile
@@ -256,6 +257,79 @@ def _report_progress(slugs, results, progress):
         _save_topic_seconds([(slug, results[slug]["seconds"], 0) for slug in slugs if slug in results])
 
 
+def _fork_topics(slugs, harness, result_dir):
+    """Run topics in a child forked from this warmed process; returns the child's pid and files.
+
+    The child starts with everything this process has already imported, loaded and built,
+    and changes nothing here: its writes are its own copy."""
+    tag = slugs[0] if len(slugs) == 1 else "batch_" + slugs[0]
+    result_path = os.path.join(result_dir, tag + ".json")
+    error_path = os.path.join(result_dir, tag + ".stderr")
+    pid = os.fork()
+    if pid:
+        return pid, result_path, error_path
+    status = 1
+    try:
+        error_handle = os.open(error_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        os.dup2(error_handle, 2)
+        null_handle = os.open(os.devnull, os.O_WRONLY)
+        os.dup2(null_handle, 1)
+        random.seed()
+        harness._LAST_AT = time.time()
+        harness.JOBS = 1
+        harness.use_scratch_tag(tag)
+        status = _worker_main(slugs, result_path)
+        harness._remove_scratch_dirs_if_green()
+    except BaseException:
+        traceback.print_exc()
+    finally:
+        sys.stdout.flush()
+        sys.stderr.flush()
+        os._exit(status)
+
+
+def _run_topics_forked(run_now, harness, jobs):
+    """Run topics in children forked from this process, `jobs` at a time: each other topic in a
+    child of its own, the quick ones shared out over a few."""
+    harness.sim()       # warm what every game build shares before the first fork
+    seconds_before = _load_topic_seconds()
+    known = sorted(seconds_before.values())
+    unknown_guess = known[len(known) // 2] if known else 0.0
+    quick = set(harness.QUICK_TOPICS)
+    pending = [[slug] for slug in run_now if slug not in quick]
+    pending += _quick_batches([slug for slug in run_now if slug in quick], seconds_before, jobs)
+    pending.sort(key=lambda slugs: -sum(seconds_before.get(slug, unknown_guess) for slug in slugs))
+    progress = {"done": 0, "total": len(run_now), "lock": threading.Lock()}
+    outcomes, running = {}, {}
+    with tempfile.TemporaryDirectory(prefix="rome_suite_") as result_dir:
+        while pending or running:
+            while pending and len(running) < jobs:
+                slugs = pending.pop(0)
+                pid, result_path, error_path = _fork_topics(slugs, harness, result_dir)
+                running[pid] = (slugs, result_path, error_path)
+            pid, wait_status = os.wait()
+            if pid not in running:
+                continue
+            slugs, result_path, error_path = running.pop(pid)
+            results = {}
+            try:
+                with open(result_path, encoding="utf-8") as handle:
+                    results = json.load(handle)
+            except (OSError, ValueError):
+                pass
+            try:
+                with open(error_path, encoding="utf-8", errors="replace") as handle:
+                    error_text = handle.read()
+            except OSError:
+                error_text = ""
+            completed = subprocess.CompletedProcess(slugs, os.waitstatus_to_exitcode(wait_status),
+                                                    "", error_text)
+            _report_progress(slugs, results, progress)
+            for slug in slugs:
+                outcomes[slug] = (completed, results.get(slug))
+    return _merge_outcomes(run_now, outcomes, harness)
+
+
 def _run_topics_parallel(run_now, harness, jobs):
     """Run topics in worker processes; print and merge results in topic order.
 
@@ -288,6 +362,12 @@ def _run_topics_parallel(run_now, harness, jobs):
         for slugs, (completed, results) in finished:
             for slug in slugs:
                 outcomes[slug] = (completed, results.get(slug))
+    return _merge_outcomes(run_now, outcomes, harness)
+
+
+def _merge_outcomes(run_now, outcomes, harness):
+    """Print each topic's output in topic order and fold its results into the harness totals."""
+    topic_costs = []
     for slug in run_now:
         completed, result = outcomes[slug]
         if result is None:
@@ -364,7 +444,10 @@ def main(argv=None):
     print("PLAYTEST REGRESSIONS\n" + "=" * 72)
     # Per-topic wall time is measured here (check() only times single checks); --timing prints it.
     topic_costs = []
-    if harness.JOBS > 1 and len(run_now) > 1:
+    if harness.JOBS > 1 and len(run_now) > 1 and hasattr(os, "fork"):
+        topic_costs = _run_topics_forked(
+            [slug for slug in TOPICS if slug in run_now], harness, harness.JOBS)
+    elif harness.JOBS > 1 and len(run_now) > 1:
         topic_costs = _run_topics_parallel(
             [slug for slug in TOPICS if slug in run_now], harness, harness.JOBS)
     else:

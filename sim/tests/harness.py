@@ -341,6 +341,16 @@ _PLAY_DIR = "_playtest_tmp" + _SCRATCH_TAG
 # transcript that failed it is usually the fastest way to see why, and
 # deleting it on the way out would be the sort of helpfulness that costs an
 # hour later.
+def use_scratch_tag(tag):
+    """Give this process its own scratch directories, as a worker started with --worker-tag gets."""
+    global _SCRATCH_TAG, _LOADTEST_DIR, _loadtest_abs, _PLAY_DIR
+    _SCRATCH_TAG = "_" + tag
+    _LOADTEST_DIR = "_loadtest_tmp" + _SCRATCH_TAG
+    _loadtest_abs = os.path.join(ROOT, _LOADTEST_DIR)
+    os.makedirs(_loadtest_abs, exist_ok=True)
+    _PLAY_DIR = "_playtest_tmp" + _SCRATCH_TAG
+
+
 @atexit.register
 def _remove_scratch_dirs_if_green():
     if FAILURES:
