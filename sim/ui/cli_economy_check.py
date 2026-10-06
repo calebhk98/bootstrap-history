@@ -2,6 +2,7 @@
 import math
 import random
 
+from sim.engine import node_payback_diagnostic
 from sim.engine.ui_port import Sim, civilization_ids, default_civilisation_id, load, load_civ
 
 FIGURE_LABELS = (
@@ -42,6 +43,10 @@ def cmd_economy_check(args):
         for seed in seeds:
             report = check_one(nodes, civ_id, seed, args.years, metals, args.staple or None)
             print("%s, seed %d, %d years" % (civ_id, seed, args.years))
+            if getattr(args, "payback", False) and seed == seeds[0] and civ_id == civs[0]:
+                print("  nodes repaying their build cost fast from net earnings (diagnostic only):")
+                print("\n".join(node_payback_diagnostic.format_rows(
+                    node_payback_diagnostic.fast_payback_rows(nodes))))
             if report is None or not report["figures"]:
                 print("  no agent economy figures (the civilisation holds no tiles or the economy is off)")
                 continue
