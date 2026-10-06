@@ -18,6 +18,7 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set
 
 from sim.constants import declare
 from sim.world import demand
+from sim.world.need_basket import NEED_SUBSTITUTION_ELASTICITY, goods_attributes
 from sim.world.need_satiation import apply_satiation
 
 def load_needs(root: str) -> Dict[str, Any]:
@@ -25,20 +26,6 @@ def load_needs(root: str) -> Dict[str, Any]:
     from sim.engine import need_data
     return need_data.load_needs(root)
 
-
-NEED_SUBSTITUTION_ELASTICITY = declare(
-    "NEED_SUBSTITUTION_ELASTICITY", 2.0,
-    kind="temporary_heuristic",
-    unit="dimensionless (constant elasticity of substitution between goods "
-         "serving one need)",
-    source=None,
-    confidence="D",
-    why="How sharply households move spending toward whichever good gives "
-        "more of a need per unit cost. Above one, a good that is twice as "
-        "effective per cost takes more than twice the share; one would "
-        "spend a fixed share per good whatever it costs. A measured "
-        "cross-price elasticity between close substitutes (metals for "
-        "tools, fabrics for clothing) would replace it.")
 
 DERIVED_DEMAND_PRICE_ELASTICITY = declare(
     "DERIVED_DEMAND_PRICE_ELASTICITY", 1.0,
@@ -121,28 +108,6 @@ def technology_material_demand(nodes: Iterable[Mapping[str, Any]], held: Set[str
         for material, quantity in (node.get("mat") or {}).items():
             totals[material] += quantity / years
     return dict(totals)
-
-
-def goods_attributes(need_data: Mapping[str, Any],
-                     production: Mapping[str, Any]) -> Dict[str, Dict[str, Any]]:
-    """Per good: `satisfies` {need: effectiveness per unit} and `supply_per_year`.
-
-    Read from the needs file's goods table and from production entries, where
-    an entry's attributes belong to its dominant output.
-    """
-    merged: Dict[str, Dict[str, Any]] = {}
-    for material, attributes in (need_data.get("goods") or {}).items():
-        merged[material] = {"satisfies": dict(attributes.get("satisfies") or {}),
-                            "supply_per_year": attributes.get("supply_per_year")}
-    for entry in production.values():
-        if not entry.get("outputs") or not (entry.get("satisfies") or entry.get("supply_per_year")):
-            continue
-        material = demand._dominant_output_key(entry)
-        record = merged.setdefault(material, {"satisfies": {}, "supply_per_year": None})
-        record["satisfies"].update(entry.get("satisfies") or {})
-        if entry.get("supply_per_year"):
-            record["supply_per_year"] = entry["supply_per_year"]
-    return merged
 
 
 def declared_supply(need_data: Mapping[str, Any],
