@@ -127,7 +127,7 @@
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "Pre-dates heavy machinery but the tine geometry and angle of attack matter for heavy clay"
+  "note": "A harrow is a frame set with teeth (tines) that is dragged across a ploughed field. It breaks up clods, levels the surface, covers scattered seed and pulls out weeds. It needs a draught animal strong enough to pull it, and tines of wood or iron. The spacing and angle of the tines matter most on heavy clay, where clods are hard and the tines can clog or skip over them."
  },
  {
   "id": "ag2_roller",
@@ -337,7 +337,7 @@
   "sch": 2,
   "art": 4,
   "conf": "B",
-  "note": "The knotter mechanism that wraps and ties twine at speed without human hands, the crux of the patent"
+  "note": "A reaper cuts standing grain; a binder also gathers the cut stalks into bundles (sheaves) and ties each with twine, so no one has to follow the machine tying by hand. The hard part is the knotter, a mechanism of small moving hooks and a knife that must form a reliable knot round each sheaf at working speed. It needs a working reaper and precise metal parts, and it saves the large labour of binding at harvest, when time is short."
  },
  {
   "id": "ag2_combine_harvester",
@@ -597,7 +597,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "The air velocity and direction relative to grain size and density that separates good grain from light chaff"
+  "note": "Winnowing separates grain from chaff, the light husk and dust left after threshing. The mixture is dropped through a stream of air, so the lighter chaff is blown aside while the heavier grain falls nearly straight down. A winnowing machine replaces waiting for the wind with a hand-turned fan. The airflow has to be set right: too weak leaves chaff in the grain, too strong blows good grain away."
  },
  {
   "id": "ag2_fanning_mill",
@@ -938,7 +938,7 @@
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "The recognition that marl beds contain both lime and clay that improve different defects simultaneously"
+  "note": "Marl is a crumbly natural mixture of clay and lime (calcium carbonate), dug from pits and spread on fields. The lime reduces soil acidity and the clay binds loose sandy soil, so one material corrects more than one fault. It needs a marl bed near the field, since digging and carting are heavy work, and some skill in judging which fields lack lime and which lack clay."
  },
  {
   "id": "ag2_green_manure",
@@ -1491,7 +1491,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "Discipline to follow contours accurately and the knowledge that it trades steeper fields for water retention"
+  "note": "Contour ploughing means ploughing along lines of equal height across a slope instead of straight up and down it. Each furrow then acts as a small barrier that slows rainwater, so more soaks in and less soil is washed away. It needs the contour lines marked out first with some levelling method, and the plough has to follow curved lines, which is slower and more awkward than straight furrows."
  },
  {
   "id": "ag2_erosion_control",

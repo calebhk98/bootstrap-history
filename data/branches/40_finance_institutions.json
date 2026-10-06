@@ -212,7 +212,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Regular marketplace with established location, rules, and enforcement. Reduces search costs for buyers and sellers."
+  "note": "A permanent market is a fixed place where buyers and sellers meet on known days, under rules about weights and measures, tolls, disputes and who may sell what, backed by officials who enforce them. Without it each trader must search for partners and cannot trust the scales. With it, goods and prices become visible, cheating is punished, and traders will travel there, so trade and specialisation grow. It needs a ruler or town to provide the space and enforce the rules."
  },
  {
   "id": "fin_auction",

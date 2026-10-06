@@ -292,7 +292,7 @@
   "sch": 0,
   "art": 1,
   "conf": "A",
-  "note": "Ink raised surface, press down. Works with carbon ink and soft brush on absorbent surface.",
+  "note": "In relief printing the picture is the raised part of a carved block, with the background cut away. Ink is brushed onto the raised surface and paper or cloth is pressed against it, so the raised lines print and the cut-away parts stay blank. It needs a carved block, an ink that sticks to the block (carbon ink bound with oil), and an absorbent surface to take the ink.",
   "traits": [
    "information",
    "status_threatening"
@@ -358,7 +358,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Water wheel drives cam-driven hammers beating rags. Faster, consistent pulp. Essential for volume."
+  "note": "Paper is made from rags broken down into a thin mush of loose fibres. A water wheel turns a shaft with projecting cams that lift heavy wooden hammers, which fall into troughs of soaked rags and pound them. The machine works without tiring, so it makes far more pulp, and more even pulp, than people beating rags by hand. That is what allows paper to be made in volume."
  },
  {
   "id": "prn_sizing_surface",
@@ -421,7 +421,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Fine brass wire mesh and wooden deckle frame. Allows consistent sheet thickness. Wire spacing visible."
+  "note": "A papermaking mould is a wooden frame covered with a mesh of fine brass wire. The worker dips it into a vat of watery pulp and lifts it, so the water drains through the mesh and leaves a flat mat of fibres that becomes one sheet. A removable rim called the deckle keeps the pulp inside the frame and shapes the edge of the sheet. Evenly drawn wire gives sheets of even thickness, and the wire spacing leaves faint lines visible when the paper is held to the light."
  },
  {
   "id": "prn_fourdrinier_machine",
@@ -799,7 +799,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Papier-mache matrix captures exact impression; pour must be fast. Curved plates enable rotary presses.",
+  "note": "A stereotype is a one-piece metal copy of a whole page of set type. A mould of the page is made by pressing damp papier-mache into the type and drying it, and molten lead-based type metal is poured into the mould and cools into a solid plate. The pour has to be quick and even or the plate is flawed. The plate can be cast curved to wrap round a cylinder, which rotary presses need, and the original type is free to be reused at once.",
   "traits": [
    "labour_saving"
   ]
@@ -924,7 +924,7 @@
   "sch": 0,
   "art": 3,
   "conf": "B",
-  "note": "Furrows cut into copper plate. Ink fills grooves, wiped surface clean. Pressure forces paper into grooves. Fine detail.",
+  "note": "Intaglio is the opposite of relief printing: the lines to be printed are cut as grooves into a polished copper plate with a hard steel tool. Ink is rubbed into the grooves and the flat surface wiped clean, then damp paper is forced into the grooves under heavy pressure and lifts the ink out. A groove can be cut very fine, so it gives much finer detail than carved wood blocks, but it needs a flat plate and a press strong enough to push the paper into the grooves.",
   "traits": [
    "status_threatening"
   ]
@@ -992,7 +992,7 @@
   "sch": 0,
   "art": 2,
   "conf": "A",
-  "note": "Greasy ink on stone, water-acidified alum applied. Water repels grease, grease rejects water. Non-obvious chemistry."
+  "note": "Lithography prints from a flat polished stone with nothing carved into it. The image is drawn on the stone with a greasy crayon or ink, and the stone is then treated so that the bare parts hold water. Greasy printing ink sticks only to the drawing and is repelled by the wet stone, so paper pressed onto the inked stone takes the image. The chemistry is not obvious, because the surface is sorted by grease and water and not by height."
  },
  {
   "id": "prn_offset_lithography",

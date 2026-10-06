@@ -165,7 +165,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Matting wool fibers with moisture and heat to create felt. Ancient technique for hats, cloaks, armor padding.",
+  "note": "Felt is cloth made without weaving. Wool fibres have microscopic surface scales that catch on each other, so when loose wool is soaked in hot water, pressed and rubbed (soap or alkali helps), the fibres lock together and shrink into a dense mat. It needs only wool, water, heat and labour, which is why it was among the oldest textiles, used for hats, cloaks and padding under armour.",
   "traits": [
    "commerce",
    "labour_saving"
@@ -324,7 +324,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Woad (Isatis tinctoria) produces blues. Leaves fermented then oxidized. Common and relatively cheap blue dye.",
+  "note": "Woad is a plant whose leaves contain a colourless precursor of the blue dye indigo. The leaves are crushed and fermented, and the dye is dissolved in an alkaline vat; cloth dipped in it comes out yellowish green and turns blue as the air oxidises it. The vat needs patient fermentation and the right alkalinity, but the plant grows in cool climates, so woad was the common cheap blue of Europe.",
   "traits": [
    "commerce",
    "labour_saving"

@@ -158,7 +158,7 @@
   "sch": 1,
   "art": 2,
   "conf": "C",
-  "note": "Stamping gives consistency; hardening to spring temper is critical. Mass production beats quill sharpening."
+  "note": "A steel pen nib is a thin pointed piece of steel with a slit down the middle. Ink is held in the slit by capillary attraction and flows to the tip as the two halves flex slightly. Nibs are stamped from sheet, pierced, slit, then hardened and tempered so they spring back and do not wear. A quill must be cut again and again by hand, while stamped nibs can be made cheaply in large numbers if the springiness is right."
  },
  {
   "id": "if_fountain_pen",
@@ -646,7 +646,7 @@
   "sch": 2,
   "art": 2,
   "conf": "C",
-  "note": "Cast iron strong in compression. Toggle linkage multiplies force near end of platen travel."
+  "note": "The iron hand press replaces the wooden screw press with a frame of cast iron, which is strong when squeezed and does not flex like wood, so a larger sheet can be printed at once. A system of levers called a toggle multiplies the pull of the operator's arm most strongly near the end of the stroke, when the paper meets the type. It needs large cast-iron parts of good quality, and the stiffer frame gives a more even impression."
  },
  {
   "id": "if_cylinder_press",
@@ -796,7 +796,7 @@
   "sch": 2,
   "art": 1,
   "conf": "C",
-  "note": "Copper deposits slowly and must be backed by lead to prevent buckling. Thinner than stereotype.",
+  "note": "An electrotype is a copper copy of a printing plate made by electroplating. A mould of the page is taken in wax and coated with graphite so that it conducts, then hung in a copper salt bath with an electric current, and a thin shell of copper slowly builds up on it. The shell is backed with molten lead so it cannot buckle. Copper deposits slowly, but the shell is hard and keeps fine detail.",
   "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
@@ -943,7 +943,7 @@
   "sch": 3,
   "art": 3,
   "conf": "C",
-  "note": "Rubber blanket expensive but does not damage stone. Pressure halves; image reverses twice."
+  "note": "In offset lithography the inked image is not printed straight onto paper. It is first transferred from the printing surface to a rubber-covered cylinder, the blanket, which then presses it onto the paper. The soft blanket spares the hard printing surface from wear and prints well on rough paper. The image reverses on the blanket and reverses again on the paper, so the original is drawn the right way round. Rubber blankets are the costly part."
  },
  {
   "id": "if_halftone_screen",
@@ -1273,7 +1273,7 @@
   "sch": 2,
   "art": 3,
   "conf": "C",
-  "note": "Prism angle must be exactly 45 degrees. Artist traces outline, adds shading freehand."
+  "note": "A camera lucida is a small prism held on a stand above a sheet of paper. By reflecting light inside the prism, the artist sees the scene and the paper together, as if the scene were laid over the page, and traces its outline with a pencil. The prism has to be made with accurate angles to give a clear view. It needs glass and the skill to shape it, and it lets people who draw poorly make accurate outlines of buildings, landscapes and specimens."
  },
  {
   "id": "if_silver_halide_sensitivity",
