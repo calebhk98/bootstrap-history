@@ -42,6 +42,34 @@ class SetupDigestTests(unittest.TestCase):
             self.assertNotEqual(base, economy_port_key.setup_digest(_Setup(**change)), change)
 
 
+class _Map:
+    def __init__(self, map_id, tiles, folder):
+        self.map_id, self.tiles, self.folders = map_id, tiles, (folder,)
+
+
+class ObjectContentTests(unittest.TestCase):
+    """An object inside the setup (the world map) is keyed on what it holds, never on its address."""
+
+    def test_equal_maps_built_separately_give_one_digest(self):
+        first = _Setup(world_map=_Map("m", {"a": {"food": 1}}, os.path.join(ROOT, "data", "maps")))
+        second = _Setup(world_map=_Map("m", {"a": {"food": 1}}, os.path.join(ROOT, "data", "maps")))
+        self.assertIsNot(first.world_map, second.world_map)
+        self.assertEqual(economy_port_key.setup_digest(first), economy_port_key.setup_digest(second))
+
+    def test_a_different_map_gives_a_different_digest(self):
+        first = _Setup(world_map=_Map("m", {"a": {"food": 1}}, ROOT))
+        second = _Setup(world_map=_Map("m", {"a": {"food": 2}}, ROOT))
+        self.assertNotEqual(economy_port_key.setup_digest(first), economy_port_key.setup_digest(second))
+
+    def test_paths_inside_the_checkout_do_not_depend_on_where_it_is(self):
+        plain = economy_port_key._plain(os.path.join(ROOT, "data", "maps"))
+        self.assertEqual(plain, os.path.join("data", "maps"))
+
+    def test_a_value_with_no_content_to_key_on_is_refused(self):
+        with self.assertRaises(TypeError):
+            economy_port_key.setup_digest(_Setup(world_map=object()))
+
+
 class ScopedSourceTests(unittest.TestCase):
     def setUp(self):
         self.root = tempfile.mkdtemp(prefix="spin_up_key_")

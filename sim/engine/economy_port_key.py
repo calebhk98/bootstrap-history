@@ -3,6 +3,7 @@ source that runs them. Part of the port."""
 import dataclasses
 import hashlib
 import json
+import os
 
 from . import solve_cache
 
@@ -11,6 +12,10 @@ SPIN_UP_SOURCE_MODULES = ("sim.engine.economy_port_year",)
 
 
 def _plain(value):
+    """JSON-able content of `value`: objects by what they hold, paths in the checkout relative to it."""
+    if isinstance(value, str):
+        inside = value.startswith(solve_cache._ROOT + os.sep)
+        return os.path.relpath(value, solve_cache._ROOT) if inside else value
     if dataclasses.is_dataclass(value) and not isinstance(value, type):
         return {field.name: _plain(getattr(value, field.name)) for field in dataclasses.fields(value)}
     if isinstance(value, dict):
@@ -19,7 +24,13 @@ def _plain(value):
         return [_plain(item) for item in value]
     if isinstance(value, (set, frozenset)):
         return sorted(_plain(item) for item in value)
-    return value if value is None or isinstance(value, (bool, int, float, str)) else repr(value)
+    if value is None or isinstance(value, (bool, int, float)):
+        return value
+    if hasattr(value, "__dict__") and not isinstance(value, type) and vars(value):
+        return {"type": type(value).__qualname__,
+                "content": {name: _plain(item) for name, item in vars(value).items()}}
+    # A repr would carry the object's address, giving a key no other process can ever hit.
+    raise TypeError("cannot key the spin-up on a %s" % type(value).__name__)
 
 
 def setup_digest(setup):
