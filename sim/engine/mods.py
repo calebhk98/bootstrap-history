@@ -6,6 +6,7 @@ from typing import Any, Dict, Iterable, List
 
 from sim.json_files import json_files
 
+from .node_defaults import fill_defaults
 from .mods_base import (ModError, ModManifest, check_not_removed, claim_fields, claim_removal,
                         deep_merge, removed_by)
 from .mods_ids import check_declared_dependencies, check_mod_id, check_new_id
@@ -76,13 +77,7 @@ def get_ordered_mods(mods_dir: str) -> List[ModManifest]:
 
 
 def _node_defaults(node: Dict[str, Any]) -> Dict[str, Any]:
-    defaults = {"ph": 60, "lab": {}, "mat": {}, "cap_hours": 4032.375834825865,
-                "up_hours": 806.475166965173, "risk": 0.15, "rev_hours": 0, "sch": 0, "art": 1, "conf": "C",
-                "kb": "", "pre": [], "req_any": [], "traits": [],
-                "build_yrs": 0.0, "adopt_yrs": 0.0, "sus": 0, "gov": 0,
-                "dev_years": None, "dev_people": None}
-    for key, value in defaults.items():
-        node.setdefault(key, copy.deepcopy(value))
+    fill_defaults(node)
     node.setdefault("yrs", max(float(node["build_yrs"]), float(node["adopt_yrs"])))
     return node
 

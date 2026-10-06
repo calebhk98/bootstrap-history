@@ -11,6 +11,7 @@ import os
 import re
 
 from sim.engine.catalog import load_production_catalog, load_trade_registry, material_namespace
+from sim.engine.node_defaults import NUMERIC_FIELDS, OPTIONAL_DEFAULTS
 from sim.engine.tree_source import (META_FILE, MERGED_DUPLICATE_IDS_FILE, NO_MODS_DIRECTORY,
                                     ROOT)
 
@@ -30,9 +31,6 @@ def load_trades():
 # than a universal numeric rank.
 REQUIRED = ["id","name","cat","pre","note"]
 
-DEFAULTS = {"ph":60,"lab":{},"mat":{},"cap_hours":4032.375834825865,"up_hours":806.475166965173,"risk":0.15,"rev_hours":0,
-            "sch":0,"art":1,"conf":"C","kb":""}
-
 
 def _num(value, default=0.0):
     """Branch authors sometimes write a number as a string, or as a range like
@@ -45,11 +43,10 @@ def _num(value, default=0.0):
 
 
 def normalise_v2(node):
-    for field, value in DEFAULTS.items():
+    for field, value in OPTIONAL_DEFAULTS.items():
         node.setdefault(field, json.loads(json.dumps(value)))
-    for field, default in (("ph",60),("cap_hours",4032.375834825865),("up_hours",806.475166965173),("risk",0.15),("rev_hours",0),
-                 ("sch",0),("art",1)):
-        node[field] = _num(node.get(field), default)
+    for field in NUMERIC_FIELDS:
+        node[field] = _num(node.get(field), OPTIONAL_DEFAULTS[field])
     node["risk"] = min(0.95, max(0.0, node["risk"]))
     for fld in ("lab","mat"):
         if not isinstance(node.get(fld), dict): node[fld] = {}
