@@ -93,6 +93,7 @@ import shutil
 import time
 from typing import Any, cast, Dict, List, NotRequired, Optional, TypedDict
 
+from sim.engine.saveload import acting_seat_of
 from sim.default_civilisation import PREFERRED_DEFAULT_CIVILISATION
 
 
@@ -539,9 +540,10 @@ def list_saves(save_dir: str) -> List[SaveSummary]:
             if not isinstance(blob, dict) or "_civ" not in blob:
                 continue
             scenario = blob.get("scenario") or {}
-            household = blob.get("household") or {}
-            founder = blob.get("founder") or {}
-            projects = blob.get("projects") or {}
+            seat = acting_seat_of(blob)
+            household = seat.get("household") or {}
+            founder = seat.get("founder") or {}
+            projects = seat.get("projects") or {}
             row.update({
                 "readable": True,
                 "civ_id": blob.get("_civ"),
@@ -550,7 +552,7 @@ def list_saves(save_dir: str) -> List[SaveSummary]:
                 "founder_alive": founder.get("founder_alive", True),
                 "dead_reason": founder.get("dead_reason"),
                 "goal_year": scenario.get("goal_year"),
-                "goal": blob.get("_goal"),
+                "goal": seat.get("goal"),
                 "reputation": household.get("reputation"),
                 "scholars": household.get("scholars"),
                 "artisans": household.get("artisans"),

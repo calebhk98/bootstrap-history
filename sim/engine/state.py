@@ -306,16 +306,18 @@ class PopulationState:
 @dataclass
 class SimulationState:
 	"""Root coordinator aggregating authoritative persistent subsystem states."""
-	household: HouseholdState
-	projects: ProjectsState
+	# household, projects and founder alias the acting seat's objects and are not saved (seats are)
+	household: Optional[HouseholdState] = field(default=None, metadata={"alias": True})
+	projects: Optional[ProjectsState] = field(default=None, metadata={"alias": True})
 	economy: Optional[EconomyState] = None
 	governance: Optional[GovernanceState] = None
-	founder: Optional[FounderState] = None
+	founder: Optional[FounderState] = field(default=None, metadata={"alias": True})
+	seats: Dict[str, "SeatState"] = field(default_factory=dict)
+	acting_seat: str = "founder"
 	scenario: Optional[ScenarioState] = None
 	population: Optional[PopulationState] = None
 	actors: Optional[ActorsState] = None
 	_civ: Optional[str] = None
-	_goal: Optional[str] = None
 	_civ_live: Dict[str, Any] = field(default_factory=dict)
 	_weights: Dict[str, Any] = field(default_factory=dict)
 	_fog: bool = False
@@ -325,6 +327,21 @@ class SimulationState:
 	_rng: Optional[List[Any]] = None
 	_seed: Optional[Union[int, str]] = None
 	interface: Dict[str, Any] = field(default_factory=dict)  # the UI's own memory; the engine never reads it
+
+	def __post_init__(self) -> None:
+		from sim.engine.state_seat import FIRST_SEAT_ID, SeatState, bind_seat
+		if not self.seats:   # built from the three objects directly: they become the first seat
+			self.acting_seat = FIRST_SEAT_ID
+			self.seats[FIRST_SEAT_ID] = SeatState(self.household, self.projects, self.founder)
+		bind_seat(self, self.acting_seat)
+
+	@property
+	def _goal(self) -> Optional[str]:
+		return self.seats[self.acting_seat].goal
+
+	@_goal.setter
+	def _goal(self, value: Optional[str]) -> None:
+		self.seats[self.acting_seat].goal = value
 
 
 ALL_STATE_CLASSES = (
@@ -363,7 +380,7 @@ def serialize_state(obj: Any) -> Any:
 	if dataclasses.is_dataclass(obj) and not isinstance(obj, type):
 		out = {}
 		for f in dataclasses.fields(obj):
-			if f.name.startswith("_on_change"):
+			if f.name.startswith("_on_change") or f.metadata.get("alias"):
 				continue
 			val = getattr(obj, f.name)
 			out[f.name] = serialize_state(val)
@@ -534,3 +551,6 @@ def deserialize_state(blob: Any, target_type: Optional[type] = None) -> Any:
 		target_type = ActiveProjectState if "ph_left" in blob else SimulationState
 
 	return _deserialize_typed(blob, target_type)
+
+
+from sim.engine import state_seat  # noqa: E402,F401  (registers SeatState, which needs the classes above)

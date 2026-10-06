@@ -1,6 +1,6 @@
 # The engine cannot yet host several players or an agent economy: one founder is wired in, households are not actors, and most money moves without a counterparty
 
-**Status:** open - steps 1 and 2 are done: every engine, agent and labour money posting goes through `ledger.transfer` and names an actor or a named edge (`sim/agents/edges.py`, held in `ActorsState.edges`), and wages, the state's pay and lenders' interest are paid to the home strata's purses (`sim/agents/payroll.py`); steps 3 and 4 remain. The one-sided volume is now zero by construction (`sim/tests/test_every_posting_names_a_counterparty.py` scans for new ones); what crosses each named edge is `state.actors.edge_volume`.
+**Status:** open - steps 1 and 2 are done: every engine, agent and labour money posting goes through `ledger.transfer` and names an actor or a named edge (`sim/agents/edges.py`, held in `ActorsState.edges`), and wages, the state's pay and lenders' interest are paid to the home strata's purses (`sim/agents/payroll.py`); step 3 stage A (seat record, `act_as`, aliases not saved) is built, stage B (splitting economy, governance and scenario state into world and seat parts) and step 4 remain. The one-sided volume is now zero by construction (`sim/tests/test_every_posting_names_a_counterparty.py` scans for new ones); what crosses each named edge is `state.actors.edge_volume`.
 
 Multiplayer, and other countries as players, need every actor to be able to own money and goods, be somewhere, and pay someone. Today:
 

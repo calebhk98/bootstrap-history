@@ -181,6 +181,8 @@ So: A, B, C, D follow 382 step 1; E and F can start as soon as A lands; G can st
 
 ### Stage A: a seat record and the alias, one seat, no behaviour change
 
+**Status:** built (`sim/engine/state_seat.py`, `sim/engine/core_seats.py`; `sim.act_as(seat)`, `sim.add_seat`). `state.household`, `.projects`, `.founder` alias the acting seat and are not saved; `state._goal` is the acting seat's goal; a save holds `seats` and `acting_seat`. Stage B is not started.
+
 - New: `sim/engine/state_seat.py` (`SeatState`, `act_as`, alias binding); edits: `sim/engine/state.py` (`seats`, `acting_seat`, alias metadata, `get_save_fields` and `serialize_state` skip aliases), `sim/engine/saveload.py` (bind aliases on load), `sim/engine/core.py` (`__init__` builds the first seat), `sim/engine/core_properties.py`, `sim/agents/household.py` (one facade per seat).
 - Tests (new `sim/tests/test_seat_state.py`): the root objects are identical to the first seat's; `act_as` restores on exception; a save round trip keeps one seat and the aliases rebind; a saved file does not contain the aliased fields twice; fingerprint check identical; `test_household_never_happened_fields.py` still passes (absent stays absent).
 

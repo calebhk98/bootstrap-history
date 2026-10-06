@@ -64,12 +64,14 @@ def _stamp(absolute):
 
 
 REQUIRED_V3_SECTIONS = (
-    "household", "projects", "economy", "governance", "founder", "scenario",
-    "population",
+    "seats", "economy", "governance", "scenario", "population",
 )
 
+# What each seat holds; the acting seat's sections are checked and searched like root ones.
+SEAT_SECTIONS = ("household", "projects", "founder")
+
 REQUIRED_METADATA_FIELDS = (
-    "_civ", "_goal", "_civ_live", "_weights", "_fog", "_immortal", "_rng",
+    "_civ", "acting_seat", "_civ_live", "_weights", "_fog", "_immortal", "_rng",
 )
 
 REQUIRED_SAVE_FIELDS = REQUIRED_V3_SECTIONS + REQUIRED_METADATA_FIELDS
@@ -90,11 +92,28 @@ def _get_field(blob, field_name):
         return None
     if field_name in blob:
         return blob[field_name]
-    for section in ("household", "projects", "economy", "governance", "founder", "scenario", "population"):
+    for section in ("economy", "governance", "scenario", "population"):
         sec = blob.get(section)
         if isinstance(sec, dict) and field_name in sec:
             return sec[field_name]
+    seat = acting_seat_of(blob)
+    for section in SEAT_SECTIONS:
+        sec = seat.get(section)
+        if isinstance(sec, dict) and field_name in sec:
+            return sec[field_name]
     return None
+
+
+def acting_seat_of(blob):
+    """The saved record of the acting seat, or an empty one when the save does not hold it."""
+    seats = blob.get("seats") if isinstance(blob, dict) else None
+    seat = seats.get(blob.get("acting_seat")) if isinstance(seats, dict) else None
+    return seat if isinstance(seat, dict) else {}
+
+
+def goal_of_blob(blob):
+    """The win node the acting seat was playing toward."""
+    return acting_seat_of(blob).get("goal")
 
 
 
@@ -116,13 +135,21 @@ def _check_save_shape(blob):
     for section in REQUIRED_V3_SECTIONS:
         if not isinstance(blob.get(section), dict):
             return "this save is corrupt: section '%s' should be an object" % section
+    seat = acting_seat_of(blob)
+    if not seat:
+        return "this save is corrupt: the acting seat %r is not among its seats" % (blob.get("acting_seat"),)
+    for section in SEAT_SECTIONS:
+        if section not in seat:
+            return "this is not a save from this game: the acting seat is missing %s" % section
+        if not isinstance(seat[section], dict):
+            return "this save is corrupt: section '%s' should be an object" % section
 
     return None
 
 
 def _check_save_scalars(blob, sim):
     """None if the save's simple top-level fields are valid; otherwise the refusal message."""
-    if blob.get("_goal") not in sim.nodes:
+    if goal_of_blob(blob) not in sim.nodes:
         return "this save's goal is not in the current technology tree"
     if not isinstance(blob.get("_civ_live"), dict) or not isinstance(blob.get("_weights"), dict):
         return "this save is corrupt: civilization state should be objects"
@@ -246,7 +273,7 @@ def goal_of_save(path):
     """Which goal a save file was playing toward, or None if it will not say."""
     try:
         with open(path) as handle:
-            return (json.load(handle) or {}).get("_goal")
+            return goal_of_blob(json.load(handle) or {})
     except (OSError, ValueError, AttributeError):
         return None
 
