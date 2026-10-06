@@ -1,5 +1,5 @@
-"""The engine steps sim/labour/labour_market.py every simulated year, so the
-share of working hours on the farm responds to food scarcity."""
+"""The engine sizes the farm's hours every simulated year, so the share of working hours on the farm
+responds to food scarcity."""
 import unittest
 
 from .harness import *  # noqa: F401,F403
@@ -15,10 +15,6 @@ def _farm_hours(test_sim):
 
 
 class WorkforceAllocationWiringTests(unittest.TestCase):
-
-    def test_engine_imports_the_labour_market(self):
-        import sim.labour.labour_allocation as module
-        self.assertTrue(hasattr(module, "labour_market"))
 
     def test_unshocked_first_year_starts_at_the_food_balance_workforce(self):
         test_sim = _rome_sim()
@@ -51,14 +47,6 @@ class WorkforceAllocationWiringTests(unittest.TestCase):
         after_two_years = _farm_hours(test_sim)
         self.assertGreater(after_one_year, depleted)
         self.assertGreater(after_two_years, after_one_year)
-
-    def test_workforce_hours_are_conserved_by_reallocation(self):
-        hours = {labour_allocation.FARM_TRADE: 40.0, "smith": 20.0, "potter": 40.0}
-        needed = labour_allocation.hours_needed_by_trade(
-            {"smith": 1.0 / 3.0, "potter": 2.0 / 3.0}, 100.0, 70.0)
-        moved = labour_allocation.reallocate(hours, 100.0, needed)
-        self.assertAlmostEqual(sum(moved.values()), 100.0)
-        self.assertGreater(moved[labour_allocation.FARM_TRADE], 40.0)
 
     def test_land_saturation_caps_the_farm_need(self):
         # Workers beyond what the land can employ produce nothing more.

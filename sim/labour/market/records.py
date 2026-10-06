@@ -102,6 +102,11 @@ class Clearing:
     hired_by_employer: Dict[str, float]
     paid_by_employer: Dict[str, float]
     average_wage: float
+    target_wage: Optional[float] = None   # where the wage is heading: hours offered meet hours wanted; none: the wage
+
+    @property
+    def heading_wage(self) -> float:
+        return self.wage if self.target_wage is None else self.target_wage
 
     @property
     def vacant_hours(self) -> float:

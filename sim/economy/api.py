@@ -8,7 +8,7 @@ WALL = "two-way"  # nothing here reaches sim/engine/; the engine hands it what i
 
 import math
 
-from . import diagnostics, households, market_curves, taxes, tile_costs
+from . import diagnostics, households, labour_state, market_curves, taxes, tile_costs
 from .currency import currency_from_coin_standard
 from .economy import Economy
 from .foreign import external_orders
@@ -53,6 +53,11 @@ def traded_volumes(economy):
 def opening_quantities(economy):
     """Quantity of each good in the opening basket."""
     return dict(economy.record.opening_basket)
+
+
+def people_by_trade(economy):
+    """Working people by trade across every labour area, as the labour core's state holds them."""
+    return labour_state.people_by_trade_everywhere(economy.record.workforce)
 
 
 def wages_by_trade(economy):

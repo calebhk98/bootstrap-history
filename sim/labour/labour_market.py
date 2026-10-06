@@ -1,29 +1,19 @@
-"""Society's hours by trade, moved toward what planned output needs (an hours-only allocator).
+"""What the recipe graph asks of each trade, and how fast the farm's hours can move.
 
-NEED is `labour_hours_required_by_trade`: hours a planned output calls for, read off
-data/production/*.json. HAVE is `Workforce.hours_by_trade`: hours worked now. `Workforce.step` moves
-hours each year out of trades with more than they are asked for and into those with less, at a speed
-that grows with the gap, along paths weighted by skill family (the registry's `family`, passed in as
-`skill_family_of`) and with a trade needing technology unable to start from nothing. No wage enters.
-`have_versus_need` names the gap instead of assuming it shut.
-
-This allocator is the engine's yearly society-hours split (labour_allocation.reallocate). The labour
-core in sim/labour/market/ models the same market with wages, ability, training and migration, and
-replaces it once the engine keeps the core's state (Complaints/428 and 430).
+`labour_hours_required_by_trade` reads the hours a planned output calls for off data/production/*.json.
+Who works in which trade is the labour core's business (sim/labour/market/); the engine's hours by trade
+come from its people (labour_allocation.py).
 """
 import collections
 import json
 import os
-from typing import (
-    AbstractSet, Any, Callable, Dict, FrozenSet, Iterable, Optional, Tuple,
-)
+from typing import Any, Dict, Optional, Tuple
 
 from sim.constants import declare
 # sim.unit_conversions carries the same "imports nothing but sim.constants"
 # property sim.constants itself already has, so importing it is not the
 # cross-domain wiring this module's own STANDALONE section forbids.
 from sim.unit_conversions import KILOGRAMS_PER_TONNE, KILOGRAMS_PER_GRAM
-from sim.algorithm_parameters import MAXIMUM_REALLOCATION_PERIODS, CONVERGENCE_TOLERANCE_HOURS
 
 # ============================================================================
 # DATA FILE LOCATIONS - SAME ROOT-RELATIVE PATTERN AS THE SIBLING MODULES
@@ -212,31 +202,12 @@ def additional_hours_to_close_a_shortfall(
 
 
 # ============================================================================
-# THE FRICTION: HOW FAST HOURS CAN ACTUALLY MOVE BETWEEN TRADES
+# THE FRICTION: HOW FAST THE FARM'S HOURS CAN MOVE
 # ============================================================================
-# Four separate parameters control reallocation speed, replacing a single flat
-# rate that could not account for crisis conditions or skill transfers:
-#
-#   OCCUPATIONAL_MOBILITY_RATE_PER_YEAR      steady-state rate - how fast
-#                                             hours move between trades under
-#                                             normal conditions.
-#   OCCUPATIONAL_MOBILITY_GAP_RESPONSE_GAIN  accelerator applied when gaps
-#                                             are large relative to trade size,
-#                                             so crises pull faster than
-#                                             routine reallocation.
-#   OCCUPATIONAL_MOBILITY_RATE_CEILING_PER_YEAR
-#                                             hard upper bound on outflow or
-#                                             inflow per year, even under
-#                                             maximum urgency.
-#   WALKABLE_TRADE_SEED_SHARE_OF_ECONOMY_HOURS
-#                                             pool of available hours for
-#                                             walkable trades (those needing
-#                                             no prior master) to draw from
-#                                             when starting from zero.
-#
-# A fifth parameter, CROSS_FAMILY_PROXIMITY, discounts reallocation rates
-# between trades in different skill families, so hours favour skill-close
-# destinations over distant ones.
+# Hours leave or join the farm no faster than OCCUPATIONAL_MOBILITY_RATE_PER_YEAR of its size under
+# normal conditions, faster as the gap grows (OCCUPATIONAL_MOBILITY_GAP_RESPONSE_GAIN), never faster than
+# OCCUPATIONAL_MOBILITY_RATE_CEILING_PER_YEAR. WALKABLE_TRADE_SEED_SHARE_OF_ECONOMY_HOURS is the pool
+# a trade with no workers draws from.
 
 OCCUPATIONAL_MOBILITY_RATE_PER_YEAR = declare(
     "OCCUPATIONAL_MOBILITY_RATE_PER_YEAR", 0.05,
@@ -306,23 +277,7 @@ WALKABLE_TRADE_SEED_SHARE_OF_ECONOMY_HOURS = declare(
         "hours are supplied. Reflects pool of always-available, unskilled "
         "labour distinct from established trades' workforces.")
 
-CROSS_FAMILY_PROXIMITY = declare(
-    "CROSS_FAMILY_PROXIMITY", 0.2,
-    kind="temporary_heuristic",
-    unit="fraction of same-family mobility ceiling applied to flows between "
-        "different skill families.",
-    source="No occupational-distance matrix for this period exists. One in "
-        "five represents enough cross-family mobility to allow retraining "
-        "over sustained shortages, without claiming distant skills are as "
-        "transferable as closely related ones.",
-    confidence="D",
-    why="Allows hours to flow between skill families at reduced rate, "
-        "reflecting that some skills transfer between trades while others "
-        "require substantial retraining. Same-family flows use full ceiling; "
-        "walkable trades use full ceiling from any origin.")
-
-
-def _relative_gap_size(gap_hours: float, basis_hours: float) -> float:
+def relative_gap_size(gap_hours: float, basis_hours: float) -> float:
     """abs(gap_hours) / basis_hours, as "how many multiples of the basis
     the gap represents" - `float("inf")` when `basis_hours` is exactly zero
     and there IS a gap (nothing to divide by, and no honest finite answer),
@@ -332,12 +287,11 @@ def _relative_gap_size(gap_hours: float, basis_hours: float) -> float:
     return abs(gap_hours) / basis_hours
 
 
-def _gap_responsive_mobility_rate(
+def gap_responsive_mobility_rate(
         base_rate: float, relative_gap: float,
         gain: float = OCCUPATIONAL_MOBILITY_GAP_RESPONSE_GAIN,
         rate_ceiling: float = OCCUPATIONAL_MOBILITY_RATE_CEILING_PER_YEAR) -> float:
-    """The rate `Workforce.step` actually uses for one trade's outflow or
-    inflow ceiling this period: `base_rate` when `relative_gap` is zero,
+    """The rate one trade's outflow or inflow ceiling takes this period: `base_rate` when `relative_gap` is zero,
     rising LINEARLY with `relative_gap` (see OCCUPATIONAL_MOBILITY_GAP_
     RESPONSE_GAIN's own declaration for why linear), saturating at
     `max(rate_ceiling, base_rate)`.
@@ -355,387 +309,3 @@ def _gap_responsive_mobility_rate(
     if relative_gap == float("inf"):
         return effective_ceiling
     return min(effective_ceiling, base_rate * (1.0 + gain * relative_gap))
-
-
-# ----------------------------------------------------------------------------
-# SKILL DISTANCE: WHICH TRADES ARE "CLOSE", AND WHICH TRADES NEED NO MASTER
-# ----------------------------------------------------------------------------
-
-_UNCLASSIFIED_TECHNOLOGY_GATE = object()
-# Private sentinel to distinguish `requires_node: null` (technique needs no
-# technology gate) from a missing field (entry not yet classified). `None`
-# cannot be the missing marker because it is itself the meaningful value
-# when a technique is available on day one.
-
-
-def trades_reachable_given_technology(
-        reached_node_ids: Iterable[str] = (),
-        production: Optional[Dict[str, Any]] = None) -> FrozenSet[str]:
-    """Return all trades reachable without an existing master, given reached
-    tech-tree nodes. A trade is reachable if it appears in at least one
-    recipe whose `requires_node` is `null` or a member of `reached_node_ids`.
-
-    `requires_node: null` means the technique needs no prior knowledge;
-    `requires_node: "node_id"` means that node must be reached first;
-    missing field means unclassified (no walkability granted either way).
-
-    One walkable recipe suffices: a partial master (hand-forge but not
-    machine-work) is still a master a civilization can grow from zero.
-
-    `reached_node_ids` is a parameter, not read from the tech tree itself,
-    following this module's standalone design: no imports from sim/engine/.
-    Empty default is day-one scenario state (no technology yet).
-
-    Technology gates are enforced: a trade fully gated behind unreached nodes
-    cannot start, however the function is called. The boundary is computed
-    per-trade from actual recipes, not hand-picked and frozen, so it grows
-    as technology is reached."""
-    production = production if production is not None else production_data()
-    reached = set(reached_node_ids)
-    reachable_trades = set()
-    for entry in production.values():
-        gate = entry.get("requires_node", _UNCLASSIFIED_TECHNOLOGY_GATE)
-        if gate is _UNCLASSIFIED_TECHNOLOGY_GATE:
-            continue   # unclassified - "no data" claims no walkability either way
-        if gate is not None and gate not in reached:
-            continue   # a real gate, and it has not been reached
-        for trade in (entry.get("labour_hours") or {}):
-            reachable_trades.add(trade)
-        for capital_item in entry.get("capital") or []:
-            for trade in (capital_item.get("build_labour_hours") or {}):
-                reachable_trades.add(trade)
-    return frozenset(reachable_trades)
-
-
-WALKABLE_TRADES = trades_reachable_given_technology()
-# Trades reachable on day one (no technology reached yet), computed from
-# data/production/'s `requires_node` field: whatever needs no technology is
-# walkable. Default for `Workforce.step`'s `walkable_trades=` parameter.
-#
-# Trades not walkable require a master and can only start from zero via
-# `minimum_absorption_hours_by_trade` (e.g., trained workforce from
-# sim/labour/labour.py's institution mechanisms).
-#
-# Callers with access to the tech tree can grow this set as technology is
-# reached, by calling `trades_reachable_given_technology(reached_node_ids)`
-# and passing the result to `Workforce.step`. Callers can also add trades
-# by hand (synthetic roles not in data/production/).
-
-def trade_skill_family(trade: str) -> str:
-    """Default skill family: each trade is its own family. Callers with a
-    registry pass its `family` field as the `skill_family_of` parameter."""
-    return trade
-
-
-def _flow_proximity(
-        origin_trade: str, destination_trade: str, destination_is_walkable: bool,
-        skill_family_of: Callable[[str], str] = trade_skill_family,
-        cross_family_proximity: float = CROSS_FAMILY_PROXIMITY) -> float:
-    """Return the fraction of mobility ceiling (0-1) allowed for flow from
-    origin to destination. Returns 1.0 (full ceiling) if destination is
-    walkable (needs no prior skill) or if both trades share a skill family.
-    Returns `cross_family_proximity` otherwise.
-
-    Asymmetric: moving DOWN into unskilled work is unrestricted (no origin
-    skill matters); moving UP into skilled work is discounted if skill
-    families differ (some training needed). This reflects that destination
-    requirements matter more than symmetric trade distance."""
-    if origin_trade == destination_trade:
-        return 1.0
-    if destination_is_walkable:
-        return 1.0
-    return 1.0 if skill_family_of(origin_trade) == skill_family_of(destination_trade) \
-        else cross_family_proximity
-
-
-SKILL_DISTANCE_BALANCING_ITERATIONS = 25
-# A purely ALGORITHMIC bound, exactly like MAXIMUM_REALLOCATION_PERIODS
-# below - not a modelling claim, just how many rounds of iterative
-# proportional fitting `_skill_distance_weighted_flow_matrix` runs to find a
-# flow matrix that respects every trade's own mobility ceiling as closely as
-# the proximity weights allow. With at most a few dozen trades this
-# converges to floating-point stability in far fewer rounds than this; the
-# margin costs nothing the test suite's time budget would notice.
-
-
-# ============================================================================
-# THE ALLOCATION: WORKFORCE STATE (HAVE), AND THE ONE STEP THAT MOVES IT
-# ============================================================================
-
-TradeFlow = collections.namedtuple(
-    "TradeFlow",
-    ["trade", "hours_required", "hours_before", "hours_moved_in",
-     "hours_moved_out", "hours_after", "tightness_ratio"])
-# tightness_ratio: hours_required / hours_before (before move) - scarcity
-# in pure hours, no wage. 1.0 = met; >1.0 = short; <1.0 = slack.
-# float("inf") when hours_before is zero and something required, signaling
-# an unpopulated trade that needs institutional action, not reallocation.
-
-
-class Workforce(object):
-    """Mutable state of hours currently worked in each trade. Stepped forward
-    one year at a time via `step()`, returning immutable TradeFlow records.
-
-    `hours_by_trade` is in hours per year (same unit as production recipes),
-    not headcount. Callers with headcount and per-worker hours multiply
-    before constructing."""
-
-    __slots__ = ("hours_by_trade",)
-
-    def __init__(self, hours_by_trade: Dict[str, float]) -> None:
-        # Sorted so sums do not depend on insertion or load order.
-        self.hours_by_trade = {trade: float(hours)
-                               for trade, hours in sorted(hours_by_trade.items())}
-
-    def __repr__(self) -> str:
-        return "Workforce(%r)" % (self.hours_by_trade,)
-
-    def total_hours(self) -> float:
-        return sum(self.hours_by_trade.values())
-
-    def step(
-            self, hours_required_by_trade: Dict[str, float],
-            mobility_rate_per_year: float = OCCUPATIONAL_MOBILITY_RATE_PER_YEAR,
-            minimum_absorption_hours_by_trade: Optional[Dict[str, float]] = None,
-            mobility_gap_response_gain: float = OCCUPATIONAL_MOBILITY_GAP_RESPONSE_GAIN,
-            mobility_rate_ceiling_per_year: float = OCCUPATIONAL_MOBILITY_RATE_CEILING_PER_YEAR,
-            walkable_trades: AbstractSet[str] = WALKABLE_TRADES,
-            walkable_trade_seed_share_of_economy_hours: float = (
-                WALKABLE_TRADE_SEED_SHARE_OF_ECONOMY_HOURS),
-            skill_family_of: Callable[[str], str] = trade_skill_family,
-            cross_family_proximity: float = CROSS_FAMILY_PROXIMITY,
-            skill_distance_balancing_iterations: int = SKILL_DISTANCE_BALANCING_ITERATIONS,
-            ) -> Dict[str, "TradeFlow"]:
-        """Advance one year: reallocate hours from surplus trades into shortage
-        trades, bounded by gap-responsive mobility ceilings and routed by
-        skill family proximity. Mutates `self.hours_by_trade` and returns
-        `{trade: TradeFlow}` - one entry per trade in either required or
-        current allocation.
-
-        The algorithm computes each trade's gap (required minus current),
-        scales outflow/inflow rates by gap size (small gaps: slow movement;
-        large gaps: faster), applies skill-distance discounts to cross-family
-        flows, and uses iterative proportional fitting to balance supply and
-        demand within constraints.
-
-        For walkable trades (no prior master needed), the mobility basis
-        includes a seed reference (percentage of total economy hours) so they
-        can start from zero. Non-walkable trades stay zero unless minimum
-        absorption hours are supplied (institutional training).
-
-        Never refuses a result: if demand exceeds supply, returns the shortage
-        allocation with unmet gaps shown in TradeFlow entries."""
-        minimum_absorption_hours_by_trade = minimum_absorption_hours_by_trade or {}
-        # Sorted so the float sums do not depend on string hash order.
-        all_trades = sorted(set(self.hours_by_trade) | set(hours_required_by_trade))
-        hours_before = {trade: self.hours_by_trade.get(trade, 0.0) for trade in all_trades}
-        hours_required = {trade: hours_required_by_trade.get(trade, 0.0) for trade in all_trades}
-        total_hours_before = sum(hours_before.values())
-        seed_reference = walkable_trade_seed_share_of_economy_hours * total_hours_before
-
-        capped_outflow = {}
-        capped_inflow = {}
-        for trade in all_trades:
-            gap = hours_required[trade] - hours_before[trade]
-            if gap < 0.0:
-                relative_gap = _relative_gap_size(gap, hours_before[trade])
-                rate = _gap_responsive_mobility_rate(
-                    mobility_rate_per_year, relative_gap,
-                    mobility_gap_response_gain, mobility_rate_ceiling_per_year)
-                capped_outflow[trade] = min(rate * hours_before[trade], -gap)
-            elif gap > 0.0:
-                ceiling_basis = hours_before[trade]
-                if trade in walkable_trades:
-                    ceiling_basis = max(ceiling_basis, seed_reference)
-                relative_gap = _relative_gap_size(gap, ceiling_basis)
-                rate = _gap_responsive_mobility_rate(
-                    mobility_rate_per_year, relative_gap,
-                    mobility_gap_response_gain, mobility_rate_ceiling_per_year)
-                floor = minimum_absorption_hours_by_trade.get(trade, 0.0)
-                capped_inflow[trade] = min(max(rate * ceiling_basis, floor), gap)
-            # gap == 0: this trade contributes nothing to either side.
-
-        surplus_trades = [trade for trade, amount in capped_outflow.items() if amount > 0.0]
-        shortage_trades = [trade for trade, amount in capped_inflow.items() if amount > 0.0]
-
-        actual_outflow: collections.defaultdict[str, float] = collections.defaultdict(float)
-        actual_inflow: collections.defaultdict[str, float] = collections.defaultdict(float)
-        if surplus_trades and shortage_trades:
-            flow_matrix = _skill_distance_weighted_flow_matrix(
-                surplus_trades, shortage_trades, capped_outflow, capped_inflow,
-                walkable_trades, skill_family_of, cross_family_proximity,
-                skill_distance_balancing_iterations)
-            for origin in surplus_trades:
-                for destination in shortage_trades:
-                    moved = flow_matrix[origin][destination]
-                    if moved:
-                        actual_outflow[origin] += moved
-                        actual_inflow[destination] += moved
-
-        flows = {}
-        for trade in all_trades:
-            hours_after = (hours_before[trade] - actual_outflow[trade]
-                          + actual_inflow[trade])
-            self.hours_by_trade[trade] = hours_after
-            tightness_ratio = (hours_required[trade] / hours_before[trade]
-                               if hours_before[trade] > 0.0
-                               else (float("inf") if hours_required[trade] > 0.0 else 0.0))
-            flows[trade] = TradeFlow(
-                trade=trade, hours_required=hours_required[trade],
-                hours_before=hours_before[trade],
-                hours_moved_in=actual_inflow[trade],
-                hours_moved_out=actual_outflow[trade],
-                hours_after=hours_after, tightness_ratio=tightness_ratio)
-        return flows
-
-
-def _skill_distance_weighted_flow_matrix(
-        surplus_trades: Iterable[str], shortage_trades: Iterable[str],
-        capped_outflow: Dict[str, float], capped_inflow: Dict[str, float],
-        walkable_trades: AbstractSet[str], skill_family_of: Callable[[str], str],
-        cross_family_proximity: float, iterations: int) -> Dict[str, Dict[str, float]]:
-    """{origin: {destination: hours}} - allocation of surplus to shortage
-    trades, weighted by skill proximity. Uses gravity model (capacity on
-    both sides times proximity discount) and iterative proportional fitting
-    to respect per-trade caps.
-
-    Initializes cells as `capped_outflow[origin] * capped_inflow[dest] *
-    proximity(origin, dest)`, then iteratively rescales rows and columns
-    to stay within caps. Each rescale shrinks, never grows, so result
-    always respects caps exactly. Approximation tuned for annual recompute;
-    when all proximities are 1.0 collapses to simple proportional split."""
-    weight = {}
-    for origin in surplus_trades:
-        row = {}
-        for destination in shortage_trades:
-            proximity = _flow_proximity(
-                origin, destination, destination in walkable_trades,
-                skill_family_of, cross_family_proximity)
-            row[destination] = capped_outflow[origin] * capped_inflow[destination] * proximity
-        weight[origin] = row
-
-    flow = {origin: dict(row) for origin, row in weight.items()}
-    for _ in range(iterations):
-        for origin in surplus_trades:
-            row_total = sum(flow[origin].values())
-            if row_total > capped_outflow[origin] and row_total > 0.0:
-                scale = capped_outflow[origin] / row_total
-                for destination in shortage_trades:
-                    flow[origin][destination] *= scale
-        for destination in shortage_trades:
-            column_total = sum(flow[origin][destination] for origin in surplus_trades)
-            if column_total > capped_inflow[destination] and column_total > 0.0:
-                scale = capped_inflow[destination] / column_total
-                for origin in surplus_trades:
-                    flow[origin][destination] *= scale
-    return flow
-
-
-# ============================================================================
-# WHAT WAS NOT MET: THE FIRST-CLASS OUTPUT THE OLD "converged=False" HID
-# ============================================================================
-
-def unmet_demand_by_trade(
-        hours_by_trade: Dict[str, float],
-        hours_required_by_trade: Dict[str, float]) -> Dict[str, float]:
-    """{trade: shortage in hours}, positive entries only. Trades with enough
-    or excess hours are omitted, so `bool(...)` answers "is anything short".
-
-    Takes plain dicts, allowing checks at any point (initial state, mid-step
-    loop, after convergence)."""
-    all_trades = set(hours_by_trade) | set(hours_required_by_trade)
-    shortfalls = {}
-    for trade in all_trades:
-        gap = hours_required_by_trade.get(trade, 0.0) - hours_by_trade.get(trade, 0.0)
-        if gap > 0.0:
-            shortfalls[trade] = gap
-    return shortfalls
-
-
-HaveVersusNeed = collections.namedtuple(
-    "HaveVersusNeed", ["trade", "hours_have", "hours_need", "gap", "tightness_ratio"])
-
-
-def have_versus_need(
-        hours_by_trade: Dict[str, float],
-        hours_required_by_trade: Dict[str, float]) -> Dict[str, "HaveVersusNeed"]:
-    """{trade: HaveVersusNeed} - compare current hours against requirement.
-    `hours_have` from workforce allocation; `hours_need` from target output.
-    `gap` is hours_need minus hours_have (positive: short; negative: slack).
-
-    Disagreement between HAVE and NEED is information, not noise: it is the
-    pressure `Workforce.step` resolves over time."""
-    all_trades = set(hours_by_trade) | set(hours_required_by_trade)
-    result = {}
-    for trade in all_trades:
-        have = hours_by_trade.get(trade, 0.0)
-        need = hours_required_by_trade.get(trade, 0.0)
-        gap = need - have
-        tightness_ratio = (need / have) if have > 0.0 else (float("inf") if need > 0.0 else 0.0)
-        result[trade] = HaveVersusNeed(trade=trade, hours_have=have, hours_need=need,
-                                       gap=gap, tightness_ratio=tightness_ratio)
-    return result
-
-
-# ============================================================================
-# THE FIXED POINT: REPEAT THE STEP UNTIL THE ALLOCATION STOPS MOVING
-# ============================================================================
-
-# MAXIMUM_REALLOCATION_PERIODS and CONVERGENCE_TOLERANCE_HOURS moved to
-# sim/algorithm_parameters.py (this task's own item 3: "algorithmic and
-# computational parameters get their own file"), with their own comments
-# carried verbatim - see that module's own section for both, and its own
-# docstring for why solve_to_stable_allocation's default arguments below
-# still resolve exactly as before. Imported above, at this file's own top,
-# rather than re-declared here.
-
-LabourMarketOutcome = collections.namedtuple(
-    "LabourMarketOutcome",
-    ["workforce", "periods_used", "stabilized", "unmet_demand_by_trade", "history"])
-
-
-def solve_to_stable_allocation(
-        hours_by_trade_initial: Dict[str, float],
-        hours_required_by_trade: Dict[str, float],
-        mobility_rate_per_year: float = OCCUPATIONAL_MOBILITY_RATE_PER_YEAR,
-        minimum_absorption_hours_by_trade: Optional[Dict[str, float]] = None,
-        maximum_periods: int = MAXIMUM_REALLOCATION_PERIODS,
-        tolerance_hours: float = CONVERGENCE_TOLERANCE_HOURS,
-        **step_kwargs: Any) -> "LabourMarketOutcome":
-    """Repeatedly step workforce allocation until it stops moving (within
-    tolerance) or maximum periods reached. Always returns an allocation with
-    unmet demand, never raises.
-
-    Returns LabourMarketOutcome:
-      workforce             final Workforce state
-      periods_used          years taken to stabilize
-      stabilized            True if fixed point reached (see below)
-      unmet_demand_by_trade shortage hours on final state
-      history               list of TradeFlow dicts, one per period
-
-    `stabilized` is True when allocation stops moving, whether because all
-    gaps closed OR because no further reallocation is possible given caps
-    (population growth, institution, or plan change needed instead).
-
-    For dynamic demand (changing each year), call Workforce.step directly."""
-    workforce = Workforce(hours_by_trade_initial)
-    history = []
-    for period in range(1, maximum_periods + 1):
-        flows = workforce.step(hours_required_by_trade, mobility_rate_per_year,
-                               minimum_absorption_hours_by_trade, **step_kwargs)
-        history.append(flows)
-        every_gap_closed = all(
-            abs(flow.hours_required - flow.hours_after) <= tolerance_hours
-            for flow in flows.values())
-        total_moved_this_period = sum(flow.hours_moved_in for flow in flows.values())
-        if every_gap_closed or total_moved_this_period <= tolerance_hours:
-            return LabourMarketOutcome(
-                workforce=workforce, periods_used=period, stabilized=True,
-                unmet_demand_by_trade=unmet_demand_by_trade(
-                    workforce.hours_by_trade, hours_required_by_trade),
-                history=history)
-    return LabourMarketOutcome(
-        workforce=workforce, periods_used=maximum_periods, stabilized=False,
-        unmet_demand_by_trade=unmet_demand_by_trade(
-            workforce.hours_by_trade, hours_required_by_trade),
-        history=history)
