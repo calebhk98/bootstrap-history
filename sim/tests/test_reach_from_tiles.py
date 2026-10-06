@@ -53,10 +53,17 @@ class ReachFromTilesTests(unittest.TestCase):
         for region_id, record in _fresh_sim("rome_100ad").geography.regions.items():
             self.assertFalse({"reach_from_italia", "route_difficulty", "coastal", "reach"} & set(record), region_id)
 
-    def test_distant_material_costs_follow_the_reach_of_the_civilisation(self):
-        near, far = _fresh_sim("rome_100ad"), _fresh_sim("mexica_1500")
-        node = next(node_id for node_id, key in near.geography._mat_unlock.items() if key)
-        self.assertLessEqual(near.geography.material_cost_factor(node), far.geography.material_cost_factor(node))
+    def test_a_located_material_costs_nothing_extra_where_a_tile_of_its_region_is_held(self):
+        for civilisation in ("rome_100ad", "mexica_1500"):
+            sim = _fresh_sim(civilisation)
+            located = sim.geography.data["located_materials"]
+            for node_id, material_key in sorted(sim.geography._mat_unlock.items()):
+                held = any(sim.geography.region_reach(region_id) == 0 for region_id in located[material_key]["regions"])
+                factor = sim.geography.material_cost_factor(node_id)
+                if held:
+                    self.assertEqual(factor, 1.0, (civilisation, node_id))
+                else:
+                    self.assertGreaterEqual(factor, 1.0, (civilisation, node_id))
 
     def test_no_engine_or_geography_code_names_a_region(self):
         offenders = []
