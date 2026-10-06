@@ -5,6 +5,9 @@ the long-run cost anchor, a glut lowers it (down to the cost of running
 capacity that is already built), founder sales reach supply and displace the
 society's own producers, and the society's capacity follows the price.
 """
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.world import market

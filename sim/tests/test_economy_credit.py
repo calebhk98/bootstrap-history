@@ -1,4 +1,7 @@
 """The credit market: rates that follow funds, rationing of risky borrowers, servicing, default cascades."""
+
+QUICK_TOPIC = True
+
 import random
 import unittest
 

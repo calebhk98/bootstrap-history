@@ -27,7 +27,7 @@ def commit_year(live_sim, summary):
 
 step_progress.set_after_year(commit_year)
 try:
-    _agent_dispatch(interrupted_sim, NODES, {"cmd": "step", "years": 4})
+    _agent_dispatch(interrupted_sim, NODES, {"cmd": "step", "years": 3})
     interrupted = False
 except KeyboardInterrupt:
     interrupted = True
@@ -39,9 +39,6 @@ reloaded = sim()
 load_state(reloaded, save_path)
 check("an interrupted multi-year step keeps the completed years on disk",
       reloaded.year == start_year + 2, (reloaded.year, start_year))
-
-quiet = _agent_dispatch(playable(), NODES, {"cmd": "step", "years": 2})
-check("a quiet step has an empty alerts list", quiet.get("alerts") == [], quiet.get("alerts"))
 
 events = [{"year": 101, "message": "CREDIT EXHAUSTED: 3 projects stopped"},
           {"year": 102, "message": "a site is sacked: the library scrolls burn"},
@@ -62,6 +59,8 @@ check("the step screen puts ALERTS first, within the first lines",
       shown.splitlines()[0] == alert_lines(alerts)[0] and "ALERTS" in shown.splitlines()[0], shown[:200])
 
 collapse = playable()
+calm = _agent_dispatch(collapse, NODES, {"cmd": "state"})
+check("no emergency without a collapse", "demographic_emergency" not in calm)
 collapse.state.population.population_change_last_year = -0.5
 state_reply = _agent_dispatch(collapse, NODES, {"cmd": "state"})
 check("a population collapse is a field on the state reply",
@@ -69,27 +68,27 @@ check("a population collapse is a field on the state reply",
 check("the state screen leads with DEMOGRAPHIC EMERGENCY",
       _render_state.render_state(state_reply).splitlines()[0].startswith("DEMOGRAPHIC EMERGENCY"),
       _render_state.render_state(state_reply)[:200])
-calm = _agent_dispatch(playable(), NODES, {"cmd": "state"})
-check("no emergency without a collapse", "demographic_emergency" not in calm)
 shutil.rmtree(scratch, ignore_errors=True)
 
 import io
 progress_stream = io.StringIO()
 step_progress.set_after_year(step_progress.commit_and_report(None, progress_stream))
-_agent_dispatch(playable(), NODES, {"cmd": "step", "years": 3})
+walked = playable()
+_agent_dispatch(walked, NODES, {"cmd": "step", "years": 2})
 single_stream = io.StringIO()
 step_progress.set_after_year(step_progress.commit_and_report(None, single_stream))
-_agent_dispatch(playable(), NODES, {"cmd": "step", "years": 1})
+quiet = _agent_dispatch(walked, NODES, {"cmd": "step", "years": 1})
 step_progress.set_after_year(None)
 check("a multi-year step prints one progress line per year; a single year prints none",
-      len(progress_stream.getvalue().splitlines()) == 3 and single_stream.getvalue() == "",
+      len(progress_stream.getvalue().splitlines()) == 2 and single_stream.getvalue() == "",
       (progress_stream.getvalue(), single_stream.getvalue()))
+check("a quiet step has an empty alerts list", quiet.get("alerts") == [], quiet.get("alerts"))
 
 # ---- the per-year hook belongs to one command: a played command clears it afterwards,
 # so a later step in the same process does not also save into that command's session file
 from sim.ui import cli_interactive as _interactive
-_hook_sim = sim()
+_hook_sim = collapse
 _hook_session = os.path.join(tempfile.mkdtemp(), "hooked.json")
-_interactive._play_run_one_command(_hook_sim, _hook_sim.nodes, {"cmd": "step", "years": 1}, _hook_session)
+_interactive._play_run_one_command(_hook_sim, _hook_sim.nodes, {"cmd": "state"}, _hook_session)
 check("the per-year save hook is cleared once the played command is done",
       step_progress._after_year[0] is None, step_progress._after_year[0])

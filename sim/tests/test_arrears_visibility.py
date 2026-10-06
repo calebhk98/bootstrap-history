@@ -1,24 +1,7 @@
-"""arrears_visibility: regression checks, run individually with `--only arrears_visibility`."""
+"""A project underfunded by arrears says so: in the log and on `why`, `stuck` and `portfolio`."""
 from .harness import *  # noqa: F401,F403
 
-# =============================================================================
-# ARREARS WASTES FOUNDER-HOURS, SILENTLY - THE ROME PLAYTESTER'S SHARPEST
-# COMPLAINT. `why_underfunded` (core.py) computed the true cause all along,
-# but it was read in exactly one place, render_state - a player who asked
-# `why <id>` on the one stalled project they cared about, or `stuck` on the
-# screen that names it, or `portfolio`, got the misleading "waiting on: your
-# hours" and nothing else, because ph_left is given back by the underfunded
-# path and so never reaches zero, which is what _waiting_on's money branch
-# is gated on. `why`, `stuck` and `portfolio` now all carry why_underfunded
-# too - the checks below drive each of the three commands and check what a
-# player actually sees, not the internal field alone. Founder-hours are the
-# one resource in this whole model that never banks (see step 5b and
-# free_hours_going_unused): a year of them lost to arrears and never
-# announced is worse than a year of money lost, because the money can be
-# earned back on the same footing and the hours cannot be earned back at
-# all.
-# =============================================================================
-s = sim(capital=1000.0)
+s_arrears = s = sim(capital=1000.0)
 _af_k = next(node_id for node_id in NODES
      if NODES[node_id]["yrs"] >= 3 and NODES[node_id]["ph"] > 500)
 _af_n = NODES[_af_k]
@@ -69,23 +52,10 @@ check("a fully-paid project waiting only on the calendar never triggers "
               for _, message in s.log[_before_log2:]),
       [message for _, message in s.log[_before_log2:]])
 
-# --- THE ACTUAL BUG REPORT: a founder with plenty of free hours, a project
-# properly staffed and running, and `why`/`stuck` both saying only "waiting
-# on your hours" while the true cause - arrears - sat unread on the
-# project's own st dict. Built the cheap way: capital pushed deep into the
-# negative (inside the credit limit, so enforce_credit_limit does not clear
-# `active` out from under the check) rather than by simulating centuries.
-s = sim(capital=1000.0)
-_arb_k = next(node_id for node_id in NODES
-     if NODES[node_id]["yrs"] >= 3 and NODES[node_id]["ph"] > 500)
-_arb_n = NODES[_arb_k]
-s.active[_arb_k] = dict(ph_left=float(_arb_n["ph"]), yrs=0.0, spent=0.0,
-                        cost_left=s.project_cost(_arb_k), lab_left=dict(_arb_n["lab"]))
-_arb_lim = s.credit_limit()
-_arb_fixed = s.living_cost() + s.upkeep() + s.mine_operating_cost()
-_arb_reserve = max(0.0, _arb_fixed - s.revenue())
-s.capital = -(_arb_reserve + 0.6 * _arb_lim) - 50.0
-s.step()
+# --- THE BUG AS FILED: `why`/`stuck` named only "waiting on your hours" while the
+# true cause - arrears - sat unread. Same game and year as above.
+s = s_arrears
+_arb_k = _af_k
 _arb_pool_check = S._agent_dispatch(s, NODES, {"cmd": "portfolio"})
 check("set-up: founder-hours are plentiful and idle, exactly the player's "
       "report - the shortfall is not staffing or founder time",

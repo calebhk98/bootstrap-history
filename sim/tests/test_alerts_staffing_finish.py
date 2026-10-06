@@ -46,17 +46,18 @@ check("a newly blocked project stops the step",
 # --- 235: the lettered-trades label says each trade has its own ceiling
 from sim.ui.protocol import _agent_dispatch
 from sim.ui.proto.render_screens_economy import render_labour
-labour_reply = _agent_dispatch(sim(), NODES, {"cmd": "labour"})
+labour_reply = _agent_dispatch(live, NODES, {"cmd": "labour"})
 label = labour_reply.get("and_how_many_of_the_lettered_trades_this_society_supplies", "")
 check("the labour ceiling label is per trade, not one shared total",
       "own ceiling" in label and "scholar" in label and "in total" not in label, label)
 
 # --- 233: departures are split by cause; the workforce block exists
 staffed = sim(capital=10000000.0, events=False)
-run_it(staffed, "workshop_first", "school_founded", "freedman_staff")
-staffed.labour.hire("scholar", 8)
-for _ in range(40):
-    staffed.step()
+staffed.employees["scholar"] = 8.0
+staffed.employees["artisan"] = 40.0
+staffed.labour._resync_pools()
+for _ in range(12):
+    staffed._step_staff()
 loss_lines = [message for _, message in staffed.log if message.startswith("you lose ")]
 check("departures are labelled death or better offers, never pooled",
       loss_lines and all(line.endswith(" to death") or line.endswith(" to better offers") for line in loss_lines)

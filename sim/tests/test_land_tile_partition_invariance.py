@@ -61,6 +61,9 @@ the same ground.
 
 Re-partitioning a territory into different region counts must not change any land figure; the fixture is synthetic tiles.
 """
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.world import land

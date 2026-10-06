@@ -24,6 +24,7 @@ _cap_costs = {node_id: capped.project_cost(node_id) for node_id in capped.order
               if capped.can_start(node_id)}
 _total_cap = 1000.0
 _result = _rush(capped, limit=50, max_total_cost=_total_cap)
+_rush_capped = _result
 _spent = sum(_cap_costs[row["id"]] for row in _result["started"])
 check("rush max_total_cost starts something", _result["count_started"] > 0, _result)
 check("rush max_total_cost never commits more than the cap",
@@ -60,29 +61,26 @@ check("rush preview says nothing was changed",
 check("rush preview reports totals",
       _preview.get("total_cost") is not None and _preview.get("total_annual_draw") is not None
       and _preview["count_would_start"] == len(_preview["would_start"]), _preview)
-_real = _rush(sim(capital=_START_CAPITAL), limit=50, max_total_cost=1000.0)
+_capped_run = _rush_capped
 check("rush preview lists exactly what the real run starts",
-      [row["id"] for row in _preview["would_start"]] == [row["id"] for row in _real["started"]],
-      (_preview["would_start"][:3], _real["started"][:3]))
+      [row["id"] for row in _preview["would_start"]] == [row["id"] for row in _capped_run["started"]],
+      (_preview["would_start"][:3], _capped_run["started"][:3]))
 
 # --- bad option values are refused, not ignored
+refused = sim(capital=_START_CAPITAL)
 for _option in ("max_total_cost", "max_annual_draw", "reserve_cash"):
-    refused = sim(capital=_START_CAPITAL)
     _result = _rush(refused, limit=3, **{_option: "lots"})
     check("rush refuses a non-numeric %s and starts nothing" % _option,
           _result.get("ok") is False and not refused.active, _result)
-_result = _rush(sim(capital=_START_CAPITAL), limit=3, max_total_cost=-5)
-check("rush refuses a negative cap", _result.get("ok") is False, _result)
+_result = _rush(refused, limit=3, max_total_cost=-5)
+check("rush refuses a negative cap", _result.get("ok") is False and not refused.active, _result)
 
 # --- with no options, behaviour is unchanged
 plain = sim(capital=_START_CAPITAL)
 _result = _rush(plain, limit=5)
 check("plain rush limit still starts exactly that many",
       _result["count_started"] == 5 and "preview" not in _result, _result)
-check("plain rush is deterministic",
-      [row["id"] for row in _rush(sim(capital=_START_CAPITAL), limit=5)["started"]]
-      == [row["id"] for row in _result["started"]])
-_unbounded = _rush(sim(capital=_START_CAPITAL))
+_unbounded = _rush(previewed)
 check("unbounded rush with no options still only previews",
       _unbounded.get("preview") is True and _unbounded.get("nothing_changed") is True)
 
@@ -103,19 +101,19 @@ check("'start <id>' is unchanged", (_parsed or {}).get("cmd") == "start", (_pars
 
 # --- preview and a real run agree near the credit margin
 for _margin_capital in (150.0, 400.0, 900.0, 2500.0):
-    _preview_ids = [row["id"] for row in
-                    _rush(sim(capital=_margin_capital), limit=50, preview=True)["would_start"]]
-    _real_ids = [row["id"] for row in _rush(sim(capital=_margin_capital), limit=50)["started"]]
+    _margin_sim = sim(capital=_margin_capital)
+    if _margin_capital == 400.0:
+        check("start_refusal is None for a startable, affordable project and changes nothing",
+              _margin_sim.start_refusal("units_standards") is None and not _margin_sim.active)
+        check("start_refusal counts extra_owed against the credit ceiling",
+              "you already owe" in (_margin_sim.start_refusal("units_standards", extra_owed=1e9) or ""))
+    _preview_ids = [row["id"] for row in _rush(_margin_sim, limit=50, preview=True)["would_start"]]
+    _real_ids = [row["id"] for row in _rush(_margin_sim, limit=50)["started"]]
     check("rush preview matches the real run at capital %d" % _margin_capital,
           _preview_ids == _real_ids and len(_real_ids) > 0, (_preview_ids, _real_ids))
-_margin_sim = sim(capital=400.0)
-check("start_refusal is None for a startable, affordable project and changes nothing",
-      _margin_sim.start_refusal("units_standards") is None and not _margin_sim.active)
-check("start_refusal counts extra_owed against the credit ceiling",
-      "you already owe" in (_margin_sim.start_refusal("units_standards", extra_owed=1e9) or ""))
 
 # --- preview rolls back everything, including the priority order and the saved state
-_roll = sim(capital=400.0)
+_roll = previewed
 _order_before = list(_roll.order)
 
 

@@ -1,5 +1,8 @@
 """Complaint 424: mass-per-year fields follow the chosen mass unit, with a per-year label, on the changes and
 market screens; the plain and the per-year rules do not shadow each other."""
+
+QUICK_TOPIC = True
+
 import json
 import unittest
 

@@ -1,4 +1,7 @@
 """The state's revenue: forms from civ data, assessed per payer, paid by transfer, arrears not overdrafts."""
+
+QUICK_TOPIC = True
+
 import json
 import os
 import unittest

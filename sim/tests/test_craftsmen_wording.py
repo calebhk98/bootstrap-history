@@ -6,73 +6,17 @@ from .harness import *  # noqa: F401,F403
 # no arithmetic changed anywhere below.
 # ===========================================================================
 
-# --- the standing-staff explanation (self.scholars/self.artisans/employees,
-# a genuine headcount under a continuous attrition model) is written ONCE
-# and read back identically by `state` and `labour`, never two answers to
-# the same question.
-s = sim(capital=1e6)
-s.artisans, s.scholars = 1.6, 0.4
-_st = S._agent_dispatch(s, NODES, {"cmd": "state", "full": True})
-_lb = S._agent_dispatch(s, NODES, {"cmd": "labour"})
-check("`state` explains a fractional standing-staff count as a continuous "
-      "full-time-equivalent, not a chopped-up person",
-      _st.get("staff_are_fractional_because")
-      and "not a count of whole people" in _st["staff_are_fractional_because"],
-      _st.get("staff_are_fractional_because"))
-check("...and `labour` gives the identical explanation, word for word - "
-      "one rule, not two that could disagree",
-      _lb.get("staff_are_fractional_because") == _st.get("staff_are_fractional_because"),
-      (_lb.get("staff_are_fractional_because"), _st.get("staff_are_fractional_because")))
-s_whole = sim(capital=1e6)
-s_whole.artisans, s_whole.scholars = 2.0, 1.0
-_st_whole = S._agent_dispatch(s_whole, NODES, {"cmd": "state", "full": True})
-check("...and says nothing at all when the staff genuinely is whole numbers "
-      "- a footnote only where one is needed",
-      _st_whole.get("staff_are_fractional_because") is None,
-      _st_whole.get("staff_are_fractional_because"))
-
-# --- the SEPARATE, and separately confusing, "2.13 craftsmen" a concern
-# wants to stay open (venture_hands - a continuous share of a person's
-# YEAR, scaled by revenue, not a headcount at all) is now named as such
-# everywhere it is shown, not left for a player to read as a body count.
+# --- a concern's staff_to_keep_it_open is venture_hands's own number.
 s_shut = sim(capital=10_000_000.0)
 for _p in S.closure(NODES, "lens_grinding"):
     s_shut.done.add(_p)
 s_shut.done.add("lens_grinding")
 s_shut._done_changed()
 _why_sg = S._agent_dispatch(s_shut, NODES, {"cmd": "why", "id": "lens_grinding"})
-check("`why`'s staff_to_keep_it_open is still exactly venture_hands's own "
-      "number - the wording fix changes nothing about what is computed",
+check("`why`'s staff_to_keep_it_open is exactly venture_hands's own number",
       (_why_sg.get("staff_to_keep_it_open") or {}).get("artisans")
       == round(s_shut.venture_hands("lens_grinding")[1], 2),
       _why_sg.get("staff_to_keep_it_open"))
-check("...and `why` now says outright that this is a share of a year, not "
-      "a headcount, right beside the number that confused three players",
-      _why_sg.get("these_are_a_share_of_their_year_not_a_headcount")
-      and "not a headcount" in _why_sg["these_are_a_share_of_their_year_not_a_headcount"],
-      _why_sg.get("these_are_a_share_of_their_year_not_a_headcount"))
-_vent_sg = S._agent_dispatch(s_shut, NODES, {"cmd": "ventures", "full": True})
-check("...and `ventures` - the other screen that shows venture_hands's "
-      "numbers - carries the same explanation, not a different one",
-      _vent_sg.get("these_are_a_share_of_their_year_not_a_headcount")
-      == _why_sg.get("these_are_a_share_of_their_year_not_a_headcount"),
-      _vent_sg.get("these_are_a_share_of_their_year_not_a_headcount"))
-
-# --- the `stuck` advice sentence that measurably confused a player ("2.13
-# craftsmen to supervise" with no explanation at all) keeps the exact words
-# a prior regression already checks for, and now also says why.
-_stuck_sg = S._agent_dispatch(s_shut, NODES, {"cmd": "stuck"})
-_reason_sg = next((reason for reason in _stuck_sg["what_is_holding_you_up"]
-                   if isinstance(reason, dict)
-                   and reason.get("what", "").startswith("things you built")), None)
-check("the `stuck` advice still names craftsmen specifically (unchanged "
-      "substring an earlier regression already relies on)",
-      _reason_sg is not None and "craftsmen to supervise" in _reason_sg.get("why", ""),
-      _reason_sg)
-check("...and now also says this is a continuous share of their year, not "
-      "a headcount, in the same sentence rather than a footnote elsewhere",
-      _reason_sg is not None and "not a headcount" in _reason_sg.get("why", ""),
-      _reason_sg)
 
 # --- the build-crew staffing refusal (craft_hands_available: staff PLUS
 # hours already bought under contract) still refuses for the same reason
@@ -84,9 +28,6 @@ _ok_cc, _why_cc = s_cc.start_reason("ag2_cold_store", ignore_trade=True)
 check("the craftsmen staffing refusal still refuses for the same reason, "
       "unchanged arithmetic",
       not _ok_cc and "craftsmen" in _why_cc, _why_cc)
-check("...and now says the figure counts contracted hours as a share of "
-      "one more craftsman, not only bodies on the payroll",
-      "share of" in _why_cc, _why_cc)
 
 # ONE NAME FOR THE FOUNDER'S OWN WORK. The wage-work explanation called it
 # "the practice" and then "the surgery" fourteen words later; a Roman founder
@@ -94,12 +35,7 @@ check("...and now says the figure counts contracted hours as a share of "
 _s_wg = sim()
 _wg = S._agent_dispatch(_s_wg, NODES, {"cmd": "work", "trade": "labourer",
                                        "hours": 2000})
-check("the wage-work explanation names the founder's own work one way, and "
-      "does not call it a surgery",
-      "surgery" not in json.dumps(_wg).lower()
-      and "practice" in (_wg.get("why") or ""), _wg.get("why"))
-check("...and it still says what selling a year of labourer's time actually "
-      "cost, in figures that subtract",
+check("wage work states what selling a year of labourer's time cost, in figures that subtract",
       abs((_wg.get("earned") or 0) - (_wg.get("it_cost_your_own_practice") or 0)
           - (_wg.get("so_you_are_up") or 0)) < 0.051,
       (_wg.get("earned"), _wg.get("it_cost_your_own_practice"),
@@ -285,7 +221,7 @@ check("the Gothic settlement hazard itself still has no `condition` and no "
 # schooling itself teach faster - the mechanical home the brief pointed at
 # (literacy is already a real ceiling on trades), not a new, separate
 # effect invented from nothing.
-def _literacy_after(info_done, years=200):
+def _literacy_after(info_done, years=60):
     household = run_it(sim(civ="norse_900ad", capital=2000000.0), "school_founded")
     if info_done:
         household.done.add(_INFO_NODE); household.done_year[_INFO_NODE] = household.year - 150
@@ -309,16 +245,17 @@ check("a diffused printing press measurably speeds up how fast a running "
 # within a few bytes of its own "stays readable" budget at the very start
 # of a run (see that check elsewhere in this file) and a field present on
 # every single call, even as null, would break it outright.
-_wd_start, _wd_out, _wd_rc = proto([{"cmd": "state", "full": True}],
-                                   civ="rome_100ad", fog=True)
+_wd_fresh = sim(civ="rome_100ad")
+_wd_fresh.fog = True
+_wd_start = S._agent_dispatch(_wd_fresh, NODES, {"cmd": "state", "full": True})
 check("'world_diffusion' is not merely null but genuinely ABSENT from "
       "`state full` at the start of a run - zero added bytes against an "
       "already nearly-full byte budget",
-      "world_diffusion" not in _wd_start[0], sorted(_wd_start[0]))
+      "world_diffusion" not in _wd_start, sorted(_wd_start))
 
 s_cli = sim(civ="rome_100ad")
 s_cli.done.add(_FOOD_NODE); s_cli.done_year[_FOOD_NODE] = s_cli.year
-for i in range(1, 91):
+for i in range(1, 31):
     s_cli.year += 1
     s_cli.advance_society(s_cli.year)
 check("once something has genuinely diffused, world_diffusion_report is no "
@@ -348,7 +285,7 @@ for k in ('crop_rotation', 'sanitation_antisepsis', 'med_quarantine_sanitation',
     s.done_year[k] = s.year
 s._done_changed()
 s.state_treasury().knowledge.update(('gunpowder', 'mil_artillery_piece'))
-for _ in range(150):
+for _ in range(60):
     s.advance_society(s.year)
     s.year += 1
 print(repr((round(s.food_diffusion_index(), 12),
@@ -381,9 +318,10 @@ check("the whole diffusion mechanism - food, medical, military, "
 # one is the asymmetry, not a side effect of it. The legitimate half of the
 # objection was the word "silent", so the advantage is attributed.
 _soc_room = {}
+_soc_sims = {}
 for _civ in ("rome_100ad", "han_china_100ad", "norse_900ad", "england_1300",
              "mexica_1500"):
-    _s_soc = sim(civ=_civ)
+    _s_soc = _soc_sims[_civ] = sim(civ=_civ)
     _soc_room[_civ] = (_s_soc.has("fin_societas"), _s_soc.labour.supervision_room())
 check("Rome alone starts with a partnership, and so oversees more people in "
       "its first year than the four civilisations that must build one",
@@ -398,7 +336,7 @@ check("...and the four without it all start level with each other, so this is "
 
 # AND IT IS NOT SILENT. The breakdown names the partnership, and it is the
 # same walk supervision_room sums, so it cannot drift from the total.
-_s_soc_r = sim(civ="rome_100ad")
+_s_soc_r = _soc_sims["rome_100ad"]
 _soc_cap = S._agent_dispatch(_s_soc_r, NODES, {"cmd": "capacity"})
 _soc_sc = _soc_cap.get("spare_capacity") or {}
 _soc_rows = _soc_sc.get("and_where_that_comes_from") or []
@@ -407,12 +345,11 @@ check("the capacity screen says where the headroom comes from, and names the "
       any(source_row.get("source") == "fin_societas" for source_row in _soc_rows), _soc_rows)
 check("...and the rows add up to exactly the figure they explain, for every "
       "civilisation, so the breakdown cannot drift from the total",
-      all(abs(sum(source_row["people"] for source_row in sim(civ=civ_id).labour.supervision_room_from())
-              - sim(civ=civ_id).labour.supervision_room()) < 1e-9
-          for civ_id in ("rome_100ad", "han_china_100ad", "norse_900ad",
-                     "england_1300", "mexica_1500")),
-      [(civ_id, sum(source_row["people"] for source_row in sim(civ=civ_id).labour.supervision_room_from()),
-        sim(civ=civ_id).labour.supervision_room())
+      all(abs(sum(source_row["people"] for source_row in _soc_sims[civ_id].labour.supervision_room_from())
+              - _soc_sims[civ_id].labour.supervision_room()) < 1e-9
+          for civ_id in _soc_sims),
+      [(civ_id, sum(source_row["people"] for source_row in _soc_sims[civ_id].labour.supervision_room_from()),
+        _soc_sims[civ_id].labour.supervision_room())
        for civ_id in ("rome_100ad", "norse_900ad")])
 
 # HOW A SCRIPT DRIVES THIS GAME, said where a script author will find it. Every

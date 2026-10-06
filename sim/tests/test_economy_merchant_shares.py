@@ -1,5 +1,8 @@
 """Merchants chasing one destination share it: across its sources one merchant's bids add up to its
 share of what the destination usually trades, and rivals together to the group's share."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy import merchants, merchants_credit

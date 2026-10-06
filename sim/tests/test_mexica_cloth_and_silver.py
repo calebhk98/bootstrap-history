@@ -1,4 +1,7 @@
 """Complaints/463: the Mexica start holds a technique for cloth, fabric and silver."""
+
+QUICK_TOPIC = True
+
 import json
 import os
 import unittest

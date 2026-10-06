@@ -17,21 +17,12 @@ cache replayed a stale answer under a fresh year. That path feeds
 `project_cost()`, which is why it surfaced as last-bit float drift in a
 project's `ph_left` two centuries later.
 
-There are two checks here and they do different jobs.
-
-The BEHAVIOURAL one runs the simulation and compares. It is honest but weak: the
-effect was sporadic, depending on the process's whole allocation history, so on
-unfixed code 200 years x 8 repeats caught it and 200 years x 4 did not, and
-150 x 4 caught it while 150 x 8 did not. It has no false positives - differing
-digests always mean something is genuinely wrong - and imperfect sensitivity.
-It is a slow_check because even shortened it costs more than the rest of this file.
-
-The STRUCTURAL one is the real guard. Rather than sampling for the symptom it
-forbids the shape: an `id()` may be used as a dict key for speed, and the entry
-it finds must then be validated by identity against a strong reference to the
-object itself. That is what `sim/ui/proto/nodes.py` has always done and
-what the two guilty caches now do. It is deterministic, it costs milliseconds,
-and it catches the whole class rather than the one instance we happened to hit.
+The behavioural guard (two runs of one seed in one process agree) lives in
+test_run_reproducibility.py. This file holds the structural one: rather than
+sampling for the symptom it forbids the shape. An `id()` may be used as a dict
+key for speed, and the entry it finds must then be validated by identity
+against a strong reference to the object itself. It is deterministic, costs
+milliseconds, and catches the whole class rather than the one instance hit.
 
 Guards the id()-reuse hazard behind non-determinism; structural, so it catches the class.
 """
@@ -143,31 +134,3 @@ for _path in _engine_files:
           or "is not None and hit[0] is" in _source
           or "entry[0] is" in _source,
           _rel)
-
-
-# --- THE BEHAVIOURAL CHECK. Slow, and sensitive rather than certain - see the
-# module docstring. Worth having anyway: it is the only check here that would
-# notice a completely different cause producing the same symptom.
-# Four runs of 40 years, not ten of 200. What this check can see that the
-# structural one cannot is state that survives from one Sim to the next inside
-# one process (a module-level counter, a cache not reset), and that shows from
-# the second run's first year, so a few repeats of a short horizon see it as
-# well as many long ones. The sporadic id()-reuse symptom was never reliably
-# caught by repeats at any length (200 years x 8 caught it, 200 x 4 did not, and
-# ten runs of 200 years pass on a tree that still has an id() in a signature),
-# which is why the structural guard above carries that class. Cost is a small
-# fraction of the old half-minute; the horizon includes the first year in which
-# the founder opens ventures and the market clears with firms present.
-_REPEATS = 4
-_YEARS = 40
-
-
-def _repeated_runs_agree():
-    from sim.tests import fingerprint as fingerprint
-    scenario = dict(fingerprint.SCENARIOS[0], years=_YEARS)
-    digests = [fingerprint.digest(fingerprint.run(scenario)[0]) for _ in range(_REPEATS)]
-    return len(set(digests)) == 1, sorted(set(digests))
-
-
-slow_check("four runs of the same scenario in one process give one answer",
-           _repeated_runs_agree)

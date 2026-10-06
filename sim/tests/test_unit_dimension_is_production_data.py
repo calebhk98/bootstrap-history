@@ -1,4 +1,7 @@
 """Complaints/399: every production entry states what dimension its unit measures, and the validator checks it."""
+
+QUICK_TOPIC = True
+
 import copy
 import unittest
 

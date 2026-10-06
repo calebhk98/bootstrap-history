@@ -1,4 +1,7 @@
 """Where a recipe is worked inside a market area: lowest expected cost among tiles with a site and spare hands."""
+
+QUICK_TOPIC = True
+
 import math
 import unittest
 

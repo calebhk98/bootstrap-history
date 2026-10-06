@@ -1,4 +1,7 @@
 """A producer that keeps losing leaves; capacity with no plant follows use; plant already built is sunk."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy import entry, producer_exit, producers, producers_close

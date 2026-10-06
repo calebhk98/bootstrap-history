@@ -1,4 +1,7 @@
 """A struck-coin state short of its need chooses to cut the metal in its coin; no other state does."""
+
+QUICK_TOPIC = True
+
 from .harness import check
 
 from sim.agents.api import ActorRecord

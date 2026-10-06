@@ -3,6 +3,9 @@ clears the offers against demand, and the market module knows nothing of the tec
 
 Pure tests of sim/world/market.py and sim/world/producer_market.py, and a structural test of what the
 market modules import."""
+
+QUICK_TOPIC = True
+
 import ast
 import os
 import unittest

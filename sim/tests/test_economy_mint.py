@@ -1,6 +1,9 @@
 """The mint's orders and books (sim/economy/mint.py): it holds a real stock of metal, sells only that,
 strikes only what it buys, charges a struck coin's issuer-side seigniorage, and exchanges weighed metal
 and commodity money at parity with no issuer."""
+
+QUICK_TOPIC = True
+
 import types as pytypes
 import unittest
 

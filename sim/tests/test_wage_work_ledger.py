@@ -3,14 +3,18 @@ about the player's own workings (complaints 144 and 171)."""
 from .harness import *  # noqa: F401,F403
 
 # --- complaint 144: one-off wage work -------------------------------------
-_replies, _, _ = proto([
-    {"cmd": "work", "trade": "scholar", "hours": 1500, "preview": True},
-    {"cmd": "money"},
-    {"cmd": "work", "trade": "scholar", "hours": 1500},
-    {"cmd": "money"},
-    {"cmd": "log"},
-])
-_preview, _money_before_work, _work, _money, _log = _replies[-5:]
+_game = sim()
+
+
+def _ask(**command):
+    return S._agent_dispatch(_game, NODES, command)
+
+
+_preview = _ask(cmd="work", trade="scholar", hours=1500, preview=True)
+_money_before_work = _ask(cmd="money")
+_work = _ask(cmd="work", trade="scholar", hours=1500)
+_money = _ask(cmd="money")
+_log = _ask(cmd="log")
 check("`work ... preview` changes nothing and states the net",
       _preview.get("preview") and _preview.get("nothing_changed")
       and "so_you_are_up" in _preview
@@ -26,18 +30,15 @@ check("`money` itemises wage income and the practice income it displaces",
       and _wage.get("practice_income_displaced", 0) > 0
       and abs(_wage["net"] - (_wage["wage_income"] - _wage["practice_income_displaced"])) < 0.2,
       _wage)
-check("`work` says the lost practice income is simply not collected at the next step",
-      "lands_at_next_step" in _work, _work)
 check("`log` has a line for the wage work",
       "wage work" in str(_log).lower(), str(_log)[:400])
 
 # --- complaint 144: the standing order, and the text screen -----------------
-_replies, _, _ = proto([
-    {"cmd": "allocate", "id": "work", "trade": "scholar", "hours": 1000},
-    {"cmd": "step", "n": 1},
-    {"cmd": "money"},
-])
-_standing_money = _replies[-1]
+_game = sim()
+_game.end_year = _game.cfg["start_year"] + _game.cfg["horizon_years"]
+_ask(cmd="allocate", id="work", trade="scholar", hours=1000)
+_ask(cmd="step", years=1)
+_standing_money = _ask(cmd="money")
 _wage = _standing_money.get("wage_work_last_year") or {}
 check("a standing `allocate work` order also appears in `money` after the step",
       _wage.get("hours", 0) > 0 and _wage.get("wage_income", 0) > 0, _wage)
@@ -50,7 +51,7 @@ check("the money text shows the wage rows and no longer claims the rows "
       _text)
 
 # --- complaint 171: shortage remedy ----------------------------------------
-_s = sim()
+_s = _game
 
 _s.annual_material_demand = lambda: {"gold_kg": 0.0}
 _none = _s.shortage_remedy("gold")

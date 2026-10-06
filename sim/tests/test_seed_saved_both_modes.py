@@ -3,19 +3,18 @@
 Complaints/360. Word seeds are kept as the word, number seeds as the number.
 """
 from .harness import *  # noqa: F401,F403
+from sim.tests import cli_in_process
 from sim.engine.saveload import load_state
 
 _scratch = tempfile.mkdtemp()
-_SIMULATOR = os.path.join(HERE, "simulator.py")
 
 
 def _start(mode, seed, name):
     path = os.path.join(_scratch, name + ".json")
     env = dict(os.environ, ROME_SAVE_DIR=_scratch, ROME_SIM_CONFIG=os.path.join(_scratch, "c.json"))
     text = '{"cmd":"state"}\n' if mode == "agent" else "quit\n"
-    subprocess.run([sys.executable, _SIMULATOR, mode, "--civ", "rome_100ad",
-                    "--seed", str(seed), "--session", path],
-                   input=text, capture_output=True, text=True, timeout=120, env=env)
+    cli_in_process.run([mode, "--civ", "rome_100ad", "--seed", str(seed), "--session", path],
+                       input_text=text, environment=env)
     return path
 
 

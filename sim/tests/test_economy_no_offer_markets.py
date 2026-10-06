@@ -1,5 +1,8 @@
 """A market with buyers and no maker: a newcomer comes whenever the bids would take its output at the
 entry price, even where the market remembers a price too low to pay."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy.economy import Economy

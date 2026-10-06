@@ -1,4 +1,7 @@
 """Gold's gram and kilogram entries agree, and gold solves dearer than silver."""
+
+QUICK_TOPIC = True
+
 import json
 import os
 import unittest

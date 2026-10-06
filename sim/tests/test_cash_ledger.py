@@ -66,7 +66,7 @@ for label, action in (
     check("after %s the book reconciles" % label, reconciles(rich), cash_book.unaccounted(rich))
 
 causes_seen = set()
-for _year in range(12):
+for _year in range(3):
     ask(rich, cmd="step", years=1)
     causes_seen |= {cause for period in rich.state.household.cash_periods for cause in period["causes"]}
     check("year %d: the book reconciles" % rich.year, reconciles(rich), cash_book.unaccounted(rich))
@@ -75,7 +75,7 @@ for _year in range(12):
 
 poor = sim(capital=2_000.0, manual=False, events=True)
 poor.end_year = poor.cfg["start_year"] + poor.cfg["horizon_years"]
-for _year in range(20):
+for _year in range(4):
     ask(poor, cmd="step", years=1)
     causes_seen |= {cause for period in poor.state.household.cash_periods for cause in period["causes"]}
     if not reconciles(poor):

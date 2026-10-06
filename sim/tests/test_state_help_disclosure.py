@@ -1,4 +1,7 @@
 """state_help_disclosure: `state` is short by default, `state full` and `state <section>` widen it; `help commands` is an index, a group, or a paged full listing."""
+
+QUICK_TOPIC = True
+
 from .harness import *  # noqa: F401,F403
 from sim.ui.proto import command_registry
 from sim.ui.proto.help import _agent_help

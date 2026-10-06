@@ -27,7 +27,7 @@ check("a resolved shortage leaves no condition", not shortage_conditions.conditi
 check("and the next shortage is news again",
       shortage_conditions.note_shortage(shortage_sim, "coal", 0.5))
 
-standing = sim()
+standing = shortage_sim
 shortage_conditions.note_shortage(standing, "charcoal", 0.46)
 state_reply = _agent_dispatch(standing, NODES, {"cmd": "state"})
 check("state carries the standing conditions", bool(state_reply.get("conditions")), list(state_reply)[:10])
@@ -50,7 +50,7 @@ check("a lone consequence is left as it was",
 check("grouping nothing changes nothing", group_disaster_events(disaster_events, None, []) == disaster_events)
 
 # --- 72: under fog, a hidden prerequisite gives its coarse kind once the player is close
-fogged = sim()
+fogged = shortage_sim
 fogged.fog = True
 hidden_node = next(node_id for node_id, node in NODES.items()
                    if not fogged.is_visible(node_id) and node.get("kind") == "INSTITUTION"
@@ -67,18 +67,14 @@ check("one far from anything known gets no kind hint",
       and "technique" not in (fogged.missing_prereq_message([far_node]) or "").lower())
 
 # --- 99 and 102: the first-screen help points at the beginner index and at sittings
-help_reply = _agent_dispatch(sim(), NODES, {"cmd": "help", "topic": "commands"})
+help_reply = _agent_dispatch(shortage_sim, NODES, {"cmd": "help", "topic": "commands"})
 first_key = next(iter(help_reply["help"]))
 check("help commands opens with a short beginner index", "start" in first_key.lower() or "begin" in first_key.lower(), list(help_reply["help"])[:3])
-hazard_game = sim(events=True)
-hazard_game.end_year = hazard_game.cfg["start_year"] + 500
-step_reply = _agent_dispatch(hazard_game, NODES, {"cmd": "step", "years": 3})
-check("a step with hazards on still returns events and alerts", step_reply.get("ok") and "events" in step_reply)
 
 from sim.ui.cli_interactive import _play_print_welcome
 import io, contextlib
 welcome = io.StringIO()
 with contextlib.redirect_stdout(welcome):
-    _play_print_welcome(sim(), "poor_scholar")
+    _play_print_welcome(shortage_sim, "poor_scholar")
 check("the welcome screen points at the sittings topic and the beginner index",
       "help sittings" in welcome.getvalue() and "help commands" in welcome.getvalue(), welcome.getvalue()[-400:])

@@ -1,5 +1,8 @@
 """Money with no issuer takes into circulation only what holders want to add, plus what is lost: a
 money commodity that is cheap to make does not flood the money stock (and the land) at parity."""
+
+QUICK_TOPIC = True
+
 import dataclasses
 import unittest
 

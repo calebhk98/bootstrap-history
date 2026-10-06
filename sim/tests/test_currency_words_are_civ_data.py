@@ -1,4 +1,7 @@
 """The words for a civilisation's money come from its own file, not an engine table."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.engine import data

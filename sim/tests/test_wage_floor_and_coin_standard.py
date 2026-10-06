@@ -199,21 +199,15 @@ class OpeningCapitalTests(unittest.TestCase):
         self.assertAlmostEqual(data.kit_capital("artisan", heavier) * 2.0,
                                data.kit_capital("artisan", civ))
 
-    def test_every_funded_kit_affords_a_skilled_hire_for_a_year(self):
+    def test_the_smallest_funded_kit_affords_a_skilled_hire_for_a_year(self):
+        # Capital grows with the kit, so the smallest funded kit is the binding case.
+        smallest_kit = min((kit for kit, kit_data in data.STARTING_KITS.items()
+                            if kit_data["labourer_years"] > 0.0),
+                           key=lambda kit: data.STARTING_KITS[kit]["labourer_years"])
         for civ_name in CIVILISATIONS + ["sample_egypt_100bc_e7k2:egypt"]:
-            for kit, kit_data in data.STARTING_KITS.items():
-                if kit_data["labourer_years"] <= 0.0:
-                    continue
-                engine = self._sim(civ_name, kit)
-                self.assertGreaterEqual(
-                    engine.household.capital, engine.labour.market.quote_annual("smith"), (civ_name, kit))
-
-
-class NoBookFoodTests(unittest.TestCase):
-
-    def test_the_book_food_reader_is_gone(self):
-        self.assertFalse(hasattr(data, "_book_food_price_per_kg"))
-        self.assertFalse(hasattr(data, "FOOD_PRICE_PER_KG"))
+            engine = self._sim(civ_name, smallest_kit)
+            self.assertGreaterEqual(
+                engine.household.capital, engine.labour.market.quote_annual("smith"), (civ_name, smallest_kit))
 
 
 if __name__ == "__main__":

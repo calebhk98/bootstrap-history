@@ -2,6 +2,7 @@
 from .harness import *  # noqa: F401,F403
 from sim.engine.ui_port import closure
 from sim.ui.memory import load_state, save_state
+from sim.ui.proto.programme import programme_before_year
 from sim.ui.proto.render_programme import render_pursue, render_programme, render_programme_rows
 
 
@@ -60,60 +61,58 @@ check("programme starts stay within its yearly draw cap",
 # --- a paused programme does nothing
 _run(game, cmd="programme", action="pause")
 _active_before = set(game.active)
-_step = _run(game, cmd="step")
-_rows = _step.get("programme") or []
+_rows = programme_before_year(game, NODES)
 check("paused programme says it did nothing", _rows and _rows[0].get("did_nothing_because") == "paused by the player", _rows)
-check("paused programme starts nothing", not (set(game.active) - _active_before - set(_step.get("completed", []))
-      ) or all(row["id"] not in game.active for row in _rows[0]["started"]), _rows)
+check("paused programme starts nothing", set(game.active) == _active_before, _rows)
 check("paused programme committed nothing", _rows[0]["started"] == [], _rows)
 
 # --- debt pauses it too
 _run(game, cmd="programme", action="resume")
 game.capital = -10.0
-_step = _run(game, cmd="step")
-check("programme does nothing in debt", "debt" in str((_step.get("programme") or [{}])[0].get("did_nothing_because")),
-      _step.get("programme"))
+_rows = programme_before_year(game, NODES)
+check("programme does nothing in debt", "debt" in str(_rows[0].get("did_nothing_because")), _rows)
 
+# Pause logic is read through the per-year hook directly; the one step above proves the dispatcher calls it.
 # --- pause conditions the player sets: debt, war risk, shortage; each is reported and can auto-resume
 _run(game, cmd="programme", action="clear")
 game.capital = 20000.0
 _set = _run(game, cmd="programme", action="set", target=GOAL, max_annual_draw=400.0, limit=50, pause_debt=500.0)
 check("programme set takes a debt pause threshold", _set.get("ok") and "pause_debt" in _set["programme"]["pauses"], _set)
 game.capital = -900.0
-_rows = _run(game, cmd="step").get("programme") or [{}]
+_rows = programme_before_year(game, NODES) or [{}]
 check("debt over the threshold pauses and says why", "debt over" in str(_rows[0].get("did_nothing_because")), _rows)
 
 _run(game, cmd="programme", action="set", target=GOAL, limit=50, pause_war_risk=0.05)
 game.capital = 20000.0
 game.civ["hazards"] = [{"name": "Raiders", "years": [game.year - 1, game.year + 30], "sack_chance": 0.4}]
-_rows = _run(game, cmd="step").get("programme") or [{}]
+_rows = programme_before_year(game, NODES) or [{}]
 check("war risk over the threshold pauses and says why", "war risk" in str(_rows[0].get("did_nothing_because")), _rows)
 check("a pause that is not auto-resume stays paused after the risk ends",
       _run(game, cmd="programme")["programme"]["paused"], _run(game, cmd="programme"))
 game.civ["hazards"] = []
-_rows = _run(game, cmd="step").get("programme") or [{}]
+_rows = programme_before_year(game, NODES) or [{}]
 check("without auto_resume it waits for the player", "war risk" in str(_rows[0].get("did_nothing_because")), _rows)
 _run(game, cmd="programme", action="resume")
-_rows = _run(game, cmd="step").get("programme") or [{}]
+_rows = programme_before_year(game, NODES) or [{}]
 check("resume works once the risk is gone", "war risk" not in str(_rows[0].get("did_nothing_because")), _rows)
 
 _run(game, cmd="programme", action="set", target=GOAL, limit=50, pause_war_risk=0.05, auto_resume=True)
 game.civ["hazards"] = [{"name": "Raiders", "years": [game.year, game.year + 30], "sack_chance": 0.4}]
-_rows = _run(game, cmd="step").get("programme") or [{}]
+_rows = programme_before_year(game, NODES) or [{}]
 check("auto_resume programme pauses on war risk", "war risk" in str(_rows[0].get("did_nothing_because")), _rows)
 game.civ["hazards"] = []
-_rows = _run(game, cmd="step").get("programme") or [{}]
+_rows = programme_before_year(game, NODES) or [{}]
 check("auto_resume programme resumes when the risk clears",
       "war risk" not in str(_rows[0].get("did_nothing_because")) and not _run(game, cmd="programme")["programme"]["paused"], _rows)
 
 _run(game, cmd="programme", action="set", target=GOAL, limit=50, pause_shortage=0.2, auto_resume=True)
 game.state.economy.shortage_condition = {"material": "iron", "since": game.year, "reported": 0.5,
                                          "previous": 0.5, "latest": 0.5}
-_rows = _run(game, cmd="step").get("programme") or [{}]
+_rows = programme_before_year(game, NODES) or [{}]
 check("a shortage past the threshold pauses and names the material",
       "iron" in str(_rows[0].get("did_nothing_because")) and "shortage" in str(_rows[0].get("did_nothing_because")), _rows)
 game.state.economy.shortage_condition = None
-_rows = _run(game, cmd="step").get("programme") or [{}]
+_rows = programme_before_year(game, NODES) or [{}]
 check("auto_resume programme resumes when the shortage clears",
       "shortage" not in str(_rows[0].get("did_nothing_because")), _rows)
 check("pause settings reject a negative number",
@@ -127,18 +126,18 @@ check("typed parse reads pause and hour caps",
 free_game = sim(capital=200000.0)
 free_game.end_year = free_game.cfg["start_year"] + 50
 _run(free_game, cmd="programme", action="set", target=GOAL, limit=50)
-_free_row = (_run(free_game, cmd="step").get("programme") or [{}])[0]
+_free_row = programme_before_year(free_game, NODES)[0]
 check("uncapped programme commits some founder hours", _free_row.get("hours", 0) > 0, _free_row)
 capped_game = sim(capital=200000.0)
 capped_game.end_year = capped_game.cfg["start_year"] + 50
 _hour_cap = _free_row.get("hours", 0) / 2.0
 _run(capped_game, cmd="programme", action="set", target=GOAL, limit=50, max_total_hours=_hour_cap)
-_row = (_run(capped_game, cmd="step").get("programme") or [{}])[0]
+_row = programme_before_year(capped_game, NODES)[0]
 check("hour cap keeps starts within the cap", _row.get("hours", 0) <= _hour_cap + 1e-6
       and len(_row.get("started", [])) < len(_free_row.get("started", [])), (_row, _free_row))
 _shown = _run(capped_game, cmd="programme")["programme"]
 check("programme show reports hours committed and the cap",
       "max_total_hours" in _shown["caps"] and "hours_committed_so_far" in _shown, _shown)
 _run(capped_game, cmd="programme", action="set", target=GOAL, limit=50, max_total_hours=0.5)
-_row = (_run(capped_game, cmd="step").get("programme") or [{}])[0]
+_row = programme_before_year(capped_game, NODES)[0]
 check("a spent hour cap stops starting", _row.get("started") == [] and "hour" in str(_row.get("did_nothing_because")), _row)

@@ -1,4 +1,7 @@
 """Countries as actors: profiles and the cast from civilisation dicts, seeding, a country's own world, a foreign government."""
+
+QUICK_TOPIC = True
+
 from .harness import check
 
 from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, RecordedActor

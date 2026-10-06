@@ -19,6 +19,9 @@ section for the reading of why it does not.
 
 sim/world/agriculture.py standalone: land, labour, technique and weather into food (unittest-style).
 """
+
+QUICK_TOPIC = True
+
 import random
 import unittest
 

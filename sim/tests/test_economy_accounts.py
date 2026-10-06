@@ -1,4 +1,7 @@
 """The economy's double-entry book: postings, atomic batches, reads, flows, conservation, save file."""
+
+QUICK_TOPIC = True
+
 import json
 import unittest
 

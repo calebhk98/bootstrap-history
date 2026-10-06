@@ -1,4 +1,7 @@
 """Checks the real load path runs: removed trades in technologies, removed starting techs."""
+
+QUICK_TOPIC = True
+
 import glob
 import json
 import os

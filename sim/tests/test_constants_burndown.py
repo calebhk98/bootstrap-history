@@ -25,6 +25,7 @@ it can exercise the tool in a subprocess without dragging in the engine.
 
 Guards the burndown count of declared numbers so milestone 1 stays measurable.
 """
+import functools
 import json
 import os
 import subprocess
@@ -35,14 +36,21 @@ _REPOSITORY_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(
     os.path.abspath(__file__))))
 
 
+@functools.lru_cache(maxsize=None)
+def _burndown_once():
+    """Run the real `sim/constants.py --burndown` subprocess once per process; the tests read its output."""
+    result = subprocess.run(
+        [sys.executable, os.path.join("sim", "constants.py"), "--burndown"],
+        cwd=_REPOSITORY_ROOT, capture_output=True, text=True)
+    return result.returncode, result.stdout, result.stderr
+
+
 class BurndownActuallyCountsTests(unittest.TestCase):
 
     def _run_burndown(self):
-        result = subprocess.run(
-            [sys.executable, os.path.join("sim", "constants.py"), "--burndown"],
-            cwd=_REPOSITORY_ROOT, capture_output=True, text=True)
-        self.assertEqual(result.returncode, 0, result.stderr)
-        return result.stdout, result.stderr
+        returncode, stdout, stderr = _burndown_once()
+        self.assertEqual(returncode, 0, stderr)
+        return stdout, stderr
 
     def test_the_burndown_does_not_report_zero_declared(self):
         # The single check that would have caught both bugs. It asserts a
@@ -212,11 +220,9 @@ class HardcodedHistoricalOutcomeTests(unittest.TestCase):
     """
 
     def _run_burndown(self):
-        result = subprocess.run(
-            [sys.executable, os.path.join("sim", "constants.py"), "--burndown"],
-            cwd=_REPOSITORY_ROOT, capture_output=True, text=True)
-        self.assertEqual(result.returncode, 0, result.stderr)
-        return result.stdout, result.stderr
+        returncode, stdout, stderr = _burndown_once()
+        self.assertEqual(returncode, 0, stderr)
+        return stdout, stderr
 
     def test_hardcoded_outcome_is_a_registered_kind(self):
         sys.path.insert(0, _REPOSITORY_ROOT)

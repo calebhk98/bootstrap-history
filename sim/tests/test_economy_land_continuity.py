@@ -1,4 +1,7 @@
 """The clearing rent of a tile moves smoothly with the land in use, and the fixture's rents never drop to nothing."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy import land_market

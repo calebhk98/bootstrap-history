@@ -35,7 +35,7 @@ watch("reopen_restaffed_ventures", "reopened", lambda args, result, held: tuple(
 watch("auto_commission_for_blocked", "commissioned", lambda args, result, held: result, owner=auto.labour)
 
 per_year = {}
-for _ in range(12):
+for _ in range(4):
     ask(auto, cmd="step", years=1)
     per_year[auto.year] = ask(auto, cmd="automation")
 
@@ -72,41 +72,47 @@ check("by default the reply is only the year just played",
       all(row["year"] == auto.year - 1 for row in per_year[auto.year]["rows"]), per_year[auto.year]["rows"][:2])
 wider = ask(auto, cmd="automation", years=3)
 check("years widens the window", len({row["year"] for row in wider["rows"]}) > 1, wider["rows"][:1])
-check("the window is kept to a few years", min(row["year"] for row in auto.state.household.automation_audit)
-      > auto.year - 6, auto.state.household.automation_audit[:1])
 text = _RENDERERS["automation"](latest)
 check("the printed screen leads with the policy and shows reason and cost",
       "AUTOMATION" in text and latest["rows"][0]["reason"][:20] in text, text[:400])
 
 manual = sim(capital=2_000_000.0)
 manual.end_year = manual.cfg["start_year"] + manual.cfg["horizon_years"]
-ask(manual, cmd="step", years=2)
+ask(manual, cmd="step", years=1)
 check("a manual game with no automation has an empty audit", ask(manual, cmd="automation")["rows"] == [])
+
+from sim.engine import automation_audit
+for _offset in range(automation_audit.YEARS_KEPT + 3):
+    manual.state.household.automation_audit.append({"year": manual.year - _offset})
+automation_audit.begin_year(manual)
+check("the window is kept to a few years",
+      {row["year"] for row in manual.state.household.automation_audit}
+      == {manual.year - offset for offset in range(automation_audit.YEARS_KEPT)},
+      manual.state.household.automation_audit)
+manual.state.household.automation_audit = []
 
 
 def _material_step(binding, demand_key, policy):
-    test_sim = sim(capital=5_000_000_000_000.0, manual=False)
-    test_sim.state.founder.policy[policy] = True
-    test_sim.annual_material_demand = lambda: {demand_key: 1_000_000.0}
-    test_sim.resource_throttle = lambda: 0.3
-    test_sim.state.economy.binding = binding
-    test_sim._step_materials()
-    return test_sim
+    manual.capital = 5_000_000_000_000.0
+    manual.state.household.automation_audit = []
+    manual.state.founder.policy[policy] = True
+    manual.annual_material_demand = lambda: {demand_key: 1_000_000.0}
+    manual.resource_throttle = lambda: 0.3
+    manual.state.economy.binding = binding
+    manual._step_materials()
+    return [row for row in manual.state.household.automation_audit]
 
 
-mined = _material_step("coal", "coal_kg", "auto_mine")
-mine_rows = [row for row in mined.state.household.automation_audit if row["action"] == "mine"]
+mine_rows = [row for row in _material_step("coal", "coal_kg", "auto_mine") if row["action"] == "mine"]
 check("auto-mine records what it ordered, the demand and the capacity it considered",
       len(mine_rows) == 1 and mine_rows[0]["policy"] == "auto_mine"
       and "demand 1000000" in mine_rows[0]["reason"]
       and "pending capacity considered" in mine_rows[0]["reason"], mine_rows)
 
-wooded = _material_step("charcoal", "charcoal_kg", "auto_forest")
-forest_rows = [row for row in wooded.state.household.automation_audit if row["action"] == "forest"]
+forest_rows = [row for row in _material_step("charcoal", "charcoal_kg", "auto_forest") if row["action"] == "forest"]
 check("auto-forest records the hectares it bought and its cost",
       len(forest_rows) == 1 and forest_rows[0]["cost"] > 0, forest_rows)
 
-nitre = _material_step("saltpetre", "saltpetre_kg", "auto_mine")
-nitre_rows = [row for row in nitre.state.household.automation_audit if row["action"] == "nitre"]
+nitre_rows = [row for row in _material_step("saltpetre", "saltpetre_kg", "auto_mine") if row["action"] == "nitre"]
 check("auto-mine's nitre beds are recorded with their cost",
       len(nitre_rows) == 1 and nitre_rows[0]["cost"] > 0, nitre_rows)

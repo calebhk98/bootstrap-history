@@ -1,4 +1,7 @@
 """Run figures: volatility, hired share, hunger share and price over labour cost."""
+
+QUICK_TOPIC = True
+
 import math
 import unittest
 

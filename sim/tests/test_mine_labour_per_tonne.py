@@ -1,5 +1,8 @@
 """Labour per tonne of rock and per tonne of mineral in the deposit model
 agrees with the sourced hand-mining figures (Complaints/342)."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.world import deposits, mine_fire_setting, mine_works

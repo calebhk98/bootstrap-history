@@ -39,7 +39,7 @@ def one_person_found(self, trade, people, pay_premium=0.0):
 rows = []
 with mock.patch.object(LabourMarket, "whole_recruits", one_person_found), \
         mock.patch.object(type(auto.labour), "hire", counting_hire):
-    for _ in range(6):
+    for _ in range(1):
         S._agent_dispatch(auto, NODES, {"cmd": "step", "years": 1})
         rows += [row for row in S._agent_dispatch(auto, NODES, {"cmd": "automation"})["rows"]
                  if row["action"] == "hire"]

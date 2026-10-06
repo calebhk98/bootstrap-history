@@ -1,4 +1,7 @@
 """Rent in a run's cost: it slows planning, entry and expansion where land is short, and changes nothing at zero."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy import entry, producers, unit_cost

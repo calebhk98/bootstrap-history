@@ -1,4 +1,7 @@
 """Content ids the economy reads come from the setup, and what a risky trade and a zero yield do."""
+
+QUICK_TOPIC = True
+
 import dataclasses
 import unittest
 

@@ -1,5 +1,8 @@
 """Patents and company shares: a state that knows the institution grants an exclusive right, the right
 and equity change hands through exchange, licences let others practise, and dividends go by share."""
+
+QUICK_TOPIC = True
+
 from .harness import check
 
 from sim.agents.api import ActorRecord, ActorRegistry, ActorsState

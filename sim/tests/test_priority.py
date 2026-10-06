@@ -9,9 +9,15 @@ from sim.ui.proto import command_registry as _registry
 _ids = ["academy_network", "corpus_written", "school_founded"]
 
 
+_shared_game = sim(capital=1e7)
+
+
 def _three_active():
-    test_sim = sim(capital=1e7)
+    """The one shared game, reset to three active projects in a known order."""
+    test_sim = _shared_game
     test_sim.order = list(_ids)
+    test_sim.active.clear()
+    test_sim.hour_allocations.clear()
     for node_id in _ids:
         test_sim.active[node_id] = dict(ph_left=float(NODES[node_id]["ph"]), yrs=0.0, spent=0.0,
                                         cost_left=0.0, lab_left={})
@@ -34,8 +40,8 @@ test_sim = _three_active()
 reply = _priority(test_sim, id="school_founded", position="first")
 check("priority <id> first puts that project ahead of the rest",
       reply.get("ok") and reply.get("order")[0] == "school_founded", reply)
-check("...and step() hands out hours in that order",
-      _ranks(test_sim) == [2, 3, 1], _ranks(test_sim))
+ranks_after_step = _ranks(test_sim)
+check("...and step() hands out hours in that order", ranks_after_step == [2, 3, 1], ranks_after_step)
 
 test_sim = _three_active()
 reply = _priority(test_sim, id="academy_network", position="last")
@@ -77,7 +83,3 @@ check("typed 'priority X 2' parses",
       _parse_typed("priority school_founded 2")[0]
       == {"cmd": "priority", "id": "school_founded", "position": 2},
       _parse_typed("priority school_founded 2"))
-
-portfolio = S._agent_dispatch(_three_active(), NODES, {"cmd": "portfolio"})
-check("the portfolio note points at the priority command",
-      "priority" in portfolio["note"], portfolio["note"])

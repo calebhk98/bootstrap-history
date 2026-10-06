@@ -1,4 +1,7 @@
 """Wear and loss of money and metal goods, and the opening money stock (sim/economy/metal_stock.py)."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy import currency, metal_stock, types

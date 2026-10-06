@@ -35,14 +35,12 @@ class StapleIsData(unittest.TestCase):
         with self.assertRaises(ValueError):
             wage_provider.staple_material({"id": "mod", "staple": ""})
 
-    def test_the_floor_follows_the_civilisations_own_staple(self):
-        for civilization_id, staple in (("han_china_100ad", "millet_kg"), ("mexica_1500", "maize_kg")):
-            civ = data.load_civ(civilization_id)
-            normal = _schedule(civ)
-            entries = _entries()
-            _scaled_labour(entries, staple, 2.0)
-            self.assertGreater(_schedule(civ, entries).subsistence_hours_per_hour,
-                               normal.subsistence_hours_per_hour, civilization_id)
+    def test_the_floor_follows_a_non_wheat_civilisations_staple(self):
+        civ = data.load_civ("mexica_1500")
+        normal = _schedule(civ)
+        entries = _entries()
+        _scaled_labour(entries, "maize_kg", 2.0)
+        self.assertGreater(_schedule(civ, entries).subsistence_hours_per_hour, normal.subsistence_hours_per_hour)
 
     def test_the_staple_moves_the_floor_more_than_wheat_does(self):
         civ = data.load_civ("han_china_100ad")

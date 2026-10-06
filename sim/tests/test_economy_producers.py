@@ -1,4 +1,7 @@
 """Producers: planning on expected prices, Leontief production, offers, and the year's close."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy import producers, producers_close

@@ -1,4 +1,7 @@
 """Mod removal of content and patching or hiding of base civilisations."""
+
+QUICK_TOPIC = True
+
 import copy
 import json
 from pathlib import Path

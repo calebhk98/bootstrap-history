@@ -1,5 +1,8 @@
 """Tile fertility and region fertility are one scale: a tile's fertility is
 that of its arable ground, and a region's is derived from its tiles."""
+
+QUICK_TOPIC = True
+
 from sim.geography.api import load_geography
 import copy
 import json

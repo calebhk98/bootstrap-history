@@ -202,8 +202,31 @@ def spin_up(production: Mapping[str, Any], reached_nodes: Iterable[str],
 _in_process_cache: Dict[str, SpinUpResult] = {}
 
 
+_source_digests: Dict[str, str] = {}
+_SOURCE_SKIPPED_DIRECTORIES = ("tests", "ui", "__pycache__")
+
+
+def _source_digest() -> str:
+    """Digest of the simulator source (the labour package may not import the engine, so no import
+    closure is walked): any edit to code the spin-up could run makes a new key; tests and the UI are skipped."""
+    root = os.path.join(_REPOSITORY_ROOT, "sim")
+    if root not in _source_digests:
+        digest = hashlib.sha256()
+        for folder, subfolders, filenames in os.walk(root):
+            subfolders[:] = sorted(name for name in subfolders if name not in _SOURCE_SKIPPED_DIRECTORIES)
+            for filename in sorted(filenames):
+                if filename.endswith(".py"):
+                    path = os.path.join(folder, filename)
+                    digest.update(os.path.relpath(path, root).encode("utf-8"))
+                    with open(path, "rb") as handle:
+                        digest.update(hashlib.sha256(handle.read()).digest())
+        _source_digests[root] = digest.hexdigest()
+    return _source_digests[root]
+
+
 def forget_in_process_cache() -> None:
     _in_process_cache.clear()
+    _source_digests.clear()
 
 
 def _cache_key(production: Mapping[str, Any], reached_nodes: Set[str],
@@ -211,7 +234,7 @@ def _cache_key(production: Mapping[str, Any], reached_nodes: Set[str],
     available, _unreached, _unclassified = techniques_available_to(production, reached_nodes)
     payload = json.dumps(
         {"recipes": available, "reached": sorted(reached_nodes),
-         "needs": _needs(),
+         "needs": _needs(), "source": _source_digest(),
          "parameters": [SPIN_UP_MAX_YEARS, SPIN_UP_SHARE_TOLERANCE,
                         labour_market.OCCUPATIONAL_MOBILITY_RATE_PER_YEAR,
                         labour_market.OCCUPATIONAL_MOBILITY_GAP_RESPONSE_GAIN,

@@ -1,4 +1,7 @@
 """A producer's running costs for the loss test leave out what it paid to build plant this year."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy.types import GoodsMove, Transfer

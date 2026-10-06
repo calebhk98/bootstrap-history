@@ -1,35 +1,40 @@
 """Runner for the split regression suite.
 
-`python3 -m sim.tests` (or `python3 sim/tests/__main__.py`) runs every sim/tests/test_*.py topic in
-sorted order, discovered from disk (nothing is registered), and prints a
-summary line. `--only economy,labour` (comma-separated topic
-names, as `--list` prints them) runs just those modules - everything else about
-the run (the harness, --slow, --jobs) is unchanged. `--list` prints the
-topic names and exits.
+`python3 -m sim.tests` runs the quick tier: every sim/tests/test_*.py topic whose file sets a
+module-level `QUICK_TOPIC = True`. `--slow` runs every topic (the full suite) and every
+slow_check. Topics are discovered from disk (nothing is registered) and run in sorted order.
+`--only economy,labour` (comma-separated topic names, as `--list` prints them) runs just those
+modules whatever their tier. `--list` prints the topic names and exits.
 
-`--timing` adds a per-topic table to the summary: wall seconds, share of
-the run, and how many checks each topic bought. That table is what decides
-whether a topic deserves a module-level `SLOW_TOPIC = True`. It changes
-nothing about which checks run, so `--timing` can be added to any
-invocation, including `--only` and `--slow`.
+A topic belongs in the quick tier when it runs in well under a second inside an already
+started process: it tests functions or small fixtures, not a whole game over years. New topics
+start outside it, so the quick run stays quick by default.
 
-`--jobs N` (default: available cores; `--jobs 1` is the plain sequential run)
-runs each topic in its own fresh worker process, N at a time. Each worker
-buffers its output and the runner prints topics in the sorted order, so the
-output is the same as `--jobs 1` apart from timings. Workers run with
-`--jobs 1` inside, so in-topic subprocess parallelism does not multiply with
-topic parallelism, and each gets its own scratch directories. A topic that
-must not run beside others sets a module-level `SERIAL_TOPIC = True`; those
-run one at a time after the parallel batch. Per-topic times are remembered
-in `.cache/` so the next run starts the longest topics first.
+`--timing` adds a per-topic table to the summary: wall seconds, share of the run, and how many
+checks each topic bought. It changes nothing about which checks run.
+
+`--jobs N` (default: available cores; `--jobs 1` is the plain sequential run in this process)
+runs topics in fresh worker processes, N at a time. Quick topics share N workers between them,
+because starting a process costs more than a quick topic; every other topic gets its own. The
+runner prints topics in sorted order, so the output is the same as `--jobs 1` apart from
+timings. Workers run with `--jobs 1` inside, so in-topic subprocess parallelism does not
+multiply with topic parallelism, and each gets its own scratch directories. A topic that must
+not run beside others sets a module-level `SERIAL_TOPIC = True`; those run one at a time after
+the parallel batch. Per-topic times are remembered in `.cache/` so the next run starts the
+longest work first.
 """
+import contextlib
 import importlib
+import io
 import json
 import os
+import random
 import subprocess
 import sys
 import tempfile
+import threading
 import time
+import traceback
 import unittest
 from concurrent.futures import ThreadPoolExecutor
 
@@ -123,16 +128,8 @@ def _flatten(suite):
 def _print_topic_timing(topic_costs):
     """Print what each topic module cost, most expensive first.
 
-    This is the evidence harness.SLOW_TOPICS is supposed to rest on, and
-    until now it did not exist as anything you could run. Three columns:
-    wall seconds, share of the measured total, and how many checks that
-    bought. The third column is the one that stops this table being used
-    badly. A topic costing 8% of the run is worth deferring if it is 6
-    checks; the same 8% is not worth deferring if it is 394, because
-    deferring it means a default run stops proving 394 things, and a suite
-    that is fast because it checks less is not faster, it is weaker. That
-    trade is exactly why the two topics replaced during the subject-based
-    regrouping did NOT get the slow tag passed on to their successors.
+    Three columns: wall seconds, share of the measured total, and how many checks that bought.
+    It is the evidence for which tier a topic belongs in.
 
     Shares are of the sum of the per-topic figures rather than of the
     process's own wall clock, so they add to 100% and stay comparable
@@ -180,63 +177,199 @@ def _save_topic_seconds(topic_costs):
         pass
 
 
-def _worker_main(slug, result_path):
-    """Run one topic in this (fresh) process and dump its results as JSON."""
+def _worker_main(slugs, result_path):
+    """Run topics one after another in this (fresh) process and dump each one's results as JSON.
+
+    Each topic's printed output is captured on its own, and a topic that raises is recorded as
+    crashed without stopping the ones after it. The file is rewritten after every topic, so a
+    process that dies outright still leaves the finished topics' results."""
     from sim.tests import harness
-    checks_before = len(harness.CHECKS_RUN)
-    started_at = time.time()
-    _run_topic(slug, harness)
-    with open(result_path, "w", encoding="utf-8") as handle:
-        json.dump({"seconds": time.time() - started_at,
-                   "checks": harness.CHECKS_RUN[checks_before:],
-                   "failures": harness.FAILURES,
-                   "skipped": harness.SKIPPED,
-                   "subproc_time": harness._SUBPROC_TIME[0],
-                   "subproc_calls": harness._SUBPROC_CALLS[0]}, handle)
+    results = {}
+    for slug in slugs:
+        checks_before, failures_before = len(harness.CHECKS_RUN), len(harness.FAILURES)
+        skipped_before = len(harness.SKIPPED)
+        subprocess_time_before = harness._SUBPROC_TIME[0]
+        subprocess_calls_before = harness._SUBPROC_CALLS[0]
+        output = io.StringIO()
+        crash = None
+        started_at = time.time()
+        with contextlib.redirect_stdout(output):
+            try:
+                _run_topic(slug, harness)
+            except (Exception, SystemExit):
+                crash = traceback.format_exc()
+        results[slug] = {"seconds": time.time() - started_at,
+                         "stdout": output.getvalue(),
+                         "crash": crash,
+                         "checks": harness.CHECKS_RUN[checks_before:],
+                         "failures": harness.FAILURES[failures_before:],
+                         "skipped": harness.SKIPPED[skipped_before:],
+                         "subproc_time": harness._SUBPROC_TIME[0] - subprocess_time_before,
+                         "subproc_calls": harness._SUBPROC_CALLS[0] - subprocess_calls_before}
+        with open(result_path, "w", encoding="utf-8") as handle:
+            json.dump(results, handle)
     return 0
 
 
-def _start_worker(slug, harness, result_dir):
-    """Launch a fresh process for one topic; in-topic parallelism is 1 per worker."""
-    result_path = os.path.join(result_dir, slug + ".json")
-    command = [sys.executable, os.path.abspath(__file__), "--worker", slug,
-               "--worker-result", result_path, "--worker-tag", slug, "--jobs", "1"]
+def _start_worker(slugs, harness, result_dir, tag):
+    """Launch a fresh process for a list of topics; in-topic parallelism is 1 per worker."""
+    result_path = os.path.join(result_dir, tag + ".json")
+    command = [sys.executable, os.path.abspath(__file__), "--worker", ",".join(slugs),
+               "--worker-result", result_path, "--worker-tag", tag, "--jobs", "1"]
     if harness.SLOW:
         command.append("--slow")
     completed = harness._real_subprocess_run(command, capture_output=True, text=True,
                                              cwd=_REPO_ROOT)
-    result = None
+    results = {}
     try:
         with open(result_path, encoding="utf-8") as handle:
-            result = json.load(handle)
+            results = json.load(handle)
     except (OSError, ValueError):
         pass
-    return completed, result
+    return completed, results
+
+
+def _quick_batches(slugs, seconds_before, count):
+    """Quick topics shared out over `count` workers, longest first onto the least loaded."""
+    batches = [[] for _ in range(max(1, min(count, len(slugs))))]
+    loads = [0.0] * len(batches)
+    for slug in sorted(slugs, key=lambda slug: -seconds_before.get(slug, 0.0)):
+        lightest = loads.index(min(loads))
+        batches[lightest].append(slug)
+        loads[lightest] += seconds_before.get(slug, 0.0)
+    return [batch for batch in batches if batch]
+
+
+def _report_progress(slugs, results, progress):
+    """One stderr line per finished topic as it finishes, and its time remembered at once, so a
+    long run shows where it is and an interrupted one still leaves its timings."""
+    with progress["lock"]:
+        for slug in slugs:
+            progress["done"] += 1
+            result = results.get(slug)
+            if result is None:
+                state = "crashed"
+            else:
+                state = "%.1fs%s" % (result["seconds"],
+                                     " FAIL" if result["failures"] or result["crash"] else "")
+            sys.stderr.write("  [%d/%d] %s %s\n" % (progress["done"], progress["total"], slug, state))
+        sys.stderr.flush()
+        _save_topic_seconds([(slug, results[slug]["seconds"], 0) for slug in slugs if slug in results])
+
+
+def _fork_topics(slugs, harness, result_dir):
+    """Run topics in a child forked from this warmed process; returns the child's pid and files.
+
+    The child starts with everything this process has already imported, loaded and built,
+    and changes nothing here: its writes are its own copy."""
+    tag = slugs[0] if len(slugs) == 1 else "batch_" + slugs[0]
+    result_path = os.path.join(result_dir, tag + ".json")
+    error_path = os.path.join(result_dir, tag + ".stderr")
+    pid = os.fork()
+    if pid:
+        return pid, result_path, error_path
+    status = 1
+    try:
+        error_handle = os.open(error_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        os.dup2(error_handle, 2)
+        null_handle = os.open(os.devnull, os.O_WRONLY)
+        os.dup2(null_handle, 1)
+        random.seed()
+        harness._LAST_AT = time.time()
+        harness.JOBS = 1
+        harness.use_scratch_tag(tag)
+        status = _worker_main(slugs, result_path)
+        harness._remove_scratch_dirs_if_green()
+    except BaseException:
+        traceback.print_exc()
+    finally:
+        sys.stdout.flush()
+        sys.stderr.flush()
+        os._exit(status)
+
+
+def _run_topics_forked(run_now, harness, jobs):
+    """Run topics in children forked from this process, `jobs` at a time: each other topic in a
+    child of its own, the quick ones shared out over a few."""
+    harness.sim()       # warm what every game build shares before the first fork
+    seconds_before = _load_topic_seconds()
+    known = sorted(seconds_before.values())
+    unknown_guess = known[len(known) // 2] if known else 0.0
+    quick = set(harness.QUICK_TOPICS)
+    pending = [[slug] for slug in run_now if slug not in quick]
+    pending += _quick_batches([slug for slug in run_now if slug in quick], seconds_before, jobs)
+    pending.sort(key=lambda slugs: -sum(seconds_before.get(slug, unknown_guess) for slug in slugs))
+    progress = {"done": 0, "total": len(run_now), "lock": threading.Lock()}
+    outcomes, running = {}, {}
+    with tempfile.TemporaryDirectory(prefix="rome_suite_") as result_dir:
+        while pending or running:
+            while pending and len(running) < jobs:
+                slugs = pending.pop(0)
+                pid, result_path, error_path = _fork_topics(slugs, harness, result_dir)
+                running[pid] = (slugs, result_path, error_path)
+            pid, wait_status = os.wait()
+            if pid not in running:
+                continue
+            slugs, result_path, error_path = running.pop(pid)
+            results = {}
+            try:
+                with open(result_path, encoding="utf-8") as handle:
+                    results = json.load(handle)
+            except (OSError, ValueError):
+                pass
+            try:
+                with open(error_path, encoding="utf-8", errors="replace") as handle:
+                    error_text = handle.read()
+            except OSError:
+                error_text = ""
+            completed = subprocess.CompletedProcess(slugs, os.waitstatus_to_exitcode(wait_status),
+                                                    "", error_text)
+            _report_progress(slugs, results, progress)
+            for slug in slugs:
+                outcomes[slug] = (completed, results.get(slug))
+    return _merge_outcomes(run_now, outcomes, harness)
 
 
 def _run_topics_parallel(run_now, harness, jobs):
-    """Run topics in worker processes; print and merge results in topic order."""
+    """Run topics in worker processes; print and merge results in topic order.
+
+    Quick topics share a few processes, since starting one costs more than the topic itself;
+    every other topic gets a fresh process of its own."""
     serial = set(harness.SERIAL_TOPICS)
+    quick = set(harness.QUICK_TOPICS)
     seconds_before = _load_topic_seconds()
-    parallel_slugs = sorted((slug for slug in run_now if slug not in serial),
-                            key=lambda slug: -seconds_before.get(slug, 0.0))
-    serial_slugs = [slug for slug in run_now if slug in serial]
+    work = [[slug] for slug in run_now if slug not in serial and slug not in quick]
+    work += _quick_batches([slug for slug in run_now if slug in quick and slug not in serial],
+                           seconds_before, jobs)
+    work.sort(key=lambda slugs: -sum(seconds_before.get(slug, 0.0) for slug in slugs))
+    serial_work = [[slug] for slug in run_now if slug in serial]
     topic_costs = []
     outcomes = {}
+    progress = {"done": 0, "total": len(run_now), "lock": threading.Lock()}
     with tempfile.TemporaryDirectory(prefix="rome_suite_") as result_dir:
+        def run(slugs):
+            tag = slugs[0] if len(slugs) == 1 else "batch_" + slugs[0]
+            completed, results = _start_worker(slugs, harness, result_dir, tag)
+            _report_progress(slugs, results, progress)
+            return completed, results
         with ThreadPoolExecutor(max_workers=jobs) as pool:
-            futures = {slug: pool.submit(_start_worker, slug, harness, result_dir)
-                       for slug in parallel_slugs}
+            futures = [(slugs, pool.submit(run, slugs)) for slugs in work]
             # Serial topics wait for the whole parallel batch, then run one at a time.
-            for future in futures.values():
+            for _, future in futures:
                 future.exception()
-        for slug in serial_slugs:
-            outcomes[slug] = _start_worker(slug, harness, result_dir)
-        for slug, future in futures.items():
-            outcomes[slug] = future.result()
+        finished = [(slugs, future.result()) for slugs, future in futures]
+        finished += [(slugs, run(slugs)) for slugs in serial_work]
+        for slugs, (completed, results) in finished:
+            for slug in slugs:
+                outcomes[slug] = (completed, results.get(slug))
+    return _merge_outcomes(run_now, outcomes, harness)
+
+
+def _merge_outcomes(run_now, outcomes, harness):
+    """Print each topic's output in topic order and fold its results into the harness totals."""
+    topic_costs = []
     for slug in run_now:
         completed, result = outcomes[slug]
-        sys.stdout.write(completed.stdout)
         if result is None:
             message = "%s: worker crashed (exit %s)" % (slug, completed.returncode)
             print("  %-58s FAIL %s" % (message, completed.stderr.strip()[-400:]))
@@ -244,11 +377,17 @@ def _run_topics_parallel(run_now, harness, jobs):
             harness.FAILURES.append(message)
             topic_costs.append((slug, 0.0, 1))
             continue
+        sys.stdout.write(result["stdout"])
         harness.CHECKS_RUN.extend((name, took) for name, took in result["checks"])
         harness.FAILURES.extend(result["failures"])
         harness.SKIPPED.extend(result["skipped"])
         harness._SUBPROC_TIME[0] += result["subproc_time"]
         harness._SUBPROC_CALLS[0] += result["subproc_calls"]
+        if result["crash"]:
+            message = "%s: worker crashed (exception)" % slug
+            print("  %-58s FAIL %s" % (message, result["crash"].strip()[-400:]))
+            harness.CHECKS_RUN.append((message, 0.0))
+            harness.FAILURES.append(message)
         topic_costs.append((slug, result["seconds"], len(result["checks"])))
     _save_topic_seconds(topic_costs)
     return topic_costs
@@ -274,7 +413,7 @@ def main(argv=None):
     if "--worker" in argv:
         position = argv.index("--worker")
         result_path = argv[argv.index("--worker-result") + 1]
-        return _worker_main(argv[position + 1], result_path)
+        return _worker_main(argv[position + 1].split(","), result_path)
 
     only = _parse_only(argv)
     if only is None:
@@ -295,34 +434,20 @@ def main(argv=None):
     # same way whether reached via -m or via this file's own __main__ guard.
     from sim.tests import harness
 
-    # SLOW TOPICS ARE OPT-IN, THE SAME WAY SLOW CHECKS ARE: same --slow flag
-    # / ROME_SLOW_TESTS env var harness.py already reads, one grain coarser.
-    # Naming a topic with --only is itself an explicit request for it, so a
-    # topic in harness.SLOW_TOPICS still runs when the person asked for it by
-    # name - only the DEFAULT (no --only) run skips it. Nobody should have to
-    # pass --slow and --only together just to get a topic they already named.
+    # The default run is the quick tier: topics whose file sets QUICK_TOPIC = True. --slow (or
+    # ROME_SLOW_TESTS) runs every topic. A topic named with --only runs whatever its tier.
     skipped_slow_topics = ([slug for slug in selected
-                             if slug in harness.SLOW_TOPICS] if only is None and not harness.SLOW
+                             if slug not in harness.QUICK_TOPICS] if only is None and not harness.SLOW
                             else [])
     run_now = [slug for slug in selected if slug not in skipped_slow_topics]
 
     print("PLAYTEST REGRESSIONS\n" + "=" * 72)
-    # PER-TOPIC WALL TIME, MEASURED HERE AND NOWHERE ELSE. harness.check()
-    # times each individual CHECK (as the gap since the previous one, which
-    # is why a topic module's import-time work lands on its own first check
-    # rather than vanishing). That is the right grain for finding one
-    # expensive check inside a cheap topic. It is the wrong grain for the
-    # decision harness.SLOW_TOPICS actually encodes, which is whether a WHOLE
-    # TOPIC MODULE is worth opting out of a default run.
-    #
-    # harness.SLOW_TOPICS' own percentages need a real command producing the
-    # number, not a hand-run measurement nothing re-checks: a figure taken by
-    # hand once and thrown away is unreproducible from the moment it is
-    # written and drifts silently thereafter. CLAUDE.md section 8 says a
-    # number in prose carries the command that produced it or it does not go
-    # in. This loop is that command.
+    # Per-topic wall time is measured here (check() only times single checks); --timing prints it.
     topic_costs = []
-    if harness.JOBS > 1 and len(run_now) > 1:
+    if harness.JOBS > 1 and len(run_now) > 1 and hasattr(os, "fork"):
+        topic_costs = _run_topics_forked(
+            [slug for slug in TOPICS if slug in run_now], harness, harness.JOBS)
+    elif harness.JOBS > 1 and len(run_now) > 1:
         topic_costs = _run_topics_parallel(
             [slug for slug in TOPICS if slug in run_now], harness, harness.JOBS)
     else:
@@ -341,13 +466,8 @@ def main(argv=None):
              ("   (%d slow checks skipped: run with --slow)" % len(harness.SKIPPED))
              if harness.SKIPPED else ""))
     if skipped_slow_topics:
-        # Same spirit as the skipped-CHECK line above: say plainly that this
-        # was not the full suite, how many topics were left out, which ones,
-        # and the exact flag that runs them, so nobody mistakes a fast run
-        # for a full one.
-        print("%d topic(s) skipped (slow): %s - run with --slow, or name one "
-              "with --only to run it anyway"
-              % (len(skipped_slow_topics), ", ".join(skipped_slow_topics)))
+        print("quick tier only: %d of %d topics skipped - run with --slow for the full suite, "
+              "or name one with --only" % (len(skipped_slow_topics), len(selected)))
     slowest_checks = sorted(harness.CHECKS_RUN,
                             key=lambda row: -row[1])[:5]
     if slowest_checks and slowest_checks[0][1] >= 5.0:

@@ -18,6 +18,9 @@ did.
 
 sim/world/demography.py standalone: age-cohort population dynamics (unittest-style).
 """
+
+QUICK_TOPIC = True
+
 import math
 import unittest
 

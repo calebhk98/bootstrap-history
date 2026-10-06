@@ -1,5 +1,8 @@
 """A balance left a float's underflow below zero (smaller than the smallest normal float) is rounding
 residue, not an overdraft; a real overdraft still fails."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy.accounts import Book, InsufficientFunds

@@ -2,6 +2,9 @@
 hard trade keeps a premium an easy one with the same training loses, an employer paying over the market
 staffs first, a school seeds a trade nobody practised, workers follow pay between places, and nobody is
 created or lost on the way."""
+
+QUICK_TOPIC = True
+
 import time
 import unittest
 

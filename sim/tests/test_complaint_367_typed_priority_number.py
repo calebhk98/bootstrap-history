@@ -1,4 +1,7 @@
 """Complaint 367: typed `priority 5` (no id) must refuse with usage, not crash."""
+
+QUICK_TOPIC = True
+
 from .harness import *  # noqa: F401,F403
 from sim.ui.proto.typed import parse_typed
 

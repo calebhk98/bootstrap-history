@@ -1,5 +1,8 @@
 """New makers: where buyers wanted more of a good than was sold, a known way of making it that pays at
 the price they bid starts a producer on the market's main tile."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy import entry

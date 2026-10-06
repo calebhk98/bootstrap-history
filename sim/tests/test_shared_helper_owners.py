@@ -1,4 +1,7 @@
 """Each shared helper or constant has one owner; the callers that differ in edge handling say so at the call."""
+
+QUICK_TOPIC = True
+
 import json
 import os
 import re

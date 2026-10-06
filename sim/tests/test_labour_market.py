@@ -17,6 +17,9 @@ a small, hand-built synthetic fixture this file controls itself.
 
 sim/labour/labour_market.py: fixed point over trade allocation in labour-hours, needing no wages.
 """
+
+QUICK_TOPIC = True
+
 import ast
 import os
 import unittest

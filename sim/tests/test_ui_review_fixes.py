@@ -1,5 +1,8 @@
 """Review fixes in sim/ui, on stubs (no game is built): filler note, programme caps, note log rows,
 replay order, portfolio paging input, goals cache."""
+
+QUICK_TOPIC = True
+
 import inspect
 import weakref
 from types import SimpleNamespace as _Namespace

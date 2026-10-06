@@ -4,6 +4,9 @@ sim/engine/civ_start_check.py is the check; `simulator.py validate` prints it pe
 civilisation. Here: a deliberately broken fixture proves each class is caught,
 and the shipped civilisations must have no free-but-unheld node.
 """
+
+QUICK_TOPIC = True
+
 import os
 import unittest
 

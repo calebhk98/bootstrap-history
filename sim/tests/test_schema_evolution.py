@@ -5,6 +5,9 @@ Tuple, Counter, defaultdict, ActiveProjectState, Optional, primitive scalars)
 automatically saves and loads with exact type and value parity without needing
 field-name-specific registration or special cases.
 """
+
+QUICK_TOPIC = True
+
 import collections
 from dataclasses import dataclass, field
 from typing import Any, DefaultDict, Dict, List, Optional, Set, Tuple

@@ -85,11 +85,11 @@ ids = sorted(name[:-5] for name in os.listdir(data.CIVDIR)
              if name.endswith(".json") and not name.startswith("_"))
 assert ids and "%(hidden)s" not in ids
 for civ_id in ids:
-    sim = S.Sim(nodes, order, random.Random(1), events=False, manual=False,
-                civ=S.load_civ(civ_id))
-    sim.goal, sim.done_year = goal, {}
-    for _ in range(3):
-        sim.step()
+    S.load_civ(civ_id)
+sim = S.Sim(nodes, order, random.Random(1), events=False, manual=False,
+            civ=S.load_civ(ids[0]))
+sim.goal, sim.done_year = goal, {}
+sim.step()
 print("ok", len(ids))
 '''
 

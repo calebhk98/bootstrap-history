@@ -1,5 +1,7 @@
 """Test that UI strings do not hardcode 'denarii' or 'transistor'."""
 
+QUICK_TOPIC = True
+
 import tokenize
 import io
 

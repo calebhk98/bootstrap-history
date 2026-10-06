@@ -1,4 +1,7 @@
 """Migration in the labour-market core, on hand-built records."""
+
+QUICK_TOPIC = True
+
 import random
 import unittest
 

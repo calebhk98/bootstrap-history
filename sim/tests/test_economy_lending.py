@@ -1,4 +1,7 @@
 """Who borrows and what follows: households for subsistence, merchants for cargo, and the default cascade."""
+
+QUICK_TOPIC = True
+
 import dataclasses
 import types
 import unittest

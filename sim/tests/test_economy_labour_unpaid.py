@@ -1,4 +1,7 @@
 """Hours an employer cannot pay for are not delivered: the workers keep them for their own plots."""
+
+QUICK_TOPIC = True
+
 import types
 import unittest
 

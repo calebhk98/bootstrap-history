@@ -38,6 +38,9 @@ a worse failure than the one being guarded against.
 
     python3 -m pip install ruff
 """
+
+QUICK_TOPIC = True
+
 import json
 import os
 import re

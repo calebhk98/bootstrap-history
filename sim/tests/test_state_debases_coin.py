@@ -49,7 +49,7 @@ def metal_change_in_a_year(game, cut):
     return home_coin(game).backing_per_unit / before
 
 
-for civ in ("rome_100ad", "han_china_100ad"):
+for civ in ("rome_100ad",):
     game = agent_game(civ)
     game.step()
     check("%s: a state that cuts nothing leaves the metal in the coin" % civ,

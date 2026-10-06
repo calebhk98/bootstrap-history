@@ -41,7 +41,7 @@ def actor_sim(rate):
 	return game
 
 
-def run(rate, pooled_share, years=30):
+def run(rate, pooled_share, years=12):
 	original = actor_registry.ENTREPRENEURIAL_CAPITAL_SHARE
 	actor_registry.ENTREPRENEURIAL_CAPITAL_SHARE = pooled_share
 	try:

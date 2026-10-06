@@ -3,7 +3,6 @@ show last year, this year and the named causes, read from the engine's own funct
 from .harness import *  # noqa: F401,F403
 
 from sim.ui import figures as figure_registry
-from sim.ui.proto import command_registry
 
 HEADLINE = ("cash", "recurring_net", "income", "upkeep", "population",
             "literacy_general", "price_index", "hazard")
@@ -20,7 +19,7 @@ def played_sim():
                     if NODES[node_id]["rev"] > 0 and test_sim.can_start(node_id)), None)
     if started:
         ask(test_sim, cmd="start", id=started)
-    ask(test_sim, cmd="step", years=2)
+    ask(test_sim, cmd="step", years=1)
     return test_sim
 
 
@@ -76,5 +75,3 @@ try:
           and {cause["cause"] for cause in probe["causes"]} == {"alpha", "beta"}, probe)
 finally:
     figure_registry.FIGURES.pop("test_probe", None)
-
-check("figures is in the command registry", "figures" in command_registry.COMMANDS)

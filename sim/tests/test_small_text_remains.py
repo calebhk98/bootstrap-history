@@ -5,8 +5,8 @@ Complaint 232 item 8: "people kept on your own staff" text appears with no conte
 Complaint 232 item 10: Train reply misleading about when work can start
 """
 from .harness import *
+from sim.tests import cli_in_process
 
-_SIMULATOR = os.path.join(HERE, "simulator.py")
 _scratch = tempfile.mkdtemp()
 
 
@@ -23,8 +23,7 @@ def _env(name, config=None):
 
 
 def _run(arguments, text, env, cwd=None):
-    return subprocess.run([sys.executable, _SIMULATOR] + arguments, input=text,
-                          capture_output=True, text=True, timeout=120, env=env, cwd=cwd)
+    return cli_in_process.run(arguments, input_text=text, environment=env, cwd=cwd)
 
 
 # ---- Complaint 194: "Imperial edict" is Rome-specific

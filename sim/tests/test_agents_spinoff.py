@@ -1,5 +1,8 @@
 """Spin-offs: staff who know a concern leave to found a rival firm that copies it; the chance grows with
 staff and years, the parent keeps what it knew, the stake is pooled capital, and a patent blocks it."""
+
+QUICK_TOPIC = True
+
 from .harness import check
 
 from sim.agents.api import ActorRecord, ActorRegistry, ActorsState

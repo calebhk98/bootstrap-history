@@ -1,4 +1,7 @@
 """Households above subsistence bid for a durable, dense good to hold as wealth."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy.households_store import STORE_PRIORITY

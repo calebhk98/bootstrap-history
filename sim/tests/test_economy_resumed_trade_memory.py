@@ -1,4 +1,7 @@
 """A sliver of trade after years with buyers and no seller must not reset the remembered price."""
+
+QUICK_TOPIC = True
+
 import types
 import unittest
 

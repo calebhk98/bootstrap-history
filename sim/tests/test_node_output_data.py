@@ -5,6 +5,9 @@ staff it holds, or a declared `annual_output_t`. These rules keep that data
 honest: a declaration names a product (it gates an entry) and carries its
 basis, and a gated node that makes something is bounded by one of the three
 rather than falling back to an authored revenue figure."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.engine import data, node_output, validate_output_bounds

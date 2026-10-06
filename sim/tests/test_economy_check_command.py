@@ -14,23 +14,37 @@ class EconomyCheckTests(unittest.TestCase):
         cls.game = Sim(nodes, [], random.Random(1), events=False, manual=True,
                        civ=load_civ("rome_100ad"), cfg={"agent_economy": True})
         cls.game.done_year = {}
-        for _year in range(3):
+        for _year in range(2):
             cls.game.step()
 
     def test_the_port_reports_the_economys_health(self):
         report = self.game.economy.health()
-        self.assertEqual(report["years"], 3)
+        self.assertEqual(report["years"], 2)
         self.assertTrue(report["staple"])
         for figure in ("staple_volatility", "metal_volatility", "hired_share", "hunger_share", "staple_over_labour"):
             self.assertIn(figure, report["figures"])
         self.assertTrue(0.0 <= report["figures"]["hunger_share"] <= 1.0)
 
+
+class EconomyCheckRendering(unittest.TestCase):
+    """The command's own loop and printing, on a literal health report instead of a played game."""
+
+    HEALTH = {"years": 2, "staple": "grain", "metals": ["iron", "copper"],
+              "figures": {"staple_volatility": 0.12, "metal_volatility": 0.05, "hired_share": 0.8,
+                          "hunger_share": 0.01, "staple_over_labour": 1.5}}
+
     def test_the_command_prints_a_section_per_civilisation_and_seed(self):
+        from sim.ui import cli_economy_check
         from sim.ui.cli_economy_check import cmd_economy_check
         args = type("Args", (), {"years": 2, "seeds": "1", "civs": "rome_100ad", "metals": "", "staple": ""})()
         output = io.StringIO()
-        with contextlib.redirect_stdout(output):
-            cmd_economy_check(args)
+        played = cli_economy_check.check_one
+        cli_economy_check.check_one = lambda *arguments, **keywords: self.HEALTH
+        try:
+            with contextlib.redirect_stdout(output):
+                cmd_economy_check(args)
+        finally:
+            cli_economy_check.check_one = played
         text = output.getvalue()
         for expected in ("rome_100ad", "seed 1", "staple", "hired_share", "hunger_share", "staple_over_labour"):
             self.assertIn(expected, text)

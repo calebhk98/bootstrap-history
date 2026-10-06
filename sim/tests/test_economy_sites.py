@@ -1,4 +1,7 @@
 """Site limits: what a site imposes on a recipe, handed in from outside; the economy models no deposit."""
+
+QUICK_TOPIC = True
+
 import unittest
 from dataclasses import replace
 from types import SimpleNamespace

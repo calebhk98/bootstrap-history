@@ -1,4 +1,7 @@
 """Per-tile food potential: finite on every tile, plausible by climate, and driven by map data only."""
+
+QUICK_TOPIC = True
+
 import math
 import os
 import statistics

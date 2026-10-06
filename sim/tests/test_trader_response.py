@@ -1,4 +1,7 @@
 """Merchants have a cost and a response: a thin gap does not move goods (Complaints/339)."""
+
+QUICK_TOPIC = True
+
 import math
 import unittest
 

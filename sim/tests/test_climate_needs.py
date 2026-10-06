@@ -1,4 +1,7 @@
 """sim/world/climate_needs.py: warmth, clothing and shelter floors calculated from climate (unittest-style)."""
+
+QUICK_TOPIC = True
+
 import json
 import os
 import unittest

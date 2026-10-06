@@ -1,4 +1,7 @@
 """api.wages_by_trade_weighted weights each trade's remembered wages by last year's hours hired."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy import api

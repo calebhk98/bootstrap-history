@@ -5,9 +5,10 @@ those changes made an unbroken game read a different pool from the one a reloade
 from .harness import *  # noqa: F401,F403
 from sim.tests import fingerprint as perf_fingerprint
 
-game = perf_fingerprint.build(dict(civ="rome_100ad", seed=1, years=36, events=True, fog=False))
+game = perf_fingerprint.build(dict(civ="rome_100ad", seed=1, years=3, events=True, fog=False))
+actors_at_start = len(game.actors.actors)
 stale = []
-for year in range(1, 37):
+for year in range(1, 4):
     game.step()
     registry = game.actors
     for trade in sorted({trade for actor in registry.actors.values() for trade in actor.record.workforce}):
@@ -19,3 +20,5 @@ for year in range(1, 37):
             stale.append((year, trade))
 check("the staff firms and governments employ is counted as they now stand, at the end of every year",
       not stale, "year and trade that differ: %s" % stale[:5])
+check("...in a game where entry actually changed who employs people during those years",
+      len(game.actors.actors) > actors_at_start, (actors_at_start, len(game.actors.actors)))

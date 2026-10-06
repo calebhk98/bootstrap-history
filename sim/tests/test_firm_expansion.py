@@ -78,6 +78,26 @@ def market_grows(sim_game, times):
 
 
 game = settled()
+
+# an entrant expects what incumbents' expansion leaves
+entry_before = SimWorld(game).entry_gross("zz_grow", game.actors.rivals_of("zz_grow", ""), 1)
+incumbent = game.actors.active_firms()[0]
+founded_capacity = incumbent.record.capacity.get("zz_grow", 1.0)
+incumbent.record.capacity["zz_grow"] = 6.0
+game.actors.note_capacity_change(incumbent.actor_id)
+entry_after = SimWorld(game).entry_gross("zz_grow", game.actors.rivals_of("zz_grow", ""), 1)
+check("an entrant expects less once an incumbent has expanded", entry_after < entry_before, (entry_before, entry_after))
+incumbent.record.capacity["zz_grow"] = founded_capacity
+game.actors.note_capacity_change(incumbent.actor_id)
+
+# no growth, no further expansion or entry
+steady_snapshot = (len(game.actors.active_firms()), round(total_capacity(game), 6))
+for _ in range(10):
+	next_year(game)
+check("a market that stops growing stops gaining firms and capacity",
+      (len(game.actors.active_firms()), round(total_capacity(game), 6)) == steady_snapshot,
+      (steady_snapshot, len(game.actors.active_firms()), total_capacity(game)))
+
 firms_before = len(game.actors.active_firms())
 capacity_before = total_capacity(game)
 check("some firm entered before the market grew", firms_before > 0, firms_before)
@@ -98,23 +118,6 @@ check("the market's growth is served by capacity at least as much as by firm cou
       (capacity_before, capacity_after, firms_before, firms_after))
 check("a firm ends larger than it was founded",
       max(firm.record.capacity.get("zz_grow", 1.0) for firm in game.actors.active_firms()) > 1.5)
-
-# an entrant expects what incumbents' expansion leaves
-fresh = settled(years=40)
-before = SimWorld(fresh).entry_gross("zz_grow", fresh.actors.rivals_of("zz_grow", ""), 1)
-fresh.actors.active_firms()[0].record.capacity["zz_grow"] = 6.0
-fresh.actors.note_capacity_change(fresh.actors.active_firms()[0].actor_id)
-after = SimWorld(fresh).entry_gross("zz_grow", fresh.actors.rivals_of("zz_grow", ""), 1)
-check("an entrant expects less once an incumbent has expanded", after < before, (before, after))
-
-# no growth, no further expansion or entry
-steady = settled(years=80)
-snapshot = (len(steady.actors.active_firms()), round(total_capacity(steady), 6))
-for _ in range(10):
-	next_year(steady)
-check("a market that stops growing stops gaining firms and capacity",
-      (len(steady.actors.active_firms()), round(total_capacity(steady), 6)) == snapshot,
-      (snapshot, len(steady.actors.active_firms()), total_capacity(steady)))
 
 # capital dearer than any margin: no expansion
 dear = actor_sim([NODE])

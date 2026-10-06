@@ -1,4 +1,7 @@
 """A producer whose runs do not pay needs no working capital, so it is not pressed to dump stock at zero."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy import producers

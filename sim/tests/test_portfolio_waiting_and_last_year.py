@@ -10,7 +10,6 @@ def ask(test_sim, **command):
 
 poor = sim(capital=2_000.0)
 poor.end_year = poor.cfg["start_year"] + poor.cfg["horizon_years"]
-ask(poor, cmd="step", years=1)
 screen = ask(poor, cmd="portfolio")
 waiting = screen.get("waiting_to_start")
 check("portfolio has a waiting-to-start section", isinstance(waiting, list) and waiting, screen.keys())
@@ -32,16 +31,16 @@ from sim.ui.proto.render_typed import _RENDERERS
 text = _RENDERERS["portfolio"](screen)
 check("the printed screen names the waiting work", "WAITING TO START" in text, text[:400])
 
-rich = sim(capital=5_000_000.0)
-rich.end_year = rich.cfg["start_year"] + rich.cfg["horizon_years"]
+rich = poor
+rich.capital = 5_000_000.0
 for node_id in list(rich.order):
-    if len(rich.active) >= 6:
+    if len(rich.active) >= 2:
         break
     if node_id not in rich.done and NODES[node_id]["yrs"] >= 6 and rich.can_start(node_id):
         ask(rich, cmd="start", id=node_id)
 ask(rich, cmd="step", years=2)  # arrival snapshot plus two years
 rows = ask(rich, cmd="portfolio")["projects"]
-check("a project running two years carries last year's effective hours",
+check("a project that has run a year carries last year's effective hours",
       rows and all("hours_effective_last_year" in row for row in rows), rows[:1])
 snapshots = rich._dashboard_history
 check("last year's figure is the earlier snapshot's, not this year's",
