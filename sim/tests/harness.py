@@ -283,14 +283,15 @@ def check(name, passed, detail=""):
 
 
 def proto(lines, civ="rome_100ad", kit=None, fog=False):
-    """Drive the real protocol in a real subprocess, as a player would."""
-    cmd = [sys.executable, os.path.join(HERE, "simulator.py"), "agent", "--civ", civ]
+    """Drive the real `simulator.py agent` protocol, in this process (cli_in_process.py)."""
+    from sim.tests import cli_in_process
+    arguments = ["agent", "--civ", civ]
     if kit:
-        cmd += ["--kit", kit]
+        arguments += ["--kit", kit]
     if fog:
-        cmd += ["--fog"]
-    completed_process = subprocess.run(cmd, input="\n".join(json.dumps(command) for command in lines) + "\n",
-                       capture_output=True, text=True, timeout=300, cwd=ROOT)
+        arguments += ["--fog"]
+    completed_process = cli_in_process.run(
+        arguments, "\n".join(json.dumps(command) for command in lines) + "\n")
     parsed_lines = []
     for line in completed_process.stdout.splitlines():
         try:
