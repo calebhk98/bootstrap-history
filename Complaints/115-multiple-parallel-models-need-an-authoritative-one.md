@@ -216,7 +216,7 @@ strata money moves only by what crossed the edge and the state's relief.
 
 ## Still two owners
 
-- Labour (428): the agent economy clears wages through the labour core; the engine's society `Workforce.step` (hours by trade) is still a second copy.
+- Labour (428): done. The agent economy clears wages through the labour core, and the engine's hours by trade are read from the core's people (the recipe graph's need while the agent economy is off); `Workforce.step` is gone.
 - Merchants (405): one owner per flow now for goods actors carry (decision above); the stand-ins still own the rest.
 - Demand baskets: `sim/world/demand.py`, the economy's household baskets and the agents' strata baskets.
 - The engine's `market_loans`, `update_capital_market` and its rate still run (and set the rate) when the agent economy is off;

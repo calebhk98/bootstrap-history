@@ -1,8 +1,9 @@
-"""Yearly allocation of a society's working hours between farm work and the
-rest of the economy, through sim.labour.labour_market.
+"""Yearly split of a society's working hours between farm work and the other trades.
 
-Labour mixin. The state is an hours-by-trade dict on the economy state, so any
-actor that owns one can be stepped with the same functions.
+Labour mixin. The farm's hours follow the food balance, moving toward what the farm is needed for
+at the occupational mobility rate. The other trades share the rest in proportion to the people the
+labour core holds in them (agent economy on), else to the need the recipe graph puts on them.
+Nothing here moves people between trades: the labour core does that (sim/labour/market/DESIGN.md).
 """
 from sim.world import agriculture
 from sim.world import farming_technique
@@ -64,17 +65,6 @@ def farm_workers_needed(baseline_fte, current_fte, shortfall_kg,
     return min(wanted, land_limit_fte)
 
 
-def starting_hours(production, reached_nodes, techniques_available_to, total_hours, farm_hours):
-    """Hours by trade at the start: the farm hours the farm logic asks for,
-    and the rest split by the spun-up trade shares."""
-    rest_hours = total_hours - farm_hours
-    shares = workforce_spinup.cached_spin_up(
-        production, reached_nodes, techniques_available_to).shares_by_trade
-    hours = {trade: rest_hours * share for trade, share in shares.items()}
-    hours[FARM_TRADE] = farm_hours
-    return hours
-
-
 def hours_needed_by_trade(need_shares, total_hours, farm_hours_needed):
     """Hours each trade is needed for: the farm need, and the rest of the
     society's hours split by each trade's share of non-farm need."""
@@ -85,17 +75,24 @@ def hours_needed_by_trade(need_shares, total_hours, farm_hours_needed):
     return needed
 
 
-def reallocate(hours_by_trade, total_hours, needed_by_trade,
-               skill_family_of=labour_market.trade_skill_family):
-    """One year of labour_market.Workforce.step toward the stated need of
-    every trade, under its mobility limits; `skill_family_of` is the trade
-    registry's family."""
-    current_total = sum(hours_by_trade[trade] for trade in sorted(hours_by_trade))
-    scale = total_hours / current_total if current_total > 0.0 else 0.0
-    workforce = labour_market.Workforce(
-        {trade: hours * scale for trade, hours in hours_by_trade.items()})
-    workforce.step(needed_by_trade, skill_family_of=skill_family_of)
-    return workforce.hours_by_trade
+def society_hours(total_hours, farm_hours, shares):
+    """The society's hours by trade: the farm's, and the rest shared by `shares` of non-farm work."""
+    farm_hours = min(max(farm_hours, 0.0), total_hours)
+    rest_hours = total_hours - farm_hours
+    hours = {trade: rest_hours * share for trade, share in sorted(shares.items())}
+    hours[FARM_TRADE] = farm_hours
+    return hours
+
+
+def farm_hours_after(current_hours, needed_hours, total_hours):
+    """Farm hours a year on: toward what the farm is needed for, no faster than the occupational
+    mobility rate (larger gaps move faster, up to its ceiling) lets hours leave or join it."""
+    gap = needed_hours - current_hours
+    basis = max(current_hours, labour_market.WALKABLE_TRADE_SEED_SHARE_OF_ECONOMY_HOURS * total_hours)
+    rate = labour_market.gap_responsive_mobility_rate(
+        labour_market.OCCUPATIONAL_MOBILITY_RATE_PER_YEAR, labour_market.relative_gap_size(gap, basis))
+    moved = max(-rate * basis, min(rate * basis, gap))
+    return min(total_hours, max(0.0, current_hours + moved))
 
 
 class LabourAllocationMixin:
@@ -116,6 +113,17 @@ class LabourAllocationMixin:
         rest = sum(value for trade, value in hours.items() if trade != FARM_TRADE)
         return {trade: value / rest for trade, value in hours.items()
                 if trade != FARM_TRADE and rest > 0.0}
+
+    def _non_farm_shares(self):
+        """Each non-farm trade's share of the hours the society gives them: the labour core's people in
+        it while the agent economy runs, else the need the recipe graph puts on it."""
+        people = self._world.economy.agent_people_by_trade()
+        if people:
+            held = {trade: count for trade, count in people.items() if trade != FARM_TRADE and count > 0.0}
+            total = sum(held.values())
+            if total > 0.0:
+                return {trade: count / total for trade, count in held.items()}
+        return self._non_farm_need_shares()
 
     def _hours_needed_by_trade(self, total_hours=None):
         """Hours each trade is needed for out of the society's hours (the labour allocation)."""
@@ -251,14 +259,13 @@ class LabourAllocationMixin:
             self._share_farm_fte(adult_equivalent_population, technique),
             adult_equivalent_population, technique)
         total_hours = self._society_hours_available()
-        if not economy.society_labour_hours:
-            # Start from the food balance for this land.
-            farm_hours = min(baseline_fte * HOURS_PER_FARM_WORKER_YEAR, total_hours)
-            economy.society_labour_hours = starting_hours(
-                labour_market.production_data(), self._world.civ["starting_techs"],
-                self._world.techniques_available_to, total_hours, farm_hours)
+        held_hours = sum(economy.society_labour_hours.values())
+        if held_hours > 0.0:
+            current_farm_hours = economy.society_labour_hours[FARM_TRADE] * total_hours / held_hours
+        else:
+            current_farm_hours = min(baseline_fte * HOURS_PER_FARM_WORKER_YEAR, total_hours)   # the food balance
         last_shortfall_kg = economy.farm_last_shortfall_kg
-        current_fte = economy.society_labour_hours[FARM_TRADE] / HOURS_PER_FARM_WORKER_YEAR
+        current_fte = current_farm_hours / HOURS_PER_FARM_WORKER_YEAR
         if last_shortfall_kg is None:
             need_fte = current_fte
         else:
@@ -268,9 +275,10 @@ class LabourAllocationMixin:
                 self._world.farm_land.hectares, self._clearable_hectares(),
                 technique=technique)
         economy.farm_hours_needed = need_fte * HOURS_PER_FARM_WORKER_YEAR
-        economy.society_labour_hours = reallocate(
-            economy.society_labour_hours, total_hours,
-            self._hours_needed_by_trade(total_hours), self._world.trade_family)
+        economy.society_labour_hours = society_hours(
+            total_hours,
+            farm_hours_after(current_farm_hours, min(economy.farm_hours_needed, total_hours), total_hours),
+            self._non_farm_shares())
         farm_fte = economy.society_labour_hours[FARM_TRADE] / HOURS_PER_FARM_WORKER_YEAR
         crop_limit_fte = (self._world.farm_land.hectares / agriculture.hectares_cropped_per_farm_worker(
             technique.crop, technique.toolkit))

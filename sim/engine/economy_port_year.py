@@ -338,6 +338,12 @@ class AgentEconomy:
                 return new / old
         return None
 
+    def people_by_trade(self):
+        """The labour core's people by trade, or None before the economy has been opened."""
+        if self._economy is None and "record" not in self.stored:
+            return None
+        return economy_api.people_by_trade(self.economy())
+
     def wage_per_hour(self, trade):
         """The trade's wage in its labour markets; a trade no producer hires (soldiers, scribes) is paid
         what its training adds to the unskilled wage, so every wage stands on the same market."""

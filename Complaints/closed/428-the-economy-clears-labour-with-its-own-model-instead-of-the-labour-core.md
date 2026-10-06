@@ -1,6 +1,6 @@
 # The economy clears labour with its own model instead of the labour core
 
-**Status:** partly done: the agent economy keeps its workforce as the labour core's `MarketState` (saved in the record), bids as sloped `Bid` tranches, and the core clears wages and trains, switches and moves people; `labour_asks.py`, the economy's own clearing and `TRADE_MOBILITY_SHARE_PER_YEAR` are gone. Open: `sim/labour/labour_market.py`'s `Workforce.step` (hours by trade for the society) is still a third copy; the households' own-plot hold-back is applied by cutting the workers the core sees, not by the core.
+**Status:** closed - the core sets wages and the engine's hours by trade; see Resolution
 
 `sim/economy/labour.py` and `sim/economy/year_labour.py` (clear, move_workers, follow_asks,
 trade_premium) are a second labour market beside `sim/labour/market/`. The agent economy is on by
@@ -32,7 +32,24 @@ What it would take (all in `sim/economy/`, owner of that package):
 - Delete `sim/economy/labour.py`'s clearing, `labour_asks.py` and `TRADE_MOBILITY_SHARE_PER_YEAR`.
 - After this, `sim/labour/labour_market.py`'s `Workforce.step` (society hours by trade,
   `labour_allocation.reallocate`) is a third copy. The engine should read hours by trade from the same
-  state, and that module goes.
+  state, and that module goes. (Done: see Resolution.)
+
+## Resolution
+
+- The engine's hours by trade (`society_labour_hours`) are the labour core's people by trade while the agent
+  economy runs and the recipe graph's need while it is off; the farm's hours follow the food balance at the
+  occupational mobility rate. `Workforce.step` and `labour_allocation.reallocate` are gone.
+- Skill premium: a trade needing long training paid the labourer's wage in the agent economy. The core's
+  switchers weighed a destination that already had workers by its pay today (not by what it will pay once
+  they are trained, net of those already training), took a few unfilled hours beside idle hands for a sure
+  job, and chose all at once; entrants did the same and read the sticky wage of a glutted trade, and the
+  danger pay of a risky trade, as reward. Skilled trades filled past their jobs and sat at the floor. Now
+  both choose in rounds that see each other's places, weigh `income_at_graduation` (the wage the market is
+  heading to, over the trade's own reservation wage), and the opening seeds no written wage. Tests:
+  `economy_labour_core`, `labour_core_switching`, `labour_core_entrants`.
+- The opening glut of skilled workers is Complaint 465. The dead constants `MAXIMUM_REALLOCATION_PERIODS`
+  and `CONVERGENCE_TOLERANCE_HOURS` remain in `sim/algorithm_parameters.py` (outside the labour package);
+  nothing reads them.
 
 ## Folded in
 

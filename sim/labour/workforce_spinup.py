@@ -1,10 +1,10 @@
-"""Starting non-farm workforce per trade, produced by a labour-market spin-up.
+"""Each non-farm trade's share of the labour the society's demand puts on it.
 
 Inputs are only what a civilisation already has: the techniques its known
 technologies unlock and household demand. Labour need per trade comes from
 the goods households consume and the recipes that make them, through the whole
-recipe graph. A neutral (equal) split of the workforce is then stepped through
-sim.labour.labour_market until the trade split stops moving.
+recipe graph. The engine splits non-farm hours by these shares when the agent
+economy is off (labour_allocation.py); with it on, the labour core's people decide.
 
 [temporary_heuristic] A need's budget is split equally by labour value across
 the available goods that satisfy it, an end good (one no available recipe
@@ -16,40 +16,15 @@ Farm labour is not decided here; the engine pins it from the farm-labour
 logic in sim.world.agriculture and this module splits the remaining hours.
 """
 import collections
-import hashlib
-import json
 import os
-import tempfile
 from typing import Any, Callable, Dict, Iterable, Mapping, Optional, Set
 
-from sim.constants import declare
 from sim.world import demand, need_demand
 from sim.labour import labour_market, legacy_trade_defaults
 
 FARM_TRADE = legacy_trade_defaults.FARM_TRADE
 
 _REPOSITORY_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-DEFAULT_CACHE_DIRECTORY = os.path.join(_REPOSITORY_ROOT, ".cache", "workforce_spinup")
-
-SPIN_UP_MAX_YEARS = declare(
-    "SPIN_UP_MAX_YEARS", 5000,
-    kind="temporary_heuristic",
-    unit="years of labour-market stepping before the spin-up gives up",
-    why="A bound so a demand structure the mobility friction cannot settle "
-        "reports non-convergence instead of looping. Generous against the "
-        "occupational mobility rate so that a normal start converges well "
-        "inside it; it is not a target and no start depends on reaching it.")
-
-SPIN_UP_SHARE_TOLERANCE = declare(
-    "SPIN_UP_SHARE_TOLERANCE", 1e-6,
-    kind="temporary_heuristic",
-    unit="largest change in any trade's share of non-farm hours between two "
-         "consecutive years, as a fraction of non-farm hours",
-    why="Convergence criterion: the split has stabilised when no trade's "
-        "share moves by more than this in a year. Tight enough that a later "
-        "year's reallocation starts from a rest state, loose enough to be "
-        "reached in floating point.")
-
 
 def _needs() -> Dict[str, Any]:
     return need_demand.load_needs(_REPOSITORY_ROOT)
@@ -167,86 +142,3 @@ def need_shares_by_trade(production: Mapping[str, Any], reached_nodes: Iterable[
         return {}
     return {trade: hours / total for trade, hours in sorted(total_by_trade.items())
             if hours > 0.0}
-
-
-SpinUpResult = collections.namedtuple(
-    "SpinUpResult", ["shares_by_trade", "years", "converged", "final_share_change"])
-
-
-def spin_up(production: Mapping[str, Any], reached_nodes: Iterable[str],
-            techniques_available_to: Callable, max_years: int = SPIN_UP_MAX_YEARS,
-            tolerance: float = SPIN_UP_SHARE_TOLERANCE) -> SpinUpResult:
-    """Step an equal (neutral) split of one unit of non-farm hours toward
-    the need, through labour_market.Workforce, until it stops moving."""
-    reached = set(reached_nodes)
-    need = need_shares_by_trade(production, reached, techniques_available_to)
-    if not need:
-        return SpinUpResult({}, 0, True, 0.0)
-    trades = sorted(need)
-    workforce = labour_market.Workforce({trade: 1.0 / len(trades) for trade in trades})
-    walkable = labour_market.trades_reachable_given_technology(reached, dict(production))
-    change = float("inf")
-    years = 0
-    while years < max_years:
-        before = dict(workforce.hours_by_trade)
-        workforce.step(need, walkable_trades=walkable)
-        years += 1
-        change = max(abs(workforce.hours_by_trade[trade] - before[trade]) for trade in trades)
-        if change <= tolerance:
-            break
-    total = workforce.total_hours()
-    shares = {trade: workforce.hours_by_trade[trade] / total for trade in trades}
-    return SpinUpResult(shares, years, change <= tolerance, change)
-
-
-_in_process_cache: Dict[str, SpinUpResult] = {}
-
-
-def forget_in_process_cache() -> None:
-    _in_process_cache.clear()
-
-
-def _cache_key(production: Mapping[str, Any], reached_nodes: Set[str],
-               techniques_available_to: Callable) -> str:
-    available, _unreached, _unclassified = techniques_available_to(production, reached_nodes)
-    payload = json.dumps(
-        {"recipes": available, "reached": sorted(reached_nodes),
-         "needs": _needs(),
-         "parameters": [SPIN_UP_MAX_YEARS, SPIN_UP_SHARE_TOLERANCE,
-                        labour_market.OCCUPATIONAL_MOBILITY_RATE_PER_YEAR,
-                        labour_market.OCCUPATIONAL_MOBILITY_GAP_RESPONSE_GAIN,
-                        labour_market.OCCUPATIONAL_MOBILITY_RATE_CEILING_PER_YEAR]},
-        sort_keys=True, default=str)
-    return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:24]
-
-
-def cached_spin_up(production: Mapping[str, Any], reached_nodes: Iterable[str],
-                   techniques_available_to: Callable, cache_dir: Optional[str] = None) -> SpinUpResult:
-    """spin_up, remembered per input set: the key hashes the available
-    recipes and known technologies, so a different mod set or civilisation
-    is a different entry. A cache that cannot be read or written is skipped."""
-    reached = set(reached_nodes)
-    key = _cache_key(production, reached, techniques_available_to)
-    directory = cache_dir or DEFAULT_CACHE_DIRECTORY
-    memo_key = directory + "|" + key
-    if memo_key in _in_process_cache:
-        return _in_process_cache[memo_key]
-    path = os.path.join(directory, key + ".json")
-    result = None
-    try:
-        with open(path, encoding="utf-8") as handle:
-            result = SpinUpResult(**json.load(handle))
-    except (OSError, ValueError, TypeError):
-        result = None
-    if result is None:
-        result = spin_up(production, reached, techniques_available_to)
-        try:
-            os.makedirs(directory, exist_ok=True)
-            handle_fd, temporary = tempfile.mkstemp(dir=directory, suffix=".tmp")
-            with os.fdopen(handle_fd, "w", encoding="utf-8") as handle:
-                json.dump(result._asdict(), handle, sort_keys=True)
-            os.replace(temporary, path)
-        except OSError:
-            pass
-    _in_process_cache[memo_key] = result
-    return result

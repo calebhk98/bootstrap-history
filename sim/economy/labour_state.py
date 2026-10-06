@@ -47,6 +47,15 @@ def people_by_trade(state: MarketState, area: str) -> Dict[str, float]:
     return {trade: math.fsum(bands) for trade, bands in sorted(state.workers.get(area, {}).items())}
 
 
+def people_by_trade_everywhere(state: MarketState) -> Dict[str, float]:
+    """Working people by trade across every labour area (trainees are not counted)."""
+    totals: Dict[str, float] = {}
+    for area in sorted(state.workers):
+        for trade, people in people_by_trade(state, area).items():
+            totals[trade] = totals.get(trade, 0.0) + people
+    return dict(sorted(totals.items()))
+
+
 def scale_people(state: MarketState, area: str, factor: float) -> None:
     """Every worker and trainee in an area, scaled."""
     for bands in state.workers.get(area, {}).values():
