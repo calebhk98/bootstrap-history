@@ -32,13 +32,10 @@ from .util import (_clean, _localise_money, _localise_words, _unsafe_path)
 
 
 def _trim_dashboard_history(sim, hist):
-	"""Trim the dashboard history to the most recent N years if configured.
-	When dashboard_history_years is set, keep only the most recent N years
-	of snapshots."""
-	cap = sim.state.scenario.dashboard_history_years
-	if cap is not None and len(hist) > cap:
-		# Keep the most recent cap entries
-		del hist[:-cap]
+	"""Trim dashboard history to the most recent N years if configured."""
+	years_kept = sim.state.scenario.dashboard_history_years
+	if years_kept is not None and len(hist) > years_kept:
+		del hist[:-years_kept]
 
 
 # Every dispatch_*.py module in this package registers its commands with
