@@ -337,7 +337,7 @@ def _run_agent(input_lines, extra_args=(), civ="rome_100ad", cwd=None):
 
 
 _PRETTY_CMDS = [
-    {"cmd": "state"}, {"cmd": "available"}, {"cmd": "why", "id": "blast_furnace"},
+    {"cmd": "state", "full": True}, {"cmd": "available"}, {"cmd": "why", "id": "blast_furnace"},
     {"cmd": "money"}, {"cmd": "labour"}, {"cmd": "risk"},
     {"cmd": "step", "years": 1}, {"cmd": "hire", "trade": "smith", "n": 1},
     {"cmd": "quit"},
