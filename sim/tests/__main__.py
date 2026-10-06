@@ -278,6 +278,7 @@ def _fork_topics(slugs, harness, result_dir, held_slots=()):
     status = 1
     for slot in held_slots:     # the parent holds the slots; a copy here would keep them past their worker
         machine_slots.release(slot)
+    os.environ[machine_slots.INSIDE_SLOT_ENV] = "1"
     try:
         error_handle = os.open(error_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
         os.dup2(error_handle, 2)

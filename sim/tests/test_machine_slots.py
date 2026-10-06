@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 from sim.tests import machine_slots
 
@@ -16,6 +17,11 @@ from sim.tests import machine_slots
 class SlotTests(unittest.TestCase):
     def setUp(self):
         self.directory = tempfile.mkdtemp(prefix="suite_slots_")
+        # This topic may itself run in a suite worker, which marks its environment as inside a slot.
+        self.outside_any_slot = mock.patch.dict(os.environ)
+        self.outside_any_slot.start()
+        os.environ.pop(machine_slots.INSIDE_SLOT_ENV, None)
+        self.addCleanup(self.outside_any_slot.stop)
 
     def test_no_more_slots_than_the_pool_holds(self):
         first = machine_slots.acquire(2, self.directory)
@@ -28,6 +34,14 @@ class SlotTests(unittest.TestCase):
         machine_slots.release(second)
         machine_slots.release(third)
 
+    def test_a_suite_started_inside_a_worker_runs_in_its_ancestors_slot(self):
+        held = machine_slots.acquire(1, self.directory)
+        try:
+            with mock.patch.dict(os.environ, {machine_slots.INSIDE_SLOT_ENV: "1"}):
+                self.assertIsNone(machine_slots.acquire(1, self.directory, wait=False))
+        finally:
+            machine_slots.release(held)
+
     def test_another_process_holding_a_slot_counts_against_the_pool(self):
         script = ("import sys; sys.path.insert(0, %r)\n"
                   "from sim.tests import machine_slots\n"
@@ -36,7 +50,7 @@ class SlotTests(unittest.TestCase):
                   % (os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
                      self.directory))
         holder = subprocess.Popen([sys.executable, "-c", script], stdin=subprocess.PIPE,
-                                  stdout=subprocess.PIPE, text=True)
+                                  stdout=subprocess.PIPE, text=True, env=dict(os.environ))
         try:
             self.assertEqual(holder.stdout.readline().strip(), "held")
             self.assertIs(machine_slots.acquire(1, self.directory, wait=False), False)

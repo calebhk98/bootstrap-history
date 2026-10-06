@@ -12,6 +12,8 @@ except ImportError:  # Windows: no shared pool, each suite keeps its own --jobs
     fcntl = None
 
 SLOTS_DIRECTORY_ENV = "ROME_SUITE_SLOTS_DIR"
+# Set in a suite worker: a suite started under it runs inside the slot its ancestor holds.
+INSIDE_SLOT_ENV = "ROME_SUITE_INSIDE_SLOT"
 WAIT_BETWEEN_TRIES_SECONDS = 0.2
 
 
@@ -30,7 +32,7 @@ def acquire(count=None, directory=None, wait=True):
     """An open handle holding one free slot, or None where slots are unavailable. With `wait` it waits
     until a slot frees; without, it returns False when none is free (a caller still holding slots must
     reap its own workers rather than wait, or two suites could each wait on the other's)."""
-    if fcntl is None:
+    if fcntl is None or os.environ.get(INSIDE_SLOT_ENV):
         return None
     directory = directory or slots_directory()
     try:
