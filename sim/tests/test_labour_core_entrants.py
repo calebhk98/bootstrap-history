@@ -111,5 +111,30 @@ class EntrantTests(unittest.TestCase):
         self.assertAlmostEqual(_everyone(state), 100.0)
 
 
+class GluttedTradeTests(unittest.TestCase):
+    """A trade's wage lags its market: a glut still shows last year's high wage. Entrants weigh the wage
+    the market is heading to (where hours offered meet hours wanted), not the lagging one."""
+
+    def _carver_entrants(self, wage, target_wage, wanted_hours):
+        clearings = _clearings({"digger": 0.5, "healer": 0.5})
+        clearings[(AREA, "carver")] = Clearing(
+            trade="carver", area=AREA, wage=wage, hours_offered=HOURS, hours_wanted=wanted_hours,
+            hours_hired=min(HOURS, wanted_hours), hired_by_employer={}, paid_by_employer={},
+            average_wage=wage, target_wage=target_wage)
+        report = YearReport()
+        entrants.place_entrants(MarketState(), _inputs(_specs()), clearings, report)
+        return report.entered[AREA].get("carver", 0.0)
+
+    def test_a_glut_drawing_on_a_lagging_wage_draws_what_the_floor_wage_would(self):
+        lagging = self._carver_entrants(wage=2.0, target_wage=0.5, wanted_hours=0.5 * HOURS)
+        floor = self._carver_entrants(wage=0.5, target_wage=0.5, wanted_hours=0.5 * HOURS)
+        self.assertAlmostEqual(lagging, floor, delta=0.01 * floor + 1e-9)
+
+    def test_a_market_heading_up_draws_more_than_the_wage_it_pays_now(self):
+        heading_up = self._carver_entrants(wage=1.0, target_wage=1.5, wanted_hours=2.0 * HOURS)
+        now = self._carver_entrants(wage=1.0, target_wage=1.0, wanted_hours=2.0 * HOURS)
+        self.assertGreater(heading_up, now)
+
+
 if __name__ == "__main__":
     unittest.main()

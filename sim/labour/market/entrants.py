@@ -39,49 +39,57 @@ def _candidates(inputs: YearInputs) -> List[str]:
 
 
 def place_entrants(state: MarketState, inputs: YearInputs, clearings: Mapping, report: YearReport) -> None:
-    fallback = fallback_trade(inputs.trades)
-    abilities = aptitude.band_abilities()
+    """The year's entrants choose in rounds; each round sees the places the earlier rounds took."""
+    rounds = int(expectations.DECISION_ROUNDS_PER_YEAR)
     for area in sorted(inputs.entrants):
-        people = inputs.entrants[area]
+        people = inputs.entrants[area] / rounds
         if people <= 0.0:
             continue
-        candidates = _candidates(inputs)
-        if fallback not in candidates:
-            candidates.append(fallback)
-        income = {trade: expectations.income_at_graduation(
-                      state, inputs, clearings, area, trade,
-                      aptitude.completion_by_band(inputs.trades[trade].difficulty))
+        for _round in range(rounds):
+            _place_round(state, inputs, clearings, area, people, report)
+
+
+def _place_round(state: MarketState, inputs: YearInputs, clearings: Mapping, area: str, people: float,
+                 report: YearReport) -> None:
+    fallback = fallback_trade(inputs.trades)
+    abilities = aptitude.band_abilities()
+    candidates = _candidates(inputs)
+    if fallback not in candidates:
+        candidates.append(fallback)
+    income = {trade: expectations.income_at_graduation(
+                  state, inputs, clearings, area, trade,
+                  aptitude.completion_by_band(inputs.trades[trade].difficulty))
+              for trade in candidates}
+    subsistence = inputs.subsistence_per_worker_year.get(area, 0.0)
+    reference = subsistence if subsistence > 0.0 else (income[fallback] if income[fallback] > 0.0 else 1.0)
+    scale = ENTRANT_TASTE_SCALE_YEARS_OF_SUBSISTENCE * reference
+    values = _band_values(inputs, abilities, candidates, income, fallback)
+    size_terms = {trade: scale * math.log(_jobs(clearings, area, trade, inputs.hours_per_worker_year))
                   for trade in candidates}
-        subsistence = inputs.subsistence_per_worker_year.get(area, 0.0)
-        reference = subsistence if subsistence > 0.0 else (income[fallback] if income[fallback] > 0.0 else 1.0)
-        scale = ENTRANT_TASTE_SCALE_YEARS_OF_SUBSISTENCE * reference
-        values = _band_values(inputs, abilities, candidates, income, fallback)
-        size_terms = {trade: scale * math.log(_jobs(clearings, area, trade, inputs.hours_per_worker_year))
-                      for trade in candidates}
-        values = [{trade: value + size_terms[trade] for trade, value in by_trade.items()} for by_trade in values]
-        waiting = aptitude.split_evenly(people)
-        entered: Dict[str, float] = {}
-        open_trades = candidates
-        for _round in range(len(candidates)):
-            if aptitude.band_total(waiting) <= 0.0 or not open_trades:
-                break
-            wanting = _wanting(waiting, values, open_trades, scale)
-            waiting = aptitude.empty_bands()
-            for trade in open_trades:
-                bands = wanting[trade]
-                if aptitude.band_total(bands) <= 0.0:
-                    continue
-                refused = training.enrol(state, inputs, area, trade, bands)
-                entered[trade] = entered.get(trade, 0.0) + aptitude.band_total(bands) - aptitude.band_total(refused)
-                aptitude.add_bands(waiting, refused)
-            open_trades = [trade for trade in open_trades
-                           if training.open_places(state, inputs, area, trade) > OPEN_PLACES_TOLERANCE]
-        leftover = aptitude.band_total(waiting)
-        if leftover > 0.0:
-            aptitude.add_bands(aptitude.bands_of(state.workers.setdefault(area, {}), fallback), waiting)
-            entered[fallback] = entered.get(fallback, 0.0) + leftover
-        for trade, count in entered.items():
-            report.entered.setdefault(area, {})[trade] = report.entered.get(area, {}).get(trade, 0.0) + count
+    values = [{trade: value + size_terms[trade] for trade, value in by_trade.items()} for by_trade in values]
+    waiting = aptitude.split_evenly(people)
+    entered: Dict[str, float] = {}
+    open_trades = candidates
+    for _attempt in range(len(candidates)):
+        if aptitude.band_total(waiting) <= 0.0 or not open_trades:
+            break
+        wanting = _wanting(waiting, values, open_trades, scale)
+        waiting = aptitude.empty_bands()
+        for trade in open_trades:
+            bands = wanting[trade]
+            if aptitude.band_total(bands) <= 0.0:
+                continue
+            refused = training.enrol(state, inputs, area, trade, bands)
+            entered[trade] = entered.get(trade, 0.0) + aptitude.band_total(bands) - aptitude.band_total(refused)
+            aptitude.add_bands(waiting, refused)
+        open_trades = [trade for trade in open_trades
+                       if training.open_places(state, inputs, area, trade) > OPEN_PLACES_TOLERANCE]
+    leftover = aptitude.band_total(waiting)
+    if leftover > 0.0:
+        aptitude.add_bands(aptitude.bands_of(state.workers.setdefault(area, {}), fallback), waiting)
+        entered[fallback] = entered.get(fallback, 0.0) + leftover
+    for trade, count in entered.items():
+        report.entered.setdefault(area, {})[trade] = report.entered.get(area, {}).get(trade, 0.0) + count
 
 
 def _band_values(inputs: YearInputs, abilities: List[float], candidates: List[str],

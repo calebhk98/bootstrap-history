@@ -7,7 +7,17 @@ there (premiums included), the rest earn the outside option (the household's own
 import math
 from typing import Dict, Mapping, Optional, Tuple
 
+from sim.constants import declare
+
 from .records import Clearing, MarketState, YearInputs
+
+DECISION_ROUNDS_PER_YEAR = declare(
+    "DECISION_ROUNDS_PER_YEAR", 4, kind="temporary_heuristic", unit="rounds of choices per year",
+    source=None, confidence="D",
+    why="People choosing a trade over a year see how many have already signed on to it (apprentices and "
+        "switchers in training), so a shortage draws only as many as it needs. Choices made all at once "
+        "overshoot, the trade gluts a training-length later and wages cycle. The number of rounds is "
+        "not fitted.")
 
 ClearingIndex = Mapping[Tuple[str, str], Clearing]   # (area, trade) -> this year's clearing
 
@@ -26,9 +36,8 @@ def expected_income(state: MarketState, inputs: YearInputs, clearings: ClearingI
             # employers want hours nobody here offers: the first to arrive is hired at the market wage
             return max(floor, clearing.wage * inputs.hours_per_worker_year)
         return floor
-    share = clearing.employment_share if clearing.hours_offered > 0.0 else 1.0
-    if clearing.vacant_hours > 0.0:
-        share = 1.0
+    # a vacancy beside idle hands is friction: a newcomer finds one of the places employers want filled
+    share = min(1.0, clearing.hours_wanted / clearing.hours_offered) if clearing.hours_offered > 0.0 else 1.0
     earned = clearing.average_wage * inputs.hours_per_worker_year
     return share * earned + (1.0 - share) * floor
 
@@ -81,10 +90,13 @@ def income_at_graduation(state: MarketState, inputs: YearInputs, clearings: Clea
     already training will not fill (net of those leaving meanwhile): a full workshop of apprentices
     tells the next entrant the shortage will be gone. Without this, entrants answer today's wage, the
     trade gluts a training-length later, and wages cycle from floor to ceiling."""
-    now = expected_income(state, inputs, clearings, area, trade)
     clearing: Optional[Clearing] = clearings.get((area, trade))
     floor = inputs.subsistence_per_worker_year.get(area, 0.0)
-    if clearing is None or now <= floor:
+    if clearing is None or clearing.hours_wanted <= 0.0:
+        return floor
+    # a wage lags its market (it closes part of the gap a year): weigh where it is heading
+    now = max(floor, clearing.heading_wage * inputs.hours_per_worker_year)
+    if now <= floor:
         return now
     hours = inputs.hours_per_worker_year
     shortage_now = clearing.hours_wanted - clearing.hours_offered

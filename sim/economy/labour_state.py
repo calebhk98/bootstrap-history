@@ -28,7 +28,7 @@ def core_trades(setup, extra_trades: Iterable[str] = ()) -> Dict[str, TradeSpec]
 
 def opening_workforce(setup, record) -> MarketState:
     """Each tile's working people placed in the trades its producers need at capacity; hard trades are
-    staffed from the able, the rest work unskilled. Wages start at the opening wages."""
+    staffed from the able, the rest work unskilled. No wage is seeded: the first year's clearing sets them."""
     hours_needed: Dict[str, Dict[str, float]] = {}
     for producer in record.producers.values():
         recipe = setup.recipes[producer.recipe_id]
@@ -39,9 +39,6 @@ def opening_workforce(setup, record) -> MarketState:
                for tile, people in sorted(setup.opening_population_by_tile.items())}
     trades = core_trades(setup, {trade for needed in hours_needed.values() for trade in needed})
     state = opening_labour_market(trades, working, hours_needed, setup.working_hours_per_year)
-    for tile in sorted(setup.opening_population_by_tile):
-        state.wages[labour_area(tile)] = {trade: wage for trade, wage in sorted(setup.opening_wages.items())
-                                          if wage > 0.0}
     return state
 
 
