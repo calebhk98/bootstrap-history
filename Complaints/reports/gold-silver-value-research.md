@@ -1,10 +1,11 @@
 # Gold against silver: what should set the ratio (research for Complaint 442)
 
 Design research only; no simulator code changed. Source tags: [read] a page opened and the figure seen
-in it, [search] a figure from a search-result snippet only, [recalled] from memory, unverified.
+in it, [disputed] sources opened or seen disagree (range given), [search] a figure from a search-result snippet only, [recalled] from memory, unverified.
 Web access was thin for this report: several primary sources (Flynn and Giraldez, Duncan-Jones,
 Ehrenkreutz, Redish) were reached only as titles or snippets, so most historical figures below are
-[search] or [recalled] and must be verified before any test relies on them.
+[search] or [recalled] and must be verified before any test relies on them. A second pass opened the sources
+noted [read] below; the Flynn and Giraldez, Spufford, Ehrenkreutz and Schultz texts could still not be opened.
 
 ## 0. What the repository already has (measured by reading, branch `structural-dedupe-and-owner-decisions`)
 
@@ -61,12 +62,11 @@ So the gap is demand and holding, plus gold-source coverage, not the production 
 Both metals are almost indestructible, so the stock is the sum of all past output less loss, and
 price is set by willingness to hold the stock, not by the year's mining. Modern gold: the above-ground
 stock is of the order of a couple of hundred thousand tonnes against annual mine output of a small
-percentage of that, and about half is jewellery [search: World Gold Council figures via eco3min.fr and
-interest.co.nz snippets, https://eco3min.fr/en/gold-demand-composition-etf-official-jewelry-bars/;
+percentage of that, and about half is jewellery [read: interest.co.nz page quoting World Gold Council, about 209,000 tonnes mined to end 2022, mine output about 3,500 tonnes a year, an annual increment of about 2 percent, jewellery 46 percent of stock, https://www.interest.co.nz/personal-finance/121199/world-gold-council-presents-overview-available-above-ground-stock-gold;
 modern figures, use only as shape]. Consequences usable here:
 
 - Price elasticity of supply to a year's flow is tiny; the stock is the buffer. A price rise releases
-  jewellery and hoards (recycling) which damps spikes [search, same source]. This is the stock-to-flow
+  jewellery and hoards (recycling) which damps spikes [search; not stated in the opened page]. This is the stock-to-flow
   logic the complaint asks for and the store module's `store_offers` partly implements.
 - Silver differs: more of it is consumed or dispersed (industrial use is modern; in antiquity,
   silver plate, coin wear and lead-silver loss), so its stock-to-flow ratio is lower and its price is
@@ -84,8 +84,7 @@ modern figures, use only as shape]. Consequences usable here:
 - Coinage: both metals were struck. In Rome gold coin was the large-payment, state and army-pay
   metal and silver the everyday one; Duncan-Jones estimated the gold in circulation at a fraction of
   the silver by weight (reported as about 880 tonnes gold and about 5,800 tonnes silver in the 160s AD)
-  though later numismatic work argues gold played a smaller role than he posited [search:
-  https://resolve.cambridge.org/ snippets on Duncan-Jones; figures need verification].
+  though later numismatic work argues gold played a smaller role than he posited [read, abstract only: Cambridge chapter "Roman Coinage under the Antonines Revisited" in Uncertain Past, https://www.cambridge.org/core/books/uncertain-past/roman-coinage-under-the-antonines-revisited/76626FBFC05664B712DC6ABE6D4790C8, which gives a money supply near 16 billion sesterces with less gold and more silver than Duncan-Jones; the 880 and 5,800 tonne figures were not seen in it and stay [search]].
 - Display and gift: Han China gave gold as the high-status gift, with silk as the working currency, and
   silver rare [search: https://en.wikipedia.org/wiki/Economy_of_the_Han_dynasty, which itself says
   gold and silver were mainly prestige goods; no ratio given]. Temples and states held plate and
@@ -99,8 +98,8 @@ modern figures, use only as shape]. Consequences usable here:
 - Official mint ratios and Gresham's law: the metal overvalued at the mint flows in and the other is
   hoarded, melted or exported [search: moneyness.ca and newtonandthemint.history.ox.ac.uk, already
   cited in `Complaints/reports/economy-research-extraction-and-money-metals.md`]. Rome's official
-  aureus-to-denarius rate was 25 while the metal-content ratio of the coins was about 12 [search:
-  https://en.wikipedia.org/wiki/Aureus], an example of a legal rate that is not the market ratio.
+  aureus-to-denarius rate was 25 while the metal-content ratio of the coins was about 12 [read:
+  https://en.wikipedia.org/wiki/Aureus gives 25 denarii per aureus; the metal-content ratio of about 12 is not stated there and stays search-only], an example of a legal rate that is not the market ratio.
   The mint ratio is a policy input a state may set; it is not the emergent ratio and the model must
   keep the two apart.
 
@@ -193,18 +192,18 @@ ratio and no preference for either metal named anywhere.
 
 The attested ratios, with how much to trust them:
 
-- Roman Republic market ratio near 12 [search: Aureus page above]; empire's official coin ratio 25
-  with metal content nearer 12 [search]. The ratio of face rates to market is a policy-wedge check.
-- Abbasid period about 13 to 14 and about 15 dirhams to the dinar [search: Islamic-coinage snippets,
+- Roman Republic gold sold for minted silver at 1 to 12 [read: https://en.wikipedia.org/wiki/Aureus, secondary]; empire's official
+  coin rate 25 denarii per aureus [read, same page]; metal content nearer 12 [search, not on that page]. The ratio of face rates to market is a policy-wedge check.
+- Abbasid period about 13 to 14 and about 15 dirhams to the dinar [search: Islamic-coinage snippets (one says al-Muqtadir's dinar was reckoned at 15 dirhams, market ratio 13 2/3, bullion dinar worth 17 dirhams; page not found),
   e.g. https://jtuh.tu.edu.iq/ and Schultz 1999, https://knowledge.uchicago.edu/record/1003/files/MSR_III_1999-Schultz.pdf,
-  not opened]. Medieval Europe from the high single digits to the mid teens [search: Venice 14 in the
-  early fourteenth century, 9 to 10 mid-century, back near 12 in the fifteenth, from bullion-history
-  popular sources; weak].
-- Ming China silver dear against gold, ratio near 6 to 8 against 10 to 12 in Europe in the early
-  sixteenth century [search: Flynn and Giraldez via snippets; Persia about 10, India about 8, same
-  source]; arbitrage then drew silver east and narrowed the gap.
+  not opened]. Medieval Europe from the high single digits to the mid teens [read: Munro 1983, Journal of Economic History 43(1) 294-298,
+  https://www.economics.utoronto.ca/munro5/MedBullionismJEH1983.pdf, reporting Lane: Venice peak 14.2 about 1305, about 10 by 1350
+  and 9.4 at Florence in 1347, 10.9 at the 1284 ducat; rose from 10 to about 12 by the 1450s; Mamluk mint ratio as low as 8.5 in 1415-1418].
+- Ming China silver dear against gold, ratio near 5.5 to 8 against 10 to 14 in Europe in the sixteenth
+  century [disputed: LibreTexts "Silver and the Ming Dynasty" (secondary, https://human.libretexts.org/Bookshelves/History/World_History/Modern_World_History%3A_New_Perspectives_(OERI)/02%3A_Global_Interactions_-_1450-1650/2.06%3A_Silver_and_the_Ming_Dynasty)
+  gives China 5.5 to 7 and Spain 12 to 14, late sixteenth century; this report earlier gave 6 to 8 and 10 to 12 for the early century from Flynn and Giraldez snippets that could not be opened; Persia about 10, India about 8 stay search-only]; arbitrage then drew silver east and narrowed the gap.
 - Spanish-American silver flood: ratio rose in Europe through the sixteenth and seventeenth centuries
-  [recalled: Hamilton, Flynn and Giraldez; check]. US 1792 mint ratio about 15 [search].
+  [recalled: Hamilton, Flynn and Giraldez; check]. US 1792 mint ratio 15 [read: https://en.wikipedia.org/wiki/Coinage_Act_of_1792, 15 silver to 1 gold].
 - Han China: gold as high-value gift, silver rare, no sourced ratio; do not test an absolute value.
 
 Checks that generalise:
@@ -270,18 +269,18 @@ rule.
 ## Sources
 
 - Hotelling's rule: https://en.wikipedia.org/wiki/Hotelling%27s_rule [search]
-- Global silver trade: https://en.wikipedia.org/wiki/Global_silver_trade_from_the_16th_to_19th_centuries [search]
+- Global silver trade: https://en.wikipedia.org/wiki/Global_silver_trade_from_the_16th_to_19th_centuries [read; no regional ratios, only a China silver-to-gold of about two to one]
 - Flynn and Giraldez material: https://ora.ox.ac.uk/objects/uuid:aec6d2ba-d664-4ef0-9ca1-f0918a55033d/files/rmg74qm819 and
-  https://mpra.ub.uni-muenchen.de/43987/1/MPRA_paper_43987.pdf (opened; text unreadable) [search]
-- Aureus: https://en.wikipedia.org/wiki/Aureus [search]
+  https://mpra.ub.uni-muenchen.de/43987/1/MPRA_paper_43987.pdf (opened; it is Irigoin on Daoguang China and has no sixteenth-century ratios; the ora.ox.ac.uk file is an Archaeometry paper with none) [search]
+- Aureus: https://en.wikipedia.org/wiki/Aureus [read]
 - Duncan-Jones, "Roman coinage under the Antonines revisited" and Dio, Zonaras and the aureus:
-  https://resolve.cambridge.org/core/books/uncertain-past/roman-coinage-under-the-antonines-revisited/76626FBFC05664B712DC6ABE6D4790C8 [search]
+  https://www.cambridge.org/core/books/uncertain-past/roman-coinage-under-the-antonines-revisited/76626FBFC05664B712DC6ABE6D4790C8 [read, abstract]
 - Han economy: https://en.wikipedia.org/wiki/Economy_of_the_Han_dynasty [read, no ratio]
 - Chinese gold stock: https://core-cms.cambridgecore.org/core/journals/journal-of-economic-history/article/an-ancient-chinese-stock-of-gold/9B471D671B992D6D0D7FCCD6E232C12F [not opened]
 - Abbasid ratio snippets and Mamluk money: https://knowledge.uchicago.edu/record/1003/files/MSR_III_1999-Schultz.pdf,
-  https://jtuh.tu.edu.iq/index.php/hum/article/view/1204 [search]
+  https://jtuh.tu.edu.iq/index.php/hum/article/view/1204 [search; the uchicago link returned 404]
 - Gold stock and jewellery share: https://eco3min.fr/en/gold-demand-composition-etf-official-jewelry-bars/,
-  https://www.interest.co.nz/personal-finance/121199/world-gold-council-presents-overview-available-above-ground-stock-gold [search]
+  https://www.interest.co.nz/personal-finance/121199/world-gold-council-presents-overview-available-above-ground-stock-gold [read]
 - Popular ratio history (weak): https://no01.substack.com/p/the-gold-to-silver-ratio,
   https://learn.apmex.com/?p=22242
 - Recalled, to verify: Veblen 1899; Leibenstein 1950; Bagwell and Bernheim 1996; Redish on medieval
