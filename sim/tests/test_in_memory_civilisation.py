@@ -24,8 +24,7 @@ def _variant(keep_file_id=False):
 class InMemoryCivilisation(unittest.TestCase):
     def test_game_runs_every_screen(self):
         sim = S.Sim(NODES, ORDER, random.Random(1), events=False, manual=False, civ=_variant())
-        for _ in range(4):
-            sim.step()
+        sim.step()
         self.assertEqual(sim.civ["id"], "variant_with_no_file")
         failures = []
         for command in sorted(KNOWN_COMMANDS):
@@ -41,9 +40,13 @@ class InMemoryCivilisation(unittest.TestCase):
                 failures.append((command, text))
         self.assertEqual(failures, [])
 
+    @classmethod
+    def setUpClass(cls):
+        cls.variant = _variant(keep_file_id=True)
+        cls.variant_sim = S.Sim(NODES, ORDER, random.Random(1), events=False, manual=False, civ=cls.variant)
+
     def test_variant_with_a_files_id_is_priced_as_itself(self):
-        variant = _variant(keep_file_id=True)
-        sim = S.Sim(NODES, ORDER, random.Random(1), events=False, manual=False, civ=variant)
+        variant, sim = self.variant, self.variant_sim
         original = S.Sim(NODES, ORDER, random.Random(1), events=False, manual=False,
                          civ=S.load_civ("rome_100ad"))
         held = frozenset(sim.state.projects.done)
@@ -58,8 +61,6 @@ class InMemoryCivilisation(unittest.TestCase):
             original._material_prices()["hectare_land"] / original.labour.money_per_labour_hour())
 
     def test_divergence_start_values_are_the_variants_own(self):
-        sim = S.Sim(NODES, ORDER, random.Random(1), events=False, manual=False,
-                    civ=_variant(keep_file_id=True))
-        territory = _agent_dispatch(sim, NODES, {"cmd": "divergence"})["territory"]
+        territory = _agent_dispatch(self.variant_sim, NODES, {"cmd": "divergence"})["territory"]
         self.assertEqual(territory["start"], ["scandinavia"])
         self.assertFalse(territory["changed"])

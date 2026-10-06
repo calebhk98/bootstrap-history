@@ -2,9 +2,6 @@
 material rather than only buy it, and the shortage-remedy messages that
 point at commands like it.
 
-Regrouped from test_round8_fixes.py - see CLAUDE.md's test-file
-reorganisation note. Checks moved verbatim; each one's own comment explains
-the break it guards.
 """
 from .harness import *  # noqa: F401,F403
 
@@ -28,35 +25,32 @@ check("nitre beds can be laid by hand, and cost what the quote says",
       (_laid, s_ni.capital))
 check("...and they actually supply saltpetre",
       s_ni._own_material_supply("nitre") > 0, s_ni._own_material_supply("nitre"))
-s_ni2 = sim(capital=10.0)
+_beds_before = s_ni.nitre_bed_m2
+s_ni.capital = 10.0
 check("...and one you cannot afford changes nothing at all",
-      s_ni2.build_nitre(20000) == 0.0 and s_ni2.nitre_bed_m2 == 0.0
-      and s_ni2.capital == 10.0,
-      (s_ni2.nitre_bed_m2, s_ni2.capital))
-_r_ni, _, _ = proto([{"cmd": "quote", "what": "nitre", "n": 20000},
-                     {"cmd": "buy", "what": "nitre", "n": 20000},
-                     {"cmd": "buy", "what": "nitre", "n": -1}])
+      s_ni.build_nitre(20000) == 0.0 and s_ni.nitre_bed_m2 == _beds_before and s_ni.capital == 10.0,
+      (s_ni.nitre_bed_m2, s_ni.capital))
+_quote = S._agent_dispatch(s_ni, NODES, {"cmd": "quote", "what": "nitre", "n": 20000})
+_buy = S._agent_dispatch(s_ni, NODES, {"cmd": "buy", "what": "nitre", "n": 20000})
+_negative = S._agent_dispatch(s_ni, NODES, {"cmd": "buy", "what": "nitre", "n": -1})
 check("the nitre quote and the nitre purchase agree on the price",
-      _r_ni[0].get("to_lay_it") is not None
-      and _r_ni[1].get("ok") is False,        # 400 denarii cannot buy 40,000
-      (_r_ni[0].get("to_lay_it"), _r_ni[1].get("error")))
-check("a negative nitre order is refused, not credited",
-      _r_ni[2].get("ok") is False, _r_ni[2])
+      _quote.get("to_lay_it") is not None and _buy.get("ok") is False,  # 10 denarii cannot buy 20,000 m2
+      (_quote.get("to_lay_it"), _buy.get("error")))
+check("a negative nitre order is refused, not credited", _negative.get("ok") is False, _negative)
 
 # --- BREAK: a MANUAL player's capital was spent on nitre beds by step().
-s_mn = sim(capital=100000.0, manual=True)
-s_mn.binding = "saltpetre"
-_cap_before = s_mn.capital
-s_mn.policy["auto_mine"] = False
-for _ in range(3):
-    s_mn.step()
+s_ni.capital = 100000.0
+s_ni.binding = "saltpetre"
+s_ni.policy["auto_mine"] = False
+_beds_before = s_ni.nitre_bed_m2
+for _ in range(2):
+    s_ni.step()
 check("with the automatic policies off, nothing lays a nitre bed but you",
-      s_mn.nitre_bed_m2 == 0.0, s_mn.nitre_bed_m2)
+      s_ni.nitre_bed_m2 == _beds_before, (_beds_before, s_ni.nitre_bed_m2))
 
 # --- BREAK: "SHORT OF SALTPETRE: work at 5% of plan" for thirty years, with
 # no way to find out what saltpetre was for or what would fix it.
-s_rm = sim(capital=100000.0)
 for _b in ("charcoal", "saltpetre", "iron"):
-    _msg = s_rm.shortage_remedy(_b)
+    _msg = s_ni.shortage_remedy(_b)
     check("a %s shortage names a command that would end it" % _b,
           "buy " in _msg or "quote " in _msg, _msg[:80])

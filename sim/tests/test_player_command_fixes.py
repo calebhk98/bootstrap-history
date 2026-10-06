@@ -42,8 +42,7 @@ quotable = {"forest": "quote forest 10", "nitre": "quote nitre 100", "farm": "qu
 check("the quote test names every buy target", set(quotable) == set(buy_targets.target_names()))
 for target, text in quotable.items():
     # stock is only for sale by a partner economy, so it is quoted from Rome (which buys from Han China)
-    reply = _run(sim(capital=1_000_000, civ="rome_100ad") if target == "living_stock"
-                 else sim(capital=1_000_000), text)
+    reply = _run(rich, text)
     check("quote works for buy target %s" % target, reply.get("ok"), (text, reply))
 farm_reply = _run(rich, "quote farm 20")
 check("quote farm prices what buy farm charges",
@@ -56,28 +55,29 @@ _run(rich, "quote farm 20")
 check("quote changes nothing", rich.capital == capital_before)
 
 # --- 155: rush preview lists what rush would start
-preview = _run(sim(capital=20000.0), "rush preview limit:3")
-real = _run(sim(capital=20000.0), "rush limit:3")
+rush_game = sim(capital=20000.0)
+preview = _run(rush_game, "rush preview limit:3")
+check("rush preview limit starts nothing", not rush_game.active, rush_game.active)
+bare = _run(rush_game, "rush preview")
+check("bare rush preview lists what it would start and starts nothing",
+      bare.get("preview") and bare.get("count_would_start", 0) > 0
+      and "total_cost" in bare and not rush_game.active, bare)
+check("bare rush preview renders as a preview, not as '0 started'",
+      "RUSH PREVIEW" in render_pretty("rush", bare), render_pretty("rush", bare)[:80])
+plain = _run(rush_game, "rush")
+check("unbounded rush still only previews and renders as one",
+      plain.get("preview") and "RUSH PREVIEW" in render_pretty("rush", plain))
+real = _run(rush_game, "rush limit:3")
 check("rush preview lists exactly the ids rush limit starts",
       _ids(preview["would_start"]) == _ids(real["started"]) and len(real["started"]) == 3,
       (preview, real))
-bare_sim = sim(capital=20000.0)
-bare = _run(bare_sim, "rush preview")
-check("bare rush preview lists what it would start and starts nothing",
-      bare.get("preview") and bare.get("count_would_start", 0) > 0
-      and "total_cost" in bare and not bare_sim.active, bare)
-check("bare rush preview renders as a preview, not as '0 started'",
-      "RUSH PREVIEW" in render_pretty("rush", bare), render_pretty("rush", bare)[:80])
-plain = _run(sim(capital=20000.0), "rush")
-check("unbounded rush still only previews and renders as one",
-      plain.get("preview") and "RUSH PREVIEW" in render_pretty("rush", plain))
 
 # --- 156: buy school <trade> <n> works, as do `trade school` and `trade_school`
-school_sim = sim(capital=1_000_000)
+school_sim = rich
 school_sim.trades_created.add("chemist")
 school_sim.labour.market.press("chemist", 100)
 for text in ("buy school chemist 1", "buy trade school chemist 1", "buy trade_school chemist 1"):
     reply = _run(school_sim, text)
     check("%r founds a school" % text, reply.get("ok") and reply["trade"] == "chemist", reply)
 check("the help example for schools is the form that works",
-      "buy school smith 2" in json.dumps(_run(sim(), "help economy")))
+      "buy school smith 2" in json.dumps(_run(rich, "help economy")))

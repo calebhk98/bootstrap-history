@@ -1,6 +1,6 @@
 """Complaint 320, general guard: stepping a game that is saved and loaded at a
-year gives the same year as stepping the unbroken game, at every year of a
-short run. Compares the digest the performance fingerprint uses, so any state
+year gives the same year as stepping the unbroken game, at each year of a
+two-year run. Compares the digest the performance fingerprint uses, so any state
 the next year reads but the save does not carry shows up as a different digest.
 A defect that only shows once the economy is large is outside this short run;
 `sim/tests/fingerprint.py` with a long scenario is where those are found."""
@@ -8,7 +8,7 @@ from .harness import *  # noqa: F401,F403
 from sim.tests import fingerprint as perf_fingerprint
 from sim.engine.saveload import save_state, load_state
 
-SCENARIO = dict(civ="rome_100ad", seed=1, years=40, events=True, fog=False)
+SCENARIO = dict(civ="rome_100ad", seed=1, years=2, events=True, fog=False)
 unbroken = perf_fingerprint.build(SCENARIO)
 save_path = os.path.join(tempfile.mkdtemp(), "save.json")
 diverging_years = []

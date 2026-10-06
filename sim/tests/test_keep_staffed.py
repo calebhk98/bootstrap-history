@@ -52,21 +52,22 @@ check("...because a glassblower was hired",
 check("...and the log says why",
       any("keep_staffed" in message for _year, message in flagged.log), flagged.log[-6:])
 
-# Off clears it, and the flag survives a save/load round trip.
-flagged2 = _lost_foreman_sim()
-_dispatch(flagged2, "keep %s staffed" % CONCERN)
+# The flag survives a save/load round trip (loaded into the spent control game).
 from sim.engine.saveload import save_state, load_state
 with tempfile.TemporaryDirectory() as folder:
     path = os.path.join(folder, "keep.json")
-    save_state(flagged2, path)
-    restored = sim(capital=1.0)
-    load_state(restored, path)
-check("the flag is part of the saved state", CONCERN in getattr(restored.state.projects, "keep_staffed", set()))
-off = _dispatch(flagged2, "keep %s off" % CONCERN)
+    save_state(flagged, path)
+    load_state(control, path)
+check("the flag is part of the saved state", CONCERN in getattr(control.state.projects, "keep_staffed", set()))
+
+# Off clears it; with the foreman lost again the concern closes.
+off = _dispatch(flagged, "keep %s off" % CONCERN)
 check("keep <id> off clears the flag",
-      off.get("ok") is True and CONCERN not in getattr(flagged2.state.projects, "keep_staffed", set()), off)
-flagged2.step()
-check("once off, the concern closes again", CONCERN not in flagged2.operating)
+      off.get("ok") is True and CONCERN not in getattr(flagged.state.projects, "keep_staffed", set()), off)
+flagged.employees.pop("glassblower", None)
+flagged.labour._resync_pools()
+flagged.step()
+check("once off, the concern closes again", CONCERN not in flagged.operating)
 
 # Within cash: a flagged concern is not hired for when the household is broke.
 poor = _lost_foreman_sim()
