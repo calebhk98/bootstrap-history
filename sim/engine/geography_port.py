@@ -4,6 +4,7 @@ import os
 
 from sim.geography.api import Geography, open_map
 
+from .data import load_civ
 from .mods import get_ordered_mods
 
 MODS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "mods")
@@ -22,6 +23,28 @@ class GeographyWorld:
     @property
     def pop_scale(self):
         return self._sim.pop_scale
+
+    @property
+    def world_map(self):
+        return self._sim.world_map
+
+    @property
+    def held_nodes(self):
+        """The technologies the civilisation holds: its starting ones, those built and those granted."""
+        state = self._sim.state
+        return set(self._sim.civ.get("starting_techs") or ()) | set(state.projects.done) | set(state.projects.granted)
+
+    @property
+    def improvements(self):
+        """The roads and track built, {edge key: {way: true}}."""
+        return self._sim.state.economy.improvements
+
+    def civilisation(self, civilisation_id):
+        """A civilisation's record, or None when there is none by that id."""
+        try:
+            return load_civ(civilisation_id)
+        except (OSError, ValueError, KeyError):
+            return None
 
 
 class GeographyPortMixin:

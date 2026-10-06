@@ -58,7 +58,6 @@ account of this hazard.
 """
 import math
 
-from .data import haversine_km
 from . import commodities as _commod
 from sim.constants import declare
 from . import money_units
@@ -243,52 +242,22 @@ class FreightMixin:
                 if float((region.get("minerals") or {}).get(material, 0.0)) > 0.0]
 
     def material_freight_distance_km(self, material):
-        """Great-circle kilometres from this civilization's own home
-        centroid to the NEAREST region that actually produces `material` -
-        the same "source from the easiest deposit, not a fixed one" logic
-        material_reach() already uses for located materials, reused here
-        rather than reinvented.
+        """Kilometres of the cheapest haul from the tiles this civilization holds to the nearest
+        region that actually produces `material`, over the carriage modes it holds and the ways it
+        has built (geography's route; the same "source from the easiest deposit" rule
+        material_reach() uses for located materials).
 
-        Zero if any region this civilization already HOLDS produces the
-        material at all: "home is home", exactly region_reach()'s own rule
-        for a home region regardless of geometry, applied here to the same
-        effect - a material you already mine somewhere in your own
-        territory costs nothing extra to move WITHIN it, by this module's
-        simplification.
+        Zero if any region this civilization already HOLDS a tile of produces the material at all:
+        "home is home", a material you already mine in your own territory costs nothing extra to
+        move within it, by this module's simplification.
 
-        None if the geography data has no located-region data for `material` at
-        all (everything outside the seven tracked minerals - see
-        _material_source_regions). CLAUDE.md SS3.1 is explicit that an
-        unknown distance is not licence to invent one, so this returns
-        "unknown" rather than a guess, and material_freight_cost_per_kg()
+        None if the geography data has no located-region data for `material` at all (everything
+        outside the seven tracked minerals - see _material_source_regions). An unknown distance is
+        not licence to invent one, so this returns "unknown" and material_freight_cost_per_kg()
         charges nothing rather than something imaginary when it sees that.
-
-        Cached on the household: this civilization's geography does not
-        change during a run, so the underlying haversine arithmetic only
-        needs to happen once per material, not once per project per year -
-        the same reasoning _material_stock()'s own lazy cache uses, next to
-        it in this file."""
-        cache = getattr(self.household, "_freight_distance_km_cache", None)
-        if cache is None:
-            cache = self.household._freight_distance_km_cache = {}
-        if material in cache:
-            return cache[material]
+        """
         regions = self._material_source_regions(material)
-        if not regions:
-            distance_km = None
-        else:
-            home_regions = set(self.civ.get("home_regions") or [])
-            if home_regions & set(regions):
-                distance_km = 0.0
-            else:
-                home_lat, home_lon = self.geography.home_centroid
-                distance_km = min(
-                    haversine_km(home_lat, home_lon,
-                                 self.geography.regions[region_id]["lat"],
-                                 self.geography.regions[region_id]["lon"])
-                    for region_id in regions)
-        cache[material] = distance_km
-        return distance_km
+        return self.geography.route_km_to(regions) if regions else None
 
     def material_freight_cost_per_kg(self, material):
         """Denarii per kilogram to haul `material` from the nearest place it

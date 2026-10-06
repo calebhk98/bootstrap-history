@@ -61,12 +61,30 @@ class MineralSharesAreNotDuplicatedTests(unittest.TestCase):
     def test_regional_totals_still_sum_to_one_over_the_home_regions(self):
         from sim.world import mineral_shares
         geography = _geography()
-        home = [region_id for region_id, region in geography["regions"].items()
-                if not region_id.startswith("_") and region["reach_from_italia"] <= 1]
+        with open(os.path.join(_ROOT, "data", "civilizations", "rome_100ad.json"), encoding="utf-8") as handle:
+            home = json.load(handle)["home_regions"]
         regional = mineral_shares.regional_mineral_shares(geography)
         for metal in ("iron", "copper", "tin", "lead", "silver"):
             total = sum(regional[region_id].get(metal, 0.0) for region_id in home)
             self.assertAlmostEqual(total, 1.0, delta=0.06, msg=metal)
+
+
+class RegionRecordsHoldNoTileDataTests(unittest.TestCase):
+
+    LABEL_FIELDS = {"name", "minerals", "note"}
+
+    def test_a_region_record_is_a_label_with_the_shares_not_yet_on_a_tile(self):
+        extra = {region_id: sorted(set(region) - self.LABEL_FIELDS)
+                 for region_id, region in _geography()["regions"].items()
+                 if not region_id.startswith("_") and set(region) - self.LABEL_FIELDS}
+        self.assertEqual(extra, {})
+
+    def test_no_region_field_repeats_a_tile_layer(self):
+        from sim.geography import api
+        layers = set(api.open_map().layers) | {"lat", "lon", "coastal", "land_area_km2", "borders"}
+        for region_id, region in _geography()["regions"].items():
+            if not region_id.startswith("_"):
+                self.assertEqual(set(region) & layers, set(), region_id)
 
 
 class ForestAreaReadsTilesTests(unittest.TestCase):

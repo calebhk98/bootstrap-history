@@ -23,7 +23,7 @@ with tempfile.TemporaryDirectory() as mods_dir:
     for name in ("regions", "tiles", "located_materials"):
         os.makedirs(os.path.join(folder, name))
     with open(os.path.join(folder, "regions", "isle.json"), "w", encoding="utf-8") as handle:
-        json.dump([{"id": "isle_mod_q7:isle", "name": "Isle", "coastal": True, "route_difficulty": 1.0}], handle)
+        json.dump([{"id": "isle_mod_q7:isle", "name": "Isle"}], handle)
     with open(os.path.join(folder, "tiles", "isle.json"), "w", encoding="utf-8") as handle:
         json.dump([{"id": "isle_mod_q7:isle_01", "lat": 0.0, "lon": 0.0, "land_area_km2": 1000.0, "coastal": True,
                     "borders": [], "old_region": "isle_mod_q7:isle", "koppen_class": "Af"}], handle)

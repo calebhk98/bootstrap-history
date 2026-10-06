@@ -42,8 +42,9 @@ def map_report(sim, full=False):
         if tile_id == base:
             row["is_your_base"] = True
         else:
-            days, _hours, _money = sim.labour.relocation_quote(tile_id)
-            row["days_from_your_base"] = round(days)
+            quote = sim.labour.relocation_quote(tile_id)
+            if quote is not None:
+                row["days_from_your_base"] = round(quote[0])
         rows.append(row)
     next_door = {}
     for tile_id in held:
