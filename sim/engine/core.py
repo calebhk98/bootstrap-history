@@ -56,6 +56,7 @@ from .mechanics import MechanicsMixin
 from .geography_port import GeographyPortMixin
 from .labour_port import LabourPortMixin
 from .projects import ProjectsMixin
+from .ways import WaysMixin
 from .society import SocietyMixin
 from .society_actors import ActorsMixin
 from .society_disclosure import DisclosureMixin
@@ -90,8 +91,8 @@ def _cell_chordal_position_km(lat_degrees, lon_degrees):
     `haversine_km` (defined in `engine/data.py`, and imported by the
     geography and economy mixins rather than by this file) gives the
     GREAT-CIRCLE distance between two
-    lat/lon points - the right answer for `region_reach`/`material_reach`'s
-    travel-time modelling, which is what it is for. It is the WRONG
+    lat/lon points - the right answer for the distance between two places,
+    which is what it is for. It is the WRONG
     choice for a spatial correlation kernel's distance argument: an
     isotropic exponential kernel of great-circle distance is not
     guaranteed positive semi-definite for an arbitrary set of points on a
@@ -217,7 +218,7 @@ YEARLY_RECORD_LIMIT = 300
 
 
 class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, LabourPortMixin,
-          ProjectsMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, InterestGroupsMixin, ForwardingPropertiesMixin, GoalsMixin,
+          ProjectsMixin, WaysMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, InterestGroupsMixin, ForwardingPropertiesMixin, GoalsMixin,
           StepPhasesMixin, LivingStockMixin, CoinHoardMixin,
           LivingStockTradeMixin, LivingStockYearlyMixin, EconomyPortMixin, NodeRederiveMixin):
     STATE_CAPACITY_DEFAULT = declare(

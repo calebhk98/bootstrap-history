@@ -35,7 +35,7 @@ class EconomyPort:
 
     def _has_territory(self):
         """A civilisation that holds no tiles has no markets to run; it stays on the engine's economy."""
-        homes = tuple(self._sim.civ.get("home_regions") or ())
+        homes = (tuple(self._sim.civ.get("home_regions") or ()), tuple(self._sim.civ.get("home_tiles") or ()))
         cached = self.__dict__.get("_territory")
         if cached is None or cached[0] != homes:
             from .economy_port_setup import civilisation_tiles

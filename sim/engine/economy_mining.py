@@ -30,8 +30,7 @@ from sim.constants import declare
 from . import money_units
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import deposits as deposit_model
-from sim.geography.api import mine_demand_goods, parameter_value, works_priced_from_deposits
-from sim.world import land
+from sim.geography.api import mine_demand_goods, parameter_value, tile_facts, tiles_held, works_priced_from_deposits
 from . import purchase_rule
 
 
@@ -944,17 +943,11 @@ class MiningMixin:
             "independently measured.")
 
     def home_land_area_km2(self):
-        """Total land area, in km2, of the tiles this civilization's
-        home_regions resolve to, not counted by how many region labels that
-        ground is filed under (see forest_land_ceiling()). Falls back to
-        Italia's tiles, as _compute_home_centroid() falls back to Italia,
-        for a civ file with no resolvable home_regions, so this never
-        divides by zero or crashes on a malformed civ file."""
-        area = land.territory_land_area_km2(self.civ.get("home_regions") or [], self.geography.data)
-        if area > 0.0:
-            return area
-        fallback = "italia" if "italia" in self.geography.regions else next(iter(self.geography.regions), None)
-        return land.territory_land_area_km2([fallback], self.geography.data) or 1.0
+        """Total land area, in km2, of the tiles this civilization holds, not counted by how many
+        region labels that ground is filed under (see forest_land_ceiling()). A civilisation holding
+        no tile has none."""
+        return sum(float(tile_facts(tile, self.world_map)["land_area_km2"])
+                   for tile in tiles_held(self.civ, self.world_map))
 
     def forest_land_ceiling(self):
         """The largest standing coppice you could ever hold, in hectares."""

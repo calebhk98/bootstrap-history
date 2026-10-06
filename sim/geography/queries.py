@@ -11,7 +11,8 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
 from sim.geography import (food_capacity, map_source, mechanisms, parameters, resource_links, resources_biotic,
                            resources_catalogue, resources_endowment, resources_prospecting,
-                           resources_summary, routes_graph, routes_modes, routes_search, tile_holdings, tile_layers)
+                           resources_summary, routes_graph, routes_modes, routes_search, tile_holdings, tile_layers,
+                           ways_build)
 
 WorldMap = map_source.WorldMap
 
@@ -50,6 +51,12 @@ def food_potential(tile_id: str, technique_factors: Optional[Mapping[str, float]
     return food_capacity.food_potential(_map(world_map), tile_id, dict(technique_factors or {}) or None)
 
 
+def tiles_held(civilisation: Mapping[str, Any], world_map: Optional[WorldMap] = None) -> List[str]:
+    """The tiles a civilisation holds: its `home_tiles` when it lists them, else the tiles its `home_regions`
+    labels name. Sorted; a tile the map lacks is not held."""
+    return tile_holdings.tiles_held(civilisation, _map(world_map))
+
+
 def tiles_of_regions(region_labels: Iterable[str], world_map: Optional[WorldMap] = None) -> List[str]:
     """Sorted tiles carrying any of these region labels (unknown labels add none)."""
     return tile_holdings.tiles_of_regions(region_labels, _map(world_map))
@@ -69,10 +76,12 @@ def dues_hours_per_tonne(world_map: Optional[WorldMap] = None) -> Dict[str, floa
 def route(origin_tiles: Iterable[str], destination_tiles: Iterable[str], modes: Iterable[str],
           improvements: Optional[Mapping[str, Mapping[str, Any]]] = None,
           mode_costs: Optional[Mapping[str, float]] = None, handling_costs: Optional[Mapping[str, float]] = None,
-          held_nodes: Optional[Iterable[str]] = None, world_map: Optional[WorldMap] = None) -> Optional[Dict[str, Any]]:
-    """The least-cost haul between two sets of tiles, or None when nothing joins them."""
+          held_nodes: Optional[Iterable[str]] = None, world_map: Optional[WorldMap] = None,
+          fastest: bool = False) -> Optional[Dict[str, Any]]:
+    """The least-cost haul between two sets of tiles (the fewest-days one with `fastest`), or None when
+    nothing joins them."""
     return routes_search.route(_map(world_map), origin_tiles, destination_tiles, modes, improvements,
-                               mode_costs, handling_costs, held_nodes)
+                               mode_costs, handling_costs, held_nodes, fastest)
 
 
 def route_costs(origin_tiles: Iterable[str], modes: Iterable[str],
@@ -101,6 +110,13 @@ def reach(origin_tiles: Iterable[str], modes: Iterable[str], days_budget: float,
 def freight_links(mode_ids: Iterable[str], world_map: Optional[WorldMap] = None) -> List[Tuple[str, str, str, float]]:
     """(tile_a, tile_b, mode, km) for every edge these modes use without anything built."""
     return routes_graph.links(_map(world_map), tuple(mode_ids))
+
+
+def build_requirements(tile_a: str, tile_b: str, improvement: str,
+                       world_map: Optional[WorldMap] = None) -> Optional[Dict[str, Any]]:
+    """What building `improvement` ("road", "rail") over the land edge between two bordering tiles takes:
+    {km, grade, trade, labour_hours, materials: {material: tonnes}, node}, or None when it cannot be built."""
+    return ways_build.requirements(_map(world_map), tile_a, tile_b, improvement)
 
 
 def edge_key(tile_a: str, tile_b: str) -> str:

@@ -1,6 +1,6 @@
 # Regions and tiles are two maps
 
-**Status:** partly - land, forest area, mineral deposits and the weather cells read tiles and no region record carries a land block; civilisations still hold region labels, and reach, freight and mineral tables still read a region anchor point (Complaints/328)
+**Status:** partly - a civilisation holds tiles (`tiles_held`: its `home_tiles`, else the tiles its region labels name) and settlement, frontier and roads, the economy's tiles, foreign routes, reach, mineral access and the forest ceiling read them; region records are labels with no position, coast, distance or land. Farm land, weather cells, crop climate and the cast still resolve region labels
 
 The world has two land systems: 21 named regions and the land tiles inside
 them. Soil fertility and arable land now come from tiles (Complaints/130),
@@ -31,12 +31,19 @@ See `docs/architecture/MAP_AND_WEATHER.md`.
 - Region land is a sum over tiles (`land.load_region_lands`); region records in `data/world/geography.json` carry no `land` block; the weather cells no longer fall back to a region centroid. `sim/geography/regions.py` is the derived region view (label record plus mineral shares completed from deposits); `Sim._regions` is built from it. `sim/tests/test_region_view_from_tiles.py`.
 - Deposits are placed by `lat`/`lon` and resolve to the holding tile at load (`sim/geography/tile_lookup.py`); see 281 and 282.
 
+## Done on the tile-holding step
+
+- `sim.geography.api.tiles_held(civilisation)` is the one answer to "which tiles does this civilisation hold": a listed `home_tiles`, else the tiles its `home_regions` labels name. `settlement`, `territory.holdings`, `labour_settlement`, `economy_port_setup`, `foreign_routes` and `economy_mining.home_land_area_km2` read it; `sim/tests/test_civilisations_hold_tiles.py`.
+- A region record keeps `name`, `minerals` (shares not yet tied to a deposit) and `note`; `route_difficulty`, `coastal` and `reach_from_italia` are deleted. A region's reach and a material's freight distance come from geography's route over the tiles held (Complaint 416). `sim/tests/test_tiles_replace_regions.py` fails if a region record carries a field the tiles carry.
+- The region anchor point is no longer read for reach or freight; `regions.region_anchor` (derived from tiles) remains only for placing a cast actor's location.
+- The reach bands moved: a region's level is the days of the fastest route from the held tiles over the modes held, banded by `reach_band_first_days` and `reach_band_ratio`, so civilisations that hold sea or cart techniques sit nearer, and a place no route joins is the farthest level (Complaints/328, 378).
+
 ## What remains
 
 Measure the region-layer readers with
-`grep -rnE "\[\"regions\"\]|get\(\"regions\"\)|self\._regions" sim --include=*.py`.
+`grep -rnE "home_regions|region_to_tiles|\.regions\b" sim --include=*.py`.
 
-- Civilisations hold region labels (`home_regions`); every tile list comes from `region_to_tiles`. Holding tiles directly is the real fix and the biggest change.
-- `sim/geography/geography.py`, `economy_freight.py`, `foreign_*`: read `Sim._regions`, the derived view, for a label anchor point, route difficulty and the unlocated mineral shares. Deriving the anchor from tile positions moves reach bands for some civilisation and region pairs (Complaints/328), so it is not behaviour-preserving.
-- `cli_interactive.py`: region names for display, which is what a label is for. `demo_commodities.py` (script since removed; recover with `git show 97473f1:sim/demo_commodities.py`) prints trade-partner region names from a report only.
+- `sim/world/land.py` and `sim/engine/core.py` (farm land, weather cells per region, `home_regions` pooling) and `sim/engine/prices.py` with `crop_climate` (growing-season check by region) still resolve region labels; `sim/agents/cast.py` places a country by a region label. A civilisation that lists `home_tiles` and no labels would hold no farm land until these read tiles.
+- Civilisation files still name their starting claim by region labels; none lists `home_tiles`.
+- `cli_interactive.py` and `demo_commodities.py` print region names, which is what a label is for.
 - Related: Complaints/289 (no place names or towns).

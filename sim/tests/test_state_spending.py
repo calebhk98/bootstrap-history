@@ -6,7 +6,7 @@ from .harness import *  # noqa: F401,F403
 
 from sim.engine.agents_port import SimWorld
 from sim.agents import budget
-from sim.geography import territory
+from sim.geography import api as geography_api, territory
 
 
 def one_year(game):
@@ -19,13 +19,13 @@ def lines_of(game):
 
 
 # ---- the map gives a state its frontier, its coast and its roads ---------------------------------
-held = territory.holdings(["italia", "gaul_germania"])
+held = territory.holdings(geography_api.tiles_of_regions(["italia", "gaul_germania"]))
 check("a territory has a frontier, a coast and an internal road network, all in km",
       held.frontier_km > 0.0 and held.coast_km > 0.0 and held.road_km > 0.0, held)
-bigger = territory.holdings(["italia", "gaul_germania", "britannia", "hispania"])
+bigger = territory.holdings(geography_api.tiles_of_regions(["italia", "gaul_germania", "britannia", "hispania"]))
 check("holding more tiles means more road to keep up",
       bigger.road_km > held.road_km, (bigger.road_km, held.road_km))
-alone = territory.holdings(["italia"])
+alone = territory.holdings(geography_api.tiles_of_regions(["italia"]))
 check("a state's road is the links between its own tiles, so an empty territory has none",
       territory.holdings([]).road_km == 0.0 and territory.holdings([]).frontier_km == 0.0
       and alone.road_km < held.road_km, alone)
