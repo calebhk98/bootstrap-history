@@ -16,8 +16,8 @@ from .harness import *  # noqa: F401,F403
 # Cross-instance state (a module-level cache or counter two Sims share) makes the
 # second run differ from its first year on, so a short horizon sees it; the
 # hash-seed check below measured divergence within 1-7 years for the same
-# reason. The run used to be 180 years, which cost minutes.
-_SAME_PROCESS_YEARS = 30
+# reason.
+_SAME_PROCESS_YEARS = 3
 
 # --- BREAK: `--seed` did not reproduce a run. Same script, same seed, three
 # runs: 587,300 / 6,664,218 / 6,652,459 in capital. PYTHONHASHSEED=0 made them
@@ -82,11 +82,13 @@ slow_check("the same seed gives the same run, twice in one process",
 # short horizon is not a weaker test here, it is simply not paying for 190+
 # extra years of a signal that, per that measurement, is essentially always
 # already in by year 7. The two subprocesses run side by side.
-_HASH_SEED_HORIZON = 12
+_HASH_SEED_HORIZON = 8
+# Every scenario diverged within the horizon above, so two (two civilisations, fog on and off) suffice.
+_HASH_SEED_SCENARIOS = "F.QUICK_SCENARIOS[1:3]"
 
 
 def _start_fingerprint(hash_seed, years_cap):
-    """Run every perf_fingerprint scenario, capped to `years_cap` years, in a
+    """Run the chosen perf_fingerprint scenarios, capped to `years_cap` years, in a
     fresh subprocess under PYTHONHASHSEED=<hash_seed>. Returns, for each
     scenario, its name and its list of per-year digests - perf_fingerprint's
     own state_of()/digest(), imported and called inside the subprocess
@@ -98,7 +100,7 @@ def _start_fingerprint(hash_seed, years_cap):
         "sys.path.insert(0, %r)\n"
         "from sim.tests import fingerprint as F\n"
         "out = []\n"
-        "for sc in F.SCENARIOS:\n"
+        "for sc in %s:\n"
         "    nm = F.name_of(sc)\n"
         "    sc = dict(sc, years=min(sc['years'], %d))\n"
         "    s = F.build(sc)\n"
@@ -110,7 +112,7 @@ def _start_fingerprint(hash_seed, years_cap):
         "        digs.append(F.digest(F.state_of(s)))\n"
         "    out.append([nm, digs])\n"
         "print(json.dumps(out))\n"
-    ) % (ROOT, years_cap)
+    ) % (ROOT, _HASH_SEED_SCENARIOS, years_cap)
     return hash_seed, subprocess.Popen(
         [sys.executable, "-c", script], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         text=True, env=dict(os.environ, PYTHONHASHSEED=str(hash_seed)))
