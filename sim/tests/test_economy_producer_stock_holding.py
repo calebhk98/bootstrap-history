@@ -1,6 +1,9 @@
 """A producer working far below its plant's capacity is short of cash only against the scale it works
 at (plus the change one year allows), not against its whole plant, so it is not forced to dump stock at
 any price. Its cash target, and so its dividends, are unchanged."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy import producers, producers_close

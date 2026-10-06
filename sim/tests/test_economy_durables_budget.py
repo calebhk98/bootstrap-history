@@ -1,5 +1,8 @@
 """A durable's stock is built from the year's spending, not from every unit of cash; at the stock that
 serves the flow it is bought at its wear rate."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy import households

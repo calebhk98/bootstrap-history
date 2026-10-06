@@ -13,6 +13,9 @@ tuning a grade or a breaking-hours constant to close a gap.
 
 sim/world/deposits.py standalone: Ricardian rent from ore grade, depth and hardness (unittest-style).
 """
+
+QUICK_TOPIC = True
+
 import ast
 import json
 import os

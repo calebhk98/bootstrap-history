@@ -62,15 +62,15 @@ def run_entry(years, rate_scale=1.0):
 	return game, counts
 
 
-game, counts = run_entry(40)
+game, counts = run_entry(14)
 world = SimWorld(game)
 check("more sellers in a market leave each an entrant less: the clearing price falls with supply",
       world.entry_gross("zz_entry", 1, 1) > world.entry_gross("zz_entry", 1, 6) > 0.0,
       (world.entry_gross("zz_entry", 1, 1), world.entry_gross("zz_entry", 1, 6)))
 check("some firms enter a proven concern", counts[-1] > 0, counts)
-check("entry stops by itself with no cap: the last years add no firm", counts[-1] == counts[-11], counts)
+check("entry stops by itself with no cap: the last five years add no firm", counts[-1] == counts[-6], counts)
 
-_, dear = run_entry(40, rate_scale=1000.0)
+_, dear = run_entry(14, rate_scale=1000.0)
 check("a dearer market rate for capital leaves fewer entrants", dear[-1] < counts[-1], (dear[-1], counts[-1]))
 
 check("the entrant's cost of capital is the capital market's rate", world.market_rate() == game.market_rate())

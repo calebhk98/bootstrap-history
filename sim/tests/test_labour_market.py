@@ -17,6 +17,9 @@ a small, hand-built synthetic fixture this file controls itself.
 
 sim/labour/labour_market.py: what the recipe graph asks of each trade, and how fast the farm hours move.
 """
+
+QUICK_TOPIC = True
+
 import ast
 import os
 import unittest

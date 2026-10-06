@@ -1,5 +1,8 @@
 """A sticky rate creeping up toward lenders' lowest ask must not freeze lending: when every lender asks
 more than last year's rate but borrowers would pay that ask, the rate lifts to it and loans are made."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy import credit

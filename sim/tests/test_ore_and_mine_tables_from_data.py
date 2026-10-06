@@ -1,5 +1,8 @@
 """Complaint 441: the ore, metal and mine tables are catalogue data, so a mod adds a mineral without engine
 edits. On shipped data the derived tables equal the literals the engine used to carry."""
+
+QUICK_TOPIC = True
+
 import json
 import os
 import tempfile

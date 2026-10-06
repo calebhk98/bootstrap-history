@@ -1,5 +1,8 @@
 """Foreign partners as external sellers and buyers: imports offered at the landed price on the port tile,
 exports bid at the partner's price less carriage, and the balance of payments read from the book."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy import foreign, goods_market, settlement

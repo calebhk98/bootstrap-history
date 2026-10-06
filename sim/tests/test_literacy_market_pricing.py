@@ -25,19 +25,19 @@ check("money alone cannot hire scribes a low-literacy society has nobody to "
 # --- Q: the same wall applies to TEACHING a trade into existence, the only
 # way engineer/chemist/machinist/optician can ever exist at all (hire()
 # refuses them outright until train() has made them real).
-ok_lo, why_lo = sim(civ="norse_900ad", capital=1e9).labour.train("machinist", 2)
+ok_lo, why_lo = s_lo.labour.train("machinist", 2)
 check("a society that cannot read cannot be taught machinists into "
       "existence either",
       not ok_lo and "literacy" in why_lo, why_lo)
-ok_hi, why_hi = sim(civ="rome_100ad", capital=1e9).labour.train("machinist", 2)
+ok_hi, why_hi = s_hi.labour.train("machinist", 2)
 check("the same teaching succeeds where enough people can read",
       ok_hi, why_hi)
 
 # --- Q: the institutional scholar ceiling (staff_capacity, which is what
 # auto_hire actually grows) is bounded by literacy_elite too, not only the
 # named `scholar`/`scribe` trades hired one at a time.
-s_hi = run_it(sim(civ="rome_100ad", capital=1e9), "school_founded")
-s_lo = run_it(sim(civ="norse_900ad", capital=1e9), "school_founded")
+run_it(s_hi, "school_founded")
+run_it(s_lo, "school_founded")
 sc_hi, sc_lo = s_hi.labour.staff_capacity()[0], s_lo.labour.staff_capacity()[0]
 check("a school trains fewer scholars where fewer of the propertied class "
       "can read",
@@ -124,37 +124,32 @@ check("hire's own fee rises the more of a trade you have taken on recently",
 s = sim(civ="rome_100ad", capital=1e9)
 s.active["gunpowder"] = {}
 f_no_beds = s.material_price_factor("saltpetre")
+cost_no_beds = s.project_cost("gunpowder")
+throttle_no_beds = s.resource_throttle()
+_mms = s.material_market_summary()
+_money_mat = S._agent_dispatch(s, NODES, {"cmd": "money"})
+s.nitre_bed_m2 = 2_000_000.0
+f_with_beds = s.material_price_factor("saltpetre")
+cost_with_beds = s.project_cost("gunpowder")
+throttle_with_beds = s.resource_throttle()
 check("demand for a material the market barely sells costs a real premium "
       "over the flat catalogue price",
       f_no_beds > 1.5, "%.3f" % f_no_beds)
-s.nitre_bed_m2 = 2_000_000.0
-f_with_beds = s.material_price_factor("saltpetre")
 check("owning enough of your own supply (nitre beds) relieves the premium "
       "-- this is 'opening a mine lowers what iron costs you', generalised",
       f_with_beds < f_no_beds, "no beds=%.3f with beds=%.3f" % (f_no_beds, f_with_beds))
-
-# --- R: the price response actually reaches the number the game quotes and
-# charges (project_cost), not only an internal factor nothing reads.
-s = sim(civ="rome_100ad", capital=1e9)
-s.active["gunpowder"] = {}
-cost_no_beds = s.project_cost("gunpowder")
-s.nitre_bed_m2 = 2_000_000.0
-cost_with_beds = s.project_cost("gunpowder")
 check("project_cost itself falls once your own supply covers the demand",
       cost_with_beds < cost_no_beds * 0.7,
       "no beds=%.0f with beds=%.0f" % (cost_no_beds, cost_with_beds))
-
-# --- refactor safety: resource_throttle()'s own quantity ceiling (unrelated
-# to price, and pre-existing) is unchanged by factoring its material lookup
-# out for material_price_factor() to share.
-s = sim(civ="rome_100ad", capital=1e9)
-s.active["gunpowder"] = {}
 check("resource_throttle still throttles a material the market will not "
       "sell you at all",
-      s.resource_throttle() < 1.0, s.resource_throttle())
-s.nitre_bed_m2 = 2_000_000.0
+      throttle_no_beds < 1.0, throttle_no_beds)
 check("...and stops once your own supply covers the need",
-      s.resource_throttle() > 0.99, s.resource_throttle())
+      throttle_with_beds > 0.99, throttle_with_beds)
+check("material_market_summary names a material trading above book price",
+      bool(_mms) and "saltpetre" in _mms, _mms)
+check("...and `money` itself carries the same line",
+      bool(_money_mat.get("materials_costing_you_a_premium")), _money_mat)
 
 # =============================================================================
 # GENERALISED PRICING: data/review/COMMODITY_DYNAMISM.md's central
@@ -235,32 +230,19 @@ check("...and mineable() agrees",
       (s.mineable("aluminium"), s.mineable("aluminium_kg"),
        s.mineable("not_a_real_material_xyz")))
 
-# --- A PLAYER MUST SEE IT: `money` surfaces a material price premium in
-# aggregate, generalised the same way goods_market_summary already is for
-# the goods side.
-s = sim(civ="rome_100ad", capital=1e9)
-s.active["gunpowder"] = {}
-s.resource_throttle()
-_mms = s.material_market_summary()
-check("material_market_summary names a material trading above book price",
-      bool(_mms) and "saltpetre" in _mms, _mms)
-_money_mat = S._agent_dispatch(s, NODES, {"cmd": "money"})
-check("...and `money` itself carries the same line",
-      bool(_money_mat.get("materials_costing_you_a_premium")), _money_mat)
-
 # --- the command surface itself accepts a generalised material name, not
 # only the seven it used to: "buy mine aluminium_kg" must actually work.
-_r_al, _, _ = proto([{"cmd": "buy", "what": "mine", "material": "aluminium_kg",
-                      "n": 0.1}])
+_command_sim = sim()
+_r_al = S._agent_dispatch(_command_sim, NODES, {"cmd": "buy", "what": "mine", "material": "aluminium_kg", "n": 0.1})
 check("the command surface itself (not just the engine underneath it) "
       "accepts a material outside the original seven",
-      _r_al[0].get("ok") is True, _r_al[0])
-_r_bad, _, _ = proto([{"cmd": "buy", "what": "mine",
-                       "material": "not_a_real_material_xyz", "n": 10}])
+      _r_al.get("ok") is True, _r_al)
+_r_bad = S._agent_dispatch(_command_sim, NODES, {"cmd": "buy", "what": "mine",
+                                                 "material": "not_a_real_material_xyz", "n": 10})
 check("...but still refuses a genuinely unpriced name, with a hint rather "
       "than a bare closed list",
-      _r_bad[0].get("ok") is False and "aluminium_kg" in _r_bad[0].get("error", ""),
-      _r_bad[0])
+      _r_bad.get("ok") is False and "aluminium_kg" in _r_bad.get("error", ""),
+      _r_bad)
 
 # --- COMMODITY FRAMEWORK (data/world/COMMODITIES.md,
 # sim/engine/commodities.py). Standalone from Sim, so these checks

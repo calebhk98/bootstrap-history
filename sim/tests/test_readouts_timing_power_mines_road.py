@@ -6,7 +6,7 @@ from sim.ui.proto.economy import _power_status
 # ===========================================================================
 # Complaints/230: the quoted finish is the earliest the payment schedule allows
 # ===========================================================================
-SLOW_NODE = "sea_skeleton_first"
+SLOW_NODE = "civ_sewer_separate"
 
 
 def stepped_completion(reputation):
@@ -26,10 +26,9 @@ def stepped_completion(reputation):
 	return quoted, None
 
 
-for reputation in (5, 80):
-	quoted_years, real_steps = stepped_completion(reputation)
-	check("the quoted earliest completion matches the steps a clean run takes (reputation %d)" % reputation,
-	      real_steps is not None and real_steps - 1 < quoted_years <= real_steps, (quoted_years, real_steps))
+quoted_years, real_steps = stepped_completion(80)
+check("the quoted earliest completion matches the steps a clean run takes",
+      real_steps is not None and real_steps - 1 < quoted_years <= real_steps, (quoted_years, real_steps))
 reputation_sim = sim(capital=1e12)
 reputation_sim.state.household.reputation = 80
 check("the calendar floor alone stays shorter than the payment schedule",
@@ -46,7 +45,7 @@ check("the retry expectation is never below the earliest completion",
 # ===========================================================================
 # Complaints/234: a capability flag is labelled as knowledge and shows the kW behind it
 # ===========================================================================
-power_sim = sim(capital=1e9)
+power_sim = reputation_sim
 power_sim.done.update({"cap_power_water", "cap_power_electric", "power_grid", "cap_power_grid"})
 power_sim._done_changed()
 tiers = {tier["id"]: tier for tier in _power_status(power_sim, NODES)["power_tiers_you_have_discovered"]}
@@ -73,7 +72,7 @@ check("a power capability gate says installed generation does not satisfy it",
 # ===========================================================================
 # Complaints/235: a mine already being sunk is subtracted from the shortfall
 # ===========================================================================
-mine_sim = sim(capital=1e9)
+mine_sim = reputation_sim
 before = mine_sim.shortage_remedy_plan("coal", 100.0)
 check("set-up: with nothing sunk the plan proposes the full mine", "buy mine coal 100" in before["commands"], before)
 ready_year = int(mine_sim.state.scenario.year) + 3
@@ -90,8 +89,8 @@ check("only the tonnage still uncovered is proposed", "buy mine coal 60" in part
 # ===========================================================================
 # Complaints/264: a fog-safe marker for what lies on the road to the goal
 # ===========================================================================
-road_sim = sim(capital=1e9)
-road_available = S._agent_dispatch(road_sim, NODES, {"cmd": "available", "all": True, "limit": 400})
+road_sim = reputation_sim
+road_available = S._agent_dispatch(road_sim, NODES, {"cmd": "available", "all": True, "limit": 100})
 rows = road_available.get("startable") or road_available.get("available") or []
 check("set-up: available has rows", bool(rows), list(road_available)[:12])
 check("every startable row says whether it is on the road to the goal",

@@ -2,6 +2,9 @@
 
 Complaints/41. The declaration lives in the civilisation's `prerequisite_gaps`
 (node id -> reason); no list lives in this test."""
+
+QUICK_TOPIC = True
+
 import os
 import unittest
 

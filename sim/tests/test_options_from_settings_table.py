@@ -9,18 +9,17 @@ are on them.
 import argparse
 
 from .harness import *  # noqa: F401,F403
+from sim.tests import cli_in_process
 from sim.engine import settings as _settings
 from sim.engine import settings_table as _table
 
 _scratch = tempfile.mkdtemp()
-_SIMULATOR = os.path.join(HERE, "simulator.py")
 
 
 def _menu(keystrokes, name):
     config = os.path.join(_scratch, name + ".json")
     env = dict(os.environ, ROME_SIM_CONFIG=config, ROME_SAVE_DIR=os.path.join(_scratch, name))
-    done = subprocess.run([sys.executable, _SIMULATOR], input=keystrokes, capture_output=True,
-                          text=True, timeout=120, env=env)
+    done = cli_in_process.run([], input_text=keystrokes, environment=env)
     saved = json.load(open(config)) if os.path.exists(config) else {}
     return done.stdout, saved
 
@@ -67,6 +66,7 @@ finally:
     del _settings.CONFIG_DEFAULTS["zz_probe"], _table.SETTINGS["zz_probe"]
 
 # --- `agent` has an options command, from the same table
+_saved_config_path = os.environ.get("ROME_SIM_CONFIG")
 os.environ["ROME_SIM_CONFIG"] = os.path.join(_scratch, "agent.json")
 _listing = S._agent_dispatch(sim(), NODES, {"cmd": "options"})
 _listed = [row["key"] for row in _listing.get("options", [])]
@@ -96,4 +96,7 @@ _settings.save_config(dict(_settings.load_config(), default_events=True, default
 _play_sim = _play._play_build_sim(_args)[0]
 check("play honours default_events on and default_deterministic",
       _play_sim.events is True and isinstance(_play_sim.rng, DetRNG), type(_play_sim.rng))
-os.environ.pop("ROME_SIM_CONFIG", None)
+if _saved_config_path is None:
+    os.environ.pop("ROME_SIM_CONFIG", None)
+else:
+    os.environ["ROME_SIM_CONFIG"] = _saved_config_path

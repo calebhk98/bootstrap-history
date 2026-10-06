@@ -1,4 +1,7 @@
 """Complaints/309: a joint by-product with no demand keeps a positive floor price and never underflows."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.engine import joint_allocation

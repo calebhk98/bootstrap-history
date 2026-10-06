@@ -1,10 +1,9 @@
 """repeated_output: Complaints/173 and 157 - long explanations shown once,
 completions printed once, one household-wide staffing line, wrapped names,
 and the Options menu handing unread lines back to the game prompt."""
-import subprocess
-import sys
 
 from .harness import *  # noqa: F401,F403
+from sim.tests import cli_in_process
 from sim.ui import protocol as _protocol
 from sim.ui.proto.render_screen_available import _available_row
 from sim.ui.proto.render_screen_state import _state_completed_head_lines
@@ -116,10 +115,9 @@ check("...and the first line still carries the id and the figures",
       row)
 
 # --- 161: the Options menu hands a non-choice back to the game prompt.
-completed = subprocess.run(
-    [sys.executable, os.path.join(HERE, "simulator.py"), "play", "--kit", "rich_merchant",
-     "--seed", "1", "--manual"],
-    input="options\nstate\n", capture_output=True, text=True, timeout=300, cwd=ROOT)
+completed = cli_in_process.run(
+    ["play", "--kit", "rich_merchant", "--seed", "1", "--manual"],
+    input_text="options\nstate\n", cwd=ROOT)
 menu_output = completed.stdout
 after_rejection = menu_output.split("not a choice")[-1]
 check("the menu echoes the line it did not take",

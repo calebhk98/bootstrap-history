@@ -1,8 +1,8 @@
 """Regression coverage for placeholder markers in the population screen
 (complaint 172). Trades with placeholder density estimates show an asterisk marker."""
 from .harness import *
+from sim.tests import cli_in_process
 
-_SIMULATOR = os.path.join(HERE, "simulator.py")
 _scratch = tempfile.mkdtemp()
 
 
@@ -19,8 +19,7 @@ def _env(name, config=None):
 
 
 def _run(arguments, text, env, cwd=None):
-    return subprocess.run([sys.executable, _SIMULATOR] + arguments, input=text,
-                          capture_output=True, text=True, timeout=120, env=env, cwd=cwd)
+    return cli_in_process.run(arguments, input_text=text, environment=env, cwd=cwd)
 
 
 def _get_population_text(name):

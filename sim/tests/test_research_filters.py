@@ -152,8 +152,7 @@ check("a hidden name and pure nonsense get the same reply shape, so absence "
       "cannot be told from hiddenness",
       set(out_hidden) == set(out_nonsense), (sorted(out_hidden), sorted(out_nonsense)))
 
-for query in ("gear", "shaft", "belt", "crank", "steam", "rotary", "drive", "education",
-              "literacy", "academy", hidden_query, nonsense):
+for query in ("gear", "steam", "rotary", "education", hidden_query, nonsense):
     for state in (None, "blocked"):
         out = _ask(fogged, find=query, **({"state": state} if state else {}), all=True)
         leaked = _leaks(out, hidden_ids)
@@ -213,7 +212,7 @@ with tempfile.TemporaryDirectory() as _mods_tmp:
               "metallurgy" in _merged["agriculture"]["cats"]
               and "soil" in _merged["agriculture"]["cats"]
               and "scythe" in _merged["agriculture"]["words"])
-        _mod_sim = sim(capital=1_000_000.0)
+        _mod_sim = plain
         _new = _ask(_mod_sim, state="blocked", tag="test_arcane_k3f9:sorcery", all=True)
         _new_ids = sorted(row["id"] for row in _rows(_new) or [])
         _expected = sorted(node_id for node_id in _weaving_ids

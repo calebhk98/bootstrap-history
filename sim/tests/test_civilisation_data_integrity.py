@@ -4,10 +4,6 @@ civilisation sets names a real, liftable node, one civilisation is never
 handed another's flavour text, a priced material is gated by its own
 prerequisite rather than sentinel-priced, and no civilisation's dated events
 leave a long silent stretch or hand out a free technology on turn one.
-
-Regrouped from test_round8_fixes.py, test_round9.py and test_round10.py -
-see CLAUDE.md's test-file reorganisation note. Checks moved verbatim; each
-one's own comment explains the break it guards.
 """
 from .harness import *  # noqa: F401,F403
 
@@ -21,26 +17,6 @@ except SystemExit as e:
 check("the reference data files are not offered as civilisations to play",
       "_TECH_EFFECTS" not in _civerr and "rome_100ad" in _civerr, _civerr)
 
-# --- BREAK: the Mexica menu says "no draught animals, no iron, no wheel in
-# practical use" and horse_collar was startable on arrival in the Valley of
-# Mexico in 1500, with `why` still calling it a collar for a draught horse.
-_mex = sim(civ="mexica_1500")
-_HORSE = "horse_collar"
-_ok_h, _why_h = _mex.start_reason(_HORSE)
-check("a society with no draught animal cannot begin draught-animal work",
-      not _ok_h and "draught animal" in _why_h, _why_h)
-check("...and the refusal names the one thing that would open it",
-      "exp_import_draught_animals" in _why_h, _why_h)
-check("...and it is not in what you could begin today",
-      not any(entry["id"] == _HORSE
-              for entry in S._agent_available(_mex, NODES, {"all": True})["available"]),
-      _HORSE)
-_mex.done.add("exp_import_draught_animals"); _mex._done_changed()
-check("...and bringing the animals across opens all of it at once",
-      _mex.needs_first(_HORSE)[0] is None, _mex.needs_first(_HORSE))
-_rom = sim(civ="rome_100ad")
-check("a society that HAS horses is not gated at all (the control case)",
-      _rom.needs_first(_HORSE)[0] is None, _rom.needs_first(_HORSE))
 # Every gate has to be liftable, or it is a wall rather than a handicap.
 for _cf in sorted(os.listdir(os.path.join(ROOT, "data/civilizations"))):
     if not _cf.endswith(".json") or _cf.startswith("_"):
@@ -58,37 +34,31 @@ for _cf in sorted(os.listdir(os.path.join(ROOT, "data/civilizations"))):
               all(x in NODES for x in (_ent.get("ids") or [])),
               [x for x in (_ent.get("ids") or []) if x not in NODES])
 
+# One game per civilisation serves the flavour-text, price-level, turn-one and gate checks.
+_CIVS = ("rome_100ad", "han_china_100ad", "norse_900ad", "mexica_1500", "england_1300")
+_games = {_cid: sim(civ=_cid) for _cid in _CIVS}
+
 # --- BREAK: Han China was told it writes its corpus "in plain quantitative
 # Greek and Latin" and seeks "Senatorial patronage".
-for _cid, _bad in (("han_china_100ad", "Greek and Latin"),
-                   ("norse_900ad", "Senatorial patronage"),
-                   ("mexica_1500", "Greek and Latin"),
-                   ("england_1300", "Senatorial patronage")):
-    _rl, _, _ = proto([{"cmd": "why", "id": "corpus_written"},
-                       {"cmd": "why", "id": "patron_senatorial"}], civ=_cid)
-    check("%s is not handed Rome's own words" % _cid,
-          _bad not in json.dumps(_rl), _bad)
-_rr, _, _ = proto([{"cmd": "why", "id": "corpus_written"}], civ="rome_100ad")
+for _cid, _bad in (("han_china_100ad", "Greek and Latin"), ("norse_900ad", "Senatorial patronage")):
+    _rl = [S._agent_dispatch(_games[_cid], NODES, {"cmd": "why", "id": _node_id})
+           for _node_id in ("corpus_written", "patron_senatorial")]
+    check("%s is not handed Rome's own words" % _cid, _bad not in json.dumps(_rl), _bad)
+_rr = S._agent_dispatch(_games["rome_100ad"], NODES, {"cmd": "why", "id": "corpus_written"})
 check("...and Rome, which the tree is written from, is left alone",
       "Greek and Latin" in json.dumps(_rr), json.dumps(_rr)[:120])
 
-# --- BREAK: the advertised price index touched nothing a player feels.
-# Revenue ~233 and living costs 230.0 TO THE DECIMAL in all five civs, against
-# a selection screen advertising "prices 0.75x to 1.40x Rome" - while project
-# costs, wages, the workshop's output and state funding all did scale, so an
-# expensive society paid 1.4x to build and ate at Roman prices.
+# --- BREAK: the advertised price index touched nothing a player feels: revenue
+# and living costs were identical in every civ.
 _lc, _rv = {}, {}
-for _cid in ("rome_100ad", "han_china_100ad", "norse_900ad", "mexica_1500",
-             "england_1300"):
-    _s = sim(civ=_cid)
+for _cid, _s in _games.items():
     _rv[_cid] = round(_s.revenue(), 2)
     _s.civ["starting_tax_share"] = 0.0      # isolate the price level from each civ's own tax
-    # Each civ counts in its own coin, so measure the price level as the
-    # ratio to the same society at a price index of one.
-    _flat = sim(civ=_cid)
-    _flat.civ["starting_tax_share"] = 0.0
-    _flat.price_index = 1.0
-    _lc[_cid] = round(_s.living_cost() / _flat.living_cost(), 4)
+    _priced = _s.living_cost()
+    _kept_index = _s.price_index
+    _s.price_index = 1.0                    # each civ counts in its own coin: ratio to a price index of one
+    _lc[_cid] = round(_priced / _s.living_cost(), 4)
+    _s.price_index = _kept_index
 check("living costs follow this society's price level",
       len(set(_lc.values())) == 5, _lc)
 check("...and so does what your practice pays",
@@ -98,6 +68,35 @@ check("...and the dearest society really is the dearest",
 check("...and the cheapest really is the cheapest",
       min(_lc, key=lambda c: _lc[c]) in ("han_china_100ad", "mexica_1500"), _lc)
 
+# --- BREAK: grant_ambient ran BEFORE the civ's named starting_techs were added,
+# so a free completion was credited on the first `step`. Nothing free may arrive
+# after the game begins.
+for _cid, _s in _games.items():
+    _before_ga = set(_s.done)
+    _s.step()
+    check("%s hands you nothing free on turn one" % _cid,
+          not (_s.done - _before_ga), sorted(_s.done - _before_ga))
+
+# --- BREAK: the Mexica menu says "no draught animals, no iron, no wheel in
+# practical use" and horse_collar was startable on arrival in the Valley of
+# Mexico in 1500, with `why` still calling it a collar for a draught horse.
+_mex = _games["mexica_1500"]
+_HORSE = "horse_collar"
+_ok_h, _why_h = _mex.start_reason(_HORSE)
+check("a society with no draught animal cannot begin draught-animal work",
+      not _ok_h and "draught animal" in _why_h, _why_h)
+check("...and the refusal names the one thing that would open it",
+      "exp_import_draught_animals" in _why_h, _why_h)
+check("...and it is not in what you could begin today",
+      not any(entry["id"] == _HORSE
+              for entry in S._agent_available(_mex, NODES, {"all": True})["available"]),
+      _HORSE)
+_mex.done.add("exp_import_draught_animals"); _mex._done_changed()
+check("...and bringing the animals across opens all of it at once",
+      _mex.needs_first(_HORSE)[0] is None, _mex.needs_first(_HORSE))
+_rom = _games["rome_100ad"]
+check("a society that HAS horses is not gated at all (the control case)",
+      _rom.needs_first(_HORSE)[0] is None, _rom.needs_first(_HORSE))
 # --- BREAK: rubber was priced at 99,999 a kilo, a sentinel left over from the
 # abolished "unobtainable" tier, and it survived the abolition of the concept
 # that justified it. A play tester worked out that one kilo was four hundred
@@ -146,19 +145,6 @@ check("nothing can be made of rubber without first securing rubber",
       not _ungated, _ungated)
 check("(and there really are rubber recipes to gate)", len(_rub_users) > 10,
       len(_rub_users))
-
-# --- BREAK: grant_ambient ran BEFORE the civ's named starting_techs were
-# added, so anything they unlocked was credited on the player's first `step`
-# and printed as "COMPLETED 100: Amphitheatre with tiered seating" - a
-# completion for something they had never started, in the same words as their
-# own work. Nothing free may arrive after the game begins.
-for _civ_ga in ("rome_100ad", "han_china_100ad", "norse_900ad", "mexica_1500",
-                "england_1300"):
-    _s_ga = sim(civ=_civ_ga)
-    _before_ga = set(_s_ga.done)
-    _s_ga.step()
-    check("%s hands you nothing free on turn one" % _civ_ga,
-          not (_s_ga.done - _before_ga), sorted(_s_ga.done - _before_ga))
 
 # --- JOB 1: "something happens shortly after the game starts and then
 # nothing happens for centuries" was the same shape of complaint across

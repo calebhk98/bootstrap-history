@@ -1,4 +1,7 @@
 """Money regimes, minting and melting, issue, money demand and the price level (sim/economy/currency.py)."""
+
+QUICK_TOPIC = True
+
 import dataclasses
 import unittest
 

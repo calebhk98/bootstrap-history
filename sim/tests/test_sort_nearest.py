@@ -1,109 +1,121 @@
 """sort_nearest: regression checks, run individually with `--only sort_nearest`."""
 from .harness import *  # noqa: F401,F403
 
-# =============================================================================
-# `available sort nearest` MEASURED DISTANCE TO BECOMING STARTABLE, NEVER
-# DISTANCE TO A GOAL - and nothing said so. An external blind playthrough,
-# goal set to the junction transistor, read "available sort nearest" as a
-# goal-aware planner because nothing told it otherwise, and got agriculture.
-# Renamed to fewest_missing (old spellings kept working); `stuck` now says
-# outright, under fog, that its goal-aware branch is switched off rather
-# than silently falling back to generic advice that looks like the real
-# answer.
-# =============================================================================
-check("'fewest_missing' is the advertised sort key now, not the misleading "
-      "'nearest'",
+# `available sort nearest` measured distance to becoming startable, never distance to a goal;
+# it is now fewest_missing, with the old spelling kept working.
+check("'fewest_missing' is the advertised sort key now, not the misleading 'nearest'",
       "fewest_missing" in _protocol._SORT_KEY_NAMES and "nearest" not in _protocol._SORT_KEY_NAMES,
       _protocol._SORT_KEY_NAMES)
 check("...but the old spelling still works, for any script already using it",
       "nearest" in _protocol._SORT_KEYS and "fewest_missing" in _protocol._SORT_KEYS,
       sorted(_protocol._SORT_KEYS))
-_stuck_goal = sim(capital=1_000_000.0)
-_stuck_goal.fog = True
-_stuck_goal.revealed = set()
-_stuck_out = S._agent_dispatch(_stuck_goal, NODES, {"cmd": "stuck"})
-check("`stuck`, under fog with a goal set, says outright that it cannot "
-      "check the goal's route - the same candour `rush` already has about "
-      "its own limits - rather than silently giving generic advice with no "
-      "explanation of what it could not do",
-      "this_does_not_know_your_goal" in _stuck_out,
-      _stuck_out.get("this_does_not_know_your_goal"))
-_stuck_nofog = sim(capital=1_000_000.0)
-_stuck_nofog.fog = False
-check("...and says nothing of the kind with fog off, where the goal-aware "
-      "branch actually runs",
-      "this_does_not_know_your_goal" not in S._agent_dispatch(
-          _stuck_nofog, NODES, {"cmd": "stuck"}),
+
+# One game serves the fog, venture and rush checks.
+shared = sim(capital=5_000_000.0)
+
+# `stuck` says outright, under fog, that it cannot check the goal's route.
+shared.fog = True
+shared.revealed = set()
+stuck_fogged = S._agent_dispatch(shared, NODES, {"cmd": "stuck"})
+check("`stuck`, under fog with a goal set, says it cannot check the goal's route",
+      "this_does_not_know_your_goal" in stuck_fogged, stuck_fogged.get("this_does_not_know_your_goal"))
+shared.fog = False
+check("...and says nothing of the kind with fog off, where the goal-aware branch runs",
+      "this_does_not_know_your_goal" not in S._agent_dispatch(shared, NODES, {"cmd": "stuck"}),
       "fog off: no such field")
+shared.fog = True
 
+# is_venture offers `open` only where there is something to open a door on.
+check("opening `arithmetic_positional` is not offered - a notation is not a door to open",
+      not shared.is_venture("arithmetic_positional")
+      and NODES["arithmetic_positional"]["rev"] == 0 and NODES["arithmetic_positional"]["up"] == 0,
+      (NODES["arithmetic_positional"]["rev"], NODES["arithmetic_positional"]["up"]))
+check("circuit theory does not open as a concern; the capacitor it improves does",
+      not shared.is_venture("el2_negative_feedback_stability_gain") and shared.is_venture("el2_capacitor_electrolytic"),
+      (shared.is_venture("el2_negative_feedback_stability_gain"), shared.is_venture("el2_capacitor_electrolytic")))
+check("a financial instrument is not a venture; the bank that uses one is",
+      not shared.is_venture("fin_cheque") and shared.is_venture("fin_deposit_bank"),
+      (shared.is_venture("fin_cheque"), shared.is_venture("fin_deposit_bank")))
+check("a husbandry method does not open its own shop; the farm it improves does",
+      not shared.is_venture("ag2_hybridisation") and shared.is_venture("crop_rotation"),
+      (shared.is_venture("ag2_hybridisation"), shared.is_venture("crop_rotation")))
+check("a trade practised for a fee (an assay office) still opens as a concern",
+      shared.is_venture("fin_assay_office"), shared.is_venture("fin_assay_office"))
+venture_count = sum(1 for node_id in NODES if shared.is_venture(node_id))
+check("the count of nodes offered to `open` is neither inflated by notations nor collapsed toward zero",
+      1300 <= venture_count <= 1450, venture_count)
 
-# --- JOB 3e: the founder's death is legible, not one line among many. A
-# normal-play tester in mortal mode found it reported as one more EVENT in a
-# long `step`, with the age nowhere but that one sentence. `sim()` has no
-# mortal switch of its own - nothing in this file needed one before - so
-# this builds the Sim directly, the same way `sim()` itself does.
-s_fd = S.Sim(NODES, ORDER, random.Random(1), events=False, manual=True,
-             civ=S.load_civ("rome_100ad"), cfg={"immortal": False, "start_capital": 1e9})
-s_fd.goal, s_fd.done_year = GOAL, {}
-s_fd.end_year = s_fd.cfg["start_year"] + 200
-_step_fd = S._agent_dispatch(s_fd, NODES, {"cmd": "step", "years": 150})
-check("the founder's death gets a field of its own in the step that carries "
-      "it, not only a line in events",
-      isinstance(_step_fd.get("the_founder_died_this_step"), dict),
-      _step_fd.get("the_founder_died_this_step"))
-check("...and the age is a number you can read, not prose you have to parse",
-      isinstance((_step_fd.get("the_founder_died_this_step") or {})
-                 .get("aged_about"), int),
-      _step_fd.get("the_founder_died_this_step"))
-check("...and `state` carries the age from then on, not only that one "
-      "step's reply",
-      _step_fd.get("founder_died_aged")
-      == _step_fd["the_founder_died_this_step"]["aged_about"],
-      (_step_fd.get("founder_died_aged"), _step_fd.get("the_founder_died_this_step")))
-check("...and the step stopped there instead of running the rest of the "
-      "150 years requested straight past it",
-      _step_fd["year"] < s_fd.cfg["start_year"] + 150, _step_fd["year"])
+# `rush`: a bulk start, capped by hours and by limit, fog-safe.
+visible_before_rush = {entry["id"] for entry in S._agent_available(shared, NODES, {"all": True})["available"]}
+rush_one = S._agent_dispatch(shared, NODES, {"cmd": "rush", "limit": 1})
+rush_many = S._agent_dispatch(shared, NODES, {"cmd": "rush", "limit": 1000})
+check("a rush limit caps how many it actually begins", rush_one["count_started"] == 1, rush_one["count_started"])
+check("`rush` starts more than one thing in a single call", rush_many.get("count_started", 0) >= 2,
+      rush_many.get("count_started"))
+check("...and every id it reports started is actually active now",
+      all(entry["id"] in shared.active or entry["id"] in shared.done
+          for entry in rush_one["started"] + rush_many["started"]),
+      [entry["id"] for entry in rush_many["started"]])
+check("under fog, the first thing `rush` starts was already on the visible `available` list",
+      all(entry["id"] in visible_before_rush for entry in rush_one["started"]),
+      [entry["id"] for entry in rush_one["started"] if entry["id"] not in visible_before_rush])
+hours_owed = sum(NODES[entry["id"]]["ph"] for entry in rush_many.get("started") or [])
+check("`rush` does not commit more hours than a couple of years can hold",
+      hours_owed <= shared.labour.director_pool() * 2.0 + max(
+          NODES[entry["id"]]["ph"] for entry in (rush_many.get("started") or [{"id": GOAL}])),
+      (hours_owed, shared.labour.director_pool()))
+check("...and says why it stopped rather than silently starting fewer",
+      any("would not make them go faster" in str(entry.get("why")) for entry in (rush_many.get("not_started") or [])),
+      [entry.get("why") for entry in (rush_many.get("not_started") or [])][:1])
+check("'values' and 'rush' are in the list every unknown-command refusal advertises",
+      "values" in S.KNOWN_COMMANDS and "rush" in S.KNOWN_COMMANDS, S.KNOWN_COMMANDS)
 
-# THE AGE SURVIVES A --session RESUME. `log` is not itself a saved field -
-# see SAVE_FIELDS - so a naive read of it for the founder's age would go
-# empty in a freshly constructed process, silently un-reporting an age
-# `state` had already shown once. _founder_death_aged/_founder_death_year
-# are saved fields precisely so this does not happen.
-_sess_fd = os.path.join(ROOT, _rel("founder_death.json"))
-S.save_state(s_fd, _sess_fd)
-s_fd2 = S.Sim(NODES, ORDER, random.Random(1), events=False, manual=True,
-             civ=S.load_civ("rome_100ad"))
-s_fd2.goal, s_fd2.done_year = GOAL, {}
-S.load_state(s_fd2, _sess_fd)
-_st_fd2 = S._agent_dispatch(s_fd2, NODES, {"cmd": "state"})
-check("the founder's age at death survives a save and a fresh process "
-      "loading it back, not only the process that saw it happen",
-      _st_fd2.get("founder_died_aged") == _step_fd.get("founder_died_aged")
-      and _st_fd2.get("founder_died_aged") is not None,
-      (_st_fd2.get("founder_died_aged"), _step_fd.get("founder_died_aged")))
-
-
-# --- JOB 3f: a bulk start for the late game, so it is not pure typing.
-s_ru = sim()
-_ru = S._agent_dispatch(s_ru, NODES, {"cmd": "rush", "force": True})
-# --- BREAK, round 12: two testers independently made this their worst finding.
-# One wrote that a dead founder's run was "permanently unwinnable from that
-# point" with the game never saying so; the other watched a corpse be offered
-# 69 startable projects and accept one. The engine was not actually silent
-# about the consequence - deputies carry the work, and with none the programme
-# dissolves over twelve years - but nothing ever told the player either half.
-_s_die = sim(capital=1000000.0, events=True)
-_s_die.cfg["immortal"] = False
-_s_die.life_left = 1.0
-for _ in range(6):
-    _s_die.step()
+# The founder's death is legible: its own field with a numeric age, the step stops there, the age
+# survives a save and load, and the log says what it means for the run.
+mortal = sim(capital=1_000_000.0, events=True)
+mortal.cfg["immortal"] = False
+mortal.life_left = 1.0
+mortal.end_year = mortal.cfg["start_year"] + 200
+step_reply = S._agent_dispatch(mortal, NODES, {"cmd": "step", "years": 150})
+died = step_reply.get("the_founder_died_this_step")
+check("the founder's death gets a field of its own in the step that carries it",
+      isinstance(died, dict), died)
+check("...and the age is a number you can read", isinstance((died or {}).get("aged_about"), int), died)
+check("...and `state` carries the age from then on",
+      step_reply.get("founder_died_aged") == (died or {}).get("aged_about"),
+      (step_reply.get("founder_died_aged"), died))
+check("...and the step stopped there instead of running the requested years past it",
+      step_reply["year"] < mortal.cfg["start_year"] + 150, step_reply["year"])
+session_path = os.path.join(ROOT, _rel("founder_death.json"))
+S.save_state(mortal, session_path)
+reloaded = S.Sim(NODES, ORDER, random.Random(1), events=False, manual=True, civ=S.load_civ("rome_100ad"))
+reloaded.goal, reloaded.done_year = GOAL, {}
+S.load_state(reloaded, session_path)
+reloaded_state = S._agent_dispatch(reloaded, NODES, {"cmd": "state"})
+check("the founder's age at death survives a save and a fresh process loading it back",
+      reloaded_state.get("founder_died_aged") == step_reply.get("founder_died_aged")
+      and reloaded_state.get("founder_died_aged") is not None,
+      (reloaded_state.get("founder_died_aged"), step_reply.get("founder_died_aged")))
+for _ in range(2):
+    mortal.step()
 check("the founder's death says what it means for the run, not only that it happened",
-      any("THE FOUNDER DIES" in message and "no deputy" in message
-          for _, message in _s_die.log),
-      [message for _, message in _s_die.log if "FOUNDER DIES" in message][:1])
+      any("THE FOUNDER DIES" in message and "no deputy" in message for _, message in mortal.log),
+      [message for _, message in mortal.log if "FOUNDER DIES" in message][:1])
 check("...and the programme dissolving is counted down where a player sees it",
-      any("DISSOLVING" in message and "ends at twelve" in message for _, message in _s_die.log),
-      [message for _, message in _s_die.log if "DISSOLVING" in message][:1])
+      any("DISSOLVING" in message and "ends at twelve" in message for _, message in mortal.log),
+      [message for _, message in mortal.log if "DISSOLVING" in message][:1])
+
+# Losing people to death and better offers is announced, not silent.
+attrition = sim(capital=10_000_000.0, events=False)
+run_it(attrition, "workshop_first", "school_founded", "freedman_staff")
+attrition.labour.hire("scholar", 8)
+for _ in range(12):
+    attrition.step()
+    if any("lose" in message and "scholar" in message for _, message in attrition.log):
+        break
+check("losing people to death and better offers is announced, not silent",
+      any("lose" in message and "scholar" in message for _, message in attrition.log),
+      [message for _, message in attrition.log if "lose" in message][:2])
 
 # --- BREAK, round 12: a developer's own change-log marker was shipped in the
 # prose a player reads. 1,108 nodes carried "[AUDIT: ... See JOB 1 upkeep
@@ -115,14 +127,6 @@ _leaks = sorted(node_id for node_id, value in NODES.items()
 check("no developer change-log marker is shipped in player-facing prose",
       not _leaks, _leaks[:5])
 
-# --- BREAK: three civilisations were told their own signature technology led
-# nowhere. `why` decided what a node unlocks by scanning hard prerequisites
-# only, so anything reached solely as one option of a req_any substitution
-# group ("any of a steam engine, a water wheel or a horse will drive this")
-# read as a dead end. Ten nodes were affected, among them the Norse clinker
-# hull - which really has 466 nodes behind it - the Norse bog-iron bloomery,
-# and the Mexica's chinampa. A play tester filed this against the Norse
-# starting kit as "flagship technologies are dead ends in the graph".
 from sim.ui.protocol import _unlocked_by as _UB, _downstream_of as _DS
 _ra_cases = ("sea_clinker_hull", "met_bloomery_bog_iron", "fud_chinampa")
 for _k_ra in _ra_cases:
@@ -228,131 +232,3 @@ check("...and NOT acyclic once every substitution option counts as an edge, "
       _reaches("hydrochloric_acid", "hydrochloric_acid", _pre_and_any),
       "no cycle found through hydrochloric_acid")
 
-# --- BREAK, round 12: `rush limit:1000` on turn one started 209 things at
-# once, owing 90,944 founder-hours against a lifetime the game itself puts at
-# about 72,000. The next step gave hours to exactly one of them, so "RUNNING
-# (209)" was a fiction about 208 of them. Committing a couple of years of
-# everyone's attention is a decision; committing four centuries of it is not.
-_s_rush = sim(capital=5000000.0)
-_r_rush = S._agent_dispatch(_s_rush, NODES, {"cmd": "rush", "limit": 1000})
-_owed_rush = sum(NODES[entry["id"]]["ph"] for entry in (_r_rush.get("started") or []))
-check("`rush` does not commit more hours than a couple of years can hold",
-      _owed_rush <= _s_rush.labour.director_pool() * 2.0 + max(
-          NODES[entry["id"]]["ph"] for entry in (_r_rush.get("started") or [{"id": GOAL}])),
-      (_owed_rush, _s_rush.labour.director_pool()))
-check("...and says why it stopped rather than silently starting fewer",
-      any("would not make them go faster" in str(entry.get("why"))
-          for entry in (_r_rush.get("not_started") or [])),
-      [entry.get("why") for entry in (_r_rush.get("not_started") or [])][:1])
-
-# --- BREAK, round 12: five scholars hired, five years stepped, the payroll
-# read 5, 4, 3, 3, 2 and NOTHING said why. The rate was right all along
-# (measured 0.825 survival over five years against 0.837 expected across forty
-# seeds); it was the reporting that was missing, and from the chair it looked
-# exactly like staff vanishing.
-_s_att = sim(capital=10000000.0, events=False)
-run_it(_s_att, "workshop_first", "school_founded", "freedman_staff")
-_s_att.labour.hire("scholar", 8)
-for _ in range(12):
-    _s_att.step()
-check("losing people to death and better offers is announced, not silent",
-      any("lose" in message and "scholar" in message for _, message in _s_att.log),
-      [message for _, message in _s_att.log if "lose" in message][:2])
-
-check("`rush` starts more than one thing in a single call",
-      _ru.get("count_started", 0) >= 2, _ru.get("count_started"))
-check("...and every id it reports started is actually active now",
-      all(entry["id"] in s_ru.active or entry["id"] in s_ru.done for entry in _ru["started"]),
-      [entry["id"] for entry in _ru["started"]])
-check("...and a limit caps how many it actually begins",
-      S._agent_dispatch(sim(), NODES, {"cmd": "rush", "limit": 1})["count_started"] == 1,
-      None)
-
-# FOG-SAFE: `can_start` already guarantees visibility (see is_visible's own
-# docstring - "anything you could start right now is visible by
-# definition"), so this is belt-and-braces: every id `rush` touches under
-# fog really was one the fogged `available` list would also have shown.
-s_ruf = sim()
-s_ruf.fog = True
-s_ruf.revealed = set()
-_avf = {entry["id"] for entry in S._agent_available(s_ruf, NODES, {"all": True})["available"]}
-_ruf = S._agent_dispatch(s_ruf, NODES, {"cmd": "rush", "force": True})
-check("under fog, everything `rush` starts was already on the visible "
-      "`available` list",
-      all(entry["id"] in _avf for entry in _ruf["started"]),
-      [entry["id"] for entry in _ruf["started"] if entry["id"] not in _avf])
-
-# EVERY NEW COMMAND MUST BE ADVERTISED. Same check the suite already runs
-# for the rest of KNOWN_COMMANDS, pinned here for the two just added so a
-# future edit that forgets to wire one up fails immediately rather than
-# waiting for the general sweep to notice.
-check("'values' and 'rush' are in the list every unknown-command refusal "
-      "advertises",
-      "values" in S.KNOWN_COMMANDS and "rush" in S.KNOWN_COMMANDS,
-      S.KNOWN_COMMANDS)
-
-
-# --- BREAK: a player asked what opening `arithmetic_positional` (decimal
-# positional notation) means, and how writing down zero creates money or has
-# a cost. It doesn't: the node carried rev=300 and up=100 purely because
-# is_venture() offers `open` to anything with either field set, with no
-# distinction between a notation and a business. A prior pass that day had
-# zeroed upkeep on 1,096 nodes it judged the same way but left their revenue
-# alone, and revenue alone still satisfies is_venture()'s `or`, so the break
-# survived half fixed. The rule applied here: a node earns as a concern only
-# if there is something to open a door on - premises, staff, stock, or a
-# trade a person actually practises for a fee - and not merely because
-# knowing it happens to carry a rev figure. Notation, theorems, financial
-# instruments, circuit theory, and farming/food-processing METHODS applied
-# to a venture that already exists elsewhere in the tree all got their rev
-# (and any leftover up) zeroed; genuinely practised trades and manufactured
-# products did not.
-check("opening `arithmetic_positional` is no longer offered - a notation is "
-      "not a door to open",
-      not sim().is_venture("arithmetic_positional")
-      and NODES["arithmetic_positional"]["rev"] == 0
-      and NODES["arithmetic_positional"]["up"] == 0,
-      (NODES["arithmetic_positional"]["rev"], NODES["arithmetic_positional"]["up"]))
-
-check("circuit theory (Black's 1927 feedback theorem) does not open as a "
-      "concern the way the capacitor it improves still does",
-      not sim().is_venture("el2_negative_feedback_stability_gain")
-      and sim().is_venture("el2_capacitor_electrolytic"),
-      (sim().is_venture("el2_negative_feedback_stability_gain"),
-       sim().is_venture("el2_capacitor_electrolytic")))
-
-check("a financial instrument (a cheque) is not itself a venture; the bank "
-      "that uses one still is",
-      not sim().is_venture("fin_cheque") and sim().is_venture("fin_deposit_bank"),
-      (sim().is_venture("fin_cheque"), sim().is_venture("fin_deposit_bank")))
-
-check("a husbandry method (hybridisation) does not open its own shop; the "
-      "farm it improves still does",
-      not sim().is_venture("ag2_hybridisation") and sim().is_venture("crop_rotation"),
-      (sim().is_venture("ag2_hybridisation"), sim().is_venture("crop_rotation")))
-
-# THE HARD MIDDLE, NOT ZEROED: an assay office is a trade a person practises
-# for a fee - premises, hallmarking equipment, paying customers - same as the
-# physician's practice and surveying business the fix was warned not to
-# destroy by treating every revenue figure as if it were a notation.
-check("a trade practised for a fee (an assay office) still opens as a "
-      "concern, unlike a notation",
-      sim().is_venture("fin_assay_office"), sim().is_venture("fin_assay_office"))
-
-# AGGREGATE, SO A FUTURE EDIT CANNOT DRIFT BACK TOWARD EITHER MISTAKE. Before
-# this fix, is_venture() offered 1,492 of the tree's 2,833 nodes to `open` as
-# going concerns (Rome's own granted set aside); a check tester found the
-# true figure for a Rome start was 1,493. This pins it well below that and
-# well above zero, so a change that either re-inflates the notation-as-shop
-# bug or blindly zeros revenue across the tree (destroying the real income
-# the game depends on) fails here rather than shipping.
-# ONE Sim, not one per node: is_venture() only reads self.nodes/self.granted,
-# neither of which changes across k, so building a fresh Sim (~8ms) for each
-# of 2,849 nodes was paying that cost 2,849 times over for a value that never
-# moved - 22.6s of the suite's own time on a check that asserts nothing about
-# any INDIVIDUAL Sim, only a count. Measured via ROME_TEST_PROFILE.
-_venture_s = sim()
-_venture_ct = sum(1 for node_id in NODES if _venture_s.is_venture(node_id))
-check("the count of nodes offered to `open` as a concern is down from the "
-      "break's 1,493, and not collapsed toward zero",
-      1300 <= _venture_ct <= 1450, _venture_ct)

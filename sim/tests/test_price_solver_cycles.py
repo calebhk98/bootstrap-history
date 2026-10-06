@@ -21,6 +21,9 @@ engine behind it.
 
 Pins the resolvability pass refusing every recipe cycle, including the axe/iron example.
 """
+
+QUICK_TOPIC = True
+
 import collections
 import unittest
 

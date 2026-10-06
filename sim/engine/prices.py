@@ -475,7 +475,8 @@ def solved_prices(held_technology_ids: Iterable[str],
                 "production": production_entries, "gates": sorted(gate_nodes_held),
                 "civilization": civilization_id, "wage_ratios": document_ratios,
                 "admitted_entries": sorted(admitted_entry_keys), "interest_rate": interest_rate,
-                "territory": territory, "farmed_hectares": farmed_hectares})
+                "territory": territory, "farmed_hectares": farmed_hectares},
+                source_modules=_SOLVER_SOURCE)
         except OSError:
             key = None  # an input file cannot be read: solve without the cache
         stored = (solve_cache.cached_json(key, compute) if key
@@ -492,6 +493,10 @@ def solved_prices(held_technology_ids: Iterable[str],
         civilization_id=civilization_id, interest_rate=interest_rate)
     _SOLVE_CACHE[cache_key] = (production_entries, result)
     return result
+
+
+# The solve reads only its inputs and the code this module imports, so only that source keys the cache.
+_SOLVER_SOURCE = ("sim.engine.prices",)
 
 
 def _tree_nodes() -> Dict[str, Any]:

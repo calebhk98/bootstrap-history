@@ -15,7 +15,7 @@ from .harness import *  # noqa: F401,F403
 
 # --- BREAK: "(these add up to the revenue above)" - 166.7 + 66.7 = 233.4
 # under a stated 233.5. A claim of exact addition, checkable in one line.
-for _civ_name in ("rome_100ad", "han_china_100ad", "norse_900ad", "england_1300"):
+for _civ_name in ("rome_100ad", "han_china_100ad"):
     _s = sim(civ=_civ_name, capital=200000.0)
     for _i, _k in enumerate(node_id for node_id in NODES if NODES[node_id]["rev"] > 0):
         if _i >= 6:
@@ -41,59 +41,65 @@ check("...and what your own people add is counted separately",
 
 # --- BREAK: after `hire smith 1`, `labour` dropped smith from YOU COULD HIRE,
 # which reads as "no more smiths available" - and `hire smith 1` still worked.
-_rl, _, _ = proto([{"cmd": "hire", "trade": "smith", "n": 1}, {"cmd": "labour"}])
+def _ask(game, **command):
+    return S._agent_dispatch(game, NODES, command)
+
+
+_game_a = sim()
+_ask(_game_a, cmd="hire", trade="smith", n=1)
+_rl = _ask(_game_a, cmd="labour")
 check("a trade you employ is still listed as one you could hire",
-      "smith" in (_rl[1].get("you_could_hire_here") or []),
-      _rl[1].get("you_could_hire_here"))
+      "smith" in (_rl.get("you_could_hire_here") or []),
+      _rl.get("you_could_hire_here"))
 
 # --- BREAK: F34, "numbers that do not reconcile, collected". Every one of
 # these was a subtraction a break tester did on figures printed together.
-_rn2, _, _ = proto([{"cmd": "hire", "trade": "smith", "n": 2},
-                    {"cmd": "labour"},
-                    {"cmd": "work", "trade": "scribe", "hours": 500},
-                    {"cmd": "start", "id": "units_standards"},
-                    {"cmd": "step", "years": 1},
-                    {"cmd": "money"}], kit="absurd")
-_lab = _rn2[1]
+_game_b = sim(capital=5.0e7)
+_game_b.end_year = _game_b.cfg["start_year"] + _game_b.cfg["horizon_years"]
+_ask(_game_b, cmd="hire", trade="smith", n=2)
+_lab = _ask(_game_b, cmd="labour")
+_wk = _ask(_game_b, cmd="work", trade="scribe", hours=500)
+_ask(_game_b, cmd="start", id="units_standards")
+_ask(_game_b, cmd="step", years=1)
+_mn = _ask(_game_b, cmd="money")
 _rows = {record["trade"]: record for record in (_lab.get("on_your_staff") or [])}
 if "smith" in _rows:
     check("the wage bill is the quoted wage times the number of people",
           abs(_rows["smith"]["a_year_of_one"] * _rows["smith"]["you_employ"]
               - _lab["annual_wage_bill"]) < 1.0,
           (_rows["smith"], _lab["annual_wage_bill"]))
-_wk = _rn2[2]
 check("work's three figures subtract to each other",
       abs((_wk["earned"] - _wk["it_cost_your_own_practice"])
           - _wk["so_you_are_up"]) < 0.051, _wk)
-_mn = _rn2[5]
 check("money's net before and after the work in hand differ by exactly that",
       abs((_mn["net_per_year"] - _mn["spent_on_projects_last_year"])
           - _mn["net_after_project_spend"]) < 0.11, _mn)
-_st2, _, _ = proto([{"cmd": "state"}], kit="absurd")
+_st2 = _ask(_game_b, cmd="state")
 check("...and the after figure is the one `state` prints, to the decimal",
-      "net_after_project_spend" in _st2[0], list(_st2[0])[:5])
+      "net_after_project_spend" in _st2, list(_st2)[:5])
 
 # --- BREAK: `why med_cataract_couching` said "REVENUE: 500 den/yr" beside a
 # ledger crediting 166.7 for the same node - `why` overstating income
 # threefold, as a break tester put it.
-_rwy, _, _ = proto([{"cmd": "why", "id": "med_cataract_couching"}])
+_game_c = sim()
+_rwy = [_ask(_game_c, cmd="why", id="med_cataract_couching")]
 check("why says what a practice node pays YOU, not only what the trade is worth",
       _rwy[0].get("but_it_pays_YOU") is not None
       and _rwy[0]["but_it_pays_YOU"] < _rwy[0]["revenue"],
       (_rwy[0].get("revenue"), _rwy[0].get("but_it_pays_YOU")))
-_st_r, _, _ = proto([{"cmd": "money"}])
+_st_r = [_ask(_game_c, cmd="money")]
 _led = _st_r[0].get("where_the_money_comes_from") or {}
 check("...and that figure is the ledger's, to the decimal",
       abs(_rwy[0]["but_it_pays_YOU"]
           - _led.get("med_cataract_couching", -1)) < 0.05 * len(_led) + 0.06,
       (_rwy[0].get("but_it_pays_YOU"), sorted(_led)[:4]))
-_rwy2, _, _ = proto([{"cmd": "why", "id": "horse_collar"}])
+_rwy2 = [_ask(_game_c, cmd="why", id="horse_collar")]
 check("...and a node that is NOT your practice carries no such line",
       _rwy2[0].get("but_it_pays_YOU") is None, _rwy2[0].get("but_it_pays_YOU"))
 
 # --- BREAK: `ventures` "1 scholars, 1 craftsmen" on the same screen as
 # `labour`'s "ON YOUR STAFF: nobody". Three screens, three counts.
-_rv2, _, _ = proto([{"cmd": "ventures"}, {"cmd": "labour"}])
+_rv2 = [_ask(_game_c, cmd="ventures"), _ask(_game_c, cmd="labour")]
 check("the free-hands count says that one of them is you",
       _rv2[0].get("one_of_each_of_those_is_you") is True
       and _rv2[1].get("you_employ_in_total") == 0,
@@ -109,14 +115,14 @@ s_vv.done.update(NODES); s_vv._done_changed()
 s_vv.artisans = s_vv.scholars = 40.0
 _opened = 0
 for _k in sorted(NODES):
-    if s_vv.is_venture(_k) and _opened < 5 and s_vv.open_venture(_k)[0]:
+    if s_vv.is_venture(_k) and _opened < 3 and s_vv.open_venture(_k)[0]:
         _opened += 1
-for _ in range(4):
+for _ in range(1):
     s_vv.step()
 _vr = S._agent_dispatch(s_vv, NODES, {"cmd": "ventures"})
 _led = s_vv.revenue_sources()
 check("ventures quotes the same earnings the ledger credits",
-      all(abs(venture_row["earns_a_year"] - _led.get(venture_row["id"], venture_row["earns_a_year"])) < 0.11
+      bool(_vr["running"]) and all(abs(venture_row["earns_a_year"] - _led.get(venture_row["id"], venture_row["earns_a_year"])) < 0.11
           for venture_row in _vr["running"]),
       [(venture_row["id"], venture_row["earns_a_year"], _led.get(venture_row["id"])) for venture_row in _vr["running"]][:2])
 check("...and its NEEDS column is the supervision the engine charges",

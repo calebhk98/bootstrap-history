@@ -67,6 +67,58 @@ class SolveKeyTests(unittest.TestCase):
             shutil.rmtree(root, ignore_errors=True)
 
 
+class SourceScopedKeyTests(unittest.TestCase):
+    """A key scoped to a module hashes the source that module imports, and no other source."""
+
+    def setUp(self):
+        self.root = tempfile.mkdtemp(prefix="solve_cache_scope_")
+        self.original_root = solve_cache._ROOT
+        files = {"data/a.json": "1",
+                 "sim/solver/__init__.py": "",
+                 "sim/solver/main.py": "from sim.solver import helper\nfrom .lazy import thing\n",
+                 "sim/solver/helper.py": "def late():\n    from sim import shared\n",
+                 "sim/solver/lazy.py": "thing = 1\n",
+                 "sim/shared.py": "x = 1\n",
+                 "sim/unrelated.py": "y = 1\n"}
+        for relative, text in files.items():
+            self._write(relative, text)
+        solve_cache._ROOT = self.root
+        solve_cache.forget_environment_digest()
+
+    def tearDown(self):
+        solve_cache._ROOT = self.original_root
+        solve_cache.forget_environment_digest()
+        shutil.rmtree(self.root, ignore_errors=True)
+
+    def _write(self, relative, text, mode="w"):
+        path = os.path.join(self.root, relative)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, mode) as handle:
+            handle.write(text)
+
+    def _key_after(self, relative):
+        before = solve_cache.solve_key(_inputs(), source_modules=("sim.solver.main",))
+        self._write(relative, "changed = 1\n", mode="a")
+        solve_cache.forget_environment_digest()
+        return before, solve_cache.solve_key(_inputs(), source_modules=("sim.solver.main",))
+
+    def test_imported_source_changes_the_key(self):
+        for relative in ("sim/solver/main.py", "sim/solver/helper.py", "sim/solver/lazy.py",
+                         "sim/shared.py", "sim/solver/__init__.py", "data/a.json"):
+            before, after = self._key_after(relative)
+            self.assertNotEqual(before, after, relative)
+
+    def test_source_the_module_never_imports_leaves_the_key(self):
+        before, after = self._key_after("sim/unrelated.py")
+        self.assertEqual(before, after)
+
+    def test_unscoped_key_still_covers_all_source(self):
+        before = solve_cache.solve_key(_inputs())
+        self._write("sim/unrelated.py", "changed = 1\n")
+        solve_cache.forget_environment_digest()
+        self.assertNotEqual(before, solve_cache.solve_key(_inputs()))
+
+
 class ColdWarmTests(unittest.TestCase):
     def setUp(self):
         self.directory = tempfile.mkdtemp(prefix="solve_cache_dir_")
@@ -141,3 +193,28 @@ class ImportSolveCountTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ConcurrentMissTests(unittest.TestCase):
+    def test_simultaneous_misses_compute_once(self):
+        import threading
+        import time
+        directory = tempfile.mkdtemp(prefix="solve_cache_herd_")
+        computations = []
+
+        def compute():
+            computations.append(1)
+            time.sleep(0.3)
+            return {"value": 1}
+        results = []
+        workers = [threading.Thread(target=lambda: results.append(
+            solve_cache.cached_json("same_key", compute, cache_dir=directory))) for _ in range(4)]
+        try:
+            for worker in workers:
+                worker.start()
+            for worker in workers:
+                worker.join()
+        finally:
+            shutil.rmtree(directory, ignore_errors=True)
+        self.assertEqual(results, [{"value": 1}] * 4)
+        self.assertEqual(len(computations), 1)

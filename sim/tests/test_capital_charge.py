@@ -4,6 +4,9 @@ The solver charges each production entry's plant its build bill over its service
 found that left a concern priced at cost earning its staff and nothing above. The charge now repays the
 build bill with interest at the civilisation's market rate (`capital_recovery_factor`), so a concern
 selling at the solved price earns its wages plus that return."""
+
+QUICK_TOPIC = True
+
 import unittest
 from unittest import mock
 

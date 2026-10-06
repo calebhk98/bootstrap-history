@@ -19,7 +19,8 @@ from sim.economy.api import (EDGE_EXTERNAL, EDGE_LEGACY, AgentOrders, Economy, G
 
 from . import solve_cache
 from .data import load_civ
-from .economy_port_setup import build_setup, in_units, opening_values
+from .economy_port_key import spin_up_key
+from .economy_port_setup import build_setup, opening_values
 
 SWITCH_ENVIRONMENT = "ROME_AGENT_ECONOMY"
 OUTCOMES_KEPT = 100   # yearly outcomes held in memory for the health figures
@@ -91,7 +92,7 @@ class AgentEconomy:
                 opening = opening_values(self._sim)
                 setup = build_setup(self._sim, opening)
                 record = solve_cache.cached_json(
-                    solve_cache.solve_key({"agent_economy_spin_up": in_units(opening), "civ": self._sim.civ["id"]}),
+                    spin_up_key(setup),
                     lambda: self._spun_up(setup), cache_dir=SPIN_UP_CACHE_DIRECTORY)
                 self._economy = economy_api.economy_from_record(setup, record)
                 self.stored["opening"] = opening

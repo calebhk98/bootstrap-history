@@ -1,5 +1,8 @@
 """Mine works charged besides breaking: barren rock, haulage, hoisting,
 drainage, timbering, ventilation (Complaints/348)."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.world import deposits, mine_fire_setting, mine_works

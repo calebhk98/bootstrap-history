@@ -1,4 +1,7 @@
 """Import and content walls of the labour package and the labour-market core."""
+
+QUICK_TOPIC = True
+
 import ast
 import glob
 import json

@@ -1,151 +1,107 @@
-"""names_and_fog: regression checks, run individually with `--only names_and_fog`."""
+"""Typed names resolve to ids, fog limits what is suggested, and `available` sorts and pages."""
 from .harness import *  # noqa: F401,F403
 
-# =============================================================================
-# NAMES, NOT JUST IDS: testers found it jarring that `state` and `available`
-# print a human NAME ("Reaper-binder") while every command that acts on a
-# technology took only the machine id ("ag2_reaper_binder"). `why`, `start`,
-# `stop`, `bounty`, `mothball`, `restore` and `open` now all resolve a typed
-# name to its id first - case and punctuation folded, a unique prefix or
-# distinctive substring both work - and refuse with the real ids to choose
-# between when the name is not unique. Ids keep working unchanged, because
-# scripts and the `agent` protocol depend on them.
-# =============================================================================
-r, _, _ = proto([{"cmd": "why", "id": "Reaper-Binder"}])
+
+def ask(game, **command):
+    return S._agent_dispatch(game, NODES, command)
+
+
+def fogged_game():
+    game = S.Sim(NODES, ORDER, random.Random(1), events=False, manual=True,
+                 civ=S.load_civ("rome_100ad"), cfg={"start_kit": "poor_scholar"})
+    game.goal, game.done_year = GOAL, {}
+    game.fog, game.revealed = True, set()
+    return game
+
+
+game = sim()
+
+# --- Commands that act on a technology resolve a typed name to its id.
+reply = ask(game, cmd="why", id="Reaper-Binder")
 check("a typed name resolves to the id, case and punctuation folded",
-      r[0].get("ok") and r[0].get("id") == "ag2_reaper_binder",
-      r[0].get("error") or r[0].get("id"))
+      reply.get("ok") and reply.get("id") == "ag2_reaper_binder", reply.get("error") or reply.get("id"))
 
-r, _, _ = proto([{"cmd": "why", "id": "ag2_balanced_ration"}])
-_printed_name = r[0].get("name")
-r2, _, _ = proto([{"cmd": "why", "id": _printed_name}])
+printed_name = ask(game, cmd="why", id="ag2_balanced_ration").get("name")
+reply = ask(game, cmd="why", id=printed_name)
 check("a name copied verbatim off another screen resolves the same way",
-      r2[0].get("ok") and r2[0].get("id") == "ag2_balanced_ration",
-      (_printed_name, r2[0].get("error")))
+      reply.get("ok") and reply.get("id") == "ag2_balanced_ration", (printed_name, reply.get("error")))
 
-r, _, _ = proto([{"cmd": "why", "id": "loom"}])
+full_reply = ask(game, cmd="why", id="loom")
 check("an ambiguous name is refused with the real ids to choose between",
-      not r[0].get("ok") and r[0].get("error", "").count("(") >= 2
-      and "tex_horizontal_loom" in r[0]["error"],
-      r[0].get("error"))
+      not full_reply.get("ok") and full_reply.get("error", "").count("(") >= 2
+      and "tex_horizontal_loom" in full_reply["error"], full_reply.get("error"))
 
-# --- fog: the ambiguous-name list must never offer more than full visibility
-# would, and on a fresh game it must offer strictly less (or the filter is a
-# no-op that only looks like it is doing something).
-import re as _re_names
-_full, _, _ = proto([{"cmd": "why", "id": "loom"}])
-_fog, _, _ = proto([{"cmd": "why", "id": "loom"}], fog=True, kit="poor_scholar")
-_full_ids = set(_re_names.findall(r"(\w+) \(", _full[0].get("error", "")))
-_fog_ids = set(_re_names.findall(r"(\w+) \(", _fog[0].get("error", "")))
-check("under fog, an ambiguous name never offers more candidates than full "
-      "visibility would",
-      _fog_ids and _fog_ids < _full_ids,
-      (sorted(_fog_ids), sorted(_full_ids)))
-
-# --- the goal's NAME gets the same one exception its id already has on
-# `why` alone - see protocol.py's _goal_why comment - and nothing widens it.
-r, _, _ = proto([{"cmd": "why", "id": NODES[GOAL]["name"]},
-                 {"cmd": "start", "id": NODES[GOAL]["name"]},
-                 {"cmd": "why", "id": "transistor"}], fog=True, kit="poor_scholar")
-check("why on the goal's exact printed name is the one thing fog answers",
-      r[0].get("ok") and r[0].get("id") == GOAL,
-      r[0].get("error"))
-check("...but the exception does not widen to other commands on the same name",
-      not r[1].get("ok") and "never heard of" in r[1].get("error", ""),
-      r[1].get("error"))
-check("...and a vague guess does not silently resolve to the goal",
-      not r[2].get("ok") and GOAL not in r[2].get("error", "")
-      and "aiming at" not in r[2].get("error", ""),
-      r[2].get("error"))
-
-
-# =============================================================================
-# FOG LEAK #1, AS THE PLAYER FOUND IT: with fog on, `why aqueduct_survey` -
-# a name for nothing in the tree - suggested six ids as "did you mean", and
-# nobody had checked whether all six were things the player had actually
-# heard of. Verified the honest way: re-ask `why` about every id the
-# suggestion offered, and none of them may come back "never heard of".
-# =============================================================================
-r, _, _ = proto([{"cmd": "why", "id": "aqueduct_survey"}], fog=True, kit="poor_scholar")
-_sugg = [suggestion.strip() for suggestion in
-         r[0].get("error", "").split("Did you mean:")[-1].split(",") if suggestion.strip()] \
-        if "Did you mean" in r[0].get("error", "") else []
-_checks = [{"cmd": "why", "id": sid} for sid in _sugg]
-_verify, _, _ = (proto(_checks) if _checks else ([], "", 0))
-check("the did-you-mean list under fog only ever suggests things the player "
-      "has heard of",
-      all("never heard of" not in x.get("error", "") for x in _verify),
-      [(sid, x.get("error")) for sid, x in zip(_sugg, _verify)
-       if "never heard of" in x.get("error", "")])
-
-
-# =============================================================================
-# FOG LEAK #2: `available`'s "HEARD OF, CANNOT BEGIN YET" block used to
-# ignore `find`/`subject` and print its usual nearest-first twenty-five
-# regardless of the search, so a search that matched nothing startable still
-# dumped seven things nobody asked about. Reproduced exactly as found: reveal
-# something (units_standards unlocks several), then search for nonsense.
-# =============================================================================
-s_hd = sim(civ="rome_100ad", manual=False)
-s_hd.fog = True
-s_hd.revealed = set()
-S._agent_dispatch(s_hd, NODES, {"cmd": "start", "id": "units_standards"})
-for _ in range(2):
-    s_hd.step()
-_hd_nonsense = S._agent_available(s_hd, NODES, {"find": "zzzznonexistentxyz"})
-_hd_plain = S._agent_available(s_hd, NODES, {"limit": 50})
-check("a search matching nothing startable does not also dump the generic "
-      "heard-of list",
-      not _hd_nonsense.get("heard_of_but_cannot_begin"),
-      _hd_nonsense.get("heard_of_but_cannot_begin"))
-check("...but the same heard-of list still shows up unfiltered when no "
-      "search was asked for",
-      _hd_plain.get("heard_of_but_cannot_begin"),
-      "empty heard-of list with no search active")
-_hd_match = S._agent_available(s_hd, NODES, {"find": "corpus"})
-check("...and a search that DOES match a heard-of item still shows it",
-      any(entry["id"] == "corpus_written"
-          for entry in _hd_match.get("heard_of_but_cannot_begin") or []),
-      _hd_match.get("heard_of_but_cannot_begin"))
-
-
-# =============================================================================
-# SORT AND PAGE, ALL THE WAY TO THE END. Several screens truncated to 25 rows
-# and said "N more, nearest first" with no way to ask for a different order.
-# `available` now takes `sort` (price/hours/years/earns/upkeep/risk/alpha/
-# nearest) and `reverse`, on both the startable list and the heard-of one.
-# =============================================================================
-r, _, _ = proto([{"cmd": "available", "limit": 10, "sort": "risk", "reverse": True}])
-_risks = [entry["risk"] for entry in r[0]["available"]]
+# --- `available` can be sorted and paged all the way through.
+sorted_reply = ask(game, cmd="available", limit=10, sort="risk", reverse=True)
+risks = [entry["risk"] for entry in sorted_reply["available"]]
 check("available can be sorted by risk, reversed, all the way through the page",
-      _risks == sorted(_risks, reverse=True), _risks)
-
-_pretty_sorted = _RP("available", r[0])
-_json_first_id = r[0]["available"][0]["id"]
-_json_last_id = r[0]["available"][-1]["id"]
-check("the printed table keeps the JSON's sort order rather than re-sorting "
-      "back to cost",
-      -1 < _pretty_sorted.find(_json_first_id) < _pretty_sorted.find(_json_last_id),
-      (_json_first_id, _json_last_id, _pretty_sorted))
-
-r2, _, _ = proto([{"cmd": "available", "limit": 3}])
+      risks == sorted(risks, reverse=True), risks)
+pretty_sorted = _RP("available", sorted_reply)
+first_id, last_id = sorted_reply["available"][0]["id"], sorted_reply["available"][-1]["id"]
+check("the printed table keeps the JSON's sort order rather than re-sorting back to cost",
+      -1 < pretty_sorted.find(first_id) < pretty_sorted.find(last_id), (first_id, last_id, pretty_sorted))
+plain_reply = ask(game, cmd="available", limit=3)
 check("a plain page still defaults to cheapest first",
-      [entry["cost"] for entry in r2[0]["available"]]
-      == sorted(entry["cost"] for entry in r2[0]["available"]),
-      [entry["cost"] for entry in r2[0]["available"]])
+      [entry["cost"] for entry in plain_reply["available"]]
+      == sorted(entry["cost"] for entry in plain_reply["available"]),
+      [entry["cost"] for entry in plain_reply["available"]])
+lines = _RP("available", plain_reply).splitlines()
+staff_header = next(i for i, line in enumerate(lines) if "STAFF" in line)
+staff_legend = next((i for i, line in enumerate(lines) if "STAFF is the standing people" in line), None)
+check("the STAFF column has its legend within a few lines of the table, not a screen away",
+      staff_legend is not None and staff_legend - staff_header - sum(
+          1 for line in lines[staff_header + 1:staff_legend] if line.startswith("   ") and line.strip()) < 15,
+      (staff_header, staff_legend))
 
-# --- the tester's other question: does `available` show staff requirements,
-# and is the legend for them nearby rather than a screen away.
-_staff_pretty = _RP("available", r2[0])
-_lines = _staff_pretty.splitlines()
-_staff_hdr = next(i for i, line in enumerate(_lines) if "STAFF" in line)
-_staff_legend = next((i for i, line in enumerate(_lines)
-                      if "STAFF is the standing people" in line), None)
-check("the STAFF column has its legend within a few lines of the table, "
-      "not a screen away",
-      _staff_legend is not None and _staff_legend - _staff_hdr - sum(
-          1 for line in _lines[_staff_hdr + 1:_staff_legend]
-          if line.startswith("   ") and line.strip()) < 15,
-      (_staff_hdr, _staff_legend))
+# --- Fog: an ambiguous-name list never offers more than full visibility would,
+# and on a fresh game offers strictly less (or the filter does nothing).
+fogged = fogged_game()
+fog_reply = ask(fogged, cmd="why", id="loom")
+full_ids = set(re.findall(r"(\w+) \(", full_reply.get("error", "")))
+fog_ids = set(re.findall(r"(\w+) \(", fog_reply.get("error", "")))
+check("under fog, an ambiguous name never offers more candidates than full visibility would",
+      fog_ids and fog_ids < full_ids, (sorted(fog_ids), sorted(full_ids)))
 
+# The goal's name gets the one exception its id already has on `why`, and nothing widens it.
+goal_why = ask(fogged, cmd="why", id=NODES[GOAL]["name"])
+goal_start = ask(fogged, cmd="start", id=NODES[GOAL]["name"])
+guess = ask(fogged, cmd="why", id="transistor")
+check("why on the goal's exact printed name is the one thing fog answers",
+      goal_why.get("ok") and goal_why.get("id") == GOAL, goal_why.get("error"))
+check("...but the exception does not widen to other commands on the same name",
+      not goal_start.get("ok") and "never heard of" in goal_start.get("error", ""), goal_start.get("error"))
+check("...and a vague guess does not silently resolve to the goal",
+      not guess.get("ok") and GOAL not in guess.get("error", "") and "aiming at" not in guess.get("error", ""),
+      guess.get("error"))
 
+# Fog leak: did-you-mean suggestions under fog must all be things the player has heard of.
+unknown_reply = ask(fogged, cmd="why", id="aqueduct_survey")
+suggestion_text = re.split(r"did you mean:", unknown_reply.get("error", ""), flags=re.IGNORECASE)[-1] \
+    if re.search(r"did you mean:", unknown_reply.get("error", ""), re.IGNORECASE) else ""
+suggestions = [suggestion.strip() for suggestion in suggestion_text.split(",") if suggestion.strip()]
+check("a near miss under fog still gets a did-you-mean list to check",
+      suggestions, unknown_reply.get("error"))
+verified = [ask(fogged, cmd="why", id=suggestion) for suggestion in suggestions]
+check("the did-you-mean list under fog only ever suggests things the player has heard of",
+      all("never heard of" not in reply.get("error", "") for reply in verified),
+      [(suggestion, reply.get("error")) for suggestion, reply in zip(suggestions, verified)
+       if "never heard of" in reply.get("error", "")])
+
+# --- Fog leak: `available`'s heard-of block must respect `find`. Reveal
+# something, then search for nonsense.
+heard = sim(civ="rome_100ad", manual=False)
+heard.fog = True
+heard.revealed = set()
+ask(heard, cmd="start", id="units_standards")
+for _ in range(2):
+    heard.step()
+nonsense = S._agent_available(heard, NODES, {"find": "zzzznonexistentxyz"})
+unfiltered = S._agent_available(heard, NODES, {"limit": 50})
+check("a search matching nothing startable does not also dump the generic heard-of list",
+      not nonsense.get("heard_of_but_cannot_begin"), nonsense.get("heard_of_but_cannot_begin"))
+check("...but the same heard-of list still shows up unfiltered when no search was asked for",
+      unfiltered.get("heard_of_but_cannot_begin"), "empty heard-of list with no search active")
+matching = S._agent_available(heard, NODES, {"find": "corpus"})
+check("...and a search that DOES match a heard-of item still shows it",
+      any(entry["id"] == "corpus_written" for entry in matching.get("heard_of_but_cannot_begin") or []),
+      matching.get("heard_of_but_cannot_begin"))

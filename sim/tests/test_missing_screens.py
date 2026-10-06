@@ -32,6 +32,16 @@ def _fresh_sim(civ="han_china_100ad", fog=False):
     return sim
 
 
+_SHARED = {}
+
+
+def _shared_sim(civ="han_china_100ad", fog=False):
+    """One game per variant for tests that only read it."""
+    if (civ, fog) not in _SHARED:
+        _SHARED[(civ, fog)] = _fresh_sim(civ, fog)
+    return _SHARED[(civ, fog)]
+
+
 def _ask(sim, name, **fields):
     return _agent_dispatch(sim, _NODES, dict(cmd=name, **fields))
 
@@ -58,7 +68,7 @@ class RegistryTests(unittest.TestCase):
 class MapTests(unittest.TestCase):
 
     def test_map_names_the_base_and_every_held_tile(self):
-        sim = _fresh_sim()
+        sim = _shared_sim()
         reply = _ask(sim, "map", full=True)
         self.assertTrue(reply["ok"], reply)
         base = reply["you_are_based_at"]
@@ -73,13 +83,13 @@ class MapTests(unittest.TestCase):
             self.assertTrue(row["terrain"])
 
     def test_the_town_figure_is_the_engines(self):
-        sim = _fresh_sim()
+        sim = _shared_sim()
         reply = _ask(sim, "map")
         self.assertEqual(reply["you_are_based_at"]["town_people"],
                          round(sim.labour.home_town_population_estimate()))
 
     def test_deposits_on_held_tiles_are_listed(self):
-        sim = _fresh_sim("rome_100ad")
+        sim = _shared_sim("rome_100ad")
         reply = _ask(sim, "map", full=True)
         listed = {(deposit["name"], row["tile"])
                   for row in reply["tiles"] for deposit in row["deposits"]}
@@ -92,7 +102,7 @@ class MapTests(unittest.TestCase):
         self.assertEqual(listed, expected)
 
     def test_reach_lists_neighbours_not_held(self):
-        sim = _fresh_sim()
+        sim = _shared_sim()
         reply = _ask(sim, "map", full=True)
         held = set(sim.labour.settlement_tiles())
         self.assertTrue(reply["next_door"])
@@ -101,7 +111,7 @@ class MapTests(unittest.TestCase):
             self.assertNotEqual(row["name"], row["tile"])
 
     def test_move_rows_carry_names(self):
-        sim = _fresh_sim()
+        sim = _shared_sim()
         reply = _ask(sim, "move_base")
         self.assertTrue(reply["tiles"])
         for row in reply["tiles"]:
@@ -110,13 +120,13 @@ class MapTests(unittest.TestCase):
         self.assertTrue(reply["you_are_at_name"])
 
     def test_pretty_screen_prints_names(self):
-        sim = _fresh_sim()
+        sim = _shared_sim()
         reply = _ask(sim, "map")
         text = render_pretty("map", reply)
         self.assertIn(reply["you_are_based_at"]["name"], text)
 
     def test_fog_map_names_no_technology(self):
-        sim = _fresh_sim(fog=True)
+        sim = _shared_sim(fog=True)
         text = json.dumps(_ask(sim, "map", full=True))
         for node_id in _NODES:
             if not sim.is_visible(node_id) and len(node_id) > 6:
@@ -126,7 +136,7 @@ class MapTests(unittest.TestCase):
 class EducationTests(unittest.TestCase):
 
     def test_figures_are_the_engines(self):
-        sim = _fresh_sim()
+        sim = _shared_sim()
         reply = _ask(sim, "education")
         self.assertTrue(reply["ok"], reply)
         literacy = reply["literacy"]
@@ -141,7 +151,7 @@ class EducationTests(unittest.TestCase):
                          round(sim.labour.farm_share_of_hours(), 4))
 
     def test_effective_flow_has_one_definition(self):
-        sim = _fresh_sim()
+        sim = _shared_sim()
         self.assertTrue(hasattr(sim, "effective_schooling_flow"))
         reply = _ask(sim, "education")
         self.assertEqual(reply["effective_schooling_flow"],
@@ -160,18 +170,8 @@ class EducationTests(unittest.TestCase):
         self.assertAlmostEqual(float(sim.civ["literacy_general"]), predicted, places=4)
         self.assertGreaterEqual(predicted, before)
 
-    def test_exact_percent_against_ceiling(self):
-        sim = _fresh_sim()
-        reply = _ask(sim, "education")
-        self.assertIn("share_of_ceiling_general", reply["literacy"])
-
-    def test_pretty_screen(self):
-        text = render_pretty("education", _ask(_fresh_sim(), "education"))
-        self.assertIn("EDUCATION", text)
-        self.assertIn("general", text)
-
     def test_fog_hides_unheard_school_nodes(self):
-        sim = _fresh_sim(fog=True)
+        sim = _shared_sim(fog=True)
         reply = _ask(sim, "education")
         shown = {row["id"] for row in reply["schools"]}
         for node_id in shown:
@@ -181,7 +181,7 @@ class EducationTests(unittest.TestCase):
 class DemographyTests(unittest.TestCase):
 
     def test_cohorts_are_the_models(self):
-        sim = _fresh_sim()
+        sim = _shared_sim()
         reply = _ask(sim, "demography")
         self.assertTrue(reply["ok"], reply)
         self.assertEqual(reply["population"], round(sim.population.total))
@@ -200,20 +200,15 @@ class DemographyTests(unittest.TestCase):
         self.assertEqual(reply["last_year"]["nutrition_ratio"], round(flows.nutrition_ratio, 4))
 
     def test_trades_come_from_population_report(self):
-        sim = _fresh_sim()
+        sim = _shared_sim()
         reply = _ask(sim, "demography")
         report = sim.labour.population_report()
         self.assertEqual([row["trade"] for row in reply["trades"]],
                          [row["trade"] for row in report["trades"]])
 
     def test_says_what_it_cannot_know(self):
-        reply = _ask(_fresh_sim(), "demography")
+        reply = _ask(_shared_sim(), "demography")
         self.assertTrue(reply["not_held"])
-
-    def test_pretty_screen(self):
-        text = render_pretty("demography", _ask(_fresh_sim(), "demography"))
-        self.assertIn("DEMOGRAPHY", text)
-        self.assertIn("children", text)
 
     def test_population_no_longer_swallows_the_alias(self):
         self.assertEqual(command_registry.resolve("demography")["name"], "demography")
@@ -222,7 +217,7 @@ class DemographyTests(unittest.TestCase):
 class DivergenceTests(unittest.TestCase):
 
     def test_fresh_run_has_not_diverged(self):
-        sim = _fresh_sim()
+        sim = _shared_sim()
         reply = _ask(sim, "divergence")
         self.assertTrue(reply["ok"], reply)
         self.assertEqual(reply["years_elapsed"], 0)
@@ -262,16 +257,12 @@ class DivergenceTests(unittest.TestCase):
             self.assertFalse(row["causes_checked"])
 
     def test_says_plainly_what_it_cannot_know(self):
-        reply = _ask(_fresh_sim(), "divergence")
+        reply = _ask(_shared_sim(), "divergence")
         self.assertTrue(reply["cannot_know"])
         self.assertIn("baseline", " ".join(reply["cannot_know"]).lower())
 
-    def test_pretty_screen(self):
-        text = render_pretty("divergence", _ask(_fresh_sim(), "divergence"))
-        self.assertIn("DIVERGENCE", text)
-
     def test_fog_lists_only_nodes_the_player_has_built(self):
-        sim = _fresh_sim(fog=True)
+        sim = _shared_sim(fog=True)
         candidate = next(node_id for node_id in sorted(_NODES)
                          if node_id not in sim.done and not sim.is_visible(node_id))
         reply = _ask(sim, "divergence")

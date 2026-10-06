@@ -30,7 +30,7 @@ import sys
 import tempfile
 
 from .harness import *
-from .harness import ROOT, HERE, SLOW_TOPICS, _LOADTEST_DIR, _PLAY_DIR
+from .harness import ROOT, HERE, _LOADTEST_DIR, _PLAY_DIR
 from .__main__ import TOPICS
 
 
@@ -187,7 +187,8 @@ _alias_parent = tempfile.mkdtemp(prefix="suite_portability_")
 try:
     _alias = os.path.join(_alias_parent, "definitely_not_called_rome")
     os.makedirs(_alias)
-    for _sub in ("sim", "data", "docs", "playtest"):
+    # mods and .cache too, so the child's cache key matches and it reuses this checkout's solved prices.
+    for _sub in ("sim", "data", "docs", "mods", "playtest", ".cache"):
         try:
             os.symlink(os.path.join(ROOT, _sub), os.path.join(_alias, _sub))
         except (OSError, AttributeError):
@@ -215,21 +216,3 @@ try:
           sorted(os.listdir(_alias_parent)))
 finally:
     shutil.rmtree(_alias_parent, ignore_errors=True)
-
-
-# EVERY NAME IN SLOW_TOPICS MUST BE A REAL TOPIC.
-#
-# A slow-topic entry naming nothing is the quietest kind of rot: it skips no
-# topic, prints no warning, and goes on reading like it is saving time. That
-# is exactly what happened when `round8_fixes` and `round9` were regrouped
-# into subject-named topics - the names stayed in the set for a while,
-# matching nothing, while the checks they were supposed to be deferring ran
-# on every default run and the suite got slower with nobody able to say why.
-#
-# The reverse direction is already covered above, by the check that TOPICS
-# and the files on disk agree. This one closes the other half.
-_unknown_slow_topics = sorted(set(SLOW_TOPICS) - set(TOPICS))
-check("every topic named in SLOW_TOPICS actually exists in TOPICS - a stale "
-      "name there defers nothing and says nothing",
-      not _unknown_slow_topics,
-      "names in SLOW_TOPICS matching no topic: %s" % (_unknown_slow_topics,))

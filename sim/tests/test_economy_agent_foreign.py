@@ -1,6 +1,9 @@
 """Foreign trade on the agent economy: partners buy and sell through edge:external at the port, the money
 they pay in or take out shows in the coin stock and the balance of payments (Complaint 389). Engine-free
 fixture; each test states a direction, not a figure."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy import foreign

@@ -1,6 +1,9 @@
 """Silver and gold come from the deposits worked (Complaints 291, 333, 334, 373):
 a silver assay per lead deposit, no silver counted twice, one dressing rate for
 every route, a jarosite route that eats lead, and gold priced from its deposits."""
+
+QUICK_TOPIC = True
+
 import json
 import unittest
 

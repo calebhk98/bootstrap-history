@@ -1,4 +1,7 @@
 """A crop runs only on tiles of the climates its data names."""
+
+QUICK_TOPIC = True
+
 import dataclasses
 import unittest
 

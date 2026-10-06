@@ -1,5 +1,8 @@
 """A newcomer is built to the trade it can see and the supply its plant and inputs can get, not to the whole
 gap buyers left."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy import entry, entry_sizing

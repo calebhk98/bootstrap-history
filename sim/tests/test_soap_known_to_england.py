@@ -1,4 +1,7 @@
 """Complaints/391: England in 1300 can make lye soap; saponification chemistry stays later."""
+
+QUICK_TOPIC = True
+
 import os
 import unittest
 

@@ -1,5 +1,8 @@
 """A durable good households buy is held, wears by one service life's share a year, and is not
 bought again in full."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy.economy import Economy

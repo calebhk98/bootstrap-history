@@ -2,6 +2,9 @@
 
 unittest-style; each TestCase method is reported as one check.
 """
+
+QUICK_TOPIC = True
+
 import copy
 import glob
 import json

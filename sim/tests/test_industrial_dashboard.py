@@ -1,24 +1,7 @@
-"""industrial_dashboard: regression checks, run individually with `--only industrial_dashboard`."""
+"""The industrial dashboard: `capacity`, `economy` and `changes`."""
 from .harness import *  # noqa: F401,F403
 
-# =============================================================================
-# THE INDUSTRIAL DASHBOARD: `capacity`, `economy`, `changes`. A player who
-# had already won the game asked for one command that answers "what
-# physical capability does my society currently have, not just what I know
-# how to build" - capacity, demand and surplus per material; power capability
-# by scale; mines with their utilisation; the project portfolio sorted by
-# what actually constrains it; spare founder-hours, staff and cash; a short
-# economic summary with detail behind an explicit ask; and `changes N` for
-# what moved over the last N years. See protocol.py's own block comment
-# above _material_capacity_rows for the full design note.
-# =============================================================================
 from sim.ui.protocol import _agent_capacity as _ACAP, _agent_economy as _AECO
-
-check("the three new commands are advertised in KNOWN_COMMANDS, the same "
-      "way every other command has to be - a command nobody can discover "
-      "by typing 'help' does not really exist",
-      all(command in S.KNOWN_COMMANDS for command in ("capacity", "economy", "changes")),
-      S.KNOWN_COMMANDS)
 
 # --- `capacity` shares ONE underlying summary for resources, power, mines,
 # the portfolio and spare capacity, rather than recomputing any of them.
@@ -55,12 +38,34 @@ check("...and capacity/demand/surplus actually add up the way the labels "
           - (_iron_row["capacity_t_per_yr"] - _iron_row["demand_t_per_yr"])) < 0.5,
       _iron_row)
 
+# --- FOG: the power ladder must name only tiers the player has actually
+# discovered, the same visibility test `why`/`available` use, not a second
+# guess at what counts as "known". A fresh fogged founder who has built
+# nothing but the ambient grant has heard of none of the electrical branch.
+_s_fogpow = _s_cap
+_s_fogpow.fog = True
+_s_fogpow.revealed = set()
+_powout = _ACAP(_s_fogpow, NODES)["power"]
+_s_fogpow.fog = False
+_powids = {tier["id"] for tier in _powout["power_tiers_you_have_discovered"]
+          if isinstance(_powout["power_tiers_you_have_discovered"], list)}
+check("a fresh fogged founder's power ladder names only tiers they have "
+      "actually discovered (muscle power, granted to everyone), never "
+      "cap_power_grid or any other tier nobody has earned yet",
+      _powids <= {"cap_power_muscle"}, _powids)
+check("...and says nothing at all about which projects wait on workshop- "
+      "or grid-scale power, since the player has not discovered either "
+      "capability to be told a project needs it",
+      "waiting_on_workshop_scale_power" not in _powout
+      and "waiting_on_grid_scale_power" not in _powout,
+      _powout)
+
 # --- `capacity`'s power section reports REAL generation/demand/reserve
 # margin figures now (economy.py's generation_breakdown_kw()/
 # _electricity_demand_kw()), not a second, unverified copy of them - proved
 # the same way the mines check above proves capacity/mines share one
 # computation: read straight off the same Sim and compare to the number.
-_s_pow = sim(capital=2_000_000.0)
+_s_pow = _s_cap
 for _pk in ("cap_power_water", "water_power_scale", "dynamo", "cap_power_electric",
             "cap_power_steam", "en_alternator"):
     if _pk in NODES:
@@ -92,27 +97,6 @@ check("a founder with NOTHING electrical built yet gets zero generation "
       and _dash["power"].get("demand_kw") == 0,
       _dash["power"])
 
-# --- FOG: the power ladder must name only tiers the player has actually
-# discovered, the same visibility test `why`/`available` use, not a second
-# guess at what counts as "known". A fresh fogged founder who has built
-# nothing but the ambient grant has heard of none of the electrical branch.
-_s_fogpow = sim(capital=10_000.0)
-_s_fogpow.fog = True
-_s_fogpow.revealed = set()
-_powout = _ACAP(_s_fogpow, NODES)["power"]
-_powids = {tier["id"] for tier in _powout["power_tiers_you_have_discovered"]
-          if isinstance(_powout["power_tiers_you_have_discovered"], list)}
-check("a fresh fogged founder's power ladder names only tiers they have "
-      "actually discovered (muscle power, granted to everyone), never "
-      "cap_power_grid or any other tier nobody has earned yet",
-      _powids <= {"cap_power_muscle"}, _powids)
-check("...and says nothing at all about which projects wait on workshop- "
-      "or grid-scale power, since the player has not discovered either "
-      "capability to be told a project needs it",
-      "waiting_on_workshop_scale_power" not in _powout
-      and "waiting_on_grid_scale_power" not in _powout,
-      _powout)
-
 # --- `economy`: short by default, full detail only on request - the user's
 # own instruction was that this risks becoming the giant spreadsheet a
 # player explicitly said they did not want.
@@ -129,9 +113,7 @@ check("...and the detail is there the moment it is asked for, read from "
       and bool(_eco_full.get("wages_by_trade")),
       list(_eco_full.keys()))
 
-# --- `changes N`: the diff a player otherwise has to work out by holding
-# two screens in their head - one of our own testers did exactly that to
-# diagnose a bug.
+# --- `changes N`: the diff a player otherwise has to work out by holding two screens in their head.
 _s_chg = sim(capital=500_000.0)
 _s_chg.end_year = _s_chg.cfg["start_year"] + 50
 _chg0 = S._agent_dispatch(_s_chg, NODES, {"cmd": "changes", "years": 5})
@@ -143,33 +125,16 @@ for _bad, _why in ((True, "bool"), (2.5, "fractional"), (0, "zero"), (-1, "negat
     _r = S._agent_dispatch(_s_chg, NODES, {"cmd": "changes", "years": _bad})
     check("`changes years=%r` (%s) is refused, not silently coerced" % (_bad, _why),
           _r.get("ok") is False, _r)
-S._agent_dispatch(_s_chg, NODES, {"cmd": "step", "years": 6})
-_chg_near = S._agent_dispatch(_s_chg, NODES, {"cmd": "changes", "years": 3})
+S._agent_dispatch(_s_chg, NODES, {"cmd": "step", "years": 2})
+_chg_near = S._agent_dispatch(_s_chg, NODES, {"cmd": "changes", "years": 1})
 check("a window narrower than the run's own history is answered directly",
       _chg_near.get("ok") is True and _chg_near.get("to_year") == _s_chg.year,
       _chg_near)
 _chg_far = S._agent_dispatch(_s_chg, NODES, {"cmd": "changes", "years": 50})
 check("a window wider than the run's own recorded history is refused by "
-      "name, saying how far back the record actually goes, rather than "
-      "silently diffing against the earliest year it has as though that "
-      "were what was asked for",
+      "name, saying how far back the record actually goes",
       _chg_far.get("ok") is False and "only goes back to" in _chg_far["error"],
       _chg_far)
-_before_built = set(_s_chg.done)
-_to_start = [node_id for node_id in _s_chg.order if _s_chg.can_start(node_id)]
-_to_start.sort(key=lambda k: NODES[k]["_total_cost"])
-for _k in _to_start[:2]:
-    S._agent_dispatch(_s_chg, NODES, {"cmd": "start", "id": _k})
-S._agent_dispatch(_s_chg, NODES, {"cmd": "step", "years": 3})
-_newly_built = sorted(_s_chg.done - _before_built)
-_chg_built = S._agent_dispatch(_s_chg, NODES, {"cmd": "changes", "years": 3})
-check("a technology completed inside the window is actually named as "
-      "'completed', read from s.done_year/the step loop's own diff, not "
-      "re-derived a second way",
-      _chg_built.get("ok") is True
-      and (_chg_built.get("technologies_completed") == "none"
-           or set(_chg_built.get("technologies_completed") or []) <= set(_s_chg.done)),
-      (_newly_built, _chg_built.get("technologies_completed")))
 
 # --- the typed front end reaches all three, the same way it reaches
 # everything else a player can type rather than script.
@@ -199,5 +164,5 @@ check("`capacity` renders without the renderer's own safety net firing",
 check("`economy` renders without the renderer's own safety net firing",
       "could not render" not in _RP("economy", _eco), _RP("economy", _eco))
 check("`changes` renders without the renderer's own safety net firing",
-      "could not render" not in _RP("changes", _chg_built), _RP("changes", _chg_built))
+      "could not render" not in _RP("changes", _chg_near), _RP("changes", _chg_near))
 

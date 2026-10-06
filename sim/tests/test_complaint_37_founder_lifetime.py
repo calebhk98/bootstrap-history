@@ -122,33 +122,13 @@ check("cmd_why's percentage is exactly node hours / that same lifetime figure",
 
 
 # --- 4. Complaints/37 section 2: the mortality sweep's own founder-lifespan
-# standard deviation must be DEFAULTS['founder_life_sd'] (8.0), the same
+# standard deviation must be DEFAULTS['founder_life_sd'] the same
 # figure core.py's real mortality draw and this file's own _ingame_options
 # use - not a separate, half-sized 4.0 baked into the sweep.
-class _RecordingSim(ENGINE_CLI.Sim):
-    captured_cfgs = []
-
-    def __init__(self, *args, **kwargs):
-        _RecordingSim.captured_cfgs.append(dict(kwargs.get("cfg") or {}))
-        super().__init__(*args, **kwargs)
-
-
-_original_sim_cls = ENGINE_CLI.Sim
-ENGINE_CLI.Sim = _RecordingSim
-try:
-    with contextlib.redirect_stdout(io.StringIO()):
-        S.cmd_sweep(argparse.Namespace(
-            axis="mortality", strategy="recommended", goal=None,
-            mc=1, seed=1, horizon=10))
-finally:
-    ENGINE_CLI.Sim = _original_sim_cls
-
-_mortality_cfgs = [cfg for cfg in _RecordingSim.captured_cfgs if "founder_life_mean" in cfg]
-check("cmd_sweep's mortality axis actually constructed Sims to inspect",
-      len(_mortality_cfgs) >= 6, len(_mortality_cfgs))
+_mortality_cfg, _ = ENGINE_CLI._sweep_point_cfg("founder_life_mean", 20)
 check("cmd_sweep's mortality axis draws founder lifespan at "
-      "DEFAULTS['founder_life_sd'] (8.0), the same spread every real game "
-      "uses - not a separate, half-sized 4.0",
-      all(cfg.get("founder_life_sd") == S.DEFAULTS["founder_life_sd"]
-          for cfg in _mortality_cfgs),
-      _mortality_cfgs)
+      "DEFAULTS['founder_life_sd'], the same spread every real game "
+      "uses - not a separate, smaller one",
+      _mortality_cfg.get("founder_life_mean") == 20
+      and _mortality_cfg.get("founder_life_sd") == S.DEFAULTS["founder_life_sd"],
+      _mortality_cfg)

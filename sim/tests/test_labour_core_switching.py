@@ -1,4 +1,7 @@
 """Workers switch trades when the gain beats retraining, and become trainees of the new trade."""
+
+QUICK_TOPIC = True
+
 import copy
 import unittest
 

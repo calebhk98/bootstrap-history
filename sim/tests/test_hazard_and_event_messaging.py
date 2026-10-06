@@ -65,11 +65,9 @@ check("a fire or a raid says what it took",
 # --- BREAK: a debasement announced itself and moved no price a player could
 # see, because the model is in real terms. Say so, and name the real bite.
 s_db = sim(capital=100000.0, events=True)
-while s_db.year < 210:
-    s_db.step()
-# Counterfactual at the same stepped state: the full quote (materials included)
-# with the coin as debased, and with it restored. The market moves over the
-# years for real reasons, so comparing across time would not isolate debasement.
+# Apply one debasement shock directly. Counterfactual at the same state: the
+# full quote (materials included) with the coin as debased, and with it restored.
+s_db._shock_real_erosion({"name": "debasement", "real_erosion": 0.2}, 210)
 _debased_price = s_db.project_cost("horse_collar")
 _real_money_kept = s_db.state.economy.money_real
 s_db.state.economy.money_real = 1.0

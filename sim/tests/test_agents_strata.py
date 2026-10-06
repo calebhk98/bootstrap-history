@@ -1,4 +1,7 @@
 """Strata: bodies of people as actors. Seeding from data, needs, growth, schooling, mobility, keep."""
+
+QUICK_TOPIC = True
+
 from .harness import check
 
 from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, CountryProfile

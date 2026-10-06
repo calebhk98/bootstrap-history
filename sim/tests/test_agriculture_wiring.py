@@ -67,6 +67,29 @@ def _rome_sim(events=False):
     return sim(civ="rome_100ad", events=events)
 
 
+_CENTURY = []
+
+
+def _unshocked_century():
+    """One unshocked Rome run over years 101-200, played once and read by every test that asks about it."""
+    if _CENTURY:
+        return _CENTURY[0]
+    test_sim = _rome_sim(events=False)
+    record = {"start_total": test_sim.population.total, "ratios": [], "total_after": {}, "cohorts_after": {}}
+    for year in range(101, 201):
+        test_sim._demographic_recovery(year)
+        record["ratios"].append(test_sim._last_demographic_step.nutrition_ratio)
+        record["total_after"][year] = test_sim.population.total
+        record["cohorts_after"][year] = (test_sim.population.children, test_sim.population.working_age,
+                                         test_sim.population.elderly)
+        if year == 101:
+            record["first_year_flows"] = test_sim._last_farm_year
+            record["first_year_hectares"] = test_sim.farm_land.hectares
+    record["end_total"] = test_sim.population.total
+    _CENTURY.append(record)
+    return record
+
+
 class VariesWithWeatherTests(unittest.TestCase):
     """The pre-wiring stand-in produced a bit-exact-constant food supply,
     forever, absent a hazard: `subsistence_food_kcal_per_day` was computed
@@ -78,8 +101,7 @@ class VariesWithWeatherTests(unittest.TestCase):
 
     def test_food_and_nutrition_ratio_are_not_a_constant(self):
         # A century, because correlated weather makes bad years rare (Complaints/49).
-        test_sim = _rome_sim(events=False)
-        ratios = nutrition_ratios_over_years(test_sim, range(101, 201))
+        ratios = _unshocked_century()["ratios"]
         # NOT a flat distinct-value count: nutrition_ratio is structurally
         # capped at 1.0 (Storage.step never lets consumption exceed demand -
         # a good year's excess is wasted, not banked, given this wiring's
@@ -115,11 +137,10 @@ class VariesWithWeatherTests(unittest.TestCase):
         self.assertGreater(max(ratios), 1.0, ratios)
 
     def test_gross_harvest_is_a_real_computed_number_not_zero(self):
-        test_sim = _rome_sim(events=False)
-        test_sim._demographic_recovery(101)
-        flows = test_sim._last_farm_year
+        century = _unshocked_century()
+        flows = century["first_year_flows"]
         self.assertGreater(flows.gross_harvest_kg, 0.0, flows)
-        self.assertGreater(test_sim.farm_land.hectares, 0.0, test_sim.farm_land)
+        self.assertGreater(century["first_year_hectares"], 0.0)
 
 
 class NoFamineWithoutCauseTests(unittest.TestCase):
@@ -155,11 +176,7 @@ class NoFamineWithoutCauseTests(unittest.TestCase):
     """
 
     def test_mean_nutrition_ratio_over_many_unshocked_years_is_plausible(self):
-        test_sim = _rome_sim(events=False)
-        ratios = []
-        for year in range(101, 201):
-            test_sim._demographic_recovery(year)
-            ratios.append(test_sim._last_demographic_step.nutrition_ratio)
+        ratios = _unshocked_century()["ratios"]
         mean_ratio = statistics.fmean(ratios)
         # Loose band: a calibration sanity check ("is the farm roughly the
         # right size, and is the asymmetry above of a plausible magnitude"),
@@ -179,14 +196,10 @@ class NoFamineWithoutCauseTests(unittest.TestCase):
         self.assertLess(mean_ratio, 1.1, ratios)
 
     def test_population_declines_but_does_not_run_away_to_extinction(self):
-        test_sim = _rome_sim(events=False)
-        start_total = test_sim.population.total
-        never_hit_zero_consumption = True
-        for year in range(101, 201):
-            test_sim._demographic_recovery(year)
-            if test_sim._last_demographic_step.nutrition_ratio < 1e-6:
-                never_hit_zero_consumption = False
-        end_total = test_sim.population.total
+        century = _unshocked_century()
+        start_total = century["start_total"]
+        never_hit_zero_consumption = all(ratio >= 1e-6 for ratio in century["ratios"])
+        end_total = century["end_total"]
         # A REAL decline (the asymmetry above, compounded over a century)
         # is expected and is not what this guards against - see this
         # class's own docstring. What it guards against is a RUNAWAY: the
@@ -216,9 +229,7 @@ class FamineHasAPhysicalCauseTests(unittest.TestCase):
     """
 
     def test_losing_most_of_the_farmland_drops_nutrition_ratio_hard(self):
-        control = _rome_sim(events=False)
-        control._demographic_recovery(101)
-        control_ratio = control._last_demographic_step.nutrition_ratio
+        control_ratio = _unshocked_century()["ratios"][0]
 
         shocked = _rome_sim(events=False)
         shocked.farm_land.hectares *= 0.15   # a land loss, not a famine flag
@@ -230,11 +241,9 @@ class FamineHasAPhysicalCauseTests(unittest.TestCase):
                         (control_ratio, shocked_ratio))
 
     def test_the_same_land_loss_costs_more_lives_than_the_unshocked_control(self):
-        control = _rome_sim(events=False)
-        control_start = control.population.total
-        for year in range(101, 111):
-            control._demographic_recovery(year)
-        control_end = control.population.total
+        century = _unshocked_century()
+        control_start = century["start_total"]
+        control_end = century["total_after"][110]
 
         shocked = _rome_sim(events=False)
         shocked_start = shocked.population.total
@@ -285,14 +294,14 @@ class DeterminismTests(unittest.TestCase):
     """
 
     def test_two_independent_sims_reach_the_same_population(self):
-        first = _rome_sim(events=False)
+        # The shared century run is the first sim; one fresh sim is the second.
         second = _rome_sim(events=False)
         for year in range(101, 151):
-            first._demographic_recovery(year)
             second._demographic_recovery(year)
-        self.assertEqual(first.population.children, second.population.children)
-        self.assertEqual(first.population.working_age, second.population.working_age)
-        self.assertEqual(first.population.elderly, second.population.elderly)
+        first_children, first_working_age, first_elderly = _unshocked_century()["cohorts_after"][150]
+        self.assertEqual(first_children, second.population.children)
+        self.assertEqual(first_working_age, second.population.working_age)
+        self.assertEqual(first_elderly, second.population.elderly)
 
     def test_a_forced_shortfall_year_reproduces_exactly_on_replay(self):
         # Same idea as the whole-run check above, but specifically across
@@ -300,10 +309,7 @@ class DeterminismTests(unittest.TestCase):
         # historical trap for exactly this kind of state (WIRING_MILESTONE_
         # 4.md SS3): reconstructing a fresh Sim mid-run (standing in for a
         # --session reload) and continuing must retrace the SAME weather.
-        reference = _rome_sim(events=False)
-        for year in range(101, 111):
-            reference._demographic_recovery(year)
-        reference_ratio = reference._last_demographic_step.nutrition_ratio
+        reference_ratio = _unshocked_century()["ratios"][9]
 
         replayed = _rome_sim(events=False)  # a fresh Sim(), like a reload
         for year in range(101, 111):

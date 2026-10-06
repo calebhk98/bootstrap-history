@@ -1,4 +1,7 @@
 """Entrants choose a trade by lifetime value and ability, within the places that exist."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.labour.market import aptitude, entrants, trades

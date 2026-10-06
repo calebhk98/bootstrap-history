@@ -1,5 +1,8 @@
 """Complaint 409: regions, located materials and the tile grid live in the map folder, so a mod's map
 overlay covers them and `load_geography` is the one reader."""
+
+QUICK_TOPIC = True
+
 import json
 import os
 import tempfile

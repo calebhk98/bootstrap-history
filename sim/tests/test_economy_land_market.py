@@ -1,5 +1,8 @@
 """The land market: arable hectares in quality bands, producers' and households' demand, differential
 rent, rationing when land is short, and rent paid to the tile's owners."""
+
+QUICK_TOPIC = True
+
 import math
 import unittest
 from types import SimpleNamespace

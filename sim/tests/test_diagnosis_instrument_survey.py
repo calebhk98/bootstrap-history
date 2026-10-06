@@ -4,6 +4,9 @@ Counts the declarations per family (the measured quantity) and checks each one
 names an instrument that exists, is a different node, and is not already a
 prerequisite (a prerequisite instrument would make the declaration vacuous).
 """
+
+QUICK_TOPIC = True
+
 from .harness import *  # noqa: F401,F403
 from sim.engine.data import closure
 

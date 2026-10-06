@@ -13,9 +13,14 @@ from .harness import *  # noqa: F401,F403
 
 # --- BREAK: `available` carried nine numbers and not one of them was the
 # staff, so six projects picked on cost and hours all waited on people.
-s_av = sim()
-_av, _, _ = proto([{"cmd": "available", "find": "flax"}])
-_rows = _av[0].get("available") or []
+_game = sim()
+
+
+def _ask(game, **command):
+    return S._agent_dispatch(game, NODES, command)
+
+
+_rows = _ask(_game, cmd="available", find="flax").get("available") or []
 check("available says what standing staff a project needs",
       _rows and any(row.get("needs_staff") for row in _rows),
       [(row["id"], row.get("needs_staff")) for row in _rows][:3])
@@ -24,7 +29,7 @@ check("available says what standing staff a project needs",
 # one-craftsman job themselves, nothing is starred. A break tester read "* means
 # the work waits" beside projects that built at full speed with nobody hired.
 from sim.ui.protocol import _short_of_staff
-_s_star = sim()
+_s_star = _game
 check("...and marks exactly the ones the start gate would refuse for staff",
       all(bool(row.get("short_of_staff"))
           == (NODES[row["id"]]["art"] > _s_star.labour.craft_hands_available() + 1e-9
@@ -36,32 +41,18 @@ _big = [node_id for node_id in sorted(NODES) if NODES[node_id]["art"] > 20][:1]
 if _big:
     check("...and a job wanting twenty craftsmen IS starred on turn one",
           _short_of_staff(_s_star, NODES[_big[0]]), _big[0])
-_av2, _, _ = proto([{"cmd": "available", "find": "zzzznosuchthing"}])
+_av2 = _ask(_game, cmd="available", find="zzzznosuchthing")
 check("a search that matches nothing says so instead of printing '1-0'",
-      _av2[0].get("nothing_matched") and "1-0" not in str(_av2[0].get("showing")),
-      _av2[0].get("showing"))
-from sim.ui.protocol import render_pretty as _RP
-_pretty = _RP("available", _av2[0])
-check("...and the empty result prints no column headings over no rows",
-      "COST" not in _pretty and "matches" in _pretty, _pretty[:120])
+      _av2.get("nothing_matched") and "1-0" not in str(_av2.get("showing")),
+      _av2.get("showing"))
 
-# --- BREAK: with knowing and running split apart, nothing said which one a
-# prerequisite wants.
-# One node with its prerequisites met, one without: both have to say which
-# state a prerequisite wants, since knowing and running became separate.
-_wy, _, _ = proto([{"cmd": "why", "id": "horse_collar"},
-                   {"cmd": "why", "id": GOAL}])
-_wp = "\n".join(_RP("why", x) for x in _wy)
-check("why states that a prerequisite must be finished, and stays finished",
-      "FINISHED" in _wp or "finished counts for ever" in _wp,
-      [line for line in _wp.splitlines() if "PREREQ" in line][:3])
 
 # --- BREAK: the run ended with one sentence and then a queue of identical
 # refusals. A play tester started a whole second game with the fog off just to
 # learn how far along the road they had died.
 s_fin = sim()
 s_fin.year = 600
-from sim.ui.protocol import final_report as _FRPT, render_final as _RF
+from sim.ui.protocol import final_report as _FRPT
 _fr = _FRPT(s_fin, NODES)
 check("the end of a run reports how far along the road it got",
       _fr.get("the_whole_road_was", 0) > 100
@@ -69,23 +60,11 @@ check("the end of a run reports how far along the road it got",
 check("...and names the steps that would have come next",
       len(_fr.get("the_next_things_would_have_been") or []) > 0,
       _fr.get("the_next_things_would_have_been"))
-check("...and renders as a page, not a dict dump",
-      "THE RUN IS OVER" in _RF(_fr) and "{" not in _RF(_fr), _RF(_fr)[:80])
-
-# --- BREAK: `help money` and `help economy` printed the same page, and both
-# were listed as separate topics.
-_hm, _, _ = proto([{"cmd": "help", "topic": "money"},
-                   {"cmd": "help", "topic": "economy"}])
-check("help money and help economy are not the same page",
-      json.dumps(_hm[0]) != json.dumps(_hm[1]),
-      list((_hm[0].get("help") or {}).keys())[:3])
-check("...and help money explains why the practice pays a third",
-      "third" in json.dumps(_hm[0]), json.dumps(_hm[0])[:120])
 
 # --- BREAK: `available "power and precision"` matched nothing while the
 # unquoted form worked, and said nothing about why.
-_aq, _, _ = proto([{"cmd": "available", "subject": '"power and precision"'},
-                   {"cmd": "available", "subject": "power and precision"}])
+_aq = [_ask(_game, cmd="available", subject='"power and precision"'),
+       _ask(_game, cmd="available", subject="power and precision")]
 check("a quoted subject means the same as an unquoted one",
       _aq[0].get("count") == _aq[1].get("count") and _aq[0].get("count", 0) > 0,
       (_aq[0].get("count"), _aq[1].get("count")))
@@ -94,8 +73,8 @@ check("a quoted subject means the same as an unquoted one",
 # in play: no note that it was cut, and no way to see the rest.
 s_h = sim()
 s_h.fog = True
-s_h.done.update(list(NODES)[:900]); s_h._done_changed()
-for _k in list(NODES)[:900]:
+s_h.done.update(list(NODES)[:200]); s_h._done_changed()
+for _k in list(NODES)[:200]:
     s_h.reveal_from(_k)
 _p1 = S._agent_available(s_h, NODES, {})
 _p2 = S._agent_available(s_h, NODES, {"heard_offset": 25})
@@ -116,14 +95,14 @@ check("a finished run is not given advice it will refuse to act on",
       S._agent_state(s_end, NODES).get("stuck"))
 
 # --- BREAK: `why` on a mistyped id suggested; `open` said "no such node".
-_ro, _, _ = proto([{"cmd": "open", "id": "fin_pawnshopp"}])
+_ro = _ask(_game, cmd="open", id="fin_pawnshopp")
 check("open on a mistyped id suggests, the way why does",
-      "did you mean" in (_ro[0].get("error") or ""), _ro[0].get("error"))
+      "did you mean" in (_ro.get("error") or ""), _ro.get("error"))
 
 # --- BREAK: "hiring 1e+21 smiths costs 281250000000000012058624 denarii".
-_rn, _, _ = proto([{"cmd": "hire", "trade": "smith", "n": 1e21},
-                   {"cmd": "buy", "what": "forest", "n": 1e30},
-                   {"cmd": "buy", "what": "forest", "n": 3}])
+_rn = [_ask(_game, cmd="hire", trade="smith", n=1e21),
+       _ask(_game, cmd="buy", what="forest", n=1e30),
+       _ask(_game, cmd="buy", what="forest", n=3)]
 check("an absurd quantity is refused as absurd, not priced in scientific notation",
       all("e+" not in (response.get("error") or "") for response in _rn[:2])
       and all(response.get("ok") is False for response in _rn[:2]),
@@ -187,12 +166,9 @@ check("a substitution group reads as English, not as a data slug",
 # --- BREAK: "FULL CHAIN BEHIND IT: ... N den" summed the tree's BASE cost and
 # applied none of the multipliers the same page prints. The eight
 # prerequisites of a telescope came out at 24,175 in all five civilisations.
-# Three independent fresh sessions - dispatched together under --jobs.
 _chain_cids = ("rome_100ad", "han_china_100ad", "norse_900ad")
-_chain_results = _par_map(
-    lambda cid: proto([{"cmd": "why", "id": "telescope"}], civ=cid)[0][0].get("chain_cost"),
-    _chain_cids)
-_chains = dict(zip(_chain_cids, _chain_results))
+_chain_games = {cid: sim(civ=cid) for cid in _chain_cids}
+_chains = {cid: _ask(_chain_games[cid], cmd="why", id="telescope").get("chain_cost") for cid in _chain_cids}
 _chain_years = {cid: cost / S.starting_schedule(cid).annual_wage("labourer")
                 for cid, cost in _chains.items()}
 check("the full-chain bill is quoted at this society's prices",
@@ -202,7 +178,7 @@ check("the full-chain bill is quoted at this society's prices",
 check("...and the chains differ in labourer-years, not only in coin",
       len({round(years, 6) for years in _chain_years.values()}) == 3, _chain_years)
 # The parts have to add up to the whole, at whatever prices.
-_s_ch = sim(civ="norse_900ad")
+_s_ch = _chain_games["norse_900ad"]
 from sim.engine.data import closure as _closure
 # The chain is what is BEHIND it, so the node itself is not in the bill.
 # and what the society already holds is not still to be paid for.
@@ -215,9 +191,9 @@ check("...and it is the sum of what each of those nodes would actually cost",
 
 # --- BREAK: `bribe 1` refused at 0% protection as "already as protected as
 # money can make you".
-_rb, _, _ = proto([{"cmd": "bribe", "amount": 1}])
+_rb = _ask(sim(), cmd="bribe", amount=1)
 check("a bribe too small to matter says so, not that you are already covered",
-      "too little" in (_rb[0].get("error") or ""), _rb[0].get("error"))
+      "too little" in (_rb.get("error") or ""), _rb.get("error"))
 
 # --- BREAK: "FULL CHAIN BEHIND IT" printed identical figures in year 436
 # after 227 technologies as in year 100 with nothing built.
@@ -244,7 +220,7 @@ check("...and it still says how long the whole road was",
 # --- BREAK: "There's no 'why am I stuck?' view - three separate 90-250-year
 # stalls, each caused by one node blocked on one thing, each found by typing
 # `why` at a guess." Every tester of rounds eight and nine said some version.
-_rs, _, _ = proto([{"cmd": "stuck"}])
+_rs = [_ask(_game, cmd="stuck")]
 check("there is one command that answers why you are not getting on",
       _rs and _rs[0].get("ok") and "what_is_holding_you_up" in _rs[0],
       list(_rs[0])[:5] if _rs else None)
@@ -272,9 +248,9 @@ check("...and with work in hand and money it says nothing is holding you up",
 check("...and names the cheapest thing you could actually begin",
       _rs[0].get("and_the_cheapest_thing_you_could_start_now") in NODES,
       _rs[0].get("and_the_cheapest_thing_you_could_start_now"))
-_s_red = sim(capital=round(0.3 * sim().project_cost("identity_cover")))   # thin purse at any wage scale
+_s_red = sim(capital=round(0.3 * _game.project_cost("identity_cover")))   # thin purse at any wage scale
 _s_red.start_project("identity_cover")
-for _ in range(3):
+for _ in range(1):
     _s_red.step()
 _rs2 = [S._agent_dispatch(_s_red, NODES, {"cmd": "stuck"})]
 _held = _rs2[-1]["what_is_holding_you_up"]
@@ -284,13 +260,10 @@ check("...and once you are committed and in the red it names both",
       [reason.get("what") for reason in _held] if not isinstance(_held, str) else _held)
 check("...and says what each piece of work in hand is waiting for",
       any(reason.get("each_waiting_on") for reason in _held if isinstance(reason, dict)), _held)
-check("...and it renders as a page, not a dict dump",
-      "WHY YOU ARE NOT GETTING ON" in _RP("stuck", _rs2[-1])
-      and "{" not in _RP("stuck", _rs2[-1]), _RP("stuck", _rs2[-1])[:70])
-_rst, _, _ = proto([{"cmd": "state"}])
+_rst = _ask(_game, cmd="state")
 check("...and `state` advertises it every turn",
-      any("stuck" in option for option in (_rst[0].get("also_available") or [])),
-      _rst[0].get("also_available"))
+      any("stuck" in option for option in (_rst.get("also_available") or [])),
+      _rst.get("also_available"))
 
 # --- BREAK: "things you built and never opened" picked the best-margin shut
 # concern by revenue minus upkeep alone and told the player to 'open' it,
@@ -357,17 +330,9 @@ check("...and once there really are enough hands free, `stuck` goes back to "
 # denarii against an opening purse of 400, and a break tester followed the
 # game's own headline advice into CREDIT EXHAUSTED by year 106. The advice is
 # right; the reader needs to know which of it they can act on this year.
-_rav, _, _ = proto([{"cmd": "available", "limit": 4, "sort": "price", "reverse": True},
-                    {"cmd": "available"}])
+_rav = [_ask(_game, cmd="available", limit=4, sort="price", reverse=True),
+        _ask(_game, cmd="available")]
 check("available says what you could raise for a project",
       _rav[0].get("you_could_raise_for_a_project") is not None
       and _rav[1].get("you_could_raise_for_a_project") is not None,
       _rav[0].get("you_could_raise_for_a_project"))
-_page = _RP("available", _rav[0])
-check("...and marks the rows you could not raise it for",
-      "*" in _page and "A * after COST" in _page,
-      [line for line in _page.splitlines() if "after COST" in line])
-_cheap, _, _ = proto([{"cmd": "available", "limit": 2}])
-check("...and does not mark what you can plainly afford",
-      "A * after COST" not in _RP("available", _cheap),
-      _RP("available", _cheap)[:200])

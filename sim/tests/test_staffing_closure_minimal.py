@@ -5,10 +5,12 @@ from .harness import *  # noqa: F401,F403
 
 def concerns_with_foreman(test_sim, trade, count):
 	# Cheapest-to-hold concerns whose supervision needs a foreman of this trade.
-	found = [node_id for node_id in sorted(NODES) if test_sim.is_venture(node_id)
-	         and test_sim.venture_foreman(node_id)[0] == trade
-	         and NODES[node_id]["rev"] > NODES[node_id]["up"]
-	         and node_id not in test_sim.CAPABILITY_INSTITUTIONS]
+	if not hasattr(concerns_with_foreman, "foremen"):
+		concerns_with_foreman.foremen = {
+			node_id: test_sim.venture_foreman(node_id)[0] for node_id in sorted(NODES)
+			if test_sim.is_venture(node_id) and NODES[node_id]["rev"] > NODES[node_id]["up"]
+			and node_id not in test_sim.CAPABILITY_INSTITUTIONS}
+	found = [node_id for node_id, foreman in concerns_with_foreman.foremen.items() if foreman == trade]
 	return found[:count]
 
 

@@ -4,6 +4,9 @@ Pure tests of sim/world/trade_between.py. Goods move from the cheaper market
 to the dearer one while the price gap exceeds the freight over the route, so
 imports cap a home shortage and exports lift the price abroad.
 """
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.world import market, trade_between

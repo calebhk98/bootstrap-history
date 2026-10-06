@@ -34,7 +34,8 @@ def _without_timing(text):
 
 
 try:
-    for entry in ("data", "docs", "mods", "playtest", "Complaints"):
+    # .cache is shared so the child runs reuse this checkout's solved prices instead of starting cold.
+    for entry in ("data", "docs", "mods", "playtest", "Complaints", ".cache"):
         if os.path.exists(os.path.join(ROOT, entry)):
             os.symlink(os.path.join(ROOT, entry), os.path.join(_alias_root, entry))
     _link_entries(os.path.join(ROOT, "sim"), os.path.join(_alias_root, "sim"), skip=("tests",))
@@ -68,7 +69,7 @@ try:
           and _without_timing(_failing.stdout) == _without_timing(_failing_sequential.stdout),
           (_failing.returncode, _failing.stdout[-400:]))
 
-    _crashing = _run_suite("--only", "mod_namespaces,zz_fake_crash", "--jobs", "4")
+    _crashing = _run_suite("--only", "parallelism_note,zz_fake_crash", "--jobs", "4")
     check("a topic that crashes on import is reported as a failure naming it, exit 1",
           _crashing.returncode == 1 and "zz_fake_crash: worker crashed" in _crashing.stdout
           and "boom at import" in _crashing.stdout,

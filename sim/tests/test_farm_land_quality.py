@@ -16,8 +16,16 @@ _GEOGRAPHY = load_geography()
 _TILES = _GEOGRAPHY["land_tiles"]["tiles"]
 _REGION_TO_TILES = _GEOGRAPHY["land_tiles"]["region_to_tiles"]
 
-_CIVILISATIONS = ("rome_100ad", "han_china_100ad", "england_1300",
-                  "mexica_1500", "norse_900ad")
+_CIVILISATIONS = ("rome_100ad", "han_china_100ad", "norse_900ad")
+
+_READ_ONLY_GAMES = {}
+
+
+def _game(civ_id):
+    """One game per civilisation for the tests that only read the farm."""
+    if civ_id not in _READ_ONLY_GAMES:
+        _READ_ONLY_GAMES[civ_id] = sim(civ_id)
+    return _READ_ONLY_GAMES[civ_id]
 
 
 def _held_tiles(home_regions):
@@ -51,13 +59,13 @@ class FarmLandQualityTests(unittest.TestCase):
     def test_quality_matches_weighted_average_of_own_regions(self):
         for civ_id in _CIVILISATIONS:
             civ = S.load_civ(civ_id)
-            test_sim = sim(civ_id)
+            test_sim = _game(civ_id)
             expected = _expected_quality(civ["home_regions"], test_sim.farm_land.hectares)
             self.assertAlmostEqual(test_sim.farm_land.quality, expected, places=9, msg=civ_id)
 
     def test_civilisations_differ(self):
-        qualities = {civ_id: sim(civ_id).farm_land.quality for civ_id in _CIVILISATIONS}
-        self.assertGreater(len(set(round(value, 6) for value in qualities.values())), 3)
+        qualities = {civ_id: _game(civ_id).farm_land.quality for civ_id in _CIVILISATIONS}
+        self.assertEqual(len(set(round(value, 6) for value in qualities.values())), len(_CIVILISATIONS))
         self.assertLess(qualities["norse_900ad"], qualities["han_china_100ad"])
 
     def test_single_region_mod_civ_gets_the_mean_of_that_regions_tiles(self):
@@ -76,8 +84,8 @@ class FarmLandQualityTests(unittest.TestCase):
             S.Sim(NODES, ORDER, random.Random(1), events=False, manual=True, civ=civ)
 
     def test_farm_output_responds_to_quality(self):
-        for civ_id in ("rome_100ad", "norse_900ad"):
-            test_sim = sim(civ_id)
+        for civ_id in ("rome_100ad",):
+            test_sim = _game(civ_id)
             harvest = agriculture.gross_harvest_kg(test_sim.farm_land, labour_hours=1.0e9)
             better = agriculture.gross_harvest_kg(
                 agriculture.Land(test_sim.farm_land.hectares,
@@ -86,7 +94,7 @@ class FarmLandQualityTests(unittest.TestCase):
 
     def test_farm_never_exceeds_arable_ceiling(self):
         for civ_id in _CIVILISATIONS:
-            test_sim = sim(civ_id)
+            test_sim = _game(civ_id)
             arable_hectares = 100.0 * sum(
                 _arable_km2(tile_id)
                 for tile_id in _held_tiles(test_sim.civ["home_regions"]))

@@ -1,4 +1,7 @@
 """Complaint 462: the concern totals follow entries, exits and capacity changes without walking every operator."""
+
+QUICK_TOPIC = True
+
 import random
 
 from .harness import check

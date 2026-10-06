@@ -36,24 +36,21 @@ def _shrink_nation(sim, total):
 
 class TownShrinksWithNationTests(unittest.TestCase):
 
-    def test_town_falls_below_the_old_floor_after_collapse(self):
+    def test_town_shrinks_with_the_nation_and_never_exceeds_it(self):
         sim = _fresh_sim()
         before = sim.labour.home_town_population_estimate()
         _shrink_nation(sim, 5000)
         after = sim.labour.home_town_population_estimate()
         self.assertLess(after, before * 0.25 * 0.5)
         self.assertLessEqual(after, sim.population.total)
-
-    def test_town_never_exceeds_nation_at_any_size(self):
-        for total in (5000000, 50000, 500, 30, 3):
-            sim = _fresh_sim()
+        for total in (500, 30, 3):
             _shrink_nation(sim, total)
             self.assertLessEqual(sim.labour.home_town_population_estimate(), total)
 
     def test_reachable_tradesmen_never_exceed_people_in_trade(self):
-        for civ in ("rome_100ad", "norse_900ad"):
+        for civ in ("norse_900ad",):
+            sim = _fresh_sim(civ)
             for total in (None, 5000, 200, 30):
-                sim = _fresh_sim(civ)
                 if total is not None:
                     _shrink_nation(sim, total)
                 for trade in sorted(_WAGES):

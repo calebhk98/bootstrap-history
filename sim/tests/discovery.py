@@ -1,8 +1,8 @@
 """Finds the suite's topics on disk; nothing is registered by hand.
 
 Every sim/tests/test_*.py is a topic named by the rest of its filename, run in
-sorted order. A file opts out of the default run with a module-level
-`SLOW_TOPIC = True`, and from the parallel batch with
+sorted order. A file joins the quick tier (the default run) with a module-level
+`QUICK_TOPIC = True`, and leaves the parallel batch with
 `SERIAL_TOPIC = True`. Kept free of heavy imports so `--list` stays instant.
 """
 import ast
@@ -18,9 +18,9 @@ def discover_topics(tests_dir=TESTS_DIR):
                   if filename.startswith("test_") and filename.endswith(".py"))
 
 
-def discover_slow_topics(tests_dir=TESTS_DIR):
-    """Topics whose file sets `SLOW_TOPIC = True` at module level."""
-    return _discover_flag("SLOW_TOPIC", tests_dir)
+def discover_quick_topics(tests_dir=TESTS_DIR):
+    """Topics whose file sets `QUICK_TOPIC = True` at module level: the default run."""
+    return _discover_flag("QUICK_TOPIC", tests_dir)
 
 
 def discover_serial_topics(tests_dir=TESTS_DIR):

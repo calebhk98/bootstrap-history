@@ -15,6 +15,7 @@ unaffected, and that food technologies do not move it.
 
 The medical nodes drive a live disease burden, so technology can lower mortality.
 """
+import contextlib
 import unittest
 
 from .harness import *  # noqa: F401,F403
@@ -26,6 +27,27 @@ def _rome_sim(events=False):
     return sim(civ="rome_100ad", events=events)
 
 
+_SHARED = []
+
+
+def _shared_rome_sim():
+    """One Rome game for the tests that only read a burden, built on first use."""
+    if not _SHARED:
+        _SHARED.append(_rome_sim())
+    return _SHARED[0]
+
+
+@contextlib.contextmanager
+def _holding(test_sim, tech_ids):
+    """Hold `tech_ids` for the block, then give back only the ones that were not already held."""
+    added = [tech_id for tech_id in tech_ids if tech_id not in test_sim.household.done]
+    test_sim.household.done.update(added)
+    try:
+        yield
+    finally:
+        test_sim.household.done.difference_update(added)
+
+
 class DiseaseBurdenDefaultTests(unittest.TestCase):
     """Rome's starting_techs (data/civilizations/rome_100ad.json) hold none
     of Sim.DISEASE_BURDEN_TECH_IDS - checked directly here rather than
@@ -34,13 +56,13 @@ class DiseaseBurdenDefaultTests(unittest.TestCase):
     """
 
     def test_rome_starts_with_none_of_the_eight_disease_technologies(self):
-        test_sim = _rome_sim()
+        test_sim = _shared_rome_sim()
         held = [tech_id for tech_id in test_sim.DISEASE_BURDEN_TECH_IDS
                 if test_sim.has(tech_id)]
         self.assertEqual(held, [], held)
 
     def test_disease_burden_is_pre_industrial_by_default(self):
-        test_sim = _rome_sim()
+        test_sim = _shared_rome_sim()
         self.assertEqual(test_sim._disease_burden(),
                           demography.PRE_INDUSTRIAL_DISEASE_BURDEN)
 
@@ -54,34 +76,31 @@ class DiseaseBurdenRespondsToUnlockedTechnologyTests(unittest.TestCase):
 
     def test_holding_one_technology_lowers_burden_by_exactly_its_own_share(self):
         from sim.engine.core import TECH_EFFECTS
-        test_sim = _rome_sim()
+        test_sim = _shared_rome_sim()
         total_weight = sum(TECH_EFFECTS[tech_id]["population"]
                            for tech_id in test_sim.DISEASE_BURDEN_TECH_IDS)
-        test_sim.household.done.add("germ_theory")
         expected = 1.0 - TECH_EFFECTS["germ_theory"]["population"] / total_weight
-        self.assertAlmostEqual(test_sim._disease_burden(), expected, places=12)
+        with _holding(test_sim, ["germ_theory"]):
+            self.assertAlmostEqual(test_sim._disease_burden(), expected, places=12)
 
     def test_holding_all_eight_reaches_fully_modern_disease_burden(self):
-        test_sim = _rome_sim()
-        for tech_id in test_sim.DISEASE_BURDEN_TECH_IDS:
-            test_sim.household.done.add(tech_id)
-        self.assertEqual(test_sim._disease_burden(), 0.0)
+        test_sim = _shared_rome_sim()
+        with _holding(test_sim, test_sim.DISEASE_BURDEN_TECH_IDS):
+            self.assertEqual(test_sim._disease_burden(), 0.0)
 
     def test_food_effect_technologies_do_not_move_disease_burden_at_all(self):
         # Food technologies act through the farming technique, not disease.
-        test_sim = _rome_sim()
+        test_sim = _shared_rome_sim()
         food_effect_techs = ("crop_rotation", "fud_three_field_rotation",
                               "fud_seed_drill", "mat_newworld_crops", "ag2_canning")
-        for tech_id in food_effect_techs:
-            test_sim.household.done.add(tech_id)
-        self.assertEqual(test_sim._disease_burden(),
-                          demography.PRE_INDUSTRIAL_DISEASE_BURDEN)
+        with _holding(test_sim, food_effect_techs):
+            self.assertEqual(test_sim._disease_burden(),
+                              demography.PRE_INDUSTRIAL_DISEASE_BURDEN)
 
     def test_burden_is_clamped_to_zero_one(self):
-        test_sim = _rome_sim()
-        for tech_id in test_sim.DISEASE_BURDEN_TECH_IDS:
-            test_sim.household.done.add(tech_id)
-        burden = test_sim._disease_burden()
+        test_sim = _shared_rome_sim()
+        with _holding(test_sim, test_sim.DISEASE_BURDEN_TECH_IDS):
+            burden = test_sim._disease_burden()
         self.assertGreaterEqual(burden, 0.0)
         self.assertLessEqual(burden, 1.0)
 

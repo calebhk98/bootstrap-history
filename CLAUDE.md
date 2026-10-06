@@ -195,7 +195,9 @@ Tooling: `python3 -m pylint sim/ | grep C0103` (worklist). Plan:
   produced it.
 - **Slow checks run before a pull request.** The default run skips them to
   stay fast for local work; run `--slow` before opening a PR (and now and then
-  on a long branch), and fix what it finds there.
+  on a long branch), and fix what it finds there. A topic joins the quick tier
+  (`QUICK_TOPIC = True`) only when it tests functions or small fixtures and runs
+  in well under a second; anything that builds a whole game stays out of it.
 - **Green tests do not mean unchanged behaviour.** The suite asserts on
   outputs and messages. `python3 -m sim.tests.fingerprint` checks the
   simulation itself (it does not cover the protocol layer).
@@ -212,7 +214,8 @@ test runner and the fingerprint live in the test package.
 
 ```bash
 python3 sim/simulator.py validate          # after EVERY edit to data/ (tree, merge, production data, civilisation starts)
-python3 -m sim.tests                       # full suite, parallel across available cores (--jobs 1 sequential, --list, --only a,b, --slow)
+python3 -m sim.tests                       # quick tier (topics with QUICK_TOPIC = True), parallel across available cores
+python3 -m sim.tests --slow                # full suite: every topic and slow check (--jobs 1 sequential, --list, --only a,b)
 python3 -m sim.tests.fingerprint record before.json   # then `check before.json` to prove behaviour unchanged
 python3 sim/constants.py --burndown        # declared numbers and temporary heuristics still to derive
 ```

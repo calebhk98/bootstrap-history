@@ -1,4 +1,7 @@
 """How much of savings households hold as goods."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy.households_orders import HOUSEHOLD_TIME_PREFERENCE

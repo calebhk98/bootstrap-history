@@ -1,4 +1,7 @@
 """Complaints/326: tolls and port dues are mode data the route search charges per leg, labelled with a source or as a heuristic."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.geography import api as geography_api

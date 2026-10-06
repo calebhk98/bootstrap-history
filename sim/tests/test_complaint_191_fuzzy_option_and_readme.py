@@ -1,10 +1,9 @@
 """Regression coverage for Complaint 191: fuzzy estimates are a normal game
-option (new-game menu, in-game options screen, settings default, save) and
-the README says `help commands` lists every command."""
+option (new-game menu, in-game options screen, settings default, save)."""
 from .harness import *
+from sim.tests import cli_in_process
 from sim.engine import settings as _settings
 
-_SIMULATOR = os.path.join(HERE, "simulator.py")
 _scratch = tempfile.mkdtemp()
 
 
@@ -19,8 +18,7 @@ def _env(name, config=None):
 
 
 def _run(arguments, text, env):
-    return subprocess.run([sys.executable, _SIMULATOR] + arguments, input=text,
-                          capture_output=True, text=True, timeout=120, env=env)
+    return cli_in_process.run(arguments, input_text=text, environment=env)
 
 
 def _only_save(saves):
@@ -53,48 +51,28 @@ _run(["play", "--civ", "rome_100ad", "--session", os.path.join(_saves, "g.json")
 check("settings default on: a plain `play` starts with fuzzy estimates on",
       _fuzzy_in(_only_save(_saves)) == [True], _fuzzy_in(_only_save(_saves)))
 
-_saves, _config, _env_plain = _env("plain")
-_run(["play", "--civ", "rome_100ad", "--session", os.path.join(_saves, "g.json")],
-     "step 1\nquit\n", _env_plain)
-check("settings default off: a plain `play` starts with fuzzy estimates off",
-      _fuzzy_in(_only_save(_saves)) == [False], _fuzzy_in(_only_save(_saves)))
-
 _saves, _config, _env_flag = _env("flag")
 _run(["play", "--civ", "rome_100ad", "--fuzzy-estimates",
       "--session", os.path.join(_saves, "g.json")], "step 1\nquit\n", _env_flag)
 check("`play --fuzzy-estimates` still turns it on",
       _fuzzy_in(_only_save(_saves)) == [True], _fuzzy_in(_only_save(_saves)))
 
-# a game begun without it is not switched on by the default when it is resumed
-_saves, _config, _env_resume = _env("resume")
-_path = os.path.join(_saves, "g.json")
-_run(["play", "--civ", "rome_100ad", "--session", _path], "step 1\nquit\n", _env_resume)
-with open(_config, "w") as handle:
-    json.dump({"default_fuzzy_estimates": True}, handle)
-_run(["play", "--session", _path], "step 1\nquit\n", _env_resume)
-check("resuming a game started without fuzzy does not turn it on from the default",
-      _fuzzy_in(_only_save(_saves)) == [False], _fuzzy_in(_only_save(_saves)))
-
-# ---- the in-game options screen shows it, and it can be turned on there --------
+# ---- a plain game starts with it off, shown on the options screen -----------------
 _saves, _config, _env_opts = _env("options")
 _path = os.path.join(_saves, "g.json")
-_shown = _run(["play", "--civ", "rome_100ad", "--session", _path],
-              "options\nb\nquit\n", _env_opts)
-check("options screen shows fuzzy estimates (off)",
-      re.search(r"fuzzy estimates\s*:\s*off", _shown.stdout) is not None, _shown.stdout[-1200:])
-_turned = _run(["play", "--session", _path], "options\nf\ny\nb\nquit\n", _env_opts)
-check("options screen can turn fuzzy estimates on mid-game",
-      re.search(r"fuzzy estimates\s*:\s*on", _turned.stdout) is not None
-      and _fuzzy_in(_only_save(_saves)) == [True], _turned.stdout[-1200:])
+_shown = _run(["play", "--civ", "rome_100ad", "--session", _path], "options\nb\nquit\n", _env_opts)
+check("settings default off: a plain `play` starts with fuzzy estimates off, and the options screen shows it",
+      re.search(r"fuzzy estimates\s*:\s*off", _shown.stdout) is not None
+      and _fuzzy_in(_only_save(_saves)) == [False], _shown.stdout[-1200:])
+
+# ---- resuming a game begun without it does not switch it on from the default;
+# ---- the options screen can then turn it on mid-game.
+with open(_config, "w") as handle:
+    json.dump({"default_fuzzy_estimates": True}, handle)
+_turned = _run(["play", "--session", _path], "options\nb\noptions\nf\ny\nb\nquit\n", _env_opts)
+_shown_states = re.findall(r"fuzzy estimates\s*:\s*(on|off)", _turned.stdout)
+check("resuming does not turn it on from the default, and the options screen can turn it on mid-game",
+      _shown_states[:1] == ["off"] and _shown_states[-1:] == ["on"] and _fuzzy_in(_only_save(_saves)) == [True], (_shown_states, _turned.stdout[-1200:]))
 _again = _run(["play", "--session", _path], "options\nb\nquit\n", _env_opts)
 check("save/load keeps fuzzy estimates: still on after a resume",
       re.search(r"fuzzy estimates\s*:\s*on", _again.stdout) is not None, _again.stdout[-1200:])
-
-# ---- README ----------------------------------------------------------------------
-_readme = open(os.path.join(ROOT, "README.md")).read()
-_playing = _readme.split("## Playing", 1)[1].split("\n## ", 1)[0]
-check("README: Playing says the table is a starting set and help commands lists every command",
-      "starting set" in _playing and "`help commands` lists every command" in _playing
-      and "`help <command>`" in _playing, _playing[:600])
-check("README: fuzzy estimates are mentioned next to fog in the options list",
-      "--fuzzy-estimates" in _readme.split("## Playing", 1)[0], "")

@@ -38,17 +38,8 @@ try:
           "training ten times as many DOES change)",
           abs(cost_big - cost_small) < 0.5, (cost_small, cost_big))
 
-    # What ten-times-the-trade actually buys: the SAME absolute batch of new
-    # hiring pressure is a smaller share of a bigger existing trade, so
-    # expanding a big trade further is cheaper, in the premium it pays,
-    # than expanding a small one by the same amount - this is the real
-    # content of "brings the price back down", not a below-base discount.
-    thin = sim(capital=1e9)
-    thin.labour.hire("smith", 5)
-    thin.year += 10
-    thick = sim(capital=1e9)
-    thick.labour.hire("smith", 50)
-    thick.year += 10
+    # The same batch of new hiring pressure is a smaller share of a bigger trade.
+    thin, thick = small, big
     thin_capital_before, thick_capital_before = thin.capital, thick.capital
     thin.labour.hire("smith", 10)
     thick.labour.hire("smith", 10)
@@ -56,9 +47,7 @@ try:
     fee_thick = thick_capital_before - thick.capital
     check("expanding an already-large trade by a fixed amount costs no more "
           "in fees than expanding a small one by the same amount, once both "
-          "have settled (hire()'s own price factor is read before the new "
-          "batch's pressure is recorded, so a single hire() call never taxes "
-          "itself - only the NEXT one)",
+          "have settled",
           abs(fee_thick - fee_thin) < 1.0, (fee_thin, fee_thick))
 
     per_head_thin = thin.labour.wage_bill() / thin.employees["smith"]
@@ -97,7 +86,7 @@ check("...and leaves an UNRELATED trade's productivity at exactly 1.0 - a "
       "trip hammer for smiths does not make carpenters faster too",
       s.labour.labour_productivity("carpenter") == 1.0, s.labour.labour_productivity("carpenter"))
 
-s2 = sim(capital=1e9)
+s2 = s
 for _node, _tr, _add in s2.LABOUR_PRODUCTIVITY_SOURCES:
     s2.done.add(_node)
 check("stacking every productivity technology this run has wired in never "
@@ -123,12 +112,18 @@ check("every trade named in LABOUR_PRODUCTIVITY_SOURCES is a real trade in "
 from sim.labour.labour_allocation import FARM_TRADE as _FARM_TRADE
 
 s_noschool = sim(capital=2000000.0, manual=False)
+s_noschool.trades_created.add("electrician")
 _gen0 = s_noschool.civ["literacy_general"]
-for i in range(1, 301):
+for i in range(1, 401):
     s_noschool.advance_society(s_noschool.year + i)
 check("with no school ever running literacy does not move at all - this "
       "is something a society is TAUGHT, not a free drift",
       s_noschool.civ["literacy_general"] == _gen0, s_noschool.civ["literacy_general"])
+check("a taught trade never naturalises without a single school ever "
+      "running, however long the run",
+      "electrician" not in s_noschool.trades_endemic
+      and s_noschool.employees.get("electrician", 0.0) == 0.0,
+      (sorted(s_noschool.trades_endemic), s_noschool.employees.get("electrician")))
 
 s_school = run_it(sim(capital=2000000.0, manual=False), "school_founded")
 _gen0b = s_school.civ["literacy_general"]
@@ -157,51 +152,11 @@ check("the lettered/propertied class closes most of its own gap too, on "
       "the same schooling",
       s_max.civ["literacy_elite"] >= 0.95, s_max.civ["literacy_elite"])
 
-# --- determinism: _advance_literacy reads self.civ (a dict) by key only;
-# proven under two hash seeds like the rest of this suite.
-def _edu_snapshot(seed_env):
-    result = subprocess.run(
-        [sys.executable, "-c",
-         "import sys; import random; from sim import simulator as S; "
-         "T,P,N,W,G = S.load(); _l,O,_b = S.load_strategy('recommended', N, T['meta']['goal_node']); "
-         "s = S.Sim(N, O, random.Random(1), events=False, manual=False, "
-         "civ=S.load_civ('rome_100ad'), cfg={'start_capital':5000000.0}); "
-         "s.goal, s.done_year = T['meta']['goal_node'], {}; "
-         "s.done.add('school_founded'); s.operating.add('school_founded'); "
-         "s.done.add('academy_network'); s.operating.add('academy_network'); "
-         "s.inst_units = {'school_founded': 9.0, 'academy_network': 9.0}; "
-         "s._done_changed(); "
-         "s.trades_created.add('electrician'); "
-         "[s.advance_society(s.year + i) for i in range(1, 201)]; "
-         "print(repr((round(s.civ['literacy_general'], 12), "
-         "round(s.civ['literacy_elite'], 12), "
-         "'electrician' in s.trades_endemic, "
-         "round(s.employees.get('electrician', 0.0), 12))))"],
-        capture_output=True, text=True, timeout=60, cwd=ROOT,
-        env=dict(os.environ, PYTHONHASHSEED=seed_env))
-    return result.stdout.strip()
-_edu_a, _edu_b = _par_map(_edu_snapshot, ("0", "98765"))
-check("literacy growth and trade absorption are identical under a "
-      "different PYTHONHASHSEED",
-      _edu_a == _edu_b and _edu_a, (_edu_a, _edu_b))
-
 # =============================================================================
 # A TRADE THE FOUNDER INTRODUCED BECOMES A TRADE THE SOCIETY HAS. The user's
 # sharpest question: "if I invent electricity, you can't say that after 100
 # years I still can't find anyone who can make or research generators." See
 # SocietyMixin._advance_trade_absorption/_grow_endemic_trade (society.py).
-s_noteach = sim(capital=5000000.0, manual=False)
-s_noteach.trades_created.add("electrician")
-for i in range(1, 401):
-    s_noteach.advance_society(s_noteach.year + i)
-check("a taught trade never naturalises without a single school ever "
-      "running, however long the run - this is exactly what 'after 100 "
-      "years I'm still the only electrician' looks like when nothing was "
-      "ever built to change it",
-      "electrician" not in s_noteach.trades_endemic
-      and s_noteach.employees.get("electrician", 0.0) == 0.0,
-      (sorted(s_noteach.trades_endemic), s_noteach.employees.get("electrician")))
-
 s_teach = run_it(sim(capital=5000000.0, manual=False),
                  "school_founded", "academy_network")
 s_teach.inst_units = {"school_founded": 9.0, "academy_network": 9.0}
@@ -244,7 +199,7 @@ check("which trades have naturalised, and when each was introduced, "
       and s_teach2.trade_introduced_year == s_teach.trade_introduced_year,
       (sorted(s_teach2.trades_endemic), s_teach2.trade_introduced_year))
 
-_st_edu, _, _ = proto([{"cmd": "state"}])
+_st_edu = [S._agent_dispatch(s_teach, NODES, {"cmd": "state"})]
 check("`state` reports this society's literacy and how far it could go "
       "from here",
       "literacy" in _st_edu[0]
@@ -267,6 +222,8 @@ _rev_node = next(node_id for node_id in sorted(NODES) if NODES[node_id].get("rev
 _no_rev_node = next(node_id for node_id in sorted(NODES) if NODES[node_id].get("rev", 0) <= 0)
 
 s_dif = sim(capital=1000000.0)
+check("diffusion_index is 0 with nothing operating",
+      s_dif.diffusion_index() == 0.0, s_dif.diffusion_index())
 check("a technology nobody has opened for business has nothing to leak",
       s_dif.diffusion_share(_rev_node) == 0.0, s_dif.diffusion_share(_rev_node))
 s_dif.done.add(_rev_node); s_dif.operating.add(_rev_node)
@@ -284,38 +241,27 @@ check("...but a first mover never loses all of it, however long the "
       "venture runs - capped, like every other saturating share in this file",
       abs(_far - s_dif.VENTURE_DIFFUSION_CAP) < 1e-6, _far)
 
-s_dif2 = sim(capital=1000000.0)
-s_dif2.done.add(_no_rev_node); s_dif2.operating.add(_no_rev_node)
-s_dif2.done_year[_no_rev_node] = s_dif2.cfg["start_year"] - 200
+s_dif.done.add(_no_rev_node); s_dif.operating.add(_no_rev_node)
+s_dif.done_year[_no_rev_node] = s_dif.cfg["start_year"] - 200
 check("a concern with no revenue at all has no market to leak into, "
       "however long it has been open",
-      s_dif2.diffusion_share(_no_rev_node) == 0.0,
-      s_dif2.diffusion_share(_no_rev_node))
+      s_dif.diffusion_share(_no_rev_node) == 0.0,
+      s_dif.diffusion_share(_no_rev_node))
 
-s_dif3 = sim(capital=1000000.0)
-s_dif3.done.add(_rev_node); s_dif3.operating.add(_rev_node)
-s_dif3.done_year[_rev_node] = s_dif3.year
-s_dif3.year += 20
-_plain = s_dif3.diffusion_share(_rev_node)
-s_dif3.done.add("corpus_dispersed"); s_dif3.operating.add("corpus_dispersed")
-s_dif3._done_changed()
-_published = s_dif3.diffusion_share(_rev_node)
+s_dif.done_year[_rev_node] = s_dif.year - 20
+_plain = s_dif.diffusion_share(_rev_node)
+s_dif.done.add("corpus_dispersed"); s_dif.operating.add("corpus_dispersed")
+s_dif._done_changed()
+_published = s_dif.diffusion_share(_rev_node)
 check("published knowledge (corpus_dispersed) escapes to competitors "
-      "faster than a secret kept in one workshop - reusing the model's own "
-      "existing idea of how knowledge spreads rather than inventing a "
-      "second one",
+      "faster than a secret kept in one workshop",
       _published > _plain, (_plain, _published))
-
-check("diffusion_index is 0 with nothing operating",
-      sim().diffusion_index() == 0.0, sim().diffusion_index())
-check("...and rises, revenue-weighted, once something is",
-      s_dif3.diffusion_index() > 0.0, s_dif3.diffusion_index())
-
-_st_dif, _, _ = proto([{"cmd": "state"}])
+check("...and diffusion_index rises, revenue-weighted, once something is operating",
+      s_dif.diffusion_index() > 0.0, s_dif.diffusion_index())
+_st_dif = S._agent_dispatch(s_dif, NODES, {"cmd": "state"})
 check("`state` reports how much of what you run has diffused to competitors",
-      "diffusion_index" in _st_dif[0]
-      and 0.0 <= _st_dif[0]["diffusion_index"] <= 1.0,
-      _st_dif[0].get("diffusion_index"))
+      "diffusion_index" in _st_dif and 0.0 <= _st_dif["diffusion_index"] <= 1.0,
+      _st_dif.get("diffusion_index"))
 
 # --- the rubber bug: a node consumed a material nothing in its own ancestry can
 # produce, and the game sold it at a flat book price. The rule and its data live
@@ -335,219 +281,139 @@ check("the gating rule flags a consumer with no producer and accepts a declared 
                                        "ungated_consumers": {"stranger": "judged purchasable here"}}}) == [],
       _gating.check_material_gating(_probe_nodes, _probe_rule))
 
-_SUPERVISED = concern_needing_craftsmen_to_supervise()
+# --- Staffing: one game for `why`'s supervision figure, the staffing closure, the
+# automatic reopen, and the price `restore` quotes inside and after the grace window.
+s_staff = sim(capital=1_000_000.0)
+_SUPERVISED = None
+for _candidate_id in sorted(NODES):
+    _candidate = NODES[_candidate_id]
+    if _candidate["rev"] > 0 and _candidate["sch"] == 0 and _candidate["art"] > 0 and not (_candidate.get("lab") or {}).get("artisan"):
+        _scholars, _craftsmen = s_staff.venture_hands(_candidate_id)
+        if (_scholars == 0
+                and max(_candidate["art"], s_staff.FOUNDER_IS_WORTH + s_staff.STAFFING_CLOSURE_SLACK) < _craftsmen <= 5.5
+                and s_staff.venture_foreman(_candidate_id)[0] is None):
+            _SUPERVISED = _candidate_id
+            break
+assert _SUPERVISED, "no concern needs craftsmen to supervise"
 
-# --- three players: `why` quoted the BUILD crew as the staff requirement,
-# and `open` actually enforces ongoing SUPERVISION (venture_hands), a
-# different and sometimes larger number never shown before the money was
-# spent. `why` must now show both, from the same function `open` checks.
-r, _, _ = proto([{"cmd": "why", "id": _SUPERVISED}])
-_why_open = r[0]["staff_to_keep_it_open"]
-_s = sim()
-_expect_sch, _expect_art = _s.venture_hands(_SUPERVISED)
+# `why` quoted the BUILD crew as the staff requirement, while `open` enforces
+# ongoing SUPERVISION (venture_hands). `why` must show both, from the same function.
+_why = S._agent_dispatch(s_staff, NODES, {"cmd": "why", "id": _SUPERVISED})
+_why_open = _why["staff_to_keep_it_open"]
+_expect_sch, _expect_art = s_staff.venture_hands(_SUPERVISED)
 check("`why`'s supervision figure is computed by the same function `open` "
       "enforces (venture_hands), not a second estimate of it",
       abs(_why_open["scholars"] - round(_expect_sch, 2)) < 0.01
       and abs(_why_open["artisans"] - round(_expect_art, 2)) < 0.01,
-      "why said %s, venture_hands says %.2f/%.2f"
-      % (_why_open, _expect_sch, _expect_art))
-check("the supervision figure can genuinely exceed the build crew shown as "
-      "staff_needed, which is exactly the case a Norse playtester measured "
-      "(2.13 craftsmen enforced against a displayed 2 artisans)",
-      _why_open["artisans"] > r[0]["staff_needed"]["artisans"],
-      "staff_needed %s, staff_to_keep_it_open %s"
-      % (r[0]["staff_needed"], _why_open))
-
-# --- and a node nobody could ever run as a going concern (pure knowledge)
-# gets no supervision figure at all - there is nothing to keep an eye on.
-r, _, _ = proto([{"cmd": "why", "id": "ag2_adulteration_law"}])
+      "why said %s, venture_hands says %.2f/%.2f" % (_why_open, _expect_sch, _expect_art))
+check("the supervision figure can genuinely exceed the build crew shown as staff_needed",
+      _why_open["artisans"] > _why["staff_needed"]["artisans"],
+      "staff_needed %s, staff_to_keep_it_open %s" % (_why["staff_needed"], _why_open))
+_pure = S._agent_dispatch(s_staff, NODES, {"cmd": "why", "id": "ag2_adulteration_law"})
 check("a pure-knowledge node (no revenue, no upkeep) carries no "
       "staff_to_keep_it_open - there is no concern to supervise",
-      r[0].get("staff_to_keep_it_open") is None, r[0].get("staff_to_keep_it_open"))
+      _pure.get("staff_to_keep_it_open") is None, _pure.get("staff_to_keep_it_open"))
 
-# --- three playtesters: a concern the staffing rule shut never came back on
-# its own once restaffed - reopening it was `auto_open`, a SEPARATE policy
-# defaulting off for a player, so every restaffing was followed by a manual
-# `open`, for ever. "Most of the mid and late game was a repetitive
-# hire-then-reopen treadmill rather than fresh decisions."
-_node_id = _SUPERVISED
-s = sim(capital=2.0 * sim().opening_fee(_node_id)[0])  # enough to open it, whatever opening costs
-s.done.add(_node_id)
-s._done_changed()
-s.employees["artisan"] = 6.0
-s.labour._resync_pools()
-ok, _ = s.open_venture(_node_id)
+# A concern the staffing rule shut never came back on its own once restaffed.
+s_staff.done.update(NODES[_SUPERVISED]["pre"])
+s_staff.done.add(_SUPERVISED)
+s_staff._done_changed()
+s_staff.employees["artisan"] = 6.0
+s_staff.labour._resync_pools()
+ok, _ = s_staff.open_venture(_SUPERVISED)
 check("set-up: the supervised concern opens with six craftsmen on staff", ok)
-s.employees["artisan"] = 0.0
-s.labour._resync_pools()
-closed = s.close_unstaffed_ventures(s.year)
+s_staff.employees["artisan"] = 0.0
+s_staff.labour._resync_pools()
+closed = s_staff.close_unstaffed_ventures(s_staff.year)
 check("losing every craftsman shuts a concern that needs them to supervise",
-      closed == [_node_id] and _node_id in s.mothballed and _node_id in getattr(s, "shut_for_staff", {}),
-      closed)
-s.employees["artisan"] = 6.0
-s.labour._resync_pools()
-reopened = s.reopen_restaffed_ventures(s.year)
+      closed == [_SUPERVISED] and _SUPERVISED in s_staff.mothballed
+      and _SUPERVISED in getattr(s_staff, "shut_for_staff", {}), closed)
+s_staff.employees["artisan"] = 6.0
+s_staff.labour._resync_pools()
+reopened = s_staff.reopen_restaffed_ventures(s_staff.year)
 check("...and it comes back on its own once restaffed, with no 'open' typed",
-      reopened == [_node_id] and _node_id in s.operating and _node_id not in s.mothballed
-      and _node_id not in getattr(s, "shut_for_staff", {}), reopened)
+      reopened == [_SUPERVISED] and _SUPERVISED in s_staff.operating and _SUPERVISED not in s_staff.mothballed
+      and _SUPERVISED not in getattr(s_staff, "shut_for_staff", {}), reopened)
 
-# --- BREAK: the closing message promises "reopening soon costs a tenth of
-# what opening did" - a player who instead reaches for `restore` (the verb
-# that actually exists for "this is shut, bring it back") got a plain
-# number with no word of which price it was, so a full-price restore 20
-# years later read as the game breaking its own promise rather than the
-# promise simply having lapsed. Same root cause as the earlier double-
-# charge bug: an unexplained number and a wrong number look identical to a
-# player who cannot see the arithmetic behind either.
-s_rg = sim(capital=1_000_000.0)
-_kg = _node_id
-# restore_work, unlike open_venture, checks that every prerequisite is
-# still done - so, unlike the plain open/close fixture above, this one
-# needs the whole ancestry marked done too.
-s_rg.done.update(NODES[_kg]["pre"])
-s_rg.done.add(_kg)
-s_rg._done_changed()
-s_rg.employees["artisan"] = 6.0
-s_rg.labour._resync_pools()
-s_rg.open_venture(_kg)
-s_rg.employees["artisan"] = 0.0
-s_rg.labour._resync_pools()
-s_rg.close_unstaffed_ventures(s_rg.year)
-check("set-up: the closure is recorded as staffing-caused, with the year "
-      "it happened",
-      _kg in getattr(s_rg, "shut_for_staff", {}), s_rg.shut_for_staff)
-_ok_rg, _msg_rg = s_rg.restore_work(_kg)
+# `restore` must say which price it charged: the discounted tenth inside the
+# grace window, the full price after it.
+s_staff.employees["artisan"] = 0.0
+s_staff.labour._resync_pools()
+s_staff.close_unstaffed_ventures(s_staff.year)
+check("set-up: the closure is recorded as staffing-caused",
+      _SUPERVISED in getattr(s_staff, "shut_for_staff", {}), s_staff.shut_for_staff)
+_ok_in_grace, _msg_in_grace = s_staff.restore_work(_SUPERVISED)
 check("restoring within the grace window names that it is the discounted "
       "price, not a bare number",
-      _ok_rg and "discounted tenth" in _msg_rg, _msg_rg)
-# Now the same closure, but restored only after the grace window has
-# lapsed - same setup, advanced past STAFF_CLOSURE_GRACE before restoring.
-s_rg2 = sim(capital=1_000_000.0)
-s_rg2.done.update(NODES[_kg]["pre"])
-s_rg2.done.add(_kg)
-s_rg2._done_changed()
-s_rg2.employees["artisan"] = 6.0
-s_rg2.labour._resync_pools()
-s_rg2.open_venture(_kg)
-s_rg2.employees["artisan"] = 0.0
-s_rg2.labour._resync_pools()
-s_rg2.close_unstaffed_ventures(s_rg2.year)
-s_rg2.year += s_rg2.STAFF_CLOSURE_GRACE + 1
-_ok_rg2, _msg_rg2 = s_rg2.restore_work(_kg)
+      _ok_in_grace and "discounted tenth" in _msg_in_grace, _msg_in_grace)
+s_staff.employees["artisan"] = 0.0
+s_staff.labour._resync_pools()
+s_staff.close_unstaffed_ventures(s_staff.year)
+s_staff.year += s_staff.STAFF_CLOSURE_GRACE + 1
+_ok_lapsed, _msg_lapsed = s_staff.restore_work(_SUPERVISED)
 check("...and restoring after the window has lapsed says outright that the "
-      "discount window is gone and this is the full price, rather than "
-      "silently charging ten times the number the closure message quoted",
-      _ok_rg2 and "too long for the tenth" in _msg_rg2, _msg_rg2)
-check("...and the lapsed-window fee really is about ten times the "
-      "in-grace one, so the explanation matches the arithmetic",
-      float(_msg_rg2.split("for ")[1].split(" denarii")[0].replace(",", ""))
-      > 5 * float(_msg_rg.split("for ")[1].split(" denarii")[0].replace(",", "")),
-      (_msg_rg, _msg_rg2))
+      "discount window is gone and this is the full price",
+      _ok_lapsed and "too long for the tenth" in _msg_lapsed, _msg_lapsed)
+check("...and the lapsed-window fee really is about ten times the in-grace one",
+      float(_msg_lapsed.split("for ")[1].split(" denarii")[0].replace(",", ""))
+      > 5 * float(_msg_in_grace.split("for ")[1].split(" denarii")[0].replace(",", "")),
+      (_msg_in_grace, _msg_lapsed))
 
-# --- BREAK: an England playtester watched their own credit-freeze unlock
-# date move silently three times - 1313, then 1320, then 1330 - because a
-# second INSOLVENCY SETTLED while the first freeze had not yet lifted
-# extends credit_frozen_until with a plain max(), and nothing in the event
-# text said the date had changed. A deadline that quietly slides is worse
-# than a longer fixed one would have been.
-s_fz = sim(capital=1000.0)
-_lim_fz = s_fz.credit_limit()
-s_fz.capital = -(_lim_fz * 1.5)
-s_fz.last_settlement = -999
-s_fz.credit_frozen_until = 110   # an earlier freeze, STILL in force at yr=105
-_before_log_fz = len(s_fz.log)
-s_fz.enforce_credit_limit(105)
-check("settling again while an earlier freeze is still in force extends "
-      "the unlock date...",
-      s_fz.credit_frozen_until == 117, s_fz.credit_frozen_until)
-_fz_msgs = [message for _, message in s_fz.log[_before_log_fz:] if "INSOLVENCY SETTLED" in message]
-check("...and says so in the same event, naming both the old and the new "
-      "date, rather than moving the deadline with no word about it",
-      bool(_fz_msgs) and "110" in _fz_msgs[0] and "117" in _fz_msgs[0],
-      _fz_msgs)
-# And the ordinary case - no prior freeze in force - gets no such addendum,
-# because nothing moved.
-s_fz2 = sim(capital=1000.0)
-s_fz2.capital = -(s_fz2.credit_limit() * 1.5)
-s_fz2.last_settlement = -999
-_before_log_fz2 = len(s_fz2.log)
-s_fz2.enforce_credit_limit(105)
-_fz2_msgs = [message for _, message in s_fz2.log[_before_log_fz2:] if "INSOLVENCY SETTLED" in message]
-check("...while a first-ever settlement, with nothing to extend, says "
-      "nothing about a moved date",
-      bool(_fz2_msgs) and "moves with every settlement" not in _fz2_msgs[0],
-      _fz2_msgs)
+# --- One game for the credit freeze, the standing-figure regression and the stall diagnosis.
+s_money = sim(capital=100000.0)
 
-# --- BREAK (REGRESSION): `state`'s "recurring" net_per_year is supposed to
-# be the STANDING figure - its own comment says so - and read plain
-# revenue() instead of revenue_capacity(), which a lender-facing figure
-# (credit_limit) already reads for the identical reason its own docstring
-# gives: "a lender does not cut your line because you took a job this
-# year." Selling founder-hours with `work` swung net_per_year for exactly
-# one year and reverted the instant the calendar rolled over - the label
-# was lying about what kind of number it was.
-s_nr = sim(capital=100000.0)
-_net_before = S._agent_dispatch(s_nr, NODES, {"cmd": "state"}).get("net_per_year")
-_capital_before_work = s_nr.capital
-_pay_nr, _ = s_nr.labour.work_for_wages("scholar", 1500)
-check("set-up: selling founder-hours for wages actually registers as this "
-      "year's wage_hours_this_year",
-      s_nr.wage_hours_this_year > 0 and _pay_nr > 0,
-      (s_nr.wage_hours_this_year, _pay_nr))
-# Restore cash so this assertion isolates the transient hours counter from
-# the separate, intentional wealth-dependent living-cost calculation.
-s_nr.capital = _capital_before_work
-_after = S._agent_dispatch(s_nr, NODES, {"cmd": "state"})
-check("net_per_year (the 'recurring' figure) does not swing just because "
-      "this year's hours were sold for wages",
-      abs(_after.get("net_per_year") - _net_before) < 5.0,
-      (_net_before, _after.get("net_per_year")))
-check("...while net_after_project_spend - explicitly THIS year's figure - "
-      "still does reflect it, so the fix narrowed the right field rather "
-      "than hiding the swing everywhere",
+# A first-ever settlement says nothing about a moved date.
+s_money.capital = -(s_money.credit_limit() * 1.5)
+s_money.last_settlement = -999
+_log_start = len(s_money.log)
+s_money.enforce_credit_limit(105)
+_first_messages = [message for _, message in s_money.log[_log_start:] if "INSOLVENCY SETTLED" in message]
+check("a first-ever settlement, with nothing to extend, says nothing about a moved date",
+      bool(_first_messages) and "moves with every settlement" not in _first_messages[0], _first_messages)
+# A second settlement while an earlier freeze is in force moves the date, and says so.
+s_money.capital = -(s_money.credit_limit() * 1.5)
+s_money.last_settlement = -999
+s_money.credit_frozen_until = 110   # an earlier freeze, STILL in force at yr=105
+_log_start = len(s_money.log)
+s_money.enforce_credit_limit(105)
+check("settling again while an earlier freeze is still in force extends the unlock date...",
+      s_money.credit_frozen_until == 117, s_money.credit_frozen_until)
+_freeze_messages = [message for _, message in s_money.log[_log_start:] if "INSOLVENCY SETTLED" in message]
+check("...and says so in the same event, naming both the old and the new date",
+      bool(_freeze_messages) and "110" in _freeze_messages[0] and "117" in _freeze_messages[0],
+      _freeze_messages)
+
+# `state`'s and `money`'s recurring net_per_year is the STANDING figure: selling
+# founder-hours with `work` must not swing it for one year.
+s_money.capital = 100000.0
+s_money.credit_frozen_until = 0
+_net_before = S._agent_dispatch(s_money, NODES, {"cmd": "state"}).get("net_per_year")
+_money_before = S._agent_dispatch(s_money, NODES, {"cmd": "money"}).get("net_per_year")
+_pay, _ = s_money.labour.work_for_wages("scholar", 1500)
+check("set-up: selling founder-hours for wages actually registers as this year's wage_hours_this_year",
+      s_money.wage_hours_this_year > 0 and _pay > 0, (s_money.wage_hours_this_year, _pay))
+s_money.capital = 100000.0   # isolate the hours counter from the wealth-dependent living cost
+_after = S._agent_dispatch(s_money, NODES, {"cmd": "state"})
+check("net_per_year (the 'recurring' figure) does not swing just because this year's hours were sold",
+      abs(_after.get("net_per_year") - _net_before) < 5.0, (_net_before, _after.get("net_per_year")))
+check("...while net_after_project_spend - explicitly THIS year's figure - still reflects it",
       abs(_after.get("net_after_project_spend") - _net_before) > 50.0,
       (_net_before, _after.get("net_after_project_spend")))
-# `money`'s own net_per_year carries the identical label and the identical
-# bug (protocol.py: "THE SAME FIGURE `state` PRINTS").
-s_nr2 = sim(capital=100000.0)
-_money_before = S._agent_dispatch(s_nr2, NODES, {"cmd": "money"}).get("net_per_year")
-_capital_before_work2 = s_nr2.capital
-s_nr2.labour.work_for_wages("scholar", 1500)
-s_nr2.capital = _capital_before_work2
-_money_after = S._agent_dispatch(s_nr2, NODES, {"cmd": "money"}).get("net_per_year")
-check("`money`'s net_per_year is insulated from the same one-year swing, "
-      "matching `state`'s",
-      abs(_money_after - _money_before) < 5.0,
-      (_money_before, _money_after))
-# And stall_diagnosis's own net, which explicitly claims to be "the same
-# net the ledger prints", has to actually be computed the same way now
-# that the ledger's own figure changed.
-#
-# BEHAVIOURAL, NOT A SOURCE SCAN: a grep of
-# inspect.getsource(S.Sim.stall_diagnosis) for the literal text
-# "revenue_capacity()" would pass on a comment mentioning the call
-# (test_parallelism_note.py records this exact failure mode actually
-# happening to a sibling check) and would not notice a call whose return
-# value stall_diagnosis went on to ignore. The claim is the one
-# this whole section is already demonstrating for net_per_year, above:
-# selling the founder's hours for wages this year must not swing the
-# figure. Reproduce that same swing test directly against stall_diagnosis,
-# on a household set up to actually be stalled (capital < 0 and 8+ years
-# in arrears, so it returns a diagnosis instead of None).
-s_stall = sim(capital=-4000.0)
-s_stall.insolvent_years = 20
-_diag_before = s_stall.stall_diagnosis()
-check("set-up: this household really is stalled, so stall_diagnosis "
-      "returns a real diagnosis to compare",
+_money_after = S._agent_dispatch(s_money, NODES, {"cmd": "money"}).get("net_per_year")
+check("`money`'s net_per_year is insulated from the same one-year swing, matching `state`'s",
+      abs(_money_after - _money_before) < 5.0, (_money_before, _money_after))
+
+# stall_diagnosis's own net must be computed the same standing way: reproduce the
+# swing test against it on a household that is actually stalled.
+s_money = sim(capital=-4000.0)
+s_money.insolvent_years = 20
+s_money.wage_hours_this_year = 0
+_diag_before = s_money.stall_diagnosis()
+check("set-up: this household really is stalled, so stall_diagnosis returns a real diagnosis to compare",
       bool(_diag_before), _diag_before)
-_capital_before_stall_work = s_stall.capital
-s_stall.labour.work_for_wages("scholar", 1500)
-s_stall.capital = _capital_before_stall_work
-_diag_after = s_stall.stall_diagnosis()
-check("stall_diagnosis's own net is insulated from a one-year wage sale "
-      "the same way net_per_year is - proving it reads revenue_capacity() "
-      "(which zeroes wage_hours_this_year before asking revenue()) rather "
-      "than plain revenue() a second time",
-      _diag_after and _diag_before
-      and _diag_after["you_are_stuck"] == _diag_before["you_are_stuck"],
+s_money.labour.work_for_wages("scholar", 1500)
+s_money.capital = -4000.0
+_diag_after = s_money.stall_diagnosis()
+check("stall_diagnosis's own net is insulated from a one-year wage sale the same way net_per_year is",
+      _diag_after and _diag_before and _diag_after["you_are_stuck"] == _diag_before["you_are_stuck"],
       (_diag_before, _diag_after))

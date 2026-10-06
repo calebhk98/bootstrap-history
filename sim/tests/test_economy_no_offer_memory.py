@@ -1,5 +1,8 @@
 """A market with buyers and no sellers: its remembered price moves toward what the good costs to make,
 so a stale low price stops drawing households' food budget to a food nobody sells."""
+
+QUICK_TOPIC = True
+
 import dataclasses
 import unittest
 

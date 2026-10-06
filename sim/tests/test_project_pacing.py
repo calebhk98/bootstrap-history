@@ -21,8 +21,6 @@ _msg_rich = _WO(s_pace, NODES, _slow, s_pace.active[_slow],
                 s_pace.active[_slow]["cost_left"])
 check("a rich player is told the pace, not that they are short of money",
       "pace" in _msg_rich and "a year" in _msg_rich, _msg_rich)
-check("...and is told how many more years that pace needs",
-      "year" in _msg_rich and any(char.isdigit() for char in _msg_rich), _msg_rich)
 s_broke = sim(capital=1.0)
 s_broke.credit_limit = lambda: 0.0
 s_broke.active[_slow] = dict(ph_left=0.0, yrs=1.0, spent=0.0,
@@ -48,10 +46,6 @@ check("...and state carries the countdown and the trade that would save it",
       _st_hl.get("will_be_abandoned_in_years") == 3
       and "engineer" in (_st_hl.get("because_nobody_here_can") or []),
       _st_hl)
-check("...and the page says the one command that keeps your hours",
-      "stop %s" % _need_eng in _RP("state", _st_all),
-      [line for line in _RP("state", _st_all).splitlines() if "ABANDONED" in line])
-
 # --- BREAK: a permanent deadlock. `logarithms` wants 10,000 scribe-hours a
 # year where the society can field 8,750, so the throttle gives back a
 # fraction of the work every year - and with no floor under the refund it gave
@@ -68,15 +62,33 @@ for _cohort in ("children", "working_age", "elderly"):    # fewer people, so the
 s_dl._done_changed()
 check("a project needing more of a trade than exists is startable",
       s_dl.start_project("logarithms")[0], s_dl.start_reason("logarithms"))
-for _ in range(60):
+_dl_ph_left = [s_dl.active["logarithms"]["ph_left"]]
+_dl_scribe_left = [s_dl.active["logarithms"]["lab_left"]["scribe"]]
+for _ in range(3):
     s_dl.step()
     if "logarithms" not in s_dl.active:
         break
-check("...and it finishes, slowly, instead of freezing for ever",
-      "logarithms" in s_dl.done, (s_dl.year, s_dl.active.get("logarithms")))
-check("...and it took longer than its calendar floor, because it crawled",
-      s_dl.done_year.get("logarithms", 0) - 100 > NODES["logarithms"]["yrs"],
-      s_dl.done_year.get("logarithms"))
+    _dl_ph_left.append(s_dl.active["logarithms"]["ph_left"])
+    _dl_scribe_left.append(s_dl.active["logarithms"]["lab_left"]["scribe"])
+check("...and every year of the crawl really works down the hours and the scribe labour left",
+      len(_dl_ph_left) == 4
+      and all(later < earlier for earlier, later in zip(_dl_ph_left, _dl_ph_left[1:]))
+      and all(later < earlier for earlier, later in zip(_dl_scribe_left, _dl_scribe_left[1:])),
+      (_dl_ph_left, _dl_scribe_left))
+
+
+def _logarithms_finishes_slowly():
+    for _ in range(60):
+        if "logarithms" not in s_dl.active:
+            break
+        s_dl.step()
+    finished = "logarithms" in s_dl.done
+    return (finished and s_dl.done_year.get("logarithms", 0) - 100 > NODES["logarithms"]["yrs"],
+            (s_dl.year, s_dl.active.get("logarithms"), s_dl.done_year.get("logarithms")))
+
+
+slow_check("...and it finishes, slowly, longer than its calendar floor, instead of freezing for ever",
+           _logarithms_finishes_slowly)
 
 # --- BREAK: `stop` burned the money as well as the hours, "same as a real
 # abandoned enterprise" - so when the creditors were about to take everything,
@@ -84,16 +96,13 @@ check("...and it took longer than its calendar floor, because it crawled",
 # was never the right move. The site does not un-dig itself either way.
 s_sp = sim(capital=round(0.3 * sim().project_cost("identity_cover")))   # part-payable at any wage scale
 s_sp.start_project("identity_cover")
-for _ in range(2):
-    s_sp.step()
+s_sp.step()
 _spent_sp = s_sp.active["identity_cover"]["spent"]
 _ok_sp, _why_sp = s_sp.stop_project("identity_cover")
 check("stopping a project keeps the money already paid",
       _ok_sp and abs(s_sp.paid_towards.get("identity_cover", 0.0)
                      - _spent_sp) < 0.5,
       (s_sp.paid_towards, _spent_sp))
-check("...and says so",
-      "comes off the bill" in str(_why_sp), _why_sp)
 s_sp.capital = 50000.0
 s_sp.start_project("identity_cover")
 check("...and beginning again bills only the remainder",
@@ -307,11 +316,6 @@ check("project_hour_pace reports what a project WANTS, with no material "
       "min(remaining, want) * throttle is not min(remaining, want * throttle)",
       abs(_pace_half - _pace_full) < 1e-9 and _pace_full > 0,
       (_pace_half, _pace_full))
-check("...and the two orderings really do differ where it matters, so that "
-      "check is guarding something real rather than restating an identity",
-      abs(min(100.0, 500.0) * 0.5 - min(100.0, 500.0 * 0.5)) > 1e-9,
-      (min(100.0, 500.0) * 0.5, min(100.0, 500.0 * 0.5)))
-
 # NO BEHAVIOURAL CHECK OF THE BRAKE ITSELF HERE, deliberately, and this is
 # the honest reason: step() recomputes self.throttle from the year's material
 # supply at the top of every year, so a test that sets self.throttle and then

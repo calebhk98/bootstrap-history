@@ -3,6 +3,9 @@
 Complaints/302: steel plate was priced at the mature technique (cheap iron bar from a later route) while the
 iron bar its own cementation works buys was priced at the civilisation's route, so the concern bought dearer
 than it sold and earned nothing."""
+
+QUICK_TOPIC = True
+
 import json
 import os
 import unittest

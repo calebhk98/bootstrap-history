@@ -159,7 +159,7 @@ check("a household the state has not noticed pays nothing and the treasury is un
       treasury.money == 0.0 and not treasury.record.income, treasury.record.income)
 
 # ---- the ledger is saved and loaded ---------------------------------------------------
-game = grown("rome_100ad")
+game = levied
 game._state_pressure(game.year)
 game.advance_actors(game.state.scenario.year)
 before = copy.deepcopy(game.state.actors.records)

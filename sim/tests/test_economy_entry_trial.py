@@ -1,4 +1,7 @@
 """Trial newcomers: judged at their own cost, only for a market with buyers and no maker in its area."""
+
+QUICK_TOPIC = True
+
 import math
 import unittest
 

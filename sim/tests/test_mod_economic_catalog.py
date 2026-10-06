@@ -1,4 +1,7 @@
 """Acceptance tests for third-party economic content with no base-data edits."""
+
+QUICK_TOPIC = True
+
 import json
 from pathlib import Path
 import tempfile

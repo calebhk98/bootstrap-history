@@ -10,6 +10,7 @@ def _ask(test_sim, **command):
 
 # --- 220: quote hire / commission / open equal what is then charged ---------
 hire_sim = sim(capital=1e7)
+net_before_hire = _ask(hire_sim, cmd="money")["net_per_year"]
 hire_quote = _ask(hire_sim, cmd="quote", what="hire", trade="smith", n=2)
 check("quote hire answers", hire_quote.get("ok"), hire_quote)
 capital_before = hire_sim.capital
@@ -31,7 +32,7 @@ check("typed 'quote bounty <id>' parses as a bounty quote",
       (parse_typed("quote bounty fin_restaurant")[0] or {}).get("id") == "fin_restaurant",
       parse_typed("quote bounty fin_restaurant"))
 
-commission_sim = sim(capital=1e7)
+commission_sim = hire_sim
 commission_quote = _ask(commission_sim, cmd="quote", what="commission", trade="smith", hours=100)
 check("quote commission answers", commission_quote.get("ok"), commission_quote)
 capital_before = commission_sim.capital
@@ -42,9 +43,9 @@ check("the commission charge equals the quote",
 check("the commission reply states the hours expire and cannot supervise",
       "supervise" in str(commission_reply.get("note", "")), commission_reply)
 check("help commission states expiry",
-      "this year" in str(_ask(sim(), cmd="help", topic="commission")), "")
+      "this year" in str(_ask(hire_sim, cmd="help", topic="commission")), "")
 
-open_sim = sim(capital=1e7)
+open_sim = hire_sim
 venture_id = next(node_id for node_id in ORDER if open_sim.is_venture(node_id)
                   and node_id not in open_sim.done)
 open_sim.done.add(venture_id)
@@ -61,18 +62,15 @@ check("the open reply names the opening charge",
       open_reply)
 
 # --- 222: recurring net is before the hiring advance ------------------------
-advance_sim = sim(capital=1e7)
-net_before_hire = _ask(advance_sim, cmd="money")["net_per_year"]
-_ask(advance_sim, cmd="hire", trade="smith", n=1)
-money_after = _ask(advance_sim, cmd="money")
-expected_drop = advance_sim.labour.wage_bill()
+money_after = _ask(hire_sim, cmd="money")
+expected_drop = hire_sim.labour.wage_bill()
 check("recurring net falls by the whole wage after a hire",
       (net_before_hire - money_after["net_per_year"]) > 0.9 * expected_drop,
       (net_before_hire, money_after["net_per_year"], expected_drop))
 check("money lists the advance as a separate one-off",
       money_after["what_it_costs_you"].get("of_which_already_paid_as_hiring_advances"),
       money_after["what_it_costs_you"])
-state_after = _ask(advance_sim, cmd="state")
+state_after = _ask(hire_sim, cmd="state")
 check("state and money agree on recurring net",
       abs(state_after["net_per_year"] - money_after["net_per_year"]) < 1.0,
       (state_after["net_per_year"], money_after["net_per_year"]))
@@ -97,15 +95,16 @@ check("the bounty reply repeats the same price",
       abs(bounty_reply.get("price", -1) - round(bounty_quote.get("paid_now", -5), 1)) < 0.11, bounty_reply)
 refused_id = next((node_id for node_id in ORDER if node_id not in bounty_sim.done
                    and not bounty_sim.bounty_eligible(node_id)), None)
-refused_quote = _ask(sim(capital=1e9), cmd="quote", what="bounty", id=refused_id)
-refused_reply = _ask(sim(capital=1e9), cmd="bounty", id=refused_id)
+refused_quote = _ask(bounty_sim, cmd="quote", what="bounty", id=refused_id)
+refused_reply = _ask(bounty_sim, cmd="bounty", id=refused_id)
 check("quote bounty gives the same refusal the bounty command gives",
       refused_quote.get("eligible") is False
       and refused_quote.get("refusal") == refused_reply.get("error"),
       (refused_quote, refused_reply))
 
 # --- 240: a cash tail after the last scheduled payment settles --------------
-tail_sim = sim(capital=1e10)
+tail_sim = bounty_sim
+tail_sim.capital = 1e10
 tail_id = next(node_id for node_id in ORDER if node_id not in tail_sim.done
                and tail_sim.can_start(node_id) and tail_sim.project_cost(node_id) > 5e3
                and NODES[node_id]["yrs"] <= 1)
@@ -136,9 +135,7 @@ check("the start warning shows sustainable debt beside the ceiling",
       start_reply)
 
 # --- 222: letting someone go says what happens to the advance ---------------
-fire_sim = sim(capital=1e7)
-_ask(fire_sim, cmd="hire", trade="smith", n=1)
-fire_reply = _ask(fire_sim, cmd="fire", trade="smith", n=1)
+fire_reply = _ask(hire_sim, cmd="fire", trade="smith", n=1)
 check("firing in the year of hire says what happens to the paid-in-advance wage",
       fire_reply.get("advance_still_credited", 0) > 0 and fire_reply.get("advance_note"),
       fire_reply)

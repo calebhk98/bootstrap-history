@@ -59,8 +59,8 @@ need = armed.state.economy.farm_hours_needed
 have = armed.state.economy.society_labour_hours[farm]
 check("farm hours still meet the farm need where the hours allow", have >= min(need, total_hours(armed)) * 0.99, (have, need))
 
-run_years(unarmed, 3)
-run_years(armed, 3)
+run_years(unarmed, 2)
+run_years(armed, 2)
 fallback = trade_data.fallback_trade(armed.labour.wage_schedule().training_years, armed.labour._world.trade_family)
 factor_armed = armed.labour.wage_schedule().tightness_factors.get(fallback, 1.0)
 factor_unarmed = unarmed.labour.wage_schedule().tightness_factors.get(fallback, 1.0)

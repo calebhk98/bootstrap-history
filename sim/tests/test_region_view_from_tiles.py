@@ -1,6 +1,9 @@
 """Complaints/136, 281, 282: a region is a label over tiles, and a deposit is
 placed by position, not by a tile id that a regenerated grid would drop.
 """
+
+QUICK_TOPIC = True
+
 import copy
 import json
 import os

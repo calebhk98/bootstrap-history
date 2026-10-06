@@ -1,5 +1,8 @@
 """A seller left holding goods nobody bought at its ask lowers the ask and what it expects to get, and does
 not stop planning runs for good because the sales it recorded were at an ask above every bid."""
+
+QUICK_TOPIC = True
+
 import math
 import unittest
 

@@ -1,6 +1,9 @@
 """Complaint 276: a req_any option naming a material that has its own resource
 node (mat_<name>) must name that node, not a bare commodity id the engine would
 price as a discounted purchase."""
+
+QUICK_TOPIC = True
+
 from .harness import *  # noqa: F401,F403
 
 bare_options = []

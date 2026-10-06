@@ -1,5 +1,8 @@
 """Merchants carry goods between market areas when the price gap beats carriage, interest, spoilage and a
 margin; capital and market share limit them; several chasing one gap overshoot it."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy import goods_market, merchants, settlement

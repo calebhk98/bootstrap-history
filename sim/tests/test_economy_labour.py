@@ -1,4 +1,7 @@
 """What a worker asks (the outside option and danger pay) and what a training costs."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 import types

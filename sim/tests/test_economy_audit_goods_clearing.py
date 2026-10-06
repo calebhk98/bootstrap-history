@@ -1,5 +1,8 @@
 """Clearing details (sim/economy/goods_market.py): a returned price respects the minimum-price floor, and a
 book-edge agent such as the mint never trades with itself."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy import goods_market

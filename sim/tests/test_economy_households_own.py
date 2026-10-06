@@ -1,4 +1,7 @@
 """A household's own plot: hours it keeps back from the labour market to grow what it could not get."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy.households_cohort import Cohort

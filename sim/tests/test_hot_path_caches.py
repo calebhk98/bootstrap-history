@@ -41,11 +41,10 @@ check("a warm production lookup lists no directories",
 # per-call catalog scan (tens of times slower), not machine noise.
 _budget_sim = sim(capital=200000.0)
 _start = time.process_time()
-for _ in range(3):
-    _budget_sim.step()
+_budget_sim.step()
 _elapsed = time.process_time() - _start
-check("three early years of the default run take well under a minute of CPU",
-      _elapsed < 60.0, "%.1fs" % _elapsed)
+check("an early year of the default run takes well under twenty seconds of CPU",
+      _elapsed < 20.0, "%.1fs" % _elapsed)
 
 
 # --- an actor's supply of a material looks only at the concerns that make it.

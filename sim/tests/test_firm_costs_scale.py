@@ -28,7 +28,7 @@ def actor_sim(extra_nodes):
 	for node in extra_nodes:
 		nodes[node["id"]] = node
 	game = S.Sim(nodes, list(ORDER), random.Random(1), events=False, manual=True,
-	             civ=S.load_civ("rome_100ad"), cfg={"agent_economy": False})   # legacy: concern wages and takings follow the engine's market
+	             civ=S.load_civ("rome_100ad"), cfg={"agent_economy": False})
 	game.goal, game.done_year = GOAL, {}
 	return game
 
@@ -60,7 +60,7 @@ def grow_market(game, growth):
 	game._revenue_cache_key = None
 
 
-def settled(growth=1.0, years=40, rate=0.12):
+def settled(growth=1.0, years=15, rate=0.12):
 	game = actor_sim([NODE])
 	game.market_rate = lambda: rate
 	founder_runs(game, "zz_scale", opened_ago=10)
@@ -72,7 +72,8 @@ def settled(growth=1.0, years=40, rate=0.12):
 	return game
 
 
-# ---- one wage for every employer; pay follows output per hour as far as the share says ------------
+# ---- one wage for every employer; pay follows output per hour as far as the share says.
+# ---- a concern's running costs and takings are its own: no index scales either.
 game = actor_sim([NODE])
 founder_runs(game, "zz_scale", opened_ago=10)
 game.labour.LABOUR_PAY_SHARE_OF_OUTPUT_GAIN = 1.0
@@ -81,6 +82,8 @@ world = SimWorld(game)
 wage_before = world.concern_wage_bill("zz_scale")
 hour_before = world.labour_market.quote("labourer")
 founder_before = game.labour.market.quote_annual("artisan")
+upkeep_before = world.upkeep("zz_scale")
+takings_before = world.concern_takings("zz_scale", game.year - 10)
 game.state.economy.output_per_head *= 10.0
 game._revenue_cache_key = None
 world = SimWorld(game)
@@ -92,16 +95,6 @@ check("the founder pays the same rise a firm does: one wage for every employer",
       abs(game.labour.market.quote_annual("artisan") / founder_before - world.labour_market.quote("labourer") / hour_before) < 1e-6)
 check("what the society makes does not follow a figure someone sets: it is the quantities its market clears",
       world.society_output() == SimWorld(actor_sim([NODE])).society_output())
-
-# ---- a concern's running costs and takings are its own: no index scales either --------------------
-game = actor_sim([NODE])
-founder_runs(game, "zz_scale", opened_ago=10)
-next_year(game)
-world = SimWorld(game)
-upkeep_before = world.upkeep("zz_scale")
-takings_before = world.concern_takings("zz_scale", game.year - 10)
-game.state.economy.output_per_head *= 10.0
-world = SimWorld(game)
 check("the upkeep of a concern that earns does not rise with an economy's output per head",
       world.upkeep("zz_scale") == upkeep_before, (upkeep_before, world.upkeep("zz_scale")))
 check("nor do its takings: the volume it sells is its own",
@@ -110,7 +103,8 @@ check("the founder pays the same upkeep an actor does for the same concern",
       abs(game.venture_real_upkeep("zz_scale") - world.upkeep("zz_scale")) < 1e-6 * world.upkeep("zz_scale"))
 
 # ---- a category's takings are its market's price times volume, shared out ------------------------
-shared = settled()
+steady = settled(growth=1.0)
+shared = steady
 world = SimWorld(shared)
 sellers = len(shared.actors.active_firms()) + 1
 ratios = shared._goods_category_ratios(CATEGORY)
@@ -121,7 +115,6 @@ check("every seller's takings are one share of the market's price times volume",
       abs(each * ratios[2] - market_total) < 0.02 * market_total, (each, ratios, market_total))
 
 # ---- the number of firms follows the market's size over a firm's ---------------------------------
-steady = settled(growth=1.0)
 grown = settled(growth=10.0)
 steady_count = len(steady.actors.active_firms())
 grown_count = len(grown.actors.active_firms())

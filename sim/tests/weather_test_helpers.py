@@ -15,9 +15,9 @@ def assert_single_draw_fallback(test_case, test_sim, agriculture, year=137):
         test_sim._pooled_farm_weather_multiplier(year), expected)
 
 
-def assert_matching_century(test_case, make_sim):
+def assert_matching_century(test_case, make_sim, years=100):
     first, second = make_sim(), make_sim()
-    for _year in range(100):
+    for _year in range(years):
         first.step()
         second.step()
     test_case.assertEqual(first.population.children, second.population.children)
@@ -27,19 +27,19 @@ def assert_matching_century(test_case, make_sim):
     test_case.assertEqual(first.farm_stock_kg, second.farm_stock_kg)
 
 
-def assert_save_reload_trajectory(test_case, make_sim, path):
+def assert_save_reload_trajectory(test_case, make_sim, path, years=60):
     reference = make_sim()
-    for _year in range(60):
+    for _year in range(years):
         reference.step()
 
     replayed = make_sim()
-    for _year in range(30):
+    for _year in range(years // 2):
         replayed.step()
     simulator.save_state(replayed, path)
 
     resumed = make_sim()
     simulator.load_state(resumed, path)
-    for _year in range(30):
+    for _year in range(years // 2):
         resumed.step()
 
     test_case.assertEqual(

@@ -21,6 +21,9 @@ reading of where the two do and do not agree.
 
 sim/geography/transport.py standalone: freight cost per tonne-km from animal metabolism, rolling resistance and gradient (unittest-style).
 """
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.geography import transport

@@ -1,4 +1,7 @@
 """Import and export duties are assessed on the money the year's postings moved through the external edge."""
+
+QUICK_TOPIC = True
+
 import types
 import unittest
 

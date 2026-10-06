@@ -1,4 +1,7 @@
 """Economy._lend: the credit rate answers borrowers even when nobody has savings on offer."""
+
+QUICK_TOPIC = True
+
 import types
 import unittest
 from unittest import mock

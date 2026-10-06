@@ -2,6 +2,9 @@
 
 Mod loader override semantics and error reporting (unittest-style).
 """
+
+QUICK_TOPIC = True
+
 import copy
 import json
 from pathlib import Path

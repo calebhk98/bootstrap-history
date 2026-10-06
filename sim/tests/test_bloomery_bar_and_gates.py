@@ -2,6 +2,9 @@
 amortisation horizon) and 41 (tanning and fulling held by the civilisations
 that used them).
 """
+
+QUICK_TOPIC = True
+
 import inspect
 import json
 import os

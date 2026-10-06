@@ -1,4 +1,7 @@
 """What a run costs and earns at live prices."""
+
+QUICK_TOPIC = True
+
 import math
 import unittest
 

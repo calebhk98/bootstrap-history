@@ -1,4 +1,7 @@
 """Goods whose unit is not a mass must not be carried as 1 kg never-spoiling goods."""
+
+QUICK_TOPIC = True
+
 import math
 import unittest
 

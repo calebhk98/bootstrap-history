@@ -5,6 +5,9 @@ Nodes that are Mediterranean artefacts sit behind the civilisation's own
 generic technology carries a neutral name; kit descriptions name no Roman
 institution.
 """
+
+QUICK_TOPIC = True
+
 import json
 import os
 import unittest

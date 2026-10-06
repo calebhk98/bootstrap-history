@@ -47,7 +47,7 @@ What it would take (all in `sim/economy/`, owner of that package):
   both choose in rounds that see each other's places, weigh `income_at_graduation` (the wage the market is
   heading to, over the trade's own reservation wage), and the opening seeds no written wage. Tests:
   `economy_labour_core`, `labour_core_switching`, `labour_core_entrants`.
-- The opening glut of skilled workers is Complaint 465. The dead constants `MAXIMUM_REALLOCATION_PERIODS`
+- The opening glut of skilled workers is Complaint 467. The dead constants `MAXIMUM_REALLOCATION_PERIODS`
   and `CONVERGENCE_TOLERANCE_HOURS` remain in `sim/algorithm_parameters.py` (outside the labour package);
   nothing reads them.
 

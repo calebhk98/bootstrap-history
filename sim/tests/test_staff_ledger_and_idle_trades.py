@@ -25,7 +25,7 @@ def _machinist_sim(manual=False):
 
 # 171: auto_hire does not re-hire a taught trade nothing draws on.
 s = _machinist_sim()
-s.step()
+s._step_staff()
 check("auto_hire does not hire a taught trade nothing uses",
       s.employees.get("machinist", 0.0) < 0.5, s.employees.get("machinist"))
 
@@ -36,7 +36,7 @@ s.done.add("mirror_amalgam")
 s.operating.add("mirror_amalgam")
 check("mirror_amalgam draws on a glassblower foreman",
       "glassblower" in s.venture_foremen_used(), s.venture_foremen_used())
-s.step()
+s._step_staff()
 check("auto_hire still replaces a taught trade an open concern draws on",
       s.employees.get("glassblower", 0.0) >= 0.5, dict(s.employees))
 
@@ -78,7 +78,7 @@ s.labour.hire("artisan", 10)
 start = s.employees["artisan"]
 mark = len(s.log)
 for _ in range(15):
-    s.step()
+    s._step_staff()
 lost_total = _lost_from_log(s.log, mark)["artisan"]
 check("logged artisan losses reconcile with the labour headcount over years of stepping",
       s.employees.get("artisan", 0.0) <= start
@@ -106,12 +106,12 @@ check("replace_lost_foremen hires the missing foreman", s.employees.get("glassbl
       dict(s.employees))
 s.employees.pop("glassblower")
 s.policy["auto_replace_foreman"] = False
-s.step()
+s._step_staff()
 check("with the policy off the step does not re-hire the foreman",
       s.employees.get("glassblower", 0.0) < 0.5, dict(s.employees))
 s.policy["auto_replace_foreman"] = True
 s.operating.add("mirror_amalgam")
 s.employees.pop("glassblower", None)
-s.step()
+s._step_staff()
 check("with the policy on the step re-hires the foreman",
       s.employees.get("glassblower", 0.0) >= 0.5, dict(s.employees))

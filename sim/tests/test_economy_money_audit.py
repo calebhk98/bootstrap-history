@@ -1,5 +1,8 @@
 """The money audit reads the supply without the edge accounts: a leak through an unnamed edge shows
 up in it although the book's own conservation check stays at zero."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy import money_audit

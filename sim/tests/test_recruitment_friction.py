@@ -1,5 +1,8 @@
 """A big hire is slower and dearer per head than a small one, and scarcer skills are harder to find
 (complaint 271). Stub world, no Sim; invented trade ids."""
+
+QUICK_TOPIC = True
+
 from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403

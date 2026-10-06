@@ -1,5 +1,8 @@
 """The audit's metal gap is read at a consistent point: coin wear booked at year close, after the mint
 last matched its metal to the coin, is not a gap; it is reported as metal awaiting wear."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy import money_audit

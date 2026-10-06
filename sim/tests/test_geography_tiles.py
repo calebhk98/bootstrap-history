@@ -20,6 +20,9 @@ generator in good faith.
 
 Structural checks on generated equal-area land tiles; does not pin exact numbers.
 """
+
+QUICK_TOPIC = True
+
 import json
 import os
 import sys

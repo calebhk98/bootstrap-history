@@ -1,5 +1,8 @@
 """The agent economy's money: more of it against the same goods raises prices, and every coin is accounted
 for (Complaint 389). Built on the engine-free fixture; each test states a direction, not a figure."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy.economy import Economy

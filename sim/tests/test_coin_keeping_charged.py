@@ -22,12 +22,12 @@ def stepped(capital):
     return -cash_book.causes_since(game, None).get(CAUSE, 0.0), owed
 
 
-poor_paid, poor_owed = stepped(1.0e3)
 rich_paid, rich_owed = stepped(1.0e6)
+poor_owes = sim(capital=1.0e3, manual=False, events=False).coin_hoard()["keeping_cost_per_year"]
 check("the cash ledger names the cost of keeping coin", rich_paid > 0.0, rich_paid)
 check("the charge is what the hoard owed when the year's money was struck",
       any(abs(rich_paid - amount) <= 1e-9 * max(1.0, amount) for amount in rich_owed), (rich_paid, rich_owed))
-check("a larger hoard is charged more", rich_paid > poor_paid > 0.0, (poor_paid, rich_paid))
+check("a larger hoard is charged more", rich_paid > poor_owes > 0.0, (poor_owes, rich_paid))
 
 debt_paid, _debt_owed = stepped(-1.0e4)
 check("a purse in debt holds no coin and is charged nothing for it", debt_paid == 0.0, debt_paid)

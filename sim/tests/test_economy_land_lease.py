@@ -1,4 +1,7 @@
 """Rent flicker: the posted rent moves a share of the way to what the tile's land clears at."""
+
+QUICK_TOPIC = True
+
 import unittest
 from types import SimpleNamespace
 

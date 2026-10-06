@@ -1,4 +1,7 @@
 """The actor registry is open to new kinds, spawners and country scopes, and the roster saves."""
+
+QUICK_TOPIC = True
+
 from .harness import check
 
 from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, CastEntry, CountryProfile, RecordedActor

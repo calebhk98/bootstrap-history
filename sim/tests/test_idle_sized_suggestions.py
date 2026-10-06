@@ -19,7 +19,7 @@ check("the program's cash cost is the engine's project cost",
 check("it never spends hours itself", test_sim.labour.director_hours_committed() == idle["committed_hours"])
 
 # a sized training suggestion for each oversubscribed trade
-crowded = sim(capital=1_000_000.0)
+crowded = test_sim
 crowded.trade_demand_vs_supply = lambda: {"machinist": {
     "demand_hours_this_year": 5000.0, "supply_hours_this_year": 1000.0, "oversubscribed": True,
     "projects_drawing_on_it": ["x"]}}

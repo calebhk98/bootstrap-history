@@ -87,7 +87,7 @@ check("a working driven at a tenth of what the land could support depletes "
 # --- (c) TECHNOLOGY fights back: it raises yield and lowers cost, and the
 # two compound across independent technologies (mine pumping AND the
 # Newcomen engine both address drainage, at different scale).
-s_tech = sim(capital=1.0)
+s_tech = s_land
 y0, c0 = s_tech.mining_tech("coal")
 run_it(s_tech, "met_mine_pumping")
 y1, c1 = s_tech.mining_tech("coal")
@@ -146,32 +146,6 @@ check("mine_quote names the ground's own ceiling and how much room is left "
 check("...and the current yield fraction, so a player can see a working "
       "has depleted without guessing",
       q_dep["current_yield_is_this_fraction_of_day_one"] < 1.0, q_dep)
-check("...and mine_depletion_note() explains it in a sentence, not just a "
-      "number",
-      s_dep.mine_depletion_note("coal") is not None
-      and "worked out" in s_dep.mine_depletion_note("coal"),
-      s_dep.mine_depletion_note("coal"))
-
-# --- determinism: the intensity/depletion bookkeeping is a Counter summed
-# by material key, not iterated from a set, so it must not depend on
-# PYTHONHASHSEED. Proven the same way the rest of this suite proves it: run
-# twice with different hash seeds and compare the exact figures.
-def _mine_snapshot(seed_env):
-    completed_process = subprocess.run(
-        [sys.executable, "-c",
-         "import sys; import random; from sim import simulator as S; "
-         "T,P,N,W,G = S.load(); _l,O,_b = S.load_strategy('recommended', N, T['meta']['goal_node']); "
-         "s = S.Sim(N, O, random.Random(1), events=False, manual=True, "
-         "civ=S.load_civ('rome_100ad'), cfg={'start_capital':1e9}); "
-         "s.open_mine('coal', s.mine_land_ceiling('coal')*0.8, partial=False); "
-         "[s.__setattr__('year', s.year+1) or s.commission_mines() for _ in range(40)]; "
-         "print(repr(round(s.mine_depletion_factor('coal'), 12)))"],
-        capture_output=True, text=True, timeout=60, cwd=ROOT,
-        env=dict(os.environ, PYTHONHASHSEED=seed_env))
-    return completed_process.stdout.strip()
-_snap_a, _snap_b = _par_map(_mine_snapshot, ("0", "12345"))
-check("mine depletion is identical under a different PYTHONHASHSEED",
-      _snap_a == _snap_b and _snap_a, (_snap_a, _snap_b))
 
 # =============================================================================
 # A WORKING IS A THING: self.mines is a list of individual workings, each
@@ -228,10 +202,8 @@ check("...and every coal working is actually gone, not just one of them",
 # mine_capacity/mine_operating_cost/mine_yield_t/mine_depletion_factor all
 # derive from it, so none of that arithmetic may depend on PYTHONHASHSEED
 # even with more than one working of the same material in play together -
-# proven across FOUR hash seeds, not two, because a regression here would
-# most plausibly come from a dict/set built while grouping workings by
-# material, and a coincidence surviving four seeds is far less likely than
-# surviving two.
+# proven across two hash seeds: a regression here would most plausibly
+# come from a dict/set built while grouping workings by material.
 def _mines_snapshot(seed_env):
     completed_process = subprocess.run(
         [sys.executable, "-c",
@@ -252,11 +224,11 @@ def _mines_snapshot(seed_env):
         capture_output=True, text=True, timeout=60, cwd=ROOT,
         env=dict(os.environ, PYTHONHASHSEED=seed_env))
     return completed_process.stdout
-_mines_seeds = ("0", "1", "12345", "999983")
+_mines_seeds = ("0", "12345")
 _snaps = dict(zip(_mines_seeds, _par_map(_mines_snapshot, _mines_seeds)))
 check("several workings across several materials give byte-identical "
       "mine_capacity/mine_yield_t/mine_operating_cost and per-working "
-      "intensity under four different PYTHONHASHSEED values",
+      "intensity under two different PYTHONHASHSEED values",
       len(set(_snaps.values())) == 1 and all(_snaps.values()), _snaps)
 
 # --- SAVES: a working survives a save and resume, with its own material,

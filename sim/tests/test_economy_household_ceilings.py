@@ -1,4 +1,7 @@
 """A cohort's bid for a good is capped at what one household of its class can pay for one unit."""
+
+QUICK_TOPIC = True
+
 import dataclasses
 import unittest
 

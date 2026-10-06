@@ -1,5 +1,8 @@
 """Complaints/391: every good a civilisation's households buy is supplied by a technique it holds,
 by an enabled partner, or is declared unsupplied with a reason in its own file."""
+
+QUICK_TOPIC = True
+
 import json
 import os
 import unittest
