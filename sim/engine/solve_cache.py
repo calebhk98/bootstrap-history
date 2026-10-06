@@ -57,7 +57,8 @@ def environment_digest(source_modules: Optional[Tuple[str, ...]] = None) -> str:
         if source_modules is None:
             _digest_tree(digest, os.path.join(_ROOT, "sim"), (".py",), skip_directories=("tests",))
         else:
-            for path in source_closure.source_files(_ROOT, source_modules):
+            closure_cache = os.path.join(os.path.dirname(DEFAULT_CACHE_DIRECTORY), "source_closure")
+            for path in source_closure.source_files(_ROOT, source_modules, cache_directory=closure_cache):
                 _digest_file(digest, path)
         _environment_digests[source_modules] = digest.hexdigest()
     return _environment_digests[source_modules]
