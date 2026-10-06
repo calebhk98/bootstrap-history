@@ -166,7 +166,7 @@ class CountryProfile:
 	price_index: float = 1.0
 	literacy_general: float = 0.0
 	literacy_elite: float = 0.0
-	home_regions: List[str] = field(default_factory=list)
+	home_tiles: List[str] = field(default_factory=list)
 	# where the country is on the map (a tile or region id the world can measure distance to)
 	location: Optional[str] = None
 	# the techniques the country knows at the start: its actors' baseline tree

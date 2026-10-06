@@ -70,7 +70,7 @@ class WeatherCellsTests(unittest.TestCase):
 
     def test_a_civilisation_with_no_home_regions_gets_no_cells(self):
         test_sim = _rome_sim()
-        test_sim.civ = dict(test_sim.civ, home_regions=[])
+        test_sim.civ = dict(test_sim.civ, home_regions=[], home_tiles=[])
         self.assertEqual(test_sim._compute_farm_weather_cells(), [])
 
     def test_a_civilisation_naming_an_unmapped_but_real_region_degrades_to_one_cell(self):

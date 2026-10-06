@@ -10,6 +10,7 @@ from unittest import mock
 from .harness import *  # noqa: F401,F403
 from sim.engine import core, invariants
 from sim.labour import labour_allocation
+from sim.geography.api import tiles_held
 from sim.world import agriculture, land
 from sim.labour import labour_market
 
@@ -218,7 +219,7 @@ class ClearingLadderTests(unittest.TestCase):
     def test_unfarmable_parcels_are_not_arable_ground(self):
         geography = _geography_with_fertility(
             CIV_ID, lambda rank, count: 0.0 if rank >= count // 2 else 0.8)
-        territory = land.territory_farmland(S.load_civ(CIV_ID)["home_regions"], geography)
+        territory = land.territory_farmland(tiles_held(S.load_civ(CIV_ID)), geography)
         self.assertTrue(territory.ladder)
         self.assertTrue(all(fertility > 0.0 for fertility, _hectares in territory.ladder))
         self.assertAlmostEqual(sum(hectares for _f, hectares in territory.ladder),
@@ -227,7 +228,7 @@ class ClearingLadderTests(unittest.TestCase):
 
     def test_ground_with_no_farmable_tile_is_empty_not_an_error(self):
         geography = _geography_with_fertility(CIV_ID, _uniform(0.0))
-        territory = land.territory_farmland(S.load_civ(CIV_ID)["home_regions"], geography)
+        territory = land.territory_farmland(tiles_held(S.load_civ(CIV_ID)), geography)
         self.assertEqual(territory.ladder, [])
         self.assertEqual(territory.arable_hectares, 0.0)
 

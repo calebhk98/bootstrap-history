@@ -256,7 +256,6 @@ class Household(Actor):
 		self._goods_mkt_op_factor_cache: Any = None
 		self._material_demand_cache: Any = None
 		self._demand_by_tag_cache: Any = None
-		self._freight_distance_km_cache: Any = None
 		self._demand_by_emp_key_cache: Any = None
 		self._stock_throttle_sig: Any = None
 		self._last_buy_refusal: Any = None
