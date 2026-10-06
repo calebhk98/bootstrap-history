@@ -6,7 +6,7 @@ Once the school, the patrons and the money exist, cash piles up faster than rese
 
 Every entry here is an ordinary node in `data/branches/56_benefactions.json`. Nothing sells anything: the return is what the work does through the game's normal channels (listed in `data/branches/MECHANICS.md`). Building costs labour and materials at the usual rates. Running costs come every year the doors are open, worked out from the people and consumables the work needs (each node's `_internal` field shows the working), and the effect stops when the money does. Every work marked repeatable can be founded again, dearer each time, up to what the population can fill. All sizes are heuristics: run `why <id>` for the current cost, upkeep and figures.
 
-Not yet covered: museums, newspapers and gambling houses as benefactions (the tree has them only as businesses with no effect on the household), colonies, and paying off a state's debt outright rather than subsidising it.
+Not yet covered: gambling houses and lotteries as licensed works, district clinics, settled colonies with land and people (only a trading post exists), and paying off a state's debt outright rather than subsidising it. `Complaints/190-late-game-uses-for-money.md` lists what each needs.
 
 ---
 
@@ -159,3 +159,73 @@ Not yet covered: museums, newspapers and gambling houses as benefactions (the tr
 **Prerequisites.** `exp_openocean_navigation`, `fin_survey_map`, `exp_trade_route_extend`.
 
 **Cost & labour.** Hulls, iron, rope, provisions; crews and repairs each season. ESTIMATED.
+
+### ben_public_museum - Public museum
+
+**What it is / why you want it.** A building for a collection of texts, specimens and instruments, with curators, open to anyone. It teaches a little and earns the founder standing.
+
+**Why you would never guess this.** A collection is read by few and only teaches as far as literacy reaches; as a safeguard for knowledge it would count only as one more copy in one town, which the game does not yet model.
+
+**Prerequisites.** `fin_museum`, `school_founded`.
+
+**Cost & labour.** Masons and carpenters to build; curators and scribes, fuel and paper each year. ESTIMATED.
+
+### ben_free_press - Endowed free press
+
+**What it is / why you want it.** A paper kept printing whether or not it sells. It gives a town something to read, carries prices to distant markets, and makes its founder known.
+
+**Why you would never guess this.** The same press that widens your markets draws the eye of officials: a paper is both a help and a danger, and it raises the alarm and the notice your work causes while it runs.
+
+**Prerequisites.** `prn_newspaper_institution`, `fin_newspaper_business`.
+
+**Cost & labour.** Printers, correspondents and engravers on the payroll; paper and ink each year. ESTIMATED.
+
+### ben_city_electric_lighting - Electric lighting for a city
+
+**What it is / why you want it.** Lamps along a town's streets, kept by electricians. Lit streets are safer for your people after dark and earn a little respect.
+
+**Why you would never guess this.** It draws power from the grid the whole time it is lit, so it needs generating capacity as well as lamps; and it has a running cost the bare street-lighting technique does not.
+
+**Prerequisites.** `civ_street_lighting`, `hom_electric_lighting`.
+
+**Cost & labour.** Electricians and labourers to build and keep; copper and glass each year. ESTIMATED.
+
+### ben_fire_and_flood_brigades - Fire and flood brigades
+
+**What it is / why you want it.** Paid crews with pumps, buckets and sandbags, drilled to turn out at a bell. They hold fire and flood damage to your own people and workshops to a part of what it would be.
+
+**Why you would never guess this.** It protects what you own, not the town: a quarter without a brigade burns as before.
+
+**Prerequisites.** `civ_aqueduct_roman`, `patron_local`.
+
+**Cost & labour.** Labourers and carpenters on the payroll; rope and iron each year. ESTIMATED.
+
+### ben_masons_school - School of the building trades
+
+**What it is / why you want it.** A trade's own school: master masons teach drawing and setting out. Masons do more per hour and the household can keep a few more trained people.
+
+**Why you would never guess this.** The gain is to one trade only; the effect of having built it stays when the doors close, while the extra trained staff go with the money.
+
+**Prerequisites.** `school_founded`, `fin_guild`, `fin_apprenticeship`.
+
+**Cost & labour.** Teachers and masters on the payroll; parchment and paper each year. ESTIMATED.
+
+### ben_technical_school - Technical school for machinists
+
+**What it is / why you want it.** A school with a shop floor and a classroom for drawing and arithmetic. Machinists do more per hour and the household can keep a few more trained people.
+
+**Why you would never guess this.** Like the building trades school, it helps one trade; the machinist's hour is what the late-game works draw on.
+
+**Prerequisites.** `school_founded`, `fin_apprenticeship`, `mfg_engine_lathe`.
+
+**Cost & labour.** Instructors and machinists on the payroll; iron, coal and paper each year. ESTIMATED.
+
+### ben_trading_post - Fortified trading post
+
+**What it is / why you want it.** A walled depot on a far coast where ships refit, trade and take on stores. Goods travel further and fewer voyages are lost.
+
+**Why you would never guess this.** It is a post, not a colony: it holds no land beyond its walls and no people but its own, and it has to be fed from home every year.
+
+**Prerequisites.** `exp_colony_administration`, `fin_trading_post`.
+
+**Cost & labour.** Masons, carpenters and labourers to build; factor, clerks, labourers and provisions each year. ESTIMATED.
