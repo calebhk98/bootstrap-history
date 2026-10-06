@@ -57,6 +57,8 @@ _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(
 if _REPO_ROOT not in sys.path:
     sys.path.insert(0, _REPO_ROOT)
 
+from sim import cache_root  # noqa: E402
+from sim.tests import machine_slots  # noqa: E402
 from sim.tests.discovery import discover_topics  # noqa: E402
 
 # Every sim/tests/test_*.py is a topic, in sorted order (see discovery.py).
@@ -152,7 +154,7 @@ def _print_topic_timing(topic_costs):
              sum(count for _, _, count in topic_costs), len(topic_costs)))
 
 
-_TIMES_FILE = os.path.join(_REPO_ROOT, ".cache", "test_topic_seconds.json")
+_TIMES_FILE = os.path.join(cache_root.cache_root(), "test_topic_seconds.json")
 
 
 def _load_topic_seconds():
@@ -257,7 +259,7 @@ def _report_progress(slugs, results, progress):
         _save_topic_seconds([(slug, results[slug]["seconds"], 0) for slug in slugs if slug in results])
 
 
-def _fork_topics(slugs, harness, result_dir):
+def _fork_topics(slugs, harness, result_dir, held_slots=()):
     """Run topics in a child forked from this warmed process; returns the child's pid and files.
 
     The child starts with everything this process has already imported, loaded and built,
@@ -269,6 +271,8 @@ def _fork_topics(slugs, harness, result_dir):
     if pid:
         return pid, result_path, error_path
     status = 1
+    for slot in held_slots:     # the parent holds the slots; a copy here would keep them past their worker
+        machine_slots.release(slot)
     try:
         error_handle = os.open(error_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
         os.dup2(error_handle, 2)
@@ -304,13 +308,19 @@ def _run_topics_forked(run_now, harness, jobs):
     with tempfile.TemporaryDirectory(prefix="rome_suite_") as result_dir:
         while pending or running:
             while pending and len(running) < jobs:
+                # Workers draw on the machine's slot pool; while ours are running, reap rather than wait.
+                slot = machine_slots.acquire(wait=not running)
+                if slot is False:
+                    break
                 slugs = pending.pop(0)
-                pid, result_path, error_path = _fork_topics(slugs, harness, result_dir)
-                running[pid] = (slugs, result_path, error_path)
+                pid, result_path, error_path = _fork_topics(
+                    slugs, harness, result_dir, [entry[3] for entry in running.values()])
+                running[pid] = (slugs, result_path, error_path, slot)
             pid, wait_status = os.wait()
             if pid not in running:
                 continue
-            slugs, result_path, error_path = running.pop(pid)
+            slugs, result_path, error_path, slot = running.pop(pid)
+            machine_slots.release(slot)
             results = {}
             try:
                 with open(result_path, encoding="utf-8") as handle:

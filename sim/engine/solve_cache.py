@@ -14,6 +14,7 @@ import os
 import tempfile
 from typing import Any, Callable, Dict, Iterator, Optional, Tuple
 
+from sim import cache_root
 from sim.engine import source_closure
 
 try:
@@ -22,7 +23,7 @@ except ImportError:  # Windows: misses are not coordinated
     fcntl = None
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-DEFAULT_CACHE_DIRECTORY = os.path.join(_ROOT, ".cache", "price_solves")
+DEFAULT_CACHE_DIRECTORY = cache_root.cache_directory("price_solves")
 _DIGEST_LENGTH = 32
 _DATA_SUFFIXES = (".json", ".md", ".txt", ".csv")
 

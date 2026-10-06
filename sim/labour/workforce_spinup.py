@@ -22,6 +22,7 @@ import os
 import tempfile
 from typing import Any, Callable, Dict, Iterable, Mapping, Optional, Set
 
+from sim import cache_root
 from sim.constants import declare
 from sim.world import demand, need_demand
 from sim.labour import labour_market, legacy_trade_defaults
@@ -29,7 +30,7 @@ from sim.labour import labour_market, legacy_trade_defaults
 FARM_TRADE = legacy_trade_defaults.FARM_TRADE
 
 _REPOSITORY_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-DEFAULT_CACHE_DIRECTORY = os.path.join(_REPOSITORY_ROOT, ".cache", "workforce_spinup")
+DEFAULT_CACHE_DIRECTORY = cache_root.cache_directory("workforce_spinup")
 
 SPIN_UP_MAX_YEARS = declare(
     "SPIN_UP_MAX_YEARS", 5000,
