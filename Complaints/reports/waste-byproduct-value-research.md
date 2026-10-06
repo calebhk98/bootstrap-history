@@ -2,8 +2,11 @@
 
 **Status:** research report, no code changed. Written for the owner decision of 2026-10-06 that a waste
 by-product may carry a negative value, a disposal cost.
-**Marking:** a claim with a link was read in this session (search result text or page). A claim marked
-*(recalled)* comes from memory of the literature and has not been re-read; check it before relying on it.
+**Marking:** a claim marked *(read)* was checked against a page or PDF opened in the verification pass
+(2026-10-06), with the citation given. *(snippet)* means only a search summary or listing was seen, or the
+page could not be opened. *(recalled)* comes from memory of the literature and has not been re-read.
+*(corrected)* marks a claim in the first draft that the source did not support, with what the source says.
+*(disputed)* means sources disagree. An unmarked link was seen as a search result only.
 Where this report names code, it was read on this branch.
 
 ## 0. What the code does today
@@ -38,28 +41,44 @@ stable; the market clears in log price. A design has to address both.
 In the von Neumann growth model any good in surplus has price zero and any process that would lose money at
 the going prices is not run; the surplus can always be thrown away at no cost. Salvadori and Kurz compare it
 with Sraffa's joint production, where Sraffa has no free disposal and so the same system can need a
-negative price ([Kurz, Salvadori, "Sraffa and von Neumann"](https://econbiz.de/Record/sraffa-and-von-neumann-kurz-heinz/10005484711);
-[Kurz and Salvadori on Sraffa's early joint-production work](https://oreilly.com/library/view/competition-value-and/9781000453140/xhtml/ch11.xhtml)).
-Search summaries state that with free disposal prices are non-negative and excess demands non-positive, and
-that with enforced market clearing prices may be negative, with a solution to each of the two price
-equilibrium problems shown to exist ([price equilibrium paper hit](https://par.nsf.gov/servlets/purl/10343279);
-I read only the summary, not the proof).
+negative price *(snippet: [Kurz, Salvadori, "Sraffa and von Neumann"](https://econbiz.de/Record/sraffa-and-von-neumann-kurz-heinz/10005484711)
+and [Kurz and Salvadori on Sraffa's early joint-production work](https://oreilly.com/library/view/competition-value-and/9781000453140/xhtml/ch11.xhtml);
+both pages blocked the fetch, so neither was opened)*.
+*(read)* Xu and Peskin, "The impact of universal recycling on the evolution of economic diversity", PLOS ONE
+17(1): e0262184, 2022, abstract and introduction ([link](https://par.nsf.gov/servlets/purl/10343279)): in
+their von Neumann extension, scenario one has non-negative prices and non-positive excess demand (any good in
+excess supply becomes a free good); scenario two has enforced market clearing and prices allowed to be
+negative, representing an economy where recycling is required so excess supply cannot be discarded. They
+state that the solution to each of the two price equilibrium problems exists at any time, and that a firm may
+have to pay another to take unwanted by-products away, which makes the good's price negative (the removal
+service has a positive price Ps, the good a negative price Pg, and the payer pays Ps minus Pg per unit). I
+did not read the proofs.
 
 What goes wrong:
 * Free disposal makes every unwanted output cost nothing to remove. That is false for slag heaps, whey or
   tar, and it hides exactly the cost we want the sim to show.
 * Drop free disposal and require exact clearing and equilibrium can fail to exist or give negative prices
   and negative activity levels. A formal solution can have negative quantities or prices in square
-  multiple-product systems ([Cottrell, OPE-L thread on negative values in pure joint production](https://users.wfu.edu/cottrell/OPE/archive/0410/0029.html);
-  [Nermuth 1984](https://homepage.univie.ac.at/manfred.nermuth/NERMUTH1984.pdf), summary only).
+multiple-product systems *(read, corrected)*: Nermuth, "The Linear Model of Production", University of Vienna
+Working Paper 8401, January 1984 (reproduced 1990), section 1.1 remark "ad (e)" and section 1.2
+([PDF](https://homepage.univie.ac.at/manfred.nermuth/NERMUTH1984.pdf)), says the possibility of negative prices
+and labour values "was pointed out by Sraffa himself", and that the model requires nonnegative quantities as an
+assumption. The paper calls itself a summary of known results. The first draft also cited a
+[Cottrell OPE-L post](https://users.wfu.edu/cottrell/OPE/archive/0410/0029.html) for negative values; that page
+(Philip Dunn, 26 October 2004) discusses indeterminacy of value under joint production and proposes a
+composite commodity to keep value positive, and does not itself show negative values or quantities.
 * Which process is run depends on prices and prices on which process is run (a non-convex choice), the
   same fixed-point difficulty our solver iterates through.
 
 ### 1.2 Sraffa and the classical joint-production literature
 
-Sraffa treats everything present at the start of a period as an input and everything at the end as an
-output, so waste is an output with a possibly negative price if the producer pays to have it removed
-([OPE-L discussion quoting this reading](https://users.wfu.edu/cottrell/ope/archive/0410/0107.html)). The price
+Sraffa's price system admits negative prices *(read: Nermuth 1984, section 1.1 "ad (e)", link in 1.1)*.
+*(corrected)* The first draft attributed to Sraffa the reading that waste is an output with a possibly negative
+price when the producer pays for removal, citing an
+[OPE-L post](https://users.wfu.edu/cottrell/ope/archive/0410/0107.html). That post (Philip Dunn, 26 October
+2004) only says the "Great Circular Flow of Torrens, Malthus, Ricardo, Marx and Sraffa treats everything present
+at the start of a production period as input and everything present at the end, just before sales, as output";
+it says nothing about waste or negative prices, so the waste-as-negative-price step is our inference. The price
 system is square only if the number of processes equals the number of goods, which is rarely true once a
 by-product exists; the system is then determined by choosing which processes run, as in von Neumann.
 
@@ -74,9 +93,15 @@ from substances that arise as undesired joint outputs, and whether an output is 
 property of the substance itself but depends on the context of production"
 ([The concept of joint production and ecological economics](https://fis.leuphana.de/en/publications/the-concept-of-joint-production-and-ecological-economics-2/);
 [Ambivalent joint production and the natural environment](https://fis.leuphana.de/de/publications/ambivalent-joint-production-and-the-natural-environment-an-econom/)).
-One chapter title in the listing is "Waste Paper: Price Ambivalence", the same good changing sign of price. I
-did not read the texts; the specific claim that Baumgartner and Faber give a negative price when disposal is
-costly, and zero or positive when a use exists, is *(recalled)*.
+*(read)* The quoted sentence is on the publisher listing of Baumgartner, "Ambivalent Joint Production and the
+Natural Environment: An Economic and Thermodynamic Analysis", Physica-Verlag, Heidelberg, 2000 (Contributions
+to Economics). *(corrected)* It is not in the abstract of Baumgartner, Dyckhoff, Faber, Proops and Schiller,
+"The concept of joint production and ecological economics", Ecological Economics, 2001, whose abstract (read)
+says only that joint production is a conceptual foundation of ecological economics, arises from
+thermodynamics, and raises concerns of responsibility and knowledge. One chapter title in the listing is
+"Waste Paper: Price Ambivalence" *(snippet)*. The specific claim that Baumgartner and Faber give a negative
+price when disposal is costly, and zero or positive when a use exists, is *(recalled)*; no text of the book
+was opened.
 
 What goes wrong: the framework tells you the sign is a property of context, which is the behaviour we want,
 but it supplies no algorithm to find the price in a model with many goods and techniques.
@@ -85,29 +110,44 @@ but it supplies no algorithm to find the price in a model with many goods and te
 
 Leontief adds pollution as an extra commodity (a "bad") produced jointly with the good, plus abatement
 sectors that consume inputs to remove it; antipollution inputs are intermediate demand
-([summary of the 1970 model](https://www.cambridge.org/core/books/inputoutput-analysis/environmental-inputoutput-analysis/A1048A88EE6213301A079B741A43A7C2);
-[Allan et al. 2007](https://storre.stir.ac.uk/bitstream/1893/7702/1/Allan%20et%20al%20ESR%202007_turner%20last.pdf)).
-The shadow price of abatement is the price the bad carries *(recalled)*. Nakamura and Kondo's waste
+*(snippet)* ([Miller and Blair, Input-Output Analysis, Cambridge University Press, 2009, ch. 10](https://www.cambridge.org/core/books/inputoutput-analysis/environmental-inputoutput-analysis/A1048A88EE6213301A079B741A43A7C2),
+whose page only says Leontief (1970) "provided one of the key methodological extensions"; the
+[Allan et al. 2007](https://storre.stir.ac.uk/bitstream/1893/7702/1/Allan%20et%20al%20ESR%202007_turner%20last.pdf)
+PDF and the 1970 paper, Review of Economics and Statistics 52(3): 262-271, could not be opened, so the
+detail of the model rests on search summaries that it adds pollution generation and separate pollution
+elimination sectors). The shadow price of abatement is the price the bad carries *(recalled)*. Nakamura and Kondo's waste
 input-output model (WIO) lets waste flows be allocated to treatment sectors (landfill, incineration,
-recycling) and uses linear programming to choose the cheapest treatment mix
-([Nakamura, landfill capacity](https://www.iioa.org/conferences/13th/files/Nakamura_landfill.pdf);
-[Nakamura and Kondo book listing](https://www.nhbs.com/waste-input-output-analysis-book-2);
-[Kagawa on WIO](https://www.iioa.org/conferences/15th/pdf/Kagawa1.pdf)).
+recycling). *(read)* Nakamura, "Inter-industry analysis of the demand for landfill capacity"
+([IIOA 13th conference paper](https://www.iioa.org/conferences/13th/files/Nakamura_landfill.pdf)): a WIO model
+of the Japanese economy with fifty-two industrial sectors, three waste disposal sectors and twenty-four waste
+types, run as scenarios of disposal and recycling options. Its conclusion says the treatment cost of
+industrial waste is carried by the industry that emits it and has been rising as new landfill sites become
+harder to open. *(corrected)* The first draft said the model uses linear programming to choose the cheapest
+treatment mix; that paper does not describe linear programming, and Kagawa's
+[WIO paper](https://www.iioa.org/conferences/15th/pdf/Kagawa1.pdf) (read, endogenous treatment sectors in a
+standard WIO) did not show it in the text I searched either. The programming claim is *(recalled)* from the
+Nakamura and Kondo book ([listing](https://www.nhbs.com/waste-input-output-analysis-book-2), *(snippet)*).
 
 What goes wrong: the abatement and treatment sectors are fixed in the technology matrix, so a treatment that
-is not in the matrix does not exist; the price of waste is a dual variable of a linear programme and can
+is not in the matrix does not exist; if treatment is chosen by a linear programme (recalled, see above) the price of waste is its dual variable and can
 jump when the optimal treatment mix changes; landfill capacity is a stock but the matrix is a flow. The
-landfill-capacity paper is the useful part: treat landfill volume as a scarce input with its own price.
+landfill-capacity paper is the useful part: it treats landfill volume as a binding capacity (it gives a figure
+for national capacity and a rising treatment cost). That landfill volume should carry its own price is our design
+inference, not a statement in the paper.
 
 ### 1.5 Physical and monetary supply and use tables (SEEA)
 
 SEEA separates flows into natural inputs, products, and residuals; residuals (solid waste, emissions) are
 recorded in physical units and flow from the economy to the environment, or between economic units
-([SEEA Central Framework ch. 3](https://unstats.un.org/unsd/statcom/doc12/SEEA%20Central%20Framework%20Ch3.pdf);
-[SEEA ch. 2](https://ecosoc.un.org/sites/default/files/documents/2023/SEEA-Central-Framework-Ch2-E.pdf)).
-Monetary tables record only market transactions; a residual with no payment has no monetary row, and the
-payment for waste collection is a service sold by the waste industry, so the sign sits on the service, not
-on the residual *(recalled)*.
+*(read)* ([SEEA Central Framework, ch. 3](https://unstats.un.org/unsd/statcom/doc12/SEEA%20Central%20Framework%20Ch3.pdf),
+paragraphs 3.20 on flows within the economy being products or residuals and flows to the environment being
+residuals, 3.64 on physical flow accounts of products being limited to those with positive monetary value,
+3.75 and 3.76 below). Paragraph 3.75: where a discarder receives money or other benefits for a discarded
+product, it is a transaction in a product, not a residual (3.85 gives scrap metal as the example). Paragraph
+3.76: payments by a generator of residuals to establishments that collect, treat or transform them are payments
+for services and transactions in products, while the residual flows are recorded separately. So the sign sits
+on the service and the payment, not on the residual. [SEEA ch. 2](https://ecosoc.un.org/sites/default/files/documents/2023/SEEA-Central-Framework-Ch2-E.pdf)
+was not opened.
 
 What goes wrong: it is an accounting convention, not a price theory. It does tell us the right bookkeeping:
 keep the residual in physical units, price the service of handling it.
@@ -125,10 +165,12 @@ complementarity solvers need a bounding rule.
 
 ISO 14044 gives a hierarchy: avoid allocation by subdividing the process or by system expansion (credit the
 co-product for the production it displaces); else allocate by physical relationships; else by economic value
-([ISO 14044 hierarchy summary](https://link.springer.com/doi/10.1007/s11367-014-0812-4);
-[practitioner summary](https://greencalculus.com/glossary/allocation/)). Switching from mass to economic
-allocation can move a co-product's footprint by a large factor, so the result depends on the rule (same
-sources).
+*(read, secondary source)*: [dei.so practitioner article](https://dei.so/what-is-allocation-and-system-expansion-in-life-cycle-assessment-lca/)
+citing ISO 14044 clause 4.3.4.2. The standard itself is paywalled and was not opened. The same article gives a
+chlor-alkali worked example in which switching from mass to economic allocation moves hydrogen's share of the
+burden by a factor of about five to six, so the result depends on the rule. The
+[Springer paper](https://link.springer.com/doi/10.1007/s11367-014-0812-4) and the
+[greencalculus glossary](https://greencalculus.com/glossary/allocation/) were not opened *(snippet)*.
 
 What goes wrong: allocation is arbitrary (physical vs economic vs energy), and system expansion needs an
 assumed displaced product, which is a modelling choice. The useful idea for us: system expansion is
@@ -145,16 +187,22 @@ is the accountant's version of our case.
 
 ### 1.9 Markets where a good crosses zero
 
-* Whey: historically a negative-value by-product of cheese making, now a source of valuable derivatives
-  after processing technology arrived; acid whey today still costs the dairy to haul away, quoted per
-  tanker load ([review article hit](https://www.nucleodoconhecimento.com.br/?p=96244);
-  [Bullvine on acid whey pricing](https://www.thebullvine.com/news/foremost-priced-its-acid-whey-in-2023-most-co-ops-still-havent/)).
-* Blast-furnace slag: first used as a cheap, near worthless adulterant of cement, then found to improve it
-  ([911 Metallurgist, slag cement](https://www.911metallurgist.com/?p=654964)).
-* Coal tar: "arguably the first large-scale industrial waste", turned into a dye feedstock (mauve in the
-  1850s) once the benzene to aniline chemistry was known
-  ([Scientific American excerpt](https://www.scientificamerican.com/article/toms-river-excerpt-on-aniline-dye);
-  [ChemistryViews](https://chemistryviews.org/?p=72858)).
+* Whey: *(read, partly corrected)* Amaral and da Silva, "Whey in the industry: environmental and valorization
+  impacts" ([review](https://www.nucleodoconhecimento.com.br/?p=96244)), says that in the past whey was not used
+  or only used in animal feed, and that knowledge of its composition and technology made it an ingredient of
+  great value for food and pharmaceutical industry; it does not say its past price was negative, so
+  "negative-value historically" is not supported there. Acid whey today: *(read)* [Bullvine, 9 June 2026](https://www.thebullvine.com/news/foremost-priced-its-acid-whey-in-2023-most-co-ops-still-havent/)
+  says a plant moving one 6,000-gallon tanker a day pays roughly 300 dollars per load, about a nickel a
+  gallon, to make it disappear.
+* Blast-furnace slag: *(read)* [911 Metallurgist, slag cement](https://www.911metallurgist.com/?p=654964)
+  quotes that the first use in cement was "to use an almost worthless and cumbersome by-product as a not readily
+  detectable adulterant in Portland cement", and that the adulterated cement was found stronger, with ground
+  chilled slag usually improving quality. The article is an old text reproduced; no author or date was shown.
+* Coal tar: *(read)* [Scientific American, Toms River excerpt](https://www.scientificamerican.com/article/toms-river-excerpt-on-aniline-dye)
+  calls it "arguably the first large-scale industrial waste", a by-product of coal gas and coke, dumped in pits
+  or waterways; Perkin found mauve from aniline in 1856. The page does not state the benzene to aniline
+  chemistry causal step beyond that. [ChemistryViews](https://chemistryviews.org/?p=72858) returned a server
+  error and was not opened *(snippet)*.
 
 In all three the sign flip is caused by a new technique (a user), not by a change in the producer's
 process. That the same material can carry both signs in different places at once (transport) is *(recalled)*
@@ -164,8 +212,10 @@ general economics, not from these pages.
 
 A recent agent-based model of industrial symbiosis has firms trading by-products in a spatial double
 auction, with transport costs, disposal penalties and resource scarcity in each firm's profit, and prices
-and quantities emerging from local trades ([arXiv 2512.17979](https://arxiv.org/abs/2512.17979v1), abstract
-read only). A disposal penalty paid when a by-product is not sold is equivalent to a negative seller
+and quantities emerging from local trades *(read, abstract only)*: Mastio, Saves, Gaudou and Verstaevel, "Adaptive Agents in Spatial Double-Auction
+Markets: Modeling the Emergence of Industrial Symbiosis", AAMAS 2026 ([arXiv 2512.17979](https://arxiv.org/abs/2512.17979v1)).
+The abstract names reinforcement-learning bidding, transportation costs and disposal penalties; "resource
+scarcity" and "profit" are from the first-draft summary and are not in the abstract. A disposal penalty paid when a by-product is not sold is equivalent to a negative seller
 reservation price. Most other agent models in this area treat disposal as an exogenous fee *(recalled)*.
 What goes wrong: an exogenous fee is a hardcoded outcome by our rule 4.1.
 
@@ -388,7 +438,10 @@ Each stage follows TDD (section 6 of `CLAUDE.md`): a regression test first showi
 
 ## Sources
 
-All links appear inline above. Items marked *(recalled)* were not read: Baumgartner and Faber's specific
-negative-price statement, the Leontief shadow-price reading, the SEEA monetary treatment of waste services,
-typical CGE waste sectors, regional sign differences, and the claim about exogenous fees in agent models.
-The Nermuth 1984 and price-equilibrium hits were seen as search summaries only.
+All links appear inline above. Verification pass of 2026-10-06: items marked *(read)* were opened (PDFs
+converted to text); *(corrected)* items record where the first draft overstated a source. Still *(recalled)*
+or *(snippet)*: Baumgartner and Faber's specific negative-price statement, the Leontief 1970 detail and the
+shadow-price reading (Allan et al. and the 1970 paper could not be opened), the Kurz and Salvadori pages (fetch
+blocked), the linear-programming claim for Nakamura and Kondo, typical CGE waste sectors, regional sign
+differences, the claim about exogenous fees in agent models, the ISO 14044 text itself, and the ChemistryViews
+page.
