@@ -605,3 +605,12 @@ check("...and beginning again takes it off the bill",
        s_ce.project_cost("identity_cover")))
 check("...and the credit is spent once, not every time",
       "identity_cover" not in s_ce.paid_towards, s_ce.paid_towards)
+
+# --- BREAK: a household past its credit line kept opening shut concerns (a door fee ignores the debt),
+# every cycle buying doors the creditors then seized, so debt ran to several times the line.
+s_past = sim(capital=-1.0)
+s_past.done.add(_short); s_past._done_changed()
+s_past.state.household.capital = -3.0 * s_past.credit_limit()
+check("nothing can be opened with a door fee once the debt is past the credit line",
+      s_past.spending_power("open") == 0.0 and _short not in s_past.auto_open_ventures(),
+      (s_past.spending_power("open"), s_past.capital, s_past.credit_limit()))

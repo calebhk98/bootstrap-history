@@ -1,5 +1,6 @@
 """Tile fertility and region fertility are one scale: a tile's fertility is
 that of its arable ground, and a region's is derived from its tiles."""
+from sim.geography.api import load_geography
 import copy
 import json
 import os
@@ -12,8 +13,7 @@ _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__
 sys.path.insert(0, os.path.join(_ROOT, "tools"))
 import generate_geography_tiles as generator  # noqa: E402
 
-with open(os.path.join(_ROOT, "data", "world", "geography.json"), encoding="utf-8") as _handle:
-    _GEOGRAPHY = json.load(_handle)
+_GEOGRAPHY = load_geography()
 _TILES = _GEOGRAPHY["land_tiles"]["tiles"]
 _REGION_TO_TILES = _GEOGRAPHY["land_tiles"]["region_to_tiles"]
 

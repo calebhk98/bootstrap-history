@@ -5,8 +5,8 @@ import unittest
 from sim.economy import merchants, merchants_credit
 from sim.economy.market_areas import AreaMap
 from sim.economy.merchants import Merchant
-from sim.economy.tile_costs import CarriageTable, Edge
 from sim.economy.types import GoodSpec
+from sim.tests.test_economy_tile_costs import star_tiles, unit_cost_table
 
 TILES = ("a", "b", "c", "d")        # a, b, c are cheap sources; d is the dear destination
 SALT = GoodSpec("salt", 1000.0, 0.0, 0.0, "food")
@@ -25,8 +25,7 @@ class View:
 
 
 def world():
-    edges = [Edge(tile, "d", ("land",), 100.0) for tile in "abc"]
-    carriage = CarriageTable(TILES, edges, {"land": 0.01})
+    carriage = unit_cost_table(star_tiles("d", ["a", "b", "c"], 100.0), "a", "d")      # a tonne from any source costs one
     area_map = AreaMap(TILES, carriage, [(SALT, 2.0)], {"a": 10.0, "b": 9.0, "c": 8.0, "d": 5.0}, threshold_share=0.01)
     return carriage, area_map
 
@@ -76,7 +75,8 @@ class SourceTests(unittest.TestCase):
     def test_the_destinations_room_goes_to_sources_that_can_fill_it(self):
         carriage, area_map = world()
         who = merchant()
-        who.expected_volumes[("salt", area_map.area_of("salt", "a"))] = 2.0        # the best-priced source has little to sell
+        who.expected_prices[("salt", area_map.area_of("salt", "a"))] = 1.9        # the best-priced source...
+        who.expected_volumes[("salt", area_map.area_of("salt", "a"))] = 2.0        # ...has little to sell
         who.expected_volumes[("salt", area_map.area_of("salt", "b"))] = 1000.0
         who.expected_volumes[("salt", area_map.area_of("salt", "c"))] = 1000.0
         orders = merchants.orders(who, View(), carriage, area_map, 1e6, {}, SPECS, 0.0)

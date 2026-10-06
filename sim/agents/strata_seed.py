@@ -11,7 +11,8 @@ from .tuning_strata import (DEFAULT_ARTISAN_SHARE_OF_URBAN, DEFAULT_BONDED_SHARE
 
 # the trades the default split's wage earners are paid as; a profile that declares its own strata
 # names its own (labelled heuristic: a default until scenarios declare strata)
-DEFAULT_TRADES = {"labourers": "labourer", "poor": "labourer", "artisans": "artisan", "merchants": "merchant"}
+DEFAULT_TRADES = {"labourers": "labourer", "poor": "labourer", "artisans": "artisan", "merchants": "merchant",
+				  "bonded": "labourer"}
 
 
 def has_bondage(profile: CountryProfile) -> bool:
@@ -44,7 +45,7 @@ def strata_definitions(profile: CountryProfile) -> List[Dict[str, Any]]:
 	if bonded > 0.0:
 		definitions[-1]["falls_to"] = "bonded"
 		definitions.append({"name": "bonded", "share": bonded, "bonded": True, "owner": "rich",
-							"literacy": 0.0, "rises_to": "poor"})
+							"trade": DEFAULT_TRADES["bonded"], "literacy": 0.0, "rises_to": "poor"})
 	return [entry for entry in definitions if entry["share"] > 0.0]
 
 

@@ -1,6 +1,6 @@
 # The solver leaves its starting guess as the price of a material no technique delivers
 
-**Status:** partly - reopened by owner decision (2026-10-02): the by-product floor (`sim/engine/joint_floor.py`, JOINT_BYPRODUCT_FLOOR_SHARE) keeps every joint output above zero, but a waste product may cost money to dispose of; decide whether a negative value is the right model
+**Status:** partly - the placeholder price is gone (`solve_prices_reach.solve_priced_materials` drops a material no technique makes and re-solves; `test_price_solver_unreachable_material`). Remaining, reopened by owner decision (2026-10-02): the by-product floor (`sim/engine/joint_floor.py`, JOINT_BYPRODUCT_FLOOR_SHARE) keeps every joint output above zero, but a waste product may cost money to dispose of; decide whether a negative value is the right model
 
 When no technique in a solve can be costed for a material (a recipe needing a heat nothing in the solve reaches, so every candidate fails the capability floor), `solve_round_update_prices` keeps the starting guess, and `compute_resolvable_materials` still calls the material resolvable. The guess is printed as a price. It was invisible while every solve held the mature techniques; a solve restricted to what a civilisation can reach shows it for cement, silicon carbide, cobalt and others (find them: materials in a solve's `resolvable_materials` with no entry in `chosen_recipe_by_material`). `priced_goods_table` now skips such a material in the held and reach tables and falls back, but the solver itself should not call it resolvable.
 

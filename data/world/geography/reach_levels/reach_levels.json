@@ -1,0 +1,39 @@
+{
+ "entries": [
+  {
+   "id": "0",
+   "desc": "at home",
+   "expedition": null
+  },
+  {
+   "id": "1",
+   "desc": "close to home ground, inside the same cultural and trading sphere",
+   "expedition": null
+  },
+  {
+   "id": "2",
+   "desc": "established trade routes exist and this civilization already uses them",
+   "expedition": "exp_trade_route_extend"
+  },
+  {
+   "id": "3",
+   "desc": "known to exist, no regular traffic yet, coastal sailing sufficient",
+   "expedition": "exp_coastal_africa"
+  },
+  {
+   "id": "4",
+   "desc": "long open-water or deep-continental voyage, needs provisioning against scurvy and a real hull",
+   "expedition": "exp_africa_circumnavigation"
+  },
+  {
+   "id": "5",
+   "desc": "ocean crossing, needs open-ocean navigation and a ship that survives it",
+   "expedition": "exp_atlantic_crossing"
+  },
+  {
+   "id": "6",
+   "desc": "the far ocean or the ice",
+   "expedition": "exp_pacific_arctic"
+  }
+ ]
+}

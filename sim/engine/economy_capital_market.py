@@ -49,14 +49,18 @@ class CapitalMarketMixin:
         agent economy, its credit market's rate."""
         rate = self.economy.agent_rate()
         if rate is not None:
-            return rate
+            return capital_market.bounded_rate(float(self.civ["starting_interest_rate"]), rate)
         record = self._market_record()
         if record is None or record.supply <= 0.0:
             return float(self.civ["starting_interest_rate"])
         return record.rate
 
     def market_credit_room(self, actor_id):
-        """What lenders will advance one borrower beyond what the others owe; None before they have met."""
+        """What lenders will advance one borrower beyond what the others owe; None before they have met. On
+        the agent economy, its credit market answers, as it does for the rate."""
+        answered, room = self.economy.agent_credit_room(actor_id)
+        if answered:
+            return room
         record = self._market_record()
         if record is None or record.supply <= 0.0:
             return None
@@ -68,7 +72,7 @@ class CapitalMarketMixin:
         loans = {FOUNDER_LOAN: max(0.0, -self.state.household.capital)}
         for actor_id in sorted(self.actors.actors):
             actor = self.actors.actors[actor_id]
-            if actor.kind == "firm" and actor.record.exited_year is not None:
+            if actor.record.exited_year is not None:
                 continue
             loans[actor_id] = actor.debt()
         return loans

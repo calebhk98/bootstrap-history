@@ -20,7 +20,7 @@ def _auto_mine_sim(pending_tonnes):
     test_sim.state.economy.binding = "coal"
     test_sim.state.economy.mine_pending["coal"] = pending_tonnes
     orders = []
-    test_sim.open_mine = lambda material, tonnes, partial=True: orders.append(tonnes) or 0.0
+    test_sim.open_mine = lambda material, tonnes, partial=True, order="": orders.append(tonnes) or 0.0
     test_sim._step_materials()
     return orders
 

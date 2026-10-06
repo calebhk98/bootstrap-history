@@ -25,7 +25,8 @@ def logistic(value: float) -> float:
 
 
 def own_income(stratum: Any, world: Any) -> float:
-	"""What the stratum earns by its own wages and property: nothing for the bonded."""
+	"""What the stratum earns by its own wages and property: nothing for the bonded, whose work is
+	the keeper's (`bonded_product`)."""
 	plan = stratum.record.plan
 	if stratum.is_bonded():
 		return 0.0
@@ -43,6 +44,16 @@ def own_income(stratum: Any, world: Any) -> float:
 	if property_share > 0.0:
 		income += world.society_output() * property_share
 	return income
+
+
+def bonded_product(stratum: Any, world: Any) -> float:
+	"""What the bonded stratum's year of work is worth at the going pay of its trade (none if it names no trade)."""
+	plan = stratum.record.plan
+	trade = plan.get("trade")
+	if not trade:
+		return 0.0
+	working = float(plan.get("work_share", STRATUM_WORKING_SHARE))
+	return stratum.record.members * working * world.pay_per_person_year(trade)
 
 
 def pay_tier(stratum: Any, need: float, spendable: float) -> float:
@@ -64,7 +75,11 @@ def run_year(stratum: Any, world: Any) -> None:
 	if observed.get("members") is not None:
 		record.members = float(observed["members"])
 	members = record.members
-	income = float(observed["income"]) if observed.get("income") is not None else own_income(stratum, world)
+	if stratum.is_bonded():
+		# the bonded earn nothing themselves: the hours the cohorts in their slice supplied, paid by employers, are the keeper's
+		record.labour_product = float(observed["income"]) if observed.get("income") is not None and record.plan.get("trade") else bonded_product(stratum, world)
+	income = 0.0 if stratum.is_bonded() else (
+		float(observed["income"]) if observed.get("income") is not None else own_income(stratum, world))
 	if income > 0.0:
 		stratum.credit(income, "edge:economy")
 	resources = income + record.allowance
@@ -148,13 +163,17 @@ def settle_moves(registry: Any) -> None:
 
 
 def settle_keep(registry: Any, world: Any) -> None:
-	"""Each keeper stratum pays the food of the bonded it holds for the coming year."""
+	"""Each keeper stratum is paid for the year's work of the bonded it holds, at the going pay of their
+	trade (bonded people naming no trade add none), and pays their food for the coming year."""
 	for actor in registry.of_kind("stratum"):
 		if not actor.is_bonded():
 			continue
 		owner = registry.actors.get(actor.neighbour_id(str(actor.record.plan.get("owner") or "")))
 		if owner is None or owner is actor:
 			continue
+		if actor.record.labour_product > 0.0:
+			owner.credit(actor.record.labour_product, "edge:economy")
+			actor.record.labour_product = 0.0
 		cost = actor.record.members * registry.world_for(actor, world).subsistence_cost_per_person_year()
 		ledger.transfer(owner, actor, cost, "keep of bonded")
 		actor.record.allowance += cost

@@ -6,7 +6,9 @@ TRADER_DEPTH_SHARE = declare(
 	unit="share of a place's yearly buying of a good", source=None, confidence="D",
 	why="The most of what buyers at a destination take in a year that traders on one route together "
 		"carry there, so chasers of one price gap do not overshoot it. Stands in for the price the "
-		"extra supply would push down.")
+		"extra supply would push down; used only where the destination's market does not answer "
+		"(price_after_cargo): a partner with no book for the good, or the home society while the agent economy is "
+		"off or has no book for it.")
 TRADER_RISK_SHARE = declare(
 	"TRADER_RISK_SHARE", 0.02, kind="temporary_heuristic",
 	unit="share of cargo value lost to spoilage, theft and wreck per voyage", source=None, confidence="D",

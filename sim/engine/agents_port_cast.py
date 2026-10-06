@@ -8,7 +8,7 @@ import functools
 from typing import Any, Dict, List, Optional, Tuple
 
 from sim.agents.api import (DOLE_MATERIAL, HOUSING_FLOOR_AREA_PER_PERSON_M2, MASONRY_PERSON_YEARS_PER_M2,
-							PUBLIC_BUILDING_LIFE_YEARS, cast_from_civilisations, seed_cast)
+							PUBLIC_BUILDING_LIFE_YEARS, cast_from_civilisations, observed_incomes, seed_cast)
 from sim.geography.api import haversine_km, load_geography, regions
 
 from .data import load_civ
@@ -51,8 +51,17 @@ class CastView:
 		return building * (self.market_rate() + 1.0 / PUBLIC_BUILDING_LIFE_YEARS)  # type: ignore[attr-defined]
 
 	def observed_stratum(self, country: Optional[str], name: str) -> Optional[Dict[str, float]]:
-		"""Nothing is observed yet: the agent economy's cohorts are not mapped to strata (a complaint)."""
-		return None
+		"""The home strata's income from the agent economy's household cohorts (`sim/agents/strata_observed.py`);
+		None for another country, or while the agent economy is off (the strata then keep their own wage bridge)."""
+		if country is not None:
+			return None
+		curve = self._sim.economy.agent_cohort_incomes()  # type: ignore[attr-defined]
+		if not curve:
+			return None
+		home = [actor for actor in self._sim.actors.of_kind("stratum")  # type: ignore[attr-defined]
+				if actor.record.country is None and actor.record.exited_year is None]
+		income = observed_incomes(home, self, curve).get(name)
+		return None if income is None else {"income": income}
 
 
 def opening_cast(sim: Any) -> Tuple[str, List[Any], Dict[str, Any]]:

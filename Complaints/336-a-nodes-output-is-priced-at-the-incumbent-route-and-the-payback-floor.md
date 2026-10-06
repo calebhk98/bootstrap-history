@@ -1,6 +1,6 @@
 # A node's output is priced at the incumbent route, and the payback floor reads gross revenue
 
-**Status:** open
+**Status:** open - not changed: the floor caps authored revenue, and a cap net of authored upkeep would loosen it (revenue may exceed cost over payback by the upkeep), so the intended test (cap, or guard on net earnings) needs an owner decision
 
 Two faults in how a derived concern's earning is judged. A node whose technique is not yet held (Solvay soda at the civilisation's start) sells at the price of the incumbent, dearer, route, so its margin is a monopoly's rather than a competitor's; neither that nor selling at its own cost is derived. And the payback floor (`test_node_revenue`, the pump guard in `test_early_playtest.py`) tests build cost over gross revenue, which counts wages passed through to staff, so a cheap, labour-heavy node (hand papermaking) sits near the floor while netting nothing. Net of derived upkeep is the figure a money pump shows in.
 

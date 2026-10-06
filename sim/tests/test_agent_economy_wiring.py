@@ -7,6 +7,7 @@ import os
 from sim.tests import fingerprint as perf_fingerprint
 from sim.engine.economy_port_year import SWITCH_ENVIRONMENT, switch_requested
 from sim.engine.saveload import save_state, load_state
+from sim.economy import api as economy_api
 
 
 def agent_game(civ, seed=1):
@@ -20,11 +21,12 @@ rome = agent_game("rome_100ad")
 check("a game asked for the agent economy runs on it", rome.economy.agent is not None)
 opened = rome.economy.agent.economy().record
 check("after the hidden spin-up households expect stable prices, so the rebased index is not read as inflation",
-      all(cohort.expected_inflation == 0.0 and cohort.last_price_level == 1.0 for cohort in opened.cohorts.values()),
-      sorted({(cohort.expected_inflation, cohort.last_price_level) for cohort in opened.cohorts.values()})[:3])
+      all(cohort.expected_inflation == 0.0 and cohort.last_basket_price_level == 1.0 for cohort in opened.cohorts.values()),
+      sorted({(cohort.expected_inflation, cohort.last_basket_price_level) for cohort in opened.cohorts.values()})[:3])
 default = perf_fingerprint.build(dict(civ="rome_100ad", seed=1, years=1, events=True, fog=False))
 check("a game that says nothing runs on the agent economy", default.economy.agent is not None
       and default.state.economy.agent_economy.get("on"))
+# the opt-out is the subject here: the switch itself is under test
 off = S.Sim(NODES, ORDER, random.Random(1), events=True, manual=False, civ=S.load_civ("rome_100ad"),
             cfg={"agent_economy": False})
 check("a game that opts out keeps the engine's own economy", off.economy.agent is None
@@ -108,3 +110,13 @@ for civ in ("england_1300", "han_china_100ad", "mexica_1500", "norse_900ad"):
     book = game.economy.agent.economy().record.book
     check("%s plays three years on the agent economy with money conserved" % civ,
           book.check_conservation(1e-9).ok)
+
+# One owner for credit: the founder's room and the rate both come from the agent economy's market.
+credit_game = agent_game("rome_100ad")
+for _year in range(2):
+    credit_game.step()
+agent_market = credit_game.economy.agent.economy()
+check("on the agent economy the credit room is the agent market's, as the rate is",
+      credit_game.market_credit_room("founder") == economy_api.credit_room(agent_market, "founder")
+      and credit_game.market_rate() == economy_api.interest_rate(agent_market),
+      (credit_game.market_credit_room("founder"), economy_api.credit_room(agent_market, "founder")))

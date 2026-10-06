@@ -268,7 +268,7 @@ for _identifier, _actor in _registry.actors.items():
     _actor.record.concerns.add("loom")
 _loom_nodes = {"loom": {"cat": "cloth"}, "forge": {"cat": "metal"}}
 _walked = _count_calls(_registry, "market_operators", lambda: [_registry.concerns_in("cloth", _loom_nodes) for _ in range(50)])
-check("concerns of a category are counted from one walk of the firms", _walked == 1, _walked)
+check("concerns of a category are counted without walking the firms", _walked == 0, _walked)
 check("...and the count is right", _registry.concerns_in("cloth", _loom_nodes) == 20 and _registry.concerns_in("metal", _loom_nodes) == 0)
 _registry.actors["firm:003"].record.concerns.add("forge")
 check("...and a firm taking on a concern is counted at once",

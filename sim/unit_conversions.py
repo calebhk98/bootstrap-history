@@ -191,6 +191,30 @@ KILOGRAMS_PER_GRAM = declare(
         "its own tech-tree entry happens to be stated in.")
 
 # ============================================================================
+# WORKING TIME
+# ============================================================================
+
+HOURS_PER_PERSON_YEAR = declare(
+    "HOURS_PER_PERSON_YEAR", 2000.0, kind="engineering_estimate",
+    unit="hours/person/year",
+    source="A 10-hour day, 250 working days a year, less feasts and holidays.",
+    confidence="B",
+    why="Converts an hourly wage to an annual one and back, and a head count "
+        "to labour hours: the one working-year convention every wage quote, "
+        "staff count and hours ledger uses.")
+
+CIVIL_DAYS_PER_YEAR = declare(
+    "CIVIL_DAYS_PER_YEAR", 365.0, kind="physical_constant",
+    unit="days/year",
+    source="The common calendar year, without the leap-year average.",
+    confidence="A",
+    why="Turns days of travel or of growth into years and back where the model "
+        "counts calendar years of whole days (sail and cart time against a "
+        "yearly interest rate, forage eaten a year, ocean productivity a year). "
+        "The world models declare their own 365.25 average for the daily "
+        "weather and food balance.")
+
+# ============================================================================
 # DISTANCE
 # ============================================================================
 

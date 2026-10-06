@@ -1,6 +1,6 @@
 # The price solver prices everything with all of human technology available
 
-**Status:** partly - era gating built and a good nothing held makes is priced at the nearest technique (Complaints/302); production coverage incomplete, a mature fallback remains for some materials, node revenue is not per civilisation
+**Status:** partly - era gating, nearest-technique pricing (Complaints/302) and per-civilisation derived node figures (Complaints/310, 317, both closed) are built; what remains is the "mature" fallback for materials nothing in reach delivers, and the placeholder floor decision in Complaints/309
 
 **Type:** Structural, and it affects every number the solver has ever printed
 **Priority:** High. Not urgent - nothing is broken today - but it silently bounds what the whole tool means.
@@ -173,6 +173,6 @@ else for exactly that reason.
 
 ## Update: priced at what a civilisation can reach
 
-A material nothing held makes is no longer priced at the mature technique when something in reach makes it: it is priced at the nearest technique in the tree with the civilisation's own techniques for everything else (`Complaints/302`, `sim/engine/prices.py` `entries_in_reach`). What remains: materials nothing in reach delivers still fall back to the mature technique, labelled "mature" (count per civilisation with `data.goods_provenance`); derived node revenue is priced once at the reference civilisation (`Complaints/310`); the solver leaves placeholder prices on materials no technique delivers (`Complaints/309`).
+A material nothing held makes is no longer priced at the mature technique when something in reach makes it: it is priced at the nearest technique in the tree with the civilisation's own techniques for everything else (`Complaints/302`, `sim/engine/prices.py` `entries_in_reach`). What remains: materials nothing in reach delivers still fall back to the mature technique, labelled "mature". Measured (re-measured against the current code): `python3 -c` over `data.goods_provenance(starting_techs, "rome_100ad", civilisation)` gives a minority of materials as mature for Rome, and they are of two kinds. A crop the territory's climate cannot grow (cacao, cassia, pepper) is priced as an import, which is what the label stands for. The rest need a heat or an input no held or reachable technique supplies (portland cement, silicon carbide, cobalt, nickel, stainless steel, nichrome, manganin, constantan, ferrite, alnico, cemented carbide, borosilicate glass, acrylonitrile, hydrogen cyanide, germanium, indium); for these the mature price stands for an import that no Roman trader could actually bring, so it is the transitional shortcut to replace with trade availability (no foreign supplier exists in the data yet). Derived node revenue (Complaints/310, 317) and the placeholder price (Complaints/309, whose remaining question is the by-product floor) are no longer open here.
 
 Related: 119.

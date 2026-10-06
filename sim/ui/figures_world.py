@@ -1,20 +1,29 @@
 """Figures about the society around the founder: wages, state notice, epidemics, project throughput.
 
-The engine records no cause for these (Complaints/420), so each gives the value and the live
-drivers; whatever the change leaves unexplained shows as the "not itemised" line.
+Wages and state notice read their causes from the cause book; the others give the value and the
+live drivers, and whatever the change leaves unexplained shows as its own line.
 """
 import sim.engine.ui_port as ui_port
 from .figures import figure
-from sim.engine.ui_port import hazards_not_yet_past
+from sim.engine.ui_port import cause_book, hazards_not_yet_past
 
 
-@figure("wages", "wage level against the starting one", unit="index", digits=4)
+def _wage_causes(sim, year):
+    return cause_book.causes_since(sim, cause_book.WAGE, year)
+
+
+def _notice_causes(sim, year):
+    return cause_book.causes_since(sim, cause_book.NOTICE, year)
+
+
+@figure("wages", "wage level against the starting one", unit="index", digits=4, since=_wage_causes)
 def _wages(sim):
     return {"value": sim.wage_index,
             "drivers": {"population_scale": sim.pop_scale, "price_index": sim.price_index}}
 
 
-@figure("state_notice", "how much the state notices you", unit="0 to 1", digits=4)
+@figure("state_notice", "how much the state notices you", unit="0 to 1", digits=4,
+        since=_notice_causes)
 def _state_notice(sim):
     report = sim.eminence_report()
     return {"value": sim.state_notice(),

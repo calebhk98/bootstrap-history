@@ -21,6 +21,10 @@ class Stub(_Namespace):
 
     __hash__ = object.__hash__
 
+    def __init__(self, **fields):
+        super().__init__(**fields)
+        self.state = _Namespace(interface={})
+
 # 1. filler note only for starts off the remaining route, never under fog
 graph = {"goal": {"pre": ["on_route"]}, "on_route": {"pre": []}, "side": {"pre": []}}
 stuck_advice.saving_plan = lambda game: None

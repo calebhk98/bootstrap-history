@@ -378,10 +378,7 @@
   "name": "Heavy mouldboard plough with coulter (regional)",
   "cat": "agriculture",
   "kind": "ENGINEERING",
-  "pre": [
-   "horse_collar",
-   "cap_tol_1mm"
-  ],
+  "pre": ["cap_tol_1mm"],
   "kb": "75_agriculture_food.md",
   "ph": 200,
   "lab": {
@@ -420,11 +417,7 @@
   "name": "Mechanical seed drill",
   "cat": "agriculture",
   "kind": "ENGINEERING",
-  "pre": [
-   "cap_tol_1mm",
-   "horse_collar",
-   "master_screw"
-  ],
+  "pre": ["cap_tol_1mm"],
   "kb": "75_agriculture_food.md",
   "ph": 180,
   "lab": {
@@ -1846,6 +1839,7 @@
   "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
+  "grants": {"dairy_cattle_kg": 1000},
   "id": "fud_livestock_selective_cattle",
   "name": "Selective breeding of draft and dairy cattle",
   "cat": "livestock",
@@ -1985,6 +1979,7 @@
   "note": "Maintain a living culture of wild yeast and lactic acid bacteria in flour and water. Feed it regularly and use it to leaven bread. Improves flavor and digestibility compared to unleavened bread. Requires discipline but produces superior bread."
  },
  {
+  "grants": {"pepper_vine_stock_kg": 50},
   "id": "fud_pepper_cultivation",
   "name": "Black pepper vine gardens",
   "cat": "crops",

@@ -391,7 +391,12 @@
   "sch": 3,
   "art": 5,
   "conf": "A",
-  "note": "Reaper feeds cut grain into threshing drum and winnowing mechanism; discharges bagged grain and straw bales. Steam- or petrol-powered. Requires flat or gentle ground, good visibility, and skilled operators. 20-30 acres per day vs 1 acre hand harvest."
+  "note": "Reaper feeds cut grain into threshing drum and winnowing mechanism; discharges bagged grain and straw bales. Steam- or petrol-powered. Requires flat or gentle ground, good visibility, and skilled operators. 20-30 acres per day vs 1 acre hand harvest.",
+  "mechanics": {
+   "precaution": {
+    "kind": "pilot_plant"
+   }
+  }
  },
  {
   "id": "ag2_mower",
@@ -1946,6 +1951,7 @@
   "note": "The sealed ecosystem that recycles condensation, keeping tropical cuttings alive for months at sea"
  },
  {
+  "grants": {"sugar_cane_sett_kg": 5000},
   "id": "ag2_sugar_voyage",
   "name": "Sugar cultivation after voyage",
   "cat": "plants",
@@ -1975,6 +1981,7 @@
   "note": "Once a few cuttings establish, perpetual harvest with harvest planning and burn timing to prevent disease"
  },
  {
+  "grants": {"tea_plant_stock_kg": 50},
   "id": "ag2_tea_voyage",
   "name": "Tea cultivation after voyage",
   "cat": "plants",
@@ -2005,6 +2012,7 @@
   "note": "Tea requires high altitude, shade trees, and careful plucking timing; four years to first harvest after planting"
  },
  {
+  "grants": {"coffee_seedling_kg": 50},
   "id": "ag2_coffee_voyage",
   "name": "Coffee cultivation after voyage",
   "cat": "plants",

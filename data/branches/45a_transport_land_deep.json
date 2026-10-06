@@ -40,7 +40,9 @@
      "mat_wrought_iron": 1.0
     }
    }
-  ]
+  ],
+  "copy_visibility": 0.8,
+  "copy_visibility_reason": "The shape and the nailing are visible on the hoof; only the fitting judgement is not."
  },
  {
   "id": "tl_horse_collar",
@@ -209,7 +211,9 @@
     }
    }
   ],
-  "_internal": "[FIXED after independent audit: the horse collar is draught harness and has nothing to do with a mounted rider's balance. The real missing input is a framed saddle.]"
+  "_internal": "[FIXED after independent audit: the horse collar is draught harness and has nothing to do with a mounted rider's balance. The real missing input is a framed saddle.]",
+  "copy_visibility": 0.9,
+  "copy_visibility_reason": "A loop of iron on a strap: shape, size and fixing are all visible on the saddle."
  },
  {
   "id": "tl_spoked_wheel",

@@ -50,6 +50,9 @@ class HouseholdState:
 	cash_flow: Dict[str, float] = field(default_factory=dict)
 	cash_mark: Optional[float] = None
 	cash_periods: List[Dict[str, Any]] = field(default_factory=list)
+	# the cause book (sim/engine/cause_book.py): rows for wage, notice and closure changes, and the readings they are measured from
+	cause_rows: List[Dict[str, Any]] = field(default_factory=list)
+	cause_mark: Optional[Dict[str, float]] = None
 
 	# Workforce and human capital
 	scholars: float = 0.0
@@ -221,6 +224,10 @@ class EconomyState:
 	market_flows: Optional[Dict[str, Any]] = None
 	# foreign economy id -> commodity -> its capacity, stock and price ratio (foreign_economies.py)
 	foreign_market_book: Dict[str, Dict[str, Dict[str, float]]] = field(default_factory=dict)
+	# foreign economy id -> material -> tonnes actors carried to and from it this year (foreign_actor_trade.py)
+	foreign_actor_trade: Dict[str, Dict[str, Dict[str, float]]] = field(default_factory=dict)
+	# material -> tonnes actors landed in the home market and took from it this year (foreign_actor_trade.py)
+	home_actor_trade: Dict[str, Dict[str, float]] = field(default_factory=dict)
 	# foreign economy id -> goods and coin paid, and the route's lift (foreign_payments.py)
 	foreign_ledger: Dict[str, Dict[str, float]] = field(default_factory=dict)
 	capacity_pool: Dict[str, float] = field(default_factory=dict)
@@ -268,10 +275,14 @@ class ScenarioState:
 	"""Simulation scenario configuration and timeline."""
 	year: int = 100
 	goal_year: Optional[int] = None
+	goal_years: Dict[str, int] = field(default_factory=dict)  # goal id -> year it was reached as the formal goal
 	weather_salt: int = 0     # this game's own weather history, drawn from its dice (Complaint 384)
 	_said_debasement: Optional[int] = None
 	_said_output: Optional[Dict[str, int]] = None
 	_said_scandal: int = 0
+	_said_wage_cascade: int = -999    # last year a wage-cascade note was printed
+	_literacy_said: int = -999        # last year a literacy-census note was printed
+	_said_condition: Set[str] = field(default_factory=set)  # hazard-condition messages already printed once
 	_said_parallelism: Optional[bool] = None
 	_said_command_index: Optional[bool] = None
 	_said_explanations: Optional[Dict[str, int]] = None
@@ -310,6 +321,7 @@ class SimulationState:
 	_immortal: bool = True
 	_rng: Optional[List[Any]] = None
 	_seed: Optional[Union[int, str]] = None
+	interface: Dict[str, Any] = field(default_factory=dict)  # the UI's own memory; the engine never reads it
 
 
 ALL_STATE_CLASSES = (

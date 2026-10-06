@@ -6,6 +6,10 @@ formulas, language) is the geography package's business. Arguments and answers a
 string ids, numbers, lists and dicts. Every call takes an optional `world_map`; without it the
 base map answers.
 
+`load_geography(world_map)` (older surface) returns the regions, reach levels, located materials and the
+tile grid as one dict, assembled from the map's `tiles`, `regions`, `reach_levels` and `located_materials`
+catalogues, so a mod's overlay covers them; a region's tiles are the tiles labelled with it.
+
 Older names on `api.py` (`transport`, `freight_cost`, `settlement`, `tile_names`, the `Geography`
 object and its region reach) are outside this contract and are to be replaced by it.
 
@@ -41,8 +45,15 @@ caller from what the actor knows; geography does not read the tech tree.
 |---|---|
 | `usable_modes([nodes_of_party, ...])` | `[mode_id]` every party can use, from the tech nodes each holds. |
 | `route(origins, destinations, modes, improvements, mode_costs, handling_costs, held_nodes)` | `{legs: [{from, to, mode, km, days, cost_per_tonne}], km, days, cost_per_tonne, inputs: {labour_hours, feed_kg, fuel_kg}}`, or `null` when nothing joins them. |
+| `route_costs(origins, modes, improvements, mode_costs, handling_costs, held_nodes)` | `{tile_id: cost_per_tonne}`: the least cost from any origin to every tile a haul reaches (origins cost 0), priced as `route` prices a haul. One search serves all destinations; the economy's market areas take their carriage costs from it. |
 | `reach(origins, modes, days_budget, improvements, held_nodes)` | `{tile_id: days}` within the budget. |
+| `dues_hours_per_tonne()` | `{mode_id: hours}` of tolls or port dues per tonne a haul pays when it changes to the mode (the mode's `dues_hours_per_tonne`, with `dues_source` and `dues_conf`). |
 | `freight_links(modes)` | `[(tile_a, tile_b, mode, km)]` for edges these modes use with nothing built. |
+| `map_of_tiles({tile_id: {lat, lon, coastal, borders}})` | A map of just those tiles with the base map's modes, sea lanes and parameters, for a scenario or test that places its own tiles. |
+| `ore_goods()` | `{resource_id: {ore_good: [smelting_recipe_id, ...]}}` for the resources whose catalogue row names ore goods (`ore_goods`), in catalogue order; a mod adds a mineral by adding a row. |
+| `works_priced_from_deposits()` | `[resource_id]` whose catalogue row says its mine running cost comes from the deposits' physical works. |
+| `mine_demand_goods()` | `{resource_id: [good]}`: the goods whose annual demand a mine of that resource supplies (`mine_demand_goods` on its catalogue row). |
+| `parameter_value(parameter_id)` | The value of one map parameter (for example `mining_trade`, the trade whose wage prices mine labour). |
 | `edge_key(tile_a, tile_b)` | The key a built road or track between two tiles is stored under. |
 
 `improvements` is the caller's record of what has been built, `{edge_key: {"road": true,

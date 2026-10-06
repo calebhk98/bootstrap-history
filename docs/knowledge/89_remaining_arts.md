@@ -254,7 +254,7 @@ Also covers: in2_travelling_microscope.
 
 ### mat_natural_rubber - Distant materials that are reachable, not exotic
 
-**What/why.** Seven materials the gap analysis flagged as apparent blockers are reachable via routes Rome already sails or trades, just farther along them (`data/world/geography.json`).
+**What/why.** Seven materials the gap analysis flagged as apparent blockers are reachable via routes Rome already sails or trades, just farther along them (`the map folder (data/world/geography/)`).
 **Kernel.** The trap is assuming "not Mediterranean" means "unobtainable": rubber (African vines) sits down a coast Rome already sails.
 **Needs.** Existing long-distance trade routes; ocean crossings specifically for quinine and platinum.
 **Check & failure.** The material arrives at a cost consistent with other long-distance goods of similar bulk.

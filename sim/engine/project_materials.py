@@ -75,6 +75,23 @@ class ProjectMaterialsMixin:
         change the returned dict: inside a view's bill scope it is shared."""
         return self._shared_bill(node_id, lambda: self._compute_material_bill(node_id))
 
+    def _unclaimed_own_supply(self, tag, node_id):
+        """Yearly own output of a material tag that no other running project has claimed."""
+        claimed = sum(record.get("own_output_claim", {}).get(tag, 0.0)
+                      for other, record in self.state.projects.active.items() if other != node_id)
+        return max(0.0, self._own_material_supply(tag) - claimed)
+
+    def project_own_output_claim(self, node_id):
+        """{tag: tonnes a year} of the founder's own output this project draws, so the next
+        project to start counts only what is left."""
+        span = max(1.0, float(self.nodes[node_id].get("build_yrs")
+                              or self.nodes[node_id].get("yrs") or 1.0))
+        claim = collections.Counter()
+        for row in self.project_material_bill(node_id)["rows"]:
+            if row["held_from_own_output_tonnes"] > 0:
+                claim[self._material_tag(row["material"])[1]] += row["held_from_own_output_tonnes"] / span
+        return dict(claim)
+
     def _compute_material_bill(self, node_id):
         span = max(1.0, float(self.nodes[node_id].get("build_yrs")
                               or self.nodes[node_id].get("yrs") or 1.0))
@@ -85,7 +102,7 @@ class ProjectMaterialsMixin:
             emp_key, tag = self._material_tag(material)
             needed = units * tonnes_per_unit(material)
             stock_left.setdefault(emp_key, self.material_stock_t(emp_key))
-            own_left.setdefault(tag, self._own_material_supply(tag) * span)
+            own_left.setdefault(tag, self._unclaimed_own_supply(tag, node_id) * span)
             from_stock = min(needed, stock_left[emp_key])
             stock_left[emp_key] -= from_stock
             from_own = min(needed - from_stock, own_left[tag])
@@ -94,11 +111,20 @@ class ProjectMaterialsMixin:
             quoted = self.material_purchase_cost(material, missing, bought[emp_key, tag])
             cost, mean_price = quoted if quoted else (0.0, 0.0)
             bought[emp_key, tag] += missing
+            deliverable_cost = cost
             lab_scale = material.endswith(self.LAB_SCALE_SUFFIX) and not material.endswith("_kg")
             headroom_left.setdefault(emp_key, self._material_market_tonnes(emp_key))
             deliverable = missing if lab_scale else min(missing, headroom_left[emp_key])
             if not lab_scale:
                 headroom_left[emp_key] -= deliverable
+            if quoted and missing > deliverable:
+                # past a year's market supply the rest is bought over the following years at today's
+                # quote, not all at once up the scarcity curve
+                spot = self.material_purchase_cost(material, 0.0)
+                deliverable_cost = (self.material_purchase_cost(material, deliverable, bought[emp_key, tag] - missing)[0]
+                                    if deliverable > 0 else 0.0)
+                cost = deliverable_cost + (missing - deliverable) * spot[1]
+                mean_price = cost / missing
             total += cost
             rows.append({"material": material, "needed_tonnes": needed,
                          "held_tonnes": from_stock + from_own,
@@ -106,7 +132,9 @@ class ProjectMaterialsMixin:
                          "held_from_own_output_tonnes": from_own,
                          "missing_tonnes": missing,
                          "price_per_tonne": mean_price, "cost_of_missing": cost,
+                         "cost_of_deliverable": deliverable_cost,
                          "deliverable_now_tonnes": deliverable,
+                         "own_supply_tonnes_per_year": self._own_material_supply(tag),
                          "years_of_supply_it_takes": (
                              None if lab_scale or missing <= 0 else missing / max(
                                  1e-9, self._material_market_tonnes(emp_key)
@@ -153,8 +181,7 @@ class ProjectMaterialsMixin:
         up_front = 0.0
         for row in bill["rows"]:
             if row["missing_tonnes"] > 0 and row["priced"]:
-                up_front += row["cost_of_missing"] * (
-                    row["deliverable_now_tonnes"] / row["missing_tonnes"])
+                up_front += row["cost_of_deliverable"]
         return bill["cost_of_missing"], up_front
 
     def project_cost_without_materials(self, node_id):
@@ -179,7 +206,7 @@ class ProjectMaterialsMixin:
             tonnes = row["deliverable_now_tonnes"]
             if tonnes <= 0 or not row["priced"]:
                 continue
-            money = row["price_per_tonne"] * tonnes * factor
+            money = row["cost_of_deliverable"] * factor
             market.settle_purchase(market.founder, self._material_tag(row["material"])[0], tonnes, money,
                                    "materials bought for projects")
             paid += money

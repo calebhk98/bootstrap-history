@@ -25,3 +25,11 @@ What it would take:
 - economy: households keep part of their savings in durable, non-spoiling goods of high value per kg,
   chosen by those physical properties and the price, not by id; selling from that stock when its price
   is high is what makes the stock, not the flow, set the price.
+
+## Folded in
+
+Overlapping issues closed into this one; each closed file keeps its full text.
+
+- 325 (`closed/325-gold-prices-below-silver-so-ornament-demand-buys-gold.md`): gold priced below silver so ornament demand buys gold; satiation done, supply-limited gold price and held-stock ornament remain.
+- 334 (`closed/334-gold-has-one-hand-sluicing-route-and-no-deposit-model.md`): gold has hydraulic and lode routes; only the ornament limit and hand placers remain.
+- 387 (`closed/387-metal-prices-swing-more-than-grain-in-rome-and-norse.md`): metal prices swing more than grain; partly fixed, gold remains and needs a validation command (445).

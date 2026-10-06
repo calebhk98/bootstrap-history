@@ -6,10 +6,11 @@ it as `base = value * factor + offset`. The engine keeps its own numbers as
 they are; this layer only converts what a player reads, following the player's
 preference per dimension (a unit id, or nothing for "as the game writes it").
 """
-import json
 import os
 import re
 from typing import Any, Dict, List, Mapping, Optional, Tuple
+
+from sim.json_files import read_json
 
 from .mods import get_ordered_mods
 from .mods_base import ModError
@@ -25,21 +26,16 @@ _registry_override: Optional[Registry] = None
 _default_registry: Optional[Registry] = None
 
 
-def _read(path: str) -> Dict[str, Any]:
-    with open(path, encoding="utf-8") as source:
-        return json.load(source)
-
-
 def load_units(root: str = ROOT, mods_dir: Optional[str] = None) -> Registry:
     """The registry from the base file and every mod's unit file."""
     mods_dir = mods_dir or os.path.join(root, "mods")
-    registry = _read(os.path.join(root, "data", "world", "units.json"))
+    registry = read_json(os.path.join(root, "data", "world", "units.json"))
     registry.setdefault("field_rules", [])
     for manifest in get_ordered_mods(mods_dir):
         path = os.path.join(manifest.directory, "data", "world", "units.json")
         if not os.path.isfile(path):
             continue
-        extra = _read(path)
+        extra = read_json(path)
         for unit_id, spec in (extra.get("units") or {}).items():
             check_new_id(manifest, unit_id, False, path)
             if unit_id in registry["units"]:
@@ -59,6 +55,9 @@ def check_registry(registry: Registry) -> None:
     for rule in registry["field_rules"]:
         if registry["units"].get(rule.get("native"), {}).get("dimension") != rule.get("dimension"):
             raise ModError("field rule %r has a native unit of another dimension" % rule.get("pattern"))
+        if rule.get("per_dimension") and (registry["units"].get(rule.get("per_native"), {}).get("dimension")
+                                          != rule["per_dimension"]):
+            raise ModError("field rule %r has a per unit of another dimension" % rule.get("pattern"))
 
 
 def registry() -> Registry:
@@ -163,9 +162,30 @@ _FORMATTERS = {"area": format_area, "mass": format_mass,
                "temperature": format_temperature, "money": format_money}
 
 
+def _format_compound(rule: Mapping[str, Any], value: float, sim: Any):
+    """(value, name, symbol) of a quantity per another dimension (money per mass), each part in its chosen unit."""
+    reg = registry()
+    context = unit_context(sim)
+    civ = getattr(sim, "civ", None)
+    parts = []
+    for dimension, native in ((rule["dimension"], rule["native"]), (rule["per_dimension"], rule["per_native"])):
+        chosen = PREFERENCES.get(dimension)
+        if not chosen or chosen not in reg["units"] or chosen == native:
+            parts.append((native, 1.0))
+        else:
+            parts.append((chosen, unit_factor(reg["units"][native], context) / unit_factor(reg["units"][chosen], context)))
+    if parts[0][0] == rule["native"] and parts[1][0] == rule["per_native"]:
+        return None
+    labels = [unit_label(reg["units"][chosen], civ) for chosen, _ in parts]
+    return (value * parts[0][1] / parts[1][1], "%s per %s" % (labels[0][0], labels[1][0]),
+            "%s/%s" % (labels[0][1], labels[1][1]))
+
+
 def format_field(rule: Mapping[str, Any], value: float, sim: Any):
     """A reply field's value as the player's chosen unit shows it, or None."""
     reg = registry()
+    if rule.get("per_dimension"):
+        return _format_compound(rule, value, sim)
     chosen = PREFERENCES.get(rule["dimension"])
     if not chosen or chosen == rule["native"] or chosen not in reg["units"]:
         return None

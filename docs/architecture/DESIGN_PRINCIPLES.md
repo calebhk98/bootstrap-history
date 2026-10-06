@@ -51,3 +51,11 @@ Existing wealth-responsive mechanisms (state notice and prominence hazard in
 `sim/engine/society_state_pressure.py`) already react to wealth; their
 saturation at extreme fortunes is a separate defect (`Complaints/114`).
 Read together with `Complaints/113` (snowball difficulty).
+
+## Success should add late-game constraints, not early difficulty
+
+Playtests show broad development compounds far faster than beelining a goal, and catastrophes cost time rather than ending runs. Do not raise early difficulty to answer this; let success create new constraints (management, politics, competitors, state extraction, urbanisation, logistics). (`Complaints/closed/113-difficulty-curve-strong-snowball.md`)
+
+## Dated hazards stay until dynamic systems produce them, and late surplus is intended
+
+Dated historical crises stay until the economy, population, medical and multiplayer systems can produce them per country; do not replace them with random draws. A large late-game surplus is the intended result of developing the whole society; what is missing is things to spend it on (190). (`Complaints/closed/180-dated-hazards-and-late-money.md`)

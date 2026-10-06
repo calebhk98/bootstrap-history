@@ -4,9 +4,10 @@ Engine-free fixture; each test states a direction, not a figure."""
 import unittest
 from unittest import mock
 
-from sim.economy import credit, economy as economy_module
+from sim.economy import api as economy_api, credit, economy as economy_module
 from sim.economy.economy import Economy
 from sim.economy.types import FundsOffer, LoanRequest
+from sim.world import capital_market
 from sim.tests import economy_fixture as fixture, test_economy_agent_money as money
 
 COIN = "coin"
@@ -101,6 +102,39 @@ class BorrowersAgainstFundsTests(unittest.TestCase):
         loans, _rate, unmet = credit.clear([request(maximum_rate=0.001)], [offer(minimum_rate=0.05)], COIN, None, {})
         self.assertEqual(loans, [])
         self.assertEqual(len(unmet), 1)
+
+
+class CreditRoomTests(unittest.TestCase):
+    """What lenders will still advance comes from the same market that sets the rate."""
+
+    def lent(self, asked=100.0):
+        economy = Economy(fixture.small_setup())
+        economy.record.memory.rates[COIN] = START_RATE
+        lender = max(economy.record.cohorts, key=lambda agent: economy.record.book.balance(agent, COIN))
+        funds = economy.record.book.balance(lender, COIN)
+        economy.record.loan_requests = [request(amount=asked)]
+        with mock.patch.object(economy_module.lending, "household_requests", return_value=[]), \
+                mock.patch.object(economy_module.lending, "merchant_requests", return_value=[]):
+            economy._lend([offer(amount=funds, lender=lender)], economy.view(), {}, None)
+        return economy, funds
+
+    def test_there_is_no_room_figure_before_lenders_have_met(self):
+        self.assertIsNone(economy_api.credit_room(Economy(fixture.small_setup()), "borrower:a"))
+
+    def test_room_is_what_lenders_will_lend_less_what_others_took_this_year(self):
+        economy, funds = self.lent()
+        self.assertAlmostEqual(economy_api.credit_room(economy, "borrower:b"),
+                               capital_market.lendable_capacity(funds) - 100.0)
+
+    def test_a_borrowers_own_loan_does_not_count_against_its_room(self):
+        economy, funds = self.lent()
+        self.assertAlmostEqual(economy_api.credit_room(economy, "borrower:a"),
+                               capital_market.lendable_capacity(funds))
+
+    def test_room_survives_a_save_and_load(self):
+        economy, _funds = self.lent()
+        again = economy_api.economy_from_record(economy.setup, economy_api.export_record(economy))
+        self.assertEqual(economy_api.credit_room(again, "borrower:b"), economy_api.credit_room(economy, "borrower:b"))
 
 
 class RateAgainstMoneyStockTests(unittest.TestCase):

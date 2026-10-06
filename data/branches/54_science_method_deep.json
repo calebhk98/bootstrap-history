@@ -2649,10 +2649,7 @@
   "name": "Textbook and codified knowledge",
   "cat": "institution",
   "kind": "INSTITUTION",
-  "pre": [
-   "sc2_institution_journal",
-   "sc2_institution_curriculum"
-  ],
+  "pre": [],
   "traits": [
    "information",
    "labour_saving"

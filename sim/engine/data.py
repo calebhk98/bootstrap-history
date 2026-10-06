@@ -26,7 +26,7 @@ import collections
 from collections import deque
 from typing import Any, cast, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple, TypedDict
 from .identity_cache import IdentityCache
-from sim.geography.api import GEOFILE, haversine_km, load_geography
+from sim.geography.api import haversine_km, load_geography
 from .mods import get_ordered_mods, load_mod_tree
 from .tree_source import load_base_tree
 from .mods_ids import is_mod_content
@@ -41,7 +41,7 @@ from .catalog import (load_mod_tree_nodes, load_production_catalog,
 
 # TYPE ALIASES FOR THE JSON THIS MODULE LOADS. Every one of these is a
 # dictionary read straight from a JSON file (branches,
-# geography.json, resources.json, a civilization file) with no schema
+# the geography data, resources.json, a civilization file) with no schema
 # object anywhere in the codebase to check it against, so `Dict[str, Any]`
 # is the true type, not a placeholder for one this pass ran out of time to
 # write: see the long note beside `Node`, below, for why a tech-tree node in
@@ -397,7 +397,8 @@ def calculated_goods_prices(held_technology_ids: Iterable[str] = (),
 
 def calculated_goods_table(held_technology_ids: Iterable[str] = (),
                            civilization_id: Optional[str] = None,
-                           civilization: Optional[JSONDict] = None
+                           civilization: Optional[JSONDict] = None,
+                           farmed_hectares: Optional[float] = None
                            ) -> Tuple[Dict[str, float], Dict[str, str]]:
     """(labour-hour price, provenance) of every material the solver prices, from one solve."""
     from . import prices as price_solver
@@ -405,7 +406,8 @@ def calculated_goods_table(held_technology_ids: Iterable[str] = (),
                 else starting_schedule(civilization_id))
     document = schedule.document()
     goods, provenance = price_solver.priced_goods_table(
-        held_technology_ids, document, civilization_id=civilization_id, civilization=civilization)
+        held_technology_ids, document, civilization_id=civilization_id, civilization=civilization,
+        farmed_hectares=farmed_hectares)
     return ({material: _in_coin(price, document, 1.0) for material, price in goods.items()}, provenance)
 
 

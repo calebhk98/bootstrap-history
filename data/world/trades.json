@@ -1,114 +1,257 @@
 {
-  "_doc": "Canonical trade identity, availability and training time. training_years is the years of apprenticeship or schooling before a person is productive in the trade (an estimate of the skill, not a wage); a trade that states none takes its family's median. Wages are not stored here: sim/labour/wages.py derives them.",
+  "_doc": "Canonical trade identity, availability and training time. training_years is the years of apprenticeship or schooling before a person is productive in the trade (an estimate of the skill, not a wage); a trade that states none takes its family's median. Wages are not stored here: sim/labour/wages.py derives them. fatality_risk_per_year is the yearly chance a worker of the trade dies at work, with fatality_source and fatality_confidence; the economy raises the wage asked for a trade by it. literate marks a trade whose practice is reading and writing, so literacy caps how many there are; taught_from is the trade a new one is taught from by default; tool_basket lists the materials a self-equipped worker replaces to stay in the trade; staff_resource names the generic staffing resource a trade fills. These four are labelled heuristics (confidence D) of the engine's labour model, moved here from code.",
   "trades": {
     "artisan": {
       "family": "craft",
-      "training_years": 4
+      "training_years": 4,
+      "tool_basket": [
+        "timber",
+        "iron"
+      ],
+      "staff_resource": "craftsmen",
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
     },
     "carpenter": {
       "family": "craft",
-      "training_years": 5
+      "training_years": 5,
+      "tool_basket": [
+        "timber",
+        "iron"
+      ],
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
     },
     "chemist": {
       "family": "scholar",
       "initially_absent": true,
       "note": "Does not exist yet; you must create this trade.",
-      "training_years": 8
+      "training_years": 8,
+      "literate": true,
+      "taught_from": "scribe",
+      "tool_basket": [
+        "glass",
+        "charcoal"
+      ],
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
     },
     "electrician": {
       "family": "craft",
       "initially_absent": true,
       "note": "Does not exist. Cannot exist until Module 50 does.",
-      "training_years": 6
+      "training_years": 6,
+      "literate": true,
+      "tool_basket": [
+        "copper"
+      ],
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
     },
     "engineer": {
       "family": "scholar",
       "initially_absent": true,
       "note": "Does not exist as a paid civilian profession. A developed state may keep military and hydraulic engineers under its own employ; a private one is your invention.",
-      "training_years": 8
+      "training_years": 8,
+      "literate": true,
+      "taught_from": "smith",
+      "tool_basket": [
+        "iron",
+        "paper"
+      ],
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
     },
     "engraver": {
       "family": "craft",
       "note": "Die and seal cutter. Skilled ones already exist wherever there is a minting or sealing tradition; they become your punchcutters.",
-      "training_years": 6
+      "training_years": 6,
+      "tool_basket": [
+        "iron"
+      ],
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
     },
     "furnaceman": {
       "family": "craft",
-      "training_years": 2
+      "training_years": 2,
+      "tool_basket": [
+        "charcoal"
+      ],
+      "fatality_risk_per_year": 0.0005,
+      "fatality_confidence": "D",
+      "fatality_source": "TRANSITIONAL heuristic: burns and furnace accidents; no sourced pre-industrial rate found, set an order of magnitude under mining."
     },
     "glassblower": {
       "family": "craft",
-      "training_years": 6
+      "training_years": 6,
+      "tool_basket": [
+        "glass",
+        "charcoal"
+      ],
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
     },
     "labourer": {
       "family": "labour",
-      "training_years": 0
+      "training_years": 0,
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
     },
     "machinist": {
       "family": "craft",
       "initially_absent": true,
       "note": "Does not exist yet; you must create this trade.",
-      "training_years": 6
+      "training_years": 6,
+      "literate": true,
+      "taught_from": "smith",
+      "tool_basket": [
+        "iron"
+      ],
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
     },
     "mason": {
       "family": "craft",
       "note": "Abundant and good wherever there is a serious stone-building tradition; scarcer and dearer where building is mostly wood.",
-      "training_years": 5
+      "training_years": 5,
+      "tool_basket": [
+        "stone",
+        "timber"
+      ],
+      "fatality_risk_per_year": 0.0005,
+      "fatality_confidence": "D",
+      "fatality_source": "TRANSITIONAL heuristic: falls from scaffolding and walls in stone building work; no sourced pre-industrial rate found, set an order of magnitude under mining."
     },
     "master": {
       "family": "craft",
-      "training_years": 7
+      "training_years": 7,
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
     },
     "merchant": {
       "family": "scholar",
       "note": "Agent and factor, paid on commission in practice.",
-      "training_years": 4
+      "training_years": 4,
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
     },
     "millwright": {
       "family": "craft",
       "note": "Water-mill builder. Scarce wherever milling by water is already established; the scarcest useful trade you can hire.",
-      "training_years": 5
+      "training_years": 5,
+      "tool_basket": [
+        "timber",
+        "iron"
+      ],
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
     },
     "miner": {
       "family": "labour",
-      "training_years": 1
+      "training_years": 1,
+      "tool_basket": [
+        "iron",
+        "timber"
+      ],
+      "fatality_risk_per_year": 0.004,
+      "fatality_confidence": "C",
+      "fatality_source": "British Mines Inspectorate returns for coal mining, 1850s: about five fatal accidents per thousand a year, explosions alone about one per thousand (J. E. Williams/Inspectorate series as summarised in P. E. H. Hair, 'Mortality from Violence in British Coal-Mines, 1800-50', Economic History Review 21 (1968)); late-nineteenth-century metal mines ran one to two per thousand. Victorian deep coal is a high bound for earlier mining; no pre-industrial rate found."
     },
     "optician": {
       "family": "craft",
       "initially_absent": true,
       "note": "Does not exist yet. You must create this trade from glassworkers.",
-      "training_years": 6
+      "training_years": 6,
+      "literate": true,
+      "taught_from": "glassblower",
+      "tool_basket": [
+        "glass"
+      ],
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
     },
     "plumber": {
       "family": "craft",
       "note": "Lead worker. Skilled and numerous wherever lead pipe-making is already an established trade (Roman plumbarii are the best-attested case); scarce or nonexistent elsewhere.",
-      "training_years": 4
+      "training_years": 4,
+      "tool_basket": [
+        "lead"
+      ],
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
     },
     "potter": {
       "family": "craft",
-      "training_years": 3
+      "training_years": 3,
+      "tool_basket": [
+        "clay",
+        "charcoal"
+      ],
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
     },
     "sailor": {
       "family": "labour",
       "note": "Cheap and abundant.",
-      "training_years": 2
+      "training_years": 2,
+      "fatality_risk_per_year": 0.02,
+      "fatality_confidence": "C",
+      "fatality_source": "British merchant service deaths about one in forty-eight a year in 1885 (contemporary Board of Trade return as reported in the press; primary table not checked); infectious disease at sea from M. Roberts and T. Carter, Travel Medicine and Infectious Disease (2016). Davis (1962) and Rediker (1987) give context, not the rate."
     },
     "scholar": {
       "family": "scholar",
-      "training_years": 8
+      "training_years": 8,
+      "literate": true,
+      "staff_resource": "scholars",
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
     },
     "scribe": {
       "family": "scholar",
-      "training_years": 5
+      "training_years": 5,
+      "literate": true,
+      "tool_basket": [
+        "paper"
+      ],
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
     },
     "smith": {
       "family": "craft",
-      "training_years": 5
+      "training_years": 5,
+      "tool_basket": [
+        "iron",
+        "charcoal"
+      ],
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
     },
     "soldier": {
       "family": "labour",
       "note": "A man under arms, drawn from the working age; the state's army is booked in this trade. Basic training is months, not years (Vegetius, De re militari 1.13 gives four months).",
-      "training_years": 1
+      "training_years": 1,
+      "fatality_risk_per_year": 0.02,
+      "fatality_confidence": "C",
+      "fatality_source": "Peacetime service mortality, mostly disease: about two-fifths of Roman legionaries died during a twenty-five-year term (W. Scheidel, Measuring Sex, Age and Death in the Roman Empire, JRA Suppl. 21 (1996), ch. 3, via secondary quotation). Battle deaths are not a yearly constant and belong to the conflict mechanics."
     }
   }
 }

@@ -35,7 +35,7 @@ class GoodsWithoutMass(unittest.TestCase):
     def test_immobile_good_has_no_market_area_beyond_its_tile(self):
         tiles = {name: TileSpec(name, 40.0, longitude, 1000.0, False, ("a", "b"), 0.5, 1.0)
                  for name, longitude in (("a", 0.0), ("b", 1.0))}
-        table = tile_costs.CarriageTable(tiles, tile_costs.build_edges(tiles), {"draught": 1.0, "pack": 1.0}, {})
+        table = tile_costs.carriage_table(tiles, {"cart": 1.0, "pack": 1.0}, world_map=tile_costs.world_map_of(tiles))
         spec = specs()["hectare_land"]
         self.assertEqual(market_areas.value_per_tonne(spec, 100.0), 0.0)
         areas = market_areas.partition(tiles, table, market_areas.value_per_tonne(spec, 100.0), {"a": 1, "b": 1})

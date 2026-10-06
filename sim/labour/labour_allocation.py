@@ -64,11 +64,12 @@ def farm_workers_needed(baseline_fte, current_fte, shortfall_kg,
     return min(wanted, land_limit_fte)
 
 
-def starting_hours(production, reached_nodes, total_hours, farm_hours):
+def starting_hours(production, reached_nodes, techniques_available_to, total_hours, farm_hours):
     """Hours by trade at the start: the farm hours the farm logic asks for,
     and the rest split by the spun-up trade shares."""
     rest_hours = total_hours - farm_hours
-    shares = workforce_spinup.cached_spin_up(production, reached_nodes).shares_by_trade
+    shares = workforce_spinup.cached_spin_up(
+        production, reached_nodes, techniques_available_to).shares_by_trade
     hours = {trade: rest_hours * share for trade, share in shares.items()}
     hours[FARM_TRADE] = farm_hours
     return hours
@@ -106,7 +107,8 @@ class LabourAllocationMixin:
         reached = frozenset(self._world.civ["starting_techs"]) | frozenset(self._world.state.projects.done)
         cached = getattr(self, "_need_shares_cache", None)
         if cached is None or cached[0] != reached:
-            shares = workforce_spinup.need_shares_by_trade(labour_market.production_data(), reached)
+            shares = workforce_spinup.need_shares_by_trade(
+                labour_market.production_data(), reached, self._world.techniques_available_to)
             cached = self._need_shares_cache = (reached, shares)
         if cached[1]:
             return cached[1]
@@ -229,22 +231,10 @@ class LabourAllocationMixin:
 
     def _people_under_arms(self):
         """People nationwide of trades drawn from the unskilled pool that actors hold on staff: they
-        have left production and farming while they serve. Actors' staff reaches labour as the slice
-        that comes out of the reachable pool (the nation's share of the trade applied to the reach),
-        so the nationwide number is that slice scaled back up by nation over reach. A port member for
-        the nationwide figure would replace this (Complaints/426)."""
+        have left production and farming while they serve."""
         world = self._world
-        total = 0.0
-        for trade in sorted(world.wages):
-            if not trade_data.drawn_from_unskilled_pool(trade):
-                continue
-            local = world.actor_staff_fte(trade)
-            if local <= 0.0:
-                continue
-            reach = self.reachable_trade_population(trade) + local
-            if reach > 0.0:
-                total += local * self.national_trade_population(trade) / reach
-        return total
+        return sum(world.actors_staff_nationwide(trade) for trade in sorted(world.wages)
+                   if trade_data.drawn_from_unskilled_pool(trade))
 
     def _society_hours_available(self):
         """Hours the society can put into farm work and trades: the working age
@@ -266,7 +256,7 @@ class LabourAllocationMixin:
             farm_hours = min(baseline_fte * HOURS_PER_FARM_WORKER_YEAR, total_hours)
             economy.society_labour_hours = starting_hours(
                 labour_market.production_data(), self._world.civ["starting_techs"],
-                total_hours, farm_hours)
+                self._world.techniques_available_to, total_hours, farm_hours)
         last_shortfall_kg = economy.farm_last_shortfall_kg
         current_fte = economy.society_labour_hours[FARM_TRADE] / HOURS_PER_FARM_WORKER_YEAR
         if last_shortfall_kg is None:

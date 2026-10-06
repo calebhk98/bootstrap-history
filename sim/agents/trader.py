@@ -10,24 +10,8 @@ from .base import RecordedActor
 from .borrowing import TRACK_RECORD_YEARS
 from .policy import Decision, Option
 from .tuning import EXIT_LOSS_YEARS
+from .trader_routes import gaining_routes, paying_tonnes, price_answers, route_key, route_terms  # noqa: F401  (re-exported)
 from .tuning_trader import TRADER_DEPTH_SHARE, TRADER_RISK_SHARE
-
-
-def route_key(material: str, source: str, destination: str) -> str:
-	return "%s@%s>%s" % (material, source, destination)
-
-
-def route_terms(world: Any, source: str, destination: str, material: str) -> Optional[Dict[str, float]]:
-	"""Per tonne: what a cargo costs to buy and carry, and what carrying it gains before the cost of
-	its capital. None when either end has no price."""
-	bought = world.price_at(material, source)
-	sold = world.price_at(material, destination)
-	if not bought or not sold or bought <= 0.0 or sold <= 0.0:
-		return None
-	freight = world.freight_between(source, destination, material, 1.0)
-	outlay = bought + freight
-	return {"bought": bought, "sold": sold, "freight": freight, "outlay": outlay,
-			"gain": sold - outlay - bought * TRADER_RISK_SHARE}
 
 
 def depth_room(world: Any, source: str, destination: str, material: str, planned: float = 0.0) -> float:
@@ -69,22 +53,24 @@ class Trader(RecordedActor):
 		# cargo already sized for a destination this year, so two sources do not each fill its room
 		planned: Dict[Tuple[str, str], float] = {}
 		for material in sorted(world.trade_materials()):
-			for source in places:
-				for destination in places:
-					terms = route_terms(world, source, destination, material) if source != destination else None
-					if terms is None or terms["gain"] <= 0.0:
-						continue
-					arriving = planned.get((material, destination), 0.0)
-					tonnes = min(depth_room(world, source, destination, material, arriving), budget / terms["outlay"])
-					if tonnes <= 0.0:
-						continue
-					planned[(material, destination)] = arriving + tonnes
-					interest = terms["bought"] * rate
-					options.append(Option(
-						subject=route_key(material, source, destination),
-						worth=tonnes * (terms["sold"] - interest - terms["bought"] * TRADER_RISK_SHARE),
-						cost=tonnes * terms["outlay"],
-						detail={"material": material, "source": source, "destination": destination, "tonnes": tonnes}))
+			for source, destination, terms in gaining_routes(world, material, places, lambda _source: places):
+				arriving = planned.get((material, destination), 0.0)
+				tonnes = budget / terms["outlay"]
+				if price_answers(world, material, destination):
+					tonnes = paying_tonnes(world, source, destination, material, terms, tonnes, rate)
+				else:
+					tonnes = min(depth_room(world, source, destination, material, arriving), tonnes)
+				if tonnes <= 0.0:
+					continue
+				planned[(material, destination)] = arriving + tonnes
+				interest = terms["bought"] * rate
+				landed = world.price_after_cargo(material, destination, tonnes, True)
+				average_sold = terms["sold"] if landed is None else (terms["sold"] + landed) / 2.0
+				options.append(Option(
+					subject=route_key(material, source, destination),
+					worth=tonnes * (average_sold - interest - terms["bought"] * TRADER_RISK_SHARE),
+					cost=tonnes * terms["outlay"],
+					detail={"material": material, "source": source, "destination": destination, "tonnes": tonnes}))
 		return options
 
 	def ship_cargo(self, option: Option, world: Any) -> float:

@@ -137,7 +137,7 @@ class FreightMixin:
     # were the same book price here regardless of the thousand-odd
     # kilometres of open water between them.
     #
-    # THE CROSSING. geography.json's own per-region `minerals` table (read
+    # THE CROSSING. the geography data's own per-region `minerals` table (read
     # by mineral_scale()/_compute_mineral_scale() in geography.py to decide
     # how much of iron/coal/copper/lead/tin/silver/saltpetre you can BUY)
     # already says which of this game's 22 regions actually produce each of
@@ -151,11 +151,11 @@ class FreightMixin:
     #
     # WHY THIS MATERIAL SET AND NOT OTHERS. Extending this to gold, or to
     # commodities.json's own curated wool/cotton/coffee, was deliberately
-    # left alone: geography.json's `minerals` table is the ONLY per-region
+    # left alone: the geography data's `minerals` table is the ONLY per-region
     # location data this engine carries at global (not just Roman-province)
     # coverage - commodities.json's "regions" field for those was written
     # Rome-centric (its `iron` entry alone lists only Roman provinces, none
-    # of geography.json's other 16 regions, even though geography.json's own
+    # of the geography data's other 16 regions, even though the geography data's own
     # `minerals` table credits China with more iron abundance than any
     # Roman province has) - using it for a non-Roman civilization would
     # invent a worse-than-nothing answer ("Han China must import all its
@@ -165,7 +165,7 @@ class FreightMixin:
     #
     # WHAT THIS DELIBERATELY DOES NOT DO. It does not touch located_
     # materials (gutta percha, natural rubber, platinum) - geography.
-    # material_cost_factor() already prices those from geography.json's own
+    # material_cost_factor() already prices those from the geography data's own
     # reach-based multiplier (see project_cost()'s use of it above), and
     # that crossing is not flat or absent, only differently sourced (a
     # hand-set multiplier calibrated to Rome rather than transport.py's
@@ -231,7 +231,7 @@ class FreightMixin:
         return cached
 
     def _material_source_regions(self, material):
-        """Regions geography.json's own per-region `minerals` table credits
+        """Regions the geography data's own per-region `minerals` table credits
         with real abundance of `material` (iron, coal, copper, lead, tin,
         silver, saltpetre - mineral_scale()'s own tracked set; see
         geography.py's _compute_mineral_scale, which reads this exact same
@@ -256,7 +256,7 @@ class FreightMixin:
         territory costs nothing extra to move WITHIN it, by this module's
         simplification.
 
-        None if geography.json has no located-region data for `material` at
+        None if the geography data has no located-region data for `material` at
         all (everything outside the seven tracked minerals - see
         _material_source_regions). CLAUDE.md SS3.1 is explicit that an
         unknown distance is not licence to invent one, so this returns
@@ -364,7 +364,7 @@ class FreightMixin:
         to haul it here from the nearest place it actually comes from (see
         material_freight_factor() above - 1.0, no change, for a material
         this civilization already produces somewhere in its own territory,
-        or that geography.json has no location data for at all).
+        or that the geography data has no location data for at all).
 
         FINDINGS_ROUND2 section R: MARKET_SHARE was a supply ceiling with no
         price response at all -- buying up to it cost the same per tonne as

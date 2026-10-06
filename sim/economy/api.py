@@ -6,10 +6,13 @@ record's internals so that callers do not hold `economy.record.<field>` in their
 """
 WALL = "two-way"  # nothing here reaches sim/engine/; the engine hands it what it needs (sim/engine/economy_port.py)
 
-from . import households, taxes, tile_costs
+import math
+
+from . import diagnostics, households, market_curves, taxes, tile_costs
 from .currency import currency_from_coin_standard
 from .economy import Economy
 from .foreign import external_orders
+from .market_memory import market_key
 from .notional import shown_prices
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
 from .protocols import AgentOrders, YearInputs
@@ -18,17 +21,21 @@ from .record import EconomyRecord
 from .setup import EconomySetup, TradeSpec, goods_specs
 from .types import EDGE_EXTERNAL, EDGE_LEGACY, GoodsMove, Offer, Transfer
 from .unit_cost import variable_cost_per_run
-from .year_close import rebase_price_level
+from .year_close import rebase_basket_price_level
 from .year_labour import trade_premium
+from sim.world import capital_market
 
 __all__ = [
-    "households", "taxes", "tile_costs", "currency_from_coin_standard", "Economy", "external_orders",
+    "diagnostics", "households", "taxes", "tile_costs", "currency_from_coin_standard", "Economy", "external_orders",
+    "price_response",
     "shown_prices", "Producer", "expected_output_prices", "live_input_prices", "live_wages", "AgentOrders",
     "YearInputs", "recipes_from_production_data", "EconomyRecord", "EconomySetup", "TradeSpec",
     "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "GoodsMove", "Offer", "Transfer",
-    "variable_cost_per_run", "rebase_price_level", "trade_premium",
+    "variable_cost_per_run", "rebase_basket_price_level", "trade_premium",
     "traded_volumes", "opening_quantities", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
+    "credit_room", "economy_from_record", "blank_economy", "export_record", "finish_spin_up", "shown_prices_of",
+    "settle_founder_takings", "move_goods", "cohort_incomes",
 ]
 
 _KEY_SEPARATOR = "|"
@@ -73,6 +80,17 @@ def interest_rate(economy):
     return economy.record.memory.rates.get(economy.setup.currency_id)
 
 
+def credit_room(economy, borrower_id):
+    """What lenders will still advance `borrower_id` beyond what others were lent at the last lending: the
+    share of the savings on offer that lenders put out, less what the other borrowers took. None before
+    lenders have met (no savings were offered yet)."""
+    record = economy.record
+    if record.funds_offered <= 0.0:
+        return None
+    others = sum(lent for borrower, lent in record.lent_by_borrower.items() if borrower != borrower_id)
+    return capital_market.headroom(capital_market.lendable_capacity(record.funds_offered), others)
+
+
 def producers_of(economy):
     """The producers by agent id."""
     return dict(economy.record.producers)
@@ -88,6 +106,51 @@ def external_trade_volume(economy):
     return economy.record.book.edge_volume(EDGE_EXTERNAL, economy.setup.currency_id)
 
 
+def cohort_incomes(economy):
+    """(people, last year's money income) of every household cohort, poorest per head first: the economy's
+    own answer to what its bodies of people earn."""
+    rows = [(cohort.people, cohort.last_year_income) for cohort in economy.record.cohorts.values()
+            if cohort.people > 0.0]
+    return sorted(rows, key=lambda row: (row[1] / row[0], row[0]))
+
+
+def price_response(economy, good, landed_units, taken_units):
+    """Factor on a good's national price once `landed_units` more are offered and `taken_units` more are bought at
+    the port, from the book the port's market last cleared (the economy's own demand and supply). The national price
+    weighs each market area by what it usually trades, so a move at the port shows in it by the port's share of that
+    value. None when the port's market has no book or traded nothing."""
+    area = market_curves.port_area(economy.area_map, economy.setup.port_tile, good)
+    curve = economy.record.curves.get(market_key(good, area)) if area is not None else None
+    if curve is None:
+        return None
+    memory = economy.record.memory
+    factor = market_curves.price_response(curve, good, memory.prices.get(market_key(good, area)), landed_units, taken_units)
+    if factor is None or not math.isfinite(factor):
+        return factor
+    return 1.0 + _port_share(economy, good, area) * (factor - 1.0)
+
+
+def _port_share(economy, good, area):
+    """The port area's share of a good's usual traded value, which weighs a move at the port into the national
+    price. Kept per economy until its next year, when prices and weights change."""
+    cache = economy.__dict__.setdefault("_port_shares", {})
+    key = (economy.record.memory.prices is not None and id(economy.record.memory.prices), good, area)
+    if key not in cache:
+        memory = economy.record.memory
+        weights = memory.volume_weights or economy.record.volumes
+        total = 0.0
+        port_value = 0.0
+        port_key = market_key(good, area)
+        for market, price in memory.prices.items():
+            if market.split(_KEY_SEPARATOR, 1)[0] == good:
+                value = price * weights.get(market, 0.0)
+                total += value
+                if market == port_key:
+                    port_value = value
+        cache[key] = port_value / total if total > 0.0 else 1.0
+    return cache[key]
+
+
 def account_balance(economy, agent_id):
     """An agent's money balance in the economy's currency."""
     return economy.record.book.balance(agent_id, economy.setup.currency_id)
@@ -96,3 +159,47 @@ def account_balance(economy, agent_id):
 def account_holdings(economy, agent_id):
     """An agent's holdings in the book, as the book reports them."""
     return economy.record.book.holdings(agent_id)
+
+
+def economy_from_record(setup, saved):
+    """An Economy resumed from a record exported by `export_record`."""
+    return Economy(setup, EconomyRecord.from_record(saved))
+
+
+def blank_economy(setup):
+    """An Economy at its opening, before any year has run."""
+    return Economy(setup)
+
+
+def export_record(economy):
+    """The economy's record as plain data, for saving."""
+    return economy.record.to_record()
+
+
+def finish_spin_up(economy):
+    """Closes the hidden spin-up years: the price level is rebased to one and the clock returns to zero."""
+    rebase_basket_price_level(economy.setup, economy.record)
+    economy.record.memory.year = 0
+
+
+def shown_prices_of(economy):
+    """(prices, stale goods) the game is shown for this economy; see `notional.shown_prices`."""
+    return shown_prices(economy.setup, economy.record)
+
+
+def move_goods(economy, moves):
+    """Applies goods moves to the economy's book."""
+    economy.record.book.move_many(moves)
+
+
+def settle_founder_takings(economy, agent_id, edge_id, tile_note="founder's takings"):
+    """Sends an agent's money and every unsold holding back over an edge; returns the money sent."""
+    book, money = economy.record.book, economy.setup.currency_id
+    proceeds = book.balance(agent_id, money)
+    if proceeds > 0.0:
+        book.transfer(Transfer(agent_id, edge_id, money, proceeds, tile_note))
+    returns = [GoodsMove(agent_id, edge_id, good, tile, quantity, "unsold concern output")
+               for good, tiles in book.holdings(agent_id)["goods"].items()
+               for tile, quantity in tiles.items() if quantity > 0.0]
+    book.move_many(returns)
+    return proceeds

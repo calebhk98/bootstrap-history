@@ -4,10 +4,11 @@ spent on works, a named purchase that hires people; no outlay of the state goes 
 from .harness import *  # noqa: F401,F403
 from functools import partial
 
-sim = partial(sim, agent_economy=False)   # these checks pin the engine's own loanable-funds market, wage table and state budget
+sim = partial(sim, agent_economy=False)   # legacy: pins how the engine's budget spends a surplus; the agent-economy budget is test_economy_agent_state.py
 
 
 from sim.agents.tuning_spending import RESERVE_CEILING_YEARS_OF_NEED
+from sim.engine.coin_hoard import KEEPING_CAUSE
 
 
 def one_year(game):
@@ -17,7 +18,7 @@ def one_year(game):
 
 def purchases(treasury):
     """Every purpose a state may pay for: a line it keeps up, or a named purchase or payment."""
-    return set(treasury.record.need) | {"interest", "patronage", "works", "relief"}
+    return set(treasury.record.need) | {"interest", "patronage", "works", "relief", KEEPING_CAUSE}
 
 
 # ---- no outlay without a recipient --------------------------------------------------------------

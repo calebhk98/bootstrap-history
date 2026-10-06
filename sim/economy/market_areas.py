@@ -14,8 +14,8 @@ from typing import Dict, Iterable, List, Mapping, Tuple
 from sim.constants import declare
 from sim.economy.tile_costs import CarriageTable
 from sim.economy.types import AreaId, GoodId, GoodSpec, MarketArea, TileId
+from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
-KILOGRAMS_PER_TONNE = 1000.0
 
 MARKET_AREA_THRESHOLD_SHARE = declare(
     "MARKET_AREA_THRESHOLD_SHARE", 0.15, kind="temporary_heuristic",

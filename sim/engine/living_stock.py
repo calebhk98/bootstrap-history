@@ -81,5 +81,5 @@ class LivingStockMixin:
         if material not in facts["solved_materials"] or not price:
             return None
         per_tonne = price / tonnes_per_unit(material) * self.partner_price_level(civilization_id)
-        return (per_tonne * (1.0 + self._trader_cost_share(facts["route"], None, civilization_id))
+        return (per_tonne * (1.0 + self._trader_cost_share(facts["route"], material, civilization_id))
                 + self._agent_cost_per_tonne(civilization_id, facts["route"]) + facts["freight_per_tonne"])

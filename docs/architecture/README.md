@@ -22,6 +22,7 @@ is now. None of this is an approved plan yet.
 | `MAP_AND_WEATHER.md` | Why the map and the weather model are two disconnected systems, and what it would take to join them. | Ours |
 | `ECONOMY_MODEL_SURVEY.md` | How other models and games price goods, set wages, split joint products and create starting conditions, with what to borrow for each of our modules. | Ours, from external sources |
 | `ECONOMY_AGENTS.md` | The agent economy being built in `sim/economy/`: agents with money and goods, markets clearing within the year, money as a stock, tile market areas, and the port that keeps it apart from the engine. | Ours |
+| `sim/agents/MULTIPLAYER.md` | Players, countries, traders and strata as actors: how a game's roster is seeded from the civilisation, the foreign economies and the `cast` key. | Ours |
 | `CODE_ANALYSIS_TOOLING.md` | What checks the code's maintainability (pylint and the naming plan), which parts are hand-written and which library sits under each. | Ours |
 | `PACKAGE_WALLS.md` | The walled packages (economy, agents, labour, geography, ui): the rule, each package's surface and port, and how to extend one. | Ours |
 

@@ -32,4 +32,6 @@ def goods_sectors(strata: List[Any], categories: Dict[str, Dict[str, Any]], worl
 			"the concerns you and the firms run have pushed the price of %s down %d%%" % (
 				category, round(100.0 * depression)),
 			income * depression, income, people, 1.0))
+		# the founder answers for his share of the sellers; firms and states selling into the category answer for the rest
+		sectors[-1].blame_share = float(data.get("founder_share", 1.0))
 	return sectors

@@ -21,6 +21,7 @@ import collections
 
 from sim.constants import declare
 from .failure_diagnosis import failure_teaches
+from .projects_precaution import chosen as precaution_chosen, relief_multiplier as precaution_relief, quote as precaution_quote
 
 
 class ProgressMixin:
@@ -389,19 +390,28 @@ class ProgressMixin:
                 return self.CONTROL_RELIEF_FACTOR
         return 1.0
 
-    def effective_risk(self, node_id):
+    def effective_risk(self, node_id, precaution=None):
         """This node's actual chance of failing on its NEXT attempt, after
         whatever retry-learning its past failures have already bought (see
-        _retry_risk_multiplier just above) AND whatever control-theory relief
+        _retry_risk_multiplier just above), whatever control-theory relief
         a completed process controller has earned it (see
-        _control_relief_multiplier just above). Equal to the bare node risk
+        _control_relief_multiplier just above) and whatever a bought
+        precaution (a pilot plant, a redundant team) relieves. `precaution`
+        None reads the running project's own choice; True or False quotes
+        the node as if it were bought or not. Equal to the bare node risk
         the first time anything is tried, with no controller built. A screen
         quoting a node's risk once failed_attempts[node_id] is above zero, or once
         the controller is done, should read THIS, not the tree's bare
         node["risk"] - that number is no longer what the dice use.
         """
+        bought = precaution_chosen(self, node_id) if precaution is None else precaution
         return (self.nodes[node_id]["risk"] * self._retry_risk_multiplier(node_id)
-                * self._control_relief_multiplier(node_id))
+                * self._control_relief_multiplier(node_id)
+                * precaution_relief(self, node_id, bought))
+
+    def precaution_quote(self, node_id):
+        """What the node's pilot plant or redundant team would cost and buy, or None."""
+        return precaution_quote(self, node_id)
 
     # ---- WHAT A RISKY NODE ACTUALLY COSTS IN CALENDAR TIME -----------------
     # effective_risk and calendar_floor answer separate questions about odds and wait.

@@ -115,7 +115,7 @@ class MarketClearingMixin:
                      entry["capacity_tonnes"], entry["stock_tonnes"],
                      self._market_flow_figures(commodity, with_flows),
                      self.actor_market_version(), self.state.scenario.year,
-                     tuple(self.foreign_economies()))
+                     tuple(self.foreign_economies()), self.actor_trade_signature())
         cache = getattr(self.household, "_market_outcome_cache", None)
         if cache is None:
             cache = self.household._market_outcome_cache = {}
@@ -191,6 +191,7 @@ class MarketClearingMixin:
         price level the year opened with; the coin the year's trade moves counts from the next year."""
         self._open_market_book()
         if self.economy.run_agent_year():
+            self.close_partner_books()
             self._close_real_output()
             return
         self._price_level_held = self.home_price_level()
@@ -198,6 +199,7 @@ class MarketClearingMixin:
             self._close_commodities()
         finally:
             self._price_level_held = None
+        self.close_partner_books(cargo_only=True)
         self.foreign_fleet_year_end()
         self._close_real_output()
 

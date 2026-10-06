@@ -18,11 +18,11 @@ from .market.trades import fallback_trade, trade_specs
 from .market.year import run_year as run_labour_year
 from .labour_market import production_data
 from .wage_provider import people_fed_per_worker
-from .wages import CAREER_YEARS, HOURS_PER_WORKER_YEAR
+from .wages import CAREER_YEARS
 
 __all__ = [
     "wage_provider", "wages", "Labour", "production_data",
-    "people_fed_per_worker", "CAREER_YEARS", "HOURS_PER_WORKER_YEAR",
+    "people_fed_per_worker", "CAREER_YEARS",
     # the labour-market core (sim/labour/market/DESIGN.md): plain records in, plain records out
     "run_labour_year", "clear_labour_markets", "opening_labour_market", "trade_specs", "fallback_trade", "people_in",
     "Bid", "Clearing", "MarketState", "Route", "School", "TradeSpec", "YearInputs", "YearReport",

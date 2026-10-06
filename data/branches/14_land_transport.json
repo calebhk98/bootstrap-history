@@ -544,7 +544,9 @@
   "traits": [
    "commerce",
    "infrastructure"
-  ]
+  ],
+  "copy_visibility": 0.9,
+  "copy_visibility_reason": "The whole design is in the object: one wheel, two handles and a tray, so looking at one shows how it is built."
  },
  {
   "id": "lnd_spring_leaf",
@@ -1634,7 +1636,12 @@
   "traits": [
    "commerce",
    "infrastructure"
-  ]
+  ],
+  "mechanics": {
+   "precaution": {
+    "kind": "pilot_plant"
+   }
+  }
  },
  {
   "id": "lnd_gearbox_clutch",

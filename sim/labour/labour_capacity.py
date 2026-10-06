@@ -36,8 +36,8 @@ class _LiterateTrades:
 
     def __get__(self, instance, owner=None):
         if instance is None:
-            return frozenset(legacy_trade_defaults.LITERATE)
-        return trade_data.literate_trades(instance._world.wages)
+            return frozenset()
+        return trade_data.literate_trades(trade_data.registry_of(instance._world), instance._world.wages)
 
 
 class CapacityMixin:

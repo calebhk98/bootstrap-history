@@ -16,6 +16,7 @@ These are methods of Sim; they are a mixin only so that they can live in a
 file of their own. Behaviour is unchanged and verified byte-identical.
 """
 from sim.constants import declare
+from . import cause_book
 
 
 def _trim(amount):
@@ -38,6 +39,7 @@ class StaffingMixin:
         projects.closures[node_id] = {"reason": reason, "year": self.state.scenario.year if year is None else year}
         if reason == self.CLOSED_FOR_STAFF:
             projects.ever_closed_for_staff.add(node_id)
+        cause_book.record_concern(self, "closure", node_id, reason)
 
     def closure_of(self, node_id):
         """The closure record of a currently shut work, else None."""
@@ -863,6 +865,7 @@ class StaffingMixin:
         # books rather than leaving it known-but-closed.
         if self.is_venture(node_id):
             projects.operating.add(node_id)
+            cause_book.record_concern(self, "opening", node_id, "restored")
         return True, ("%s back in service for %s denarii%s"
                       % (node_id, "{:,.0f}".format(fee),
                          (" (%s)" % _grace_note) if _grace_note else ""))

@@ -4,7 +4,7 @@ goods those entries make; nothing counts completed technologies."""
 from .harness import *  # noqa: F401,F403
 from functools import partial
 
-sim = partial(sim, agent_economy=False)   # these checks pin the engine's own yearly material market
+sim = partial(sim, agent_economy=False)   # legacy: pins real output through the engine's yearly material market, which the agent economy replaces
 
 
 import copy
@@ -110,13 +110,10 @@ game._open_market_book()
 book = game.state.economy.market_book
 book["iron"]["traded_tonnes"] *= 1.5
 book[GOOD]["traded_tonnes"] *= 0.8
-granted = frozenset(game.state.projects.granted)
-base_prices = {material: price for material, price in calculated_goods_prices(
-    granted, civilization_id="rome_100ad", civilization=game.civ, money_per_labour_hour=1.0).items()
-    if price > 0.0}
+from sim.engine.real_output import opening_prices_in_hours
+base_prices = opening_prices_in_hours(frozenset(game.state.projects.granted), game.civ, game._opening_farmed_hectares)
 opening = market_demand.household_demand_by_material(
-    {material: price for material, price in base_prices.items() if game.material_price_basis(material) != "mature"},
-    game._opening_population(), market_demand.MEAN_INCOME_HOURS_PER_CAPITA)
+    base_prices, game._opening_population(), market_demand.MEAN_INCOME_HOURS_PER_CAPITA)
 total = 0.0
 for material, units in opening.items():
     entry = book.get(game._material_tag(material)[0])

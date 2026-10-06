@@ -43,10 +43,10 @@ class ModEconomicCatalogTests(unittest.TestCase):
         self.production = {
             "test_acme_k3f9:ore": {"outputs": {"test_acme_k3f9:ore": 1}, "inputs": {},
                          "labour_hours": {"labourer": 2}, "extracted_from": "deposit",
-                         "requires_node": None, "yield_basis": "Synthetic acceptance-test extraction basis with explicit unit output.", "conf": "C"},
+                         "requires_node": None, "unit_dimension": "mass", "yield_basis": "Synthetic acceptance-test extraction basis with explicit unit output.", "conf": "C"},
             "test_acme_k3f9:ingot": {"outputs": {"test_acme_k3f9:ingot": 1}, "inputs": {"test_acme_k3f9:ore": 2},
                            "labour_hours": {"test_acme_k3f9:clockmaker": 1},
-                           "requires_node": None, "yield_basis": "Synthetic acceptance-test smelting basis with explicit mass conversion.", "conf": "C"}}
+                           "requires_node": None, "unit_dimension": "mass", "yield_basis": "Synthetic acceptance-test smelting basis with explicit mass conversion.", "conf": "C"}}
         (mod / "data/production/metals.json").write_text(json.dumps({"materials": self.production}))
 
     def tearDown(self):

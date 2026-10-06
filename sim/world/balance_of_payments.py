@@ -32,8 +32,8 @@ def opening_stock_units(workers: float, wage_per_year: float) -> float:
     return max(0.0, workers) * max(0.0, wage_per_year) * MONEY_STOCK_YEARS_OF_WAGES
 
 
-def price_level(stock_units: float, opening_units: float) -> float:
-    """Price level against the opening one."""
+def money_stock_price_level(stock_units: float, opening_units: float) -> float:
+    """Price level against the opening one, from the stock of coin against the opening stock."""
     if opening_units <= 0.0:
         return 1.0
     return max(PRICE_LEVEL_FLOOR, stock_units / opening_units) ** PRICE_LEVEL_PASS_THROUGH

@@ -146,7 +146,7 @@ class StatePressureMixin:
 
     def military_leverage(self):
         """How much of the military branch this founder can put in a patron's
-        hands: the count that "if I woke up in Rome and made cannon" is
+        hands: the count that "if I woke up in a past society and made cannon" is
         actually asking about.
 
         Measured against a founder with none of the 111+ military, weapon and

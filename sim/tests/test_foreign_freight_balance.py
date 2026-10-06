@@ -9,7 +9,7 @@ lifts only what its carriers can.
 from .harness import *  # noqa: F401,F403
 from functools import partial
 
-sim = partial(sim, agent_economy=False)   # these checks pin the engine's own yearly material market
+sim = partial(sim, agent_economy=False)   # legacy: pins freight lift and coin balances of the engine's own foreign trade; see test_economy_agent_foreign.py
 
 
 from sim.engine.data import load_civ
@@ -101,10 +101,10 @@ book.clear()
 # --- the coin that pays for goods.
 opening = 1000.0
 check("a stock at its opening level leaves traded prices where they are",
-      balance_of_payments.price_level(opening, opening) == 1.0, None)
+      balance_of_payments.money_stock_price_level(opening, opening) == 1.0, None)
 check("a drained stock lowers the price level and a swollen one raises it",
-      balance_of_payments.price_level(0.5 * opening, opening) < 1.0
-      < balance_of_payments.price_level(2.0 * opening, opening), None)
+      balance_of_payments.money_stock_price_level(0.5 * opening, opening) < 1.0
+      < balance_of_payments.money_stock_price_level(2.0 * opening, opening), None)
 check("an economy cannot pay out more coin than it holds",
       balance_of_payments.coin_paid(500.0, 200.0) == 200.0
       and balance_of_payments.coin_paid(-5.0, 200.0) == 0.0, None)
@@ -116,6 +116,7 @@ home_per_coin = coin["kg_per_unit"] * r._material_prices()[coin["material"]]
 home_opening = r.home_coin_stock_units()
 check("with no trade the home stock is its opening one and the price level is one",
       r.home_price_level() == 1.0 and r.partner_price_level(PARTNER) == 1.0, None)
+r._coin_carriage_money_per_tonne = lambda civilization_id: 0.0   # carriage of coin: test_coin_carriage_and_treasury_keeping
 r._settle_flow(PARTNER, 5.0, 0.1 * home_opening, home_per_coin)
 paid = r.foreign_balance_of_payments(PARTNER)
 check("an import is paid in coin that leaves the home stock",

@@ -773,7 +773,16 @@
     "traits": [
       "infrastructure",
       "labour_saving"
-    ]
+    ],
+    "mechanics": {
+      "diagnosis_instrument": {
+        "instrument": "prc_gauge_blocks_johansson",
+        "quantity": "tolerance",
+        "needed": 0.005,
+        "unit": "mm",
+        "needed_words": "hole positions true to 5 microns"
+      }
+    }
   },
   {
     "id": "prc_honing_machine",
@@ -809,7 +818,16 @@
     "traits": [
       "labour_saving"
     ],
-    "_internal": "[FIXED after independent audit: honing works to a micron; the 0.01 mm rung understated it.]"
+    "_internal": "[FIXED after independent audit: honing works to a micron; the 0.01 mm rung understated it.]",
+    "mechanics": {
+      "diagnosis_instrument": {
+        "instrument": "prc_gauge_blocks_johansson",
+        "quantity": "tolerance",
+        "needed": 0.001,
+        "unit": "mm",
+        "needed_words": "a bore true to a micron"
+      }
+    }
   },
   {
     "id": "prc_lapping_plate",
@@ -1754,7 +1772,16 @@
     "traits": [
       "infrastructure",
       "labour_saving"
-    ]
+    ],
+    "mechanics": {
+      "diagnosis_instrument": {
+        "instrument": "prc_gauge_blocks_johansson",
+        "quantity": "tolerance",
+        "needed": 0.001,
+        "unit": "mm",
+        "needed_words": "ball and race true to a micron"
+      }
+    }
   },
   {
     "id": "prc_ballscrew",

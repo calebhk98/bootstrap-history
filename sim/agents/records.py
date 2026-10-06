@@ -90,6 +90,8 @@ class ActorRecord:
 	plan: Dict[str, Any] = field(default_factory=dict)
 	welfare: float = 0.0
 	allowance: float = 0.0
+	# a bonded stratum: the value of this year's work, owed to its keeper at settlement
+	labour_product: float = 0.0
 	moving: Dict[str, float] = field(default_factory=dict)
 
 	# ---- exchange: offers other actors have made to this one, and how many it has made itself

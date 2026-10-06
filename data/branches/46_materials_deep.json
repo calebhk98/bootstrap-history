@@ -328,7 +328,12 @@
   "sus": 2,
   "up_hours": 0,
   "kb": "10_metallurgy.md",
-  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]",
+  "mechanics": {
+   "precaution": {
+    "kind": "pilot_plant"
+   }
+  }
  },
  {
   "id": "mt2_magnesium_extraction",
@@ -407,7 +412,12 @@
   "sus": 2,
   "up_hours": 0,
   "kb": "10_metallurgy.md",
-  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]",
+  "mechanics": {
+   "precaution": {
+    "kind": "pilot_plant"
+   }
+  }
  },
  {
   "id": "mt2_platinum_group_metals",
@@ -708,7 +718,16 @@
   "gov": 1,
   "sus": 8,
   "kb": "10_metallurgy.md",
-  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]",
+  "mechanics": {
+   "diagnosis_instrument": {
+    "instrument": "met_spectroscopic_assay",
+    "quantity": "impurity",
+    "needed": 0.0001,
+    "unit": "impurity fraction",
+    "needed_words": "metal of 99.99% purity"
+   }
+  }
  },
  {
   "id": "mt2_basic_converter",
@@ -980,7 +999,16 @@
   "risk": 0.28,
   "conf": "C",
   "note": "Melting under vacuum removes dissolved oxygen, nitrogen, hydrogen. Deoxidizing with aluminum and calcium then vacuum refining produces ultra-clean steel. WW1 prompted research for superior alloys; post-1920 in Germany and US for aircraft.",
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "mechanics": {
+   "diagnosis_instrument": {
+    "instrument": "in2_mcleod_vacuum_gauge",
+    "quantity": "pressure",
+    "needed": 1.0,
+    "unit": "torr",
+    "needed_words": "a furnace chamber held at about 1 torr or better"
+   }
+  }
  },
  {
   "id": "mt2_powder_metallurgy",
@@ -2452,7 +2480,9 @@
   "conf": "B",
   "note": "11-14% Mn, 1% C. Austenitic, very tough, hardens tremendously under impact (work hardening). Used for railway switches, crusher jaws, military armor. Hadfield (1880s) patent; microstructure was mysterious (austenite + brittle carbides plus transformation). Weldable with difficulty.",
   "up_hours": 0,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "copy_visibility": 0.1,
+  "copy_visibility_reason": "The alloy content and the water quench are invisible in the casting; only testing it in use reveals the property."
  },
  {
   "id": "mt2_spring_steel",
@@ -2482,7 +2512,9 @@
   "conf": "A",
   "note": "0.5-1.0% C steel, hardened and tempered blue or straw color. Retains yield point elasticity; returns to shape after bending. Watch springs, vehicle suspensions, precision mechanisms all depend. Quality control critical; brittle fracture if over-tempered or under-tempered.",
   "up_hours": 0,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "copy_visibility": 0.1,
+  "copy_visibility_reason": "The carbon content and the tempering temperature are invisible in a finished spring, and the colour of the heat is read by eye in the shop."
  },
  {
   "id": "mt2_grey_cast_iron",

@@ -204,6 +204,9 @@
       "lime_kg": 90000.0
     },
     "mechanics": {
+      "precaution": {
+        "kind": "pilot_plant"
+      },
       "electrical_process": {
         "material": "iron_ore_kg",
         "kwh_per_kg_of_product": 5.0,
@@ -278,7 +281,12 @@
       "infrastructure"
     ],
     "up_hours": 80647.5166965173,
-    "yrs": 3.0
+    "yrs": 3.0,
+    "mechanics": {
+      "precaution": {
+        "kind": "pilot_plant"
+      }
+    }
   },
   {
     "adopt_yrs": 0.0,
@@ -539,6 +547,9 @@
       "lime_kg": 25000.0
     },
     "mechanics": {
+      "precaution": {
+        "kind": "pilot_plant"
+      },
       "capability": {
         "lost_benefit": "Artisan training capacity"
       },
@@ -637,7 +648,12 @@
       "labour_saving"
     ],
     "up_hours": 44356.13418308451,
-    "yrs": 3.0
+    "yrs": 3.0,
+    "mechanics": {
+      "precaution": {
+        "kind": "pilot_plant"
+      }
+    }
   },
   {
     "adopt_yrs": 0.0,
@@ -793,6 +809,8 @@
     "cap_hours": 60485.63752238797,
     "cat": "metallurgy",
     "conf": "B",
+    "copy_visibility": 0.15,
+    "copy_visibility_reason": "The sealed chest and the long hold in the fire are hidden, and the blistered bar does not show the carbon source or the timing.",
     "dev_people": null,
     "dev_years": null,
     "gov": 2,
@@ -1469,6 +1487,8 @@
     "cap_hours": 120971.27504477595,
     "cat": "metallurgy",
     "conf": "B",
+    "copy_visibility": 0.1,
+    "copy_visibility_reason": "The charge, the clay of the pot and the heat schedule leave no trace in the ingot; the furnace shows only that something melts.",
     "dev_people": null,
     "dev_years": null,
     "failure_kind": "process_control",
@@ -1487,6 +1507,9 @@
       "iron_bar_kg": 3000.0
     },
     "mechanics": {
+      "precaution": {
+        "kind": "pilot_plant"
+      },
       "capability": {
         "lost_benefit": "Artisan training capacity"
       },
@@ -1656,7 +1679,12 @@
       "spectacle"
     ],
     "up_hours": 90728.45628358195,
-    "yrs": 3.0
+    "yrs": 3.0,
+    "mechanics": {
+      "precaution": {
+        "kind": "redundant_team"
+      }
+    }
   },
   {
     "adopt_yrs": 0.0,
@@ -1698,7 +1726,19 @@
       "spectacle"
     ],
     "up_hours": 100809.39587064662,
-    "yrs": 4.0
+    "yrs": 4.0,
+    "mechanics": {
+      "diagnosis_instrument": {
+        "instrument": "in2_mcleod_vacuum_gauge",
+        "quantity": "pressure",
+        "needed": 1e-06,
+        "unit": "torr",
+        "needed_words": "a vacuum of about 1e-6 torr"
+      },
+      "precaution": {
+        "kind": "pilot_plant"
+      }
+    }
   },
   {
     "adopt_yrs": 0.0,
@@ -1748,7 +1788,12 @@
       "infrastructure"
     ],
     "up_hours": 100809.39587064662,
-    "yrs": 4.0
+    "yrs": 4.0,
+    "mechanics": {
+      "precaution": {
+        "kind": "redundant_team"
+      }
+    }
   },
   {
     "adopt_yrs": 0.0,
@@ -1855,6 +1900,9 @@
       "steel_plate_kg": 1.5
     },
     "mechanics": {
+      "precaution": {
+        "kind": "pilot_plant"
+      },
       "power_generation": {
         "role": "local",
         "tier": "cap_power_electric"
@@ -1932,6 +1980,9 @@
       "salt_kg": 200000.0
     },
     "mechanics": {
+      "precaution": {
+        "kind": "redundant_team"
+      },
       "electrical_process": {
         "material": "bauxite_kg",
         "kwh_per_kg_of_product": 15.0,
@@ -2273,7 +2324,12 @@
       "food"
     ],
     "up_hours": 0,
-    "yrs": 12.0
+    "yrs": 12.0,
+    "mechanics": {
+      "precaution": {
+        "kind": "pilot_plant"
+      }
+    }
   },
   {
     "_internal": "[SCALED: this is an INDUSTRY, not a demonstration. At 250 tonnes of product a year it consumes about 1,500 tonnes of charcoal annually, derived from the physical ratio in data/world/resources.json rather than guessed. At 0.75 tonnes of charcoal per hectare of coppice per year that is roughly 2,000 hectares of forest under permanent management, which you must own before you light it.]  [REVIEWED: prerequisite(s) cap_heat_1300 added by a reviewer working node by node. Reason: decarburizing cast iron in puddling furnace at 1300 C requires water-blown blast furnace heat]",
@@ -2636,7 +2692,12 @@
       "spectacle"
     ],
     "up_hours": 100809.39587064662,
-    "yrs": 4.0
+    "yrs": 4.0,
+    "mechanics": {
+      "precaution": {
+        "kind": "pilot_plant"
+      }
+    }
   },
   {
     "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]",
@@ -2773,7 +2834,12 @@
       "inexplicable"
     ],
     "up_hours": 0,
-    "yrs": 3.0
+    "yrs": 3.0,
+    "mechanics": {
+      "precaution": {
+        "kind": "pilot_plant"
+      }
+    }
   },
   {
     "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_pure_6N added by a reviewer working node by node. Reason: fractional distillation of volatile germanium tetrachloride requires high-purity refining technique]",
@@ -2815,7 +2881,12 @@
       "inexplicable"
     ],
     "up_hours": 0,
-    "yrs": 5.0
+    "yrs": 5.0,
+    "mechanics": {
+      "precaution": {
+        "kind": "pilot_plant"
+      }
+    }
   },
   {
     "adopt_yrs": 0.0,
@@ -2939,7 +3010,12 @@
       "inexplicable"
     ],
     "up_hours": 0,
-    "yrs": 5.0
+    "yrs": 5.0,
+    "mechanics": {
+      "precaution": {
+        "kind": "pilot_plant"
+      }
+    }
   },
   {
     "adopt_yrs": 0.0,
@@ -3022,7 +3098,12 @@
       "spectacle"
     ],
     "up_hours": 50404.69793532331,
-    "yrs": 3.0
+    "yrs": 3.0,
+    "mechanics": {
+      "precaution": {
+        "kind": "pilot_plant"
+      }
+    }
   },
   {
     "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [SCALED: this is an INDUSTRY, not a demonstration. At 50 tonnes of product a year it consumes about 125 tonnes of charcoal annually, derived from the physical ratio in data/world/resources.json rather than guessed. At 0.75 tonnes of charcoal per hectare of coppice per year that is roughly 167 hectares of forest under permanent management, which you must own before you light it.]  [REVIEWED: prerequisite(s) cap_heat_1100 added by a reviewer working node by node. Reason: soda-lime glass melting requires 1000-1100 C furnace]",
@@ -3032,6 +3113,8 @@
     "cap_hours": 60485.63752238797,
     "cat": "glass_optics",
     "conf": "B",
+    "copy_visibility": 0.2,
+    "copy_visibility_reason": "A clear pane does not show the batch, the purity of the sand or the fining; those decide whether the next melt is clear.",
     "dev_people": null,
     "dev_years": null,
     "gov": 0,
@@ -3292,6 +3375,8 @@
     "cap_hours": 50404.69793532331,
     "cat": "military",
     "conf": "A",
+    "copy_visibility": 0.15,
+    "copy_visibility_reason": "Proportions, purity of the saltpetre and the corning cannot be recovered from the finished grains.",
     "dev_people": null,
     "dev_years": null,
     "gov": 3,
@@ -3391,7 +3476,12 @@
       "infrastructure"
     ],
     "up_hours": 120971.27504477595,
-    "yrs": 7.0
+    "yrs": 7.0,
+    "mechanics": {
+      "precaution": {
+        "kind": "pilot_plant"
+      }
+    }
   },
   {
     "adopt_yrs": 0.0,
@@ -3457,6 +3547,8 @@
     "cap_hours": 60485.63752238797,
     "cat": "military",
     "conf": "B",
+    "copy_visibility": 0.6,
+    "copy_visibility_reason": "The envelope, the burner and the basket are seen in flight; the seam sealing and the handling of the fire are not.",
     "dev_people": null,
     "dev_years": null,
     "gov": 3,
@@ -3661,6 +3753,9 @@
       "steel_noric_kg": 300.0
     },
     "mechanics": {
+      "precaution": {
+        "kind": "pilot_plant"
+      },
       "capability": {
         "lost_benefit": "The price markup and staff-capacity bonus"
       },
@@ -3752,7 +3847,12 @@
       "infrastructure"
     ],
     "up_hours": 362913.8251343278,
-    "yrs": 4.0
+    "yrs": 4.0,
+    "mechanics": {
+      "precaution": {
+        "kind": "pilot_plant"
+      }
+    }
   },
   {
     "adopt_yrs": 0.0,
@@ -3837,7 +3937,12 @@
       "spectacle"
     ],
     "up_hours": 110890.33545771128,
-    "yrs": 5.0
+    "yrs": 5.0,
+    "mechanics": {
+      "precaution": {
+        "kind": "redundant_team"
+      }
+    }
   },
   {
     "_internal": "[SCALED: this is an INDUSTRY, not a demonstration. At 200 tonnes of product a year it consumes about 300 tonnes of charcoal annually, derived from the physical ratio in data/world/resources.json rather than guessed. At 0.75 tonnes of charcoal per hectare of coppice per year that is roughly 400 hectares of forest under permanent management, which you must own before you light it.]",
@@ -4258,7 +4363,12 @@
       "spectacle"
     ],
     "up_hours": 16129.50333930346,
-    "yrs": 3.0
+    "yrs": 3.0,
+    "mechanics": {
+      "precaution": {
+        "kind": "pilot_plant"
+      }
+    }
   },
   {
     "adopt_yrs": 0.0,
@@ -4379,7 +4489,12 @@
       "spectacle"
     ],
     "up_hours": 161295.0333930346,
-    "yrs": 10.0
+    "yrs": 10.0,
+    "mechanics": {
+      "precaution": {
+        "kind": "pilot_plant"
+      }
+    }
   },
   {
     "adopt_yrs": 0.0,
@@ -4530,6 +4645,9 @@
     "lab": {},
     "mat": {},
     "mechanics": {
+      "precaution": {
+        "kind": "redundant_team"
+      },
       "capability": {
         "lost_benefit": "Protection, credit, state funding and status"
       },
@@ -4863,7 +4981,12 @@
       "spectacle"
     ],
     "up_hours": 40323.75834825865,
-    "yrs": 4.0
+    "yrs": 4.0,
+    "mechanics": {
+      "precaution": {
+        "kind": "pilot_plant"
+      }
+    }
   },
   {
     "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]",
@@ -4959,7 +5082,12 @@
       "inexplicable"
     ],
     "up_hours": 0,
-    "yrs": 4.0
+    "yrs": 4.0,
+    "mechanics": {
+      "precaution": {
+        "kind": "pilot_plant"
+      }
+    }
   },
   {
     "adopt_yrs": 0.0,
@@ -5024,6 +5152,9 @@
       "steel_plate_kg": 90000.0
     },
     "mechanics": {
+      "precaution": {
+        "kind": "pilot_plant"
+      },
       "capability": {
         "lost_benefit": "The price markup and staff-capacity bonus"
       },
@@ -5253,7 +5384,12 @@
       "infrastructure"
     ],
     "up_hours": 181456.9125671639,
-    "yrs": 8.0
+    "yrs": 8.0,
+    "mechanics": {
+      "precaution": {
+        "kind": "pilot_plant"
+      }
+    }
   },
   {
     "adopt_yrs": 0.0,
@@ -5322,6 +5458,9 @@
       "timber_m3": 4000.0
     },
     "mechanics": {
+      "precaution": {
+        "kind": "pilot_plant"
+      },
       "capability": {
         "lost_benefit": "The trade-reach revenue bonus and staff capacity"
       },
@@ -5654,7 +5793,12 @@
       "labour_saving"
     ],
     "up_hours": 36291.382513432785,
-    "yrs": 3.0
+    "yrs": 3.0,
+    "mechanics": {
+      "precaution": {
+        "kind": "pilot_plant"
+      }
+    }
   },
   {
     "adopt_yrs": 0,
@@ -5817,7 +5961,12 @@
       "inexplicable"
     ],
     "up_hours": 0,
-    "yrs": 4.0
+    "yrs": 4.0,
+    "mechanics": {
+      "precaution": {
+        "kind": "pilot_plant"
+      }
+    }
   },
   {
     "_internal": "[REVIEWED: prerequisite(s) cap_measure_temp_hi added by a reviewer working node by node. Reason: 1414 C crystal growth requires high-temperature pyrometry]",
@@ -5867,7 +6016,12 @@
       "inexplicable"
     ],
     "up_hours": 806475.166965173,
-    "yrs": 7.0
+    "yrs": 7.0,
+    "mechanics": {
+      "precaution": {
+        "kind": "pilot_plant"
+      }
+    }
   },
   {
     "_internal": "[REVIEWED: prerequisite(s) cap_measure_temp_hi, cap_tol_10um added by a reviewer working node by node. Reason: Czochralski pulling requires high-temperature pyrometry at melting point and slide rest precision for seed control]",
@@ -5922,7 +6076,12 @@
       "inexplicable"
     ],
     "up_hours": 0,
-    "yrs": 5.0
+    "yrs": 5.0,
+    "mechanics": {
+      "precaution": {
+        "kind": "pilot_plant"
+      }
+    }
   },
   {
     "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]",
@@ -6019,7 +6178,12 @@
       "spectacle"
     ],
     "up_hours": 141133.15421890526,
-    "yrs": 7.0
+    "yrs": 7.0,
+    "mechanics": {
+      "precaution": {
+        "kind": "redundant_team"
+      }
+    }
   },
   {
     "_internal": "[FIXED after independent audit: a ruled grating needs the finest screw you own; the node declared no tolerance rung.]",
@@ -6123,6 +6287,9 @@
       "iron_bar_kg": 9000.0
     },
     "mechanics": {
+      "precaution": {
+        "kind": "pilot_plant"
+      },
       "mining_tech": {
         "yield": 1.6,
         "cost": 0.65
@@ -6194,6 +6361,9 @@
       "steel_plate_kg": 25000.0
     },
     "mechanics": {
+      "precaution": {
+        "kind": "pilot_plant"
+      },
       "capability": {
         "lost_benefit": "Artisan training capacity"
       },
@@ -6300,7 +6470,12 @@
       "infrastructure"
     ],
     "up_hours": 181456.9125671639,
-    "yrs": 9.0
+    "yrs": 9.0,
+    "mechanics": {
+      "precaution": {
+        "kind": "pilot_plant"
+      }
+    }
   },
   {
     "_internal": "[REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: green vitriol dehydration at approximately 480 C requires pottery kiln scale heat]",
@@ -6380,6 +6555,9 @@
       "shellac_kg": 150.0
     },
     "mechanics": {
+      "precaution": {
+        "kind": "pilot_plant"
+      },
       "capability": {
         "lost_benefit": "The trade-reach revenue bonus and staff capacity"
       },
@@ -6638,7 +6816,16 @@
       "spectacle"
     ],
     "up_hours": 30242.818761193987,
-    "yrs": 2.0
+    "yrs": 2.0,
+    "mechanics": {
+      "diagnosis_instrument": {
+        "instrument": "in2_mcleod_vacuum_gauge",
+        "quantity": "pressure",
+        "needed": 0.001,
+        "unit": "torr",
+        "needed_words": "a vacuum of about 1e-3 torr"
+      }
+    }
   },
   {
     "_internal": "[REVIEWED: prerequisite(s) cap_vac_1e6 added by a reviewer working node by node. Reason: triode and amplifier require very high vacuum to prevent arcing and ensure long tube life]",
@@ -6696,7 +6883,12 @@
       "spectacle"
     ],
     "up_hours": 181456.9125671639,
-    "yrs": 8.0
+    "yrs": 8.0,
+    "mechanics": {
+      "precaution": {
+        "kind": "pilot_plant"
+      }
+    }
   },
   {
     "adopt_yrs": 0.0,
@@ -6776,9 +6968,7 @@
     "name": "Large watermill system: overshot wheels, millponds and leats",
     "note": "Build and manage a substantial watermill site: impound water, control it through leats, and drive one or more overshot wheels at useful power. Medieval England inherits this civil and hydraulic capability. General-purpose line shafts that distribute power among unrelated industrial machines are not included.",
     "ph": 450.0,
-    "pre": [
-      "crank_conrod"
-    ],
+    "pre": [],
     "req_any": [],
     "rev_hours": 44356.13418308451,
     "risk": 0.15,
@@ -6948,7 +7138,12 @@
       "infrastructure"
     ],
     "up_hours": 604856.3752238797,
-    "yrs": 12.0
+    "yrs": 12.0,
+    "mechanics": {
+      "precaution": {
+        "kind": "pilot_plant"
+      }
+    }
   },
   {
     "_internal": "[SCALED: this is an INDUSTRY, not a demonstration. At 20 tonnes of product a year it consumes about 240 tonnes of charcoal annually, derived from the physical ratio in data/world/resources.json rather than guessed. At 0.75 tonnes of charcoal per hectare of coppice per year that is roughly 320 hectares of forest under permanent management, which you must own before you light it.]",
@@ -7001,7 +7196,12 @@
       "infrastructure"
     ],
     "up_hours": 60485.63752238797,
-    "yrs": 3.0
+    "yrs": 3.0,
+    "mechanics": {
+      "precaution": {
+        "kind": "pilot_plant"
+      }
+    }
   },
   {
     "_internal": "[REVIEWED: prerequisite(s) cap_measure_temp_hi, cap_tol_10um added by a reviewer working node by node. Reason: dragging molten zone requires high-temperature pyrometry at melting point and slide rest precision for heater control]",
@@ -7057,6 +7257,18 @@
       "inexplicable"
     ],
     "up_hours": 0,
-    "yrs": 6.0
+    "yrs": 6.0,
+    "mechanics": {
+      "diagnosis_instrument": {
+        "instrument": "in2_mass_spectrograph",
+        "quantity": "impurity",
+        "needed": 1e-09,
+        "unit": "impurity fraction",
+        "needed_words": "purity of 1 part in 1e9"
+      },
+      "precaution": {
+        "kind": "pilot_plant"
+      }
+    }
   }
 ]

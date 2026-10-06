@@ -20,6 +20,8 @@ from .interest_groups import check_group_prohibition
 from .living_stock import check_unheld_stock
 from .data import win_condition_describe
 from sim.constants import declare
+from .projects_precaution import (spec as precaution_spec, extra_cost as precaution_extra_cost,
+                                  extra_hours as precaution_extra_hours)
 
 
 class StartingMixin:
@@ -31,7 +33,9 @@ class StartingMixin:
         if node_id in self.state.projects.active:
             raise ValueError("project %s is already active" % node_id)
         node = self.nodes[node_id]
+        own_output_claim = None
         if cost_left is None:
+            own_output_claim = self.project_own_output_claim(node_id)
             bill = self.settle_project_materials(node_id)
             cost_left = bill
         rebuild_factor = self.rebuild_work_factor(node_id)
@@ -44,6 +48,8 @@ class StartingMixin:
             record["rebuild_factor"] = rebuild_factor
         if bill is not None:
             record["bill"] = float(bill)
+        if own_output_claim:
+            record["own_output_claim"] = own_output_claim
         if include_labor:
             record["lab_left"] = {trade: hours * rebuild_factor
                                   for trade, hours in node["lab"].items()}
@@ -180,20 +186,18 @@ class StartingMixin:
     def bounty_eligible(self, node_id):
         """Can this be bought as a prize instead of built with your own hands?
 
-        A public prize ("ten thousand sesterces to the first glassworker who
-        brings me a clear sphere of glass the size of a millet seed") converts
-        DENARII into someone else's HOURS, which is the trade you most want to
-        make. It only works where the craft already exists in the Empire and the
+        A public prize (for example, in Rome, coin to the first glassworker who
+        brings a clear sphere of glass the size of a millet seed) converts
+        money into someone else's HOURS, which is the trade you most want to
+        make. It only works where the craft already exists in the society and the
         artisan can recognise success without understanding the theory. You
         cannot post a bounty for zone refining; nobody would know what to aim at.
         """
         node = self.nodes[node_id]
-        # THE ALLOW-LIST IS ROME'S CRAFTS, BUT NOT THE WHOLE RULE: anything
-        # this society is measurably GOOD at (its own cost multipliers say
-        # so) can be recognised by its own craftsmen, whatever Rome's craft
-        # categories happen to be - a civilisation whose own profile marks
-        # shipbuilding as what it is best at in the world should not be
-        # refused a bounty on it for want of a Roman artisan's judgement.
+        # The category list is the default scenario's crafts, not the whole rule:
+        # anything this society is measurably GOOD at (its own cost multipliers
+        # say so) can be recognised by its own craftsmen, whatever the default
+        # scenario's craft categories are.
         if node["cat"] in ("glass_optics", "metallurgy", "precision", "power",
                         "agriculture", "information", "instruments"):
             return all(prereq_id in self.state.projects.done for prereq_id in node["pre"])
@@ -928,7 +932,7 @@ class StartingMixin:
                        purchase_rule.remedies_text(self)))
         return None
 
-    def start_project(self, node_id):
+    def start_project(self, node_id, precaution=False):
         """PLAYER-CHOSEN start. This is the whole reason `--manual` and the
         `agent` JSON protocol exist: the old `play` command let you type a
         node id, but all that did was move it to the front of `order`, the
@@ -945,12 +949,16 @@ class StartingMixin:
         refusal = self.start_refusal(node_id)
         if refusal:
             return False, refusal
+        if precaution and precaution_spec(self, node_id) is None:
+            return False, "%s offers no pilot plant or redundant team to pay for." % self.nodes[node_id]["name"]
         projects = self.state.projects
         household = self.state.household
         scenario_year = self.state.scenario.year
         # Materials due now are bought (and banked as stock) first; what
         # is left is the bill paid in instalments.
         bill = self.settle_project_materials(node_id)
+        if precaution:
+            bill += precaution_extra_cost(self, node_id, bill)
         price = bill
         _paid_now = min(price, max(0.0, (projects.paid_towards or {}).get(node_id, 0.0)))
         price -= _paid_now
@@ -974,6 +982,10 @@ class StartingMixin:
         # nearly done too. Setting the real total here, before any of that
         # runs, is what fixed it.
         self.initialize_project(node_id, spent=_already, cost_left=price, bill=bill)
+        if precaution:
+            record = projects.active[node_id]
+            record["precaution"] = True
+            record["ph_left"] += precaution_extra_hours(self, node_id)
         # A genuinely instantaneous capability should not need an otherwise
         # empty annual turn merely to trip the completion check in step().
         # Keep anything with money, labour, risk, or a calendar floor on the

@@ -59,7 +59,9 @@ def _shorten_credit_forecast(sim, cmd, out):
 
 @command("start", shape="tech", group="projects", aliases=("begin", "research", "build"),
          summary="begin work on something",
-         usage=["start <id or name>"], options={"<id>": "a technology or concern"},
+         usage=["start <id or name> [precaution]"],
+         options={"<id>": "a technology or concern",
+                  "precaution": "pay for the pilot plant or redundant team the quote offers, for a lower chance of failing"},
          description="If it cannot start, the error says exactly what is missing. A "
                      "start that would oversubscribe a hired trade still goes ahead "
                      "and warns.")
@@ -125,7 +127,7 @@ def _cmd_start(sim, nodes, cmd, ended):
                 % (_trade, "{:,.0f}".format(_new_total), "{:,.0f}".format(_supply),
                    _competitors, "" if _competitors == 1 else "s",
                    "{:,.0f}".format(_plan["desired"])))
-    started, why = sim.start_project(node_id)
+    started, why = sim.start_project(node_id, precaution=bool(cmd.get("precaution")))
     if not started:
         return {"ok": False, "error": why}
     node = nodes[node_id]
@@ -353,7 +355,7 @@ def _cmd_stop(sim, nodes, cmd, ended):
 def _rush_caps(cmd):
     """The fiscal caps on a rush as (caps, error). A cap is None when not given."""
     caps = {}
-    for key in ("max_total_cost", "max_annual_draw", "reserve_cash"):
+    for key in ("max_total_cost", "max_annual_draw", "reserve_cash", "max_total_hours"):
         raw = cmd.get(key)
         if raw is None:
             caps[key] = None
@@ -375,8 +377,11 @@ def _rush_cost_left(sim, node_id):
     return price - min(price, max(0.0, paid))
 
 
-def _rush_cap_refusal(caps, budget, cost, draw, cost_so_far, draw_so_far):
-    """Why the next project breaks a fiscal cap, or None when it fits."""
+def _rush_cap_refusal(caps, budget, cost, draw, cost_so_far, draw_so_far, hours=0.0, hours_so_far=0.0):
+    """Why the next project breaks a fiscal or founder-hour cap, or None when it fits."""
+    if caps.get("max_total_hours") is not None and hours_so_far + hours > caps["max_total_hours"] + 1e-9:
+        return ("not begun: needs %s founder hours, which would take this rush past "
+                "max_total_hours" % "{:,.0f}".format(hours))
     if caps["max_total_cost"] is not None and cost_so_far + cost > caps["max_total_cost"] + 1e-9:
         return ("not begun: costs %s, which would take this rush past "
                 "max_total_cost" % "{:,.0f}".format(cost))
@@ -433,7 +438,9 @@ def _rush_preview(sim, nodes, cmd, ended, confirm=None):
                   "max_cost": "skip projects dearer than this each",
                   "max_hours": "skip projects needing more founder hours than this each",
                   "limit": "cap the count", "max_total_cost": "cap total money",
-                  "max_annual_draw": "cap yearly draw", "reserve_cash": "keep this much back",
+                  "max_annual_draw": "cap yearly draw",
+                  "max_total_hours": "cap the founder hours the rush commits",
+                  "reserve_cash": "keep this much back",
                   "preview": "show what it would start and spend, starting nothing"},
          description="Highest-leverage first. Also spelled 'start all'.")
 def _cmd_rush(sim, nodes, cmd, ended):
@@ -514,7 +521,7 @@ def _cmd_rush(sim, nodes, cmd, ended):
         cost_left = _rush_cost_left(sim, node_id)
         annual_draw = cost_left / max(1.0, nodes[node_id]["yrs"])
         cap_reason = _rush_cap_refusal(caps, budget, cost_left, annual_draw,
-                                       total_cost, total_draw)
+                                       total_cost, total_draw, nodes[node_id]["ph"], _owed)
         if cap_reason:
             not_started.append({"id": node_id, "name": nodes[node_id]["name"],
                                 "why": cap_reason})
@@ -843,7 +850,7 @@ def _cmd_policy(sim, nodes, cmd, ended):
             if key not in sim.policy:
                 return {"ok": False, "error": "no such policy: %s. They are: %s"
                         % (key, ", ".join(sorted(sim.policy)))}
-            sim.policy[key] = _flag(val)
+            sim.policy[key] = "replace" if key == "auto_hire" and str(val).lower() == "replace" else _flag(val)
             changed[key] = sim.policy[key]
     # WHICH OF THESE CAN ACTUALLY ACT TODAY: negative capital silently
     # disables both hiring and opening even while the switches read ON,
@@ -892,7 +899,7 @@ def _cmd_policy(sim, nodes, cmd, ended):
                 # since the mix genuinely matters and is defended in code
                 # - a player deciding whether to switch this on should be
                 # able to read what it will do before it does it.
-                "auto_hire": "grow the staff toward what you can house and "
+                "auto_hire": "(also 'replace': only hire back people lost, never grow) grow the staff toward what you can house and "
                              "pay. Mostly craftsmen, because craftsmen are "
                              "what keep concerns open; some scholars; and "
                              "it replaces any trade you taught as its "
@@ -923,7 +930,7 @@ def _cmd_policy(sim, nodes, cmd, ended):
                                    "will not need next year, and it leaves "
                                    "no standing obligation either way",
                 "auto_bribe": "pay your way out of a scandal before it kills you",
-                "auto_court_heir": "spend 800 denarii (price-adjusted) when a "
+                "auto_court_heir": "spend a price-adjusted sum when a "
                                    "patron dies to court the successor. By hand: "
                                    "'bribe <amount>'. Off by "
                                    "default in manual play; on unattended",

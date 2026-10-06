@@ -14,7 +14,7 @@ import math
 from collections import defaultdict
 from typing import Any, Dict, List, Mapping, NamedTuple, Optional, Tuple
 
-from sim.labour.api import HOURS_PER_WORKER_YEAR
+from sim.unit_conversions import HOURS_PER_PERSON_YEAR
 
 from . import energy_prices
 
@@ -123,7 +123,7 @@ def _covers_its_staff(entry: Mapping[str, Any], goods: Mapping[str, float], ener
 def _line_capacities(node: Mapping[str, Any], lines: List[Dict[str, Any]]) -> List[Tuple[Dict[str, Any], float]]:
     """(line, units of its dominant output a year) for each line the plant, the staff or the declared
     output bounds."""
-    staff_hours = (node.get("sch", 0.0) + node.get("art", 0.0)) * HOURS_PER_WORKER_YEAR
+    staff_hours = (node.get("sch", 0.0) + node.get("art", 0.0)) * HOURS_PER_PERSON_YEAR
     staffed_lines = [entry for entry in lines if _hours_per_unit(entry) > 0.0] if staff_hours > 0.0 else []
     declared_kilograms = float(node.get("annual_output_t") or 0.0) * 1000.0
     material_lines = [entry for entry in lines if not any(material in ENERGY_CARRIERS for material in entry["outputs"])]

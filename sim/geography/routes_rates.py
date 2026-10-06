@@ -14,8 +14,8 @@ from typing import Any, Dict, Optional, Tuple
 
 from sim.geography import parameters, sea_freight, transport
 from sim.geography.map_source import MapDataError, WorldMap
+from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
-KILOGRAMS_PER_TONNE = 1000.0
 JOULES_PER_MEGAJOULE = 1.0e6
 GRADE_STEP = 0.002
 CURRENT_STEP_KM_PER_HOUR = 0.1

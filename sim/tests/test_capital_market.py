@@ -8,7 +8,7 @@ import tempfile
 from .harness import *  # noqa: F401,F403
 from functools import partial
 
-sim = partial(sim, agent_economy=False)   # these checks pin the engine's own loanable-funds market, wage table and state budget
+sim = partial(sim, agent_economy=False)   # legacy: pins the engine's own loanable-funds rate; the agent-economy credit market is test_economy_agent_credit.py
 
 
 from sim.engine.agents_port import SimWorld
@@ -173,6 +173,11 @@ debtor = shared.actors.add("firm:e", ActorRecord(kind="firm", money=-1.0e5, last
 one_year(shared)
 check("a firm in debt pays interest on it, booked by purpose",
       debtor.record.outlays.get("interest", 0.0) > 0.0 and debtor.money < -1.0e5, (debtor.record.outlays, debtor.money))
+
+gone_trader = shared.actors.add("trader:gone", ActorRecord(kind="trader", location="town", money=-1.0e5, founded_year=shared.year))
+check("a trader in debt is in the loan book", shared.market_loans().get("trader:gone", 0.0) > 0.0)
+gone_trader.record.exited_year = shared.year
+check("an exited actor of any kind leaves the loan book (Complaint 406)", "trader:gone" not in shared.market_loans())
 
 # ---- the state borrows to cover a deficit instead of only cutting -------------------------------
 def deficit(army_multiple):

@@ -18,14 +18,8 @@ import math
 from typing import Any, Dict, Iterable, Mapping, Optional
 
 from sim.constants import declare
+from sim.unit_conversions import HOURS_PER_PERSON_YEAR
 
-
-HOURS_PER_WORKER_YEAR = declare(
-    "HOURS_PER_WORKER_YEAR", 2000.0, kind="engineering_estimate",
-    unit="hours/worker/year", source=None, confidence="C",
-    why="Converts an hourly wage to an annual one. Same order as the "
-        "household's own person-year (a ten-hour day for most of the year "
-        "less feast days).")
 
 CAREER_YEARS = declare(
     "CAREER_YEARS", 30.0, kind="temporary_heuristic",
@@ -95,7 +89,7 @@ def subsistence_wage_per_hour(food_kg_per_person_year: float,
                               food_price_per_kg: float,
                               people_fed_per_worker: float,
                               non_food_markup: float = NON_FOOD_SUBSISTENCE_MARKUP,
-                              hours_per_year: float = HOURS_PER_WORKER_YEAR) -> float:
+                              hours_per_year: float = HOURS_PER_PERSON_YEAR) -> float:
     """What one working hour must earn to keep a worker and dependants, in
     the unit the food price is given in (labour hours give labour hours)."""
     yearly_need = (food_kg_per_person_year * food_price_per_kg
@@ -148,7 +142,7 @@ class WageSchedule(object):
                  subsistence_hours_per_hour: float, discount_rate: float,
                  tightness_factors: Optional[Dict[str, float]] = None,
                  career_years: float = CAREER_YEARS,
-                 hours_per_year: float = HOURS_PER_WORKER_YEAR) -> None:
+                 hours_per_year: float = HOURS_PER_PERSON_YEAR) -> None:
         self.money_per_labour_hour = money_per_labour_hour
         self.subsistence_hours_per_hour = subsistence_hours_per_hour
         self.hours_per_year = hours_per_year

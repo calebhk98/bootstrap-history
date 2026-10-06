@@ -150,12 +150,17 @@ class WeatherSeedPurityTests(unittest.TestCase):
                  for region in test_sim.civ["home_regions"]}
         self.assertEqual(len(seeds), len(test_sim.civ["home_regions"]), seeds)
 
-    def test_omitting_region_reproduces_the_old_civ_year_only_seed(self):
+    def test_omitting_region_mixes_in_no_region_ingredient(self):
+        # Without a region the seed is a function of civilisation id, year and the game's
+        # weather salt only (the salt is the game's own dice, so each game has its own weather).
         test_sim = _rome_sim()
+        seed = test_sim._farm_year_weather_seed(150)
+        salt = test_sim.state.scenario.weather_salt
+        self.assertTrue(salt)
         civ_component = sum((index + 1) * ord(character) for index, character
                             in enumerate(str(test_sim.civ.get("id", "civ"))))
-        expected = (civ_component * 1000003 + 150 * 97) % (2 ** 32)
-        self.assertEqual(test_sim._farm_year_weather_seed(150), expected)
+        expected = (civ_component * 1000003 + 150 * 97 + salt * 104729) % (2 ** 32)
+        self.assertEqual(seed, expected)
 
     def test_two_civilisations_sharing_a_region_name_still_draw_different_weather(self):
         rome = _rome_sim()

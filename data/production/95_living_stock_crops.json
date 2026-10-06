@@ -1,0 +1,85 @@
+{
+ "_note": "Planting stock and breeding herds for crops and milk cattle that the tree grants as living stock and no other production file makes. Rates of increase and loss, and their sources, are in data/world/living_stock.json.",
+ "materials": {
+  "sugar_cane_sett_kg": {
+   "outputs": {
+    "sugar_cane_sett_kg": 60000.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 800.0
+   },
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "arable land",
+   "unit_dimension": "mass",
+   "basis": "per hectare of seed-cane nursery per year, output as kg of setts for planting out",
+   "yield_basis": "GROWN. A seed-cane hectare supplies planting material for about eleven hectares by conventional multiplication, and a hectare is planted with five to six tonnes of setts, so about sixty tonnes of setts per nursery hectare (Cane Advisory Services seed rate; planting-techniques review). LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. The sourced propagation facts are in data/world/living_stock.json; the per-hectare output and the labour here are estimates, not checked against a source. Conf C. Made only where the crop is already grown, so the stock cannot be had without a society that holds it.",
+   "conf": "C",
+   "requires_node": "ag2_sugar_voyage"
+  },
+  "pepper_vine_stock_kg": {
+   "outputs": {
+    "pepper_vine_stock_kg": 1000.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 600.0
+   },
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "arable land",
+   "unit_dimension": "mass",
+   "basis": "per hectare of pepper nursery and mother vines per year, output as kg of rooted cuttings",
+   "yield_basis": "GROWN. Mother vines give dozens of cuttings a year each at a high rooting rate (TNAU Agritech Portal, Pepper); the kilograms of rooted cuttings per hectare is an order-of-magnitude estimate. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. The sourced propagation facts are in data/world/living_stock.json; the per-hectare output and the labour here are estimates, not checked against a source. Conf C. Made only where the crop is already grown, so the stock cannot be had without a society that holds it.",
+   "conf": "C",
+   "requires_node": "fud_pepper_cultivation"
+  },
+  "tea_plant_stock_kg": {
+   "outputs": {
+    "tea_plant_stock_kg": 1500.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 600.0
+   },
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "arable land",
+   "unit_dimension": "mass",
+   "basis": "per hectare of tea mother bushes per year, output as kg of rooted cuttings",
+   "yield_basis": "GROWN. A mother bush gives tens to hundreds of cuttings a year at a high survival rate (tea clonal-propagation leaflet; University of Hawaii CTAHR SCM-35); the kilograms of rooted cuttings per hectare is an order-of-magnitude estimate. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. The sourced propagation facts are in data/world/living_stock.json; the per-hectare output and the labour here are estimates, not checked against a source. Conf C. Made only where the crop is already grown, so the stock cannot be had without a society that holds it.",
+   "conf": "C",
+   "requires_node": "ag2_tea_voyage"
+  },
+  "coffee_seedling_kg": {
+   "outputs": {
+    "coffee_seedling_kg": 2000.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 700.0
+   },
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "arable land",
+   "unit_dimension": "mass",
+   "basis": "per hectare of coffee nursery per year, output as kg of seedlings ready for the field",
+   "yield_basis": "GROWN. Seedlings stay six to nine months in the nursery with a fifth to a third lost (Agriculture Institute, coffee propagation); the kilograms per nursery hectare is an order-of-magnitude estimate. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. The sourced propagation facts are in data/world/living_stock.json; the per-hectare output and the labour here are estimates, not checked against a source. Conf C. Made only where the crop is already grown, so the stock cannot be had without a society that holds it.",
+   "conf": "C",
+   "requires_node": "ag2_coffee_voyage"
+  },
+  "dairy_cattle_kg": {
+   "outputs": {
+    "dairy_cattle_kg": 100.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 40.0
+   },
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "pasture",
+   "unit_dimension": "mass",
+   "basis": "per hectare of breeding pasture per year, output as kg of live weight of milk cattle reared to first calving",
+   "yield_basis": "GROWN. Cows calve and the heifers are reared on grass and hay to first calving. Live-weight gain on extensive pasture is taken as the draught_animal_kg entry's figure; the calving and mortality rates are sourced in data/world/living_stock.json (FAO traditional-systems review). LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. The sourced propagation facts are in data/world/living_stock.json; the per-hectare output and the labour here are estimates, not checked against a source. Conf C. Made only where the crop is already grown, so the stock cannot be had without a society that holds it.",
+   "conf": "C",
+   "requires_node": "fud_livestock_selective_cattle"
+  }
+ }
+}

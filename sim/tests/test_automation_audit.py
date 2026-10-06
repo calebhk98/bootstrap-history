@@ -15,21 +15,24 @@ seen = {"hired": [], "opened": [], "reopened": [], "commissioned": []}
 year_of = lambda: auto.year
 
 
-def watch(name, bucket, outcome):
-    original = getattr(auto, name)
+def watch(name, bucket, outcome, owner=auto):
+    original = getattr(owner, name)
 
     def wrapper(*args, **kwargs):
         before = auto.capital
+        held = dict(auto.employees)
         result = original(*args, **kwargs)
-        seen[bucket].append((year_of(), outcome(args, result), before - auto.capital))
+        seen[bucket].append((year_of(), outcome(args, result, held), before - auto.capital))
         return result
-    setattr(auto, name, wrapper)
+    setattr(owner, name, wrapper)
 
 
-watch("hire", "hired", lambda args, result: (args[0], args[1]) if result and result[0] else None)
-watch("auto_open_ventures", "opened", lambda args, result: tuple(result))
-watch("reopen_restaffed_ventures", "reopened", lambda args, result: tuple(result))
-watch("auto_commission_for_blocked", "commissioned", lambda args, result: result)
+# hiring lives in the labour package; the outcome is the trade and the people the staff gained
+watch("hire", "hired", lambda args, result, held: (args[0], round(auto.employees.get(args[0], 0.0) - held.get(args[0], 0.0)))
+      if result and result[0] else None, owner=auto.labour)
+watch("auto_open_ventures", "opened", lambda args, result, held: tuple(result))
+watch("reopen_restaffed_ventures", "reopened", lambda args, result, held: tuple(result))
+watch("auto_commission_for_blocked", "commissioned", lambda args, result, held: result, owner=auto.labour)
 
 per_year = {}
 for _ in range(12):

@@ -213,7 +213,7 @@ def _topic_economy(sim):
                         '{"cmd":"quote","what":"mine","material":"coal",'
                         '"n":500}, and close it with '
                         '{"cmd":"close","material":"coal"}. Materials: '
-                        + Sim.mine_catalog_hint(Sim),
+                        + Sim.base_mine_catalog_hint(),
             "buy slaves": '{"cmd":"buy","what":"slaves","n":5}. This is '
                           "available because it was the ordinary condition of "
                           "production in most of these societies, and a model "

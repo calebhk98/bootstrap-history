@@ -2135,6 +2135,11 @@
   "note": "Honest assessment: nuclear power requires uranium enrichment to weapons-grade purity (99.9999+%), neutron physics unknown to any pre-modern society, materials research for radiation damage, and a national security programme. The reactor is the easy part. Start this only if you have a state programme with decades and billions to spare.",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "mechanics": {
+   "precaution": {
+    "kind": "pilot_plant"
+   }
+  }
  }
 ]

@@ -2,166 +2,11 @@
  "_doc": "Resource definitions per sim/geography/resources_catalogue.py. mechanism: mineral_deposit | point_occurrence | surface_stock | biotic_stand. unit: the quantity unit; with grade_basis true, contained quantity = ore tonnes x grade in that unit per tonne (key median_<unit>_per_tonne). deposit_types: {id, deposits_per_million_km2 (per million km2 of fully permissive land, before clustering), tonnage_lognormal {median_tonnes, sigma (ln)}, grade_lognormal, depth_class, small_scale, permissive_when [conditions], envelope [suitability entries], layer_weights [{layer, weights, default, if_missing}], provincial_only (only near catalogue deposits of that type), clusters (false: no boost from neighbours), gem_fraction {median, sigma}}. Densities are tile averages, heuristic stand-ins for a geologic-province layer (e.g. Hasterok 2022) that would replace the relief and climate proxies. Giants beyond the truncation of the lognormal come only from the known-deposit catalogue. Metals: unit kg of contained metal.",
  "entries": [
   {
-   "id": "gold",
-   "mechanism": "mineral_deposit",
-   "unit": "kg",
-   "deposit_types": [
-    {
-     "id": "orogenic_vein_gold",
-     "deposits_per_million_km2": 6,
-     "tonnage_lognormal": {
-      "median_tonnes": 1000000.0,
-      "sigma": 1.8
-     },
-     "depth_class": "shallow_vein",
-     "grade_lognormal": {
-      "median_kg_per_tonne": 0.008,
-      "sigma": 0.5
-     },
-     "envelope": [
-      {
-       "layer": "elevation_std_m",
-       "optimal": [
-        200,
-        3000
-       ],
-       "tolerated": [
-        0,
-        5000
-       ],
-       "if_missing": true
-      }
-     ],
-     "layer_weights": [
-      {
-       "layer": "koppen_group",
-       "weights": {
-        "A": 1,
-        "B": 1,
-        "C": 1,
-        "D": 1,
-        "E": 0.3
-       },
-       "default": 0.0,
-       "if_missing": 0.5
-      }
-     ],
-     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
-     "conf": "D"
-    },
-    {
-     "id": "placer_gold",
-     "deposits_per_million_km2": 12,
-     "tonnage_lognormal": {
-      "median_tonnes": 300000.0,
-      "sigma": 1.6
-     },
-     "depth_class": "alluvial",
-     "grade_lognormal": {
-      "median_kg_per_tonne": 0.0004,
-      "sigma": 0.5
-     },
-     "small_scale": true,
-     "envelope": [
-      {
-       "layer": "elevation_std_m",
-       "optimal": [
-        200,
-        3000
-       ],
-       "tolerated": [
-        0,
-        5000
-       ],
-       "if_missing": true
-      }
-     ],
-     "layer_weights": [
-      {
-       "layer": "koppen_group",
-       "weights": {
-        "A": 0.8,
-        "B": 0.4,
-        "C": 1,
-        "D": 1,
-        "E": 0.2
-       },
-       "default": 0.0,
-       "if_missing": 0.5
-      }
-     ],
-     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
-     "conf": "D"
-    },
-    {
-     "id": "epithermal_gold",
-     "deposits_per_million_km2": 1.5,
-     "tonnage_lognormal": {
-      "median_tonnes": 1500000.0,
-      "sigma": 1.6
-     },
-     "depth_class": "shallow_vein",
-     "grade_lognormal": {
-      "median_kg_per_tonne": 0.004,
-      "sigma": 0.4
-     },
-     "envelope": [
-      {
-       "layer": "elevation_std_m",
-       "optimal": [
-        400,
-        3000
-       ],
-       "tolerated": [
-        100,
-        5000
-       ],
-       "if_missing": true
-      }
-     ],
-     "layer_weights": [
-      {
-       "layer": "koppen_group",
-       "weights": {
-        "A": 1,
-        "B": 1,
-        "C": 1,
-        "D": 0.6,
-        "E": 0.2
-       },
-       "default": 0.0,
-       "if_missing": 0.5
-      }
-     ],
-     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
-     "conf": "D"
-    },
-    {
-     "id": "paleoplacer_conglomerate_gold",
-     "deposits_per_million_km2": 0.3,
-     "tonnage_lognormal": {
-      "median_tonnes": 200000000.0,
-      "sigma": 1.2
-     },
-     "depth_class": "deep_vein",
-     "grade_lognormal": {
-      "median_kg_per_tonne": 0.0025,
-      "sigma": 0.4
-     },
-     "provincial_only": true,
-     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
-     "conf": "D"
-    }
-   ],
-   "grade_basis": true,
-   "unit_factors": {
-    "tonnes_contained": 1000.0
-   },
-   "crustal_abundance_ppm": 0.004
-  },
-  {
    "id": "iron",
    "mechanism": "mineral_deposit",
+   "ore_goods": {"iron_ore_kg": ["pig_iron_kg", "iron_bloom_kg"]},
+   "works_priced_from_deposits": true,
+   "mine_demand_goods": ["iron_bar_kg", "iron_ore_kg"],
    "unit": "kg",
    "deposit_types": [
     {
@@ -314,6 +159,9 @@
   {
    "id": "copper",
    "mechanism": "mineral_deposit",
+   "ore_goods": {"copper_ore_kg": ["copper_kg"]},
+   "works_priced_from_deposits": true,
+   "mine_demand_goods": ["copper_kg", "copper_wire_kg", "wire_drawn_kg"],
    "unit": "kg",
    "deposit_types": [
     {
@@ -458,6 +306,9 @@
   {
    "id": "tin",
    "mechanism": "mineral_deposit",
+   "ore_goods": {"cassiterite_kg": ["tin_kg"]},
+   "works_priced_from_deposits": true,
+   "mine_demand_goods": ["tin_kg"],
    "unit": "kg",
    "deposit_types": [
     {
@@ -557,6 +408,9 @@
   {
    "id": "lead",
    "mechanism": "mineral_deposit",
+   "ore_goods": {"galena_kg": ["lead_kg"]},
+   "works_priced_from_deposits": true,
+   "mine_demand_goods": ["lead_kg"],
    "unit": "kg",
    "deposit_types": [
     {
@@ -642,6 +496,9 @@
   {
    "id": "silver",
    "mechanism": "mineral_deposit",
+   "ore_goods": {"silver_ore_kg": ["silver_kg"]},
+   "works_priced_from_deposits": true,
+   "mine_demand_goods": ["silver_kg"],
    "unit": "kg",
    "deposit_types": [
     {
@@ -825,8 +682,170 @@
    }
   },
   {
+   "id": "gold",
+   "mechanism": "mineral_deposit",
+   "ore_goods": {"gold_gravel_kg": ["gold_kg"], "gold_lode_ore_kg": ["gold_lode_kg"]},
+   "works_priced_from_deposits": true,
+   "mine_demand_goods": ["gold_kg"],
+   "unit": "kg",
+   "deposit_types": [
+    {
+     "id": "orogenic_vein_gold",
+     "deposits_per_million_km2": 6,
+     "tonnage_lognormal": {
+      "median_tonnes": 1000000.0,
+      "sigma": 1.8
+     },
+     "depth_class": "shallow_vein",
+     "grade_lognormal": {
+      "median_kg_per_tonne": 0.008,
+      "sigma": 0.5
+     },
+     "envelope": [
+      {
+       "layer": "elevation_std_m",
+       "optimal": [
+        200,
+        3000
+       ],
+       "tolerated": [
+        0,
+        5000
+       ],
+       "if_missing": true
+      }
+     ],
+     "layer_weights": [
+      {
+       "layer": "koppen_group",
+       "weights": {
+        "A": 1,
+        "B": 1,
+        "C": 1,
+        "D": 1,
+        "E": 0.3
+       },
+       "default": 0.0,
+       "if_missing": 0.5
+      }
+     ],
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    },
+    {
+     "id": "placer_gold",
+     "deposits_per_million_km2": 12,
+     "tonnage_lognormal": {
+      "median_tonnes": 300000.0,
+      "sigma": 1.6
+     },
+     "depth_class": "alluvial",
+     "grade_lognormal": {
+      "median_kg_per_tonne": 0.0004,
+      "sigma": 0.5
+     },
+     "small_scale": true,
+     "envelope": [
+      {
+       "layer": "elevation_std_m",
+       "optimal": [
+        200,
+        3000
+       ],
+       "tolerated": [
+        0,
+        5000
+       ],
+       "if_missing": true
+      }
+     ],
+     "layer_weights": [
+      {
+       "layer": "koppen_group",
+       "weights": {
+        "A": 0.8,
+        "B": 0.4,
+        "C": 1,
+        "D": 1,
+        "E": 0.2
+       },
+       "default": 0.0,
+       "if_missing": 0.5
+      }
+     ],
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    },
+    {
+     "id": "epithermal_gold",
+     "deposits_per_million_km2": 1.5,
+     "tonnage_lognormal": {
+      "median_tonnes": 1500000.0,
+      "sigma": 1.6
+     },
+     "depth_class": "shallow_vein",
+     "grade_lognormal": {
+      "median_kg_per_tonne": 0.004,
+      "sigma": 0.4
+     },
+     "envelope": [
+      {
+       "layer": "elevation_std_m",
+       "optimal": [
+        400,
+        3000
+       ],
+       "tolerated": [
+        100,
+        5000
+       ],
+       "if_missing": true
+      }
+     ],
+     "layer_weights": [
+      {
+       "layer": "koppen_group",
+       "weights": {
+        "A": 1,
+        "B": 1,
+        "C": 1,
+        "D": 0.6,
+        "E": 0.2
+       },
+       "default": 0.0,
+       "if_missing": 0.5
+      }
+     ],
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    },
+    {
+     "id": "paleoplacer_conglomerate_gold",
+     "deposits_per_million_km2": 0.3,
+     "tonnage_lognormal": {
+      "median_tonnes": 200000000.0,
+      "sigma": 1.2
+     },
+     "depth_class": "deep_vein",
+     "grade_lognormal": {
+      "median_kg_per_tonne": 0.0025,
+      "sigma": 0.4
+     },
+     "provincial_only": true,
+     "source": "Singer 2008, Cox and Singer 1986 (USGS Bull 1693), Singer and Mosier grade-tonnage models; values from memory, check before relying",
+     "conf": "D"
+    }
+   ],
+   "grade_basis": true,
+   "unit_factors": {
+    "tonnes_contained": 1000.0
+   },
+   "crustal_abundance_ppm": 0.004
+  },
+  {
    "id": "mercury",
    "mechanism": "mineral_deposit",
+   "ore_goods": {"cinnabar_kg": ["mercury_kg"]},
    "unit": "kg",
    "deposit_types": [
     {

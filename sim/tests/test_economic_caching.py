@@ -156,7 +156,7 @@ check("revenue() memoization and invalidation", _ok, _detail)
 
 def _test_goods_market_memoization_and_invalidation():
 	"""Verify _goods_category_ratios and goods_market_factor cache and invalidate."""
-	sim_inst = sim(civ="rome_100ad", capital=book_money(10000.0), agent_economy=False)
+	sim_inst = sim(civ="rome_100ad", capital=book_money(10000.0), agent_economy=False)   # legacy: caches the engine's goods-market factor
 	loom_node = "tex_power_loom"
 	if loom_node in sim_inst.nodes:
 		sim_inst.household.operating.add(loom_node)
@@ -363,7 +363,7 @@ check("rapid workforce invalidation", _ok, _detail)
 
 def _test_multiple_goods_concerns_competition():
 	"""Edge case: adding multiple concerns in the same goods category updates cross-elasticity."""
-	sim_inst = sim(civ="rome_100ad", capital=book_money(10000.0), agent_economy=False)
+	sim_inst = sim(civ="rome_100ad", capital=book_money(10000.0), agent_economy=False)   # legacy: caches the engine's goods-market factor
 	loom_node = "tex_power_loom"
 	if loom_node in sim_inst.nodes:
 		sim_inst.household.operating.add(loom_node)

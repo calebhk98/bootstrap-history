@@ -1,7 +1,8 @@
 """Typed-line parsing for pursue and programme: key:value caps, `preview`, and the goal in the rest."""
 from . import typed
 
-NUMBER_KEYS = ("max_total_cost", "max_annual_draw", "reserve_cash", "limit")
+NUMBER_KEYS = ("max_total_cost", "max_annual_draw", "reserve_cash", "limit", "max_total_hours", "max_annual_hours",
+               "pause_debt", "pause_war_risk", "pause_shortage")
 
 
 def _split(words):
@@ -17,6 +18,8 @@ def _split(words):
                 return None, None, "'%s' is not a number for %s" % (value, key)
         elif text.lower() in ("preview", "dry_run"):
             options["preview"] = True
+        elif key.lower() == "auto_resume":
+            options["auto_resume"] = value.lower() not in ("no", "false", "0", "off")
         else:
             remaining.append(text)
     if "limit" in options:

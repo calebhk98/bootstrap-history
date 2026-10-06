@@ -41,14 +41,14 @@ class SpinUpTests(unittest.TestCase):
 
     def test_converges_for_every_base_civilisation(self):
         for civ in _civilisations():
-            result = workforce_spinup.spin_up(_PRODUCTION, set(civ["starting_techs"]))
+            result = workforce_spinup.spin_up(_PRODUCTION, set(civ["starting_techs"]), techniques_available_to)
             self.assertTrue(result.converged, civ["id"])
             self.assertLessEqual(result.years, workforce_spinup.SPIN_UP_MAX_YEARS)
             self.assertAlmostEqual(sum(result.shares_by_trade.values()), 1.0, places=9)
 
     def test_stops_early_when_the_split_stops_moving(self):
         civ = next(_civilisations())
-        result = workforce_spinup.spin_up(_PRODUCTION, set(civ["starting_techs"]))
+        result = workforce_spinup.spin_up(_PRODUCTION, set(civ["starting_techs"]), techniques_available_to)
         self.assertLess(result.years, workforce_spinup.SPIN_UP_MAX_YEARS)
         self.assertLessEqual(result.final_share_change,
                              workforce_spinup.SPIN_UP_SHARE_TOLERANCE)
@@ -56,7 +56,7 @@ class SpinUpTests(unittest.TestCase):
     def test_too_short_a_spin_up_reports_not_converged(self):
         civ = next(_civilisations())
         result = workforce_spinup.spin_up(_PRODUCTION, set(civ["starting_techs"]),
-                                          max_years=1)
+                                          techniques_available_to, max_years=1)
         self.assertFalse(result.converged)
         self.assertEqual(result.years, 1)
 
@@ -64,14 +64,14 @@ class SpinUpTests(unittest.TestCase):
         farm_trade = labour_allocation.FARM_TRADE
         for civ in _civilisations():
             reached = set(civ["starting_techs"])
-            result = workforce_spinup.spin_up(_PRODUCTION, reached)
+            result = workforce_spinup.spin_up(_PRODUCTION, reached, techniques_available_to)
             expected = _trades_of_available_recipes(_PRODUCTION, reached) - {farm_trade}
             self.assertEqual({trade for trade, share in result.shares_by_trade.items()
                               if share > 0.0}, expected, civ["id"])
             self.assertTrue(all(share >= 0.0 for share in result.shares_by_trade.values()))
 
     def test_civilisations_with_different_technology_split_differently(self):
-        splits = [workforce_spinup.spin_up(_PRODUCTION, set(civ["starting_techs"])).shares_by_trade
+        splits = [workforce_spinup.spin_up(_PRODUCTION, set(civ["starting_techs"]), techniques_available_to).shares_by_trade
                   for civ in _civilisations()]
         self.assertGreater(len({tuple(sorted(split)) for split in splits}), 1)
 
@@ -86,17 +86,17 @@ class SpinUpTests(unittest.TestCase):
             "labour_hours": {"zz_sage": 3.0}, "requires_node": "zz_unreached_node",
             "basis": "one locked", "yield_basis": "test", "conf": "C"}
         civ = next(_civilisations())
-        result = workforce_spinup.spin_up(production, set(civ["starting_techs"]))
+        result = workforce_spinup.spin_up(production, set(civ["starting_techs"]), techniques_available_to)
         self.assertGreater(result.shares_by_trade.get("zz_wright", 0.0), 0.0)
         self.assertEqual(result.shares_by_trade.get("zz_sage", 0.0), 0.0)
         # The wright also draws iron, so the smith side of the graph is busier.
-        base = workforce_spinup.spin_up(_PRODUCTION, set(civ["starting_techs"]))
+        base = workforce_spinup.spin_up(_PRODUCTION, set(civ["starting_techs"]), techniques_available_to)
         self.assertNotEqual(base.shares_by_trade, result.shares_by_trade)
 
     def test_deterministic_for_a_given_input(self):
         civ = next(_civilisations())
-        first = workforce_spinup.spin_up(_PRODUCTION, set(civ["starting_techs"]))
-        second = workforce_spinup.spin_up(_PRODUCTION, set(civ["starting_techs"]))
+        first = workforce_spinup.spin_up(_PRODUCTION, set(civ["starting_techs"]), techniques_available_to)
+        second = workforce_spinup.spin_up(_PRODUCTION, set(civ["starting_techs"]), techniques_available_to)
         self.assertEqual(first.shares_by_trade, second.shares_by_trade)
         self.assertEqual(first.years, second.years)
 
@@ -112,16 +112,16 @@ class SpinUpTests(unittest.TestCase):
         civ = next(_civilisations())
         reached = set(civ["starting_techs"])
         with tempfile.TemporaryDirectory() as cache_dir:
-            fresh = workforce_spinup.cached_spin_up(_PRODUCTION, reached, cache_dir=cache_dir)
+            fresh = workforce_spinup.cached_spin_up(_PRODUCTION, reached, techniques_available_to, cache_dir=cache_dir)
             self.assertEqual(len(os.listdir(cache_dir)), 1)
             workforce_spinup.forget_in_process_cache()
-            again = workforce_spinup.cached_spin_up(_PRODUCTION, reached, cache_dir=cache_dir)
+            again = workforce_spinup.cached_spin_up(_PRODUCTION, reached, techniques_available_to, cache_dir=cache_dir)
             self.assertEqual(fresh.shares_by_trade, again.shares_by_trade)
             production = copy.deepcopy(_PRODUCTION)
             production["zz_gadget"] = {
                 "outputs": {"zz_gadget": 1.0}, "inputs": {},
                 "labour_hours": {"zz_wright": 3.0}, "requires_node": None}
-            workforce_spinup.cached_spin_up(production, reached, cache_dir=cache_dir)
+            workforce_spinup.cached_spin_up(production, reached, techniques_available_to, cache_dir=cache_dir)
             self.assertEqual(len(os.listdir(cache_dir)), 2)
 
     def test_default_cache_location_is_not_tracked_data(self):

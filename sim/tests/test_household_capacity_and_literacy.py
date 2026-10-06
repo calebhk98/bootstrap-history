@@ -33,11 +33,14 @@ check("giving that advice does not recurse into itself",
 def _deputies_are_announced():
     deputies_sim = sim(capital=2000000.0, manual=False)
     run_it(deputies_sim, "school_founded", "patron_imperial", "academy_network")
+    peak_deputies = 0.0
     for _ in range(30):
         deputies_sim.step()
+        peak_deputies = max(peak_deputies, deputies_sim.directors_extra)
     said = [message for _, message in deputies_sim.log if "deput" in message]
+    # deputies can leave again, so the bound is the most held at once, not the count at the end
     return (any("deput" in message and "your year is" in message for _, message in deputies_sim.log)
-            and len(said) <= int(deputies_sim.directors_extra) + 1, said[:1])
+            and len(said) == len(set(said)) and len(said) <= int(peak_deputies), said[:1])
 
 slow_check("gaining a deputy is announced with what it does to your year, "
            "once per whole deputy rather than every year",
@@ -62,11 +65,10 @@ check("a trade that needs no letters is not capped by literacy at all",
       s_lit.labour.literate_capacity("smith") == float("inf"),
       s_lit.labour.literate_capacity("smith"))
 # --- BREAK: `train electrician 20` gave 27 while machinists stopped at 5.9.
-check("every taught trade is bounded by literacy, electrician included",
-      not (set(Labour.LITERATE_TRADES) ^ set(Labour.LITERATE_TRADES))
-      and all(trade in Labour.LITERATE_TRADES for trade in S.TRADES_ABSENT),
-      sorted(set(S.TRADES_ABSENT) - set(Labour.LITERATE_TRADES)))
 s_el = sim(capital=2000000.0)
+check("every taught trade is bounded by literacy, electrician included",
+      all(trade in s_el.labour.LITERATE_TRADES for trade in S.TRADES_ABSENT),
+      sorted(set(S.TRADES_ABSENT) - set(s_el.labour.LITERATE_TRADES)))
 _ok_el, _why_el = s_el.labour.train("electrician", 20)
 check("...so twenty electricians cannot be taught into a society of twelve",
       not _ok_el and "literacy" in str(_why_el), _why_el)

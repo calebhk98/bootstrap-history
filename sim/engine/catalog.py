@@ -26,10 +26,21 @@ class Trade:
     note: str = ""
     initially_absent: bool = False
     source: str = ""
+    extra: Mapping[str, Any] = dataclasses.field(default_factory=dict)   # every other field the file states
+
+
+_TRADE_NAMED_FIELDS = frozenset({"family", "training", "training_years", "note", "initially_absent"})
+
+
+def _trade_fields(trade: Trade) -> Dict[str, Any]:
+    """A trade's fields flat, with the extra ones beside the named ones, as a data file states them."""
+    fields = dataclasses.asdict(trade)
+    return {**fields.pop("extra"), **fields}
 
 
 def _trade_from(trade_id: str, metadata: Mapping[str, Any], source: str) -> Trade:
     return Trade(trade_id,
+                 extra={key: value for key, value in metadata.items() if key not in _TRADE_NAMED_FIELDS},
                  family=metadata.get("family", "craft"),
                  training=metadata.get("training"),
                  training_years=metadata.get("training_years"),
@@ -166,7 +177,7 @@ def load_trade_registry(root: str, production: Optional[Mapping[str, Any]] = Non
                                    (manifest.id, path, trade_id))
                 claim_fields(claims, TRADE, trade_id, metadata, manifest, by_id)
                 registry[trade_id] = _trade_from(trade_id, deep_merge(
-                    dataclasses.asdict(registry[trade_id]), metadata), registry[trade_id].source)
+                    _trade_fields(registry[trade_id]), metadata), registry[trade_id].source)
                 continue
             if manifest:
                 check_new_id(manifest, trade_id, False, path)

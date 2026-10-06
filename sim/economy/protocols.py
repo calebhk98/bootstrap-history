@@ -61,7 +61,7 @@ class MarketView(Protocol):
     def currency_of(self, area: AreaId) -> CurrencyId:
         """The money prices in this area are counted in."""
 
-    def price_level(self, currency: CurrencyId) -> float:
+    def basket_price_level(self, currency: CurrencyId) -> float:
         """Last year's price level against the opening year (1.0 at the opening)."""
 
     def expected_inflation(self, currency: CurrencyId) -> float:

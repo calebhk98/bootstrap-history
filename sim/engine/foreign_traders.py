@@ -15,12 +15,11 @@ from sim.geography.api import cargo_cost, freight_cost
 
 from .data import STARTING_KITS
 from sim.agents.api import SAVING_SHARE_OF_SURPLUS
+from sim.unit_conversions import CIVIL_DAYS_PER_YEAR
 from .foreign_payments import OPENING_CARRIERS_PER_ROUTE
 from .foreign_routes import SEA_MODE
 
 MERCHANTS_BORROWER = "merchants"
-
-DAYS_PER_YEAR = 365.0
 
 
 class ForeignTradersMixin:
@@ -37,7 +36,7 @@ class ForeignTradersMixin:
 
     @staticmethod
     def _route_voyage_years(route):
-        return 0.0 if route is None else sum(leg.travel_days for leg in route.legs) / DAYS_PER_YEAR
+        return 0.0 if route is None else sum(leg.travel_days for leg in route.legs) / CIVIL_DAYS_PER_YEAR
 
     def _trader_cycle_years(self, route, civilization_id=None):
         """Years money is tied up in a cargo: the voyage, and the wait for a sailing at the two ends."""

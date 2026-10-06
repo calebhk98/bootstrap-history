@@ -13,7 +13,8 @@ def render_programme_rows(rows):
         if row.get("did_nothing_because"):
             lines.append("%s did nothing: %s" % (head, row["did_nothing_because"]))
             continue
-        lines.append("%s started %d, spent %s" % (head, len(started), _fmt_num(row.get("spent", 0.0))))
+        lines.append("%s started %d, spent %s, founder hours %s" % (
+            head, len(started), _fmt_num(row.get("spent", 0.0)), _fmt_num(row.get("hours", 0.0))))
         lines.extend("  - %s (%s)" % (item["name"], _fmt_num(item["cost"])) for item in started)
         for item in row.get("skipped") or []:
             lines.append("  skipped %s: %s" % (item["id"], item["why"]))
@@ -29,7 +30,9 @@ def render_programme(out):
         return out.get("note", "no programme set")
     lines = ["PROGRAMME: %s%s" % (programme["target"], " (paused)" if programme["paused"] else ""),
              "  caps: %s" % programme["caps"],
-             "  committed so far: %s" % _fmt_num(programme["committed_so_far"]),
+             "  committed so far: %s, founder hours %s" % (
+                 _fmt_num(programme["committed_so_far"]), _fmt_num(programme.get("hours_committed_so_far", 0))),
+             "  pauses on: %s" % programme.get("pauses", "none"),
              _wrap(programme["runs"], indent="  ")]
     if out.get("note"):
         lines.append(_wrap(out["note"], indent="  "))

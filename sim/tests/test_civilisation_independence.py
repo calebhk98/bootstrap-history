@@ -20,9 +20,10 @@ CIVILISATION_DIR = os.path.join(ROOT, "data", "civilizations")
 
 # Offline tools that may name a civilisation, each with the reason.
 TOOL_ALLOW_LIST = {
+    "default_civilisation.py": "holds the default-civilisation setting, shared by the engine and labour",
 }
-# The one place a default may name a civilisation: the setting itself.
-ENGINE_ALLOW_LIST = {os.path.join("engine", "settings.py")}
+# Nothing in the engine or world may name one; the default setting lives in sim/default_civilisation.py.
+ENGINE_ALLOW_LIST = set()
 
 
 def civilisation_ids():
@@ -98,8 +99,8 @@ class GameStartsWithoutTheDefaultCivilisation(unittest.TestCase):
     civilisation, built from symlinks so it costs nothing to make."""
 
     def test_game_starts_and_steps_without_the_default_civilisation_file(self):
-        with open(os.path.join(SIM_DIR, "engine", "settings.py"), encoding="utf-8") as handle:
-            hidden = re.search(r'"default_civ":\s*"([^"]+)"', handle.read()).group(1)
+        with open(os.path.join(SIM_DIR, "default_civilisation.py"), encoding="utf-8") as handle:
+            hidden = re.search(r'PREFERRED_DEFAULT_CIVILISATION = "([^"]+)"', handle.read()).group(1)
         with tempfile.TemporaryDirectory() as scratch:
             for entry in os.listdir(ROOT):
                 if entry not in (".git", "data", ".claude"):

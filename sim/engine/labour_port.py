@@ -1,7 +1,7 @@
 """The engine's side of the labour wall: what the labour package reads from the simulation, and where
 the simulation keeps its `Labour`."""
 from sim.labour.api import Labour
-from . import data, money_units, purchase_rule, wage_schedule
+from . import data, money_units, purchase_rule, solve_prices_core, wage_schedule
 
 
 class LabourWorld:
@@ -10,6 +10,7 @@ class LabourWorld:
 
     def __init__(self, sim):
         self._sim = sim
+        self._trade_registry = None
 
     @property
     def wages(self):
@@ -22,6 +23,18 @@ class LabourWorld:
     @property
     def trade_notes(self):
         return data.TRADE_NOTES
+
+    def techniques_available_to(self, production, reached_nodes):
+        return solve_prices_core.techniques_available_to(production, reached_nodes)
+
+    @property
+    def trade_registry(self):
+        """Each trade's fields as plain mappings: the named ones and everything else its file states."""
+        if self._trade_registry is None:
+            self._trade_registry = {trade_id: {"family": trade.family, "training_years": trade.training_years,
+                                               **trade.extra}
+                                    for trade_id, trade in data.TRADE_REGISTRY.items()}
+        return self._trade_registry
 
     def trade_family(self, trade):
         return data.trade_family(trade)
@@ -70,6 +83,9 @@ class LabourWorld:
 
     def actor_staff_fte(self, trade):
         return self._sim.actor_staff_fte(trade)
+
+    def actors_staff_nationwide(self, trade):
+        return self._sim.actor_staff_nationwide(trade)
 
     def actor_staff_total(self):
         return self._sim.actor_staff_total()

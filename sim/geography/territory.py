@@ -1,6 +1,6 @@
 """What a state holds on the map: its frontier, its coast and the roads between its tiles.
 
-Read from the equal-area tiles in `data/world/geography.json` and a civilisation's
+Read from the equal-area tiles in `the map folder (data/world/geography/)` and a civilisation's
 `home_regions`. Nothing here is specific to a civilisation; a state that holds other
 tiles holds other lengths.
 

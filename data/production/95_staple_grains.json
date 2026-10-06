@@ -1,0 +1,37 @@
+{
+ "_note": "Staple grains other than wheat, so a civilisation whose people live on another grain can price its subsistence basket (a civilisation file names its `staple`). Each is a GROWN, land-limited entry shaped like wheat_kg: no material inputs, one hectare-year charged against hectare_land.",
+ "materials": {
+  "millet_kg": {
+   "outputs": {
+    "millet_kg": 900.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 200.0
+   },
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "arable land",
+   "unit_dimension": "mass",
+   "basis": "per hectare CROPPED with foxtail or broomcorn millet for one growing season, as kg of threshed grain net of seed",
+   "yield_basis": "GROWN. Dry-farmed foxtail or broomcorn millet of the northern Chinese plains, sown in rows and hoed: on the order of eight hundred to a thousand kilograms of grain per hectare (Hsu Cho-yun, Han Agriculture, 1980; Bray, Science and Civilisation in China vol. 6 pt 2, 1984; archaeobotanical estimates for the Neolithic to Han), so 900 net of the few kilograms of seed held back (conf C). Labour: hoeing and thinning the rows, hand reaping and threshing by flail, about 200 hours per hectare; traditional records run higher, so this is the low end for a skilled Han household with the seed drill (conf C). LAND: the batch is the one hectare-year the basis states, charged at hectare_land's rent like wheat_kg.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "maize_kg": {
+   "outputs": {
+    "maize_kg": 1100.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 400.0
+   },
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "arable land",
+   "unit_dimension": "mass",
+   "basis": "per hectare CROPPED with maize for one growing season, as kg of shelled grain net of seed",
+   "yield_basis": "GROWN. Hand-planted maize in hills with the digging stick and no draught animal: traditional milpa returns about a thousand to fifteen hundred kilograms of shelled grain per hectare after shelling and drying losses (Sanders, Parsons and Santley, The Basin of Mexico, 1979; milpa field studies in Guatemala, Scientific Reports 2021, and the review in Frontiers in Agronomy 2023), so 1100 net of seed (conf C). Labour: planting each hill, repeated hoeing, hand harvest, husking and shelling; ethnographic totals vary widely and harvest alone runs to several hundred hours, so about 400 hours per hectare (conf C). LAND: the batch is the one hectare-year the basis states, charged at hectare_land's rent like wheat_kg.",
+   "conf": "C",
+   "requires_node": "fud_maize"
+  }
+ }
+}

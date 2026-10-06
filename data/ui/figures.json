@@ -1,0 +1,23 @@
+{
+ "_doc": "Figures the `figures` / `why <name>` inspector explains. Each reads the running game through state paths: dotted names of Sim attributes or methods (a method is called with no arguments; a name after a dict looks up its key). value: the path of the number. components, flows, drivers: a path to a mapping of name to number, or {name: path}. label, unit and digits describe it. A mod adds figures in mods/<mod_id>/data/ui/figures.json under ids <mod_id>:<name>. A figure that needs code (a cause book, a loop) is registered with @figure in sim/ui instead.",
+ "figures": {
+  "income": {
+   "label": "recurring revenue per year", "unit": "money per year",
+   "value": "revenue", "components": "revenue_sources"
+  },
+  "upkeep": {
+   "label": "running costs per year", "unit": "money per year",
+   "value": "upkeep", "components": "upkeep_by_concern"
+  },
+  "population": {
+   "label": "population", "unit": "people", "digits": 0,
+   "value": "population.total",
+   "components": {"children": "population.children", "working age": "population.working_age",
+                  "elderly": "population.elderly"}
+  },
+  "price_index": {
+   "label": "price level against the starting one", "unit": "index", "digits": 4,
+   "value": "price_index", "drivers": {"wage_index": "wage_index"}
+  }
+ }
+}

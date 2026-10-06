@@ -9,11 +9,12 @@ import json
 import os
 from typing import Any, Dict, Mapping
 
+from sim.default_civilisation import CIVILISATION_DIRECTORY, default_civilisation_id
 from sim.world import demography
 from sim.labour import wages
 
-# The staple the subsistence basket is priced in.
-FOOD_PRICE_MATERIAL = "wheat_kg"
+# The staple of a civilisation that names none.
+DEFAULT_STAPLE_MATERIAL = "wheat_kg"
 
 REFERENCE_POPULATION = 10000.0
 
@@ -23,14 +24,21 @@ REFERENCE_POPULATION = 10000.0
 def reference_civilisation() -> Dict[str, Any]:
     """The default civilisation's own file, for the context-free wage table
     tools and the price solver use when no civilisation is in play."""
-    from sim.engine.solve_prices_core import DEFAULT_LAND_CIVILIZATION, REPO_ROOT
-    path = os.path.join(REPO_ROOT, "data", "civilizations", DEFAULT_LAND_CIVILIZATION + ".json")
+    path = os.path.join(CIVILISATION_DIRECTORY, default_civilisation_id() + ".json")
     with open(path, encoding="utf-8") as handle:
         return json.load(handle)
 
 
 def reference_discount_rate() -> float:
     return float(reference_civilisation()["starting_interest_rate"])
+
+
+def staple_material(civ: Mapping[str, Any]) -> str:
+    """The grain the civilisation's subsistence basket is priced in: its `staple`, else the default."""
+    staple = civ.get("staple", DEFAULT_STAPLE_MATERIAL)
+    if not isinstance(staple, str) or not staple:
+        raise ValueError("civilization %r staple must be a material id" % civ.get("id", "?"))
+    return staple
 
 
 def validate_coin_standard(civ: Mapping[str, Any]) -> None:

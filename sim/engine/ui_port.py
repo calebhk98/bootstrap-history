@@ -2,9 +2,9 @@
 explicit name, and each private `Sim` member the UI reads or writes has a public function that
 delegates exactly. sim/ui/ imports nothing from sim.engine except this module."""
 from sim.engine import (  # noqa: F401
-    automation_audit, cash_book, civ_start_check, fuzzy_estimates, path_search, planner,
+    automation_audit, cash_book, cause_book, civ_start_check, fuzzy_estimates, path_search, planner,
     purchase_rule, settings, settings_table, shortage_conditions, topic_tags, tree_merge, units,
-    validate_material_gating, validate_output_bounds, validate_production, validate_unheld_gates)
+    validate_material_gating, validate_output_bounds, validate_copy_visibility, validate_production, validate_unheld_gates)
 from sim.engine.blockers import BLOCKER_MEANING, RUNNING_CONSTRAINT_KIND  # noqa: F401
 from sim.engine.catalog import load_production_catalog  # noqa: F401
 from sim.engine.core import Sim  # noqa: F401
@@ -19,6 +19,7 @@ from sim.engine.default_civilisation import default_civilisation_id  # noqa: F40
 from sim.engine.fog import strip_self_play_advice  # noqa: F401
 from sim.engine.hazard_window import hazards_not_yet_past  # noqa: F401
 from sim.engine.identity_cache import IdentityCache  # noqa: F401
+from sim.engine.mods import get_ordered_mods  # noqa: F401
 from sim.engine.knowledge_warning import knowledge_loss_warning, warning_lines  # noqa: F401
 from sim.engine.permanent_benefit import permanent_parts  # noqa: F401
 from sim.engine.projects_completion import FAILED_PREFIX, goal_movement, MINOR_MARK  # noqa: F401
@@ -32,6 +33,17 @@ from sim.engine.saveload import (  # noqa: F401
 from sim.engine.settings_table import normal_seed, valid_seed_text  # noqa: F401
 from sim.engine.shortage_conditions import condition_line  # noqa: F401
 from sim.engine.units_summary import summary_line  # noqa: F401
+from sim.engine.ui_data import load_figure_specs  # noqa: F401
+from sim.engine.readable import is_readable  # noqa: F401
+
+
+def interface_memory(sim):
+    """The slot of the save the UI owns; the engine never reads it."""
+    return sim.state.interface
+
+
+def set_interface_memory(sim, memory):
+    sim.state.interface = memory
 
 
 # Engine reads: private methods and fields of the `Sim`, under public names.
@@ -144,6 +156,18 @@ def goal_closure(sim):
 
 def set_goal_closure(sim, closure_set):
     sim._goal_closure = closure_set
+
+
+def goal_years(sim):
+    return dict(sim.state.scenario.goal_years)
+
+
+def set_goal(sim, node_id):
+    sim.set_goal(node_id)
+
+
+def win_condition_anatomy(sim, condition):
+    return sim.win_condition_anatomy(condition)
 
 
 def goal_critical_floor(sim):

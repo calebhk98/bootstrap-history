@@ -20,7 +20,7 @@ from .producers import Producer
 from .producers_close import working_capital_target
 from .record import EconomyRecord
 from .setup import EconomySetup, labour_area, recipe_tile_key
-from .tile_costs import CarriageTable, carriage_table
+from .tile_costs import CarriageTable
 from .types import EDGE_MINT, GoodId, Recipe, TileId, Transfer
 
 OPENING_SPARE_CAPACITY_SHARE = declare(
@@ -44,7 +44,7 @@ MERCHANT_CAPITAL_SHARE_OF_OUTPUT = declare(
 
 
 def open_economy(setup: EconomySetup) -> Tuple[EconomyRecord, AreaMap, CarriageTable]:
-    carriage = carriage_table(setup.tiles, setup.carriage_rates, setup.handling_rates, edges=setup.edges)
+    carriage = setup.carriage_table()
     priced_goods = {good: price for good, price in setup.opening_prices.items()
                     if good in setup.specs and price > 0.0}
     area_map = AreaMap(setup.tiles, carriage, [(setup.specs[good], price) for good, price in
@@ -69,7 +69,7 @@ def open_economy(setup: EconomySetup) -> Tuple[EconomyRecord, AreaMap, CarriageT
 
 def _opening_memory(setup, area_map, priced_goods) -> MarketMemory:
     memory = MarketMemory(year=0, rates={setup.currency_id: setup.opening_rate},
-                          price_levels={setup.currency_id: 1.0})
+                          basket_price_levels={setup.currency_id: 1.0})
     for good, price in priced_goods.items():
         for area in area_map.areas(good):
             memory.prices[market_key(good, area.area_id)] = price

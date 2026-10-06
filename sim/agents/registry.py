@@ -7,6 +7,7 @@ from .records import ActorRecord, ActorsState
 
 from . import firm_entry, imitation, ledger
 from .base import RecordedActor
+from .concern_totals import ConcernTotals
 from .firm import Firm
 from .government import Government
 from .group import InterestGroup
@@ -49,10 +50,13 @@ class _ConcernWatch:
 	current whenever its concern set changes. Holds only plain data, so a
 	state holding watched sets still copies."""
 
-	def __init__(self, firm_id: str, holders: Dict[str, Set[str]], version: List[int]) -> None:
+	def __init__(self, firm_id: str, holders: Dict[str, Set[str]], version: List[int],
+				 totals: ConcernTotals, record: Any) -> None:
 		self.firm_id = firm_id
 		self.holders = holders
 		self.version = version
+		self.totals = totals
+		self.record = record
 		self.known: Set[str] = set()
 		self.target: Any = None
 
@@ -65,6 +69,7 @@ class _ConcernWatch:
 		for node_id in current - self.known:
 			self.holders.setdefault(node_id, set()).add(self.firm_id)
 		self.known = current
+		self.totals.sync(self.firm_id, self.record)
 
 
 class ActorRegistry:
@@ -84,13 +89,12 @@ class ActorRegistry:
 		self._column_position: Dict[str, int] = {}
 		self._changed_actors: Set[str] = set()
 		self._columns_synced = False
-		self._category_counts: Optional[Any] = None
 		self._acting: Optional[RecordedActor] = None
 		self._staff_basis: Dict[str, float] = {}
 		self._bans: Optional[Dict[str, str]] = None
 		# bumped whenever any firm's concerns change, so market caches keyed on it stay honest
 		self.version: List[int] = [0]
-		self._capacity_totals: Optional[Any] = None
+		self._totals = ConcernTotals()
 		# country -> the world its actors see this year (rebuilt every `advance`)
 		self._scoped: Dict[str, Any] = {}
 		for actor_id in sorted(state.records):
@@ -103,6 +107,7 @@ class ActorRegistry:
 			watch = getattr(previous.record.concerns, "_on_change", None)
 			if isinstance(watch, _ConcernWatch):
 				watch.known, watch.target = set(), ()
+				self._totals.forget(actor_id)
 				for holding in self._holders.values():
 					holding.discard(actor_id)
 		actor = ACTOR_CLASSES[record.kind](actor_id, record, make_policy(record.policy_kind))
@@ -114,7 +119,7 @@ class ActorRegistry:
 			if hasattr(type(actor), "find_actor"):
 				actor.find_actor = self.get
 			from sim.invalidating import _InvalidatingSet
-			watch = _ConcernWatch(actor_id, self._holders, self.version)
+			watch = _ConcernWatch(actor_id, self._holders, self.version, self._totals, record)
 			record.concerns = _InvalidatingSet(record.concerns, on_change=watch)
 			watch.target = record.concerns
 			watch()
@@ -128,34 +133,18 @@ class ActorRegistry:
 		self._bans = None
 		return actor
 
-	def note_capacity_change(self) -> None:
-		"""A firm has grown a concern: caches of the market's total supply are stale."""
+	def note_capacity_change(self, firm_id: str) -> None:
+		"""A firm has changed the size it runs a concern at: the totals take its new sizes."""
 		self.version[0] += 1
+		self._totals.sync(firm_id, self.actors[firm_id].record)
 
 	def capacity_in(self, node_id: str) -> float:
 		"""Founding sizes of one concern that every active firm runs, summed."""
-		key = (self.version[0], len(self.actors))
-		if self._capacity_totals is None or self._capacity_totals[0] != key:
-			totals: Dict[str, float] = {}
-			for operator in self.market_operators():
-				for held in operator.concerns:
-					totals[held] = totals.get(held, 0.0) + operator.record.capacity.get(held, 1.0)
-			self._capacity_totals = (key, totals)
-		return self._capacity_totals[1].get(node_id, 0.0)
+		return self._totals.size_by_node.get(node_id, 0.0)
 
 	def concerns_in(self, category: str, nodes: Dict[str, Any]) -> float:
 		"""Founding sizes of concerns of goods category `category` that actors operate, summed over operators."""
-		# one pass counts every category; it is kept while no firm's concerns change (an exiting firm
-		# empties its concerns first, which counts as a change)
-		key = (self.version[0], len(self.actors))
-		if self._category_counts is None or self._category_counts[0] != key:
-			counts: Dict[Any, float] = {}
-			for operator in self.market_operators():
-				for node_id in operator.concerns:
-					node_category = nodes[node_id].get("cat")
-					counts[node_category] = counts.get(node_category, 0.0) + operator.record.capacity.get(node_id, 1.0)
-			self._category_counts = (key, counts)
-		return self._category_counts[1].get(category, 0)
+		return self._totals.size_of_category(category, nodes)
 
 	def refresh_staff(self) -> None:
 		"""Forget the staffing and demand tallies so the next read counts every actor again."""

@@ -104,7 +104,7 @@ class EngineWageTests(unittest.TestCase):
 
     def setUp(self):
         from .harness import sim
-        self.sim = sim(civ="rome_100ad", events=False, agent_economy=False)   # the engine's own wage schedule
+        self.sim = sim(civ="rome_100ad", events=False, agent_economy=False)   # legacy: the engine's own wage schedule
         self.sim._demographic_recovery(101)
 
     def test_solver_and_payroll_read_the_same_wage(self):
@@ -142,7 +142,7 @@ class EngineWageTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             path = os.path.join(directory, "save.json")
             save_state(engine, path)
-            fresh = sim(civ="rome_100ad", events=False, agent_economy=False)
+            fresh = sim(civ="rome_100ad", events=False, agent_economy=False)   # legacy: the engine's own wage schedule
             load_state(fresh, path)
         self.assertEqual(fresh.labour.wage_schedule().tightness_factors["smith"], 1.2)
         self.assertAlmostEqual(fresh.labour.market.pressure("artisan"), pressure)

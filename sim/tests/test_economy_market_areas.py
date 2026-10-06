@@ -5,10 +5,10 @@ tiles through `region_to_tiles` is test scaffolding only."""
 import json
 import unittest
 
+from sim.geography.api import load_geography
 from sim.economy import market_areas, tile_costs
 from sim.economy.types import GoodSpec
-from sim.tests.test_economy_tile_costs import (
-    CARRIER_PRICES, FEED_PRICE_PER_KG, ANNUAL_RATE, WAGE_PER_HOUR, GEOGRAPHY_PATH, civ_tile_ids, grid)
+from sim.tests.test_economy_tile_costs import REAL_HANDLING, REAL_RATES, civ_tile_ids, grid, grid_table
 
 GRAIN = GoodSpec("grain_kg", 1.0, 0.1, 0.0, "food")
 SILVER = GoodSpec("silver_kg", 1.0, 0.0, 0.0, "metal")
@@ -24,7 +24,7 @@ def population(tile_ids):
 class PartitionTests(unittest.TestCase):
     def setUp(self):
         self.tiles = grid(5, 5)
-        self.table = tile_costs.carriage_table(self.tiles, {tile_costs.DRAUGHT_MODE: 1.0})
+        self.table = grid_table(self.tiles, {"cart": 1.0})
         self.step = self.table.cost_per_tonne("t_0_0", "t_1_0")
 
     def test_dear_goods_form_one_area_and_cheap_goods_one_per_tile(self):
@@ -55,7 +55,7 @@ class PartitionTests(unittest.TestCase):
 
     def test_disconnected_tiles_never_share_an_area(self):
         pieces = {tile_id: tile for tile_id, tile in self.tiles.items() if tile_id.startswith(("t_0_", "t_4_"))}
-        table = tile_costs.carriage_table(pieces, {tile_costs.DRAUGHT_MODE: 1.0})
+        table = grid_table(pieces, {"cart": 1.0})
         areas = market_areas.partition(pieces, table, 1e12, population(pieces), 0.5, "x")
         self.assertEqual(len(areas), 2)
 
@@ -67,8 +67,8 @@ class PartitionTests(unittest.TestCase):
 class AreaMapTests(unittest.TestCase):
     def setUp(self):
         self.tiles = grid(5, 5)
-        rates = {tile_costs.DRAUGHT_MODE: 1.0}
-        self.table = tile_costs.carriage_table(self.tiles, rates)
+        rates = {"cart": 1.0}
+        self.table = grid_table(self.tiles, rates)
         step = self.table.cost_per_tonne("t_0_0", "t_1_0")
         self.grain_price = 0.5 * step / 0.15 / 1000.0
         self.silver_price = 1e6 * self.grain_price
@@ -120,14 +120,12 @@ class AreaMapTests(unittest.TestCase):
 class RealTilesTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        with open(GEOGRAPHY_PATH, encoding="utf-8") as handle:
-            cls.geography = json.load(handle)
+        cls.geography = load_geography()
 
     def area_counts(self, civ_name):
         tile_ids = civ_tile_ids(self.geography, civ_name)
         tiles = tile_costs.tiles_from_geography(self.geography, tile_ids)
-        rates = tile_costs.money_per_tonne_km_by_mode(CARRIER_PRICES, WAGE_PER_HOUR, FEED_PRICE_PER_KG, ANNUAL_RATE)
-        table = tile_costs.carriage_table(tiles, rates, tile_costs.handling_money_per_tonne_by_mode(WAGE_PER_HOUR))
+        table = tile_costs.carriage_table(tiles, REAL_RATES, REAL_HANDLING)
         pops = {tile_id: tile.land_area_km2 * tile.arable_fraction * tile.fertility for tile_id, tile in tiles.items()}
         goods = [(GRAIN, GRAIN_PRICE), (SILK, SILK_PRICE), (SILVER, SILVER_PRICE)]
         area_map = market_areas.AreaMap(tiles, table, goods, pops)

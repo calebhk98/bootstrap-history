@@ -19,6 +19,7 @@ grouping evidence.
 """
 from .data import WAGES
 from sim.constants import declare
+from sim.unit_conversions import HOURS_PER_PERSON_YEAR
 from . import money_units
 from sim.world import capital_market
 
@@ -570,6 +571,11 @@ class CreditMixin:
         # are simply in arrears, which already has consequences of its own.
         if household.capital < -limit and year - getattr(household, "last_settlement", -999) >= self.SETTLEMENT_MIN_INTERVAL_YEARS:
             household.last_settlement = year
+            # The balance left is measured against the line that stands once the name has been marked down, so it never starts outside it.
+            _rep_before = household.reputation
+            household.reputation = max(0.0, _rep_before - self.SETTLEMENT_REPUTATION_HIT)
+            limit = min(limit, self.credit_limit())
+            household.reputation = _rep_before
             household.reset_cash(-limit * self.SETTLEMENT_CAPITAL_RETAINED_FRACTION, "debts written off in settlement")
             # THE NUMBER ANNOUNCED HAS TO BE THE NUMBER APPLIED: quoting a
             # fixed "reputation -12" against a reputation of 4.9 would say
@@ -765,6 +771,9 @@ class CreditMixin:
             # months opens even while deep in arrears" and its slow-payback sibling,
             # which holds the line the other way: a concern that takes YEARS
             # to clear its own capex still does not open on this.
+            # Past the line nobody lends, so there is nothing to raise for a door fee either.
+            if self.state.household.capital < -self.credit_limit():
+                return 0.0
             return calculate_affordability(
                 self.state.household.capital, self.credit_limit(), share,
                 preserve_debt=True)
@@ -894,12 +903,4 @@ class CreditMixin:
             "is tuned game balance, not derived from any household-budget "
             "study.")
 
-    HOURS_PER_PERSON_YEAR = declare(
-        "HOURS_PER_PERSON_YEAR", 2000.0, kind="engineering_estimate",
-        unit="hours/person/year", source=
-        "A 10-hour day, 250 working days a year, less feasts "
-        "and holidays.",
-        confidence="B",
-        why="Converts an annual wage into an hourly rate (stall_diagnosis' "
-            "own wage-comparison arithmetic) and back - the working-"
-            "year convention the wage provider uses.")
+    HOURS_PER_PERSON_YEAR = HOURS_PER_PERSON_YEAR

@@ -39,7 +39,7 @@ class EconomyPort:
         cached = self.__dict__.get("_territory")
         if cached is None or cached[0] != homes:
             from .economy_port_setup import civilisation_tiles
-            cached = self.__dict__["_territory"] = (homes, bool(civilisation_tiles(self._sim.civ)[0]))
+            cached = self.__dict__["_territory"] = (homes, bool(civilisation_tiles(self._sim.civ, self._sim.world_map)[0]))
         return cached[1]
 
     def _answering_agent(self):
@@ -64,6 +64,26 @@ class EconomyPort:
         agent = self._answering_agent()
         return None if agent is None else agent.rate()
 
+    def agent_credit_room(self, borrower_id):
+        """(True, room) when the agent economy answers, with room None before lenders have met; (False, None)
+        while it is off."""
+        agent = self._answering_agent()
+        return (False, None) if agent is None else (True, agent.credit_room(borrower_id))
+
+    def agent_price_response(self, material, landed_tonnes, taken_tonnes):
+        """Factor on a material's home price once `landed_tonnes` more come to market and `taken_tonnes` more are
+        bought, by the agent economy's own demand and supply; None while it is off or has no book for the good."""
+        agent = self._answering_agent()
+        return None if agent is None else agent.price_response(material, landed_tonnes, taken_tonnes)
+
+    def agent_cohort_incomes(self):
+        """[(people, yearly money income)] of the agent economy's household cohorts, poorest per head first,
+        or None while the agent economy is off."""
+        agent = self._answering_agent()
+        if agent is None:
+            return None
+        return agent.cohort_incomes()
+
     def runs_agent_economy(self):
         return self.agent is not None
 
@@ -77,6 +97,15 @@ class EconomyPort:
         self.open_agent()
         agent.run_year()
         return True
+
+    def health(self, metals=(), staple=None):
+        """The agent economy's health figures over the years this game has played (economy_port_health.py);
+        None while the agent economy is off."""
+        agent = self.agent
+        if agent is None:
+            return None
+        from .economy_port_health import health_report
+        return health_report(agent, metals, staple)
 
     def open_agent(self):
         """Open the agent economy (with its hidden spin-up) on the engine's own opening figures."""
@@ -146,10 +175,6 @@ class EconomyPort:
     def book_money(self, amount):
         """A book-coin amount in this civilisation's money now."""
         return self._sim.labour.book_money(amount)
-
-    def price_level(self):
-        """The level of money prices against the opening year (1.0 at the opening)."""
-        return self._sim.home_price_level()
 
     def wage_pressure(self):
         """How far wages stand above their opening level from a shortage of people."""

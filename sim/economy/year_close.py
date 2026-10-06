@@ -158,26 +158,26 @@ def _with_sales(producer, recipe, ledger: YearLedger):
                                last_runs=worked)
 
 
-def remember_price_level(setup, record) -> float:
+def remember_basket_price_level(setup, record) -> float:
     """The fixed basket's cost at today's prices over its cost at the base prices, over the goods that
     traded recently (notional.RECENT_TRADE_YEARS): a good that has not cleared holds only an estimate,
     and an estimate frozen at its base price would damp measured inflation. The basket's quantities
     stay those of the opening; which goods are priced follows trade."""
     recent = recently_traded_goods(record.memory)
     prices = {good: price for good, price in national_prices(record).items() if good in recent}
-    level = currency.price_level(prices, record.index_base_prices or setup.opening_prices, record.opening_basket)
-    record.memory.note_price_level(setup.currency_id, level)
+    level = currency.basket_price_level(prices, record.index_base_prices or setup.opening_prices, record.opening_basket)
+    record.memory.note_basket_price_level(setup.currency_id, level)
     return level
 
 
-def rebase_price_level(setup, record) -> None:
+def rebase_basket_price_level(setup, record) -> None:
     """Today's prices become the index base (level one) and everyone, the market's memory and each
     household alike, stops expecting inflation, so the rebase is not read as a jump in prices."""
     money = setup.currency_id
     record.index_base_prices = national_prices(record)
-    record.memory.price_levels[money] = 1.0
+    record.memory.basket_price_levels[money] = 1.0
     record.memory.expected_inflation[money] = 0.0
-    record.cohorts = {agent: renewed(cohort, last_price_level=1.0, expected_inflation=0.0)
+    record.cohorts = {agent: renewed(cohort, last_basket_price_level=1.0, expected_inflation=0.0)
                       for agent, cohort in record.cohorts.items()}
 
 

@@ -227,6 +227,7 @@ def _brief(sim, nodes, node_id, fog):
             "calendar_floor_years": round(sim.calendar_floor(node_id), 2),
             "nominal_calendar_floor_before_reputation": node["yrs"],
             "risk": sim.effective_risk(node_id),
+            "pay_to_lower_the_risk": sim.precaution_quote(node_id),
             "earns_per_year": round(sim.venture_real_earnings(node_id), 1),
             "costs_per_year_after": round(sim.venture_real_upkeep(node_id), 1),
             **available_economics.row_fields(sim, node_id, node),
@@ -854,6 +855,11 @@ def _material_row(row):
             "cost_of_missing": round(row["cost_of_missing"], 1),
             **({"years_of_supply_it_takes": round(row["years_of_supply_it_takes"], 1)}
                if row["years_of_supply_it_takes"] else {}),
+            "own_supply_tonnes_per_year": round(row["own_supply_tonnes_per_year"], 3),
+            **({"scarcity_note": "your own output of %.0f t a year of %s counts as supply against the demand "
+                                 "on it, which lowers the premium on anything you still buy"
+                                 % (row["own_supply_tonnes_per_year"], row["material"])}
+               if row["own_supply_tonnes_per_year"] > 0 else {}),
             **({} if row["priced"] else {"note": "no market price; counted as free"})}
 
 
@@ -1020,6 +1026,7 @@ def _explain_timing_and_risk(sim, nodes, node_id, node):
         "earliest_completion_years": round(sim.earliest_completion_years(node_id), 2),
         "earliest_completion_year": round(sim.state.scenario.year + sim.earliest_completion_years(node_id), 1),
         "risk": sim.effective_risk(node_id),
+        "pay_to_lower_the_risk": sim.precaution_quote(node_id),
         # THE EXPECTED TOTAL, RETRIES INCLUDED - not the floor and the risk
         # left for the player to combine by hand. A 45%-risk, 4-year-floor
         # node is not a 4-year project: the bare geometric series 1/(1-p) is
@@ -1259,7 +1266,10 @@ def _explain_visible_prerequisites(sim, nodes, node_id, node):
     """Which prerequisites this node has, which are still missing, and how
     many more are hidden by fog than the visible lists let on.
     """
+    direct = ([prereq_id for prereq_id in node["pre"] if sim.is_visible(prereq_id)]
+              if sim.fog else node["pre"])
     return {
+        "prerequisite_names": {prereq_id: nodes[prereq_id]["name"] for prereq_id in direct if prereq_id in nodes},
         # ONLY WHAT YOU HAVE HEARD OF. These are read for a visible node, where
         # every prerequisite is either done or itself heard of - except on the
         # goal, which `why` answers under fog because the status line names it

@@ -7,7 +7,7 @@ import unittest
 from sim.economy.market_memory import MarketMemory
 from sim.economy.notional import notional_prices, recently_traded_goods, shown_prices
 from sim.economy.types import Recipe
-from sim.economy.year_close import remember_price_level
+from sim.economy.year_close import remember_basket_price_level
 
 
 def setup_with(recipes, opening):
@@ -49,12 +49,12 @@ class PriceLevelTests(unittest.TestCase):
         memory.note_trading({"tin|a"})
         base = {"tin": 1.0, "salt": 1.0}
         record = record_with(memory, {"tin": 1.0, "salt": 1.0}, base)
-        self.assertAlmostEqual(remember_price_level(setup_with({}, base), record), 2.0)
+        self.assertAlmostEqual(remember_basket_price_level(setup_with({}, base), record), 2.0)
 
     def test_with_nothing_traded_the_level_is_unchanged(self):
         memory = MarketMemory(prices={"tin|a": 2.0})
         record = record_with(memory, {"tin": 1.0}, {"tin": 1.0})
-        self.assertEqual(remember_price_level(setup_with({}, {"tin": 1.0}), record), 1.0)
+        self.assertEqual(remember_basket_price_level(setup_with({}, {"tin": 1.0}), record), 1.0)
 
 
 def smelt():

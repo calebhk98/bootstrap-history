@@ -29,3 +29,13 @@ def rows(sim, years=1):
     """The rows from the latest `years` years that were played, oldest first."""
     first_year = sim.state.scenario.year - max(1, int(years))
     return [row for row in sim.state.household.automation_audit if row["year"] >= first_year]
+
+
+def record_skip(sim, policy, what, reason):
+    """Append a row for something automation looked at and did not do, with the refusal reason."""
+    return record(sim, policy, "skipped", what, reason, sim.state.household.capital)
+
+
+def order_id(policy, subject, year):
+    """The id an order carries from its audit row to what it set going (a mine tranche, then the working)."""
+    return "%s:%s:%d" % (policy, subject, year)

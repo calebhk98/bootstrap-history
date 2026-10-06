@@ -9,7 +9,7 @@ import copy
 import math
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
-from sim.geography import (food_capacity, map_source, mechanisms, parameters, resources_biotic,
+from sim.geography import (food_capacity, map_source, mechanisms, parameters, resource_links, resources_biotic,
                            resources_catalogue, resources_endowment, resources_prospecting,
                            resources_summary, routes_graph, routes_modes, routes_search, tile_holdings, tile_layers)
 
@@ -60,6 +60,12 @@ def usable_modes(known_nodes_per_party: Iterable[Iterable[str]], world_map: Opti
     return sorted(routes_modes.usable_modes(_map(world_map), known_nodes_per_party))
 
 
+def dues_hours_per_tonne(world_map: Optional[WorldMap] = None) -> Dict[str, float]:
+    """{mode_id: labour-hours of tolls or port dues per tonne, charged each time a haul changes to the mode}."""
+    return {mode_id: float(mode.get("dues_hours_per_tonne", 0.0))
+            for mode_id, mode in sorted(routes_modes.modes(_map(world_map)).items())}
+
+
 def route(origin_tiles: Iterable[str], destination_tiles: Iterable[str], modes: Iterable[str],
           improvements: Optional[Mapping[str, Mapping[str, Any]]] = None,
           mode_costs: Optional[Mapping[str, float]] = None, handling_costs: Optional[Mapping[str, float]] = None,
@@ -67,6 +73,21 @@ def route(origin_tiles: Iterable[str], destination_tiles: Iterable[str], modes: 
     """The least-cost haul between two sets of tiles, or None when nothing joins them."""
     return routes_search.route(_map(world_map), origin_tiles, destination_tiles, modes, improvements,
                                mode_costs, handling_costs, held_nodes)
+
+
+def route_costs(origin_tiles: Iterable[str], modes: Iterable[str],
+                improvements: Optional[Mapping[str, Mapping[str, Any]]] = None,
+                mode_costs: Optional[Mapping[str, float]] = None, handling_costs: Optional[Mapping[str, float]] = None,
+                held_nodes: Optional[Iterable[str]] = None, world_map: Optional[WorldMap] = None) -> Dict[str, float]:
+    """{tile: least cost per tonne} from any origin tile to every tile a haul reaches, as `route` prices it."""
+    return routes_search.costs_from(_map(world_map), origin_tiles, modes, improvements,
+                                    mode_costs, handling_costs, held_nodes)
+
+
+def map_of_tiles(tile_records: Mapping[str, Mapping[str, Any]], world_map: Optional[WorldMap] = None) -> WorldMap:
+    """A map of just these tiles ({id: {lat, lon, coastal, borders, ...}}) with the base map's carriage
+    modes, sea lanes and parameters, for a scenario or test that places its own tiles."""
+    return map_source.map_of_tiles(tile_records, _map(world_map))
 
 
 def reach(origin_tiles: Iterable[str], modes: Iterable[str], days_budget: float,
@@ -115,6 +136,26 @@ def deposit_records(resource_id: Optional[str] = None, world_map: Optional[World
     return sorted(rows, key=lambda row: (row.get("order", math.inf), row["id"]))
 
 
+def ore_goods(world_map: Optional[WorldMap] = None) -> Dict[str, Dict[str, Tuple[str, ...]]]:
+    """{resource id: {ore good: smelting recipe ids in order of preference}} for the resources that yield ore goods."""
+    return resource_links.ore_goods(_map(world_map))
+
+
+def mine_demand_goods(world_map: Optional[WorldMap] = None) -> Dict[str, Tuple[str, ...]]:
+    """{resource id: goods whose demand a mine of it supplies}, from the catalogue rows that name them."""
+    return resource_links.mine_demand_goods(_map(world_map))
+
+
+def works_priced_from_deposits(world_map: Optional[WorldMap] = None) -> Tuple[str, ...]:
+    """Resource ids whose mine running cost comes from the deposits' physical works."""
+    return resource_links.works_priced_from_deposits(_map(world_map))
+
+
+def parameter_value(parameter_id: str, world_map: Optional[WorldMap] = None) -> Any:
+    """The value of one of the map's parameters."""
+    return parameters.parameter(_map(world_map), parameter_id)
+
+
 def prospect(tile_id: str, resource_id: str, effort: float, seed: Any,
              world_map: Optional[WorldMap] = None) -> List[Dict[str, Any]]:
     """Hidden deposits found with `effort` person-days; the same seed and effort give the same finds."""
@@ -140,3 +181,8 @@ def problems(world_map: Optional[WorldMap] = None) -> List[str]:
     found += ["route mode %r is incomplete" % mode_id for mode_id in routes_modes.invalid_entries(world_map)]
     found += resources_catalogue.validate(world_map)
     return found
+
+
+def heuristic_parameters(world_map: Optional[WorldMap] = None) -> List[str]:
+    """Ids of the map's parameters still marked as heuristics, for the burndown."""
+    return [entry["id"] for entry in parameters.heuristics(_map(world_map))]

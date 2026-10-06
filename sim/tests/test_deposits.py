@@ -709,8 +709,8 @@ class LoadDepositsUsesGeographyAndResourcesTests(unittest.TestCase):
         # load_deposits must not pull either in, since data/world/
         # the catalogue names no china or southeast_asia deposit at all
         # and resources.json's empire_output_100ad is Rome's own figure.
-        with open(os.path.join(_REPO_ROOT, "data", "world", "geography.json")) as handle:
-            land_tiles = json.load(handle)["land_tiles"]
+        from sim.geography.api import load_geography
+        land_tiles = load_geography()["land_tiles"]
         region_of_tile = {tile_id: region_id
                           for region_id, tile_ids in land_tiles["region_to_tiles"].items()
                           for tile_id in tile_ids}

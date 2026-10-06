@@ -744,7 +744,7 @@ class MaterialSupplyMixin:
     SALTPETRE_TRADE_ROUTE_TONNES_PER_YR = declare(
         "SALTPETRE_TRADE_ROUTE_TONNES_PER_YR", 60.0, kind="temporary_heuristic",
         unit="tonnes/year", source=
-        "geography.json's Bengal saltpetre sea-route entry, reused here as "
+        "the geography data's Bengal saltpetre sea-route entry, reused here as "
         "'the single most useful thing in the geography file' per the "
         "comment above - the ROUTE'S existence is a geography fact, but "
         "this file has no independent attested annual tonnage for it.",

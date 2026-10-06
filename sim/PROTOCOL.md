@@ -107,6 +107,10 @@ Two fixes, usable separately or together:
                                                     reserve and training.
       {"cmd":"path","id":"zinc_metal"}             everything still undone on the way
                                                     to this node, in dependency order
+      {"cmd":"start","id":"zinc_metal","precaution":true}  as below, also paying for the
+                                                    pilot plant or redundant team `why` quotes
+                                                    (pay_to_lower_the_risk), for a lower chance
+                                                    of failing
       {"cmd":"start","id":"zinc_metal"}            begin a project (error explains
                                                     exactly what is missing if you can't;
                                                     if it would oversubscribe a hired
@@ -115,6 +119,18 @@ Two fixes, usable separately or together:
                                                     "this_oversubscribes_a_trade" - it
                                                     still starts, this is a warning)
       {"cmd":"stop","id":"zinc_metal"}             abandon a project; sunk cost is sunk
+      {"cmd":"programme","action":"set","target":"<goal or category>",
+       "max_total_cost":..,"max_annual_draw":..,
+       "reserve_cash":..,"max_total_hours":..,       a standing plan: before each year of step it
+       "max_annual_hours":..,"pause_debt":..,        starts what the route allows through rush.
+       "pause_war_risk":..,"pause_shortage":..,      Hour caps stop starts once the founder hours
+       "auto_resume":true}                           it committed reach them. pause_debt (money
+      {"cmd":"programme","action":"show"}            owed), pause_war_risk (yearly sack chance, as
+      {"cmd":"programme","action":                   risk shows) and pause_shortage (share of
+        "pause"|"resume"|"clear"}                    planned work lost) pause it; the step reply's
+                                                    "programme" rows say why in
+                                                    did_nothing_because. It stays paused until
+                                                    resume, or resumes itself with auto_resume.
       {"cmd":"exclude","what":"freedman_staff"}    never let rush, rush preview, auto_open or
       {"cmd":"exclude","what":"trait:buys_people"}  auto_commission begin this id; also
       {"cmd":"exclude","what":"category:<cat>"}     category:<cat> and trait:<trait>. Saved with
@@ -205,6 +221,21 @@ Two fixes, usable separately or together:
       {"cmd":"buy","what":"mine","material":"iron","n":500}   sink a mine
       {"cmd":"buy","what":"slaves","n":4}          the economic actions the optimizer
       {"cmd":"buy","what":"manumit","n":4}         could take, exposed to the player
+      {"cmd":"policy","set":{"auto_hire":"replace"}}   auto_hire takes true, false or "replace":
+                                                    replace-only hires back only the people lost
+                                                    that year and never grows the staff; its audit
+                                                    rows (`automation`) say so. A mine ordered by
+                                                    auto_mine has an `order` id on its audit row,
+                                                    its tranche and its working
+      {"cmd":"sell","material":"iron","n":5}       sell stock at the current value
+      {"cmd":"sell","what":"concern","id":"<id>"}  sell a concern you run through the exchange: the
+                                                    buyer is the AI actor that can make it and pay
+                                                    and keeps most money after paying; the price
+                                                    is the concern's margin over the valuation
+                                                    horizon. Reply: sold, buyer, price. You keep
+                                                    the know-how
+      {"cmd":"sell","what":"farm","n":40}          return farmland to the land market at what
+                                                    `buy farm` charges per hectare, no fee
       {"cmd":"step","years":5}                     advance the calendar; returns what
                                                     completed and what happened. If
                                                     years>1 and this year alone already

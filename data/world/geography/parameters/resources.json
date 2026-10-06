@@ -42,5 +42,8 @@
    "why": "Cover of a biotic stand on a tile with no measured forest layer, scaled by the envelope suitability."},
   {"id": "resources_off_map_distance_km", "value": 600, "unit": "km", "kind": "heuristic",
    "source": "About one and a half nominal tile widths: farther than that from every tile centre, the position lies outside every tile the map kept", "conf": "D",
-   "why": "A catalogued deposit on an island the grid dropped (Nauru) would otherwise be credited to a tile far away."}
+   "why": "A catalogued deposit on an island the grid dropped (Nauru) would otherwise be credited to a tile far away."},
+  {"id": "mining_trade", "value": "miner", "unit": "trade id", "kind": "heuristic",
+   "source": "none; the trade of data/world/trades.json that raises ore", "conf": "D",
+   "why": "The wage that prices mine building and running labour; replace with a trade named per deposit type."}
  ]}

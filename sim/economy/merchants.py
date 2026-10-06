@@ -33,9 +33,9 @@ from .merchants_shares import RouteShares, room_left
 from .protocols import AgentOrders, MarketView
 from .tile_costs import CarriageTable
 from .types import AgentId, AreaId, Bid, CurrencyId, Fill, GoodId, GoodSpec, Offer, TileId, Transfer
+from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 EDGE_CARRIAGE = "edge:carriage"          # carriage with no named carrier; the caller creates it
-KILOGRAMS_PER_TONNE = 1000.0
 
 MERCHANT_MARGIN_SHARE = declare(
     "MERCHANT_MARGIN_SHARE", 0.05, kind="temporary_heuristic", unit="share of the buying price",

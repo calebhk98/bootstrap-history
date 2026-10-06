@@ -1,6 +1,6 @@
 # Held living stock does not breed, die or spread, and a player has no command to buy it
 
-**Status:** partly - held stock breeds and dies each year and `buy living_stock` buys it from a partner; smuggling, theft, liquidation of breeding stock and an actor-based export policy remain
+**Status:** partly - held stock breeds and dies each year and `buy living_stock` buys it from a partner; the cash-remedies list no longer offers living stock for sale; pepper, dairy cattle, tea, coffee and sugar cane now have sourced rows granted by their nodes; smuggling, theft, feed and pasture draw, rubber stock and an actor-based export policy remain
 
 Living stock is now a held material (Complaints/365): `silkworm_eggs_kg`, `ramie_stock_kg`,
 `draught_animal_kg` sit in the same ledger as any stock, and nodes name them in `holds`. As first reported, this was
@@ -32,7 +32,8 @@ missing (see What is done and What remains below):
 - Held stock breeds and dies each year (`sim/engine/living_stock_yearly.py`, `sim/world/stock_dynamics.py`, rates in
   `data/world/living_stock.json`): a holding at or above its breeding minimum grows by its natural increase, any
   holding falls by its loss, as expected values. Every rate is a labelled temporary heuristic with its reasoning in
-  its `basis`; none was checked against a source. The increase is not limited by feed or pasture.
+  its `basis`; the original rows were not checked against a source, the five added for the folded crops carry `source` and
+  `confidence` fields. The increase is not limited by feed or pasture.
 
 ## What remains
 
@@ -41,7 +42,23 @@ missing (see What is done and What remains below):
   an actor.
 - Breeding by labour (the production entries for the stock materials) is priced for a partner's sale but a held
   herd does not draw on pasture, labour or feed when it grows.
-- Emergency liquidation (`sim/engine/cash_remedies.py`) can still sell breeding stock; stock should be exempt or
-  priced as breeding stock.
+- The `sell` command still sells living stock when a player names it; only the cash-remedies list is exempt
+  (`sim/tests/test_refusal_cash_remedies.py`). Pricing it as breeding stock is open.
+- Feed and pasture: the pasture model (`sim/geography/food_pasture.py`) is per tile and a held herd has no tile, so a
+  held herd cannot draw on it yet; the herd needs a place before it can eat.
+- Rubber has no stock row: the tree has no planted-rubber node (`mat_natural_rubber` is wild tapping of African vines), and a
+  proper node needs a knowledge section on budded-stump nurseries and tapping that is not written yet.
+- The new rows (`pepper_vine_stock_kg`, `dairy_cattle_kg`, `tea_plant_stock_kg`, `coffee_seedling_kg`, `sugar_cane_sett_kg`)
+  cite sources in `data/world/living_stock.json`, but the plant rows cap natural increase at a doubling (a labelled heuristic;
+  the sourced ceilings are far higher) until planting is limited by land, and several sources are undated web summaries
+  graded C. A partner that sells these is not wired: no start civilisation holds them or lists them, so only the nodes grant them.
 - The partner's refusal is still a civilisation data field (`will_not_sell`); an actor-based export policy
   (`sim/agents/policy.py`) should replace it.
+
+- Done: `cash_remedies` skips every material that has a row in `data/world/living_stock.json`.
+
+## Folded in
+
+Overlapping issues closed into this one; each closed file keeps its full text.
+
+- 365 (`closed/365-living-stock-is-modelled-as-research.md`): living stock is modelled as research; pepper, rubber, dairy cattle, tea, coffee and sugar have no stock nodes.

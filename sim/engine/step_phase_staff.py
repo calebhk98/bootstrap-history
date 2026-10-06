@@ -6,6 +6,7 @@ import random
 
 from sim.world.demography import BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE
 from . import automation_audit
+from .staff_replacement import REPLACE_ONLY, replace_lost_staff
 
 
 class StaffPhaseMixin:
@@ -150,7 +151,11 @@ class StaffPhaseMixin:
         # says nobody when there is nothing spare.
         _hire_room = (self.state.household.capital >= 0
                       or -self.state.household.capital <= self.credit_limit() * self.AUTO_HIRE_CREDIT_ROOM_SHARE)
-        if (self.state.founder.policy.get("auto_hire", not self.manual) and _hire_room):
+        _hire_mode = self.state.founder.policy.get("auto_hire", not self.manual)
+        if _hire_mode == REPLACE_ONLY and _hire_room:
+            replace_lost_staff(self, _lost)
+            self.labour.resync_pools()
+        if (_hire_mode and _hire_mode != REPLACE_ONLY and _hire_room):
             # Scaled by the SAME affordability figure staff_capacity() just
             # used for sc_cap/ar_cap (see the comment there): supervision-room
             # headroom is not a free six people, it is six people you still
@@ -208,8 +213,10 @@ class StaffPhaseMixin:
                     _before = self.state.household.capital
                     _hired, _ = self.labour.hire(trade, int(delta))
                     if _hired:
+                        # the people the market found, which can be fewer than sought
+                        _found = round(self.state.household.employees.get(trade, 0.0) - have)
                         automation_audit.record(
-                            self, "auto_hire", "hire", "%d %s" % (int(delta), trade),
+                            self, "auto_hire", "hire", "%d %s" % (_found, trade),
                             "staff target %.1f against %.1f held, with %.1f supervision room"
                             % (want, have, self.labour.supervision_room()), _before)
                 elif delta <= -1.0:

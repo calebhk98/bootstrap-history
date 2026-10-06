@@ -65,7 +65,7 @@ check("with no pooled capital firms still enter, on credit", len(unfunded.actors
       len(unfunded.actors.active_firms()))
 check("an entrant that borrowed owes the market", borrowed > 0.0, borrowed)
 
-dear, _dear_debt = run(40.0 * 0.12, 0.0)
+dear, _dear_debt = run(1000.0 * 0.12, 0.0)
 check("dearer credit leaves fewer entrants on credit",
       len(dear.actors.active_firms()) < len(unfunded.actors.active_firms()),
       (len(dear.actors.active_firms()), len(unfunded.actors.active_firms())))

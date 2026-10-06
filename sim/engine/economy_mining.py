@@ -24,16 +24,44 @@ MiningMixin is composed into EconomyMixin (economy.py) alongside the
 other economy sub-mixins; see that file for the composition and for the
 grouping evidence.
 """
+import functools
+
 from sim.constants import declare
 from . import money_units
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import deposits as deposit_model
+from sim.geography.api import mine_demand_goods, parameter_value, works_priced_from_deposits
 from sim.world import land
 from . import purchase_rule
 
 
+@functools.lru_cache(maxsize=None)
+def _works_priced_materials(world_map):
+    return works_priced_from_deposits(world_map)
+
+
+@functools.lru_cache(maxsize=None)
+def _demand_goods_by_material(world_map):
+    return mine_demand_goods(world_map)
+
+
+def mine_catalog_hint_for(materials):
+    """The hint naming the materials whose workings are priced from deposits, and the generic fallback."""
+    return ("well-known workings: %s - or any other material key the "
+            "tree uses (for example aluminium_kg), priced from its own "
+            "book price if nothing more specific is known about it"
+            % ", ".join(sorted(materials)))
+
+
 class MiningMixin:
-    MINE_OPEX_MATERIALS = ("coal", "iron", "copper", "lead", "tin", "silver", "gold")
+    @property
+    def MINE_OPEX_MATERIALS(self):
+        """Materials whose mine running cost comes from the deposits' physical works, from the map's catalogue."""
+        return _works_priced_materials(self.world_map)
+
+    def mine_demand_goods(self, material):
+        """The goods whose annual demand a mine of `material` supplies: the catalogue row's list, else the key itself."""
+        return _demand_goods_by_material(self.world_map).get(material, (material,))
 
     @property
     def MINE_OPEX_PER_T(self):
@@ -71,12 +99,16 @@ class MiningMixin:
         unit="hardness class of deposits.py", source=None, confidence="D",
         why="Rock hardness assumed for a material with no named deposits; "
             "replace with per-material deposit data.")
-    MINE_TRADE = "miner"
+    @property
+    def MINE_TRADE(self):
+        """The trade whose wage prices mine labour, from the map's parameters."""
+        return parameter_value("mining_trade", self.world_map)
+
     _MINE_PROFILE_CACHE = {}
 
     def _mine_reference_deposits(self, mat):
         """(deposit, weight) pairs describing a typical working of `mat`."""
-        if mat in deposit_model.METALS:
+        if mat in deposit_model.metals(self.world_map):
             pool = deposit_model.load_deposits(mat)
             total = sum(dep.quantity_tonnes_per_year for dep in pool)
             return [(dep, dep.quantity_tonnes_per_year / total) for dep in pool]
@@ -133,15 +165,15 @@ class MiningMixin:
 
     def mine_catalog_hint(self):
         """What to tell a player who typed a material name this file
-        cannot price. Names the seven hand-named metals (see
-        COMMODITY_DYNAMISM.md) as well-sourced headline cases, and also
-        points at the generic fallback below: not a hard, closed list.
-        """
-        named = ", ".join(sorted(self.MINE_OPEX_MATERIALS))
-        return ("well-known workings: %s - or any other material key the "
-                "tree uses (for example aluminium_kg), priced from its own "
-                "book price if nothing more specific is known about it"
-                % named)
+        cannot price: the materials the deposits' works price on this
+        game's map, and the generic fallback below. Not a closed list."""
+        return mine_catalog_hint_for(self.MINE_OPEX_MATERIALS)
+
+    @staticmethod
+    def base_mine_catalog_hint():
+        """The same hint on the base map, for help text written before any game exists."""
+        return mine_catalog_hint_for(_works_priced_materials(None))
+
 
     # ---- LAND: what is under your feet is geography, not standing --------
     #
@@ -152,7 +184,7 @@ class MiningMixin:
     # limited by land area and what is actually under it, the same as the
     # market half of supply is. geography.py's mineral_scale() ALREADY
     # answers "how much of this material's national output can THIS
-    # civilisation reach," built from geography.json's per-region mineral
+    # civilisation reach," built from the geography data's per-region mineral
     # abundance and this civilization's own home_regions and reach (see
     # its own comment) -- and it already governs the MARKET half of supply
     # (_material_market_tonnes). Reusing it here, rather than inventing a
@@ -668,7 +700,7 @@ class MiningMixin:
                       "What you spent sinking them is gone, and reopening means "
                       "sinking them again." % (mat, saved))
 
-    def open_mine(self, mat, t_per_yr, partial=True):
+    def open_mine(self, mat, t_per_yr, partial=True, order=""):
         """Open your own workings.
 
         The Empire's ATTESTED output is not a hard ceiling: a founder who
@@ -746,7 +778,7 @@ class MiningMixin:
         # a figure recomputed later against a price_index that has since moved.
         if economy.mine_tranches is None:
             economy.mine_tranches = []
-        economy.mine_tranches.append([mat, t_per_yr, scenario.year + self.MINE_LEAD_YEARS, cost])
+        economy.mine_tranches.append([mat, t_per_yr, scenario.year + self.MINE_LEAD_YEARS, cost, order])
         economy.mine_pending[mat] = economy.mine_pending.get(mat, 0.0) + t_per_yr
         return t_per_yr
 
@@ -770,9 +802,10 @@ class MiningMixin:
             # this field existed (see SAVE_FIELDS/load_state) - honestly
             # unknown, not fabricated, so 0.0 rather than a guess.
             capex_paid = tranche[3] if len(tranche) > 3 else 0.0
+            order = tranche[4] if len(tranche) > 4 else ""
             if scenario.year >= ready:
                 economy.mines.append({"material": mat, "capacity": amount,
-                                   "opened_year": ready, "capex_paid": capex_paid,
+                                   "opened_year": ready, "capex_paid": capex_paid, "order": order,
                                    "intensity_yrs": 0.0})
                 economy.mine_pending[mat] = max(0.0, economy.mine_pending.get(mat, 0.0) - amount)
                 if economy.mine_pending.get(mat, 0.0) <= 0:
@@ -842,7 +875,7 @@ class MiningMixin:
         or dict, so this stays deterministic across hash seeds with no
         sorted() needed."""
         return sum(self.mine_operating_cost_for(working) for working in getattr(self.household, "mines", ()))
-    # Land bounds woodland too, not only mines. geography.json carries no
+    # Land bounds woodland too, not only mines. the geography data carries no
     # per-region forest figure to read the way minerals has one, so this is
     # built from the signal that IS there: how much GROUND you actually hold
     # and how good your state is at organising land tenure at all
@@ -850,12 +883,12 @@ class MiningMixin:
     # concession gates it, but fencing off and managing a woodland at scale
     # still takes an administration capable of holding the tenure.
     #
-    # KEYED ON AREA (geography.json's own `land.land_area_km2` per home
+    # KEYED ON AREA (the geography data's own `land.land_area_km2` per home
     # region - see home_land_area_km2() below), NOT ON A COUNT OF REGION
     # LABELS (len(home_regions)): Complaint 45 names the same failure here
     # that it names for rent - a region is a filing label, not a unit of
     # area, and the labels range 86x in size (americas_north 19.8M km2
-    # down to britannia's 230,000 -- data/world/geography.json). Keying
+    # down to britannia's 230,000 -- the map folder (data/world/geography/)). Keying
     # this on label count would let re-filing Rome's SAME seven regions
     # as, say, fourteen tiles double its woodland ceiling with no forest
     # gaining or losing a single hectare, while Han China's one enormous
@@ -871,7 +904,7 @@ class MiningMixin:
     # full revenue-driven scale-up, comfortably under that -- no private
     # holding should rival the entire empire's own managed woodland. The
     # per-area rate is re-derived from that SAME anchor, using Rome's own
-    # home land area (9.5175 million km2, from geography.json) as the one
+    # home land area (9.5175 million km2, from the geography data) as the one
     # data point available to convert "hectares per home region" into
     # "hectares per million km2 of home land" -- so Rome's own ceiling barely
     # moves (its real, mapped land area is what the old per-region figure was
@@ -887,12 +920,12 @@ class MiningMixin:
         "managed empire-wide at CHARCOAL_PER_HA=0.75 t/ha/yr), converted "
         "from hectares-per-region to hectares-per-million-km2 using Rome's "
         "own home land area (9.5175 million km2 across its seven home "
-        "regions, data/world/geography.json) as the calibration point, so "
+        "regions, the map folder (data/world/geography/)) as the calibration point, so "
         "that Rome's own pre-revenue ceiling is essentially unchanged by "
         "the switch from counting labels to reading area.",
         confidence="C",
         why="Base standing-woodland ceiling per million km2 of home land "
-            "held, before state capacity is applied. geography.json carries "
+            "held, before state capacity is applied. the geography data carries "
             "no per-region forest figure the way it does for minerals, so "
             "this is still built from a proxy and checked against the one "
             "real empire-wide anchor available, not measured region by "

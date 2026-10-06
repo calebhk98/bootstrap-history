@@ -57,6 +57,9 @@ if ROOT not in sys.path:
 	sys.path.insert(0, ROOT)
 while HERE in sys.path:
 	sys.path.remove(HERE)
+from sim.tests.isolation import isolate_home
+# The suite never touches the real home: settings and saves go to a per-run temporary directory.
+isolate_home()
 from sim import simulator as S
 # PLANNER and COMMOD are unused in harness.py itself for the same reason as
 # the note above: test_people_attrition_scholars.py and test_reputation.py
@@ -372,7 +375,7 @@ def _mk_loom_sim(n_looms, age_years):
                   if node.get("cat") == "textiles" and node.get("rev"))
     assert len(candidates) >= n_looms, "not enough textiles venture nodes in the tree"
     chosen = candidates[:n_looms]
-    loom_sim = sim(civ="rome_100ad", capital=5_000_000.0, agent_economy=False)
+    loom_sim = sim(civ="rome_100ad", capital=5_000_000.0, agent_economy=False)   # legacy: callers assert on the engine's goods-market arithmetic
     loom_sim.artisans = loom_sim.scholars = 100.0 * n_looms
     # These fixtures exercise goods-market arithmetic, not labour scarcity.
     # Supply every qualified trade so each selected historical concern can

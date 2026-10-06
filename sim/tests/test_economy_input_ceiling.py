@@ -28,7 +28,7 @@ class View:
     def currency_of(self, area):
         return "coin"
 
-    def price_level(self, currency):
+    def basket_price_level(self, currency):
         return 1.0
 
     def expected_inflation(self, currency):

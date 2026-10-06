@@ -147,12 +147,12 @@ class QuantityLoopTests(unittest.TestCase):
 class PriceLevelAndRateTests(unittest.TestCase):
     def test_fixed_basket(self):
         self.assertAlmostEqual(
-            currency.price_level({"a": 2.0, "b": 3.0}, {"a": 1.0, "b": 3.0}, {"a": 1.0, "b": 1.0}), 5 / 4)
+            currency.basket_price_level({"a": 2.0, "b": 3.0}, {"a": 1.0, "b": 3.0}, {"a": 1.0, "b": 1.0}), 5 / 4)
 
     def test_skips_missing_goods_and_empty_base(self):
         self.assertAlmostEqual(
-            currency.price_level({"a": 2.0}, {"a": 1.0, "b": 1.0}, {"a": 1.0, "b": 1.0}), 2.0)
-        self.assertEqual(currency.price_level({"a": 2.0}, {}, {}), 1.0)
+            currency.basket_price_level({"a": 2.0}, {"a": 1.0, "b": 1.0}, {"a": 1.0, "b": 1.0}), 2.0)
+        self.assertEqual(currency.basket_price_level({"a": 2.0}, {}, {}), 1.0)
 
     def test_exchange_rate_at_metal_parity(self):
         penny = currency.currency_from_coin_standard(

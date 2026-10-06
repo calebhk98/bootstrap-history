@@ -56,7 +56,9 @@ def _agent_end_reason(sim):
 # Hazard fields only the `risk` screen needs.
 _RISK_ONLY_KEYS = ("note", "what_you_can_do", "staff_loss_before_what_you_have_built",
                    "output_factor", "output_factor_after_what_you_have_built",
-                   "national_public_health")
+                   "national_public_health", "staff_loss_after_what_you_have_built",
+                   "remaining_annual_wave_checks", "chance_of_at_least_one_staff_loss_wave",
+                   "expected_cumulative_staff_loss")
 
 
 def _risk_without_the_essays(knowledge_risk):

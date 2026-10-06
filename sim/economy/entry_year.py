@@ -15,7 +15,6 @@ from .producers import Producer, expected_output_prices, live_input_prices, live
 from .producers_close import working_capital_target
 from .market_memory import market_key
 from .setup import recipe_tile_key
-from .tile_costs import carriage_table
 from .types import GoodsMove, LoanRequest, Transfer
 
 
@@ -78,7 +77,7 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
 
 
 def _carriage(setup):
-    return carriage_table(setup.tiles, setup.carriage_rates, setup.handling_rates, edges=setup.edges)
+    return setup.carriage_table()
 
 
 def _traded_volume(record, view, area_map):
@@ -138,7 +137,7 @@ def close_idle_producers(setup, record) -> int:
 def _spare_output(setup, record, view) -> Dict[Tuple[str, str], float]:
     """Output (good, area) the market's makers could have added from idle capacity last year."""
     spare: Dict[Tuple[str, str], float] = {}
-    for producer in record.producers.values():
+    for producer in sites.in_id_order(record.producers):
         recipe = setup.recipes[producer.recipe_id]
         # capacity waiting on a plant loan counts too, so one gap does not bring a newcomer every year
         idle_runs = (producer.capacity_runs - max(0.0, producer.last_runs)
