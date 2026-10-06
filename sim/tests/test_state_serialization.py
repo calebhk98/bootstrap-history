@@ -55,9 +55,9 @@ def _test_automatic_field_persistence():
 		scenario=scenario,
 		population=pop,
 		_civ="rome_100ad",
-		_goal="aqueduct",
 		_fog=False,
 	)
+	state._goal = "aqueduct"
 
 	blob = serialize_state(state)
 	if not isinstance(blob, dict):
@@ -188,8 +188,8 @@ def _test_transient_cache_exclusion():
 	)
 
 	blob = serialize_state(state)
-	hh_blob = blob.get("household", {})
-	proj_blob = blob.get("projects", {})
+	hh_blob = blob["seats"]["founder"]["household"]
+	proj_blob = blob["seats"]["founder"]["projects"]
 
 	for transient in ("_done_ver", "_operating_ver", "_active_ver", "_workforce_ver", "_cap_factor"):
 		if transient in hh_blob or transient in blob:
@@ -301,7 +301,7 @@ def _test_v3_save_shape_validation():
 
 		# 2. Missing top-level section (e.g. projects)
 		bad_missing_section = dict(valid_blob)
-		del bad_missing_section["projects"]
+		bad_missing_section["seats"] = {"founder": {k: v for k, v in valid_blob["seats"]["founder"].items() if k != "projects"}}
 		err = _validate_save(bad_missing_section, sim)
 		if not err or "projects" not in err:
 			return False, f"Missing section was not rejected properly: {err}"
@@ -315,7 +315,7 @@ def _test_v3_save_shape_validation():
 
 		# 4. Corrupt section shape (section is not an object)
 		bad_section_type = dict(valid_blob)
-		bad_section_type["household"] = "corrupt_string"
+		bad_section_type["seats"] = {"founder": dict(valid_blob["seats"]["founder"], household="corrupt_string")}
 		err = _validate_save(bad_section_type, sim)
 		if not err or "household" not in err or "object" not in err:
 			return False, f"Corrupt section type was not rejected properly: {err}"

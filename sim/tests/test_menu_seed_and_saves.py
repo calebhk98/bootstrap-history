@@ -4,6 +4,7 @@ save), 204 (typed save accepts absolute paths) and 205 (changes window counts
 from the arrival year)."""
 from .harness import *
 from sim.engine import settings as _settings
+from sim.engine.saveload import goal_of_blob
 
 _SIMULATOR = os.path.join(HERE, "simulator.py")
 _scratch = tempfile.mkdtemp()
@@ -65,8 +66,8 @@ check("263: the menu no longer calls the 1951 transistor the default",
 _menu_saves = _saves_in(_saves)
 check("263: an all-defaults menu game aims at the goal `play` aims at by default",
       len(_menu_saves) == 1
-      and json.load(open(_menu_saves[0])).get("_goal") == "point_contact_transistor",
-      [json.load(open(path)).get("_goal") for path in _menu_saves])
+      and goal_of_blob(json.load(open(_menu_saves[0]))) == "point_contact_transistor",
+      [goal_of_blob(json.load(open(path))) for path in _menu_saves])
 _civs_listing = _run(["civs"], "", _env_goal).stdout
 _civ_ids = [line.split()[0] for line in _civs_listing.splitlines()
             if line and not line.startswith((" ", "starting")) and "," in line]
