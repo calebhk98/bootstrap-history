@@ -91,7 +91,10 @@ class Government(CoinageMixin, StoresMixin, SurplusMixin, RecordedActor):
 		self.record.unfunded = {line.name: line.money * (1.0 - share) for line in lines}
 		for line in lines:
 			if share > 0.0:
-				ledger.transfer(self, world.edge(EDGE_STATE_SPENDING), line.money * share, line.name)
+				if line.labour:
+					world.pay_wages(self, line.money * share, line.name)   # the state's pay reaches its people
+				else:
+					ledger.transfer(self, world.edge(EDGE_STATE_SPENDING), line.money * share, line.name)
 			for commodity, tonnes in line.materials.items():
 				world.market_purchase(self.actor_id, commodity, tonnes * share)
 		return lines, share

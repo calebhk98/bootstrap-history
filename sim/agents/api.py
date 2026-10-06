@@ -9,7 +9,7 @@ from .household import Household
 from .household_party import HouseholdParty
 from . import imitation, ledger, licence, revenue, supply
 from .policy import CallbackPolicy, Decision, IdlePolicy, Option, Policy, ValuePolicy, register_policy
-from . import edges
+from . import edges, payroll
 from .records import ActorRecord, ActorsState, CapitalMarketRecord, CastEntry, CountryProfile
 from .registry import ActorRegistry, register_actor_kind, register_spawner, register_world_scope
 from .saving import SAVING_SHARE_OF_SURPLUS
@@ -38,7 +38,7 @@ __all__ = ["Actor", "RecordedActor", "Household", "HouseholdParty", "exchange_sa
            "Policy", "ValuePolicy", "CallbackPolicy", "IdlePolicy", "Option",
            "Decision", "register_policy", "ActorRegistry", "ActorRecord", "ActorsState",
            "CapitalMarketRecord", "CastEntry", "CountryProfile", "register_actor_kind",
-           "register_spawner", "register_world_scope", "edges", "ledger", "licence", "supply", "imitation", "revenue",
+           "register_spawner", "register_world_scope", "edges", "payroll", "ledger", "licence", "supply", "imitation", "revenue",
            "SAVING_SHARE_OF_SURPLUS", "CONCESSION_PREFIX", "Sector", "sector_key",
            "MANAGEMENT_SPAN_EXPONENT", "OBSERVATION_RANGE_KM", "PROOF_YEARS", "SECRET_EXPOSURE",
            "THREAT_ARMY_RESPONSE", "SOLDIER_TRADE", "PUBLIC_BUILDING_LIFE_YEARS", "DOLE_MATERIAL", "MASONRY_PERSON_YEARS_PER_M2", "HOUSING_FLOOR_AREA_PER_PERSON_M2", "cast_from_civilisations", "profile_from_civilisation", "seed_cast",

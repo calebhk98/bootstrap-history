@@ -28,7 +28,7 @@ class MoneyPhaseMixin:
         keeping = min(self.coin_hoard()["keeping_cost_per_year"], room)
         self.receive_from_edge(edges.EDGE_CUSTOMERS, revenue, "venture revenue")
         self.pay_edge(edges.EDGE_SUPPLIERS, upkeep, "running costs of concerns")
-        self.pay_edge(edges.EDGE_WORKERS, living_cost, "living costs")
+        self.pay_wages(living_cost, "living costs")
         self.pay_edge(edges.EDGE_SUPPLIERS, mine_cost, "mine running costs")
         self.pay_edge(edges.EDGE_COIN_GUARDS, keeping, "keeping coin under guard")
         # A mine you cannot pay for is a mine you stop working. Without this the

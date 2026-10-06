@@ -76,3 +76,14 @@ ledger.transfer(payer, state.edge("edge:test"), 4.0, "a payment")
 ledger.transfer(state.edge("edge:test"), payer, 1.0, "a refund")
 check("a payer's loss is the edge's gain", payer.money == 7.0 and state.edges["edge:test"] == 3.0, state.edges)
 check("an edge keeps the volume that crossed it", state.edge_volume["edge:test"] == 5.0, state.edge_volume)
+
+# step 2: wages and the state's pay land in the people's purses
+people = sim(manual=False, events=False)
+people.end_year = people.cfg["start_year"] + people.cfg["horizon_years"]
+for _year in range(4):
+    ask(people, cmd="step", years=1)
+strata = [record for record in people.state.actors.records.values() if record.stratum and record.country is None]
+received = {label for record in strata for label in record.income if label != "edge:economy"}
+check("the home country has strata", bool(strata), len(strata))
+check("the founder's payroll and the state's pay reach the people's purses",
+      "living costs" in received and ("army" in received or "administration" in received), sorted(received))

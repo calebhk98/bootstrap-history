@@ -37,7 +37,10 @@ def operate_concern(actor: Any, node_id: str, world: Any, rivals: float) -> floa
 	wages = found * world.concern_wage_bill(node_id, capacity)
 	ledger.transfer(world.edge(EDGE_CUSTOMERS), actor, takings, "takings")
 	ledger.transfer(actor, world.edge(EDGE_SUPPLIERS), upkeep, "upkeep")
-	ledger.transfer(actor, world.edge(EDGE_WORKERS), wages, "wages")
+	if actor.record.country is None:
+		world.pay_wages(actor, wages, "wages")
+	else:
+		ledger.transfer(actor, world.edge(EDGE_WORKERS), wages, "wages")
 	levy = world.government().collect(actor, takings, world)
 	royalty = world.collect_royalty(actor, node_id, takings)
 	return takings - upkeep - wages - levy - royalty

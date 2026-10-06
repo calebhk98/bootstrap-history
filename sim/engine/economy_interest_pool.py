@@ -43,5 +43,6 @@ class InterestPoolMixin:
                     ledger.transfer(self.edge(edges.EDGE_INTEREST), firm, share * firm.money / firm_funds, INTEREST_PURPOSE)
             else:
                 record.interest_to_households += share
+                self.pay_savers(share)
             record.interest_received_total += share
         return pool
