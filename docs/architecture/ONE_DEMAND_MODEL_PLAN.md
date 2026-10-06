@@ -1,9 +1,28 @@
 # One household demand model, and the other duplicates Complaint 115 still lists
 
-**Status:** design and staged plan, nothing built. Written against branch `structural-dedupe-and-owner-decisions`
-(measured 2026-10-06). It answers the "Still two owners" list in
+**Status:** stages 1 to 4 built on branch `one-demand-model` (2026-10-06); stages 5 to 7 not started. Written against
+branch `structural-dedupe-and-owner-decisions`. It answers the "Still two owners" list in
 `Complaints/115-multiple-parallel-models-need-an-authoritative-one.md`: three household demand models, the engine's
 capital market with the agent economy off, and the merchant stand-ins.
+
+What is built. Stage 1: `sim/world/need_basket.py` holds the pure kernel (`make_basket`, `need_prices` taking a
+`price_of(good)` function, `price_ceilings`, `subsistence_cost_per_person`, `need_units`, `limit_satiation`);
+`sim/economy/households_basket.py` re-exports it and prices a basket from a market view. Stage 2: `climate_basket`,
+`basket_with_floors` and `mean_climate_basket` make climate floors a kernel function; `baskets_by_tile` calls it.
+Stage 3: `NeedDemandModel.final_demand` takes price index, floors and surplus split from the kernel; the engine adapter
+(`market_demand.household_basket`) gives it the people-weighted floors of the civilisation's tiles, so shelter, clothing
+and warmth carry demand in the opt-out game. Stage 4: strata pay the floor of each need in turn
+(`SimWorld.need_floor_costs_per_person_year`, `stratum_year.run_year`); `STRATUM_OTHER_NEED_FOOD_MULTIPLE`,
+`housing_cost_per_person_year` and `HOUSING_FLOOR_AREA_PER_PERSON_M2` are gone; `record.shortfall` is keyed by need id.
+
+What stage 3 and 4 left for later. The price solver's anchors (`joint_allocation.build_demand_anchors`) still build the
+model without climate floors, because no map reaches that function. The strata cost comes from the engine's goods-market
+prices in both modes; with the agent economy on, asking the economy's own tile prices through `sim/economy/api.py` is
+not done. `household_saving` (`agents_port_capital.py`) still uses `income_bins` and belongs to stage 5.
+`agents_port_budget.py`, `wage_schedule.py` and `foreign_capacity.py` still read the food-floor constant or the model
+without a civilisation. Stratum surplus beyond the floors and schooling is saved, not spent by need weight: that needs a
+labelled propensity and is open. The fingerprint was not recorded (owner's rule for this branch); record a new baseline
+before merging.
 
 Rules this plan keeps (`CLAUDE.md` section 4): no hardcoded outcomes, interventions through normal rules, every
 heuristic labelled, no save migration, no content ids in the engine. Tests below pin relationships, never dated
