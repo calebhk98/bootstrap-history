@@ -30,6 +30,17 @@ from .programme import programme_before_year
 from .step_problems import route_nodes, route_startable, stalled_projects, step_problems
 from .util import (_clean, _localise_money, _localise_words, _unsafe_path)
 
+
+def _trim_dashboard_history(sim, hist):
+	"""Trim the dashboard history to the most recent N years if configured.
+	When dashboard_history_years is set, keep only the most recent N years
+	of snapshots."""
+	cap = sim.state.scenario.dashboard_history_years
+	if cap is not None and len(hist) > cap:
+		# Keep the most recent cap entries
+		del hist[:-cap]
+
+
 # Every dispatch_*.py module in this package registers its commands with
 # @command when imported; they are found by name here, so a new module needs
 # no edit. Each module's _cmd_* handlers are re-exported from this module so
@@ -255,6 +266,7 @@ def _cmd_step(sim, nodes, cmd, ended):
         _snap["concerns_closed"] = sorted(before_operating - sim.operating)
         _snap["completed"] = sorted(sim.done - before_done)
         hist.append(_snap)
+        _trim_dashboard_history(sim, hist)
         if route:
             snapshots.append({**_snap, "route_startable": route_startable(sim, route)})
         else:
