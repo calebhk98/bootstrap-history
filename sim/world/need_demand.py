@@ -17,28 +17,14 @@ import sys
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set
 
 from sim.constants import declare
-from sim.world import demand
-from sim.world.need_satiation import apply_satiation
+from sim.world import demand, need_basket
+from sim.world.need_basket import NEED_SUBSTITUTION_ELASTICITY, goods_attributes
 
 def load_needs(root: str) -> Dict[str, Any]:
     """The base-and-enabled-mod needs and goods under `root` (sim/engine/need_data.py)."""
     from sim.engine import need_data
     return need_data.load_needs(root)
 
-
-NEED_SUBSTITUTION_ELASTICITY = declare(
-    "NEED_SUBSTITUTION_ELASTICITY", 2.0,
-    kind="temporary_heuristic",
-    unit="dimensionless (constant elasticity of substitution between goods "
-         "serving one need)",
-    source=None,
-    confidence="D",
-    why="How sharply households move spending toward whichever good gives "
-        "more of a need per unit cost. Above one, a good that is twice as "
-        "effective per cost takes more than twice the share; one would "
-        "spend a fixed share per good whatever it costs. A measured "
-        "cross-price elasticity between close substitutes (metals for "
-        "tools, fabrics for clothing) would replace it.")
 
 DERIVED_DEMAND_PRICE_ELASTICITY = declare(
     "DERIVED_DEMAND_PRICE_ELASTICITY", 1.0,
@@ -121,28 +107,6 @@ def technology_material_demand(nodes: Iterable[Mapping[str, Any]], held: Set[str
         for material, quantity in (node.get("mat") or {}).items():
             totals[material] += quantity / years
     return dict(totals)
-
-
-def goods_attributes(need_data: Mapping[str, Any],
-                     production: Mapping[str, Any]) -> Dict[str, Dict[str, Any]]:
-    """Per good: `satisfies` {need: effectiveness per unit} and `supply_per_year`.
-
-    Read from the needs file's goods table and from production entries, where
-    an entry's attributes belong to its dominant output.
-    """
-    merged: Dict[str, Dict[str, Any]] = {}
-    for material, attributes in (need_data.get("goods") or {}).items():
-        merged[material] = {"satisfies": dict(attributes.get("satisfies") or {}),
-                            "supply_per_year": attributes.get("supply_per_year")}
-    for entry in production.values():
-        if not entry.get("outputs") or not (entry.get("satisfies") or entry.get("supply_per_year")):
-            continue
-        material = demand._dominant_output_key(entry)
-        record = merged.setdefault(material, {"satisfies": {}, "supply_per_year": None})
-        record["satisfies"].update(entry.get("satisfies") or {})
-        if entry.get("supply_per_year"):
-            record["supply_per_year"] = entry["supply_per_year"]
-    return merged
 
 
 def declared_supply(need_data: Mapping[str, Any],
@@ -228,16 +192,10 @@ class NeedDemandModel:
                 self.effectiveness[need_id][material] = effect
         self._need_goods = {need_id: sorted(self.effectiveness.get(need_id, ()))
                             for need_id in sorted(self.needs)}
-        self.subsistence = {need_id: self._subsistence(spec)
-                            for need_id, spec in self.needs.items()}
+        self.basket = need_basket.make_basket(need_data, production, self.substitution)
+        self.subsistence = {need.need_id: need.subsistence_per_person for need in self.basket.needs}
         self._input_per_unit_output = self._recipe_coefficients()
         self._influence_cache: Dict[str, Dict[str, float]] = {}
-
-    @staticmethod
-    def _subsistence(spec: Mapping[str, Any]) -> float:
-        if spec.get("subsistence_constant"):
-            return float(getattr(demand, spec["subsistence_constant"]))
-        return float(spec.get("subsistence_per_capita_per_year", 0.0))
 
     def _recipe_coefficients(self) -> Dict[str, Dict[str, float]]:
         """{output: {input: quantity per unit output}}, averaged over the recipes
@@ -265,37 +223,19 @@ class NeedDemandModel:
                 table[material] = dict(averaged)
         return table
 
-    def _active_needs(self, prices: Mapping[str, float]) -> Dict[str, List[str]]:
-        """{need: its priced goods} for needs with at least one."""
-        active = {}
-        for need_id, goods in self._need_goods.items():
-            priced = [material for material in goods if prices.get(material, 0.0) > 0.0]
-            if priced:
-                active[need_id] = priced
-        return active
-
     def final_demand(self, prices: Mapping[str, float]) -> Dict[str, float]:
-        """{material: units households want per year} at `prices`."""
-        active = self._active_needs(prices)
-        if not active:
+        """{material: units households want per year} at `prices`: floors, price index and the
+        surplus split come from the need-basket kernel; below the committed cost of every floor the
+        protected-floor rule of sim/world/demand.py applies per income bin."""
+        priced = need_basket.need_prices(self.basket, prices.get)
+        if not priced:
             return {}
-        exponent = 1.0 - self.substitution
-        weight_total = sum(self.needs[need_id]["surplus_budget_share"] for need_id in active)
-        cost_per_effect: Dict[str, Dict[str, float]] = {}
-        price_index: Dict[str, float] = {}
-        for need_id, materials in active.items():
-            costs = {material: prices[material] / self.effectiveness[need_id][material]
-                     for material in materials}
-            cost_per_effect[need_id] = costs
-            index_power = sum(cost ** exponent for cost in costs.values())
-            price_index[need_id] = index_power ** (1.0 / exponent)
-        basket = tuple(
-            demand.Good(need_id, self.subsistence[need_id],
-                        self.needs[need_id]["surplus_budget_share"] / weight_total)
-            for need_id in active)
-        need_units = {need_id: 0.0 for need_id in active}
-        committed = sum(price_index[good.name] * good.subsistence_quantity_per_capita_per_year
-                        for good in basket)
+        weight_total = sum(need.spec.budget_weight for need in priced)
+        price_index = {need.spec.need_id: need.price_index for need in priced}
+        goods = tuple(demand.Good(need.spec.need_id, need.spec.subsistence_per_person,
+                                  need.spec.budget_weight / weight_total) for need in priced)
+        need_units = {need.spec.need_id: 0.0 for need in priced}
+        committed = need_basket.subsistence_cost_per_person(priced)
         covered_population = 0.0
         covered_surplus = 0.0
         for income_bin in self.bins:
@@ -304,24 +244,22 @@ class NeedDemandModel:
                 covered_population += income_bin.population
                 covered_surplus += income_bin.population * surplus
                 continue
-            for good in basket:
+            for good in goods:
                 need_units[good.name] += (
                     income_bin.population * demand.household_quantity_demanded_per_capita(
-                        good, price_index, income_bin.income_per_capita_per_year, basket))
-        for good in basket:
-            need_units[good.name] += (
-                good.subsistence_quantity_per_capita_per_year * covered_population
-                + good.marginal_budget_share / price_index[good.name] * covered_surplus)
+                        good, price_index, income_bin.income_per_capita_per_year, goods))
+        _floors, covered_units = need_basket.need_units(
+            priced, self.basket, covered_population, covered_surplus, satiate=False)
+        for need_id, units in covered_units.items():
+            need_units[need_id] += units
         if self.satiate:
-            apply_satiation(need_units, price_index, self.needs,
-                            sum(income_bin.population for income_bin in self.bins))
+            need_basket.limit_satiation(need_units, priced, self.basket,
+                                        sum(income_bin.population for income_bin in self.bins))
         quantities: Dict[str, float] = collections.defaultdict(float)
-        for need_id, materials in active.items():
-            spending = price_index[need_id] * need_units[need_id]
-            index_power = price_index[need_id] ** exponent
-            for material in materials:
-                share = cost_per_effect[need_id][material] ** exponent / index_power
-                quantities[material] += spending * share / prices[material]
+        for need in priced:
+            spending = need.price_index * need_units[need.spec.need_id]
+            for material, price, _effect, share in need.goods:
+                quantities[material] += spending * share / price
         return dict(quantities)
 
     def _demand_from(self, sources: Mapping[str, float]) -> Dict[str, float]:

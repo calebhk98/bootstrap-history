@@ -6,16 +6,10 @@ STRATUM_WORKING_SHARE = declare(
 	unit="share of a stratum's members earning a wage", source=None, confidence="D",
 	why="Working-age members in paid work; stands in for the age structure and household "
 		"labour supply of the body of people (the demography package holds the real structure).")
-STRATUM_OTHER_NEED_FOOD_MULTIPLE = declare(
-	"STRATUM_OTHER_NEED_FOOD_MULTIPLE", 0.5, kind="temporary_heuristic",
-	unit="food baskets per person-year", source=None, confidence="D",
-	why="What the third tier of needs (goods beyond food and housing) costs per head, as a "
-		"multiple of the food basket; stands in for the demand system's own budget.")
 STRATUM_SAVINGS_BUFFER_YEARS = declare(
 	"STRATUM_SAVINGS_BUFFER_YEARS", 0.25, kind="temporary_heuristic",
-	unit="years of food and housing", source=None, confidence="D",
-	why="Savings a stratum keeps before it spends on goods beyond food and housing or on "
-		"schooling; stands in for precautionary saving.")
+	unit="years of the floors of every need", source=None, confidence="D",
+	why="Savings a stratum keeps before it spends on schooling; stands in for precautionary saving.")
 STRATUM_EDUCATION_SHARE = declare(
 	"STRATUM_EDUCATION_SHARE", 0.2, kind="temporary_heuristic",
 	unit="share of the surplus over needs", source=None, confidence="D",
@@ -125,9 +119,3 @@ DEFAULT_BONDED_SHARE = declare(
 	"DEFAULT_BONDED_SHARE", 0.1, kind="temporary_heuristic",
 	unit="share of population", source=None, confidence="D",
 	why="People in bondage when a profile states that debt bondage exists and no strata.")
-
-HOUSING_FLOOR_AREA_PER_PERSON_M2 = declare(
-	"HOUSING_FLOOR_AREA_PER_PERSON_M2", 10.0, kind="temporary_heuristic",
-	unit="m2 of dwelling per person", source=None, confidence="D",
-	why="Floor space one person lives in, which with the masonry labour per square metre prices a "
-		"body of people's housing. Stands in for a dwelling stock with rents set by the market.")

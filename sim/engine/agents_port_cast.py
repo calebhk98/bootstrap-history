@@ -7,10 +7,11 @@ subsistence; housing is the yearly carrying cost (interest and wear) of building
 import functools
 from typing import Any, Dict, List, Optional, Tuple
 
-from sim.agents.api import (DOLE_MATERIAL, HOUSING_FLOOR_AREA_PER_PERSON_M2, MASONRY_PERSON_YEARS_PER_M2,
-							PUBLIC_BUILDING_LIFE_YEARS, cast_from_civilisations, observed_incomes, seed_cast)
+from sim.agents.api import DOLE_MATERIAL, FOOD_NEED, cast_from_civilisations, observed_incomes, seed_cast
 from sim.geography.api import haversine_km, load_geography, regions
+from sim.world import need_basket
 
+from . import market_demand
 from .data import load_civ
 
 
@@ -39,16 +40,22 @@ class CastView:
 			return 0.0
 		return haversine_km(first[0], first[1], second[0], second[1])
 
-	def subsistence_cost_per_person_year(self) -> float:
-		tonnes = self.subsistence_kg_per_person_year() / 1000.0  # type: ignore[attr-defined]
-		return self.material_cost(DOLE_MATERIAL, tonnes)  # type: ignore[attr-defined,no-any-return]
+	def need_floor_costs_per_person_year(self) -> Dict[str, float]:
+		"""What one person's floor of each need costs a year at the prices households pay: the need-basket
+		kernel (sim/world/need_basket.py) on the civilisation's climate floors and the goods market's
+		prices. A need with no priced good is left out; with none priced, the food floor is the dole."""
+		basket = market_demand.household_basket(self._sim.civ, self._sim.world_map)
+		prices = self._sim.goods_market.household_prices()  # type: ignore[attr-defined]
+		costs = {need.spec.need_id: need.price_index * need.spec.subsistence_per_person
+				 for need in need_basket.need_prices(basket, prices.get) if need.spec.subsistence_per_person > 0.0}
+		if not costs:
+			tonnes = self.subsistence_kg_per_person_year() / 1000.0  # type: ignore[attr-defined]
+			costs[FOOD_NEED] = self.material_cost(DOLE_MATERIAL, tonnes)  # type: ignore[attr-defined]
+		return costs
 
-	def housing_cost_per_person_year(self) -> float:
-		"""The labourers' pay to build one person's floor space, carried a year at the market rate and
-		worn over a building's life."""
-		building = (HOUSING_FLOOR_AREA_PER_PERSON_M2 * MASONRY_PERSON_YEARS_PER_M2
-					* self.pay_per_person_year("labourer"))  # type: ignore[attr-defined]
-		return building * (self.market_rate() + 1.0 / PUBLIC_BUILDING_LIFE_YEARS)  # type: ignore[attr-defined]
+	def subsistence_cost_per_person_year(self) -> float:
+		"""The food floor of `need_floor_costs_per_person_year`."""
+		return self.need_floor_costs_per_person_year().get(FOOD_NEED, 0.0)
 
 	def observed_stratum(self, country: Optional[str], name: str) -> Optional[Dict[str, float]]:
 		"""The home strata's income from the agent economy's household cohorts (`sim/agents/strata_observed.py`);

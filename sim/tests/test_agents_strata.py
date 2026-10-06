@@ -22,8 +22,8 @@ class StrataWorld(FakeWorld):
 	def subsistence_cost_per_person_year(self):
 		return self.food
 
-	def housing_cost_per_person_year(self):
-		return self.housing
+	def need_floor_costs_per_person_year(self):
+		return {"food": self.food, "shelter": self.housing}
 
 	def pay_per_person_year(self, trade):
 		return self.pay[trade]
@@ -129,9 +129,8 @@ for _year in range(3):
 	registry.advance(world)
 check("a starving stratum records an unmet share of food", 0.0 < poor.record.shortfall["food"] <= 1.0, poor.record.shortfall)
 check("a starving stratum shrinks", poor.record.members < start and poor.record.last_growth < 0, poor.record.last_growth)
-check("housing goes unmet before food is touched, and goods first of all",
-	  poor.record.shortfall["housing"] >= poor.record.shortfall["food"] and poor.record.shortfall["goods"] == 1.0,
-	  poor.record.shortfall)
+check("food is paid before the other floors, so shelter goes unmet first",
+	  poor.record.shortfall["shelter"] >= poor.record.shortfall["food"], poor.record.shortfall)
 check("literacy falls when nothing funds schooling", poor.record.literacy < 0.05, poor.record.literacy)
 
 # ---- bonded strata cost their owner -------------------------------------------------------

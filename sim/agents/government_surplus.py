@@ -17,13 +17,13 @@ class SurplusMixin:
 	"""Mixed into `Government`."""
 
 	def relieve_strata(self, excess: float, world: Any) -> float:
-		"""Pay the bodies of people in its country the cost of the food and housing they report going without,
+		"""Pay the bodies of people in its country the cost of the floors of the needs they report going without,
 		as far as `excess` reaches (shared by need when it does not). Returns what was paid."""
 		needs = []
-		food_cost, housing_cost = world.subsistence_cost_per_person_year(), world.housing_cost_per_person_year()
+		floor_costs = world.need_floor_costs_per_person_year()
 		for stratum in world.country_strata():
 			shortfall = stratum.record.shortfall
-			need = stratum.record.members * (food_cost * shortfall.get("food", 0.0) + housing_cost * shortfall.get("housing", 0.0))
+			need = stratum.record.members * sum(cost * shortfall.get(need_id, 0.0) for need_id, cost in floor_costs.items())
 			if need > 0.0:
 				needs.append((stratum, need))
 		total = sum(need for _stratum, need in needs)

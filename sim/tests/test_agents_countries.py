@@ -205,8 +205,8 @@ class PricedWorld(ScenarioWorld):
 	def subsistence_cost_per_person_year(self):
 		return 100.0
 
-	def housing_cost_per_person_year(self):
-		return 10.0
+	def need_floor_costs_per_person_year(self):
+		return {"food": 100.0, "shelter": 10.0}
 
 
 priced = PricedWorld()

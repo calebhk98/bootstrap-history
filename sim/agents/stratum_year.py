@@ -12,10 +12,10 @@ from .tuning_strata import (BIRTH_RATE, BIRTH_WELFARE_RESPONSE, BONDAGE_EXIT_RAT
 							DEATH_RATE, EDUCATION_EFFORT_SCALE, FALL_WELFARE, FAMINE_DEATH_RATE,
 							GROWTH_LAG_SHARE, LITERACY_CEILING, LITERACY_DECAY_RATE, LITERACY_GAIN_RATE,
 							LITERACY_WIDTH, MOBILITY_RATE, RISE_LITERACY, RISE_WELFARE, STRATUM_EDUCATION_SHARE,
-							STRATUM_OTHER_NEED_FOOD_MULTIPLE, STRATUM_SAVINGS_BUFFER_YEARS,
+							STRATUM_SAVINGS_BUFFER_YEARS,
 							STRATUM_WORKING_SHARE, WELFARE_WIDTH)
 
-TIERS = ("food", "housing", "goods")
+FOOD_NEED = "food"   # paid first, and the need whose shortfall is famine
 
 
 def logistic(value: float) -> float:
@@ -85,15 +85,13 @@ def run_year(stratum: Any, world: Any) -> None:
 		ledger.transfer(world.edge(EDGE_ECONOMY), stratum, income, EDGE_ECONOMY)
 	resources = income + record.allowance
 	record.allowance = 0.0
-	food_cost = world.subsistence_cost_per_person_year()
-	housing_cost = world.housing_cost_per_person_year()
-	needs = {"food": members * food_cost, "housing": members * housing_cost,
-			 "goods": members * food_cost * STRATUM_OTHER_NEED_FOOD_MULTIPLE}
-	buffer = 0.0 if stratum.is_bonded() else STRATUM_SAVINGS_BUFFER_YEARS * (needs["food"] + needs["housing"])
-	for tier in TIERS:
-		spendable = stratum.money - (buffer if tier == "goods" else 0.0)
-		record.shortfall[tier] = unmet(needs[tier], pay_tier(stratum, needs[tier], spendable, world))
-	food_bill = members * food_cost
+	floor_costs = world.need_floor_costs_per_person_year()
+	needs = {need_id: members * floor_costs[need_id]
+			 for need_id in sorted(floor_costs, key=lambda need_id: (need_id != FOOD_NEED, need_id))}
+	buffer = 0.0 if stratum.is_bonded() else STRATUM_SAVINGS_BUFFER_YEARS * sum(needs.values())
+	record.shortfall = {need_id: unmet(need, pay_tier(stratum, need, stratum.money, world))
+						for need_id, need in needs.items()}
+	food_bill = members * floor_costs.get(FOOD_NEED, 0.0)
 	record.welfare = resources / food_bill if food_bill > 0.0 else 0.0
 	school(stratum, max(0.0, resources - sum(needs.values())), food_bill, buffer, world)
 	if observed.get("members") is not None:
