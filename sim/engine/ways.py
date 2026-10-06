@@ -9,6 +9,7 @@ Nothing here is specific to the founder: it asks for the paying actor's househol
 wages and material only, not a time or the labourers' absence from other work.
 """
 import sim.geography.api as geography
+from sim.agents.api import edges
 
 
 class WaysMixin:
@@ -47,12 +48,11 @@ class WaysMixin:
         key = geography.edge_key(tile_a, tile_b)
         if self.state.economy.improvements.get(key, {}).get(way):
             return False, "a %s already joins %s and %s." % (way, tile_a, tile_b)
-        household = self.state.household
         from . import purchase_rule
         if not purchase_rule.can_pay(self, quote["money"]):
             return False, "a %s of %.0f km costs about %s; %s." % (
                 way, quote["km"], "{:,.0f}".format(quote["money"]), purchase_rule.afford_means())
-        household.cost_capital(quote["money"], "building a %s" % way)
+        self.pay_edge(edges.EDGE_BUILDERS, quote["money"], "building a %s" % way)
         self.state.economy.improvements.setdefault(key, {})[way] = True
         return True, "built a %s of %.0f km between %s and %s for %s." % (
             way, quote["km"], tile_a, tile_b, "{:,.0f}".format(quote["money"]))
