@@ -915,14 +915,27 @@ def cultivable_land_for_civilization(
     tile returns an empty list without looking at `geography`.
     """
     civilization = _load_civilization(civilization_id, civilizations)
-    tile_ids = tiles_held(civilization)
-    if not tile_ids:
+    if not (civilization.get("home_tiles") or civilization.get("home_regions")):
         return []
-    geography = geography if geography is not None else load_geography()
+    if geography is None:
+        geography = load_geography()
+        tile_ids = tiles_held(civilization)
+    else:
+        tile_ids = _tiles_held_in(civilization, geography)
     if geography.get("land_tiles") is None:
         raise KeyError("geography has no 'land_tiles' block")
     tile_lands = load_tile_lands(geography)
     return [tile_lands[tile_id] for tile_id in tile_ids if tile_id in tile_lands]
+
+
+def _tiles_held_in(civilization: Dict[str, Any], geography: Dict[str, Any]) -> List[str]:
+    """`tiles_held` read against the geography the caller passed rather than the loaded world map:
+    the listed `home_tiles`, else the tiles its region labels name in that geography."""
+    if civilization.get("home_tiles") is not None:
+        return sorted(set(civilization["home_tiles"]))
+    region_to_tiles = (geography.get("land_tiles") or {}).get("region_to_tiles", {})
+    return sorted({tile_id for region in civilization.get("home_regions") or []
+                   for tile_id in region_to_tiles.get(region, [])})
 
 
 TerritoryFarmland = collections.namedtuple("TerritoryFarmland", [
