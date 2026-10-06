@@ -25,6 +25,14 @@ def _buildable_pair(sim, way="road"):
     raise AssertionError("no buildable pair")
 
 
+def _finish_building(sim):
+    """Move the calendar to the year the last way under construction opens, and open it."""
+    due_years = [year for ways in sim.state.economy.ways_under_construction.values() for year in ways.values()]
+    if due_years:
+        sim.state.scenario.year = max(due_years)
+    sim.finish_ways()
+
+
 class BuiltWaysTests(unittest.TestCase):
 
     def test_a_new_game_has_built_nothing(self):
@@ -39,6 +47,8 @@ class BuiltWaysTests(unittest.TestCase):
         before = sim.state.household.capital
         ok, message = sim.build_way(tile_a, tile_b, "road")
         self.assertTrue(ok, message)
+        self.assertNotIn(geography.edge_key(tile_a, tile_b), sim.state.economy.improvements)
+        _finish_building(sim)
         self.assertTrue(sim.state.economy.improvements[geography.edge_key(tile_a, tile_b)]["road"])
         self.assertAlmostEqual(before - sim.state.household.capital, quote["money"], places=4)
 
@@ -48,6 +58,7 @@ class BuiltWaysTests(unittest.TestCase):
         sim.state.household.capital = 1e12
         self.assertNotIn(geography.edge_key(tile_a, tile_b), sim.ways_built())
         sim.build_way(tile_a, tile_b, "road")
+        _finish_building(sim)
         self.assertIn(geography.edge_key(tile_a, tile_b), sim.ways_built())
 
     def test_building_is_refused_without_the_money_the_technology_or_a_border(self):
@@ -65,6 +76,7 @@ class BuiltWaysTests(unittest.TestCase):
         tile_a, tile_b = _buildable_pair(sim)
         sim.state.household.capital = 1e12
         sim.build_way(tile_a, tile_b, "road")
+        _finish_building(sim)
         copy = deserialize_state(serialize_state(sim.state.economy), type(sim.state.economy))
         self.assertEqual(copy.improvements, sim.state.economy.improvements)
 
@@ -80,6 +92,7 @@ class BuiltWaysTests(unittest.TestCase):
         days_before = sim.labour.travel_days_to_tile(far)
         for leg in route["legs"]:
             sim.build_way(leg["from"], leg["to"], "road")
+        _finish_building(sim)
         self.assertTrue(sim.state.economy.improvements)
         built = geography.route([base], [far], modes, sim.ways_built(), held_nodes=held)
         self.assertLess(built["cost_per_tonne"], route["cost_per_tonne"])
@@ -98,6 +111,7 @@ class BuiltWaysTests(unittest.TestCase):
         self.assertEqual(sim.state.economy.improvements, {})
         command["preview"] = False
         self.assertTrue(_agent_dispatch(sim, _NODES, command)["ok"])
+        _finish_building(sim)
         self.assertIn(geography.edge_key(tile_a, tile_b), sim.ways_built())
 
 
