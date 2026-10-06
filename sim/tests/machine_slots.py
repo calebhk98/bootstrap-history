@@ -41,7 +41,7 @@ def acquire(count=None, directory=None, wait=True):
     while True:
         for number in range(count):
             try:
-                handle = open(os.path.join(directory, "slot_%d.lock" % number), "a")
+                handle = open(os.path.join(directory, "slot_%d.lock" % number), "a")  # noqa: SIM115 - held open as the slot
             except OSError:
                 return None
             try:

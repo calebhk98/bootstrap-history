@@ -57,8 +57,8 @@ _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(
 if _REPO_ROOT not in sys.path:
     sys.path.insert(0, _REPO_ROOT)
 
-from sim import cache_root  # noqa: E402
-from sim.tests import machine_slots  # noqa: E402
+from sim import cache_root
+from sim.tests import machine_slots
 from sim.tests.discovery import discover_topics  # noqa: E402
 
 # Every sim/tests/test_*.py is a topic, in sorted order (see discovery.py).
@@ -83,7 +83,12 @@ def _run_topic(slug, harness):
     """
     mod = importlib.import_module("sim.tests.test_%s" % slug)
 
-    cases = unittest.TestLoader().loadTestsFromModule(mod)
+    # Only the module's own classes: a TestCase imported from another topic is that topic's to run.
+    loader = unittest.TestLoader()
+    own_classes = [getattr(mod, name) for name in dir(mod)
+                   if isinstance(getattr(mod, name), type) and issubclass(getattr(mod, name), unittest.TestCase)
+                   and getattr(mod, name).__module__ == mod.__name__]
+    cases = unittest.TestSuite(loader.loadTestsFromTestCase(test_class) for test_class in own_classes)
     if not cases.countTestCases():
         return
 
