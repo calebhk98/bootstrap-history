@@ -1,6 +1,6 @@
 # Add political interest groups created by industrialisation
 
-**Status:** partly - interest groups are actors that organise, press the state and are answered (test interest_groups); what remains is split into 311, 312 and 313; reopened: the remaining work belongs to this complaint too, the related one is a cross-reference, not a replacement
+**Status:** partly - interest groups are actors that organise, press the state and are answered (test interest_groups); remaining: add measured sources for groups beyond displaced producers and employers (landholders, workers, clergy, military, bureaucracy, urban poor, academics), model society-side producers in goods categories, and link group prohibitions to techniques through substitutes not just production-entry gates
 
 **Source:** playtest findings document, LATE-008. **Type:** Feature
 recommendation, roadmap-sized, substantially overlapping already-planned

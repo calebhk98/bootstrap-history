@@ -1,6 +1,6 @@
 # Add supplier depth / tacit industrial competence, without duplicating existing delays
 
-**Status:** open - on hold
+**Status:** open - on hold until one labour model sets wages and workforce (Complaint 428); supplier depth attaches to that model's workforce tenure
 
 **Source:** playtest findings document, LATE-009. **Type:** Realism
 refinement, medium size. Carries its own explicit warning against

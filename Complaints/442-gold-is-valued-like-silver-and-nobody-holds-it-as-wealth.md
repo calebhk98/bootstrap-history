@@ -1,6 +1,6 @@
 # Gold is worth no more than silver per kilogram to households, and nobody holds it as wealth
 
-**Status:** open - data (`data/world/needs.json`) and an economy mechanism to design
+**Status:** open - owner direction (2026-10-06): the value of gold against silver should follow how rare each is and where its mines are, through geography and the deposits; research comes before code
 
 Measured on the agent economy (scratch driver replaying the deleted `sim/economy_validate.py`,
 30 years, seeds 1-3; no command prints it yet, Complaint 445): the median gold-to-silver price ratio
