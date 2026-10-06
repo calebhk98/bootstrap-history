@@ -8,6 +8,7 @@ nothing). Everything here is pure: prices come in as a function of the good, cli
 numbers, and no actor, market or tile is named. The economy, the aggregate demand model and the strata
 read this module; they add what only they know (cash, durables, income bins, a purse).
 """
+import dataclasses
 import math
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
@@ -142,8 +143,10 @@ def subsistence_cost_per_person(priced: Sequence[PricedNeed]) -> float:
     return math.fsum(need.price_index * need.spec.subsistence_per_person for need in priced)
 
 
-def need_units(priced: Sequence[PricedNeed], basket: Basket, people: float, surplus: float):
-    """(floor units, total units) per need id: floors plus weighted surplus, limited by satiation."""
+def need_units(priced: Sequence[PricedNeed], basket: Basket, people: float, surplus: float,
+               satiate: bool = True):
+    """(floor units, total units) per need id: floors plus weighted surplus, limited by satiation
+    (unless `satiate` is off, for a caller that limits the sum over several groups itself)."""
     floors = {need.spec.need_id: need.spec.subsistence_per_person * people for need in priced}
     weight_total = math.fsum(need.spec.budget_weight for need in priced)
     totals = dict(floors)
@@ -151,8 +154,54 @@ def need_units(priced: Sequence[PricedNeed], basket: Basket, people: float, surp
         for need in priced:
             totals[need.spec.need_id] += (surplus * need.spec.budget_weight / weight_total
                                           / need.price_index)
-        limits = {need.spec.need_id: {"surplus_budget_share": need.spec.budget_weight,
-                                      "satiation_per_capita_per_year": satiation_limit(basket, need.spec.need_id)}
-                  for need in priced}
-        apply_satiation(totals, {need.spec.need_id: need.price_index for need in priced}, limits, people)
+        if satiate:
+            limit_satiation(totals, priced, basket, people)
     return floors, totals
+
+
+def limit_satiation(totals: Dict[str, float], priced: Sequence[PricedNeed], basket: Basket, people: float) -> None:
+    """Cap each satiable need's units at its per-head limit and move the freed spending, in place."""
+    limits = {need.spec.need_id: {"surplus_budget_share": need.spec.budget_weight,
+                                  "satiation_per_capita_per_year": satiation_limit(basket, need.spec.need_id)}
+              for need in priced}
+    apply_satiation(totals, {need.spec.need_id: need.price_index for need in priced}, limits, people)
+
+
+def climate_floor_fields(basket: Basket) -> Dict[str, str]:
+    """{need id: the climate floor name (`sim/world/climate_needs.py`) that sets its floor}, for the needs
+    whose data names one in `subsistence_from_climate`."""
+    return {need_id: spec["subsistence_from_climate"] for need_id, spec in basket.need_data.items()
+            if spec.get("subsistence_from_climate")}
+
+
+def basket_with_floors(basket: Basket, climate_floors: Mapping[str, float]) -> Basket:
+    """The basket with each climate need's floor replaced by the named entry of `climate_floors`
+    (floors per person per year, as `climate_needs.floors_for_tile` returns them)."""
+    fields = climate_floor_fields(basket)
+    needs = tuple(dataclasses.replace(need, subsistence_per_person=float(climate_floors[fields[need.need_id]]))
+                  if need.need_id in fields else need for need in basket.needs)
+    return dataclasses.replace(basket, needs=needs)
+
+
+def mean_climate_basket(basket: Basket, tile_records_with_people: Sequence[Tuple[Mapping[str, Any], float]]) -> Basket:
+    """The basket for a civilisation: each climate floor is the people-weighted mean of its tiles' floors
+    (floors are nonlinear in temperature, so the mean is over floors, not over climates)."""
+    if not climate_floor_fields(basket):
+        return basket
+    from sim.world import climate_needs
+    total = math.fsum(people for _record, people in tile_records_with_people)
+    if total <= 0.0:
+        return basket
+    by_tile = [(climate_needs.floors_for_tile(record), people) for record, people in tile_records_with_people]
+    names = sorted(set(climate_floor_fields(basket).values()))
+    return basket_with_floors(basket, {name: math.fsum(floors[name] * people for floors, people in by_tile) / total
+                                       for name in names})
+
+
+def climate_basket(basket: Basket, tile_record: Mapping[str, Any]) -> Basket:
+    """The basket for a place with this climate (`lat`, `koppen_class`, optional `koppen_sample_mix`):
+    warmth, clothing and shelter floors follow from heat balance."""
+    from sim.world import climate_needs
+    if not climate_floor_fields(basket):
+        return basket
+    return basket_with_floors(basket, climate_needs.floors_for_tile(tile_record))

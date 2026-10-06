@@ -59,5 +59,37 @@ class NeedBasketTest(unittest.TestCase):
         self.assertAlmostEqual(need_basket.subsistence_cost_per_person(priced), 200.0 * index_by_need(NEED_DATA)["food"])
 
 
+CLIMATE_DATA = {
+    "needs": {
+        "warmth": {"surplus_budget_share": 0.1, "subsistence_from_climate": "warmth_mj"},
+        "food": {"surplus_budget_share": 0.5, "subsistence_per_capita_per_year": 200.0},
+    },
+    "goods": {"fuel": {"satisfies": {"warmth": 1.0}}, "grain": {"satisfies": {"food": 1.0}}},
+}
+
+
+def floors_of(basket):
+    return {need.need_id: need.subsistence_per_person for need in basket.needs}
+
+
+class ClimateFloorTest(unittest.TestCase):
+    def test_a_tiles_floors_equal_the_climate_calculation(self):
+        from sim.world import climate_needs
+        tile = {"lat": 50, "koppen_class": "Dfb"}
+        basket = need_basket.climate_basket(need_basket.make_basket(CLIMATE_DATA, {}), tile)
+        self.assertAlmostEqual(floors_of(basket)["warmth"], climate_needs.floors_for_tile(tile)["warmth_mj"])
+        self.assertEqual(floors_of(basket)["food"], 200.0)
+
+    def test_a_hotter_tile_has_no_larger_warmth_floor_than_a_colder_one(self):
+        base = need_basket.make_basket(CLIMATE_DATA, {})
+        cold = floors_of(need_basket.climate_basket(base, {"lat": 62, "koppen_class": "Dfc"}))["warmth"]
+        hot = floors_of(need_basket.climate_basket(base, {"lat": 5, "koppen_class": "Af"}))["warmth"]
+        self.assertLessEqual(hot, cold)
+
+    def test_a_basket_with_no_climate_need_is_unchanged(self):
+        base = need_basket.make_basket(NEED_DATA, {})
+        self.assertIs(need_basket.climate_basket(base, {"lat": 50, "koppen_class": "Dfb"}), base)
+
+
 if __name__ == "__main__":
     unittest.main()

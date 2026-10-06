@@ -10,7 +10,7 @@ import os
 
 from sim.economy.api import (EconomySetup, TradeSpec, currency_from_coin_standard, goods_specs, households,
                              recipes_from_production_data, taxes, tile_costs)
-from sim.world import demand
+from sim.world import demand, need_basket
 from sim.geography.api import layer_value, sea_freight, settlement, tiles_held
 from sim.labour import api as labour_api
 
@@ -70,21 +70,12 @@ def opening_values(sim):
 def baskets_by_tile(basket, need_data, world_map, tile_ids):
     """The household basket on each tile, with the floors its climate sets (sim/world/climate_needs.py)
     for every need whose data names one in `subsistence_from_climate`."""
-    from sim.world import climate_needs
-    climate_field = {need_id: spec.get("subsistence_from_climate")
-                     for need_id, spec in need_data.get("needs", {}).items() if spec.get("subsistence_from_climate")}
-    if not climate_field:
+    if not need_basket.climate_floor_fields(basket):
         return {}
-    baskets = {}
-    for tile in tile_ids:
-        floors = climate_needs.floors_for_tile({
-            "lat": layer_value(tile, "lat", world_map),
-            "koppen_class": layer_value(tile, "koppen_class", world_map),
-            "koppen_sample_mix": layer_value(tile, "koppen_sample_mix", world_map)})
-        needs = tuple(dataclasses.replace(need, subsistence_per_person=float(floors[climate_field[need.need_id]]))
-                      if need.need_id in climate_field else need for need in basket.needs)
-        baskets[tile] = dataclasses.replace(basket, needs=needs)
-    return baskets
+    return {tile: need_basket.climate_basket(basket, {
+        "lat": layer_value(tile, "lat", world_map),
+        "koppen_class": layer_value(tile, "koppen_class", world_map),
+        "koppen_sample_mix": layer_value(tile, "koppen_sample_mix", world_map)}) for tile in tile_ids}
 
 
 def coin_per_unit(opening):
