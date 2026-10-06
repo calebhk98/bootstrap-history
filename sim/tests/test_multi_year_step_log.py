@@ -50,3 +50,5 @@ check("the printed step report shows events of every reported year",
       all(("DURING %d" % year in printed) or ("COMPLETED %d" % year in printed)
           for year in reported_years),
       (reported_years, printed[:800]))
+check("the step covers a second year that logged something, so the comparison is not about one year",
+      len(reported_years) >= 2, reported_years)

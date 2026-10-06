@@ -62,15 +62,33 @@ for _cohort in ("children", "working_age", "elderly"):    # fewer people, so the
 s_dl._done_changed()
 check("a project needing more of a trade than exists is startable",
       s_dl.start_project("logarithms")[0], s_dl.start_reason("logarithms"))
-for _ in range(60):
+_dl_ph_left = [s_dl.active["logarithms"]["ph_left"]]
+_dl_scribe_left = [s_dl.active["logarithms"]["lab_left"]["scribe"]]
+for _ in range(3):
     s_dl.step()
     if "logarithms" not in s_dl.active:
         break
-check("...and it finishes, slowly, instead of freezing for ever",
-      "logarithms" in s_dl.done, (s_dl.year, s_dl.active.get("logarithms")))
-check("...and it took longer than its calendar floor, because it crawled",
-      s_dl.done_year.get("logarithms", 0) - 100 > NODES["logarithms"]["yrs"],
-      s_dl.done_year.get("logarithms"))
+    _dl_ph_left.append(s_dl.active["logarithms"]["ph_left"])
+    _dl_scribe_left.append(s_dl.active["logarithms"]["lab_left"]["scribe"])
+check("...and every year of the crawl really works down the hours and the scribe labour left",
+      len(_dl_ph_left) == 4
+      and all(later < earlier for earlier, later in zip(_dl_ph_left, _dl_ph_left[1:]))
+      and all(later < earlier for earlier, later in zip(_dl_scribe_left, _dl_scribe_left[1:])),
+      (_dl_ph_left, _dl_scribe_left))
+
+
+def _logarithms_finishes_slowly():
+    for _ in range(60):
+        if "logarithms" not in s_dl.active:
+            break
+        s_dl.step()
+    finished = "logarithms" in s_dl.done
+    return (finished and s_dl.done_year.get("logarithms", 0) - 100 > NODES["logarithms"]["yrs"],
+            (s_dl.year, s_dl.active.get("logarithms"), s_dl.done_year.get("logarithms")))
+
+
+slow_check("...and it finishes, slowly, longer than its calendar floor, instead of freezing for ever",
+           _logarithms_finishes_slowly)
 
 # --- BREAK: `stop` burned the money as well as the hours, "same as a real
 # abandoned enterprise" - so when the creditors were about to take everything,
