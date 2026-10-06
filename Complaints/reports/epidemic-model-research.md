@@ -23,13 +23,12 @@ same pathogen cannot recur next year at full strength, and mortality falls as
 survivors become immune. Both properties are consequences of the model, not
 of authored numbers (CLAUDE.md 4.1, 4.2).
 
-Note on the repository at the time of writing: CLAUDE.md names `sim/geography/`,
-`sim/agents/`, `sim/labour/`, `docs/architecture/PACKAGE_WALLS.md` and a geography
-`INTERFACE.md`. None exist in the worktree this report was written in (base is
-older than that restructuring). The package layout below follows the pattern
-that does exist (`sim/economy/__init__.py`: standalone, imports `sim.world` and
-`sim.constants`, never `sim.engine`, reached only through an engine port) and
-should be re-checked against `PACKAGE_WALLS.md` once on the newer base.
+Repository base: re-checked against the real base (PR #36). The walled packages
+`sim/economy/`, `sim/labour/`, `sim/geography/`, `sim/agents/` and `sim/ui/` exist,
+with the rules in `docs/architecture/PACKAGE_WALLS.md` and the geography contract in
+`sim/geography/INTERFACE.md`. The proposed `sim/disease/` is a sixth walled package
+following that rule (its own `api.py` with `WALL = "two-way"`, an object on `Sim`,
+and an engine adapter), and it reads places and routes only through `sim.geography.api`.
 
 ## 1. What exists today
 
@@ -56,10 +55,13 @@ Read from the code (no numbers stated, run the commands to measure).
 - The agent economy (`sim/economy/households_cohort.py`) holds one `Cohort` per
   tile and income class with `people` and `working_people`; this is where
   disease deaths and lost working days must land.
-- Routes: `sim/world/trade_routes.py` (`Route.travel_days`, `distance_km`,
-  legs by mode), `data/world/trade_routes.json`, tile centres and distances in
-  `sim/world/settlement.py`; monthly temperatures per climate class in
-  `sim/world/climate_temperatures.py` (`monthly_temperatures`).
+- Places and routes: `sim/geography/api.py` per `sim/geography/INTERFACE.md`:
+  `tile_ids()`, `tile_facts(tile_id)` (latitude, longitude, land area, coastal,
+  `neighbours`, `climate_class`, region), `layer_value(tile_id, layer_id)`,
+  `route(...)` (legs with mode, km and days) and `reach(origins, modes,
+  days_budget, ...)` (tiles within a travel budget), `freight_links(modes)`;
+  monthly temperatures per climate class in `sim/geography/climate_temperatures.py`.
+  Geography does not read the tech tree; the caller passes what actors hold.
 
 Three structural problems the model must remove: loss is an authored fraction;
 timing is an annual coin flip independent of contact, geography or immunity; and
@@ -158,12 +160,14 @@ Between tiles i and j the infectious flux is
   and crew movements implied by trade volume on the route (people per tonne
   carried by mode, a derived quantity, not a table of historical flows), plus
   migration, armies and pilgrimages as other actors generate them (the general
-  actor rule). A route's `travel_days` and mode come from `trade_routes.py`.
+  actor rule). A route's days and mode come from `sim.geography.api.route(...)` (legs with mode,
+  km and days) and `freight_links`; `reach` bounds which tiles an infectious
+  traveller can plausibly arrive in within the infectious period.
 - `survival_in_transit` is the chance a traveller who is infectious on departure
   or infected in transit is still infectious on arrival. A fast pathogen with a
   short infectious period only crosses short routes; a pathogen with a long latent
   period can cross a whole sea. This falls out of the infectious duration and
-  `travel_days`; no per-disease code. The incubation interval is advanced during
+  route days; no per-disease code. The incubation interval is advanced during
   transit, so a ship leaves with a healthy-looking person and arrives with an
   outbreak.
 - Goods are a second carrier for vector borne diseases. A pathogen declares
@@ -175,7 +179,7 @@ Between tiles i and j the infectious flux is
   tested as data variants (see open questions).
 - Local coupling (commuting, neighbouring tiles by adjacency) is a second,
   weaker flux with a gravity or radiation form (Viboud et al. 2006), parameters
-  derived from tile population and distance (`settlement.distance_km`). Large scale
+  derived from tile population and distance (tile coordinates from `tile_facts`). Large scale
   spread over the transport network dominates (Balcan et al. 2009), so the first
   increment can omit adjacency coupling and keep only route coupling.
 - Policy is a multiplier on the flux owned by an actor (a state closing a port,
@@ -502,10 +506,15 @@ world to simulate (open question 3).
 
 ### 6.1 New package `sim/disease/`
 
-Follow the economy package pattern: standalone (imports `sim.world` and
-`sim.constants`, never `sim.engine`), reached from the engine only through a port
-module, with `api.py` as the single surface under the walled packages rule of
-`PACKAGE_WALLS.md` once present. Short files by topic, per CLAUDE.md section 5:
+A sixth walled package under `docs/architecture/PACKAGE_WALLS.md`: `sim/disease/api.py`
+is the only door and declares `WALL = "two-way"`; nothing inside imports
+`sim.engine`, `sim.ui` or another package except through its `api`; the object
+lives on `Sim` as `sim.disease` (built on first use, never saved; saved state stays
+in `SimulationState`). What it needs from the engine comes through a `DiseaseWorld`
+adapter in `sim/engine/disease_port.py` with one explicit member per input (people
+by tile and band, nutrition ratio, route flux, tile public health state), no
+`__getattr__` forwarding. It reads places and routes through `sim.geography.api`
+only. Short files by topic, per CLAUDE.md section 5:
 
     sim/disease/api.py            the only import surface
     sim/disease/types.py          Pathogen, Compartments, TileDiseaseState, YearInputs, YearResult
@@ -519,18 +528,23 @@ module, with `api.py` as the single surface under the walled packages rule of
     sim/disease/endemic.py        equilibrium spin up and mean field mode
     sim/disease/step.py           the sub-stepping loop
     data/disease/*.json           pathogens, with _SCHEMA.md and sources
-    sim/engine/disease_port.py    builds inputs from engine and economy, applies outputs
+    sim/engine/disease_port.py    DiseaseWorld: builds inputs from engine and economy, applies outputs
+
+Demography (`sim/world/demography.py`) is still a standalone domain model under
+`sim/world/`, so the disease package receives its cohort counts and nutrition
+ratio as plain data through the adapter rather than importing it.
 
 ### 6.2 What it reads, what it returns
 
 Inputs per year (a `YearInputs` record, plain data):
 
-- from demography: people by tile and age band; the `nutrition_ratio` by tile;
+- from demography (through the adapter): people by tile and age band; the `nutrition_ratio` by tile;
   births and deaths already computed (so there is no double counting);
-- from geography and the weather model: tile density, urban share, monthly
-  temperature and rainfall per tile, climate class;
+- from `sim.geography.api`: tile facts (area, coastal, neighbours, climate class),
+  per-tile layers (precipitation, forest), monthly temperature by climate class;
+  density comes from people divided by land area;
 - from the route and trade layers: the route table (origin tile, destination
-  tile, `travel_days`, mode), persons per year and tonnes per year per route
+  tile, days and mode from `route(...)`), persons per year and tonnes per year per route
   (derived from last year's trade flows and the military and migration actors);
 - from the economy and tech: the tile public health state variables of Section
   4.2, derived from installed capacity and from the `disease_effects` of known
@@ -690,7 +704,7 @@ scenario seeding event and delete its `staff_loss`. Tests: items 1, 2, 3 and 5
 of Section 7 for a single tile; the 386 reproduction passes.
 
 Stage 2: spatial coupling over routes. Route flux from trade volumes and
-`travel_days`, infection import, active set, quarantine multiplier from a state
+route days, infection import, active set, quarantine multiplier from a state
 actor. Test item 6. Seasonal drivers and the thermal curves. Add cholera
 (environmental reservoir) as the first non person to person pathogen and
 validate item 7.
