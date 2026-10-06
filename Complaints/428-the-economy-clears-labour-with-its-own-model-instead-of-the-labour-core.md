@@ -1,6 +1,6 @@
 # The economy clears labour with its own model instead of the labour core
 
-**Status:** open
+**Status:** partly done: the agent economy keeps its workforce as the labour core's `MarketState` (saved in the record), bids as sloped `Bid` tranches, and the core clears wages and trains, switches and moves people; `labour_asks.py`, the economy's own clearing and `TRADE_MOBILITY_SHARE_PER_YEAR` are gone. Open: `sim/labour/labour_market.py`'s `Workforce.step` (hours by trade for the society) is still a third copy; the households' own-plot hold-back is applied by cutting the workers the core sees, not by the core.
 
 `sim/economy/labour.py` and `sim/economy/year_labour.py` (clear, move_workers, follow_asks,
 trade_premium) are a second labour market beside `sim/labour/market/`. The agent economy is on by
