@@ -87,6 +87,8 @@
  },
  {
   "id": "mfg_mushet_steel",
+  "copy_visibility": 0.1,
+  "copy_visibility_reason": "The tool shows nothing of the tungsten and manganese in the steel; Mushet's alloy was kept secret and rivals could not copy it until they analysed samples.",
   "name": "Mushet steel tooling",
   "cat": "cutting",
   "kind": "ENGINEERING",
@@ -3513,6 +3515,8 @@
  },
  {
   "id": "mfg_enamelling",
+  "copy_visibility": 0.2,
+  "copy_visibility_reason": "A glossy coat shows nothing of the frit, the metal oxides or the firing, which makers kept as secrets.",
   "name": "Enamelling",
   "cat": "finishing",
   "kind": "ENGINEERING",

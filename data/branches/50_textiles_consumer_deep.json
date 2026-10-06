@@ -1846,6 +1846,8 @@
  },
  {
   "id": "tx2_silk_fibre",
+  "copy_visibility": 0.1,
+  "copy_visibility_reason": "The silk thread reveals nothing about the worm, the mulberry or the reeling of the cocoon; the secret was kept for centuries until monks are said to have smuggled eggs to Byzantium.",
   "name": "Silk: cultivated fibre",
   "cat": "fibres",
   "kind": "RESOURCE",
@@ -2185,6 +2187,8 @@
  },
  {
   "id": "tx2_lockstitch",
+  "copy_visibility": 0.5,
+  "copy_visibility_reason": "The stitch itself is visible in the seam and can be pulled apart, but the shuttle and the needle timing sit inside the machine head.",
   "name": "Lockstitch: two-thread interlocking",
   "cat": "sewing",
   "kind": "ENGINEERING",

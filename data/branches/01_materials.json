@@ -1530,6 +1530,8 @@
  },
  {
   "id": "mat_porcelain",
+  "copy_visibility": 0.1,
+  "copy_visibility_reason": "Europe imported Chinese porcelain for centuries and could not copy it until Bottger's work in the early 1700s; the white body, the kaolin and the high firing are invisible in the finished ware.",
   "name": "Porcelain and high-fired stoneware",
   "cat": "material",
   "kind": "RESOURCE",
@@ -1556,6 +1558,8 @@
  },
  {
   "id": "mat_cement_portland",
+  "copy_visibility": 0.2,
+  "copy_visibility_reason": "The grey powder shows nothing of the limestone and clay ratio or the burning temperature, and Aspdin kept his recipe secret when he patented it.",
   "name": "Portland cement",
   "cat": "material",
   "kind": "RESOURCE",

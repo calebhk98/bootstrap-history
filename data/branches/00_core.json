@@ -532,6 +532,8 @@
     "dev_years": null,
     "gov": 2,
     "id": "blast_furnace",
+    "copy_visibility": 0.3,
+    "copy_visibility_reason": "The stack and the blast are visible from outside, but the burden ratio, the flux and the way to tap it are not, and furnaces copied on sight often chilled or froze.",
     "kb": "10_metallurgy.md#blast_furnace_cast_iron",
     "kind": "ENGINEERING",
     "lab": {
@@ -1032,6 +1034,8 @@
     "dev_years": null,
     "gov": 0,
     "id": "clock_mechanical_escapement",
+    "copy_visibility": 0.6,
+    "copy_visibility_reason": "The dial and the striking are visible but the escapement and the train sit sealed in the case, so a clockmaker must open one to learn it; Chinese and Japanese makers learned the form from imported clocks by taking them apart.",
     "kb": "40_power_precision.md#clockwork_escapement",
     "kind": "ENGINEERING",
     "lab": {
@@ -1392,6 +1396,8 @@
     "dev_years": null,
     "gov": 1,
     "id": "crank_conrod",
+    "copy_visibility": 0.9,
+    "copy_visibility_reason": "The crank and the rod are visible in operation, and the form is simple enough to copy from a drawing or a working machine.",
     "kb": "40_power_precision.md#crank_connecting_rod",
     "kind": "ENGINEERING",
     "lab": {
@@ -1806,6 +1812,8 @@
     "dev_years": null,
     "gov": 0,
     "id": "distillation_alcohol",
+    "copy_visibility": 0.4,
+    "copy_visibility_reason": "The still and its condenser are visible in a working yard and were copied widely, but the cuts, the fuel and the control of the heat are learned by doing.",
     "kb": "20_chemistry.md#distillation_fractional",
     "kind": "SCIENCE",
     "lab": {
@@ -3494,6 +3502,8 @@
     "dev_years": null,
     "gov": 2,
     "id": "horse_collar",
+    "copy_visibility": 0.9,
+    "copy_visibility_reason": "The padded ring that sits on the shoulders is visible on every working horse, so the harness shape copies from one look.",
     "kb": "75_agriculture_food.md#horse_collar_harness",
     "kind": "ENGINEERING",
     "lab": {
@@ -5257,6 +5267,8 @@
     "dev_years": null,
     "gov": -1,
     "id": "printing_press",
+    "copy_visibility": 0.7,
+    "copy_visibility_reason": "The screw, the bed and the platen are visible in a print shop and press builders copied them, but the type metal and the ink are not shown by the press.",
     "kb": "80_information_printing.md",
     "kind": "ENGINEERING",
     "lab": {

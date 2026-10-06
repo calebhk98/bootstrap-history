@@ -1083,6 +1083,8 @@
   },
   {
     "id": "prc_scraped_surface_plate",
+    "copy_visibility": 0.3,
+    "copy_visibility_reason": "A flat surface looks the same as an ordinary one; the three-plate method and the hand scraping that make it true are not seen from the plate.",
     "name": "Hand-scraped surface plate and why it beats grinding",
     "cat": "machine_tools",
     "kind": "ENGINEERING",

@@ -2024,6 +2024,8 @@
  },
  {
   "id": "md2_penicillin_fermentation",
+  "copy_visibility": 0.15,
+  "copy_visibility_reason": "The brown liquor and the tank say nothing of the mould strain, the medium or the aeration; the wartime American effort needed the strain and the process shared from Britain.",
   "name": "Deep tank fermentation",
   "cat": "therapeutics",
   "kind": "ENGINEERING",

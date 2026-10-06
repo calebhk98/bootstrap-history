@@ -56,6 +56,8 @@
  },
  {
   "id": "civ_dome_roman",
+  "copy_visibility": 0.5,
+  "copy_visibility_reason": "The outer form of a dome is plain to see, but the centering, the coursing and the mortar that let it stand are not; many later domes cracked while copying them.",
   "name": "Roman concrete dome",
   "cat": "structures",
   "kind": "ENGINEERING",
@@ -87,6 +89,8 @@
  },
  {
   "id": "civ_aqueduct_roman",
+  "copy_visibility": 0.8,
+  "copy_visibility_reason": "Arcades and channels stand in the open and the form is copied by sight; the levelling of the long gentle gradient is the part not shown.",
   "name": "Roman aqueduct with inverted siphons",
   "cat": "water",
   "kind": "INFRASTRUCTURE",

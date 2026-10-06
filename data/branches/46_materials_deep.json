@@ -2299,6 +2299,8 @@
  },
  {
   "id": "mt2_high_speed_steel",
+  "copy_visibility": 0.1,
+  "copy_visibility_reason": "The tool gives no hint of its alloy or its heat treatment; the Taylor and White process was kept secret and shown only in the cutting performance.",
   "name": "High speed steel (HSS): tungsten-molybdenum-vanadium tool steel",
   "cat": "alloys",
   "kind": "RESOURCE",
@@ -2574,6 +2576,8 @@
  },
  {
   "id": "mt2_malleable_cast_iron",
+  "copy_visibility": 0.15,
+  "copy_visibility_reason": "The casting looks like ordinary iron; the long annealing in the packing and the white iron starting point that make it tough are not visible, which kept Reaumur's work a puzzle for makers.",
   "name": "Malleable cast iron: annealed white iron, ductile",
   "cat": "alloys",
   "kind": "RESOURCE",
