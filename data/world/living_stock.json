@@ -97,21 +97,21 @@
       "natural_increase": 0.0,
       "annual_loss": 0.5,
       "breeding_minimum_units": 0,
-      "basis": "TEMPORARY HEURISTIC, seed tubers of the potato. A tuber multiplies only by being planted and lifted, which is the production entry, not a rate of the held lot. A stored tuber sprouts, rots or shrivels within a season or two without cool dark storage, so half of a held lot is taken as lost in a year. Estimates, not checked against a source; no figure here is sourced.",
+      "basis": "Seed tubers of the potato. A tuber multiplies only by being planted and lifted, which is the production entry, not a rate of the held lot. SOURCED (read): an Andean organic plot sowed about 1850 kg of seed per hectare and lifted 7.34 kg per kg sown (Quispe Condori and Pari Choquechambi 2025, doi 10.25127/agrops.20252.1087, pp. 6-9; one experimental plot). TEMPORARY HEURISTIC, unsourced: half of a held lot lost in a year, since a stored tuber sprouts, rots or shrivels within a season or two without cool dark storage.",
       "confidence": "C"
     },
     "maize_seed_kg": {
       "natural_increase": 0.0,
       "annual_loss": 0.2,
       "breeding_minimum_units": 0,
-      "basis": "TEMPORARY HEURISTIC, maize grain kept for sowing. Seed multiplies only by being sown and harvested, which is the production entry, not a rate of the held lot. Dry grain keeps its viability for a few years if kept dry and free of weevil, so about a fifth of a held lot is taken as unusable after a year. Estimates, not checked against a source; no figure here is sourced.",
+      "basis": "Maize grain kept for sowing. Seed multiplies only by being sown and harvested, which is the production entry, not a rate of the held lot. SOURCED (read): milpa sowing is two to three seeds per hill, hills 80 by 40 cm, about 62500 plants per hectare (Cuanalo-de la Cerda and Uicab-Covoh 2006, Terra Latinoamericana 24(3):401-408, p. 404); the seed mass per hectare is not stated. TEMPORARY HEURISTIC, unsourced: about a fifth of a held lot unusable after a year, since dry grain keeps viability a few years if kept dry and free of weevil.",
       "confidence": "C"
     },
     "cacao_seed_kg": {
       "natural_increase": 0.0,
       "annual_loss": 0.9,
       "breeding_minimum_units": 0,
-      "basis": "TEMPORARY HEURISTIC, cacao beans kept for planting. The seed is recalcitrant: it does not survive drying and loses viability within weeks, so nearly all of a held lot is taken as lost within a year unless planted out in a nursery. Multiplication is by planting and a bearing tree, which is the production entry, not a rate of the held lot. Estimates, not checked against a source; no figure here is sourced.",
+      "basis": "Cacao beans kept for planting. Multiplication is by planting and a bearing tree, which is the production entry, not a rate of the held lot. SOURCED (read): trees become productive two to four years after planting (Daymond et al., Global Review of Cocoa Farming Systems, University of Reading for ICCO, section 2.4). TEMPORARY HEURISTIC, unsourced: nearly all of a held lot lost within a year, since the seed is recalcitrant, does not survive drying and loses viability within weeks unless planted out in a nursery; no source opened for the loss rate.",
       "confidence": "C"
     }
   }
