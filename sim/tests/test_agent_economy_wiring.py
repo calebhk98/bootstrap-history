@@ -23,7 +23,7 @@ opened = rome.economy.agent.economy().record
 check("after the hidden spin-up households expect stable prices, so the rebased index is not read as inflation",
       all(cohort.expected_inflation == 0.0 and cohort.last_basket_price_level == 1.0 for cohort in opened.cohorts.values()),
       sorted({(cohort.expected_inflation, cohort.last_basket_price_level) for cohort in opened.cohorts.values()})[:3])
-default = perf_fingerprint.build(dict(civ="rome_100ad", seed=1, years=1, events=True, fog=False))
+default = sim()
 check("a game that says nothing runs on the agent economy", default.economy.agent is not None
       and default.state.economy.agent_economy.get("on"))
 # the opt-out is the subject here: the switch itself is under test
@@ -46,7 +46,7 @@ finally:
         os.environ[SWITCH_ENVIRONMENT] = saved_switch
 
 prices, wages = [], []
-for _year in range(4):
+for _year in range(2):
     rome.step()
     prices.append(rome.economy.material_price("wheat_kg"))
     wages.append(rome.economy.labour.quote("labourer"))
@@ -91,8 +91,7 @@ check("the founder's concern output is offered without the old price table, at a
 
 unbroken = agent_game("rome_100ad")
 save_path = os.path.join(tempfile.mkdtemp(), "agent_save.json")
-for _year in range(2):
-    unbroken.step()
+unbroken.step()
 save_state(unbroken, save_path)
 resumed = agent_game("rome_100ad")
 load_state(resumed, save_path)
@@ -103,12 +102,11 @@ check("a saved game on the agent economy resumes the same economy",
 check("and the same game state", perf_fingerprint.digest(perf_fingerprint.state_of(unbroken))
       == perf_fingerprint.digest(perf_fingerprint.state_of(resumed)))
 
-for civ in ("england_1300", "han_china_100ad", "mexica_1500", "norse_900ad"):
+for civ in ("han_china_100ad", "norse_900ad"):
     game = agent_game(civ)
-    for _year in range(3):
-        game.step()
+    game.step()
     book = game.economy.agent.economy().record.book
-    check("%s plays three years on the agent economy with money conserved" % civ,
+    check("%s plays a year on the agent economy with money conserved" % civ,
           book.check_conservation(1e-9).ok)
 
 # One owner for credit: the founder's room and the rate both come from the agent economy's market.

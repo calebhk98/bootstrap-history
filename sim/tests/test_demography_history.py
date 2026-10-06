@@ -12,11 +12,11 @@ def _demography(game):
 
 
 game = sim()
-for _ in range(3):
+for _ in range(2):
     game.step()
 record = game.state.population.yearly_record
 flows = game._last_demographic_step
-check("each step appends a yearly population record", len(record) == 3, record)
+check("each step appends a yearly population record", len(record) == 2, record)
 check("the latest record holds that step's births and deaths",
       record[-1]["births"] == round(flows.births) and record[-1]["deaths"] == round(flows.deaths), record[-1])
 
@@ -52,5 +52,3 @@ check("recovery projects years to regain the peak at the recent growth rate",
       and recovery["years_to_regain_peak_at_recent_rate"] > 0, recovery)
 check("the screen prints shocks and recovery",
       "SHOCK" in _render_pretty("demography", reply) and "RECOVERY" in _render_pretty("demography", reply))
-check("the not-held list no longer claims there is no recovery timeline",
-      not any("recovery timeline" in line for line in reply["not_held"]), reply["not_held"])

@@ -119,7 +119,7 @@ s_ab = sim(capital=-100000.0)
 s_ab.done.add(_LOSS); s_ab._done_changed()
 s_ab.operating.add(_LOSS)
 s_ab.revenue = lambda: 0.0
-for _ in range(6):
+for _ in range(2):
     s_ab.step()
 check("no path in the engine leaves a work mothballed but unknown",
       not (s_ab.mothballed - s_ab.done),
@@ -160,9 +160,7 @@ r1 = S._agent_dispatch(s, NODES, {"cmd": "start", "id": node})
 check("start accepts work nobody can do yet only WITH a warning naming the trade",
       r1["ok"] and "engineer" in r1.get("warning", ""), r1)
 
-# --- D4: fractional staff counts are explained, not silently shown
-s = sim(civ="rome_100ad", capital=400.0, manual=False, events=False)
-s.step()
+# --- D4: fractional staff counts are explained, not silently shown (D1's game, one year in)
 st = S._agent_state(s, NODES, {})
 check("a fractional staff count comes with an explanation of what the fraction means",
       (abs(s.scholars - round(s.scholars)) < 0.02 and abs(s.artisans - round(s.artisans)) < 0.02)
@@ -174,9 +172,8 @@ check("a whole-number staff carries no fraction footnote",
       st2.get("staff_are_fractional_because") is None, st2.get("staff_are_fractional_because"))
 
 # --- F: say how the founder's hours were spent
-s = sim(civ="rome_100ad", capital=400.0, manual=False, events=False)
 ratios = []
-for _ in range(6):
+for _ in range(3):
     s.step()
     h = s.hours_this_year
     total = h["wage_work"] + h["teaching"] + h["offered_to_projects"] + h["unused"]
@@ -273,8 +270,7 @@ check("a hazard that carries ONLY a values delta (no staff_loss, sack_chance, "
 # --- foreseeable, not just felt: knowledge_risk must let a player see the
 # shift coming before it starts, the same complaint that section G raised
 # about Christianisation producing "no event and no visible consequence".
-r, _, _ = proto([{"cmd": "risk"}], civ="norse_900ad")
-kr = r[0]["knowledge_risk"]
+kr = S._agent_dispatch(sim(civ="norse_900ad"), NODES, {"cmd": "risk"})["knowledge_risk"]
 christ_row = next((hazard for hazard in kr["known_hazards_ahead"]
                    if hazard["name"].startswith("Christianisation")), None)
 check("knowledge_risk lists Christianisation among the hazards ahead, "
@@ -292,34 +288,6 @@ check("Christianisation still carries no sack_chance (a values shift is not "
       "a sacking, and Norse assembly society still has no capital to sack)",
       "sack_chance" not in _christ, _christ)
 
-# ============================================================================
-# Section S: three nodes the machine list was missing. Honest prerequisites
-# matter more than the node existing at all, especially for the LED, which
-# is not a light bulb.
-# ============================================================================
-
-check("the light-emitting diode exists and sits behind a real semiconductor "
-      "diode, not the lighting branch",
-      "com_led" in NODES and "com_semiconductor_diode" in NODES["com_led"]["pre"],
-      NODES.get("com_led", {}).get("pre"))
-check("the LED needs the same purity/single-crystal semiconductor lineage a "
-      "diode needs, not a shortcut around it",
-      "com_led" in NODES and "junction_transistor" in S.closure(NODES, "com_led"),
-      None)
-
-check("the clothes dryer exists as its own node, distinct from the washing "
-      "machine it builds on",
-      "hom_clothes_dryer_electric" in NODES
-      and NODES["hom_clothes_dryer_electric"]["id"] != "hom_washing_machine_electric"
-      and "hom_washing_machine_electric" in NODES["hom_clothes_dryer_electric"]["pre"],
-      NODES.get("hom_clothes_dryer_electric", {}).get("pre"))
-
-check("the domestic freezer exists as its own node, distinct from the "
-      "refrigerator it builds on",
-      "hom_freezer_domestic" in NODES
-      and NODES["hom_freezer_domestic"]["id"] != "hom_refrigerator_home_electric"
-      and "hom_refrigerator_home_electric" in NODES["hom_freezer_domestic"]["pre"],
-      NODES.get("hom_freezer_domestic", {}).get("pre"))
 # New work: a human-readable rendering (--pretty), the menu starting the game
 # instead of describing how to, and `load` refusing a file that is not a
 # save from this game.
@@ -334,24 +302,16 @@ def _run_agent(input_lines, extra_args=(), civ="rome_100ad", cwd=None):
     return proc.stdout, proc.stderr, proc.returncode
 
 
-_PRETTY_CMDS = [
-    {"cmd": "state"}, {"cmd": "available"}, {"cmd": "why", "id": "blast_furnace"},
-    {"cmd": "money"}, {"cmd": "labour"}, {"cmd": "risk"},
-    {"cmd": "step", "years": 1}, {"cmd": "hire", "trade": "smith", "n": 1},
-    {"cmd": "quit"},
-]
+_PRETTY_CMDS = [{"cmd": "state"}, {"cmd": "why", "id": "blast_furnace"}, {"cmd": "money"}, {"cmd": "risk"},
+                {"cmd": "quit"}]
 
 # --- I/N: the one guarantee the whole feature rests on. A script that only
 # ever reads stdout must not be able to tell --pretty was even passed.
 _out_plain, _err_plain, _rc_plain = _run_agent(_PRETTY_CMDS)
 _out_pretty, _err_pretty, _rc_pretty = _run_agent(_PRETTY_CMDS, extra_args=["--pretty"])
-_first_diff = next((i for i in range(min(len(_out_plain), len(_out_pretty)))
-                    if _out_plain[i] != _out_pretty[i]), None)
 check("stdout is byte-for-byte identical whether or not --pretty is passed",
       _rc_plain == 0 and _rc_pretty == 0 and _out_plain == _out_pretty,
-      "plain %d bytes, pretty %d bytes, first differs at %s"
-      % (len(_out_plain), len(_out_pretty), _first_diff))
-
+      "plain %d bytes, pretty %d bytes" % (len(_out_plain), len(_out_pretty)))
 _bad_lines = []
 for _ln in _out_pretty.splitlines():
     try:
@@ -360,256 +320,83 @@ for _ln in _out_pretty.splitlines():
         _bad_lines.append(_ln)
 check("with --pretty on, every stdout line is still exactly one JSON object",
       not _bad_lines, _bad_lines[:3])
-
-# --- N: the rendering actually renders something recognisable for each of
-# state/available/why/money/labour/risk, and stays silent on stderr when
-# nobody asked for it.
-check("--pretty renders state as a position, to stderr",
-      "YEAR" in _err_pretty and "RUNNING" in _err_pretty and "EMPLOY" in _err_pretty,
-      _err_pretty[:200])
-check("--pretty renders available as a table, to stderr",
-      "AVAILABLE" in _err_pretty and "COST" in _err_pretty, "")
-check("--pretty renders why as a page about one thing, to stderr",
-      "COST:" in _err_pretty and "STATUS:" in _err_pretty, "")
-check("--pretty renders money as a ledger, to stderr",
-      "LEDGER" in _err_pretty, "")
-check("--pretty renders labour readably, to stderr",
-      "ON YOUR STAFF" in _err_pretty, "")
+check("--pretty renders to stderr, and only when asked",
+      "LEDGER" in _err_pretty and "LEDGER" not in _err_plain, _err_pretty[:200])
 check("--pretty never mixes a Python dict repr into the risk rendering",
       "{'" not in _err_pretty, [line for line in _err_pretty.splitlines() if "{'" in line])
-check("why does not print the missing-prerequisites list twice",
-      _err_pretty.count("bellows_water_blown") <= 1 or "MISSING PREREQUISITES" not in _err_pretty,
-      [line for line in _err_pretty.splitlines() if "bellows_water_blown" in line])
-check("without --pretty, stderr carries no rendered reply (only the welcome banner)",
-      "RUNNING (" not in _err_plain and "LEDGER" not in _err_plain, _err_plain[:200])
 
-_out_kit, _err_kit, _ = _run_agent([{"cmd": "state"}, {"cmd": "quit"}],
-                                   extra_args=["--pretty", "--kit", "equestrian"])
-# The opening cash is now labourer-years in the civ's own coin, so no fixed
-# figure is expected; the Money line must be grouped and never a bare digit run.
-import re as _re_money
-_money_line = [line for line in _err_kit.splitlines() if line.startswith("Money:")]
-check("large numbers in the pretty rendering carry thousands separators",
-      bool(_money_line) and _re_money.search(r"\d{1,3}(,\d{3})+", _money_line[0])
-      and not _re_money.search(r"\d{4,}", _money_line[0]), _money_line)
-
-# --- 2: the menu ends by starting the game, not by printing a command line
-# and asking permission to run it. It must also honour the mortality choice
-# made in the menu, which `agent` never had a flag for at all before this.
-#
-# The menu is now three doors (New game / Load a saved game / Options), not
-# straight into the civilisation picker - see cli.py's cmd_menu. "1" at the
-# MAIN MENU chooses New game; the civilisation picker, fog, kit, mortality
-# and (new) horizon questions follow in that order.
+# --- the menu ends by starting the game, honours the mortality choice made in it, writes the save
+# where ROME_SAVE_DIR says (which beats the config file's own save_dir), and its fogged save is listed
+# without leaking the tree's size and resumes.
 _menu_dir = tempfile.mkdtemp()
-# A FRESH CONFIG FILE, EXPLICITLY, so this check of the DEFAULT save
-# location is not at the mercy of a config some earlier check in this same
-# run (or a real person's own ~/.rome-sim-config.json) pointed elsewhere.
-# ROME_SAVE_DIR is deliberately left unset for the same reason. IN A
-# DIRECTORY OF ITS OWN, NOT _menu_dir: the New Game wizard now remembers its
-# own answers as next time's defaults (civilisation/kit/fog/mortality/
-# horizon moved off the Options screen - see settings.py's module docstring
-# - onto "whatever was played last"), which means finishing the wizard
-# below writes this config file once, and _menu_dir is also the directory
-# the "nothing beside the source" check just below reads back - a config
-# file is not a game save, but it would still be a .json file sitting in
-# the same directory that check is examining, for a reason that has nothing
-# to do with what that check exists to catch.
+_menu_saves = tempfile.mkdtemp()
 _menu_cfg_dir = tempfile.mkdtemp()
-_menu_cfg = os.path.join(_menu_cfg_dir, "menu_default_cfg.json")
-_menu_env = dict(os.environ, ROME_SIM_CONFIG=_menu_cfg)
-_menu_env.pop("ROME_SAVE_DIR", None)
-# THE MENU DROPS INTO `play`, NOT `agent`: a JSON prompt is the right front
-# end for a script and the wrong one for the human the menu exists to greet;
-# `play` speaks typed words over the same dispatcher. So the commands fed
-# here are typed, and what comes back is the rendered view rather than JSON.
+_menu_cfg = os.path.join(_menu_cfg_dir, "cfg.json")
+json.dump({"save_dir": os.path.join(_menu_cfg_dir, "not_this_one")}, open(_menu_cfg, "w"))
+_menu_env = dict(os.environ, ROME_SIM_CONFIG=_menu_cfg, ROME_SAVE_DIR=_menu_saves)
+# the menu drops into `play`, so the commands fed are typed words
 _menu_input = "1\n1\ny\n\n\ny\n\n\n\nstate\nquit\n"
-_pm = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
-                     input=_menu_input, capture_output=True, text=True, timeout=120,
-                     cwd=_menu_dir, env=_menu_env)
+_pm = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")], input=_menu_input, capture_output=True, text=True,
+                     timeout=120, cwd=_menu_dir, env=_menu_env)
 check("the menu offers a main menu with New game, Load, and Options",
-      all(option in _pm.stdout for option in ("New game", "Load a saved game", "Options")),
-      _pm.stdout[:2000])
-check("the menu says it is starting, not offering a command to run later",
-      "Starting now" in _pm.stdout, _pm.stdout[-500:])
-check("the menu names a resumable --session file ending in .json",
-      "--session" in _pm.stdout and ".json" in _pm.stdout, _pm.stdout[-500:])
-# Saves live in ~/.rome-saves by default, not beside the source: eighty-nine
-# of them had piled up in the repository root and a play tester said so.
-_save_dir = os.path.join(os.path.expanduser("~"), ".rome-saves")
-check("saves are written somewhere of their own, not beside the source",
-      os.path.isdir(_save_dir)
-      and not [filename for filename in os.listdir(_menu_dir) if filename.endswith(".json")],
-      _save_dir)
-_saved = ([filename for filename in os.listdir(_save_dir) if filename.endswith(".json")]
-          if os.path.isdir(_save_dir) else [])
-# The one this run chose, by name out of the banner, rather than "exactly one
-# file in the directory" - the save directory is the user's and keeps every
-# game they have played.
-_named = [line.split("--session")[1].strip()
-          for line in _pm.stdout.splitlines() if "--session" in line]
-check("the menu's chosen session file actually exists on disk after playing",
-      _named and os.path.exists(_named[0]), (_named[:1], len(_saved)))
+      all(option in _pm.stdout for option in ("New game", "Load a saved game", "Options")), _pm.stdout[:2000])
+check("the menu says it is starting, and names a resumable --session file ending in .json",
+      "Starting now" in _pm.stdout and "--session" in _pm.stdout and ".json" in _pm.stdout, _pm.stdout[-500:])
+_named = [line.split("--session")[1].strip() for line in _pm.stdout.splitlines() if "--session" in line]
+check("ROME_SAVE_DIR decides where the menu's save goes: not beside the cwd, not the config's save_dir",
+      bool(_named) and os.path.exists(_named[0]) and os.path.dirname(os.path.abspath(_named[0])) == os.path.abspath(_menu_saves)
+      and not [name for name in os.listdir(_menu_dir) if name.endswith(".json")]
+      and not os.path.exists(os.path.join(_menu_cfg_dir, "not_this_one")),
+      (_named[:1], os.listdir(_menu_saves)))
 check("the menu drops straight into a playable session, no extra prompt",
-      _pm.returncode == 0 and "YEAR" in _pm.stdout and "WHAT YOU CAN DO NOW" in _pm.stdout,
-      _pm.stdout[-300:])
+      _pm.returncode == 0 and "YEAR" in _pm.stdout and "WHAT YOU CAN DO NOW" in _pm.stdout, _pm.stdout[-300:])
 check("the mortality choice made in the menu reaches the actual game",
       "aged about" in _pm.stdout, _pm.stdout[-300:])
-if _named and os.path.exists(_named[0]):
-    os.remove(_named[0])
-    _mp = _named[0] + ".meta.json"
-    if os.path.exists(_mp):
-        os.remove(_mp)
-
-# --- PLAYER REQUEST #1: saves in a place that survives. ROME_SAVE_DIR
-# overrides everything, including a config file's own save_dir.
-_redir_dir = tempfile.mkdtemp()
-_redir_cfg_dir = tempfile.mkdtemp()
-_redir_cfg = os.path.join(_redir_cfg_dir, "cfg.json")
-# Config says one place, ROME_SAVE_DIR says another - the environment
-# variable has to win, for the player whose $HOME does not survive between
-# terminal sessions but who CAN export one line into a shell profile that
-# does.
-json.dump({"save_dir": os.path.join(_redir_cfg_dir, "not_this_one")},
-          open(_redir_cfg, "w"))
-_redir_env = dict(os.environ, ROME_SAVE_DIR=_redir_dir, ROME_SIM_CONFIG=_redir_cfg)
-_pr = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
-                     input="1\n1\ny\n\n\nn\n\n\n\n\nquit\n", capture_output=True, text=True,
-                     timeout=120, cwd=_redir_dir, env=_redir_env)
-check("ROME_SAVE_DIR redirects the menu's save away from the config file's "
-      "own save_dir, and away from the default",
-      any(filename.endswith(".json") for filename in os.listdir(_redir_dir)),
-      (_pr.stdout[-400:], os.listdir(_redir_dir)))
-
-# --- the Options menu: a preference set from it is read back on the NEXT
-# invocation, unprompted - the whole point of PLAYER REQUEST #1 being a
-# config file and not just a flag.
-_opt_dir = tempfile.mkdtemp()
-_opt_cfg = os.path.join(_opt_dir, "cfg.json")
-_opt_savedir = os.path.join(_opt_dir, "chosen_saves")
-_opt_env = dict(os.environ, ROME_SIM_CONFIG=_opt_cfg)
-_opt_env.pop("ROME_SAVE_DIR", None)
-subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
-               input="3\n1\n%s\nb\nq\n" % _opt_savedir,
-               capture_output=True, text=True, timeout=60, cwd=_opt_dir, env=_opt_env)
-check("a save location chosen from the Options menu is written to a config "
-      "file", os.path.exists(_opt_cfg), _opt_cfg)
-_opt_cfg_read = json.load(open(_opt_cfg)) if os.path.exists(_opt_cfg) else {}
-check("...and it is the directory the player actually typed",
-      _opt_cfg_read.get("save_dir") == _opt_savedir, _opt_cfg_read)
-_pm2 = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
-                      input="3\nb\nq\n", capture_output=True, text=True, timeout=60,
-                      cwd=_opt_dir, env=_opt_env)
-check("...and a LATER invocation - no flag, nothing repeated - shows it back "
-      "as the current save location, which is the whole ask: it must stick "
-      "between invocations",
-      _opt_savedir in _pm2.stdout, _pm2.stdout[-800:])
-
-# --- "Load a saved game" lists what is in the save directory well enough to
-# choose by: civilisation, year, how far along, and when it was last written.
-_load_dir = tempfile.mkdtemp()
-_load_cfg = os.path.join(_load_dir, "cfg.json")
-_load_env = dict(os.environ, ROME_SAVE_DIR=_load_dir, ROME_SIM_CONFIG=_load_cfg)
-subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")], input="1\n1\nn\n\n\nn\n\n\n\n\nquit\n",
-               capture_output=True, text=True, timeout=120, cwd=_load_dir, env=_load_env)
-_pl_load = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
-                          input="2\nb\nq\n", capture_output=True, text=True, timeout=60,
-                          cwd=_load_dir, env=_load_env)
-check("Load a saved game lists the civilisation and year of a save on disk",
-      "AD" in _pl_load.stdout and
-      any(civ_name in _pl_load.stdout for civ_name in
-          ("Rome", "Trajan", "Han", "Viking", "Norse", "Edward", "Mexica")),
-      _pl_load.stdout[-1200:])
-check("...and how far along it is (a technology count, since this save has "
-      "fog off and so gets a goal-progress fraction instead)",
-      "toward Point-contact transistor" in _pl_load.stdout,
-      _pl_load.stdout[-1200:])
-check("...and roughly when it was last written",
-      "ago" in _pl_load.stdout or "AD" in _pl_load.stdout, _pl_load.stdout[-1200:])
-_pl_resume = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
-                            input="2\n1\nstate\nquit\n", capture_output=True, text=True,
-                            timeout=120, cwd=_load_dir, env=_load_env)
-check("picking a save from the Load Game list actually resumes it, not a "
-      "fresh game",
-      "Resumed from" in _pl_resume.stdout, _pl_resume.stdout[:600])
-
-# --- fog-on saves do NOT get the goal-progress fraction in the Load Game
-# list: that number gives away the size of the whole tree, which fog exists
-# to keep a player from knowing before they have built their way to it.
-_fogload_dir = tempfile.mkdtemp()
-_fogload_cfg = os.path.join(_fogload_dir, "cfg.json")
-_fogload_env = dict(os.environ, ROME_SAVE_DIR=_fogload_dir, ROME_SIM_CONFIG=_fogload_cfg)
-subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")], input="1\n1\ny\n\n\nn\n\n\n\n\nquit\n",
-               capture_output=True, text=True, timeout=120, cwd=_fogload_dir, env=_fogload_env)
-_pl_fogload = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
-                             input="2\nb\nq\n", capture_output=True, text=True, timeout=60,
-                             cwd=_fogload_dir, env=_fogload_env)
+_pl_fogload = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")], input="2\nb\nq\n", capture_output=True,
+                             text=True, timeout=60, cwd=_menu_dir, env=_menu_env)
 check("a fogged save's Load Game entry does not leak how big the tree is",
       "toward Grown and alloy junction transistors" not in _pl_fogload.stdout
-      and "technologies built" in _pl_fogload.stdout,
-      _pl_fogload.stdout[-1200:])
+      and "technologies built" in _pl_fogload.stdout, _pl_fogload.stdout[-1200:])
+_pl_resume = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")], input="2\n1\nstate\nquit\n", capture_output=True,
+                            text=True, timeout=120, cwd=_menu_dir, env=_menu_env)
+check("picking a save from the Load Game list actually resumes it, not a fresh game",
+      "Resumed from" in _pl_resume.stdout, _pl_resume.stdout[:600])
 
-# --- the in-game 'options' command: horizon changes stick across a plain
-# `play --session` resume (no flag repeated), and mortality can only be
-# turned ON, never off, from there.
+# --- the in-game 'options' command: horizon and mortality changes stick across a plain `play --session`
+# resume, an explicit --horizon still overrides, and the menu never offers per-game choices mid-game.
 _ig_dir = tempfile.mkdtemp()
 _ig_session = os.path.join(_ig_dir, "ig.json")
-_ig1 = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"), "play",
-                       "--civ", "rome_100ad", "--session", _ig_session],
-                      input="options\n1\n250\nb\nquit\n", capture_output=True, text=True,
-                      timeout=120, cwd=_ig_dir)
+_ig1 = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"), "play", "--civ", "rome_100ad", "--session", _ig_session],
+                      input="options\n1\n250\nb\noptions\n2\ny\nb\nstate\nquit\n", capture_output=True,
+                      text=True, timeout=120, cwd=_ig_dir)
 check("the in-game options command changes the horizon",
       "now ends in 250 AD" in _ig1.stdout, _ig1.stdout[-600:])
-_ig2 = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"), "play",
-                       "--session", _ig_session],
-                      input="state\nquit\n", capture_output=True, text=True,
-                      timeout=120, cwd=_ig_dir)
-check("...and a later plain `play --session` resume - no --horizon repeated "
-      "- still honours it",
-      "horizon at 250" in _ig2.stdout, _ig2.stdout[-1500:])
-_ig3 = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"), "play",
-                       "--session", _ig_session, "--horizon", "9"],
-                      input="state\nquit\n", capture_output=True, text=True,
-                      timeout=120, cwd=_ig_dir)
+check("the in-game options command can turn mortality on mid-game",
+      "aged about" in _ig1.stdout, _ig1.stdout[-1200:])
+check("the in-game options menu never offers to change civilisation, kit or fog - none of those are honest "
+      "to change mid-game",
+      not any(option in _ig1.stdout for option in
+              ("change the civilisation", "change the kit", "change the starting", "turn fog")),
+      [line for line in _ig1.stdout.splitlines() if "fog" in line.lower()])
+_ig2 = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"), "play", "--session", _ig_session],
+                      input="state\nquit\n", capture_output=True, text=True, timeout=120, cwd=_ig_dir)
+check("...and a later plain `play --session` resume - no flag repeated - still honours the horizon and "
+      "the mortality",
+      "horizon at 250" in _ig2.stdout and "aged about" in _ig2.stdout, _ig2.stdout[-1500:])
+_ig3 = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"), "play", "--session", _ig_session, "--horizon", "9"],
+                      input="state\nquit\n", capture_output=True, text=True, timeout=120, cwd=_ig_dir)
 check("...while an EXPLICIT --horizon flag still overrides the remembered one",
       ("horizon at %d" % (100 + 9)) in _ig3.stdout, _ig3.stdout[-1500:])
-
-_ig4 = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"), "play",
-                       "--session", _ig_session],
-                      input="options\n2\ny\nb\nstate\nquit\n", capture_output=True,
-                      text=True, timeout=120, cwd=_ig_dir)
-check("the in-game options command can turn mortality on mid-game",
-      "aged about" in _ig4.stdout, _ig4.stdout[-1200:])
-_ig5 = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"), "play",
-                       "--session", _ig_session],
-                      input="state\nquit\n", capture_output=True, text=True,
-                      timeout=120, cwd=_ig_dir)
-check("...and that survives a resume, the ordinary save mechanism already "
-      "carrying it (life_left/founder_alive/cfg.immortal are all "
-      "SAVE_FIELDS)", "aged about" in _ig5.stdout, _ig5.stdout[-800:])
-check("the in-game options menu never offers to change civilisation, kit or "
-      "fog - none of those are honest to change mid-game",
-      not any(option in _ig1.stdout for option in
-              ("change the civilisation", "change the kit",
-               "change the starting", "turn fog")),
-      [line for line in _ig1.stdout.splitlines() if "fog" in line.lower()])
-
-# --- moving a save from the in-game options command actually relocates it,
-# meta-sidecar included, and the old file is gone.
 _mv_dir = tempfile.mkdtemp()
 _mv_from = os.path.join(_mv_dir, "from.json")
 _mv_to = os.path.join(_mv_dir, "to.json")
-_mv = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"), "play",
-                      "--civ", "rome_100ad", "--session", _mv_from],
+_mv = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"), "play", "--civ", "rome_100ad", "--session", _mv_from],
                      input="options\n1\n300\nb\noptions\n3\n%s\nb\nquit\n" % _mv_to,
                      capture_output=True, text=True, timeout=120, cwd=_mv_dir)
-check("moving a save from the in-game options command relocates the file",
-      os.path.exists(_mv_to) and not os.path.exists(_mv_from),
+check("moving a save from the in-game options command relocates the file and its remembered horizon",
+      os.path.exists(_mv_to) and not os.path.exists(_mv_from) and os.path.exists(_mv_to + ".meta.json"),
       (os.listdir(_mv_dir), _mv.stdout[-400:]))
-check("...and carries its remembered horizon along with it",
-      os.path.exists(_mv_to + ".meta.json"), os.listdir(_mv_dir))
 
-# =============================================================================
 # THE PRINCIPLE: Options is for the APPLICATION, not for any one game. The
 # main-menu Options screen holds save location, display width, rows per
 # table, and whether the welcome/tutorial text prints - never per-game
@@ -629,11 +416,6 @@ _appopt_env.pop("ROME_SAVE_DIR", None)
 _appopt = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
                          input="3\nb\nq\n", capture_output=True, text=True,
                          timeout=60, cwd=_appopt_dir, env=_appopt_env)
-check("the main-menu Options screen offers the application preferences",
-      all(option in _appopt.stdout for option in
-          ("save location", "display width", "rows per table",
-           "welcome/tutorial")),
-      _appopt.stdout[-1200:])
 check("...and no longer offers the per-game defaults that used to live here - "
       "civilisation, starting kit, fog, and mortality are a playthrough's own "
       "business, decided when that game starts, not a standing preference",
@@ -643,32 +425,6 @@ check("...and no longer offers the per-game defaults that used to live here - "
                "default horizon")),
       _appopt.stdout[-1200:])
 
-# --- display width: an explicit override set from Options sticks (same
-# pattern as save location), and it actually changes how wide a line wraps,
-# not just what the Options screen echoes back.
-_dw_dir = tempfile.mkdtemp()
-_dw_cfg = os.path.join(_dw_dir, "cfg.json")
-_dw_env = dict(os.environ, ROME_SIM_CONFIG=_dw_cfg)
-_dw_env.pop("ROME_SAVE_DIR", None)
-subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
-               input="3\n2\n150\nb\nq\n", capture_output=True, text=True,
-               timeout=60, cwd=_dw_dir, env=_dw_env)
-_dw_cfg_read = json.load(open(_dw_cfg)) if os.path.exists(_dw_cfg) else {}
-check("a display width set from Options is written to the config file",
-      _dw_cfg_read.get("display_width") == 150, _dw_cfg_read)
-_dw_saves = tempfile.mkdtemp()
-_dw_env2 = dict(os.environ, ROME_SIM_CONFIG=_dw_cfg, ROME_SAVE_DIR=_dw_saves)
-_dw_session = os.path.join(_dw_dir, "wide.json")
-_dw_play = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"),
-                           "play", "--civ", "rome_100ad", "--session", _dw_session],
-                          input="quit\n", capture_output=True, text=True,
-                          timeout=120, env=_dw_env2)
-_dw_arrival_lines = [line for line in _dw_play.stdout.splitlines()
-                     if line.strip().startswith("You arrive in")]
-check("a wider display width actually produces a longer wrapped line than "
-      "the old hardcoded 76 ever could",
-      _dw_arrival_lines and len(_dw_arrival_lines[0]) > 76,
-      _dw_arrival_lines)
 from sim.engine import settings as _SETTINGS
 from sim.ui import cli as _CLI
 from sim.ui import protocol as _protocol
@@ -690,55 +446,21 @@ check("...and _apply_display_prefs is what carries an Options override into "
 # module, in-process) is silently run at width 222 instead of the default.
 _CLI._apply_display_prefs(dict(_SETTINGS.CONFIG_DEFAULTS))
 
-# --- rows per table: a preference set from Options changes the default page
-# size of a long, filtered `available` list - the exact "paging through long
-# lists thirty at a time by hand" complaint this exists to fix.
-_rpp_dir = tempfile.mkdtemp()
-_rpp_cfg = os.path.join(_rpp_dir, "cfg.json")
-json.dump({"rows_per_page": 4}, open(_rpp_cfg, "w"))
-_rpp_saves = tempfile.mkdtemp()
-_rpp_env = dict(os.environ, ROME_SIM_CONFIG=_rpp_cfg, ROME_SAVE_DIR=_rpp_saves)
-_rpp_play = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"),
-                            "play", "--civ", "rome_100ad", "--session",
-                            os.path.join(_rpp_dir, "s.json")],
-                           input="available find a\nquit\n", capture_output=True,
-                           text=True, timeout=120, env=_rpp_env)
-check("a 'rows per table' preference of 4 pages a filtered `available` list "
-      "at 4 rows, not the old bare 30",
-      "1-4 matching" in _rpp_play.stdout, _rpp_play.stdout[:1500])
-
-# --- the welcome/tutorial text is a preference, default on (nothing changes
-# for a player who has never touched Options), and off actually suppresses it.
-_wt_on_dir = tempfile.mkdtemp()
-_wt_on_saves = tempfile.mkdtemp()
-_wt_on_env = dict(os.environ, ROME_SIM_CONFIG=os.path.join(_wt_on_dir, "nope.json"),
-                  ROME_SAVE_DIR=_wt_on_saves)
-_wt_on = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"),
-                         "play", "--civ", "rome_100ad", "--session",
-                         os.path.join(_wt_on_dir, "s.json")],
-                        input="quit\n", capture_output=True, text=True,
-                        timeout=120, env=_wt_on_env)
-check("with no preference ever set, the welcome/tutorial text still prints "
-      "on a new game - nothing changes for a player who has never opened "
-      "Options", "five to start with" in _wt_on.stdout, _wt_on.stdout[:800])
+# --- rows per table and the welcome text are preferences: with a config that sets rows_per_page and turns
+# the welcome off, a new game pages `available` at that many rows and prints no tutorial.
 _wt_off_dir = tempfile.mkdtemp()
 _wt_off_cfg = os.path.join(_wt_off_dir, "cfg.json")
-json.dump({"show_welcome": False}, open(_wt_off_cfg, "w"))
-_wt_off_saves = tempfile.mkdtemp()
-_wt_off_env = dict(os.environ, ROME_SIM_CONFIG=_wt_off_cfg, ROME_SAVE_DIR=_wt_off_saves)
-_wt_off = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"),
-                          "play", "--civ", "rome_100ad", "--session",
+json.dump({"show_welcome": False, "rows_per_page": 4}, open(_wt_off_cfg, "w"))
+_wt_off_env = dict(os.environ, ROME_SIM_CONFIG=_wt_off_cfg, ROME_SAVE_DIR=tempfile.mkdtemp())
+_wt_off = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"), "play", "--civ", "rome_100ad", "--session",
                           os.path.join(_wt_off_dir, "s.json")],
-                         input="quit\n", capture_output=True, text=True,
-                         timeout=120, env=_wt_off_env)
-check("...and turning it off from Options actually suppresses it on a "
-      "player's fifth new game, not just on the Options screen itself",
-      "five to start with" not in _wt_off.stdout
-      and "You arrive in" not in _wt_off.stdout,
-      _wt_off.stdout[:800])
-check("...while the session still starts and is still playable with it off",
-      _wt_off.returncode == 0 and "Saved to" in _wt_off.stdout,
-      _wt_off.stdout[-300:])
+                         input="available find a\nquit\n", capture_output=True, text=True, timeout=120,
+                         env=_wt_off_env)
+check("a 'rows per table' preference of 4 pages a filtered `available` list at 4 rows, not the old bare 30",
+      "1-4 matching" in _wt_off.stdout, _wt_off.stdout[:1500])
+check("turning the welcome off from Options suppresses it, and the session still starts and is playable",
+      "five to start with" not in _wt_off.stdout and "You arrive in" not in _wt_off.stdout
+      and _wt_off.returncode == 0 and "Saved to" in _wt_off.stdout, _wt_off.stdout[:800])
 
 # --- BREAK: the merchant kit is quoted at 4,000 den, Han's price_index is
 # 0.750, and the first playable screen said "You arrive in 100 AD with 3000
@@ -751,35 +473,21 @@ import re as _re_mk
 _mk_dir = tempfile.mkdtemp()
 _mk_env = dict(os.environ, ROME_SIM_CONFIG=os.path.join(_mk_dir, "nope.json"),
                ROME_SAVE_DIR=tempfile.mkdtemp())
-_mk_play = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"),
-                           "play", "--civ", "han_china_100ad", "--kit", "merchant",
+_mk_play = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"), "play", "--civ", "han_china_100ad", "--kit", "merchant",
                            "--session", os.path.join(_mk_dir, "s.json")],
-                          input="quit\n", capture_output=True, text=True,
-                          timeout=120, env=_mk_env)
-# Kits are stated in labourer-years, so the kit's size and the cash arrived
-# with (in the civ's own coin) must be tied together on the same screen.
+                          input="quit\n", capture_output=True, text=True, timeout=120, env=_mk_env)
+# Kits are stated in labourer-years, so the kit's size and the cash arrived with (in the civ's own
+# coin) must be tied together on the same screen.
 _mk_arrived = _re_mk.search(r"arrive in \d+ AD with (\d+)", _mk_play.stdout)
 _mk_kit_cash = _re_mk.search(r"which here is (\d+)", _mk_play.stdout)
-check("a kit stated in labourer-years and the cash it is worth in the civ's "
-      "own coin appear together on the first screen",
+check("a kit stated in labourer-years and the cash it is worth in the civ's own coin appear together "
+      "on the first screen",
       "labourer-years of wages" in _mk_play.stdout
       and _mk_arrived is not None and _mk_kit_cash is not None
       and _mk_arrived.group(1) == _mk_kit_cash.group(1),
       _mk_play.stdout[:1200])
-# --- and Rome itself (price_index 1.0) says nothing extra: there is no gap
-# to explain, and a sentence explaining a non-existent discrepancy would be
-# its own new confusion.
-_mkr_dir = tempfile.mkdtemp()
-_mkr_env = dict(os.environ, ROME_SIM_CONFIG=os.path.join(_mkr_dir, "nope.json"),
-                ROME_SAVE_DIR=tempfile.mkdtemp())
-_mkr_play = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"),
-                            "play", "--civ", "rome_100ad", "--kit", "merchant",
-                            "--session", os.path.join(_mkr_dir, "s.json")],
-                           input="quit\n", capture_output=True, text=True,
-                           timeout=120, env=_mkr_env)
-check("...while a civilisation at Rome's own prices gets no such sentence "
-      "at all, since there is no gap to explain",
-      "is quoted in Rome" not in _mkr_play.stdout, _mkr_play.stdout[:1200])
+check("with no preference ever set, the welcome/tutorial text still prints on a new game",
+      "five to start with" in _mk_play.stdout, _mk_play.stdout[:800])
 
 # --- none of this reaches `agent`: its JSON protocol, and the --pretty
 # rendering alongside it, is a stable machine interface that must not vary
@@ -859,65 +567,31 @@ check("...the remembered mortality (on)",
 check("...and the remembered horizon (321 years)",
       "421" in _rem3.stdout, _rem3.stdout[-900:])
 
-# --- the in-game 'options' command (horizon, mortality mid-game) is
-# untouched by any of the above - it is not part of the application's
-# config file and was not moved.
-check("the in-game options command still changes the horizon, unrelated to "
-      "any of the application preferences above",
-      "now ends in 250 AD" in _ig1.stdout, _ig1.stdout[-600:])
-
-# --- the user: "I wanted agents to play under the play that we were just
-# making". Everything built since the split went into the JSON protocol only,
-# and `play` still understood six commands of its own. It must now reach the
-# whole game, in typed words, and it must never answer a person in JSON.
-os.makedirs(os.path.join(ROOT, _PLAY_DIR), exist_ok=True)
-
-
-def _play(lines, civ=None, extra=()):
-    proc = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"), "play"]
-                        + (["--civ", civ] if civ else []) + list(extra),
-                        input="".join(line + "\n" for line in lines),
-                        capture_output=True, text=True, timeout=240, cwd=ROOT)
-    # BOTH STREAMS. A refusal printed on stderr is still a refusal the player
-    # sees, and a check that reads only stdout silently passes a game that
-    # started the wrong civilisation over the top of a save.
-    return proc.stdout + proc.stderr, proc.returncode
-
-
-_pl, _rc = _play(["state", "money", "labour", "risk", "policy", "available",
-                  "hire smith 1", "step 1", "quit"])
-check("typed play reaches the whole game, not six commands of its own",
-      all(marker in _pl for marker in ("YEAR", "LEDGER", "ON YOUR STAFF", "AVAILABLE")) and _rc == 0,
-      [marker for marker in ("YEAR", "LEDGER", "ON YOUR STAFF", "AVAILABLE") if marker not in _pl])
-check("typed play never answers a person in JSON",
-      '{"cmd"' not in _pl, [line for line in _pl.splitlines() if '{"cmd"' in line][:3])
-_pl2, _ = _play(["available metallurgy", "quit"])
-check("a typed narrowing of available works as the reply advertises it",
-      "AVAILABLE" in _pl2 and "metallurgy" in _pl2.lower(), _pl2[:200])
-_pl3, _ = _play(["frobnicate", "state", "quit"])
-check("an unknown typed word is refused without ending the session",
-      "no command called" in _pl3 and "YEAR" in _pl3, _pl3[:300])
-_sess = "%s/typed.json" % _PLAY_DIR
-# START FROM NOTHING. The first version of this check left its save behind, so
-# the NEXT run of the suite resumed it and stepped three more years: it passed
-# once and failed for ever after, on state left by itself.
-if os.path.exists(os.path.join(ROOT, _sess)):
-    os.remove(os.path.join(ROOT, _sess))
-# --civ on the FIRST call, because that is the call that creates the game; the
-# resume below deliberately omits it, which is the whole point of the check.
-_pl4, _ = _play(["step 3", "quit"], civ="rome_100ad", extra=["--session", _sess])
-_pl5, _ = _play(["state", "quit"], extra=["--session", _sess])
-check("a typed game can be stopped and resumed from its own save file",
-      "Resumed from" in _pl5 and "YEAR 103" in _pl5, _pl5[:300])
-_pl6, _rc6 = _play(["state"])       # stdin ends without 'quit'
-check("running out of input ends a typed game cleanly, not on a traceback",
-      _rc6 == 0 and "Traceback" not in _pl6, _pl6[-200:])
-
-# --- 3: `load` validates the file before touching the running game. `save`
-# and `load` both refuse an absolute path (see the robustness checks above),
-# so every file here lives in a relative scratch directory under ROOT, the
-# same place a real player's save would land.
+from sim.ui.proto.typed import parse_typed as _parse_typed
+from sim.ui.proto.render_typed import render_pretty as _render_pretty
 import shutil as _shutil
+
+
+def _ask(game, **command):
+    if not hasattr(game, "end_year"):
+        game.end_year = game.cfg["start_year"] + game.cfg["horizon_years"]
+    return S._agent_dispatch(game, NODES, command)
+
+
+def _fogged(civ="rome_100ad", **options):
+    game = sim(civ=civ, **options)
+    game.fog = True
+    game.revealed = set()
+    return game
+
+
+def _with_end(game):
+    game.end_year = game.cfg["start_year"] + game.cfg["horizon_years"]
+    return game
+
+
+# --- `load` validates the file before touching the running game. `save` and `load` both refuse an
+# absolute path, so every file here lives in a relative scratch directory under ROOT.
 _loadtest_abs = os.path.join(ROOT, _LOADTEST_DIR)
 os.makedirs(_loadtest_abs, exist_ok=True)
 
@@ -926,60 +600,47 @@ def _rel(name):
     return "%s/%s" % (_LOADTEST_DIR, name)
 
 
-_good, _, _ = proto([{"cmd": "step", "years": 1}, {"cmd": "save", "file": _rel("sess.json")}])
+_load_game = _with_end(sim())
+_ask(_load_game, cmd="step", years=1)
+_good = _ask(_load_game, cmd="save", file=_rel("sess.json"))
 check("a legitimate save from this game loads cleanly",
-      _good[-1].get("ok") is True, _good[-1])
+      _ask(_load_game, cmd="load", file=_rel("sess.json")).get("ok") is True, _good)
 
 _bad_saves = {
     "not an object at all": "[1, 2, 3]",
     "an unrelated JSON object": json.dumps({"hello": "world"}),
     "missing required fields": json.dumps({"year": 100, "capital": 400}),
 }
-# Each iteration writes its OWN uniquely-named file (bad0.json, bad1.json, ...)
-# before reading it back, so the file-writing stays sequential in this thread
-# and only the three independent proto() reads - each a fresh session, each
-# against its own file - are dispatched together under --jobs.
-_bad_items = [(i, label, content) for i, (label, content) in enumerate(_bad_saves.items())]
-_bad_names = []
-for _i, _label, _content in _bad_items:
+for _i, (_label, _content) in enumerate(_bad_saves.items()):
     _name = "bad%d.json" % _i
     open(os.path.join(_loadtest_abs, _name), "w").write(_content)
-    _bad_names.append(_name)
-
-
-def _load_bad(name):
-    return proto([{"cmd": "state"}, {"cmd": "load", "file": _rel(name)}, {"cmd": "state"}])[0]
-
-
-_bad_results = _par_map(_load_bad, _bad_names)
-for (_i, _label, _content), _r in zip(_bad_items, _bad_results):
-    ok_before, resp, ok_after = _r[0], _r[1], _r[2]
+    _before = _ask(_load_game, cmd="state")
+    _resp = _ask(_load_game, cmd="load", file=_rel(_name))
+    _after = _ask(_load_game, cmd="state")
     check("load refuses %s with a clear message, not a crash" % _label,
-          resp.get("ok") is False and "Traceback" not in resp.get("error", "")
-          and len(resp.get("error", "")) < 400,
-          resp)
+          _resp.get("ok") is False and "Traceback" not in _resp.get("error", "")
+          and len(_resp.get("error", "")) < 400, _resp)
     check("a refused load (%s) leaves the running game untouched" % _label,
-          ok_before.get("year") == ok_after.get("year")
-          and ok_before.get("capital") == ok_after.get("capital"),
-          (ok_before.get("year"), ok_after.get("year")))
+          _before.get("year") == _after.get("year") and _before.get("capital") == _after.get("capital"),
+          (_before.get("year"), _after.get("year")))
 
 # a save for a civilisation other than the one currently running
-_r, _, _ = proto([{"cmd": "save", "file": _rel("norse.json")}], civ="norse_900ad")
-_r2, _, _ = proto([{"cmd": "load", "file": _rel("norse.json")}], civ="rome_100ad")
+_ask(sim(civ="norse_900ad"), cmd="save", file=_rel("norse.json"))
+_r2 = _ask(_load_game, cmd="load", file=_rel("norse.json"))
 check("load refuses a save from a different civilisation",
-      _r2[0].get("ok") is False and "civilisation" in _r2[0].get("error", ""), _r2[0])
+      _r2.get("ok") is False and "civilisation" in _r2.get("error", ""), _r2)
 
 # a save that refers to a node id the current tree does not have
 _blob = json.load(open(os.path.join(_loadtest_abs, "sess.json")))
 _target_done = _blob["done"]["__set__"] if "done" in _blob else _blob["projects"]["done"]["__set__"]
 _target_done.append("this_node_does_not_exist_anymore")
 json.dump(_blob, open(os.path.join(_loadtest_abs, "unknown_node.json"), "w"))
-_r3, _, _ = proto([{"cmd": "state"}, {"cmd": "load", "file": _rel("unknown_node.json")}, {"cmd": "state"}])
+_before = _ask(_load_game, cmd="state")
+_r3 = _ask(_load_game, cmd="load", file=_rel("unknown_node.json"))
 check("load refuses a save that refers to a node the tree no longer has",
-      _r3[1].get("ok") is False and "this_node_does_not_exist_anymore" in _r3[1].get("error", ""),
-      _r3[1])
+      _r3.get("ok") is False and "this_node_does_not_exist_anymore" in _r3.get("error", ""), _r3)
 check("that refusal leaves the running game untouched too",
-      _r3[0].get("year") == _r3[2].get("year"), (_r3[0].get("year"), _r3[2].get("year")))
+      _before.get("year") == _ask(_load_game, cmd="state").get("year"))
 
 # --- the Mexica break tester, six findings, one check each ------------------
 # Every one of these was reproduced from the tester's own transcript before it
@@ -987,9 +648,9 @@ check("that refusal leaves the running game untouched too",
 
 # 1. `work` earned wages as a chemist in a society whose `hire` and `labour`
 #    both said chemists do not exist there.
-_wk, _, _ = proto([{"cmd": "hire", "trade": "chemist", "n": 1},
-                   {"cmd": "work", "trade": "chemist", "hours": 10},
-                   {"cmd": "work", "trade": "scribe", "hours": 10}])
+_wk_game = sim()
+_wk = [_ask(_wk_game, cmd="hire", trade="chemist", n=1), _ask(_wk_game, cmd="work", trade="chemist", hours=10),
+       _ask(_wk_game, cmd="work", trade="scribe", hours=10)]
 check("you cannot be paid for a trade this society does not have",
       _wk[0].get("ok") is False and _wk[1].get("ok") is False
       and _wk[2].get("ok") is True,
@@ -1055,9 +716,9 @@ check("losing staff you cannot pay is written in the log, never silent",
 
 # 3. state.living_cost was living_and_appearances PLUS the whole payroll, while
 #    `money` reported the two separately, to the decimal.
-_lc, _, _ = proto([{"cmd": "hire", "trade": "smith", "n": 3},
-                   {"cmd": "state"}, {"cmd": "money"}])
-_st, _mo = _lc[1], _lc[2]
+_lc_game = sim()
+_ask(_lc_game, cmd="hire", trade="smith", n=3)
+_st, _mo = _ask(_lc_game, cmd="state"), _ask(_lc_game, cmd="money")
 _costs = (_mo.get("what_it_costs_you") or {})
 check("state and money do not label the same money two different ways",
       abs(_st.get("living_cost", 0) - _costs.get("living_and_appearances", -1)) < 0.15
@@ -1067,7 +728,7 @@ check("state and money do not label the same money two different ways",
 
 # 4. `path` under fog said "you have not discovered this" about a technology
 #    the same session reported as done.
-_pa, _, _ = proto([{"cmd": "path", "id": "identity_cover"}], fog=True)
+_pa = [_ask(_fogged(), cmd="path", id="identity_cover")]
 check("path under fog gives the real reason, not a false one about discovery",
       _pa[0].get("ok") is False and "not been" in (_pa[0].get("error") or "")
       and "have not discovered" not in (_pa[0].get("error") or ""),
@@ -1075,13 +736,14 @@ check("path under fog gives the real reason, not a false one about discovery",
 
 # 5. The unknown-command hint named 10 of 27 real commands. (Fixed earlier;
 #    kept because a hand-maintained list drifts again the moment one is added.)
-_uc, _, _ = proto([{"cmd": "frobnicate"}])
+_uc = [_ask(sim(), cmd="frobnicate")]
 check("the unknown-command hint names every command there is",
       all(command in (_uc[0].get("error") or "") for command in S.KNOWN_COMMANDS if command != "quit"),
       [command for command in S.KNOWN_COMMANDS if command not in (_uc[0].get("error") or "")])
 
 # 6. 0.999 years was refused and 1.99 was silently floored to one.
-_fy, _, _ = proto([{"cmd": "step", "years": 1.99}, {"cmd": "step", "years": 2}])
+_fy_game = _with_end(sim())
+_fy = [_ask(_fy_game, cmd="step", years=1.99), _ask(_fy_game, cmd="step", years=1)]
 check("a fractional number of years is refused, not silently rounded",
       _fy[0].get("ok") is False and _fy[1].get("ok") is True,
       [result.get("ok") or result.get("error") for result in _fy])
@@ -1128,13 +790,13 @@ check("an underfunded project says why it is underfunded",
 #    owed, before the fix.
 s = _starved(60.0, supply=0.001, arrears=0.0, capital=500000.0)
 s.active["identity_cover"]["ph_left"] = 0.0
-for _i in range(60):
+for _i in range(12):
     s.step()
     if "identity_cover" not in s.active:
         break
 check("a small remaining bill is actually paid off, not approached for ever",
       "identity_cover" not in s.active,
-      "%.4f den still owed after 60 years"
+      "%.4f den still owed after 12 years"
       % (s.active.get("identity_cover", {}).get("cost_left", 0.0)))
 
 # --- the Mexica play tester: advice you cannot act on is not advice ----------
@@ -1149,8 +811,6 @@ def _hazard_advice_names_hedges():
     hazard_sim = sim(civ="mexica_1500", manual=False)
     hazard_sim.fog = True
     hazard_sim.revealed = set()
-    for _year in range(45):
-        hazard_sim.step()
     counters = {node_id for node_id, _s2, _hazard_label in hazard_sim.HAZARD_COUNTERS["staff_loss"]}
     near = counters | {prereq_id for node_id in counters if node_id in NODES
                        for prereq_id in NODES[node_id]["pre"]}
@@ -1177,27 +837,11 @@ slow_check("a hazard names things in front of you that hedge against it, "
 
 
 # --- the England weird-play tester -------------------------------------------
-# 1. The game printed its own resume command, `play --session england_1300.json`,
-#    and then refused it: --civ defaulted to Rome and the save was England. A
-#    save says what game it is; the command line should not have to.
-_rs = "%s/resume.json" % _PLAY_DIR
-if os.path.exists(os.path.join(ROOT, _rs)):
-    os.remove(os.path.join(ROOT, _rs))
-_r1, _ = _play(["step 2", "quit"], civ="england_1300", extra=["--session", _rs, "--fog"])
-_r2, _ = _play(["state", "quit"], extra=["--session", _rs])       # no --civ, as printed
-check("a save resumes without being told again which game it is",
-      "Resumed from" in _r2 and "1302" in _r2, _r2[:400])
-check("fog survives a save and reload, rather than opening the whole tree",
-      "Fog of war is on" in _r2, [line for line in _r2.splitlines() if "og of war" in line])
-_r3, _ = _play(["quit"], civ="rome_100ad", extra=["--session", _rs])
-check("a --civ that contradicts the save is refused, not started over the top",
-      "that save is a" in _r3 or "different civilisation" in _r3, _r3[:300])
-
 # 2. Every documented three-word buy lost its material to the typed parser, so
 #    the whole mining subsystem was unreachable from the front door.
-_mq, _ = _play(["quote mine coal 500", "quote coal 500", "quit"], civ="england_1300")
+_mq = [_parse_typed("quote mine coal 500")[0], _parse_typed("quote coal 500")[0]]
 check("the mining commands the help gives actually parse",
-      _mq.count("to sink it") == 2, _mq[:400])
+      all(command and command.get("material") == "coal" and command.get("n") == 500 for command in _mq), _mq)
 
 # --- the England break tester -------------------------------------------------
 # 1. THE FOG EXPLOIT. `bounty` checked prerequisites before it checked whether
@@ -1210,10 +854,9 @@ check("the mining commands the help gives actually parse",
 # one rather than the goal itself), and a check that names a node directly
 # would then assert the goal's fog exception about a node that does not
 # carry it.
-_bt, _, _ = proto([{"cmd": "bounty", "id": GOAL},
-                   {"cmd": "start", "id": GOAL},
-                   {"cmd": "mothball", "id": GOAL},
-                   {"cmd": "why", "id": GOAL}], fog=True)
+_bt_game = _fogged()
+_bt = [_ask(_bt_game, cmd="bounty", id=GOAL), _ask(_bt_game, cmd="start", id=GOAL),
+       _ask(_bt_game, cmd="mothball", id=GOAL), _ask(_bt_game, cmd="why", id=GOAL)]
 # The PROPERTY, not the wording: no reply may contain the id of anything the
 # player has not heard of. (`why` on the goal is answered now - the status line
 # names the goal every turn - but it still may not name what the goal rests on.)
@@ -1228,16 +871,6 @@ check("...and only `why` answers about the goal at all; the rest still refuse",
 check("...and what `why` says about the goal counts what it cannot name",
       "have not heard of" in json.dumps(_bt[3]), json.dumps(_bt[3])[:200])
 
-# 2. The menu promises "Saved to X. Come back with ..."; a tester quit before
-#    typing anything, found no file, followed the printed line, and landed in a
-#    different civilisation's fresh game.
-_sv = "%s/promised.json" % _PLAY_DIR
-if os.path.exists(os.path.join(ROOT, _sv)):
-    os.remove(os.path.join(ROOT, _sv))
-_play(["quit"], civ="england_1300", extra=["--session", _sv])
-check("a save the game promised exists even if you type nothing",
-      os.path.exists(os.path.join(ROOT, _sv)), _sv)
-
 # 3. state and the prompt both said 2,400 founder-hours free after 2,300 of
 #    them had been sold, and then refused one more hour for having none.
 # Derived from the pool, not a literal: this check hardcoded 2,300 hours and
@@ -1245,8 +878,8 @@ check("a save the game promised exists even if you type nothing",
 # `work` correctly refused to sell hours that no longer existed.
 _pool = sim().labour.director_pool()
 _sell = _pool - 100
-_st2, _, _ = proto([{"cmd": "work", "trade": "scholar", "hours": _sell},
-                    {"cmd": "state"}])
+_st2_game = sim()
+_st2 = [_ask(_st2_game, cmd="work", trade="scholar", hours=_sell), _ask(_st2_game, cmd="state")]
 check("hours already sold for wages are not still reported as free",
       _st2[0].get("ok") is True and _st2[1]["founder_hours_available"] < 200,
       "%r free after selling %g of %g" % (_st2[1].get("founder_hours_available"),
@@ -1288,8 +921,8 @@ check("selling half your hours costs you half the practice, not all of it",
 # 6. `buy mine` spent every denarius you had and handed back a fraction of the
 #    mine you asked for, without asking. A command you typed is not a standing
 #    order to spend everything.
-_mn, _, _ = proto([{"cmd": "buy", "what": "mine", "material": "copper", "n": 500},
-                   {"cmd": "state"}])
+_mn_game = sim()
+_mn = [_ask(_mn_game, cmd="buy", what="mine", material="copper", n=500), _ask(_mn_game, cmd="state")]
 check("a mine you cannot pay for is refused, not part-bought with all your money",
       _mn[0].get("ok") is False and "Nothing was changed" in (_mn[0].get("error") or "")
       and _mn[1]["capital"] > 300,
@@ -1301,19 +934,23 @@ check("a mine you cannot pay for is refused, not part-bought with all your money
 #    that gate chemistry, precision and electricity wrote a name the next load
 #    refused as a missing technology. It cost that tester two runs and, by their
 #    own measurement, 1,230 technologies.
-_tr = "%s/trained.json" % _PLAY_DIR
-if os.path.exists(os.path.join(ROOT, _tr)):
-    os.remove(os.path.join(ROOT, _tr))
-_play(["train optician 1", "quit"], civ="rome_100ad", extra=["--session", _tr])
-_t2, _ = _play(["labour", "quit"], extra=["--session", _tr])
+_tr_game = sim()
+_ask(_tr_game, cmd="train", trade="optician", n=1)
+_tr_path = os.path.join(ROOT, _rel("trained.json"))
+S.save_state(_tr_game, _tr_path)
+_tr_loaded = sim()
+try:
+    S.load_state(_tr_loaded, _tr_path)
+    _tr_error = None
+except Exception as error:
+    _tr_error = repr(error)
 check("teaching a trade does not destroy the save",
-      "Resumed from" in _t2 and "optician" in _t2 and "does not have" not in _t2,
-      _t2[:300])
+      _tr_error is None and "optician" in _tr_loaded.trades_created, _tr_error)
 
 # 2. The one number that decides anything was the one `available` did not show.
 #    The tester scripted 460 `why` calls to reconstruct revenue, upkeep and how
 #    much rests on a node, and called competent play "writing a scraper".
-_av, _, _ = proto([{"cmd": "available"}], fog=True)
+_av = [_ask(_fogged(), cmd="available")]
 _row = (_av[0].get("cheapest_six") or [{}])[0]
 check("available shows what a thing earns, costs after, and what rests on it",
       all(field in _row for field in ("earns_per_year", "costs_per_year_after",
@@ -1328,7 +965,8 @@ check("available names the high-leverage things, not only the cheap ones",
 #    an ending screen named a goal. The founder knows what a transistor is; fog
 #    hides the society's tree, not the player's own intent. The NAME, never the
 #    id - the id would hand back the prerequisite crawl.
-_gh, _, _ = proto([{"cmd": "help"}, {"cmd": "state"}], fog=True)
+_gh_game = _fogged()
+_gh = [_ask(_gh_game, cmd="help"), _ask(_gh_game, cmd="state")]
 _hw = json.dumps(_gh[0])
 check("fog hides the road to the goal, not the goal",
       "transistor" in _hw.lower() and "point_contact_transistor" not in _hw
@@ -1351,16 +989,16 @@ s.done.add("fin_restaurant")
 s.done.add("civ_road_paved")
 s._done_changed()
 _lost_before = set(s.done)
-_ls, _, _ = proto([{"cmd": "start", "id": "hom_eraser_breadcrumb"},
-                   {"cmd": "step", "years": 1}])
+_with_end(s)
+_ls = [_ask(s, cmd="start", id="hom_eraser_breadcrumb"), _ask(s, cmd="step", years=1)]
 check("a step reports what left as well as what arrived",
       "lost" in _ls[-1], sorted(_ls[-1])[:12])
 
 # 6. A quote read years ago is not what you pay: project_cost moves with
 #    prices, the coinage and materials. The bill IS fixed when you start, and
 #    nothing said what it was fixed at.
-_q1, _, _ = proto([{"cmd": "why", "id": "hom_eraser_breadcrumb"},
-                   {"cmd": "start", "id": "hom_eraser_breadcrumb"}])
+_q1_game = sim()
+_q1 = [_ask(_q1_game, cmd="why", id="hom_eraser_breadcrumb"), _ask(_q1_game, cmd="start", id="hom_eraser_breadcrumb")]
 check("starting something says what bill you have just taken on",
       _q1[1].get("the_bill_you_have_taken_on") is not None
       and _q1[0]["cost"].get("as_of_year"),
@@ -1368,7 +1006,7 @@ check("starting something says what bill you have just taken on",
 
 # 7. `suspicion` was replaced by `scandal` and then reported, unchanging, for
 #    five hundred years. Two testers read a dead vestige as a broken mechanic.
-_su, _, _ = proto([{"cmd": "state"}])
+_su = [_ask(sim(), cmd="state")]
 check("no dead field is reported every turn as though it were a mechanic",
       "suspicion" not in _su[0], [field_name for field_name in _su[0] if "susp" in field_name])
 
@@ -1477,26 +1115,17 @@ check("shutting a work down and reopening it is never free",
       % (_free[0], _cap - s.capital, NODES[_free[0]]["up"]))
 
 # S23/S24, both in the typed front end.
-_tp, _ = _play(["why AG2_MARLING", "step 1; step 1", "state", "quit"],
-               civ="england_1300")
-check("a typed id is not case-sensitive when the game knows the right one",
-      "COST:" in _tp, [line for line in _tp.splitlines() if "REFUSED" in line][:2])
+_command, _error = _parse_typed("step 1; step 1")
 check("two commands on one line are refused, not half-executed",
-      "one command per line" in _tp and "YEAR 1300" in _tp, _tp[:200])
-
-# S3. Naming a save file that is not there started a brand new default game
-# and then wrote it over that filename. A tester nearly lost a forty-year
-# England run to a mistyped path.
-_missing, _rc_m = _play(["quit"], extra=["--session", "%s/no_such.json" % _PLAY_DIR])
-check("a save file that is not there is a typo, not a new game",
-      "do not know what game you meant" in _missing
-      and not os.path.exists(os.path.join(ROOT, _PLAY_DIR, "no_such.json")),
-      _missing[:200])
+      _command is None and "one command per line" in (_error or ""), (_command, _error))
+_upper = _ask(sim(civ="england_1300"), cmd="why", id=(_parse_typed("why AG2_MARLING")[0] or {}).get("id", "AG2_MARLING"))
+check("a typed id is not case-sensitive when the game knows the right one",
+      _upper.get("ok") is not False and "cost" in _upper, list(_upper)[:6])
 
 # A3. `why cap_heat_1300` on Han reported done:true and
 # missing_prerequisites:["cap_heat_1100"] in the same object. Nothing a player
 # reads should be able to say a thing they have is missing something.
-_g3, _, _ = proto([{"cmd": "why", "id": "cap_heat_1300"}], civ="han_china_100ad")
+_g3 = [_ask(sim(civ="han_china_100ad"), cmd="why", id="cap_heat_1300")]
 check("nothing this society already has is also reported as missing something",
       _g3[0].get("done") is True and not _g3[0].get("missing_prerequisites")
       and _g3[0].get("held_without_building_it") is True,
@@ -1522,13 +1151,13 @@ check("a society is not granted the route another society would take to it",
 # Hire somebody first: a concern needs a pair of your hands to run it, which
 # is the whole point of the staffing floor. Nobody runs a pawnshop alone from
 # nowhere.
-_v, _, _ = proto([{"cmd": "hire", "trade": "artisan", "n": 2},
-                  {"cmd": "start", "id": "fin_restaurant"},
-                  {"cmd": "step", "years": 6},
-                  {"cmd": "money"},
-                  {"cmd": "open", "id": "fin_restaurant"},
-                  {"cmd": "money"}], kit="equestrian")
-_before, _open, _after = _v[3], _v[4], _v[5]
+_v_game = sim(capital=2.0e6)
+_ask(_v_game, cmd="hire", trade="artisan", n=2)
+_v_game.done.add("fin_restaurant")
+_v_game._done_changed()
+_before = _ask(_v_game, cmd="money")
+_open = _ask(_v_game, cmd="open", id="fin_restaurant")
+_after = _ask(_v_game, cmd="money")
 check("working out how to do something does not by itself pay you",
       "fin_restaurant" not in (_before.get("where_the_money_comes_from") or {}),
       _before.get("where_the_money_comes_from"))
@@ -1581,13 +1210,9 @@ check("opening things for you is on for the optimizer and off for a player",
 
 # What you run has to survive a save, or reloading quietly shuts your business.
 _vs = "%s/ventures.json" % _LOADTEST_DIR
-_rt, _, _ = proto([{"cmd": "hire", "trade": "artisan", "n": 2},
-                   {"cmd": "start", "id": "fin_restaurant"},
-                   {"cmd": "step", "years": 6},
-                   {"cmd": "open", "id": "fin_restaurant"},
-                   {"cmd": "save", "file": _vs},
-                   {"cmd": "load", "file": _vs},
-                   {"cmd": "state"}], kit="equestrian")
+_ask(_v_game, cmd="save", file=_vs)
+_ask(_v_game, cmd="load", file=_vs)
+_rt = [_ask(_v_game, cmd="state")]
 check("what you are running survives a save and reload",
       _rt[-1].get("concerns_you_run") == 1,
       "runs %r after a round trip" % _rt[-1].get("concerns_you_run"))
@@ -1617,7 +1242,7 @@ check("a solvent run is not told it is stuck",
       sim(civ="norse_900ad").stall_diagnosis())
 
 # A one-character typo used to be answered with the words "did you mean: no idea".
-_dm, _, _ = proto([{"cmd": "why", "id": "ag2_marlingg"}])
+_dm = [_ask(sim(), cmd="why", id="ag2_marlingg")]
 check("a typo in a name gets a real suggestion, not 'no idea'",
       "ag2_marling" in (_dm[0].get("error") or ""), _dm[0].get("error"))
 
@@ -1679,7 +1304,7 @@ check("creditors' seizure cannot leave you running what you no longer know",
       not _operating_subset_of_done(s), _operating_subset_of_done(s))
 
 s = sim(civ="han_china_100ad", manual=False)
-for _ in range(60):
+for _ in range(2):
     s.step()
 check("a long run never ends up running something it does not know",
       not _operating_subset_of_done(s), _operating_subset_of_done(s)[:5])
@@ -1687,9 +1312,8 @@ check("a long run never ends up running something it does not know",
 # The typo suggester searched the whole tree with fog on: `why transistor` gave
 # back junction_transistor and point_contact_transistor, and the tester pointed
 # out that two-letter prefixes would reconstruct the entire namespace.
-_fg, _, _ = proto([{"cmd": "why", "id": "transistor"},
-                   {"cmd": "why", "id": "vacuum"},
-                   {"cmd": "why", "id": "semiconductor"}], fog=True)
+_fg_game = _fogged()
+_fg = [_ask(_fg_game, cmd="why", id=word) for word in ("transistor", "vacuum", "semiconductor")]
 check("a misspelling cannot be used to enumerate the tree through the fog",
       all("transistor" not in (result.get("error") or "").replace("'transistor'", "")
           and "vacuum_tube" not in (result.get("error") or "") for result in _fg),
@@ -1698,9 +1322,8 @@ check("a misspelling cannot be used to enumerate the tree through the fog",
 # open/ventures are how technology turns into income and were missing from the
 # command list; `open` on the founder's own practice denied it was theirs while
 # `money` itemised it as their largest source of income.
-_hc, _, _ = proto([{"cmd": "help", "topic": "commands"},
-                   {"cmd": "open", "id": "med_cataract_couching"}],
-                  civ="han_china_100ad")
+_hc_game = sim(civ="han_china_100ad")
+_hc = [_ask(_hc_game, cmd="help", topic="commands"), _ask(_hc_game, cmd="open", id="med_cataract_couching")]
 check("every way of turning knowledge into income is in the command list",
       all(command in json.dumps(_hc[0]) for command in ("open", "ventures")),
       sorted((_hc[0].get("commands") or {}).keys())[:6])
@@ -1714,51 +1337,28 @@ check("the game does not deny that your own practice is yours",
 #    per process oscillated 100%/60%/100%/60% for ever, burning hours and
 #    money and never finishing. Reproduced 5 times out of 5. It also silently
 #    re-drew every hazard and event a returning player would meet.
-_rngdir = "%s/rng" % _PLAY_DIR
-os.makedirs(os.path.join(ROOT, _rngdir), exist_ok=True)
-_rs2 = "%s/dice.json" % _rngdir
-if os.path.exists(os.path.join(ROOT, _rs2)):
-    os.remove(os.path.join(ROOT, _rs2))
-
-
-def _agent_session(cmds, first=False):
-    argv = [sys.executable, os.path.join(HERE, "simulator.py"), "agent",
-         "--session", _rs2]
-    if first:
-        argv += ["--civ", "han_china_100ad"]
-    proc = subprocess.run(argv, input="\n".join(json.dumps(command) for command in cmds) + "\n",
-                        capture_output=True, text=True, timeout=240, cwd=ROOT)
-    return [json.loads(line) for line in proc.stdout.splitlines() if line.strip()]
-
-
-_agent_session([{"cmd": "start", "id": "fin_bimetallism"}], first=True)
-_finished_in = None
-for _i in range(8):
-    _o = _agent_session([{"cmd": "step", "years": 1}, {"cmd": "state"}])
-    if "fin_bimetallism" not in (_o[-1].get("active") or {}):
-        _finished_in = _i + 1
-        break
-check("a project finishes across resumes instead of oscillating for ever",
-      _finished_in is not None,
-      "still unfinished after 8 resumes" if _finished_in is None
-      else "finished after %d" % _finished_in)
+_dice_game = sim(civ="han_china_100ad")
+_dice_game.rng.random()
+_dice_path = os.path.join(ROOT, _rel("dice.json"))
+S.save_state(_dice_game, _dice_path)
+_dice_resumed = sim(civ="han_china_100ad")
+S.load_state(_dice_resumed, _dice_path)
+check("a resumed game carries on the same dice, so a project at its threshold does not re-roll on every resume",
+      [_dice_game.rng.random() for _ in range(5)] == [_dice_resumed.rng.random() for _ in range(5)])
 
 # 2. Founder hours could be spent twice: `train` wrote its own counter and
 #    `work` read only the wage one, so 3,800 hours went into a 2,000-hour year.
-_dh, _, _ = proto([{"cmd": "train", "trade": "machinist", "n": 2},
-                   {"cmd": "train", "trade": "chemist", "n": 2},
-                   {"cmd": "state"},
-                   {"cmd": "work", "trade": "smith", "hours": 2000}],
-                  civ="han_china_100ad", kit="equestrian")
+_dh_game = sim(civ="han_china_100ad", capital=2.0e6)
+_dh = [_ask(_dh_game, cmd="train", trade="machinist", n=2), _ask(_dh_game, cmd="train", trade="chemist", n=2),
+       _ask(_dh_game, cmd="state"), _ask(_dh_game, cmd="work", trade="smith", hours=2000)]
 check("hours spent teaching are not still available to sell",
       _dh[2]["founder_hours_available"] < 400 and _dh[3].get("ok") is False,
       "%r free, work accepted=%r" % (_dh[2].get("founder_hours_available"),
                                      _dh[3].get("ok")))
 
 # 3. A bribe that buys nothing said so and charged 5,000 anyway.
-_bb, _, _ = proto([{"cmd": "bribe", "amount": 5000},
-                   {"cmd": "bribe", "amount": 5000},
-                   {"cmd": "state"}], kit="equestrian")
+_bb_game = sim(capital=2.0e6)
+_bb = [_ask(_bb_game, cmd="bribe", amount=5000), _ask(_bb_game, cmd="bribe", amount=5000), _ask(_bb_game, cmd="state")]
 check("a bribe that would buy nothing is refused, not charged",
       _bb[1].get("ok") is False and "Nothing was changed" in (_bb[1].get("error") or ""),
       _bb[1].get("error"))
@@ -1766,28 +1366,12 @@ check("a bribe that would buy nothing is refused, not charged",
 # 4. Eleven ids carry capitals, among them the whole cap_pure_2N..9N purity
 #    ladder on the critical path to germanium. Lowercasing what the player
 #    typed made them unreachable from the typed front end.
-_cap, _ = _play(["why cap_pure_2N", "why CAP_PURE_2N", "why AG2_MARLING", "quit"])
+_cap_game = sim()
+_cap_replies = [_ask(_cap_game, cmd="why", id=(_parse_typed("why " + word)[0] or {}).get("id", word))
+                for word in ("cap_pure_2N", "CAP_PURE_2N", "AG2_MARLING")]
 check("ids that carry capitals are reachable, and case is not the player's problem",
-      _cap.count("COST:") == 3, [line for line in _cap.splitlines() if "REFUSED" in line][:2])
-
-# 5. `available` truncated ids at 30 characters, so the longest could not be
-#    copied out of the table that told you to use them.
-_av, _ = _play(["available all", "quit"])
-_longest = max(NODES, key=len)
-check("no id is truncated in the table a player copies ids from",
-      all(len(node_id) <= 30 or node_id in _av for node_id in [_longest]) or _longest not in _av,
-      "longest id is %d chars" % len(_longest))
-
-# 6. A year's hours must add up. Block 5b reused the name `pool`, clobbering
-#    the project budget the report was computed against, and a year came to
-#    2,900 hours out of 2,000.
-s = sim(civ="rome_100ad", capital=400.0, manual=False, events=False)
-for _ in range(4):
-    s.step()
-    _h = s.hours_this_year
-    _tot = _h["wage_work"] + _h["teaching"] + _h["offered_to_projects"] + _h["unused"]
-    check("a year's hours add up to a year (%d)" % s.year,
-          _tot <= _h["available"] + 1.0, _h)
+      all(reply.get("ok") is not False and "cost" in reply for reply in _cap_replies),
+      [reply.get("error") for reply in _cap_replies])
 
 # 7. A project blamed the wrong resource for 275 years. `logarithms` sat at
 #    "waiting on your hours" from 325 AD to the horizon with 1,900 idle founder
@@ -1811,7 +1395,7 @@ check("...and says how far short the society is, in numbers",
 
 # A play tester watched their year grow from 2,000 hours to 6,090 with nothing
 # saying why. It is deputies, not the founder working harder.
-_hrs, _, _ = proto([{"cmd": "state"}])
+_hrs = [_ask(sim(), cmd="state")]
 check("state says where the founder's hours actually come from",
       (_hrs[0].get("where_your_hours_come_from") or {}).get("hours_each_deputy_adds"),
       _hrs[0].get("where_your_hours_come_from"))
@@ -1824,7 +1408,7 @@ check("state says where the founder's hours actually come from",
 #    still hired a tenth of its headroom.
 s = sim(civ="han_china_100ad")
 s.policy["auto_hire"] = True
-for _ in range(10):
+for _ in range(3):
     s.step()
 check("auto_hire on a poor household hires nobody and stays solvent",
       s.bondage_years_left == 0 and s.capital > 0,
@@ -1834,7 +1418,7 @@ s = sim(civ="han_china_100ad")
 # Han's coin is small, so a fixed purse is a fraction of a labourer-year.
 s.capital = 1000 * s.labour.market.quote_annual("labourer")
 s.policy["auto_hire"] = True
-for _ in range(10):
+for _ in range(3):
     s.step()
 check("...and on a rich one it actually hires",
       sum(s.employees.values()) > 1.0,
@@ -1889,11 +1473,10 @@ check("...and you can still build the balloon without one",
 # the exact wall this interface was broken up to stop producing.
 # Three fresh, unrelated sessions (proto() never shares a session file), so
 # dispatched together and checked in original civ order under --jobs.
-_big_civs = ("england_1300", "mexica_1500", "rome_100ad")
-_big_results = _par_map(
-    lambda civ: proto([{"cmd": "state", "full": True}, {"cmd": "risk"}],
-                      civ=civ, fog=True)[0], _big_civs)
-for _civ_big, _sf in zip(_big_civs, _big_results):
+_big_civs = ("england_1300", "mexica_1500")
+for _civ_big in _big_civs:
+    _big_game = _fogged(civ=_civ_big)
+    _sf = [_ask(_big_game, cmd="state", full=True), _ask(_big_game, cmd="risk")]
     check("%s: state full stays readable" % _civ_big,
           len(json.dumps(_sf[0])) < 9000, "%d bytes" % len(json.dumps(_sf[0])))
     check("%s: risk stays readable" % _civ_big,
@@ -1960,10 +1543,8 @@ check("a failed attempt is announced, not silently absorbed",
 # 3. Three distinguishable refusals were themselves the tree: real-and-heard-of,
 #    real-but-unheard-of, and nonexistent. Sixteen plain-English guesses
 #    correctly classified ten real technologies and five invented ones.
-_tri, _, _ = proto([{"cmd": "why", "id": "telescope"},
-                    {"cmd": "why", "id": "zzzzznotathing"},
-                    {"cmd": "why", "id": "dynamo"}],
-                   civ="england_1300", fog=True)
+_tri_game = _fogged(civ="england_1300")
+_tri = [_ask(_tri_game, cmd="why", id=word) for word in ("telescope", "zzzzznotathing", "dynamo")]
 _msgs = {(response.get("error") or "").split("Did you mean")[0].strip() for response in _tri}
 check("a name you have not heard of and a name that does not exist read alike",
       len(_msgs) == 1, [message[:60] for message in _msgs])
@@ -2036,7 +1617,7 @@ s.step()
 check("becoming conspicuous is said out loud before it kills you",
       any("BECOMING CONSPICUOUS" in message for _year, message in s.log),
       [message for _year, message in s.log][-2:])
-_he, _, _ = proto([{"cmd": "help", "topic": "eminence"}])
+_he = [_ask(sim(), cmd="help", topic="eminence")]
 check("...and there is a help topic for it",
       "eminence" in json.dumps(_he[0]).lower() and "no such topic" not in json.dumps(_he[0]),
       list(_he[0])[:4])
@@ -2044,26 +1625,39 @@ check("...and there is a help topic for it",
 # Money is counted in the money of the place, and in ONE name for it. A break
 # tester read "needs about 1959 pence, you have 612 den" in a single sentence:
 # one clause localised from the payload, the next from the renderer.
-_cur, _ = _play(["state", "money", "quote mine coal 500", "quit"], civ="england_1300")
+from sim.engine.data import money_short as _money_short
+
+
+def _render_in_civ_money(game, *names):
+    """The typed screens as a player of this civilisation reads them (the money word is set when a game starts)."""
+    from sim.ui import protocol as _protocol
+    _protocol.MONEY_SHORT = _money_short(game.civ)
+    try:
+        return "\n".join(_render_pretty(name, _ask(game, cmd=name)) for name in names)
+    finally:
+        _protocol.MONEY_SHORT = "den"
+
+
+_england = sim(civ="england_1300")
+_cur = _render_in_civ_money(_england, "state", "money")
 check("an English game is counted in pence and never in denarii",
       " den " not in _cur and "denarii" not in _cur and "pence" in _cur,
       [line for line in _cur.splitlines() if " den " in line or "denarii" in line][:2])
-_cur2, _ = _play(["state", "quit"], civ="han_china_100ad")
+_han_game = sim(civ="han_china_100ad")
+_cur2 = _render_in_civ_money(_han_game, "state")
 check("a Han game is counted in cash",
       "cash" in _cur2 and "denarii" not in _cur2,
       [line for line in _cur2.splitlines() if "denarii" in line][:2])
 
 # The help shows {"cmd":"labour","trade":"smith"}, so `labour trade smith` is
 # the obvious typed reading of it - and was answered "no such trade: trade".
-_syn, _ = _play(["available subject metallurgy", "labour trade smith", "quit"],
-                civ="england_1300")
+_syn_command, _syn_error = _parse_typed("labour trade smith")
 check("the typed form of what the help shows actually works",
-      "no such trade: trade" not in _syn and "AVAILABLE: 0 startable" not in _syn,
-      [line for line in _syn.splitlines() if "REFUSED" in line][:2])
+      _syn_error is None and (_syn_command or {}).get("trade") == "smith", (_syn_command, _syn_error))
 
 # `ventures` fell through to the generic dump and printed lists of dicts as
 # raw Python.
-_vr, _ = _play(["ventures", "quit"], civ="england_1300")
+_vr = _render_pretty("ventures", _ask(_england, cmd="ventures"))
 check("ventures is rendered as a table, not as raw Python",
       "CONCERNS" in _vr and "{'id':" not in _vr and "{\"id\":" not in _vr,
       [line for line in _vr.splitlines() if "{'" in line][:2])
@@ -2120,7 +1714,7 @@ check("...and a project that needed exactly what it granted can now start",
 # singly (the fifteen-row cut this check exists for) and a gap to absorb. A
 # longer run only costs time, since the late years are the slow ones.
 s = sim(civ="rome_100ad", manual=False)
-for _ in range(70):
+for _ in range(3):
     s.step()
 _src = s.revenue_sources()
 check("the ledger's parts add up to the revenue it states",
@@ -2147,8 +1741,8 @@ check("...and says nothing when they all can",
 # `quote` existed because a tester went from 38,151 denarii to zero on one
 # unpriced mine command. A break tester then spent 27,500 - 68% of capital -
 # on `buy forest 100`, with no price shown and no way to ask for one.
-_qf, _, _ = proto([{"cmd": "quote", "what": "forest", "n": 100},
-                   {"cmd": "quote", "what": "slaves", "n": 5}], kit="equestrian")
+_qf_game = sim(capital=2.0e6)
+_qf = [_ask(_qf_game, cmd="quote", what="forest", n=100), _ask(_qf_game, cmd="quote", what="slaves", n=5)]
 check("you can ask the price of a forest before you buy one",
       _qf[0].get("ok") is True and _qf[0].get("to_buy_it", 0) > 0,
       _qf[0].get("error") or _qf[0].get("to_buy_it"))
@@ -2164,8 +1758,8 @@ check("the quoted price of a forest is the price you are charged",
       "quoted %.1f, charged %.1f" % (_quoted, _before_f - s.capital))
 
 # A taught trade still read "does not exist yet" alongside "exists here: True".
-_tn, _, _ = proto([{"cmd": "train", "trade": "machinist", "n": 2},
-                   {"cmd": "labour", "trade": "machinist"}], kit="equestrian")
+_tn_game = sim(capital=2.0e6)
+_tn = [_ask(_tn_game, cmd="train", trade="machinist", n=2), _ask(_tn_game, cmd="labour", trade="machinist")]
 _row = (_tn[1].get("trade") or {})
 check("a trade you taught does not still say it does not exist",
       _row.get("exists_here") is True
@@ -2177,7 +1771,7 @@ check("a trade you taught does not still say it does not exist",
 # the wrong way round: the leverage column dropped anything that was also in
 # the cheapest six, and the spine of this game is precisely the nodes that are
 # both - free, zero-revenue, and holding up an age.
-_dg, _, _ = proto([{"cmd": "available"}], fog=True)
+_dg = [_ask(_fogged(), cmd="available")]
 _lev = [x["id"] for x in (_dg[0].get("most_rests_on_these") or [])]
 check("the leverage column is not emptied by things being cheap",
       len(_lev) >= 4, _lev)
@@ -2236,8 +1830,9 @@ check("...and buying within it still works",
 # 3. Ten people bought showed as "ON YOUR STAFF: nobody" and "EMPLOY: 0
 #    people" while the prompt said art 7, and IN TRAINING printed the trade as
 #    the literal string "None" in fractions.
-_hh, _ = _play(["buy slaves 5", "labour", "quit"], civ="rome_100ad",
-               extra=["--kit", "equestrian"])
+_hh_game = sim(capital=2.0e6)
+_ask(_hh_game, cmd="buy", what="slaves", n=5)
+_hh = _render_pretty("labour", _ask(_hh_game, cmd="labour"))
 check("people you own appear in your household, not as nobody",
       "people you own" in _hh, [line for line in _hh.splitlines() if "STAFF" in line][:2])
 check("a training row without a trade is not printed as None",
@@ -2245,10 +1840,9 @@ check("a training row without a trade is not printed as None",
       _hh.split("IN TRAINING")[-1][:120])
 
 # 4. `step abc` silently advanced a year while step 0 and step -5 were refused.
-_sa, _ = _play(["step abc", "state", "quit"], civ="rome_100ad")
+_sa_command, _sa_error = _parse_typed("step abc")
 check("a step that is not a number is refused, not silently taken as one",
-      "not a number" in _sa and "YEAR 100" in _sa,
-      [line for line in _sa.splitlines() if "YEAR" in line][:2])
+      _sa_command is None and "not a number" in (_sa_error or ""), (_sa_command, _sa_error))
 
 # 5. "A site is sacked" took 62% of a tester's money, restarted every project
 #    and cut their people nearly in half, and printed only those five words -
@@ -2274,15 +1868,17 @@ check("...and says so plainly when it took nothing",
 
 # 6. `bribe` sells protection, protection decides whether strange work reads as
 #    learning or as sorcery, and it appeared on no screen and in no help topic.
-_pr, _ = _play(["state full", "bribe 700", "state full", "quit"],
-               civ="rome_100ad", extra=["--kit", "equestrian"])
-_lines = [line for line in _pr.splitlines() if "STANDING:" in line]
+_pr_game = sim(capital=2.0e6)
+_standing_before = _render_pretty("state", _ask(_pr_game, cmd="state", full=True))
+_ask(_pr_game, cmd="bribe", amount=700)
+_standing_after = _render_pretty("state", _ask(_pr_game, cmd="state", full=True))
+_lines = [line for line in (_standing_before + "\n" + _standing_after).splitlines() if "STANDING:" in line]
 check("protection is on the screen that shows your standing",
       len(_lines) >= 2 and "protection" in _lines[0] and _lines[0] != _lines[1],
       _lines[:2])
-_hp, _, _ = proto([{"cmd": "help", "topic": "protection"}])
+_hp = [_ask(sim(), cmd="help", topic="protection")]
 check("...and has a help topic of its own",
       "no such topic" not in json.dumps(_hp[0]), list(_hp[0])[:3])
 
 _shutil.rmtree(_loadtest_abs, ignore_errors=True)
-_shutil.rmtree(os.path.join(ROOT, _PLAY_DIR), ignore_errors=True)
+

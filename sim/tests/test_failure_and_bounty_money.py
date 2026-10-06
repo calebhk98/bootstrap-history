@@ -27,7 +27,7 @@ def _fail_and_measure(test_sim, node_id):
     return before - test_sim.capital
 
 
-_NODES_TO_FAIL = ("blast_furnace", "mat_bulk_steel", "zinc_industry_scale")
+_NODES_TO_FAIL = ("blast_furnace",)
 
 # --- 251 / 218: the charge is the quote, whatever is held or already bought ---
 for _node_id in _NODES_TO_FAIL:

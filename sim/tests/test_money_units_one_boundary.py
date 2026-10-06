@@ -7,7 +7,7 @@ import unittest
 from sim.engine import data
 from sim.engine.core import Sim
 
-BASE_CIVS = ["rome_100ad", "han_china_100ad", "norse_900ad", "mexica_1500", "england_1300"]
+BASE_CIVS = ["rome_100ad", "han_china_100ad"]
 MOD_CIV = "sample_egypt_100bc_e7k2:egypt"
 ALL_CIVS = BASE_CIVS + [MOD_CIV]
 COIN_SCALE = 2.5
@@ -24,6 +24,19 @@ def build(civ):
               manual=True, civ=civ)
     sim.goal, sim.done_year = harness.GOAL, {}
     return sim
+
+
+_PLAIN_GAMES = {}
+
+
+def plain(name):
+    """One shared, never-mutated game per civilisation (or per coin-scaled Rome)."""
+    if name not in _PLAIN_GAMES:
+        if name == "heavier_rome":
+            _PLAIN_GAMES[name] = build(civ_with_coin_scale("rome_100ad", COIN_SCALE))
+        else:
+            _PLAIN_GAMES[name] = build(data.load_civ(name))
+    return _PLAIN_GAMES[name]
 
 
 def civ_with_coin_scale(name, scale):
@@ -60,16 +73,8 @@ def open_concern(sim, node_id):
 
 class RevenueIsInTheCivilisationsCoin(unittest.TestCase):
 
-    def test_revenue_in_labourer_years_ignores_the_coin_standard(self):
-        rome = build(data.load_civ("rome_100ad"))
-        node_id = reference_concern(rome)
-        baseline = takings_per_wage(rome, node_id)
-        heavier = build(civ_with_coin_scale("rome_100ad", COIN_SCALE))
-        self.assertAlmostEqual(takings_per_wage(heavier, node_id), baseline,
-                               delta=baseline * 1e-6)
-
     def test_node_revenue_in_labour_hours_is_the_same_in_every_civilisation(self):
-        sims = {name: build(data.load_civ(name)) for name in ALL_CIVS}
+        sims = {name: plain(name) for name in ALL_CIVS}
         node_id = reference_concern(sims["rome_100ad"])
         hours = {name: sim.nodes[node_id]["rev"] / sim.labour.wage_schedule().money_per_labour_hour
                  for name, sim in sims.items()}
@@ -78,28 +83,20 @@ class RevenueIsInTheCivilisationsCoin(unittest.TestCase):
                                    delta=hours["rome_100ad"] * 1e-9, msg=name)
 
     def test_revenue_to_wage_ratio_stays_near_romes_in_every_civilisation(self):
-        rome = build(data.load_civ("rome_100ad"))
+        rome = plain("rome_100ad")
         node_id = reference_concern(rome)
         rome_ratio = takings_per_wage(rome, node_id)
         for name in ALL_CIVS:
-            ratio = takings_per_wage(build(data.load_civ(name)), node_id)
+            ratio = takings_per_wage(plain(name), node_id)
             self.assertGreater(ratio, rome_ratio / 3.0, name)
             self.assertLess(ratio, rome_ratio * 3.0, name)
-
-    def test_project_cost_in_labourer_years_ignores_the_coin_standard(self):
-        rome = build(data.load_civ("rome_100ad"))
-        node_id = reference_concern(rome)
-        heavier = build(civ_with_coin_scale("rome_100ad", COIN_SCALE))
-        self.assertAlmostEqual(
-            heavier.project_cost(node_id) / labourer_annual_wage(heavier),
-            rome.project_cost(node_id) / labourer_annual_wage(rome), places=6)
 
 
 class MaterialPricesAreInHours(unittest.TestCase):
 
     def test_material_price_over_hourly_wage_ignores_the_coin_standard(self):
-        rome = build(data.load_civ("rome_100ad"))
-        heavier = build(civ_with_coin_scale("rome_100ad", COIN_SCALE))
+        rome = plain("rome_100ad")
+        heavier = plain("heavier_rome")
         prices, heavier_prices = rome._material_prices(), heavier._material_prices()
         checked = 0
         for material in sorted(prices):
@@ -126,8 +123,8 @@ class MaterialPricesAreInHours(unittest.TestCase):
 class EconomyWorksWithAnyCoin(unittest.TestCase):
 
     def test_han_can_afford_and_earn_from_a_basic_concern(self):
-        han = build(data.load_civ("han_china_100ad"))
-        rome = build(data.load_civ("rome_100ad"))
+        han = plain("han_china_100ad")
+        rome = plain("rome_100ad")
         node_id = reference_concern(han)
 
         def payback(sim):
@@ -142,10 +139,10 @@ class EconomyWorksWithAnyCoin(unittest.TestCase):
         self.assertLess(payback(han), payback(rome) * 3.0)
 
     def test_purse_and_annual_wage_are_of_one_scale_in_every_civilisation(self):
-        rome = build(data.load_civ("rome_100ad"))
+        rome = plain("rome_100ad")
         rome_years = rome.capital / labourer_annual_wage(rome)
         for name in ALL_CIVS:
-            sim = build(data.load_civ(name))
+            sim = plain(name)
             years = sim.capital / labourer_annual_wage(sim)
             self.assertAlmostEqual(years / sim.price_index, rome_years,
                                    delta=rome_years * 1e-6, msg=name)

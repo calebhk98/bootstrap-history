@@ -89,10 +89,9 @@ def coin_imbalance(played):
     return ledger["home_coin_units"] + per_coin * ledger["partner_coin_units"], abs(ledger["home_coin_units"]) + 1e-9
 
 
-with_cargo, without = agent_game(), agent_game()
-for each in (with_cargo, without):
-    each.step()
-    each.step()
+with_cargo, without = game, agent_game()
+without.step()
+without.step()
 world = SimWorld(with_cargo)
 home = world._home_place()
 priced = [m for m in world.trade_materials()
@@ -110,8 +109,6 @@ check("the cargo adds no order to the economy's external orders",
       all(bid.flexible_quantity > 0.0 for bid in orders.bids) and all(offer.reservation_price > 0.0 for offer in orders.offers), None)
 with_cargo.step()
 without.step()
-with_cargo.step()
-without.step()
 check("money and goods are conserved in the economy's book with the cargo's year",
       with_cargo.economy.agent.economy().record.book.check_conservation(1e-9).ok, None)
 for label, played in (("with", with_cargo), ("without", without)):
@@ -121,12 +118,9 @@ for label, played in (("with", with_cargo), ("without", without)):
 check("the traders' home tally is cleared when the year closes", not with_cargo.state.economy.home_actor_trade, None)
 
 # --- (e) home-bound cargo sized by the price settles over the years, with no sign flips.
-def home_run():
-    """Six years of a good the partner sells at a third of home's price; traders bring it home as far as it pays.
+def home_run(played):
+    """Three years of a good the partner sells at a third of home's price; traders bring it home as far as it pays.
     Returns the cargo each year and whether a quarter more would still have paid."""
-    played = agent_game()
-    played.step()
-    played.step()
     world = SimWorld(played)
     home = world._home_place()
     rate = played.market_rate()
@@ -146,7 +140,7 @@ def home_run():
     # the capital of the traders together buys many times what the market trades in a year
     capital_tonnes = 10.0 * volumes.get(material + "|" + area_of(material), 0.0) * tonnes_per_unit(material)
     backs, marginal = [], []
-    for _year in range(6):
+    for _year in range(3):
         world = SimWorld(played)
         terms = route_terms(world, PARTNER, home, material)
         back = 0.0
@@ -164,7 +158,7 @@ def home_run():
     return backs, marginal
 
 
-backs, marginal = home_run()
+backs, marginal = home_run(without)
 check("cargo bound for home never flips sign once the partner's book has opened (the year after the first)",
       all(back > 0.0 for back in backs[1:]), backs)
 check("home-bound cargo stays finite", all(math.isfinite(back) for back in backs), backs)

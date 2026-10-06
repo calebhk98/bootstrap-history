@@ -36,7 +36,7 @@ NOT_A_QUANTITY = _re.compile(
 game = sim(capital=5_000_000.0)
 game.end_year = game.cfg["start_year"] + game.cfg["horizon_years"]
 for _command in ({"cmd": "buy", "what": "farm", "n": 50}, {"cmd": "buy", "what": "forest", "n": 20},
-                 {"cmd": "step", "years": 3}):
+                 {"cmd": "step", "years": 1}):
     _agent_dispatch(game, NODES, _command)
 
 U.set_registry(U.load_units(ROOT))

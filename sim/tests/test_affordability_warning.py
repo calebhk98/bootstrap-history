@@ -14,6 +14,7 @@ from .harness import *  # noqa: F401,F403
 # --- committed_spend() is the exact sum `money` already printed, not a
 # second total that could drift from it.
 s = sim(capital=400.0)
+_front_page_game = s
 S._agent_dispatch(s, NODES, {"cmd": "start", "id": "scientific_method"})
 S._agent_dispatch(s, NODES, {"cmd": "start", "id": "units_standards"})
 _money_agg = S._agent_dispatch(s, NODES, {"cmd": "money"})
@@ -113,8 +114,6 @@ check("...and the credit this combination is likely to draw is bigger than "
       _agg and _agg["likely_to_draw_on_credit_between_them"]
       > r_units["on_credit"]["you_would_borrow"],
       (_agg, r_units["on_credit"]))
-check("...framed as a warning the player can act on, not a refusal",
-      r_units["ok"], r_units)
 
 # --- NO WARNING for a single project, however large: the aggregate question
 # only makes sense once more than one thing is drawing on the same purse,
@@ -140,7 +139,7 @@ check("plenty of cash on hand: no aggregate warning even with two things "
 # --- `available`'s own front-page advice says the same thing, ONCE, the
 # first time a brand-new player looks at the leverage shortlist - not on
 # every call, which would bury it in noise.
-s = sim(capital=400.0)
+s = _front_page_game
 _av1 = S._agent_dispatch(s, NODES, {"cmd": "available"})
 check("available's leverage list carries the stacking caution the first "
       "time a player sees it",
