@@ -976,7 +976,7 @@ def _parse_history_cap(val):
 	"""Parse dashboard history cap from user input: positive int or 'off'/'none'."""
 	if isinstance(val, str):
 		if val.lower() in ("off", "none"):
-			return None
+			return None, None
 		try:
 			val = int(val)
 		except ValueError:

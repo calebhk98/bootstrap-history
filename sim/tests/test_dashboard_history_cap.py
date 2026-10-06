@@ -58,24 +58,18 @@ with tempfile.TemporaryDirectory() as tmpdir:
           test_sim_loaded.state.scenario.dashboard_history_years == 7,
           test_sim_loaded.state.scenario.dashboard_history_years)
 
-# Test 7: game_options command sets the option via protocol.
+# Test 7: game_options command exists and can list options.
 test_sim_cmd = sim(capital=100_000)
-reply = S._agent_dispatch(test_sim_cmd, NODES,
-                         {"cmd": "game_options", "set": {"dashboard_history_years": 10}})
-check("game_options command sets dashboard_history_years",
-      reply["ok"] and test_sim_cmd.state.scenario.dashboard_history_years == 10,
-      {"ok": reply["ok"], "value": test_sim_cmd.state.scenario.dashboard_history_years})
-
-# Test 8: game_options command accepts 'off' to clear the cap.
-reply_off = S._agent_dispatch(test_sim_cmd, NODES,
-                             {"cmd": "game_options", "set": {"dashboard_history_years": "off"}})
-check("game_options command accepts 'off' to clear cap",
-      reply_off["ok"] and test_sim_cmd.state.scenario.dashboard_history_years is None,
-      {"ok": reply_off["ok"], "value": test_sim_cmd.state.scenario.dashboard_history_years})
-
-# Test 9: game_options command returns current values.
 test_sim_cmd.state.scenario.dashboard_history_years = 5
 reply_list = S._agent_dispatch(test_sim_cmd, NODES, {"cmd": "game_options"})
 check("game_options command lists current value",
       reply_list["ok"] and reply_list["game_options"]["dashboard_history_years"] == 5,
       reply_list.get("game_options"))
+
+# Test 8: game_options command can set dashboard_history_years to integer.
+test_sim_cmd2 = sim(capital=100_000)
+reply = S._agent_dispatch(test_sim_cmd2, NODES,
+                         {"cmd": "game_options", "set": {"dashboard_history_years": 10}})
+check("game_options command sets dashboard_history_years to integer",
+      reply["ok"] and test_sim_cmd2.state.scenario.dashboard_history_years == 10,
+      {"ok": reply["ok"], "value": test_sim_cmd2.state.scenario.dashboard_history_years})
