@@ -31,6 +31,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import traceback
 import unittest
@@ -238,6 +239,23 @@ def _quick_batches(slugs, seconds_before, count):
     return [batch for batch in batches if batch]
 
 
+def _report_progress(slugs, results, progress):
+    """One stderr line per finished topic as it finishes, and its time remembered at once, so a
+    long run shows where it is and an interrupted one still leaves its timings."""
+    with progress["lock"]:
+        for slug in slugs:
+            progress["done"] += 1
+            result = results.get(slug)
+            if result is None:
+                state = "crashed"
+            else:
+                state = "%.1fs%s" % (result["seconds"],
+                                     " FAIL" if result["failures"] or result["crash"] else "")
+            sys.stderr.write("  [%d/%d] %s %s\n" % (progress["done"], progress["total"], slug, state))
+        sys.stderr.flush()
+        _save_topic_seconds([(slug, results[slug]["seconds"], 0) for slug in slugs if slug in results])
+
+
 def _run_topics_parallel(run_now, harness, jobs):
     """Run topics in worker processes; print and merge results in topic order.
 
@@ -253,18 +271,20 @@ def _run_topics_parallel(run_now, harness, jobs):
     serial_work = [[slug] for slug in run_now if slug in serial]
     topic_costs = []
     outcomes = {}
+    progress = {"done": 0, "total": len(run_now), "lock": threading.Lock()}
     with tempfile.TemporaryDirectory(prefix="rome_suite_") as result_dir:
-        def tag(slugs):
-            return slugs[0] if len(slugs) == 1 else "batch_" + slugs[0]
+        def run(slugs):
+            tag = slugs[0] if len(slugs) == 1 else "batch_" + slugs[0]
+            completed, results = _start_worker(slugs, harness, result_dir, tag)
+            _report_progress(slugs, results, progress)
+            return completed, results
         with ThreadPoolExecutor(max_workers=jobs) as pool:
-            futures = [(slugs, pool.submit(_start_worker, slugs, harness, result_dir, tag(slugs)))
-                       for slugs in work]
+            futures = [(slugs, pool.submit(run, slugs)) for slugs in work]
             # Serial topics wait for the whole parallel batch, then run one at a time.
             for _, future in futures:
                 future.exception()
         finished = [(slugs, future.result()) for slugs, future in futures]
-        finished += [(slugs, _start_worker(slugs, harness, result_dir, tag(slugs)))
-                     for slugs in serial_work]
+        finished += [(slugs, run(slugs)) for slugs in serial_work]
         for slugs, (completed, results) in finished:
             for slug in slugs:
                 outcomes[slug] = (completed, results.get(slug))
