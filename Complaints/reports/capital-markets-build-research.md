@@ -6,8 +6,10 @@ how agent-based models represent it, and proposes a staged build with relationsh
 changed. It extends `Complaints/reports/agent-economy-capital-markets.md` (the first-step note) and does not
 repeat it; read that first.
 
-Source tags: **read** = page or abstract opened or returned by search in this session; **snippet** = only a
-search-result excerpt seen; **recalled** = from memory, unchecked, treat as a lead to verify. Any figure in this
+Source tags: **read** = page, paper or abstract opened in full by fetch and checked (the citation names it);
+**snippet** = only a search-result excerpt seen; **recalled** = from memory, unchecked, treat as a lead to verify;
+**disputed** = sources disagree, both sides given. A verification pass opened every source it could; section 11
+logs what each check found and holds the exact Eisenberg and Noe clearing rule and Diamond and Dybvig run condition. Any figure in this
 document is a cited date or is marked as such; no other numbers are asserted.
 
 ## 1. What exists
@@ -56,72 +58,119 @@ Dates are those the sources give; they are not simulation inputs (4.2).
 **Roman argentarii and societates publicanorum.** Argentarii took deposits, made loans, assayed and changed
 coin; jurists defined a bank by receiving deposits and advancing credit. Some deposits were safekeeping and
 bore no interest, others bore interest and could be lent on, which is a deposit as a use-of-funds contract.
-Banking was regulated and accounts were kept (read: Andreau via the Liberty Street summary and a legal-basis
-paper below). The societates publicanorum were large partnerships that leased state revenue and works; their
-shares (partes, small ones particulae) resemble stock, but scholars dispute that partes were actively traded
-(snippet: Wikipedia, Berkeley paper, Bocconi note). Lesson for the sim: the engine must allow a share claim
+Banking was regulated and accounts were kept (read: Andreau, Banking and Business in the Roman World, p. 39,
+"receiving deposits and advancing credit", via the Liberty Street summary, which also says most argentarii
+loans were short-term and local; the legal-basis paper stays snippet). The societates publicanorum were large
+partnerships that leased state revenue and works; their shares (partes) resemble stock. **Disputed:** Malmendier,
+"Publicani" (Berkeley encyclopedia entry, p. 2) reads Cicero, Verrines 1.55.143, as showing partes were
+"transferable and traded" with variable prices; Poitras and Geranio (summarised in the Bocconi note) find only brief
+discussion of possible share trading resting on "a debatable interpretation", with sub-partnerships the usual
+way to raise capital. The Wikipedia page was not reopened (snippet). Lesson for the sim: the engine must allow a share claim
 without assuming a secondary market; the market comes from a separate gate.
 
 **Han lending.** Lending against collateral was widespread; Sima Qian's economic chapters describe merchants
-and lenders (snippet). Buddhist monastic endowments lent and ran pawnshops from a later period (snippet).
+and lenders (snippet; not confirmed: the Wikipedia pawnbroking page does not mention Han lending and the
+World History Encyclopedia Sima Qian page does not describe the economic chapters). Buddhist monasteries ran
+the earliest Chinese pawnshops from the 5th century (read: Wikipedia, History of pawnbroking, China section).
 Lesson: the lender need not be a bank; a long-lived institution with an endowment lends from its capital, which
 is the same shape as a bank with no deposits. Han detail is the weakest part of this research; verify before use.
 
 **Bottomry and marine insurance.** Bottomry (Greek and Roman nauticum foenus) is a loan on ship or cargo
-repaid only if the voyage succeeds, at a high rate that prices the hazard; fraud (sinking ships to avoid
-repayment) is documented in Demosthenes' speeches (read: Wikipedia, Smith's dictionary entry). Marine
-insurance as a separate contract appears in Genoa; a cargo policy is attested for 1343 and the oldest surviving
-policy for 1347 (snippet). In London, underwriting gathered around Lloyd's coffee house from 1688 (snippet).
+repaid only if the voyage succeeds, at a high rate that prices the hazard; fraud (scuttling ships to keep loan and cargo) is documented in Demosthenes' speech Against Zenothemis (read:
+Wikipedia, Bottomry; Smith's Dictionary of Greek and Roman Antiquities, "Fenus", which says principal and
+interest were recoverable only if the ship met no disaster and gives Demosthenes examples of voyage rates
+well above ordinary interest). Marine insurance as a separate contract appears in Italy: genuine insurance
+arose in the half-century from 1275 to 1325 (read: Gresham lecture by Leonard, https://www.gresham.ac.uk/node/12775);
+the Genoese dates of 1343 for a cargo policy and 1347 for the oldest surviving policy are unverified (snippet; the
+insurance.museum page opened covers only a 1426 London policy). Edward Lloyd kept a coffee house in Great
+Tower Street by the end of 1688 (read: same lecture), but **corrected:** Lloyd's began as an information hub
+for merchants and the Royal Exchange was the main underwriting venue in the eighteenth century, so
+underwriting did not "gather around Lloyd's from 1688".
 Lesson: insurance grows out of a contingent loan; the moral hazard is part of the original institution, so
 the sim should include it.
 
 **Medieval bills of exchange and deposit banks.** The bill let a merchant pay in one place and settle in
 another through a correspondent, disguising credit as exchange; the Medici bank ran branches in several cities
-as separate partnerships (read: de Roover via search results; recalled for detail). Cashless payment between
-accounts grew from the Genoese fairs (snippet). Lesson: the claim a bill creates (a payable by a named party at
+as separate partnerships (read via Wikipedia, Medici Bank, which cites de Roover: a Florence parent partnership
+held shares in independent branch partnerships, "resembles nothing so much as the modern holding company", and
+bills let the bank avoid the usury ban; the book itself, too large to fetch, was not opened, so de Roover
+stays snippet at the page level). Cashless payment between accounts began with Genoese merchants at the
+Champagne fairs in the second half of the 12th century, first as notarised fair letters (lettres de foire), then
+bills of exchange, with claims settled through accounts at banking houses (read: Deutsche Bundesbank special
+exhibit; **corrected** from "Genoese fairs"). Lesson: the claim a bill creates (a payable by a named party at
 a place) is the first claim that changes hands, and acceptance and endorsement create chains of liability.
 
 **Italian merchant banks.** Partnership banks funded by partners' capital and by deposits, lending to princes
 and merchants; the large failures came from concentrated lending to sovereigns and branch overextension
-(recalled: de Roover). Lesson: concentration limit and sovereign default are the failure channels, and both
+(snippet: Wikipedia, Medici Bank, citing de Roover on the Bruges branch lending large sums to rulers and on weak
+oversight of branch managers; the book was not opened). Lesson: concentration limit and sovereign default are the failure channels, and both
 exist as heuristic slots already named in the first-step note.
 
-**Amsterdam Wisselbank.** Opened 1609 as a municipal exchange bank to settle bills in good money; it
-held coin against deposits and later (from 1683) restricted withdrawal of coin and so operated as fiat
-money (read: Quinn and Roberds, as found by search). Lesson: the warehouse bank, a full-reserve deposit,
-is a real historical first stage, and the move to partial backing is a decision with a visible trigger.
+**Amsterdam Wisselbank.** Opened 1609 as a municipal exchange bank to settle bills in good money, taking coin
+as deposits and paying out coin on withdrawal; the city required large bills of exchange to be settled at the
+bank. **Corrected:** lending "was the first major deviation from the bank's original plan" and began soon
+after opening, to the city, the province of Holland, the Republic and the VOC; the 1669 balance sheet shows
+metal at about three quarters of deposits, so the bank was not full reserve in practice. In 1683 it limited
+depositors' ability to withdraw coin by unbundling the deposit into a bank-guilder account and a negotiable
+receipt for specific coins, which made it a fiat money provider (read: Quinn and Roberds, How Amsterdam Got Fiat
+Money, Atlanta Fed Working Paper 2010-17, Introduction and sections 2.1 and 2.3,
+https://fraser.stlouisfed.org/files/docs/historical/frbatl/wp/frbatl_wp_2010-17.pdf). Lesson: a deposit
+that began as a warehouse claim became a lending bank within decades, and the move to a fiat claim was a
+decision with a visible trigger; a full-reserve stage is the stated design, not a historical equilibrium.
 
 **Bank of England and state bonds.** The 1672 Stop of the Exchequer was a repudiation that ruined goldsmith
 bankers who had lent to the Crown; after 1688 parliamentary control made royal borrowing credible and the Bank
-of England followed in 1694 as a loan contract with the government (snippet: Wikipedia, Tax Research UK,
-North and Weingast). Lesson: a sovereign borrower's default is a decision with a reputational cost, and the
+of England followed in 1694 as a loan contract with the government (read: Wikipedia, Stop of the Exchequer,
+2 January 1672, about 1.2 million pounds of debt, Burnet quoted on bankers broken; North and Weingast 1989,
+Journal of Economic History 49(4), pp. 820-821, call the Stop a "partial repudiation" and describe the Bank
+incorporated in 1694 from subscribers to a new large loan, barred from lending the Crown money without
+Parliament's consent; the ruin of goldsmith bankers is from Wikipedia, not North and Weingast). **Disputed:**
+North and Weingast argue the 1688 settlement made royal borrowing credible; Pincus and Robinson ("What Really
+Happened During the Glorious Revolution?", pp. 194-195) accept the importance of the changes but hold that the
+causal account is not substantiated, since the settlement set few new de jure rules and the important changes
+were de facto. Tax Research UK was not opened (snippet). Lesson: a sovereign borrower's default is a decision with a reputational cost, and the
 cost is what makes lending to it possible. In the sim, the state's default must be a choice weighed against
 the loss of its credit standing, not a script.
 
 **Joint-stock companies.** The VOC (1602) combined permanent capital with transferable shares and a secondary
-market from the outset (snippet). Limited liability and perpetual existence are separate legal gates; Rome's
-partnerships dissolve on a partner's death while England's corporations do not (civilisation file text).
+market from the outset (read: Wikipedia, Euronext Amsterdam: no plan for immediate liquidation, shares
+transferable, a secondary market arose "quickly" at the East India House; the Leiden item stays snippet). Limited liability and perpetual existence are separate legal gates; Rome's
+ordinary partnerships dissolve on a partner's death while England's corporations do not (civilisation file
+text; note Malmendier, "Publicani", p. 2, says Roman law gave the societas publicanorum permanence after a
+member's death, so the Roman case has an exception).
 Lesson: three separable properties: share claim, transferability, limited liability.
 
 ### Agent-based representations
 
-- **Delli Gatti and colleagues, credit network** (snippet): firms and banks linked by productive and credit
-  relations; net worth constrains output and borrowing; a shock with high leverage causes bankruptcy avalanches
-  through the credit network (financial accelerator). Use: net-worth-driven credit supply, and a default that
+- **Delli Gatti and colleagues, credit network** (read: Delli Gatti, Gallegati, Greenwald, Russo, Stiglitz,
+  "Business fluctuations in a credit-network economy", Physica A 370 (2006) 68-74, abstract and section 2:
+  downstream firms, upstream firms and banks linked by productive and credit relations, bankruptcy chains and
+  avalanches, bank credit supply more than proportional to bank net worth with a regulatory target; the 2010
+  Journal of Economic Dynamics and Control 34(9) 1627-1650 abstract, seen in search only, adds that net worth
+  of downstream firms drives fluctuations and an avalanche can follow if leverage is critically high: snippet). Use: net-worth-driven credit supply, and a default that
   becomes a creditor's loss and then the creditor's own default.
-- **Gai and Kapadia, contagion** (snippet): interbank exposures on arbitrary network, failure when losses
-  exceed capital buffers, robust-yet-fragile: contagion is rare but wide when it occurs, and depends on asset
-  market liquidity. Use: banks lend to banks; capital buffer is a state variable; fire-sale price is a channel.
-- **Eisenberg and Noe, clearing** (snippet): given obligations, a unique clearing payment vector exists under
-  limited liability, debt priority over equity and proportional payment. Use: replace id-order servicing
+- **Gai and Kapadia, contagion** (read: Bank of England Working Paper 383, March 2010, sections 2 and 4, exact
+  rule in section 11): interbank exposures on a random network, failure when losses exceed the capital buffer,
+  robust-yet-fragile (contagion probability low, effects extremely widespread when it occurs), and depends on
+  asset market liquidity through a resale price q below one under fire sales; the paper assumes zero recovery
+  on a defaulted interbank asset. Use: banks lend to banks; capital buffer is a state variable; fire-sale price is a channel.
+- **Eisenberg and Noe, clearing** (read at second hand: restatements in Sonin and Sonin 2020 and Stachurski 2022;
+  the 2001 paper itself was not opened; exact rule in section 11): given obligations, a clearing payment
+  vector exists under limited liability, debt priority over equity and proportional payment; uniqueness
+  needed a regularity condition in the 2001 paper, which Stachurski shows is unnecessary. Use: replace id-order servicing
   with proportional clearing inside a year.
-- **Diamond and Dybvig, runs** (snippet): demand deposits give liquidity but have a run equilibrium: if you
-  expect others to withdraw, withdrawing first is individually best, and runs cause real damage; deposit
-  insurance removes the incentive. Use: depositors' withdrawal is a decision with expectations over others,
+- **Diamond and Dybvig, runs** (read at second hand: lecture slides on the paper and the Minneapolis Fed
+  abstract; the paper text, Journal of Political Economy 91(3), 1983, pp. 401-419, was not opened; exact
+  condition in section 11): demand deposits give liquidity but have a run equilibrium: if you expect others
+  to withdraw, withdrawing first is individually best, and runs cause real damage; deposit insurance removes
+  the incentive. Use: depositors' withdrawal is a decision with expectations over others,
   with sequential service.
-- **Bank of England agent-based models** (snippet): corporate bond and housing markets, macroprudential
-  policy experiments (Hinterschweiger and others, Staff Working Paper on housing); the Bank's RAMSI is a
-  stress-test framework with banks as balance sheets (snippet, weak on detail). Use: policy levers (capital and
+- **Bank of England agent-based models** (read: Turrell, "Agent-based models: understanding the economy from
+  the bottom up", Quarterly Bulletin 2016 Q4, pp. 173-188: Bank models of corporate bonds and housing, the
+  housing model used for a macroprudential loan-to-income limit experiment, cites Baptista, Farmer,
+  Hinterschweiger, Low, Tang and Uluc, Staff Working Paper 619, 2016; the bulletin does not mention RAMSI).
+  The Bank's RAMSI is a top-down stress-test model of banks as balance sheets (Burrows, Learmonth, McKeown and
+  Williams, Financial Stability Paper 17, 2012; search summary only: snippet). Use: policy levers (capital and
   loan limits) are parameters an actor or player sets, the same stance as the first-step note's bank policy fields.
 
 ## 3. Per-institution table
@@ -132,7 +181,7 @@ such as `accepts_deposits`, and the actor must also have it known.
 
 | Institution | Claims it adds (holder on issuer) | Decisions (actor: option, as `Option` with worth, cost, chance) | Gate | Failure mode |
 |---|---|---|---|---|
-| Money changer and warehouse deposit (argentarii, Wisselbank) | Depositor on bank: demand claim, backed by bank's purse in full | Depositor: place cash with a bank or hold it, worth is safety and payment convenience, cost is foregone return. Bank: accept the deposit and keep it whole or lend. | `fin_argentarii`, then `fin_deposit_bank` | Embezzlement or lending out against promise (agency problem); with full backing no run, the loss is theft or debasement. |
+| Money changer and warehouse deposit (argentarii; Wisselbank as chartered, though it soon lent) | Depositor on bank: demand claim, backed by bank's purse in full | Depositor: place cash with a bank or hold it, worth is safety and payment convenience, cost is foregone return. Bank: accept the deposit and keep it whole or lend. | `fin_argentarii`, then `fin_deposit_bank` | Embezzlement or lending out against promise (agency problem); with full backing no run, the loss is theft or debasement. |
 | Fractional-reserve bank | Depositor on bank (demand); bank on borrowers (term loans) | Bank: reserve share, margin, lending to one borrower; depositor: stay or withdraw given expected solvency | `fin_fractional_reserve` | Maturity mismatch: borrower defaults reduce bank assets, withdrawals exceed purse, bank fails; run (Diamond and Dybvig). |
 | Interbank and clearing | Bank on bank (overnight or term) | Bank: lend surplus purse to another bank at a rate reflecting its own estimate of that bank | `fin_clearing_house` | Cascade through exposures (Gai and Kapadia); freeze when banks stop lending to each other. |
 | Bill of exchange, promissory note, endorsement | Payee on drawee, transferable | Holder: keep to maturity or sell (discount) now; drawee: accept or refuse; bank: discount at a rate | `fin_bill_exchange`, `fin_endorsement`, `fin_discounting` | Chain of endorsers each liable; a default propagates back along the chain; discounting banks hold the loss. |
@@ -299,28 +348,100 @@ information, search or law the sim does not model; name that in the `why` as the
 
 - Andreau, Banking and Business in the Roman World, via Liberty Street Economics summary:
   https://libertystreeteconomics.newyorkfed.org/2012/11/historical-echoes-how-do-you-say-wall-street-in-latin
-  (read, search excerpt); Cambridge excerpt: https://assets.cambridge.org/97805213/89327/excerpt/9780521389327_excerpt.pdf (snippet).
+  (read); Cambridge excerpt: https://assets.cambridge.org/97805213/89327/excerpt/9780521389327_excerpt.pdf (snippet; the server refused the fetch).
 - Contracts of loan and deposit in ancient Rome: https://unz.univer.km.ua/index.php/unz/en/article/view/109_5-18 (snippet).
-- Publicani and partes: https://en.wikipedia.org/wiki/Publicani (snippet); https://eml.berkeley.edu/~ulrike/Papers/Publicani_Article_v5.pdf (snippet);
-  https://www.unibocconi.it/en/news/ancient-rome-stock-exchange-myth (snippet; source for the doubt about share trading).
-- Han lending and monastic endowments: https://en.wikipedia.org/wiki/History_of_pawnbroking (snippet); Sima Qian chapters in
-  https://www.worldhistory.org/Sima_Qian/ (snippet). Weak; interest-rate detail not found.
-- Bottomry: https://en.wikipedia.org/wiki/Bottomry (read excerpt); https://penelope.uchicago.edu/Thayer/E/Roman/Texts/secondary/SMIGRA*/Fenus.html (snippet).
-- Marine insurance origins and Lloyd's: https://www.gresham.ac.uk/node/12775 (snippet); https://insurance.museum/insurance-history-snippet (snippet).
-- De Roover, The Medici Bank: https://www.Gwern.net/doc/history/medici/1963-deroover-theriseanddeclineofthemedicibank.pdf (snippet);
-  Journal of Economic History note https://www.cambridge.org/core/journals/journal-of-economic-history/article/medici-bank-financial-and-commercial-operations/E8865702110452B1C5B0341407C0DBAC (snippet).
-- Genoese fairs and cashless payment: https://www.bundesbank.de/resource/blob/616616/9ed646d315f7c6e0e1782d0921a838b4/mL/the-origins-of-cashless-payments-data.pdf (snippet).
-- Quinn and Roberds on the Bank of Amsterdam: https://www.frbatlanta.org:443/-/media/documents/research/publications/wp/2006/wp0613.pdf and
-  https://fraser.stlouisfed.org/files/docs/historical/frbatl/wp/frbatl_wp_2010-17.pdf (snippet each).
-- Stop of the Exchequer and the Bank of England: https://en.wikipedia.org/wiki/Stop_of_the_Exchequer (snippet);
-  https://www.cambridge.org/core/product/5E8F87F595E76EA2CBE3838C3A0080D1 (snippet); North and Weingast 1989 (recalled).
-- VOC: https://en.wikipedia.org/wiki/Euronext_Amsterdam (snippet); https://scholarlypublications.universiteitleiden.nl/access/item%3A2907003/view (snippet).
+- Publicani and partes: https://en.wikipedia.org/wiki/Publicani (snippet); https://eml.berkeley.edu/~ulrike/Papers/Publicani_Article_v5.pdf (read: Malmendier, p. 2, pro trading);
+  https://www.unibocconi.it/en/news/ancient-rome-stock-exchange-myth (read: Poitras and Geranio, against; disputed).
+- Han lending and monastic endowments: https://en.wikipedia.org/wiki/History_of_pawnbroking (read: monastic pawnshops, 5th century; no Han content); Sima Qian chapters in
+  https://www.worldhistory.org/Sima_Qian/ (read: no economic-chapter content; Han claim unverified). Weak; interest-rate detail not found.
+- Bottomry: https://en.wikipedia.org/wiki/Bottomry (read); https://penelope.uchicago.edu/Thayer/E/Roman/Texts/secondary/SMIGRA*/Fenus.html (read).
+- Marine insurance origins and Lloyd's: https://www.gresham.ac.uk/node/12775 (read); https://insurance.museum/insurance-history-snippet (read: 1426 London policy only; Genoa dates not found).
+- De Roover, The Medici Bank: https://www.Gwern.net/doc/history/medici/1963-deroover-theriseanddeclineofthemedicibank.pdf (snippet; over the fetch size limit);
+  de Roover, The Medici Bank: financial and commercial operations, Journal of Economic History 6(2), 1946, https://www.cambridge.org/core/journals/journal-of-economic-history/article/medici-bank-financial-and-commercial-operations/E8865702110452B1C5B0341407C0DBAC (read: abstract only; says the bank dealt in exchange and merchandise);
+  https://en.wikipedia.org/wiki/Medici_Bank (read: holding structure, usury, decline).
+- Genoese fairs and cashless payment: https://www.bundesbank.de/resource/blob/616616/9ed646d315f7c6e0e1782d0921a838b4/mL/the-origins-of-cashless-payments-data.pdf (read).
+- Quinn and Roberds on the Bank of Amsterdam: https://fraser.stlouisfed.org/files/docs/historical/frbatl/wp/frbatl_wp_2010-17.pdf (read: Working Paper 2010-17, "How Amsterdam Got Fiat Money"; the 2006 working paper URL, now moved to atlantafed.org, returned a 404 page and stays snippet).
+- Stop of the Exchequer and the Bank of England: https://en.wikipedia.org/wiki/Stop_of_the_Exchequer (read);
+  https://www.cambridge.org/core/product/5E8F87F595E76EA2CBE3838C3A0080D1 (snippet); North and Weingast 1989, Constitutions and Commitment, Journal of Economic History 49(4) 803-832,
+  https://cdn.vanderbilt.edu/vu-my/wp-content/uploads/sites/138/2016/12/14091657/NorthWeingast-1989-Constitutions-and-Commitment.pdf (read, pp. 820-821);
+  Pincus and Robinson, What Really Happened During the Glorious Revolution?, https://people.bu.edu/chamley/HSFref/PincusRobinson11.pdf (read, introduction and section 2).
+- VOC: https://en.wikipedia.org/wiki/Euronext_Amsterdam (read); https://scholarlypublications.universiteitleiden.nl/access/item%3A2907003/view (snippet).
 - Gai and Kapadia, Contagion in financial networks (2010):
-  https://www.bankofengland.co.uk/working-paper/2010/contagion-in-financial-networks (snippet).
+  https://www.bankofengland.co.uk/working-paper/2010/contagion-in-financial-networks (read; full text https://www.bankofengland.co.uk/-/media/boe/files/working-paper/2010/contagion-in-financial-networks.pdf, Working Paper 383).
 - Delli Gatti and colleagues, Business fluctuations in a credit-network economy (2006), The financial accelerator in an evolving
-  credit network (2010): https://business.columbia.edu/sites/default/files-efs/imce-uploads/Joseph_Stiglitz/2006_Business_Fluctuations.pdf (snippet);
-  https://pmc.ncbi.nlm.nih.gov/articles/PMC3534113/ (snippet).
-- Bank of England agent-based models: https://www.bankofengland.co.uk/-/media/boe/files/quarterly-bulletin/2016/agent-based-models-understanding-the-economy-from-the-bottom-up.pdf (snippet);
+  credit network (2010): https://business.columbia.edu/sites/default/files-efs/imce-uploads/Joseph_Stiglitz/2006_Business_Fluctuations.pdf (read: Physica A 370 (2006) 68-74);
+  **corrected:** https://pmc.ncbi.nlm.nih.gov/articles/PMC3534113/ is Tedeschi, Mazloumian, Gallegati and Helbing, Bankruptcy Cascades in Interbank Markets, PLoS ONE 7(12) e52749, 2012 (read), not the 2010 Delli Gatti paper;
+  the 2010 paper (Journal of Economic Dynamics and Control 34(9) 1627-1650) is at https://publicatt.unicatt.it/handle/10807/15244 (snippet only).
+- Bank of England agent-based models: https://www.bankofengland.co.uk/-/media/boe/files/quarterly-bulletin/2016/agent-based-models-understanding-the-economy-from-the-bottom-up.pdf (read);
   https://www.sfipress.org/eecs-iv-17 (snippet).
-- Diamond and Dybvig (1983): https://minneapolisfed.org/research/quarterly-review/bank-runs-deposit-insurance-and-liquidity (snippet).
-- Eisenberg and Noe (2001), Systemic risk in financial systems, Management Science: https://www.citedrive.com/en/discovery/systemic-risk-in-financial-systems/ (snippet).
+- Diamond and Dybvig (1983): https://minneapolisfed.org/research/quarterly-review/bank-runs-deposit-insurance-and-liquidity (read: abstract and reprint details, Quarterly Review Winter 2000, DOI 10.21034/qr.2412; the PDF link was refused, so the model detail comes from the lecture slides https://homepage.ntu.edu.tw/~yitingli/file/macro%20and%20money/DiamondDybvig1983.pdf, read).
+- Eisenberg and Noe (2001), Systemic risk in financial systems, Management Science: https://www.citedrive.com/en/discovery/systemic-risk-in-financial-systems/ (snippet; abstract only). Restatements read: Sonin and Sonin, Banks as Tanks, https://arxiv.org/pdf/1705.05943, section 2; Stachurski, Systemic Risk in Financial Systems: Properties of Equilibria, https://arxiv.org/abs/2202.11183 (read).
+
+## 11. Verification log and exact rules
+
+Verification pass, 2026-10-06. Tags above were updated in place; this section holds the formulas the build will
+copy and the tally. Where a source could not be opened the old tag stands.
+
+**Eisenberg and Noe (2001), Management Science 47(2) 236-249, clearing rule.** The 2001 paper was not opened (no
+open copy found); the rule below is as restated in section 2 of Sonin and Sonin (2020) and in Stachurski (2022),
+which agree. Notation spelled out: a system has `number_of_nodes` nodes; `liability[i][j]` is what node i owes
+node j; `total_obligation[i]` is the sum over j of `liability[i][j]`; `relative_liability[i][j] =
+liability[i][j] / total_obligation[i]` (rows sum to one); `outside_cash[i]` is node i's cash flow from outside the
+system. A clearing payment vector `payment` (total paid by each node) satisfies two conditions: limited
+liability, the total payment of a node never exceeds its outside cash plus what it receives; and absolute
+priority with proportionality, a node either pays its whole obligation or pays all it has, and splits what it
+pays across creditors in the proportions `relative_liability`. Together:
+
+    payment[j] = min(total_obligation[j], outside_cash[j] + sum over i of payment[i] * relative_liability[i][j])
+
+taken componentwise, with `0 <= payment <= total_obligation`. A node is in default when `payment[j] <
+total_obligation[j]`. Existence follows from a lattice fixed-point theorem (Knaster-Tarski) because the map is
+monotone; the paper's fictitious default algorithm finds the greatest solution by marking defaulting nodes and
+re-solving in at most one pass per node. Uniqueness: the 2001 paper required a regularity condition (every
+risk orbit contains a node with positive outside cash); Stachurski (2022) proves a unique solution always exists.
+Edge case for the build: a closed cycle of debt with zero outside cash has many solutions under the older
+statement (Sonin and Sonin section 2), so a build should either take the greatest solution or give such cycles a
+declared rule. Equity holders are residual claimants and receive nothing until all debt is paid in full.
+
+**Diamond and Dybvig (1983), Journal of Political Economy 91(3) 401-419, run condition.** The paper text was not
+opened; the following is from the lecture slides on the paper (read) and the abstract (read). Three dates 0, 1,
+2; a continuum of identical agents each endowed with one unit at date 0; each is, ex post, either type 1 (wants
+to consume at date 1, share `early_share`) or type 2 (wants date 2). Technology: one unit invested at date 0
+gives one unit if liquidated at date 1 and `long_return` (greater than one) at date 2. The demand deposit
+contract pays `early_payment` (called r1) per unit deposited to anyone who withdraws at date 1, served in
+order of arrival (the sequential service constraint, first come first served), and the bank pays remaining
+depositors pro rata from what is left at date 2. The good equilibrium has type 1 withdrawing at date 1 and
+type 2 waiting. The slides state: for every `early_payment` greater than one, a run is also an equilibrium,
+because the face value of deposits owed at date 1 exceeds the liquidation value of the bank's assets; if
+`early_payment` equals one the bank is immune to runs but gives no liquidity service over the market.
+Runs are self-fulfilling: investment is riskless, and a type 2 who expects all others to withdraw at date 1
+withdraws too. From memory of the paper (unchecked, recalled): with `withdrawn_share` the share of depositors who
+have already withdrawn, the date-1 payoff is `early_payment` while `withdrawn_share * early_payment <= 1` and
+zero after the bank is empty; the date-2 payoff is `max(0, (1 - withdrawn_share * early_payment) / (1 -
+withdrawn_share) * long_return)`; a type 2 compares the two given a belief about others. Policy results from
+the slides: suspension of convertibility (the bank refuses more than early_share times early_payment of
+withdrawals at date 1) removes runs only if `early_share` is known and non-random (Proposition 1); deposit
+insurance financed by a tax on withdrawals achieves the optimum as the unique equilibrium (Proposition 2).
+
+**Gai and Kapadia (2010), Bank of England Working Paper 383, section 2 solvency rule (read).** Bank i has
+interbank assets `interbank_assets[i]` spread evenly over its incoming links, illiquid external assets
+`external_assets[i]`, interbank liabilities and customer deposits `deposits[i]`. With `defaulted_share` the
+fraction of its debtor banks that have defaulted (zero recovery assumed) and `resale_price` q the price of the
+illiquid asset (one with no fire sales), bank i is solvent when
+
+    (1 - defaulted_share) * interbank_assets[i] + resale_price * external_assets[i] - interbank_liabilities[i] - deposits[i] > 0
+
+equivalently `capital_buffer[i] - (1 - resale_price) * external_assets[i] >= defaulted_share *
+interbank_assets[i]` (their equation 2) with `capital_buffer[i]` = assets minus liabilities at book value.
+Contagion from one default to a neighbour needs the neighbour's buffer, net of fire-sale loss, to be below its
+interbank assets divided by its in-degree (their equation 3).
+
+**Tally** (claims counted over the history, modelling and source claims in sections 2 and 10, not the design
+tables; counts are approximate because some sentences bundle claims): confirmed (now read) 18; corrected 7
+(Wisselbank full reserve, Lloyd's underwriting, Genoese fairs to Champagne fairs, publicani permanence
+exception, Delli Gatti PMC link, Eisenberg and Noe uniqueness condition, Stop of the Exchequer banker ruin
+attributed to Wikipedia not North and Weingast); unverified (tag kept) 11 (Han lending, Genoa 1343 and 1347
+dates, de Roover book pages, Tax Research UK, Leiden VOC item, Delli Gatti 2010 text, RAMSI, Cambridge Andreau
+excerpt, Roman loan and deposit paper, and the originals of Eisenberg and Noe 2001 and Diamond and Dybvig
+1983, whose rules are confirmed only through restatements); disputed 2 (share trading in the societates
+publicanorum; North and Weingast on the Glorious Revolution).
