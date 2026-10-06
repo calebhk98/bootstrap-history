@@ -208,6 +208,8 @@
  },
  {
   "id": "cn_pozzolana_concrete",
+  "copy_visibility": 0.25,
+  "copy_visibility_reason": "The set concrete shows its aggregate but not the volcanic ash, the lime or the slaking, and the craft was not recovered by later builders for centuries.",
   "name": "Pozzolana hydraulic concrete",
   "cat": "binders",
   "pre": [
@@ -340,6 +342,8 @@
  },
  {
   "id": "cn_true_arch",
+  "copy_visibility": 0.8,
+  "copy_visibility_reason": "The voussoirs and the keystone are visible on the finished arch, so a mason can copy the form; the centering and the setting out are learned by working.",
   "name": "True arch in stone",
   "cat": "structural",
   "kind": "ENGINEERING",
@@ -2786,6 +2790,8 @@
  },
  {
   "id": "cn_plate_glass_window",
+  "copy_visibility": 0.2,
+  "copy_visibility_reason": "A clear sheet shows nothing of the batch or the casting and grinding; Venice kept glass methods on its island and the French works at Saint-Gobain later held the plate process as a state secret.",
   "name": "Plate glass large pane",
   "cat": "envelope",
   "kind": "ENGINEERING",

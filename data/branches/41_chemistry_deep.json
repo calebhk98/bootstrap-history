@@ -2169,6 +2169,8 @@
  },
  {
   "id": "ch2_rxn_vulcanisation",
+  "copy_visibility": 0.1,
+  "copy_visibility_reason": "The finished rubber shows nothing of the sulphur and the heating; Goodyear's rivals had to analyse samples to find the secret, and it was contested in court.",
   "name": "Vulcanisation of rubber",
   "cat": "organic_reaction",
   "kind": "SCIENCE",

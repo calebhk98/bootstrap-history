@@ -181,6 +181,8 @@
  },
  {
   "id": "hom_mirror_bronze_polished",
+  "copy_visibility": 0.2,
+  "copy_visibility_reason": "A mirror shows its shape but not the tin-rich alloy and the polish that make it bright, and the Chinese magic mirrors puzzled European makers who studied them.",
   "name": "Mirror, polished bronze",
   "cat": "personal",
   "kind": "ENGINEERING",
@@ -369,6 +371,8 @@
  },
  {
   "id": "hom_soap_hard",
+  "copy_visibility": 0.3,
+  "copy_visibility_reason": "A bar of soap does not show the lye, the fat or the salting out, though a soap-boiler's yard can be seen in operation.",
   "name": "Hard soap, sapo",
   "cat": "sanitation",
   "pre": [

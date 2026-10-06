@@ -321,6 +321,8 @@
  },
  {
   "id": "mil_flintlock",
+  "copy_visibility": 0.7,
+  "copy_visibility_reason": "The hammer, pan and frizzen are visible on the outside, and the lock plate comes off to show the springs; the temper of the springs and the fit of the parts are not visible.",
   "name": "Flintlock mechanism",
   "cat": "weapons",
   "kind": "ENGINEERING",
@@ -3738,6 +3740,8 @@
  },
  {
   "id": "mil_incendiary_bomb",
+  "copy_visibility": 0.15,
+  "copy_visibility_reason": "The fire and its effect are visible but the mixture and the delivery are not, as with the Byzantine Greek fire that was kept secret until the knowledge was lost.",
   "name": "Incendiary bomb",
   "cat": "air",
   "kind": "ENGINEERING",

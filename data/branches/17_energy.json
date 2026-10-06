@@ -565,6 +565,8 @@
  },
  {
   "id": "pwr_windmill_fantail",
+  "copy_visibility": 0.9,
+  "copy_visibility_reason": "The small fan at the back and its gear train are visible from the ground, so any miller who sees one can build another.",
   "name": "Windmill fantail and automatic furling",
   "cat": "power",
   "pre": [
