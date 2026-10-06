@@ -164,7 +164,8 @@ class SettlementMixin:
                            "wages while your household travels; you have %s."
                            % (tile, math.ceil(days), "{:,.0f}".format(money),
                               "{:,.0f}".format(household.capital)))
-        household.cost_capital(money, "relocation")
+        self._world.pay_edge(self._world.EDGE_WORKERS, money, "relocation")
+        household.total_spend += money
         household.relocation_hours_this_year = (
             (household.relocation_hours_this_year or 0.0) + hours)
         # Local contracts and the local market's memory stay behind.

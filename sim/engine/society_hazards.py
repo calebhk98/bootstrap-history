@@ -21,6 +21,7 @@ from sim.constants import declare
 from . import cause_book, money_units
 from .data import (closure, critical_path, money_word)
 from .hazard_window import hazards_not_yet_past
+from sim.agents.api import edges, ledger
 
 
 class HazardsMixin:
@@ -387,7 +388,7 @@ class HazardsMixin:
             row.pop("in_progress", None)
         return rows
 
-    def lose_capital(self, fraction, cause="losses"):
+    def lose_capital(self, fraction, cause="losses", taker=None):
         """Destroy a fraction of what you HAVE. Never a fraction of what you owe.
 
         Multiplying `self.state.household.capital` by a fraction directly is
@@ -406,7 +407,8 @@ class HazardsMixin:
         if household.capital <= 0:
             return 0.0
         lost = household.capital * max(0.0, min(1.0, fraction))
-        household.debit(lost, cause)
+        # what is taken goes to the taker (an actor); what is destroyed goes to the named sink
+        ledger.transfer(household, self.edge(edges.EDGE_DESTROYED) if taker is None else taker, lost, cause)
         return lost
 
     def _resolve_hazard_condition(self, hazard, year, hazard_start):
@@ -934,7 +936,7 @@ class HazardsMixin:
             gift = self.PATRON_DEATH_COURTING_GIFT * self.price_index
             courted = self.policy.get("auto_court_heir", not self.manual)
             if courted:
-                household.debit(gift, "courting a patron's heir")
+                self.pay_edge(edges.EDGE_OFFICIALS, gift, "courting a patron's heir")
             if courted:
                 msg = ("your patron dies; auto_court_heir courts his heir "
                        "afresh for %s denarii. Protection falls from %d%% to "

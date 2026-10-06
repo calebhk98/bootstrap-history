@@ -2,6 +2,8 @@
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Set
 
+from .edges import Edge
+
 
 @dataclass
 class ActorRecord:
@@ -202,3 +204,10 @@ class ActorsState:
 	countries: Dict[str, CountryProfile] = field(default_factory=dict)
 	# the founder's own country (the civilisation the game was started with)
 	home_country: str = ""
+	# named edge -> money it has taken in less what it has paid out, and the money that crossed it either way
+	edges: Dict[str, float] = field(default_factory=dict)
+	edge_volume: Dict[str, float] = field(default_factory=dict)
+
+	def edge(self, name: str) -> Edge:
+		"""The named edge, an account outside the actors that a posting can name as its counterparty."""
+		return Edge(name, self.edges, self.edge_volume)

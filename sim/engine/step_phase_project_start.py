@@ -3,6 +3,7 @@
 A part of the year's phases (core_step_phases.py); Sim inherits it through StepPhasesMixin."""
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from . import automation_audit, shortage_conditions
+from sim.agents.api import edges
 
 
 class ProjectStartPhaseMixin:
@@ -266,7 +267,7 @@ class ProjectStartPhaseMixin:
                 # The shortage is real and unresolved; more money is not the
                 # answer to it.
                 spend = min(self.state.household.capital * 0.05, self.labour.book_money(2000.0))
-                self.state.household.debit(spend, "nitre beds laid down")
+                self.pay_edge(edges.EDGE_BUILDERS, spend, "nitre beds laid down")
                 self.state.economy.nitre_bed_m2 += spend / self.NITRE_COST_PER_M2
                 automation_audit.record(
                     self, "auto_mine", "nitre", "%d square metres of nitre bed" % (spend / self.NITRE_COST_PER_M2),

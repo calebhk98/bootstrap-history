@@ -32,6 +32,7 @@ from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import deposits as deposit_model
 from sim.geography.api import mine_demand_goods, parameter_value, tile_facts, tiles_held, works_priced_from_deposits
 from . import purchase_rule
+from sim.agents.api import edges
 
 
 @functools.lru_cache(maxsize=None)
@@ -765,7 +766,7 @@ class MiningMixin:
             cost = t_per_yr * cap * self.price_index * scale
         if t_per_yr <= 0:
             return 0.0
-        household.debit(cost, "mines opened")
+        self.pay_edge(edges.EDGE_BUILDERS, cost, "mines opened")
         # Each investment is its own working with its own sinking time.
         # Pooling them and taking the LATEST ready date would mean a
         # player who invests spare cash every year, which is exactly what
@@ -849,7 +850,7 @@ class MiningMixin:
             kept = []
             for working in self._workings_of(material):
                 cut = working["capacity"] * self.MOTHBALL_CUT_SHARE
-                household.credit(cut * self._mine_opex(material) * self.price_index, "mine running costs saved by mothballing")
+                self.receive_from_edge(edges.EDGE_SUPPLIERS, cut * self._mine_opex(material) * self.price_index, "mine running costs saved by mothballing")
                 working["capacity"] -= cut
                 if working["capacity"] >= 1.0:
                     kept.append(working)
@@ -981,6 +982,6 @@ class MiningMixin:
         # A shaft that costs nothing needs no budget check.
         if cost > 0 and not purchase_rule.can_pay(self, cost):
             return 0.0
-        household.debit(cost, "forest bought")
+        self.pay_edge(edges.EDGE_LANDOWNERS, cost, "forest bought")
         economy.forest_ha += hectares
         return hectares

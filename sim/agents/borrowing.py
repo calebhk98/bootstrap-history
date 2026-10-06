@@ -9,6 +9,9 @@ from typing import Any
 from sim.constants import declare
 from sim.world import capital_market
 
+from . import ledger
+from .edges import EDGE_INTEREST
+
 STANDING_DISCOUNT_CAP = declare(
 	"STANDING_DISCOUNT_CAP", 0.03, kind="temporary_heuristic",
 	unit="fraction off the annual rate (maximum)", source=None, confidence="D",
@@ -78,6 +81,6 @@ class Borrower:
 		if debt <= 0.0:
 			return 0.0
 		owed = debt * self.borrowing_rate(world)
-		self.debit(owed, "interest")  # type: ignore[attr-defined]
+		ledger.transfer(self, world.edge(EDGE_INTEREST), owed, "interest")
 		world.note_interest_paid(owed)
 		return owed

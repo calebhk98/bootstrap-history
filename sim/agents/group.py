@@ -9,7 +9,9 @@ founder either way. Nothing here names a trade, a commodity or a civilisation.
 import math
 from typing import Any, Dict, List
 
+from . import ledger
 from .base import RecordedActor
+from .edges import EDGE_STATE_SPENDING
 from .group_tuning import (GRIEVANCE_RETENTION, GROUP_BAN_PULL, GROUP_CLAIM_CEILING_SHARE, GROUP_DISBANDING_SHARE,
 						   GROUP_LOG_INTERVAL_YEARS, GROUP_ORGANISING_WEIGHT, GROUP_PULL_SCALE,
 						   SCANDAL_PER_PETITION)
@@ -76,7 +78,7 @@ class InterestGroup(RecordedActor):
 		revenue = world.scope_revenue(1.0 if sector is None else sector.scope)
 		# what the state paid it, averaged with last year's so a payment does not swing the next year's pull
 		paid = world.concession_paid(CONCESSION_PREFIX + self.actor_id)
-		self.credit(paid, "compensation from the state")
+		ledger.transfer(world.edge(EDGE_STATE_SPENDING), self, paid, "compensation from the state")
 		record.received_last_year = 0.5 * (record.received_last_year + paid)
 		record.lost_income = max(0.0, gross - record.received_last_year)
 		if record.lost_income / revenue < GROUP_ORGANISING_WEIGHT * GROUP_DISBANDING_SHARE:

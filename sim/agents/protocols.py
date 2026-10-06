@@ -18,6 +18,10 @@ class World(Protocol):
 
 	# ---- What a state asks when it budgets
 
+	def edge(self, name: str) -> Any:
+		"""The named edge a posting names when its other side is not an actor."""
+		...
+
 	def population_total(self) -> float:
 		...
 

@@ -9,6 +9,7 @@ from sim.constants import declare
 from sim.labour.api import wage_provider
 
 from .data import load_civ
+from sim.agents.api import edges, ledger
 
 COIN_GUARD_HOURS_PER_TONNE_YEAR = declare(
     "COIN_GUARD_HOURS_PER_TONNE_YEAR", 60.0, kind="temporary_heuristic",
@@ -17,7 +18,7 @@ COIN_GUARD_HOURS_PER_TONNE_YEAR = declare(
         "from stone, doors and a guard roster (a vault has no model yet), and is not measured. "
         "The household's purse is charged it each year.")
 
-KEEPING_CAUSE = "edge:coin guards"  # paid to the guards, people in the economy
+KEEPING_CAUSE = edges.EDGE_COIN_GUARDS  # paid to the guards, people in the economy
 KEEPING_BASIS = ("guard hours per tonne of coin per year, a labelled heuristic "
                  "(COIN_GUARD_HOURS_PER_TONNE_YEAR), at the unskilled hour")
 
@@ -52,7 +53,7 @@ class CoinHoardMixin:
                 continue
             cost = self.coin_keeping_cost_per_year(record.money)
             if cost > 0.0:
-                actor.debit(cost, KEEPING_CAUSE)
+                ledger.transfer(actor, self.edge(edges.EDGE_COIN_GUARDS), cost, KEEPING_CAUSE)
 
     def _coin_carriage_money_per_tonne(self, civilization_id):
         """Home money to carry a tonne over the route to a partner; nothing where no route is known."""

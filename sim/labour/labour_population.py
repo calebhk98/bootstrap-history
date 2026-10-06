@@ -91,7 +91,7 @@ class PopulationMixin:
         household = self._world.state.household
         if seats <= 0 or cost > household.capital:
             return False, "cannot afford that trade school"
-        household.debit(cost, "trade schools")
+        self._world.pay_edge(self._world.EDGE_WORKERS, cost, "trade schools")
         schools = getattr(household, "trade_schools", None)
         if schools is None:
             schools = household.trade_schools = {}

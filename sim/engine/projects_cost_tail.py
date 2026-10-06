@@ -5,6 +5,7 @@ can be left owing a few cash units. Making it wait a whole extra year for that
 is a bookkeeping artefact, so the sliver is paid at the final scheduled payment.
 """
 from sim.constants import declare
+from sim.agents.api import edges
 
 
 class ProjectCostTailMixin:
@@ -24,7 +25,7 @@ class ProjectCostTailMixin:
         if tail > self.COST_TAIL_SETTLE_SHARE * self.project_cost(node_id):
             return 0.0
         household = self.state.household
-        household.debit(tail, "project payments")
+        self.pay_edge(edges.EDGE_SUPPLIERS, tail, "project payments")
         household.total_spend += tail
         project_state["spent"] += tail
         project_state["cost_left"] = 0.0
