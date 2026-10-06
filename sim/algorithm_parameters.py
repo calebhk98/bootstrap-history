@@ -8,10 +8,8 @@ computation runs, not what it claims about the simulated world.
 
 WHAT BELONGS HERE. A fixed-point solver's damping factor, its convergence
 tolerance, its iteration cap; a search's maximum period count. Gathered
-from sim/engine/solve_prices_core.py (the price solver's own damped-Jacobi loop)
-and sim/labour/labour_market.py (the labour-reallocation fixed point), the
-two places in this project that run an iterative numerical search rather
-than a closed-form calculation. The strongly-connected-components pass
+from sim/engine/solve_prices_core.py (the price solver's own damped-Jacobi loop), the
+project's iterative numerical search rather than a closed-form calculation. The strongly-connected-components pass
 sim/engine/solve_prices_core.py's own resolvability check runs
 (`_strongly_connected_components`, Tarjan's algorithm) was also examined
 for this task and holds nothing that belongs here: it is deliberately
@@ -64,7 +62,7 @@ WHY MOVED RATHER THAN LEFT AND MERELY GATHERED BY REFERENCE. The
 stakeholder's stated reason ("if you want to tune them, they should be in
 one place") means "one place to edit," not "one place to read about" -
 gathering pointers here while the real assignment stayed in solve_prices_
-core.py and labour_market.py would not let anyone tune anything from this
+core.py would not let anyone tune anything from this
 file. Each constant's own original comment moved WITH it, verbatim
 (CLAUDE.md SS6: comments are load-bearing and this project does not strip
 them), so nothing explaining WHY a value is what it is was lost in the
@@ -78,10 +76,7 @@ number. sim/engine/solve_prices_core.py therefore re-imports each moved name fro
 this file and keeps it bound at its own old attribute name (see that
 file's own comment at the import), so `solve_prices_core.DAMPING_FACTOR`
 still resolves exactly as it always did and neither sibling file needed to
-change at all. sim/labour/labour_market.py does the same for its own two
-names, on the chance anything outside this file's own edits (a test, a
-future caller) references `labour_market.MAXIMUM_REALLOCATION_PERIODS` or
-`labour_market.CONVERGENCE_TOLERANCE_HOURS` directly.
+change at all.
 
 HOW A CONSUMER USES ONE OF THESE. Imported fully qualified, `from
 sim.algorithm_parameters import DAMPING_FACTOR`, the same convention sim/
@@ -158,31 +153,3 @@ INITIAL_PRICE_GUESS_HOURS = 1.0
 # to.
 GROWTH_BOUND_HOURS = 1e9
 
-# ============================================================================
-# sim/labour/labour_market.py - the labour-reallocation fixed point
-# ============================================================================
-# Moved here verbatim, comments included, from sim/labour/labour_market.py's
-# own "THE FIXED POINT: REPEAT THE STEP UNTIL THE ALLOCATION STOPS MOVING"
-# section. See that file's own import of these two names for why its own
-# module attributes still work unchanged.
-
-# An algorithmic ceiling on the search, exactly like sim.solve_prices.py's
-# own MAXIMUM_ITERATIONS - not a claim about how long a real reallocation
-# takes (that claim is THE FRICTION section's job), only a guard against a
-# pathological input (a proximity of exactly zero everywhere, say) looping
-# forever without ever registering as stabilised.
-# OUTCOME-INERT (SAFETY CEILING ONLY): the same reasoning as solve_prices_
-# core.py's own MAXIMUM_ITERATIONS above - a real allocation that would
-# stabilise does so at the same allocation whether given 500 periods or
-# 5,000 to do it in.
-MAXIMUM_REALLOCATION_PERIODS = 500
-
-# Absolute hours, not a ratio - a trade required at 0.0 hours must be able
-# to reach exactly 0.0 tightness, which a ratio-based tolerance cannot
-# express cleanly at that boundary. Used for BOTH stopping conditions
-# `solve_to_stable_allocation` checks - see its own docstring.
-# OUTCOME-SENSITIVE: the same reasoning as solve_prices_core.py's own
-# CONVERGENCE_TOLERANCE above - this defines "stabilised," so loosening it
-# reports a workforce as settled while real hours are still moving between
-# trades.
-CONVERGENCE_TOLERANCE_HOURS = 1e-6
