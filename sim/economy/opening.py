@@ -11,7 +11,7 @@ from typing import Dict, List, Mapping, Tuple
 
 from sim.constants import declare
 
-from . import currency, goods_market, households, location, mint, ownership, sites, unit_cost
+from . import currency, goods_market, households, labour_state, location, mint, ownership, sites, unit_cost
 from .accounts import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
@@ -59,7 +59,7 @@ def open_economy(setup: EconomySetup) -> Tuple[EconomyRecord, AreaMap, CarriageT
     runs = required_runs(final_by_tile, incumbents, setup.recipes)
     _place_producers(setup, record, area_map, final_by_tile, incumbents, runs)
     sites.apply_site_limits(record, setup)
-    _open_workforce(setup, record)
+    record.workforce = labour_state.opening_workforce(setup, record)
     _open_merchants(setup, record, priced_goods, final_by_tile)
     _strike_opening_cash(setup, record)
     mint.seed_opening_metal(setup, record)
@@ -216,25 +216,6 @@ def _has_people(record, tile) -> bool:
 
 def _richest_class(record, tile) -> int:
     return ownership.richest_class(record.cohorts.values(), tile) or 0
-
-
-def _open_workforce(setup, record) -> None:
-    """Workers by tile and trade: what the tile's producers need at capacity, scaled to the tile's
-    working people; the rest work unskilled."""
-    needed: Dict[TileId, Dict[str, float]] = {}
-    for producer in record.producers.values():
-        recipe = setup.recipes[producer.recipe_id]
-        for trade, hours in recipe.labour_hours.items():
-            trades = needed.setdefault(producer.tile, {})
-            trades[trade] = trades.get(trade, 0.0) + producer.capacity_runs * hours / setup.working_hours_per_year
-    for tile, people in sorted(setup.opening_population_by_tile.items()):
-        working = people * setup.working_share
-        trades = needed.get(tile, {})
-        total = math.fsum(trades.values())
-        scale = min(1.0, working / total) if total > 0.0 else 0.0
-        workforce = {trade: workers * scale for trade, workers in sorted(trades.items())}
-        workforce[setup.unskilled_trade] = workforce.get(setup.unskilled_trade, 0.0) + max(0.0, working - total * scale)
-        record.workforce[tile] = workforce
 
 
 def _open_merchants(setup, record, prices, final_by_tile) -> None:

@@ -6,7 +6,7 @@ import os
 
 from .harness import *  # noqa: F401,F403
 
-from sim.economy import year_labour
+from sim.economy import labour
 from sim.engine import economy_port_setup
 from sim.engine.catalog import Trade, _trade_fields, _trade_from
 from sim.labour import trade_data
@@ -45,9 +45,9 @@ check("the port passes each trade's risk into the economy",
       all(setup.trades[name].fatality_risk_per_year == trades_file[name]["fatality_risk_per_year"] for name in trades_file))
 safe_twin = dataclasses.replace(setup.trades["miner"], fatality_risk_per_year=0.0)
 check("the twin has equal training", safe_twin.training_years == setup.trades["miner"].training_years > 0.0)
-dangerous_ask = year_labour.trade_ask(setup, "miner", 100.0)
+dangerous_ask = labour.reservation_wage(100.0, setup.working_hours_per_year, setup.trades["miner"].fatality_risk_per_year, 20.0)
 setup.trades["miner"] = safe_twin
-safe_ask = year_labour.trade_ask(setup, "miner", 100.0)
+safe_ask = labour.reservation_wage(100.0, setup.working_hours_per_year, setup.trades["miner"].fatality_risk_per_year, 20.0)
 check("a dangerous trade's offered wage exceeds a safe one with equal training", dangerous_ask > safe_ask, (dangerous_ask, safe_ask))
 
 # 443: service lives are in data and reach the economy.

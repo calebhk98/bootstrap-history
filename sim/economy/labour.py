@@ -1,24 +1,15 @@
-"""The labour market for one trade in one area: where hours offered meet hours bid, and the wage they settle at.
+"""What a worker asks and what a training costs, and the order-book helpers other markets share.
 
-Workers offer hours at a reservation wage (the outside option); employers bid hours at the most the
-hours are worth to them. The clearing wage sits between the marginal worker and the marginal employer.
-The wage actually paid is sticky: it moves toward the clearing wage by a share each year and never
-passes it, so vacancies pull it up and idle hours push it down over several years. Nothing here names
-a trade; soldiers, smiths and farmhands are all hours bought by an employer, the state included.
+The labour market itself is the labour core's (`sim.labour.api`; sim/economy/year_labour.py hands it the
+year). `clearing_point` and `allocate_in_order` clear the credit market; `sticky_move` is the move of a
+remembered price toward its target.
 """
 import math
 from typing import Dict, List, Optional, Sequence, Tuple
 
 from sim.constants import declare
 
-from .types import AreaId, CurrencyId, Fill, LabourBid, LabourOffer, LabourResult, TradeId
 
-WAGE_ADJUSTMENT_SHARE_PER_YEAR = declare(
-    "WAGE_ADJUSTMENT_SHARE_PER_YEAR", 0.3, kind="temporary_heuristic",
-    unit="share of the gap to the clearing wage closed in a year", source=None, confidence="D",
-    why="Contracts, custom and the cost of searching keep a wage from jumping to the market-clearing "
-        "level in one year. Stands in for explicit contract lengths and search friction, which are not "
-        "modelled; the Lengnick and EURACE wage rule has the same free adjustment rate.")
 DANGER_PREMIUM_EXPONENT = declare(
     "DANGER_PREMIUM_EXPONENT", 1.0, kind="temporary_heuristic",
     unit="exponent on the yearly fatality risk", source=None, confidence="D",
@@ -110,45 +101,6 @@ def sticky_move(last_value: Optional[float], target: float, share: float) -> flo
     if last_value is None:
         return target
     return last_value + max(0.0, min(1.0, share)) * (target - last_value)
-
-
-def clear(bids: Sequence[LabourBid], offers: Sequence[LabourOffer], trade: TradeId, area: AreaId,
-          currency: CurrencyId, last_wage: Optional[float]) -> LabourResult:
-    bids = [bid for bid in bids if bid.trade == trade and bid.area == area and bid.hours > 0]
-    offers = [offer for offer in offers if offer.trade == trade and offer.area == area and offer.hours > 0]
-    target = clearing_point([(offer.reservation_wage, offer.hours) for offer in offers],
-                            [(bid.maximum_wage, bid.hours) for bid in bids])
-    if target is None or (last_wage is not None and not offers):
-        # with nobody offering hours nothing is hired, and an untraded wage stays where it was
-        wage = last_wage if last_wage is not None else 0.0
-    else:
-        wage = sticky_move(last_wage, target, WAGE_ADJUSTMENT_SHARE_PER_YEAR)
-        lowest_ask = min(offer.reservation_wage for offer in offers) if offers else None
-        if lowest_ask is not None and wage < lowest_ask <= max((bid.maximum_wage for bid in bids), default=-math.inf):
-            # a sticky wage below every worker's ask would hire nobody while an employer would pay it
-            wage = lowest_ask
-    willing = [offer for offer in offers if offer.reservation_wage <= wage]
-    able = [bid for bid in bids if bid.maximum_wage >= wage]
-    supply = sum(offer.hours for offer in sorted(willing, key=lambda o: (o.worker, o.hours)))
-    demand = sum(bid.hours for bid in sorted(able, key=lambda b: (b.employer, b.hours)))
-    hired = min(supply, demand)
-    worker_entries = [(offer.reservation_wage, offer.worker, offer.hours) for offer in willing]
-    employer_entries = [(bid.maximum_wage, bid.employer, bid.hours) for bid in able]
-    worker_hours = allocate_in_order(worker_entries, hired, descending=False)
-    employer_hours = allocate_in_order(employer_entries, hired, descending=True)
-    fills = []
-    for offer, hours in zip(willing, worker_hours):
-        if hours > 0:
-            fills.append(Fill(offer.worker, trade, area, "", hours, wage, "sell"))
-    for bid, hours in zip(able, employer_hours):
-        if hours > 0:
-            fills.append(Fill(bid.employer, trade, area, "", hours, wage, "buy"))
-    fills.sort(key=lambda fill: (fill.side, fill.agent, fill.quantity))
-    total_bid = sum(bid.hours for bid in sorted(bids, key=lambda b: (b.employer, b.hours)))
-    total_offered = sum(offer.hours for offer in sorted(offers, key=lambda o: (o.worker, o.hours)))
-    return LabourResult(trade=trade, area=area, currency=currency, wage=wage, hours_hired=hired,
-                        vacant_hours=max(0.0, total_bid - hired), idle_hours=max(0.0, total_offered - hired),
-                        fills=tuple(fills))
 
 
 def reservation_wage(subsistence_cost_per_year: float, working_hours_per_year: float,

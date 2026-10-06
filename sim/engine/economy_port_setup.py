@@ -138,7 +138,7 @@ def build_setup(sim, opening=None):
     prices = {good: price for good, price in opening["prices"].items() if good in specs and price > 0.0}
     trades_data = _load("world", "trades.json").get("trades", {})
     trades = {trade: TradeSpec(trade, float(spec.get("training_years", 0.0)),
-                               float(spec.get("fatality_risk_per_year", 0.0)))
+                               float(spec.get("fatality_risk_per_year", 0.0)), str(spec.get("family", "")))
               for trade, spec in sorted(trades_data.items())}
     wages = dict(opening["wages"])
     by_people = sorted(tile_ids, key=lambda tile: (-population_by_tile[tile], tile))

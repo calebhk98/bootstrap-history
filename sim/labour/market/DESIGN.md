@@ -85,9 +85,9 @@ worker is worth less than the first.
 ## Status and what is outside this folder
 
 The core is complete and tested (`python3 -m sim.tests --only labour_core_training,labour_core_clearing,labour_core_entrants,labour_core_switching,labour_core_migration,labour_core_opening,labour_core_year,labour_core_walls`).
-Nothing in the running game calls it yet. That needs changes outside `sim/labour/`:
+The agent economy (on by default) calls it every year (`sim/economy/year_labour.py`) and keeps its state
+in its record, so the core sets the wage every employer is quoted. Still outside the core:
 
-- Complaint 428: the agent economy delegates its labour clearing and worker movement to the core.
 - Complaint 429 (done for `literate`, `taught_from`, `tool_basket`, `staff_resource`, `fatality_risk_per_year`,
   now read from the trade registry): `difficulty` and `fallback` are still derived in code, and
   `legacy_trade_defaults.py` keeps the role constants.

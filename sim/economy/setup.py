@@ -28,6 +28,7 @@ class TradeSpec:
     trade_id: TradeId
     training_years: float = 0.0
     fatality_risk_per_year: float = 0.0
+    family: str = ""                  # trades that share skill: retraining within one is quicker
 
 
 @dataclass
