@@ -111,6 +111,7 @@ class Config(TypedDict):
     display_width: Optional[int]
     rows_per_page: int
     show_welcome: bool
+    multi_year_step_warning: bool
     commission_display: str
     display_units: Dict[str, str]
     default_civ: str
@@ -204,6 +205,7 @@ CONFIG_DEFAULTS: Config = {
     "display_width": None,     # None means "ask the terminal; see below"
     "rows_per_page": 30,
     "show_welcome": True,
+    "multi_year_step_warning": True,   # `step N` warns when founder-hours would go unused
     "commission_display": "both",  # "commissioned", "ready", or "both"
     # Unit id per dimension (area, mass, temperature, money) the player wants
     # shown; a missing dimension means "as the game writes it" (Complaint 285).

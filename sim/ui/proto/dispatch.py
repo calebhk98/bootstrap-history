@@ -149,7 +149,7 @@ def _cmd_step(sim, nodes, cmd, ended):
     # Non-blocking: it says so and proceeds, it does not refuse the step.
     multi_year_hours_warning = None
     lone_dependencies = sim.labour.sole_supervisors() if years > 1 else []
-    if years > 1:
+    if years > 1 and ui_port.settings.load_config().get("multi_year_step_warning", True):
         _pre_state = _agent_state(sim, nodes)
         _idle_note = _pre_state.get("free_hours_going_unused")
         if _idle_note:
@@ -371,6 +371,7 @@ def _cmd_step(sim, nodes, cmd, ended):
     if multi_year_hours_warning:
         out["multi_year_hours_warning"] = multi_year_hours_warning
     out.update(_agent_state(sim, nodes))
+    out["state_view"] = "short"
     return out
 
 

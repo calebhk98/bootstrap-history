@@ -29,3 +29,21 @@ check("a row from the year just played reaches the step reply",
 reply = _agent_dispatch(game, NODES, {"cmd": "step"})
 check("an older year's row is not repeated in the next step",
       not any(row.get("what") == "probe" for row in reply.get("automation") or []))
+
+# The step reply shows the short state and one closing pointer to the full one.
+from sim.ui.proto.render_screen_state_views import render_view
+from sim.ui.proto.render_screen_step import FULL_STATE_POINTER
+
+step_game = sim()
+step_game.end_year = step_game.cfg["start_year"] + 50
+step_reply = _agent_dispatch(step_game, NODES, {"cmd": "step", "years": 2})
+step_text = render_step(step_reply)
+short_lines = {line for line in render_view(step_reply, "short") if line.strip()}
+full_only_lines = {line for line in render_view(step_reply, "full") if line.strip()} - short_lines
+check("the step reply text carries the short state's sections",
+      any("state full" in line for line in short_lines) and all(line in step_text for line in short_lines if "more:" in line),
+      step_text[-300:])
+check("the step reply text leaves out the sections only the full state prints",
+      full_only_lines and not any(line in step_text.splitlines() for line in full_only_lines), sorted(full_only_lines)[:3])
+check("the pointer to the full state appears exactly once, as the last line",
+      step_text.count(FULL_STATE_POINTER) == 1 and step_text.splitlines()[-1] == FULL_STATE_POINTER, step_text[-200:])
