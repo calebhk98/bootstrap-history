@@ -1,6 +1,7 @@
 """round2_policy_hazards_options: regression checks, run individually with `--only round2_policy_hazards_options`."""
 
 from .harness import *  # noqa: F401,F403
+from sim.tests import cli_in_process
 
 # ============================================================================
 # Round two, sections C-F: knowledge vs plant, the automatic policies, warning
@@ -294,11 +295,11 @@ check("Christianisation still carries no sack_chance (a values shift is not "
 # ============================================================================
 
 def _run_agent(input_lines, extra_args=(), civ="rome_100ad", cwd=None):
-    """Drive the real `agent` subcommand in a real subprocess, optionally with
+    """Drive the real `agent` subcommand in-process (cli_in_process.py), optionally with
     extra CLI flags (--pretty among them). Returns (stdout, stderr, returncode)."""
-    cmd = [sys.executable, os.path.join(HERE, "simulator.py"), "agent", "--civ", civ] + list(extra_args)
-    proc = subprocess.run(cmd, input="\n".join(json.dumps(command) for command in input_lines) + "\n",
-                       capture_output=True, text=True, timeout=300, cwd=(cwd or ROOT))
+    arguments = ["agent", "--civ", civ] + list(extra_args)
+    proc = cli_in_process.run(arguments, input_text="\n".join(json.dumps(command) for command in input_lines) + "\n",
+                              cwd=(cwd or ROOT))
     return proc.stdout, proc.stderr, proc.returncode
 
 
@@ -337,7 +338,7 @@ _menu_env = dict(os.environ, ROME_SIM_CONFIG=_menu_cfg, ROME_SAVE_DIR=_menu_save
 # the menu drops into `play`, so the commands fed are typed words
 _menu_input = "1\n1\ny\n\n\ny\n\n\n\nstate\nquit\n"
 _pm = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")], input=_menu_input, capture_output=True, text=True,
-                     timeout=120, cwd=_menu_dir, env=_menu_env)
+                     timeout=120, cwd=_menu_dir, env=_menu_env)  # real process: keeps the true entry point covered
 check("the menu offers a main menu with New game, Load, and Options",
       all(option in _pm.stdout for option in ("New game", "Load a saved game", "Options")), _pm.stdout[:2000])
 check("the menu says it is starting, and names a resumable --session file ending in .json",
@@ -352,13 +353,11 @@ check("the menu drops straight into a playable session, no extra prompt",
       _pm.returncode == 0 and "YEAR" in _pm.stdout and "WHAT YOU CAN DO NOW" in _pm.stdout, _pm.stdout[-300:])
 check("the mortality choice made in the menu reaches the actual game",
       "aged about" in _pm.stdout, _pm.stdout[-300:])
-_pl_fogload = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")], input="2\nb\nq\n", capture_output=True,
-                             text=True, timeout=60, cwd=_menu_dir, env=_menu_env)
+_pl_fogload = cli_in_process.run([], input_text="2\nb\nq\n", cwd=_menu_dir, environment=_menu_env)
 check("a fogged save's Load Game entry does not leak how big the tree is",
       "toward Grown and alloy junction transistors" not in _pl_fogload.stdout
       and "technologies built" in _pl_fogload.stdout, _pl_fogload.stdout[-1200:])
-_pl_resume = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")], input="2\n1\nstate\nquit\n", capture_output=True,
-                            text=True, timeout=120, cwd=_menu_dir, env=_menu_env)
+_pl_resume = cli_in_process.run([], input_text="2\n1\nstate\nquit\n", cwd=_menu_dir, environment=_menu_env)
 check("picking a save from the Load Game list actually resumes it, not a fresh game",
       "Resumed from" in _pl_resume.stdout, _pl_resume.stdout[:600])
 
@@ -366,9 +365,8 @@ check("picking a save from the Load Game list actually resumes it, not a fresh g
 # resume, an explicit --horizon still overrides, and the menu never offers per-game choices mid-game.
 _ig_dir = tempfile.mkdtemp()
 _ig_session = os.path.join(_ig_dir, "ig.json")
-_ig1 = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"), "play", "--civ", "rome_100ad", "--session", _ig_session],
-                      input="options\n1\n250\nb\noptions\n2\ny\nb\nstate\nquit\n", capture_output=True,
-                      text=True, timeout=120, cwd=_ig_dir)
+_ig1 = cli_in_process.run(["play", "--civ", "rome_100ad", "--session", _ig_session],
+                      input_text="options\n1\n250\nb\noptions\n2\ny\nb\nstate\nquit\n", cwd=_ig_dir)
 check("the in-game options command changes the horizon",
       "now ends in 250 AD" in _ig1.stdout, _ig1.stdout[-600:])
 check("the in-game options command can turn mortality on mid-game",
@@ -378,21 +376,20 @@ check("the in-game options menu never offers to change civilisation, kit or fog 
       not any(option in _ig1.stdout for option in
               ("change the civilisation", "change the kit", "change the starting", "turn fog")),
       [line for line in _ig1.stdout.splitlines() if "fog" in line.lower()])
-_ig2 = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"), "play", "--session", _ig_session],
-                      input="state\nquit\n", capture_output=True, text=True, timeout=120, cwd=_ig_dir)
+_ig2 = cli_in_process.run(["play", "--session", _ig_session],
+                      input_text="state\nquit\n", cwd=_ig_dir)
 check("...and a later plain `play --session` resume - no flag repeated - still honours the horizon and "
       "the mortality",
       "horizon at 250" in _ig2.stdout and "aged about" in _ig2.stdout, _ig2.stdout[-1500:])
-_ig3 = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"), "play", "--session", _ig_session, "--horizon", "9"],
-                      input="state\nquit\n", capture_output=True, text=True, timeout=120, cwd=_ig_dir)
+_ig3 = cli_in_process.run(["play", "--session", _ig_session, "--horizon", "9"],
+                      input_text="state\nquit\n", cwd=_ig_dir)
 check("...while an EXPLICIT --horizon flag still overrides the remembered one",
       ("horizon at %d" % (100 + 9)) in _ig3.stdout, _ig3.stdout[-1500:])
 _mv_dir = tempfile.mkdtemp()
 _mv_from = os.path.join(_mv_dir, "from.json")
 _mv_to = os.path.join(_mv_dir, "to.json")
-_mv = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"), "play", "--civ", "rome_100ad", "--session", _mv_from],
-                     input="options\n1\n300\nb\noptions\n3\n%s\nb\nquit\n" % _mv_to,
-                     capture_output=True, text=True, timeout=120, cwd=_mv_dir)
+_mv = cli_in_process.run(["play", "--civ", "rome_100ad", "--session", _mv_from],
+                     input_text="options\n1\n300\nb\noptions\n3\n%s\nb\nquit\n" % _mv_to, cwd=_mv_dir)
 check("moving a save from the in-game options command relocates the file and its remembered horizon",
       os.path.exists(_mv_to) and not os.path.exists(_mv_from) and os.path.exists(_mv_to + ".meta.json"),
       (os.listdir(_mv_dir), _mv.stdout[-400:]))
@@ -413,9 +410,8 @@ _appopt_dir = tempfile.mkdtemp()
 _appopt_cfg = os.path.join(_appopt_dir, "cfg.json")
 _appopt_env = dict(os.environ, ROME_SIM_CONFIG=_appopt_cfg)
 _appopt_env.pop("ROME_SAVE_DIR", None)
-_appopt = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
-                         input="3\nb\nq\n", capture_output=True, text=True,
-                         timeout=60, cwd=_appopt_dir, env=_appopt_env)
+_appopt = cli_in_process.run([],
+                         input_text="3\nb\nq\n", cwd=_appopt_dir, environment=_appopt_env)
 check("...and no longer offers the per-game defaults that used to live here - "
       "civilisation, starting kit, fog, and mortality are a playthrough's own "
       "business, decided when that game starts, not a standing preference",
@@ -452,10 +448,10 @@ _wt_off_dir = tempfile.mkdtemp()
 _wt_off_cfg = os.path.join(_wt_off_dir, "cfg.json")
 json.dump({"show_welcome": False, "rows_per_page": 4}, open(_wt_off_cfg, "w"))
 _wt_off_env = dict(os.environ, ROME_SIM_CONFIG=_wt_off_cfg, ROME_SAVE_DIR=tempfile.mkdtemp())
-_wt_off = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"), "play", "--civ", "rome_100ad", "--session",
+_wt_off = cli_in_process.run(["play", "--civ", "rome_100ad", "--session",
                           os.path.join(_wt_off_dir, "s.json")],
-                         input="available find a\nquit\n", capture_output=True, text=True, timeout=120,
-                         env=_wt_off_env)
+                         input_text="available find a\nquit\n",
+                         environment=_wt_off_env)
 check("a 'rows per table' preference of 4 pages a filtered `available` list at 4 rows, not the old bare 30",
       "1-4 matching" in _wt_off.stdout, _wt_off.stdout[:1500])
 check("turning the welcome off from Options suppresses it, and the session still starts and is playable",
@@ -473,9 +469,9 @@ import re as _re_mk
 _mk_dir = tempfile.mkdtemp()
 _mk_env = dict(os.environ, ROME_SIM_CONFIG=os.path.join(_mk_dir, "nope.json"),
                ROME_SAVE_DIR=tempfile.mkdtemp())
-_mk_play = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"), "play", "--civ", "han_china_100ad", "--kit", "merchant",
+_mk_play = cli_in_process.run(["play", "--civ", "han_china_100ad", "--kit", "merchant",
                            "--session", os.path.join(_mk_dir, "s.json")],
-                          input="quit\n", capture_output=True, text=True, timeout=120, env=_mk_env)
+                          input_text="quit\n", environment=_mk_env)
 # Kits are stated in labourer-years, so the kit's size and the cash arrived with (in the civ's own
 # coin) must be tied together on the same screen.
 _mk_arrived = _re_mk.search(r"arrive in \d+ AD with (\d+)", _mk_play.stdout)
@@ -495,12 +491,11 @@ check("with no preference ever set, the welcome/tutorial text still prints on a 
 _agentpref_cfg = os.path.join(tempfile.mkdtemp(), "cfg.json")
 json.dump({"display_width": 200, "rows_per_page": 2}, open(_agentpref_cfg, "w"))
 _agentpref_env = dict(os.environ, ROME_SIM_CONFIG=_agentpref_cfg)
-_ap = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"), "agent",
+_ap = cli_in_process.run(["agent",
                       "--civ", "rome_100ad", "--pretty"],
-                     input=json.dumps({"cmd": "available", "find": "a"}) + "\n"
+                     input_text=json.dumps({"cmd": "available", "find": "a"}) + "\n"
                            + json.dumps({"cmd": "quit"}) + "\n",
-                     capture_output=True, text=True, timeout=60,
-                     env=_agentpref_env)
+                     environment=_agentpref_env)
 check("a saved display-width/rows-per-page preference never reaches `agent` "
       "- its --pretty rendering still pages at the old default of 30, "
       "regardless of what a human's own config file says",
@@ -527,9 +522,8 @@ _rem_env = dict(os.environ, ROME_SIM_CONFIG=_rem_cfg, ROME_SAVE_DIR=_rem_saves)
 # goes through that fifth option, exactly as a player asking for a number that
 # is not named would. Both answers have to be in the script or the wizard
 # consumes the horizon as the goal.
-_rem1 = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
-                       input="1\n1\nn\n\nmerchant\ny\n\n5\n321\n\nquit\n",
-                       capture_output=True, text=True, timeout=120, env=_rem_env)
+_rem1 = cli_in_process.run([],
+                       input_text="1\n1\nn\n\nmerchant\ny\n\n5\n321\n\nquit\n", environment=_rem_env)
 _rem_cfg_read = json.load(open(_rem_cfg)) if os.path.exists(_rem_cfg) else {}
 check("finishing the New Game wizard remembers every answer as next time's "
       "default, with no Options screen involved",
@@ -539,15 +533,13 @@ check("finishing the New Game wizard remembers every answer as next time's "
       and _rem_cfg_read.get("default_mortal") is True
       and _rem_cfg_read.get("default_horizon") == 321,
       _rem_cfg_read)
-_rem2 = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
-                       input="1\nb\nq\n", capture_output=True, text=True,
-                       timeout=60, env=_rem_env)
+_rem2 = cli_in_process.run([],
+                       input_text="1\nb\nq\n", environment=_rem_env)
 check("...and the civilisation picker offers that remembered choice as its "
       "default the next time the wizard is opened",
       "default 1" in _rem2.stdout, _rem2.stdout[-800:])
-_rem3 = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
-                       input="1\n\n\n\n\n\n\n\n\nstate\nquit\n", capture_output=True,
-                       text=True, timeout=120, env=_rem_env)
+_rem3 = cli_in_process.run([],
+                       input_text="1\n\n\n\n\n\n\n\n\nstate\nquit\n", environment=_rem_env)
 check("...and accepting every default (blank through all six questions) "
       "actually starts the remembered civilisation, not rome_100ad",
       "LATER HAN EMPIRE" in _rem3.stdout.upper(), _rem3.stdout[:2000])

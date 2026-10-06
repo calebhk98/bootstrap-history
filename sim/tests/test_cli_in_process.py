@@ -33,3 +33,19 @@ _cwd_before, _argv_before, _stdout_before = os.getcwd(), list(sys.argv), sys.std
 cli_in_process.run(["agent"], json.dumps({"cmd": "quit"}) + "\n")
 check("the runner restores the working directory, argv and streams",
       (os.getcwd(), sys.argv, sys.stdout) == (_cwd_before, _argv_before, _stdout_before))
+
+# Display preferences a command applies (width, rows per page) must not outlast it.
+from sim.ui import cli as _cli_module
+from sim.ui import protocol as _protocol_module
+_display_before = (_cli_module._DISPLAY_WIDTH, _protocol_module.DISPLAY_WIDTH,
+                   _protocol_module.DEFAULT_AVAILABLE_LIMIT)
+_display_config = os.path.join(tempfile.mkdtemp(), "config.json")
+json.dump({"display_width": 150, "rows_per_page": 7}, open(_display_config, "w"))
+cli_in_process.run(["play", "--civ", "rome_100ad", "--session", os.path.join(tempfile.mkdtemp(), "s.json")],
+                   "quit\n", dict(os.environ, ROME_SIM_CONFIG=_display_config,
+                                  ROME_SAVE_DIR=tempfile.mkdtemp()))
+check("the runner restores the display width and rows per page a command applied",
+      (_cli_module._DISPLAY_WIDTH, _protocol_module.DISPLAY_WIDTH,
+       _protocol_module.DEFAULT_AVAILABLE_LIMIT) == _display_before,
+      (_display_before, _cli_module._DISPLAY_WIDTH, _protocol_module.DISPLAY_WIDTH,
+       _protocol_module.DEFAULT_AVAILABLE_LIMIT))

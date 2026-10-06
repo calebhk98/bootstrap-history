@@ -1,9 +1,9 @@
 """Regression coverage for Complaint 191: fuzzy estimates are a normal game
 option (new-game menu, in-game options screen, settings default, save)."""
 from .harness import *
+from sim.tests import cli_in_process
 from sim.engine import settings as _settings
 
-_SIMULATOR = os.path.join(HERE, "simulator.py")
 _scratch = tempfile.mkdtemp()
 
 
@@ -18,8 +18,7 @@ def _env(name, config=None):
 
 
 def _run(arguments, text, env):
-    return subprocess.run([sys.executable, _SIMULATOR] + arguments, input=text,
-                          capture_output=True, text=True, timeout=120, env=env)
+    return cli_in_process.run(arguments, input_text=text, environment=env)
 
 
 def _only_save(saves):

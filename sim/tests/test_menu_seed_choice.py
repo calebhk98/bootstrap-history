@@ -6,12 +6,12 @@ the question and the resolver directly."""
 import builtins
 
 from .harness import *
+from sim.tests import cli_in_process
 
 from sim.tests import fingerprint as perf_fingerprint
 from sim.ui import cli_interactive
 from sim.engine.settings_table import normal_seed
 
-_SIMULATOR = os.path.join(HERE, "simulator.py")
 _scratch = tempfile.mkdtemp()
 
 
@@ -28,8 +28,7 @@ def _env(name, config=None):
 
 
 def _run(arguments, text, env, cwd=None):
-    return subprocess.run([sys.executable, _SIMULATOR] + arguments, input=text,
-                          capture_output=True, text=True, timeout=120, env=env, cwd=cwd)
+    return cli_in_process.run(arguments, input_text=text, environment=env, cwd=cwd)
 
 
 def _ask_seed(answers, config=None):

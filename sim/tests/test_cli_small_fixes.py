@@ -1,11 +1,10 @@
 """Tests for CLI small fixes (complaints 155, 156, 157, 168)."""
 import json
 import os
-import subprocess
-import sys
 import tempfile
 
 from .harness import *  # noqa: F401,F403
+from sim.tests import cli_in_process
 
 
 def test_159_new_session_needs_civ_and_readme_says_so():
@@ -13,10 +12,8 @@ def test_159_new_session_needs_civ_and_readme_says_so():
     start a new game), and the README's new-game example names the civ."""
     with tempfile.TemporaryDirectory() as tmpdir:
         session_path = os.path.join(tmpdir, "newgame.json")
-        result = subprocess.run(
-            [sys.executable, os.path.join(ROOT, "sim", "simulator.py"),
-             "play", "--session", session_path, "--seed", "1"],
-            input="quit\n", capture_output=True, text=True, timeout=60, cwd=ROOT)
+        result = cli_in_process.run(
+            ["play", "--session", session_path, "--seed", "1"], input_text="quit\n", cwd=ROOT)
         output = result.stdout + result.stderr
         assert "--civ" in output, "the refusal should name --civ. Got: %s" % output[:300]
         assert not os.path.exists(session_path), "no save should be written for a typo'd path"
@@ -28,13 +25,7 @@ def test_159_new_session_needs_civ_and_readme_says_so():
 
 def test_160_goals_marks_actual_default():
     """goals output should mark the actual default goal, not just tree's meta."""
-    result = subprocess.run(
-        [sys.executable, os.path.join(ROOT, "sim", "simulator.py"), "goals"],
-        capture_output=True,
-        text=True,
-        timeout=10,
-        cwd=ROOT
-    )
+    result = cli_in_process.run(["goals"], cwd=ROOT)
     assert result.returncode == 0
     lines = result.stdout.split("\n")
     # Find lines that mark a default
@@ -47,15 +38,7 @@ def test_160_goals_marks_actual_default():
 
 def test_161_options_not_alias_of_available():
     """help commands should not list 'options' as an alias of 'available'."""
-    result = subprocess.run(
-        [sys.executable, os.path.join(ROOT, "sim", "simulator.py"),
-         "play", "--seed", "1"],
-        input="help commands\nquit\n",
-        capture_output=True,
-        text=True,
-        timeout=10,
-        cwd=ROOT
-    )
+    result = cli_in_process.run(["play", "--seed", "1"], input_text="help commands\nquit\n", cwd=ROOT)
     assert result.returncode == 0
     # Check that 'options' is not listed as an alias of 'available'
     # The output should show available and its aliases separately from options menu
@@ -65,13 +48,7 @@ def test_161_options_not_alias_of_available():
 
 def test_172_help_has_player_facing_description():
     """--help should show player-facing descriptions, not developer module docstring."""
-    result = subprocess.run(
-        [sys.executable, os.path.join(ROOT, "sim", "simulator.py"), "--help"],
-        capture_output=True,
-        text=True,
-        timeout=10,
-        cwd=ROOT
-    )
+    result = cli_in_process.run(["--help"], cwd=ROOT)
     assert result.returncode == 0
     output = result.stdout
     # Should NOT contain developer documentation terms

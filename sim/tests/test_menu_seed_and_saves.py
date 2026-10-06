@@ -3,9 +3,9 @@ and play agree on goal and civilisations), 246 (save browser reads the nested
 save), 204 (typed save accepts absolute paths) and 205 (changes window counts
 from the arrival year)."""
 from .harness import *
+from sim.tests import cli_in_process
 from sim.engine import settings as _settings
 
-_SIMULATOR = os.path.join(HERE, "simulator.py")
 _scratch = tempfile.mkdtemp()
 
 
@@ -19,8 +19,7 @@ def _env(name):
 
 
 def _run(arguments, text, env):
-    return subprocess.run([sys.executable, _SIMULATOR] + arguments, input=text,
-                          capture_output=True, text=True, timeout=120, env=env)
+    return cli_in_process.run(arguments, input_text=text, environment=env)
 
 
 def _saves_in(saves):

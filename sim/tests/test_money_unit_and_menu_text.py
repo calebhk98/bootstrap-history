@@ -2,8 +2,8 @@
 232 item 5 (mortality wording). Tests that the money unit is explained in
 the start text, and that the mortality question uses neutral wording."""
 from .harness import *
+from sim.tests import cli_in_process
 
-_SIMULATOR = os.path.join(HERE, "simulator.py")
 _scratch = tempfile.mkdtemp()
 
 
@@ -20,8 +20,7 @@ def _env(name, config=None):
 
 
 def _run(arguments, text, env, cwd=None):
-    return subprocess.run([sys.executable, _SIMULATOR] + arguments, input=text,
-                          capture_output=True, text=True, timeout=120, env=env, cwd=cwd)
+    return cli_in_process.run(arguments, input_text=text, environment=env, cwd=cwd)
 
 
 # ---- Complaint 203: money unit is anchored to labourer wage
