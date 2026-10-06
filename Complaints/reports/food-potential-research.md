@@ -1,6 +1,6 @@
 # Food potential gaps: research and build plan (Complaint 411)
 
-Research report only; no code or data changed. Tags on every source: **read** (text of the page or abstract seen this session), **snippet** (seen only as a search-result excerpt), **recalled** (from memory, to be verified before a number is committed). Per CLAUDE.md 4.1 and 4.5, every rule below derives an outcome from geography, physics or biology; no rule reads a historical result. Numbers appear only in tables with a source and tag; measure anything else with the commands given.
+Research report only; no code or data changed. Tags on every source: **read** (text of the page or abstract seen this session), **snippet** (seen only as a search-result excerpt), **recalled** (from memory, to be verified before a number is committed). A second pass opened sources: a row tagged **read** now means the cited page or document was opened and the figure seen in it; **disputed** means opened sources disagree. Per CLAUDE.md 4.1 and 4.5, every rule below derives an outcome from geography, physics or biology; no rule reads a historical result. Numbers appear only in tables with a source and tag; measure anything else with the commands given.
 
 ## 0. How the current model is built (read from the repo)
 
@@ -33,11 +33,11 @@ Yield: keep the Pauly and Christensen chain (primary production, ten percent tra
 
 | Fact | Value or statement | Source | Tag |
 |---|---|---|---|
-| Primary production required to sustain world catches, share by system | Under 2% of open ocean, above 20% for upwelling, shelf and freshwater | Pauly and Christensen 1995, Nature 374:255, https://fishbase.se/Ecopath/PPRnatur.htm | snippet |
-| Energy transfer between trophic levels | Ten percent | same | snippet |
-| Shelf catches per area | Range from 0.1 to 30 t/km2/yr, most 1 to 10, modal 3 to 6 | Search excerpt of a shelf-yield-per-area review at https://journal.nafo.int/Volumes/Articles/ID/285/ (Have peak fishery production levels been passed in continental shelf area) | snippet (modern industrial catches, an upper check, not a pre-industrial target) |
-| Regional peaks of shelf-dependent resources | Arcto-boreal 2.1 to 2.7 t/km2, south-boreal 0.5 to 2.2, tropical and subtropical 0.4 to 0.9 | same | snippet |
-| Ryther world maximum sustainable fish yield from primary production | Order of 100 million t | Ryther 1969 Science 166:72 | snippet |
+| Primary production required to sustain world catches, share by system | Under 2% of open ocean, above 20% for upwelling, shelf and freshwater | Pauly and Christensen 1995, Nature 374:255, https://fishbase.se/Ecopath/PPRnatur.htm (page opened: open ocean 1.6 percent, upwelling, shelf and freshwater each more than 20 percent) | read |
+| Energy transfer between trophic levels | Ten percent (average ecotrophic transfer efficiency 10%) | same, page opened | read |
+| Shelf catches per area | Range from 0.1 to 30 t/km2/yr, most 1 to 10, modal 3 to 6 | Search excerpt of a shelf-yield-per-area review at https://journal.nafo.int/Volumes/Articles/ID/285/ (Have peak fishery production levels been passed in continental shelf area); the page was opened second pass and shows only the regional peaks below, not this range | snippet (modern industrial catches, an upper check, not a pre-industrial target) |
+| Regional peaks of shelf-dependent resources | Arcto-boreal 2.1 to 2.7 t/km2, south-boreal 0.5 to 2.2, tropical and subtropical 0.4 to 0.9 (Mediterranean about 2.4), peaks over 1950 to 1994 | same, page opened | read |
+| Ryther world maximum sustainable fish yield from primary production | Order of 100 million t | Ryther 1969 Science 166:72 (not opened) | snippet |
 | Sea Around Us catch by cell and large marine ecosystem | Catch reconstructions, 0.5 degree cells | https://www.seaaroundus.org | recalled |
 | Logistic surplus production model | Maximum sustainable yield = rate times carrying capacity over four | Schaefer 1954 | recalled |
 
@@ -61,21 +61,21 @@ with winter_feed_available = standing forage that survives the winter and is rea
 
 | Dataset | Content and limits | Source | Tag |
 |---|---|---|---|
-| WorldClim 2.1 monthly tavg and prec, 10 arc-minute | Already cached; the monthly series gives months above a threshold with no new download | https://worldclim.org/data/worldclim21.html | read (existing layer source) |
-| MODIS/Terra snow cover monthly CMG, 0.05 degree (MOD10CM, version 61) | Monthly mean snow cover on a 7200 by 3600 global grid, HDF-EOS; open use with citation; Earthdata login may be needed to download | https://nsidc.org/data/mod10cm | snippet |
-| GAEZ v4 reference length of growing period, 5 arc-minute | Module of agro-climatic indicators; portal https://gaez.fao.org; licence believed to restrict commercial use (check) | https://www.fao.org/gaez/gaezv4/en | snippet (portal), licence recalled |
-| Fennoscandian reindeer: lichen biomass and animal density | Mean lichen biomass in Finnish herding ranged from 54 to 380 kg dry matter per ha, correlating negatively with animal density per lichen range (1.5 to 14.3 animals/km2); economic carrying capacity of lichen range 900 kg dry matter per ha | Rangifer articles at https://septentrio.uit.no/index.php/rangifer/article/download/840/803/3202 | snippet |
-| Winter pasture limits most reindeer populations | Winter lichen pasture is the limiting factor | same family of sources | snippet |
+| WorldClim 2.1 monthly tavg and prec, 10 arc-minute | Already cached; the monthly series gives months above a threshold with no new download. Resolutions 10, 5, 2.5 minutes and 30 seconds; citation Fick and Hijmans 2017, Int. J. Climatol. 37:4302-4315. Licence: free for academic and other non-commercial use, redistribution and commercial use need prior permission (https://www.worldclim.org/about.html) | https://worldclim.org/data/worldclim21.html, opened | read |
+| MODIS/Terra snow cover monthly CMG, 0.05 degree (MOD10CM, version 61) | Monthly, March 2000 to present, global 0.05 degree grid (the 7200 by 3600 size follows from that, not stated on the page), HDF-EOS2; citation required as a condition of use (Hall and Riggs 2021, doi 10.5067/MODIS/MOD10CM.061); free NASA Earthdata login required | https://nsidc.org/data/mod10cm, page opened | read |
+| GAEZ v4 reference length of growing period, 5 arc-minute | Module of agro-climatic indicators; portal https://gaez.fao.org. Licence: the portal page opened states no data licence; a search result lists the v4 model documentation as Creative Commons attribution non-commercial and the separate v3.0 user agreement as a personal, non-transferable licence; licensing questions go to copyright@fao.org. Treat redistribution as not permitted until FAO confirms | https://www.fao.org/gaez/gaezv4/en, https://www.fao.org/fileadmin/user_upload/gaez/docs/User_Agreement_and_Disclaimer_EN.pdf (v3.0) | snippet (portal), licence unresolved |
+| Fennoscandian reindeer: lichen biomass and animal density | Mean lichen biomass in Finnish herding ranged from 54 to 380 kg dry matter per ha, correlating negatively with animal density per lichen range (1.5 to 14.3 animals/km2); economic carrying capacity of lichen range 900 kg dry matter per ha | Rangifer articles at Helle, Kilpelainen and Aikio 1990, Rangifer Special Issue 3:115-121, https://septentrio.uit.no/index.php/rangifer/article/download/840/803/3202 (PDF opened; figures are for Finnish herding districts in the 1970s) | read |
+| Winter pasture limits most reindeer populations | Winter lichen pasture is the limiting factor | same family of sources; the opened Finnish paper shows lichen biomass far below the carrying capacity and negatively related to animal density, but does not state this sentence | snippet |
 | Mongolian steppe | Lack of winter and spring feed is the major constraint on herd size | https://www.mongoliajol.info/index.php/JASE-A/article/view/3399/3764 and Frontiers in Sustainable Food Systems 2023 article https://www.frontiersin.org/articles/10.3389/fsufs.2023.1186899/full | snippet |
-| Non-equilibrium rangelands | Below roughly 300 to 400 mm rain, or above 30% coefficient of variation of rain, herds follow rain, not stock, and are limited by drought crashes | Ellis and Swift 1988, J. Range Manage. 41:450 | snippet |
-| Pastoral herd sizes, milk and offtake | Herd sizes and yields per head | Dahl and Hjort 1976, *Having Herds* (already the source for animal rows) | recalled |
+| Non-equilibrium rangelands | Below roughly 300 to 400 mm rain, or above 30% coefficient of variation of rain, herds follow rain, not stock, and are limited by drought crashes | Ellis and Swift 1988, J. Range Manage. 41:450-459 (paper exists; the full text did not open, and the numeric thresholds, 300 to 400 mm and a rainfall coefficient of variation of about 30 to 33 percent, appear in later literature that cites it, so they are not confirmed as the paper's own) | snippet |
+| Pastoral herd sizes, milk and offtake | Herd sizes and yields per head | Dahl and Hjort 1976, *Having Herds* (already the source for animal rows; not opened) | recalled |
 
 **Checks.** Compute herd densities for reindeer on tundra and subarctic tiles and compare to the Fennoscandian range above; for yak on the Tibetan plateau compare to published stocking rates (recalled, to be sourced in stage 2); a subarctic tile with no lichen layer should fall far below the current output.
 
 **Files and fields.**
 - New layers `growing_months`, `cold_months`, optionally `snow_months`, added in `layers_raster.py` and `catalog.py` (the same worker that reads WorldClim). Fallbacks from class values go in `data/world/geography/derived_layers/` like the existing climate fallbacks.
 - `sim/geography/food_pasture.py` `usable_forage_kg`: apply the season term and the winter-feed minimum. New parameters in `food.json` (grass growth temperature threshold, winter intake days from `cold_months`, snow-reach fraction). Reindeer need a lichen term; either a `lichen_fraction` proxy from land cover (tundra and boreal open forest) or an `if_missing` envelope until a layer exists (open question 2).
-- Download: stage 1 none. Optional MODIS snow: about 12 monthly files, each tens of megabytes (recalled size), public domain style open licence with citation, login required.
+- Download: stage 1 none. Optional MODIS snow: about 12 monthly files, each tens of megabytes (recalled size, not on the product page), free to use but citation is a condition of use and a free NASA Earthdata login is required (NSIDC page opened; it does not say public domain).
 
 ## 3. Slope
 
@@ -83,12 +83,12 @@ with winter_feed_available = standing forage that survives the winter and is rea
 
 | Fact | Statement | Source | Tag |
 |---|---|---|---|
-| GAEZ integrates terrain slope classes with soil and climate into suitability, with extents of soil units tallied by slope class | | https://www.gaez.iiasa.ac.at/docs/GAEZ_MD_02.02.2012.pdf, https://pure.iiasa.ac.at/id/eprint/6667/1/RR-02-002.pdf | snippet |
-| GAEZ slope class breakpoints and their reduction factors (rainfed arable limit about 8 to 16 percent; above about 30 percent not cultivable without terraces) | | Fischer, van Velthuizen, Nachtergaele 2002 (the IIASA report above), Table of slope classes | recalled, must be read from the report before use |
-| Grazing slope adjustments (use falls on slopes above about 10 to 30 percent) | | Holechek et al., *Range Management: Principles and Practices* | recalled |
+| GAEZ integrates terrain slope classes with soil and climate into suitability, with extents of soil units tallied by slope class | | https://www.gaez.iiasa.ac.at/docs/GAEZ_MD_02.02.2012.pdf (503), https://pure.iiasa.ac.at/id/eprint/6667/1/RR-02-002.pdf (access denied); neither opened second pass | snippet |
+| GAEZ slope class breakpoints and their reduction factors (rainfed arable limit about 8 to 16 percent; above about 30 percent not cultivable without terraces) | | Fischer, van Velthuizen, Nachtergaele 2002 (the IIASA report above), Table of slope classes; the report would not open (access denied). A search result lists the GAEZ v4 terrain slope classes as 0.5, 2, 5, 10, 15, 30 and 45 percent, and a separate study lists reduction-factor classes at 2, 5, 8, 16 and 30 percent: the breakpoints differ between sources | disputed (class edges), recalled (reduction factors); must be read from the report before use |
+| Grazing slope adjustments (use falls on slopes above about 10 to 30 percent) | | Holechek et al., *Range Management: Principles and Practices* (not opened) | recalled |
 | Terrace construction labour per hectare | | Ethnographic and engineering studies of Andean, Chinese and Mediterranean terraces | recalled, no source found yet |
 
-**Data.** The existing `ruggedness_index` is a 10 arc-minute neighbour difference, far too coarse to make slope classes; a slope-class share needs a finer elevation model. Options: GMTED2010 (USGS, public domain, 30 arc-second, global; tile size from a few hundred megabytes), SRTM 90 m (public domain), or GAEZ's own slope layer (licence to check). Recommend a baked layer set `slope_share_below_<class>` (fractions of land under each class breakpoint) so the technique can read the cumulative share at its limit. Build in `layers_raster.py` with a new cache entry in `cache.py`.
+**Data.** The existing `ruggedness_index` is a 10 arc-minute neighbour difference, far too coarse to make slope classes; a slope-class share needs a finer elevation model. Options: GMTED2010 (USGS; the Earth Engine catalog page quotes the USGS statement that most USGS information is in the public domain and may be used without restriction, and describes a 7.5 arc-second product, with 15 and 30 arc-second versions recalled; suggested credit: courtesy of the U.S. Geological Survey; tile size from a few hundred megabytes, recalled), SRTM 90 m (public domain distributed by USGS EROS, which asks for credit, per a search summary), or GAEZ's own slope layer (licence unresolved, see the dataset table). Provider terms found for the other layers: WorldClim states data are free for academic and other non-commercial use and may not be redistributed or used commercially without permission (https://www.worldclim.org/about.html, opened), which bears on caching and shipping its derived layers; the Oregon State VGPM site states no licence or citation policy (page opened); Natural Earth public domain not re-checked. Recommend a baked layer set `slope_share_below_<class>` (fractions of land under each class breakpoint) so the technique can read the cumulative share at its limit. Build in `layers_raster.py` with a new cache entry in `cache.py`.
 
 **Files and fields.** `sim/geography/food_crops.py` (`arable_hectares` times the cumulative slope share at the actor's limit; limit read from `technique_factors`, parameter `food_slope_limit_without_terracing`), `sim/geography/food_pasture.py` (slope use factor), new layers in `catalog.py`, and a terracing labour entry in the labour model (open question 4). Do not use the class-constant `arable_fraction` for slope; it is generated by `tools/generate_geography_tiles.py` from the Koppen table.
 
@@ -102,23 +102,23 @@ with winter_feed_available = standing forage that survives the winter and is rea
 
 | Fact | Source | Tag |
 |---|---|---|
-| Large herbivore biomass against rainfall and primary production | Coe, Cumming and Phillipson 1976, Oecologia 22:341, https://link.springer.com/article/10.1007/BF00317566 | snippet (exists, regression not read) |
-| Equilibrium and non-equilibrium rangelands | Ellis and Swift 1988 | snippet |
-| Maximum production at 0.6 of carrying capacity, growth rate 1.5 times mass to the minus 0.36 | Robinson and Redford 1986, 1991 (already in `food.json`) | recalled |
-| Logistic surplus production, maximum sustainable yield at half carrying capacity | Schaefer 1954; Hilborn and Walters 1992 | recalled |
+| Large herbivore biomass against rainfall and primary production | Coe, Cumming and Phillipson 1976, Oecologia 22:341, https://link.springer.com/article/10.1007/BF00317566 (page needs a login redirect; a search summary confirms the paper relates herbivore biomass to rainfall; coefficients not read) | snippet (exists, regression not read) |
+| Equilibrium and non-equilibrium rangelands | Ellis and Swift 1988 (see section 2 row) | snippet |
+| Maximum production at 0.6 of carrying capacity, growth rate 1.5 times mass to the minus 0.36 | Robinson and Redford 1986, 1991 (already in `food.json`; not opened) | recalled |
+| Logistic surplus production, maximum sustainable yield at half carrying capacity | Schaefer 1954; Hilborn and Walters 1992 (not opened) | recalled |
 
 Files: `sim/geography/food_pasture.py`, `food_wild.py`, `food_crops.py`, parameters in `food.json`.
 
 ## 5. Tropical rainforest against savanna
 
-**Rule.** Replace the Af arable fraction constant with shifting-cultivation geometry. A plot is cropped for a few years then fallowed until the secondary forest rebuilds the nutrient stock. Cropped share of land = crop_years / (crop_years + fallow_years); fallow_years = years of regrowth to restore the cleared nutrient stock, which falls as net primary production and soil nutrient supply rise (read from the existing `net_primary_production`). Yield per cropped hectare in the first years is high (ash from burnt biomass), so the rainforest result is a modest density per km2 from a low cropped share, not a poor yield. Add a temperature-dependent leaching and weed pressure as a function of rainfall to the wet side of the water envelope, instead of the arbitrary tolerated cutoff. Fallow ratio classes: cropped share below one third is shifting cultivation, one third to two thirds short fallow, above two thirds permanent (from the Ruthenberg R-value, snippet).
+**Rule.** Replace the Af arable fraction constant with shifting-cultivation geometry. A plot is cropped for a few years then fallowed until the secondary forest rebuilds the nutrient stock. Cropped share of land = crop_years / (crop_years + fallow_years); fallow_years = years of regrowth to restore the cleared nutrient stock, which falls as net primary production and soil nutrient supply rise (read from the existing `net_primary_production`). Yield per cropped hectare in the first years is high (ash from burnt biomass), so the rainforest result is a modest density per km2 from a low cropped share, not a poor yield. Add a temperature-dependent leaching and weed pressure as a function of rainfall to the wet side of the water envelope, instead of the arbitrary tolerated cutoff. Fallow ratio classes: cropped share below one third is shifting cultivation, one third to two thirds short fallow, above two thirds permanent (from the Ruthenberg R-value, read in the FAO shifting cultivation text).
 
 | Fact | Source | Tag |
 |---|---|---|
-| Critical population density: the highest density a given system carries without degradation (Allan 1965) | https://www.fao.org/4/r1340e/r1340e04.htm (FAO shifting cultivation text) and search excerpts | snippet |
-| Fallow ratio R = cultivation years times 100 over total cycle; R below 33 shifting, 33 to 66 short fallow, above 66 permanent | search excerpts of Ruthenberg-based literature | snippet |
-| Amazonian uplands: fallow usually several decades after one to two years of farming; low carrying capacity | Fearnside, https://repositorio.inpa.gov.br/handle/1/19656 and https://philip.inpa.gov.br/publ_livres/Preprints/1997/Human%20Carrying%20capacity-EC-preprint.pdf (page returned 503, not read) | snippet |
-| Nutrient and fallow dynamics | Nye and Greenland 1960, *The Soil under Shifting Cultivation*; Conklin 1957; Ruthenberg 1980 *Farming Systems in the Tropics* | recalled |
+| Critical population density: the highest density a given system carries without degradation (Allan 1965) | https://www.fao.org/4/r1340e/r1340e04.htm (FAO shifting cultivation text, opened; the critical-density definition was not in the extract returned, so Allan 1965 stays unconfirmed) | snippet |
+| Fallow ratio R = cultivation years times 100 over total cycle; R below 33 shifting, 33 to 66 short fallow, above 66 permanent | https://www.fao.org/4/r1340e/r1340e04.htm (opened): R = cultivation period times 100 over (cultivation plus fallow); below 33 shifting or long fallow, 33 to 66 short fallow, above 66 permanent; example of 5 years cropped and 15 fallow gives R of 25 | read |
+| Amazonian uplands: fallow usually several decades after one to two years of farming; low carrying capacity | Fearnside, https://repositorio.inpa.gov.br/handle/1/19656 and https://philip.inpa.gov.br/publ_livres/Preprints/1997/Human%20Carrying%20capacity-EC-preprint.pdf (page returned 503, not read; the first link returned 404 on second pass) | snippet |
+| Nutrient and fallow dynamics | Nye and Greenland 1960, *The Soil under Shifting Cultivation*; Conklin 1957; Ruthenberg 1980 *Farming Systems in the Tropics* (none opened) | recalled |
 
 Files and fields: `tools/generate_geography_tiles.py` (the `KOPPEN_ARABLE_AND_FERTILITY` table is the class constant to retire; its Af and Aw lines are the only per-class numbers involved), `sim/geography/food_crops.py` (cropped-share rule), `food_crop_water_envelope` in `food.json`. No download. Calibration test: Af density should land inside a published range for shifting cultivators on a similar soil (extract from Fearnside and Allan before building).
 
@@ -128,9 +128,9 @@ Files and fields: `tools/generate_geography_tiles.py` (the `KOPPEN_ARABLE_AND_FE
 
 | Fact | Source | Tag |
 |---|---|---|
-| Hunter-gatherer diet breadth, return rates in kcal per hour, and ethnographic densities | Kelly 2013, *The Lifeways of Hunter-Gatherers: The Foraging Spectrum*, Cambridge UP; Binford 2001 *Constructing Frames of Reference* | snippet (catalogue entries found, tables not read) |
-| Foraging return rates | Winterhalder and Smith 2000, Evolutionary Anthropology 9:51 | recalled |
-| Pastoral labour and herd size per household | Dahl and Hjort 1976 | recalled |
+| Hunter-gatherer diet breadth, return rates in kcal per hour, and ethnographic densities | Kelly 2013, *The Lifeways of Hunter-Gatherers: The Foraging Spectrum*, Cambridge UP; Binford 2001 *Constructing Frames of Reference* | snippet (catalogue entries found, tables not read; not re-opened) |
+| Foraging return rates | Winterhalder and Smith 2000, Evolutionary Anthropology 9:51 (not opened) | recalled |
+| Pastoral labour and herd size per household | Dahl and Hjort 1976 (not opened) | recalled |
 | Fishing effort and catch per man-day | Historical North Sea and Norwegian fishery records; ethnography of the Northwest Coast | recalled, no source yet |
 
 These belong to the labour package behind `sim/labour/api.py`; geography exposes the ceiling and a per-source energy per worker-day parameter, per the package walls (`docs/architecture/PACKAGE_WALLS.md`).

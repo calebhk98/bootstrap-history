@@ -3,7 +3,9 @@
 Branch `transport-and-building-demand-research`. Research only; no code or data changed.
 Web search in this session returned snippets and abstracts, rarely full tables. Every figure below
 is tagged `read` (seen in a snippet or page this session), `repo` (read from this repository) or
-`recalled` (from memory, not re-checked; verify before it goes into data). Confidence letters
+`recalled` (from memory, not re-checked; verify before it goes into data). A second pass opened the
+sources again: `read` now means the cited page or document was opened and the figure seen in it;
+`disputed` means opened sources disagree (range given). Confidence letters
 follow `data/production/_SCHEMA.md` (A well attested, B probable, C estimate, D guess).
 
 ## 1. What the repository does today
@@ -91,17 +93,20 @@ Findings from reading the code and data:
 
 - Merchant hulls: a typical Roman grain ship on the Rome route is put at a few hundred tonnes with
   large exceptions ([summary](https://weaponsandwarfare.com/?p=12258), [Isis](https://en.wikipedia.org/wiki/Isis_(ship)),
-  read). Crew of about eight to ten for a hull of about a hundred tonnes (read, secondary; Casson,
-  *Ships and Seamanship in the Ancient World*, is the primary to check). The repo already carries
+  read). Crew sizes are disputed: eight to ten for about a hundred tonnes appears only in a search summary,
+  while a Southampton summary gives four or five for a single-masted hull of about 150 tonnes
+  ([Roman Mediterranean shipping](https://generic.wordpress.soton.ac.uk/archaeology/2014/06/03/roman-mediterranean-shipping/),
+  read); Casson, *Ships and Seamanship in the Ancient World*, is the primary to check and was not opened. The repo already carries
   hull cargo and crew in `sea_freight.py` and they should be checked against these.
-- Rome's imported grain is given as roughly 150,000 tonnes of Egyptian grain a year ([Roman grain
-  trade](https://warhistory.org/article/the-roman-grain-trade), read), with larger totals for all
-  sources; a figure of four hundred ships in a popular source should be treated as grade D.
+- Rome's total grain need is given as at least 150,000 tonnes a year by Erdkamp, 237,000 by Mattingly
+  and Aldrete, and 272,000 (40 million modii) by Rickman ([Cura Annonae](https://en.wikipedia.org/wiki/Cura_Annonae),
+  read, secondary); no Egyptian-only tonnage was found (Josephus gives Egypt four months of supply);
+  a figure of four hundred ships in a popular source should be treated as grade D.
   Erdkamp, *The Grain Market in the Roman Empire* (2005), is the scholarly source.
-- Freight rates: Scheidel's ORBIS work on the Edict of Diocletian gives wagon haulage at roughly
-  fifty times the per-tonne-km cost of sea haulage, with river in between ([Scheidel 2013, ORBIS
-  prices](https://www.ancientportsantiques.com/wp-content/uploads/Documents/ETUDESarchivees/MedNavigationRoutes/ORBISprices-Scheidel2013.pdf);
-  figures read through a search summary, the PDF text was not extractable). This is a validation
+- Freight rates: Scheidel ([The Shape of the Roman World, JRA 27, 2014](https://www.cambridge.org/core/journals/journal-of-roman-archaeology/article/shape-of-the-roman-world-modelling-imperial-connectivity/E61006878912791FDEE7CFAD95530770),
+  read) gives wagon haulage at roughly fifty times the per-tonne-km cost of sea haulage. The 2013
+  working paper previously cited (ORBISprices-Scheidel2013.pdf) was opened and contains sea prices
+  against simulated sailing times only, no wagon figures. This is a validation
   relation for the freight mechanism, not an input.
 - Port labour (stevedores, lightermen, bargemen on the Tiber, towing teams) is the part most often
   forgotten: cargoes were transferred to river craft and hauled upstream by animals or men
@@ -110,7 +115,7 @@ Findings from reading the code and data:
 
 ### 2.5 Occupational structure as distribution checks (not targets)
 
-- England: male agriculture about half of employment in 1710 falling to about a third by 1817;
+- England: male agriculture 43 to 52 percent of employment around 1710 (estimators differ, see table) falling to about a third by 1817 (1817 not re-checked);
   secondary (manufacturing and construction together) rising from just over a third to over two
   fifths; tertiary (including transport and dealing) rising from about an eighth to nearly a fifth
   (Shaw-Taylor and Wrigley, via a search summary of the [Cambridge Group project](https://www.campop.geog.cam.ac.uk/research/occupations.171221/);
@@ -134,21 +139,21 @@ Items needing a source are not to be authored until their tag reads `read` again
 
 | Figure | Units | Source | Tag | Conf | Target file and field |
 |---|---|---|---|---|---|
-| Lead pipe, ten-quinaria pipe, one ten-foot length | 120 Roman pounds | Vitruvius 8.6.4 via [lexundria](https://www.lexundria.com/vitr/8.6.4/mg) | read | B | `data/production/20_nonferrous.json`, new entry `lead_pipe_m`: `unit_mass_kg`, `inputs.lead_kg` |
-| Pipe sheet width equals circumference in digits; digit | 1.85 cm | [Smith's Dictionary](https://penelope.uchicago.edu/Thayer/E/Roman/Texts/secondary/SMIGRA*/Fistula.html) via search | read | B | `yield_basis` of `lead_pipe_m` |
-| Quinaria bore and area | 2.3 cm, 4.15 cm2 | [Encyclopaedia Romana](https://penelope.uchicago.edu/~grout/encyclopaedia_romana/romanurbs/quinaria.html) | read | A | `yield_basis` of `lead_pipe_m` |
-| Aqueduct delivery, Rome, 97 AD | 14,018 quinariae per day | Frontinus, same page | read | B | test of water service level, not an input |
-| Merchant hull cargo, Rome route | about 100 to 250 t | [summary](https://weaponsandwarfare.com/?p=12258) | read | C | check `MERCHANT_HULL_CARGO_TONNES` in `sim/geography/sea_freight.py` |
-| Crew for a hull of about 100 t | 8 to 10 | search summary; Casson | read (secondary) | C | check `MERCHANT_HULL_CREW` |
-| Egyptian grain to Rome | about 150,000 t per year | [summary](https://warhistory.org/article/the-roman-grain-trade) | read | C | validation of annona tonne-km, tests only |
-| Wagon to sea freight cost ratio per kg-km | about 50 to 1 | Scheidel 2013 via search | read | C | validation relation in `sim/tests` |
-| Wagon cost | 0.035 denarii per kg per km | same | read | C | validation only (CLAUDE.md 4.5: not a price input) |
-| Sea cost | 0.00067 denarii per kg per km | same | read | C | validation only |
+| Lead pipe, decenaria (plate ten digits wide, rolled), one ten-foot length | 120 Roman pounds; the series is 12 pounds per digit of plate width (quinaria 5 digits 60, octonaria 100, vicenaria 240, centenaria 100 digits 1200) | Vitruvius 8.6.4 via [lexundria](https://www.lexundria.com/vitr/8.6.4/mg), opened second pass; label corrected (the old row said ten-quinaria) | read | B | `data/production/20_nonferrous.json`, new entry `lead_pipe_m`: `unit_mass_kg`, `inputs.lead_kg` |
+| Pipe sheet width equals circumference in digits; digit | 1.85 cm | [Smith's Dictionary](https://penelope.uchicago.edu/Thayer/E/Roman/Texts/secondary/SMIGRA*/Fistula.html), opened: names pipes by plate width in digits, ten-foot plates, 12 pounds per digit-wide ten-foot strip; the 1.85 cm digit was not on the page | read (width rule), recalled (digit length) | B | `yield_basis` of `lead_pipe_m` |
+| Quinaria bore and area | 2.3 cm, 4.15 cm2 (five quarter-digits diameter) | [Encyclopaedia Romana](https://penelope.uchicago.edu/~grout/encyclopaedia_romana/romanurbs/quinaria.html), opened second pass | read | A | `yield_basis` of `lead_pipe_m` |
+| Aqueduct delivery, Rome, 97 AD | 14,018 quinariae per day (the page adds about 10,000 more diverted illegally) | Frontinus (LXIV.2, LXXIV.4) via the same page, opened | read | B | test of water service level, not an input |
+| Merchant hull cargo, Rome route | disputed, about 75 t average to about 400 t largest (Madrague de Giens); grain ships 340 to 400 t around 200 AD (Cura Annonae: 350 t standard, Isis 1200 to 1300 t). The old 100 to 250 t source did not open | [Southampton summary](https://generic.wordpress.soton.ac.uk/archaeology/2014/06/03/roman-mediterranean-shipping/), [Cura Annonae](https://en.wikipedia.org/wiki/Cura_Annonae), [war history](https://warhistory.org/article/the-roman-grain-trade) | disputed | C | check `MERCHANT_HULL_CARGO_TONNES` in `sim/geography/sea_freight.py` |
+| Crew for a hull of about 100 to 150 t | disputed: 8 to 10 (100 t, search summary only) against 4 or 5 (single mast, about 150 t, Southampton summary). Casson not opened | [Southampton summary](https://generic.wordpress.soton.ac.uk/archaeology/2014/06/03/roman-mediterranean-shipping/) | disputed | C | check `MERCHANT_HULL_CREW` |
+| Total grain to Rome (Egyptian share not found) | 150,000 t (Erdkamp minimum) to 272,000 t (Rickman); Mattingly and Aldrete 237,000 t. The old row attached 150,000 t to Egypt alone; the war-history page it cited gives 40 million modii and about 800 shiploads instead | [Cura Annonae](https://en.wikipedia.org/wiki/Cura_Annonae), [war history](https://warhistory.org/article/the-roman-grain-trade) | disputed | C | validation of annona tonne-km, tests only |
+| Wagon to sea freight cost ratio per kg-km | about 52 to 1 (0.035 over 0.00067) | Scheidel 2014, JRA 27, [Cambridge page](https://www.cambridge.org/core/journals/journal-of-roman-archaeology/article/shape-of-the-roman-world-modelling-imperial-connectivity/E61006878912791FDEE7CFAD95530770), opened; the 2013 working paper cited before has no wagon figures | read | C | validation relation in `sim/tests` |
+| Wagon cost | 0.035 denarii per kg of wheat per km (20 denarii for 1,200 Roman pounds per Roman mile) | Scheidel 2014, same page | read | C | validation only (CLAUDE.md 4.5: not a price input) |
+| Sea cost | 0.00067 denarii per kg of wheat per km (mean) | Scheidel 2014, same page | read | C | validation only |
 | Household size | 5 persons | `PERSONS_PER_HOUSEHOLD` (Laslett) | repo | C | already declared |
 | Dwelling service life | 30 years, one value | `STRUCTURE_SERVICE_LIFE_YEARS` | repo | D | replace by per-material `service_life_years` |
-| Ostian carpenters' guild | over 300 members, late 2nd century | [Cambridge chapter abstract](https://www.cambridge.org/core/books/abs/skilled-labour-and-professionalism-in-ancient-greece-and-rome/perception-of-skills-in-ostia-the-evidence-of-monuments-and-written-sources/C8E8EF72BBA7E82346252FDFA2C3B7F2) | read | C | distribution check, test only |
-| England male shares (agriculture, secondary, tertiary) 1710 and 1817 | about 50, 37, 12 and 36, 44, 18 percent | Shaw-Taylor and Wrigley via search | read (secondary) | B | distribution check, test only |
-| Labour per cubic metre by building task | person-days | DeLaine 1997; Bernard 2018 Appendix One | recalled (not retrieved) | to set | new building-service recipes in `data/production/`, `labour_hours` |
+| Ostian carpenters' guild | over 300 members, late 2nd century | [Cambridge chapter abstract](https://www.cambridge.org/core/books/abs/skilled-labour-and-professionalism-in-ancient-greece-and-rome/perception-of-skills-in-ostia-the-evidence-of-monuments-and-written-sources/C8E8EF72BBA7E82346252FDFA2C3B7F2); abstract opened, the count is not on it | recalled | C | distribution check, test only |
+| England male shares (agriculture, secondary, tertiary) 1710 and 1817 | agriculture 43 percent c.1710 (Shaw-Taylor et al. 2010, baptism registers) against 52 percent with industry 32 and services 15 (adjusted probate estimates, 1700-19), both in [PMC6420141](https://pmc.ncbi.nlm.nih.gov/articles/PMC6420141); the old 50, 37, 12 and the 1817 values 36, 44, 18 were not found (Cambridge Group pages return 403) | disputed (1710), recalled (1817) | B | distribution check, test only |
+| Labour per cubic metre by building task | person-days | DeLaine 1997 (Appendix 5 is a table of labour constants by job, time and skill, per [BMCR](https://bmcr.brynmawr.edu/1998/1998.11.41/), opened; values not shown); Bernard 2018 Appendix One | recalled (values not retrieved) | to set | new building-service recipes in `data/production/`, `labour_hours` |
 | Service lives by material (earth, timber, brick, stone) | years | needs a source (Salzman; Brunskill; Roman building studies) | not found | to set | `needs.json` goods or a new `service_life_years` field |
 | Mill wheel and race wear, repair labour | hours per year per wheel | Wilson; Barbegal studies | not found | to set | upkeep recipe in `data/production/80_machines.json` |
 | Lead pipe laid per connection, Pompeii | metres | Pompeii water studies | not found | to set | water service recipe |
