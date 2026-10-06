@@ -209,6 +209,8 @@ class EconomyState:
 	forest_ha: float = 0.0
 	# edge key -> {way: true} of the roads and track built (ways.py); geography's routes read it
 	improvements: Dict[str, Dict[str, bool]] = field(default_factory=dict)
+	# edge key -> {way: year it is finished} of the roads and track paid for and being built (ways.py)
+	ways_under_construction: Dict[str, Dict[str, float]] = field(default_factory=dict)
 	nitre_bed_m2: float = 0.0
 	agent_economy: Dict[str, Any] = field(default_factory=dict)   # the agent economy's record (economy_port_year.py)
 	market_pressure: float = 0.0

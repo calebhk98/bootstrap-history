@@ -4,7 +4,8 @@ A built way is the caller's record (an improvement on an edge, `routes_compile`)
 making one. Earthwork is a bed of the way's width and depth plus, on sloping ground, a balanced
 cut-and-fill bench (a triangle of width times width times grade over four, cut equal to fill, so moved
 twice), so steeper ground costs more. Surface and fixed materials come from the mode's `construction`
-block in the map data; labour is the earthwork over a person-day's excavation.
+block in the map data; labour is the earthwork over a person-day's excavation; the build time is that labour over what the
+mode's crew works in a year.
 
 Standalone: the route graph and modes of this package.
 """
@@ -24,7 +25,7 @@ def land_edge(world_map: WorldMap, tile_a: str, tile_b: str) -> Optional[routes_
 
 
 def requirements(world_map: WorldMap, tile_a: str, tile_b: str, improvement: str) -> Optional[Dict[str, Any]]:
-    """{km, grade, trade, labour_hours, materials: {material: tonnes}, node} of building `improvement`
+    """{km, grade, trade, labour_hours, materials: {material: tonnes}, node, build_years} of building `improvement`
     (a mode's `needs_improvement`, such as "road") over the land edge, or None when it cannot be
     built there: no such edge, no mode builds it, or the ground is steeper than the mode's natural limit."""
     edge = land_edge(world_map, tile_a, tile_b)
@@ -43,5 +44,8 @@ def requirements(world_map: WorldMap, tile_a: str, tile_b: str, improvement: str
     materials = {surface["material"]: metres * width * float(surface["depth_m"]) * float(surface["tonnes_per_m3"])}
     for material, tonnes_per_km in work.get("fixed_materials_tonnes_per_km", {}).items():
         materials[material] = materials.get(material, 0.0) + km * float(tonnes_per_km)
+    crew_hours_per_year = (float(work["crew_people"]) * float(work["work_days_per_year"])
+                           * float(work["work_hours_per_day"]))
     return {"km": km, "grade": edge.grade, "trade": work["trade"], "labour_hours": labour_hours,
-            "materials": materials, "node": mode.get("improvement_node")}
+            "materials": materials, "node": mode.get("improvement_node"),
+            "build_years": labour_hours / crew_hours_per_year}

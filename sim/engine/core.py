@@ -13,7 +13,7 @@ from sim.world import demography
 from sim.world import agriculture
 from sim.world import farming_technique
 from sim.world import land
-from sim.geography.api import regions
+from sim.geography.api import regions, tiles_held
 # Weather is drawn per the geography data land_tiles cell (see
 # `_compute_farm_weather_cells`).
 # Imported FULLY QUALIFIED (`sim.world.shared_constants`), not the bare
@@ -382,9 +382,9 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         # Initial condition: cleared area is what feeds the starting
         # population at reference soil, on the best ground the held tiles
         # offer; later clearing works down the same best-first ladder.
-        home_regions = list(self.civ.get("home_regions") or [])
-        if home_regions:
-            territory = land.territory_farmland(home_regions, load_geography(self.world_map))
+        held_tiles = tiles_held(self.civ, self.world_map)
+        if held_tiles:
+            territory = land.territory_farmland(held_tiles, load_geography(self.world_map))
             self._farm_ladder = territory.ladder
             self._farm_arable_ceiling = territory.arable_hectares
         else:
@@ -941,8 +941,8 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         `_pooled_farm_weather_multiplier` below reads as "fall back to one
         civilisation-wide draw" (see that method's own docstring).
         """
-        home_regions = list(self.civ.get("home_regions") or [])
-        if not home_regions:
+        held_tiles = tiles_held(self.civ, self.world_map)
+        if not held_tiles:
             return []
         # Loaded directly here, NOT via `self.geo` (set later in
         # `__init__`, after this method's own call site - see that call
@@ -954,20 +954,16 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         geography = load_geography(self.world_map)
         land_tiles = geography.get("land_tiles") or {}
         tiles_by_id = land_tiles.get("tiles") or {}
-        region_to_tiles = land_tiles.get("region_to_tiles") or {}
         raw_cells = []
-        for region in home_regions:
-            tile_ids = region_to_tiles.get(region) or []
-            if tile_ids:
-                for tile_id in tile_ids:
-                    tile = tiles_by_id.get(tile_id)
-                    if not tile:
-                        continue
-                    arable_km2 = (tile.get("land_area_km2", 0.0)
-                                  * tile.get("arable_fraction", 0.0))
-                    raw_cells.append(Sim._WeatherCell(
-                        cell_id=tile_id, lat=tile["lat"], lon=tile["lon"],
-                        weight=arable_km2))
+        for tile_id in held_tiles:
+            tile = tiles_by_id.get(tile_id)
+            if not tile:
+                continue
+            arable_km2 = (tile.get("land_area_km2", 0.0)
+                          * tile.get("arable_fraction", 0.0))
+            raw_cells.append(Sim._WeatherCell(
+                cell_id=tile_id, lat=tile["lat"], lon=tile["lon"],
+                weight=arable_km2))
         if not raw_cells:
             return []
         # STAKEHOLDER ITEM 7: cap cell count independently of how finely

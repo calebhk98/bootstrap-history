@@ -5,8 +5,9 @@ routes read (sim/geography/INTERFACE.md). What a way takes (labour hours and mat
 from geography's terrain model; this module prices it at the labour and goods markets and records it.
 Nothing here is specific to the founder: it asks for the paying actor's household.
 
-[temporary_heuristic] A way is finished and usable the moment it is paid for; building it takes the
-wages and material only, not a time or the labourers' absence from other work.
+A way is paid for when it is started and becomes usable when its build time, from geography's
+construction data (the labour over what the mode's crew works in a year), has passed. [temporary_heuristic]
+The crew is not drawn from the labour market's pools: the wages are paid, the labourers are not missed.
 """
 import sim.geography.api as geography
 from sim.agents.api import edges
@@ -32,7 +33,7 @@ class WaysMixin:
                 return None
             money += priced[0]
         return {"money": money, "labour_hours": needs["labour_hours"], "materials": needs["materials"],
-                "km": needs["km"], "node": needs["node"]}
+                "km": needs["km"], "node": needs["node"], "years": needs["build_years"]}
 
     def build_way(self, tile_a, tile_b, way):
         """Build `way` between two bordering tiles the nation holds. Returns (ok, message)."""
@@ -48,11 +49,25 @@ class WaysMixin:
         key = geography.edge_key(tile_a, tile_b)
         if self.state.economy.improvements.get(key, {}).get(way):
             return False, "a %s already joins %s and %s." % (way, tile_a, tile_b)
+        if way in self.state.economy.ways_under_construction.get(key, {}):
+            return False, "a %s between %s and %s is already being built." % (way, tile_a, tile_b)
         from . import purchase_rule
         if not purchase_rule.can_pay(self, quote["money"]):
             return False, "a %s of %.0f km costs about %s; %s." % (
                 way, quote["km"], "{:,.0f}".format(quote["money"]), purchase_rule.afford_means())
         self.pay_edge(edges.EDGE_BUILDERS, quote["money"], "building a %s" % way)
-        self.state.economy.improvements.setdefault(key, {})[way] = True
-        return True, "built a %s of %.0f km between %s and %s for %s." % (
-            way, quote["km"], tile_a, tile_b, "{:,.0f}".format(quote["money"]))
+        due_year = self.state.scenario.year + quote["years"]
+        self.state.economy.ways_under_construction.setdefault(key, {})[way] = due_year
+        return True, "started a %s of %.0f km between %s and %s for %s; it will take about %.1f years." % (
+            way, quote["km"], tile_a, tile_b, "{:,.0f}".format(quote["money"]), quote["years"])
+
+    def finish_ways(self):
+        """Open the ways whose build time has passed, so routes, reach and the economy's carriage see them."""
+        pending = self.state.economy.ways_under_construction
+        for key in sorted(pending):
+            for way in sorted(pending[key]):
+                if pending[key][way] <= self.state.scenario.year:
+                    self.state.economy.improvements.setdefault(key, {})[way] = True
+                    del pending[key][way]
+            if not pending[key]:
+                del pending[key]

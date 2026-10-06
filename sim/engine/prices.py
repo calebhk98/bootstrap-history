@@ -180,6 +180,7 @@ from sim.engine.validate_production import load_production             # noqa: E
 from sim.labour.api import wages                                     # noqa: E402
 from sim.labour.api import wage_provider                # noqa: E402
 from sim.engine import solve_cache                              # noqa: E402
+from sim.geography.api import tiles_held                    # noqa: E402
 
 
 class SolvedPrices(object):
@@ -332,7 +333,7 @@ def territory_fingerprint(civilization: Optional[Mapping[str, Any]]) -> Optional
     """What of a held civilisation the solve reads beyond its id: its people and its ground."""
     if civilization is None:
         return None
-    return (civilization.get("population"), tuple(civilization.get("home_regions") or ()))
+    return (civilization.get("population"), tuple(tiles_held(civilization)))
 
 
 # Cleared area changes every year by a little; solves are keyed on bands of this relative width.
@@ -537,15 +538,15 @@ def entries_in_reach(held: Set[str], held_gate_nodes: FrozenSet[str], resolvable
                      if all(nearest[material] == rank for material in production_entries[key]["outputs"]))
 
 
-def _climate_allows(entry, civilization_id, home_regions=None):
+def _climate_allows(entry, civilization_id, held_tiles=None):
     """Whether the territory has a climate the entry's crop grows in; entries naming none always do."""
     if not entry or not entry.get("grown_in_climate_classes"):
         return True
     from sim.geography.api import crop_climate
-    if home_regions is None:
+    if held_tiles is None:
         from .data import load_civ
-        home_regions = load_civ(civilization_id).get("home_regions")
-    return crop_climate.entry_grows_in(entry, home_regions)
+        held_tiles = tiles_held(load_civ(civilization_id))
+    return crop_climate.entry_grows_in(entry, held_tiles)
 
 
 def priced_goods_table(held_technology_ids: Iterable[str],
@@ -593,13 +594,13 @@ def priced_goods_table(held_technology_ids: Iterable[str],
     goods_in_money = {}
     provenance = {}
     territory = civilization_id or solve_prices.DEFAULT_LAND_CIVILIZATION
-    home_regions = None if civilization is None else tuple(civilization.get("home_regions") or ())
+    held_tiles = None if civilization is None else tuple(tiles_held(civilization))
     for table, label in ((mature, "mature"), (in_reach, "gated"), (solved, "solved")):
         for material in table.resolvable_materials:
             if label != "mature" and material not in table.chosen_recipe_by_material:
                 continue    # no technique in this table delivers it (a heat it cannot reach): the price is a placeholder
             if label != "mature" and not _climate_allows(
-                    entries.get(table.chosen_recipe_by_material[material]), territory, home_regions):
+                    entries.get(table.chosen_recipe_by_material[material]), territory, held_tiles):
                 continue    # a crop the territory's climate cannot grow stays priced as if imported
             goods_in_money[material] = hours_to_denarii(
                 table.prices_in_labour_hours[material], prices_json)
