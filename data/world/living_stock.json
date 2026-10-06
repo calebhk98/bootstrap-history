@@ -92,6 +92,27 @@
       "source": "Cane Advisory Services (caneadvisory.ac.in, 'Seed Rate'; undated): 42,000 to 45,000 three-bud setts, 50 to 60 quintals, plant a hectare; a sugarcane planting-techniques review reports a conventional multiplication of about 11 to 12 against 100 to 150 from tissue culture; two-bud setts germinate about 65 to 70 percent (sugarcane agronomy lab manual, mcconline.org.in).",
       "confidence": "C",
       "basis": "Kilograms of seed cane (setts). Sourced ceiling: a seed nursery hectare plants about 11 to 12 hectares, so the sourced rate is around ten and a half times in a year; loss is the failed share, 1 - 0.7 from germination of about 65 to 70 percent. The increase is capped at a doubling a year: the sourced propagation ceiling is far higher, but a held lot is stock, not a planting, and the limit by land and labour is not modelled (TEMPORARY HEURISTIC cap). Seed cane per hectare planted: 5000 to 6000 kg. Years to first yield: about one year (a plant cane crop). A planting is not a source of seed after the ratoon crop, which carries disease."
+    },
+    "potato_seed_tuber_kg": {
+      "natural_increase": 0.0,
+      "annual_loss": 0.5,
+      "breeding_minimum_units": 0,
+      "basis": "TEMPORARY HEURISTIC, seed tubers of the potato. A tuber multiplies only by being planted and lifted, which is the production entry, not a rate of the held lot. A stored tuber sprouts, rots or shrivels within a season or two without cool dark storage, so half of a held lot is taken as lost in a year. Estimates, not checked against a source; no figure here is sourced.",
+      "confidence": "C"
+    },
+    "maize_seed_kg": {
+      "natural_increase": 0.0,
+      "annual_loss": 0.2,
+      "breeding_minimum_units": 0,
+      "basis": "TEMPORARY HEURISTIC, maize grain kept for sowing. Seed multiplies only by being sown and harvested, which is the production entry, not a rate of the held lot. Dry grain keeps its viability for a few years if kept dry and free of weevil, so about a fifth of a held lot is taken as unusable after a year. Estimates, not checked against a source; no figure here is sourced.",
+      "confidence": "C"
+    },
+    "cacao_seed_kg": {
+      "natural_increase": 0.0,
+      "annual_loss": 0.9,
+      "breeding_minimum_units": 0,
+      "basis": "TEMPORARY HEURISTIC, cacao beans kept for planting. The seed is recalcitrant: it does not survive drying and loses viability within weeks, so nearly all of a held lot is taken as lost within a year unless planted out in a nursery. Multiplication is by planting and a bearing tree, which is the production entry, not a rate of the held lot. Estimates, not checked against a source; no figure here is sourced.",
+      "confidence": "C"
     }
   }
 }

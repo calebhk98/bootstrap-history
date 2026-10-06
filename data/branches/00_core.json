@@ -2547,6 +2547,7 @@
     "pre": [
       "exp_americas_factory"
     ],
+    "holds": {"cacao_seed_kg": 20},
     "req_any": [],
     "rev_hours": 0,
     "risk": 0.15,
@@ -2616,6 +2617,7 @@
     "pre": [
       "exp_americas_factory"
     ],
+    "holds": {"maize_seed_kg": 50},
     "req_any": [],
     "rev_hours": 0,
     "risk": 0.15,
@@ -2648,6 +2650,7 @@
     "pre": [
       "exp_americas_factory"
     ],
+    "holds": {"potato_seed_tuber_kg": 50},
     "req_any": [],
     "rev_hours": 0,
     "risk": 0.15,
@@ -5927,8 +5930,9 @@
       "information",
       "infrastructure"
     ],
-    "up_hours": 0,
-    "yrs": 3.0
+    "up_hours": 200,
+    "yrs": 3.0,
+    "_internal": "[HEURISTIC: yearly upkeep taken as one percent of the construction labour hours (repair and keeping the works in service); no wear or failure model yet.]"
   },
   {
     "_internal": "[REVIEWED: prerequisite(s) cap_measure_elec added by a reviewer working node by node. Reason: four-point probe and Hall effect require electrical measurement]",

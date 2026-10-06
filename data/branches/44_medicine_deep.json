@@ -2594,7 +2594,9 @@
      "order": 8
     }
    ]
-  }
+  },
+  "up_hours": 4.5,
+  "_internal": "[HEURISTIC: yearly upkeep taken as one percent of the construction labour hours (repair and keeping the works in service); no wear or failure model yet.]"
  },
  {
   "id": "md2_chlorination",
@@ -2647,7 +2649,9 @@
   "dev_years": 15,
   "dev_people": 3,
   "note": "Storm overflows during rain; prevents plant overload; but combined systems cheaper; infiltration and inflow challenges",
-  "conf": "B"
+  "conf": "B",
+  "up_hours": 5.5,
+  "_internal": "[HEURISTIC: yearly upkeep taken as one percent of the construction labour hours (repair and keeping the works in service); no wear or failure model yet.]"
  },
  {
   "id": "md2_activated_sludge",
@@ -2674,7 +2678,9 @@
   "dev_years": 20,
   "dev_people": 4,
   "note": "Microorganism flocs oxidize organic matter; aeration essential; solids separation by settling; sludge recycling; process control critical",
-  "conf": "B"
+  "conf": "B",
+  "up_hours": 5.5,
+  "_internal": "[HEURISTIC: yearly upkeep taken as one percent of the construction labour hours (repair and keeping the works in service); no wear or failure model yet.]"
  },
  {
   "id": "md2_milk_pasteurisation",
@@ -2839,7 +2845,9 @@
      "order": 3
     }
    ]
-  }
+  },
+  "up_hours": 5,
+  "_internal": "[HEURISTIC: yearly upkeep taken as one percent of the construction labour hours (repair and keeping the works in service); no wear or failure model yet.]"
  },
  {
   "id": "md2_vector_control",

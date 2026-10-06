@@ -295,6 +295,8 @@
    "exp_atlantic_crossing",
    "exp_colony_administration"
   ],
+  "grants": {"potato_seed_tuber_kg": 200, "maize_seed_kg": 200, "cacao_seed_kg": 40},
+  "_internal": "[HEURISTIC: the founding stock the post returns (planting tubers, grain and beans) is a stated size taken as enough to pass the breeding minimums and the holds of the crop nodes; not derived from ship holds or a source.]",
   "kb": "95_expeditions.md#americas_factory",
   "ph": 500,
   "lab": {
