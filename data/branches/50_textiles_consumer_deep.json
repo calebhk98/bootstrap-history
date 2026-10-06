@@ -222,7 +222,7 @@
   "cap_hours": 0,
   "build_yrs": 0.25,
   "adopt_yrs": 0,
-  "note": "Rollers at progressively faster speeds attenuate fibres, flyer imparts twist, produces roving ready for spinning frame",
+  "note": "Between carded fibre and finished yarn there is a stage called roving: a loose, thick strand with just enough twist to hold together. In the roving frame, pairs of rollers turning at increasing speeds stretch the fibre strand thinner, and a rotating arm called a flyer twists it and winds it onto a bobbin. The spinning frame can only finish a strand that is already even and thin enough, so this step feeds it.",
   "up_hours": 0,
   "gov": -1,
   "sus": 1
@@ -677,7 +677,7 @@
   "cap_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 0.5,
-  "note": "Rotating cam drives picker sticks that strike shuttle, replaces hand throwing, enables power loom and higher speeds",
+  "note": "Picking is the throw that sends the shuttle, which carries the weft thread, through the gap between the warp threads. In a power loom a rotating cam moves arms called picker sticks that strike the shuttle at each end and drive it across, replacing the weaver's hand throw. It needs hard, accurately fitted metal parts, since the shuttle is struck over and over, and it lets looms run much faster than a person can throw.",
   "up_hours": 0
  },
  {
@@ -770,7 +770,7 @@
   "cap_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
-  "note": "Starch or other binder applied to warp, increases abrasion resistance and stiffness, essential for high-speed weaving",
+  "note": "The warp is the set of long threads held in the loom, and weaving rubs them repeatedly against the loom parts, so weak yarn frays and breaks. Sizing coats the warp with a paste, often of starch, that lays down loose fibre ends and stiffens the thread so it resists rubbing. The size is washed out of the finished cloth. Fast weaving breaks unsized thread constantly, so sizing is needed for high speeds.",
   "up_hours": 0
  },
  {
@@ -1097,7 +1097,7 @@
   "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 0.5,
-  "note": "Rotating cylinder with teasel or wire brushes teases fibre ends to surface, mechanical replacement for hand teasel",
+  "note": "Raising pulls the ends of fibres up out of woven cloth to make a soft surface called a nap, as on blankets and woollen cloth. By hand it is done with teasels, the dried prickly heads of a plant, drawn across the damp cloth. A machine carries teasels or wire brushes on a rotating cylinder and passes the cloth over it. Fulled cloth is needed first, and the nap is usually trimmed afterwards to even it.",
   "up_hours": 0
  },
  {
@@ -1274,7 +1274,7 @@
   "cap_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
-  "note": "Laid on grass, UV radiation breaks colour bodies, slowest method but gentlest on fibres, traditional for linen",
+  "note": "Linen and other plant fibres start out yellowish or grey. Bleaching by sun means spreading the cloth on grass and keeping it wet, so that sunlight, moisture and air slowly destroy the colouring matter. It needs open land, clean water and a lot of time, which makes it the slowest method. It is the gentlest on the fibres, and was the traditional treatment for linen.",
   "up_hours": 0
  },
  {
