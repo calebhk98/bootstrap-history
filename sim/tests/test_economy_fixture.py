@@ -1,4 +1,7 @@
 """The hand-built three-tile economy opens, steps and conserves money and goods, fast."""
+
+QUICK_TOPIC = True
+
 import time
 import unittest
 

@@ -1,5 +1,8 @@
 """Claims as assets: a lender's wealth includes its loans, a default is its loss, households spend from
 wealth, and a default's loss moves on to the lender's own spending and borrowing."""
+
+QUICK_TOPIC = True
+
 import dataclasses
 import unittest
 

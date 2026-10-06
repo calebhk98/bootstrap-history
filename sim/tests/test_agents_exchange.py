@@ -1,5 +1,8 @@
 """Actors trade with each other: money, stores, know-how and concerns change hands atomically through
 the ledger, an AI actor answers offers by worth, and the commands write the journal."""
+
+QUICK_TOPIC = True
+
 from .harness import check
 
 from sim.agents.api import ActorRecord, ActorRegistry, ActorsState

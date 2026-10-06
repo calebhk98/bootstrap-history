@@ -1,5 +1,8 @@
 """Household cohorts: classes from the Gini split, budgets bounded by cash, floors and crowding out,
 durables as replacement, consumption and unmet floors, determinism."""
+
+QUICK_TOPIC = True
+
 import dataclasses
 import time
 import unittest

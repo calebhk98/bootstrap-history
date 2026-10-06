@@ -1,4 +1,7 @@
 """Demand derives from what goods do: needs, effectiveness, recipes. No basket entry per good."""
+
+QUICK_TOPIC = True
+
 import copy
 import json
 import os

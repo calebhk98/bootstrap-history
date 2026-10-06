@@ -40,6 +40,9 @@ harness built for the engine.
 
 Pins the subsistence cliff and Engel-curve floor as current behaviour; invert, do not delete.
 """
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.tests import demand_fixtures as fixtures

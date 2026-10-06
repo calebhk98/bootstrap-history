@@ -1,4 +1,7 @@
 """Stocks carried between years: spoilage, wear, the price a holder sells at, and target stock."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy import inventory

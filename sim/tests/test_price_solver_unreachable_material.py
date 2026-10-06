@@ -1,5 +1,8 @@
 """Complaints/309: a material no technique in a solve can make has no price, never the solver's
 starting guess. Everything the solve calls resolvable has a chosen technique."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.engine import solve_prices

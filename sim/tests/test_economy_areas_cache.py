@@ -1,4 +1,7 @@
 """Area cache test."""
+
+QUICK_TOPIC = True
+
 import dataclasses
 import unittest
 

@@ -1,4 +1,7 @@
 """A durable luxury saturates per head: the budget share is the data's, the metal bought is bounded."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.world import demand, need_demand

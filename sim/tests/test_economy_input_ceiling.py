@@ -1,4 +1,7 @@
 """A producer never offers more for an input than the run is worth at the input prices it now sees."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy import producers

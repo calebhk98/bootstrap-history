@@ -1,5 +1,8 @@
 """Plant building and plant bids (sim/economy/economy.py): bids have a derived ceiling, building keeps the
 goods it did not use, and following the engine keeps the other fields of a record."""
+
+QUICK_TOPIC = True
+
 import types as pytypes
 import unittest
 from unittest import mock

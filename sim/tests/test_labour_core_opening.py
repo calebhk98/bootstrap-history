@@ -1,5 +1,8 @@
 """A starting labour market places each area's people in the trades its work needs: hard trades from
 the able bands, the rest in the fallback trade, nobody lost, and a short run from there settles."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.labour.market import aptitude, opening, records, trades, year

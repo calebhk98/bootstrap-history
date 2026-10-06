@@ -1,4 +1,7 @@
 """Map folders merge under the mod rules, and per-tile values fall back from layers to fields to rules."""
+
+QUICK_TOPIC = True
+
 import os
 import unittest
 

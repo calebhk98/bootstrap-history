@@ -1,5 +1,8 @@
 """Complaint 417: `simulator.py validate` runs the map's own checks, and the burndown lists the map's
 heuristic parameters."""
+
+QUICK_TOPIC = True
+
 import contextlib
 import io
 import unittest

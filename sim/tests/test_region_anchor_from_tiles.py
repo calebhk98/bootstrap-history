@@ -1,5 +1,8 @@
 """Complaint 328: a region's anchor point is derived from its tiles, never
 hand-set in geography.json."""
+
+QUICK_TOPIC = True
+
 import json
 import math
 import os

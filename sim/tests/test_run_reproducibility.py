@@ -7,6 +7,9 @@ Regrouped from test_round9.py - see CLAUDE.md's test-file reorganisation
 note. Checks moved verbatim; the comments explain the break they guard and,
 at length, why this replaced a slower and less sensitive home-grown check.
 """
+
+QUICK_TOPIC = True
+
 from .harness import *  # noqa: F401,F403
 
 

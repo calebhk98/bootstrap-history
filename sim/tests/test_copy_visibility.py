@@ -2,6 +2,9 @@
 
 `copy_visibility` (above 0, at most 1, with `copy_visibility_reason`) is the share of the know-how that shows
 in the product or the working yard. A node that declares nothing keeps the count of trades and materials."""
+
+QUICK_TOPIC = True
+
 import types
 import unittest
 

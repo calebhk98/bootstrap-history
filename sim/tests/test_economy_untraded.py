@@ -1,5 +1,8 @@
 """A price a market has not cleared lately is not a market price: it is aged, kept out of the price
 index, and (for a good somebody can make) follows what it costs to make at today's prices."""
+
+QUICK_TOPIC = True
+
 import dataclasses
 import types
 import unittest

@@ -1,4 +1,7 @@
 """Property income paid to a tile's owner cohort is shared across the tile's cohorts by what each owns."""
+
+QUICK_TOPIC = True
+
 import unittest
 from types import SimpleNamespace
 

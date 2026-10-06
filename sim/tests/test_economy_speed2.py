@@ -1,3 +1,5 @@
+QUICK_TOPIC = True
+
 import math
 import unittest
 

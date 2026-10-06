@@ -1,3 +1,5 @@
+QUICK_TOPIC = True
+
 import dataclasses
 import json
 import unittest

@@ -251,9 +251,9 @@ def slow_check(name, run_check):
 
 
 # Topic discovery lives in discovery.py so --list needs no heavy imports.
-from .discovery import TESTS_DIR, discover_topics, discover_slow_topics, discover_serial_topics
+from .discovery import TESTS_DIR, discover_topics, discover_quick_topics, discover_serial_topics
 
-SLOW_TOPICS = discover_slow_topics()
+QUICK_TOPICS = discover_quick_topics()
 SERIAL_TOPICS = discover_serial_topics()
 
 

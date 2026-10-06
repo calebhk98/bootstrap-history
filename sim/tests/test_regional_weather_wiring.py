@@ -15,8 +15,6 @@ is actually met.
 Weather is drawn per home region and pooled by cultivable-land share; the seed is a pure function of (civ, region, year).
 """
 
-# Skipped by a default run; --slow or --only runs it.
-SLOW_TOPIC = True
 import random
 import statistics
 import unittest

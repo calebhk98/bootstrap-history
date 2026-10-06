@@ -18,6 +18,9 @@ test_price_solver_cycles.py, so it does not drag in the engine.
 
 Pins the technique-to-node link the price solver gates on, so a Roman technique is told from a modern one.
 """
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.engine import solve_prices

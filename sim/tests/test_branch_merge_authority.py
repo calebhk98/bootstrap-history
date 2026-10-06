@@ -10,6 +10,9 @@ are carried through exactly as written.
 
 Every test runs against a temporary branches directory.
 """
+
+QUICK_TOPIC = True
+
 import json
 import os
 import tempfile

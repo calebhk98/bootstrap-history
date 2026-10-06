@@ -1,5 +1,8 @@
 """An exiting producer's dividend, once its lenders are repaid, drops a remainder that is only floating-point
 residue: paying it would overdraw the producer by a rounding error and fail the whole year."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy import producer_exit

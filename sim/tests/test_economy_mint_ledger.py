@@ -1,6 +1,9 @@
 """Mint books that follow what was paid and what crossed the border (sim/economy/mint.py): seigniorage is the
 coin value of the metal taken in less the coin actually paid for it, and coin that leaves or enters through
 edge:external takes its metal with it or arrives with it."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy import currency, mint

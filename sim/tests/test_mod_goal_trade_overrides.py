@@ -1,4 +1,7 @@
 """Override semantics for goals (keyed by node) and trades in mod data."""
+
+QUICK_TOPIC = True
+
 import copy
 import json
 import unittest

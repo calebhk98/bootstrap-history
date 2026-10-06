@@ -1,5 +1,8 @@
 """Households sell part of a store that has grown beyond its target, or cheaply when short of food money;
 a game without durables is unchanged."""
+
+QUICK_TOPIC = True
+
 import unittest
 from unittest import mock
 

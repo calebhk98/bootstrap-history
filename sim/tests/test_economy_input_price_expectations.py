@@ -1,5 +1,8 @@
 """A producer plans against the input prices it expects, not only last year's: a one-year spike in an
 input's price does not swing its runs, so a chain of producers does not hand a swing down the chain."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy import producers

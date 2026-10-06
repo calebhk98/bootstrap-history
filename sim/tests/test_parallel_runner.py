@@ -34,7 +34,8 @@ def _without_timing(text):
 
 
 try:
-    for entry in ("data", "docs", "mods", "playtest", "Complaints"):
+    # .cache is shared so the child runs reuse this checkout's solved prices instead of starting cold.
+    for entry in ("data", "docs", "mods", "playtest", "Complaints", ".cache"):
         if os.path.exists(os.path.join(ROOT, entry)):
             os.symlink(os.path.join(ROOT, entry), os.path.join(_alias_root, entry))
     _link_entries(os.path.join(ROOT, "sim"), os.path.join(_alias_root, "sim"), skip=("tests",))

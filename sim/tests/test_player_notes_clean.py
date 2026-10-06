@@ -1,4 +1,7 @@
 """Complaint 122: player-facing notes must not contain audit markers or patch history."""
+
+QUICK_TOPIC = True
+
 from .harness import *  # noqa: F401,F403
 
 # Audit markers and patch history patterns that should never appear in player notes

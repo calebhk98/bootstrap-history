@@ -1,4 +1,7 @@
 """Traders: founded where a price gap pays, carry goods cheap to dear within capital and depth, and exit on losses."""
+
+QUICK_TOPIC = True
+
 from .harness import check
 
 from sim.agents.api import ActorRecord, ActorRegistry, ActorsState

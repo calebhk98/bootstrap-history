@@ -1,4 +1,7 @@
 """Production data as recipes, and the order goods clear in."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy import recipes

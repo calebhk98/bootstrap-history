@@ -2,6 +2,9 @@
 fixed entry cost that rises with the operators crowding its market and a copy chance that depends on
 the founder's literacy; a firm that earns less than its plant would lend for leaves and its purse
 returns to its founder. Money between the founder and the firm is conserved."""
+
+QUICK_TOPIC = True
+
 from .harness import check
 
 from sim.agents.api import ActorRecord, ActorRegistry, ActorsState

@@ -1,5 +1,8 @@
 """What a goods market that traded nothing tells its sellers about the price next year, and how a
 good's price across its areas is summed into one national price."""
+
+QUICK_TOPIC = True
+
 import types
 import unittest
 

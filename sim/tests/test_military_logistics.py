@@ -18,6 +18,9 @@ CALIBRATION TARGETS section and pack_animal_max_one_way_days()'s docstring.
 
 sim/world/military_logistics.py standalone: rations, fodder, baggage range and ammunition as consumption arithmetic (unittest-style).
 """
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.world import military_logistics as logistics

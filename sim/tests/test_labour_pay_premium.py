@@ -1,5 +1,8 @@
 """Pay over the market: a premium raises the quote, widens what an employer can recruit and draws its
 hires from rivals rather than idle hands. Stub world, no Sim; invented trade ids."""
+
+QUICK_TOPIC = True
+
 from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403

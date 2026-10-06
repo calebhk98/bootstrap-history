@@ -1,4 +1,7 @@
 """A trade whose posts are all filled but whose pay is far over its ask still draws workers."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy import labour_asks

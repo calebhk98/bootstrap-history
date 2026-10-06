@@ -4,6 +4,9 @@ before coke).
 Raw coal cannot smelt metal ore before it is coked (its sulphur ruins the metal).
 This test verifies that no ore-smelting recipe accepts raw coal as a fuel.
 """
+
+QUICK_TOPIC = True
+
 import os
 import unittest
 

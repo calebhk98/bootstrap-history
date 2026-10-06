@@ -1,5 +1,8 @@
 """The labour market: a sticky wage that follows vacancies and idle hours toward the clearing wage,
 never left below every worker's reservation while an employer would pay it."""
+
+QUICK_TOPIC = True
+
 import random
 import unittest
 

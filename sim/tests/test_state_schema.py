@@ -1,4 +1,7 @@
 """Test state definitions, ActiveProjectState schema, and explicit state ownership."""
+
+QUICK_TOPIC = True
+
 import unittest
 from sim.tests.harness import check
 

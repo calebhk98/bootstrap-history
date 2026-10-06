@@ -1,5 +1,7 @@
 """A screen registered with @renders in any render_*.py module is found by render_pretty without editing a shared table."""
 
+QUICK_TOPIC = True
+
 from sim.ui.proto import render_registry, render_typed
 
 from .harness import check

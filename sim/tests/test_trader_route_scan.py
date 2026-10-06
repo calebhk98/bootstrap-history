@@ -1,5 +1,8 @@
 """The traders' route scan prices only pairs whose price gap can exceed freight, and finds the routes an
 exhaustive scan over every (material, source, destination) triple finds."""
+
+QUICK_TOPIC = True
+
 import random
 
 from .harness import check

@@ -1,5 +1,8 @@
 """The agent economy's state budget: it spends what it has, covers a deficit in its policy's order, and what
 it prints reaches prices (Complaint 389). Engine-free fixture; each test states a direction, not a figure."""
+
+QUICK_TOPIC = True
+
 import dataclasses
 import unittest
 

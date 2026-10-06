@@ -17,8 +17,6 @@ task does not own; this file is additive, focused on what changed.
 Weather is correlated across land tiles by real distance.
 """
 
-# Skipped by a default run; --slow or --only runs it.
-SLOW_TOPIC = True
 import statistics
 import unittest
 

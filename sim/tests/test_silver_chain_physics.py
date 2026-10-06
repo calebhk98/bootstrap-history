@@ -1,5 +1,8 @@
 """The silver chain in data/production/ agrees with the physics of the
 deposits and of the lead it is cupelled from."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.engine.prices import _default_production_entries

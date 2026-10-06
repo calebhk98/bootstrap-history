@@ -4,6 +4,9 @@ Guarantees that start_reason(..., _why=False) produces the exact same boolean
 verdict as start_reason(..., _why=True) and that _project_progress_afford_gate()
 returns identical results when reusing precomputed revenue/upkeep.
 """
+
+QUICK_TOPIC = True
+
 from .harness import *  # noqa: F401,F403
 
 

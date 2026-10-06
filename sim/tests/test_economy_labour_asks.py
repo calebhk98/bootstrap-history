@@ -1,5 +1,8 @@
 """A labour market nobody offers hours in follows what a worker of the trade would ask, not its opening
 seed; workers move toward trades that pay more than their training and danger ask for."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy import labour_asks

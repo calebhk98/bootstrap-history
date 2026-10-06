@@ -1,4 +1,7 @@
 """Labour-core clearing over plain records: wages, premiums, recruitment friction, poaching."""
+
+QUICK_TOPIC = True
+
 import copy
 import unittest
 

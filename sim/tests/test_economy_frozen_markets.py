@@ -1,5 +1,8 @@
 """A market with offers and no bids drifts toward the lowest ask instead of freezing, and the first trade
 after such quiet years moves the remembered price only part of the way."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy import market_memory_asks as asks

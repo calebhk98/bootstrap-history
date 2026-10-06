@@ -1,4 +1,7 @@
 """Complaints/399: a good's unit mass can be stated in its production entry, and the validator checks it."""
+
+QUICK_TOPIC = True
+
 import copy
 import unittest
 

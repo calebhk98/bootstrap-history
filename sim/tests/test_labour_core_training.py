@@ -1,6 +1,9 @@
 """The labour core's trade specs, ability bands and training pipeline, on plain records with invented
 trade ids: a hard trade is finished mostly by the able, a school adds workers only after the training
 years, a trade nobody practises cannot teach itself, and nobody is lost on the way."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.labour.market import aptitude, records, trades, training

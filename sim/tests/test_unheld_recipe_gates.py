@@ -3,6 +3,9 @@
 The frontier is recipe gates held by nobody whose own prerequisites somebody
 does hold. Each states `unheld_reason` in the tree data beside the node (the
 validator reads it); no list lives in this test."""
+
+QUICK_TOPIC = True
+
 import os
 import unittest
 

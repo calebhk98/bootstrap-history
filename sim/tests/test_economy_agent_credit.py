@@ -1,6 +1,9 @@
 """The agent economy's loanable-funds rate: savings with no borrowers pull it down toward lenders' asks,
 more funds lower it, more borrowing raises it, and money lent is money moved, not made (Complaint 389).
 Engine-free fixture; each test states a direction, not a figure."""
+
+QUICK_TOPIC = True
+
 import unittest
 from unittest import mock
 

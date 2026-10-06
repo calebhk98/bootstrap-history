@@ -1,5 +1,8 @@
 """Complaint 460 (home config): the suite points the settings file and the save directory at a per-run
 temporary directory, so no test can write the developer's real home."""
+
+QUICK_TOPIC = True
+
 from .harness import *  # noqa: F401,F403
 from sim.engine import settings
 

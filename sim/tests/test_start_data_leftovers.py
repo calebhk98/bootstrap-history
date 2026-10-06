@@ -1,4 +1,7 @@
 """Starts agree with themselves: needle and fireclay (Complaints/297)."""
+
+QUICK_TOPIC = True
+
 import json
 import os
 import unittest

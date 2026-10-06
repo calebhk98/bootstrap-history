@@ -1,4 +1,7 @@
 """Settlement: clearing results become postings; unpaid and undelivered parts are reported, not crashed on."""
+
+QUICK_TOPIC = True
+
 import random
 import unittest
 

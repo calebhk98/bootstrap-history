@@ -5,6 +5,9 @@ reached by getattr, a dispatch table or a mod hook.
 
 sim/tests: dead-code removal guard (unittest-style).
 """
+
+QUICK_TOPIC = True
+
 import importlib
 
 import sim.ui.cli  # noqa: F401  (loads cli_analysis in the order the app does)

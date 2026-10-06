@@ -1,5 +1,8 @@
 """A player is an actor of its own: it researches any node whose prerequisites it knows, runs concerns,
 obeys queued commands and journals each, and shares one concern rule with the firm."""
+
+QUICK_TOPIC = True
+
 from .harness import check
 
 from sim.agents.api import ActorRecord, Firm, ledger

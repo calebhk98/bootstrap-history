@@ -1,4 +1,7 @@
 """A capability name is a prerequisite (`pre`), never the capital field."""
+
+QUICK_TOPIC = True
+
 import glob
 import json
 import os

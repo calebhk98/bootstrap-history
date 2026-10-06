@@ -1,4 +1,7 @@
 """Which goods households hold as a store of wealth, and in what proportion."""
+
+QUICK_TOPIC = True
+
 import math
 import unittest
 
