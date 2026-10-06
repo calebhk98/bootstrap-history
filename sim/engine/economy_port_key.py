@@ -20,9 +20,9 @@ def _plain(value, ancestors=()):
         return os.path.relpath(value, solve_cache._ROOT) if inside else value
     if value is None or isinstance(value, (bool, int, float)):
         return value
-    if id(value) in ancestors:
+    if any(value is ancestor for ancestor in ancestors):
         raise TypeError("cannot key the spin-up on a %s that contains itself" % type(value).__name__)
-    ancestors = ancestors + (id(value),)
+    ancestors = ancestors + (value,)
     if dataclasses.is_dataclass(value) and not isinstance(value, type):
         return {field.name: _plain(getattr(value, field.name), ancestors) for field in dataclasses.fields(value)}
     if isinstance(value, dict):
