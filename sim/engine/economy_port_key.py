@@ -27,8 +27,9 @@ def _plain(value):
     if value is None or isinstance(value, (bool, int, float)):
         return value
     if hasattr(value, "__dict__") and not isinstance(value, type) and vars(value):
+        # underscore attributes are caches derived from the public content (a map's route tables), not content
         return {"type": type(value).__qualname__,
-                "content": {name: _plain(item) for name, item in vars(value).items()}}
+                "content": {name: _plain(item) for name, item in vars(value).items() if not name.startswith("_")}}
     # A repr would carry the object's address, giving a key no other process can ever hit.
     raise TypeError("cannot key the spin-up on a %s" % type(value).__name__)
 
