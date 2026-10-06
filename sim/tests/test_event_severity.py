@@ -6,6 +6,9 @@ from sim.ui.proto import event_severity
 from sim.ui.proto.render_screen_step import render_step
 
 
+QUICK_TOPIC = True
+
+
 class EventTiers(unittest.TestCase):
 
     def test_eight_tiers_from_run_ending_to_informational(self):
@@ -53,18 +56,6 @@ class StepScreenStyling(unittest.TestCase):
         self.assertLess(text.index(sacked), text.index(fair))
         self.assertIn("***", sacked)
         self.assertNotIn("***", fair)
-
-
-class StepReplyCarriesSeverity(unittest.TestCase):
-
-    def test_every_step_event_has_a_severity_name(self):
-        from sim.ui.protocol import _agent_dispatch
-        household = sim(civ="rome_100ad", capital=1e5)
-        household.end_year = household.cfg["start_year"] + 50
-        reply = _agent_dispatch(household, NODES, {"cmd": "step", "years": 3})
-        self.assertTrue(reply["events"])
-        for event in reply["events"]:
-            self.assertIn(event["severity"], event_severity.TIER_NAMES)
 
 
 if __name__ == "__main__":

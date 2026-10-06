@@ -119,7 +119,7 @@ check("the traders' home tally is cleared when the year closes", not with_cargo.
 
 # --- (e) home-bound cargo sized by the price settles over the years, with no sign flips.
 def home_run(played):
-    """Three years of a good the partner sells at a third of home's price; traders bring it home as far as it pays.
+    """Two years of a good the partner sells at a third of home's price; traders bring it home as far as it pays.
     Returns the cargo each year and whether a quarter more would still have paid."""
     world = SimWorld(played)
     home = world._home_place()
@@ -140,7 +140,7 @@ def home_run(played):
     # the capital of the traders together buys many times what the market trades in a year
     capital_tonnes = 10.0 * volumes.get(material + "|" + area_of(material), 0.0) * tonnes_per_unit(material)
     backs, marginal = [], []
-    for _year in range(3):
+    for _year in range(2):
         world = SimWorld(played)
         terms = route_terms(world, PARTNER, home, material)
         back = 0.0

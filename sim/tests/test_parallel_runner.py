@@ -69,7 +69,7 @@ try:
           and _without_timing(_failing.stdout) == _without_timing(_failing_sequential.stdout),
           (_failing.returncode, _failing.stdout[-400:]))
 
-    _crashing = _run_suite("--only", "mod_namespaces,zz_fake_crash", "--jobs", "4")
+    _crashing = _run_suite("--only", "parallelism_note,zz_fake_crash", "--jobs", "4")
     check("a topic that crashes on import is reported as a failure naming it, exit 1",
           _crashing.returncode == 1 and "zz_fake_crash: worker crashed" in _crashing.stdout
           and "boom at import" in _crashing.stdout,
