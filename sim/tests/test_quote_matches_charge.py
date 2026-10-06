@@ -47,8 +47,8 @@ if _bounty_id:
                   "bounty", {"id": _bounty_id}, "paid_now"))
 
 for _name, _quote_args, _action, _action_args, _key in _ROWS:
-    _quote = S._agent_dispatch(_fresh(), NODES, dict(_quote_args, cmd="quote"))
     _game = _fresh()
+    _quote = S._agent_dispatch(_game, NODES, dict(_quote_args, cmd="quote"))
     _before = _game.capital
     _reply = S._agent_dispatch(_game, NODES, dict(_action_args, cmd=_action))
     _charged = _before - _game.capital
@@ -102,22 +102,19 @@ def _first_node(test):
     return None
 
 
-def _openable_game(node_id):
-    game = _ledger_game()
-    game.state.projects.done.add(node_id)
-    game._done_changed()
-    return game
-
-
 def _first_openable():
+    """A venture whose opening quote needs no extra staff, found on one probe game."""
+    probe = _ledger_game()
     for node_id in ORDER:
-        probe = _ledger_game()
         if node_id in probe.done or not probe.is_venture(node_id):
             continue
-        reply = S._agent_dispatch(_openable_game(node_id), NODES,
-                                  {"cmd": "quote", "what": "open", "id": node_id})
+        probe.state.projects.done.add(node_id)
+        probe._done_changed()
+        reply = S._agent_dispatch(probe, NODES, {"cmd": "quote", "what": "open", "id": node_id})
         if reply.get("ok") and not reply.get("staff_short"):
             return node_id
+        probe.state.projects.done.discard(node_id)
+        probe._done_changed()
     return None
 
 
@@ -135,9 +132,10 @@ def _run_project(node_id):
 _open_id = _first_openable()
 check("a venture exists to open in the table", _open_id is not None)
 if _open_id:
-    _open_quote = S._agent_dispatch(_openable_game(_open_id), NODES,
-                                    {"cmd": "quote", "what": "open", "id": _open_id})
-    _opener = _openable_game(_open_id)
+    _opener = _ledger_game()
+    _opener.state.projects.done.add(_open_id)
+    _opener._done_changed()
+    _open_quote = S._agent_dispatch(_opener, NODES, {"cmd": "quote", "what": "open", "id": _open_id})
     _open_reply = S._agent_dispatch(_opener, NODES, {"cmd": "open", "id": _open_id})
     check("open: the action succeeds", _open_reply.get("ok"), _open_reply)
     check("open: the ledger shows exactly what was quoted",
@@ -160,7 +158,7 @@ for _label, _test in (
 
 # The hire's yearly wage: the fee plus what the first year's payroll adds beyond it is the quoted wage.
 _hired, _twin = _ledger_game(), _ledger_game()
-_hire_quote = S._agent_dispatch(_ledger_game(), NODES, {"cmd": "quote", "what": "hire", "trade": "smith", "n": 1})
+_hire_quote = S._agent_dispatch(_hired, NODES, {"cmd": "quote", "what": "hire", "trade": "smith", "n": 1})
 S._agent_dispatch(_hired, NODES, {"cmd": "hire", "trade": "smith", "n": 1})
 for _game in (_hired, _twin):
     S._agent_dispatch(_game, NODES, {"cmd": "step", "years": 1})
@@ -172,8 +170,8 @@ check("hire wage: the first year's charge through the ledger is the quoted yearl
 
 # Living stock: the ledger "stock bought abroad" outflow is exactly the quoted cost.
 _stock_args = {"what": "living_stock", "material": "ramie_stock_kg", "n": 100}
-_stock_quote = S._agent_dispatch(_ledger_game(), NODES, dict(_stock_args, cmd="quote"))
 _stocked = _ledger_game()
+_stock_quote = S._agent_dispatch(_stocked, NODES, dict(_stock_args, cmd="quote"))
 _stock_reply = S._agent_dispatch(_stocked, NODES, dict(_stock_args, cmd="buy"))
 check("living stock: the ledger shows exactly what was quoted",
       _stock_reply.get("ok") and abs(_ledger_outflow(_stocked, "stock bought abroad")

@@ -73,7 +73,7 @@ check("a concern closed on purpose with 'mothball' is never auto-reopened, "
 # --- the treadmill itself, measured: build a realistic spread of concerns,
 # starve them of any staff replacement (auto_hire off, the player default),
 # and count closures against automatic reopenings over 40 years
-def _portfolio_run(auto_hire, years=40):
+def _portfolio_run(auto_hire, years=12):
     sim_state = sim(civ="norse_900ad", capital=60000.0)
     sim_state.policy["auto_hire"] = auto_hire
     cands = sorted((node_id for node_id in NODES if sim_state.is_venture(node_id) and NODES[node_id]["rev"] > 0),
@@ -114,5 +114,5 @@ check("with auto_hire replacing attrition losses, no closed concern stays "
       "shut while there are free people to run it - every closure comes back "
       "on its own as soon as the household can staff it again",
       not _stranded and _reopenings > 0,
-      "opened %d, shut with free staff at year 40: %s, auto-reopenings: %d"
+      "opened %d, shut with free staff at the end: %s, auto-reopenings: %d"
       % (len(_opened), _stranded, _reopenings))

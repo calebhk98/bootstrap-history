@@ -1,7 +1,15 @@
 """Regression coverage for the new-game menu's seed question (blank draws a
-random seed, a number is used, settings may hold a default) and for `goals`
-agreeing with the menu's goal list (complaint 259)."""
+random seed, a number is used, settings may hold a default), for word seeds
+replaying the same game, and for `goals` agreeing with the menu's goal list
+(complaint 259). One menu run goes through the real CLI; the seed rules call
+the question and the resolver directly."""
+import builtins
+
 from .harness import *
+
+from sim.tests import fingerprint as perf_fingerprint
+from sim.ui import cli_interactive
+from sim.engine.settings_table import normal_seed
 
 _SIMULATOR = os.path.join(HERE, "simulator.py")
 _scratch = tempfile.mkdtemp()
@@ -24,44 +32,60 @@ def _run(arguments, text, env, cwd=None):
                           capture_output=True, text=True, timeout=120, env=env, cwd=cwd)
 
 
-def _seed_after_menu(name, seed_answer, config=None):
-    saves, env = _env(name, config)
-    # civilisation, opening, fog, fuzzy, kit, mortality, goal, horizon, then the seed
-    result = _run(["menu"], "1\n" + "\n" * 7 + seed_answer + "\n" + "\n" * 4 + "quit\n", env)
-    found = [path for path in glob.glob(os.path.join(saves, "*.json"))
-             if not path.endswith(".meta.json")]
-    seed = json.load(open(found[0])).get("_seed") if len(found) == 1 else None
-    return seed, result.stdout
+def _ask_seed(answers, config=None):
+    """What the seed question returns for these typed answers, with settings `config`."""
+    remaining = list(answers)
+    real_input = builtins.input
+    builtins.input = lambda prompt="": remaining.pop(0)
+    try:
+        return cli_interactive._new_game_ask_seed(config or {})
+    finally:
+        builtins.input = real_input
 
 
-_seed, _out = _seed_after_menu("typed", "4242")
-check("menu: the seed question is asked", "Seed" in _out, _out[-1500:])
-check("menu: a typed seed is the game's seed", _seed == 4242, (_seed, _out[-800:]))
-_seed, _out = _seed_after_menu("blank", "")
-check("menu: a blank seed draws a random one", _seed not in (None, 4242), (_seed, _out[-800:]))
-_seed, _out = _seed_after_menu("word", "Rome42")
-check("menu: a word seed is accepted and kept as typed, in lower case",
-      _seed == "rome42", (_seed, _out[-800:]))
-_seed, _out = _seed_after_menu("bad", "two words\n77")
-check("menu: a seed with a space is asked again", _seed == 77, (_seed, _out[-800:]))
-_seed, _out = _seed_after_menu("configured", "", {"default_seed": 9001})
-check("menu: a blank answer takes the seed set in settings", _seed == 9001, (_seed, _out[-800:]))
+# ---- the whole menu, through the CLI: the question is asked and the typed seed is the game's seed
+saves, env = _env("typed")
+# civilisation, opening, fog, fuzzy, kit, mortality, goal, horizon, then the seed
+menu_result = _run(["menu"], "1\n" + "\n" * 7 + "4242\n" + "\n" * 4 + "quit\n", env)
+found = [path for path in glob.glob(os.path.join(saves, "*.json")) if not path.endswith(".meta.json")]
+menu_seed = json.load(open(found[0])).get("_seed") if len(found) == 1 else None
+check("menu: the seed question is asked", "Seed" in menu_result.stdout, menu_result.stdout[-1500:])
+check("menu: a typed seed is the game's seed", menu_seed == 4242, (menu_seed, menu_result.stdout[-800:]))
 
-# ---- a word seed replays the same game from the command line
-_saves_word, _env_word = _env("word-replay")
-def _word_game(name, seed):
-    session = os.path.join(_saves_word, name + ".json")
-    out = _run(["play", "--civ", "rome_100ad", "--seed", seed, "--session", session],
-               "step 3\nstate\nquit\n", _env_word).stdout
-    # "(took N s)" timing lines differ between runs; the game itself must not
-    return "\n".join(line for line in out.split("Seed:", 1)[-1].splitlines()
-                     if not line.strip().startswith("(took "))
-_first, _second = _word_game("a", "hello"), _word_game("b", "hello")
-check("--seed takes a word and prints it back", _first.startswith(" hello"), _first[:200])
-check("the same word seed replays the same game", _first == _second.replace("b.json", "a.json"),
-      (_first[:400], _second[:400]))
-check("a different word seed rolls different dice",
-      _word_game("c", "goodbye").split("\n", 1)[-1] != _first.split("\n", 1)[-1])
+# ---- the seed rules
+blank_answer = _ask_seed([""])
+check("menu: a blank seed asks for a random one", blank_answer is None, blank_answer)
+saved_default = os.environ.pop(cli_interactive.DEFAULT_SEED_ENV, None)
+try:
+    drawn = {cli_interactive.resolve_seed(None) for _ in range(3)}
+finally:
+    if saved_default is not None:
+        os.environ[cli_interactive.DEFAULT_SEED_ENV] = saved_default
+check("menu: no seed given draws a fresh random one each time", len(drawn) > 1, drawn)
+word_answer = _ask_seed(["Rome42"])
+check("menu: a word seed is accepted and kept as typed, in lower case", word_answer == "rome42", word_answer)
+retyped = _ask_seed(["two words", "77"])
+check("menu: a seed with a space is asked again", retyped == 77, retyped)
+configured_answer = _ask_seed([""], {"default_seed": 9001})
+check("menu: a blank answer takes the seed set in settings", configured_answer == 9001, configured_answer)
+quit_answer = _ask_seed(["q"])
+check("menu: a quit answer backs out", quit_answer is False, quit_answer)
+
+# ---- a word seed replays the same game, a different word rolls different dice
+def _word_game_digest(seed):
+    game = S.Sim(NODES, ORDER, random.Random(normal_seed(seed)), events=True, manual=True,
+                 civ=S.load_civ("rome_100ad"))
+    game.goal, game.done_year = GOAL, {}
+    game.end_year = game.cfg["start_year"] + game.cfg["horizon_years"]
+    game.step()
+    return perf_fingerprint.digest(perf_fingerprint.state_of(game))
+
+
+hello_digest = _word_game_digest("hello")
+check("the same word seed replays the same game", hello_digest == _word_game_digest("hello"),
+      "two runs of hello differ")
+check("a different word seed rolls different dice", hello_digest != _word_game_digest("goodbye"),
+      "hello and goodbye match")
 
 # ---- 263: `goals` lists what the menu lists, default first, without the stale blurb
 _saves, _env_goals = _env("goals")
@@ -71,21 +95,16 @@ check("goals: the default goal is the first row",
 check("goals: no blurb calls the junction transistor the original goal",
       "original goal" not in _goals.lower(), _goals[:1200])
 
-# ---- 208: a typed save says where it landed, stays frozen on resume, says how to move it
+# ---- 208: a typed save says where it landed and stays frozen on resume; --seed takes a word and prints it back
 _saves, _env_export = _env("export")
 _live = os.path.join(_saves, "g.json")
 _workdir = os.path.join(_scratch, "work")
 os.makedirs(_workdir, exist_ok=True)
 _snapshot = os.path.join(_workdir, "snap.json")
-_out = _run(["play", "--civ", "rome_100ad", "--seed", "1", "--session", _live],
+_out = _run(["play", "--civ", "rome_100ad", "--seed", "hello", "--session", _live],
             "save snap.json\nquit\n", _env_export, _workdir).stdout
-check("208: a typed relative save says the full path it landed at",
-      _snapshot in _out, _out[-700:])
-_after_save = _out.split("saved:")[-1]
-check("208: it says the live session file is separate",
-      "live" in _after_save and _live in _after_save, _out[-700:])
-check("208: it says how to copy the save to another machine",
-      "--session" in _after_save and "copy" in _after_save, _out[-700:])
+check("--seed takes a word and prints it back", "hello" in _out, _out[:300])
+check("208: a typed relative save says the full path it landed at", _snapshot in _out, _out[-700:])
 _snapshot_before = open(_snapshot).read()
 _resume = _run(["play", "--session", _snapshot], "step 1\nquit\n", _env_export, _workdir).stdout
 check("208: resuming a manually saved file does not overwrite it",

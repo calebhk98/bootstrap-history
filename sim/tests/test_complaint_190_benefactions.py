@@ -34,12 +34,6 @@ def late_game_sim():
     return late
 
 
-def baseline(*running):
-    base = late_game_sim()
-    run_it(base, *running)
-    return base
-
-
 # ---- the works are available once their prerequisites are met, and not before ----
 fresh = sim(capital=800_000_000.0)
 late = late_game_sim()
@@ -66,93 +60,82 @@ for work in PRESENT:
           work in late.CAPABILITY_INSTITUTIONS)
 
 # ---- what each one changes, through the channel it declares ----
-def opened(work, extra_running=()):
-    """A household with `work` built and its doors open."""
-    house = baseline(*extra_running)
-    run_it(house, work)
-    return house
-
-
+# One late-game household serves every work: each is opened, measured against the household just
+# before, then closed again, so the next work starts from the same position.
 def protection_of(house):
     house.update_protection()
     return house.state.household.protection
 
 
 # A probe per effect channel a work declares: which engine reading must move, and which way.
-_SCHOOL_PRECONDITIONS = tuple(node_id for node_id, node in NODES.items()
-                              if (node.get("mechanics") or {}).get("schooling_flow", {}).get("required"))
+SCHOOL_PRECONDITIONS = tuple(node_id for node_id, node in NODES.items()
+                             if (node.get("mechanics") or {}).get("schooling_flow", {}).get("required"))
+run_it(late, *SCHOOL_PRECONDITIONS)
 
 
-def _channel_probes(mechanics):
+def channel_probes(mechanics):
     probes = []
     if "schooling_flow" in mechanics:
-        probes.append(("schooling flow", lambda h: h._schooling_flow(), 1, _SCHOOL_PRECONDITIONS))
+        probes.append(("schooling flow", lambda h: h._schooling_flow(), 1))
     if "standing" in mechanics:
-        probes.append(("standing", lambda h: h.standing_floor(), 1, ()))
+        probes.append(("standing", lambda h: h.standing_floor(), 1))
     if (mechanics.get("staff_capacity") or {}).get("scholars"):
-        probes.append(("scholars the household can keep", lambda h: h.labour.staff_capacity()[0], 1, ()))
+        probes.append(("scholars the household can keep", lambda h: h.labour.staff_capacity()[0], 1))
     for counter in mechanics.get("hazard_counters") or []:
         probes.append(("loss to %s" % counter["kind"],
-                       lambda h, kind=counter["kind"]: h.hazard_relief(kind)[0], -1, ()))
+                       lambda h, kind=counter["kind"]: h.hazard_relief(kind)[0], -1))
     if "reach" in mechanics:
-        probes.append(("market reach", lambda h: h.goods_reach_factor(), 1, ()))
+        probes.append(("market reach", lambda h: h.goods_reach_factor(), 1))
     if "supervision_room" in mechanics:
-        probes.append(("people one can direct", lambda h: h.labour.supervision_room(), 1, ()))
+        probes.append(("people one can direct", lambda h: h.labour.supervision_room(), 1))
     if "protection" in mechanics or "patron_protection" in mechanics:
-        probes.append(("protection", protection_of, 1, ()))
+        probes.append(("protection", protection_of, 1))
     if "credit_line" in mechanics:
-        probes.append(("credit limit", lambda h: h.credit_limit(), 1, ()))
+        probes.append(("credit limit", lambda h: h.credit_limit(), 1))
     return probes
 
 
-PROBES = {work: _channel_probes(NODES[work]["mechanics"]) for work in PRESENT}
+PROBES = {work: channel_probes(NODES[work]["mechanics"]) for work in PRESENT}
 for work in PRESENT:
     check("%s declares at least one effect channel this test can measure" % work, bool(PROBES[work]))
 
 for work in PRESENT:
-    for label, probe, direction, needs in PROBES[work]:
-        before = probe(baseline(*needs))
-        after = probe(opened(work, needs))
-        moved = (after - before) * direction
-        check("%s open changes %s the intended way" % (work, label), moved > 1e-9, (before, after))
-
-# ---- closing the doors switches the effect off; the upkeep is real ----
-for work in PRESENT:
-    house = opened(work)
+    before = [probe(late) for _label, probe, _direction in PROBES[work]]
+    run_it(late, work)
+    for (label, probe, direction), value_before in zip(PROBES[work], before):
+        value_after = probe(late)
+        check("%s open changes %s the intended way" % (work, label),
+              (value_after - value_before) * direction > 1e-9, (value_before, value_after))
+    # ---- the upkeep is real, and closing the doors switches the effect off ----
     check("%s costs its whole yearly upkeep when open, whatever the household headcount" % work,
-          abs(house.institution_upkeep(work) - house.nodes[work]["up"]) < 1e-6 * house.nodes[work]["up"]
-          and house.nodes[work]["up"] > 0)
+          abs(late.institution_upkeep(work) - late.nodes[work]["up"]) < 1e-6 * late.nodes[work]["up"]
+          and late.nodes[work]["up"] > 0)
     check("%s upkeep is counted in what the household pays each year" % work,
-          house.upkeep() >= house.institution_upkeep(work) - 1e-6)
-    plain = baseline()
-    for label, probe, direction, needs in PROBES[work][:1]:
-        if needs:
-            continue
-        opened_value = probe(house)
-        house.close_venture(work)
-        check("%s: closing it takes %s back to where it was" % (work, label),
-              abs(probe(house) - probe(plain)) < abs(opened_value - probe(plain)), (opened_value, probe(house)))
+          late.upkeep() >= late.institution_upkeep(work) - 1e-6)
+    label, probe, direction = PROBES[work][0]
+    opened_value = probe(late)
+    late.close_venture(work)
+    check("%s: closing it takes %s back to where it was" % (work, label),
+          abs(probe(late) - before[0]) < abs(opened_value - before[0]), (before[0], opened_value, probe(late)))
 
 # ---- repeatable: a further unit of a scalable work is more of it, at a higher price ----
 for work in PRESENT:
     if work not in late.SCALABLE_INSTITUTIONS:
         continue
-    house = late_game_sim()
-    house.done.add(work)
-    house._done_changed()
-    ok_first, message_first = house.open_venture(work)
+    ok_first, message_first = late.open_venture(work)
     check("%s opens" % work, ok_first, message_first)
     if not ok_first:
         continue
-    units_before = house.institution_units(work)
-    second_unit_price = house.institution_unit_cost(work, units_before, 1.0)
-    ok_more, message_more = house.open_venture(work, units=1.0)
+    units_before = late.institution_units(work)
+    second_unit_price = late.institution_unit_cost(work, units_before, 1.0)
+    ok_more, message_more = late.open_venture(work, units=1.0)
     check("%s can be founded again on top of the first" % work, ok_more, message_more)
     if ok_more:
-        check("%s: more of it runs after expanding" % work, house.institution_units(work) > units_before)
+        check("%s: more of it runs after expanding" % work, late.institution_units(work) > units_before)
         check("%s: a further unit costs more than the first did" % work,
-              second_unit_price > house.venture_capex(work))
+              second_unit_price > late.venture_capex(work))
         check("%s: upkeep grows with the units" % work,
-              abs(house.institution_upkeep(work)
-                  - house.nodes[work]["up"] * house.institution_units(work)) < 1e-6 * house.nodes[work]["up"]
-              and house.institution_units(work) > units_before)
+              abs(late.institution_upkeep(work)
+                  - late.nodes[work]["up"] * late.institution_units(work)) < 1e-6 * late.nodes[work]["up"]
+              and late.institution_units(work) > units_before)
+    late.close_venture(work)

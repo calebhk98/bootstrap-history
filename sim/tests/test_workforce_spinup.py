@@ -27,6 +27,16 @@ def _civilisations():
             yield civ
 
 
+_SPUN = {}
+
+
+def _spun(civ):
+    """The spin-up for a civilisation's starting techs, computed once per run of this module."""
+    if civ["id"] not in _SPUN:
+        _SPUN[civ["id"]] = workforce_spinup.spin_up(_PRODUCTION, set(civ["starting_techs"]), techniques_available_to)
+    return _SPUN[civ["id"]]
+
+
 def _trades_of_available_recipes(production, reached):
     available, _unreached, _unclassified = techniques_available_to(production, reached)
     trades = set()
@@ -41,14 +51,14 @@ class SpinUpTests(unittest.TestCase):
 
     def test_converges_for_every_base_civilisation(self):
         for civ in _civilisations():
-            result = workforce_spinup.spin_up(_PRODUCTION, set(civ["starting_techs"]), techniques_available_to)
+            result = _spun(civ)
             self.assertTrue(result.converged, civ["id"])
             self.assertLessEqual(result.years, workforce_spinup.SPIN_UP_MAX_YEARS)
             self.assertAlmostEqual(sum(result.shares_by_trade.values()), 1.0, places=9)
 
     def test_stops_early_when_the_split_stops_moving(self):
         civ = next(_civilisations())
-        result = workforce_spinup.spin_up(_PRODUCTION, set(civ["starting_techs"]), techniques_available_to)
+        result = _spun(civ)
         self.assertLess(result.years, workforce_spinup.SPIN_UP_MAX_YEARS)
         self.assertLessEqual(result.final_share_change,
                              workforce_spinup.SPIN_UP_SHARE_TOLERANCE)
@@ -64,15 +74,14 @@ class SpinUpTests(unittest.TestCase):
         farm_trade = labour_allocation.FARM_TRADE
         for civ in _civilisations():
             reached = set(civ["starting_techs"])
-            result = workforce_spinup.spin_up(_PRODUCTION, reached, techniques_available_to)
+            result = _spun(civ)
             expected = _trades_of_available_recipes(_PRODUCTION, reached) - {farm_trade}
             self.assertEqual({trade for trade, share in result.shares_by_trade.items()
                               if share > 0.0}, expected, civ["id"])
             self.assertTrue(all(share >= 0.0 for share in result.shares_by_trade.values()))
 
     def test_civilisations_with_different_technology_split_differently(self):
-        splits = [workforce_spinup.spin_up(_PRODUCTION, set(civ["starting_techs"]), techniques_available_to).shares_by_trade
-                  for civ in _civilisations()]
+        splits = [_spun(civ).shares_by_trade for civ in _civilisations()]
         self.assertGreater(len({tuple(sorted(split)) for split in splits}), 1)
 
     def test_a_mod_trade_with_an_available_recipe_gets_workers(self):
@@ -90,12 +99,12 @@ class SpinUpTests(unittest.TestCase):
         self.assertGreater(result.shares_by_trade.get("zz_wright", 0.0), 0.0)
         self.assertEqual(result.shares_by_trade.get("zz_sage", 0.0), 0.0)
         # The wright also draws iron, so the smith side of the graph is busier.
-        base = workforce_spinup.spin_up(_PRODUCTION, set(civ["starting_techs"]), techniques_available_to)
+        base = _spun(civ)
         self.assertNotEqual(base.shares_by_trade, result.shares_by_trade)
 
     def test_deterministic_for_a_given_input(self):
         civ = next(_civilisations())
-        first = workforce_spinup.spin_up(_PRODUCTION, set(civ["starting_techs"]), techniques_available_to)
+        first = _spun(civ)
         second = workforce_spinup.spin_up(_PRODUCTION, set(civ["starting_techs"]), techniques_available_to)
         self.assertEqual(first.shares_by_trade, second.shares_by_trade)
         self.assertEqual(first.years, second.years)
@@ -130,6 +139,28 @@ class SpinUpTests(unittest.TestCase):
         self.assertTrue(any(line.strip("/") == top for line in ignored), top)
 
 
+_STARTED = {}
+
+
+def _started(civ):
+    """A game of the civilisation after its first year's allocation, with the farm share the farm
+    labour logic wanted before it; built once per civilisation."""
+    if civ["id"] not in _STARTED:
+        test_sim = sim(civ=civ["id"], events=False)
+        adult_equivalent = test_sim._adult_equivalent_population(test_sim.population)
+        technique = test_sim.labour._farming_technique()
+        baseline_fte = test_sim.labour._expected_year_farm_need(
+            test_sim.labour._share_farm_fte(adult_equivalent, technique),
+            adult_equivalent, technique)
+        total_hours = (test_sim.population.working_age
+                       * labour_allocation.HOURS_PER_FARM_WORKER_YEAR)
+        wanted_share = min(baseline_fte * labour_allocation.HOURS_PER_FARM_WORKER_YEAR,
+                           total_hours) / total_hours
+        test_sim._demographic_recovery(test_sim.civ.get("year", 100) + 1)
+        _STARTED[civ["id"]] = (test_sim, test_sim.state.economy.society_labour_hours, wanted_share)
+    return _STARTED[civ["id"]]
+
+
 class EngineStartTests(unittest.TestCase):
 
     def _first_year(self, civ_id):
@@ -139,7 +170,7 @@ class EngineStartTests(unittest.TestCase):
 
     def test_start_workforce_is_split_by_trade_not_pooled(self):
         for civ in _civilisations():
-            _test_sim, hours = self._first_year(civ["id"])
+            _test_sim, hours, _wanted = _started(civ)
             expected = _trades_of_available_recipes(
                 _PRODUCTION, set(civ["starting_techs"])) | {labour_allocation.FARM_TRADE}
             self.assertEqual({trade for trade, value in hours.items() if value > 0.0},
@@ -147,18 +178,7 @@ class EngineStartTests(unittest.TestCase):
 
     def test_farm_share_matches_the_farm_labour_logic(self):
         for civ in _civilisations():
-            test_sim = sim(civ=civ["id"], events=False)
-            adult_equivalent = test_sim._adult_equivalent_population(test_sim.population)
-            technique = test_sim.labour._farming_technique()
-            baseline_fte = test_sim.labour._expected_year_farm_need(
-                test_sim.labour._share_farm_fte(adult_equivalent, technique),
-                adult_equivalent, technique)
-            total_hours = (test_sim.population.working_age
-                           * labour_allocation.HOURS_PER_FARM_WORKER_YEAR)
-            wanted_share = min(baseline_fte * labour_allocation.HOURS_PER_FARM_WORKER_YEAR,
-                               total_hours) / total_hours
-            test_sim._demographic_recovery(test_sim.civ.get("year", 100) + 1)
-            hours = test_sim.state.economy.society_labour_hours
+            _test_sim, hours, wanted_share = _started(civ)
             farm_share = hours[labour_allocation.FARM_TRADE] / sum(hours.values())
             self.assertGreater(farm_share, 0.0)
             self.assertLess(farm_share, 1.0)
