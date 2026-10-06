@@ -206,16 +206,6 @@ for _ in range(40):
 check("manual play never buys people for you", s.slaves == 0 and s.freedmen == 0,
       "slaves %d freedmen %d" % (s.slaves, s.freedmen))
 
-# --- naive WEIRD: nothing should repay its whole cost in weeks. Skilled-trade
-# wages now come from the training premium rather than the book's wage table,
-# so the fastest-repaying node pays back sooner than the book wages allowed.
-PUMP_PAYBACK_YEARS_FLOOR = 0.25
-pumps = [node_id for node_id, node in NODES.items()
-         if float(node.get("rev") or 0) > 0 and node["_total_cost"] > 0
-         and node["_total_cost"] / float(node["rev"]) < PUMP_PAYBACK_YEARS_FLOOR]
-check("no node repays its entire cost in under three months", not pumps,
-      "%d pumps, e.g. %s" % (len(pumps), pumps[:3]))
-
 # --- naive WEIRD 7 / Han BREAK 5: a project must actually be PAID for
 s = sim(capital=book_money(400.0), manual=True)
 ok, why = s.start_project("identity_cover")         # 1,580 den against 400

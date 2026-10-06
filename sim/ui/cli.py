@@ -1374,6 +1374,8 @@ def main():
                            "good with the largest opening quantity, which may be an odd one; name wheat_kg to be sure)")
     subparser.add_argument("--metals", default="", help="comma-separated metal goods for the volatility figure "
                            "(default: the good backing the currency)")
+    subparser.add_argument("--payback", action="store_true", help="also list nodes whose build cost is repaid "
+                           "suspiciously fast by net earnings (a diagnostic; it changes nothing)")
     sub.add_parser("goals", help="list the selectable goals and their critical-path floors")
     subparser = sub.add_parser("path", help="the critical path to a goal"); subparser.add_argument("goal", nargs="?")
     subparser = sub.add_parser("costs", help="the resource costs of every node"); subparser.add_argument("--top", type=int, default=20)

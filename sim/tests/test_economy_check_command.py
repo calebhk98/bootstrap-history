@@ -35,6 +35,15 @@ class EconomyCheckTests(unittest.TestCase):
         for expected in ("rome_100ad", "seed 1", "staple", "hired_share", "hunger_share", "staple_over_labour"):
             self.assertIn(expected, text)
 
+    def test_the_payback_flag_prints_the_diagnostic_section(self):
+        from sim.ui.cli_economy_check import cmd_economy_check
+        args = type("Args", (), {"years": 1, "seeds": "1", "civs": "rome_100ad", "metals": "", "staple": "",
+                                 "payback": True})()
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            cmd_economy_check(args)
+        self.assertIn("diagnostic only", output.getvalue())
+
 
 if __name__ == "__main__":
     unittest.main()
