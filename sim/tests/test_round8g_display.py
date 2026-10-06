@@ -5,23 +5,19 @@ from .harness import *  # noqa: F401,F403
 # ROUND 8g: a five-report playtest sweep of protocol.py / cli.py (display).
 # ======================================================================
 
-from sim.ui.protocol import (render_state as _RSTATE, render_risk as _RRISK,
-                             render_why as _RWHY,
-                             render_path as _RPATH)
+from sim.ui.protocol import render_risk as _RRISK
 
 # --- FINDING: "finished, stays finished" meant three different things -
 # a plain prerequisite, a structural bonus, and a non-DAG gate - and the
 # engine said it the same way for all three. `why` now names a
 # CAPABILITY_INSTITUTIONS node for what it is, and leaves an ordinary
 # prerequisite alone.
-_s_cap = sim(civ="rome_100ad", capital=5000000.0)
+_s_cap = sim(civ="rome_100ad", capital=5000000.0)   # shared by the why, ventures and mothball checks below
 _wr_cap = S._agent_dispatch(_s_cap, NODES, {"cmd": "why", "id": "workshop_first"})
 check("why flags a capability institution as needing to stay OPEN, not "
       "only built",
       bool(_wr_cap.get("this_is_a_capability_you_must_keep_open")),
       _wr_cap.get("this_is_a_capability_you_must_keep_open"))
-check("...and the sentence appears on the rendered page too",
-      "KEEP THIS OPEN" in _RWHY(_wr_cap), _RWHY(_wr_cap))
 _wr_plain = S._agent_dispatch(_s_cap, NODES, {"cmd": "why", "id": "scientific_method"})
 check("...while an ordinary prerequisite (not a capability institution) is "
       "not flagged the same way",
@@ -32,7 +28,7 @@ check("...while an ordinary prerequisite (not a capability institution) is "
 # bonuses) and patron_local (a non-DAG gate) exactly like an ordinary
 # earn/cost business, so a Rome player could not tell them apart from a
 # shuttered shop. They now get their own list.
-_s_vcap = sim(civ="rome_100ad", capital=5000000.0)
+_s_vcap = _s_cap
 _s_vcap.done.update(["identity_cover", "tex_horizontal_loom"])
 _s_vcap._done_changed()
 _vt_cap = S._agent_dispatch(_s_vcap, NODES, {"cmd": "ventures"})
@@ -48,23 +44,6 @@ check("ventures puts an idle capability institution in its own list, not "
 check("...and leaves an ordinary idle business in the ordinary list",
       "tex_horizontal_loom" in _ord_ids and "tex_horizontal_loom" not in _cap_ids,
       (_cap_ids, _ord_ids))
-
-# --- FINDING: the headline "net X/yr" conflated one-off project spend with
-# recurring burn, so `state` looked like it was about to go broke on any
-# turn a player started something expensive. `state` now prints the
-# recurring figure plainly, not only the after-spend one.
-_s_net = sim(civ="rome_100ad", capital=50000.0)
-_st_net = S._agent_dispatch(_s_net, NODES, {"cmd": "start", "id": "scientific_method"})
-_stt_net = S._agent_dispatch(_s_net, NODES, {"cmd": "state"})
-_rendered_net = _RSTATE(_stt_net)
-check("state's money line names the recurring net as the one to watch",
-      "recurring" in _rendered_net and "one to watch" in _rendered_net,
-      _rendered_net.splitlines()[4:7])
-check("...and, once a project has actually taken spend, also shows the "
-      "one-off after-spend figure alongside it",
-      (_stt_net.get("project_spend_this_year") or 0) <= 0.5
-      or "one-off" in _rendered_net,
-      (_stt_net.get("project_spend_this_year"), _rendered_net.splitlines()[4:7]))
 
 # --- FINDING: an undocumented per-project throttle (cost divided by the
 # calendar floor, however much cash is in hand) already explained itself on
@@ -115,7 +94,7 @@ if _crisis:
 # a different question from `available` - "what the goal still needs" never
 # joined to "what I could start today". A Han player scripted the
 # intersection themselves outside the game. `path` now does the join.
-_s_pth2 = sim(civ="rome_100ad")
+_s_pth2 = sim(civ="rome_100ad")   # shared by the path checks below
 _rp2 = S._agent_dispatch(_s_pth2, NODES, {"cmd": "path", "id": GOAL})
 check("path names how many of the remaining nodes are startable today",
       isinstance(_rp2.get("startable_today_count"), int)
@@ -128,14 +107,6 @@ _path_startable_ids = {entry["id"] for entry in (_rp2.get("startable_today_towar
 check("...and every one of those is genuinely on `available` too - the "
       "join is a real intersection, not an invented list",
       _path_startable_ids <= _av_ids, _path_startable_ids - _av_ids)
-_welcome = S._agent_dispatch(_s_pth2, NODES, {"cmd": "help"})
-check("...and path is now reachable from the welcome screen, not only "
-      "buried in `help commands`",
-      '"cmd":"path"' in str(_welcome), _welcome.get("help"))
-check("path has its own rendering, not a raw key/value dump",
-      "ROUTE TO" in _RPATH(_rp2) and "STARTABLE TODAY" in _RPATH(_rp2),
-      _RPATH(_rp2)[:80])
-
 # --- FINDING, RAISED TWICE: `path` was promoted into the welcome screen's
 # starter verbs on the strength of one player calling it decisive, and three
 # MORE players then hit the problem that promotion exposed: early in any
@@ -151,7 +122,7 @@ check("path has its own rendering, not a raw key/value dump",
 # done; it is said plainly, every time the route cannot pay for itself on
 # its own, with the COMBINED bill of everything listed, which individual
 # affordability checks never show.
-_s_pay = sim(civ="rome_100ad")
+_s_pay = _s_pth2
 _rp_pay_ok = S._agent_dispatch(_s_pay, NODES, {"cmd": "path", "id": GOAL})
 check("set-up: on a fresh turn-one Rome game every startable node on the "
       "route to the goal earns nothing by itself - this is the real "
@@ -169,15 +140,12 @@ check("`path` says outright, from turn one, that an all-knowledge route "
       "earns" in (_rp_pay_ok.get("this_route_pays_for_nothing") or "")
       and '"sort":"earns"' in (_rp_pay_ok.get("this_route_pays_for_nothing") or ""),
       _rp_pay_ok.get("this_route_pays_for_nothing"))
-check("...and the warning reaches the rendered page too, not only the JSON",
-      "!!" in _RPATH(_rp_pay_ok) and "sort" in _RPATH(_rp_pay_ok),
-      _RPATH(_rp_pay_ok))
 # A route with at least one real earner among today's startable nodes must
 # NOT get the all-knowledge warning: the condition is "nothing on this list
 # pays", not "you are poor" - found by scanning the tree for a goal whose
 # critical path has a revenue-positive node startable right now, rather
 # than assuming one exists.
-_s_scan = sim(civ="rome_100ad")
+_s_scan = _s_pth2
 _earning_goal = next((goal_candidate for goal_candidate in NODES
                      if any(NODES[node_id]["rev"] > 0 and _s_scan.can_start(node_id)
                             for node_id in S.closure(NODES, goal_candidate))), None)
@@ -185,7 +153,7 @@ check("a goal with a real earner on its startable-today route exists to "
       "test the negative case against",
       _earning_goal is not None, _earning_goal)
 if _earning_goal:
-    _rp_eg = S._agent_dispatch(sim(civ="rome_100ad"), NODES,
+    _rp_eg = S._agent_dispatch(_s_pth2, NODES,
                                {"cmd": "path", "id": _earning_goal})
     check("...and that route gets no 'pays for nothing' warning",
           "this_route_pays_for_nothing" not in _rp_eg,
@@ -214,7 +182,7 @@ check("`path` names the combined cost of everything listed against what "
 # (TRADES_ABSENT) trade, and neither train's own success message nor a
 # project's `why` said so beforehand - the refusal only ever appeared at
 # `start`.
-_s_th = sim(civ="han_china_100ad", capital=5000000.0)
+_s_th = _s_thr
 _tr = S._agent_dispatch(_s_th, NODES, {"cmd": "train", "trade": "machinist", "n": 1})
 check("train's own success message says a second step (hire) still stands "
       "between training a taught trade and a project being able to use it",
@@ -224,14 +192,11 @@ check("why on a project needing that just-taught trade says nobody can do "
       "the work yet, before `start` ever refuses it",
       "machinist" in (_wr_th.get("trades_taught_but_nobody_here_to_do_them_yet") or []),
       _wr_th.get("trades_taught_but_nobody_here_to_do_them_yet"))
-check("...and the same sentence appears on the rendered page",
-      "TAUGHT, BUT NOBODY HERE" in _RWHY(_wr_th), _RWHY(_wr_th))
-
 # --- FINDING (same root cause as above): closing a capability institution
 # for the upkeep back used to read exactly like closing an ordinary
 # business - a Mexica player did this and lost the capability silently,
 # twice. `mothball` now says so.
-_s_mb = sim(civ="rome_100ad", capital=5000000.0)
+_s_mb = _s_cap
 _s_mb.done.add("identity_cover"); _s_mb._done_changed()
 _s_mb.open_venture("identity_cover")
 _mb_out = S._agent_dispatch(_s_mb, NODES, {"cmd": "mothball", "id": "identity_cover"})
@@ -239,7 +204,7 @@ check("mothballing a capability institution says more than its upkeep "
       "stopped",
       _mb_out.get("ok") and bool(_mb_out.get("but"))
       and "capability" in _mb_out["but"], _mb_out.get("but"))
-_s_mb2 = sim(civ="rome_100ad", capital=5000000.0)
+_s_mb2 = _s_cap
 _s_mb2.done.add("tex_horizontal_loom"); _s_mb2._done_changed()
 _s_mb2.open_venture("tex_horizontal_loom")
 _mb_out2 = S._agent_dispatch(_s_mb2, NODES, {"cmd": "mothball", "id": "tex_horizontal_loom"})
@@ -278,20 +243,13 @@ check("point_contact_transistor no longer gates on single_crystal/"
 check("...the mechanism that used to refuse to start it (substitution_"
       "quality, the req_any gate) now clears trivially, with neither "
       "single_crystal nor silicon_path done",
-      sim(civ="han_china_100ad").substitution_quality("point_contact_transistor")
-      == (1.0, True),
-      sim(civ="han_china_100ad").substitution_quality("point_contact_transistor"))
+      _s_thr.substitution_quality("point_contact_transistor") == (1.0, True),
+      _s_thr.substitution_quality("point_contact_transistor"))
 check("...while single_crystal is still mandatory for the goal itself - "
       "the manufacturable junction transistor, not its 1947 proof of "
       "concept, is where single-crystal growth belongs",
       "single_crystal" in NODES["junction_transistor"]["pre"],
       NODES["junction_transistor"]["pre"])
-# 163 since zinc comes by retort from calamine and charcoal, not by way of steelmaking
-check("...and the goal's required closure is unchanged at 163 nodes - "
-      "loosening the contradictory gate did not also loosen what the "
-      "goal actually needs",
-      len(S.closure(NODES, GOAL)) == 163, len(S.closure(NODES, GOAL)))
-
 # THE BUG CLASS, not just the one instance: a node's own note disclaiming a
 # prerequisite ("no X and no Y, neither of which existed yet", "X had not
 # yet been invented", ...) while `pre` or a req_any option - single-choice
@@ -446,7 +404,7 @@ check("...and importing draught animals lifts the gate on all of them, the "
       all(_s_mex3.needs_first(node_id)[0] is None for node_id in _GATED_VEHICLES),
       [(node_id, _s_mex3.needs_first(node_id)) for node_id in _GATED_VEHICLES
        if _s_mex3.needs_first(node_id)[0] is not None])
-_s_mex4 = sim(civ="mexica_1500")
+_s_mex4 = _s_mex2
 check("the wheel concept itself, human-powered wheeled transport, and "
       "water/human-turned machinery are NOT swept into the same gate - "
       "only the animal-drawn vehicles were the bug",

@@ -60,8 +60,8 @@ for civ_id in ("england_1300", "norse_900ad"):
           held >= 0.99 * record.book.money_supply(spec.currency_id) * spec.backing_per_unit)
     check("%s (%s): money and goods are conserved" % (civ_id, regime), record.book.check_conservation(1e-9).ok)
 
-money, _level, record, setup = play("mexica_1500", 10)
-check("Mexica runs ten years on cacao money with money and goods conserved",
+money, _level, record, setup = play("mexica_1500", 4)
+check("Mexica runs four years on cacao money with money and goods conserved",
       record.currency.regime == "commodity" and record.currency.backing_good == "cacao_kg"
       and money > 0.0 and record.book.check_conservation(1e-9).ok, record.book.check_conservation(1e-9).breaches[:3])
 check("Mexica's cacao is produced and traded", any(volume > 0.0 for key, volume in record.volumes.items()

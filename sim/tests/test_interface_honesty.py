@@ -14,6 +14,7 @@ from .harness import *  # noqa: F401,F403
 # and a break tester's own numbers said why it mattered - EARNS/YR under fog
 # was "the only usable heuristic", and got them 95 of the 146 nodes on the
 # road to the goal without working out the tree at all.
+_plain = sim()   # fog off, read only, shared by the checks that need an ordinary game
 s_fe = sim()
 s_fe.fog = True
 s_fe.revealed = set()
@@ -53,9 +54,7 @@ if _k_up:
           _wu["upkeep"] == NODES[_k_up]["up"], (_wu["upkeep"], NODES[_k_up]["up"]))
 
 # NARROWS TO THE EXACT FIGURE ONCE YOU HAVE ACTUALLY RUN IT A FEW YEARS.
-s_ry = sim()
-s_ry.fog = True
-s_ry.revealed = set()
+s_ry = s_fe
 s_ry.done.add(_k_fe)
 s_ry.done_year[_k_fe] = s_ry.year
 s_ry._done_changed()
@@ -69,7 +68,7 @@ check("...and becomes the exact figure after you have actually run it a "
       _w_old["revenue"] == NODES[_k_fe]["rev"], _w_old["revenue"])
 
 # FOG OFF: the exact figure, as before.
-s_nf = sim()
+s_nf = _plain
 _w_nf = S._agent_dispatch(s_nf, NODES, {"cmd": "why", "id": _k_fe})
 check("with fog off, EARNS/YR is still the exact figure",
       _w_nf["revenue"] == NODES[_k_fe]["rev"], _w_nf["revenue"])
@@ -88,7 +87,7 @@ for _spid, _banned in (
         ("corpus_written", ("largest single call on your personal hours",
                             "must not cut")),
         ("plague_preparedness", ("highest expected-value defensive investment",))):
-    _wn = S._node_explain(sim(), NODES, _spid)
+    _wn = S._node_explain(_plain, NODES, _spid)
     check("%s's note no longer ranks itself against the rest of the tree"
           % _spid,
           all(banned_phrase not in (_wn.get("note") or "") for banned_phrase in _banned),
@@ -97,7 +96,7 @@ for _spid, _banned in (
 # LEGITIMATE WARNINGS SURVIVE: plague_preparedness still tells you the date
 # and what the node actually does about it - a consequence the player
 # cannot see coming, not a ranking claim, and it must stay.
-_pp = S._node_explain(sim(), NODES, "plague_preparedness")
+_pp = S._node_explain(_plain, NODES, "plague_preparedness")
 check("...but the actual hazard warning underneath it is untouched",
       "165 AD" in (_pp.get("note") or "")
       and "decides whether your institute survives" in (_pp.get("note") or ""),
@@ -105,7 +104,7 @@ check("...but the actual hazard warning underneath it is untouched",
 
 # school_founded's OWN statement that it is optional must survive too - it
 # is the opposite of the fault being fixed.
-_sf = S._node_explain(sim(), NODES, "school_founded")
+_sf = S._node_explain(_plain, NODES, "school_founded")
 check("school_founded's note still says it is optional",
       "OPTIONAL" in (_sf.get("note") or "")
       and "Nothing in the technical tree requires it" in (_sf.get("note") or ""),
@@ -113,8 +112,7 @@ check("school_founded's note still says it is optional",
 
 # UNDER FOG TOO: fog_summary takes its one sentence off the same note, and
 # used to open with exactly the self-play line this exists to cut.
-s_fp = sim()
-s_fp.fog = True
+s_fp = s_fe
 s_fp.revealed = {"school_founded"}
 check("the fogged one-line summary of school_founded is not its own "
       "self-rating either",
@@ -149,8 +147,7 @@ check("a refusal for a started-but-unfinished prerequisite says it has to "
 # --- JOB 3b: a fog-safe sense of progress DURING play, and nothing more
 # until the run ends - the total itself is the size of the tree's own
 # spoiler surface, same reasoning as downstream_count being hidden.
-s_pg = sim()
-s_pg.fog = True
+s_pg = s_fe
 s_pg.revealed = set()
 s_pg.done.add("arithmetic_positional")
 s_pg._done_changed()
@@ -162,7 +159,7 @@ check("under fog, `state` says how many of the goal's road you already have",
 check("...but never the total - final_report gives that, once the run is "
       "over and there is nothing left to spoil",
       "the_whole_road_was" not in _stpg, sorted(_stpg.keys()))
-s_pg2 = sim()
+s_pg2 = _plain
 _stpg2 = S._agent_dispatch(s_pg2, NODES, {"cmd": "state"})
 check("with fog off, the fog-safe progress field is absent (path/why "
       "already answer this exactly, by name)",
@@ -172,7 +169,7 @@ check("with fog off, the fog-safe progress field is absent (path/why "
 # --- JOB 3c: the society's own values are readable. Event text has always
 # named these fields directly ("changes the society: w_novelty") with no
 # command that would say what one is; two testers asked for this.
-_vals = S._agent_dispatch(sim(), NODES, {"cmd": "values"})
+_vals = S._agent_dispatch(_plain, NODES, {"cmd": "values"})
 check("`values` exists and lists this society's own traits as numbers",
       _vals.get("ok") and len(_vals.get("values") or []) >= 8, _vals)
 check("...and every field event text names is one this command can look up",
@@ -202,6 +199,7 @@ for _k_se in _ok_se:
     if _started_se >= 15:
         break
     _started_se += bool(S._agent_dispatch(s_se, NODES, {"cmd": "start", "id": _k_se}).get("ok"))
+s_se.capital = -(0.9 * s_se.credit_limit())   # start close to the limit instead of running years to get there
 _step_ce = S._agent_dispatch(s_se, NODES, {"cmd": "step", "years": 100})
 # CLOSE TO THE LIMIT now interrupts a batched step too (see the dedicated
 # check below), and it fires strictly BEFORE exhaustion by design - so this

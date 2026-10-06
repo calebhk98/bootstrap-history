@@ -149,6 +149,24 @@ _r = S._agent_dispatch(s, NODES, {"cmd": "allocate"})
 check("...and it is actually gone from the list, not just zeroed in place",
       _r["ok"] and _r["allocations"] == "none", _r)
 
+# --- a standing order persists across a save and a load, the same as
+# `policy` does, rather than silently reverting to "let the allocator "
+# decide" on every resume.
+s.hour_allocations["academy_network"] = 321.0
+s.hour_allocations["work"] = 77.0
+s.work_trade = "scribe"
+_save_path = os.path.join(tempfile.gettempdir(), "rome_allocate_save_test.json")
+_protocol.save_state(s, _save_path)
+s2 = sim(capital=1e7)
+_protocol.load_state(s2, _save_path)
+os.remove(_save_path)
+check("a standing project directive survives a save and a load",
+      s2.hour_allocations.get("academy_network") == 321.0,
+      s2.hour_allocations)
+check("...and so does a standing work-for-wages directive and its trade",
+      s2.hour_allocations.get("work") == 77.0 and s2.work_trade == "scribe",
+      (s2.hour_allocations.get("work"), s2.work_trade))
+
 # --- the standing "work" directive: sells hours for wages every year on
 # its own, reusing work_for_wages (labour.py) rather than a second way to
 # pay the founder, and tops up a turn where some of it was already sold by
@@ -177,23 +195,4 @@ check("a standing work order tops up to the full directive rather than "
 check("...and the standing order's own hour tally resets for the next "
       "year exactly like an ordinary `work` call does",
       s.wage_hours_this_year == 0.0, s.wage_hours_this_year)
-
-# --- a standing order persists across a save and a load, the same as
-# `policy` does, rather than silently reverting to "let the allocator "
-# decide" on every resume.
-s = sim(capital=1e7)
-s.hour_allocations["academy_network"] = 321.0
-s.hour_allocations["work"] = 77.0
-s.work_trade = "scribe"
-_save_path = os.path.join(tempfile.gettempdir(), "rome_allocate_save_test.json")
-_protocol.save_state(s, _save_path)
-s2 = sim(capital=1e7)
-_protocol.load_state(s2, _save_path)
-os.remove(_save_path)
-check("a standing project directive survives a save and a load",
-      s2.hour_allocations.get("academy_network") == 321.0,
-      s2.hour_allocations)
-check("...and so does a standing work-for-wages directive and its trade",
-      s2.hour_allocations.get("work") == 77.0 and s2.work_trade == "scribe",
-      (s2.hour_allocations.get("work"), s2.work_trade))
 

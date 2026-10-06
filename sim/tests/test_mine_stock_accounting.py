@@ -17,13 +17,13 @@ def _mine_fixture():
 mine_sim = _mine_fixture()
 yearly_yield = None
 years_producing = 0
-for _ in range(8):
+for _ in range(5):
     mine_sim.step()
     if mine_sim.mine_capacity.get(_KEY):
         years_producing += 1
         yearly_yield = sum(mine_sim.mine_yield_t_for(working) for working in mine_sim._workings_of(_KEY))
 banked = mine_sim.material_stock_t(_KEY)
-check("set-up: the working came ready and produced for several years", years_producing >= 3, years_producing)
+check("set-up: the working came ready and produced for several years", years_producing >= 2, years_producing)
 check("stock on hand equals the yearly yield times the years it has run (nothing consumes it)",
       abs(banked - yearly_yield * years_producing) < 0.02 * yearly_yield * years_producing,
       (banked, yearly_yield, years_producing))

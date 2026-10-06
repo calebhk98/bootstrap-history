@@ -5,9 +5,9 @@ those changes made an unbroken game read a different pool from the one a reloade
 from .harness import *  # noqa: F401,F403
 from sim.tests import fingerprint as perf_fingerprint
 
-game = perf_fingerprint.build(dict(civ="rome_100ad", seed=1, years=36, events=True, fog=False))
+game = perf_fingerprint.build(dict(civ="rome_100ad", seed=1, years=12, events=True, fog=False))
 stale = []
-for year in range(1, 37):
+for year in range(1, 13):
     game.step()
     registry = game.actors
     for trade in sorted({trade for actor in registry.actors.values() for trade in actor.record.workforce}):

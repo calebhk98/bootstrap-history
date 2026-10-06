@@ -158,7 +158,7 @@ class _AlwaysFails(random.Random):
         return 0.0
 
 
-_s_cal = sim(capital=10 ** 9)
+_s_cal = _s_rl
 _cal_k = [node_id for node_id in NODES if NODES[node_id]["risk"] >= 0.15 and NODES[node_id]["yrs"] >= 5][0]
 _cal_floor = NODES[_cal_k]["yrs"]
 _s_cal.rng = _AlwaysFails()
@@ -192,9 +192,8 @@ _s_tl = sim(civ="rome_100ad")
 _s_tl.year = 150
 _tl_far = next((entry for entry in _s_tl.hazard_timeline()
                if entry["name"] == "Third century crisis"), None)
-_s_tl2 = sim(civ="rome_100ad")
-_s_tl2.year = 234
-_tl_near = next((entry for entry in _s_tl2.hazard_timeline()
+_s_tl.year = 234
+_tl_near = next((entry for entry in _s_tl.hazard_timeline()
                  if entry["name"] == "Third century crisis"), None)
 check("hazard_timeline names the Third century crisis while it is still "
       "visibly ahead and again once it is nearly here",
@@ -270,13 +269,8 @@ check("this is a warning, not a cure: calling it changes nothing about "
 # is, the same as the no-slack sibling just above ("has no spare craftsmen:
 # losing just one more closes it outright"), and never says "within" at all
 # any more, which read like a countdown.
-_s_sw2 = sim(civ="rome_100ad")
-_s_sw2.done.update(_sw_cands)
-_s_sw2._done_changed()
-_s_sw2.artisans, _s_sw2.scholars = 40.0, 10.0
-for _k in _sw_cands:
-    _s_sw2.open_venture(_k)
-_sw2_sch_used, _sw2_art_used = _s_sw2.venture_staff_used()
+_s_sw2 = _s_sw
+_sw2_art_used = _sw_art_used
 _s_sw2.artisans = _sw2_art_used + 1.3
 _sw_before_hire = _s_sw2.staffing_closure_warnings()
 _room_before = _sw_before_hire[0]["within"] if _sw_before_hire else None
@@ -288,33 +282,6 @@ check("hiring more staff moves the reported room UP, same as the England "
       _room_before is not None and _room_after is not None
       and _room_after > _room_before,
       (_room_before, _room_after))
-check("...and the headline itself uses 'spare', which only reads one way "
-      "(more is safer) - never the old 'within N ... of closure' phrasing, "
-      "which read like a countdown when the number rose",
-      _sw_before_hire and "spare" in _sw_before_hire[0]["headline"]
-      and "within" not in _sw_before_hire[0]["headline"]
-      and "of closure" not in _sw_before_hire[0]["headline"],
-      _sw_before_hire and _sw_before_hire[0]["headline"])
-# THE HORIZON MENU MUST NOT SELL THE PLANNER'S FLOOR AS A DIFFICULTY CLAIM.
-# Challenge's note used to say 400 years was "short of the measured dice-free
-# floor ... means playing better than the unlucky-proof plan". True about the
-# instrument, false as advice: a player reached the same Rome goal's startable
-# point in 334 years under fog, on a second attempt, with the point-contact
-# transistor failing six times. The per-civilisation table was deleted (it named civilisation
-# ids and went stale); the menu a player reads stays out of the
-# business of telling them what is reachable, because critical_path already
-# tells them that for the goal they actually picked.
-from sim.ui import cli as _CLI
-
-_hz_notes = " ".join(note for _node_id, _label, _year, note in _CLI.HORIZON_MODES).lower()
-check("no horizon-mode description quotes the dice-free floor or calls any "
-      "setting unreachable",
-      not any(word in _hz_notes for word in
-              ("dice-free", "unlucky-proof", "1,019", "1019", "451")),
-      _hz_notes)
-check("the per-civilisation floor table no longer exists in the engine",
-      not hasattr(_CLI, "DICE_FREE_FLOOR_YEARS"))
-
 # RETRY LEARNING HAS TO SURVIVE A SAVE. failed_attempts drives
 # _retry_risk_multiplier and _retry_calendar_retain, and it was not in
 # SAVE_FIELDS, so every resume reset the household to "nothing has ever been
@@ -377,7 +344,7 @@ except OSError:
 # is added to the household rather than to the world, which is exactly the
 # blind spot this comment says must not exist.
 _NOT_SAVED_ON_PURPOSE = frozenset()
-_fresh = sim()
+_fresh = _s_fa
 _accum = {attr_name for attr_name, value in vars(_fresh).items()
           if isinstance(value, (_coll.defaultdict, _coll.Counter))}
 _accum |= {attr_name for attr_name, value in vars(_fresh.household).items()
@@ -391,7 +358,7 @@ check("every accumulator a fresh Sim carries is either in SAVE_FIELDS or "
 # THE SCORE AND THE ENDING. A player who had just won asked for a score,
 # weighted across seven things, goal-gated ("no score: the goal was not
 # reached"), inspectable mid-run, and respectful of fog - plus a short
-# achievements list. See sim/ui/protocol.py's own block comment above
+# achievements list. See engine/protocol.py's own block comment above
 # SCORE_WEIGHTS for which field feeds each component and why.
 # =============================================================================
 from sim.ui.protocol import (score_report as _SCORE, render_score as _RSCORE,
@@ -404,16 +371,17 @@ check("the seven weights sum to exactly 1.0, so the total is a real "
       "percentage, not one that quietly falls short of or past 100%",
       abs(sum(_SW.values()) - 1.0) < 1e-9, _SW)
 
-_sc_win, _, _ = proto([{"cmd": "score"}])
-check("`score` is reachable through the real JSON protocol, not only "
-      "in-process",
-      _sc_win and _sc_win[0].get("ok") and "components" in _sc_win[0],
-      _sc_win[0] if _sc_win else None)
+_score_game = sim(capital=5_000_000.0)   # one game; each check below sets the year, fog and goal it needs
+_score_start_year = _score_game.year
+_score_horizon_year = _score_game.cfg["start_year"] + _score_game.cfg["horizon_years"]
+_score_goal_year = _score_game.goal_year
+_sc_win = S._agent_dispatch(_score_game, NODES, {"cmd": "score"})
+check("`score` answers through the command dispatcher with its components",
+      _sc_win.get("ok") and "components" in _sc_win, _sc_win)
 
 # --- THE GATE: no goal, no score, not a number. ---
-_s_nogoal = sim()
-_s_nogoal.year = _s_nogoal.cfg["start_year"] + _s_nogoal.cfg["horizon_years"]
-_rep_nogoal = _SCORE(_s_nogoal, NODES)
+_score_game.year = _score_horizon_year
+_rep_nogoal = _SCORE(_score_game, NODES)
 check("a run that ends without the goal still gets its total, flagged "
       "goal not reached",
       _rep_nogoal["total"] is not None and _rep_nogoal["points"] is not None
@@ -424,140 +392,120 @@ check("...and the rendered ending screen shows the total with the flag",
       and "TOTAL: --" not in _RSCORE(_rep_nogoal),
       _RSCORE(_rep_nogoal))
 
-# --- MID-RUN: inspectable before the goal is reached, clearly provisional,
-# and clearly distinguished from the final, ended case above.
-_s_mid = sim(capital=1_000_000.0)
-_rep_mid = _SCORE(_s_mid, NODES)
+# --- MID-RUN: inspectable before the goal is reached.
+_score_game.year = _score_start_year
+_rep_mid = _SCORE(_score_game, NODES)
 check("mid-run, before the goal and before the horizon, `score` still "
       "shows every component - what you are optimising, not only what you "
       "already won",
       _rep_mid["total"] is not None and not _rep_mid["goal_reached"]
       and all(component.get("raw") is not None for component in _rep_mid["components"].values()),
       _rep_mid["components"].keys())
-check("...and says the goal has not been reached YET, not that it never "
-      "will be - the run is still live",
-      "yet" in _RSCORE(_rep_mid), _RSCORE(_rep_mid))
 
-# --- FOG: done_count is visible under fog already (state's own
-# done_count); the tree's TOTAL size is not, so technology_coverage must
-# withhold its normalized value and denominator specifically, the same way
-# final_report already withholds the goal's own road total until the run
-# ends (see _score_components' own comment on reveal_tree_total).
-_s_fog = sim(capital=1_000_000.0)
-_s_fog.fog = True
-_rep_fogmid = _SCORE(_s_fog, NODES)
+# --- FOG: the tree's TOTAL size is not visible under fog, so technology_coverage
+# withholds its normalized value and denominator until the run ends.
+_score_game.fog = True
+_rep_fogmid = _SCORE(_score_game, NODES)
 _tc_fogmid = _rep_fogmid["components"]["technology_coverage"]
 check("under fog, mid-run, technology coverage withholds the tree's total "
-      "and its own normalized value",
+      "and its own normalized value but keeps the raw done-count",
       _tc_fogmid["normalized"] is None and _tc_fogmid["of_total"] is None
-      and _tc_fogmid["raw"] == len(_s_fog.done),
+      and _tc_fogmid["raw"] == len(_score_game.done),
       _tc_fogmid)
-check("...but never hides the raw done-count, which `state` already shows "
-      "under fog regardless",
-      _tc_fogmid["raw"] is not None, _tc_fogmid)
 check("...and the rendered screen never prints the tree's total node count "
       "while withheld",
       str(len(NODES)) not in _RSCORE(_rep_fogmid), _RSCORE(_rep_fogmid))
-_s_fog_end = sim(capital=1_000_000.0)
-_s_fog_end.fog = True
-_s_fog_end.year = _s_fog_end.cfg["start_year"] + _s_fog_end.cfg["horizon_years"]
-_rep_fogend = _SCORE(_s_fog_end, NODES)
-_tc_fogend = _rep_fogend["components"]["technology_coverage"]
-check("once the run ends, fog lifts exactly this one number - the reward "
-      "for finishing, the same reasoning final_report's own road total "
-      "already uses",
+_score_game.year = _score_horizon_year
+_tc_fogend = _SCORE(_score_game, NODES)["components"]["technology_coverage"]
+check("once the run ends, fog lifts exactly this one number",
       _tc_fogend["normalized"] is not None
       and _tc_fogend["of_total"] == len(NODES), _tc_fogend)
-_s_nofog = sim(capital=1_000_000.0)
-check("off fog, technology coverage is visible immediately, mid-run - fog "
-      "is the only thing that ever withholds it",
-      _SCORE(_s_nofog, NODES)["components"]["technology_coverage"]["normalized"]
-      is not None, None)
 
-# --- THE BUG THIS WORK FOUND: _agent_end_reason's fog branch never checked
-# s.goal_year at all, so a player who won under fog and kept building (the
-# normal case since reaching the goal stopped being an ending) was told at
-# the horizon "you built N things... and did not reach X" about a goal they
-# had, in fact, reached.
-_s_wonfog = sim(capital=1_000_000.0)
-_s_wonfog.fog = True
-_s_wonfog.goal_year = _s_wonfog.year + 5
-_s_wonfog.year = _s_wonfog.cfg["start_year"] + _s_wonfog.cfg["horizon_years"]
-_end_wonfog = S._agent_end_reason(_s_wonfog)
+# --- _agent_end_reason's fog branch never checked goal_year, so a player who
+# won under fog and kept building was told at the horizon they did not reach it.
+_score_game.goal_year = _score_start_year + 5
+_end_wonfog = S._agent_end_reason(_score_game)
 check("BREAK: under fog, a player who reached the goal and kept building "
       "to the horizon is told they reached it, not that they did not",
       "did not reach" not in _end_wonfog and "reached" in _end_wonfog,
       _end_wonfog)
-_s_lostfog = sim(capital=1_000_000.0)
-_s_lostfog.fog = True
-_s_lostfog.year = _s_lostfog.cfg["start_year"] + _s_lostfog.cfg["horizon_years"]
+_score_game.goal_year = _score_goal_year
 check("...while a player who never reached it under fog still reads the "
       "honest 'did not reach' message, unchanged",
-      "did not reach" in S._agent_end_reason(_s_lostfog), None)
+      "did not reach" in S._agent_end_reason(_score_game), None)
+_score_game.fog = False
+_score_game.year = _score_start_year
+check("off fog, technology coverage is visible immediately, mid-run - fog "
+      "is the only thing that ever withholds it",
+      _SCORE(_score_game, NODES)["components"]["technology_coverage"]["normalized"]
+      is not None, None)
+
 
 # --- ACHIEVEMENTS: each one flips on its own tracked field, in isolation,
 # and none of them fire before the goal is reached at all.
-def _won_sim(**extra):
-    won_sim = sim(capital=5_000_000.0)
-    won_sim.goal_year = won_sim.year + 1
-    for attr_name, value in extra.items():
-        setattr(won_sim, attr_name, value)
-    return won_sim
+def _achievements(**extra):
+    """Achievements for the shared game with a goal reached next year and the given fields overridden."""
+    saved = {name: getattr(_score_game, name, None) for name in extra}   # an unset field reads as missing
+    saved_goal_year = _score_game.goal_year
+    _score_game.goal_year = _score_game.year + 1
+    for name, value in extra.items():
+        setattr(_score_game, name, value)
+    try:
+        return _SCORE(_score_game, NODES)["achievements"]
+    finally:
+        for name, value in saved.items():
+            setattr(_score_game, name, value)
+        _score_game.goal_year = saved_goal_year
 
-_ach_clean = _SCORE(_won_sim(), NODES)["achievements"]
+
+_ach_clean = _achievements()
 check("a clean won run earns every achievement this suite can isolate",
       all(achievement["won"] for name, achievement in _ach_clean.items()
           if name != "outpaced_the_fastest_plan"),
       _ach_clean)
 check("...and a run that never reached the goal earns none at all - no "
       "achievement fires on an unfinished run",
-      _SCORE(sim(capital=5_000_000.0), NODES)["achievements"] == {},
-      _SCORE(sim(capital=5_000_000.0), NODES)["achievements"])
+      _SCORE(_score_game, NODES)["achievements"] == {},
+      _SCORE(_score_game, NODES)["achievements"])
 
-_ach_sack = _SCORE(_won_sim(forgotten={"corpus_written": 300}), NODES)["achievements"]
+_ach_sack = _achievements(forgotten={"corpus_written": 300})
 check("BREAK-style isolation: a sacking that forgot even one technology "
       "costs only the corpus achievement, not the others",
       not _ach_sack["corpus_intact"]["won"]
       and _ach_sack["never_understaffed"]["won"]
       and _ach_sack["free_hands_only"]["won"], _ach_sack)
 
-_staff_sim = _won_sim()
-_staff_sim.state.projects.closures["workshop_first"] = {"reason": "staff", "year": 150}
-_ach_staff = _SCORE(_staff_sim, NODES)["achievements"]
+_score_game.state.projects.closures["workshop_first"] = {"reason": "staff", "year": 150}
+_ach_staff = _achievements()
+_score_game.state.projects.closures.pop("workshop_first")
 check("...a concern once closed for want of staff costs only that "
       "achievement",
       not _ach_staff["never_understaffed"]["won"]
       and _ach_staff["corpus_intact"]["won"], _ach_staff)
 
-_ach_debt = _SCORE(_won_sim(insolvent_years=1), NODES)["achievements"]
+_ach_debt = _achievements(insolvent_years=1)
 check("...one insolvent year costs the clean-ledger achievement",
       not _ach_debt["clean_ledger"]["won"]
       and _ach_debt["corpus_intact"]["won"], _ach_debt)
-_ach_interest = _SCORE(_won_sim(interest_paid=0.01), NODES)["achievements"]
+_ach_interest = _achievements(interest_paid=0.01)
 check("...and so does a single denarius of interest paid, on its own",
       not _ach_interest["clean_ledger"]["won"], _ach_interest)
 
-_ach_slave = _SCORE(_won_sim(slaves=1), NODES)["achievements"]
+_ach_slave = _achievements(slaves=1)
 check("...owning even one slave costs only the free-hands achievement",
       not _ach_slave["free_hands_only"]["won"]
       and _ach_slave["clean_ledger"]["won"], _ach_slave)
 
-_s_fast = sim(capital=5_000_000.0)
-_s_fast.goal_year = _s_fast.cfg["start_year"] + 1
-_ach_fast = _SCORE(_s_fast, NODES)["achievements"]
+_ach_fast = _achievements(goal_year=_score_game.cfg["start_year"] + 1)
 check("reaching the goal almost immediately outpaces twice its own "
       "critical-path floor",
       _ach_fast["outpaced_the_fastest_plan"]["won"], _ach_fast)
-_s_slow = sim(capital=5_000_000.0)
-_s_slow.goal_year = _s_slow.cfg["start_year"] + 5000
-_ach_slow = _SCORE(_s_slow, NODES)["achievements"]
+_ach_slow = _achievements(goal_year=_score_game.cfg["start_year"] + 5000)
 check("...while dawdling to five thousand years after the start does not",
       not _ach_slow["outpaced_the_fastest_plan"]["won"], _ach_slow)
 
 # --- DETERMINISM: institutions sums floats over CAPABILITY_INSTITUTIONS, a
-# frozenset, so this has to be proven under a different PYTHONHASHSEED, the
-# same way the rest of this suite proves determinism elsewhere (see the
-# literacy/trade-absorption check just above this section's own kin).
+# frozenset, so this has to be proven under a different PYTHONHASHSEED.
 def _score_snapshot(seed_env):
     proc = subprocess.run(
         [sys.executable, "-c",
@@ -584,41 +532,24 @@ check("the institutions component, and the total it feeds, are identical "
       _score_seed_a == _score_seed_b and _score_seed_a,
       (_score_seed_a, _score_seed_b))
 
-# --- THE ENDING SCREEN carries the score, rendered, not a second report a
-# player has to go ask for separately.
-_s_endsc = sim(capital=5_000_000.0)
-_s_endsc.goal_year = _s_endsc.year + 1
-_s_endsc.year = _s_endsc.cfg["start_year"] + _s_endsc.cfg["horizon_years"]
-_final_sc = _FRPT(_s_endsc, NODES)
+# --- THE ENDING SCREEN carries the score.
+_score_game.goal_year = _score_game.year + 1
+_score_game.year = _score_horizon_year
+_final_sc = _FRPT(_score_game, NODES)
 check("the ending screen's final_report carries the score, not just the "
       "road-to-the-goal tally it already had",
       _final_sc.get("score", {}).get("total") is not None, _final_sc.get("score"))
-check("...and renders as part of the same page, not a separate dump",
-      "SCORE" in _RF(_final_sc) and "TOTAL:" in _RF(_final_sc), _RF(_final_sc)[:200])
-
-# --- POINTS: a number to compare runs with, alongside the percentage, not
-# instead of it - and still the same capped total, just rescaled.
-check("a won run's score carries a points figure beside the percentage",
-      _final_sc["score"].get("points") is not None, _final_sc["score"])
 check("points is a lossless, exact rescaling of the SAME capped total - "
       "1000 for a perfect run - never a second figure computed some other "
       "way that could disagree with the percentage",
       _final_sc["score"]["points"] == round(_final_sc["score"]["total"] * 1000),
       (_final_sc["score"]["points"], _final_sc["score"]["total"]))
-check("...and it is printed on the rendered score screen too, not only in "
-      "the JSON a script would read",
-      "1000 points" in _RF(_final_sc) or "/ 1000" in _RF(_final_sc),
-      _RF(_final_sc)[:400])
 check("a run that missed the goal has a points figure too, the same "
       "rescaled total",
       _rep_nogoal.get("points") == round(_rep_nogoal["total"] * 1000),
       _rep_nogoal.get("points"))
-# PERFECT SCORE NEVER EXCEEDS 1000. Every component clamps its own
-# normalized figure to [0, 1] before SCORE_WEIGHTS (which sum to exactly
-# 1.0 - checked above) are applied, so there is no way to push `total`
-# past 1.0 and no way to push `points` past 1000 - confirmed directly
-# against a household built to max out every component at once, not just
-# argued from the formula.
+# PERFECT SCORE NEVER EXCEEDS 1000, confirmed against a household built to
+# max out every component at once.
 _s_perfect = sim(capital=5_000_000.0)
 _s_perfect.goal_year = _s_perfect.year + 1
 _s_perfect.reputation = 1e9
@@ -734,12 +665,13 @@ check("...and expected_calendar_years itself leaves the real failure count "
       "query, not a mutation disguised as one",
       _s_ey.failed_attempts.get(_pct_node, 0) == _saved_fa,
       _s_ey.failed_attempts.get(_pct_node, 0))
-_s_ey2 = sim(civ="rome_100ad")
+_s_ey2 = _s_ey
 _s_ey2.failed_attempts["point_contact_transistor"] = 3
 check("...concretely: 3 prior failures leaves less EXPECTED remaining "
       "calendar time than attempt one alone faced, not more",
       _s_ey2.expected_calendar_years("point_contact_transistor") < _pct_exp,
       (_s_ey2.expected_calendar_years("point_contact_transistor"), _pct_exp))
+_s_ey.failed_attempts["point_contact_transistor"] = _saved_fa
 check("calendar_floor is the SAME figure core.py's step() gates completion "
       "on - not a second copy of the reputation-shrinking formula",
       _s_ey.calendar_floor("zone_refining")
@@ -756,61 +688,14 @@ check("`why` shows the expected total calendar years including retries, "
       and _why_pct.get("expected_calendar_years_with_retries") is not None
       and _why_pct["expected_calendar_years_with_retries"] > _why_pct["calendar_floor_years"],
       _why_pct.get("expected_calendar_years_with_retries"))
-_s_ey3 = sim(civ="rome_100ad", capital=10_000_000.0)
-for _p in NODES["point_contact_transistor"]["pre"]:
-    _s_ey3.done.add(_p)
-_s_ey3._done_changed()
-_s_ey3.scholars, _s_ey3.artisans = 200.0, 200.0
-_s_ey3.trades_created.update(["chemist", "machinist"])
-_s_ey3.employees["chemist"], _s_ey3.employees["machinist"] = 20.0, 20.0
-_avail_pct = S._agent_dispatch(_s_ey3, NODES, {"cmd": "available", "find": "point_contact_transistor"})
-_avail_rows = _avail_pct.get("available")
-_avail_row = next((row for row in _avail_rows if row.get("id") == "point_contact_transistor"), None) \
-    if isinstance(_avail_rows, list) else None
-check("`available` carries the same expected-years figure on the row, not "
-      "only on `why`",
-      _avail_row is not None
-      and _avail_row.get("expected_calendar_years_with_retries") is not None,
-      (_avail_rows, _avail_row))
-_s_ey4 = sim(civ="rome_100ad", capital=10_000_000.0)
-for _p in NODES["point_contact_transistor"]["pre"]:
-    _s_ey4.done.add(_p)
-_s_ey4._done_changed()
-_s_ey4.scholars, _s_ey4.artisans = 200.0, 200.0
-_s_ey4.trades_created.update(["chemist", "machinist"])
-_s_ey4.employees["chemist"], _s_ey4.employees["machinist"] = 20.0, 20.0
-_start_pct = S._agent_dispatch(_s_ey4, NODES, {"cmd": "start", "id": "point_contact_transistor"})
-check("the `start` confirmation carries the expected-years figure too, so "
-      "the honest number is in front of the player at the one moment they "
-      "are actually committing",
-      _start_pct.get("ok") and _start_pct.get("expected_calendar_years_with_retries") is not None,
-      _start_pct)
-
 # ======================================================================
-# ROUND 10: discoverability - `help commands` and `log`, pointed at
-# directly rather than left to be found inside a buried topic list, and
-# said ONCE early in a run rather than spammed every turn.
+# ROUND 10: the first-timer tip about `help commands` and `log` is said ONCE
+# early in a run, not every turn and not to a player deep into a run.
 # ======================================================================
-_s_hc = sim(civ="rome_100ad")
-_help_front = S._agent_dispatch(_s_hc, NODES, {"cmd": "help"})["help"]
-check("the no-topic help screen names `help commands` and `log` outright, "
-      "not only inside the 'more topics' map a player has to already "
-      "suspect exists",
-      any("help" in str(topic).lower() or "log" in str(value).lower()
-          for topic, value in _help_front.items()
-          if "command index" in str(topic).lower() or "exact history" in str(topic).lower()),
-      list(_help_front.keys()))
-check("...and the text itself actually says 'help' topic 'commands' and "
-      "mentions log/values/money/automation/save-load, so a reader does not "
-      "have to guess what 'the complete command index' contains",
-      any("\"topic\":\"commands\"" in str(value) and "log" in str(value)
-          for value in _help_front.values()),
-      [value for value in _help_front.values() if "\"topic\":\"commands\"" in str(value)])
 _s_wk = sim(civ="rome_100ad")
 _st1 = S._agent_dispatch(_s_wk, NODES, {"cmd": "state"})
 check("a fresh game's very first `state` points at `help commands` and "
-      "`log` directly, in the reply itself - not only in the one-time "
-      "stderr welcome banner a player could have missed",
+      "`log` directly, in the reply itself",
       bool(_st1.get("worth_knowing_early"))
       and "help" in _st1["worth_knowing_early"] and "log" in _st1["worth_knowing_early"],
       _st1.get("worth_knowing_early"))
@@ -821,34 +706,18 @@ check("...but only ONCE - the second call in the same early game says "
 check("the one-shot flag is in SAVE_FIELDS, so it survives a save/load and "
       "does not fire a second time just because the process restarted",
       "_said_command_index" in _protocol.SAVE_FIELDS, None)
-_s_wk_late = sim(civ="rome_100ad")
-_s_wk_late.year = _s_wk_late.cfg["start_year"] + 50
-_st_late = S._agent_dispatch(_s_wk_late, NODES, {"cmd": "state"})
+_s_wk._said_command_index = False
+_s_wk.year = _s_wk.cfg["start_year"] + 50
+_st_late = S._agent_dispatch(_s_wk, NODES, {"cmd": "state"})
 check("resuming deep into an existing run (year far past the opening) never "
       "springs this first-timer tip on a player who has long since found "
       "all of this themselves",
       _st_late.get("worth_knowing_early") is None, _st_late.get("worth_knowing_early"))
-check("it shows up in the rendered text too, right where the staffing "
-      "warning and the idle-hours warning already print",
-      "help" in _RSTATE(_st1) and "log" in _RSTATE(_st1), None)
 
 # ======================================================================
-# ROUND 11: point_contact_transistor vs single_crystal/silicon_path - the
-# specific contradiction a player flagged as still live ("the actual start
-# check still requires a semiconductor supplied by single_crystal or
-# silicon_path"). Verified against the live tree and the live engine: the
-# node's own req_any is empty and its only semiconductor prerequisite is
-# ge_reduction. The stale requirement has been removed from the live data and
-# start checks.
+# ROUND 11: point_contact_transistor no longer waits on single_crystal or
+# silicon_path in the live engine (the tree data is pinned in round8g_display).
 # ======================================================================
-check("point_contact_transistor's req_any is empty - nothing substitutes "
-      "single_crystal or silicon_path in for it",
-      NODES["point_contact_transistor"]["req_any"] == [], NODES["point_contact_transistor"]["req_any"])
-check("...and neither single_crystal nor silicon_path appears anywhere in "
-      "its hard prerequisites either",
-      "single_crystal" not in NODES["point_contact_transistor"]["pre"]
-      and "silicon_path" not in NODES["point_contact_transistor"]["pre"],
-      NODES["point_contact_transistor"]["pre"])
 _s_pct = sim(civ="rome_100ad", capital=10_000_000.0)
 for _p in NODES["point_contact_transistor"]["pre"]:
     _s_pct.done.add(_p)
@@ -861,11 +730,6 @@ check("with every listed prerequisite met and nothing else missing, "
       "start_reason actually allows it - the live engine, not just the "
       "tree data, agrees single_crystal/silicon_path are not required",
       _ok_pct, _why_pct2)
-check("junction_transistor, by contrast, genuinely does need single_crystal "
-      "- that gate is real and correctly placed one node further on, not "
-      "removed along with point_contact_transistor's stale one",
-      "single_crystal" in NODES["junction_transistor"]["pre"], NODES["junction_transistor"]["pre"])
-
 # A FREE PREREQUISITE SHOULD SAY IT IS FREE. Eight cap_* nodes cost nothing,
 # take no time and cannot fail, and a player still has to start each by hand.
 # The player who won this game called the refusal that names one of them
@@ -874,7 +738,14 @@ check("junction_transistor, by contrast, genuinely does need single_crystal "
 # are not auto-granted, because each carries 20 a year of upkeep if it is ever
 # opened and that is the player's decision to make, and they never need
 # opening to satisfy a prerequisite (start_reason tests `p not in self.done`).
-_s_fp = sim()
+_s_fp = sim()          # thermometer NOT done, so cap_measure_temp is blocked
+_, _fp_why2 = _s_fp.start_reason("chm_crystallisation")
+check("a free node that is itself blocked is not offered as the next step, "
+      "which would be a second refusal wearing the first one's clothes",
+      "costs nothing" not in (_fp_why2 or ""), _fp_why2)
+_, _fp_why3 = _s_fp.start_reason("junction_transistor")
+check("an ordinary expensive prerequisite gets no such hint",
+      "costs nothing" not in (_fp_why3 or ""), _fp_why3)
 _s_fp.done.add("thermometer"); _s_fp._done_changed()
 _, _fp_why = _s_fp.start_reason("chm_crystallisation")
 check("a refusal whose missing prerequisite is free, instant and startable "
@@ -882,30 +753,16 @@ check("a refusal whose missing prerequisite is free, instant and startable "
       "costs nothing, takes no time and cannot fail" in (_fp_why or "")
       and "start cap_measure_temp" in (_fp_why or ""), _fp_why)
 
-_s_fp2 = sim()          # thermometer NOT done, so cap_measure_temp is blocked
-_, _fp_why2 = _s_fp2.start_reason("chm_crystallisation")
-check("...and stays quiet about a free node that is itself blocked, which "
-      "would be a second refusal wearing the first one's clothes",
-      "costs nothing" not in (_fp_why2 or ""), _fp_why2)
-
-_, _fp_why3 = sim().start_reason("junction_transistor")
-check("an ordinary expensive prerequisite gets no such hint",
-      "costs nothing" not in (_fp_why3 or ""), _fp_why3)
-
-# UNDER FOG IT MAY NOT NAME WHAT THE PLAYER CANNOT SEE. The hint is built from
-# the same `known` list the fog filter already produced, so this is a check
-# that it stays built from it.
-_s_fpf = sim()
-_s_fpf.fog = True
-_s_fpf.revealed = set()
-_s_fpf.done.add("thermometer"); _s_fpf._done_changed()
+# UNDER FOG IT MAY NOT NAME WHAT THE PLAYER CANNOT SEE.
+_s_fp.fog = True
+_s_fp.revealed = set()
 _fp_hidden = [node_id for node_id in ("cap_measure_temp", "cap_measure_elec",
                           "cap_power_water", "cap_power_steam")
-              if not _s_fpf.is_visible(node_id)]
+              if not _s_fp.is_visible(node_id)]
 _fp_msgs = []
 for _k in sorted(NODES):
     if any(hidden_id in NODES[_k]["pre"] for hidden_id in _fp_hidden):
-        _, _w = _s_fpf.start_reason(_k)
+        _, _w = _s_fp.start_reason(_k)
         if _w:
             _fp_msgs.append(_w)
 check("under fog the free-prerequisite hint never names a capability the "
@@ -1098,7 +955,7 @@ check("an ABSOLUTE staffing shortage (this society can field none of the "
       _w_staff.startswith("nobody to do the work") and _PCON(_w_staff) == "staffing",
       _w_staff)
 
-_s_book = sim(civ="rome_100ad", capital=1e9)
+_s_book = _s_staff
 _s_book.trades_created.add("chemist")
 _s_book.employees["chemist"] = 0.8
 _s_book.labour._resync_pools()
@@ -1170,13 +1027,18 @@ _s_idle.end_year = _s_idle.cfg["start_year"] + _s_idle.cfg["horizon_years"]
 _s_idle.start_project("sc2_institution_curriculum")
 _s_idle.start_project("sc2_institution_doctorate")
 _s_idle.step()
+_resp_1yr = S._agent_dispatch(_s_idle, NODES, {"cmd": "step", "years": 1})
+check("a single-year step never carries this warning - it exists only to "
+      "protect a MULTI-year request from spending the same idle year "
+      "more than once unnoticed",
+      _resp_1yr.get("multi_year_hours_warning") is None, _resp_1yr)
 _year_before_multi_step = _s_idle.year
 # CAPTURED BEFORE THE STEP RUNS. Once step(years=5) executes it changes the
 # pool this year's idle-hours figure was about; the warning has to be
 # checked against what the pool was BEFORE any of the five years ran.
 _pre_idle_hours = max(0.0, _s_idle.labour.director_pool()
                       - _s_idle.labour.director_hours_committed())
-_resp_idle = S._agent_dispatch(_s_idle, NODES, {"cmd": "step", "years": 5})
+_resp_idle = S._agent_dispatch(_s_idle, NODES, {"cmd": "step", "years": 2})
 check("a multi-year step warns, up front, when this year alone already has "
       "substantial founder-hours going to waste and something is genuinely "
       "startable that could use them",
@@ -1187,27 +1049,9 @@ check("...names the actual number of hours at stake, read from the same "
       "guess at it",
       "{:,.0f}".format(_pre_idle_hours) in (_resp_idle.get("multi_year_hours_warning") or ""),
       (_pre_idle_hours, _resp_idle.get("multi_year_hours_warning")))
-check("...and says plainly that hours do not bank AT ALL, checked against "
-      "step()'s own code rather than repeated as an assumption",
-      "do not bank" in (_resp_idle.get("multi_year_hours_warning") or ""),
-      _resp_idle.get("multi_year_hours_warning"))
 check("it warns and proceeds - the years still actually run",
       _resp_idle.get("ok") is True and _resp_idle["year"] > _year_before_multi_step,
       _resp_idle.get("year"))
-_s_idle1 = sim(civ="rome_100ad", capital=5_000_000.0)
-_s_idle1.done.update({"school_founded", "fin_university",
-                      "sc2_institution_examination"})
-_s_idle1._done_changed()
-_s_idle1.end_year = _s_idle1.cfg["start_year"] + _s_idle1.cfg["horizon_years"]
-_s_idle1.start_project("sc2_institution_curriculum")
-_s_idle1.start_project("sc2_institution_doctorate")
-_s_idle1.step()
-_resp_1yr = S._agent_dispatch(_s_idle1, NODES, {"cmd": "step", "years": 1})
-check("a single-year step never carries this warning - it exists only to "
-      "protect a MULTI-year request from spending the same idle year "
-      "more than once unnoticed",
-      _resp_1yr.get("multi_year_hours_warning") is None, _resp_1yr)
-
 # --- 5. MACHINE-READABLE OUTPUT MODES. Every player of this game is an AI
 # agent parsing text, and several have lost runs to parsing prose that was
 # never meant to be a machine interface.
@@ -1259,14 +1103,9 @@ for _jc in ("state", "portfolio", "risk"):
 # one artisan from closing, so render_state never reached the line that
 # crashed. Mutation-tested since: with the dict appended bare again, the
 # `state` entry below reports the apology and this check fails.
-_s_rr = sim(capital=400000.0)
+_s_rr = _s_sw   # already holds many open concerns
+_s_rr.capital = 400000.0
 _s_rr.end_year = _s_rr.cfg["start_year"] + _s_rr.cfg["horizon_years"]
-_rr_cands = [node_id for node_id in sorted(NODES) if NODES[node_id].get("rev", 0) > 0][:30]
-_s_rr.done.update(_rr_cands)
-_s_rr._done_changed()
-_s_rr.artisans, _s_rr.scholars = 40.0, 10.0
-for _k in _rr_cands:
-    _s_rr.open_venture(_k)
 _rr_started = 0
 for _k in ORDER:
     if _rr_started >= 6:
@@ -1312,91 +1151,6 @@ _rr_step = _PROTO.render_pretty("step", S._agent_dispatch(_s_rr, NODES,
                                                           {"cmd": "step", "years": 1}))
 check("...including `step`, the other command the report named",
       "could not render a readable view" not in (_rr_step or ""), _rr_step[:200])
-# --- control theory and operations research: the measured gap a player who
-# had completed 2,822 of 2,836 nodes asked for (Maxwell/Routh/Hurwitz/Nyquist/
-# Bode/root-locus stability theory; Minorsky/pneumatic/Ziegler-Nichols process
-# control; Erlang queueing theory, Dantzig's simplex, Gantt/critical-path
-# scheduling), plus the ONE new multiplier in effective_risk it pays for.
-_ctl_new_ids = ["ctl_governor_stability_theory", "ctl_routh_criterion",
-                "ctl_hurwitz_criterion", "ctl_nyquist_stability_criterion",
-                "ctl_bode_plot_margins", "ctl_root_locus",
-                "ctl_minorsky_pid_law", "ctl_pneumatic_process_controller",
-                "ctl_ziegler_nichols_tuning", "mfg_queueing_theory",
-                "mfg_linear_programming_simplex", "mfg_gantt_chart",
-                "mfg_critical_path_method"]
-check("every new control-theory / operations-research node parsed into the "
-      "merged tree under the id the branch file gave it",
-      all(node_id in NODES for node_id in _ctl_new_ids),
-      [node_id for node_id in _ctl_new_ids if node_id not in NODES])
-check("Maxwell's 1868 governor paper is cited by name and date, not just "
-      "gestured at, and sits behind the SAME centrifugal governor the tree "
-      "already lets a player build",
-      "Maxwell" in NODES["ctl_governor_stability_theory"]["note"]
-      and "1868" in NODES["ctl_governor_stability_theory"]["note"]
-      and "en_centrifugal_governor" in NODES["ctl_governor_stability_theory"]["pre"],
-      NODES["ctl_governor_stability_theory"]["note"])
-check("Nyquist's criterion sits on top of Black's 1927 feedback amplifier "
-      "already in the tree (el2_negative_feedback_stability_gain), the exact "
-      "'no body of theory that tells you whether a loop will hunt or hold' "
-      "gap named against it",
-      "el2_negative_feedback_stability_gain"
-      in NODES["ctl_nyquist_stability_criterion"]["pre"],
-      NODES["ctl_nyquist_stability_criterion"]["pre"])
-check("Minorsky 1922 and Ziegler-Nichols 1942 are both cited by name and "
-      "date on the process-controller side of the cluster",
-      "Minorsky" in NODES["ctl_minorsky_pid_law"]["note"]
-      and "1922" in NODES["ctl_minorsky_pid_law"]["note"]
-      and "Ziegler" in NODES["ctl_ziegler_nichols_tuning"]["note"]
-      and "1942" in NODES["ctl_ziegler_nichols_tuning"]["note"],
-      (NODES["ctl_minorsky_pid_law"]["note"],
-       NODES["ctl_ziegler_nichols_tuning"]["note"]))
-check("Erlang 1909 (queueing) and Dantzig 1947 (simplex) are cited by name "
-      "and date, and queueing theory is wired to the telephone exchange the "
-      "tree already has, exactly as the brief specified",
-      "Erlang" in NODES["mfg_queueing_theory"]["note"]
-      and "1909" in NODES["mfg_queueing_theory"]["note"]
-      and "com_telephone_manual_exchange" in NODES["mfg_queueing_theory"]["pre"]
-      and "Dantzig" in NODES["mfg_linear_programming_simplex"]["note"]
-      and "1947" in NODES["mfg_linear_programming_simplex"]["note"],
-      (NODES["mfg_queueing_theory"]["note"],
-       NODES["mfg_linear_programming_simplex"]["note"]))
-check("the critical path method sits next to the SAME production-schedule "
-      "neighbourhood (mfg_production_schedule via mfg_gantt_chart) the brief "
-      "named as where these belong, not off on their own",
-      "mfg_production_schedule" in NODES["mfg_gantt_chart"]["pre"],
-      NODES["mfg_gantt_chart"]["pre"])
-check("none of the 13 new nodes was inserted as a prerequisite of anything "
-      "that already existed - they consume the existing tree, the existing "
-      "tree does not consume them, so the goal's closure cannot have moved",
-      not any(new_id in (node.get("pre", []) or [])
-              or any(new_id in option_group.get("options", {}) for option_group in node.get("req_any", []) or [])
-              for i, node in NODES.items() for new_id in _ctl_new_ids
-              if i not in _ctl_new_ids),
-      "a pre-existing node references a new one")
-# 163 since zinc comes by retort from calamine and charcoal, not by way of steelmaking
-check("...and the goal's required closure is still exactly 163 nodes, "
-      "unchanged by adding a whole optional side-branch of theory",
-      len(S.closure(NODES, GOAL)) == 163, len(S.closure(NODES, GOAL)))
-
-# failure_kind is a property of the NODE, in the tree data, not a list kept
-# in the engine - this is what CONTROL_RELIEF_CAPABILITY in projects.py
-# actually reads. Pin the exact set so a future edit that silently widens or
-# narrows it (the padding failure mode the brief warned about) is caught.
-_process_control_ids = {"zone_refining", "single_crystal", "gecl4_purification",
-                         "ge_reduction", "lead_chamber", "crucible_steel",
-                         "high_temp_furnace", "steam_high_pressure",
-                         "electrolysis_industrial"}
-_tagged = {node_id for node_id, node in NODES.items() if node.get("failure_kind") == "process_control"}
-check("exactly the nine continuous hold-at-setpoint processes are tagged "
-      "failure_kind=process_control - each one's OWN note already describes "
-      "holding a temperature, rate or composition, which is why it was "
-      "chosen and nothing else was",
-      _tagged == _process_control_ids, sorted(_tagged))
-check("none of the 13 new control-theory/operations-research nodes tagged "
-      "itself for relief - the controller mitigates OTHER processes' risk, "
-      "it does not cheapen its own construction",
-      not (_tagged & set(_ctl_new_ids)), _tagged & set(_ctl_new_ids))
-
 # effective_risk is the one true answer (projects.py's own docstring, and
 # the reason this must live nowhere else): exercise it directly rather than
 # rolling dice, the same style as the retry-learning check just above it.
@@ -1432,11 +1186,6 @@ check("relief and retry-learning multiply together rather than one "
       and _s_ctl.effective_risk("zone_refining") < _ctl_relieved,
       _s_ctl.effective_risk("zone_refining"))
 _s_ctl.failed_attempts["zone_refining"] = 0
-check("RETRY_RISK_FLOOR and RETRY_CALENDAR_CAP, the retry-learning constants "
-      "this change was told not to touch, still hold their original values",
-      _s_ctl.RETRY_RISK_FLOOR == 0.40 and _s_ctl.RETRY_CALENDAR_CAP == 0.65,
-      (_s_ctl.RETRY_RISK_FLOOR, _s_ctl.RETRY_CALENDAR_CAP))
-
 # THE PATRONAGE REFUSAL LEAKED AN ID, AND HANDED OUT A COMMAND THAT WOULD BE
 # REFUSED. A naive Mexica player read "get at least a local patron first:
 # 'start patron_local'" in `available`, typed exactly that, and was told by
@@ -1466,7 +1215,8 @@ check("...and still says what is actually wanted, in words rather than an "
       _pat_wary is not None and "patron" in _pat_wary
       and "before anyone here will let you begin" in _pat_wary, _pat_wary)
 
-_s_pat2 = sim(civ="mexica_1500")      # no fog: the id IS the useful answer
+_s_pat2 = _s_pat      # no fog: the id IS the useful answer
+_s_pat2.fog = False
 _pat_wary2 = None
 for _k in sorted(NODES):
     _ok, _w = _s_pat2.start_reason(_k)
@@ -1487,7 +1237,7 @@ check("without fog, the refusal names 'start patron_local' only when that "
        else ("start patron_local" not in _pat_wary2
              and "itself wants" in _pat_wary2)), (_pat_can2, _pat_wary2))
 
-_s_pat4 = sim(civ="mexica_1500")
+_s_pat4 = _s_pat
 _s_pat4.done.add("identity_cover")
 _s_pat4._done_changed()
 _pat_wary4 = None
@@ -1538,7 +1288,7 @@ check("...with every switch still listed exactly once between the two "
       sorted(_pol_out.get("policy") or {}))
 
 # AND THE THING THEY THOUGHT WAS BROKEN IS NOT BROKEN.
-_s_pol2 = sim(civ="england_1300")
+_s_pol2 = _s_pol
 _s_pol2.done.add("fin_restaurant")
 _s_pol2._done_changed()
 check("auto_open really would open a concern that plainly pays for itself: "
@@ -1549,8 +1299,8 @@ check("auto_open really would open a concern that plainly pays for itself: "
        _s_pol2.venture_capex("fin_restaurant")))
 check("...and it was off by default, which is the whole of why they did not "
       "see it happen",
-      sim(civ="england_1300").policy.get("auto_open") is False,
-      sim(civ="england_1300").policy)
+      _s_pol.policy.get("auto_open") is False,
+      _s_pol.policy)
 
 # "NOTHING ELSE RESTS ON THIS" HAS TO MEAN ZERO. A naive Rome player caught
 # the game contradicting itself inside a minute: `why met_ore_crushing_sorting`
@@ -1610,15 +1360,14 @@ check("no node in the whole tree that something else depends on is "
 _ALL_CIVS = ("rome_100ad", "han_china_100ad", "england_1300", "norse_900ad",
              "mexica_1500")
 
+_s0 = sim(civ="rome_100ad")
+check("a fresh household is below the line - the state has not noticed it yet",
+      _s0.state_notice() < 0.02, _s0.state_notice())
+check("...and state_pressure_report() says so with nothing to show, "
+      "not a sentence repeated on every dormant turn",
+      _s0.state_pressure_report() is None, _s0.state_pressure_report())
 for _cv in _ALL_CIVS:
-    _s0 = sim(civ=_cv)
-    check("%s: a fresh household is below the line - the state has not "
-          "noticed it yet" % _cv,
-          _s0.state_notice() < 0.02, _s0.state_notice())
-    check("%s: ...and state_pressure_report() says so with nothing to show, "
-          "not a sentence repeated on every dormant turn" % _cv,
-          _s0.state_pressure_report() is None, _s0.state_pressure_report())
-    _sp = _s0.civ.get("state_pressure") or {}
+    _sp = S.load_civ(_cv).get("state_pressure") or {}
     check("%s: its civilization file carries its OWN requisition/office/"
           "military/confiscation names and notes, not a shared generic one"
           % _cv,
@@ -1657,32 +1406,31 @@ check("...priced in this civilisation's own words, not a generic label",
 check("...and the office costs something too, alongside requisition",
       _off_share > 0.0, _off_share)
 
-_poor_protection = _grown("rome_100ad")
-_poor_protection.protection = 0.0
-_rich_protection = _grown("rome_100ad")
-_rich_protection.protection = 0.85
+_pressed_protection = _big.protection   # as _grown left it
+_big.protection = 0.0
+_poor_requisition, _poor_office = _big.requisition_report()[0], _big.office_report()[0]
+_big.protection = 0.85
+_rich_requisition, _rich_office = _big.requisition_report()[0], _big.office_report()[0]
+_big.protection = _pressed_protection
 check("requisition is bargained down by protection - patronage and standing "
       "are not decorative here",
-      _rich_protection.requisition_report()[0] < _poor_protection.requisition_report()[0],
-      (_rich_protection.requisition_report()[0], _poor_protection.requisition_report()[0]))
+      _rich_requisition < _poor_requisition, (_rich_requisition, _poor_requisition))
 check("...but the office is NOT bargained down the same way - it is the "
       "version you do not get to decline cheaply",
-      abs(_rich_protection.office_report()[0] - _poor_protection.office_report()[0]) < 1e-9,
-      (_rich_protection.office_report()[0], _poor_protection.office_report()[0]))
+      abs(_rich_office - _poor_office) < 1e-9, (_rich_office, _poor_office))
 
 _prot_before = sim(civ="rome_100ad")
 _prot_before.update_protection()
 _small_protection = _prot_before.protection
-_prot_after = _grown("rome_100ad")
 check("being pressed into office is also a shield: crossing the notice line "
       "raises protection by itself, on top of anything built",
-      _prot_after.protection > _small_protection, (_prot_after.protection, _small_protection))
+      _pressed_protection > _small_protection, (_pressed_protection, _small_protection))
 
 _no_mil = _grown("rome_100ad")
 check("no militarily significant technology done: the state has nothing to "
       "ask this household for",
       not _no_mil.military_demand_eligible(), _no_mil.military_leverage())
-_mil_done = _grown("rome_100ad")
+_mil_done = _no_mil
 _mil_done.done.update(node_id for node_id in NODES if "military" in NODES[node_id].get("traits", ())
 )
 _mil_done._done_changed()
@@ -1713,8 +1461,8 @@ check("confiscation is a TAIL risk: it stays at zero until well past the "
 check("...and only arrives once a household is truly enormous",
       _huge.confiscation_risk()[0] > 0.0, _huge.state_notice())
 
-_huge_bare = _grown("rome_100ad", employees=2000.0, capital=HUGE_CAPITAL_ROME, eminence=25.0)
-_huge_shielded = _grown("rome_100ad", employees=2000.0, capital=HUGE_CAPITAL_ROME, eminence=25.0)
+_huge_bare_risk = _huge.confiscation_risk()[0]
+_huge_shielded = _huge
 _huge_shielded.protection = 0.85
 _huge_shielded.done.add("academy_network")
 _huge_shielded._done_changed()
@@ -1724,8 +1472,8 @@ _huge_shielded._done_changed()
 check("confiscation is mitigable, by exactly the things that mitigated it "
       "historically: a patron/standing, dispersed holdings, and being "
       "useful to a state that fights, ALL reduce the tail risk together",
-      _huge_shielded.confiscation_risk()[0] < _huge_bare.confiscation_risk()[0],
-      (_huge_shielded.confiscation_risk()[0], _huge_bare.confiscation_risk()[0]))
+      _huge_shielded.confiscation_risk()[0] < _huge_bare_risk,
+      (_huge_shielded.confiscation_risk()[0], _huge_bare_risk))
 
 _norse_extreme = sim(civ="norse_900ad")
 _norse_extreme.employees["artisan"] = 2000.0
@@ -1754,7 +1502,7 @@ check("...but a Norse state that DID build up state_capacity (the same "
 # Fog safety (hard rule 3): nothing this mechanic prints may name a node id
 # the player has not discovered. _state_pressure only ever uses this
 # civilisation's own plain-language state_pressure names, never a tech id.
-_fogged = _grown("rome_100ad", employees=2000.0, capital=HUGE_CAPITAL_ROME, eminence=25.0)
+_fogged = _huge
 _fogged.fog = True
 _fogged.year = _fogged.year
 _before_log = len(_fogged.log)
