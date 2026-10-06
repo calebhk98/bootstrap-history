@@ -7,6 +7,7 @@ import re
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 from sim.agents.api import Household
+from . import category_traits
 from .data import closure, JSONDict, Nodes
 from .hazard_window import hazards_not_yet_past
 from .hazard_hedge_timing import add_timing_to_steps
@@ -381,13 +382,10 @@ class FogMixin:
             "timeline": timeline,
         }
 
-    # Protects knowledge and persona that carry upkeep: categories that would
-    # be shed for money but cannot be lost without softlocking the run.
-    # Does NOT protect institutions (patron_local, collegium_licensed, etc.)
-    # which can and must lapse. Only knowledge that DOES carry upkeep.
-    NEVER_ABANDON = {"mathematics", "physics", "method", "notation",
-                     "algebra", "geometry", "probability", "analysis",
-                     "theory", "knowledge"}
+    # Categories flagged never_abandoned (data/world/category_traits.json)
+    # protect knowledge that carries upkeep and cannot be lost without
+    # softlocking the run. Institutions (patron_local, collegium_licensed,
+    # etc.) are not flagged: they can and must lapse.
 
     def never_abandon(self, node_id: str) -> bool:
         """Protected: knowledge, and anything the goal actually needs.
@@ -397,7 +395,7 @@ class FogMixin:
         and rebuild him later; you cannot have the game quietly delete a step
         you need and then refuse to fund rebuilding it.
         """
-        if self.nodes[node_id]["cat"] in self.NEVER_ABANDON:
+        if category_traits.has_trait(self.nodes[node_id]["cat"], "never_abandoned"):
             return True
         return self.on_road_to_goal(node_id)
 

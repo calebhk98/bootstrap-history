@@ -29,7 +29,7 @@ from collections import defaultdict
 
 from sim.engine.ui_port import load_production_catalog
 from sim.engine.ui_port import (
-    tree_merge, validate_material_gating, validate_output_bounds, validate_copy_visibility, validate_production,
+    category_traits, tree_merge, validate_material_gating, validate_output_bounds, validate_copy_visibility, validate_production,
     validate_unheld_gates)
 from sim.engine.ui_port import default_civilisation_id
 from sim.engine.ui_port import (
@@ -387,6 +387,7 @@ def cmd_validate(args):
     errs += validate_copy_visibility.check_copy_visibility(nodes)
     errs += _data_source_errors(nodes)
     errs += validate_map.map_problems()
+    errs += category_traits.check_category_traits(nodes.values())
     errs += validate_material_gating.check_material_gating(nodes, validate_material_gating.load_gating(ROOT))
     from sim.engine.ui_port import civ_start_check
     errs += validate_unheld_gates.check_unheld_gates(nodes, civ_start_check.load_civilisations(ROOT), production)
