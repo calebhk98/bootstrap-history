@@ -76,9 +76,11 @@ check("...and a vague guess does not silently resolve to the goal",
 
 # Fog leak: did-you-mean suggestions under fog must all be things the player has heard of.
 unknown_reply = ask(fogged, cmd="why", id="aqueduct_survey")
-suggestions = [suggestion.strip() for suggestion in
-               unknown_reply.get("error", "").split("Did you mean:")[-1].split(",") if suggestion.strip()] \
-    if "Did you mean" in unknown_reply.get("error", "") else []
+suggestion_text = re.split(r"did you mean:", unknown_reply.get("error", ""), flags=re.IGNORECASE)[-1] \
+    if re.search(r"did you mean:", unknown_reply.get("error", ""), re.IGNORECASE) else ""
+suggestions = [suggestion.strip() for suggestion in suggestion_text.split(",") if suggestion.strip()]
+check("a near miss under fog still gets a did-you-mean list to check",
+      suggestions, unknown_reply.get("error"))
 verified = [ask(fogged, cmd="why", id=suggestion) for suggestion in suggestions]
 check("the did-you-mean list under fog only ever suggests things the player has heard of",
       all("never heard of" not in reply.get("error", "") for reply in verified),

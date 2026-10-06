@@ -2,6 +2,8 @@
 Endless difficulty horizon: regressions from a player who won the game."""
 from .harness import *  # noqa: F401,F403
 
+from sim.ui.proto.state_waiting import _agent_end_reason
+
 _SIMULATOR = os.path.join(HERE, "simulator.py")
 
 
@@ -21,6 +23,19 @@ check("choosing Endless carries exactly ENDLESS_HORIZON_YEARS into the save's me
       _endless_written and json.load(open(os.path.join(
           _endless_saves, _endless_written[0] + ".meta.json"))).get("horizon_years") == _CLI.ENDLESS_HORIZON_YEARS,
       (_endless_written, _endless_wizard.stdout[-800:]))
+# Behaviour, not just the sidecar: a game whose end year comes from that horizon is still
+# running 600 years in, where the same game under the standard horizon has ended.
+_endless_meta = (json.load(open(os.path.join(_endless_saves, _endless_written[0] + ".meta.json")))
+                 if _endless_written else {})
+_horizon_game = sim()
+_horizon_game.year = _horizon_game.cfg["start_year"] + 600
+_horizon_game.end_year = _horizon_game.cfg["start_year"] + _endless_meta.get("horizon_years", 0)
+_endless_reason = _agent_end_reason(_horizon_game)
+_horizon_game.end_year = _horizon_game.cfg["start_year"] + 500
+_standard_reason = _agent_end_reason(_horizon_game)
+check("choosing Endless lets a game cross where a 500-year Standard horizon has already ended the run",
+      _endless_reason is None and _standard_reason is not None,
+      (_endless_meta.get("horizon_years"), _endless_reason, _standard_reason))
 _endless_options = (_play(["play", "--session", os.path.join(_endless_saves, _endless_written[0])],
                           "options\nb\nquit\n", os.environ.copy())
                     if _endless_written else None)

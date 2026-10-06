@@ -15,13 +15,25 @@ is actually met.
 Weather is drawn per home region and pooled by cultivable-land share; the seed is a pure function of (civ, region, year).
 """
 
+import os
 import statistics
+import tempfile
 import unittest
 
 from .harness import *  # noqa: F401,F403
 
 from sim.engine.core import agriculture
 from sim.engine import data
+from sim.tests.weather_test_helpers import assert_matching_century, assert_save_reload_trajectory
+
+# Long enough for weather to shape population and stock, short enough to stay cheap; the
+# engine's own yearly market keeps each year fast and weather does not depend on the market.
+DETERMINISM_YEARS = 20
+
+
+def _market_free_rome():
+    return sim(civ="rome_100ad", events=False, agent_economy=False)
+
 
 
 def _rome_sim(events=False):
@@ -151,6 +163,24 @@ class WeatherSeedPurityTests(unittest.TestCase):
         finally:
             SHARED_ROME.civ = original_civ
         self.assertNotEqual(rome_seed, other_seed)
+
+
+class DeterminismAcrossSaveAndReloadTests(unittest.TestCase):
+    """Weather is a pure function of (civ, region, year, salt): two games match, and a save/reload mid-run loses no draw."""
+
+    def test_two_games_stay_identical_year_for_year(self):
+        assert_matching_century(self, _market_free_rome, years=DETERMINISM_YEARS)
+
+    def test_a_mid_run_save_and_reload_follows_the_same_trajectory(self):
+        with tempfile.TemporaryDirectory() as folder:
+            assert_save_reload_trajectory(
+                self, _market_free_rome, os.path.join(folder, "weather_trajectory.json"),
+                years=DETERMINISM_YEARS)
+
+    def test_pooled_multiplier_averages_close_to_one(self):
+        draws = [SHARED_ROME._pooled_farm_weather_multiplier(year)
+                 for year in range(101, 101 + 400)]
+        self.assertAlmostEqual(statistics.fmean(draws), 1.0, delta=0.02)
 
 
 class UnshockedCenturyAcceptanceTests(unittest.TestCase):

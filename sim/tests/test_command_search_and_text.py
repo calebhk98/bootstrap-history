@@ -34,7 +34,16 @@ _command, _error = _typed("available limit banana")
 check("217: a limit that is not a number is refused, not swallowed",
       _error is not None and "limit" in _error, (_command, _error))
 
-_england = sim("england_1300")
+def _fogged_england():
+    """England as the typed game starts it: fog on, the poor scholar's kit."""
+    game = S.Sim(NODES, ORDER, random.Random(1), events=False, manual=True,
+                 civ=S.load_civ("england_1300"), cfg={"start_kit": "poor_scholar"})
+    game.goal, game.done_year = GOAL, {}
+    game.fog, game.revealed = True, set()
+    return game
+
+
+_england = _fogged_england()
 
 
 def _ask(game, **command):
@@ -45,7 +54,10 @@ _replies = [_ask(_england, cmd="available", all=True, limit=3),
             _ask(_england, cmd="available", tag="optics"),
             _ask(_england, cmd="available", subject="metallurgy", offset=9999),
             _ask(_england, cmd="available", subject="physics"),
-            _ask(_england, cmd="available", find="physics")]
+            _ask(_england, cmd="available", find="physics"),
+            _ask(_england, cmd="available", find="electricity"),
+            _ask(_england, cmd="available", subject="electricity"),
+            _ask(_england, cmd="available", subject="furnace")]
 check("217: 'all' with 'limit' shows only the limit",
       len(_replies[0].get("available", [])) == 3, len(_replies[0].get("available", [])))
 check("217: a tag refusal says subjects are a different list and names both lists",
@@ -62,11 +74,27 @@ check("197: find does not match a node by its knowledge-file name",
 check("197: find still matches by name",
       _tree_filters.matches_find(_synthetic, "signal", "a"))
 
+_electricity_find, _electricity_subject = _replies[5], _replies[6]
+_signal_find = _ask(_england, cmd="available", find="signal")
+check("197: Signal flags is in view under fog, so its absence from an electricity search means something",
+      "com_signal_flags" in [row["id"] for row in _signal_find.get("available", [])],
+      [row["id"] for row in _signal_find.get("available", [])])
+check("197: 'available find electricity' does not list a node by its filing cabinet",
+      "com_signal_flags" not in [row["id"] for row in _electricity_find.get("available", [])],
+      _electricity_find.get("available"))
+check("197: 'available electricity' does not list Signal flags",
+      "com_signal_flags" not in [row["id"] for row in _electricity_subject.get("available", [])],
+      [row["id"] for row in _electricity_subject.get("available", [])])
+
 # ---- 196: a topic word that is not a subject heading is searched as a word ---------
 check("196: a bare topic word returns what find returns",
       [row["id"] for row in _replies[3].get("available", [])]
       == [row["id"] for row in _replies[4].get("available", [])]
       and _replies[3].get("count", 0) > 0, (_replies[3].get("showing"), _replies[4].get("count")))
+
+for _word, _reply in (("physics", _replies[3]), ("furnace", _replies[7])):
+    check("196: 'available %s' returns at least one result" % _word,
+          _reply.get("ok") is not False and len(_reply.get("available", [])) > 0, _reply.get("available", []))
 
 # ---- 221: close and quote name the right command ------------------------------------
 _han = sim("han_china_100ad")

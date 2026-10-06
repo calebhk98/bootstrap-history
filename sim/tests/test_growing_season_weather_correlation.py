@@ -195,7 +195,7 @@ class PooledWeatherMultiplierTests(unittest.TestCase):
 
 class DeterminismTests(unittest.TestCase):
     """The Cholesky setup is reconstructed from static data on every load.
-    The century and mid-run save/reload trajectories are asserted in
+    The matching-run and mid-run save/reload trajectories are asserted in
     test_regional_weather_wiring.DeterminismAcrossSaveAndReloadTests.
     """
 

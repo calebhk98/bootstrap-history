@@ -13,11 +13,11 @@ QUICK_TOPIC = True
 from .harness import *  # noqa: F401,F403
 
 
-# Cross-instance state (a module-level cache or counter two Sims share) makes the
-# second run differ from its first year on, so a short horizon sees it; the
-# hash-seed check below measured divergence within 1-7 years for the same
-# reason.
-_SAME_PROCESS_YEARS = 3
+# Cross-instance state (a module-level cache or counter two Sims share) shows once the market's
+# actors exist: in this scenario traders enter from the first year and interest groups a few years
+# later, with traders still entering after that. The horizon covers the whole entry period
+# (count `run.actors.actors` by `record.kind` after each `step()` to re-measure it).
+_SAME_PROCESS_YEARS = 8
 
 # --- BREAK: `--seed` did not reproduce a run. Same script, same seed, three
 # runs: 587,300 / 6,664,218 / 6,652,459 in capital. PYTHONHASHSEED=0 made them
@@ -77,12 +77,12 @@ slow_check("the same seed gives the same run, twice in one process",
 # made the old check's sensitivity depend on luck neither run controlled.
 # Two explicit, different seeds make it the same every time this suite runs.
 #
-# 12 years, not perf_fingerprint's own 200-400: detection above was within
-# 1-7 years on every scenario, so 12 is well over the slowest of those - a
+# Ten years, not perf_fingerprint's own 200-400: detection above was within
+# 1-7 years on every scenario, so ten leaves margin over the slowest of those - a
 # short horizon is not a weaker test here, it is simply not paying for 190+
 # extra years of a signal that, per that measurement, is essentially always
 # already in by year 7. The two subprocesses run side by side.
-_HASH_SEED_HORIZON = 8
+_HASH_SEED_HORIZON = 10
 # Every scenario diverged within the horizon above, so two (two civilisations, fog on and off) suffice.
 _HASH_SEED_SCENARIOS = "F.QUICK_SCENARIOS[1:3]"
 
