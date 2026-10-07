@@ -13,5 +13,5 @@ Related: 336.
 ## Findings while working it
 
 - At the merged base the test passes: its bound is met because late purchases come out negative (households sell stock out), not because the stock settles. Print the path with the command above.
-- In that fixture no producer moves the price (the external edge offers and bids as a fringe), so the seller choice never changes an ask, whether cuts-only or with raises. The swing is households' store of value (Complaint 404): they offer held metal at the holding reservation, below the edge's bid, and bid for it again when the price is above.
+- In that fixture no producer moves the price (the external edge offers and bids as a fringe), so the seller choice never changes an ask, whether cuts-only or with raises. The swing is households' store of value (`households_store.py`; no complaint covers it yet): they offer held metal at the holding reservation, below the edge's bid, and bid for it again when the price is above.
 - Remaining: derive the store's reservation against the same bid it later pays; plan capacity at the price expected after the producer's own additions (`sim/economy/producers.py`, owned by another change at the time).
