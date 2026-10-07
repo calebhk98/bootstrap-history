@@ -328,10 +328,7 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
             year_hours = max(1.0, self.labour.director_pool())
             practice_lost = self.revenue() * (hours / year_hours) * (
                 1.0 if self.practice_attention() > 0 else 0.0)
-            rate = (self.labour.market.quote_annual(trade) / self.HOURS_PER_PERSON_YEAR
-                    * (1.0 + min(self.WAGE_REPUTATION_BONUS_CAP,
-                                 self.state.household.reputation / self.WAGE_REPUTATION_BONUS_SCALE)))
-            if hours * rate > practice_lost:
+            if self.labour.wage_for_hours(trade, hours) > practice_lost:
                 _, err = self.labour.work_for_wages(trade, hours)
                 # Kept in step with `remaining` so hours_this_year (below) does
                 # not count hours sold for wages here as still unused.
