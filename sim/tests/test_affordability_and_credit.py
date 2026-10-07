@@ -142,20 +142,17 @@ wage_game = sim(civ="norse_900ad", capital=-4000.0)  # a civilisation whose own 
 wage_game.insolvent_years = 20
 wage_advice = [reason for reason in (wage_game.stall_diagnosis() or {}).get("what_would_change_it", [])
                if reason.startswith("work as a ")]
-check("wage work is not advised where the sale itself costs more practice than it pays",
-      not wage_advice, wage_advice)
-
-# With no practice to lose the advice shows, and its quote is what work_for_wages pays.
-wage_game.revenue = lambda: 0.0
-wage_advice = [reason for reason in (wage_game.stall_diagnosis() or {}).get("what_would_change_it", [])
-               if reason.startswith("work as a ")]
+# The advice's quote is what work_for_wages pays for the trade and hours it names.
 quote_match = re.match(r"work as a (\w+): (\d+) of your own hours .* bring in about ([\d,]+) against the ([\d,]+) of practice",
                        wage_advice[0]) if wage_advice else None
-check("a stalled household in debt with no practice is offered wage work, with trade, hours and earning",
+check("a stalled household in debt is offered wage work, with trade, hours and earning",
       quote_match, wage_advice)
 if quote_match:
     quoted_trade, quoted_hours = quote_match.group(1), int(quote_match.group(2))
-    quoted_earning = int(quote_match.group(3).replace(",", ""))
+    quoted_earning, quoted_practice = (int(quote_match.group(index).replace(",", "")) for index in (3, 4))
+    _, _, practice_given_up = wage_game.labour.work_for_wages_dry_run(quoted_trade, quoted_hours)
+    check("the practice the banner says is given up is what the sale costs",
+          abs(practice_given_up - quoted_practice) <= 1, (quoted_practice, practice_given_up))
     capital_before = wage_game.capital
     paid, refusal = wage_game.labour.work_for_wages(quoted_trade, quoted_hours)
     check("the advised work is accepted", refusal is None, refusal)
