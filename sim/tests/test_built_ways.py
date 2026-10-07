@@ -50,7 +50,8 @@ class BuiltWaysTests(unittest.TestCase):
         self.assertNotIn(geography.edge_key(tile_a, tile_b), sim.state.economy.improvements)
         _finish_building(sim)
         self.assertTrue(sim.state.economy.improvements[geography.edge_key(tile_a, tile_b)]["road"])
-        self.assertAlmostEqual(before - sim.state.household.capital, quote["money"], places=4)
+        # a balance near 1e12 carries rounding far coarser than 1e-4, so compare by share of the quote
+        self.assertAlmostEqual(before - sim.state.household.capital, quote["money"], delta=1e-9 * quote["money"])
 
     def test_a_built_road_is_what_routes_use(self):
         sim = _fresh_sim()
