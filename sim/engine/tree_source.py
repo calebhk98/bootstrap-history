@@ -11,8 +11,10 @@ import os
 import tempfile
 from typing import Any, Dict, Iterator, Optional
 
+from sim import cache_root
+
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-DEFAULT_CACHE_DIRECTORY = os.path.join(ROOT, ".cache", "tech_tree")
+DEFAULT_CACHE_DIRECTORY = cache_root.cache_directory("tech_tree")
 
 META_FILE = "_META.json"
 MERGED_DUPLICATE_IDS_FILE = "_MERGED_DUPLICATE_IDS.json"
