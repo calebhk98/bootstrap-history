@@ -93,6 +93,7 @@ import shutil
 import time
 from typing import Any, cast, Dict, List, NotRequired, Optional, TypedDict
 
+from sim.engine.saveload import acting_seat_of
 from sim.default_civilisation import PREFERRED_DEFAULT_CIVILISATION
 
 
@@ -111,6 +112,7 @@ class Config(TypedDict):
     display_width: Optional[int]
     rows_per_page: int
     show_welcome: bool
+    multi_year_step_warning: bool
     commission_display: str
     display_units: Dict[str, str]
     default_civ: str
@@ -204,6 +206,7 @@ CONFIG_DEFAULTS: Config = {
     "display_width": None,     # None means "ask the terminal; see below"
     "rows_per_page": 30,
     "show_welcome": True,
+    "multi_year_step_warning": True,   # `step N` warns when founder-hours would go unused
     "commission_display": "both",  # "commissioned", "ready", or "both"
     # Unit id per dimension (area, mass, temperature, money) the player wants
     # shown; a missing dimension means "as the game writes it" (Complaint 285).
@@ -537,9 +540,10 @@ def list_saves(save_dir: str) -> List[SaveSummary]:
             if not isinstance(blob, dict) or "_civ" not in blob:
                 continue
             scenario = blob.get("scenario") or {}
-            household = blob.get("household") or {}
-            founder = blob.get("founder") or {}
-            projects = blob.get("projects") or {}
+            seat = acting_seat_of(blob)
+            household = seat.get("household") or {}
+            founder = seat.get("founder") or {}
+            projects = seat.get("projects") or {}
             row.update({
                 "readable": True,
                 "civ_id": blob.get("_civ"),
@@ -548,7 +552,7 @@ def list_saves(save_dir: str) -> List[SaveSummary]:
                 "founder_alive": founder.get("founder_alive", True),
                 "dead_reason": founder.get("dead_reason"),
                 "goal_year": scenario.get("goal_year"),
-                "goal": blob.get("_goal"),
+                "goal": seat.get("goal"),
                 "reputation": household.get("reputation"),
                 "scholars": household.get("scholars"),
                 "artisans": household.get("artisans"),

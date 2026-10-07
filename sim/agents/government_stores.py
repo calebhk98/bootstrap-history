@@ -13,6 +13,7 @@ from typing import Any, Dict, List
 
 from . import ledger
 from .budget_line import Line
+from .edges import EDGE_CUSTOMERS, EDGE_TAXPAYERS
 from .revenue_bases import earned_income
 
 
@@ -32,8 +33,8 @@ class StoresMixin:
 			if assessed.in_kind:
 				record.in_kind_received[assessed.material] = record.in_kind_received.get(assessed.material, 0.0) + assessed.tonnes
 				record.stores[assessed.material] = record.stores.get(assessed.material, 0.0) + assessed.tonnes
-		self.credit(sum(assessed.money for assessed in assessments if not assessed.in_kind and not assessed.payers),  # type: ignore[attr-defined]
-					"taxation")
+		unmodelled = sum(assessed.money for assessed in assessments if not assessed.in_kind and not assessed.payers)
+		ledger.transfer(world.edge(EDGE_TAXPAYERS), self, unmodelled, "taxation")
 
 	def collect_from_payers(self, assessments: List[Any]) -> Dict[str, float]:
 		"""Take each payer's share of the forms that fall on actors, from the purse it holds; the income
@@ -82,5 +83,5 @@ class StoresMixin:
 			if surplus > 0.0:
 				stores[material] = keep
 				world.market_sale(self.actor_id, material, surplus)  # type: ignore[attr-defined]
-				self.credit(surplus * world.material_price(material), "sale of stores")  # type: ignore[attr-defined]
+				ledger.transfer(world.edge(EDGE_CUSTOMERS), self, surplus * world.material_price(material), "sale of stores")
 		self.record.stores = {material: tonnes for material, tonnes in stores.items() if tonnes > 0.0}  # type: ignore[attr-defined]

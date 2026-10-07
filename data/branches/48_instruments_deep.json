@@ -1,6 +1,8 @@
 [
  {
   "id": "in2_simple_lens",
+  "copy_visibility": 0.8,
+  "copy_visibility_reason": "The lens is its own form and the curve is plain to see; the polish that makes it clear is the only hidden part.",
   "name": "Simple plano-convex lens",
   "cat": "optics",
   "kind": "ENGINEERING",
@@ -1735,7 +1737,7 @@
   "sch": 0,
   "art": 4,
   "conf": "C",
-  "note": "Rotor imbalance is catastrophic; dynamic balancing to < 1 gram-cm required. Vacuum jacket reduces drag and heating."
+  "note": "An ultracentrifuge spins a sample in a rotor at extreme speed, so the outward force is many thousands of times gravity. This pulls very small particles or large molecules out of a liquid, or sorts them by weight, which ordinary settling cannot do. The rotor must be balanced very finely (to under 1 gram-cm), because an unbalanced rotor can shatter at speed. It spins in a vacuum jacket, which cuts air drag and heating."
  },
  {
   "id": "in2_ph_meter_potentiometer",
@@ -3788,7 +3790,7 @@
   "sch": 0,
   "art": 3,
   "conf": "C",
-  "note": "Measures 1 to 1e-4 torr. Requires careful construction and leveling. Provides absolute calibration for other gauges."
+  "note": "The McLeod gauge measures very low gas pressure. A sample of the thin gas is trapped in a glass bulb, then squeezed by raising mercury into a small tube of known volume. Because the gas is compressed by a known amount, the pressure it reaches shows the original pressure by Boyle's law, which links volume and pressure. It depends only on measured volumes and heights, so it is used to calibrate other gauges, but it needs careful glassblowing and clean mercury."
  },
  {
   "id": "in2_quartz_resonator_frequency",

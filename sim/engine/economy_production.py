@@ -21,7 +21,7 @@ grouping evidence, and for why this lives in a separate file.
 """
 from .data import trade_family
 from sim.constants import declare
-from . import money_units, node_revenue_market
+from . import category_traits, money_units, node_revenue_market
 from .readable import readable
 
 
@@ -491,18 +491,15 @@ class ProductionMixin:
     # two are shipping, and the difference decides who gets paid. Cataract
     # couching is a skill a single trained person practises with their own
     # hands, and practising it is exactly the cover the guide tells you to
-    # adopt: PRACTISABLE_CATS credits it. A fleet of large merchant ships is
+    # adopt: categories flagged practisable credit it. A fleet of large merchant ships is
     # owned by other people and you are not entitled to its freight, so
     # shipping stays excluded. Removing the revenue from both is too blunt:
     # without practice income, a poorer civilisation paying a higher price
     # index has no way to accumulate enough for identity_cover, the first
     # node in the game.
-    PRACTISABLE_CATS = {"surgery", "obstetrics", "pharmacology", "medicine",
-                        "diagnosis", "dentistry"}
-
     def _practisable(self, node_id):
         """Is this granted node a skill YOU can practise for a fee?"""
-        return self.nodes[node_id].get("cat") in self.PRACTISABLE_CATS
+        return category_traits.has_trait(self.nodes[node_id].get("cat"), "practisable")
 
     def still_ramping(self):
         """Earners that are not yet paying their full figure, and how far along.

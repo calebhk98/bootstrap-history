@@ -38,11 +38,16 @@ demography to read.
 variable cost; a holder of stock at what it expects to get next year less carrying cost and spoilage; a
 seller short of cash for debts or wages below that; a waste product below zero.
 
-**Wages and the interest rate are sticky.** Each moves by a share of the gap to its clearing level a
-year, but a wage is never left below every worker's ask while an employer would pay it, and a wage
-nobody offered hours at stays where it was. With savings on offer and nobody borrowing, the rate drifts
-toward lenders' lowest ask. A goods market that traded nothing keeps its price unless every seller
-asked more than any buyer would pay; an offer that is only float residue is no supply.
+**Wages come from the labour core; the interest rate is sticky.** The economy keeps its workforce as
+the labour core's `MarketState` (people per tile, trade and ability band; `labour_state.py`) and each
+year hands the core the producers' bids as tranches of falling value (`labour_bids.py`), the outside
+option, entrants and attrition from demography, and routes to bordering tiles (`labour_inputs.py`).
+The core sets every (trade, tile) wage and trains, switches and moves people (sim/labour/market/DESIGN.md);
+`year_labour.py` settles what it reports. A trade's training premium is whatever wage draws enough able
+people to it. The interest rate moves by a share of the gap to its clearing level a year, drifting
+toward lenders' lowest ask with savings on offer and nobody borrowing. A goods market that traded nothing
+keeps its price unless every seller asked more than any buyer would pay; an offer that is only float
+residue is no supply.
 
 **Clearing order follows the recipes.** A good clears after the goods it is made from, so producers
 sell this year what they made from inputs bought this year. Cycles draw their inputs from stock.

@@ -5,6 +5,7 @@ from the arrival year)."""
 from .harness import *
 from sim.tests import cli_in_process
 from sim.engine import settings as _settings
+from sim.engine.saveload import goal_of_blob
 
 _scratch = tempfile.mkdtemp()
 
@@ -74,7 +75,7 @@ check("254: the new-game menu draws its own seed, not a fixed one and not play's
 check("263: the menu goal list offers the point-contact transistor",
       "oint-contact" in _menu, _menu[-1500:])
 check("263: an all-defaults menu game aims at the goal `play` aims at by default",
-      _menu_record.get("_goal") == "point_contact_transistor", _menu_record.get("_goal"))
+      goal_of_blob(_menu_record) == "point_contact_transistor", goal_of_blob(_menu_record))
 _offered = re.search(r"Which one\? \[1-(\d+)", _menu)
 check("263: the menu offers as many civilisations as exist",
       _offered is not None and int(_offered.group(1)) == len(S.civilization_ids()),

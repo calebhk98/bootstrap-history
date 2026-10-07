@@ -330,6 +330,8 @@
  },
  {
   "id": "sea_sternpost_rudder",
+  "copy_visibility": 0.9,
+  "copy_visibility_reason": "The hinged rudder on the sternpost and its tiller are fully visible on a hull in harbour, and the form spread between seafaring peoples by sight.",
   "name": "Sternpost rudder",
   "cat": "ships",
   "kind": "ENGINEERING",
@@ -363,6 +365,8 @@
  },
  {
   "id": "sea_lateen_sail",
+  "copy_visibility": 0.8,
+  "copy_visibility_reason": "The rig is plain to see from the quay, though handling it in a seaway and tacking with the long yard is learned only by sailing.",
   "name": "Lateen sail",
   "cat": "ships",
   "pre": [
@@ -1623,6 +1627,8 @@
  },
  {
   "id": "sea_canal_lock",
+  "copy_visibility": 0.9,
+  "copy_visibility_reason": "The chamber and gates are visible and a working lock explains itself to anyone watching it fill.",
   "name": "Canal lock",
   "cat": "harbours",
   "pre": [

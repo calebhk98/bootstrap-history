@@ -8,6 +8,7 @@ import unittest
 from .harness import *  # noqa: F401,F403
 from sim.labour import labour_allocation
 from sim.engine.core import load_geography
+from sim.geography.api import tiles_held
 from sim.engine import saveload
 from sim.world import agriculture, land
 
@@ -16,7 +17,7 @@ HOURS = labour_allocation.HOURS_PER_FARM_WORKER_YEAR
 
 def _ladder(civ_id):
     civ = S.load_civ(civ_id)
-    return land.territory_farmland(civ["home_regions"], load_geography())
+    return land.territory_farmland(tiles_held(civ), load_geography())
 
 
 class LadderTests(unittest.TestCase):

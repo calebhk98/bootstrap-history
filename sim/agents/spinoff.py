@@ -6,6 +6,7 @@ the concern needs (the parent keeps all it knew), is funded as any entrant is (a
 from typing import Any, List
 
 from . import concern_ops, firm_entry, ledger
+from .edges import EDGE_ENTRY_PREMIUM, EDGE_POOLED_CAPITAL
 from .records import ActorRecord
 from .registry import register_spawner
 from .tuning import ENTREPRENEURIAL_CAPITAL_SHARE, ENTRY_STAKE_BUFFER, VALUE_HORIZON_YEARS
@@ -79,9 +80,9 @@ def consider_spinoffs(registry: Any, world: Any) -> List[str]:
 				firm.record.plan["founder"] = founder.actor_id
 				ledger.transfer(founder, firm, own, "founding stake")
 			else:
-				firm.credit(own, "edge:pooled capital")
+				ledger.transfer(registry.state.edge(EDGE_POOLED_CAPITAL), firm, own, EDGE_POOLED_CAPITAL)
 			if premium > 0.0:
-				firm.debit(premium, "edge:entry premium")
+				ledger.transfer(firm, registry.state.edge(EDGE_ENTRY_PREMIUM), premium, EDGE_ENTRY_PREMIUM)
 			concern_ops.open_concern(firm, node_id, world)
 			founded.append(firm_id)
 			break

@@ -10,8 +10,8 @@ import os
 
 from sim.economy.api import (EconomySetup, TradeSpec, currency_from_coin_standard, goods_specs, households,
                              recipes_from_production_data, taxes, tile_costs)
-from sim.world import demand
-from sim.geography.api import layer_value, sea_freight, settlement, tiles_of_regions
+from sim.world import demand, need_basket
+from sim.geography.api import layer_value, sea_freight, settlement, tiles_held
 from sim.labour import api as labour_api
 
 from .foreign_routes import SEA_MODE
@@ -25,9 +25,8 @@ def _load(*parts):
 
 
 def civilisation_tiles(civ, world_map):
-    """The tiles a civilisation holds on the engine's map (through its home regions until civilisations
-    hold tiles), and that map."""
-    return tiles_of_regions(list(civ.get("home_regions") or []), world_map), world_map
+    """The tiles a civilisation holds on the engine's map, and that map."""
+    return tiles_held(civ, world_map), world_map
 
 
 def allowed_entries(production, held_nodes):
@@ -47,7 +46,6 @@ def opening_values(sim):
     the same markets, producers and price base however the engine's own tables have moved since."""
     civ = sim.civ
     tile_ids, _world_map = civilisation_tiles(civ, sim.world_map)
-    home = list(civ.get("home_regions") or [])
     people = float(sim.population.total)
     production = demand.production_data()
     trades_data = _load("world", "trades.json").get("trades", {})
@@ -57,7 +55,7 @@ def opening_values(sim):
                            | {unskilled})
     modes = sim._freight_mode_costs()
     return {
-        "population_by_tile": {tile: people * settlement.population_share(home, tile) for tile in tile_ids},
+        "population_by_tile": {tile: people * settlement.population_share(tile_ids, tile) for tile in tile_ids},
         "working_share": sim.population.working_age / people if people > 0.0 else 0.0,
         "recipes": allowed,
         "prices": {good: price for good, price in sim.economy.material_prices().items() if price > 0.0},
@@ -72,21 +70,12 @@ def opening_values(sim):
 def baskets_by_tile(basket, need_data, world_map, tile_ids):
     """The household basket on each tile, with the floors its climate sets (sim/world/climate_needs.py)
     for every need whose data names one in `subsistence_from_climate`."""
-    from sim.world import climate_needs
-    climate_field = {need_id: spec.get("subsistence_from_climate")
-                     for need_id, spec in need_data.get("needs", {}).items() if spec.get("subsistence_from_climate")}
-    if not climate_field:
+    if not need_basket.climate_floor_fields(basket):
         return {}
-    baskets = {}
-    for tile in tile_ids:
-        floors = climate_needs.floors_for_tile({
-            "lat": layer_value(tile, "lat", world_map),
-            "koppen_class": layer_value(tile, "koppen_class", world_map),
-            "koppen_sample_mix": layer_value(tile, "koppen_sample_mix", world_map)})
-        needs = tuple(dataclasses.replace(need, subsistence_per_person=float(floors[climate_field[need.need_id]]))
-                      if need.need_id in climate_field else need for need in basket.needs)
-        baskets[tile] = dataclasses.replace(basket, needs=needs)
-    return baskets
+    return {tile: need_basket.climate_basket(basket, {
+        "lat": layer_value(tile, "lat", world_map),
+        "koppen_class": layer_value(tile, "koppen_class", world_map),
+        "koppen_sample_mix": layer_value(tile, "koppen_sample_mix", world_map)}) for tile in tile_ids}
 
 
 def coin_per_unit(opening):
@@ -138,7 +127,7 @@ def build_setup(sim, opening=None):
     prices = {good: price for good, price in opening["prices"].items() if good in specs and price > 0.0}
     trades_data = _load("world", "trades.json").get("trades", {})
     trades = {trade: TradeSpec(trade, float(spec.get("training_years", 0.0)),
-                               float(spec.get("fatality_risk_per_year", 0.0)))
+                               float(spec.get("fatality_risk_per_year", 0.0)), str(spec.get("family", "")))
               for trade, spec in sorted(trades_data.items())}
     wages = dict(opening["wages"])
     by_people = sorted(tile_ids, key=lambda tile: (-population_by_tile[tile], tile))

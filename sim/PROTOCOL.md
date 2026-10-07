@@ -285,6 +285,12 @@ Two fixes, usable separately or together:
                                                     this year's founder hours, local
                                                     contracts and most local standing.
                                                     Refused for a tile nobody lives on.
+      {"cmd":"build_way","way":"road",             build a road ("road") or railway ("rail") between
+       "from":"<tile>","to":"<tile>"}                two bordering tiles you hold (typed: `build_way
+                                                    road <tile> <tile>`); add "preview":true to
+                                                    quote the km, labour hours, tonnes of material
+                                                    and money first. Pays at market prices; built
+                                                    ways are what journeys and hauls route over.
       {"cmd":"map"} / {"cmd":"map","full":true}    the land you hold: "you_are_based_at",
                                                     "tiles" (name, region, terrain,
                                                     people, days_from_your_base,

@@ -29,7 +29,7 @@ from collections import defaultdict
 
 from sim.engine.ui_port import load_production_catalog
 from sim.engine.ui_port import (
-    tree_merge, validate_material_gating, validate_output_bounds, validate_copy_visibility, validate_production,
+    category_traits, tree_merge, validate_material_gating, validate_output_bounds, validate_copy_visibility, validate_production,
     validate_unheld_gates)
 from sim.engine.ui_port import default_civilisation_id
 from sim.engine.ui_port import (
@@ -387,6 +387,7 @@ def cmd_validate(args):
     errs += validate_copy_visibility.check_copy_visibility(nodes)
     errs += _data_source_errors(nodes)
     errs += validate_map.map_problems()
+    errs += category_traits.check_category_traits(nodes.values())
     errs += validate_material_gating.check_material_gating(nodes, validate_material_gating.load_gating(ROOT))
     from sim.engine.ui_port import civ_start_check
     errs += validate_unheld_gates.check_unheld_gates(nodes, civ_start_check.load_civilisations(ROOT), production)
@@ -1374,6 +1375,8 @@ def main():
                            "good with the largest opening quantity, which may be an odd one; name wheat_kg to be sure)")
     subparser.add_argument("--metals", default="", help="comma-separated metal goods for the volatility figure "
                            "(default: the good backing the currency)")
+    subparser.add_argument("--payback", action="store_true", help="also list nodes whose build cost is repaid "
+                           "suspiciously fast by net earnings (a diagnostic; it changes nothing)")
     sub.add_parser("goals", help="list the selectable goals and their critical-path floors")
     subparser = sub.add_parser("path", help="the critical path to a goal"); subparser.add_argument("goal", nargs="?")
     subparser = sub.add_parser("costs", help="the resource costs of every node"); subparser.add_argument("--top", type=int, default=20)

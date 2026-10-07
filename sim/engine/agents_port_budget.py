@@ -3,7 +3,7 @@ from typing import Any, List, Tuple
 
 from sim.agents.api import THREAT_ARMY_RESPONSE
 from sim.world import demand
-from sim.geography.api import territory
+from sim.geography.api import territory, tiles_held
 
 
 class BudgetView:
@@ -19,7 +19,7 @@ class BudgetView:
 
 	def territory(self) -> Any:
 		"""Frontier, coast and road length of the tiles the state holds."""
-		return territory.holdings(list(self._sim.civ.get("home_regions") or []))
+		return territory.holdings(tiles_held(self._sim.civ))
 
 	def country_strata(self) -> List[Any]:
 		"""The bodies of people (strata actors) of the state's own country, in id order."""

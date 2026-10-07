@@ -572,7 +572,10 @@ def _cmd_move_base(sim, nodes, cmd, ended):
         for tile in sorted(people, key=lambda name: -people[name]):
             if tile == home or people[tile] < 1.0:
                 continue
-            days, hours, money = sim.labour.relocation_quote(tile)
+            quote = sim.labour.relocation_quote(tile)
+            if quote is None:
+                continue
+            days, hours, money = quote
             rows.append({"tile": tile, "name": tile_names.tile_name(tile),
                          "region": tile_names.region_name(tile),
                          "terrain": tile_names.terrain(tile),

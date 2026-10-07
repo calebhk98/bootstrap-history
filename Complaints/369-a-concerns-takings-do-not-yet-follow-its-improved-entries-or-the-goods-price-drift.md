@@ -1,6 +1,6 @@
 # A concern's takings do not yet follow the production entries it uses or the drift of its goods' prices
 
-**Status:** partly - a concern's volume and takings now follow the techniques some producer runs (`sim/engine/concern_volume.py`, `techniques_in_use.py`; pinned by `sim/tests/test_concern_volume.py`). Remaining: only 32 nodes derive their revenue from production entries (the other nodes' revenue is authored, Complaint 283), a founder ahead of the society earns no lead, and prices still come from a solved long-run cost rather than per-producer supply (Complaint 375).
+**Status:** partly - a concern's volume and takings now follow the techniques some producer runs (`sim/engine/concern_volume.py`, `techniques_in_use.py`; pinned by `sim/tests/test_concern_volume.py`). Remaining: most nodes still have authored revenue (Complaint 283), a founder ahead of the society earns no lead, and prices still come from a solved long-run cost rather than per-producer supply (Complaint 375).
 
 What is missing, in order:
 - Nodes whose revenue is authored (all but 32 of the tree) have no entries to follow: they need a stated product (Complaint 283).

@@ -274,7 +274,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "Mica splits into thin sheets cleanly; stable temperature coefficient; suitable for RF and timing circuits."
+  "note": "A capacitor stores electric charge on two conducting plates separated by a thin insulator. In a mica capacitor the insulator is mica, a mineral that splits cleanly into very thin, even sheets, with metal foil or coating on each side. Its capacitance changes very little with temperature or age, so it is used where stability matters, as in radio and timing circuits. It needs a supply of good mica and care in cutting and stacking it."
  },
  {
   "id": "el2_capacitor_fixed_paper",
@@ -428,7 +428,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Arc-free air dielectric; tuning smooth and reversible; stray inductance from leads limits RF performance."
+  "note": "A variable capacitor has interleaved sets of metal plates with only air between them, one set fixed and the other turning on a shaft. Turning the shaft changes how much the plates overlap, and so changes the capacitance smoothly. This is how radio sets are tuned to a station. Air cannot be permanently damaged by a spark, so arcing does no lasting harm. It needs well-fitted plates and a smooth-running bearing, and the metal leads add small unwanted effects at radio frequencies."
  },
  {
   "id": "el2_inductor_air_core",
@@ -3535,7 +3535,7 @@
   "sch": 0,
   "art": 3,
   "conf": "C",
-  "note": "Tunable by cavity dimensions; very efficient for continuous wave; used in radar transmitters from 1940s.",
+  "note": "A klystron is a vacuum tube that amplifies or generates microwaves. A beam of electrons is sent through a hollow metal chamber called a cavity, where the signal speeds some electrons and slows others, so they bunch up as they travel on. The bunches then give up energy to a second cavity, which delivers a much stronger signal. The cavity size sets the frequency. It needs a good vacuum and precise copper cavities, and it was used in radar transmitters.",
   "gov": 1,
   "sus": 8,
   "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"

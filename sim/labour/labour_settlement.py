@@ -7,7 +7,7 @@ import math
 
 from sim.constants import declare
 import sim.geography.api as geography
-from sim.geography.api import Geography, settlement
+from sim.geography.api import settlement
 
 
 class SettlementMixin:
@@ -18,12 +18,6 @@ class SettlementMixin:
         why="Largest share of a tile's people that can live in its one "
             "market town. Keeps the town inside the tile's headcount, and so "
             "inside the nation's; the share itself is tuned, not measured.")
-    RELOCATION_KM_PER_DAY = declare(
-        "RELOCATION_KM_PER_DAY", 25.0, kind="temporary_heuristic",
-        unit="km per day at the baseline travel pace", source=None, confidence="D",
-        why="How fast a household with its goods and staff moves overland "
-            "before the civilisation's own travel tradition (base_reach) "
-            "speeds it up. A walking caravan pace, not fitted to a source.")
     HIRE_TRAVEL_DAYS = declare(
         "HIRE_TRAVEL_DAYS", 1.0, kind="temporary_heuristic",
         unit="days of travel", source=None, confidence="D",
@@ -40,9 +34,13 @@ class SettlementMixin:
             "does not travel; this share is what a founder's name still "
             "carries in a place they have just arrived in.")
 
+    def held_tiles(self):
+        """The tiles this nation holds."""
+        return tuple(geography.tiles_held(self._world.civ))
+
     def settlement_tiles(self):
         """{tile id: people living there} for the tiles this nation holds."""
-        homes = self._world.civ.get("home_regions") or []
+        homes = self.held_tiles()
         total = self._world.population.total
         return {tile: total * settlement.population_share(homes, tile)
                 for tile in settlement.tile_ids(homes)}
@@ -50,19 +48,18 @@ class SettlementMixin:
     def base_tile(self):
         """The tile the household operates from."""
         chosen = getattr(self._world.state.household, "base_tile", None)
-        homes = self._world.civ.get("home_regions") or []
+        homes = self.held_tiles()
         if chosen and chosen in settlement.tile_ids(homes):
             return chosen
         return settlement.default_base_tile(homes)
 
     def distance_to_tile_km(self, tile):
-        return settlement.distance_km(
-            self._world.civ.get("home_regions") or [], self.base_tile(), tile)
+        return settlement.distance_km(self.held_tiles(), self.base_tile(), tile)
 
     def _nominal_town_population(self):
         """The town the reference size and civilisation scale give here,
         before the people who actually live nearby bound it."""
-        homes = self._world.civ.get("home_regions") or []
+        homes = self.held_tiles()
         place = settlement.relative_capacity(homes, self.base_tile())
         return (self.TOWN_POPULATION_REFERENCE * place
                 * (self.POP_SCALE_FLOOR_SHARE
@@ -71,7 +68,7 @@ class SettlementMixin:
     def _town_population_at(self, tile):
         """People in `tile`'s town: the nominal town there, never more than a
         set share of the tile's own people (and so never more than the nation's)."""
-        homes = self._world.civ.get("home_regions") or []
+        homes = self.held_tiles()
         tile_people = self._world.population.total * settlement.population_share(homes, tile)
         place = settlement.relative_capacity(homes, tile)
         nominal = (self.TOWN_POPULATION_REFERENCE * place
@@ -82,12 +79,6 @@ class SettlementMixin:
     def home_town_population_estimate(self):
         """People in the base's town."""
         return self._town_population_at(self.base_tile())
-
-    def travel_speed_km_per_day(self):
-        """How fast a household with its goods and staff moves when it relocates:
-        the walking pace, sped up by the civilisation's travel tradition (base_reach)."""
-        return self.RELOCATION_KM_PER_DAY * (
-            1.0 + Geography.REACH_SPEED_COEF * float(self._world.civ.get("base_reach", 2)))
 
     def held_technologies(self):
         """Technologies this actor's people can travel with: the civilisation's own and those built."""
@@ -101,18 +92,19 @@ class SettlementMixin:
         base = self.base_tile()
         if base is None:
             return {}
-        key = (base, held, days_budget)
+        built = self._world.state.economy.improvements
+        key = (base, held, days_budget, repr(sorted((edge, sorted(ways)) for edge, ways in built.items())))
         cache = self.__dict__.setdefault("_reachable_tiles_cache", {})
         if key not in cache:
             cache.clear()
             modes = geography.usable_modes([held])
-            cache[key] = geography.reach([base], modes, days_budget, held_nodes=held)
+            cache[key] = geography.reach([base], modes, days_budget, built, held_nodes=held)
         return cache[key]
 
     def reach_population_estimate(self, days_budget=None):
         """People in the home territory's towns within a hire's travel budget of the base,
         the base's own town always included."""
-        homes = self._world.civ.get("home_regions") or []
+        homes = self.held_tiles()
         base = self.base_tile()
         within = self.reachable_tiles(days_budget)
         return sum(self._town_population_at(tile) for tile in settlement.tile_ids(homes)
@@ -132,10 +124,19 @@ class SettlementMixin:
         return sum(count * self.labour_market.unscarce_annual(trade)
                    for trade, count in household.employees.items())
 
+    def travel_days_to_tile(self, tile):
+        """Days the household needs to reach `tile` by the fastest route over the modes its people hold
+        (geography's route over the ways built, weighted by time); None when no route joins the tiles."""
+        held = self.held_technologies()
+        found = geography.route([self.base_tile()], [tile], geography.usable_modes([held]),
+                                self._world.state.economy.improvements, held_nodes=held, fastest=True)
+        return None if found is None else found["days"]
+
     def relocation_quote(self, tile):
-        """(days, hours lost, money) to move the base to `tile`."""
-        km = self.distance_to_tile_km(tile)
-        days = km / self.travel_speed_km_per_day()
+        """(days, hours lost, money) to move the base to `tile`; None when no route joins it to the base."""
+        days = self.travel_days_to_tile(tile)
+        if days is None:
+            return None
         year_share = min(1.0, days / 365.0)
         hours = year_share * self.director_pool()
         # The whole payroll is paid while it walks, and does no other work.
@@ -153,14 +154,18 @@ class SettlementMixin:
             return False, "you are already based at %s. Nothing was changed." % tile
         if people[tile] < 1.0:
             return False, "nobody lives at %s: no cultivable land feeds anyone there." % tile
-        days, hours, money = self.relocation_quote(tile)
+        quote = self.relocation_quote(tile)
+        if quote is None:
+            return False, "no route over the ways your people can travel joins %s to your base." % tile
+        days, hours, money = quote
         household = self._world.state.household
         if money > household.capital:
             return False, ("moving to %s takes about %d days and would cost %s in "
                            "wages while your household travels; you have %s."
                            % (tile, math.ceil(days), "{:,.0f}".format(money),
                               "{:,.0f}".format(household.capital)))
-        household.cost_capital(money, "relocation")
+        self._world.pay_edge(self._world.EDGE_WORKERS, money, "relocation")
+        household.total_spend += money
         household.relocation_hours_this_year = (
             (household.relocation_hours_this_year or 0.0) + hours)
         # Local contracts and the local market's memory stay behind.

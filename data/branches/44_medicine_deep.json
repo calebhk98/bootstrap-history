@@ -480,7 +480,7 @@
   "adopt_yrs": 1,
   "dev_years": 8,
   "dev_people": 1,
-  "note": "Indirect laryngoscopy: angled mirror reflects light and image back; direct intubation for anesthesia came later",
+  "note": "A laryngoscope lets a doctor see the throat above the vocal cords. In the indirect form a small angled mirror on a long handle is held at the back of the mouth, while light from a lamp or a head mirror is reflected down the throat, and the doctor sees the vocal cords in the mirror. It needs a good light source and a small mirror, and it makes the voice box visible for diagnosis. Direct views for anaesthesia came later.",
   "conf": "B",
   "up_hours": 0
  },
@@ -772,7 +772,7 @@
   "adopt_yrs": 1,
   "dev_years": 8,
   "dev_people": 2,
-  "note": "Precisely ruled counting grid; known depth; dilution factor; normal range and interpretation of anemia and polycythemia",
+  "note": "A haemocytometer is a thick glass slide with a grid of fine lines etched in it, forming a chamber of exactly known depth. A blood sample is diluted by a known amount and placed in the chamber, and the cells are counted under a microscope in a few of the squares. Because the volume counted is known, the count gives the number of cells per volume of blood, which shows conditions such as anaemia. The grid must be ruled very accurately.",
   "conf": "B",
   "up_hours": 0
  },
@@ -2024,6 +2024,8 @@
  },
  {
   "id": "md2_penicillin_fermentation",
+  "copy_visibility": 0.15,
+  "copy_visibility_reason": "The brown liquor and the tank say nothing of the mould strain, the medium or the aeration; the wartime American effort needed the strain and the process shared from Britain.",
   "name": "Deep tank fermentation",
   "cat": "therapeutics",
   "kind": "ENGINEERING",
@@ -2592,7 +2594,9 @@
      "order": 8
     }
    ]
-  }
+  },
+  "up_hours": 4.5,
+  "_internal": "[HEURISTIC: yearly upkeep taken as one percent of the construction labour hours (repair and keeping the works in service); no wear or failure model yet.]"
  },
  {
   "id": "md2_chlorination",
@@ -2645,7 +2649,9 @@
   "dev_years": 15,
   "dev_people": 3,
   "note": "Storm overflows during rain; prevents plant overload; but combined systems cheaper; infiltration and inflow challenges",
-  "conf": "B"
+  "conf": "B",
+  "up_hours": 5.5,
+  "_internal": "[HEURISTIC: yearly upkeep taken as one percent of the construction labour hours (repair and keeping the works in service); no wear or failure model yet.]"
  },
  {
   "id": "md2_activated_sludge",
@@ -2672,7 +2678,9 @@
   "dev_years": 20,
   "dev_people": 4,
   "note": "Microorganism flocs oxidize organic matter; aeration essential; solids separation by settling; sludge recycling; process control critical",
-  "conf": "B"
+  "conf": "B",
+  "up_hours": 5.5,
+  "_internal": "[HEURISTIC: yearly upkeep taken as one percent of the construction labour hours (repair and keeping the works in service); no wear or failure model yet.]"
  },
  {
   "id": "md2_milk_pasteurisation",
@@ -2837,7 +2845,9 @@
      "order": 3
     }
    ]
-  }
+  },
+  "up_hours": 5,
+  "_internal": "[HEURISTIC: yearly upkeep taken as one percent of the construction labour hours (repair and keeping the works in service); no wear or failure model yet.]"
  },
  {
   "id": "md2_vector_control",

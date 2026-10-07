@@ -6,7 +6,9 @@ through the world's market; the trader books what it paid, what it got and the c
 """
 from typing import Any, Dict, List, Optional, Tuple
 
+from . import ledger
 from .base import RecordedActor
+from .edges import EDGE_FREIGHT, EDGE_MARKET, EDGE_POOLED_CAPITAL
 from .borrowing import TRACK_RECORD_YEARS
 from .policy import Decision, Option
 from .tuning import EXIT_LOSS_YEARS
@@ -79,9 +81,9 @@ class Trader(RecordedActor):
 		tonnes = detail["tonnes"]
 		paid, received = world.ship(self.actor_id, detail["material"], tonnes, detail["source"], detail["destination"])
 		freight = world.freight_between(detail["source"], detail["destination"], detail["material"], tonnes)
-		self.debit(paid, "edge:market purchase")
-		self.debit(freight, "edge:freight")
-		self.credit(received, "edge:market sale")
+		ledger.transfer(self, world.edge(EDGE_MARKET), paid, "edge:market purchase")
+		ledger.transfer(self, world.edge(EDGE_FREIGHT), freight, EDGE_FREIGHT)
+		ledger.transfer(world.edge(EDGE_MARKET), self, received, "edge:market sale")
 		margin = received - paid - freight
 		route = self.record.routes.setdefault(
 			option.subject, {"material": detail["material"], "tonnes": 0.0, "margin": 0.0, "years": 0})
@@ -107,7 +109,7 @@ class Trader(RecordedActor):
 			self.record.routes.clear()
 			self.record.exited_year = world.year
 			if self.money > 0.0:
-				self.debit(self.money, "edge:pooled capital")  # its owners take back what is left
+				ledger.transfer(self, world.edge(EDGE_POOLED_CAPITAL), self.money, EDGE_POOLED_CAPITAL)  # its owners take back what is left
 
 
 from .registry import register_actor_kind  # noqa: E402

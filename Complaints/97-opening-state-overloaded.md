@@ -1,6 +1,6 @@
 # Opening state is informative but overloaded
 
-**Status:** partly - `state` is short by default (situation, what you can do now, goal, risks, then a footer naming the sections), with `state full` and `state <section>` (one section table in `sim/ui/proto/render_screen_state_views.py`); typed `help commands` is a short index of command groups, `help commands <group>` lists one, `help commands all` pages the full listing (`sim/ui/proto/help_commands.py`); unknown commands get fuzzy close matches; test `sim/tests/test_state_help_disclosure.py`; remains: the JSON `{"cmd":"help","topic":"commands"}` still returns the full listing (agents and tests rely on it), and the step reply still renders the full state
+**Status:** partly - owner decision (2026-10-06): JSON `help commands` keeps the full listing, built automatically from the command registry (as intended); the step reply shows the short state with one line at the very end pointing to `state full` (done: the step reply is the short state plus one closing `state full` pointer; remaining: the opening-screen hierarchy and the help items below)
 
 Before the player makes their first decision, the initial state output can expose them to:
 

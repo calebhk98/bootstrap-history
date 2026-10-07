@@ -6,6 +6,8 @@ last meeting: the state and the founder are credited, the firms are credited in 
 purses, and the society's savers (households, not modelled actor by actor) are credited as a running
 total on the market record. Nothing is created: what lenders receive is what borrowers paid.
 """
+
+from sim.agents.api import edges, ledger
 INTEREST_PURPOSE = "interest_on_lending"
 
 
@@ -33,13 +35,14 @@ class InterestPoolMixin:
             if share <= 0.0:
                 continue
             if source == "state":
-                self.state_treasury().credit(share, INTEREST_PURPOSE)
+                ledger.transfer(self.edge(edges.EDGE_INTEREST), self.state_treasury(), share, INTEREST_PURPOSE)
             elif source == "founder":
-                self.household.credit(share, INTEREST_PURPOSE)
+                ledger.transfer(self.edge(edges.EDGE_INTEREST), self.household, share, INTEREST_PURPOSE)
             elif source == "firms" and firm_funds > 0.0:
                 for firm in firms:
-                    firm.credit(share * firm.money / firm_funds, INTEREST_PURPOSE)
+                    ledger.transfer(self.edge(edges.EDGE_INTEREST), firm, share * firm.money / firm_funds, INTEREST_PURPOSE)
             else:
                 record.interest_to_households += share
+                self.pay_savers(share)
             record.interest_received_total += share
         return pool

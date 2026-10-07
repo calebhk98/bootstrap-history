@@ -1,12 +1,9 @@
 {
- "_note": "A region's lat/lon anchor is not stored: sim/geography/regions.py computes it as the land-area-weighted centre of the region's tiles. coastal marks whether the region is reachable and workable by sea rather than only overland; a landlocked region can still be reached, just more slowly and without the sea-going discount a coastal society gets. route_difficulty multiplies the raw great-circle distance to approximate a real voyage's difficulty where straight-line distance badly understates it (ice, blue-water crossings with no coastal stepping-stones, hostile mountain and desert relay routes) or slightly overstates it (a fast, reliable, wind-assisted route like the monsoon crossing to India). minerals gives each region's rough share of a material's total output AT THIS TECHNOLOGICAL LEVEL, normalised so Rome's own home regions sum to about 1.0 per metal -- this reproduces data/world/resources.json's Roman totals for a Roman-home-region civilization exactly, and gives every other civilization the same yardstick for ITS OWN ground instead of the population-scaled guess the simulator used to make. A metal whose share is tied to a named deposit is NOT listed here: that share lives on the deposit in data/world/geography/deposits/ancient.json (which sits on a land tile), and sim/world/mineral_shares.py adds it back to the region its tile belongs to, so a region's total is this table plus its deposits.",
+ "_note": "A region is a label over tiles. Its anchor point, coast and distance from anyone are not stored: they are derived from its tiles (sim/geography/regions.py) and from the fastest route over the tile graph (sim/geography/reach_bands.py). minerals is the share of each metal's output not yet tied to a deposit on a tile.",
  "entries": [
   {
    "id": "italia",
    "name": "Italy",
-   "reach_from_italia": 0,
-   "coastal": true,
-   "route_difficulty": 1.0,
    "minerals": {
     "coal": 0.0,
     "tin": 0.0,
@@ -17,9 +14,6 @@
   {
    "id": "gaul_germania",
    "name": "Gaul and the Germanies",
-   "reach_from_italia": 1,
-   "coastal": true,
-   "route_difficulty": 1.0,
    "minerals": {
     "coal": 0.55,
     "silver": 0.0,
@@ -30,9 +24,6 @@
   {
    "id": "britannia",
    "name": "Britain",
-   "reach_from_italia": 1,
-   "coastal": true,
-   "route_difficulty": 1.0,
    "minerals": {
     "coal": 0.45,
     "saltpetre": 0.0
@@ -42,9 +33,6 @@
   {
    "id": "hispania",
    "name": "Iberia",
-   "reach_from_italia": 1,
-   "coastal": true,
-   "route_difficulty": 1.0,
    "minerals": {
     "coal": 0.0,
     "saltpetre": 0.0
@@ -54,9 +42,6 @@
   {
    "id": "north_africa",
    "name": "North Africa and Egypt",
-   "reach_from_italia": 1,
-   "coastal": true,
-   "route_difficulty": 1.0,
    "minerals": {
     "coal": 0.0,
     "tin": 0.0,
@@ -68,9 +53,6 @@
   {
    "id": "greece_anatolia",
    "name": "Greece and Anatolia",
-   "reach_from_italia": 1,
-   "coastal": true,
-   "route_difficulty": 1.0,
    "minerals": {
     "coal": 0.0,
     "tin": 0.0,
@@ -81,9 +63,6 @@
   {
    "id": "levant_mesopotamia",
    "name": "Syria and Mesopotamia",
-   "reach_from_italia": 1,
-   "coastal": true,
-   "route_difficulty": 1.0,
    "minerals": {
     "coal": 0.0,
     "tin": 0.0,
@@ -96,9 +75,6 @@
   {
    "id": "scandinavia",
    "name": "Scandinavia and the Baltic",
-   "reach_from_italia": 2,
-   "coastal": true,
-   "route_difficulty": 1.1,
    "minerals": {
     "iron": 0.25,
     "coal": 0.02,
@@ -113,9 +89,6 @@
   {
    "id": "arabia_horn",
    "name": "Arabia and the Horn of Africa",
-   "reach_from_italia": 2,
-   "coastal": true,
-   "route_difficulty": 1.0,
    "minerals": {
     "iron": 0.02,
     "coal": 0.0,
@@ -129,9 +102,6 @@
   {
    "id": "india",
    "name": "India and Ceylon",
-   "reach_from_italia": 2,
-   "coastal": true,
-   "route_difficulty": 0.85,
    "minerals": {
     "iron": 0.15,
     "coal": 0.0,
@@ -146,9 +116,6 @@
   {
    "id": "persia_centralasia",
    "name": "Persia and Central Asia",
-   "reach_from_italia": 2,
-   "coastal": false,
-   "route_difficulty": 1.2,
    "minerals": {
     "iron": 0.1,
     "coal": 0.0,
@@ -163,9 +130,6 @@
   {
    "id": "china",
    "name": "China",
-   "reach_from_italia": 3,
-   "coastal": true,
-   "route_difficulty": 1.1,
    "minerals": {
     "iron": 0.9,
     "coal": 1.2,
@@ -180,9 +144,6 @@
   {
    "id": "west_africa",
    "name": "West and Central Africa",
-   "reach_from_italia": 3,
-   "coastal": true,
-   "route_difficulty": 1.0,
    "minerals": {
     "iron": 0.05,
     "coal": 0.0,
@@ -197,9 +158,6 @@
   {
    "id": "southeast_asia",
    "name": "Malaya, Indonesia, the Spice Islands",
-   "reach_from_italia": 3,
-   "coastal": true,
-   "route_difficulty": 1.0,
    "minerals": {
     "iron": 0.05,
     "coal": 0.0,
@@ -214,9 +172,6 @@
   {
    "id": "east_africa_south",
    "name": "East Africa and the Cape",
-   "reach_from_italia": 4,
-   "coastal": true,
-   "route_difficulty": 1.3,
    "minerals": {
     "iron": 0.05,
     "coal": 0.0,
@@ -231,9 +186,6 @@
   {
    "id": "siberia_urals",
    "name": "The Urals and Siberia",
-   "reach_from_italia": 4,
-   "coastal": false,
-   "route_difficulty": 1.4,
    "minerals": {
     "iron": 0.15,
     "coal": 0.05,
@@ -248,9 +200,6 @@
   {
    "id": "americas_carib",
    "name": "The Caribbean and Mesoamerica",
-   "reach_from_italia": 5,
-   "coastal": true,
-   "route_difficulty": 1.5,
    "minerals": {
     "iron": 0.05,
     "coal": 0.0,
@@ -265,9 +214,6 @@
   {
    "id": "americas_south",
    "name": "South America, Amazonia and the Andes",
-   "reach_from_italia": 5,
-   "coastal": true,
-   "route_difficulty": 1.5,
    "minerals": {
     "iron": 0.05,
     "coal": 0.0,
@@ -282,9 +228,6 @@
   {
    "id": "americas_north",
    "name": "North America",
-   "reach_from_italia": 5,
-   "coastal": true,
-   "route_difficulty": 1.5,
    "minerals": {
     "iron": 0.1,
     "coal": 0.1,
@@ -298,9 +241,6 @@
   {
    "id": "australia_pacific",
    "name": "Australia and the Pacific",
-   "reach_from_italia": 6,
-   "coastal": true,
-   "route_difficulty": 1.8,
    "minerals": {
     "iron": 0.02,
     "coal": 0.02,
@@ -314,9 +254,6 @@
   {
    "id": "greenland_arctic",
    "name": "Greenland and the Arctic",
-   "reach_from_italia": 6,
-   "coastal": true,
-   "route_difficulty": 2.2,
    "minerals": {
     "iron": 0.01,
     "coal": 0.0,

@@ -10,7 +10,7 @@ import math
 from dataclasses import dataclass
 from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
-from . import sites, unit_cost
+from . import labour_state, sites, unit_cost
 from .market_areas import MarketArea
 from .producers import Producer, live_input_prices
 from .setup import labour_area
@@ -147,7 +147,7 @@ def entry_siting(setup, record, view, area_map, carriage) -> Siting:
             cost = cost_per_run(recipe, wages, live_input_prices(probe, recipe, view),
                                 record.land_rent.get(tile, 0.0) * setup.land_per_run.get(recipe_id, 0.0),
                                 carriage.cost_per_tonne(tile, demand.anchor_tile), factor, tonnes)
-            spare = spare_hours(record.workforce.get(tile, {}), setup.working_hours_per_year,
+            spare = spare_hours(labour_state.people_by_trade(record.workforce, labour_area(tile)), setup.working_hours_per_year,
                                 committed.get(tile, 0.0))
             candidates.append(Candidate(tile, cost, staffable_runs(recipe, spare),
                                         sites.headroom_runs(recipe, tile, by_recipe, capacity.get((recipe_id, tile), 0.0))))

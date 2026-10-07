@@ -16,6 +16,8 @@ from .money_audit import MoneyAudit, year_report
 from .entry_year import close_idle_producers, open_entrants, restake_owners
 from .households_own import (hours_for_own_plan, own_production, own_production_options, plot_hectares,
                              withhold_hours)
+from .labour_inputs import labour_context
+from .labour_state import scale_people
 from .opening import open_economy
 from .protocols import YearInputs
 from .record import EconomyRecord
@@ -24,7 +26,7 @@ from .types import Bid, EDGE_CONSUMPTION, GoodsMove, is_edge
 from .year_close import (check_money, close_agents, dispatch_merchants, money_taxes, national_prices,
                          remember_basket_price_level, wear_and_spoilage)
 from .year_goods import add_orders, clear_goods, cohort_orders, merchant_orders, state_orders
-from .year_labour import clear_labour, follow_asks, labour_offers, move_workers, outside_option_by_tile
+from .year_labour import clear_labour, held_share_by_area, labour_offers, outside_option_by_tile
 from .year_ledger import YearLedger
 
 
@@ -100,9 +102,10 @@ class Economy:
         for orders in inputs.engine_orders.values():
             labour_bids.extend(orders.labour_bids)
         state_budget.plan_year(setup, record, view, labour_bids)
-        offers, kept = withhold_hours(labour_offers(setup, record, view, outside_option_by_tile(setup, record, view)),
-                                      self._shortfall_hours())
-        clear_labour(setup, record, labour_bids, offers, ledger)
+        everyone = labour_offers(setup, record, view, outside_option_by_tile(setup, record, view))
+        offers, kept = withhold_hours(everyone, self._shortfall_hours())
+        clear_labour(setup, record, labour_bids, offers, ledger, labour_context(setup, record, view, self.carriage, inputs),
+                     held_share_by_area(everyone, offers))
         self._grow_own(offers, ledger, inputs.harvest_factor, kept)
         order_book = {}
         funds = cohort_orders(setup, record, view, ledger, order_book)
@@ -138,8 +141,6 @@ class Economy:
             record.property_income[lender] = record.property_income.get(lender, 0.0) + received
         for payment in rent:
             record.property_income[payment.payee] = record.property_income.get(payment.payee, 0.0) + payment.amount
-        move_workers(setup, record, ledger)
-        follow_asks(setup, record, view, ledger)
         wear_and_spoilage(setup, record)
         level = remember_basket_price_level(setup, record)
         record.memory.year += 1
@@ -162,12 +163,10 @@ class Economy:
             scale = after / before
             record.cohorts[cohort_id] = replace(cohort, people=cohort.people * scale,
                                                   working_people=cohort.working_people * scale)
-        for tile, workforce in record.workforce.items():
-            before = people_now.get(tile, 0.0)
+        for tile, before in people_now.items():
             after = inputs.population_by_tile.get(tile, before)
             if before > 0.0 and after != before:
-                for trade in workforce:
-                    workforce[trade] *= after / before
+                scale_people(record.workforce, labour_area(tile), after / before)
 
     def _follow_yields(self, inputs: YearInputs) -> None:
         for producer_id, factor in inputs.yield_factor_by_producer.items():
@@ -188,7 +187,7 @@ class Economy:
         for cohort_id, cohort in sorted(self.record.cohorts.items()):
             tile = self.setup.tiles.get(cohort.tile)
             hours[cohort_id] = hours_for_own_plan(cohort, self._own_plot_options(),
-                                                        tile.fertility if tile else 0.0)
+                                                  tile.fertility if tile else 0.0)
         return hours
 
     def _grow_own(self, offers, ledger: YearLedger, harvest_factor: float = 1.0,

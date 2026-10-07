@@ -28,6 +28,7 @@ engine, regardless of which file a method lives in.
 from sim.constants import declare
 from . import money_units
 from sim.unit_conversions import PERCENT_SCALE
+from sim.agents.api import edges
 
 
 class GoodsMixin:
@@ -558,7 +559,7 @@ class GoodsMixin:
         household = self.state.household
         if hectares <= 0 or cost > household.capital:
             return 0.0
-        household.debit(cost, "farmland bought")
+        self.pay_edge(edges.EDGE_LANDOWNERS, cost, "farmland bought")
         economy = self.state.economy
         economy.farm_hectares = (getattr(economy, "farm_hectares", 0.0) or 0.0) + hectares
         return hectares
@@ -574,7 +575,7 @@ class GoodsMixin:
         household = self.state.household
         if places <= 0 or cost > household.capital:
             return 0.0
-        household.debit(cost, "worker housing built")
+        self.pay_edge(edges.EDGE_BUILDERS, cost, "worker housing built")
         household.worker_housing_places = (getattr(household, "worker_housing_places", 0.0) or 0.0) + places
         return places
 

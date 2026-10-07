@@ -16,7 +16,7 @@ in its own territory costs nothing extra to move (geography.json's own
 per-region `minerals` table decides "produces," never an invented distance);
 a material it does not costs MORE, by an amount traceable to transport.py's
 own per-tonne-km feed and driver-hour figures and the real great-circle
-distance between two real region centroids; and a material geography.json
+distance of geography's route to the nearest region that produces it; and a material geography.json
 has no location data for at all (gold, and everything outside the seven
 tracked minerals) is left alone rather than guessed at, per CLAUDE.md SS3.1.
 
@@ -25,12 +25,12 @@ Wires transport.py into economy.py through a live Sim and geography mineral tabl
 from .harness import *  # noqa: F401,F403
 
 from sim.geography import transport as _transport
-from sim.engine.data import haversine_km
+from sim.geography import api as geography_api
 
 # =============================================================================
 # HOME IS HOME: a material produced somewhere in this civilization's own
 # territory costs nothing extra to haul, regardless of how far that region
-# sits from the civilization's own geographic centroid.
+# is from the tiles it holds.
 # =============================================================================
 s_rome = sim(capital=1.0)
 for _mat in ("iron", "copper", "coal"):
@@ -70,21 +70,20 @@ check("...so the SAME node cost calculation prices coal higher for a "
 
 # =============================================================================
 # THE DISTANCE IS REAL GEOGRAPHY, NOT INVENTED. material_freight_distance_km
-# has to equal an independent great-circle calculation between this
-# civilization's own home centroid and the nearest coal-bearing region's
-# real lat/lon in data/world/geography.json - not a number this crossing
-# made up for the occasion (CLAUDE.md SS3.1).
+# has to equal geography's own route from the tiles held to the nearest
+# producing region, not a number this crossing made up (CLAUDE.md SS3.1).
 # =============================================================================
-_home_lat, _home_lon = s_mexica.geography.home_centroid
 _candidates = [region_id for region_id, region in s_mexica.geography.regions.items()
                if float((region.get("minerals") or {}).get("coal", 0.0)) > 0.0]
-_expected_km = min(
-    haversine_km(_home_lat, _home_lon,
-                 s_mexica.geography.regions[_rid]["lat"], s_mexica.geography.regions[_rid]["lon"])
-    for _rid in _candidates)
-check("the freight distance matches an independent haversine calculation "
-      "against geography.json's own region coordinates, to the metre",
-      abs(_mexica_coal_km - _expected_km) < 1e-6,
+_held = geography_api.tiles_held(s_mexica.civ, s_mexica.world_map)
+_held_nodes = s_mexica.geography._world.held_nodes
+_route = geography_api.route(_held, geography_api.tiles_of_regions(_candidates, s_mexica.world_map),
+                             geography_api.usable_modes([_held_nodes]), s_mexica.state.economy.improvements,
+                             held_nodes=_held_nodes, world_map=s_mexica.world_map)
+_expected_km = _route["km"] if _route else None
+check("the freight distance is the kilometres of geography's cheapest route over the modes held "
+      "from the tiles held to the nearest coal-bearing region",
+      _expected_km is not None and abs(_mexica_coal_km - _expected_km) < 1e-6,
       (_mexica_coal_km, _expected_km))
 
 # =============================================================================

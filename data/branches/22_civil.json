@@ -1,6 +1,8 @@
 [
  {
   "id": "civ_arch_roman",
+  "copy_visibility": 0.8,
+  "copy_visibility_reason": "The voussoirs and keystone are visible on the finished arch, so a mason can copy the form; the centering and setting out are learned by working.",
   "name": "Masonry arch",
   "cat": "structures",
   "kind": "ENGINEERING",
@@ -56,6 +58,8 @@
  },
  {
   "id": "civ_dome_roman",
+  "copy_visibility": 0.5,
+  "copy_visibility_reason": "The outer form of a dome is plain to see, but the centering, the coursing and the mortar that let it stand are not; many later domes cracked while copying them.",
   "name": "Roman concrete dome",
   "cat": "structures",
   "kind": "ENGINEERING",
@@ -87,6 +91,8 @@
  },
  {
   "id": "civ_aqueduct_roman",
+  "copy_visibility": 0.8,
+  "copy_visibility_reason": "Arcades and channels stand in the open and the form is copied by sight; the levelling of the long gentle gradient is the part not shown.",
   "name": "Roman aqueduct with inverted siphons",
   "cat": "water",
   "kind": "INFRASTRUCTURE",
@@ -2109,7 +2115,7 @@
    "copper_kg": 15
   },
   "cap_hours": 4032.375834825865,
-  "up_hours": 0,
+  "up_hours": 3,
   "yrs": 1,
   "risk": 0.1,
   "sus": 0,
@@ -2122,6 +2128,6 @@
   "traits": [
    "infrastructure"
   ],
-  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
+  "_internal": "[HEURISTIC: yearly upkeep taken as one percent of the construction labour hours (repair and keeping the works in service); no wear or failure model yet.] [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  }
 ]

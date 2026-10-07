@@ -56,6 +56,16 @@ def summarize(bids: Sequence[Bid], offers: Sequence[Offer]) -> Dict[str, List[Li
             "offers": [[price, quantity] for price, quantity in sorted(by_price.items())]}
 
 
+def bids_of(curve: Dict[str, List[List[float]]], good: str) -> List[Bid]:
+    """The summarised buyers' schedules as bids on the summary's own area."""
+    return _bids(curve, good)
+
+
+def offers_of(curve: Dict[str, List[List[float]]], good: str) -> List[Offer]:
+    """The summarised sellers' reservations as offers on the summary's own area."""
+    return _offers(curve, good)
+
+
 def _bids(curve: Dict[str, List[List[float]]], good: str) -> List[Bid]:
     return [Bid("curve:%d" % number, good, CURVE_AREA, CURVE_TILE, floor, flexible, reference, elasticity, budget,
                 0, math.inf if ceiling is None else ceiling)

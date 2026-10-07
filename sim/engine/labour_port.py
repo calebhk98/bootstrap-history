@@ -1,5 +1,6 @@
 """The engine's side of the labour wall: what the labour package reads from the simulation, and where
 the simulation keeps its `Labour`."""
+from sim.agents.api import edges
 from sim.labour.api import Labour
 from . import data, money_units, purchase_rule, solve_prices_core, wage_schedule
 
@@ -8,9 +9,22 @@ class LabourWorld:
     """What one simulation's labour reads from it: the state, the civilisation, the mechanics and
     prices around it, and the engine's trade tables. One explicit member per thing labour uses."""
 
+    # the named edges labour's postings name as their counterparty
+    EDGE_WORKERS = edges.EDGE_WORKERS
+    EDGE_SLAVE_TRADERS = edges.EDGE_SLAVE_TRADERS
+    EDGE_EMPLOYERS = edges.EDGE_EMPLOYERS
+
     def __init__(self, sim):
         self._sim = sim
         self._trade_registry = None
+
+    def pay_edge(self, edge_name, amount, purpose):
+        """The founder's household pays a named edge."""
+        self._sim.pay_edge(edge_name, amount, purpose)
+
+    def receive_from_edge(self, edge_name, amount, purpose):
+        """A named edge pays the founder's household."""
+        self._sim.receive_from_edge(edge_name, amount, purpose)
 
     @property
     def wages(self):

@@ -1,6 +1,6 @@
 # Deleting `data/prices.json`
 
-**Status:** partly
+**Status:** partly - the file is deleted and nothing opens it; remains (see Remains): supply curves inferred from price, an import or unavailability policy for gated materials, commodities.json and the book labourer wage still in book money, and two photovoltaic entries with no requires_node
 
 `data/prices.json` is not a calibration dataset and will not survive the
 migration. Historical observations that are independently worth testing may be

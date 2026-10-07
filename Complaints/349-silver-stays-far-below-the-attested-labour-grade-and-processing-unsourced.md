@@ -1,10 +1,11 @@
 # Silver stays near 380 hours per kg: deposit grades and processing hours are unsourced
 
-**Status:** open
+**Status:** partly - Eastern Desert and Nubian gold deposit added, jarosite grade confidence raised, Melle recorded as a reference; grades, processing hours, water inflow and support work stay unsourced
 
 After 348 the model's silver is about 379 hours per kg against about 1,000-1,700 (Bettenay Table 3, all workers) and about 3,700 (Strabo-Polybius, 305). A twelve-hour day at the opening wage is about ten denarii of silver against the attested one. Not tuned. What remains, each needing a source:
 
 - Ore grade. Deposit grades are round figures, confidence C and D. Bettenay's Melle needs about 43 tonnes of ore per tonne of lead; the model's lead deposits need 6-12 (150-180 kg per tonne is 17-21 percent galena, above his extreme case of 14). This is a larger factor than every term in 348 together. Melle is a poor thin deposit, so it does not fix the Roman figure; Davies, Domergue and Hopper on Spanish and Laurion ore were not opened.
+- Staff-share ratios to compare the constants with (Bettenay 2022, Metalla 26.2, workforce section, about pp. 76-77, read; the ratios come from his sources, Berg 1988 and Vozar 2000 among them): face miners are 40 to 70 percent of mine staff; ore processing staff are about as many as the mine staff, from 30 percent of total staff (early Kongsberg) to 50-65 percent (Slovak operations); as many people may supply wood as work the mine, at 1 to 1.5 green tonnes of wood per forest worker per day realistic (2.5 to 5 upper estimate). His Melle model comes to 6,000 to 7,200 hours per kg of silver (250 to 300 workers, 300 days, a 12-hour day taken from the Laurion case in his Table 2, 150 kg of silver a year), joint with about 52 tonnes of lead a year, so it is an upper reference for a poor deposit and not a silver-only cost.
 - Dressing and smelting hours. Bettenay has processing staff about equal to mine staff; the lead recipe's dressing (20 hours per tonne of ore, a heuristic) plus smelting comes to about half his per-tonne-of-ore figure.
 - Support work in shallow mines (carrying, hoisting, drainage, timber) comes to about 0.36 of face hours, just under the 0.43 his 40-70 percent face share implies; deep mines are inside it. Ventilation shaft and amortised sinking are not in that ratio.
 - Water inflow per tonne (3 and 0.5 tonnes of water per tonne of ore) has no source; drainage is the largest deep-mine term. Drainage adits are not modelled.

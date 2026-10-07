@@ -61,12 +61,30 @@ class MineralSharesAreNotDuplicatedTests(unittest.TestCase):
     def test_regional_totals_still_sum_to_one_over_the_home_regions(self):
         from sim.world import mineral_shares
         geography = _geography()
-        home = [region_id for region_id, region in geography["regions"].items()
-                if not region_id.startswith("_") and region["reach_from_italia"] <= 1]
+        with open(os.path.join(_ROOT, "data", "civilizations", "rome_100ad.json"), encoding="utf-8") as handle:
+            home = json.load(handle)["home_regions"]
         regional = mineral_shares.regional_mineral_shares(geography)
         for metal in ("iron", "copper", "tin", "lead", "silver"):
             total = sum(regional[region_id].get(metal, 0.0) for region_id in home)
             self.assertAlmostEqual(total, 1.0, delta=0.06, msg=metal)
+
+
+class RegionRecordsHoldNoTileDataTests(unittest.TestCase):
+
+    LABEL_FIELDS = {"name", "minerals", "note"}
+
+    def test_a_region_record_is_a_label_with_the_shares_not_yet_on_a_tile(self):
+        extra = {region_id: sorted(set(region) - self.LABEL_FIELDS)
+                 for region_id, region in _geography()["regions"].items()
+                 if not region_id.startswith("_") and set(region) - self.LABEL_FIELDS}
+        self.assertEqual(extra, {})
+
+    def test_no_region_field_repeats_a_tile_layer(self):
+        from sim.geography import api
+        layers = set(api.open_map().layers) | {"lat", "lon", "coastal", "land_area_km2", "borders"}
+        for region_id, region in _geography()["regions"].items():
+            if not region_id.startswith("_"):
+                self.assertEqual(set(region) & layers, set(), region_id)
 
 
 class ForestAreaReadsTilesTests(unittest.TestCase):
@@ -76,9 +94,8 @@ class ForestAreaReadsTilesTests(unittest.TestCase):
         test_sim = sim(civ="rome_100ad")
         geography = _geography()
         tiles = geography["land_tiles"]["tiles"]
-        expected = sum(tiles[tile_id]["land_area_km2"]
-                       for region_id in test_sim.civ["home_regions"]
-                       for tile_id in geography["land_tiles"]["region_to_tiles"][region_id])
+        from sim.geography.api import tiles_held
+        expected = sum(tiles[tile_id]["land_area_km2"] for tile_id in tiles_held(test_sim.civ))
         self.assertAlmostEqual(test_sim.home_land_area_km2(), expected, places=6)
 
     def test_region_records_hold_no_land_figures(self):
@@ -86,3 +103,44 @@ class ForestAreaReadsTilesTests(unittest.TestCase):
         test_sim = sim(civ="rome_100ad")
         for region in test_sim.geography.regions.values():
             self.assertNotIn("land", region)
+
+
+class NoModuleReadsRegionLabelsForTileDataTests(unittest.TestCase):
+    """Farm land, weather cells, crop climate and the cast hold tiles: a civilisation that lists
+    `home_tiles` and no labels gets the same farm land, weather cells, climate and place."""
+
+    def _civilisation(self, region_labels_removed):
+        import copy
+        from sim.engine.data import load_civ
+        civilisation = copy.deepcopy(load_civ("rome_100ad"))
+        if region_labels_removed:
+            from sim.geography.api import tiles_held
+            civilisation["home_tiles"] = tiles_held(civilisation)
+            civilisation["home_regions"] = []
+        return civilisation
+
+    def test_farm_land_and_weather_cells_follow_the_tiles_held(self):
+        from sim.tests.harness import sim
+        labelled = sim(civ="rome_100ad")
+        tiled = sim(civ="rome_100ad")
+        tiled.civ = self._civilisation(True)
+        territory = tiled._compute_farm_weather_cells()
+        self.assertEqual([cell.cell_id for cell in territory],
+                         [cell.cell_id for cell in labelled._compute_farm_weather_cells()])
+        from sim.world import land
+        self.assertEqual(land.territory_farmland(tiled_tiles(tiled.civ)).arable_hectares,
+                         land.territory_farmland(tiled_tiles(labelled.civ)).arable_hectares)
+
+    def test_crop_climate_and_cast_place_follow_the_tiles_held(self):
+        from sim.agents.cast import profile_from_civilisation
+        from sim.geography.api import crop_climate, tiles_held
+        labelled, tiled = self._civilisation(False), self._civilisation(True)
+        self.assertEqual(crop_climate.territory_classes(tiles_held(labelled)),
+                         crop_climate.territory_classes(tiles_held(tiled)))
+        self.assertEqual(profile_from_civilisation(labelled).location, profile_from_civilisation(tiled).location)
+        self.assertIn(profile_from_civilisation(tiled).location, tiled["home_tiles"])
+
+
+def tiled_tiles(civilisation):
+    from sim.geography.api import tiles_held
+    return tiles_held(civilisation)

@@ -7,14 +7,15 @@ import math
 from typing import Any, Dict
 
 from . import ledger
+from .edges import EDGE_ECONOMY
 from .tuning_strata import (BIRTH_RATE, BIRTH_WELFARE_RESPONSE, BONDAGE_EXIT_RATE, BONDED_BIRTH_SHARE,
 							DEATH_RATE, EDUCATION_EFFORT_SCALE, FALL_WELFARE, FAMINE_DEATH_RATE,
 							GROWTH_LAG_SHARE, LITERACY_CEILING, LITERACY_DECAY_RATE, LITERACY_GAIN_RATE,
 							LITERACY_WIDTH, MOBILITY_RATE, RISE_LITERACY, RISE_WELFARE, STRATUM_EDUCATION_SHARE,
-							STRATUM_OTHER_NEED_FOOD_MULTIPLE, STRATUM_SAVINGS_BUFFER_YEARS,
+							STRATUM_SAVINGS_BUFFER_YEARS,
 							STRATUM_WORKING_SHARE, WELFARE_WIDTH)
 
-TIERS = ("food", "housing", "goods")
+FOOD_NEED = "food"   # paid first, and the need whose shortfall is famine
 
 
 def logistic(value: float) -> float:
@@ -56,11 +57,11 @@ def bonded_product(stratum: Any, world: Any) -> float:
 	return stratum.record.members * working * world.pay_per_person_year(trade)
 
 
-def pay_tier(stratum: Any, need: float, spendable: float) -> float:
+def pay_tier(stratum: Any, need: float, spendable: float, world: Any) -> float:
 	"""Buy what can be bought of one tier from `spendable`; the money leaves the modelled actors."""
 	paid = max(0.0, min(need, spendable))
 	if paid > 0.0:
-		stratum.debit(paid, "edge:economy")
+		ledger.transfer(stratum, world.edge(EDGE_ECONOMY), paid, EDGE_ECONOMY)
 	return paid
 
 
@@ -81,20 +82,18 @@ def run_year(stratum: Any, world: Any) -> None:
 	income = 0.0 if stratum.is_bonded() else (
 		float(observed["income"]) if observed.get("income") is not None else own_income(stratum, world))
 	if income > 0.0:
-		stratum.credit(income, "edge:economy")
+		ledger.transfer(world.edge(EDGE_ECONOMY), stratum, income, EDGE_ECONOMY)
 	resources = income + record.allowance
 	record.allowance = 0.0
-	food_cost = world.subsistence_cost_per_person_year()
-	housing_cost = world.housing_cost_per_person_year()
-	needs = {"food": members * food_cost, "housing": members * housing_cost,
-			 "goods": members * food_cost * STRATUM_OTHER_NEED_FOOD_MULTIPLE}
-	buffer = 0.0 if stratum.is_bonded() else STRATUM_SAVINGS_BUFFER_YEARS * (needs["food"] + needs["housing"])
-	for tier in TIERS:
-		spendable = stratum.money - (buffer if tier == "goods" else 0.0)
-		record.shortfall[tier] = unmet(needs[tier], pay_tier(stratum, needs[tier], spendable))
-	food_bill = members * food_cost
+	floor_costs = world.need_floor_costs_per_person_year()
+	needs = {need_id: members * floor_costs[need_id]
+			 for need_id in sorted(floor_costs, key=lambda need_id: (need_id != FOOD_NEED, need_id))}
+	buffer = 0.0 if stratum.is_bonded() else STRATUM_SAVINGS_BUFFER_YEARS * sum(needs.values())
+	record.shortfall = {need_id: unmet(need, pay_tier(stratum, need, stratum.money, world))
+						for need_id, need in needs.items()}
+	food_bill = members * floor_costs.get(FOOD_NEED, 0.0)
 	record.welfare = resources / food_bill if food_bill > 0.0 else 0.0
-	school(stratum, max(0.0, resources - sum(needs.values())), food_bill, buffer)
+	school(stratum, max(0.0, resources - sum(needs.values())), food_bill, buffer, world)
 	if observed.get("members") is not None:
 		record.last_growth = record.members / previous_members - 1.0 if previous_members > 0.0 else 0.0
 		return
@@ -102,12 +101,12 @@ def run_year(stratum: Any, world: Any) -> None:
 	decide_moves(stratum)
 
 
-def school(stratum: Any, surplus: float, food_bill: float, buffer: float) -> None:
+def school(stratum: Any, surplus: float, food_bill: float, buffer: float, world: Any) -> None:
 	"""Spend a share of the surplus on schooling and move literacy toward the ceiling, or let it fade."""
 	record = stratum.record
 	spend = min(STRATUM_EDUCATION_SHARE * surplus, max(0.0, stratum.money - buffer))
 	if spend > 0.0:
-		stratum.debit(spend, "edge:economy")
+		ledger.transfer(stratum, world.edge(EDGE_ECONOMY), spend, EDGE_ECONOMY)
 	effort = spend / food_bill if food_bill > 0.0 else 0.0
 	funded = 1.0 - math.exp(-effort / EDUCATION_EFFORT_SCALE)
 	gain = LITERACY_GAIN_RATE * max(0.0, LITERACY_CEILING - record.literacy) * funded
@@ -172,7 +171,7 @@ def settle_keep(registry: Any, world: Any) -> None:
 		if owner is None or owner is actor:
 			continue
 		if actor.record.labour_product > 0.0:
-			owner.credit(actor.record.labour_product, "edge:economy")
+			ledger.transfer(registry.state.edge(EDGE_ECONOMY), owner, actor.record.labour_product, EDGE_ECONOMY)
 			actor.record.labour_product = 0.0
 		cost = actor.record.members * registry.world_for(actor, world).subsistence_cost_per_person_year()
 		ledger.transfer(owner, actor, cost, "keep of bonded")

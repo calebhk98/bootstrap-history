@@ -321,6 +321,8 @@
  },
  {
   "id": "mil_flintlock",
+  "copy_visibility": 0.7,
+  "copy_visibility_reason": "The hammer, pan and frizzen are visible on the outside, and the lock plate comes off to show the springs; the temper of the springs and the fit of the parts are not visible.",
   "name": "Flintlock mechanism",
   "cat": "weapons",
   "kind": "ENGINEERING",
@@ -3410,7 +3412,7 @@
    "steel_plate_kg": 2000
   },
   "cap_hours": 0,
-  "up_hours": 0,
+  "up_hours": 3.1,
   "build_yrs": 2,
   "adopt_yrs": 2,
   "risk": 0.03,
@@ -3421,7 +3423,7 @@
   "note": "The chain home idea - distributed radar stations reporting to central control centre which directs fighters. Early warning gives time to scramble interceptors. Won the Battle of Britain.",
   "gov": 3,
   "sus": 6,
-  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+  "_internal": "[HEURISTIC: yearly upkeep taken as one percent of the construction labour hours (repair and keeping the works in service); no wear or failure model yet.] [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_iff_system",
@@ -3738,6 +3740,8 @@
  },
  {
   "id": "mil_incendiary_bomb",
+  "copy_visibility": 0.7,
+  "copy_visibility_reason": "An unexploded bomb shows its casing, fuse and petroleum or phosphorus filling to anyone who opens it; what stays hidden is the filling's exact mix and the fuse timing.",
   "name": "Incendiary bomb",
   "cat": "air",
   "kind": "ENGINEERING",

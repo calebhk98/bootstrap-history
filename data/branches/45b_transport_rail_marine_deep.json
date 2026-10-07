@@ -1894,6 +1894,8 @@
  },
  {
   "id": "tr_block_tackle",
+  "copy_visibility": 0.9,
+  "copy_visibility_reason": "The sheaves and the rope run are visible and a rigger sees how the purchase works at once.",
   "name": "Block and tackle pulley",
   "cat": "marine",
   "kind": "ENGINEERING",

@@ -8,6 +8,9 @@ own file, so tests owning different mechanisms never edit this one together.
 import random
 from typing import Any, Dict, List, Optional, Set
 
+from sim.agents import ledger
+from sim.agents.records import ActorsState
+
 
 class FakeLabourMarket:
 	"""Every trade is paid one flat wage per hour; hiring and release are only counted."""
@@ -71,6 +74,13 @@ class FakeWorld:
 		self.population = 0.0
 		# concerns that have run at a profit where entrants can see them
 		self.proven: Set[str] = set()
+		self.edge_book = ActorsState()
+
+	def edge(self, name: str) -> Any:
+		return self.edge_book.edge(name)
+
+	def pay_wages(self, payer: Any, amount: float, purpose: Any) -> None:
+		ledger.transfer(payer, self.edge("edge:workers"), amount, purpose)
 
 	# ---- the tree and what has been shown
 	def civ_id(self) -> str:

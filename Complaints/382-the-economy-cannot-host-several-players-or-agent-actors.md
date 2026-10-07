@@ -1,6 +1,6 @@
 # The engine cannot yet host several players or an agent economy: one founder is wired in, households are not actors, and most money moves without a counterparty
 
-**Status:** open - the new agent economy (`sim/economy/`, docs/architecture/ECONOMY_AGENTS.md) is built as if these were fixed; engine postings without a counterparty are booked against `edge:legacy` so their volume is measured
+**Status:** open - steps 1 and 2 are done: every engine, agent and labour money posting goes through `ledger.transfer` and names an actor or a named edge (`sim/agents/edges.py`, held in `ActorsState.edges`), and wages, the state's pay and lenders' interest are paid to the home strata's purses (`sim/agents/payroll.py`); step 3 stage A (seat record, `act_as`, aliases not saved) is built, stage B (splitting economy, governance and scenario state into world and seat parts) and step 4 remain. The one-sided volume is now zero by construction (`sim/tests/test_every_posting_names_a_counterparty.py` scans for new ones); what crosses each named edge is `state.actors.edge_volume`.
 
 Multiplayer, and other countries as players, need every actor to be able to own money and goods, be somewhere, and pay someone. Today:
 
@@ -19,7 +19,7 @@ Multiplayer, and other countries as players, need every actor to be able to own 
 - **Partners are records, not actors.** Foreign economies are dict ledgers (`economy.foreign_ledger`).
 - **Prices are global to one civilisation.** `price_index` is a static float set from the civilisation file (`sim/engine/core.py:344`). The tree's money fields (`rev`, `up`, `cap`) are priced once at load for one coin (`sim/engine/money_units.py:price_nodes`).
 
-Measure the one-sided volume, once the port books it, as the yearly volume of `edge:legacy`. Until then, `grep -rn "\.credit(\|\.debit(" sim/engine` lists the postings.
+Measure what crosses each named edge as `state.actors.edge_volume` (divide by years played); the scan in the test above lists any posting that names no counterparty.
 
 What it would take, in order:
 1. Every engine posting names a counterparty, or a named edge.

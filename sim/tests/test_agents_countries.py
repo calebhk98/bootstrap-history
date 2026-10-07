@@ -51,19 +51,19 @@ check("a civilisation with almost nothing in it still gives a profile",
 	  and bare.starting_techs == set() and bare.wage_index == 1.0 and bare.strata == [], bare)
 HOME = {"id": "alpha", "name": "Alpha", "population": 1_000_000, "urban_fraction": 0.1, "state_capacity": 0.8,
 		"starting_tax_share": 0.1, "wage_index": 1.0, "price_index": 1.0, "literacy_general": 0.2, "literacy_elite": 0.9,
-		"home_regions": ["north", "south"], "starting_techs": ["plough", "wheel"], "standing_army": 5000,
+		"home_tiles": ["algeria_01"], "starting_techs": ["plough", "wheel"], "standing_army": 5000,
 		"values": {"w_military": 0.9},
 		"cast": {"strata": [{"name": "farmers", "share": 0.9}], "treasury": 50.0, "mood": "calm",
 				 "actors": [{"actor_id": "observer:1", "kind": "observer", "controller": "llm", "money": 20.0,
 							 "knowledge": ["wheel"]}]}}
 BETA = {"id": "beta", "name": "Beta", "population": 500_000, "state_capacity": 0.5, "starting_tax_share": 0.2,
-		"wage_index": 0.5, "home_regions": ["east"], "starting_techs": ["loom"], "cast": {"treasury": 10.0, "countries": [
-			{"id": "gamma", "name": "Gamma", "population": 100_000, "starting_techs": ["raft"], "home_regions": ["isles"]}]}}
+		"wage_index": 0.5, "home_tiles": ["algeria_02"], "starting_techs": ["loom"], "cast": {"treasury": 10.0, "countries": [
+			{"id": "gamma", "name": "Gamma", "population": 100_000, "starting_techs": ["raft"], "home_tiles": ["algeria_03"]}]}}
 DELTA = {"id": "delta", "population": 200_000}
 profile = profile_from_civilisation(HOME)
 check("a profile reads the civilisation's own fields",
 	  profile.population == 1_000_000 and profile.tax_share == 0.1 and profile.starting_techs == {"plough", "wheel"}
-	  and profile.location == "north" and profile.home_regions == ["north", "south"], profile)
+	  and profile.location == "algeria_01" and profile.home_tiles == ["algeria_01"], profile)
 check("a profile carries strata from the cast key and keeps unconsumed cast keys in extra",
 	  profile.strata == [{"name": "farmers", "share": 0.9}] and profile.extra.get("mood") == "calm"
 	  and "treasury" not in profile.extra and "actors" not in profile.extra, profile.extra)
@@ -81,7 +81,7 @@ check("the home government is a government with no foreign country",
 check("each foreign country has a foreign government of its own",
 	  all(by_id["government:" + country].kind == "foreign_government" and by_id["government:" + country].country == country
 		  for country in ("beta", "gamma", "delta")))
-check("a government sits where its country is", by_id["government:beta"].location == "east")
+check("a government sits where its country is", by_id["government:beta"].location == "algeria_02")
 check("a declared actor joins the cast with its own fields",
 	  by_id["observer:1"].kind == "observer" and by_id["observer:1"].controller == "llm"
 	  and by_id["observer:1"].money == 20.0 and by_id["observer:1"].params == {"knowledge": ["wheel"]}
@@ -156,12 +156,12 @@ check("every member of the World protocol is answered by a country's world",
 check("forwarding is explicit, not by __getattr__", "__getattr__" not in vars(CountryWorld))
 
 # ---- fog: the farther the country, the less it learns -------------------------------------
-world.distances = {"east": 100.0, "isles": 4000.0}
+world.distances = {"algeria_02": 100.0, "algeria_03": 4000.0}
 near = CountryWorld(world, profiles["beta"], registry).exposure("wheel", None)
 far = CountryWorld(world, profiles["gamma"], registry).exposure("wheel", None)
 check("a nearer country gets more exposure than a farther one", 0.0 < far < near < 1.0, (near, far))
 check("an observer's own place counts when it is given",
-	  CountryWorld(world, profiles["beta"], registry).exposure("wheel", "isles") == far)
+	  CountryWorld(world, profiles["beta"], registry).exposure("wheel", "algeria_03") == far)
 
 # ---- a foreign government's year ----------------------------------------------------------
 world.demonstrated_nodes = {"wheel"}
@@ -171,7 +171,7 @@ state2 = ActorsState()
 registry2 = ActorRegistry(state2)
 seed_cast(registry2, "alpha", [entry for entry in entries if entry.actor_id == "government:beta"], profiles)
 government = registry2.actors["government:beta"]
-world.distances = {"east": 0.0}
+world.distances = {"algeria_02": 0.0}
 registry2.advance(world)
 income, outlays = government.record.income, government.record.outlays
 check("a foreign government raises revenue from its country's taxpayers",
@@ -208,8 +208,8 @@ class PricedWorld(ScenarioWorld):
 	def subsistence_cost_per_person_year(self):
 		return 100.0
 
-	def housing_cost_per_person_year(self):
-		return 10.0
+	def need_floor_costs_per_person_year(self):
+		return {"food": 100.0, "shelter": 10.0}
 
 
 priced = PricedWorld()

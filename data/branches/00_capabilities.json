@@ -144,7 +144,7 @@
   "sch": 0,
   "art": 2,
   "conf": "B",
-  "note": "A flame, not a furnace: small volume only. Fused quartz working, platinum melting, lime light.",
+  "note": "An oxy-hydrogen blowpipe is a jet of hydrogen burning in pure oxygen. Without the nitrogen of air to soak up heat, the flame is far hotter than any furnace of the time, but it heats only a small spot, so it works on small objects only. It needs both gases made, stored and fed to the nozzle separately, because mixed gas can explode back into the supply. This heat can melt platinum, work fused quartz and make lime glow.",
   "mechanics": {
    "diagnosis_instrument": {
     "instrument": "opt_pyrometer_optical",
@@ -375,7 +375,7 @@
   "sch": 0,
   "art": 2,
   "conf": "B",
-  "note": "A leather-sealed piston pump. Barometry, the Magdeburg demonstration, condensers. Not enough for any electron device.",
+  "note": "A rough vacuum is made with a piston pump, a cylinder where a sealed piston draws air out through valves. Leather around the piston makes the seal, and each stroke removes part of the air that is left. Leaks past the leather and the space left at the end of each stroke stop it going lower. It is enough to show that air has weight and pressure, and for barometers and condensers, but it leaves too much gas for any electron device.",
   "mechanics": {
    "diagnosis_instrument": {
     "instrument": "opt_manometer",

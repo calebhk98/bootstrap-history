@@ -285,3 +285,28 @@ check("...names the actual number of hours at stake, read from the same "
 check("it warns and proceeds - the years still actually run",
       _resp_idle.get("ok") is True and _resp_idle["year"] > _year_before_multi_step,
       _resp_idle.get("year"))
+# The warning can be turned off by the machine-wide setting; the years still run.
+import json as _json
+import os as _os
+import tempfile as _tempfile
+_warning_config_path = _os.path.join(_tempfile.mkdtemp(), "cfg.json")
+_previous_config_env = _os.environ.get("ROME_SIM_CONFIG")
+_os.environ["ROME_SIM_CONFIG"] = _warning_config_path
+try:
+    _json.dump({"multi_year_step_warning": False}, open(_warning_config_path, "w"))
+    _s_quiet = sim(civ="rome_100ad", capital=5_000_000.0)
+    _s_quiet.done.update({"school_founded", "fin_university", "sc2_institution_examination"})
+    _s_quiet._done_changed()
+    _s_quiet.end_year = _s_quiet.cfg["start_year"] + _s_quiet.cfg["horizon_years"]
+    _s_quiet.start_project("sc2_institution_curriculum")
+    _s_quiet.start_project("sc2_institution_doctorate")
+    _s_quiet.step()
+    _resp_quiet = S._agent_dispatch(_s_quiet, NODES, {"cmd": "step", "years": 5})
+    check("with multi_year_step_warning off, a multi-year step that would warn does not, and still runs",
+          _resp_quiet.get("ok") is True and not _resp_quiet.get("multi_year_hours_warning"),
+          _resp_quiet.get("multi_year_hours_warning"))
+finally:
+    if _previous_config_env is None:
+        _os.environ.pop("ROME_SIM_CONFIG", None)
+    else:
+        _os.environ["ROME_SIM_CONFIG"] = _previous_config_env

@@ -53,6 +53,11 @@ SETTINGS = {
         "welcome/tutorial text on new games",
         "Whether the arrival paragraph and starter-verb tutorial print for a new game.",
         "flag", aliases=("welcome", "tutorial")),
+    "multi_year_step_warning": Setting(
+        "multi-year step warning",
+        "Whether `step N` warns before a multi-year step when founder-hours are going "
+        "unused and a project could be started. Off skips the warning only.",
+        "flag", aliases=("stepwarning", "step-warning")),
     "display_units": Setting(
         "display units",
         "The unit shown for each kind of quantity (area, mass, temperature, money). "

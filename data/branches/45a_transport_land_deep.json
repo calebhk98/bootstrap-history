@@ -634,6 +634,8 @@
  },
  {
   "id": "tl_ball_bearing",
+  "copy_visibility": 0.6,
+  "copy_visibility_reason": "Opened up, the balls and races are visible and the idea is obvious; the roundness, hardness and uniform size of the balls are what make it work and cannot be seen.",
   "name": "Ball bearing: spherical",
   "cat": "wheels_running_gear",
   "kind": "ENGINEERING",
@@ -1369,7 +1371,7 @@
   "sch": 0,
   "art": 3,
   "conf": "B",
-  "note": "Propshaft spins inside the axle tube; differential is built into axle casing. Standard on motor vehicles from 1900."
+  "note": "A live axle is a rigid axle beam that carries the power to the wheels. A drive shaft from the engine turns the differential, a set of gears in the middle of the axle casing that lets the two wheels turn at different speeds in a bend. From there two axle shafts inside the casing turn the wheels. It is simple and strong, but the wheels at both ends move together over bumps."
  },
  {
   "id": "tl_dead_axle",
@@ -2038,7 +2040,7 @@
   "sch": 0,
   "art": 4,
   "conf": "B",
-  "note": "Eliminates hand-crank; starter disengages when engine fires. Bendix drive uses overrunning clutch for safety."
+  "note": "An electric starter is a small electric motor, run from a battery, that turns the engine over so it can start without a hand crank. Its small gear meshes with a toothed ring on the engine flywheel. The gear must disengage once the engine fires, or the engine would spin the motor to destruction, and a Bendix drive does this with an overrunning clutch. It needs a battery and a motor strong enough to turn a cold engine."
  },
  {
   "id": "tl_dynamo",
@@ -3411,6 +3413,8 @@
  },
  {
   "id": "tl_vulcanized_rubber",
+  "copy_visibility": 0.3,
+  "copy_visibility_reason": "The cured rubber shows nothing of the sulfur or the heat; Hancock is said to have deduced the cure from samples of Goodyear's rubber and patented it in England.",
   "name": "Vulcanized rubber",
   "cat": "wheels_running_gear",
   "kind": "ENGINEERING",

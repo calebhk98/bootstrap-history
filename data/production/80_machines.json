@@ -144,6 +144,42 @@
    "yield_basis": "BUILD BILL, split out of data/production/70_energy.json's electrical_mj_photovoltaic per Complaints/39 (that entry keeps the POWER and SERVICE-LIFE facts that belong to running one square metre, not building it). Glass cover, aluminium frame and copper wiring/junction box are real, modest per-square-metre quantities for a module of this class; the silicon figure (0.5 kg/m2) is a wafer-mass allowance including sawing losses, priced through the silicon_kg entry in 20_nonferrous.json. THE HONEST CAVEAT, carried over unchanged: silicon_kg's own yield_basis is explicit that it omits crystal growth, wafer sawing, cell doping/metallisation and module lamination - real, individually energy-intensive steps in making an actual photovoltaic cell - so this entry's resulting price is a LOWER BOUND by a margin this file cannot yet quantify, not a claim that a panel is already this cheap to build in full. Tag: GAP, not a heuristic, per CLAUDE.md 3.4. requires_node is deliberately ABSENT, not null: the tech tree has no node for a power-generating cell at all (no node marks the transition from 'we understand the photovoltaic effect' to 'we can manufacture a cell'), so classifying this as available-with-no-technology (null) would be as wrong as inventing a gate that does not exist - absence here means what the schema says it means, an honest gap that drops this entry from every gated solve until the tree grows that node, exactly matching data/production/70_energy.json's electrical_mj_photovoltaic, which has always left the same field absent for the same reason.",
    "conf": "C"
   }
+,
 
+  "low_voltage_main_two_wire_unit": {
+  "outputs": {
+   "low_voltage_main_two_wire_unit": 1.0
+  },
+  "inputs": {
+   "copper_wire_kg": 9905.7
+  },
+  "labour_hours": {
+   "electrician": 7.11,
+   "labourer": 3.56
+  },
+  "unit_dimension": "count",
+  "basis": "per one two-wire low-voltage DC main of 800 m route, rated 100 kW at the lamp: copper conductors and the labour that sets its poles",
+  "yield_basis": "BUILD BILL of the line plant in electrical_mj_main_two_wire. Current at the lamp is 100 kW over 110 V; the conductor section is that current over the design current density (1500 circular mils per ampere, 1.3157 A per mm2); copper mass is 2 conductors times section times 800 m times 8960 kg/m3. Two conductors, each of the full section. Pole setting: 20 poles (25 per km at a 130 ft span, Still, Overhead Electric Power Transmission, 1913, pp. 40-41) at 45 a day (40 to 50 a day by two linemen and a teamster, Standard Handbook Sec. 11 par. 167) is 0.444 crew-days of two linemen (electrician) and one teamster (labourer) at 8 hours a day (the day length is an assumption). LOWER BOUND ON THE PLANT: the conductor copper and the pole-setting labour are counted; the pole timber, crossarms, insulators and stringing labour are not, because no mass or hours table for them was read (the electricity market design report marks them needed). Meter, meter reading and station attendant hours are likewise not counted. ",
+  "requires_node": "dynamo",
+  "conf": "C"
+ },
+
+  "low_voltage_main_three_wire_unit": {
+  "outputs": {
+   "low_voltage_main_three_wire_unit": 1.0
+  },
+  "inputs": {
+   "copper_wire_kg": 7429.3
+  },
+  "labour_hours": {
+   "electrician": 7.11,
+   "labourer": 3.56
+  },
+  "unit_dimension": "count",
+  "basis": "per one three-wire low-voltage DC main of 800 m route, rated 100 kW at the lamp: copper conductors and the labour that sets its poles",
+  "yield_basis": "BUILD BILL of the line plant in electrical_mj_main_three_wire. Current at the lamp is 100 kW over 220 V; the conductor section is that current over the design current density (1500 circular mils per ampere, 1.3157 A per mm2); copper mass is 3 conductors times section times 800 m times 8960 kg/m3. Three conductors (two outers and a neutral of the outer section), each carrying half the current at twice the voltage, so each is half the two-wire section. Pole setting: 20 poles (25 per km at a 130 ft span, Still, Overhead Electric Power Transmission, 1913, pp. 40-41) at 45 a day (40 to 50 a day by two linemen and a teamster, Standard Handbook Sec. 11 par. 167) is 0.444 crew-days of two linemen (electrician) and one teamster (labourer) at 8 hours a day (the day length is an assumption). LOWER BOUND ON THE PLANT: the conductor copper and the pole-setting labour are counted; the pole timber, crossarms, insulators and stringing labour are not, because no mass or hours table for them was read (the electricity market design report marks them needed). Meter, meter reading and station attendant hours are likewise not counted. ",
+  "requires_node": "el2_three_wire_distribution_system",
+  "conf": "C"
+ }
  }
 }

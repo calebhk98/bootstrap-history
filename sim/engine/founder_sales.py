@@ -3,6 +3,7 @@ from sim.agents.api import CommandRejected, HouseholdParty, exchange_sale
 from sim.agents.household_party import FOUNDER_ACTOR_ID
 
 from .agents_port import SimWorld
+from sim.agents.api import edges
 
 
 class FounderSalesMixin:
@@ -40,6 +41,6 @@ class FounderSalesMixin:
             return {"ok": False, "error": "you own %.1f hectares of farmland, not %.1f" % (owned, hectares)}
         price = hectares * self.farm_price_per_hectare()
         economy.farm_hectares = owned - hectares
-        self.household.credit(price, "farmland sold")
+        self.receive_from_edge(edges.EDGE_LANDOWNERS, price, "farmland sold")
         return {"ok": True, "sold_farm_hectares": hectares, "price": round(price, 1),
                 "farm_hectares": round(economy.farm_hectares, 1), "capital": round(self.household.capital, 1)}

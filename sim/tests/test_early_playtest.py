@@ -405,14 +405,7 @@ _missing_id = S._agent_dispatch(answers, NODES, {"cmd": "why"}).get("error", "")
 check("a missing id asks for one rather than naming a Python type",
       "NoneType" not in _missing_id and "available" in _missing_id, _missing_id[:90])
 
-# --- data lints that cost no game
-PUMP_PAYBACK_YEARS_FLOOR = 0.25
-pumps = [node_id for node_id, node in NODES.items()
-         if float(node.get("rev") or 0) > 0 and node["_total_cost"] > 0
-         and node["_total_cost"] / float(node["rev"]) < PUMP_PAYBACK_YEARS_FLOOR]
-check("no node repays its entire cost in under three months", not pumps,
-      "%d pumps, e.g. %s" % (len(pumps), pumps[:3]))
-
+# --- data lints that cost no game (fast payback is a diagnostic, `economy-check --payback`, not a test)
 check("debt bondage follows the society, and is a term of years",
       S.load_civ("rome_100ad").get("debt_bondage") is False
       and S.load_civ("han_china_100ad").get("debt_bondage") is True

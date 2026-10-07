@@ -12,6 +12,7 @@ import os
 from sim.agents.api import COIN_RESTRIKE_SHARE_PER_YEAR
 from sim.constants import declare
 from sim.economy import api as economy_api
+from sim.world.demography_turnover import working_age_turnover
 from sim.economy.api import (EDGE_EXTERNAL, EDGE_LEGACY, AgentOrders, Economy, GoodsMove, Offer, Producer,
                              YearInputs, expected_output_prices, external_orders, live_input_prices, live_wages,
                              trade_premium, variable_cost_per_run)
@@ -280,8 +281,10 @@ class AgentEconomy:
         economy = self._economy
         yields = {producer_id: weather for producer_id, producer in economy_api.producers_of(economy).items()
                   if economy.setup.land_per_run.get(producer.recipe_id, 0.0) > 0.0}
+        entrant_share, attrition_share = working_age_turnover(population)
         return YearInputs(year=sim.state.scenario.year, population_by_tile=sim.labour.settlement_tiles(),
                           working_age_share=population.working_age / total if total > 0.0 else 0.0,
+                          entrant_share=entrant_share, attrition_share=attrition_share,
                           yield_factor_by_producer=yields, engine_orders=engine_orders, harvest_factor=weather)
 
     def _spin_up(self):
@@ -335,6 +338,12 @@ class AgentEconomy:
             if new is not None and old > 0.0:
                 return new / old
         return None
+
+    def people_by_trade(self):
+        """The labour core's people by trade, or None before the economy has been opened."""
+        if self._economy is None and "record" not in self.stored:
+            return None
+        return economy_api.people_by_trade(self.economy())
 
     def wage_per_hour(self, trade):
         """The trade's wage in its labour markets; a trade no producer hires (soldiers, scribes) is paid

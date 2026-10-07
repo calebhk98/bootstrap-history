@@ -1,6 +1,8 @@
 """A firm grows the concerns it runs while the market's return on the added capacity beats its cost of capital."""
 from typing import Any
 
+from . import ledger
+from .edges import EDGE_BUILDERS
 from .tuning import EXPANSION_RATE
 
 
@@ -30,7 +32,7 @@ class ExpansionMixin:
 				rate = max(rate, self.borrowing_rate(world))  # type: ignore[attr-defined]
 			if gain <= cost * rate:
 				continue
-			self.debit(cost, "expansion")  # type: ignore[attr-defined]
+			ledger.transfer(self, world.edge(EDGE_BUILDERS), cost, "expansion")
 			self.record.capacity[node_id] = capacity + step  # type: ignore[attr-defined]
 			if self.on_capacity_change is not None:  # type: ignore[attr-defined]
 				self.on_capacity_change(self.actor_id)  # type: ignore[attr-defined]

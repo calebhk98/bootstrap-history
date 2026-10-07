@@ -20,6 +20,7 @@ object and its region reach) are outside this contract and are to be replaced by
 | `open_map(mods)` | A map handle: the base map with each mod's overlay merged. `mods` is `[(mod_id, mod_root)]` in load order. |
 | `tile_ids()` | Every tile id, sorted. Ids are opaque: do not parse them. |
 | `tile_facts(tile_id)` | `{id, lat, lon, land_area_km2, coastal, neighbours: [tile_id], climate_class, region}` |
+| `tiles_held(civilisation)` | The sorted tiles a civilisation record holds: its `home_tiles` when it lists them, else the tiles its `home_regions` labels name (a region is only a label over tiles). A tile the map lacks is not held. |
 | `layer_value(tile_id, layer_id)` | One per-tile value by name (for example `annual_precipitation_mm`, `forest_fraction`), or `null`. |
 | `problems()` | `[message]`: everything wrong with the map's data; empty when sound. |
 
@@ -44,7 +45,7 @@ caller from what the actor knows; geography does not read the tech tree.
 | Call | Answer |
 |---|---|
 | `usable_modes([nodes_of_party, ...])` | `[mode_id]` every party can use, from the tech nodes each holds. |
-| `route(origins, destinations, modes, improvements, mode_costs, handling_costs, held_nodes)` | `{legs: [{from, to, mode, km, days, cost_per_tonne}], km, days, cost_per_tonne, inputs: {labour_hours, feed_kg, fuel_kg}}`, or `null` when nothing joins them. |
+| `route(origins, destinations, modes, improvements, mode_costs, handling_costs, held_nodes, fastest=False)` | `{legs: [{from, to, mode, km, days, cost_per_tonne}], km, days, cost_per_tonne, inputs: {labour_hours, feed_kg, fuel_kg}}`, or `null` when nothing joins them. The least-cost haul; with `fastest` the fewest-days one (how people travel, not goods). |
 | `route_costs(origins, modes, improvements, mode_costs, handling_costs, held_nodes)` | `{tile_id: cost_per_tonne}`: the least cost from any origin to every tile a haul reaches (origins cost 0), priced as `route` prices a haul. One search serves all destinations; the economy's market areas take their carriage costs from it. |
 | `reach(origins, modes, days_budget, improvements, held_nodes)` | `{tile_id: days}` within the budget. |
 | `dues_hours_per_tonne()` | `{mode_id: hours}` of tolls or port dues per tonne a haul pays when it changes to the mode (the mode's `dues_hours_per_tonne`, with `dues_source` and `dues_conf`). |
@@ -54,6 +55,7 @@ caller from what the actor knows; geography does not read the tech tree.
 | `works_priced_from_deposits()` | `[resource_id]` whose catalogue row says its mine running cost comes from the deposits' physical works. |
 | `mine_demand_goods()` | `{resource_id: [good]}`: the goods whose annual demand a mine of that resource supplies (`mine_demand_goods` on its catalogue row). |
 | `parameter_value(parameter_id)` | The value of one map parameter (for example `mining_trade`, the trade whose wage prices mine labour). |
+| `build_requirements(tile_a, tile_b, improvement)` | `{km, grade, trade, labour_hours, materials: {material: tonnes}, node}` of building a way (`"road"`, `"rail"`) over the land edge between two bordering tiles, from the terrain (earthwork on the slope, surface and fixed materials from the mode's `construction` data), or `null` when it cannot be built there. |
 | `edge_key(tile_a, tile_b)` | The key a built road or track between two tiles is stored under. |
 
 `improvements` is the caller's record of what has been built, `{edge_key: {"road": true,

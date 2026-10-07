@@ -261,7 +261,7 @@
   "sch": 1,
   "art": 0,
   "conf": "A",
-  "note": "Reduction and splinting of fractures. Success depends on immobility for weeks; infection is the main hazard.",
+  "note": "Setting a broken bone means pulling the broken ends back into line (reduction) and then holding the limb still in a splint of wood and bandage. The bone mends itself, but only if the ends stay aligned and unmoving for weeks. If the skin is broken, infection is the main danger. It needs bandage cloth, splints and skilled hands, and it prevents crippling and death from untreated fractures.",
   "traits": [
    "medical"
   ]
@@ -315,7 +315,7 @@
    "lime_kg": 50000.0
   },
   "cap_hours": 161295.0333930346,
-  "up_hours": 0,
+  "up_hours": 183,
   "yrs": 3.0,
   "risk": 0.05,
   "sus": 0,
@@ -332,7 +332,8 @@
   "mechanics": {
    "disease_burden": true
   },
-  "build_yrs": 3.0
+  "build_yrs": 3.0,
+  "_internal": "[HEURISTIC: yearly upkeep taken as one percent of the construction labour hours (repair and keeping the works in service); no wear or failure model yet.]"
  },
  {
   "id": "med_legal_physician",

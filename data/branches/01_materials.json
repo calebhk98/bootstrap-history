@@ -1,6 +1,8 @@
 [
  {
   "id": "mat_wrought_iron",
+  "copy_visibility": 0.3,
+  "copy_visibility_reason": "The bloom and the hammered bar are visible, and a bloomery can be watched at work, but the ore choice, the charcoal ratio and the feel for when the bloom is ready stay in the smith's hands.",
   "name": "Wrought iron (bloomery)",
   "cat": "material",
   "kind": "RESOURCE",
@@ -32,6 +34,8 @@
  },
  {
   "id": "mat_bronze",
+  "copy_visibility": 0.4,
+  "copy_visibility_reason": "The alloy colour and the casting are visible, but the tin share is not, and a founder cannot read it off the finished piece without assay.",
   "name": "Bronze",
   "cat": "material",
   "kind": "RESOURCE",
@@ -54,6 +58,8 @@
  },
  {
   "id": "mat_brass",
+  "copy_visibility": 0.2,
+  "copy_visibility_reason": "The golden metal shows nothing of the calamine and charcoal packed round the copper, and no onlooker sees that a second metal went in.",
   "name": "Brass (by cementation)",
   "cat": "material",
   "kind": "RESOURCE",
@@ -182,7 +188,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Already produced wherever cupellation from galena is practised."
+  "note": "Silver is won from galena, which is first smelted to a silver-bearing lead. That lead is then heated in air in a shallow cup of porous bone ash (a cupel): the lead oxidises to litharge, which soaks into the cup, while the silver does not oxidise and stays behind as a bead. It needs a hot furnace with a steady air blast and careful heat control, and it is already practised wherever cupellation from galena is known."
  },
  {
   "id": "mat_gold",
@@ -336,7 +342,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Already available wherever there is trade access to an alum source (Rome's is Melos). Mordant, styptic, sizing."
+  "note": "Alum is a crystalline mineral salt that dissolves in water and is dug or boiled out of certain rocks. As a mordant it helps dye bind to cloth, so colours do not wash out. It also tightens tissue and can stop small bleeding, and it is used to size paper. Only a few places produce it, so reaching an alum source by trade is what makes it available."
  },
  {
   "id": "mat_vitriols",
@@ -557,6 +563,8 @@
  },
  {
   "id": "mat_linen",
+  "copy_visibility": 0.6,
+  "copy_visibility_reason": "Retting ponds, scutching and hackling are done in the open and each step shows its result; the retting time and water that spare the fibre are learned by doing.",
   "name": "Linen",
   "cat": "material",
   "kind": "RESOURCE",
@@ -575,7 +583,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Linen from flax after retting and breaking. Already produced routinely wherever flax is grown and processed.",
+  "note": "Linen is cloth made from flax fibre. The stalks are retted (soaked so microbes rot the pectin gluing fibre to the woody core), broken and scutched to free the long fibres, hackled (combed) to clean and align them, then spun and woven. It is already produced routinely wherever flax is grown and processed.",
   "traits": [
    "commerce",
    "labour_saving"
@@ -604,6 +612,8 @@
  },
  {
   "id": "mat_leather",
+  "copy_visibility": 0.5,
+  "copy_visibility_reason": "The tanyard and its pits are visible and smell far off, but the strength and timing of the tanning liquors, which decide the leather, are not visible.",
   "name": "Leather",
   "cat": "material",
   "kind": "RESOURCE",
@@ -737,6 +747,8 @@
  },
  {
   "id": "mat_glass_soda",
+  "copy_visibility": 0.2,
+  "copy_visibility_reason": "Clear glass shows nothing of the batch, the ash or sand choice or the annealing; Venetian glassmakers were bound by law not to leave Murano, which shows the recipe was worth guarding.",
   "name": "Soda-lime glass",
   "cat": "material",
   "kind": "RESOURCE",
@@ -1034,6 +1046,8 @@
  },
  {
   "id": "mat_cast_iron",
+  "copy_visibility": 0.5,
+  "copy_visibility_reason": "Castings and the tapping of a furnace are visible, but the burden, blast and slag control that keep a furnace running are hidden in the operation.",
   "name": "Cast iron",
   "cat": "material",
   "kind": "RESOURCE",
@@ -1108,6 +1122,8 @@
  },
  {
   "id": "mat_bulk_steel",
+  "copy_visibility": 0.3,
+  "copy_visibility_reason": "A converter blow is a spectacle anyone can watch, but the lining chemistry and the phosphorus in the ore are invisible; early Bessemer licensees failed on phosphoric ores until the cause was understood.",
   "name": "Bulk steel (converter and open hearth)",
   "cat": "material",
   "kind": "RESOURCE",
@@ -1168,6 +1184,8 @@
  },
  {
   "id": "mat_tool_steel_hss",
+  "copy_visibility": 0.2,
+  "copy_visibility_reason": "A tool cutting at red heat is a striking demonstration, but the composition and the high heat treatment cannot be read from the tool and were held as a patented secret.",
   "name": "High speed and alloy tool steel",
   "cat": "material",
   "kind": "RESOURCE",
@@ -1225,6 +1243,8 @@
  },
  {
   "id": "mat_zinc",
+  "copy_visibility": 0.2,
+  "copy_visibility_reason": "The metal reaches a buyer as ingots and shows nothing of the sealed retort and downward condensing; European users imported zinc from the East before they could make it.",
   "name": "Zinc metal",
   "cat": "material",
   "kind": "RESOURCE",
@@ -1272,7 +1292,7 @@
   "sch": 4,
   "art": 8,
   "conf": "B",
-  "note": "Not isolated in antiquity. Coinage, plating, alloy steels, glass-to-metal seals, catalysts."
+  "note": "Nickel was not isolated in antiquity, because its ores are hard to smelt and are easily mistaken for copper ores. It is won by roasting and smelting the ore to a metal-rich matte and refining that, by chemical routes such as the Mond process (a gas that carries nickel off as a vapour) or by electrolytic refining, and needs very high heat and chemical purification. It is used for coinage, plating, alloy steels, glass-to-metal seals and catalysts."
  },
  {
   "id": "mat_chromium",
@@ -1356,6 +1376,8 @@
  },
  {
   "id": "mat_aluminium",
+  "copy_visibility": 0.2,
+  "copy_visibility_reason": "The grey metal shows nothing of the bath or the current; an onlooker at the cell sees molten salt and glow but not the bath composition or the cell control.",
   "name": "Aluminium",
   "cat": "material",
   "kind": "RESOURCE",
@@ -1530,6 +1552,8 @@
  },
  {
   "id": "mat_porcelain",
+  "copy_visibility": 0.1,
+  "copy_visibility_reason": "Europe imported Chinese porcelain for centuries and could not copy it until Bottger's work in the early 1700s; the white body, the kaolin and the high firing are invisible in the finished ware.",
   "name": "Porcelain and high-fired stoneware",
   "cat": "material",
   "kind": "RESOURCE",
@@ -1556,6 +1580,8 @@
  },
  {
   "id": "mat_cement_portland",
+  "copy_visibility": 0.2,
+  "copy_visibility_reason": "The grey powder shows nothing of the limestone and clay ratio or the burning temperature, and Aspdin kept his recipe secret when he patented it.",
   "name": "Portland cement",
   "cat": "material",
   "kind": "RESOURCE",
@@ -1606,6 +1632,8 @@
  },
  {
   "id": "mat_paper",
+  "copy_visibility": 0.3,
+  "copy_visibility_reason": "The sheet shows its fibres but not the beating, sizing or mould work; tradition has the craft crossing into the Islamic world with captured papermakers, so it moved with people rather than samples.",
   "name": "Rag paper",
   "cat": "material",
   "kind": "RESOURCE",
@@ -1769,6 +1797,8 @@
  },
  {
   "id": "mat_petroleum_refined",
+  "copy_visibility": 0.5,
+  "copy_visibility_reason": "Kerosene and wax are visible products and a still can be seen at work, but cut points and the removal of impurities are matters of operating skill.",
   "name": "Refined petroleum fractions",
   "cat": "material",
   "kind": "RESOURCE",
@@ -1824,6 +1854,8 @@
  },
  {
   "id": "mat_chlorine",
+  "copy_visibility": 0.3,
+  "copy_visibility_reason": "The bleached cloth and the smell are evident, but the generating plant, the absorption in lime and the handling of the gas are not shown by the product.",
   "name": "Chlorine and bleach",
   "cat": "material",
   "kind": "RESOURCE",
@@ -1848,6 +1880,8 @@
  },
  {
   "id": "mat_dyes_synthetic",
+  "copy_visibility": 0.4,
+  "copy_visibility_reason": "The dyed cloth can be analysed by a trained chemist, but the route from coal tar through the intermediates and the plant that runs it are not visible; imitators needed their own chemists.",
   "name": "Synthetic dyes (aniline)",
   "cat": "material",
   "kind": "RESOURCE",
@@ -1892,6 +1926,8 @@
  },
  {
   "id": "mat_nitrocellulose",
+  "copy_visibility": 0.2,
+  "copy_visibility_reason": "The fibre looks unchanged after nitration, and the acid mix, temperature and the washing that decide whether it is stable are invisible; several early plants blew up for lack of it.",
   "name": "Nitrocellulose",
   "cat": "material",
   "kind": "RESOURCE",

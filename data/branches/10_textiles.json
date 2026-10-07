@@ -44,7 +44,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Linen from flax after retting and breaking. Rome produces linen cloth routinely."
+  "note": "Linen fibre comes from the stalks of the flax plant. The stalks are soaked or dew-retted for days to weeks so the pectin that glues fibre to the woody core rots, then beaten and combed to separate the long fibres from the brittle core. Rome produces and trades linen cloth widely. The work is labour-intensive but the cloth is durable."
  },
  {
   "id": "tex_cotton_trade",
@@ -165,7 +165,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Matting wool fibers with moisture and heat to create felt. Ancient technique for hats, cloaks, armor padding.",
+  "note": "Felt is cloth made without weaving. Wool fibres have microscopic surface scales that catch on each other, so when loose wool is soaked in hot water, pressed and rubbed (soap or alkali helps), the fibres lock together and shrink into a dense mat. It needs only wool, water, heat and labour, which is why it was among the oldest textiles, used for hats, cloaks and padding under armour.",
   "traits": [
    "commerce",
    "labour_saving"
@@ -304,6 +304,8 @@
  },
  {
   "id": "tex_dye_woad",
+  "copy_visibility": 0.2,
+  "copy_visibility_reason": "A blue cloth shows nothing of the fermented woad balls or the vat, and the guilds held the process.",
   "name": "Dyeing with woad",
   "cat": "textiles",
   "kind": "ENGINEERING",
@@ -322,7 +324,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Woad (Isatis tinctoria) produces blues. Leaves fermented then oxidized. Common and relatively cheap blue dye.",
+  "note": "Woad is a plant whose leaves contain a colourless precursor of the blue dye indigo. The leaves are crushed and fermented, and the dye is dissolved in an alkaline vat; cloth dipped in it comes out yellowish green and turns blue as the air oxidises it. The vat needs patient fermentation and the right alkalinity, but the plant grows in cool climates, so woad was the common cheap blue of Europe.",
   "traits": [
    "commerce",
    "labour_saving"
@@ -330,6 +332,8 @@
  },
  {
   "id": "tex_dye_murex",
+  "copy_visibility": 0.1,
+  "copy_visibility_reason": "The purple shows nothing of the shellfish, the gland or the long steeping, and the process was kept so close that it was lost after the fall of Constantinople.",
   "name": "Murex purple dyeing",
   "cat": "textiles",
   "kind": "ENGINEERING",
@@ -414,6 +418,8 @@
  },
  {
   "id": "tex_spinning_wheel",
+  "copy_visibility": 0.9,
+  "copy_visibility_reason": "The wheel, the band and the spindle are all visible and a spinner copies it from one look.",
   "name": "Spinning wheel with flyer",
   "cat": "textiles",
   "kind": "ENGINEERING",
@@ -495,6 +501,8 @@
  },
  {
   "id": "tex_treadle_loom",
+  "copy_visibility": 0.8,
+  "copy_visibility_reason": "The frame, the heddles and the treadle links are all visible on the loom; only the setting-up of a warp takes teaching.",
   "name": "Treadle loom",
   "cat": "textiles",
   "kind": "ENGINEERING",
@@ -538,6 +546,8 @@
  },
  {
   "id": "tex_mordanting",
+  "copy_visibility": 0.15,
+  "copy_visibility_reason": "A coloured cloth does not show which mineral salt fixed the dye, and recipes for fast reds such as Turkey red were kept as trade secrets and bought or stolen by European dyers over decades.",
   "name": "Mordanting dyes with alum",
   "cat": "textiles",
   "kind": "ENGINEERING",
@@ -572,6 +582,8 @@
  },
  {
   "id": "tex_indigo",
+  "copy_visibility": 0.2,
+  "copy_visibility_reason": "A blue cloth shows nothing of the fermenting vat, its alkali or its reduction, which are the hard part; the vat is a craft secret kept by dyers.",
   "name": "Indigo dyeing",
   "cat": "textiles",
   "kind": "ENGINEERING",
@@ -771,6 +783,8 @@
  },
  {
   "id": "tex_flying_shuttle",
+  "copy_visibility": 0.9,
+  "copy_visibility_reason": "The shuttle box and the picker are plain on the loom, so a visiting weaver could see how it works at a glance; Britain's later restrictions had to target the people and machines leaving rather than the idea.",
   "name": "Flying shuttle",
   "cat": "textiles",
   "kind": "ENGINEERING",
@@ -816,6 +830,8 @@
  },
  {
   "id": "tex_spinning_jenny",
+  "copy_visibility": 0.8,
+  "copy_visibility_reason": "The row of spindles and the sliding carriage are visible in the frame; only the knack of drawing the roving at the right pace is learned by use.",
   "name": "Spinning jenny",
   "cat": "textiles",
   "kind": "ENGINEERING",
@@ -854,6 +870,8 @@
  },
  {
   "id": "tex_water_frame",
+  "copy_visibility": 0.6,
+  "copy_visibility_reason": "The roller drafting is visible in the frame, but the setting of the roller speeds and weights is not; Britain banned exporting such machinery and Samuel Slater is said to have rebuilt one in America from memory.",
   "name": "Water frame spinner",
   "cat": "textiles",
   "kind": "ENGINEERING",
@@ -1241,6 +1259,8 @@
  },
  {
   "id": "tex_calico_printing",
+  "copy_visibility": 0.3,
+  "copy_visibility_reason": "The printed pattern is visible and the blocks can be copied, but the mordants and the fastness of the colour are not shown.",
   "name": "Calico printing with blocks",
   "cat": "textiles",
   "kind": "ENGINEERING",
@@ -1437,6 +1457,8 @@
  },
  {
   "id": "tex_spinning_mule",
+  "copy_visibility": 0.6,
+  "copy_visibility_reason": "The moving carriage and the spindles are visible, but the timing of the draw, twist and winding-on is hard to read from the machine, and British export bans on mules slowed continental copies.",
   "name": "Spinning mule (jenny plus frame)",
   "cat": "textiles",
   "kind": "ENGINEERING",

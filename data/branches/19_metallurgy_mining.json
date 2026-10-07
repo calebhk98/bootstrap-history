@@ -1440,6 +1440,8 @@
  },
  {
   "id": "met_quenching_media",
+  "copy_visibility": 0.1,
+  "copy_visibility_reason": "The cooled blade shows nothing of what bath it was quenched in, and smiths kept their baths as guild secrets.",
   "name": "Quenching media and quench crack prevention",
   "cat": "heat_treatment",
   "kind": "ENGINEERING",

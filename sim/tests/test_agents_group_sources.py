@@ -21,8 +21,8 @@ class StrataWorld(FakeWorld):
 	def subsistence_cost_per_person_year(self):
 		return 100.0
 
-	def housing_cost_per_person_year(self):
-		return 40.0
+	def need_floor_costs_per_person_year(self):
+		return {"food": 100.0, "shelter": 40.0}
 
 	def pay_per_person_year(self, trade):
 		return self.pay[trade]

@@ -1,18 +1,23 @@
 # Reach and built roads are not read by the engine
 
-**Status:** open
+**Status:** partly - the engine keeps built roads and track and routes over them (labour reach, relocation, region reach, material freight distance); the economy's market areas (`route_costs` in `sim/economy`) are not yet handed the built ways, and a way is finished the moment it is paid for
 
-Geography can now route over tiles by any mode a civilisation holds, with roads and railways as built improvements the caller records (`api.route`, `api.reach`, `api.edge_key`; `sim/geography/INTERFACE.md`). Labour reach (Complaint 134), region reach bands (`Geography.region_reach`, calibrated against hand-set `reach_from_italia` figures, Complaints 328 and 378) still use distances and bands instead (the economy's market areas now read geography's route costs, Complaint 408).
+Geography routes over tiles by any mode a civilisation holds, with roads and railways as built improvements the caller records (`api.route`, `api.reach`, `api.edge_key`, `api.build_requirements`; `sim/geography/INTERFACE.md`).
 
-What it would take: the engine keeps a saved `improvements` map of built roads and track per edge, built by projects that cost labour and material per km by terrain; labour reach becomes `api.reach` within a day budget; region reach and `material_reach` become route cost from the home tiles. `sim/engine/economy_mining.py` also still falls back to the region id "italia" by name.
+## Done
 
-Labour reach now reads `api.reach` over the modes held (Complaint 134, closed). It passes no
-`improvements`, since the engine keeps none yet. Relocating the household's base still uses a straight-line
-walking pace (`labour_settlement.relocation_quote`). `api.route` from spain_03 to algeria_01 returns
-5,357 km and 228 days for rome_100ad, about three times the straight-line quote, which reads as a
-cheapest-freight path rather than the fastest way a household would travel. A fastest-route query, or a
-route weighted by days, would let relocation use geography too.
+- `state.economy.improvements` ({edge key: {way: true}}) is saved with the game. `Sim.build_way` / `way_quote` (`sim/engine/ways.py`, command `build_way`) price a road or railway from `api.build_requirements`: earthwork on the edge's grade (a bed plus a balanced cut-and-fill bench), surface and fixed materials from the mode's `construction` data (labelled heuristics), labour at the labour market, material at the goods market. Steeper ground costs more; ground beyond the mode's natural limit cannot be built. `sim/tests/test_geography_ways_build.py`, `sim/tests/test_built_ways.py`.
+- Labour reach (`reachable_tiles`) and relocation pass the improvements. Relocation takes the days of `api.route(..., fastest=True)` over the modes held, not a straight-line pace; `RELOCATION_KM_PER_DAY` and the `base_reach` speed-up are gone, and a tile no route joins is refused. `sim/tests/test_relocation_follows_fastest_route.py`.
+- `Geography.region_reach` is the fewest days of the fastest route from the tiles held to any tile of the region, over the modes and ways held, banded on a doubling ladder (`reach_band_first_days`, `reach_band_ratio`, both labelled heuristics); a region no route joins is the farthest level. `material_reach` is calibrated against the same table for the civilisation the located-material costs were written for (`located_material_reference_civilisation`), replacing `reach_from_italia`. Reach and mineral access are rebuilt when the techniques held or the ways built change. `civilisation.base_reach` is deleted. `sim/tests/test_reach_from_tiles.py`.
+- `material_freight_distance_km` is the km of geography's cheapest route to the nearest producing region (the great-circle distance between the nearest pair of tiles only when no mode joins them).
+- The region id "italia" fallback in `economy_mining.py` is gone (a civilisation holding no tile has no woodland ceiling); `sim/tests/test_reach_from_tiles.py` fails if an engine or geography module names a region id.
 
+## What remains
+
+- Hand the built ways to the economy's market areas (`sim/economy` `route_costs`/`tile_costs`, through `EconomySetup`), so a road lowers carriage costs in the agent economy as well as in routes, reach and relocation.
+- Building takes time and labourers' hours (it is finished and paid in wages at once); the labour hours are not drawn from the labour market's pools.
+- Roads exist only on land edges; bridges, river works, ports and canals, and an `engineered` way over ground steeper than the natural limit, are not built.
+- The reach bands are labelled heuristics; deriving the ladder (for example from the carriers' own days per tile) would remove them.
 
 ## Folded in
 

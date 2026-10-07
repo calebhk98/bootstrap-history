@@ -45,7 +45,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Spherical water containers magnify. The phenomenon is ancient and refraction geometry tells you why.",
+  "note": "A clear glass globe filled with water works as a magnifying lens. Light bends as it passes between water and air at the curved surface, and the bent rays focus, so text or small objects seen through or behind the globe appear larger. It needs only a clear round container and water. The effect was noticed in antiquity, and it shows the basic idea that curved transparent material can enlarge, from which ground lenses followed.",
   "traits": [
    "religious_adjacent",
    "spectacle"
