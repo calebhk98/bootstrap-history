@@ -54,7 +54,7 @@ for it (CLAUDE.md SS3.1):
      class, classified by the `kgcpy` package's bundled raster (the Rubel et
      al. 2016 present-day maps, not Beck et al. 2018 - see that package's
      own citation). The dataset is the `koppen_class` option in
-     tools/map_data_sources.py (see DATA SOURCES below). This is the actual
+     sim/geography/map_data_sources.py (see DATA SOURCES below). This is the actual
      generating rule for the two numbers Complaints/45 is about: a desert
      tile gets a low arable fraction wherever on Earth it is, a
      Mediterranean-climate tile gets fertility 1.0 wherever on Earth it is,
@@ -138,8 +138,8 @@ reproduce the same tiles, because every other input (kgcpy's bundled
 raster, the code below) is pinned by `pip install` versions - see
 REQUIREMENTS below.
 
-DATA SOURCES. Each layer's dataset is one option in tools/map_data_sources.py
-and tools/koppen_classifiers.py; `--list-sources` prints them and
+DATA SOURCES. Each layer's dataset is one option in sim/geography/map_data_sources.py
+(also read by sim.geography.layer_build, so both generators share one description); `--list-sources` prints them and
 `--source koppen_class=OPTION` picks one. Adding a dataset means adding an
 option there plus the files or loader it needs. The current source of every
 committed layer is listed in data/world/geography/ATTRIBUTION.md.
@@ -209,9 +209,10 @@ import io
 import urllib.request
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import map_data_sources  # noqa: E402
-from koppen_classifiers import KOPPEN_CLASSIFIERS  # noqa: E402
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from sim.geography import api as geography_api  # noqa: E402
+
+map_data_sources = geography_api.map_data_sources
 
 # ============================================================================
 # CACHE AND DOWNLOAD - Natural Earth's public-domain vector layers, fetched
@@ -222,23 +223,6 @@ DEFAULT_CACHE_DIR = os.path.join(
     os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache")),
     "bootstrap_history_geography_tiles")
 
-NATURAL_EARTH_BASE_URL = "https://naciscdn.org/naturalearth"
-
-# (cache subdirectory, download url, expected shapefile basename)
-NATURAL_EARTH_LAYERS = {
-    "land": (
-        "land",
-        f"{NATURAL_EARTH_BASE_URL}/50m/physical/ne_50m_land.zip",
-        "ne_50m_land.shp",
-    ),
-    "countries": (
-        "countries",
-        f"{NATURAL_EARTH_BASE_URL}/50m/cultural/ne_50m_admin_0_countries.zip",
-        "ne_50m_admin_0_countries.shp",
-    ),
-}
-
-
 def _download_and_extract(url, destination_directory):
     os.makedirs(destination_directory, exist_ok=True)
     request = urllib.request.Request(url, headers={"User-Agent": "bootstrap-history-geography-tiles/1.0"})
@@ -248,17 +232,17 @@ def _download_and_extract(url, destination_directory):
         archive.extractall(destination_directory)
 
 
-def ensure_natural_earth_layer(layer_key, cache_dir):
-    """Returns the local .shp path for `layer_key`, downloading into
+def ensure_natural_earth_layer(source, cache_dir):
+    """Returns the local .shp path for a registry source (map_data_sources), downloading into
     `cache_dir` first if it is not already there. Idempotent: a second
     call with the same cache_dir does no network access at all.
     """
-    subdirectory, url, shapefile_name = NATURAL_EARTH_LAYERS[layer_key]
-    layer_dir = os.path.join(cache_dir, subdirectory)
-    shapefile_path = os.path.join(layer_dir, shapefile_name)
+    files = source.files
+    layer_dir = os.path.join(cache_dir, files["cache_subdirectory"])
+    shapefile_path = os.path.join(layer_dir, files["shapefile"])
     if not os.path.exists(shapefile_path):
-        print("  downloading %s ..." % url)
-        _download_and_extract(url, layer_dir)
+        print("  downloading %s ..." % files["url"])
+        _download_and_extract(files["url"], layer_dir)
     return shapefile_path
 
 
@@ -495,7 +479,8 @@ def assign_tile_ids(tiles):
 
 def build_tiles(cache_dir, sources=None, verbose=True):
     sources = sources or map_data_sources.resolve_sources()
-    classify_koppen = KOPPEN_CLASSIFIERS[sources["koppen_class"]]()
+    chosen = {layer: map_data_sources.SOURCES[layer][option] for layer, option in sources.items()}
+    classify_koppen = map_data_sources.loader_of(chosen["koppen_class"])()
     import geopandas
     import shapely
     from shapely.geometry import box
@@ -505,8 +490,8 @@ def build_tiles(cache_dir, sources=None, verbose=True):
             print(message)
 
     start = time.time()
-    land_shapefile = ensure_natural_earth_layer("land", cache_dir)
-    countries_shapefile = ensure_natural_earth_layer("countries", cache_dir)
+    land_shapefile = ensure_natural_earth_layer(chosen["land_mask"], cache_dir)
+    countries_shapefile = ensure_natural_earth_layer(chosen["country_majority"], cache_dir)
 
     land = geopandas.read_file(land_shapefile).to_crs(EQUAL_AREA_CRS)
     countries = geopandas.read_file(countries_shapefile)
@@ -754,7 +739,7 @@ def main():
         help="where to cache downloaded Natural Earth shapefiles (default: %s)"
              % DEFAULT_CACHE_DIR)
     parser.add_argument("--source", action="append", default=[], metavar="LAYER=OPTION",
-        help="dataset for a layer, chosen from tools/map_data_sources.py (repeatable; defaults are the "
+        help="dataset for a layer, chosen from sim/geography/map_data_sources.py (repeatable; defaults are the "
              "datasets the committed files were built from)")
     parser.add_argument("--list-sources", action="store_true",
         help="print every layer's source options and exit")

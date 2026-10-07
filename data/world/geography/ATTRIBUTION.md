@@ -1,6 +1,6 @@
 # Map data attribution and provenance
 
-The dataset behind each generated map layer. The registry is `tools/map_data_sources.py`; a layer's dataset is one option there, chosen with `--source layer=option` on `tools/generate_geography_tiles.py`. Layers other than the first three are written by `python3 -m sim.geography.layer_build`. A test checks this registry covers every layer file and tile-grid field.
+The dataset behind each generated map layer. The registry is `sim/geography/map_data_sources.py`; a layer's dataset is one option there, chosen with `--source layer=option` on `tools/generate_geography_tiles.py`. Layers other than the first three are written by `python3 -m sim.geography.layer_build`, which takes the same `--source layer=option`; each option names its loader and files. A test checks this registry covers every layer file and tile-grid field.
 
 Terms are recorded as provenance (read from each provider on the audit date, see `Complaints/reports/map-data-licence-audit.md`); the project owner decided licences do not block use here.
 
@@ -23,7 +23,8 @@ Terms are recorded as provenance (read from each provider on the audit date, see
 | river_km_navigable | natural_earth_10m_rivers | Natural Earth 1:10m rivers_lake_centerlines | Natural Earth | Natural Earth, naturalearthdata.com | public domain |
 | lake_area_km2 | natural_earth_10m_lakes | Natural Earth 1:10m lakes | Natural Earth | Natural Earth, naturalearthdata.com | public domain |
 | shelf_area_km2 | natural_earth_10m_bathymetry | Natural Earth 1:10m bathymetry L_0 and K_200 | Natural Earth | Natural Earth, naturalearthdata.com | public domain |
-| is_port | natural_earth_10m_ocean | Natural Earth 1:10m ocean | Natural Earth | Natural Earth, naturalearthdata.com | public domain |
+| is_port | natural_earth_ocean | Natural Earth 1:10m ocean | Natural Earth | Natural Earth, naturalearthdata.com | public domain |
+| sea_links | natural_earth_ocean | Natural Earth ocean, coastline and admin-0 | Natural Earth | Natural Earth, naturalearthdata.com | public domain |
 
 Notes:
 - `koppen_class` (and the arable and fertility figures read from it) come from the Rubel et al. 2016 maps bundled in the `kgcpy` package, not from Beck et al. 2018.

@@ -11,7 +11,6 @@ from shapely.geometry import Point, box
 from .cache import fetch_unzipped
 
 PLANE_CRS = 6933  # WGS 84 / NSIDC EASE-Grid 2.0 Global (cylindrical equal area)
-NATURAL_EARTH = "https://naciscdn.org/naturalearth"
 GEOGRAPHY_PATH = os.path.join(
     os.path.dirname(__file__), "..", "..", "..", "data", "world", "geography", "tile_grid.json")
 
@@ -28,10 +27,10 @@ def plane_y(latitudes):
     return _FORWARD.transform([0.0] * len(latitudes), latitudes)[1]
 
 
-def read_natural_earth(scale, theme, name, cache_dir):
-    """A Natural Earth layer as a GeoDataFrame in the plane CRS."""
+def read_natural_earth(source, scale, theme, name, cache_dir):
+    """A Natural Earth layer as a GeoDataFrame in the plane CRS; `source.files["base"]` is where the archives live."""
     stem = "ne_%s_%s" % (scale, name)
-    directory = fetch_unzipped("%s/%s/%s/%s.zip" % (NATURAL_EARTH, scale, theme, stem), cache_dir)
+    directory = fetch_unzipped("%s/%s/%s/%s.zip" % (source.files["base"], scale, theme, stem), cache_dir)
     return geopandas.read_file(os.path.join(directory, stem + ".shp")).to_crs(PLANE_CRS)
 
 
@@ -47,12 +46,12 @@ class Tile:
         self.land = land
 
 
-def load_tiles(cache_dir, geography_path=GEOGRAPHY_PATH):
-    """Tiles of the tile grid file, with cell and land geometry."""
+def load_tiles(cache_dir, land_source, geography_path=GEOGRAPHY_PATH):
+    """Tiles of the tile grid file, with cell and land geometry from the `land_mask` source."""
     with open(geography_path, encoding="utf-8") as handle:
         section = json.load(handle)
     side = math.sqrt(section["target_tile_area_km2"]) * 1000.0
-    land_frame = read_natural_earth("50m", "physical", "land", cache_dir)
+    land_frame = read_natural_earth(land_source, "50m", "physical", "land", cache_dir)
     land_index = land_frame.sindex
     land_shapes = land_frame.geometry.values
     tiles = []

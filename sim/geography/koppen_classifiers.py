@@ -1,11 +1,11 @@
-"""Koppen-Geiger classifiers, one per option of map_data_sources.SOURCES["koppen_class"].
+"""Koppen-Geiger classifiers for the tile generator, one per option of map_data_sources.SOURCES["koppen_class"].
 
 Each factory returns classify(lat, lon) -> class letters, or None when the dataset has nothing there.
 """
 
 
 def kgcpy_rubel_2016():
-    import kgcpy
+    import kgcpy  # generator-only dependency
 
     def classify(lat, lon):
         # Keep longitude in [-180, 180): the equal-area round trip can return 180.00000003 at the antimeridian.
@@ -31,6 +31,3 @@ def kgcpy_rubel_2016():
         return None
 
     return classify
-
-
-KOPPEN_CLASSIFIERS = {"kgcpy_rubel_2016": kgcpy_rubel_2016}
