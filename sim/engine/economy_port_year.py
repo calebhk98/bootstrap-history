@@ -296,15 +296,25 @@ class AgentEconomy:
         watched = sorted(basket, key=lambda good: -basket[good] * prices.get(good, 0.0))[:SPIN_UP_WATCHED_GOODS]
         inputs = YearInputs(year=0, population_by_tile={}, working_age_share=economy.setup.working_share,
                             yield_factor_by_producer={}, engine_orders={})
+        self._settle(economy, inputs, watched, with_wages=False)
+        economy_api.trim_workforce_to_expected_hours(economy)
+        self._settle(economy, inputs, watched, with_wages=True)   # the trimmed trades' wages and entry settle too
+        economy_api.finish_spin_up(economy)
+
+    @staticmethod
+    def _settle(economy, inputs, watched, with_wages):
+        """Hidden years until the price level, the rate, the main prices and the trades' wages move less than
+        the tolerance a year (the trades' wages only when `with_wages`)."""
         before = None
         for _year in range(int(SPIN_UP_MAXIMUM_YEARS)):
             outcome = economy.step(inputs)
+            wages = economy_api.wages_by_trade_weighted(economy) if with_wages else {}
             now = ([outcome.basket_price_level, economy_api.interest_rate(economy) or 0.0]
-                   + [outcome.prices.get(good, 0.0) for good in watched])
-            if before is not None and max(abs(new / old - 1.0) for new, old in zip(now, before) if old > 0.0) < SPIN_UP_TOLERANCE:
+                   + [outcome.prices.get(good, 0.0) for good in watched] + [wages[trade] for trade in sorted(wages)])
+            if before is not None and len(now) == len(before) and max(
+                    abs(new / old - 1.0) for new, old in zip(now, before) if old > 0.0) < SPIN_UP_TOLERANCE:
                 break
             before = now
-        economy_api.finish_spin_up(economy)
 
     def _save(self):
         self.stored["record"] = economy_api.export_record(self._economy)

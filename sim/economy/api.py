@@ -182,11 +182,14 @@ def export_record(economy):
 
 
 def finish_spin_up(economy):
-    """Closes the hidden spin-up years: trades are cut to the hours wanted, the price level is rebased to
-    one and the clock returns to zero."""
-    workforce_settle.trim_to_expected_hours(economy.setup, economy.record, economy.view())
+    """Closes the hidden spin-up years: the price level is rebased to one and the clock returns to zero."""
     rebase_basket_price_level(economy.setup, economy.record)
     economy.record.memory.year = 0
+
+
+def trim_workforce_to_expected_hours(economy):
+    """Cuts each skilled trade to the hours employers plan to want; see workforce_settle."""
+    workforce_settle.trim_to_expected_hours(economy.setup, economy.record, economy.view())
 
 
 def shown_prices_of(economy):
