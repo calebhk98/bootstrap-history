@@ -73,15 +73,19 @@ def _candidates(rivals: Sequence[Offer], last_price: Optional[float], unit_value
 
 
 def best_reservation(bids: Sequence[Bid], rivals: Sequence[Offer], offer: Offer, unit_value: float,
-                     last_price: Optional[float], ceiling: float = math.inf, floor: float = 0.0) -> Optional[float]:
+                     last_price: Optional[float], ceiling: float = math.inf, floor: float = 0.0,
+                     current: Optional[float] = None) -> Optional[float]:
     """The reservation, between `floor` and `ceiling`, that maximises the seller's profit against the book, or
-    None when the seller does not move the price or nothing beats offering at the ceiling."""
+    None when the seller does not move the price or nothing beats keeping `current` (the price-taking ask;
+    the ceiling when not given). A choice above the ask withholds units, which stay unsold."""
     if not moves_the_price(bids, rivals, offer, last_price):
         return None
-    start = ceiling if math.isfinite(ceiling) else 0.0
-    best, best_profit = None, profit_at(bids, rivals, offer, start, unit_value, last_price)
-    for reservation in _candidates(rivals, last_price, unit_value):
-        if reservation >= ceiling or reservation < floor:
+    if current is None:
+        current = ceiling if math.isfinite(ceiling) else 0.0
+    best, best_profit = None, profit_at(bids, rivals, offer, current, unit_value, last_price)
+    bounds = [bound for bound in (floor, ceiling) if math.isfinite(bound)]
+    for reservation in sorted({*bounds, *_candidates(rivals, last_price, unit_value)}):
+        if reservation > ceiling or reservation < floor or reservation == current:
             continue
         profit = profit_at(bids, rivals, offer, reservation, unit_value, last_price)
         if profit > best_profit + ROUNDING_SHARE * max(abs(best_profit), 1e-300):

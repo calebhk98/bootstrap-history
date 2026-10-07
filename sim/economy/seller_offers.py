@@ -5,11 +5,11 @@ if its own offer moves the clearing price (seller_pricing.py), asks the reservat
 profit; a producer that does not move the price keeps the reservation `producers.offers` gave it. What a
 unit is worth to the seller unsold is the cheaper of replacing it (its variable cost per unit) and holding
 it (its price-taking reservation), so a seller never prices below what a unit costs it to make or keep.
-A producer stands for every workshop running its recipe on its tile, and those workshops cannot hold goods
-back together, so a producer may cut its ask below the price-taking one but never raise it
-(temporary heuristic: restraint needs a firm, not an aggregate of competing workshops). The cut is
-bounded by the share a seller already marks its ask down in a year (UNSOLD_ASK_MARKDOWN_SHARE), so a
-producer's price falls over the years as its capacity grows and never collapses in one.
+A seller that moves the price may also raise its ask above the price-taking one, which holds units back
+(restraint) when the dearer, smaller sale earns more. A change either way is bounded by the share a seller
+already marks its ask down in a year (UNSOLD_ASK_MARKDOWN_SHARE), so an ask moves over the years as the
+book changes and never jumps in one; an ask raised past what buyers pay goes unsold and is marked down
+again by the producer's own rule.
 """
 import dataclasses
 from typing import List, Optional, Sequence
@@ -53,9 +53,11 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
         if value is None or offer.quantity <= 0.0:
             continue
         rivals = offers[:index] + offers[index + 1:]
+        ask = max(offer.reservation_price, 0.0)
+        step = UNSOLD_ASK_MARKDOWN_SHARE * (ask if ask > 0.0 else max(last_price or 0.0, 0.0))
         choice = seller_pricing.best_reservation(
-            book, rivals, offer, value, last_price, ceiling=max(offer.reservation_price, 0.0),
-            floor=max(offer.reservation_price, 0.0) * (1.0 - UNSOLD_ASK_MARKDOWN_SHARE))
+            book, rivals, offer, value, last_price, ceiling=ask + step,
+            floor=ask * (1.0 - UNSOLD_ASK_MARKDOWN_SHARE), current=ask)
         if choice is not None:
             offers[index] = dataclasses.replace(offer, reservation_price=choice)
     return offers

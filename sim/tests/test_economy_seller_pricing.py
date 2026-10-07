@@ -61,5 +61,30 @@ class ChoiceTests(unittest.TestCase):
         self.assertLess(price, 1.0)
 
 
+class RestraintTests(unittest.TestCase):
+    def test_a_sole_seller_asking_below_its_best_price_raises_its_ask(self):
+        offer = own(500.0)
+        choice = seller_pricing.best_reservation(demand(), [], offer, 0.1, 1.0, ceiling=2.0, floor=0.5, current=0.5)
+        self.assertIsNotNone(choice)
+        self.assertGreater(choice, 0.5)
+        self.assertLessEqual(choice, 2.0)
+
+    def test_the_raise_is_bounded_by_the_ceiling(self):
+        offer = own(500.0)
+        choice = seller_pricing.best_reservation(demand(), [], offer, 0.1, 1.0, ceiling=0.6, floor=0.4, current=0.5)
+        self.assertLessEqual(choice, 0.6)
+
+    def test_a_seller_already_at_its_best_ask_within_its_bounds_keeps_it(self):
+        offer = own(500.0)
+        best = seller_pricing.best_reservation(demand(), [], offer, 0.1, 1.0)
+        self.assertIsNone(seller_pricing.best_reservation(demand(), [], offer, 0.1, 1.0,
+                                                          ceiling=best, floor=best * 0.9, current=best))
+
+    def test_a_seller_with_a_dear_rival_does_not_raise_past_a_price_that_sells_less_for_less(self):
+        rivals = [rival(1e6, 1.0)]
+        self.assertIsNone(seller_pricing.best_reservation(demand(), rivals, own(1e-6), 0.1, 1.0, ceiling=2.0,
+                                                          floor=0.5, current=1.0))
+
+
 if __name__ == "__main__":
     unittest.main()
