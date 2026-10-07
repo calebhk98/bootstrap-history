@@ -1,6 +1,6 @@
 # Skilled trades open with more people than jobs and sit at the floor wage
 
-**Status:** open
+**Status:** closed - after the hidden spin-up each non-fallback trade is cut to the hours producers plan to bid (or the market hired last year, if more); the freed people join the unskilled trade (`sim/economy/workforce_settle.py`, called from `finish_spin_up`). Regression: `sim/tests/test_complaint_467_trades_open_to_the_jobs.py`.
 
 The agent economy's opening staffs hard trades from the able by the hours producers could work at
 capacity (`sim/economy/labour_state.py` `opening_workforce`). After the hidden spin-up years producers
@@ -18,3 +18,7 @@ What it would take: size the opening workforce by the hours producers will actua
 runs, not capacity), or run the hidden spin-up until the workforce settles as well as prices. Producers'
 own contraction during the spin-up (capacity falling to a fraction of the opening's) is its own question
 in `sim/economy/producers*.py`.
+
+Resolution: the opening workforce itself is still sized by capacity (it must exist for the spin-up); the trim
+after the spin-up replaces capacity with expected hours, read from producers' own plans. Producers' contraction
+during the spin-up stays a separate question in `sim/economy/producers*.py`.
