@@ -414,6 +414,8 @@
  },
  {
   "id": "fud_seed_drill",
+  "copy_visibility": 0.8,
+  "copy_visibility_reason": "The hopper, the tube and the coulter are visible on the machine, so a farmer can copy the layout; the metering of the seed and the covering of it are the parts that take adjusting.",
   "name": "Mechanical seed drill",
   "cat": "agriculture",
   "kind": "ENGINEERING",

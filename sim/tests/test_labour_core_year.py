@@ -81,7 +81,7 @@ class DemandTests(unittest.TestCase):
         state, report = run(state, year_inputs, 3)
         early_wage = report.clearing("carver", "vale").wage
         self.assertGreater(early_wage, report.clearing("digger", "vale").wage)
-        state, report = run(state, year_inputs, 30)
+        state, report = run(state, year_inputs, 45)
         self.assertGreater(workers(state, "vale", "carver"), 60.0)
         self.assertLess(report.clearing("carver", "vale").wage, early_wage)
 
@@ -91,9 +91,13 @@ class AptitudeTests(unittest.TestCase):
         state = records.MarketState(workers={"vale": town(digger=2000, healer=30, plainhand=30)})
         year_inputs = inputs([bid("farm", "digger", "vale", 2000), bid("temple", "healer", "vale", 100, 20.0),
                               bid("office", "plainhand", "vale", 100, 20.0)], entrants=60.0, attrition=0.025)
-        state, report = run(state, year_inputs, 60)
-        self.assertGreater(report.clearing("healer", "vale").wage,
-                           1.2 * report.clearing("plainhand", "vale").wage)
+        state, _report = run(state, year_inputs, 60)
+        healer_wages, plainhand_wages = [], []
+        for _year in range(60):   # vertical demand cycles, so compare the averages over a long stretch
+            state, report = year.run_year(state, year_inputs)
+            healer_wages.append(report.clearing("healer", "vale").wage)
+            plainhand_wages.append(report.clearing("plainhand", "vale").wage)
+        self.assertGreater(sum(healer_wages), 1.2 * sum(plainhand_wages))
         healers = state.workers["vale"]["healer"]
         self.assertGreater(healers[-1], healers[0])
 

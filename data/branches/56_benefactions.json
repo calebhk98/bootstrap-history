@@ -848,5 +848,446 @@
     "order": 18
    }
   }
+ },
+ {
+  "id": "ben_public_museum",
+  "name": "Public museum",
+  "cat": "benefaction",
+  "pre": [
+   "fin_museum",
+   "school_founded"
+  ],
+  "traits": [
+   "information"
+  ],
+  "kb": "04_BENEFACTIONS.md#ben_public_museum",
+  "ph": 150,
+  "lab": {
+   "mason": 3000,
+   "carpenter": 2000,
+   "labourer": 3000,
+   "scholar": 500
+  },
+  "mat": {
+   "timber_m3": 300,
+   "brick_1000": 100,
+   "stone_blocks": 5000,
+   "parchment_sheet": 1000
+  },
+  "cap_hours": 0,
+  "up_hours": 62281.98057834831,
+  "build_yrs": 3,
+  "adopt_yrs": 2,
+  "risk": 0.1,
+  "rev_hours": 0,
+  "sch": 1,
+  "art": 2,
+  "conf": "C",
+  "gov": 0,
+  "sus": 0,
+  "note": "A building for the collection: texts, specimens, instruments and the curators who keep them, open to anyone who comes. It teaches a little by being looked at and adds to the name of its founder. Another museum in another town is a further unit.",
+  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"labourer\": 3000, \"scholar\": 6000, \"scribe\": 4000}. Annual consumables: {\"charcoal_kg\": 20000, \"paper_kg\": 500}. Sizes of the work and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing. Engine readers checked: schooling_flow in _schooling_flow, standing in standing_floor; the sizes are labelled heuristics. A corpus hedge (the corpus mechanic, read by corpus_hedge_tiers and corpus_hedge) is deliberately not declared: the knowledge-risk tests assume exactly two corpus nodes and fail with a third.",
+  "mechanics": {
+   "upkeep_full": true,
+   "capability": {
+    "lost_benefit": "The visitors a public museum teaches and the standing it earns",
+    "scalable": "literacy"
+   },
+   "schooling_flow": {
+    "per_sqrt_unit": 0.2,
+    "order": 4
+   },
+   "standing": {
+    "per_sqrt_unit": 1.5,
+    "order": 19
+   }
+  }
+ },
+ {
+  "id": "ben_free_press",
+  "name": "Endowed free press",
+  "cat": "benefaction",
+  "pre": [
+   "prn_newspaper_institution",
+   "fin_newspaper_business"
+  ],
+  "traits": [
+   "information"
+  ],
+  "kb": "04_BENEFACTIONS.md#ben_free_press",
+  "ph": 200,
+  "lab": {
+   "scribe": 3000,
+   "artisan": 2000,
+   "engraver": 800,
+   "carpenter": 800
+  },
+  "mat": {
+   "timber_m3": 50,
+   "iron_bar_kg": 1500,
+   "lead_kg": 400,
+   "paper_kg": 3000,
+   "ink_kg": 200
+  },
+  "cap_hours": 0,
+  "up_hours": 475086.8112608162,
+  "build_yrs": 1.5,
+  "adopt_yrs": 2,
+  "risk": 0.15,
+  "rev_hours": 0,
+  "sch": 1,
+  "art": 2,
+  "conf": "C",
+  "gov": 0,
+  "sus": 0,
+  "note": "Money to keep a paper printing whether or not it sells: printers, correspondents, engravers and a stock of paper and ink, with the news and the prices of distant markets in every issue. It teaches the town to read by giving it something to read, it widens the markets you can sell to, and it earns a name. A paper that prints what officials would rather not read draws their eye to your work and to you. More papers in more towns are further units.",
+  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"artisan\": 8000, \"engraver\": 3000, \"scribe\": 12000}. Annual consumables: {\"ink_kg\": 800, \"paper_kg\": 8000}. Sizes of the work and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing. Engine readers checked: schooling_flow in _schooling_flow, reach in goods_reach_factor, alarm_factor in node alarm, eminence_hazard_factor in prominence_hazard and eminence_report, standing in standing_floor. The alarm and eminence factors are labelled heuristics; the alarm factor multiplies the alarm of every project while the press is open because the engine has no per-state legitimacy or public opinion field. The prerequisite prn_newspaper_institution already carries the status_threatening trait and a negative government stance.",
+  "mechanics": {
+   "upkeep_full": true,
+   "capability": {
+    "lost_benefit": "The readers a free press teaches, the markets it opens and the standing it earns",
+    "scalable": "literacy"
+   },
+   "schooling_flow": {
+    "per_sqrt_unit": 0.15,
+    "order": 5
+   },
+   "reach": {
+    "factor": 1.04,
+    "order": 7
+   },
+   "standing": {
+    "per_sqrt_unit": 1.0,
+    "order": 20
+   },
+   "alarm_factor": {
+    "factor": 1.05
+   },
+   "eminence_hazard_factor": {
+    "factor": 1.08,
+    "order": 3,
+    "hint_when_running": "a paper in your pay makes you known, and a name that is known is watched"
+   }
+  }
+ },
+ {
+  "id": "ben_city_electric_lighting",
+  "name": "Electric lighting for a city",
+  "cat": "benefaction",
+  "pre": [
+   "civ_street_lighting",
+   "hom_electric_lighting"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "04_BENEFACTIONS.md#ben_city_electric_lighting",
+  "ph": 200,
+  "lab": {
+   "electrician": 15000,
+   "labourer": 12000,
+   "engineer": 800,
+   "carpenter": 1500
+  },
+  "mat": {
+   "copper_wire_kg": 8000,
+   "iron_bar_kg": 5000,
+   "glass_raw_kg": 2000,
+   "timber_m3": 300
+  },
+  "cap_hours": 0,
+  "up_hours": 25981.469300938956,
+  "build_yrs": 2,
+  "adopt_yrs": 2,
+  "risk": 0.1,
+  "rev_hours": 0,
+  "sch": 1,
+  "art": 2,
+  "conf": "C",
+  "gov": 0,
+  "sus": 0,
+  "note": "Arc and filament lamps along a town's streets and squares, with the lamplighters' replacement: electricians to keep the lines and lamps, glass and copper to renew them. It draws power from the grid the whole time it is lit. Lit streets are safer for the people you employ after dark, lend your name a little respect, and discourage the thieves who work in the dark. The next town is another unit.",
+  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"electrician\": 9000, \"labourer\": 3000}. Annual consumables: {\"copper_kg\": 300, \"glass_raw_kg\": 800}. Sizes of the work and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing. Engine readers checked: hazard_counters in HAZARD_COUNTERS (staff_loss), protection in update_protection, standing in standing_floor. No electricity_gate is declared here: the node's prerequisites already lead through power_grid, which the electricity load scan (_electricity_load_node_ids) treats as needing generated electricity, so the open works draws the standing electric load without a second declaration. The shares are labelled heuristics. The working-day and light-demand effects of street lighting have no field and are not modelled.",
+  "mechanics": {
+   "upkeep_full": true,
+   "capability": {
+    "lost_benefit": "The lit streets and the safety and standing they bring",
+    "scalable": "population"
+   },
+   "hazard_counters": [
+    {
+     "kind": "staff_loss",
+     "share": 0.03,
+     "label": "lit streets after dark",
+     "order": 20
+    }
+   ],
+   "protection": {
+    "flat": 0.02,
+    "order": 10
+   },
+   "standing": {
+    "per_sqrt_unit": 1.0,
+    "order": 21
+   }
+  }
+ },
+ {
+  "id": "ben_fire_and_flood_brigades",
+  "name": "Fire and flood brigades",
+  "cat": "benefaction",
+  "pre": [
+   "civ_aqueduct_roman",
+   "patron_local"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "04_BENEFACTIONS.md#ben_fire_and_flood_brigades",
+  "ph": 100,
+  "lab": {
+   "carpenter": 1500,
+   "labourer": 3000,
+   "mason": 500,
+   "smith": 500
+  },
+  "mat": {
+   "timber_m3": 100,
+   "iron_bar_kg": 1500,
+   "twine_kg": 3000,
+   "lead_kg": 1000
+  },
+  "cap_hours": 0,
+  "up_hours": 26700.294934554375,
+  "build_yrs": 1,
+  "adopt_yrs": 1,
+  "risk": 0.1,
+  "rev_hours": 0,
+  "sch": 1,
+  "art": 1,
+  "conf": "C",
+  "gov": 0,
+  "sus": 0,
+  "note": "Paid crews with buckets, pumps, hooks, ladders and sandbags, drilled to turn out at a bell for fire in the town or water at the wall. They hold fire and flood damage to your workshops and people to a part of what it would be, and they earn the thanks of the neighbours. A brigade in another quarter is another unit.",
+  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"carpenter\": 1500, \"labourer\": 12000}. Annual consumables: {\"iron_bar_kg\": 300, \"twine_kg\": 600}. Sizes of the work and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing. Engine readers checked: hazard_counters kinds output_factor and staff_loss in HAZARD_COUNTERS and hazard_relief; they reduce the founder household's own losses, not the nation's, and a hazard is countered by its kind, not by whether it was a fire or a flood. The shares are labelled heuristics.",
+  "mechanics": {
+   "upkeep_full": true,
+   "capability": {
+    "lost_benefit": "The lower damage from fire and flood and the thanks of the town",
+    "scalable": "population"
+   },
+   "hazard_counters": [
+    {
+     "kind": "output_factor",
+     "share": 0.04,
+     "label": "paid crews for fire and flood",
+     "order": 21
+    },
+    {
+     "kind": "staff_loss",
+     "share": 0.04,
+     "label": "crews that pull people out of fire and water",
+     "order": 22
+    }
+   ],
+   "standing": {
+    "per_sqrt_unit": 1.0,
+    "order": 22
+   }
+  }
+ },
+ {
+  "id": "ben_masons_school",
+  "name": "School of the building trades",
+  "cat": "benefaction",
+  "pre": [
+   "school_founded",
+   "fin_guild",
+   "fin_apprenticeship"
+  ],
+  "traits": [
+   "information"
+  ],
+  "kb": "04_BENEFACTIONS.md#ben_masons_school",
+  "ph": 150,
+  "lab": {
+   "mason": 2000,
+   "carpenter": 1500,
+   "scholar": 1000,
+   "labourer": 1500
+  },
+  "mat": {
+   "timber_m3": 200,
+   "brick_1000": 40,
+   "stone_blocks": 3000,
+   "parchment_sheet": 500
+  },
+  "cap_hours": 0,
+  "up_hours": 32535.504745164533,
+  "build_yrs": 2,
+  "adopt_yrs": 2,
+  "risk": 0.1,
+  "rev_hours": 0,
+  "sch": 1,
+  "art": 2,
+  "conf": "C",
+  "gov": 0,
+  "sus": 0,
+  "note": "A school kept by a trade for its own apprentices: master masons teach drawing, setting out and the geometry of the arch, and pupils work on the lodge's building. It makes the household's masons do more in an hour and keeps a few more trained people on the payroll. Another school for another town is a further unit.",
+  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"mason\": 5000, \"scholar\": 3000}. Annual consumables: {\"paper_kg\": 200, \"parchment_sheet\": 500}. Sizes of the work and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing. Engine readers checked: labour_productivity in labour_productivity (capped at half again, summed over built nodes; it is read from built nodes, not from running ones, so closing the school does not remove it), staff_capacity in staff_capacity_sources, standing in standing_floor. The bonus and the capacity are labelled heuristics.",
+  "mechanics": {
+   "upkeep_full": true,
+   "capability": {
+    "lost_benefit": "The better-taught masons and the standing the school earns",
+    "scalable": "literacy"
+   },
+   "labour_productivity": {
+    "trade": "mason",
+    "bonus": 0.05,
+    "order": 11
+   },
+   "staff_capacity": {
+    "scholars": 2.0,
+    "artisans": 6.0,
+    "directors": 1.0,
+    "scales_with_units": true,
+    "must_be_running": true,
+    "order": 23
+   },
+   "standing": {
+    "per_sqrt_unit": 0.8,
+    "order": 23
+   }
+  }
+ },
+ {
+  "id": "ben_technical_school",
+  "name": "Technical school for machinists",
+  "cat": "benefaction",
+  "pre": [
+   "school_founded",
+   "fin_apprenticeship",
+   "mfg_engine_lathe"
+  ],
+  "traits": [
+   "information"
+  ],
+  "kb": "04_BENEFACTIONS.md#ben_technical_school",
+  "ph": 200,
+  "lab": {
+   "machinist": 1500,
+   "mason": 1500,
+   "carpenter": 1000,
+   "scholar": 1000,
+   "labourer": 1500
+  },
+  "mat": {
+   "timber_m3": 150,
+   "brick_1000": 60,
+   "iron_bar_kg": 3000,
+   "paper_kg": 500
+  },
+  "cap_hours": 0,
+  "up_hours": 44591.25235842318,
+  "build_yrs": 2,
+  "adopt_yrs": 2,
+  "risk": 0.1,
+  "rev_hours": 0,
+  "sch": 1,
+  "art": 2,
+  "conf": "C",
+  "gov": 0,
+  "sus": 0,
+  "note": "A school with a shop floor: lathes and benches, instructors from the trade and a classroom for drawing and arithmetic. Its pupils become machinists who do more in an hour and the household can keep a few more trained people. Another school in another town is a further unit.",
+  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"machinist\": 6000, \"scholar\": 4000}. Annual consumables: {\"coal_kg\": 20000, \"iron_bar_kg\": 1000, \"paper_kg\": 300}. Sizes of the work and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing. Engine readers checked: as for ben_masons_school. The bonus and the capacity are labelled heuristics.",
+  "mechanics": {
+   "upkeep_full": true,
+   "capability": {
+    "lost_benefit": "The better-taught machinists and the standing the school earns",
+    "scalable": "literacy"
+   },
+   "labour_productivity": {
+    "trade": "machinist",
+    "bonus": 0.05,
+    "order": 12
+   },
+   "staff_capacity": {
+    "scholars": 2.0,
+    "artisans": 6.0,
+    "directors": 1.0,
+    "scales_with_units": true,
+    "must_be_running": true,
+    "order": 24
+   },
+   "standing": {
+    "per_sqrt_unit": 0.8,
+    "order": 24
+   }
+  }
+ },
+ {
+  "id": "ben_trading_post",
+  "name": "Fortified trading post",
+  "cat": "benefaction",
+  "pre": [
+   "exp_colony_administration",
+   "fin_trading_post"
+  ],
+  "traits": [
+   "commerce",
+   "infrastructure"
+  ],
+  "kb": "04_BENEFACTIONS.md#ben_trading_post",
+  "ph": 300,
+  "lab": {
+   "carpenter": 6000,
+   "mason": 4000,
+   "labourer": 10000,
+   "sailor": 1000,
+   "merchant": 1500,
+   "scribe": 1000
+  },
+  "mat": {
+   "stone_blocks": 20000,
+   "timber_m3": 1500,
+   "iron_bar_kg": 3000,
+   "wheat_kg": 100000
+  },
+  "cap_hours": 0,
+  "up_hours": 109762.98555878915,
+  "build_yrs": 3,
+  "adopt_yrs": 2,
+  "risk": 0.2,
+  "rev_hours": 0,
+  "sch": 1,
+  "art": 2,
+  "conf": "C",
+  "gov": 0,
+  "sus": 0,
+  "note": "A walled depot on a far coast with a storehouse, a landing, a garrison of labourers and a factor with clerks. Ships put in to refit, trade and take on stores, so goods travel further and fewer voyages are lost. It is not a colony: it holds no land beyond its walls and no people but its own, and it is kept up at your cost every year. Another post on another coast is a further unit.",
+  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"labourer\": 12000, \"merchant\": 8000, \"scribe\": 4000}. Annual consumables: {\"iron_bar_kg\": 500, \"wheat_kg\": 120000}. Sizes of the work and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing. Engine readers checked: reach in goods_reach_factor, hazard_counters (output_factor) in HAZARD_COUNTERS, standing in standing_floor. A settlement with land and its own people needs state the engine does not have (no owned territory, no second population or market); this wrapper stands for the post only. The sizes are labelled heuristics.",
+  "mechanics": {
+   "upkeep_full": true,
+   "capability": {
+    "lost_benefit": "The wider reach and safer voyages the post gives and the name it earns",
+    "scalable": "population"
+   },
+   "reach": {
+    "factor": 1.05,
+    "order": 8
+   },
+   "hazard_counters": [
+    {
+     "kind": "output_factor",
+     "share": 0.04,
+     "label": "a supply post on the sea route",
+     "order": 23
+    }
+   ],
+   "standing": {
+    "flat": 2.0,
+    "order": 25
+   }
+  }
  }
 ]

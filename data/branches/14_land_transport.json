@@ -1383,6 +1383,8 @@
  },
  {
   "id": "lnd_otto_cycle_four_stroke",
+  "copy_visibility": 0.6,
+  "copy_visibility_reason": "The engine is visible and its four strokes can be worked out from watching the valves, but the cam timing and ignition are not read off the casing.",
   "name": "Otto cycle four-stroke engine",
   "cat": "transport",
   "kind": "ENGINEERING",

@@ -6,6 +6,7 @@ from .money_units import book_money_factor
 from .wage_schedule import build_schedule
 from . import automation_audit
 from sim.engine.state import SimulationState, ActiveProjectState
+from sim.engine.state_seat import bind_seat
 from .data import (DEFAULTS, kit_capital, load_civ, load_geography, load_resources,
                    nodes_in_civ_money, TECH_EFFECTS, TRADE_REGISTRY)
 
@@ -13,7 +14,7 @@ from sim.world import demography
 from sim.world import agriculture
 from sim.world import farming_technique
 from sim.world import land
-from sim.geography.api import regions
+from sim.geography.api import regions, tiles_held
 # Weather is drawn per the geography data land_tiles cell (see
 # `_compute_farm_weather_cells`).
 # Imported FULLY QUALIFIED (`sim.world.shared_constants`), not the bare
@@ -56,6 +57,8 @@ from .mechanics import MechanicsMixin
 from .geography_port import GeographyPortMixin
 from .labour_port import LabourPortMixin
 from .projects import ProjectsMixin
+from .core_seats import SeatMixin
+from .ways import WaysMixin
 from .society import SocietyMixin
 from .society_actors import ActorsMixin
 from .society_disclosure import DisclosureMixin
@@ -90,8 +93,8 @@ def _cell_chordal_position_km(lat_degrees, lon_degrees):
     `haversine_km` (defined in `engine/data.py`, and imported by the
     geography and economy mixins rather than by this file) gives the
     GREAT-CIRCLE distance between two
-    lat/lon points - the right answer for `region_reach`/`material_reach`'s
-    travel-time modelling, which is what it is for. It is the WRONG
+    lat/lon points - the right answer for the distance between two places,
+    which is what it is for. It is the WRONG
     choice for a spatial correlation kernel's distance argument: an
     isotropic exponential kernel of great-circle distance is not
     guaranteed positive semi-definite for an arbitrary set of points on a
@@ -217,7 +220,7 @@ YEARLY_RECORD_LIMIT = 300
 
 
 class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, LabourPortMixin,
-          ProjectsMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, InterestGroupsMixin, ForwardingPropertiesMixin, GoalsMixin,
+          ProjectsMixin, SeatMixin, WaysMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, InterestGroupsMixin, ForwardingPropertiesMixin, GoalsMixin,
           StepPhasesMixin, LivingStockMixin, CoinHoardMixin,
           LivingStockTradeMixin, LivingStockYearlyMixin, EconomyPortMixin, NodeRederiveMixin):
     STATE_CAPACITY_DEFAULT = declare(
@@ -381,9 +384,9 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         # Initial condition: cleared area is what feeds the starting
         # population at reference soil, on the best ground the held tiles
         # offer; later clearing works down the same best-first ladder.
-        home_regions = list(self.civ.get("home_regions") or [])
-        if home_regions:
-            territory = land.territory_farmland(home_regions, load_geography(self.world_map))
+        held_tiles = tiles_held(self.civ, self.world_map)
+        if held_tiles:
+            territory = land.territory_farmland(held_tiles, load_geography(self.world_map))
             self._farm_ladder = territory.ladder
             self._farm_arable_ceiling = territory.arable_hectares
         else:
@@ -486,6 +489,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
             workforce_changed=self._workforce_changed,
             state=self.state,
             port=HouseholdPort())
+        self._seat_facades = {self.state.acting_seat: self.household}
         # EVERY AUTOMATIC BEHAVIOUR, IN ONE PLACE, SWITCHABLE.
         #
         # Everything automatic must be controllable: a player can enable or
@@ -611,31 +615,19 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
 
     def _reconnect_state_hooks(self):
         """Reconnect transient cache state, version counters, and invalidating wrappers after save/load."""
-        from sim.engine.economy import _InvalidatingDict, _InvalidatingSet
-        from sim.engine.state import ActiveProjectState
-        # Household façade first, so version bumps fired while reconnecting land on this state
+        # Household façades first, so version bumps fired while reconnecting land on this state
         if hasattr(self, "household"):
-            self.household._state = self.state
-        # Reconnect invalidation wrappers
-        self.state.projects.operating = _InvalidatingSet(
-            self.state.projects.operating or set(),
-            on_change=self._operating_changed
-        )
-        self.state.projects.active = _InvalidatingDict(
-            {k: ActiveProjectState.from_dict(v if isinstance(v, dict) else v.to_canon_dict(), _on_change=self._active_changed)
-             for k, v in (self.state.projects.active or {}).items()},
-            on_change=self._active_changed
-        )
-        self.state.household.employees = _InvalidatingDict(
-            self.state.household.employees or {},
-            on_change=self._workforce_changed
-        )
+            self.sync_seat_facades()
+        acting = self.state.acting_seat
+        try:
+            for seat_id in self.state.seats:
+                bind_seat(self.state, seat_id)
+                self._wrap_seat_containers()
+        finally:
+            bind_seat(self.state, acting)
         cleared = getattr(self.state.economy, "farm_cleared_hectares", None)
         if cleared is not None:
             self.labour.set_farm_area(cleared)
-        # Ensure version counters exist on state owners
-        self.household.start_version_counters(self.state)
-
         # Synchronize demographic cohort floats
         if self.state.population is not None and hasattr(self, "population"):
             if self.state.population.pop_children or self.state.population.pop_working_age or self.state.population.pop_elderly:
@@ -664,6 +656,25 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         # the demand the last throttle saw is read before the next one, so it is carried
         held_demand = self.state.economy.material_demand_at_last_throttle
         self.household._material_demand_cache = None if held_demand is None else collections.Counter(held_demand)
+
+    def _wrap_seat_containers(self):
+        """Wrap the bound seat's mutation-aware containers and start its version counters."""
+        from sim.engine.economy import _InvalidatingDict, _InvalidatingSet
+        from sim.engine.state import ActiveProjectState
+        self.state.projects.operating = _InvalidatingSet(
+            self.state.projects.operating or set(),
+            on_change=self._operating_changed
+        )
+        self.state.projects.active = _InvalidatingDict(
+            {k: ActiveProjectState.from_dict(v if isinstance(v, dict) else v.to_canon_dict(), _on_change=self._active_changed)
+             for k, v in (self.state.projects.active or {}).items()},
+            on_change=self._active_changed
+        )
+        self.state.household.employees = _InvalidatingDict(
+            self.state.household.employees or {},
+            on_change=self._workforce_changed
+        )
+        self.household.start_version_counters(self.state)
 
     # ---- OUTSIDE-SURFACE PROPERTIES FOR THE EXTRACTED HOUSEHOLD ----------
     # Moved to sim/engine/core_properties.py's ForwardingPropertiesMixin:
@@ -940,8 +951,8 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         `_pooled_farm_weather_multiplier` below reads as "fall back to one
         civilisation-wide draw" (see that method's own docstring).
         """
-        home_regions = list(self.civ.get("home_regions") or [])
-        if not home_regions:
+        held_tiles = tiles_held(self.civ, self.world_map)
+        if not held_tiles:
             return []
         # Loaded directly here, NOT via `self.geo` (set later in
         # `__init__`, after this method's own call site - see that call
@@ -953,20 +964,16 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         geography = load_geography(self.world_map)
         land_tiles = geography.get("land_tiles") or {}
         tiles_by_id = land_tiles.get("tiles") or {}
-        region_to_tiles = land_tiles.get("region_to_tiles") or {}
         raw_cells = []
-        for region in home_regions:
-            tile_ids = region_to_tiles.get(region) or []
-            if tile_ids:
-                for tile_id in tile_ids:
-                    tile = tiles_by_id.get(tile_id)
-                    if not tile:
-                        continue
-                    arable_km2 = (tile.get("land_area_km2", 0.0)
-                                  * tile.get("arable_fraction", 0.0))
-                    raw_cells.append(Sim._WeatherCell(
-                        cell_id=tile_id, lat=tile["lat"], lon=tile["lon"],
-                        weight=arable_km2))
+        for tile_id in held_tiles:
+            tile = tiles_by_id.get(tile_id)
+            if not tile:
+                continue
+            arable_km2 = (tile.get("land_area_km2", 0.0)
+                          * tile.get("arable_fraction", 0.0))
+            raw_cells.append(Sim._WeatherCell(
+                cell_id=tile_id, lat=tile["lat"], lon=tile["lon"],
+                weight=arable_km2))
         if not raw_cells:
             return []
         # STAKEHOLDER ITEM 7: cap cell count independently of how finely

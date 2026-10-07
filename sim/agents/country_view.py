@@ -105,8 +105,9 @@ class CountryWorld:
 	def subsistence_cost_per_person_year(self) -> float:
 		return self._shared.subsistence_cost_per_person_year() * self._relative("price_index")
 
-	def housing_cost_per_person_year(self) -> float:
-		return self._shared.housing_cost_per_person_year() * self._relative("wage_index")
+	def need_floor_costs_per_person_year(self) -> Dict[str, float]:
+		level = self._relative("price_index")
+		return {need_id: cost * level for need_id, cost in self._shared.need_floor_costs_per_person_year().items()}
 
 	def exposure(self, node_id: str, location: Optional[str]) -> float:
 		"""How much of the founder's work reaches an observer here: the shared visibility, thinned by

@@ -11,6 +11,7 @@ one's own comment for the break it guards.
 Venture lifecycle checks, grouped by theme.
 """
 from .harness import *  # noqa: F401,F403
+from sim.engine import category_traits
 
 
 # --- BREAK: when the staff ran short, the closer picked the concern that
@@ -284,7 +285,7 @@ _s_mb2 = s_misc
 _mb2_id = next(node_id for node_id, node in NODES.items()
                if node.get("up", 0) <= 0 and node.get("rev", 0) <= 0
                and node_id not in _s_mb2.granted
-               and not (_s_mb2.never_abandon(node_id) and node["cat"] in _s_mb2.NEVER_ABANDON))
+               and not (_s_mb2.never_abandon(node_id) and category_traits.has_trait(node["cat"], "never_abandoned")))
 _s_mb2.done.add(_mb2_id); _s_mb2._done_changed()
 _mb2_ok, _mb2_msg = _s_mb2.mothball_work(_mb2_id)
 check("...but a thing with genuinely nothing to save (no money, no staff "

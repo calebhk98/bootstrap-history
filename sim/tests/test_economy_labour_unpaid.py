@@ -6,6 +6,8 @@ import types
 import unittest
 
 from sim.economy.accounts import Book
+from sim.labour.api import MarketState, YearInputs as CoreInputs
+from sim.labour.market.aptitude import split_evenly
 from sim.economy.market_memory import MarketMemory
 from sim.economy.types import EDGE_MINT, LabourBid, LabourOffer, Transfer
 from sim.economy.year_labour import clear_labour
@@ -15,12 +17,16 @@ from sim.economy.year_ledger import YearLedger
 def cleared(employer_cash):
     book = Book()
     book.transfer(Transfer(EDGE_MINT, "farm", "coin", employer_cash, "opening"))
-    record = types.SimpleNamespace(book=book, memory=MarketMemory())
-    setup = types.SimpleNamespace(currency_id="coin")
+    state = MarketState(workers={"labour:t1": {"plough": split_evenly(0.05)}},
+                        hired_hours={"labour:t1": {"plough": {"farm": 100.0}}})   # the farm's hands stay on
+    record = types.SimpleNamespace(book=book, memory=MarketMemory(), workforce=state)
+    setup = types.SimpleNamespace(currency_id="coin", trades={}, unskilled_trade="plough")
     bids = [LabourBid("farm", "plough", "labour:t1", 100.0, 5.0)]
     offers = [LabourOffer("family", "plough", "labour:t1", 100.0, 1.0)]
     ledger = YearLedger()
-    clear_labour(setup, record, bids, offers, ledger)
+    context = CoreInputs(trades={}, bids=(), subsistence_per_worker_year={"labour:t1": 2000.0},
+                         hours_per_worker_year=2000.0, discount_rate=0.05, career_years=30.0)
+    clear_labour(setup, record, bids, offers, ledger, context)
     return ledger, ledger.labour_results[0]
 
 

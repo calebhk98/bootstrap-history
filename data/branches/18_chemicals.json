@@ -911,6 +911,8 @@
   },
   {
     "id": "chm_azo_dyes",
+    "copy_visibility": 0.2,
+    "copy_visibility_reason": "The colour shows nothing of the diazotisation and the coupling or the cold temperatures they need; German firms held the know-how through patents and their own staff.",
     "name": "Azo dyes: diazotisation and azo coupling",
     "cat": "organic_chemistry",
     "kind": "SCIENCE",

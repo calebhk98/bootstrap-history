@@ -16,7 +16,8 @@ These are methods of Sim; they are a mixin only so that they can live in a
 file of their own. Behaviour is unchanged and verified byte-identical.
 """
 from sim.constants import declare
-from . import cause_book
+from . import cause_book, category_traits
+from sim.agents.api import edges
 
 
 def _trim(amount):
@@ -759,7 +760,7 @@ class StaffingMixin:
         # stop paying for, turning a bad year into an unrecoverable
         # softlock. Knowledge still cannot be unlearned; a building can
         # always be shut.
-        if self.never_abandon(node_id) and self.nodes[node_id]["cat"] in self.NEVER_ABANDON:
+        if self.never_abandon(node_id) and category_traits.has_trait(self.nodes[node_id]["cat"], "never_abandoned"):
             return False, ("that is knowledge, or it is who you are here. "
                            "You cannot un-know a thing to save its upkeep")
         # SHUTTING A SHOP DOWN IS NOT FORGETTING HOW IT WORKED: this touches
@@ -855,7 +856,7 @@ class StaffingMixin:
         if any(prereq_id not in projects.done for prereq_id in node["pre"]):
             return False, ("you no longer have what it stands on: "
                            + ", ".join(prereq_id for prereq_id in node["pre"] if prereq_id not in projects.done))
-        household.debit(fee, "known technique restored")
+        self.pay_edge(edges.EDGE_WORKERS, fee, "known technique restored")
         projects.done.add(node_id)
         self._done_changed()
         projects.mothballed.discard(node_id)

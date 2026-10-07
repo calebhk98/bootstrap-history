@@ -7,6 +7,7 @@ import random
 from sim.world.demography import BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE
 from . import automation_audit
 from .staff_replacement import REPLACE_ONLY, replace_lost_staff
+from sim.agents.api import edges
 
 
 class StaffPhaseMixin:
@@ -253,7 +254,7 @@ class StaffPhaseMixin:
                 if short > 0.02 and self.state.household.capital > self.labour.market.quote_annual(trade_id) * self.TRADE_REPLACEMENT_AFFORDABILITY_YEARS:
                     _before = self.state.household.capital
                     self.state.household.employees[trade_id] = have + short
-                    self.state.household.debit(short * self.labour.market.quote_annual(trade_id), "wages advanced for replacement staff")
+                    self.pay_edge(edges.EDGE_WORKERS, short * self.labour.market.quote_annual(trade_id), "wages advanced for replacement staff")
                     automation_audit.record(
                         self, "auto_hire", "replace", "%.1f %s" % (short, trade_id),
                         "something draws on the trade and %.1f are held against a target of %.1f" % (have, want), _before)

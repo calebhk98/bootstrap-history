@@ -7,7 +7,7 @@ import hashlib
 import random
 from typing import Any, Dict, List, Optional, Set
 
-from sim.agents.api import OBSERVATION_RANGE_KM, supply
+from sim.agents.api import OBSERVATION_RANGE_KM, payroll, supply
 
 from .agents_port_budget import BudgetView
 from .agents_port_capacity import CapacityView
@@ -42,6 +42,14 @@ class SimWorld(BudgetView, RevenueView, GroupView, DisclosureView, CapitalView, 
 		if key not in self._memo:
 			self._memo[key] = compute()
 		return self._memo[key]
+
+	def edge(self, name: str) -> Any:
+		"""The named edge a posting names when its other side is not an actor."""
+		return self._sim.edge(name)
+
+	def pay_wages(self, payer: Any, amount: float, purpose: Any) -> None:
+		"""Wages the home country's people are paid: they reach the strata's purses."""
+		payroll.pay_wages(self._sim.actors, payer, amount, purpose, self)
 
 	@property
 	def year(self) -> int:

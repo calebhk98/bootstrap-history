@@ -8,9 +8,8 @@ Each node with authored revenue is one of:
 - "knowledge": a science that makes nothing; it earns nothing.
 - "authored": equipment, institutions and services whose product the tree does not
   yet state (what each would physically earn: fees from the people served, a share
-  of the trade it enables, the work its machine does). The authored revenue stays,
-  held under a payback floor so that cheaper solved inputs cannot turn it into a
-  money pump; the authored upkeep stays.
+  of the trade it enables, the work its machine does). The authored revenue and
+  upkeep stay; `node_payback_diagnostic` flags any that repay their cost suspiciously fast.
 
 The figures are derived against one civilisation's prices and wages: `for_civilisation`
 re-derives them for the civilisation playing, cached on what they depend on.
@@ -20,15 +19,6 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 from sim.constants import declare
 
 from . import energy_prices, node_output, node_upkeep
-
-MINIMUM_PAYBACK_YEARS = declare(
-    "MINIMUM_PAYBACK_YEARS", 0.25, kind="temporary_heuristic", unit="years", source=None,
-    confidence="D",
-    why="Authored revenue hours were written against older, higher material costs. "
-        "A node whose revenue is neither derived from output nor nil is held to at "
-        "most its whole cost divided by this payback, standing for competitors "
-        "entering any activity that repays its cost faster. It goes when the tree "
-        "states what services, institutions and equipment produce.")
 
 # fields `apply_revenue` sets on a node: what a civilisation's derivation replaces
 DERIVED_FIELDS = ("rev_hours", "up_hours", "_revenue_basis", "_upkeep_basis", "_output_per_year",
@@ -68,7 +58,7 @@ def apply_revenue(nodes: Iterable[dict], goods: Mapping[str, float],
             node["_revenue_basis"] = "knowledge"
         else:
             node["_revenue_basis"] = "authored"
-            node["rev_hours"] = _held_under_floor(node, authored, wages, money_per_labour_hour)
+            node["rev_hours"] = authored
 
 
 def _apply_output(node: dict, baskets: node_output.Baskets, goods: Mapping[str, float],
@@ -91,19 +81,6 @@ def _apply_output(node: dict, baskets: node_output.Baskets, goods: Mapping[str, 
                                      "plant_wear_hours": wear_hours}
         node["up_hours"] = staff + plant
         node["_upkeep_basis"] = "derived"
-
-
-def _build_cost_hours(node: Mapping, wages: Mapping[str, float], money_per_labour_hour: float) -> float:
-    return (sum(wages[trade] * hours for trade, hours in node["lab"].items()) / money_per_labour_hour
-            + node["_material_hours"] + node["cap_hours"])
-
-
-def _held_under_floor(node: dict, authored: float, wages: Mapping[str, float],
-                      money_per_labour_hour: float) -> float:
-    cost_hours = _build_cost_hours(node, wages, money_per_labour_hour)
-    if cost_hours <= 0.0:
-        return authored
-    return min(authored, cost_hours / MINIMUM_PAYBACK_YEARS * (1.0 - 1e-9))
 
 
 def for_civilisation(nodes: Mapping[str, dict], civ: Mapping[str, Any], schedule: Any,

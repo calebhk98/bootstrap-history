@@ -22,6 +22,7 @@ that they can live in a file of their own. Behaviour is unchanged and
 verified byte-identical.
 """
 from sim.constants import declare
+from . import category_traits
 from .institution_societies import belongs_to_other_society
 
 
@@ -199,14 +200,12 @@ class DiffusionMixin:
     # something literally everyone has, in a way a founder's personal
     # market share against live competitors never fully does.
     #
-    # Four categories, read off the tree's own `traits` (the same field
-    # alarm_of and state_interest already key off) rather than a second,
-    # hand-maintained node list. The priority order matters only for the
-    # handful of nodes carrying two of these traits at once
+    # The diffusing categories are the tree's own `traits` (the same field
+    # alarm_of and state_interest already key off), listed in priority order
+    # in data/world/category_traits.json (`diffusion_traits`). The order
+    # matters only for nodes carrying two of these traits at once
     # (ag2_veterinary_vaccination is both food and medical) - fixed, so the
-    # same node is never counted against two different half-lives depending
-    # on dict iteration order.
-    DIFFUSION_TRAIT_PRIORITY = ("food", "medical", "military", "information")
+    # same node is never counted against two different half-lives.
 
     # Years for HALF of a just-completed technology in this category to
     # have spread through the society at large, absent any literacy or
@@ -243,15 +242,17 @@ class DiffusionMixin:
         why="Years for half of a newly-completed information technology "
             "(printing and the like) to spread through society. Tuned, "
             "not measured.")
-    DIFFUSION_HALF_LIFE_YEARS = {
-        "food": DIFFUSION_HALF_LIFE_FOOD_YEARS,
-        "medical": DIFFUSION_HALF_LIFE_MEDICAL_YEARS,
-        "information": DIFFUSION_HALF_LIFE_INFORMATION_YEARS,
-    }
+    def _diffusion_half_life_years(self, cat):
+        """Bare half-life of a diffusion trait: a number in its data entry, or
+        the declared constant it names."""
+        entry = category_traits.diffusion_traits()[cat]
+        if "half_life_years" in entry:
+            return float(entry["half_life_years"])
+        return getattr(self, entry["half_life_constant"])
 
     def _diffusion_category(self, node_record):
         traits = node_record.get("traits") or ()
-        for trait in self.DIFFUSION_TRAIT_PRIORITY:
+        for trait in category_traits.diffusion_trait_names():
             if trait in traits:
                 return trait
         return None
@@ -262,7 +263,7 @@ class DiffusionMixin:
         recomputing once built, however large self.household.done grows."""
         cache = self.__dict__.get("_diffusible_ids_cache")
         if cache is None:
-            cache = {category: [] for category in self.DIFFUSION_TRAIT_PRIORITY}
+            cache = {category: [] for category in category_traits.diffusion_trait_names()}
             for node_id, node in self.nodes.items():
                 category = self._diffusion_category(node)
                 if category:
@@ -272,7 +273,7 @@ class DiffusionMixin:
         return cache.get(cat, ())
 
     def _diffusion_pace(self, cat):
-        """How much faster than DIFFUSION_HALF_LIFE_YEARS[cat]'s bare figure
+        """How much faster than the category's bare half-life
         this category is actually moving, for THIS society, right now.
 
         Reuses diffusion_share's own two accelerants for medical and
@@ -288,7 +289,7 @@ class DiffusionMixin:
         field to watch.
         """
         pace = 1.0
-        if cat in ("medical", "information"):
+        if category_traits.diffusion_traits()[cat].get("text_paced"):
             pace = self.corpus_diffusion_pace()
             gen_lit = float(self.civ.get("literacy_general", 0.12))
             pace *= (self.LITERACY_DIFFUSION_PACE_BASE
@@ -321,11 +322,11 @@ class DiffusionMixin:
         cat = self._diffusion_category(node)
         if cat is None:
             return 0.0
-        if cat == "military":
+        if category_traits.diffusion_traits()[cat].get("government_held"):
             return 1.0 if node_id in self.state_treasury().knowledge else 0.0
         done_year_map = projects.done_year or {}
         age = max(0.0, scenario.year - done_year_map.get(node_id, scenario.year))
-        half_life = (self.DIFFUSION_HALF_LIFE_YEARS[cat]
+        half_life = (self._diffusion_half_life_years(cat)
                      / max(0.4, self._diffusion_pace(cat)))
         return max(0.0, min(1.0, 1.0 - 0.5 ** (age / half_life)))
 

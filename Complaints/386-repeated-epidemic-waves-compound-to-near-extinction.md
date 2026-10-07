@@ -1,6 +1,6 @@
 # Repeated epidemic waves compound a civilisation's population toward extinction
 
-**Status:** open - needs an owner decision: the hazard is authored as a fraction lost per wave, and waves can recur every year of its window
+**Status:** open - owner decision (2026-10-06): replace the authored fraction per wave with a population-level epidemic model that spreads through trade and geography and responds to technology; research in Complaints/reports/epidemic-model-research.md comes before code
 
 `data/civilizations/mexica_1500.json` declares "Old World epidemics on contact" with `staff_loss` 0.8 over the years 1520 to 1600. A wave can strike in any year of that window (the wave chance per year is shown in `sim/engine/fog.py`), and each wave removes the declared share of the population. Waves compound: in a game played on the agent economy, Mexica seed 2 falls from about five million people to a few hundred within twenty years of contact.
 

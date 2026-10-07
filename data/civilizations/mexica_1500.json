@@ -1,7 +1,6 @@
 {
   "_note_cost_multipliers": "No domesticable large mammal exists in Mesoamerica, so every load moves on a human back and every plough, cart, harness and horse-hoe in the tree is a far worse deal here. That is a fact about the continent, not something the founder can teach away, and it is the single largest handicap any civilization in this file carries. Against it: superb calendrical astronomy, intensive chinampa agriculture that outyields Roman farming per hectare, and cotton textiles.",
   "_note_debt_bondage": "Tlacotin: servitude entered into for debt, worked off, not heritable, and the person could buy their own freedom. Not chattel slavery, and the model should not flatten it into one.",
-  "base_reach": 1,
   "blurb": "A large, dense, literate, well-administered state with monumental construction, chinampa agriculture that outyields anything in Europe, and no draught animals, no iron, no wheel in practical use.",
   "bondage_years": 8,
   "cost_multipliers": {

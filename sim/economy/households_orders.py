@@ -14,12 +14,11 @@ import math
 from typing import List, Mapping, Optional
 
 from sim.constants import declare
-from sim.world.need_satiation import apply_satiation
 
 from . import currency
 from .credit_view import claims_of
 from .households_ability import affordable_goods, household_budget_for_need
-from .households_basket import Basket, PricedNeed, need_prices, price_ceilings, satiation_limit
+from .households_basket import Basket, PricedNeed, need_prices, need_units, price_ceilings
 from .households_cohort import Cohort
 from .protocols import AgentOrders, MarketView
 from .types import Bid, FundsOffer, GoodId, GoodSpec
@@ -73,22 +72,6 @@ def _durable_ratio(good: GoodId, flow: float, held: float, specs: Mapping[GoodId
     return max(0.0, flow * spec.service_life_years - held + wear) / flow
 
 
-def _need_units(priced: List[PricedNeed], basket: Basket, people: float, surplus: float):
-    """(floor units, total units) per need id: floors plus weighted surplus, limited by satiation."""
-    floors = {need.spec.need_id: need.spec.subsistence_per_person * people for need in priced}
-    weight_total = math.fsum(need.spec.budget_weight for need in priced)
-    totals = dict(floors)
-    if surplus > 0.0 and weight_total > 0.0:
-        for need in priced:
-            totals[need.spec.need_id] += (surplus * need.spec.budget_weight / weight_total
-                                          / need.price_index)
-        limits = {need.spec.need_id: {"surplus_budget_share": need.spec.budget_weight,
-                                      "satiation_per_capita_per_year": satiation_limit(basket, need.spec.need_id)}
-                  for need in priced}
-        apply_satiation(totals, {need.spec.need_id: need.price_index for need in priced}, limits, people)
-    return floors, totals
-
-
 def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year: float,
                  basket: Basket, specs: Mapping[GoodId, GoodSpec],
                  priced: Optional[List[PricedNeed]] = None) -> AgentOrders:
@@ -114,7 +97,7 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
                                    cohort.expected_inflation)
     spending = max(0.0, min(cash, income_this_year
                             + currency.spending_adjustment(cash + claims + store_value, keep, income_this_year)))
-    floors, totals = _need_units(priced, basket, cohort.people, spending - floor_cost)
+    floors, totals = need_units(priced, basket, cohort.people, spending - floor_cost)
     rows = []
     for need in priced:
         need_id = need.spec.need_id

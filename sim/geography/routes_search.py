@@ -117,8 +117,9 @@ def route(world_map: WorldMap, origin_tiles: Iterable[str], destination_tiles: I
           modes: Iterable[str], improvements: Optional[Mapping[str, Mapping[str, Any]]] = None,
           mode_costs: Optional[Mapping[str, float]] = None,
           handling_costs: Optional[Mapping[str, float]] = None,
-          held_nodes: Optional[Iterable[str]] = None) -> Optional[Dict[str, Any]]:
-    """The least-cost haul from any origin tile to any destination tile, or None.
+          held_nodes: Optional[Iterable[str]] = None, fastest: bool = False) -> Optional[Dict[str, Any]]:
+    """The least-cost haul from any origin tile to any destination tile, or None. With `fastest` the
+    haul is the one taking the fewest days (how a household travels) rather than the cheapest.
 
     Returns {"legs": [{"from", "to", "mode", "km", "days", "cost_per_tonne", ("handling_days")}],
     "km", "days", "cost_per_tonne", "inputs": {labour_hours, feed_kg, fuel_kg}}. `modes` are mode ids
@@ -133,8 +134,8 @@ def route(world_map: WorldMap, origin_tiles: Iterable[str], destination_tiles: I
                 "inputs": {"labour_hours": 0.0, "feed_kg": 0.0, "fuel_kg": 0.0}}
     compiled = routes_compile.compiled_for(world_map, routes_modes.checked_mode_ids(world_map, modes),
                                            improvements, mode_costs, handling_costs, held_nodes)
-    tree = _tree(compiled, origins, False)
-    end_state = _best_state(compiled, tree, destinations, False)
+    tree = _tree(compiled, origins, fastest)
+    end_state = _best_state(compiled, tree, destinations, fastest)
     return None if end_state is None else _legs(compiled, tree, end_state)
 
 

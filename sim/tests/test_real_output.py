@@ -113,7 +113,8 @@ book[GOOD]["traded_tonnes"] *= 0.8
 from sim.engine.real_output import opening_prices_in_hours
 base_prices = opening_prices_in_hours(frozenset(game.state.projects.granted), game.civ, game._opening_farmed_hectares)
 opening = market_demand.household_demand_by_material(
-    base_prices, game._opening_population(), market_demand.MEAN_INCOME_HOURS_PER_CAPITA)
+    base_prices, game._opening_population(), market_demand.MEAN_INCOME_HOURS_PER_CAPITA,
+    game.civ, game.world_map)
 total = 0.0
 for material, units in opening.items():
     entry = book.get(game._material_tag(material)[0])

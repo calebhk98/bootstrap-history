@@ -393,3 +393,8 @@ main first, so the economy's moved three times (to 410-418, then 425-433, then h
 
 394 -> 460  suite-writes-the-real-home-config  (two issues shared 394; the wage-quote issue keeps it)
 395 -> 461  regional-weather-wiring-seed-check-fails  (two issues shared 395; the crop-recipe issue keeps it)
+
+## 2026-10-06
+
+464 -> 466  committed-map-layers-come-from-non-commercial-or-unlicensed-datasets  (two issues shared 464; the test-suite issue keeps it)
+465 -> 467  skilled-trades-open-with-more-people-than-jobs-and-sit-at-the-floor  (two issues shared 465; the stall-banner issue keeps it)

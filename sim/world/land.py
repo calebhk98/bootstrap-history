@@ -363,7 +363,7 @@ import os
 from typing import Any, Dict, List, Optional
 
 from sim.constants import declare
-from sim.geography.api import load_geography
+from sim.geography.api import load_geography, tiles_held
 from sim.world.shared_constants import (
     ANNUAL_LABOUR_HOURS_PER_FARM_WORKER as _SHARED_ANNUAL_LABOUR_HOURS_PER_FARM_WORKER,
     FALLOW_SHARE_OF_HOLDING as _SHARED_FALLOW_SHARE_OF_HOLDING,
@@ -906,75 +906,36 @@ def _load_civilization(
     return _load_json(path)
 
 
-def _tile_ids_for_home_regions(home_regions: List[str],
-                               land_tiles: Dict[str, Any]) -> List[str]:
-    """The deduplicated, sorted union of `land_tiles["region_to_tiles"]`
-    over every region in `home_regions` - the set of physical tiles this
-    territory resolves to, regardless of how many region labels
-    `home_regions` names or what order they are given in. Sorted (not just
-    deduplicated) so the RESULT, and therefore everything `find_margin_of_
-    cultivation` computes from it, does not depend on `home_regions`'s own
-    input order either - the same determinism `find_margin_of_cultivation`
-    itself already guarantees by breaking ties on `region` name.
-
-    A `home_regions` entry absent from `region_to_tiles` (should not
-    happen for any of this project's 21 real regions - all 21 are mapped,
-    per `docs/architecture/MAP_AND_WEATHER.md` section 1.1) contributes no
-    tiles rather than raising - the same "a gap here is a future region's
-    problem, not this call's" reasoning `load_region_lands` already
-    applies to a region missing its `land` block.
-    """
-    region_to_tiles = land_tiles.get("region_to_tiles", {})
-    tile_ids = set()
-    for region in home_regions:
-        tile_ids.update(region_to_tiles.get(region, []))
-    return sorted(tile_ids)
-
-
 def cultivable_land_for_civilization(
         civilization_id: str, geography: Optional[Dict[str, Any]] = None,
         civilizations: Optional[Dict[str, Any]] = None) -> List[RegionLand]:
-    """This civilization's own list of RegionLand parcels - TILE-grain,
-    not region-grain (see the module docstring's THE TWO MAP SYSTEMS
-    section) - resolved from the regions named
-    in its `home_regions` via `land_tiles["region_to_tiles"]`, read fresh
-    every call. See the module docstring's WHAT A LATER CONQUEST MECHANISM
-    WOULD HAVE TO TOUCH section: this function does no caching keyed on
-    civilization_id, so a caller that has updated some civilization's own
-    `home_regions` (however that update eventually happens - out of this
-    module's ownership) gets the new territory back on its very next
-    call, with no change needed here.
-
-    A `home_regions` entry naming a region `land_tiles["region_to_tiles"]`
-    has no tiles for (should not happen for any of this project's 21 real
-    regions) contributes no parcels rather than raising - see
-    `_tile_ids_for_home_regions`'s own docstring.
-
-    A civilization with an EMPTY `home_regions` (the landless case
-    `margin_outcome_for_civilization`'s own tests exercise) returns an
-    empty list without even looking at `geography` - checked before the
-    `land_tiles` presence check below, so a civilization that holds no
-    territory prices at zero without needing a `land_tiles` block to
-    exist at all, the same "nothing to resolve, nothing to raise about"
-    shortcut `_tile_ids_for_home_regions` would reach anyway, taken one
-    call earlier so a caller building a minimal geography fixture for a
-    landless civilization is not forced to give it tile data it will
-    never be asked to read.
+    """This civilization's own list of RegionLand parcels, one per tile it
+    holds (`geography.api.tiles_held`: its `home_tiles`, else the tiles its
+    region labels name), read fresh every call. A civilization holding no
+    tile returns an empty list without looking at `geography`.
     """
     civilization = _load_civilization(civilization_id, civilizations)
-    home_regions = civilization.get("home_regions") or []
-    if not home_regions:
+    if not (civilization.get("home_tiles") or civilization.get("home_regions")):
         return []
-    geography = geography if geography is not None else load_geography()
-    land_tiles = geography.get("land_tiles")
-    if land_tiles is None:
-        raise KeyError(
-            "geography has no 'land_tiles' block - see load_tile_lands's "
-            "own docstring for why cultivable_land_for_civilization no "
-            "longer falls back to 'regions' alone")
+    if geography is None:
+        geography = load_geography()
+        tile_ids = tiles_held(civilization)
+    else:
+        tile_ids = _tiles_held_in(civilization, geography)
+    if geography.get("land_tiles") is None:
+        raise KeyError("geography has no 'land_tiles' block")
     tile_lands = load_tile_lands(geography)
-    tile_ids = _tile_ids_for_home_regions(home_regions, land_tiles)
     return [tile_lands[tile_id] for tile_id in tile_ids if tile_id in tile_lands]
+
+
+def _tiles_held_in(civilization: Dict[str, Any], geography: Dict[str, Any]) -> List[str]:
+    """`tiles_held` read against the geography the caller passed rather than the loaded world map:
+    the listed `home_tiles`, else the tiles its region labels name in that geography."""
+    if civilization.get("home_tiles") is not None:
+        return sorted(set(civilization["home_tiles"]))
+    region_to_tiles = (geography.get("land_tiles") or {}).get("region_to_tiles", {})
+    return sorted({tile_id for region in civilization.get("home_regions") or []
+                   for tile_id in region_to_tiles.get(region, [])})
 
 
 TerritoryFarmland = collections.namedtuple("TerritoryFarmland", [
@@ -984,24 +945,20 @@ TerritoryFarmland = collections.namedtuple("TerritoryFarmland", [
 ])
 
 
-def territory_farmland(home_regions: List[str],
+def territory_farmland(tile_ids: List[str],
                        geography: Optional[Dict[str, Any]] = None) -> TerritoryFarmland:
-    """Arable hectares and arable-weighted mean fertility over the tiles
-    the named regions resolve to. A region with no tiles raises KeyError;
-    territory with no farmable ground comes back empty."""
+    """Arable hectares and arable-weighted mean fertility over the given
+    tiles (a civilisation's `tiles_held`); territory with no farmable
+    ground comes back empty."""
     geography = geography if geography is not None else load_geography()
     land_tiles = geography.get("land_tiles")
     if land_tiles is None:
         raise KeyError("geography has no 'land_tiles' block")
-    region_to_tiles = land_tiles.get("region_to_tiles", {})
-    for region in home_regions:
-        if not region_to_tiles.get(region):
-            raise KeyError("home region %r has no land tiles in geography" % region)
     tile_lands = load_tile_lands(geography)
     total_arable_km2 = 0.0
     weighted_fertility = 0.0
     parcels = []
-    for tile_id in _tile_ids_for_home_regions(home_regions, land_tiles):
+    for tile_id in sorted(set(tile_ids)):
         tile = tile_lands[tile_id]
         # Ground that yields nothing is not arable, whatever its share of the tile.
         if tile.fertility_quality_multiplier <= 0.0:
@@ -1022,15 +979,14 @@ def territory_farmland(home_regions: List[str],
         ladder=ladder)
 
 
-def territory_land_area_km2(home_regions: List[str],
+def territory_land_area_km2(tile_ids: List[str],
                             geography: Optional[Dict[str, Any]] = None) -> float:
-    """Total land area, km2, of the tiles the named regions resolve to.
-    Zero when none of them has tiles."""
+    """Total land area, km2, of the given tiles; zero for none."""
     geography = geography if geography is not None else load_geography()
     land_tiles = geography.get("land_tiles") or {}
     tiles = land_tiles.get("tiles") or {}
     return sum(float(tiles[tile_id].get("land_area_km2", 0.0))
-               for tile_id in _tile_ids_for_home_regions(home_regions, land_tiles)
+               for tile_id in set(tile_ids)
                if tile_id in tiles)
 
 

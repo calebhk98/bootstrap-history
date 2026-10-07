@@ -44,6 +44,7 @@ A mod may provide:
 * `data/branches/*.json`: a list of technology nodes (or an object with a
   `nodes` list).
 * `data/goals.json`: `{ "goals": [...] }`, using the base goal catalog shape.
+* `data/category_traits.json`: `{ "categories": {category: {"never_abandoned": bool, "practisable": bool}}, "diffusion_traits": [...] }`, merged over `data/world/category_traits.json`. A mod whose nodes use a new `cat` must add its entry; `validate` reports a missing one.
 * `data/civilizations/*.json`: civilization files using the base schema, or
   override patches of an existing civilisation.
 * `data/production/*.json`: production recipe files using the base schema.

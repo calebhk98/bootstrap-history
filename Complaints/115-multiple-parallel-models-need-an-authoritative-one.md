@@ -216,8 +216,11 @@ strata money moves only by what crossed the edge and the state's relief.
 
 ## Still two owners
 
-- Labour (428): the labour package's market and the agent economy's labour market each clear wages.
+- Labour (428): done. The agent economy clears wages through the labour core, and the engine's hours by trade are read from the core's people (the recipe graph's need while the agent economy is off); `Workforce.step` is gone.
 - Merchants (405): one owner per flow now for goods actors carry (decision above); the stand-ins still own the rest.
-- Demand baskets: `sim/world/demand.py`, the economy's household baskets and the agents' strata baskets.
+- Demand baskets: one kernel now (`sim/world/need_basket.py`); the economy, the aggregate demand model and the strata
+  read it (`docs/architecture/ONE_DEMAND_MODEL_PLAN.md` stages 1 to 4, branch `one-demand-model`). Open: the solver's
+  anchors have no climate floors, the strata cost does not yet come from the economy's own tile prices when it is on,
+  and stage 7 (retire what the kernel replaced).
 - The engine's `market_loans`, `update_capital_market` and its rate still run (and set the rate) when the agent economy is off;
   only the reading side is unified.

@@ -2,7 +2,7 @@
 explicit name, and each private `Sim` member the UI reads or writes has a public function that
 delegates exactly. sim/ui/ imports nothing from sim.engine except this module."""
 from sim.engine import (  # noqa: F401
-    automation_audit, cash_book, cause_book, civ_start_check, fuzzy_estimates, path_search, planner,
+    automation_audit, cash_book, category_traits, cause_book, civ_start_check, fuzzy_estimates, path_search, planner,
     purchase_rule, settings, settings_table, shortage_conditions, topic_tags, tree_merge, units,
     validate_material_gating, validate_output_bounds, validate_copy_visibility, validate_production, validate_unheld_gates)
 from sim.engine.blockers import BLOCKER_MEANING, RUNNING_CONSTRAINT_KIND  # noqa: F401

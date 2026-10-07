@@ -55,25 +55,26 @@ def switch_trades(state: MarketState, inputs: YearInputs, clearings: Mapping, re
             continue
         income = {trade: expectations.expected_income(state, inputs, clearings, area, trade)
                   for trade in sources}
-        income.update({trade: expectations.income_at_graduation(
-                           state, inputs, clearings, area, trade,
-                           aptitude.completion_by_band(inputs.trades[trade].difficulty))
-                       for trade in destinations if trade not in income})
         vacancies = {trade for trade in destinations
                      if (area, trade) in clearings and clearings[(area, trade)].vacant_hours > 0.0}
-        moves = _planned_moves(state, inputs, area, sources, destinations, income, vacancies,
-                               abilities, subsistence)
-        _carry_out(state, inputs, report, area, moves)
+        for _round in range(int(expectations.DECISION_ROUNDS_PER_YEAR)):
+            later_income = {trade: expectations.income_at_graduation(
+                                state, inputs, clearings, area, trade,
+                                aptitude.completion_by_band(inputs.trades[trade].difficulty))
+                            for trade in destinations}
+            moves = _planned_moves(state, inputs, area, sources, destinations, income, later_income, vacancies,
+                                   abilities, subsistence)
+            _carry_out(state, inputs, report, area, moves)
 
 
-def _planned_moves(state, inputs, area, sources, destinations, income, vacancies, abilities,
-                   subsistence) -> List[Move]:
+def _planned_moves(state, inputs, area, sources, destinations, income, later_income, vacancies,
+                   abilities, subsistence) -> List[Move]:
     rate = inputs.discount_rate
     remaining = inputs.career_years * REMAINING_CAREER_SHARE
     moves: List[Move] = []
     for source in sources:
         targets = [trade for trade in destinations if trade != source
-                   and (income[trade] > income[source] or trade in vacancies)]
+                   and (later_income[trade] > income[source] or trade in vacancies)]
         if not targets:
             continue
         gain: Dict[str, float] = {}
@@ -81,7 +82,7 @@ def _planned_moves(state, inputs, area, sources, destinations, income, vacancies
         for trade in targets:
             years = inputs.trades[trade].training_years * _training_share(inputs, source, trade)
             lost[trade] = income[source] * expectations.annuity_factor(rate, years)
-            gain[trade] = expectations.present_value(income[trade] - income[source], rate, years, remaining)
+            gain[trade] = expectations.present_value(later_income[trade] - income[source], rate, years, remaining)
         by_target = {trade: aptitude.empty_bands() for trade in targets}
         for band, count in enumerate(state.workers[area][source]):
             if count <= 0.0:
@@ -95,7 +96,8 @@ def _planned_moves(state, inputs, area, sources, destinations, income, vacancies
             shares = expectations.logit_shares(scores, SWITCHING_TASTE_SCALE)
             for trade in scores:
                 if trade:
-                    by_target[trade][band] = count * SWITCHING_CONSIDERATION_SHARE_PER_YEAR * shares[trade]
+                    by_target[trade][band] = (count * SWITCHING_CONSIDERATION_SHARE_PER_YEAR
+                                          / expectations.DECISION_ROUNDS_PER_YEAR * shares[trade])
         for trade in targets:
             if aptitude.band_total(by_target[trade]) > 0.0:
                 moves.append((source, trade, by_target[trade]))

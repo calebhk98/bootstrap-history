@@ -848,9 +848,9 @@ CIVS_EMINENCE_DANGER_DEFAULT = declare(
 def cmd_civs(args):
     """List the civilizations you can play, and what makes each one different.
 
-    home_regions and base_reach are shown here because they actually drive
-    Sim.region_reach() and Sim.material_reach() (see simulator.py), so this
-    names the home ground itself, not just the region ids.
+    home_regions are shown here because they name the tiles the civilisation holds,
+    which drive Geography.region_reach() and material_reach(), so this names the
+    home ground itself, not just the region ids.
     """
     geo = load_geography()
     region_names = {rid: region_record.get("name", rid)
@@ -867,10 +867,9 @@ def cmd_civs(args):
         print("   %s" % civ_data.get("blurb", ""))
         homes = [region_names.get(region_id, region_id) for region_id in civ_data.get("home_regions") or []]
         print("   home ground: %s" % (", ".join(homes) if homes else "(none set)"))
-        print("   population %s   state capacity %.2f   base_reach %d (how far it already "
-              "routinely travels)   starts with %d technologies"
+        print("   population %s   state capacity %.2f   starts with %d technologies"
               % (f"{civ_data.get('population',0):,}", civ_data.get("state_capacity", 0),
-                 civ_data.get("base_reach", 0), len(civ_data.get("starting_techs", []))))
+                 len(civ_data.get("starting_techs", []))))
         print("   fears the inexplicable %.2f | fears heterodoxy %.2f | resents machines %+.2f "
               "| bribable %.2f | habituates %.2f"
               % (value["w_magic_fear"], value["w_religious_rigidity"], value["w_labour_saving"],

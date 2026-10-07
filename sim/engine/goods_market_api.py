@@ -19,6 +19,7 @@ from sim.world.producer_market import Offer
 from . import purchase_rule
 from .goods_market_offers import GoodsOffers
 from .project_materials import tonnes_per_unit
+from sim.agents.api import edges
 
 FOUNDER = "founder"
 
@@ -35,10 +36,10 @@ class FounderParty:
         return purchase_rule.can_pay(self._sim, money)
 
     def pay(self, money, purpose):
-        self._sim.state.household.debit(money, purpose)
+        self._sim.pay_edge(edges.EDGE_MARKET, money, purpose)
 
     def receive(self, money, purpose):
-        self._sim.state.household.credit(money, purpose)
+        self._sim.receive_from_edge(edges.EDGE_MARKET, money, purpose)
 
     def held(self, key):
         return self._sim.material_stock_t(key)

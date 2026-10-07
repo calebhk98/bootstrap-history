@@ -1,6 +1,6 @@
-"""Non-farm hours move toward what each trade is needed for, so a wage that
-signals scarcity is answered by hours and then eases back; the training
-premium uses the civilisation's own interest rate."""
+"""Farm hours move toward what the farm is needed for, the rest of the hours are shared by trade, and a
+wage that signals scarcity eases back once hours meet need; the training premium uses the
+civilisation's own interest rate."""
 import random
 import unittest
 
@@ -19,39 +19,46 @@ def _needs(smith_hours, potter_hours):
 
 class HoursFollowNeedTests(unittest.TestCase):
 
-    def test_a_short_trade_gains_hours_within_the_mobility_limit(self):
-        hours = {FARM: 500.0, "smith": 50.0, "potter": 450.0}
-        needs = _needs(300.0, 200.0)
-        first = labour_allocation.reallocate(hours, TOTAL_HOURS, needs)
-        self.assertGreater(first["smith"], hours["smith"])
-        self.assertLess(first["smith"], needs["smith"])
-        self.assertAlmostEqual(sum(first.values()), TOTAL_HOURS)
+    def test_farm_hours_move_toward_need_within_the_mobility_limit(self):
+        first = labour_allocation.farm_hours_after(500.0, 900.0, TOTAL_HOURS)
+        self.assertGreater(first, 500.0)
+        self.assertLess(first, 900.0)
         ceiling = labour_market.OCCUPATIONAL_MOBILITY_RATE_CEILING_PER_YEAR
-        self.assertLessEqual(first["smith"] - hours["smith"], ceiling * TOTAL_HOURS)
+        self.assertLessEqual(first - 500.0, ceiling * 500.0)
 
-    def test_hours_close_the_gap_over_years(self):
-        hours = {FARM: 500.0, "smith": 50.0, "potter": 450.0}
-        needs = _needs(300.0, 200.0)
-        gaps = []
-        for _year in range(200):
-            hours = labour_allocation.reallocate(hours, TOTAL_HOURS, needs)
-            gaps.append(needs["smith"] - hours["smith"])
-        self.assertEqual(gaps, sorted(gaps, reverse=True))
-        self.assertLess(gaps[-1], 0.05 * gaps[0])
-
-    def test_wage_rises_then_eases_back_as_hours_answer(self):
-        schedule = wages.WageSchedule({"smith": 5.0, "potter": 5.0}, 1.0, 1.0, 0.10)
-        hours = {FARM: 500.0, "smith": 50.0, "potter": 450.0}
-        needs = _needs(300.0, 200.0)
+    def test_farm_hours_close_the_gap_over_years_without_overshooting(self):
+        farm = 500.0
         series = []
-        for _year in range(400):
-            schedule.step(needs, hours)
-            hours = labour_allocation.reallocate(hours, TOTAL_HOURS, needs)
+        for _year in range(200):
+            farm = labour_allocation.farm_hours_after(farm, 900.0, TOTAL_HOURS)
+            series.append(farm)
+        self.assertEqual(series, sorted(series))
+        self.assertLessEqual(series[-1], 900.0 + 1e-9)
+        self.assertGreater(series[-1], 899.0)
+
+    def test_farm_hours_leave_the_farm_when_it_is_needed_less(self):
+        self.assertLess(labour_allocation.farm_hours_after(500.0, 300.0, TOTAL_HOURS), 500.0)
+
+    def test_the_rest_of_the_hours_are_shared_by_trade_and_nothing_is_lost(self):
+        hours = labour_allocation.society_hours(TOTAL_HOURS, 600.0, {"smith": 0.25, "potter": 0.75})
+        self.assertEqual(hours, {FARM: 600.0, "smith": 100.0, "potter": 300.0})
+        self.assertAlmostEqual(sum(hours.values()), TOTAL_HOURS)
+
+    def test_a_wage_rises_while_a_trade_is_short_and_eases_back_once_it_is_not(self):
+        schedule = wages.WageSchedule({"smith": 5.0, "potter": 5.0}, 1.0, 1.0, 0.10)
+        baseline = schedule.wage_per_hour("smith")
+        needs = _needs(300.0, 200.0)
+        short = {FARM: 500.0, "smith": 50.0, "potter": 450.0}
+        met = {FARM: 500.0, "smith": 300.0, "potter": 200.0}
+        series = []
+        for _year in range(20):
+            schedule.step(needs, short)
             series.append(schedule.wage_per_hour("smith"))
-        peak = max(series)
-        self.assertGreater(peak, series[0])
-        self.assertLess(series[-1], peak)
-        self.assertAlmostEqual(series[-1], series[-2], places=3)
+        peak = series[-1]
+        self.assertGreater(peak, baseline)
+        for _year in range(400):
+            schedule.step(needs, met)
+        self.assertLess(schedule.wage_per_hour("smith"), peak)
 
     def test_one_function_gives_the_need_to_allocation_and_wages(self):
         needed = labour_allocation.hours_needed_by_trade(

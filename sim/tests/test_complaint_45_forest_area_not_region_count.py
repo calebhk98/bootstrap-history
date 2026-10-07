@@ -132,19 +132,14 @@ check("Rome's own pre-revenue forest ceiling under the area-based formula "
       _rome_pre_revenue_new)
 
 
-# --- 5. A civilization with no valid home_regions at all must not crash -
-# home_land_area_km2() falls back the same way _compute_home_centroid()
-# already does, rather than raising or returning zero.
+# --- 5. A civilization that holds no tile has no woodland ceiling - no region
+# is substituted for it (no content id is special-cased).
 _orphan = _fresh_sim()
 _orphan.civ = dict(_orphan.civ)
 _orphan.civ["home_regions"] = ["not_a_real_region_id"]
-_orphan_area = _orphan.home_land_area_km2()
-check("a civ file with no valid home_regions gets a positive fallback area, "
-      "not a crash or a silent zero that would make forest_land_ceiling() "
-      "always refuse every purchase",
-      _orphan_area > 0.0,
-      _orphan_area)
-check("...and forest_land_ceiling() itself still returns a usable positive "
-      "number in that situation",
-      _orphan.forest_land_ceiling() > 0.0,
+check("a civ that resolves to no tile holds no land, and no region stands in for it",
+      _orphan.home_land_area_km2() == 0.0,
+      _orphan.home_land_area_km2())
+check("...so its forest ceiling is zero rather than a crash or a borrowed region's",
+      _orphan.forest_land_ceiling() == 0.0,
       _orphan.forest_land_ceiling())

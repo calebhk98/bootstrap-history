@@ -44,7 +44,7 @@ check("load refuses a save from a different civilisation",
 
 # a save that refers to a node id the current tree does not have
 _blob = json.load(open(os.path.join(_loadtest_abs, "sess.json")))
-_target_done = _blob["done"]["__set__"] if "done" in _blob else _blob["projects"]["done"]["__set__"]
+_target_done = _blob["seats"][_blob["acting_seat"]]["projects"]["done"]["__set__"]
 _target_done.append("this_node_does_not_exist_anymore")
 json.dump(_blob, open(os.path.join(_loadtest_abs, "unknown_node.json"), "w"))
 _before = ask_agent(_load_game, cmd="state")

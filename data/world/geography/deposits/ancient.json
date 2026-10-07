@@ -489,8 +489,8 @@
    "ore_grade_kg_per_tonne": 2.0,
    "depth_class": "surface",
    "hardness_class": "medium",
-   "conf": "D",
-   "source": "Rio Tinto silver came largely from jarosite and gossan ores smelted with lead added as a collector (Anguilano et al. 2010, ArcheoSciences 34, read). The 0.2 wt% silver grade (2 kg per tonne) is from an abstract seen in a search, not from the paper, so it is confidence D. The share of the silver-only total is carved from hispania_silver's and is a placeholder: no source gives the split. Surface working in medium rock (gossan is a weathered cap; the hardness is unsourced). Complaints/373.",
+   "conf": "C",
+   "source": "Rio Tinto silver came largely from jarosite and gossan ores smelted with lead added as a collector (Anguilano et al. 2010, ArcheoSciences 34, read). The 0.2 wt% silver grade (2 kg per tonne) is from an abstract seen in a search, not from the paper, and a second independent mention agrees: Bettenay 2022 (Metalla 26.2, supergene-enrichment section, citing Anguilano 2012) gives silver at about 0.2 percent in jarosite ore at the base of the iron cap. Two secondary mentions, primary not opened, so confidence C. The share of the silver-only total is carved from hispania_silver's and is a placeholder: no source gives the split. Surface working in medium rock (gossan is a weathered cap; the hardness is unsourced). Complaints/373.",
    "deposit_type": "gossan_jarosite",
    "status": "historic",
    "surveyed_lat": 37.7,
@@ -684,6 +684,29 @@
    "source": "Wikipedia coordinate; no endowment figure.",
    "conf": "B",
    "order": 34
+  },
+  {
+   "id": "eastern_desert_nubian_gold",
+   "name": "Eastern Desert and Nubian Gold",
+   "resource": "gold",
+   "lat": 22.8,
+   "lon": 33.3,
+   "material_moved": "ore",
+   "ore_grade_kg_per_tonne": 0.01,
+   "depth_class": "shallow_vein",
+   "hardness_class": "hard",
+   "conf": "B",
+   "source": "Klemm, Klemm and Murr 2001, Gold of the Pharaohs, J. African Earth Sciences 33, 643-659 (read in full). Quartz-vein ore worked from trenches and shafts: assumed recovery 10 g/t, about two thirds of the maximum concentration mined (p. 658), so 0.010 kg per tonne; tailings kept 3-5 g/t (p. 652). Underground working was limited to about 30 m by the ventilation available to men and oil lamps in New Kingdom workings (p. 654), hence shallow_vein. One entry stands for the whole Eastern Desert and Nubian field (about 250 sites in the paper), placed at the Wadi Allaqi gold district, so the point is a representative position, not a mine. No share_of_empire_output: the paper gives no Roman-era split,, and the entry is catalogue-only like the other entries without a share, so it moves no modelled gold output. Location checked: Wadi Allaqi is named by Klemm as a gold district (Hairiri, Umm Garaiyat) and Wikidata item Q2575777 gives the wadi's mouth near 22.97 N 32.90 E and its centre near 22.5 N 34.0 E; the entry is placed on that line, 22.8 N 33.3 E. Bir Umm Fawakhir was left out because no source opened gave its coordinates.",
+   "deposit_type": "orogenic_quartz_vein_gold",
+   "status": "historic",
+   "first_worked": -3000,
+   "endowment": 18,
+   "endowment_unit": "tonnes_contained",
+   "endowment_source": "Klemm et al. 2001, p. 658: maximum total ancient production of 18 t from Predynastic times (about 3000 BC) to about 1350 AD, from 400,000-600,000 t of quartz ore at 10 g/t (at most 6 t) plus wadi workings of the same order or at most double. A ceiling on production, not a resource estimate. About 7 t were Pharaonic; the rest is split equally between Ptolemaic and Arab times.",
+   "surveyed_lat": 22.8,
+   "surveyed_lon": 33.3,
+   "surveyed_source": "Wadi Allaqi, between the two Wikidata Q2575777 positions (22.97 N 32.90 E and 22.5 N 34.0 E)",
+   "order": 35
   }
  ]
 }

@@ -30,6 +30,14 @@ from .programme import programme_before_year
 from .step_problems import route_nodes, route_startable, stalled_projects, step_problems
 from .util import (_clean, _localise_money, _localise_words, _unsafe_path)
 
+
+def _trim_dashboard_history(sim, hist):
+	"""Trim dashboard history to the most recent N years if configured."""
+	years_kept = sim.state.scenario.dashboard_history_years
+	if years_kept is not None and len(hist) > years_kept:
+		del hist[:-years_kept]
+
+
 # Every dispatch_*.py module in this package registers its commands with
 # @command when imported; they are found by name here, so a new module needs
 # no edit. Each module's _cmd_* handlers are re-exported from this module so
@@ -141,7 +149,7 @@ def _cmd_step(sim, nodes, cmd, ended):
     # Non-blocking: it says so and proceeds, it does not refuse the step.
     multi_year_hours_warning = None
     lone_dependencies = sim.labour.sole_supervisors() if years > 1 else []
-    if years > 1:
+    if years > 1 and ui_port.settings.load_config().get("multi_year_step_warning", True):
         _pre_state = _agent_state(sim, nodes)
         _idle_note = _pre_state.get("free_hours_going_unused")
         if _idle_note:
@@ -255,6 +263,7 @@ def _cmd_step(sim, nodes, cmd, ended):
         _snap["concerns_closed"] = sorted(before_operating - sim.operating)
         _snap["completed"] = sorted(sim.done - before_done)
         hist.append(_snap)
+        _trim_dashboard_history(sim, hist)
         if route:
             snapshots.append({**_snap, "route_startable": route_startable(sim, route)})
         else:
@@ -362,6 +371,7 @@ def _cmd_step(sim, nodes, cmd, ended):
     if multi_year_hours_warning:
         out["multi_year_hours_warning"] = multi_year_hours_warning
     out.update(_agent_state(sim, nodes))
+    out["state_view"] = "short"
     return out
 
 

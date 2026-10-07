@@ -14,6 +14,7 @@ SLOW_YEARS = 12
 
 
 def years_that_diverge(years):
+    """One run of `years` years, yielding the years that differ so far after each year."""
     scenario = dict(civ="rome_100ad", seed=1, years=years, events=True, fog=False)
     unbroken = perf_fingerprint.build(scenario)
     save_path = os.path.join(tempfile.mkdtemp(), "save.json")
@@ -27,11 +28,22 @@ def years_that_diverge(years):
         if (perf_fingerprint.digest(perf_fingerprint.state_of(unbroken))
                 != perf_fingerprint.digest(perf_fingerprint.state_of(resumed))):
             diverging_years.append(year)
-    return diverging_years
+        yield list(diverging_years)
 
 
-quick_diverging = years_that_diverge(QUICK_YEARS)
+# The quick check and the slow check are the same run: the slow one carries on from where the quick one stopped.
+run_of_years = years_that_diverge(SLOW_YEARS)
+quick_diverging = [next(run_of_years) for _ in range(QUICK_YEARS)][-1]
 check("a game saved and loaded before each year of a short run plays that year as the unbroken game does",
       not quick_diverging, "years that differ: %s" % quick_diverging)
+
+
+def _rest_of_the_run():
+    diverging_years = quick_diverging
+    for diverging_years in run_of_years:
+        pass
+    return not diverging_years, "a year differs within %d years: %s" % (SLOW_YEARS, diverging_years)
+
+
 slow_check("...and the same over a run long enough to finish projects, admit firms and meet hazards",
-           lambda: (not years_that_diverge(SLOW_YEARS), "a year differs within %d years" % SLOW_YEARS))
+           _rest_of_the_run)

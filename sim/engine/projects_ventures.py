@@ -19,6 +19,7 @@ import collections
 
 from sim.constants import declare
 from . import cause_book, money_units
+from sim.agents.api import edges
 
 
 class VenturesMixin:
@@ -249,7 +250,7 @@ class VenturesMixin:
                                % ("{:,.0f}".format(fee),
                                   "{:,.0f}".format(household.capital),
                                   "{:,.0f}".format(self.spending_power("buy"))))
-            household.debit(fee, "opening a venture")
+            self.pay_edge(edges.EDGE_BUILDERS, fee, "opening a venture")
         projects.operating.add(node_id)
         projects.mothballed.discard(node_id)
         self.clear_closure(node_id)
@@ -318,7 +319,7 @@ class VenturesMixin:
                                % (node_id, add_units, "{:,.0f}".format(fee),
                                   "{:,.0f}".format(self.state.household.capital),
                                   "{:,.0f}".format(self.spending_power("buy"))))
-            self.state.household.debit(fee, "expanding a venture")
+            self.pay_edge(edges.EDGE_BUILDERS, fee, "expanding a venture")
         governance = self.state.governance
         inst_units = getattr(governance, "inst_units", None)
         if inst_units is None:

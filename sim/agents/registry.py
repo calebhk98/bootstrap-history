@@ -8,6 +8,7 @@ from .records import ActorRecord, ActorsState
 from . import firm_entry, imitation, ledger
 from .base import RecordedActor
 from .concern_totals import ConcernTotals
+from .edges import EDGE_ENTRY_PREMIUM, EDGE_POOLED_CAPITAL
 from .firm import Firm
 from .government import Government
 from .group import InterestGroup
@@ -399,9 +400,9 @@ class ActorRegistry:
 				founded_firm.record.plan["founder"] = founder.actor_id
 				ledger.transfer(founder, founded_firm, pooled, "founding stake")
 			else:
-				founded_firm.credit(pooled, "edge:pooled capital")
+				ledger.transfer(self.state.edge(EDGE_POOLED_CAPITAL), founded_firm, pooled, EDGE_POOLED_CAPITAL)
 			if premium > 0.0:
-				founded_firm.debit(premium, "edge:entry premium")
+				ledger.transfer(founded_firm, self.state.edge(EDGE_ENTRY_PREMIUM), premium, EDGE_ENTRY_PREMIUM)
 			waiting[key] = waiting.get(key, 0) + 1
 			founded.append(firm_id)
 		return founded

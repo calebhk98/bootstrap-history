@@ -16,7 +16,8 @@ import copy
 import os
 
 from sim.constants import declare
-from sim.world import demand, need_demand
+from sim.geography.api import layer_value, settlement, tiles_held
+from sim.world import demand, need_basket, need_demand
 
 from . import goods_market_offers
 
@@ -48,10 +49,40 @@ def _household_model():
     return model
 
 
-def household_demand_by_material(prices_in_hours, population, income_per_capita):
-    """{material: units a year} households (and what they buy through recipes) want."""
-    model = copy.copy(_household_model())
+_CLIMATE_BASKETS = {}
+
+
+def _civilisation_basket(model, civ, world_map):
+    """The model's basket with the floors the climate of the civilisation's tiles sets, each tile
+    weighted by its share of the opening population (cached for the map it was built on)."""
+    key = (id(model), str(civ["id"]))
+    cached = _CLIMATE_BASKETS.get(key)
+    if cached is not None and cached[0] is world_map:
+        return cached[1]
+    tile_ids = tiles_held(civ, world_map)
+    records = [({"lat": layer_value(tile, "lat", world_map),
+                 "koppen_class": layer_value(tile, "koppen_class", world_map),
+                 "koppen_sample_mix": layer_value(tile, "koppen_sample_mix", world_map)},
+                settlement.population_share(tile_ids, tile)) for tile in tile_ids]
+    basket = need_basket.mean_climate_basket(model.basket, records)
+    _CLIMATE_BASKETS[key] = (world_map, basket)
+    return basket
+
+
+def household_basket(civ, world_map):
+    """The household need basket of a civilisation: the installed content's needs with the floors its
+    tiles' climate sets."""
+    return _civilisation_basket(_household_model(), civ, world_map)
+
+
+def household_demand_by_material(prices_in_hours, population, income_per_capita, civ=None, world_map=None):
+    """{material: units a year} households (and what they buy through recipes) want. With a
+    civilisation and its map, the warmth, clothing and shelter floors are those its tiles' climate sets."""
+    base = _household_model()
+    model = copy.copy(base)
     model.bins = demand.income_bins(max(population, 1.0), income_per_capita)
+    if civ is not None and world_map is not None:
+        model.basket = _civilisation_basket(base, civ, world_map)
     return model.total_demand(prices_in_hours)
 
 
@@ -110,7 +141,8 @@ class MarketDemandMixin:
         prices_in_hours = {material: price / per_hour for material, price in prices.items()
                            if price > 0.0 and (material in basket["prices"]
                                                or self.goods_market.offered_by(material) == seller_at_home)}
-        now = household_demand_by_material(prices_in_hours, key[0] * self._opening_population(), key[1])
+        now = household_demand_by_material(prices_in_hours, key[0] * self._opening_population(), key[1],
+                                       self.civ, self.world_map)
         opening_by_commodity, now_by_commodity = {}, {}
         for material, units in basket["units"].items():
             commodity = basket["commodity"][material]

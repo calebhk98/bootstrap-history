@@ -189,6 +189,7 @@ class MarketClearingMixin:
     def _step_market(self):
         """Close the year: capacity follows the price, unsold goods carry on. Every commodity clears at the
         price level the year opened with; the coin the year's trade moves counts from the next year."""
+        self.finish_ways()
         self._open_market_book()
         if self.economy.run_agent_year():
             self.close_partner_books()

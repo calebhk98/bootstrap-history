@@ -15,7 +15,7 @@
   "cap_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
-  "note": "Water or dew retting breaks down pectin binding fibre to woody core, controlled fermentation in standing water",
+  "note": "Flax and hemp stalks are soaked in water or exposed to dew for weeks to break down the pectin that binds the woody core to the long fibers. This controlled fermentation must be watched carefully, as overretting weakens the fibers and underretting leaves too much woody material to separate.",
   "up_hours": 0
  },
  {
@@ -40,7 +40,7 @@
   "cap_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
-  "note": "Scutching board and wooden scutcher blade beat retting fibre to separate long bast fibres from brittle woody break, crude mechanisation with flails",
+  "note": "After retting, the dried flax or hemp stalks are broken and then beaten over a board with a wooden blade, so the brittle woody core falls away and the long bast fibres remain. Flails give a crude mechanised version of the same beating. Quality depends on beating firmly enough to free the core without tearing the fibres.",
   "up_hours": 0
  },
  {
@@ -63,7 +63,7 @@
   "cap_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 0,
-  "note": "Pins set in flat boards, four grades of hecklers pull fibre through progressively finer pins, separates long line from short tow",
+  "note": "After scutching, hackling pulls the fibre bundle through a series of boards set with metal pins, from coarse to progressively finer. Each pass combs out more short, tangled fibre (tow) and straightens the long fibre (line). The long line is what can be spun into fine thread, while the tow makes coarser yarn.",
   "up_hours": 0,
   "gov": -1,
   "sus": 1
@@ -195,7 +195,7 @@
   "cap_hours": 0,
   "build_yrs": 0.15,
   "adopt_yrs": 0,
-  "note": "Two and more rovings drawn together and doubled, evens out slubs, allows fibre blending and increases draft",
+  "note": "Drawing feeds several slivers or rovings together (doubling) and stretches them between pairs of rollers, each pair turning faster than the one before. Doubling averages out thick and thin places so the strand becomes even, and different fibres or colours can be blended this way. The amount of stretching is called the draft, and an even strand is needed for even yarn.",
   "up_hours": 0,
   "gov": -1,
   "sus": 1
@@ -222,7 +222,7 @@
   "cap_hours": 0,
   "build_yrs": 0.25,
   "adopt_yrs": 0,
-  "note": "Rollers at progressively faster speeds attenuate fibres, flyer imparts twist, produces roving ready for spinning frame",
+  "note": "Between carded fibre and finished yarn there is a stage called roving: a loose, thick strand with just enough twist to hold together. In the roving frame, pairs of rollers turning at increasing speeds stretch the fibre strand thinner, and a rotating arm called a flyer twists it and winds it onto a bobbin. The spinning frame can only finish a strand that is already even and thin enough, so this step feeds it.",
   "up_hours": 0,
   "gov": -1,
   "sus": 1
@@ -677,7 +677,7 @@
   "cap_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 0.5,
-  "note": "Rotating cam drives picker sticks that strike shuttle, replaces hand throwing, enables power loom and higher speeds",
+  "note": "Picking is the throw that sends the shuttle, which carries the weft thread, through the gap between the warp threads. In a power loom a rotating cam moves arms called picker sticks that strike the shuttle at each end and drive it across, replacing the weaver's hand throw. It needs hard, accurately fitted metal parts, since the shuttle is struck over and over, and it lets looms run much faster than a person can throw.",
   "up_hours": 0
  },
  {
@@ -770,7 +770,7 @@
   "cap_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
-  "note": "Starch or other binder applied to warp, increases abrasion resistance and stiffness, essential for high-speed weaving",
+  "note": "The warp is the set of long threads held in the loom, and weaving rubs them repeatedly against the loom parts, so weak yarn frays and breaks. Sizing coats the warp with a paste, often of starch, that lays down loose fibre ends and stiffens the thread so it resists rubbing. The size is washed out of the finished cloth. Fast weaving breaks unsized thread constantly, so sizing is needed for high speeds.",
   "up_hours": 0
  },
  {
@@ -1097,7 +1097,7 @@
   "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 0.5,
-  "note": "Rotating cylinder with teasel or wire brushes teases fibre ends to surface, mechanical replacement for hand teasel",
+  "note": "Raising pulls the ends of fibres up out of woven cloth to make a soft surface called a nap, as on blankets and woollen cloth. By hand it is done with teasels, the dried prickly heads of a plant, drawn across the damp cloth. A machine carries teasels or wire brushes on a rotating cylinder and passes the cloth over it. Fulled cloth is needed first, and the nap is usually trimmed afterwards to even it.",
   "up_hours": 0
  },
  {
@@ -1274,7 +1274,7 @@
   "cap_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
-  "note": "Laid on grass, UV radiation breaks colour bodies, slowest method but gentlest on fibres, traditional for linen",
+  "note": "Linen and other plant fibres start out yellowish or grey. Bleaching by sun means spreading the cloth on grass and keeping it wet, so that sunlight, moisture and air slowly destroy the colouring matter. It needs open land, clean water and a lot of time, which makes it the slowest method. It is the gentlest on the fibres, and was the traditional treatment for linen.",
   "up_hours": 0
  },
  {
@@ -1846,6 +1846,8 @@
  },
  {
   "id": "tx2_silk_fibre",
+  "copy_visibility": 0.1,
+  "copy_visibility_reason": "The silk thread reveals nothing about the worm, the mulberry or the reeling of the cocoon; the secret was kept for centuries until monks are said to have smuggled eggs to Byzantium.",
   "name": "Silk: cultivated fibre",
   "cat": "fibres",
   "kind": "RESOURCE",
@@ -2185,6 +2187,8 @@
  },
  {
   "id": "tx2_lockstitch",
+  "copy_visibility": 0.5,
+  "copy_visibility_reason": "The stitch itself is visible in the seam and can be pulled apart, but the shuttle and the needle timing sit inside the machine head.",
   "name": "Lockstitch: two-thread interlocking",
   "cat": "sewing",
   "kind": "ENGINEERING",

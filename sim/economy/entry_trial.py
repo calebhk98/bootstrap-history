@@ -60,15 +60,26 @@ def demand_at(bids: Sequence[Bid], price: float, price_now: float) -> float:
     return total
 
 
-def capacity_in_area(producers: Mapping[str, Producer], recipes: Mapping[str, Recipe], good: GoodId,
-                     area_tiles, coming: Mapping[str, float]) -> float:
-    """Output of `good` the makers on the area's tiles could reach, counting plant still to come."""
+def capacity_terms_by_good(producers: Mapping[str, Producer], recipes: Mapping[str, Recipe],
+                           coming: Mapping[str, float]) -> Dict[GoodId, List[Tuple[str, float]]]:
+    """Per good, each maker's (tile, reachable output of the good) in producer order, plant to come counted."""
+    terms: Dict[GoodId, List[Tuple[str, float]]] = {}
+    for producer_id, producer in producers.items():
+        for good, made in recipes[producer.recipe_id].outputs.items():
+            if made > 0.0:
+                terms.setdefault(good, []).append(
+                    (producer.tile,
+                     (producer.capacity_runs * producer.yield_factor + coming.get(producer_id, 0.0)) * made))
+    return terms
+
+
+def capacity_in_area(terms: Mapping[GoodId, Sequence[Tuple[str, float]]], good: GoodId, area_tiles) -> float:
+    """Output of `good` the makers on the area's tiles could reach (terms: capacity_terms_by_good)."""
     tiles = set(area_tiles)
     total = 0.0
-    for producer_id, producer in producers.items():
-        made = recipes[producer.recipe_id].outputs.get(good, 0.0)
-        if made > 0.0 and producer.tile in tiles:
-            total += (producer.capacity_runs * producer.yield_factor + coming.get(producer_id, 0.0)) * made
+    for tile, term in terms.get(good, ()):
+        if tile in tiles:
+            total += term
     return total
 
 
@@ -80,13 +91,13 @@ def trial_entry_plans(setup, record, view, area_map, bids_by_market: Mapping[Tup
         for good in setup.recipes[recipe_id].outputs:
             makers.setdefault(good, []).append(recipe_id)
     skip = set(planned)
+    capacity_terms = capacity_terms_by_good(record.producers, setup.recipes, record.expansion_runs)
     plans = []
     for (good, area_id), bids in sorted(bids_by_market.items()):
         if (good, area_id) in skip or good not in makers or good not in area_map.goods():
             continue
         area = next((each for each in area_map.areas(good) if each.area_id == area_id), None)
-        if area is None or capacity_in_area(record.producers, setup.recipes, good, area.tiles,
-                                            record.expansion_runs) > 0.0:
+        if area is None or capacity_in_area(capacity_terms, good, area.tiles) > 0.0:
             continue
         best = _cheapest(setup, record, view, good, area.anchor_tile, makers[good])
         if best is None:

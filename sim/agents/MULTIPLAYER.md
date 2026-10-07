@@ -75,7 +75,7 @@ of home operators, and what its concerns make is sold there. A trader's sale abr
 
 Every payment between actors goes through `ledger.transfer`. Money enters or leaves only at a named
 edge (for example, a foreign country's revenue from people the simulation does not model actor by
-actor). Tests check that the sum of purses is conserved across a year apart from those edges.
+actor). Edges are named in `edges.py` and kept in the saved state, so purses plus edges stay constant; a test checks that over a run and scans for any posting that names no counterparty. Wages, the state's pay and lenders' interest are paid to the home country's free strata (`payroll.py`).
 
 ## What lives elsewhere
 

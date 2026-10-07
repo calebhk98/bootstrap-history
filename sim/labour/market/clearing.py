@@ -141,6 +141,7 @@ def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bid
     reservation = reservation_wage(inputs, area, spec.fatality_risk_per_year)
     last = state.wages.get(area, {}).get(trade)
     wage = market_wage(last, reservation, offered, bids)
+    target = clearing_target(reservation, offered, bids) if offered > 0.0 and bids else wage
     wanted, paid = eligible_bids(bids, wage)
     previous = state.hired_hours.get(area, {}).get(trade, {})
     hired = retain(wanted, previous, offered) if offered > 0.0 else {employer: 0.0 for employer in wanted}
@@ -154,7 +155,8 @@ def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bid
     average = sum(hours * paid[employer] for employer, hours in hired.items()) / total if total > 0.0 else wage
     return Clearing(trade=trade, area=area, wage=wage, hours_offered=offered, hours_wanted=sum(wanted.values()),
                     hours_hired=total, hired_by_employer=hired,
-                    paid_by_employer={employer: paid[employer] for employer in hired}, average_wage=average)
+                    paid_by_employer={employer: paid[employer] for employer in hired}, average_wage=average,
+                    target_wage=target)
 
 
 def clear_all(state: MarketState, inputs: YearInputs) -> List[Clearing]:

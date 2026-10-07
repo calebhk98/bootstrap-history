@@ -118,7 +118,7 @@ class WagesMixin(WageLedgerMixin):
         household = self._world.state.household
         pay = self.wage_for_hours(trade, hours)
         before_practice = self._world.revenue()
-        household.credit(pay, "wages for your own work")
+        self._world.receive_from_edge(self._world.EDGE_EMPLOYERS, pay, "wages for your own work")
         household.wage_hours_this_year = household.wage_hours_this_year + hours
         household.wages_earned = (household.wages_earned or 0.0) + pay
         household.wage_income_this_year = household.wage_income_this_year + pay

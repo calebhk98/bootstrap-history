@@ -14,7 +14,7 @@ from sim.agents.trader_entry import candidate_routes
 from sim.agents.tuning import ENTREPRENEURIAL_CAPITAL_SHARE
 from sim.agents.tuning_trader import TRADER_DEPTH_SHARE, TRADER_RISK_SHARE
 
-from .test_agents_traders import TradeWorld, make_registry
+from .trader_fake_world import TradeWorld, make_registry
 
 MATERIALS = ("grain", "iron", "salt")
 

@@ -27,6 +27,7 @@ from .step_phase_money import MoneyPhaseMixin
 from .step_phase_project_start import ProjectStartPhaseMixin
 from .step_phase_projects import ProjectProgressPhaseMixin
 from .step_phase_staff import StaffPhaseMixin
+from sim.agents.api import edges, ledger
 
 
 @dataclass(frozen=True)
@@ -426,7 +427,7 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
                 and self.state.founder.policy.get("auto_bribe", not self.manual)):
             spend = min(self.state.household.capital * self.AUTO_BRIBE_CAPITAL_SHARE,
                         self.state.household.scandal * self.AUTO_BRIBE_COST_PER_SCANDAL_POINT)
-            self.state.household.debit(spend, "bribes")
+            self.pay_edge(edges.EDGE_OFFICIALS, spend, "bribes")
             self.state.household.bribes_ytd = self.BRIBES_YTD_DECAY * self.state.household.bribes_ytd + spend
             self.state.household.scandal -= (spend / self.BRIBE_SCANDAL_REDUCTION_SCALE
                                        * self.value_weights["bribability"])
@@ -467,7 +468,7 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
                 roll = self.rng.random()
                 if roll < self.EMINENCE_OUTCOME_CONFISCATION_SHARE:
                     take = self.state.household.capital * self.EMINENCE_CONFISCATION_CAPITAL_LOSS
-                    self.state.household.debit(take, "confiscation by the state")
+                    ledger.transfer(self.state.household, self.state_treasury(), take, "confiscation by the state")
                     self.state.household.reputation = max(0.0, self.state.household.reputation - self.EMINENCE_CONFISCATION_REPUTATION_LOSS)
                     self.state.household.eminence *= self.EMINENCE_CONFISCATION_RETENTION
                     self.state.household.log.append((self.state.scenario.year, "PROMINENCE: property confiscated, %d den lost, "

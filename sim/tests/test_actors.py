@@ -159,8 +159,7 @@ offers = {option.subject: option for option in government.imitation_options(worl
 check("an invention kept out of public use is less exposed",
       abs(offers["test_hidden"].worth / offers["test_visible"].worth - SECRET_EXPOSURE) < 1e-9,
       (offers["test_hidden"].worth, offers["test_visible"].worth))
-homes = game.civ.get("home_regions") or []
-farthest = max(settlement.tile_ids(homes), key=game.labour.distance_to_tile_km)
+farthest = max(settlement.tile_ids(game.labour.held_tiles()), key=game.labour.distance_to_tile_km)
 government.record.location = farthest
 far_offer = {option.subject: option for option in government.imitation_options(world)}["test_visible"]
 check("a distant observer sees less of what the founder does", far_offer.worth < offers["test_visible"].worth)

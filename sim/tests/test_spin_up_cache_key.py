@@ -1,7 +1,7 @@
-"""The cached spin-ups (the agent economy's hidden years, the labour market's trade split) are keyed on
+"""The cached spin-ups (the agent economy's hidden years) are keyed on
 what they start from and on the source that runs them, and on nothing else.
 
-sim/engine/economy_port_key.py, sim/labour/workforce_spinup.py.
+sim/engine/economy_port_key.py.
 """
 QUICK_TOPIC = True
 
@@ -13,7 +13,6 @@ import unittest
 from typing import Any, Dict
 
 from sim.engine import economy_port_key, solve_cache, source_closure
-from sim.labour import workforce_spinup
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -64,6 +63,26 @@ class ObjectContentTests(unittest.TestCase):
     def test_paths_inside_the_checkout_do_not_depend_on_where_it_is(self):
         plain = economy_port_key._plain(os.path.join(ROOT, "data", "maps"))
         self.assertEqual(plain, os.path.join("data", "maps"))
+
+    def test_a_memo_kept_on_the_map_does_not_change_the_digest(self):
+        empty = _Setup(world_map=_Map("m", {"a": {"food": 1}}, ROOT))
+        filled = _Setup(world_map=_Map("m", {"a": {"food": 1}}, ROOT))
+        filled.world_map.__dict__["_route_rates"] = {"road": [1.0, 2.0]}
+        self.assertEqual(economy_port_key.setup_digest(empty), economy_port_key.setup_digest(filled))
+
+    def test_a_memo_pointing_back_at_its_map_is_keyed_without_walking_the_cycle(self):
+        world_map = _Map("m", {"a": {"food": 1}}, ROOT)
+        memo = _Map("memo", {}, ROOT)
+        memo.world_map = world_map
+        world_map.__dict__["_route_rates"] = memo
+        plain = economy_port_key._plain(_Setup(world_map=world_map))
+        self.assertNotIn("_route_rates", plain["world_map"]["content"])
+
+    def test_a_cycle_through_public_fields_is_refused(self):
+        world_map = _Map("m", {}, ROOT)
+        world_map.parent = world_map
+        with self.assertRaises(TypeError):
+            economy_port_key.setup_digest(_Setup(world_map=world_map))
 
     def test_a_value_with_no_content_to_key_on_is_refused(self):
         with self.assertRaises(TypeError):
@@ -118,36 +137,6 @@ class RealClosureTests(unittest.TestCase):
         self.assertIn(os.path.join("sim", "engine", "economy_port_year.py"), relative)
         self.assertIn(os.path.join("sim", "economy", "api.py"), relative)
         self.assertFalse([path for path in relative if path.startswith(os.path.join("sim", "ui") + os.sep)])
-
-
-class WorkforceSpinUpKeyTests(unittest.TestCase):
-    def setUp(self):
-        self.root = tempfile.mkdtemp(prefix="workforce_key_")
-        self.original_root = workforce_spinup._REPOSITORY_ROOT
-        for relative in ("sim/labour/a.py", "sim/ui/b.py", "sim/tests/c.py"):
-            _write(self.root, relative, "x = 1\n")
-        workforce_spinup._REPOSITORY_ROOT = self.root
-        workforce_spinup.forget_in_process_cache()
-
-    def tearDown(self):
-        workforce_spinup._REPOSITORY_ROOT = self.original_root
-        workforce_spinup.forget_in_process_cache()
-        shutil.rmtree(self.root, ignore_errors=True)
-
-    def _digest_after_edit(self, relative):
-        before = workforce_spinup._source_digest()
-        _write(self.root, relative, "y = 2\n")
-        workforce_spinup.forget_in_process_cache()
-        return before, workforce_spinup._source_digest()
-
-    def test_editing_source_changes_the_digest(self):
-        before, after = self._digest_after_edit("sim/labour/a.py")
-        self.assertNotEqual(before, after)
-
-    def test_editing_tests_or_the_ui_keeps_it(self):
-        for relative in ("sim/ui/b.py", "sim/tests/c.py"):
-            before, after = self._digest_after_edit(relative)
-            self.assertEqual(before, after, relative)
 
 
 if __name__ == "__main__":

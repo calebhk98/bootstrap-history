@@ -7,7 +7,8 @@ authored figure, labelled as such."""
 import copy
 import unittest
 
-from sim.engine import data, energy_prices, node_output, node_revenue, node_revenue_market
+from sim.engine import (data, energy_prices, node_output, node_payback_diagnostic, node_revenue,
+                        node_revenue_market)
 from sim.labour.labour_market import production_data
 
 
@@ -78,11 +79,23 @@ class NodeRevenue(unittest.TestCase):
                 self.assertLessEqual(sum(node["_output_per_year"].values()) / 1000.0,
                                      declared * (1 + 1e-9), node_id)
 
-    def test_output_derived_nodes_repay_their_cost_no_faster_than_the_floor(self):
-        for node_id, node in self.derived().items():
-            if node["rev"] > 0:
-                self.assertGreaterEqual(node["_total_cost"] / node["rev"],
-                                        node_revenue.MINIMUM_PAYBACK_YEARS, node_id)
+    def test_authored_revenue_is_never_capped_by_a_payback_floor(self):
+        for node_id, node in self.nodes.items():
+            if node.get("_revenue_basis") == "authored":
+                self.assertEqual(node["rev_hours"], node["_rev_hours_authored"], node_id)
+
+    def test_payback_diagnostic_returns_well_formed_rows_and_changes_nothing(self):
+        before = {node_id: node["rev"] for node_id, node in self.nodes.items()}
+        rows = node_payback_diagnostic.fast_payback_rows(self.nodes, threshold_years=1e9)
+        self.assertTrue(rows)
+        for row in rows:
+            self.assertEqual(set(row), {"node", "basis", "build_cost", "net_per_year", "payback_years"})
+            self.assertGreater(row["net_per_year"], 0.0)
+            self.assertAlmostEqual(row["payback_years"], row["build_cost"] / row["net_per_year"])
+        self.assertEqual([row["payback_years"] for row in rows], sorted(row["payback_years"] for row in rows))
+        self.assertEqual(node_payback_diagnostic.fast_payback_rows(self.nodes, threshold_years=0.0), [])
+        self.assertTrue(node_payback_diagnostic.format_rows(node_payback_diagnostic.fast_payback_rows(self.nodes)))
+        self.assertEqual(before, {node_id: node["rev"] for node_id, node in self.nodes.items()})
 
     def test_knowledge_nodes_earn_nothing(self):
         found = [node_id for node_id, node in self.nodes.items() if node.get("_revenue_basis") == "knowledge"]

@@ -93,15 +93,14 @@ class CapitalRecoveryFactor(unittest.TestCase):
 class TilesOfACivilisation(unittest.TestCase):
 
     def test_land_and_geography_agree_on_the_tiles_of_every_civilisation(self):
-        land_tiles = geography_api.load_geography()["land_tiles"]
         folder = os.path.join(DATA_DIR, "civilizations")
         for name in sorted(os.listdir(folder)):
             if not name.endswith(".json"):
                 continue
             with open(os.path.join(folder, name), encoding="utf-8") as handle:
-                regions = json.load(handle).get("home_regions") or []
-            self.assertEqual(geography_api.tiles_of_regions(regions),
-                             land._tile_ids_for_home_regions(regions, land_tiles), name)
+                civilisation = json.load(handle)
+            self.assertEqual(geography_api.tiles_of_regions(civilisation.get("home_regions") or []),
+                             geography_api.tiles_held(civilisation), name)
 
 
 if __name__ == "__main__":

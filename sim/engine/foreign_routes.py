@@ -14,7 +14,7 @@ from typing import Tuple
 
 from sim.constants import declare
 from sim.world import trader_response
-from sim.geography.api import cargo_cost, freight_cost, sea_freight, tiles_of_regions
+from sim.geography.api import cargo_cost, freight_cost, sea_freight, tiles_held
 from sim.geography.api import route as route_over_tiles
 from sim.geography.api import dues_hours_per_tonne
 from sim.geography.api import usable_modes as usable_route_modes
@@ -174,8 +174,8 @@ class ForeignRoutesMixin:
         modes = [mode for mode in usable_route_modes((home_techs, foreign_techs), self.world_map)
                  if mode in mode_costs]
         found = route_over_tiles(
-            tiles_of_regions(civilization_record.get("home_regions") or [], self.world_map),
-            tiles_of_regions(self.civ.get("home_regions") or [], self.world_map), modes,
+            tiles_held(civilization_record, self.world_map),
+            tiles_held(self.civ, self.world_map), modes,
             mode_costs=mode_costs, handling_costs=self._freight_handling_costs(),
             held_nodes=home_techs | foreign_techs, world_map=self.world_map)
         return None if found is None else route_from_geography(found)

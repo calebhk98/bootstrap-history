@@ -34,8 +34,8 @@ class FiscalWorld(FakeWorld):
 	def subsistence_cost_per_person_year(self):
 		return self.food_cost
 
-	def housing_cost_per_person_year(self):
-		return self.housing_cost
+	def need_floor_costs_per_person_year(self):
+		return {"food": self.food_cost, "shelter": self.housing_cost}
 
 	def pay_per_person_year(self, trade):
 		return 1000.0
@@ -54,7 +54,7 @@ def make_stratum(name, members, earned, money, hungry=0.0):
 	body = Stratum(stratum_id("home", name), ActorRecord(kind="stratum", stratum=name, members=members, money=money))
 	body.record.income["edge:economy"] = earned
 	body.record.income["migration"] = 7.0e9   # a transfer between bodies is not earned
-	body.record.shortfall = {"food": hungry, "housing": hungry, "goods": 0.0}
+	body.record.shortfall = {"food": hungry, "shelter": hungry}
 	return body
 
 

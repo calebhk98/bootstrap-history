@@ -8,13 +8,16 @@ import collections
 import dataclasses
 from dataclasses import dataclass, field
 from typing import (
-	Any, Callable, DefaultDict, Dict, List,
+	TYPE_CHECKING, Any, Callable, DefaultDict, Dict, List,
 	Optional, Set, Tuple, Union, get_args, get_origin, get_type_hints,
 )
 
 from sim.agents.api import ActorRecord, ActorsState, CapitalMarketRecord  # noqa: F401
 from sim.engine import cash_book
 from sim.invalidating import ActiveProjectState, _InvalidatingDict
+
+if TYPE_CHECKING:
+	from sim.engine.state_seat import SeatState  # set on this module at import by state_seat
 
 
 @dataclass
@@ -207,6 +210,10 @@ class EconomyState:
 	binding: Optional[str] = None
 	shortage_condition: Optional[Dict[str, Any]] = None
 	forest_ha: float = 0.0
+	# edge key -> {way: true} of the roads and track built (ways.py); geography's routes read it
+	improvements: Dict[str, Dict[str, bool]] = field(default_factory=dict)
+	# edge key -> {way: year it is finished} of the roads and track paid for and being built (ways.py)
+	ways_under_construction: Dict[str, Dict[str, float]] = field(default_factory=dict)
 	nitre_bed_m2: float = 0.0
 	agent_economy: Dict[str, Any] = field(default_factory=dict)   # the agent economy's record (economy_port_year.py)
 	market_pressure: float = 0.0
@@ -277,6 +284,7 @@ class ScenarioState:
 	goal_year: Optional[int] = None
 	goal_years: Dict[str, int] = field(default_factory=dict)  # goal id -> year it was reached as the formal goal
 	weather_salt: int = 0     # this game's own weather history, drawn from its dice (Complaint 384)
+	dashboard_history_years: Optional[int] = None  # cap dashboard history to N most recent years; None = no cap
 	_said_debasement: Optional[int] = None
 	_said_output: Optional[Dict[str, int]] = None
 	_said_scandal: int = 0
@@ -303,16 +311,18 @@ class PopulationState:
 @dataclass
 class SimulationState:
 	"""Root coordinator aggregating authoritative persistent subsystem states."""
-	household: HouseholdState
-	projects: ProjectsState
+	# household, projects and founder alias the acting seat's objects and are not saved (seats are)
+	household: Optional[HouseholdState] = field(default=None, metadata={"alias": True})
+	projects: Optional[ProjectsState] = field(default=None, metadata={"alias": True})
 	economy: Optional[EconomyState] = None
 	governance: Optional[GovernanceState] = None
-	founder: Optional[FounderState] = None
+	founder: Optional[FounderState] = field(default=None, metadata={"alias": True})
+	seats: Dict[str, "SeatState"] = field(default_factory=dict)
+	acting_seat: str = "founder"
 	scenario: Optional[ScenarioState] = None
 	population: Optional[PopulationState] = None
 	actors: Optional[ActorsState] = None
 	_civ: Optional[str] = None
-	_goal: Optional[str] = None
 	_civ_live: Dict[str, Any] = field(default_factory=dict)
 	_weights: Dict[str, Any] = field(default_factory=dict)
 	_fog: bool = False
@@ -322,6 +332,21 @@ class SimulationState:
 	_rng: Optional[List[Any]] = None
 	_seed: Optional[Union[int, str]] = None
 	interface: Dict[str, Any] = field(default_factory=dict)  # the UI's own memory; the engine never reads it
+
+	def __post_init__(self) -> None:
+		from sim.engine.state_seat import FIRST_SEAT_ID, SeatState, bind_seat
+		if not self.seats:   # built from the three objects directly: they become the first seat
+			self.acting_seat = FIRST_SEAT_ID
+			self.seats[FIRST_SEAT_ID] = SeatState(self.household, self.projects, self.founder)
+		bind_seat(self, self.acting_seat)
+
+	@property
+	def _goal(self) -> Optional[str]:
+		return self.seats[self.acting_seat].goal
+
+	@_goal.setter
+	def _goal(self, value: Optional[str]) -> None:
+		self.seats[self.acting_seat].goal = value
 
 
 ALL_STATE_CLASSES = (
@@ -360,7 +385,7 @@ def serialize_state(obj: Any) -> Any:
 	if dataclasses.is_dataclass(obj) and not isinstance(obj, type):
 		out = {}
 		for f in dataclasses.fields(obj):
-			if f.name.startswith("_on_change"):
+			if f.name.startswith("_on_change") or f.metadata.get("alias"):
 				continue
 			val = getattr(obj, f.name)
 			out[f.name] = serialize_state(val)
@@ -531,3 +556,6 @@ def deserialize_state(blob: Any, target_type: Optional[type] = None) -> Any:
 		target_type = ActiveProjectState if "ph_left" in blob else SimulationState
 
 	return _deserialize_typed(blob, target_type)
+
+
+from sim.engine import state_seat  # noqa: E402,F401  (registers SeatState, which needs the classes above)

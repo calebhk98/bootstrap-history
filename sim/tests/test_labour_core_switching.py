@@ -109,6 +109,45 @@ class SwitchingTests(unittest.TestCase):
 
 
 
+class PipelineTests(unittest.TestCase):
+    """A trade that already has incumbents is weighed by what it will pay once a switcher is trained,
+    the same as one nobody practises: a shortage the people already training will fill draws nobody."""
+
+    def _carver_shortage(self, trainees):
+        state = _state({"digger": 1000.0, "carver": 100.0})
+        if trainees:
+            bands = aptitude.band_count()
+            state.trainees = {AREA: {"carver": [[3.0, [trainees / bands] * bands, 0.0]]}}
+        clearings = _clearings({"digger": 0.5, "cutter": 0.5, "healer": 0.5})
+        clearings[(AREA, "carver")] = Clearing(
+            trade="carver", area=AREA, wage=2.0, hours_offered=100.0 * HOURS, hours_wanted=300.0 * HOURS,
+            hours_hired=100.0 * HOURS, hired_by_employer={}, paid_by_employer={}, average_wage=2.0)
+        report = YearReport()
+        switching.switch_trades(state, _inputs(_specs()), clearings, report)
+        return report.switched.get(AREA, {}).get("carver", 0.0)
+
+    def test_an_unfilled_shortage_draws_switchers(self):
+        self.assertGreater(self._carver_shortage(trainees=0.0), 0.0)
+
+    def test_a_shortage_the_trainees_will_fill_draws_nobody(self):
+        self.assertLessEqual(self._carver_shortage(trainees=800.0), 1e-9)
+
+
+class FrictionalVacancyTests(unittest.TestCase):
+    def _switched(self, hired):
+        state = _state({"digger": 1000.0, "carver": 400.0})
+        clearings = _clearings({"digger": 0.5, "cutter": 0.5, "healer": 0.5})
+        clearings[(AREA, "carver")] = Clearing(
+            trade="carver", area=AREA, wage=1.0, hours_offered=400.0 * HOURS, hours_wanted=200.0 * HOURS,
+            hours_hired=hired * HOURS, hired_by_employer={}, paid_by_employer={}, average_wage=1.0)
+        report = YearReport()
+        switching.switch_trades(state, _inputs(_specs()), clearings, report)
+        return report.switched.get(AREA, {}).get("carver", 0.0)
+
+    def test_a_few_unfilled_hours_in_a_glutted_trade_do_not_make_it_a_sure_job(self):
+        self.assertAlmostEqual(self._switched(hired=199.0), self._switched(hired=200.0), delta=0.05 * self._switched(hired=200.0))
+
+
 class NoWorthlessSwitchTests(unittest.TestCase):
     def test_a_trade_paying_a_hair_more_draws_nobody_who_must_retrain_for_it(self):
         floor_wage = SUBSISTENCE / HOURS

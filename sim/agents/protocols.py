@@ -18,6 +18,10 @@ class World(Protocol):
 
 	# ---- What a state asks when it budgets
 
+	def edge(self, name: str) -> Any:
+		"""The named edge a posting names when its other side is not an actor."""
+		...
+
 	def population_total(self) -> float:
 		...
 
@@ -392,8 +396,9 @@ class World(Protocol):
 		"""Money for one person's food at subsistence for a year."""
 		...
 
-	def housing_cost_per_person_year(self) -> float:
-		"""Money for one person's housing for a year."""
+	def need_floor_costs_per_person_year(self) -> Dict[str, float]:
+		"""Money for one person's floor of each need for a year, by need id, at the prices households pay
+		(the need-basket kernel, sim/world/need_basket.py)."""
 		...
 
 	def observed_stratum(self, country: Optional[str], name: str) -> Optional[Dict[str, float]]:
