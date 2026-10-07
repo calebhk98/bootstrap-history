@@ -6,8 +6,10 @@ import statistics
 import time
 
 from .cache import DEFAULT_CACHE
+from sim.geography import map_data_sources
+
 from .catalog import LAYERS
-from . import sea_links
+from .compute import compute_layer
 from .tiles import load_tiles
 
 LAYER_DIRECTORY = os.path.join(
@@ -16,9 +18,9 @@ LAYER_DIRECTORY = os.path.join(
 SEA_LINK_DIRECTORY = os.path.join(os.path.dirname(LAYER_DIRECTORY), "sea_links")
 
 
-def write_layer(layer_id, layer, values, directory):
+def write_layer(layer_id, layer, source, values, directory):
     """One file per layer, one tile per line, sorted ids."""
-    header = {"_doc": layer.doc, "id": layer_id, "unit": layer.unit, "source": layer.source,
+    header = {"_doc": layer.doc, "id": layer_id, "unit": layer.unit, "source": source.source_text,
               "method": layer.method, "conf": layer.conf}
     lines = ["{"] + ["%s: %s," % (json.dumps(key), json.dumps(value)) for key, value in header.items()]
     lines.append('"values": {')
@@ -45,28 +47,33 @@ def write_sea_links(entries, directory):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--layers", help="comma-separated layer ids (default: all)")
+    parser.add_argument("--source", action="append", default=[], metavar="LAYER=OPTION",
+                        help="dataset option for a layer (see sim/geography/map_data_sources.py); repeatable")
     parser.add_argument("--cache", default=DEFAULT_CACHE, help="download cache directory")
     options = parser.parse_args()
     wanted = options.layers.split(",") if options.layers else list(LAYERS) + ["sea_links"]
     unknown = [layer_id for layer_id in wanted if layer_id not in LAYERS and layer_id != "sea_links"]
     if unknown:
         parser.error("unknown layers: %s (known: %s)" % (", ".join(unknown), ", ".join(LAYERS)))
+    try:
+        chosen = map_data_sources.resolve_sources(options.source)
+    except ValueError as error:
+        parser.error(str(error))
     start = time.time()
-    tiles, side = load_tiles(options.cache)
+    tiles, side = load_tiles(options.cache, map_data_sources.SOURCES["land_mask"][chosen["land_mask"]])
     print("%d tiles, cell side %.1f km (%.0fs)" % (len(tiles), side / 1000.0, time.time() - start))
     os.makedirs(LAYER_DIRECTORY, exist_ok=True)
     for layer_id in wanted:
         if layer_id == "sea_links":
             stage = time.time()
-            entries = sea_links.network(tiles, options.cache)[1]
+            entries = compute_layer(layer_id, chosen[layer_id], tiles, side, options.cache)[1]
             write_sea_links(entries, SEA_LINK_DIRECTORY)
             print("%-30s %d links (%.0fs)" % (layer_id, len(entries), time.time() - stage))
             continue
         layer = LAYERS[layer_id]
         stage = time.time()
-        arguments = (tiles, side, options.cache) if layer.needs_side else (tiles, options.cache)
-        values = layer.compute(*arguments)
-        write_layer(layer_id, layer, values, LAYER_DIRECTORY)
+        values = compute_layer(layer_id, chosen[layer_id], tiles, side, options.cache)
+        write_layer(layer_id, layer, map_data_sources.SOURCES[layer_id][chosen[layer_id]], values, LAYER_DIRECTORY)
         numbers = sorted(values.values())
         print("%-30s min %10.2f  median %10.2f  max %10.2f  (%.0fs)" % (
             layer_id, numbers[0], statistics.median(numbers), numbers[-1], time.time() - stage))
