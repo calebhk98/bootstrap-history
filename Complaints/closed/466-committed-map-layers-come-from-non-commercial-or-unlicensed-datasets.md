@@ -1,6 +1,6 @@
 # Committed map layers come from non-commercial or unlicensed datasets
 
-**Status:** open - owner decision (2026-10-06): licences do not matter for this open project; remaining: each layer's source becomes one option in the generator, so swapping a dataset means changing that option and adding its files
+**Status:** closed - owner decided licences do not matter; each layer's dataset is now one option in `tools/map_data_sources.py` (generator option `--source layer=option`), Koppen provenance corrected to Rubel et al. via kgcpy, and `data/world/geography/ATTRIBUTION.md` lists each layer's current source. Committed layer data unchanged; regenerating with defaults is unchanged (full regeneration not run: needs network and shapely, geopandas, kgcpy)
 
 Several committed files under `data/world/geography/` are derived from datasets whose terms forbid commercial use or redistribution, or state no terms at all. The file-by-file provenance, each provider's licence page and the open replacements are in `Complaints/reports/map-data-licence-audit.md` (not legal advice).
 
