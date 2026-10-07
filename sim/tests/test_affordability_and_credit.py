@@ -142,7 +142,28 @@ wage_game = sim(civ="norse_900ad", capital=-4000.0)  # a civilisation whose own 
 wage_game.insolvent_years = 20
 wage_advice = [reason for reason in (wage_game.stall_diagnosis() or {}).get("what_would_change_it", [])
                if reason.startswith("work as a ")]
-check("a stalled household in debt is offered wage work", wage_advice, wage_game.stall_diagnosis())
+check("wage work is not advised where the sale itself costs more practice than it pays",
+      not wage_advice, wage_advice)
+
+# With no practice to lose the advice shows, and its quote is what work_for_wages pays.
+wage_game.revenue = lambda: 0.0
+wage_advice = [reason for reason in (wage_game.stall_diagnosis() or {}).get("what_would_change_it", [])
+               if reason.startswith("work as a ")]
+quote_match = re.match(r"work as a (\w+): (\d+) of your own hours .* bring in about ([\d,]+) against the ([\d,]+) of practice",
+                       wage_advice[0]) if wage_advice else None
+check("a stalled household in debt with no practice is offered wage work, with trade, hours and earning",
+      quote_match, wage_advice)
+if quote_match:
+    quoted_trade, quoted_hours = quote_match.group(1), int(quote_match.group(2))
+    quoted_earning = int(quote_match.group(3).replace(",", ""))
+    capital_before = wage_game.capital
+    paid, refusal = wage_game.labour.work_for_wages(quoted_trade, quoted_hours)
+    check("the advised work is accepted", refusal is None, refusal)
+    check("the money moved is the earning the banner quoted",
+          abs(paid - quoted_earning) <= 1 and abs((wage_game.capital - capital_before) - paid) < 1e-6,
+          (quoted_earning, paid, wage_game.capital - capital_before))
+    check("the banner names the trade that pays most an hour",
+          quoted_trade == wage_game.labour.best_wage_trade(), (quoted_trade, wage_game.labour.best_wage_trade()))
 
 # --- an idle fortune bleeds living costs, and the ledger names the part that is wealth.
 rich_ledger = S._agent_dispatch(sim(capital=book_money(1_000_000)), NODES, {"cmd": "money"})

@@ -1,6 +1,6 @@
 # The stall banner's wage-work quote disagrees with what work_for_wages pays
 
-**Status:** open
+**Status:** closed - the banner priced the trade from the unscarce base wage and the pool from a different hour count; it now runs the sale itself (`work_for_wages_dry_run`) on the best trade by `Labour.best_wage_trade`, and `work_for_wages`, the banner and the year's wage-work rule all price through `Labour.wage_for_hours`. Guarded in `sim/tests/test_affordability_and_credit.py`.
 
 When the founder is stalled for money, the banner suggests wage work and quotes what a named
 trade would earn against what the founder's own practice brings in. Taking that advice through

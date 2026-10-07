@@ -50,6 +50,18 @@ class WagesMixin(WageLedgerMixin):
             market = self.__dict__["_labour_market"] = LabourMarket(self)
         return market
 
+    def wage_for_hours(self, trade, hours):
+        """What `hours` of the founder's own work in `trade` pay now. The one answer work_for_wages
+        pays and every quote of that pay (the stall banner, the year's wage-work rule) reads."""
+        rate = self.labour_market.quote_annual(trade) / self._world.HOURS_PER_PERSON_YEAR
+        reputation = self._world.state.household.reputation
+        return hours * rate * (1.0 + min(self.WAGE_REPUTATION_BONUS_CAP, reputation / self.WAGE_REPUTATION_SCALE))
+
+    def best_wage_trade(self):
+        """The trade open to the founder that pays most an hour, or None when none is open."""
+        trades = [trade for trade in self._world.wages if self.trade_available(trade)]
+        return max(trades, key=lambda trade: self.wage_for_hours(trade, 1.0), default=None)
+
     def work_for_wages(self, trade, hours):
         """Do a job. For money. Like everybody else.
 
@@ -104,10 +116,7 @@ class WagesMixin(WageLedgerMixin):
         # column, or the two disagree and the docstring's "no arbitrage in
         # either direction" claim becomes false.
         household = self._world.state.household
-        rate = self.labour_market.quote_annual(trade) / self._world.HOURS_PER_PERSON_YEAR
-        pay = (hours * rate
-               * (1.0 + min(self.WAGE_REPUTATION_BONUS_CAP,
-                            household.reputation / self.WAGE_REPUTATION_SCALE)))
+        pay = self.wage_for_hours(trade, hours)
         before_practice = self._world.revenue()
         household.credit(pay, "wages for your own work")
         household.wage_hours_this_year = household.wage_hours_this_year + hours

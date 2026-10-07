@@ -607,24 +607,6 @@ class CreditMixin:
                                      % (_frozen_before, household.credit_frozen_until))
                                     if _moved else "")))
 
-    WAGE_REPUTATION_BONUS_CAP = declare(
-        "WAGE_REPUTATION_BONUS_CAP", 0.5, kind="temporary_heuristic",
-        unit="multiple on wage income (maximum bonus)", source=None,
-        confidence="D",
-        why="Ceiling on how much personal reputation can raise what "
-            "working for wages pays, in the stall-diagnosis advice shown "
-            "to a stuck player. A defensive cap on an already-invented "
-            "reputation scale (see STANDING_* above), not derived from any "
-            "attested wage-premium-for-reputation relationship.")
-    WAGE_REPUTATION_BONUS_SCALE = declare(
-        "WAGE_REPUTATION_BONUS_SCALE", 200.0, kind="temporary_heuristic",
-        unit="reputation points per 100% of the bonus cap", source=None,
-        confidence="D",
-        why="How fast reputation converts into a wage-work bonus, against "
-            "WAGE_REPUTATION_BONUS_CAP above. Reputation's own scale is "
-            "itself invented, so this is a heuristic layered on a "
-            "heuristic, the same shape as DEBT_RATE_REPUTATION_SCALE.")
-
     def stall_diagnosis(self):
         """None if the run is going somewhere; otherwise what is wrong and what
         would actually change it.
@@ -657,28 +639,19 @@ class CreditMixin:
         if net >= 0:
             return None
         ways = []
-        pool = self.labour.director_pool() - household.wage_hours_this_year
-        if pool > 100:
-            # Only suggest work if it gains (selling hours pulls from practice).
-            # Name the best-paying trade available.
-            trades = [trade for trade in WAGES if self.labour.trade_available(trade)]
-            best_trade = max(trades, key=self.labour.base_annual_wage,
-                         default=None)
+        hours = self.labour.director_pool() - self.labour.director_hours_committed()
+        if hours > 100:
+            # Only suggest work if it gains (selling hours pulls from practice):
+            # the best-paying open trade, quoted by running the sale itself.
+            best_trade = self.labour.best_wage_trade()
             if best_trade:
-                rate = self.labour.base_annual_wage(best_trade) / self.HOURS_PER_PERSON_YEAR
-                would_earn = (self.labour.market.in_current_money(pool * rate)
-                              * (1.0 + min(self.WAGE_REPUTATION_BONUS_CAP,
-                                           household.reputation / self.WAGE_REPUTATION_BONUS_SCALE)))
-                # What those same hours are already earning in the practice.
-                practice = sum(self.nodes[node_id]["rev"] for node_id in self._practice_set())
-                would_cost = (practice * self.PRACTICE_SHARE
-                              * (pool / max(1.0, self.labour.director_pool())))
+                would_earn, _refusal, would_cost = self.labour.work_for_wages_dry_run(best_trade, hours)
                 if would_earn > would_cost:
                     ways.append("work as a %s: %.0f of your own hours are left "
                                 "this year and would bring in about %s against "
                                 "the %s of practice they come out of, so you are "
                                 "up %s. Nobody has to lend you anything for that"
-                                % (best_trade, pool,
+                                % (best_trade, hours,
                                    "{:,.0f}".format(would_earn),
                                    "{:,.0f}".format(would_cost),
                                    "{:,.0f}".format(would_earn - would_cost)))
