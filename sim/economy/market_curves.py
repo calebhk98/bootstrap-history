@@ -17,6 +17,8 @@ CURVE_AREA = "curve"
 CURVE_TILE = "curve"
 EXTRA_SELLER = "extra:supply"
 EXTRA_BUYER = "extra:demand"
+BASE_CLEARINGS_KEPT = 4096
+_BASE_CLEARINGS: dict = {}
 _NO_CEILING = None     # a bid with no ceiling is saved with none, not with infinity
 
 
@@ -65,14 +67,29 @@ def _offers(curve: Dict[str, List[List[float]]], good: str) -> List[Offer]:
             for number, (price, quantity) in enumerate(curve["offers"])]
 
 
+def _base_clearing(curve, good: str, last_price: Optional[float]):
+    """(price, quantity traded, bids, offers) of the summarised book alone. Many quotes ask of the same
+    book, so the answer is kept by the book's content; the memory is emptied when it grows large."""
+    key = (good, last_price, tuple(map(tuple, curve["bids"])), tuple(map(tuple, curve["offers"])))
+    found = _BASE_CLEARINGS.get(key)
+    if found is None:
+        bids, offers = _bids(curve, good), _offers(curve, good)
+        base = goods_market.clear(bids, offers, good, CURVE_AREA, "", last_price)
+        found = (base.price, base.quantity, tuple(bids), tuple(offers))
+        if len(_BASE_CLEARINGS) >= BASE_CLEARINGS_KEPT:
+            _BASE_CLEARINGS.clear()
+        _BASE_CLEARINGS[key] = found
+    return found
+
+
 def price_response(curve: Dict[str, List[List[float]]], good: str, last_price: Optional[float],
                    landed: float, taken: float) -> Optional[float]:
     """The market's price after `landed` more units are offered in it and `taken` more are bought, over the
     price its summarised book clears at; None when that book traded nothing, so the market has no price to
     move."""
-    bids, offers = _bids(curve, good), _offers(curve, good)
-    base = goods_market.clear(bids, offers, good, CURVE_AREA, "", last_price)
-    if not base.quantity > 0.0 or not base.price > 0.0:
+    base_price, base_traded, bids, offers = _base_clearing(curve, good, last_price)
+    bids, offers = list(bids), list(offers)
+    if not base_traded > 0.0 or not base_price > 0.0:
         return None
     if landed > 0.0:
         offers.append(Offer(EXTRA_SELLER, good, CURVE_AREA, CURVE_TILE, landed, 0.0))
@@ -81,9 +98,9 @@ def price_response(curve: Dict[str, List[List[float]]], good: str, last_price: O
     if taken >= math.fsum(offer.quantity for offer in offers):
         return math.inf    # more is wanted at any price than the sellers hold: nothing caps the price
     try:
-        moved = goods_market.clear(bids, offers, good, CURVE_AREA, "", base.price)
+        moved = goods_market.clear(bids, offers, good, CURVE_AREA, "", base_price)
     except OverflowError:
         return math.inf
     if not moved.quantity > 0.0:
         return None
-    return moved.price / base.price
+    return moved.price / base_price

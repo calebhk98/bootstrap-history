@@ -135,7 +135,9 @@ class SpinUpTests(unittest.TestCase):
 
     def test_default_cache_location_is_not_tracked_data(self):
         ignored = open(os.path.join(_ROOT, ".gitignore"), encoding="utf-8").read().split()
-        top = os.path.relpath(workforce_spinup.DEFAULT_CACHE_DIRECTORY, _ROOT).split(os.sep)[0]
+        from sim import cache_root
+        self.assertEqual(os.path.dirname(workforce_spinup.DEFAULT_CACHE_DIRECTORY), cache_root.cache_root())
+        top = os.path.basename(cache_root.cache_root())
         self.assertTrue(any(line.strip("/") == top for line in ignored), top)
 
 

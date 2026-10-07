@@ -65,6 +65,26 @@ class ObjectContentTests(unittest.TestCase):
         plain = economy_port_key._plain(os.path.join(ROOT, "data", "maps"))
         self.assertEqual(plain, os.path.join("data", "maps"))
 
+    def test_a_memo_kept_on_the_map_does_not_change_the_digest(self):
+        empty = _Setup(world_map=_Map("m", {"a": {"food": 1}}, ROOT))
+        filled = _Setup(world_map=_Map("m", {"a": {"food": 1}}, ROOT))
+        filled.world_map.__dict__["_route_rates"] = {"road": [1.0, 2.0]}
+        self.assertEqual(economy_port_key.setup_digest(empty), economy_port_key.setup_digest(filled))
+
+    def test_a_memo_pointing_back_at_its_map_is_keyed_without_walking_the_cycle(self):
+        world_map = _Map("m", {"a": {"food": 1}}, ROOT)
+        memo = _Map("memo", {}, ROOT)
+        memo.world_map = world_map
+        world_map.__dict__["_route_rates"] = memo
+        plain = economy_port_key._plain(_Setup(world_map=world_map))
+        self.assertNotIn("_route_rates", plain["world_map"]["content"])
+
+    def test_a_cycle_through_public_fields_is_refused(self):
+        world_map = _Map("m", {}, ROOT)
+        world_map.parent = world_map
+        with self.assertRaises(TypeError):
+            economy_port_key.setup_digest(_Setup(world_map=world_map))
+
     def test_a_value_with_no_content_to_key_on_is_refused(self):
         with self.assertRaises(TypeError):
             economy_port_key.setup_digest(_Setup(world_map=object()))
