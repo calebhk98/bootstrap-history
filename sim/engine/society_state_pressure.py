@@ -19,6 +19,7 @@ Behaviour is unchanged and verified byte-identical.
 import math
 
 from sim.constants import declare
+from sim.engine import money_units
 
 from sim.world import military_logistics
 
@@ -653,17 +654,20 @@ class StatePressureMixin:
             "reputation's own scale is itself invented (see STANDING_* in "
             "economy.py), so this normalisation is a heuristic layered on "
             "a heuristic.")
-    EMINENCE_WEALTH_VISIBLE_THRESHOLD = declare(
-        "EMINENCE_WEALTH_VISIBLE_THRESHOLD", 250000.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii", source=None, confidence="D",
-        why="Capital treated as '1.0 visibly rich' for the prominence "
-            "hazard, and reused verbatim by eminence_report's own "
-            "what_would_change_it note and by household_scale's "
-            "HOUSEHOLD_WEALTH_SATURATES_AT comment as the smaller, "
-            "personal-wealth line beneath that mechanic's much larger "
-            "fiscal one. A round number marking enough personal wealth to "
-            "be a courtier's envy, not measured against any specific "
-            "attested Roman fortune.")
+    EMINENCE_WEALTH_VISIBLE_THRESHOLD_LABOUR_HOURS = declare(
+        "EMINENCE_WEALTH_VISIBLE_THRESHOLD_LABOUR_HOURS", 5040000.0, kind="temporary_heuristic",
+        unit="labour hours", source=None, confidence="D",
+        why="Wealth treated as '1.0 visibly rich' for the prominence "
+            "hazard, held as an amount of labour (a stock of labour-valued "
+            "goods) so it follows what labour costs rather than the coin, "
+            "and reused by eminence_report's own what_would_change_it note "
+            "and by household_scale's HOUSEHOLD_WEALTH_SATURATES_AT comment "
+            "as the smaller, personal-wealth line beneath that mechanic's "
+            "much larger fiscal one. A round number marking enough personal "
+            "wealth to be a courtier's envy, not measured against any "
+            "specific attested fortune.")
+    EMINENCE_WEALTH_VISIBLE_THRESHOLD = money_units.PricedInLabourHours(
+        "EMINENCE_WEALTH_VISIBLE_THRESHOLD_LABOUR_HOURS")
     EMINENCE_FAMILIARITY_RELIEF = declare(
         "EMINENCE_FAMILIARITY_RELIEF", 0.15, kind="temporary_heuristic",
         unit="dimensionless (fraction of hazard familiarity removes)",
@@ -779,22 +783,20 @@ class StatePressureMixin:
             "notice keeps climbing over most of a run's plausible staff "
             "size rather than maxing out early; not fitted to any "
             "specific historical household's size.")
-    # Ten times prominence_hazard's own 250,000-denarii "visibly rich" line,
-    # deliberately: that number marks enough personal wealth for a courtier to
+    # A multiple of prominence_hazard's own "visibly rich" line (see
+    # EMINENCE_WEALTH_VISIBLE_THRESHOLD_LABOUR_HOURS), deliberately: that number marks enough personal wealth for a courtier to
     # envy, which is a different and smaller bar than enough FISCAL scale for
     # a treasury to think assessing your output is worth an official's time.
     # A household a few times richer than a senator is eminence's problem,
     # already modelled; a household whose output could supply an army or a
-    # grain fleet is this one's, and that is a ten-million-denarii household,
-    # not a quarter-million one - see the measured trajectories in this
+    # grain fleet is this one's, and that is a far larger household - see the measured trajectories in this
     # section's own commit for where Rome and Han actually cross it.
     HOUSEHOLD_WEALTH_SATURATES_AT = declare(
         "HOUSEHOLD_WEALTH_SATURATES_AT", 100800.0, kind="temporary_heuristic",
         unit="labourer-years of the opening wage", source=None,
         confidence="D",
         why="Capital at which household_scale()'s wealth term saturates - "
-            "ten times prominence_hazard's own 250,000-denarii 'visibly "
-            "rich' line (EMINENCE_WEALTH_VISIBLE_THRESHOLD), deliberately: "
+            "ten times X, deliberately: "
             "personal envy and fiscal scale worth an official's time are "
             "different, larger bars. See the comment above for the "
             "reasoning; the figure itself is chosen to fit the measured "
