@@ -57,17 +57,20 @@ class CarriageTable:
 
     Costs from a source tile are computed on first use and cached; `warm()` fills every source.
     `world_map` is geography's map (the base map when None); `held_nodes` are the tech nodes the
-    society holds, which open-sea lanes may require."""
+    society holds, which open-sea lanes may require; `improvements` is the built roads and track,
+    `{edge_key: {"road": true}}`, which only a mode with a rate here can use."""
 
     def __init__(self, tile_ids: Iterable[TileId], money_per_tonne_km_by_mode: Mapping[str, float],
                  handling_money_per_tonne_by_mode: Optional[Mapping[str, float]] = None,
-                 held_nodes: Iterable[str] = (), world_map=None):
+                 held_nodes: Iterable[str] = (), world_map=None,
+                 improvements: Optional[Mapping[str, Mapping[str, object]]] = None):
         self.tile_ids = tuple(sorted(tile_ids))
         self._tile_set = frozenset(self.tile_ids)
         self._rates = dict(money_per_tonne_km_by_mode)
         self._handling = dict(handling_money_per_tonne_by_mode or {})
         self._held_nodes = tuple(sorted(held_nodes))
         self._world_map = world_map
+        self._improvements = dict(improvements or {})
         self._from_source: Dict[TileId, Dict[TileId, float]] = {}
 
     def costs_from(self, source: TileId) -> Dict[TileId, float]:
@@ -76,7 +79,8 @@ class CarriageTable:
         if cached is None:
             everywhere = route_costs(
                 [source], sorted(self._rates), mode_costs=self._rates, handling_costs=self._handling,
-                held_nodes=self._held_nodes, world_map=self._world_map)
+                held_nodes=self._held_nodes, world_map=self._world_map,
+                improvements=self._improvements)
             cached = {tile_id: cost for tile_id, cost in everywhere.items() if tile_id in self._tile_set}
             self._from_source[source] = cached
         return cached
@@ -92,6 +96,8 @@ class CarriageTable:
 
 def carriage_table(tiles: Mapping[TileId, TileSpec], money_per_tonne_km_by_mode: Mapping[str, float],
                    handling_money_per_tonne_by_mode: Optional[Mapping[str, float]] = None,
-                   held_nodes: Iterable[str] = (), world_map=None) -> CarriageTable:
-    """A table over these tiles at the given rates."""
-    return CarriageTable(tiles, money_per_tonne_km_by_mode, handling_money_per_tonne_by_mode, held_nodes, world_map)
+                   held_nodes: Iterable[str] = (), world_map=None,
+                   improvements: Optional[Mapping[str, Mapping[str, object]]] = None) -> CarriageTable:
+    """A table over these tiles at the given rates, with the built ways."""
+    return CarriageTable(tiles, money_per_tonne_km_by_mode, handling_money_per_tonne_by_mode, held_nodes, world_map,
+                         improvements)

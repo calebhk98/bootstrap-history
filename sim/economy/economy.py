@@ -5,7 +5,7 @@
 """
 import math
 from dataclasses import dataclass, field, replace
-from typing import Dict, Optional, Tuple
+from typing import Any, Dict, Mapping, Optional, Tuple
 
 from . import credit, credit_claims, currency, labour, land_market, lending, merchants_credit, producers, sites, state_budget, unit_cost
 from .credit_view import CreditView
@@ -74,8 +74,18 @@ class Economy:
         self.record = record
         self.area_map = area_map
         self.carriage = carriage
+        self.improvements: Dict[str, Dict[str, Any]] = dict(setup.improvements)   # the ways `carriage` was built with
         self._own_options = None
         self._own_hectares: Dict[str, float] = {}   # land households' own plots took this year, by tile
+
+    def set_improvements(self, improvements: Mapping[str, Mapping[str, Any]]) -> bool:
+        """Rebuild the carriage table over these built ways; False when they are the ones it already has.
+        Market areas keep the partition they were opened with."""
+        if dict(improvements) == self.improvements:
+            return False
+        self.improvements = {key: dict(way) for key, way in improvements.items()}
+        self.carriage = self.setup.carriage_table(self.improvements)
+        return True
 
     def view(self) -> YearView:
         return CreditView(self.record.memory, self.record.book, self.area_map, self.setup.currency_id, labour_area,
