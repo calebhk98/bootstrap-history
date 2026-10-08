@@ -83,6 +83,12 @@ def _river_inputs():
 
 
 @functools.lru_cache(maxsize=None)
+def _paved_road_inputs(team_size):
+    return freight_physics.draught_freight_physical_inputs(
+        freight_physics.OX, team_size, freight_physics.CART, freight_physics.PAVED_ROAD)
+
+
+@functools.lru_cache(maxsize=None)
 def _caravan_inputs():
     return freight_physics.pack_freight_physical_inputs(
         freight_physics.MULE, int(CARAVAN_STRING_SIZE))
@@ -103,6 +109,9 @@ class ForeignRoutesMixin:
         hull_kg = hull_inputs.cargo_tonnes * sea_freight.HULL_TIMBER_KG_PER_CARGO_TONNE
         return {
             "cart": (self._land_freight_physical_inputs(),
+                     freight_cost.CarrierPrices(freight_physics.CART.self_mass_kg * vehicle_wood,
+                                                team * ox_price), land_days, 0.0),
+            "road": (_paved_road_inputs(int(self.LAND_FREIGHT_TEAM_SIZE)),
                      freight_cost.CarrierPrices(freight_physics.CART.self_mass_kg * vehicle_wood,
                                                 team * ox_price), land_days, 0.0),
             "pack": (_caravan_inputs(),

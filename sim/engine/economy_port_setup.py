@@ -64,6 +64,7 @@ def opening_values(sim):
         "rate": float(sim.economy.base_rate()),
         "carriage": dict(modes),
         "held_nodes": sorted(sim.state.projects.done | sim.state.projects.granted),
+        "ways": {key: dict(way) for key, way in sorted(sim.state.economy.improvements.items())},
     }
 
 
@@ -149,7 +150,7 @@ def build_setup(sim, opening=None):
         land_per_run={recipe_id: float(production[recipe_id].get("land_hectare_years") or 0.0)
                       for recipe_id in recipes if production[recipe_id].get("land_hectare_years")},
         basket_by_tile=baskets_by_tile(basket, need_data, world_map, tile_ids), coin_per_unit=unit,
-        world_map=world_map)
+        world_map=world_map, improvements=dict(opening["ways"]))
 
 
 def _counted_currency(civ, unit):

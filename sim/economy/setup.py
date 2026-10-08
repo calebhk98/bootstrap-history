@@ -64,10 +64,13 @@ class EconomySetup:
     held_nodes: Tuple[str, ...] = ()    # tech nodes the society holds; geography's sea lanes may need them
     world_map: Any = None               # geography's map the tiles lie on (the base map when None)
     coin_per_unit: float = 1.0          # the economy counts money in this many coins (the port converts)
+    improvements: Dict[str, Dict[str, Any]] = field(default_factory=dict)   # built roads and track by edge key
 
-    def carriage_table(self) -> CarriageTable:
-        """What it costs to move a tonne between this setup's tiles, over geography's route graph."""
-        return carriage_table(self.tiles, self.carriage_rates, self.handling_rates, self.held_nodes, self.world_map)
+    def carriage_table(self, improvements=None) -> CarriageTable:
+        """What it costs to move a tonne between this setup's tiles, over geography's route graph, with the
+        built ways (this setup's own when none are given)."""
+        ways = self.improvements if improvements is None else improvements
+        return carriage_table(self.tiles, self.carriage_rates, self.handling_rates, self.held_nodes, self.world_map, ways)
 
     def basket_for(self, tile: TileId):
         """The needs of people living on a tile: the common basket with that tile's floors."""

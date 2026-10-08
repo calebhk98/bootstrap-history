@@ -107,7 +107,13 @@ class AgentEconomy:
                 self.stored["opening"] = opening
                 self._save()
             self._built_from = self.stored
+            self.sync_ways()
         return self._economy
+
+    def sync_ways(self):
+        """Give the live economy the ways the game has built so far; its hauls are priced over them from now on."""
+        if self._economy is not None:
+            economy_api.set_improvements(self._economy, self._sim.state.economy.improvements)
 
     def _spun_up(self, setup):
         """The record after the hidden years; the same opening always gives the same one, so it is cached
@@ -122,6 +128,7 @@ class AgentEconomy:
     # ---- the year -----------------------------------------------------------------------------
     def run_year(self):
         economy = self.economy()
+        self.sync_ways()
         orders = self._founder_orders()
         orders.update(self._external_orders())
         self._strike_state_coin(economy)

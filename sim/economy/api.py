@@ -176,6 +176,11 @@ def blank_economy(setup):
     return Economy(setup)
 
 
+def set_improvements(economy, improvements):
+    """Give the economy's hauls the built ways `{edge_key: {"road": true}}`; False when nothing changed."""
+    return economy.set_improvements(improvements)
+
+
 def export_record(economy):
     """The economy's record as plain data, for saving."""
     return economy.record.to_record()
