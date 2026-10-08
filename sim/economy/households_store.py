@@ -157,8 +157,7 @@ def store_offers(cohort, view, specs, weights, prices, held, wealth_above_buffer
         if urgent > 0.0:
             offers.append(Offer(cohort.agent_id, good, area, cohort.tile, urgent, low))
         if patient > 0.0:
-            # never below the price its own bid pays for the good, or it sells to the edge and buys back dearer
-            reservation = max(prices[good], holding_reservation(
-                prices[good], rate, spec.spoilage_per_year, STORE_STORAGE_COST_PER_KG_YEAR * spec.unit_mass_kg))
+            reservation = holding_reservation(prices[good], rate, spec.spoilage_per_year,
+                                              STORE_STORAGE_COST_PER_KG_YEAR * spec.unit_mass_kg)
             offers.append(Offer(cohort.agent_id, good, area, cohort.tile, patient, reservation))
     return offers
