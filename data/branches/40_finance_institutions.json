@@ -1452,7 +1452,10 @@
   "sch": 1,
   "art": 1,
   "conf": "C",
-  "note": "A state-recognised registry grants a time-limited exclusive right in exchange for public disclosure. An inventor can petition immediately, but completion means recognition and enforcement by the state."
+  "note": "A state-recognised registry grants a time-limited exclusive right in exchange for public disclosure. An inventor can petition immediately, but completion means recognition and enforcement by the state.",
+  "mechanics": {
+   "patent_grant": true
+  }
  },
  {
   "id": "fin_patent_office",
@@ -2480,7 +2483,9 @@
   "name": "Gambling house and gaming establishment",
   "cat": "luxury",
   "kind": "INSTITUTION",
-  "pre": [],
+  "pre": [
+   "fin_contract_law"
+  ],
   "traits": [
    "commerce",
    "luxury"
@@ -2503,7 +2508,15 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "Establishment where customers gamble, with the house taking a cut of all winnings. Highly profitable but attracts violence and is often banned or heavily taxed."
+  "note": "Establishment where customers gamble, with the house taking a cut of all winnings. Highly profitable but attracts violence and is often banned or heavily taxed. Officials who are paid to look away give a little cover, and the house draws the state's attention.",
+  "mechanics": {
+   "alarm_factor": {
+    "factor": 1.08
+   },
+   "protection": {
+    "flat": 0.01
+   }
+  }
  },
  {
   "id": "fin_lottery",
@@ -2511,7 +2524,8 @@
   "cat": "law",
   "kind": "INSTITUTION",
   "pre": [
-   "fin_government"
+   "fin_government",
+   "fin_contract_law"
   ],
   "traits": [
    "commerce"
@@ -2534,7 +2548,15 @@
   "sch": 1,
   "art": 1,
   "conf": "B",
-  "note": "A government-authorised sale of numbered chances funds a declared public purpose, with published drawing and payout rules. Private lots and prize distributions are ancient; the reform is a recurring revenue-raising institution."
+  "note": "A government-authorised sale of numbered chances funds a declared public purpose, with published drawing and payout rules. Private lots and prize distributions are ancient; the reform is a recurring revenue-raising institution. A state that draws its revenue through the operator is slow to think ill of the operator.",
+  "mechanics": {
+   "alarm_factor": {
+    "factor": 0.97
+   },
+   "protection": {
+    "flat": 0.02
+   }
+  }
  },
  {
   "id": "fin_racecourse",

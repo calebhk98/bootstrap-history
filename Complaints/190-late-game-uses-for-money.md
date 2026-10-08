@@ -1,6 +1,6 @@
 # Request: things a very rich founder can spend on
 
-**Status:** partly - fifteen ordinary works in data/branches/56_benefactions.json (schools, library, research foundation, hospital, water works, harbour, telegraph, games, temple, patronage, house bank, underwriting, grain dole, state subsidy, expedition) act through existing mechanics; museums, newspapers, gambling houses, colonies, paying off a state's debt outright and electric city lighting remain (they exist only as businesses with no effect, or as no node)
+**Status:** partly - fifteen ordinary works in data/branches/56_benefactions.json (schools, library, research foundation, hospital, water works, harbour, telegraph, games, temple, patronage, house bank, underwriting, grain dole, state subsidy, expedition) act through existing mechanics; museums, newspapers, colonies, paying off a state's debt outright and electric city lighting remain (they exist only as businesses with no effect, or as no node); gambling houses and the public lottery are now gated on contract law and carry an effect through alarm and protection (`fin_gambling_house`, `fin_lottery` in data/branches/40_finance_institutions.json)
 
 Late in a run the founder holds tens to hundreds of millions of denarii with little to buy: research is paced by prerequisites and calendar floors, so idle cash only raises confiscation risk. The surplus itself is intended (advancing the whole society earns far more than working for yourself); what is missing is uses for it.
 
