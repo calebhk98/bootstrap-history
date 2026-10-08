@@ -1,6 +1,6 @@
 # Regions and tiles are two maps
 
-**Status:** partly - a civilisation holds tiles (`tiles_held`: its `home_tiles`, else the tiles its region labels name) and settlement, frontier and roads, the economy's tiles, foreign routes, reach, mineral access and the forest ceiling read them; region records are labels with no position, coast, distance or land. Farm land, weather cells, crop climate and the cast still resolve region labels
+**Status:** partly - a civilisation holds tiles (`tiles_held`: its `home_tiles`, else the tiles its region labels name) and every reader of a civilisation's territory goes through it: settlement, frontier and roads, the economy's tiles, foreign routes, reach, mineral access, the forest ceiling, farm land, the weather cells, crop climate, the cast and a foreign economy's mined capacity. Remaining: no civilisation file lists `home_tiles` yet (they still name a starting claim by labels), region records still carry mineral shares not yet tied to a deposit, and located materials still name regions
 
 The world has two land systems: 21 named regions and the land tiles inside
 them. Soil fertility and arable land now come from tiles (Complaints/130),
@@ -38,12 +38,15 @@ See `docs/architecture/MAP_AND_WEATHER.md`.
 - The region anchor point is no longer read for reach or freight; `regions.region_anchor` (derived from tiles) remains only for placing a cast actor's location.
 - The reach bands moved: a region's level is the days of the fastest route from the held tiles over the modes held, banded by `reach_band_first_days` and `reach_band_ratio`, so civilisations that hold sea or cart techniques sit nearer, and a place no route joins is the farthest level (Complaints/328, 378).
 
+## Done on the second-path sweep
+
+- Farm land (`land.cultivable_land_for_civilization`), the weather cells (`Sim._compute_farm_weather_cells`), crop climate (`prices._climate_allows`) and the cast (`cast.profile_from_civilisation`) already read `tiles_held`; the earlier status line was stale. `sim/tests/test_civilisations_hold_tiles.py` now shows a civilisation with only `home_tiles` gets farm land, a crop climate and a placed cast country.
+- A foreign economy's mined capacity summed the shares of its `home_regions`; it now sums each region's share by the fraction of that region's tiles the civilisation holds (`foreign_capacity.held_mineral_share`). `sim/tests/test_foreign_capacity_from_tiles.py`.
+- The remaining `home_regions` mentions in code are comments, display (`cli_interactive.py`, `screen_divergence.py`, `screen_map.py`), cache keys (`economy_port.py`, `geography.py`) and the resolver itself (`tile_holdings.py`, `land._tiles_held_in` for a caller-supplied geography). Measure with `grep -rnE "home_regions|region_to_tiles" sim --include=*.py`.
+
 ## What remains
 
-Measure the region-layer readers with
-`grep -rnE "home_regions|region_to_tiles|\.regions\b" sim --include=*.py`.
-
-- `sim/world/land.py` and `sim/engine/core.py` (farm land, weather cells per region, `home_regions` pooling) and `sim/engine/prices.py` with `crop_climate` (growing-season check by region) still resolve region labels; `sim/agents/cast.py` places a country by a region label. A civilisation that lists `home_tiles` and no labels would hold no farm land until these read tiles.
 - Civilisation files still name their starting claim by region labels; none lists `home_tiles`.
+- Region records keep mineral shares not tied to a deposit, and located materials name regions.
 - `cli_interactive.py` and `demo_commodities.py` print region names, which is what a label is for.
 - Related: Complaints/289 (no place names or towns).
