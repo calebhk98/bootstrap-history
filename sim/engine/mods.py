@@ -6,7 +6,7 @@ from typing import Any, Dict, Iterable, List
 
 from sim.json_files import json_files
 
-from .mods_base import (ModError, ModManifest, check_not_removed, claim_fields, claim_removal,
+from .mods_base import (MANIFEST_KEYS, ModError, ModManifest, check_not_removed, claim_fields, claim_removal,
                         deep_merge, removed_by)
 from .mods_ids import check_declared_dependencies, check_mod_id, check_new_id
 from .mods_goals import apply_goal_entries
@@ -16,8 +16,11 @@ from .mods_remove import (RECIPE, TECH, check_recipe_references, check_tree_refe
 def _manifest(path: str) -> ModManifest:
     with open(path, encoding="utf-8") as source:
         raw = json.load(source)
-    required = ("id", "name", "version", "dependencies", "conflicts")
-    missing = [name for name in required if name not in raw]
+    unknown = sorted(set(raw) - set(MANIFEST_KEYS))
+    if unknown:
+        raise ModError("%s has unknown manifest keys: %s (known keys: %s)" %
+                       (path, ", ".join(unknown), ", ".join(MANIFEST_KEYS)))
+    missing = [name for name in MANIFEST_KEYS if name not in raw]
     if missing:
         raise ModError("%s is missing manifest fields: %s" % (path, ", ".join(missing)))
     mod_id = raw["id"]

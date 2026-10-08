@@ -39,6 +39,11 @@ A manifest has this shape:
 }
 ```
 
+All five keys are required. Any other key is refused with a message naming it and
+the known keys (the list is the manifest type's own fields in
+`sim/engine/mods_base.py`). The game has no version number to compare against, so
+there is no minimum-game-version field yet.
+
 A mod may provide:
 
 * `data/branches/*.json`: a list of technology nodes (or an object with a
