@@ -1,6 +1,6 @@
 """Shared mod types plus field-claim and removal-claim bookkeeping."""
 import copy
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from typing import Any, Dict, List
 
 
@@ -17,6 +17,9 @@ class ModManifest:
     conflicts: List[str]
     directory: str = field(repr=False, compare=False, default="")
 
+
+# Manifest keys are the manifest type's own fields (the directory is set by the loader).
+MANIFEST_KEYS = tuple(item.name for item in fields(ModManifest) if item.name != "directory")
 
 # Patch keys that steer the loader and are never merged into content.
 CONTROL_KEYS = ("override", "replaces", "remove")

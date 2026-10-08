@@ -14,13 +14,16 @@ Ordered by value per cost.
 
 ## Missing capabilities
 
-1. **World content from mods:** geography, deposits and resources, hazards
-   and events, UI and currency strings, strategies. Each is read from base
-   paths only. This includes `data/world/foreign_economies.json`: a mod can
-   add a civilisation but not enable it as a trading partner.
+1. **World content from mods (partly done):** map overlays (geography,
+   deposits, resources, routes), needs and display units are read from mods.
+   Still base-only: hazards and events, UI and currency strings, strategies,
+   and `data/world/foreign_economies.json` (a mod can add a civilisation but
+   not enable it as a trading partner).
 
-2. **Manifest hardening:** a minimum game version, compared versions for
-   dependencies, and rejection of unknown keys.
+2. **Manifest hardening (partly done):** unknown manifest keys are rejected
+   (`test_mod_manifest_keys`). Still open: a minimum game version (the game has
+   no version number to compare against yet, so it needs one first) and
+   compared versions for dependencies (`dependencies` is a list of ids today).
 
 3. **Commands and automatic policies.** A mod cannot add, change or remove a
    player command or an automatic policy (auto-mine, auto-forest, shedding);
