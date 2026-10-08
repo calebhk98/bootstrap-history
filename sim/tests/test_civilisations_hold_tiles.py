@@ -50,5 +50,34 @@ class TilesHeldTests(unittest.TestCase):
         self.assertAlmostEqual(shares, 1.0, places=9)
 
 
+class TilesOnlyCivilisationTests(unittest.TestCase):
+    """A civilisation that lists `home_tiles` and no region labels is read through its tiles everywhere."""
+
+    def _tiles_only(self, civilisation_id="rome_100ad"):
+        civ = dict(_civilisation(civilisation_id))
+        civ["home_tiles"] = api.tiles_held(civ)
+        del civ["home_regions"]
+        return civ
+
+    def test_farm_land_follows_the_tiles(self):
+        from sim.world import land
+        civ = self._tiles_only()
+        parcels = land.cultivable_land_for_civilization(
+            "tiles_only", civilizations={"tiles_only": civ})
+        self.assertEqual(len(parcels), len(civ["home_tiles"]))
+        self.assertGreater(sum(parcel.arable_hectares for parcel in parcels), 0.0)
+
+    def test_crop_climate_follows_the_tiles(self):
+        classes = api.crop_climate.territory_classes(self._tiles_only()["home_tiles"])
+        self.assertEqual(classes, api.crop_climate.territory_classes(api.tiles_held(_civilisation("rome_100ad"))))
+        self.assertTrue(classes)
+
+    def test_the_cast_places_a_country_on_its_tiles(self):
+        from sim.agents.cast import profile_from_civilisation
+        profile = profile_from_civilisation(self._tiles_only())
+        self.assertEqual(profile.home_tiles, self._tiles_only()["home_tiles"])
+        self.assertIn(profile.location, profile.home_tiles)
+
+
 if __name__ == "__main__":
     unittest.main()
