@@ -1,6 +1,6 @@
 # Goal/path UI can accidentally teach the wrong strategy
 
-**Status:** partly - owner decision (2026-10-06): keep the multi-year step warning; done: the `multi_year_step_warning` setting (on by default) turns it off; remaining: the goal leverage view; no new warnings for now
+**Status:** closed - `leverage` and `path` show the system levers; `stuck` respects a saving target; `idle` names the calendar; the `step N` warning can be turned off
 
 The Rome transistor run became extremely inefficient because the visible goal/path information encouraged a direct prerequisite-chain mindset. The player focused on completing prerequisites in order rather than building a strong civilization first.
 

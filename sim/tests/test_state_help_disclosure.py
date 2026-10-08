@@ -26,6 +26,11 @@ _full = render_state(_reply)
 check("short state keeps situation, what to do, goal and risks and drops the detail",
       all(word in _short for word in ("Money:", "You:", "WHAT YOU CAN DO NOW", "Goal:", "AHEAD:"))
       and not any(word in _short for word in ("EMPLOY:", "STANDING:", "RUNNING")), _short)
+_markers = ["Money:", "You:", "WHAT YOU CAN DO NOW", "Goal:", "AHEAD:", "more:"]
+_positions = [_short.find(marker) for marker in _markers]
+check("short state reads in priority order: money, you, what you can do, goal, risks, then the `state full` pointer last",
+      all(position >= 0 for position in _positions) and _positions == sorted(_positions)
+      and "state full" in _short.splitlines()[-1], (_markers, _positions))
 check("short state ends with one footer naming every section and `state full`",
       _short.splitlines()[-1].startswith("more:") and "state full" in _short.splitlines()[-1]
       and all(name in _short.splitlines()[-1] for name in SECTIONS), _short.splitlines()[-1])
