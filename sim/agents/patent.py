@@ -38,6 +38,15 @@ def blocked_reason(world: Any, actor: Any, node_id: str) -> str:
 	return "%s holds the patent on %s and has not licensed it" % (entry["holder"], node_id)
 
 
+def chain_blocked_reason(world: Any, actor: Any, chain: Iterable[str]) -> str:
+	"""Why `actor` may not copy or enter any step of `chain` for want of a licence, or an empty string."""
+	for node_id in chain:
+		reason = blocked_reason(world, actor, node_id)
+		if reason:
+			return reason
+	return ""
+
+
 def apply(actor: Any, node_id: str, world: Any) -> str:
 	"""Ask the state for an exclusive right to an invention the actor holds; refuses with the reason."""
 	if node_id not in world.nodes:

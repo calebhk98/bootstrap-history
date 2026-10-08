@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 
 from .records import ActorRecord
 
-from . import imitation, ledger
+from . import imitation, ledger, patent
 from .borrowing import Borrower
 from .ledger import Purpose
 from .policy import Decision, Option, Policy, ValuePolicy
@@ -140,7 +140,7 @@ class Actor(Borrower):
 		options = []
 		for worth, node_id in candidates[:ATTENTION_SPAN]:
 			chain = imitation.missing_chain(node_id, world, self)
-			if not chain:
+			if not chain or patent.chain_blocked_reason(world, self, chain):
 				continue
 			plan = imitation.copy_plan(self, chain, world)
 			options.append(Option(subject=node_id, worth=worth, cost=plan["total"],
