@@ -35,6 +35,15 @@ SPIN_UP_MAXIMUM_YEARS = declare(
     "SPIN_UP_MAXIMUM_YEARS", 30, kind="temporary_heuristic",
     unit="years", source=None, confidence="D",
     why="A bound on the hidden years, so a economy that keeps moving still starts in a known time.")
+SPIN_UP_TRIMMED_YEARS = declare(
+    "SPIN_UP_TRIMMED_YEARS", 15, kind="temporary_heuristic",
+    unit="years", source=None, confidence="D",
+    why="After the workforce is trimmed to the hours employers want, the skilled trades need a few years for "
+        "wages to leave the market's ceiling and for entry to fill the thinned trades. Their wages swing by "
+        "multiples a year in thin labour markets and never meet a tolerance, so the stage is a fixed length, "
+        "as long as that takes and no longer (shorter lengths left trades glutted or the staffing wage "
+        "reference too high in some civilisations; found by trying lengths against the opening-workforce tests). "
+        "A model of hiring and training would derive it per trade.")
 SPIN_UP_WATCHED_GOODS = 12
 FOREIGN_TRADE_SHARE = declare(
     "FOREIGN_TRADE_SHARE", 0.1, kind="temporary_heuristic",
@@ -296,15 +305,30 @@ class AgentEconomy:
         watched = sorted(basket, key=lambda good: -basket[good] * prices.get(good, 0.0))[:SPIN_UP_WATCHED_GOODS]
         inputs = YearInputs(year=0, population_by_tile={}, working_age_share=economy.setup.working_share,
                             yield_factor_by_producer={}, engine_orders={})
+        self._settle(economy, inputs, watched)
+        economy_api.trim_workforce_to_expected_hours(economy)
+        self._settle_trimmed(economy, inputs)
+        economy_api.finish_spin_up(economy)
+
+    @staticmethod
+    def _settle(economy, inputs, watched):
+        """Hidden years until the price level, the rate and the main prices move less than the tolerance a year."""
         before = None
         for _year in range(int(SPIN_UP_MAXIMUM_YEARS)):
             outcome = economy.step(inputs)
             now = ([outcome.basket_price_level, economy_api.interest_rate(economy) or 0.0]
                    + [outcome.prices.get(good, 0.0) for good in watched])
-            if before is not None and max(abs(new / old - 1.0) for new, old in zip(now, before) if old > 0.0) < SPIN_UP_TOLERANCE:
+            if before is not None and max(
+                    abs(new / old - 1.0) for new, old in zip(now, before) if old > 0.0) < SPIN_UP_TOLERANCE:
                 break
             before = now
-        economy_api.finish_spin_up(economy)
+
+    @staticmethod
+    def _settle_trimmed(economy, inputs):
+        """The few further years, from the state the first stage left, in which the trimmed trades' wages and
+        entry settle."""
+        for _year in range(int(SPIN_UP_TRIMMED_YEARS)):
+            economy.step(inputs)
 
     def _save(self):
         self.stored["record"] = economy_api.export_record(self._economy)

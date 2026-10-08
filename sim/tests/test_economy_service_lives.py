@@ -55,5 +55,16 @@ class ServiceLifeTests(unittest.TestCase):
         late_wear = sum(rows[year][1] for year in range(10, 13)) / 3.0
         self.assertLess(late_bought, 2.5 * late_wear)
 
+    @unittest.expectedFailure       # Complaint 468: the stock still fills and swings; see its findings
+    def test_late_holdings_settle_and_purchases_stay_near_wear_without_selling_out(self):
+        rows = years_of(durable_setup(), 13)
+        for year in range(9, 13):
+            change = rows[year][0] - rows[year - 1][0]
+            bought = change + rows[year][1]
+            self.assertGreaterEqual(bought, 0.0, "households sell their stock out in year %d" % year)
+            self.assertLessEqual(abs(change), rows[year][1], "stock swings by more than a year's wear in year %d" % year)
+            self.assertLess(bought, 2.0 * rows[year][1])
+
+
 if __name__ == "__main__":
     unittest.main()

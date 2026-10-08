@@ -1,6 +1,6 @@
 # Opening state is informative but overloaded
 
-**Status:** partly - owner decision (2026-10-06): JSON `help commands` keeps the full listing, built automatically from the command registry (as intended); the step reply shows the short state with one line at the very end pointing to `state full` (done: the step reply is the short state plus one closing `state full` pointer; remaining: the opening-screen hierarchy and the help items below)
+**Status:** closed - short state is ordered money, you, what you can do, goal, risks, with one `state full` pointer last; `help commands` is a beginner index and the welcome points at it and at `help sittings`
 
 Before the player makes their first decision, the initial state output can expose them to:
 

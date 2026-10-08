@@ -40,12 +40,15 @@ def _clear(bids: Sequence[Bid], rivals: Sequence[Offer], offer: Offer, reservati
     return goods_market.clear(bids, offers, offer.good, offer.area, "", last_price)
 
 
+def _sold_and_price(result, seller: str) -> Tuple[float, float]:
+    sold = math.fsum(fill.quantity for fill in result.fills if fill.agent == seller and fill.side == "sell")
+    return sold, result.price
+
+
 def sold_and_price(bids: Sequence[Bid], rivals: Sequence[Offer], offer: Offer, reservation: float,
                    last_price: Optional[float]) -> Tuple[float, float]:
     """What the seller sells, and the clearing price, if it offers its quantity at `reservation`."""
-    result = _clear(bids, rivals, offer, reservation, last_price)
-    sold = math.fsum(fill.quantity for fill in result.fills if fill.agent == offer.seller and fill.side == "sell")
-    return sold, result.price
+    return _sold_and_price(_clear(bids, rivals, offer, reservation, last_price), offer.seller)
 
 
 def profit_at(bids: Sequence[Bid], rivals: Sequence[Offer], offer: Offer, reservation: float,
@@ -55,12 +58,14 @@ def profit_at(bids: Sequence[Bid], rivals: Sequence[Offer], offer: Offer, reserv
     return (price - unit_value) * sold
 
 
+def _price_moved(without, with_it) -> bool:
+    return abs(with_it.price - without.price) > ROUNDING_SHARE * max(abs(with_it.price), abs(without.price))
+
+
 def moves_the_price(bids: Sequence[Bid], rivals: Sequence[Offer], offer: Offer,
                     last_price: Optional[float]) -> bool:
     """True when adding the seller's whole offer, at the lowest ask, changes the clearing price."""
-    without = _clear(bids, rivals, offer, None, last_price).price
-    with_it = _clear(bids, rivals, offer, 0.0, last_price).price
-    return abs(with_it - without) > ROUNDING_SHARE * max(abs(with_it), abs(without))
+    return _price_moved(_clear(bids, rivals, offer, None, last_price), _clear(bids, rivals, offer, 0.0, last_price))
 
 
 def _candidates(rivals: Sequence[Offer], last_price: Optional[float], unit_value: float) -> List[float]:
@@ -73,17 +78,30 @@ def _candidates(rivals: Sequence[Offer], last_price: Optional[float], unit_value
 
 
 def best_reservation(bids: Sequence[Bid], rivals: Sequence[Offer], offer: Offer, unit_value: float,
-                     last_price: Optional[float], ceiling: float = math.inf, floor: float = 0.0) -> Optional[float]:
+                     last_price: Optional[float], ceiling: float = math.inf, floor: float = 0.0,
+                     current: Optional[float] = None) -> Optional[float]:
     """The reservation, between `floor` and `ceiling`, that maximises the seller's profit against the book, or
-    None when the seller does not move the price or nothing beats offering at the ceiling."""
-    if not moves_the_price(bids, rivals, offer, last_price):
+    None when the seller does not move the price or nothing beats keeping `current` (the price-taking ask;
+    the ceiling when not given). A choice above the ask withholds units, which stay unsold."""
+    without = _clear(bids, rivals, offer, None, last_price)
+    cleared = {0.0: _clear(bids, rivals, offer, 0.0, last_price)}    # each reservation is cleared once
+    if not _price_moved(without, cleared[0.0]):
         return None
-    start = ceiling if math.isfinite(ceiling) else 0.0
-    best, best_profit = None, profit_at(bids, rivals, offer, start, unit_value, last_price)
-    for reservation in _candidates(rivals, last_price, unit_value):
-        if reservation >= ceiling or reservation < floor:
+
+    def profit(reservation: float) -> float:
+        if reservation not in cleared:
+            cleared[reservation] = _clear(bids, rivals, offer, reservation, last_price)
+        sold, price = _sold_and_price(cleared[reservation], offer.seller)
+        return (price - unit_value) * sold
+
+    if current is None:
+        current = ceiling if math.isfinite(ceiling) else 0.0
+    best, best_profit = None, profit(current)
+    bounds = [bound for bound in (floor, ceiling) if math.isfinite(bound)]
+    for reservation in sorted({*bounds, *_candidates(rivals, last_price, unit_value)}):
+        if reservation > ceiling or reservation < floor or reservation == current:
             continue
-        profit = profit_at(bids, rivals, offer, reservation, unit_value, last_price)
-        if profit > best_profit + ROUNDING_SHARE * max(abs(best_profit), 1e-300):
-            best, best_profit = reservation, profit
+        candidate_profit = profit(reservation)
+        if candidate_profit > best_profit + ROUNDING_SHARE * max(abs(best_profit), 1e-300):
+            best, best_profit = reservation, candidate_profit
     return best

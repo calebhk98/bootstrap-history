@@ -115,3 +115,33 @@ check("...and what the chance of being denounced this year is",
 check("...and the page prints both, next to the eminence line that already did",
       "SCANDAL is dangerous above" in _RP("state", _st_sc),
       [line for line in _RP("state", _st_sc).splitlines() if "dangerous above" in line])
+
+# The "visibly rich" line is an amount of labour, so it follows the coin: the
+# same capital in labour hours is the same wealth term whatever the money is.
+from sim.constants import book_money_names as _book_money_names
+_wealth_sims = {}
+for _civ_name in ("rome_100ad", "han_china_100ad"):
+    _w = sim(civ=_civ_name)
+    _w.reputation, _w.familiarity = 0.0, 0.0
+    _wealth_sims[_civ_name] = _w
+_rome_sim, _han_sim = _wealth_sims["rome_100ad"], _wealth_sims["han_china_100ad"]
+_rome_mph = _rome_sim.labour.money_per_labour_hour()
+_han_mph = _han_sim.labour.money_per_labour_hour()
+# Same capital in labour hours, as a share of the hazard at saturated wealth
+# (other civilisation-specific weights cancel in the ratio).
+_hours = 1.0e6  # below the threshold in hours, so the term is not saturated
+_wealth_share = {}
+for _civ_name, _s in _wealth_sims.items():
+    _s.capital = 1.0e6 * _hours * _s.labour.money_per_labour_hour()
+    _saturated = _s.prominence_hazard()
+    _s.capital = _hours * _s.labour.money_per_labour_hour()
+    _wealth_share[_civ_name] = _s.prominence_hazard() / _saturated
+_rome_fixed, _han_fixed = _wealth_share["rome_100ad"], _wealth_share["han_china_100ad"]
+check("the two civilisations' coins differ, so the test means something",
+      abs(_rome_mph - _han_mph) > 1e-9 * max(_rome_mph, _han_mph), (_rome_mph, _han_mph))
+check("the wealth term of the prominence hazard is the same at the same capital in labour hours",
+      abs(_rome_fixed - _han_fixed) <= 1e-9 * max(_rome_fixed, _han_fixed, 1e-12)
+      and _rome_fixed > 0.0, (_rome_fixed, _han_fixed))
+check("the visibly-rich threshold is no longer a book-denarii figure",
+      "EMINENCE_WEALTH_VISIBLE_THRESHOLD" not in _book_money_names(),
+      sorted(_book_money_names()))

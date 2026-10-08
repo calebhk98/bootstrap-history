@@ -20,9 +20,9 @@ from rasterio.transform import from_origin
 from sim.geography.distance import haversine_km
 
 from .cache import fetch_unzipped
-from .tiles import NATURAL_EARTH, PLANE_CRS, read_natural_earth
+from .catalog import CELL_DEGREES
+from .tiles import PLANE_CRS, read_natural_earth
 
-CELL_DEGREES = 0.1
 BRIDGED_GAP_CELLS = 2  # port cells this close (in cells) belong to one coast
 LINK_RANGE_KM = 2000.0  # longest water path a link may have
 KM_PER_DEGREE = 6371.0 * math.pi / 180.0
@@ -32,13 +32,13 @@ ALL_NEIGHBOURS = numpy.ones((3, 3), dtype=bool)
 _cache = {}
 
 
-def _ocean_water(cache_dir):
+def _ocean_water(cache_dir, source):
     """Boolean grid (rows north to south) of water cells: centre not on land, or a coastline passes through
     (so a strait narrower than a cell stays open); only the largest connected body is kept, which drops lakes."""
     shape = (round(180 / CELL_DEGREES), round(360 / CELL_DEGREES))
     transform = from_origin(-180.0, 90.0, CELL_DEGREES, CELL_DEGREES)
-    land = geopandas.read_file(fetch_unzipped("%s/50m/physical/ne_50m_land.zip" % NATURAL_EARTH, cache_dir) + "/ne_50m_land.shp")
-    coast = geopandas.read_file(fetch_unzipped("%s/50m/physical/ne_50m_coastline.zip" % NATURAL_EARTH, cache_dir) + "/ne_50m_coastline.shp")
+    land = geopandas.read_file(fetch_unzipped("%s/50m/physical/ne_50m_land.zip" % source.files["base"], cache_dir) + "/ne_50m_land.shp")
+    coast = geopandas.read_file(fetch_unzipped("%s/50m/physical/ne_50m_coastline.zip" % source.files["base"], cache_dir) + "/ne_50m_coastline.shp")
     on_land = rasterio.features.rasterize(land.geometry.values, out_shape=shape, transform=transform, dtype="uint8").astype(bool)
     on_coast = rasterio.features.rasterize(coast.geometry.values, out_shape=shape, transform=transform,
                                            all_touched=True, dtype="uint8").astype(bool)
@@ -54,9 +54,9 @@ def _own_land(tile, countries):
     return own if not own.is_empty else tile.land
 
 
-def _countries(cache_dir):
+def _countries(cache_dir, source):
     """{Natural Earth country name: shape in the plane}."""
-    frame = read_natural_earth("50m", "cultural", "admin_0_countries", cache_dir)
+    frame = read_natural_earth(source, "50m", "cultural", "admin_0_countries", cache_dir)
     return dict(zip(frame["NAME"], frame.geometry.values))
 
 
@@ -159,13 +159,13 @@ def _entry(pair, total, path, along, shore_km, cells, columns, anchors):
             "max_offshore_km": round(float(shore_km[path].max()))}
 
 
-def network(tiles, cache_dir):
+def network(tiles, cache_dir, source):
     """(set of port tile ids, sorted list of link entries), computed once per build."""
     if cache_dir in _cache:
         return _cache[cache_dir]
-    water = _ocean_water(cache_dir)
+    water = _ocean_water(cache_dir, source)
     columns = water.shape[1]
-    ports = _port_cells(tiles, water, _countries(cache_dir))
+    ports = _port_cells(tiles, water, _countries(cache_dir, source))
     graph, cells, node_of, (edge_from, edge_to, edge_km) = _water_graph(water)
     coast = numpy.flatnonzero((scipy.ndimage.binary_dilation(~water, structure=ALL_NEIGHBOURS) & water).ravel())
     shore_km = scipy.sparse.csgraph.dijkstra(graph, directed=False, indices=node_of[coast], min_only=True)
@@ -198,6 +198,6 @@ def network(tiles, cache_dir):
     return _cache[cache_dir]
 
 
-def is_port(tiles, cache_dir):
-    ports = network(tiles, cache_dir)[0]
+def is_port(tiles, cache_dir, source):
+    ports = network(tiles, cache_dir, source)[0]
     return {tile.tile_id: 1 if tile.tile_id in ports else 0 for tile in tiles}

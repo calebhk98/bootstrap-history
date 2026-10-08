@@ -8,7 +8,7 @@ WALL = "two-way"  # nothing here reaches sim/engine/; the engine hands it what i
 
 import math
 
-from . import diagnostics, households, labour_state, market_curves, taxes, tile_costs
+from . import diagnostics, households, labour_state, market_curves, taxes, tile_costs, workforce_settle
 from .currency import currency_from_coin_standard
 from .economy import Economy
 from .foreign import external_orders
@@ -185,6 +185,11 @@ def finish_spin_up(economy):
     """Closes the hidden spin-up years: the price level is rebased to one and the clock returns to zero."""
     rebase_basket_price_level(economy.setup, economy.record)
     economy.record.memory.year = 0
+
+
+def trim_workforce_to_expected_hours(economy):
+    """Cuts each skilled trade to the hours employers plan to want; see workforce_settle."""
+    workforce_settle.trim_to_expected_hours(economy.setup, economy.record, economy.view())
 
 
 def shown_prices_of(economy):

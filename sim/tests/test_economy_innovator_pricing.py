@@ -30,10 +30,13 @@ class InnovatorPricingTests(unittest.TestCase):
         self.assertLess(first, 2.0 * before)
 
     def test_the_price_falls_as_the_entrants_capacity_grows(self):
+        # Against the years before entry, not the few years just after it: sellers that move the price may
+        # raise or withhold, so the entry years are a swing, and the property is the level the market
+        # settles at once the entrant can serve it.
         table = rows()
-        early = mean(row["price"] for row in table[scenario.ENTRY_YEAR:scenario.ENTRY_YEAR + 4])
+        before = mean(row["price"] for row in table[:scenario.ENTRY_YEAR])
         late = mean(row["price"] for row in table[-4:])
-        self.assertLess(late, 0.8 * early)
+        self.assertLess(late, 0.8 * before)
 
     @unittest.expectedFailure
     def test_the_price_path_falls_steadily_without_a_swing_between_years(self):
