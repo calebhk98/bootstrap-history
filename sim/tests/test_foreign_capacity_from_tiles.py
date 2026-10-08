@@ -32,9 +32,9 @@ class HeldMineralShareTests(unittest.TestCase):
     def test_fewer_tiles_hold_less_of_a_regions_share(self):
         regions = region_records(api.load_geography())
         region = next(region_id for region_id, record in regions.items()
-                      if record.get("minerals") and len(api.tiles_of_regions([region_id])) > 1)
+                      if any(share > 0.0 for share in (record.get("minerals") or {}).values()) and len(api.tiles_of_regions([region_id])) > 1)
         tiles = api.tiles_of_regions([region])
-        commodity = sorted(regions[region]["minerals"])[0]
+        commodity = next(name for name, share in sorted(regions[region]["minerals"].items()) if share > 0.0)
         part = held_mineral_share({"home_tiles": tiles[:1]}, regions, commodity)
         whole = held_mineral_share({"home_tiles": tiles}, regions, commodity)
         self.assertGreater(whole, part)
