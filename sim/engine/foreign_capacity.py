@@ -12,6 +12,7 @@ has no capacity and is only bought.
 import functools
 
 from sim.constants import declare
+from sim.geography.api import layer_value, tiles_held, tiles_of_regions
 from sim.world import demand as demand_model
 
 from .data import ROOT, load_civ, starting_schedule
@@ -62,6 +63,18 @@ def household_tonnes_by_material(civilization_id):
     return budget_scaled_final_tonnes(prices_in_hours, float(civilization.get("population") or 0.0))
 
 
+def held_mineral_share(civilisation, regions, commodity):
+    """Sum of the regional shares of a mined commodity over the tiles the civilisation holds: each
+    region's share counted by the fraction of that region's tiles held."""
+    held_by_region = {}
+    for tile_id in tiles_held(civilisation):
+        region_id = layer_value(tile_id, "region")
+        held_by_region[region_id] = held_by_region.get(region_id, 0) + 1
+    return sum(float((regions[region_id].get("minerals") or {}).get(commodity, 0.0))
+               * held / len(tiles_of_regions([region_id]))
+               for region_id, held in held_by_region.items() if region_id in regions)
+
+
 class ForeignCapacityMixin:
 
     def home_unmade_demand_tonnes(self, commodity):
@@ -89,9 +102,7 @@ class ForeignCapacityMixin:
 
     def _foreign_mineral_share(self, civilization_id, commodity):
         """Sum of its home regions' shares of a mined commodity."""
-        return sum(float((self.geography.regions[region_id].get("minerals") or {}).get(commodity, 0.0))
-                   for region_id in load_civ(civilization_id).get("home_regions") or []
-                   if region_id in self.geography.regions)
+        return held_mineral_share(load_civ(civilization_id), self.geography.regions, commodity)
 
     def _foreign_can_make(self, civilization_id, material, solved, _seen=None):
         """Whether its techniques and regions supply the material: it holds
