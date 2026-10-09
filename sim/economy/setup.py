@@ -61,6 +61,7 @@ class EconomySetup:
     basket_by_tile: Dict[TileId, Any] = field(default_factory=dict)   # floors that follow the tile's climate
     state_policy: StatePolicy = field(default_factory=StatePolicy)   # how the state budgets and finances a deficit
     site_limits: Tuple[SiteLimit, ...] = ()     # where site-bound recipes can run, and how much (sites.py)
+    mint_recipe: Optional[Recipe] = None   # how the mint strikes coin: the production entry the coin standard names
     held_nodes: Tuple[str, ...] = ()    # tech nodes the society holds; geography's sea lanes may need them
     world_map: Any = None               # geography's map the tiles lie on (the base map when None)
     coin_per_unit: float = 1.0          # the economy counts money in this many coins (the port converts)

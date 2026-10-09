@@ -11,7 +11,8 @@ from . import credit, credit_claims, currency, labour, land_market, lending, mer
 from .credit_view import CreditView
 from .market_areas import AreaMap
 from .market_memory import YearView
-from .mint import mint_orders, settle_mint
+from .mint import mint_orders, settle_mint, staff as staff_mint
+from .mint_labour import close_year as close_mint_year, mint_agent
 from .money_audit import MoneyAudit, year_report
 from .entry_year import close_idle_producers, open_entrants, restake_owners
 from .households_own import (hours_for_own_plan, own_production, own_production_options, plot_hectares,
@@ -113,6 +114,7 @@ class Economy:
         for orders in inputs.engine_orders.values():
             labour_bids.extend(orders.labour_bids)
         state_budget.plan_year(setup, record, view, labour_bids)
+        staff_mint(setup, record, view, labour_bids)
         everyone = labour_offers(setup, record, view, outside_option_by_tile(setup, record, view))
         offers, kept = withhold_hours(everyone, self._shortfall_hours())
         context = labour_context(setup, record, view, self.carriage, inputs, self._own_plot_options())
@@ -121,7 +123,8 @@ class Economy:
         order_book = {}
         funds = cohort_orders(setup, record, view, ledger, order_book)
         state_orders(setup, record, view, self.area_map, order_book, {})
-        mint_held = mint_orders(setup, record, self.area_map, order_book)
+        mint_held = mint_orders(setup, record, self.area_map, order_book,
+                                ledger.hours_hired.get(mint_agent(setup), {}))
         for agent, orders in sorted(inputs.engine_orders.items()):
             add_orders(order_book, orders)
         for plan in plans.values():
@@ -133,6 +136,7 @@ class Economy:
             plant_runs[producer_id] = plant_runs.get(producer_id, 0.0) + runs
         clear_goods(setup, record, view, self.area_map, order_book, plans, ledger)
         settle_mint(record, mint_held)
+        close_mint_year(setup, record)
         rent = land_market.settle_year(setup, record, view,
                                        {producer_id: plan.wanted_runs for producer_id, plan in plans.items()},
                                        self._own_hectares)

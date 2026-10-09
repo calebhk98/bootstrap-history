@@ -30,11 +30,23 @@ def civilisation_tiles(civ, world_map):
     return tiles_held(civ, world_map), world_map
 
 
+def _runnable(entry, held_nodes):
+    return entry.get("requires_node") is None or entry.get("requires_node") in held_nodes
+
+
 def allowed_entries(production, held_nodes):
-    """Production entries the society can run: those needing no node, or a node it holds."""
+    """Production entries the society's producers can run: those needing no node, or a node it holds.
+    An entry whose `actor` is the mint is the mint's way of striking coin, not a firm's."""
     return sorted(entry_id for entry_id, entry in production.items()
                   if not entry_id.startswith("_") and isinstance(entry, dict)
-                  and (entry.get("requires_node") is None or entry.get("requires_node") in held_nodes))
+                  and entry.get("actor") != "mint" and _runnable(entry, held_nodes))
+
+
+def mint_recipe_id(civ, production, held_nodes):
+    """The production entry the coin standard names for striking its coin, when the society can run it."""
+    entry_id = civ.get("coin_standard", {}).get("mint_recipe")
+    entry = production.get(entry_id) if entry_id else None
+    return entry_id if isinstance(entry, dict) and entry.get("actor") == "mint" and _runnable(entry, held_nodes) else None
 
 
 def unskilled_trade(trades_data):
@@ -51,14 +63,17 @@ def opening_values(sim):
     production = demand.production_data()
     trades_data = _load("world", "trades.json").get("trades", {})
     allowed = allowed_entries(production, set(sim.state.projects.granted))
+    mint_recipe = mint_recipe_id(civ, production, set(sim.state.projects.granted))
     unskilled = unskilled_trade(trades_data)
-    labour_trades = sorted({trade for entry_id in allowed for trade in (production[entry_id].get("labour_hours") or {})}
+    labour_trades = sorted({trade for entry_id in allowed + ([mint_recipe] if mint_recipe else [])
+                            for trade in (production[entry_id].get("labour_hours") or {})}
                            | {unskilled})
     modes = sim._freight_mode_costs()
     return {
         "population_by_tile": {tile: people * settlement.population_share(tile_ids, tile) for tile in tile_ids},
         "working_share": sim.population.working_age / people if people > 0.0 else 0.0,
         "recipes": allowed,
+        "mint_recipe": mint_recipe,
         "prices": {good: price for good, price in sim.economy.material_prices().items() if price > 0.0},
         "wages": {trade: sim.economy.labour.quote(trade) for trade in labour_trades if trade in trades_data},
         "unskilled_trade": unskilled,
@@ -116,6 +131,8 @@ def build_setup(sim, opening=None):
     population_by_tile = {tile: float(opening["population_by_tile"].get(tile, 0.0)) for tile in tile_ids}
     production = demand.production_data()
     recipes = recipes_from_production_data(production, opening["recipes"])
+    mint_recipe = (recipes_from_production_data(production, [opening["mint_recipe"]])[opening["mint_recipe"]]
+                   if opening.get("mint_recipe") else None)
     need_data = _load("world", "needs.json")
     basket = households.make_basket(need_data, production)
     goods = set()
@@ -142,7 +159,7 @@ def build_setup(sim, opening=None):
         carriage_rates=dict(opening["carriage"]),
         handling_rates={SEA_MODE: sea_freight.PORT_HANDLING_HOURS_PER_TONNE * wages.get(opening["unskilled_trade"], 0.0)},
         held_nodes=tuple(opening["held_nodes"]),
-        specs=specs, recipes=recipes, basket=basket, trades=trades,
+        specs=specs, recipes=recipes, mint_recipe=mint_recipe, basket=basket, trades=trades,
         tax_forms=taxes.forms_from_civ_data(civ.get("state_revenue") or []),
         state_capacity=min(1.0, max(0.0, float(civ.get("state_capacity", 1.0)))),
         working_hours_per_year=float(sim.HOURS_PER_PERSON_YEAR), working_share=float(opening["working_share"]),

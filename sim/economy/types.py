@@ -64,6 +64,7 @@ class CurrencySpec:
     backing_per_unit: float          # units of backing_good in one unit of money; 0 for fiat
     issuer: Optional[AgentId]        # who strikes or prints it; None for weighed metal
     mint_charge_share: float = 0.0   # share of the metal the mint keeps when striking
+    fineness: float = 1.0            # share of a struck coin's mass that is the backing metal
 
 
 @dataclass(frozen=True)

@@ -20,6 +20,8 @@
     "regime": "struck_coin",
     "material": "silver_kg",
     "kg_per_unit": 0.00135,
+    "fineness": 0.925,
+    "mint_recipe": "struck_silver_coin_kg",
     "mint_charge_share": 0.015,
     "source": "The sterling penny of Edward I: 22.5 troy grains (about 1.46 g) at 0.925 fineness (Spufford, Money and its Use in Medieval Europe, 1988). Confidence B. Regime: a state mint struck the penny from bullion brought to it and kept a charge (seigniorage and mint costs) out of the silver, of the order of one to two per cent in this period (Allen, Mints and Money in Medieval England, CUP 2012; Spufford 1988); the share here is an estimate within that range, confidence low."
   },
