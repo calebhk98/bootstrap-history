@@ -410,6 +410,11 @@ class AgentEconomy:
         """Mean rent per hectare-year the land market let land at last year, in coin."""
         return economy_api.land_rent_per_hectare(self.economy()) * self._economy.setup.coin_per_unit
 
+    def land_rent_paid_by_tile(self):
+        """Rent producers paid on each tile where land was let last year, in coin."""
+        coin = self._economy.setup.coin_per_unit
+        return {tile: rent * coin for tile, rent in economy_api.land_rent_paid_by_tile(self.economy()).items()}
+
     def rate(self):
         return self.answers()[2]
 

@@ -60,6 +60,23 @@ def stratum_income(world: Any) -> Base:
 	return Base(sum(income for _stratum, income in payers), payers=payers)
 
 
+def land_rent(world: Any) -> Base:
+	"""Rent producers paid on the land they let last year, summed over the tiles; the owners who received it
+	are the payers where the world can name them."""
+	owners = tuple(world.land_rent_owners())
+	return Base(sum(world.land_rent_paid_by_tile().values()), payers=owners)
+
+
+def land_value(world: Any) -> Base:
+	"""What the land let is worth: the rent capitalised at the market rate of interest, so land is worth what
+	its rent would buy in the loan market. Nothing is taxable where there is no rate."""
+	rate = world.market_rate()
+	base = land_rent(world)
+	if rate <= 0.0:
+		return Base(0.0)
+	return Base(base.value / rate, payers=tuple((owner, rent / rate) for owner, rent in base.payers))
+
+
 BASES: Dict[str, Callable[[Any], Base]] = {
 	"harvest": harvest,
 	"adult_labour_years": adult_labour_years,
@@ -67,4 +84,6 @@ BASES: Dict[str, Callable[[Any], Base]] = {
 	"exports_value": exports_value,
 	"coin_stock": coin_stock,
 	"stratum_income": stratum_income,
+	"land_rent": land_rent,
+	"land_value": land_value,
 }

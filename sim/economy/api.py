@@ -8,7 +8,7 @@ WALL = "two-way"  # nothing here reaches sim/engine/; the engine hands it what i
 
 import math
 
-from . import diagnostics, households, labour_state, market_curves, taxes, tile_costs, workforce_settle
+from . import diagnostics, households, labour_state, land_rents, market_curves, taxes, tile_costs, workforce_settle
 from .currency import currency_from_coin_standard
 from .economy import Economy
 from .foreign import external_orders
@@ -36,6 +36,7 @@ __all__ = [
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
     "credit_room", "economy_from_record", "blank_economy", "export_record", "finish_spin_up", "shown_prices_of",
     "settle_founder_takings", "move_goods", "post_transfers", "cohort_incomes", "land_rent_per_hectare",
+    "land_rent_paid_by_tile",
 ]
 
 _KEY_SEPARATOR = "|"
@@ -73,6 +74,11 @@ def land_rent_per_hectare(economy):
     none was)."""
     rents = [rent for rent in economy.record.land_rent.values() if rent > 0.0]
     return sum(rents) / len(rents) if rents else 0.0
+
+
+def land_rent_paid_by_tile(economy):
+    """Rent producers paid on each tile where land was let last year, in the economy's units."""
+    return land_rents.rent_paid_by_tile(economy.setup, economy.record)
 
 
 def wages_by_trade_weighted(economy):

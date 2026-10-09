@@ -766,6 +766,15 @@
       }
     },
     {
+      "form": "tributum_soli",
+      "basis": "land_value",
+      "rate": 0.01,
+      "_internal": {
+        "source": "The provincial land and property tax in coin, assessed on a census value (Ulpian, Digest 50.15; Appian, Syrian Wars 50 gives one per cent of assessed property in Syria). One province's rate stands for the empire, and the census value is taken as the rent capitalised at the market rate; Italy was exempt, which this empire-wide share ignores.",
+        "confidence": "C"
+      }
+    },
+    {
       "form": "poll_tax",
       "basis": "adult_labour_years",
       "rate": 0.04,
