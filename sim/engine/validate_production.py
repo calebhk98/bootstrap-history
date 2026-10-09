@@ -224,6 +224,19 @@ def check_requires_node(where, entry, known_nodes):
     return problems
 
 
+def check_operated_by(where, entry, known_nodes):
+    """`operated_by` lists the tree nodes whose concern runs this technique."""
+    if "operated_by" not in entry:
+        return []
+    operators = entry["operated_by"]
+    if not isinstance(operators, list) or not all(isinstance(operator, str) for operator in operators):
+        return ["%s: operated_by must be a list of tech-tree node ids, not %r" % (where, operators)]
+    if known_nodes is None:
+        return []
+    return ["%s: operated_by '%s' is not a node in the tech tree" % (where, operator)
+            for operator in operators if operator not in known_nodes]
+
+
 def check_capital_build_materials(good_where, build_materials, known_materials):
     """Every build_materials key is a real material with a sane quantity."""
     problems = []
@@ -442,6 +455,7 @@ def check(entries, known_materials, known_trades, known_nodes=None):
         problems.extend(check_labour_hours(where, entry, known_trades))
         problems.extend(check_energy_carrier_fields(where, entry))
         problems.extend(check_requires_node(where, entry, known_nodes))
+        problems.extend(check_operated_by(where, entry, known_nodes))
         problems.extend(check_capital(where, entry, known_materials, known_trades))
         problems.extend(check_yield_basis(where, entry))
         problems.extend(check_conf(where, entry))

@@ -42,6 +42,7 @@ Once every material has inputs and a yield, the price of each is the cost of wha
 | `yield_basis` | WHY these numbers, in physical terms. This is the most important field in the entry. An entry whose yield_basis does not survive a metallurgist reading it is a guess wearing a lab coat. |
 | `capital` | Optional. A list of the fixed capital goods this process runs IN rather than consumes making one batch - a furnace, a mill, a chamber, a pan. See CAPITAL below. Omit entirely for a process where capital is not worth separating from labour - see WHICH MATERIALS GOT CAPITAL below for which and why. |
 | `requires_node` | WHEN this technique becomes available: the id of the tech-tree node that has to be reached before anyone can run it, or `null` for a technique that needs no technology at all. See WHEN A TECHNIQUE BECOMES AVAILABLE below. Omitting the field is not the same as `null` - it means nobody has classified this entry, and a gated solve drops it. |
+| `operated_by` | Optional. A list of tech-tree node ids whose concern runs this technique, apart from `requires_node` (when anyone may run it). A node named here earns its revenue from what its staff and plant turn out of this entry (`sim/engine/node_output.py`) instead of a typed figure. Name a node only when it really is the operation that makes this good; the node's name can mislead (`cn_mortar` is the weapon). Checked by `validate_production.check_operated_by`. |
 | `conf` | A well attested, B probable, C the author's estimate. Be honest; C is fine and common. |
 
 ## WHEN A TECHNIQUE BECOMES AVAILABLE

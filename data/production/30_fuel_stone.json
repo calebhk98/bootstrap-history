@@ -47,7 +47,8 @@
    "basis": "per tonne of charcoal from an earth-clamp burn",
    "yield_basis": "THE classic yield, and one of the most consequential ratios in the whole dataset: a traditional earth-covered clamp (wood stacked, turfed over, lit and controlled by choking the air supply so it smoulders rather than flames) converts roughly 20-25% of the dry wood mass into charcoal, the rest leaving as smoke, water vapour and volatile tars. Taking 25% (the better-run end of that range) gives 4 kg of wood per kg of charcoal, i.e. 4000 kg wood_kg for a tonne of charcoal. No external fuel input is listed because the clamp is self-firing - part of the charge itself supplies the heat that pyrolyses the rest, which is exactly why the yield is capped in the 20-25% band rather than higher. This ratio is what makes charcoal iron a forest-eating industry: every tonne of charcoal a furnace burns stands for four tonnes of wood that had to grow somewhere first. Labour is a collier tending the clamp around the clock for several days per burn (building it, watching for blue smoke that signals a breach, breaking it open and sorting the product), amortised over the wood charged.",
    "conf": "B",
-   "requires_node": null
+   "requires_node": null,
+   "operated_by": ["en_charcoal_burning", "charcoal_industrial"]
   },
   "coal_kg": {
    "outputs": {

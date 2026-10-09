@@ -60,7 +60,8 @@
    "basis": "per tonne of ground Portland cement clinker (setting-regulator gypsum not included)",
    "yield_basis": "COMPOSITION AND STOICHIOMETRY. Portland clinker is about 65% CaO, with silica, alumina and iron oxide making up most of the rest (roughly 29% together). Lime is supplied as limestone at 100.09/56.08 kg CaCO3 per kg of CaO (CO2 driven off). The oxide balance comes from clay taken as about 87% oxide after dehydroxylation (the same water loss porcelain_kg's kaolinite figure uses). Heat is the enthalpy to calcine and clinker the charge, about 1.75 GJ per tonne, a theoretical floor at the roughly 1450 C clinkering needs; real kilns burn several times more. Crew hours are lime_kg's kiln hours because no cement-specific figure exists here. The few percent of gypsum that retards set is omitted. Heuristic labour and energy, conf C.",
    "conf": "C",
-   "requires_node": "cn_portland_cement"
+   "requires_node": "cn_portland_cement",
+   "operated_by": ["cn_cement_clinker_grinding", "cn_rotary_cement_kiln"]
   },
   "stainless_steel_kg": {
    "outputs": {
