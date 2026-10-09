@@ -1,6 +1,6 @@
 # Add supplier depth / tacit industrial competence, without duplicating existing delays
 
-**Status:** partly done - unblocked (Complaint 428 is closed). `sim/engine/industry_depth.py` counts depth from the simulation (retained worker-years anyone spends running a technique, against a founding-size concern's own staff) and feeds the ramp (`venture_ramp`, `agents_port.ramp`), the failure risk (`effective_risk`, stricter of depth and retry learning) and the scale a firm can expand a concern to. Techniques running at the opening are seeded from the agent economy's opening producers (worker-years a year in steady state); without the agent economy the seed falls back to one concern and the scale ceiling is off. Remaining: a whole-game check of the seeding order (it happens on the first read of experience), per-trade tenure in the labour core in place of employed staff-years, input-producer reliability, scrap and unit labour, founder-free running, maintenance, and retiring EXIT_GRACE_YEARS and the retry-risk multiplier into the same stock
+**Status:** closed - supplier depth is derived and automatic: tenure (worker-years by trade in a technique, held in the labour core and faded at the demography's leaving rate) drives ramp, failure risk (which absorbs the retry multiplier), reachable scale, founder-free running, scrap and unit labour along an experience curve, plant repair and input supply (producers, haul days from geography, supplier depth); `EXIT_GRACE_YEARS` is retired into the ramp. The whole-game seeding-order check is the slow topic `sim/tests/test_industry_depth_game.py`, written and not yet run
 
 **Source:** playtest findings document, LATE-009. **Type:** Realism
 refinement, medium size. Carries its own explicit warning against
@@ -64,3 +64,17 @@ both independently point at the same underlying gap (professions do not
 move in response to scarcity) that `labour_market.py` exists to close.
 
 Owner decision (2026-10-09): supplier depth must come out of the simulation automatically (operating concerns, trained workers, years of running), never a manual or authored value per technology.
+
+## Orchestrator decisions (2026-10-09)
+
+- Delivery delay lives in geography: route days from the nearest producer of an input to the concern's tile, through geography's api. The agent economy carries no per-recipe lead time, so the engine counting geography's days is not double counting. One port method lists producers of a good by tile (`producers_by_good`, `sim/engine/economy_port_year.py`).
+- Per-trade tenure: worker-years spent in a technique by a trade, held in the labour core (`sim/labour/tenure.py`); it decays at the demography's death and retirement rate (`sim/world/demography_turnover.py`, no new number). A worker moving trade carries nothing.
+- Scrap and unit labour: an experience curve on the same worker-years stock; the progress ratio is a declared temporary_heuristic (`LEARNING_PROGRESS_RATIO`, Wright 1936; Argote and Epple 1990). Scrap share and labour per unit both fall along it toward the entry's stated figure.
+- Founder-free running: a concern no longer needs its founder once the tenure its staff hold in the technique reaches the founding staff's hours for one year of running.
+- Maintenance: plant repair labour, sized from the plant's stated service lives in production data; repair needs trades with tenure in that technique, and lacking them the concern loses running time in proportion.
+- `EXIT_GRACE_YEARS` and the retry-risk multiplier retire into the tenure stock: a concern's exit grace is its ramp (which depth sets), and a diagnosed failed attempt adds its worker-years to the stock that the risk reads.
+- The seeding-order check is a slow topic, not run here.
+
+## Where it lives
+
+`sim/engine/industry_depth.py` (stock, depth, seeding, founder-free, failure learning), `sim/engine/industry_learning.py` (pure curves, repair, input supply), `sim/engine/industry_concern.py` (the Sim side; applied in `concern_takings`), `sim/labour/tenure.py`. Tests: `test_labour_tenure`, `test_industry_depth`, `test_industry_learning` (quick), `test_industry_depth_game` (slow).

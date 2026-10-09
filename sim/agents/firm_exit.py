@@ -2,7 +2,6 @@
 from typing import Any
 
 from . import ledger
-from .tuning import EXIT_GRACE_YEARS
 
 
 def earns_less_than_plant_would_lend_for(firm: Any, world: Any) -> bool:
@@ -11,8 +10,8 @@ def earns_less_than_plant_would_lend_for(firm: Any, world: Any) -> bool:
 		return False  # a loss is counted already
 	plant = 0.0
 	for node_id in firm.concerns:
-		if world.year - firm.opened_year_of(node_id, world.year) < EXIT_GRACE_YEARS:
-			return False
+		if world.ramp(firm.opened_year_of(node_id, world.year), node_id) < 1.0:
+			return False  # still ramping up: the industry's depth sets how long that takes
 		plant += world.plant_cost(node_id, firm, firm.capacity_of(node_id))
 	return firm.record.last_margin <= plant * world.market_rate()
 
