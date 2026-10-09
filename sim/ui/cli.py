@@ -29,7 +29,7 @@ from collections import defaultdict
 
 from sim.engine.ui_port import load_production_catalog
 from sim.engine.ui_port import (
-    category_traits, tree_merge, validate_material_gating, validate_output_bounds, node_revenue_census, validate_copy_visibility, validate_production,
+    category_traits, tree_merge, validate_material_gating, validate_node_money, node_revenue_census, validate_copy_visibility, validate_production,
     validate_unheld_gates, validate_running_gates, validate_defence_stores)
 from sim.engine.ui_port import default_civilisation_id
 from sim.engine.ui_port import (
@@ -307,13 +307,11 @@ def _print_validate_summary(nodes, goal_rows, default_goal):
     print("edges            : %d" % sum(len(node_record["pre"]) for node_record in nodes.values()))
     print("total capital     : %s den across all %d nodes" % (f"{sum(node_record['_total_cost'] for node_record in nodes.values()):,.0f}", len(nodes)))
     print("total founder hrs : %s" % f"{sum(node_record['ph'] for node_record in nodes.values()):,}")
-    print("REVENUE BASIS (nodes with a revenue figure; 'authored' names no product to derive it from)")
+    print("REVENUE (a node earns only from the output of the entries that name it in operated_by)")
     print("\n".join(node_revenue_census.format_lines(node_revenue_census.basis_counts(nodes))))
-    print("UPKEEP AND CAPITAL BASIS ('authored' is a typed figure; 'derived' follows the node's staff, plant and entries)")
+    print("UPKEEP AND CAPITAL BASIS")
     print("\n".join(node_revenue_census.format_cost_lines("upkeep", node_revenue_census.cost_basis_counts(nodes, "_upkeep_basis"))))
     print("\n".join(node_revenue_census.format_cost_lines("capital", node_revenue_census.cost_basis_counts(nodes, "_capital_basis"))))
-    print("TYPED FIGURES STILL IN BRANCH FILES")
-    print("\n".join(node_revenue_census.format_file_lines(node_revenue_census.typed_figures_by_file(nodes))))
     print()
     print("GOALS (%d selectable; 'goals' prints this table alone)" % len(goal_rows))
     print("%-34s %9s %10s  %s" % ("name", "closure", "floor(yr)", "node"))
@@ -390,7 +388,7 @@ def cmd_validate(args):
         producible.update((entry.get("outputs") or {}).keys())
     errs, warns = _validate_nodes(nodes, goods, wages, producible)
     errs += _validate_topo_order(nodes)
-    errs += validate_output_bounds.check_output_bounds(nodes, production)
+    errs += validate_node_money.check_node_money(nodes, production)
     errs += validate_copy_visibility.check_copy_visibility(nodes)
     errs += _data_source_errors(nodes)
     errs += validate_map.map_problems()

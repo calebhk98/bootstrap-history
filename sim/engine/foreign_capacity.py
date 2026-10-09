@@ -106,7 +106,10 @@ class ForeignCapacityMixin:
         capacity, _demand = self.foreign_opening(civilization_id, commodity, solved)
         if capacity > 0.0 or self._tracked_mineral(commodity):
             return capacity
-        scale = float(load_civ(civilization_id).get("population") or 0.0) / self.DEFAULT_POPULATION_100AD
+        # a curated output is the reference empire's; any other is this society's own capacity
+        reference = (self.DEFAULT_POPULATION_100AD if commodity in self.res["empire_output_100ad"]
+                     else float(self.civ.get("population") or self.DEFAULT_POPULATION_100AD))
+        scale = float(load_civ(civilization_id).get("population") or 0.0) / reference
         return self._national_output_tonnes(commodity) * scale * FOREIGN_OUTPUT_PER_POPULATION_SHARE
 
     def _tracked_mineral(self, commodity):

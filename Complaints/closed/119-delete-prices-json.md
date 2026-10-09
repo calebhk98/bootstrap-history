@@ -1,6 +1,6 @@
 # Deleting `data/prices.json`
 
-**Status:** partly - the file is deleted and nothing opens it; the commodity ledger prices from the solved table and the book labourer wage is gone; node capital is derived from staff and plant and output nodes state no revenue or upkeep; remains (see Remains): supply curves inferred from price, typed node revenue and upkeep for nodes that name no product (Complaints/140 lists the files); the import and unavailability policy for gated materials and the two photovoltaic gates are done (see Remains)
+**Status:** closed - the file is deleted and nothing opens it; prices, wages and the commodity ledger are solved; node money derives from stated staff, plant and output (Complaints/140); a material's national output and market share come from the deposits on the tiles held and the producers' plants (`material_capacity.py`), with no curve fitted to price
 
 `data/prices.json` is not a calibration dataset and will not survive the
 migration. Historical observations that are independently worth testing may be
@@ -167,15 +167,19 @@ sourced test fixture.
 
 ## Remains
 
-`data/prices.json` is deleted and nothing opens it. Still open before this can close:
+`data/prices.json` is deleted and nothing opens it. Everything that was open is done:
 
-- The generic national-output and market-share curves in `sim/engine/economy_materials.py` infer physical supply from price (blocker 4); with solved prices a cheap gated material such as aluminium gets an enormous fitted market. Replace with physical capacity and resource access.
+- (done) The generic national-output and market-share curves in `sim/engine/economy_materials.py` inferred physical supply from price (blocker 4); with solved prices a cheap gated material such as aluminium gets an enormous fitted market. Replace with physical capacity and resource access. The fit is deleted: output is the working rate of the found deposits on the tiles held plus the producers' plants (`sim/engine/material_capacity.py`, `sim/tests/test_material_supply_from_capacity.py`); the market share of such a material is a declared open share bounded by the standing ceiling.
 - (done) A material no one in reach makes has no price: priced by the home technique in reach, else the cheapest partner's landed price, else unavailable, and a project that needs it cannot start (Complaints/38, `sim/tests/test_no_seller_no_price.py`). The transitional "mature" price is gone from `priced_goods_table`; the energy-grade fallback in `sim/engine/energy_prices.py` is gone too (a line that states a heat grade nothing held supplies cannot run).
 - (done) `data/world/commodities.json` carries no price: each commodity names a `price_material` and `CommodityLedger` takes the solved price of it in labour hours per kg.
-- (done) `BOOK_LABOURER_WAGE_DENARII_PER_HOUR` is deleted. Node `up_hours` and `cap_hours` are still authored hour figures (Complaints/140); node `rev` is now derived from output for nodes that gate production entries and have a staff or plant to derive from, and is nil for sciences that make nothing, while the rest keep authored `rev` (see Complaints/283, 295, 296).
+- (done) `BOOK_LABOURER_WAGE_DENARII_PER_HOUR` is deleted. No node types `up_hours`, `cap_hours` or `rev_hours` any more (Complaints/140).
 - (done) `photovoltaic_panel_m2` and `electrical_mj_photovoltaic` carry `requires_node: silicon_path` (solar-grade silicon, the gate of `silicon_kg`, which the panel is built from). The cycle the earlier attempt blamed (aluminium needs electricity, the panel needs aluminium) is not a solver fault: the resolvability pass takes the dynamo route topologically so the loop never forms there, and the numeric solve prices the loop to a fixed point in a few dozen rounds (`AlternativeEnergyCycleTests`). The 30 second overrun was the cold solve cache, which any edit under `sim/` or `data/` invalidates: `data.load()` takes longer than 30 seconds on a cold cache with or without the gate. Not re-timed on the real tree here.
 - `rg -n 'prices\.json|\bPRICES\b' sim tools` now finds only tests that guard against reading it and the harness's own `PRICES` name; the prose in `sim` comments is fixed, data and docs outside `sim` (mostly historical) still mention the file.
 
 Related: 38, 309.
 
 Owner decision (2026-10-09): high priority: do it soon, it likely causes economic errors.
+
+Owner decision (2026-10-09): a node that makes no product earns nothing directly; its value comes only from what its mechanics change (cheaper inputs, more output elsewhere, the effects it already carries). Typed `rev_hours` is deleted on every such node. Programme spending (the benefactions: a grain dole, games, a school) is not upkeep: it is a spending line the acting actor pays, priced from what it buys. Sciences pay no upkeep beyond their staff. Remaining typed `up_hours` and `cap_hours` derive from stated staff and plant, or from a labelled default on the build bill.
+
+Owner decision (2026-10-09): replace the price-fitted national output and market share in `economy_materials.py` with capacity from what exists: mined materials from the deposits on held tiles and the mine works, made materials from the agent economy's producers. No fit to price remains.

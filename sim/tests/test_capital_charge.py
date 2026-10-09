@@ -27,7 +27,7 @@ PLANT_OUTPUT_PER_YEAR = 1000.0
 
 def works_entry():
     return {"outputs": {"widget_kg": 10.0}, "inputs": {"ore_kg": 10.0}, "labour_hours": {"labourer": 5.0},
-            "requires_node": "widget_works",
+            "requires_node": "widget_works", "operated_by": ["widget_works"],
             "capital": [{"good": "pan", "build_labour_hours": {"labourer": BUILD_LABOUR_HOURS},
                          "service_life_years": LIFE_YEARS, "annual_output_at_basis": PLANT_OUTPUT_PER_YEAR}]}
 
@@ -82,7 +82,7 @@ class ConcernEarnsItsReturn(unittest.TestCase):
 
     def earnings(self, rate):
         """(revenue less staff, build hours of its plant) of a concern selling at its solved price."""
-        node = {"id": "widget_works", "kind": "ENGINEERING", "rev_hours": 1.0, "up_hours": 1.0, "sch": 0.0,
+        node = {"id": "widget_works", "kind": "ENGINEERING", "sch": 0.0,
                 "art": 0.0, "annual_output_t": 0.0, "lab": {}, "cap_hours": 0.0, "_material_hours": 0.0}
         goods = {"ore_kg": 1.0, "widget_kg": unit_price(rate)}
         table = {"widget_works_entry": works_entry()}

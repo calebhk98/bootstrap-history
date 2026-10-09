@@ -99,10 +99,12 @@ class FortificationUpkeep(unittest.TestCase):
     def test_large_masonry_fortifications_cost_upkeep_and_label_the_rate(self):
         # Complaints/245: a built bastion was never maintained; lime mortar and stone need repair.
         nodes = _nodes()
+        from sim.engine import data
+        loaded = data.load()[2]
         for node_id in ("mil_trace_italienne", "mil_bastion"):
             node = nodes[node_id]
-            self.assertGreater(node["up_hours"], 0, node_id)
             self.assertIn("HEURISTIC", node.get("_internal", ""), node_id)
+            self.assertGreater(loaded[node_id]["up_hours"], 0, node_id)     # derived from its build bill
 
 
 if __name__ == "__main__":

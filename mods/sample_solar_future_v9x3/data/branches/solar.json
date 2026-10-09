@@ -16,10 +16,7 @@
       "copper_kg": 20,
       "glass_raw_kg": 100
     },
-    "cap_hours": 100809.39587064662,
-    "up_hours": 2016.1879174129324,
     "risk": 0.1,
-    "rev_hours": 20161.879174129324,
     "sch": 2,
     "art": 2,
     "conf": "C",
@@ -46,10 +43,7 @@
       "copper_kg": 20,
       "glass_raw_kg": 100
     },
-    "cap_hours": 100809.39587064662,
-    "up_hours": 2016.1879174129324,
     "risk": 0.1,
-    "rev_hours": 20161.879174129324,
     "sch": 2,
     "art": 2,
     "conf": "C",

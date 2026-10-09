@@ -24,7 +24,7 @@ class NodeUpkeep(unittest.TestCase):
     def test_every_node_with_upkeep_states_its_basis(self):
         for node_id, node in self.nodes.items():
             if node["up_hours"] > 0:
-                self.assertIn(node.get("_upkeep_basis"), ("derived", "default", "authored"), node_id)
+                self.assertIn(node.get("_upkeep_basis"), ("derived", "default", "programme", "staff", "authored"), node_id)
 
     def test_every_output_node_has_derived_upkeep(self):
         output = [node_id for node_id, node in self.nodes.items() if node.get("_revenue_basis") == "output"]
@@ -75,11 +75,14 @@ class NodeUpkeep(unittest.TestCase):
             self.assertAlmostEqual(changed[node_id]["up_hours"], node["up_hours"],
                                    delta=1e-9 * max(1.0, node["up_hours"]), msg=node_id)
 
-    def test_authored_upkeep_is_kept_where_nothing_is_derived(self):
-        kept = [node for node in self.nodes.values() if node.get("_upkeep_basis") == "authored"]
-        self.assertGreater(len(kept), 100)
-        for node in kept:
-            self.assertEqual(node["up_hours"], node["_up_hours_authored"], node["id"])
+    def test_no_node_types_a_positive_upkeep(self):
+        self.assertEqual([node["id"] for node in self.nodes.values()
+                          if node.get("_upkeep_basis") == "authored"], [])
+
+    def test_a_programme_costs_what_its_labour_and_consumables_cost(self):
+        node = {"annual_labour_hours": {"labourer": 10.0}, "annual_consumables": {"wheat_kg": 100.0}}
+        wages, goods = {"labourer": 2.0}, {"wheat_kg": 0.5}
+        self.assertAlmostEqual(node_upkeep.programme_spending_hours(node, goods, wages, 2.0), (20.0 + 50.0) / 2.0)
 
     def test_the_maintenance_share_is_a_declared_fraction_of_the_build_cost(self):
         for kind in ("INFRASTRUCTURE", "ENGINEERING", "RESOURCE", None):
