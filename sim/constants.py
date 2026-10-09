@@ -321,6 +321,7 @@ def _import_declaring_modules():
                    "sim.engine.core",
                    "sim.engine.society",
                    "sim.labour.labour",
+                   "sim.disease.numerics",
                    "sim.engine.projects",
                    "sim.unit_conversions",
                    "sim.world.agriculture",
