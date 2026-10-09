@@ -1,6 +1,6 @@
 # Food potential: shelf zones overlap, cold pasture is high, no slope, no competition
 
-**Status:** open
+**Status:** partly done. Shelf zones are split among bordering tiles (`extent_zone_overlaps_neighbours` on the marine rows; an equal split by neighbour count, not a true area partition, which needs the shelf polygons and the layer build with its external data). Slope limits arable and pasture land by `ruggedness_index` (labelled heuristic envelopes). Pasture follows a growing season derived from mean, coldest and warmest month temperature (`food_season.py`) and charges stored fodder for the months without growth. Forest limits cropland, and wild grazers (`grass_share_of_diet` on the game rows) take grass before herds. Tests: `sim/tests/test_geography_food_gaps.py`. Still open: tropical rainforest cropping, a true shelf partition, hunting depletion (needs a stock that persists between years, which a static potential cannot hold), and the labour cap (belongs to the labour model).
 
 `sim/geography/food_capacity.py` gives each tile's sustainable food by source from physical layers. Known gaps, each measurable with `python3 -c "from sim.geography import api; print(api.food_potential('<tile>'))"`:
 
