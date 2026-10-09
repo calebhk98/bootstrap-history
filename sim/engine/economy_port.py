@@ -65,6 +65,11 @@ class EconomyPort:
         agent = self._answering_agent()
         return None if agent is None else agent.wage_per_hour(trade)
 
+    def agent_country(self, country):
+        """What the agent economy answers for a partner country in it, or None (off, not in it, or no wage yet)."""
+        agent = self._answering_agent()
+        return None if agent is None else agent.country(country)
+
     def agent_land_rent_per_hectare(self):
         """Mean rent per hectare-year of the agent economy's land market, in coin; None while it is off."""
         agent = self._answering_agent()

@@ -55,6 +55,12 @@ def unskilled_trade(trades_data):
     return labour_api.fallback_trade(labour_api.trade_specs(trades_data))
 
 
+def partner_openings(sim):
+    """{partner id: its tiles, people and recipes} for the partners that are part of the agent economy."""
+    from .economy_port_partners import partner_opening
+    return {partner: partner_opening(sim, partner) for partner in sim.partners_in_agent_economy()}
+
+
 def opening_values(sim):
     """What the setup takes from the engine at the opening: kept in the save so a resumed game rebuilds
     the same markets, producers and price base however the engine's own tables have moved since."""
@@ -66,16 +72,24 @@ def opening_values(sim):
     allowed = allowed_entries(production, set(sim.state.projects.granted))
     mint_recipe = mint_recipe_id(civ, production, set(sim.state.projects.granted))
     unskilled = unskilled_trade(trades_data)
-    labour_trades = sorted({trade for entry_id in allowed + ([mint_recipe] if mint_recipe else [])
+    partners = partner_openings(sim)
+    partner_prices = {}
+    for opened in partners.values():
+        partner_prices.update(opened.pop("prices"))
+    everyone_runs = sorted(set(allowed).union(*(opened["recipes"] for opened in partners.values())))
+    labour_trades = sorted({trade for entry_id in everyone_runs + ([mint_recipe] if mint_recipe else [])
                             for trade in (production[entry_id].get("labour_hours") or {})}
                            | {unskilled})
     modes = sim._freight_mode_costs()
+    prices = dict(partner_prices)
+    prices.update({good: price for good, price in sim.economy.material_prices().items() if price > 0.0})
     return {
+        "partners": partners,
         "population_by_tile": {tile: people * settlement.population_share(tile_ids, tile) for tile in tile_ids},
         "working_share": sim.population.working_age / people if people > 0.0 else 0.0,
         "recipes": allowed,
         "mint_recipe": mint_recipe,
-        "prices": {good: price for good, price in sim.economy.material_prices().items() if price > 0.0},
+        "prices": prices,
         "wages": {trade: sim.economy.labour.quote(trade) for trade in labour_trades if trade in trades_data},
         "unskilled_trade": unskilled,
         "rate": float(sim.economy.base_rate()),
@@ -131,10 +145,18 @@ def build_setup(sim, opening=None):
     opening = in_units(opening)
     civ = sim.civ
     tile_ids, world_map = civilisation_tiles(civ, sim.world_map)
-    tiles = tile_costs.tiles_from_map(world_map, tile_ids)
+    partners = opening.get("partners") or {}
+    all_tile_ids = list(tile_ids) + [tile for opened in partners.values() for tile in opened["tiles"]]
+    tiles = tile_costs.tiles_from_map(world_map, all_tile_ids)
+    for partner_id, opened in partners.items():
+        for tile in opened["tiles"]:
+            tiles[tile] = dataclasses.replace(tiles[tile], country=partner_id)
     population_by_tile = {tile: float(opening["population_by_tile"].get(tile, 0.0)) for tile in tile_ids}
+    for opened in partners.values():
+        population_by_tile.update({tile: float(people) for tile, people in opened["population_by_tile"].items()})
     production = demand.production_data()
-    recipes = recipes_from_production_data(production, opening["recipes"])
+    every_recipe = sorted(set(opening["recipes"]).union(*(opened["recipes"] for opened in partners.values())))
+    recipes = recipes_from_production_data(production, every_recipe)
     mint_recipe = (recipes_from_production_data(production, [opening["mint_recipe"]])[opening["mint_recipe"]]
                    if opening.get("mint_recipe") else None)
     need_data = _load("world", "needs.json")
@@ -154,7 +176,7 @@ def build_setup(sim, opening=None):
                                float(spec.get("fatality_risk_per_year", 0.0)), str(spec.get("family", "")))
               for trade, spec in sorted(trades_data.items())}
     wages = dict(opening["wages"])
-    by_people = sorted(tile_ids, key=lambda tile: (-population_by_tile[tile], tile))
+    by_people = sorted(tile_ids, key=lambda tile: (-population_by_tile[tile], tile))   # the home country's tiles
     coastal = [tile for tile in by_people if tiles[tile].coastal]
     return EconomySetup(
         civ_id=str(civ["id"]),
@@ -172,12 +194,22 @@ def build_setup(sim, opening=None):
         capital_tile=by_people[0], port_tile=(coastal or by_people)[0],
         land_per_run={recipe_id: float(production[recipe_id].get("land_hectare_years") or 0.0)
                       for recipe_id in recipes if production[recipe_id].get("land_hectare_years")},
-        basket_by_tile=baskets_by_tile(basket, need_data, world_map, tile_ids), coin_per_unit=unit,
+        basket_by_tile=baskets_by_tile(basket, need_data, world_map, all_tile_ids), coin_per_unit=unit,
+        recipes_by_country=recipes_by_country(str(civ["id"]), opening["recipes"], partners),
         world_map=world_map, improvements=dict(opening["ways"]),
         site_limits=tuple(SiteLimit(*limit) for limit in opening["site_limits"]),
         opening_store_output={good: tuple(tuple(working) for working in entry["workings"])
                               for good, entry in sorted(opening["stores"].items()) if entry["workings"]},
         opening_store_gaps={good: entry["gap"] for good, entry in sorted(opening["stores"].items()) if entry["gap"]})
+
+
+def recipes_by_country(home_id, home_recipes, partners):
+    """Which recipes each country's producers can run; empty when there is only the home country."""
+    if not partners:
+        return {}
+    by_country = {home_id: tuple(sorted(home_recipes))}
+    by_country.update({partner: tuple(sorted(opened["recipes"])) for partner, opened in partners.items()})
+    return by_country
 
 
 def _counted_currency(civ, unit):

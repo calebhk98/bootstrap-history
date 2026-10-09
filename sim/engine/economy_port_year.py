@@ -422,6 +422,16 @@ class AgentEconomy:
             return None
         return unskilled * (1.0 + trade_premium(setup, trade))
 
+    def country(self, country):
+        """What the economy answers for a partner country in it (`CountryAnswers`), or None when the country is
+        not in this economy or its labour markets have no wage yet."""
+        economy = self.economy()
+        if country == economy.setup.civ_id or country not in economy.setup.countries():
+            return None
+        from .economy_port_country import CountryAnswers
+        answers = CountryAnswers(economy, country)
+        return answers if answers.has_labour_market() else None
+
     def land_rent_per_hectare(self):
         """Mean rent per hectare-year the land market let land at last year, in coin."""
         return economy_api.land_rent_per_hectare(self.economy()) * self._economy.setup.coin_per_unit
