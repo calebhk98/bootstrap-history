@@ -22,7 +22,13 @@ class MoneyPhaseMixin:
             "Tuned, not measured.")
 
     def _step_money(self):
-        # 2. money
+        """One seat's money, then the world's year, then the seat's goal check: the whole phase for a game of one seat."""
+        self._step_money_seat()
+        self._step_money_world()
+        self._step_win_conditions()
+
+    def _step_money_seat(self):
+        # 2. money: the acting seat's takings, costs, credit and insolvency
         living_cost = self.living_cost()
         # THE YEAR YOU PAID FOR IN ADVANCE IS NOT BILLED AGAIN: `hire` takes
         # a finder's fee and the first year's wages up front, and
@@ -195,6 +201,9 @@ class MoneyPhaseMixin:
                 freed = self.labour.manumit(max(1, self.state.household.slaves // self.AUTO_MANUMIT_SHARE_DIVISOR))
                 if freed:
                     self.state.household.log.append((self.state.scenario.year, "freed %d people" % freed))
+
+    def _step_money_world(self):
+        """The society's own year: output recovery, population, literacy and trades, the actors. Once a year."""
         # currency debasement and war damage now come from the civilization's
         # own hazard list, not from Rome's dates baked into the engine
         if self.state.economy.output_factor < 1.0:
@@ -223,6 +232,8 @@ class MoneyPhaseMixin:
         # decisions rather than lagging a full step behind them.
         self.advance_society(self.state.scenario.year)
         self.advance_actors(self.state.scenario.year)
+
+    def _step_win_conditions(self):
         # 2c. THRESHOLD GOALS. A node carrying a `win_condition` (see
         # data.py's WIN_CONDITION_LABELS and the tree's own goals
         # using one) is never built - start_reason refuses it outright -
