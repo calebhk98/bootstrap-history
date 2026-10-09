@@ -1,6 +1,5 @@
 """The founder sells: a built concern to another actor through the exchange, farmland back to the land market."""
 from sim.agents.api import CommandRejected, HouseholdParty, exchange_sale
-from sim.agents.household_party import FOUNDER_ACTOR_ID
 
 from .agents_port import SimWorld
 from sim.agents.api import edges
@@ -17,7 +16,7 @@ class FounderSalesMixin:
         party = HouseholdParty(self.household, {node_id: world.concern_margin(node_id)})
 
         def find_actor(actor_id):
-            return party if actor_id == FOUNDER_ACTOR_ID else self.actors.get(actor_id)
+            return party if actor_id == party.actor_id else self.actors.get(actor_id)
 
         buyers = [actor for actor in self.actors.of_kind("firm") + self.actors.of_kind("player")
                   if getattr(actor.record, "exited_year", None) is None]

@@ -8,7 +8,6 @@ home technique in reach and no partner offers draws no household spending.
 from .harness import *  # noqa: F401,F403
 
 from sim.engine.agents_port import SimWorld
-from sim.engine.goods_market_api import FOUNDER
 from sim.engine.market_demand import household_demand_by_material
 from sim.engine.state import ActorRecord
 from sim.engine.project_materials import tonnes_per_unit
@@ -25,7 +24,7 @@ founder_game = sim(civ="rome_100ad", capital=1e9)
 firm_game = sim(civ="rome_100ad", capital=1e9)
 control = sim(civ="rome_100ad", capital=1e9)
 tonnes = control.market_state(MATERIAL)["capacity_tonnes"] * 0.05
-founder_game.goods_market.note_sale(FOUNDER, MATERIAL, tonnes)
+founder_game.goods_market.note_sale(founder_game.goods_market.acting_party_id, MATERIAL, tonnes)
 firm_game.goods_market.note_sale("firm:1", MATERIAL, tonnes)
 check("a sale by the founder lowers the price the year would close at",
       closing_ratio(founder_game) < closing_ratio(control) - 1e-6,
@@ -38,7 +37,7 @@ selling = sim(civ="rome_100ad", capital=1e9)
 selling._material_stock()[MATERIAL] = tonnes
 sold = selling.sell_material_stock(MATERIAL, tonnes)
 check("the founder's own stock sale is entered in the same book under his name, and lowers the price",
-      sold > 0 and abs(selling.goods_market.sold_tonnes(MATERIAL, FOUNDER) - sold) < 1e-9
+      sold > 0 and abs(selling.goods_market.sold_tonnes(MATERIAL, selling.goods_market.acting_party_id) - sold) < 1e-9
       and selling.goods_market.others_sold_tonnes(MATERIAL) == 0.0
       and closing_ratio(selling) < closing_ratio(control),
       (sold, closing_ratio(selling), closing_ratio(control)))
@@ -57,7 +56,7 @@ check("the state's purchases reach the book as the actors' demand",
       abs(buying.actor_demand(MATERIAL) - tonnes) < 1e-9 and closing_ratio(buying) > closing_ratio(control),
       (buying.actor_demand(MATERIAL), closing_ratio(buying)))
 founder_buys = sim(civ="rome_100ad", capital=1e9)
-founder_buys.goods_market.note_purchase(FOUNDER, MATERIAL, tonnes)
+founder_buys.goods_market.note_purchase(founder_buys.goods_market.acting_party_id, MATERIAL, tonnes)
 check("...while the founder's purchases are his own, not the actors'",
       founder_buys.actor_demand(MATERIAL) == 0.0 and abs(closing_ratio(founder_buys) - closing_ratio(buying)) < 1e-12,
       (founder_buys.actor_demand(MATERIAL), closing_ratio(founder_buys), closing_ratio(buying)))

@@ -4,8 +4,6 @@ from typing import Any, Dict, List
 
 from sim.agents.api import CONCESSION_PREFIX, Sector, sector_key
 
-from .goods_market_api import FOUNDER
-
 
 class GroupView:
 	"""Read-only questions behind who organises and what it asks of the state."""
@@ -31,7 +29,7 @@ class GroupView:
 		sim = self._sim
 		wage = self._annual_labourer_wage()
 		sectors = []
-		for commodity in sim.economy.goods.commodities_sold_by(FOUNDER):
+		for commodity in sim.economy.goods.commodities_sold_by(sim.goods_market.acting_party_id):
 			state = sim.market_state(commodity)
 			quote = self._commodity_quote(commodity)
 			if state is None or quote is None:

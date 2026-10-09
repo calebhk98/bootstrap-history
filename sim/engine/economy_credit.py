@@ -141,7 +141,7 @@ class CreditMixin:
             years *= min(1.0, self.civ["starting_interest_rate"] / market_rate)
         serviceable = floor + max(0.0, earning) * years
         # And never more than lenders still hold beyond what everyone else owes them.
-        room = self.market_credit_room(capital_market.FOUNDER_LOAN)
+        room = self.market_credit_room(self.state.acting_seat)
         return calculate_credit_ceiling(base, floor, serviceable, self.price_index,
                                         None if room is None else room / self.price_index)
 

@@ -57,7 +57,6 @@ PARTNER_SPEND_SHARE_PER_YEAR = declare(
     why="A partner pays for what it buys from the coin it holds, so its purchases fall as it pays coin out "
         "(price-specie flow). How much of its money a partner spends abroad a year is not measured; the "
         "partner as a full economy (Complaint 382) would decide it.")
-FOUNDER_AGENT = "founder"
 
 
 def switch_requested(cfg) -> bool:
@@ -129,7 +128,7 @@ class AgentEconomy:
     def run_year(self):
         economy = self.economy()
         self.sync_ways()
-        orders = self._founder_orders()
+        orders = self._seat_orders()
         orders.update(self._external_orders())
         from .project_materials import tonnes_per_unit
         legs = self._sim.cargo_legs()
@@ -140,7 +139,7 @@ class AgentEconomy:
         self._strike_state_coin(economy)
         outcome = economy.step(self._inputs(orders))
         self.outcomes.append(outcome)
-        self._settle_founder()
+        self._settle_seats()
         self._sim.settle_trader_cargo(economy_port_cargo.close_cargo_accounts(economy, legs, tonnes_per_unit))
         self._settle_foreign_coin()
         self._answers = None
@@ -152,9 +151,18 @@ class AgentEconomy:
         cut = self._sim.state_treasury().record.coin_cut_share
         economy.strike_lighter_coin(cut, COIN_RESTRIKE_SHARE_PER_YEAR)
 
-    # ---- the founder's concerns sell in the same market ----------------------------------------
-    def _founder_orders(self):
-        """The founder's running concerns' output for the year, handed over from the engine through the
+    # ---- each seat's concerns sell in the same market ----------------------------------------
+    def _seat_orders(self):
+        """Every seat's running concerns' output for the year, one agent per seat named by its seat id."""
+        sim = self._sim
+        orders = {}
+        for seat_id in sorted(sim.state.seats):
+            with sim.act_as(seat_id):
+                orders.update(self._acting_seat_orders(seat_id))
+        return orders
+
+    def _acting_seat_orders(self, agent_id):
+        """The acting seat's running concerns' output for the year, handed over from the engine through the
         legacy edge (the engine's purse is not yet an account in the book: Complaint 382) and offered at
         what the concern costs to make it at the economy's own prices and wages (_concern_reservation)."""
         sim, economy = self._sim, self._economy
@@ -174,14 +182,14 @@ class AgentEconomy:
                 quantity = units * ramp
                 if quantity <= 0.0 or material not in area_map.goods():
                     continue
-                moves.append(GoodsMove(EDGE_LEGACY, FOUNDER_AGENT, material, tile, quantity, "concern output"))
-                cost = self._concern_reservation(node_id, material, tile, view)
-                offers.append(Offer(FOUNDER_AGENT, material, area_map.area_of(material, tile), tile, quantity, cost))
+                moves.append(GoodsMove(EDGE_LEGACY, agent_id, material, tile, quantity, "concern output"))
+                cost = self._concern_reservation(node_id, material, tile, view, agent_id)
+                offers.append(Offer(agent_id, material, area_map.area_of(material, tile), tile, quantity, cost))
         economy_api.move_goods(economy, moves)
-        return {FOUNDER_AGENT: AgentOrders(offers=tuple(offers))} if offers else {}
+        return {agent_id: AgentOrders(offers=tuple(offers))} if offers else {}
 
-    def _concern_reservation(self, node_id, material, tile, view) -> float:
-        """The least the founder takes for a unit of a concern's output: the unit's share, by value, of
+    def _concern_reservation(self, node_id, material, tile, view, agent_id) -> float:
+        """The least the seat takes for a unit of a concern's output: the unit's share, by value, of
         the variable cost of the cheapest technique the concern holds that the economy knows, at the
         economy's live prices and wages. With no such technique it sells at what the market pays."""
         from .prices import default_production_entries
@@ -193,7 +201,7 @@ class AgentEconomy:
             recipe = recipes.get(key)
             if recipe is None or material not in recipe.outputs:
                 continue
-            probe = Producer(FOUNDER_AGENT, FOUNDER_AGENT, key, tile, 1.0)
+            probe = Producer(agent_id, agent_id, key, tile, 1.0)
             prices = expected_output_prices(probe, recipe, view) or {}
             revenue = sum(recipe.outputs[good] * prices.get(good, 0.0) for good in recipe.outputs)
             cost = variable_cost_per_run(recipe, live_input_prices(probe, recipe, view),
@@ -291,10 +299,12 @@ class AgentEconomy:
             if exports > 0.0:
                 sim._settle_flow(partner, -1.0, exports / len(partners), per_partner_coin)
 
-    def _settle_founder(self):
-        """What the founder's goods fetched goes back to the engine; what did not sell goes back too."""
-        proceeds = economy_api.settle_founder_takings(self._economy, FOUNDER_AGENT, EDGE_LEGACY)
-        self.stored["founder_takings"] = proceeds * self._economy.setup.coin_per_unit
+    def _settle_seats(self):
+        """What each seat's goods fetched goes back to the engine; what did not sell goes back too."""
+        coin = self._economy.setup.coin_per_unit
+        self.stored["seat_takings"] = {
+            seat_id: economy_api.settle_agent_takings(self._economy, seat_id, EDGE_LEGACY) * coin
+            for seat_id in sorted(self._sim.state.seats)}
 
     def _inputs(self, engine_orders) -> YearInputs:
         sim = self._sim

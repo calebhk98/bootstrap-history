@@ -35,7 +35,7 @@ __all__ = [
     "traded_volumes", "opening_quantities", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
     "credit_room", "economy_from_record", "blank_economy", "export_record", "finish_spin_up", "shown_prices_of",
-    "settle_founder_takings", "move_goods", "post_transfers", "cohort_incomes", "land_rent_per_hectare",
+    "settle_agent_takings", "move_goods", "post_transfers", "cohort_incomes", "land_rent_per_hectare",
 ]
 
 _KEY_SEPARATOR = "|"
@@ -219,7 +219,7 @@ def post_transfers(economy, transfers):
     economy.record.book.transfer_many(transfers)
 
 
-def settle_founder_takings(economy, agent_id, edge_id, tile_note="founder's takings"):
+def settle_agent_takings(economy, agent_id, edge_id, tile_note="agent's takings"):
     """Sends an agent's money and every unsold holding back over an edge; returns the money sent."""
     book, money = economy.record.book, economy.setup.currency_id
     proceeds = book.balance(agent_id, money)

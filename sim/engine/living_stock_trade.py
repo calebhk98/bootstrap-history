@@ -58,7 +58,7 @@ class LivingStockTradeMixin:
     def settle_stock_purchase(self, quote):
         """Pay a quote through the goods market and receive the stock; False when the buyer cannot
         pay. The partner is paid in its own coin's metal, as every foreign payment is."""
-        buyer = self.goods_market.founder
+        buyer = self.goods_market.acting
         if not buyer.can_pay(quote["cost"]):
             return False
         self.goods_market.settle_import(

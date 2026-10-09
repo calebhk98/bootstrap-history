@@ -1,4 +1,4 @@
-"""The founder's household as a party to an exchange.
+"""A seat's household as a party to an exchange.
 
 An exchange handles an actor with `actor_id`, `money`, `concerns`, `knows`, `learn`, `credit`, `debit`,
 `opened_year_of`, `capacity_of` and a `record` (stores, offers, opened year, margins). The household keeps
@@ -9,17 +9,15 @@ from typing import Any, Dict, Optional
 
 from .records import ActorRecord
 
-FOUNDER_ACTOR_ID = "founder"
-
 
 class HouseholdParty:
 	"""Gives a `Household` the surface an exchange needs; holds no state of its own beyond a transient record."""
 
 	kind = "household"
-	actor_id = FOUNDER_ACTOR_ID
 
-	def __init__(self, household: Any, margins: Optional[Dict[str, float]] = None) -> None:
+	def __init__(self, household: Any, margins: Optional[Dict[str, float]] = None, seat_id: Optional[str] = None) -> None:
 		self.household = household
+		self.actor_id = seat_id if seat_id is not None else household._state.acting_seat
 		projects = household._state.projects
 		if projects.opened_year is None:
 			projects.opened_year = {}
