@@ -604,8 +604,7 @@ class MiningMixin(MineDepositsMixin):
 
     def mine_depletion_note(self, mat):
         """One sentence on why this material's workings, ON AVERAGE, yield
-        less than the tonnage sunk into them - for the same reason
-        goods_market_note() exists for a concern's revenue: a player whose
+        less than the tonnage sunk into them: a player whose
         coal yield has fallen over the decades must be able to find out why
         without guessing. None if there is nothing to explain (no workings,
         or a fresh one with no relevant technology). See

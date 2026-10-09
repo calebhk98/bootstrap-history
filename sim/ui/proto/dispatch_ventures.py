@@ -719,9 +719,6 @@ def _cmd_ventures(sim, nodes, cmd, ended):
                 "specialist_foreman": (
                     {"trade": _foreman_trade, "fte": round(_foreman_fte, 2)}
                     if _foreman_trade else None)}
-        _note = sim.goods_market_note(node_id)
-        if _note:
-            row["market"] = _note
         # A CAPABILITY, NOT ONLY A BUSINESS: every other row here is a
         # straightforward earn-vs-cost decision; these are not, because
         # closing one loses scholars it supports, household places it

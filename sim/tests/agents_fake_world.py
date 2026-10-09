@@ -199,9 +199,6 @@ class FakeWorld:
 	def market_forget(self, actor_id: str) -> None:
 		pass
 
-	def runs_agent_economy(self) -> bool:
-		return False
-
 	def market_sale(self, seller_id: str, material: str, tonnes: float, from_concerns: Any = None) -> None:
 		self.sales.append((seller_id, material, tonnes))
 

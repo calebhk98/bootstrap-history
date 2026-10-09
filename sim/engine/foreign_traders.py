@@ -9,22 +9,20 @@ A house owns the carriers its capital buys and is staffed from the labour market
 toward the arbitrage volume as fast as carriers can change cargo (`sim/world/trader_response.py`) and
 is limited by the lift and by the capital merchants hold and can borrow.
 """
-import dataclasses
 import math
 
-from sim.world import market, merchant_house, merchant_terms, trader_response
+from sim.world import merchant_house, merchant_terms, trader_response
 from sim.geography.api import cargo_cost, sea_freight
 
 from sim.unit_conversions import CIVIL_DAYS_PER_YEAR
+from sim.agents.api import EDGE_SAVERS
 from .foreign_payments import OPENING_CARRIERS_PER_ROUTE
 from .foreign_routes import SEA_MODE
 
-MERCHANTS_BORROWER = "merchants"
 
 
 class ForeignTradersMixin:
 
-    MERCHANTS_BORROWER = MERCHANTS_BORROWER
 
     def _route_carriers(self, civilization_id, route):
         """Carriers on a route; endless for a route of no legs. With no partner named, the opening
@@ -123,46 +121,12 @@ class ForeignTradersMixin:
             self.market_rate(),
             self._trader_cycle_years(route, civilization_id, destination_demand_tonnes))
 
-    def _destination_price_flexibility(self, commodity, conditions, destination_is_home, cargo_tonnes):
-        """How far the destination's price falls per rise in the quantity on its market once a cargo
-        lands: the agent economy's response for the good where it answers for the home market, else the
-        market's own clearing with the cargo added; None where neither gives one."""
-        traded = market.clear_market(conditions).quantity_traded_tonnes
-        if not traded > 0.0 or not cargo_tonnes > 0.0:
-            return None
-        landed_share = cargo_tonnes / traded
-        if destination_is_home and commodity is not None:
-            for material in self._commodity_materials(commodity):
-                factor = self.economy.agent_price_response(material, cargo_tonnes, 0.0)
-                if factor is not None:
-                    return merchant_terms.price_flexibility(factor, landed_share)
-        landed = dataclasses.replace(conditions, actor_supply_tonnes=conditions.actor_supply_tonnes + cargo_tonnes)
-        factor = market.clearing_price_ratio(landed) / market.clearing_price_ratio(conditions)
-        return merchant_terms.price_flexibility(factor, landed_share)
 
-    def _spoiling_material(self, commodity):
-        """The material of a commodity that spoils fastest, or None when none spoils."""
-        if commodity is None:
-            return None
-        rates = cargo_cost.spoilage_rates()
-        spoiling = [material for material in self._commodity_materials(commodity) if material in rates]
-        return max(spoiling, key=rates.get) if spoiling else None
-
-    def _fleet_value(self, civilization_id):
-        """Money sunk in a route's carriers."""
-        route = self._foreign_economy_facts(civilization_id)["route"]
-        if self._route_lift_years_per_tonne(route) is None:
-            return 0.0
-        return (self.foreign_lift_capacity_tonnes(civilization_id, route)
-                * self._route_capital_per_lift_tonne(route))
 
     def _households_loanable_funds(self):
         """Funds households put into the loanable pool at the last meeting of the capital market; none before
         it has met (reading their saving then would price society output, which needs this landed price)."""
-        record = self._market_record()
-        if record is not None and record.supply > 0.0:
-            return record.supply_by_source.get("households", 0.0)
-        return 0.0
+        return self.actors.state.purses.offers.get(EDGE_SAVERS, 0.0)
 
     def _merchant_own_capital(self):
         """Money the home merchant class holds of its own: its share of the funds households save,
@@ -175,85 +139,3 @@ class ForeignTradersMixin:
     def _capital_per_merchant(self):
         merchants = self.labour.national_trade_population("merchant")
         return self._merchant_own_capital() / merchants if merchants > 0.0 else 0.0
-
-    def merchant_class_capital(self):
-        """Money the home merchant class holds for goods in transit and inventory: its own share of
-        the households' funds, the earnings merchants have kept, less what is sunk in carriers."""
-        ledgers = self.state.economy.foreign_ledger
-        kept = sum(ledger["merchant_retained"] for ledger in ledgers.values())
-        sunk = sum(self._fleet_value(civilization_id) for civilization_id in self.foreign_economies())
-        return max(0.0, self._merchant_own_capital() + kept - sunk)
-
-    def merchant_borrowing(self):
-        """Money the merchant class owes the pool: what it put into goods in its last year of trade,
-        beyond its own."""
-        used = sum(ledger["merchant_capital_used"] for ledger in self.state.economy.foreign_ledger.values())
-        if used <= 0.0:
-            return 0.0
-        return merchant_house.borrowing(used, self.merchant_class_capital())
-
-    def merchant_capital_left(self, civilization_id):
-        """Home money merchants can still tie up in goods this year, over every partner: their own
-        capital and what they borrow against it within lenders' room."""
-        if self._route_lift_years_per_tonne(self._foreign_economy_facts(civilization_id)["route"]) is None:
-            return float("inf")
-        capital = merchant_terms.capital_to_finance(
-            self.merchant_class_capital(), self.market_credit_room(MERCHANTS_BORROWER))
-        year = self.state.scenario.year
-        used = sum(ledger["merchant_capital_used"] for ledger in self.state.economy.foreign_ledger.values()
-                   if ledger["lift_year"] == year)
-        return max(0.0, capital - used)
-
-    def trader_terms(self, civilization_id, facts, home_price, foreign_price, commodity=None,
-                     destination=None, destination_is_home=True):
-        """`TraderTerms` for a route this year; capital limits in tonnes each way at these prices.
-        A named commodity pays spoilage by its fastest-spoiling material. `destination` is the
-        conditions of the market the goods go to (the dearer side): its price response sets the markup
-        and its demand the time to sell."""
-        route = facts["route"]
-        flexibility, demand = None, None
-        if destination is not None and route is not None:
-            flexibility = self._destination_price_flexibility(
-                commodity, destination, destination_is_home, self._route_cargo_tonnes(route))
-            demand = (destination.household_demand_at_anchor_tonnes + destination.committed_demand_tonnes
-                      + destination.actor_demand_tonnes)
-        cycle = self._trader_cycle_years(route, civilization_id, demand)
-        left = self.merchant_capital_left(civilization_id)
-        round_trip = 2.0 * self._route_voyage_years(route)
-
-        def tonnes_financed(price):
-            return left / (price * cycle) if price > 0.0 and cycle > 0.0 else (
-                math.inf if price > 0.0 else 0.0)
-        return trader_response.TraderTerms(
-            self._trader_cost_share(route, self._spoiling_material(commodity), civilization_id,
-                                    flexibility, demand),
-            merchant_terms.redirect_share_per_year(round_trip),
-            capital_tonnes_in=tonnes_financed(foreign_price),
-            capital_tonnes_out=tonnes_financed(home_price),
-            agent_cost_per_tonne=self._agent_cost_per_tonne(civilization_id, route),
-            margin_share=self._trader_margin_share(civilization_id, route, flexibility),
-            cycle_years=cycle)
-
-    def _flow_capital_tied(self, civilization_id, commodity, flow, home_entry, foreign_outcome, facts):
-        """Home money merchants tied up in a flow for a cycle, at the exporter's price."""
-        value = self._flow_value(civilization_id, commodity, flow, home_entry, foreign_outcome, facts)
-        if value is None:
-            return 0.0
-        cycle = self.state.economy.foreign_market_book[civilization_id][commodity].get("trader_cycle_years")
-        return value * (self._trader_cycle_years(facts["route"], civilization_id) if cycle is None else cycle)
-
-    def _retain_merchant_earnings(self, civilization_id, commodity, flow, home_entry, foreign_outcome, facts):
-        """Add to merchants' capital the part of the markup a flow earned them that they put back into
-        trade, from their own return on the money tied up (the markup over the cycle) against the market
-        rate; the rest is spent. The terms the flow was cleared on are on the book's entry."""
-        value = self._flow_value(civilization_id, commodity, flow, home_entry, foreign_outcome, facts)
-        if value:
-            entry = self.state.economy.foreign_market_book[civilization_id][commodity]
-            margin = entry.get("trader_margin_share")
-            if margin is None:
-                margin = self._trader_margin_share(civilization_id, facts["route"])
-            cycle = entry.get("trader_cycle_years")
-            if cycle is None:
-                cycle = self._trader_cycle_years(facts["route"], civilization_id)
-            kept = merchant_terms.retained_share(margin / cycle if cycle > 0.0 else math.inf, self.market_rate())
-            self._foreign_ledger(civilization_id, create=True)["merchant_retained"] += value * margin * kept

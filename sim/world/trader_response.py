@@ -15,7 +15,6 @@ import dataclasses
 import math
 from dataclasses import dataclass
 
-from . import trade_between
 
 
 @dataclass(frozen=True)
@@ -40,35 +39,3 @@ def cost_share_of_price(margin_share, loss_share, market_rate, cycle_years):
     a cycle of travel and waiting."""
     return margin_share + loss_share / (1.0 - loss_share) + market_rate * cycle_years
 
-
-def clear_with_traders(home, foreign, home_price_per_tonne, foreign_price_per_tonne,
-                       freight_per_tonne, terms, previous_flow_tonnes,
-                       lift_into_home_tonnes=math.inf, lift_out_of_home_tonnes=math.inf):
-    """`trade_between.clear_trading_markets` with merchants' costs and a partial adjustment from
-    `previous_flow_tonnes` (positive into home)."""
-    limit_in = min(lift_into_home_tonnes, terms.capital_tonnes_in)
-    limit_out = min(lift_out_of_home_tonnes, terms.capital_tonnes_out)
-    target = 0.0
-    if (home_price_per_tonne > 0.0 and foreign_price_per_tonne > 0.0
-            and math.isfinite(freight_per_tonne)):
-        for direction in (1.0, -1.0):
-            exporter_price = foreign_price_per_tonne if direction > 0 else home_price_per_tonne
-            cost = (freight_per_tonne + terms.agent_cost_per_tonne
-                    + terms.cost_share_of_price * exporter_price)
-            target = trade_between.arbitrage_flow(
-                home, foreign, home_price_per_tonne, foreign_price_per_tonne, cost, direction,
-                limit_in if direction > 0 else limit_out)
-            if target != 0.0:
-                break
-    flow = previous_flow_tonnes + terms.adjustment_share * (target - previous_flow_tonnes)
-    # A faded flow, and last year's flow when markets have since shrunk, stay inside the limits.
-    if flow > 0.0:
-        flow = min(flow, limit_in, trade_between.offerable_tonnes(foreign))
-    elif flow < 0.0:
-        flow = -min(-flow, limit_out, trade_between.offerable_tonnes(home))
-    if abs(flow) < 1e-9:
-        flow = 0.0
-    home_after, foreign_after = trade_between.with_flow(home, foreign, flow)
-    return trade_between.TradeOutcome(
-        flow, trade_between.clear_market(home_after), trade_between.clear_market(foreign_after),
-        home_after, foreign_after)

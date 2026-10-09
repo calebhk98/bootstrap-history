@@ -85,7 +85,7 @@ from .interest_groups import InterestGroupsMixin
 from .core_properties import ForwardingPropertiesMixin
 from .goals import GoalsMixin
 from .core_step_phases import StepContext, StepPhasesMixin
-from .economy_port import EconomyPortMixin, switch_requested
+from .economy_port import EconomyPortMixin
 from .data import trade_family
 from .invariants import check_simulation_invariants
 from sim.agents.api import Household
@@ -329,8 +329,6 @@ class Sim(RealPriceRatiosMixin, CoinRevaluationMixin, WageMarketRatiosMixin, Mec
             actors=ActorsState(),
             _civ=self.civ.get("id"),
         )
-        if switch_requested(self.cfg):
-            self.state.economy.agent_economy["on"] = True
         # SET HERE SO EVERY READER CAN READ THEM DIRECTLY. Both are assigned
         # afterwards by whoever builds the game - cli_interactive, cli_agent,
         # sim/tests/fingerprint.py - and both round-trip through saveload's `_fog`
@@ -392,14 +390,12 @@ class Sim(RealPriceRatiosMixin, CoinRevaluationMixin, WageMarketRatiosMixin, Mec
         # population at reference soil, on the best ground the held tiles
         # offer; later clearing works down the same best-first ladder.
         held_tiles = tiles_held(self.civ, self.world_map)
-        if held_tiles:
-            territory = land.territory_farmland(held_tiles, load_geography(self.world_map))
-            self._farm_ladder = territory.ladder
-            self._farm_arable_ceiling = territory.arable_hectares
-        else:
-            # temporary_heuristic: no territory declared, so reference soil, no ceiling.
-            self._farm_ladder = []
-            self._farm_arable_ceiling = None
+        if not held_tiles:
+            raise ValueError("civilisation %r holds no tiles: the agent economy needs a territory to run its markets on; "
+                             "name its starting claim in `home_tiles`" % (self.civ.get("id"),))
+        territory = land.territory_farmland(held_tiles, load_geography(self.world_map))
+        self._farm_ladder = territory.ladder
+        self._farm_arable_ceiling = territory.arable_hectares
         sized = self._agriculture.farmland_for_population(
             self._adult_equivalent_population(self.population),
             arable_hectares_ceiling=self._farm_arable_ceiling)
@@ -574,11 +570,10 @@ class Sim(RealPriceRatiosMixin, CoinRevaluationMixin, WageMarketRatiosMixin, Mec
         # particular, never infer one civilization's materials or institutions for another
         # civilization from those fields.
         self._reconnect_state_hooks()
-        if self.economy.runs_agent_economy():
-            # opened now, not by the first question a screen or a cost asks: while it opens the engine's
-            # own figures answer, and nothing computed from them may stay cached afterwards
-            self.economy.open_agent()
-            self._done_changed()
+        # opened now, not by the first question a screen or a cost asks: while it opens the engine's
+        # own figures answer, and nothing computed from them may stay cached afterwards
+        self.economy.open_agent()
+        self._done_changed()
         self.join_cast_seats()
 
     def _reconnect_state_hooks(self):

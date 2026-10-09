@@ -62,6 +62,11 @@ class LabourWorld:
     def refusal_text(self, what, cost):
         return purchase_rule.refusal_text(self._sim, what, cost)
 
+    def economy_unskilled_wage(self):
+        """Money one hour of the unskilled trade is paid in the agent economy; None until the game's money
+        is priced at the economy (its opening)."""
+        return self._sim.economy.unskilled_wage()
+
     def build_wage_schedule(self, civ, tightness_factors=None):
         return wage_schedule.build_schedule(data.TRADE_REGISTRY, civ, tightness_factors=tightness_factors)
 

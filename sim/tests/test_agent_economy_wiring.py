@@ -3,16 +3,15 @@ come from it and move, money is conserved, the state's tax grain no longer swamp
 (Complaint 383), a saved game resumes the same economy, and every civilisation plays on it."""
 from .harness import *  # noqa: F401,F403
 import os
+import tempfile
 
 from sim.tests import fingerprint as perf_fingerprint
-from sim.engine.economy_port_year import SWITCH_ENVIRONMENT, switch_requested
 from sim.engine.saveload import save_state, load_state
 from sim.economy import api as economy_api
 
 
 def agent_game(civ, seed=1):
-    game = S.Sim(NODES, ORDER, random.Random(seed), events=True, manual=False, civ=S.load_civ(civ),
-                 cfg={"agent_economy": True})
+    game = S.Sim(NODES, ORDER, random.Random(seed), events=True, manual=False, civ=S.load_civ(civ))
     game.goal, game.done_year = GOAL, {}
     return game
 
@@ -24,38 +23,20 @@ check("after the hidden spin-up households expect stable prices, so the rebased 
       all(cohort.expected_inflation == 0.0 and cohort.last_basket_price_level == 1.0 for cohort in opened.cohorts.values()),
       sorted({(cohort.expected_inflation, cohort.last_basket_price_level) for cohort in opened.cohorts.values()})[:3])
 default = sim()
-check("a game that says nothing runs on the agent economy", default.economy.agent is not None
-      and default.state.economy.agent_economy.get("on"))
-# the opt-out is the subject here: the switch itself is under test
-off = S.Sim(NODES, ORDER, random.Random(1), events=True, manual=False, civ=S.load_civ("rome_100ad"),
-            cfg={"agent_economy": False})
-check("a game that opts out keeps the engine's own economy", off.economy.agent is None
-      and not off.state.economy.agent_economy)
-
-saved_switch = os.environ.pop(SWITCH_ENVIRONMENT, None)
-try:
-    check("the switch is on with no config", switch_requested({}) and switch_requested({"agent_economy": True}))
-    check("only an explicit False opts out", not switch_requested({"agent_economy": False}))
-    os.environ[SWITCH_ENVIRONMENT] = "1"
-    check("the environment forces it on over an opt-out", switch_requested({"agent_economy": False}))
-    os.environ[SWITCH_ENVIRONMENT] = "0"
-    check("the environment forces it off over the default", not switch_requested({}))
-finally:
-    os.environ.pop(SWITCH_ENVIRONMENT, None)
-    if saved_switch is not None:
-        os.environ[SWITCH_ENVIRONMENT] = saved_switch
+check("a game that says nothing runs on the agent economy", default.economy.agent is not None)
 
 prices, wages = [], []
 for _year in range(2):
     rome.step()
     prices.append(rome.economy.material_price("wheat_kg"))
     wages.append(rome.economy.labour.quote("labourer"))
-old_wheat = off.economy.material_price("wheat_kg")
+old_wheat = rome._material_prices()["wheat_kg"]
 check("wheat is priced by the agent economy, not at the engine's own cost", abs(prices[0] / old_wheat - 1.0) > 1e-6,
       "agent %r engine %r" % (prices[0], old_wheat))
 check("the wheat price moves from year to year", len({round(price, 9) for price in prices}) > 1, prices)
-check("the labourer's wage comes from the agent economy's labour market",
-      abs(wages[0] / off.economy.labour.quote("labourer") - 1.0) > 1e-6)
+opening_wage = rome.state.economy.agent_economy["opening"]["wages"]["labourer"]
+check("the labourer's wage comes from the agent economy's labour market", abs(wages[0] / opening_wage - 1.0) > 1e-6,
+      (wages[0], opening_wage))
 
 economy = rome.economy.agent.economy()
 report = economy.record.book.check_conservation(1e-9)
@@ -83,7 +64,7 @@ def _no_price_table():
 
 
 founder._material_prices = _no_price_table
-founder_orders = founder.economy.agent._founder_orders()
+founder_orders = founder.economy.agent._seat_orders()
 founder_offers = [offer for orders in founder_orders.values() for offer in orders.offers]
 check("the founder's concern output is offered without the old price table, at a finite reservation",
       founder_offers and all(0.0 <= offer.reservation_price < float("inf") for offer in founder_offers),

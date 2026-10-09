@@ -10,7 +10,7 @@ from .household_party import HouseholdParty
 from . import imitation, joint_stock, ledger, licence, patent, revenue, supply
 from .policy import CallbackPolicy, Decision, IdlePolicy, Option, Policy, ValuePolicy, register_policy
 from . import edges, payroll
-from .records import ActorRecord, ActorsState, CapitalMarketRecord, CastEntry, CountryProfile
+from .records import ActorRecord, ActorsState, CastEntry, CountryProfile
 from .registry import ActorRegistry, register_actor_kind, register_spawner, register_world_scope
 from .purses import COIN as PURSE_CURRENCY, EDGE_EXCHANGE, EDGE_OUTSIDE, EDGE_SAVERS, Purses
 from .saving import SAVING_SHARE_OF_SURPLUS
@@ -40,7 +40,7 @@ from .trader_entry import trader_entry
 __all__ = ["PURSE_CURRENCY", "EDGE_EXCHANGE", "EDGE_OUTSIDE", "EDGE_SAVERS", "Purses", "demand_answer", "Actor", "RecordedActor", "Household", "HouseholdParty", "exchange_sale", "Firm", "Government",
            "Policy", "ValuePolicy", "CallbackPolicy", "IdlePolicy", "Option",
            "Decision", "register_policy", "ActorRegistry", "ActorRecord", "ActorsState",
-           "CapitalMarketRecord", "CastEntry", "CountryProfile", "register_actor_kind",
+           "CastEntry", "CountryProfile", "register_actor_kind",
            "register_spawner", "register_world_scope", "edges", "payroll", "ledger", "licence", "patent", "supply", "imitation", "joint_stock", "revenue",
            "SAVING_SHARE_OF_SURPLUS", "CONCESSION_PREFIX", "Sector", "sector_key",
            "MANAGEMENT_SPAN_EXPONENT", "OBSERVATION_RANGE_KM", "PLAYER_VISIBLE_EXPOSURE", "PROOF_YEARS", "SECRET_EXPOSURE",

@@ -97,7 +97,7 @@ worker is worth less than the first.
 The core is complete and tested (`python3 -m sim.tests --only labour_core_training,labour_core_clearing,labour_core_entrants,labour_core_switching,labour_core_migration,labour_core_opening,labour_core_year,labour_core_walls`).
 The agent economy (on by default) calls it every year (`sim/economy/year_labour.py`) and keeps its state
 in its record, so the core sets the wage every employer is quoted. The engine's hours by trade are
-the core's people by trade (`sim/labour/labour_allocation.py`); with the agent economy off they follow
+the core's people by trade (`sim/labour/labour_allocation.py`); until the agent economy has opened they follow
 the need the recipe graph puts on each trade. Still outside the core:
 
 - Complaint 429 (done for `literate`, `taught_from`, `tool_basket`, `staff_resource`, `fatality_risk_per_year`,

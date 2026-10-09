@@ -26,9 +26,8 @@ def _format(value):
 
 
 def check_one(nodes, civ_id, seed, years, metals, staple=None):
-    """Play `years` years of `civ_id` and return the port's health report (None off the agent economy)."""
-    game = Sim(nodes, [], random.Random(seed), events=False, manual=True, civ=load_civ(civ_id),
-               cfg={"agent_economy": True})
+    """Play `years` years of `civ_id` and return the port's health report."""
+    game = Sim(nodes, [], random.Random(seed), events=False, manual=True, civ=load_civ(civ_id))
     game.done_year = {}
     for _year in range(years):
         game.step()
@@ -51,7 +50,7 @@ def cmd_economy_check(args):
                 print("\n".join(node_payback_diagnostic.format_rows(
                     node_payback_diagnostic.fast_payback_rows(nodes))))
             if report is None or not report["figures"]:
-                print("  no agent economy figures (the civilisation holds no tiles or the economy is off)")
+                print("  no agent economy figures yet")
                 continue
             print("  staple %s, metals %s" % (report["staple"], ", ".join(report["metals"]) or "none"))
             for key, meaning in FIGURE_LABELS:

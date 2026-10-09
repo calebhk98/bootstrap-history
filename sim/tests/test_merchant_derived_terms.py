@@ -10,7 +10,6 @@ import math
 import unittest
 
 from sim.engine import foreign_route_choice, foreign_routes, foreign_traders
-from sim.engine.economy_capital_market import CapitalMarketMixin
 from sim.geography import freight_cost, provisions, sea_freight, transport
 from sim.geography import api as geography
 from sim.world import market, merchant_house, merchant_terms
@@ -350,143 +349,10 @@ class CapitalTests(unittest.TestCase):
         self.assertEqual(merchant_house.borrowing(50.0, 100.0), 0.0)
 
 
-class _Pool(CapitalMarketMixin, foreign_traders.ForeignTradersMixin):
-    def __init__(self, borrowed):
-        self.state = type("State", (), {"seats": {}})()
-        self.actors = type("Actors", (), {"actors": {}})()
-        self.borrowed = borrowed
-
-    def merchant_borrowing(self):
-        return self.borrowed
-
-
-class PoolTests(unittest.TestCase):
-
-    def test_the_merchants_borrowing_is_among_the_pools_loans(self):
-        self.assertEqual(_Pool(75.0).market_loans()[foreign_traders.MERCHANTS_BORROWER], 75.0)
-
-    def test_a_merchant_class_that_borrows_nothing_adds_no_loan(self):
-        self.assertEqual(_Pool(0.0).market_loans().get(foreign_traders.MERCHANTS_BORROWER, 0.0), 0.0)
-
-
-class RetentionTests(unittest.TestCase):
-
-    def test_nothing_is_kept_from_no_return(self):
-        self.assertEqual(merchant_terms.retained_share(0.0, 0.05), 0.0)
-
-    def test_a_higher_return_keeps_more_and_a_dearer_market_rate_keeps_less(self):
-        kept = [merchant_terms.retained_share(r, 0.05) for r in (0.01, 0.05, 0.5, 5.0)]
-        self.assertEqual(kept, sorted(kept))
-        self.assertLess(kept[-1], 1.0)
-        self.assertGreater(merchant_terms.retained_share(0.2, 0.02), merchant_terms.retained_share(0.2, 0.2))
-
-    def test_the_share_kept_is_the_part_of_the_total_return_above_the_markets(self):
-        self.assertAlmostEqual(merchant_terms.retained_share(0.15, 0.05), 0.15 / 0.20)
-
-    def test_the_households_saving_share_is_not_what_merchants_keep(self):
-        import inspect
-        self.assertNotIn("SAVING_SHARE_OF_SURPLUS", inspect.getsource(foreign_traders))
-
-
-class _Agents:
-    def __init__(self, factor):
-        self.factor = factor
-
-    def agent_price_response(self, material, landed_tonnes, taken_tonnes):
-        return self.factor
-
-
-class _Destination(foreign_traders.ForeignTradersMixin):
-    def __init__(self, factor=None):
-        self.economy = _Agents(factor)
-
-    def _commodity_materials(self, commodity):
-        return ["wheat_kg"]
-
-
 def conditions(demand=1000.0, capacity=500.0):
     return market.MarketConditions(
         household_demand_at_anchor_tonnes=demand, committed_demand_tonnes=0.0,
         society_capacity_tonnes=capacity, actor_supply_tonnes=0.0, founder_sales_tonnes=0.0, stock_tonnes=0.0)
-
-
-class DestinationResponseTests(unittest.TestCase):
-
-    def test_the_markets_own_clearing_gives_the_flexibility_when_the_agent_economy_is_off(self):
-        flexibility = _Destination()._destination_price_flexibility("grain", conditions(), True, 10.0)
-        self.assertGreater(flexibility, 0.0)
-        self.assertLess(flexibility, 10.0)
-
-    def test_a_market_whose_demand_barely_responds_to_price_falls_further_with_a_cargo(self):
-        stiff = market.MarketConditions(**{**conditions().__dict__, "demand_price_elasticity": 0.1})
-        supple = market.MarketConditions(**{**conditions().__dict__, "demand_price_elasticity": 2.0})
-        destination = _Destination()
-        self.assertGreater(destination._destination_price_flexibility("grain", stiff, False, 10.0),
-                           destination._destination_price_flexibility("grain", supple, False, 10.0))
-
-    def test_the_agent_economy_answers_for_the_home_market_when_it_has_a_book(self):
-        flexibility = _Destination(0.8)._destination_price_flexibility("grain", conditions(), True, 100.0)
-        share = 100.0 / market.clear_market(conditions()).quantity_traded_tonnes
-        self.assertAlmostEqual(flexibility, merchant_terms.price_flexibility(0.8, share))
-
-    def test_the_agent_economy_is_not_asked_about_a_partners_market(self):
-        asked = _Destination(0.1)._destination_price_flexibility("grain", conditions(), False, 100.0)
-        self.assertNotAlmostEqual(asked, merchant_terms.price_flexibility(
-            0.1, 100.0 / market.clear_market(conditions()).quantity_traded_tonnes))
-
-    def test_a_market_that_trades_nothing_has_no_response_to_read(self):
-        self.assertIsNone(_Destination()._destination_price_flexibility("grain", conditions(0.0, 0.0), True, 10.0))
-
-
-class _Ledgers(foreign_traders.ForeignTradersMixin):
-    """The merchants' books as the engine keeps them, with one partner and one commodity."""
-
-    def __init__(self, used=0.0, own=0.0, rate=0.05, margin=None, cycle=None):
-        entry = {}
-        if margin is not None:
-            entry["trader_margin_share"], entry["trader_cycle_years"] = margin, cycle
-        self.state = type("State", (), {"economy": type("Economy", (), {
-            "foreign_ledger": {"p": {"merchant_capital_used": used, "merchant_retained": 0.0}},
-            "foreign_market_book": {"p": {"c": entry}}})()})()
-        self.own, self.rate = own, rate
-
-    def _flow_value(self, *arguments):
-        return 100.0
-
-    def _foreign_ledger(self, civilization_id, create=False):
-        return self.state.economy.foreign_ledger[civilization_id]
-
-    def _merchant_own_capital(self):
-        return self.own
-
-    def foreign_economies(self):
-        return []
-
-    def market_rate(self):
-        return self.rate
-
-
-class LedgerTests(unittest.TestCase):
-
-    def retained(self, **arguments):
-        ledgers = _Ledgers(**arguments)
-        ledgers._retain_merchant_earnings("p", "c", 1.0, {}, None, {"route": None})
-        return ledgers.state.economy.foreign_ledger["p"]["merchant_retained"]
-
-    def test_merchants_keep_a_share_of_their_markup_set_by_their_own_return(self):
-        high = self.retained(margin=0.2, cycle=0.5)
-        low = self.retained(margin=0.2, cycle=5.0)
-        self.assertGreater(high, low)
-        self.assertGreater(low, 0.0)
-        self.assertLess(high, 100.0 * 0.2)
-
-    def test_a_dearer_market_rate_leaves_less_kept(self):
-        self.assertGreater(self.retained(margin=0.2, cycle=1.0, rate=0.02),
-                           self.retained(margin=0.2, cycle=1.0, rate=0.3))
-
-    def test_the_class_borrows_what_it_used_beyond_its_own_capital(self):
-        self.assertEqual(_Ledgers(used=300.0, own=100.0).merchant_borrowing(), 200.0)
-        self.assertEqual(_Ledgers(used=50.0, own=100.0).merchant_borrowing(), 0.0)
 
 
 if __name__ == "__main__":

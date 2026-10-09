@@ -101,7 +101,7 @@ class TradeView:
 	def price_after_cargo(self, material: str, place: str, tonnes: float, landing: bool) -> Optional[float]:
 		"""Price per tonne at a place once `tonnes` more of a good land there (`landing`) or are taken from it, on
 		top of this year's cargo; None where the place's market does not answer (the home society's, while it has
-		no book for the good: the agent economy is off)."""
+		no book for the good: the economy opens)."""
 		price = self.price_at(material, place)
 		if not price:
 			return None
@@ -120,23 +120,17 @@ class TradeView:
 
 	def ship(self, trader_id: str, material: str, tonnes: float, source: str, destination: str) -> Tuple[float, float]:
 		"""Buy at the source and sell at the destination; (money paid, money received), the quotes the trader is
-		booked at. The cargo is noted as a leg and settled once the year's market has cleared (trader_cargo.py): on
-		the agent economy its home side is orders in the book, otherwise it goes through the engine's own market;
-		a partner's side is tallied for its market book to close on (foreign_actor_trade.py)."""
+		booked at. The cargo is noted as a leg and settled once the year's market has cleared (trader_cargo.py): its
+		home side is orders in the book; a partner's side is tallied for its market book to close on (foreign_actor_trade.py)."""
 		if tonnes <= 0.0:
 			return 0.0, 0.0
 		paid = (self.price_at(material, source) or 0.0) * tonnes
 		received = (self.price_at(material, destination) or 0.0) * tonnes
 		home = self._home_place()
 		sim = self._sim  # type: ignore[attr-defined]
-		on_book = self.runs_agent_economy()  # type: ignore[attr-defined]
 		if source == home:
-			if not on_book:
-				self.market_purchase(trader_id, self.commodity_of(material), tonnes)  # type: ignore[attr-defined]
 			sim.note_actor_home_trade(material, tonnes, False)
 		if destination == home:
-			if not on_book:
-				self.market_sale(trader_id, material, tonnes)  # type: ignore[attr-defined]
 			sim.note_actor_home_trade(material, tonnes, True)
 		if destination != home:
 			sim.note_actor_trade(destination, material, tonnes, True)

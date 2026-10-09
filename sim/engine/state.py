@@ -12,7 +12,7 @@ from typing import (
 	Optional, Set, Tuple, Union, get_args, get_origin, get_type_hints,
 )
 
-from sim.agents.api import ActorRecord, ActorsState, CapitalMarketRecord  # noqa: F401
+from sim.agents.api import ActorRecord, ActorsState  # noqa: F401
 from sim.engine import cash_book
 from sim.engine.state_holdings import HoldingsState, SeatProgressState
 from sim.invalidating import ActiveProjectState, _InvalidatingDict
@@ -293,6 +293,9 @@ class EconomyState:
 	foreign_trade_by_year: Dict[str, Dict[str, float]] = field(default_factory=dict)
 	society_labour_hours: Dict[str, float] = field(default_factory=dict)
 	wage_tightness_factors: Dict[str, float] = field(default_factory=dict)
+	# whether the money an hour of work is worth is the agent economy's unskilled wage (set when the economy
+	# first opens and the opening's money is repriced to it)
+	money_from_economy: bool = False
 
 
 @dataclass

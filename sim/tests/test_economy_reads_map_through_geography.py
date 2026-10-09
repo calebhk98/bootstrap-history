@@ -11,7 +11,7 @@ from sim.engine import economy_port_setup, geography_port
 with open(economy_port_setup.__file__, encoding="utf-8") as handle:
     check("the economy setup does not open the geography file by path", "geography.json" not in handle.read())
 
-game = sim()
+game = unopened_sim()
 base_tiles, _base_map = economy_port_setup.civilisation_tiles(game.civ, game.world_map)
 check("the civilisation holds tiles on the engine's map", len(base_tiles) > 1, len(base_tiles))
 edited = base_tiles[0]
@@ -29,7 +29,7 @@ with tempfile.TemporaryDirectory() as mods_dir:
     saved = geography_port.MODS_DIR
     geography_port.MODS_DIR = mods_dir
     try:
-        modded = sim(agent_economy=False)   # only the map and the setup built from it are read, so no hidden years
+        modded = unopened_sim()   # only the map and the setup built from it are read, so no hidden years
         check("the engine's map is the base map with the active mod's overlay",
               modded.world_map.tiles[edited]["arable_fraction"] == 0.123)
         modded_setup = economy_port_setup.build_setup(modded)
@@ -37,7 +37,7 @@ with tempfile.TemporaryDirectory() as mods_dir:
         check("the setup names the map its tiles lie on", modded_setup.world_map is modded.world_map)
     finally:
         geography_port.MODS_DIR = saved
-check("without the mod the base map is unchanged", sim().world_map.tiles[edited]["arable_fraction"] != 0.123)
+check("without the mod the base map is unchanged", unopened_sim().world_map.tiles[edited]["arable_fraction"] != 0.123)
 
 
 # Complaint 409: the foreign routes ask geography about the map the game opened, mods included.
@@ -66,7 +66,7 @@ with tempfile.TemporaryDirectory() as mods_dir:
     saved = geography_port.MODS_DIR
     geography_port.MODS_DIR = mods_dir
     try:
-        modded = sim(agent_economy=False)   # only the map and the setup built from it are read, so no hidden years
+        modded = unopened_sim()   # only the map and the setup built from it are read, so no hidden years
         with mock.patch.object(foreign_routes, "route_over_tiles", _spy("route", foreign_routes.route_over_tiles)), \
                 mock.patch.object(foreign_routes, "usable_route_modes", _spy("modes", foreign_routes.usable_route_modes)), \
                 mock.patch.object(foreign_routes, "tiles_held", _spy("tiles_held", foreign_routes.tiles_held)):

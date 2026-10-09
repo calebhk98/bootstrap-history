@@ -1,5 +1,5 @@
 """Actors other than the founder, run once a year inside the simulation."""
-from sim.agents.api import ActorRegistry, edges, ledger, payroll, SOLDIER_TRADE
+from sim.agents.api import ActorRegistry, ledger, payroll, SOLDIER_TRADE
 from .actor_kinds_data import register_mod_actor_kinds
 from .agents_port import SimWorld
 from .agents_port_cast import seed_opening_cast
@@ -129,7 +129,7 @@ class ActorsMixin:
     def _advance_actors_year(self, year):
         seed_opening_cast(self)
         self.state_treasury()
-        self.update_capital_market()
+        self.refresh_lender_offers()
         self.actors.advance(SimWorld(self))
         self.accrue_industry_experience()
         self.charge_actors_for_keeping_coin()

@@ -46,11 +46,10 @@ class IndustryConcernMixin:
 
     def concern_input_availability(self, node_id, purchases_value):
         """Share of the year the concern has its inputs, from the producers the economy runs for each."""
-        agent = self.economy.agent
-        if agent is None or not purchases_value:
+        if not purchases_value or self.economy.agent_producers_by_good() is None:   # nothing runs while the economy opens
             return 1.0
         year = self.state.scenario.year
-        producers = self._done_memo("producers_by_good", year, agent.producers_by_good)
+        producers = self._done_memo("producers_by_good", year, self.economy.agent_producers_by_good)
         gate = {key: entry.get("requires_node") for key, entry in default_production_entries().items()}
         depth, lead = {}, {}
         for material in purchases_value:

@@ -2,7 +2,7 @@
 
 A cargo sold to a partner enters that partner's market book, so a gap the traders serve narrows over the
 years; and a good the traders carry in a direction is not also carried that way by the economy's stand-in
-external orders or by the engine's aggregate foreign flow.
+external orders.
 """
 from .harness import *  # noqa: F401,F403
 
@@ -17,8 +17,7 @@ TRADER = "trader:test"
 
 
 def agent_game():
-    game = S.Sim(NODES, ORDER, random.Random(1), events=True, manual=False, civ=S.load_civ("rome_100ad"),
-                 cfg={"agent_economy": True})
+    game = S.Sim(NODES, ORDER, random.Random(1), events=True, manual=False, civ=S.load_civ("rome_100ad"))
     game.goal, game.done_year = GOAL, {}
     return game
 
@@ -85,38 +84,7 @@ check("a good traders export may still be imported by the economy (the gap runs 
 check("...and a good traders import may still be exported by it",
       (in_good in bids_after) == (in_good in bids_before), in_good)
 
-# --- (c) the engine's own aggregate flow (the agent economy off) leaves a good the actors carry to them.
-SILK = "silk_kg"
-
-
-def engine_game():
-    """A game on the engine's own market with a partner dearer than home for every good, at stated terms."""
-    game = sim(civ="rome_100ad", capital=1e9, agent_economy=False)
-    game.foreign_economies = lambda: [PARTNER]
-    game._foreign_price_pair = lambda commodity, facts: (10.0, 100.0)
-    game._foreign_sides = lambda commodity, facts: (True, True)
-    game._output_is_sourced = lambda commodity: True
-    game.foreign_opening = lambda civilization_id, commodity, solved: (
-        2 * (game._market_entry(commodity) or {"reference_tonnes": 0.0})["reference_tonnes"],) * 2
-    game._route_freight_per_tonne = lambda civilization: 1.0
-    game._agent_cost_per_tonne = lambda civilization_id, route: 0.0
-    game.foreign_lift_left_tonnes = lambda civilization_id, route: (float("inf"),) * 2
-    game.household._foreign_facts_cache = None
-    return game
-
-
-def engine_flows(game):
-    entry = game._market_entry(SILK)
-    return game.foreign_trade(SILK, entry, game._market_conditions(SILK, entry, True))[1]
-
-
-game = engine_game()
-check("the engine's aggregate flow exports the good to a dearer partner",
-      sum(flow for _id, flow, _outcome in engine_flows(game)) < 0.0, engine_flows(game))
-game.note_actor_trade(PARTNER, SILK, 1.0, True)
-check("...and leaves it alone once actors carry it to that partner", engine_flows(game) == [], engine_flows(game))
-
-# --- (d) a cargo sized against the price it makes settles: no flips, and the partner's price stops at the band freight sets.
+# --- (c) a cargo sized against the price it makes settles: no flips, and the partner's price stops at the band freight sets.
 game = agent_game()
 world = SimWorld(game)
 home = world._home_place()
@@ -128,7 +96,16 @@ for material in world.trade_materials():
     if terms and entry and entry["capacity_tonnes"] > 0.0 and terms["gain"] > terms["bought"] * (rate + 0.05):
         candidates.append((terms["gain"] / terms["bought"], material))
 check("a Rome start has a gap with the partner wide enough to pay the interest on the cargo", bool(candidates), None)
-material = max(candidates)[1]
+
+
+def payable(material):
+    """Tonnes of a cargo of the material that still pays on the route out."""
+    terms = route_terms(world, home, PARTNER, material)
+    return paying_tonnes(world, home, PARTNER, material, terms, 1e12 / terms["outlay"], rate)
+
+
+material = max(candidates, key=lambda pair: payable(pair[1]))[1]
+check("...and a cargo of the widest-paying good pays", payable(material) > 0.0, material)
 
 
 def cargo_for(world, source, destination):

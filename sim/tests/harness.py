@@ -176,20 +176,33 @@ def hours_money(hours, civ="rome_100ad"):
     return hours * S.starting_schedule(civ).money_per_labour_hour
 
 
-def sim(civ="rome_100ad", capital=None, manual=True, events=False, agent_economy=None, surveyed=None):
-    """A game on the default economy; `agent_economy=False` opts out to the engine's own yearly market.
-    `surveyed` lists the materials whose deposits the game has already found (a mine names a found deposit;
-    the metals and coal by default, `()` for none)."""
-    config = {"start_capital": capital} if capital is not None else {}
-    if agent_economy is not None:
-        config["agent_economy"] = agent_economy
-    config = config or None
+def sim(civ="rome_100ad", capital=None, manual=True, events=False, surveyed=None):
+    """A game on the agent economy. `surveyed` lists the materials whose deposits the game has already found
+    (a mine names a found deposit; the metals and coal by default, `()` for none)."""
+    config = {"start_capital": capital} if capital is not None else None
     test_sim = S.Sim(NODES, ORDER, random.Random(1), events=events, manual=manual,
               civ=S.load_civ(civ), cfg=config)
     test_sim.goal, test_sim.done_year = GOAL, {}
     for material in (("coal",) + tuple(_ore_goods(test_sim.world_map))) if surveyed is None else tuple(surveyed):
         found_deposits_of(test_sim, material)
     return test_sim
+
+
+def unopened_sim(civ="rome_100ad", capital=None, manual=True, events=False, surveyed=None):
+    """A game whose agent economy has not opened: the engine's own figures answer every question, as they do while
+    the economy opens, and no hidden years run. For tests that read only the data, the map or the setup built from
+    them (and, since nothing is cleared, for mechanisms that need the engine's own tables)."""
+    return build_unopened(lambda: sim(civ=civ, capital=capital, manual=manual, events=events, surveyed=surveyed))
+
+
+def build_unopened(factory):
+    """`factory()` (a call that builds a `Sim`) with the agent economy left unopened: see `unopened_sim`."""
+    from unittest import mock
+    from sim.engine.economy_port import EconomyPort
+    with mock.patch.object(EconomyPort, "open_agent", lambda self: None):
+        game = factory()
+    game.economy._opening = True
+    return game
 
 
 def _ore_goods(world_map):
@@ -409,7 +422,7 @@ def _mk_loom_sim(n_looms, age_years):
                   if node.get("cat") == "textiles" and node.get("rev"))
     assert len(candidates) >= n_looms, "not enough textiles venture nodes in the tree"
     chosen = candidates[:n_looms]
-    loom_sim = sim(civ="rome_100ad", capital=5_000_000.0, agent_economy=False)   # legacy: callers assert on the engine's goods-market arithmetic
+    loom_sim = sim(civ="rome_100ad", capital=5_000_000.0)
     loom_sim.artisans = loom_sim.scholars = 100.0 * n_looms
     # These fixtures exercise goods-market arithmetic, not labour scarcity.
     # Supply every qualified trade so each selected historical concern can

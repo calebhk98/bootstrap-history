@@ -23,7 +23,7 @@ def opened():
         goal = tree["meta"]["goal_node"]
         _levels, order, _blocked = simulator.load_strategy("recommended", nodes, goal)
         game = simulator.Sim(nodes, order, random.Random(1), events=True, manual=False,
-                             civ=simulator.load_civ("england_1300"), cfg={"agent_economy": True})
+                             civ=simulator.load_civ("england_1300"))
         OPENED["economy"] = game.economy.agent.economy()
     return OPENED["economy"]
 

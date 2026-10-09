@@ -288,10 +288,13 @@ class WagesMixin(WageLedgerMixin):
         return cached
 
     def wage_schedule(self):
-        """This household's labour-market wage schedule, in money at the present price level: one coin
-        stock against the goods moves what an hour is worth, and so every wage and every price."""
+        """This household's labour-market wage schedule, in money at the present price level. An hour of
+        the unskilled trade is worth what the economy pays it; before the economy has opened it is worth
+        the opening's figure."""
         schedule = self._opening_wage_schedule()
-        schedule.money_per_labour_hour = schedule.opening_money_per_labour_hour * self._world.home_price_level()
+        paid = self._world.economy_unskilled_wage()
+        schedule.money_per_labour_hour = (paid if paid is not None
+                                          else schedule.opening_money_per_labour_hour * self._world.home_price_level())
         return schedule
 
     def money_per_labour_hour(self):

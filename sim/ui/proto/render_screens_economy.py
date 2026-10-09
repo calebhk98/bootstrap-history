@@ -255,9 +255,6 @@ def render_economy(out):
     lines.append("  literacy: general %s, elite %s"
              % (_pct(lit.get("general")), _pct(lit.get("elite"))))
     lines.append("  household places used: %s" % out.get("household_places_used_of_all"))
-    if out.get("market_saturation"):
-        lines.append("")
-        lines.append(_wrap(out["market_saturation"], indent="  "))
     if out.get("materials_at_a_premium"):
         lines.append(_wrap(out["materials_at_a_premium"], indent="  "))
     moved = out.get("what_moved_most")

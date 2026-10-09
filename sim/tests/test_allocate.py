@@ -171,7 +171,7 @@ check("...and so does a standing work-for-wages directive and its trade",
 # its own, reusing work_for_wages (labour.py) rather than a second way to
 # pay the founder, and tops up a turn where some of it was already sold by
 # hand instead of selling the whole directive again on top.
-s = sim(capital=1e7, agent_economy=False)   # legacy: the earnings are compared with the engine's own wage-table rate
+s = unopened_sim(capital=1e7)   # legacy: the earnings are compared with the engine's own wage-table rate
 # Fed by its own farm, so no hunger reprices wages during the step.
 s.farm_land.quality, s.farm_land.hectares = 1.3, s.farm_land.hectares * 2.0
 _r = S._agent_dispatch(s, NODES, {"cmd": "allocate", "id": "work",

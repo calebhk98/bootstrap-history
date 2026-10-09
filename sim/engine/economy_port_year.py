@@ -1,9 +1,9 @@
-"""The agent economy inside a game: the switch, opening it, its year, and what the engine's seams read.
+"""The agent economy inside a game: opening it, its year, and what the engine's seams read.
 
 Part of the port (with economy_port.py and economy_port_setup.py, the only engine modules that import
 `sim.economy`). Its whole state lives in `state.economy.agent_economy`, so a saved game resumes the
-same economy. The engine's own price, wage and rate code asks `answers()` and falls back to its old
-figures while the switch is off or before the economy has opened.
+same economy. The engine's own price, wage and rate code asks `answers()`; while the economy opens (it
+reads the engine's own opening figures to build its setup) those figures answer instead.
 """
 import collections
 import math
@@ -23,7 +23,6 @@ from .economy_port_key import spin_up_key
 from .economy_port_setup import build_setup, opening_values
 from .material_units import tonnes_per_unit
 
-SWITCH_ENVIRONMENT = "ROME_AGENT_ECONOMY"
 OUTCOMES_KEPT = 100   # yearly outcomes held in memory for the health figures
 SPIN_UP_CACHE_DIRECTORY = os.path.join(os.path.dirname(solve_cache.DEFAULT_CACHE_DIRECTORY), "agent_economy")
 SPIN_UP_TOLERANCE = declare(
@@ -60,15 +59,6 @@ PARTNER_SPEND_SHARE_PER_YEAR = declare(
         "partner as a full economy (Complaint 382) would decide it.")
 
 
-def switch_requested(cfg) -> bool:
-    """On unless config `agent_economy` is explicitly False; the environment variable overrides
-    the config either way ("1" forces on, "0" forces off)."""
-    override = os.environ.get(SWITCH_ENVIRONMENT)
-    if override in ("0", "1"):
-        return override == "1"
-    return cfg.get("agent_economy") is not False
-
-
 class AgentEconomy:
     """One game's agent economy. Not saved itself: it rebuilds from `state.economy.agent_economy`."""
 
@@ -84,9 +74,6 @@ class AgentEconomy:
     @property
     def stored(self):
         return self._sim.state.economy.agent_economy
-
-    def on(self) -> bool:
-        return bool(self.stored.get("on"))
 
     def opened(self) -> bool:
         return self._economy is not None or "record" in self.stored
@@ -159,6 +146,11 @@ class AgentEconomy:
 
     def note_purchase(self, buyer, commodity, tonnes, budget):
         economy_port_actors.note_purchase(self.stored.setdefault("purchases", []), buyer, commodity, tonnes, budget)
+
+    def forget_orders(self, actor_id):
+        for kind, key in (("sales", "seller"), ("purchases", "buyer")):
+            if kind in self.stored:
+                self.stored[kind] = [order for order in self.stored[kind] if order[key] != actor_id]
 
     def trades_good(self, material):
         """Whether the economy has a market for the material."""
@@ -500,6 +492,11 @@ class AgentEconomy:
             for good in (recipe.outputs if recipe is not None else ()):
                 found.setdefault(good, []).append((producer.tile, producer.recipe_id))
         return found
+
+    def unskilled_wage_per_hour(self):
+        """The home labour markets' wage for an hour of the trade anyone can take up, in coin."""
+        wages = self.answers()[1]
+        return wages.get(self._economy.setup.unskilled_trade)
 
     def wage_per_hour(self, trade, country=None):
         """The trade's wage in its labour markets; a trade no producer hires (soldiers, scribes) is paid

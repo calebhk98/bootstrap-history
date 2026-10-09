@@ -63,7 +63,7 @@ class CastView:
 
 	def observed_stratum(self, country: Optional[str], name: str) -> Optional[Dict[str, float]]:
 		"""The home strata's income from the agent economy's household cohorts (`sim/agents/strata_observed.py`);
-		None for another country, or while the agent economy is off (the strata then keep their own wage bridge)."""
+		None for another country, or while the economy opens (the strata then keep their own wage bridge)."""
 		if country is not None:
 			return None
 		curve = self._sim.economy.agent_cohort_incomes()  # type: ignore[attr-defined]

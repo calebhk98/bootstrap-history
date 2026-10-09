@@ -4,7 +4,7 @@ A borrower's debt is a set of loan claims in the actors' book (`sim/agents/purse
 straight to the claim holders. The household savers the simulation does not model one by one hold part of every
 claim; what they receive reaches the strata that hold savings, in proportion to what each holds.
 """
-from sim.agents.api import EDGE_SAVERS, ledger, payroll
+from sim.agents.api import EDGE_SAVERS, payroll
 
 
 class InterestMixin:

@@ -15,8 +15,7 @@ YEARS = 12
 
 def play(civ_id, seed=1):
     _tree, _prices, nodes, _wages, _goods = load()
-    game = Sim(nodes, [], random.Random(seed), events=False, manual=True, civ=load_civ(civ_id),
-               cfg={"agent_economy": True})
+    game = Sim(nodes, [], random.Random(seed), events=False, manual=True, civ=load_civ(civ_id))
     game.done_year = {}
     for _year in range(YEARS):
         game.step()

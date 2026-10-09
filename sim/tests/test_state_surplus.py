@@ -2,9 +2,8 @@
 holds against risk is lent through the loanable-funds market (the state as a saver, earning interest) and
 spent on works, a named purchase that hires people; no outlay of the state goes to nobody."""
 from .harness import *  # noqa: F401,F403
-from functools import partial
 
-sim = partial(sim, agent_economy=False)   # legacy: pins how the engine's budget spends a surplus; the agent-economy budget is test_economy_agent_state.py
+sim = unopened_sim   # legacy: pins how the engine's budget spends a surplus; the agent-economy budget is test_economy_agent_state.py
 
 
 from sim.agents.purses import COIN, INTEREST_PAID, LENT
@@ -47,7 +46,7 @@ saver_treasury = saver.state_treasury()
 saver_treasury.money = 1.0e12
 one_year(saver)
 check("a state with a reserve beyond its need is a source of funds on the market",
-      saver.capital_market().supply_by_source.get("state", 0.0) > 0.0, saver.capital_market().supply_by_source)
+      saver.actors.state.purses.offers.get(saver_treasury.actor_id, 0.0) > 0.0, saver.actors.state.purses.offers)
 one_year(saver)
 # a borrower in the market: firms and the founder owe and pay interest, and the lenders are paid exactly that
 from sim.engine.state import ActorRecord
@@ -59,12 +58,12 @@ for number in range(3):
 borrowed.household.capital = -1.0e6  # the founder owes too
 for _year in range(4):
     one_year(borrowed)
-market = borrowed.capital_market()
 paid = borrowed.actors.state.purses.book.money_flow(COIN).get(INTEREST_PAID, 0.0)
 check("borrowers paid interest over the years", paid > 0.0, paid)
 lent, _rate = borrowed.state_lending()
 check("part of what the state supplies is lent, as claims on the borrowers, because they want funds",
-      0.0 < lent <= borrowed.capital_market().supply_by_source["state"], (lent, borrowed.capital_market().supply_by_source))
+      0.0 < lent <= borrowed.actors.state.purses.offers[borrowed_treasury.actor_id],
+      (lent, borrowed.actors.state.purses.offers))
 check("the claims the state holds are the borrowers' debts",
       abs(lent - borrowed.actors.state.purses.lent(borrowed_treasury.actor_id)) < 1e-6 * lent, lent)
 check("the state earned interest on what it lent, no more than borrowers paid",

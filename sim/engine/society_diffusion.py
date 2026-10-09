@@ -35,9 +35,7 @@ class DiffusionMixin:
     # a technique cheapens the goods its entries make. What is missing, and IS this file's
     # job, is the other half: a NUMBER, per venture, for how much of the one
     # thing YOU personally run has leaked to imitators - not a price, which
-    # is the competing agent's own territory (see goods_market_factor,
-    # economy.py, already doing exactly that job, by AGE, for four goods
-    # categories) - a fraction of the original edge that is gone, that a
+    # is the competing agent's own territory (the agent economy's prices) - a fraction of the original edge that is gone, that a
     # price formula can spend however it spends a competitive market. This
     # is deliberately NOT wired into revenue() here: pricing belongs to
     # economy.py's own goods-market code, and two places independently

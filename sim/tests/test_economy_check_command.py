@@ -12,7 +12,7 @@ class EconomyCheckTests(unittest.TestCase):
     def setUpClass(cls):
         _tree, _prices, nodes, _wages, _goods = load()
         cls.game = Sim(nodes, [], random.Random(1), events=False, manual=True,
-                       civ=load_civ("rome_100ad"), cfg={"agent_economy": True})
+                       civ=load_civ("rome_100ad"))
         cls.game.done_year = {}
         for _year in range(2):
             cls.game.step()

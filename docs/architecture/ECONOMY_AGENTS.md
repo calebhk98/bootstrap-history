@@ -1,9 +1,9 @@
 # The agent economy
 
-Status: the game's economy by default. A game opts out with `cfg["agent_economy"] = False`;
-`ROME_AGENT_ECONOMY=0` (off) or `=1` (on) overrides either way (`switch_requested`,
-`sim/engine/economy_port_year.py`). Tests of the old economy's own mechanisms opt out explicitly.
-The yearly economy checks measure it against plausible ranges.
+Status: the game's only economy. There is no switch: a civilisation that holds no tiles is refused when the game
+is built, and the engine's own opening figures answer only while the economy opens (`sim/tests/harness.unopened_sim`
+builds a game that stays in that state, for tests of the opening figures). The yearly economy checks measure it
+against plausible ranges.
 
 Owner decision (2026-10-09, later): retire the agent-economy-off mode; the agent economy is the only economy (supersedes the earlier keep decision).
 
@@ -194,6 +194,26 @@ the actors. The decision for who may owe what, and to whom:
   own cash book is told of each loan and repayment so its purse still equals its books. The market rate and the
   credit ceiling are still the ones `Borrower.credit_ceiling` reads (the agent economy's credit market answers
   them); the savers are a labelled stand-in for cohorts' savings, which are in the same book but not yet the lenders.
+
+## One money per labour hour (Complaint 115)
+
+What an hour of work is worth in the game's coin is one figure: the agent economy's wage for the unskilled trade
+(`EconomyPort.unskilled_wage`, read by the labour package's `wage_schedule`). Before the economy has opened there is
+no wage to read, so the opening is counted at the price solver's figure (the coin's labour cost); the economy's
+opening (`sim/engine/opening_money.py`, called from `open_agent`) then reprices everything counted at that figure, the
+founder's and every seat's purse and the tree's money fields, by the ratio of the two, and sets
+`state.economy.money_from_economy`. From then on living costs, node money, the constants stated in labour hours
+(`money_units.PricedInLabourHours`) and hiring all use the economy's wage, so a purse buys the hours it was meant to.
+The two figures differ by a large factor because the solver costs the coin's metal at its labour hours, while the
+economy fixes the metal's price in coin and lets goods and wages follow the money stock. Measure both with
+`python3 -m sim.tests --jobs 1 --only one_money_per_labour_hour` (slow: it opens the economy).
+
+## Domestic trade has one owner
+
+Trade between the places of the home country is the economy's merchants (`sim/economy/merchants.py`): agents in the
+book with cash, who buy where a good is cheap and carry it to where it is dear, paying the carriers. Trader actors take
+the routes that cross a border (their cargo accounts are in the book). Giving trader actors a second domestic router
+would carry the same gap twice, the duplication that Complaint 405 closed for foreign trade, so there is none.
 
 ## Heuristics
 

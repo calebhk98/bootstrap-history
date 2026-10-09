@@ -16,7 +16,7 @@ check("typed economic levers reach their protocol actions",
 s = sim(capital=1_000_000)
 reply = S._agent_dispatch(s, NODES, {"cmd": "buy", "what": "farm", "n": 120})
 check("farmland is a direct lever that lowers food costs", reply["ok"] and reply["food_cost_factor"] < 1, reply)
-legacy = sim(capital=1_000_000, agent_economy=False)   # legacy: the wage quote follows the engine's own food-cost table
+legacy = unopened_sim(capital=1_000_000)   # legacy: the wage quote follows the engine's own food-cost table
 wage0 = legacy.labour.market.quote_annual("artisan")
 legacy_reply = S._agent_dispatch(legacy, NODES, {"cmd": "buy", "what": "farm", "n": 120})
 check("...and, on the engine's own wage table, lowers wages",

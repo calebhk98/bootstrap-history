@@ -8,9 +8,9 @@ from sim.engine.state import ActorRecord
 TRADE = "artisan"
 
 
-def crowded_game(founder_staff, firm_staff, **config):
+def crowded_game(founder_staff, firm_staff, build=sim, **config):
     """A game whose town holds `founder_staff` people on the founder's books and `firm_staff` on a firm's."""
-    game = sim(**config)
+    game = build(**config)
     game.state.household.employees = {"labourer": float(founder_staff)} if founder_staff else {}
     if firm_staff:
         firm = game.actors.add("firm:crowd", ActorRecord(kind="firm", money=1.0e6))
@@ -36,8 +36,8 @@ check("the quote for the same hour is the same whichever employer's staff crowd 
       abs(by_firm.labour.market.quote(TRADE) - by_founder.labour.market.quote(TRADE)) < 1e-12)
 # legacy: only the engine's own wage table prices housing into the quote
 check("a firm's crowding reaches the founder's quote",
-      crowded_game(0, full_town, agent_economy=False).labour.market.quote(TRADE)
-      > sim(agent_economy=False).labour.market.quote(TRADE))
+      crowded_game(0, full_town, build=unopened_sim).labour.market.quote(TRADE)
+      > unopened_sim().labour.market.quote(TRADE))
 check("a firm and the founder hiring the same trade are quoted the same hour",
       by_firm.labour.market.quote(TRADE, 0.0, employer="a firm")
       == by_firm.labour.market.quote(TRADE, 0.0, employer=by_firm.state.household))
@@ -49,8 +49,8 @@ check("housing built in the town eases the factor for everyone",
 
 
 # ---- commission, bondage and the workshop carry the wage's cost factors ---------------------------
-def priced(crowd, **config):
-    game = crowded_game(0, full_town if crowd else 0, **config)
+def priced(crowd, build=sim):
+    game = crowded_game(0, full_town if crowd else 0, build=build)
     game.price_index = 1.5
     game._wage_index_base = 1.3
     game.labour.market.press("smith", game.labour.market_supply("smith") * 0.5)
@@ -66,8 +66,8 @@ for label, game in (("an uncrowded town", plain), ("a crowded town", crowded)):
           (market.commission_cost("smith", 100.0, premium), 100.0 * premium * market.quote("smith")))
 # legacy: agent-economy wages do not carry the housing factor
 check("a commission costs more where housing is dearer",
-      priced(True, agent_economy=False).labour.market.commission_cost("smith", 100.0, premium)
-      > priced(False, agent_economy=False).labour.market.commission_cost("smith", 100.0, premium))
+      priced(True, build=unopened_sim).labour.market.commission_cost("smith", 100.0, premium)
+      > priced(False, build=unopened_sim).labour.market.commission_cost("smith", 100.0, premium))
 
 for label, game in (("an uncrowded town", plain), ("a crowded town", crowded)):
     household = game.state.household

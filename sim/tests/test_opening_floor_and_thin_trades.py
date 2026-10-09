@@ -16,7 +16,7 @@ GOOD_PRICE_DRIFT = 20.0          # times the good's price against wheat at the o
 
 
 def _game():
-    game = sim(civ="rome_100ad", agent_economy=True)
+    game = sim(civ="rome_100ad")
     economy = game.economy.agent._economy
     return game, economy, economy.setup, economy.record, economy.view()
 

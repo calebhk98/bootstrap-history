@@ -131,7 +131,7 @@ check("rent is the hectares at the rent of the tile the concern stands on",
 check("a tile where no land was let pays the mean rent of the land let", abs(site.site_rent("workshop", tile="moor") - 40.0 * plot) < 1e-9)
 check("a dearer tile costs more", site.site_rent("workshop", tile="coast") > site.site_rent("workshop", tile="hills"))
 Economy.on = False
-check("with the agent economy off the rent is the engine's land price", abs(site.site_rent("workshop", tile="coast") - 7.0 * plot) < 1e-9)
+check("while the economy opens the rent is the engine's land price", abs(site.site_rent("workshop", tile="coast") - 7.0 * plot) < 1e-9)
 Economy.on = True
 
 # ---- where a firm stands: its own tile, else the home country's

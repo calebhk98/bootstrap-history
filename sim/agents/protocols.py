@@ -340,10 +340,7 @@ class World(Protocol):
 		...
 
 	def market_forget(self, actor_id: str) -> None:
-		"""An actor's standing sales and purchases in the one goods market end; it deals afresh this year."""
-		...
-
-	def runs_agent_economy(self) -> bool:
+		"""An actor's sales and purchases noted for this year's market end; it deals afresh."""
 		...
 
 	def market_sale(self, seller_id: str, material: str, tonnes: float, from_concerns: Any = None) -> None:

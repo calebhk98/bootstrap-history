@@ -29,8 +29,8 @@ def actor_sim(extra_nodes, civ="rome_100ad"):
     nodes = copy.deepcopy(NODES)
     for node in extra_nodes:
         nodes[node["id"]] = node
-    game = S.Sim(nodes, list(ORDER), random.Random(1), events=False, manual=True,
-                 civ=S.load_civ(civ), cfg={"agent_economy": False})   # legacy: firms share the engine's yearly material market with the founder
+    game = build_unopened(lambda: S.Sim(nodes, list(ORDER), random.Random(1), events=False, manual=True,
+                 civ=S.load_civ(civ)))
     game.goal, game.done_year = GOAL, {}
     return game
 
@@ -200,9 +200,9 @@ check("a material nobody makes has no actor supply", game.actor_supply("no_such_
 loom = make_node("test_loom", category="textiles", revenue=8000.0)
 game = actor_sim([loom])
 founder_runs(game, "test_loom", opened_ago=6)
-alone = game.goods_market_factor("test_loom")
+alone = game.goods_category_factor("textiles")
 firm = firm_runs(game, "firm:loom", "test_loom")
-shared = game.goods_market_factor("test_loom")
+shared = game.goods_category_factor("textiles")
 check("a firm selling into the same category lowers the founder's share of its market",
       shared < alone, (shared, alone))
 world = SimWorld(game)
@@ -212,4 +212,4 @@ check("a firm's takings come out of the same shared market as the founder's",
       (world.concern_takings("test_loom", game.state.scenario.year - 5), ramped * shared))
 firm.concerns.clear()
 check("when the firm closes the founder has the market back",
-      abs(game.goods_market_factor("test_loom") - alone) < 1e-9)
+      abs(game.goods_category_factor("textiles") - alone) < 1e-9)

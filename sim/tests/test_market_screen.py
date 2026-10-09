@@ -5,33 +5,16 @@ from sim.ui.proto import command_registry as _registry
 from sim.ui.proto.render_typed import render_pretty as _render_pretty
 from sim.ui.proto.typed import parse_typed as _parse_typed
 
-# `market`: goods saturation, every priceable material, every trade's wage,
+# `market`: every priceable material, every trade's wage,
 # on one screen, from numbers the game already computes.
 check("market is a registered command with a help page",
       _registry.resolve("market") is not None
       and _registry.page("market")["usage"], _registry.resolve("market"))
 
-_empty = sim()
-_reply_empty = S._agent_dispatch(_empty, NODES, {"cmd": "market"})
-check("market answers on a fresh game with no concerns: ok, no saturation rows",
-      _reply_empty.get("ok") is True and _reply_empty.get("goods") == [],
-      _reply_empty.get("goods"))
-
 _loom_sim, _loom_ids = _mk_loom_sim(2, 60)
 _reply = S._agent_dispatch(_loom_sim, NODES, {"cmd": "market"})
-_textiles = next((row for row in _reply.get("goods", []) if row["category"] == "textiles"), None)
-check("market lists the category the concerns sell into, with the concerns that compete",
-      _textiles is not None and sorted(_textiles["concerns"]) == sorted(_loom_ids),
-      _reply.get("goods"))
-check("...and the share of the quoted figure actually being earned, below 1 when saturated",
-      _textiles and 0.0 < _textiles["share_of_quoted_earned"] < 1.0
-      and _textiles["earned_per_year"] < _textiles["quoted_per_year"],
-      _textiles)
-check("...matching goods_market_factor's own numbers",
-      _textiles and abs(_textiles["earned_per_year"] - sum(
-          NODES[node_id]["rev"] * _loom_sim.venture_ramp(node_id) * _loom_sim.price_index
-          * _loom_sim.goods_market_factor(node_id) for node_id in _loom_ids)) < 0.06,
-      _textiles)
+check("market answers ok, with no founder-side goods rows", _reply.get("ok") is True and "goods" not in _reply
+      and "demand" not in _reply, sorted(_reply))
 
 _materials = _reply.get("materials", {})
 _rows = _materials.get("rows", [])
@@ -47,7 +30,7 @@ _bases = {row["material"]: row.get("price_basis") for row in _everything}
 check("each material row says which technique its price is at, and the text names one the society lacks",
       set(_bases.values()) <= {"solved", "gated", "imported", None} and "gated" in _bases.values()
       and "priced at a technique you do not have" in _render_pretty(
-          "market", {"ok": True, "goods": [], "materials": {"rows": [dict(_everything[0], price_basis="gated")], "total": 1},
+          "market", {"ok": True, "materials": {"rows": [dict(_everything[0], price_basis="gated")], "total": 1},
                      "wages": []}),
       _bases.get("steel_plate_kg"))
 _quote_ref = _loom_sim.material_trade_quote(_rows[0]["material"])
@@ -76,12 +59,5 @@ check("typed 'market offset 10 limit 5' parses",
       _parse_typed("market offset 10 limit 5")[0] == {"cmd": "market", "offset": 10, "limit": 5},
       _parse_typed("market offset 10 limit 5"))
 _text = _render_pretty("market", _reply)
-check("the rendered screen has the three sections",
-      all(word in _text for word in ("GOODS", "MATERIAL", "WAGES")), _text[:400])
-
-# `why` on a concern names its goods category and the saturation there.
-_why = S._agent_dispatch(_loom_sim, NODES, {"cmd": "why", "id": _loom_ids[0]})
-_why_text = _render_pretty("why", _why)
-check("why on a concern names its goods category and current saturation",
-      "textiles" in _why_text.lower() and "market" in _why_text.lower()
-      and _why.get("goods_market_line"), _why.get("goods_market_line"))
+check("the rendered screen has its two sections",
+      all(word in _text for word in ("MATERIAL", "WAGES")), _text[:400])

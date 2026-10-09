@@ -3,8 +3,8 @@
 Inputs are only what a civilisation already has: the techniques its known
 technologies unlock and household demand. Labour need per trade comes from
 the goods households consume and the recipes that make them, through the whole
-recipe graph. The engine splits non-farm hours by these shares when the agent
-economy is off (labour_allocation.py); with it on, the labour core's people decide.
+recipe graph. The engine splits non-farm hours by these shares until the agent
+economy has opened (labour_allocation.py); once it has, the labour core's people decide.
 
 A need's budget is split among the available goods that satisfy it by the same constant-elasticity
 mix households use (sim/world/need_basket.py), with a good's labour value per unit of need as its

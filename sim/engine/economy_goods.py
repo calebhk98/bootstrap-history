@@ -14,10 +14,9 @@ per-category state several of the others read); essential_price_ratio()
 (the staples side of the income effect); invest_farm()/
 build_worker_housing() (buying down that same essential price and
 housing cost); income_factor() (turning the price ratio into
-discretionary spending power); goods_market_factor()/
-goods_market_factor_if_opened()/goods_market_note()/
-goods_market_summary() (the price itself, one concern and all of
-them).
+discretionary spending power); goods_category_factor() and
+goods_category_factor_with_entrants() (the price itself, for the
+concerns actors run).
 
 GoodsMixin is composed into EconomyMixin (economy.py) alongside the
 other economy sub-mixins; see that file for the composition and for
@@ -665,48 +664,6 @@ class GoodsMixin:
             "see this method's own docstring. Not reached today; a "
             "placeholder bound, not a measured one.")
 
-    def goods_market_factor(self, node_id):
-        """How a goods-producing concern's revenue has moved, relative to
-        the day it opened, as the market it sells into fills up - shared
-        with every OTHER concern selling the same kind of good, and lifted
-        or dampened by how cheap the essentials market has made staples if
-        this good is a discretionary one. See _goods_category_state's own
-        comment for the cross-elasticity fix and income_factor's for the
-        income effect; this function's job is only to turn those into one
-        node's own revenue multiplier.
-
-        Exactly 1.0 for a LONE concern on the day it opens, by
-        construction (n_active=1, world_age=0, no essential concern
-        running -> income_factor=1.0), so a player who opens one loom
-        still earns the tree's own figure on the first turn, unchanged
-        from before this pass - the brief's own original requirement.
-        A SECOND concern in the same category, though, does not reset to
-        1.0 even on ITS day one if the first is already mature: it is
-        entering a market that already has supply in it, which is
-        precisely what "compete" has to mean.
-
-        Price then moves along an ordinary constant-elasticity demand
-        curve against the category's SHARED total supply (see
-        _goods_category_ratios): quantity sold varies as price ** (-eta),
-        so solving for the price that clears exactly `total_supply` gives
-        price_ratio = total_supply ** (-1/eta), clamped at the floor;
-        quantity sold is the smaller of what supply can make and what
-        that price will move. Revenue is price times quantity, both
-        relative to day one - but quantity is now a SHARED total, split
-        evenly across every concern currently selling into the category
-        (`/ n_active`), because that total is what the whole category's
-        combined capacity finds buyers for, not what any one concern
-        alone would.
-        """
-        if self.economy.runs_agent_economy():
-            return 1.0      # the agent economy's prices carry the market (node_output_market_factor)
-        projects = self.state.projects
-        if node_id not in projects.operating:
-            return 1.0
-        cat = self.nodes[node_id].get("cat")
-        if not cat or cat not in self.GOODS_CATEGORIES:
-            return 1.0
-        return self.goods_category_factor(cat)
 
     def goods_category_factor(self, cat):
         """What one seller's revenue in a goods category has become relative to
@@ -750,34 +707,6 @@ class GoodsMixin:
         bucket[cat] = factor
         return factor
 
-    def goods_market_factor_if_opened(self, node_id):
-        """What goods_market_factor(node_id) would read on the day you actually
-        opened node_id, if you opened it today - unlike goods_market_factor(node_id)
-        itself, which answers a flat 1.0 for anything not yet `operating`
-        because it has no day-one to measure yet, and every screen that
-        lists a not-yet-opened concern (`ventures`'s "you know how but have
-        not opened", `why`) reads that 1.0 as "the tree's own figure is what
-        this would earn." For the FIRST concern in a category that is true.
-        For a SECOND one it has never been true - see goods_market_factor's
-        own docstring, which already says a second concern "does not reset
-        to 1.0... it is entering a market that already has supply in it" -
-        so a player needs to see that BEFORE opening it, not find out the
-        hard way with revenue quietly far below what every screen had
-        shown, with no warning at the moment the decision to open was
-        actually made.
-
-        None for anything not a goods category. 1.0 - the honest, unhedged
-        answer - when nothing of yours operates in this category yet: a
-        real first mover really does get the tree's own figure, the same
-        identity goods_market_factor() itself preserves.
-        """
-        cat = self.nodes[node_id].get("cat")
-        cfg = self.GOODS_CATEGORIES.get(cat)
-        if not cfg:
-            return None
-        if node_id in self.state.projects.operating:
-            return self.goods_market_factor(node_id)
-        return self.goods_category_factor_with_entrants(cat, 1)
 
     def goods_category_factor_with_entrants(self, cat, entrants):
         """One seller's revenue in a goods category relative to day one once `entrants` more
@@ -790,150 +719,3 @@ class GoodsMixin:
         if cat not in self.ESSENTIAL_CATEGORIES:
             factor *= self.income_factor()
         return factor
-
-    def goods_market_note(self, node_id):
-        """One sentence on why THIS concern's earnings have moved (or, for
-        one not yet opened, WOULD move) from the tree's own figure - so a
-        player sees why a concern that opened at 400 a year now earns 280,
-        instead of being left to notice the number changed and guess why
-        (the brief's own example, in the brief's own words). Also says when
-        competition, not just time, is the reason - the brief's own second
-        question ("do two looms compete") answered on the one screen a
-        player actually reads.
-
-        WORKS BEFORE YOU OPEN IT, not only after: returning None for
-        anything not yet `operating` would leave silent the one moment a
-        player could still choose differently - before committing capital
-        to a second concern in an already-saturated category. See
-        goods_market_factor_if_opened's own comment for the mechanism this
-        surfaces early.
-        """
-        cat = self.nodes[node_id].get("cat")
-        cfg = self.GOODS_CATEGORIES.get(cat)
-        if not cfg:
-            return None
-        opened = node_id in self.state.projects.operating
-        factor = (self.goods_market_factor(node_id) if opened
-                  else self.goods_market_factor_if_opened(node_id))
-        if factor is None or abs(factor - 1.0) < 0.01:
-            return None
-        node = self.nodes[node_id]
-        quoted = node["rev"] * (self.venture_ramp(node_id) if opened else 1.0) * self.price_index
-        now = quoted * factor
-        floor_factor = cfg["floor"] ** (1.0 - cfg["eta"])
-        direction = ("fallen, because supply of it - yours and everyone "
-                     "else's - has grown faster than demand"
-                     if factor < 1.0 else
-                     "risen, because the cheaper it got the more buyers it "
-                     "found")
-        category_state = self._goods_category_state(cat)
-        n_active = (category_state[0] if category_state else 0) + (0 if opened else 1)
-        n_active = max(1, n_active)
-        if opened:
-            bits = ["the tree quotes %s a year for this; it actually earns "
-                    "about %s now. The price this market pays has %s since "
-                    "you opened it. It will settle at roughly %s a year "
-                    "once that market saturation runs its course, not at "
-                    "nothing - there is always a floor price and a floor of "
-                    "buyers this kind of good keeps"
-                    % ("{:,.0f}".format(quoted), "{:,.0f}".format(now), direction,
-                       "{:,.0f}".format(quoted * floor_factor / n_active))]
-        else:
-            # Warning before decision: quote matches ventures/why figure.
-            bits = ["the tree quotes %s a year for this, and 'ventures'/'why' "
-                    "show that same figure - but %d of yours already sell "
-                    "into this market, so this would open already reduced by "
-                    "market saturation, at about %s a year, not %s"
-                    % ("{:,.0f}".format(quoted), n_active - 1,
-                       "{:,.0f}".format(now), "{:,.0f}".format(quoted))]
-        if n_active > 1:
-            bits.append("%d concern%s of yours %s selling into this same "
-                        "market at once and share what it will pay - each "
-                        "one takes home a smaller slice than it would alone"
-                        % (n_active, "" if n_active == 1 else "s",
-                           "would be" if not opened else "are"))
-        if cfg.get("essential"):
-            bits.append("this is a necessity: people keep buying it "
-                        "whatever it costs, which is why it barely moves "
-                        "with price")
-        elif self.essential_price_ratio() < 0.99:
-            bits.append("food has gotten cheaper in your hands, which "
-                        "leaves people more to spend on a good like this "
-                        "one")
-        if factor < 1.0:
-            # Solution: different category = no competition, keeps tree figure.
-            bits.append("a concern in a DIFFERENT goods category is not "
-                        "competing for these same buyers and is not reduced "
-                        "by this at all")
-        return ". ".join(bits)
-
-    def goods_market_summary(self):
-        """Every operating goods concern whose earnings have moved from the
-        tree's own figure, worst first - the aggregate version of
-        goods_market_note(), for `money` rather than one concern at a time.
-
-        ALSO THE TOTAL, not only the worst row. Market saturation can eat a
-        large share of gross revenue, and a screen that names only which
-        single concern is worst hit without adding the pieces up leaves "the
-        market is taking some of what I earn" as something a player has to
-        reconstruct by hand rather than a number they can read against their
-        own revenue. This is not a new
-        mechanism and not a bug in the existing one: goods_market_factor()'s
-        floors are exactly what GOODS_CATEGORIES documents, and several
-        concerns competing in the same category is exactly the situation
-        this file's cross-elasticity fix (see _goods_category_state) was
-        written to represent honestly. It is a real, intended effect that
-        simply had no total attached to it anywhere a player would read.
-        """
-        rows = []
-        quoted_total = actual_total = 0.0
-        for node_id in sorted(self.state.projects.operating):
-            cfg = self.GOODS_CATEGORIES.get(self.nodes[node_id].get("cat"))
-            if not cfg:
-                continue
-            factor = self.goods_market_factor(node_id)
-            node = self.nodes[node_id]
-            quoted = node["rev"] * self.venture_ramp(node_id) * self.price_index
-            quoted_total += quoted
-            actual_total += quoted * factor
-            if abs(factor - 1.0) > 0.01:
-                rows.append((node_id, factor))
-        if not rows:
-            return None
-        rows.sort(key=lambda entry: entry[1])
-        worst = rows[0]
-        cats_sharing = sorted({self.nodes[node_id].get("cat") for node_id, _factor in rows
-                               if (self._goods_category_state(self.nodes[node_id].get("cat")) or (1,))[0] > 1})
-        note = ("%d concern%s selling into a market that has moved since it "
-                "opened: %s is at %d%% of the tree's own figure, because "
-                "supply of what it makes has grown since it opened. "
-                "'ventures' says the same thing for each one"
-                % (len(rows), "" if len(rows) == 1 else "s",
-                   worst[0], round(worst[1] * PERCENT_SCALE)))
-        if cats_sharing:
-            note += (". You are running more than one concern selling into "
-                     "the same market in: %s - they are competing with each "
-                     "other, not just with time" % ", ".join(cats_sharing))
-        # THE NUMBER THAT WAS MISSING: total denarii a year, and what share
-        # of these concerns' own quoted figures that is - the "47% of gross
-        # revenue" a player has to be able to read directly, not infer.
-        gap = quoted_total - actual_total
-        if quoted_total > 0.5 and abs(gap) > 0.5:
-            pct = round(PERCENT_SCALE * abs(gap) / quoted_total)
-            if gap > 0:
-                note += (". Altogether, market saturation is taking about %s "
-                         "a year from these concerns - %d%% of what their own "
-                         "quoted figures add up to. It does not recover on "
-                         "its own: opening ANOTHER concern in a category you "
-                         "are already saturating makes this worse, not "
-                         "better, while a concern in a category you do not "
-                         "yet run keeps the tree's own figure"
-                         % ("{:,.0f}".format(gap), pct))
-            else:
-                note += (". Altogether, these concerns are earning about %s "
-                         "a year MORE than their own quoted figures add up "
-                         "to (%d%%) - cheap, saturated essentials have left "
-                         "buyers with more to spend on the rest"
-                         % ("{:,.0f}".format(-gap), pct))
-        return note
-
