@@ -872,7 +872,7 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
                                rent_hours_per_kg_by_material=None,
                                capability_band_price_by_carrier=None,
                                demand_anchor_price_by_material=None,
-                               interest_rate=0.0):
+                               interest_rate=0.0, include_capital=True):
     """Cost one recipe's whole batch, then split it across its outputs.
 
     Returns (total_process_cost_hours, {output_material: price_per_unit}),
@@ -950,7 +950,7 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
         return None
 
     capital_cost_hours = _capital_cost_hours_per_unit(
-        entry.get("capital") or [], current_prices, wage_by_trade, interest_rate)
+        (entry.get("capital") or []) if include_capital else [], current_prices, wage_by_trade, interest_rate)
     if capital_cost_hours is None:
         return None
 
