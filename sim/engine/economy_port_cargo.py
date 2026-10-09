@@ -14,8 +14,10 @@ LANDING, TAKING = "in", "out"
 
 
 def _enters_book(economy, leg):
-    """Whether the leg is home's trade in a good the economy trades."""
-    return leg["kind"] in (LANDING, TAKING) and leg["tonnes"] > 0.0 and leg["material"] in economy.area_map.goods()
+    """Whether the leg is home's trade in a good the economy trades, and a taking cargo has money and a use for it."""
+    if leg["kind"] not in (LANDING, TAKING) or leg["tonnes"] <= 0.0 or leg["material"] not in economy.area_map.goods():
+        return False
+    return leg["kind"] == LANDING or (leg["paid"] > 0.0 and leg["received"] > leg.get("carriage", 0.0))
 
 
 def cargo_orders(economy, legs, tonnes_per_unit):
@@ -34,8 +36,6 @@ def cargo_orders(economy, legs, tonnes_per_unit):
             continue
         budget = leg["paid"] / coin
         worth_per_unit = (leg["received"] - leg.get("carriage", 0.0)) / coin / units
-        if budget <= 0.0 or worth_per_unit <= 0.0:
-            continue
         fundings.append(Transfer(EDGE_CARGO, account, economy.setup.currency_id, budget, "cargo funds"))
         # a merchant's order is for a fixed quantity (elasticity zero), at most what the cargo will fetch abroad
         orders[account] = AgentOrders(bids=(Bid(account, good, area, tile, 0.0, units, budget / units, 0.0, budget,

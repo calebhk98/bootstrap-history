@@ -200,6 +200,7 @@ class MarketClearingMixin:
             self._close_commodities()
         finally:
             self._price_level_held = None
+        self.settle_trader_cargo(None)
         self.close_partner_books(cargo_only=True)
         self.foreign_fleet_year_end()
         self._close_real_output()
