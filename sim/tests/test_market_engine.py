@@ -13,7 +13,6 @@ from functools import partial
 sim = partial(sim, agent_economy=False)   # legacy: pins the engine's own yearly material market
 
 
-from sim.engine.goods_market_api import FOUNDER
 
 MATERIAL = "iron"
 
@@ -66,7 +65,7 @@ check("a windfall of stock lowers the price at once, with no production change",
 s = sim(civ="rome_100ad", capital=1e9)
 base_state = s.market_state(MATERIAL)
 tonnes = base_state["capacity_tonnes"] * 0.05
-s.goods_market.note_purchase(FOUNDER, MATERIAL, tonnes)
+s.goods_market.note_purchase(s.goods_market.acting_party_id, MATERIAL, tonnes)
 bought_state = s.market_state(MATERIAL)
 check("what the founder buys adds demand: the year, closed now, would price higher",
       bought_state["price_ratio_if_year_closed_now"] > base_state["price_ratio_if_year_closed_now"],

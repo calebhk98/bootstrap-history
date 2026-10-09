@@ -35,6 +35,10 @@ class DisclosureView:
 			return PROOF_YEARS / self.secret_exposure(node_id)
 		return float(PROOF_YEARS)
 
+	def seat_parties(self) -> Any:
+		"""Every seat as an actor, by seat id: the founder and other players hold patents and shares."""
+		return self._sim.seat_parties()
+
 	def state_grants_patents(self, actor: Any) -> bool:
 		"""Whether the state holds a technology that declares the `patent_grant` mechanic, in its own
 		knowledge or in what its society already knows."""
@@ -43,7 +47,8 @@ class DisclosureView:
 
 	def patent_entry(self, node_id: str) -> Any:
 		"""The live patent on an invention as {"holder", "expires", "licensees"}, or None."""
-		return licence.live_patent(self._sim.actors.actors.values(), node_id, self.year)
+		holders = list(self._sim.actors.actors.values()) + list(self._sim.seat_parties().values())
+		return licence.live_patent(holders, node_id, self.year)
 
 	def collect_royalty(self, firm: Any, node_id: str, takings: float) -> float:
 		"""The founder's royalty on a licensed firm's takings; the amount paid."""

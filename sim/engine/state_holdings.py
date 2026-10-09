@@ -32,6 +32,11 @@ class HoldingsState:
 	# tonnes a year per material the last throttle saw; the next year's prices read it before it is recomputed
 	material_demand_at_last_throttle: Optional[Dict[str, float]] = None
 	_dashboard_history: Optional[List[Any]] = None
+	# rights and equity the seat holds as an actor: patents by node id, shares held by issuer id, and the part
+	# of the seat's own equity issued to others
+	patents: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+	shares_held: Dict[str, float] = field(default_factory=dict)
+	shares_issued: float = 0.0
 
 
 @dataclass

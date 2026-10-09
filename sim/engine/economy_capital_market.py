@@ -26,7 +26,7 @@ LENDABLE_RESERVE_SHARE = declare(
     why="How much of its spare reserve a state puts into the loanable pool (the rest stays as coin and "
         "bullion). Stands in for a treasury's investment policy.")
 
-FOUNDER_LOAN = capital_market.FOUNDER_LOAN
+SEAT_SOURCE_PREFIX = "seat:"   # a seat's own savings among the funds lenders hold
 
 
 class CapitalMarketMixin:
@@ -69,7 +69,7 @@ class CapitalMarketMixin:
 
     def market_loans(self):
         """Everything modelled borrowers owe, by borrower."""
-        loans = {FOUNDER_LOAN: max(0.0, -self.state.household.capital)}
+        loans = {seat_id: max(0.0, -seat.household.capital) for seat_id, seat in self.state.seats.items()}
         for actor_id in sorted(self.actors.actors):
             actor = self.actors.actors[actor_id]
             if actor.record.exited_year is not None:
@@ -82,12 +82,14 @@ class CapitalMarketMixin:
         gov = self.state_treasury()
         firms = sum(max(0.0, firm.money) for firm in self.actors.active_firms())
         spare = max(0.0, gov.money - sum(gov.record.need.values()))
-        return {
+        funds = {
             "households": LENDING_HORIZON_YEARS * world.household_saving(),
-            "founder": max(0.0, self.state.household.capital),
             "firms": firms,
             "state": LENDABLE_RESERVE_SHARE * spare,
         }
+        for seat_id, seat in self.state.seats.items():
+            funds[SEAT_SOURCE_PREFIX + seat_id] = max(0.0, seat.household.capital)
+        return funds
 
     def state_lending(self):
         """(what the state has out on loan, the yearly rate lenders earn) at the last meeting. Lenders'
@@ -130,7 +132,7 @@ class CapitalMarketMixin:
         gov = "government:" + str(self.civ.get("id"))
         if record is None or record.supply <= 0.0:
             return {"market_rate": round(self.market_rate(), 4), "met": False}
-        room = self.market_credit_room(FOUNDER_LOAN)
+        room = self.market_credit_room(self.state.acting_seat)
         return {
             "met": True,
             "market_rate": round(record.rate, 4),

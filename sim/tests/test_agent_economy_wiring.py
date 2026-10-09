@@ -115,6 +115,6 @@ for _year in range(2):
     credit_game.step()
 agent_market = credit_game.economy.agent.economy()
 check("on the agent economy the credit room is the agent market's, as the rate is",
-      credit_game.market_credit_room("founder") == economy_api.credit_room(agent_market, "founder")
+      credit_game.market_credit_room(credit_game.state.acting_seat) == economy_api.credit_room(agent_market, credit_game.state.acting_seat)
       and credit_game.market_rate() == economy_api.interest_rate(agent_market),
-      (credit_game.market_credit_room("founder"), economy_api.credit_room(agent_market, "founder")))
+      (credit_game.market_credit_room(credit_game.state.acting_seat), economy_api.credit_room(agent_market, credit_game.state.acting_seat)))

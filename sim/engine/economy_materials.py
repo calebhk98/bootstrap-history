@@ -933,11 +933,11 @@ class MaterialSupplyMixin:
 
     def buy_material_stock(self, material, tonnes):
         """The founder buys a material at the market (see GoodsMarket.buy)."""
-        return self.goods_market.buy(self.goods_market.founder, material, tonnes)
+        return self.goods_market.buy(self.goods_market.acting, material, tonnes)
 
     def sell_material_stock(self, material, tonnes):
         """The founder sells stock at the market (see GoodsMarket.sell)."""
-        return self.goods_market.sell(self.goods_market.founder, material, tonnes)
+        return self.goods_market.sell(self.goods_market.acting, material, tonnes)
 
     def materials_report(self):
         """Stocks, annual flows, demand, and current trade values."""

@@ -437,6 +437,10 @@ class World(Protocol):
 		"""The live patent on a node ({"holder", "expires", "licensees"}), else None."""
 		...
 
+	def seat_parties(self) -> Dict[str, Any]:
+		"""Every seat as an actor by seat id (they hold patents and shares like any actor)."""
+		...
+
 	# ---- What the home state asks of its people (sim/engine/agents_port_budget.py)
 
 	def country_strata(self) -> List[Any]:
