@@ -1,6 +1,6 @@
 # Reach and built roads are not read by the engine
 
-**Status:** closed - roads, railways, canals, bridges and ports are built over time by a crew hired through the labour market, steep ground is built engineered, a train and a canal barge have carriage rates, market areas follow the built ways, and the reach ladder is derived from the carriers' own days per tile
+**Status:** partly - roads, railways, canals, bridges and ports are built over time by a crew hired through the labour market, steep ground is built engineered, a train and a canal barge have carriage rates, market areas follow the built ways, and the reach ladder is derived from the carriers' own days per tile. Remaining from the complaints folded in here: settlement still splits people by arable area times fertility instead of reading food potential (414); a mine does not name a found deposit, so mining does not read endowment or prospecting (415); surveyed positions per mine (281, owner: later)
 
 Geography routes over tiles by any mode a civilisation holds, with roads and railways as built improvements the caller records (`api.route`, `api.reach`, `api.edge_key`, `api.build_requirements`; `sim/geography/INTERFACE.md`).
 
