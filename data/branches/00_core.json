@@ -559,13 +559,9 @@
       "capability": {
         "lost_benefit": "Artisan training capacity"
       },
-      "mining_tech": {
-        "yield": 1.3,
-        "cost": 0.85,
-        "materials": [
-          "iron",
-          "coal"
-        ]
+      "mine_works": {
+        "haulage_load_kilograms": 2500.0,
+        "source": "temporary_heuristic: cast-iron plateway underground. Load per carrier trip = a horse's sustained pull (about 500 N, a heuristic) over rolling resistance times gravity, one driver per train, speed as the barrow's. Plateway resistance is taken at 0.02 (friction falls about sevenfold from macadam, Complaints/reports/mining-techniques-physics-research.md section 2.9), so about 2.5 tonnes, in line with the 2 to 3 tonnes on a waggonway there."
       },
       "room_places": {
         "flat": 15,
@@ -5529,9 +5525,9 @@
         "factor": 1.35,
         "order": 4
       },
-      "mining_tech": {
-        "yield": 1.3,
-        "cost": 1.0
+      "mine_works": {
+        "haulage_load_kilograms": 10000.0,
+        "source": "Wagons on rails let one horse deliver 10 to 13 tonnes of coal per run, about four times a road wagon (Complaints/reports/mining-techniques-physics-research.md section 2.9, Early Transport PDF, a snippet); the low end is taken as the load per carrier trip."
       },
       "room_places": {
         "flat": 95,
@@ -6360,9 +6356,13 @@
       "precaution": {
         "kind": "pilot_plant"
       },
-      "mining_tech": {
-        "yield": 1.6,
-        "cost": 0.65
+      "mine_works": {
+        "drainage_engine": {
+          "lift_power_watts": 30200.0,
+          "attendants": 2,
+          "fuel_kg_per_tonne_metre": 0.0292
+        },
+        "source": "Farey 1827 pp. 172-173, Smeaton's new Long Benton engine: 40.5 horsepower effective, a duty of 9.45 million foot-pounds per bushel, derived 0.0292 kg of coal per tonne-metre of water (Complaints/reports/mining-techniques-physics-research.md section 2.11). Attendants (an engineman and a stoker) are a temporary_heuristic: the text gives none."
       }
     },
     "name": "Newcomen atmospheric engine",

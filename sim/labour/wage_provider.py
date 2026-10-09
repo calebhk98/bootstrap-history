@@ -57,6 +57,9 @@ def validate_coin_standard(civ: Mapping[str, Any]) -> None:
         raise ValueError("civilization %r coin_standard needs a positive kg_per_unit" % name)
     if not isinstance(standard.get("source"), str) or not standard["source"].strip():
         raise ValueError("civilization %r coin_standard needs a source" % name)
+    recipe = standard.get("mint_recipe")
+    if recipe is not None and (not isinstance(recipe, str) or not recipe):
+        raise ValueError("civilization %r coin_standard mint_recipe must be a production entry id" % name)
     fineness = standard.get("fineness")
     if fineness is not None and (isinstance(fineness, bool) or not isinstance(fineness, (int, float))
                                  or not 0.0 < fineness <= 1.0):

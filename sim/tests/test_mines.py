@@ -6,7 +6,7 @@ from .harness import *  # noqa: F401,F403
 # nothing in the model answered: can you sink unlimited mines of one
 # material, does yield fall as the easy ore is worked out, and does
 # technology fight back. See economy.py's mine_land_ceiling()/
-# mine_depletion_factor()/mining_tech() for the reasoning and the numbers.
+# mine_depletion_factor() and sim/world/mine_technique.py for the reasoning and the numbers.
 # =============================================================================
 
 # --- (a) LAND: the ceiling differs by material and by civilization, because
@@ -84,39 +84,33 @@ check("a working driven at a tenth of what the land could support depletes "
       or s_gentle.mine_depletion_factor("coal") == 1.0,
       (s_gentle.mine_depletion_factor("coal"), s_dep.mine_depletion_factor("coal")))
 
-# --- (c) TECHNOLOGY fights back: it raises yield and lowers cost, and the
-# two compound across independent technologies (mine pumping AND the
-# Newcomen engine both address drainage, at different scale).
+# --- (c) TECHNOLOGY fights back: each technique changes the physical term of the works it acts on,
+# so the running cost per tonne falls, and the cheapest of several lifting devices is used rather
+# than the devices compounding (mine pumping and the Newcomen engine both address drainage).
 s_tech = s_land
-y0, c0 = s_tech.mining_tech("coal")
+c0 = s_tech._mine_opex("coal")
 run_it(s_tech, "met_mine_pumping")
-y1, c1 = s_tech.mining_tech("coal")
+c1 = s_tech._mine_opex("coal")
 run_it(s_tech, "steam_atmospheric")
-y2, c2 = s_tech.mining_tech("coal")
-check("mine pumping alone raises yield and lowers cost for coal mining",
-      y1 > y0 and c1 < c0, (y0, y1, c0, c1))
-check("the Newcomen engine on top of mine pumping compounds rather than "
-      "replacing it",
-      y2 > y1 and c2 < c1, (y1, y2, c1, c2))
-check("mining technology never raises yield or lowers cost without bound "
-      "(capped/floored like every other compounding factor in this file)",
-      y2 <= 3.0 and c2 >= 0.35, (y2, c2))
+c2 = s_tech._mine_opex("coal")
+check("mine pumping alone lowers the running cost of coal mining",
+      c1 < c0, (c0, c1))
+check("the Newcomen engine on top of mine pumping does not cost more than mine pumping alone",
+      c2 <= c1, (c1, c2))
 
-# --- technology raises what an EXISTING, already-depleted working yields,
-# not only room for a new one - "fight depletion", not just avoid it.
-before_tech = s_dep.mine_yield_t("coal")
+# --- technology lowers what an EXISTING, already-depleted working costs to run.
+before_tech = s_dep.mine_operating_cost_for(s_dep.mines[0])
 run_it(s_dep, "met_mine_pumping")
 run_it(s_dep, "steam_atmospheric")
-after_tech = s_dep.mine_yield_t("coal")
-check("mine pumping and the Newcomen engine raise a depleted working's "
-      "actual yield, not just future room to sink a new one",
-      after_tech > before_tech, (before_tech, after_tech))
+after_tech = s_dep.mine_operating_cost_for(s_dep.mines[0])
+check("mine pumping and the Newcomen engine lower a depleted working's running cost",
+      after_tech < before_tech, (before_tech, after_tech))
 
 # --- the interaction the brief asked for: a real decision, not an
 # exponential. Cost is bounded on both ends even at maximum depletion with
 # every relevant technology built.
 s_bound = sim(capital=1.0)
-for _t in s_bound.nodes_with_mechanic("mining_tech"):
+for _t in s_bound.nodes_with_mechanic("mine_works"):
     s_bound.done.add(_t); s_bound.operating.add(_t)
 s_bound._done_changed()
 # A working of its own, fully depleted from its own commissioning year (see

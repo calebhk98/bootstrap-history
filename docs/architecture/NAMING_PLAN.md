@@ -320,7 +320,6 @@ Same referent as `k` (an id/key), just scope-shadowed.
   referent of the same shape.
 
 **`_y` — 56 bindings, 9 files. Verdict: CONSISTENT — a discarded year.**
-- `sim/engine/economy.py:3822` — `_y, cost = self.mining_tech(mat)`.
 - `sim/engine/fog.py:323` — `for k, _y in (getattr(self, "forgotten", None) or {}).items()`:
   the year a technology was forgotten, unused by the caller. Always "a year
   value, conventionally unused" — the underscore-prefix convention is doing

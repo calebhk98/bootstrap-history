@@ -657,15 +657,11 @@ class MaterialSupplyMixin:
             return holdings.nitre_bed_m2 * self.NITRE_YIELD_T_PER_M2
         if tag.startswith("mine:"):
             mat = tag[5:]
-            # DEPLETION AND TECHNOLOGY, not the nominal tonnage you sank
-            # capital into. mine_capacity is a historical record of what
-            # you PAID for; what a working actually YIELDS this year is
-            # that, discounted by how worked-out it is and multiplied by
-            # whatever mining technology has done to counter that -- see
-            # mine_depletion_factor() and mining_tech()'s own comments.
-            yld, _cost = self.mining_tech(mat)
-            return (self.mine_capacity.get(mat, 0.0)
-                    * self.mine_depletion_factor(mat) * yld)
+            # DEPLETION, not the nominal tonnage you sank capital into.
+            # mine_capacity is a historical record of what you PAID for;
+            # what a working actually YIELDS this year is that, discounted
+            # by how worked-out it is -- see mine_depletion_factor().
+            return self.mine_capacity.get(mat, 0.0) * self.mine_depletion_factor(mat)
         return 0.0
 
     def _national_output_tonnes(self, emp_key):
