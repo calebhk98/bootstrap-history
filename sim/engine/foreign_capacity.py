@@ -12,8 +12,8 @@ has no capacity and is only bought.
 import functools
 
 from sim.constants import declare
-from sim.geography.api import layer_value, tiles_held, tiles_of_regions
-from sim.world import demand as demand_model
+from sim.geography.api import tiles_held
+from sim.world import demand as demand_model, mineral_shares
 
 from .data import ROOT, load_civ, starting_schedule
 from .market_demand import MEAN_INCOME_HOURS_PER_CAPITA, household_demand_by_material
@@ -63,16 +63,10 @@ def household_tonnes_by_material(civilization_id):
     return budget_scaled_final_tonnes(prices_in_hours, float(civilization.get("population") or 0.0))
 
 
-def held_mineral_share(civilisation, regions, commodity):
-    """Sum of the regional shares of a mined commodity over the tiles the civilisation holds: each
-    region's share counted by the fraction of that region's tiles held."""
-    held_by_region = {}
-    for tile_id in tiles_held(civilisation):
-        region_id = layer_value(tile_id, "region")
-        held_by_region[region_id] = held_by_region.get(region_id, 0) + 1
-    return sum(float((regions[region_id].get("minerals") or {}).get(commodity, 0.0))
-               * held / len(tiles_of_regions([region_id]))
-               for region_id, held in held_by_region.items() if region_id in regions)
+def held_mineral_share(civilisation, geography, commodity):
+    """Share of a mined commodity on the tiles the civilisation holds: the deposits sitting on them,
+    plus the region tables' remainder (no deposit behind it) by the fraction of each region's tiles held."""
+    return mineral_shares.held_share(tiles_held(civilisation), commodity, geography)
 
 
 class ForeignCapacityMixin:
@@ -101,8 +95,8 @@ class ForeignCapacityMixin:
                    for region in self.geography.regions.values())
 
     def _foreign_mineral_share(self, civilization_id, commodity):
-        """Sum of its home regions' shares of a mined commodity."""
-        return held_mineral_share(load_civ(civilization_id), self.geography.regions, commodity)
+        """Share of a mined commodity on the tiles it holds."""
+        return held_mineral_share(load_civ(civilization_id), self.geography.data, commodity)
 
     def _foreign_can_make(self, civilization_id, material, solved, _seen=None):
         """Whether its techniques and regions supply the material: it holds
