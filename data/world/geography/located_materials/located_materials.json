@@ -132,7 +132,7 @@
      "name": "Lake Titicaca basin",
      "lat": -15.8,
      "lon": -69.9,
-     "source": "The potato was domesticated in the southern Peruvian Altiplano; Spooner et al. 2005."
+     "source": "The potato was domesticated in southern Peru (the Titicaca basin position is approximate); Spooner, McLean, Ramsay, Waugh and Bryan, A single domestication for potato based on multilocus amplified fragment length polymorphism genotyping, PNAS 102 (2005) 14694-14699."
     }
    ],
    "cost_multiplier": 1,
@@ -149,7 +149,7 @@
      "name": "Balsas river valley, Mexico",
      "lat": 18.0,
      "lon": -101.0,
-     "source": "Maize descends from teosinte of the Balsas valley; Matsuoka et al. 2002."
+     "source": "Maize descends from Balsas teosinte and arose in a single domestication in southern Mexico, the Balsas drainage being a candidate region; Matsuoka et al., A single domestication for maize shown by multilocus microsatellite genotyping, PNAS 99 (2002) 6080-6084."
     }
    ],
    "cost_multiplier": 1,
@@ -165,7 +165,7 @@
      "name": "Soconusco, Chiapas",
      "lat": 15.0,
      "lon": -92.3,
-     "source": "Soconusco was the classic cacao coast of Mesoamerica; Coe and Coe, The True History of Chocolate."
+     "source": "Soconusco was the classic cacao coast of Mesoamerica; Coe and Coe, The True History of Chocolate (Thames and Hudson, 1996), and cacao residues at Paso de la Amada in Soconusco, Powis et al., Oldest chocolate in the New World, Antiquity 81 (2007)."
     }
    ],
    "cost_multiplier": 1,
@@ -203,7 +203,7 @@
      "name": "Yungas, Bolivia",
      "lat": -16.5,
      "lon": -67.5,
-     "source": "The Yungas and the eastern Andean slopes are the old coca country; Plowman 1984."
+     "source": "The Yungas and the eastern Andean slopes are the old coca country; Plowman, The ethnobotany of coca, in Prance and Kallunki (eds), Ethnobotany in the Neotropics, Advances in Economic Botany 1 (1984) 62-111."
     }
    ],
    "cost_multiplier": 90,
@@ -218,7 +218,7 @@
      "name": "Lower Yangtze (Suzhou and Hangzhou)",
      "lat": 30.5,
      "lon": 120.2,
-     "source": "The Yangtze delta was China's leading silk region; Kuhn, Science and Civilisation in China vol 5 part 9."
+     "source": "The Yangtze delta was China's leading silk region; Kuhn, Science and Civilisation in China vol 5 part 9, Textile Technology: Spinning and Reeling (Cambridge University Press, 1988)."
     }
    ],
    "cost_multiplier": 30,
@@ -243,7 +243,7 @@
      "name": "Barus, Sumatra",
      "lat": 2.0,
      "lon": 98.4,
-     "source": "Barus camphor (Dryobalanops) was the Indian Ocean trade's prized camphor; Wheatley, The Golden Khersonese."
+     "source": "Barus camphor (Dryobalanops) was the Indian Ocean trade's prized camphor; Drakard, An Indian Ocean Port: Sources for the Earlier History of Barus, Archipel 37 (1989), doi 10.3406/arch.1989.2562."
     },
     {
      "name": "Fujian and Taiwan (Cinnamomum camphora)",
@@ -280,7 +280,7 @@
      "name": "Malabar coast",
      "lat": 10.0,
      "lon": 76.3,
-     "source": "Malabar was the pepper coast of the Roman trade; Casson, Periplus Maris Erythraei."
+     "source": "Malabar was the pepper coast of the Roman trade; Casson, The Periplus Maris Erythraei (Princeton University Press, 1989), on Limyrike."
     }
    ],
    "cost_multiplier": 8,
@@ -299,7 +299,7 @@
      "name": "Nile valley",
      "lat": 30.0,
      "lon": 31.2,
-     "source": "Cotton growing in Egypt, small in antiquity and large after 1820; Owen, Cotton and the Egyptian Economy."
+     "source": "Cotton growing in Egypt, small in antiquity and large after 1820; Owen, Cotton and the Egyptian Economy 1820-1914 (Oxford, 1969), which covers the period from 1820."
     }
    ],
    "cost_multiplier": 4
@@ -365,7 +365,7 @@
      "name": "Hit, on the Euphrates",
      "lat": 33.64,
      "lon": 42.83,
-     "source": "Natural bitumen seeps at Hit, used since Sumer; Forbes, Studies in Ancient Technology vol 1."
+     "source": "Natural bitumen seeps at Hit, used since Sumer; Forbes, Studies in Ancient Technology vol 1, Bitumen and Petroleum in Antiquity (Brill, 2nd ed 1964)."
     }
    ],
    "cost_multiplier": 2,
@@ -406,13 +406,13 @@
      "name": "Weardale, Northern Pennines",
      "lat": 54.74,
      "lon": -2.2,
-     "source": "Fluorspar mined with the Pennine lead veins; Dunham, Geology of the Northern Pennine Orefield."
+     "source": "Fluorspar mined with the Pennine lead veins; Dunham, Geology of the Northern Pennine Orefield vol 1, Tyne to Stainmore (British Geological Survey, 2nd ed 1990), and Dunham, Fluorspar and barytes in the Northern Pennines, Geological Magazine (1938)."
     },
     {
      "name": "Freiberg, Saxony",
      "lat": 50.92,
      "lon": 13.34,
-     "source": "Fluorspar of the Erzgebirge veins; Baumann et al., Freiberg district."
+     "source": "Fluorite and barite occur as gangue in the Erzgebirge and Freiberg vein deposits (Mineralium Deposita studies of the Freiberg sphalerite and the Niederschlag fluorite-barite mine); the Baumann et al. reference formerly cited was not found."
     }
    ],
    "cost_multiplier": 2
@@ -437,7 +437,7 @@
      "name": "Chincha Islands, Peru",
      "lat": -13.6,
      "lon": -76.4,
-     "source": "The Chincha Islands guano trade from 1840; Mathew, The House of Gibbs and the Peruvian Guano Monopoly (1981)."
+     "source": "The Chincha Islands guano trade from 1840; Mathew, The House of Gibbs and the Peruvian Guano Monopoly (Royal Historical Society, 1981)."
     }
    ],
    "cost_multiplier": 30,
@@ -450,7 +450,7 @@
      "name": "Ganges plain",
      "lat": 25.0,
      "lon": 85.0,
-     "source": "Sugar boiling began in the Ganges plain; Daniels, Science and Civilisation in China vol 6 part 3."
+     "source": "Sugar boiling began in the Ganges plain; Daniels, Agro-industries: sugarcane technology, Science and Civilisation in China vol 6 part 3 (Cambridge University Press, 1996)."
     },
     {
      "name": "Java",
@@ -482,7 +482,7 @@
      "name": "Kaffa, Ethiopia",
      "lat": 7.3,
      "lon": 36.0,
-     "source": "Coffea arabica is native to the southwest Ethiopian highlands; Anthony et al. 2002."
+     "source": "Coffea arabica is native to the southwest Ethiopian highlands; Anthony, Combes, Astorga, Bertrand, Graziosi and Lashermes, The origin of cultivated Coffea arabica L. varieties revealed by AFLP and SSR markers, Theoretical and Applied Genetics 104 (2002) 894-900 (primary centre of diversity)."
     }
    ],
    "cost_multiplier": 15,
@@ -495,13 +495,13 @@
      "name": "Niger delta oil palm belt",
      "lat": 5.0,
      "lon": 6.0,
-     "source": "The oil palm belt of the Bight of Benin and Biafra; Lynn, Commerce and Economic Change in West Africa."
+     "source": "The oil palm belt of the Bight of Benin and Biafra; Lynn, Commerce and Economic Change in West Africa: The Palm Oil Trade in the Nineteenth Century (Cambridge University Press, 1997)."
     },
     {
      "name": "Ashanti kola country",
      "lat": 6.7,
      "lon": -1.6,
-     "source": "Kola nut grown in the forest of Ashanti and traded north; Lovejoy, Caravans of Kola."
+     "source": "Kola nut grown in the forest of Ashanti and traded north; Lovejoy, Caravans of Kola: The Hausa Kola Trade 1700-1900 (Zaria, Ahmadu Bello University Press, 1980)."
     }
    ],
    "cost_multiplier": 20
@@ -513,13 +513,13 @@
      "name": "Bambuk and the upper Senegal",
      "lat": 13.5,
      "lon": -11.5,
-     "source": "Bambuk gold fed the trans-Saharan trade; Bovill, The Golden Trade of the Moors."
+     "source": "Bambuk gold fed the trans-Saharan trade; Bovill, The Golden Trade of the Moors (Oxford University Press, 1958), which names Bambuk among the gold-bearing districts."
     },
     {
      "name": "Akan goldfields",
      "lat": 6.5,
      "lon": -2.0,
-     "source": "Akan alluvial gold and forest ivory; Garrard, Akan Weights and the Gold Trade."
+     "source": "Akan alluvial gold and forest ivory; Garrard, Akan Weights and the Gold Trade (Longman, 1980)."
     }
    ],
    "cost_multiplier": 6,

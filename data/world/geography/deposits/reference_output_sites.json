@@ -106,8 +106,8 @@
    "share_of_reference_output": 0.1,
    "deposit_type": "metamorphosed_copper_sulphide",
    "status": "historic",
-   "conf": "B",
-   "source": "Khetri-Singhana belt, Rajasthan, copper worked since the Ganeshwar-Jodhpura culture and the Harappan period; Hegde and Craddock on Indian copper mining."
+   "conf": "C",
+   "source": "Khetri-Singhana belt, Rajasthan, copper worked since the Ganeshwar-Jodhpura culture (Ganeshwar site, Wikipedia); Willies, Ancient and post-medieval mining sites in the Khetri copper belt and the Kolar gold field, India, Bulletin of the Peak District Mines Historical Society 11(6), 1992, 285-295, listed in the Heritage of Metals and Societies review of Indian metallurgy but not read here. No joint Hegde and Craddock work on Khetri was found."
   },
   {
    "id": "hazaribagh_tin",
@@ -119,7 +119,7 @@
    "deposit_type": "pegmatite_cassiterite",
    "status": "historic",
    "conf": "D",
-   "source": "Cassiterite of the Hazaribagh-Gaya mica belt, Bihar-Jharkhand, the small Indian tin source (Geological Survey of India); not independently re-checked. Ancient India imported most of its tin."
+   "source": "Cassiterite of the Hazaribagh-Gaya mica belt, Bihar-Jharkhand, as a placeholder for the small Indian tin output. No source found for tin in Hazaribagh or Gaya (Indian Bureau of Mines Bihar listings omit tin; India's commercial cassiterite is in Bastar and Dantewada, Chhattisgarh), so the occurrence is unverified. Ancient India imported most of its tin."
   },
   {
    "id": "zawar_lead",
@@ -167,7 +167,7 @@
    "deposit_type": "vein_copper",
    "status": "historic",
    "conf": "C",
-   "source": "Talmessi and Meskani copper, Anarak district, Iran, worked from the Bronze Age; Pigott on Iranian copper. Kerman's Sar Cheshmeh is the larger modern body."
+   "source": "Talmessi and Meskani copper-nickel-cobalt ores, Anarak district, Iran; Encyclopaedia Iranica (Copper ii, Copper resources in Iran; Anarak) gives Talmessi as a possible early native-copper mine and Anarak copper mining as probably pre-Islamic, so Bronze Age working here is not confirmed. Kerman's Sar Cheshmeh is the larger modern body."
   },
   {
    "id": "mushiston_tin",
@@ -263,7 +263,7 @@
    "deposit_type": "carbonate_hosted_galena",
    "status": "historic",
    "conf": "C",
-   "source": "Huize and the Yunnan silver mines, the main Ming-Qing silver producers; von Glahn, Fountain of Fortune (1996). The earlier Han silver output was small."
+   "source": "Huize and the Yunnan silver mines: Yunnan was the most productive silver region from the Yuan onward, Ming records name about twenty mines and Qing records about two hundred, and the Jinniu mines at Huize were productive from the late 1780s (Heidelberg Sinology mining project, https://www.zo.uni-heidelberg.de/sinologie/research/epm/12_jinniu_huize.html). Von Glahn, Fountain of Fortune (1996), covers the Ming-Qing silver economy but was not found to treat Huize."
   },
   {
    "id": "taruga_iron",
@@ -275,7 +275,7 @@
    "deposit_type": "laterite_bog_ore",
    "status": "historic",
    "conf": "B",
-   "source": "Taruga and the Nok culture (central Nigeria), among the earliest iron smelting in West Africa, from the middle of the first millennium BC; Fagg and Rowlands."
+   "source": "Taruga and the Nok culture (central Nigeria), among the earliest iron smelting in West Africa, from the middle of the first millennium BC; Fagg Rackham, Franke, Junius, Maennel and Beck, Early West African Iron Smelting: The Legacy of Taruga in Light of Recent Nok Research, African Archaeological Review (2017), doi 10.1007/s10437-017-9262-2."
   },
   {
    "id": "akjoujt_copper",
@@ -287,7 +287,7 @@
    "deposit_type": "vein_copper",
    "status": "historic",
    "conf": "C",
-   "source": "Akjoujt (Mauritania), copper mined and smelted in the first millennium BC (radiocarbon dates from the Grotte aux Chauves-souris mine, fifth century BC); Lambert, Les industries sur cuivre dans l'Ouest saharien, West African Journal of Archaeology 1 (1971). Medieval working not verified."
+   "source": "Akjoujt (Mauritania), copper mined and smelted in the first millennium BC at the Grotte aux Chauves-souris mine (radiocarbon dates reported by Courcier and colleagues, CUPRUM project, citing Lambert 1965 and 1975; Killick 1988 cites Lambert 1971 and 1983 for mid first millennium BC smelting). The title and journal of Lambert 1971 (Les industries sur cuivre dans l'Ouest saharien) were not verified. Medieval working not verified."
   },
   {
    "id": "thai_nguyen_iron",
@@ -347,7 +347,7 @@
    "deposit_type": "skarn_copper",
    "status": "historic",
    "conf": "C",
-   "source": "Gumeshevskoye, near Polevskoy, Urals copper worked in the Bronze Age and by the Demidovs from the eighteenth century; Bronze Age attribution to the Chud is not sourced."
+   "source": "Gumeshevskoye (Gumyoshevsky) mine, Polevskoy, Urals: copper in use from the mid second millennium BC (Wikipedia, Gumyoshevsky mine) and a source of Final Bronze Age copper for Itkul and Sarmatian cultures (Ankusheva and colleagues); deposit found 1702, Polevskoy copper smelter 1724 to 1930. Chud and Demidov attributions are not sourced."
   },
   {
    "id": "zmeinogorsk_lead",
@@ -394,8 +394,8 @@
    "share_of_reference_output": 0.35,
    "deposit_type": "vein_copper",
    "status": "historic",
-   "conf": "B",
-   "source": "Inguaran, Michoacan, a copper source of West Mexican metallurgy, which began after about AD 700 along the Ecuador-Peru maritime route; Hosler, The Sounds and Colors of Power (MIT Press, 2009) and Hosler and Macfarlane, Science 273 (1996). Inguaran itself is cited from memory."
+   "conf": "C",
+   "source": "Inguaran, Michoacan, a copper source of West Mexican metallurgy, which began after about AD 700 along the Ecuador-Peru maritime route; Hosler, The Sounds and Colors of Power (MIT Press, 1994) and Hosler and Macfarlane, Copper Sources, Metal Production and Metals Trade in Late Postclassic Mesoamerica, Science 273 (1996) 1819-1824. Inguaran itself is not named in any source found, so its place among the sampled ores is unverified."
   },
   {
    "id": "taxco_tin",
@@ -431,7 +431,7 @@
    "deposit_type": "epithermal_vein",
    "status": "historic",
    "conf": "B",
-   "source": "Taxco, Guerrero, the first Spanish silver mines (1534) and the Mexican silver belt with Zacatecas; Bakewell on colonial Mexican silver."
+   "source": "Taxco, Guerrero, early Spanish silver mines of the 1530s (Encyclopedia.com, Taxco; Wikipedia, Taxco gives about 1532) and part of the Mexican silver belt with Zacatecas; Bakewell, Silver Mining and Society in Colonial Mexico: Zacatecas 1546-1700 (Cambridge University Press, 1971) covers Zacatecas, not Taxco."
   },
   {
    "id": "oruro_tin",
@@ -442,8 +442,8 @@
    "share_of_reference_output": 0.05,
    "deposit_type": "vein_cassiterite",
    "status": "historic",
-   "conf": "C",
-   "source": "Oruro and the Bolivian tin belt, the probable source of the tin bronze of Tiwanaku and the Inca; Lechtman on Andean metallurgy. Not independently re-checked."
+   "conf": "D",
+   "source": "Oruro and the Bolivian tin belt, a candidate source of Andean tin bronze: tin bronze appears in northern Bolivia in the Tiwanaku period, and Lechtman and Macfarlane's lead isotope work places Tiwanaku bronze ores in the Bolivian puna and high sierra, but no source found names Oruro as the prehispanic tin source. Unverified."
   },
   {
    "id": "cerro_de_pasco_lead",
@@ -467,7 +467,7 @@
    "deposit_type": "native_copper",
    "status": "historic",
    "conf": "A",
-   "source": "Keweenaw Peninsula and Isle Royale, Michigan: native copper mined by the Old Copper Complex peoples from about 5000 BC; Martin and Pleger on Lake Superior copper."
+   "source": "Keweenaw Peninsula and Isle Royale, Michigan: native copper mined by the Old Copper Complex peoples; lake-sediment geochemistry dates Isle Royale mining to 6500 to 5400 years ago, Pompeani et al., The Holocene (2014), doi 10.1177/0959683614557574."
   },
   {
    "id": "mesabi_iron",
