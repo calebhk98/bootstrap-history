@@ -18,6 +18,7 @@ from . import money_units, purchase_rule
 from .blockers import blocker_kind
 from .interest_groups import check_group_prohibition
 from .living_stock import check_unheld_stock
+from .material_availability import check_materials_have_a_seller
 from .data import win_condition_describe
 from sim.constants import declare
 from .projects_precaution import (spec as precaution_spec, extra_cost as precaution_extra_cost,
@@ -851,6 +852,7 @@ class StartingMixin:
         _check_missing_prereqs,
         check_unheld_stock,
         _check_substitution,
+        check_materials_have_a_seller,
         _check_credit_frozen,
         _check_arrears,
         _check_people_exist,

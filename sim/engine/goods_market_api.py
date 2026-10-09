@@ -183,7 +183,7 @@ class GoodsMarket(GoodsOffers):
         """Current buy and sell quote for a tonne of a material; None when it has no price."""
         sim = self._sim
         material = str(material or "").strip().lower()
-        per_kg = sim._material_price_per_kg(material)
+        per_kg = self.unit_price(material)
         if per_kg is None:
             return None
         emp_key = sim._material_tag(material)[0]
@@ -204,7 +204,7 @@ class GoodsMarket(GoodsOffers):
         """(money, mean money per tonne) to buy `tonnes` of a material now, the price rising as
         the order is filled. None when it has no price."""
         sim = self._sim
-        unit_price = sim._material_price_per_kg(material)
+        unit_price = self.unit_price(material)
         if unit_price is None:
             return None
         emp_key, tag = sim._material_tag(material)

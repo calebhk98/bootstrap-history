@@ -21,10 +21,11 @@ and one function does the actual replacement `data.py` wants:
         -> (goods_in_money, provenance)
 
 `goods_in_money` is a plain {material: price} dict in the wage document's
-coin. `provenance` is {material: "solved" | "gated" | "mature"}: "solved" is
-priced under the held technologies, "gated" at a technique not held but with
-held-technique inputs, "mature" only under all technology (see
-priced_goods_table).
+coin. `provenance` is {material: "solved" | "gated"}: "solved" is priced under
+the held technologies, "gated" at a technique not held but within reach, with
+held-technique inputs (see priced_goods_table). A material neither makes is
+absent: a price needs a seller, and a trading partner's offer is priced by the
+goods market, not here.
 
 CACHE KEY: THE SET OF GATE NODES HELD, PLUS THE CIVILIZATION FOR LAND RENT.
 See RENT NEEDS A CIVILIZATION below for why a bare gate-node set stopped
@@ -160,13 +161,9 @@ Prices = Dict[str, float]
 # exactly the two fields every entry shares regardless of process shape.
 ProductionEntries = Dict[str, Any]
 
-# {material: "solved" | "gated" | "mature"} - see priced_goods_table's
-# own docstring for what the three strings mean. A plain Dict[str, str]
-# rather than a Literal-keyed TypedDict: the KEYS are material ids, open
-# and data-driven, exactly the case CLAUDE.md's TypedDict guidance carves
-# out for a plain mapping - the fixed part is the three VALUES, which are
-# documented in prose at every function that produces or reads one rather
-# than re-declared as a type this small module has no other user of.
+# {material: "solved" | "gated"} - see priced_goods_table's own docstring
+# for what the two strings mean. A plain Dict[str, str]: the KEYS are
+# material ids, open and data-driven.
 Provenance = Dict[str, str]
 
 HERE = os.path.dirname(os.path.abspath(__file__))              # sim/engine
@@ -570,12 +567,12 @@ def priced_goods_table(held_technology_ids: Iterable[str],
                  not hold does; priced at that technique with every other
                  input priced as this society prices it, so a good and the
                  inputs its own route buys sit in one price system.
-      "mature" - nothing in reach makes it. TRANSITIONAL (CLAUDE.md 4.4):
-                 priced as if every gate technology were held, standing for
-                 an import or a later supplier at the mature technique's
-                 cost, until trade and availability replace it. A material
-                 nothing anywhere makes is absent, never given an invented
-                 price.
+                 A technique is in reach when its node is the fewest research steps
+                 from what the society holds (`entries_in_reach`).
+
+    A material nothing in reach makes is absent: a price needs a seller. A trading partner that
+    makes it may still sell it (the goods market prices that at the partner's cost plus freight and
+    merchants' terms); where no one does, it cannot be bought.
 
     `civilization_id` and `interest_rate` are passed straight through to `solved_prices` - see RENT
     NEEDS A CIVILIZATION in the module docstring. `civilization`, when the caller holds
@@ -592,21 +589,16 @@ def priced_goods_table(held_technology_ids: Iterable[str],
         solved.gate_nodes_held, prices_json, production_entries=production_entries,
         civilization_id=civilization_id, interest_rate=interest_rate, civilization=civilization, farmed_hectares=farmed_hectares,
         admitted_entry_keys=entries_in_reach(held, solved.gate_nodes_held, solved.resolvable_materials, entries))
-    mature = solved_prices(all_gate_nodes(entries), prices_json,
-                           production_entries=production_entries,
-                           civilization_id=civilization_id, interest_rate=interest_rate,
-                           civilization=civilization, farmed_hectares=farmed_hectares)
     goods_in_money = {}
     provenance = {}
     territory = civilization_id or solve_prices.DEFAULT_LAND_CIVILIZATION
     held_tiles = None if civilization is None else tuple(tiles_held(civilization))
-    for table, label in ((mature, "mature"), (in_reach, "gated"), (solved, "solved")):
+    for table, label in ((in_reach, "gated"), (solved, "solved")):
         for material in table.resolvable_materials:
-            if label != "mature" and material not in table.chosen_recipe_by_material:
+            if material not in table.chosen_recipe_by_material:
                 continue    # no technique in this table delivers it (a heat it cannot reach): the price is a placeholder
-            if label != "mature" and not _climate_allows(
-                    entries.get(table.chosen_recipe_by_material[material]), territory, held_tiles):
-                continue    # a crop the territory's climate cannot grow stays priced as if imported
+            if not _climate_allows(entries.get(table.chosen_recipe_by_material[material]), territory, held_tiles):
+                continue    # a crop the territory's climate cannot grow is not made here; only a partner could sell it
             goods_in_money[material] = hours_to_denarii(
                 table.prices_in_labour_hours[material], prices_json)
             provenance[material] = label

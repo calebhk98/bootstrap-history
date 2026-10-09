@@ -3,6 +3,9 @@
 from sim.ui import units_text
 from .util import _fmt_num, _pct
 
+PRICE_BASIS_NOTE = {"gated": "priced at a technique you do not have",
+                    "imported": "bought from a trading partner, delivered"}
+
 
 def render_market(out):
     lines = ["GOODS YOUR CONCERNS SELL INTO  (share of the quoted figure being earned)"]
@@ -36,8 +39,7 @@ def render_market(out):
                          _fmt_num(row["sell_per_tonne"]),
                          _fmt_num(row["market_available_tonnes_per_year"]),
                          "own" if row["own_supply"] else "",
-                         "priced at a technique you do not have"
-                         if row.get("price_basis") in ("gated", "mature") else "")).rstrip())
+                         PRICE_BASIS_NOTE.get(row.get("price_basis"), ""))).rstrip())
     if materials.get("offset", 0) + len(rows) < materials.get("total", 0):
         lines.append("  more: market offset %d" % (materials["offset"] + len(rows)))
     lines += ["", "WAGES  (a year of one person; 'labour <trade>' for detail)",

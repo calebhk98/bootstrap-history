@@ -860,7 +860,8 @@ def _material_row(row):
                                  "on it, which lowers the premium on anything you still buy"
                                  % (row["own_supply_tonnes_per_year"], row["material"])}
                if row["own_supply_tonnes_per_year"] > 0 else {}),
-            **({} if row["priced"] else {"note": "no market price; counted as free"})}
+            **({} if row["priced"] else {"note": "cannot be bought: no one in reach makes or sells it, so the project cannot start on it "
+                                      "and its cost here leaves it out"})}
 
 
 def _explain_identity(sim, nodes, node_id, node):
