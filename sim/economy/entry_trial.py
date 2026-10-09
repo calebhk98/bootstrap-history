@@ -11,7 +11,7 @@ Entry drawn by a margin where makers already exist was tried and taken out: it m
 swing (Complaints/reports/agent-economy-review-round-four.md).
 """
 import math
-from typing import Dict, List, Mapping, Optional, Sequence, Tuple
+from typing import Dict, List, Mapping, Sequence, Tuple
 
 from sim.constants import declare
 
@@ -85,7 +85,8 @@ def capacity_in_area(terms: Mapping[GoodId, Sequence[Tuple[str, float]]], good: 
 
 def trial_entry_plans(setup, record, view, area_map, bids_by_market: Mapping[Tuple[GoodId, AreaId], Sequence[Bid]],
                       planned: Sequence[Tuple[GoodId, AreaId]] = (), siting=None) -> List[EntryPlan]:
-    """At most one trial newcomer per market with bids and no maker in its area."""
+    """Trial newcomers for each market with bids and no maker in its area: every recipe whose entry price
+    the bids would still take output at, cheapest first, each for a share of what the cheaper ones leave."""
     makers: Dict[GoodId, List[str]] = {}
     for recipe_id in sorted(setup.recipes):
         for good in setup.recipes[recipe_id].outputs:
@@ -99,31 +100,31 @@ def trial_entry_plans(setup, record, view, area_map, bids_by_market: Mapping[Tup
         area = next((each for each in area_map.areas(good) if each.area_id == area_id), None)
         if area is None or capacity_in_area(capacity_terms, good, area.tiles) > 0.0:
             continue
-        best = _cheapest(setup, record, view, good, area.anchor_tile, makers[good])
-        if best is None:
-            continue
-        recipe_id, cost = best
-        entry_price = cost * (1.0 + ENTRY_PRICE_MARGIN_SHARE)
         price = view.price(good, area_id)
-        wanted = demand_at(bids, entry_price, price if price and price > 0.0 else entry_price)
-        if wanted <= 0.0:
-            continue
-        added = wanted * ENTRY_SHARE_OF_UNTRADED_DEMAND
-        runs = added / setup.recipes[recipe_id].outputs[good]
-        tile = area.anchor_tile
-        if siting is not None:
-            picked = siting(recipe_id, UnmetDemand(good, area_id, area.anchor_tile, added), runs)
-            if picked is None:
-                continue
-            tile, runs = picked
-        if runs > 0.0 and math.isfinite(runs):
-            plans.append(EntryPlan(recipe_id, tile, good, runs, ENTRY_PRICE_MARGIN_SHARE))
+        built = 0.0
+        for recipe_id, cost in recipes_by_cost(setup, record, view, good, area.anchor_tile, makers[good]):
+            entry_price = cost * (1.0 + ENTRY_PRICE_MARGIN_SHARE)
+            wanted = demand_at(bids, entry_price, price if price and price > 0.0 else entry_price) - built
+            if wanted <= 0.0:
+                break
+            added = wanted * ENTRY_SHARE_OF_UNTRADED_DEMAND
+            runs = added / setup.recipes[recipe_id].outputs[good]
+            tile = area.anchor_tile
+            if siting is not None:
+                picked = siting(recipe_id, UnmetDemand(good, area_id, area.anchor_tile, added), runs)
+                if picked is None:
+                    continue
+                tile, runs = picked
+            if runs > 0.0 and math.isfinite(runs):
+                plans.append(EntryPlan(recipe_id, tile, good, runs, ENTRY_PRICE_MARGIN_SHARE))
+                built += runs * setup.recipes[recipe_id].outputs[good]
     return plans
 
 
-def _cheapest(setup, record, view, good, tile, recipe_ids) -> Optional[Tuple[str, float]]:
+def recipes_by_cost(setup, record, view, good, tile, recipe_ids) -> List[Tuple[str, float]]:
+    """(recipe, full cost per unit of `good`) for each recipe that can be costed, cheapest first."""
     rate = view.interest_rate(setup.currency_id)
-    best = None
+    ranked = []
     for recipe_id in recipe_ids:
         recipe = setup.recipes[recipe_id]
         probe = Producer("probe", "probe", recipe_id, tile, 1.0)
@@ -132,6 +133,6 @@ def _cheapest(setup, record, view, good, tile, recipe_ids) -> Optional[Tuple[str
         rent = record.land_rent.get(tile, 0.0) * setup.land_per_run.get(recipe_id, 0.0)
         cost = full_cost_per_unit(recipe, good, outputs, live_input_prices(probe, recipe, view),
                                   live_wages(probe, recipe, view), rate, rent)
-        if math.isfinite(cost) and cost > 0.0 and (best is None or cost < best[1]):
-            best = (recipe_id, cost)
-    return best
+        if math.isfinite(cost) and cost > 0.0:
+            ranked.append((recipe_id, cost))
+    return sorted(ranked, key=lambda item: (item[1], item[0]))

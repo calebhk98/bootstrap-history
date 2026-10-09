@@ -39,6 +39,7 @@ class EconomyRecord:
     worn_runs: Dict[AgentId, float] = field(default_factory=dict)        # plant that wore out last year, to rebuild
     state_budget: StateBudget = field(default_factory=StateBudget)       # the state's revenue and this year's plan
     land_rent: Dict[TileId, float] = field(default_factory=dict)         # rent per hectare producers paid, by tile
+    margin_years: Dict[str, int] = field(default_factory=dict)           # market_key -> years in a row the expected price stood above the entry price
     hours_hired: Dict[str, float] = field(default_factory=dict)          # labour market_key -> hours hired last year
     funds_offered: float = 0.0                                           # savings on offer at the last lending, home currency
     lent_by_borrower: Dict[AgentId, float] = field(default_factory=dict)  # what each borrower was lent at the last lending
@@ -65,6 +66,7 @@ class EconomyRecord:
             "worn_runs": self.worn_runs,
             "state_budget": plain(self.state_budget),
             "land_rent": self.land_rent,
+            "margin_years": self.margin_years,
             "hours_hired": self.hours_hired,
             "funds_offered": self.funds_offered,
             "lent_by_borrower": self.lent_by_borrower,
@@ -93,6 +95,7 @@ class EconomyRecord:
             worn_runs=dict(record["worn_runs"]),
             state_budget=StateBudget(**record["state_budget"]),
             land_rent=dict(record["land_rent"]),
+            margin_years=dict(record["margin_years"]),
             hours_hired=dict(record["hours_hired"]),
             funds_offered=record["funds_offered"],
             lent_by_borrower=dict(record["lent_by_borrower"]),
