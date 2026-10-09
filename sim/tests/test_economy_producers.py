@@ -172,7 +172,7 @@ class CloseYearTests(unittest.TestCase):
         self.assertEqual(result.transfers, ())
 
     def test_exit_after_persistent_losses_pays_out_the_cash(self):
-        view = farm_view(0.5, cash=50.0)
+        view = farm_view(0.001, cash=50.0)     # no workplace of the producer's covers its cost
         producer = farmer()
         for _year in range(producers_close.LOSS_YEARS_BEFORE_EXIT):
             self.assertGreater(producer.capacity_runs, 0.0)
