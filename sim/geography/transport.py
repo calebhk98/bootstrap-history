@@ -104,6 +104,8 @@ from sim.constants import declare
 # unit_conversions is infrastructure, not cross-domain wiring.
 from sim.unit_conversions import KILOGRAMS_PER_TONNE, METERS_PER_KILOMETER
 
+from .provisions import person_provisions_kg_per_day
+
 # ============================================================================
 # PHYSICAL CONSTANTS
 # ============================================================================
@@ -887,7 +889,7 @@ FreightPhysicalInputs = collections.namedtuple(
     "FreightPhysicalInputs",
     ["mode", "cargo_tonnes", "distance_per_day_km", "tonne_km_per_day",
      "feed_kg_per_day", "feed_kg_per_tonne_km", "driver_hours_per_tonne_km",
-     "vehicle_wear_fraction_per_tonne_km"])
+     "vehicle_wear_fraction_per_tonne_km", "carried_kg_per_day"])
 
 
 def _feed_kg_from_work_and_maintenance(maintenance_kcal: float, work_joules: float) -> float:
@@ -944,7 +946,8 @@ def draught_freight_physical_inputs(
         feed_kg_per_tonne_km=feed_kg / tonne_km_per_day,
         driver_hours_per_tonne_km=driver_hours_per_day / tonne_km_per_day,
         vehicle_wear_fraction_per_tonne_km=(
-            1.0 / (vehicle.service_life_km * cargo_tonnes)))
+            1.0 / (vehicle.service_life_km * cargo_tonnes)),
+        carried_kg_per_day=feed_kg + person_provisions_kg_per_day(1))
 
 
 def pack_climb_work_joules_per_day(
@@ -1013,7 +1016,8 @@ def pack_freight_physical_inputs(
         feed_kg_per_tonne_km=feed_kg / tonne_km_per_day,
         driver_hours_per_tonne_km=driver_hours_per_day / tonne_km_per_day,
         vehicle_wear_fraction_per_tonne_km=(
-            team_size / (vehicle.service_life_km * cargo_tonnes)))
+            team_size / (vehicle.service_life_km * cargo_tonnes)),
+        carried_kg_per_day=feed_kg + person_provisions_kg_per_day(1))
 
 
 def barge_freight_physical_inputs(
@@ -1092,7 +1096,8 @@ def barge_freight_physical_inputs(
         feed_kg_per_tonne_km=feed_kg / tonne_km_per_day,
         driver_hours_per_tonne_km=driver_hours_per_day / tonne_km_per_day,
         vehicle_wear_fraction_per_tonne_km=(
-            1.0 / (vehicle.service_life_km * cargo_tonnes)))
+            1.0 / (vehicle.service_life_km * cargo_tonnes)),
+        carried_kg_per_day=feed_kg + person_provisions_kg_per_day(1))
 
 
 def maximum_one_way_range_before_self_defeating_km(

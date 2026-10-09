@@ -122,7 +122,7 @@ class ForeignRoutesMixin:
                       freight_cost.CarrierPrices(freight_physics.BARGE.self_mass_kg * vehicle_wood,
                                                  2.0 * ox_price), land_days, 0.0),
             SEA_MODE: (hull_inputs, freight_cost.CarrierPrices(hull_kg * vehicle_wood),
-                    sea_freight.SAILING_DAYS_PER_YEAR, freight_cost.HULL_LOSS_PER_THOUSAND_KM)}
+                    sea_freight.SAILING_DAYS_PER_YEAR, sea_freight.hull_loss_per_thousand_km())}
 
     def _freight_mode_costs(self, imbalance=1.0, modes=None):
         """{mode: home money per tonne-km}: feed and crew, the carrier's capital at the market
