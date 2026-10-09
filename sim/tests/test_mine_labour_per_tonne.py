@@ -67,7 +67,9 @@ class MineLabourPerTonne(unittest.TestCase):
             deposit.depth_class, deposit.hardness_class,
             deposits._lift_hours_per_tonne_metre(),
             deposits.shaft_depth_metres(deposit),
-            mine_fire_setting.MINING_SHIFT_HOURS).values())
+            mine_fire_setting.MINING_SHIFT_HOURS,
+            drainage_hours_per_tonne_metre=deposits.drainage_lift_hours_per_tonne_metre()
+        ).values())
         self.assertAlmostEqual(
             _hours_per_tonne_of_ore(deposit),
             (deposits.BREAKING_HOURS_PER_TONNE_HARD + wood_hours) * rock_per_ore + works,

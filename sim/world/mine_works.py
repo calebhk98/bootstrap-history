@@ -73,7 +73,8 @@ WATER_LIFTED_TONNES_PER_TONNE_ORE_BY_DEPTH = declare(
     confidence="D",
     why="Drainage is the largest uncertain term of a deep mine; the lift "
         "work per tonne of water is physical, the inflow is a guess. "
-        "Drainage adits (Bettenay) would lower it.")
+        "Drainage adits lower the head it is lifted through "
+        "(mine_technique.py).")
 
 TIMBERED_SHARE_OF_WORKINGS_BY_HARDNESS = declare(
     "TIMBERED_SHARE_OF_WORKINGS_BY_HARDNESS",
@@ -121,9 +122,17 @@ def rock_broken_tonnes_per_tonne_ore(depth_class):
 
 def works_hours_per_tonne_ore(depth_class, hardness_class,
                               lift_hours_per_tonne_metre, depth_metres,
-                              shift_hours):
+                              shift_hours, effects=None,
+                              drainage_hours_per_tonne_metre=None):
     """{term: labourer-hours per tonne of ORE} for hoisting, carrying,
-    drainage and timbering. Breaking and fire-setting stay in deposits.py."""
+    drainage and timbering. Breaking and fire-setting stay in deposits.py.
+    `effects` (mine_technique.combine) lowers the head water is lifted
+    through; `drainage_hours_per_tonne_metre` is the lift cost of the water
+    device in use and defaults to the hoist's."""
+    effects = effects or {}
+    if drainage_hours_per_tonne_metre is None:
+        drainage_hours_per_tonne_metre = lift_hours_per_tonne_metre
+    drained_head = depth_metres * (1.0 - effects.get("gravity_drained_head_share", 0.0))
     carry_trips = 1000.0 / CARRY_LOAD_KILOGRAMS
     haul = (carry_trips * 2.0 * HAUL_DISTANCE_METRES_BY_DEPTH[depth_class]
             / CARRY_SPEED_METRES_PER_HOUR)
@@ -137,6 +146,7 @@ def works_hours_per_tonne_ore(depth_class, hardness_class,
     return {
         "hoist": lift_head,
         "haulage": haul,
-        "drainage": WATER_LIFTED_TONNES_PER_TONNE_ORE_BY_DEPTH[depth_class] * lift_head,
+        "drainage": (WATER_LIFTED_TONNES_PER_TONNE_ORE_BY_DEPTH[depth_class]
+                     * drainage_hours_per_tonne_metre * drained_head),
         "timbering": timbering,
     }

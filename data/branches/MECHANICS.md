@@ -48,7 +48,8 @@ change; read them from the node data (no command summarises them).
 | `institution_places` | people one unit supports (upkeep scaling) |
 | `labour_productivity` | `trade` and `bonus` for that trade's hour |
 | `schooling_flow` | schooling contribution; `required` makes it a precondition of all schooling |
-| `mining_tech` | `yield` and `cost` multipliers on mining, optionally limited to `materials` |
+| `mining_tech` | `yield` and `cost` multipliers on mining, optionally limited to `materials` (generic; a technique that stands for a physical work declares `mine_works` instead) |
+| `mine_works` | a physical term of the mine's works, read by `sim/world/mine_technique.py`: `drainage_lift_efficiency`, `gravity_drained_head_share`, `gravel_moved_multiple`; carries a `source` |
 | `hazard_counters` | list of `{kind, share, label, order}`: what harm the node counters |
 | `staff_grant` | people granted once on completion when auto-hire is off |
 | `staff_advice` | `kind` (`scholars`/`artisans`), `advice` text shown when staff is short |

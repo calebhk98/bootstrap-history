@@ -29,7 +29,7 @@ import functools
 from sim.constants import declare
 from . import money_units
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
-from sim.world import deposits as deposit_model
+from sim.world import deposits as deposit_model, mine_technique
 from sim.geography.api import mine_demand_goods, parameter_value, tile_facts, tiles_held, works_priced_from_deposits
 from . import purchase_rule
 from sim.agents.api import edges
@@ -120,18 +120,31 @@ class MiningMixin:
             quantity_tonnes_per_year=1.0, note="")
         return [(seam, 1.0)]
 
+    def mine_works_effects(self):
+        """What the running mining techniques change in the physical works
+        (mine_technique.combine of every running node's `mine_works` spec)."""
+        kept = self._running_kept("mine_works_effects")
+        if "effects" not in kept:
+            kept["effects"] = mine_technique.combine(
+                spec for node_id, spec in self._effect_terms("mine_works")
+                if self.running(node_id))
+        return kept["effects"]
+
     def _mine_labour_hours_per_tonne(self, mat):
         """(build hours per tonne/year, running hours per tonne) of a typical
-        working of `mat`, output-weighted across its deposits."""
-        cached = self._MINE_PROFILE_CACHE.get(mat)
+        working of `mat`, output-weighted across its deposits, under the
+        running techniques' effects on the works."""
+        effects = self.mine_works_effects()
+        key = (mat, mine_technique.effects_key(effects))
+        cached = self._MINE_PROFILE_CACHE.get(key)
         if cached is None:
             pairs = self._mine_reference_deposits(mat)
             build = sum(weight * deposit_model.build_cost_labour_hours_per_tonne_year(dep)
                         for dep, weight in pairs)
             running = sum(weight * KILOGRAMS_PER_TONNE
-                          * deposit_model.extraction_cost_labour_hours_per_kg(dep)
+                          * deposit_model.extraction_cost_labour_hours_per_kg(dep, effects)
                           for dep, weight in pairs)
-            cached = self._MINE_PROFILE_CACHE[mat] = (build, running)
+            cached = self._MINE_PROFILE_CACHE[key] = (build, running)
         return cached
 
     def _mine_capex_opex(self, mat):

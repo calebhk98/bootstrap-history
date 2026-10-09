@@ -1884,6 +1884,119 @@
   }
  },
  {
+  "id": "met_archimedean_screw",
+  "name": "Archimedean screw for mine drainage",
+  "cat": "mining",
+  "kind": "ENGINEERING",
+  "pre": [],
+  "kb": "10_metallurgy.md",
+  "ph": 40,
+  "lab": {
+   "carpenter": 60
+  },
+  "mat": {
+   "timber_m3": 2,
+   "iron_bar_kg": 5
+  },
+  "cap_hours": 600.0,
+  "up_hours": 120.0,
+  "yrs": 0.2,
+  "risk": 0.08,
+  "sus": 0,
+  "gov": 1,
+  "rev_hours": 0,
+  "sch": 0,
+  "art": 1,
+  "conf": "B",
+  "note": "A timber screw in a sloping trough, turned by one person, lifts water a metre or so per screw; several set in steps drain a deep working (Diodorus 5.37, Vitruvius, screws found at Sotiel Coronada and Centenillo). It lifts more per hour of labour than passing buckets by hand.",
+  "traits": [
+   "infrastructure"
+  ],
+  "mechanics": {
+   "mine_works": {
+    "drainage_lift_efficiency": 0.45,
+    "source": "Landels 1978 p. 63 via the earthsci.org summary: delivery at 40 to 50 percent efficiency; midpoint taken. Complaints/reports/silver-grades-and-processing-research.md section 4."
+   }
+  }
+ },
+ {
+  "id": "met_bucket_wheel_battery",
+  "name": "Bucket-wheel battery for mine drainage",
+  "cat": "mining",
+  "kind": "ENGINEERING",
+  "pre": [
+   "cn_crane_treadwheel"
+  ],
+  "kb": "10_metallurgy.md",
+  "ph": 40,
+  "lab": {
+   "carpenter": 200,
+   "smith": 40
+  },
+  "mat": {
+   "timber_m3": 12,
+   "iron_bar_kg": 40
+  },
+  "cap_hours": 2400.0,
+  "up_hours": 480.0,
+  "yrs": 0.6,
+  "risk": 0.08,
+  "sus": 0,
+  "gov": 1,
+  "rev_hours": 0,
+  "sch": 0,
+  "art": 1,
+  "conf": "B",
+  "note": "Treadmill-driven bucket wheels set in pairs one above another, each lifting water a few metres into the next stage (Rio Tinto, San Domingos). A man walking the wheel turns far more of his effort into lift than one passing buckets.",
+  "traits": [
+   "infrastructure"
+  ],
+  "mechanics": {
+   "mine_works": {
+    "drainage_lift_efficiency": 0.69,
+    "source": "Derived from Landels 1978 p. 69 via the earthsci.org summary: 19 gallons a minute through 12 feet for 0.1 horsepower of treadmill input is about 52 W of lift from 75 W; imperial gallons assumed. Complaints/reports/silver-grades-and-processing-research.md section 4."
+   }
+  }
+ },
+ {
+  "id": "met_drainage_adit",
+  "name": "Drainage adit",
+  "cat": "mining",
+  "kind": "ENGINEERING",
+  "pre": [
+   "met_ore_crushing_sorting"
+  ],
+  "kb": "10_metallurgy.md",
+  "ph": 40,
+  "lab": {
+   "miner": 600
+  },
+  "mat": {
+   "timber_m3": 4,
+   "iron_bar_kg": 30
+  },
+  "cap_hours": 8000.0,
+  "up_hours": 1600.0,
+  "yrs": 1.5,
+  "risk": 0.08,
+  "sus": 0,
+  "gov": 1,
+  "rev_hours": 0,
+  "sch": 0,
+  "art": 1,
+  "conf": "B",
+  "note": "A level gallery driven from a valley side to the workings lets water below its mouth's level run out by gravity, so only the water below the adit is lifted. Long adits were a standing work of Roman and later mines (Bettenay 2022).",
+  "traits": [
+   "infrastructure"
+  ],
+  "mechanics": {
+   "mine_works": {
+    "gravity_drained_head_share": 0.4,
+    "source": "temporary_heuristic: no relief data in the deposit catalogue to derive the adit level; Bettenay 2022 and Agricola describe adits qualitatively. Share of the working depth drained by gravity."
+   }
+  }
+ },
+ {
   "id": "met_winding_engine",
   "name": "Winding engine and mine shaft hoisting",
   "cat": "mining",
