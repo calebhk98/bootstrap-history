@@ -1,0 +1,58 @@
+{
+ "id": "measles",
+ "name": "Measles",
+ "tags": [
+  "respiratory",
+  "crowd"
+ ],
+ "stages": [
+  {
+   "id": "incubating",
+   "infectiousness": 0.0,
+   "mean_duration_in_days": 10.0,
+   "shape": 6
+  },
+  {
+   "id": "infectious",
+   "infectiousness": 1.0,
+   "mean_duration_in_days": 8.0,
+   "shape": 2
+  }
+ ],
+ "transmissibility_per_day": 1.875,
+ "case_fatality": 0.028,
+ "immunity": {
+  "permanent": true,
+  "duration_in_days": null
+ },
+ "reproduction_number_range": [
+  12.0,
+  18.0
+ ],
+ "sources": {
+  "reproduction_number_range": {
+   "confidence": "read",
+   "source": "Guerra et al. 2017, Lancet Infect Dis, abstract via Europe PMC: often cited 12 to 18, estimates vary more widely"
+  },
+  "transmissibility_per_day": {
+   "confidence": "derived",
+   "source": "Midpoint of the cited range (15) divided by the infectious days; not itself observed"
+  },
+  "case_fatality": {
+   "confidence": "read",
+   "source": "Panum 1846 Faroe epidemic via Hektoen International (second hand): 170 deaths among 6100 infected, 2.8 percent; higher with malnutrition and in first-contact outbreaks (recalled)"
+  },
+  "immunity": {
+   "confidence": "read",
+   "source": "Panum 1846 via Hektoen: no reinfection after 65 years"
+  },
+  "stage.incubating": {
+   "confidence": "summary",
+   "source": "Non-infectious part of incubation: rash about 14 days after exposure (range 7 to 21) less the 4 days of infectiousness before rash; CDC Pink Book chapter 13 seen only as search summaries. Shape 6 is a derived Erlang approximation"
+  },
+  "stage.infectious": {
+   "confidence": "summary",
+   "source": "Infectious from about 4 days before to 4 days after rash onset, CDC clinician materials as reported by search results, page text not opened"
+  }
+ }
+}

@@ -396,6 +396,8 @@ def cmd_validate(args):
     from sim.engine import validate_event_causes
     errs += validate_event_causes.check_event_causes(civ_start_check.load_civilisations(ROOT), set(nodes))
     errs += validate_running_gates.check_running_gates(nodes)
+    from sim.engine import validate_disease_data
+    errs += validate_disease_data.check_disease_data()
     goal_errs, default_goal, goal_rows = _validate_goal_rows(tree, nodes)
     errs += goal_errs
 
