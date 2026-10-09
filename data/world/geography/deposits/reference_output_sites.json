@@ -23,7 +23,7 @@
    "deposit_type": "banded_iron_and_skarn",
    "status": "historic",
    "conf": "C",
-   "source": "Bergslagen (Dalarna, Vastmanland, Orebro), the central Swedish ore district whose bloomery iron was smelted from the Iron Age and exported as osmund iron in the Middle Ages; Dannemora and Sala lie in it."
+   "source": "Bergslagen (Dalarna, Vastmanland, Orebro), the central Swedish ore district whose bloomery iron was smelted from the Iron Age and exported as osmund iron in the Middle Ages."
   },
   {
    "id": "sala_lead",
@@ -71,7 +71,7 @@
    "deposit_type": "volcanogenic_massive_sulphide",
    "status": "historic",
    "conf": "C",
-   "source": "Mahd adh Dhahab ('Cradle of Gold'), Hejaz, an ancient gold, silver and copper working reopened in the twentieth century; Saudi Geological Survey. Silver is a minor product."
+   "source": "Mahd adh Dhahab ('Cradle of Gold'), Hejaz, an ancient gold, silver and copper working; Luce, O'Neil and Rye, Mahd adh Dhahab: Precambrian epithermal gold deposit in Saudi Arabia, US Geological Survey Open-File Report 78-388 (1978), https://pubs.usgs.gov/publication/ofr78388. Silver is a minor product."
   },
   {
    "id": "wadi_sawawin_iron",
@@ -83,7 +83,7 @@
    "deposit_type": "banded_iron_formation",
    "status": "historic",
    "conf": "D",
-   "source": "Wadi Sawawin banded iron formation, northwest Saudi Arabia (Saudi Geological Survey); the one large iron body of the peninsula. No ancient working is attested, so this share is a placeholder for the peninsula's small iron output."
+   "source": "Wadi Sawawin banded iron formation, Midyan terrane of northwest Saudi Arabia, about 60 km from the Red Sea port of Duba; the one large iron body of the peninsula. No ancient working is attested, so this share is a placeholder for the peninsula's small iron output. Position approximate (no published coordinate found)."
   },
   {
    "id": "konasamudram_iron",
@@ -119,7 +119,7 @@
    "deposit_type": "pegmatite_cassiterite",
    "status": "historic",
    "conf": "D",
-   "source": "Cassiterite of the Hazaribagh-Gaya mica belt, Bihar-Jharkhand, the small Indian tin source; Geological Survey of India memoirs. Ancient India imported most of its tin."
+   "source": "Cassiterite of the Hazaribagh-Gaya mica belt, Bihar-Jharkhand, the small Indian tin source (Geological Survey of India); not independently re-checked. Ancient India imported most of its tin."
   },
   {
    "id": "zawar_lead",
@@ -131,7 +131,7 @@
    "deposit_type": "carbonate_hosted_galena",
    "status": "historic",
    "conf": "A",
-   "source": "Zawar, Udaipur, Rajasthan: lead-zinc-silver mines worked from the late first millennium BC and the site of medieval zinc distillation; Craddock et al. on Zawar."
+   "source": "Zawar, Udaipur, Rajasthan: lead-zinc-silver mines with a Mauryan-period phase (radiocarbon on mine timbers, late first millennium BC) and a second phase from the fourteenth century, where medieval zinc distillation was practised; Craddock and Hegde, Early Indian Metallurgy (Zawar, Agucha, Dariba), https://esamskriti.com/e/Culture/Indian-Culture/ZINC-Mining-in-Zawar-region-of-Rajasthan~Interview-with-Dr.-Paul-T.-Craddock-1.aspx."
   },
   {
    "id": "zawar_silver",
@@ -142,8 +142,8 @@
    "share_of_reference_output": 0.05,
    "deposit_type": "carbonate_hosted_galena",
    "status": "historic",
-   "conf": "B",
-   "source": "Zawar, Rajasthan: silver recovered from the argentiferous galena by cupellation, as the lead entry; Craddock et al."
+   "conf": "C",
+   "source": "Zawar, Rajasthan: silver from the argentiferous galena, as the lead entry; Craddock and Hegde, Early Indian Metallurgy. Silver recovery here is not independently re-checked."
   },
   {
    "id": "chadormalu_iron",
@@ -154,8 +154,8 @@
    "share_of_reference_output": 0.1,
    "deposit_type": "iron_oxide_apatite",
    "status": "historic",
-   "conf": "C",
-   "source": "Bafq district (Yazd), iron oxide bodies of central Iran, worked in the medieval Persian world; Geological Survey of Iran."
+   "conf": "D",
+   "source": "Choghart iron oxide deposit, Bafq district (Yazd), about 12 km northeast of Bafq, with Chadormalu 80 km to the north; a large Precambrian iron body. Medieval working is not independently verified."
   },
   {
    "id": "anarak_copper",
@@ -171,15 +171,15 @@
   },
   {
    "id": "mushiston_tin",
-   "name": "Mushiston and Karnab Tin",
+   "name": "Mushiston Tin",
    "resource": "tin",
-   "lat": 39.5,
-   "lon": 68.7,
+   "lat": 39.25,
+   "lon": 67.9,
    "share_of_reference_output": 0.05,
    "deposit_type": "pegmatite_cassiterite",
    "status": "historic",
    "conf": "B",
-   "source": "Mushiston (Tajikistan) and Karnab (Uzbekistan) cassiterite of the Zeravshan valley, worked in the Bronze Age Eurasian tin trade; Cierny, Weisgerber and Parzinger on Central Asian tin."
+   "source": "Mushiston copper-tin deposit, Kaznok valley of the Zeravshan mountains about 35 km south of Penjikent (Tajikistan), mined from the end of the third millennium BC; Karnab, Lapas and Changali (Uzbekistan) lie farther west and are not covered by this point. Cierny, Weisgerber and Parzinger on Central Asian tin; Frontiers in Earth Science 2023, doi 10.3389/feart.2023.1224873. Position approximate."
   },
   {
    "id": "karamazar_lead",
@@ -191,7 +191,7 @@
    "deposit_type": "carbonate_hosted_galena",
    "status": "historic",
    "conf": "C",
-   "source": "Karamazar range (Kan-i-Mansur), Tajikistan and Uzbekistan: lead and silver mines of Samanid Transoxiana named by the geographers al-Muqaddasi and Ibn Hawqal. Position approximate."
+   "source": "Karamazar range (Kan-i-Mansur), Tajikistan and Uzbekistan: mining and smelting of the ninth to eleventh centuries is attested at the Mansura mine (Wikipedia, Mining in Tajikistan); the geographers' accounts of it were not checked. Position approximate."
   },
   {
    "id": "karamazar_silver",
@@ -203,7 +203,7 @@
    "deposit_type": "carbonate_hosted_galena",
    "status": "historic",
    "conf": "C",
-   "source": "Karamazar range (Kan-i-Mansur): the silver mines that fed Samanid coinage, as the lead entry. Position approximate."
+   "source": "Karamazar range (Kan-i-Mansur): silver mines of the Samanid period, as the lead entry; Transoxianan silver feeding Samanid dirhams is argued in the Journal of Historical Research (jhr.usb.ac.ir/article_9357). Position approximate."
   },
   {
    "id": "wuan_iron",
@@ -214,8 +214,8 @@
    "share_of_reference_output": 0.9,
    "deposit_type": "skarn_iron",
    "status": "historic",
-   "conf": "C",
-   "source": "Handan and Wu'an (Hebei) skarn iron, with the Tieshenggou foundry (Henan) the main Han state ironworks; Wagner on Chinese iron and steel, and the Han Salt and Iron Monopoly sites."
+   "conf": "D",
+   "source": "Handan-Wu'an (Hebei) skarn iron district; Han state ironworks such as Tieshenggou (Henan, about 200 km southwest) are described in Wagner, Iron and Steel in Ancient China (Brill, 1993), which does not itself source the Handan ore. Ore source is not independently verified."
   },
   {
    "id": "tonglushan_copper",
@@ -238,8 +238,8 @@
    "share_of_reference_output": 0.15,
    "deposit_type": "skarn_cassiterite",
    "status": "historic",
-   "conf": "B",
-   "source": "Gejiu (Yunnan), China's chief tin district, worked from antiquity; the Chinese Bronze Age tin sources are disputed, and Gejiu is the largest of them."
+   "conf": "C",
+   "source": "Gejiu (Yunnan): earliest clear working there is copper from the Han period and tin was mined on a large scale only from the early 1900s; long tin exploitation is probable but not proven (Heidelberg Sinology mining project, https://www.zo.uni-heidelberg.de/sinologie/research/epm/09_gejiu.html). Yunnan deposits are reported as China's main Han tin source (Wikipedia, Tin mining)."
   },
   {
    "id": "shuikoushan_lead",
@@ -250,8 +250,8 @@
    "share_of_reference_output": 0.2,
    "deposit_type": "carbonate_hosted_galena",
    "status": "historic",
-   "conf": "C",
-   "source": "Shuikoushan (Changning, Hunan), a lead-zinc district worked from at least the Ming, the leading Chinese lead source before the modern period."
+   "conf": "D",
+   "source": "Shuikoushan (Changning, Hunan), a lead-zinc-copper district; Qing-period Hunan lead mining is covered by Lin Rongqin on Hunan mining, but Shuikoushan's own early history was not found. Date of first working unverified."
   },
   {
    "id": "huize_silver",
@@ -263,7 +263,7 @@
    "deposit_type": "carbonate_hosted_galena",
    "status": "historic",
    "conf": "C",
-   "source": "Huize and the Yunnan silver mines, the main Ming-Qing silver producers; von Glahn on Chinese silver mining. The earlier Han silver output was small."
+   "source": "Huize and the Yunnan silver mines, the main Ming-Qing silver producers; von Glahn, Fountain of Fortune (1996). The earlier Han silver output was small."
   },
   {
    "id": "taruga_iron",
@@ -286,8 +286,8 @@
    "share_of_reference_output": 0.05,
    "deposit_type": "vein_copper",
    "status": "historic",
-   "conf": "B",
-   "source": "Akjoujt (Mauritania), copper worked in the first millennium BC and again in the Middle Ages; Lambert and Bellamy on the Akjoujt Chalcolithic."
+   "conf": "C",
+   "source": "Akjoujt (Mauritania), copper mined and smelted in the first millennium BC (radiocarbon dates from the Grotte aux Chauves-souris mine, fifth century BC); Lambert, Les industries sur cuivre dans l'Ouest saharien, West African Journal of Archaeology 1 (1971). Medieval working not verified."
   },
   {
    "id": "thai_nguyen_iron",
@@ -335,7 +335,7 @@
    "deposit_type": "skarn_magnetite",
    "status": "historic",
    "conf": "C",
-   "source": "Mount Vysokaya and Gora Blagodat, central Urals, the magnetite that built the Demidov ironworks from 1700; Hudson on the Russian iron industry."
+   "source": "Mount Vysokaya and Gora Blagodat, central Urals, the magnetite behind the Demidov Nizhny Tagil ironworks (begun 1725); Hudson, The Rise of the Demidov Family and the Russian Iron Industry in the Eighteenth Century (Oriental Research Partners, 1986)."
   },
   {
    "id": "gumeshevsk_copper",
@@ -347,7 +347,7 @@
    "deposit_type": "skarn_copper",
    "status": "historic",
    "conf": "C",
-   "source": "Gumeshevskoye, near Polevskoy, Urals copper worked by the Chud peoples of the Bronze Age and by the Demidovs from the eighteenth century."
+   "source": "Gumeshevskoye, near Polevskoy, Urals copper worked in the Bronze Age and by the Demidovs from the eighteenth century; Bronze Age attribution to the Chud is not sourced."
   },
   {
    "id": "zmeinogorsk_lead",
@@ -359,7 +359,7 @@
    "deposit_type": "volcanogenic_massive_sulphide",
    "status": "historic",
    "conf": "C",
-   "source": "Zmeinogorsk and the Rudny Altai polymetallic ores, with ancient Chud workings and Kolyvan-Voskresensk silver-lead mines from 1730."
+   "source": "Zmeinogorsk and the Rudny Altai polymetallic ores, with ancient workings and the Demidov-founded Kolyvan-Voskresensk works (1727); silver ore discovered in winter 1743."
   },
   {
    "id": "zmeinogorsk_silver",
@@ -371,7 +371,7 @@
    "deposit_type": "volcanogenic_massive_sulphide",
    "status": "historic",
    "conf": "C",
-   "source": "Zmeinogorsk Altai silver, the same ore as the lead entry; the Kolyvan mines supplied the Russian state's silver in the eighteenth century."
+   "source": "Zmeinogorsk Altai silver, the same ore as the lead entry; first Altai silver was presented in 1744 and the works passed to the Crown for it."
   },
   {
    "id": "durango_iron",
@@ -395,7 +395,7 @@
    "deposit_type": "vein_copper",
    "status": "historic",
    "conf": "B",
-   "source": "Inguaran, Michoacan, the copper source of West Mexican metallurgy from about AD 600 (Tarascan arsenical bronze); Hosler on West Mexican metallurgy."
+   "source": "Inguaran, Michoacan, a copper source of West Mexican metallurgy, which began after about AD 700 along the Ecuador-Peru maritime route; Hosler, The Sounds and Colors of Power (MIT Press, 2009) and Hosler and Macfarlane, Science 273 (1996). Inguaran itself is cited from memory."
   },
   {
    "id": "taxco_tin",
@@ -407,7 +407,7 @@
    "deposit_type": "vein_cassiterite",
    "status": "historic",
    "conf": "D",
-   "source": "Small cassiterite occurrences in the Taxco-Guerrero belt used for tin bronze in prehispanic Mexico; Hosler. Position approximate."
+   "source": "Small cassiterite occurrences in the Taxco-Guerrero belt may have supplied tin bronze in prehispanic Mexico (Hosler); not verified. Position approximate."
   },
   {
    "id": "zimapan_lead",
@@ -442,8 +442,8 @@
    "share_of_reference_output": 0.05,
    "deposit_type": "vein_cassiterite",
    "status": "historic",
-   "conf": "B",
-   "source": "Oruro and the Bolivian tin belt, the source of the tin bronze of the Inca and Tiwanaku; Lechtman on Andean tin bronze."
+   "conf": "C",
+   "source": "Oruro and the Bolivian tin belt, the probable source of the tin bronze of Tiwanaku and the Inca; Lechtman on Andean metallurgy. Not independently re-checked."
   },
   {
    "id": "cerro_de_pasco_lead",

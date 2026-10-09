@@ -393,7 +393,7 @@
      "name": "Larderello, Tuscany",
      "lat": 43.23,
      "lon": 10.87,
-     "source": "Boric acid from the Tuscan lagoni steam fields, worked from 1818; Gmelin."
+     "source": "Boric acid from the Tuscan lagoni steam fields, worked industrially from 1818 by Larderel, after Hoefer's discovery of boric acid in the lagoni; Wikipedia, Larderello."
     }
    ],
    "cost_multiplier": 1,
@@ -437,7 +437,7 @@
      "name": "Chincha Islands, Peru",
      "lat": -13.6,
      "lon": -76.4,
-     "source": "The Chincha Islands guano trade from 1840; Mathew, White Gold."
+     "source": "The Chincha Islands guano trade from 1840; Mathew, The House of Gibbs and the Peruvian Guano Monopoly (1981)."
     }
    ],
    "cost_multiplier": 30,
@@ -469,7 +469,7 @@
      "name": "Xishuangbanna and Pu'er, Yunnan",
      "lat": 22.0,
      "lon": 100.8,
-     "source": "Wild tea (Camellia sinensis var. assamica) of southwest Yunnan, the oldest tea country; Yee 2018."
+     "source": "Wild tea (Camellia sinensis var. assamica) of southwest Yunnan, a candidate tea homeland (origin debated); Kew POWO, Camellia sinensis."
     }
    ],
    "cost_multiplier": 25,
