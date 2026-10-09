@@ -12,3 +12,5 @@ Related: 119.
 Joint by-product floor: sim/engine/joint_floor.py lifts every output of a joint batch to a labelled share of the batch's standalone cost per kg, paid for by the outputs above it, so a by-product in glut (wood_tar_kg) no longer decays to a denormal. Measure: the solved price of wood_tar_kg for rome_100ad (was 4e-27 hours per kg, now above 1e-4; print it with the Rome solve in test_joint_byproduct_floor).
 
 Owner decision (2026-10-02): a waste product can have a negative value (you pay to get rid of it); check whether the by-product floor is right before keeping it, so this is reopened.
+
+Research done (2026-10-09): `Complaints/reports/negative-byproduct-value-research.md` recommends a disposal sink recipe (handling, haulage to a dump, land for the heap) whose cost bounds a by-product's price from below, replacing JOINT_BYPRODUCT_FLOOR_SHARE, and lists what the solver must change. Sources were read through search summaries only; check before quoting.
