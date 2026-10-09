@@ -1,6 +1,11 @@
 # The mod system adds content but cannot change rules or remove content
 
-**Status:** partly - overrides, removal, civ patching, goal/trade overrides, map overlays, needs and units, namespaced ids (`<mod_id>:<name>`), the unique mod id format, the declared-dependency check and the required-manifest-key check done (extra keys such as author or credits are accepted: owner decision 2026-10-09) (test_mod_* topics); remaining, see mods/TASKS.md: hazards, UI strings, strategies and foreign_economies from mods, a minimum game version (the game has no version number yet) and dependency versions, commands and automatic policies, new actor kinds
+**Status:** closed - a mod changes rules and removes content through data (declared numbers, technology effects, overrides and removal of nodes, recipes, trades, goals, civilisations, kits, economies and commands, civilisation hazards and cast through list edits, map overlays with deposits), declares commands, policies and species, requires a game version and dependency ranges, and may ship consented Python; tests test_mod_* and test_mod_actor_kind_in_a_game (slow topic, not run in the container)
+
+**Owner decisions:**
+- 2026-10-09: extra manifest metadata keys (author, coauthors, ...) are accepted; only missing required keys are refused.
+- Owner decision (2026-10-09): Python mod code is IN, built as plan Stage 4 of docs/architecture/MOD_HOOKS_PLAN.md: consented, hashed code with the stated safety boundary (not a sandbox; consent is the protection).
+- 2026-10-09: the game version is a `GAME_VERSION` string in `sim/game_version.py` compared as semantic versions; manifests take an optional `min_game_version` and dependency entries may carry a version range.
 
 **Source:** playtester report that mods are "heavily restricted": no runnable
 code, no magic or elves, cannot change or hide Rome, cannot really change the
@@ -168,3 +173,20 @@ is no in-process sandbox for CPython that holds; a "sandboxed" mod needs a
 subprocess or WASM boundary with an allowlisted API, an explicit
 "this mod runs code" consent per mod, and a manifest permission list. Until
 then, keeping mods data-only is a feature worth stating in the README.
+
+## What closed it
+
+Every item of the former status line is built; the README documents each.
+
+* Hazards, UI strings, strategies, foreign economies: civilisation list edits (`append`, `remove_items`, dotted
+  fields such as `cast.seats`), `starting_kits.json`, `win_condition_labels.json`, `data/strategies/`, and a mod copy
+  of `foreign_economies.json`. Currency words were already civilisation data.
+* Rules: `data/constants.json` overrides a number registered with `declare`, and `_TECH_EFFECTS.json` takes mod
+  patches.
+* Versions: `GAME_VERSION`, `--version`, `min_game_version`, dependency ranges.
+* Commands and automatic policies: `data/ui/commands.json` (read, macro, policy) and `data/ui/policies.json`.
+* New actor kinds: `data/world/actor_kinds.json` (a `DeclaredKind` driven by the needs catalogue, the labour market
+  and the ledger) and code-registered kinds.
+* Mod code: `mod-allow`, `mods/consent.json`, `validate` lists code mods.
+* Complaints 136 and 382: deposits are map catalogue rows covered by the map overlay; seats are cast data a civilisation
+  patch edits with `cast.seats`.

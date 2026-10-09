@@ -2,7 +2,8 @@
 
 What a mod can do today is in `mods/README.md`. Evidence and the full
 analysis for everything below is in
-`Complaints/118-mod-system-cannot-change-rules-or-remove-content.md`.
+`Complaints/closed/118-mod-system-cannot-change-rules-or-remove-content.md`;
+the design the later items followed is `docs/architecture/MOD_HOOKS_PLAN.md`.
 
 The target: two authors who have never heard of each other can each ship a
 mod, a player installs both, and they either work together or fail loudly
@@ -10,43 +11,33 @@ with a message naming both mods. And a mod can change the game's content and
 rules as far as the design constraints allow (CLAUDE.md section 4), not only
 add to it.
 
-Ordered by value per cost.
+## Done
 
-## Missing capabilities
+1. **World content from mods:** map overlays (geography, deposits, resources,
+   routes), needs, display units, foreign economies, starting kits,
+   win-condition sentences, strategies, civilisation hazards and cast through
+   list edits, declared numbers (`data/constants.json`) and technology effects.
+2. **Manifest hardening:** required keys, extra keys kept as the author's own
+   metadata (owner decision), `min_game_version` against `GAME_VERSION`
+   (`sim/game_version.py`, `simulator.py --version`), dependency version ranges
+   compared as semantic versions.
+3. **Commands and automatic policies:** declarative `read`, `macro` and `policy`
+   entries in `data/ui/commands.json`, plus default switches in
+   `data/ui/policies.json`.
+4. **New kinds of actor:** a declared species (`data/world/actor_kinds.json`)
+   running through the needs catalogue, the labour market and the ledger, and
+   code-registered kinds.
+5. **Runnable mod code:** owner decision 2026-10-09, built as consented and
+   hashed Python (`mod-allow`, `mods/consent.json`) with the safety boundary
+   stated in the README: it is not a sandbox.
 
-1. **World content from mods (partly done):** map overlays (geography,
-   deposits, resources, routes), needs and display units are read from mods.
-   Still base-only: hazards and events, UI and currency strings, strategies,
-   and `data/world/foreign_economies.json` (a mod can add a civilisation but
-   not enable it as a trading partner).
+## Open
 
-2. **Manifest hardening (partly done):** a missing required key is refused; extra
-   keys are the author's metadata and are kept out of the way, never refused
-   (owner decision, `test_mod_manifest_keys`). Still open: a minimum game version (the game has
-   no version number to compare against yet, so it needs one first) and
-   compared versions for dependencies (`dependencies` is a list of ids today).
-
-3. **Commands and automatic policies.** A mod cannot add, change or remove a
-   player command or an automatic policy (auto-mine, auto-forest, shedding);
-   both are Python. A declarative form for policies (a condition on state
-   and an action from the existing command set) would cover most needs
-   without running mod code.
-
-## Larger work
-
-4. **New kinds of actor and new mechanics** (elves, dragons, magic). By the
-   design constraints these cannot be special cases: a new species is an
-   actor with calorie needs, growth and diet running through the normal
-   production and labour rules, and magic is most naturally an energy or
-   material source with recipes. Both depend on the general-actor work the
-   project needs anyway for multiplayer and draft animals.
-
-5. **Runnable mod code.** Not supported, and expensive to trust: Python run
-   in-process has the player's full permissions. Prefer extending the
-   declarative data contract. If code hooks are ever added they need a
-   process or WASM boundary, an allowlisted API, per-mod consent, and a
-   deterministic random source handed in so saves and fingerprints stay
-   reproducible.
+- **A process or WASM boundary for mod code.** Consent is the only protection
+  today; an allowlisted message interface would let a player run an author they
+  do not trust. Not started; the declarative contract covers most needs.
+- **Hazard effects beyond the shipped fields.** A hazard is made of the effect
+  fields the engine reads; a new effect needs an actor kind or mod code.
 
 ## Not required
 

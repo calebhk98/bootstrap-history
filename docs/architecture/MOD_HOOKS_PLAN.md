@@ -1,5 +1,7 @@
 # Mod hooks plan: land tiles, commands and new actor kinds
 
+Status: commands, policies, actor kinds and mod code (stages 2 to 4) are built, as described in `mods/README.md`; the land-tile readers of section 1.1 are the work that remains outside Complaint 118.
+
 Complaint 118 left three things a mod cannot do: add land tiles, add commands, add actor kinds.
 This document says how each is discovered today, where a mod would hook in, what blocks it, the
 mechanism proposed, a staged plan with tests, and an audit of other places where adding content

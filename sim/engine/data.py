@@ -28,6 +28,8 @@ from typing import Any, cast, Dict, FrozenSet, Iterable, List, Optional, Set, Tu
 from .identity_cache import IdentityCache
 from sim.geography.api import haversine_km, load_geography
 from .mods import get_ordered_mods, load_mod_tree
+from .mod_world_data import load_starting_kits, load_win_condition_labels
+from .mods_world import merge_mod_map
 from .tree_source import load_base_tree
 from .mods_civ import (apply_mod_civilization, check_all_civilizations, check_starting_techs,
                        is_hidden, mod_civ_ids)
@@ -127,9 +129,10 @@ def _load_tech_effects() -> JSONDict:
     try:
         with open(path) as source:
             effects = json.load(source)
-        return {key: value for key, value in effects.items() if not key.startswith("_")}
-    except Exception:
-        return {}
+        base = {key: value for key, value in effects.items() if not key.startswith("_")}
+    except OSError:
+        base = {}
+    return merge_mod_map(base, get_ordered_mods(MODDIR), "civilizations/_TECH_EFFECTS.json", None, "tech effect")
 
 
 TECH_EFFECTS: JSONDict = _load_tech_effects()
@@ -738,12 +741,7 @@ def resolve_goal(tree: JSONDict, nodes: Nodes, name: Optional[str]) -> str:
 # metric here is a 0..1 fraction, which is the only shape `win_condition`
 # currently supports and the only one either of the two current threshold
 # goals needs.
-WIN_CONDITION_LABELS: Dict[str, str] = {
-    "literacy_general": "the general population's literacy reaches %s",
-    "literacy_elite": "the lettered and propertied class's literacy reaches %s",
-    "epidemic_relief": ("the measures you have built have cut %s of what "
-                        "epidemics and famine would otherwise take"),
-}
+WIN_CONDITION_LABELS: Dict[str, str] = load_win_condition_labels(ROOT, MODDIR)
 
 
 def win_condition_describe(node_record: JSONDict) -> str:
@@ -780,23 +778,7 @@ def win_condition_describe(node_record: JSONDict) -> str:
 # coin's physical content. The figures keep the earlier kit sizes relative to
 # the earlier labourer wage; none is tuned to history. `kit_capital` converts
 # them to money.
-STARTING_KITS: Dict[str, StartingKit] = {
-    "destitute":   {"labourer_years": 0.0, "desc": "the clothes you stand in. You must earn your first meal."},
-    "poor_scholar":{"labourer_years": 4.033, "desc": "DEFAULT. A few years of a labourer's wages in cash, a knife, a lens, a codex of notes. About what a working teacher has."},
-    "artisan":     {"labourer_years": 12.10, "desc": "enough to rent a workshop and buy a first set of tools."},
-    "merchant":    {"labourer_years": 40.33, "desc": "a modest trading capital. You can fund one real venture."},
-    "rich_merchant":{"labourer_years": 201.6, "desc": "wealthy, but well short of the fortune that marks the top of society."},
-    "equestrian":  {"labourer_years": 1008.0, "desc": "the fortune that marks the top rank of the local elite, exactly. Conspicuous."},
-    # "the medians sit inside the noise band" is not true of the whole kit
-    # range: measured on the finish, not just the opening - Rome, 8 runs a
-    # kit, one seed - the median year the transistor is reached runs 476
-    # destitute, 489 poor_scholar, 468 rich_merchant, 434 absurd. The first
-    # three are inside each other's spread; a million denarii is not. So the
-    # claim is true of the middle of the range and false at the top of it,
-    # which is exactly the kind of statement that should not be made in one
-    # sentence about "the whole kit range".
-    "absurd":      {"labourer_years": 10081.0, "desc": "four great fortunes in unminted gold. Once money can be converted into protection and into sunk mines, wealth helps. What it does NOT do is make you a magician: a vast fortune buys perhaps a tenth off the time, not a different game. What money changes most is the OPENING - the first fifty years, where a poor founder is choosing between eating and building."},
-}
+STARTING_KITS: Dict[str, StartingKit] = load_starting_kits(ROOT, MODDIR)  # type: ignore[assignment]
 
 DEFAULTS: SimulationDefaults = dict(
     # IMMORTALITY IS THE DEFAULT. The point of this simulator is to test the TREE,

@@ -2,7 +2,9 @@
 hash seed it needs, and strategy loading with its dependency-order repair."""
 import json, os, random, sys
 
-from sim.engine.data import STRATS, closure, hard_pre, topo_order
+from sim.engine.data import MODDIR, STRATS, closure, hard_pre, topo_order
+from sim.engine.mods import get_ordered_mods
+from sim.engine.mods_strategies import mod_strategy_path
 
 
 # ----------------------------------------------------------------------------
@@ -88,14 +90,20 @@ def ensure_fixed_hash_seed(seed="0"):
     os.execvpe(sys.executable, [sys.executable] + sys.argv, env)
 
 
+def strategy_file(name):
+    """The strategy file for a name: the strategies folder, then an installed mod's, then a literal path."""
+    path = os.path.join(STRATS, str(name) + ".json")
+    if os.path.exists(path):
+        return path
+    return mod_strategy_path(name, get_ordered_mods(MODDIR)) or (str(name) if os.path.exists(str(name)) else path)
+
+
 def load_strategy(name, nodes, goal):
     # A NAME OR A PATH. --save-winner writes a strategy file wherever you ask it
     # to, and there was no way to read one back: this looked only inside the
     # strategies directory for name + ".json", so the captured order of a run
     # that actually reached the goal could be written and never used.
-    path = os.path.join(STRATS, str(name) + ".json")
-    if not os.path.exists(path) and os.path.exists(str(name)):
-        path = str(name)
+    path = strategy_file(name)
     if os.path.exists(path):
         strategy_data = json.load(open(path))
         order = [node_id for node_id in strategy_data["order"] if node_id in nodes]

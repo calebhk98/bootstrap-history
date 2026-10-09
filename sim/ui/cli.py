@@ -43,7 +43,7 @@ import argparse, sys
 from sim.engine.ui_port import Sim
 from . import protocol as _protocol
 from sim.engine.ui_port import settings
-from . import cli_units_options, validate_map
+from . import cli_mods, cli_units_options, validate_map
 # civ_of_save/goal_of_save are the only names this file reads from
 # .protocol; `cmd_agent` and everything else that needs
 # _agent_available, _agent_dispatch, _agent_end_reason, _agent_help,
@@ -52,6 +52,7 @@ from . import cli_units_options, validate_map
 # imports its own copies of what it needs straight from .protocol.
 from .protocol import civ_of_save, goal_of_save
 from sim.constants import declare
+from sim.game_version import GAME_VERSION
 
 
 from sim.engine.ui_port import DetRNG, ensure_fixed_hash_seed, load_strategy, topo_stable
@@ -395,6 +396,7 @@ def cmd_validate(args):
     warns += ["%s: no copy_visibility of its own and no entry for its category, so it keeps the count of trades and materials" % node_id
               for node_id in copy_visibility_defaults.undeclared(nodes)]
     errs += _data_source_errors(nodes)
+    errs += cli_mods.mod_findings()
     errs += validate_map.map_problems()
     errs += category_traits.check_category_traits(nodes.values())
     errs += validate_material_gating.check_material_gating(nodes, validate_material_gating.load_gating(ROOT))
@@ -459,8 +461,8 @@ def _validate_basket_supply(civ_start_check, civilisations, production):
     import json
     from sim.engine import civ_basket_check
     from sim.engine.need_data import load_needs
-    with open(os.path.join(ROOT, "data", "world", "foreign_economies.json"), encoding="utf-8") as handle:
-        economies = json.load(handle)["economies"]
+    from sim.engine.ui_port import foreign_economy_document
+    economies = foreign_economy_document()["economies"]
     errors, warnings = civ_basket_check.basket_supply_findings(
         civilisations, production, load_needs(ROOT, MODDIR)["goods"], economies)
     for message in warnings:
@@ -1377,6 +1379,7 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter)
     # NOT required: typing the bare command should open the menu rather than
     # print a usage error at somebody who has just arrived.
+    parser.add_argument("--version", action="version", version="%(prog)s " + GAME_VERSION)
     sub = parser.add_subparsers(dest="cmd", required=False)
     subparser = sub.add_parser("validate", help="check the tech tree for errors")
     subparser.add_argument("--deep", action="store_true",
@@ -1387,6 +1390,8 @@ def main():
                         "Takes real time (one Sim trial per cell); the structural "
                         "checks above run either way and are instant.")
     sub.add_parser("civs", help="list the playable civilisations")
+    subparser = sub.add_parser("mod-allow", help="allow an installed mod to run its Python code (full permissions; read the warning)")
+    subparser.add_argument("mod_id", help="the mod's id")
     subparser = sub.add_parser("economy-check", help="play a short game and print the agent economy's health: "
                                "staple and metal price volatility, hired share, unskilled wage over its floor, hunger, staple price over labour cost")
     subparser.add_argument("--years", type=int, default=5, help="years to play per game (default 5)")
@@ -1697,6 +1702,7 @@ def main():
             "run": cmd_run, "compare": cmd_compare, "play": cmd_play, "agent": cmd_agent,
             "sensitivity": cmd_sensitivity, "plan": cmd_plan,
             "search": cmd_search, "economy-check": cmd_economy_check,
+            "mod-allow": cli_mods.cmd_mod_allow,
             "baseline-ensemble": cmd_baseline_ensemble}[args.cmd](args)
 
 

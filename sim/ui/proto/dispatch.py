@@ -10,7 +10,7 @@ from sim.engine.ui_port import money_word
 from sim.engine.ui_port import fuzzy_estimates, units
 
 from .economy import _dashboard_snapshot
-from . import command_registry
+from . import command_registry, mod_commands
 from .command_registry import command
 from .compact import compact_state, compact_stuck, compact_why
 from .help import _agent_help
@@ -245,7 +245,9 @@ def _cmd_step(sim, nodes, cmd, ended):
         goal_was_startable = sim.goal in nodes and sim.can_start(sim.goal)
         population_before = sim.population.total
         programme_log.extend(programme_before_year(sim, nodes))
+        programme_log.extend(mod_commands.run_policies(sim, nodes, "year_start"))
         sim.step()
+        programme_log.extend(mod_commands.run_policies(sim, nodes, "year_end"))
         ran += 1
         population_change = sim.population.total / population_before - 1.0 if population_before > 0 else 0.0
         sim.state.population.population_change_last_year = round(population_change, 4)
@@ -393,6 +395,9 @@ command_registry.register_command(
     usage=["load <file>"], options={"<file>": "a file written by save"},
     description="Replaces the current game with a saved one.",
     handler=_cmd_save)
+
+# Mod commands join the registry before the tables below are read from it.
+mod_commands.load_mod_commands()
 
 # Every command word and alias mapped to its handler, from the registry.
 _AGENT_DISPATCH_TABLE = command_registry.handlers()

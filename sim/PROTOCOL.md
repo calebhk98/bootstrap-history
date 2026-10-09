@@ -578,3 +578,10 @@ with mortal founders, a denunciation, a fall): its commands that need a living
 holder are refused with the reason, and the others play on. The game is over
 when no seat is playing, or every seat still playing has reached its goal. In
 a game with immortal founders no founder dies, so this never arises.
+
+## Commands from mods
+
+A mod may add commands, named `<mod_id>:<name>` (typed or as `{"cmd": "<mod_id>:<name>"}`), with an optional bare
+alias that works while nothing else claims the word. They appear in `help` like any command. A macro replays existing
+commands through this same protocol, so fog guards and option checks apply to it; a mod policy runs at the start or
+end of each year of a `step` and appears in the `programme` lines of the reply. See `mods/README.md`.
