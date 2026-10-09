@@ -186,7 +186,7 @@ class FreightMixin:
     # real seagoing-hull mode. It also does not amortise the cart's own
     # capital cost or wear (transport.py's own vehicle_wear_fraction_per_
     # tonne_km) into the price: there is no market price for a cart
-    # anywhere in prices.json to convert that fraction into denarii, so
+    # anywhere in the production data to convert that fraction into denarii, so
     # this prices feed and driver time only, which UNDERSTATES the true
     # cost - a conservative simplification, named per CLAUDE.md SS3.4, not
     # a hidden one.
@@ -279,7 +279,7 @@ class FreightMixin:
         FEED PRICE IS A LABELLED STAND-IN. transport.py's own FEED_ENERGY_
         DENSITY_KCAL_PER_KG declaration describes the ration it costs
         against as hay-heavy, and this project has no hay or fodder price
-        anywhere in prices.json - FREIGHT_FEED_PRICE_MATERIAL (wheat_kg) is
+        anywhere in the production data - FREIGHT_FEED_PRICE_MATERIAL (wheat_kg) is
         the closest book price that exists, and wheat is dearer per
         kilogram than real fodder, so this reads as a conservative
         (upper-bound), not measured, feed cost.

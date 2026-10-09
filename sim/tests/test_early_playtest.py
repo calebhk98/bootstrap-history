@@ -206,7 +206,7 @@ check("an insolvency settlement never abandons a persona or institution",
 
 # A founder driven deep into debt stays inside the credit line, climbs back, and keeps what the goal needs.
 def _ruined_founder_run():
-    ruined = sim(manual=False, capital=book_money(1e6))
+    ruined = sim(manual=False, capital=hours_money(20200000))
     ruined.labour.buy_slaves(400)
     ruined.start_project("identity_cover")
     for _ in range(3):
@@ -351,7 +351,7 @@ check("a mine can be closed, and stops costing", cost_open > 0 and cost_closed =
       "before %s after %s" % (cost_open, cost_closed))
 
 # --- an unfunded project never completes, and manual play never buys people for you
-unfunded = sim(capital=book_money(400.0), manual=True)
+unfunded = sim(capital=hours_money(8060), manual=True)
 ok_start, start_why = unfunded.start_project("identity_cover")         # 1,580 den against 400
 for _ in range(3):
     unfunded.step()

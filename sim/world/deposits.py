@@ -139,7 +139,7 @@ metal-specific process with its own fuel and labour (data/world/
 resources.json's own `constraints` section already carries some of that,
 e.g. `charcoal_kg_per_kg_metal` for copper and lead smelting). This matters
 most for mercury: cinnabar ore can be sold AS ITSELF (the pigment minium,
-data/prices.json's cinnabar_kg), needing no metallurgy at all, but metallic
+the solved price of cinnabar_kg), needing no metallurgy at all, but metallic
 mercury needs roasting the ore and condensing the vapour, a real added cost
 this module does not carry. See the module's own CALIBRATION TARGETS section
 and sim/tests/test_deposits.py's BookPriceComparisonTests for exactly how

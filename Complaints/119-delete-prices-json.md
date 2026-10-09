@@ -1,6 +1,6 @@
 # Deleting `data/prices.json`
 
-**Status:** partly - the file is deleted and nothing opens it; remains (see Remains): supply curves inferred from price, an import or unavailability policy for gated materials, commodities.json and the book labourer wage still in book money, and two photovoltaic entries with no requires_node
+**Status:** partly - the file is deleted and nothing opens it; the commodity ledger prices from the solved table and the book labourer wage is gone; remains (see Remains): supply curves inferred from price, an import or unavailability policy for gated materials, authored node hour figures (Complaints/140), and two photovoltaic entries with no requires_node
 
 `data/prices.json` is not a calibration dataset and will not survive the
 migration. Historical observations that are independently worth testing may be
@@ -76,8 +76,8 @@ and convert through the civilisation's own wage.
   `priced_goods_table`, `calculated_goods_prices`), each node's `rev`, `up`
   and `cap`, and every declared money constant (`declare(..., book_money=True)`,
   converted per `Sim`). `sim/tests/test_money_units_one_boundary.py` checks it.
-- [ ] The conversion factor itself, the book labourer wage, is still a book
-  figure; it goes when authored money is derived from labour and materials.
+- [x] The conversion factor itself, the book labourer wage, is deleted (it is a book
+  figure no more; remaining authored hour figures are tracked in Complaints/140).
 
 What still limits it: the coin's value is fixed at the opening technology, so
 later improvements to the coin metal's production do not deflate the currency
@@ -171,10 +171,10 @@ sourced test fixture.
 
 - The generic national-output and market-share curves in `sim/engine/economy_materials.py` infer physical supply from price (blocker 4); with solved prices a cheap gated material such as aluminium gets an enormous fitted market. Replace with physical capacity and resource access.
 - Gated materials use the labelled mature-technique price above; trade, import and unavailability policy is not built.
-- `data/world/commodities.json` base prices are still authored book denarii read by the commodity ledger.
-- `BOOK_LABOURER_WAGE_DENARII_PER_HOUR` and node `up` and `cap` are still authored book money; node `rev` is now derived from output for nodes that gate production entries and have a staff or plant to derive from, and is nil for sciences that make nothing, while the rest keep authored `rev` (see Complaints/283, 295, 296).
-- `photovoltaic_panel_m2` and `electrical_mj_photovoltaic` have no `requires_node` (the only base technology that fits is a mod node), so no gated solve prices them.
-- `rg -n 'prices\.json|\bPRICES\b' sim tools` still finds prose in comments, test docstrings and the test harness's own `PRICES` name for the wage document; data and docs outside `sim` also mention the file.
+- (done) `data/world/commodities.json` carries no price: each commodity names a `price_material` and `CommodityLedger` takes the solved price of it in labour hours per kg.
+- (done) `BOOK_LABOURER_WAGE_DENARII_PER_HOUR` is deleted. Node `up_hours` and `cap_hours` are still authored hour figures (Complaints/140); node `rev` is now derived from output for nodes that gate production entries and have a staff or plant to derive from, and is nil for sciences that make nothing, while the rest keep authored `rev` (see Complaints/283, 295, 296).
+- `photovoltaic_panel_m2` and `electrical_mj_photovoltaic` have no `requires_node`, so no gated solve prices them. The complaint's claim that only a mod node fits is wrong: `silicon_path` (solar-grade silicon, already the gate of `silicon_kg`, which the panel is built from) fits. Gating both entries with it was tried and `data.load()` then did not finish within 30 seconds, probably because aluminium needs electricity and the panel needs aluminium, a cycle through the energy market the solver (the 135 agent's area) does not handle. Reverted; retry once the solver resolves that cycle.
+- `rg -n 'prices\.json|\bPRICES\b' sim tools` now finds only tests that guard against reading it and the harness's own `PRICES` name; the prose in `sim` comments is fixed, data and docs outside `sim` (mostly historical) still mention the file.
 
 Related: 38, 309.
 

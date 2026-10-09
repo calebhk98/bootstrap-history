@@ -2,10 +2,24 @@
 
 A part of the year's phases (core_step_phases.py); Sim inherits it through StepPhasesMixin."""
 from . import automation_audit
+from sim.constants import declare
 from sim.agents.api import edges
 
 
 class MoneyPhaseMixin:
+
+    AUTO_BUY_PEOPLE_CAPITAL_FLOOR_IN_PRICES = declare(
+        "AUTO_BUY_PEOPLE_CAPITAL_FLOOR_IN_PRICES", 20.0, kind="temporary_heuristic",
+        unit="base prices of one person", source=None, confidence="D",
+        why="Capital the optimizer must hold, as a number of what one person costs to buy, before its "
+            "standing policy buys people. A price multiple, so it follows the cost of a person in any coin. "
+            "Tuned, not measured.")
+    AUTO_BUY_PEOPLE_CAPITAL_PER_PERSON_IN_PRICES = declare(
+        "AUTO_BUY_PEOPLE_CAPITAL_PER_PERSON_IN_PRICES", 5.0, kind="temporary_heuristic",
+        unit="base prices of one person", source=None, confidence="D",
+        why="Capital kept in reserve per person the optimizer's standing policy buys, as a multiple of "
+            "one person's base price, so a purchase never spends the purse down to the price. "
+            "Tuned, not measured.")
 
     def _step_money(self):
         # 2. money
@@ -169,8 +183,8 @@ class MoneyPhaseMixin:
         # that hides it lies about the cost of everything", and hiding the
         # acquisition from a player is the worst version of that.
         if self.state.founder.policy.get("auto_buy_people", False):
-            if self.state.household.capital > self.labour.book_money(6000.0) and self.state.household.artisans < 12 and self.running_with_mechanic("hosts_bought_people"):
-                got = self.labour.buy_slaves(min(6, int(self.state.household.capital // self.labour.book_money(1500.0))))
+            if self.state.household.capital > self.AUTO_BUY_PEOPLE_CAPITAL_FLOOR_IN_PRICES * self.labour.SLAVE_BASE_PRICE and self.state.household.artisans < 12 and self.running_with_mechanic("hosts_bought_people"):
+                got = self.labour.buy_slaves(min(6, int(self.state.household.capital // (self.AUTO_BUY_PEOPLE_CAPITAL_PER_PERSON_IN_PRICES * self.labour.SLAVE_BASE_PRICE))))
                 if got:
                     self.state.household.log.append((self.state.scenario.year, "bought %d people for the workshop" % got))
         if self.state.founder.policy.get("auto_manumit", not self.manual) and self.state.household.slaves:

@@ -178,10 +178,6 @@ class EconomyPort:
         """Money one hour of unskilled work is worth now."""
         return self._sim.labour.money_per_labour_hour()
 
-    def book_money(self, amount):
-        """A book-coin amount in this civilisation's money now."""
-        return self._sim.labour.book_money(amount)
-
     def wage_pressure(self):
         """How far wages stand above their opening level from a shortage of people."""
         return self._sim.wage_index

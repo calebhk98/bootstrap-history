@@ -3,7 +3,7 @@
 import random
 import unittest
 
-from sim.constants import REGISTRY, book_money_names
+from sim.constants import REGISTRY
 from sim.engine import data
 from sim.engine.core import Sim
 from sim.world import deposits
@@ -39,12 +39,10 @@ def build(civ_name):
 
 class PhysicalConstantsAreInHours(unittest.TestCase):
 
-    def test_each_is_declared_in_labour_hours_not_book_money(self):
+    def test_each_is_declared_in_labour_hours(self):
         for money_name, hours_name in PHYSICAL_COSTS.items():
             self.assertTrue(hours_name in REGISTRY, hours_name)
             self.assertIn("labour hour", REGISTRY[hours_name]["unit"], hours_name)
-            self.assertFalse(REGISTRY[hours_name]["book_money"], hours_name)
-            self.assertNotIn(money_name, book_money_names())
 
     def test_price_is_hours_times_the_coin_per_hour(self):
         for civ_name in ("rome_100ad", "han_china_100ad"):

@@ -296,10 +296,6 @@ class WagesMixin(WageLedgerMixin):
         """Money one hour of the unskilled numeraire trade is worth here."""
         return self.wage_schedule().money_per_labour_hour
 
-    def book_money(self, denarii):
-        """An authored book-denarii amount in this civilisation's coin."""
-        return self._world.book_to_money(denarii, self.money_per_labour_hour())
-
     LABOUR_PAY_SHARE_OF_OUTPUT_GAIN = declare(
         "LABOUR_PAY_SHARE_OF_OUTPUT_GAIN", 0.0, kind="temporary_heuristic",
         unit="exponent on output_per_head (1 = pay rises as fast as output per hour)",

@@ -4,9 +4,25 @@ A part of the year's phases (core_step_phases.py); Sim inherits it through StepP
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from . import automation_audit, shortage_conditions
 from sim.agents.api import edges
+from sim.constants import declare
+from . import money_units
 
 
 class ProjectStartPhaseMixin:
+
+    AUTO_FOREST_CAPITAL_LABOUR_HOURS_PER_HA = declare(
+        "AUTO_FOREST_CAPITAL_LABOUR_HOURS_PER_HA", 36300.0, kind="temporary_heuristic",
+        unit="labour hours of capital held per hectare bought", source=None, confidence="D",
+        why="How much capital the optimizer holds for each hectare of charcoal forest its mining "
+            "policy buys alongside an ore shortfall, so the forest never takes the whole purse. "
+            "Tuned, not measured.")
+    AUTO_FOREST_CAPITAL_PER_HA = money_units.PricedInLabourHours("AUTO_FOREST_CAPITAL_LABOUR_HOURS_PER_HA")
+    NITRE_BED_SPEND_CEILING_LABOUR_HOURS = declare(
+        "NITRE_BED_SPEND_CEILING_LABOUR_HOURS", 40300.0, kind="temporary_heuristic",
+        unit="labour hours per year", source=None, confidence="D",
+        why="Yearly ceiling on the optimizer's automatic nitre-bed spending, a flat amount of work "
+            "rather than a share of the shortfall that beds cannot close. Tuned, not measured.")
+    NITRE_BED_SPEND_CEILING = money_units.PricedInLabourHours("NITRE_BED_SPEND_CEILING_LABOUR_HOURS")
 
     def _step_start_projects(self):
         # 4b. start new projects
@@ -249,7 +265,7 @@ class ProjectStartPhaseMixin:
                 # Iron and the base metals are smelted with charcoal, so the
                 # ore is only half the answer.
                 if self.state.holdings.binding in ("iron", "copper", "lead"):
-                    self.buy_forest(min(200.0, self.state.household.capital / self.labour.book_money(1800.0)))
+                    self.buy_forest(min(200.0, self.state.household.capital / self.AUTO_FOREST_CAPITAL_PER_HA))
             elif (self.state.holdings.binding == "saltpetre"
                     and self.state.founder.policy.get("auto_mine", not self.manual)):
                 # GATED, like every other automatic purchase: ungated, this
@@ -261,12 +277,12 @@ class ProjectStartPhaseMixin:
                 # spends a quarter of capital a year against a shortfall
                 # nitre beds cannot close at any affordable scale, which
                 # starves everything else and, once the household falls into
-                # arrears, pins it there with interest. Two thousand denarii
-                # a year is what leaves the rest of the programme funded.
+                # arrears, pins it there with interest. A fixed yearly amount
+                # of work is what leaves the rest of the programme funded.
                 #
                 # The shortage is real and unresolved; more money is not the
                 # answer to it.
-                spend = min(self.state.household.capital * 0.05, self.labour.book_money(2000.0))
+                spend = min(self.state.household.capital * 0.05, self.NITRE_BED_SPEND_CEILING)
                 self.pay_edge(edges.EDGE_BUILDERS, spend, "nitre beds laid down")
                 self.state.holdings.nitre_bed_m2 += spend / self.NITRE_COST_PER_M2
                 automation_audit.record(

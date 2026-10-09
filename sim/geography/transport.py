@@ -4,7 +4,7 @@ hours, and how much of a vehicle's working life, per tonne-kilometre.
 WHAT THIS IS FOR. Every other cost in this project eventually needs to move
 something from where it is made to where it is used, and until now nothing
 in the simulation has had an opinion on what that costs beyond a number
-copied into `data/prices.json`. This module answers "what does it take to
+authored as a book figure. This module answers "what does it take to
 move one tonne one kilometre" from physics and animal biology alone: a
 draught animal's tractive effort against rolling resistance and gradient, a
 pack animal's carrying capacity as a fraction of its own body weight, and

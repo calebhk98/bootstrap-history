@@ -432,7 +432,7 @@
    "mat_mercury": 0.5
   },
   "cap_hours": 60485.63752238797,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "build_yrs": 1.8,
   "adopt_yrs": 0,
   "dev_years": 20,
@@ -614,7 +614,7 @@
    "mica_kg": 0.05
   },
   "cap_hours": 12097.127504477594,
-  "up_hours": 806.475166965173,
+  "up_hours": 800.0,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "dev_years": 8,
@@ -787,7 +787,7 @@
    "glass_lead_kg": 0.2
   },
   "cap_hours": 12097.127504477594,
-  "up_hours": 806.475166965173,
+  "up_hours": 800.0,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "dev_years": 8,
@@ -994,7 +994,7 @@
    "quartz_tube_kg": 1
   },
   "cap_hours": 50404.69793532331,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "build_yrs": 1.2,
   "adopt_yrs": 0.3,
   "dev_years": 25,
@@ -1212,7 +1212,7 @@
    "tungsten_kg": 0.05
   },
   "cap_hours": 40323.75834825865,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "build_yrs": 1,
   "adopt_yrs": 0.1,
   "dev_years": 15,
@@ -1402,7 +1402,7 @@
    "mat_mercury": 1
   },
   "cap_hours": 50404.69793532331,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "build_yrs": 1.5,
   "adopt_yrs": 0.2,
   "dev_years": 20,
@@ -1585,7 +1585,7 @@
    "lead_kg": 10
   },
   "cap_hours": 60485.63752238797,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "build_yrs": 1.5,
   "adopt_yrs": 0.1,
   "dev_years": 20,
@@ -1763,7 +1763,7 @@
    "copper_kg": 3
   },
   "cap_hours": 50404.69793532331,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "build_yrs": 1.2,
   "adopt_yrs": 0.3,
   "dev_years": 18,
@@ -1869,7 +1869,7 @@
    "copper_kg": 5
   },
   "cap_hours": 50404.69793532331,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "build_yrs": 1.2,
   "adopt_yrs": 0.2,
   "dev_years": 15,
@@ -2302,7 +2302,7 @@
   "mat": {
    "iron_bar_kg": 10
   },
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 403.2375834825865,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
@@ -2480,7 +2480,7 @@
    "wood_kg": 10.0
   },
   "cap_hours": 10080.939587064662,
-  "up_hours": 806.475166965173,
+  "up_hours": 800.0,
   "build_yrs": 0.4,
   "adopt_yrs": 0,
   "dev_years": 7,
@@ -2511,7 +2511,7 @@
    "glass_raw_kg": 1
   },
   "cap_hours": 12097.127504477594,
-  "up_hours": 806.475166965173,
+  "up_hours": 800.0,
   "build_yrs": 0.5,
   "adopt_yrs": 0,
   "dev_years": 6,
@@ -2576,7 +2576,7 @@
    "mat_stone": 5000
   },
   "cap_hours": 40323.75834825865,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "build_yrs": 1,
   "adopt_yrs": 0.1,
   "dev_years": 12,
@@ -2887,7 +2887,7 @@
    "lead_kg": 30,
    "cordage_kg": 100
   },
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 302.42818761193985,
   "build_yrs": 0.15,
   "adopt_yrs": 0,
@@ -3091,7 +3091,7 @@
    "brass_kg": 15
   },
   "cap_hours": 60485.63752238797,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "build_yrs": 1.5,
   "adopt_yrs": 0.2,
   "dev_years": 15,
@@ -3122,7 +3122,7 @@
    "brass_kg": 3
   },
   "cap_hours": 12097.127504477594,
-  "up_hours": 806.475166965173,
+  "up_hours": 800.0,
   "build_yrs": 0.4,
   "adopt_yrs": 0,
   "dev_years": 6,
@@ -3224,7 +3224,7 @@
    "copper_beryllium_kg": 0.1
   },
   "cap_hours": 50404.69793532331,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "build_yrs": 1.5,
   "adopt_yrs": 0.2,
   "dev_years": 20,
@@ -3684,7 +3684,7 @@
    "mat_mercury": 5
   },
   "cap_hours": 12097.127504477594,
-  "up_hours": 806.475166965173,
+  "up_hours": 800.0,
   "build_yrs": 0.4,
   "adopt_yrs": 0,
   "dev_years": 6,
@@ -3967,7 +3967,7 @@
    "steel_plate_kg": 0.5
   },
   "cap_hours": 10080.939587064662,
-  "up_hours": 806.475166965173,
+  "up_hours": 800.0,
   "build_yrs": 0.4,
   "adopt_yrs": 0,
   "dev_years": 8,

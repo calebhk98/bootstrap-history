@@ -250,7 +250,7 @@
    "timber_m3": 0.1,
    "iron_bar_kg": 2
   },
-  "cap_hours": 806.475166965173,
+  "cap_hours": 800.0,
   "up_hours": 403.2375834825865,
   "yrs": 1.0,
   "risk": 0.1,
@@ -318,7 +318,7 @@
    "lime_kg": 1
   },
   "cap_hours": 1612.950333930346,
-  "up_hours": 806.475166965173,
+  "up_hours": 800.0,
   "yrs": 1.0,
   "risk": 0.1,
   "sus": 0,
@@ -348,7 +348,7 @@
    "timber_m3": 3,
    "iron_bar_kg": 15
   },
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 0,
   "yrs": 1.5,
   "risk": 0.15,
@@ -378,7 +378,7 @@
    "alum_kg": 0.2,
    "tallow_kg": 0.2
   },
-  "cap_hours": 806.475166965173,
+  "cap_hours": 800.0,
   "up_hours": 403.2375834825865,
   "yrs": 0.3,
   "risk": 0.05,
@@ -536,7 +536,7 @@
    "steel_noric_kg": 1,
    "charcoal_kg": 5
   },
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 0,
   "yrs": 2.0,
   "risk": 0.1,
@@ -729,7 +729,7 @@
    "iron_bar_kg": 100
   },
   "cap_hours": 60485.63752238797,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "yrs": 2.0,
   "risk": 0.2,
   "sus": 0,
@@ -949,7 +949,7 @@
    "beeswax_kg": 1,
    "nitric_acid_kg": 2
   },
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 1612.950333930346,
   "yrs": 1.5,
   "risk": 0.15,
@@ -1138,7 +1138,7 @@
    "steel_plate_kg": 30
   },
   "cap_hours": 60485.63752238797,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "yrs": 1.5,
   "risk": 0.2,
   "sus": 0,
@@ -1197,7 +1197,7 @@
    "mercury_kg": 1
   },
   "cap_hours": 12097.127504477594,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "yrs": 1.0,
   "risk": 0.15,
   "sus": 0,
@@ -1325,7 +1325,7 @@
    "silver_kg": 2
   },
   "cap_hours": 20161.879174129324,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "yrs": 1.0,
   "risk": 0.15,
   "sus": 0,
@@ -1640,7 +1640,7 @@
    "shellac_kg": 20
   },
   "cap_hours": 30242.818761193987,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "yrs": 1.0,
   "risk": 0.1,
   "sus": 0,
@@ -1816,7 +1816,7 @@
    "linen_rag_kg": 50
   },
   "cap_hours": 10080.939587064662,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "yrs": 2.0,
   "risk": 0.1,
   "sus": 0,
@@ -1878,7 +1878,7 @@
   },
   "mat": {},
   "cap_hours": 20161.879174129324,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "yrs": 1.0,
   "risk": 0,
   "sus": 0,

@@ -150,7 +150,7 @@
    "mat_tungsten": 8,
    "cobalt_kg": 4
   },
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "build_yrs": 0.6,
   "adopt_yrs": 0,
   "dev_years": 18,
@@ -1691,7 +1691,7 @@
    "mat_bronze": 50
   },
   "cap_hours": 20161.879174129324,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "build_yrs": 2,
   "adopt_yrs": 0.1,
   "dev_years": 5,
@@ -1890,7 +1890,7 @@
    "mat_bronze": 60
   },
   "cap_hours": 20161.879174129324,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "build_yrs": 1.8,
   "adopt_yrs": 0.3,
   "dev_years": 9,
