@@ -1,6 +1,13 @@
 # Multiple parallel models exist for related concepts; define which is authoritative
 
-**Status:** open
+**Status:** partly. Merchants items 2 and 3 are done: a trader's cargo is entered in the agent economy's book as a
+cargo account's orders (home price moves with it), the partner's side settles in that partner's coin ledger and counts
+against the route's carriers, and the trader's purse is trued up to what the book gave. Still open: the trader's purse
+is not itself an account in the book (the engine holds it; Complaint 382), the other actors' sales and purchases
+(`market_sale`, `market_purchase` from firms and the state) still go only to the engine's flows, items 4 and 5 below,
+the engine's capital market with the agent economy on (kept, see "Still two owners"), the solver anchors' climate
+floors and the strata cost from the economy's tile prices. Whole-game checks of the cargo path are written but were not
+run (a whole game takes about half an hour to open here): `test_home_cargo_price`, `test_foreign_actor_trade`.
 
 **Source:** playtest findings document, ARCH-001. **Type:** Architecture
 recommendation, largely already answered by an existing document; this
@@ -73,8 +80,8 @@ too quickly.
 ## Size
 
 The documentation this finding asks for already exists; the remaining work
-is the wiring itself, which is `Complaints/102`'s scope, not a new
-documentation task. This complaint's only remaining contribution is noting,
+is the wiring itself, which was `Complaints/102`'s scope (102 and 428 are closed; the open work is listed in
+"Still two owners" below), not a new documentation task. This complaint's only remaining contribution is noting,
 for the record, that `deposits.py`'s status ("reachable through a tool the
 engine can call but does not by default") is subtly different from
 `demand.py` and `labour_market.py`'s status ("wired into nothing"), a
@@ -85,7 +92,7 @@ for prioritising the wiring work.
 
 `docs/architecture/STATE_OF_THE_PROJECT.md` (milestones, not-built and next-steps sections) answer this finding
 directly; read that document rather than re-deriving the answer.
-`Complaints/102` (ECON-004) is where the actual wiring work is tracked.
+`Complaints/closed/102` (ECON-004) tracked the wiring; what remains is under "Still two owners".
 
 ## Folded in
 
@@ -141,19 +148,26 @@ Left to do, in order:
    monotone where a buyer's ceiling binds), so the cargo that pays is a marginal one, not a price reached exactly
    (`test_foreign_actor_trade.py` no longer asserts the partner's price settles at the break-even); and the first year after a partner's book opens, a good the partner does not make quotes a taken cargo
    as unpayable (home-bound cargo was zero in the test's first year).
-2. A trader's money is booked through "edge:market sale" and "edge:market purchase", not through the foreign coin
-   ledger, so a trader's exports do not draw coin from the partner or raise the home coin stock (price-specie flow
-   exists only for the external edge). The cargo does not use the carrier lift either (`_record_lift`).
-3. Trader purchases and sales at home still enter the agent economy over the legacy edge (`market_sale`,
-   `market_purchase`), not as external orders; the economy cannot yet tell them from domestic trade, so a cargo
-   bound for home or out of it is quoted (`price_after_cargo` re-clears the port book with it as a hypothetical offer
-   or bid, on top of the year's tally, `Sim.actor_home_trade`) but is not in the book the year then clears: the home
-   price the trader sized against does not actually move with its cargo. Entering the cargo as external orders was
-   tried and backed out: the order carries no partner, so `_settle_foreign_coin` split the money it moved evenly among
-   the partners, and the actor's own "edge:market sale" and "edge:market purchase" postings were made from nowhere
-   while the book also paid or received the edge. A proper version needs the trader as an account in the book (its
-   purse and goods) and a partner on each order (a per-partner edge, which touches the edge records, `wanted_at`,
-   the wash-trade filter and the coin settlement); the same gap as item 2.
+2. Done: a trader's cargo is settled once, after the home market has cleared (`sim/engine/trader_cargo.py`). The
+   partner's side goes through the foreign coin ledger (`_settle_flow`: imports pay coin to the partner, exports draw it,
+   so price-specie flow now sees the traders) and counts against the route's carrier lift (`_record_lift`); the
+   partner's tally closes on what really crossed. The trader is booked at its decision-time quotes (`edge:market
+   purchase`, `edge:market sale`) and trued up afterwards (`edge:market settlement`, and `last_margin`) to what the
+   cargo made, so unsold cargo shows as a loss. Known gaps: the lift is recorded but nothing yet limits a cargo by the
+   carriers left (the fleet year end runs only with the agent economy off), and the money swept out of the book is
+   not tied to metal the way coin crossing `edge:external` is (the mint counts it as worn).
+3. Done for traders: a cargo that touches home gets a cargo account in the book (`sim/engine/economy_port_cargo.py`,
+   one per trader, route, good and direction). A landing cargo arrives from the partner's edge
+   (`external_edge(partner)`, the per-partner edge) and is offered at any price; a taking cargo is bought with the
+   funds the trader put in, at most what it will fetch abroad less carriage. After the clear the account's money goes
+   back over `edge:cargo` and the goods nobody took return over the partner's edge. The home price moves with the
+   cargo and the economy can tell it from domestic trade by its edge records. The earlier attempt's two faults are
+   gone: each order has its partner (the cargo's edge, not the shared `edge:external`), and the trader is not posted
+   from nowhere (its purse is trued up to the book's result). Pinned on the hand-built economy by
+   `test_trader_cargo_book.py` and `test_trader_cargo_settlement.py`. Not done: the purse is the engine's
+   (Complaint 382), so money crosses the engine and the book at the year's start and end; firms' and the state's
+   `market_sale` and `market_purchase` still go only to the engine's flows, which nothing reads on the agent economy;
+   the customs bases (`taxes_bases.imports_paid`) read `edge:external` only, so trader cargo pays no duty.
 4. The economy's merchants (`sim/economy/merchants.py`) were not touched: they move goods between tiles only, with no
    partner. The aggregate flow can go once the agent economy is the only economy, with the external orders; until
    then it is the opt-out game's merchant.
@@ -217,12 +231,24 @@ strata money moves only by what crossed the edge and the state's relief.
 ## Still two owners
 
 - Labour (428): done. The agent economy clears wages through the labour core, and the engine's hours by trade are read from the core's people (the recipe graph's need while the agent economy is off); `Workforce.step` is gone.
-- Merchants (405): one owner per flow now for goods actors carry (decision above); the stand-ins still own the rest.
+- Merchants (405): one owner per flow now for goods actors carry (decision above), and the traders' cargo is in the
+  book and the coin ledger (items 2 and 3); the stand-ins still own the rest.
 - Demand baskets: one kernel now (`sim/world/need_basket.py`); the economy, the aggregate demand model and the strata
   read it (`docs/architecture/ONE_DEMAND_MODEL_PLAN.md` stages 1 to 4, branch `one-demand-model`). Open: the solver's
   anchors have no climate floors, the strata cost does not yet come from the economy's own tile prices when it is on,
-  and stage 7 (retire what the kernel replaced).
+  and stage 7 (retire what the kernel replaced). Stage 7 measured: the canned basket and the strata multiple constants are
+  already gone; `HOUSEHOLD_FOOD_BUDGET_SHARE_{LOW,HIGH}` and `SILVER_TO_LEAD_PRICE_RATIO_HISTORICAL` are read only by the
+  reporting tests and were declared checks on purpose (closed Complaint 36), and `market_clearing_price`,
+  `aggregate_household_demand` and `household_budget_share` have no production reader but belong to the standalone
+  silver and lead pricing model that `DEMAND_AT_SCALE.md` documents, so they stay until the owner says to drop that
+  model; the strata wage bridge stays for other countries and the agent-economy-off game.
 - The engine's `market_loans`, `update_capital_market` and its rate still run (and set the rate) when the agent economy is off;
-  only the reading side is unified.
+  only the reading side is unified. Decided with evidence (2026-10-09): the agent-economy-off path is a supported mode, not
+  dead code. `ECONOMY_AGENTS.md` documents `cfg["agent_economy"] = False` and `ROME_AGENT_ECONOMY=0`; a game
+  falls back to it by itself for a civilisation that holds no tiles (`EconomyPort._has_territory`); and the tests of
+  the old economy's mechanisms opt out (count them with `grep -rln "agent_economy.*False" sim/tests | wc -l`). So it
+  was not deleted. Nor was the engine meeting stopped with the agent economy on: the meeting's supply shares are
+  what `pay_lenders` pays the engine actors' interest pool out by, so stopping it would sink that interest; ending it
+  needs those actors to borrow from accounts in the book, the same gap as the trader's purse.
 
 Owner decision (2026-10-09): high priority: do it as soon as possible.

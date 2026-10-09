@@ -22,6 +22,7 @@ from sim.world import market, trader_response
 
 from .data import ROOT, calculated_goods_prices, goods_provenance, load_civ, starting_schedule
 from .foreign_actor_trade import ForeignActorTradeMixin
+from .trader_cargo import TraderCargoMixin
 from .foreign_capacity import ForeignCapacityMixin
 from .foreign_payments import ForeignPaymentsMixin
 from .foreign_routes import ForeignRoutesMixin
@@ -73,7 +74,7 @@ def _foreign_prices_in_own_coin(civilization_id):
 
 
 class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPaymentsMixin,
-                            ForeignTradersMixin, ForeignActorTradeMixin):
+                            ForeignTradersMixin, ForeignActorTradeMixin, TraderCargoMixin):
 
     def foreign_economies(self):
         """Economies trading with this society this year, sorted by id."""

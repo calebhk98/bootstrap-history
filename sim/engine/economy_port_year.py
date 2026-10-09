@@ -17,7 +17,7 @@ from sim.economy.api import (EDGE_EXTERNAL, EDGE_LEGACY, AgentOrders, Economy, G
                              YearInputs, expected_output_prices, external_orders, live_input_prices, live_wages,
                              trade_premium, variable_cost_per_run)
 
-from . import solve_cache
+from . import economy_port_cargo, solve_cache
 from .data import load_civ
 from .economy_port_key import spin_up_key
 from .economy_port_setup import build_setup, opening_values
@@ -131,10 +131,17 @@ class AgentEconomy:
         self.sync_ways()
         orders = self._founder_orders()
         orders.update(self._external_orders())
+        from .project_materials import tonnes_per_unit
+        legs = self._sim.cargo_legs()
+        moves, cargo_orders, fundings = economy_port_cargo.cargo_orders(economy, legs, tonnes_per_unit)
+        economy_api.move_goods(economy, moves)
+        economy_api.post_transfers(economy, fundings)
+        orders.update(cargo_orders)
         self._strike_state_coin(economy)
         outcome = economy.step(self._inputs(orders))
         self.outcomes.append(outcome)
         self._settle_founder()
+        self._sim.settle_trader_cargo(economy_port_cargo.close_cargo_accounts(economy, legs, tonnes_per_unit))
         self._settle_foreign_coin()
         self._answers = None
         self._save()

@@ -1,6 +1,6 @@
 # One household demand model, and the other duplicates Complaint 115 still lists
 
-**Status:** stages 1 to 4 built on branch `one-demand-model` (2026-10-06); stages 5 to 7 not started. Written against
+**Status:** stages 1 to 4 built on branch `one-demand-model` (2026-10-06); stage 6 started (2026-10-09: traders' cargo is in the book and the coin ledger, Complaint 115 items 2 and 3); stage 5 not done on purpose (the agent-economy-off game is a supported mode and the engine meeting still pays the actors' interest pool, Complaint 115); stage 7 measured, see Complaint 115 "Still two owners". Written against
 branch `structural-dedupe-and-owner-decisions`. It answers the "Still two owners" list in
 `Complaints/115-multiple-parallel-models-need-an-authoritative-one.md`: three household demand models, the engine's
 capital market with the agent economy off, and the merchant stand-ins.
