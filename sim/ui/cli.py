@@ -30,7 +30,7 @@ from collections import defaultdict
 from sim.engine.ui_port import load_production_catalog
 from sim.engine.ui_port import (
     category_traits, tree_merge, validate_material_gating, validate_output_bounds, node_revenue_census, validate_copy_visibility, validate_production,
-    validate_unheld_gates, validate_running_gates)
+    validate_unheld_gates, validate_running_gates, validate_defence_stores)
 from sim.engine.ui_port import default_civilisation_id
 from sim.engine.ui_port import (
     ROOT, MODDIR, CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog,
@@ -396,6 +396,7 @@ def cmd_validate(args):
     from sim.engine import validate_event_causes
     errs += validate_event_causes.check_event_causes(civ_start_check.load_civilisations(ROOT), set(nodes))
     errs += validate_running_gates.check_running_gates(nodes)
+    errs += validate_defence_stores.check_defence_stores(nodes, set(wages), producible)
     from sim.engine import validate_disease_data
     errs += validate_disease_data.check_disease_data()
     goal_errs, default_goal, goal_rows = _validate_goal_rows(tree, nodes)

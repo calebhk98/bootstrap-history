@@ -128,6 +128,8 @@ class VenturesMixin:
             trade, fte = self.venture_foreman(node_id)
             if trade:
                 used[trade] += fte * self.institution_units(node_id)
+            for garrison_trade, people in self.venture_garrison(node_id, self.institution_units(node_id)).items():
+                used[garrison_trade] += people
         return dict(used)
 
     def venture_foreman_free(self, trade, excluding=None):

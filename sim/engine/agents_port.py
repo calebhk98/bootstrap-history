@@ -134,6 +134,8 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, DisclosureView, Cap
 		staff = {"scholar": scholars, "artisan": craftsmen}
 		if foreman_trade:
 			staff[foreman_trade] = staff.get(foreman_trade, 0.0) + foreman_fte
+		for trade, people in sim.venture_garrison(node_id).items():
+			staff[trade] = staff.get(trade, 0.0) + people
 		return {trade: people for trade, people in staff.items() if people > 0.0}
 
 	def concern_wage_bill(self, node_id: str, capacity: float = 1.0) -> float:

@@ -50,7 +50,8 @@ change; read them from the node data (no command summarises them).
 | `schooling_flow` | schooling contribution; `required` makes it a precondition of all schooling |
 | `mining_tech` | `yield` and `cost` multipliers on mining, optionally limited to `materials` (generic; a technique that stands for a physical work declares `mine_works` instead) |
 | `mine_works` | a physical term of the mine's works, read by `sim/world/mine_technique.py`: `drainage_lift_efficiency`, `gravity_drained_head_share`, `gravel_moved_multiple`; carries a `source` |
-| `hazard_counters` | list of `{kind, share, label, order}`: what harm the node counters |
+| `hazard_counters` | list of `{kind, share, label, order}`: what harm the node counters. An entry may add `requires_running` (works that must be open), `magazine` (`{material: units}` held in the stock ledger for the counter to count in full; it counts for the share held) and `draws` (`{material: units}` spent from the ledger in each year a threat of its kind is live). The node's own `garrison` (see CONTRACT) is read the same way: the counter counts for the share of the garrison present |
+| `banks_output` | `material` and `per_labour_hour`: a running work puts that material into the stock ledger each year from its crew's hours (`sch` plus `art` people); the crew's inputs are bought inside the work's running costs (`sim/engine/defence_stores.py`) |
 | `staff_grant` | people granted once on completion when auto-hire is off |
 | `staff_advice` | `kind` (`scholars`/`artisans`), `advice` text shown when staff is short |
 

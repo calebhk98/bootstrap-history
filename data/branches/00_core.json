@@ -3431,11 +3431,19 @@
           "kind": "sack_chance",
           "share": 0.15,
           "label": "corned powder",
-          "order": 6
+          "order": 6,
+          "magazine": {
+            "gunpowder_kg": 1000
+          }
         }
-      ]
+      ],
+      "banks_output": {
+        "material": "gunpowder_kg",
+        "per_labour_hour": 3.0
+      }
     },
     "name": "Corned gunpowder",
+    "_internal": "[HEURISTIC: banked powder is the crew hours of the running works times a mill rate per labour hour, and the magazine that counts the powder as a defence is one battery's year; the inputs are bought inside the works' running costs, not drawn from the ledger.]",
     "note": "75/15/10 by mass, and the ratio is worthless without corning: wet the mix, press the cake, break it into grains, sieve. OPTIONAL AND DANGEROUS. It buys imperial favour instantly and it makes every future usurper more dangerous, including during the Third Century Crisis when you most need the Empire to hold. Recommended: develop the chemistry, withhold the corning, and keep it as a survival card.",
     "ph": 300.0,
     "pre": [
