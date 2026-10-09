@@ -71,3 +71,15 @@ def built_km(world_map: WorldMap, improvements: Mapping[str, Mapping[str, Any]],
         return 0.0
     count = sum(1 for built in improvements.values() if built.get(improvement))
     return count * float(found["construction"]["length_m"]) / METRES_PER_KM
+
+
+WORK_TYPES = ("crossing", "harbour")
+CONSTRUCTION_FIELDS = ("trade", "length_m", "section_m2", "material", "tonnes_per_m3", "person_days_per_m3",
+                       "work_hours_per_day", "work_days_per_year", "crew_people")
+
+
+def invalid_entries(world_map: WorldMap) -> list:
+    """Ids of works missing a known type, a source, a reason or a construction figure."""
+    return [work_id for work_id, work in sorted(world_map.catalogue("ways").items())
+            if work.get("type") not in WORK_TYPES or not work.get("source") or not work.get("why")
+            or any(field not in (work.get("construction") or {}) for field in CONSTRUCTION_FIELDS)]

@@ -237,6 +237,7 @@ def problems(world_map: Optional[WorldMap] = None) -> List[str]:
              for parameter_id in parameters.invalid_entries(world_map)]
     found += ["resource %r names an unknown mechanism" % row_id for row_id in mechanisms.unknown_rows(world_map)]
     found += ["route mode %r is incomplete" % mode_id for mode_id in routes_modes.invalid_entries(world_map)]
+    found += ["built work %r is incomplete" % work_id for work_id in ways_works.invalid_entries(world_map)]
     found += resources_catalogue.validate(world_map)
     return found
 

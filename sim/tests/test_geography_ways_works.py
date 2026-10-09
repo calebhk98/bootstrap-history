@@ -129,6 +129,14 @@ class PortTests(unittest.TestCase):
         self.assertEqual(api.improvement_key("road", "b", "a", self.world_map), api.edge_key("a", "b"))
 
 
+class DataTests(unittest.TestCase):
+
+    def test_the_works_catalogue_is_complete_and_the_map_has_no_problems(self):
+        world_map = api.open_map()
+        self.assertEqual(api.problems(world_map), [])
+        self.assertEqual({"bridge", "port"}, set(world_map.catalogue("ways")))
+
+
 class CanalTests(unittest.TestCase):
 
     def setUp(self):
