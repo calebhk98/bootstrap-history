@@ -206,13 +206,37 @@ def _main_output(recipe: Recipe, prices: Mapping[GoodId, float]) -> GoodId:
     return max(sorted(recipe.outputs), key=lambda good: recipe.outputs[good] * prices.get(good, 0.0))
 
 
+def _placement_order(runs, recipes, setup) -> List[str]:
+    """Recipes in the order they are placed: a recipe after every recipe that uses what it makes, so the
+    users of an input are on the map before its suppliers are placed beside them. A cycle falls back to id order."""
+    users = {}
+    for recipe_id in runs:
+        recipe = recipes[recipe_id]
+        for good in list(recipe.inputs) + list(recipe.plant_goods):
+            users.setdefault(good, set()).add(recipe_id)
+    produced = {recipe_id: _main_output(recipes[recipe_id], setup.opening_prices) for recipe_id in runs}
+    ordered: List[str] = []
+    waiting = sorted(runs)
+    while waiting:
+        ready = [recipe_id for recipe_id in waiting
+                 if all(user in ordered or user == recipe_id for user in users.get(produced[recipe_id], ()))]
+        step = ready or waiting[:1]
+        ordered.extend(step)
+        waiting = [recipe_id for recipe_id in waiting if recipe_id not in step]
+    return ordered
+
+
 def _place_producers(setup, record, area_map, final_by_tile, incumbents, runs) -> None:
     """Each market area of the recipe's main output gets its share of the runs, sized by the area's share
-    of demand for that good (its people's share when no household buys it), spread over its tiles by
-    location.opening_split: one producer per (recipe, tile)."""
+    of the demand for that good (households' and the already placed producers' that use it as an input; its
+    people's share when nobody buys it), spread over its tiles by location.opening_split: one producer per
+    (recipe, tile). An input is therefore opened where its users are, with the supply their capacity needs,
+    not where people happen to live (a good too cheap to carry has a market the size of a tile)."""
     population = setup.opening_population_by_tile
     by_limits = sites.limits_by_recipe(setup.site_limits)
-    for recipe_id, count in sorted(runs.items()):
+    input_demand: Dict[TileId, Dict[GoodId, float]] = {}
+    for recipe_id in _placement_order(runs, setup.recipes, setup):
+        count = runs[recipe_id]
         recipe = setup.recipes[recipe_id]
         main = _main_output(recipe, setup.opening_prices)
         areas = area_map.areas(main) if main in area_map.goods() else ()
@@ -220,7 +244,8 @@ def _place_producers(setup, record, area_map, final_by_tile, incumbents, runs) -
             continue
         weights = {}
         for area in areas:
-            weight = math.fsum(final_by_tile.get(tile, {}).get(main, 0.0) for tile in area.tiles)
+            weight = math.fsum(final_by_tile.get(tile, {}).get(main, 0.0) + input_demand.get(tile, {}).get(main, 0.0)
+                               for tile in area.tiles)
             weights[area.area_id] = (area, weight)
         if math.fsum(weight for _area, weight in weights.values()) <= 0.0:
             weights = {area.area_id: (area, math.fsum(population.get(tile, 0.0) for tile in area.tiles))
@@ -242,6 +267,12 @@ def _place_producers(setup, record, area_map, final_by_tile, incumbents, runs) -
                     expected_sales=capacity / (1.0 + OPENING_SPARE_CAPACITY_SHARE),
                     yield_factor=sites.yield_at(recipe, tile, by_limits, setup.yield_factor_by_recipe_tile.get(
                         recipe_tile_key(recipe_id, tile), 1.0)))
+                wanted = input_demand.setdefault(tile, {})
+                for good, quantity in recipe.inputs.items():
+                    wanted[good] = wanted.get(good, 0.0) + capacity * quantity
+                if recipe.plant_life_years > 0.0:
+                    for good, quantity in recipe.plant_goods.items():
+                        wanted[good] = wanted.get(good, 0.0) + capacity * quantity / recipe.plant_life_years
 
 
 def _has_people(record, tile) -> bool:
