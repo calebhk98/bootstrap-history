@@ -1,6 +1,6 @@
 # Regions and tiles are two maps
 
-**Status:** partly - a civilisation holds tiles (`tiles_held`: its `home_tiles`, else the tiles its region labels name) and every reader of a civilisation's territory goes through it: settlement, frontier and roads, the economy's tiles, foreign routes, reach, mineral access, the forest ceiling, farm land, the weather cells, crop climate, the cast and a foreign economy's mined capacity. Remaining: no civilisation file lists `home_tiles` yet (they still name a starting claim by labels), region records still carry mineral shares not yet tied to a deposit, and located materials still name regions
+**Status:** partly - a civilisation holds tiles: every shipped civilisation file lists `home_tiles` and no `home_regions`, and every reader of a civilisation's territory goes through `tiles_held`. A foreign economy's mined share counts the deposits on its tiles. Remaining: region records still carry mineral shares with no deposit behind them (listed below), the home mineral scale and material freight still read region shares, and located materials still name regions
 
 The world has two land systems: 21 named regions and the land tiles inside
 them. Soil fertility and arable land now come from tiles (Complaints/130),
@@ -44,9 +44,16 @@ See `docs/architecture/MAP_AND_WEATHER.md`.
 - A foreign economy's mined capacity summed the shares of its `home_regions`; it now sums each region's share by the fraction of that region's tiles the civilisation holds (`foreign_capacity.held_mineral_share`). `sim/tests/test_foreign_capacity_from_tiles.py`.
 - The remaining `home_regions` mentions in code are comments, display (`cli_interactive.py`, `screen_divergence.py`, `screen_map.py`), cache keys (`economy_port.py`, `geography.py`) and the resolver itself (`tile_holdings.py`, `land._tiles_held_in` for a caller-supplied geography). Measure with `grep -rnE "home_regions|region_to_tiles" sim --include=*.py`.
 
+## Done on the civilisation files and mineral readers
+
+- Each shipped civilisation (`data/civilizations/*.json`) lists `home_tiles`, generated with the resolver from its old labels (same tile count as before for each) and spot-checked by latitude and longitude. `home_regions` is gone from them. `sim.geography.api.regions_of_tiles` gives the labels of held tiles; `cmd_civs`, the map screen and the divergence screen show those.
+- Decision on dropping `home_regions` from the resolver: kept, as a shorthand a mod civilisation may use (`mods/README.md`, `data/civilizations/_SCHEMA.md`). Evidence: with the shipped files on tiles, every reader goes through `tiles_held`, so the label path costs one line and no second source remains in shipped data; but the sample mod civilisation, many fixtures and a patch that adds one mod tile to a civilisation all read more simply with labels, and removing it would touch about thirty tests. `home_tiles` wins when both are present. `sim/tests/test_civilisations_hold_tiles.py` fails if a shipped file lists labels or no tiles.
+- `mineral_shares.held_share` is what a holder can draw on: the deposits sitting on its tiles, exactly, plus each region's table remainder by the fraction of that region's tiles held. `foreign_capacity.held_mineral_share` uses it, so a deposit on a tile not held no longer counts because its region is. `sim/tests/test_held_mineral_share.py` (fixtures) and `sim/tests/test_foreign_capacity_from_tiles.py`.
+
 ## What remains
 
-- Civilisation files still name their starting claim by region labels; none lists `home_tiles`.
-- Region records keep mineral shares not tied to a deposit, and located materials name regions.
+- Region mineral shares with no deposit behind them (measure: print each region's `minerals` from `load_geography()` against `mineral_shares.deposit_shares_by_tile`): every non-zero table entry is such a case. Coal in all seven regions that list it, saltpetre in India, Persia and China, and iron, copper, lead, silver and tin in the non-Roman regions (Scandinavia, Arabia, India, Persia, China, West Africa, Southeast Asia, East Africa, Siberia, the Americas, Australia, Greenland). The deposit catalogue only holds Roman-world metals (iron, copper, lead, silver, tin, gold, mercury). No deposits are invented here; each needs a sourced deposit entry (Complaint 416).
+- The home mineral scale (`Geography._compute_mineral_scale`) and `economy_freight` (regions that produce a material) still read region shares by region reach. Moving the deposit part to the reach of the deposit's tile needs a per-tile reach level; geography only banks reach per region.
+- Located materials (`data/world/geography/located_materials/located_materials.json`, read by `Geography.material_reach`) name regions. Translating them mechanically to every tile of those regions would keep behaviour and add no information; a real move needs a sourced tile (or latitude and longitude) per material, like deposits, and a per-tile reach level.
 - `cli_interactive.py` and `demo_commodities.py` print region names, which is what a label is for.
 - Related: Complaints/289 (no place names or towns).
