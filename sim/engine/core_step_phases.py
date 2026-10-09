@@ -22,6 +22,7 @@ import random
 from dataclasses import dataclass
 
 from sim.unit_conversions import PERCENT_SCALE
+from . import automation_audit
 from .invariants import check_labour_market_invariants
 from .step_phase_money import MoneyPhaseMixin
 from .step_phase_project_start import ProjectStartPhaseMixin
