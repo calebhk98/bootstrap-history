@@ -21,7 +21,7 @@ from .producers_close import working_capital_target
 from .record import EconomyRecord
 from .setup import EconomySetup, labour_area, recipe_tile_key
 from .tile_costs import CarriageTable
-from .types import EDGE_MINT, GoodId, Recipe, TileId, Transfer
+from .types import EDGE_MINT, EDGE_PRODUCTION, GoodId, GoodsMove, Recipe, TileId, Transfer
 
 OPENING_SPARE_CAPACITY_SHARE = declare(
     "OPENING_SPARE_CAPACITY_SHARE", 0.1, kind="temporary_heuristic",
@@ -53,6 +53,7 @@ def open_economy(setup: EconomySetup) -> Tuple[EconomyRecord, AreaMap, CarriageT
                            ways={key: dict(built) for key, built in setup.improvements.items()})
     view = YearView(memory, record.book, area_map, setup.currency_id, labour_area)
     _open_cohorts(setup, record)
+    _seed_durable_stocks(setup, record, view)
     final_by_tile = _final_demand(setup, record, view)
     incumbents = incumbent_recipes(setup.recipes, priced_goods, setup.opening_wages, setup.opening_rate)
     runs = required_runs(final_by_tile, incumbents, setup.recipes)
@@ -100,20 +101,44 @@ def _open_cohorts(setup, record) -> None:
             record.cohorts[cohort.agent_id] = cohort
 
 
-def _final_demand(setup, record, view) -> Dict[TileId, Dict[GoodId, float]]:
-    """What each tile's households buy at the opening prices with the opening income."""
-    final: Dict[TileId, Dict[GoodId, float]] = {}
+def _opening_bids(setup, record, view):
+    """(cohort, bid, price) for what each cohort would buy at the opening prices with the opening income."""
     priced_by_tile = {}
     for cohort in sorted(record.cohorts.values(), key=lambda each: each.agent_id):
         priced = priced_by_tile.setdefault(cohort.tile, households.need_prices(setup.basket_for(cohort.tile), view, cohort.tile))
         income = cohort.last_year_income
         orders = households.goods_orders(cohort, view, income, income, setup.basket_for(cohort.tile), setup.specs,
                                          priced)
-        demand = final.setdefault(cohort.tile, {})
         for bid in orders.bids:
             price = view.price(bid.good, bid.area)
             if price:
-                demand[bid.good] = demand.get(bid.good, 0.0) + goods_market.quantity_at(bid, price)
+                yield cohort, bid, price
+
+
+def _seed_durable_stocks(setup, record, view) -> None:
+    """Households open holding the durables they keep in use (dwellings, vessels, tools): the stock their
+    expected flow wants over the good's service life. Without it the first year's demand is the whole
+    stock built at once, thirty years of walls in one, and the opening staffs for a building boom that is
+    never repeated."""
+    moves = []
+    for cohort, bid, price in _opening_bids(setup, record, view):
+        spec = setup.specs.get(bid.good)
+        if spec is None or spec.service_life_years <= 0.0 or bid.priority == households_store.STORE_PRIORITY:
+            continue     # a store of wealth is seeded from the deposits (opening_stores), not from need
+        quantity = bid.floor_quantity + bid.flexible_quantity     # the stock wanted, whatever the cash
+        if quantity > 0.0:
+            moves.append(GoodsMove(EDGE_PRODUCTION, cohort.agent_id, bid.good, cohort.tile, quantity,
+                                   "opening stock of a durable in use"))
+    if moves:
+        record.book.move_many(moves)
+
+
+def _final_demand(setup, record, view) -> Dict[TileId, Dict[GoodId, float]]:
+    """What each tile's households buy at the opening prices with the opening income."""
+    final: Dict[TileId, Dict[GoodId, float]] = {}
+    for cohort, bid, price in _opening_bids(setup, record, view):
+        demand = final.setdefault(cohort.tile, {})
+        demand[bid.good] = demand.get(bid.good, 0.0) + goods_market.quantity_at(bid, price)
     return final
 
 

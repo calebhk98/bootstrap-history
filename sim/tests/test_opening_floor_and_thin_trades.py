@@ -11,6 +11,7 @@ from sim.labour import wages
 
 FLOOR_OVER_FOOD_FLOOR = 8.0      # a small multiple: clothing, shelter, fuel, water and vessels together cost a few foods
 SUBSTITUTE_SLACK = 1.5           # room for the one-year lag of the unskilled wage the ceiling reads
+MASON_SHARE_OF_WORKERS = 0.03       # the opening had a tenth
 GOOD_PRICE_DRIFT = 20.0          # times the good's price against wheat at the opening
 
 
@@ -64,6 +65,18 @@ class OpeningFloorTests(unittest.TestCase):
             now, then = median_price(good), setup.opening_prices.get(good)
             if now and then:
                 self.assertLess((now / wheat_now) / (then / wheat_then), GOOD_PRICE_DRIFT, good)
+
+
+class OpeningStaffingTests(unittest.TestCase):
+
+    def test_the_opening_does_not_staff_a_building_boom(self):
+        # Households open holding the durables they keep in use, so the first year buys replacement, not
+        # thirty years of walls: masons stay a small share of working people (they were a tenth).
+        from sim.economy import labour_state, opening
+        _game_, _economy, setup, _record, _view = _game()
+        record, _areas, _carriage = opening.open_economy(setup)
+        people = labour_state.people_by_trade_everywhere(record.workforce)
+        self.assertLess(people.get("mason", 0.0) / sum(people.values()), MASON_SHARE_OF_WORKERS)
 
 
 if __name__ == "__main__":

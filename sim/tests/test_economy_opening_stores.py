@@ -81,7 +81,8 @@ class OpeningEconomyTests(unittest.TestCase):
         record, _areas, _carriage = open_economy(setup)
         held = sum(record.book.stock(agent, fixture.METAL, tile) for agent, cohort in record.cohorts.items()
                    for tile in [cohort.tile])
-        self.assertAlmostEqual(held, opening_stores.retained_output(2.0, 100.0, 0.0, METAL_GOODS_LOSS_PER_YEAR))
+        # the seeded wealth, and besides it the stock the households keep in use (opening._seed_durable_stocks)
+        self.assertGreaterEqual(held, opening_stores.retained_output(2.0, 100.0, 0.0, METAL_GOODS_LOSS_PER_YEAR))
 
     def test_the_opened_economy_holds_none_of_a_good_used_up_within_the_year(self):
         setup = fixture.small_setup(opening_store_output={fixture.METAL: ((2.0, 100.0, 0.0),)})
