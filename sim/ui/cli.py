@@ -396,6 +396,11 @@ def cmd_validate(args):
     from sim.engine import validate_event_causes
     errs += validate_event_causes.check_event_causes(civ_start_check.load_civilisations(ROOT), set(nodes))
     errs += validate_running_gates.check_running_gates(nodes)
+    from sim.engine import validate_action_results
+    from sim.geography.api import open_map
+    carriage_map = open_map()
+    errs += validate_action_results.check_action_results(
+        nodes, list(carriage_map.catalogue("route_modes").values()) + list(carriage_map.catalogue("sea_lanes").values()))
     errs += validate_defence_stores.check_defence_stores(nodes, set(wages), producible)
     from sim.engine import validate_disease_data
     errs += validate_disease_data.check_disease_data()

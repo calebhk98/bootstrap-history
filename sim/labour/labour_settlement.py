@@ -82,7 +82,7 @@ class SettlementMixin:
 
     def held_technologies(self):
         """Technologies this actor's people can travel with: the civilisation's own and those built."""
-        return frozenset(self._world.civ.get("starting_techs", ())) | frozenset(self._world.state.projects.done)
+        return frozenset(self._world.held_and_running())
 
     def reachable_tiles(self, days_budget=None):
         """{tile: days} a hire can travel to the base from within `days_budget` (default

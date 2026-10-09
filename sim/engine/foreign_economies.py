@@ -86,6 +86,9 @@ class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPay
 
     def partner_refusal(self, civilization_id, material):
         """Why the partner will not sell the material, else None."""
+        gate = self.partner_gate_refusal(civilization_id)
+        if gate:
+            return gate
         if material in exports_refused(civilization_id):
             return "%s will not sell %s" % (load_civ(civilization_id).get("name", civilization_id), material)
         return None

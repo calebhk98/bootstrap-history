@@ -183,6 +183,9 @@ class LabourWorld:
     def has(self, node_id):
         return self._sim.has(node_id)
 
+    def held_and_running(self, include_starting=True):
+        return self._sim.held_and_running(include_starting)
+
     def home_price_level(self):
         return self._sim.home_price_level()
 
