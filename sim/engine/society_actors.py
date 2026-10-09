@@ -113,10 +113,16 @@ class ActorsMixin:
 
     def pay_state(self, amount, purpose):
         """The household pays the state: the founder's loss is the treasury's gain."""
-        ledger.transfer(self.household, self.state_treasury(), amount, purpose)
+        with self.coin_carriage_listening():
+            ledger.transfer(self.household, self.state_treasury(), amount, purpose)
 
     def advance_actors(self, year):
-        """Give every actor its year: the countries, players, firms, traders and bodies of people."""
+        """Give every actor its year: the countries, players, firms, traders and bodies of people. Coin moved
+        between actors in different places pays carriage meanwhile."""
+        with self.coin_carriage_listening():
+            self._advance_actors_year(year)
+
+    def _advance_actors_year(self, year):
         seed_opening_cast(self)
         self.state_treasury()
         self.update_capital_market()

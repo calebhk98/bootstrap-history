@@ -44,6 +44,7 @@ from .foreign_economies import ForeignEconomiesMixin
 from .living_stock import LivingStockMixin
 from .coin_hoard import CoinHoardMixin
 from .theft_charge import TheftChargeMixin
+from .coin_carriage import CoinCarriageMixin
 from .living_stock_trade import LivingStockTradeMixin
 from .living_stock_yearly import LivingStockYearlyMixin
 from .market_demand import MarketDemandMixin
@@ -222,7 +223,7 @@ YEARLY_RECORD_LIMIT = 300
 
 class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IndustryDepthMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, LabourPortMixin,
           ProjectsMixin, SeatMixin, WaysMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, InterestGroupsMixin, ForwardingPropertiesMixin, GoalsMixin,
-          StepPhasesMixin, LivingStockMixin, CoinHoardMixin, TheftChargeMixin,
+          StepPhasesMixin, LivingStockMixin, CoinHoardMixin, CoinCarriageMixin, TheftChargeMixin,
           LivingStockTradeMixin, LivingStockYearlyMixin, EconomyPortMixin, NodeRederiveMixin):
     STATE_CAPACITY_DEFAULT = declare(
         "STATE_CAPACITY_DEFAULT", 0.7, kind="temporary_heuristic",
