@@ -39,3 +39,5 @@ Overlapping issues closed into this one; each closed file keeps its full text.
 - 270 (`closed/270-request-private-militia-bribery-and-campaign-influence.md`): private militia, bribery and campaign influence (owner: wait for multiplayer).
 
 Owner decision (2026-10-09): high priority: do it as soon as possible.
+
+Owner decision (2026-10-09): when one player's founder dies in a run where founders are mortal, the game stops for that player only; every other seat keeps playing. In an immortal-founder run this never arises.
