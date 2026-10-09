@@ -176,6 +176,8 @@ def next_expectations(producer: Producer, recipe: Recipe, view: MarketView) -> D
         for good in latest_prices:
             updated[good] += REGRESSIVE_EXPECTATION_WEIGHT * (updated[good] * break_even - updated[good])
     for good in unsold_outputs(producer, recipe, view):
+        if good not in updated:
+            continue  # never priced and nothing expected: there is no ask to mark down
         updated[good] = min(updated[good], producer.expected_prices.get(good, updated[good])
                             * (1.0 - UNSOLD_ASK_MARKDOWN_SHARE))
     return updated
