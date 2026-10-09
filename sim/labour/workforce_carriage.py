@@ -1,4 +1,4 @@
-"""Crew hours to carry one tonne a typical haul, by trade: carriage as a labour need.
+"""Crew hours to carry one tonne a typical haul, by trade: carriage as a labour need (carters, sailors).
 
 The goods households and producers use are moved, and the movers are sailors and carriers. The
 hours per tonne-km are geography's (the physical inputs the route search prices a haul with), for the

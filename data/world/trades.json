@@ -24,6 +24,14 @@
       "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
       "fatality_confidence": "D"
     },
+    "carter": {
+      "family": "labour",
+      "note": "Drives a cart or leads a pack train: carter, teamster, muleteer, drover. Land carriage by animal is this trade's work; porters on foot stay labourers.",
+      "training_years": 1,
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
+    },
     "chemist": {
       "family": "scholar",
       "initially_absent": true,

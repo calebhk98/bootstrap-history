@@ -405,7 +405,8 @@
     "pepper_kg": "black pepper came from southern India or the tropics, regions the model has no partner for; the cultivation node is not held",
     "silk_kg": "silk was a long-route import from China, which the model supplies only as a partner in the years it covers",
     "steel_plate_kg": "plate steel needs the later cementation and refining processes and no partner holds them; ordinary iron or bronze serves implements until a founder brings them",
-    "tool_steel_kg": "tool steel needs the later cementation process and no partner holds it; households fall back on other implement metals"
+    "tool_steel_kg": "tool steel needs the later cementation process and no partner holds it; households fall back on other implement metals",
+    "water_piped_kg": "No lead-pipe working node is held and no partner supplies one: its households draw water from wells and carry it from the river or spring, as they did before piped supply."
   },
   "year": 900,
   "local_words": {
