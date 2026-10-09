@@ -129,8 +129,7 @@ def _found_rival(registry: Any, world: Any, parent: Any, node_id: str, pool: Lis
 		location=tile, country=parent.record.country, spun_off_from=parent.actor_id))
 	firm.learn(know_how(node_id, world, parent), world)
 	if founder is not None:
-		firm.record.plan["founder"] = founder.actor_id
-		ledger.transfer(founder, firm, own, "founding stake")
+		firm_entry.fund_from(founder, firm, own)
 	else:
 		pool[0] -= own
 		ledger.transfer(registry.state.edge(EDGE_POOLED_CAPITAL), firm, own, EDGE_POOLED_CAPITAL)

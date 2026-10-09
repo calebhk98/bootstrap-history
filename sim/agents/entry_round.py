@@ -55,8 +55,7 @@ class NicheEntry:
 			kind="firm", name=firm_id, target=node_id, last_margin=expected, founded_year=world.year,
 			location=self.tile))
 		if founder is not None:
-			firm.record.plan["founder"] = founder.actor_id
-			ledger.transfer(founder, firm, pooled, "founding stake")
+			firm_entry.fund_from(founder, firm, pooled)
 		else:
 			self.pool[0] -= pooled
 			ledger.transfer(registry.state.edge(EDGE_POOLED_CAPITAL), firm, pooled, EDGE_POOLED_CAPITAL)
