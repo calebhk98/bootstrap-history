@@ -104,19 +104,15 @@ class MarketClearingMixin:
             actor_demand_tonnes=actor_demand, offers=offers,
             founder_sales_tonnes=founder_sales,
             stock_tonnes=entry["stock_tonnes"],
-            floor_ratio=self._floor_ratio(commodity, record),
+            floor_ratio=self._floor_ratio(commodity),
             ceiling_ratio=float(record.get("price_ceiling_factor", market.DEFAULT_CEILING_RATIO)))
 
-    def _floor_ratio(self, commodity, record):
-        """The lowest price over the incumbents' cost the commodity sells at. A built plant sells at least at
-        what running it costs, the running share of that cost; the commodity's stated floor (else the
-        default) stays as the outer bound, since stock and windfalls also sell below any producer's cost
-        and the clearing has one floor for all sellers."""
-        stated = float(record.get("price_floor_factor", market.DEFAULT_FLOOR_RATIO))
+    def _floor_ratio(self, commodity):
+        """The lowest price over the incumbents' cost their producers sell at: a built plant sells at least
+        at what running it costs, the running share of that cost; without a split, at its full cost. Stock
+        and price takers sell below this, down to the clearing's own stock bound."""
         running_share = self.commodity_floor_ratio(commodity)
-        if running_share is None:
-            return stated
-        return max(MINIMUM_FLOOR_RATIO, min(stated, running_share))
+        return market.UNSPLIT_FLOOR_RATIO if running_share is None else max(MINIMUM_FLOOR_RATIO, running_share)
 
     def _market_outcome(self, commodity, with_flows=False):
         """(conditions, outcome) of the clearing, or None for a commodity
@@ -209,6 +205,7 @@ class MarketClearingMixin:
         if self.economy.run_agent_year():
             self.close_partner_books()
             self._close_real_output()
+            self.revalue_coin_metals()
             return
         self._price_level_held = self.home_price_level()
         try:
@@ -219,6 +216,7 @@ class MarketClearingMixin:
         self.close_partner_books(cargo_only=True)
         self.foreign_fleet_year_end()
         self._close_real_output()
+        self.revalue_coin_metals()
 
     def _close_commodities(self):
         book = self.state.economy.market_book

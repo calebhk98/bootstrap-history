@@ -14,7 +14,7 @@ that is labour_population.py's market depth and labour_capacity.py's
 household-room ceiling; this file only prices the trade once a person is
 in it.
 """
-from . import trade_data
+from . import trade_data, wage_provider
 from .labour_market_api import LabourMarket
 from .labour_wage_ledger import WageLedgerMixin
 from sim.constants import declare
@@ -251,7 +251,8 @@ class WagesMixin(WageLedgerMixin):
         """Endogenous food, housing and trade-tool multipliers for a wage.
 
         The labour-market schedule is the neutral benchmark; these factors
-        scale it by how far live food, housing and tool prices have moved.
+        scale it by how far live food, housing and tool prices have moved: the staple's and the tools'
+        market clearing (price over the incumbents' cost), the tools' also by the demand pressure.
         At neutral prices the weighted factor is 1.0 to within about a part
         in a million.
 
@@ -264,10 +265,11 @@ class WagesMixin(WageLedgerMixin):
         would have caught it happened to sit behind a stray sys.exit in
         another test module and had never run.
         """
-        food = self._world.essential_price_ratio()
+        food = self._world.market_price_ratio(wage_provider.staple_material(self._world.civ))
         housing = self.labour_market.town_housing_factor()
         basket = trade_data.tool_basket(trade_data.registry_of(self._world), trade)
-        tools = (sum(self._world.material_price_factor(material) for material in basket) / len(basket)
+        tools = (sum(self._world.material_price_factor(material) * self._world.market_price_ratio(material)
+                     for material in basket) / len(basket)
                  if basket else 1.0)
         return {"food": food, "housing": housing, "tools": tools,
                 "skill_and_difficulty": 1.0,

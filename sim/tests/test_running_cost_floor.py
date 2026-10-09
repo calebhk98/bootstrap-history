@@ -85,15 +85,11 @@ class OffersAndFloorTests(unittest.TestCase):
         share = game.commodity_floor_ratio("widget")
         self.assertTrue(0.0 < share < 1.0)
         self.assertAlmostEqual(share, game.entry_cost_ratio("widget_kg", "widget_kg", running=True))
-        self.assertAlmostEqual(game._floor_ratio("widget", {"price_floor_factor": 0.99}), share)
+        self.assertAlmostEqual(game._floor_ratio("widget"), share)
 
-    def test_the_stated_floor_stays_the_outer_bound(self):
+    def test_a_commodity_nothing_can_split_sells_at_no_less_than_its_cost(self):
         game = StubGame(works_entry())
-        self.assertAlmostEqual(game._floor_ratio("widget", {"price_floor_factor": 0.01}), 0.01)
-
-    def test_a_commodity_nothing_can_split_keeps_its_stated_floor(self):
-        game = StubGame(works_entry())
-        self.assertAlmostEqual(game._floor_ratio("unknown", {"price_floor_factor": 0.35}), 0.35)
+        self.assertAlmostEqual(game._floor_ratio("unknown"), 1.0)
 
 
 if __name__ == "__main__":
