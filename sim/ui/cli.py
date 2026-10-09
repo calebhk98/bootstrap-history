@@ -43,7 +43,7 @@ import argparse, sys
 from sim.engine.ui_port import Sim
 from . import protocol as _protocol
 from sim.engine.ui_port import settings
-from . import cli_units_options, validate_map
+from . import cli_mods, cli_units_options, validate_map
 # civ_of_save/goal_of_save are the only names this file reads from
 # .protocol; `cmd_agent` and everything else that needs
 # _agent_available, _agent_dispatch, _agent_end_reason, _agent_help,
@@ -394,6 +394,7 @@ def cmd_validate(args):
     errs += validate_output_bounds.check_output_bounds(nodes, production)
     errs += validate_copy_visibility.check_copy_visibility(nodes)
     errs += _data_source_errors(nodes)
+    errs += cli_mods.mod_findings()
     errs += validate_map.map_problems()
     errs += category_traits.check_category_traits(nodes.values())
     errs += validate_material_gating.check_material_gating(nodes, validate_material_gating.load_gating(ROOT))
@@ -1387,6 +1388,8 @@ def main():
                         "Takes real time (one Sim trial per cell); the structural "
                         "checks above run either way and are instant.")
     sub.add_parser("civs", help="list the playable civilisations")
+    subparser = sub.add_parser("mod-allow", help="allow an installed mod to run its Python code (full permissions; read the warning)")
+    subparser.add_argument("mod_id", help="the mod's id")
     subparser = sub.add_parser("economy-check", help="play a short game and print the agent economy's health: "
                                "staple and metal price volatility, hired share, unskilled wage over its floor, hunger, staple price over labour cost")
     subparser.add_argument("--years", type=int, default=5, help="years to play per game (default 5)")
@@ -1697,6 +1700,7 @@ def main():
             "run": cmd_run, "compare": cmd_compare, "play": cmd_play, "agent": cmd_agent,
             "sensitivity": cmd_sensitivity, "plan": cmd_plan,
             "search": cmd_search, "economy-check": cmd_economy_check,
+            "mod-allow": cli_mods.cmd_mod_allow,
             "baseline-ensemble": cmd_baseline_ensemble}[args.cmd](args)
 
 

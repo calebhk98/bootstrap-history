@@ -19,6 +19,8 @@ class ModManifest:
     min_game_version: str = ""
     # Version range a dependency must satisfy, by dependency id; absent means any version.
     dependency_ranges: Dict[str, str] = field(default_factory=dict, compare=False)
+    # Python files the mod asks to run (needs "code" in permissions and the player's consent; see mod_code.py).
+    code: List[str] = field(default_factory=list, compare=False)
 
 
 # Required manifest keys are the manifest type's fields without a default.

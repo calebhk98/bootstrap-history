@@ -48,8 +48,13 @@ def _manifest(path: str) -> ModManifest:
         names.append(match.group(1))
         if match.group(2):
             ranges[match.group(1)] = match.group(2).strip()
+    code = raw.get("code", [])
+    if not isinstance(code, list) or not all(isinstance(item, str) for item in code):
+        raise ModError("%s field code must be a list of file names" % path)
+    if code and "code" not in (raw.get("permissions") or []):
+        raise ModError("%s lists code files but does not declare \"permissions\": [\"code\"]" % path)
     return ModManifest(mod_id, str(raw["name"]), str(raw["version"]), names, list(raw["conflicts"]),
-                       os.path.dirname(path), minimum, ranges)
+                       os.path.dirname(path), minimum, ranges, list(code))
 
 
 def _check_dependency_versions(manifests: Dict[str, ModManifest]) -> None:

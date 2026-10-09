@@ -1,10 +1,13 @@
 """The standing policy a new seat starts with: which automatic behaviours are on."""
 from typing import Any, Dict
 
+from .mods_base import ModError
+from .ui_commands import policy_defaults
+
 
 def default_policy(manual: bool) -> Dict[str, Any]:
     """Every automatic behaviour, on for the optimizer and off for a player who plays by hand."""
-    return {
+    policy = {
         "auto_hire":     not manual,   # grow the staff toward what you can support
         # ON for the optimizer, OFF for a player: automatically buying
         # people on a player's behalf, in a game they are playing by
@@ -45,3 +48,9 @@ def default_policy(manual: bool) -> Dict[str, Any]:
         # concerns hold, hiring and housing them each year. Off always.
         "reserve_staff": False,
     }
+    shipped = set(policy)
+    for name, value in policy_defaults(manual).items():
+        if ":" not in name and name not in shipped:
+            raise ModError("a mod sets the default of policy %r, which does not exist" % name)
+        policy[name] = value
+    return policy
