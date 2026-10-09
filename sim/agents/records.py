@@ -207,6 +207,9 @@ class ActorsState:
 	# named edge -> money it has taken in less what it has paid out, and the money that crossed it either way
 	edges: Dict[str, float] = field(default_factory=dict)
 	edge_volume: Dict[str, float] = field(default_factory=dict)
+	# concern id -> the takings of a lone operator that entrants expect, and the year it was last revised
+	expected_takings: Dict[str, float] = field(default_factory=dict)
+	expected_takings_year: Dict[str, int] = field(default_factory=dict)
 
 	def edge(self, name: str) -> Edge:
 		"""The named edge, an account outside the actors that a posting can name as its counterparty."""

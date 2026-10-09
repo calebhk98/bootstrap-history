@@ -5,8 +5,8 @@ Plain functions over an actor and a world view. The actor needs `workforce`, `re
 """
 from typing import Any
 
-from . import ledger
-from .edges import EDGE_CUSTOMERS, EDGE_SUPPLIERS, EDGE_WORKERS
+from . import firm_entry, ledger
+from .edges import EDGE_CUSTOMERS, EDGE_LANDOWNERS, EDGE_SUPPLIERS, EDGE_WORKERS
 
 
 def staff_concern(actor: Any, node_id: str, world: Any) -> float:
@@ -44,6 +44,20 @@ def operate_concern(actor: Any, node_id: str, world: Any, rivals: float) -> floa
 	levy = world.government().collect(actor, takings, world)
 	royalty = world.collect_royalty(actor, node_id, takings)
 	return takings - upkeep - wages - levy - royalty
+
+
+def carry_concern(actor: Any, node_id: str, world: Any) -> float:
+	"""Pay what running a concern costs whatever it sells: rent on the land it occupies and a manager's
+	hours (the same costs an entrant weighs, firm_entry.carrying_cost). Returns the sum paid."""
+	capacity = actor.capacity_of(node_id)
+	rent = world.site_rent(node_id, capacity)
+	management = firm_entry.management_cost(world, node_id, capacity)
+	ledger.transfer(actor, world.edge(EDGE_LANDOWNERS), rent, "site rent")
+	if actor.record.country is None:
+		world.pay_wages(actor, management, "management")
+	else:
+		ledger.transfer(actor, world.edge(EDGE_WORKERS), management, "management")
+	return rent + management
 
 
 def open_concern(actor: Any, node_id: str, world: Any) -> None:

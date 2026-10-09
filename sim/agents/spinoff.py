@@ -6,7 +6,7 @@ the concern needs (the parent keeps all it knew), is funded as any entrant is (a
 from typing import Any, List
 
 from . import concern_ops, firm_entry, ledger
-from .edges import EDGE_ENTRY_PREMIUM, EDGE_POOLED_CAPITAL
+from .edges import EDGE_POOLED_CAPITAL
 from .records import ActorRecord
 from .registry import register_spawner
 from .tuning import ENTREPRENEURIAL_CAPITAL_SHARE, ENTRY_STAKE_BUFFER, VALUE_HORIZON_YEARS
@@ -42,8 +42,8 @@ def spin_off_chance(parent: Any, node_id: str, world: Any) -> float:
 
 def consider_spinoffs(registry: Any, world: Any) -> List[str]:
 	"""Each business that runs a concern may lose staff who found a rival running it; at most one a
-	parent a year, and only where it passes the test any entrant does: it earns after the crowding
-	premium, and a founder (or, with no strata, the pooled capital) puts up the whole stake."""
+	parent a year, and only where it passes the test any entrant does: it earns after what a firm
+	carries, and a founder (or, with no strata, the pooled capital) puts up the whole stake."""
 	founded: List[str] = []
 	capital_limit = world.society_output() * ENTREPRENEURIAL_CAPITAL_SHARE
 	for parent_id in sorted(registry.actors):
@@ -55,13 +55,13 @@ def consider_spinoffs(registry: Any, world: Any) -> List[str]:
 			if chance <= 0.0 or world.rng_for(world.year, "spinoff", parent_id, node_id).random() >= chance:
 				continue
 			rivals = registry.rivals_of(node_id, "")
-			expected = (world.entry_gross(node_id, rivals, 1.0)
-						- world.upkeep(node_id) - world.concern_wage_bill(node_id))
+			expected = (firm_entry.expected_entry_gross(registry, world, node_id, rivals, 1.0)
+						- world.upkeep(node_id) - world.concern_wage_bill(node_id)
+						- firm_entry.carrying_cost(world, node_id))
 			if expected <= 0.0 or getattr(world, "patent_entry", lambda _node: None)(node_id):
 				continue
-			# the same test as any entrant (registry.consider_entry): crowding premium, a founder's stake
-			premium = firm_entry.entry_premium(world.copy_cost(node_id), rivals)
-			stake = world.copy_cost(node_id) * ENTRY_STAKE_BUFFER + premium
+			# the same test as any entrant (entry_round.py): what a firm carries, a founder's stake
+			stake = world.copy_cost(node_id) * ENTRY_STAKE_BUFFER
 			strata_exist = bool(registry.of_kind("stratum"))
 			founders = firm_entry.founder_candidates(registry) if strata_exist else []
 			founder = founders[0] if founders else None
@@ -81,8 +81,6 @@ def consider_spinoffs(registry: Any, world: Any) -> List[str]:
 				ledger.transfer(founder, firm, own, "founding stake")
 			else:
 				ledger.transfer(registry.state.edge(EDGE_POOLED_CAPITAL), firm, own, EDGE_POOLED_CAPITAL)
-			if premium > 0.0:
-				ledger.transfer(firm, registry.state.edge(EDGE_ENTRY_PREMIUM), premium, EDGE_ENTRY_PREMIUM)
 			concern_ops.open_concern(firm, node_id, world)
 			founded.append(firm_id)
 			break

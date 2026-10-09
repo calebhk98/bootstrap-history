@@ -395,6 +395,10 @@ class AgentEconomy:
             return None
         return unskilled * (1.0 + trade_premium(setup, trade))
 
+    def land_rent_per_hectare(self):
+        """Mean rent per hectare-year the land market let land at last year, in coin."""
+        return economy_api.land_rent_per_hectare(self.economy()) * self._economy.setup.coin_per_unit
+
     def rate(self):
         return self.answers()[2]
 

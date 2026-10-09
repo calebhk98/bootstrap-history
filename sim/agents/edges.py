@@ -22,7 +22,6 @@ EDGE_INTEREST = "edge:interest"          # interest borrowers pay, until the mar
 EDGE_PATRONAGE = "edge:patronage"        # what a state grants a patron; the grant works through its effects, not a purse
 EDGE_OPENING = "edge:opening"            # money an actor starts the game with
 EDGE_POOLED_CAPITAL = "edge:pooled capital"  # savings pooled to found a business, and taken back at its end
-EDGE_ENTRY_PREMIUM = "edge:entry premium"    # what a crowded market charges an entrant to get in
 EDGE_MARKET = "edge:market"              # goods bought and sold by a trader
 EDGE_FREIGHT = "edge:freight"            # carriers paid for carrying a cargo
 EDGE_EMPLOYERS = "edge:employers"        # what employers pay a household for its own work

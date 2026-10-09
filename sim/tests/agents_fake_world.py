@@ -144,6 +144,9 @@ class FakeWorld:
 		return capacity * sum(people * self.hours_per_person_year * self.labour_market.wage_per_hour
 							  for people in self.concern_staff(node_id).values())
 
+	def site_rent(self, node_id: str, capacity: float = 1.0) -> float:
+		return 0.0
+
 	def concern_takings(self, node_id: str, opened_year: int, rivals: float = 0.0, capacity: float = 1.0) -> float:
 		return capacity * float(self.nodes[node_id].get("rev", 0.0)) / (1.0 + rivals)
 

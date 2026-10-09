@@ -48,7 +48,8 @@ class Firm(ExpansionMixin, RecordedActor):
 	def operate(self, world: Any) -> None:
 		for node_id in sorted(self.concerns):
 			rivals = self.rivals_of(node_id, self.actor_id) if self.rivals_of else 0.0
-			margin = concern_ops.operate_concern(self, node_id, world, rivals)
+			margin = (concern_ops.operate_concern(self, node_id, world, rivals)
+					  - concern_ops.carry_concern(self, node_id, world))
 			self.record.last_margin = margin
 			self.record.loss_years = self.record.loss_years + 1 if margin < 0 else 0
 		if self.record.loss_years == 0 and self.concerns:
