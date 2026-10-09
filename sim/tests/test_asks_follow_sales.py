@@ -50,10 +50,45 @@ class WorkersAskFollowSales(unittest.TestCase):
         state = market(2.0)
         scales = []
         for _ in range(5):
-            clearing.clear_all(state, inputs([Bid("farm", "digger", "vale", 1000.0, 3.0)]))
+            clearing.clear_all(state, inputs([Bid("farm", "digger", "vale", 1000.0, 1.1)]))
             scales.append(asks.scale_of(state, "vale", "digger"))
-        self.assertTrue(all(later > earlier for earlier, later in zip(scales, scales[1:])), scales)
+        # demand outruns supply and buyers pay little over the ask: the ask rises to what they pay, no further
+        self.assertTrue(all(later >= earlier for earlier, later in zip(scales, scales[1:])), scales)
         self.assertGreater(scales[0], 1.0)
+        self.assertLessEqual(scales[-1], 1.1 + 1e-9)
+
+    def test_a_wage_well_above_the_ask_does_not_drag_the_ask_up_after_it(self):
+        state = market(2.0)
+        for _ in range(8):
+            clearing.clear_all(state, inputs([Bid("farm", "digger", "vale", 1000.0, 50.0)]))
+        self.assertEqual(asks.scale_of(state, "vale", "digger"), 1.0)
+
+    def test_a_thin_trade_whose_employers_can_pay_less_is_hired_again_at_once(self):
+        state = market(3.0)
+        for _ in range(12):
+            clearing.clear_all(state, inputs([Bid("farm", "digger", "vale", 500.0, 50.0)]))
+        after = clearing.clear_all(state, inputs([Bid("farm", "digger", "vale", 500.0, 10.0)]))[0]
+        self.assertLessEqual(after.wage, 10.0)
+        self.assertGreater(after.hours_hired, 0.0)
+
+    def test_a_thin_trade_with_swinging_demand_is_hired_every_year(self):
+        state = market(3.0)
+        hired = []
+        for year in range(30):
+            cap = 50.0 if year % 2 else 12.0
+            hired.append(clearing.clear_all(state, inputs([Bid("farm", "digger", "vale", 500.0, cap)]))[0].hours_hired)
+        self.assertTrue(all(hours > 0.0 for hours in hired[2:]), hired)
+
+    def test_a_glutted_common_trade_settles_at_the_plot_floor_without_undershooting(self):
+        # ten workers, employers want a fifth of their hours at any wage up to 5; the plot is worth 30 of 100
+        state = market(10.0)
+        wages = []
+        for _ in range(60):
+            result = clearing.clear_all(state, inputs([Bid("farm", "digger", "vale", 200.0, 5.0)], ask_floor=30.0))[0]
+            wages.append(result.wage)
+        self.assertTrue(all(later <= earlier + 1e-9 for earlier, later in zip(wages, wages[1:])), wages)
+        self.assertGreaterEqual(min(wages), 0.3 - 1e-9)
+        self.assertAlmostEqual(wages[-1], 0.3, places=2)
 
     def test_an_ask_stops_at_what_the_family_has_without_selling(self):
         # the family's own plot is worth half the subsistence floor to a worker

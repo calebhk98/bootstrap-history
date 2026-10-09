@@ -65,7 +65,8 @@ def market_wage(last: Optional[float], reservation: float, offered: float, bids:
     wage = target if last is None else last + WAGE_SHARE_CLOSED_PER_YEAR * (target - last)
     if any(bid.maximum_wage >= reservation for bid in bids):
         wage = max(wage, reservation)
-    return wage
+    # no employer can pay above its maximum: a wage that lags above every maximum falls to the best of them
+    return min(wage, max(max(bid.maximum_wage for bid in bids), reservation))
 
 
 def premium_factor(paid: float, rival_paid: float) -> float:

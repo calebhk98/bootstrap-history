@@ -44,7 +44,10 @@ def record(state: MarketState, area: str, trade: str, offered: float, wanted: fl
     before = scale_of(state, area, trade)
     scale = moved_scale(before, offered, wanted)
     if scale > before and reservation > 0.0:
-        scale = min(scale, max(before, wage / reservation))
+        # a raise only means something where the ask is what the hours fetched; a wage already well above
+        # it says the buyers set the price, and a higher ask would only stick when demand falls
+        binding = wage <= reservation * before * (1.0 + ASK_ADJUSTMENT_SHARE_PER_YEAR)
+        scale = min(scale, max(before, wage / reservation)) if binding else before
     if reservation > 0.0:
         scale = max(scale, lowest / reservation)
     state.asks.setdefault(area, {})[trade] = scale
