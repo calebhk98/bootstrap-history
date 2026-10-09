@@ -47,6 +47,11 @@ class Coinage(CoinRevaluationMixin, ForeignPaymentsMixin, IncumbentPricesMixin):
     def _material_prices(self):
         return {"silver_kg": 50.0 * self.home_price_level()}
 
+    def real_price_ratio(self, material):
+        return self.market_price_ratio(material)
+
+    coin_value_ratio = real_price_ratio
+
 
 class RevaluationTests(unittest.TestCase):
     def test_a_glut_of_the_coin_metal_raises_the_price_level(self):
@@ -81,8 +86,11 @@ class RevaluationTests(unittest.TestCase):
         game = Coinage()
         game.foreign_economies = lambda: ["x"]
         game.market_price_ratio = {"silver_kg": 0.8, "gold_kg": 1.5}.get
-        game.revalue_coin_metals()
-        self.assertEqual(game.state.economy.coin_metal_ratios, {"silver_kg": 0.8, "gold_kg": 1.5})
+        for _year in range(60):
+            game.revalue_coin_metals()    # damped: it closes on the measured value over the years
+        ratios = game.state.economy.coin_metal_ratios
+        self.assertAlmostEqual(ratios["silver_kg"], 0.8, places=4)
+        self.assertAlmostEqual(ratios["gold_kg"], 1.5, places=4)
 
 
 class StockBoundTests(unittest.TestCase):
@@ -149,6 +157,9 @@ class RecordingStub(WageMarketRatiosMixin):
         self.wages._world = types.SimpleNamespace(
             civ=self.civ, trade_registry=self.trade_registry, last_market_price_ratio=self.last_market_price_ratio,
             material_price_factor=lambda material: 1.0)
+
+    def real_price_ratio(self, material):
+        return self.market_price_ratio(material)
 
     def market_price_ratio(self, material):
         self.live_calls += 1
