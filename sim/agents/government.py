@@ -12,7 +12,7 @@ weight (military, infrastructure, prestige, ...), through its policy.
 """
 from typing import Any, Dict, List, Tuple
 
-from . import budget, ledger
+from . import budget, demand_answer, ledger
 from .base import Actor, RecordedActor
 from .government_coinage import CoinageMixin
 from .government_stores import StoresMixin
@@ -60,6 +60,15 @@ class Government(CoinageMixin, StoresMixin, SurplusMixin, RecordedActor):
 	def collect(self, payer: Actor, taxable: float, world: Any) -> float:
 		"""Levy `payer` and receive it; the amount taken."""
 		levy, parts = self.assess(payer, taxable, world)
+		if parts["requisition"] > 0.0 and payer.demand_stance() != demand_answer.COMPLY:
+			# a refused requisition is paid, with a penalty, only if the state can enforce it
+			draw = world.rng_for("demand", getattr(payer, "actor_id", ""), world.year).random()
+			answer = demand_answer.settle_demand(payer.demand_stance(), parts["requisition"], world.state_capacity(),
+												 payer.standing(), draw)
+			parts["requisition"] = answer["paid"] - answer["penalty"]
+			if answer["penalty"] > 0.0:
+				parts["penalty"] = answer["penalty"]
+			levy = sum(parts.values())
 		if levy > 0.0:
 			ledger.transfer(payer, self, levy, parts)
 		return levy

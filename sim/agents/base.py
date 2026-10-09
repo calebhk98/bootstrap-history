@@ -113,6 +113,14 @@ class Actor(Borrower):
 		"""Standing and patronage that bargain a levy down, 0..1."""
 		return 0.0
 
+	def demand_stance(self) -> str:
+		"""How the actor answers the state's demands: comply unless it has said otherwise."""
+		return "comply"
+
+	def set_demand_stance(self, stance: str) -> None:
+		"""Answer the state's demands from now on with `stance`."""
+		raise NotImplementedError
+
 	def copy_budget(self, world: Any) -> float:
 		"""Money it will commit to new copies this year: its purse and what it may still borrow."""
 		committed = sum((1.0 - work["progress"]) * (work["money"] + work["labour_cost"])
@@ -254,6 +262,12 @@ class RecordedActor(Actor):
 
 	def location(self) -> Optional[str]:
 		return self.record.location
+
+	def demand_stance(self) -> str:
+		return self.record.demand_stance
+
+	def set_demand_stance(self, stance: str) -> None:
+		self.record.demand_stance = stance
 
 	def opened_year_of(self, node_id: str, default: int) -> int:
 		return self.record.opened_year.get(node_id, default)
