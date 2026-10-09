@@ -1,6 +1,6 @@
 """Shared mod types plus field-claim and removal-claim bookkeeping."""
 import copy
-from dataclasses import dataclass, field, fields
+from dataclasses import MISSING, dataclass, field, fields
 from typing import Any, Dict, List
 
 
@@ -16,10 +16,14 @@ class ModManifest:
     dependencies: List[str]
     conflicts: List[str]
     directory: str = field(repr=False, compare=False, default="")
+    min_game_version: str = ""
+    # Version range a dependency must satisfy, by dependency id; absent means any version.
+    dependency_ranges: Dict[str, str] = field(default_factory=dict, compare=False)
 
 
-# Manifest keys are the manifest type's own fields (the directory is set by the loader).
-MANIFEST_KEYS = tuple(item.name for item in fields(ModManifest) if item.name != "directory")
+# Required manifest keys are the manifest type's fields without a default.
+MANIFEST_KEYS = tuple(item.name for item in fields(ModManifest)
+                      if item.default is MISSING and item.default_factory is MISSING)
 
 # Patch keys that steer the loader and are never merged into content.
 CONTROL_KEYS = ("override", "replaces", "remove")

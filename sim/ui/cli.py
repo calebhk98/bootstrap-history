@@ -52,6 +52,7 @@ from . import cli_units_options, validate_map
 # imports its own copies of what it needs straight from .protocol.
 from .protocol import civ_of_save, goal_of_save
 from sim.constants import declare
+from sim.game_version import GAME_VERSION
 
 
 from sim.engine.ui_port import DetRNG, ensure_fixed_hash_seed, load_strategy, topo_stable
@@ -1375,6 +1376,7 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter)
     # NOT required: typing the bare command should open the menu rather than
     # print a usage error at somebody who has just arrived.
+    parser.add_argument("--version", action="version", version="%(prog)s " + GAME_VERSION)
     sub = parser.add_subparsers(dest="cmd", required=False)
     subparser = sub.add_parser("validate", help="check the tech tree for errors")
     subparser.add_argument("--deep", action="store_true",
