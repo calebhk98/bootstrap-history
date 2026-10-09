@@ -179,11 +179,11 @@ class TradesWithoutANamedNeedTests(unittest.TestCase):
         needs = _json("data", "world", "needs.json")
         full = {spec.need_id: spec for spec in need_basket.make_basket(needs, _PRODUCTION, civ_values={"literacy_general": 1.0}).needs}
         half = {spec.need_id: spec for spec in need_basket.make_basket(needs, _PRODUCTION, civ_values={"literacy_general": 0.5}).needs}
-        self.assertAlmostEqual(half["writing"].subsistence_per_person, full["writing"].subsistence_per_person / 2.0)
+        self.assertEqual(full["writing"].subsistence_per_person, 0.0)
         self.assertAlmostEqual(half["writing"].budget_weight, full["writing"].budget_weight / 2.0)
         self.assertEqual(full["money"].goods, ())
         none = {spec.need_id: spec for spec in need_basket.make_basket(needs, _PRODUCTION).needs}
-        self.assertEqual(none["writing"].subsistence_per_person, 0.0)
+        self.assertEqual(none["writing"].budget_weight, 0.0)
 
     def test_a_society_with_no_literacy_has_no_demand_for_scribes_writing(self):
         reached = _starting_techs("rome_100ad")

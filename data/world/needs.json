@@ -62,10 +62,9 @@
   },
   "writing": {
    "surplus_budget_share": 0.01,
-   "subsistence_per_capita_per_year": 10.0,
    "scales_with_civ_field": "literacy_general",
    "unit": "written pages",
-   "subsistence_basis": "Pages written or copied for each literate person a year (letters, accounts, contracts, copies of books): an order-of-magnitude estimate, confidence D, with no source in hand. The need applies to the literate share of the population, which is the civilisation's literacy_general, so it grows as schooling spreads.",
+   "floor_basis": "No floor: nobody dies or goes cold for want of writing, and a floor is bought whatever it costs, which would put writing into the wage a household must earn. Households spend a share of their surplus on it, and the share applies to the literate part of the population, which is the civilisation's literacy_general, so it grows as schooling spreads.",
    "effectiveness_basis": "one written page of a letter or document"
   },
   "money": {
