@@ -1146,8 +1146,11 @@ def land_rent_hours_per_hectare(production_entries, wage_by_trade,
         # way there is no reference crop price to convert the physical rent
         # into hours with, so land keeps the old RENT_IS_ZERO answer.
         return {}
+    # the reference is wheat's labour alone: the plough team's capital is priced by the main solve, and
+    # needs the land rent this function is still to fix
+    labour_only = {key: value for key, value in wheat_entry.items() if key != "capital"}
     wheat_cost = recipe_cost_and_allocation(
-        "wheat_kg", wheat_entry, {"hectare_land": 0.0}, wage_by_trade)
+        "wheat_kg", labour_only, {"hectare_land": 0.0}, wage_by_trade)
     if wheat_cost is None:
         return {}
     _wheat_total_hours, wheat_output_prices = wheat_cost

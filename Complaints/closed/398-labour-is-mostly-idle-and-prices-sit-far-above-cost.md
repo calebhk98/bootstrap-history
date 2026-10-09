@@ -1,6 +1,6 @@
 # Labour is mostly idle and prices sit far above cost on the agent economy
 
-**Status:** partly - done on fixtures: the wage floor is the household's need basket at local prices less its plot, entry is drawn by a lasting margin on smoothed prices with no one-newcomer-a-market-a-year cap, and `simulator.py economy-check` prints the decomposition. Remaining: draught animals and their fodder in the plough crops' recipes (from 395), and a whole-game run of `economy-check` to see whether idle labour and wide margins fall out
+**Status:** closed - the wage floor is the household's basket less its plot, entry follows a lasting margin on smoothed prices with no yearly cap, `economy-check` prints the decomposition, and plough wheat holds a draught team as plant and grazes it as land; the whole-game comparison is the slow topic `labour_margins_whole_game`
 
 In every civilisation only a small share of the hours households offer is hired, and the rest go unhired or to own plots, so the unskilled wage sits at the workers' ask (the family's subsistence floor per offered hour) almost everywhere. Wages are a small part of household income; most of it is property income (dividends) and food grown for itself. At the same time goods sell far above the cost of the labour in them, with little land rent, and few makers enter. An economy with idle hands, free land and wide margins is not in competition: entry fires only where buyers are turned away (`sim/economy/entry.py`), so incumbents keep their margins and pay them out as dividends.
 
@@ -56,7 +56,16 @@ Done (fixtures only; `python3 -m sim.tests --only economy_labour_ask_floor,econo
 - Seed (395): wheat's yield is already net of the seed corn held back (`yield_basis` in `data/production/40_organics.json`), the other grains say the same; the seed share is a physical fact in the output.
 - Wage against the household basket, not wheat alone (388): `wage_over_floor`.
 
+Done since (Round seven below).
+
 Not done:
-- Draught animals and their fodder as inputs of the plough crops (395). Plant goods would need the oxen as a held, priced capital good and fodder needs a good that does not exist in the data; an input would also take the crop out of households' own plots (`households_own.own_production_options` takes land-only recipes), which the wage floor above reads. Needs a design decision on how a farm holds and feeds its team, then data from Cato and Columella.
 - Not measured on a whole game (about 45 minutes cold here): the effect on idle hours, wage over floor and price over labour cost, and on durable swings (Complaint 468). Run `python3 sim/simulator.py economy-check --civs rome_100ad --years 12`.
 - Mineral entry kept only for a lasting, observed shortfall, and a gate on observed spending growth (the round-four report's list): the pace limit and the smoothed price stand in for them.
+
+## Round seven: the plough team
+
+- `wheat_kg` is the ard crop: it holds a yoke of draught animals as plant (`capital` in `data/production/40_organics.json`, built from the existing `draught_animal_kg`, which the economy rears from pasture and the engine breeds and loses yearly), sized per hectare cropped from Cato, Columella and medieval English plough teams (order of magnitude, confidence C), and its `land_hectare_years` adds the team's grazing and hay, so fodder is land and no good. It needs `cap_power_muscle`, the node a society without draught animals cannot reach (Mexica's `needs_first` gate), so availability follows the held stock without naming a civilisation.
+- `wheat_hoe_kg` is the same crop by spade and hoe: more labour, no team, no node. Hand-digging labour and equal yield are labelled estimates in its `yield_basis`.
+- The household own-plot rule already ignores plant goods (it only refuses `inputs`), so a household grows the plough crop with its own team and is not offered a crop that needs bought inputs (`households_own.own_production_options`; test `plough_crop_holds_a_team`). A household's team costs it nothing here; a firm pays the capital charge.
+- Millet is hoed per its own basis and was left alone.
+- The whole-game comparison (Rome with a team, Mexica by hand; hired share, wage over floor, hunger) is the slow topic `labour_margins_whole_game`, not run here: `python3 -m sim.tests --slow --only labour_margins_whole_game`.
