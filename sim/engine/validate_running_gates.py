@@ -10,8 +10,9 @@ RUNNING_FIELDS = ("up", "rev", "up_hours", "rev_hours")
 
 def _states_upkeep_source(node: Mapping[str, Any]) -> bool:
     """Whether the node's stated data gives it an upkeep (node_revenue derives one from staff places, a
-    programme's labour and consumables, or a share of the build bill) unless it writes `up_hours` as 0."""
-    if node.get("up_hours") is not None:
+    programme's labour and consumables, or a share of the build bill) unless it writes `up_hours` as 0.
+    A node already built (it carries `up`) is judged by its derived figures alone."""
+    if node.get("up_hours") is not None or "up" in node:
         return False
     bill = list((node.get("lab") or {}).values()) + list((node.get("mat") or {}).values())
     staff = [node.get("sch"), node.get("art")]
