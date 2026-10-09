@@ -5,15 +5,14 @@ from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 from .records import ActorRecord, ActorsState
 
-from . import firm_entry, imitation, ledger
 from .base import RecordedActor
 from .concern_totals import ConcernTotals
-from .edges import EDGE_ENTRY_PREMIUM, EDGE_POOLED_CAPITAL
+from .entry_round import NicheEntry
 from .firm import Firm
 from .government import Government
 from .group import InterestGroup
 from .policy import make_policy
-from .tuning import ENTREPRENEURIAL_CAPITAL_SHARE, ENTRY_STAKE_BUFFER, VALUE_HORIZON_YEARS
+from .tuning import ENTREPRENEURIAL_CAPITAL_SHARE
 
 # kind -> class; `register_actor_kind` adds to it, so a mod can bring its own kind of actor
 ACTOR_CLASSES: Dict[str, Any] = {"firm": Firm, "government": Government, "interest_group": InterestGroup}
@@ -351,13 +350,12 @@ class ActorRegistry:
 		self._bans = None
 
 	def consider_entry(self, world: Any) -> List[str]:
-		"""Found a firm for each proven concern whose market still pays an entrant, after its own
-		output and that of entrants already waiting reaches the market, more than the capital
-		it ties up would earn at the market's rate."""
+		"""Found firms into each proven concern for as long as its market still pays an entrant, after
+		its own output and that of entrants already waiting reaches the market and after what a firm
+		carries, more than the capital it ties up would earn at the market's rate."""
 		self.world = world
 		founded = []
-		capital_limit = world.society_output() * ENTREPRENEURIAL_CAPITAL_SHARE
-		capital_rate = world.market_rate()
+		pool = [world.society_output() * ENTREPRENEURIAL_CAPITAL_SHARE]
 		waiting: Dict[str, int] = {}
 		for firm in self.active_firms():
 			target = firm.record.target
@@ -367,44 +365,13 @@ class ActorRegistry:
 		strata_exist = bool(self.of_kind("stratum"))
 		for node_id in self.proven_concerns(world):
 			key = world.market_key(node_id)
-			rivals = self.rivals_of(node_id, "")
-			expected = (world.entry_gross(node_id, rivals, waiting.get(key, 0) + 1)
-						 - world.upkeep(node_id) - world.concern_wage_bill(node_id))
-			if expected <= 0:
-				continue
-			probe = Firm("probe", ActorRecord(kind="firm", last_margin=expected, founded_year=world.year))
-			chain = imitation.missing_chain(node_id, world, probe)
-			if not chain:
-				continue
-			plan = imitation.copy_plan(probe, chain, world)
-			founders = firm_entry.founder_candidates(self) if strata_exist else []
-			founder = founders[0] if founders else None
-			chance = imitation.copy_chance(chain, world) * firm_entry.copy_ease(founder)
-			worth = expected * VALUE_HORIZON_YEARS * chance
-			premium = firm_entry.entry_premium(plan["total"], rivals + waiting.get(key, 0))
-			stake = plan["total"] * ENTRY_STAKE_BUFFER + premium
-			pooled, borrowed = firm_entry.stake_split(stake, founder, strata_exist, capital_limit)
-			if borrowed > probe.spare_credit(world):
-				continue
-			capital_cost = pooled * capital_rate + (borrowed * probe.rate_on_loan(world, borrowed) if borrowed > 0.0 else 0.0)
-			if worth <= plan["total"] + premium or expected * chance <= capital_cost:
-				continue
-			serial = len(self.state.records) + 1
-			while "firm:%d" % serial in self.state.records:
-				serial += 1
-			firm_id = "firm:%d" % serial
-			founded_firm = self.add(firm_id, ActorRecord(
-				kind="firm", name=firm_id, target=node_id,
-				last_margin=expected, founded_year=world.year))
-			if founder is not None:
-				founded_firm.record.plan["founder"] = founder.actor_id
-				ledger.transfer(founder, founded_firm, pooled, "founding stake")
-			else:
-				ledger.transfer(self.state.edge(EDGE_POOLED_CAPITAL), founded_firm, pooled, EDGE_POOLED_CAPITAL)
-			if premium > 0.0:
-				ledger.transfer(founded_firm, self.state.edge(EDGE_ENTRY_PREMIUM), premium, EDGE_ENTRY_PREMIUM)
-			waiting[key] = waiting.get(key, 0) + 1
-			founded.append(firm_id)
+			niche = NicheEntry(self, world, node_id, pool, strata_exist)
+			while True:
+				firm_id = niche.found(self.rivals_of(node_id, ""), waiting.get(key, 0))
+				if firm_id is None:
+					break
+				waiting[key] = waiting.get(key, 0) + 1
+				founded.append(firm_id)
 		return founded
 
 	def consider_groups(self, world: Any) -> List[str]:

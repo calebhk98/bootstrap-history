@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 from .harness import check
 
 from sim.agents.api import ActorRecord, Firm, ledger
-from sim.agents import registry as registry_module
+from sim.agents import firm_entry, registry as registry_module
 from sim.agents.player import Player
 from sim.agents.player_commands import register_command
 from sim.agents.tuning_player import PLAYER_JOURNAL_LIMIT
@@ -202,13 +202,15 @@ firm.concerns.add("shop")
 firm.record.opened_year["shop"] = 95
 firm.rivals_of = lambda node_id, asking_id: 1.0
 firm.operate(world)
-check("a firm's year through the shared rule: takings less upkeep and wages",
-	  abs(firm.money - (1000.0 + 250.0 - 50.0 - 100.0)) < 1e-6 and abs(firm.record.last_margin - 100.0) < 1e-6, firm.money)
+managing = firm_entry.management_cost(world, "shop")
+check("a firm's year through the shared rule: takings less upkeep, wages and management",
+	  managing > 0.0 and abs(firm.money - (1000.0 + 250.0 - 50.0 - 100.0 - managing)) < 1e-6
+	  and abs(firm.record.last_margin - (100.0 - managing)) < 1e-6, firm.money)
 check("a firm's staffing and loss years are kept", firm.record.staffing["shop"] == 1.0 and firm.record.loss_years == 0)
 world.free_people["labourer"] = 0.0
 firm.operate(world)
 check("a firm that finds no staff makes nothing and loses its upkeep",
-	  firm.record.staffing["shop"] == 0.0 and firm.record.loss_years == 1 and abs(firm.record.last_margin + 50.0) < 1e-6, firm.record.last_margin)
+	  firm.record.staffing["shop"] == 0.0 and firm.record.loss_years == 1 and abs(firm.record.last_margin + 50.0 + managing) < 1e-6, firm.record.last_margin)
 
 # ---- deterministic with the same seed -------------------------------------------------------
 def run(seed):

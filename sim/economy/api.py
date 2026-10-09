@@ -35,7 +35,7 @@ __all__ = [
     "traded_volumes", "opening_quantities", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
     "credit_room", "economy_from_record", "blank_economy", "export_record", "finish_spin_up", "shown_prices_of",
-    "settle_founder_takings", "move_goods", "post_transfers", "cohort_incomes",
+    "settle_founder_takings", "move_goods", "post_transfers", "cohort_incomes", "land_rent_per_hectare",
 ]
 
 _KEY_SEPARATOR = "|"
@@ -66,6 +66,13 @@ def wages_by_trade(economy):
     for key, wage in economy.record.memory.wages.items():
         rows.setdefault(key.split(_KEY_SEPARATOR, 1)[0], []).append(wage)
     return rows
+
+
+def land_rent_per_hectare(economy):
+    """Mean rent per hectare-year producers paid last year over the tiles where land was let (zero where
+    none was)."""
+    rents = [rent for rent in economy.record.land_rent.values() if rent > 0.0]
+    return sum(rents) / len(rents) if rents else 0.0
 
 
 def wages_by_trade_weighted(economy):

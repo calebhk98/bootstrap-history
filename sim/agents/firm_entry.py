@@ -1,12 +1,50 @@
-"""What it takes to found a firm: who funds the stake, what crowding adds to its cost, how easily the founder copies."""
+"""What it takes to found a firm: who funds the stake, what it must carry, how easily the founder copies."""
 from typing import Any, List, Optional, Tuple
 
-from .tuning import ENTRY_EQUITY_SHARE, ENTRY_PREMIUM_PER_OPERATOR, FOUNDER_WEALTH_MULTIPLE, TACIT_SHARE_OF_COPYING
+from .tuning import ENTRY_EQUITY_SHARE, ENTRANT_EXPECTATION_ADJUSTMENT_SHARE, FOUNDER_WEALTH_MULTIPLE, MANAGEMENT_SPAN_OF_CONTROL, TACIT_SHARE_OF_COPYING
 
 
-def entry_premium(copy_cost: float, operators: float) -> float:
-	"""The fixed cost of finding a place in a market that `operators` already serve."""
-	return copy_cost * ENTRY_PREMIUM_PER_OPERATOR * max(0.0, operators)
+def management_cost(world: Any, node_id: str, capacity: float = 1.0) -> float:
+	"""Yearly pay for the manager hours a concern run at `capacity` times its founding size needs:
+	the hours of its staff over the span of control, paid as the best paid trade among its staff."""
+	staff = world.concern_staff(node_id)
+	people = sum(staff.values()) * capacity
+	if people <= 0.0:
+		return 0.0
+	manager_wage = max(world.labour_market.quote(trade, 0.0) for trade in staff)
+	return people / MANAGEMENT_SPAN_OF_CONTROL * world.hours_per_person_year * manager_wage
+
+
+def carrying_cost(world: Any, node_id: str, capacity: float = 1.0) -> float:
+	"""What a firm running a concern at `capacity` carries beyond the concern's upkeep and wages: the
+	rent of the land it occupies and a manager's hours. The cost of winning customers has no basis in
+	the model yet and is left out."""
+	return world.site_rent(node_id, capacity) + management_cost(world, node_id, capacity)
+
+
+def expected_takings(registry: Any, world: Any, node_id: str) -> float:
+	"""The takings of a lone operator an entrant expects: last year's expectation moved part of the way
+	to this year's takings, so a one-year spike in price does not draw a crowd of entrants. Revised
+	once a year."""
+	state = registry.state
+	spot = world.entry_gross(node_id, 0.0, 1.0)
+	if node_id not in state.expected_takings:
+		state.expected_takings[node_id] = spot
+	elif state.expected_takings_year.get(node_id) != world.year:
+		previous = state.expected_takings[node_id]
+		state.expected_takings[node_id] = previous + ENTRANT_EXPECTATION_ADJUSTMENT_SHARE * (spot - previous)
+	state.expected_takings_year[node_id] = world.year
+	return state.expected_takings[node_id]
+
+
+def expected_entry_gross(registry: Any, world: Any, node_id: str, rivals: float, entrants: float) -> float:
+	"""Yearly takings one more operator expects once `entrants` (itself included) join the `rivals`: the
+	market's sharing as it stands, at the takings level entrants expect."""
+	spot = world.entry_gross(node_id, rivals, entrants)
+	spot_alone = world.entry_gross(node_id, 0.0, 1.0)
+	if spot_alone <= 0.0:
+		return spot
+	return spot * expected_takings(registry, world, node_id) / spot_alone
 
 
 def personal_capital(stratum: Any) -> float:
