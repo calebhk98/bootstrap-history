@@ -1,6 +1,6 @@
 # Prices use long-run cost, not the current market
 
-**Status:** partly - on the agent economy (the default) every price is the year's market clearing; on the engine side a producer whose plant is built offers at its running cost (the entry's cost without the plant's repayment) and the clearing's floor is the running share of the incumbents' cost, capped by the stated floor; remaining: the coin metal's revaluation (not started, see the Update 2 list), the goods market and wages do not use the clearing, the stated floor stays as the outer bound for stock sold below any producer's cost, and `foreign_actor_trade.py` still uses the stated floor
+**Status:** partly - on the agent economy (the default) every price is the year's market clearing and a built plant is sunk for the decision to run (`sim/economy/producers.py`), so the fixes below matter for the engine path used when the agent economy is off; on the engine side a producer whose plant is built offers at its running cost (the entry's cost without the plant's repayment) and the clearing's floor is the running share of the incumbents' cost, capped by the stated floor; remaining: the coin metal's revaluation (not started, see the Update 2 list), the goods market and wages do not use the clearing, the stated floor stays as the outer bound for stock sold below any producer's cost, and `foreign_actor_trade.py` still uses the stated floor
 
 ## What is wrong
 
