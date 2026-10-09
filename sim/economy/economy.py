@@ -69,12 +69,12 @@ class Economy:
         if record is None:
             record, area_map, carriage = open_economy(setup)
         else:
-            carriage = setup.carriage_table()
+            carriage = setup.carriage_table(record.ways)
             area_map = setup.area_map(carriage)
         self.record = record
         self.area_map = area_map
         self.carriage = carriage
-        self.improvements: Dict[str, Dict[str, Any]] = dict(setup.improvements)   # the ways `carriage` was built with
+        self.improvements: Dict[str, Dict[str, Any]] = dict(record.ways)   # the ways `carriage` and the areas were built with
         self._own_options = None
         self._own_hectares: Dict[str, float] = {}   # land households' own plots took this year, by tile
 
@@ -84,6 +84,7 @@ class Economy:
         if dict(improvements) == self.improvements:
             return False
         self.improvements = {key: dict(way) for key, way in improvements.items()}
+        self.record.ways = {key: dict(way) for key, way in self.improvements.items()}
         self.carriage = self.setup.carriage_table(self.improvements)
         area_map = self.setup.area_map(self.carriage)
         follow(self.record, self.area_map, area_map)

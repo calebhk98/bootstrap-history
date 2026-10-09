@@ -68,6 +68,14 @@ class FollowTests(unittest.TestCase):
                 good, area_id = key.split(KEY_SEPARATOR)
                 self.assertIn(area_id, [area.area_id for area in economy.area_map.areas(good)], key)
 
+    def test_a_saved_economy_resumes_with_the_areas_it_was_saved_with(self):
+        economy = economy_before_the_roads()
+        economy_api.set_improvements(economy, ways())
+        resumed = economy_api.economy_from_record(economy.setup, economy_api.export_record(economy))
+        for good in economy.area_map.goods():
+            self.assertEqual(resumed.area_map.areas(good), economy.area_map.areas(good))
+        self.assertFalse(economy_api.set_improvements(resumed, ways()))
+
     def test_the_economy_runs_on_after_its_areas_change(self):
         economy = economy_before_the_roads()
         economy.step(fixture.quiet_year(economy.setup))
