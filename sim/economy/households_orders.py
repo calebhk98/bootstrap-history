@@ -49,15 +49,33 @@ SAVINGS_RATE_RESPONSE_LIMIT = declare(
     unit="largest multiple of the savings target a high real rate draws", source=None, confidence="D",
     why="Saving rises with what it earns but not without bound; the bound stands in for the income effect "
         "that a model of lifetime choice would give.")
+SAVINGS_RESPONSE_FLOOR = declare(
+    "SAVINGS_RESPONSE_FLOOR", 1.0, kind="temporary_heuristic",
+    unit="share of the savings target kept when cash earns nothing in real terms", source=None,
+    confidence="D",
+    why="Households do not stop saving because expected inflation reaches the interest rate: they hold the "
+        "wealth in other forms (the durable store takes more of it then) and smooth. The floor stands in "
+        "for that portfolio choice and for the saving motives that do not depend on the return (dearth, "
+        "dowry, old age); no society's saving is measured against the real rate here.")
+WEALTH_DRAWDOWN_LIMIT = declare(
+    "WEALTH_DRAWDOWN_LIMIT", 1.0, kind="temporary_heuristic",
+    unit="share of a year's income that wealth above target may add to spending in a year", source=None,
+    confidence="D",
+    why="Households smooth consumption: wealth above what they want to keep is spent down over several "
+        "years, not in the one year their target falls. Without a limit a fall in the target sends the "
+        "whole stock of cash to the shops at once and nothing is left to lend. The pace is an assumption; "
+        "no society's spending is measured against its wealth here.")
 
 
 def savings_target(surplus_income: float, interest_rate: float, expected_inflation: float) -> float:
     """Wealth a household wants to keep beyond its cash buffer: years of its income above subsistence,
-    more when saving pays more in real terms (bounded); none at subsistence."""
+    more when saving pays more in real terms (bounded, and never below a floor, since wealth held as goods
+    counts toward it); none at subsistence."""
     if surplus_income <= 0.0:
         return 0.0
     real_rate = max(0.0, interest_rate - expected_inflation)
-    response = min(SAVINGS_RATE_RESPONSE_LIMIT, real_rate / HOUSEHOLD_TIME_PREFERENCE)
+    response = max(SAVINGS_RESPONSE_FLOOR,
+                   min(SAVINGS_RATE_RESPONSE_LIMIT, real_rate / HOUSEHOLD_TIME_PREFERENCE))
     return SAVINGS_YEARS_OF_SURPLUS_INCOME * surplus_income * response
 
 
@@ -120,8 +138,9 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
     store_value = math.fsum(held[good] * store_prices[good] for good in weights)
     keep = target + savings_target(income_this_year - floor_cost, view.interest_rate(area_currency),
                                    cohort.expected_inflation)
-    spending = max(0.0, min(cash, income_this_year
-                            + currency.spending_adjustment(cash + claims + store_value, keep, income_this_year)))
+    drawdown = min(currency.spending_adjustment(cash + claims + store_value, keep, income_this_year),
+                   WEALTH_DRAWDOWN_LIMIT * max(0.0, income_this_year))
+    spending = max(0.0, min(cash, income_this_year + drawdown))
     floors, totals = need_units(priced, basket, cohort.people, spending - floor_cost)
     # the stock of a durable is sized on the expected flow: this year's flow scaled by expected over actual
     # spending, but never below the flow the smoothed surplus (smoothed spending over smoothed floor cost)
