@@ -119,8 +119,7 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
     sub-mixin reads through self
     (done_in_order/_done_changed/_operating_changed/_reset_operating,
     alongside _InvalidatingSet above, which the last two use), and a
-    handful of constants (PRACTICE_SHARE,
-    FOREST_COST_PER_HA)
+    handful of constants (FOREST_COST_PER_HA)
     that are genuinely read from more than one sub-mixin, so moving any
     one of them into a single sub-mixin would leave the others reaching
     across module boundaries for a constant that isn't theirs - they
@@ -298,32 +297,6 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
         if seq is None:
             seq = self.household._done_seq = [node_id for node_id in self.order if node_id in self.state.projects.done]
         return seq
-
-    # WHAT ONE PERSON'S PRACTICE IS WORTH, against what the tree quotes for the
-    # trade as a going concern. A physician working alone, out of a rented room,
-    # with no partners and no staff, does not take what an organised practice
-    # takes; a third is the figure the whole opening is calibrated around.
-    #
-    # This number was already in the game and was reached by accident. A granted
-    # skill has no entry in done_year, so its "age" was zero every year for ever
-    # and the revenue ramp - meant to say a NEW business takes three years to
-    # find its custom - pinned it at the first step of three and never moved it.
-    # The arithmetic came out right and the meaning came out wrong: a break
-    # tester read `why` at 500 a year, saw 166.7 in the ledger, and could find
-    # nothing anywhere that explained the difference or said whether it would
-    # ever close. It will not. It is not a ramp; it is the size of your practice.
-    PRACTICE_SHARE = declare(
-        "PRACTICE_SHARE", 1.0 / 3.0, kind="temporary_heuristic",
-        unit="fraction of the tree's quoted trade revenue", source=None,
-        confidence="D",
-        why="What a lone practitioner working out of a rented room, with "
-            "no partners and no staff, actually takes home against what "
-            "the tree quotes for the trade as an organised going concern. "
-            "Per the comment above, this number was reached by ACCIDENT "
-            "(a revenue-ramp bug that happened to land on a defensible "
-            "fraction) and then kept because the whole opening of the game "
-            "is now calibrated around it - moving it requires re-tuning "
-            "the early game, not just picking a better number.")
 
     # Named so that `quote forest` and the
     # purchase itself cannot drift apart: a player must be able to ask the

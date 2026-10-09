@@ -199,7 +199,7 @@ class ProjectMaterialsMixin:
             if tonnes <= 0 or not row["priced"]:
                 continue
             money = row["cost_of_deliverable"] * factor
-            market.settle_purchase(market.founder, self._material_tag(row["material"])[0], tonnes, money,
+            market.settle_purchase(market.acting,self._material_tag(row["material"])[0], tonnes, money,
                                    "materials bought for projects")
             paid += money
         return paid
