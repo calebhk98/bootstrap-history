@@ -1,6 +1,6 @@
 # Money constants and technology revenue are still in book denarii
 
-**Status:** partly - eight `book_money` constants remain and are documented as genuine nominal money amounts (debt floors, bribe prices, credit line per reputation point, bribery capital thresholds); the eminence threshold is now labour hours; revenue is derived from output for nodes that make something (`sim/engine/node_output.py`, 283) and authored for the rest; the pump guard is still loosened
+**Status:** partly - no money amount is written in book denarii any more: the book conversion boundary (`BOOK_LABOURER_WAGE_DENARII_PER_HOUR`, `book_money`, `book_to_money`, the `book_money` flag on `declare`) is deleted, every former `book_money` constant, inline literal and effect spec is a labour-hour quantity priced on read; remains: node `cap_hours`, `up_hours` and (for the nodes that make nothing derivable) `rev_hours` are still authored hour figures, and the pump guard is still loosened
 
 Money is now anchored to each civilisation's coin, and costs are labour-hours
 inside the engine, but some numbers are still written in the old book
@@ -102,3 +102,16 @@ Overlapping issues closed into this one; each closed file keeps its full text.
 - Production data still names land in iugera (`iugerum_land`, `land_iugera_years`) and the price solver converts at that one edge; `sim/world/land.py` works in hectares. Engine message source spells money "denarii" and the display edge (`sim/ui/proto/util.py`, `_localise_money`) swaps the civilisation's own word in. Both are internal names, not what a player reads (`closed/132-the-game-assumes-rome-exists.md`).
 
 Owner decision (2026-10-09): a money amount in book denarii is an error, not a documented exception: remove Rome from the game and the figure means nothing. Every money amount becomes a physical quantity (labour hours, a mass of goods or coin metal) converted at the display edge.
+
+## Progress: the book boundary removed (fifth increment, owner decision applied)
+
+- [x] The eight remaining `book_money` constants are declared in labour hours and priced on read (`money_units.PricedInLabourHours`): credit line per reputation point, the two bribe prices, the two arrears floors, the insolvency floor, the bribery capital threshold and the auto-bribe cost per point. Each `why` says why it is a count of hours (a bribe is the work and risk an official gives up, a debt floor is the labour that clears it). They now follow the price level like the other hour-declared constants; before, they were fixed at load.
+- [x] The inline `book_money(...)` literals in the auto policies are declared constants: people are bought in multiples of one person's base price (`AUTO_BUY_PEOPLE_*_IN_PRICES`), forest and nitre-bed spending in labour hours.
+- [x] Mechanic effect specs (`credit_line`, `living_cost_status`) carry `labour_hours: true` and hour values instead of `book_money: true`; `Sim.effect_value` multiplies by the coin's money per labour hour.
+- [x] `BOOK_LABOURER_WAGE_DENARII_PER_HOUR`, `book_to_money`, `book_money_factor`, `Labour.book_money`, the economy and labour port wrappers and `book_money_names` are deleted. `rg book_money sim data` finds only the regression test that says they are gone (`sim/tests/test_no_book_money.py`).
+- [x] The generic output and market-share curves in `economy_materials.py` (fitted in book denarii per kg) are restated in labour hours per kg (anchor and scale rescaled by the old wage, a price floor declared), so the last reader of a book unit is gone.
+- [x] The node field defaults are two labourer-years of capital and four-tenths of a labourer-year of upkeep (`node_defaults.py`) and the data entries that wrote the old book default out are restated the same way.
+- [ ] Still open: node `cap_hours`/`up_hours` are authored hour figures (the old book figures divided once by the book wage), and `rev_hours` is derived from output for only a few dozen nodes. Measure with `data.load()`: count nodes by `_revenue_basis` and `_upkeep_basis` (about a thousand authored revenues, about fourteen hundred authored upkeeps). Deriving them needs each node's staff, plant and product stated in the data; nineteen authored-revenue nodes already gate production entries but state no plant output or staff to bound them.
+- [ ] The pump payback guard is unchanged.
+
+Not run (needs a whole game, which takes about half an hour cold): `sim/tests/test_physical_money_constants.py`, `test_money_units_one_boundary.py`, the eminence and closure tests that use `hours_money`, and the `literacy_market_pricing` ledger checks.
