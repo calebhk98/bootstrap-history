@@ -303,6 +303,15 @@ class ActorRegistry:
 	def active_firms(self) -> List[Firm]:
 		return [firm for firm in self.of_kind("firm") if firm.record.exited_year is None]  # type: ignore[misc]
 
+	def concern_nodes(self) -> List[str]:
+		"""Every concern some actor in business runs."""
+		return [node_id for node_id, holders in self._holders.items() if holders]
+
+	def operators_of(self, node_id: str) -> List[RecordedActor]:
+		"""Actors in business that run a concern, in id order."""
+		return [self.actors[actor_id] for actor_id in sorted(self._holders.get(node_id, ()))
+				if self.actors[actor_id].record.exited_year is None]
+
 	def rivals_of(self, node_id: str, asking_id: str) -> float:
 		"""Founding sizes of the concern that other operators run in its market, the founder's included."""
 		operators = self._holders.get(node_id, ())

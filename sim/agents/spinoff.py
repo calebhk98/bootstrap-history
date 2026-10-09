@@ -2,11 +2,11 @@
 
 How many consider leaving grows with the staff the concern keeps and the years it has run; each who does founds
 a rival only where an entrant would earn (the same test as any entrant), so the market, not a count, stops them. The new firm learns what
-the concern needs (the parent keeps all it knew), is funded as any entrant is (a stratum's founder, else the pooled capital), and no rival is founded on a concern while anyone holds a patent on it.
+the concern needs (the parent keeps all it knew), is funded as any entrant is (a stratum's founder, else the pooled capital). A patent on the concern is a risk the rival weighs (the state's reach times its margin), not a block.
 """
 from typing import Any, List, Optional
 
-from . import concern_ops, firm_entry, ledger
+from . import concern_ops, enforcement, firm_entry, ledger
 from .edges import EDGE_POOLED_CAPITAL
 from .records import ActorRecord
 from .registry import register_spawner
@@ -72,7 +72,8 @@ def _found_rival(registry: Any, world: Any, parent: Any, node_id: str, pool: Lis
 	expected = (firm_entry.expected_entry_gross(registry, world, node_id, rivals, 1.0)
 				- world.upkeep(node_id) - world.concern_wage_bill(node_id)
 				- firm_entry.carrying_cost(world, node_id, tile=tile))
-	if expected <= 0.0 or getattr(world, "patent_entry", lambda _node: None)(node_id):
+	expected -= enforcement.expected_damages(world, "", node_id, expected)
+	if expected <= 0.0:
 		return None
 	stake = world.copy_cost(node_id) * ENTRY_STAKE_BUFFER
 	strata_exist = bool(registry.of_kind("stratum"))

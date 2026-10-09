@@ -1,7 +1,7 @@
 """One entrant into a niche: the test every new firm passes, whatever the niche or the year."""
 from typing import Any, List, Optional
 
-from . import firm_entry, imitation, ledger
+from . import enforcement, firm_entry, imitation, ledger
 from .edges import EDGE_POOLED_CAPITAL
 from .firm import Firm
 from .records import ActorRecord
@@ -30,6 +30,7 @@ class NicheEntry:
 		if self.plan is None:
 			return None
 		expected = firm_entry.expected_entry_gross(registry, world, node_id, rivals, waiting + 1) - self.costs
+		expected -= enforcement.expected_damages(world, "", node_id, expected)
 		if expected <= 0:
 			return None
 		probe = Firm("probe", ActorRecord(kind="firm", last_margin=expected, founded_year=world.year))

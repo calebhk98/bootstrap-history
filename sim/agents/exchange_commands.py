@@ -1,7 +1,7 @@
 """Player commands for exchange, and the yearly answer of AI actors to the offers they hold."""
 from typing import Any, Callable, Dict, List
 
-from . import exchange, joint_stock, patent, spinoff  # noqa: F401  (patent and spinoff register commands and spawners)
+from . import enforcement, exchange, joint_stock, patent, spinoff  # noqa: F401  (patent and spinoff register commands and spawners)
 from .player_commands import CommandRejected, register_command
 from .registry import register_spawner
 from .tuning import VALUE_HORIZON_YEARS
@@ -85,3 +85,12 @@ def exchange_answers(registry: Any, world: Any) -> List[str]:
 
 
 register_spawner("exchange_answers", exchange_answers)
+
+
+def patent_enforcement(registry: Any, world: Any) -> List[str]:
+	"""Yearly: holders pursue the operators of their patented concerns who have no licence. Founds no actors."""
+	enforcement.enforce_patents(registry, world)
+	return []
+
+
+register_spawner("patent_enforcement", patent_enforcement)
