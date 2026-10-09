@@ -21,7 +21,7 @@ class CapacityView:
 		"""Yearly margin gained by growing a concern from `capacity` to `capacity + step`: the takings
 		at the price the larger supply leaves, less the upkeep and wages of the added size."""
 		sim = self._sim
-		base = sim.concern_takings(node_id, self.ramp(opened_year))  # type: ignore[attr-defined]
+		base = sim.concern_takings(node_id, self.ramp(opened_year, node_id))  # type: ignore[attr-defined]
 		category = self.nodes[node_id].get("cat")  # type: ignore[attr-defined]
 		if category in sim.GOODS_CATEGORIES:
 			before = capacity * base * sim.goods_category_factor(category)

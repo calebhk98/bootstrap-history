@@ -19,6 +19,7 @@ from .agents_port_cast import CastView
 from .agents_port_coinage import CoinageView
 from .agents_port_trade import TradeView
 from .data import TRADES_ABSENT
+from .industry_depth import RAMP_SHARE_AT_FULL_DEPTH
 
 
 class SimWorld(BudgetView, RevenueView, GroupView, DisclosureView, CapitalView, CapacityView, TradeView, CastView, CoinageView):
@@ -194,8 +195,17 @@ class SimWorld(BudgetView, RevenueView, GroupView, DisclosureView, CapitalView, 
 				proven.append(node_id)
 		return proven
 
-	def ramp(self, opened_year: int) -> float:
-		return min(1.0, (self.year - opened_year + 1) / self._sim.cfg["revenue_ramp_years"])
+	def ramp(self, opened_year: int, node_id: Optional[str] = None) -> float:
+		ramp_years = self._sim.cfg["revenue_ramp_years"]
+		if node_id is not None:
+			ramp_years *= 1.0 - (1.0 - RAMP_SHARE_AT_FULL_DEPTH) * self._sim.industry_depth(node_id)
+		return min(1.0, (self.year - opened_year + 1) / ramp_years)
+
+	def scale_ceiling(self, node_id: str) -> float:
+		"""The most founding sizes one concern of this kind can be run at, from the industry's experience."""
+		if not self.runs_agent_economy():
+			return float("inf")  # no opening producers to size the industry from
+		return float(self._sim.industry_scale_ceiling(node_id))
 
 	def concern_takings(self, node_id: str, opened_year: int, rivals: float = 0.0, capacity: float = 1.0) -> float:
 		"""Yearly takings of a concern an actor runs at `capacity` times its founding size. A goods
@@ -203,7 +213,7 @@ class SimWorld(BudgetView, RevenueView, GroupView, DisclosureView, CapitalView, 
 		of capacity gets its share of the demand; a concern with no market model splits with the
 		capacity of its rivals."""
 		sim = self._sim
-		takings = (sim.concern_takings(node_id, self.ramp(opened_year)) * capacity
+		takings = (sim.concern_takings(node_id, self.ramp(opened_year, node_id)) * capacity
 				   * sim.node_output_market_factor(self.nodes[node_id]))
 		category = self.nodes[node_id].get("cat")
 		if category in sim.GOODS_CATEGORIES:
@@ -236,7 +246,7 @@ class SimWorld(BudgetView, RevenueView, GroupView, DisclosureView, CapitalView, 
 
 	def concern_output_tonnes(self, node_id: str, material: str, opened_year: int, staffed: float) -> float:
 		return supply.concern_output_tonnes(self.nodes[node_id], node_id, material,
-											self.ramp(opened_year), staffed
+											self.ramp(opened_year, node_id), staffed
 											* self._sim.concern_volume_ratio(node_id))
 
 	def upkeep(self, node_id: str, capacity: float = 1.0) -> float:

@@ -309,7 +309,11 @@ class World(Protocol):
 		"""Founder concerns that have been running at a profit long enough to be believed."""
 		...
 
-	def ramp(self, opened_year: int) -> float:
+	def ramp(self, opened_year: int, node_id: Optional[str] = None) -> float:
+		...
+
+	def scale_ceiling(self, node_id: str) -> float:
+		"""The most founding sizes one concern of this kind can be run at."""
 		...
 
 	def concern_takings(self, node_id: str, opened_year: int, rivals: float = 0.0, capacity: float = 1.0) -> float:

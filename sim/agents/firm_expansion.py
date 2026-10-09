@@ -18,6 +18,8 @@ class ExpansionMixin:
 			if self.record.staffing.get(node_id, 1.0) < 1.0:  # type: ignore[attr-defined]
 				continue
 			capacity = self.capacity_of(node_id)  # type: ignore[attr-defined]
+			if capacity >= world.scale_ceiling(node_id):
+				continue
 			step = capacity * EXPANSION_RATE
 			rivals = self.rivals_of(node_id, self.actor_id) if self.rivals_of else 0.0  # type: ignore[attr-defined]
 			gain = world.expansion_gain(node_id, self.record.opened_year[node_id], capacity, step, rivals)  # type: ignore[attr-defined]

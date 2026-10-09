@@ -1,6 +1,6 @@
 # Add supplier depth / tacit industrial competence, without duplicating existing delays
 
-**Status:** open - on hold until one labour model sets wages and workforce (Complaint 428); supplier depth attaches to that model's workforce tenure
+**Status:** partly done - unblocked (Complaint 428 is closed). `sim/engine/industry_depth.py` counts depth from the simulation (retained worker-years anyone spends running a technique, against a founding-size concern's own staff) and feeds the ramp (`venture_ramp`, `agents_port.ramp`), the failure risk (`effective_risk`, stricter of depth and retry learning) and the scale a firm can expand a concern to. Remaining: seed experience for techniques already running at the opening (a firm cannot grow past one founding size until experience accrues), per-trade tenure in the labour core in place of employed staff-years, input-producer reliability, scrap and unit labour, founder-free running, maintenance, and retiring EXIT_GRACE_YEARS and the retry-risk multiplier into the same stock
 
 **Source:** playtest findings document, LATE-009. **Type:** Realism
 refinement, medium size. Carries its own explicit warning against

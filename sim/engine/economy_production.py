@@ -23,6 +23,7 @@ from .data import trade_family
 from sim.constants import declare
 from . import category_traits, money_units, node_revenue_market
 from .readable import readable
+from .industry_depth import RAMP_SHARE_AT_FULL_DEPTH
 
 
 class ProductionMixin:
@@ -89,7 +90,10 @@ class ProductionMixin:
         if started is None:
             started = projects.done_year.get(node_id, scenario.year)
         age = scenario.year - started
-        return min(1.0, (age + 1) / self.cfg["revenue_ramp_years"])
+        # An established industry (anyone's worker-years running it) finds its custom sooner.
+        ramp_years = self.cfg["revenue_ramp_years"] * (
+            1.0 - (1.0 - RAMP_SHARE_AT_FULL_DEPTH) * self.industry_depth(node_id))
+        return min(1.0, (age + 1) / ramp_years)
 
     def practice_attention(self):
         """How much of your practice you are actually there to run.
