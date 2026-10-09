@@ -49,6 +49,7 @@ caller from what the actor knows; geography does not read the tech tree.
 | `route_costs(origins, modes, improvements, mode_costs, handling_costs, held_nodes)` | `{tile_id: cost_per_tonne}`: the least cost from any origin to every tile a haul reaches (origins cost 0), priced as `route` prices a haul. One search serves all destinations; the economy's market areas take their carriage costs from it. |
 | `reach(origins, modes, days_budget, improvements, held_nodes)` | `{tile_id: days}` within the budget. |
 | `dues_hours_per_tonne()` | `{mode_id: hours}` of tolls or port dues per tonne a haul pays when it changes to the mode (the mode's `dues_hours_per_tonne`, with `dues_source` and `dues_conf`). |
+| `carriage_rates(mode_ids)` | `{mode_id: {crew_trade, crew_hours_per_tonne_km, handling_hours_per_tonne, edge_classes}}` on level ground for the modes that name a `crew_trade`, from the same physical rates the route search uses. |
 | `freight_links(modes)` | `[(tile_a, tile_b, mode, km)]` for edges these modes use with nothing built. |
 | `map_of_tiles({tile_id: {lat, lon, coastal, borders}})` | A map of just those tiles with the base map's modes, sea lanes and parameters, for a scenario or test that places its own tiles. |
 | `ore_goods()` | `{resource_id: {ore_good: [smelting_recipe_id, ...]}}` for the resources whose catalogue row names ore goods (`ore_goods`), in catalogue order; a mod adds a mineral by adding a row. |

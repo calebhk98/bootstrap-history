@@ -10,6 +10,7 @@ from sim.world import farming_technique
 from sim.world import land
 from sim.labour import labour_market
 from sim.labour import trade_data
+from sim.labour import workforce_carriage
 from sim.labour import workforce_spinup
 
 # Farm labour is the generic unskilled trade as data/production books it;
@@ -105,7 +106,8 @@ class LabourAllocationMixin:
         cached = getattr(self, "_need_shares_cache", None)
         if cached is None or cached[0] != reached:
             shares = workforce_spinup.need_shares_by_trade(
-                labour_market.production_data(), reached, self._world.techniques_available_to)
+                labour_market.production_data(), reached, self._world.techniques_available_to,
+                workforce_carriage.carriage_hours_per_tonne_by_trade(reached))
             cached = self._need_shares_cache = (reached, shares)
         if cached[1]:
             return cached[1]

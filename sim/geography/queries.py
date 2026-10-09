@@ -11,7 +11,7 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
 from sim.geography import (food_capacity, map_source, mechanisms, parameters, resource_links, resources_biotic,
                            resources_catalogue, resources_endowment, resources_prospecting,
-                           resources_summary, routes_graph, routes_modes, routes_search, tile_holdings, tile_layers,
+                           resources_summary, routes_carriage, routes_graph, routes_modes, routes_search, tile_holdings, tile_layers,
                            ways_build)
 
 WorldMap = map_source.WorldMap
@@ -71,6 +71,12 @@ def dues_hours_per_tonne(world_map: Optional[WorldMap] = None) -> Dict[str, floa
     """{mode_id: labour-hours of tolls or port dues per tonne, charged each time a haul changes to the mode}."""
     return {mode_id: float(mode.get("dues_hours_per_tonne", 0.0))
             for mode_id, mode in sorted(routes_modes.modes(_map(world_map)).items())}
+
+
+def carriage_rates(mode_ids: Iterable[str], world_map: Optional[WorldMap] = None) -> Dict[str, Dict[str, Any]]:
+    """{mode_id: {crew_trade, crew_hours_per_tonne_km, handling_hours_per_tonne, edge_classes}} on level ground
+    for the modes that name a crew trade."""
+    return routes_carriage.carriage_rates(_map(world_map), mode_ids)
 
 
 def route(origin_tiles: Iterable[str], destination_tiles: Iterable[str], modes: Iterable[str],
