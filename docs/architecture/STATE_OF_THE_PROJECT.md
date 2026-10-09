@@ -37,7 +37,7 @@ Measure with these; none of their output is copied here.
 | 0 | the production side (`data/production/`) | Built and validated by `python3 sim/simulator.py validate`. The remaining gaps are joint-byproduct materials that cannot be priced from the cost side (`Complaints/29`). |
 | 1 | provenance and a burndown | Working. A rising count of declared heuristics means the audit is finding more, not that the project is regressing. |
 | 2 | the synthetic world | Not started and not needed: domain models were built standalone under `sim/world/` and wired in afterwards. |
-| 3 | actors | `Actor` base with `Household`, `Government` and `Firm` in `sim/agents/` (see `ACTORS.md`). Governments and firms imitate founder inventions, enter where demand is unmet and share one labour pool and goods market with everyone else (`Complaints/103` for what remains). |
+| 3 | actors | `Actor` base with `Household`, `Government` and `Firm` in `sim/agents/` (see `ACTORS.md`). Governments and firms imitate founder inventions, enter where demand is unmet and share one labour pool and goods market with everyone else (`Complaints/closed/103-add-independent-firms-imitation-entrepreneurship.md`). |
 | 4 | food and people | Wired: agriculture and demography run through the engine's yearly demographic step, with a persistent granary and weather pooling. See `WIRING_MILESTONE_4.md`. |
 | 5 | the wage and the price solve | The solver gives every good a cost of making; the book file is deleted. On the default agent economy wages, prices and the interest rate are the year's market clearing, and money is a stock held in accounts, struck from each civilisation's coin metal. Node revenue is derived from output for nodes that make something; the rest is in `Complaints/140`. |
 | 5c | the agent economy | The default economy (`sim/economy/`, described in `ECONOMY_AGENTS.md`): households, producers, merchants, a lender pool, a mint and the state, with every market clearing each year. The engine reaches it only through `sim/engine/economy_port*.py`. Measure: `python3 -m sim.tests --list` for the economy topics, `python3 sim/constants.py --kind temporary_heuristic` for its declared shortcuts. |
@@ -105,9 +105,10 @@ their status lines; `grep -m1 '^\*\*Status' Complaints/*.md` lists everything.
 
 1. **Finish the tile map** (`Complaints/136`): retire the region anchor for
    reach, freight and mineral tables.
-2. **Finish actors** (`Complaints/103`, `106`, `110`): firm choices (license,
-   publish, keep secret), deeper capital markets, interest groups, and other
-   countries as full economies and players (`sim/agents/MULTIPLAYER.md`).
+2. **Finish actors** (`Complaints/106`, `110`): deeper capital markets and
+   interest groups (firm choices and other countries as players are built:
+   `Complaints/closed/103-add-independent-firms-imitation-entrepreneurship.md`,
+   `sim/agents/MULTIPLAYER.md`).
 3. **Money in physical units** (`Complaints/140`) and the legacy postings
    (`Complaints/382`).
 4. **Model gaps**: actions and builds that are modelled as research, trade

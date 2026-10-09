@@ -187,6 +187,28 @@ Two fixes, usable separately or together:
                                                     share R of its takings each year (a state has
                                                     no takings, so no royalty). Replies {ok, note,
                                                     inventions} or {ok:false, error}.
+      {"cmd":"patent"}                             {patents:{id:{granted, expires, licensees, live}},
+                                                    shares_held, shares_issued, offers}: what the seat
+                                                    holds as an actor. {"cmd":"patent","id":"<id>"}
+                                                    applies for the exclusive right to an invention you
+                                                    hold, where a state knows the institution. Others may
+                                                    still practise it unlicensed: the state enforces the
+                                                    right only as far as its capacity reaches, and a holder
+                                                    who catches an infringer is paid its margin.
+      {"cmd":"offer","to":"<actor id>","give":{...},"take":{...}}
+                                                   offer a firm, a state, a stratum or another seat things
+                                                    for things: money, patent [ids], licence [ids] with
+                                                    royalty {id: share of takings}, shares {issuer id: share
+                                                    of its equity}. An AI actor answers at its next turn;
+                                                    another seat uses accept or decline. {ok, offered, to,
+                                                    expires} or {ok:false, error}.
+      {"cmd":"offers"}                             the offers made to this seat. {"cmd":"accept","offer":"<id>"}
+                                                    and {"cmd":"decline","offer":"<id>"} answer one.
+      {"cmd":"shares","do":"issue","share":S,"to":"<id>","price":P}
+                                                   sell share S of your own equity; its holders draw
+                                                    dividends from your margin each year.
+                                                    {"cmd":"shares","do":"buy","issuer":"<id>","share":S,"from":"<id>","price":P}
+                                                    buys shares in another actor. Both are offers.
       {"cmd":"idle"}                               {directed_hours_this_year, committed_hours,
                                                     idle_hours, delay_kinds:{kind:[ids]},
                                                     what_the_wait_is, potential_uses:{
