@@ -25,9 +25,19 @@ class Sector:
 		return stratum_sectors(strata, world)
 
 	@staticmethod
-	def remember_welfare(strata):
+	def remember_welfare(strata, world=None):
 		from .group_strata import remember_welfare
-		remember_welfare(strata)
+		remember_welfare(strata, world)
+
+	@staticmethod
+	def of_firms(firms, world):
+		from .group_firms import firm_owner_sectors
+		return firm_owner_sectors(firms)
+
+	@staticmethod
+	def remember_margins(firms):
+		from .group_firms import remember_margins
+		remember_margins(firms)
 
 	@staticmethod
 	def of_goods(strata, categories, world):

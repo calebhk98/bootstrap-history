@@ -23,6 +23,8 @@ from sim.engine import money_units
 
 from sim.world import military_logistics
 
+from .state_demand import answer_state_demand
+
 
 STATE_INTEREST_RELIGIOUS_ADJACENT_WEIGHT = declare(
     "STATE_INTEREST_RELIGIOUS_ADJACENT_WEIGHT", -0.9, kind="temporary_heuristic",
@@ -1236,7 +1238,16 @@ class StatePressureMixin:
         took = (req_share + off_share) * rev
         if took > 0.5:
             office_paid = off_share * rev
-            self.pay_state(took, {"office": office_paid, "requisition": took - office_paid})
+            answer = answer_state_demand(self, took - office_paid)
+            if answer["penalty"] > 0.0:
+                self.state.household.log.append((year, "You refused the requisition and the state enforced it: "
+                                     "the demand and a penalty of %s on top" % "{:,.0f}".format(answer["penalty"])))
+            elif answer["withheld"] > 0.5:
+                self.state.household.log.append((year, "You refused the requisition and the state did not "
+                                     "enforce it this year: %s withheld" % "{:,.0f}".format(answer["withheld"])))
+            took = office_paid + answer["paid"]
+            self.pay_state(took, {"office": office_paid, "requisition": answer["paid"] - answer["penalty"],
+                                  "penalty": answer["penalty"]})
             last = self.state.household._said_requisition
             if year - last >= 15:
                 self.state.household._said_requisition = year
@@ -1279,14 +1290,22 @@ class StatePressureMixin:
                 take = 0.0
             if take > 0.0:
                 self.state.household.last_military_demand = year
-                self.pay_state(take, "military supply")
+                asked = take
+                answered = answer_state_demand(self, asked)
+                take = answered["paid"]
+                self.pay_state(take, {"military supply": take - answered["penalty"], "penalty": answered["penalty"]})
                 name = state_pressure_cfg.get("military_name", "the arsenal")
-                self.state.household.log.append((year, "%s asks for your output: %s handed over "
-                                     "in powder, iron or finished pieces. "
-                                     "Refusing a state that can still fight "
-                                     "is not free, and this was the cheaper "
-                                     "choice"
-                                 % (name, "{:,.0f}".format(take))))
+                if self.state.household.demand_stance == "comply":
+                    said = ("%s asks for your output: %s handed over in powder, iron or finished pieces. "
+                            "Refusing a state that can still fight is not free, and this was the cheaper "
+                            "choice (the 'answer' command changes how you answer)" % (name, "{:,.0f}".format(take)))
+                elif answered["enforced"]:
+                    said = ("%s asked for %s of your output, you refused and it enforced: %s taken with the penalty"
+                            % (name, "{:,.0f}".format(asked), "{:,.0f}".format(take)))
+                else:
+                    said = ("%s asked for %s of your output, you refused and it could not enforce: nothing taken"
+                            % (name, "{:,.0f}".format(asked)))
+                self.state.household.log.append((year, said))
 
         probability, conf_why = self.confiscation_risk()
         if probability > 0.0:

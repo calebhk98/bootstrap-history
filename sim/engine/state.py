@@ -37,6 +37,8 @@ class HouseholdState:
 	eminence: float = 0.0
 	familiarity: float = 0.0
 	protection: float = 0.0
+	# how the household answers the state's demands: "comply" or "refuse" (sim/agents/demand_answer.py)
+	demand_stance: str = "comply"
 	bribes_ytd: float = 0.0
 	slaves: int = 0
 	freedmen: int = 0

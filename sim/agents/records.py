@@ -66,6 +66,8 @@ class ActorRecord:
 	last_logged_year: Optional[int] = None
 	# what the treasury paid the founder as patron this year
 	patron_grant: float = 0.0
+	# how the actor answers the state's demands ("comply" or "refuse", sim/agents/demand_answer.py)
+	demand_stance: str = "comply"
 	# ---- every actor: the country whose government it answers to and whose techniques it starts
 	# with (None = the home country), and who drives it ("ai", "human", "llm")
 	country: Optional[str] = None
@@ -126,6 +128,9 @@ class ActorRecord:
 	# remembered welfare (what it has come to expect)
 	blame_share: float = 1.0
 	welfare_reference: float = 0.0
+	# what a stratum has come to expect of each income it earns (wages, property) and a firm of its profit
+	income_reference: Dict[str, float] = field(default_factory=dict)
+	margin_reference: float = 0.0
 
 
 @dataclass

@@ -30,10 +30,11 @@ from .strata_observed import observed_incomes
 from .strata_seed import seed_strata, strata_definitions, strata_spawner
 from .player_commands import CommandRejected, register_command
 from . import exchange, exchange_commands, exchange_sale  # noqa: F401  (registers the offer commands and the answers spawner)
+from . import demand_answer, demand_commands  # noqa: F401  (registers the command that answers the state's demands)
 from .trader import Trader
 from .trader_entry import trader_entry
 
-__all__ = ["Actor", "RecordedActor", "Household", "HouseholdParty", "exchange_sale", "Firm", "Government",
+__all__ = ["demand_answer", "Actor", "RecordedActor", "Household", "HouseholdParty", "exchange_sale", "Firm", "Government",
            "Policy", "ValuePolicy", "CallbackPolicy", "IdlePolicy", "Option",
            "Decision", "register_policy", "ActorRegistry", "ActorRecord", "ActorsState",
            "CapitalMarketRecord", "CastEntry", "CountryProfile", "register_actor_kind",
