@@ -19,12 +19,12 @@ def stubbed(simulation, home_price=100.0, foreign_price=10.0):
 
 
 # --- pure terms.
-check("more competing merchants shrink the markup toward zero",
-      merchant_terms.competition_markup_share(1) > merchant_terms.competition_markup_share(5)
-      > merchant_terms.competition_markup_share(50) > 0.0
-      and merchant_terms.competition_markup_share(10 ** 9) < 1e-6, None)
-check("the markup is the monopoly markup for one merchant",
-      abs(merchant_terms.competition_markup_share(1) - merchant_terms.MONOPOLY_MARKUP_SHARE) < 1e-12, None)
+check("more competing houses shrink the markup toward zero",
+      merchant_terms.competition_markup_share(1, 1.0) > merchant_terms.competition_markup_share(5, 1.0)
+      > merchant_terms.competition_markup_share(50, 1.0) > 0.0
+      and merchant_terms.competition_markup_share(10 ** 9, 1.0) < 1e-6, None)
+check("the markup is the monopoly markup for one house",
+      abs(merchant_terms.competition_markup_share(1, 1.0) - merchant_terms.monopoly_markup_share(1.0)) < 1e-12, None)
 check("goods wait less for a sailing when more carriers serve the route",
       merchant_terms.wait_years(2.0, 10.0) > merchant_terms.wait_years(2.0, 40.0) > 0.0
       and merchant_terms.wait_years(2.0, float("inf")) == 0.0, None)
@@ -53,8 +53,14 @@ many._foreign_ledger(PARTNER, create=True)["lift_tonnes_per_year"] = (
     20.0 * few.foreign_lift_capacity_tonnes(PARTNER, facts["route"]))
 check("a larger fleet means more merchants",
       many._route_carriers(PARTNER, facts["route"]) > 10.0 * few._route_carriers(PARTNER, facts["route"]), None)
-check("more competing merchants on a route lower the margin above cost",
+check("more competing houses on a route lower the margin above cost",
       many._trader_margin_share(PARTNER, facts["route"]) < few._trader_margin_share(PARTNER, facts["route"]), None)
+check("a destination whose price falls faster with the cargo allows a larger markup",
+      few._trader_margin_share(PARTNER, facts["route"], 2.0) > few._trader_margin_share(PARTNER, facts["route"], 0.2), None)
+check("a house owns at least one carrier, so houses never outnumber carriers",
+      many._route_houses(PARTNER, facts["route"]) <= many._route_carriers(PARTNER, facts["route"]) + 1e-9, None)
+check("merchants borrowing from the pool is among its loans",
+      few.market_loans().get("merchants", None) is not None, None)
 check("...and the goods wait less to be shipped",
       many._trader_cycle_years(facts["route"], PARTNER) < few._trader_cycle_years(facts["route"], PARTNER), None)
 check("agents' pay comes from the labour market: a dearer merchant costs more per tonne",

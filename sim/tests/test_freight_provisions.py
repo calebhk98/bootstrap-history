@@ -125,8 +125,9 @@ class RobberyTests(unittest.TestCase):
 
 class LegPricingTests(unittest.TestCase):
 
-    def test_a_floor_keeps_an_overlong_leg_finite(self):
-        self.assertLess(freight_cost.leg_money_per_tonne(1.0, CART, 1.0e6, least_share=0.1), float("inf"))
+    def test_restocking_keeps_an_overlong_leg_finite(self):
+        self.assertLess(freight_cost.leg_money_per_tonne(
+            1.0, CART, 1.0e6, restock_days=provisions.RESTOCK_INTERVAL_DAYS), float("inf"))
 
     def test_provisions_raise_a_leg_above_its_rate_times_distance(self):
         self.assertGreater(freight_cost.leg_money_per_tonne(1.0, CART, 200.0), 200.0)

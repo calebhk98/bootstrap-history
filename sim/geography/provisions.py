@@ -26,6 +26,15 @@ PERSON_WATER_KG_PER_DAY = declare(
     confidence="B",
     why="Water a crew member drinks each day, carried because a hull at sea cannot refill it.")
 
+RESTOCK_INTERVAL_DAYS = declare(
+    "RESTOCK_INTERVAL_DAYS", 5.0, kind="temporary_heuristic",
+    unit="days of travel between places a land carrier buys food, water and feed", source=None,
+    confidence="D",
+    why="A land carrier carries what it consumes only to the next village, inn or well, not for a whole "
+        "leg, so a long land leg is crossed in stages and still delivers cargo. The spacing of such places "
+        "would come from where people live along the way, which the route search does not give. A hull at "
+        "sea is not restocked between its ports.")
+
 
 def person_provisions_kg_per_day(people):
     """Mass of the food and water `people` consume in a day."""
@@ -38,3 +47,12 @@ def delivered_share(inputs, distance_km):
     days = distance_km / inputs.distance_per_day_km
     consumed_kg = inputs.carried_kg_per_day * days
     return max(0.0, 1.0 - consumed_kg / (inputs.cargo_tonnes * KILOGRAMS_PER_TONNE))
+
+
+def restocked_share(inputs, distance_km, restock_days):
+    """Share of a carrier's lift that arrives as cargo over a leg when it can restock every
+    `restock_days` of travel (the whole leg is one stage when None): the carrier carries only a
+    stage's consumption, so the share stops falling once the leg is longer than a stage."""
+    if restock_days is None:
+        return delivered_share(inputs, distance_km)
+    return delivered_share(inputs, min(distance_km, restock_days * inputs.distance_per_day_km))
