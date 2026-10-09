@@ -67,8 +67,10 @@ for _ in range(2000):
     s_dep.year += 1
     s_dep.commission_mines()
 check("...and depletion saturates at the floor rather than continuing to "
-      "fall without limit (not an exponential collapse)",
-      abs(s_dep.mine_depletion_factor("coal") - s_dep.DEPLETION_FLOOR) < 1e-6,
+      "fall without limit (not an exponential collapse), unless the deposits are "
+      "worked out and the workings have closed",
+      abs(s_dep.mine_depletion_factor("coal") - s_dep.DEPLETION_FLOOR) < 1e-6
+      or not s_dep._workings_of("coal"),
       s_dep.mine_depletion_factor("coal"))
 
 # --- a working driven gently (a small fraction of what the ground could

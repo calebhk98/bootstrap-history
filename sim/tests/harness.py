@@ -176,8 +176,10 @@ def hours_money(hours, civ="rome_100ad"):
     return hours * S.starting_schedule(civ).money_per_labour_hour
 
 
-def sim(civ="rome_100ad", capital=None, manual=True, events=False, agent_economy=None):
-    """A game on the default economy; `agent_economy=False` opts out to the engine's own yearly market."""
+def sim(civ="rome_100ad", capital=None, manual=True, events=False, agent_economy=None, surveyed=None):
+    """A game on the default economy; `agent_economy=False` opts out to the engine's own yearly market.
+    `surveyed` lists the materials whose deposits the game has already found (a mine names a found deposit;
+    the metals and coal by default, `()` for none)."""
     config = {"start_capital": capital} if capital is not None else {}
     if agent_economy is not None:
         config["agent_economy"] = agent_economy
@@ -185,7 +187,30 @@ def sim(civ="rome_100ad", capital=None, manual=True, events=False, agent_economy
     test_sim = S.Sim(NODES, ORDER, random.Random(1), events=events, manual=manual,
               civ=S.load_civ(civ), cfg=config)
     test_sim.goal, test_sim.done_year = GOAL, {}
+    for material in (("coal",) + tuple(_ore_goods(test_sim.world_map))) if surveyed is None else tuple(surveyed):
+        found_deposits_of(test_sim, material)
     return test_sim
+
+
+def _ore_goods(world_map):
+    from sim.geography import api as _geography
+    return _geography.ore_goods(world_map)
+
+
+def found_deposits_of(game, material):
+    """Give the game the deposits of `material` that thorough prospecting of its held tiles would find, without
+    paying for the search, so a test can open a mine (a mine names a deposit it has found)."""
+    from sim.geography import api as _geography
+    resource_id = game.mine_resource_id(material)
+    if resource_id is None:
+        return []
+    seed = "tests"
+    held = _geography.tiles_held(game.civ, game.world_map)
+    for tile in sorted(held, key=lambda tile: -_geography.endowment(tile, resource_id, game.world_map)["undiscovered_expected"]):
+        found = _geography.prospect(tile, resource_id, 1e12, seed, game.world_map)
+        known = {row["id"] for row in game.state.holdings.deposits_found}
+        game.state.holdings.deposits_found.extend(dict(row) for row in found if row["id"] not in known)
+    return game.found_deposits(material)
 
 
 def concern_needing_craftsmen_to_supervise():
