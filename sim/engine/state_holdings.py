@@ -42,6 +42,9 @@ class HoldingsState:
 	patents: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 	shares_held: Dict[str, float] = field(default_factory=dict)
 	shares_issued: float = 0.0
+	# offers other actors have made the seat (plain dicts, as the exchange keeps them) and how many it has made
+	offers: List[Dict[str, Any]] = field(default_factory=list)
+	offer_serial: int = 0
 
 
 @dataclass

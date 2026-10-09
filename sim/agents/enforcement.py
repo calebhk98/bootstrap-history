@@ -27,24 +27,43 @@ def holder_actor(registry: Any, world: Any, holder_id: str) -> Any:
 	return registry.get(holder_id) or getattr(world, "seat_parties", lambda: {})().get(holder_id)
 
 
+def patented_nodes(registry: Any, world: Any) -> set:
+	"""Every node some actor or seat holds a patent on."""
+	holders = list(registry.actors.values()) + list(getattr(world, "seat_parties", lambda: {})().values())
+	return {node_id for holder in holders for node_id in holder.record.patents}
+
+
+def operators_of(registry: Any, world: Any, node_id: str) -> list:
+	"""Who runs a concern: the actors in business, and the seats that run it themselves."""
+	seats = getattr(world, "seat_parties", lambda: {})()
+	return registry.operators_of(node_id) + [seats[seat_id] for seat_id in sorted(seats) if node_id in seats[seat_id].concerns]
+
+
+def margin_of(operator: Any, world: Any) -> float:
+	"""What an operator earns from one of its concerns in a year, on average."""
+	seat_margin = getattr(world, "seat_margin", None)
+	total = seat_margin(operator.actor_id) if operator.kind == "household" and seat_margin is not None else operator.record.last_margin
+	return max(0.0, total) / max(1, len(operator.concerns))
+
+
 def enforce_patents(registry: Any, world: Any) -> float:
 	"""Each unlicensed operator of a patented concern is caught with the chance of the state's capacity and
 	pays its margin on the concern to the holder, never more than its purse; the total paid."""
 	paid = 0.0
-	for node_id in sorted(registry.concern_nodes()):
+	for node_id in sorted(patented_nodes(registry, world)):
 		entry = world.patent_entry(node_id)
 		if entry is None:
 			continue
 		holder = holder_actor(registry, world, entry["holder"])
 		if holder is None:
 			continue
-		for operator in registry.operators_of(node_id):
+		for operator in operators_of(registry, world, node_id):
 			if not unlicensed(entry, operator.actor_id):
 				continue
 			draw = world.rng_for(world.year, "enforcement", operator.actor_id, node_id).random()
 			if draw >= world.state_capacity():
 				continue
-			damages = min(max(0.0, operator.money), max(0.0, operator.record.last_margin) / max(1, len(operator.concerns)))
+			damages = min(max(0.0, operator.money), margin_of(operator, world))
 			ledger.transfer(operator, holder, damages, "damages")
 			paid += damages
 	return paid

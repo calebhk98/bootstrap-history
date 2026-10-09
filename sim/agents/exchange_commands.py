@@ -76,12 +76,28 @@ def answer_offers(actor: Any, find_actor: Callable[[str], Any], world: Any) -> L
 	return answered
 
 
+def finder(registry: Any, world: Any) -> Callable[[str], Any]:
+	"""Finds a party to an exchange by id: an actor in the registry, else a seat."""
+	seats: Dict[str, Any] = {}
+
+	def find(actor_id: str) -> Any:
+		found = registry.get(actor_id)
+		if found is None and getattr(world, "seat_parties", None) is not None:
+			if not seats:
+				seats.update(world.seat_parties())
+			found = seats.get(actor_id)
+		return found
+	return find
+
+
 def exchange_answers(registry: Any, world: Any) -> List[str]:
 	"""Yearly: lapse old offers, then let every AI actor answer what it holds. Founds no actors."""
+	find = finder(registry, world)
 	for actor_id in sorted(registry.actors):
 		actor = registry.actors[actor_id]
 		exchange.expire_offers(actor, world.year)
-		answer_offers(actor, registry.get, registry.world_for(actor, world))
+		if actor.record.offers:
+			answer_offers(actor, find, registry.world_for(actor, world))
 	return []
 
 

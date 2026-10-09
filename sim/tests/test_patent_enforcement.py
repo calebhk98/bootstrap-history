@@ -97,3 +97,40 @@ spinoff.SPINOFF_CHANCE_PER_STAFF_YEAR = 1.0
 founded = spinoff.consider_spinoffs(registry, world)
 spinoff.SPINOFF_CHANCE_PER_STAFF_YEAR = original
 check("a rival is founded on a patented concern where the state cannot enforce", len(founded) >= 1, founded)
+
+
+# ---- the founder is an actor like any other: a seat running a patented concern unlicensed is pursued too ----
+class SeatParty:
+	kind = "household"
+	actor_id = "founder"
+
+	def __init__(self):
+		self.record = ActorRecord(kind="household")
+		self.concerns = {"mill"}
+		self.money = 900.0
+
+	def debit(self, amount, purpose):
+		self.money -= amount
+
+	def credit(self, amount, purpose):
+		self.money += amount
+
+
+class SeatWorld(EnforcedWorld):
+	def seat_parties(self):
+		return {"founder": self.seat}
+
+	def seat_margin(self, seat_id):
+		return 300.0
+
+
+world, registry, holder, infringer, licensed = setup(1.0)
+seat_world = SeatWorld(year=100)
+seat_world.capacity, seat_world.registry, seat_world.nodes = 1.0, registry, world.nodes
+seat_world.seat = SeatParty()
+enforcement.enforce_patents(registry, seat_world)
+check("the founder pays the holder its margin on the concern", seat_world.seat.money == 600.0 and holder.money == 1800.0, (seat_world.seat.money, holder.money))
+holder.record.patents["mill"]["licensees"].append("founder")
+seat_world.seat.money = 900.0
+enforcement.enforce_patents(registry, seat_world)
+check("a licensed founder is left alone", seat_world.seat.money == 900.0)

@@ -79,6 +79,7 @@ from .society import SocietyMixin
 from .society_actors import ActorsMixin
 from .society_disclosure import DisclosureMixin
 from .founder_sales import FounderSalesMixin
+from .seat_dealings import SeatDealingsMixin
 from .interest_groups import InterestGroupsMixin
 from .core_properties import ForwardingPropertiesMixin
 from .goals import GoalsMixin
@@ -236,7 +237,7 @@ YEARLY_RECORD_LIMIT = 300
 
 
 class Sim(RealPriceRatiosMixin, CoinRevaluationMixin, WageMarketRatiosMixin, MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IndustryDepthMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, LabourPortMixin,
-          ProjectsMixin, SeatMixin, SeatRunMixin, SeatBuildsMixin, SeatSightMixin, ShockYearMixin, WaysMixin, WorksMixin, HeldWorksMixin, ActionLossMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, InterestGroupsMixin, ForwardingPropertiesMixin, GoalsMixin,
+          ProjectsMixin, SeatMixin, SeatRunMixin, SeatBuildsMixin, SeatSightMixin, ShockYearMixin, WaysMixin, WorksMixin, HeldWorksMixin, ActionLossMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, SeatDealingsMixin, InterestGroupsMixin, ForwardingPropertiesMixin, GoalsMixin,
           StepPhasesMixin, LivingStockMixin, CoinHoardMixin, CoinCarriageMixin, TheftChargeMixin,
           LivingStockTradeMixin, LivingStockYearlyMixin, FoodSupplyMixin, DefenceStoresMixin, EconomyPortMixin, NodeRederiveMixin):
     STATE_CAPACITY_DEFAULT = declare(

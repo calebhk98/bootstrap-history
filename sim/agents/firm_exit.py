@@ -19,7 +19,7 @@ def earns_less_than_plant_would_lend_for(firm: Any, world: Any) -> bool:
 
 def close_firm(firm: Any, world: Any) -> None:
 	"""Stop running every concern; what is left in the purse goes back to the founder who put it up."""
-	founder = firm.find_actor(firm.record.plan.get("founder", "")) if firm.find_actor is not None else None
+	founder = firm.find_actor(firm.record.plan.get("backer", "")) if firm.find_actor is not None else None
 	if founder is not None and firm.money > 0.0:
 		ledger.transfer(firm, founder, firm.money, "founding stake returned")
 	if founder is not None and "founder_household" in firm.record.plan:

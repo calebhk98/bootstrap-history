@@ -67,7 +67,7 @@ def fund_from(founder: Any, firm: Any, amount: float) -> None:
 	"""A household of the founding stratum puts `amount` into the firm; the firm remembers which and how much."""
 	rank = household_wealth.commit(founder, amount)
 	ledger.transfer(founder, firm, amount, "founding stake")
-	firm.record.plan["founder"] = founder.actor_id
+	firm.record.plan["backer"] = founder.actor_id
 	firm.record.plan["founder_household"] = rank
 	firm.record.plan["stake"] = amount
 
