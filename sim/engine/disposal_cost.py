@@ -15,12 +15,12 @@ from dataclasses import dataclass, field
 from typing import Dict, FrozenSet, Iterable
 
 from sim.constants import declare
+from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import demand
 
 HANDLING_SERVICE = "waste_handling_job"
 HAULAGE_SERVICE = "waste_haulage_tkm"
 GROUND_SERVICE = "dump_ground_m2"
-KILOGRAMS_PER_TONNE = 1000.0
 WASTE_HEAPS_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
                                 "data", "world", "waste_heaps.json")
 

@@ -4,8 +4,8 @@ from typing import Any, Optional
 from sim.agents.api import supply
 from sim.constants import declare
 from sim.labour.api import production_data
+from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
-KILOGRAMS_PER_TONNE = 1000.0
 SQUARE_METRES_PER_HECTARE = 10000.0
 FLOOR_AREA_PER_WORKER_SQUARE_METRES = declare(
 	"FLOOR_AREA_PER_WORKER_SQUARE_METRES", 30.0, kind="temporary_heuristic",

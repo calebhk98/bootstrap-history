@@ -17,7 +17,7 @@ from sim.labour.labour_market import production_data
 
 # Entries that state a plant and gate a node, whose inputs at solved prices cost more than what they
 # make: a technique dearer than the one that sets the price, so it adds nothing a staff could be paid from.
-INPUTS_DEARER_THAN_PRODUCT = {"mechanical_mj_motor", "zinc_electrolytic_kg"}
+INPUTS_DEARER_THAN_PRODUCT = {"mechanical_mj_motor"}
 
 WAGES = {"labourer": 1.0}
 BUILD_LABOUR_HOURS = 20000.0
