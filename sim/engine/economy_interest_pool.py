@@ -39,8 +39,8 @@ class InterestPoolMixin:
             if source == "state":
                 ledger.transfer(self.edge(edges.EDGE_INTEREST), self.state_treasury(), share, INTEREST_PURPOSE)
             elif source.startswith(SEAT_SOURCE_PREFIX):
-                seat_household = self._seat_facades[source[len(SEAT_SOURCE_PREFIX):]]
-                ledger.transfer(self.edge(edges.EDGE_INTEREST), seat_household, share, INTEREST_PURPOSE)
+                ledger.transfer(self.edge(edges.EDGE_INTEREST), self.seat_party(source[len(SEAT_SOURCE_PREFIX):]),
+                                share, INTEREST_PURPOSE)
             elif source == "firms" and firm_funds > 0.0:
                 for firm in firms:
                     ledger.transfer(self.edge(edges.EDGE_INTEREST), firm, share * firm.money / firm_funds, INTEREST_PURPOSE)
