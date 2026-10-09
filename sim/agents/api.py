@@ -30,7 +30,7 @@ from .stratum import Stratum, stratum_id
 from .strata_observed import observed_incomes
 from .strata_seed import seed_strata, strata_definitions, strata_spawner
 from .player_commands import CommandRejected, register_command
-from . import exchange, exchange_commands, exchange_sale  # noqa: F401  (registers the offer commands and the answers spawner)
+from . import equity_round, exchange, exchange_commands, exchange_sale  # noqa: F401  (registers the offer commands, the answers and equity rounds)
 from . import demand_answer, demand_commands  # noqa: F401  (registers the command that answers the state's demands)
 from .trader import Trader
 from .trader_entry import trader_entry
