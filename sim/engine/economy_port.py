@@ -56,6 +56,11 @@ class EconomyPort:
         agent = self._answering_agent()
         return None if agent is None else agent.price_ratio(materials, self._sim._material_prices())
 
+    def agent_prices(self):
+        """The agent economy's prices by good in coin, or None to use the engine's."""
+        agent = self._answering_agent()
+        return None if agent is None else agent.answers()[0]
+
     def agent_wage_per_hour(self, trade):
         agent = self._answering_agent()
         return None if agent is None else agent.wage_per_hour(trade)

@@ -5,7 +5,16 @@ partner's). A glut of the metal (ratio below one) makes a unit of coin buy less 
 price level rises with it; a shortage lowers it. Holders of coin and of debts written in coin bear the
 change: nothing is indexed or compensated.
 """
+from sim.constants import declare
+
 from .data import load_civ
+
+REVALUATION_YEARLY_SHARE = declare(
+    "REVALUATION_YEARLY_SHARE", 0.5, kind="temporary_heuristic",
+    unit="share of the gap between the coin metal's recorded and measured value closed in a year",
+    source=None, confidence="D",
+    why="Coin is a stock: its value follows the metal's price as holders and mints reprice, not at once. "
+        "Damping also keeps one year's market noise out of the price level. Mint behaviour would replace it.")
 
 
 class CoinRevaluationMixin:
@@ -26,5 +35,8 @@ class CoinRevaluationMixin:
         metals.update(self.partner_coin_metal(partner) for partner in self.foreign_economies())
         ratios = self.state.economy.coin_metal_ratios
         for metal in sorted(metals):
-            ratio = self.market_price_ratio(metal)
-            ratios[metal] = ratio if ratio and ratio > 0.0 else 1.0
+            measured = self.real_price_ratio(metal)
+            if not measured > 0.0:
+                measured = 1.0
+            held = ratios.get(metal, 1.0)
+            ratios[metal] = held ** (1.0 - REVALUATION_YEARLY_SHARE) * measured ** REVALUATION_YEARLY_SHARE
