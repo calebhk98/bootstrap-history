@@ -165,10 +165,10 @@
   "pre": [],
   "kb": "91_household.md",
   "ph": 0,
-  "lab": {},
+  "lab": {"mason": 400, "labourer": 600},
   "mat": {},
   "cap_hours": 0,
-  "up_hours": 0,
+  "up_hours": 10,
   "yrs": 0,
   "risk": 0,
   "sus": 0,
@@ -177,6 +177,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
+  "_internal": "[HEURISTIC: no construction labour was authored for this work, so it is taken as an order of magnitude below the Roman aqueduct crew bill (a bath house is a masonry hall with flues and a cistern, not a line of arches); upkeep one percent of it a year, repair and re-lining; fuel and attendants are not counted here.]",
   "note": "Public hygiene infrastructure at this scale is remarkable for its era wherever it exists (Rome's thermae are the model: heated water pools, caldarium and frigidarium as social centres); even so, most private homes still lack hot water."
  },
  {

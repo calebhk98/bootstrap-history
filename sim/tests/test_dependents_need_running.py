@@ -42,6 +42,8 @@ EXPECTED_RUNNING = {
     "tl_level_crossing": ["railway"],
     "mil_railway_mobilisation": ["railway", "telegraph_electric"],
     "ben_harbour_and_lighthouse": ["civ_harbour_dock"],
+    "ben_fire_and_flood_brigades": ["civ_aqueduct_roman"],
+    "sea_buoy": ["sea_harbours_pozzolana"],
     "sea_drydock": ["civ_harbour_dock"],
     "tr_dry_dock": ["civ_harbour_dock"],
     "civ_water_treatment": ["civ_aqueduct_roman"],
