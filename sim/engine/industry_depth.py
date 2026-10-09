@@ -10,6 +10,9 @@ The stock shortens a concern's ramp (venture_ramp, agents_port.ramp), lowers the
 core keeps hours by trade but no tenure, so a worker-year here is a year of staff employed in the concern.
 """
 from sim.constants import declare
+from sim.economy import api as economy_api
+
+from .prices import default_production_entries
 
 EXPERIENCE_RETENTION_PER_YEAR = declare(
     "EXPERIENCE_RETENTION_PER_YEAR", 0.61, kind="temporary_heuristic",
@@ -58,16 +61,37 @@ class IndustryDepthMixin:
 
     def seed_opening_industry_experience(self):
         """Once, from the opening's own state: each technique the society already runs (granted) starts at
-        the steady state of one founding-size concern's staff-years against the yearly fade, as if it had
-        been running long. A technique nobody runs starts at zero."""
+        the steady state of the worker-years its opening producers employ a year against the yearly fade, as
+        if it had been running long. Without an agent economy there are no opening producers, so one
+        founding-size concern stands in (the scale ceiling is then off, see agents_port.scale_ceiling).
+        A technique nobody runs starts at zero."""
         projects = self.state.projects
         if projects.industry_seeded or not projects.granted:
             return
         projects.industry_seeded = True
+        opening = self.opening_worker_years_by_node() or {}
         for node_id in sorted(projects.granted):
             if self.is_venture(node_id):
-                projects.industry_years[node_id] = (
-                    self.founding_worker_years(node_id) / (1.0 - EXPERIENCE_RETENTION_PER_YEAR))
+                rate = opening.get(node_id, self.founding_worker_years(node_id))
+                projects.industry_opening_rate[node_id] = rate
+                projects.industry_years[node_id] = rate / (1.0 - EXPERIENCE_RETENTION_PER_YEAR)
+
+    def opening_worker_years_by_node(self):
+        """Worker-years a year the agent economy's producers put into each technique's own entries; None
+        while there is no agent economy."""
+        agent = self.economy.agent
+        if agent is None:
+            return None
+        economy = agent.economy()
+        gate = {key: entry.get("requires_node") for key, entry in default_production_entries().items()}
+        years = {}
+        for producer in economy_api.producers_of(economy).values():
+            node_id = gate.get(producer.recipe_id)
+            recipe = economy.setup.recipes.get(producer.recipe_id)
+            if node_id is not None and recipe is not None:
+                years[node_id] = years.get(node_id, 0.0) + (
+                    producer.capacity_runs * sum(recipe.labour_hours.values()) / economy.setup.working_hours_per_year)
+        return years
 
     def industry_depth(self, node_id):
         """0 for a technique nobody has run, approaching 1 as it becomes established."""
@@ -90,7 +114,9 @@ class IndustryDepthMixin:
         projects = self.state.projects
         for node_id in sorted(projects.granted | projects.operating):
             if self.is_venture(node_id):
-                years[node_id] = years.get(node_id, 0.0) + self.founding_worker_years(node_id)
+                held_by_society = projects.industry_opening_rate.get(node_id) if node_id in projects.granted else None
+                years[node_id] = years.get(node_id, 0.0) + (
+                    self.founding_worker_years(node_id) if held_by_society is None else held_by_society)
         if self.state.actors is not None and self.state.actors.records:
             for firm in self.actors.active_firms():
                 for node_id in firm.concerns:

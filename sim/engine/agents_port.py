@@ -203,6 +203,8 @@ class SimWorld(BudgetView, RevenueView, GroupView, DisclosureView, CapitalView, 
 
 	def scale_ceiling(self, node_id: str) -> float:
 		"""The most founding sizes one concern of this kind can be run at, from the industry's experience."""
+		if not self.runs_agent_economy():
+			return float("inf")  # no opening producers to size the industry from
 		return float(self._sim.industry_scale_ceiling(node_id))
 
 	def concern_takings(self, node_id: str, opened_year: int, rivals: float = 0.0, capacity: float = 1.0) -> float:

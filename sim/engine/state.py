@@ -161,6 +161,8 @@ class ProjectsState:
 	# technique -> retained worker-years of anyone running it (industry_depth.py)
 	industry_years: Dict[str, float] = field(default_factory=dict)
 	industry_seeded: bool = False
+	# technique -> worker-years a year the society's opening producers put in (industry_depth.py)
+	industry_opening_rate: Dict[str, float] = field(default_factory=dict)
 	mothballed: Set[str] = field(default_factory=set)
 	bountied: Set[str] = field(default_factory=set)
 	granted: Set[str] = field(default_factory=set)

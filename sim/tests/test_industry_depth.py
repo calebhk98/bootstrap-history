@@ -16,10 +16,10 @@ from sim.engine.projects_progress import ProgressMixin
 Depth = industry_depth.IndustryDepthMixin
 
 
-def world(experience=None, founding_staff=2.0, concerns=None, seeded=True, granted=None):
+def world(experience=None, founding_staff=2.0, concerns=None, seeded=True, granted=None, opening=None):
     """A bare stand-in for the Sim with only what the depth, ramp and risk code read."""
     projects = types.SimpleNamespace(
-        industry_years=dict(experience or {}), industry_seeded=seeded, granted=set(granted or ()), opened_year={"loom": 10}, done_year={},
+        industry_years=dict(experience or {}), industry_seeded=seeded, industry_opening_rate={}, granted=set(granted or ()), opened_year={"loom": 10}, done_year={},
         failed_attempts=collections.defaultdict(int), uninformed_failures={}, done=set(), operating=set())
     stub = types.SimpleNamespace(
         state=types.SimpleNamespace(projects=projects, scenario=types.SimpleNamespace(year=10)),
@@ -30,6 +30,7 @@ def world(experience=None, founding_staff=2.0, concerns=None, seeded=True, grant
     stub.concern_worker_years_this_year = lambda: dict(concerns or {})
     stub.industry_experience = lambda node_id: Depth.industry_experience(stub, node_id)
     stub.industry_depth = lambda node_id: Depth.industry_depth(stub, node_id)
+    stub.opening_worker_years_by_node = lambda: dict(opening or {})
     stub.is_venture = lambda node_id: True
     stub.seed_opening_industry_experience = lambda: Depth.seed_opening_industry_experience(stub)
     stub.nodes_with_mechanic = lambda name: []
@@ -102,8 +103,16 @@ class IndustryDepth(unittest.TestCase):
         self.assertGreater(Depth.industry_scale_ceiling(opening, "loom"), 1.0)
         self.assertEqual(opening.industry_depth("anvil"), 0.0)
 
+    def test_an_opening_workforce_of_many_workshops_sizes_the_seed(self):
+        one = world(seeded=False, granted={"loom"})
+        many = world(seeded=False, granted={"loom"}, opening={"loom": 40.0})
+        self.assertGreater(Depth.industry_scale_ceiling(many, "loom"), 5.0 * Depth.industry_scale_ceiling(one, "loom"))
+        self.assertGreater(many.industry_depth("loom"), 0.9)
+
     def test_the_seeded_stock_is_the_steady_state_of_its_own_upkeep(self):
-        opening = world(seeded=False, granted={"loom"}, concerns={"loom": 2.0})
+        opening = world(seeded=False, granted={"loom"}, opening={"loom": 7.0})
+        opening.concern_worker_years_this_year = lambda: Depth.concern_worker_years_this_year(opening)
+        opening.state.actors = None
         before = opening.industry_experience("loom")
         Depth.accrue_industry_experience(opening)
         self.assertAlmostEqual(opening.industry_experience("loom"), before, places=6)
