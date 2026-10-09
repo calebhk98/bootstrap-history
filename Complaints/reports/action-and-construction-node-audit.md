@@ -1,6 +1,6 @@
 # Audit: action and construction nodes in the tech tree
 
-Audit for `Complaints/133-some-technologies-are-actions-not-research.md`.
+Audit for `Complaints/closed/133-some-technologies-are-actions-not-research.md`.
 Measured on 2026-10-06 on branch `structural-dedupe-and-owner-decisions`
 (written on `action-and-construction-node-audit`). No code or data was
 changed.
@@ -270,7 +270,7 @@ says that yet.
 
 ### Engine work the rest needs
 
-Status: items 1 and 6 are built as a node field (`requires_running`, see
+Status (closed with Complaint 133): all seven items are built, see the Closing section of that complaint. Earlier status: items 1 and 6 are built as a node field (`requires_running`, see
 `sim/engine/projects_running_gates.py`), item 3 is built for roads and railways as `requires_ways`,
 item 2 is still open (no register of works on tiles), item 4 is described below and not built,
 item 5 and 7 are untouched. The grid, telegraph, railway, harbour, aqueduct, sewer and road-network dependents that operate now name the

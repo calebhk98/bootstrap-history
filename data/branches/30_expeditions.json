@@ -36,6 +36,7 @@
   "id": "exp_openocean_navigation",
   "name": "Open ocean navigation out of sight of land",
   "cat": "expedition",
+  "returns": {"route": ["open_pacific_east", "open_pacific_west"]},
   "kind": "INFRASTRUCTURE",
   "pre": [
    "sea_magnetic_compass",
@@ -172,6 +173,8 @@
   "id": "exp_coastal_africa",
   "name": "Coastal voyage down West Africa",
   "cat": "expedition",
+  "returns": {"route": ["west_african_coast"]},
+  "risks": {"crew": {"sailor": 0.3}, "hull": {"timber_m3": 0.5, "iron_bar_kg": 0.5, "canvas_kg": 0.5}, "cargo": {"wine_common_kg": 0.3}},
   "kind": "INFRASTRUCTURE",
   "pre": [
    "exp_oceangoing_hull",
@@ -206,12 +209,15 @@
    "precaution": {
     "kind": "pilot_plant"
    }
-  }
+  },
+  "_internal": "[HEURISTIC: the shares of crew, hull and cargo a failed voyage loses are round figures set beside the node's chance of failing; ships are not yet assets, so the hull is taken as the share of the hull timber, ironwork and canvas held in stock, and the cargo as the share of the provisions held. No wreck, rescue or salvage model yet.]"
  },
  {
   "id": "exp_africa_circumnavigation",
   "name": "Round the Cape",
   "cat": "expedition",
+  "returns": {"route": ["cape_passage"]},
+  "risks": {"crew": {"sailor": 0.4}, "hull": {"timber_m3": 0.6, "iron_bar_kg": 0.6, "canvas_kg": 0.6}, "cargo": {"wine_common_kg": 0.4}},
   "kind": "INFRASTRUCTURE",
   "pre": [
    "exp_coastal_africa",
@@ -244,12 +250,15 @@
    "precaution": {
     "kind": "pilot_plant"
    }
-  }
+  },
+  "_internal": "[HEURISTIC: the shares of crew, hull and cargo a failed voyage loses are round figures set beside the node's chance of failing; ships are not yet assets, so the hull is taken as the share of the hull timber, ironwork and canvas held in stock, and the cargo as the share of the provisions held. No wreck, rescue or salvage model yet.]"
  },
  {
   "id": "exp_atlantic_crossing",
   "name": "Cross the Atlantic",
   "cat": "expedition",
+  "returns": {"route": ["open_atlantic"]},
+  "risks": {"crew": {"sailor": 0.5}, "hull": {"timber_m3": 0.6, "iron_bar_kg": 0.6, "canvas_kg": 0.6}, "cargo": {"wine_common_kg": 0.5}},
   "kind": "INFRASTRUCTURE",
   "pre": [
    "exp_oceangoing_hull",
@@ -284,7 +293,8 @@
    "precaution": {
     "kind": "pilot_plant"
    }
-  }
+  },
+  "_internal": "[HEURISTIC: the shares of crew, hull and cargo a failed voyage loses are round figures set beside the node's chance of failing; ships are not yet assets, so the hull is taken as the share of the hull timber, ironwork and canvas held in stock, and the cargo as the share of the provisions held. No wreck, rescue or salvage model yet.]"
  },
  {
   "id": "exp_americas_factory",

@@ -66,7 +66,8 @@ class WaysMixin:
             way, quote["km"], tile_a, tile_b, "{:,.0f}".format(quote["money"]), quote["years"])
 
     def finish_ways(self):
-        """Open the ways whose build time has passed, so routes, reach and the economy's carriage see them."""
+        """Open the ways whose build time has passed, so routes, reach and the economy's carriage see them;
+        the works register (works.py) finishes on the same beat."""
         pending = self.state.economy.ways_under_construction
         for key in sorted(pending):
             for way in sorted(pending[key]):
@@ -75,3 +76,4 @@ class WaysMixin:
                     del pending[key][way]
             if not pending[key]:
                 del pending[key]
+        self.finish_works()

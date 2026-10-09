@@ -369,6 +369,8 @@ def _merge_resolve_prerequisites(nodes, retired, losses):
     dangling = collections.Counter()
     for node in nodes.values():
         node["pre"] = [retired.get(prereq, prereq) for prereq in node["pre"]]
+        if node.get("requires_running"):
+            node["requires_running"] = list(dict.fromkeys(retired.get(work, work) for work in node["requires_running"]))
         for group in node.get("req_any", []):
             group["options"] = {retired.get(option, option): quantity for option, quantity in group.get("options", {}).items()}
         keep = []

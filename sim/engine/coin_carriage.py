@@ -58,7 +58,7 @@ class CoinCarriageMixin:
             cache["year"] = year
         key = (origin, destination)
         if key not in cache:
-            home_techs = frozenset(self.state.projects.done)
+            home_techs = self.held_and_running(include_starting=False)
             mode_costs = self._freight_mode_costs(0.0)
             modes = [mode for mode in usable_route_modes((home_techs,), self.world_map) if mode in mode_costs]
             found = route_over_tiles([origin], [destination], modes, mode_costs=mode_costs,

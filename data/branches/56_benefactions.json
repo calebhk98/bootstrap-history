@@ -1042,6 +1042,7 @@
    "civ_aqueduct_roman",
    "patron_local"
   ],
+  "requires_running": ["civ_aqueduct_roman"],
   "traits": [
    "infrastructure"
   ],
@@ -1071,7 +1072,7 @@
   "gov": 0,
   "sus": 0,
   "note": "Paid crews with buckets, pumps, hooks, ladders and sandbags, drilled to turn out at a bell for fire in the town or water at the wall. They hold fire and flood damage to your workshops and people to a part of what it would be, and they earn the thanks of the neighbours. A brigade in another quarter is another unit.",
-  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"carpenter\": 1500, \"labourer\": 12000}. Annual consumables: {\"iron_bar_kg\": 300, \"twine_kg\": 600}. Sizes of the work and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing. Engine readers checked: hazard_counters kinds output_factor and staff_loss in HAZARD_COUNTERS and hazard_relief; they reduce the founder household's own losses, not the nation's, and a hazard is countered by its kind, not by whether it was a fire or a flood. The shares are labelled heuristics.",
+  "_internal": "[GATE: Pumps and hydrants draw on a water supply that is built and kept in service; with the aqueduct shut there is no water to turn out with.] Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"carpenter\": 1500, \"labourer\": 12000}. Annual consumables: {\"iron_bar_kg\": 300, \"twine_kg\": 600}. Sizes of the work and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing. Engine readers checked: hazard_counters kinds output_factor and staff_loss in HAZARD_COUNTERS and hazard_relief; they reduce the founder household's own losses, not the nation's, and a hazard is countered by its kind, not by whether it was a fire or a flood. The shares are labelled heuristics.",
   "mechanics": {
    "upkeep_full": true,
    "capability": {

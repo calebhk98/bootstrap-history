@@ -30,9 +30,8 @@ class GeographyWorld:
 
     @property
     def held_nodes(self):
-        """The technologies the civilisation holds: its starting ones, those built and those granted."""
-        state = self._sim.state
-        return set(self._sim.civ.get("starting_techs") or ()) | set(state.projects.done) | set(state.projects.granted)
+        """The technologies the civilisation holds and keeps in service, and what its actions returned."""
+        return self._sim.held_and_running()
 
     @property
     def improvements(self):

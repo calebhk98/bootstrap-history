@@ -285,10 +285,10 @@
   ],
   "kb": "85_transport_civil.md",
   "ph": 0,
-  "lab": {},
+  "lab": {"mason": 600, "labourer": 800},
   "mat": {},
   "cap_hours": 0,
-  "up_hours": 0,
+  "up_hours": 14,
   "yrs": 0,
   "risk": 0,
   "sus": 0,
@@ -297,6 +297,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
+  "_internal": "[HEURISTIC: no construction labour was authored for this work, so it is taken as the crew bill of civ_harbour_dock (a concrete mole is the same masons and labourers at a larger scale); upkeep one percent of it a year, repair of the mole and clearing of the basin; no silting or wear model yet.]",
   "note": "Harbours built in hydraulic concrete that sets underwater are already achievable wherever pozzolana or an equivalent hydraulic binder exists (Rome's Portus and Caesarea are the standing examples); breakwaters and jetties protect anchorages.",
   "traits": [
    "infrastructure"
@@ -1602,6 +1603,7 @@
   "pre": [
    "sea_harbours_pozzolana"
   ],
+  "requires_running": ["sea_harbours_pozzolana"],
   "kb": "85_transport_civil.md",
   "ph": 60,
   "lab": {
@@ -1613,7 +1615,7 @@
    "lead_kg": 50
   },
   "cap_hours": 6048.563752238797,
-  "up_hours": 0,
+  "up_hours": 2.5,
   "yrs": 0.25,
   "risk": 0.1,
   "sus": 0,
@@ -1627,7 +1629,7 @@
    "commerce",
    "infrastructure"
   ],
-  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
+  "_internal": "[HEURISTIC: yearly upkeep taken as one percent of the construction labour hours (repair and keeping the works in service); no wear or failure model yet.] [GATE: A buoy is moored, tended and re-laid by a harbour's crews; with no harbour in service the markers drift and foul.] [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "sea_canal_lock",

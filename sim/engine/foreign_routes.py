@@ -21,6 +21,7 @@ from sim.geography.api import dues_hours_per_tonne
 from sim.geography.api import usable_modes as usable_route_modes
 from sim.geography.api import transport as freight_physics
 
+from . import action_results
 from .data import load_civ
 
 CARAVAN_STRING_SIZE = declare(
@@ -176,8 +177,8 @@ class ForeignRoutesMixin:
         when no mode both can use joins them. `imbalance` is how one-sided the flows are
         (last year's, by default)."""
         civilization_record = civilization if isinstance(civilization, dict) else load_civ(civilization)
-        foreign_techs = frozenset(civilization_record.get("starting_techs") or ())
-        home_techs = frozenset(self.state.projects.done)
+        foreign_techs = action_results.expand(self.nodes, frozenset(civilization_record.get("starting_techs") or ()))
+        home_techs = self.held_and_running(include_starting=False)
         if imbalance is None:
             imbalance = self._foreign_flow_imbalance(civilization_record.get("id"))
         mode_costs = self._freight_mode_costs(imbalance)

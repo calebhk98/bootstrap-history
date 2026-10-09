@@ -64,7 +64,7 @@ def opening_values(sim):
         "unskilled_trade": unskilled,
         "rate": float(sim.economy.base_rate()),
         "carriage": dict(modes),
-        "held_nodes": sorted(sim.state.projects.done | sim.state.projects.granted),
+        "held_nodes": sorted(sim.held_and_running(include_starting=False)),
         "ways": {key: dict(way) for key, way in sorted(sim.state.economy.improvements.items())},
         "stores": opening_store_values(sim.world_map, tile_ids, int(sim.cfg["start_year"])),
     }
