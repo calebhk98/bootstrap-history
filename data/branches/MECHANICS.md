@@ -26,7 +26,7 @@ change; read them from the node data (no command summarises them).
 * `group`: within a channel, only the first holder of a group counts.
 * `order`: sequence in which an effect channel is applied. It is stored only
   where floating-point results depend on it.
-* `book_money`: the amount is in book money and is scaled to the civilisation's
+* `labour_hours`: the amount is in labour hours and is priced in the civilisation's
   coin.
 * `tier`: for chains where only the best holder counts (`effect_best`).
 

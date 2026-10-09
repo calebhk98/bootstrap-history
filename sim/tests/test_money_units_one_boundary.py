@@ -1,5 +1,5 @@
 """Every money figure reaches the player in the civilisation's own coin
-through one conversion: book denarii -> labour hours -> civilisation money."""
+through one conversion: labour hours -> civilisation money."""
 import copy
 import random
 import unittest

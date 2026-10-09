@@ -616,8 +616,8 @@
     "scalable": "population"
    },
    "credit_line": {
-    "per_unit": 12000.0,
-    "book_money": true,
+    "per_unit": 242000.0,
+    "labour_hours": true,
     "order": 6
    },
    "debt_rate_discount": {

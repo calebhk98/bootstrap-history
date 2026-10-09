@@ -1,23 +1,11 @@
 """Where labour hours become a civilisation's money.
 
 Tree capital, upkeep and revenue are authored in labour hours (`cap_hours`,
-`up_hours`, `rev_hours`) and priced here in each civilisation's own coin. The
-book goods table and the remaining declared money constants are still written
-in the book's denarii and take the path
-    book denarii -> labour hours -> civilisation money
-and nothing else converts.
+`up_hours`, `rev_hours`) and every declared money amount is a count of labour
+hours; both are priced here in each civilisation's own coin.
 """
-from sim.constants import declare
 from typing import Iterable, Mapping
 
-BOOK_LABOURER_WAGE_DENARII_PER_HOUR = declare(
-    "BOOK_LABOURER_WAGE_DENARII_PER_HOUR", 0.049598551373284096,
-    kind="temporary_heuristic", unit="book denarii per labour hour", source=None,
-    confidence="D",
-    why="The unskilled wage of the book's own reference schedule, which every "
-        "authored denarii figure was calibrated against and which the starting "
-        "kits were stated in labourer-years from. It goes when authored money "
-        "is derived from labour and materials.")
 
 class PricedInLabourHours:
     """A cost declared as labour hours, read as money in the reader's coin.
@@ -33,21 +21,6 @@ class PricedInLabourHours:
     def __get__(self, sim, owner=None):
         hours = getattr(owner if sim is None else sim, self.hours_name)
         return hours if sim is None else hours * sim.labour.money_per_labour_hour()
-
-
-def _book_to_hours(denarii: float) -> float:
-    return denarii / BOOK_LABOURER_WAGE_DENARII_PER_HOUR
-
-
-def book_to_money(denarii: float, money_per_labour_hour: float) -> float:
-    return _book_to_hours(denarii) * money_per_labour_hour
-
-
-def book_money_factor(money_per_labour_hour: float) -> float:
-    """Civilisation money per book denarius."""
-    return book_to_money(1.0, money_per_labour_hour)
-
-
 
 
 def price_nodes(nodes: Iterable[dict], schedule_wages: Mapping[str, float],
