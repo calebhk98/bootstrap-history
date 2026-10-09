@@ -2,7 +2,7 @@
 
 A trader decides a cargo at the year's start against quotes and is booked at them. The partner's side is real money
 at once (the foreign coin ledger and the route's carriers); the home side is whatever the agent economy's book gave
-the cargo (`economy_port_cargo.py`), or the quote while the agent economy is off. Settling trues the trader's purse
+the cargo (`economy_port_cargo.py`), or the quote where the book took none of it. Settling trues the trader's purse
 up from the booking to the result and closes the partner's tally on what really crossed.
 A leg is a plain dict kept in `state.economy.agent_economy["cargo"]`, so a save carries it.
 """

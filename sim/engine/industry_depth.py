@@ -111,9 +111,8 @@ class IndustryDepthMixin:
     def seed_opening_industry_experience(self):
         """Once, from the opening's own state: each technique the society already runs (granted) starts at
         the steady state of the worker-years its opening producers employ a year against the yearly fade, as
-        if it had been running long. Without an agent economy there are no opening producers, so one
-        founding-size concern stands in (the scale ceiling is then off, see agents_port.scale_ceiling).
-        A technique nobody runs starts at zero."""
+        if it had been running long. A technique no opening producer runs gets one founding-size concern's
+        worker-years."""
         projects = self.state.projects
         if projects.industry_seeded or not projects.granted:
             return
@@ -128,13 +127,13 @@ class IndustryDepthMixin:
 
     def opening_worker_years_by_node(self):
         """Worker-years a year the agent economy's producers put into each technique's own entries; None
-        while there is no agent economy."""
-        agent = self.economy.agent
-        if agent is None:
+        while the economy opens."""
+        by_recipe = self.economy.agent_worker_years_by_recipe()
+        if by_recipe is None:
             return None
         gate = {key: entry.get("requires_node") for key, entry in default_production_entries().items()}
         years = {}
-        for recipe_id, worker_years in agent.worker_years_by_recipe().items():
+        for recipe_id, worker_years in by_recipe.items():
             node_id = gate.get(recipe_id)
             if node_id is not None:
                 years[node_id] = years.get(node_id, 0.0) + worker_years

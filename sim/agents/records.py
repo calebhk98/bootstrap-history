@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Set
 
 from .edges import Edge
+from .purses import Purses
 
 
 @dataclass
@@ -136,30 +137,6 @@ class ActorRecord:
 
 
 @dataclass
-class CapitalMarketRecord:
-	"""A civilisation's loanable-funds market as it stood at its last yearly meeting."""
-	# yearly market rate; 0 until the market has met, when the civilisation's starting rate stands
-	rate: float = 0.0
-	# funds demanded per unit held at the first meeting: the balance at which the rate is the starting rate
-	reference_utilisation: float = 0.0
-	# funds lenders hold, by source (households, firms, founder, state), and in all
-	supply_by_source: Dict[str, float] = field(default_factory=dict)
-	supply: float = 0.0
-	# borrowing by the economy the simulation does not model actor by actor
-	background: float = 0.0
-	# what lenders will advance to modelled borrowers in all (before what is already lent)
-	capacity: float = 0.0
-	# actor id -> what it owed at the meeting
-	loans: Dict[str, float] = field(default_factory=dict)
-	# interest borrowers have paid and lenders not yet been paid; and running totals of each side
-	interest_pool: float = 0.0
-	interest_paid_total: float = 0.0
-	interest_received_total: float = 0.0
-	# the part of what lenders received that went to the society's savers (households, not modelled by actor)
-	interest_to_households: float = 0.0
-
-
-@dataclass
 class CountryProfile:
 	"""What one country starts a game with: read from its civilisation file when the cast is seeded,
 	then saved with the game, so every save keeps the countries it began with."""
@@ -204,22 +181,23 @@ class CastEntry:
 class ActorsState:
 	"""Every actor other than the founder's household, keyed by actor id."""
 	records: Dict[str, ActorRecord] = field(default_factory=dict)
-	# civilisation id -> its loanable-funds market
-	markets: Dict[str, CapitalMarketRecord] = field(default_factory=dict)
 	# the game's roster as seeded at its first actor year, and the countries in it; empty until then
 	cast: Dict[str, CastEntry] = field(default_factory=dict)
 	countries: Dict[str, CountryProfile] = field(default_factory=dict)
 	# the founder's own country (the civilisation the game was started with)
 	home_country: str = ""
-	# named edge -> money it has taken in less what it has paid out, and the money that crossed it either way
-	edges: Dict[str, float] = field(default_factory=dict)
-	edge_volume: Dict[str, float] = field(default_factory=dict)
+	# every actor's money, as accounts in a book with the edges among them, and the debts as loan claims (purses.py)
+	purses: Any = field(default_factory=Purses)
 	# named edge -> material -> tonnes of goods it holds (stolen stock goes to the thieves' edge)
 	edge_goods: Dict[str, Dict[str, float]] = field(default_factory=dict)
 	# concern id -> the takings of a lone operator that entrants expect, and the year it was last revised
 	expected_takings: Dict[str, float] = field(default_factory=dict)
 	expected_takings_year: Dict[str, int] = field(default_factory=dict)
 
+	def __post_init__(self) -> None:
+		if isinstance(self.purses, dict):
+			self.purses = Purses.from_record(self.purses)
+
 	def edge(self, name: str) -> Edge:
 		"""The named edge, an account outside the actors that a posting can name as its counterparty."""
-		return Edge(name, self.edges, self.edge_volume, self.edge_goods)
+		return Edge(name, self.purses, self.edge_goods)

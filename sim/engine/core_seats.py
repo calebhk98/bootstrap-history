@@ -14,6 +14,7 @@ class SeatMixin:
 		if seat_id in self.state.seats:
 			raise ValueError("seat %r already exists" % (seat_id,))
 		self.state.seats[seat_id] = seat
+		self.state.attach_purses()
 		self._seat_facades[seat_id] = self._new_facade(seat_id)
 
 	def _new_facade(self, seat_id: str) -> Household:

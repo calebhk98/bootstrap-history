@@ -139,7 +139,7 @@ def run_two_years(places):
 		counts.append(len(registry_module_run))
 		run_registry.advance(run_world)
 		run_world.new_year()
-	return counts, {key: (record.money, sorted(record.routes)) for key, record in sorted(run_registry.state.records.items())}
+	return counts, {key: (run_registry.get(key).money, sorted(record.routes)) for key, record in sorted(run_registry.state.records.items())}
 
 
 first_run = run_two_years(["a", "b", "c", "d"])

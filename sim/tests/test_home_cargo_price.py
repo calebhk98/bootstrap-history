@@ -25,8 +25,7 @@ TRADER = "trader:test"
 
 
 def agent_game():
-    game = S.Sim(NODES, ORDER, random.Random(1), events=True, manual=False, civ=S.load_civ("rome_100ad"),
-                 cfg={"agent_economy": True})
+    game = S.Sim(NODES, ORDER, random.Random(1), events=True, manual=False, civ=S.load_civ("rome_100ad"))
     game.goal, game.done_year = GOAL, {}
     return game
 

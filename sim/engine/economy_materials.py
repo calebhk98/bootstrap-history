@@ -254,9 +254,9 @@ class MaterialSupplyMixin:
         return (cid, "mine:" + cid)
 
     def producer_capacity_tonnes(self, material):
-        """Tonnes a year the agent economy's producers can make of `material`; zero without one."""
-        agent = self.economy.agent
-        return 0.0 if agent is None else agent.producer_capacity_tonnes(material)
+        """Tonnes a year the agent economy's producers can make of `material`; zero while it opens."""
+        tonnes = self.economy.agent_producer_capacity_tonnes(material)
+        return 0.0 if tonnes is None else tonnes
 
     def _generic_national_output_t_per_yr(self, tag):
         return self._done_memo("national_output", tag,

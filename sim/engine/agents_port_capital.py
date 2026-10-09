@@ -33,9 +33,9 @@ class CapitalView:
 		"""(what the state has out on loan, the yearly rate lenders earn) at the last meeting."""
 		return self._sim.state_lending()
 
-	def note_interest_paid(self, amount: float) -> None:
-		"""A borrower's interest joins the pool lenders are paid from."""
-		self._sim.economy.report_interest_paid(amount)
+	def pay_interest(self, payer: Any, owed: float, purpose: str = "interest") -> None:
+		"""A borrower pays the interest on its debt to its lenders."""
+		self._sim.pay_interest(payer, owed, purpose)
 
 	def household_saving(self) -> float:
 		"""Yearly saving of the society's households: a share of the income above subsistence, with

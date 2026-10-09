@@ -31,8 +31,8 @@ def actor_sim(extra_nodes):
 	nodes = copy.deepcopy(NODES)
 	for node in extra_nodes:
 		nodes[node["id"]] = node
-	game = S.Sim(nodes, list(ORDER), random.Random(1), events=False, manual=True,
-	             civ=S.load_civ("rome_100ad"), cfg={"agent_economy": False})   # legacy: firms sell into the engine's yearly material market
+	game = build_unopened(lambda: S.Sim(nodes, list(ORDER), random.Random(1), events=False, manual=True,
+	             civ=S.load_civ("rome_100ad")))
 	game.goal, game.done_year = GOAL, {}
 	return game
 

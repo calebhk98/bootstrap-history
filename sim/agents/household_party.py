@@ -111,6 +111,23 @@ class HouseholdParty:
 			self.household.done.update(chain)
 			self.household.granted.update(chain)
 
+	@property
+	def purses(self) -> Any:
+		with self._acting():
+			return self.household.purses
+
+	@property
+	def account_id(self) -> str:
+		return self.actor_id
+
+	def note_income(self, purpose: Any, amount: float) -> None:
+		with self._acting():
+			self.household.note_income(purpose, amount)
+
+	def note_outlay(self, purpose: Any, amount: float) -> None:
+		with self._acting():
+			self.household.note_outlay(purpose, amount)
+
 	def credit(self, amount: float, purpose: Any) -> None:
 		with self._acting():
 			self.household.credit(amount, purpose)

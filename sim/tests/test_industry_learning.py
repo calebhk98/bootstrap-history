@@ -81,7 +81,7 @@ class InputSupply(unittest.TestCase):
 def concern_world(producers, days, depths=None):
     """A stand-in Sim for the input supply: `producers` {good: [(tile, recipe)]}, `days` to the base."""
     stub = types.SimpleNamespace(
-        economy=types.SimpleNamespace(agent=types.SimpleNamespace(producers_by_good=lambda: producers)),
+        economy=types.SimpleNamespace(agent_producers_by_good=lambda: producers),
         state=types.SimpleNamespace(scenario=types.SimpleNamespace(year=10)))
     stub._done_memo = lambda name, key, compute: compute()
     stub.industry_depth = lambda node_id: (depths or {}).get(node_id, 0.0)
@@ -104,9 +104,13 @@ class ConcernInputs(unittest.TestCase):
         stub = concern_world({"grain": [("farms", "grow")]}, 365.0)
         self.assertEqual(Concern.concern_input_availability(stub, "bake", {"grain": 5.0}), 1.0)
 
-    def test_without_an_agent_economy_inputs_are_not_counted(self):
+    def test_a_concern_buying_nothing_has_all_its_inputs(self):
         stub = concern_world({}, 10.0)
-        stub.economy.agent = None
+        self.assertEqual(Concern.concern_input_availability(stub, "smelt", {}), 1.0)
+
+    def test_while_the_economy_opens_inputs_are_not_counted(self):
+        stub = concern_world({}, 10.0)
+        stub.economy.agent_producers_by_good = lambda: None
         self.assertEqual(Concern.concern_input_availability(stub, "smelt", {"ore": 10.0}), 1.0)
 
     def test_an_unreachable_producer_is_not_counted(self):

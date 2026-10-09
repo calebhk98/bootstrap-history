@@ -226,8 +226,6 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, DisclosureView, Cap
 
 	def scale_ceiling(self, node_id: str) -> float:
 		"""The most founding sizes one concern of this kind can be run at, from the industry's experience."""
-		if not self.runs_agent_economy():
-			return float("inf")  # no opening producers to size the industry from
 		return float(self._sim.industry_scale_ceiling(node_id))
 
 	def concern_takings(self, node_id: str, opened_year: int, rivals: float = 0.0, capacity: float = 1.0) -> float:
@@ -252,20 +250,24 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, DisclosureView, Cap
 		return supply.materials_made_by(node_id)
 
 	def market_forget(self, actor_id: str) -> None:
-		"""An actor's standing sales and purchases in the one goods market end; it deals afresh this year."""
-		self._sim.economy.goods.forget(actor_id)
-
-	def runs_agent_economy(self) -> bool:
-		return self._sim.economy.runs_agent_economy()
+		"""An actor's sales and purchases noted for this year's market end; it deals afresh."""
+		self._sim.economy.forget_actor_orders(actor_id)
 
 	def market_sale(self, seller_id: str, material: str, tonnes: float, from_concerns: Any = None) -> None:
 		"""An actor sells `tonnes` of a material into the one goods market this year. One whose concerns
-		made it, [(node id, tonnes)], will not sell below what they cost it to make."""
-		self._sim.economy.offer_sale(seller_id, material, tonnes, from_concerns)
+		made it, [(node id, tonnes)], will not sell below what they cost it to make. The goods are offered in the agent
+		economy's book and the proceeds reach the seller's purse when the year's market has cleared."""
+		self._sim.economy.note_actor_sale(seller_id, material, tonnes, from_concerns)
 
-	def market_purchase(self, buyer_id: str, commodity: str, tonnes: float) -> None:
-		"""An actor buys `tonnes` of a commodity at the one goods market this year."""
-		self._sim.economy.goods.note_purchase(buyer_id, commodity, tonnes)
+	def market_purchase(self, buyer_id: str, commodity: str, tonnes: float, budget: float = 0.0) -> None:
+		"""An actor buys `tonnes` of a commodity at the one goods market this year: it bids for them in the agent
+		economy's book, paying up to `budget` out of its purse."""
+		self._sim.economy.note_actor_purchase(buyer_id, commodity, tonnes, budget)
+
+	def sells_on_book(self, node_id: str) -> bool:
+		"""Whether what a concern makes is sold in the agent economy's book, so its takings are the market's and not the
+		engine's estimate."""
+		return any(self._sim.economy.agent_trades_good(material) for material in supply.materials_made_by(node_id))
 
 	def concern_output_tonnes(self, node_id: str, material: str, opened_year: int, staffed: float) -> float:
 		node = self.nodes[node_id]

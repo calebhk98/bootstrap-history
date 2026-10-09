@@ -1,5 +1,5 @@
 """Actors other than the founder, run once a year inside the simulation."""
-from sim.agents.api import ActorRegistry, edges, ledger, payroll, SOLDIER_TRADE
+from sim.agents.api import ActorRegistry, ledger, payroll, SOLDIER_TRADE
 from .actor_kinds_data import register_mod_actor_kinds
 from .agents_port import SimWorld
 from .agents_port_cast import seed_opening_cast
@@ -34,10 +34,6 @@ class ActorsMixin:
     def pay_wages(self, amount, purpose):
         """The founder's household pays wages: the home country's people receive them."""
         payroll.pay_wages(self.actors, self.state.household, amount, purpose, self)
-
-    def pay_savers(self, amount):
-        """Interest due to households as lenders is paid out of the interest edge to the savers."""
-        payroll.pay_savers(self.actors, self.edge(edges.EDGE_INTEREST), amount)
 
     def receive_from_edge(self, edge_name, amount, purpose):
         """A named edge pays the founder's household."""
@@ -133,7 +129,7 @@ class ActorsMixin:
     def _advance_actors_year(self, year):
         seed_opening_cast(self)
         self.state_treasury()
-        self.update_capital_market()
+        self.refresh_lender_offers()
         self.actors.advance(SimWorld(self))
         self.accrue_industry_experience()
         self.charge_actors_for_keeping_coin()

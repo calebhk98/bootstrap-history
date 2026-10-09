@@ -7,6 +7,7 @@ QUICK_TOPIC = True
 import types
 import unittest
 
+from sim.agents.purses import Purses
 from sim.agents.edges import Edge, EDGE_THIEVES
 from sim.engine import theft_exposure
 from sim.engine.holdings_exposure import Exposure, GoodsLot, HoldingsExposureMixin, split_purse
@@ -28,8 +29,8 @@ class Purse:
 
 
 def world_with_thieves():
-    balances, goods = {}, {}
-    thieves = Edge(EDGE_THIEVES, balances, {}, goods)
+    balances, goods = Purses(), {}
+    thieves = Edge(EDGE_THIEVES, balances, goods)
     return types.SimpleNamespace(edge=lambda name: thieves), thieves, balances
 
 
@@ -61,7 +62,7 @@ class StolenGoodsLeaveTheStock(unittest.TestCase):
         exposure, stock = exposure_of(purse, coin=1000.0, goods_tonnes=0.0, land=1e6, loans=0.0)
         taken = TheftChargeMixin.steal_from(world, purse, exposure, EVENT, **CALM)
         self.assertGreater(taken, 0.0)
-        self.assertAlmostEqual(purse.money + balances[EDGE_THIEVES], 1000.0)
+        self.assertAlmostEqual(purse.money + balances.purse(EDGE_THIEVES), 1000.0)
         self.assertAlmostEqual(taken, 1000.0 * theft_exposure.share_taken("coin", EVENT, **CALM))
 
     def test_goods_lose_a_smaller_share_than_coin(self):
@@ -78,7 +79,7 @@ class StolenGoodsLeaveTheStock(unittest.TestCase):
         taken = TheftChargeMixin.steal_from(world, purse, exposure, 1.0, **CALM)
         self.assertLessEqual(taken, 30.0)
         self.assertGreaterEqual(purse.money, 0.0)
-        self.assertAlmostEqual(purse.money + balances[EDGE_THIEVES], 30.0)
+        self.assertAlmostEqual(purse.money + balances.purse(EDGE_THIEVES), 30.0)
 
     def test_a_bigger_event_takes_proportionally_more_of_what_is_portable(self):
         for kind in ("coin", "goods", "loans"):
@@ -125,8 +126,8 @@ class FounderSeat(types.SimpleNamespace):
 
 def founder_seat(farm_hectares=10.0):
     stock = {"iron": 40.0}
-    balances, goods = {}, {}
-    thieves = Edge(EDGE_THIEVES, balances, {}, goods)
+    balances, goods = Purses(), {}
+    thieves = Edge(EDGE_THIEVES, balances, goods)
     household = Purse(2000.0)
     household.capital = 0.0
     household.protection = 0.0
@@ -164,7 +165,7 @@ class FounderHoldings(unittest.TestCase):
         household = seat.state.household
         taken = TheftChargeMixin.plunder_founder(seat, 0.6, "sack and plunder", order_holds=False)
         self.assertGreater(taken, 0.0)
-        self.assertAlmostEqual(household.money + seat.balances[EDGE_THIEVES], 2000.0)
+        self.assertAlmostEqual(household.money + seat.balances.purse(EDGE_THIEVES), 2000.0)
         self.assertLess(seat.stock["iron"], 40.0)
         self.assertLess(seat.farm_stock_kg, 20000.0)
         self.assertAlmostEqual(seat.thieves.goods_held()["iron"], 40.0 - seat.stock["iron"])

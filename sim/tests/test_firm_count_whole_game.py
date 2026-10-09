@@ -1,5 +1,5 @@
 """Complaint 345, whole game: the number of firms in a niche follows what a firm carries (site rent from the
-engine's land price while the agent economy is off, a manager's hours) against what the market pays, with no
+engine's land price while the economy opens, a manager's hours) against what the market pays, with no
 cap on entrants a year. Slow topic: it builds games and runs decades.
 
 Re-measure: `python3 -m sim.tests --slow --only firm_count_whole_game`."""
@@ -26,8 +26,8 @@ def make_node(revenue):
 def new_game(revenue):
 	nodes = copy.deepcopy(NODES)
 	nodes["zz_count"] = make_node(revenue)
-	game = S.Sim(nodes, list(ORDER), random.Random(1), events=False, manual=True,
-	             civ=S.load_civ("rome_100ad"), cfg={"agent_economy": False})
+	game = build_unopened(lambda: S.Sim(nodes, list(ORDER), random.Random(1), events=False, manual=True,
+	             civ=S.load_civ("rome_100ad")))
 	game.goal, game.done_year = GOAL, {}
 	game.market_rate = lambda: 0.12
 	year = game.state.scenario.year
@@ -57,7 +57,7 @@ small_game, small_counts = firms_after(2.0e5, 30)
 big_game, big_counts = firms_after(2.0e6, 30)
 world = SimWorld(big_game)
 
-check("with the agent economy off a concern still pays rent, at the engine's land price",
+check("while the economy opens a concern still pays rent, at the engine's land price",
       world.site_rent("zz_count") > 0.0, world.site_rent("zz_count"))
 check("a bigger market holds more firms", big_counts[-1] > small_counts[-1], (small_counts[-1], big_counts[-1]))
 check("firms grow no faster than the market they share", big_counts[-1] <= 10.0 * max(1, small_counts[-1]) + 1,

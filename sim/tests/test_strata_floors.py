@@ -33,7 +33,8 @@ def run_one_year(money, floor_costs):
     world = FloorWorld(floor_costs)
     strata_spawner(registry, world)
     body = registry.actors["stratum:home:body"]
-    body.record.money = body.record.allowance = money
+    body.money = money
+    body.record.allowance = money
     registry.advance(world)
     return body.record
 

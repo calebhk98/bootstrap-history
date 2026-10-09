@@ -147,6 +147,18 @@ def _civilisation(civilization_id):
         return json.load(handle)
 
 
+def _climate_basket(basket, civilisation):
+    """The basket with the warmth, clothing and shelter floors the climate of the civilisation's tiles sets,
+    as households face them (the installed mods' map)."""
+    from sim.engine import market_demand
+    from sim.engine.mods import get_ordered_mods
+    from sim.geography.api import open_map
+    from sim.world import need_basket
+    world_map = open_map([(manifest.id, manifest.directory)
+                          for manifest in get_ordered_mods(os.path.join(_ROOT, "mods"))])
+    return need_basket.mean_climate_basket(basket, market_demand.climate_records(civilisation, world_map))
+
+
 def build_demand_anchors(civilization_id=None, supply_by_material=None, civilization=None):
     """NeedDemandAnchors for a civilisation, or None when nothing is anchorable.
 
@@ -181,4 +193,6 @@ def build_demand_anchors(civilization_id=None, supply_by_material=None, civiliza
     technology_demand = need_demand.technology_material_demand(
         catalog.load_mod_tree_nodes(_ROOT), set(civilisation.get("starting_techs") or ()))
     model = need_demand.NeedDemandModel(needs, production, bins, technology_demand)
+    model.basket = _climate_basket(model.basket, civilisation)
+    model.subsistence = {need.need_id: need.subsistence_per_person for need in model.basket.needs}
     return need_demand.NeedDemandAnchors(model, supply_by_material, table_supply)

@@ -54,14 +54,6 @@ def competition_markup_share(houses, flexibility):
     return monopoly_markup_share(flexibility) / max(1.0, houses)
 
 
-def retained_share(return_on_capital, market_rate):
-    """Share of what merchants earn above cost that they put back into trade: the part of their
-    whole return (the market's rate plus the return above it) that is above the market's rate."""
-    excess = max(0.0, return_on_capital)
-    if math.isinf(excess):
-        return 1.0
-    return excess / (excess + max(0.0, market_rate)) if excess > 0.0 else 0.0
-
 
 def selling_years(cargo_tonnes, demand_tonnes_per_year, houses):
     """Years the average tonne of a cargo waits to be sold: the market takes its demand a year and
@@ -89,21 +81,6 @@ def wait_years(round_trip_years, carriers):
         return math.inf
     return 0.0 if math.isinf(carriers) else round_trip_years / carriers
 
-
-def redirect_share_per_year(round_trip_years):
-    """Share of a route's flow that can change cargo or direction in a year: a carrier changes only
-    when it is home, once a round trip."""
-    return 1.0 if round_trip_years <= 1.0 else 1.0 / round_trip_years
-
-
-def capital_to_finance(own_capital, credit_room):
-    """Money merchants can put into goods: their own, and what they borrow against it up to the room
-    lenders have left (`None`: not yet known, so only the borrowing their own capital supports)."""
-    own = max(0.0, own_capital)
-    borrowed = BORROWING_PER_OWN_CAPITAL * own
-    if credit_room is not None:
-        borrowed = min(borrowed, max(0.0, credit_room))
-    return own + borrowed
 
 
 def agent_cost_per_tonne(lift_years_per_tonne, hours_per_person_year, wage_per_hour, agents_per_carrier):

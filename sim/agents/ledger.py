@@ -35,8 +35,15 @@ def transfer(payer: Any, payee: Any, amount: float, purpose: Purpose) -> None:
 	"""
 	if amount == 0:
 		return
-	payer.debit(amount, purpose)
-	payee.credit(amount, purpose)
+	purses = getattr(payer, "purses", None)
+	if purses is not None and getattr(payee, "purses", None) is purses:
+		# both keep accounts in the one book: a single posting, the payer drawing on its facility if short
+		purses.transfer(payer.account_id, payee.account_id, amount, purposes_label(purpose))
+		payer.note_outlay(purpose, amount)
+		payee.note_income(purpose, amount)
+	else:
+		payer.debit(amount, purpose)
+		payee.credit(amount, purpose)
 	hook = AFTER_TRANSFER[0]
 	if hook is not None:
 		AFTER_TRANSFER[0] = None
@@ -44,6 +51,11 @@ def transfer(payer: Any, payee: Any, amount: float, purpose: Purpose) -> None:
 			hook(payer, payee, amount, purpose)
 		finally:
 			AFTER_TRANSFER[0] = hook
+
+
+def purposes_label(purpose: Purpose) -> str:
+	"""A posting's purpose as the book's one label."""
+	return purpose if isinstance(purpose, str) else "+".join(sorted(purpose))
 
 
 def settle(account: Any, other: Any, new_balance: float, purpose: Purpose) -> None:

@@ -10,7 +10,6 @@ from typing import Any, Callable, Dict, List, Tuple
 
 from sim.agents.api import joint_stock
 from sim.labour.api import wage_provider
-from sim.world import capital_market
 
 
 @dataclass
@@ -55,14 +54,6 @@ def _add_lot(exposure: Exposure, lot: GoodsLot) -> None:
 
 class HoldingsExposureMixin:
     """Mixed into `Sim`."""
-
-    def lent_share(self):
-        """Share of lenders' funds out on loan at the last meeting of the market (as `state_lending` reads it)."""
-        record = self._market_record()
-        if record is None or record.supply <= 0.0:
-            return 0.0
-        demanded = capital_market.utilisation(record.background + sum(record.loans.values()), record.supply)
-        return min(1.0 - capital_market.LENDER_RESERVE_SHARE, demanded)
 
     def actor_exposure(self, actor, price_of_tonne, find_actor):
         """What a firm or a state keeps: its purse, the stores it holds, and the shares it owns in others."""

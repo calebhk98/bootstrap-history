@@ -7,10 +7,11 @@ the trader's purse, goods the market did not take back over the partner's edge. 
 
 QUICK_TOPIC = True
 
+import dataclasses
 import unittest
 
 from sim.economy import api as economy_api
-from sim.economy import money_audit
+from sim.economy import money_audit, taxes
 from sim.engine import economy_port_cargo as cargo
 from sim.tests import economy_fixture as fixture
 
@@ -42,7 +43,9 @@ def year_with(economy, legs):
     moves, orders, fundings = cargo.cargo_orders(economy, legs, tonnes_per_unit)
     economy_api.move_goods(economy, moves)
     economy_api.post_transfers(economy, fundings)
-    outcome = economy.step(fixture.quiet_year(economy.setup, engine_orders=orders))
+    imports, exports = cargo.border_accounts(economy, legs)
+    outcome = economy.step(dataclasses.replace(fixture.quiet_year(economy.setup, engine_orders=orders),
+                                               import_accounts=imports, export_accounts=exports))
     return outcome, cargo.close_cargo_accounts(economy, legs, tonnes_per_unit)
 
 
@@ -65,6 +68,23 @@ class CargoInTheBook(unittest.TestCase):
         unsold_units = (400.0 - sold["tonnes"]) * UNITS_PER_TONNE
         returned = -book.edge_goods_net(economy_api.external_edge(PARTNER), fixture.GRAIN)
         self.assertAlmostEqual(returned, unsold_units, delta=1e-3 * 400.0 * UNITS_PER_TONNE)
+
+    def test_a_landing_cargo_pays_the_states_import_duty_out_of_its_takings(self):
+        taxed, free = warmed(), warmed()
+        taxed.setup = dataclasses.replace(taxed.setup, tax_forms=(taxes.TaxForm("customs", "imports_value", 0.1),),
+                                          state_capacity=1.0)
+        landing = leg("in", 400.0, paid=100.0, received=100.0)
+        state, currency = taxed.setup.state_agent, taxed.setup.currency_id
+        state_before = taxed.record.book.balance(state, currency)
+        free_before = free.record.book.balance(state, currency)
+        _outcome, with_duty = year_with(taxed, [landing])
+        _outcome, without = year_with(free, [landing])
+        duty = without[landing["id"]]["money"] - with_duty[landing["id"]]["money"]
+        self.assertGreater(duty, 0.0)
+        self.assertAlmostEqual(duty, 0.1 * without[landing["id"]]["money"], places=6 - 3)
+        gained = taxed.record.book.balance(state, currency) - state_before
+        self.assertAlmostEqual(gained - (free.record.book.balance(state, currency) - free_before), duty / taxed.setup.coin_per_unit,
+                               delta=1e-6 * max(1.0, duty))
 
     def test_a_taking_cargo_raises_the_home_price_and_returns_what_it_did_not_spend(self):
         economy = warmed()

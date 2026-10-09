@@ -52,11 +52,11 @@ class CoinHoardMixin:
         home_pay = max(1e-9, world.pay_per_person_year(KEEPING_PAY_TRADE))
         for actor in self.actors.actors.values():
             record = actor.record
-            if record.exited_year is not None or record.money <= 0.0 or record.stratum:
+            if record.exited_year is not None or actor.money <= 0.0 or record.stratum:
                 continue
             country = record.country
             at_home = country in (None, self.actors.state.home_country)
-            cost = self.coin_keeping_cost_per_year(record.money)
+            cost = self.coin_keeping_cost_per_year(actor.money)
             if not at_home:
                 cost *= self.actors.world_for(actor, world).pay_per_person_year(KEEPING_PAY_TRADE) / home_pay
             if cost > 0.0:

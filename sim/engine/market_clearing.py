@@ -125,8 +125,7 @@ class MarketClearingMixin:
         signature = (self.population.total,
                      entry["capacity_tonnes"], entry["stock_tonnes"],
                      self._market_flow_figures(commodity, with_flows),
-                     self.actor_market_version(), self.state.scenario.year,
-                     tuple(self.foreign_economies()), self.actor_trade_signature())
+                     self.actor_market_version(), self.state.scenario.year)
         cache = getattr(self.household, "_market_outcome_cache", None)
         if cache is None:
             cache = self.household._market_outcome_cache = {}
@@ -134,13 +133,9 @@ class MarketClearingMixin:
         cached = cache.get((commodity, with_flows))
         if cached is not None and cached[0] == signature and cached[2] is prices:
             return cached[1]
-        conditions, trade_flows = self.foreign_trade(
-            commodity, entry, self._market_conditions(commodity, entry, with_flows))
+        conditions = self._market_conditions(commodity, entry, with_flows)
         result = (conditions, market.clear_market(conditions))
         cache[(commodity, with_flows)] = (signature, result, prices)
-        self.household._trade_tonnes_cache = getattr(self.household, "_trade_tonnes_cache", {})
-        self.household._trade_tonnes_cache[(commodity, with_flows)] = sum(
-            flow for _id, flow, _outcome in trade_flows)
         return result
 
     # ---- what callers read --------------------------------------------------
@@ -186,7 +181,6 @@ class MarketClearingMixin:
                 market.society_sales_displaced_by_founder(closing_conditions),
             "unsold_tonnes": closing.unsold_tonnes,
             "unmet_demand_tonnes": closing.unmet_demand_tonnes,
-            "trade_tonnes": self.household._trade_tonnes_cache[(commodity, True)],
         }
 
     # ---- the turn of the year -----------------------------------------------
@@ -198,42 +192,11 @@ class MarketClearingMixin:
             self._market_entry(self._material_tag(material)[0])
 
     def _step_market(self):
-        """Close the year: capacity follows the price, unsold goods carry on. Every commodity clears at the
-        price level the year opened with; the coin the year's trade moves counts from the next year."""
+        """Close the year: the agent economy's year runs, then the partners' books close on what crossed."""
         self.finish_ways()
         self._open_market_book()
-        if self.economy.run_agent_year():
-            self.close_partner_books()
-            self._close_real_output()
-            self.revalue_coin_metals()
-            self.record_wage_market_ratios()
-            return
-        self._price_level_held = self.home_price_level()
-        try:
-            self._close_commodities()
-        finally:
-            self._price_level_held = None
-        self.settle_trader_cargo(None)
-        self.close_partner_books(cargo_only=True)
-        self.foreign_fleet_year_end()
+        self.economy.run_agent_year()
+        self.close_partner_books()
         self._close_real_output()
         self.revalue_coin_metals()
         self.record_wage_market_ratios()
-
-    def _close_commodities(self):
-        book = self.state.economy.market_book
-        for commodity in sorted(book):
-            entry = book[commodity]
-            conditions, trade_flows = self.foreign_trade(
-                commodity, entry, self._market_conditions(commodity, entry, True))
-            outcome = market.clear_market(conditions)
-            self.foreign_trade_year_end(commodity, entry, trade_flows)
-            if self.home_makes_commodity(commodity, trade_flows):
-                entry["capacity_tonnes"] = market.adjusted_capacity(
-                    entry["capacity_tonnes"], outcome.price_ratio)
-            entry["stock_tonnes"] = market.stock_after_year(outcome)
-            entry["price_ratio"] = outcome.price_ratio
-            entry["society_sales_tonnes"] = outcome.society_sales_tonnes
-            entry["traded_tonnes"] = outcome.quantity_traded_tonnes
-            wanted = outcome.quantity_traded_tonnes + outcome.unmet_demand_tonnes
-            entry["cleared_share"] = outcome.quantity_traded_tonnes / wanted if wanted > 0.0 else 1.0

@@ -7,6 +7,9 @@ suppliers) is where those actors' purses land once they exist.
 """
 from typing import Any, Dict, Optional
 
+from .ledger import purposes_label
+from .purses import COIN, EDGE_OUTSIDE
+
 EDGE_WORKERS = "edge:workers"            # wages and fees paid to people the founder's labour market holds
 EDGE_SUPPLIERS = "edge:suppliers"        # inputs, upkeep and project work bought from the economy
 EDGE_CUSTOMERS = "edge:customers"        # what the economy pays for a concern's takings
@@ -31,14 +34,13 @@ EDGE_THIEVES = "edge:thieves"            # what thieves take; people in the econ
 
 
 class Edge:
-	"""One named edge, reading and writing its balance and volume in the state that holds it."""
+	"""One named edge: an account outside the actors in the purses' book, whose goods (stolen stock) it also holds."""
 
-	def __init__(self, name: str, balances: Dict[str, float], volumes: Dict[str, float],
-				 goods: Optional[Dict[str, Dict[str, float]]] = None) -> None:
+	def __init__(self, name: str, purses: Any, goods: Optional[Dict[str, Dict[str, float]]] = None) -> None:
 		self.name = name
 		self.actor_id = name
-		self._balances = balances
-		self._volumes = volumes
+		self.account_id = name
+		self.purses = purses
 		self._goods = goods if goods is not None else {}
 
 	def receive_goods(self, material: str, tonnes: float) -> None:
@@ -50,12 +52,24 @@ class Edge:
 		"""Tonnes of each material the edge holds."""
 		return dict(self._goods.get(self.name, {}))
 
+	def balance(self) -> float:
+		"""Money the edge has taken in less what it has paid out."""
+		return self.purses.purse(self.name)
+
+	def volume(self) -> float:
+		"""Money that crossed the edge either way."""
+		return self.purses.book.edge_volume(self.name, COIN)
+
 	def credit(self, amount: float, purpose: Any) -> None:
 		"""Money paid to the edge."""
-		self._balances[self.name] = self._balances.get(self.name, 0.0) + float(amount)
-		self._volumes[self.name] = self._volumes.get(self.name, 0.0) + abs(float(amount))
+		self.purses.transfer(EDGE_OUTSIDE, self.name, float(amount), purposes_label(purpose))
 
 	def debit(self, amount: float, purpose: Any) -> None:
 		"""Money paid out by the edge."""
-		self._balances[self.name] = self._balances.get(self.name, 0.0) - float(amount)
-		self._volumes[self.name] = self._volumes.get(self.name, 0.0) + abs(float(amount))
+		self.purses.transfer(self.name, EDGE_OUTSIDE, float(amount), purposes_label(purpose))
+
+	def note_income(self, purpose: Any, amount: float) -> None:
+		"""An edge keeps no books by purpose; the book holds what crossed it."""
+
+	def note_outlay(self, purpose: Any, amount: float) -> None:
+		"""An edge keeps no books by purpose."""

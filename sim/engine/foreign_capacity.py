@@ -73,23 +73,6 @@ def household_tonnes_by_material(civilization_id):
 
 class ForeignCapacityMixin:
 
-    def home_unmade_demand_tonnes(self, commodity):
-        """Tonnes a year this society's own households want of a commodity
-        it cannot make, from the same model at its own prices and size now;
-        zero when no household good is part of the commodity."""
-        prices = self.goods_market.household_prices()
-        cache = getattr(self.household, "_home_final_tonnes_cache", None)
-        if cache is None or cache[0] is not prices:
-            per_hour = self.labour.money_per_labour_hour()
-            tonnes = budget_scaled_final_tonnes(
-                {material: price / per_hour for material, price in prices.items() if price > 0.0},
-                self._opening_population())
-            by_commodity = {}
-            for material, amount in sorted(tonnes.items()):
-                key = self._material_tag(material)[0]
-                by_commodity[key] = by_commodity.get(key, 0.0) + amount
-            cache = self.household._home_final_tonnes_cache = (prices, by_commodity)
-        return cache[1].get(commodity, 0.0) * self.household_demand_ratio(commodity)
 
     def foreign_supply_tonnes(self, civilization_id, material):
         """Tonnes a year a partner can sell of a material: what its own techniques, inputs and regions

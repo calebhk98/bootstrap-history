@@ -49,7 +49,7 @@ before = total_money(registry.actors.values())
 paid = licence.collect_patent_royalty(world, registry.get, licensee, "loom", 2000.0)
 check("it pays that share of its takings", abs(paid - 200.0) < 1e-9 and abs(holder.money - 350.0) < 1e-9, (paid, holder.money))
 check("the royalty moves through the ledger and conserves money", abs(total_money(registry.actors.values()) - before) < 1e-9)
-licensee.record.money = 20.0
+licensee.money = 20.0
 check("it never pays more than its purse", abs(licence.collect_patent_royalty(world, registry.get, licensee, "loom", 2000.0) - 20.0) < 1e-9)
 world.year = 111
 check("the royalty ends with the patent", licence.collect_patent_royalty(world, registry.get, licensee, "loom", 2000.0) == 0.0)

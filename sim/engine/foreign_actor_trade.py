@@ -40,16 +40,6 @@ class ForeignActorTradeMixin:
         return any(flows.get(material, {}).get(key, 0.0) > 0.0
                    for named, flows in tally.items() if partner is None or named == partner)
 
-    def actors_carry_commodity(self, commodity, partner):
-        """Whether actors have carried any material of the commodity either way with a partner this year."""
-        flows = self.state.economy.foreign_actor_trade.get(partner, {})
-        return any(flows.get(material, {}).get(key, 0.0) > 0.0
-                   for material in self._commodity_materials(commodity) for key in (SOLD, BOUGHT))
-
-    def actor_trade_signature(self):
-        """Changes when the year's tally does, for caches that read the partners' trade."""
-        return sum(flow[SOLD] + flow[BOUGHT] for flows in self.state.economy.foreign_actor_trade.values()
-                   for flow in flows.values())
 
     def partner_price_per_unit(self, partner, material):
         """A partner's price of a material in home money: its solved cost, at its coin's price level and
@@ -82,10 +72,9 @@ class ForeignActorTradeMixin:
         sold, bought = flow[SOLD] + (tonnes if landing else 0.0), flow[BOUGHT] + (0.0 if landing else tonnes)
         return self._partner_outcome(entry, commodity, sold, bought).price_ratio / entry["price_ratio"]
 
-    def close_partner_books(self, cargo_only=False):
+    def close_partner_books(self):
         """Clear each commodity in each partner's book on the year's actor cargo (none for most), so the
-        partner's capacity follows its price and the price follows the cargo; then clear the tally.
-        `cargo_only` leaves alone commodities with no cargo, which the engine's own year closes."""
+        partner's capacity follows its price and the price follows the cargo; then clear the tally."""
         tally = self.state.economy.foreign_actor_trade
         book = self.state.economy.foreign_market_book
         self.state.economy.home_actor_trade.clear()
@@ -99,8 +88,6 @@ class ForeignActorTradeMixin:
             for commodity in sorted(set(book.get(partner, {})) | set(cargo)):
                 entry = self._foreign_entry(partner, commodity, facts)
                 if entry is None:
-                    continue
-                if cargo_only and commodity not in cargo:
                     continue
                 sold, bought = cargo.get(commodity, (0.0, 0.0))
                 outcome = self._partner_outcome(entry, commodity, sold, bought)

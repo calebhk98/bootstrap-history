@@ -40,15 +40,6 @@ def utilisation(demand: float, supply: float) -> float:
     return demand / supply if supply > 0.0 else float("inf")
 
 
-def rate_for_balance(starting_rate: float, current_utilisation: float, reference_utilisation: float) -> float:
-    """The market rate: the starting rate scaled by how the balance has moved from its starting value."""
-    if reference_utilisation <= 0.0 or current_utilisation <= 0.0:
-        return starting_rate * RATE_FLOOR_SHARE
-    if current_utilisation == float("inf"):
-        return starting_rate * RATE_CEILING_SHARE
-    scaled = (current_utilisation / reference_utilisation) ** RATE_ELASTICITY
-    return starting_rate * max(RATE_FLOOR_SHARE, min(RATE_CEILING_SHARE, scaled))
-
 
 def bounded_rate(starting_rate: float, rate: float) -> float:
     """A market rate held under the ceiling: however keen the queue of borrowers, lenders' own risk and the

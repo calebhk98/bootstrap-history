@@ -105,7 +105,7 @@ class Economy:
         setup, record = self.setup, self.record
         self.__dict__.pop("_port_shares", None)
         record.book.start_year()
-        ledger = YearLedger()
+        ledger = YearLedger(import_accounts=frozenset(inputs.import_accounts), export_accounts=frozenset(inputs.export_accounts))
         self._follow_population(inputs)
         self._follow_yields(inputs)
         sites.apply_site_limits(record, setup, inputs.site_limits)

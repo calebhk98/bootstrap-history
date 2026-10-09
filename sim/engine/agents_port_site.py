@@ -49,7 +49,7 @@ class SiteView:
 
 	def land_rent_at(self, tile: Optional[str]) -> float:
 		"""Yearly rent of a hectare on a tile: the agent economy's land market's rent there (the mean rent
-		of the land let where none was let on the tile); the engine's land price while it is off."""
+		of the land let where none was let on the tile); the engine's land price while the economy opens."""
 		rent = self._sim.economy.agent_land_rent_at(tile)
 		if rent is None or rent <= 0.0:
 			return float(self.material_price("hectare_land"))  # type: ignore[attr-defined]

@@ -22,7 +22,7 @@ def _core_state(game):
 
 class HoursFollowTheCoreTests(unittest.TestCase):
 
-    def test_with_the_agent_economy_on_a_trade_with_more_people_has_more_hours(self):
+    def test_a_trade_with_more_people_has_more_hours(self):
         game = sim(civ="rome_100ad", events=False)
         game._demographic_recovery(101)
         before = _non_farm_share(game, "smith")
@@ -39,8 +39,8 @@ class HoursFollowTheCoreTests(unittest.TestCase):
         # people change a little after the year's allocation, so the two totals agree to a percent
         self.assertAlmostEqual(total, game.labour._society_hours_available(), delta=0.01 * total)
 
-    def test_with_the_agent_economy_off_hours_follow_the_need_the_recipes_put_on_each_trade(self):
-        game = sim(civ="rome_100ad", events=False, agent_economy=False)
+    def test_before_the_economy_has_opened_hours_follow_the_need_the_recipes_put_on_each_trade(self):
+        game = unopened_sim(civ="rome_100ad", events=False)
         game._demographic_recovery(101)
         shares = game.labour._non_farm_need_shares()
         for trade, share in shares.items():

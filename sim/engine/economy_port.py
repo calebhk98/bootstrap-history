@@ -4,15 +4,10 @@ The tree, the founder, projects, actors and screens ask this port about prices, 
 and what a concern takes, and post their purchases, sales and hires through it. They do not read
 the price tables, the coin stock or the market book directly, so the model behind the port can
 change without them knowing. This is the only engine module that may import `sim.economy`
-(sim/tests/test_economy_imports.py); today every answer still comes from the engine's own mixins.
+(sim/tests/test_economy_imports.py); the agent economy answers, and the engine's own opening figures answer
+while it opens.
 """
-
-
-def switch_requested(cfg):
-    """True unless a new game opts out of the agent economy (config `agent_economy` False); the
-    environment variable named in economy_port_year.SWITCH_ENVIRONMENT overrides, for comparing runs."""
-    from .economy_port_year import switch_requested as requested
-    return requested(cfg)
+from . import opening_money
 
 
 class EconomyPort:
@@ -22,31 +17,20 @@ class EconomyPort:
         self._sim = sim
         self._agent = None
 
-    # ---- the agent economy (economy_port_year.py), when the game runs on it ---------------------
+    # ---- the agent economy (economy_port_year.py), the game's one economy ---------------------------
     @property
     def agent(self):
-        """The agent economy when this game runs on it and it has opened; else None."""
-        if not self._sim.state.economy.agent_economy.get("on") or not self._has_territory():
-            return None
+        """The game's agent economy (it opens when first asked, or at the game's start)."""
         if self._agent is None:
             from .economy_port_year import AgentEconomy
             self._agent = AgentEconomy(self._sim)
         return self._agent
 
-    def _has_territory(self):
-        """A civilisation that holds no tiles has no markets to run; it stays on the engine's economy."""
-        homes = (tuple(self._sim.civ.get("home_regions") or ()), tuple(self._sim.civ.get("home_tiles") or ()))
-        cached = self.__dict__.get("_territory")
-        if cached is None or cached[0] != homes:
-            from .economy_port_setup import civilisation_tiles
-            cached = self.__dict__["_territory"] = (homes, bool(civilisation_tiles(self._sim.civ, self._sim.world_map)[0]))
-        return cached[1]
-
     def _answering_agent(self):
-        """The agent economy, opened, when it should answer; None while off or while it opens (the
-        opening reads the engine's own figures)."""
+        """The agent economy, opened, when it should answer; None while it opens (the opening reads the
+        engine's own figures)."""
         agent = self.agent
-        if agent is None or self._opening:
+        if self._opening:
             return None
         self.open_agent()
         return agent
@@ -66,28 +50,41 @@ class EconomyPort:
         agent = self._answering_agent()
         return None if agent is None else agent.wage_per_hour(trade, self._sim.acting_country())
 
+    def unskilled_wage(self):
+        """Money one hour of the unskilled trade is paid in the agent economy, or None until the game's money is
+        priced at the economy (the economy's opening reprices it, see reprice_opening_money)."""
+        if not self._sim.state.economy.money_from_economy or self._opening:
+            return None
+        agent = self._answering_agent()
+        return None if agent is None else agent.unskilled_wage_per_hour()
+
     def agent_country(self, country):
-        """What the agent economy answers for a partner country in it, or None (off, not in it, or no wage yet)."""
+        """What the agent economy answers for a partner country in it, or None (not in it, or no wage yet)."""
         agent = self._answering_agent()
         return None if agent is None else agent.country(country)
 
     def agent_land_rent_per_hectare(self):
-        """Mean rent per hectare-year of the agent economy's land market, in coin; None while it is off."""
+        """Mean rent per hectare-year of the agent economy's land market, in coin; None while it opens."""
         agent = self._answering_agent()
         return None if agent is None else agent.land_rent_per_hectare()
 
+    def agent_need_floor_costs(self):
+        """What a person's floor of each need costs a year on the home tiles, in coin; None while the economy opens."""
+        agent = self._answering_agent()
+        return None if agent is None else agent.need_floor_costs_per_person_year() or None
+
     def agent_land_rent_at(self, tile):
-        """Rent per hectare-year on a tile in coin; None while the agent economy is off."""
+        """Rent per hectare-year on a tile in coin; None while the economy opens."""
         agent = self._answering_agent()
         return None if agent is None else agent.land_rent_at_tile(tile)
 
     def agent_land_rent_paid_by_tile(self):
-        """Rent paid on each let tile last year in coin; empty while the agent economy is off."""
+        """Rent paid on each let tile last year in coin; empty while the economy opens."""
         agent = self._answering_agent()
         return {} if agent is None else agent.land_rent_paid_by_tile()
 
     def agent_people_by_trade(self):
-        """Working people by trade in the agent economy's labour core; None while it is off or not yet
+        """Working people by trade in the agent economy's labour core; None while it opens or has not yet
         opened (opening it is the wage quotes' business, and slow)."""
         agent = self.agent
         return None if agent is None or self._opening else agent.people_by_trade()
@@ -98,41 +95,66 @@ class EconomyPort:
 
     def agent_credit_room(self, borrower_id):
         """(True, room) when the agent economy answers, with room None before lenders have met; (False, None)
-        while it is off."""
+        while it opens."""
         agent = self._answering_agent()
         return (False, None) if agent is None else (True, agent.credit_room(borrower_id))
 
     def agent_price_response(self, material, landed_tonnes, taken_tonnes):
         """Factor on a material's home price once `landed_tonnes` more come to market and `taken_tonnes` more are
-        bought, by the agent economy's own demand and supply; None while it is off or has no book for the good."""
+        bought, by the agent economy's own demand and supply; None while it opens or has no book for the good."""
         agent = self._answering_agent()
         return None if agent is None else agent.price_response(material, landed_tonnes, taken_tonnes)
 
+    def agent_producers_by_good(self):
+        """{good: [(tile, recipe id)]} of the producers the agent economy runs; None while it opens."""
+        agent = self._answering_agent()
+        return None if agent is None else agent.producers_by_good()
+
+    def agent_worker_years_by_recipe(self):
+        """Worker-years a year the agent economy's producers put into each recipe; None while it opens."""
+        agent = self._answering_agent()
+        return None if agent is None else agent.worker_years_by_recipe()
+
+    def agent_producer_capacity_tonnes(self, material):
+        """Tonnes a year the agent economy's producers can make of a material; None while it opens."""
+        agent = self._answering_agent()
+        return None if agent is None else agent.producer_capacity_tonnes(material)
+
     def agent_cohort_incomes(self):
         """[(people, yearly money income)] of the agent economy's household cohorts, poorest per head first,
-        or None while the agent economy is off."""
+        or None while the economy opens."""
         agent = self._answering_agent()
         if agent is None:
             return None
         return agent.cohort_incomes()
 
-    def runs_agent_economy(self):
-        return self.agent is not None
+    def note_actor_sale(self, seller, material, tonnes, from_concerns):
+        """An actor's tonnes of a material for the agent economy's market this year."""
+        self.agent.note_sale(seller, material, tonnes, from_concerns)
+
+    def note_actor_purchase(self, buyer, commodity, tonnes, budget):
+        """An actor's tonnes of a commodity it bids for in the agent economy's market this year, with its budget in coin."""
+        self.agent.note_purchase(buyer, commodity, tonnes, budget)
+
+    def agent_trades_good(self, material):
+        """Whether the agent economy has a market for the material (False while it opens)."""
+        agent = self._answering_agent()
+        return agent is not None and agent.trades_good(material)
+
+    def forget_actor_orders(self, actor_id):
+        """An actor's sales and purchases noted for this year's market end."""
+        self.agent.forget_orders(actor_id)
 
     _opening = False
 
     def run_agent_year(self):
-        """The agent economy's year, in place of the engine's own clearing; False when the switch is off."""
-        agent = self.agent
-        if agent is None:
-            return False
+        """The agent economy's year."""
         self.open_agent()
-        agent.run_year()
-        return True
+        self.agent.run_year()
 
     def health(self, metals=(), staple=None):
         """The agent economy's health figures over the years this game has played (economy_port_health.py);
-        None while the agent economy is off."""
+        None while the economy opens."""
         agent = self.agent
         if agent is None:
             return None
@@ -140,15 +162,23 @@ class EconomyPort:
         return health_report(agent, metals, staple)
 
     def open_agent(self):
-        """Open the agent economy (with its hidden spin-up) on the engine's own opening figures."""
+        """Open the agent economy (with its hidden spin-up) on the engine's own opening figures, then count
+        the game's money at the economy's wage."""
         agent = self.agent
-        if agent is None or agent.opened():
+        if agent is None:
             return
-        self._opening = True
-        try:
-            agent.economy()
-        finally:
-            self._opening = False
+        priced = self._sim.state.economy.money_from_economy
+        if priced and agent.opened():
+            return
+        before = None if priced else self._sim.labour.money_per_labour_hour()
+        if not agent.opened():
+            self._opening = True
+            try:
+                agent.economy()
+            finally:
+                self._opening = False
+        if not priced:
+            opening_money.reprice_opening_money(self._sim, before)
 
     # ---- goods and labour: the two market facades ------------------------------------------
     @property
@@ -183,12 +213,6 @@ class EconomyPort:
         """The market's quote for a material (buy and sell terms), or None if it has no price."""
         return self._sim.material_trade_quote(material)
 
-    def offer_sale(self, seller_id, material, tonnes, from_concerns=None):
-        """An actor puts `tonnes` on the market this year; one whose own concerns made it, given as
-        [(node id, tonnes)], will not sell below what they cost it to make."""
-        sim = self._sim
-        reservation = sim.concerns_reservation_ratio(from_concerns, material) if from_concerns else None
-        sim.goods_market.note_sale(seller_id, self.commodity_of(material), tonnes, reservation)
 
     def purchase_cost(self, material, tonnes, already=0.0):
         """(money, mean money per tonne) to buy `tonnes` more, given `already` bought this year;
@@ -204,9 +228,6 @@ class EconomyPort:
         """Money one hour of unskilled work is worth now."""
         return self._sim.labour.money_per_labour_hour()
 
-    def wage_pressure(self):
-        """How far wages stand above their opening level from a shortage of people."""
-        return self._sim.wage_index
 
     def coin_stock_units(self):
         """Units of money this society holds."""
@@ -226,10 +247,6 @@ class EconomyPort:
         """What lenders will advance this borrower beyond what others owe; None before they have met."""
         return self._sim.market_credit_room(borrower_id)
 
-    def report_interest_paid(self, amount):
-        """Interest a borrower paid this year, shared among lenders at the year's close."""
-        self._sim.note_interest_paid(amount)
-
     # ---- concerns and projects ----------------------------------------------------------------
     def concern_takings(self, node_id, ramp):
         """Yearly takings of one concern at a given ramp, before the market's price is applied."""
@@ -243,8 +260,7 @@ class EconomyPort:
     def concern_gross(self, node_id):
         """Yearly takings of a concern once ramped up, with the market's price for its goods applied."""
         sim = self._sim
-        return (sim.concern_takings(node_id, 1.0) * sim.goods_market_factor(node_id)
-                * sim.node_output_market_factor(sim.nodes[node_id]))
+        return sim.concern_takings(node_id, 1.0) * sim.node_output_market_factor(sim.nodes[node_id])
 
     def concern_upkeep(self, node_id, capacity=1.0):
         """Yearly upkeep of a concern at a given capacity."""

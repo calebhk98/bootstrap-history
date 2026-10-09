@@ -178,8 +178,8 @@ class World(Protocol):
 		"""(what the state has out on loan, the yearly rate lenders earn) at the last meeting."""
 		...
 
-	def note_interest_paid(self, amount: float) -> None:
-		"""A borrower's interest joins the pool lenders are paid from."""
+	def pay_interest(self, payer: Any, owed: float, purpose: str = "interest") -> None:
+		"""A borrower pays the interest on its debt to its lenders."""
 		...
 
 	def household_saving(self) -> float:
@@ -340,16 +340,17 @@ class World(Protocol):
 		...
 
 	def market_forget(self, actor_id: str) -> None:
-		"""An actor's standing sales and purchases in the one goods market end; it deals afresh this year."""
-		...
-
-	def runs_agent_economy(self) -> bool:
+		"""An actor's sales and purchases noted for this year's market end; it deals afresh."""
 		...
 
 	def market_sale(self, seller_id: str, material: str, tonnes: float, from_concerns: Any = None) -> None:
 		...
 
-	def market_purchase(self, buyer_id: str, commodity: str, tonnes: float) -> None:
+	def sells_on_book(self, node_id: str) -> bool:
+		"""Whether a concern's output is sold in the agent economy's book, so its takings are the market's."""
+		...
+
+	def market_purchase(self, buyer_id: str, commodity: str, tonnes: float, budget: float = 0.0) -> None:
 		"""An actor buys `tonnes` of a commodity at the one goods market this year."""
 		...
 

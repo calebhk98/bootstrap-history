@@ -46,9 +46,10 @@ class EconomyRecord:
     curves: Dict[str, Any] = field(default_factory=dict)                 # market_key -> the book of the last clearing at the port (market_curves.py)
     ways: Dict[str, Dict[str, Any]] = field(default_factory=dict)        # the built ways the market areas are partitioned for
 
-    def to_record(self) -> Dict[str, Any]:
+    def to_record(self, skip_currencies=()) -> Dict[str, Any]:
+        """The record as plain data; money in `skip_currencies` (another owner's currency in the shared book) is left out."""
         return {
-            "book": self.book.to_record(),
+            "book": self.book.to_record(skip=skip_currencies),
             "memory": plain(self.memory),
             "currency": plain(self.currency),
             "cohorts": {key: plain(value) for key, value in sorted(self.cohorts.items())},

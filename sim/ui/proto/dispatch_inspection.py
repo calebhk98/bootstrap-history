@@ -3,7 +3,6 @@
 from .command_registry import command
 from sim.ui.figures import FIGURES
 from .dispatch_figures import figure_reply
-from sim.ui.market_report import goods_market_line, opening_effect
 from sim.engine.ui_port import active_years_left, remaining_critical_path_years
 from .explain_once import already_explained
 from .nodes import _did_you_mean
@@ -146,10 +145,6 @@ def _cmd_why(sim, nodes, cmd, ended):
     explained["critical_path_years_remaining"] = (
         None if sim.fog else round(remaining_critical_path_years(
             nodes, node_id, sim.done, active_years_left(nodes, sim.active)), 1))
-    if goods_market_line(sim, node_id):
-        explained["goods_market_line"] = goods_market_line(sim, node_id)
-    if opening_effect(sim, node_id):
-        explained["opening_effect"] = opening_effect(sim, node_id)
     notes = notes_for(sim, node_id)
     if notes:
         explained["your_notes"] = ["%s: %s" % (note["year"], note["text"]) for note in notes]

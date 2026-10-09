@@ -14,7 +14,7 @@ class RealPriceRatiosMixin:
 
     def _agent_basket(self, excluded):
         """(prices now, baseline prices, the geometric mean of the basket's price change excluding the named
-        goods), or None when the agent economy is off."""
+        goods), or None while the economy opens."""
         prices = self.economy.agent_prices()
         if prices is None:
             return None
@@ -27,7 +27,7 @@ class RealPriceRatiosMixin:
 
     def real_price_ratio(self, material):
         """The material's price against the other goods' now, over the same at the baseline; the engine's
-        market ratio when the agent economy is off."""
+        market ratio while the economy opens."""
         basket = self._agent_basket({material})
         if basket is None:
             return self.market_price_ratio(material)

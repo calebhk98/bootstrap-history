@@ -2,9 +2,8 @@
 (harvest, people, trade, coin held), not a fitted share of labour value. Some forms are paid in kind and
 arrive as goods in the state's stores, to be used or sold through the goods market."""
 from .harness import *  # noqa: F401,F403
-from functools import partial
 
-sim = partial(sim, agent_economy=False)   # legacy: pins surplus grain sold into the engine's goods market, which the agent economy does not run
+sim = unopened_sim   # legacy: pins surplus grain sold into the engine's goods market, which the agent economy does not run
 
 
 from sim.engine.agents_port import SimWorld

@@ -13,7 +13,7 @@ from typing import Any, Dict, List
 
 from . import ledger
 from .budget_line import Line
-from .edges import EDGE_CUSTOMERS, EDGE_TAXPAYERS
+from .edges import EDGE_TAXPAYERS
 from .revenue_bases import earned_income
 
 
@@ -72,16 +72,3 @@ class StoresMixin:
 			drawn_lines.append(dataclasses.replace(line, materials={c: t for c, t in materials.items() if t > 0.0},
 												   material_cost=max(0.0, cost)))
 		return drawn_lines
-
-	def sell_surplus(self, lines: List[Line], world: Any) -> None:
-		"""Sell what the stores hold beyond what the lines will draw next year, at the market's price."""
-		stores = self.record.stores  # type: ignore[attr-defined]
-		for material in sorted(stores):
-			commodity = world.commodity_of(material)
-			keep = sum(line.materials.get(commodity, 0.0) for line in lines)
-			surplus = stores[material] - keep
-			if surplus > 0.0:
-				stores[material] = keep
-				world.market_sale(self.actor_id, material, surplus)  # type: ignore[attr-defined]
-				ledger.transfer(world.edge(EDGE_CUSTOMERS), self, surplus * world.material_price(material), "sale of stores")
-		self.record.stores = {material: tonnes for material, tonnes in stores.items() if tonnes > 0.0}  # type: ignore[attr-defined]

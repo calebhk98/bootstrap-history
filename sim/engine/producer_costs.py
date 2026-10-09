@@ -121,13 +121,6 @@ class ProducerCostsMixin:
                   if material in (production[key].get("outputs") or {})]
         return min(ratios) if ratios else 1.0
 
-    def concerns_reservation_ratio(self, node_tonnes, material):
-        """Reservation price, as a ratio, of an actor selling `material` from several concerns:
-        [(node id, tonnes)], each at its own cost, weighted by what it sells."""
-        total = sum(tonnes for _node, tonnes in node_tonnes)
-        if not total > 0.0:
-            return 1.0
-        return sum(self.concern_cost_ratio(node_id, material) * tonnes for node_id, tonnes in node_tonnes) / total
 
     def founder_concern_offers(self, commodity):
         """What the founder's own running concerns put on the market in `commodity`, each at its cost;

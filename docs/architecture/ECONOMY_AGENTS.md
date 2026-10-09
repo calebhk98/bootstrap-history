@@ -1,9 +1,11 @@
 # The agent economy
 
-Status: the game's economy by default. A game opts out with `cfg["agent_economy"] = False`;
-`ROME_AGENT_ECONOMY=0` (off) or `=1` (on) overrides either way (`switch_requested`,
-`sim/engine/economy_port_year.py`). Tests of the old economy's own mechanisms opt out explicitly.
-The yearly economy checks measure it against plausible ranges.
+Status: the game's only economy. There is no switch: a civilisation that holds no tiles is refused when the game
+is built, and the engine's own opening figures answer only while the economy opens (`sim/tests/harness.unopened_sim`
+builds a game that stays in that state, for tests of the opening figures). The yearly economy checks measure it
+against plausible ranges.
+
+Owner decision (2026-10-09, later): retire the agent-economy-off mode; the agent economy is the only economy (supersedes the earlier keep decision).
 
 ## What it is
 
@@ -149,10 +151,73 @@ the book (`sim/engine/economy_port_cargo.py`): a landing cargo arrives over the 
 account's money goes back to the trader's purse over `edge:cargo` and the goods nobody took return over the
 partner's edge. The partner's side settles in that partner's coin ledger and the route's carriers
 (`sim/engine/trader_cargo.py`), and the trader's purse is trued up from its decision-time booking to the result.
-The trader's purse itself is still the engine's, not an account in the book (Complaint 382).
+The trader's purse is an account in the same book (see "Actors' money and debt in the book"); the cargo account is funded
+and emptied over `edge:cargo`, and the trader's booked result is trued up to what the book gave.
+A landing cargo's sales and a taking cargo's purchases cross the border, so the state's customs assess them: the
+economy is told which accounts are such (`YearInputs.import_accounts`, `export_accounts`), its ledger counts their
+sales and purchases as imports and exports, and the customs bases tax the cargo account out of its takings. A cargo
+bought for abroad with nothing left in its account owes no export duty (the duty is taken from what the account holds).
 
 **The founder's concerns sell in the same markets**, offered at their output's cost at the economy's
-own prices and wages; the takings return to the engine's purse through `edge:legacy` (Complaint 382).
+own prices and wages; the takings go back out over `edge:legacy` (the founder's revenue is still the engine's
+estimate, which the seat's offers only press on the market).
+
+**Firms', states' and other actors' sales and purchases are book orders** (`sim/engine/economy_port_actors.py`). A
+`market_sale` is noted through the year and, when the economy's year runs, becomes an offer from an account named for the
+seller, at what its concerns cost to make the good (a good with no concern behind it at what the market pays). What the
+account holds afterwards is the seller's proceeds, turned into its coin over `edge:exchange`; what did not sell goes back
+out. A concern whose output sells in the book does not also book the engine's estimate of its takings. A
+`market_purchase` becomes a bid for a fixed quantity from an account named for the buyer, whose budget the buyer's coin
+turned into the economy's unit; the goods it gets are used up and the unspent budget returns. The state pays the money of
+a line's materials this way and the rest of the line as before. The actors' coin and the economy's unit are two
+currencies of one book (the actors' accounts live in the economy's book once it opens; each owner saves only its own
+currency), meeting at `edge:exchange` at the opening wage that fixes the unit.
+
+## Actors' money and debt in the book (Complaint 115)
+
+The engine's actors (firms, the state, traders, interest groups and the strata) keep their money as accounts in a
+double-entry book (`sim/book.py`, the class the economy's own agents use; the actors' instance is
+`ActorsState.purses`, `sim/agents/purses.py`). The book exists from the first posting of a game and is saved with
+the actors. The decision for who may owe what, and to whom:
+
+- A purse is never negative. Only edge accounts (the edges named in `sim/agents/edges.py`, and the savers) may go
+  below zero.
+- A debt is a loan claim. An actor that pays more than its purse holds draws the shortfall on its facility: the
+  household savers (`edge:savers`, the lenders the simulation does not model one by one) put the money into its
+  purse and hold a claim for the principal. Money that comes in repays the claim before it is kept. The claim is the
+  lender's asset and the actor's liability, the way `economy/credit_claims.py` already treats a cohort's or a
+  merchant's loan, and moves no money by itself.
+- `Actor.money` stays the net position (purse less claim), so every reader keeps its meaning; `Actor.debt()` is the
+  claim's principal and `spendable` the purse above zero plus the credit still open. Interest is added to the claim
+  as before (`Borrower.pay_interest`); the market's pool still shares it among the lenders at the yearly meeting.
+- Lenders are the accounts that offer funds at the yearly meeting (a state's reserve, a firm's spare
+  cash) and the household savers (`edge:savers`, the households the simulation does not model one by one). A draw is
+  shared among them in proportion to what they offer, each lending no more than its purse holds, and each holds a claim
+  for its part. Interest is paid straight to the claim holders in proportion to their claims (the savers' part reaches the
+  strata that hold savings), so there is no interest pool; `state_lending` is the claims the state holds. A lender's
+  own cash book is told of each loan and repayment so its purse still equals its books. The market rate and the
+  credit ceiling are still the ones `Borrower.credit_ceiling` reads (the agent economy's credit market answers
+  them); the savers are a labelled stand-in for cohorts' savings, which are in the same book but not yet the lenders.
+
+## One money per labour hour (Complaint 115)
+
+What an hour of work is worth in the game's coin is one figure: the agent economy's wage for the unskilled trade
+(`EconomyPort.unskilled_wage`, read by the labour package's `wage_schedule`). Before the economy has opened there is
+no wage to read, so the opening is counted at the price solver's figure (the coin's labour cost); the economy's
+opening (`sim/engine/opening_money.py`, called from `open_agent`) then reprices everything counted at that figure, the
+founder's and every seat's purse and the tree's money fields, by the ratio of the two, and sets
+`state.economy.money_from_economy`. From then on living costs, node money, the constants stated in labour hours
+(`money_units.PricedInLabourHours`) and hiring all use the economy's wage, so a purse buys the hours it was meant to.
+The two figures differ by a large factor because the solver costs the coin's metal at its labour hours, while the
+economy fixes the metal's price in coin and lets goods and wages follow the money stock. Measure both with
+`python3 -m sim.tests --jobs 1 --only one_money_per_labour_hour` (slow: it opens the economy).
+
+## Domestic trade has one owner
+
+Trade between the places of the home country is the economy's merchants (`sim/economy/merchants.py`): agents in the
+book with cash, who buy where a good is cheap and carry it to where it is dear, paying the carriers. Trader actors take
+the routes that cross a border (their cargo accounts are in the book). Giving trader actors a second domestic router
+would carry the same gap twice, the duplication that Complaint 405 closed for foreign trade, so there is none.
 
 ## Heuristics
 

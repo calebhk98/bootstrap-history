@@ -20,6 +20,14 @@ def _enters_book(economy, leg):
     return leg["kind"] == LANDING or (leg["paid"] > 0.0 and leg["received"] > leg.get("carriage", 0.0))
 
 
+def border_accounts(economy, legs):
+    """(accounts that sell landed goods, accounts that buy goods for abroad): their sales and purchases cross
+    the border, so the state's customs assess them."""
+    booked = [leg for leg in sorted(legs, key=lambda each: each["id"]) if _enters_book(economy, leg)]
+    return (tuple(leg["id"] for leg in booked if leg["kind"] == LANDING),
+            tuple(leg["id"] for leg in booked if leg["kind"] == TAKING))
+
+
 def cargo_orders(economy, legs, tonnes_per_unit):
     """(goods moves, {account: orders}, money transfers) that put the legs' cargo in the book this year."""
     moves, orders, fundings = [], {}, []

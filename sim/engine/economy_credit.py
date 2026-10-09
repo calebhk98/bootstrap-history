@@ -321,9 +321,8 @@ class CreditMixin:
             return 0.0
         rate = self.debt_interest_rate()
         owed = -household.capital * rate
-        self.pay_edge(edges.EDGE_INTEREST, owed, "interest on arrears")
+        self.pay_interest(self.household, owed, "interest on arrears")
         household.interest_paid = (household.interest_paid or 0.0) + owed
-        self.note_interest_paid(owed)
         if owed > 0 and (household.insolvent_years in (1, 5, 15)):
             household.log.append((year, "interest on %0.f denarii of arrears at %.1f%% a year"
                                  % (-household.capital, rate * 100)))

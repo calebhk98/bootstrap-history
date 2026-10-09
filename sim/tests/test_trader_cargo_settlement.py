@@ -43,7 +43,7 @@ class Stub(TraderCargoMixin):
     def _settle_flow(self, partner, flow_tonnes, value, per_coin):
         self.settled.append((partner, flow_tonnes, value))
 
-    def _record_lift(self, partner, route, flow_tonnes, unmet_tonnes, capital_tied=0.0):
+    def _record_lift(self, partner, route, flow_tonnes, unmet_tonnes):
         self.lifts.append((partner, flow_tonnes))
 
     def note_actor_trade(self, partner, material, tonnes, to_partner):
@@ -57,15 +57,11 @@ class Stub(TraderCargoMixin):
 class ShippingWorld(TradeView):
     """A trader's view of the world with prices fixed and its market seams recorded."""
 
-    def __init__(self, on_book):
-        self.on_book = on_book
+    def __init__(self):
         self.notes, self._memo = [], {}
         self.game = Stub()
         self._sim = self.game
         self.game.note_actor_home_trade = lambda *args: self.notes.append(("home", args))
-
-    def runs_agent_economy(self):
-        return self.on_book
 
     def _home_place(self):
         return "home"
@@ -150,18 +146,18 @@ class CargoSettlement(unittest.TestCase):
 
 
 class ShippingNotesTheLeg(unittest.TestCase):
-    def test_on_the_agent_economy_the_home_side_is_left_to_the_book(self):
-        world = ShippingWorld(on_book=True)
+    def test_the_home_side_is_left_to_the_book(self):
+        world = ShippingWorld()
         self.assertEqual(world.ship(TRADER, "grain", 5.0, PARTNER, "home"), (20.0, 50.0))
         self.assertEqual([note for note in world.notes if note[0] in ("sale", "purchase")], [])
         (leg,) = world.game.cargo_legs()
         self.assertEqual((leg["kind"], leg["tonnes"], leg["paid"], leg["received"], leg["carriage"]), ("in", 5.0, 20.0, 50.0, 10.0))
 
-    def test_with_the_agent_economy_off_the_engines_own_market_still_takes_the_home_side(self):
-        world = ShippingWorld(on_book=False)
+    def test_cargo_leaving_home_is_a_taking_leg_and_cargo_arriving_a_landing_leg(self):
+        world = ShippingWorld()
         world.ship(TRADER, "grain", 5.0, "home", PARTNER)
         world.ship(TRADER, "grain", 3.0, PARTNER, "home")
-        self.assertEqual([note for note in world.notes if note[0] in ("sale", "purchase")], [("purchase", 5.0), ("sale", 3.0)])
+        self.assertEqual([note for note in world.notes if note[0] in ("sale", "purchase")], [])
         self.assertEqual(sorted(leg["kind"] for leg in world.game.cargo_legs()), ["in", "out"])
 
 

@@ -1,5 +1,5 @@
-"""With the agent economy on, a home stratum's income is the earnings of the household cohorts in its slice of the
-population, not members x work share x pay; with it off the wage bridge stays. Money is conserved."""
+"""A home stratum's income is the earnings of the household cohorts in its slice of the population, not members x work
+share x pay; before the economy has opened (it answers nothing yet) the wage bridge stays. Money is conserved."""
 import random
 
 from .harness import *  # noqa: F401,F403
@@ -10,9 +10,10 @@ from sim.agents.strata_observed import slice_income
 from sim.engine.agents_port import SimWorld
 
 
-def rome_game(agent_economy):
-    game = S.Sim(NODES, list(ORDER), random.Random(1), events=False, manual=True, civ=S.load_civ("rome_100ad"),
-                 cfg={"agent_economy": agent_economy})
+def rome_game(opened):
+    def build():
+        return S.Sim(NODES, list(ORDER), random.Random(1), events=False, manual=True, civ=S.load_civ("rome_100ad"))
+    game = build() if opened else build_unopened(build)
     for _ in range(2):  # the first year only seeds the roster
         game.state.scenario.year += 1
         game.advance_actors(game.state.scenario.year)
@@ -33,13 +34,13 @@ check("the whole curve is every cohort's income", abs(slice_income(rows, 0.0, 40
 check("a slice inside one row takes its share", abs(slice_income(rows, 15.0, 20.0) - 20.0) < 1e-9)
 check("a slice across rows adds the parts", abs(slice_income(rows, 5.0, 25.0) - (5.0 + 40.0 + 50.0)) < 1e-9)
 
-# ---- agent economy off: the wage bridge stays -----------------------------------------------
+# ---- before the economy has opened: the wage bridge stays -----------------------------------------------
 off = rome_game(False)
-check("with the economy off no cohort curve is offered", off.economy.agent_cohort_incomes() is None)
-check("with the economy off strata observe nothing", SimWorld(off).observed_stratum(None, "labourers") is None)
-check("with the economy off the strata still earn by the bridge", edge_in(home(off)) > 0.0)
+check("before the economy has opened no cohort curve is offered", off.economy.agent_cohort_incomes() is None)
+check("before the economy has opened strata observe nothing", SimWorld(off).observed_stratum(None, "labourers") is None)
+check("before the economy has opened the strata still earn by the bridge", edge_in(home(off)) > 0.0)
 
-# ---- agent economy on -----------------------------------------------------------------------
+# ---- the economy open -----------------------------------------------------------------------
 on = rome_game(True)
 curve = on.economy.agent_cohort_incomes()
 check("the agent economy offers its cohorts' incomes", bool(curve) and all(people > 0.0 for people, _ in curve))
@@ -84,9 +85,10 @@ for actor in home(on):
 
 
 def edge_net(actors):
-    """Money in less money out across the edge of the strata, counting the state's relief as coming in."""
-    return sum(sum(v for k, v in a.record.income.items() if k.startswith("edge:") or k == "relief")
-               - sum(v for k, v in a.record.outlays.items() if k.startswith("edge:")) for a in actors)
+    """Money in less money out across the edge of the strata, counting the state's relief and the interest the savers
+    pass on as coming in, and the interest the strata owe as going out."""
+    return sum(sum(v for k, v in a.record.income.items() if k.startswith("edge:") or k in ("relief", "interest_on_lending"))
+               - sum(v for k, v in a.record.outlays.items() if k.startswith("edge:") or k == "interest") for a in actors)
 
 
 all_strata = on.actors.of_kind("stratum")
