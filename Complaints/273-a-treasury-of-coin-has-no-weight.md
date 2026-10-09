@@ -1,6 +1,6 @@
 # A treasury of coin weighs nothing and needs no vault
 
-**Status:** closed - keeping cost, coin carriage by mass, and theft, sack and banditry all read how wealth is kept (`sim/engine/holdings_exposure.py`, `theft_exposure.py`, `theft_charge.py`, `sim/tests/test_theft_all_holdings.py`); stolen money goes to `edge:thieves`, stolen goods to its goods
+**Status:** partly - keeping cost, coin carriage by mass on foreign routes, and theft, sack and banditry all read how wealth is kept (`sim/engine/holdings_exposure.py`, `theft_exposure.py`, `theft_charge.py`). Remaining: foreign-country actors pay no keeping cost (`coin_hoard.py` skips them); coin moved between actors of the same country in different places pays no carriage by its mass and distance
 
 Source: `Complaints/reports/playthrough-review-han-china-100-to-400ad.md`, item 5 (physical weight of bronze coinage).
 
