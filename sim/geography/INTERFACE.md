@@ -57,6 +57,7 @@ caller from what the actor knows; geography does not read the tech tree.
 | `mine_demand_goods()` | `{resource_id: [good]}`: the goods whose annual demand a mine of that resource supplies (`mine_demand_goods` on its catalogue row). |
 | `parameter_value(parameter_id)` | The value of one map parameter (for example `mining_trade`, the trade whose wage prices mine labour). |
 | `build_requirements(tile_a, tile_b, improvement)` | `{km, grade, trade, labour_hours, materials: {material: tonnes}, node}` of building a way (`"road"`, `"rail"`) over the land edge between two bordering tiles, from the terrain (earthwork on the slope, surface and fixed materials from the mode's `construction` data), or `null` when it cannot be built there. |
+| `built_km(improvements, improvement)` | Kilometres of a way (`"road"`, `"rail"`) the caller's `improvements` record holds, over land edges, counted as a build is. |
 | `edge_key(tile_a, tile_b)` | The key a built road or track between two tiles is stored under. |
 
 `improvements` is the caller's record of what has been built, `{edge_key: {"road": true,

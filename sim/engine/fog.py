@@ -407,6 +407,8 @@ class FogMixin:
         """
         if category_traits.has_trait(self.nodes[node_id]["cat"], "never_abandoned"):
             return True
+        if self.relied_on_running(node_id):
+            return False
         return self.on_road_to_goal(node_id)
 
     def on_road_to_goal(self, node_id: str) -> bool:
