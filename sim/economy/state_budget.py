@@ -7,7 +7,7 @@ from typing import Dict, List, Tuple
 
 from sim.constants import declare
 
-from . import households_basket, state_finance
+from . import currency, households_basket, state_finance
 from .setup import labour_area
 from .types import Bid, EDGE_CONSUMPTION, GoodsMove, LabourBid
 
@@ -33,6 +33,10 @@ class StateBudget:
     deficit: float = 0.0
     financed: Dict[str, float] = field(default_factory=dict)   # what each method supplied this year
     issued_total: float = 0.0
+    unplanned_cash: float = 0.0          # cash left after the plan and the reserve: what the store may buy with
+    need_wanted: Dict[str, float] = field(default_factory=dict)   # goods the lines bid for, so the rest bought is store
+    expected_inflation: float = 0.0      # what the treasury expects of prices, as households do
+    last_price_level: float = 0.0        # the basket price level when it last updated that expectation
 
 
 def plan_year(setup, record, view, labour_bids: List[LabourBid]) -> None:
@@ -43,6 +47,7 @@ def plan_year(setup, record, view, labour_bids: List[LabourBid]) -> None:
     reserve = policy.reserve_years_of_revenue * budget.revenue
     spendable = min(cash, budget.revenue + policy.cash_spend_share * max(0.0, cash - budget.revenue - reserve))
     planned = spendable
+    budget.unplanned_cash = max(0.0, cash - spendable - reserve)
     if policy.real_spending_target > 0.0:
         # a stated programme is paid from every coin on hand first, then financed
         planned = policy.real_spending_target * view.basket_price_level(money)
@@ -90,10 +95,13 @@ def _labour_bids(setup, record, view, wage_budget: float) -> List[LabourBid]:
     return bids
 
 
-def goods_bids(setup, record, view, area_map, order_book) -> None:
+def goods_bids(setup, record, view, area_map, order_book, kept=None) -> None:
     """Spend the goods budget across the basket's needs by their weights and each need's goods by the
-    household mix; stores already held are used up first and cost nothing."""
+    household mix; stores already held are used up first and cost nothing, except the durable store
+    (`kept`, by good), which the lines leave alone."""
     budget = record.state_budget
+    budget.need_wanted = {}
+    kept = dict(kept or {})
     if budget.goods_budget <= 0.0:
         return
     tile = setup.capital_tile
@@ -111,11 +119,13 @@ def goods_bids(setup, record, view, area_map, order_book) -> None:
             held = [(held_tile, quantity) for held_tile, quantity in
                     sorted(record.book.holdings(state)["goods"].get(good, {}).items()) if quantity > 0.0]
             for held_tile, quantity in held:
-                used = min(wanted, quantity)
+                reserved = min(quantity, kept.get(good, 0.0)) if held_tile == tile else 0.0
+                used = min(wanted, quantity - reserved)
                 moves.append(GoodsMove(state, EDGE_CONSUMPTION, good, held_tile, used, "state stores used"))
                 wanted -= used
             if wanted <= 0.0 or good not in area_map.goods():
                 continue
+            budget.need_wanted[good] = budget.need_wanted.get(good, 0.0) + wanted
             area = view.area_of(good, tile)
             order_book.setdefault((good, area), ([], []))[0].append(
                 Bid(state, good, area, tile, 0.0, wanted, price, 1.0, wanted * price))   # a fixed sum to spend: unit elastic
@@ -123,15 +133,25 @@ def goods_bids(setup, record, view, area_map, order_book) -> None:
 
 
 def close_year(setup, record, ledger, tax_received: float) -> None:
-    """What the state bought is used up; what it took in this year sets next year's revenue."""
+    """What the state bought for its lines is used up (not what it bought to hold); what it took in this
+    year sets next year's revenue."""
     state = setup.state_agent
     bought: Dict[Tuple[str, str], float] = {}
     for fill in ledger.buy_fills.get(state, []):
         bought[(fill.good, fill.tile)] = bought.get((fill.good, fill.tile), 0.0) + fill.quantity
+    lines_left = dict(record.state_budget.need_wanted)   # the lines' bids clear before the store's (priority)
     moves = []
     for (good, tile), quantity in sorted(bought.items()):
+        quantity = min(quantity, lines_left.get(good, 0.0))
+        lines_left[good] = lines_left.get(good, 0.0) - quantity
         used = min(quantity, record.book.stock(state, good, tile))
         if used > 0.0:
             moves.append(GoodsMove(state, EDGE_CONSUMPTION, good, tile, used, "state purchases used"))
     record.book.move_many(moves)
     record.state_budget.revenue = tax_received + ledger.sales_in.get(state, 0.0)
+    level = record.memory.basket_price_levels.get(setup.currency_id)
+    budget = record.state_budget
+    if level and budget.last_price_level > 0.0:
+        budget.expected_inflation = currency.update_expected_inflation(budget.expected_inflation,
+                                                                       level / budget.last_price_level - 1.0)
+    budget.last_price_level = level or budget.last_price_level
