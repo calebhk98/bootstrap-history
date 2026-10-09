@@ -25,7 +25,8 @@ EDGE_CONSUMPTION = "edge:consumption"    # goods used up by households, inputs u
 EDGE_SPOILAGE = "edge:spoilage"          # goods lost while held
 EDGE_DEFAULT = "edge:default"            # debt written off
 EDGE_LEGACY = "edge:legacy"              # engine postings that do not yet name a counterparty
-EDGE_CARGO = "edge:cargo"                # money between a trader's purse (outside the book) and its cargo account
+EDGE_CARGO = "edge:cargo"                # money between a trader's purse and its cargo account
+EDGE_EXCHANGE = "edge:exchange"          # the actors' coin turned into the economy's unit and back (agents/purses.py names the other side)
 
 
 def external_edge(partner: str) -> AgentId:

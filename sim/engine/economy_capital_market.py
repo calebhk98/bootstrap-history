@@ -6,6 +6,7 @@ the simulation does not model actor by actor borrows, is the demand. The rate fo
 (`sim/world/capital_market.py`), and the funds lenders will still advance are what every borrower's
 credit limit is bounded by (`economy_credit.py`, `actors/borrowing.py`).
 """
+from sim.agents.api import EDGE_SAVERS
 from sim.constants import declare
 from sim.world import capital_market
 
@@ -93,24 +94,29 @@ class CapitalMarketMixin:
         return funds
 
     def state_lending(self):
-        """(what the state has out on loan, the yearly rate lenders earn) at the last meeting. Lenders'
-        funds are lent in proportion to what is demanded of the pool, up to all but their reserve, and
-        every source's share of that lending is its share of the pool (labelled heuristic: no matching
-        of particular lenders to particular borrowers)."""
-        record = self._market_record()
-        if record is None or record.supply <= 0.0:
-            return 0.0, self.market_rate()
-        demanded = capital_market.utilisation(record.background + sum(record.loans.values()), record.supply)
-        lent_share = min(1.0 - capital_market.LENDER_RESERVE_SHARE, demanded)
-        return record.supply_by_source.get("state", 0.0) * lent_share, record.rate
+        """(what the state has out on loan, the yearly rate lenders earn): the claims the state holds in the
+        actors' book, and the market rate."""
+        return self.actors.state.purses.lent(self.state_treasury().actor_id), self.market_rate()
+
+    def lender_offers(self, sources):
+        """The funds each lender account offers this year, from the market's sources: the households' savings
+        stand behind the savers, the state's reserve behind its account, a seat's savings behind the seat's, and
+        each firm's purse behind the firm's."""
+        offers = {EDGE_SAVERS: sources["households"], self.state_treasury().actor_id: sources["state"]}
+        for seat_id in self.state.seats:
+            offers[seat_id] = sources[SEAT_SOURCE_PREFIX + seat_id]
+        purses = self.actors.state.purses
+        for firm in self.actors.active_firms():
+            offers[firm.actor_id] = purses.purse(firm.actor_id)
+        return offers
 
     def update_capital_market(self):
         """The year's meeting: set the rate from the balance and record what lenders will advance."""
         from .agents_port import SimWorld
         world = SimWorld(self)
-        self.pay_lenders()
         record = self.capital_market()
         sources = self.market_funds(world)
+        self.actors.state.purses.set_offers(self.lender_offers(sources))
         supply = sum(sources.values())
         loans = self.market_loans()
         background = BACKGROUND_BORROWING_SHARE * sources["households"]

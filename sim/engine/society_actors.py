@@ -35,10 +35,6 @@ class ActorsMixin:
         """The founder's household pays wages: the home country's people receive them."""
         payroll.pay_wages(self.actors, self.state.household, amount, purpose, self)
 
-    def pay_savers(self, amount):
-        """Interest due to households as lenders is paid out of the interest edge to the savers."""
-        payroll.pay_savers(self.actors, self.edge(edges.EDGE_INTEREST), amount)
-
     def receive_from_edge(self, edge_name, amount, purpose):
         """A named edge pays the founder's household."""
         ledger.transfer(self.edge(edge_name), self.state.household, amount, purpose)

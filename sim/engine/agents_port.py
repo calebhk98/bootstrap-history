@@ -260,12 +260,26 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, DisclosureView, Cap
 
 	def market_sale(self, seller_id: str, material: str, tonnes: float, from_concerns: Any = None) -> None:
 		"""An actor sells `tonnes` of a material into the one goods market this year. One whose concerns
-		made it, [(node id, tonnes)], will not sell below what they cost it to make."""
-		self._sim.economy.offer_sale(seller_id, material, tonnes, from_concerns)
+		made it, [(node id, tonnes)], will not sell below what they cost it to make. On the agent economy the goods are
+		offered in its book and the proceeds reach the seller's purse when the year's market has cleared."""
+		if self.runs_agent_economy():
+			self._sim.economy.note_actor_sale(seller_id, material, tonnes, from_concerns)
+		else:
+			self._sim.economy.offer_sale(seller_id, material, tonnes, from_concerns)
 
-	def market_purchase(self, buyer_id: str, commodity: str, tonnes: float) -> None:
-		"""An actor buys `tonnes` of a commodity at the one goods market this year."""
-		self._sim.economy.goods.note_purchase(buyer_id, commodity, tonnes)
+	def market_purchase(self, buyer_id: str, commodity: str, tonnes: float, budget: float = 0.0) -> None:
+		"""An actor buys `tonnes` of a commodity at the one goods market this year. On the agent economy it bids for
+		them in its book, paying up to `budget` out of its purse."""
+		if self.runs_agent_economy():
+			self._sim.economy.note_actor_purchase(buyer_id, commodity, tonnes, budget)
+		else:
+			self._sim.economy.goods.note_purchase(buyer_id, commodity, tonnes)
+
+	def sells_on_book(self, node_id: str) -> bool:
+		"""Whether what a concern makes is sold in the agent economy's book, so its takings are the market's and not the
+		engine's estimate."""
+		return self.runs_agent_economy() and any(
+			self._sim.economy.agent_trades_good(material) for material in supply.materials_made_by(node_id))
 
 	def concern_output_tonnes(self, node_id: str, material: str, opened_year: int, staffed: float) -> float:
 		node = self.nodes[node_id]

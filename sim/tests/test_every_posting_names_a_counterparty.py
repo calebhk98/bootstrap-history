@@ -3,8 +3,8 @@
 Money changes a purse only through `ledger.transfer`; where the other side is not an actor the
 simulation models, it is a named edge, an account outside the actors in the purses' book (`state.actors.purses`).
 So all purses together plus all edges together stay what they were, and a new one-sided posting fails the scan below.
-The founder's household is not yet an account in that book: what it gains or loses against an actor is booked
-against `edge:outside the book`, so the conserved total is its purse less that edge's balance."""
+The households' purses are accounts in that book too; a posting that names no counterparty (an assignment to a
+purse) would show as a balance on `edge:outside the book`, so the total below holds only while none is made."""
 import os
 import re
 
@@ -37,8 +37,7 @@ check("no engine or agent code posts money to one side only", not offenders, off
 
 def purses(game):
     book = game.state.actors.purses.book
-    return game.state.household.capital + sum(
-        book.balance(account, COIN) for account in book.agents() if not account.startswith("edge:"))
+    return sum(book.balance(account, COIN) for account in book.agents() if not account.startswith("edge:"))
 
 
 def edges(game):

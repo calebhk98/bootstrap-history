@@ -105,6 +105,31 @@ class HouseholdState:
 	last_military_demand: int = -999
 	_said_confiscation_band: int = -1
 
+	# ---- the purse: an account in the actors' book (sim/agents/purses.py) once the state is attached to it ----
+	def attach(self, purses: Any, account: str) -> None:
+		"""Keep this household's purse as account `account` in `purses`. Cash it held before being attached is
+		placed there once, unless the book already knows the account (a loaded game)."""
+		held = self.__dict__.pop("_local_capital", 0.0)
+		self.__dict__["_purses"], self.__dict__["_account"] = purses, account
+		if held and not purses.has_account(account):
+			purses.set_net(account, held, "opening")
+
+	@property
+	def ledger_purses(self) -> Any:
+		return self.__dict__.get("_purses")
+
+	@property
+	def account(self) -> str:
+		return self.__dict__.get("_account", "")
+
+	def note_income(self, purpose: Any, amount: float) -> None:
+		"""Money that came in by a posting in the book, entered in the cash book under its cause."""
+		cash_book.record(self, 1.0, float(amount), purpose)
+
+	def note_outlay(self, purpose: Any, amount: float) -> None:
+		"""Money that went out by a posting in the book, entered in the cash book under its cause."""
+		cash_book.record(self, -1.0, float(amount), purpose)
+
 	def credit(self, amount: float, purpose: Any) -> None:
 		"""Money in, entered in the cash book under its cause."""
 		self.capital += float(amount)
@@ -149,6 +174,25 @@ class HouseholdState:
 	def record_spend(self, amount: float) -> None:
 		"""Record spend without altering capital balance directly."""
 		self.total_spend += float(amount)
+
+
+def _purse_net(household: HouseholdState) -> float:
+	purses = household.__dict__.get("_purses")
+	if purses is None:
+		return household.__dict__.get("_local_capital", 0.0)
+	return purses.net(household.__dict__["_account"])
+
+
+def _set_purse_net(household: HouseholdState, value: float) -> None:
+	purses = household.__dict__.get("_purses")
+	if purses is None:
+		household.__dict__["_local_capital"] = float(value)
+	else:
+		purses.set_net(household.__dict__["_account"], float(value), "set")
+
+
+# the purse is the household's net position in the actors' book (purse less what it has drawn on its facility)
+HouseholdState.capital = property(_purse_net, _set_purse_net)  # type: ignore[assignment]
 
 
 @dataclass
@@ -331,6 +375,13 @@ class SimulationState:
 				self.household, self.projects, self.founder,
 				**{name: value for name, value in given.items() if value is not None})
 		bind_seat(self, self.acting_seat)
+		self.attach_purses()
+
+	def attach_purses(self) -> None:
+		"""Every seat's household keeps its purse in the actors' book, under the seat's id."""
+		if self.actors is not None:
+			for seat_id, seat in self.seats.items():
+				seat.household.attach(self.actors.purses, seat_id)
 
 	@property
 	def _goal(self) -> Optional[str]:

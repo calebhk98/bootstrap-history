@@ -274,6 +274,20 @@ class Household(Actor):
 	def money(self, value: float) -> None:
 		self.capital = value
 
+	@property
+	def purses(self) -> Any:  # type: ignore[override]
+		return self._state.household.ledger_purses
+
+	@property
+	def account_id(self) -> str:
+		return self._state.household.account
+
+	def note_income(self, purpose: Any, amount: float) -> None:
+		self._state.household.note_income(purpose, amount)
+
+	def note_outlay(self, purpose: Any, amount: float) -> None:
+		self._state.household.note_outlay(purpose, amount)
+
 	def credit(self, amount: float, purpose: Any) -> None:
 		self._state.household.credit(amount, purpose)
 

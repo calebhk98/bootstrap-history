@@ -151,10 +151,23 @@ the book (`sim/engine/economy_port_cargo.py`): a landing cargo arrives over the 
 account's money goes back to the trader's purse over `edge:cargo` and the goods nobody took return over the
 partner's edge. The partner's side settles in that partner's coin ledger and the route's carriers
 (`sim/engine/trader_cargo.py`), and the trader's purse is trued up from its decision-time booking to the result.
-The trader's purse itself is still the engine's, not an account in the book (Complaint 382).
+The trader's purse is an account in the same book (see "Actors' money and debt in the book"); the cargo account is funded
+and emptied over `edge:cargo`, and the trader's booked result is trued up to what the book gave.
 
 **The founder's concerns sell in the same markets**, offered at their output's cost at the economy's
-own prices and wages; the takings return to the engine's purse through `edge:legacy` (Complaint 382).
+own prices and wages; the takings go back out over `edge:legacy` (the founder's revenue is still the engine's
+estimate, which the seat's offers only press on the market).
+
+**Firms', states' and other actors' sales and purchases are book orders** (`sim/engine/economy_port_actors.py`). A
+`market_sale` is noted through the year and, when the economy's year runs, becomes an offer from an account named for the
+seller, at what its concerns cost to make the good (a good with no concern behind it at what the market pays). What the
+account holds afterwards is the seller's proceeds, turned into its coin over `edge:exchange`; what did not sell goes back
+out. A concern whose output sells in the book does not also book the engine's estimate of its takings. A
+`market_purchase` becomes a bid for a fixed quantity from an account named for the buyer, whose budget the buyer's coin
+turned into the economy's unit; the goods it gets are used up and the unspent budget returns. The state pays the money of
+a line's materials this way and the rest of the line as before. The actors' coin and the economy's unit are two
+currencies of one book (the actors' accounts live in the economy's book once it opens; each owner saves only its own
+currency), meeting at `edge:exchange` at the opening wage that fixes the unit.
 
 ## Actors' money and debt in the book (Complaint 115)
 
@@ -173,10 +186,14 @@ the actors. The decision for who may owe what, and to whom:
 - `Actor.money` stays the net position (purse less claim), so every reader keeps its meaning; `Actor.debt()` is the
   claim's principal and `spendable` the purse above zero plus the credit still open. Interest is added to the claim
   as before (`Borrower.pay_interest`); the market's pool still shares it among the lenders at the yearly meeting.
-- The household savers lend from `edge:savers`, not from named cohorts. Linking the facility to the economy's credit
-  market (cohorts' savings on offer, the market's rate, defaults) waits until the purses and the economy's book are
-  one book (the next stages of Complaint 115); until then the facility is a labelled stand-in and the market rate
-  and credit ceiling are still the ones `Borrower.credit_ceiling` reads.
+- Lenders are the accounts that offer funds at the yearly meeting (a state's reserve, a seat's savings, a firm's spare
+  cash) and the household savers (`edge:savers`, the households the simulation does not model one by one). A draw is
+  shared among them in proportion to what they offer, each lending no more than its purse holds, and each holds a claim
+  for its part. Interest is paid straight to the claim holders in proportion to their claims (the savers' part reaches the
+  strata that hold savings), so there is no interest pool; `state_lending` is the claims the state holds. A lender's
+  own cash book is told of each loan and repayment so its purse still equals its books. The market rate and the
+  credit ceiling are still the ones `Borrower.credit_ceiling` reads (the agent economy's credit market answers
+  them); the savers are a labelled stand-in for cohorts' savings, which are in the same book but not yet the lenders.
 
 ## Heuristics
 

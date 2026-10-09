@@ -314,6 +314,10 @@ class Book:
         purse = self._money.get(agent)
         return purse.get(currency, 0.0) if purse else 0.0
 
+    def knows(self, agent: AgentId) -> bool:
+        """Whether the agent has ever held or paid anything in this book."""
+        return agent in self._money or agent in self._goods
+
     def stock(self, agent: AgentId, good: GoodId, tile: TileId) -> float:
         by_good = self._goods.get(agent)
         if not by_good:
@@ -403,20 +407,68 @@ class Book:
 
     # ---- save file -----------------------------------------------------------------------------
 
-    def to_record(self) -> dict:
+    def to_record(self, only: Iterable[CurrencyId] = None, skip: Iterable[CurrencyId] = ()) -> dict:
+        """The book as plain data; `only` keeps just those currencies (goods are left out then), `skip` drops some."""
+        if only is None and not skip:
+            return self._record_of(lambda currency: True, True, False)
+        wanted = None if only is None else set(only)
+        dropped = set(skip)
+        return self._record_of(lambda currency: (wanted is None or currency in wanted) and currency not in dropped,
+                               wanted is None, True)
+
+    def _record_of(self, keep, with_goods: bool, filtered: bool) -> dict:
+        def by_agent(mapping: dict) -> dict:
+            out = {}
+            for agent, by_currency in sorted(mapping.items()):
+                kept = {currency: value for currency, value in sorted(by_currency.items()) if keep(currency)}
+                if kept or not filtered:
+                    out[agent] = kept
+            return out
+
+        def by_currency(mapping: dict) -> dict:
+            return {currency: value for currency, value in sorted(mapping.items()) if keep(currency)}
+
+        def purposes(mapping: dict) -> dict:
+            return {currency: dict(sorted(inner.items())) for currency, inner in sorted(mapping.items()) if keep(currency)}
+
         return {
-            "money": _sorted_nested(self._money),
-            "goods": {agent: _sorted_nested(by_good) for agent, by_good in sorted(self._goods.items())},
-            "gross_money": dict(sorted(self._gross_money.items())),
-            "gross_goods": dict(sorted(self._gross_goods.items())),
-            "money_by_purpose": _sorted_nested(self._money_by_purpose),
-            "goods_by_purpose": _sorted_nested(self._goods_by_purpose),
-            "edge_money_volume": _sorted_nested(self._edge_money_volume),
-            "edge_money_net": _sorted_nested(self._edge_money_net),
-            "edge_goods_volume": _sorted_nested(self._edge_goods_volume),
-            "edge_goods_net": _sorted_nested(self._edge_goods_net),
-            "supply_at_start": dict(sorted(self._supply_at_start.items())),
+            "money": by_agent(self._money),
+            "goods": {agent: _sorted_nested(by_good) for agent, by_good in sorted(self._goods.items())} if with_goods else {},
+            "gross_money": by_currency(self._gross_money),
+            "gross_goods": dict(sorted(self._gross_goods.items())) if with_goods else {},
+            "money_by_purpose": purposes(self._money_by_purpose),
+            "goods_by_purpose": _sorted_nested(self._goods_by_purpose) if with_goods else {},
+            "edge_money_volume": by_agent(self._edge_money_volume),
+            "edge_money_net": by_agent(self._edge_money_net),
+            "edge_goods_volume": _sorted_nested(self._edge_goods_volume) if with_goods else {},
+            "edge_goods_net": _sorted_nested(self._edge_goods_net) if with_goods else {},
+            "supply_at_start": by_currency(self._supply_at_start),
         }
+
+    def absorb(self, other: "Book") -> None:
+        """Take over everything `other` holds and has booked, its currencies added to this book's."""
+        def add_nested(into: dict, source: dict) -> None:
+            for key, inner in source.items():
+                held = _nested(into, key)
+                for name, value in inner.items():
+                    held[name] = held.get(name, 0.0) + value
+
+        add_nested(self._money, other._money)
+        for agent, by_good in other._goods.items():
+            for good, by_tile in by_good.items():
+                for tile, value in by_tile.items():
+                    self._set_stock(agent, good, tile, self.stock(agent, good, tile) + value)
+        for mine, theirs in ((self._gross_money, other._gross_money), (self._gross_goods, other._gross_goods),
+                             (self._supply_at_start, other._supply_at_start)):
+            for key, value in theirs.items():
+                mine[key] = mine.get(key, 0.0) + value
+        for mine, theirs in ((self._money_by_purpose, other._money_by_purpose),
+                             (self._goods_by_purpose, other._goods_by_purpose),
+                             (self._edge_money_volume, other._edge_money_volume),
+                             (self._edge_money_net, other._edge_money_net),
+                             (self._edge_goods_volume, other._edge_goods_volume),
+                             (self._edge_goods_net, other._edge_goods_net)):
+            add_nested(mine, theirs)
 
     @classmethod
     def from_record(cls, record: dict) -> "Book":

@@ -586,6 +586,8 @@ class Sim(RealPriceRatiosMixin, CoinRevaluationMixin, WageMarketRatiosMixin, Mec
         # Household façades first, so version bumps fired while reconnecting land on this state
         if hasattr(self, "household"):
             self.sync_seat_facades()
+        self.state.attach_purses()
+        self.state.actors.purses.observer = self.note_lender_posting
         acting = self.state.acting_seat
         try:
             for seat_id in self.state.seats:

@@ -7,6 +7,7 @@ from functools import partial
 sim = partial(sim, agent_economy=False)   # legacy: pins how the engine's budget spends a surplus; the agent-economy budget is test_economy_agent_state.py
 
 
+from sim.agents.purses import COIN, INTEREST_PAID, LENT
 from sim.agents.tuning_spending import RESERVE_CEILING_YEARS_OF_NEED
 from sim.engine.coin_hoard import KEEPING_CAUSE
 
@@ -18,7 +19,7 @@ def one_year(game):
 
 def purchases(treasury):
     """Every purpose a state may pay for: a line it keeps up, or a named purchase or payment."""
-    return set(treasury.record.need) | {"interest", "patronage", "works", "relief", KEEPING_CAUSE}
+    return set(treasury.record.need) | {"interest", "patronage", "works", "relief", KEEPING_CAUSE, LENT}
 
 
 # ---- no outlay without a recipient --------------------------------------------------------------
@@ -48,9 +49,6 @@ one_year(saver)
 check("a state with a reserve beyond its need is a source of funds on the market",
       saver.capital_market().supply_by_source.get("state", 0.0) > 0.0, saver.capital_market().supply_by_source)
 one_year(saver)
-lent, _rate = saver.state_lending()
-check("part of what the state supplies is lent, because the market's borrowers want funds",
-      0.0 < lent <= saver.capital_market().supply_by_source["state"], (lent, saver.capital_market().supply_by_source))
 # a borrower in the market: firms and the founder owe and pay interest, and the lenders are paid exactly that
 from sim.engine.state import ActorRecord
 borrowed = sim()
@@ -62,16 +60,20 @@ borrowed.household.capital = -1.0e6  # the founder owes too
 for _year in range(4):
     one_year(borrowed)
 market = borrowed.capital_market()
-paid = market.interest_paid_total
+paid = borrowed.actors.state.purses.book.money_flow(COIN).get(INTEREST_PAID, 0.0)
 check("borrowers paid interest over the years", paid > 0.0, paid)
-check("what lenders received is what borrowers paid, less what waits in the pool for the next meeting",
-      abs(market.interest_received_total + market.interest_pool - paid) < 1e-9 * paid,
-      (market.interest_received_total, market.interest_pool, paid))
+lent, _rate = borrowed.state_lending()
+check("part of what the state supplies is lent, as claims on the borrowers, because they want funds",
+      0.0 < lent <= borrowed.capital_market().supply_by_source["state"], (lent, borrowed.capital_market().supply_by_source))
+check("the claims the state holds are the borrowers' debts",
+      abs(lent - borrowed.actors.state.purses.lent(borrowed_treasury.actor_id)) < 1e-6 * lent, lent)
 check("the state earned interest on what it lent, no more than borrowers paid",
       0.0 < borrowed_treasury.record.income.get("interest_on_lending", 0.0) <= paid,
       (borrowed_treasury.record.income, paid))
-every_receipt = (borrowed_treasury.record.income.get("interest_on_lending", 0.0) + market.interest_to_households
-                 + sum(firm.record.income.get("interest_on_lending", 0.0) for firm in borrowed.actors.active_firms()))
+every_receipt = (borrowed_treasury.record.income.get("interest_on_lending", 0.0)
+                 + sum(actor.record.income.get("interest_on_lending", 0.0) for actor in borrowed.actors.actors.values()
+                       if actor is not borrowed_treasury)
+                 + borrowed.state.household.cash_flow.get("interest_on_lending", 0.0))
 check("no lender's interest income exceeds what was paid",
       every_receipt <= paid * (1.0 + 1e-9), (every_receipt, paid))
 bare = sim()

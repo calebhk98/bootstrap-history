@@ -35,7 +35,8 @@ def operate_concern(actor: Any, node_id: str, world: Any, rivals: float) -> floa
 	takings = found * world.concern_takings(node_id, actor.opened_year_of(node_id, world.year), rivals, capacity)
 	upkeep = world.upkeep(node_id, capacity)
 	wages = found * world.concern_wage_bill(node_id, capacity)
-	ledger.transfer(world.edge(EDGE_CUSTOMERS), actor, takings, "takings")
+	if not world.sells_on_book(node_id):   # what sells in the book is paid when the year's market clears
+		ledger.transfer(world.edge(EDGE_CUSTOMERS), actor, takings, "takings")
 	ledger.transfer(actor, world.edge(EDGE_SUPPLIERS), upkeep, "upkeep")
 	if actor.record.country is None:
 		world.pay_wages(actor, wages, "wages")

@@ -116,6 +116,19 @@ class EconomyPort:
             return None
         return agent.cohort_incomes()
 
+    def note_actor_sale(self, seller, material, tonnes, from_concerns):
+        """An actor's tonnes of a material for the agent economy's market this year."""
+        self.agent.note_sale(seller, material, tonnes, from_concerns)
+
+    def note_actor_purchase(self, buyer, commodity, tonnes, budget):
+        """An actor's tonnes of a commodity it bids for in the agent economy's market this year, with its budget in coin."""
+        self.agent.note_purchase(buyer, commodity, tonnes, budget)
+
+    def agent_trades_good(self, material):
+        """Whether the agent economy has a market for the material (False while it is off)."""
+        agent = self._answering_agent()
+        return agent is not None and agent.trades_good(material)
+
     def runs_agent_economy(self):
         return self.agent is not None
 
@@ -225,10 +238,6 @@ class EconomyPort:
     def credit_room(self, borrower_id):
         """What lenders will advance this borrower beyond what others owe; None before they have met."""
         return self._sim.market_credit_room(borrower_id)
-
-    def report_interest_paid(self, amount):
-        """Interest a borrower paid this year, shared among lenders at the year's close."""
-        self._sim.note_interest_paid(amount)
 
     # ---- concerns and projects ----------------------------------------------------------------
     def concern_takings(self, node_id, ramp):
