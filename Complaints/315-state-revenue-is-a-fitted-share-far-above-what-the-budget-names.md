@@ -1,6 +1,6 @@
 # State revenue is a fitted share of labour value, several times what the modelled budget spends
 
-**Status:** partly - revenue is the declared forms assessed on modelled bases, in coin or in kind (test state_revenue_forms), and a form can now fall on the strata's earned income (`stratum_income`, test state_strata_fiscal); remaining: no civilisation file declares a stratum-income form yet (data/civilizations is outside the state-budget files), the surplus is spent on unnamed works rather than lines with their own stock, and there is still no rent or land value
+**Status:** partly - revenue is the declared forms assessed on modelled bases, in coin or in kind (test state_revenue_forms); a form can fall on the strata's earned income (`stratum_income`, test state_strata_fiscal), on the rent producers paid for land let (`land_rent`) or on land's capital value, that rent over the market rate (`land_value`) (test state_land_revenue); Rome declares a `tributum_soli` on `land_value`. Remaining: the rent is drawn from the edge, not from named owners, because the agent economy keeps rent with household cohorts and strata are rank slices of them (a world that can name owners returns them from `land_rent_owners()` and the tax is then taken from their purses); no civilisation declares a stratum-income form (no source gives one); the surplus is spent on unnamed works rather than lines with their own stock (see "Lines the budget lacks")
 
 `SimWorld.state_revenue` is the working people not under arms, at the unskilled wage, times the economy's output factor, times `starting_tax_share` times state capacity. With the standing lines of 300 built (army, officials, roads, public buildings, court, dole, navy), a healthy Rome spends about a third of that and Han about a sixth, so neither goes short until a plague, a collapse of output or a threat-driven army takes the revenue below need. Measure: `python3 sim/budget_series.py rome_100ad 200 1` (script since removed; recover with `git show 97473f1:sim/budget_series.py`) and the same for `han_china_100ad`; the table shows revenue beside the need by line. With `BUDGET_SERIES_IDLE_FOUNDER=1`, Rome goes short from the third-century crisis on and Han never does; Norse runs close to balance from the start.
 
@@ -22,3 +22,20 @@ Overlapping issues closed into this one; each closed file keeps its full text.
 
 - 286 (`closed/286-state-budget-models-only-army-and-officials.md`): the state budget names only army and officials; surplus should be spent on named lines with a stock of works (roads, aqueducts) and their upkeep.
 - 105 (`closed/105-add-a-state-fiscal-budget-model.md`): state fiscal budget: the remaining pieces are 286 (above) and the revenue forms in this issue.
+
+## Update (land bases, 2026-10)
+
+`land_rent` and `land_value` (`revenue_bases.py`) read `economy.api.land_rent_paid_by_tile` (`sim/economy/land_rents.py`): each tile's rent per hectare times the hectare-years its producers worked last year, in coin. `land_value` divides by `market_rate()` and is nil without a rate. Not every civilisation had a land tax beyond the harvest forms it already declares: Han, Mexica and Norse take theirs from the harvest, England in 1300 had customs and a movables subsidy but no standing land tax, so only Rome gained a form. No stratum-income form was added because no source names a rate. The Rome form is measured only on fixtures (a whole game was not built); its yield in a played start is unmeasured.
+
+### Lines the budget lacks
+
+The standing lines are army, officials, roads, public buildings, court, dole and navy (`budget.standing_lines`). Surplus beyond the reserve relieves reported hunger, then hires works. Named lines still missing, each with what it needs:
+
+- Fortifications and garrison works: a stock of wall length per tile held, from the frontier and the sack hazards, with upkeep as masons; needs a wall stock on the tile record.
+- Water and drainage (aqueducts, canals, irrigation): a stock per town and per irrigated tile, upkeep as masons and labour; needs the water works to be tile state, not only a node.
+- Granaries and relief stocks: a grain reserve held in the state's stores against bad harvests, bought when the price is low; needs a target in years of need and a store-keeping loss.
+- Tax collection: collectors as a share of the revenue each form raises, by form (a customs post per trade crossing, assessors per land form); needs a cost per unit of base per form.
+- Campaigns beyond the standing force: marching and supply as a function of the threat and distance, paid from stores and coin; needs the army to move on the map.
+- Public works for the capital and temples: building to a stock of floor area beyond upkeep; needs the stock and a motive other than surplus.
+- Gifts and donatives to the army and officials: a per-head payment tied to accession or crisis events; needs those events as state (the events agent's area).
+None is built here.
