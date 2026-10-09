@@ -9,6 +9,7 @@ import unittest
 
 import sim.engine.core  # noqa: F401  (loads the engine in its import order)
 from sim.agents import ledger
+from sim.agents.purses import Purses
 from sim.agents.edges import Edge, EDGE_COIN_GUARDS, EDGE_FREIGHT
 from sim.engine import coin_carriage
 from sim.engine.coin_carriage import CoinCarriageMixin
@@ -35,12 +36,12 @@ class Party:
 
 
 def world():
-    balances = {}
+    balances = Purses()
     sim = types.SimpleNamespace(
         state=types.SimpleNamespace(household=Party(0.0)), world_map=types.SimpleNamespace(tiles={"a": 1, "b": 2}),
         actors=types.SimpleNamespace(state=types.SimpleNamespace(home_country="home", countries={})),
         coin_kg_per_unit=lambda: KG_PER_UNIT, home_carriage_per_tonne=lambda origin, destination: PER_TONNE,
-        edge=lambda name: Edge(name, balances, {}), balances=balances)
+        edge=lambda name: Edge(name, balances), balances=balances)
     sim.place_of = lambda actor: CoinCarriageMixin.place_of(sim, actor)
     sim.charge = lambda *args: CoinCarriageMixin.charge_coin_carriage(sim, *args)
     return sim
@@ -61,7 +62,7 @@ class Carriage(unittest.TestCase):
         sim = world()
         payer, payee = Party(1000.0, "a", "home"), Party(0.0, "b", "home")
         self.pay(sim, payer, payee, 500.0)
-        carriage = sim.balances[EDGE_FREIGHT]
+        carriage = sim.balances.purse(EDGE_FREIGHT)
         self.assertAlmostEqual(carriage, 500.0 * KG_PER_UNIT / 1000.0 * PER_TONNE)
         self.assertAlmostEqual(payer.money + payee.money + carriage, 1000.0)
 
@@ -70,25 +71,25 @@ class Carriage(unittest.TestCase):
         self.pay(sim, Party(1000.0, "a"), Party(0.0, "a"), 500.0)
         self.pay(sim, Party(1000.0, "a"), Party(0.0, "b"), 500.0, "interest")
         self.pay(sim, Party(1000.0, "a"), Party(0.0, None), 500.0)
-        self.assertNotIn(EDGE_FREIGHT, sim.balances)
+        self.assertEqual(sim.balances.purse(EDGE_FREIGHT), 0.0)
 
     def test_a_foreign_party_is_settled_by_the_foreign_route_instead(self):
         sim = world()
         self.pay(sim, Party(1000.0, "a", "home"), Party(0.0, "b", "abroad"), 500.0)
-        self.assertNotIn(EDGE_FREIGHT, sim.balances)
+        self.assertEqual(sim.balances.purse(EDGE_FREIGHT), 0.0)
 
 
 class ForeignKeeping(unittest.TestCase):
 
     def test_a_foreign_actor_pays_its_own_countrys_guards_at_its_pay(self):
-        balances = {}
+        balances = Purses()
         home, abroad = Party(1000.0, country="home"), Party(1000.0, country="abroad")
         scoped = types.SimpleNamespace(pay_per_person_year=lambda trade: 50.0)
         sim = types.SimpleNamespace(
             actors=types.SimpleNamespace(actors={"h": home, "f": abroad},
                                          state=types.SimpleNamespace(home_country="home"),
                                          world_for=lambda actor, shared: scoped if actor is abroad else shared),
-            coin_keeping_cost_per_year=lambda money: 10.0, edge=lambda name: Edge(name, balances, {}))
+            coin_keeping_cost_per_year=lambda money: 10.0, edge=lambda name: Edge(name, balances))
         import sim.engine.agents_port as port
         original = port.SimWorld
         port.SimWorld = lambda _sim: types.SimpleNamespace(pay_per_person_year=lambda trade: 100.0)
@@ -96,8 +97,8 @@ class ForeignKeeping(unittest.TestCase):
             CoinHoardMixin.charge_actors_for_keeping_coin(sim)
         finally:
             port.SimWorld = original
-        self.assertAlmostEqual(balances[EDGE_COIN_GUARDS], 10.0)
-        self.assertAlmostEqual(balances[EDGE_COIN_GUARDS + ":abroad"], 5.0)
+        self.assertAlmostEqual(balances.purse(EDGE_COIN_GUARDS), 10.0)
+        self.assertAlmostEqual(balances.purse(EDGE_COIN_GUARDS + ":abroad"), 5.0)
 
 
 if __name__ == "__main__":

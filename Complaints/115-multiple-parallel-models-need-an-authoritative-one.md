@@ -252,3 +252,5 @@ strata money moves only by what crossed the edge and the state's relief.
   needs those actors to borrow from accounts in the book, the same gap as the trader's purse.
 
 Owner decision (2026-10-09): high priority: do it as soon as possible.
+
+Owner decision (2026-10-09, later): retire the agent-economy-off mode; the agent economy is the only economy (supersedes the earlier keep decision).

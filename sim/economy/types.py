@@ -8,16 +8,14 @@ import math
 from dataclasses import dataclass, field
 from typing import Mapping, Optional, Tuple
 
-AgentId = str
-CurrencyId = str
-GoodId = str
-TileId = str
+from sim.book import (EDGE_PREFIX, AgentId, CurrencyId, GoodId, GoodsMove, TileId, Transfer,  # noqa: F401
+                      is_edge)
+
 AreaId = str
 TradeId = str
 
 # Accounts that are the edge of the model: money and goods enter or leave the economy only through
 # one of these, so every other agent's holdings change only by a transfer with a counterparty.
-EDGE_PREFIX = "edge:"
 EDGE_MINT = "edge:mint"                  # coin struck from metal, or melted back into it
 EDGE_ISSUE = "edge:issue"                # money an issuer creates or retires (fiat, notes)
 EDGE_WEAR = "edge:wear"                  # coin and metal lost to wear, loss and burial
@@ -28,10 +26,6 @@ EDGE_SPOILAGE = "edge:spoilage"          # goods lost while held
 EDGE_DEFAULT = "edge:default"            # debt written off
 EDGE_LEGACY = "edge:legacy"              # engine postings that do not yet name a counterparty
 EDGE_CARGO = "edge:cargo"                # money between a trader's purse (outside the book) and its cargo account
-
-
-def is_edge(agent_id: AgentId) -> bool:
-    return agent_id.startswith(EDGE_PREFIX)
 
 
 def external_edge(partner: str) -> AgentId:
@@ -114,25 +108,6 @@ class SiteLimit:
 
 
 # ---- moving money and goods --------------------------------------------------------------------
-
-@dataclass(frozen=True)
-class Transfer:
-    payer: AgentId
-    payee: AgentId
-    currency: CurrencyId
-    amount: float                    # never negative; reverse payer and payee instead
-    purpose: str
-
-
-@dataclass(frozen=True)
-class GoodsMove:
-    giver: AgentId
-    receiver: AgentId
-    good: GoodId
-    tile: TileId
-    quantity: float                  # never negative
-    purpose: str
-
 
 # ---- orders ------------------------------------------------------------------------------------
 

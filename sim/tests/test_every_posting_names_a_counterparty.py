@@ -1,14 +1,17 @@
 """Complaint 382 step 1: every money posting names a counterparty or a named edge.
 
 Money changes a purse only through `ledger.transfer`; where the other side is not an actor the
-simulation models, it is a named edge held in `state.actors.edges`. So all purses together plus all
-edges together stay what they were, and a new one-sided posting fails the scan below."""
+simulation models, it is a named edge, an account outside the actors in the purses' book (`state.actors.purses`).
+So all purses together plus all edges together stay what they were, and a new one-sided posting fails the scan below.
+The founder's household is not yet an account in that book: what it gains or loses against an actor is booked
+against `edge:outside the book`, so the conserved total is its purse less that edge's balance."""
 import os
 import re
 
 from .harness import *  # noqa: F401,F403
 
 from sim.agents import ledger
+from sim.agents.purses import COIN, EDGE_OUTSIDE
 
 SIM_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCANNED = ("engine", "agents", "labour", "geography", "economy")
@@ -33,11 +36,15 @@ check("no engine or agent code posts money to one side only", not offenders, off
 
 
 def purses(game):
-    return game.state.household.capital + sum(record.money for record in game.state.actors.records.values())
+    book = game.state.actors.purses.book
+    return game.state.household.capital + sum(
+        book.balance(account, COIN) for account in book.agents() if not account.startswith("edge:"))
 
 
 def edges(game):
-    return sum(game.state.actors.edges.values())
+    book = game.state.actors.purses.book
+    return sum(book.balance(account, COIN) for account in book.agents()
+               if account.startswith("edge:") and account != EDGE_OUTSIDE)
 
 
 def ask(game, **command):
@@ -60,10 +67,9 @@ for label, capital in (("a rich household", 300_000.0), ("a poor household", 2_0
     total = purses(game) + edges(game)
     check("%s: all purses and all named edges together stay what they were over %d years" % (label, years),
           abs(total - opening) <= 1e-6 * max(1.0, abs(opening)), (opening, total))
-    check("%s: money moved through named edges" % label, bool(game.state.actors.edge_volume),
-          game.state.actors.edge_volume)
-    check("%s: every edge is named" % label, all(name.startswith("edge:") for name in game.state.actors.edges),
-          sorted(game.state.actors.edges))
+    crossed = game.state.actors.purses.book.edge_agents()
+    check("%s: money moved through named edges" % label, bool(crossed), crossed)
+    check("%s: every edge is named" % label, all(name.startswith("edge:") for name in crossed), crossed)
 
 # an edge takes what a payer loses and gives what a payee gains, and keeps its volume
 from sim.engine.state import ActorsState
@@ -74,8 +80,9 @@ payer.debit = lambda amount, purpose: setattr(payer, "money", payer.money - amou
 payer.credit = lambda amount, purpose: setattr(payer, "money", payer.money + amount)
 ledger.transfer(payer, state.edge("edge:test"), 4.0, "a payment")
 ledger.transfer(state.edge("edge:test"), payer, 1.0, "a refund")
-check("a payer's loss is the edge's gain", payer.money == 7.0 and state.edges["edge:test"] == 3.0, state.edges)
-check("an edge keeps the volume that crossed it", state.edge_volume["edge:test"] == 5.0, state.edge_volume)
+check("a payer's loss is the edge's gain", payer.money == 7.0 and state.edge("edge:test").balance() == 3.0,
+      state.edge("edge:test").balance())
+check("an edge keeps the volume that crossed it", state.edge("edge:test").volume() == 5.0, state.edge("edge:test").volume())
 
 # step 2: wages and the state's pay land in the people's purses
 people = sim(manual=False, events=False)

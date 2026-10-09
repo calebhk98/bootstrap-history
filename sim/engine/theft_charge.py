@@ -53,7 +53,7 @@ class TheftChargeMixin(HoldingsExposureMixin):
             exposure = self.actor_exposure(actor, world.material_price, self.actors.get)
             if not exposure.values:
                 continue
-            scale = self.visible_scale(sum(actor.workforce.values()), record.money, actor.prominence())
+            scale = self.visible_scale(sum(actor.workforce.values()), actor.money, actor.prominence())
             self.steal_from(actor, exposure, theft_exposure.THEFT_SHARE_PER_YEAR_AT_FULL_EXPOSURE,
                             {kind: COIN_GUARD_HOURS_PER_TONNE_YEAR for kind in GUARDED_KINDS}, scale,
                             self.state_capacity, 0.0)

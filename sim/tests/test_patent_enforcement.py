@@ -72,7 +72,7 @@ check("a state with no capacity enforces nothing", infringer.money == 1000.0 and
 
 # ---- the damages never exceed the infringer's purse --------------------------------------------------
 world, registry, holder, infringer, licensed = setup(1.0)
-infringer.record.money = 100.0
+infringer.money = 100.0
 enforcement.enforce_patents(registry, world)
 check("an infringer pays no more than it holds", infringer.money == 0.0 and holder.money == 1100.0, (infringer.money, holder.money))
 

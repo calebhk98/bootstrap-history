@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Set
 
 from .edges import Edge
+from .purses import Purses
 
 
 @dataclass
@@ -211,15 +212,18 @@ class ActorsState:
 	countries: Dict[str, CountryProfile] = field(default_factory=dict)
 	# the founder's own country (the civilisation the game was started with)
 	home_country: str = ""
-	# named edge -> money it has taken in less what it has paid out, and the money that crossed it either way
-	edges: Dict[str, float] = field(default_factory=dict)
-	edge_volume: Dict[str, float] = field(default_factory=dict)
+	# every actor's money, as accounts in a book with the edges among them, and the debts as loan claims (purses.py)
+	purses: Any = field(default_factory=Purses)
 	# named edge -> material -> tonnes of goods it holds (stolen stock goes to the thieves' edge)
 	edge_goods: Dict[str, Dict[str, float]] = field(default_factory=dict)
 	# concern id -> the takings of a lone operator that entrants expect, and the year it was last revised
 	expected_takings: Dict[str, float] = field(default_factory=dict)
 	expected_takings_year: Dict[str, int] = field(default_factory=dict)
 
+	def __post_init__(self) -> None:
+		if isinstance(self.purses, dict):
+			self.purses = Purses.from_record(self.purses)
+
 	def edge(self, name: str) -> Edge:
 		"""The named edge, an account outside the actors that a posting can name as its counterparty."""
-		return Edge(name, self.edges, self.edge_volume, self.edge_goods)
+		return Edge(name, self.purses, self.edge_goods)

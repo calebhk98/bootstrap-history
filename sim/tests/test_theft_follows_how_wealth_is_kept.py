@@ -6,6 +6,7 @@ QUICK_TOPIC = True
 import types
 import unittest
 
+from sim.agents.purses import Purses
 from sim.agents.edges import Edge, EDGE_THIEVES
 from sim.engine import theft_exposure
 from sim.engine.holdings_exposure import Exposure
@@ -63,19 +64,19 @@ class FakePurse:
 class TheftPaidToThieves(unittest.TestCase):
 
     def test_stolen_money_is_conserved_and_lands_with_the_thieves(self):
-        balances = {}
-        thieves = Edge(EDGE_THIEVES, balances, {})
+        balances = Purses()
+        thieves = Edge(EDGE_THIEVES, balances)
         purse = FakePurse(VALUE)
         world = types.SimpleNamespace(edge=lambda name: thieves)
         exposure = Exposure(values={"coin": purse.money}, purse=purse.money)
         stolen = TheftChargeMixin.steal_from(world, purse, exposure, ANNUAL, **CALM)
         self.assertGreater(stolen, 0.0)
-        self.assertAlmostEqual(purse.money + balances[EDGE_THIEVES], VALUE)
-        self.assertAlmostEqual(balances[EDGE_THIEVES], stolen)
+        self.assertAlmostEqual(purse.money + balances.purse(EDGE_THIEVES), VALUE)
+        self.assertAlmostEqual(balances.purse(EDGE_THIEVES), stolen)
 
     def test_nothing_is_stolen_from_a_purse_holding_no_coin(self):
         purse = FakePurse(-20.0)
-        world = types.SimpleNamespace(edge=lambda name: Edge(EDGE_THIEVES, {}, {}))
+        world = types.SimpleNamespace(edge=lambda name: Edge(EDGE_THIEVES, Purses()))
         exposure = Exposure(values={}, purse=0.0)
         self.assertEqual(TheftChargeMixin.steal_from(world, purse, exposure, ANNUAL, **CALM), 0.0)
         self.assertEqual(purse.money, -20.0)

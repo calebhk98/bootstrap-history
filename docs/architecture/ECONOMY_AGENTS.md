@@ -5,6 +5,8 @@ Status: the game's economy by default. A game opts out with `cfg["agent_economy"
 `sim/engine/economy_port_year.py`). Tests of the old economy's own mechanisms opt out explicitly.
 The yearly economy checks measure it against plausible ranges.
 
+Owner decision (2026-10-09, later): retire the agent-economy-off mode; the agent economy is the only economy (supersedes the earlier keep decision).
+
 ## What it is
 
 `sim/economy/` is a standalone package: agents that hold money and goods, markets that clear their
@@ -153,6 +155,28 @@ The trader's purse itself is still the engine's, not an account in the book (Com
 
 **The founder's concerns sell in the same markets**, offered at their output's cost at the economy's
 own prices and wages; the takings return to the engine's purse through `edge:legacy` (Complaint 382).
+
+## Actors' money and debt in the book (Complaint 115)
+
+The engine's actors (firms, the state, traders, interest groups and the strata) keep their money as accounts in a
+double-entry book (`sim/book.py`, the class the economy's own agents use; the actors' instance is
+`ActorsState.purses`, `sim/agents/purses.py`). The book exists from the first posting of a game and is saved with
+the actors. The decision for who may owe what, and to whom:
+
+- A purse is never negative. Only edge accounts (the edges named in `sim/agents/edges.py`, and the savers) may go
+  below zero.
+- A debt is a loan claim. An actor that pays more than its purse holds draws the shortfall on its facility: the
+  household savers (`edge:savers`, the lenders the simulation does not model one by one) put the money into its
+  purse and hold a claim for the principal. Money that comes in repays the claim before it is kept. The claim is the
+  lender's asset and the actor's liability, the way `economy/credit_claims.py` already treats a cohort's or a
+  merchant's loan, and moves no money by itself.
+- `Actor.money` stays the net position (purse less claim), so every reader keeps its meaning; `Actor.debt()` is the
+  claim's principal and `spendable` the purse above zero plus the credit still open. Interest is added to the claim
+  as before (`Borrower.pay_interest`); the market's pool still shares it among the lenders at the yearly meeting.
+- The household savers lend from `edge:savers`, not from named cohorts. Linking the facility to the economy's credit
+  market (cohorts' savings on offer, the market's rate, defaults) waits until the purses and the economy's book are
+  one book (the next stages of Complaint 115); until then the facility is a labelled stand-in and the market rate
+  and credit ceiling are still the ones `Borrower.credit_ceiling` reads.
 
 ## Heuristics
 
