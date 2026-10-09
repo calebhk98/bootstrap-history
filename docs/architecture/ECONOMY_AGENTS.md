@@ -95,9 +95,19 @@ idle capacity could have added, a recipe the society knows that pays at the pric
 the tile's producer of it (`entry.py`, `entry_year.py`), its owner staking cash and borrowing plant
 only up to that stake. A market with buyers and no maker in its area draws a trial newcomer judged at
 its own full cost plus a margin, since its remembered price is stale (`entry_trial.py`). A good with no
-known recipe gets no maker. Entry drawn by a lasting margin over full cost where makers already exist
-was tried and taken out because it destabilised staple prices
+known recipe gets no maker. Every recipe that pays draws a newcomer, best first, each for a share of
+what the better ones leave: no cap on newcomers per market a year. Where makers exist and sellers have
+raised asks until buyers are no longer turned away, a market whose usual (smoothed) price stays above
+its cheapest recipe's entry price for as many years as a loser waits to exit draws newcomers sized to
+what the bids take at the entry price, no faster than incumbents change their output
+(`entry_margin.py`); the first attempt at this destabilised staple prices
 (`Complaints/reports/agent-economy-review-round-four.md`, "Tried and not merged").
+
+**Workers ask what they can sell for, down to a floor.** A worker's ask falls while hours go unsold
+and rises when demand outruns supply (`sim/labour/market/asks.py`). It never falls below what keeping
+his household alive and working costs (the need basket's floors at local prices) less what its own plot
+grows (`labour_ask_floor.py`). `simulator.py economy-check` prints the hired share, the wage over that
+floor and the staple's price over its labour cost.
 
 **Producers sit on tiles.** Each tile is its own labour market, so a producer hires only its own tile's
 people. At the opening a recipe's capacity is spread over its market area's tiles by working hours;
