@@ -31,6 +31,18 @@
   "hazards": [
     {
       "name": "Great Famine",
+      "causes": [
+        {
+          "quantity": "food_supply_ratio",
+          "op": "<",
+          "value": 1.1,
+          "why": "A dearth or famine strikes a society without a harvest margin; with a margin above need a bad year is absorbed. A reasoning bound, to be fitted against a baseline ensemble."
+        }
+      ],
+      "causes_effect": "scale",
+      "causes_not_modelled": [
+        "The run of cold wet years: weather and the map are only partly joined, so the harvest shock comes through the food supply alone."
+      ],
       "staff_loss": 0.12,
       "years": [
         1315,
@@ -57,6 +69,17 @@
     },
     {
       "name": "Hundred Years War",
+      "causes": [
+        {
+          "quantity": "army_share_of_wanted",
+          "op": ">=",
+          "value": 0.5,
+          "why": "A war or a rebellion by soldiers needs a standing force to fight it; a state that has let its army fall below half of what its threat calls for is not the one that went to war. A reasoning bound, to be fitted against a baseline ensemble."
+        }
+      ],
+      "causes_not_modelled": [
+        "The French crown's army and its aggression, and the dynastic claim: no neighbouring polity is simulated."
+      ],
       "note": "A century of war funded by taxation Parliament must consent to, which is why Parliament's power grows through this period rather than the Crown's alone, and funded also by letters patent: Edward III's 1331 grant inviting the Flemish clothworker John Kempe to teach English weavers his technique is the template for a whole class of war-driven invitations to bring a foreign process home and be rewarded with a monopoly on it. That makes the wartime Crown a more eager importer of new technique than peacetime custom would be, and makes royal favour, increasingly dispensed through war service and patent grants rather than land alone, matter more than it did -- both applied gradually below as shifts in what this society values, well short of a value that would make this an easy country to work in; the guilds who litigate against a fulling mill are not softened by any of it.",
       "output_factor": 0.85,
       "values": {
@@ -70,6 +93,23 @@
     },
     {
       "name": "Wars of the Roses",
+      "causes": [
+        {
+          "quantity": "elite_share_vs_opening",
+          "op": ">=",
+          "value": 1.0,
+          "why": "Civil war follows elite overproduction: more claimants to the same offices. The propertied bodies must be at least as large a share of the people as they began."
+        },
+        {
+          "quantity": "state_funded_share",
+          "op": "<",
+          "value": 1.0,
+          "why": "Fiscal strain is the shared root of the collapses and wars of this kind: a state whose revenue covers everything it needs has no arrears, no mutiny over pay and no pressure to seize new sources of money."
+        }
+      ],
+      "causes_not_modelled": [
+        "A disputed succession and a weak king's legitimacy: not simulated."
+      ],
       "note": "From the first battle of St Albans on 22 May 1455 to Stoke Field on 16 June 1487, with Towton on 29 March 1461 the bloodiest day ever fought on English soil and Bosworth on 22 August 1485 the decisive one. It is deliberately modelled light, and that is the historically honest choice: the campaigns were short, the armies were small, the fighting was between magnate affinities rather than across the countryside, and the wool exports, the courts, the harvest and the fairs carried on through nearly all of it. What it does change is whose protection is worth having. An attainder passed on the losing side took everything a family owned, the Yorkist and Tudor settlements each redistributed patronage wholesale, and standing conspicuously near a great man became the main way to lose what you had built. The danger to a workshop here is being on the wrong lord's list, not being burnt.",
       "output_factor": 0.92,
       "sack_chance": 0.005,
@@ -84,6 +124,17 @@
     },
     {
       "name": "Break with Rome and the dissolution of the monasteries",
+      "causes": [
+        {
+          "quantity": "state_funded_share",
+          "op": "<",
+          "value": 1.0,
+          "why": "Fiscal strain is the shared root of the collapses and wars of this kind: a state whose revenue covers everything it needs has no arrears, no mutiny over pay and no pressure to seize new sources of money."
+        }
+      ],
+      "causes_not_modelled": [
+        "A king's marriage and the church as an institution with estates: no religious institution is simulated."
+      ],
       "note": "The Act of Supremacy of 1534, the suppression of the lesser houses in 1536 and of the greater houses in 1539. Somewhere between a quarter and a third of the land of England changed hands through the Court of Augmentations inside a decade, most of it sold on to gentry buyers to pay for the French war: the largest transfer of English property before the twentieth century, and the making of the improving landlord who will matter enormously in the eighteenth century entry below. The other half is a real loss. The monastic libraries were destroyed - John Leland went round the houses ahead of the commissioners trying to record what was in them and largely failed, and the university library at Oxford was stripped so completely that in 1556 the empty shelves themselves were sold off. Both facts are modelled: a working land market and a burnt archive.",
       "output_factor": 0.92,
       "values": {
@@ -97,6 +148,9 @@
     },
     {
       "name": "The confessional whiplash",
+      "causes_not_modelled": [
+        "Each ruler's religion and the succession: ruler legitimacy and religious institutions are not simulated, so no necessary condition can be checked."
+      ],
       "note": "Edwardian iconoclasm from 1547 to 1553, then Mary's restoration of Rome and the burning of some two hundred and eighty Protestants between 1555 and 1558, then the Elizabethan settlement in 1559. Under each regime the safest scholarly position was to hold no position at all and to have written nothing down that could be produced later. Short, and modelled as shifts in what this society values only: nobody's harvest failed because of it, but the risk of writing anything about the order of the world went up sharply and did not come back down until the next entry.",
       "values": {
         "w_magic_fear": 0.05,
@@ -109,6 +163,9 @@
     },
     {
       "name": "The Elizabethan settlement and the strangers",
+      "causes_not_modelled": [
+        "A ruler's religious settlement and refugees from foreign persecution: neither a ruler's choice nor foreign polities are simulated."
+      ],
       "note": "The 1559 settlement ended the confessional swings and deliberately declined to ask hard questions about private belief. The Crown then set about importing technique on purpose. The Company of Mines Royal and the Mineral and Battery Works, both chartered in 1568, brought German miners and brass-makers to Keswick and Tintern; Dutch and Walloon refugee weavers were settled at Sandwich from 1561, Norwich from 1565 and Colchester and Canterbury after, bringing the new draperies with them; and English patents for invention begin in earnest, with Giacomo Acontio's petition of 1565 making the argument that a term of monopoly is the fair price of disclosure. This is the first stretch of English history in which being a foreign man with an unfamiliar process is an asset rather than a liability. The offsetting fact, and it is not small, is that this is also when the witch trials start: the Witchcraft Act of 1563 made it a felony, and the Home Circuit indictments peak between the 1580s and the 1640s. Novelty gets cheaper and doctrine gets lighter, and producing an effect nobody can explain gets more dangerous, all at once.",
       "values": {
         "w_commerce": 0.1,
@@ -123,6 +180,18 @@
     },
     {
       "name": "The dearth of the 1590s",
+      "causes": [
+        {
+          "quantity": "food_supply_ratio",
+          "op": "<",
+          "value": 1.1,
+          "why": "A dearth or famine strikes a society without a harvest margin; with a margin above need a bad year is absorbed. A reasoning bound, to be fitted against a baseline ensemble."
+        }
+      ],
+      "causes_effect": "scale",
+      "causes_not_modelled": [
+        "The run of bad harvests: weather and the map are only partly joined."
+      ],
       "note": "Four consecutive cold wet summers and failed harvests, 1594 to 1597. Grain prices roughly doubled; parish burial registers in the north-west, Cumberland and Westmorland in particular, show genuine famine mortality, while the south got off with high prices and hunger. The Poor Law of 1598, consolidated in 1601 and in force for two and a half centuries, is the state's answer to it. Modest here because it was regional, not national.",
       "staff_loss": 0.08,
       "condition": {
@@ -142,6 +211,23 @@
     },
     {
       "name": "Civil War and Interregnum",
+      "causes": [
+        {
+          "quantity": "elite_share_vs_opening",
+          "op": ">=",
+          "value": 1.0,
+          "why": "Civil war follows elite overproduction: more claimants to the same offices. The propertied bodies must be at least as large a share of the people as they began."
+        },
+        {
+          "quantity": "state_funded_share",
+          "op": "<",
+          "value": 1.0,
+          "why": "Fiscal strain is the shared root of the collapses and wars of this kind: a state whose revenue covers everything it needs has no arrears, no mutiny over pay and no pressure to seize new sources of money."
+        }
+      ],
+      "causes_not_modelled": [
+        "King against parliament over religion and taxation: legitimacy and religious institutions are not simulated."
+      ],
       "note": "Edgehill in 1642, Marston Moor in 1644, Naseby on 14 June 1645, the execution of Charles I on 30 January 1649, Worcester in 1651. Perhaps 85,000 died in the fighting and something like 100,000 more of the camp diseases that travelled with the armies - a share of the population comparable to the First World War's and the worst English event modelled here apart from the plagues. Towns were stormed and sacked, Bolton and Leicester and Bristol twice among them, which is why this civilization now carries a sack risk that it did not carry through the whole of the Hundred Years War: that war was fought in France, and this one was not. The offsetting fact is that the same years produced Hartlib's circle and its programme of useful knowledge, Wilkins' experimental club at Wadham, and the political conditions in which the Royal Society could be chartered eighteen months after the Restoration.",
       "output_factor": 0.75,
       "sack_chance": 0.035,
@@ -193,6 +279,15 @@
     },
     {
       "name": "The Royal Society and the end of the witch trials",
+      "causes": [
+        {
+          "quantity": "literacy_elite",
+          "op": ">=",
+          "value": 0.5,
+          "relative_to_start": true,
+          "why": "A movement carried by books and schools needs readers; if the educated class has lost half its opening literacy the texts and the clergy or officials who copy them are gone."
+        }
+      ],
       "note": "The Statute of Monopolies of 1624 had already fixed the shape of English patent law - fourteen years to the true and first inventor of a new manufacture, void for everything else - and after 1660 using it becomes routine rather than exceptional. The Royal Society was chartered in 1662 and printed the Philosophical Transactions from 1665, which is the first standing public record of experiment in England and the first place where publishing a method makes you safer rather than more exposed. Newton's Principia followed in 1687. Over the same decades the witch trials collapse: the last English execution for witchcraft is usually given as Alice Molland at Exeter in 1685, and the last certain one is Temperance Lloyd and the other two Bideford women in 1682; and the Witchcraft Act of 1736 repealed the offence and replaced it with a fine for pretending to have magical powers. Being publicly and printedly curious stops being dangerous in England inside two generations. This is the largest favourable shifts in what this society values shift in this file and it is the reason the eighteenth century looks the way it does.",
       "values": {
         "w_commerce": 0.12,
@@ -208,6 +303,17 @@
     },
     {
       "name": "The financial revolution",
+      "causes": [
+        {
+          "quantity": "state_funded_share",
+          "op": "<",
+          "value": 1.0,
+          "why": "Fiscal strain is the shared root of the collapses and wars of this kind: a state whose revenue covers everything it needs has no arrears, no mutiny over pay and no pressure to seize new sources of money."
+        }
+      ],
+      "causes_not_modelled": [
+        "The change of dynasty and a parliament's guarantee of the debt: legitimacy and representative bodies are not simulated."
+      ],
       "note": "The settlement of 1689 is not only fiscal: the Toleration Act of the same year let Protestant dissenters worship legally, and the Dissenting academies that followed taught mathematics, natural philosophy and bookkeeping to men the universities would not admit, which is where a good share of the next century's engineers were educated. The Test and Corporation Acts stood until 1828 and Catholics were excluded until 1829, so doctrine still costs something here - but far less than it cost in 1300. On the money: the Bank of England chartered in 1694, a funded national debt serviced by parliamentary taxation rather than by the king's word, the Great Recoinage of 1696 with Newton at the Mint, and by 1720 a securities market deep enough to produce the South Sea Bubble and the Bubble Act passed to stop the next one. Borrowing rates fall further and faster here than anywhere else in Europe, and capital that had to be inherited can now be raised. The rise in how much money can buy in a courtroom is not a joke: the eighteenth-century English state ran on place, pension, sinecure and interest, which is a genuine protection for a man with money to spend on friends and a genuine obstacle to one without.",
       "values": {
         "bribability": 0.08,
@@ -221,6 +327,18 @@
     },
     {
       "name": "The great frost and the dearth of 1740",
+      "causes": [
+        {
+          "quantity": "food_supply_ratio",
+          "op": "<",
+          "value": 1.1,
+          "why": "A dearth or famine strikes a society without a harvest margin; with a margin above need a bad year is absorbed. A reasoning bound, to be fitted against a baseline ensemble."
+        }
+      ],
+      "causes_effect": "scale",
+      "causes_not_modelled": [
+        "The frost itself: weather and the map are only partly joined."
+      ],
       "note": "The winter of 1739-40 is the coldest in the Central England Temperature series, which begins in 1659. The 1740 harvest failed across northern Europe, and 1741 was the worst peacetime mortality year of the English eighteenth century. In Ireland the same two years are the bliain an air, the year of the slaughter, in which something like a fifth to a quarter of the population died - proportionally worse than the famine of the 1840s, and much less remembered.",
       "staff_loss": 0.07,
       "condition": {
@@ -240,6 +358,15 @@
     },
     {
       "name": "Enclosure and the agricultural revolution",
+      "causes": [
+        {
+          "quantity": "population",
+          "op": ">=",
+          "value": 1.0,
+          "relative_to_start": true,
+          "why": "The change answers pressure of people on land; a society that has shrunk below its opening population is not under that pressure."
+        }
+      ],
       "note": "More than five thousand private enclosure acts between 1700 and 1830, enclosing something like six and a half million acres of open field and common; Tull's seed drill of about 1701; the Norfolk four-course rotation with turnips and clover; Bakewell's breeding at Dishley from the 1760s. English agricultural output roughly doubled while the share of the workforce on the land fell, which is what releases hands for anything else. The reason this belongs in a technologist's file is Robert Allen's point about why the machines were built here: English wages were high and English coal was cheap, so a device that replaced a man paid for itself in Lancashire when the identical device did not pay in France or in Bengal. how a device that replaces a man is received therefore moves from strongly negative to about neutral across the century - neutral and not positive, because the men whose work is being replaced fight back and keep winning locally: John Kay was driven out of Bury in 1753, the Spitalfields weavers broke engine looms, and the Luddites are only a decade past this horizon.",
       "values": {
         "w_commerce": 0.08,
@@ -252,6 +379,17 @@
     },
     {
       "name": "The Napoleonic Wars and the Continental System",
+      "causes": [
+        {
+          "quantity": "army_share_of_wanted",
+          "op": ">=",
+          "value": 0.5,
+          "why": "A war or a rebellion by soldiers needs a standing force to fight it; a state that has let its army fall below half of what its threat calls for is not the one that went to war. A reasoning bound, to be fitted against a baseline ensemble."
+        }
+      ],
+      "causes_not_modelled": [
+        "A continental power's army and its blockade: no neighbouring polity is simulated."
+      ],
       "note": "Britain is at war with France for all but one year between 1793 and 1815. Napoleon's Continental System, decreed from Berlin in 1806, tries to close every port in Europe to British trade; Britain's own Orders in Council answer in kind. Trade did not stop - smuggling and re-export through neutral flags were both large - but it ran at a real cost and a real risk of seizure the whole time, and the war itself absorbed a workforce and a tax base that would otherwise have gone to anything else. Unlike the Hundred Years War this is not fought on English soil, so it costs trade and money rather than a sack.",
       "output_factor": 0.87,
       "years": [
@@ -261,6 +399,9 @@
     },
     {
       "name": "The Great Exhibition and Victorian confidence in the machine",
+      "causes_not_modelled": [
+        "A public mood of confidence in machines: public opinion is not simulated, so no necessary condition can be checked."
+      ],
       "note": "Paxton's Crystal Palace opened in Hyde Park on 1 May 1851 and six million people, a third of the population, went through it over five months, to look at machinery as the main attraction rather than as a threat to anyone's trade. It is the clearest single marker of the thing Allen's agricultural-revolution entry above says started only reluctantly: by 1851 a device that replaces a man's work is something Britain holds a celebration of. No damage fields: this is the one unambiguously good year in the file between the Black Death and the twentieth century.",
       "values": {
         "w_novelty": 0.08,
@@ -273,6 +414,17 @@
     },
     {
       "name": "The First World War",
+      "causes": [
+        {
+          "quantity": "army_share_of_wanted",
+          "op": ">=",
+          "value": 0.5,
+          "why": "A war or a rebellion by soldiers needs a standing force to fight it; a state that has let its army fall below half of what its threat calls for is not the one that went to war. A reasoning bound, to be fitted against a baseline ensemble."
+        }
+      ],
+      "causes_not_modelled": [
+        "Alliances and an opposing coalition: no neighbouring polity is simulated."
+      ],
       "note": "Roughly 880,000 British dead out of a population of about 46 million, concentrated almost entirely among working-age men, plus four years in which a large share of everything the country could make went to the trenches rather than to trade. The war is also why income tax, conscription and rationing all become things a British state can simply do, which the financial-revolution and Royal Society entries above would not have predicted from 1720.",
       "output_factor": 0.78,
       "staff_loss": 0.025,
@@ -283,6 +435,17 @@
     },
     {
       "name": "The Second World War",
+      "causes": [
+        {
+          "quantity": "army_share_of_wanted",
+          "op": ">=",
+          "value": 0.5,
+          "why": "A war or a rebellion by soldiers needs a standing force to fight it; a state that has let its army fall below half of what its threat calls for is not the one that went to war. A reasoning bound, to be fitted against a baseline ensemble."
+        }
+      ],
+      "causes_not_modelled": [
+        "Alliances and an opposing coalition: no neighbouring polity is simulated."
+      ],
       "note": "About 450,000 British dead, smaller as a share of the population than the First War, but the material disruption is larger: the Blitz, convoy losses in the Atlantic, and an economy converted almost wholly to war production under rationing that outlasted the war itself into the early 1950s. Britain emerges victorious and essentially bankrupt, which is the real backdrop to everything that follows this horizon.",
       "output_factor": 0.72,
       "staff_loss": 0.015,

@@ -6,7 +6,9 @@ import json
 import os
 import random
 import sys
+import tempfile
 import unittest
+from unittest import mock
 
 _REPOSITORY_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(
     os.path.abspath(__file__))))
@@ -261,6 +263,13 @@ class DivergenceTests(unittest.TestCase):
         reply = _ask(_shared_sim(), "divergence")
         self.assertTrue(reply["cannot_know"])
         self.assertIn("baseline", " ".join(reply["cannot_know"]).lower())
+
+    def test_without_a_baseline_ensemble_it_says_how_to_make_one(self):
+        with tempfile.TemporaryDirectory() as empty, mock.patch.dict(os.environ, {"ROME_CACHE_DIR": empty}):
+            reply = _ask(_shared_sim(), "divergence")
+        self.assertFalse(reply["baseline"]["available"])
+        self.assertIn("baseline-ensemble", reply["baseline"]["how_to_generate"])
+        self.assertIn("baseline-ensemble", " ".join(reply["cannot_know"]))
 
     def test_fog_lists_only_nodes_the_player_has_built(self):
         sim = _shared_sim(fog=True)

@@ -321,7 +321,16 @@ Two fixes, usable separately or together:
                                                     way, upcoming or before the run began;
                                                     "causes_checked" is true when the event
                                                     states causes, with "causes_hold_now" and
-                                                    "failed_causes") and
+                                                    "failed_causes"; "causes_not_modelled"
+                                                    lists causes with no simulated
+                                                    counterpart), "baseline" (the run
+                                                    against the baseline ensemble: each
+                                                    measure against its band, and which
+                                                    built technologies the baseline society
+                                                    would not yet hold; when no ensemble is
+                                                    cached, "available" is false and
+                                                    "how_to_generate" names the command
+                                                    `simulator.py baseline-ensemble`) and
                                                     "cannot_know". Under fog an upcoming
                                                     event has no name.
       {"cmd":"finish"}                             end the run here and return the final

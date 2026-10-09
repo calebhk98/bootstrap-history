@@ -6,10 +6,14 @@ An event's `causes` is a list of conditions, all of which must hold. Each names 
 `relative_to_start` reads `value` as a share of the quantity at the start of the run; `node` names the
 technology of the `state_holds` quantity. With `causes_effect` "skip" (the default) an event whose causes
 fail does not happen that year; with "scale" it happens at the strength the causes hold to, the smallest
-closeness among them. The engine knows quantity names only, never an event or technology id.
+closeness among them. `causes_not_modelled` lists, in words, historical causes with no simulated counterpart;
+they are shown on the divergence screen and judged by nothing. A quantity not yet measured does not stop an
+event. The engine knows quantity names only, never an event or technology id.
 """
 import operator
 from typing import Any, Callable, Dict, List, NamedTuple, Optional, Tuple
+
+from . import event_cause_state
 
 OPERATORS: Dict[str, Callable[[float, float], bool]] = {
     ">": operator.gt, ">=": operator.ge, "<": operator.lt, "<=": operator.le, "==": operator.eq}
@@ -78,6 +82,16 @@ QUANTITIES: Dict[str, Quantity] = {
     "state_holds": Quantity(_state_holds, needs_node=True, meaning="1 when the state holds the technology `node`, else 0"),
     "territory_share_of_start": Quantity(_territory_share,
                                          meaning="share of the tiles held at the start still held"),
+    "food_supply_ratio": Quantity(event_cause_state.food_supply_ratio,
+                                  meaning="calories available over calories needed last year"),
+    "lowest_stratum_welfare": Quantity(event_cause_state.lowest_stratum_welfare,
+                                       meaning="welfare ratio of the worst-off free body of people"),
+    "stratum_welfare_spread": Quantity(event_cause_state.stratum_welfare_spread,
+                                       meaning="best-off over worst-off welfare among free bodies of people"),
+    "coin_metal_kept": Quantity(event_cause_state.coin_metal_kept,
+                                meaning="share of the opening metal the state's coin still holds"),
+    "elite_share_vs_opening": Quantity(event_cause_state.elite_share_vs_opening,
+                                       meaning="propertied share of the people over its opening share"),
 }
 
 
@@ -99,8 +113,13 @@ def _threshold(sim: Any, cause: Dict[str, Any], quantity: Quantity) -> float:
 
 def evaluate_cause(sim: Any, cause: Dict[str, Any]) -> Dict[str, Any]:
     quantity = QUANTITIES[cause["quantity"]]
-    value = float(quantity.read(sim, cause.get("node")))
+    reading = quantity.read(sim, cause.get("node"))
     threshold = _threshold(sim, cause, quantity)
+    if reading is None:  # not yet measured: nothing to judge by, so the cause does not stop the event
+        return {"quantity": cause["quantity"], "node": cause.get("node"), "op": cause["op"],
+                "threshold": round(threshold, 4), "value": None, "holds": True, "closeness": 1.0,
+                "why": cause.get("why", "")}
+    value = float(reading)
     holds = OPERATORS[cause["op"]](value, threshold)
     return {"quantity": cause["quantity"], "node": cause.get("node"), "op": cause["op"],
             "threshold": round(threshold, 4), "value": round(value, 4), "holds": holds,
@@ -154,6 +173,9 @@ def cause_problems(hazard: Dict[str, Any], node_ids: Any) -> List[str]:
     problems = []
     if hazard.get("causes_effect", "skip") not in EFFECTS:
         problems.append("%s: causes_effect must be one of %s" % (name, ", ".join(EFFECTS)))
+    unmodelled = hazard.get("causes_not_modelled", [])
+    if not isinstance(unmodelled, list) or any(not str(entry).strip() for entry in unmodelled):
+        problems.append("%s: causes_not_modelled must be a list of non-empty sentences" % name)
     for cause in hazard.get("causes") or []:
         quantity = QUANTITIES.get(cause.get("quantity"))
         if quantity is None:

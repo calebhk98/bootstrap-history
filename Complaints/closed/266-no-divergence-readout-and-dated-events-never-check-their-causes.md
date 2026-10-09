@@ -1,0 +1,33 @@
+# Nothing tells the player when history has left its track, and scheduled events fire whether or not their causes still exist
+
+**Status:** closed - `divergence` readout; every dated event now states causes the engine can check, or names the historical causes it cannot simulate (`causes_not_modelled`); `simulator.py baseline-ensemble` stores a baseline ensemble that `divergence` reads for measures and for which built technologies the baseline society would not yet hold
+
+Three testers (A, B and the Rome and Han reports in complaint 180): the 235 crisis, Decian edict, Diocletian reforms, Gothic settlement and sacks fire on schedule in an empire with steam, grids and 120 million people; the civilisation is still "under Trajan" in 600 AD (260); Mexica "invasion feels predetermined" (90% a year, all three runs, see 250). Effects are softened by what the player built, but whether they happen at all never changes.
+
+Complaint 180 records the stakeholder decision that dated hazards stay until the dynamic systems can produce them. This complaint asks for two things that decision does not rule out:
+
+1. A divergence readout: a screen comparing the run with the recorded world (population, literacy, key inventions, who holds the territory) and flagging when a dated event's stated causes are no longer true, so the player and the tester can see why it still fired.
+2. Events that evaluate their own preconditions (an `if` in the data, not in the engine, per 4.7) and can be skipped, changed or fail, rather than always firing.
+
+Also from A: "conditional historical events", "alternative outcomes", and "dynamic neighbouring societies" (see 103, 109, 112). C also asks the risk text to say the design intent ("you cannot stop the conquest, only protect what you know") and to show how much each hedge moves the odds (see 200, 245).
+
+Status of evidence: reproduces by design; no live run was needed. Related: 180, 260, 103, 109, 245, 200.
+
+
+Found in the final blind playtests of this branch (Rome 100 AD and Mexica 1500 fog runs; A section 7; B tree and history; C design complaints on the invasion). Reports: `Complaints/reports/playtest-rome-fog-fuzzy-demo.md`, `Complaints/reports/playtest-rome-fog-demo-65pct.md`; triage: `Complaints/reports/final-playtests-triage.md`.
+
+## Done
+
+- `divergence` (aliases `drift`, `baseline`): start values against now for population, wage and price index, both literacies and territory; the technologies the founder built; each dated event as happened, under way, upcoming or before the run began, with `causes_checked` false. It states what it cannot know (`sim/ui/proto/screen_divergence.py`).
+
+- Item 2, mechanism: an event may declare `causes` in its civilisation file (quantity, comparison, threshold, `why`), evaluated by `sim/engine/event_causes.py` (quantities: population, output hours per head, state funded share, army against the threat, both literacies, a technology the state holds, share of start territory held). A failed cause skips the event that year (or weakens it with `causes_effect: scale`) and says so once in the log. `validate` rejects an unknown quantity, operator or technology. The `divergence` screen reports `causes_checked`, `causes_hold_now` and `failed_causes`; the `risk` forecast shows the chances after the causes, with the causes listed. Tests: `sim/tests/test_event_causes.py`.
+- Causes are stated for: the plague and epidemic events (population against the opening population), the third-century crisis and the currency debasement (state funding gap), Diocletian's reforms (funding gap, territory held), the Gothic settlement, the sack of Rome, the Lombard invasion and the Spanish invasion (army against the threat), the end of the western empire (funding gap).
+
+## Closed by
+
+- New quantities events can name (`sim/engine/event_cause_state.py`): food supply over need, lowest and spread of stratum welfare, the share of the opening metal the coin holds, and the propertied share of the people against its opening share. A quantity not yet measured does not stop an event. Every shipped event except the disasters (below) now carries `causes`, `causes_not_modelled`, or both, in the five civilisation files.
+- `causes_not_modelled` (data, a list of sentences, checked by `validate`) says precisely which historical causes have no simulated counterpart; the `divergence` screen prints them under the event. Decision: an unsimulated cause does not block closing. Where the event has a necessary condition the simulation can check, that is stated as a cause (a debased coin for its restoration, a divided realm for its reunification, a standing army for a war of soldiers, fiscal strain, hungry free strata, elite numbers). Where it has none (a usurping empress, a strongman's rule, a treaty, a union of crowns, criminal organisations, a public mood), the event stays dated and says so, which is the standing decision of Complaint 180 until the dynamic systems exist. The Spanish invasion's allies and weapons gap are listed this way: no allied city-state actor exists, and the sources dispute the weapons' weight, so it stays with the hazard counters that already soften sacks.
+- The Great Fire of London and the two Mexico City earthquakes carry no causes: fire is already a yearly random event and earthquakes are not derivable from anything simulated (seismicity is not modelled). They are the dated exception the research report allows.
+- Baseline ensemble: `python3 sim/simulator.py baseline-ensemble --civ <id> --seeds N --years Y [--jobs J]` plays N unplayed games (`sim/engine/baseline_game.py`) and stores per-year bands (population, wage index, both literacies, territory tiles) and the year offset at which each run's society first held each technology, to `<cache>/baseline_ensemble/<civ>.json` (`sim/engine/baseline_ensemble.py`). `divergence` reads it when present: each measure against its band for the same year of the run, and for each technology built, how many baseline runs held it by now, the median first year, and whether the society would not yet hold it (fewer than half the runs). When absent it says no ensemble is held and prints the command. Per-technology dates are not used, per CLAUDE.md 4.2.
+- Tests: `sim/tests/test_event_cause_state.py` and `sim/tests/test_baseline_ensemble.py` (stub runner, quick tier); whole-game `divergence` check in `sim/tests/test_missing_screens.py`.
+- The thresholds are reasoned bounds, not fitted. Measuring how often a baseline run satisfies them needs the ensemble above on a whole game (not run here: about 45 minutes a game). The epidemic events and their population cause are retired by Complaint 386 stage 2 (its list already says to retire the authored epidemic entry).
