@@ -206,6 +206,7 @@ class MarketClearingMixin:
             self.close_partner_books()
             self._close_real_output()
             self.revalue_coin_metals()
+            self.record_wage_market_ratios()
             return
         self._price_level_held = self.home_price_level()
         try:
@@ -217,6 +218,7 @@ class MarketClearingMixin:
         self.foreign_fleet_year_end()
         self._close_real_output()
         self.revalue_coin_metals()
+        self.record_wage_market_ratios()
 
     def _close_commodities(self):
         book = self.state.economy.market_book

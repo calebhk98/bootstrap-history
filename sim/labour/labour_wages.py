@@ -252,7 +252,7 @@ class WagesMixin(WageLedgerMixin):
 
         The labour-market schedule is the neutral benchmark; these factors
         scale it by how far live food, housing and tool prices have moved: the staple's and the tools'
-        market clearing (price over the incumbents' cost), the tools' also by the demand pressure.
+        market ratio (price over the incumbents' cost) at the last year's close, the tools' also by the demand pressure.
         At neutral prices the weighted factor is 1.0 to within about a part
         in a million.
 
@@ -265,10 +265,10 @@ class WagesMixin(WageLedgerMixin):
         would have caught it happened to sit behind a stray sys.exit in
         another test module and had never run.
         """
-        food = self._world.market_price_ratio(wage_provider.staple_material(self._world.civ))
+        food = self._world.last_market_price_ratio(wage_provider.staple_material(self._world.civ))
         housing = self.labour_market.town_housing_factor()
         basket = trade_data.tool_basket(trade_data.registry_of(self._world), trade)
-        tools = (sum(self._world.material_price_factor(material) * self._world.market_price_ratio(material)
+        tools = (sum(self._world.material_price_factor(material) * self._world.last_market_price_ratio(material)
                      for material in basket) / len(basket)
                  if basket else 1.0)
         return {"food": food, "housing": housing, "tools": tools,

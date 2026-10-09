@@ -11,6 +11,7 @@ from sim.engine.coin_revaluation import CoinRevaluationMixin
 from sim.engine.foreign_actor_trade import ForeignActorTradeMixin
 from sim.engine.foreign_payments import ForeignPaymentsMixin
 from sim.engine.incumbent_prices import IncumbentPricesMixin
+from sim.engine.wage_market_ratios import WageMarketRatiosMixin
 from sim.labour.labour_wages import WagesMixin
 from sim.tests.test_capital_charge import works_entry
 from sim.tests.test_running_cost_floor import StubGame
@@ -120,7 +121,7 @@ class WageStub(WagesMixin):
     def __init__(self, ratios):
         self._world = types.SimpleNamespace(
             civ={"staple": "wheat_kg"}, trade_registry={"smith": {"tool_basket": ["iron_kg"]}},
-            market_price_ratio=lambda material: ratios.get(material, 1.0),
+            last_market_price_ratio=lambda material: ratios.get(material, 1.0),
             material_price_factor=lambda material: 1.0)
 
     @property
@@ -135,6 +136,36 @@ class WageClearingTests(unittest.TestCase):
         self.assertAlmostEqual(flat["food"], 1.0)
         self.assertAlmostEqual(dear["food"], 2.0)
         self.assertAlmostEqual(dear["tools"], 3.0)
+
+
+class RecordingStub(WageMarketRatiosMixin):
+    """The market computes a landed price, which asks for a wage: the wage must not ask the market back."""
+    def __init__(self):
+        self.state = types.SimpleNamespace(economy=types.SimpleNamespace(wage_market_ratios={}))
+        self.civ = {"staple": "wheat_kg"}
+        self.trade_registry = {"smith": {"tool_basket": ["iron_kg"]}}
+        self.live_calls = 0
+        self.wages = WageStub({})
+        self.wages._world = types.SimpleNamespace(
+            civ=self.civ, trade_registry=self.trade_registry, last_market_price_ratio=self.last_market_price_ratio,
+            material_price_factor=lambda material: 1.0)
+
+    def market_price_ratio(self, material):
+        self.live_calls += 1
+        self.wages.wage_cost_factors("smith")    # a landed price quotes a wage
+        return 2.0
+
+
+class WageRecursionTests(unittest.TestCase):
+    def test_a_wage_quote_never_calls_the_live_clearing(self):
+        game = RecordingStub()
+        game.record_wage_market_ratios()
+        self.assertEqual(game.live_calls, 2)   # the staple and the tool, once each, at the close
+        calls = game.live_calls
+        factors = game.wages.wage_cost_factors("smith")
+        self.assertEqual(game.live_calls, calls)
+        self.assertAlmostEqual(factors["food"], 2.0)
+        self.assertAlmostEqual(factors["tools"], 2.0)
 
 
 if __name__ == "__main__":

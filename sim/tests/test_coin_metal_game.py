@@ -17,4 +17,4 @@ check("...and raises the price level: the coin buys less",
       s.home_price_level() > level_before, (level_before, s.home_price_level()))
 check("the wage's food term is the staple's clearing",
       abs(s.labour.wage_cost_factors("smith")["food"]
-          - s.market_price_ratio(wage_provider.staple_material(s.civ))) < 1e-9, None)
+          - s.last_market_price_ratio(wage_provider.staple_material(s.civ))) < 1e-9, None)
