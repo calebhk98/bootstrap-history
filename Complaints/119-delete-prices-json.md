@@ -1,6 +1,6 @@
 # Deleting `data/prices.json`
 
-**Status:** partly - the file is deleted and nothing opens it; the commodity ledger prices from the solved table and the book labourer wage is gone; remains (see Remains): supply curves inferred from price, authored node hour figures (Complaints/140); the import and unavailability policy for gated materials and the two photovoltaic gates are done (see Remains)
+**Status:** partly - the file is deleted and nothing opens it; the commodity ledger prices from the solved table and the book labourer wage is gone; node capital is derived from staff and plant and output nodes state no revenue or upkeep; remains (see Remains): supply curves inferred from price, typed node revenue and upkeep for nodes that name no product (Complaints/140 lists the files); the import and unavailability policy for gated materials and the two photovoltaic gates are done (see Remains)
 
 `data/prices.json` is not a calibration dataset and will not survive the
 migration. Historical observations that are independently worth testing may be

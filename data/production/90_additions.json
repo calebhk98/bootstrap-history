@@ -100,7 +100,8 @@
    "basis": "per kg of heavy laid rope, rope-walk grade",
    "yield_basis": "Hemp fibre laid up (twisted in multiple strands against each other, the technique a rope walk exists to do at length and consistent tension) into thick rope. Mirrors canvas_kg's own reasoning exactly: a thick rope has far less total twisted/laid length per kilogram than a fine thread or thin twine, so it needs FEWER labour hours per kilogram despite the more elaborate multi-strand construction - the same physical trade-off canvas_kg's entry gives for why heavy sailcloth was historically cheaper per kilogram than fine linen. The 15% processing loss is taken directly from canvas_kg's own figure for the same fibre going through a comparable mechanical process. Gated on the rope-walk apparatus itself, rather than left ungated, because consistent long heavy rope of uniform lay is what that apparatus specifically buys over ad hoc hand-twisting (this file's own twine_kg).",
    "conf": "C",
-   "requires_node": "tex_rope_walk"
+   "requires_node": "tex_rope_walk",
+   "operated_by": ["tex_rope_walk"]
   },
   "sailcloth_kg": {
    "outputs": {
@@ -166,7 +167,8 @@
    "basis": "per tonne of ammonium nitrate (NH4NO3)",
    "yield_basis": "STOICHIOMETRY for the core ratio: NH3 (17.03 g/mol) + HNO3 (63.01 g/mol) -> NH4NO3 (80.04 g/mol), a straight acid-base neutralisation with no by-product to allocate against. Per tonne of product that is 213 kg of ammonia and 787 kg of nitric acid at perfect conversion; taken here at 215 and 800 kg with a small margin for the imperfect conversion and minor liquor losses any real neutralisation and crystallisation run carries. THERMAL: the neutralised liquor is a dilute aqueous solution that must be evaporated to crystallise solid ammonium nitrate out of it; taken at a modest 500 MJ/tonne for that evaporation, well below sodium_carbonate_solvay_kg's own 500 MJ/tonne evaporative figure in this file scaled to a comparable order of magnitude rather than independently measured, which is the softest number in this entry and the reason it is marked C rather than B despite the exact stoichiometric core. Gated on `nitric_acid` (rather than on `mat_ammonia`, which this recipe also genuinely needs) because nitric acid is the harder-won of the two precursors - it needs BOTH a nitre-bed supply and a sulfuric-acid lead chamber already working, a taller and later compound requirement than ammonia's own gate - matching this schema's own instruction to name the later, real bottleneck rather than the earliest node the process happens to touch.",
    "conf": "C",
-   "requires_node": "nitric_acid"
+   "requires_node": "nitric_acid",
+   "operated_by": ["nitric_acid"]
   },
   "ox": {
    "outputs": {

@@ -64,7 +64,6 @@
    "mat_leather": 3,
    "mat_wool": 1
   },
-  "cap_hours": 8064.75166965173,
   "up_hours": 800.0,
   "build_yrs": 0.2,
   "adopt_yrs": 0.1,
@@ -353,7 +352,6 @@
   "mat": {
    "gravel_kg": 1000
   },
-  "cap_hours": 20161.879174129324,
   "up_hours": 2016.1879174129324,
   "build_yrs": 1,
   "adopt_yrs": 0.5,
@@ -424,7 +422,6 @@
    "mat_bitumen": 200,
    "gravel_kg": 1000
   },
-  "cap_hours": 24194.255008955188,
   "up_hours": 2419.425500895519,
   "build_yrs": 1.2,
   "adopt_yrs": 0.5,
@@ -1021,7 +1018,6 @@
    "engineer": 150
   },
   "mat": {},
-  "cap_hours": 14113.315421890527,
   "up_hours": 1411.3315421890527,
   "build_yrs": 0.4,
   "adopt_yrs": 0.1,
@@ -2062,7 +2058,6 @@
   "mat": {
    "steel_plate_kg": 1.5
   },
-  "cap_hours": 20161.879174129324,
   "up_hours": 2016.1879174129324,
   "build_yrs": 0.7,
   "adopt_yrs": 0.2,
@@ -3369,14 +3364,11 @@
   "mat": {
    "steel_plate_kg": 1.5
   },
-  "cap_hours": 18145.691256716393,
-  "up_hours": 1814.569125671639,
   "build_yrs": 0.7,
   "adopt_yrs": 0.2,
   "dev_years": 6,
   "dev_people": 2,
   "risk": 0.12,
-  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -3665,7 +3657,6 @@
   "mat": {
    "lead_kg": 8
   },
-  "cap_hours": 16129.50333930346,
   "up_hours": 1612.950333930346,
   "build_yrs": 0.6,
   "adopt_yrs": 0.2,

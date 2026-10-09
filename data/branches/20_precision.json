@@ -19,7 +19,6 @@
       "timber_m3": 3,
       "iron_bar_kg": 20
     },
-    "cap_hours": 3024.2818761193985,
     "up_hours": 0,
     "yrs": 0.5,
     "risk": 0.1,
@@ -53,7 +52,6 @@
       "iron_bar_kg": 15,
       "timber_m3": 0.5
     },
-    "cap_hours": 2016.1879174129324,
     "up_hours": 0,
     "yrs": 0.25,
     "risk": 0.12,
@@ -87,7 +85,6 @@
     "mat": {
       "cast_iron_kg": 30
     },
-    "cap_hours": 1612.950333930346,
     "up_hours": 0,
     "yrs": 0.2,
     "risk": 0.08,
@@ -122,7 +119,6 @@
       "iron_bar_kg": 10,
       "timber_m3": 0.3
     },
-    "cap_hours": 2419.425500895519,
     "up_hours": 0,
     "yrs": 0.2,
     "risk": 0.1,
@@ -157,7 +153,6 @@
       "iron_bar_kg": 25,
       "timber_m3": 0.8
     },
-    "cap_hours": 4000.0,
     "up_hours": 0,
     "yrs": 0.5,
     "risk": 0.15,
@@ -192,7 +187,6 @@
       "iron_bar_kg": 30,
       "timber_m3": 1.0
     },
-    "cap_hours": 5040.469793532331,
     "up_hours": 0,
     "yrs": 0.5,
     "risk": 0.12,
@@ -226,7 +220,6 @@
       "iron_bar_kg": 20,
       "cast_iron_kg": 15
     },
-    "cap_hours": 3024.2818761193985,
     "up_hours": 0,
     "yrs": 0.3,
     "risk": 0.1,
@@ -261,7 +254,6 @@
       "cast_iron_kg": 20,
       "iron_bar_kg": 12
     },
-    "cap_hours": 3629.138251343278,
     "up_hours": 0,
     "yrs": 0.4,
     "risk": 0.1,
@@ -382,7 +374,6 @@
       "iron_bar_kg": 100,
       "timber_m3": 4
     },
-    "cap_hours": 20161.879174129324,
     "up_hours": 0,
     "yrs": 1.5,
     "risk": 0.18,
@@ -420,7 +411,6 @@
       "iron_bar_kg": 50,
       "timber_m3": 2
     },
-    "cap_hours": 14113.315421890527,
     "up_hours": 0,
     "yrs": 1.0,
     "risk": 0.15,
@@ -455,7 +445,6 @@
       "iron_bar_kg": 30,
       "timber_m3": 1
     },
-    "cap_hours": 8064.75166965173,
     "up_hours": 0,
     "yrs": 0.6,
     "risk": 0.12,
@@ -528,7 +517,6 @@
     "mat": {
       "steel_noric_kg": 8
     },
-    "cap_hours": 2016.1879174129324,
     "up_hours": 0,
     "yrs": 0.2,
     "risk": 0.08,
@@ -603,7 +591,6 @@
       "iron_bar_kg": 30,
       "brass_kg": 5
     },
-    "cap_hours": 8064.75166965173,
     "up_hours": 0,
     "yrs": 0.8,
     "risk": 0.12,
@@ -690,7 +677,6 @@
       "iron_bar_kg": 70,
       "steel_plate_kg": 30
     },
-    "cap_hours": 17137.597298009925,
     "up_hours": 2217.8067091542257,
     "yrs": 1.2,
     "risk": 0.14,
@@ -850,7 +836,6 @@
       "olive_oil_kg": 1,
       "aluminum_oxide_kg": 2
     },
-    "cap_hours": 4000.0,
     "up_hours": 0,
     "yrs": 0.5,
     "risk": 0.08,
@@ -894,7 +879,6 @@
       "iron_bar_kg": 40,
       "timber_m3": 1.5
     },
-    "cap_hours": 7056.657710945264,
     "up_hours": 0,
     "yrs": 0.5,
     "risk": 0.1,
@@ -1032,7 +1016,6 @@
       "steel_noric_kg": 8,
       "cast_iron_kg": 100
     },
-    "cap_hours": 8064.75166965173,
     "up_hours": 0,
     "yrs": 0.7,
     "risk": 0.13,
@@ -1066,7 +1049,6 @@
       "cast_iron_kg": 60,
       "iron_bar_kg": 30
     },
-    "cap_hours": 4000.0,
     "up_hours": 0,
     "yrs": 0.3,
     "risk": 0.08,
@@ -1102,7 +1084,6 @@
     "mat": {
       "cast_iron_kg": 500
     },
-    "cap_hours": 12097.127504477594,
     "up_hours": 0,
     "yrs": 4.0,
     "risk": 0.1,
@@ -1135,7 +1116,6 @@
     "mat": {
       "cast_iron_kg": 20
     },
-    "cap_hours": 1008.0939587064662,
     "up_hours": 0,
     "yrs": 0.2,
     "risk": 0.05,
@@ -1166,7 +1146,6 @@
       "cast_iron_kg": 15,
       "steel_noric_kg": 2
     },
-    "cap_hours": 2016.1879174129324,
     "up_hours": 0,
     "yrs": 0.25,
     "risk": 0.08,
@@ -1196,7 +1175,6 @@
     "mat": {
       "steel_noric_kg": 8
     },
-    "cap_hours": 3024.2818761193985,
     "up_hours": 0,
     "yrs": 0.4,
     "risk": 0.1,
@@ -1228,7 +1206,6 @@
     "mat": {
       "steel_noric_kg": 10
     },
-    "cap_hours": 4000.0,
     "up_hours": 403.2375834825865,
     "yrs": 0.5,
     "risk": 0.1,
@@ -1328,7 +1305,6 @@
       "brass_kg": 0.3,
       "steel_noric_kg": 0.4
     },
-    "cap_hours": 2419.425500895519,
     "up_hours": 201.61879174129325,
     "yrs": 0.3,
     "risk": 0.1,
@@ -1362,7 +1338,6 @@
       "brass_kg": 3,
       "steel_noric_kg": 4
     },
-    "cap_hours": 8064.75166965173,
     "up_hours": 0,
     "yrs": 0.8,
     "risk": 0.12,
@@ -1398,7 +1373,6 @@
       "steel_noric_kg": 5,
       "chromium_kg": 0.1
     },
-    "cap_hours": 6048.563752238797,
     "up_hours": 0,
     "yrs": 1.0,
     "risk": 0.15,
@@ -1475,7 +1449,6 @@
     "mat": {
       "glass_raw_kg": 2
     },
-    "cap_hours": 5040.469793532331,
     "up_hours": 0,
     "yrs": 0.7,
     "risk": 0.13,
@@ -1512,7 +1485,6 @@
       "glass_raw_kg": 3,
       "brass_kg": 2
     },
-    "cap_hours": 7056.657710945264,
     "up_hours": 0,
     "yrs": 0.8,
     "risk": 0.14,
@@ -1546,7 +1518,6 @@
       "brass_kg": 5,
       "steel_noric_kg": 3
     },
-    "cap_hours": 9072.845628358196,
     "up_hours": 0,
     "yrs": 1.0,
     "risk": 0.15,
@@ -1582,7 +1553,6 @@
       "brass_kg": 4,
       "cast_iron_kg": 80
     },
-    "cap_hours": 10080.939587064662,
     "up_hours": 0,
     "yrs": 1.0,
     "risk": 0.14,
@@ -1614,7 +1584,6 @@
       "steel_noric_kg": 0.5,
       "brass_kg": 0.2
     },
-    "cap_hours": 1612.950333930346,
     "up_hours": 0,
     "yrs": 0.25,
     "risk": 0.08,
@@ -1648,7 +1617,6 @@
       "cast_iron_kg": 50,
       "steel_noric_kg": 5
     },
-    "cap_hours": 6048.563752238797,
     "up_hours": 0,
     "yrs": 0.7,
     "risk": 0.12,
@@ -1681,7 +1649,6 @@
       "stone_blocks": 500,
       "cast_iron_kg": 200
     },
-    "cap_hours": 40323.75834825865,
     "up_hours": 0,
     "yrs": 2.0,
     "risk": 0.2,
@@ -1716,7 +1683,6 @@
       "platinum_g": 100,
       "glass_raw_kg": 2
     },
-    "cap_hours": 8064.75166965173,
     "up_hours": 0,
     "yrs": 3.0,
     "risk": 0.2,
@@ -1841,7 +1807,6 @@
       "cast_iron_kg": 30,
       "steel_noric_kg": 4
     },
-    "cap_hours": 6048.563752238797,
     "up_hours": 0,
     "yrs": 0.8,
     "risk": 0.12,
@@ -1878,7 +1843,6 @@
       "steel_noric_kg": 15,
       "brass_kg": 3
     },
-    "cap_hours": 8064.75166965173,
     "up_hours": 0,
     "yrs": 1.0,
     "risk": 0.12,
@@ -1914,7 +1878,6 @@
       "timber_m3": 20,
       "stone_blocks": 200
     },
-    "cap_hours": 30242.818761193987,
     "up_hours": 0,
     "yrs": 5.0,
     "risk": 0.15,
@@ -1982,7 +1945,6 @@
     "mat": {
       "tool_steel_kg": 3
     },
-    "cap_hours": 4000.0,
     "up_hours": 0,
     "yrs": 0.8,
     "risk": 0.15,
@@ -2052,7 +2014,6 @@
     "mat": {
       "cast_iron_kg": 500
     },
-    "cap_hours": 12097.127504477594,
     "up_hours": 0,
     "yrs": 1.2,
     "risk": 0.12,
@@ -2084,7 +2045,6 @@
       "machinist": 100
     },
     "mat": {},
-    "cap_hours": 3024.2818761193985,
     "up_hours": 0,
     "yrs": 0.8,
     "risk": 0.15,
@@ -2119,7 +2079,6 @@
       "iron_bar_kg": 30,
       "timber_m3": 1
     },
-    "cap_hours": 6048.563752238797,
     "up_hours": 0,
     "yrs": 0.5,
     "risk": 0.1,

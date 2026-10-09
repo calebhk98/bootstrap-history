@@ -11,7 +11,7 @@ import os
 import re
 
 from sim.engine.catalog import load_production_catalog, load_trade_registry, material_namespace
-from sim.engine.node_defaults import NUMERIC_FIELDS, OPTIONAL_DEFAULTS
+from sim.engine.node_defaults import NUMERIC_FIELDS, OPTIONAL_DEFAULTS, STATED_NUMERIC_FIELDS
 from sim.engine.tree_source import (META_FILE, MERGED_DUPLICATE_IDS_FILE, NO_MODS_DIRECTORY,
                                     ROOT)
 
@@ -47,6 +47,9 @@ def normalise_v2(node):
         node.setdefault(field, json.loads(json.dumps(value)))
     for field in NUMERIC_FIELDS:
         node[field] = _num(node.get(field), OPTIONAL_DEFAULTS[field])
+    for field in STATED_NUMERIC_FIELDS:
+        if field in node:
+            node[field] = _num(node[field], 0.0)
     node["risk"] = min(0.95, max(0.0, node["risk"]))
     for fld in ("lab","mat"):
         if not isinstance(node.get(fld), dict): node[fld] = {}

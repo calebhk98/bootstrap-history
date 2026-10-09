@@ -1,8 +1,8 @@
 """Where labour hours become a civilisation's money.
 
-Tree capital, upkeep and revenue are authored in labour hours (`cap_hours`,
-`up_hours`, `rev_hours`) and every declared money amount is a count of labour
-hours; both are priced here in each civilisation's own coin.
+Tree capital, upkeep and revenue are labour hours (`cap_hours`, `up_hours`, `rev_hours`, derived
+by `node_revenue.apply_revenue` where the data states what they follow from) and every declared
+money amount is a count of labour hours; both are priced here in each civilisation's own coin.
 """
 from typing import Iterable, Mapping
 

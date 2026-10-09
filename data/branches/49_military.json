@@ -16,7 +16,6 @@
    "labourer": 20.0
   },
   "mat": {},
-  "cap_hours": 800.0,
   "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 0,
@@ -49,7 +48,6 @@
    "mat_charcoal": 8,
    "nitre_kg": 15
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 1,
@@ -81,7 +79,6 @@
    "mat_charcoal": 8,
    "nitre_kg": 15
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
@@ -185,7 +182,6 @@
    "nitre_kg": 0.5,
    "mat_charcoal": 0.2
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.05,
   "adopt_yrs": 0.5,
@@ -220,7 +216,6 @@
    "mat_charcoal": 0.1,
    "mat_sulfur": 0.1
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.05,
   "adopt_yrs": 0.5,
@@ -258,7 +253,6 @@
    "iron_bar_kg": 60,
    "tool_steel_kg": 20
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 2,
@@ -295,7 +289,6 @@
    "iron_bar_kg": 40,
    "tool_steel_kg": 10
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.15,
   "adopt_yrs": 1,
@@ -351,7 +344,6 @@
    "tool_steel_kg": 30,
    "iron_bar_kg": 60
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 3,
@@ -405,7 +397,6 @@
    "copper_kg": 5,
    "fulminate_kg": 0.5
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 1,
@@ -441,7 +432,6 @@
    "nitre_kg": 0.3,
    "lead_kg": 0.05
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.05,
   "adopt_yrs": 1,
@@ -478,7 +468,6 @@
    "lead_kg": 5,
    "nitre_kg": 0.5
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 2,
@@ -515,7 +504,6 @@
    "copper_kg": 1,
    "fulminate_kg": 0.1
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.08,
   "adopt_yrs": 1,
@@ -550,7 +538,6 @@
    "steel_plate_kg": 200,
    "iron_bar_kg": 100
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 2,
@@ -584,7 +571,6 @@
   "mat": {
    "lead_kg": 10
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.05,
   "adopt_yrs": 1,
@@ -623,7 +609,6 @@
    "iron_bar_kg": 150,
    "tool_steel_kg": 40
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 3,
@@ -661,7 +646,6 @@
    "steel_plate_kg": 350,
    "tool_steel_kg": 60
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
@@ -697,7 +681,6 @@
    "steel_plate_kg": 50,
    "tool_steel_kg": 15
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 1,
@@ -735,7 +718,6 @@
    "iron_bar_kg": 140,
    "tool_steel_kg": 35
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.35,
   "adopt_yrs": 2,
@@ -773,7 +755,6 @@
    "steel_plate_kg": 400,
    "tool_steel_kg": 80
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 2,
@@ -811,7 +792,6 @@
    "steel_plate_kg": 450,
    "tool_steel_kg": 100
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 3,
@@ -848,7 +828,6 @@
    "steel_plate_kg": 1200,
    "tool_steel_kg": 200
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 1,
   "adopt_yrs": 2,
@@ -885,7 +864,6 @@
    "steel_plate_kg": 1100,
    "tool_steel_kg": 180
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.9,
   "adopt_yrs": 2,
@@ -920,7 +898,6 @@
    "steel_plate_kg": 150,
    "copper_kg": 80
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
@@ -956,7 +933,6 @@
    "steel_plate_kg": 80,
    "tool_steel_kg": 40
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.15,
   "adopt_yrs": 1,
@@ -996,7 +972,6 @@
    "coal_kg": 100.0,
    "nitrocellulose_kg": 8.0
   },
-  "cap_hours": 60485.63752238797,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 2,
@@ -1033,7 +1008,6 @@
    "mat_glycerol": 2,
    "mat_petroleum_refined": 1
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.15,
   "adopt_yrs": 1,
@@ -1071,7 +1045,6 @@
    "mat_bronze": 2000,
    "gunpowder_kg": 300
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 2,
   "adopt_yrs": 1,
@@ -1125,7 +1098,6 @@
   "mat": {
    "mat_bronze": 150
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 0.5,
@@ -1159,7 +1131,6 @@
    "mat_wood": 800,
    "iron_bar_kg": 300
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 1.5,
   "adopt_yrs": 1,
@@ -1193,7 +1164,6 @@
    "steel_plate_kg": 400,
    "tool_steel_kg": 100
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.6,
   "adopt_yrs": 1.5,
@@ -1229,7 +1199,6 @@
   "mat": {
    "steel_plate_kg": 200
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 1,
@@ -1263,7 +1232,6 @@
   "mat": {
    "cast_iron_kg": 50
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 1,
@@ -1301,7 +1269,6 @@
    "lead_kg": 30,
    "mat_sulfur": 2
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.15,
   "adopt_yrs": 2,
@@ -1337,7 +1304,6 @@
    "cast_iron_kg": 60,
    "mat_nitroglycerin": 20
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 2,
@@ -1372,7 +1338,6 @@
    "nitre_kg": 1,
    "mat_sulfur": 0.5
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.08,
   "adopt_yrs": 1,
@@ -1405,7 +1370,6 @@
   "mat": {
    "mat_bronze": 600
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 1,
   "adopt_yrs": 1,
@@ -1438,7 +1402,6 @@
   "mat": {
    "steel_plate_kg": 1000
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 1.5,
   "adopt_yrs": 1,
@@ -1471,7 +1434,6 @@
    "scholar": 80
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 2,
@@ -1500,7 +1462,6 @@
    "engineer": 80
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 1,
@@ -1533,7 +1494,6 @@
   "mat": {
    "paper_kg": 5
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 2,
@@ -1567,7 +1527,6 @@
    "brass_kg": 80,
    "steel_plate_kg": 100
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 2,
@@ -1604,7 +1563,6 @@
    "steel_plate_kg": 400,
    "brass_kg": 150
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.8,
   "adopt_yrs": 3,
@@ -1641,7 +1599,6 @@
    "brass_kg": 100,
    "steel_plate_kg": 150
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 3,
@@ -1677,7 +1634,6 @@
   "mat": {
    "steel_plate_kg": 800
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 1.2,
   "adopt_yrs": 2,
@@ -1714,7 +1670,6 @@
    "glass_lead_kg": 15,
    "mat_bronze": 30
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 2,
@@ -1752,7 +1707,6 @@
    "wood_kg": 30000.0,
    "lime_kg": 80000.0
   },
-  "cap_hours": 60485.63752238797,
   "up_hours": 491,
   "build_yrs": 4,
   "adopt_yrs": 3,
@@ -1800,7 +1754,6 @@
    "stone_kg": 1500000.0,
    "lime_kg": 200000.0
   },
-  "cap_hours": 0,
   "up_hours": 621,
   "build_yrs": 3,
   "adopt_yrs": 2,
@@ -1846,7 +1799,6 @@
   "mat": {
    "mat_stone": 2000
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 1.5,
   "adopt_yrs": 1,
@@ -1878,7 +1830,6 @@
   "mat": {
    "mat_stone": 3000
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 2,
   "adopt_yrs": 1,
@@ -1911,7 +1862,6 @@
    "mat_stone": 4000,
    "lime_kg": 800
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 2.5,
   "adopt_yrs": 1.5,
@@ -1944,7 +1894,6 @@
   "mat": {
    "steel_plate_kg": 2800
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 1.5,
   "adopt_yrs": 2,
@@ -1979,7 +1928,6 @@
    "mat_sand": 3000,
    "mat_stone": 2000
   },
-  "cap_hours": 0,
   "up_hours": 2,
   "build_yrs": 2,
   "adopt_yrs": 1.5,
@@ -2023,7 +1971,6 @@
    "engineer": 60
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 1,
@@ -2054,7 +2001,6 @@
   "mat": {
    "steel_plate_kg": 20
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.05,
   "adopt_yrs": 0.5,
@@ -2086,7 +2032,6 @@
   "mat": {
    "steel_plate_kg": 500
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
@@ -2119,7 +2064,6 @@
   "mat": {
    "steel_plate_kg": 800
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 1,
@@ -2148,7 +2092,6 @@
    "engineer": 70
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 0.5,
@@ -2178,7 +2121,6 @@
   "mat": {
    "steel_plate_kg": 80
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
@@ -2343,7 +2285,6 @@
   "mat": {
    "steel_plate_kg": 500
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
@@ -2383,7 +2324,6 @@
    "nitroglycerin_kg": 100.0,
    "steel_plate_kg": 200.0
   },
-  "cap_hours": 30242.818761193987,
   "up_hours": 0,
   "build_yrs": 0.8,
   "adopt_yrs": 2,
@@ -2415,7 +2355,6 @@
   "mat": {
    "steel_plate_kg": 1000
   },
-  "cap_hours": 100809.39587064662,
   "up_hours": 0,
   "build_yrs": 1.5,
   "adopt_yrs": 1,
@@ -2447,7 +2386,6 @@
   "mat": {
    "steel_plate_kg": 2000
   },
-  "cap_hours": 161295.0333930346,
   "up_hours": 0,
   "build_yrs": 2,
   "adopt_yrs": 1.5,
@@ -2479,7 +2417,6 @@
   "mat": {
    "steel_plate_kg": 2500
   },
-  "cap_hours": 201618.79174129324,
   "up_hours": 12097.127504477594,
   "build_yrs": 2.5,
   "adopt_yrs": 2,
@@ -2511,7 +2448,6 @@
    "glass_lead_kg": 30,
    "brass_kg": 60
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
@@ -2542,7 +2478,6 @@
   "mat": {
    "steel_plate_kg": 300
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 1,
@@ -2574,7 +2509,6 @@
    "cast_iron_kg": 80,
    "mat_nitroglycerin": 50
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
@@ -2606,7 +2540,6 @@
    "sand_quartz_kg": 20,
    "brass_kg": 100
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
@@ -2641,7 +2574,6 @@
    "cast_iron_kg": 50,
    "gunpowder_kg": 5
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 0.5,
@@ -2672,7 +2604,6 @@
   "mat": {
    "steel_plate_kg": 1500
   },
-  "cap_hours": 161295.0333930346,
   "up_hours": 0,
   "build_yrs": 1.5,
   "adopt_yrs": 1,
@@ -2705,7 +2636,6 @@
   "mat": {
    "steel_plate_kg": 3000
   },
-  "cap_hours": 302428.18761193985,
   "up_hours": 0,
   "build_yrs": 2,
   "adopt_yrs": 3,
@@ -2738,7 +2668,6 @@
   "mat": {
    "steel_plate_kg": 800
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.6,
   "adopt_yrs": 1.5,
@@ -2769,7 +2698,6 @@
   "mat": {
    "steel_plate_kg": 400
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
@@ -2800,7 +2728,6 @@
   "mat": {
    "steel_plate_kg": 500
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 1,
@@ -2831,7 +2758,6 @@
   "mat": {
    "steel_plate_kg": 200
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
@@ -2862,7 +2788,6 @@
   "mat": {
    "steel_plate_kg": 600
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 2,
@@ -2894,7 +2819,6 @@
   "mat": {
    "steel_plate_kg": 1200
   },
-  "cap_hours": 161295.0333930346,
   "up_hours": 0,
   "build_yrs": 1.2,
   "adopt_yrs": 1.5,
@@ -2925,7 +2849,6 @@
   "mat": {
    "steel_plate_kg": 1500
   },
-  "cap_hours": 201618.79174129324,
   "up_hours": 14113.315421890527,
   "build_yrs": 1.3,
   "adopt_yrs": 1.5,
@@ -2958,7 +2881,6 @@
   "mat": {
    "steel_plate_kg": 2500
   },
-  "cap_hours": 241942.5500895519,
   "up_hours": 0,
   "build_yrs": 1.5,
   "adopt_yrs": 2,
@@ -2989,7 +2911,6 @@
    "mat_linen": 200,
    "cordage_kg": 500
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 1,
@@ -3020,7 +2941,6 @@
    "engineer": 100
   },
   "mat": {},
-  "cap_hours": 1612.950333930346,
   "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 1,
@@ -3053,7 +2973,6 @@
    "glass_lead_kg": 40,
    "brass_kg": 60
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 2,
@@ -3084,7 +3003,6 @@
   "mat": {
    "cast_iron_kg": 80
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 0.5,
@@ -3119,7 +3037,6 @@
    "brass_kg": 120,
    "steel_plate_kg": 80
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 2,
@@ -3151,7 +3068,6 @@
    "steel_plate_kg": 150,
    "tool_steel_kg": 40
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 2,
@@ -3184,7 +3100,6 @@
    "mat_aluminium": 400,
    "petroleum_refined_kg": 100
   },
-  "cap_hours": 100809.39587064662,
   "up_hours": 0,
   "build_yrs": 1.5,
   "adopt_yrs": 2,
@@ -3225,7 +3140,6 @@
    "mat_aluminium": 800,
    "petroleum_refined_kg": 200
   },
-  "cap_hours": 201618.79174129324,
   "up_hours": 0,
   "build_yrs": 2,
   "adopt_yrs": 2,
@@ -3266,7 +3180,6 @@
    "mat_aluminium": 600,
    "petroleum_refined_kg": 120
   },
-  "cap_hours": 141133.15421890526,
   "up_hours": 0,
   "build_yrs": 1.5,
   "adopt_yrs": 2,
@@ -3307,7 +3220,6 @@
   "mat": {
    "steel_plate_kg": 10000
   },
-  "cap_hours": 705665.7710945264,
   "up_hours": 0,
   "build_yrs": 5,
   "adopt_yrs": 3,
@@ -3338,7 +3250,6 @@
    "steel_plate_kg": 200,
    "cordage_kg": 100
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
@@ -3370,7 +3281,6 @@
   "mat": {
    "steel_plate_kg": 500
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
@@ -3405,7 +3315,6 @@
    "cast_iron_kg": 200.0,
    "copper_kg": 150.0
   },
-  "cap_hours": 161295.0333930346,
   "up_hours": 0,
   "build_yrs": 0.6,
   "adopt_yrs": 3,
@@ -3444,7 +3353,6 @@
    "brass_kg": 1000,
    "steel_plate_kg": 2000
   },
-  "cap_hours": 0,
   "up_hours": 3.1,
   "build_yrs": 2,
   "adopt_yrs": 2,
@@ -3479,7 +3387,6 @@
   "mat": {
    "brass_kg": 80
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1.5,
@@ -3515,7 +3422,6 @@
    "cast_iron_kg": 100,
    "brass_kg": 80
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
@@ -3548,7 +3454,6 @@
   "mat": {
    "steel_plate_kg": 500
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 1.2,
   "adopt_yrs": 3,
@@ -3584,7 +3489,6 @@
    "stainless_steel_kg": 300,
    "petroleum_refined_kg": 120
   },
-  "cap_hours": 161295.0333930346,
   "up_hours": 0,
   "build_yrs": 2,
   "adopt_yrs": 3,
@@ -3614,7 +3518,6 @@
   "mat": {
    "bleach_kg": 10
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 1,
@@ -3649,7 +3552,6 @@
    "bleach_kg": 8,
    "mat_carbon": 3
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.15,
   "adopt_yrs": 1.5,
@@ -3686,7 +3588,6 @@
    "ethylene_glycol_kg": 5,
    "mat_sulfur": 3
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.15,
   "adopt_yrs": 1.5,
@@ -3721,7 +3622,6 @@
    "mat_charcoal": 5,
    "glass_lead_kg": 20
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 1,
@@ -3757,7 +3657,6 @@
    "steel_plate_kg": 80,
    "mat_petroleum_refined": 20
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
@@ -3794,7 +3693,6 @@
    "cast_iron_kg": 50,
    "mat_petroleum_refined": 20
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 1,
@@ -3827,7 +3725,6 @@
    "mat_petroleum_refined": 30,
    "aluminium_soap_kg": 3
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.15,
   "adopt_yrs": 2,
@@ -3866,7 +3763,6 @@
    "uranium_235_kg": 50,
    "plutonium_kg": 10
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 2,
   "adopt_yrs": 0,
@@ -3898,7 +3794,6 @@
    "engineer": 80
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
@@ -3929,7 +3824,6 @@
   "mat": {
    "paper_kg": 20
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 2,
@@ -3959,7 +3853,6 @@
    "engineer": 80
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1.5,
@@ -3992,7 +3885,6 @@
    "scholar": 90
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
@@ -4025,7 +3917,6 @@
    "brass_kg": 60,
    "mat_wood": 100
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
@@ -4061,7 +3952,6 @@
    "brass_kg": 100,
    "mat_wood": 50
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 2,
@@ -4094,7 +3984,6 @@
    "engineer": 90
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1.5,
@@ -4124,7 +4013,6 @@
    "scholar": 240
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 2,
@@ -4153,7 +4041,6 @@
    "scholar": 270
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 2,
@@ -4182,7 +4069,6 @@
    "artisan": 80
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1.5,
@@ -4213,7 +4099,6 @@
   "mat": {
    "steel_plate_kg": 500
   },
-  "cap_hours": 201618.79174129324,
   "up_hours": 40323.75834825865,
   "build_yrs": 2,
   "adopt_yrs": 2,
@@ -4241,7 +4126,6 @@
    "scholar": 80
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 3,

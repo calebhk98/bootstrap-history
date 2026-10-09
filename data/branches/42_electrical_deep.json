@@ -924,7 +924,6 @@
    "lead_kg": 0.002,
    "mat_porcelain": 0.01
   },
-  "cap_hours": 201618.79174129324,
   "up_hours": 40323.75834825865,
   "build_yrs": 0.05,
   "adopt_yrs": 0,
@@ -1796,7 +1795,6 @@
    "copper_wire_kg": 100,
    "mat_brass_kg": 30
   },
-  "cap_hours": 604.8563752238797,
   "up_hours": 120.97127504477595,
   "build_yrs": 2.5,
   "adopt_yrs": 0.2,
@@ -1963,14 +1961,11 @@
   "mat": {
    "copper_wire_kg": 5000
   },
-  "cap_hours": 403.2375834825865,
-  "up_hours": 80.6475166965173,
   "build_yrs": 3,
   "adopt_yrs": 2,
   "dev_years": 40,
   "dev_people": 6,
   "risk": 0.16,
-  "rev_hours": 403237.5834825865,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -3835,7 +3830,6 @@
    "copper_kg": 30.0,
    "iron_bar_kg": 2.0
   },
-  "cap_hours": 32259.00667860692,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
@@ -3866,7 +3860,6 @@
    "engineer": 180
   },
   "mat": {},
-  "cap_hours": 8064.75166965173,
   "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 0,
@@ -3898,7 +3891,6 @@
    "engineer": 120
   },
   "mat": {},
-  "cap_hours": 12097.127504477594,
   "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 0,
@@ -3932,7 +3924,6 @@
    "engineer": 170
   },
   "mat": {},
-  "cap_hours": 8064.75166965173,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0.05,
@@ -3974,7 +3965,6 @@
    "electrician": 120
   },
   "mat": {},
-  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 0.1,
@@ -4013,7 +4003,6 @@
    "engineer": 250
   },
   "mat": {},
-  "cap_hours": 2016.1879174129324,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0.2,
@@ -4054,7 +4043,6 @@
    "electrician": 130
   },
   "mat": {},
-  "cap_hours": 4000.0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 0.1,
@@ -4104,7 +4092,6 @@
    "electrician": 150
   },
   "mat": {},
-  "cap_hours": 2419.425500895519,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 0.2,
@@ -4146,7 +4133,6 @@
    "engineer": 290
   },
   "mat": {},
-  "cap_hours": 2016.1879174129324,
   "up_hours": 0,
   "build_yrs": 0.6,
   "adopt_yrs": 0.3,
@@ -4184,7 +4170,6 @@
    "engineer": 250
   },
   "mat": {},
-  "cap_hours": 3024.2818761193985,
   "up_hours": 0,
   "build_yrs": 1,
   "adopt_yrs": 0.2,
@@ -4232,7 +4217,6 @@
    "electrician": 120
   },
   "mat": {},
-  "cap_hours": 5040.469793532331,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 0.1,
@@ -4281,7 +4265,6 @@
    "electrician": 100
   },
   "mat": {},
-  "cap_hours": 8064.75166965173,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0.05,
@@ -4329,7 +4312,6 @@
    "electrician": 130
   },
   "mat": {},
-  "cap_hours": 3629.138251343278,
   "up_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 0.15,
@@ -4376,7 +4358,6 @@
    "electrician": 120
   },
   "mat": {},
-  "cap_hours": 4000.0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 0.1,
@@ -4425,7 +4406,6 @@
    "electrician": 120
   },
   "mat": {},
-  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 0.1,
@@ -4477,7 +4457,6 @@
    "electrician": 140
   },
   "mat": {},
-  "cap_hours": 3024.2818761193985,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 0.15,
@@ -4524,7 +4503,6 @@
    "electrician": 100
   },
   "mat": {},
-  "cap_hours": 8064.75166965173,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0.05,
@@ -4580,7 +4558,6 @@
    "mat_copper_kg": 5,
    "mat_polyethylene": 1
   },
-  "cap_hours": 3024.2818761193985,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 0.2,
@@ -4629,7 +4606,6 @@
   "mat": {
    "mat_copper_kg": 10
   },
-  "cap_hours": 2016.1879174129324,
   "up_hours": 0,
   "build_yrs": 1,
   "adopt_yrs": 0.3,
@@ -4679,7 +4655,6 @@
    "mat_copper_wire_kg": 5,
    "mat_porcelain": 0.5
   },
-  "cap_hours": 2419.425500895519,
   "up_hours": 0,
   "build_yrs": 0.6,
   "adopt_yrs": 0.15,

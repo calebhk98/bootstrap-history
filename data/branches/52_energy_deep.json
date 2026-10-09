@@ -827,7 +827,6 @@
    "cast_iron_kg": 500,
    "copper_kg": 200
   },
-  "cap_hours": 2016.1879174129324,
   "up_hours": 403.2375834825865,
   "build_yrs": 2.0,
   "adopt_yrs": 0.5,
@@ -1223,14 +1222,11 @@
    "cast_iron_kg": 700,
    "mat_bronze": 150
   },
-  "cap_hours": 5040.469793532331,
-  "up_hours": 1209.7127504477594,
   "build_yrs": 2.8,
   "adopt_yrs": 0.2,
   "dev_years": 10,
   "dev_people": 3,
   "risk": 0.15,
-  "rev_hours": 50404.69793532331,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -1735,7 +1731,6 @@
    "iron_bar_kg": 50,
    "glass_raw_kg": 10
   },
-  "cap_hours": 1411.3315421890527,
   "up_hours": 241.9425500895519,
   "build_yrs": 0.8,
   "adopt_yrs": 0.2,
@@ -1801,7 +1796,6 @@
    "steel_plate_kg": 200,
    "cast_iron_kg": 250
   },
-  "cap_hours": 2419.425500895519,
   "up_hours": 403.2375834825865,
   "build_yrs": 1.2,
   "adopt_yrs": 0.2,
@@ -1884,14 +1878,11 @@
    "copper_kg": 40.0,
    "tool_steel_kg": 50.0
   },
-  "cap_hours": 40323.75834825865,
-  "up_hours": 8064.75166965173,
   "build_yrs": 3.0,
   "adopt_yrs": 0.2,
   "dev_years": 12,
   "dev_people": 3,
   "risk": 0.18,
-  "rev_hours": 50404.69793532331,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -2120,7 +2111,6 @@
   "mat": {
    "cast_iron_kg": 300
   },
-  "cap_hours": 1612.950333930346,
   "up_hours": 302.42818761193985,
   "build_yrs": 1.0,
   "adopt_yrs": 0.2,
@@ -2198,7 +2188,6 @@
    "steel_plate_kg": 500,
    "cast_iron_kg": 400
   },
-  "cap_hours": 3024.2818761193985,
   "up_hours": 705.6657710945263,
   "build_yrs": 2.2,
   "adopt_yrs": 0.3,
@@ -2903,7 +2892,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
@@ -3092,7 +3080,6 @@
    "copper_kg": 50.0,
    "oil_mineral_kg": 30.0
   },
-  "cap_hours": 16129.50333930346,
   "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
@@ -3872,14 +3859,11 @@
   "mat": {
    "wood_kg": 1000
   },
-  "cap_hours": 2016.1879174129324,
-  "up_hours": 403.2375834825865,
   "build_yrs": 0.5,
   "adopt_yrs": 0,
   "dev_years": 0,
   "dev_people": 0,
   "risk": 0.08,
-  "rev_hours": 1748.0349243970124,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -4115,7 +4099,6 @@
    "copper_kg": 150,
    "brick_1000": 0.5
   },
-  "cap_hours": 3225.900667860692,
   "up_hours": 564.5326168756211,
   "build_yrs": 2.2,
   "adopt_yrs": 0.2,
@@ -4214,7 +4197,6 @@
   "mat": {
    "steel_plate_kg": 100
   },
-  "cap_hours": 2520.2348967661655,
   "up_hours": 423.3994626567158,
   "build_yrs": 0.8,
   "adopt_yrs": 0.2,

@@ -25,7 +25,6 @@
    "hectare_land": 100.92,
    "parchment_sheet": 2000
   },
-  "cap_hours": 0,
   "up_hours": 445476.7203523874,
   "build_yrs": 3,
   "adopt_yrs": 2,
@@ -79,7 +78,6 @@
    "parchment_sheet": 20000,
    "paper_kg": 5000
   },
-  "cap_hours": 0,
   "up_hours": 129338.45490203961,
   "build_yrs": 2,
   "adopt_yrs": 2,
@@ -137,7 +135,6 @@
    "iron_bar_kg": 2000,
    "paper_kg": 2000
   },
-  "cap_hours": 0,
   "up_hours": 769558.7661973422,
   "build_yrs": 4,
   "adopt_yrs": 3,
@@ -198,7 +195,6 @@
    "hectare_land": 50.46,
    "lead_kg": 3000
   },
-  "cap_hours": 0,
   "up_hours": 623627.0847349941,
   "build_yrs": 3,
   "adopt_yrs": 2,
@@ -257,7 +253,6 @@
    "lead_kg": 80000,
    "timber_m3": 1000
   },
-  "cap_hours": 0,
   "up_hours": 196961.39765206937,
   "build_yrs": 4,
   "adopt_yrs": 2,
@@ -317,7 +312,6 @@
    "timber_m3": 3000,
    "iron_bar_kg": 10000
   },
-  "cap_hours": 0,
   "up_hours": 359849.2194998602,
   "build_yrs": 5,
   "adopt_yrs": 3,
@@ -379,7 +373,6 @@
    "iron_bar_kg": 3000,
    "glass_raw_kg": 5000
   },
-  "cap_hours": 0,
   "up_hours": 427835.07607502426,
   "build_yrs": 3,
   "adopt_yrs": 3,
@@ -430,7 +423,6 @@
   "mat": {
    "timber_m3": 300
   },
-  "cap_hours": 0,
   "up_hours": 13158569.795478808,
   "build_yrs": 1,
   "adopt_yrs": 1,
@@ -489,7 +481,6 @@
    "bronze_kg": 800,
    "hectare_land": 100.92
   },
-  "cap_hours": 0,
   "up_hours": 214663.5275669549,
   "build_yrs": 4,
   "adopt_yrs": 2,
@@ -541,7 +532,6 @@
    "timber_m3": 100,
    "parchment_sheet": 500
   },
-  "cap_hours": 0,
   "up_hours": 432230.36573498446,
   "build_yrs": 1,
   "adopt_yrs": 1,
@@ -598,7 +588,6 @@
    "iron_bar_kg": 2000,
    "silver_kg": 300
   },
-  "cap_hours": 0,
   "up_hours": 146617.18535426844,
   "build_yrs": 2,
   "adopt_yrs": 2,
@@ -650,7 +639,6 @@
    "silver_kg": 2000,
    "parchment_sheet": 500
   },
-  "cap_hours": 0,
   "up_hours": 334767.8418072433,
   "build_yrs": 2,
   "adopt_yrs": 3,
@@ -703,7 +691,6 @@
    "timber_m3": 1500,
    "wheat_kg": 4000000
   },
-  "cap_hours": 0,
   "up_hours": 21361228.71868158,
   "build_yrs": 2,
   "adopt_yrs": 2,
@@ -761,7 +748,6 @@
   "mat": {
    "silver_kg": 3000
   },
-  "cap_hours": 0,
   "up_hours": 19567668.271109384,
   "build_yrs": 1,
   "adopt_yrs": 1,
@@ -822,7 +808,6 @@
    "wheat_kg": 300000,
    "wine_common_kg": 50000
   },
-  "cap_hours": 0,
   "up_hours": 769336.9855264267,
   "build_yrs": 3,
   "adopt_yrs": 2,
@@ -876,7 +861,6 @@
    "stone_blocks": 5000,
    "parchment_sheet": 1000
   },
-  "cap_hours": 0,
   "up_hours": 62281.98057834831,
   "build_yrs": 3,
   "adopt_yrs": 2,
@@ -931,7 +915,6 @@
    "paper_kg": 3000,
    "ink_kg": 200
   },
-  "cap_hours": 0,
   "up_hours": 475086.8112608162,
   "build_yrs": 1.5,
   "adopt_yrs": 2,
@@ -997,7 +980,6 @@
    "glass_raw_kg": 2000,
    "timber_m3": 300
   },
-  "cap_hours": 0,
   "up_hours": 25981.469300938956,
   "build_yrs": 2,
   "adopt_yrs": 2,
@@ -1060,7 +1042,6 @@
    "twine_kg": 3000,
    "lead_kg": 1000
   },
-  "cap_hours": 0,
   "up_hours": 26700.294934554375,
   "build_yrs": 1,
   "adopt_yrs": 1,
@@ -1125,7 +1106,6 @@
    "stone_blocks": 3000,
    "parchment_sheet": 500
   },
-  "cap_hours": 0,
   "up_hours": 32535.504745164533,
   "build_yrs": 2,
   "adopt_yrs": 2,
@@ -1190,7 +1170,6 @@
    "iron_bar_kg": 3000,
    "paper_kg": 500
   },
-  "cap_hours": 0,
   "up_hours": 44591.25235842318,
   "build_yrs": 2,
   "adopt_yrs": 2,
@@ -1256,7 +1235,6 @@
    "iron_bar_kg": 3000,
    "wheat_kg": 100000
   },
-  "cap_hours": 0,
   "up_hours": 109762.98555878915,
   "build_yrs": 3,
   "adopt_yrs": 2,

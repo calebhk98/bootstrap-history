@@ -1437,7 +1437,6 @@
   "risk": 0.1,
   "conf": "A",
   "note": "Grip a specimen in a powered machine, pull it apart, measure the load and elongation. Plot load vs elongation to find yield strength, ultimate strength, and elongation to failure. The testing machine must pull at constant rate with a load cell accurate to 1 percent or the data is worthless. This data is the only way to verify that specifications are being met; without tests you cannot know if a batch of steel is good.",
-  "cap_hours": 36291.382513432785,
   "up_hours": 0,
   "kb": "10_metallurgy.md"
  },

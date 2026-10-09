@@ -251,7 +251,6 @@
    "cast_iron_kg": 80,
    "iron_bar_kg": 60
   },
-  "cap_hours": 9072.845628358196,
   "up_hours": 1612.950333930346,
   "build_yrs": 0.6,
   "adopt_yrs": 1,
@@ -795,7 +794,6 @@
    "steel_plate_kg": 200,
    "cast_iron_kg": 150
   },
-  "cap_hours": 12097.127504477594,
   "up_hours": 2016.1879174129324,
   "build_yrs": 1,
   "adopt_yrs": 1,
@@ -1015,7 +1013,6 @@
    "scholar": 400
   },
   "mat": {},
-  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
@@ -1046,7 +1043,6 @@
    "scholar": 500
   },
   "mat": {},
-  "cap_hours": 7056.657710945264,
   "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
@@ -1074,7 +1070,6 @@
   "ph": 60,
   "lab": {},
   "mat": {},
-  "cap_hours": 4000.0,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
@@ -1106,14 +1101,11 @@
   "mat": {
    "mat_bone": 500
   },
-  "cap_hours": 5645.326168756211,
-  "up_hours": 800.0,
   "build_yrs": 0.4,
   "adopt_yrs": 0,
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.1,
-  "rev_hours": 2822.6630843781054,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -1139,7 +1131,6 @@
    "sulfuric_acid_kg": 600,
    "mat_bone": 400
   },
-  "cap_hours": 8467.989253134316,
   "up_hours": 1209.7127504477594,
   "build_yrs": 0.6,
   "adopt_yrs": 0,
@@ -1232,7 +1223,6 @@
    "merchant": 80
   },
   "mat": {},
-  "cap_hours": 2419.425500895519,
   "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
@@ -1263,7 +1253,6 @@
    "chemist": 240
   },
   "mat": {},
-  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 0,
@@ -1296,7 +1285,6 @@
   "mat": {
    "mat_ammonia": 300
   },
-  "cap_hours": 5645.326168756211,
   "up_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 0,
@@ -1336,7 +1324,6 @@
    "chemist": 350
   },
   "mat": {},
-  "cap_hours": 7056.657710945264,
   "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
@@ -1540,7 +1527,6 @@
    "scribe": 250
   },
   "mat": {},
-  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
@@ -1601,7 +1587,6 @@
    "scholar": 400
   },
   "mat": {},
-  "cap_hours": 8064.75166965173,
   "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
@@ -1632,7 +1617,6 @@
    "scholar": 450
   },
   "mat": {},
-  "cap_hours": 9677.702003582075,
   "up_hours": 0,
   "build_yrs": 1,
   "adopt_yrs": 2,
@@ -1662,7 +1646,6 @@
    "scholar": 350
   },
   "mat": {},
-  "cap_hours": 7661.514086169143,
   "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
@@ -1693,7 +1676,6 @@
    "merchant": 240
   },
   "mat": {},
-  "cap_hours": 6451.801335721384,
   "up_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 0,
@@ -1725,7 +1707,6 @@
    "chemist": 300
   },
   "mat": {},
-  "cap_hours": 7661.514086169143,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
@@ -1841,7 +1822,6 @@
    "scholar": 300
   },
   "mat": {},
-  "cap_hours": 6451.801335721384,
   "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
@@ -1873,7 +1853,6 @@
    "scholar": 280
   },
   "mat": {},
-  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
@@ -1903,7 +1882,6 @@
    "labourer": 250
   },
   "mat": {},
-  "cap_hours": 8064.75166965173,
   "up_hours": 0,
   "build_yrs": 1,
   "adopt_yrs": 0,
@@ -1937,7 +1915,6 @@
   "mat": {
    "glass_raw_kg": 40
   },
-  "cap_hours": 6451.801335721384,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
@@ -1967,7 +1944,6 @@
   "ph": 80,
   "lab": {},
   "mat": {},
-  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "build_yrs": 1,
   "adopt_yrs": 0,
@@ -1998,7 +1974,6 @@
   "ph": 120,
   "lab": {},
   "mat": {},
-  "cap_hours": 7661.514086169143,
   "up_hours": 0,
   "build_yrs": 2,
   "adopt_yrs": 1,
@@ -2029,7 +2004,6 @@
   "ph": 90,
   "lab": {},
   "mat": {},
-  "cap_hours": 6451.801335721384,
   "up_hours": 0,
   "build_yrs": 1,
   "adopt_yrs": 0,
@@ -2057,7 +2031,6 @@
   "ph": 70,
   "lab": {},
   "mat": {},
-  "cap_hours": 5242.088585273625,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 0,
@@ -2085,7 +2058,6 @@
   "ph": 65,
   "lab": {},
   "mat": {},
-  "cap_hours": 4838.851001791038,
   "up_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 0,
@@ -2289,7 +2261,6 @@
   "mat": {
    "bleach_kg": 600
   },
-  "cap_hours": 9072.845628358196,
   "up_hours": 0,
   "build_yrs": 0.8,
   "adopt_yrs": 1,
@@ -2364,7 +2335,6 @@
    "scholar": 350
   },
   "mat": {},
-  "cap_hours": 7056.657710945264,
   "up_hours": 0,
   "build_yrs": 1,
   "adopt_yrs": 1,
@@ -2395,7 +2365,6 @@
    "scholar": 380
   },
   "mat": {},
-  "cap_hours": 8064.75166965173,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 1,
@@ -2426,7 +2395,6 @@
    "scribe": 320
   },
   "mat": {},
-  "cap_hours": 6451.801335721384,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
@@ -2454,7 +2422,6 @@
   "ph": 110,
   "lab": {},
   "mat": {},
-  "cap_hours": 7056.657710945264,
   "up_hours": 0,
   "build_yrs": 1,
   "adopt_yrs": 0,
@@ -2571,7 +2538,6 @@
    "scholar": 420
   },
   "mat": {},
-  "cap_hours": 9677.702003582075,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 1,
@@ -2601,7 +2567,6 @@
    "cast_iron_kg": 300,
    "steel_plate_kg": 500
   },
-  "cap_hours": 7661.514086169143,
   "up_hours": 0,
   "build_yrs": 1.2,
   "adopt_yrs": 0,
@@ -2642,7 +2607,6 @@
    "chemist": 340
   },
   "mat": {},
-  "cap_hours": 7056.657710945264,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
@@ -2673,7 +2637,6 @@
    "scholar": 380
   },
   "mat": {},
-  "cap_hours": 8064.75166965173,
   "up_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 0,
@@ -2814,7 +2777,6 @@
   "mat": {
    "cast_iron_kg": 400
   },
-  "cap_hours": 9677.702003582075,
   "up_hours": 1612.950333930346,
   "build_yrs": 0.8,
   "adopt_yrs": 1,
@@ -2877,7 +2839,6 @@
    "chemist": 280
   },
   "mat": {},
-  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
@@ -2908,7 +2869,6 @@
    "chemist": 350
   },
   "mat": {},
-  "cap_hours": 7661.514086169143,
   "up_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 0,
@@ -3166,7 +3126,6 @@
   "ph": 80,
   "lab": {},
   "mat": {},
-  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 0,
@@ -3324,7 +3283,6 @@
    "mat_nickel": 50,
    "hydrogen_m3": 200
   },
-  "cap_hours": 8871.226836616903,
   "up_hours": 0,
   "build_yrs": 0.6,
   "adopt_yrs": 0,
@@ -3387,7 +3345,6 @@
   "mat": {
    "cast_iron_kg": 200
   },
-  "cap_hours": 8064.75166965173,
   "up_hours": 0,
   "build_yrs": 0.6,
   "adopt_yrs": 0,
@@ -3482,7 +3439,6 @@
   "mat": {
    "steel_plate_kg": 300
   },
-  "cap_hours": 8467.989253134316,
   "up_hours": 0,
   "build_yrs": 0.8,
   "adopt_yrs": 0,
@@ -3514,7 +3470,6 @@
   "mat": {
    "steel_plate_kg": 40
   },
-  "cap_hours": 7661.514086169143,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 0,
@@ -3642,7 +3597,6 @@
   "ph": 70,
   "lab": {},
   "mat": {},
-  "cap_hours": 5645.326168756211,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 0,
@@ -3688,7 +3642,6 @@
   "mat": {
    "steel_plate_kg": 500
   },
-  "cap_hours": 8467.989253134316,
   "up_hours": 0,
   "build_yrs": 1.5,
   "adopt_yrs": 0,
@@ -3732,7 +3685,6 @@
   "mat": {
    "steel_plate_kg": 800
   },
-  "cap_hours": 10484.17717054725,
   "up_hours": 0,
   "build_yrs": 2,
   "adopt_yrs": 1,
@@ -3760,7 +3712,6 @@
    "chemist": 300
   },
   "mat": {},
-  "cap_hours": 7661.514086169143,
   "up_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 0,
@@ -3790,7 +3741,6 @@
    "chemist": 380
   },
   "mat": {},
-  "cap_hours": 8467.989253134316,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
@@ -3821,7 +3771,6 @@
    "scribe": 350
   },
   "mat": {},
-  "cap_hours": 8064.75166965173,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,

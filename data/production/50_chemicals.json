@@ -53,7 +53,8 @@
    "basis": "per tonne of lead-chamber sulphuric acid at commercial chamber strength, ~65% H2SO4 by mass",
    "yield_basis": "THE INDUSTRIAL ROUTE (Roebuck, 1746 onward), stoichiometric net reaction S + 3/2 O2 + H2O -> H2SO4. H2SO4 is 98.08 g/mol, sulphur 32.07 g/mol, so pure sulphur needed is 32.7% of the pure-acid mass produced; at 65% acid strength a tonne of output contains 650 kg pure H2SO4, needing 212.6 kg sulphur stoichiometrically. Real chamber conversion runs on the order of 85% efficient (gas leakage past the lead seams, incomplete nitrous-gas catalysis), giving the 250 kg figure. Nitre (saltpetre) is not consumed by the acid-forming reaction itself - it supplies the NO/NO2 that catalyses SO2+O2+H2O -> H2SO4 - but real chambers lose nitrogen oxides out the stack faster than the sulphur dioxide, so continuous make-up nitre on the order of 7-10% of the sulphur burned (taken at 8%) was a standard historical consumption figure, not a stoichiometric one. Water covers the ~120 kg chemically combined in the H2SO4 itself (18.02/98.08 g water per g acid, scaled to 650 kg acid), the roughly 350 kg of plain dilution water that brings the theoretical ~78% chamber-strength acid down to the commercial 65% grade, and a further margin for the continuous water spray real Gay-Lussac/Glover towers ran (most recirculated, but not all - some genuinely leaves as vapour carried out with the vented gas stream) - a generous single-pass figure rather than a figure that assumes a recycling loop this entry cannot verify. Note also that the reaction gains mass from atmospheric oxygen (S + O2 -> SO2 -> SO3, absorbing roughly 1.5 kg of O2 per kg of sulphur burned) exactly the way rust or any oxidation does; that oxygen is free, untracked air, which is why the tracked inputs by mass do not have to sum to the full output mass on their own. Sulphur combustion is exothermic and the chambers are close to self-heating; the small charcoal figure is only for cold-weather start-up and auxiliary steam, not the main reaction. nitre_kg has no production entry in this file - out of scope by instruction - so this entry treats it as a purchased input, which is exactly how a chamber-acid works fed on saltpetre bought from a nitre bed.",
    "conf": "C",
-   "requires_node": "lead_chamber"
+   "requires_node": "lead_chamber",
+   "operated_by": ["lead_chamber"]
   },
   "sulfuric_acid_vitriol_kg": {
    "outputs": {
@@ -72,7 +73,8 @@
    "basis": "per tonne of concentrated 'oil of vitriol' (~95% H2SO4), the strong acid obtained by dry-distilling calcined green vitriol",
    "yield_basis": "THE EARLIER ROUTE, genuinely a different industry from the chamber process rather than a smaller version of it: alchemists and early chemists (attested from the medieval Islamic world through Libavius and Glauber in the 16-17th century) drove concentrated fuming acid out of green vitriol (ferrous sulphate, FeSO4.7H2O, already priced in this dataset as green_vitriol_kg, gathered by weathering pyrite) by heating it in a sealed retort. FeSO4.7H2O is 278.03 g/mol; on strong heating it first sheds its 7 waters, then 2 FeSO4 -> Fe2O3 + SO2 + SO3 (a real, balanced decomposition: 2x151.92 = 303.84 g FeSO4 gives 159.7 g Fe2O3 + 64.07 g SO2 + 80.07 g SO3). Only the SO3 half readily condenses with water into strong acid in a chilled receiver; the SO2 half historically escaped or gave a separate, weaker 'spirit of sulphur'. Per kg of starting crystal, the theoretical SO3-derived H2SO4 is 0.176 kg; taking a generous 70% capture in a period retort (real losses were large - gas escapes past every joint) gives 0.1235 kg acid per kg vitriol, hence 7.7 t of vitriol per tonne of ~95%-strength acid. This process ALSO yields a red iron-oxide residue ('colcothar'), used historically as a pigment and polishing rouge, which this entry does not price - it is outside this file's assigned material list. Fuel is a rough estimate for sustained red heat (500-700 C) driving off seven waters of crystallisation and then decomposing the anhydrous salt across many small batches; it is not derived from a measured kiln efficiency the way lime_kg's is, and is the softest number in this entry.",
    "conf": "C",
-   "requires_node": "sulfuric_retort"
+   "requires_node": "sulfuric_retort",
+   "operated_by": ["sulfuric_retort"]
   },
   "salt_kg": {
    "outputs": {
@@ -176,7 +178,8 @@
    "basis": "per tonne of pure (100% ABV-equivalent) ethanol recovered by malting, fermentation and pot-still distillation of grain",
    "yield_basis": "Two stoichiometric steps in series. Malt enzymes hydrolyse starch to glucose, (C6H10O5)n + H2O -> C6H12O6 per repeat unit, a 1.11 kg glucose per kg starch theoretical yield taken at 90% real conversion; Gay-Lussac fermentation then runs C6H12O6 -> 2 C2H5OH + 2 CO2 (180.16 g/mol glucose to 92.14 g/mol ethanol, 51.1% theoretical mass yield), taken at 90% of theoretical for yeast losses and unfermented residue - together about 0.46 kg ethanol per kg fermentable sugar. Wheat carries roughly 65% starch by mass, so raw grain gives on the order of 0.30 kg ethanol per kg grain in the fermented wash, close to the ~0.30-0.35 kg/kg long cited for grain whisky distilling. A single pot still does not capture the wash's alcohol quantitatively - heads, tails and an imperfect cut cost on the order of 15% - taking 85% recovery gives the ~0.255 kg/kg net figure behind the 3920 kg grain figure. Mashing water is a standard ~3:1 water:grain ratio, most of which leaves as spent wash rather than appearing in the output. Firewood is a rough estimate for the extended boiling a pot still needs to concentrate and redistill the wash to drinkable/usable proof; it is the softest number in this entry.",
    "conf": "C",
-   "requires_node": "distillation_alcohol"
+   "requires_node": "distillation_alcohol",
+   "operated_by": ["distillation_alcohol"]
   },
   "dye_kg": {
    "outputs": {
@@ -229,7 +232,8 @@
    "basis": "per tonne of bleaching powder ('chloride of lime'), calcium hypochlorite/chloride absorbed onto slaked lime",
    "yield_basis": "Two reactions in series, both balanced. Scheele's 1774 method generates chlorine from pyrolusite and hydrochloric acid: MnO2 (86.94 g/mol) + 4 HCl (145.84 g/mol pure) -> MnCl2 + Cl2 (70.90 g/mol) + 2 H2O; per kg Cl2 that is 1.226 kg pure MnO2 (1.53 kg at pyrolusite_kg's own 80% assay) and 2.06 kg pure HCl (6.86 kg at hydrochloric_acid_kg's ~30% commercial strength), scaled here by an 85% generator efficiency for incomplete reaction and gas loss. The gas is then absorbed onto slaked lime, Cl2 + Ca(OH)2 -> CaOCl2 + H2O (a 1.79 kg bleaching-powder yield per kg Cl2, needing 1.045 kg Ca(OH)2, i.e. 0.79 kg of lime_kg's quicklime once slaking water is subtracted out), taken at 90% absorption efficiency in the lime bed. As a cross-check: pure CaOCl2 is 55.8% chlorine by mass, and the conventional industrial assay of 'available chlorine' (roughly half of total combined chlorine, the historically standard commercial spec) comes out near 30%, which matches the widely cited 35%-available-chlorine grade of real 19th-century bleaching powder reasonably well. This entry deliberately consumes hydrochloric_acid_kg rather than describing chlorine as if it fell from the sky - it is a genuinely expensive input, which is exactly why the later Deacon and electrolytic chlorine processes existed to escape Scheele's HCl consumption.",
    "conf": "C",
-   "requires_node": "chm_bleaching_powder"
+   "requires_node": "chm_bleaching_powder",
+   "operated_by": ["chm_bleaching_powder"]
   },
   "hydrogen_m3": {
    "outputs": {
@@ -267,7 +271,8 @@
    "basis": "per tonne of hydrochloric acid at ~30% HCl by mass (commercial 'muriatic acid' strength), from the Leblanc 'salt cake' reaction",
    "yield_basis": "STOICHIOMETRIC: 2 NaCl + H2SO4 -> Na2SO4 + 2 HCl (2x58.44 + 98.08 = 215.0 g reactants against 142.04 + 2x36.46 = 215.0 g products - balanced). Per kg of pure HCl this needs 1.60 kg salt and 1.35 kg pure H2SO4 (2.07 kg of this file's 65%-strength chamber acid); at 30% output strength a tonne contains 300 kg pure HCl, giving 481 kg salt and 621 kg acid before losses. Real muffle-furnace HCl generation vents a substantial fraction of the gas rather than capturing it - this was a genuine, well-documented 19th-century problem (untreated Leblanc-works HCl fumes were toxic enough that Britain's Alkali Act 1863 was passed specifically to force its capture), and taking 85% capture (representing works fitted with Gossage absorption towers rather than earlier plants that simply vented it) scales the figures to those given. The same reaction also deposits solid sodium sulphate ('salt cake') in the furnace, which historically fed the Leblanc soda industry (see sodium_carbonate_kg) - not credited here as a joint output, since this entry is written to price HCl on its own account rather than as a soda-works by-product. Coal fires the muffle furnace, which must reach red heat to drive the second, harder stage of the reaction (NaCl + NaHSO4 -> Na2SO4 + HCl) to completion.",
    "conf": "C",
-   "requires_node": "hydrochloric_acid"
+   "requires_node": "hydrochloric_acid",
+   "operated_by": ["hydrochloric_acid"]
   },
   "ammonia_kg": {
    "outputs": {
@@ -325,7 +330,8 @@
    "basis": "per tonne of crystallised copper sulphate pentahydrate (CuSO4.5H2O)",
    "yield_basis": "STOICHIOMETRIC. Hot, concentrated sulphuric acid is itself the oxidant that lets copper metal (which does not react with dilute acid) dissolve: Cu + 2 H2SO4(conc.,hot) -> CuSO4 + SO2 + 2 H2O (63.55 + 196.16 = 259.71 g reactants against 159.61 + 64.07 + 36.03 = 259.71 g products - balanced), and the sulphate then crystallises with five waters, CuSO4 + 5 H2O -> CuSO4.5H2O (249.69 g/mol). Per kg of crystal that is 0.2545 kg copper and 0.7857 kg pure H2SO4 (1.209 kg at 65% chamber strength); a 90% allowance for unreacted copper and crystallisation loss gives the figures above. Charcoal is a rough estimate for the heat needed to keep the acid hot and concentrated enough to act as an oxidiser (concentrated H2SO4 only oxidises copper well above room temperature), not a derived kiln-efficiency figure.",
    "conf": "C",
-   "requires_node": "sulfuric_retort"
+   "requires_node": "sulfuric_retort",
+   "operated_by": ["sulfuric_retort"]
   },
   "paint_kg": {
    "outputs": {
@@ -384,7 +390,8 @@
    "basis": "per tonne of glacial acetic acid recovered via the 'acetate of lime' process",
    "yield_basis": "The major 19th-century industrial route before synthetic acetic acid: the same destructive distillation of wood that gives methanol and charcoal (see formaldehyde_kg) also yields pyroligneous liquor containing acetic acid, commonly cited at 6-10% of dry wood mass in the crude liquor; after purification losses a net recovery on the order of 5% of dry wood mass as usable acid is taken here, giving the 20 t wood figure. The crude acid is neutralised with lime to precipitate calcium acetate (2 CH3COOH + Ca(OH)2 -> Ca(C2H3O2)2 + 2 H2O), which is then decomposed with sulphuric acid to liberate concentrated acid and gypsum (Ca(C2H3O2)2 + H2SO4 -> CaSO4 + 2 CH3COOH) - stoichiometrically 0.617 kg Ca(OH)2 (0.467 kg as lime_kg's quicklime) and 0.817 kg pure H2SO4 (1.256 kg at 65% strength) per kg of acid recovered. LABELLED HEURISTIC (rule 3.4): as with formaldehyde_kg, this entry charges the full wood cost without crediting the charcoal co-product from the same retort run. Charcoal fuel here is for the acid-liberation redistillation, not the primary wood pyrolysis, which is self-firing.",
    "conf": "C",
-   "requires_node": "destructive_distillation"
+   "requires_node": "destructive_distillation",
+   "operated_by": ["destructive_distillation"]
   },
   "calcium_carbide_kg": {
    "outputs": {
@@ -404,7 +411,8 @@
    "basis": "per tonne of calcium carbide (CaC2) from the electric-arc furnace (Willson process, 1892)",
    "yield_basis": "STOICHIOMETRIC: CaO + 3 C -> CaC2 + CO (56.08 + 36.03 = 92.11 g reactants against 64.10 + 28.01 = 92.11 g products - balanced). Per kg of carbide that is 0.875 kg quicklime and 0.562 kg carbon; taking an 85% arc-furnace conversion efficiency gives the figures above (charcoal stands in for the metallurgical coke a real plant would use, since coke is not itself a tracked material here - a minor simplification). The defining fact about this process is that it is almost entirely an ELECTRICITY consumer rather than a fuel-heat one: the arc furnace must reach roughly 2000 C, well above anything a combustion furnace reaches, and historically consumed on the order of 3000-4000 kWh per tonne of carbide - a benchmark still roughly true of modern carbide furnaces - taken here at 3500 kWh (12,600 MJ). This entry is only reachable once cheap, abundant electricity exists, which is itself the real historical constraint on carbide (and hence acetylene) availability - carried as electrical_mj so that constraint is exactly what sim/engine/solve_prices.py's electrical energy market now prices. ELECTRICAL, NOT SHAFT WORK: this figure is carried as electrical_mj because the process is electrolysis or an electric furnace, which needs an electric current rather than a turning shaft. It was originally written as mechanical_mj on the reasoning that electricity must bottom out in whatever turns the dynamo - true for a waterwheel, false in general, since a photovoltaic panel makes current from photons with no shaft anywhere. See Complaints/38 and the ENERGY section of sim/engine/solve_prices.py.",
    "conf": "B",
-   "requires_node": "arc_furnace_ferroalloys"
+   "requires_node": "arc_furnace_ferroalloys",
+   "operated_by": ["arc_furnace_ferroalloys"]
   },
   "acetylene_kg": {
    "outputs": {
@@ -476,7 +484,8 @@
    "basis": "per tonne of soda ash (Na2CO3) by the Leblanc process",
    "yield_basis": "New intermediate (rule 3.4, and see this file's note on why it exists). STOICHIOMETRIC, in two stages, exactly as the task brief asks to show. Stage 1, the salt-cake reaction: 2 NaCl + H2SO4 -> Na2SO4 + 2 HCl. Stage 2, the 'black ash' furnace reaction: Na2SO4 + 2 C + CaCO3 -> Na2CO3 + CaS + 2 CO2 (142.04 + 24.02 + 100.09 = 266.15 g reactants against 105.99 + 72.14 + 88.02 = 266.15 g products - balanced). Chaining both stages per kg of soda ash gives 1.103 kg salt, 0.925 kg pure H2SO4 (1.424 kg at 65% strength), 0.227 kg carbon (0.252 kg charcoal) and 0.944 kg limestone; a 75% overall process efficiency (the Leblanc black-ash furnace was notoriously incomplete and labour-brutal, one reason Solvay displaced it within a generation) scales these to the figures above. Extra coal fires the reverberatory furnace itself, beyond the stoichiometric carbon reductant. Stage 1's hydrochloric acid is a genuine co-product of this reaction (see hydrochloric_acid_kg's own note) not credited here, and stage 2's calcium sulphide waste ('galligu') was a real and notorious pollutant of Leblanc works, disposed of rather than priced.",
    "conf": "B",
-   "requires_node": "soda_leblanc"
+   "requires_node": "soda_leblanc",
+   "operated_by": ["soda_leblanc"]
   },
   "sodium_carbonate_solvay_kg": {
    "outputs": {
@@ -517,7 +526,8 @@
    "basis": "per tonne of trisodium citrate from neutralising citric acid with soda ash",
    "yield_basis": "STOICHIOMETRIC: 2 C6H8O7 + 3 Na2CO3 -> 2 Na3C6H5O7 + 3 H2O + 3 CO2 (384.24 + 317.97 = 702.21 g reactants against 516.14 + 54.05 + 132.03 = 702.22 g products - balanced), 0.744 kg citric acid and 0.616 kg soda ash per kg of product; a 92% allowance for a straightforward aqueous neutralisation and crystallisation gives the figures above. Both inputs are this file's own entries (citric_acid_kg, sodium_carbonate_kg), so this entry is a short final step on top of two already-argued chains rather than a fresh derivation of its own.",
    "conf": "C",
-   "requires_node": "soda_leblanc"
+   "requires_node": "soda_leblanc",
+   "operated_by": ["soda_leblanc"]
   },
   "chrome_salts_kg": {
    "outputs": {
@@ -640,7 +650,8 @@
    "basis": "per tonne of camphor recovered by steam-distilling chipped camphor-laurel (Cinnamomum camphora) wood",
    "yield_basis": "New intermediate this file needs for celluloid_kg. Camphor-laurel heartwood carries roughly 2-4% camphor by mass (older trees richer), taken at a middling 2.5%, with steam distillation recovering on the order of 85% of that content - a net 2.125% yield, meaning roughly 47 t of chipped heartwood processed per tonne of camphor recovered, hence the large wood figure (wood_kg is this file's existing raw-feedstock material, already used the same way by charcoal_kg). Labour is dominated by chipping that much wood and tending prolonged steam-still batches; charcoal raises the steam.",
    "conf": "C",
-   "requires_node": "distillation_alcohol"
+   "requires_node": "distillation_alcohol",
+   "operated_by": ["distillation_alcohol"]
   },
   "phosphorus_red_kg": {
    "outputs": {
@@ -660,7 +671,8 @@
    "basis": "per tonne of red phosphorus, converted from white phosphorus reduced from bone ash in an electric or fuel-fired retort",
    "yield_basis": "STOICHIOMETRIC retort reduction, the historical (Scheele/Gahn-derived, industrialised mid-1800s) route before electric-furnace phosphorus: 2 Ca3(PO4)2 + 6 SiO2 + 10 C -> 6 CaSiO3 + 10 CO + P4 (1100.94 g reactants against 1100.96 g products - balanced). Per kg of white phosphorus that is 5.01 kg pure Ca3(PO4)2 (6.26 kg at bone ash's ~80% assay), 2.91 kg silica (sand_quartz_kg, taken near-pure) and 0.97 kg carbon (1.08 kg as charcoal); a 65% real retort yield (this reduction runs at 1400-1500 C and any leak lets phosphorus vapour escape and oxidise before condensing, historically a genuinely difficult and dangerous process) scales these up. White phosphorus is then converted to the red allotrope by prolonged heating at 250-300 C in the absence of air - no reagent is consumed, only heat, but a further 5% is lost to sublimation and venting during the slow conversion. Extra charcoal beyond the stoichiometric reductant fires the retort itself, which must sustain a far higher temperature than any other roast in this file. Phosphorus manufacture was a severe historical occupational hazard (industrial phosphorus poisoning, 'phossy jaw', among 19th-century match-workers), reflected here in the heavy furnaceman labour figure rather than in any material line.",
    "conf": "C",
-   "requires_node": "chm_phosphorus_extraction"
+   "requires_node": "chm_phosphorus_extraction",
+   "operated_by": ["chm_phosphorus_extraction"]
   },
   "argon_or_h2_m3": {
    "outputs": {

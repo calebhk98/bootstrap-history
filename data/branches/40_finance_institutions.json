@@ -12,7 +12,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
@@ -38,7 +37,6 @@
    "scribe": 60.0
   },
   "mat": {},
-  "cap_hours": 30242.818761193987,
   "up_hours": 1209.7127504477594,
   "build_yrs": 0.5,
   "adopt_yrs": 0,
@@ -72,7 +70,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
@@ -98,7 +95,6 @@
    "scribe": 20.0
   },
   "mat": {},
-  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
@@ -131,7 +127,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
@@ -155,7 +150,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
@@ -179,7 +173,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
@@ -203,7 +196,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
@@ -227,7 +219,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
@@ -253,7 +244,6 @@
    "scribe": 200.0
   },
   "mat": {},
-  "cap_hours": 80647.5166965173,
   "up_hours": 0,
   "build_yrs": 1.0,
   "adopt_yrs": 0,
@@ -280,7 +270,6 @@
    "scribe": 40.0
   },
   "mat": {},
-  "cap_hours": 18145.691256716393,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 0,
@@ -312,7 +301,6 @@
   "mat": {
    "papyrus_sheet": 50
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.25,
   "adopt_yrs": 2,
@@ -344,7 +332,6 @@
   "mat": {
    "paper_kg": 100
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 3,
@@ -375,7 +362,6 @@
   "mat": {
    "paper_kg": 80
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.25,
   "adopt_yrs": 1,
@@ -406,7 +392,6 @@
   "mat": {
    "paper_kg": 30
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 1,
@@ -448,7 +433,6 @@
   "mat": {
    "parchment_sheet": 50
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.25,
   "adopt_yrs": 2,
@@ -479,7 +463,6 @@
   "mat": {
    "parchment_sheet": 30
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
@@ -510,7 +493,6 @@
   "mat": {
    "parchment_sheet": 20
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 1,
@@ -541,7 +523,6 @@
   "mat": {
    "parchment_sheet": 15
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 1,
@@ -572,7 +553,6 @@
   "mat": {
    "parchment_sheet": 20
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
@@ -635,7 +615,6 @@
    "scribe": 100
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 2,
@@ -730,7 +709,6 @@
    "scribe": 100
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
@@ -853,7 +831,6 @@
    "scribe": 100
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 3,
@@ -960,7 +937,6 @@
    "merchant": 100
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
@@ -989,7 +965,6 @@
    "master": 50
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 2,
@@ -1146,7 +1121,6 @@
   "mat": {
    "paper_kg": 300
   },
-  "cap_hours": 40323.75834825865,
   "up_hours": 0,
   "build_yrs": 1.5,
   "adopt_yrs": 2,
@@ -1208,7 +1182,6 @@
   "mat": {
    "parchment_sheet": 80
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
@@ -1355,7 +1328,6 @@
    "scribe": 150
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
@@ -1384,7 +1356,6 @@
    "scribe": 100
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
@@ -1412,7 +1383,6 @@
    "scribe": 200
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
@@ -1443,7 +1413,6 @@
    "scribe": 100
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
@@ -1509,7 +1478,6 @@
    "scribe": 200
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
@@ -1538,7 +1506,6 @@
    "scribe": 100
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
@@ -1566,7 +1533,6 @@
    "merchant": 150
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
@@ -1596,7 +1562,6 @@
   "mat": {
    "parchment_sheet": 10
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 1,
@@ -1620,7 +1585,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
@@ -1696,7 +1660,6 @@
    "master": 100
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
@@ -1726,7 +1689,6 @@
    "merchant": 200
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
@@ -1756,7 +1718,6 @@
    "scribe": 50
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
@@ -1785,7 +1746,6 @@
    "scribe": 50
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 2,
@@ -1984,7 +1944,6 @@
    "merchant": 150
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
@@ -2087,7 +2046,6 @@
   "mat": {
    "paper_kg": 100
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
@@ -2468,7 +2426,6 @@
    "paper_kg": 200,
    "mat_ink": 50
   },
-  "cap_hours": 20161.879174129324,
   "up_hours": 1008.0939587064662,
   "build_yrs": 0.5,
   "adopt_yrs": 1,
@@ -2890,7 +2847,6 @@
    "timber_m3": 100,
    "mat_leather": 50
   },
-  "cap_hours": 40323.75834825865,
   "up_hours": 2016.1879174129324,
   "build_yrs": 1,
   "adopt_yrs": 1,
@@ -3219,7 +3175,6 @@
    "master": 200
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
@@ -3249,7 +3204,6 @@
   "mat": {
    "parchment_sheet": 30
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
@@ -3489,7 +3443,6 @@
   "mat": {
    "parchment_sheet": 1000
   },
-  "cap_hours": 40323.75834825865,
   "up_hours": 2016.1879174129324,
   "build_yrs": 2,
   "adopt_yrs": 1,
@@ -3546,7 +3499,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
@@ -3578,7 +3530,6 @@
   "mat": {
    "parchment_sheet": 500
   },
-  "cap_hours": 40323.75834825865,
   "up_hours": 2016.1879174129324,
   "build_yrs": 1.5,
   "adopt_yrs": 2,
@@ -3610,7 +3561,6 @@
   "mat": {
    "paper_kg": 800
   },
-  "cap_hours": 100809.39587064662,
   "up_hours": 6048.563752238797,
   "build_yrs": 2,
   "adopt_yrs": 2,

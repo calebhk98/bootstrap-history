@@ -227,7 +227,6 @@
    "lime_kg": 80,
    "mat_lime": 30
   },
-  "cap_hours": 5040.469793532331,
   "up_hours": 800.0,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
@@ -510,7 +509,6 @@
   "mat": {
    "mat_wood": 250
   },
-  "cap_hours": 7056.657710945264,
   "up_hours": 1008.0939587064662,
   "build_yrs": 0.5,
   "adopt_yrs": 0,
@@ -1065,7 +1063,6 @@
   "mat": {
    "steel_plate_kg": 800
   },
-  "cap_hours": 60485.63752238797,
   "up_hours": 10080.939587064662,
   "build_yrs": 2.5,
   "adopt_yrs": 2,
@@ -1722,7 +1719,6 @@
    "mat_wood": 200,
    "iron_bar_kg": 50
   },
-  "cap_hours": 14113.315421890527,
   "up_hours": 2016.1879174129324,
   "build_yrs": 0.9,
   "adopt_yrs": 0,
@@ -2395,7 +2391,6 @@
   "mat": {
    "iron_bar_kg": 250
   },
-  "cap_hours": 24194.255008955188,
   "up_hours": 4000.0,
   "build_yrs": 1.5,
   "adopt_yrs": 1,
@@ -2677,7 +2672,6 @@
   "mat": {
    "cast_iron_kg": 150
   },
-  "cap_hours": 14113.315421890527,
   "up_hours": 2016.1879174129324,
   "build_yrs": 0.8,
   "adopt_yrs": 0,

@@ -11,7 +11,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0,
   "risk": 0,
@@ -160,7 +159,6 @@
    "brick_1000": 10,
    "timber_m3": 20
   },
-  "cap_hours": 100809.39587064662,
   "up_hours": 20161.879174129324,
   "yrs": 1,
   "risk": 0,
@@ -314,7 +312,6 @@
    "stone_kg": 500000.0,
    "lime_kg": 50000.0
   },
-  "cap_hours": 161295.0333930346,
   "up_hours": 183,
   "yrs": 3.0,
   "risk": 0.05,
@@ -345,7 +342,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0,
   "risk": 0,
@@ -411,7 +407,6 @@
    "artisan": 100
   },
   "mat": {},
-  "cap_hours": 20161.879174129324,
   "up_hours": 0,
   "yrs": 1,
   "risk": 0.05,
@@ -451,7 +446,6 @@
    "steel_noric_kg": 50,
    "glass_raw_kg": 5
   },
-  "cap_hours": 40323.75834825865,
   "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.05,
@@ -486,7 +480,6 @@
   "mat": {
    "linen_kg": 1
   },
-  "cap_hours": 4000.0,
   "up_hours": 0,
   "yrs": 0,
   "risk": 0,
@@ -518,7 +511,6 @@
   "mat": {
    "soap_kg": 5
   },
-  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "yrs": 1,
   "risk": 0,
@@ -551,7 +543,6 @@
    "ethanol": 2,
    "charcoal_kg": 1
   },
-  "cap_hours": 16129.50333930346,
   "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.1,
@@ -575,7 +566,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0,
   "risk": 0,
@@ -732,7 +722,6 @@
    "glass_raw_kg": 0.5,
    "mercury_kg": 0.1
   },
-  "cap_hours": 6048.563752238797,
   "up_hours": 604.8563752238797,
   "yrs": 0.5,
   "risk": 0.05,
@@ -1009,7 +998,6 @@
    "scholar": 120
   },
   "mat": {},
-  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "yrs": 1,
   "risk": 0,
@@ -1080,7 +1068,6 @@
    "scholar": 150
   },
   "mat": {},
-  "cap_hours": 16129.50333930346,
   "up_hours": 4000.0,
   "yrs": 1,
   "risk": 0.1,
@@ -1109,7 +1096,6 @@
   "mat": {
    "parchment_sheet": 100
   },
-  "cap_hours": 20161.879174129324,
   "up_hours": 0,
   "yrs": 1,
   "risk": 0,
@@ -1140,7 +1126,6 @@
    "scholar": 250
   },
   "mat": {},
-  "cap_hours": 24194.255008955188,
   "up_hours": 0,
   "yrs": 2,
   "risk": 0.05,
@@ -1175,7 +1160,6 @@
    "alum_kg": 10,
    "brick_1000": 20
   },
-  "cap_hours": 70566.57710945263,
   "up_hours": 0,
   "yrs": 1,
   "risk": 0,
@@ -1218,7 +1202,6 @@
   "mat": {
    "timber_m3": 10
   },
-  "cap_hours": 40323.75834825865,
   "up_hours": 0,
   "yrs": 1,
   "risk": 0,
