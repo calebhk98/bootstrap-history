@@ -157,14 +157,12 @@ class ForeignTradersMixin:
                 * self._route_capital_per_lift_tonne(route))
 
     def _households_loanable_funds(self):
-        """Funds households put into the loanable pool: at the last meeting of the capital market, or
-        what their saving would put in before it has met."""
+        """Funds households put into the loanable pool at the last meeting of the capital market; none before
+        it has met (reading their saving then would price society output, which needs this landed price)."""
         record = self._market_record()
         if record is not None and record.supply > 0.0:
             return record.supply_by_source.get("households", 0.0)
-        from .agents_port import SimWorld
-        from .economy_capital_market import LENDING_HORIZON_YEARS
-        return LENDING_HORIZON_YEARS * SimWorld(self).household_saving()
+        return 0.0
 
     def _merchant_own_capital(self):
         """Money the home merchant class holds of its own: its share of the funds households save,
