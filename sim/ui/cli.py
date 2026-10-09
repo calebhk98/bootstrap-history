@@ -195,7 +195,7 @@ def _check_node_materials(node_id, node_record, goods, producible):
         if material_id in goods:
             continue
         if material_id in producible:
-            warns.append("%s: material %s has a production entry but no solved price (cost is a lower bound)" % (node_id, material_id))
+            warns.append("%s: material %s has a production entry but no seller in reach of the starting society, so it has no price and cannot be bought there (cost here is a lower bound)" % (node_id, material_id))
         else:
             errs.append("%s: unpriced material %s" % (node_id, material_id))
     return errs, warns
