@@ -45,7 +45,8 @@ def side_worth(side: Dict[str, Any], taker: Any, holder: Any, world: Any, find_a
 	if side.get("concern"):
 		worth += concern_worth(holder, side["concern"])
 	for node_id in set(side.get("patent", ())) | set(side.get("licence", ())):
-		worth += max(valuer(node_id, world) if valuer is not None else 0.0, concern_worth(holder, node_id))
+		kept = 1.0 - float(side.get("royalty", {}).get(node_id, 0.0))
+		worth += kept * max(valuer(node_id, world) if valuer is not None else 0.0, concern_worth(holder, node_id))
 	if side.get("shares") and find_actor is not None:
 		worth += joint_stock.shares_worth(side["shares"], find_actor)
 	return worth

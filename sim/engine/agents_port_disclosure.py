@@ -50,8 +50,15 @@ class DisclosureView:
 
 	def patent_entry(self, node_id: str) -> Any:
 		"""The live patent on an invention as {"holder", "expires", "licensees"}, or None."""
-		holders = list(self._sim.actors.actors.values()) + list(self._sim.seat_parties().values())
+		sim = self._sim
+		holders = list(sim.actors.actors.values()) + [sim.seat_party(seat_id) for seat_id, seat in sim.state.seats.items()
+													  if node_id in seat.holdings.patents]
 		return licence.live_patent(holders, node_id, self.year)
+
+	def _holder(self, holder_id: str) -> Any:
+		"""The actor with this id: one in the registry, else a seat."""
+		sim = self._sim
+		return sim.actors.get(holder_id) or (sim.seat_party(holder_id) if holder_id in sim.state.seats else None)
 
 	def collect_royalty(self, firm: Any, node_id: str, takings: float) -> float:
 		"""The royalty a licensed firm's takings owe each seat that licensed it the invention; the amount paid."""
@@ -63,4 +70,4 @@ class DisclosureView:
 			if due > 0.0:
 				ledger.transfer(firm, sim.seat_party(seat_id), due, "licence")
 				paid += due
-		return paid
+		return paid + licence.collect_patent_royalty(self, self._holder, firm, node_id, takings)

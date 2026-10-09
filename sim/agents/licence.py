@@ -37,3 +37,16 @@ def live_patent(actors: Any, node_id: str, year: int) -> Optional[Dict[str, Any]
 
 def royalty_due(takings: float, record: Dict[str, Any]) -> float:
 	return max(0.0, takings) * float(record.get("royalty", 0.0))
+
+
+def collect_patent_royalty(world: Any, find_holder: Any, firm: Any, node_id: str, takings: float) -> float:
+	"""A firm licensed under a patent pays the holder the royalty agreed on its takings from the concern, never
+	more than its purse, while the patent lives; the amount paid. `find_holder(id)` gives the holder actor."""
+	owed = firm.record.royalty_owed.get(node_id)
+	holder = find_holder(owed["holder"]) if owed else None
+	entry = holder.record.patents.get(node_id) if holder is not None else None
+	if entry is None or not patent.live(entry, world.year):
+		return 0.0
+	due = min(royalty_due(takings, {"royalty": owed["rate"]}), max(0.0, firm.money))
+	ledger.transfer(firm, holder, due, "licence")
+	return due
