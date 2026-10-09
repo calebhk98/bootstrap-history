@@ -84,6 +84,11 @@
     },
     {
       "name": "Third century crisis",
+      "causes_not_modelled": [
+        "Sasanian and Germanic pressure on the frontiers: no neighbouring polity with an army is simulated for this civilisation.",
+        "Army-made emperors and an undefined succession: ruler legitimacy is not simulated.",
+        "The Decian edict is a loyalty test with no simulated ruler; its values shift rides on this event's fiscal cause."
+      ],
       "causes": [
         {
           "quantity": "state_funded_share",
@@ -150,6 +155,17 @@
     },
     {
       "name": "The solidus and the end of the debasement",
+      "causes": [
+        {
+          "quantity": "coin_metal_kept",
+          "op": "<",
+          "value": 1.0,
+          "why": "Restoring a sound coin presupposes a debased one; a coin never cut has nothing to restore."
+        }
+      ],
+      "causes_not_modelled": [
+        "The emperor's choice to strike a gold coin and the gold supply that backed it are not simulated as a decision."
+      ],
       "note": "The debasement modelled above stops, and it is worth saying why, because a century of worthless coin is the largest single thing that happened to this civilization's money and its end is not a small event. Aurelian reformed the antoninianus in 274; Constantine then struck the solidus at 72 to the pound of gold from about 309, and it held that weight essentially unchanged for seven hundred years. Long contracts, banking and long-distance trade become possible again for anyone who can get gold. The other half of this entry is quieter and better attested than it is famous: the conquests that supplied cheap slaves had ended, the colonate was binding tenants to the land instead, and late antiquity is when water power actually spreads in the Roman world. Ausonius, writing about the Moselle around 370 (Mosella, lines 361-364), describes water-driven saws cutting stone - the first securely attested water-powered saws anywhere. Rome's baseline hostility to labour-saving devices is real but it is at its weakest here, so how a device that replaces a man is received moves back toward neutral. This entry carries no damage: it is a good century and is modelled as one.",
       "values": {
         "w_commerce": 0.12,
@@ -162,6 +178,18 @@
     },
     {
       "name": "Christianisation of the empire",
+      "causes": [
+        {
+          "quantity": "literacy_elite",
+          "op": ">=",
+          "value": 0.5,
+          "relative_to_start": true,
+          "why": "A movement carried by books and schools needs readers; if the educated class has lost half its opening literacy the texts and the clergy or officials who copy them are gone."
+        }
+      ],
+      "causes_not_modelled": [
+        "A ruler's conversion and state patronage of one religion: no religious institution or ruler legitimacy is simulated."
+      ],
       "note": "Rome's baseline note says it is magic and not heterodoxy that is criminal here, because the state has never needed everyone to worship the same way. Over this century that stops being true. The Edict of Milan in 313 tolerates Christianity; Constantius II's law of 357 (Theodosian Code 9.16.4) makes consulting a haruspex a capital offence; Theodosius' edict of 380 makes Nicene Christianity the religion of the state and the laws of 391-392 close the temples and ban sacrifice outright; and in 385 Priscillian is executed at Trier, the first man in the empire put to death for holding the wrong doctrine. Divination and astrology were already suspect; what is new is that there is now one correct answer about the world, and an apparatus for finding out who does not hold it. This is the largest single shifts in what this society values shift in this file and it runs against the technologist, not with him.",
       "values": {
         "w_magic_fear": 0.1,
@@ -243,6 +271,17 @@
     },
     {
       "name": "Ostrogothic Italy under Theodoric",
+      "causes": [
+        {
+          "quantity": "territory_share_of_start",
+          "op": "<",
+          "value": 1.0,
+          "why": "The event follows the division or loss of a realm (to reunify, refound, reconquer or succeed it). A state still holding every tile it began with has nothing to reunify or retake."
+        }
+      ],
+      "causes_not_modelled": [
+        "A federate king's rise to rule a province: no neighbouring polity or its army is simulated."
+      ],
       "note": "Modelling the fifth and sixth centuries as unbroken decline would be false, so this is here. Theodoric ruled Italy from 493 to 526 and Cassiodorus' Variae, written as his secretary, are letters ordering the repair of aqueducts and city walls, the draining of the Pontine marshes, the protection of ancient statues from theft, and a water-clock and a sundial to be made and sent to the Burgundian king with a letter explaining how they work. The Senate still met, the grain dole still ran, the coinage was still struck to Roman standards, and both Boethius and Cassiodorus did their work at this court - though Theodoric had Boethius executed in 524, which is the reminder that a good century is not a safe one. Ostrogothic Italy was better governed than Italy had been for a hundred years and would be for four hundred more. No damage fields: this is a window in which to build.",
       "values": {
         "w_commerce": 0.08,
@@ -255,6 +294,23 @@
     },
     {
       "name": "Justinian's Gothic War",
+      "causes": [
+        {
+          "quantity": "territory_share_of_start",
+          "op": "<",
+          "value": 1.0,
+          "why": "The event follows the division or loss of a realm (to reunify, refound, reconquer or succeed it). A state still holding every tile it began with has nothing to reunify or retake."
+        },
+        {
+          "quantity": "army_share_of_wanted",
+          "op": ">=",
+          "value": 0.5,
+          "why": "A war or a rebellion by soldiers needs a standing force to fight it; a state that has let its army fall below half of what its threat calls for is not the one that went to war. A reasoning bound, to be fitted against a baseline ensemble."
+        }
+      ],
+      "causes_not_modelled": [
+        "The Gothic kingdom's army and its succession quarrel: no neighbouring polity is simulated."
+      ],
       "note": "Belisarius landed in Sicily in 535 to recover Italy for the empire and the war took nineteen years. Rome changed hands five times; the Goths cut the aqueducts in 537 and they were never fully restored, ending the water supply of a city that had had one for eight hundred years; Totila emptied Rome of its inhabitants in 546. Procopius, who was there, is the source and is not a neutral one. The Pragmatic Sanction of 554 handed back an Italy with a wrecked countryside, a collapsed urban population and no functioning senate. The reconquest destroyed more of Roman Italy than any of the invasions had.",
       "output_factor": 0.55,
       "sack_chance": 0.05,
@@ -320,6 +376,17 @@
     },
     {
       "name": "The Arab conquests close the Mediterranean",
+      "causes": [
+        {
+          "quantity": "state_funded_share",
+          "op": "<",
+          "value": 1.0,
+          "why": "Fiscal strain is the shared root of the collapses and wars of this kind: a state whose revenue covers everything it needs has no arrears, no mutiny over pay and no pressure to seize new sources of money."
+        }
+      ],
+      "causes_not_modelled": [
+        "The Arab polity's rise and the exhaustion of the Roman and Persian armies by their last war: no neighbouring polity is simulated."
+      ],
       "note": "Within a century of Muhammad's death in 632, Arab armies had taken Syria and Egypt from Byzantium (634-642), swept across North Africa and taken Carthage itself in 698, and crossed into Spain in 711. Henri Pirenne's thesis - that it is this, and not the fifth-century invasions, which actually ends the ancient Mediterranean as a single economic space - is contested on details but not on the basic shape: papyrus from Egypt, African red slip ware and the grain fleets all stop reaching Italy across this window, a sea that had been Rome's own for six centuries becomes a frontier, and whatever reaches Ravenna or Rome now comes from a much smaller world.",
       "output_factor": 0.85,
       "condition": {
@@ -343,6 +410,17 @@
     },
     {
       "name": "The Carolingian renaissance",
+      "causes": [
+        {
+          "quantity": "state_funded_share",
+          "op": ">=",
+          "value": 0.9,
+          "why": "A settlement, revival or peace dividend needs a state that can pay its army and officials; one in arrears has nothing left over for it. A reasoning bound, to be fitted against a baseline ensemble."
+        }
+      ],
+      "causes_not_modelled": [
+        "A ruler's patronage of scholars and monastic schools: no ruler decision or religious institution is simulated."
+      ],
       "note": "Charlemagne's court at Aachen gathers Alcuin of York and a real revival of schooling, a standardised minuscule hand that makes copying faster and more legible, and a currency reform (the silver denier, not by coincidence the ancestor of the word this file still counts in) stable enough to use; he is crowned Emperor in Rome on Christmas Day 800 by Leo III, the first time the title is claimed in the west since 476. It is a revival built on a much smaller base than the old empire - most of Charlemagne's Europe could not read - but a play tester who reached the year 600 and asked the game why two centuries of total silence followed found, correctly, that nothing here answered them; this is the first thing since the Lombards that is not a catastrophe.",
       "values": {
         "w_novelty": 0.05,

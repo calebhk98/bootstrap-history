@@ -1391,6 +1391,13 @@ def main():
                            "(default: the good backing the currency)")
     subparser.add_argument("--payback", action="store_true", help="also list nodes whose build cost is repaid "
                            "suspiciously fast by net earnings (a diagnostic; it changes nothing)")
+    subparser = sub.add_parser("baseline-ensemble", help="play several games of a civilisation with no player and store "
+                               "their distributions (population, wages, literacy, territory, technologies held by year) "
+                               "for the divergence screen to compare against; each game takes a long time")
+    subparser.add_argument("--civ", default="", help="civilisation id (default: the default one)")
+    subparser.add_argument("--seeds", type=int, default=20, help="how many games, seeds 1 to N (default 20)")
+    subparser.add_argument("--years", type=int, default=300, help="years to play per game (default 300)")
+    subparser.add_argument("--jobs", type=int, default=1, help="games to play at once (default 1)")
     sub.add_parser("goals", help="list the selectable goals and their critical-path floors")
     subparser = sub.add_parser("path", help="the critical path to a goal"); subparser.add_argument("goal", nargs="?")
     subparser = sub.add_parser("costs", help="the resource costs of every node"); subparser.add_argument("--top", type=int, default=20)
@@ -1676,7 +1683,8 @@ def main():
             "goals": cmd_goals,
             "run": cmd_run, "compare": cmd_compare, "play": cmd_play, "agent": cmd_agent,
             "sensitivity": cmd_sensitivity, "plan": cmd_plan,
-            "search": cmd_search, "economy-check": cmd_economy_check}[args.cmd](args)
+            "search": cmd_search, "economy-check": cmd_economy_check,
+            "baseline-ensemble": cmd_baseline_ensemble}[args.cmd](args)
 
 
 # ----------------------------------------------------------------------------
@@ -1694,3 +1702,4 @@ from .cli_interactive import cmd_civs, cmd_menu, cmd_play
 from .cli_agent import cmd_agent
 from .cli_analysis import cmd_plan, cmd_search, cmd_why
 from .cli_economy_check import cmd_economy_check
+from .cli_baseline import cmd_baseline_ensemble

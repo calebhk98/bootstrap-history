@@ -158,6 +158,24 @@ def _pair_line(label, pair):
     return "%-18s start %s, now %s" % (label, _fmt_num(pair["start"]), _fmt_num(pair["now"]))
 
 
+def _baseline_lines(baseline):
+    if not baseline.get("available"):
+        return ["", _wrap("BASELINE: %s. Generate it with: %s" % (
+            baseline.get("reason", "not available"), baseline.get("how_to_generate", "baseline-ensemble")))]
+    lines = ["", "BASELINE (%d runs with no player, year %d of the run%s)" % (
+        baseline["runs"], baseline["compared_at_offset"],
+        ", the last year played" if baseline.get("beyond_horizon") else "")]
+    for metric, row in baseline["compared"].items():
+        band = row["baseline"]
+        lines.append("  %-18s now %s, baseline %s to %s (median %s): %s" % (
+            metric, _fmt_num(row["now"]), _fmt_num(band["p10"]), _fmt_num(band["p90"]),
+            _fmt_num(band["median"]), row["position"]))
+    ahead = baseline.get("technologies_ahead_of_the_baseline") or []
+    if ahead:
+        lines.append(_wrap("technologies you built that the baseline society would not yet hold: " + ", ".join(ahead)))
+    return lines
+
+
 def render_divergence(out):
     lines = ["DIVERGENCE: %s years since %s" % (out["years_elapsed"], out["start_year"]),
              _pair_line("population", out["population"]),
@@ -174,10 +192,13 @@ def render_divergence(out):
         lines.append("  %s (%s)" % (row["name"], row["year"]))
     if len(built) > 20:
         lines.append("  ... and %d more (json lists all)" % (len(built) - 20))
+    lines.extend(_baseline_lines(out.get("baseline") or {}))
     lines.append("")
     lines.append("DATED EVENTS")
     for row in out.get("dated_events") or []:
         lines.append("  %s-%s %-20s %s" % (*row["years"], row["status"], row.get("name", "(withheld)")))
+        for cause in row.get("causes_not_modelled") or []:
+            lines.append(_wrap("    not simulated: " + cause))
     lines.append("")
     for note in out.get("cannot_know") or []:
         lines.append(_wrap("cannot know: " + note))
