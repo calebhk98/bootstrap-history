@@ -47,12 +47,13 @@ class WageMovement(unittest.TestCase):
         result = run(state, [bid("a", 500.0)])
         self.assertAlmostEqual(result.wage, 1.0)
 
-    def test_no_bids_keeps_wage_and_hires_nothing(self):
+    def test_no_bids_hires_nothing_and_the_quote_drifts_down_to_the_ask(self):
         state = make_state(wage=2.5)
-        result = run(state, [])
-        self.assertEqual(result.hours_hired, 0.0)
-        self.assertEqual(result.wage, 2.5)
-        self.assertEqual(state.wages["vale"]["digger"], 2.5)
+        results = [run(state, []) for _ in range(3)]
+        wages = [result.wage for result in results]
+        self.assertEqual([result.hours_hired for result in results], [0.0, 0.0, 0.0])
+        self.assertTrue(2.5 > wages[0] > wages[1] > wages[2] > 0.0)
+        self.assertEqual(state.wages["vale"]["digger"], wages[-1])
 
 
 class PremiumAndFriction(unittest.TestCase):

@@ -3,6 +3,7 @@ import math
 from typing import Dict, List, Optional, Sequence, Set, Tuple
 
 from sim.constants import declare
+from . import asks
 from .records import Bid, Clearing, MarketState, YearInputs
 
 WAGE_SHARE_CLOSED_PER_YEAR = declare(
@@ -56,8 +57,10 @@ def clearing_target(reservation: float, offered: float, bids: Sequence[Bid]) -> 
 
 
 def market_wage(last: Optional[float], reservation: float, offered: float, bids: Sequence[Bid]) -> float:
-    if offered <= 0.0 or not bids:
+    if offered <= 0.0:
         return last if last is not None else max((bid.maximum_wage for bid in bids), default=reservation)
+    if not bids:    # hours on offer and nobody wanting them: the quote drifts down to the ask
+        return reservation if last is None else last + WAGE_SHARE_CLOSED_PER_YEAR * (reservation - last)
     target = clearing_target(reservation, offered, bids)
     wage = target if last is None else last + WAGE_SHARE_CLOSED_PER_YEAR * (target - last)
     if any(bid.maximum_wage >= reservation for bid in bids):
@@ -138,7 +141,9 @@ def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bid
     spec = inputs.trades[trade]
     workers = sum(state.workers.get(area, {}).get(trade, []))
     offered = workers * inputs.hours_per_worker_year
-    reservation = reservation_wage(inputs, area, spec.fatality_risk_per_year)
+    base_reservation = reservation_wage(inputs, area, spec.fatality_risk_per_year)
+    lowest = inputs.ask_floor_per_worker_year.get(area, 0.0) / max(inputs.hours_per_worker_year, 1e-12)
+    reservation = max(base_reservation * asks.scale_of(state, area, trade), lowest)
     last = state.wages.get(area, {}).get(trade)
     wage = market_wage(last, reservation, offered, bids)
     target = clearing_target(reservation, offered, bids) if offered > 0.0 and bids else wage
@@ -150,6 +155,7 @@ def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bid
         poach(hired, wanted, paid)
     hired = {employer: hours for employer, hours in hired.items() if hours > 0.0}
     state.wages.setdefault(area, {})[trade] = wage
+    asks.record(state, area, trade, offered, sum(wanted.values()), wage, base_reservation, lowest)
     state.hired_hours.setdefault(area, {})[trade] = dict(hired)
     total = sum(hired.values())
     average = sum(hours * paid[employer] for employer, hours in hired.items()) / total if total > 0.0 else wage
