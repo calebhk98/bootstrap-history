@@ -1348,7 +1348,7 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
             joint_materials, prices, interest_rate, dump_minimum_distance_kilometres)
         glut_source = getattr(demand_anchors, "glutted_materials", None)
         disposal = Disposal(disposal_costs, frozenset(
-            glut_source(reference_prices_for_demand(prices)) if glut_source else ()))
+            glut_source(reference_prices_for_demand(prices), disposal_costs) if glut_source else ()))
 
         candidates_by_material = _solve_round_candidates(
             production_entries, recipe_ids_in_order, resolvable_materials, prices,

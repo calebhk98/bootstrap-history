@@ -79,6 +79,17 @@ class ClearingSearchGlutTests(unittest.TestCase):
     def test_scarce_supply_is_not_a_glut(self):
         self.assertEqual(self.anchors(10.0).glutted_materials({"gem_kg": 1.0}), set())
 
+    def test_a_market_clearing_below_the_disposal_cost_is_a_glut(self):
+        anchors = self.anchors(10.0)
+        clearing = anchors.prices({"gem_kg": 1.0})["gem_kg"]
+        self.assertEqual(anchors.glutted_materials({"gem_kg": 1.0}, {"gem_kg": clearing * 10.0}), {"gem_kg"})
+        self.assertEqual(anchors.glutted_materials({"gem_kg": 1.0}, {"gem_kg": clearing / 10.0}), set())
+
+    def test_a_decayed_price_does_not_hide_a_market_that_clears_above_the_disposal_cost(self):
+        anchors = self.anchors(10.0)
+        clearing = anchors.prices({"gem_kg": 1.0})["gem_kg"]
+        self.assertEqual(anchors.glutted_materials({"gem_kg": clearing * 1e-12}, {"gem_kg": clearing / 10.0}), set())
+
     def test_a_table_supplied_good_is_never_reported_as_glut(self):
         self.assertEqual(self.anchors(1e30, ("gem_kg",)).glutted_materials({"gem_kg": 1.0}), set())
 
@@ -202,7 +213,7 @@ class GluttedDemand:
     def prices(self, _prices):
         return {"tar_kg": 1e-12, "charcoal_kg": 2.0}
 
-    def glutted_materials(self, _prices):
+    def glutted_materials(self, _prices, _disposal_costs=None):
         return self.glutted
 
 
