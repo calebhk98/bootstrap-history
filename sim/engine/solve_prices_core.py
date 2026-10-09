@@ -24,7 +24,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(os.path.dirname(HERE))
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
+from sim.engine import disposal_cost  # noqa: E402
 from sim.engine.joint_allocation import allocate_joint_cost, cap_anchors  # noqa: E402
+from sim.engine.price_change import relative_price_change  # noqa: E402
 from sim.engine.default_civilisation import default_civilisation_id  # noqa: E402
 from sim.world import deposits                  # noqa: E402  (RENT ON EXTRACTED MATERIALS)
 from sim.world import land                      # noqa: E402  (RENT ON ARABLE LAND)
@@ -621,9 +623,8 @@ def _update_productiveness_round_prices(component, prices, candidates_by_materia
         if not math.isfinite(damped_price) or abs(damped_price) > GROWTH_BOUND_HOURS:
             return True, max_relative_change
         prices[material] = damped_price
-        if previous_price > 0:
-            max_relative_change = max(
-                max_relative_change, abs(damped_price - previous_price) / previous_price)
+        max_relative_change = max(
+            max_relative_change, relative_price_change(previous_price, damped_price))
     return False, max_relative_change
 
 
@@ -859,13 +860,15 @@ def _energy_cost_hours(entry, current_prices, capability_band_price_by_carrier):
 
 def _allocate_output_prices(outputs, current_prices, total_process_cost_hours,
                             demand_anchor_price_by_material=None,
-                            disposal_value_by_material=None):
+                            disposal_value_by_material=None, interest_rate=0.0):
     # Missing prices fall back to the initial guess, as for any unsolved material.
     priced = {material: current_prices.get(material, INITIAL_PRICE_GUESS_HOURS)
               for material in outputs}
+    disposal_costs = (disposal_cost.disposal_cost_by_material(outputs, current_prices, interest_rate)
+                      if len(outputs) > 1 else None)
     return allocate_joint_cost(outputs, priced, total_process_cost_hours,
                                demand_anchor_price_by_material,
-                               disposal_value_by_material)
+                               disposal_value_by_material, disposal_costs)
 
 
 def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
@@ -965,7 +968,7 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
 
     output_prices = _allocate_output_prices(
         outputs, current_prices, total_process_cost_hours,
-        demand_anchor_price_by_material, entry.get("disposal_value_hours"))
+        demand_anchor_price_by_material, entry.get("disposal_value_hours"), interest_rate)
 
     return total_process_cost_hours, output_prices
 
@@ -1240,7 +1243,7 @@ def _solve_round_candidates(production_entries, recipe_ids_in_order, resolvable_
 
 def _solve_round_update_prices(resolvable_materials, prices, candidates_by_material,
                                damping, chosen_recipe_by_material,
-                               production_entries=None, scarcity_floor=None):
+                               production_entries=None, scarcity_floor=None, disposal_floor=None):
     new_prices = {}
     max_relative_change = 0.0
     for material in resolvable_materials:
@@ -1248,7 +1251,10 @@ def _solve_round_update_prices(resolvable_materials, prices, candidates_by_mater
         if not candidates:
             new_prices[material] = prices[material]
             continue
-        best_price, best_recipe = min(candidates, key=lambda pair: pair[0])
+        # A candidate cannot go below minus the material's disposal cost; bound before choosing.
+        lowest = (disposal_floor or {}).get(material, -math.inf)
+        best_price, best_recipe = min(
+            ((max(price, lowest), recipe) for price, recipe in candidates), key=lambda pair: pair[0])
         chosen_recipe_by_material[material] = best_recipe
         # A sole-output good cannot recover a scarcity rent through a joint split,
         # so its price is held at or above what its limited supply clears at.
@@ -1257,10 +1263,8 @@ def _solve_round_update_prices(resolvable_materials, prices, candidates_by_mater
             best_price = max(best_price, scarcity_floor[material])
         damped_price = (1.0 - damping) * prices[material] + damping * best_price
         new_prices[material] = damped_price
-        previous_price = prices[material]
-        if previous_price > 0:
-            relative_change = abs(damped_price - previous_price) / previous_price
-            max_relative_change = max(max_relative_change, relative_change)
+        max_relative_change = max(
+            max_relative_change, relative_price_change(prices[material], damped_price))
     return new_prices, max_relative_change
 
 
@@ -1316,6 +1320,7 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
 
     final_residual = float("inf")
     iterations_run = 0
+    joint_materials = disposal_cost.joint_output_materials(production_entries)
     for iteration in range(1, max_iterations + 1):
         iterations_run = iteration
 
@@ -1335,7 +1340,8 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
         prices, final_residual = _solve_round_update_prices(
             resolvable_materials, prices, candidates_by_material, damping,
             chosen_recipe_by_material, production_entries,
-            floor_source(prices) if floor_source else None)
+            floor_source(prices) if floor_source else None,
+            disposal_cost.disposal_price_floor(joint_materials, prices, interest_rate))
         if final_residual < tolerance:
             break
 
