@@ -366,7 +366,7 @@ class NoRomanAreaUnitInDataTests(unittest.TestCase):
     def test_a_hectare_year_crop_states_one_hectare_year(self):
         production_entries, _duplicates = solve_prices.load_production()
         self.assertAlmostEqual(
-            production_entries["wheat_kg"]["land_hectare_years"], 1.0, places=3)
+            production_entries["wheat_hoe_kg"]["land_hectare_years"], 1.0, places=3)
 
     def test_solver_has_no_roman_area_conversion(self):
         from sim.world import land

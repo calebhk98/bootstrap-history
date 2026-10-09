@@ -30,7 +30,8 @@ Option = Tuple[float, str, GoodId, float]      # (hours per need unit, recipe id
 
 def own_production_options(recipes: Mapping[str, Recipe], land_per_run: Mapping[str, float],
                            basket: Basket) -> Dict[str, List[Option]]:
-    """For each need, the land-only recipes whose output serves it, fewest hours first. Only needs with a
+    """For each need, the recipes whose output serves it that buy nothing on the market (land and the household's
+    own team held as plant are not inputs), fewest hours first. Only needs with a
     floor where the cohort lives are grown (own_production reads the cohort's own floors)."""
     options: Dict[str, List[Option]] = {}
     for need in basket.needs:
