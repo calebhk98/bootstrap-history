@@ -21,7 +21,8 @@ class NicheEntry:
 		self.carried = firm_entry.carrying_cost(world, node_id, tile=self.tile)
 		self.costs = world.upkeep(node_id) + world.concern_wage_bill(node_id) + self.carried
 		probe = Firm("probe", ActorRecord(kind="firm", founded_year=world.year))
-		self.chain = imitation.missing_chain(node_id, world, probe)
+		self.seen = imitation.in_sight(self.tile, node_id, world)
+		self.chain = imitation.missing_chain(node_id, world, probe) if self.seen else None
 		self.plan = imitation.copy_plan(probe, self.chain, world) if self.chain else None
 
 	def found(self, rivals: float, waiting: int) -> Optional[str]:

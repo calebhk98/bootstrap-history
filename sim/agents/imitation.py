@@ -9,6 +9,13 @@ from typing import Any, Dict, List, Optional
 from . import ledger
 from .edges import EDGE_WORKERS
 from .tuning import COPY_EFFORT_SHARE, COPY_RISK_SHARE, COPY_TIME_SHARE, HIRING_PREMIUM
+from .tuning_player import PLAYER_VISIBLE_EXPOSURE
+
+
+def in_sight(location: Optional[str], node_id: str, world: Any) -> bool:
+	"""Whether an observer at `location` sees enough of an invention to copy it: secrecy, the know-how's own
+	opacity and the distance to the makers all count (fog of war for actors, as for a seat)."""
+	return float(world.exposure(node_id, location)) >= PLAYER_VISIBLE_EXPOSURE
 
 
 def missing_chain(node_id: str, world: Any, actor: Any) -> Optional[List[str]]:
