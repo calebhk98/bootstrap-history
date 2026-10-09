@@ -43,6 +43,7 @@ class YearOutcome:
     idle_hours: float = 0.0
     vacant_hours: float = 0.0
     hired_hours: float = 0.0
+    wage_floor_per_hour: float = 0.0               # the lowest a worker's ask could fall to (labour_ask_floor.py)
     extraction: Dict[Tuple[str, str], float] = field(default_factory=dict)   # runs worked per (recipe, tile) on a site
     conservation_residual: float = 0.0
     state_cash: float = 0.0
@@ -360,6 +361,7 @@ class Economy:
         return YearOutcome(year=record.memory.year, basket_price_level=level, prices=national_prices(record),
                            wages=mean_wages, rate=record.memory.rates.get(money, 0.0),
                            money_supply=record.book.money_supply(money), hunger_by_tile=hunger,
-                           output=dict(sorted(output.items())), idle_hours=idle, vacant_hours=vacant, hired_hours=hired, extraction=extraction,
+                           output=dict(sorted(output.items())), idle_hours=idle, vacant_hours=vacant, hired_hours=hired,
+                           wage_floor_per_hour=ledger.wage_floor_per_hour, extraction=extraction,
                            conservation_residual=check_money(record), money_audit=year_report(record),
                            state_cash=record.book.balance(setup.state_agent, money))

@@ -54,3 +54,13 @@ def ask_floor_by_tile(setup, record, view, options: Mapping[str, Sequence[Option
             priced, options, tile_data.fertility if tile_data else 0.0, setup.working_hours_per_year,
             people / working if working > 0.0 else 1.0)
     return floors
+
+
+def mean_floor_per_hour(floor_by_area: Mapping[str, float], workers_by_area: Mapping[str, float],
+                        hours_per_worker_year: float) -> float:
+    """The wage floor per hour averaged over areas, weighted by their workers (for the run's figures)."""
+    total = sum(workers_by_area.get(area, 0.0) for area in floor_by_area)
+    if total <= 0.0 or hours_per_worker_year <= 0.0:
+        return 0.0
+    return sum(floor * workers_by_area.get(area, 0.0) for area, floor in floor_by_area.items()) / (
+        total * hours_per_worker_year)

@@ -9,6 +9,9 @@ FIGURE_LABELS = (
     ("staple_volatility", "std dev of the staple's yearly log price change"),
     ("metal_volatility", "median of the same over the metals"),
     ("hired_share", "median share of offered hours hired"),
+    ("unskilled_wage", "median unskilled wage per hour"),
+    ("wage_floor", "median wage floor per hour (household costs less its plot)"),
+    ("wage_over_floor", "median unskilled wage over the wage floor"),
     ("hunger_share", "mean food floor short over the floor needed"),
     ("staple_over_labour", "median staple price over its labour cost"),
 )

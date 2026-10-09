@@ -4,7 +4,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.economy.labour_ask_floor import plot_value_per_worker_year, wage_floor_per_worker_year
+from sim.economy.labour_ask_floor import mean_floor_per_hour, plot_value_per_worker_year, wage_floor_per_worker_year
 from sim.world.need_basket import NeedSpec, PricedNeed
 
 FOOD = PricedNeed(NeedSpec("food", 10.0, 1.0, (("grain", 1.0),)), 2.0, (("grain", 2.0, 1.0, 1.0),))
@@ -47,6 +47,16 @@ class WageFloorTests(unittest.TestCase):
 
     def test_no_basket_priced_means_no_floor(self):
         self.assertEqual(wage_floor_per_worker_year([], OPTIONS, 1.0, 1000.0, 2.0), 0.0)
+
+
+class MeanFloorTests(unittest.TestCase):
+    def test_areas_weigh_by_their_workers_and_the_year_is_split_into_hours(self):
+        floors = {"a": 100.0, "b": 400.0}
+        self.assertAlmostEqual(mean_floor_per_hour(floors, {"a": 3.0, "b": 1.0}, 100.0), 1.75)
+
+    def test_no_workers_or_no_hours_means_no_floor(self):
+        self.assertEqual(mean_floor_per_hour({"a": 100.0}, {}, 100.0), 0.0)
+        self.assertEqual(mean_floor_per_hour({"a": 100.0}, {"a": 1.0}, 0.0), 0.0)
 
 
 if __name__ == "__main__":

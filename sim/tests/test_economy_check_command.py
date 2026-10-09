@@ -21,7 +21,8 @@ class EconomyCheckTests(unittest.TestCase):
         report = self.game.economy.health()
         self.assertEqual(report["years"], 2)
         self.assertTrue(report["staple"])
-        for figure in ("staple_volatility", "metal_volatility", "hired_share", "hunger_share", "staple_over_labour"):
+        for figure in ("staple_volatility", "metal_volatility", "hired_share", "hunger_share", "staple_over_labour",
+                       "unskilled_wage", "wage_floor", "wage_over_floor"):
             self.assertIn(figure, report["figures"])
         self.assertTrue(0.0 <= report["figures"]["hunger_share"] <= 1.0)
 
@@ -31,7 +32,8 @@ class EconomyCheckRendering(unittest.TestCase):
 
     HEALTH = {"years": 2, "staple": "grain", "metals": ["iron", "copper"],
               "figures": {"staple_volatility": 0.12, "metal_volatility": 0.05, "hired_share": 0.8,
-                          "hunger_share": 0.01, "staple_over_labour": 1.5}}
+                          "hunger_share": 0.01, "staple_over_labour": 1.5, "unskilled_wage": 0.15,
+                          "wage_floor": 0.1, "wage_over_floor": 1.5}}
 
     def test_the_command_prints_a_section_per_civilisation_and_seed(self):
         from sim.ui import cli_economy_check
@@ -46,7 +48,8 @@ class EconomyCheckRendering(unittest.TestCase):
         finally:
             cli_economy_check.check_one = played
         text = output.getvalue()
-        for expected in ("rome_100ad", "seed 1", "staple", "hired_share", "hunger_share", "staple_over_labour"):
+        for expected in ("rome_100ad", "seed 1", "staple", "hired_share", "hunger_share", "staple_over_labour",
+                         "wage_over_floor"):
             self.assertIn(expected, text)
 
     def test_the_payback_flag_prints_the_diagnostic_section(self):

@@ -1374,7 +1374,7 @@ def main():
                         "checks above run either way and are instant.")
     sub.add_parser("civs", help="list the playable civilisations")
     subparser = sub.add_parser("economy-check", help="play a short game and print the agent economy's health: "
-                               "staple and metal price volatility, hired share, hunger, staple price over labour cost")
+                               "staple and metal price volatility, hired share, unskilled wage over its floor, hunger, staple price over labour cost")
     subparser.add_argument("--years", type=int, default=5, help="years to play per game (default 5)")
     subparser.add_argument("--seeds", default="1", help="comma-separated seeds (default 1)")
     subparser.add_argument("--civs", default="", help="comma-separated civilisation ids, or 'all' (default: the default one)")
