@@ -17,6 +17,7 @@ from sim.engine.data import (  # noqa: F401
     win_condition_describe)
 from sim.engine.default_civilisation import default_civilisation_id  # noqa: F401
 from sim.engine.fog import strip_self_play_advice  # noqa: F401
+from sim.engine.foreign_economy_data import foreign_economy_document  # noqa: F401
 from sim.engine.hazard_window import hazards_not_yet_past  # noqa: F401
 from sim.engine.identity_cache import IdentityCache  # noqa: F401
 from sim.engine.mods import get_ordered_mods  # noqa: F401

@@ -458,8 +458,8 @@ def _validate_basket_supply(civ_start_check, civilisations, production):
     import json
     from sim.engine import civ_basket_check
     from sim.engine.need_data import load_needs
-    with open(os.path.join(ROOT, "data", "world", "foreign_economies.json"), encoding="utf-8") as handle:
-        economies = json.load(handle)["economies"]
+    from sim.engine.ui_port import foreign_economy_document
+    economies = foreign_economy_document()["economies"]
     errors, warnings = civ_basket_check.basket_supply_findings(
         civilisations, production, load_needs(ROOT, MODDIR)["goods"], economies)
     for message in warnings:

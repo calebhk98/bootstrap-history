@@ -1,0 +1,14 @@
+{
+ "_doc": "Player-facing sentence for each win_condition metric; the value is formatted as a percentage into the %s. A mod adds a label, or patches one with override or remove, under the same name in its own data/ui/win_condition_labels.json.",
+ "labels": {
+  "literacy_general": {
+   "text": "the general population's literacy reaches %s"
+  },
+  "literacy_elite": {
+   "text": "the lettered and propertied class's literacy reaches %s"
+  },
+  "epidemic_relief": {
+   "text": "the measures you have built have cut %s of what epidemics and famine would otherwise take"
+  }
+ }
+}

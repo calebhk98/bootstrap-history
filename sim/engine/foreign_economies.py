@@ -15,12 +15,11 @@ coin is worth the coin's metal at the home price of that metal.
 """
 import dataclasses
 import functools
-import json
-import os
 
 from sim.world import market, trader_response
 
-from .data import ROOT, calculated_goods_prices, goods_provenance, load_civ, starting_schedule
+from .data import calculated_goods_prices, goods_provenance, load_civ, starting_schedule
+from .foreign_economy_data import foreign_economy_document
 from .foreign_actor_trade import ForeignActorTradeMixin
 from .trader_cargo import TraderCargoMixin
 from .foreign_capacity import ForeignCapacityMixin
@@ -29,21 +28,16 @@ from .foreign_routes import ForeignRoutesMixin
 from .foreign_traders import ForeignTradersMixin
 from .project_materials import tonnes_per_unit
 
-FOREIGN_ECONOMIES_PATH = os.path.join(ROOT, "data", "world", "foreign_economies.json")
-
-
 @functools.lru_cache(maxsize=None)
 def foreign_economy_records():
-    """The economies the data file names."""
-    with open(FOREIGN_ECONOMIES_PATH, encoding="utf-8") as handle:
-        return tuple(json.load(handle)["economies"])
+    """The economies the data file names, with installed mods applied."""
+    return tuple(foreign_economy_document()["economies"])
 
 
 @functools.lru_cache(maxsize=None)
 def not_traded_materials():
     """Materials that cannot cross a border, from the data file."""
-    with open(FOREIGN_ECONOMIES_PATH, encoding="utf-8") as handle:
-        return frozenset(json.load(handle).get("not_traded_materials") or ())
+    return frozenset(foreign_economy_document()["not_traded_materials"])
 
 
 @functools.lru_cache(maxsize=None)

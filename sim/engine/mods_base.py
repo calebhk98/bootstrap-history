@@ -57,7 +57,7 @@ def ancestors(manifest: ModManifest, by_id: Dict[str, ModManifest]) -> set:
     return found
 
 
-def _unrelated(earlier: str, manifest: ModManifest, by_id: Dict[str, ModManifest]) -> bool:
+def unrelated(earlier: str, manifest: ModManifest, by_id: Dict[str, ModManifest]) -> bool:
     return bool(earlier) and earlier != manifest.id and earlier not in ancestors(manifest, by_id)
 
 
@@ -65,7 +65,7 @@ def check_not_removed(claims: Dict[Any, str], kind: str, item_id: str,
                       manifest: ModManifest, by_id: Dict[str, ModManifest]) -> None:
     """Patching what an unrelated mod removed is a conflict naming both."""
     remover = claims.get((kind, item_id, REMOVED))
-    if _unrelated(remover, manifest, by_id):
+    if unrelated(remover, manifest, by_id):
         raise ModError("mod %s removes %s %s but mod %s patches it; make one depend on the "
                        "other to choose a winner" % (remover, kind, item_id, manifest.id))
 
@@ -78,7 +78,7 @@ def claim_fields(claims: Dict[Any, str], kind: str, item_id: str, patch: Dict[st
         if name in CONTROL_KEYS or name == "id":
             continue
         earlier = claims.get((kind, item_id, name))
-        if _unrelated(earlier, manifest, by_id):
+        if unrelated(earlier, manifest, by_id):
             raise ModError("mods %s and %s both override field %r of %s %s; make one depend on "
                            "the other to choose a winner" % (earlier, manifest.id, name, kind, item_id))
         claims[(kind, item_id, name)] = manifest.id
@@ -88,7 +88,7 @@ def claim_removal(claims: Dict[Any, str], kind: str, item_id: str,
                   manifest: ModManifest, by_id: Dict[str, ModManifest]) -> None:
     """Removing what an unrelated mod already patched is a conflict naming both."""
     for (claimed_kind, claimed_id, name), earlier in claims.items():
-        if (claimed_kind, claimed_id) == (kind, item_id) and _unrelated(earlier, manifest, by_id):
+        if (claimed_kind, claimed_id) == (kind, item_id) and unrelated(earlier, manifest, by_id):
             raise ModError("mod %s patches %s %s but mod %s removes it; make one depend on the "
                            "other to choose a winner" % (earlier, kind, item_id, manifest.id))
     claims[(kind, item_id, REMOVED)] = manifest.id
