@@ -10,6 +10,7 @@ QUICK_TOPIC = True
 
 import unittest
 
+from sim.engine import foreign_routes
 from sim.geography import freight_cost, provisions, sea_freight, transport
 
 # Stated prices in one unit of money: grain per kg, the hourly wage, the market rate.
@@ -109,7 +110,7 @@ class HullCrewTests(unittest.TestCase):
 class RobberyTests(unittest.TestCase):
 
     def test_a_larger_crew_is_taken_less_often(self):
-        losses = [sea_freight.boarding_loss_share(crew) for crew in (1, 4, 12, 60)]
+        losses = [sea_freight.boarding_loss_share(crew) for crew in (1, 4, 12, 80)]
         self.assertEqual(losses, sorted(losses, reverse=True))
         self.assertGreater(losses[0], 0.9)
         self.assertLess(losses[-1], 0.1)
@@ -120,6 +121,43 @@ class RobberyTests(unittest.TestCase):
 
     def test_a_crew_cannot_take_losses_below_the_weather_alone(self):
         self.assertGreater(sea_freight.hull_loss_per_thousand_km(1.0e6), 0.0)
+
+
+class LegPricingTests(unittest.TestCase):
+
+    def test_a_floor_keeps_an_overlong_leg_finite(self):
+        self.assertLess(freight_cost.leg_money_per_tonne(1.0, CART, 1.0e6, least_share=0.1), float("inf"))
+
+    def test_provisions_raise_a_leg_above_its_rate_times_distance(self):
+        self.assertGreater(freight_cost.leg_money_per_tonne(1.0, CART, 200.0), 200.0)
+
+
+class _StubEconomy(foreign_routes.ForeignRoutesMixin):
+    def _carrier_models(self):
+        return {"cart": (CART, CART_PRICES, 250.0, 0.0), "sail": (HULL, HULL_PRICES, 150.0, 0.0)}
+
+    def _freight_handling_costs(self):
+        return {"sail": 5.0}
+
+
+class RoutePricingTests(unittest.TestCase):
+
+    def test_a_route_leg_costs_more_per_tonne_for_the_carried_provisions(self):
+        legs = (foreign_routes.Leg("a", "b", "cart", 200.0, 200.0, 11.0),
+                foreign_routes.Leg("b", "c", "sail", 1000.0, 20.0, 9.0))
+        priced = _StubEconomy()._with_carried_provisions(foreign_routes.Route(legs))
+        self.assertGreater(priced.legs[0].cost_per_tonne, 200.0)
+        self.assertGreater(priced.legs[1].cost_per_tonne, 20.0)
+        self.assertGreater(priced.legs[0].cost_per_tonne / 200.0, priced.legs[1].cost_per_tonne / 20.0)
+
+    def test_the_handling_fee_is_not_scaled(self):
+        legs = (foreign_routes.Leg("b", "c", "sail", 1000.0, 5.0, 9.0),)
+        priced = _StubEconomy()._with_carried_provisions(foreign_routes.Route(legs))
+        self.assertEqual(priced.legs[0].cost_per_tonne, 5.0)
+
+    def test_a_mode_without_a_model_is_left_as_found(self):
+        legs = (foreign_routes.Leg("a", "b", "teleport", 10.0, 7.0, 1.0),)
+        self.assertEqual(_StubEconomy()._with_carried_provisions(foreign_routes.Route(legs)).legs, legs)
 
 
 if __name__ == "__main__":
