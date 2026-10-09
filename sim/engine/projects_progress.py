@@ -21,6 +21,7 @@ import collections
 
 from sim.constants import declare
 from .failure_diagnosis import failure_teaches
+from .industry_depth import depth_risk_multiplier
 from .projects_precaution import chosen as precaution_chosen, relief_multiplier as precaution_relief, quote as precaution_quote
 
 
@@ -405,7 +406,9 @@ class ProgressMixin:
         node["risk"] - that number is no longer what the dice use.
         """
         bought = precaution_chosen(self, node_id) if precaution is None else precaution
-        return (self.nodes[node_id]["risk"] * self._retry_risk_multiplier(node_id)
+        # Retry learning and an established industry are one lesson: the stricter of the two, not their product.
+        learned = min(self._retry_risk_multiplier(node_id), depth_risk_multiplier(self.industry_depth(node_id)))
+        return (self.nodes[node_id]["risk"] * learned
                 * self._control_relief_multiplier(node_id)
                 * precaution_relief(self, node_id, bought))
 

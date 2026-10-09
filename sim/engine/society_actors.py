@@ -121,4 +121,5 @@ class ActorsMixin:
         self.state_treasury()
         self.update_capital_market()
         self.actors.advance(SimWorld(self))
+        self.accrue_industry_experience()
         self.charge_actors_for_keeping_coin()

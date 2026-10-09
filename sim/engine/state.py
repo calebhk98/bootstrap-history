@@ -158,6 +158,8 @@ class ProjectsState:
 	operating: Set[str] = field(default_factory=set)
 	failed_attempts: DefaultDict[str, int] = field(default_factory=lambda: collections.defaultdict(int))
 	uninformed_failures: Dict[str, int] = field(default_factory=dict)
+	# technique -> retained worker-years of anyone running it (industry_depth.py)
+	industry_years: Dict[str, float] = field(default_factory=dict)
 	mothballed: Set[str] = field(default_factory=set)
 	bountied: Set[str] = field(default_factory=set)
 	granted: Set[str] = field(default_factory=set)
