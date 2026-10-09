@@ -4,7 +4,7 @@ A contribution is (source_id, species_id or None, kcal per year).
 """
 from typing import List, Tuple
 
-from sim.geography import content_rules, tile_layers
+from sim.geography import content_rules, food_land, tile_layers
 from sim.geography.food_productivity import lookup
 from sim.geography.map_source import WorldMap
 from sim.geography.parameters import parameter
@@ -15,7 +15,7 @@ RIVER_BANKS = 2.0
 
 def crop_contributions(world_map: WorldMap, tile_id: str) -> List[Tuple[str, None, float]]:
     area = tile_layers.number(world_map, tile_id, "land_area_km2", 0.0)
-    arable_hectares = area * HECTARES_PER_SQUARE_KM * tile_layers.number(world_map, tile_id, "arable_fraction", 0.0)
+    arable_hectares = area * HECTARES_PER_SQUARE_KM * food_land.arable_fraction(world_map, tile_id)
     fertility = tile_layers.number(world_map, tile_id, "fertility_quality_multiplier", 0.0)
     reader = lookup(world_map, tile_id)
     by_temperature = content_rules.suitability(parameter(world_map, "food_crop_temperature_envelope"), reader)
