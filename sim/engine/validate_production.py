@@ -116,7 +116,9 @@ def check_has_source(where, entry):
     # read as claiming its output appears from nothing.
     draws_on_energy_carrier = any(
         entry.get(energy_field) for energy_field in ENERGY_CARRIER_FIELDS)
-    if not inputs and not entry.get("extracted_from") and not draws_on_energy_carrier:
+    # A service (carrying, holding ground) makes no matter, so it consumes labour or land and nothing else.
+    is_service = entry.get("service") is True and bool(entry.get("labour_hours") or entry.get("land_hectare_years"))
+    if not inputs and not entry.get("extracted_from") and not draws_on_energy_carrier and not is_service:
         problems.append("%s: no inputs, no extracted_from and no energy "
                         "carrier field - this material appears from "
                         "nowhere" % where)

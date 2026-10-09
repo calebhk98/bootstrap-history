@@ -1,20 +1,4 @@
 """A lower bound under every output of a joint batch: minus what it costs to dispose of it."""
-from sim.constants import declare
-
-DEMAND_GLUT_SHARE_OF_DISPOSAL_COST = declare(
-    "DEMAND_GLUT_SHARE_OF_DISPOSAL_COST", 0.01,
-    kind="temporary_heuristic",
-    unit="fraction of the disposal cost per unit",
-    source=None,
-    confidence="D",
-    why="An output whose market clears at no more than this share of what disposing of it costs is in "
-        "glut: the clearing search bottoms out at its lowest price instead of finding a root, so the "
-        "price is the disposal cost, not the near-zero anchor. Should come from the clearing search "
-        "reporting that supply exceeds demand at every price.")
-
-
-def is_glutted(anchor_price, disposal_cost):
-    return disposal_cost > 0.0 and anchor_price <= DEMAND_GLUT_SHARE_OF_DISPOSAL_COST * disposal_cost
 
 
 def bound_to_disposal_cost(prices, outputs, disposal_cost_by_material):

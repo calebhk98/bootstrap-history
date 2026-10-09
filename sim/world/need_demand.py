@@ -357,6 +357,13 @@ class NeedDemandModel:
 
         Materials nobody demands at all are left out.
         """
+        return self.clearing_with_glut(prices, supply_by_material, report)[0]
+
+    def clearing_with_glut(self, prices: Mapping[str, float],
+                           supply_by_material: Mapping[str, float],
+                           report: Optional[Iterable[str]] = None):
+        """(clearing prices, materials in glut): the glut is where the first pass of the search found supply
+        above demand at every price down to the span's floor, so no price clears the market."""
         wanted = set(supply_by_material if report is None else report)
         # Only goods sharing a need with a reported good can move its price.
         rival_needs = {need_id for need_id, goods in self._need_goods.items()
@@ -372,15 +379,21 @@ class NeedDemandModel:
         # not their costs, so each is re-cleared against the others' latest.
         working = dict(prices)
         clearing: Dict[str, float] = {}
+        glutted: Set[str] = set()
         for _pass in range(CLEARING_PASSES):
             for material in targets:
-                clearing[material] = self._clear(
+                clearing[material], is_glut = self._clear(
                     material, supply_by_material[material], working, prices[material])
                 working[material] = clearing[material]
-        return {material: price for material, price in clearing.items() if material in wanted}
+                # Only the first pass searches the full span below the good's own price.
+                if is_glut and _pass == 0:
+                    glutted.add(material)
+        return ({material: price for material, price in clearing.items() if material in wanted},
+                {material for material in glutted if material in wanted})
 
     def _clear(self, material: str, supply: float, prices: Dict[str, float],
-               reference: float) -> float:
+               reference: float):
+        """(clearing price, whether supply exceeds demand at every price searched)."""
         current = reference
         weights = self._influence(material)
 
@@ -401,13 +414,13 @@ class NeedDemandModel:
 
         centre = prices[material]
         if not centre > 0.0:
-            return centre
+            return centre, False
         low = max(centre * 10.0 ** (-CLEARING_SEARCH_SPAN_DECADES), sys.float_info.min)
         high = centre * 10.0 ** CLEARING_SEARCH_SPAN_DECADES
         if excess_demand(high) > 0.0:
-            return high
+            return high, False
         if excess_demand(low) < 0.0:
-            return low
+            return low, True
         for _step in range(CLEARING_BISECTION_STEPS):
             # Geometric midpoint in log space, so tiny prices cannot underflow to zero.
             middle = math.exp((math.log(low) + math.log(high)) / 2.0)
@@ -415,7 +428,7 @@ class NeedDemandModel:
                 low = middle
             else:
                 high = middle
-        return _polish_root(excess_demand, low, high)
+        return _polish_root(excess_demand, low, high), False
 
 
 class NeedDemandAnchors:
@@ -455,7 +468,7 @@ class NeedDemandAnchors:
             return cached[1]
         supply = self.model.byproduct_supply(current_prices)
         supply.update(self.supply_by_material)
-        result = self.model.clearing_prices(current_prices, supply, report=materials)
+        result = self.model.clearing_with_glut(current_prices, supply, report=materials)
         self._last[key] = (inputs, result)
         return result
 
@@ -467,7 +480,7 @@ class NeedDemandAnchors:
         graph and final needs do not yet cover every use of such a good.
         """
         # TEMPORARY HEURISTIC: an anchor below the current price is dropped, not used as a glut.
-        clearing = self._clearing(current_prices, self.anchor_materials)
+        clearing = self._clearing(current_prices, self.anchor_materials)[0]
         return {material: price for material, price in clearing.items()
                 if material not in self.table_supply_materials
                 or price >= current_prices[material]}
@@ -476,4 +489,12 @@ class NeedDemandAnchors:
         """{material: lowest price its limited supply allows}."""
         if not self.scarcity_materials:
             return {}
-        return self._clearing(current_prices, self.scarcity_materials)
+        return self._clearing(current_prices, self.scarcity_materials)[0]
+
+    def glutted_materials(self, current_prices: Mapping[str, float]) -> Set[str]:
+        """Materials whose supply exceeds demand at every price the clearing search tried.
+
+        A good supplied from a resource table is left out: the recipe graph does not yet cover every use
+        of it, so a shortfall of demand there is not a glut."""
+        glut = self._clearing(current_prices, self.anchor_materials)[1]
+        return {material for material in glut if material not in self.table_supply_materials}
