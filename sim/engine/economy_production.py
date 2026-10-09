@@ -222,9 +222,8 @@ class ProductionMixin:
                 # everything never expanded (see ProjectsMixin.institution_units).
                 _units = (self.institution_units(node_id)
                           if node_id in self.SCALABLE_INSTITUTIONS else 1.0)
-                # goods_market_factor() is 1.0 outside GOODS_CATEGORIES
                 total_revenue += (node["rev"] * _units * self.venture_ramp(node_id) * self.price_index
-                                  * self.goods_market_factor(node_id) * self.node_output_market_factor(node))
+                                  * self.node_output_market_factor(node))
         # THERE IS ONLY SO MUCH MARKET. Uncapped, this compounds: every venture
         # pays back quickly, so its income buys the next one, and nothing
         # stops a run's capital from growing far past what a real market this

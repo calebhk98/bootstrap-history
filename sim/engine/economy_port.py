@@ -260,8 +260,7 @@ class EconomyPort:
     def concern_gross(self, node_id):
         """Yearly takings of a concern once ramped up, with the market's price for its goods applied."""
         sim = self._sim
-        return (sim.concern_takings(node_id, 1.0) * sim.goods_market_factor(node_id)
-                * sim.node_output_market_factor(sim.nodes[node_id]))
+        return sim.concern_takings(node_id, 1.0) * sim.node_output_market_factor(sim.nodes[node_id])
 
     def concern_upkeep(self, node_id, capacity=1.0):
         """Yearly upkeep of a concern at a given capacity."""
