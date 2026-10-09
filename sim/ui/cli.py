@@ -29,7 +29,7 @@ from collections import defaultdict
 
 from sim.engine.ui_port import load_production_catalog
 from sim.engine.ui_port import (
-    category_traits, tree_merge, validate_material_gating, validate_output_bounds, validate_copy_visibility, validate_production,
+    category_traits, tree_merge, validate_material_gating, validate_output_bounds, node_revenue_census, validate_copy_visibility, validate_production,
     validate_unheld_gates)
 from sim.engine.ui_port import default_civilisation_id
 from sim.engine.ui_port import (
@@ -307,6 +307,8 @@ def _print_validate_summary(nodes, goal_rows, default_goal):
     print("edges            : %d" % sum(len(node_record["pre"]) for node_record in nodes.values()))
     print("total capital     : %s den across all %d nodes" % (f"{sum(node_record['_total_cost'] for node_record in nodes.values()):,.0f}", len(nodes)))
     print("total founder hrs : %s" % f"{sum(node_record['ph'] for node_record in nodes.values()):,}")
+    print("REVENUE BASIS (nodes with a revenue figure; 'authored' names no product to derive it from)")
+    print("\n".join(node_revenue_census.format_lines(node_revenue_census.basis_counts(nodes))))
     print()
     print("GOALS (%d selectable; 'goals' prints this table alone)" % len(goal_rows))
     print("%-34s %9s %10s  %s" % ("name", "closure", "floor(yr)", "node"))

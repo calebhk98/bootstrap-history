@@ -368,7 +368,8 @@
    "basis": "per kg of calcined bone ash",
    "yield_basis": "Bone is roughly two-thirds mineral (calcium phosphate) and the rest organic matter - collagen, fat, marrow. Calcining (burning) a bone white in a hot, sustained fire drives off all of the organic fraction as smoke and gas, leaving only the mineral ash behind at roughly 65-70% of the original dry weight, so about 1.4 kg of raw bone is needed per kg of finished ash - the inverse of that yield. This needs a genuinely hot, sustained fire rather than a quick burn, priced here as charcoal fuel and a furnaceman's hours tending the kiln until the bone is fully white through and through rather than just charred black on the surface.",
    "conf": "C",
-   "requires_node": "cap_heat_0700"
+   "requires_node": "cap_heat_0700",
+   "operated_by": ["ag2_bone_meal"]
   },
   "gelatin_kg": {
    "outputs": {
