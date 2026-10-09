@@ -221,6 +221,32 @@ class OpeningDurablesTests(unittest.TestCase):
         self.assertGreater(held, 0.0)
 
 
+class OpeningPlacementTests(unittest.TestCase):
+    """An input opens beside its users, with the supply their capacity needs (clay for potters), not where
+    people happen to live: a good too cheap to carry has a market the size of a tile."""
+
+    def test_users_of_a_good_are_placed_before_its_suppliers(self):
+        from sim.economy import opening
+        from sim.economy.types import Recipe
+        recipes = {"pot": Recipe("pot", {"pot_kg": 1.0}, {"clay_kg": 1.0}, {"potter": 1.0}),
+                   "dig": Recipe("dig", {"clay_kg": 1.0}, {}, {"labourer": 1.0}),
+                   "wood": Recipe("wood", {"wood_kg": 1.0}, {}, {"labourer": 1.0}),
+                   "kiln": Recipe("kiln", {"pot_kg": 0.5}, {"wood_kg": 1.0, "clay_kg": 1.0}, {"potter": 1.0})}
+        setup = type("Setup", (), {"opening_prices": {"pot_kg": 2.0, "clay_kg": 1.0, "wood_kg": 1.0}})()
+        order = opening._placement_order({name: 1.0 for name in recipes}, recipes, setup)
+        self.assertLess(order.index("pot"), order.index("dig"))
+        self.assertLess(order.index("kiln"), order.index("dig"))
+        self.assertLess(order.index("kiln"), order.index("wood"))
+
+    def test_a_cycle_still_places_every_recipe(self):
+        from sim.economy import opening
+        from sim.economy.types import Recipe
+        recipes = {"a": Recipe("a", {"a_kg": 1.0}, {"b_kg": 1.0}, {"x": 1.0}),
+                   "b": Recipe("b", {"b_kg": 1.0}, {"a_kg": 1.0}, {"x": 1.0})}
+        setup = type("Setup", (), {"opening_prices": {"a_kg": 1.0, "b_kg": 1.0}})()
+        self.assertEqual(sorted(opening._placement_order({"a": 1.0, "b": 1.0}, recipes, setup)), ["a", "b"])
+
+
 class MillwrightTests(unittest.TestCase):
 
     def test_a_water_wheel_charges_millwright_hours_to_build_and_to_run(self):
