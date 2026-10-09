@@ -71,6 +71,12 @@ class SubstituteWageTests(unittest.TestCase):
         result = settle(state(healers=1.0), [hungry_bid(maximum=1.2)])
         self.assertLessEqual(result.wage, 1.2 + 1e-9)
 
+    def test_a_skilled_trade_in_surplus_never_quotes_below_the_unskilled_wage(self):
+        held = state(healers=500.0, digger_wage=3.0)
+        bids = [Bid("clinic", "healer", "vale", 10.0, 500.0), Bid("farm", "digger", "vale", 99999.0, 3.0)]
+        result = settle(held, bids)
+        self.assertGreaterEqual(result.wage, held.wages["vale"]["digger"] - 1e-9)
+
 
 if __name__ == "__main__":
     unittest.main()

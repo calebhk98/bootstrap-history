@@ -46,6 +46,15 @@ def reservation_wage(inputs: YearInputs, area: str, risk: float) -> float:
     return floor * (1.0 + risk * inputs.value_of_life_years_of_income)
 
 
+def unskilled_option(state: MarketState, inputs: YearInputs, area: str, trade: str) -> float:
+    """What a skilled worker can always earn instead: the unskilled wage the area paid last year, taken
+    straight up with no retraining, so no trade quotes below it."""
+    fallback = fallback_trade(inputs.trades)
+    if trade == fallback:
+        return 0.0
+    return state.wages.get(area, {}).get(fallback) or 0.0
+
+
 def trained_substitute_wage(state: MarketState, inputs: YearInputs, area: str, trade: str) -> float:
     """The most an hour of a trade can command where hands are few: what it takes to train a substitute. A
     person who trains goes the trade's training years unpaid, so the trade pays the unskilled wage times the
@@ -161,7 +170,7 @@ def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bid
     offered = workers * inputs.hours_per_worker_year
     base_reservation = reservation_wage(inputs, area, spec.fatality_risk_per_year)
     lowest = inputs.ask_floor_per_worker_year.get(area, 0.0) / max(inputs.hours_per_worker_year, 1e-12)
-    reservation = max(base_reservation * asks.scale_of(state, area, trade), lowest)
+    reservation = max(base_reservation * asks.scale_of(state, area, trade), lowest, unskilled_option(state, inputs, area, trade))
     last = state.wages.get(area, {}).get(trade)
     ceiling = max(trained_substitute_wage(state, inputs, area, trade), reservation)
     wage = min(market_wage(last, reservation, offered, bids), ceiling)
