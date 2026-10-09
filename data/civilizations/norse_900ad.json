@@ -122,6 +122,15 @@
     },
     {
       "name": "Black Death in Scandinavia",
+      "causes": [
+        {
+          "quantity": "population",
+          "op": ">=",
+          "value": 0.5,
+          "relative_to_start": true,
+          "why": "A pandemic runs through crowded, connected settlements. Below half the opening population the opening density of towns and trade is gone, so there is nothing to carry it at the recorded scale. A reasoning bound, to be fitted against a baseline ensemble."
+        }
+      ],
       "note": "Reached Norway in 1349 on an English ship putting in at Bergen and killed on a scale even worse than England's, by some estimates more than half the population; entire farms and valleys were abandoned and some were never resettled. Recurs at reduced severity through the late 14th century, same as everywhere else in Europe, but this is the first and worst wave.",
       "staff_loss": 0.55,
       "years": [

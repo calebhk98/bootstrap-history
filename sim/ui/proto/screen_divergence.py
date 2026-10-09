@@ -2,9 +2,10 @@
 against where the run began, and which dated events came and went.
 
 The game holds start values (the civilisation the game began with) and the dated hazard
-list. It holds no baseline run and no per-technology historical date, so the
+list, each hazard's stated causes judged against the run as it stands. It holds no baseline run and no per-technology historical date, so the
 screen says what it cannot know instead of guessing.
 """
+from sim.engine import event_causes
 from sim.geography.api import regions_of_tiles, tiles_held
 
 _HAPPENED = "happened"
@@ -42,8 +43,14 @@ def _dated_events(sim):
             status = _UNDER_WAY
         else:
             status = _UPCOMING
+        report = event_causes.evaluate_causes(sim, hazard)
         row = {"status": status, "years": [year_start, year_end],
-               "causes_checked": False}
+               "causes_checked": report["checked"]}
+        if report["checked"]:
+            row["causes_hold_now"] = not report["failed"]
+            row["failed_causes"] = [
+                {key: cause[key] for key in ("quantity", "node", "op", "threshold", "value", "why")}
+                for cause in report["failed"]]
         if not (sim.fog and status == _UPCOMING):
             row["name"] = hazard.get("name", "hazard")
         rows.append(row)
@@ -82,8 +89,9 @@ def divergence_report(sim):
             "reached by now is not known: only the start values are compared",
             "technologies carry no historical date, so the screen lists what "
             "you built, not which of them the society would not yet have",
-            "dated events fire on schedule and the game does not check their "
-            "causes (causes_checked is false for every one), so none can "
-            "yet be skipped or changed",
+            "an event with causes_checked false states no causes in its data and "
+            "fires on schedule; one with causes_checked true is skipped (or "
+            "weakened) in a year its causes do not hold, judged as things "
+            "stand today",
         ],
     }

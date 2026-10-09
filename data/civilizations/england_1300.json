@@ -39,6 +39,15 @@
     },
     {
       "name": "Black Death",
+      "causes": [
+        {
+          "quantity": "population",
+          "op": ">=",
+          "value": 0.5,
+          "relative_to_start": true,
+          "why": "A pandemic runs through crowded, connected settlements. Below half the opening population the opening density of towns and trade is gone, so there is nothing to carry it at the recorded scale. A reasoning bound, to be fitted against a baseline ensemble."
+        }
+      ],
       "note": "and recurrent thereafter",
       "staff_loss": 0.45,
       "years": [
@@ -148,6 +157,15 @@
     },
     {
       "name": "The Great Plague of London",
+      "causes": [
+        {
+          "quantity": "population",
+          "op": ">=",
+          "value": 0.5,
+          "relative_to_start": true,
+          "why": "A pandemic runs through crowded, connected settlements. Below half the opening population the opening density of towns and trade is gone, so there is nothing to carry it at the recorded scale. A reasoning bound, to be fitted against a baseline ensemble."
+        }
+      ],
       "note": "The last major English outbreak of bubonic plague. The London bills of mortality record about 68,500 deaths and the true figure was probably near 100,000, a fifth to a quarter of the city, concentrated in the poor parishes outside the walls. Everyone who could afford to leave left, including the court and most of the physicians, and that is most of the effect on a workshop: the labour and the custom walk out of the city together and do not come back for a year.",
       "staff_loss": 0.22,
       "years": [

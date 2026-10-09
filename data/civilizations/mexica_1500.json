@@ -107,6 +107,15 @@
   "hazards": [
     {
       "name": "Old World epidemics on contact",
+      "causes": [
+        {
+          "quantity": "population",
+          "op": ">=",
+          "value": 0.5,
+          "relative_to_start": true,
+          "why": "A pandemic runs through crowded, connected settlements. Below half the opening population the opening density of towns and trade is gone, so there is nothing to carry it at the recorded scale. A reasoning bound, to be fitted against a baseline ensemble."
+        }
+      ],
       "note": "Smallpox, measles and typhus in a population with no immunity. This is the single most severe hazard of any civilization in this directory and it is not a fair fight.",
       "staff_loss": 0.8,
       "years": [
@@ -116,6 +125,14 @@
     },
     {
       "name": "Spanish invasion",
+      "causes": [
+        {
+          "quantity": "army_share_of_wanted",
+          "op": "<=",
+          "value": 1.0,
+          "why": "A small expedition with large allied armies took a state whose own force did not exceed what the threat called for; a state that keeps more than that is not taken this way. How much weapons, allies and smallpox each weighed is disputed (Restall, Hassig), so only the force against the threat is stated here."
+        }
+      ],
       "note": "The conquest does not just take the city, it replaces the religious order that ran it. Franciscan and Dominican friars begin systematic campaigns against indigenous ritual almost immediately, and the colonial administration that follows is far less willing than the tlatoani's court to read an inexplicable effect as divine favour rather than as diabolism or sorcery to be extirpated -- applied gradually below as shifts in what this society values, over the same short years as the the chance of being sacked, because there is no long war here to spread it across.",
       "sack_chance": 0.9,
       "values": {
@@ -158,6 +175,15 @@
     },
     {
       "name": "The matlazahuatl of 1736",
+      "causes": [
+        {
+          "quantity": "population",
+          "op": ">=",
+          "value": 0.5,
+          "relative_to_start": true,
+          "why": "A pandemic runs through crowded, connected settlements. Below half the opening population the opening density of towns and trade is gone, so there is nothing to carry it at the recorded scale. A reasoning bound, to be fitted against a baseline ensemble."
+        }
+      ],
       "note": "Probably typhus. It began at Tacuba in August 1736 and ran through the valley of Mexico for three years; the usual figures are forty to fifty thousand dead in Mexico City and something like two hundred thousand across New Spain. It is the last great colonial epidemic before the smallpox of 1797, which is itself the immediate reason the Crown sent the Balmis expedition out from A Coruna at the end of 1803, carrying live vaccine to America in relays of orphan boys arm to arm - the first mass vaccination campaign anywhere in the world, and one that began here.",
       "staff_loss": 0.25,
       "years": [

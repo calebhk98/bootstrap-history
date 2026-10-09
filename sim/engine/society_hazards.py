@@ -20,6 +20,7 @@ are a mixin only so that they can live in a file of their own.
 from sim.constants import declare
 from . import cause_book, money_units
 from .data import (closure, critical_path, money_word)
+from . import event_causes
 from .hazard_window import hazards_not_yet_past
 from sim.agents.api import edges, ledger
 
@@ -306,6 +307,8 @@ class HazardsMixin:
         rows = []
         for hazard, year_start, year_end, in_progress in hazards_not_yet_past(
                 self.civ, self.year):
+            if event_causes.effective_hazard(self, hazard)[0] is None:
+                continue                  # its stated causes do not hold as things stand
             years_until = 0 if in_progress else (year_start - self.year)
             name = hazard.get("name", "hazard")
             kinds = [hazard_kind for hazard_kind in
@@ -474,6 +477,20 @@ class HazardsMixin:
                 adjusted[field] = hazard[field] * scale
         return adjusted
 
+    def _apply_event_causes(self, hazard, year, hazard_start):
+        """The event as its stated causes leave it this year, or None when they do not hold.
+        Told once, the year the window opens, when the causes fail."""
+        kept, report = event_causes.effective_hazard(self, hazard)
+        if report["failed"] and year == hazard_start:
+            said = self.state.scenario._said_condition
+            key = "causes:" + hazard.get("name", "hazard")
+            if key not in said:
+                said.add(key)
+                self.state.household.log.append((year, "%s: %s, so it %s" % (
+                    hazard.get("name", "hazard"), event_causes.failed_words(report),
+                    "does not come" if kept is None else "comes weaker")))
+        return kept
+
     STAFF_LOSS_HAZARD_ANNUAL_CHANCE = declare(
         "STAFF_LOSS_HAZARD_ANNUAL_CHANCE", 0.32, kind="temporary_heuristic",
         unit="dimensionless (yearly probability while the hazard's window "
@@ -549,6 +566,9 @@ class HazardsMixin:
         for hazard in self.civ.get("hazards", []):
             hazard_start, hazard_end = hazard.get("years", [0, 0])
             if not (hazard_start <= year <= hazard_end):
+                continue
+            hazard = self._apply_event_causes(hazard, year, hazard_start)
+            if hazard is None:
                 continue
             hazard = self._resolve_hazard_condition(hazard, year, hazard_start)
             self._shock_staff_loss(hazard, year)

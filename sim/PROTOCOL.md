@@ -319,7 +319,9 @@ Two fixes, usable separately or together:
                                                     "territory"), "technologies_you_built",
                                                     "dated_events" (status happened, under
                                                     way, upcoming or before the run began;
-                                                    "causes_checked" is false for all) and
+                                                    "causes_checked" is true when the event
+                                                    states causes, with "causes_hold_now" and
+                                                    "failed_causes") and
                                                     "cannot_know". Under fog an upcoming
                                                     event has no name.
       {"cmd":"finish"}                             end the run here and return the final
