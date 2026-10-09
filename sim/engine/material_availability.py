@@ -8,7 +8,7 @@ from .blockers import blocker_kind
 
 def materials_without_a_seller(self, node_id):
     """[material] the project would buy and no one in reach sells, sorted. Stock in hand covers a need."""
-    from .project_materials import tonnes_per_unit     # at call time: that module imports half the engine
+    from .material_units import tonnes_per_unit
     node = self.nodes[node_id]
     market = self.goods_market
     if not node.get("req_any") and all(market.can_be_bought(material) for material in node["mat"]):

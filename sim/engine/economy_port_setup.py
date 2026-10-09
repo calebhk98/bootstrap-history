@@ -7,6 +7,7 @@ nodes it holds; the economy only receives the recipes.
 import dataclasses
 import json
 import os
+from typing import Dict
 
 from sim.economy.api import (EconomySetup, SiteLimit, TradeSpec, currency_from_coin_standard, goods_specs, households,
                              recipes_from_production_data, taxes, tile_costs)
@@ -24,6 +25,16 @@ DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.
 def _load(*parts):
     with open(os.path.join(DATA_DIR, *parts), encoding="utf-8") as handle:
         return json.load(handle)
+
+
+_UNIT_MASS_KG: Dict[str, float] = {}
+
+
+def unit_mass_kg(material: str) -> float:
+    """Kilograms in one unit of a material, as the freight model reads it (stated, then inferred from the id)."""
+    if material not in _UNIT_MASS_KG:
+        _UNIT_MASS_KG[material] = goods_specs({material: ""}, {})[material].unit_mass_kg
+    return _UNIT_MASS_KG[material]
 
 
 def civilisation_tiles(civ, world_map):

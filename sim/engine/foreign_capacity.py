@@ -17,7 +17,7 @@ from sim.world import demand as demand_model
 
 from .data import ROOT, load_civ, starting_schedule
 from .market_demand import MEAN_INCOME_HOURS_PER_CAPITA, household_demand_by_material
-from .project_materials import tonnes_per_unit
+from .material_units import tonnes_per_unit
 
 FOREIGN_OPENING_IN_BALANCE = declare(
     "FOREIGN_OPENING_IN_BALANCE", 1.0, kind="temporary_heuristic",

@@ -10,7 +10,7 @@ from .harness import *  # noqa: F401,F403
 from sim.engine.agents_port import SimWorld
 from sim.engine.market_demand import household_demand_by_material
 from sim.engine.state import ActorRecord
-from sim.engine.project_materials import tonnes_per_unit
+from sim.engine.material_units import tonnes_per_unit
 
 MATERIAL = "iron"
 

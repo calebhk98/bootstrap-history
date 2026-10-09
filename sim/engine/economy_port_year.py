@@ -21,7 +21,7 @@ from . import economy_port_cargo, economy_port_sites, material_capacity, solve_c
 from .data import load_civ
 from .economy_port_key import spin_up_key
 from .economy_port_setup import build_setup, opening_values
-from .project_materials import tonnes_per_unit
+from .material_units import tonnes_per_unit
 
 SWITCH_ENVIRONMENT = "ROME_AGENT_ECONOMY"
 OUTCOMES_KEPT = 100   # yearly outcomes held in memory for the health figures
@@ -132,7 +132,7 @@ class AgentEconomy:
         self.sync_ways()
         orders = self._seat_orders()
         orders.update(self._external_orders())
-        from .project_materials import tonnes_per_unit
+        from .material_units import tonnes_per_unit
         legs = self._sim.cargo_legs()
         moves, cargo_orders, fundings = economy_port_cargo.cargo_orders(economy, legs, tonnes_per_unit)
         economy_api.move_goods(economy, moves)
@@ -225,7 +225,7 @@ class AgentEconomy:
         partners = sim.foreign_economies()
         if not partners:
             return {}
-        from .project_materials import tonnes_per_unit
+        from .material_units import tonnes_per_unit
         offers_api = sim.goods_market
         routes = {partner: offers_api._route_from(partner) for partner in partners}
         volumes = economy_api.traded_volumes(economy)
@@ -258,7 +258,7 @@ class AgentEconomy:
     def price_response(self, material, landed_tonnes, taken_tonnes):
         """Factor on a material's price at the port once more tonnes land there or are taken out, from the book the
         market last cleared; None when the market has none."""
-        from .project_materials import tonnes_per_unit
+        from .material_units import tonnes_per_unit
         per_unit = tonnes_per_unit(material)
         if not per_unit or per_unit <= 0.0 or material not in self.economy().area_map.goods():
             return None

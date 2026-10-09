@@ -12,7 +12,7 @@ from .harness import *  # noqa: F401,F403
 from sim.engine import foreign_economies as _foreign_module
 from sim.engine import foreign_capacity as _capacity
 from sim.engine.data import load_civ, load_geography, starting_schedule
-from sim.engine.project_materials import tonnes_per_unit
+from sim.engine.material_units import tonnes_per_unit
 from sim.world import market, trade_between
 from sim.geography import api as geography_api
 from sim.geography import sea_freight, transport

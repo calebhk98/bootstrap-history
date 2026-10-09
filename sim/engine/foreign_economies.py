@@ -26,7 +26,7 @@ from .foreign_capacity import ForeignCapacityMixin
 from .foreign_payments import ForeignPaymentsMixin
 from .foreign_routes import ForeignRoutesMixin
 from .foreign_traders import ForeignTradersMixin
-from .project_materials import tonnes_per_unit
+from .material_units import tonnes_per_unit
 
 @functools.lru_cache(maxsize=None)
 def foreign_economy_records():

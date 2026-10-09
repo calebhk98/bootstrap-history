@@ -9,7 +9,6 @@ import random
 from typing import Any, Dict, List, Optional, Set
 
 from sim.agents.api import OBSERVATION_RANGE_KM, SECRET_EXPOSURE, payroll, supply
-from sim.economy.api import goods_specs
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from .agents_port_budget import BudgetView
@@ -25,17 +24,8 @@ from .agents_port_coinage import CoinageView
 from .agents_port_trade import TradeView
 from . import seat_builds, visibility as visibility_of
 from .data import TRADES_ABSENT
+from .economy_port_setup import unit_mass_kg
 from .industry_depth import RAMP_SHARE_AT_FULL_DEPTH
-
-
-_UNIT_MASS_KG: Dict[str, float] = {}
-
-
-def unit_mass_kg(material: str) -> float:
-	"""Kilograms in one unit of a material, as the freight model reads it (stated, then inferred from the id)."""
-	if material not in _UNIT_MASS_KG:
-		_UNIT_MASS_KG[material] = goods_specs({material: ""}, {})[material].unit_mass_kg
-	return _UNIT_MASS_KG[material]
 
 
 class SimWorld(BudgetView, SiteView, RevenueView, GroupView, DisclosureView, CapitalView, CapacityView, TradeView, CastView, CoinageView, SeatView):

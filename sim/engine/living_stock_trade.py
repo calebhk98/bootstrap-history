@@ -6,7 +6,7 @@ terms and the route's freight (`partner_quote_per_tonne`), unless its own policy
 (`GoodsMarket.settle_import`); the quote a player reads is built by the function the charge uses.
 """
 from .data import load_civ
-from .project_materials import tonnes_per_unit
+from .material_units import tonnes_per_unit
 
 
 class LivingStockTradeMixin:

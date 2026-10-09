@@ -47,7 +47,7 @@ class GoodsOffers(GoodsImports):
         the merchants' costs as a share of that, and the freight. None when the partner does not
         make it, it may not cross a border, or no route joins the two."""
         from .foreign_economies import not_traded_materials
-        from .project_materials import tonnes_per_unit
+        from .material_units import tonnes_per_unit
         facts = self._sim._foreign_economy_facts(civilization_id)
         route = route or self._route_from(civilization_id)
         if (route is None or material not in facts["solved_materials"]

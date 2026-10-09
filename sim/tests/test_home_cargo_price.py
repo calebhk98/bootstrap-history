@@ -18,7 +18,7 @@ from sim.economy.api import EDGE_EXTERNAL
 from sim.economy import api as economy_api
 from sim.economy.types import Bid, Offer
 from sim.engine.agents_port import SimWorld
-from sim.engine.project_materials import tonnes_per_unit
+from sim.engine.material_units import tonnes_per_unit
 
 PARTNER = "han_china_100ad"
 TRADER = "trader:test"

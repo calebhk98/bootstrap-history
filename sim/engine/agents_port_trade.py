@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from .foreign_capacity import budget_scaled_final_tonnes, household_tonnes_by_material
 from .foreign_economies import not_traded_materials
-from .project_materials import tonnes_per_unit
+from .material_units import tonnes_per_unit
 
 
 class TradeView:

@@ -192,7 +192,9 @@ class ImportVolumeTests(unittest.TestCase):
 class _Partner(foreign_capacity.ForeignCapacityMixin):
     DEFAULT_POPULATION_100AD = 100.0
 
-    def __init__(self, can_make=True, opening=(0.0, 0.0), mined=False, book=None):
+    def __init__(self, can_make=True, opening=(0.0, 0.0), mined=False, book=None, curated=True, own_population=50.0):
+        self.res = {"empire_output_100ad": {"ore_kg": 1.0} if curated else {}}
+        self.civ = {"population": own_population}
         self.state = types.SimpleNamespace(economy=types.SimpleNamespace(
             foreign_market_book={"partner": book or {}}))
         self._can_make, self._opening, self._mined = can_make, opening, mined
@@ -239,6 +241,9 @@ class PartnerSupplyTests(unittest.TestCase):
 
     def test_an_input_only_good_follows_the_partners_size_against_the_table_it_is_stated_for(self):
         self.assertAlmostEqual(self._supply(_Partner()), 1000.0 * 10.0 / 100.0 * foreign_capacity.FOREIGN_OUTPUT_PER_POPULATION_SHARE)
+
+    def test_a_good_outside_the_reference_table_follows_this_societys_own_size(self):
+        self.assertAlmostEqual(self._supply(_Partner(curated=False)), 1000.0 * 10.0 / 50.0 * foreign_capacity.FOREIGN_OUTPUT_PER_POPULATION_SHARE)
 
 
 class ProjectNeedsASellerTests(unittest.TestCase):

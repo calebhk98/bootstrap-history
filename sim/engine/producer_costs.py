@@ -17,7 +17,7 @@ from sim.world.producer_market import Offer
 
 from . import entry_cost
 from . import prices as price_solver
-from .project_materials import tonnes_per_unit
+from .material_units import tonnes_per_unit
 
 
 # (production table, {gate node: keys of the entries it gates}, {outputs: keys of entries making them}); the

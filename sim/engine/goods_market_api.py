@@ -18,7 +18,7 @@ from sim.world.producer_market import Offer
 
 from . import purchase_rule
 from .goods_market_offers import GoodsOffers
-from .project_materials import tonnes_per_unit
+from .material_units import tonnes_per_unit
 from sim.agents.api import edges
 
 class SeatParty:

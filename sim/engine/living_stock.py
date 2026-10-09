@@ -10,7 +10,7 @@ data; nothing here names one.
 from sim.world import living_stock
 
 from .blockers import blocker_kind
-from .project_materials import tonnes_per_unit
+from .material_units import tonnes_per_unit
 
 
 @blocker_kind("supply")

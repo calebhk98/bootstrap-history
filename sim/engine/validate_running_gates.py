@@ -8,8 +8,19 @@ from typing import Any, List, Mapping
 RUNNING_FIELDS = ("up", "rev", "up_hours", "rev_hours")
 
 
+def _states_upkeep_source(node: Mapping[str, Any]) -> bool:
+    """Whether the node's stated data gives it an upkeep (node_revenue derives one from staff places, a
+    programme's labour and consumables, or a share of the build bill) unless it writes `up_hours` as 0."""
+    if node.get("up_hours") is not None:
+        return False
+    bill = list((node.get("lab") or {}).values()) + list((node.get("mat") or {}).values())
+    staff = [node.get("sch"), node.get("art")]
+    programme = list((node.get("annual_labour_hours") or {}).values()) + list((node.get("annual_consumables") or {}).values())
+    return any((amount or 0) > 0 for amount in bill + staff + programme)
+
+
 def _can_run(node: Mapping[str, Any]) -> bool:
-    return any((node.get(field) or 0) > 0 for field in RUNNING_FIELDS)
+    return any((node.get(field) or 0) > 0 for field in RUNNING_FIELDS) or _states_upkeep_source(node)
 
 
 def _cycle_from(nodes: Mapping[str, Mapping[str, Any]], start: str) -> List[str]:
