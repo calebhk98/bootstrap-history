@@ -393,6 +393,8 @@ def cmd_validate(args):
     errs += validate_material_gating.check_material_gating(nodes, validate_material_gating.load_gating(ROOT))
     from sim.engine.ui_port import civ_start_check
     errs += validate_unheld_gates.check_unheld_gates(nodes, civ_start_check.load_civilisations(ROOT), production)
+    from sim.engine import validate_event_causes
+    errs += validate_event_causes.check_event_causes(civ_start_check.load_civilisations(ROOT), set(nodes))
     goal_errs, default_goal, goal_rows = _validate_goal_rows(tree, nodes)
     errs += goal_errs
 
