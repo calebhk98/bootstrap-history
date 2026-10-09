@@ -25,6 +25,9 @@ from sim.world import market
 
 from .goods_market_api import FOUNDER, GoodsMarket
 
+# The clearing searches between floor and ceiling in logs, so the floor stays above nothing.
+MINIMUM_FLOOR_RATIO = 0.01
+
 
 class MarketClearingMixin:
 
@@ -100,8 +103,19 @@ class MarketClearingMixin:
             actor_demand_tonnes=actor_demand, offers=offers,
             founder_sales_tonnes=founder_sales,
             stock_tonnes=entry["stock_tonnes"],
-            floor_ratio=float(record.get("price_floor_factor", market.DEFAULT_FLOOR_RATIO)),
+            floor_ratio=self._floor_ratio(commodity, record),
             ceiling_ratio=float(record.get("price_ceiling_factor", market.DEFAULT_CEILING_RATIO)))
+
+    def _floor_ratio(self, commodity, record):
+        """The lowest price over the incumbents' cost the commodity sells at. A built plant sells at least at
+        what running it costs, the running share of that cost; the commodity's stated floor (else the
+        default) stays as the outer bound, since stock and windfalls also sell below any producer's cost
+        and the clearing has one floor for all sellers."""
+        stated = float(record.get("price_floor_factor", market.DEFAULT_FLOOR_RATIO))
+        running_share = self.commodity_floor_ratio(commodity)
+        if running_share is None:
+            return stated
+        return max(MINIMUM_FLOOR_RATIO, min(stated, running_share))
 
     def _market_outcome(self, commodity, with_flows=False):
         """(conditions, outcome) of the clearing, or None for a commodity

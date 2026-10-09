@@ -1,6 +1,6 @@
 # Prices use long-run cost, not the current market
 
-**Status:** partly - on the agent economy (the default) every price is the year's market clearing, not a long-run cost; build-decision amortisation in the engine's project costs remains
+**Status:** partly - on the agent economy (the default) every price is the year's market clearing; on the engine side a producer whose plant is built offers at its running cost (the entry's cost without the plant's repayment) and the clearing's floor is the running share of the incumbents' cost, capped by the stated floor; remaining: the coin metal's revaluation (not started, see the Update 2 list), the goods market and wages do not use the clearing, the stated floor stays as the outer bound for stock sold below any producer's cost, and `foreign_actor_trade.py` still uses the stated floor
 
 ## What is wrong
 
@@ -68,3 +68,9 @@ Related: 102, 326, 338, 359, 364.
 The price a good clears at is no longer one solved long-run cost for the society: each producer offers at the cost of the entry it runs and the market clears the offers against demand. The solver gives the incumbents' cost, the cost of one entry for a producer, and a baseline for a good nobody yet makes. A mine's amortised cost still enters through the solver's cost of the entry; a producer that has sunk its capital selling below the full cost (the floor) is the existing floor ratio, not yet each producer's own running cost.
 
 Owner decision (2026-10-09): high priority: a bigger issue than it looks; do it soon.
+
+## Update 2 (running cost for sunk plants)
+
+Done: `recipe_cost_and_allocation(..., include_capital=False)` costs an entry without its plant's repayment; `CostBook.running_unit_cost_hours` and `running_share` give the split per entry. Concerns that exist (the founder's operating ventures, firms' concerns offered through `offer_sale`) offer at that running cost (`producer_costs.py`), while the incumbents' reference, quotes and payback stay at the full cost, so capital matters to the decision to build and not to the price once built. The engine's floor ratio is `commodity_floor_ratio` (the running share of the incumbents' entry), no higher than the commodity's stated floor, so a capital-heavy good (a mine's metal) can fall further in a glut than a labour-only one. Tests: `sim/tests/test_running_cost_floor.py`.
+
+Remains, for the coin-metal revaluation (inflation from a metal glut), which touches the money anchor and was left to its owner: the coin's value must follow `market_price_ratio` of the coin metal (today `_coin_metal_price` reads the incumbents' price with no ratio, `incumbent_prices.py`), through the mint standard in `money_units.py`; the price level (`home_price_level`) and the labour wage per hour (`labour_wages.py`) must then move with it without double counting the goods' own ratio; the foreign partners' coin prices (`partner_price_level`) need the same ratio; savings and debts in coin need a decision on who bears the revaluation. The floor ceiling for stock sellers needs `sim/world/market.py` to give stock and windfalls their own bound apart from producers' floor.

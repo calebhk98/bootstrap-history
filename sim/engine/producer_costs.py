@@ -3,7 +3,9 @@
 Each producer (a firm's or the founder's concern, the incumbents) makes a good by the production entry it
 runs. Its cost is that entry's unit cost at the prices of its inputs (entry_cost.py), over the incumbents'
 cost of the same good, so the market (sim/world/market.py) receives only a ratio. A producer that holds
-several entries for a good runs the cheapest.
+several entries for a good runs the cheapest. A producer whose plant is built (every concern that
+exists) offers at its running cost, the entry's cost without the plant's repayment; the full cost, with
+the repayment, stays the incumbents' reference and what a decision to build is judged against.
 
 TEMPORARY HEURISTIC (CLAUDE.md 4.4): the entries a concern holds are its node's own and those of any node
 some producer runs that make the same products (concern_volume.py); a producer-by-producer technique set
@@ -76,23 +78,45 @@ class ProducerCostsMixin:
                 hours, self._opening_wage_document(), self.civ, self.techniques_in_use()), {})
         return cache
 
-    def entry_cost_ratio(self, entry_key, material):
+    def entry_cost_ratio(self, entry_key, material, running=False):
         """A unit of `material` made by this entry over the same made by the incumbents' entry, both at the
-        prices the incumbents face; one where either cannot be costed."""
+        prices the incumbents face; one where either cannot be costed. `running` leaves the entry's plant
+        repayment out (a producer whose plant is built), the incumbents' cost staying the full one."""
         _hours, book, ratios = self._cost_book()
-        key = (entry_key, material)
+        key = (entry_key, material, running)
         if key not in ratios:
             reference_key = self._reference_entry(material)
-            own = book.unit_cost_hours(entry_key, material)
+            own = (book.running_unit_cost_hours if running else book.unit_cost_hours)(entry_key, material)
             reference = book.unit_cost_hours(reference_key, material) if reference_key else None
             ratios[key] = own / reference if own is not None and reference else 1.0
         return ratios[key]
 
+    def commodity_floor_ratio(self, commodity):
+        """The share of the incumbents' cost that is running cost, for the entries they make the commodity's
+        materials by: the lowest price their built plant still sells at. None where no entry can be split."""
+        _hours, book, ratios = self._cost_book()
+        key = ("floor", commodity)
+        if key not in ratios:
+            shares = []
+            for material in self.materials_of_commodity(commodity):
+                reference_key = self._reference_entry(material)
+                share = book.running_share(reference_key, material) if reference_key else None
+                if share is not None:
+                    shares.append(share)
+            ratios[key] = sum(shares) / len(shares) if shares else None
+        return ratios[key]
+
+    def materials_of_commodity(self, commodity):
+        """The material keys that trade as one commodity, sorted."""
+        return sorted(material for material, group in self._material_commodity_map().items()
+                      if group == commodity)
+
     def concern_cost_ratio(self, node_id, material):
-        """The cost ratio of the cheapest entry a concern on this node holds that makes `material`."""
+        """The running cost ratio of the cheapest entry a concern on this node holds that makes `material`:
+        a concern that exists has sunk its plant, so it offers at what running it costs."""
         production = price_solver.default_production_entries()
         held = self.techniques_in_use()
-        ratios = [self.entry_cost_ratio(key, material)
+        ratios = [self.entry_cost_ratio(key, material, running=True)
                   for key in entry_keys_held_for(node_id, production, held)
                   if material in (production[key].get("outputs") or {})]
         return min(ratios) if ratios else 1.0
