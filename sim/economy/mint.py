@@ -104,11 +104,16 @@ def _loss_share(setup, spec) -> float:
     return backing.spoilage_per_year if backing is not None else 0.0
 
 
+def capacity_fine_kilograms(setup, record) -> float:
+    """Fine metal the mint can strike in a year: what it bids hours for."""
+    spec = record.currency
+    return yearly_monetisation(setup, record) * spec.backing_per_unit if spec.backing_per_unit > 0.0 else 0.0
+
+
 def staff(setup, record, view, labour_bids) -> None:
     """Before the labour market clears: the mint bids for the hours of its yearly capacity."""
-    spec = record.currency
-    if spec.backing_per_unit > 0.0:
-        mint_labour.staff(setup, record, view, labour_bids, yearly_monetisation(setup, record) * spec.backing_per_unit)
+    if record.currency.backing_per_unit > 0.0:
+        mint_labour.staff(setup, record, view, labour_bids, capacity_fine_kilograms(setup, record))
 
 
 def mint_orders(setup, record, area_map, order_book, hours_hired=None) -> Dict[str, float]:

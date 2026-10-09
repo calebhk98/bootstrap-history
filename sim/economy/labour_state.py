@@ -9,6 +9,7 @@ from typing import Dict, Iterable, Mapping, Tuple
 
 from sim.labour.api import MarketState, TradeSpec, opening_labour_market, trade_specs
 
+from . import mint, mint_labour
 from .market_memory import market_key
 from .setup import labour_area
 
@@ -27,14 +28,17 @@ def core_trades(setup, extra_trades: Iterable[str] = ()) -> Dict[str, TradeSpec]
 
 
 def opening_workforce(setup, record) -> MarketState:
-    """Each tile's working people placed in the trades its producers need at capacity; hard trades are
-    staffed from the able, the rest work unskilled. No wage is seeded: the first year's clearing sets them."""
+    """Each tile's working people placed in the trades its producers and its mint need at capacity; hard
+    trades are staffed from the able, the rest work unskilled. No wage is seeded: the first year's clearing sets them."""
     hours_needed: Dict[str, Dict[str, float]] = {}
     for producer in record.producers.values():
         recipe = setup.recipes[producer.recipe_id]
         needed = hours_needed.setdefault(labour_area(producer.tile), {})
         for trade, hours in recipe.labour_hours.items():
             needed[trade] = needed.get(trade, 0.0) + producer.capacity_runs * hours
+    mint_needed = hours_needed.setdefault(labour_area(setup.capital_tile), {})
+    for trade, hours in mint_labour.capacity_hours(setup, record.currency, mint.capacity_fine_kilograms(setup, record)).items():
+        mint_needed[trade] = mint_needed.get(trade, 0.0) + hours
     working = {labour_area(tile): people * setup.working_share
                for tile, people in sorted(setup.opening_population_by_tile.items())}
     trades = core_trades(setup, {trade for needed in hours_needed.values() for trade in needed})

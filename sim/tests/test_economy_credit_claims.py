@@ -72,13 +72,17 @@ class ClaimTests(unittest.TestCase):
         self.assertGreater(marked[0].rate, clean[0].rate)
 
 
+# cash low enough that wealth, not the drawdown limit (one year of income), sets the spending
+CASH = 8000.0
+
+
 class HouseholdWealthTests(unittest.TestCase):
     def spending(self, claims):
         class Lender(View):
             def claims(self, agent, currency):
                 return claims
         orders = households.goods_orders(cohort(people=10.0, last_year_spending=5000.0, last_year_income=5000.0),
-                                         Lender(), cash=20000.0, income_this_year=5000.0, basket=BASKET, specs=SPECS)
+                                         Lender(), cash=CASH, income_this_year=5000.0, basket=BASKET, specs=SPECS)
         return sum(bid.flexible_quantity * bid.reference_price for bid in orders.bids)
 
     def test_a_view_without_loans_gives_no_claims(self):

@@ -59,9 +59,9 @@ def open_economy(setup: EconomySetup) -> Tuple[EconomyRecord, AreaMap, CarriageT
     for country in setup.countries():
         _open_country_producers(setup, record, area_map, priced_goods, final_by_tile, country)
     sites.apply_site_limits(record, setup)
-    record.workforce = labour_state.opening_workforce(setup, record)
     _open_merchants(setup, record, priced_goods, final_by_tile)
     _strike_opening_cash(setup, record)
+    record.workforce = labour_state.opening_workforce(setup, record)   # the mint's capacity follows the money struck
     mint.seed_opening_metal(setup, record)
     opening_stores.seed_opening_stores(setup, record, _store_goods(setup, view, area_map, priced_goods))
     record.opening_basket = _national(final_by_tile)

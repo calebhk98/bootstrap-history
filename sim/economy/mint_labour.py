@@ -33,6 +33,14 @@ def hours_per_fine_kilogram(recipe, spec) -> Dict[str, float]:
     return {trade: hours / coin_kilograms / spec.fineness for trade, hours in recipe.labour_hours.items()}
 
 
+def capacity_hours(setup, spec, capacity_fine_kilograms: float) -> Dict[str, float]:
+    """Hours by trade the mint needs to strike `capacity_fine_kilograms` in a year; none where it does not strike."""
+    if not _striking(setup, spec) or capacity_fine_kilograms <= 0.0:
+        return {}
+    return {trade: capacity_fine_kilograms * per_kilogram
+            for trade, per_kilogram in hours_per_fine_kilogram(setup.mint_recipe, spec).items()}
+
+
 def _striking(setup, spec) -> bool:
     return (getattr(setup, "mint_recipe", None) is not None and currency.has_mint(spec)
             and spec.backing_per_unit > 0.0)

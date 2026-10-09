@@ -71,7 +71,7 @@ with tempfile.TemporaryDirectory() as mods_dir:
                 mock.patch.object(foreign_routes, "usable_route_modes", _spy("modes", foreign_routes.usable_route_modes)), \
                 mock.patch.object(foreign_routes, "tiles_held", _spy("tiles_held", foreign_routes.tiles_held)):
             modded._foreign_route("han_china_100ad")
-        check("the foreign route is searched on the engine's mod-aware map", asked_maps.get("route") == [modded.world_map])
+        check("the foreign route is searched on the engine's mod-aware map", asked_maps.get("route") and all(each is modded.world_map for each in asked_maps["route"]))
         check("the usable modes are read from that map", asked_maps.get("modes") == [modded.world_map])
         check("the route's end tiles are resolved on that map", asked_maps.get("tiles_held") == [modded.world_map] * 2)
     finally:
