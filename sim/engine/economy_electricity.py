@@ -456,15 +456,15 @@ class ElectricityMixin:
         # otherwise silently replay a now-stale (worst, who) for.
         elec_need = self._electricity_demand_kw()
         elec_have = self.generation_capacity_kw()
-        economy = self.state.economy
+        holdings = self.state.holdings
         scenario = self.state.scenario
         sig = (scenario.year, tuple(sorted(industrial.items())), tuple(sorted(lab.items())),
-               tuple(sorted(self.mine_capacity.items())), economy.forest_ha,
-               economy.nitre_bed_m2, tuple(sorted(stock.items())),
+               tuple(sorted(self.mine_capacity.items())), holdings.forest_ha,
+               holdings.nitre_bed_m2, tuple(sorted(stock.items())),
                elec_need, elec_have)
         if sig == getattr(self.household, "_stock_throttle_sig", None):
-            economy.throttle, economy.binding = self.household._stock_throttle_cache
-            return economy.throttle
+            holdings.throttle, holdings.binding = self.household._stock_throttle_cache
+            return holdings.throttle
         worst, who = 1.0, None
         # RESOURCE_THROTTLE_FLOOR (declared below): work never fully stops
         # for a shortage - a shortfall slows a project instead of halting
@@ -513,7 +513,7 @@ class ElectricityMixin:
             # larger `have`, for exactly the reason in the comment above.
             stock[emp_key] = max(0.0, own_and_stock - lab_drawn - consumed_ind)
             self.goods_market.note_draw(emp_key, lab_drawn + consumed_ind - own_and_stock)
-        economy.throttle, economy.binding = worst, who
+        holdings.throttle, holdings.binding = worst, who
         # Stored AFTER mutation, against stock as this call actually left
         # it - so an immediate repeat call's sig (computed from that same,
         # now-settled stock) matches and replays rather than spending again.
@@ -522,7 +522,7 @@ class ElectricityMixin:
                                      sig[7], sig[8])
         self.household._stock_throttle_cache = (worst, who)
         if who:
-            economy.shortages[who] += 1
+            holdings.shortages[who] += 1
         return worst
 
     def project_resource_throttle(self, node_id):
@@ -536,7 +536,7 @@ class ElectricityMixin:
         projects with no matching input retain their full labour pace.
         """
         factor = self.resource_throttle()
-        binding = self.state.economy.binding
+        binding = self.state.holdings.binding
         if factor >= 0.999 or not binding:
             return 1.0
         if binding == "electricity":

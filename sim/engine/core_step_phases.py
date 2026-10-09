@@ -385,7 +385,7 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
         self.state.household.spend_last_year = getattr(self, "_spend_this_year", 0.0)
         self._spend_this_year = 0.0
         # Sellers restock, so the pressure your buying put on the market fades.
-        self.state.economy.market_pressure = max(0.0, self.state.economy.market_pressure * self.MARKET_PRESSURE_DECAY - self.MARKET_PRESSURE_ANNUAL_FADE)
+        self.state.holdings.market_pressure = max(0.0, self.state.holdings.market_pressure * self.MARKET_PRESSURE_DECAY - self.MARKET_PRESSURE_ANNUAL_FADE)
         # WARN BEFORE IT KILLS YOU: eminence can end the run outright on a
         # roll with no escalation and nothing in the log ever mentioning
         # it beforehand. It is the one hazard that cannot be bribed away,
@@ -441,8 +441,8 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
         _sd = self.cfg["suspicion_danger"]
         if self.state.household.scandal > _sd * 0.75:
             _band = int(self.state.household.scandal / max(1.0, _sd * 0.15))
-            if _band > self.state.scenario._said_scandal:
-                self.state.scenario._said_scandal = _band
+            if _band > self.state.seat_progress._said_scandal:
+                self.state.seat_progress._said_scandal = _band
                 self.state.household.log.append((self.state.scenario.year, "YOU ARE BEING TALKED ABOUT: scandal %.0f "
                                      "against a line of %.0f. Past it you may be "
                                      "denounced, and that ends the run - about "
@@ -452,7 +452,7 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
                                  % (self.state.household.scandal, _sd,
                                     PERCENT_SCALE * max(0.0, (self.state.household.scandal - _sd) / self.SCANDAL_HAZARD_SCALE))))
         elif self.state.household.scandal < _sd * 0.5:
-            self.state.scenario._said_scandal = 0
+            self.state.seat_progress._said_scandal = 0
         if self.events and self.state.household.scandal > self.cfg["suspicion_danger"]:
             probability = (self.state.household.scandal - self.cfg["suspicion_danger"]) / self.SCANDAL_HAZARD_SCALE
             if self.rng.random() < probability:

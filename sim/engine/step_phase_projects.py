@@ -199,13 +199,13 @@ class ProjectProgressPhaseMixin:
         # that many hours even with the whole pool behind it. Either
         # is a real, nameable reason; "it disappeared" is not.
         if _dir_hours and _dir_hours > 0 and _dir_hours - per > 1.0:
-            if (_project_throttle < 0.98 and self.state.economy.binding
+            if (_project_throttle < 0.98 and self.state.holdings.binding
                     and _pace_cap >= _dir_hours - 0.5):
                 _directed_hours_unused.append((node_id, round(_dir_hours - per, 0),
                     "a shortage of %s has every project (this one "
                     "included) running at %d%% of the pace its "
                     "hours alone would allow"
-                    % (self.state.economy.binding, round(_project_throttle * 100))))
+                    % (self.state.holdings.binding, round(_project_throttle * 100))))
             elif _pace_cap * _project_throttle < _dir_hours - 0.5:
                 _directed_hours_unused.append((node_id, round(_dir_hours - per, 0),
                     "its own pace this year - at most %s hours, set "

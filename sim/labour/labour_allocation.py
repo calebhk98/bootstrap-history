@@ -128,11 +128,12 @@ class LabourAllocationMixin:
     def _hours_needed_by_trade(self, total_hours=None):
         """Hours each trade is needed for out of the society's hours (the labour allocation)."""
         economy = self._world.state.economy
+        holdings = self._world.state.holdings
         hours = economy.society_labour_hours
         if total_hours is None:
             total_hours = sum(hours.values())
         farm_now = hours.get(FARM_TRADE, 0.0)
-        farm_needed = farm_now if economy.farm_hours_needed is None else economy.farm_hours_needed
+        farm_needed = farm_now if holdings.farm_hours_needed is None else holdings.farm_hours_needed
         return hours_needed_by_trade(self._non_farm_need_shares(), total_hours, farm_needed)
 
     def _hours_needed_for_wages(self):
@@ -155,7 +156,7 @@ class LabourAllocationMixin:
         quality = (land.ladder_quality(self._world.farm_ladder, hectares)
                    if self._world.farm_ladder else 1.0)
         self._world.farm_land = agriculture.Land(hectares, quality)
-        self._world.state.economy.farm_cleared_hectares = hectares
+        self._world.state.holdings.farm_cleared_hectares = hectares
 
     def _apply_land_clearing(self):
         """Hands beyond what the farm can crop spent the year clearing;
@@ -254,6 +255,7 @@ class LabourAllocationMixin:
         """Farm FTE for this year, after the labour market reacts to last
         year's harvest."""
         economy = self._world.state.economy
+        holdings = self._world.state.holdings
         technique = self._farming_technique()
         baseline_fte = self._expected_year_farm_need(
             self._share_farm_fte(adult_equivalent_population, technique),
@@ -264,20 +266,20 @@ class LabourAllocationMixin:
             current_farm_hours = economy.society_labour_hours[FARM_TRADE] * total_hours / held_hours
         else:
             current_farm_hours = min(baseline_fte * HOURS_PER_FARM_WORKER_YEAR, total_hours)   # the food balance
-        last_shortfall_kg = economy.farm_last_shortfall_kg
+        last_shortfall_kg = holdings.farm_last_shortfall_kg
         current_fte = current_farm_hours / HOURS_PER_FARM_WORKER_YEAR
         if last_shortfall_kg is None:
             need_fte = current_fte
         else:
             need_fte = farm_workers_needed(
                 baseline_fte, current_fte, last_shortfall_kg,
-                economy.farm_last_marginal_product,
+                holdings.farm_last_marginal_product,
                 self._world.farm_land.hectares, self._clearable_hectares(),
                 technique=technique)
-        economy.farm_hours_needed = need_fte * HOURS_PER_FARM_WORKER_YEAR
+        holdings.farm_hours_needed = need_fte * HOURS_PER_FARM_WORKER_YEAR
         economy.society_labour_hours = society_hours(
             total_hours,
-            farm_hours_after(current_farm_hours, min(economy.farm_hours_needed, total_hours), total_hours),
+            farm_hours_after(current_farm_hours, min(holdings.farm_hours_needed, total_hours), total_hours),
             self._non_farm_shares())
         farm_fte = economy.society_labour_hours[FARM_TRADE] / HOURS_PER_FARM_WORKER_YEAR
         crop_limit_fte = (self._world.farm_land.hectares / agriculture.hectares_cropped_per_farm_worker(

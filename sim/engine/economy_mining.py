@@ -581,10 +581,10 @@ class MiningMixin:
         sink = tonnes * cap * self.price_index * scale
         opex = self.mine_operating_cost_new(mat, tonnes)
         ceiling = self.mine_land_ceiling(mat)
-        economy = self.state.economy
+        holdings = self.state.holdings
         household = self.state.household
         room = max(0.0, ceiling - self.mine_capacity.get(mat, 0.0)
-                   - economy.mine_pending.get(mat, 0.0))
+                   - holdings.mine_pending.get(mat, 0.0))
         depl = self.mine_depletion_factor(mat)
         note = ("The yearly cost is charged whether or not you use the "
                 "output, and goes on until you close it. Mothballing is "
@@ -688,12 +688,12 @@ class MiningMixin:
         # were actually costing, not a figure blended across every shaft of
         # this material as if they were all worked equally hard.
         saved = sum(self.mine_operating_cost_for(working) for working in workings)
-        economy = self.state.economy
+        holdings = self.state.holdings
         household = self.state.household
         scenario = self.state.scenario
-        economy.mines = [working for working in (economy.mines or [])
+        holdings.mines = [working for working in (holdings.mines or [])
                          if working.get("material") != mat]
-        economy.mine_tranches = [tranche for tranche in (economy.mine_tranches or [])
+        holdings.mine_tranches = [tranche for tranche in (holdings.mine_tranches or [])
                                  if tranche[0] != mat]
         household.log.append((scenario.year, "you close the %s workings" % mat))
         return True, ("the %s workings are closed. You stop paying %.0f a year. "
@@ -735,11 +735,11 @@ class MiningMixin:
         # a province with no tin in it, at the same size as one with plenty.
         ceiling = self.mine_land_ceiling(mat)
         have_cap = self.mine_capacity
-        economy = self.state.economy
+        holdings = self.state.holdings
         household = self.state.household
         scenario = self.state.scenario
         t_per_yr = min(t_per_yr, max(0.0, ceiling - have_cap.get(mat, 0.0)
-                                          - economy.mine_pending.get(mat, 0.0)))
+                                          - holdings.mine_pending.get(mat, 0.0)))
         if t_per_yr <= 0:
             return 0.0
         # DEEPER ONES COST MORE. mining_cost_scale() is 1.0 on a fresh
@@ -776,27 +776,27 @@ class MiningMixin:
         # being folded into one number for the material - `cost` is carried
         # along so that working can say what it actually cost to sink, not
         # a figure recomputed later against a price_index that has since moved.
-        if economy.mine_tranches is None:
-            economy.mine_tranches = []
-        economy.mine_tranches.append([mat, t_per_yr, scenario.year + self.MINE_LEAD_YEARS, cost, order])
-        economy.mine_pending[mat] = economy.mine_pending.get(mat, 0.0) + t_per_yr
+        if holdings.mine_tranches is None:
+            holdings.mine_tranches = []
+        holdings.mine_tranches.append([mat, t_per_yr, scenario.year + self.MINE_LEAD_YEARS, cost, order])
+        holdings.mine_pending[mat] = holdings.mine_pending.get(mat, 0.0) + t_per_yr
         return t_per_yr
 
     def commission_mines(self):
         """Move finished tranches from pending into standing workings
-        (self.state.economy.mines), tranche by tranche. Each tranche becomes exactly one
+        (self.state.holdings.mines), tranche by tranche. Each tranche becomes exactly one
         working, commissioned in the year it actually came on stream (the
         tranche's own `ready` year, which is when its own depletion clock
         starts - see _advance_mine_depletion) - not merged into any other
         working of the same material, so a shaft opened in year 400 stays
         a distinct, unworn thing next to one opened three centuries before
         it."""
-        economy = self.state.economy
+        holdings = self.state.holdings
         scenario = self.state.scenario
-        if economy.mines is None:
-            economy.mines = []
+        if holdings.mines is None:
+            holdings.mines = []
         still = []
-        for tranche in (economy.mine_tranches or []):
+        for tranche in (holdings.mine_tranches or []):
             mat, amount, ready = tranche[0], tranche[1], tranche[2]
             # capex_paid: absent on a tranche written by a save from before
             # this field existed (see SAVE_FIELDS/load_state) - honestly
@@ -804,15 +804,15 @@ class MiningMixin:
             capex_paid = tranche[3] if len(tranche) > 3 else 0.0
             order = tranche[4] if len(tranche) > 4 else ""
             if scenario.year >= ready:
-                economy.mines.append({"material": mat, "capacity": amount,
+                holdings.mines.append({"material": mat, "capacity": amount,
                                    "opened_year": ready, "capex_paid": capex_paid, "order": order,
                                    "intensity_yrs": 0.0})
-                economy.mine_pending[mat] = max(0.0, economy.mine_pending.get(mat, 0.0) - amount)
-                if economy.mine_pending.get(mat, 0.0) <= 0:
-                    economy.mine_pending.pop(mat, None)
+                holdings.mine_pending[mat] = max(0.0, holdings.mine_pending.get(mat, 0.0) - amount)
+                if holdings.mine_pending.get(mat, 0.0) <= 0:
+                    holdings.mine_pending.pop(mat, None)
             else:
                 still.append(tranche)
-        economy.mine_tranches = still
+        holdings.mine_tranches = still
         # ONE YEAR OF DEPLETION: core.py's step() calls commission_mines()
         # exactly once a year (see its own comment, "materials: buy the
         # woodland... before the shortage bites"), so depletion rides that
@@ -841,7 +841,7 @@ class MiningMixin:
         survive keep their own real commissioning year and depletion clock
         instead of the newest or oldest being arbitrarily preferred."""
         household = self.state.household
-        economy = self.state.economy
+        holdings = self.state.holdings
         scenario = self.state.scenario
         order = sorted(self.mine_capacity, key=lambda material: -self._mine_opex(material))
         for material in order:
@@ -854,7 +854,7 @@ class MiningMixin:
                 working["capacity"] -= cut
                 if working["capacity"] >= 1.0:
                     kept.append(working)
-            economy.mines = [working for working in (economy.mines or [])
+            holdings.mines = [working for working in (holdings.mines or [])
                              if working.get("material") != material] + kept
             household.log.append((scenario.year, "MOTHBALLED half the %s workings; you could "
                                         "not pay to keep them running" % material))
@@ -962,10 +962,10 @@ class MiningMixin:
     def buy_forest(self, hectares):
         """Coppice woodland, bought outright. The cheapest thing in the tree that
         nobody thinks to buy, and the one that decides whether a furnace runs."""
-        economy = self.state.economy
+        holdings = self.state.holdings
         household = self.state.household
         scenario = self.state.scenario
-        room = max(0.0, self.forest_land_ceiling() - economy.forest_ha)
+        room = max(0.0, self.forest_land_ceiling() - holdings.forest_ha)
         if hectares > room:
             # SILENT TRUNCATION, not a refusal: open_mine's own ceiling does
             # the same (the tranche you get is the room there is, not zero),
@@ -983,5 +983,5 @@ class MiningMixin:
         if cost > 0 and not purchase_rule.can_pay(self, cost):
             return 0.0
         self.pay_edge(edges.EDGE_LANDOWNERS, cost, "forest bought")
-        economy.forest_ha += hectares
+        holdings.forest_ha += hectares
         return hectares

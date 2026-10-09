@@ -33,7 +33,7 @@ from .util import (_clean, _localise_money, _localise_words, _unsafe_path)
 
 def _trim_dashboard_history(sim, hist):
 	"""Trim dashboard history to the most recent N years if configured."""
-	years_kept = sim.state.scenario.dashboard_history_years
+	years_kept = sim.state.seat_progress.dashboard_history_years
 	if years_kept is not None and len(hist) > years_kept:
 		del hist[:-years_kept]
 

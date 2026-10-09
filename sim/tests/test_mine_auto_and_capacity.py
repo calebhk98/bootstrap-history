@@ -17,8 +17,8 @@ def _auto_mine_sim(pending_tonnes):
     test_sim.state.founder.policy["auto_mine"] = True
     test_sim.annual_material_demand = lambda: {"coal_kg": 1_000_000.0}
     test_sim.resource_throttle = lambda: 0.3
-    test_sim.state.economy.binding = "coal"
-    test_sim.state.economy.mine_pending["coal"] = pending_tonnes
+    test_sim.state.holdings.binding = "coal"
+    test_sim.state.holdings.mine_pending["coal"] = pending_tonnes
     orders = []
     test_sim.open_mine = lambda material, tonnes, partial=True, order="": orders.append(tonnes) or 0.0
     test_sim._step_materials()

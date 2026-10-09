@@ -21,7 +21,7 @@ class MoneyPhaseMixin:
         self.state.household.wages_prepaid = 0.0
         self.state.founder.living_cost_paid += living_cost
         mine_cost = self.mine_operating_cost()
-        self.state.economy.mine_cost_paid += mine_cost
+        self.state.holdings.mine_cost_paid += mine_cost
         revenue, upkeep = self.revenue(), self.upkeep()
         # The guard is paid from what the purse and the credit line can bear, like any other spending.
         room = max(0.0, self.state.household.capital + self.credit_limit() + revenue - upkeep - living_cost - mine_cost)

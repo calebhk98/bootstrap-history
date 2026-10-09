@@ -561,7 +561,7 @@ class FreightMixin:
         if not purchase_rule.can_pay(self, cost):
             return 0.0
         self.pay_edge(edges.EDGE_BUILDERS, cost, "nitre beds laid down")
-        self.state.economy.nitre_bed_m2 += square_metres
+        self.state.holdings.nitre_bed_m2 += square_metres
         return square_metres
 
     NITRE_SHORTAGE_SAFETY_BUFFER = declare(
@@ -603,7 +603,7 @@ class FreightMixin:
             return {"text": "", "commands": []}
         if binding == "charcoal":
             need = max(0.0, self.annual_material_demand().get("charcoal_kg", 0.0)
-                       / KILOGRAMS_PER_TONNE - self.state.economy.forest_ha * self.CHARCOAL_PER_HA)
+                       / KILOGRAMS_PER_TONNE - self.state.holdings.forest_ha * self.CHARCOAL_PER_HA)
             hectares_needed = max(1.0, round(need / max(self.CHARCOAL_PER_HA, 1e-9)))
             return {"text": (
                 "Charcoal is grown, not bought: about %s more hectare%s of "
@@ -617,7 +617,7 @@ class FreightMixin:
             shortfall_t = self.material_shortfall_t(binding)
         if binding == "saltpetre":
             demand = self.annual_material_demand().get("saltpetre_kg", 0.0) / KILOGRAMS_PER_TONNE
-            available = (self.state.economy.nitre_bed_m2 * self.NITRE_YIELD_T_PER_M2
+            available = (self.state.holdings.nitre_bed_m2 * self.NITRE_YIELD_T_PER_M2
                          + self._material_market_tonnes("saltpetre")
                          + self._material_stock().get("saltpetre", 0.0))
             deficit = max(shortfall_t, demand - available, 0.0)
@@ -637,7 +637,7 @@ class FreightMixin:
                                    * self.price_index))),
                 "commands": ["buy nitre %d" % square_meters]}
         if binding in self.MINE_OPEX_MATERIALS:
-            sinking = [tranche for tranche in (self.state.economy.mine_tranches or []) if tranche[0] == binding]
+            sinking = [tranche for tranche in (self.state.holdings.mine_tranches or []) if tranche[0] == binding]
             sinking_tonnes = sum(tranche[1] for tranche in sinking)
             if sinking_tonnes > 0.0:
                 ready_year = int(min(tranche[2] for tranche in sinking))
