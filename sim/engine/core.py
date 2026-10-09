@@ -65,6 +65,7 @@ from .core_seats import SeatMixin
 from .ways import WaysMixin
 from .held_works import HeldWorksMixin
 from .works import WorksMixin
+from .action_loss import ActionLossMixin
 from .society import SocietyMixin
 from .society_actors import ActorsMixin
 from .society_disclosure import DisclosureMixin
@@ -226,7 +227,7 @@ YEARLY_RECORD_LIMIT = 300
 
 
 class Sim(CoinRevaluationMixin, MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IndustryDepthMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, LabourPortMixin,
-          ProjectsMixin, SeatMixin, WaysMixin, WorksMixin, HeldWorksMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, InterestGroupsMixin, ForwardingPropertiesMixin, GoalsMixin,
+          ProjectsMixin, SeatMixin, WaysMixin, WorksMixin, HeldWorksMixin, ActionLossMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, InterestGroupsMixin, ForwardingPropertiesMixin, GoalsMixin,
           StepPhasesMixin, LivingStockMixin, CoinHoardMixin, CoinCarriageMixin, TheftChargeMixin,
           LivingStockTradeMixin, LivingStockYearlyMixin, DefenceStoresMixin, EconomyPortMixin, NodeRederiveMixin):
     STATE_CAPACITY_DEFAULT = declare(

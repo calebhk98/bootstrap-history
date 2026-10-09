@@ -399,6 +399,7 @@ def cmd_validate(args):
     from sim.engine import validate_action_results
     from sim.geography.api import open_map
     carriage_map = open_map()
+    errs += validate_action_results.check_risks(nodes)
     errs += validate_action_results.check_action_results(
         nodes, list(carriage_map.catalogue("route_modes").values()) + list(carriage_map.catalogue("sea_lanes").values()))
     errs += validate_defence_stores.check_defence_stores(nodes, set(wages), producible)

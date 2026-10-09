@@ -28,3 +28,18 @@ def check_action_results(nodes: Mapping[str, Mapping[str, Any]], gated_entries: 
             if is_token and needed not in returned:
                 problems.append("%s: requires_nodes asks for %s, which no node returns" % (entry.get("id"), needed))
     return problems
+
+
+def check_risks(nodes: Mapping[str, Mapping[str, Any]]) -> List[str]:
+    """A node's `risks` names crew, hull or cargo, each a share above nothing and at most everything."""
+    problems = []
+    for node_id in sorted(nodes):
+        for kind, shares in sorted((nodes[node_id].get("risks") or {}).items()):
+            if kind not in ("crew", "hull", "cargo"):
+                problems.append("%s: risks kind %r is not crew, hull or cargo" % (node_id, kind))
+                continue
+            for name, share in sorted(shares.items()):
+                if not isinstance(share, (int, float)) or not 0.0 < share <= 1.0:
+                    problems.append("%s: risks %s %s needs a share above nothing and at most one, not %r"
+                                    % (node_id, kind, name, share))
+    return problems

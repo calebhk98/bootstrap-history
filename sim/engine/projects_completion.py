@@ -214,6 +214,9 @@ class CompletionMixin:
             # What the purse and the credit line left cannot bear is not forgiven: it is added to what the project still costs, paid through the gated instalments.
             _borne = min(_lost, max(0.0, household.capital + self.credit_limit()))
             self.pay_edge(edges.EDGE_DESTROYED, _borne, "failure losses")
+            if not claimed:
+                for _loss_line in self.lose_what_was_risked(node_id):
+                    household.log.append((scenario.year, "%s: %s" % (node["name"], _loss_line)))
             projects.active[node_id]["cost_left"] = (projects.active[node_id].get("cost_left") or 0.0) + (_lost - _borne)
             # A failure always announces itself; its size sets how loudly.
             _next_risk = self.effective_risk(node_id)
