@@ -1,5 +1,5 @@
 {
- "_doc": "The 31 named historical deposits (formerly a separate file; every original field kept unchanged, including its lat/lon placeholders tracked by Complaints/281 and its own conf, which describes the grade and share figures) plus three extra ancient sites. surveyed_lat/surveyed_lon give the real location where the deposit is a real named place; ids ending in _generic are placeholders and have none. endowment appears only where it could be justified and is production plus remaining resource, to order of magnitude; endowment_source says how. Entries without an endowment key have none that can be defended. order: position in this file's sequence, so a consumer can list the named deposits in a fixed order (resources by first appearance, deposits within a resource as listed).",
+ "_doc": "The 31 named historical deposits (formerly a separate file; every original field kept unchanged, including its lat/lon placeholders tracked by Complaints/281 and its own conf, which describes the grade and share figures) plus three extra ancient sites. surveyed_lat/surveyed_lon give the real location where the deposit is a real named place; ids ending in _generic are placeholders and have none. endowment appears only where it could be justified and is production plus remaining resource, to order of magnitude; endowment_source says how. Entries without an endowment key have none that can be defended. order: position in this file's sequence, so a consumer can list the named deposits in a fixed order (resources by first appearance, deposits within a resource as listed). working_unknown: set where no source read gives a working date or a total endowment, so first_worked and endowment are absent on purpose and the deposit counts as unworked.",
  "entries": [
   {
    "id": "elba_hematite",
@@ -414,7 +414,8 @@
    "source": "Generic placeholder for geography.json's small 0.02 Italian silver share; silver is a trace constituent of argentiferous galena, not its own separate ore.",
    "deposit_type": "unspecified_placeholder",
    "status": "historic",
-   "order": 20
+   "order": 20,
+   "working_unknown": "UNKNOWN (D): a generic placeholder for a small Italian silver share, not a located working; no source gives a date or size. Listed as unworked in the opening stores."
   },
   {
    "id": "britannia_silver_generic",
@@ -431,7 +432,8 @@
    "source": "Silver content of British argentiferous lead ore (see britannia_lead); generic figure, no assay.",
    "deposit_type": "unspecified_placeholder",
    "status": "historic",
-   "order": 21
+   "order": 21,
+   "working_unknown": "UNKNOWN (D): a generic placeholder for silver in British argentiferous lead ore, not a located working; no source gives a date or size. Listed as unworked in the opening stores."
   },
   {
    "id": "hispania_silver",
@@ -451,7 +453,8 @@
    "surveyed_lat": 37.6,
    "surveyed_lon": -0.98,
    "surveyed_source": "Cartagena (Carthago Nova) silver district, Wikipedia",
-   "order": 22
+   "order": 22,
+   "working_unknown": "UNKNOWN (C): no source read gives a working date or a total endowment. Strabo 3.2.10 citing Polybius attests working on a large scale by the second century BCE (about 40,000 workers); Kay 2014, reported in an OUP chapter and a Geochemical Perspectives Letters article, infers about 35 t of silver a year from the 25,000 drachmae a day, a yearly rate at one date, not a total. Not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores. Primary to obtain: Domergue 1990."
   },
   {
    "id": "laurion_silver",
@@ -496,7 +499,8 @@
    "surveyed_lat": 37.7,
    "surveyed_lon": -6.6,
    "surveyed_source": "Riotinto, Huelva; from memory",
-   "order": 24
+   "order": 24,
+   "working_unknown": "UNKNOWN (D): no source read gives a working date or a total endowment. Delgado et al. 2021 (Onoba 9, citing Salkield 1970) give more than 20 million tonnes of slag, a ceiling on the smelted charge and not an endowment of silver. Not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores. Primary to obtain: Anguilano et al. 2010 and 2012, Domergue 1990."
   },
   {
    "id": "gaul_germania_tin_generic",
@@ -600,7 +604,9 @@
    "surveyed_lat": 46.31,
    "surveyed_lon": 23.13,
    "surveyed_source": "Rosia Montana, Wikipedia",
-   "order": 29
+   "order": 29,
+   "first_worked": 106,
+   "first_worked_source": "Roman exploitation after the conquest of 106 CE (data/world/resources.json gold note); UNESCO inscription for Rosia Montana, seen as a search summary only, gives about 500 t of gold over 166 years from 106 CE, which agrees with the endowment already here (precious-metal-mining-sources.md). Confidence D: a snippet."
   },
   {
    "id": "almaden_cinnabar",

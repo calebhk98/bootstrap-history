@@ -2,7 +2,7 @@
 household spreads a store across goods by that return. Pure functions; goods enter only as specs
 and prices, never by id."""
 import math
-from typing import Dict, Mapping, Optional
+from typing import Dict, Iterable, Mapping, Optional
 
 from sim.constants import declare
 
@@ -25,6 +25,12 @@ STORE_RETURN_SENSITIVITY = declare(
     unit="e-folds of weight per unit of yearly return", source=None, confidence="D",
     why="How strongly households shift a store toward the good that promises the better yearly return. "
         "Stands in for a portfolio choice that is not modelled; the value is an assumption.")
+STORE_SERVICE_UNLIMITED = declare(
+    "STORE_SERVICE_UNLIMITED", 1.0, kind="temporary_heuristic", unit="share of a held good's service counted",
+    source=None, confidence="D",
+    why="A held good's service is counted in full, though a household can use only so much plate or "
+        "ornament and the surplus of a hoard serves nothing. The satiation limit of the need is not "
+        "applied here; a household's own use of its hoard would replace this.")
 
 
 def carry_cost_share(spec: GoodSpec, price: float) -> float:
@@ -42,10 +48,26 @@ def expected_price_change(price: float, usual_price: Optional[float]) -> float:
     return STORE_PRICE_REVERSION_SPEED * math.log(usual_price / price)
 
 
-def carrying_return(spec: GoodSpec, price: float, usual_price: Optional[float]) -> float:
+def service_values_per_year(priced_needs: Iterable, specs: Mapping[str, GoodSpec]) -> Dict[str, float]:
+    """Money a held unit of each durable good saves a year by serving a need: its effect per unit over
+    its service life, at what a unit of that need costs the household anew (the need's price index).
+    Goods that serve no need, or are used up within the year, are absent. TEMPORARY HEURISTIC (see
+    `STORE_SERVICE_UNLIMITED`): no limit on how much of the need a household can use."""
+    values: Dict[str, float] = {}
+    for need in priced_needs:
+        for good, _price, effect, _share in need.goods:
+            spec = specs.get(good)
+            if spec is None or spec.service_life_years <= 0.0 or effect <= 0.0:
+                continue
+            values[good] = values.get(good, 0.0) + effect * need.price_index / spec.service_life_years
+    return values
+
+
+def carrying_return(spec: GoodSpec, price: float, usual_price: Optional[float],
+                    service_value: float = 0.0) -> float:
     """Expected yearly return on holding a unit, as a share of its price: the expected price change
-    less the cost of carrying it. No service is counted, since a good's service is not in its spec."""
-    return expected_price_change(price, usual_price) - carry_cost_share(spec, price)
+    and the value of the service it gives (`service_value`, money a year) less the cost of carrying it."""
+    return expected_price_change(price, usual_price) + service_value / price - carry_cost_share(spec, price)
 
 
 def split_by_return(returns: Mapping[str, float]) -> Dict[str, float]:

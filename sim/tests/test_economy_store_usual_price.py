@@ -48,7 +48,7 @@ class StoreHoldingTests(unittest.TestCase):
 
     def test_a_good_priced_above_its_usual_price_draws_a_smaller_share(self):
         plain = self.holding(store_view.View())
-        self.assertAlmostEqual(plain["metal_kg"], plain[OTHER])
+        self.assertGreater(plain["metal_kg"], plain[OTHER])     # the metal also serves a need, the other good does not
         view = UsualPriceView({"metal_kg": 50.0, OTHER: 95.0})
         risen = self.holding(view)
         self.assertLess(risen["metal_kg"], risen[OTHER])

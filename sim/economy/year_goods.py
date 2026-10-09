@@ -10,7 +10,7 @@ import math
 from typing import Dict, List, Tuple
 
 from . import (goods_market, households, market_curves, merchants, producers, seller_offers, settlement,
-               state_budget, taxes)
+               state_budget, state_store, taxes)
 from .market_memory import market_key
 from .market_memory_asks import (memory_reference_volume, note_bids, note_offers, price_after_no_bids,
                                  price_after_resumed_trade, wanted_at)
@@ -93,12 +93,16 @@ def merchant_orders(setup, record, view, area_map, carriage, order_book: OrderBo
 
 def state_orders(setup, record, view, area_map, order_book: OrderBook, keep) -> None:
     """The state offers what it holds beyond what its own lines will draw, at what holding it would net."""
-    state_budget.goods_bids(setup, record, view, area_map, order_book)
+    bids, store_offers, kept = state_store.orders(setup, record, view)
+    state_budget.goods_bids(setup, record, view, area_map, order_book, kept)
+    for bid in bids:
+        order_book.setdefault((bid.good, bid.area), ([], []))[0].append(bid)
+    add_orders(order_book, AgentOrders(offers=tuple(store_offers)))
     rate = view.interest_rate(setup.currency_id)
     from .inventory import holding_reservation
     offers = []
     for (good, tile), quantity in sorted(_held_stock(record.book, setup.state_agent).items()):
-        surplus = quantity - keep.get(good, 0.0)
+        surplus = quantity - keep.get(good, 0.0) - (kept.get(good, 0.0) if tile == setup.capital_tile else 0.0)
         if surplus <= 0.0 or good not in area_map.goods():
             continue
         area = area_map.area_of(good, tile)

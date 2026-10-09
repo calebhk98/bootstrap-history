@@ -8,7 +8,8 @@ from sim.constants import declare
 
 from .households_orders import HOUSEHOLD_TIME_PREFERENCE
 from .inventory import holding_reservation
-from .store_return import STORE_STORAGE_COST_PER_KG_YEAR, carrying_return, split_by_return
+from .store_return import (STORE_SERVICE_UNLIMITED, STORE_STORAGE_COST_PER_KG_YEAR, carrying_return,
+                           service_values_per_year, split_by_return)
 from .types import Bid, GoodId, GoodSpec, Offer
 
 STORE_MAX_SPOILAGE = declare(
@@ -46,10 +47,12 @@ STORE_PRIORITY = 2          # after the need tiers (floors, then surplus)
 
 def store_candidates(specs: Mapping[GoodId, GoodSpec], prices: Mapping[GoodId, float],
                      staple_price_per_kg: float,
-                     usual_prices: Optional[Mapping[GoodId, float]] = None) -> Dict[GoodId, float]:
+                     usual_prices: Optional[Mapping[GoodId, float]] = None,
+                     service_values: Optional[Mapping[GoodId, float]] = None) -> Dict[GoodId, float]:
     """Goods fit to hold as wealth, each with its share of the holding (sums to one; empty if none).
     The shares follow each good's expected carrying return (`store_return`), so a good whose price is
-    high against its usual price draws less and the stock, not the year's flow, settles the price."""
+    high against its usual price draws less and the stock, not the year's flow, settles the price.
+    `service_values` is what a unit saves a year by serving a need (`store_return.service_values_per_year`)."""
     returns = {}
     for good, spec in specs.items():
         price = prices.get(good, 0.0)
@@ -58,7 +61,8 @@ def store_candidates(specs: Mapping[GoodId, GoodSpec], prices: Mapping[GoodId, f
             continue
         if price / spec.unit_mass_kg < STORE_MIN_DENSITY_MULTIPLE * staple_price_per_kg:
             continue
-        returns[good] = carrying_return(spec, price, (usual_prices or {}).get(good))
+        service = STORE_SERVICE_UNLIMITED * (service_values or {}).get(good, 0.0)
+        returns[good] = carrying_return(spec, price, (usual_prices or {}).get(good), service)
     return split_by_return(returns)
 
 
@@ -98,7 +102,7 @@ def store_holding(cohort, view, specs: Mapping[GoodId, GoodSpec], priced) -> Tup
             usual = getattr(view, "usual_price", None)      # a view that keeps no price memory has none
             if usual is not None and usual(good, area):
                 usual_prices[good] = usual(good, area)
-    weights = store_candidates(specs, prices, staple, usual_prices)
+    weights = store_candidates(specs, prices, staple, usual_prices, service_values_per_year(priced, specs))
     return (weights, {good: prices[good] for good in weights},
             {good: view.stock(cohort.agent_id, good, cohort.tile) for good in weights})
 
