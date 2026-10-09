@@ -110,6 +110,11 @@ class ActorRegistry:
 				self._totals.forget(actor_id)
 				for holding in self._holders.values():
 					holding.discard(actor_id)
+		if record.kind not in ACTOR_CLASSES:
+			owner = record.kind.partition(":")[0] if ":" in record.kind else ""
+			raise ValueError("actor %s is of kind %r, which is not registered%s" % (
+				actor_id, record.kind, "; it comes from mod %s, which is not installed or whose code is not allowed" % owner
+				if owner else ""))
 		actor = ACTOR_CLASSES[record.kind](actor_id, record, make_policy(record.policy_kind))
 		if hasattr(type(actor), "rivals_of"):
 			# an actor that runs concerns in the shared market: it counts its rivals and is counted as one

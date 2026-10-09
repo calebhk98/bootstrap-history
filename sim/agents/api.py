@@ -27,6 +27,7 @@ from .country_view import CountryWorld
 from .government_foreign import ForeignGovernment
 from .player import Player
 from .stratum import Stratum, stratum_id
+from .declared_kind import DeclaredKind, register_declared_kinds
 from .strata_observed import observed_incomes
 from .strata_seed import seed_strata, strata_definitions, strata_spawner
 from .player_commands import CommandRejected, register_command
@@ -45,4 +46,4 @@ __all__ = ["demand_answer", "Actor", "RecordedActor", "Household", "HouseholdPar
            "THREAT_ARMY_RESPONSE", "SOLDIER_TRADE", "DOLE_MATERIAL", "FOOD_NEED", "cast_from_civilisations", "profile_from_civilisation", "seed_cast",
            "CountryWorld", "ForeignGovernment", "Player", "Stratum", "stratum_id", "seed_strata",
            "strata_definitions", "strata_spawner", "CommandRejected", "register_command", "exchange", "Trader",
-           "trader_entry"]
+           "trader_entry", "DeclaredKind", "register_declared_kinds"]

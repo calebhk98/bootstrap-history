@@ -1,5 +1,6 @@
 """Actors other than the founder, run once a year inside the simulation."""
 from sim.agents.api import ActorRegistry, edges, ledger, payroll, SOLDIER_TRADE
+from .actor_kinds_data import register_mod_actor_kinds
 from .agents_port import SimWorld
 from .agents_port_cast import seed_opening_cast
 from .state import ActorsState
@@ -15,6 +16,7 @@ class ActorsMixin:
             state.actors = ActorsState()
         registry = self.__dict__.get("_actor_registry")
         if registry is None or registry.state is not state.actors:
+            register_mod_actor_kinds()
             registry = ActorRegistry(state.actors)
             self._actor_registry = registry
         return registry
