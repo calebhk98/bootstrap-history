@@ -45,7 +45,7 @@ def _trades_of_available_recipes(production, reached):
 def _shares(production, reached):
     return workforce_spinup.need_shares_by_trade(
         production, set(reached), techniques_available_to,
-        workforce_carriage.carriage_for(reached).trades())
+        workforce_carriage.carriage_for(reached))
 
 
 class NeedSharesTests(unittest.TestCase):
