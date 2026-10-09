@@ -5,8 +5,7 @@ Part of the port. A partner is derived the way the home country is: its people s
 producers are placed by the economy's own opening from what its people demand and what its techniques
 allow, and its prices and wages are the economy's. Nothing about output or wages is authored here."""
 from sim.constants import declare
-from sim.geography.api import haversine_km, tile_facts, tiles_held
-from sim.geography import settlement
+from sim.geography.api import haversine_km, settlement, tile_facts, tiles_held
 from sim.world import census as census_module, demand
 
 from .data import load_civ
