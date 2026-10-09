@@ -31,7 +31,7 @@ the layout and the merge rules (new ids `<mod_id>:<name>`, `"override": true`, `
 
 ## Food
 
-`food_potential(tile_id, technique_factors)` answers
+`food_potential(tile_id, technique_factors, wild_stock=None)` answers
 
     {"tile": id, "kcal_per_year": {source_id: kcal}, "total_kcal_per_year": kcal,
      "people_supported": people, "species": {"hunted": [id], "herded": [id], "fished": [id], "foraged": [id]}}
@@ -39,6 +39,12 @@ the layout and the merge rules (new ids `<mod_id>:<name>`, `"override": true`, `
 Each source is sustainable yield (crops, pastoral, hunting, foraging, marine and freshwater
 fishing; ids come from data). `technique_factors` is `{source_id: multiplier}` chosen by the
 caller from what the actor knows; geography does not read the tech tree.
+
+`wild_stock` is the game's `{tile_id: {species_id: share of carrying capacity left}}`, a missing entry
+meaning a full stock. `hunted_kcal(tile_id, wild_stock)` gives `{species_id: kcal}` a year's hunting can take
+now; `draw_wild_stock(wild_stock, tile_id, kcal_taken)` returns the stock after hunters take that;
+`regrow_wild_stock(wild_stock)` returns it a year later. The game keeps and saves the stock. Labour's
+limit on gatherers (sim/labour/food_gathering.py) is applied by the caller, not here.
 
 ## Pathways
 
