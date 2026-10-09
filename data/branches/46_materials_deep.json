@@ -3438,7 +3438,13 @@
   "gov": 2,
   "sus": 1,
   "kb": "10_metallurgy.md",
-  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]",
+  "mechanics": {
+   "mine_works": {
+    "gravel_moved_multiple": 2.0,
+    "source": "temporary_heuristic: pressure monitors on piped heads break and wash gravel faster than the Roman collapse-and-flood method; no measured rate found. Multiple on the book gravel moved per labourer-hour of a hydraulic working."
+   }
+  }
  },
  {
   "id": "mt2_dredging_mining",

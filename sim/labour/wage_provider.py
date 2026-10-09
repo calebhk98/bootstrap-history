@@ -57,6 +57,15 @@ def validate_coin_standard(civ: Mapping[str, Any]) -> None:
         raise ValueError("civilization %r coin_standard needs a positive kg_per_unit" % name)
     if not isinstance(standard.get("source"), str) or not standard["source"].strip():
         raise ValueError("civilization %r coin_standard needs a source" % name)
+    fineness = standard.get("fineness")
+    if fineness is not None and (isinstance(fineness, bool) or not isinstance(fineness, (int, float))
+                                 or not 0.0 < fineness <= 1.0):
+        raise ValueError("civilization %r coin_standard fineness must be a share above 0 and at most 1" % name)
+
+
+def coin_gross_kg_per_unit(standard: Mapping[str, Any]) -> float:
+    """Mass of one coin: the metal it stands for over its fineness (1 when none is stated)."""
+    return standard["kg_per_unit"] / standard.get("fineness", 1.0)
 
 
 def coin_standard(civ: Mapping[str, Any]) -> Dict[str, Any]:

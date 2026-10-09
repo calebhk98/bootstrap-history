@@ -23,7 +23,8 @@ def _terms(deposit):
     return mine_works.works_hours_per_tonne_ore(
         deposit.depth_class, deposit.hardness_class,
         deposits._lift_hours_per_tonne_metre(),
-        deposits.shaft_depth_metres(deposit), mine_fire_setting.MINING_SHIFT_HOURS)
+        deposits.shaft_depth_metres(deposit), mine_fire_setting.MINING_SHIFT_HOURS,
+        drainage_hours_per_tonne_metre=deposits.drainage_lift_hours_per_tonne_metre())
 
 
 class MineWorks(unittest.TestCase):
