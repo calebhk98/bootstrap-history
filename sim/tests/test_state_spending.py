@@ -82,9 +82,9 @@ check("soldiers kept under arms owe no poll tax, so the people it is assessed on
       SimWorld(drawn).state_revenue() < SimWorld(free).state_revenue(),
       (SimWorld(drawn).state_revenue(), SimWorld(free).state_revenue()))
 slump = sim()
-slump.state.economy.farm_last_harvest_kg = 1.0e9
+slump.state.holdings.farm_last_harvest_kg = 1.0e9
 steady = sim()
-steady.state.economy.farm_last_harvest_kg = 2.0e9
+steady.state.holdings.farm_last_harvest_kg = 2.0e9
 check("a failed harvest cuts what the state can take",
       SimWorld(slump).state_revenue() < SimWorld(steady).state_revenue(),
       (SimWorld(slump).state_revenue(), SimWorld(steady).state_revenue()))
@@ -128,7 +128,7 @@ check("the purse still equals income less outlays after the works",
                                   - sum(hoard_treasury.record.outlays.values()))) < 1e-6 * 1.0e18, hoard_treasury.money)
 collapse = sim()
 collapse.civ["state_revenue"] = [form for form in collapse.civ["state_revenue"] if form["basis"] == "harvest"]
-collapse.state.economy.farm_last_harvest_kg = 1.0  # what the farms yield all but stops
+collapse.state.holdings.farm_last_harvest_kg = 1.0  # what the farms yield all but stops
 for _year in range(8):
     one_year(collapse)
 check("when revenue collapses the reserve lasts a few years, then the state goes short and seeks it of the taxpayers it sees",

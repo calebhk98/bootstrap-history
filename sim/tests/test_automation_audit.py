@@ -98,7 +98,7 @@ def _material_step(binding, demand_key, policy):
     manual.state.founder.policy[policy] = True
     manual.annual_material_demand = lambda: {demand_key: 1_000_000.0}
     manual.resource_throttle = lambda: 0.3
-    manual.state.economy.binding = binding
+    manual.state.holdings.binding = binding
     manual._step_materials()
     return [row for row in manual.state.household.automation_audit]
 

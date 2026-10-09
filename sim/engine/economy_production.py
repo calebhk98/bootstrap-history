@@ -155,6 +155,7 @@ class ProductionMixin:
         """
         scenario = self.state.scenario
         economy = self.state.economy
+        holdings = self.state.holdings
         projects = self.state.projects
         household = self.state.household
         governance = self.state.governance
@@ -168,7 +169,7 @@ class ProductionMixin:
             self.household.workforce_version,
             self.household.institution_units_version,
             household.wage_hours_this_year,
-            getattr(economy, "farm_hectares", 0.0) or 0.0,
+            getattr(holdings, "farm_hectares", 0.0) or 0.0,
             getattr(household, "freedmen", 0.0) or 0.0,
             getattr(household, "slaves", 0.0) or 0.0,
             getattr(governance, "gov", 0.0) or 0.0,

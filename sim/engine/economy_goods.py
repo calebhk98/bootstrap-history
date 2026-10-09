@@ -561,7 +561,8 @@ class GoodsMixin:
             return 0.0
         self.pay_edge(edges.EDGE_LANDOWNERS, cost, "farmland bought")
         economy = self.state.economy
-        economy.farm_hectares = (getattr(economy, "farm_hectares", 0.0) or 0.0) + hectares
+        holdings = self.state.holdings
+        holdings.farm_hectares = (getattr(holdings, "farm_hectares", 0.0) or 0.0) + hectares
         return hectares
 
     def housing_price_per_place(self):
@@ -624,6 +625,7 @@ class GoodsMixin:
         # Not serialized because: pure transient derived state recomputed on load
         scenario = self.state.scenario
         economy = self.state.economy
+        holdings = self.state.holdings
         projects = self.state.projects
         shared_key = (
             scenario.year,
@@ -631,7 +633,7 @@ class GoodsMixin:
             economy.output_per_head,
             self.household.operating_version,
             self.household.done_version,
-            getattr(economy, "farm_hectares", 0.0) or 0.0,
+            getattr(holdings, "farm_hectares", 0.0) or 0.0,
             self.actor_market_version(),
         )
         cache = getattr(self.household, "_income_factor_cache", None)
@@ -714,6 +716,7 @@ class GoodsMixin:
         projects = self.state.projects
         scenario = self.state.scenario
         economy = self.state.economy
+        holdings = self.state.holdings
 
         # Cached value: category-level operating revenue factor
         # Dependencies: shared_key and household farm_hectares
@@ -725,7 +728,7 @@ class GoodsMixin:
             economy.output_per_head,
             self.household.operating_version,
             self.household.done_version,
-            getattr(economy, "farm_hectares", 0.0) or 0.0,
+            getattr(holdings, "farm_hectares", 0.0) or 0.0,
             self.actor_market_version(),
         )
         cache = getattr(self.household, "_goods_mkt_op_factor_cache", None)

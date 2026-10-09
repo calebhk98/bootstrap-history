@@ -645,13 +645,13 @@ class MaterialSupplyMixin:
         """Tonnes a year of a tracked commodity you supply yourself, not
         bought from anyone: mines you sank, woodland you bought, nitre beds
         you built. See MATERIAL_CHECKS for which tag means what."""
-        economy = self.state.economy
+        holdings = self.state.holdings
         if tag == "forest1":
-            return economy.forest_ha * self.CHARCOAL_PER_HA
+            return holdings.forest_ha * self.CHARCOAL_PER_HA
         if tag == "forest4":
-            return economy.forest_ha * self.CHARCOAL_PER_HA * self.FIREWOOD_PER_CHARCOAL_MASS_RATIO
+            return holdings.forest_ha * self.CHARCOAL_PER_HA * self.FIREWOOD_PER_CHARCOAL_MASS_RATIO
         if tag == "nitre":
-            return economy.nitre_bed_m2 * self.NITRE_YIELD_T_PER_M2
+            return holdings.nitre_bed_m2 * self.NITRE_YIELD_T_PER_M2
         if tag.startswith("mine:"):
             mat = tag[5:]
             # DEPLETION AND TECHNOLOGY, not the nominal tonnage you sank
@@ -876,9 +876,10 @@ class MaterialSupplyMixin:
         specific answers (wire_chain_report's propagate_demand) rather than
         a second source of truth Sim's own state has to agree with."""
         economy = self.state.economy
-        stock = getattr(economy, "_material_stock_ledger", None)
+        holdings = self.state.holdings
+        stock = getattr(holdings, "_material_stock_ledger", None)
         if stock is None:
-            stock = economy._material_stock_ledger = _StockLedger()
+            stock = holdings._material_stock_ledger = _StockLedger()
         elif not isinstance(stock, _StockLedger):
             # A RESUMED SAVE HANDS THIS BACK AS A PLAIN DICT. It is in
             # SAVE_FIELDS so that a reloaded game is the same game - without it
@@ -886,7 +887,7 @@ class MaterialSupplyMixin:
             # from the run that was saved, the same class of fault as a fog
             # that could be rewound by reloading. JSON has no Counter, so
             # promote whatever came back before anything adds to it.
-            stock = economy._material_stock_ledger = _StockLedger(stock)
+            stock = holdings._material_stock_ledger = _StockLedger(stock)
         if stock.unswept:
             non_physical = self.NON_PHYSICAL_CAPACITY_KEYS
             for key in [key for key in stock if key in non_physical or key.endswith("_hours")]:
@@ -898,11 +899,11 @@ class MaterialSupplyMixin:
         """Stock as it stood when this year's accounting began. Every recompute
         of the year works from this snapshot (plus trades made since), so the
         year's own output is banked once however often it is recomputed."""
-        economy = self.state.economy
+        holdings = self.state.holdings
         year = self.state.scenario.year
-        record = economy._material_stock_opening
+        record = holdings._material_stock_opening
         if not record or record.get("year") != year:
-            record = economy._material_stock_opening = {
+            record = holdings._material_stock_opening = {
                 "year": year, "tonnes": dict(self._material_stock())}
         return record["tonnes"]
 
@@ -1005,10 +1006,10 @@ class MaterialSupplyMixin:
         _own_material_supply already knows how to read, curated commodity
         or not."""
         out = {(material, "mine:" + material) for material, capacity in self.mine_capacity.items() if capacity > 0}
-        economy = self.state.economy
-        if economy.forest_ha > 0:
+        holdings = self.state.holdings
+        if holdings.forest_ha > 0:
             out.add(("charcoal", "forest1"))
             out.add(("charcoal", "forest4"))
-        if economy.nitre_bed_m2 > 0:
+        if holdings.nitre_bed_m2 > 0:
             out.add(("saltpetre", "nitre"))
         return out

@@ -170,11 +170,11 @@ def _test_economy_and_founder_and_scenario_state():
 		return False, "founder_alive mutation via sim did not update state.founder.founder_alive"
 
 	# EconomyState
-	if s.mines != s.state.economy.mines:
+	if s.mines != s.state.holdings.mines:
 		return False, "mines mismatch"
 	s.mines.append({"material": "iron", "capacity": 1.0, "opened_year": 100, "capex_paid": 50.0, "intensity_yrs": 0.0})
-	if len(s.state.economy.mines) != 1:
-		return False, f"mines mutation did not update state.economy.mines: {s.state.economy.mines}"
+	if len(s.state.holdings.mines) != 1:
+		return False, f"mines mutation did not update state.holdings.mines: {s.state.holdings.mines}"
 
 	return True, "economy, founder, and scenario live on respective typed state objects"
 
@@ -312,11 +312,11 @@ def _test_all_subsystems_full_coverage_sync():
 
 	# 2. EconomyState land and resources
 	s.farm_hectares = 45.0
-	if s.state.economy.farm_hectares != 45.0:
+	if s.state.holdings.farm_hectares != 45.0:
 		return False, "farm_hectares failed to sync to state.economy"
 
 	s.forest_ha = 12.5
-	if s.state.economy.forest_ha != 12.5:
+	if s.state.holdings.forest_ha != 12.5:
 		return False, "forest_ha failed to sync to state.economy"
 
 	s.money_real = 0.85
@@ -338,7 +338,7 @@ def _test_all_subsystems_full_coverage_sync():
 
 	# 4. ScenarioState and state root
 	s.goal_year = 300
-	if s.state.scenario.goal_year != 300:
+	if s.state.seat_progress.goal_year != 300:
 		return False, "goal_year failed to sync to state.scenario"
 
 	s.fog = False

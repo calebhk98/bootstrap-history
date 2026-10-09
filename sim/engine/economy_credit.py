@@ -123,7 +123,7 @@ class CreditMixin:
         # A collegium's credit is linear in its units (collateral, not fame); land is real collateral.
         base = self.effect_sum("credit_line", base)
         base += max(0.0, self.state.household.reputation) * self.CREDIT_LINE_PER_REPUTATION_POINT
-        base += self.state.economy.forest_ha * self.CREDIT_LINE_PER_FOREST_HA                   # also collateral
+        base += self.state.holdings.forest_ha * self.CREDIT_LINE_PER_FOREST_HA                   # also collateral
         # Floor of one year's running costs: everyone can run a tab for a season.
         # One upkeep() call; if already provided, reuse it to avoid silent duplication.
         upkeep_amount = self.upkeep() if _upkeep is None else _upkeep

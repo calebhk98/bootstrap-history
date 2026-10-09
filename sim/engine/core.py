@@ -625,7 +625,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
                 self._wrap_seat_containers()
         finally:
             bind_seat(self.state, acting)
-        cleared = getattr(self.state.economy, "farm_cleared_hectares", None)
+        cleared = getattr(self.state.holdings, "farm_cleared_hectares", None)
         if cleared is not None:
             self.labour.set_farm_area(cleared)
         # Synchronize demographic cohort floats
@@ -654,7 +654,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         # Reset transient caches
         self._reset_economic_caches()
         # the demand the last throttle saw is read before the next one, so it is carried
-        held_demand = self.state.economy.material_demand_at_last_throttle
+        held_demand = self.state.holdings.material_demand_at_last_throttle
         self.household._material_demand_cache = None if held_demand is None else collections.Counter(held_demand)
 
     def _wrap_seat_containers(self):
@@ -1530,9 +1530,9 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         # so a stale or missing value right after a fresh `Sim()` (before
         # this method has run once) costs nothing correctness-sensitive.
         self._last_farm_year = farm_year
-        self.state.economy.farm_last_shortfall_kg = farm_year.food_shortfall_kg
-        self.state.economy.farm_last_harvest_kg = farm_year.gross_harvest_kg
-        self.state.economy.farm_last_marginal_product = (
+        self.state.holdings.farm_last_shortfall_kg = farm_year.food_shortfall_kg
+        self.state.holdings.farm_last_harvest_kg = farm_year.gross_harvest_kg
+        self.state.holdings.farm_last_marginal_product = (
             farm_year.marginal_product_last_hour_kg_per_hour)
         self.labour.update_wages()
 
@@ -2257,7 +2257,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         self.state.projects.done_year = {}
         horizon = horizon or self.cfg["horizon_years"]
         end = self.cfg["start_year"] + horizon
-        while self.state.scenario.year < end and not self.state.founder.dead_reason and self.state.scenario.goal_year is None:
+        while self.state.scenario.year < end and not self.state.founder.dead_reason and self.state.seat_progress.goal_year is None:
             self.step()
         return self
 

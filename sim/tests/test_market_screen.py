@@ -59,7 +59,7 @@ check("offset and limit page the materials table",
       == list(_priceable)[len(_rows):len(_rows) + 5],
       _page2["materials"]["rows"])
 _mine_sim = sim()
-_mine_sim.state.economy.forest_ha = 10.0
+_mine_sim.state.holdings.forest_ha = 10.0
 _all = S._agent_dispatch(_mine_sim, NODES, {"cmd": "market", "limit": 1000})
 _charcoal = next(row for row in _all["materials"]["rows"] if row["material"] == "charcoal_kg")
 check("a material you produce is flagged as own supply",

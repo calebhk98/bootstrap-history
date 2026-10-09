@@ -15,6 +15,7 @@ def _test_automatic_field_persistence():
 		EconomyState,
 		FounderState,
 		GovernanceState,
+		HoldingsState,
 		HouseholdState,
 		PopulationState,
 		ProjectsState,
@@ -36,7 +37,8 @@ def _test_automatic_field_persistence():
 		done={"stone_cutting"},
 		operating={"stone_cutting"},
 	)
-	econ = EconomyState(
+	econ = EconomyState()
+	holdings = HoldingsState(
 		mines=[{"id": "m1", "ore": "iron", "capex": 500.0}],
 		forest_ha=120.0,
 		shortages={"charcoal": 3},
@@ -50,6 +52,7 @@ def _test_automatic_field_persistence():
 		household=hh,
 		projects=projects,
 		economy=econ,
+		holdings=holdings,
 		governance=gov,
 		founder=founder,
 		scenario=scenario,
@@ -74,8 +77,8 @@ def _test_automatic_field_persistence():
 		return False, f"Projects active missing 'arch': {restored.projects.active}"
 	if restored.projects.active["arch"].ph_left != 80.0:
 		return False, f"Active project ph_left mismatch: {restored.projects.active['arch'].ph_left}"
-	if restored.economy.shortages.get("charcoal") != 3:
-		return False, f"Shortages mismatch: {restored.economy.shortages}"
+	if restored.holdings.shortages.get("charcoal") != 3:
+		return False, f"Shortages mismatch: {restored.holdings.shortages}"
 
 	return True, "Automatic field persistence verified"
 
@@ -123,6 +126,7 @@ def _test_runtime_type_reconstruction():
 	from sim.engine.state import (
 		ActiveProjectState,
 		EconomyState,
+		HoldingsState,
 		HouseholdState,
 		ProjectsState,
 		SimulationState,
@@ -140,12 +144,14 @@ def _test_runtime_type_reconstruction():
 		operating={"spinning_wheel"},
 		failed_attempts=collections.defaultdict(int, {"steam_engine": 2}),
 	)
-	econ = EconomyState(shortages=collections.Counter({"iron": 4}))
+	econ = EconomyState()
+	holdings = HoldingsState(shortages=collections.Counter({"iron": 4}))
 
 	state = SimulationState(
 		household=hh,
 		projects=projects,
 		economy=econ,
+		holdings=holdings,
 		governance=None,
 		founder=None,
 		scenario=None,
@@ -160,8 +166,8 @@ def _test_runtime_type_reconstruction():
 		return False, f"operating is not set: {type(restored.projects.operating)}"
 	if not isinstance(restored.projects.failed_attempts, collections.defaultdict):
 		return False, f"failed_attempts is not defaultdict: {type(restored.projects.failed_attempts)}"
-	if not isinstance(restored.economy.shortages, collections.Counter):
-		return False, f"shortages is not Counter: {type(restored.economy.shortages)}"
+	if not isinstance(restored.holdings.shortages, collections.Counter):
+		return False, f"shortages is not Counter: {type(restored.holdings.shortages)}"
 	if not isinstance(restored.projects.active["loom"], ActiveProjectState):
 		return False, f"active['loom'] is not ActiveProjectState: {type(restored.projects.active['loom'])}"
 

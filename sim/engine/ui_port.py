@@ -159,7 +159,7 @@ def set_goal_closure(sim, closure_set):
 
 
 def goal_years(sim):
-    return dict(sim.state.scenario.goal_years)
+    return dict(sim.state.seat_progress.goal_years)
 
 
 def set_goal(sim, node_id):
@@ -210,9 +210,9 @@ def set_said_parallelism(sim, said):
     sim._said_parallelism = said
 
 
-def said_explanations(scenario):
-    return scenario._said_explanations
+def said_explanations(seat_progress):
+    return seat_progress._said_explanations
 
 
-def set_said_explanations(scenario, said):
-    scenario._said_explanations = said
+def set_said_explanations(seat_progress, said):
+    seat_progress._said_explanations = said

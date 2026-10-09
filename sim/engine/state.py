@@ -14,6 +14,7 @@ from typing import (
 
 from sim.agents.api import ActorRecord, ActorsState, CapitalMarketRecord  # noqa: F401
 from sim.engine import cash_book
+from sim.engine.state_holdings import HoldingsState, SeatProgressState
 from sim.invalidating import ActiveProjectState, _InvalidatingDict
 
 if TYPE_CHECKING:
@@ -200,31 +201,17 @@ class ProjectsState:
 @dataclass
 class EconomyState:
 	"""Physical plants, extractive workings, durable inventory, and material flows."""
-	mines: List[Dict[str, Any]] = field(default_factory=list)
-	mine_pending: Dict[str, float] = field(default_factory=dict)
-	mine_ready: Dict[str, int] = field(default_factory=dict)
-	mine_cost_paid: float = 0.0
-	mine_tranches: Optional[List[Any]] = None
-	shortages: collections.Counter = field(default_factory=collections.Counter)
-	throttle: float = 1.0
-	binding: Optional[str] = None
-	shortage_condition: Optional[Dict[str, Any]] = None
-	forest_ha: float = 0.0
 	# edge key -> {way: true} of the roads and track built (ways.py); geography's routes read it
 	improvements: Dict[str, Dict[str, bool]] = field(default_factory=dict)
 	# edge key -> {way: year it is finished} of the roads and track paid for and being built (ways.py)
 	ways_under_construction: Dict[str, Dict[str, float]] = field(default_factory=dict)
-	nitre_bed_m2: float = 0.0
 	agent_economy: Dict[str, Any] = field(default_factory=dict)   # the agent economy's record (economy_port_year.py)
-	market_pressure: float = 0.0
 	output_factor: float = 1.0
 	# real output per person over the opening's, measured when the market closes (real_output.py)
 	output_per_head: float = 1.0
 	# material -> its price in labour hours the first year households were offered it, which values it in real output
 	introduction_prices: Dict[str, float] = field(default_factory=dict)
 	money_real: float = 1.0
-	_material_stock_ledger: Optional[Dict[str, float]] = None
-	_material_stock_opening: Optional[Dict[str, Any]] = None
 	# commodity -> society capacity, stock and last price ratio (market_clearing.py)
 	market_book: Dict[str, Dict[str, float]] = field(default_factory=dict)
 	# the year's purchases and sales by commodity and party, and the founder's draws (goods_market_api.py)
@@ -238,22 +225,11 @@ class EconomyState:
 	# foreign economy id -> goods and coin paid, and the route's lift (foreign_payments.py)
 	foreign_ledger: Dict[str, Dict[str, float]] = field(default_factory=dict)
 	capacity_pool: Dict[str, float] = field(default_factory=dict)
-	farm_hectares: Optional[float] = None
-	farm_stock_kg: float = 0.0
-	farm_cleared_hectares: Optional[float] = None
-	farm_last_shortfall_kg: Optional[float] = None
-	# gross harvest of the last year the farm closed, in kilograms of grain (0 before the first)
-	farm_last_harvest_kg: float = 0.0
 	# year -> value of goods this society imported ("in") and exported ("out") that year, in its money;
 	# the state's customs read the last completed year (foreign_payments.py)
 	foreign_trade_by_year: Dict[str, Dict[str, float]] = field(default_factory=dict)
-	farm_last_marginal_product: Optional[float] = None
 	society_labour_hours: Dict[str, float] = field(default_factory=dict)
-	farm_hours_needed: Optional[float] = None
 	wage_tightness_factors: Dict[str, float] = field(default_factory=dict)
-	# tonnes a year per material the last throttle saw; the next year's prices read it before it is recomputed
-	material_demand_at_last_throttle: Optional[Dict[str, float]] = None
-	_dashboard_history: Optional[List[Any]] = None
 
 
 @dataclass
@@ -281,20 +257,12 @@ class FounderState:
 class ScenarioState:
 	"""Simulation scenario configuration and timeline."""
 	year: int = 100
-	goal_year: Optional[int] = None
-	goal_years: Dict[str, int] = field(default_factory=dict)  # goal id -> year it was reached as the formal goal
 	weather_salt: int = 0     # this game's own weather history, drawn from its dice (Complaint 384)
-	dashboard_history_years: Optional[int] = None  # cap dashboard history to N most recent years; None = no cap
 	_said_debasement: Optional[int] = None
 	_said_output: Optional[Dict[str, int]] = None
-	_said_scandal: int = 0
 	_said_wage_cascade: int = -999    # last year a wage-cascade note was printed
 	_literacy_said: int = -999        # last year a literacy-census note was printed
 	_said_condition: Set[str] = field(default_factory=set)  # hazard-condition messages already printed once
-	_said_parallelism: Optional[bool] = None
-	_said_command_index: Optional[bool] = None
-	_said_explanations: Optional[Dict[str, int]] = None
-	score_last_seen: Optional[Dict[str, Any]] = None
 
 
 @dataclass
@@ -311,11 +279,13 @@ class PopulationState:
 @dataclass
 class SimulationState:
 	"""Root coordinator aggregating authoritative persistent subsystem states."""
-	# household, projects and founder alias the acting seat's objects and are not saved (seats are)
+	# household, projects, founder, governance, holdings and seat_progress alias the acting seat's objects and are not saved (seats are)
 	household: Optional[HouseholdState] = field(default=None, metadata={"alias": True})
 	projects: Optional[ProjectsState] = field(default=None, metadata={"alias": True})
 	economy: Optional[EconomyState] = None
-	governance: Optional[GovernanceState] = None
+	governance: Optional[GovernanceState] = field(default=None, metadata={"alias": True})
+	holdings: Optional[HoldingsState] = field(default=None, metadata={"alias": True})
+	seat_progress: Optional[SeatProgressState] = field(default=None, metadata={"alias": True})
 	founder: Optional[FounderState] = field(default=None, metadata={"alias": True})
 	seats: Dict[str, "SeatState"] = field(default_factory=dict)
 	acting_seat: str = "founder"
@@ -337,7 +307,10 @@ class SimulationState:
 		from sim.engine.state_seat import FIRST_SEAT_ID, SeatState, bind_seat
 		if not self.seats:   # built from the three objects directly: they become the first seat
 			self.acting_seat = FIRST_SEAT_ID
-			self.seats[FIRST_SEAT_ID] = SeatState(self.household, self.projects, self.founder)
+			given = {name: getattr(self, name) for name in ("governance", "holdings", "seat_progress")}
+			self.seats[FIRST_SEAT_ID] = SeatState(
+				self.household, self.projects, self.founder,
+				**{name: value for name, value in given.items() if value is not None})
 		bind_seat(self, self.acting_seat)
 
 	@property
@@ -355,6 +328,8 @@ ALL_STATE_CLASSES = (
 	EconomyState,
 	GovernanceState,
 	FounderState,
+	HoldingsState,
+	SeatProgressState,
 	ScenarioState,
 	PopulationState,
 	ActorsState,

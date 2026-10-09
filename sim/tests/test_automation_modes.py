@@ -60,17 +60,17 @@ mined = sim(capital=5_000_000_000_000.0, manual=False)
 mined.state.founder.policy["auto_mine"] = True
 mined.annual_material_demand = lambda: {"coal_kg": 1_000_000.0}
 mined.resource_throttle = lambda: 0.3
-mined.state.economy.binding = "coal"
+mined.state.holdings.binding = "coal"
 mined._step_materials()
 order_rows = [row for row in mined.state.household.automation_audit if row["action"] == "mine"]
 check("the mine row carries an order id", len(order_rows) == 1 and order_rows[0].get("order"), order_rows)
-tranches = [tranche for tranche in mined.state.economy.mine_tranches if tranche[0] == "coal"]
+tranches = [tranche for tranche in mined.state.holdings.mine_tranches if tranche[0] == "coal"]
 check("the tranche it sank carries the same order id", tranches and tranches[0][4] == order_rows[0]["order"], tranches)
 mined.state.scenario.year = tranches[0][2]
 mined.commission_mines()
-working = [each for each in mined.state.economy.mines if each["material"] == "coal"]
+working = [each for each in mined.state.holdings.mines if each["material"] == "coal"]
 check("the working it became still names the order", working and working[0].get("order") == order_rows[0]["order"], working)
 
 by_hand = sim(capital=5_000_000_000_000.0, manual=True)
 by_hand.open_mine("coal", 10.0)
-check("a mine ordered by hand has no order id", by_hand.state.economy.mine_tranches[0][4] == "", by_hand.state.economy.mine_tranches)
+check("a mine ordered by hand has no order id", by_hand.state.holdings.mine_tranches[0][4] == "", by_hand.state.holdings.mine_tranches)

@@ -270,13 +270,13 @@ class BondageMixin:
         # A town's slave market has a depth. Buying beyond it bids the price up.
         price = self.slave_quote(n_people)
         household = self._world.state.household
-        economy = self._world.state.economy
+        holdings = self._world.state.holdings
         if not self._world.can_pay(price):
             household._last_buy_refusal = self._world.refusal_text("%d slaves" % n_people, price)
             return 0
         self._world.pay_edge(self._world.EDGE_SLAVE_TRADERS, price, "slaves bought")
         household.slaves += n_people
-        economy.market_pressure = economy.market_pressure + n_people
+        holdings.market_pressure = holdings.market_pressure + n_people
         # Untrained on arrival. They become productive through household.training.
         household.training.append([n_people * self.WORKER_EQUIVALENT_UNTRAINED, self._world.state.scenario.year + self.TRAINING_YEARS])
         return n_people
