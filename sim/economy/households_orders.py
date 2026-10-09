@@ -11,7 +11,7 @@ The sum of every bid's budget never exceeds cash: floors are budgeted first (wit
 rise), surplus spending only from what remains.
 """
 import math
-from typing import List, Mapping, Optional
+from typing import Dict, List, Mapping, Optional
 
 from sim.constants import declare
 
@@ -74,6 +74,29 @@ def _durable_ratio(good: GoodId, flow: float, held: float, specs: Mapping[GoodId
     return max(0.0, flow * scale * spec.service_life_years - held + wear) / flow
 
 
+def _smoothed_flow_by_good(cohort: Cohort, priced: List[PricedNeed], basket: Basket
+                           ) -> Dict[GoodId, float]:
+    """The yearly flow of each good the smoothed surplus (smoothed spending over smoothed floor cost) buys,
+    with the goods the cohort could afford on it: it sizes the stock of a durable that a bad year, in which
+    the floors take nearly all spending or a good is unaffordable, would otherwise size at nothing."""
+    if cohort.expected_spending <= 0.0 or cohort.expected_floor_cost <= 0.0:
+        return {}
+    stock_floors, stock_totals = need_units(priced, basket, cohort.people,
+                                            cohort.expected_spending - cohort.expected_floor_cost)
+    flows: Dict[GoodId, float] = {}
+    for need in priced:
+        need_id = need.spec.need_id
+        affordable, affordable_share, household_cap = affordable_goods(
+            need.goods, household_budget_for_need(stock_totals[need_id], need.price_index, cohort.people),
+            need.spec.subsistence_per_person > 0.0)
+        for good, price, effect, share in need.goods:
+            if affordable[good]:
+                per_unit = need.price_index * share / price / affordable_share
+                flows[good] = flows.get(good, 0.0) + (stock_floors[need_id] + max(
+                    0.0, stock_totals[need_id] - stock_floors[need_id])) * per_unit
+    return flows
+
+
 def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year: float,
                  basket: Basket, specs: Mapping[GoodId, GoodSpec],
                  priced: Optional[List[PricedNeed]] = None) -> AgentOrders:
@@ -100,9 +123,13 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
     spending = max(0.0, min(cash, income_this_year
                             + currency.spending_adjustment(cash + claims + store_value, keep, income_this_year)))
     floors, totals = need_units(priced, basket, cohort.people, spending - floor_cost)
+    # the stock of a durable is sized on the expected flow: this year's flow scaled by expected over actual
+    # spending, but never below the flow the smoothed surplus (smoothed spending over smoothed floor cost)
+    # buys, since the scaled flow vanishes when the floors take nearly all of a bad year's spending
+    scale = durable_stock.expected_flow_scale(cohort.expected_spending, spending)
+    smoothed_flow = _smoothed_flow_by_good(cohort, priced, basket)
     rows = []
     flow_by_good = {}
-    scale = durable_stock.expected_flow_scale(cohort.expected_spending, spending)
     for need in priced:
         need_id = need.spec.need_id
         ceilings = need.ceilings or price_ceilings(need.goods)
@@ -116,9 +143,11 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
             per_unit = need.price_index * share / price / affordable_share
             floor_quantity = floors[need_id] * per_unit
             flexible_quantity = max(0.0, totals[need_id] - floors[need_id]) * per_unit
-            flow_by_good[good] = flow_by_good.get(good, 0.0) + floor_quantity + flexible_quantity
-            ratio = _durable_ratio(good, floor_quantity + flexible_quantity,
-                                   view.stock(cohort.agent_id, good, cohort.tile), specs, scale)
+            flow = floor_quantity + flexible_quantity
+            flow_by_good[good] = flow_by_good.get(good, 0.0) + flow
+            stock_flow = max(flow * scale, smoothed_flow.get(good, 0.0))
+            ratio = _durable_ratio(good, flow, view.stock(cohort.agent_id, good, cohort.tile), specs,
+                                   stock_flow / flow if flow > 0.0 else 1.0)
             if ratio > 0.0 and floor_quantity + flexible_quantity > 0.0:
                 rows.append((need.spec.subsistence_per_person > 0.0, good, price,
                              floor_quantity * ratio, flexible_quantity * ratio, ceiling))
@@ -146,7 +175,9 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
     offers = ()
     if weights:
         # stock kept in use serves the needs and is not savings, so the store sees only the rest
-        in_use = durable_stock.in_use_stock(flow_by_good, specs, scale, households_store.STORE_REBALANCE_BAND)
+        stock_flow_by_good = {good: max(flow_by_good.get(good, 0.0) * scale, smoothed_flow.get(good, 0.0))
+                              for good in set(flow_by_good) | set(smoothed_flow)}
+        in_use = durable_stock.in_use_stock(stock_flow_by_good, specs, 1.0, households_store.STORE_REBALANCE_BAND)
         held = {good: max(0.0, quantity - in_use.get(good, 0.0)) for good, quantity in held.items()}
         real_rate = view.interest_rate(area_currency) - cohort.expected_inflation
         above_buffer = cash + claims + store_value - target

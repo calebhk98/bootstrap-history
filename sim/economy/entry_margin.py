@@ -81,14 +81,17 @@ def margin_entry_plans(setup, record, view, area_map, bids_by_market: Mapping[Tu
         ranked = recipes_by_cost(setup, record, view, good, area.anchor_tile, makers[good])
         if not ranked:
             continue
+        # the margin must be there in the smoothed price and in the year's price: entry that waited on the
+        # smoothed price alone kept adding makers for years after the price had fallen to cost
         record.margin_years[key] = margin_streak(
-            record.margin_years.get(key, 0), expected, ranked[0][1] * (1.0 + ENTRY_PRICE_MARGIN_SHARE))
+            record.margin_years.get(key, 0), min(expected, price) if price > 0.0 else expected,
+            ranked[0][1] * (1.0 + ENTRY_PRICE_MARGIN_SHARE))
         if (good, area_id) in skip or not margin_has_lasted(record.margin_years[key]):
             continue
         room = MARGIN_ENTRY_GROWTH_SHARE * capacity
         for recipe_id, cost in ranked:
             entry_price = cost * (1.0 + ENTRY_PRICE_MARGIN_SHARE)
-            if entry_price >= expected or room <= 0.0:
+            if entry_price >= min(expected, price if price > 0.0 else expected) or room <= 0.0:
                 break
             gap = gap_at_entry_price(bids, entry_price, price, capacity)
             added = min(MARGIN_ENTRY_SHARE_OF_GAP * gap, room)

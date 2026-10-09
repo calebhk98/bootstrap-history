@@ -45,6 +45,7 @@ class Cohort:
     last_year_income: float = 0.0
     last_year_spending: float = 0.0
     expected_spending: float = 0.0     # smoothed spending that sizes the stock of durables it wants
+    expected_floor_cost: float = 0.0   # smoothed cost of the cohort's need floors; spending beyond it sizes durables
     unmet_floor_by_need: Dict[str, float] = field(default_factory=dict)   # need units short of the floor
     own_plan_by_need: Dict[str, float] = field(default_factory=dict)      # need units it grows with hours kept back
 

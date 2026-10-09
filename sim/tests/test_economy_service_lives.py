@@ -6,6 +6,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.economy.economy import Economy
+from sim.economy.types import Transfer
 from sim.tests import economy_fixture as fixture
 
 SERVICE_LIFE_YEARS = 20.0
@@ -21,13 +22,21 @@ def household_stock(economy):
                for quantity in book.holdings(agent)["goods"][fixture.METAL].values())
 
 
-def years_of(setup, years):
+# The fixture opens with margins no competition has worked on; entry and the wage floor take them away over
+# decades, with incomes and the wanted stock swinging while they do (Complaint 398). The real game also
+# measures from a spun-up economy, so the durable path is read after the fixture has settled.
+SPIN_UP_YEARS = 60
+
+
+def years_of(setup, years, spin_up=0):
     """(household stock after the year, wear that year, units sold that year, households' income that
-    year) for each year."""
+    year) for each of `years` years after `spin_up` years that are not reported."""
     economy = Economy(setup)
     rows = []
-    for _year in range(years):
+    for year in range(spin_up + years):
         economy.step(fixture.quiet_year(setup))
+        if year < spin_up:
+            continue
         flow = economy.record.book.goods_flow(fixture.METAL)
         income = sum(cohort.last_year_income for cohort in economy.record.cohorts.values())
         rows.append((household_stock(economy), flow.get("wear", 0.0), flow["output"], income))
@@ -48,30 +57,57 @@ class ServiceLifeTests(unittest.TestCase):
         rows = years_of(fixture.small_setup(), 3)
         self.assertEqual(rows[2][0], 0.0)
 
-    def test_it_is_not_bought_again_in_full(self):
-        # households fill the stock over years of income, then buy the wear plus the growth of the
-        # stock they want, which follows their income (the fixture's income keeps growing)
-        rows = years_of(durable_setup(), 13)
-        bought = [rows[year][0] - rows[year - 1][0] + rows[year][1] for year in range(1, 13)]
-        self.assertGreater(bought[0], 8.0 * rows[1][1])
-        late = range(10, 13)
-        late_bought = sum(rows[year][0] - rows[year - 1][0] + rows[year][1] for year in late) / 3.0
-        late_wear = sum(rows[year][1] for year in late) / 3.0
-        late_stock = sum(rows[year - 1][0] for year in late) / 3.0
-        income_growth = (rows[12][3] / rows[9][3]) ** (1.0 / 3.0) - 1.0
-        self.assertGreater(income_growth, 0.0, "the fixture's income should still be growing")
-        self.assertLess(late_bought, late_wear + late_stock * income_growth * 1.5)
+    def test_the_stock_is_filled_over_years_of_income(self):
+        rows = years_of(durable_setup(), 3)
+        self.assertGreater(rows[1][0] - rows[0][0] + rows[1][1], 8.0 * rows[1][1])
 
-    def test_late_holdings_grow_smoothly_with_income_without_selling_out(self):
-        # the fixture's income grows, so the wanted stock grows and the holding rises; the premise of
-        # a flat income (stock change within one year's wear) does not hold
-        rows = years_of(durable_setup(), 13)
-        late = range(10, 13)
-        bought = [rows[year][0] - rows[year - 1][0] + rows[year][1] for year in late]
-        for year in late:
-            self.assertGreaterEqual(rows[year][0], rows[year - 1][0], "households sell their stock down in year %d" % year)
-        self.assertGreaterEqual(min(bought), 0.0)
-        self.assertLess(max(bought), 2.0 * min(bought), "purchases swing from year to year")
+    def test_it_is_not_bought_again_in_full(self):
+        # once the fixture has settled its income is level with lumps (competition has taken the margins
+        # that made it grow), so households buy about the wear: never a year's purchase beyond twice the
+        # wear, where buying the stock again would be as many times the wear as the service life
+        rows = years_of(durable_setup(), 13, SPIN_UP_YEARS)
+        for year in range(1, 13):
+            bought = rows[year][0] - rows[year - 1][0] + rows[year][1]
+            self.assertGreaterEqual(bought, 0.0)
+            self.assertLess(bought, 2.0 * rows[year][1], "year %d buys the stock again" % year)
+
+    def test_settled_holdings_move_by_less_than_one_years_wear(self):
+        # with a level income the wanted stock is level, so the holding rises or falls by less than the wear
+        # a lumpy year of income can account for; it is neither sold out nor refilled in a year
+        rows = years_of(durable_setup(), 13, SPIN_UP_YEARS)
+        for year in range(1, 13):
+            self.assertLess(abs(rows[year][0] - rows[year - 1][0]), rows[year][1], "the stock jumps in year %d" % year)
+
+
+class BadYearTests(unittest.TestCase):
+    """One bad year must not sell the durable stock off and then rebuy it (Complaint 468's swing): the
+    stock is sized on smoothed spending and a smoothed surplus, not on what one year's floors leave."""
+
+    def test_the_unspun_fixtures_income_crash_does_not_sell_the_stock(self):
+        # the fixture's own income falls by a fifth in its seventh year as margins close; the holding
+        # used to go from 33 thousand to 8 thousand units that year
+        rows = years_of(durable_setup(), 14)
+        for year in range(1, 14):
+            self.assertGreater(rows[year][0], 0.9 * rows[year - 1][0], "year %d sells a tenth of the stock" % year)
+
+    def test_a_year_of_cash_shortage_sells_at_most_a_third_of_the_stock_and_rebuys_near_the_wear(self):
+        setup = durable_setup()
+        economy = Economy(setup)
+        for _year in range(8):
+            economy.step(fixture.quiet_year(setup))
+        before = household_stock(economy)
+        for cohort in economy.record.cohorts.values():          # households lose nine tenths of their cash
+            cash = economy.record.book.balance(cohort.agent_id, setup.currency_id)
+            economy.record.book.transfer(Transfer(cohort.agent_id, setup.state_agent, setup.currency_id,
+                                                  0.9 * cash, "levy"))
+        previous = before
+        for _year in range(4):
+            economy.step(fixture.quiet_year(setup))
+            wear = economy.record.book.goods_flow(fixture.METAL).get("wear", 0.0)
+            stock = household_stock(economy)
+            self.assertGreater(stock, 0.6 * before, "the stock is sold off")
+            self.assertLess(stock - previous + wear, 3.0 * wear, "the stock is bought again")
+            previous = stock
 
 
 if __name__ == "__main__":

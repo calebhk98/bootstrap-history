@@ -7,7 +7,7 @@ with what the cohort got of it; the shortfall is recorded for demography to read
 from typing import Dict, List, Mapping, Tuple
 
 from . import currency, durable_stock
-from .households_basket import Basket
+from .households_basket import Basket, need_prices, subsistence_cost_per_person
 from .households_cohort import Cohort, renewed
 from .households_own import next_own_plan
 from .protocols import MarketView
@@ -48,6 +48,7 @@ def close_year(cohort: Cohort, received_by_good: Mapping[GoodId, float], view: M
              if quantity > 0.0 and not _is_durable(good, specs)]
     unmet = unmet_floor_by_need(cohort, received_by_good, view, specs, basket)
     first_good = next((need.goods[0][0] for need in basket.needs if need.goods), None)
+    floor_cost = subsistence_cost_per_person(need_prices(basket, view, cohort.tile)) * cohort.people
     expected, level, target = cohort.expected_inflation, cohort.last_basket_price_level, cohort.cash_target
     if first_good is not None:
         money = view.currency_of(view.area_of(first_good, cohort.tile))
@@ -58,5 +59,6 @@ def close_year(cohort: Cohort, received_by_good: Mapping[GoodId, float], view: M
     return renewed(cohort, expected_inflation=expected, last_basket_price_level=level, cash_target=target,
                    last_year_income=income_received, last_year_spending=spent,
                    expected_spending=durable_stock.update_expected_spending(cohort.expected_spending, spent),
+                   expected_floor_cost=durable_stock.update_expected_spending(cohort.expected_floor_cost, floor_cost),
                    unmet_floor_by_need=unmet,
                    own_plan_by_need=next_own_plan(cohort.own_plan_by_need, unmet, spent < income_received)), moves
