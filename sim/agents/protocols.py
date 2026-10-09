@@ -109,6 +109,14 @@ class World(Protocol):
 		"""Money's worth of the coin this society holds, from its coin standard."""
 		...
 
+	def land_rent_paid_by_tile(self) -> Dict[str, float]:
+		"""Rent producers paid last year on each tile where land was let, in coin; empty without an agent economy."""
+		...
+
+	def land_rent_owners(self) -> List[Tuple[Any, float]]:
+		"""(actor, rent received) where the world can say which actors the rent went to; empty where it cannot."""
+		...
+
 	# ---- Who is hurt, and what an interest group can see
 
 	def displaced_producers(self) -> List[Sector]:

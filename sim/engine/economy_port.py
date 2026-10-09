@@ -65,6 +65,11 @@ class EconomyPort:
         agent = self._answering_agent()
         return None if agent is None else agent.land_rent_per_hectare()
 
+    def agent_land_rent_paid_by_tile(self):
+        """Rent paid on each let tile last year in coin; empty while the agent economy is off."""
+        agent = self._answering_agent()
+        return {} if agent is None else agent.land_rent_paid_by_tile()
+
     def agent_people_by_trade(self):
         """Working people by trade in the agent economy's labour core; None while it is off or not yet
         opened (opening it is the wage quotes' business, and slow)."""
