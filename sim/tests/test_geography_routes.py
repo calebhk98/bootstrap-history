@@ -228,7 +228,7 @@ class EarthSeaLinkTests(unittest.TestCase):
         by_sail = routes_search.route(self.world_map, ["egypt_08"], ["saudi_arabia_10"], {"sail"})
         self.assertIsNone(by_sail)
         round_africa = routes_search.route(self.world_map, ["egypt_08"], ["saudi_arabia_10"], {"sail"},
-                                           held_nodes={"exp_africa_circumnavigation", "exp_coastal_africa"})
+                                           held_nodes={"route:cape_passage", "route:west_african_coast"})
         self.assertIsNotNone(round_africa)
 
     def test_a_landlocked_looking_tile_is_not_a_port(self):
@@ -239,7 +239,7 @@ class EarthSeaLinkTests(unittest.TestCase):
         black_sea, aegean = self._tile_near(45.3, 33.0), self._tile_near(36.8, 30.5)
         self.assertIsNotNone(routes_search.route(self.world_map, [black_sea], [aegean], {"sail"}))
         caribbean, pacific = self._tile_near(22.0, -80.0), self._tile_near(-1.5, -80.5)
-        everything = {"exp_africa_circumnavigation", "exp_coastal_africa", "exp_atlantic_crossing"}
+        everything = {"route:cape_passage", "route:west_african_coast", "route:open_atlantic"}
         legs = routes_search.route(self.world_map, [caribbean], [pacific], {"sail"}, held_nodes=everything)["legs"]
         self.assertNotIn("panama_01", {tile for leg in legs for tile in (leg["from"], leg["to"])})
 

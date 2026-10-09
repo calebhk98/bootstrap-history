@@ -36,6 +36,7 @@
   "id": "exp_openocean_navigation",
   "name": "Open ocean navigation out of sight of land",
   "cat": "expedition",
+  "returns": {"route": ["open_pacific_east", "open_pacific_west"]},
   "kind": "INFRASTRUCTURE",
   "pre": [
    "sea_magnetic_compass",
@@ -172,6 +173,7 @@
   "id": "exp_coastal_africa",
   "name": "Coastal voyage down West Africa",
   "cat": "expedition",
+  "returns": {"route": ["west_african_coast"]},
   "kind": "INFRASTRUCTURE",
   "pre": [
    "exp_oceangoing_hull",
@@ -212,6 +214,7 @@
   "id": "exp_africa_circumnavigation",
   "name": "Round the Cape",
   "cat": "expedition",
+  "returns": {"route": ["cape_passage"]},
   "kind": "INFRASTRUCTURE",
   "pre": [
    "exp_coastal_africa",
@@ -250,6 +253,7 @@
   "id": "exp_atlantic_crossing",
   "name": "Cross the Atlantic",
   "cat": "expedition",
+  "returns": {"route": ["open_atlantic"]},
   "kind": "INFRASTRUCTURE",
   "pre": [
    "exp_oceangoing_hull",

@@ -103,6 +103,20 @@ class HeldAndRunningTests(unittest.TestCase):
         self.assertIn("harbour", host.held_and_running())
 
 
+class AuthoredDataTests(unittest.TestCase):
+
+    def test_every_route_a_lane_asks_for_is_returned_by_an_authored_expedition(self):
+        from sim.engine import tree_merge
+        from sim.geography.api import open_map
+        nodes = {node["id"]: node for node in tree_merge.build_tree().tree["nodes"]}
+        world_map = open_map()
+        entries = list(world_map.catalogue("route_modes").values()) + list(world_map.catalogue("sea_lanes").values())
+        self.assertEqual(validate_action_results.check_action_results(nodes, entries), [])
+        asked = {needed for entry in entries for needed in entry.get("requires_nodes") or () if needed.startswith("route:")}
+        self.assertTrue(asked)
+        self.assertEqual(asked - action_results.results_of(nodes, nodes), set())
+
+
 class CallersTests(unittest.TestCase):
 
     def test_geography_reads_the_one_answer(self):
