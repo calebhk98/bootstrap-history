@@ -17,11 +17,13 @@ from sim.geography import (cargo_cost, climate_temperatures, crop_climate, freig
                            sea_freight, settlement, territory, tile_names, transport)
 from sim.geography.climate_temperatures import (KOPPEN_TROPICAL_COLDEST_MONTH_MINIMUM_CELSIUS, daily_temperatures,
                                                 representative_extremes)
+from sim.geography.carriage_reach import MARKET_AREA_THRESHOLD_SHARE, MEAN_DISTANCE_IN_DISC, market_radius_km, realm_span_km
 from sim.geography.distance import haversine_km
 from sim.geography.geography import Geography
 from sim.geography.loading import load_geography
 
-__all__ = ["Geography", "load_geography", "haversine_km", "KOPPEN_TROPICAL_COLDEST_MONTH_MINIMUM_CELSIUS",
+__all__ = ["Geography", "load_geography", "haversine_km", "MARKET_AREA_THRESHOLD_SHARE", "MEAN_DISTANCE_IN_DISC",
+           "market_radius_km", "realm_span_km", "KOPPEN_TROPICAL_COLDEST_MONTH_MINIMUM_CELSIUS",
            "daily_temperatures", "representative_extremes", "cargo_cost", "climate_temperatures", "crop_climate",
            "freight_cost", "map_data_sources", "provisions", "regions", "sea_freight", "settlement", "territory", "tile_lookup",
            "tile_names", "transport",

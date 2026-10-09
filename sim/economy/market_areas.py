@@ -5,7 +5,7 @@ of the good's value, so a price gap inside an area is bounded by carriage. Silve
 civilisation; grain stays within a tile or a few. Goods of similar value per tonne share one
 partition (log-scale buckets), so the map holds a few partitions, not one per good.
 
-Standalone: `sim.constants` and `sim.economy.types` only.
+Standalone: `sim.constants`, `sim.geography.api` and `sim.economy.types` only.
 """
 import math
 from dataclasses import replace
@@ -13,16 +13,11 @@ from typing import Dict, Iterable, List, Mapping, Tuple
 
 from sim.constants import declare
 from sim.economy.tile_costs import CarriageTable
+from sim.geography.api import MARKET_AREA_THRESHOLD_SHARE
 from sim.economy.types import AreaId, GoodId, GoodSpec, MarketArea, TileId
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 
-MARKET_AREA_THRESHOLD_SHARE = declare(
-    "MARKET_AREA_THRESHOLD_SHARE", 0.15, kind="temporary_heuristic",
-    unit="share of a good's value per tonne", source=None, confidence="D",
-    why="Price gaps within a market are bounded by carriage; tiles whose carriage to the anchor is "
-        "under this share of the value trade as one market. Not yet derived from trader margins "
-        "and arbitrage speed.")
 MARKET_AREA_VALUE_BUCKET_WIDTH_LN = declare(
     "MARKET_AREA_VALUE_BUCKET_WIDTH_LN", 1.4, kind="temporary_heuristic",
     unit="natural-log units of value per tonne", source=None, confidence="D",

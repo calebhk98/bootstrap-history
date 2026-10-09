@@ -30,7 +30,7 @@ def _starting_techs(civ_id):
 def _shares(reached, production=None, carriage=None):
     return workforce_spinup.need_shares_by_trade(
         production or _PRODUCTION, set(reached), techniques_available_to,
-        carriage if carriage is not None else workforce_carriage.carriage_hours_per_tonne_by_trade(reached))
+        carriage if carriage is not None else workforce_carriage.carriage_for(reached))
 
 
 def _recipe(output, labour, inputs=None):
@@ -38,9 +38,13 @@ def _recipe(output, labour, inputs=None):
             "requires_node": None, "basis": "one", "yield_basis": "test", "conf": "C"}
 
 
+def _zz_carriage(span=None):
+    return workforce_carriage.Carriage((workforce_carriage.CarriageMode("zz_carrier", 1.0, 1.0),), span)
+
+
 def _synthetic_shares(production, needs, carriage=None):
     with mock.patch.object(workforce_spinup, "_needs", return_value=needs):
-        return workforce_spinup.need_shares_by_trade(production, set(), techniques_available_to, carriage or {})
+        return workforce_spinup.need_shares_by_trade(production, set(), techniques_available_to, carriage)
 
 
 class LandCarriersTests(unittest.TestCase):
@@ -56,7 +60,7 @@ class LandCarriersTests(unittest.TestCase):
 
     def test_rome_carries_by_cart_so_carters_take_a_share_of_the_need(self):
         reached = _starting_techs("rome_100ad")
-        self.assertGreater(workforce_carriage.carriage_hours_per_tonne_by_trade(reached).get("carter", 0.0), 0.0)
+        self.assertIn("carter", workforce_carriage.carriage_for(reached).trades())
         self.assertGreater(_shares(reached).get("carter", 0.0), 0.0)
 
     def test_carters_are_drawn_from_the_same_pool_as_sailors(self):
@@ -90,16 +94,50 @@ class WaterNeedTests(unittest.TestCase):
         for good in ("water_kg", "water_piped_kg", "water_well_kg"):
             self.assertEqual(_PRODUCTION[good]["carriage_km"], 0.0, good)
 
-    def test_a_recipe_hauled_the_mean_distance_costs_more_carriage_than_one_not_hauled(self):
+    def test_a_recipe_hauled_as_far_as_its_value_pays_for_costs_more_carriage_than_one_not_hauled(self):
         needs = {"needs": {"food": {"surplus_budget_share": 1.0}},
                  "goods": {"zz_food": {"satisfies": {"food": 1.0}}}}
         hauled = {"zz_food": _recipe("zz_food", {"zz_worker": 1.0})}
         at_hand = {"zz_food": dict(_recipe("zz_food", {"zz_worker": 1.0}), carriage_km=0.0)}
         with mock.patch.object(workforce_spinup.demand, "mass_in_kg_or_none", return_value=1000.0):
-            carried = _synthetic_shares(hauled, needs, {"zz_carrier": 1.0})
-            not_carried = _synthetic_shares(at_hand, needs, {"zz_carrier": 1.0})
+            carried = _synthetic_shares(hauled, needs, _zz_carriage())
+            not_carried = _synthetic_shares(at_hand, needs, _zz_carriage())
         self.assertGreater(carried.get("zz_carrier", 0.0), 0.0)
         self.assertEqual(not_carried.get("zz_carrier", 0.0), 0.0)
+
+
+class HaulFollowsValueTests(unittest.TestCase):
+
+    def test_a_dearer_tonne_is_carried_farther_and_dearer_carriage_shortens_the_haul(self):
+        carriage = _zz_carriage()
+        mode = carriage.modes[0]
+        self.assertGreater(carriage.haul_km(mode, 200.0), carriage.haul_km(mode, 20.0))
+        dear = workforce_carriage.CarriageMode("zz_carrier", 2.0, 2.0)
+        self.assertLess(carriage.haul_km(dear, 20.0), carriage.haul_km(mode, 20.0))
+
+    def test_no_haul_exceeds_the_span_between_the_realms_tiles(self):
+        capped = _zz_carriage(span=3.0)
+        self.assertAlmostEqual(capped.haul_km(capped.modes[0], 1.0e9), 3.0, places=9)
+        self.assertLess(capped.haul_km(capped.modes[0], 1.0), 3.0)
+
+    def test_the_realm_span_is_the_mean_distance_between_its_tiles(self):
+        from sim.geography import api as geography
+        ids = geography.tiles_held(_json("data", "civilizations", "rome_100ad.json"))
+        span = geography.realm_span_km(ids)
+        self.assertGreater(span, 100.0)
+        self.assertIsNone(geography.realm_span_km(ids[:1]))
+
+    def test_carriage_rates_cost_at_least_their_crew_hours(self):
+        from sim.geography import api as geography
+        for mode_id, rate in geography.carriage_rates(["cart", "sail", "foot"]).items():
+            self.assertGreaterEqual(rate["cost_hours_per_tonne_km"], rate["crew_hours_per_tonne_km"], mode_id)
+
+    def test_carters_are_a_minor_share_of_romes_need_not_a_quarter(self):
+        reached = _starting_techs("rome_100ad")
+        homes = _json("data", "civilizations", "rome_100ad.json")
+        from sim.geography import api as geography
+        carriage = workforce_carriage.carriage_for(reached, geography.tiles_held(homes))
+        self.assertLess(_shares(reached, carriage=carriage)["carter"], 0.1)
 
 
 class CarriageDistanceDataTests(unittest.TestCase):
@@ -162,7 +200,7 @@ class GenericWeightTests(unittest.TestCase):
             trades.update(entry.get("labour_hours") or {})
             for capital in entry.get("capital") or ():
                 trades.update(capital.get("build_labour_hours") or {})
-        trades.update(workforce_carriage.carriage_hours_per_tonne_by_trade(reached))
+        trades.update(workforce_carriage.carriage_for(reached).trades())
         self.assertLessEqual(set(_shares(reached)), trades)
 
 

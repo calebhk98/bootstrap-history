@@ -20,6 +20,10 @@ def _civ(civ_id):
         return json.load(handle)
 
 
+def _carriage(trade, crew_hours_per_tonne_km, cost_hours_per_tonne_km=2.0):
+    return workforce_carriage.Carriage((workforce_carriage.CarriageMode(trade, crew_hours_per_tonne_km, cost_hours_per_tonne_km),))
+
+
 def _shares(reached, carriage=None):
     return workforce_spinup.need_shares_by_trade(
         _PRODUCTION, set(reached), techniques_available_to, carriage)
@@ -30,19 +34,20 @@ class CarriageEntersTheNeedTests(unittest.TestCase):
     def test_a_carriage_rate_gives_its_trade_a_share_and_none_means_none(self):
         reached = _civ("rome_100ad")["starting_techs"]
         self.assertEqual(_shares(reached).get("sailor", 0.0), 0.0)
-        with_hulls = _shares(reached, {"sailor": 1.0})
+        with_hulls = _shares(reached, _carriage("sailor", 1.0))
         self.assertGreater(with_hulls["sailor"], 0.0)
         self.assertAlmostEqual(sum(with_hulls.values()), 1.0, places=9)
 
-    def test_dearer_carriage_takes_more_of_the_need(self):
+    def test_a_mode_whose_cost_is_more_crew_takes_more_of_the_need(self):
+        # carriage costs a fixed share of a good's value, so what matters is how much of the cost is crew
         reached = _civ("rome_100ad")["starting_techs"]
-        self.assertGreater(_shares(reached, {"sailor": 2.0})["sailor"],
-                           _shares(reached, {"sailor": 1.0})["sailor"])
+        self.assertGreater(_shares(reached, _carriage("sailor", 1.5))["sailor"],
+                           _shares(reached, _carriage("sailor", 0.5))["sailor"])
 
     def test_carriage_hours_per_tonne_follow_the_modes_a_society_can_use(self):
-        rome = workforce_carriage.carriage_hours_per_tonne_by_trade(_civ("rome_100ad")["starting_techs"])
-        self.assertGreater(rome.get("sailor", 0.0), 0.0)
-        self.assertNotIn("sailor", workforce_carriage.carriage_hours_per_tonne_by_trade([]))
+        rome = workforce_carriage.carriage_for(_civ("rome_100ad")["starting_techs"])
+        self.assertIn("sailor", rome.trades())
+        self.assertNotIn("sailor", workforce_carriage.carriage_for([]).trades())
 
     def test_the_hours_come_from_the_route_modes_physical_rates(self):
         rates = geography.carriage_rates(["sail", "foot"])
@@ -52,7 +57,7 @@ class CarriageEntersTheNeedTests(unittest.TestCase):
 
     def test_rome_sailors_get_a_real_share_from_its_known_modes(self):
         reached = _civ("rome_100ad")["starting_techs"]
-        carriage = workforce_carriage.carriage_hours_per_tonne_by_trade(reached)
+        carriage = workforce_carriage.carriage_for(reached)
         self.assertGreater(_shares(reached, carriage)["sailor"], 0.001)
 
 

@@ -14,8 +14,9 @@ is made only as far as the recipes that use it ask.
 [temporary_heuristic] A material with several available producers is split equally among them, until
 technique-choice costs exist to replace this; labour value stands for price until prices are known here.
 
-Carriage is part of a good's chain: every tonne a recipe makes is carried a typical haul by the crews of
-the carriage modes the society's technologies unlock (workforce_carriage.py, from geography's rates).
+Carriage is part of a good's chain: every tonne a recipe makes is carried by the crews of the carriage modes
+the society's technologies unlock, as far as the tonne's value pays for and no farther than between the realm's
+own tiles (workforce_carriage.py, from geography's rates and market reach).
 Farm hours count in a chain's total, so a farm-heavy good gives the other trades only their own slice.
 
 Farm labour is not decided here; the engine pins it from the farm-labour
@@ -66,12 +67,6 @@ def _labour_coefficients(recipe_id: str, production: Mapping[str, Any]) -> Dict[
     return labour_market.labour_hours_coefficients_per_unit_output(recipe_id, dict(production))
 
 
-def _haul_scale(entry: Mapping[str, Any]) -> float:
-    """How far this recipe's output travels as a share of the mean haul (one when it states no distance)."""
-    stated = entry.get("carriage_km")
-    return 1.0 if stated is None else float(stated) / workforce_carriage.MEAN_HAUL_KM
-
-
 def _solve_levels(final_demand: Mapping[str, float], producers: Mapping[str, list],
                   input_coefficients: Mapping[str, Mapping[str, float]]) -> Dict[str, float]:
     """Recipe levels (units of each recipe's dominant output) meeting the
@@ -98,14 +93,14 @@ def _solve_levels(final_demand: Mapping[str, float], producers: Mapping[str, lis
 
 def need_shares_by_trade(production: Mapping[str, Any], reached_nodes: Iterable[str],
                          techniques_available_to: Callable,
-                         carriage_hours_per_tonne: Optional[Mapping[str, float]] = None) -> Dict[str, float]:
+                         carriage: Optional[workforce_carriage.Carriage] = None) -> Dict[str, float]:
     """Share of non-farm labour each trade is needed for, from the goods
     households consume and the available recipes that make them. Trades with
     no available recipe, or whose goods nothing demands, are absent. `techniques_available_to(production, reached)` is the engine's
-    filter, returning (available, unreached, unclassified). `carriage_hours_per_tonne` is {trade: hours
-    to carry a tonne a typical haul} (workforce_carriage); every tonne a recipe in a good's chain makes
-    is carried that far, so the carriers take their share of the good's labour."""
-    carriage = dict(carriage_hours_per_tonne or {})
+    filter, returning (available, unreached, unclassified). `carriage` (workforce_carriage) says what a
+    tonne costs to carry; every tonne a recipe in a good's chain makes is carried as far as its value pays
+    for, so the carriers take their share of the good's labour."""
+    carriage = carriage or workforce_carriage.Carriage()
     available, _unreached, _unclassified = techniques_available_to(
         production, set(reached_nodes))
     dominant = {recipe_id: _dominant_output(entry) for recipe_id, entry in available.items()}
@@ -117,13 +112,27 @@ def need_shares_by_trade(production: Mapping[str, Any], reached_nodes: Iterable[
                           for recipe_id in dominant}
     labour = {recipe_id: _labour_coefficients(recipe_id, available) for recipe_id in dominant}
 
-    # A recipe's dominant output as tonnes carried; a unit that is not a mass is not carried here. A
-    # recipe that states `carriage_km` (water drawn where it is used states none) is hauled that far
-    # instead of the society's mean haul.
+    # A recipe's dominant output as tonnes; a unit that is not a mass is not carried here.
     tonnes_per_unit_output = {
-        recipe_id: ((demand.mass_in_kg_or_none(material, 1.0) or 0.0) / KILOGRAMS_PER_TONNE
-                    * _haul_scale(available[recipe_id]))
+        recipe_id: (demand.mass_in_kg_or_none(material, 1.0) or 0.0) / KILOGRAMS_PER_TONNE
         for recipe_id, material in dominant.items()}
+
+    def chain_hours_per_unit(material: str) -> float:
+        levels = _solve_levels({material: 1.0}, producers, input_coefficients)
+        return sum(level * per_unit for recipe_id, level in levels.items()
+                   for per_unit in labour[recipe_id].values())
+
+    carriage_cache: Dict[str, Dict[str, float]] = {}
+
+    def carriage_hours_per_tonne(recipe_id: str) -> Dict[str, float]:
+        # Crew hours to carry a tonne this recipe makes: as far as its value (the labour of its whole chain
+        # per tonne) pays for, unless the recipe states a distance (water drawn where it is used states none).
+        if recipe_id not in carriage_cache:
+            tonnes = tonnes_per_unit_output[recipe_id]
+            value = chain_hours_per_unit(dominant[recipe_id]) / tonnes if tonnes > 0.0 else 0.0
+            carriage_cache[recipe_id] = carriage.hours_per_tonne_by_trade(
+                value, available[recipe_id].get("carriage_km"))
+        return carriage_cache[recipe_id]
 
     def trade_hours_per_unit(material: str) -> Dict[str, float]:
         levels = _solve_levels({material: 1.0}, producers, input_coefficients)
@@ -132,8 +141,9 @@ def need_shares_by_trade(production: Mapping[str, Any], reached_nodes: Iterable[
             for trade, per_unit in labour[recipe_id].items():
                 hours[trade] += level * per_unit
             tonnes = level * tonnes_per_unit_output[recipe_id]
-            for trade, per_tonne in carriage.items():
-                hours[trade] += tonnes * per_tonne
+            if tonnes > 0.0:
+                for trade, per_tonne in carriage_hours_per_tonne(recipe_id).items():
+                    hours[trade] += tonnes * per_tonne
         return hours
 
     # Household demand: each need's budget goes to the available goods that satisfy it, split by what

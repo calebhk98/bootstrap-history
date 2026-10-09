@@ -5,6 +5,7 @@ at the occupational mobility rate. The other trades share the rest in proportion
 labour core holds in them (agent economy on), else to the need the recipe graph puts on them.
 Nothing here moves people between trades: the labour core does that (sim/labour/market/DESIGN.md).
 """
+import sim.geography.api as geography
 from sim.world import agriculture
 from sim.world import farming_technique
 from sim.world import land
@@ -107,7 +108,7 @@ class LabourAllocationMixin:
         if cached is None or cached[0] != reached:
             shares = workforce_spinup.need_shares_by_trade(
                 labour_market.production_data(), reached, self._world.techniques_available_to,
-                workforce_carriage.carriage_hours_per_tonne_by_trade(reached))
+                workforce_carriage.carriage_for(reached, geography.tiles_held(self._world.civ)))
             cached = self._need_shares_cache = (reached, shares)
         if cached[1]:
             return cached[1]
