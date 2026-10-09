@@ -53,15 +53,16 @@ class CreditMixin:
             "model of what a moneylender could actually observe and enforce "
             "against a given borrower's income, which this engine does not "
             "have.")
-    CREDIT_LINE_PER_REPUTATION_POINT = declare(
-        "CREDIT_LINE_PER_REPUTATION_POINT", 250.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii of credit per reputation point", source=None,
-        confidence="D",
-        why="Genuinely a money amount: a credit line is a nominal sum a lender will advance in the coin, not a quantity of anything physical. "
-            "How much a point of reputation (itself a heuristic score, see "
-            "STANDING_* above) is worth in raw borrowing power. Doubly "
-            "removed from any measurement: reputation is invented and this "
-            "conversion rate is invented on top of it.")
+    CREDIT_LINE_LABOUR_HOURS_PER_REPUTATION_POINT = declare(
+        "CREDIT_LINE_LABOUR_HOURS_PER_REPUTATION_POINT", 5040.0, kind="temporary_heuristic",
+        unit="labour hours of credit per reputation point", source=None, confidence="D",
+        why='How much a point of reputation (itself a heuristic score, see '
+            'STANDING_* above) is worth in raw borrowing power. Doubly removed from'
+            ' any measurement: reputation is invented and this conversion rate is '
+            'invented on top of it. A lender advances against expected repayment '
+            'from labour, so the line is a count of labour hours; it follows what '
+            'labour costs in the coin, not the coin itself.')
+    CREDIT_LINE_PER_REPUTATION_POINT = money_units.PricedInLabourHours("CREDIT_LINE_LABOUR_HOURS_PER_REPUTATION_POINT")
     CREDIT_LINE_LABOUR_HOURS_PER_FOREST_HA = declare(
         "CREDIT_LINE_LABOUR_HOURS_PER_FOREST_HA", 2420.0, kind="temporary_heuristic",
         unit="labour hours of credit per hectare of owned forest", source=None,
@@ -123,7 +124,7 @@ class CreditMixin:
         # A collegium's credit is linear in its units (collateral, not fame); land is real collateral.
         base = self.effect_sum("credit_line", base)
         base += max(0.0, self.state.household.reputation) * self.CREDIT_LINE_PER_REPUTATION_POINT
-        base += self.state.economy.forest_ha * self.CREDIT_LINE_PER_FOREST_HA                   # also collateral
+        base += self.state.holdings.forest_ha * self.CREDIT_LINE_PER_FOREST_HA                   # also collateral
         # Floor of one year's running costs: everyone can run a tab for a season.
         # One upkeep() call; if already provided, reuse it to avoid silent duplication.
         upkeep_amount = self.upkeep() if _upkeep is None else _upkeep
@@ -140,7 +141,7 @@ class CreditMixin:
             years *= min(1.0, self.civ["starting_interest_rate"] / market_rate)
         serviceable = floor + max(0.0, earning) * years
         # And never more than lenders still hold beyond what everyone else owes them.
-        room = self.market_credit_room(capital_market.FOUNDER_LOAN)
+        room = self.market_credit_room(self.state.acting_seat)
         return calculate_credit_ceiling(base, floor, serviceable, self.price_index,
                                         None if room is None else room / self.price_index)
 

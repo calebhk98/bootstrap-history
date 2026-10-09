@@ -6,7 +6,7 @@ import json
 import os
 import unittest
 
-from sim.geography.api import load_geography
+from sim.geography.api import load_geography, tiles_held
 from sim.world import climate_needs
 from sim.world.climate_needs import floors_for_civilisation_tiles, floors_for_tile
 
@@ -74,11 +74,9 @@ class RealTerritoryTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.geography = load_geography()
-        region_to_tiles = cls.geography["land_tiles"]["region_to_tiles"]
         cls.floors = {}
         for civilisation_id in ("norse_900ad", "england_1300", "rome_100ad", "mexica_1500"):
-            regions = _load("data/civilizations/%s.json" % civilisation_id)["home_regions"]
-            tile_ids = sorted({tile for region in regions for tile in region_to_tiles.get(region, ())})
+            tile_ids = tiles_held(_load("data/civilizations/%s.json" % civilisation_id))
             cls.floors[civilisation_id] = floors_for_civilisation_tiles(cls.geography, tile_ids)["weighted_mean"]
 
     def test_warmth_orders_norse_england_rome_mexica(self):

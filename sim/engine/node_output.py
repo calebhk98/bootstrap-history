@@ -20,19 +20,21 @@ from . import energy_prices
 
 ENERGY_CARRIERS = energy_prices.ENERGY_CARRIERS
 
-# (production table, {node id: entries}); the table is kept so a hit is confirmed with `is`
+# (production table, {node id: entries run}); the table is kept so a hit is confirmed with `is`
 _ENTRIES_BY_NODE: List[Any] = [None, None]
 
 
 def entries_gated_by(node_id: str, production: Mapping[str, Any]) -> List[Dict[str, Any]]:
-    """Production entries that become available with this node, in key order."""
+    """Production entries a node's concern runs, in key order: those that become available with it
+    (`requires_node`) and those that name it in `operated_by`."""
     index = _ENTRIES_BY_NODE[1] if _ENTRIES_BY_NODE[0] is production else None
     if index is None:
         index = defaultdict(list)
         for key in sorted(production):
-            gate = production[key].get("requires_node")
-            if gate:
-                index[gate].append(production[key])
+            entry = production[key]
+            for operator in dict.fromkeys([entry.get("requires_node"), *(entry.get("operated_by") or [])]):
+                if operator:
+                    index[operator].append(entry)
         _ENTRIES_BY_NODE[:] = [production, index]
     return index.get(node_id, [])
 

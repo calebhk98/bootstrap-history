@@ -1,6 +1,6 @@
 # Gold is worth no more than silver per kilogram to households, and nobody holds it as wealth
 
-**Status:** open - owner direction (2026-10-06): the value of gold against silver should follow how rare each is and where its mines are, through geography and the deposits; research comes before code
+**Status:** open - owner direction (2026-10-06): the value of gold against silver should follow how rare each is and where its mines are, through geography and the deposits. Built (second report, first code step): the store of durable goods now splits by expected carrying return, not inverse carrying cost, and opening stocks of durable stores are seeded from cumulative deposit output less loss. Not done: no whole game was run, so the gold-to-silver ratio is not re-measured; the ornament need is still equal per kg; deposit data lack working dates and sizes for several Roman districts (see Progress); a held good's service is not counted in its return; states hold no reserve.
 
 Measured on the agent economy (scratch driver replaying the deleted `sim/economy_validate.py`,
 30 years, seeds 1-3; no command prints it yet, Complaint 445): the median gold-to-silver price ratio
@@ -33,3 +33,21 @@ Overlapping issues closed into this one; each closed file keeps its full text.
 - 325 (`closed/325-gold-prices-below-silver-so-ornament-demand-buys-gold.md`): gold priced below silver so ornament demand buys gold; satiation done, supply-limited gold price and held-stock ornament remain.
 - 334 (`closed/334-gold-has-one-hand-sluicing-route-and-no-deposit-model.md`): gold has hydraulic and lode routes; only the ornament limit and hand placers remain.
 - 387 (`closed/387-metal-prices-swing-more-than-grain-in-rome-and-norse.md`): metal prices swing more than grain; partly fixed, gold remains and needs a validation command (445).
+
+Research second pass (2026-10-09): `Complaints/reports/gold-silver-value-second-pass.md` (read alongside the first report, `gold-silver-value-research.md`). Finding: households already hold durable high-value goods as wealth (`sim/economy/households_store.py`), so "nobody holds it as wealth" may be stale; re-measure first. What remains is that the store splits its budget between metals by carrying cost alone, which comes out near even, and opening metal stocks start empty. Recommended: split by expected carrying return, seed opening stocks from past deposit output less loss, and let regional ratios differ through carriage cost per unit of value.
+
+## Progress (2026-10-09)
+
+Code, all on pure functions and small fixtures (no game built):
+
+- `sim/economy/store_return.py`: a good's carrying return is its expected price change (toward the slow average of its price, `MarketMemory.usual_prices`, read through `YearView.usual_price`) less spoilage, wear and storage; `households_store.store_candidates` splits the store by that return. Every coefficient is a declared temporary heuristic. The old inverse-carrying-cost split made the price ratio of two metals equal the stock ratio, which is the hidden outcome the second report named; now the ratio rises with the stock gap by less than the gap.
+- `sim/geography/resources_mined.py` (`mined_before`, in the geography contract): output of a country's deposits before a year, each deposit worked at a stated share of its endowment a year from `first_worked` until worked out. A deposit with no working date or size is listed as unworked, never guessed; a country with no deposit of a metal says so.
+- `sim/engine/economy_port_stores.py` and `sim/economy/opening_stores.py`: the port passes workings to the setup; the economy keeps what yearly loss leaves and gives it to households by income, for goods that qualify as stores at the opening prices. Resources that yield several goods, or count in tonnes, are reported as gaps.
+- Tests: `test_economy_store_ratio`, `test_economy_store_usual_price`, `test_economy_opening_stores`, `test_geography_mined_output`, `test_port_opening_stores`.
+
+Findings to act on next:
+
+- For Rome the derived silver stock is not far above the gold stock, because `hispania_silver`, `rio_tinto_jarosite` and the Italian and British placeholders have no `first_worked` or no `endowment` in the deposit data, so they are left out. Print the list with `opening_store_values` in `sim/engine/economy_port_stores.py`. Adding sourced working dates and sizes is data work (do not tune them to a ratio).
+- Han, Mexica and Norse have no gold or silver deposit in the data, so their opening stores are empty by that statement; the missing West African, Japanese, Central European and Indian districts are the same gap.
+- The working share (`resources_working_share_per_year`) and the loss rate (`METAL_GOODS_LOSS_PER_YEAR`) are unsourced heuristics.
+- To measure the ratio, run the 442 scratch driver on the new build in a slow topic; it was not run here.

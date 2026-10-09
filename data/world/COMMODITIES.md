@@ -95,7 +95,7 @@ one) now covers every material key the tech tree uses, not nine.
 A later audit, run directly against a live `Sim` rather than by reading the
 code, measured the gap section 0 above left open precisely: **149 of the
 162 distinct material keys the tech tree actually uses (about 92%) had a
-price read once from `prices.json` at load time and never revisited for
+price read once at load time and never revisited for
 scarcity, surplus, population or time**, because `MATERIAL_CHECKS`/
 `MARKET_SHARE` in `economy.py` only ever named 13 keys (9 commodities) by
 hand. Its worked failure was aluminium: "no mine, no supply lever of any
@@ -121,8 +121,8 @@ in three tiers, cheapest-and-most-specific first:
    demonstration.
 3. Everything else (silk, glass, aluminium, the acids and dyes and
    alloys of the industrial and chemical ages) -- a generic fallback
-   derived from the one number every material already has, its own book
-   price in `prices.json`, fitted against the curated seven's own
+   derived from the one number every material already has, its own solved
+   price in labour hours per kg, fitted against the curated seven's own
    capex/opex and national-output figures (see `economy.py`'s own
    `GENERIC_OUTPUT_ANCHOR_T_PER_YR`/`GENERIC_MINE_CAPEX_MULTIPLE` comments
    for the fit and its error against a held-out point, gold).
@@ -186,10 +186,8 @@ explained:
   "name": "Copper",
   "unit": "kg",
   "category": "ore_metal",                 // ore_metal | agricultural | manufactured | luxury_import
-  "material_keys": ["copper_kg", "copper_ore_kg"],   // prices.json keys this commodity subsumes
-  "base_price_denarii_per_kg": 4.0,
-  "price_conf": "C",
-  "price_source": "data/prices.json:copper_kg",
+  "material_keys": ["copper_kg", "copper_ore_kg"],   // material keys this commodity subsumes
+  "price_material": "copper_kg",           // base price = this material's solved price, labour hours per kg
   "national_output_t_per_yr": 15000,
   "output_conf": "C",
   "output_source": "data/world/resources.json:empire_output_100ad.copper",
@@ -291,7 +289,7 @@ figure, discussed in section 6.
 ```
 ratio  = demand_t / max(supply_t, epsilon)
 factor = clamp(ratio ** elasticity, price_floor_factor, price_ceiling_factor)
-price  = base_price_denarii_per_kg * factor
+price  = solved_price_in_labour_hours_per_kg_of_price_material * factor
 ```
 
 This is deliberately symmetric where `economy.py`'s
@@ -522,8 +520,7 @@ actually binds a plan.
   mined (iron, copper, coal, gold), something grown (wool), something
   manufactured from another commodity (cloth from wool and flax lumped
   together, copper wire from copper), and something obtainable only by
-  trade (coffee, cotton). The other roughly 170 priced materials in
-  `prices.json` have no commodity entry and `commodity_demand()` silently
+  trade (coffee, cotton). The other roughly 170 priced materials have no commodity entry and `commodity_demand()` silently
   ignores material keys it does not recognise, exactly like
   `economy.py.MATERIAL_CHECKS` does today.
 - **Fibres are lumped.** `cloth` answers for both `cloth_kg` (wool cloth)

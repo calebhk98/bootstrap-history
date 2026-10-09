@@ -9,7 +9,7 @@ food system at all - farms are revenue nodes, exactly like a workshop, with
 no physical land, no labour-to-yield relationship and no concept of a bad
 harvest. This module is what makes "how many people can this land support,
 and how many of them are free to do something else" a computed answer
-instead of an assumption baked into `data/prices.json`.
+instead of an assumed price.
 
 STANDALONE ON PURPOSE. Nothing here imports from `sim/engine/`, and nothing
 in `sim/engine/` imports this. See `sim/world/__init__.py` for why the

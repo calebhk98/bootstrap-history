@@ -27,10 +27,17 @@ EDGE_CONSUMPTION = "edge:consumption"    # goods used up by households, inputs u
 EDGE_SPOILAGE = "edge:spoilage"          # goods lost while held
 EDGE_DEFAULT = "edge:default"            # debt written off
 EDGE_LEGACY = "edge:legacy"              # engine postings that do not yet name a counterparty
+EDGE_CARGO = "edge:cargo"                # money between a trader's purse (outside the book) and its cargo account
 
 
 def is_edge(agent_id: AgentId) -> bool:
     return agent_id.startswith(EDGE_PREFIX)
+
+
+def external_edge(partner: str) -> AgentId:
+    """The edge one partner's cargo arrives from and leaves to; it holds no money of its own, so the partner's
+    payment goes through the foreign coin ledger, not the book."""
+    return EDGE_EXTERNAL + ":" + partner
 
 
 # ---- what exists -------------------------------------------------------------------------------

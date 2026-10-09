@@ -60,6 +60,16 @@ class EconomyPort:
         agent = self._answering_agent()
         return None if agent is None else agent.wage_per_hour(trade)
 
+    def agent_land_rent_per_hectare(self):
+        """Mean rent per hectare-year of the agent economy's land market, in coin; None while it is off."""
+        agent = self._answering_agent()
+        return None if agent is None else agent.land_rent_per_hectare()
+
+    def agent_land_rent_paid_by_tile(self):
+        """Rent paid on each let tile last year in coin; empty while the agent economy is off."""
+        agent = self._answering_agent()
+        return {} if agent is None else agent.land_rent_paid_by_tile()
+
     def agent_people_by_trade(self):
         """Working people by trade in the agent economy's labour core; None while it is off or not yet
         opened (opening it is the wage quotes' business, and slow)."""
@@ -177,10 +187,6 @@ class EconomyPort:
     def money_per_labour_hour(self):
         """Money one hour of unskilled work is worth now."""
         return self._sim.labour.money_per_labour_hour()
-
-    def book_money(self, amount):
-        """A book-coin amount in this civilisation's money now."""
-        return self._sim.labour.book_money(amount)
 
     def wage_pressure(self):
         """How far wages stand above their opening level from a shortage of people."""

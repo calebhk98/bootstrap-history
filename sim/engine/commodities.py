@@ -124,8 +124,8 @@ class CommodityExplanation(TypedDict):
     trade_partners: TradePartners
     monopoly_possible: bool
     demand_t_per_yr: float
-    price_denarii_per_kg: float
-    base_price_denarii_per_kg: Optional[float]
+    price_hours_per_kg: float
+    base_price_hours_per_kg: Optional[float]
 
 
 HERE = os.path.dirname(os.path.abspath(__file__))        # sim/engine
@@ -156,8 +156,12 @@ class CommodityLedger:
 
     def __init__(self, commodities: Optional[Commodities] = None,
                  nodes: Optional[NodeMap] = None,
-                 supply_override: Optional[Dict[str, float]] = None) -> None:
+                 supply_override: Optional[Dict[str, float]] = None,
+                 price_hours_per_kg: Optional[Dict[str, float]] = None) -> None:
         self.commodities: Commodities = commodities if commodities is not None else load_commodities()
+        # Solved price of each material in labour hours per kg; a commodity's base price is the
+        # price of the material its `price_material` names.
+        self.price_hours_per_kg: Dict[str, float] = price_hours_per_kg or {}
         self.nodes: NodeMap = nodes or {}
         # A LIVE SIM KNOWS ITS OWN NUMBERS BETTER THAN THIS FILE DOES. Without
         # this, country_output() always answers from commodities.json's own
@@ -360,12 +364,24 @@ class CommodityLedger:
     # that function cannot represent "automated looms make cloth cheaper,"
     # and section 4.2 for the worked example this enables.
 
+    def base_price_hours_per_kg(self, commodity_id: str) -> Optional[float]:
+        """The solved price, in labour hours per kg, of the material this
+        commodity is priced by; None when it names none or the table lacks it."""
+        material = self.commodities[commodity_id].get("price_material")
+        return self.price_hours_per_kg.get(material) if material else None
+
+    def _base_price(self, commodity_id: str) -> float:
+        base = self.base_price_hours_per_kg(commodity_id)
+        if base is None:
+            raise ValueError("%s has no solved base price to move" % commodity_id)
+        return float(base)
+
     def price(self, commodity_id: str, demand_t: float, supply_t: float) -> float:
-        """Denarii per kg, from how hard `demand_t` leans on `supply_t`,
+        """Labour hours per kg, from how hard `demand_t` leans on `supply_t`,
         bounded by this commodity's own floor and ceiling (section 2's
         `price_floor_factor` / `price_ceiling_factor`)."""
         commodity = self.commodities[commodity_id]
-        base = float(commodity.get("base_price_denarii_per_kg", 1.0))
+        base = self._base_price(commodity_id)
         elastic = float(commodity.get("elasticity", 1.0))
         floor = float(commodity.get("price_floor_factor", 0.4))
         ceil_ = float(commodity.get("price_ceiling_factor", 6.0))
@@ -382,7 +398,7 @@ class CommodityLedger:
         shocks)."""
         rng = rng or random
         commodity = self.commodities[commodity_id]
-        base = float(commodity.get("base_price_denarii_per_kg", 1.0))
+        base = self._base_price(commodity_id)
         floor = float(commodity.get("price_floor_factor", 0.4)) * base
         ceil_ = float(commodity.get("price_ceiling_factor", 6.0)) * base
         fundamental = self.price(commodity_id, demand_t, supply_t)
@@ -575,8 +591,8 @@ class CommodityLedger:
             "trade_partners": self.trade_partners(commodity_id),
             "monopoly_possible": commodity.get("monopoly_possible", False),
             "demand_t_per_yr": demand_t,
-            "price_denarii_per_kg": self.price(commodity_id, demand_t, supply_t),
-            "base_price_denarii_per_kg": commodity.get("base_price_denarii_per_kg"),
+            "price_hours_per_kg": self.price(commodity_id, demand_t, supply_t),
+            "base_price_hours_per_kg": self.base_price_hours_per_kg(commodity_id),
         }
 
 

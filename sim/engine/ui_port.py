@@ -4,7 +4,7 @@ delegates exactly. sim/ui/ imports nothing from sim.engine except this module.""
 from sim.engine import (  # noqa: F401
     automation_audit, cash_book, category_traits, cause_book, civ_start_check, fuzzy_estimates, path_search, planner,
     purchase_rule, settings, settings_table, shortage_conditions, topic_tags, tree_merge, units,
-    validate_material_gating, validate_output_bounds, validate_copy_visibility, validate_production, validate_unheld_gates)
+    validate_material_gating, validate_output_bounds, node_revenue_census, validate_copy_visibility, validate_production, validate_unheld_gates, validate_running_gates)
 from sim.engine.blockers import BLOCKER_MEANING, RUNNING_CONSTRAINT_KIND  # noqa: F401
 from sim.engine.catalog import load_production_catalog  # noqa: F401
 from sim.engine.core import Sim  # noqa: F401
@@ -49,7 +49,8 @@ def set_interface_memory(sim, memory):
 # Engine reads: private methods and fields of the `Sim`, under public names.
 
 def material_prices(sim):
-    return sim._material_prices()
+    """Every material someone in reach sells, at the price households are asked."""
+    return sim.goods_market.household_prices()
 
 
 def commodity_ledger(sim):
@@ -159,7 +160,7 @@ def set_goal_closure(sim, closure_set):
 
 
 def goal_years(sim):
-    return dict(sim.state.scenario.goal_years)
+    return dict(sim.state.seat_progress.goal_years)
 
 
 def set_goal(sim, node_id):
@@ -210,9 +211,9 @@ def set_said_parallelism(sim, said):
     sim._said_parallelism = said
 
 
-def said_explanations(scenario):
-    return scenario._said_explanations
+def said_explanations(seat_progress):
+    return seat_progress._said_explanations
 
 
-def set_said_explanations(scenario, said):
-    scenario._said_explanations = said
+def set_said_explanations(seat_progress, said):
+    seat_progress._said_explanations = said

@@ -139,7 +139,7 @@ metal-specific process with its own fuel and labour (data/world/
 resources.json's own `constraints` section already carries some of that,
 e.g. `charcoal_kg_per_kg_metal` for copper and lead smelting). This matters
 most for mercury: cinnabar ore can be sold AS ITSELF (the pigment minium,
-data/prices.json's cinnabar_kg), needing no metallurgy at all, but metallic
+the solved price of cinnabar_kg), needing no metallurgy at all, but metallic
 mercury needs roasting the ore and condensing the vapour, a real added cost
 this module does not carry. See the module's own CALIBRATION TARGETS section
 and sim/tests/test_deposits.py's BookPriceComparisonTests for exactly how
@@ -268,7 +268,7 @@ from typing import Any, Dict, List, Optional
 
 from sim.constants import declare
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
-from sim.world import mine_fire_setting, mine_works
+from sim.world import mine_fire_setting, mine_technique, mine_works
 from sim.geography.api import deposit_records, ore_goods, tile_lookup
 
 # ============================================================================
@@ -630,7 +630,7 @@ Deposit = collections.namedtuple("Deposit", [
 ], defaults=((), "primary"))
 
 
-def extraction_cost_labour_hours_per_kg(deposit: "Deposit") -> float:
+def extraction_cost_labour_hours_per_kg(deposit: "Deposit", effects=None) -> float:
     """Labour-hours to raise one kilogram of CONTAINED METAL from `deposit`,
     from physical properties alone. Never reads a price anywhere - see the
     module docstring's EXTRACTION COST MECHANICS section for what each of
@@ -647,15 +647,17 @@ def extraction_cost_labour_hours_per_kg(deposit: "Deposit") -> float:
     total_cost_labour_hours_per_kg (see SINKING COST).
     """
     if deposit.depth_class == "alluvial_hydraulic":
-        hours_per_tonne_material = ALLUVIAL_HYDRAULIC_PROCESSING_HOURS_PER_TONNE
+        hours_per_tonne_material = (
+            ALLUVIAL_HYDRAULIC_PROCESSING_HOURS_PER_TONNE
+            / (effects or {}).get("gravel_moved_multiple", 1.0))
     elif deposit.depth_class == "alluvial":
         hours_per_tonne_material = ALLUVIAL_HAND_PROCESSING_HOURS_PER_TONNE
     else:
-        hours_per_tonne_material = vein_hours_per_tonne_ore(deposit)
+        hours_per_tonne_material = vein_hours_per_tonne_ore(deposit, effects)
     return hours_per_tonne_material / deposit.ore_grade_kg_per_tonne
 
 
-def vein_hours_per_tonne_ore(deposit: "Deposit") -> float:
+def vein_hours_per_tonne_ore(deposit: "Deposit", effects=None) -> float:
     """Labourer-hours per tonne of ore presented from a vein or surface
     working: breaking and fire-setting every tonne of rock broken (ore plus
     the barren rock that comes with it), then hoisting, carrying, draining
@@ -667,7 +669,9 @@ def vein_hours_per_tonne_ore(deposit: "Deposit") -> float:
     on_ore = sum(mine_works.works_hours_per_tonne_ore(
         deposit.depth_class, deposit.hardness_class,
         _lift_hours_per_tonne_metre(), shaft_depth_metres(deposit),
-        mine_fire_setting.MINING_SHIFT_HOURS).values())
+        mine_fire_setting.MINING_SHIFT_HOURS, effects=effects,
+        drainage_hours_per_tonne_metre=drainage_lift_hours_per_tonne_metre(effects)
+    ).values())
     return on_rock * rock_per_ore + on_ore
 
 
@@ -691,6 +695,15 @@ def _lift_hours_per_tonne_metre() -> float:
     return joules_per_tonne_metre / (
         HUMAN_SUSTAINED_POWER_WATTS * HOIST_MECHANICAL_EFFICIENCY
         * SECONDS_PER_HOUR)
+
+
+def drainage_lift_hours_per_tonne_metre(effects=None) -> float:
+    """Labourer-hours to lift one tonne of water one metre: bailing unless a
+    running technique brings a more efficient device (screw, wheel)."""
+    efficiency = (effects or {}).get(
+        "drainage_lift_efficiency", mine_technique.BAILING_MECHANICAL_EFFICIENCY)
+    return (GRAVITY_METRES_PER_SECOND_SQUARED * KILOGRAMS_PER_TONNE
+            / (HUMAN_SUSTAINED_POWER_WATTS * efficiency * SECONDS_PER_HOUR))
 
 
 def shaft_cost_labour_hours(deposit: "Deposit") -> float:
@@ -829,7 +842,7 @@ def current_ore_grade_kg_per_tonne(deposit: "Deposit", fraction_extracted: float
 
 
 def current_extraction_cost_labour_hours_per_kg(
-        deposit: "Deposit", fraction_extracted: float) -> float:
+        deposit: "Deposit", fraction_extracted: float, effects=None) -> float:
     """extraction_cost_labour_hours_per_kg, but at the grade actually being
     worked at this point in the deposit's life rather than its virgin
     grade. The effort per tonne of ROCK (hardness_class, depth_class) is
@@ -842,7 +855,7 @@ def current_extraction_cost_labour_hours_per_kg(
     if grade_now <= 0.0:
         return float("inf")
     return extraction_cost_labour_hours_per_kg(
-        deposit._replace(ore_grade_kg_per_tonne=grade_now))
+        deposit._replace(ore_grade_kg_per_tonne=grade_now), effects)
 
 
 # ============================================================================

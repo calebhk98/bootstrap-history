@@ -64,7 +64,7 @@ from . import money_units
 from . import purchase_rule
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
-from sim.geography.api import transport as freight_physics
+from sim.geography.api import cargo_cost, freight_cost, transport as freight_physics
 from sim.agents.api import edges
 
 
@@ -186,7 +186,7 @@ class FreightMixin:
     # real seagoing-hull mode. It also does not amortise the cart's own
     # capital cost or wear (transport.py's own vehicle_wear_fraction_per_
     # tonne_km) into the price: there is no market price for a cart
-    # anywhere in prices.json to convert that fraction into denarii, so
+    # anywhere in the production data to convert that fraction into denarii, so
     # this prices feed and driver time only, which UNDERSTATES the true
     # cost - a conservative simplification, named per CLAUDE.md SS3.4, not
     # a hidden one.
@@ -279,7 +279,7 @@ class FreightMixin:
         FEED PRICE IS A LABELLED STAND-IN. transport.py's own FEED_ENERGY_
         DENSITY_KCAL_PER_KG declaration describes the ration it costs
         against as hay-heavy, and this project has no hay or fodder price
-        anywhere in prices.json - FREIGHT_FEED_PRICE_MATERIAL (wheat_kg) is
+        anywhere in the production data - FREIGHT_FEED_PRICE_MATERIAL (wheat_kg) is
         the closest book price that exists, and wheat is dearer per
         kilogram than real fodder, so this reads as a conservative
         (upper-bound), not measured, feed cost.
@@ -294,8 +294,9 @@ class FreightMixin:
         distance_km = self.material_freight_distance_km(material)
         if not distance_km:
             return 0.0
-        denarii_per_tonne_km = self.land_freight_money_per_tonne_km()
-        denarii_per_tonne = denarii_per_tonne_km * distance_km
+        denarii_per_tonne = freight_cost.leg_money_per_tonne(
+            self.land_freight_money_per_tonne_km(), self._land_freight_physical_inputs(), distance_km,
+            least_share=1.0 - cargo_cost.MAX_LOST_SHARE)
         return denarii_per_tonne / KILOGRAMS_PER_TONNE
 
     def material_freight_factor(self, emp_key):
@@ -561,7 +562,7 @@ class FreightMixin:
         if not purchase_rule.can_pay(self, cost):
             return 0.0
         self.pay_edge(edges.EDGE_BUILDERS, cost, "nitre beds laid down")
-        self.state.economy.nitre_bed_m2 += square_metres
+        self.state.holdings.nitre_bed_m2 += square_metres
         return square_metres
 
     NITRE_SHORTAGE_SAFETY_BUFFER = declare(
@@ -603,7 +604,7 @@ class FreightMixin:
             return {"text": "", "commands": []}
         if binding == "charcoal":
             need = max(0.0, self.annual_material_demand().get("charcoal_kg", 0.0)
-                       / KILOGRAMS_PER_TONNE - self.state.economy.forest_ha * self.CHARCOAL_PER_HA)
+                       / KILOGRAMS_PER_TONNE - self.state.holdings.forest_ha * self.CHARCOAL_PER_HA)
             hectares_needed = max(1.0, round(need / max(self.CHARCOAL_PER_HA, 1e-9)))
             return {"text": (
                 "Charcoal is grown, not bought: about %s more hectare%s of "
@@ -617,7 +618,7 @@ class FreightMixin:
             shortfall_t = self.material_shortfall_t(binding)
         if binding == "saltpetre":
             demand = self.annual_material_demand().get("saltpetre_kg", 0.0) / KILOGRAMS_PER_TONNE
-            available = (self.state.economy.nitre_bed_m2 * self.NITRE_YIELD_T_PER_M2
+            available = (self.state.holdings.nitre_bed_m2 * self.NITRE_YIELD_T_PER_M2
                          + self._material_market_tonnes("saltpetre")
                          + self._material_stock().get("saltpetre", 0.0))
             deficit = max(shortfall_t, demand - available, 0.0)
@@ -637,7 +638,7 @@ class FreightMixin:
                                    * self.price_index))),
                 "commands": ["buy nitre %d" % square_meters]}
         if binding in self.MINE_OPEX_MATERIALS:
-            sinking = [tranche for tranche in (self.state.economy.mine_tranches or []) if tranche[0] == binding]
+            sinking = [tranche for tranche in (self.state.holdings.mine_tranches or []) if tranche[0] == binding]
             sinking_tonnes = sum(tranche[1] for tranche in sinking)
             if sinking_tonnes > 0.0:
                 ready_year = int(min(tranche[2] for tranche in sinking))

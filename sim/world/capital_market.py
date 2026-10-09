@@ -7,8 +7,6 @@ own arrears, less a discount for its own standing.
 """
 from sim.constants import declare
 
-FOUNDER_LOAN = "founder"  # the founder's id among the market's borrowers
-
 RATE_ELASTICITY = declare(
     "RATE_ELASTICITY", 0.5, kind="temporary_heuristic",
     unit="proportional change of the rate per proportional change of the balance", source=None,

@@ -4,9 +4,25 @@ A part of the year's phases (core_step_phases.py); Sim inherits it through StepP
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from . import automation_audit, shortage_conditions
 from sim.agents.api import edges
+from sim.constants import declare
+from . import money_units
 
 
 class ProjectStartPhaseMixin:
+
+    AUTO_FOREST_CAPITAL_LABOUR_HOURS_PER_HA = declare(
+        "AUTO_FOREST_CAPITAL_LABOUR_HOURS_PER_HA", 36300.0, kind="temporary_heuristic",
+        unit="labour hours of capital held per hectare bought", source=None, confidence="D",
+        why="How much capital the optimizer holds for each hectare of charcoal forest its mining "
+            "policy buys alongside an ore shortfall, so the forest never takes the whole purse. "
+            "Tuned, not measured.")
+    AUTO_FOREST_CAPITAL_PER_HA = money_units.PricedInLabourHours("AUTO_FOREST_CAPITAL_LABOUR_HOURS_PER_HA")
+    NITRE_BED_SPEND_CEILING_LABOUR_HOURS = declare(
+        "NITRE_BED_SPEND_CEILING_LABOUR_HOURS", 40300.0, kind="temporary_heuristic",
+        unit="labour hours per year", source=None, confidence="D",
+        why="Yearly ceiling on the optimizer's automatic nitre-bed spending, a flat amount of work "
+            "rather than a share of the shortfall that beds cannot close. Tuned, not measured.")
+    NITRE_BED_SPEND_CEILING = money_units.PricedInLabourHours("NITRE_BED_SPEND_CEILING_LABOUR_HOURS")
 
     def _step_start_projects(self):
         # 4b. start new projects
@@ -180,27 +196,27 @@ class ProjectStartPhaseMixin:
             # no answer at all for coal: the binding constraint fell through
             # both branches and the run simply sat throttled. That is why coal
             # showed 1,669 shortage-years in a 395 year run.
-            if self.state.economy.binding == "charcoal":
+            if self.state.holdings.binding == "charcoal":
                 if self.state.founder.policy.get("auto_forest", not self.manual):
                     # SIZED FROM THE SHORTFALL, like the mine branch below,
                     # rather than from a flat share of cash. A tenth of a
                     # denarius of capital bought a ten-thousandth of a hectare
                     # while the demand was measured in hundreds of tonnes.
                     _need_t = (self.annual_material_demand().get("charcoal_kg", 0.0)
-                               / KILOGRAMS_PER_TONNE) - self.state.economy.forest_ha * self.CHARCOAL_PER_HA
+                               / KILOGRAMS_PER_TONNE) - self.state.holdings.forest_ha * self.CHARCOAL_PER_HA
                     _want_ha = max(0.0, _need_t) / max(self.CHARCOAL_PER_HA, 1e-9)
                     _afford_ha = (_can_raise * 0.35
                                   / (self.FOREST_COST_PER_HA * self.price_index))
                     _before = self.state.household.capital
-                    _hectares_before = self.state.economy.forest_ha
+                    _hectares_before = self.state.holdings.forest_ha
                     self.buy_forest(min(400.0, _want_ha, _afford_ha))
-                    if self.state.economy.forest_ha > _hectares_before:
+                    if self.state.holdings.forest_ha > _hectares_before:
                         automation_audit.record(
                             self, "auto_forest", "forest",
-                            "%.0f hectares of coppice" % (self.state.economy.forest_ha - _hectares_before),
+                            "%.0f hectares of coppice" % (self.state.holdings.forest_ha - _hectares_before),
                             "charcoal demand exceeds what %.0f hectares yield by %.0f tonnes a year"
                             % (_hectares_before, max(0.0, _need_t)), _before)
-            elif (self.state.economy.binding in self.MINE_OPEX_MATERIALS
+            elif (self.state.holdings.binding in self.MINE_OPEX_MATERIALS
                     and self.state.founder.policy.get("auto_mine", not self.manual)):
                 # Size the mine from ALL the material keys that feed this
                 # bucket, not one of them. The throttle counted iron ore AND
@@ -220,37 +236,37 @@ class ProjectStartPhaseMixin:
                 # sorted(), because this feeds a float sum.
                 keys = tuple(sorted(material for material, (bucket, _tag)
                                     in self.MATERIAL_CHECKS.items()
-                                    if bucket == self.state.economy.binding))
+                                    if bucket == self.state.holdings.binding))
                 short = sum(dem.get(material, 0.0) for material in keys)
                 # Shafts already sinking count, so a tranche about to
                 # commission is not ordered twice.
-                want = max(0.0, short - self.mine_capacity.get(self.state.economy.binding, 0.0)
-                           - self.state.economy.mine_pending.get(self.state.economy.binding, 0.0))
+                want = max(0.0, short - self.mine_capacity.get(self.state.holdings.binding, 0.0)
+                           - self.state.holdings.mine_pending.get(self.state.holdings.binding, 0.0))
                 _before = self.state.household.capital
-                _pending = self.state.economy.mine_pending.get(self.state.economy.binding, 0.0)
+                _pending = self.state.holdings.mine_pending.get(self.state.holdings.binding, 0.0)
                 _ordered = min(want, self.state.household.capital * 0.25
-                               / max(1.0, self._mine_capex(self.state.economy.binding)))
-                _order = automation_audit.order_id("auto_mine", self.state.economy.binding, self.state.scenario.year)
-                self.open_mine(self.state.economy.binding, _ordered, order=_order)
+                               / max(1.0, self._mine_capex(self.state.holdings.binding)))
+                _order = automation_audit.order_id("auto_mine", self.state.holdings.binding, self.state.scenario.year)
+                self.open_mine(self.state.holdings.binding, _ordered, order=_order)
                 if _ordered > 0:
                     automation_audit.record(
                         self, "auto_mine", "mine",
-                        "%.0f t/year of %s ordered" % (_ordered, self.state.economy.binding),
+                        "%.0f t/year of %s ordered" % (_ordered, self.state.holdings.binding),
                         "demand %.0f t/year > active %.0f t/year; pending capacity considered %.0f t/year"
-                        % (short, self.mine_capacity.get(self.state.economy.binding, 0.0), _pending),
+                        % (short, self.mine_capacity.get(self.state.holdings.binding, 0.0), _pending),
                         _before, order=_order)
                 else:
                     automation_audit.record_skip(
-                        self, "auto_mine", "mine for %s" % self.state.economy.binding,
+                        self, "auto_mine", "mine for %s" % self.state.holdings.binding,
                         "nothing ordered: shortfall %.0f t/year against %.0f t/year active and %.0f pending, "
                         "a quarter of capital buys %.0f t/year"
-                        % (short, self.mine_capacity.get(self.state.economy.binding, 0.0), _pending,
-                           self.state.household.capital * 0.25 / max(1.0, self._mine_capex(self.state.economy.binding))))
+                        % (short, self.mine_capacity.get(self.state.holdings.binding, 0.0), _pending,
+                           self.state.household.capital * 0.25 / max(1.0, self._mine_capex(self.state.holdings.binding))))
                 # Iron and the base metals are smelted with charcoal, so the
                 # ore is only half the answer.
-                if self.state.economy.binding in ("iron", "copper", "lead"):
-                    self.buy_forest(min(200.0, self.state.household.capital / self.labour.book_money(1800.0)))
-            elif (self.state.economy.binding == "saltpetre"
+                if self.state.holdings.binding in ("iron", "copper", "lead"):
+                    self.buy_forest(min(200.0, self.state.household.capital / self.AUTO_FOREST_CAPITAL_PER_HA))
+            elif (self.state.holdings.binding == "saltpetre"
                     and self.state.founder.policy.get("auto_mine", not self.manual)):
                 # GATED, like every other automatic purchase: ungated, this
                 # branch would take five per cent of a manual player's
@@ -261,14 +277,14 @@ class ProjectStartPhaseMixin:
                 # spends a quarter of capital a year against a shortfall
                 # nitre beds cannot close at any affordable scale, which
                 # starves everything else and, once the household falls into
-                # arrears, pins it there with interest. Two thousand denarii
-                # a year is what leaves the rest of the programme funded.
+                # arrears, pins it there with interest. A fixed yearly amount
+                # of work is what leaves the rest of the programme funded.
                 #
                 # The shortage is real and unresolved; more money is not the
                 # answer to it.
-                spend = min(self.state.household.capital * 0.05, self.labour.book_money(2000.0))
+                spend = min(self.state.household.capital * 0.05, self.NITRE_BED_SPEND_CEILING)
                 self.pay_edge(edges.EDGE_BUILDERS, spend, "nitre beds laid down")
-                self.state.economy.nitre_bed_m2 += spend / self.NITRE_COST_PER_M2
+                self.state.holdings.nitre_bed_m2 += spend / self.NITRE_COST_PER_M2
                 automation_audit.record(
                     self, "auto_mine", "nitre", "%d square metres of nitre bed" % (spend / self.NITRE_COST_PER_M2),
                     "saltpetre is the binding shortage; the yearly spend is capped, not sized to the gap",
@@ -276,14 +292,14 @@ class ProjectStartPhaseMixin:
                 self.state.household.log.append((self.state.scenario.year, "laid down %d square metres of nitre bed "
                                      "for %d denarii (auto_mine)"
                                  % (spend / self.NITRE_COST_PER_M2, spend)))
-        if thr < 0.6 and self.state.economy.binding:
+        if thr < 0.6 and self.state.holdings.binding:
             # SAY WHAT TO DO ABOUT IT: a bare "SHORT OF SALTPETRE: work at
             # 5% of plan" with no remedy attached reads as the game being
             # stuck rather than as something actionable.
             # One standing condition; the full message only when it is new or has moved materially.
-            if shortage_conditions.note_shortage(self, self.state.economy.binding, thr):
+            if shortage_conditions.note_shortage(self, self.state.holdings.binding, thr):
                 self.state.household.log.append((self.state.scenario.year, "SHORT OF %s: work running at %d%% of plan. %s"
-                                 % (self.state.economy.binding.upper(), thr * 100,
-                                    self.shortage_remedy(self.state.economy.binding))))
+                                 % (self.state.holdings.binding.upper(), thr * 100,
+                                    self.shortage_remedy(self.state.holdings.binding))))
         else:
             shortage_conditions.clear_shortage(self)

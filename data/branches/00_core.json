@@ -109,7 +109,7 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 1.0,
-    "cap_hours": 4032.375834825865,
+    "cap_hours": 4000.0,
     "cat": "mathematics",
     "conf": "C",
     "dev_people": null,
@@ -221,6 +221,8 @@
       "high_temp_furnace",
       "power_grid"
     ],
+    "requires_running": ["power_grid"],
+    "_internal": "[GATE: Operates only on a running grid: it draws mains power from it, so a shut or never-built grid leaves it dead. Knowledge of the technique stays in pre.]",
     "req_any": [],
     "rev_hours": 806475.166965173,
     "risk": 0.35,
@@ -919,8 +921,8 @@
     "mechanics": {
       "ablation_candidate": true,
       "living_cost_status": {
-        "flat": 200.0,
-        "book_money": true,
+        "flat": 4030.0,
+        "labour_hours": true,
         "gate": "has",
         "order": 0
       },
@@ -1179,8 +1181,8 @@
       },
       "ablation_candidate": true,
       "credit_line": {
-        "per_unit": 4000.0,
-        "book_money": true,
+        "per_unit": 80600.0,
+        "labour_hours": true,
         "order": 4
       },
       "protection": {
@@ -2018,6 +2020,8 @@
       "electroplating",
       "power_grid"
     ],
+    "requires_running": ["power_grid"],
+    "_internal": "[GATE: Operates only on a running grid: it draws mains power from it, so a shut or never-built grid leaves it dead. Knowledge of the technique stays in pre.]",
     "req_any": [
       {
         "group": "cryolite_supply",
@@ -2236,8 +2240,8 @@
       },
       "ablation_candidate": true,
       "credit_line": {
-        "flat": 30000.0,
-        "book_money": true,
+        "flat": 605000.0,
+        "labour_hours": true,
         "order": 5
       },
       "debt_rate_discount": {
@@ -2733,7 +2737,7 @@
     "adopt_yrs": 0.0,
     "art": 1.0,
     "build_yrs": 0.5,
-    "cap_hours": 4032.375834825865,
+    "cap_hours": 4000.0,
     "cat": "semiconductor",
     "conf": "A",
     "dev_people": null,
@@ -3734,8 +3738,8 @@
         "order": 6
       },
       "credit_line": {
-        "flat": 400.0,
-        "book_money": true,
+        "flat": 8060.0,
+        "labour_hours": true,
         "order": 0
       },
       "protection": {
@@ -3758,7 +3762,7 @@
     "traits": [
       "commerce"
     ],
-    "up_hours": 4032.375834825865,
+    "up_hours": 4000.0,
     "yrs": 0.5
   },
   {
@@ -4700,8 +4704,8 @@
         "order": 5
       },
       "credit_line": {
-        "flat": 60000.0,
-        "book_money": true,
+        "flat": 1210000.0,
+        "labour_hours": true,
         "order": 3
       },
       "debt_rate_discount": {
@@ -4709,8 +4713,8 @@
         "order": 2
       },
       "living_cost_status": {
-        "flat": 2500.0,
-        "book_money": true,
+        "flat": 50400.0,
+        "labour_hours": true,
         "order": 2
       },
       "reach": {
@@ -4810,8 +4814,8 @@
         "lost_benefit": "Protection and credit"
       },
       "credit_line": {
-        "flat": 3000.0,
-        "book_money": true,
+        "flat": 60500.0,
+        "labour_hours": true,
         "order": 1
       },
       "debt_rate_discount": {
@@ -4844,7 +4848,7 @@
     "traits": [
       "commerce"
     ],
-    "up_hours": 4032.375834825865,
+    "up_hours": 4000.0,
     "yrs": 0.5
   },
   {
@@ -4872,8 +4876,8 @@
         "order": 4
       },
       "credit_line": {
-        "flat": 15000.0,
-        "book_money": true,
+        "flat": 302000.0,
+        "labour_hours": true,
         "order": 2
       },
       "debt_rate_discount": {
@@ -4881,8 +4885,8 @@
         "order": 1
       },
       "living_cost_status": {
-        "flat": 900.0,
-        "book_money": true,
+        "flat": 18100.0,
+        "labour_hours": true,
         "order": 1
       },
       "reach": {

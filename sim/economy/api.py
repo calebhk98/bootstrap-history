@@ -8,7 +8,7 @@ WALL = "two-way"  # nothing here reaches sim/engine/; the engine hands it what i
 
 import math
 
-from . import diagnostics, households, labour_state, market_curves, taxes, tile_costs, workforce_settle
+from . import diagnostics, households, labour_state, land_rents, market_curves, taxes, tile_costs, workforce_settle
 from .currency import currency_from_coin_standard
 from .economy import Economy
 from .foreign import external_orders
@@ -19,7 +19,7 @@ from .protocols import AgentOrders, YearInputs
 from .recipes import recipes_from_production_data
 from .record import EconomyRecord
 from .setup import EconomySetup, TradeSpec, goods_specs
-from .types import EDGE_EXTERNAL, EDGE_LEGACY, GoodsMove, Offer, Transfer
+from .types import EDGE_CARGO, EDGE_EXTERNAL, EDGE_LEGACY, Bid, GoodsMove, Offer, Transfer, external_edge
 from .unit_cost import variable_cost_per_run
 from .year_close import rebase_basket_price_level
 from .year_labour import trade_premium
@@ -30,12 +30,13 @@ __all__ = [
     "price_response",
     "shown_prices", "Producer", "expected_output_prices", "live_input_prices", "live_wages", "AgentOrders",
     "YearInputs", "recipes_from_production_data", "EconomyRecord", "EconomySetup", "TradeSpec",
-    "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "GoodsMove", "Offer", "Transfer",
+    "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "EDGE_CARGO", "external_edge", "Bid", "GoodsMove", "Offer", "Transfer",
     "variable_cost_per_run", "rebase_basket_price_level", "trade_premium",
     "traded_volumes", "opening_quantities", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
     "credit_room", "economy_from_record", "blank_economy", "export_record", "finish_spin_up", "shown_prices_of",
-    "settle_founder_takings", "move_goods", "cohort_incomes",
+    "settle_agent_takings", "move_goods", "post_transfers", "cohort_incomes", "land_rent_per_hectare",
+    "land_rent_paid_by_tile",
 ]
 
 _KEY_SEPARATOR = "|"
@@ -66,6 +67,18 @@ def wages_by_trade(economy):
     for key, wage in economy.record.memory.wages.items():
         rows.setdefault(key.split(_KEY_SEPARATOR, 1)[0], []).append(wage)
     return rows
+
+
+def land_rent_per_hectare(economy):
+    """Mean rent per hectare-year producers paid last year over the tiles where land was let (zero where
+    none was)."""
+    rents = [rent for rent in economy.record.land_rent.values() if rent > 0.0]
+    return sum(rents) / len(rents) if rents else 0.0
+
+
+def land_rent_paid_by_tile(economy):
+    """Rent producers paid on each tile where land was let last year, in the economy's units."""
+    return land_rents.rent_paid_by_tile(economy.setup, economy.record)
 
 
 def wages_by_trade_weighted(economy):
@@ -207,7 +220,12 @@ def move_goods(economy, moves):
     economy.record.book.move_many(moves)
 
 
-def settle_founder_takings(economy, agent_id, edge_id, tile_note="founder's takings"):
+def post_transfers(economy, transfers):
+    """Applies money transfers to the economy's book."""
+    economy.record.book.transfer_many(transfers)
+
+
+def settle_agent_takings(economy, agent_id, edge_id, tile_note="agent's takings"):
     """Sends an agent's money and every unsold holding back over an edge; returns the money sent."""
     book, money = economy.record.book, economy.setup.currency_id
     proceeds = book.balance(agent_id, money)

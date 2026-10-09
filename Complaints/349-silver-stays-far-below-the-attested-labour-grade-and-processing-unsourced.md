@@ -30,3 +30,5 @@ Overlapping issues closed into this one; each closed file keeps its full text.
 - 139 (`closed/139-silver-is-too-cheap-to-produce.md`): silver too cheap to produce: the remaining gap is this issue.
 - 284 (`closed/284-solved-copper-and-silver-prices-look-low.md`): solved copper and silver prices look low; open sub-item: the copper recipe's ore per tonne of metal disagrees with what the deposits imply (data audit).
 - 373 (`closed/373-no-jarosite-silver-route.md`): the jarosite route is built; its grade, flux and recovery need the paper.
+
+Research (2026-10-09): `Complaints/reports/silver-grades-and-processing-research.md` (extends `precious-metal-mining-sources.md`): the silver grade of the ore actually dressed moves hours per kg the most (hours vary as one over grade, and plausible grades span more than tenfold), drainage water per tonne second. Most primary sources (Domergue, Davies, Hopper) could not be opened; their figures are from summaries and labelled so. Watch the unit trap: silver is often quoted per tonne of lead, not of ore.

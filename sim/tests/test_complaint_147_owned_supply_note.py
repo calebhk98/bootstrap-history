@@ -20,7 +20,7 @@ class OwnedSupplyNoteTests(unittest.TestCase):
 
     def test_owned_supply_is_named_and_lowers_the_price(self):
         bare, owner = sim(capital=5e7), sim(capital=5e7)
-        owner.state.economy.forest_ha += 500
+        owner.state.holdings.forest_ha += 500
         before, after = _row(bare), _row(owner)
         self.assertLess(after["price_per_tonne"], before["price_per_tonne"])
         shown = _material_row(after)

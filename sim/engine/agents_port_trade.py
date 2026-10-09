@@ -119,25 +119,31 @@ class TradeView:
 		return self._delivered().get((material, destination), 0.0)
 
 	def ship(self, trader_id: str, material: str, tonnes: float, source: str, destination: str) -> Tuple[float, float]:
-		"""Buy at the source and sell at the destination; (money paid, money received). The home side
-		goes through the one goods market and is tallied for the home price quote; a partner's side is
-		tallied for its market book to close on (foreign_actor_trade.py)."""
+		"""Buy at the source and sell at the destination; (money paid, money received), the quotes the trader is
+		booked at. The cargo is noted as a leg and settled once the year's market has cleared (trader_cargo.py): on
+		the agent economy its home side is orders in the book, otherwise it goes through the engine's own market;
+		a partner's side is tallied for its market book to close on (foreign_actor_trade.py)."""
 		if tonnes <= 0.0:
 			return 0.0, 0.0
 		paid = (self.price_at(material, source) or 0.0) * tonnes
 		received = (self.price_at(material, destination) or 0.0) * tonnes
 		home = self._home_place()
 		sim = self._sim  # type: ignore[attr-defined]
+		on_book = self.runs_agent_economy()  # type: ignore[attr-defined]
 		if source == home:
-			self.market_purchase(trader_id, self.commodity_of(material), tonnes)  # type: ignore[attr-defined]
+			if not on_book:
+				self.market_purchase(trader_id, self.commodity_of(material), tonnes)  # type: ignore[attr-defined]
 			sim.note_actor_home_trade(material, tonnes, False)
 		if destination == home:
-			self.market_sale(trader_id, material, tonnes)  # type: ignore[attr-defined]
+			if not on_book:
+				self.market_sale(trader_id, material, tonnes)  # type: ignore[attr-defined]
 			sim.note_actor_home_trade(material, tonnes, True)
 		if destination != home:
 			sim.note_actor_trade(destination, material, tonnes, True)
 		if source != home:
 			sim.note_actor_trade(source, material, tonnes, False)
+		sim.note_cargo_leg(trader_id, material, tonnes, source, destination, paid, received,
+						   self.freight_between(source, destination, material, tonnes), home)
 		key = (material, destination)
 		self._delivered()[key] = self._delivered().get(key, 0.0) + tonnes
 		return paid, received

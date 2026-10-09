@@ -30,7 +30,7 @@ def save_state(sim, path):
 		sim.state.population.pop_elderly = float(sim.population.elderly)
 
 	held_demand = sim.household._material_demand_cache
-	sim.state.economy.material_demand_at_last_throttle = None if held_demand is None else dict(held_demand)
+	sim.state.holdings.material_demand_at_last_throttle = None if held_demand is None else dict(held_demand)
 
 	# dumps (not dump, not indent) so the C encoder does the work
 	text = json.dumps(serialize_state(sim.state), default=str,
@@ -64,11 +64,11 @@ def _stamp(absolute):
 
 
 REQUIRED_V3_SECTIONS = (
-    "seats", "economy", "governance", "scenario", "population",
+    "seats", "economy", "scenario", "population",
 )
 
 # What each seat holds; the acting seat's sections are checked and searched like root ones.
-SEAT_SECTIONS = ("household", "projects", "founder")
+SEAT_SECTIONS = ("household", "projects", "founder", "holdings", "governance", "seat_progress")
 
 REQUIRED_METADATA_FIELDS = (
     "_civ", "acting_seat", "_civ_live", "_weights", "_fog", "_immortal", "_rng",
@@ -92,7 +92,7 @@ def _get_field(blob, field_name):
         return None
     if field_name in blob:
         return blob[field_name]
-    for section in ("economy", "governance", "scenario", "population"):
+    for section in ("economy", "scenario", "population"):
         sec = blob.get(section)
         if isinstance(sec, dict) and field_name in sec:
             return sec[field_name]

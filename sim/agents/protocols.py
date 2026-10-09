@@ -109,6 +109,14 @@ class World(Protocol):
 		"""Money's worth of the coin this society holds, from its coin standard."""
 		...
 
+	def land_rent_paid_by_tile(self) -> Dict[str, float]:
+		"""Rent producers paid last year on each tile where land was let, in coin; empty without an agent economy."""
+		...
+
+	def land_rent_owners(self) -> List[Tuple[Any, float]]:
+		"""(actor, rent received) where the world can say which actors the rent went to; empty where it cannot."""
+		...
+
 	# ---- Who is hurt, and what an interest group can see
 
 	def displaced_producers(self) -> List[Sector]:
@@ -280,6 +288,10 @@ class World(Protocol):
 	def concern_wage_bill(self, node_id: str, capacity: float = 1.0) -> float:
 		...
 
+	def site_rent(self, node_id: str, capacity: float = 1.0) -> float:
+		"""Yearly rent of the land a concern run at `capacity` times its founding size occupies."""
+		...
+
 	def free_fte(self, trade: str, actor_id: Optional[str]) -> Optional[float]:
 		...
 
@@ -309,7 +321,11 @@ class World(Protocol):
 		"""Founder concerns that have been running at a profit long enough to be believed."""
 		...
 
-	def ramp(self, opened_year: int) -> float:
+	def ramp(self, opened_year: int, node_id: Optional[str] = None) -> float:
+		...
+
+	def scale_ceiling(self, node_id: str) -> float:
+		"""The most founding sizes one concern of this kind can be run at."""
 		...
 
 	def concern_takings(self, node_id: str, opened_year: int, rivals: float = 0.0, capacity: float = 1.0) -> float:
@@ -419,6 +435,10 @@ class World(Protocol):
 
 	def patent_entry(self, node_id: str) -> Optional[Dict[str, Any]]:
 		"""The live patent on a node ({"holder", "expires", "licensees"}), else None."""
+		...
+
+	def seat_parties(self) -> Dict[str, Any]:
+		"""Every seat as an actor by seat id (they hold patents and shares like any actor)."""
 		...
 
 	# ---- What the home state asks of its people (sim/engine/agents_port_budget.py)

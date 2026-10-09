@@ -96,7 +96,7 @@ class MechanicsMixin:
 
     def effect_value(self, node_id, spec):
         """The size of one node's effect: flat, or scaled by how much of the institution runs."""
-        scale = self._book_money_scale if spec.get("book_money") else 1.0
+        scale = self.labour.money_per_labour_hour() if spec.get("labour_hours") else 1.0
         if "per_sqrt_unit" in spec:
             return spec["per_sqrt_unit"] * scale * self.institution_units(node_id) ** 0.5
         if "per_unit" in spec:

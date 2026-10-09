@@ -2,10 +2,24 @@
 
 A part of the year's phases (core_step_phases.py); Sim inherits it through StepPhasesMixin."""
 from . import automation_audit
+from sim.constants import declare
 from sim.agents.api import edges
 
 
 class MoneyPhaseMixin:
+
+    AUTO_BUY_PEOPLE_CAPITAL_FLOOR_IN_PRICES = declare(
+        "AUTO_BUY_PEOPLE_CAPITAL_FLOOR_IN_PRICES", 20.0, kind="temporary_heuristic",
+        unit="base prices of one person", source=None, confidence="D",
+        why="Capital the optimizer must hold, as a number of what one person costs to buy, before its "
+            "standing policy buys people. A price multiple, so it follows the cost of a person in any coin. "
+            "Tuned, not measured.")
+    AUTO_BUY_PEOPLE_CAPITAL_PER_PERSON_IN_PRICES = declare(
+        "AUTO_BUY_PEOPLE_CAPITAL_PER_PERSON_IN_PRICES", 5.0, kind="temporary_heuristic",
+        unit="base prices of one person", source=None, confidence="D",
+        why="Capital kept in reserve per person the optimizer's standing policy buys, as a multiple of "
+            "one person's base price, so a purchase never spends the purse down to the price. "
+            "Tuned, not measured.")
 
     def _step_money(self):
         # 2. money
@@ -21,16 +35,18 @@ class MoneyPhaseMixin:
         self.state.household.wages_prepaid = 0.0
         self.state.founder.living_cost_paid += living_cost
         mine_cost = self.mine_operating_cost()
-        self.state.economy.mine_cost_paid += mine_cost
+        self.state.holdings.mine_cost_paid += mine_cost
         revenue, upkeep = self.revenue(), self.upkeep()
         # The guard is paid from what the purse and the credit line can bear, like any other spending.
         room = max(0.0, self.state.household.capital + self.credit_limit() + revenue - upkeep - living_cost - mine_cost)
-        keeping = min(self.coin_hoard()["keeping_cost_per_year"], room)
+        keeping_owed = self.coin_hoard()["keeping_cost_per_year"]
+        keeping = min(keeping_owed, room)
         self.receive_from_edge(edges.EDGE_CUSTOMERS, revenue, "venture revenue")
         self.pay_edge(edges.EDGE_SUPPLIERS, upkeep, "running costs of concerns")
         self.pay_wages(living_cost, "living costs")
         self.pay_edge(edges.EDGE_SUPPLIERS, mine_cost, "mine running costs")
         self.pay_edge(edges.EDGE_COIN_GUARDS, keeping, "keeping coin under guard")
+        self.charge_founder_for_theft(keeping, keeping_owed)
         # A mine you cannot pay for is a mine you stop working. Without this the
         # opex accrued for ever against a bankrupt enterprise: the England run
         # sank a large mine, lost its revenue and then ran three centuries at
@@ -55,6 +71,7 @@ class MoneyPhaseMixin:
                 self, "reopen (always on, not a policy)", "reopen", ", ".join(_reopened),
                 "a staffing closure, and the people to watch it are free again", _before,
                 ids=list(_reopened))
+        self.close_lapsed_dependents(self.state.scenario.year)
         self.close_unstaffed_ventures(self.state.scenario.year)
         # Open what plainly pays for itself, before the books are struck: a
         # concern you opened this year is a concern that earns this year.
@@ -169,8 +186,8 @@ class MoneyPhaseMixin:
         # that hides it lies about the cost of everything", and hiding the
         # acquisition from a player is the worst version of that.
         if self.state.founder.policy.get("auto_buy_people", False):
-            if self.state.household.capital > self.labour.book_money(6000.0) and self.state.household.artisans < 12 and self.running_with_mechanic("hosts_bought_people"):
-                got = self.labour.buy_slaves(min(6, int(self.state.household.capital // self.labour.book_money(1500.0))))
+            if self.state.household.capital > self.AUTO_BUY_PEOPLE_CAPITAL_FLOOR_IN_PRICES * self.labour.SLAVE_BASE_PRICE and self.state.household.artisans < 12 and self.running_with_mechanic("hosts_bought_people"):
+                got = self.labour.buy_slaves(min(6, int(self.state.household.capital // (self.AUTO_BUY_PEOPLE_CAPITAL_PER_PERSON_IN_PRICES * self.labour.SLAVE_BASE_PRICE))))
                 if got:
                     self.state.household.log.append((self.state.scenario.year, "bought %d people for the workshop" % got))
         if self.state.founder.policy.get("auto_manumit", not self.manual) and self.state.household.slaves:

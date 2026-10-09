@@ -278,6 +278,7 @@
     }
    ],
    "unit_dimension": "energy",
+   "requires_node": "silicon_path",
    "basis": "per 1000 MJ of electricity generated at the busbar by installed photovoltaic capacity",
    "yield_basis": "The entire cost of this technique is its capital amortisation - there is no fuel, no labour beyond the panel's own construction, and no running cost at all, which is itself a real and verifiable feature of photovoltaic economics (its cost is famously almost all up-front capital, unlike every combustion or muscle-powered technique in this file) rather than an oversight. See this entry's own capital_basis for the full derivation of the annual output figure the amortisation divides by.",
    "conf": "C"

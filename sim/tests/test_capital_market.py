@@ -100,7 +100,7 @@ one_year(indebted)
 indebted.capital = -0.5 * indebted.capital_market().capacity
 one_year(indebted)
 check("a founder's debt is demand on the market and is recorded among the loans",
-      indebted.capital_market().loans.get("founder", 0.0) > 0.0, indebted.capital_market().loans)
+      indebted.capital_market().loans.get(indebted.state.acting_seat, 0.0) > 0.0, indebted.capital_market().loans)
 check("more borrowing, a higher market rate",
       indebted.market_rate() > base.market_rate(), (indebted.market_rate(), base.market_rate()))
 

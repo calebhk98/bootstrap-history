@@ -187,21 +187,21 @@ class MaterialSupplyMixin:
     # plentiful material gets assumed to have a large national output and a
     # wide buyable share; a dear, rare one gets less of both - fitted, not
     # guessed, from the curated figures the 9 tracked commodities already
-    # carry: iron (1.0 den/kg) is rated 82,500 t/yr, copper (4.0) 15,000,
-    # gold (3,440) 9. log(output) against log(price) across those three
-    # (four orders of magnitude in price) fits close to output =
-    # 82,500 / price**1.1 - which reproduces gold's real 9 t/yr to within
+    # carry: iron is rated 82,500 t/yr, copper 15,000, gold 9. log(output)
+    # against log(price in labour hours per kg) across those three (about
+    # four orders of magnitude in price) fits close to output =
+    # anchor / price**1.1 - which reproduces gold's real 9 t/yr to within
     # 20% despite the fit never having seen gold's number, because scarcity
     # and price genuinely do move together, not because gold is special.
     # This is exactly the standard COMMODITY_DYNAMISM.md sets: "a commodity
     # nobody anticipated must behave correctly because the mechanism is
     # supply and demand, not because somebody wrote a rule for it."
     GENERIC_OUTPUT_ANCHOR_T_PER_YR = declare(
-        "GENERIC_OUTPUT_ANCHOR_T_PER_YR", 82500.0, kind="engineering_estimate",
-        unit="tonnes/year at price=1 denarius/kg", source=
+        "GENERIC_OUTPUT_ANCHOR_T_PER_YR", 2246000.0, kind="engineering_estimate",
+        unit="tonnes/year at a price of one labour hour per kg", source=
         "Fitted (log-log regression) from resources.json's own curated "
-        "empire outputs for iron (1.0 den/kg -> 82,500 t/yr), copper "
-        "(4.0 -> 15,000 t/yr) and gold (3,440 -> 9 t/yr) - see the class "
+        "empire outputs for iron (82,500 t/yr), copper (15,000 t/yr) and gold (9 t/yr), "
+        "each against its solved price in labour hours per kg - see the class "
         "comment above for the fit and its cross-check against gold's own "
         "number, which the fit never saw.",
         confidence="C",
@@ -216,7 +216,7 @@ class MaterialSupplyMixin:
         unit="dimensionless exponent on price", source=
         "Same three-point log-log fit as GENERIC_OUTPUT_ANCHOR_T_PER_YR.",
         confidence="C",
-        why="How fast national output falls as a material's own book price "
+        why="How fast national output falls as a material's own solved price "
             "rises, in the fitted fallback curve - scarcity and price "
             "moving together is a real, general economic regularity; this "
             "specific exponent is fitted to three commodities and "
@@ -281,10 +281,9 @@ class MaterialSupplyMixin:
         return table[entry]
 
     def _material_price_per_kg(self, tag):
-        """Denarii/kg for a raw material key (for example aluminium_kg) from
-        the calculator-backed table, or a curated commodity id from
-        commodities.json's own base_price - the two files agree by
-        construction, see commodities.json's own `_doc.reused_from`). None
+        """Money per kg in this civilisation's coin for a raw material key (for
+        example aluminium_kg) from the calculator-backed table, or for a curated
+        commodity id the price of the material its `price_material` names. None
         if this file cannot price it at all, which should not happen for
         any material key the tech tree actually uses (see the class
         comment above)."""
@@ -293,15 +292,14 @@ class MaterialSupplyMixin:
             return prices[tag]
         commodity = self._commodity_ledger().commodities.get(tag)
         if commodity:
-            price = float(commodity.get("base_price_denarii_per_kg", 0.0) or 0.0)
-            return self.labour.book_money(price) or None
+            return prices.get(commodity.get("price_material")) or None
         return None
 
-    def _denarii_price_per_kg(self, tag):
-        """The price in book denarii, the unit the output and market-share
-        curves below were fitted in."""
+    def _hours_price_per_kg(self, tag):
+        """The price in labour hours per kg, the unit the output and
+        market-share curves below are stated in."""
         price = self._material_price_per_kg(tag)
-        return None if price is None else price / self.labour.book_money(1.0)
+        return None if price is None else price / self.labour.money_per_labour_hour()
 
     def _material_tag(self, mat_key):
         """Which (commodity id, supply-pool tag) a raw material key draws
@@ -351,7 +349,7 @@ class MaterialSupplyMixin:
         ledger = self._commodity_ledger()
         if tag in ledger.commodities:
             return ledger.country_output(tag, built=self.state.projects.done)
-        price = self._denarii_price_per_kg(tag)
+        price = self._hours_price_per_kg(tag)
         price_power = None if price is None or price <= 0 else price ** self.GENERIC_OUTPUT_PRICE_EXPONENT
         if not price_power:     # unpriced, free, or so cheap the power underflows
             return self.GENERIC_OUTPUT_CEILING_T_PER_YR
@@ -379,13 +377,13 @@ class MaterialSupplyMixin:
         if tag in ledger.commodities:
             return float(ledger.commodities[tag].get(
                 "market_share", self.GENERIC_MARKET_SHARE_LEDGER_FALLBACK))
-        price = self._denarii_price_per_kg(tag)
+        price = self._hours_price_per_kg(tag)
         if price is None or price <= 0:
             return self.GENERIC_MARKET_SHARE_NO_PRICE_FALLBACK
         return max(self.GENERIC_MARKET_SHARE_FLOOR,
                    min(self.GENERIC_MARKET_SHARE_CEILING,
                        self.GENERIC_MARKET_SHARE_SCALE
-                       / (max(price, 0.01) ** self.GENERIC_MARKET_SHARE_PRICE_EXPONENT)))
+                       / (max(price, self.GENERIC_MARKET_SHARE_PRICE_FLOOR_HOURS_PER_KG) ** self.GENERIC_MARKET_SHARE_PRICE_EXPONENT)))
 
     GENERIC_MARKET_SHARE_LEDGER_FALLBACK = declare(
         "GENERIC_MARKET_SHARE_LEDGER_FALLBACK", 0.03, kind="temporary_heuristic",
@@ -402,8 +400,8 @@ class MaterialSupplyMixin:
             "material with no price data has no basis for restricting it "
             "either; a placeholder rather than a reasoned figure.")
     GENERIC_MARKET_SHARE_SCALE = declare(
-        "GENERIC_MARKET_SHARE_SCALE", 0.08, kind="engineering_estimate",
-        unit="dimensionless scale on the price-fitted market-share curve",
+        "GENERIC_MARKET_SHARE_SCALE", 0.266, kind="engineering_estimate",
+        unit="market share at a price of one labour hour per kg",
         source="Fitted the same way GENERIC_OUTPUT_ANCHOR_T_PER_YR was, "
                "against the curated MARKET_SHARE figures for gold/silver "
                "(0.01, rare and dear) and coal (0.50, cheap and open).",
@@ -421,6 +419,11 @@ class MaterialSupplyMixin:
             "price rises - rarer, dearer materials are held closer by "
             "whoever controls them, a real and general pattern; the "
             "specific exponent is fitted to three commodities.")
+    GENERIC_MARKET_SHARE_PRICE_FLOOR_HOURS_PER_KG = declare(
+        "GENERIC_MARKET_SHARE_PRICE_FLOOR_HOURS_PER_KG", 0.202, kind="temporary_heuristic",
+        unit="labour hours per kg", source=None, confidence="D",
+        why="Price below which the market-share curve stops rising, so a "
+            "near-free material does not divide by zero. A defensive bound.")
     GENERIC_MARKET_SHARE_FLOOR = declare(
         "GENERIC_MARKET_SHARE_FLOOR", 0.01, kind="temporary_heuristic",
         unit="fraction of national output (minimum)", source=None,
@@ -645,13 +648,13 @@ class MaterialSupplyMixin:
         """Tonnes a year of a tracked commodity you supply yourself, not
         bought from anyone: mines you sank, woodland you bought, nitre beds
         you built. See MATERIAL_CHECKS for which tag means what."""
-        economy = self.state.economy
+        holdings = self.state.holdings
         if tag == "forest1":
-            return economy.forest_ha * self.CHARCOAL_PER_HA
+            return holdings.forest_ha * self.CHARCOAL_PER_HA
         if tag == "forest4":
-            return economy.forest_ha * self.CHARCOAL_PER_HA * self.FIREWOOD_PER_CHARCOAL_MASS_RATIO
+            return holdings.forest_ha * self.CHARCOAL_PER_HA * self.FIREWOOD_PER_CHARCOAL_MASS_RATIO
         if tag == "nitre":
-            return economy.nitre_bed_m2 * self.NITRE_YIELD_T_PER_M2
+            return holdings.nitre_bed_m2 * self.NITRE_YIELD_T_PER_M2
         if tag.startswith("mine:"):
             mat = tag[5:]
             # DEPLETION AND TECHNOLOGY, not the nominal tonnage you sank
@@ -876,9 +879,10 @@ class MaterialSupplyMixin:
         specific answers (wire_chain_report's propagate_demand) rather than
         a second source of truth Sim's own state has to agree with."""
         economy = self.state.economy
-        stock = getattr(economy, "_material_stock_ledger", None)
+        holdings = self.state.holdings
+        stock = getattr(holdings, "_material_stock_ledger", None)
         if stock is None:
-            stock = economy._material_stock_ledger = _StockLedger()
+            stock = holdings._material_stock_ledger = _StockLedger()
         elif not isinstance(stock, _StockLedger):
             # A RESUMED SAVE HANDS THIS BACK AS A PLAIN DICT. It is in
             # SAVE_FIELDS so that a reloaded game is the same game - without it
@@ -886,7 +890,7 @@ class MaterialSupplyMixin:
             # from the run that was saved, the same class of fault as a fog
             # that could be rewound by reloading. JSON has no Counter, so
             # promote whatever came back before anything adds to it.
-            stock = economy._material_stock_ledger = _StockLedger(stock)
+            stock = holdings._material_stock_ledger = _StockLedger(stock)
         if stock.unswept:
             non_physical = self.NON_PHYSICAL_CAPACITY_KEYS
             for key in [key for key in stock if key in non_physical or key.endswith("_hours")]:
@@ -898,11 +902,11 @@ class MaterialSupplyMixin:
         """Stock as it stood when this year's accounting began. Every recompute
         of the year works from this snapshot (plus trades made since), so the
         year's own output is banked once however often it is recomputed."""
-        economy = self.state.economy
+        holdings = self.state.holdings
         year = self.state.scenario.year
-        record = economy._material_stock_opening
+        record = holdings._material_stock_opening
         if not record or record.get("year") != year:
-            record = economy._material_stock_opening = {
+            record = holdings._material_stock_opening = {
                 "year": year, "tonnes": dict(self._material_stock())}
         return record["tonnes"]
 
@@ -929,11 +933,11 @@ class MaterialSupplyMixin:
 
     def buy_material_stock(self, material, tonnes):
         """The founder buys a material at the market (see GoodsMarket.buy)."""
-        return self.goods_market.buy(self.goods_market.founder, material, tonnes)
+        return self.goods_market.buy(self.goods_market.acting, material, tonnes)
 
     def sell_material_stock(self, material, tonnes):
         """The founder sells stock at the market (see GoodsMarket.sell)."""
-        return self.goods_market.sell(self.goods_market.founder, material, tonnes)
+        return self.goods_market.sell(self.goods_market.acting, material, tonnes)
 
     def materials_report(self):
         """Stocks, annual flows, demand, and current trade values."""
@@ -1005,10 +1009,10 @@ class MaterialSupplyMixin:
         _own_material_supply already knows how to read, curated commodity
         or not."""
         out = {(material, "mine:" + material) for material, capacity in self.mine_capacity.items() if capacity > 0}
-        economy = self.state.economy
-        if economy.forest_ha > 0:
+        holdings = self.state.holdings
+        if holdings.forest_ha > 0:
             out.add(("charcoal", "forest1"))
             out.add(("charcoal", "forest4"))
-        if economy.nitre_bed_m2 > 0:
+        if holdings.nitre_bed_m2 > 0:
             out.add(("saltpetre", "nitre"))
         return out

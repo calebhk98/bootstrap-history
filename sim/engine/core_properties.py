@@ -522,7 +522,7 @@ class ForwardingPropertiesMixin:
 
 	@property
 	def _dashboard_history(self):
-		sub = getattr(self.state, "economy", None)
+		sub = getattr(self.state, "holdings", None)
 		if sub is None:
 			raise AttributeError("_dashboard_history")
 		val = getattr(sub, "_dashboard_history", None)
@@ -532,21 +532,21 @@ class ForwardingPropertiesMixin:
 
 	@_dashboard_history.setter
 	def _dashboard_history(self, value):
-		sub = getattr(self.state, "economy", None)
+		sub = getattr(self.state, "holdings", None)
 		if sub is not None:
 			setattr(sub, "_dashboard_history", value)
 
 	@property
 	def binding(self):
-		return getattr(self.state.economy, "binding")
+		return getattr(self.state.holdings, "binding")
 
 	@binding.setter
 	def binding(self, value):
-		setattr(self.state.economy, "binding", value)
+		setattr(self.state.holdings, "binding", value)
 
 	@property
 	def farm_hectares(self):
-		sub = getattr(self.state, "economy", None)
+		sub = getattr(self.state, "holdings", None)
 		if sub is None:
 			raise AttributeError("farm_hectares")
 		val = getattr(sub, "farm_hectares", None)
@@ -556,29 +556,29 @@ class ForwardingPropertiesMixin:
 
 	@farm_hectares.setter
 	def farm_hectares(self, value):
-		sub = getattr(self.state, "economy", None)
+		sub = getattr(self.state, "holdings", None)
 		if sub is not None:
 			setattr(sub, "farm_hectares", value)
 
 	@property
 	def farm_stock_kg(self):
-		return getattr(self.state.economy, "farm_stock_kg")
+		return getattr(self.state.holdings, "farm_stock_kg")
 
 	@farm_stock_kg.setter
 	def farm_stock_kg(self, value):
-		setattr(self.state.economy, "farm_stock_kg", value)
+		setattr(self.state.holdings, "farm_stock_kg", value)
 
 	@property
 	def forest_ha(self):
-		return getattr(self.state.economy, "forest_ha")
+		return getattr(self.state.holdings, "forest_ha")
 
 	@forest_ha.setter
 	def forest_ha(self, value):
-		setattr(self.state.economy, "forest_ha", value)
+		setattr(self.state.holdings, "forest_ha", value)
 
 	@property
 	def mine_tranches(self):
-		sub = getattr(self.state, "economy", None)
+		sub = getattr(self.state, "holdings", None)
 		if sub is None:
 			raise AttributeError("mine_tranches")
 		val = getattr(sub, "mine_tranches", None)
@@ -588,17 +588,17 @@ class ForwardingPropertiesMixin:
 
 	@mine_tranches.setter
 	def mine_tranches(self, value):
-		sub = getattr(self.state, "economy", None)
+		sub = getattr(self.state, "holdings", None)
 		if sub is not None:
 			setattr(sub, "mine_tranches", value)
 
 	@property
 	def mines(self):
-		return getattr(self.state.economy, "mines")
+		return getattr(self.state.holdings, "mines")
 
 	@mines.setter
 	def mines(self, value):
-		setattr(self.state.economy, "mines", value)
+		setattr(self.state.holdings, "mines", value)
 
 	@property
 	def money_real(self):
@@ -610,11 +610,11 @@ class ForwardingPropertiesMixin:
 
 	@property
 	def nitre_bed_m2(self):
-		return getattr(self.state.economy, "nitre_bed_m2")
+		return getattr(self.state.holdings, "nitre_bed_m2")
 
 	@nitre_bed_m2.setter
 	def nitre_bed_m2(self, value):
-		setattr(self.state.economy, "nitre_bed_m2", value)
+		setattr(self.state.holdings, "nitre_bed_m2", value)
 
 	@property
 	def output_factor(self):
@@ -626,19 +626,19 @@ class ForwardingPropertiesMixin:
 
 	@property
 	def shortages(self):
-		return getattr(self.state.economy, "shortages")
+		return getattr(self.state.holdings, "shortages")
 
 	@shortages.setter
 	def shortages(self, value):
-		setattr(self.state.economy, "shortages", value)
+		setattr(self.state.holdings, "shortages", value)
 
 	@property
 	def throttle(self):
-		return getattr(self.state.economy, "throttle")
+		return getattr(self.state.holdings, "throttle")
 
 	@throttle.setter
 	def throttle(self, value):
-		setattr(self.state.economy, "throttle", value)
+		setattr(self.state.holdings, "throttle", value)
 
 	# =========================================================================
 	# GovernanceState Compatibility Properties
@@ -734,7 +734,7 @@ class ForwardingPropertiesMixin:
 
 	@property
 	def _said_command_index(self):
-		sub = getattr(self.state, "scenario", None)
+		sub = getattr(self.state, "seat_progress", None)
 		if sub is None:
 			raise AttributeError("_said_command_index")
 		val = getattr(sub, "_said_command_index", None)
@@ -744,33 +744,33 @@ class ForwardingPropertiesMixin:
 
 	@_said_command_index.setter
 	def _said_command_index(self, value):
-		sub = getattr(self.state, "scenario", None)
+		sub = getattr(self.state, "seat_progress", None)
 		if sub is not None:
 			setattr(sub, "_said_command_index", value)
 
 	@property
 	def _said_parallelism(self):
-		return self.state.scenario._said_parallelism
+		return self.state.seat_progress._said_parallelism
 
 	@_said_parallelism.setter
 	def _said_parallelism(self, value):
-		self.state.scenario._said_parallelism = value
+		self.state.seat_progress._said_parallelism = value
 
 	@property
 	def _said_scandal(self):
-		return self.state.scenario._said_scandal
+		return self.state.seat_progress._said_scandal
 
 	@_said_scandal.setter
 	def _said_scandal(self, value):
-		self.state.scenario._said_scandal = value
+		self.state.seat_progress._said_scandal = value
 
 	@property
 	def goal_year(self):
-		return getattr(self.state.scenario, "goal_year")
+		return getattr(self.state.seat_progress, "goal_year")
 
 	@goal_year.setter
 	def goal_year(self, value):
-		setattr(self.state.scenario, "goal_year", value)
+		setattr(self.state.seat_progress, "goal_year", value)
 
 	@property
 	def year(self):

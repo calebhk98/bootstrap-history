@@ -258,7 +258,7 @@
    "potter": 80.0
   },
   "mat": {},
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 0,
   "yrs": 0.3,
   "risk": 0,
@@ -514,7 +514,7 @@
   "mat": {
    "timber_m3": 2.5
   },
-  "cap_hours": 806.475166965173,
+  "cap_hours": 800.0,
   "up_hours": 120.97127504477595,
   "yrs": 0.3,
   "risk": 0.08,
@@ -579,7 +579,7 @@
   "mat": {
    "cast_iron_kg": 80
   },
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 0,
   "yrs": 0.8,
   "risk": 0.2,
@@ -737,7 +737,7 @@
    "scholar": 400
   },
   "mat": {},
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 0,
   "yrs": 1,
   "risk": 0.1,
@@ -938,7 +938,7 @@
    "artisan": 200
   },
   "mat": {},
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 0,
   "yrs": 1,
   "risk": 0.1,
@@ -1116,7 +1116,7 @@
    "timber_m3": 4,
    "iron_bar_kg": 30
   },
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 0,
   "yrs": 1,
   "risk": 0.2,
@@ -1214,7 +1214,7 @@
    "lime_kg": 80
   },
   "cap_hours": 8064.75166965173,
-  "up_hours": 806.475166965173,
+  "up_hours": 800.0,
   "yrs": 2,
   "risk": 0.2,
   "sus": 0,
@@ -1278,7 +1278,7 @@
    "brick_1000": 50,
    "iron_bar_kg": 30
   },
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 604.8563752238797,
   "yrs": 1,
   "risk": 0.1,
@@ -1299,6 +1299,8 @@
    "civ_aqueduct_roman",
    "analytical_chemistry"
   ],
+  "requires_running": ["civ_aqueduct_roman"],
+  "_internal": "[GATE: Draws on a water supply that is built and kept in service; with the aqueduct shut there is no flow to treat, lift or distribute.]",
   "kb": "85_transport_civil.md",
   "ph": 200,
   "lab": {
@@ -1309,7 +1311,7 @@
    "alum_kg": 50
   },
   "cap_hours": 5040.469793532331,
-  "up_hours": 806.475166965173,
+  "up_hours": 800.0,
   "yrs": 1.2,
   "risk": 0.1,
   "sus": 0,
@@ -1332,6 +1334,8 @@
    "bellows_water_blown",
    "civ_aqueduct_roman"
   ],
+  "requires_running": ["civ_aqueduct_roman"],
+  "_internal": "[GATE: Draws on a water supply that is built and kept in service; with the aqueduct shut there is no flow to treat, lift or distribute.]",
   "kb": "85_transport_civil.md",
   "ph": 150,
   "lab": {
@@ -1364,6 +1368,8 @@
   "pre": [
    "civ_pumping_station"
   ],
+  "requires_running": ["civ_pumping_station"],
+  "_internal": "[GATE: The tower is filled by the pumping station and holds pressure only while it lifts water into it.]",
   "kb": "85_transport_civil.md",
   "ph": 100,
   "lab": {
@@ -1394,6 +1400,7 @@
   "pre": [
    "civ_sewer_roman"
   ],
+  "requires_running": ["civ_sewer_roman"],
   "kb": "85_transport_civil.md",
   "ph": 120,
   "lab": {
@@ -1419,7 +1426,7 @@
   ],
   "build_yrs": 2,
   "adopt_yrs": 5,
-  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.] [GATE: Takes its flow from, or is laid into, a sewer that is built and kept clear; with the sewer shut it has nothing to act on.]"
  },
  {
   "id": "civ_sewage_treatment",
@@ -1430,6 +1437,7 @@
    "civ_sewer_separate",
    "germ_theory"
   ],
+  "requires_running": ["civ_sewer_separate"],
   "kb": "85_transport_civil.md",
   "ph": 200,
   "lab": {
@@ -1453,7 +1461,7 @@
   "traits": [
    "infrastructure"
   ],
-  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.] [GATE: Treatment works receive what the separate foul sewer collects; with that sewer shut there is no foul flow.]"
  },
  {
   "id": "civ_steel_frame",
@@ -1544,7 +1552,7 @@
    "iron_bar_kg": 250.0
   },
   "cap_hours": 24194.255008955188,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "yrs": 1.5,
   "risk": 0.1,
   "sus": 0,
@@ -1576,7 +1584,7 @@
   "mat": {
    "steel_plate_kg": 80
   },
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 604.8563752238797,
   "yrs": 1,
   "risk": 0.1,
@@ -1605,7 +1613,7 @@
    "steel_plate_kg": 70
   },
   "cap_hours": 5040.469793532331,
-  "up_hours": 806.475166965173,
+  "up_hours": 800.0,
   "yrs": 1.2,
   "risk": 0.12,
   "sus": 0,
@@ -1726,7 +1734,7 @@
   "mat": {
    "glass_raw_kg": 100
   },
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 604.8563752238797,
   "yrs": 1.2,
   "risk": 0.15,
@@ -1882,7 +1890,7 @@
   "mat": {
    "brass_kg": 10
   },
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 0,
   "yrs": 0.8,
   "risk": 0.05,
@@ -1911,7 +1919,7 @@
    "scholar": 300
   },
   "mat": {},
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 0,
   "yrs": 1,
   "risk": 0.1,
@@ -2106,6 +2114,7 @@
    "arc_light_lamp",
    "power_grid"
   ],
+  "requires_running": ["power_grid"],
   "kb": "85_transport_civil.md",
   "ph": 120,
   "lab": {
@@ -2114,7 +2123,7 @@
   "mat": {
    "copper_kg": 15
   },
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 3,
   "yrs": 1,
   "risk": 0.1,
@@ -2128,6 +2137,6 @@
   "traits": [
    "infrastructure"
   ],
-  "_internal": "[HEURISTIC: yearly upkeep taken as one percent of the construction labour hours (repair and keeping the works in service); no wear or failure model yet.] [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
+  "_internal": "[HEURISTIC: yearly upkeep taken as one percent of the construction labour hours (repair and keeping the works in service); no wear or failure model yet.] [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.] [GATE: Operates only on a running grid: it draws mains power from it, so a shut or never-built grid leaves it dead. Knowledge of the technique stays in pre.]"
  }
 ]

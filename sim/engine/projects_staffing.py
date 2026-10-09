@@ -32,8 +32,9 @@ class StaffingMixin:
     CLOSED_LOSS_MAKING = "loss_making"
     CLOSED_CREDITOR_SEIZURE = "creditor_seizure"
 
-    def close_work(self, node_id, reason, year=None):
-        """Shut a work and record why and since when, in one place."""
+    def close_work(self, node_id, reason, year=None, cascade=True):
+        """Shut a work and record why and since when, in one place. Whatever requires it running
+        shuts with it unless `cascade` is off."""
         projects = self.state.projects
         projects.operating.discard(node_id)
         projects.mothballed.add(node_id)
@@ -41,6 +42,8 @@ class StaffingMixin:
         if reason == self.CLOSED_FOR_STAFF:
             projects.ever_closed_for_staff.add(node_id)
         cause_book.record_concern(self, "closure", node_id, reason)
+        if cascade:
+            self.close_lapsed_dependents(self.state.scenario.year if year is None else year)
 
     def closure_of(self, node_id):
         """The closure record of a currently shut work, else None."""
@@ -820,6 +823,9 @@ class StaffingMixin:
             return False, ('you no longer know how to do that, so there is '
                            'nothing to reopen: build it again with '
                            '{"cmd":"start","id":"%s"}' % node_id)
+        gate_refusal = self.running_gate_refusal(node_id)
+        if gate_refusal:
+            return False, gate_refusal
         node = self.nodes[node_id]
         # `open` quotes the same price for a concern.
         fee = self.reopen_fee(node_id, self.reopen_units(node_id))

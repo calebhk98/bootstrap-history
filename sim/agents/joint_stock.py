@@ -78,9 +78,11 @@ def shares_worth(shares: Dict[str, float], find_actor: Any) -> float:
 
 
 def pay_dividends(registry: Any, world: Any) -> float:
-	"""Every actor with outside shareholders pays them a part of its last margin by share, never more
+	"""Every actor with outside shareholders (an actor in the registry, or a seat) pays them a part of its last margin by share, never more
 	than its purse; returns the total paid."""
 	paid = 0.0
+	holders = dict(registry.actors)
+	holders.update(getattr(world, "seat_parties", lambda: {})())
 	for issuer_id in sorted(registry.actors):
 		issuer = registry.actors[issuer_id]
 		if issuer.record.exited_year is not None or issuer.record.issued <= 0.0:
@@ -88,10 +90,10 @@ def pay_dividends(registry: Any, world: Any) -> float:
 		pool = min(DIVIDEND_PAYOUT_SHARE * max(0.0, issuer.record.last_margin), max(0.0, issuer.money))
 		if pool <= 0.0:
 			continue
-		for holder_id in sorted(registry.actors):
-			share = registry.actors[holder_id].record.holdings.get(issuer_id, 0.0)
+		for holder_id in sorted(holders):
+			share = holders[holder_id].record.holdings.get(issuer_id, 0.0)
 			if share > 0.0:
-				ledger.transfer(issuer, registry.actors[holder_id], pool * share, "dividend")
+				ledger.transfer(issuer, holders[holder_id], pool * share, "dividend")
 				paid += pool * share
 	return paid
 

@@ -16,7 +16,7 @@
    "labourer": 20.0
   },
   "mat": {},
-  "cap_hours": 806.475166965173,
+  "cap_hours": 800.0,
   "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 0,
@@ -117,7 +117,7 @@
    "mat_stone": 1000
   },
   "cap_hours": 20161.879174129324,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "build_yrs": 1,
   "adopt_yrs": 0,
   "risk": 0.0,
@@ -3397,6 +3397,7 @@
    "telegraph_electric",
    "vacuum_tube"
   ],
+  "requires_running": ["telegraph_electric"],
   "traits": [
    "military",
    "infrastructure"
@@ -3423,7 +3424,7 @@
   "note": "The chain home idea - distributed radar stations reporting to central control centre which directs fighters. Early warning gives time to scramble interceptors. Won the Battle of Britain.",
   "gov": 3,
   "sus": 6,
-  "_internal": "[HEURISTIC: yearly upkeep taken as one percent of the construction labour hours (repair and keeping the works in service); no wear or failure model yet.] [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+  "_internal": "[HEURISTIC: yearly upkeep taken as one percent of the construction labour hours (repair and keeping the works in service); no wear or failure model yet.] [AUDIT: State interest and suspicion were unset and have been defaulted from the category.] [GATE: Rides on the running telegraph network (lines, operators, cells); with the network shut it has nothing to carry.]"
  },
  {
   "id": "mil_iff_system",
@@ -3946,6 +3947,9 @@
    "railway",
    "mil_general_staff"
   ],
+  "requires_running": ["railway", "telegraph_electric"],
+  "requires_ways": {"rail": 150},
+  "_internal": "[GATE: A timetabled mobilisation moves units between garrisons by rail and orders them by telegraph, so it needs a junction: at least two lines meeting, twice the single line. The telegraph is named in the node's own description.]",
   "traits": [
    "military"
   ],

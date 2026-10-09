@@ -39,7 +39,7 @@ for civ_id in ("rome_100ad", "han_china_100ad", "norse_900ad", "mexica_1500", "e
 
 # ---- revenue is the sum of the forms assessed on their bases --------------------------------------
 game = sim()
-game.state.economy.farm_last_harvest_kg = HARVEST_KG
+game.state.holdings.farm_last_harvest_kg = HARVEST_KG
 year = game.state.scenario.year
 game.state.economy.foreign_trade_by_year = {str(year - 1): {"in": 6.0e9, "out": 2.0e9}}
 world = declared(game, [LAND, POLL, IMPORTS, EXPORTS, WEALTH])
@@ -72,9 +72,9 @@ fitted.civ["starting_tax_share"] = 0.9
 check("the civilisation's fitted tax share does not set the state's revenue",
       abs(SimWorld(fitted).state_revenue() - before) < 1e-9 * before, (SimWorld(fitted).state_revenue(), before))
 bigger = sim()
-bigger.state.economy.farm_last_harvest_kg = 2.0 * HARVEST_KG
+bigger.state.holdings.farm_last_harvest_kg = 2.0 * HARVEST_KG
 smaller = sim()
-smaller.state.economy.farm_last_harvest_kg = HARVEST_KG
+smaller.state.holdings.farm_last_harvest_kg = HARVEST_KG
 check("a larger harvest yields a larger land tax",
       declared(bigger, [LAND]).state_revenue() > 1.9 * declared(smaller, [LAND]).state_revenue())
 quiet = sim()
@@ -85,7 +85,7 @@ check("trade duties follow the trade that crossed the border",
 
 # ---- in-kind revenue arrives as goods and goes through the goods market ---------------------------
 kind = sim()
-kind.state.economy.farm_last_harvest_kg = HARVEST_KG
+kind.state.holdings.farm_last_harvest_kg = HARVEST_KG
 treasury = kind.state_treasury()
 treasury.money = 0.0
 declared(kind, [LAND])

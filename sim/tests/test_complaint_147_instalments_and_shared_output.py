@@ -37,7 +37,7 @@ class SharedOutputTests(unittest.TestCase):
 
     def test_second_project_counts_only_the_output_left(self):
         game = sim(capital=5e7)
-        game.state.economy.forest_ha += 4
+        game.state.holdings.forest_ha += 4
         alone = self._own_held(game, _SECOND)
         self.assertGreater(alone, 0)
         game.initialize_project(_FIRST)

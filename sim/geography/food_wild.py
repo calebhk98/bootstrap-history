@@ -9,10 +9,30 @@ import math
 from typing import List, Tuple
 
 from sim.geography import content_rules
-from sim.geography.food_productivity import (land_available_to_wild_km2, lookup, net_primary_energy_per_km2,
-                                             net_primary_production, rows_of_mechanism)
+from sim.geography.food_productivity import (GRAMS_PER_KG, SQUARE_METRES_PER_SQUARE_KM, land_available_to_wild_km2,
+                                             lookup, net_primary_energy_per_km2, net_primary_production,
+                                             rows_of_mechanism)
 from sim.geography.map_source import WorldMap
 from sim.geography.parameters import parameter
+from sim.unit_conversions import CIVIL_DAYS_PER_YEAR
+
+
+def standing_stock_kg_per_km2(row: dict, productivity: float, fit: float) -> float:
+    return min(row["biomass_cap_kg_per_km2"], row["biomass_kg_per_km2_per_npp_g_m2"] * productivity * fit)
+
+
+def wild_grass_demand_g_per_m2(world_map: WorldMap, tile_id: str) -> float:
+    """Dry grass the tile's wild herbivores eat per m2 of land per year; herds share what is left."""
+    reader = lookup(world_map, tile_id)
+    productivity = net_primary_production(world_map, tile_id)
+    intake_per_kg_year = parameter(world_map, "food_livestock_intake_fraction_per_day") * CIVIL_DAYS_PER_YEAR
+    demand_kg_per_km2 = 0.0
+    for row in rows_of_mechanism(world_map, "wild_population"):
+        fit = content_rules.suitability(row["envelope"], reader)
+        if fit > 0.0:
+            demand_kg_per_km2 += (standing_stock_kg_per_km2(row, productivity, fit)
+                                  * row.get("grass_share_of_diet", 0.0) * intake_per_kg_year)
+    return demand_kg_per_km2 * GRAMS_PER_KG / SQUARE_METRES_PER_SQUARE_KM
 
 
 def hunting_contributions(world_map: WorldMap, tile_id: str) -> List[Tuple[str, str, float]]:
@@ -28,8 +48,7 @@ def hunting_contributions(world_map: WorldMap, tile_id: str) -> List[Tuple[str, 
         fit = content_rules.suitability(row["envelope"], reader)
         if fit <= 0.0:
             continue
-        stock = min(row["biomass_cap_kg_per_km2"],
-                    row["biomass_kg_per_km2_per_npp_g_m2"] * productivity * fit)
+        stock = standing_stock_kg_per_km2(row, productivity, fit)
         growth_rate = coefficient * row["adult_mass_kg"] ** exponent
         production = stock * peak * (math.exp(growth_rate) - 1.0)
         kcal = production * row["harvest_fraction"] * row["edible_kcal_per_kg_live"] * area * accessibility

@@ -224,7 +224,7 @@
    "charcoal_kg": 10,
    "clay_kg": 2
   },
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 1209.7127504477594,
   "yrs": 1,
   "risk": 0.15,
@@ -261,7 +261,7 @@
    "iron_bar_kg": 0.5,
    "leather_kg": 1
   },
-  "cap_hours": 806.475166965173,
+  "cap_hours": 800.0,
   "up_hours": 0,
   "yrs": 0.2,
   "risk": 0.08,
@@ -752,7 +752,7 @@
    "timber_m3": 0.2,
    "linen_kg": 1
   },
-  "cap_hours": 806.475166965173,
+  "cap_hours": 800.0,
   "up_hours": 0,
   "yrs": 0.2,
   "risk": 0.08,
@@ -860,8 +860,8 @@
    "steel_plate_kg": 5,
    "iron_bar_kg": 4
   },
-  "cap_hours": 4032.375834825865,
-  "up_hours": 806.475166965173,
+  "cap_hours": 4000.0,
+  "up_hours": 800.0,
   "yrs": 1.2,
   "risk": 0.2,
   "sus": 10,
@@ -1014,8 +1014,8 @@
    "iron_bar_kg": 4,
    "aluminium_kg": 4
   },
-  "cap_hours": 4032.375834825865,
-  "up_hours": 806.475166965173,
+  "cap_hours": 4000.0,
+  "up_hours": 800.0,
   "yrs": 1.1,
   "risk": 0.2,
   "sus": 10,
@@ -1365,7 +1365,7 @@
    "linen_kg": 6,
    "steel_plate_kg": 8
   },
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 1209.7127504477594,
   "yrs": 1.2,
   "risk": 0.2,
@@ -1463,7 +1463,7 @@
   },
   "mat": {},
   "cap_hours": 1612.950333930346,
-  "up_hours": 806.475166965173,
+  "up_hours": 800.0,
   "yrs": 0.3,
   "risk": 0.2,
   "sus": 1,

@@ -30,6 +30,7 @@
     "regime": "struck_coin",
     "material": "silver_kg",
     "kg_per_unit": 0.0027,
+    "fineness": 0.8,
     "source": "Fine silver in one denarius: Trajan's reform, dated to AD 100 by Butcher and Ponting, lowered fineness to about 80% at about 3.2 g, so about 2.6 to 2.7 g of silver (The Metallurgy of Roman Silver Coinage, CUP 2014, ch. 15; and their paper 'The Reforms of Trajan and the End of the Pre-Neronian Denarius'). 100 AD sits at the reform boundary; the pre-reform denarius held about 2.9 g. Confidence medium-low on the post-reform fineness. Regime: the denarius was struck at the state mint at Rome; no mint charge is attested (the emperor's gain came from fineness, not a charge), so none is set."
   },
   "debt_bondage": false,
@@ -48,6 +49,15 @@
   "hazards": [
     {
       "name": "Antonine plague",
+      "causes": [
+        {
+          "quantity": "population",
+          "op": ">=",
+          "value": 0.5,
+          "relative_to_start": true,
+          "why": "A pandemic runs through crowded, connected settlements. Below half the opening population the opening density of towns and trade is gone, so there is nothing to carry it at the recorded scale. A reasoning bound, to be fitted against a baseline ensemble."
+        }
+      ],
       "note": "probably smallpox or measles",
       "staff_loss": 0.28,
       "years": [
@@ -57,6 +67,15 @@
     },
     {
       "name": "Plague of Cyprian",
+      "causes": [
+        {
+          "quantity": "population",
+          "op": ">=",
+          "value": 0.5,
+          "relative_to_start": true,
+          "why": "A pandemic runs through crowded, connected settlements. Below half the opening population the opening density of towns and trade is gone, so there is nothing to carry it at the recorded scale. A reasoning bound, to be fitted against a baseline ensemble."
+        }
+      ],
       "staff_loss": 0.28,
       "years": [
         249,
@@ -65,6 +84,14 @@
     },
     {
       "name": "Third century crisis",
+      "causes": [
+        {
+          "quantity": "state_funded_share",
+          "op": "<",
+          "value": 1.0,
+          "why": "The trouble was fiscal at root: a state whose revenue could not cover the army and administration it needed paid in debased coin and arrears. A state that funds everything it needs has no such pressure."
+        }
+      ],
       "note": "Rome's baseline shifts in what this society values note that it is magic, not heterodoxy, that is criminal here, because the state has never before needed everyone to worship the same way. The Decian edict of 250 breaks that: for the first time, sacrifice to the emperor's genius is demanded empire-wide and certified in writing, a loyalty test with no precedent, followed by Valerian's edicts against Christians in 257-258. That is a real tightening of religious rigidity, not merely more of the old magic-suspicion, so it is modelled as its own small shift below rather than folded into how readily an inexplicable effect is called sorcery.",
       "output_factor": 0.62,
       "sack_chance": 0.16,
@@ -78,6 +105,14 @@
     },
     {
       "name": "Currency debasement",
+      "causes": [
+        {
+          "quantity": "state_funded_share",
+          "op": "<",
+          "value": 1.0,
+          "why": "The trouble was fiscal at root: a state whose revenue could not cover the army and administration it needed paid in debased coin and arrears. A state that funds everything it needs has no such pressure."
+        }
+      ],
       "real_erosion": 0.06,
       "years": [
         190,
@@ -86,6 +121,20 @@
     },
     {
       "name": "Diocletian's reforms and the Price Edict",
+      "causes": [
+        {
+          "quantity": "state_funded_share",
+          "op": "<",
+          "value": 1.0,
+          "why": "The trouble was fiscal at root: a state whose revenue could not cover the army and administration it needed paid in debased coin and arrears. A state that funds everything it needs has no such pressure."
+        },
+        {
+          "quantity": "territory_share_of_start",
+          "op": ">=",
+          "value": 0.5,
+          "why": "The reform reorganised an empire still holding most of its provinces. A state that has lost most of its opening territory has no such empire left to reorganise."
+        }
+      ],
       "note": "Diocletian came to power in 284 and rebuilt the state by making it much heavier. The tetrarchy of 293 gave the empire four courts to feed; the army was roughly doubled; the iugatio-capitatio assessment taxed land and heads together, often in kind, and needed a census machinery Rome had never had. The Edict on Maximum Prices of 301 fixed ceilings on more than a thousand goods and wages on pain of death, and Lactantius (De mortibus persecutorum 7) says blood was shed over trifles until the law was quietly let die. The same decades made the collegia hereditary: a man's son inherited his trade and could not leave it, which is a direct constraint on anyone who wants to work at something new. That, and not the persecution of 303-311, is why how much trade is honoured falls here. The state also gets stronger and its favour correspondingly more decisive, which is the patronage shift.",
       "output_factor": 0.9,
       "values": {
@@ -126,6 +175,14 @@
     },
     {
       "name": "Adrianople and the Gothic settlement",
+      "causes": [
+        {
+          "quantity": "army_share_of_wanted",
+          "op": "<=",
+          "value": 1.0,
+          "why": "The frontier gave way because the force kept did not match the threat the state faced. A state that keeps more than the threat calls for does not lose the frontier this way."
+        }
+      ],
       "note": "Valens let the Tervingi cross the Danube in 376 to escape the Huns, mishandled feeding them, and lost two thirds of the eastern field army and his own life at Adrianople on 9 August 378; Ammianus (31.13) calls it the worst defeat since Cannae. The treaty of 382 then settled the Goths on imperial soil under their own leaders, which had never been done before. The damage to a workshop is not the battle but what follows it: an army that has to be rebuilt is paid for out of taxation, and a frontier that is now inside the frontier keeps moving.",
       "output_factor": 0.85,
       "sack_chance": 0.03,
@@ -136,6 +193,14 @@
     },
     {
       "name": "The crossings, and the sack of Rome",
+      "causes": [
+        {
+          "quantity": "army_share_of_wanted",
+          "op": "<=",
+          "value": 1.0,
+          "why": "The frontier gave way because the force kept did not match the threat the state faced. A state that keeps more than the threat calls for does not lose the frontier this way."
+        }
+      ],
       "note": "Vandals, Alans and Suebi crossed the Rhine at the end of 406 and were never expelled; the garrison of Britain left in 407 and did not come back; Alaric's Goths entered Rome on 24 August 410, the first capture of the city in eight hundred years, which Jerome and Augustine both wrote about as the end of something. Geiseric took Carthage in 439, and with it the African grain that had fed Rome since Augustus, and sacked Rome again over a fortnight in June 455. Attila reached Italy in 452. The sack risk here is deliberately per-year and low rather than a single certainty: most places in the western empire were not sacked in any given year of this half-century, and a great many were sacked in some year of it.",
       "output_factor": 0.72,
       "sack_chance": 0.04,
@@ -157,6 +222,14 @@
     },
     {
       "name": "The end of the western empire",
+      "causes": [
+        {
+          "quantity": "state_funded_share",
+          "op": "<",
+          "value": 1.0,
+          "why": "The trouble was fiscal at root: a state whose revenue could not cover the army and administration it needed paid in debased coin and arrears. A state that funds everything it needs has no such pressure."
+        }
+      ],
       "note": "Ricimer besieged and sacked Rome in 472; Odoacer deposed Romulus Augustulus on 4 September 476 and sent the western regalia to Constantinople, which contemporaries treated as an administrative tidying-up rather than an epoch. What actually ends is the fiscal machine: the western state stops collecting taxes at scale and therefore stops paying for roads, aqueducts, harbours, an army and a currency. Protection after this comes from a bishop or a landowner who is physically nearby, not from a governor who answers to a court, which is the patronage shift; and the long-distance exchange that carried African red slip ware to Britain simply stops, which is the commerce shift.",
       "output_factor": 0.6,
       "values": {
@@ -193,6 +266,15 @@
     },
     {
       "name": "The Justinianic plague",
+      "causes": [
+        {
+          "quantity": "population",
+          "op": ">=",
+          "value": 0.5,
+          "relative_to_start": true,
+          "why": "A pandemic runs through crowded, connected settlements. Below half the opening population the opening density of towns and trade is gone, so there is nothing to carry it at the recorded scale. A reasoning bound, to be fitted against a baseline ensemble."
+        }
+      ],
       "note": "First recorded at Pelusium in Egypt in the summer of 541 and in Constantinople by the spring of 542, where Procopius (Wars 2.22-23) says the dead reached five thousand and then ten thousand a day. It has since been confirmed as Yersinia pestis from sixth-century burials at Aschheim and elsewhere: the same organism as the Black Death. The mortality is genuinely disputed - Procopius' figures are not usable, and recent work on pollen records, coin finds and papyri argues the demographic effect was a good deal smaller than the literary sources imply. It is set well below England's Black Death here for that reason, not because it was a mild disease.",
       "staff_loss": 0.3,
       "years": [
@@ -202,6 +284,15 @@
     },
     {
       "name": "Recurrent plague",
+      "causes": [
+        {
+          "quantity": "population",
+          "op": ">=",
+          "value": 0.5,
+          "relative_to_start": true,
+          "why": "A pandemic runs through crowded, connected settlements. Below half the opening population the opening density of towns and trade is gone, so there is nothing to carry it at the recorded scale. A reasoning bound, to be fitted against a baseline ensemble."
+        }
+      ],
       "note": "The 541 outbreak did not end; it came back roughly every decade for two centuries. Outbreaks are recorded at Constantinople in 558, in the 570s and in 586, and in the west over the same period - Gregory of Tours has the plague at Marseille in 588, and Gregory the Great was elected at Rome in 590 during one of them. Lower severity than the first wave, because some immunity exists and because the population it is working on has already been reduced.",
       "staff_loss": 0.12,
       "years": [
@@ -211,6 +302,14 @@
     },
     {
       "name": "The Lombard invasion",
+      "causes": [
+        {
+          "quantity": "army_share_of_wanted",
+          "op": "<=",
+          "value": 1.0,
+          "why": "The frontier gave way because the force kept did not match the threat the state faced. A state that keeps more than the threat calls for does not lose the frontier this way."
+        }
+      ],
       "note": "Alboin crossed the Julian Alps in the spring of 568, three years after Justinian's reconquest was complete and while the plague was still running, and there was nothing left in Italy to stop him. The peninsula was permanently split between Lombard duchies inland and Byzantine strips along the coasts and the corridor from Rome to Ravenna, and stayed split for twelve centuries. Paul the Deacon's Historia Langobardorum is the narrative source. For anyone with a workshop, this is the end of a single market, a single law and a single currency in Italy.",
       "output_factor": 0.62,
       "sack_chance": 0.03,
@@ -255,14 +354,95 @@
       ]
     }
   ],
-  "home_regions": [
-    "italia",
-    "gaul_germania",
-    "britannia",
-    "hispania",
-    "north_africa",
-    "greece_anatolia",
-    "levant_mesopotamia"
+  "home_tiles": [
+    "algeria_01",
+    "algeria_02",
+    "algeria_03",
+    "algeria_04",
+    "algeria_05",
+    "algeria_06",
+    "algeria_07",
+    "algeria_08",
+    "algeria_09",
+    "algeria_10",
+    "algeria_11",
+    "algeria_12",
+    "algeria_13",
+    "algeria_14",
+    "algeria_15",
+    "algeria_16",
+    "egypt_01",
+    "egypt_02",
+    "egypt_03",
+    "egypt_04",
+    "egypt_05",
+    "egypt_06",
+    "egypt_07",
+    "egypt_08",
+    "egypt_09",
+    "france_01",
+    "france_02",
+    "france_03",
+    "france_04",
+    "france_05",
+    "germany_01",
+    "germany_02",
+    "germany_03",
+    "greece_01",
+    "greece_02",
+    "iraq_01",
+    "iraq_02",
+    "iraq_03",
+    "italy_01",
+    "italy_02",
+    "italy_03",
+    "italy_04",
+    "italy_05",
+    "lebanon_01",
+    "libya_01",
+    "libya_02",
+    "libya_03",
+    "libya_04",
+    "libya_05",
+    "libya_06",
+    "libya_07",
+    "libya_08",
+    "libya_09",
+    "libya_10",
+    "libya_11",
+    "libya_12",
+    "libya_13",
+    "morocco_01",
+    "morocco_02",
+    "morocco_03",
+    "morocco_04",
+    "morocco_05",
+    "morocco_06",
+    "morocco_07",
+    "netherlands_01",
+    "portugal_01",
+    "portugal_02",
+    "spain_01",
+    "spain_02",
+    "spain_03",
+    "spain_04",
+    "spain_05",
+    "syria_01",
+    "tunisia_01",
+    "tunisia_02",
+    "turkey_01",
+    "turkey_02",
+    "turkey_03",
+    "turkey_04",
+    "turkey_05",
+    "turkey_06",
+    "turkey_07",
+    "turkey_08",
+    "turkey_09",
+    "united_kingdom_01",
+    "united_kingdom_02",
+    "united_kingdom_03",
+    "united_kingdom_04"
   ],
   "id": "rome_100ad",
   "institutions": {
@@ -325,6 +505,7 @@
     "civ_surveying_groma",
     "civ_town_planning",
     "civ_vault_barrel",
+    "cn_crane_treadwheel",
     "cn_gypsum_plaster",
     "cn_pile_driving",
     "cn_post_lintel",
@@ -439,7 +620,10 @@
     "med_surgical_kit_good",
     "med_trepanation",
     "med_wound_suturing",
+    "met_archimedean_screw",
     "met_bloomery_bog_iron",
+    "met_bucket_wheel_battery",
+    "met_drainage_adit",
     "met_ore_crushing_sorting",
     "mfg_adhesive_bond",
     "mfg_cold_riveting",

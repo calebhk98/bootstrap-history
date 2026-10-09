@@ -15,11 +15,12 @@ def check_simulation_invariants(state):
         assert math.isfinite(value) and value >= 0.0, \
             "invalid demographic %s=%r" % (key, value)
     economy = state.economy
-    for key, value in (economy._material_stock_ledger or {}).items():
+    holdings = state.holdings
+    for key, value in (holdings._material_stock_ledger or {}).items():
         assert math.isfinite(value) and value >= -1e-9, \
             "negative or non-finite physical stockpile %s=%r" % (key, value)
-    assert math.isfinite(economy.farm_stock_kg) and economy.farm_stock_kg >= -1e-9, \
-        "negative or non-finite physical stockpile grain=%r" % economy.farm_stock_kg
+    assert math.isfinite(holdings.farm_stock_kg) and holdings.farm_stock_kg >= -1e-9, \
+        "negative or non-finite physical stockpile grain=%r" % holdings.farm_stock_kg
     for key, value in (getattr(economy, "commodity_prices", None) or {}).items():
         assert math.isfinite(value) and value >= 0.0, \
             "negative or non-finite commodity price %s=%r" % (key, value)

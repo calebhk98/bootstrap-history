@@ -1,0 +1,58 @@
+{
+ "id": "smallpox",
+ "name": "Smallpox (variola major)",
+ "tags": [
+  "respiratory",
+  "crowd"
+ ],
+ "stages": [
+  {
+   "id": "incubating",
+   "infectiousness": 0.0,
+   "mean_duration_in_days": 13.0,
+   "shape": 8
+  },
+  {
+   "id": "infectious",
+   "infectiousness": 1.0,
+   "mean_duration_in_days": 21.0,
+   "shape": 2
+  }
+ ],
+ "transmissibility_per_day": 0.22619,
+ "case_fatality": 0.3,
+ "immunity": {
+  "permanent": true,
+  "duration_in_days": null
+ },
+ "reproduction_number_range": [
+  3.5,
+  6.0
+ ],
+ "sources": {
+  "reproduction_number_range": {
+   "confidence": "read",
+   "source": "Gani and Leach 2001, Nature, abstract via Europe PMC: 3.5 to 6 in isolated pre-twentieth century populations with negligible herd immunity; earlier estimates 1.5 to above 20 are disputed"
+  },
+  "transmissibility_per_day": {
+   "confidence": "derived",
+   "source": "Midpoint of the sourced reproduction number range (4.75) divided by the infectious days; not itself observed"
+  },
+  "case_fatality": {
+   "confidence": "read",
+   "source": "CDC smallpox overview, stacks.cdc.gov/view/cdc/26503: about 30 percent overall in variola major (first-contact fatality is disputed and is not this number)"
+  },
+  "immunity": {
+   "confidence": "recalled",
+   "source": "Lifelong after recovery; not found in the CDC document, re-check before relying on it"
+  },
+  "stage.incubating": {
+   "confidence": "read",
+   "source": "CDC smallpox overview: incubation averages about 12 to 14 days, range 7 to 17. Shape 8 is a derived Erlang approximation of a bell-shaped period"
+  },
+  "stage.infectious": {
+   "confidence": "recalled",
+   "source": "CDC overview says contagious from fever onset, most from rash, until the last scab falls; the 21 day mean is recalled, not read"
+  }
+ }
+}

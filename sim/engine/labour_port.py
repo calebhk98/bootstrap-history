@@ -2,7 +2,7 @@
 the simulation keeps its `Labour`."""
 from sim.agents.api import edges
 from sim.labour.api import Labour
-from . import data, money_units, purchase_rule, solve_prices_core, wage_schedule
+from . import data, purchase_rule, solve_prices_core, wage_schedule
 
 
 class LabourWorld:
@@ -61,9 +61,6 @@ class LabourWorld:
 
     def refusal_text(self, what, cost):
         return purchase_rule.refusal_text(self._sim, what, cost)
-
-    def book_to_money(self, denarii, money_per_labour_hour):
-        return money_units.book_to_money(denarii, money_per_labour_hour)
 
     def build_wage_schedule(self, civ, tightness_factors=None):
         return wage_schedule.build_schedule(data.TRADE_REGISTRY, civ, tightness_factors=tightness_factors)

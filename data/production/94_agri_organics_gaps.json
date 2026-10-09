@@ -342,7 +342,8 @@
    "basis": "per tonne of phosphatic converter slag, with the steel blown alongside it (basic-lined converter on high-phosphorus pig iron)",
    "yield_basis": "MASS BALANCE. Blowing high-phosphorus pig iron (about 2 percent P) in a lime-lined converter leaves roughly 200-250 kg of slag per tonne of steel, so a tonne of slag comes with about 4.5 tonnes of steel; the pig iron charge is 4.5 t over an about 90 percent metal yield = 5000 kg. About 100 kg of phosphorus becomes about 230 kg of P2O5, i.e. 23 percent of the slag, and the lime flux (about 500 kg) supplies the rest of the slag's calcium oxide. Blowing is exothermic (silicon, carbon and phosphorus burn), so no thermal input is charged. Furnaceman hours are steel_plate_kg's 25 per tonne of steel, scaled to 4.5 t. Conf C.",
    "conf": "C",
-   "requires_node": "met_basic_lining_phosphorus"
+   "requires_node": "met_basic_lining_phosphorus",
+   "operated_by": ["ag2_basic_slag"]
   },
   "wood_tar_kg": {
    "outputs": {

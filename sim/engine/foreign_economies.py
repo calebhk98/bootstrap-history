@@ -22,6 +22,7 @@ from sim.world import market, trader_response
 
 from .data import ROOT, calculated_goods_prices, goods_provenance, load_civ, starting_schedule
 from .foreign_actor_trade import ForeignActorTradeMixin
+from .trader_cargo import TraderCargoMixin
 from .foreign_capacity import ForeignCapacityMixin
 from .foreign_payments import ForeignPaymentsMixin
 from .foreign_routes import ForeignRoutesMixin
@@ -73,7 +74,7 @@ def _foreign_prices_in_own_coin(civilization_id):
 
 
 class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPaymentsMixin,
-                            ForeignTradersMixin, ForeignActorTradeMixin):
+                            ForeignTradersMixin, ForeignActorTradeMixin, TraderCargoMixin):
 
     def foreign_economies(self):
         """Economies trading with this society this year, sorted by id."""
@@ -127,9 +128,9 @@ class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPay
 
     def _commodity_materials(self, commodity):
         """Material keys that count as the commodity: the commodity's own
-        name, the ledger's grouping and every priced material the engine
-        files under it. Remembered until the price table changes."""
-        prices = self._material_prices()
+        name, the ledger's grouping and every material the engine files under it that has a seller
+        in reach. Remembered until the offers change."""
+        prices = self.goods_market.household_prices()
         cache = getattr(self.household, "_commodity_materials_cache", None)
         if cache is None or cache[0] is not prices:
             cache = self.household._commodity_materials_cache = (prices, {})
@@ -148,14 +149,11 @@ class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPay
 
     def _foreign_trade_key(self, commodity, facts):
         """(material key, home can make the commodity, partner can make it)
-        for the material of the commodity priced on both sides that may
-        cross a border, preferring one both can make; None when neither side
-        makes any."""
-        home_prices = self._material_prices()
+        for the material of the commodity the partner prices that may cross a border, preferring
+        one both can make; None when neither side makes any."""
         foreign_prices = facts["prices_in_home_money"]
         keys = [key for key in self._commodity_materials(commodity)
-                if key in home_prices and key in foreign_prices
-                and key not in not_traded_materials()]
+                if key in foreign_prices and key not in not_traded_materials()]
         home_makes = [key for key in keys if key in facts["home_solved_materials"]]
         foreign_makes = [key for key in keys if key in facts["solved_materials"]]
         both = [key for key in home_makes if key in foreign_makes]
@@ -175,10 +173,9 @@ class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPay
             return None
         key, home_can, foreign_can = found
         per_tonne = 1.0 / tonnes_per_unit(key)
-        home_price = self._material_prices()[key] * per_tonne
         foreign_price = facts["prices_in_home_money"][key] * per_tonne
-        return (home_price if home_can else foreign_price,
-                foreign_price if foreign_can else home_price)
+        home_price = self._material_prices()[key] * per_tonne if home_can else foreign_price
+        return (home_price, foreign_price if foreign_can else home_price)
 
     def _output_is_sourced(self, commodity):
         """Whether the society's output of the commodity comes from a sourced

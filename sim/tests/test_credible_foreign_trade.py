@@ -38,8 +38,8 @@ check("...and the hull's distance per day follows its voyage speed",
       abs(sea.distance_per_day_km - sea_freight.ground_km_per_day()) < 1e-9, None)
 
 # --- routes over tiles, from the geography contract.
-_ROME_TILES = geography_api.tiles_of_regions(load_civ("rome_100ad")["home_regions"])
-_HAN_TILES = geography_api.tiles_of_regions(load_civ(PARTNER)["home_regions"])
+_ROME_TILES = geography_api.tiles_held(load_civ("rome_100ad"))
+_HAN_TILES = geography_api.tiles_held(load_civ(PARTNER))
 _COSTS = {"sail": 0.03, "cart": 1.0}
 _SAIL_NODE = "sea_square_sail"
 _CART_NODE = "lnd_two_wheel_cart"
@@ -103,7 +103,7 @@ check("a partner that cannot sail is reached overland, and dearly",
 solved = facts["solved_materials"]
 iron_capacity, iron_demand = s.foreign_opening(PARTNER, "iron", solved)
 han_iron_share = sum(float(s.geography.regions[region]["minerals"].get("iron", 0.0))
-                     for region in load_civ(PARTNER)["home_regions"])
+                     for region in geography_api.regions_of_tiles(_HAN_TILES))
 check("a mined commodity is the national output times its regions' share, not population scaled",
       abs(iron_capacity - s._national_output_tonnes("iron") * han_iron_share) < 1e-6
       and han_iron_share > 0.0, (iron_capacity, han_iron_share))

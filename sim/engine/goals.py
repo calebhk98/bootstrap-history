@@ -18,14 +18,14 @@ class GoalsMixin:
         """Note the year a node was reached; the formal goal's own year follows."""
         if node_id != self.goal:
             return
-        self.state.scenario.goal_years.setdefault(node_id, year)
-        if self.state.scenario.goal_year is None:
-            self.state.scenario.goal_year = year
+        self.state.seat_progress.goal_years.setdefault(node_id, year)
+        if self.state.seat_progress.goal_year is None:
+            self.state.seat_progress.goal_year = year
 
     def set_goal(self, node_id):
         """Make a node the formal goal. A goal reached before keeps the year it was reached in."""
         self.goal = node_id
-        self.state.scenario.goal_year = self.state.scenario.goal_years.get(node_id)
+        self.state.seat_progress.goal_year = self.state.seat_progress.goal_years.get(node_id)
 
     def win_condition_anatomy(self, condition) -> List[AnatomyRow]:
         """What the number behind a win_condition is made of right now, as (label, value, unit) rows."""

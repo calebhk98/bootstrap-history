@@ -42,7 +42,7 @@ check("the quote refuses with the same reason",
 more = S._agent_dispatch(buyer, NODES, {"cmd": "buy", "what": "living_stock", "material": RAMIE, "n": 1e9})
 check("a partner cannot sell more than it holds", not more.get("ok") and "holds" in more.get("error", ""), more)
 poor = sim(civ=HOME, capital=1.0)
-poor.goods_market.founder.can_pay = lambda money: False
+poor.goods_market.acting.can_pay = lambda money: False
 broke = S._agent_dispatch(poor, NODES, {"cmd": "buy", "what": "living_stock", "material": RAMIE, "n": 1000})
 check("a buyer who cannot pay is refused and charged nothing",
       not broke.get("ok") and poor.stock_held(RAMIE) == 0.0, broke)

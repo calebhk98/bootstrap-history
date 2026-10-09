@@ -54,6 +54,17 @@ class WaysBuildTests(unittest.TestCase):
         self.assertTrue(any(leg["mode"] == "road" for leg in paved["legs"]))
         self.assertLessEqual(paved["cost_per_tonne"], plain["cost_per_tonne"])
 
+    def test_built_length_counts_only_the_named_way_over_the_edges_it_covers(self):
+        world_map, edges = _land_edges()
+        first, second = [edge for edge in edges if edge.grade <= 0.05][:2]
+        built = {api.edge_key(first.tile_a, first.tile_b): {"road": True, "rail": True},
+                 api.edge_key(second.tile_a, second.tile_b): {"road": True}}
+        road_km = api.built_km(built, "road", world_map=world_map)
+        rail_km = api.built_km(built, "rail", world_map=world_map)
+        self.assertEqual(api.built_km({}, "road", world_map=world_map), 0.0)
+        self.assertGreater(road_km, rail_km)
+        self.assertGreater(rail_km, 0.0)
+
 
 if __name__ == "__main__":
     unittest.main()

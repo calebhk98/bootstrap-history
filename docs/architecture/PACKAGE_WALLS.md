@@ -2,7 +2,7 @@
 
 The simulator is split into packages that the rest of the code reaches only through a published
 surface, so the people working inside one package can change its internals without the others
-noticing. `sim/economy/` was the first. `sim/agents/`, `sim/labour/`, `sim/geography/` and `sim/ui/`
+noticing. `sim/economy/` was the first. `sim/agents/`, `sim/labour/`, `sim/geography/`, `sim/disease/` and `sim/ui/`
 follow the same rule.
 
 ## The rule
@@ -31,6 +31,7 @@ engine stay off `sim.economy` too (only `sim/engine/economy_port*.py` may import
 | `sim/labour/` | `sim/labour/api.py` | `sim.labour` (a `Labour`); `LabourWorld` in `sim/engine/labour_port.py`; the labour market every employer asks is `sim.labour.market` |
 | `sim/geography/` | `sim/geography/api.py` | `sim.geography` (a `Geography`); `GeographyWorld` in `sim/engine/geography_port.py` |
 | `sim/agents/` | `sim/agents/api.py` | none; the engine adapters (`society_actors.py`, `society_disclosure.py`, `interest_groups.py`) consume the api, and `sim/engine/agents_port*.py` (`SimWorld`) is what actors ask of the world (`sim/agents/protocols.py`) |
+| `sim/disease/` | `sim/disease/api.py` | none yet (stage 1: a patch of people and a pathogen, not wired into `Sim`); `sim/engine/validate_disease_data.py` is the one engine file that imports it, for `validate` |
 | `sim/ui/` | `sim/ui/api.py` | none; the UI is a consumer and reaches the engine only through `sim/engine/ui_port.py`. `sim/simulator.py` is the entry point |
 
 Each adapter is a plain class (or, for the UI, a module) with one explicit member per thing the

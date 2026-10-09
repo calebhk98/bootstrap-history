@@ -254,7 +254,8 @@ class DivergenceTests(unittest.TestCase):
                                      "before the run began"})
         for row in reply["dated_events"]:
             self.assertIn("causes_checked", row)
-            self.assertFalse(row["causes_checked"])
+            if row["causes_checked"]:
+                self.assertIn("failed_causes", row)
 
     def test_says_plainly_what_it_cannot_know(self):
         reply = _ask(_shared_sim(), "divergence")

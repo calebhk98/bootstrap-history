@@ -2,8 +2,9 @@
 
 A fishery row names the layer that gives its extent (shelf area, lake area, river length). Marine
 rows (with a trophic level) take a share of the shelf's primary production up the food chain
-(Pauly and Christensen); other rows give a sustainable yield per unit of extent. A row may name a
-parameter used as the extent when the layer has no value, only on tiles with a given field set.
+(Pauly and Christensen); other rows give a sustainable yield per unit of extent. A row flagged `extent_zone_overlaps_neighbours`
+splits its layer value equally among the tile and the bordering tiles that have their own value. A row
+may name a parameter used as the extent when the layer has no value, only on tiles with a given field set.
 """
 from typing import List, Optional, Tuple
 
@@ -19,10 +20,21 @@ def _extent(world_map: WorldMap, tile_id: str, row: dict) -> float:
         return 0.0
     found: Optional[float] = tile_layers.number(world_map, tile_id, row["extent_layer"])
     if found is not None:
+        if row.get("extent_zone_overlaps_neighbours"):
+            return found / _tiles_sharing_zone(world_map, tile_id, row)
         return found
     if "extent_fallback_parameter" in row:
         return float(parameter(world_map, row["extent_fallback_parameter"]))
     return 0.0
+
+
+def _tiles_sharing_zone(world_map: WorldMap, tile_id: str, row: dict) -> int:
+    """The tile and its bordering tiles that have their own zone: each takes an equal part of overlapping zones."""
+    sharing = 1
+    for neighbour in world_map.tiles[tile_id].get("borders", []):
+        if (tile_layers.number(world_map, neighbour, row["extent_layer"], 0.0) or 0.0) > 0.0:
+            sharing += 1
+    return sharing
 
 
 def _marine_tonnes(world_map: WorldMap, tile_id: str, row: dict, extent_km2: float) -> float:

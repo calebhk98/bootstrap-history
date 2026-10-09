@@ -1,9 +1,8 @@
 """The simulation itself: what one year does, and the loop over years."""
 import collections, copy, math, os, random, sys
 
-from sim.constants import book_money_names, declare
-from .money_units import book_money_factor
-from .wage_schedule import build_schedule
+from sim.constants import declare
+from . import money_units
 from . import automation_audit
 from sim.engine.state import SimulationState, ActiveProjectState
 from sim.engine.state_seat import bind_seat
@@ -44,12 +43,14 @@ from .market_clearing import MarketClearingMixin
 from .foreign_economies import ForeignEconomiesMixin
 from .living_stock import LivingStockMixin
 from .coin_hoard import CoinHoardMixin
+from .theft_charge import TheftChargeMixin
 from .living_stock_trade import LivingStockTradeMixin
 from .living_stock_yearly import LivingStockYearlyMixin
 from .market_demand import MarketDemandMixin
 from .real_output import RealOutputMixin
 from .concern_volume import ConcernVolumeMixin
 from .techniques_in_use import TechniquesInUseMixin
+from .industry_depth import IndustryDepthMixin
 from .incumbent_prices import IncumbentPricesMixin
 from .producer_costs import ProducerCostsMixin
 from .fog import FogMixin
@@ -219,9 +220,9 @@ FARM_WEATHER_POOLED_CELL_CAP = declare(
 YEARLY_RECORD_LIMIT = 300
 
 
-class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, LabourPortMixin,
+class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IndustryDepthMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, LabourPortMixin,
           ProjectsMixin, SeatMixin, WaysMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, InterestGroupsMixin, ForwardingPropertiesMixin, GoalsMixin,
-          StepPhasesMixin, LivingStockMixin, CoinHoardMixin,
+          StepPhasesMixin, LivingStockMixin, CoinHoardMixin, TheftChargeMixin,
           LivingStockTradeMixin, LivingStockYearlyMixin, EconomyPortMixin, NodeRederiveMixin):
     STATE_CAPACITY_DEFAULT = declare(
         "STATE_CAPACITY_DEFAULT", 0.7, kind="temporary_heuristic",
@@ -259,16 +260,6 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
     # DISEASE_BURDEN_TECH_IDS (nodes declaring the `disease_burden` mechanic) is
     # provided by MechanicsMixin; food techs in _TECH_EFFECTS.json do not declare it.
 
-    def _localise_book_money_constants(self):
-        """Give this Sim its own copy of every money constant authored in book
-        denarii, in its civilisation's coin."""
-        factor = book_money_factor(build_schedule(
-            TRADE_REGISTRY, self.civ).money_per_labour_hour)
-        self._book_money_scale = factor
-        for name in book_money_names():
-            if hasattr(type(self), name):
-                setattr(self, name, getattr(type(self), name) * factor)
-
     def __init__(self, nodes, order, rng, events=True, cfg=None, verbose=False,
                  bounty_set=None, civ=None, manual=False, debug=None):
         self.nodes = nodes
@@ -304,7 +295,6 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         self.start_civ = copy.deepcopy(self.civ)    # the opening values, kept while self.civ drifts
         self.nodes = nodes_in_civ_money(nodes, self.civ)
         self._remember_derived_gates(self.civ["starting_techs"])
-        self._localise_book_money_constants()
         # Authoritative live SimulationState hierarchy
         from sim.engine.state import (
             SimulationState, HouseholdState, ProjectsState, ActorsState,
@@ -625,7 +615,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
                 self._wrap_seat_containers()
         finally:
             bind_seat(self.state, acting)
-        cleared = getattr(self.state.economy, "farm_cleared_hectares", None)
+        cleared = getattr(self.state.holdings, "farm_cleared_hectares", None)
         if cleared is not None:
             self.labour.set_farm_area(cleared)
         # Synchronize demographic cohort floats
@@ -654,7 +644,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         # Reset transient caches
         self._reset_economic_caches()
         # the demand the last throttle saw is read before the next one, so it is carried
-        held_demand = self.state.economy.material_demand_at_last_throttle
+        held_demand = self.state.holdings.material_demand_at_last_throttle
         self.household._material_demand_cache = None if held_demand is None else collections.Counter(held_demand)
 
     def _wrap_seat_containers(self):
@@ -1530,9 +1520,9 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         # so a stale or missing value right after a fresh `Sim()` (before
         # this method has run once) costs nothing correctness-sensitive.
         self._last_farm_year = farm_year
-        self.state.economy.farm_last_shortfall_kg = farm_year.food_shortfall_kg
-        self.state.economy.farm_last_harvest_kg = farm_year.gross_harvest_kg
-        self.state.economy.farm_last_marginal_product = (
+        self.state.holdings.farm_last_shortfall_kg = farm_year.food_shortfall_kg
+        self.state.holdings.farm_last_harvest_kg = farm_year.gross_harvest_kg
+        self.state.holdings.farm_last_marginal_product = (
             farm_year.marginal_product_last_hour_kg_per_hour)
         self.labour.update_wages()
 
@@ -1775,15 +1765,16 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
             "damage linger for decades, not measured against any attested "
             "postwar recovery rate.")
 
-    INSOLVENCY_FLOOR_MIN = declare(
-        "INSOLVENCY_FLOOR_MIN", 4000.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii", source=None, confidence="D",
-        why="Genuinely a money amount: it is a nominal debt threshold, and a debt is a promise of a fixed sum of the coin it was contracted in, whatever that coin later buys. "
-            "Floor on how deep into arrears a household can sit before "
-            "insolvency's staff bleed can begin, for a household with "
-            "very low revenue - so a household earning almost nothing is "
-            "not bled the instant it dips a denarius below zero. Round "
-            "number, not measured.")
+    INSOLVENCY_FLOOR_MIN_LABOUR_HOURS = declare(
+        "INSOLVENCY_FLOOR_MIN_LABOUR_HOURS", 80600.0, kind="temporary_heuristic",
+        unit="labour hours", source=None, confidence="D",
+        why="Floor on how deep into arrears a household can sit before insolvency's"
+            ' staff bleed can begin, for a household with very low revenue - so a '
+            'household earning almost nothing is not bled the instant it dips a '
+            'denarius below zero. Round number, not measured. How deep a debt a '
+            'household can carry is the labour it would take to clear, so the floor'
+            ' is hours of work, the same burden whatever the coin is worth.')
+    INSOLVENCY_FLOOR_MIN = money_units.PricedInLabourHours("INSOLVENCY_FLOOR_MIN_LABOUR_HOURS")
     INSOLVENCY_FLOOR_REVENUE_MULTIPLE = declare(
         "INSOLVENCY_FLOOR_REVENUE_MULTIPLE", 2.0, kind="temporary_heuristic",
         unit="years of revenue", source=None, confidence="D",
@@ -1907,14 +1898,15 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         why="Scandal level above which the optimizer's standing bribery "
             "policy actually starts spending - below it, scandal is not "
             "yet worth buying down. Tuned, not measured.")
-    AUTO_BRIBE_CAPITAL_THRESHOLD = declare(
-        "AUTO_BRIBE_CAPITAL_THRESHOLD", 2000, kind="temporary_heuristic",
-        book_money=True, unit="denarii", source=None, confidence="D",
-        why="Genuinely a money amount: it is a threshold on coin held, so it is compared against capital as it is counted. "
-            "Minimum capital before the optimizer's bribery policy will "
-            "spend at all, so a poor household is not bled dry bribing "
-            "away scandal it might survive anyway. Round number, not "
-            "measured.")
+    AUTO_BRIBE_CAPITAL_THRESHOLD_LABOUR_HOURS = declare(
+        "AUTO_BRIBE_CAPITAL_THRESHOLD_LABOUR_HOURS", 40300.0, kind="temporary_heuristic",
+        unit="labour hours", source=None, confidence="D",
+        why="Minimum capital before the optimizer's bribery policy will spend at "
+            'all, so a poor household is not bled dry bribing away scandal it might'
+            ' survive anyway. Round number, not measured. Capital is a stock of '
+            'labour-valued goods and coin, so the threshold is the hours of work it'
+            ' represents.')
+    AUTO_BRIBE_CAPITAL_THRESHOLD = money_units.PricedInLabourHours("AUTO_BRIBE_CAPITAL_THRESHOLD_LABOUR_HOURS")
     AUTO_BRIBE_CAPITAL_SHARE = declare(
         "AUTO_BRIBE_CAPITAL_SHARE", 0.12, kind="temporary_heuristic",
         unit="dimensionless (share of capital)", source=None,
@@ -1922,13 +1914,15 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         why="Ceiling on how much of current capital one year's bribery "
             "spend can be, so buying down scandal cannot alone bankrupt "
             "the household. Tuned, not measured.")
-    AUTO_BRIBE_COST_PER_SCANDAL_POINT = declare(
-        "AUTO_BRIBE_COST_PER_SCANDAL_POINT", 260, kind="temporary_heuristic",
-        book_money=True, unit="denarii per scandal point", source=None, confidence="D",
-        why="Genuinely a money amount: a bribe is handed over as coin and the sum is negotiated between the parties, not fixed by the labour of any good. "
-            "What buying down one point of scandal costs, capping total "
-            "spend alongside AUTO_BRIBE_CAPITAL_SHARE. Invented figure, "
-            "not sourced to any attested bribe schedule.")
+    AUTO_BRIBE_COST_LABOUR_HOURS_PER_SCANDAL_POINT = declare(
+        "AUTO_BRIBE_COST_LABOUR_HOURS_PER_SCANDAL_POINT", 5240.0, kind="temporary_heuristic",
+        unit="labour hours per scandal point", source=None, confidence="D",
+        why='What buying down one point of scandal costs, capping total spend '
+            'alongside AUTO_BRIBE_CAPITAL_SHARE. Invented figure, not sourced to '
+            'any attested bribe schedule. An official accepts a payment worth the '
+            'work and risk he gives up, so the sum is the hours of unskilled labour'
+            ' it buys.')
+    AUTO_BRIBE_COST_PER_SCANDAL_POINT = money_units.PricedInLabourHours("AUTO_BRIBE_COST_LABOUR_HOURS_PER_SCANDAL_POINT")
     BRIBES_YTD_DECAY = declare(
         "BRIBES_YTD_DECAY", 0.7, kind="temporary_heuristic",
         unit="dimensionless (fraction kept per year)", source=None,
@@ -1938,15 +1932,15 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
             "protection term) survives into next year - a bribe's "
             "protective effect fades rather than accumulating forever. "
             "Tuned, not measured.")
-    BRIBE_SCANDAL_REDUCTION_SCALE = declare(
-        "BRIBE_SCANDAL_REDUCTION_SCALE", 300.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii per scandal point removed (before bribability)",
-        source=None, confidence="D",
-        why="Genuinely a money amount: a bribe is handed over as coin and the sum is negotiated between the parties, not fixed by the labour of any good. "
-            "How much bribery spend it takes to remove one point of "
-            "scandal, scaled further by this society's own bribability "
-            "weight. Invented figure, not sourced to any attested bribe "
-            "schedule.")
+    BRIBE_SCANDAL_REDUCTION_LABOUR_HOURS_PER_POINT = declare(
+        "BRIBE_SCANDAL_REDUCTION_LABOUR_HOURS_PER_POINT", 6050.0, kind="temporary_heuristic",
+        unit="labour hours per scandal point removed (before bribability)", source=None, confidence="D",
+        why='How much bribery spend it takes to remove one point of scandal, scaled'
+            " further by this society's own bribability weight. Invented figure, "
+            'not sourced to any attested bribe schedule. An official accepts a '
+            'payment worth the work and risk he gives up, so the sum is the hours '
+            'of unskilled labour it buys.')
+    BRIBE_SCANDAL_REDUCTION_SCALE = money_units.PricedInLabourHours("BRIBE_SCANDAL_REDUCTION_LABOUR_HOURS_PER_POINT")
 
     SCANDAL_HAZARD_SCALE = declare(
         "SCANDAL_HAZARD_SCALE", 60.0, kind="temporary_heuristic",
@@ -2257,7 +2251,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         self.state.projects.done_year = {}
         horizon = horizon or self.cfg["horizon_years"]
         end = self.cfg["start_year"] + horizon
-        while self.state.scenario.year < end and not self.state.founder.dead_reason and self.state.scenario.goal_year is None:
+        while self.state.scenario.year < end and not self.state.founder.dead_reason and self.state.seat_progress.goal_year is None:
             self.step()
         return self
 

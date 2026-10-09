@@ -101,7 +101,7 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
     economy_materials.py and one in economy_freight.py cache their
     answer on their own bare class object rather than on self, because
     what they cache (a CommodityLedger, a material-to-commodity-id map,
-    prices.json's own figures, and the ox-cart-and-dirt-track physical
+    the solved price table, and the ox-cart-and-dirt-track physical
     inputs freight pricing reuses) does not differ between one Sim
     instance and the next in the same process. TRAP: that class-object
     reference at each cache site MUST match whatever class actually

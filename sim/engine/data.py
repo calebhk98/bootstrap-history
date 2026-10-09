@@ -29,7 +29,6 @@ from .identity_cache import IdentityCache
 from sim.geography.api import haversine_km, load_geography
 from .mods import get_ordered_mods, load_mod_tree
 from .tree_source import load_base_tree
-from .mods_ids import is_mod_content
 from .mods_civ import (apply_mod_civilization, check_all_civilizations, check_starting_techs,
                        is_hidden, mod_civ_ids)
 from . import energy_prices, money_units, node_revenue
@@ -330,17 +329,8 @@ def load(held_technology_ids: Optional[Iterable[str]] = None,
     production = load_production_catalog(ROOT, MODDIR)
     load_trade_registry(ROOT, production, MODDIR, nodes=nodes.values())
     validate_mod_material_paths(nodes.values(), production, manifests)
-    producers = set(production)
-    for entry in production.values():
-        producers.update((entry.get("outputs") or {}).keys())
-    for node in nodes.values():
-        if not is_mod_content(node["id"], manifests):
-            continue
-        for material in (node.get("mat") or {}):
-            if material not in goods:
-                raise ValueError("mod technology %s requires material %s; it has a "
-                                 "production path but is unavailable with the selected "
-                                 "technologies" % (node["id"], material))
+    # A material with a production path but no seller in reach is unavailable until one appears, which is a
+    # state of the game (the start gate says so), not a fault in the content.
     for node in nodes.values():
         if not has_luck_component(node):
             node["risk"] = 0.0
@@ -359,9 +349,9 @@ def load(held_technology_ids: Optional[Iterable[str]] = None,
 def goods_provenance(held_technology_ids: Iterable[str] = (),
                       civilization_id: Optional[str] = None,
                       civilization: Optional[JSONDict] = None) -> Dict[str, str]:
-    """{material: "solved" | "gated" | "mature"} for every material the solver prices:
-    "gated" ones are priced at a technique not held, "mature" ones where nothing
-    in reach makes them (see `sim.engine.prices.priced_goods_table`).
+    """{material: "solved" | "gated"} for every material the solver prices:
+    "gated" ones are priced at a technique not held but within reach; a material
+    nothing in reach makes is absent (see `sim.engine.prices.priced_goods_table`).
 
     `civilization_id` should be the SAME civilization `held_technology_ids`
     came from: land rent is solved against its territory, and left at `None`

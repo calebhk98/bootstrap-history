@@ -230,7 +230,7 @@
    "iron_bar_kg": 20
   },
   "cap_hours": 3024.2818761193985,
-  "up_hours": 806.475166965173,
+  "up_hours": 800.0,
   "yrs": 1.0,
   "risk": 0.15,
   "sus": 0,
@@ -327,7 +327,7 @@
    "stone_kg": 2000,
    "timber_m3": 3
   },
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 0,
   "yrs": 2.0,
   "risk": 0.15,
@@ -357,7 +357,7 @@
    "timber_m3": 1
   },
   "cap_hours": 1008.0939587064662,
-  "up_hours": 806.475166965173,
+  "up_hours": 800.0,
   "yrs": 0.5,
   "risk": 0.1,
   "sus": 0,
@@ -384,7 +384,7 @@
    "labourer": 100
   },
   "mat": {},
-  "cap_hours": 806.475166965173,
+  "cap_hours": 800.0,
   "up_hours": 604.8563752238797,
   "yrs": 0.5,
   "risk": 0.15,
@@ -477,6 +477,8 @@
    "dynamo",
    "power_grid"
   ],
+  "requires_running": ["power_grid"],
+  "_internal": "[GATE: Operates only on a running grid: it draws mains power from it, so a shut or never-built grid leaves it dead. Knowledge of the technique stays in pre.]",
   "kb": "",
   "ph": 400,
   "lab": {
@@ -490,7 +492,7 @@
    "copper_wire_kg": 30
   },
   "cap_hours": 20161.879174129324,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "yrs": 2.0,
   "risk": 0.15,
   "sus": 0,
@@ -583,7 +585,7 @@
    "iron_bar_kg": 20
   },
   "cap_hours": 3024.2818761193985,
-  "up_hours": 806.475166965173,
+  "up_hours": 800.0,
   "yrs": 1.0,
   "risk": 0.1,
   "sus": 0,
@@ -612,7 +614,7 @@
    "timber_m3": 4,
    "iron_bar_kg": 15
   },
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.15,
@@ -782,7 +784,7 @@
    "iron_sheet_kg": 80
   },
   "cap_hours": 20161.879174129324,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "yrs": 2.0,
   "risk": 0.15,
   "sus": 0,
@@ -815,7 +817,7 @@
    "iron_bar_kg": 15,
    "brass_kg": 8
   },
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 604.8563752238797,
   "yrs": 1.0,
   "risk": 0.12,
@@ -1021,7 +1023,7 @@
   },
   "mat": {},
   "cap_hours": 2520.2348967661655,
-  "up_hours": 806.475166965173,
+  "up_hours": 800.0,
   "yrs": 1.0,
   "risk": 0.1,
   "sus": 3,
@@ -1284,7 +1286,7 @@
    "copper_kg": 40
   },
   "cap_hours": 20161.879174129324,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "yrs": 2.0,
   "risk": 0.18,
   "sus": 0,
@@ -1409,7 +1411,7 @@
    "brass_kg": 5,
    "paper_kg": 20
   },
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.1,
@@ -1509,7 +1511,7 @@
    "iron_bar_kg": 50
   },
   "cap_hours": 24194.255008955188,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "yrs": 2.0,
   "risk": 0.2,
   "sus": 0,
@@ -1541,7 +1543,7 @@
    "zinc_kg": 5,
    "bismuth_kg": 2
   },
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.15,
@@ -1772,6 +1774,8 @@
    "motor_transformer_ac",
    "power_grid"
   ],
+  "requires_running": ["power_grid"],
+  "_internal": "[GATE: Operates only on a running grid: it draws mains power from it, so a shut or never-built grid leaves it dead. Knowledge of the technique stays in pre.]",
   "kb": "",
   "ph": 400,
   "lab": {

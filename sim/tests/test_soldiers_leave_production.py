@@ -55,7 +55,7 @@ expected = (unarmed.population.working_age - armed.population.working_age + sold
 check("the society's hours fall by the soldiers' hours", abs(gap - expected) < 0.01 * expected, (gap, expected))
 check("hours stay positive under a large army", total_hours(armed) > 0.0)
 farm = labour_allocation.FARM_TRADE
-need = armed.state.economy.farm_hours_needed
+need = armed.state.holdings.farm_hours_needed
 have = armed.state.economy.society_labour_hours[farm]
 check("farm hours still meet the farm need where the hours allow", have >= min(need, total_hours(armed)) * 0.99, (have, need))
 

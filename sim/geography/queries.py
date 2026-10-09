@@ -10,8 +10,8 @@ import math
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
 from sim.geography import (food_capacity, map_source, mechanisms, parameters, resource_links, resources_biotic,
-                           resources_catalogue, resources_endowment, resources_prospecting,
-                           resources_summary, routes_graph, routes_modes, routes_search, tile_holdings, tile_layers,
+                           resources_catalogue, resources_endowment, resources_mined, resources_prospecting,
+                           resources_summary, routes_carriage, routes_graph, routes_modes, routes_search, tile_holdings, tile_layers,
                            ways_build)
 
 WorldMap = map_source.WorldMap
@@ -62,6 +62,11 @@ def tiles_of_regions(region_labels: Iterable[str], world_map: Optional[WorldMap]
     return tile_holdings.tiles_of_regions(region_labels, _map(world_map))
 
 
+def regions_of_tiles(tile_ids: Iterable[str], world_map: Optional[WorldMap] = None) -> List[str]:
+    """Sorted region labels the tiles carry (labels only; a region owns no data)."""
+    return tile_holdings.regions_of_tiles(tile_ids, _map(world_map))
+
+
 def usable_modes(known_nodes_per_party: Iterable[Iterable[str]], world_map: Optional[WorldMap] = None) -> List[str]:
     """Route modes every party can use, from the tech nodes each holds."""
     return sorted(routes_modes.usable_modes(_map(world_map), known_nodes_per_party))
@@ -71,6 +76,12 @@ def dues_hours_per_tonne(world_map: Optional[WorldMap] = None) -> Dict[str, floa
     """{mode_id: labour-hours of tolls or port dues per tonne, charged each time a haul changes to the mode}."""
     return {mode_id: float(mode.get("dues_hours_per_tonne", 0.0))
             for mode_id, mode in sorted(routes_modes.modes(_map(world_map)).items())}
+
+
+def carriage_rates(mode_ids: Iterable[str], world_map: Optional[WorldMap] = None) -> Dict[str, Dict[str, Any]]:
+    """{mode_id: {crew_trade, crew_hours_per_tonne_km, handling_hours_per_tonne, edge_classes}} on level ground
+    for the modes that name a crew trade."""
+    return routes_carriage.carriage_rates(_map(world_map), mode_ids)
 
 
 def route(origin_tiles: Iterable[str], destination_tiles: Iterable[str], modes: Iterable[str],
@@ -117,6 +128,12 @@ def build_requirements(tile_a: str, tile_b: str, improvement: str,
     """What building `improvement` ("road", "rail") over the land edge between two bordering tiles takes:
     {km, grade, trade, labour_hours, materials: {material: tonnes}, node}, or None when it cannot be built."""
     return ways_build.requirements(_map(world_map), tile_a, tile_b, improvement)
+
+
+def built_km(improvements: Mapping[str, Mapping[str, Any]], improvement: str,
+             world_map: Optional[WorldMap] = None) -> float:
+    """Kilometres of `improvement` ("road", "rail") the caller's `improvements` record holds."""
+    return ways_build.built_km(_map(world_map), improvements, improvement)
 
 
 def edge_key(tile_a: str, tile_b: str) -> str:
@@ -170,6 +187,14 @@ def works_priced_from_deposits(world_map: Optional[WorldMap] = None) -> Tuple[st
 def parameter_value(parameter_id: str, world_map: Optional[WorldMap] = None) -> Any:
     """The value of one of the map's parameters."""
     return parameters.parameter(_map(world_map), parameter_id)
+
+
+def mined_before(tile_ids: Iterable[str], resource_id: str, year: int,
+                 world_map: Optional[WorldMap] = None) -> Dict[str, Any]:
+    """What the known deposits of a resource in these tiles had yielded by `year`: {workings, unworked,
+    deposits_in_tiles, unit}, a working being {id, tile_id, output_per_year, years_worked, years_since_last_output}
+    in the resource's unit. Deposits with no working date are listed in `unworked`, never guessed."""
+    return resources_mined.mined_before(_map(world_map), tile_ids, resource_id, year)
 
 
 def prospect(tile_id: str, resource_id: str, effort: float, seed: Any,

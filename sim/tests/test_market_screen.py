@@ -45,7 +45,7 @@ check("each material row carries the quote's buy price and an own-supply flag",
 _everything = S._agent_dispatch(_loom_sim, NODES, {"cmd": "market", "limit": 1000}).get("materials", {}).get("rows", [])
 _bases = {row["material"]: row.get("price_basis") for row in _everything}
 check("each material row says which technique its price is at, and the text names one the society lacks",
-      set(_bases.values()) <= {"solved", "gated", "mature", None} and "gated" in _bases.values()
+      set(_bases.values()) <= {"solved", "gated", "imported", None} and "gated" in _bases.values()
       and "priced at a technique you do not have" in _render_pretty(
           "market", {"ok": True, "goods": [], "materials": {"rows": [dict(_everything[0], price_basis="gated")], "total": 1},
                      "wages": []}),
@@ -59,7 +59,7 @@ check("offset and limit page the materials table",
       == list(_priceable)[len(_rows):len(_rows) + 5],
       _page2["materials"]["rows"])
 _mine_sim = sim()
-_mine_sim.state.economy.forest_ha = 10.0
+_mine_sim.state.holdings.forest_ha = 10.0
 _all = S._agent_dispatch(_mine_sim, NODES, {"cmd": "market", "limit": 1000})
 _charcoal = next(row for row in _all["materials"]["rows"] if row["material"] == "charcoal_kg")
 check("a material you produce is flagged as own supply",

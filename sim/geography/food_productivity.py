@@ -5,11 +5,12 @@ Standalone: imports only the geography map modules.
 import math
 from typing import Callable, List
 
-from sim.geography import content_rules, mechanisms, tile_layers
+from sim.geography import content_rules, food_land, mechanisms, tile_layers
 from sim.geography.map_source import WorldMap
 from sim.geography.parameters import parameter
 
 SQUARE_METRES_PER_SQUARE_KM = 1.0e6
+GRAMS_PER_KG = 1000.0
 
 
 def food_cache(world_map: WorldMap, name: str) -> dict:
@@ -33,7 +34,7 @@ def rows_of_mechanism(world_map: WorldMap, mechanism: str) -> List[dict]:
 def land_available_to_wild_km2(world_map: WorldMap, tile_id: str) -> float:
     """Land not under the plough: what wild animals and plants have."""
     area = tile_layers.number(world_map, tile_id, "land_area_km2", 0.0)
-    return area * (1.0 - tile_layers.number(world_map, tile_id, "arable_fraction", 0.0))
+    return area * (1.0 - food_land.arable_fraction(world_map, tile_id))
 
 
 def net_primary_production(world_map: WorldMap, tile_id: str) -> float:

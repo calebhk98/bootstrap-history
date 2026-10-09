@@ -175,6 +175,7 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
             if signal is not None and signal > 0.0:
                 floor = setup.opening_prices.get(good, signal) * PRICE_MEMORY_FLOOR_SHARE
                 record.memory.prices[key] = max(signal, floor)
+                record.memory.note_usual_price(key)
             record.volumes[key] = result.quantity
             record.memory.note_volume(key, result.quantity)
             cleared.add(key)

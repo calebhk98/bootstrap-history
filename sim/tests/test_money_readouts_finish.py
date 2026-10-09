@@ -78,7 +78,7 @@ check("the state screen prints a sustainable debt line when in arrears",
 
 # --- 244: a mine quote prices the running cost the new working will be charged
 mine_sim = sim(civ="han_china_100ad", capital=1e12)
-mine_sim.state.economy.mines = [{"material": "coal", "capacity": 500.0, "opened_year": 100,
+mine_sim.state.holdings.mines = [{"material": "coal", "capacity": 500.0, "opened_year": 100,
                                  "capex_paid": 0.0,
                                  "intensity_yrs": mine_sim.DEPLETION_HALF_LIFE_YRS * 0.5}]
 mine_quote = mine_sim.mine_quote("coal", 100)

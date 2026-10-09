@@ -290,7 +290,7 @@
   "mat": {
    "timber_m3": 5
   },
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.2,
@@ -756,7 +756,7 @@
    "timber_m3": 15.0
   },
   "cap_hours": 20161.879174129324,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "yrs": 1.0,
   "risk": 0.15,
   "sus": 0,
@@ -793,7 +793,7 @@
    "artisan": 100
   },
   "mat": {},
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 1008.0939587064662,
   "yrs": 1.0,
   "risk": 0.1,
@@ -936,7 +936,7 @@
    "labourer": 300
   },
   "mat": {},
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.2,
@@ -1000,7 +1000,7 @@
    "lime_kg": 100
   },
   "cap_hours": 10080.939587064662,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "yrs": 1.0,
   "risk": 0.2,
   "sus": 0,
@@ -1364,7 +1364,7 @@
   "mat": {
    "timber_m3": 5
   },
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.15,
@@ -1451,6 +1451,9 @@
    "fud_mechanical_refrigeration",
    "railway"
   ],
+  "requires_running": ["railway"],
+  "requires_ways": {"rail": 75},
+  "_internal": "[GATE: Operates over the railway works, and only while they are open. Needs track the actor has built: a line joining at least two held tiles is the least that can carry a service, and the figure is that single line measured the way geography counts a rail build.]",
   "kb": "75_agriculture_food.md",
   "ph": 200,
   "lab": {
@@ -1492,7 +1495,7 @@
    "artisan": 100
   },
   "mat": {},
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 2016.1879174129324,
   "yrs": 1.0,
   "risk": 0.1,
@@ -1617,7 +1620,7 @@
   "mat": {
    "timber_m3": 3
   },
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 1008.0939587064662,
   "yrs": 1.0,
   "risk": 0.1,
@@ -1734,7 +1737,7 @@
   "mat": {
    "parchment_sheet": 200
   },
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.1,
@@ -1765,7 +1768,7 @@
    "chemist": 150
   },
   "mat": {},
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.15,
@@ -1791,7 +1794,7 @@
    "artisan": 150
   },
   "mat": {},
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 1612.950333930346,
   "yrs": 1.0,
   "risk": 0.15,
@@ -1914,7 +1917,7 @@
    "artisan": 200
   },
   "mat": {},
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 1612.950333930346,
   "yrs": 1.0,
   "risk": 0.1,
@@ -1940,7 +1943,7 @@
    "artisan": 150
   },
   "mat": {},
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 2016.1879174129324,
   "yrs": 1.0,
   "risk": 0.15,
@@ -1995,7 +1998,7 @@
    "labourer": 400
   },
   "mat": {},
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 0,
   "yrs": 3.0,
   "risk": 0.2,

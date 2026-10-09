@@ -30,13 +30,14 @@ class ViewShareMixin:
             return None
         registry = self.actors
         economy = self.state.economy
+        holdings = self.state.holdings
         projects = self.state.projects
         return ((self._material_prices(), demand),
                 (self.goods_market.others_stamp(), registry.version[0], len(registry.actors), self.state.scenario.year,
                  self.household.done_version, self.household.operating_version,
                  len(projects.done), len(projects.operating),
-                 economy.forest_ha, economy.nitre_bed_m2, self.population.total,
-                 economy.output_per_head, len(economy.mines)))
+                 holdings.forest_ha, holdings.nitre_bed_m2, self.population.total,
+                 economy.output_per_head, len(holdings.mines)))
 
     def _shared_answer(self, key, inputs, compute):
         """`compute()` reused while the world stamp holds and `inputs` (what the answer reads that

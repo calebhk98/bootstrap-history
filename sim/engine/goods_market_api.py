@@ -3,15 +3,15 @@
 The founder, a firm, the state and the foreign traders deal with `Sim.goods_market`:
 
     quote_buy / quote_sell     what an order would cost or fetch, from the posted price
-    buy / sell                 an order from a party (anything with money and goods; the founder
-                               is `FounderParty`), priced along the curve the order climbs
+    buy / sell                 an order from a party (anything with money and goods; a seat
+                               is a `SeatParty`), priced along the curve the order climbs
     note_purchase / note_sale  tonnes a party bought or sold this year, counted in the same book
     price / price_ratio / state  what screens read
 
-A party is identified by a string. The founder is `FOUNDER`; a firm or the state is its actor id.
-A sale by the founder and by a firm are the same entry in the year's flows, so they move the
-clearing price the same way (`sim/world/market.py`); the posted price leaves out the founder's own
-orders only, which keep the marginal curves that move a bill as it is filled. The clearing itself
+A party is identified by a string. A seat is its seat id (`state.acting_seat` for the asking seat);
+a firm or the state is its actor id. A sale by a seat and by a firm are the same entry in the year's
+flows, so they move the clearing price the same way (`sim/world/market.py`); the posted price leaves
+out the asking seat's own orders only, which keep the marginal curves that move a bill as it is filled. The clearing itself
 is in market_clearing.py; who offers what is in goods_market_offers.py.
 """
 from sim.world.producer_market import Offer
@@ -21,49 +21,66 @@ from .goods_market_offers import GoodsOffers
 from .project_materials import tonnes_per_unit
 from sim.agents.api import edges
 
-FOUNDER = "founder"
+class SeatParty:
+    """One seat's money and stock, as a party to an order; every act runs as that seat."""
 
-
-class FounderParty:
-    """The founder's money and stock, as a party to an order."""
-
-    party_id = FOUNDER
-
-    def __init__(self, sim):
+    def __init__(self, sim, seat_id):
         self._sim = sim
+        self.party_id = seat_id
 
     def can_pay(self, money):
-        return purchase_rule.can_pay(self._sim, money)
+        with self._sim.act_as(self.party_id):
+            return purchase_rule.can_pay(self._sim, money)
 
     def pay(self, money, purpose):
-        self._sim.pay_edge(edges.EDGE_MARKET, money, purpose)
+        with self._sim.act_as(self.party_id):
+            self._sim.pay_edge(edges.EDGE_MARKET, money, purpose)
 
     def receive(self, money, purpose):
-        self._sim.receive_from_edge(edges.EDGE_MARKET, money, purpose)
+        with self._sim.act_as(self.party_id):
+            self._sim.receive_from_edge(edges.EDGE_MARKET, money, purpose)
 
     def held(self, key):
-        return self._sim.material_stock_t(key)
+        with self._sim.act_as(self.party_id):
+            return self._sim.material_stock_t(key)
 
     def take_delivery(self, key, tonnes):
-        sim = self._sim
-        opening = sim._material_opening_stock()
-        sim._material_stock()[key] += tonnes
-        opening[key] = opening.get(key, 0.0) + tonnes
-        sim.state.household._stock_throttle_sig = None
+        self._move_stock(key, tonnes)
 
     def hand_over(self, key, tonnes):
+        self._move_stock(key, -tonnes)
+
+    def _move_stock(self, key, tonnes):
         sim = self._sim
-        opening = sim._material_opening_stock()
-        sim._material_stock()[key] -= tonnes
-        opening[key] = opening.get(key, 0.0) - tonnes
-        sim.state.household._stock_throttle_sig = None
+        with sim.act_as(self.party_id):
+            opening = sim._material_opening_stock()
+            sim._material_stock()[key] += tonnes
+            opening[key] = opening.get(key, 0.0) + tonnes
+            sim.state.household._stock_throttle_sig = None
 
 
 class GoodsMarket(GoodsOffers):
 
     def __init__(self, sim):
         self._sim = sim
-        self.founder = FounderParty(sim)
+        self._seat_parties = {}
+
+    @property
+    def acting_party_id(self):
+        """The party id of the seat asking now."""
+        return self._sim.state.acting_seat
+
+    def seat_party(self, seat_id):
+        """The party for one seat, the same object every time."""
+        party = self._seat_parties.get(seat_id)
+        if party is None:
+            party = self._seat_parties[seat_id] = SeatParty(self._sim, seat_id)
+        return party
+
+    @property
+    def acting(self):
+        """The party for the seat asking now."""
+        return self.seat_party(self._sim.state.acting_seat)
 
     # ---- the records: the one place they are written -------------------------------------
 
@@ -122,12 +139,12 @@ class GoodsMarket(GoodsOffers):
     # ---- reads ------------------------------------------------------------------------
 
     @staticmethod
-    def _total(parties, party_id=None, others=False):
-        """Tonnes one party has, or every party's, or every party but the founder's; summed in party
+    def _total(parties, party_id=None, except_party=None):
+        """Tonnes one party has, or every party's, or every party but `except_party`'s; summed in party
         order so that a save and load cannot change the last digit."""
         if party_id is not None:
             return parties.get(party_id, 0.0)
-        return sum(tonnes for party, tonnes in sorted(parties.items()) if not (others and party == FOUNDER))
+        return sum(tonnes for party, tonnes in sorted(parties.items()) if party != except_party)
 
     def sold_tonnes(self, commodity, seller_id=None):
         """Tonnes sold this year: by one seller, or by all of them."""
@@ -140,27 +157,28 @@ class GoodsMarket(GoodsOffers):
         return self._sim._market_flows()["drawn"].get(commodity, 0.0)
 
     def others_offers(self, commodity):
-        """Offers of every seller but the founder that named the lowest price it takes: (tonnes, ratio)."""
+        """Offers of every seller but the asking seat that named the lowest price it takes: (tonnes, ratio)."""
         flows = self._sim._market_flows()
         sold = flows["sold"].get(commodity, {})
         reservations = flows.get("reservation", {}).get(commodity, {})
         return tuple(Offer(sold[party], reservations[party])
-                     for party in sorted(reservations) if party != FOUNDER and sold.get(party, 0.0) > 0.0)
+                     for party in sorted(reservations) if party != self.acting_party_id and sold.get(party, 0.0) > 0.0)
 
     def others_sold_tonnes(self, commodity):
-        """What every seller but the founder put on the market this year."""
-        return self._total(self._sim._market_flows()["sold"].get(commodity, {}), others=True)
+        """What every seller but the asking seat put on the market this year."""
+        return self._total(self._sim._market_flows()["sold"].get(commodity, {}), except_party=self.acting_party_id)
 
     def others_bought_tonnes(self, commodity):
-        return self._total(self._sim._market_flows()["bought"].get(commodity, {}), others=True)
+        return self._total(self._sim._market_flows()["bought"].get(commodity, {}), except_party=self.acting_party_id)
 
     def others_stamp(self):
-        """What every party but the founder has sold and bought this year, comparable for equality,
+        """What every party but the asking seat has sold and bought this year, comparable for equality,
         for caches whose answers read the posted price."""
         flows = self._sim._market_flows()
+        asking = self.acting_party_id
         return tuple(
             tuple(sorted((commodity, tuple(sorted((party, tonnes) for party, tonnes in parties.items()
-                                                  if party != FOUNDER)))
+                                                  if party != asking)))
                          for commodity, parties in flows[kind].items()))
             for kind in ("sold", "bought"))
 
@@ -183,7 +201,7 @@ class GoodsMarket(GoodsOffers):
         """Current buy and sell quote for a tonne of a material; None when it has no price."""
         sim = self._sim
         material = str(material or "").strip().lower()
-        per_kg = sim._material_price_per_kg(material)
+        per_kg = self.unit_price(material)
         if per_kg is None:
             return None
         emp_key = sim._material_tag(material)[0]
@@ -204,7 +222,7 @@ class GoodsMarket(GoodsOffers):
         """(money, mean money per tonne) to buy `tonnes` of a material now, the price rising as
         the order is filled. None when it has no price."""
         sim = self._sim
-        unit_price = sim._material_price_per_kg(material)
+        unit_price = self.unit_price(material)
         if unit_price is None:
             return None
         emp_key, tag = sim._material_tag(material)
@@ -234,7 +252,7 @@ class GoodsMarket(GoodsOffers):
     def quote_sell(self, material, tonnes, seller=None):
         """(stock key, tonnes the market takes now, money for them): the one figure `sell` pays
         and refusals quote as a way to raise cash."""
-        seller = seller or self.founder
+        seller = seller or self.acting
         quote = self.quote(material)
         tonnes = float(tonnes)
         if not quote or tonnes <= 0:

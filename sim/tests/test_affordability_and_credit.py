@@ -163,7 +163,7 @@ if quote_match:
           quoted_trade == wage_game.labour.best_wage_trade(), (quoted_trade, wage_game.labour.best_wage_trade()))
 
 # --- an idle fortune bleeds living costs, and the ledger names the part that is wealth.
-rich_ledger = S._agent_dispatch(sim(capital=book_money(1_000_000)), NODES, {"cmd": "money"})
+rich_ledger = S._agent_dispatch(sim(capital=hours_money(20200000)), NODES, {"cmd": "money"})
 check("the ledger names the part of your living costs that is your wealth",
       (rich_ledger.get("what_it_costs_you") or {}).get("_of_which_because_you_are_rich", 0) > 1000,
       rich_ledger.get("what_it_costs_you"))

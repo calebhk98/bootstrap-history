@@ -66,6 +66,8 @@ class ActorRecord:
 	last_logged_year: Optional[int] = None
 	# what the treasury paid the founder as patron this year
 	patron_grant: float = 0.0
+	# how the actor answers the state's demands ("comply" or "refuse", sim/agents/demand_answer.py)
+	demand_stance: str = "comply"
 	# ---- every actor: the country whose government it answers to and whose techniques it starts
 	# with (None = the home country), and who drives it ("ai", "human", "llm")
 	country: Optional[str] = None
@@ -126,6 +128,9 @@ class ActorRecord:
 	# remembered welfare (what it has come to expect)
 	blame_share: float = 1.0
 	welfare_reference: float = 0.0
+	# what a stratum has come to expect of each income it earns (wages, property) and a firm of its profit
+	income_reference: Dict[str, float] = field(default_factory=dict)
+	margin_reference: float = 0.0
 
 
 @dataclass
@@ -207,6 +212,9 @@ class ActorsState:
 	# named edge -> money it has taken in less what it has paid out, and the money that crossed it either way
 	edges: Dict[str, float] = field(default_factory=dict)
 	edge_volume: Dict[str, float] = field(default_factory=dict)
+	# concern id -> the takings of a lone operator that entrants expect, and the year it was last revised
+	expected_takings: Dict[str, float] = field(default_factory=dict)
+	expected_takings_year: Dict[str, int] = field(default_factory=dict)
 
 	def edge(self, name: str) -> Edge:
 		"""The named edge, an account outside the actors that a posting can name as its counterparty."""

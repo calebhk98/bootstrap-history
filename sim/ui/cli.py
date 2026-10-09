@@ -29,8 +29,8 @@ from collections import defaultdict
 
 from sim.engine.ui_port import load_production_catalog
 from sim.engine.ui_port import (
-    category_traits, tree_merge, validate_material_gating, validate_output_bounds, validate_copy_visibility, validate_production,
-    validate_unheld_gates)
+    category_traits, tree_merge, validate_material_gating, validate_output_bounds, node_revenue_census, validate_copy_visibility, validate_production,
+    validate_unheld_gates, validate_running_gates)
 from sim.engine.ui_port import default_civilisation_id
 from sim.engine.ui_port import (
     ROOT, MODDIR, CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog,
@@ -195,7 +195,7 @@ def _check_node_materials(node_id, node_record, goods, producible):
         if material_id in goods:
             continue
         if material_id in producible:
-            warns.append("%s: material %s has a production entry but no solved price (cost is a lower bound)" % (node_id, material_id))
+            warns.append("%s: material %s has a production entry but no seller in reach of the starting society, so it has no price and cannot be bought there (cost here is a lower bound)" % (node_id, material_id))
         else:
             errs.append("%s: unpriced material %s" % (node_id, material_id))
     return errs, warns
@@ -307,6 +307,8 @@ def _print_validate_summary(nodes, goal_rows, default_goal):
     print("edges            : %d" % sum(len(node_record["pre"]) for node_record in nodes.values()))
     print("total capital     : %s den across all %d nodes" % (f"{sum(node_record['_total_cost'] for node_record in nodes.values()):,.0f}", len(nodes)))
     print("total founder hrs : %s" % f"{sum(node_record['ph'] for node_record in nodes.values()):,}")
+    print("REVENUE BASIS (nodes with a revenue figure; 'authored' names no product to derive it from)")
+    print("\n".join(node_revenue_census.format_lines(node_revenue_census.basis_counts(nodes))))
     print()
     print("GOALS (%d selectable; 'goals' prints this table alone)" % len(goal_rows))
     print("%-34s %9s %10s  %s" % ("name", "closure", "floor(yr)", "node"))
@@ -391,6 +393,11 @@ def cmd_validate(args):
     errs += validate_material_gating.check_material_gating(nodes, validate_material_gating.load_gating(ROOT))
     from sim.engine.ui_port import civ_start_check
     errs += validate_unheld_gates.check_unheld_gates(nodes, civ_start_check.load_civilisations(ROOT), production)
+    from sim.engine import validate_event_causes
+    errs += validate_event_causes.check_event_causes(civ_start_check.load_civilisations(ROOT), set(nodes))
+    errs += validate_running_gates.check_running_gates(nodes)
+    from sim.engine import validate_disease_data
+    errs += validate_disease_data.check_disease_data()
     goal_errs, default_goal, goal_rows = _validate_goal_rows(tree, nodes)
     errs += goal_errs
 

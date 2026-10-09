@@ -2325,7 +2325,7 @@
   "conf": "C",
   "note": "Screw propeller is more efficient than paddle wheel in rough seas, but requires shaft alignment that paddle wheels do not. The kernel is that any misalignment creates vibration that damages bearings. Modern propellers use bronze casting and careful balancing.",
   "cap_hours": 50404.69793532331,
-  "up_hours": 4032.375834825865
+  "up_hours": 4000.0
  },
  {
   "id": "tr_paddle_wheel",
@@ -2912,6 +2912,8 @@
    "tr_canal_lock",
    "civ_pumping_station"
   ],
+  "requires_running": ["civ_harbour_dock"],
+  "_internal": "[GATE: Built into a harbour that is kept up: breakwater and quay shelter it, and a drydock basin or a lighthouse serves a port that exists.]",
   "traits": [
    "infrastructure"
   ],

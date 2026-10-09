@@ -23,7 +23,7 @@ posted price leaves out the founder's flows and counts everyone else's.
 """
 from sim.world import market
 
-from .goods_market_api import FOUNDER, GoodsMarket
+from .goods_market_api import GoodsMarket
 
 # The clearing searches between floor and ceiling in logs, so the floor stays above nothing.
 MINIMUM_FLOOR_RATIO = 0.01
@@ -45,7 +45,7 @@ class MarketClearingMixin:
             previous = flows or {}
             flows = economy.market_flows = {"year": year, "drawn": {}}
             for kind in ("bought", "sold", "reservation"):
-                standing = {commodity: {party: tonnes for party, tonnes in parties.items() if party != FOUNDER}
+                standing = {commodity: {party: tonnes for party, tonnes in parties.items() if party not in self.state.seats}
                             for commodity, parties in (previous.get(kind) or {}).items()}
                 flows[kind] = {commodity: parties for commodity, parties in standing.items() if parties}
         return flows
@@ -81,10 +81,11 @@ class MarketClearingMixin:
         own orders count only `with_flows`; every other party's always do."""
         market_api = self.goods_market
         committed = founder_sales = 0.0
+        asking = market_api.acting_party_id
         if with_flows:
-            committed = (market_api.bought_tonnes(commodity, FOUNDER)
+            committed = (market_api.bought_tonnes(commodity, asking)
                          + market_api.drawn_tonnes(commodity))
-            founder_sales = market_api.sold_tonnes(commodity, FOUNDER)
+            founder_sales = market_api.sold_tonnes(commodity, asking)
         offers = market_api.others_offers(commodity)
         price_takers = market_api.others_sold_tonnes(commodity) - sum(offer.tonnes for offer in offers)
         return (committed, founder_sales, max(0.0, price_takers), market_api.others_bought_tonnes(commodity),
@@ -178,7 +179,7 @@ class MarketClearingMixin:
             "reference_capacity_tonnes": entry["reference_tonnes"],
             "stock_tonnes": entry["stock_tonnes"],
             "household_demand_tonnes_at_anchor": conditions.household_demand_at_anchor_tonnes,
-            "founder_purchases_tonnes": (self.goods_market.bought_tonnes(commodity, FOUNDER)
+            "founder_purchases_tonnes": (self.goods_market.bought_tonnes(commodity, self.goods_market.acting_party_id)
                                         + self.goods_market.drawn_tonnes(commodity)),
             "founder_sales_tonnes": closing_conditions.founder_sales_tonnes,
             "actor_supply_tonnes": conditions.actor_supply_tonnes + sum(
@@ -214,6 +215,7 @@ class MarketClearingMixin:
             self._close_commodities()
         finally:
             self._price_level_held = None
+        self.settle_trader_cargo(None)
         self.close_partner_books(cargo_only=True)
         self.foreign_fleet_year_end()
         self._close_real_output()

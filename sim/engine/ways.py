@@ -19,6 +19,10 @@ class WaysMixin:
         """{edge key: {way: true}} of what has been built, as geography's routes take it."""
         return self.state.economy.improvements
 
+    def built_way_km(self, way):
+        """Kilometres of `way` this actor's record holds."""
+        return geography.built_km(self.state.economy.improvements, way, self.world_map)
+
     def way_quote(self, tile_a, tile_b, way):
         """What building `way` ("road", "rail") between two bordering tiles costs now:
         {money, labour_hours, materials, km, node}, or None when it cannot be built there or a material

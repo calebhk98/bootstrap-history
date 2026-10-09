@@ -7,7 +7,7 @@ from sim.ui.protocol import _waiting_on as _waiting_on
 # consume revenue arriving later in the year, and one beyond all cash/credit
 # that cannot progress until its finances change.
 _money_node = "academy_network"
-_money_state = dict(ph_left=0.0, yrs=1.0, spent=0.0, cost_left=book_money(9000.0))
+_money_state = dict(ph_left=0.0, yrs=1.0, spent=0.0, cost_left=hours_money(181000))
 _blocked = sim(capital=0.0)
 _blocked.capital = -50_000.0
 _blocked.credit_limit = lambda: 2_000.0
@@ -18,11 +18,11 @@ _blocked_message = _waiting_on(_blocked, NODES, _money_node,
 check("a project with no spending power is labelled fully blocked",
       _blocked_message.startswith("money: fully blocked"), _blocked_message)
 
-_opportunistic = sim(capital=book_money(1.0))
-_opportunistic.project_cost = lambda k: book_money(9000.0)
+_opportunistic = sim(capital=hours_money(20.2))
+_opportunistic.project_cost = lambda k: hours_money(181000)
 _opportunistic.active[_money_node] = dict(_money_state)
 _opportunistic_message = _waiting_on(
-    _opportunistic, NODES, _money_node, _opportunistic.active[_money_node], book_money(9000.0))
+    _opportunistic, NODES, _money_node, _opportunistic.active[_money_node], hours_money(181000))
 check("a project with some funding access is labelled opportunistic",
       _opportunistic_message.startswith(
           "money: unfunded now; will fund opportunistically"),

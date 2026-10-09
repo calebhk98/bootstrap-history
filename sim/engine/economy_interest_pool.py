@@ -1,13 +1,15 @@
 """Interest on loans: what borrowers pay in a year is what lenders receive, split by what each supplied.
 
-Every borrower (the founder, a firm, the state) adds its interest to the market's pool as it pays it. At
+Every borrower (a seat, a firm, the state) adds its interest to the market's pool as it pays it. At
 the next meeting the pool is shared among the sources of funds in proportion to what each supplied at the
-last meeting: the state and the founder are credited, the firms are credited in proportion to their
+last meeting: the state and each seat are credited, the firms are credited in proportion to their
 purses, and the society's savers (households, not modelled actor by actor) are credited as a running
 total on the market record. Nothing is created: what lenders receive is what borrowers paid.
 """
 
 from sim.agents.api import edges, ledger
+from .economy_capital_market import SEAT_SOURCE_PREFIX
+
 INTEREST_PURPOSE = "interest_on_lending"
 
 
@@ -36,8 +38,9 @@ class InterestPoolMixin:
                 continue
             if source == "state":
                 ledger.transfer(self.edge(edges.EDGE_INTEREST), self.state_treasury(), share, INTEREST_PURPOSE)
-            elif source == "founder":
-                ledger.transfer(self.edge(edges.EDGE_INTEREST), self.household, share, INTEREST_PURPOSE)
+            elif source.startswith(SEAT_SOURCE_PREFIX):
+                ledger.transfer(self.edge(edges.EDGE_INTEREST), self.seat_party(source[len(SEAT_SOURCE_PREFIX):]),
+                                share, INTEREST_PURPOSE)
             elif source == "firms" and firm_funds > 0.0:
                 for firm in firms:
                     ledger.transfer(self.edge(edges.EDGE_INTEREST), firm, share * firm.money / firm_funds, INTEREST_PURPOSE)

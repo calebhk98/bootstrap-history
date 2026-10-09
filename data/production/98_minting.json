@@ -1,0 +1,25 @@
+{
+ "_note": "Minting: refined metal alloyed to the coin's fineness, cast into flans and struck. The mint's charge (seigniorage) is not a cost of this process; it is the coin standard's mint_charge_share (sim/economy/mint.py). Complaints/374.",
+ "materials": {
+  "struck_silver_coin_kg": {
+   "outputs": {
+    "struck_silver_coin_kg": 1000.0
+   },
+   "inputs": {
+    "silver_kg": 800.0,
+    "copper_kg": 200.0,
+    "charcoal_kg": 200.0
+   },
+   "labour_hours": {
+    "labourer": 2100.0,
+    "furnaceman": 800.0,
+    "engraver": 320.0
+   },
+   "unit_dimension": "mass",
+   "basis": "per 1000 kg of struck silver coin of eight parts silver to two of copper by mass",
+   "yield_basis": "LABELLED HEURISTIC (conf D) for the labour and fuel; the process is attested. The silver and copper are the coin's fineness (the post-reform denarius is put near 80 percent silver by Butcher and Ponting, the figure in rome_100ad's coin_standard); metal lost in melting is not charged. Striking: a hammer-struck flan takes a striker and a holder, taken at five coins a minute for the pair, so 150 coins per labourer-hour; at the coin's gross mass (the fine silver in the standard over the fineness) that is about 0.5 kg of coin per labourer-hour, 2100 hours per tonne with trimming and sorting. Melting, alloying and casting flans: furnaceman hours per tonne are about 0.8 per kg (a crucible charge of a few kilograms per hour). Charcoal: heat to melt silver and copper is a fraction of a megajoule per kg, a small crucible furnace delivers a few percent of the fuel's heat, so about 0.2 kg of charcoal per kg of coin. Dies: an engraver cuts a die pair in about a day and a die pair strikes some tens of thousands of coins; 320 hours per tonne is that ratio rounded. No source was found that gives a Roman mint's hours per kilogram; replace these with a measured figure first.",
+   "conf": "D",
+   "requires_node": "fin_coined_money"
+  }
+ }
+}

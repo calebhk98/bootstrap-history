@@ -42,6 +42,13 @@ def tiles_held(civilisation: Mapping[str, Any], world_map: Optional[map_source.W
     return sorted({tile_id for tile_id in listed if tile_id in world_map.tiles})
 
 
+def regions_of_tiles(tile_ids: Iterable[str], world_map: Optional[map_source.WorldMap] = None) -> List[str]:
+    """Sorted region labels carried by these tiles (a tile with no label adds none)."""
+    world_map = _map(world_map)
+    labels = {tile_layers.value(world_map, tile_id, "region") for tile_id in tile_ids if tile_id in world_map.tiles}
+    return sorted(label for label in labels if label)
+
+
 def region_ids(world_map: Optional[map_source.WorldMap] = None) -> List[str]:
     """Every region label some tile of the map carries, sorted."""
     return sorted(_tiles_by_region(_map(world_map)))

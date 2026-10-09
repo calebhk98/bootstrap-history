@@ -14,10 +14,10 @@ from .harness import *  # noqa: F401,F403
 # One game for the container and version-counter tests (each only adds and
 # removes its own entries and compares versions relative to its own start),
 # one stepped game for the memoisation tests.
-CONTAINERS = sim(civ="rome_100ad", capital=book_money(10000.0))
-STEPPED = sim(civ="rome_100ad", capital=book_money(10000.0))
+CONTAINERS = sim(civ="rome_100ad", capital=hours_money(202000))
+STEPPED = sim(civ="rome_100ad", capital=hours_money(202000))
 STEPPED.step()
-GOODS = sim(civ="rome_100ad", capital=book_money(10000.0), agent_economy=False)
+GOODS = sim(civ="rome_100ad", capital=hours_money(202000), agent_economy=False)
 
 
 def _test_done_and_operating_versions():

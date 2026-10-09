@@ -9,6 +9,7 @@ from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 from sim.agents.api import Household
 from . import category_traits
 from .data import closure, JSONDict, Nodes
+from . import event_causes
 from .hazard_window import hazards_not_yet_past
 from .hazard_hedge_timing import add_timing_to_steps
 
@@ -278,6 +279,9 @@ class FogMixin:
         upcoming = []
         for hazard, year_start, year_end, in_progress in hazards_not_yet_past(
                 self.civ, scenario.year):
+            # the chances shown are the ones the event's stated causes leave, as things stand today
+            effective, causes = event_causes.effective_hazard(self, hazard)
+            hazard = effective if effective is not None else event_causes.weakened(hazard, 0.0)
             row = {"name": hazard.get("name", "hazard"),
                    "years": [year_start, year_end],
                    "in_progress": in_progress,
@@ -296,6 +300,12 @@ class FogMixin:
                 if kind in hazard or (kind == "sack_chance" and hazard.get("sack_chance")):
                     row["what_you_can_do"][kind] = self.hazard_advice(kind, hazard)
             add_timing_to_steps(row["what_you_can_do"], scenario.year, year_start, in_progress)
+            if causes["checked"]:
+                row["causes_hold_now"] = not causes["failed"]
+                row["causes"] = [{key: cause[key] for key in ("quantity", "node", "op", "threshold", "value", "holds", "why")}
+                                 for cause in causes["conditions"]]
+                if effective is None:
+                    row["skipped_while_causes_fail"] = True
             if "sack_chance" in hazard:
                 row["sack_chance_after_what_you_have_built"] = round(
                     self.hazard_figure("sack_chance", hazard), 4)
@@ -397,6 +407,8 @@ class FogMixin:
         """
         if category_traits.has_trait(self.nodes[node_id]["cat"], "never_abandoned"):
             return True
+        if self.relied_on_running(node_id):
+            return False
         return self.on_road_to_goal(node_id)
 
     def on_road_to_goal(self, node_id: str) -> bool:

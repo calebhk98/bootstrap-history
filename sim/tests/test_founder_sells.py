@@ -80,7 +80,7 @@ check("the sale survives a save and load", "zz_easy" not in revived.state.projec
 
 # ---- farmland -------------------------------------------------------------------------------
 land = actor_sim(EXTRA)
-land.state.economy.farm_hectares = 100.0
+land.state.holdings.farm_hectares = 100.0
 cash = land.household.capital
 result = land.sell_farm(40.0)
 check("selling farmland removes the hectares", result["ok"] and abs(land.farm_hectares - 60.0) < 1e-9, result)

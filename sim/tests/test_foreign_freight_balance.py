@@ -57,7 +57,7 @@ def _route(destination_tiles):
         mode_costs={"cart": _rate_of(imbalance=1.0)}, held_nodes=held)
 
 
-_HAN_TILES = geography_api.tiles_of_regions(load_civ(PARTNER)["home_regions"])
+_HAN_TILES = geography_api.tiles_held(load_civ(PARTNER))
 _NEAR = geography_api.reach(_HAN_TILES[:1], ["cart"], 60.0, held_nodes={"lnd_two_wheel_cart"})
 _FAR = geography_api.reach(_HAN_TILES[:1], ["cart"], 250.0, held_nodes={"lnd_two_wheel_cart"})
 _near_tile = sorted((tile for tile in _NEAR if tile != _HAN_TILES[0]), key=_NEAR.get)[-1]

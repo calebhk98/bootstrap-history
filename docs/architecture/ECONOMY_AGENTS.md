@@ -129,6 +129,14 @@ partners' prices. The year's trade settles in the partners' coin ledgers (`forei
 partner paying out coin sees its prices fall, and it spends at most a share of the coin it holds
 (price-specie flow). The types allow partners to become full economies, and later players.
 
+**Trader actors' cargo** is not booked against `edge:external`. Each cargo leg that touches home gets an account in
+the book (`sim/engine/economy_port_cargo.py`): a landing cargo arrives over the partner's own edge
+(`external_edge(partner)`) and is offered, a taking cargo is bought with funds the trader put in; after the clear the
+account's money goes back to the trader's purse over `edge:cargo` and the goods nobody took return over the
+partner's edge. The partner's side settles in that partner's coin ledger and the route's carriers
+(`sim/engine/trader_cargo.py`), and the trader's purse is trued up from its decision-time booking to the result.
+The trader's purse itself is still the engine's, not an account in the book (Complaint 382).
+
 **The founder's concerns sell in the same markets**, offered at their output's cost at the economy's
 own prices and wages; the takings return to the engine's purse through `edge:legacy` (Complaint 382).
 

@@ -45,5 +45,8 @@
    "why": "A catalogued deposit on an island the grid dropped (Nauru) would otherwise be credited to a tile far away."},
   {"id": "mining_trade", "value": "miner", "unit": "trade id", "kind": "heuristic",
    "source": "none; the trade of data/world/trades.json that raises ore", "conf": "D",
-   "why": "The wage that prices mine building and running labour; replace with a trade named per deposit type."}
+   "why": "The wage that prices mine building and running labour; replace with a trade named per deposit type."},
+  {"id": "resources_working_share_per_year", "value": 0.004, "unit": "share of a deposit's endowment worked a year", "kind": "heuristic",
+   "source": "none; the order of the repo's own Las Medulas and Laurion figures over their working lives (confidence C and D), not a fit", "conf": "D",
+   "why": "How fast a historic deposit is worked out, until output rates by deposit are sourced; sets the metal mined before a start year, from which opening stocks of durable goods are derived."}
  ]}

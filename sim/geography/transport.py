@@ -4,7 +4,7 @@ hours, and how much of a vehicle's working life, per tonne-kilometre.
 WHAT THIS IS FOR. Every other cost in this project eventually needs to move
 something from where it is made to where it is used, and until now nothing
 in the simulation has had an opinion on what that costs beyond a number
-copied into `data/prices.json`. This module answers "what does it take to
+authored as a book figure. This module answers "what does it take to
 move one tonne one kilometre" from physics and animal biology alone: a
 draught animal's tractive effort against rolling resistance and gradient, a
 pack animal's carrying capacity as a fraction of its own body weight, and
@@ -103,6 +103,8 @@ from typing import Optional
 from sim.constants import declare
 # unit_conversions is infrastructure, not cross-domain wiring.
 from sim.unit_conversions import KILOGRAMS_PER_TONNE, METERS_PER_KILOMETER
+
+from .provisions import person_provisions_kg_per_day
 
 # ============================================================================
 # PHYSICAL CONSTANTS
@@ -887,7 +889,7 @@ FreightPhysicalInputs = collections.namedtuple(
     "FreightPhysicalInputs",
     ["mode", "cargo_tonnes", "distance_per_day_km", "tonne_km_per_day",
      "feed_kg_per_day", "feed_kg_per_tonne_km", "driver_hours_per_tonne_km",
-     "vehicle_wear_fraction_per_tonne_km"])
+     "vehicle_wear_fraction_per_tonne_km", "carried_kg_per_day"])
 
 
 def _feed_kg_from_work_and_maintenance(maintenance_kcal: float, work_joules: float) -> float:
@@ -944,7 +946,8 @@ def draught_freight_physical_inputs(
         feed_kg_per_tonne_km=feed_kg / tonne_km_per_day,
         driver_hours_per_tonne_km=driver_hours_per_day / tonne_km_per_day,
         vehicle_wear_fraction_per_tonne_km=(
-            1.0 / (vehicle.service_life_km * cargo_tonnes)))
+            1.0 / (vehicle.service_life_km * cargo_tonnes)),
+        carried_kg_per_day=feed_kg + person_provisions_kg_per_day(1))
 
 
 def pack_climb_work_joules_per_day(
@@ -1013,7 +1016,8 @@ def pack_freight_physical_inputs(
         feed_kg_per_tonne_km=feed_kg / tonne_km_per_day,
         driver_hours_per_tonne_km=driver_hours_per_day / tonne_km_per_day,
         vehicle_wear_fraction_per_tonne_km=(
-            team_size / (vehicle.service_life_km * cargo_tonnes)))
+            team_size / (vehicle.service_life_km * cargo_tonnes)),
+        carried_kg_per_day=feed_kg + person_provisions_kg_per_day(1))
 
 
 def barge_freight_physical_inputs(
@@ -1092,7 +1096,8 @@ def barge_freight_physical_inputs(
         feed_kg_per_tonne_km=feed_kg / tonne_km_per_day,
         driver_hours_per_tonne_km=driver_hours_per_day / tonne_km_per_day,
         vehicle_wear_fraction_per_tonne_km=(
-            1.0 / (vehicle.service_life_km * cargo_tonnes)))
+            1.0 / (vehicle.service_life_km * cargo_tonnes)),
+        carried_kg_per_day=feed_kg + person_provisions_kg_per_day(1))
 
 
 def maximum_one_way_range_before_self_defeating_km(

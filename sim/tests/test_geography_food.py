@@ -62,6 +62,7 @@ class FoodTests(unittest.TestCase):
         for prefix in ("Cs", "Cf"):
             tiles = [t for t, tile in world_map.tiles.items() if tile["koppen_class"].startswith(prefix)
                      and tile["arable_fraction"] >= 0.2 and tile_layers.number(world_map, t, "mean_temperature_c", 0) >= 8
+                     and tile_layers.number(world_map, t, "ruggedness_index", 0) <= 100
                      and tile_layers.number(world_map, t, "annual_precipitation_mm", 0) >= 400]
             self.assertTrue(tiles)
             for tile_id in tiles:

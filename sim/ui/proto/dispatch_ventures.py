@@ -44,12 +44,12 @@ def _shorten_credit_forecast(sim, cmd, out):
     blocks = [key for key in _CREDIT_PROSE if key in out]
     if not blocks:
         return
-    scenario = sim.state.scenario
-    said = ui_port.said_explanations(scenario) or {}
+    seat_progress = sim.state.seat_progress
+    said = ui_port.said_explanations(seat_progress) or {}
     full = bool(cmd.get("full")) or said.get("credit_forecast") != sim.year
     if full:
         said["credit_forecast"] = sim.year
-        ui_port.set_said_explanations(scenario, said)
+        ui_port.set_said_explanations(seat_progress, said)
     else:
         for key in blocks:
             for prose_key in _CREDIT_PROSE[key]:
