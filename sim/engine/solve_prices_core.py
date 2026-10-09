@@ -25,6 +25,7 @@ REPO_ROOT = os.path.dirname(os.path.dirname(HERE))
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 from sim.engine import disposal_cost  # noqa: E402
+from sim.engine.disposal_cost import Disposal  # noqa: E402,F401
 from sim.engine.joint_allocation import allocate_joint_cost, cap_anchors  # noqa: E402
 from sim.engine.price_change import reference_prices_for_demand, relative_price_change  # noqa: E402
 from sim.engine.default_civilisation import default_civilisation_id  # noqa: E402
@@ -748,17 +749,22 @@ def compute_resolvable_materials(production_entries, producers_of, diagnostics=N
     return resolvable
 
 
-def _material_cost_hours(inputs, current_prices):
+def _material_cost_hours(inputs, current_prices, disposal_costs=None):
     """Sum of `quantity_per_batch * input_price` over one recipe's `inputs`,
     or None the instant an input has no price yet - the same "propagate the
     failure" rule every cost component `recipe_cost_and_allocation` sums
     follows, so its caller can just check each component for None in turn.
+
+    A waste can sit at a negative price; taking it is then a credit, but never a bigger one than the
+    disposal cost it saves (`disposal_costs`, per unit; none known means no credit).
     """
     material_cost_hours = 0.0
     for input_material, quantity_per_batch in inputs.items():
         input_price = current_prices.get(input_material)
         if input_price is None:
             return None
+        if input_price < 0.0:
+            input_price = max(input_price, -(disposal_costs or {}).get(input_material, 0.0))
         material_cost_hours += quantity_per_batch * input_price
     return material_cost_hours
 
@@ -860,22 +866,24 @@ def _energy_cost_hours(entry, current_prices, capability_band_price_by_carrier):
 
 def _allocate_output_prices(outputs, current_prices, total_process_cost_hours,
                             demand_anchor_price_by_material=None,
-                            disposal_value_by_material=None, interest_rate=0.0):
+                            disposal_value_by_material=None, interest_rate=0.0, disposal=None):
     # Missing prices fall back to the initial guess, as for any unsolved material.
     priced = {material: current_prices.get(material, INITIAL_PRICE_GUESS_HOURS)
               for material in outputs}
-    disposal_costs = (disposal_cost.disposal_cost_by_material(outputs, current_prices, interest_rate)
-                      if len(outputs) > 1 else None)
+    if len(outputs) > 1 and disposal is None:
+        disposal = Disposal(disposal_cost.disposal_cost_by_material(outputs, current_prices, interest_rate))
     return allocate_joint_cost(outputs, priced, total_process_cost_hours,
                                demand_anchor_price_by_material,
-                               disposal_value_by_material, disposal_costs)
+                               disposal_value_by_material,
+                               disposal.costs if disposal else None,
+                               disposal.glutted if disposal else frozenset())
 
 
 def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
                                rent_hours_per_kg_by_material=None,
                                capability_band_price_by_carrier=None,
                                demand_anchor_price_by_material=None,
-                               interest_rate=0.0, include_capital=True):
+                               interest_rate=0.0, include_capital=True, disposal=None):
     """Cost one recipe's whole batch, then split it across its outputs.
 
     Returns (total_process_cost_hours, {output_material: price_per_unit}),
@@ -939,7 +947,11 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
     # germanium is always the tiny quantity, never the one a furnace's
     # annual output is quoted against).
     batch_output_quantity = max(outputs.values()) if outputs else 1.0
-    material_cost_hours = _material_cost_hours(inputs, current_prices)
+    waste_input_costs = disposal.costs if disposal else None
+    if waste_input_costs is None and any(
+            current_prices.get(material, 0.0) < 0.0 for material in inputs):
+        waste_input_costs = disposal_cost.disposal_cost_by_material(inputs, current_prices, interest_rate)
+    material_cost_hours = _material_cost_hours(inputs, current_prices, waste_input_costs)
     if material_cost_hours is None:
         return None
 
@@ -961,14 +973,14 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
     if energy_cost_hours is None:
         return None
 
-    total_process_cost_hours = (material_cost_hours + labour_cost_hours + rent_hours
-                                + land_cost_hours
-                                + capital_cost_hours * batch_output_quantity
-                                + energy_cost_hours)
+    # The credit for taking a waste pays for the process, but cannot make its product cost less than nothing.
+    total_process_cost_hours = max(
+        0.0, material_cost_hours + labour_cost_hours + rent_hours + land_cost_hours
+        + capital_cost_hours * batch_output_quantity + energy_cost_hours)
 
     output_prices = _allocate_output_prices(
         outputs, current_prices, total_process_cost_hours,
-        demand_anchor_price_by_material, entry.get("disposal_value_hours"), interest_rate)
+        demand_anchor_price_by_material, entry.get("disposal_value_hours"), interest_rate, disposal)
 
     return total_process_cost_hours, output_prices
 
@@ -1195,13 +1207,13 @@ def _capability_band_prices_this_round(required_grades_by_carrier, production_en
 def _solve_round_candidates(production_entries, recipe_ids_in_order, resolvable_materials,
                             prices, wage_by_trade, rent_hours_per_kg_by_material,
                             band_price_by_carrier, floor_by_carrier,
-                            demand_anchor_price_by_material=None, interest_rate=0.0):
+                            demand_anchor_price_by_material=None, interest_rate=0.0, disposal=None):
     def cost(recipe_id, entry, anchors):
         return recipe_cost_and_allocation(
             recipe_id, entry, prices, wage_by_trade,
             rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
             capability_band_price_by_carrier=band_price_by_carrier,
-            demand_anchor_price_by_material=anchors, interest_rate=interest_rate)
+            demand_anchor_price_by_material=anchors, interest_rate=interest_rate, disposal=disposal)
 
     runnable = [
         recipe_id for recipe_id in recipe_ids_in_order
@@ -1271,7 +1283,7 @@ def _solve_round_update_prices(resolvable_materials, prices, candidates_by_mater
 def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
          damping=DAMPING_FACTOR, max_iterations=MAXIMUM_ITERATIONS,
          tolerance=CONVERGENCE_TOLERANCE, rent_hours_per_kg_by_material=None,
-         demand_anchors=None, interest_rate=0.0):
+         demand_anchors=None, interest_rate=0.0, dump_minimum_distance_kilometres=0.0):
     """Damped Jacobi fixed-point iteration over every resolvable material.
 
     Every material updates from the SAME round's starting prices (Jacobi,
@@ -1328,20 +1340,27 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
             required_grades_by_carrier, production_entries, prices, wage_by_trade,
             rent_hours_per_kg_by_material, interest_rate)
 
+        # What waste costs to dispose of this round, and which joint outputs the demand search found in glut.
+        disposal_costs = disposal_cost.disposal_cost_by_material(
+            joint_materials, prices, interest_rate, dump_minimum_distance_kilometres)
+        glut_source = getattr(demand_anchors, "glutted_materials", None)
+        disposal = Disposal(disposal_costs, frozenset(
+            glut_source(reference_prices_for_demand(prices)) if glut_source else ()))
+
         candidates_by_material = _solve_round_candidates(
             production_entries, recipe_ids_in_order, resolvable_materials, prices,
             wage_by_trade, rent_hours_per_kg_by_material, band_price_by_carrier,
             floor_by_carrier,
             demand_anchor_price_by_material=(
                 demand_anchors.prices(reference_prices_for_demand(prices)) if demand_anchors else None),
-            interest_rate=interest_rate)
+            interest_rate=interest_rate, disposal=disposal)
 
         floor_source = getattr(demand_anchors, "scarcity_floor_prices", None)
         prices, final_residual = _solve_round_update_prices(
             resolvable_materials, prices, candidates_by_material, damping,
             chosen_recipe_by_material, production_entries,
             floor_source(reference_prices_for_demand(prices)) if floor_source else None,
-            disposal_cost.disposal_price_floor(joint_materials, prices, interest_rate))
+            {material: -cost for material, cost in disposal_costs.items()})
         if final_residual < tolerance:
             break
 

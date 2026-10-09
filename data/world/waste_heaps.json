@@ -1,0 +1,37 @@
+{
+ "_doc": "What a heap of each waste material looks like, so the ground it covers can be worked out. bulk_density_kg_per_m3: kilograms of the loose material in one cubic metre. heap_height_m: height the tipped heap stands at. A material without an entry takes the labelled default heap in sim/engine/disposal_cost.py. Read by sim/engine/disposal_cost.py; a key must be a material some production entry makes (checked by test_waste_disposal_data). Tars are liquids: the 'heap' is the depth of the pit they are tipped into.",
+ "materials": {
+  "basic_slag_kg": {
+   "bulk_density_kg_per_m3": 1760.0,
+   "heap_height_m": 10.0,
+   "kind": "measured",
+   "conf": "C",
+   "source": "Density: unit weight of steel slag aggregate 1600 to 1920 kg/m3, Recycled Materials Resource Center, 'Steel Slag - Material Description' (rmrc.wisc.edu), midpoint taken. Height: Welsh colliery spoil tips recorded by RCAHMW Coflein stand from about 10 m to about 30 m; the low end is taken because tipping was by hand and cart.",
+   "why": "Crushed steelworks slag piles dense and angular."
+  },
+  "coal_tar_kg": {
+   "bulk_density_kg_per_m3": 1175.0,
+   "heap_height_m": 3.0,
+   "kind": "measured",
+   "conf": "D",
+   "source": "Density: specific gravity of tar 1.1 to 1.25 (exam-preparation summary of handbook values, not a primary source), midpoint taken. Depth: a labelled heuristic, a pit a person can empty by bucket.",
+   "why": "A viscous liquid, held in a pit, so the footprint is its volume over the pit depth."
+  },
+  "wood_tar_kg": {
+   "bulk_density_kg_per_m3": 1175.0,
+   "heap_height_m": 3.0,
+   "kind": "measured",
+   "conf": "D",
+   "source": "As coal_tar_kg: no separate figure for wood tar found.",
+   "why": "A viscous liquid, held in a pit."
+  },
+  "wood_ash_kg": {
+   "bulk_density_kg_per_m3": 820.0,
+   "heap_height_m": 5.0,
+   "kind": "measured",
+   "conf": "C",
+   "source": "Density: loose wood ash 663 to 977 kg/m3, Materials 8(10) 5353 (2015), doi 10.3390/MA8105353, midpoint taken. Height: a labelled heuristic; dry ash rests at about 33 degrees (Engineering ToolBox angles of repose), so a low heap spreads wide.",
+   "why": "Light, loose, fine ash."
+  }
+ }
+}

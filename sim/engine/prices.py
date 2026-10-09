@@ -326,11 +326,19 @@ def default_production_entries() -> ProductionEntries:
     return _default_production_entries()
 
 
+def waste_dump_minimum_distance(civilization: Optional[Mapping[str, Any]]) -> float:
+    """The nearest a state lets waste be tipped to settlement and water, in km; none unless the record says."""
+    if civilization is None:
+        return 0.0
+    return float(civilization.get("waste_dump_minimum_distance_kilometres") or 0.0)
+
+
 def territory_fingerprint(civilization: Optional[Mapping[str, Any]]) -> Optional[Tuple[Any, ...]]:
-    """What of a held civilisation the solve reads beyond its id: its people and its ground."""
+    """What of a held civilisation the solve reads beyond its id: its people, its ground and its dump rule."""
     if civilization is None:
         return None
-    return (civilization.get("population"), tuple(tiles_held(civilization)))
+    return (civilization.get("population"), tuple(tiles_held(civilization)),
+            waste_dump_minimum_distance(civilization))
 
 
 # Cleared area changes every year by a little; solves are keyed on bands of this relative width.
@@ -389,7 +397,8 @@ def _solve_to_json(production_entries: ProductionEntries,
         available_entries, producers_of, resolvable_materials, wage_by_trade,
         rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
         demand_anchors=joint_allocation.build_demand_anchors(civilization_id, civilization=civilization),
-        interest_rate=interest_rate)
+        interest_rate=interest_rate,
+        dump_minimum_distance_kilometres=waste_dump_minimum_distance(civilization))
 
     return {
         "prices_in_labour_hours": prices_in_labour_hours,

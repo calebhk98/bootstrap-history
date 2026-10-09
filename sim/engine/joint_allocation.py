@@ -13,7 +13,7 @@ import warnings
 
 from sim.constants import declare
 from sim.engine.default_civilisation import default_civilisation_id
-from sim.engine.joint_floor import bound_to_disposal_cost, is_glutted
+from sim.engine.joint_floor import bound_to_disposal_cost
 from sim.world import demand, deposits
 
 DEFAULT_CIVILIZATION = default_civilisation_id()
@@ -34,7 +34,8 @@ MEAN_INCOME_LABOUR_HOURS_PER_CAPITA_PER_YEAR = declare(
 def allocate_joint_cost(outputs, current_prices, total_cost,
                         anchor_price_by_material=None,
                         disposal_value_by_material=None,
-                        disposal_cost_by_material=None):
+                        disposal_cost_by_material=None,
+                        glutted_materials=frozenset()):
     """{material: price per unit} splitting `total_cost` over `outputs`.
 
     Outputs only have to recover the batch together; a bulk waste may carry
@@ -46,8 +47,9 @@ def allocate_joint_cost(outputs, current_prices, total_cost,
     disposal value (default zero) is in surplus: it prices at the disposal
     value and the other outputs carry the rest of the batch.
 
-    An anchored output in glut (its demand clears at next to nothing) prices at minus its disposal cost
-    per unit, `disposal_cost_by_material`, and the other outputs carry the batch plus that cost.
+    An output in glut (`glutted_materials`: the demand search found supply above demand at every price) prices
+    at minus its disposal cost per unit, `disposal_cost_by_material`, and the other outputs carry the batch
+    plus that cost.
     No output is priced below minus its disposal cost.
     """
     if len(outputs) == 1:
@@ -59,8 +61,7 @@ def allocate_joint_cost(outputs, current_prices, total_cost,
     surplus = {name: disposal.get(name, 0.0) for name in outputs
                if name in anchors and anchors[name] <= disposal.get(name, 0.0)}
     surplus.update({name: -disposal_costs[name] for name in outputs
-                    if name not in surplus and name in anchors and name in disposal_costs
-                    and is_glutted(anchors[name], disposal_costs[name])})
+                    if name not in surplus and name in glutted_materials and name in disposal_costs})
     if surplus and len(surplus) < len(outputs):
         # Disposal revenue cannot exceed the batch, so the rest never goes negative; a disposal cost
         # (negative value) is added to what the rest carry.
