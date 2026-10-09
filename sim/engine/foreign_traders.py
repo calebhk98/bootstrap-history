@@ -11,7 +11,7 @@ can borrow.
 import math
 
 from sim.world import merchant_terms, trader_response
-from sim.geography.api import cargo_cost, freight_cost
+from sim.geography.api import cargo_cost, sea_freight
 
 from .data import STARTING_KITS
 from sim.agents.api import SAVING_SHARE_OF_SURPLUS
@@ -63,7 +63,7 @@ class ForeignTradersMixin:
         if route is None:
             return 0.0
         sailed_km = sum(leg.distance_km for leg in route.legs if leg.mode == SEA_MODE)
-        return cargo_cost.sea_loss_share(freight_cost.HULL_LOSS_PER_THOUSAND_KM, sailed_km)
+        return cargo_cost.sea_loss_share(sea_freight.hull_loss_per_thousand_km(), sailed_km)
 
     def _cargo_lost_share(self, route, material=None, civilization_id=None):
         """Share of a cargo lost on a route: with hulls at sea, and to spoilage over the voyage

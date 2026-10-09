@@ -1,6 +1,17 @@
 # Merchants' terms still rest on labelled guesses
 
-**Status:** open
+**Status:** in progress. Done under the owner decision: a hull's crew is derived from its rig,
+watches and helm (`sea_freight.crew_to_sail`) instead of a stated crew; the crew's and animals' food and
+water ride as cargo mass (`provisions.delivered_share`) and are charged per tonne delivered on each
+foreign route leg and on domestic hauls; robbery falls with crew size (`sea_freight.boarding_loss_share`,
+`hull_loss_per_thousand_km`, a labelled heuristic for raiders' numbers and meeting rate, replacing the flat hull
+loss); coin carried to pay for a cargo already weighs through `coin_hoard.coin_carriage_units`
+(Complaint 273). `test_freight_provisions` pins land-versus-sea grain reach from the freight function.
+Remaining: crew as a choice (extra defenders against the cost of losses), the sea crew still sums
+to the rig's need only, `MONOPOLY_MARKUP_SHARE`, `AGENTS_PER_CARRIER`, one merchant per carrier, the wait
+counting sailings only, the class's capital from `MERCHANT_DENSITY`, retained earnings from the households'
+saving share. Carried provisions are floored at the cargo-loss cap rather than priced as impassable, and
+routes are still chosen on per-km rates before provisions are charged.
 
 Complaint 346 derived merchants' wait, agents' cost, markup, speed and capital from the fleet,
 the labour market and the capital market. What is left is stated, not derived:

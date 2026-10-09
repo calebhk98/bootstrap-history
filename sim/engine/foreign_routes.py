@@ -8,13 +8,14 @@ with the empty return where flows are one-sided (`sim/geography/freight_cost.py`
 The legs of the chosen route are kept, with their travel days, so a player can
 see where goods travel.
 """
+import dataclasses
 import functools
 from dataclasses import dataclass
 from typing import Tuple
 
 from sim.constants import declare
 from sim.world import trader_response
-from sim.geography.api import cargo_cost, freight_cost, sea_freight, tiles_held
+from sim.geography.api import cargo_cost, freight_cost, provisions, sea_freight, tiles_held
 from sim.geography.api import route as route_over_tiles
 from sim.geography.api import dues_hours_per_tonne
 from sim.geography.api import usable_modes as usable_route_modes
@@ -122,7 +123,7 @@ class ForeignRoutesMixin:
                       freight_cost.CarrierPrices(freight_physics.BARGE.self_mass_kg * vehicle_wood,
                                                  2.0 * ox_price), land_days, 0.0),
             SEA_MODE: (hull_inputs, freight_cost.CarrierPrices(hull_kg * vehicle_wood),
-                    sea_freight.SAILING_DAYS_PER_YEAR, freight_cost.HULL_LOSS_PER_THOUSAND_KM)}
+                    sea_freight.SAILING_DAYS_PER_YEAR, sea_freight.hull_loss_per_thousand_km())}
 
     def _freight_mode_costs(self, imbalance=1.0, modes=None):
         """{mode: home money per tonne-km}: feed and crew, the carrier's capital at the market
@@ -187,7 +188,25 @@ class ForeignRoutesMixin:
             tiles_held(self.civ, self.world_map), modes,
             mode_costs=mode_costs, handling_costs=self._freight_handling_costs(),
             held_nodes=home_techs | foreign_techs, world_map=self.world_map)
-        return None if found is None else route_from_geography(found)
+        return None if found is None else self._with_carried_provisions(route_from_geography(found))
+
+    def _with_carried_provisions(self, route):
+        """The route with each leg priced per tonne delivered: the crew's and animals' food and water
+        ride on the carrier and take lift from the cargo (`provisions.delivered_share`), the carrier
+        restocking at each leg's end. The route was chosen on the per-km rates; handling is not
+        scaled; the share is floored at what the cargo-loss cap leaves."""
+        models = self._carrier_models()
+        handling = self._freight_handling_costs()
+        least_share = 1.0 - cargo_cost.MAX_LOST_SHARE
+        legs = []
+        for leg in route.legs:
+            if leg.mode not in models:
+                legs.append(leg)
+                continue
+            fee = handling.get(leg.mode, 0.0)
+            share = max(least_share, provisions.delivered_share(models[leg.mode][0], leg.distance_km))
+            legs.append(dataclasses.replace(leg, cost_per_tonne=fee + max(0.0, leg.cost_per_tonne - fee) / share))
+        return Route(tuple(legs))
 
     def _route_freight_per_tonne(self, civilization, imbalance=None):
         """Home money to haul a tonne over the cheapest route; infinite when

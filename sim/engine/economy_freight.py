@@ -64,7 +64,7 @@ from . import money_units
 from . import purchase_rule
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
-from sim.geography.api import transport as freight_physics
+from sim.geography.api import cargo_cost, freight_cost, transport as freight_physics
 from sim.agents.api import edges
 
 
@@ -294,8 +294,9 @@ class FreightMixin:
         distance_km = self.material_freight_distance_km(material)
         if not distance_km:
             return 0.0
-        denarii_per_tonne_km = self.land_freight_money_per_tonne_km()
-        denarii_per_tonne = denarii_per_tonne_km * distance_km
+        denarii_per_tonne = freight_cost.leg_money_per_tonne(
+            self.land_freight_money_per_tonne_km(), self._land_freight_physical_inputs(), distance_km,
+            least_share=1.0 - cargo_cost.MAX_LOST_SHARE)
         return denarii_per_tonne / KILOGRAMS_PER_TONNE
 
     def material_freight_factor(self, emp_key):
