@@ -1,6 +1,6 @@
 # Prices use long-run cost, not the current market
 
-**Status:** closed - every price reads the year's clearing: the coin metal's market ratio revalues the coin (a glut inflates, a shortage deflates; holders of coin and of coin debts bear it, nothing is indexed), wages' food and tool terms and the goods market read the clearing, stock sells on its own bound apart from the producers' running-share floor, and the partners' books use that floor
+**Status:** partly - every price reads the year's clearing: the coin metal's market ratio revalues the coin (holders of coin and coin debts bear it), wages' food and tool terms and the goods market read the clearing, stock sells on its own bound apart from the producers' running-share floor, and the partners' books use that floor. Remaining: a material's own deposits and a mine's output feed supply only through what the founder sells (from the Remains paragraph; show it is done on the agent economy or do it)
 
 ## What is wrong
 
