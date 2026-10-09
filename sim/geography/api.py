@@ -8,7 +8,7 @@ WALL = "two-way"  # nothing here reaches sim/engine/; the engine hands it what i
 # tile_lookup and the queries first: regions pulls in sim.world modules that import them back from this module.
 from sim.geography import tile_lookup
 from sim.geography import queries
-from sim.geography.queries import (build_requirements, built_km, carriage_rates, deposit_records, edge_key, draw_wild_stock, endowment, food_potential, freight_links, hunted_kcal, regrow_wild_stock,
+from sim.geography.queries import (build_requirements, built_km, carriage_rates, deposit_records, edge_key, draw_wild_stock, endowment, food_potential, freight_links, game_food_sources, hunted_kcal, regrow_wild_stock,
                                    dues_hours_per_tonne, heuristic_parameters, known_deposits, layer_value, mined_before, map_of_tiles, mine_demand_goods, open_map, ore_goods, parameter_value, problems,
                                    prospect, reach, resource_ids, resources_at, route, route_costs, stand, supports,
                                    tile_facts, tile_ids, regions_of_tiles, tiles_held, tiles_of_regions, works_priced_from_deposits,
@@ -28,7 +28,7 @@ __all__ = ["Geography", "load_geography", "haversine_km", "MARKET_AREA_THRESHOLD
            "freight_cost", "map_data_sources", "provisions", "regions", "sea_freight", "settlement", "territory", "tile_lookup",
            "tile_names", "transport",
            # the contract (sim/geography/INTERFACE.md); everything above is older surface outside it
-           "queries", "build_requirements", "built_km", "carriage_rates", "open_map", "tile_ids", "tiles_held", "tiles_of_regions", "regions_of_tiles", "tile_facts", "layer_value", "food_potential", "hunted_kcal", "draw_wild_stock", "regrow_wild_stock", "usable_modes", "dues_hours_per_tonne", "route",
+           "queries", "build_requirements", "built_km", "carriage_rates", "open_map", "tile_ids", "tiles_held", "tiles_of_regions", "regions_of_tiles", "tile_facts", "layer_value", "food_potential", "hunted_kcal", "game_food_sources", "draw_wild_stock", "regrow_wild_stock", "usable_modes", "dues_hours_per_tonne", "route",
            "reach", "route_costs", "map_of_tiles", "freight_links", "edge_key", "resource_ids", "resources_at", "endowment", "known_deposits",
            "deposit_records", "mined_before", "prospect", "supports", "stand", "problems", "heuristic_parameters", "ore_goods",
            "works_priced_from_deposits", "mine_demand_goods", "parameter_value"]

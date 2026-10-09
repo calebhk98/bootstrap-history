@@ -42,7 +42,7 @@ caller from what the actor knows; geography does not read the tech tree.
 
 `wild_stock` is the game's `{tile_id: {species_id: share of carrying capacity left}}`, a missing entry
 meaning a full stock. `hunted_kcal(tile_id, wild_stock)` gives `{species_id: kcal}` a year's hunting can take
-now; `draw_wild_stock(wild_stock, tile_id, kcal_taken)` returns the stock after hunters take that;
+now; `game_food_sources()` names the food source ids hunting goes under; `draw_wild_stock(wild_stock, tile_id, kcal_taken)` returns the stock after hunters take that;
 `regrow_wild_stock(wild_stock)` returns it a year later. The game keeps and saves the stock. Labour's
 limit on gatherers (sim/labour/food_gathering.py) is applied by the caller, not here.
 

@@ -22,6 +22,11 @@ def _without_full_stocks(wild_stock: Mapping) -> Dict[str, Dict[str, float]]:
     return {tile_id: species for tile_id, species in cleaned.items() if species}
 
 
+def game_food_sources(world_map: WorldMap) -> list:
+    """The food source ids that hunting wild animals goes under."""
+    return sorted({row["food_source"] for row in rows_of_mechanism(world_map, "wild_population")})
+
+
 def hunted_kcal_by_species(world_map: WorldMap, tile_id: str,
                            wild_stock: Optional[Mapping] = None) -> Dict[str, float]:
     """Energy a year's hunting can take from each species now, given the stock left."""

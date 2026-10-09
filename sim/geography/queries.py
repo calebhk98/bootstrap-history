@@ -58,6 +58,11 @@ def hunted_kcal(tile_id: str, wild_stock: Optional[Mapping[str, Any]] = None,
     return food_wild_harvest.hunted_kcal_by_species(_map(world_map), tile_id, wild_stock)
 
 
+def game_food_sources(world_map: Optional[WorldMap] = None) -> List[str]:
+    """The food source ids that hunting wild animals goes under."""
+    return food_wild_harvest.game_food_sources(_map(world_map))
+
+
 def draw_wild_stock(wild_stock: Mapping[str, Any], tile_id: str, kcal_taken: Mapping[str, float],
                     world_map: Optional[WorldMap] = None) -> Dict[str, Dict[str, float]]:
     """The game's wild stock after hunters take `kcal_taken` ({species id: kcal}) on a tile."""
