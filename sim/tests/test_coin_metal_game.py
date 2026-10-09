@@ -3,6 +3,8 @@ value, which shows as a higher price level; the wage's food and tool terms read 
 from .harness import *  # noqa: F401,F403
 from functools import partial
 
+from sim.labour import wage_provider
+
 sim = partial(sim, agent_economy=False)   # the engine's own yearly market
 
 s = sim(civ="rome_100ad", capital=1e9)
@@ -15,4 +17,4 @@ check("...and raises the price level: the coin buys less",
       s.home_price_level() > level_before, (level_before, s.home_price_level()))
 check("the wage's food term is the staple's clearing",
       abs(s.labour.wage_cost_factors("smith")["food"]
-          - s.market_price_ratio(s.civ.get("staple", "wheat_kg"))) < 1e-9, None)
+          - s.market_price_ratio(wage_provider.staple_material(s.civ))) < 1e-9, None)
