@@ -246,8 +246,8 @@ class EarthSeaLinkTests(unittest.TestCase):
     def test_england_reaches_han_by_land_across_the_suez_isthmus(self):
         england, han = self._civilisation("england_1300"), self._civilisation("han_china_100ad")
         modes = api.usable_modes([england["starting_techs"], han["starting_techs"]])
-        result = api.route(tile_holdings.tiles_of_regions(england["home_regions"]),
-                           tile_holdings.tiles_of_regions(han["home_regions"]), modes,
+        result = api.route(tile_holdings.tiles_held(england),
+                           tile_holdings.tiles_held(han), modes,
                            held_nodes=set(england["starting_techs"]) | set(han["starting_techs"]))
         land_legs = [leg for leg in result["legs"] if leg["mode"] in ("pack", "cart", "foot")]
         self.assertTrue(land_legs)

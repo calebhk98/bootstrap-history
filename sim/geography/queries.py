@@ -62,6 +62,11 @@ def tiles_of_regions(region_labels: Iterable[str], world_map: Optional[WorldMap]
     return tile_holdings.tiles_of_regions(region_labels, _map(world_map))
 
 
+def regions_of_tiles(tile_ids: Iterable[str], world_map: Optional[WorldMap] = None) -> List[str]:
+    """Sorted region labels the tiles carry (labels only; a region owns no data)."""
+    return tile_holdings.regions_of_tiles(tile_ids, _map(world_map))
+
+
 def usable_modes(known_nodes_per_party: Iterable[Iterable[str]], world_map: Optional[WorldMap] = None) -> List[str]:
     """Route modes every party can use, from the tech nodes each holds."""
     return sorted(routes_modes.usable_modes(_map(world_map), known_nodes_per_party))

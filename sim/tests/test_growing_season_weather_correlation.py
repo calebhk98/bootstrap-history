@@ -23,6 +23,7 @@ import unittest
 from .harness import *  # noqa: F401,F403
 
 from sim.engine.core import Sim, agriculture
+from sim.geography import api as geography_api
 from sim.tests.weather_test_helpers import assert_single_draw_fallback
 
 
@@ -91,7 +92,7 @@ class WeatherCellsTests(unittest.TestCase):
         # the degrade path's own "should not happen for any of the 21
         # shipped regions" claim true today rather than merely asserted.
         real_region_to_tiles = test_sim.geography.data["land_tiles"]["region_to_tiles"]
-        for region in test_sim.civ["home_regions"]:
+        for region in geography_api.regions_of_tiles(geography_api.tiles_held(test_sim.civ)):
             self.assertIn(region, real_region_to_tiles, region)
             self.assertGreater(len(real_region_to_tiles[region]), 0, region)
 

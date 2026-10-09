@@ -8,7 +8,7 @@ import json
 import os
 import unittest
 
-from sim.geography.api import load_geography
+from sim.geography.api import load_geography, regions_of_tiles, tiles_held
 
 from sim.world import deposits
 
@@ -62,7 +62,7 @@ class MineralSharesAreNotDuplicatedTests(unittest.TestCase):
         from sim.world import mineral_shares
         geography = _geography()
         with open(os.path.join(_ROOT, "data", "civilizations", "rome_100ad.json"), encoding="utf-8") as handle:
-            home = json.load(handle)["home_regions"]
+            home = regions_of_tiles(tiles_held(json.load(handle)))
         regional = mineral_shares.regional_mineral_shares(geography)
         for metal in ("iron", "copper", "tin", "lead", "silver"):
             total = sum(regional[region_id].get(metal, 0.0) for region_id in home)
@@ -113,10 +113,9 @@ class NoModuleReadsRegionLabelsForTileDataTests(unittest.TestCase):
         import copy
         from sim.engine.data import load_civ
         civilisation = copy.deepcopy(load_civ("rome_100ad"))
-        if region_labels_removed:
-            from sim.geography.api import tiles_held
-            civilisation["home_tiles"] = tiles_held(civilisation)
-            civilisation["home_regions"] = []
+        if not region_labels_removed:
+            from sim.geography.api import regions_of_tiles
+            civilisation["home_regions"] = regions_of_tiles(civilisation.pop("home_tiles"))
         return civilisation
 
     def test_farm_land_and_weather_cells_follow_the_tiles_held(self):
