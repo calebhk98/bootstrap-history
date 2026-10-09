@@ -59,6 +59,8 @@ def carriage_for(reached_nodes: Iterable[str], realm_tiles: Iterable[str] = ()) 
     rates = geography.carriage_rates(geography.usable_modes([frozenset(reached_nodes)]))
     best_by_group: Dict[str, Dict[str, object]] = {}
     for rate in rates.values():
+        if rate.get("needs_improvement"):
+            continue  # a road, track or canal carries only where one is built; the shares are taken before any is
         group = _carriage_group(rate["edge_classes"])
         held = best_by_group.get(group)
         if held is None or rate["cost_hours_per_tonne_km"] < held["cost_hours_per_tonne_km"]:
