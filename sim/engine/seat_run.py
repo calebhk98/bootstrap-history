@@ -59,6 +59,12 @@ class SeatRunMixin:
 			self._wrap_seat_containers()
 		return seat
 
+	def acting_country(self):
+		"""The partner country the acting seat belongs to, or None for the game's own country: the markets,
+		wages and prices the seat deals in are that country's own."""
+		country = self.state.seats[self.state.acting_seat].country
+		return None if country in (None, self.civ.get("id")) else country
+
 	def society_techs_now(self) -> set:
 		"""The techniques the society holds now: what a seat joining today is granted."""
 		return set(self._society_held_techs())

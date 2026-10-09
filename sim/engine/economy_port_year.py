@@ -75,6 +75,7 @@ class AgentEconomy:
         self._sim = sim
         self._economy = None
         self._answers = None
+        self._country_answers = {}
         self._stale = set()
         self.outcomes = collections.deque(maxlen=OUTCOMES_KEPT)   # recent yearly outcomes, for health figures; not saved
         self._built_from = None          # the stored dict the live economy belongs to; a load replaces it
@@ -91,7 +92,7 @@ class AgentEconomy:
 
     def economy(self) -> Economy:
         if self._built_from is not self.stored:
-            self._economy, self._answers = None, None
+            self._economy, self._answers, self._country_answers = None, None, {}
         if self._economy is None:
             if "record" in self.stored:
                 setup = build_setup(self._sim, self.stored["opening"])
@@ -144,6 +145,7 @@ class AgentEconomy:
         self._sim.settle_trader_cargo(economy_port_cargo.close_cargo_accounts(economy, legs, tonnes_per_unit))
         self._settle_foreign_coin()
         self._answers = None
+        self._country_answers = {}
         self._save()
         return outcome
 
@@ -364,10 +366,22 @@ class AgentEconomy:
         self.stored["record"] = economy_api.export_record(self._economy)
 
     # ---- what the seams read ------------------------------------------------------------------
-    def answers(self):
+    def answers(self, country=None):
         """(prices by good, hours-weighted wage per hour by trade, rate), for this year; built once a year. A good
         whose markets have not cleared lately shows what it costs to make at today's prices and wages, or
-        its last price when nothing makes it; `stale_goods()` names those."""
+        its last price when nothing makes it; `stale_goods()` names those. For a partner `country` that is part
+        of the economy, those of its own markets; any other country is answered as the home country."""
+        if country is not None and country != self._sim.civ.get("id"):
+            home = self.answers()
+            if country not in self._economy.setup.countries():
+                return home
+            if country not in self._country_answers:
+                coin = self._economy.setup.coin_per_unit
+                prices, _stale = economy_api.shown_prices_of(self._economy, country)
+                wages = economy_api.wages_by_trade_weighted(self._economy, country)
+                self._country_answers[country] = ({good: price * coin for good, price in prices.items()},
+                                                  {trade: wage * coin for trade, wage in wages.items()}, home[2])
+            return self._country_answers[country]
         if self._answers is None or self._built_from is not self.stored:
             self.economy()
             wages = economy_api.wages_by_trade_weighted(self._economy)
@@ -383,9 +397,9 @@ class AgentEconomy:
         self.answers()
         return set(self._stale)
 
-    def price_ratio(self, materials, old_prices):
+    def price_ratio(self, materials, old_prices, country=None):
         """The new price over the engine's own cost, for the first of `materials` both price; None if none."""
-        prices = self.answers()[0]
+        prices = self.answers(country)[0]
         for material in materials:
             old = old_prices.get(material, 0.0)
             new = prices.get(material)
@@ -410,10 +424,10 @@ class AgentEconomy:
                     producer.capacity_runs * sum(recipe.labour_hours.values()) / economy.setup.working_hours_per_year)
         return years
 
-    def wage_per_hour(self, trade):
+    def wage_per_hour(self, trade, country=None):
         """The trade's wage in its labour markets; a trade no producer hires (soldiers, scribes) is paid
         what its training adds to the unskilled wage, so every wage stands on the same market."""
-        wages = self.answers()[1]
+        wages = self.answers(country)[1]
         if trade in wages:
             return wages[trade]
         setup = self._economy.setup

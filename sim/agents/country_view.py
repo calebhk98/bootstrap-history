@@ -109,7 +109,7 @@ class CountryWorld:
 
 	def society_output(self) -> float:
 		"""What this country's producers make at its prices when it is in the economy; otherwise the home
-		society's output scaled by this country's people and its wage level."""
+		society's output scaled by this country's people and its wage level (TEMPORARY HEURISTIC, as pay)."""
 		own = self._own_economy()
 		output = None if own is None else own.society_output()
 		if output is not None:
@@ -117,6 +117,7 @@ class CountryWorld:
 		return self._shared.society_output() * self._relative("population") * self._relative("wage_index")
 
 	def subsistence_cost_per_person_year(self) -> float:
+		"""The country's food floor from its own prices; else the home figure over its price level (TEMPORARY HEURISTIC)."""
 		own = self._own_economy()
 		floors = {} if own is None else own.need_floor_costs_per_person_year()
 		if floors.get(FOOD_NEED):
@@ -124,6 +125,7 @@ class CountryWorld:
 		return self._shared.subsistence_cost_per_person_year() * self._relative("price_index")
 
 	def need_floor_costs_per_person_year(self) -> Dict[str, float]:
+		"""The country's floors from its own prices; else the home floors over its price level (TEMPORARY HEURISTIC)."""
 		own = self._own_economy()
 		floors = {} if own is None else own.need_floor_costs_per_person_year()
 		if floors:

@@ -107,8 +107,14 @@ class ActorsMixin:
         return self.actors.version[0]
 
     def state_treasury(self):
-        """The government actor of the founder's civilisation."""
+        """The government actor of the acting seat's country: the founder's civilisation unless the seat belongs
+        to a partner country that has a government of its own in the cast."""
         seed_opening_cast(self)  # a bare record made first would keep the cast from giving it its place and kind
+        country = self.acting_country()
+        if country is not None:
+            government = self.actors.government_of(country)
+            if government is not None:
+                return government
         return self.actors.ensure_government(str(self.civ.get("id")), self.civ.get("name", ""))
 
     def pay_state(self, amount, purpose):
