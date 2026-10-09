@@ -36,7 +36,7 @@ See `docs/architecture/MAP_AND_WEATHER.md`.
 - `sim.geography.api.tiles_held(civilisation)` is the one answer to "which tiles does this civilisation hold": a listed `home_tiles`, else the tiles its `home_regions` labels name. `settlement`, `territory.holdings`, `labour_settlement`, `economy_port_setup`, `foreign_routes` and `economy_mining.home_land_area_km2` read it; `sim/tests/test_civilisations_hold_tiles.py`.
 - A region record keeps `name`, `minerals` (shares not yet tied to a deposit) and `note`; `route_difficulty`, `coastal` and `reach_from_italia` are deleted. A region's reach and a material's freight distance come from geography's route over the tiles held (Complaint 416). `sim/tests/test_tiles_replace_regions.py` fails if a region record carries a field the tiles carry.
 - The region anchor point is no longer read for reach or freight; `regions.region_anchor` (derived from tiles) remains only for placing a cast actor's location.
-- The reach bands moved: a region's level is the days of the fastest route from the held tiles over the modes held, banded by `reach_band_first_days` and `reach_band_ratio`, so civilisations that hold sea or cart techniques sit nearer, and a place no route joins is the farthest level (Complaints/328, 378).
+- The reach bands moved: a region's level is the days of the fastest route from the held tiles over the modes held, banded on a ladder derived from the carriers' own days per tile (`reach_bands.ladder`), so civilisations that hold sea or cart techniques sit nearer, and a place no route joins is the farthest level (Complaints/328, 378).
 
 ## Done on the second-path sweep
 

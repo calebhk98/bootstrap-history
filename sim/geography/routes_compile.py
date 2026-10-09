@@ -8,7 +8,10 @@ A haul pays a mode's handling each time it changes to that mode, and when it sta
 Improvements are a caller-owned dict {edge_key: {"road": true, "rail": true, "grade": g,
 "engineered": true}}. A mode that `needs_improvement` runs only on edges carrying that key; the way
 is levelled to the mode's `built_grade_cap` (or the improvement's own `grade`), and an edge steeper
-than the mode's `max_natural_grade` needs `engineered`.
+than the mode's `max_natural_grade` needs `engineered`. A land edge that crosses a river (`bridge` in
+the improvements) is forded by a land mode at that mode's own handling, crossed only by a bridge by a
+mode that is `bridge_only`. A built `port` (keyed by its tile) takes the sea edges of the harbours
+bordering it.
 
 Standalone: the route graph, rates and modes of this package.
 """
@@ -68,7 +71,8 @@ def compile_graph(world_map: WorldMap, mode_ids, improvements, mode_costs, handl
     tile_index = {tile_id: index for index, tile_id in enumerate(route_graph.tile_ids)}
     count = len(ordered)
     links: List[List[Link]] = [[] for _ in range(len(tile_index) * count)]
-    for edge in route_graph.edges:
+    handling = [_handling(chosen[mode_id], mode_id, handling_costs) for mode_id in ordered]
+    for edge in route_graph.edges + tuple(routes_graph.harbour_edges(world_map, improvements)):
         if not edge.lane_nodes <= held_nodes:
             continue
         index_a, index_b = tile_index[edge.tile_a], tile_index[edge.tile_b]
@@ -86,6 +90,13 @@ def compile_graph(world_map: WorldMap, mode_ids, improvements, mode_costs, handl
                 if grade is None:
                     continue
                 km *= mode.get("km_factor", 1.0)
+            ford_cost, ford_days = 0.0, 0.0
+            if edge.crosses_river and not improvement.get("bridge"):
+                crossing = mode.get("river_crossing", "ford")
+                if crossing == "bridge_only":
+                    continue
+                if crossing == "ford":
+                    ford_cost, ford_days = handling[position]
             for source, target, current in ((index_a, index_b, edge.current_km_per_hour),
                                             (index_b, index_a, -edge.current_km_per_hour)):
                 rate = table.rate(mode_id, edge.edge_class, grade, current)
@@ -93,10 +104,9 @@ def compile_graph(world_map: WorldMap, mode_ids, improvements, mode_costs, handl
                     continue
                 money = _scale(world_map, table, mode_id, edge.edge_class, rate, mode_costs)
                 links[source * count + position].append(
-                    (target * count + position, km * money, km / rate.km_per_day, km, rate))
+                    (target * count + position, km * money + ford_cost, km / rate.km_per_day + ford_days, km, rate))
     modes_at = [tuple(position for position in range(count) if links[tile * count + position])
                 for tile in range(len(tile_index))]
-    handling = [_handling(chosen[mode_id], mode_id, handling_costs) for mode_id in ordered]
     return Compiled(route_graph.tile_ids, tile_index, ordered, links, modes_at, handling)
 
 

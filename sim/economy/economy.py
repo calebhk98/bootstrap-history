@@ -10,6 +10,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 from . import credit, credit_claims, currency, labour, land_market, lending, merchants_credit, producers, sites, state_budget, unit_cost
 from .credit_view import CreditView
 from .market_areas import AreaMap
+from .market_areas_follow import follow
 from .market_memory import YearView
 from .mint import mint_orders, settle_mint, staff as staff_mint
 from .mint_labour import close_year as close_mint_year, mint_agent
@@ -68,25 +69,26 @@ class Economy:
         if record is None:
             record, area_map, carriage = open_economy(setup)
         else:
-            carriage = setup.carriage_table()
-            area_map = AreaMap(setup.tiles, carriage,
-                               [(setup.specs[good], price) for good, price in sorted(setup.opening_prices.items())
-                                if good in setup.specs and price > 0.0],
-                               setup.opening_population_by_tile)
+            carriage = setup.carriage_table(record.ways)
+            area_map = setup.area_map(carriage)
         self.record = record
         self.area_map = area_map
         self.carriage = carriage
-        self.improvements: Dict[str, Dict[str, Any]] = dict(setup.improvements)   # the ways `carriage` was built with
+        self.improvements: Dict[str, Dict[str, Any]] = dict(record.ways)   # the ways `carriage` and the areas were built with
         self._own_options = None
         self._own_hectares: Dict[str, float] = {}   # land households' own plots took this year, by tile
 
     def set_improvements(self, improvements: Mapping[str, Mapping[str, Any]]) -> bool:
-        """Rebuild the carriage table over these built ways; False when they are the ones it already has.
-        Market areas keep the partition they were opened with."""
+        """Rebuild the carriage table over these built ways, partition the market areas again over it and
+        carry the markets' memory to the new areas; False when they are the ways it already has."""
         if dict(improvements) == self.improvements:
             return False
         self.improvements = {key: dict(way) for key, way in improvements.items()}
+        self.record.ways = {key: dict(way) for key, way in self.improvements.items()}
         self.carriage = self.setup.carriage_table(self.improvements)
+        area_map = self.setup.area_map(self.carriage)
+        follow(self.record, self.area_map, area_map)
+        self.area_map = area_map
         return True
 
     def view(self) -> YearView:

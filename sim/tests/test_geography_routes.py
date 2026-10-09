@@ -13,7 +13,7 @@ ROUTES_SMALL = os.path.join(FIXTURES, "routes_small")
 MOD_OVERLAY = os.path.join(FIXTURES, "routes_mod", "data", "world", "geography")
 MOD_ID = "test_routes_k9"
 DATA_FOLDER = map_source.BASE_MAP_FOLDER
-ROUTE_CATALOGUES = ("route_modes", "sea_lanes", "parameters")
+ROUTE_CATALOGUES = ("route_modes", "sea_lanes", "parameters", "ways")
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ANCIENT_NODES = {"sea_square_sail", "lnd_mule_transport", "lnd_two_wheel_cart", "lnd_ox_transport"}
 
@@ -80,7 +80,9 @@ class SmallMapTests(unittest.TestCase):
     def test_no_route_by_rail_without_track(self):
         self.assertIsNone(routes_search.route(self.world_map, ["a1"], ["a2"], {"rail"}))
         built = {routes_search.edge_key("a1", "a2"): {"rail": True}}
-        railway = routes_search.route(self.world_map, ["a1"], ["a2"], {"rail"}, improvements=built)
+        self.assertIsNone(routes_search.route(self.world_map, ["a1"], ["a2"], {"rail"}, improvements=built))
+        bridged = {routes_search.edge_key("a1", "a2"): {"rail": True, "bridge": True}}
+        railway = routes_search.route(self.world_map, ["a1"], ["a2"], {"rail"}, improvements=bridged)
         self.assertEqual([leg["mode"] for leg in railway["legs"]], ["rail"])
 
     def test_sea_needs_coastal_ends(self):

@@ -9,10 +9,10 @@ import copy
 import math
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
-from sim.geography import (food_capacity, food_wild_harvest, map_source, mechanisms, parameters, resource_links, resources_biotic,
+from sim.geography import (food_capacity, food_wild_harvest, map_source, mechanisms, parameters, resource_links, resources_biotic, rail_freight,
                            resources_catalogue, resources_endowment, resources_mined, resources_prospecting,
                            resources_summary, routes_carriage, routes_graph, routes_modes, routes_search, tile_holdings, tile_layers,
-                           ways_build)
+                           ways_build, ways_works)
 
 WorldMap = map_source.WorldMap
 
@@ -146,16 +146,33 @@ def freight_links(mode_ids: Iterable[str], world_map: Optional[WorldMap] = None)
     return routes_graph.links(_map(world_map), tuple(mode_ids))
 
 
-def build_requirements(tile_a: str, tile_b: str, improvement: str,
+def build_requirements(tile_a: str, tile_b: Optional[str], improvement: str,
                        world_map: Optional[WorldMap] = None) -> Optional[Dict[str, Any]]:
-    """What building `improvement` ("road", "rail") over the land edge between two bordering tiles takes:
-    {km, grade, trade, labour_hours, materials: {material: tonnes}, node}, or None when it cannot be built."""
+    """What building `improvement` ("road", "rail", "canal", "bridge") over the land edge between two
+    bordering tiles takes, or a "port" on one coastal tile (`tile_b` the same tile or None):
+    {km, grade, trade, labour_hours, materials: {material: tonnes}, node, build_years, engineered,
+    crew_people, crew_hours_per_year}, or None when it cannot be built. Ground steeper than the way's
+    natural limit is built `engineered` at more earthwork."""
     return ways_build.requirements(_map(world_map), tile_a, tile_b, improvement)
+
+
+def train_carrier(mode_id: str, world_map: Optional[WorldMap] = None) -> Optional[Dict[str, Any]]:
+    """{inputs, fuel_material, stock_material, stock_kg} of a rail mode as a freight carrier (its physical
+    inputs per tonne-km, what the fuel and the rolling stock are made of, the stock's mass), or None when
+    the mode is not a train."""
+    mode = routes_modes.modes(_map(world_map)).get(mode_id)
+    return rail_freight.carrier_record(mode["carrier"]) if mode is not None and mode.get("model") == "rail" else None
+
+
+def improvement_key(improvement: str, tile_a: str, tile_b: str, world_map: Optional[WorldMap] = None) -> str:
+    """The key a built `improvement` is recorded under: the tile id for a port, else the edge key."""
+    return ways_works.key_of(_map(world_map), improvement, tile_a, tile_b)
 
 
 def built_km(improvements: Mapping[str, Mapping[str, Any]], improvement: str,
              world_map: Optional[WorldMap] = None) -> float:
-    """Kilometres of `improvement` ("road", "rail") the caller's `improvements` record holds."""
+    """Kilometres of `improvement` ("road", "rail", "canal"; a bridge's span or a port's quay for those works)
+    the caller's `improvements` record holds."""
     return ways_build.built_km(_map(world_map), improvements, improvement)
 
 
@@ -243,6 +260,7 @@ def problems(world_map: Optional[WorldMap] = None) -> List[str]:
              for parameter_id in parameters.invalid_entries(world_map)]
     found += ["resource %r names an unknown mechanism" % row_id for row_id in mechanisms.unknown_rows(world_map)]
     found += ["route mode %r is incomplete" % mode_id for mode_id in routes_modes.invalid_entries(world_map)]
+    found += ["built work %r is incomplete" % work_id for work_id in ways_works.invalid_entries(world_map)]
     found += resources_catalogue.validate(world_map)
     return found
 

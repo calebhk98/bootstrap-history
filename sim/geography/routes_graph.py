@@ -27,7 +27,8 @@ from sim.geography.map_source import WorldMap
 @dataclass(frozen=True)
 class Edge:
     """One undirected edge. `current_km_per_hour` is signed from tile_a to tile_b (river only; 0 when
-    the flow direction is unknown). `lane_nodes` are the nodes an open-sea leg needs."""
+    the flow direction is unknown). `lane_nodes` are the nodes an open-sea leg needs. `crosses_river`
+    marks a land edge between tiles on the same river, which a land carrier fords unless it is bridged."""
     tile_a: str
     tile_b: str
     edge_class: str
@@ -35,6 +36,7 @@ class Edge:
     grade: float = 0.0
     current_km_per_hour: float = 0.0
     lane_nodes: FrozenSet[str] = frozenset()
+    crosses_river: bool = False
 
     @property
     def key(self) -> str:
@@ -109,8 +111,9 @@ def _land_and_river_edges(world_map: WorldMap, coordinates) -> List[Edge]:
     for tile_a, tile_b in sorted(pairs):
         centre_km = haversine_km(*coordinates[tile_a], *coordinates[tile_b])
         km = centre_km * detour
-        edges.append(Edge(tile_a, tile_b, "land", km, _land_grade(world_map, tile_a, tile_b, km)))
-        if _on_the_same_river(world_map, tile_a, tile_b):
+        on_river = _on_the_same_river(world_map, tile_a, tile_b)
+        edges.append(Edge(tile_a, tile_b, "land", km, _land_grade(world_map, tile_a, tile_b, km), crosses_river=on_river))
+        if on_river:
             edges.append(Edge(tile_a, tile_b, "river", centre_km * river_detour,
                               current_km_per_hour=_river_current(world_map, tile_a, tile_b)))
     return edges
@@ -225,6 +228,38 @@ def graph(world_map: WorldMap) -> RouteGraph:
         cached = RouteGraph(tuple(sorted(world_map.tiles)), tuple(edges), coordinates, {})
         world_map.__dict__["_route_graph"] = cached
     return cached
+
+
+def land_edge(world_map: WorldMap, tile_a: str, tile_b: str) -> Optional[Edge]:
+    """The land edge joining two tiles, or None when they do not border (or one is not on the map)."""
+    key = edge_key(tile_a, tile_b)
+    return next((edge for edge in graph(world_map).edges if edge.edge_class == "land" and edge.key == key), None)
+
+
+def harbour_edges(world_map: WorldMap, improvements) -> List[Edge]:
+    """Sea edges a built port opens: a port tile shares the water of the bordering tiles that have a
+    harbour, so it takes their sea edges (the shortest where two reach the same tile). A port is
+    recorded under its tile id in `improvements`."""
+    ports = sorted(tile_id for tile_id, built in (improvements or {}).items()
+                   if tile_id in world_map.tiles and built.get("port"))
+    if not ports:
+        return []
+    by_tile: Dict[str, List[Edge]] = {}
+    for edge in graph(world_map).edges:
+        if edge.edge_class in ("coast", "open_sea"):
+            by_tile.setdefault(edge.tile_a, []).append(edge)
+            by_tile.setdefault(edge.tile_b, []).append(edge)
+    found: Dict[Tuple[str, str], Edge] = {}
+    for port in ports:
+        for neighbour in world_map.tiles[port].get("borders", ()):
+            for edge in by_tile.get(neighbour, ()):
+                other = edge.tile_b if edge.tile_a == neighbour else edge.tile_a
+                if other == port:
+                    continue
+                kept = found.get((port, other))
+                if kept is None or edge.km < kept.km:
+                    found[(port, other)] = Edge(port, other, edge.edge_class, edge.km, lane_nodes=edge.lane_nodes)
+    return [found[pair] for pair in sorted(found)]
 
 
 def links(world_map: WorldMap, mode_ids) -> List[Tuple[str, str, str, float]]:

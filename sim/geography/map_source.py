@@ -174,7 +174,7 @@ def merge_folders(folders: Iterable[Tuple[Optional[str], str]]) -> WorldMap:
 def map_of_tiles(tile_records: Dict[str, Dict[str, Any]], like: WorldMap) -> WorldMap:
     """A map of the given tiles that keeps only `like`'s route catalogues and parameters (no layers, no
     sea_links: sea edges are then joined from the tiles' coasts)."""
-    kept = {name: like.catalogue(name) for name in ("route_modes", "sea_lanes", "parameters")}
+    kept = {name: like.catalogue(name) for name in ("route_modes", "sea_lanes", "parameters", "ways")}
     tiles = {tile_id: dict(record, id=tile_id) for tile_id, record in tile_records.items()}
     return WorldMap("tiles_of_%s" % like.map_id, tiles, {}, kept, ())
 

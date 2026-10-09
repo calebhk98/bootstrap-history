@@ -44,6 +44,7 @@ class EconomyRecord:
     funds_offered: float = 0.0                                           # savings on offer at the last lending, home currency
     lent_by_borrower: Dict[AgentId, float] = field(default_factory=dict)  # what each borrower was lent at the last lending
     curves: Dict[str, Any] = field(default_factory=dict)                 # market_key -> the book of the last clearing at the port (market_curves.py)
+    ways: Dict[str, Dict[str, Any]] = field(default_factory=dict)        # the built ways the market areas are partitioned for
 
     def to_record(self) -> Dict[str, Any]:
         return {
@@ -71,6 +72,7 @@ class EconomyRecord:
             "funds_offered": self.funds_offered,
             "lent_by_borrower": self.lent_by_borrower,
             "curves": self.curves,
+            "ways": {key: dict(built) for key, built in sorted(self.ways.items())},
         }
 
     @classmethod
@@ -100,6 +102,7 @@ class EconomyRecord:
             funds_offered=record["funds_offered"],
             lent_by_borrower=dict(record["lent_by_borrower"]),
             curves=dict(record["curves"]),
+            ways={key: dict(built) for key, built in record["ways"].items()},
         )
 
 
