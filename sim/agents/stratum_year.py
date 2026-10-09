@@ -16,6 +16,8 @@ from .tuning_strata import (BIRTH_RATE, BIRTH_WELFARE_RESPONSE, BONDAGE_EXIT_RAT
 							STRATUM_WORKING_SHARE, WELFARE_WIDTH)
 
 FOOD_NEED = "food"   # paid first, and the need whose shortfall is famine
+WAGES = "wages"
+PROPERTY = "property"
 
 
 def logistic(value: float) -> float:
@@ -25,13 +27,13 @@ def logistic(value: float) -> float:
 		return 0.0
 
 
-def own_income(stratum: Any, world: Any) -> float:
-	"""What the stratum earns by its own wages and property: nothing for the bonded, whose work is
-	the keeper's (`bonded_product`)."""
+def income_parts(stratum: Any, world: Any) -> Dict[str, float]:
+	"""What the stratum earns by its own wages and by its property, apart: nothing for the bonded,
+	whose work is the keeper's (`bonded_product`)."""
 	plan = stratum.record.plan
 	if stratum.is_bonded():
-		return 0.0
-	income = 0.0
+		return {}
+	parts: Dict[str, float] = {}
 	trade = plan.get("trade")
 	if trade:
 		working = float(plan.get("work_share", STRATUM_WORKING_SHARE))
@@ -40,11 +42,16 @@ def own_income(stratum: Any, world: Any) -> float:
 			# people with land earn at least what keeps those they support fed, from their own plot when
 			# no employer pays that much: the classical floor under wages the agent economy also uses
 			wages = max(wages, stratum.record.members * world.subsistence_cost_per_person_year())
-		income += wages
+		parts[WAGES] = wages
 	property_share = float(plan.get("property_share") or 0.0)
 	if property_share > 0.0:
-		income += world.society_output() * property_share
-	return income
+		parts[PROPERTY] = world.society_output() * property_share
+	return parts
+
+
+def own_income(stratum: Any, world: Any) -> float:
+	"""What the stratum earns by its own wages and property."""
+	return sum(income_parts(stratum, world).values())
 
 
 def bonded_product(stratum: Any, world: Any) -> float:

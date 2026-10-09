@@ -436,6 +436,21 @@ Two fixes, usable separately or together:
       `interest_groups` (names and causes) while any group is organised. Groups are actors of
       kind `interest_group` in the actor registry (ActorRecord fields `group_kind`, `subject`,
       `cause`, `members`, `lost_income`, `grievance`, `strength`, `claim`, `demands`).
+      Other kinds are measured from the bodies of people and the firms: `displaced_workers` (a
+      stratum whose trade's pay fell below what it had come to expect), `landholders` (a propertied
+      stratum whose property income fell), `firm_owners` (firms whose profit fell below what their
+      owners expected) and `falling_incomes` (the part of a stratum's fall in welfare those do not
+      explain). Only `displaced_producers` can obtain a prohibition; the rest are made good from the
+      state's purse as far as its capacity lets it.
+
+      ANSWERING THE STATE'S DEMANDS (Complaint 110). `answer` (aliases `answer_demand`, `stance`) with
+      `{"cmd":"answer","what":"comply"|"refuse"}` sets how you meet the requisition and the supply
+      levy the state assesses (the office it presses on you is not declinable); bare `answer` shows
+      the stance. The reply's `note` gives the odds: a refusal is enforced with a chance set by the
+      state's capacity, turned aside in part by your protection; if enforced the state takes the
+      demand and a penalty in proportion to its capacity, otherwise nothing. The log names each
+      refusal and its outcome. Any other actor answers the same way through the player command
+      `{"command":"answer_demand","stance":"refuse"}` (ActorRecord field `demand_stance`).
 
       MACHINE-READABLE MODES. 'state json', 'portfolio json' and 'risk json'
       (typed, inside `play`) print the raw reply - the exact line a script

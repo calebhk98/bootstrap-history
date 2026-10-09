@@ -128,6 +128,9 @@ class ActorRecord:
 	# remembered welfare (what it has come to expect)
 	blame_share: float = 1.0
 	welfare_reference: float = 0.0
+	# what a stratum has come to expect of each income it earns (wages, property) and a firm of its profit
+	income_reference: Dict[str, float] = field(default_factory=dict)
+	margin_reference: float = 0.0
 
 
 @dataclass
