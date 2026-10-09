@@ -19,7 +19,7 @@ from .protocols import AgentOrders, YearInputs
 from .recipes import recipes_from_production_data
 from .record import EconomyRecord
 from .setup import EconomySetup, TradeSpec, goods_specs
-from .types import EDGE_EXTERNAL, EDGE_LEGACY, GoodsMove, Offer, Transfer
+from .types import EDGE_CARGO, EDGE_EXTERNAL, EDGE_LEGACY, Bid, GoodsMove, Offer, Transfer, external_edge
 from .unit_cost import variable_cost_per_run
 from .year_close import rebase_basket_price_level
 from .year_labour import trade_premium
@@ -30,12 +30,12 @@ __all__ = [
     "price_response",
     "shown_prices", "Producer", "expected_output_prices", "live_input_prices", "live_wages", "AgentOrders",
     "YearInputs", "recipes_from_production_data", "EconomyRecord", "EconomySetup", "TradeSpec",
-    "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "GoodsMove", "Offer", "Transfer",
+    "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "EDGE_CARGO", "external_edge", "Bid", "GoodsMove", "Offer", "Transfer",
     "variable_cost_per_run", "rebase_basket_price_level", "trade_premium",
     "traded_volumes", "opening_quantities", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
     "credit_room", "economy_from_record", "blank_economy", "export_record", "finish_spin_up", "shown_prices_of",
-    "settle_founder_takings", "move_goods", "cohort_incomes",
+    "settle_founder_takings", "move_goods", "post_transfers", "cohort_incomes",
 ]
 
 _KEY_SEPARATOR = "|"
@@ -205,6 +205,11 @@ def shown_prices_of(economy):
 def move_goods(economy, moves):
     """Applies goods moves to the economy's book."""
     economy.record.book.move_many(moves)
+
+
+def post_transfers(economy, transfers):
+    """Applies money transfers to the economy's book."""
+    economy.record.book.transfer_many(transfers)
 
 
 def settle_founder_takings(economy, agent_id, edge_id, tile_note="founder's takings"):
