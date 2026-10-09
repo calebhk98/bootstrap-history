@@ -119,23 +119,26 @@ def declared_supply(need_data: Mapping[str, Any],
 
 def budget_weights_by_good(need_data: Mapping[str, Any], production: Mapping[str, Any],
                            available_materials: Set[str],
-                           cost_per_unit: Optional[Mapping[str, float]] = None) -> Dict[str, float]:
+                           cost_per_unit: Optional[Mapping[str, float]] = None,
+                           civ_values: Optional[Mapping[str, Any]] = None) -> Dict[str, float]:
     """{good: share of household spending} with no prices: each need's budget weight, normalised over
     needs an available good serves, split among those goods. `cost_per_unit` is what a unit of a good costs
     in any one currency (labour value when prices are unknown); the goods of a need then take spending as
     the household mix does (constant elasticity on cost per need unit, sim/world/need_basket.py). A good
     without a positive cost takes the mean weight of its need's priced goods; with no costs at all the
-    split inside a need is equal."""
+    split inside a need is equal. A need that scales with a civilisation field (`civ_values`) weighs by it."""
     attributes = goods_attributes(need_data, production)
     servers: Dict[str, List[str]] = collections.defaultdict(list)
     for material in sorted(available_materials):
         for need_id in attributes.get(material, {}).get("satisfies", {}):
             servers[need_id].append(material)
-    weight_total = sum(need_data["needs"][need_id]["surplus_budget_share"]
-                       for need_id in servers)
+    civ_values = civ_values or {}
+    need_weight = {need_id: need_data["needs"][need_id]["surplus_budget_share"]
+                   * need_basket.civ_scale(need_data["needs"][need_id], civ_values) for need_id in servers}
+    weight_total = sum(need_weight.values())
     weights: Dict[str, float] = collections.defaultdict(float)
     for need_id, materials in servers.items():
-        share = need_data["needs"][need_id]["surplus_budget_share"] / weight_total
+        share = need_weight[need_id] / weight_total if weight_total > 0.0 else 0.0
         inside = _mix_inside_need(need_id, materials, attributes, cost_per_unit or {})
         for material in materials:
             weights[material] += share * inside[material]

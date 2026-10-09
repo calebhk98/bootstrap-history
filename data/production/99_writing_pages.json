@@ -1,0 +1,65 @@
+{
+ "_note": "Written pages: the writing need (data/world/needs.json) is met by a scribe writing on a surface with ink, so scribes get demand from literate people's use of writing. One recipe for each surface; the household mix chooses among them.",
+ "materials": {
+  "written_page_papyrus": {
+   "outputs": {
+    "written_page": 1.0
+   },
+   "inputs": {
+    "papyrus_sheet": 1.0,
+    "ink_kg": 0.0015
+   },
+   "labour_hours": {
+    "scribe": 3.0
+   },
+   "unit_dimension": "count",
+   "basis": "per written page of a letter, account or copied text on papyrus",
+   "yield_basis": "A page takes one sheet of the writing surface and about a gram or two of ink (1.5 g a page is an estimate). A scribe in a book hand wrote a few pages a day, taken here as three hours a page (an estimate of the work rate, confidence D); document hands were quicker. Services that turn materials into what households use are recipes on the trades that do the work, as the laid walls are.",
+   "requires_node": "prn_carbon_ink",
+   "conf": "D",
+   "satisfies": {
+    "writing": 1.0
+   }
+  },
+  "written_page_parchment": {
+   "outputs": {
+    "written_page": 1.0
+   },
+   "inputs": {
+    "parchment_sheet": 1.0,
+    "ink_kg": 0.0015
+   },
+   "labour_hours": {
+    "scribe": 3.0
+   },
+   "unit_dimension": "count",
+   "basis": "per written page of a letter, account or copied text on parchment",
+   "yield_basis": "A page takes one sheet of the writing surface and about a gram or two of ink (1.5 g a page is an estimate). A scribe in a book hand wrote a few pages a day, taken here as three hours a page (an estimate of the work rate, confidence D); document hands were quicker. Services that turn materials into what households use are recipes on the trades that do the work, as the laid walls are.",
+   "requires_node": "prn_parchment_sheets",
+   "conf": "D",
+   "satisfies": {
+    "writing": 1.0
+   }
+  },
+  "written_page_paper": {
+   "outputs": {
+    "written_page": 1.0
+   },
+   "inputs": {
+    "paper_kg": 0.005,
+    "ink_kg": 0.0015
+   },
+   "labour_hours": {
+    "scribe": 3.0
+   },
+   "unit_dimension": "count",
+   "basis": "per written page of a letter, account or copied text on paper",
+   "yield_basis": "A page takes one sheet of the writing surface and about a gram or two of ink (1.5 g a page is an estimate). A scribe in a book hand wrote a few pages a day, taken here as three hours a page (an estimate of the work rate, confidence D); document hands were quicker. Services that turn materials into what households use are recipes on the trades that do the work, as the laid walls are. A sheet of paper is about five grams.",
+   "requires_node": "prn_hand_papermaking",
+   "conf": "D",
+   "satisfies": {
+    "writing": 1.0
+   }
+  }
+ }
+}

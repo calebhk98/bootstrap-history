@@ -65,7 +65,8 @@ def goods_attributes(need_data: Mapping[str, Any],
     merged: Dict[str, Dict[str, Any]] = {}
     for material, attributes in (need_data.get("goods") or {}).items():
         merged[material] = {"satisfies": dict(attributes.get("satisfies") or {}),
-                            "supply_per_year": attributes.get("supply_per_year")}
+                            "supply_per_year": attributes.get("supply_per_year"),
+                            "bought_by_households": attributes.get("bought_by_households", True)}
     for entry in production.values():
         if not entry.get("outputs") or not (entry.get("satisfies") or entry.get("supply_per_year")):
             continue
@@ -77,20 +78,42 @@ def goods_attributes(need_data: Mapping[str, Any],
     return merged
 
 
+def need_floor(data: Mapping[str, Any]) -> float:
+    """A need's floor per person per year from its data: a named constant, a stated figure, or a held
+    stock that wears out (`held_stock_per_capita` over `service_life_years`, as for any durable)."""
+    if data.get("subsistence_constant"):
+        return float(getattr(demand, data["subsistence_constant"]))
+    if data.get("held_stock_per_capita") and data.get("service_life_years"):
+        return float(data["held_stock_per_capita"]) / float(data["service_life_years"])
+    return float(data.get("subsistence_per_capita_per_year", 0.0))
+
+
+def civ_scale(data: Mapping[str, Any], civ_values: Mapping[str, Any]) -> float:
+    """What share of the population a need applies to: a need that names `scales_with_civ_field` (writing
+    follows literacy) is scaled by that field of the civilisation; one that names none applies to all."""
+    field = data.get("scales_with_civ_field")
+    return 1.0 if not field else max(0.0, min(1.0, float(civ_values.get(field, 0.0))))
+
+
 def make_basket(need_data: Mapping[str, Any], production: Mapping[str, Any],
-                substitution_elasticity: Optional[float] = None) -> Basket:
+                substitution_elasticity: Optional[float] = None,
+                civ_values: Optional[Mapping[str, Any]] = None) -> Basket:
+    """The household basket. A good households do not buy themselves (`bought_by_households` false, such as
+    the coin the mint keeps struck) serves no need in it. `civ_values` are the civilisation fields a need may
+    scale with; a need that scales with a field not given applies to nobody."""
     attributes = goods_attributes(need_data, production)
+    civ_values = civ_values or {}
     serving: Dict[str, List[Tuple[str, float]]] = {}
     for good in sorted(attributes):
+        if attributes[good].get("bought_by_households") is False:
+            continue
         for need_id, effect in sorted(attributes[good]["satisfies"].items()):
             serving.setdefault(need_id, []).append((good, effect))
     specs = []
     for need_id in sorted(need_data["needs"]):
         data = need_data["needs"][need_id]
-        subsistence = (float(getattr(demand, data["subsistence_constant"]))
-                       if data.get("subsistence_constant")
-                       else float(data.get("subsistence_per_capita_per_year", 0.0)))
-        specs.append(NeedSpec(need_id, subsistence, float(data["surplus_budget_share"]),
+        scale = civ_scale(data, civ_values)
+        specs.append(NeedSpec(need_id, need_floor(data) * scale, float(data["surplus_budget_share"]) * scale,
                               tuple(serving.get(need_id, ()))))
     substitution = (NEED_SUBSTITUTION_ELASTICITY if substitution_elasticity is None
                     else substitution_elasticity)

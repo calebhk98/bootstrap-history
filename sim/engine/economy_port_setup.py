@@ -117,7 +117,7 @@ def build_setup(sim, opening=None):
     production = demand.production_data()
     recipes = recipes_from_production_data(production, opening["recipes"])
     need_data = _load("world", "needs.json")
-    basket = households.make_basket(need_data, production)
+    basket = households.make_basket(need_data, production, civ_values=civ)
     goods = set()
     for recipe in recipes.values():
         goods.update(recipe.outputs, recipe.inputs, recipe.plant_goods)

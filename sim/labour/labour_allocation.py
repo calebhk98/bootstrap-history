@@ -108,7 +108,8 @@ class LabourAllocationMixin:
         if cached is None or cached[0] != reached:
             shares = workforce_spinup.need_shares_by_trade(
                 labour_market.production_data(), reached, self._world.techniques_available_to,
-                workforce_carriage.carriage_for(reached, geography.tiles_held(self._world.civ)))
+                workforce_carriage.carriage_for(reached, geography.tiles_held(self._world.civ)),
+                self._world.civ)
             cached = self._need_shares_cache = (reached, shares)
         if cached[1]:
             return cached[1]
