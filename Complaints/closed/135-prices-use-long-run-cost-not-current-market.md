@@ -1,6 +1,6 @@
 # Prices use long-run cost, not the current market
 
-**Status:** partly - every price reads the year's clearing: the coin metal's market ratio revalues the coin (holders of coin and coin debts bear it), wages' food and tool terms and the goods market read the clearing, stock sells on its own bound apart from the producers' running-share floor, and the partners' books use that floor. Remaining: a material's own deposits and a mine's output feed supply only through what the founder sells (from the Remains paragraph; show it is done on the agent economy or do it)
+**Status:** closed - every price reads the year's clearing: the coin metal's market ratio revalues the coin (holders of coin and coin debts bear it), wages' food and tool terms and the goods market read the clearing, stock sells on its own bound apart from the producers' running-share floor, the partners' books use that floor, and mines' output is supply in the clearing on both paths
 
 ## What is wrong
 
@@ -78,3 +78,7 @@ Remains, for the coin-metal revaluation (inflation from a metal glut), which tou
 ## Update 3 (closed)
 
 Done: `coin_revaluation.py` records each coin metal's market price ratio at the year's close (the home metal and every partner's); `home_price_level` and `partner_price_level` divide by it, and `_coin_metal_price` multiplies by it once, so the money per labour hour, every price and the partner prices follow the metal without counting the goods' own ratio twice. Holders of coin and of debts written in coin bear the revaluation, as in history; no one is compensated. The goods market (`quote`, `purchase_cost`) already multiplied by `market_price_ratio`, which is the clearing on both paths (the agent economy's year, or the engine's); wages now read it too: the food term is the staple's ratio and the tool term is the demand pressure times each tool material's ratio. The clearing has two floors: producers' (`commodity_floor_ratio`, the running share, else the full cost) below which society producers idle, and the stock's own (`STOCK_FLOOR_RATIO`, a labelled heuristic) down to which stock, the founder's sales and actors' output sell; the stated `price_floor_factor` and `DEFAULT_FLOOR_RATIO` no longer enter the engine's clearing, and `foreign_actor_trade.py` uses the producers' floor. Tests: `sim/tests/test_coin_metal_revaluation.py` (quick), `sim/tests/test_coin_metal_game.py` (slow, a whole game).
+
+## Update 4 (mines and deposits)
+
+Shown, not changed: a mine's output feeds supply beyond what the founder sells. Agent economy: a site-bound mine is a producer whose runs the deposit's limit caps (`sim/economy/sites.py`), and its output is the year's supply the price clears on. Engine path: the society's baseline capacity is the deposits' output (a deposit's quantity is its share of the empire output table, scaled by the reach to the tiles held, `geography.mineral_scale`), and the mines that concerns run enter as offers at their own running cost (`founder_concern_offers` in `producer_costs.py`, `goods_market.others_offers`). Tests: `sim/tests/test_mine_supply_enters_clearing.py`.
