@@ -3,7 +3,7 @@
 The stock is worker-years spent running a technique, summed over every concern that runs it (the founder's
 and every firm's), and it fades each year. Depth is that stock against what a founding-size concern's own
 staff would take years to master, so the same stock is deep for a small shop and shallow for a large mill.
-Nothing is read from the tree: a technique nobody runs has no depth however old it is.
+Techniques the society runs at the opening are seeded once. Nothing is read from the tree: a technique nobody runs has no depth however old it is.
 
 The stock shortens a concern's ramp (venture_ramp, agents_port.ramp), lowers the failure risk of a node
 (effective_risk) and lifts the scale a firm can grow a concern to (sim/agents/firm_expansion.py). The labour
@@ -53,7 +53,21 @@ class IndustryDepthMixin:
 
     def industry_experience(self, node_id):
         """Retained worker-years spent running this technique, by anyone."""
+        self.seed_opening_industry_experience()
         return self.state.projects.industry_years.get(node_id, 0.0)
+
+    def seed_opening_industry_experience(self):
+        """Once, from the opening's own state: each technique the society already runs (granted) starts at
+        the steady state of one founding-size concern's staff-years against the yearly fade, as if it had
+        been running long. A technique nobody runs starts at zero."""
+        projects = self.state.projects
+        if projects.industry_seeded or not projects.granted:
+            return
+        projects.industry_seeded = True
+        for node_id in sorted(projects.granted):
+            if self.is_venture(node_id):
+                projects.industry_years[node_id] = (
+                    self.founding_worker_years(node_id) / (1.0 - EXPERIENCE_RETENTION_PER_YEAR))
 
     def industry_depth(self, node_id):
         """0 for a technique nobody has run, approaching 1 as it becomes established."""
@@ -74,8 +88,8 @@ class IndustryDepthMixin:
         """Worker-years each technique's operating concerns employed this year, the founder's and the firms'."""
         years = {}
         projects = self.state.projects
-        for node_id in projects.operating:
-            if node_id not in projects.granted and self.is_venture(node_id):
+        for node_id in sorted(projects.granted | projects.operating):
+            if self.is_venture(node_id):
                 years[node_id] = years.get(node_id, 0.0) + self.founding_worker_years(node_id)
         if self.state.actors is not None and self.state.actors.records:
             for firm in self.actors.active_firms():

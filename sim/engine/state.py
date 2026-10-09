@@ -160,6 +160,7 @@ class ProjectsState:
 	uninformed_failures: Dict[str, int] = field(default_factory=dict)
 	# technique -> retained worker-years of anyone running it (industry_depth.py)
 	industry_years: Dict[str, float] = field(default_factory=dict)
+	industry_seeded: bool = False
 	mothballed: Set[str] = field(default_factory=set)
 	bountied: Set[str] = field(default_factory=set)
 	granted: Set[str] = field(default_factory=set)
