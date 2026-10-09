@@ -1,6 +1,6 @@
 # Sellers may only cut their asks, so prices ratchet down and durable purchases swing
 
-**Status:** partly - the durable-stock swing is fixed (in-use stock netted out of the store's holding; wanted stock sized on smoothed expected spending; the service-lives tests now expect wear plus the growth of the wanted stock); capacity planning at the post-addition price is not built (Complaint 336)
+**Status:** closed - the durable-stock swing is fixed (in-use stock netted out of the store; wanted stock sized on expected spending; test_economy_service_lives expects wear plus the growth of the wanted stock); sellers may raise as well as cut (seller_offers.py, ask_raise.py, Complaint 398); capacity planning at the post-addition price is tracked in Complaint 336
 
 The seller-pricing rule built for Complaint 336 (`sim/economy/seller_pricing.py`, `seller_offers.py`, hooked into `year_goods.py`) lets a producer that moves the clearing price cut its ask against the market's book, but never raise it (a labelled heuristic standing in for many workshops that cannot hold goods back together). With cuts only, a durable good's price drifts down year after year. In the service-lives fixture, households keep buying well above wear long after their stock is filled, and the stock swings up and down from year to year instead of settling. Before the pricing hook, purchases fell to about the wear once the stock was full.
 
