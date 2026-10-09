@@ -7,6 +7,7 @@ import unittest
 from unittest import mock
 
 from sim.engine import validate_production
+from sim.world import need_basket
 from sim.engine.catalog import load_production_catalog
 from sim.engine.solve_prices_core import techniques_available_to
 from sim.labour import workforce_carriage, workforce_spinup
@@ -27,10 +28,11 @@ def _starting_techs(civ_id):
     return set(_json("data", "civilizations", civ_id + ".json")["starting_techs"])
 
 
-def _shares(reached, production=None, carriage=None):
+def _shares(reached, production=None, carriage=None, civ_id=None):
+    civ = _json("data", "civilizations", civ_id + ".json") if civ_id else {}
     return workforce_spinup.need_shares_by_trade(
         production or _PRODUCTION, set(reached), techniques_available_to,
-        carriage if carriage is not None else workforce_carriage.carriage_hours_per_tonne_by_trade(reached))
+        carriage if carriage is not None else workforce_carriage.carriage_for(reached), civ)
 
 
 def _recipe(output, labour, inputs=None):
@@ -38,9 +40,13 @@ def _recipe(output, labour, inputs=None):
             "requires_node": None, "basis": "one", "yield_basis": "test", "conf": "C"}
 
 
+def _zz_carriage(span=None):
+    return workforce_carriage.Carriage((workforce_carriage.CarriageMode("zz_carrier", 1.0, 1.0),), span)
+
+
 def _synthetic_shares(production, needs, carriage=None):
     with mock.patch.object(workforce_spinup, "_needs", return_value=needs):
-        return workforce_spinup.need_shares_by_trade(production, set(), techniques_available_to, carriage or {})
+        return workforce_spinup.need_shares_by_trade(production, set(), techniques_available_to, carriage)
 
 
 class LandCarriersTests(unittest.TestCase):
@@ -56,7 +62,7 @@ class LandCarriersTests(unittest.TestCase):
 
     def test_rome_carries_by_cart_so_carters_take_a_share_of_the_need(self):
         reached = _starting_techs("rome_100ad")
-        self.assertGreater(workforce_carriage.carriage_hours_per_tonne_by_trade(reached).get("carter", 0.0), 0.0)
+        self.assertIn("carter", workforce_carriage.carriage_for(reached).trades())
         self.assertGreater(_shares(reached).get("carter", 0.0), 0.0)
 
     def test_carters_are_drawn_from_the_same_pool_as_sailors(self):
@@ -90,16 +96,50 @@ class WaterNeedTests(unittest.TestCase):
         for good in ("water_kg", "water_piped_kg", "water_well_kg"):
             self.assertEqual(_PRODUCTION[good]["carriage_km"], 0.0, good)
 
-    def test_a_recipe_hauled_the_mean_distance_costs_more_carriage_than_one_not_hauled(self):
+    def test_a_recipe_hauled_as_far_as_its_value_pays_for_costs_more_carriage_than_one_not_hauled(self):
         needs = {"needs": {"food": {"surplus_budget_share": 1.0}},
                  "goods": {"zz_food": {"satisfies": {"food": 1.0}}}}
         hauled = {"zz_food": _recipe("zz_food", {"zz_worker": 1.0})}
         at_hand = {"zz_food": dict(_recipe("zz_food", {"zz_worker": 1.0}), carriage_km=0.0)}
         with mock.patch.object(workforce_spinup.demand, "mass_in_kg_or_none", return_value=1000.0):
-            carried = _synthetic_shares(hauled, needs, {"zz_carrier": 1.0})
-            not_carried = _synthetic_shares(at_hand, needs, {"zz_carrier": 1.0})
+            carried = _synthetic_shares(hauled, needs, _zz_carriage())
+            not_carried = _synthetic_shares(at_hand, needs, _zz_carriage())
         self.assertGreater(carried.get("zz_carrier", 0.0), 0.0)
         self.assertEqual(not_carried.get("zz_carrier", 0.0), 0.0)
+
+
+class HaulFollowsValueTests(unittest.TestCase):
+
+    def test_a_dearer_tonne_is_carried_farther_and_dearer_carriage_shortens_the_haul(self):
+        carriage = _zz_carriage()
+        mode = carriage.modes[0]
+        self.assertGreater(carriage.haul_km(mode, 200.0), carriage.haul_km(mode, 20.0))
+        dear = workforce_carriage.CarriageMode("zz_carrier", 2.0, 2.0)
+        self.assertLess(carriage.haul_km(dear, 20.0), carriage.haul_km(mode, 20.0))
+
+    def test_no_haul_exceeds_the_span_between_the_realms_tiles(self):
+        capped = _zz_carriage(span=3.0)
+        self.assertAlmostEqual(capped.haul_km(capped.modes[0], 1.0e9), 3.0, places=9)
+        self.assertLess(capped.haul_km(capped.modes[0], 1.0), 3.0)
+
+    def test_the_realm_span_is_the_mean_distance_between_its_tiles(self):
+        from sim.geography import api as geography
+        ids = geography.tiles_held(_json("data", "civilizations", "rome_100ad.json"))
+        span = geography.realm_span_km(ids)
+        self.assertGreater(span, 100.0)
+        self.assertIsNone(geography.realm_span_km(ids[:1]))
+
+    def test_carriage_rates_cost_at_least_their_crew_hours(self):
+        from sim.geography import api as geography
+        for mode_id, rate in geography.carriage_rates(["cart", "sail", "foot"]).items():
+            self.assertGreaterEqual(rate["cost_hours_per_tonne_km"], rate["crew_hours_per_tonne_km"], mode_id)
+
+    def test_carters_are_a_minor_share_of_romes_need_not_a_quarter(self):
+        reached = _starting_techs("rome_100ad")
+        homes = _json("data", "civilizations", "rome_100ad.json")
+        from sim.geography import api as geography
+        carriage = workforce_carriage.carriage_for(reached, geography.tiles_held(homes))
+        self.assertLess(_shares(reached, carriage=carriage)["carter"], 0.1)
 
 
 class CarriageDistanceDataTests(unittest.TestCase):
@@ -109,6 +149,51 @@ class CarriageDistanceDataTests(unittest.TestCase):
         self.assertEqual(validate_production.check_carriage_km("water_kg", {}), [])
         for bad in (-1, "near", True, float("inf")):
             self.assertTrue(validate_production.check_carriage_km("water_kg", {"carriage_km": bad}), bad)
+
+
+class TradesWithoutANamedNeedTests(unittest.TestCase):
+    """Potters, glassblowers, scribes and engravers had no demand while no need named vessels, glass, writing or coin."""
+
+    def test_the_four_trades_get_a_share_in_every_start_that_can_make_their_goods(self):
+        for civ_id, trades in (("rome_100ad", ("potter", "glassblower", "scribe", "engraver")),
+                               ("england_1300", ("potter", "glassblower", "scribe", "engraver")),
+                               ("han_china_100ad", ("potter", "scribe", "engraver")),
+                               ("mexica_1500", ("potter", "scribe"))):
+            shares = _shares(_starting_techs(civ_id), civ_id=civ_id)
+            for trade in trades:
+                self.assertGreater(shares.get(trade, 0.0), 0.0, (civ_id, trade))
+
+    def test_vessels_writing_and_money_are_needs_with_stated_floors(self):
+        needs = _json("data", "world", "needs.json")
+        for need_id in ("vessels", "writing", "money"):
+            self.assertIn(need_id, needs["needs"])
+        self.assertTrue(need_basket.need_floor(needs["needs"]["vessels"]) > 0.0)
+        self.assertIn("Deal", needs["needs"]["vessels"]["stock_basis"])
+        self.assertIn("Duncan-Jones", needs["needs"]["money"]["stock_basis"])
+
+    def test_a_held_stock_floor_is_the_stock_over_its_service_life(self):
+        self.assertAlmostEqual(need_basket.need_floor({"held_stock_per_capita": 6.0, "service_life_years": 3.0}), 2.0)
+        self.assertEqual(need_basket.need_floor({"subsistence_per_capita_per_year": 7.0}), 7.0)
+
+    def test_writing_follows_literacy_and_coin_is_not_bought_by_households(self):
+        needs = _json("data", "world", "needs.json")
+        full = {spec.need_id: spec for spec in need_basket.make_basket(needs, _PRODUCTION, civ_values={"literacy_general": 1.0}).needs}
+        half = {spec.need_id: spec for spec in need_basket.make_basket(needs, _PRODUCTION, civ_values={"literacy_general": 0.5}).needs}
+        self.assertAlmostEqual(half["writing"].subsistence_per_person, full["writing"].subsistence_per_person / 2.0)
+        self.assertAlmostEqual(half["writing"].budget_weight, full["writing"].budget_weight / 2.0)
+        self.assertEqual(full["money"].goods, ())
+        none = {spec.need_id: spec for spec in need_basket.make_basket(needs, _PRODUCTION).needs}
+        self.assertEqual(none["writing"].subsistence_per_person, 0.0)
+
+    def test_a_society_with_no_literacy_has_no_demand_for_scribes_writing(self):
+        reached = _starting_techs("rome_100ad")
+        civ = dict(_json("data", "civilizations", "rome_100ad.json"), literacy_general=0.0)
+        lettered = workforce_spinup.need_shares_by_trade(
+            _PRODUCTION, set(reached), techniques_available_to, workforce_carriage.carriage_for(reached), civ)
+        self.assertEqual(lettered.get("scribe", 0.0), 0.0)
+
+    def test_coin_replacement_is_demand_for_the_engravers_the_minting_recipe_charges(self):
+        self.assertGreater(_PRODUCTION["struck_silver_coin_kg"]["labour_hours"]["engraver"], 0.0)
 
 
 class MillwrightTests(unittest.TestCase):
@@ -162,7 +247,7 @@ class GenericWeightTests(unittest.TestCase):
             trades.update(entry.get("labour_hours") or {})
             for capital in entry.get("capital") or ():
                 trades.update(capital.get("build_labour_hours") or {})
-        trades.update(workforce_carriage.carriage_hours_per_tonne_by_trade(reached))
+        trades.update(workforce_carriage.carriage_for(reached).trades())
         self.assertLessEqual(set(_shares(reached)), trades)
 
 

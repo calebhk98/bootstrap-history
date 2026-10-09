@@ -52,6 +52,30 @@
    "unit": "kg of water at the point of use",
    "effectiveness_basis": "mass of water delivered; every way of delivering it is equal"
   },
+  "vessels": {
+   "surplus_budget_share": 0.02,
+   "held_stock_per_capita": 5.0,
+   "service_life_years": 4.0,
+   "stock_basis": "A household holds a few dozen vessels (cooking pots, storage jars, bowls, cups) of about a kilogram each, about 5 kg a head, and they break and are replaced within a few years: cooking pots last the least, storage jars the most. Ethnoarchaeological studies of household pottery (Deal, Household Pottery Disposal in the Maya Highlands, 1998, recalled and not re-opened) give the order of the stock and its use-life; confidence D. The floor is the stock over its life, as for any durable.",
+   "unit": "kg of vessel ware",
+   "effectiveness_basis": "mass of ware; fired clay and glass are taken equal until a source gives their use-lives separately"
+  },
+  "writing": {
+   "surplus_budget_share": 0.01,
+   "subsistence_per_capita_per_year": 10.0,
+   "scales_with_civ_field": "literacy_general",
+   "unit": "written pages",
+   "subsistence_basis": "Pages written or copied for each literate person a year (letters, accounts, contracts, copies of books): an order-of-magnitude estimate, confidence D, with no source in hand. The need applies to the literate share of the population, which is the civilisation's literacy_general, so it grows as schooling spreads.",
+   "effectiveness_basis": "one written page of a letter or document"
+  },
+  "money": {
+   "surplus_budget_share": 0.005,
+   "held_stock_per_capita": 0.1,
+   "service_life_years": 67.0,
+   "stock_basis": "Silver coin in circulation in a large pre-industrial money economy is of the order of a tenth of a kilogram a head, and wear, loss and hoarding take about one and a half per cent of it a year (Duncan-Jones, Money and Government in the Roman Empire, 1994, recalled and not re-opened; confidence D). The mint's own striking and wear are modelled in sim/economy/mint.py; this entry is only so the labour package sees the engravers and furnacemen that coin replacement keeps at work, and households do not buy it.",
+   "unit": "kg of struck silver coin",
+   "effectiveness_basis": "mass of coin struck"
+  },
   "warmth_and_light": {
    "subsistence_from_climate": "warmth_mj",
    "surplus_budget_share": 0.15,
@@ -109,6 +133,11 @@
   "charcoal_kg": {"satisfies": {"warmth_and_light": 29.0}},
   "coal_kg": {"satisfies": {"warmth_and_light": 27.0}},
   "peat_kg": {"satisfies": {"warmth_and_light": 12.0}},
+
+  "ceramic_kg": {"satisfies": {"vessels": 1.0}},
+  "glass_raw_kg": {"satisfies": {"vessels": 1.0}},
+
+  "struck_silver_coin_kg": {"satisfies": {"money": 1.0}, "bought_by_households": false},
 
   "water_kg": {"satisfies": {"water": 1.0}},
   "water_well_kg": {"satisfies": {"water": 1.0}},

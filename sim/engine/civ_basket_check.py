@@ -37,6 +37,8 @@ def unsupplied_basket_goods(civilisation_id, civilisations, production, goods, e
     partners = _partners_for(civilisation_id, civilisation, civilisations, economies)
     missing = []
     for good in sorted(goods):
+        if (goods[good] or {}).get("bought_by_households") is False:
+            continue
         gates = [gate for gate, _entry in by_material.get(good, ())]
         if not gates or _makes(held, gates):
             continue

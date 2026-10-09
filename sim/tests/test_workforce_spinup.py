@@ -42,10 +42,10 @@ def _trades_of_available_recipes(production, reached):
     return trades
 
 
-def _shares(production, reached):
+def _shares(production, reached, civ=None):
     return workforce_spinup.need_shares_by_trade(
         production, set(reached), techniques_available_to,
-        workforce_carriage.carriage_hours_per_tonne_by_trade(reached))
+        workforce_carriage.carriage_for(reached), civ)
 
 
 class NeedSharesTests(unittest.TestCase):
@@ -56,15 +56,15 @@ class NeedSharesTests(unittest.TestCase):
 
     def test_a_trade_with_an_available_recipe_goes_without_a_share_only_for_goods_no_need_names(self):
         # A trade whose every recipe makes a good no need names has no demand of its own unless a recipe
-        # uses the good (the need data has no vessel, ink or coin need); the labour package floors such
-        # trades (NO_DEMAND_TRADE_SHARE). Any other trade must be in the shares.
+        # uses the good (shaft work in a start that holds water power but runs nothing that draws it); the labour
+        # package floors such trades (NO_DEMAND_TRADE_SHARE). Any other trade must be in the shares.
         farm_trade = labour_allocation.FARM_TRADE
         needs = need_demand.load_needs(_ROOT)
         for civ in _civilisations():
             reached = set(civ["starting_techs"])
-            shares = _shares(_PRODUCTION, reached)
+            shares = _shares(_PRODUCTION, reached, civ)
             available, _unreached, _unclassified = techniques_available_to(_PRODUCTION, reached)
-            carriers = set(workforce_carriage.carriage_hours_per_tonne_by_trade(reached))
+            carriers = workforce_carriage.carriage_for(reached).trades()
             expected = (_trades_of_available_recipes(_PRODUCTION, reached) | carriers) - {farm_trade}
             self.assertLessEqual({trade for trade, share in shares.items() if share > 0.0}, expected, civ["id"])
             named = {good for good, attributes in need_demand.goods_attributes(needs, available).items()
@@ -120,7 +120,7 @@ class EngineStartTests(unittest.TestCase):
         for civ in _civilisations():
             _test_sim, hours = self._first_year(civ["id"])
             expected = (_trades_of_available_recipes(_PRODUCTION, set(civ["starting_techs"]))
-                        | set(workforce_carriage.carriage_hours_per_tonne_by_trade(civ["starting_techs"]))
+                        | workforce_carriage.carriage_for(civ["starting_techs"]).trades()
                         | {labour_allocation.FARM_TRADE})
             held = {trade for trade, value in hours.items() if value > 0.0}
             # a trade the labour core holds nobody in (none needed it at the opening) has no hours
