@@ -934,9 +934,9 @@
    "infrastructure"
   ],
   "mechanics": {
-   "mining_tech": {
-    "yield": 1.0,
-    "cost": 0.8
+   "mine_works": {
+    "drilling_rate_multiple": 2.5,
+    "source": "A heavy drill with two men puts in 20 to 40 ft of hole per 8 hour shift, 15 ft per man-shift at the middle, against 5 to 7 ft by hand, 6 ft (Hoover, Principles of Mining, 1909, pp. 149-150): 2.5 times. It speeds the drilling of blasting holes and does nothing without blasting."
    }
   },
   "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"

@@ -139,7 +139,7 @@ class MiningMixin:
         cached = self._MINE_PROFILE_CACHE.get(key)
         if cached is None:
             pairs = self._mine_reference_deposits(mat)
-            build = sum(weight * deposit_model.build_cost_labour_hours_per_tonne_year(dep)
+            build = sum(weight * deposit_model.build_cost_labour_hours_per_tonne_year(dep, effects)
                         for dep, weight in pairs)
             running = sum(weight * KILOGRAMS_PER_TONNE
                           * deposit_model.extraction_cost_labour_hours_per_kg(dep, effects)
@@ -225,10 +225,8 @@ class MiningMixin:
         """The largest standing capacity of this material you could ever
         organise, in tonnes/yr: how big an enterprise your standing and
         state can run, times whether the ore is actually under your feet,
-        times what mining technology currently lets a working pull out of a
-        given deposit (mining_tech()'s own yield multiplier -- see its
-        comment for why a pump or a railway belongs on THIS side of the
-        ledger and not only on cost)."""
+        (what technology lets a working raise per shaft is in the works cost,
+        sim/world/deposits.py, not a multiple here)."""
         state_capacity = float(self.civ.get("state_capacity", self.STATE_CAPACITY_DEFAULT_FALLBACK))
         favour = self.effect_best("mine_ceiling")
         if favour is not None:
@@ -237,8 +235,7 @@ class MiningMixin:
             base = self.MINE_CEILING_BASE_STRANGER + self.MINE_CEILING_STATE_SCALE_STRANGER * state_capacity
         base *= 1.0 + min(self.REVENUE_SCALE_CAP_MULTIPLE, max(0.0, self.revenue()) / self.REVENUE_SCALE_DENARII)
         geo = self.geography.mineral_scale(mat)
-        yld, _cost = self.mining_tech(mat)
-        return base * geo * yld
+        return base * geo
 
     MINE_CEILING_BASE_IMPERIAL = declare(
         "MINE_CEILING_BASE_IMPERIAL", 20000.0, kind="temporary_heuristic",
@@ -314,8 +311,8 @@ class MiningMixin:
     # own comment on that history). This is intensity-years, not calendar
     # years, so it accrues faster the harder you lean on a given deposit
     # relative to what the ground can support -- and slower once technology
-    # (mining_tech(), below) raises that support, which is the whole of
-    # "make depletion something you can fight."
+    # (the works techniques, sim/world/mine_technique.py) raises that
+    # support, which is the whole of "make depletion something you can fight."
     DEPLETION_HALF_LIFE_YRS = declare(
         "DEPLETION_HALF_LIFE_YRS", 120.0, kind="temporary_heuristic",
         unit="intensity-years for yield to fall from 1.0 toward the floor",
@@ -437,30 +434,6 @@ class MiningMixin:
     # railway are independent improvements, not alternatives.
     # Mechanical (water-wheel or animal) mine drainage - the first tier of the
     # pumping problem the class comment describes.
-    # The Newcomen atmospheric engine, built specifically to drain flooding coal
-    # and tin workings - a later, stronger tier on the same drainage problem as
-    # met_mine_pumping, compounding with it.
-    # Black-powder blasting breaks rock faster per man-hour; it does not put new
-    # ore in the ground, so cost only, no yield term.
-    # Dynamite blasting, a stronger version of the same black-powder effect; cost
-    # only, no yield term.
-    # Rotary drilling speeds face advance; cost only, no yield term, the same
-    # reasoning as blasting.
-    # A railway creates REACH, not extraction efficiency: ore too far from a
-    # market to be worth carting becomes worth lifting once a railway can move it
-    # - a yield (economically-reachable tonnage) effect, not a per-tonne cost
-    # effect, reused from goods_reach_factor()'s own self.running("railway")
-    # check.
-    # MINING_TECH: each technology's yield/cost multipliers are its node's `mining_tech` mechanic.
-    # The first step of cheap steel making low-grade ore worth digging - iron did
-    # not change how ore comes out of the ground, it changed whether digging it
-    # was worth doing at all (see the class comment above); for coal, the same
-    # entry represents a cheap-steel industry becoming a coking-coal customer
-    # large enough to justify the pit, drainage and rail spur a smaller demand
-    # would not.
-    # Bessemer/open-hearth bulk steel, the second and further step of the same
-    # effect as blast_furnace, further from ore than the last.
-
     def _running_kept(self, name):
         """A dict for derived values that depend only on which nodes are built, granted and
         operating (what `running` reads); it starts empty whenever that changes."""
@@ -472,59 +445,16 @@ class MiningMixin:
             kept = self.__dict__["_running_kept_tables"] = (projects, stamp, self.nodes, {})
         return kept[3].setdefault(name, {})
 
-    def mining_tech(self, mat):
-        """(yield_mult, cost_mult) technology has bought this material's
-        mining so far. yield_mult >= 1 raises what a working can pull out
-        of the same deposit; cost_mult <= 1 lowers what getting it out
-        costs. Capped/floored like every other compounding factor in this
-        file (MARKET_SHARE, goods_reach_factor): a mine at three times the
-        book yield is a real historical claim, thirty times is the
-        abolished unobtainable category with its sign flipped."""
-        kept = self._running_kept("mining_tech")
-        found = kept.get(mat)
-        if found is not None:
-            return found
-        yield_mult, cost_mult = 1.0, 1.0
-        for node_id, spec in self._effect_terms("mining_tech"):
-            if self.running(node_id) and mat in spec.get("materials", (mat,)):
-                yield_mult *= spec["yield"]
-                cost_mult *= spec["cost"]
-        found = kept[mat] = (min(yield_mult, self.MINING_TECH_YIELD_CEILING),
-                                max(self.MINING_TECH_COST_FLOOR, cost_mult))
-        return found
-
-    MINING_TECH_YIELD_CEILING = declare(
-        "MINING_TECH_YIELD_CEILING", 3.0, kind="temporary_heuristic",
-        unit="dimensionless multiple on extractable tonnage (maximum)",
-        source=None, confidence="D",
-        why="Cap on how far compounding every mining technology together "
-            "can raise a deposit's yield - a mine at three times book "
-            "yield is a real historical claim, per this method's own "
-            "docstring; the specific ceiling is a defensive bound against "
-            "the abolished 'unobtainable' category's mirror image, not a "
-            "derived limit.")
-    MINING_TECH_COST_FLOOR = declare(
-        "MINING_TECH_COST_FLOOR", 0.35, kind="temporary_heuristic",
-        unit="dimensionless multiple on cost per tonne/year (minimum)",
-        source=None, confidence="D",
-        why="Floor on how far compounding technology can cheapen mining - "
-            "technology helps, but extraction is never free. A defensive "
-            "bound, not a derived limit.")
-
     def mining_cost_scale(self, mat):
         """What sinking or running a tonne/yr of this material costs THIS
-        YEAR, relative to the derived capex and opex: technology (mining_tech's cost multiplier) against depletion
+        YEAR, relative to the derived capex and opex. The derived figures
+        already carry what the running techniques do to the works
+        (_mine_labour_hours_per_tonne), so this is depletion alone
         (mine_depletion_factor, inverted -- the same effort recovers less
         from a half-worked deposit, so it costs proportionally more per
-        tonne) pulling against each other. This is "deeper ones cost more"
-        made concrete, and technology is the only thing that pushes back.
-        Bounded to keep the tension a real decision rather than a runaway:
-        a fully depleted, untooled working costs at most 2x book (not
-        infinite), and full mining technology on a fresh deposit costs no
-        less than 0.4x (not free)."""
-        _year, cost = self.mining_tech(mat)
+        tonne). Bounded to keep it a real decision rather than a runaway."""
         return max(self.MINING_COST_SCALE_FLOOR,
-                   min(self.MINING_COST_SCALE_CEILING, cost / self.mine_depletion_factor(mat)))
+                   min(self.MINING_COST_SCALE_CEILING, 1.0 / self.mine_depletion_factor(mat)))
 
     def mining_cost_scale_for(self, working):
         """Same as mining_cost_scale(), but for what running THIS working
@@ -533,9 +463,8 @@ class MiningMixin:
         running than a fresh one of the same material, which the old
         material-level figure could not say because it had no idea which
         working was which."""
-        _year, cost = self.mining_tech(working["material"])
         return max(self.MINING_COST_SCALE_FLOOR,
-                   min(self.MINING_COST_SCALE_CEILING, cost / self.mine_depletion_factor_for(working)))
+                   min(self.MINING_COST_SCALE_CEILING, 1.0 / self.mine_depletion_factor_for(working)))
 
     MINING_COST_SCALE_FLOOR = declare(
         "MINING_COST_SCALE_FLOOR", 0.4, kind="temporary_heuristic",
@@ -560,9 +489,8 @@ class MiningMixin:
 
     def mine_yield_t_for(self, working):
         """Tonnes a year THIS working actually raises this year, after ITS
-        OWN depletion and current mining technology."""
-        yld, _cost = self.mining_tech(working["material"])
-        return working["capacity"] * self.mine_depletion_factor_for(working) * yld
+        OWN depletion."""
+        return working["capacity"] * self.mine_depletion_factor_for(working)
 
     def mine_operating_cost_for(self, working):
         """What THIS working costs to run this year, whether or not you use
@@ -605,13 +533,7 @@ class MiningMixin:
                 "disperses, so reopening means sinking it again.")
         if scale > 1.05:
             note += (" This costs %.0f%% of the book price: the easy ore "
-                      "here is going, and nothing you have built yet cuts "
-                      "the cost of getting at what is left (mine pumping, "
-                      "blasting, or a railway would)." % (scale * 100))
-        elif scale < 0.95:
-            note += (" This costs %.0f%% of the book price: what you have "
-                      "built has made this cheaper to get out of the "
-                      "ground." % (scale * 100))
+                     "here is going." % (scale * 100))
         return {"material": mat,
                 "tonnes_per_year": round(tonnes, 3),
                 "to_sink_it": round(sink, 1),
@@ -638,25 +560,18 @@ class MiningMixin:
         sorted() to stay deterministic across hash seeds."""
         return sum(self.mine_yield_t_for(working) for working in self._workings_of(mat))
 
-    def _mine_depletion_note_from(self, depl, yld):
+    def _mine_depletion_note_from(self, depl):
         """Shared sentence-builder behind mine_depletion_note() (a
         material's average) and mine_depletion_note_for() (one working's
         own figures) - the same wording either way, just fed a different
         depletion fraction."""
-        if abs(depl - 1.0) < 0.01 and abs(yld - 1.0) < 0.01:
+        if abs(depl - 1.0) < 0.01:
             return None
-        bits = []
-        if depl < 0.999:
-            bits.append("the easy ore here is %d%% worked out, so the same "
-                        "shaft yields %d%% of its first-year tonnage"
-                        % (round((1.0 - depl) * 100), round(depl * 100)))
-        if yld > 1.001:
-            bits.append("technology you have built raises that back up "
-                        "%.1fx" % yld)
-        elif depl < 0.999:
-            bits.append("mine pumping, drilling or blasting would raise it "
-                        "back up")
-        return "; ".join(bits)
+        return ("the easy ore here is %d%% worked out, so the same shaft "
+                "yields %d%% of its first-year tonnage; techniques that cut "
+                "the labour of the works (drainage, hoisting, blasting, "
+                "haulage) lower what the ore costs, not how much a shaft yields"
+                % (round((1.0 - depl) * 100), round(depl * 100)))
 
     def mine_depletion_note(self, mat):
         """One sentence on why this material's workings, ON AVERAGE, yield
@@ -669,16 +584,13 @@ class MiningMixin:
         particular working rather than the material's blended average."""
         if not self._workings_of(mat):
             return None
-        yld, _cost = self.mining_tech(mat)
-        return self._mine_depletion_note_from(self.mine_depletion_factor(mat), yld)
+        return self._mine_depletion_note_from(self.mine_depletion_factor(mat))
 
     def mine_depletion_note_for(self, working):
         """mine_depletion_note(), for one working's OWN depletion rather
         than its material's average across every working of it - the
         figure the `mines` row for this specific working should explain."""
-        yld, _cost = self.mining_tech(working["material"])
-        return self._mine_depletion_note_from(
-            self.mine_depletion_factor_for(working), yld)
+        return self._mine_depletion_note_from(self.mine_depletion_factor_for(working))
 
     def close_mine(self, mat):
         """Shut your own workings down, on purpose.

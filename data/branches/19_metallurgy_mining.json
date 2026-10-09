@@ -1877,9 +1877,13 @@
    "religious_adjacent"
   ],
   "mechanics": {
-   "mining_tech": {
-    "yield": 1.4,
-    "cost": 0.85
+   "mine_works": {
+    "drainage_engine": {
+     "lift_power_watts": 5900.0,
+     "attendants": 2,
+     "fuel_kg_per_tonne_metre": 0.0
+    },
+    "source": "temporary_heuristic: force pumps worked by a water wheel, no fuel. Power = water density times gravity times flow times fall times wheel efficiency, for a stream of 0.1 cubic metres a second falling 10 m at 0.6, about 5.9 kW; Pryce 1778 pp. 151-152 describes a 48-foot wheel working pumps in four lifts but gives no flow. Attendants (wheel keeper, pump man) are a guess."
    }
   }
  },
@@ -2029,7 +2033,17 @@
   "note": "A steam engine driving a large reel with steel wire rope hoists ore and workers from depth. The rope must be wire, not hemp, or it breaks under load and falls into the shaft. The brake must hold the maximum load suspended or a rope failure is a catastrophe. Regular inspections for wear and fraying are essential; a frayed rope is a widow-maker.",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "mechanics": {
+   "mine_works": {
+    "hoist_engine": {
+     "lift_power_watts": 7500.0,
+     "attendants": 2,
+     "fuel_kg_per_tonne_metre": 0.0118
+    },
+    "source": "Fuel: Watt's 1778 duty, 23.44 million foot-pounds per 84 lb bushel, derived 0.0118 kg of coal per tonne-metre (Farey 1827 p. 337; Complaints/reports/mining-techniques-physics-research.md section 2.11). Power (a rotative engine of about 10 horsepower) and attendants (engineman, brakeman) are a temporary_heuristic: no winding engine rating was opened."
+   }
+  }
  },
  {
   "id": "met_black_powder_blasting",
@@ -2066,9 +2080,16 @@
    "infrastructure"
   ],
   "mechanics": {
-   "mining_tech": {
-    "yield": 1.0,
-    "cost": 0.85
+   "mine_works": {
+    "blasting": {
+     "drilling_hours_per_tonne_rock": {
+      "soft": 1.5,
+      "medium": 2.9,
+      "hard": 4.4
+     },
+     "charging_hours_per_tonne_rock": 0.5
+    },
+    "source": "Hand drilling takes 1.5 to 2.1 m of hole per man-shift in hard rock (Hoover, Principles of Mining, 1909, p. 150); 1.8 m in an 8 hour shift is 4.4 hours per metre of hole. The rock one metre of hole breaks (1 tonne), the faster drilling of medium (1.5 times) and soft (3 times) rock, and the charging, tamping and firing hours are a temporary_heuristic. The powder itself is not charged (BLASTING_EXPLOSIVE_HOURS_NOT_CHARGED)."
    }
   },
   "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
@@ -2107,9 +2128,16 @@
    "infrastructure"
   ],
   "mechanics": {
-   "mining_tech": {
-    "yield": 1.0,
-    "cost": 0.65
+   "mine_works": {
+    "blasting": {
+     "drilling_hours_per_tonne_rock": {
+      "soft": 1.0,
+      "medium": 1.9,
+      "hard": 2.9
+     },
+     "charging_hours_per_tonne_rock": 0.5
+    },
+    "source": "temporary_heuristic: as black powder, with a stronger explosive breaking 1.5 times the rock per metre of hole (the node note puts it at three times the power per unit mass; the burden does not grow in proportion). Hand-drilling rate as met_black_powder_blasting."
    }
   },
   "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"

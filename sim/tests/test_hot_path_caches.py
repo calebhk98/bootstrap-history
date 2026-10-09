@@ -281,7 +281,7 @@ _probe._material_stock()
 check("a capacity key written to the stock lands in the pool and leaves the stock",
       "scholar_hours" not in _probe._material_stock() and _probe.state.economy.capacity_pool.get("scholar_hours", 0.0) >= 5.0)
 
-# --- mining technology is read once per material until what is built or operating changes.
-_probe.mining_tech("iron")
-_asked = _count_calls(_probe, "running", lambda: [_probe.mining_tech("iron") for _ in range(20)])
-check("mining technology of a material is not recomputed while nothing built or operating changes", _asked == 0, _asked)
+# --- the works effects of mining techniques are read once until what is built or operating changes.
+_probe.mine_works_effects()
+_asked = _count_calls(_probe, "running", lambda: [_probe.mine_works_effects() for _ in range(20)])
+check("the mining works effects are not recomputed while nothing built or operating changes", _asked == 0, _asked)
