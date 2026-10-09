@@ -491,10 +491,22 @@ class NeedDemandAnchors:
             return {}
         return self._clearing(current_prices, self.scarcity_materials)[0]
 
-    def glutted_materials(self, current_prices: Mapping[str, float]) -> Set[str]:
-        """Materials whose supply exceeds demand at every price the clearing search tried.
+    def glutted_materials(self, current_prices: Mapping[str, float],
+                          disposal_cost_by_material: Optional[Mapping[str, float]] = None) -> Set[str]:
+        """Materials nobody pays for: supply exceeds demand at every price the clearing search tried, or the
+        market clears below what it costs to dispose of a unit (buyers then take it for less than dumping it
+        costs, so it is a waste, not a product).
 
-        A good supplied from a resource table is left out: the recipe graph does not yet cover every use
-        of it, so a shortfall of demand there is not a glut."""
-        glut = self._clearing(current_prices, self.anchor_materials)[1]
+        The search for a waste is centred at no less than its disposal cost, so a price that has decayed
+        towards zero cannot hide a market that clears well above it. A good supplied from a resource table
+        is left out: the recipe graph does not yet cover every use of it, so a shortfall of demand there is
+        not a glut."""
+        costs = {material: cost for material, cost in (disposal_cost_by_material or {}).items()
+                 if cost > 0.0 and material in self.anchor_materials}
+        centred = dict(current_prices)
+        for material, cost in costs.items():
+            centred[material] = max(centred.get(material, 0.0), cost)
+        clearing, glut = self._clearing(centred, self.anchor_materials)
+        glut = set(glut) | {material for material, cost in costs.items()
+                            if material in clearing and clearing[material] < cost}
         return {material for material in glut if material not in self.table_supply_materials}
