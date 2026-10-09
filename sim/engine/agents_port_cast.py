@@ -41,9 +41,13 @@ class CastView:
 		return haversine_km(first[0], first[1], second[0], second[1])
 
 	def need_floor_costs_per_person_year(self) -> Dict[str, float]:
-		"""What one person's floor of each need costs a year at the prices households pay: the need-basket
-		kernel (sim/world/need_basket.py) on the civilisation's climate floors and the goods market's
-		prices. A need with no priced good is left out; with none priced, the food floor is the dole."""
+		"""What one person's floor of each need costs a year at the prices households pay: the economy's own
+		tile prices on each tile's climate floors (the need-basket kernel, sim/world/need_basket.py). While the
+		economy opens, the same kernel on the engine's goods market prices. A need with no priced good is left
+		out; with none priced, the food floor is the dole."""
+		from_tiles = self._sim.economy.agent_need_floor_costs()  # type: ignore[attr-defined]
+		if from_tiles:
+			return from_tiles
 		basket = market_demand.household_basket(self._sim.civ, self._sim.world_map)
 		prices = self._sim.goods_market.household_prices()  # type: ignore[attr-defined]
 		costs = {need.spec.need_id: need.price_index * need.spec.subsistence_per_person

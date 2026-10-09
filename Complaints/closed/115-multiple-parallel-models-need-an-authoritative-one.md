@@ -1,13 +1,14 @@
 # Multiple parallel models exist for related concepts; define which is authoritative
 
-**Status:** partly. Merchants items 2 and 3 are done: a trader's cargo is entered in the agent economy's book as a
-cargo account's orders (home price moves with it), the partner's side settles in that partner's coin ledger and counts
-against the route's carriers, and the trader's purse is trued up to what the book gave. Still open: the trader's purse
-is not itself an account in the book (the engine holds it; Complaint 382), the other actors' sales and purchases
-(`market_sale`, `market_purchase` from firms and the state) still go only to the engine's flows, items 4 and 5 below,
-the engine's capital market with the agent economy on (kept, see "Still two owners"), the solver anchors' climate
-floors and the strata cost from the economy's tile prices. Whole-game checks of the cargo path are written but were not
-run (a whole game takes about half an hour to open here): `test_home_cargo_price`, `test_foreign_actor_trade`.
+**Status:** closed (2026-10-09). The agent economy is the only economy (owner decision at the foot of this file).
+What was done: an actor's debt is a loan claim in the economy's book and its purse is never negative; firms', the
+state's, traders' and seats' purses are book accounts, and their sales and purchases are book orders; the agent-economy-off
+mode, the engine's capital market, its goods-market category model (founder side), the aggregate foreign flow and the
+engine's price-level fallbacks are deleted; the engine's money per labour hour is the economy's wage for the unskilled
+trade; trader cargo pays customs; the solver's anchors carry the climate floors; the strata's cost of living is the
+economy's own tile prices. What is left, stated under "Still two owners": the engine's static commodity market book
+(read only, no longer a second economy), and trader actors carry only cross-border cargo (domestic trade is the
+economy's merchants'). Whole-game results are in the commit bodies of the branch `close-115-agent-economy-only`.
 
 **Source:** playtest findings document, ARCH-001. **Type:** Architecture
 recommendation, largely already answered by an existing document; this
@@ -107,7 +108,7 @@ Measured on a Rome start with the agent economy on (a short run, printing per ye
 there is no command for it, the checks in `sim/tests/test_foreign_actor_trade.py` are the repeatable part):
 
 - The engine's aggregate `foreign_traders` flow is dormant in an agent-economy game: `_step_market` returns after the
-  agent year, so `foreign_trade_year_end` never books a flow. It runs only when the agent economy is off.
+  agent year, so `foreign_trade_year_end` never books a flow. It ran only when the agent economy was off (deleted with that mode).
 - The economy's `_external_orders` and the trader actors both carried the same goods across the same gap. Felt was
   imported by both in the same years; stone blocks were imported by the stand-in orders while the traders exported
   them. The traders carried the same cargo every year, since a sale abroad never moved the partner's price.
@@ -139,8 +140,7 @@ Left to do, in order:
    weighs areas). `EconomyPort.agent_price_response` hands it to `SimWorld.price_after_cargo` for home, on top of the
    year's home tally (`Sim.actor_home_trade`). Cargo bound for home and the source side of cargo taken from home are
    sized by it (`test_home_cargo_price.py`: the quote matches a re-clear of the book with the cargo, home-bound cargo
-   never flips sign and is the marginal one that pays, and a year with cargo posts the foreign coin once). `TRADER_DEPTH_SHARE` stays only as the fallback where nothing answers: the home society with
-   the agent economy off, a good with no port book yet, and a partner with no book for the good. Still open: a cargo
+   never flips sign and is the marginal one that pays, and a year with cargo posts the foreign coin once). `TRADER_DEPTH_SHARE` stays only as the fallback where nothing answers: a good with no port book yet while the economy opens, and a partner with no book for the good. Still open: a cargo
    is sized against its own route only: two routes into one market within a year each see the tally of the cargo
    already shipped, not of the cargo planned by the other; the merged buyers add their budgets, so a market held
    back by a few budgets quotes a little off its book; the quote is from last year's book, so it lags the year's own
@@ -164,14 +164,17 @@ Left to do, in order:
    cargo and the economy can tell it from domestic trade by its edge records. The earlier attempt's two faults are
    gone: each order has its partner (the cargo's edge, not the shared `edge:external`), and the trader is not posted
    from nowhere (its purse is trued up to the book's result). Pinned on the hand-built economy by
-   `test_trader_cargo_book.py` and `test_trader_cargo_settlement.py`. Not done: the purse is the engine's
-   (Complaint 382), so money crosses the engine and the book at the year's start and end; firms' and the state's
-   `market_sale` and `market_purchase` still go only to the engine's flows, which nothing reads on the agent economy;
-   the customs bases (`taxes_bases.imports_paid`) read `edge:external` only, so trader cargo pays no duty.
-4. The economy's merchants (`sim/economy/merchants.py`) were not touched: they move goods between tiles only, with no
-   partner. The aggregate flow can go once the agent economy is the only economy, with the external orders; until
-   then it is the opt-out game's merchant.
-5. No domestic routes for trader actors (an economy-port member exposing area prices).
+   `test_trader_cargo_book.py` and `test_trader_cargo_settlement.py`. Closed by the branch: the trader's purse is an account in the same book; firms' and the state's `market_sale` and
+   `market_purchase` are book orders (`sim/engine/economy_port_actors.py`); a cargo account that sells landed goods or buys
+   goods for abroad is told to the economy (`YearInputs.import_accounts`, `export_accounts`), and the customs bases tax it
+   (`test_economy_foreign_duties.py`, `test_trader_cargo_book.py`).
+4. Done: the aggregate flow (`foreign_traders`, `foreign_trade_year_end`) is deleted with the agent-economy-off mode; the
+   external orders stay as the owner of the goods no actor carries. The economy's merchants (`sim/economy/merchants.py`)
+   move goods between tiles of the economy.
+5. Decided: domestic trade has one owner, the economy's merchants. They are agents in the book with cash, who buy where a
+   good is cheap and carry it where it is dear; trader actors take the routes that cross a border. A second domestic
+   router for trader actors would carry the same gap twice, the duplication 405 closed. If a player-run domestic trader
+   is wanted, it is an economy merchant with an owner, not an actor with its own router.
 
 ## Remaining after the shared-helper pass: state revenue bases
 
@@ -206,7 +209,7 @@ Left to do, in order:
   273, 140).
 - **Credit.** `market_rate()` and `market_credit_room()` both ask the agent economy's credit market when it is on
   (`economy.api.credit_room`: what lenders put out of the savings on offer at the last lending, less what other borrowers
-  took). The engine's loanable-funds record answers only when the agent economy is off. Founder credit with the agent economy on
+  took). The engine's loanable-funds record answered only when the agent economy was off (that mode and the record are deleted). Founder credit with the agent economy on
   now follows the agent market's room (it used to read a record the agent economy never updates); the quick fingerprint
   scenarios are byte-identical before and after, so the founder's ceiling is not bound by it there.
 - **Constants.** `tile_costs.py` no longer holds its own distance or carrier-size copies (geography owns them). The
@@ -230,26 +233,26 @@ strata money moves only by what crossed the edge and the state's relief.
 
 ## Still two owners
 
-- Labour (428): done. The agent economy clears wages through the labour core, and the engine's hours by trade are read from the core's people (the recipe graph's need while the agent economy is off); `Workforce.step` is gone.
-- Merchants (405): one owner per flow now for goods actors carry (decision above), and the traders' cargo is in the
-  book and the coin ledger (items 2 and 3); the stand-ins still own the rest.
-- Demand baskets: one kernel now (`sim/world/need_basket.py`); the economy, the aggregate demand model and the strata
-  read it (`docs/architecture/ONE_DEMAND_MODEL_PLAN.md` stages 1 to 4, branch `one-demand-model`). Open: the solver's
-  anchors have no climate floors, the strata cost does not yet come from the economy's own tile prices when it is on,
-  and stage 7 (retire what the kernel replaced). Stage 7 measured: the canned basket and the strata multiple constants are
-  already gone; `HOUSEHOLD_FOOD_BUDGET_SHARE_{LOW,HIGH}` and `SILVER_TO_LEAD_PRICE_RATIO_HISTORICAL` are read only by the
-  reporting tests and were declared checks on purpose (closed Complaint 36), and `market_clearing_price`,
-  `aggregate_household_demand` and `household_budget_share` have no production reader but belong to the standalone
-  silver and lead pricing model that `DEMAND_AT_SCALE.md` documents, so they stay until the owner says to drop that
-  model; the strata wage bridge stays for other countries and the agent-economy-off game.
-- The engine's `market_loans`, `update_capital_market` and its rate still run (and set the rate) when the agent economy is off;
-  only the reading side is unified. Decided with evidence (2026-10-09): the agent-economy-off path is a supported mode, not
-  dead code. `ECONOMY_AGENTS.md` documents `cfg["agent_economy"] = False` and `ROME_AGENT_ECONOMY=0`; a game
-  falls back to it by itself for a civilisation that holds no tiles (`EconomyPort._has_territory`); and the tests of
-  the old economy's mechanisms opt out (count them with `grep -rln "agent_economy.*False" sim/tests | wc -l`). So it
-  was not deleted. Nor was the engine meeting stopped with the agent economy on: the meeting's supply shares are
-  what `pay_lenders` pays the engine actors' interest pool out by, so stopping it would sink that interest; ending it
-  needs those actors to borrow from accounts in the book, the same gap as the trader's purse.
+- Labour (428): done. The agent economy clears wages through the labour core, and the engine's hours by trade are read from the core's people; `Workforce.step` is gone.
+- Merchants (405): one owner per flow (decision above). Goods actors carry are theirs, the traders' cargo is in the
+  book and the coin ledger, and the stand-ins own the rest; domestic trade is the economy's merchants'.
+- Demand baskets: one kernel (`sim/world/need_basket.py`); the economy, the aggregate demand model and the strata read it
+  (`docs/architecture/ONE_DEMAND_MODEL_PLAN.md`). The solver's anchors face the climate floors of the civilisation's
+  tiles and the strata's cost of living is the economy's tile prices. Stage 7 measured: the canned basket and the strata
+  multiple constants are gone; `HOUSEHOLD_FOOD_BUDGET_SHARE_{LOW,HIGH}` and `SILVER_TO_LEAD_PRICE_RATIO_HISTORICAL` are
+  read only by the reporting tests and were declared checks on purpose (closed Complaint 36), and `market_clearing_price`,
+  `aggregate_household_demand` and `household_budget_share` have no production reader but belong to the standalone silver
+  and lead pricing model that `DEMAND_AT_SCALE.md` documents, so they stay until the owner says to drop that model; the
+  strata wage bridge stays for other countries and for the opening, before the economy has cohorts to read.
+- Capital: the engine's `market_loans`, `update_capital_market` and its rate are deleted. An actor borrows against the
+  economy's book (a facility drawn from the lenders pro rata to what they offer, claims held by the lenders, interest paid
+  to the claim holders); the rate and the credit ceiling are the agent economy's credit market's.
+- Money: the engine's money per labour hour is the economy's wage for the unskilled trade, one figure for living cost,
+  node money, purses and hiring (`ECONOMY_AGENTS.md`, "One money per labour hour").
+- The engine's commodity market book (`_market_outcome`, `market_state`, interest groups' goods market api) still
+  exists as a static, read-only model of a commodity's demand and supply that actors and screens read for quotes the
+  economy has no answer for yet (a good with no book, a partner's goods). It prices nothing the economy prices; folding it
+  into the economy's per-area books is the remaining deduplication, not blocked by anything here.
 
 Owner decision (2026-10-09): high priority: do it as soon as possible.
 
@@ -263,3 +266,7 @@ purse are priced in the engine's hour. Measure it with
 `python3 -c "from sim.tests.harness import sim; g = sim(); print(g.labour.money_per_labour_hour(), g.economy.agent.wage_per_hour('labourer'))"`.
 Until one hour is authoritative, a founder income has to be priced in the engine's hour to meet the founder's costs
 (`practice_income` in `sim/engine/economy_production.py` is), and `work` pays far less than a day's living.
+
+Done (2026-10-09): the engine's money per labour hour is the economy's wage for the unskilled trade; the opening is
+repriced to it when the economy opens (`sim/engine/opening_money.py`). `python3 -m sim.tests --jobs 1 --only
+one_money_per_labour_hour` prints both and checks they are equal.

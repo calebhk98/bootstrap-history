@@ -99,4 +99,6 @@ class YearInputs:
     harvest_factor: float = 1.0                             # this year's growing weather on households' own plots
     site_limits: Tuple[SiteLimit, ...] = ()                 # the sites' limits now; empty keeps the last declared
     entrant_share: float = 0.0                              # share of working people a year coming of working age
+    import_accounts: Tuple = ()                             # accounts that sell goods landed from abroad: their sales are imports
+    export_accounts: Tuple = ()                             # accounts that buy goods for abroad: their purchases are exports
     attrition_share: float = 0.0                            # share of working people a year dying or retiring

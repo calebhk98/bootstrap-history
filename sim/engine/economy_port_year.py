@@ -128,7 +128,7 @@ class AgentEconomy:
         orders.update(cargo_orders)
         self._strike_state_coin(economy)
         sales, purchases = self._actor_trade_orders(orders)
-        outcome = economy.step(self._inputs(orders))
+        outcome = economy.step(self._inputs(orders, economy_port_cargo.border_accounts(economy, legs)))
         economy_port_sites.deplete(self._sim, outcome.extraction, self._recipe_outputs())
         self.outcomes.append(outcome)
         self._settle_actor_trade(sales, purchases)
@@ -359,7 +359,7 @@ class AgentEconomy:
             seat_id: economy_api.settle_agent_takings(self._economy, seat_id, EDGE_LEGACY) * coin
             for seat_id in sorted(self._sim.state.seats)}
 
-    def _inputs(self, engine_orders) -> YearInputs:
+    def _inputs(self, engine_orders, border_accounts=((), ())) -> YearInputs:
         sim = self._sim
         population = sim.population
         total = float(population.total)
@@ -372,6 +372,7 @@ class AgentEconomy:
                           working_age_share=population.working_age / total if total > 0.0 else 0.0,
                           entrant_share=entrant_share, attrition_share=attrition_share,
                           yield_factor_by_producer=yields, engine_orders=engine_orders, harvest_factor=weather,
+                          import_accounts=border_accounts[0], export_accounts=border_accounts[1],
                           site_limits=tuple(economy_port_sites.site_limits(sim, self._recipe_outputs())))
 
     def _recipe_outputs(self):
@@ -523,6 +524,14 @@ class AgentEconomy:
     def land_rent_per_hectare(self):
         """Mean rent per hectare-year the land market let land at last year, in coin."""
         return economy_api.land_rent_per_hectare(self.economy()) * self._economy.setup.coin_per_unit
+
+    def need_floor_costs_per_person_year(self, country=None):
+        """What a person's floor of each need costs a year at the prices on the home tiles (the mean over the
+        people there), in coin; empty before any tile holds people."""
+        economy = self.economy()
+        scope = economy_api.country_figures.home_when_shared(economy, country)
+        costs = economy_api.country_figures.need_floor_costs_per_person_year(economy, scope)
+        return {need: cost * economy.setup.coin_per_unit for need, cost in costs.items()}
 
     def land_rent_at_tile(self, tile):
         """Rent per hectare-year on one tile in coin (the mean where none was let there)."""

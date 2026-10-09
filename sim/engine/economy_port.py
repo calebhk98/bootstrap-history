@@ -68,6 +68,11 @@ class EconomyPort:
         agent = self._answering_agent()
         return None if agent is None else agent.land_rent_per_hectare()
 
+    def agent_need_floor_costs(self):
+        """What a person's floor of each need costs a year on the home tiles, in coin; None while the economy opens."""
+        agent = self._answering_agent()
+        return None if agent is None else agent.need_floor_costs_per_person_year() or None
+
     def agent_land_rent_at(self, tile):
         """Rent per hectare-year on a tile in coin; None while the economy opens."""
         agent = self._answering_agent()

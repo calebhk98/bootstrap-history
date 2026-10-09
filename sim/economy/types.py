@@ -29,6 +29,11 @@ EDGE_CARGO = "edge:cargo"                # money between a trader's purse and it
 EDGE_EXCHANGE = "edge:exchange"          # the actors' coin turned into the economy's unit and back (agents/purses.py names the other side)
 
 
+def is_external_edge(account: AgentId) -> bool:
+    """Whether the account is the foreign edge or one partner's (`external_edge`)."""
+    return account == EDGE_EXTERNAL or account.startswith(EDGE_EXTERNAL + ":")
+
+
 def external_edge(partner: str) -> AgentId:
     """The edge one partner's cargo arrives from and leaves to; it holds no money of its own, so the partner's
     payment goes through the foreign coin ledger, not the book."""

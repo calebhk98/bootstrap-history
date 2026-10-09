@@ -6,7 +6,7 @@ it received and earned, a merchant from what it bought where. It is rebuilt ever
 from dataclasses import dataclass, field
 from typing import Dict, Iterable, List, Tuple
 
-from .types import EDGE_EXTERNAL, AgentId, ClearingResult, Fill, GoodId, GoodsMove, LabourResult, Transfer
+from .types import AgentId, ClearingResult, Fill, GoodId, GoodsMove, LabourResult, Transfer, is_external_edge
 
 SALE_PREFIX = "sale of "    # settlement's purpose for a goods sale
 
@@ -33,6 +33,8 @@ class YearLedger:
     plant_spend: Dict[AgentId, float] = field(default_factory=dict)    # paid for plant goods, a build not a running cost
     unmet_demand: Dict[Tuple[GoodId, str], float] = field(default_factory=dict)   # (good, area): quantity
     bids_by_market: Dict[Tuple[GoodId, str], list] = field(default_factory=dict)  # (good, area): the year's bids
+    import_accounts: frozenset = frozenset()   # accounts whose sales are goods that crossed the border (customs)
+    export_accounts: frozenset = frozenset()   # accounts whose purchases leave over the border
     wage_floor_per_hour: float = 0.0       # what a worker's household costs less its plot, per hour, over the areas
 
     def note_postings(self, postings: Iterable[object], purpose_kind: str = "") -> None:
@@ -62,13 +64,20 @@ class YearLedger:
         return max(0.0, self.money_out.get(agent, 0.0) - self.plant_spend.get(agent, 0.0))
 
     def _note_foreign(self, transfer: Transfer) -> None:
-        """Money through the external edge, by the domestic party and the good named in the purpose."""
+        """Money across the border, by the domestic party and the good named in the purpose: paid to a foreign edge,
+        received from one, taken for a landed cargo's sale, or paid for a cargo bound abroad."""
         good = transfer.purpose[len(SALE_PREFIX):] if transfer.purpose.startswith(SALE_PREFIX) else transfer.purpose
-        if transfer.payee == EDGE_EXTERNAL and transfer.payer != EDGE_EXTERNAL:
+        if is_external_edge(transfer.payee) and not is_external_edge(transfer.payer):
             key = (transfer.payer, good)
             self.imports_paid[key] = self.imports_paid.get(key, 0.0) + transfer.amount
-        elif transfer.payer == EDGE_EXTERNAL and transfer.payee != EDGE_EXTERNAL:
+        elif is_external_edge(transfer.payer) and not is_external_edge(transfer.payee):
             key = (transfer.payee, good)
+            self.exports_received[key] = self.exports_received.get(key, 0.0) + transfer.amount
+        elif transfer.payee in self.import_accounts and transfer.purpose.startswith(SALE_PREFIX):
+            key = (transfer.payee, good)
+            self.imports_paid[key] = self.imports_paid.get(key, 0.0) + transfer.amount
+        elif transfer.payer in self.export_accounts and transfer.purpose.startswith(SALE_PREFIX):
+            key = (transfer.payer, good)
             self.exports_received[key] = self.exports_received.get(key, 0.0) + transfer.amount
 
     def note_clearing(self, result: ClearingResult) -> None:
