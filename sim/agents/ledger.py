@@ -5,9 +5,25 @@ income and outlays by purpose, so its purse always equals its opening money
 plus income less outlays. `transfer` is the one way a payer's loss becomes a
 payee's gain, so money between actors is neither created nor destroyed.
 """
-from typing import Any, Mapping, Union
+import contextlib
+from typing import Any, Callable, Iterator, List, Mapping, Optional, Union
 
 Purpose = Union[str, Mapping[str, float]]
+
+# Called after each transfer as hook(payer, payee, amount, purpose) while an engine listens (`listening`), so it can
+# charge what moving the coin cost. It is switched off while it runs, so its own postings are not charged again.
+AFTER_TRANSFER: List[Optional[Callable[[Any, Any, float, Purpose], None]]] = [None]
+
+
+@contextlib.contextmanager
+def listening(hook: Callable[[Any, Any, float, Purpose], None]) -> Iterator[None]:
+	"""Let `hook` see every transfer made inside the block."""
+	before = AFTER_TRANSFER[0]
+	AFTER_TRANSFER[0] = hook
+	try:
+		yield
+	finally:
+		AFTER_TRANSFER[0] = before
 
 
 def transfer(payer: Any, payee: Any, amount: float, purpose: Purpose) -> None:
@@ -21,6 +37,13 @@ def transfer(payer: Any, payee: Any, amount: float, purpose: Purpose) -> None:
 		return
 	payer.debit(amount, purpose)
 	payee.credit(amount, purpose)
+	hook = AFTER_TRANSFER[0]
+	if hook is not None:
+		AFTER_TRANSFER[0] = None
+		try:
+			hook(payer, payee, amount, purpose)
+		finally:
+			AFTER_TRANSFER[0] = hook
 
 
 def settle(account: Any, other: Any, new_balance: float, purpose: Purpose) -> None:
