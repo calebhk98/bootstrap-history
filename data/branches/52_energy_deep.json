@@ -3611,6 +3611,8 @@
    "en_substation",
    "power_grid"
   ],
+  "requires_running": ["power_grid"],
+  "_internal": "[GATE: Operates only on a running grid: it draws mains power from it, so a shut or never-built grid leaves it dead. Knowledge of the technique stays in pre.]",
   "traits": [
    "infrastructure"
   ],
@@ -3717,6 +3719,8 @@
    "pwr_water_turbine_fourneyron",
    "water_power_scale"
   ],
+  "requires_running": ["power_grid"],
+  "_internal": "[GATE: Operates only on a running grid: it draws mains power from it, so a shut or never-built grid leaves it dead. Knowledge of the technique stays in pre.]",
   "traits": [
    "labour_saving",
    "infrastructure"
@@ -3818,6 +3822,8 @@
    "power_grid",
    "water_power_scale"
   ],
+  "requires_running": ["power_grid"],
+  "_internal": "[GATE: Operates only on a running grid: it draws mains power from it, so a shut or never-built grid leaves it dead. Knowledge of the technique stays in pre.]",
   "traits": [
    "infrastructure"
   ],

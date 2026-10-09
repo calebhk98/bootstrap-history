@@ -273,8 +273,8 @@ says that yet.
 Status: items 1 and 6 are built as a node field (`requires_running`, see
 `sim/engine/projects_running_gates.py`), item 3 is built for roads and railways as `requires_ways`,
 item 2 is still open (no register of works on tiles), item 4 is described below and not built,
-item 5 and 7 are untouched. No dependent in the data has been migrated to the new fields yet, so
-nothing in play changes until a node names them.
+item 5 and 7 are untouched. The grid, telegraph, railway, harbour, aqueduct, sewer and road-network dependents that operate now name the
+works they need running (`sim/tests/test_dependents_need_running.py` lists them); knowledge nodes keep `pre` only.
 
 1. A general running gate on dependents. A node field (name to be chosen; the
    `requires_running` on counters is the model) listing nodes that must be

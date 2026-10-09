@@ -536,6 +536,9 @@
   "pre": [
    "railway"
   ],
+  "requires_running": ["railway"],
+  "requires_ways": {"rail": 75},
+  "_internal": "[GATE: Operates over the railway works, and only while they are open. Needs track the actor has built: a line joining at least two held tiles is the least that can carry a service, and the figure is that single line measured the way geography counts a rail build.]",
   "traits": [
    "infrastructure"
   ],
@@ -2845,6 +2848,8 @@
    "power_grid",
    "tl_motor_dc"
   ],
+  "requires_running": ["power_grid"],
+  "_internal": "[GATE: Operates only on a running grid: it draws mains power from it, so a shut or never-built grid leaves it dead. Knowledge of the technique stays in pre.]",
   "traits": [
    "labour_saving",
    "infrastructure"

@@ -477,6 +477,8 @@
    "dynamo",
    "power_grid"
   ],
+  "requires_running": ["power_grid"],
+  "_internal": "[GATE: Operates only on a running grid: it draws mains power from it, so a shut or never-built grid leaves it dead. Knowledge of the technique stays in pre.]",
   "kb": "",
   "ph": 400,
   "lab": {
@@ -1772,6 +1774,8 @@
    "motor_transformer_ac",
    "power_grid"
   ],
+  "requires_running": ["power_grid"],
+  "_internal": "[GATE: Operates only on a running grid: it draws mains power from it, so a shut or never-built grid leaves it dead. Knowledge of the technique stays in pre.]",
   "kb": "",
   "ph": 400,
   "lab": {

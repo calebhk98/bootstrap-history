@@ -1451,6 +1451,9 @@
    "fud_mechanical_refrigeration",
    "railway"
   ],
+  "requires_running": ["railway"],
+  "requires_ways": {"rail": 75},
+  "_internal": "[GATE: Operates over the railway works, and only while they are open. Needs track the actor has built: a line joining at least two held tiles is the least that can carry a service, and the figure is that single line measured the way geography counts a rail build.]",
   "kb": "75_agriculture_food.md",
   "ph": 200,
   "lab": {

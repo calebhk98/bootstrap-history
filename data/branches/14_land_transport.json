@@ -34,6 +34,8 @@
    "lnd_paved_road_network",
    "lnd_horse_saddle_basic"
   ],
+  "requires_running": ["lnd_paved_road_network"],
+  "_internal": "[GATE: The relay runs on stations along a kept-up road network; if the roads are not maintained the posts cannot keep their pace. No road length is asked because the opening roads are an initial holding that the built-ways record does not hold.]",
   "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {},
@@ -875,6 +877,9 @@
    "lnd_signal_railway",
    "telegraph_electric"
   ],
+  "requires_running": ["telegraph_electric"],
+  "requires_ways": {"rail": 75},
+  "_internal": "[GATE: Block signalling passes the train's presence from block to block over the telegraph, on a line that exists. Needs track the actor has built: a line joining at least two held tiles is the least that can carry a service, and the figure is that single line measured the way geography counts a rail build.]",
   "kb": "85_transport_civil.md",
   "ph": 150,
   "lab": {

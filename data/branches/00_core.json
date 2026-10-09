@@ -221,6 +221,8 @@
       "high_temp_furnace",
       "power_grid"
     ],
+    "requires_running": ["power_grid"],
+    "_internal": "[GATE: Operates only on a running grid: it draws mains power from it, so a shut or never-built grid leaves it dead. Knowledge of the technique stays in pre.]",
     "req_any": [],
     "rev_hours": 806475.166965173,
     "risk": 0.35,
@@ -2018,6 +2020,8 @@
       "electroplating",
       "power_grid"
     ],
+    "requires_running": ["power_grid"],
+    "_internal": "[GATE: Operates only on a running grid: it draws mains power from it, so a shut or never-built grid leaves it dead. Knowledge of the technique stays in pre.]",
     "req_any": [
       {
         "group": "cryolite_supply",
