@@ -33,10 +33,12 @@ class WaysBuildTests(unittest.TestCase):
             return found["labour_hours"] / found["km"]
         self.assertGreater(per_km(steep), per_km(flat))
 
-    def test_ground_steeper_than_the_natural_limit_cannot_be_built(self):
+    def test_ground_steeper_than_the_engineered_limit_cannot_be_built(self):
         world_map, edges = _land_edges()
-        too_steep = next(edge for edge in edges if edge.grade > 0.08)
-        self.assertIsNone(api.build_requirements(too_steep.tile_a, too_steep.tile_b, "rail", world_map=world_map))
+        limit = world_map.catalogue("route_modes")["rail"]["engineered"]["max_grade"]
+        too_steep = max(edges, key=lambda edge: edge.grade)
+        found = api.build_requirements(too_steep.tile_a, too_steep.tile_b, "rail", world_map=world_map)
+        self.assertEqual(found is None, too_steep.grade > limit)
 
     def test_tiles_that_do_not_border_have_no_way(self):
         world_map, edges = _land_edges()

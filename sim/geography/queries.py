@@ -12,7 +12,7 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 from sim.geography import (food_capacity, map_source, mechanisms, parameters, resource_links, resources_biotic,
                            resources_catalogue, resources_endowment, resources_mined, resources_prospecting,
                            resources_summary, routes_carriage, routes_graph, routes_modes, routes_search, tile_holdings, tile_layers,
-                           ways_build)
+                           ways_build, ways_works)
 
 WorldMap = map_source.WorldMap
 
@@ -123,16 +123,25 @@ def freight_links(mode_ids: Iterable[str], world_map: Optional[WorldMap] = None)
     return routes_graph.links(_map(world_map), tuple(mode_ids))
 
 
-def build_requirements(tile_a: str, tile_b: str, improvement: str,
+def build_requirements(tile_a: str, tile_b: Optional[str], improvement: str,
                        world_map: Optional[WorldMap] = None) -> Optional[Dict[str, Any]]:
-    """What building `improvement` ("road", "rail") over the land edge between two bordering tiles takes:
-    {km, grade, trade, labour_hours, materials: {material: tonnes}, node}, or None when it cannot be built."""
+    """What building `improvement` ("road", "rail", "canal", "bridge") over the land edge between two
+    bordering tiles takes, or a "port" on one coastal tile (`tile_b` the same tile or None):
+    {km, grade, trade, labour_hours, materials: {material: tonnes}, node, build_years, engineered,
+    crew_people, crew_hours_per_year}, or None when it cannot be built. Ground steeper than the way's
+    natural limit is built `engineered` at more earthwork."""
     return ways_build.requirements(_map(world_map), tile_a, tile_b, improvement)
+
+
+def improvement_key(improvement: str, tile_a: str, tile_b: str, world_map: Optional[WorldMap] = None) -> str:
+    """The key a built `improvement` is recorded under: the tile id for a port, else the edge key."""
+    return ways_works.key_of(_map(world_map), improvement, tile_a, tile_b)
 
 
 def built_km(improvements: Mapping[str, Mapping[str, Any]], improvement: str,
              world_map: Optional[WorldMap] = None) -> float:
-    """Kilometres of `improvement` ("road", "rail") the caller's `improvements` record holds."""
+    """Kilometres of `improvement` ("road", "rail", "canal"; a bridge's span or a port's quay for those works)
+    the caller's `improvements` record holds."""
     return ways_build.built_km(_map(world_map), improvements, improvement)
 
 
