@@ -50,7 +50,7 @@ def carry_concern(actor: Any, node_id: str, world: Any) -> float:
 	"""Pay what running a concern costs whatever it sells: rent on the land it occupies and a manager's
 	hours (the same costs an entrant weighs, firm_entry.carrying_cost). Returns the sum paid."""
 	capacity = actor.capacity_of(node_id)
-	rent = world.site_rent(node_id, capacity)
+	rent = world.site_rent(node_id, capacity, actor.location())
 	management = firm_entry.management_cost(world, node_id, capacity)
 	ledger.transfer(actor, world.edge(EDGE_LANDOWNERS), rent, "site rent")
 	if actor.record.country is None:

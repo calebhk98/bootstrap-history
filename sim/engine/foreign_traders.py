@@ -51,11 +51,9 @@ class ForeignTradersMixin:
     def _agent_cost_per_tonne(self, civilization_id, route):
         """Money for the agents kept at the two ends per tonne a carrier lifts, at the labour
         market's wage for a merchant."""
-        years_per_tonne = self._route_lift_years_per_tonne(route)
-        if years_per_tonne is None:
-            return 0.0
-        return (merchant_terms.AGENTS_PER_CARRIER * years_per_tonne * self.HOURS_PER_PERSON_YEAR
-                * self.labour.market.quote("merchant"))
+        return merchant_terms.agent_cost_per_tonne(
+            self._route_lift_years_per_tonne(route), self.HOURS_PER_PERSON_YEAR,
+            self.labour.market.quote("merchant"))
 
     @staticmethod
     def _route_cargo_loss_share(route):

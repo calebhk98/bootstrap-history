@@ -33,7 +33,7 @@ class SharedMarketWorld(FakeWorld):
 	def plant_cost(self, node_id, actor, step):
 		return 1000.0 * step
 
-	def site_rent(self, node_id, capacity=1.0):
+	def site_rent(self, node_id, capacity=1.0, tile=None):
 		return self.rent * capacity
 
 
@@ -83,16 +83,22 @@ lasting = entrants_after(0, 10 * MARKET_TAKINGS)
 check("a spike over a settled market draws fewer than the same takings met fresh", spike < lasting, (spike, lasting))
 
 
-# ---- site rent is the land a concern's declared output takes, at the land market's rent
-from sim.engine.agents_port_site import SiteView
+# ---- site rent: every concern occupies a plot from its staff; land it works comes on top
+from sim.engine.agents_port_site import SiteView, FLOOR_AREA_PER_WORKER_SQUARE_METRES
 from sim.agents.api import supply
+from sim.world import merchant_terms
 
 
 class Economy:
-	rent = 40.0
+	"""The agent economy's land market: a rent per hectare on each tile where land was let."""
+	mean = 40.0
+	by_tile = {"coast": 100.0, "hills": 10.0}
+	on = True
 
-	def agent_land_rent_per_hectare(self):
-		return self.rent
+	def agent_land_rent_at(self, tile):
+		if not self.on:
+			return None
+		return self.by_tile.get(tile, self.mean)
 
 
 class Sim:
@@ -101,14 +107,59 @@ class Sim:
 
 class Site(SiteView):
 	_sim = Sim()
-	nodes = {"ag2_sugar_voyage": {"annual_output_t": 120.0}, "no_land": {"annual_output_t": 50.0}}
+	nodes = {"ag2_sugar_voyage": {"annual_output_t": 120.0}, "workshop": {}}
+	engine_land_price = 7.0
+
+	def concern_staff(self, node_id):
+		return {"artisan": 4.0, "labourer": 6.0}
+
+	def material_price(self, material):
+		return self.engine_land_price if material == "hectare_land" else 0.0
 
 
 site = Site()
-check("a concern that works land ties up hectares in proportion to its declared output",
-	supply.materials_made_by("ag2_sugar_voyage") and site.site_hectares("ag2_sugar_voyage") > 0.0
-	and abs(site.site_hectares("ag2_sugar_voyage", 2.0) - 2.0 * site.site_hectares("ag2_sugar_voyage")) < 1e-9,
-	site.site_hectares("ag2_sugar_voyage"))
-check("its site rent is those hectares at the land market's rent",
-	abs(site.site_rent("ag2_sugar_voyage") - 40.0 * site.site_hectares("ag2_sugar_voyage")) < 1e-9)
-check("a concern that works no land pays no site rent", site.site_rent("no_land") == 0.0)
+plot = site.plot_hectares("workshop")
+check("a concern with no declared output still occupies a plot, from its staff at a stated floor area",
+	abs(plot - 10.0 * FLOOR_AREA_PER_WORKER_SQUARE_METRES / 10000.0) < 1e-12 and plot > 0.0, plot)
+check("a bigger concern occupies a bigger plot", abs(site.plot_hectares("workshop", 3.0) - 3.0 * plot) < 1e-12)
+check("a concern that works land ties up the land and the plot",
+	supply.materials_made_by("ag2_sugar_voyage") and site.site_hectares("ag2_sugar_voyage") > site.plot_hectares("ag2_sugar_voyage")
+	and abs(site.site_hectares("workshop") - plot) < 1e-12, site.site_hectares("ag2_sugar_voyage"))
+check("rent is the hectares at the rent of the tile the concern stands on",
+	abs(site.site_rent("workshop", tile="coast") - 100.0 * plot) < 1e-9
+	and abs(site.site_rent("workshop", tile="hills") - 10.0 * plot) < 1e-9)
+check("a tile where no land was let pays the mean rent of the land let", abs(site.site_rent("workshop", tile="moor") - 40.0 * plot) < 1e-9)
+check("a dearer tile costs more", site.site_rent("workshop", tile="coast") > site.site_rent("workshop", tile="hills"))
+Economy.on = False
+check("with the agent economy off the rent is the engine's land price", abs(site.site_rent("workshop", tile="coast") - 7.0 * plot) < 1e-9)
+Economy.on = True
+
+# ---- where a firm stands: its own tile, else the home country's
+registry = ActorRegistry(ActorsState(home_country="home"))
+registry.add("government:home", ActorRecord(kind="government", location="coast"))
+check("a firm with no tile of its own stands on the home country's tile", firm_entry.firm_tile(registry, None) == "coast")
+firm = registry.add("firm:7", ActorRecord(kind="firm", concerns={"shop"}, location="hills"))
+check("a firm stands where it was placed", firm_entry.firm_tile(registry, firm) == "hills")
+check("no home government, no tile", firm_entry.firm_tile(ActorRegistry(ActorsState(home_country="home")), None) is None)
+
+
+class TileWorld(SharedMarketWorld):
+	def site_rent(self, node_id, capacity=1.0, tile=None):
+		return {"coast": 90000.0, "hills": 1000.0}.get(tile, 0.0) * capacity
+
+
+world = TileWorld()
+check("a firm carries the rent of its own tile", firm_entry.carrying_cost(world, "shop", tile="coast")
+	> firm_entry.carrying_cost(world, "shop", tile="hills"))
+entry_registry = ActorRegistry(ActorsState(home_country="home"))
+entry_registry.add("government:home", ActorRecord(kind="government", location="hills"))
+founded = entry_registry.consider_entry(TileWorld())
+check("a firm founded by entry is placed on a tile", founded and all(
+	entry_registry.get(firm_id).record.location == "hills" for firm_id in founded), founded)
+
+# ---- the cost of winning customers: the merchants' agents are paid per tonne a carrier lifts
+check("a sale that needs no carrier needs no agents on the model's terms",
+	merchant_terms.agent_cost_per_tonne(None, 2000.0, 1.0) == 0.0)
+check("a sale across a route costs the agents' hours the lift takes, at the going wage",
+	abs(merchant_terms.agent_cost_per_tonne(0.01, 2000.0, 3.0)
+		- merchant_terms.AGENTS_PER_CARRIER * 0.01 * 2000.0 * 3.0) < 1e-9)

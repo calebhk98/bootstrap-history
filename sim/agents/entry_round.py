@@ -17,7 +17,8 @@ class NicheEntry:
 	def __init__(self, registry: Any, world: Any, node_id: str, pool: List[float], strata_exist: bool) -> None:
 		self.registry, self.world, self.node_id = registry, world, node_id
 		self.pool, self.strata_exist = pool, strata_exist
-		self.carried = firm_entry.carrying_cost(world, node_id)
+		self.tile = firm_entry.firm_tile(registry, None)
+		self.carried = firm_entry.carrying_cost(world, node_id, tile=self.tile)
 		self.costs = world.upkeep(node_id) + world.concern_wage_bill(node_id) + self.carried
 		probe = Firm("probe", ActorRecord(kind="firm", founded_year=world.year))
 		self.chain = imitation.missing_chain(node_id, world, probe)
@@ -50,7 +51,8 @@ class NicheEntry:
 			serial += 1
 		firm_id = "firm:%d" % serial
 		firm = registry.add(firm_id, ActorRecord(
-			kind="firm", name=firm_id, target=node_id, last_margin=expected, founded_year=world.year))
+			kind="firm", name=firm_id, target=node_id, last_margin=expected, founded_year=world.year,
+			location=self.tile))
 		if founder is not None:
 			firm.record.plan["founder"] = founder.actor_id
 			ledger.transfer(founder, firm, pooled, "founding stake")

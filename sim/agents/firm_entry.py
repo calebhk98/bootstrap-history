@@ -15,11 +15,21 @@ def management_cost(world: Any, node_id: str, capacity: float = 1.0) -> float:
 	return people / MANAGEMENT_SPAN_OF_CONTROL * world.hours_per_person_year * manager_wage
 
 
-def carrying_cost(world: Any, node_id: str, capacity: float = 1.0) -> float:
+def firm_tile(registry: Any, actor: Optional[Any]) -> Optional[str]:
+	"""The tile a firm's concerns stand on: where the firm was placed, else the home country's tile."""
+	if actor is not None and actor.record.location is not None:
+		return actor.record.location  # type: ignore[no-any-return]
+	home = registry.actors.get("government:" + (registry.state.home_country or ""))
+	return None if home is None else home.record.location  # type: ignore[no-any-return]
+
+
+def carrying_cost(world: Any, node_id: str, capacity: float = 1.0, tile: Optional[str] = None) -> float:
 	"""What a firm running a concern at `capacity` carries beyond the concern's upkeep and wages: the
-	rent of the land it occupies and a manager's hours. The cost of winning customers has no basis in
-	the model yet and is left out."""
-	return world.site_rent(node_id, capacity) + management_cost(world, node_id, capacity)
+	rent of the site on its tile and a manager's hours. The cost of winning customers is the agents'
+	hours the merchants' terms charge per tonne a carrier lifts (merchant_terms.agent_cost_per_tonne);
+	a sale in the firm's own market needs no carrier, so a firm carries nothing more for it, and where
+	goods cross places the traders who carry them bear it."""
+	return world.site_rent(node_id, capacity, tile) + management_cost(world, node_id, capacity)
 
 
 def expected_takings(registry: Any, world: Any, node_id: str) -> float:

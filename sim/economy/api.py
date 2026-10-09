@@ -36,7 +36,7 @@ __all__ = [
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
     "credit_room", "economy_from_record", "blank_economy", "export_record", "finish_spin_up", "shown_prices_of",
     "settle_agent_takings", "move_goods", "post_transfers", "cohort_incomes", "land_rent_per_hectare",
-    "land_rent_paid_by_tile",
+    "land_rent_paid_by_tile", "land_rent_at_tile",
 ]
 
 _KEY_SEPARATOR = "|"
@@ -74,6 +74,13 @@ def land_rent_per_hectare(economy):
     none was)."""
     rents = [rent for rent in economy.record.land_rent.values() if rent > 0.0]
     return sum(rents) / len(rents) if rents else 0.0
+
+
+def land_rent_at_tile(economy, tile):
+    """Rent per hectare-year the land market let land at on one tile last year; the mean over the tiles where
+    land was let where none was let on this tile (zero where none was let anywhere)."""
+    rent = economy.record.land_rent.get(tile, 0.0)
+    return rent if rent > 0.0 else land_rent_per_hectare(economy)
 
 
 def land_rent_paid_by_tile(economy):

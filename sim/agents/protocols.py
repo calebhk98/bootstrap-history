@@ -288,8 +288,8 @@ class World(Protocol):
 	def concern_wage_bill(self, node_id: str, capacity: float = 1.0) -> float:
 		...
 
-	def site_rent(self, node_id: str, capacity: float = 1.0) -> float:
-		"""Yearly rent of the land a concern run at `capacity` times its founding size occupies."""
+	def site_rent(self, node_id: str, capacity: float = 1.0, tile: Optional[str] = None) -> float:
+		"""Yearly rent of the site a concern run at `capacity` times its founding size occupies, on `tile`."""
 		...
 
 	def free_fte(self, trade: str, actor_id: Optional[str]) -> Optional[float]:

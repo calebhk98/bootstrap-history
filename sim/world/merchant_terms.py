@@ -63,3 +63,12 @@ def capital_to_finance(own_capital, credit_room):
     if credit_room is not None:
         borrowed = min(borrowed, max(0.0, credit_room))
     return own + borrowed
+
+
+def agent_cost_per_tonne(lift_years_per_tonne, hours_per_person_year, wage_per_hour):
+    """Money for the agents kept at the two ends per tonne a carrier lifts: their hours over the
+    carrier-years one tonne a year of lift takes, at the going wage. A sale that needs no carrier
+    (None) needs no agents; where goods cross places this is what finding and serving buyers costs."""
+    if lift_years_per_tonne is None:
+        return 0.0
+    return AGENTS_PER_CARRIER * lift_years_per_tonne * hours_per_person_year * wage_per_hour
