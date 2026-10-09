@@ -28,8 +28,7 @@
   "sus": 0,
   "traits": [
    "infrastructure"
-  ],
-  "up_hours": 403.2375834825865
+  ]
  },
  {
   "adopt_yrs": 1,
@@ -60,8 +59,7 @@
   "sus": 0,
   "traits": [
    "infrastructure"
-  ],
-  "up_hours": 403.2375834825865
+  ]
  },
  {
   "adopt_yrs": 1,
@@ -92,8 +90,7 @@
   "sus": 0,
   "traits": [
    "infrastructure"
-  ],
-  "up_hours": 403.2375834825865
+  ]
  },
  {
   "adopt_yrs": 1,
@@ -123,8 +120,7 @@
   "sus": 0,
   "traits": [
    "infrastructure"
-  ],
-  "up_hours": 403.2375834825865
+  ]
  },
  {
   "adopt_yrs": 1,
@@ -155,8 +151,7 @@
   "sus": 0,
   "traits": [
    "infrastructure"
-  ],
-  "up_hours": 403.2375834825865
+  ]
  },
  {
   "adopt_yrs": 1,
@@ -187,8 +182,7 @@
   "sus": 0,
   "traits": [
    "infrastructure"
-  ],
-  "up_hours": 403.2375834825865
+  ]
  },
  {
   "adopt_yrs": 1,
@@ -218,8 +212,7 @@
   "sus": 0,
   "traits": [
    "infrastructure"
-  ],
-  "up_hours": 403.2375834825865
+  ]
  },
  {
   "adopt_yrs": 1,
@@ -249,8 +242,7 @@
   "sus": 0,
   "traits": [
    "infrastructure"
-  ],
-  "up_hours": 403.2375834825865
+  ]
  },
  {
   "adopt_yrs": 1,
@@ -283,8 +275,7 @@
   "sch": 0,
   "traits": [
    "infrastructure"
-  ],
-  "up_hours": 403.2375834825865
+  ]
  },
  {
   "adopt_yrs": 1,
@@ -315,7 +306,6 @@
   "traits": [
    "infrastructure"
   ],
-  "up_hours": 403.2375834825865,
   "yrs": 1.0
  }
 ]

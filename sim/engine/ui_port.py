@@ -4,7 +4,7 @@ delegates exactly. sim/ui/ imports nothing from sim.engine except this module.""
 from sim.engine import (  # noqa: F401
     automation_audit, cash_book, category_traits, cause_book, civ_start_check, fuzzy_estimates, path_search, planner,
     purchase_rule, settings, settings_table, shortage_conditions, topic_tags, tree_merge, units,
-    validate_material_gating, validate_output_bounds, node_revenue_census, validate_copy_visibility, validate_production, validate_unheld_gates, validate_running_gates, validate_defence_stores)
+    validate_material_gating, validate_node_money, node_revenue_census, validate_copy_visibility, validate_production, validate_unheld_gates, validate_running_gates, validate_defence_stores)
 from sim.engine.blockers import BLOCKER_MEANING, RUNNING_CONSTRAINT_KIND  # noqa: F401
 from sim.engine.catalog import load_production_catalog  # noqa: F401
 from sim.engine.core import Sim  # noqa: F401

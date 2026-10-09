@@ -10,7 +10,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine import data, node_output, validate_output_bounds
+from sim.engine import data, node_output, validate_node_money
 from sim.labour.labour_market import production_data
 
 class NodeOutputData(unittest.TestCase):
@@ -31,18 +31,8 @@ class NodeOutputData(unittest.TestCase):
                 self.assertTrue(node_output.entries_gated_by(node_id, self.production),
                                 "%s declares annual_output_t but gates no production entry" % node_id)
 
-    def test_the_real_data_states_a_bound_or_a_reason_for_every_gated_maker(self):
-        self.assertEqual(validate_output_bounds.check_output_bounds(self.nodes, self.production), [])
-
-    def test_an_unbounded_gated_maker_without_a_reason_is_rejected(self):
-        gated = next(node_id for node_id in self.nodes if node_output.entries_gated_by(node_id, self.production))
-        node = {"_rev_hours_authored": 5.0, "_revenue_basis": "authored"}
-        self.assertEqual(len(validate_output_bounds.check_output_bounds({gated: node}, self.production)), 1)
-        node["output_unbounded_reason"] = "extraction: the deposit, not a plant, sets the output"
-        self.assertEqual(validate_output_bounds.check_output_bounds({gated: node}, self.production), [])
-        node["_revenue_basis"] = "derived"
-        del node["output_unbounded_reason"]
-        self.assertEqual(validate_output_bounds.check_output_bounds({gated: node}, self.production), [])
+    def test_the_real_data_states_a_bound_for_every_operated_maker(self):
+        self.assertEqual(validate_node_money.check_node_money(self.nodes, self.production), [])
 
 
 if __name__ == "__main__":

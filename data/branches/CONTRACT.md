@@ -64,14 +64,15 @@ tree that runs from the Roman Empire of 100 AD to modern technology.
 | `ph` | the founder's own hours. Scarce: he has about 72,000 in a lifetime. Most nodes should be 40 to 400; only things needing his personal insight go above 600. |
 | `lab` | hired hours by trade. Allowed trades ONLY: labourer, artisan, master, glassblower, smith, carpenter, miner, scribe, scholar, furnaceman, potter, chemist, machinist |
 | `mat` | materials consumed. Allowed keys are listed in PRICED_MATERIALS below. |
-| `cap_hours` | one-off capital in labour hours beyond labour and materials |
-| `up_hours` | annual upkeep in labour hours |
+| `cap_hours` | omit. Capital beyond labour and materials is derived: the plant the node's production entries state (`capital`) plus tooling for its `sch` and `art` places (`sim/engine/node_capital.py`). |
+| `up_hours` | omit, or write `0` for a node with nothing to keep up. Upkeep is derived: an output node pays its entries' staff and plant; a programme pays its stated bill (`annual_labour_hours`, `annual_consumables`); a science pays its staff; any other node keeps up a labelled share of its build bill. A positive figure is not read from the tree. |
+| `annual_labour_hours` | optional `{trade: hours}` a programme (a benefaction) employs each year; priced at wages and paid by the actor that opens the node. |
+| `annual_consumables` | optional `{material: quantity}` a programme consumes each year; priced at solved prices. |
 | `yrs` | **calendar floor**: curing, growing, seasoning, or a generation of economic diffusion. Money cannot buy this down. Be honest; this is what sets the real timeline. |
 | `risk` | 0 to 1, probability an attempt fails outright |
 | `sus` | suspicion delta. Rome executes magicians and much of this looks like magic. |
 | `gov` | State interest, -3 will actively suppress, +3 will fund and demand. **Use negative values.** Labour-displacing machinery, anything breaking elite information control, and anything that looks like a faction all attract hostility. |
-| `rev_hours` | net labour hours per year at maturity, 0 if not a product |
-| `output_unbounded_reason` | optional. Required on a node that gates a production entry and keeps an authored `rev_hours` because no plant, staff or `annual_output_t` bounds its output; says why. `validate` reads it. |
+| `rev_hours` | omit. A node earns only from the output of the production entries that name it in `operated_by` (`sim/engine/node_output.py`); a node that makes nothing earns nothing directly and its value is what its mechanics change. A positive figure is a `validate` error. |
 | `requires_running` | optional list of node ids that must be built AND open (a venture: it has upkeep or revenue), not merely done. Gates beginning the node and opening it, switches the node's effects off while a work is shut, and closes the node when the work closes (closure reason `gate_lapsed`; it stays shut until opened by hand). A work others require running is not exempt from being closed in arrears. `validate` rejects an unknown id, a node that cannot run, and a cycle. Use it for what is a built thing (a grid, a railway, a harbour), not for lineage; keep `pre` for knowledge. |
 | `garrison` | optional `{trade: people}`: the standing crew the work needs, drawn from the labour market (`hire <trade>`). An open concern holds them like a foreman: `open` refuses without them free, the yearly staffing rule shuts the work when they are gone (and its counters lapse), and a counter on the node counts for the share present. `validate` rejects a trade with no wage. |
 | `requires_ways` | optional `{way: kilometres}` (`"road"`, `"rail"`): a length of that way the actor has actually built (`sim/engine/ways.py`, read through geography's `built_km`) before the node can begin or count as running. The size of a built work is its length, and its cost already scales with it. |

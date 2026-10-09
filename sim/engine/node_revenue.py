@@ -1,20 +1,14 @@
-"""Node revenue and upkeep against solved costs.
+"""Node revenue, upkeep and capital against solved costs.
 
-Capital is derived for every node (`node_capital`): the plant its entries state plus tooling for its
-named staff places; a node that states `cap_hours` keeps that figure, labelled authored. A node that
-states no upkeep keeps up a share of its build bill (basis "default").
+A node earns only from what it makes: one named in an entry's `operated_by` earns that output at solved
+prices less what it buys (`node_output`, energy at the price graded to each entry, `energy_prices`), and
+its upkeep is its entries' staff at the civilisation's wages plus the upkeep of its plant (`node_upkeep`).
+A node that makes nothing earns nothing directly; its value is what its mechanics change.
 
-Each node that states a revenue, or is named in an entry's `operated_by`, is one of:
-- "output": it runs production entries and the data gives it a physical yearly
-  output (`node_output`); it earns that output at solved prices less what it buys
-  (energy at the price graded to each entry, `energy_prices`), and its upkeep is its
-  staff at the civilisation's wages plus the upkeep of its plant (`node_upkeep`). It
-  states neither figure.
-- "knowledge": a science that makes nothing; it earns nothing.
-- "authored": equipment, institutions and services whose product the tree does not
-  yet state (what each would physically earn: fees from the people served, a share
-  of the trade it enables, the work its machine does). The authored revenue and
-  upkeep stay; `node_payback_diagnostic` flags any that repay their cost suspiciously fast.
+Upkeep of a node that earns from no output is, in order: the figure it states (a mod), the bill of the
+programme it runs (labour and consumables stated on the node), a science's staff, or a labelled share of
+its build bill. Capital is derived for every node (`node_capital`): the plant its entries state plus
+tooling for its named staff places; a node that states `cap_hours` (a mod) keeps that figure.
 
 The figures are derived against one civilisation's prices and wages: `for_civilisation`
 re-derives them for the civilisation playing, cached on what they depend on.
@@ -47,41 +41,42 @@ def apply_revenue(nodes: Iterable[dict], goods: Mapping[str, float],
         node["_cap_hours_authored"] = node.get("_cap_hours_authored", node.get("cap_hours"))
         for field in DERIVED_FIELDS[2:]:
             node.pop(field, None)
-        authored = node.get("_rev_hours_authored", node.get("rev_hours", 0.0))
-        node["_rev_hours_authored"] = authored
+        node["_rev_hours_authored"] = node.get("_rev_hours_authored", node.get("rev_hours", 0.0))
         node["_up_hours_authored"] = node.get("_up_hours_authored", node.get("up_hours"))
         node["rev_hours"] = 0.0
         gated = node_output.entries_gated_by(node["id"], production)
         operated = any(node["id"] in (entry.get("operated_by") or []) for entry in gated)
-        baskets = (node_output.output_baskets(node, production, goods, energy, wages)
-                   if gated and (authored > 0.0 or operated) else None)
+        baskets = node_output.output_baskets(node, production, goods, energy, wages) if operated else None
         plant_build_hours = 0.0
         if baskets is not None:
             plant_build_hours = _apply_output(node, baskets, goods, wages, money_per_labour_hour)
-        elif authored > 0.0 and node.get("kind") == "SCIENCE" and not gated:
-            node["_revenue_basis"] = "knowledge"
-        elif authored > 0.0:
-            node["_revenue_basis"] = "authored"
-            node["rev_hours"] = authored
         node["cap_hours"], node["_capital_basis"] = node_capital.resolve(node, plant_build_hours)
         if node.get("_revenue_basis") != "output":
-            _apply_unlisted_upkeep(node, wages, money_per_labour_hour)
+            _apply_unlisted_upkeep(node, goods, wages, money_per_labour_hour)
 
 
-def _apply_unlisted_upkeep(node: dict, wages: Mapping[str, float], money_per_labour_hour: float) -> None:
-    """Upkeep of a node that earns from no output: the figure it states, else the upkeep of what it cost to
-    build."""
+def _apply_unlisted_upkeep(node: dict, goods: Mapping[str, float], wages: Mapping[str, float],
+                           money_per_labour_hour: float) -> None:
+    """Upkeep of a node that earns from no output (see the module docstring for the order)."""
     stated = node["_up_hours_authored"]
     if stated is not None:
         node["up_hours"] = float(stated)
-        if node["up_hours"] > 0.0:
-            node["_upkeep_basis"] = "authored"
-        return
-    build_bill = (sum(wages[trade] * hours for trade, hours in node["lab"].items()) / money_per_labour_hour
-                  + node.get("_material_hours", 0.0) + node["cap_hours"])
-    node["up_hours"] = node_upkeep.unstated_upkeep_hours(node, build_bill)
+        basis = "authored"
+    else:
+        build_bill = (sum(wages[trade] * hours for trade, hours in node["lab"].items()) / money_per_labour_hour
+                      + node.get("_material_hours", 0.0) + node["cap_hours"])
+        if node_upkeep.is_programme(node):
+            node["up_hours"] = (node_upkeep.programme_spending_hours(node, goods, wages, money_per_labour_hour)
+                                + node_upkeep.maintenance_hours(node, build_bill))
+            basis = "programme"
+        elif node.get("kind") == "SCIENCE":
+            node["up_hours"] = node_upkeep.staff_places_hours_cost(node, wages, money_per_labour_hour)
+            basis = "staff"
+        else:
+            node["up_hours"] = node_upkeep.unstated_upkeep_hours(node, build_bill)
+            basis = "default"
     if node["up_hours"] > 0.0:
-        node["_upkeep_basis"] = "default"
+        node["_upkeep_basis"] = basis
 
 
 def _apply_output(node: dict, baskets: node_output.Baskets, goods: Mapping[str, float],

@@ -5,7 +5,8 @@ import json
 import os
 import unittest
 
-from sim.engine import data, node_capital, node_revenue, node_revenue_census, node_upkeep, tree_merge
+from sim.engine import (data, node_capital, node_revenue, node_revenue_census, node_upkeep, tree_merge,
+                        validate_node_money)
 from sim.labour.labour_market import production_data
 from sim.unit_conversions import HOURS_PER_PERSON_YEAR
 
@@ -63,33 +64,57 @@ class AppliedToABareNode(unittest.TestCase):
         self.assertEqual(node["_capital_basis"], "derived")
         self.assertAlmostEqual(node["cap_hours"], node_capital.tooling_hours(node))
         self.assertEqual(node["_upkeep_basis"], "default")
+        node["annual_labour_hours"] = {"labourer": 100.0}
+        node_revenue.apply_revenue([node], goods, wages, rate)
+        self.assertEqual(node["_upkeep_basis"], "programme")
+        self.assertGreater(node["up_hours"], node_upkeep.maintenance_hours(node, 0.0) + 90.0)
+        science = dict(node, kind="SCIENCE", sch=2.0, art=0.0)
+        science.pop("annual_labour_hours")
+        node_revenue.apply_revenue([science], goods, wages, rate)
+        self.assertEqual(science["_upkeep_basis"], "staff")
+        self.assertAlmostEqual(science["up_hours"], 2.0 * wages["scholar"] * HOURS_PER_PERSON_YEAR / rate)
         self.assertGreater(node["up_hours"], 0.0)
         self.assertEqual(node["rev_hours"], 0.0)
 
 
+class Validation(unittest.TestCase):
+
+    def test_typed_revenue_is_an_error_and_the_real_tree_has_none(self):
+        self.assertEqual(len(validate_node_money.check_no_typed_revenue({"x": {"_rev_hours_authored": 5.0}})), 1)
+        _tree, _document, nodes, _wages, _goods = data.load()
+        self.assertEqual(validate_node_money.check_node_money(nodes, production_data()), [])
+
+    def test_an_operated_node_nothing_bounds_is_an_error(self):
+        production = {"made_kg": {"outputs": {"made_kg": 1.0}, "labour_hours": {"labourer": 1.0},
+                                  "operated_by": ["maker"]}}
+        unbounded = {"maker": {"id": "maker", "sch": 0, "art": 0}}
+        self.assertEqual(len(validate_node_money.check_operated_nodes_are_bounded(unbounded, production)), 1)
+        staffed = {"maker": {"id": "maker", "sch": 0, "art": 2}}
+        self.assertEqual(validate_node_money.check_operated_nodes_are_bounded(staffed, production), [])
+
+
 class CensusCountsTheCostBases(unittest.TestCase):
 
-    def test_cost_bases_and_the_files_that_still_type_figures(self):
-        nodes = {"a": {"_capital_basis": "derived", "_upkeep_basis": "derived"},
-                 "b": {"_capital_basis": "authored", "_upkeep_basis": "authored", "_src": "f.json"},
+    def test_cost_bases_are_counted(self):
+        nodes = {"a": {"_capital_basis": "derived", "_upkeep_basis": "derived", "_revenue_basis": "output"},
+                 "b": {"_capital_basis": "authored", "_upkeep_basis": "programme"},
                  "c": {"_capital_basis": "derived", "_upkeep_basis": "default"}}
         capital = node_revenue_census.cost_basis_counts(nodes, "_capital_basis")
         upkeep = node_revenue_census.cost_basis_counts(nodes, "_upkeep_basis")
         self.assertEqual((capital["derived"], capital["authored"]), (2, 1))
-        self.assertEqual((upkeep["derived"], upkeep["default"], upkeep["authored"]), (1, 1, 1))
-        self.assertEqual(dict(node_revenue_census.typed_figures_by_file(nodes)["f.json"]), {"up_hours": 1, "cap_hours": 1})
-        self.assertTrue(node_revenue_census.format_file_lines(node_revenue_census.typed_figures_by_file(nodes)))
+        self.assertEqual((upkeep["derived"], upkeep["programme"], upkeep["default"]), (1, 1, 1))
+        counts = node_revenue_census.basis_counts(nodes)
+        self.assertEqual((counts["output"], counts["no product"]), (1, 2))
 
 
-class BranchDataStatesNoCapital(unittest.TestCase):
+class BranchDataStatesNoMoney(unittest.TestCase):
 
-    def test_capital_is_typed_only_where_a_typed_revenue_still_depends_on_it(self):
-        """Capital and revenue convert together: a typed revenue over derived capital would repay in days."""
+    def test_no_branch_node_types_a_capital_revenue_or_positive_upkeep(self):
         typed = []
         for path in sorted(glob.glob(os.path.join(BRANCH_DIRECTORY, "[0-9]*.json"))):
             with open(path) as handle:
-                typed += [node["id"] for node in json.load(handle)
-                          if isinstance(node, dict) and "cap_hours" in node and not node.get("rev_hours")]
+                typed += [node["id"] for node in json.load(handle) if isinstance(node, dict)
+                          and ("cap_hours" in node or node.get("rev_hours") or node.get("up_hours"))]
         self.assertEqual(typed, [])
 
 
@@ -99,13 +124,8 @@ class OutputNodesTypeNoFigure(unittest.TestCase):
         _tree, _document, nodes, _wages, _goods = data.load()
         output = {node_id for node_id, node in nodes.items() if node.get("_revenue_basis") == "output"}
         self.assertGreater(len(output), 20)
-        typed = []
-        for path in sorted(glob.glob(os.path.join(BRANCH_DIRECTORY, "[0-9]*.json"))):
-            with open(path) as handle:
-                typed += [node["id"] for node in json.load(handle)
-                          if isinstance(node, dict) and node["id"] in output
-                          and ("rev_hours" in node or "up_hours" in node)]
-        self.assertEqual(typed, [])
+        for node_id in output:
+            self.assertGreater(nodes[node_id]["_upkeep_hours_parts"]["staff"] + nodes[node_id]["rev_hours"], 0.0, node_id)
 
     def test_each_output_node_is_named_as_an_operator_by_the_entries_it_runs(self):
         _tree, _document, nodes, _wages, _goods = data.load()

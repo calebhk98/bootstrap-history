@@ -44,16 +44,11 @@ class OperatedEntries(unittest.TestCase):
 
 class Census(unittest.TestCase):
 
-    def test_counts_split_nodes_with_a_typed_revenue_by_basis(self):
-        nodes = {"a": {"_revenue_basis": "output"},
-                 "b": {"_revenue_basis": "authored", "_src": "x.json"},
-                 "c": {"_revenue_basis": "authored", "_src": "x.json", "_upkeep_basis": "authored"},
-                 "d": {"_revenue_basis": None}}
+    def test_counts_split_output_nodes_from_the_rest(self):
+        nodes = {"a": {"_revenue_basis": "output"}, "b": {}, "c": {}}
         counts = node_revenue_census.basis_counts(nodes)
-        self.assertEqual((counts["output"], counts["authored"], counts["knowledge"]), (1, 2, 0))
+        self.assertEqual((counts["output"], counts["no product"]), (1, 2))
         self.assertTrue(node_revenue_census.format_lines(counts))
-        self.assertEqual(node_revenue_census.typed_figures_by_file(nodes)["x.json"],
-                         {"rev_hours": 2, "up_hours": 1})
 
 
 class RealData(unittest.TestCase):
