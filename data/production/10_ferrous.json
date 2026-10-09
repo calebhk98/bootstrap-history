@@ -86,6 +86,7 @@
    "basis": "per tonne of liquid pig iron tapped from a blast furnace (roughly 4% carbon plus the silicon, manganese and phosphorus picked up from the ore and flux)",
    "yield_basis": "BLAST FURNACE, an indirect process: continuous countercurrent operation (ore and charcoal descending against rising hot reducing gas) recovers iron far more completely than a bloomery's batch smelt, because the gas has the whole shaft to react in before the charge reaches tapping heat, and the slag is tapped molten rather than trapping unreduced ore in a solid mass. Taking recovery at roughly 92% of contained iron from a richer ore than a bloomery is fed (blast furnaces were historically supplied the best ore to hand, taken here at 50% Fe) gives about 2.2 tonnes of ore per tonne of pig iron (1.0 / (0.50 x 0.92) = 2.17, rounded to 2200 kg) - roughly half the bloomery's ore appetite, which is the whole economic point of the indirect process. Charcoal at 4 t per tonne of metal is lower per kg of iron than the bloomery figure despite the furnace running far hotter (it must reach and hold above iron's 1538 C melting point), because continuous operation lets the rising gas preheat the descending charge instead of that heat being relit from cold for every batch. Flux is limestone-equivalent to combine with the ore's silica gangue into a fluid, tappable slag, taken at roughly 14% of ore mass. Labour per tonne is far below a bloomery's because a blast furnace runs continuously for weeks with a small crew, so the same total campaign labour is spread over vastly more metal - this is a different ore-to-metal ratio, a different fuel-per-kg, and a different labour figure from iron_bloom_kg, as the process demands.",
    "requires_node": "blast_furnace",
+   "operated_by": ["blast_furnace"],
    "conf": "C"
   },
   "cast_iron_kg": {
@@ -103,6 +104,7 @@
    "basis": "per tonne of iron castings, cast to shape directly from a blast furnace's own liquid pig iron (moulding, pouring, fettling)",
    "yield_basis": "Cast iron is pig iron poured to shape rather than refined further, so its composition is essentially unchanged - this entry is casting loss, not a metallurgical transformation, which is exactly why a blast furnace's output is described as producing CAST iron rather than bar: nothing here removes carbon. Loss is oxide dross skimmed from the ladle before pouring, plus gate, riser and sprue metal that does not end up in the finished casting, plus the occasional mis-cast reject; taken together at roughly 8%, which is why the input figure exceeds the output. Fettling (knocking off gates and risers, filing the parting line) is a smith's finishing work rather than a furnace process, hence the modest labour figure.",
    "requires_node": "blast_furnace",
+   "operated_by": ["blast_furnace"],
    "conf": "C"
   },
   "iron_bar_kg": {
@@ -143,6 +145,7 @@
    "basis": "per tonne of consolidated wrought-iron bar (fined and hammered down to under roughly 0.1% carbon)",
    "yield_basis": "FINING (finery or puddling): cast iron's roughly 4% carbon, plus its silicon and phosphorus, is oxidised out in an air blast or reverberatory hearth until the metal is soft, weldable wrought iron - this is what the task means by cast iron needing to be fined into bar, and it is decarburisation, the mirror image of the cementation used below to make steel. The same oxidising conditions that burn out the carbon also burn some of the iron itself into the slag ('finery cinder'); this iron loss is a documented feature of the fining process rather than a rounding error, taken here at roughly 20%, so 1.25 t of pig iron is needed per tonne of bar. Charcoal fires the hearth and the several reheats needed to shingle (hammer-consolidate) the spongy fined bloom and draw it out into bar, taken at 2 t per tonne of bar - a separate fuel bill from the pig iron's own smelting. Labour is heavy hand-work (blowing and tending the hearth, then hammering) but far less per tonne than a bloomery needs, because the ore-to-metal saving happened upstream at the blast furnace: fining itself is not a cheap step, it is simply a smaller share of the total cost than smelting straight from ore.",
    "requires_node": "finery_puddling",
+   "operated_by": ["finery_puddling"],
    "conf": "C"
   },
   "iron_bar_bloomery_kg": {
@@ -231,6 +234,7 @@
    "basis": "per tonne of consolidated (shear/blister) tool steel, cemented and reworked from wrought-iron bar",
    "yield_basis": "CEMENTATION: wrought-iron bar is packed in charcoal inside sealed chests and held around 900-1000 C for five to ten days, letting carbon diffuse into the iron from the surface inward - a slow solid-state diffusion process, which is why it takes days rather than hours, and the diffusing carbon itself adds negligible mass. The mass loss that matters is downstream: the carbon case is uneven straight out of the chest (high at the surface, low at the core), so a tool-grade steel means breaking the resulting 'blister steel' bars, bundling and forge-welding them together (shear steel) to homogenise the carbon, and every one of those reheats burns a few percent of the iron to scale, compounding over the several heats a good tool steel needs - taken together at roughly 15%, which is the 'small yield' the cementation process is known for. Charcoal consumption is dominated by the week-long cementation furnace campaign rather than the welding heats themselves. Furnaceman hours are low per tonne because cementation is a passive batch process - a furnace holds many bars at once and needs only periodic checking over its multi-day cycle; smith hours are the active, per-heat labour of breaking, bundling and hammer-welding.",
    "requires_node": "cementation_steel",
+   "operated_by": ["cementation_steel"],
    "conf": "C"
   },
   "steel_plate_kg": {
@@ -285,6 +289,7 @@
    "basis": "per tonne of cemented steel plate, forged or rolled flat from wrought-iron bar",
    "yield_basis": "The same cementation process as tool_steel_kg, but a shorter case-hardening cycle and only one consolidation heat before flattening to plate, which is why the charcoal, loss and smith-labour figures here are all lower than tool_steel_kg's: structural plate does not need the thoroughly homogenised, repeatedly shear-welded carbon case that a cutting edge does. The loss that remains (10%) is oxide scale from the cementation reheat plus the flattening passes themselves, each of which needs the stock brought back to working heat and each of which scales a little more.",
    "requires_node": "cementation_steel",
+   "operated_by": ["cementation_steel"],
    "conf": "C"
   },
   "iron_sheet_kg": {
@@ -339,6 +344,7 @@
    "basis": "per tonne of cold-drawn iron wire, forged down to rod and then drawn through a series of dies",
    "yield_basis": "Bar is first forged down to rod (a small scale loss, folded into the 5% input figure), then drawn cold through dies of progressively smaller bore - a mechanical, not thermal, process, and nearly lossless in mass since no metal is oxidised or cut away, only reshaped. What limits it is the metal's own work-hardening: iron can only take about 20-30% reduction in cross-section per draw before it cracks, so fine wire needs many passes with an intermediate annealing heat between them to restore ductility. The mechanical_mj figure is the mechanical work of that plastic deformation (redundant deformation plus die friction), estimated in the low hundreds of kJ per kg for a multi-pass draw of iron wire, i.e. on the order of 150 MJ per tonne - a real cost distinct from any fuel already counted as an input, which is why it is carried separately rather than folded into a fuel quantity. It is MECHANICAL rather than thermal (see ENERGY in sim/engine/solve_prices.py's module docstring): a draw-bench delivers shaft work directly, priced through data/production/70_energy.json's mechanical energy market (water wheel or human muscle), never through a fuel's calorific value.",
    "requires_node": "drawplate_wire",
+   "operated_by": ["drawplate_wire"],
    "conf": "C"
   },
   "flue_dust_kg": {
@@ -354,6 +360,7 @@
    "basis": "per tonne of fine particulate swept from a blast furnace's flue and dust-catcher",
    "yield_basis": "Furnace draught strong enough to sustain combustion and reduction also carries a share of the charge - unburnt charcoal fines, ore dust, and condensed metal-oxide fume - up the stack rather than down into the melt, and this settles out in the flue and dust-catcher rather than being smelted. It is not a separately manufactured material: its ore and fuel are already paid for as part of the pig_iron_kg entry that produced it, so this entry carries no material inputs of its own, only the labour of shovelling it out of the dust-catcher, which is why it is marked extracted_from rather than given a smelting recipe - the same logic as a by-product that costs nothing but collecting.",
    "requires_node": "blast_furnace",
+   "operated_by": ["blast_furnace"],
    "conf": "C"
   },
   "green_vitriol_kg": {

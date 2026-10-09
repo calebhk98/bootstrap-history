@@ -114,7 +114,8 @@
    "basis": "per tonne of coal carbonised (coked) in a byproduct coke oven",
    "yield_basis": "JOINT PRODUCTION: destructively distilling coal in a sealed oven at 1000-1100 C drives off its volatile matter, some of which is condensed rather than burned - a byproduct oven (as opposed to an open beehive oven that just burns the volatiles off) recovers coal tar and leaves a high-fixed-carbon solid residue (coke, called carbon_kg here since the tree uses it for electrodes, motor brushes and electrolysis anodes - applications that want a carbon block, not iron). Byproduct coking of bituminous coal is well-documented industrial chemistry: coke yield runs 65-75% of the coal charged (taken here at 70%), and tar condenses out at roughly 3-5% of the charge (taken at 3.5%); the remainder leaves as coal gas and ammonia liquor, which are not modelled as materials here. The furnaceman hours are the least certain number in the entry - a coking cycle runs 2-3 days but one crew tends many ovens charging and drawing in sequence, so the per-tonne figure is an amortised estimate, not a stopwatch reading.",
    "conf": "B",
-   "requires_node": "coal_coke"
+   "requires_node": "coal_coke",
+   "operated_by": ["coal_coke"]
   },
   "graphite_kg": {
    "outputs": {

@@ -23,8 +23,8 @@ class NodeUpkeep(unittest.TestCase):
 
     def test_every_node_with_upkeep_states_its_basis(self):
         for node_id, node in self.nodes.items():
-            if node["_up_hours_authored"] > 0:
-                self.assertIn(node.get("_upkeep_basis"), ("derived", "authored"), node_id)
+            if node["up_hours"] > 0:
+                self.assertIn(node.get("_upkeep_basis"), ("derived", "default", "authored"), node_id)
 
     def test_every_output_node_has_derived_upkeep(self):
         output = [node_id for node_id, node in self.nodes.items() if node.get("_revenue_basis") == "output"]

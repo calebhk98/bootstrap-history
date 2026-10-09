@@ -19,7 +19,6 @@
       "platinum_g": 10,
       "lead_kg": 5
     },
-    "cap_hours": 10080.939587064662,
     "up_hours": 0,
     "yrs": 1.0,
     "risk": 0.1,
@@ -64,7 +63,6 @@
       "iron_bar_kg": 80,
       "coal_kg": 20
     },
-    "cap_hours": 40323.75834825865,
     "up_hours": 0,
     "yrs": 1.5,
     "risk": 0.25,
@@ -101,7 +99,6 @@
       "bronze_kg": 80.0,
       "iron_bar_kg": 50.0
     },
-    "cap_hours": 16129.50333930346,
     "up_hours": 0,
     "yrs": 0.5,
     "risk": 0.15,
@@ -413,13 +410,10 @@
       "lime_kg": 100,
       "coal_kg": 50
     },
-    "cap_hours": 20161.879174129324,
-    "up_hours": 1612.950333930346,
     "yrs": 0.5,
     "risk": 0.1,
     "sus": 1,
     "gov": 2,
-    "rev_hours": 14329.047529053712,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -825,7 +819,6 @@
       "copper_kg": 100,
       "iron_bar_kg": 50
     },
-    "cap_hours": 80647.5166965173,
     "up_hours": 0,
     "yrs": 1.5,
     "risk": 0.1,
@@ -1156,7 +1149,6 @@
       "chemist": 100
     },
     "mat": {},
-    "cap_hours": 10080.939587064662,
     "up_hours": 0,
     "yrs": 0.5,
     "risk": 0.0,
@@ -1191,7 +1183,6 @@
     "mat": {
       "lead_kg": 200
     },
-    "cap_hours": 30242.818761193987,
     "up_hours": 0,
     "yrs": 1.0,
     "risk": 0.05,
@@ -1222,7 +1213,6 @@
     "mat": {
       "clay_kg": 100
     },
-    "cap_hours": 20161.879174129324,
     "up_hours": 0,
     "yrs": 1.0,
     "risk": 0.1,
@@ -1257,7 +1247,6 @@
       "glass_raw_kg": 200,
       "steel_plate_kg": 100
     },
-    "cap_hours": 60485.63752238797,
     "up_hours": 0,
     "yrs": 1.0,
     "risk": 0.15,
@@ -1289,7 +1278,6 @@
     "mat": {
       "steel_plate_kg": 200
     },
-    "cap_hours": 40323.75834825865,
     "up_hours": 0,
     "yrs": 2.0,
     "risk": 0.05,
@@ -1323,7 +1311,6 @@
       "iron_bar_kg": 100,
       "linen_kg": 20
     },
-    "cap_hours": 40323.75834825865,
     "up_hours": 0,
     "yrs": 1.0,
     "risk": 0.1,
@@ -1358,7 +1345,6 @@
       "iron_bar_kg": 150,
       "steel_plate_kg": 50
     },
-    "cap_hours": 60485.63752238797,
     "up_hours": 0,
     "yrs": 1.5,
     "risk": 0.15,
@@ -1392,7 +1378,6 @@
       "copper_kg": 50,
       "coal_kg": 150
     },
-    "cap_hours": 40323.75834825865,
     "up_hours": 0,
     "yrs": 0.5,
     "risk": 0.05,
@@ -1423,7 +1408,6 @@
       "artisan": 80
     },
     "mat": {},
-    "cap_hours": 10080.939587064662,
     "up_hours": 0,
     "yrs": 0.5,
     "risk": 0.0,
@@ -1492,7 +1476,6 @@
     "mat": {
       "sand_quartz_kg": 50
     },
-    "cap_hours": 10080.939587064662,
     "up_hours": 0,
     "yrs": 2.0,
     "risk": 0.05,
@@ -1525,7 +1508,6 @@
       "nickel_kg": 10,
       "copper_kg": 5
     },
-    "cap_hours": 30242.818761193987,
     "up_hours": 2016.1879174129324,
     "yrs": 0.5,
     "risk": 0.05,
@@ -1551,7 +1533,6 @@
       "scholar": 200
     },
     "mat": {},
-    "cap_hours": 0,
     "up_hours": 0,
     "yrs": 0.5,
     "risk": 0.0,
@@ -1582,7 +1563,6 @@
       "chemist": 100
     },
     "mat": {},
-    "cap_hours": 0,
     "up_hours": 0,
     "yrs": 1.0,
     "risk": 0.05,
@@ -1611,7 +1591,6 @@
     "ph": 0,
     "lab": {},
     "mat": {},
-    "cap_hours": 0,
     "up_hours": 0,
     "yrs": 0.0,
     "risk": 0.0,
@@ -1680,7 +1659,6 @@
     "mat": {
       "coal_kg": 80
     },
-    "cap_hours": 60485.63752238797,
     "up_hours": 4000.0,
     "yrs": 1.0,
     "risk": 0.4,
@@ -1776,7 +1754,6 @@
     "mat": {
       "coal_kg": 100
     },
-    "cap_hours": 60485.63752238797,
     "up_hours": 4000.0,
     "yrs": 1.0,
     "risk": 0.2,
@@ -1912,13 +1889,10 @@
       "mercury_kg": 20,
       "coal_kg": 50
     },
-    "cap_hours": 20161.879174129324,
-    "up_hours": 1612.950333930346,
     "yrs": 0.5,
     "risk": 0.3,
     "sus": 2,
     "gov": 2,
-    "rev_hours": 30242.818761193987,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -1944,7 +1918,6 @@
     "mat": {
       "coal_kg": 80
     },
-    "cap_hours": 40323.75834825865,
     "up_hours": 3024.2818761193985,
     "yrs": 1.0,
     "risk": 0.1,
@@ -2038,7 +2011,6 @@
     "mat": {
       "coal_kg": 150
     },
-    "cap_hours": 100809.39587064662,
     "up_hours": 8064.75166965173,
     "yrs": 1.5,
     "risk": 0.15,
@@ -2136,7 +2108,6 @@
     "ph": 0,
     "lab": {},
     "mat": {},
-    "cap_hours": 0,
     "up_hours": 0,
     "yrs": 0.0,
     "risk": 0.0,
@@ -2269,7 +2240,6 @@
       "silver_kg": 10,
       "coal_kg": 100
     },
-    "cap_hours": 40323.75834825865,
     "up_hours": 3024.2818761193985,
     "yrs": 1.0,
     "risk": 0.1,
@@ -2363,13 +2333,10 @@
     "mat": {
       "coal_kg": 100
     },
-    "cap_hours": 30242.818761193987,
-    "up_hours": 2419.425500895519,
     "yrs": 0.5,
     "risk": 0.1,
     "sus": 1,
     "gov": 0,
-    "rev_hours": 60485.63752238797,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -2506,7 +2473,6 @@
     "mat": {
       "alum_kg": 100
     },
-    "cap_hours": 10080.939587064662,
     "up_hours": 1008.0939587064662,
     "yrs": 0.5,
     "risk": 0.05,
@@ -2537,7 +2503,6 @@
     "mat": {
       "sand_quartz_kg": 1000
     },
-    "cap_hours": 20161.879174129324,
     "up_hours": 2016.1879174129324,
     "yrs": 0.5,
     "risk": 0.05,
@@ -2569,7 +2534,6 @@
     "mat": {
       "bleach_kg": 50
     },
-    "cap_hours": 16129.50333930346,
     "up_hours": 1612.950333930346,
     "yrs": 0.5,
     "risk": 0.05,
@@ -2639,13 +2603,10 @@
       "charcoal_kg": 200,
       "bone_ash_kg": 500
     },
-    "cap_hours": 40323.75834825865,
-    "up_hours": 3024.2818761193985,
     "yrs": 0.5,
     "risk": 0.2,
     "sus": 2,
     "gov": 1,
-    "rev_hours": 40323.75834825865,
     "unheld_reason": "phosphorus is isolated in the 1600s",
     "sch": 0,
     "art": 0,

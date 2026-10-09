@@ -360,7 +360,6 @@
   "dev_people": 1,
   "note": "Mercury in glass with fixed point at 37 C. Temperature tells severity of infection. Fever is sometimes the body fighting infection.",
   "conf": "B",
-  "cap_hours": 6048.563752238797,
   "up_hours": 0
  },
  {
@@ -2130,7 +2129,6 @@
   "dev_people": 2,
   "note": "Serum from horses immunized with toxin. Diphtheria antitoxin reduced mortality from 50% to 20%. Anaphylaxis kills 1 in 1000. Passive immunity is temporary.",
   "conf": "B",
-  "cap_hours": 16129.50333930346,
   "up_hours": 0
  },
  {

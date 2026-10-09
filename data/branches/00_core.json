@@ -3,7 +3,6 @@
     "adopt_yrs": 10.0,
     "art": 10.0,
     "build_yrs": 3.0,
-    "cap_hours": 907284.5628358196,
     "cat": "institution",
     "conf": "C",
     "dev_people": null,
@@ -109,7 +108,6 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 1.0,
-    "cap_hours": 4000.0,
     "cat": "mathematics",
     "conf": "C",
     "dev_people": null,
@@ -185,7 +183,6 @@
     "adopt_yrs": 12.0,
     "art": 60.0,
     "build_yrs": 3.0,
-    "cap_hours": 1209712.7504477594,
     "cat": "metallurgy",
     "conf": "B",
     "dev_people": null,
@@ -224,14 +221,12 @@
     "requires_running": ["power_grid"],
     "_internal": "[GATE: Operates only on a running grid: it draws mains power from it, so a shut or never-built grid leaves it dead. Knowledge of the technique stays in pre.]",
     "req_any": [],
-    "rev_hours": 806475.166965173,
     "risk": 0.35,
     "sch": 6.0,
     "sus": 3,
     "traits": [
       "infrastructure"
     ],
-    "up_hours": 705665.7710945264,
     "yrs": 12.0
   },
   {
@@ -296,7 +291,6 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 1.0,
-    "cap_hours": 6048.563752238797,
     "cat": "mathematics",
     "conf": "C",
     "dev_people": null,
@@ -330,7 +324,6 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 0.5,
-    "cap_hours": 12097.127504477594,
     "cat": "foundation",
     "conf": "C",
     "dev_people": null,
@@ -361,7 +354,6 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 2.0,
-    "cap_hours": 6048.563752238797,
     "cat": "chemistry",
     "conf": "C",
     "dev_people": null,
@@ -479,7 +471,6 @@
     "adopt_yrs": 0.0,
     "art": 2.0,
     "build_yrs": 1.0,
-    "cap_hours": 40323.75834825865,
     "cat": "metallurgy",
     "conf": "B",
     "dev_people": null,
@@ -529,7 +520,6 @@
     "annual_output_t": 300,
     "art": 6.0,
     "build_yrs": 5.0,
-    "cap_hours": 241942.5500895519,
     "cat": "metallurgy",
     "conf": "B",
     "dev_people": null,
@@ -600,14 +590,12 @@
         }
       }
     ],
-    "rev_hours": 443561.3418308451,
     "risk": 0.35,
     "sch": 1.0,
     "sus": 3,
     "traits": [
       "infrastructure"
     ],
-    "up_hours": 141133.15421890526,
     "yrs": 5.0
   },
   {
@@ -663,7 +651,6 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 2.0,
-    "cap_hours": 3024.2818761193985,
     "cat": "mathematics",
     "conf": "C",
     "dev_people": null,
@@ -737,7 +724,6 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 0.0,
-    "cap_hours": 0,
     "cat": "capability",
     "conf": "A",
     "dev_people": null,
@@ -812,7 +798,6 @@
     "annual_output_t": 60,
     "art": 3.0,
     "build_yrs": 2.0,
-    "cap_hours": 60485.63752238797,
     "cat": "metallurgy",
     "conf": "B",
     "copy_visibility": 0.15,
@@ -851,14 +836,12 @@
         }
       }
     ],
-    "rev_hours": 120971.27504477595,
     "risk": 0.2,
     "sch": 0.0,
     "sus": 1,
     "traits": [
       "infrastructure"
     ],
-    "up_hours": 36291.382513432785,
     "yrs": 2.0
   },
   {
@@ -866,7 +849,6 @@
     "adopt_yrs": 0.0,
     "art": 1.0,
     "build_yrs": 3.0,
-    "cap_hours": 70566.57710945263,
     "cat": "metallurgy",
     "conf": "B",
     "dev_people": null,
@@ -889,21 +871,18 @@
       "workshop_first"
     ],
     "req_any": [],
-    "rev_hours": 24194.255008955188,
     "risk": 0.1,
     "sch": 0.0,
     "sus": 2,
     "traits": [
       "infrastructure"
     ],
-    "up_hours": 44356.13418308451,
     "yrs": 3.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 3.0,
-    "cap_hours": 120971.27504477595,
     "cat": "social",
     "conf": "B",
     "dev_people": null,
@@ -966,7 +945,6 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 0.0,
-    "cap_hours": 0,
     "cat": "buildings",
     "conf": "A",
     "dev_people": null,
@@ -996,7 +974,6 @@
     "adopt_yrs": 0,
     "art": 2.0,
     "build_yrs": 4.0,
-    "cap_hours": 60485.63752238797,
     "cat": "structures",
     "conf": "B",
     "dev_people": 0,
@@ -1031,7 +1008,6 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 1.0,
-    "cap_hours": 8064.75166965173,
     "cat": "precision",
     "conf": "C",
     "dev_people": null,
@@ -1117,7 +1093,6 @@
     "adopt_yrs": 0.0,
     "art": 2.0,
     "build_yrs": 3.0,
-    "cap_hours": 100809.39587064662,
     "cat": "metallurgy",
     "conf": "B",
     "copy_visibility": 0.7,
@@ -1143,21 +1118,18 @@
       "charcoal_industrial"
     ],
     "req_any": [],
-    "rev_hours": 36291.382513432785,
     "risk": 0.25,
     "sch": 1.0,
     "sus": 1,
     "traits": [
       "infrastructure"
     ],
-    "up_hours": 50404.69793532331,
     "yrs": 3.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 1.0,
-    "cap_hours": 50404.69793532331,
     "cat": "institution",
     "conf": "B",
     "dev_people": null,
@@ -1343,7 +1315,6 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 10.0,
-    "cap_hours": 30242.818761193987,
     "cat": "information",
     "conf": "C",
     "dev_people": null,
@@ -1573,7 +1544,6 @@
     "adopt_yrs": 0.0,
     "art": 1.0,
     "build_yrs": 0.5,
-    "cap_hours": 3024.2818761193985,
     "cat": "electrical",
     "conf": "B",
     "dev_people": null,
@@ -1658,7 +1628,6 @@
     "adopt_yrs": 0.0,
     "art": 5.0,
     "build_yrs": 3.0,
-    "cap_hours": 161295.0333930346,
     "cat": "chemistry",
     "conf": "B",
     "dev_people": null,
@@ -1686,7 +1655,6 @@
       "lab_apparatus"
     ],
     "req_any": [],
-    "rev_hours": 141133.15421890526,
     "risk": 0.3,
     "sch": 3.0,
     "sus": 6,
@@ -1694,7 +1662,6 @@
       "inexplicable",
       "spectacle"
     ],
-    "up_hours": 90728.45628358195,
     "yrs": 3.0,
     "mechanics": {
       "precaution": {
@@ -1815,7 +1782,6 @@
     "adopt_yrs": 0.0,
     "art": 2.0,
     "build_yrs": 1.0,
-    "cap_hours": 28226.630843781055,
     "cat": "chemistry",
     "conf": "C",
     "dev_people": null,
@@ -1842,7 +1808,6 @@
       "workshop_first"
     ],
     "req_any": [],
-    "rev_hours": 84679.89253134317,
     "risk": 0.15,
     "sch": 0.0,
     "sus": 5,
@@ -1850,14 +1815,12 @@
       "inexplicable",
       "spectacle"
     ],
-    "up_hours": 18145.691256716393,
     "yrs": 1.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 1.0,
     "build_yrs": 0.5,
-    "cap_hours": 7056.657710945264,
     "cat": "metallurgy",
     "conf": "B",
     "dev_people": null,
@@ -1882,14 +1845,12 @@
       "workshop_first"
     ],
     "req_any": [],
-    "rev_hours": 16129.50333930346,
     "risk": 0.12,
     "sch": 0.0,
     "sus": 1,
     "traits": [
       "infrastructure"
     ],
-    "up_hours": 3024.2818761193985,
     "yrs": 0.5
   },
   {
@@ -1897,7 +1858,6 @@
     "adopt_yrs": 7.0,
     "art": 25.0,
     "build_yrs": 2.3333333333333335,
-    "cap_hours": 241942.5500895519,
     "cat": "electrical",
     "conf": "B",
     "copy_visibility": 0.6,
@@ -1963,7 +1923,6 @@
         }
       }
     ],
-    "rev_hours": 241942.5500895519,
     "risk": 0.35,
     "sch": 4.0,
     "sus": 8,
@@ -1972,7 +1931,6 @@
       "infrastructure",
       "spectacle"
     ],
-    "up_hours": 120971.27504477595,
     "yrs": 7.0
   },
   {
@@ -2180,7 +2138,6 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 3.0,
-    "cap_hours": 8064.75166965173,
     "cat": "physics",
     "conf": "C",
     "dev_people": null,
@@ -2310,7 +2267,6 @@
     "adopt_yrs": 12.0,
     "art": 2.0,
     "build_yrs": 4.0,
-    "cap_hours": 846798.9253134317,
     "cat": "expedition",
     "conf": "B",
     "dev_people": 0,
@@ -2362,7 +2318,6 @@
     "annual_output_t": 250,
     "art": 4.0,
     "build_yrs": 2.0,
-    "cap_hours": 100809.39587064662,
     "cat": "metallurgy",
     "conf": "B",
     "copy_visibility": 0.4,
@@ -2400,7 +2355,6 @@
         }
       }
     ],
-    "rev_hours": 181456.9125671639,
     "unheld_reason": "the finery is a late medieval step and puddling is 1784",
     "risk": 0.25,
     "sch": 1.0,
@@ -2408,14 +2362,12 @@
     "traits": [
       "infrastructure"
     ],
-    "up_hours": 70566.57710945263,
     "yrs": 2.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 2.0,
-    "cap_hours": 201618.79174129324,
     "cat": "institution",
     "conf": "C",
     "dev_people": null,
@@ -2481,7 +2433,6 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 3.0,
-    "cap_hours": 0,
     "cat": "institution",
     "conf": "C",
     "dev_people": null,
@@ -2548,7 +2499,6 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 0.0,
-    "cap_hours": 0,
     "cat": "located_material",
     "conf": "A",
     "dev_people": null,
@@ -2618,7 +2568,6 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 0.0,
-    "cap_hours": 0,
     "cat": "located_material",
     "conf": "A",
     "dev_people": null,
@@ -2651,7 +2600,6 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 0.0,
-    "cap_hours": 0,
     "cat": "located_material",
     "conf": "A",
     "dev_people": null,
@@ -2733,7 +2681,6 @@
     "adopt_yrs": 0.0,
     "art": 1.0,
     "build_yrs": 0.5,
-    "cap_hours": 4000.0,
     "cat": "semiconductor",
     "conf": "A",
     "dev_people": null,
@@ -2819,7 +2766,6 @@
     "adopt_yrs": 0.0,
     "art": 12.0,
     "build_yrs": 3.0,
-    "cap_hours": 322590.0667860692,
     "cat": "semiconductor",
     "conf": "A",
     "dev_people": null,
@@ -2875,7 +2821,6 @@
     "adopt_yrs": 5.0,
     "art": 14.0,
     "build_yrs": 1.6666666666666667,
-    "cap_hours": 443561.3418308451,
     "cat": "semiconductor",
     "conf": "A",
     "dev_people": null,
@@ -2921,7 +2866,6 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 1.0,
-    "cap_hours": 2016.1879174129324,
     "cat": "mathematics",
     "conf": "C",
     "dev_people": null,
@@ -2955,7 +2899,6 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 2.0,
-    "cap_hours": 5040.469793532331,
     "cat": "medicine",
     "conf": "C",
     "dev_people": null,
@@ -3002,7 +2945,6 @@
     "adopt_yrs": 5.0,
     "art": 16.0,
     "build_yrs": 1.6666666666666667,
-    "cap_hours": 504046.9793532331,
     "cat": "semiconductor",
     "conf": "B",
     "dev_people": null,
@@ -3244,7 +3186,6 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 0.0,
-    "cap_hours": 0,
     "cat": "milestone",
     "conf": "C",
     "dev_people": null,
@@ -3280,7 +3221,6 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 0.0,
-    "cap_hours": 0,
     "cat": "milestone",
     "conf": "C",
     "dev_people": null,
@@ -3356,7 +3296,6 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 0.0,
-    "cap_hours": 0,
     "cat": "milestone",
     "conf": "C",
     "dev_people": null,
@@ -3583,7 +3522,6 @@
     "adopt_yrs": 0.0,
     "art": 3.0,
     "build_yrs": 2.0,
-    "cap_hours": 60485.63752238797,
     "cat": "military",
     "conf": "B",
     "copy_visibility": 0.6,
@@ -3625,7 +3563,6 @@
     "adopt_yrs": 0.0,
     "art": 2.0,
     "build_yrs": 1.0,
-    "cap_hours": 28226.630843781055,
     "cat": "chemistry",
     "conf": "A",
     "dev_people": null,
@@ -3657,7 +3594,6 @@
         }
       }
     ],
-    "rev_hours": 28226.630843781055,
     "risk": 0.25,
     "sch": 2.0,
     "sus": 8,
@@ -3665,14 +3601,12 @@
       "inexplicable",
       "spectacle"
     ],
-    "up_hours": 18145.691256716393,
     "yrs": 1.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 2.0,
     "build_yrs": 2.0,
-    "cap_hours": 40323.75834825865,
     "cat": "chemistry",
     "conf": "B",
     "dev_people": null,
@@ -3705,7 +3639,6 @@
         }
       }
     ],
-    "rev_hours": 10080.939587064662,
     "risk": 0.35,
     "sch": 3.0,
     "sus": 6,
@@ -3713,14 +3646,12 @@
       "inexplicable",
       "spectacle"
     ],
-    "up_hours": 28226.630843781055,
     "yrs": 2.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 0.5,
-    "cap_hours": 30242.818761193987,
     "cat": "foundation",
     "conf": "C",
     "dev_people": null,
@@ -3899,7 +3830,6 @@
     "adopt_yrs": 0.0,
     "art": 3.0,
     "build_yrs": 1.5,
-    "cap_hours": 60485.63752238797,
     "cat": "chemistry",
     "conf": "B",
     "dev_people": null,
@@ -3940,7 +3870,6 @@
     "adopt_yrs": 5.0,
     "art": 5.0,
     "build_yrs": 1.6666666666666667,
-    "cap_hours": 181456.9125671639,
     "cat": "chemistry",
     "conf": "B",
     "copy_visibility": 0.4,
@@ -3971,7 +3900,6 @@
       "sulfuric_retort"
     ],
     "req_any": [],
-    "rev_hours": 181456.9125671639,
     "risk": 0.35,
     "sch": 3.0,
     "sus": 8,
@@ -3979,7 +3907,6 @@
       "inexplicable",
       "spectacle"
     ],
-    "up_hours": 110890.33545771128,
     "yrs": 5.0,
     "mechanics": {
       "precaution": {
@@ -4085,7 +4012,6 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 4.0,
-    "cap_hours": 24194.255008955188,
     "cat": "mathematics",
     "conf": "C",
     "dev_people": null,
@@ -4194,7 +4120,6 @@
     "adopt_yrs": 0.0,
     "art": 2.0,
     "build_yrs": 0.5,
-    "cap_hours": 8064.75166965173,
     "cat": "material",
     "conf": "A",
     "dev_people": null,
@@ -4226,7 +4151,6 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 0.0,
-    "cap_hours": 0,
     "cat": "located_material",
     "conf": "A",
     "dev_people": null,
@@ -4259,7 +4183,6 @@
     "adopt_yrs": 0.0,
     "art": 1.0,
     "build_yrs": 1.0,
-    "cap_hours": 50404.69793532331,
     "cat": "metallurgy",
     "conf": "B",
     "dev_people": null,
@@ -4421,7 +4344,6 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 2.0,
-    "cap_hours": 302428.18761193985,
     "cat": "social",
     "conf": "B",
     "dev_people": null,
@@ -4549,7 +4471,6 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 2.0,
-    "cap_hours": 6048.563752238797,
     "cat": "physics",
     "conf": "C",
     "dev_people": null,
@@ -4585,7 +4506,6 @@
     "adopt_yrs": 0.0,
     "art": 2.0,
     "build_yrs": 2.5,
-    "cap_hours": 52420.885852736246,
     "cat": "chemistry",
     "conf": "B",
     "dev_people": null,
@@ -4619,21 +4539,18 @@
         }
       }
     ],
-    "rev_hours": 28226.630843781055,
     "risk": 0.25,
     "sch": 1.0,
     "sus": 2,
     "traits": [
       "inexplicable"
     ],
-    "up_hours": 32259.00667860692,
     "yrs": 2.5
   },
   {
     "adopt_yrs": 0.0,
     "art": 2.0,
     "build_yrs": 1.5,
-    "cap_hours": 36291.382513432785,
     "cat": "chemistry",
     "conf": "A",
     "copy_visibility": 0.5,
@@ -4669,7 +4586,6 @@
         }
       }
     ],
-    "rev_hours": 44356.13418308451,
     "risk": 0.3,
     "sch": 2.0,
     "sus": 9,
@@ -4677,7 +4593,6 @@
       "inexplicable",
       "spectacle"
     ],
-    "up_hours": 24194.255008955188,
     "yrs": 1.5
   },
   {
@@ -4802,7 +4717,6 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 0.5,
-    "cap_hours": 24194.255008955188,
     "cat": "social",
     "conf": "C",
     "dev_people": null,
@@ -4859,7 +4773,6 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 2.0,
-    "cap_hours": 241942.5500895519,
     "cat": "social",
     "conf": "C",
     "dev_people": null,
@@ -4953,7 +4866,6 @@
     "adopt_yrs": 0.0,
     "art": 1.0,
     "build_yrs": 0.1,
-    "cap_hours": 1209.7127504477594,
     "cat": "alloys",
     "conf": "B",
     "dev_people": null,
@@ -5096,7 +5008,6 @@
     "adopt_yrs": 0.0,
     "art": 20.0,
     "build_yrs": 4.0,
-    "cap_hours": 403237.5834825865,
     "cat": "semiconductor",
     "conf": "A",
     "dev_people": null,
@@ -5371,7 +5282,6 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 4.0,
-    "cap_hours": 16129.50333930346,
     "cat": "physics",
     "conf": "C",
     "dev_people": null,
@@ -5782,7 +5692,6 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 2.0,
-    "cap_hours": 2016.1879174129324,
     "cat": "foundation",
     "conf": "C",
     "dev_people": null,
@@ -5939,7 +5848,6 @@
     "adopt_yrs": 0.0,
     "art": 4.0,
     "build_yrs": 3.0,
-    "cap_hours": 362913.8251343278,
     "cat": "information",
     "conf": "C",
     "dev_people": null,
@@ -5985,7 +5893,6 @@
     "adopt_yrs": 0.0,
     "art": 10.0,
     "build_yrs": 4.0,
-    "cap_hours": 181456.9125671639,
     "cat": "semiconductor",
     "conf": "B",
     "dev_people": null,
@@ -6035,7 +5942,6 @@
     "adopt_yrs": 7.0,
     "art": 40.0,
     "build_yrs": 2.3333333333333335,
-    "cap_hours": 1209712.7504477594,
     "cat": "semiconductor",
     "conf": "B",
     "dev_people": null,
@@ -6070,14 +5976,12 @@
         }
       }
     ],
-    "rev_hours": 806475.166965173,
     "risk": 0.45,
     "sch": 30.0,
     "sus": 1,
     "traits": [
       "inexplicable"
     ],
-    "up_hours": 806475.166965173,
     "yrs": 7.0,
     "mechanics": {
       "precaution": {
@@ -6090,7 +5994,6 @@
     "adopt_yrs": 5.0,
     "art": 25.0,
     "build_yrs": 1.6666666666666667,
-    "cap_hours": 604856.3752238797,
     "cat": "semiconductor",
     "conf": "A",
     "dev_people": null,
@@ -6204,7 +6107,6 @@
     "adopt_yrs": 7.0,
     "art": 6.0,
     "build_yrs": 2.3333333333333335,
-    "cap_hours": 221780.67091542255,
     "cat": "chemistry",
     "conf": "B",
     "dev_people": null,
@@ -6233,7 +6135,6 @@
       "lead_chamber"
     ],
     "req_any": [],
-    "rev_hours": 221780.67091542255,
     "risk": 0.3,
     "sch": 3.0,
     "sus": 5,
@@ -6241,7 +6142,6 @@
       "inexplicable",
       "spectacle"
     ],
-    "up_hours": 141133.15421890526,
     "yrs": 7.0,
     "mechanics": {
       "precaution": {
@@ -6295,7 +6195,6 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 1.0,
-    "cap_hours": 1008.0939587064662,
     "cat": "mathematics",
     "conf": "C",
     "dev_people": null,
@@ -6330,7 +6229,6 @@
     "adopt_yrs": 7.0,
     "art": 8.0,
     "build_yrs": 2.3333333333333335,
-    "cap_hours": 282266.3084378105,
     "cat": "power",
     "conf": "B",
     "copy_visibility": 0.7,
@@ -6397,7 +6295,6 @@
         }
       }
     ],
-    "rev_hours": 120971.27504477595,
     "risk": 0.35,
     "sch": 2.0,
     "sus": 4,
@@ -6405,7 +6302,6 @@
       "infrastructure",
       "religious_adjacent"
     ],
-    "up_hours": 141133.15421890526,
     "yrs": 7.0
   },
   {
@@ -6554,7 +6450,6 @@
     "adopt_yrs": 0.0,
     "art": 3.0,
     "build_yrs": 2.0,
-    "cap_hours": 70566.57710945263,
     "cat": "chemistry",
     "conf": "B",
     "dev_people": null,
@@ -6592,14 +6487,12 @@
         }
       }
     ],
-    "rev_hours": 30242.818761193987,
     "risk": 0.4,
     "sch": 2.0,
     "sus": 10,
     "traits": [
       "inexplicable"
     ],
-    "up_hours": 44356.13418308451,
     "yrs": 2.0
   },
   {
@@ -6740,7 +6633,6 @@
     "adopt_yrs": 0.0,
     "art": 2.0,
     "build_yrs": 3.0,
-    "cap_hours": 12097.127504477594,
     "cat": "physics",
     "conf": "C",
     "dev_people": null,
@@ -6817,7 +6709,6 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 0.5,
-    "cap_hours": 5040.469793532331,
     "cat": "foundation",
     "conf": "C",
     "dev_people": null,
@@ -6974,7 +6865,6 @@
     "adopt_yrs": 0.0,
     "art": 2.0,
     "build_yrs": 1.0,
-    "cap_hours": 14113.315421890527,
     "cat": "electrical",
     "conf": "A",
     "dev_people": null,
@@ -7066,7 +6956,6 @@
     "adopt_yrs": 0.0,
     "art": 2.0,
     "build_yrs": 1.0,
-    "cap_hours": 100809.39587064662,
     "cat": "institution",
     "conf": "C",
     "dev_people": null,
@@ -7234,7 +7123,6 @@
     "annual_output_t": 20,
     "art": 3.0,
     "build_yrs": 3.0,
-    "cap_hours": 110890.33545771128,
     "cat": "metallurgy",
     "conf": "B",
     "dev_people": null,
@@ -7270,14 +7158,12 @@
         }
       }
     ],
-    "rev_hours": 80647.5166965173,
     "risk": 0.4,
     "sch": 1.0,
     "sus": 3,
     "traits": [
       "infrastructure"
     ],
-    "up_hours": 60485.63752238797,
     "yrs": 3.0,
     "mechanics": {
       "precaution": {
@@ -7290,7 +7176,6 @@
     "adopt_yrs": 6.0,
     "art": 25.0,
     "build_yrs": 2.0,
-    "cap_hours": 705665.7710945264,
     "cat": "semiconductor",
     "conf": "A",
     "dev_people": null,

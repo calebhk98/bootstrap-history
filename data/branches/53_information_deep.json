@@ -17,7 +17,6 @@
   "mat": {
    "mat_papyrus": 50
   },
-  "cap_hours": 6048.563752238797,
   "up_hours": 604.8563752238797,
   "build_yrs": 0.1,
   "adopt_yrs": 0,
@@ -48,7 +47,6 @@
   "mat": {
    "parchment_sheet": 10
   },
-  "cap_hours": 8064.75166965173,
   "up_hours": 800.0,
   "build_yrs": 0.1,
   "adopt_yrs": 0,
@@ -79,7 +77,6 @@
   "mat": {
    "paper_kg": 20
   },
-  "cap_hours": 10080.939587064662,
   "up_hours": 1008.0939587064662,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
@@ -497,7 +494,6 @@
    "lead_kg": 1000,
    "tin_kg": 200
   },
-  "cap_hours": 40323.75834825865,
   "up_hours": 3024.2818761193985,
   "build_yrs": 0.5,
   "adopt_yrs": 1,
@@ -747,7 +743,6 @@
   "mat": {
    "lead_kg": 400
   },
-  "cap_hours": 60485.63752238797,
   "up_hours": 5040.469793532331,
   "build_yrs": 0.8,
   "adopt_yrs": 1,
@@ -932,7 +927,6 @@
   "mat": {
    "alum_kg": 50
   },
-  "cap_hours": 120971.27504477595,
   "up_hours": 9072.845628358196,
   "build_yrs": 1.3,
   "adopt_yrs": 2,
@@ -1229,7 +1223,6 @@
   "mat": {
    "glass_raw_kg": 8
   },
-  "cap_hours": 30242.818761193987,
   "up_hours": 2016.1879174129324,
   "build_yrs": 0.5,
   "adopt_yrs": 0,
@@ -1402,7 +1395,6 @@
    "glass_raw_kg": 20,
    "mat_nitrocellulose": 10
   },
-  "cap_hours": 56453.26168756211,
   "up_hours": 4435.613418308451,
   "build_yrs": 0.8,
   "adopt_yrs": 1,
@@ -1751,7 +1743,6 @@
   "mat": {
    "steel_plate_kg": 20
   },
-  "cap_hours": 44356.13418308451,
   "up_hours": 3629.138251343278,
   "build_yrs": 0.7,
   "adopt_yrs": 0,
@@ -2195,7 +2186,6 @@
    "copper_kg": 40,
    "iron_bar_kg": 30
   },
-  "cap_hours": 50404.69793532331,
   "up_hours": 4000.0,
   "build_yrs": 0.7,
   "adopt_yrs": 2,
@@ -2509,7 +2499,6 @@
   "mat": {
    "copper_kg": 40
   },
-  "cap_hours": 46372.32210049745,
   "up_hours": 3629.138251343278,
   "build_yrs": 0.6,
   "adopt_yrs": 2,
@@ -2643,7 +2632,6 @@
   "mat": {
    "copper_kg": 30
   },
-  "cap_hours": 32259.00667860692,
   "up_hours": 2621.0442926368123,
   "build_yrs": 0.4,
   "adopt_yrs": 0,
@@ -2935,7 +2923,6 @@
    "cast_iron_kg": 200,
    "copper_kg": 150
   },
-  "cap_hours": 161295.0333930346,
   "up_hours": 12097.127504477594,
   "build_yrs": 2.5,
   "adopt_yrs": 2,
@@ -3500,7 +3487,6 @@
    "scribe": 250
   },
   "mat": {},
-  "cap_hours": 26210.442926368123,
   "up_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 2,

@@ -284,7 +284,8 @@
    "basis": "per kg of finished vegetable (oak-bark) tanned leather",
    "yield_basis": "Leather is hides plus tannin plus a great deal of TIME - and time is not labour, so this entry is explicit about which is which. Fleshing and liming (soaking in a lime bath to loosen hair and dissolve the epidermis) removes hair and some tissue, a mass loss partly offset by the tannin the hide later absorbs, netting to roughly 1.15 kg of raw hide needed per kg of finished leather. Traditional oak-bark vegetable tanning used large quantities of ground bark relative to the hide's own weight - historical tanneries are commonly described using several times the hide's weight in bark across the whole tan - taken here at 3 kg of oak_bark_kg per kg of leather. The labour figures (fleshing, liming, working the hide by hand in the tan pits; then currying/finishing - shaving to thickness, working in oils) are what a tanner and his labourers actually DO with their hands; they do NOT include the months the hide spends soaking in progressively stronger tan liquors in a pit, which for heavy leather traditionally ran six months to well over a year. That soak time ties up PIT CAPACITY AND CAPITAL, not labour-hours, and belongs in whatever the sim uses to model production lead time, not in labour_hours here.",
    "conf": "C",
-   "requires_node": "tex_vegetable_tanning"
+   "requires_node": "tex_vegetable_tanning",
+   "operated_by": ["tex_vegetable_tanning"]
   },
   "parchment_sheet": {
    "outputs": {
@@ -578,7 +579,8 @@
    "basis": "per kg of steam-distilled essential oil (rose otto taken as the representative case)",
    "yield_basis": "Flower petals hold their aromatic oil at an extremely low concentration - on the order of a few hundredths of a percent by weight for rose, which is why attar of rose is one of the most valuable liquids by weight in the pre-modern world. Perfumery sources consistently put the ratio at several thousand kilograms of fresh petals per kilogram of finished oil after steam distillation; taken here at 3500:1. Steam distilling that much plant material needs a correspondingly large, sustained fire under a still (a copper alembic historically) across many batches, priced as firewood. Labour is split between the huge quantity of hand-picking needed upstream (folded in here as labourer hours on top of rose_petals_kg's own harvest, since a still-load is picked and processed in a short window before the oil volatilises away) and the artisan's skilled hours running the still and separating the oil from the distillate.",
    "conf": "B",
-   "requires_node": "distillation_alcohol"
+   "requires_node": "distillation_alcohol",
+   "operated_by": ["distillation_alcohol"]
   },
   "rose_petals_kg": {
    "outputs": {
@@ -761,7 +763,8 @@
    "basis": "per kg of finished, dried and sized rag paper",
    "yield_basis": "PAPER FROM RAGS IS A REAL CHAIN, and rags are themselves worn-out linen - see linen_rag_kg's own entry for why that input already carries a collection cost rather than a fresh-manufacture one. Turning rags into paper: the rags are boiled with a weak lye (wood ash again, as in soap_kg) to loosen dirt and help break down the fibre, then beaten (historically by hand with mallets, later by water-powered stamping mills - this entry assumes the more labour-heavy hand/tended-mill case) into a fibrous pulp slurry, which a vatman forms into sheets on a wire mould, couches onto felts, presses to squeeze out water, and hangs to dry before sizing (typically with gelatin_kg or a starch, omitted here as a small addition) to stop ink from feathering. Washing, boiling and beating loses some fibre, so roughly 1.4 kg of rag is needed per kg of finished dry paper. Labour splits into the pulping/beating/vatting (labourer) and the more skilled sheet-forming, couching, pressing and sizing (artisan).",
    "conf": "C",
-   "requires_node": "prn_hand_papermaking"
+   "requires_node": "prn_hand_papermaking",
+   "operated_by": ["prn_hand_papermaking"]
   },
   "linen_rag_kg": {
    "outputs": {

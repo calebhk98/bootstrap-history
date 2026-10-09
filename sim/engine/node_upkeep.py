@@ -74,3 +74,10 @@ def plant_wear_hours(plant: Iterable[Tuple[Mapping, float]], goods: Mapping[str,
     bill over its service life, which the solved price of what it makes charges per unit."""
     return sum(_capital_build_hours(capital, goods, wages, money_per_labour_hour)
                / capital["service_life_years"] * used for capital, used in plant if capital.get("service_life_years"))
+
+
+def unstated_upkeep_hours(node: Mapping, build_bill_hours: float) -> float:
+    """Upkeep of a node that states none and runs no entries: the upkeep of what it cost to build (its
+    labour, materials and tooling), by kind of node. Its staff are paid from what it earns, and it
+    states no earning."""
+    return maintenance_hours(node, build_bill_hours)

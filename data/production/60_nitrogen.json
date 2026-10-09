@@ -17,7 +17,8 @@
    "basis": "per tonne of refined saltpetre from a worked nitre bed",
    "yield_basis": "THE COST HERE IS A CALENDAR, AND THAT IS THE WHOLE POINT. A nitre bed is soil, manure and ash left to nitrifying bacteria for 12 to 24 months. No amount of money shortens it, which is why this single material gates the entire nitrogen branch of the tech tree and why the simulator already models nitre beds as a calendar floor rather than a purchase. The mass ratio is poor - a bed yields a low single-digit percentage of its charge as nitre - and the labour is turning and leaching over two years rather than skilled work. The alternatives are geographic rather than technical: mined deposits where they exist, or import from the Gangetic plain along a route Rome already sails. A society with neither, and no patience, does not get nitrogen chemistry at all. Numbers are order of magnitude; the two-year floor is the number that matters and it is well attested.",
    "conf": "C",
-   "requires_node": "nitre_beds"
+   "requires_node": "nitre_beds",
+   "operated_by": ["nitre_beds"]
   },
   "nitric_acid_kg": {
    "outputs": {
@@ -35,7 +36,8 @@
    "basis": "per tonne of nitric acid",
    "yield_basis": "STOICHIOMETRIC, so the ratio follows from the molar masses rather than from an estimate: potassium nitrate is 101.1 g/mol and nitric acid 63.0, so a tonne of acid needs about 1.6 t of nitre at perfect conversion, and rather more in practice. Taken at 1.35 t here against a partial-conversion route that leaves a bisulphate rather than driving to completion. The economic point, and the only one the solver needs, is that nitric acid costs a nitre and a sulfuric acid - it inherits the two-year calendar of the first and the fuel of the second, which is why it stays expensive in any society that cannot do both. Cost structure only; this entry deliberately carries no process detail.",
    "conf": "C",
-   "requires_node": "nitric_acid"
+   "requires_node": "nitric_acid",
+   "operated_by": ["nitric_acid"]
   },
   "nitrocellulose_kg": {
    "outputs": {

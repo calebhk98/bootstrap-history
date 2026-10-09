@@ -1,6 +1,6 @@
 # Money constants and technology revenue are still in book denarii
 
-**Status:** partly - no money amount is written in book denarii any more: the book conversion boundary (`BOOK_LABOURER_WAGE_DENARII_PER_HOUR`, `book_money`, `book_to_money`, the `book_money` flag on `declare`) is deleted, every former `book_money` constant, inline literal and effect spec is a labour-hour quantity priced on read; remains: node `cap_hours`, `up_hours` and (for the nodes that make nothing derivable) `rev_hours` are still authored hour figures, and the pump guard is still loosened
+**Status:** partly - no money amount is written in book denarii any more, and a node's capital, upkeep and revenue are derived wherever the data states a staff, a plant or a product (`node_capital.py`, `node_upkeep.py`, `node_revenue.py`); remains: typed `rev_hours` on nodes that name no product, typed `up_hours` on those and on programme spending, and typed `cap_hours` on the nodes whose typed revenue depends on it (see the last section for the per-file list)
 
 Money is now anchored to each civilisation's coin, and costs are labour-hours
 inside the engine, but some numbers are still written in the old book
@@ -112,6 +112,18 @@ Owner decision (2026-10-09): a money amount in book denarii is an error, not a d
 - [x] The generic output and market-share curves in `economy_materials.py` (fitted in book denarii per kg) are restated in labour hours per kg (anchor and scale rescaled by the old wage, a price floor declared), so the last reader of a book unit is gone.
 - [x] The node field defaults are two labourer-years of capital and four-tenths of a labourer-year of upkeep (`node_defaults.py`) and the data entries that wrote the old book default out are restated the same way.
 - [ ] Still open: node `cap_hours`/`up_hours` are authored hour figures (the old book figures divided once by the book wage), and `rev_hours` is derived from output for only a few dozen nodes. Measure with `data.load()`: count nodes by `_revenue_basis` and `_upkeep_basis` (about a thousand authored revenues, about fourteen hundred authored upkeeps). Deriving them needs each node's staff, plant and product stated in the data; nineteen authored-revenue nodes already gate production entries but state no plant output or staff to bound them.
-- [ ] The pump payback guard is unchanged.
+- [x] The pump payback guard: there is no guard test left to loosen; it became the diagnostic `node_payback_diagnostic` (`simulator.py economy-check --payback`), which never caps revenue (`Complaints/336`). Rows under the diagnostic threshold: `python3 sim/simulator.py economy-check --payback`; capital for typed-revenue nodes stays typed so the count does not grow while their revenue is typed.
 
 Not run (needs a whole game, which takes about half an hour cold): `sim/tests/test_physical_money_constants.py`, `test_money_units_one_boundary.py`, the eminence and closure tests that use `hours_money`, and the `literacy_market_pricing` ledger checks.
+
+## Progress: capital and upkeep from what the data states (sixth increment)
+
+- [x] `cap_hours` is derived (`sim/engine/node_capital.py`): the build bills of the plant a node's entries state plus tooling for its `sch` and `art` places (`WORKPLACE_TOOLING_PERSON_YEARS_PER_PLACE`, a labelled heuristic). A node that states `cap_hours` keeps it, labelled `authored`. The default of two labourer-years is gone (`node_defaults.py`); typed capital is removed from every node that states no revenue.
+- [x] A node named in an entry's `operated_by` earns from output without a typed `rev_hours` or `up_hours`; the output nodes carry neither figure, and their entries name them.
+- [x] A node that states no `up_hours` and earns from no output keeps up a labelled share of its build bill (`_upkeep_basis` `default`) in place of the old flat default.
+- [x] `simulator.py validate` prints revenue, upkeep and capital by basis and the branch files that still type figures (`node_revenue_census.py`).
+- [ ] Typed figures that remain, with the data each needs (measure with `python3 sim/simulator.py validate`, section "TYPED FIGURES STILL IN BRANCH FILES"):
+  - nodes that name no product: each needs the production entries it runs (`operated_by`, with outputs, labour by trade, plant with service lives and capacity, each with a `basis`), after which revenue, upkeep and capital derive and the typed fields are deleted. Files: 00_core, 10_textiles, 11_food_agriculture, 12_household, 13_media, 14_land_transport, 15_ships, 16_aviation, 17_energy, 18_chemicals, 19_metallurgy_mining, 20_precision, 21_medicine, 22_civil, 23_optics_instruments, 24_comms_computing, 30_expeditions, 40_finance_institutions, 42_electrical_deep, 45a_transport_land_deep, 45b_transport_rail_marine_deep, 47_agri_food_deep, 48_instruments_deep, 49_military, 51_construction_deep, 52_energy_deep, 53_information_deep, 60_goalpath_deep, 62_control_ops_deep.
+  - nodes that gate entries but no staff, plant or declared output bounds them (their `output_unbounded_reason` says why), in 00_core, 17_energy, 18_chemicals, 19_metallurgy_mining, 21_medicine, 47_agri_food_deep, 48_instruments_deep and 51_construction_deep.
+  - nodes that type an upkeep and no revenue: programme spending (benefactions, 56; 55_realism_part02), capability upkeep (00_capabilities) and service staff (19_metallurgy_mining, 22_civil, 18_chemicals, 00_core and others). Each needs its staff by trade and its materials stated, or a programme model.
+  - sciences that type an upkeep and earn nothing.

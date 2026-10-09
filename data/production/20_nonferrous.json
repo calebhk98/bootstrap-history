@@ -269,6 +269,7 @@
    "basis": "per tonne of metallic zinc produced by retort distillation",
    "yield_basis": "RETORT DISTILLATION - the achievement that eluded Europe until the Bristol process of 1738 (India's Zawar mines managed it centuries earlier), despite brass having been made for two thousand years, precisely because it requires not just reducing the ore but condensing the escaping zinc vapour as metal without letting it reoxidise - a sealed fireclay retort with a cooled condenser, not just a hot crucible. calamine_kg is the raw ore at ~35% Zn (see that entry); ZnO + C -> Zn + CO (0.18 kg C/kg Zn stoichiometric) reduces it after an in-furnace calcining roast, and overall recovery of the ore's zinc content as condensed metal is assumed at 70% - better than cementation's capture (this process is built for condensation) but still well short of complete. Retorts themselves were notoriously short-lived, cracking under repeated thermal cycling - reflected in the heavy furnaceman and labourer hours (retort construction/replacement, multi-day firings). This entry and the electrolytic one below produce the identical metal; the difference between them is entirely how hard it is to make, exactly as the aluminium pair below tells the same kind of story.",
    "requires_node": "zinc_metal",
+   "operated_by": ["zinc_metal"],
    "conf": "C"
   },
   "zinc_electrolytic_kg": {
@@ -406,6 +407,7 @@
    "basis": "per kilogram of solar/semiconductor-grade polycrystalline silicon, added for electrical_mj_photovoltaic below (see 70_energy.json) - not a material the tree consumes yet, defined here because that entry's own capital needs a priced silicon input rather than an invented one",
    "yield_basis": "TWO real industrial steps folded into one entry, the same kind of fold aluminium_kg above makes for Bayer-plus-Hall-Heroult, flagged as a LABELLED HEURISTIC (CLAUDE.md 3.4) rather than itemised further. STEP ONE, carbothermic reduction (submerged electric-arc furnace): SiO2 + 2C -> Si + 2CO2 needs 2.14 kg SiO2 and 0.855 kg C per kg Si stoichiometrically (60.08/28.09 and 24.02/28.09 from the molar masses); real metallurgical-grade furnaces lose silicon to SiO fuming and slag, taken here at 85% overall recovery, giving 2.52 kg sand_quartz_kg (treated as effectively pure SiO2, consistent with quartz_tube_kg's own treatment of the same material) per kg Si. This step needs electricity specifically, not just heat, because industrial practice runs it as a submerged ARC furnace to hold the ~2000 C the reaction wants - a documented industrial specific-energy figure of ~12 MWh (43,200 MJ) per TONNE of metallurgical-grade silicon, i.e. 43.2 MJ/kg, taken here at 12 MWh/t. STEP TWO, purification to solar/semiconductor grade (the Siemens process: trichlorosilane synthesis, distillation and CVD deposition of ultra-pure polysilicon) - a documented, if wide, industrial range of roughly 100-150 kWh per kg of polysilicon output for conventional (non-fluidised-bed) plants, taken here at the conventional-process figure of 120 kWh/kg = 432 MJ/kg. TOTAL: 43.2 + 432 = 475.2 MJ/kg, rounded to 475, carried as electrical_mj rather than thermal_mj because both steps specifically need electrical current (arc heat in step one; resistance-heated CVD reactors and electrolytic-grade purity control in step two) rather than combustion heat - see ENERGY in sim/engine/solve_prices.py's module docstring. WHAT THIS STILL OMITS, LABELLED RATHER THAN HIDDEN: crystal growth (Czochralski pulling of an ingot from the molten polysilicon), wafer sawing (which loses a large fraction of the ingot as kerf), cell processing (diffusion doping, anti-reflective coating) and module lamination are each individually real and individually energy- or capital-intensive steps that real photovoltaic-grade silicon goes through after this entry's own two steps, and NONE of them are modelled here - this entry's price, and hence electrical_mj_photovoltaic's own price below, is consequently a LOWER BOUND by a margin this file cannot yet quantify, the same honest-floor status quartz_tube_kg's old energy_mj carried. Capital (the arc furnace and the Siemens/CVD reactor plant) is now modelled, order-of-magnitude, in the capital list above - an earlier draft of this entry left it at zero, which understated the true cost of a genuinely enormous piece of real industrial plant far more than an order-of-magnitude estimate does; see that list's own capital_basis.",
    "requires_node": "silicon_path",
+   "operated_by": ["silicon_path"],
    "conf": "C"
   },
   "soda_ash_kg": {
@@ -515,6 +517,7 @@
    "basis": "per tonne of cold-drawn copper wire",
    "yield_basis": "Wire drawing is purely mechanical - copper rod is pulled through progressively smaller dies, with no chemical change and no reduction, so there is no ore or fuel-for-reduction input here, only the copper feedstock itself plus a 2% allowance for trim scrap and oxide scale not recovered within this entry's basis. Copper work-hardens as it is drawn and must be periodically annealed (heated and slow-cooled) to restore ductility for further drawing, hence a small furnaceman allowance alongside the machinist hours for the drawing bench itself.",
    "requires_node": "drawplate_wire",
+   "operated_by": ["drawplate_wire"],
    "conf": "C"
   },
   "nickel_ore_kg": {
@@ -987,7 +990,8 @@
    "basis": "per gram of metallic caesium",
    "yield_basis": "Cs2O is 94.3% caesium by mass (265.82/281.82); a 20% Cs2O ore is ~18.9% contained caesium. Refining pollucite to metal is a genuinely multi-step chemical process (acid digestion, ion exchange or fractional crystallisation to isolate a caesium salt, then reduction to metal, historically by reaction with calcium metal or by electrolysis) that this entry does not model step by step; an ASSUMED 80% overall recovery (LABELLED HEURISTIC, conf C) is applied instead, giving ~6.6 g of pollucite ore per gram of caesium metal. The chemist-hour figure is large per gram because it is per GRAM - world caesium metal output has always been measured in kilograms per year, reflecting both the ore's rarity and the chemistry's difficulty, and the labour figure is trying to represent that scale honestly rather than pretend caesium is a bulk metal with a small unit cost.",
    "conf": "C",
-   "requires_node": "opt_spectroscopy_emission"
+   "requires_node": "opt_spectroscopy_emission",
+   "operated_by": ["opt_spectroscopy_emission"]
   },
   "phosphor_bronze_g": {
    "outputs": {

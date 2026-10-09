@@ -45,7 +45,8 @@
    "basis": "per tonne of hand-cobbed beryl crystal from a granite pegmatite",
    "yield_basis": "EXTRACTED. Beryl (Be3Al2Si6O18) occurs as large crystals in pegmatites and is picked out by hand, so this is hard-rock digging at the copper_ore_kg rate; sorting is not costed separately. The beryllium content is a property of the mineral and is stated in the recipe that consumes it.",
    "conf": "C",
-   "requires_node": "arc_furnace_ferroalloys"
+   "requires_node": "arc_furnace_ferroalloys",
+   "operated_by": ["arc_furnace_ferroalloys"]
   },
   "rutile_kg": {
    "outputs": {
@@ -210,7 +211,8 @@
    "basis": "per tonne of copper-beryllium alloy, 1.9% beryllium by mass, by carbothermic reduction of beryllia in a copper bath",
    "yield_basis": "COMPOSITION AND STOICHIOMETRY. Age-hardening copper-beryllium is about 1.9% beryllium. That is 19 kg beryllium per tonne; beryl is 5.03% beryllium (3*9.012/537.5) and taken as 70% recovered through opening and reduction, so 19/(0.0503*0.70) = 540 kg. BeO + C -> Be + CO needs 1.333 kg carbon per kg beryllium, 25.3 kg. Copper is 981 kg with the 2% melt loss bronze_kg uses, 1001 kg. Heat is a floor: the reduction takes about 499 kJ per mole beryllium (formation enthalpies of BeO and CO), 55.4 MJ/kg, 1052 MJ for 19 kg, plus heating and melting 981 kg copper (0.385 kJ/kg/K to 1085 C and 205 kJ/kg fusion), about 610 MJ; total 1665 MJ at about 2000 C, which only arc heating reaches. Reagents to open the beryl are not costed. Alloying labour is copied from bronze_kg.",
    "conf": "C",
-   "requires_node": "arc_furnace_ferroalloys"
+   "requires_node": "arc_furnace_ferroalloys",
+   "operated_by": ["arc_furnace_ferroalloys"]
   },
   "cemented_carbide_kg": {
    "outputs": {
@@ -250,7 +252,8 @@
    "basis": "per tonne of silicon carbide from an Acheson resistance furnace",
    "yield_basis": "STOICHIOMETRY. SiO2 + 3 C -> SiC + 2 CO needs 60.08/40.10 = 1.498 kg silica and 36.03/40.10 = 0.899 kg carbon per kg SiC. Heat is a floor: the reaction takes 618 kJ per mole SiC (formation enthalpies of SiO2, SiC and CO), 15.4 GJ per tonne, plus about 2.6 GJ to bring the charge to 2300 C, about 18000 MJ, which only resistance heating reaches. Carbon monoxide off-gas heat is not credited, and real furnaces leave unreacted charge, so material yield is optimistic. Crew hours are copied from cement_portland_kg's kiln crew.",
    "conf": "C",
-   "requires_node": "arc_furnace_ferroalloys"
+   "requires_node": "arc_furnace_ferroalloys",
+   "operated_by": ["arc_furnace_ferroalloys"]
   },
   "alnico_kg": {
    "outputs": {
@@ -346,7 +349,8 @@
    "basis": "per tonne of precipitated magnesium fluoride for optical coatings",
    "yield_basis": "STOICHIOMETRY. MgCl2 + CaF2 + H2SO4 -> MgF2 + CaSO4 + 2 HCl, with fluoride released as hydrogen fluoride from fluorspar and acid. MgF2 is 62.30 g/mol, so per kg: 95.21/62.30 = 1.528 kg MgCl2, 78.07/62.30 = 1.253 kg CaF2 and 98.08/62.30 = 1.574 kg H2SO4, all at an assumed 90% yield: 1698, 1392 and 1749 kg. Hydrochloric acid and calcium sulphate are discarded. Drying and vacuum-grade purification are not modelled. Labour is copied from molybdenum_kg's chemist hours.",
    "conf": "C",
-   "requires_node": "hydrofluoric_acid"
+   "requires_node": "hydrofluoric_acid",
+   "operated_by": ["hydrofluoric_acid"]
   },
   "mica_kg": {
    "outputs": {
