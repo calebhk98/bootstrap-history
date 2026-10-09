@@ -270,6 +270,12 @@ says that yet.
 
 ### Engine work the rest needs
 
+Status: items 1 and 6 are built as a node field (`requires_running`, see
+`sim/engine/projects_running_gates.py`), item 3 is built for roads and railways as `requires_ways`,
+item 2 is still open (no register of works on tiles), item 4 is described below and not built,
+item 5 and 7 are untouched. No dependent in the data has been migrated to the new fields yet, so
+nothing in play changes until a node names them.
+
 1. A general running gate on dependents. A node field (name to be chosen; the
    `requires_running` on counters is the model) listing nodes that must be
    running, read beside `_check_missing_prereqs` in
@@ -292,7 +298,12 @@ says that yet.
 3. Size. `capability.scalable` sizes institutions by units; a grid, a railway
    or a telegraph network should scale by the length or load built, with cost
    rising with size, as the benefactions already do for each repeat foundation.
-4. Action results. `grants` covers living stock only. Routes opened, places
+4. Action results. (Not built. A declared result needs a saved record per actor, for example a set of
+   lanes sailed, which is a new field in `sim/engine/state*.py`, plus every reader of `requires_nodes`
+   on modes and sea lanes asking for it: `geography_port.held_nodes`, `economy_port_setup`,
+   `foreign_routes` and `labour_settlement` each build their own held set from `done`, so one change
+   would be partial. The smallest honest step is one engine method answering "held and running" that
+   those four call.) `grants` covers living stock only. Routes opened, places
    known, deposits secured and posts held need a declared result a dependent
    can check, for example a record that this actor has sailed this lane, read
    by sea lanes in place of `requires_nodes`.

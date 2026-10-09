@@ -1,6 +1,6 @@
 # Some technologies are actions, not research
 
-**Status:** partly - the data fixes of the audit are done (living stock returned by the American post, upkeep on constructions that had none); the engine work in `Complaints/reports/action-and-construction-node-audit.md` (a running gate on dependents, works with a place and a size, action results other than stock, lapse of a completed work) remains
+**Status:** partly - done: data fixes of the audit; a node field `requires_running` (works that must be built and open) gating beginning, opening, effects and open dependents, with lapse down the chain when a work closes and no softlock exemption for a work others rely on; `requires_ways` (kilometres of road or railway built, read through geography's `built_km`) as the size and place of a built work. Remaining: no dependent in the data uses either field yet (migrating the grid, telegraph, railway, harbour, aqueduct and sewer rows changes play and needs a fingerprint comparison), a general works register on tiles other than ways, action results other than living stock, loss of hull, crew and cargo in a failed voyage
 
 Several tree nodes model something you do or build as if it were something
 you learn. Examples: an expedition to the Americas is a voyage (ships,
@@ -45,3 +45,11 @@ audit entries have no construction labour to take a share of (`sea_harbours_pozz
 What remains is engine work, listed in the audit: dependents that require a work to be running, a
 place and a size for built works, action results other than living stock, and lapse of a completed
 work.
+
+## Engine progress
+
+`requires_running` is read generically (`sim/engine/projects_running_gates.py`): a start check of kind
+`closed`, `running` false while a required work is shut, `open` and `restore` refused, and the yearly
+`close_lapsed_dependents` plus a cascade in `close_work` (closure reason `gate_lapsed`). `validate`
+rejects an unknown id, a node that cannot run and a cycle. Tests: `sim/tests/test_running_gates.py`
+(small fixtures, quick tier). Action results: see the audit, item 4, for what a declared result needs.

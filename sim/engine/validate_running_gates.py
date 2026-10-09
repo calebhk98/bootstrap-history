@@ -1,7 +1,8 @@
 """Validation rule: what a node requires running must be a work that can run.
 
 `running` equals `done` for anything that is not a venture, so a running requirement on such a
-node would never bind. A requirement chain that loops could never be met."""
+node would never bind. A requirement chain that loops could never be met. `requires_ways` lengths
+must be positive numbers."""
 from typing import Any, List, Mapping
 
 RUNNING_FIELDS = ("up", "rev", "up_hours", "rev_hours")
@@ -36,6 +37,10 @@ def check_running_gates(nodes: Mapping[str, Mapping[str, Any]]) -> List[str]:
             elif not _can_run(nodes[needed]):
                 errors.append("%s: requires_running names %s, which has no upkeep or revenue so is never "
                               "'running' apart from being built" % (node_id, needed))
+    for node_id in sorted(nodes):
+        for way, km in (nodes[node_id].get("requires_ways") or {}).items():
+            if not isinstance(km, (int, float)) or km <= 0:
+                errors.append("%s: requires_ways %s needs a positive number of kilometres, not %r" % (node_id, way, km))
     reported = set()
     for node_id in sorted(nodes):
         loop = _cycle_from(nodes, node_id) if nodes[node_id].get("requires_running") else []

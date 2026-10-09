@@ -24,6 +24,7 @@ def _nodes():
         GRID: {"id": GRID, "pre": [], "up": 10.0, "rev": 0.0},
         LAMP: {"id": LAMP, "pre": [GRID], "up": 2.0, "rev": 1.0, "requires_running": [GRID]},
         TRAM: {"id": TRAM, "pre": [LAMP], "up": 2.0, "rev": 1.0, "requires_running": [LAMP]},
+        "depot": {"id": "depot", "pre": [], "up": 1.0, "rev": 0.0, "requires_ways": {"rail": 50.0}},
         "lore": {"id": "lore", "pre": [GRID], "up": 0.0, "rev": 0.0, "requires_running": [GRID]},
     }
 
@@ -40,6 +41,11 @@ class _Host(RunningGatesMixin, CapabilityMixin, StaffingMixin, FogMixin):
 
     def on_road_to_goal(self, node_id):
         return True
+
+    built_km = {"rail": 0.0}
+
+    def built_way_km(self, way):
+        return self.built_km.get(way, 0.0)
 
     def has(self, node_id):
         return node_id in self.state.projects.done
@@ -79,6 +85,33 @@ class RunningGateTests(unittest.TestCase):
     def test_opening_a_dependent_is_refused_while_its_work_is_shut(self):
         self.assertIn(GRID, _host(grid_open=False, lamp_open=False).running_gate_refusal(LAMP))
         self.assertIsNone(_host(lamp_open=False).running_gate_refusal(LAMP))
+
+
+class WayGateTests(unittest.TestCase):
+
+    def test_a_node_waits_for_the_length_of_way_it_names(self):
+        host = _host()
+        host.state.projects.done.add("depot")
+        host.state.projects.operating.add("depot")
+        host.built_km = {"rail": 10.0}
+        self.assertEqual(host.ways_short("depot"), {"rail": 40.0})
+        self.assertFalse(host.running("depot"))
+        host.built_km = {"rail": 60.0}
+        self.assertEqual(host.ways_short("depot"), {})
+        self.assertTrue(host.running("depot"))
+
+    def test_the_start_refusal_says_how_much_is_short(self):
+        host = _host()
+        host.built_km = {"rail": 10.0}
+        verdict = check_running_gates(host, "depot", host.nodes["depot"], False, None, True)
+        self.assertFalse(verdict[0])
+        self.assertIn("rail", verdict[1])
+        self.assertIn("40", verdict[1])
+
+    def test_a_bad_way_requirement_is_named(self):
+        nodes = _nodes()
+        nodes["depot"]["requires_ways"] = {"rail": -1}
+        self.assertTrue(any("rail" in error for error in validate_running_gates.check_running_gates(nodes)))
 
 
 class LapseTests(unittest.TestCase):

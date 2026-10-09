@@ -130,6 +130,12 @@ def build_requirements(tile_a: str, tile_b: str, improvement: str,
     return ways_build.requirements(_map(world_map), tile_a, tile_b, improvement)
 
 
+def built_km(improvements: Mapping[str, Mapping[str, Any]], improvement: str,
+             world_map: Optional[WorldMap] = None) -> float:
+    """Kilometres of `improvement` ("road", "rail") the caller's `improvements` record holds."""
+    return ways_build.built_km(_map(world_map), improvements, improvement)
+
+
 def edge_key(tile_a: str, tile_b: str) -> str:
     """The key an improvement (a built road or track) between two tiles is stored under."""
     return routes_graph.edge_key(tile_a, tile_b)

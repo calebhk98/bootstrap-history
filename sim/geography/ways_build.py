@@ -9,7 +9,7 @@ mode's crew works in a year.
 
 Standalone: the route graph and modes of this package.
 """
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Mapping, Optional
 
 from sim.geography import routes_graph, routes_modes
 from sim.geography.map_source import WorldMap
@@ -22,6 +22,16 @@ def land_edge(world_map: WorldMap, tile_a: str, tile_b: str) -> Optional[routes_
     key = routes_graph.edge_key(tile_a, tile_b)
     return next((edge for edge in routes_graph.graph(world_map).edges
                  if edge.edge_class == "land" and edge.key == key), None)
+
+
+def built_km(world_map: WorldMap, improvements: Mapping[str, Mapping[str, Any]], improvement: str) -> float:
+    """Length of `improvement` the caller's record holds, over the land edges it covers, counted the
+    way `requirements` counts a build."""
+    mode = next((entry for entry in routes_modes.modes(world_map).values()
+                 if entry.get("needs_improvement") == improvement and entry.get("construction")), None)
+    factor = mode.get("km_factor", 1.0) if mode else 1.0
+    return sum(edge.km * factor for edge in routes_graph.graph(world_map).edges
+               if edge.edge_class == "land" and (improvements.get(edge.key) or {}).get(improvement))
 
 
 def requirements(world_map: WorldMap, tile_a: str, tile_b: str, improvement: str) -> Optional[Dict[str, Any]]:
