@@ -17,10 +17,11 @@ from sim.economy.api import (EDGE_EXTERNAL, EDGE_LEGACY, AgentOrders, Economy, G
                              YearInputs, expected_output_prices, external_orders, live_input_prices, live_wages,
                              trade_premium, variable_cost_per_run)
 
-from . import economy_port_cargo, economy_port_sites, solve_cache
+from . import economy_port_cargo, economy_port_sites, material_capacity, solve_cache
 from .data import load_civ
 from .economy_port_key import spin_up_key
 from .economy_port_setup import build_setup, opening_values
+from .project_materials import tonnes_per_unit
 
 SWITCH_ENVIRONMENT = "ROME_AGENT_ECONOMY"
 OUTCOMES_KEPT = 100   # yearly outcomes held in memory for the health figures
@@ -412,6 +413,15 @@ class AgentEconomy:
         if self._economy is None and "record" not in self.stored:
             return None
         return economy_api.people_by_trade(self.economy())
+
+    def producer_capacity_tonnes(self, material):
+        """Tonnes a year the economy's producers can make of a material at full capacity; zero before the
+        economy has opened."""
+        if not self.opened():
+            return 0.0
+        economy = self.economy()
+        return material_capacity.producer_capacity_tonnes(
+            economy_api.producers_of(economy).values(), economy.setup.recipes, material, tonnes_per_unit(material))
 
     def worker_years_by_recipe(self):
         """Worker-years a year the economy's producers can put into each recipe at full capacity."""

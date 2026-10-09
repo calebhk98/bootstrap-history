@@ -10,9 +10,8 @@ keys - you can actually get your hands on this year, whether that is
 your own production, a purchase against the empire's market, or stock
 carried over from an earlier year. Covers: CHARCOAL_PER_HA/MARKET_SHARE
 (the nine curated commodities' own supply figures); the generic
-fallback that fits an output-vs-price curve from those nine so that
-every OTHER material key behaves correctly without anyone having
-curated it by hand (_commodity_ledger()/_material_commodity_map()/
+fallback that reads every OTHER material key's output from the deposits held and
+the producers' plants (_commodity_ledger()/_material_commodity_map()/
 _material_prices()/_material_price_per_kg()/_material_tag()/
 _generic_national_output_t_per_yr()/_generic_market_share()/
 _normalize_material_name()); chosen_fuel() and annual_material_demand()
@@ -46,7 +45,7 @@ account.
 """
 import collections
 
-from . import commodities as _commod
+from . import commodities as _commod, material_capacity
 from sim.constants import declare
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
@@ -163,77 +162,11 @@ class MaterialSupplyMixin:
         'gold': MARKET_SHARE_GOLD,
     }
 
-    # ---- GENERALISING BEYOND THE 9 HAND-NAMED COMMODITIES --------------------
-    #
-    # data/review/COMMODITY_DYNAMISM.md, an audit run directly against
-    # this engine, found 149 of the then 162 distinct material keys the
-    # tech tree used (about 92%) had a price read once at
-    # load time and never revisited for scarcity, surplus or anything else,
-    # because MATERIAL_CHECKS/MARKET_SHARE above only ever named 13 keys by
-    # hand. The tree has since dropped to 159 distinct material keys, all
-    # 13 MATERIAL_CHECKS keys still among them, so the live count today is
-    # 146 of 159 (still about 92%) - counted by intersecting MATERIAL_CHECKS
-    # against every `mat` key in data/branches/; COMMODITY_DYNAMISM.md's
-    # own audit script is not committed to the repo (same status as
-    # NAMING_PLAN.md's scanner), so this is measured, not scriptable here.
-    # Its own worked case was aluminium: "no mine, no supply lever of any
-    # kind... nothing in economy.py even contains the string aluminium."
-    #
-    # The fix below is NOT a per-material rule. It is a generic fallback that
-    # activates for any material key this file has no curated entry for,
-    # using the one number every material already has: its calculated price
-    # (the solver prices every material a node's `mat` dict names, or load()
-    # would have raised building `_material_cost`). A cheap,
-    # plentiful material gets assumed to have a large national output and a
-    # wide buyable share; a dear, rare one gets less of both - fitted, not
-    # guessed, from the curated figures the 9 tracked commodities already
-    # carry: iron is rated 82,500 t/yr, copper 15,000, gold 9. log(output)
-    # against log(price in labour hours per kg) across those three (about
-    # four orders of magnitude in price) fits close to output =
-    # anchor / price**1.1 - which reproduces gold's real 9 t/yr to within
-    # 20% despite the fit never having seen gold's number, because scarcity
-    # and price genuinely do move together, not because gold is special.
-    # This is exactly the standard COMMODITY_DYNAMISM.md sets: "a commodity
-    # nobody anticipated must behave correctly because the mechanism is
-    # supply and demand, not because somebody wrote a rule for it."
-    GENERIC_OUTPUT_ANCHOR_T_PER_YR = declare(
-        "GENERIC_OUTPUT_ANCHOR_T_PER_YR", 2246000.0, kind="engineering_estimate",
-        unit="tonnes/year at a price of one labour hour per kg", source=
-        "Fitted (log-log regression) from resources.json's own curated "
-        "empire outputs for iron (82,500 t/yr), copper (15,000 t/yr) and gold (9 t/yr), "
-        "each against its solved price in labour hours per kg - see the class "
-        "comment above for the fit and its cross-check against gold's own "
-        "number, which the fit never saw.",
-        confidence="C",
-        why="The anchor point of a fitted output-vs-price curve used to "
-            "guess national output for any of the 146 material keys this "
-            "file has no curated resources.json figure for. A real answer "
-            "needs an actual output figure per material, which is exactly "
-            "what data/production/'s coverage work is building toward "
-            "replacing this fallback with.")
-    GENERIC_OUTPUT_PRICE_EXPONENT = declare(
-        "GENERIC_OUTPUT_PRICE_EXPONENT", 1.1, kind="hardcoded_outcome",
-        unit="dimensionless exponent on price", source=
-        "Same three-point log-log fit as GENERIC_OUTPUT_ANCHOR_T_PER_YR.",
-        confidence="C",
-        why="How fast national output falls as a material's own solved price "
-            "rises, in the fitted fallback curve - scarcity and price "
-            "moving together is a real, general economic regularity; this "
-            "specific exponent is fitted to three commodities and "
-            "extrapolated to every other material, which is the honest "
-            "limit of what three points can support.")
-    GENERIC_OUTPUT_FLOOR_T_PER_YR = declare(
-        "GENERIC_OUTPUT_FLOOR_T_PER_YR", 5.0, kind="temporary_heuristic",
-        unit="tonnes/year (minimum)", source=None, confidence="D",
-        why="Safety floor so an extremely expensive material's fitted "
-            "output never rounds to a market that supplies literally "
-            "nothing. Not fitted; a defensive bound on the formula above.")
-    GENERIC_OUTPUT_CEILING_T_PER_YR = declare(
-        "GENERIC_OUTPUT_CEILING_T_PER_YR", 400000.0, kind="temporary_heuristic",
-        unit="tonnes/year (maximum)", source=None, confidence="D",
-        why="Safety ceiling so an extremely cheap material's fitted output "
-            "never runs away to an implausible national output. Not "
-            "fitted; a defensive bound on the formula above.")
+    # ---- BEYOND THE HAND-NAMED COMMODITIES --------------------------------------
+    # A material with no curated figure has the output the society can physically bring to market:
+    # the working rate of the deposits on the tiles held, plus the plants of the producers that make
+    # it (`material_capacity`). Nothing is fitted to price; a material nothing mines or makes has no
+    # market, which is what the book of that commodity already says (`_market_entry`).
 
     def _commodity_ledger(self):
         """The 9 curated commodities from commodities.json, as a
@@ -295,12 +228,6 @@ class MaterialSupplyMixin:
             return prices.get(commodity.get("price_material")) or None
         return None
 
-    def _hours_price_per_kg(self, tag):
-        """The price in labour hours per kg, the unit the output and
-        market-share curves below are stated in."""
-        price = self._material_price_per_kg(tag)
-        return None if price is None else price / self.labour.money_per_labour_hour()
-
     def _material_tag(self, mat_key):
         """Which (commodity id, supply-pool tag) a raw material key draws
         on, generalised beyond the 13 keys MATERIAL_CHECKS names by hand.
@@ -326,64 +253,46 @@ class MaterialSupplyMixin:
         cid = self._material_commodity_map().get(mat_key, mat_key)
         return (cid, "mine:" + cid)
 
+    def producer_capacity_tonnes(self, material):
+        """Tonnes a year the agent economy's producers can make of `material`; zero without one."""
+        agent = self.economy.agent
+        return 0.0 if agent is None else agent.producer_capacity_tonnes(material)
+
     def _generic_national_output_t_per_yr(self, tag):
         return self._done_memo("national_output", tag,
                                lambda: self._generic_national_output_uncached(tag))
 
     def _generic_national_output_uncached(self, tag):
-        """National output for a commodity/material this file has no
-        curated resources.json figure for - the MARKET half of supply (see
-        _material_market_tonnes). Prefers real data over a guess wherever
-        real data exists: if `tag` is one of the 4 commodities.json defines
-        but MARKET_SHARE has never priced (cloth, wool, cotton,
-        copper_wire), this reads THAT commodity's own national/manufacturing
-        output through CommodityLedger.country_output() - which already
-        knows a built power loom raises cloth output, or cyanidation raises
-        gold's, per commodities.json's own `produced_by` multipliers. That
-        is COMMODITY_DYNAMISM.md's own third finding wired in for real:
-        "a genuinely general elasticity-based price function... sitting
-        unconnected." Only a material with no curated home at all (silk,
-        glass, the acids and dyes and alloys) falls through to the generic
-        price-derived formula documented on GENERIC_OUTPUT_ANCHOR_T_PER_YR
-        above."""
+        """Tonnes a year the society can bring to market of a material with no curated figure. A commodity
+        commodities.json defines reads its own output (which knows what built works raise it); any other
+        material is what the deposits on the tiles held can yield plus what the producers' plants make."""
         ledger = self._commodity_ledger()
         if tag in ledger.commodities:
             return ledger.country_output(tag, built=self.state.projects.done)
-        price = self._hours_price_per_kg(tag)
-        price_power = None if price is None or price <= 0 else price ** self.GENERIC_OUTPUT_PRICE_EXPONENT
-        if not price_power:     # unpriced, free, or so cheap the power underflows
-            return self.GENERIC_OUTPUT_CEILING_T_PER_YR
-        out = self.GENERIC_OUTPUT_ANCHOR_T_PER_YR / price_power
-        return max(self.GENERIC_OUTPUT_FLOOR_T_PER_YR,
-                   min(self.GENERIC_OUTPUT_CEILING_T_PER_YR, out))
+        return (material_capacity.mined_capacity_tonnes(self.found_deposits(tag))
+                + self.producer_capacity_tonnes(tag))
+
+    def _output_scale(self, emp_key):
+        """What the national output of `emp_key` is scaled by to reach this society: a curated figure is
+        the reference empire's, so it scales with population (charcoal) or with the mineral tiles held;
+        a capacity read from the society's own deposits and producers is already its own."""
+        if emp_key not in self.res["empire_output_100ad"] and emp_key != "charcoal" \
+                and emp_key not in self._commodity_ledger().commodities:
+            return 1.0
+        return self.pop_scale if emp_key == "charcoal" else self.geography.mineral_scale(emp_key)
 
     def _generic_market_share(self, tag):
         return self._done_memo("market_share", tag,
                                lambda: self._generic_market_share_uncached(tag))
 
     def _generic_market_share_uncached(self, tag):
-        """What fraction of _generic_national_output_t_per_yr an ordinary
-        buyer (no special standing) can reach, for a commodity/material
-        MARKET_SHARE has no curated figure for. Same two-tier preference as
-        the output figure: a commodities.json commodity's own market_share
-        (cloth 0.5, wool 0.4, cotton 1.0 trade-only, copper_wire 0.6) where
-        one exists; otherwise a generic curve fitted the same way
-        GENERIC_OUTPUT was - rarer, dearer materials are held closer (gold
-        0.01, silver 0.01) and cheap bulk ones are wide open (coal 0.50) -
-        clamped well inside that observed range since this is a default
-        for a material nobody has separately reasoned about, not a
-        specific claim."""
+        """The fraction of the society's output an ordinary buyer can reach for a material MARKET_SHARE has no
+        figure for: a commodities.json commodity's own market_share, else the declared open share."""
         ledger = self._commodity_ledger()
         if tag in ledger.commodities:
             return float(ledger.commodities[tag].get(
                 "market_share", self.GENERIC_MARKET_SHARE_LEDGER_FALLBACK))
-        price = self._hours_price_per_kg(tag)
-        if price is None or price <= 0:
-            return self.GENERIC_MARKET_SHARE_NO_PRICE_FALLBACK
-        return max(self.GENERIC_MARKET_SHARE_FLOOR,
-                   min(self.GENERIC_MARKET_SHARE_CEILING,
-                       self.GENERIC_MARKET_SHARE_SCALE
-                       / (max(price, self.GENERIC_MARKET_SHARE_PRICE_FLOOR_HOURS_PER_KG) ** self.GENERIC_MARKET_SHARE_PRICE_EXPONENT)))
+        return material_capacity.DEFAULT_MARKET_SHARE_OF_CAPACITY
 
     GENERIC_MARKET_SHARE_LEDGER_FALLBACK = declare(
         "GENERIC_MARKET_SHARE_LEDGER_FALLBACK", 0.03, kind="temporary_heuristic",
@@ -392,55 +301,6 @@ class MaterialSupplyMixin:
             "that names no market_share field of its own - a middling, "
             "unremarkable buyable fraction picked so a missing field does "
             "not silently become 'unbuyable' or 'unlimited'.")
-    GENERIC_MARKET_SHARE_NO_PRICE_FALLBACK = declare(
-        "GENERIC_MARKET_SHARE_NO_PRICE_FALLBACK", 0.20, kind="temporary_heuristic",
-        unit="fraction of national output", source=None, confidence="D",
-        why="Fallback market share for a material this file cannot even "
-            "price at all - deliberately generous (wide open) since a "
-            "material with no price data has no basis for restricting it "
-            "either; a placeholder rather than a reasoned figure.")
-    GENERIC_MARKET_SHARE_SCALE = declare(
-        "GENERIC_MARKET_SHARE_SCALE", 0.266, kind="engineering_estimate",
-        unit="market share at a price of one labour hour per kg",
-        source="Fitted the same way GENERIC_OUTPUT_ANCHOR_T_PER_YR was, "
-               "against the curated MARKET_SHARE figures for gold/silver "
-               "(0.01, rare and dear) and coal (0.50, cheap and open).",
-        confidence="C",
-        why="Scale of the price-fitted curve giving a generic material's "
-            "market share when nothing more specific is known. Same honest "
-            "limit as the output fit: three curated points fitted and "
-            "extrapolated, not a measurement for any specific material.")
-    GENERIC_MARKET_SHARE_PRICE_EXPONENT = declare(
-        "GENERIC_MARKET_SHARE_PRICE_EXPONENT", 0.4, kind="engineering_estimate",
-        unit="dimensionless exponent on price", source=
-        "Same three-point fit as GENERIC_MARKET_SHARE_SCALE.",
-        confidence="C",
-        why="How fast a generic material's buyable share shrinks as its "
-            "price rises - rarer, dearer materials are held closer by "
-            "whoever controls them, a real and general pattern; the "
-            "specific exponent is fitted to three commodities.")
-    GENERIC_MARKET_SHARE_PRICE_FLOOR_HOURS_PER_KG = declare(
-        "GENERIC_MARKET_SHARE_PRICE_FLOOR_HOURS_PER_KG", 0.202, kind="temporary_heuristic",
-        unit="labour hours per kg", source=None, confidence="D",
-        why="Price below which the market-share curve stops rising, so a "
-            "near-free material does not divide by zero. A defensive bound.")
-    GENERIC_MARKET_SHARE_FLOOR = declare(
-        "GENERIC_MARKET_SHARE_FLOOR", 0.01, kind="temporary_heuristic",
-        unit="fraction of national output (minimum)", source=None,
-        confidence="D",
-        why="Clamp so the fitted generic market-share curve never reaches "
-            "a literal zero for an ordinary buyer, however dear the "
-            "material - a defensive bound, not a reasoned floor.")
-    GENERIC_MARKET_SHARE_CEILING = declare(
-        "GENERIC_MARKET_SHARE_CEILING", 0.35, kind="temporary_heuristic",
-        unit="fraction of national output (maximum)", source=None,
-        confidence="D",
-        why="Clamp so the fitted generic market-share curve stays well "
-            "inside the observed range of the curated figures it was "
-            "fitted from, per this method's own docstring ('a default for "
-            "a material nobody has separately reasoned about, not a "
-            "specific claim') - a defensive bound, not a reasoned ceiling.")
-
     def _normalize_material_name(self, mat):
         """Accept either spelling when a player names a material: the
         short curated name a mine has always used ("iron"), or the exact
@@ -675,8 +535,7 @@ class MaterialSupplyMixin:
         """What the society's own producers can bring to market a year: the
         national output scaled to the territory held (see _material_market_tonnes
         for the same scale)."""
-        scale = self.pop_scale if emp_key == "charcoal" else self.geography.mineral_scale(emp_key)
-        return self._national_output_tonnes(emp_key) * scale
+        return self._national_output_tonnes(emp_key) * self._output_scale(emp_key)
 
     def _material_market_tonnes(self, emp_key):
         """Tonnes a year of `emp_key` the empire's market will sell you, at
@@ -717,8 +576,7 @@ class MaterialSupplyMixin:
         # population. Charcoal stays on pop_scale: it is not mined, it is
         # a local wood market, and THAT genuinely does track how much
         # local economic activity there is to buy firewood from.
-        scale = self.pop_scale if emp_key == "charcoal" else self.geography.mineral_scale(emp_key)
-        market = national * share * scale
+        market = national * share * self._output_scale(emp_key)
         # Bengal saltpetre: an existing annual sea route, not a nitre bed.
         # This is the single most useful thing in the geography file.
         routes = kept.get(emp_key)
