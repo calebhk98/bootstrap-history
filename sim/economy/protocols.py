@@ -50,6 +50,10 @@ class MarketView(Protocol):
     def price(self, good: GoodId, area: AreaId) -> Optional[float]:
         """Last year's clearing price; None if the market never cleared."""
 
+    def usual_price(self, good: GoodId, area: AreaId) -> Optional[float]:
+        """A slow average of the clearing price, which holders of durable goods compare today's with.
+        A view may omit it; holders then expect no reversion."""
+
     def wage(self, trade: TradeId, area: AreaId) -> Optional[float]:
         """Last year's wage per hour."""
 

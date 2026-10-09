@@ -14,6 +14,7 @@ from sim.world import demand, need_basket
 from sim.geography.api import layer_value, sea_freight, settlement, tiles_held
 from sim.labour import api as labour_api
 
+from .economy_port_stores import opening_store_values
 from .foreign_routes import SEA_MODE
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data")
@@ -65,6 +66,7 @@ def opening_values(sim):
         "carriage": dict(modes),
         "held_nodes": sorted(sim.state.projects.done | sim.state.projects.granted),
         "ways": {key: dict(way) for key, way in sorted(sim.state.economy.improvements.items())},
+        "stores": opening_store_values(sim.world_map, tile_ids, int(sim.cfg["start_year"])),
     }
 
 
@@ -150,7 +152,10 @@ def build_setup(sim, opening=None):
         land_per_run={recipe_id: float(production[recipe_id].get("land_hectare_years") or 0.0)
                       for recipe_id in recipes if production[recipe_id].get("land_hectare_years")},
         basket_by_tile=baskets_by_tile(basket, need_data, world_map, tile_ids), coin_per_unit=unit,
-        world_map=world_map, improvements=dict(opening["ways"]))
+        world_map=world_map, improvements=dict(opening["ways"]),
+        opening_store_output={good: tuple(tuple(working) for working in entry["workings"])
+                              for good, entry in sorted(opening["stores"].items()) if entry["workings"]},
+        opening_store_gaps={good: entry["gap"] for good, entry in sorted(opening["stores"].items()) if entry["gap"]})
 
 
 def _counted_currency(civ, unit):

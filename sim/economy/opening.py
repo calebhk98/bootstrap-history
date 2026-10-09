@@ -11,7 +11,7 @@ from typing import Dict, List, Mapping, Tuple
 
 from sim.constants import declare
 
-from . import currency, goods_market, households, labour_state, location, mint, ownership, sites, unit_cost
+from . import currency, goods_market, households, households_store, labour_state, location, mint, opening_stores, ownership, sites, unit_cost
 from .accounts import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
@@ -63,8 +63,17 @@ def open_economy(setup: EconomySetup) -> Tuple[EconomyRecord, AreaMap, CarriageT
     _open_merchants(setup, record, priced_goods, final_by_tile)
     _strike_opening_cash(setup, record)
     mint.seed_opening_metal(setup, record)
+    opening_stores.seed_opening_stores(setup, record, _store_goods(setup, view, area_map, priced_goods))
     record.opening_basket = _national(final_by_tile)
     return record, area_map, carriage
+
+
+def _store_goods(setup, view, area_map, priced_goods) -> set:
+    """The goods fit to hold as wealth at the opening prices, as households choose them."""
+    tile = setup.capital_tile
+    staple = households_store.staple_price_per_kg(households.need_prices(setup.basket_for(tile), view, tile), setup.specs)
+    prices = {good: view.price(good, area_map.area_of(good, tile)) or 0.0 for good in priced_goods}
+    return set(households_store.store_candidates(setup.specs, prices, staple)) if math.isfinite(staple) else set()
 
 
 def _opening_memory(setup, area_map, priced_goods) -> MarketMemory:
@@ -73,6 +82,7 @@ def _opening_memory(setup, area_map, priced_goods) -> MarketMemory:
     for good, price in priced_goods.items():
         for area in area_map.areas(good):
             memory.prices[market_key(good, area.area_id)] = price
+            memory.note_usual_price(market_key(good, area.area_id))
     for trade, wage in setup.opening_wages.items():
         for tile in setup.tiles:
             memory.wages[market_key(trade, labour_area(tile))] = wage

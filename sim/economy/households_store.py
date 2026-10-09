@@ -2,12 +2,13 @@
 Pure functions: which goods qualify and how the holding is split among them, and how much of savings
 goes into the holding. Goods are chosen by their physical properties and price, never by id."""
 import math
-from typing import Dict, List, Mapping, Tuple
+from typing import Dict, List, Mapping, Optional, Tuple
 
 from sim.constants import declare
 
 from .households_orders import HOUSEHOLD_TIME_PREFERENCE
 from .inventory import holding_reservation
+from .store_return import STORE_STORAGE_COST_PER_KG_YEAR, carrying_return, split_by_return
 from .types import Bid, GoodId, GoodSpec, Offer
 
 STORE_MAX_SPOILAGE = declare(
@@ -20,16 +21,6 @@ STORE_MIN_DENSITY_MULTIPLE = declare(
     unit="multiple of the staple's price per kg", source=None, confidence="D",
     why="Wealth kept as goods has to be small enough to hide, carry and guard, so only goods worth many "
         "times a staple's price per kg qualify. The multiple is an assumption, not measured.")
-STORE_STORAGE_COST_PER_KG_YEAR = declare(
-    "STORE_STORAGE_COST_PER_KG_YEAR", 0.01, kind="temporary_heuristic",
-    unit="money per kg a year", source=None, confidence="D",
-    why="Guarding and housing a hoard costs by the kilogram, so a dense good costs little per unit of "
-        "value. The figure stands in for a strongroom and watchman, which are not modelled.")
-STORE_CHOICE_ELASTICITY = declare(
-    "STORE_CHOICE_ELASTICITY", 0.5, kind="temporary_heuristic",
-    unit="exponent on the inverse of carrying cost", source=None, confidence="D",
-    why="Households spread a store across the goods that qualify, favouring the cheaper to carry. Below "
-        "one, a dearer good never draws more demand because of its price; the value itself is assumed.")
 STORE_SAVINGS_SHARE = declare(
     "STORE_SAVINGS_SHARE", 0.1, kind="temporary_heuristic", unit="share of savings", source=None,
     confidence="D",
@@ -53,19 +44,13 @@ STORE_LIQUIDATION_RESERVATION_SHARE = declare(
         "fetched less than its worth. The discount is an assumption; pawnbrokers' margins would bound it.")
 STORE_PRIORITY = 2          # after the need tiers (floors, then surplus)
 
-assert STORE_CHOICE_ELASTICITY < 1.0, "an elasticity of 1 or more makes a price rise raise its own demand"
-
-
-def _carry_cost_share(spec: GoodSpec, price: float) -> float:
-    """Yearly cost of holding a unit as a share of its price: spoilage, wear, and storage by mass."""
-    return (spec.spoilage_per_year + 1.0 / spec.service_life_years
-            + STORE_STORAGE_COST_PER_KG_YEAR * spec.unit_mass_kg / price)
-
-
 def store_candidates(specs: Mapping[GoodId, GoodSpec], prices: Mapping[GoodId, float],
-                     staple_price_per_kg: float) -> Dict[GoodId, float]:
-    """Goods fit to hold as wealth, each with its share of the holding (sums to one; empty if none)."""
-    weights = {}
+                     staple_price_per_kg: float,
+                     usual_prices: Optional[Mapping[GoodId, float]] = None) -> Dict[GoodId, float]:
+    """Goods fit to hold as wealth, each with its share of the holding (sums to one; empty if none).
+    The shares follow each good's expected carrying return (`store_return`), so a good whose price is
+    high against its usual price draws less and the stock, not the year's flow, settles the price."""
+    returns = {}
     for good, spec in specs.items():
         price = prices.get(good, 0.0)
         if (spec.service_life_years <= 0.0 or spec.spoilage_per_year > STORE_MAX_SPOILAGE
@@ -73,9 +58,8 @@ def store_candidates(specs: Mapping[GoodId, GoodSpec], prices: Mapping[GoodId, f
             continue
         if price / spec.unit_mass_kg < STORE_MIN_DENSITY_MULTIPLE * staple_price_per_kg:
             continue
-        weights[good] = (1.0 / _carry_cost_share(spec, price)) ** STORE_CHOICE_ELASTICITY
-    total = math.fsum(weights.values())
-    return {good: weight / total for good, weight in sorted(weights.items())} if total > 0.0 else {}
+        returns[good] = carrying_return(spec, price, (usual_prices or {}).get(good))
+    return split_by_return(returns)
 
 
 def store_value_target(savings: float, expected_inflation: float, real_rate: float) -> float:
@@ -105,12 +89,16 @@ def store_holding(cohort, view, specs: Mapping[GoodId, GoodSpec], priced) -> Tup
     staple = staple_price_per_kg(priced, specs)
     if not math.isfinite(staple):
         return {}, {}, {}
-    prices = {}
+    prices, usual_prices = {}, {}
     for good in specs:
-        price = view.price(good, view.area_of(good, cohort.tile))
+        area = view.area_of(good, cohort.tile)
+        price = view.price(good, area)
         if price:
             prices[good] = price
-    weights = store_candidates(specs, prices, staple)
+            usual = getattr(view, "usual_price", None)      # a view that keeps no price memory has none
+            if usual is not None and usual(good, area):
+                usual_prices[good] = usual(good, area)
+    weights = store_candidates(specs, prices, staple, usual_prices)
     return (weights, {good: prices[good] for good in weights},
             {good: view.stock(cohort.agent_id, good, cohort.tile) for good in weights})
 

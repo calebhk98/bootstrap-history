@@ -65,6 +65,9 @@ class EconomySetup:
     world_map: Any = None               # geography's map the tiles lie on (the base map when None)
     coin_per_unit: float = 1.0          # the economy counts money in this many coins (the port converts)
     improvements: Dict[str, Dict[str, Any]] = field(default_factory=dict)   # built roads and track by edge key
+    opening_store_output: Dict[GoodId, Tuple[Tuple[float, float, float], ...]] = field(default_factory=dict)
+    # per durable good, its past workings (kg a year, years worked, years since the last output) from the deposits
+    opening_store_gaps: Dict[GoodId, str] = field(default_factory=dict)   # why a good has no workings, for audit
 
     def carriage_table(self, improvements=None) -> CarriageTable:
         """What it costs to move a tonne between this setup's tiles, over geography's route graph, with the

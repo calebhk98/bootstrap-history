@@ -10,7 +10,7 @@ import math
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
 from sim.geography import (food_capacity, map_source, mechanisms, parameters, resource_links, resources_biotic,
-                           resources_catalogue, resources_endowment, resources_prospecting,
+                           resources_catalogue, resources_endowment, resources_mined, resources_prospecting,
                            resources_summary, routes_carriage, routes_graph, routes_modes, routes_search, tile_holdings, tile_layers,
                            ways_build)
 
@@ -187,6 +187,14 @@ def works_priced_from_deposits(world_map: Optional[WorldMap] = None) -> Tuple[st
 def parameter_value(parameter_id: str, world_map: Optional[WorldMap] = None) -> Any:
     """The value of one of the map's parameters."""
     return parameters.parameter(_map(world_map), parameter_id)
+
+
+def mined_before(tile_ids: Iterable[str], resource_id: str, year: int,
+                 world_map: Optional[WorldMap] = None) -> Dict[str, Any]:
+    """What the known deposits of a resource in these tiles had yielded by `year`: {workings, unworked,
+    deposits_in_tiles, unit}, a working being {id, tile_id, output_per_year, years_worked, years_since_last_output}
+    in the resource's unit. Deposits with no working date are listed in `unworked`, never guessed."""
+    return resources_mined.mined_before(_map(world_map), tile_ids, resource_id, year)
 
 
 def prospect(tile_id: str, resource_id: str, effort: float, seed: Any,
