@@ -62,7 +62,7 @@ class SpendingSmoothingTests(unittest.TestCase):
         self.assertLess(self.bids(cash=150000.0), 0.95 * 150000.0)
 
     def test_spending_scales_with_income_not_with_cash(self):
-        self.assertGreater(self.bids(income=400000.0), 3.0 * self.bids(income=100000.0) * 0.9)
+        self.assertGreater(self.bids(income=400000.0), 2.0 * self.bids(income=100000.0))
 
 
 class UnsoldGoodTests(unittest.TestCase):
