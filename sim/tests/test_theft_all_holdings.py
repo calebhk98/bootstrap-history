@@ -123,7 +123,7 @@ class FounderSeat(types.SimpleNamespace):
     """The parts of `Sim` the founder's exposure and plunder read."""
 
 
-def founder_seat():
+def founder_seat(farm_hectares=10.0):
     stock = {"iron": 40.0}
     balances, goods = {}, {}
     thieves = Edge(EDGE_THIEVES, balances, {}, goods)
@@ -131,8 +131,8 @@ def founder_seat():
     household.capital = 0.0
     household.protection = 0.0
     seat = FounderSeat(
-        state=types.SimpleNamespace(household=household), civ={"staple": "wheat"}, price_index=1.0,
-        farm_stock_kg=20000.0, farm_hectares=10.0, forest_ha=2.0, FOREST_COST_PER_HA=100.0, state_capacity=0.0,
+        state=types.SimpleNamespace(household=household, holdings=types.SimpleNamespace(farm_hectares=farm_hectares)),
+        civ={"staple": "wheat"}, price_index=1.0, farm_stock_kg=20000.0, forest_ha=2.0, FOREST_COST_PER_HA=100.0, state_capacity=0.0,
         lent_share=lambda: 0.1, farm_price_per_hectare=lambda: 50.0, _material_stock=lambda: stock,
         goods_market=types.SimpleNamespace(quote=lambda material: {"sell_per_tonne": 5.0}),
         edge=lambda name: thieves, visible_scale=lambda *args: 0.5, labour=types.SimpleNamespace(headcount=lambda: 3),
@@ -155,6 +155,10 @@ class FounderHoldings(unittest.TestCase):
         self.assertAlmostEqual(view.values["land"], 10.0 * 50.0 + 2.0 * 100.0)
         self.assertEqual({lot.name for lot in view.lots}, {"iron", "wheat"})
 
+    def test_a_founder_with_no_farm_yet_exposes_only_the_forest_as_land(self):
+        view = HoldingsExposureMixin.founder_exposure(founder_seat(farm_hectares=None))
+        self.assertAlmostEqual(view.values["land"], 2.0 * 100.0)
+
     def test_a_sack_takes_money_and_stock_by_the_same_exposure_and_destroys_nothing(self):
         seat = founder_seat()
         household = seat.state.household
@@ -164,7 +168,7 @@ class FounderHoldings(unittest.TestCase):
         self.assertLess(seat.stock["iron"], 40.0)
         self.assertLess(seat.farm_stock_kg, 20000.0)
         self.assertAlmostEqual(seat.thieves.goods_held()["iron"], 40.0 - seat.stock["iron"])
-        self.assertEqual(seat.farm_hectares, 10.0)
+        self.assertEqual(seat.state.holdings.farm_hectares, 10.0)
 
     def test_an_ordered_state_makes_banditry_cost_less_than_a_sack_of_equal_strength(self):
         orderly, fallen = founder_seat(), founder_seat()

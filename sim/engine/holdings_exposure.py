@@ -96,7 +96,7 @@ class HoldingsExposureMixin:
             def take_grain(tonnes):
                 self.farm_stock_kg = max(0.0, self.farm_stock_kg - tonnes * 1000.0)
             _add_lot(exposure, GoodsLot(staple_name, self.farm_stock_kg / 1000.0, staple["sell_per_tonne"], take_grain))
-        land = ((self.farm_hectares or 0.0) * self.farm_price_per_hectare()
+        land = ((self.state.holdings.farm_hectares or 0.0) * self.farm_price_per_hectare()  # None: no farm yet
                 + (self.forest_ha or 0.0) * self.FOREST_COST_PER_HA * self.price_index)
         if land > 0.0:
             exposure.values["land"] = land
