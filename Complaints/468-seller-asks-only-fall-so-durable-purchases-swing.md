@@ -1,6 +1,6 @@
 # Sellers may only cut their asks, so prices ratchet down and durable purchases swing
 
-**Status:** partly - the swing itself is the store treating in-use durable stock as its holding (found, fix tried, blocked by an existing bound); capacity planning at the post-addition price is not built
+**Status:** partly - the durable-stock swing is fixed (in-use stock netted out of the store's holding; wanted stock sized on smoothed expected spending; the service-lives tests now expect wear plus the growth of the wanted stock); capacity planning at the post-addition price is not built (Complaint 336)
 
 The seller-pricing rule built for Complaint 336 (`sim/economy/seller_pricing.py`, `seller_offers.py`, hooked into `year_goods.py`) lets a producer that moves the clearing price cut its ask against the market's book, but never raise it (a labelled heuristic standing in for many workshops that cannot hold goods back together). With cuts only, a durable good's price drifts down year after year. In the service-lives fixture, households keep buying well above wear long after their stock is filled, and the stock swings up and down from year to year instead of settling. Before the pricing hook, purchases fell to about the wear once the stock was full.
 
@@ -29,3 +29,5 @@ Related: 336.
 Owner decision (2026-10-09): household wealth and income grow year to year in real life, so the fixture's growing income is right. A test that asks late purchases to stay near wear is wrong when the stock should grow with income: the expectation is purchases near wear plus the growth of the desired stock. Apply the netting and smoothing fix and change the test to that expectation.
 
 Note (round five, Complaint 398): producers' asks now also rise when they sell out (`sim/economy/ask_raise.py`), by a small declared share a year, on top of the cut-or-raise choice of a seller that moves the price. The durable-swing path in the service-lives fixture has not been re-printed since; the fixes in the owner decision above are still to do.
+
+Done (durable-stock-follows-income): `sim/economy/durable_stock.py` holds the declared smoothing share (`EXPECTED_SPENDING_ADJUSTMENT`) and the in-use stock; `Cohort.expected_spending` is updated at close; `goods_orders` sizes a durable's wanted stock on the expected flow and passes the store only the holding above the in-use stock. `test_it_is_not_bought_again_in_full` now bounds late purchases by late wear plus the stock's growth with the fixture's own income path; the settle regression became `test_late_holdings_grow_smoothly_with_income_without_selling_out` because its flat-income premise (stock change within a year's wear) is wrong for growing income. Re-print the path with the command above.

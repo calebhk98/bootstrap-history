@@ -15,7 +15,7 @@ from typing import List, Mapping, Optional
 
 from sim.constants import declare
 
-from . import currency
+from . import currency, durable_stock
 from .credit_view import claims_of
 from .households_ability import affordable_goods, household_budget_for_need
 from .households_basket import Basket, PricedNeed, need_prices, need_units, price_ceilings
@@ -61,15 +61,17 @@ def savings_target(surplus_income: float, interest_rate: float, expected_inflati
     return SAVINGS_YEARS_OF_SURPLUS_INCOME * surplus_income * response
 
 
-def _durable_ratio(good: GoodId, flow: float, held: float, specs: Mapping[GoodId, GoodSpec]) -> float:
-    """1.0 for a good used up in the year; for a durable, replacement over the flow it serves."""
+def _durable_ratio(good: GoodId, flow: float, held: float, specs: Mapping[GoodId, GoodSpec],
+                   scale: float = 1.0) -> float:
+    """1.0 for a good used up in the year; for a durable, replacement over the flow it serves. The stock
+    wanted is sized on the expected flow (`scale` times this year's)."""
     spec = specs.get(good)
     if spec is None or spec.service_life_years <= 0.0:
         return 1.0
     if flow <= 0.0:
         return 0.0
     wear = held * min(1.0, 1.0 / spec.service_life_years)
-    return max(0.0, flow * spec.service_life_years - held + wear) / flow
+    return max(0.0, flow * scale * spec.service_life_years - held + wear) / flow
 
 
 def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year: float,
@@ -99,6 +101,8 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
                             + currency.spending_adjustment(cash + claims + store_value, keep, income_this_year)))
     floors, totals = need_units(priced, basket, cohort.people, spending - floor_cost)
     rows = []
+    flow_by_good = {}
+    scale = durable_stock.expected_flow_scale(cohort.expected_spending, spending)
     for need in priced:
         need_id = need.spec.need_id
         ceilings = need.ceilings or price_ceilings(need.goods)
@@ -112,8 +116,9 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
             per_unit = need.price_index * share / price / affordable_share
             floor_quantity = floors[need_id] * per_unit
             flexible_quantity = max(0.0, totals[need_id] - floors[need_id]) * per_unit
+            flow_by_good[good] = flow_by_good.get(good, 0.0) + floor_quantity + flexible_quantity
             ratio = _durable_ratio(good, floor_quantity + flexible_quantity,
-                                   view.stock(cohort.agent_id, good, cohort.tile), specs)
+                                   view.stock(cohort.agent_id, good, cohort.tile), specs, scale)
             if ratio > 0.0 and floor_quantity + flexible_quantity > 0.0:
                 rows.append((need.spec.subsistence_per_person > 0.0, good, price,
                              floor_quantity * ratio, flexible_quantity * ratio, ceiling))
@@ -140,6 +145,9 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
     savings = cash - budget_total - target
     offers = ()
     if weights:
+        # stock kept in use serves the needs and is not savings, so the store sees only the rest
+        in_use = durable_stock.in_use_stock(flow_by_good, specs, scale, households_store.STORE_REBALANCE_BAND)
+        held = {good: max(0.0, quantity - in_use.get(good, 0.0)) for good, quantity in held.items()}
         real_rate = view.interest_rate(area_currency) - cohort.expected_inflation
         above_buffer = cash + claims + store_value - target
         store_bids, store_spend = households_store.store_bids(
