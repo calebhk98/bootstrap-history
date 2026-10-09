@@ -75,6 +75,22 @@ class ClearingTests(unittest.TestCase):
         self.assertTrue(all(value <= first + 1e-9 for value in rates))
         self.assertGreater(rates[0], 0.04)
 
+    def test_scarce_funds_cannot_lift_the_base_rate_past_the_ceiling(self):
+        offers = [funds("l", 1.0, 0.04)]
+        requests = [request("b", 1000.0, 50.0, 1.0e9)]
+        _, uncapped, _ = credit.clear(requests, offers, "coin", None, {})
+        loans, capped, unmet = credit.clear(requests, offers, "coin", None, {}, rate_ceiling=0.5)
+        self.assertGreater(uncapped, 0.5)
+        self.assertLessEqual(capped, 0.5)
+        self.assertAlmostEqual(sum(item.principal for item in loans), 1.0)     # still rationed to the funds
+        self.assertAlmostEqual(sum(item.amount for item in unmet), 999.0)
+
+    def test_a_ceiling_below_every_lenders_ask_lends_nothing(self):
+        loans, rate, _ = credit.clear([request("b", 10.0, 0.9, 1.0e9)], [funds("l", 100.0, 0.2)], "coin", None, {},
+                                      rate_ceiling=0.1)
+        self.assertEqual(loans, [])
+        self.assertLessEqual(rate, 0.1)
+
     def test_other_currencies_are_ignored(self):
         other = LoanRequest("b", "bronze", 10.0, 0.5, 5.0, 100.0, "x")
         loans, _rate, unmet = credit.clear([other], [funds("l", 100, 0.05)], "coin", None, {})
