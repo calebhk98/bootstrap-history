@@ -28,6 +28,14 @@ FOREIGN_OPENING_IN_BALANCE = declare(
         "until trade moves it; its land, labour and trades do not yet cap "
         "that output (Complaints/109).")
 
+FOREIGN_OUTPUT_PER_POPULATION_SHARE = declare(
+    "FOREIGN_OUTPUT_PER_POPULATION_SHARE", 1.0, kind="temporary_heuristic",
+    unit="a partner's output of a good it can make over the stated national output, per unit of population ratio",
+    source=None, confidence="D",
+    why="A good bought only as an input has no partner demand figure to size its supply, so a partner that "
+        "holds every technique, input and deposit for it makes the stated national output scaled one-for-one "
+        "by its population over the one the table is stated for, until an industrial output model sizes it.")
+
 
 @functools.lru_cache(maxsize=None)
 def _final_goods():
@@ -88,6 +96,24 @@ class ForeignCapacityMixin:
                 by_commodity[key] = by_commodity.get(key, 0.0) + amount
             cache = self.household._home_final_tonnes_cache = (prices, by_commodity)
         return cache[1].get(commodity, 0.0) * self.household_demand_ratio(commodity)
+
+    def foreign_supply_tonnes(self, civilization_id, material):
+        """Tonnes a year a partner can sell of a material: what its own techniques, inputs and regions
+        make, and what it holds. Zero when it cannot make the material. A partner's book, once opened,
+        carries its capacity and stock; before that the opening figures stand."""
+        facts = self._foreign_economy_facts(civilization_id)
+        commodity = self._material_tag(material)[0]
+        solved = facts["solved_materials"]
+        if material not in solved or not self._foreign_can_make(civilization_id, material, solved):
+            return 0.0
+        entry = self.state.economy.foreign_market_book.get(civilization_id, {}).get(commodity)
+        if entry is not None:
+            return entry["capacity_tonnes"] + entry["stock_tonnes"]
+        capacity, _demand = self.foreign_opening(civilization_id, commodity, solved)
+        if capacity > 0.0 or self._tracked_mineral(commodity):
+            return capacity
+        scale = float(load_civ(civilization_id).get("population") or 0.0) / self.DEFAULT_POPULATION_100AD
+        return self._national_output_tonnes(commodity) * scale * FOREIGN_OUTPUT_PER_POPULATION_SHARE
 
     def _tracked_mineral(self, commodity):
         """Whether the geography file gives regional shares for it."""

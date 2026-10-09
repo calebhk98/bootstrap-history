@@ -13,7 +13,7 @@ import unittest
 from unittest import mock
 
 from sim.engine import purchase_rule  # noqa: F401  (first: the engine modules import each other in a fixed order)
-from sim.engine import material_availability, prices as engine_prices, solve_prices
+from sim.engine import foreign_capacity, material_availability, prices as engine_prices, solve_prices
 from sim.engine.goods_market_offers import GoodsOffers, HOME_SELLER
 
 
@@ -56,8 +56,14 @@ class _Route:
     cost_per_tonne = 10.0
 
 
-def _fake_sim(home_prices, partner_makes, partner_prices):
+def _fake_sim(home_prices, partner_makes, partner_prices, gated=(), supply=None, lift_in=math.inf):
+    supply = supply or {}
     return types.SimpleNamespace(
+        _price_tables=lambda: ({}, {material: ("gated" if material in gated else "solved")
+                                    for material in home_prices}),
+        foreign_supply_tonnes=lambda partner, material: supply.get(material, 1000.0),
+        foreign_lift_left_tonnes=lambda partner, route: (lift_in, lift_in),
+        _material_tag=lambda material: (material, material),
         _material_prices=lambda: home_prices,
         foreign_economies=lambda: ["partner"],
         state=types.SimpleNamespace(projects=types.SimpleNamespace(done=()),
@@ -80,8 +86,13 @@ class _Offers(GoodsOffers):
         self._sim = sim
         self.route = _Route() if routes is None else routes
 
+    bought = 0.0
+
     def _route_from(self, civilization_id):
         return self.route
+
+    def bought_tonnes(self, commodity, buyer_id=None):
+        return self.bought
 
 
 class SellerInReachTests(unittest.TestCase):
@@ -120,6 +131,114 @@ class SellerInReachTests(unittest.TestCase):
         with mock.patch("sim.engine.foreign_economies.not_traded_materials", lambda: frozenset({"cassia_kg"})):
             offers = _Offers(self.sim)
             self.assertIsNone(offers.offered_by("cassia_kg"))
+
+
+class CheapestSellerInReachTests(unittest.TestCase):
+
+    def _sim(self, **keywords):
+        return _fake_sim(home_prices={"glass_kg": 40.0, "wheat_kg": 4.0}, partner_makes={"glass_kg", "wheat_kg"},
+                         partner_prices={"glass_kg": 5.0, "wheat_kg": 1.0}, **keywords)
+
+    def test_a_partner_that_sells_cheaper_than_a_technique_the_home_does_not_yet_run_is_the_seller(self):
+        offers = _Offers(self._sim(gated={"glass_kg"}))
+        self.assertEqual(offers.offered_by("glass_kg"), "partner")
+        self.assertAlmostEqual(offers.unit_price("glass_kg"), offers.landed_price("glass_kg", "partner", offers.route))
+        self.assertLess(offers.unit_price("glass_kg"), 40.0)
+
+    def test_a_partner_that_sells_dearer_leaves_the_gated_home_technique_the_seller(self):
+        sim = _fake_sim(home_prices={"glass_kg": 2.0}, partner_makes={"glass_kg"}, partner_prices={"glass_kg": 50.0},
+                        gated={"glass_kg"})
+        offers = _Offers(sim)
+        self.assertEqual(offers.offered_by("glass_kg"), HOME_SELLER)
+        self.assertEqual(offers.unit_price("glass_kg"), 2.0)
+
+    def test_a_good_the_home_runs_a_producer_for_stays_with_the_home_even_where_a_partner_is_cheaper(self):
+        offers = _Offers(self._sim(gated={"glass_kg"}))
+        self.assertEqual(offers.offered_by("wheat_kg"), HOME_SELLER)
+        self.assertEqual(offers.unit_price("wheat_kg"), 4.0)
+
+    def test_a_partner_that_can_not_make_it_in_volume_is_no_seller(self):
+        offers = _Offers(self._sim(gated={"glass_kg"}, supply={"glass_kg": 0.0}))
+        self.assertEqual(offers.offered_by("glass_kg"), HOME_SELLER)
+
+
+class ImportVolumeTests(unittest.TestCase):
+    """What a partner brings is bounded by what it makes and the carriers' lift, not by the home output curves."""
+
+    def _offers(self, supply, lift_in):
+        sim = _fake_sim(home_prices={}, partner_makes={"cassia_kg"}, partner_prices={"cassia_kg": 50.0},
+                        supply={"cassia_kg": supply}, lift_in=lift_in)
+        return _Offers(sim)
+
+    def test_the_smaller_of_the_partners_supply_and_the_lift_is_what_comes(self):
+        self.assertEqual(self._offers(supply=30.0, lift_in=100.0).import_tonnes_available("cassia_kg"), 30.0)
+        self.assertEqual(self._offers(supply=300.0, lift_in=100.0).import_tonnes_available("cassia_kg"), 100.0)
+
+    def test_what_was_bought_this_year_comes_off_it(self):
+        offers = self._offers(supply=300.0, lift_in=100.0)
+        offers.bought = 40.0
+        self.assertEqual(offers.import_tonnes_available("cassia_kg"), 60.0)
+        offers.bought = 500.0
+        self.assertEqual(offers.import_tonnes_available("cassia_kg"), 0.0)
+
+    def test_a_good_the_home_sells_has_no_import_figure(self):
+        sim = _fake_sim(home_prices={"wheat_kg": 4.0}, partner_makes=set(), partner_prices={})
+        self.assertIsNone(_Offers(sim).import_tonnes_available("wheat_kg"))
+
+    def test_a_route_with_no_lift_brings_nothing(self):
+        self.assertEqual(self._offers(supply=300.0, lift_in=0.0).import_tonnes_available("cassia_kg"), 0.0)
+
+
+class _Partner(foreign_capacity.ForeignCapacityMixin):
+    DEFAULT_POPULATION_100AD = 100.0
+
+    def __init__(self, can_make=True, opening=(0.0, 0.0), mined=False, book=None):
+        self.state = types.SimpleNamespace(economy=types.SimpleNamespace(
+            foreign_market_book={"partner": book or {}}))
+        self._can_make, self._opening, self._mined = can_make, opening, mined
+
+    def _foreign_economy_facts(self, civilization_id):
+        return {"solved_materials": frozenset({"ore_kg"})}
+
+    def _material_tag(self, material):
+        return material, material
+
+    def _foreign_can_make(self, civilization_id, material, solved):
+        return self._can_make
+
+    def foreign_opening(self, civilization_id, commodity, solved):
+        return self._opening
+
+    def _tracked_mineral(self, commodity):
+        return self._mined
+
+    def _national_output_tonnes(self, commodity):
+        return 1000.0
+
+
+class PartnerSupplyTests(unittest.TestCase):
+    """A partner sells no more than it makes or holds."""
+
+    def _supply(self, partner, material="ore_kg"):
+        with mock.patch.object(foreign_capacity, "load_civ", lambda civilization_id: {"population": 10.0}):
+            return partner.foreign_supply_tonnes("partner", material)
+
+    def test_a_good_the_partner_cannot_make_supplies_nothing(self):
+        self.assertEqual(self._supply(_Partner(can_make=False)), 0.0)
+        self.assertEqual(self._supply(_Partner(), material="cobalt_kg"), 0.0)
+
+    def test_an_opened_book_supplies_its_capacity_and_stock(self):
+        book = {"ore_kg": {"capacity_tonnes": 7.0, "stock_tonnes": 3.0}}
+        self.assertEqual(self._supply(_Partner(book=book)), 10.0)
+
+    def test_the_opening_capacity_stands_before_the_book_opens(self):
+        self.assertEqual(self._supply(_Partner(opening=(25.0, 40.0))), 25.0)
+
+    def test_a_mined_good_with_no_deposit_in_its_regions_supplies_nothing(self):
+        self.assertEqual(self._supply(_Partner(mined=True)), 0.0)
+
+    def test_an_input_only_good_follows_the_partners_size_against_the_table_it_is_stated_for(self):
+        self.assertAlmostEqual(self._supply(_Partner()), 1000.0 * 10.0 / 100.0 * foreign_capacity.FOREIGN_OUTPUT_PER_POPULATION_SHARE)
 
 
 class ProjectNeedsASellerTests(unittest.TestCase):
