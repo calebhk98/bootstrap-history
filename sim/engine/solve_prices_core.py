@@ -26,7 +26,7 @@ if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 from sim.engine import disposal_cost  # noqa: E402
 from sim.engine.joint_allocation import allocate_joint_cost, cap_anchors  # noqa: E402
-from sim.engine.price_change import relative_price_change  # noqa: E402
+from sim.engine.price_change import reference_prices_for_demand, relative_price_change  # noqa: E402
 from sim.engine.default_civilisation import default_civilisation_id  # noqa: E402
 from sim.world import deposits                  # noqa: E402  (RENT ON EXTRACTED MATERIALS)
 from sim.world import land                      # noqa: E402  (RENT ON ARABLE LAND)
@@ -1333,14 +1333,14 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
             wage_by_trade, rent_hours_per_kg_by_material, band_price_by_carrier,
             floor_by_carrier,
             demand_anchor_price_by_material=(
-                demand_anchors.prices(prices) if demand_anchors else None),
+                demand_anchors.prices(reference_prices_for_demand(prices)) if demand_anchors else None),
             interest_rate=interest_rate)
 
         floor_source = getattr(demand_anchors, "scarcity_floor_prices", None)
         prices, final_residual = _solve_round_update_prices(
             resolvable_materials, prices, candidates_by_material, damping,
             chosen_recipe_by_material, production_entries,
-            floor_source(prices) if floor_source else None,
+            floor_source(reference_prices_for_demand(prices)) if floor_source else None,
             disposal_cost.disposal_price_floor(joint_materials, prices, interest_rate))
         if final_residual < tolerance:
             break
@@ -1364,7 +1364,7 @@ def minor_joint_byproducts_are_unanchored(production_entries, chosen_recipe_by_m
     demand-anchored output (`demand_anchors`) is split by value and not reported.
     """
     unanchored = {}
-    anchored = set(demand_anchors.prices(prices)) if demand_anchors else set()
+    anchored = set(demand_anchors.prices(reference_prices_for_demand(prices))) if demand_anchors else set()
     for material, recipe_id in chosen_recipe_by_material.items():
         entry = production_entries[recipe_id]
         outputs = entry.get("outputs") or {}
