@@ -232,6 +232,9 @@ class VenturesMixin:
             if node_id in self.SCALABLE_INSTITUTIONS and units and float(units) > 0:
                 return self._expand_institution(node_id, float(units), pay)
             return False, "you are already running that"
+        gate_refusal = self.running_gate_refusal(node_id)
+        if gate_refusal:
+            return False, gate_refusal
         scalable = node_id in self.SCALABLE_INSTITUTIONS
         fee, unit_count = self.opening_fee(node_id, units)
         refusal = self.staffing_open_refusal(node_id, unit_count)

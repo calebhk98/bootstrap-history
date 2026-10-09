@@ -18,6 +18,7 @@ from . import money_units, purchase_rule
 from .blockers import blocker_kind
 from .interest_groups import check_group_prohibition
 from .living_stock import check_unheld_stock
+from .projects_running_gates import check_running_gates
 from .material_availability import check_materials_have_a_seller
 from .data import win_condition_describe
 from sim.constants import declare
@@ -850,6 +851,7 @@ class StartingMixin:
         _check_unobtainable,
         _check_foreign_only,
         _check_missing_prereqs,
+        check_running_gates,
         check_unheld_stock,
         _check_substitution,
         check_materials_have_a_seller,

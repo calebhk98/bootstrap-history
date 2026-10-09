@@ -58,6 +58,7 @@ here, on the composition point all six inherit from, instead.
 from .blockers import BlockersMixin
 from .projects_capability import CapabilityMixin
 from .projects_ventures import VenturesMixin
+from .projects_running_gates import RunningGatesMixin
 from .projects_staffing import StaffingMixin
 from .projects_staffing_shortfall import StaffingShortfallMixin
 from .projects_staffing_report import StaffingReportMixin
@@ -77,6 +78,7 @@ class ProjectsMixin(
         BlockersMixin,
         CapabilityMixin,
         VenturesMixin,
+        RunningGatesMixin,
         StaffingMixin,
         StaffingShortfallMixin,
         StaffingReportMixin,

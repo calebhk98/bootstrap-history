@@ -71,6 +71,7 @@ class MoneyPhaseMixin:
                 self, "reopen (always on, not a policy)", "reopen", ", ".join(_reopened),
                 "a staffing closure, and the people to watch it are free again", _before,
                 ids=list(_reopened))
+        self.close_lapsed_dependents(self.state.scenario.year)
         self.close_unstaffed_ventures(self.state.scenario.year)
         # Open what plainly pays for itself, before the books are struck: a
         # concern you opened this year is a concern that earns this year.
