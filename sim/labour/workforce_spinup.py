@@ -19,6 +19,7 @@ import collections
 import os
 from typing import Any, Callable, Dict, Iterable, Mapping, Optional, Set
 
+from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import demand, need_demand
 from sim.labour import labour_market, legacy_trade_defaults
 
@@ -42,10 +43,7 @@ def _input_coefficients(recipe_id: str, production: Mapping[str, Any]) -> Dict[s
 
 
 def _labour_coefficients(recipe_id: str, production: Mapping[str, Any]) -> Dict[str, float]:
-    coefficients = labour_market.labour_hours_coefficients_per_unit_output(
-        recipe_id, dict(production))
-    coefficients.pop(FARM_TRADE, None)
-    return coefficients
+    return labour_market.labour_hours_coefficients_per_unit_output(recipe_id, dict(production))
 
 
 def _solve_levels(final_demand: Mapping[str, float], producers: Mapping[str, list],
@@ -73,11 +71,15 @@ def _solve_levels(final_demand: Mapping[str, float], producers: Mapping[str, lis
 
 
 def need_shares_by_trade(production: Mapping[str, Any], reached_nodes: Iterable[str],
-                         techniques_available_to: Callable) -> Dict[str, float]:
+                         techniques_available_to: Callable,
+                         carriage_hours_per_tonne: Optional[Mapping[str, float]] = None) -> Dict[str, float]:
     """Share of non-farm labour each trade is needed for, from the goods
     households consume and the available recipes that make them. Trades with
     no available recipe are absent. `techniques_available_to(production, reached)` is the engine's
-    filter, returning (available, unreached, unclassified)."""
+    filter, returning (available, unreached, unclassified). `carriage_hours_per_tonne` is {trade: hours
+    to carry a tonne a typical haul} (workforce_carriage); every tonne a recipe in a good's chain makes
+    is carried that far, so the carriers take their share of the good's labour."""
+    carriage = dict(carriage_hours_per_tonne or {})
     available, _unreached, _unclassified = techniques_available_to(
         production, set(reached_nodes))
     dominant = {recipe_id: _dominant_output(entry) for recipe_id, entry in available.items()}
@@ -88,6 +90,11 @@ def need_shares_by_trade(production: Mapping[str, Any], reached_nodes: Iterable[
     input_coefficients = {recipe_id: _input_coefficients(recipe_id, available)
                           for recipe_id in dominant}
     labour = {recipe_id: _labour_coefficients(recipe_id, available) for recipe_id in dominant}
+
+    # A recipe's dominant output as tonnes; a unit that is not a mass is not carried here.
+    tonnes_per_unit_output = {
+        recipe_id: (demand.mass_in_kg_or_none(material, 1.0) or 0.0) / KILOGRAMS_PER_TONNE
+        for recipe_id, material in dominant.items()}
 
     consumed = set()
     for coefficients in input_coefficients.values():
@@ -100,6 +107,9 @@ def need_shares_by_trade(production: Mapping[str, Any], reached_nodes: Iterable[
         for recipe_id, level in levels.items():
             for trade, per_unit in labour[recipe_id].items():
                 hours[trade] += level * per_unit
+            tonnes = level * tonnes_per_unit_output[recipe_id]
+            for trade, per_tonne in carriage.items():
+                hours[trade] += tonnes * per_tonne
         return hours
 
     # Household demand: each need's budget goes to the available goods that
@@ -117,8 +127,9 @@ def need_shares_by_trade(production: Mapping[str, Any], reached_nodes: Iterable[
     served_recipes: Set[str] = set()
 
     def add_budget(material: str, weight: float) -> None:
-        # A unit of labour value: weight is spread over the good's trades in
-        # proportion to the hours its whole supply chain uses.
+        # A unit of labour value: weight is spread over the good's trades, farm labour included, in
+        # proportion to the hours its whole supply chain uses; the farm slice is dropped at the end,
+        # so a farm-heavy good gives the other trades little rather than all of its weight.
         hours = trade_hours_per_unit(material)
         all_hours = sum(hours.values())
         if all_hours <= 0.0:
