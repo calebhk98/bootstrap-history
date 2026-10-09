@@ -44,6 +44,20 @@ class EntryTests(unittest.TestCase):
         self.assertEqual(entry.gap_beyond_spare(100.0, 120.0), 0.0)
         self.assertEqual(entry.gap_beyond_spare(100.0, 30.0), 70.0)
 
+    def test_a_large_gap_draws_every_recipe_that_pays_not_just_the_best(self):
+        # no per-year cap of one newcomer a market: the part of the gap the best recipe's newcomer leaves
+        # open draws the next recipe that pays
+        mine = Recipe("mine_salt", {"salt": 10.0}, {}, {"hand": 4.0})
+        chosen = plans({"boil_salt": SALT, "mine_salt": mine}, self.view(1.0), market())
+        self.assertEqual(sorted(plan.recipe_id for plan in chosen), ["boil_salt", "mine_salt"])
+        built = sum(plan.runs * 10.0 for plan in chosen)
+        self.assertLess(built, 100.0)
+
+    def test_a_recipe_that_does_not_pay_is_left_out_beside_one_that_does(self):
+        dear = Recipe("dear_salt", {"salt": 10.0}, {}, {"hand": 400.0})
+        chosen = plans({"boil_salt": SALT, "dear_salt": dear}, self.view(1.0), market())
+        self.assertEqual([plan.recipe_id for plan in chosen], ["boil_salt"])
+
     def test_no_unmet_demand_no_entry(self):
         self.assertEqual(plans({"boil_salt": SALT}, self.view(1.0), market(unmet=0.0)), [])
 

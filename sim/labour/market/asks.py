@@ -1,7 +1,8 @@
 """What workers ask, as a multiple of the reservation wage, remembered per (area, trade).
 
 A worker sells hours like a seller sells goods. The reservation wage (the family's subsistence per hour plus
-pay for the trade's danger) is where the ask starts, not a bound under it: hours employers would not take at
+pay for the trade's danger) is where the ask starts; the bound under it is the wage floor (the household's
+costs less its plot, economy/labour_ask_floor.py): hours employers would not take at
 the ask are offered cheaper the next year, by the share of them left unsold, and when employers want more
 than is offered the ask is raised by the share of demand left unmet. Nothing here names a trade or an area.
 A family with hours nobody buys still eats from its own plot and savings (the economy keeps those hours
@@ -39,8 +40,8 @@ def moved_scale(scale: float, offered: float, wanted: float) -> float:
 def record(state: MarketState, area: str, trade: str, offered: float, wanted: float, wage: float,
            reservation: float, lowest: float = 0.0) -> None:
     """Move the ask for the year just cleared. It is never raised past the wage the hours just fetched (a
-    seller does not ask more than anyone has been seen to pay) and never lowered past `lowest`, what the
-    family has without selling hours (own plot, savings): the subsistence floor is not that bound."""
+    seller does not ask more than anyone has been seen to pay) and never lowered past `lowest`, the wage
+    floor: what the household costs to keep alive and working, less what its own plot gives."""
     before = scale_of(state, area, trade)
     scale = moved_scale(before, offered, wanted)
     if scale > before and reservation > 0.0:

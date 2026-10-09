@@ -73,7 +73,7 @@ class YearInputs:
     routes: Dict[AreaId, List[Route]] = dataclasses.field(default_factory=dict)
     schools: Sequence[School] = ()
     enterable_trades: Optional[frozenset] = None        # None: every trade in `trades`
-    ask_floor_per_worker_year: Dict[AreaId, float] = dataclasses.field(default_factory=dict)  # what a worker's family has without selling hours: the lowest an ask falls to
+    ask_floor_per_worker_year: Dict[AreaId, float] = dataclasses.field(default_factory=dict)  # the wage a worker needs to keep his household alive and working, less its own plot: the lowest an ask falls to
     value_of_life_years_of_income: float = 0.0          # prices a trade's fatality risk into its ask
 
 

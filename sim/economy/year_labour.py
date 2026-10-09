@@ -8,11 +8,12 @@ the trade (sim/labour/market/DESIGN.md).
 import dataclasses
 from typing import Dict, List, Mapping, Sequence, Tuple
 
-from sim.labour.api import CAREER_YEARS, run_labour_year
+from sim.labour.api import CAREER_YEARS, people_in, run_labour_year
 
 from . import households, labour, settlement
 from .households_cohort import VALUE_OF_LIFE_YEARS_OF_INCOME
 from .households_orders import HOUSEHOLD_TIME_PREFERENCE
+from .labour_ask_floor import mean_floor_per_hour
 from .labour_bids import sloped_bids
 from .labour_state import core_trades, give_back, hold_back, mirror_wages, people_by_trade
 from .market_memory import market_key
@@ -103,6 +104,10 @@ def clear_labour(setup, record, bids: Sequence[LabourBid], offers: Sequence[Labo
     (labour_inputs.labour_context). `held_share` is the share of each area's workers whose hours
     households keep for their own plots: the market does not see them this year."""
     core_bids = sloped_bids(bids)
+    ledger.wage_floor_per_hour = mean_floor_per_hour(
+        context.ask_floor_per_worker_year,
+        {area: people_in(record.workforce, area) for area in context.ask_floor_per_worker_year},
+        context.hours_per_worker_year)
     inputs = dataclasses.replace(context, trades=core_trades(setup, {bid.trade for bid in core_bids}),
                                  bids=core_bids)
     seen, held = hold_back(record.workforce, held_share or {})

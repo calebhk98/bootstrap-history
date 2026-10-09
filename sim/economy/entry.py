@@ -107,8 +107,9 @@ def entry_plans(recipes: Mapping[str, Recipe], view: MarketView,
                 rent_by_tile: Optional[Mapping[TileId, float]] = None,
                 land_per_run: Optional[Mapping[str, float]] = None,
                 traded: Optional[Traded] = None, siting=None) -> List[EntryPlan]:
-    """At most one new maker per market with unmet demand: the known recipe making the good with the
-    best return on capital at last year's prices, if that return beats the interest rate. Rent per
+    """New makers for each market with unmet demand: the known recipes making the good, best return on
+    capital at last year's prices first, each that beats the interest rate, each built for a share of what
+    the better ones leave of the gap (no limit on how many a year: the gap and the returns decide). Rent per
     hectare last year on the tile, times the land a run takes, is part of a run's cost. With `traded`,
     the size is held to the trade the market and its suppliers' markets carried (entry_sizing.py), and
     a recipe whose size comes to nothing gives way to the next best. With `siting` (location.py) a newcomer
@@ -130,20 +131,23 @@ def entry_plans(recipes: Mapping[str, Recipe], view: MarketView,
             yearly_return = _return_at(recipes[recipe_id], recipe_id, demand.anchor_tile, view, rent)
             if yearly_return > view.interest_rate(currency):
                 ranked.append((-yearly_return, recipe_id))
+        remaining = demand.quantity
         for negative_return, recipe_id in sorted(ranked):
             recipe = recipes[recipe_id]
-            whole_gap_runs = demand.quantity / recipe.outputs[demand.good]
+            if remaining <= 0.0:
+                break
+            whole_gap_runs = remaining / recipe.outputs[demand.good]
             tile = demand.anchor_tile
             runs = sized_runs(recipe, demand.good, whole_gap_runs * ENTRY_SHARE_OF_UNMET_DEMAND, whole_gap_runs,
                               tile, traded)
             if siting is not None and runs > 0.0 and math.isfinite(runs):
-                picked = siting(recipe_id, demand, runs)
+                picked = siting(recipe_id, UnmetDemand(demand.good, demand.area, demand.anchor_tile, remaining), runs)
                 if picked is None:
                     continue
                 tile, runs = picked
             if runs > 0.0 and math.isfinite(runs):
                 plans.append(EntryPlan(recipe_id, tile, demand.good, runs, -negative_return))
-                break
+                remaining -= runs * recipe.outputs[demand.good]
     return plans
 
 
