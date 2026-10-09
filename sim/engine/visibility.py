@@ -8,14 +8,15 @@ OPENNESS_ORDER = ("publish", "default", "license", "secret")
 
 
 def base_visibility(mode: str, in_public_use: bool, copy_difficulty: float, secret_exposure: float) -> float:
-    """Share of an invention that can be learned before distance counts, 0..1. A published one shows in full;
-    a secret or licensed one shows `secret_exposure` over how hard the know-how is to copy from sight; with
-    no choice made it shows in full once it is run in public and as a secret otherwise."""
+    """Share of an invention that can be learned before distance counts, 0..1. A published one shows in full.
+    One run in public shows what the product and the yard give away, which is the reciprocal of how hard its
+    know-how is to copy from sight; one kept shut (a secret, a licensed one, or any not yet run in public) shows
+    only what leaks past the door, `secret_exposure` of that."""
     if mode == "publish":
         return 1.0
-    if mode in ("secret", "license"):
-        return secret_exposure / copy_difficulty
-    return 1.0 if in_public_use else secret_exposure
+    if mode == "default" and in_public_use:
+        return 1.0 / copy_difficulty
+    return secret_exposure / copy_difficulty
 
 
 def seen_from(visibility: float, distance_km: float, observation_range_km: float) -> float:

@@ -120,8 +120,8 @@ TACIT_SHARE_OF_COPYING = declare(
 	"TACIT_SHARE_OF_COPYING", 0.3, kind="temporary_heuristic",
 	unit="share of the copy chance", source=None, confidence="D",
 	why="How much of a copy's chance of success rests on reading, measuring and writing down what "
-		"is seen; a founder from an unlettered stratum loses that share. Stands in for declared "
-		"per-technique visibility (Complaint 376).")
+		"is seen; a founder from an unlettered stratum loses that share. Stands in for a measured "
+		"effect of literacy on copying; what is visible of each technique is declared in data.")
 EXIT_GRACE_YEARS = declare(
 	"EXIT_GRACE_YEARS", 5, kind="temporary_heuristic",
 	unit="years", source=None, confidence="D",

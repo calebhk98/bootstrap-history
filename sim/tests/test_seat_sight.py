@@ -21,8 +21,11 @@ from sim.engine.visibility import base_visibility, most_open_mode, seen_from
 # ---- pure visibility
 check("a published invention shows in full, a secret by its leak over its difficulty",
       base_visibility("publish", False, 4.0, 0.25) == 1.0 and base_visibility("secret", True, 4.0, 0.25) == 0.0625, None)
-check("with no choice made, public use shows it in full and privacy as a secret",
-      base_visibility("default", True, 3.0, 0.25) == 1.0 and base_visibility("default", False, 3.0, 0.25) == 0.25, None)
+check("with no choice made, public use shows what the product gives away and privacy only what leaks",
+      base_visibility("default", True, 3.0, 0.25) == 1.0 / 3.0 and base_visibility("default", False, 3.0, 0.25) == 0.25 / 3.0
+      and base_visibility("default", True, 1.0, 0.25) == 1.0, None)
+check("a technique whose product gives it away shows in full when run in public, one that hides it does not",
+      base_visibility("default", True, 1.0 / 0.9, 0.25) > base_visibility("default", True, 1.0 / 0.15, 0.25), None)
 check("distance thins what shows", seen_from(1.0, 0.0, 800.0) == 1.0 and seen_from(1.0, 800.0, 800.0) == 0.5, None)
 check("one maker publishing opens an invention for everyone", most_open_mode(["secret", "publish", "license"]) == "publish"
       and most_open_mode(["secret", "license"]) == "license" and most_open_mode([]) == "default", None)
