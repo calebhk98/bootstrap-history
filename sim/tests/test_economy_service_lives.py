@@ -4,7 +4,9 @@ bought again in full."""
 QUICK_TOPIC = True
 
 import unittest
+from unittest import mock
 
+from sim.economy import opening
 from sim.economy.economy import Economy
 from sim.economy.types import Transfer
 from sim.tests import economy_fixture as fixture
@@ -28,10 +30,18 @@ def household_stock(economy):
 SPIN_UP_YEARS = 60
 
 
-def years_of(setup, years, spin_up=0):
+def economy_opening_empty(setup):
+    """An economy whose households open holding none of the durable, as when a good is new to a society:
+    the opening's seeding of in-use stocks (opening._seed_durable_stocks) is switched off."""
+    with mock.patch.object(opening, "_seed_durable_stocks", lambda *_arguments: None):
+        return Economy(setup)
+
+
+def years_of(setup, years, spin_up=0, empty=False):
     """(household stock after the year, wear that year, units sold that year, households' income that
-    year) for each of `years` years after `spin_up` years that are not reported."""
-    economy = Economy(setup)
+    year) for each of `years` years after `spin_up` years that are not reported. Households open holding
+    the stock they keep in use, unless `empty`."""
+    economy = economy_opening_empty(setup) if empty else Economy(setup)
     rows = []
     for year in range(spin_up + years):
         economy.step(fixture.quiet_year(setup))
@@ -58,8 +68,20 @@ class ServiceLifeTests(unittest.TestCase):
         self.assertEqual(rows[2][0], 0.0)
 
     def test_the_stock_is_filled_over_years_of_income(self):
-        rows = years_of(durable_setup(), 3)
+        # a durable new to a society starts from no stock and is built up by many times the wear
+        rows = years_of(durable_setup(), 3, empty=True)
         self.assertGreater(rows[1][0] - rows[0][0] + rows[1][1], 8.0 * rows[1][1])
+
+    def test_households_open_holding_the_stock_they_keep_in_use_and_so_build_less(self):
+        # the real opening seeds the in-use stock, so the first year builds less than from nothing; the
+        # fixture's income still grows while its margins close, so what is bought is not just the wear
+        # (the settled tests below hold it to that), but it is never the stock built from scratch
+        seeded = years_of(durable_setup(), 3)
+        empty = years_of(durable_setup(), 3, empty=True)
+        self.assertGreater(seeded[0][0], 0.0)
+        bought_seeded = seeded[1][0] - seeded[0][0] + seeded[1][1]
+        bought_empty = empty[1][0] - empty[0][0] + empty[1][1]
+        self.assertLess(bought_seeded, bought_empty)
 
     def test_it_is_not_bought_again_in_full(self):
         # once the fixture has settled its income is level with lumps (competition has taken the margins
@@ -91,9 +113,12 @@ class BadYearTests(unittest.TestCase):
             self.assertGreater(rows[year][0], 0.9 * rows[year - 1][0], "year %d sells a tenth of the stock" % year)
 
     def test_a_year_of_cash_shortage_sells_at_most_a_third_of_the_stock_and_rebuys_near_the_wear(self):
+        # the economy is read after the fixture has settled, as in the other settled tests: the stock then
+        # stands at the level its income wants, so a rise in what the households want is not mistaken for a
+        # rebuy after the shortage
         setup = durable_setup()
         economy = Economy(setup)
-        for _year in range(8):
+        for _year in range(SPIN_UP_YEARS):
             economy.step(fixture.quiet_year(setup))
         before = household_stock(economy)
         for cohort in economy.record.cohorts.values():          # households lose nine tenths of their cash
