@@ -9,7 +9,8 @@ located-material costs follow from it.
 import json
 from typing import Any, Dict, NotRequired, Tuple, TypedDict
 
-from sim.geography import queries, reach_bands, routes_modes, tile_holdings
+from sim.geography import located_places, mineral_shares, queries, reach_bands, routes_modes, tile_holdings
+from sim.geography.queries import deposit_records
 from sim.geography.distance import haversine_km
 from sim.geography.parameters import parameter as parameter_value
 
@@ -17,15 +18,11 @@ from sim.geography.parameters import parameter as parameter_value
 JSONDict = Dict[str, Any]
 
 
-MineralShares = Dict[str, float]  # one region's rough share of each mineral's output, by mineral id
-
-
 class RegionRecord(TypedDict):
     """One entry of the geography data's `regions` block: a label over tiles. Land figures and the
     anchor point are not stored: they are derived from the region's tiles (sim/world/land.py,
     sim/geography/regions.py). `note` is the only key absent on some regions."""
     name: str
-    minerals: MineralShares
     note: NotRequired[str]
 
 
@@ -35,6 +32,8 @@ class Geography:
     geo: JSONDict
     _regions: Dict[str, RegionRecord]
     _mat_unlock: Dict[str, str]
+    _shares_by_tile: Dict[str, Dict[str, float]]
+    _material_tiles: Dict[str, Tuple[str, ...]]
     _table: Dict[str, Any]
 
     def __init__(self, world: Any) -> None:
@@ -48,17 +47,23 @@ class Geography:
                 frozenset(self._world.held_nodes), json.dumps(self._world.improvements, sort_keys=True))
 
     def _reach_table(self) -> Dict[str, Any]:
-        """{levels: {region: reach level}, scale: {mineral: scale}}, rebuilt when its inputs change."""
+        """{levels: {region: reach level}, tile_levels: {tile: reach level}, scale: {mineral: scale}},
+        rebuilt when its inputs change."""
         key = self._inputs_key()
         if self._table["key"] != key:
             world_map = self._world.world_map
-            levels = reach_bands.region_levels(world_map, tile_holdings.tiles_held(self._world.civ, world_map),
-                                               self._world.held_nodes, self._world.improvements)
-            self._table = {"key": key, "levels": levels, "reference": {}, "scale": {}}
-            minerals = sorted({material for record in self._regions.values()
-                               for material in (record.get("minerals") or {})})
-            self._table["scale"] = {material: self._compute_mineral_scale(material) for material in minerals}
+            held = tile_holdings.tiles_held(self._world.civ, world_map)
+            levels = reach_bands.region_levels(world_map, held, self._world.held_nodes, self._world.improvements)
+            tile_levels = reach_bands.tile_levels(world_map, held, self._world.held_nodes, self._world.improvements)
+            self._table = {"key": key, "levels": levels, "tile_levels": tile_levels, "reference": {}, "scale": {}}
+            self._table["scale"] = {material: self._compute_mineral_scale(material)
+                                    for material in sorted(self._shares_by_tile)}
         return self._table
+
+    def tile_reach(self, tile_id: str) -> int:
+        """How hard `tile_id` is to reach, FOR THIS CIVILIZATION, on the same levels as `region_reach`:
+        0 for a tile held, the farthest level for a tile no route joins."""
+        return self._reach_table()["tile_levels"].get(tile_id, reach_bands.farthest_level(self._world.world_map))
 
     def region_reach(self, region_id: str) -> int:
         """How hard `region_id` is to reach, FOR THIS CIVILIZATION, 0 to the map's farthest level.
@@ -72,19 +77,18 @@ class Geography:
             return farthest
         return self._reach_table()["levels"].get(region_id, farthest)
 
-    def route_km_to(self, region_ids: Any) -> Any:
-        """Kilometres of the cheapest haul from the tiles held to the nearest tile of any of these regions
-        (0.0 when a tile of one is held), over the modes held and the ways built; the great-circle
-        distance between the nearest pair of tiles when no mode joins them, None when there is no region."""
-        regions = tuple(sorted(region_ids))
+    def route_km_to(self, tile_ids: Any) -> Any:
+        """Kilometres of the cheapest haul from the tiles held to the nearest of these tiles (0.0 when one
+        is held), over the modes held and the ways built; the great-circle distance between the nearest
+        pair of tiles when no mode joins them, None when there is no tile."""
+        targets = tuple(sorted(set(tile_ids)))
         kept = self._reach_table().setdefault("route_km", {})
-        if regions not in kept:
-            kept[regions] = self._route_km(regions)
-        return kept[regions]
+        if targets not in kept:
+            kept[targets] = self._route_km(targets)
+        return kept[targets]
 
-    def _route_km(self, regions: Tuple[str, ...]) -> Any:
+    def _route_km(self, targets: Tuple[str, ...]) -> Any:
         world_map = self._world.world_map
-        targets = queries.tiles_of_regions(regions, world_map)
         held = tile_holdings.tiles_held(self._world.civ, world_map)
         if not targets or not held:
             return None
@@ -99,14 +103,14 @@ class Geography:
                    for a in held for b in targets)
 
     def _reference_levels(self, civilisation_id: str) -> Dict[str, int]:
-        """Region levels of the civilisation the located-material costs were authored for, at its start."""
+        """Tile levels of the civilisation the located-material costs were authored for, at its start."""
         reference = self._reach_table()["reference"]
         if civilisation_id not in reference:
             record = self._world.civilisation(civilisation_id)
             world_map = self._world.world_map
             reference[civilisation_id] = (
-                reach_bands.region_levels(world_map, tile_holdings.tiles_held(record, world_map),
-                                          record.get("starting_techs") or ()) if record else {})
+                reach_bands.tile_levels(world_map, tile_holdings.tiles_held(record, world_map),
+                                        record.get("starting_techs") or ()) if record else {})
         return reference[civilisation_id]
 
     # How much of a region's output reaches your market by ordinary trade
@@ -118,9 +122,9 @@ class Geography:
         """Reach and cost multiplier for `material_key`, FOR THIS CIVILIZATION.
 
         Looks the material up in the geography data's located_materials, picks
-        whichever of its regions is EASIEST for this civ to reach (a rational
-        buyer sources from the nearest deposit, not always the "primary"
-        one), and turns that region's reach into a cost multiplier.
+        whichever of its places (each a tile) is EASIEST for this civ to reach (a
+        rational buyer sources from the nearest one), and turns that tile's reach
+        into a cost multiplier.
 
         The published cost_multiplier was authored for one civilisation (the map parameter
         `located_material_reference_civilisation`). At civ_reach 0 (you hold the place) the
@@ -134,15 +138,12 @@ class Geography:
             return 0, 1.0
         base_mult = float(material_entry.get("cost_multiplier", 1.0))
         best = None
-        for rid in (material_entry.get("regions") or []):
-            reg = self._regions.get(rid)
-            if not reg:
-                continue
-            civ_r = self.region_reach(rid)
+        for tile_id in self._material_tiles.get(material_key, ()):
+            civ_r = self.tile_reach(tile_id)
             if best is None or civ_r < best[0]:
                 reference = self._reference_levels(parameter_value(
                     self._world.world_map, "located_material_reference_civilisation"))
-                best = (civ_r, max(1, reference.get(rid, civ_r)))
+                best = (civ_r, max(1, reference.get(tile_id, civ_r)))
         if best is None:
             return 0, base_mult
         civ_r, reference_level = best
@@ -195,25 +196,33 @@ class Geography:
         actually is, would get only 7%. A coalfield does not care how many
         people live near it.
 
-        the geography data's per-region `minerals` gives each region's rough
-        share of a material's total output, normalised so ROME'S OWN home
-        regions sum to about 1.0 -- which is what reproduces
-        resources.json's Roman totals exactly for a Rome-based civ and
-        changes nothing about the Rome baseline. For any other civilization:
-        regions it actually HOLDS (reach 0) count in full, and every
-        other region contributes a SHRINKING but never-zero share as it
+        Each named deposit carries a share of a material's total output
+        (sim/geography/mineral_shares.py), normalised so ROME'S OWN deposits sum
+        to about 1.0 -- which is what reproduces resources.json's Roman
+        totals for a Rome-based civ. For any other civilization: deposits on
+        tiles it actually HOLDS (reach 0) count in full, and every other
+        deposit contributes a SHRINKING but never-zero share as its tile
         fades with reach (TRADE_ACCESS_BY_REACH), because a civilization
         with no local ore can still buy imported metal, just less of it.
         Floored well above zero so this is a price, never a wall.
         """
         total = 0.0
-        for rid, reg in self._regions.items():
-            minerals: MineralShares = reg.get("minerals") or {}
-            share = float(minerals.get(material, 0.0))
-            if share <= 0:
-                continue
-            total += share * self.TRADE_ACCESS_BY_REACH.get(self.region_reach(rid), 0.02)
+        for tile_id, share in self._shares_by_tile.get(material, {}).items():
+            total += share * self.TRADE_ACCESS_BY_REACH.get(self.tile_reach(tile_id), 0.02)
         return max(0.05, total)
+
+    def tracked_materials(self) -> Tuple[str, ...]:
+        """The materials whose output the deposits share out over tiles."""
+        return tuple(sorted(self._shares_by_tile))
+
+    def held_share(self, tile_ids: Any, material: str) -> float:
+        """Share of `material`'s output from the deposits on these tiles (zero for an untracked material)."""
+        held = set(tile_ids)
+        return sum(share for tile_id, share in self._shares_by_tile.get(material, {}).items() if tile_id in held)
+
+    def source_tiles(self, material: str) -> Tuple[str, ...]:
+        """The tiles whose deposits produce `material` (empty for a material no deposit shares out)."""
+        return tuple(sorted(self._shares_by_tile.get(material, {})))
 
     def mineral_scale(self, material: str) -> float:
         """Fraction of a mineral's reference output this civilisation can draw on, kept until the tiles
@@ -226,6 +235,9 @@ class Geography:
         self.geo = geo
         from sim.geography import regions as region_tables  # here: regions -> sim.world -> this package's api
         self._regions = region_tables.region_records(self.geo)
+        rows = deposit_records(world_map=self._world.world_map)
+        self._shares_by_tile = mineral_shares.deposit_shares_by_tile(self.geo, rows)
+        self._material_tiles = {}
         self._table = {"key": None}
         # node id -> located_materials key, so a location-gated tech node finds its geography entry
         # without the tech tree knowing anything about geography.
@@ -233,6 +245,7 @@ class Geography:
         for material_key, material_data in (self.geo.get("located_materials") or {}).items():
             if material_key.startswith("_"):
                 continue
+            self._material_tiles[material_key] = located_places.tiles(material_data, self.geo, rows)
             for nid in (material_data.get("unlocks") or []):
                 self._mat_unlock[nid] = material_key
 

@@ -677,7 +677,8 @@
    "status": "historic",
    "source": "Wikipedia coordinate; no endowment figure.",
    "conf": "B",
-   "order": 33
+   "order": 33,
+   "share_of_reference_output": 0.05
   },
   {
    "id": "rammelsberg",

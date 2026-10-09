@@ -1,268 +1,105 @@
 {
- "_note": "A region is a label over tiles. Its anchor point, coast and distance from anyone are not stored: they are derived from its tiles (sim/geography/regions.py) and from the fastest route over the tile graph (sim/geography/reach_bands.py). minerals is the share of each metal's output not yet tied to a deposit on a tile.",
+ "_note": "A region is a label over tiles. Its anchor point, coast and distance from anyone are not stored: they are derived from its tiles (sim/geography/regions.py) and from the fastest route over the tile graph (sim/geography/reach_bands.py). Mineral output is not stored here: it sits on the deposits (data/world/geography/deposits/), read per tile by sim/world/mineral_shares.py.",
  "entries": [
   {
    "id": "italia",
    "name": "Italy",
-   "minerals": {
-    "coal": 0.0,
-    "tin": 0.0,
-    "saltpetre": 0.0
-   },
    "note": "Home, if you are Rome. Nobody else's home."
   },
   {
    "id": "gaul_germania",
    "name": "Gaul and the Germanies",
-   "minerals": {
-    "coal": 0.55,
-    "silver": 0.0,
-    "saltpetre": 0.0
-   },
    "note": "Noricum steel is famous; this is also the Rhineland and Ruhr coal country long before anyone calls it that, which is why it matters so much to whoever holds it in 1300."
   },
   {
    "id": "britannia",
    "name": "Britain",
-   "minerals": {
-    "coal": 0.45,
-    "saltpetre": 0.0
-   },
    "note": "Cornish tin, Mendip and Pennine lead, Wealden iron, and coalfields the Romans barely touch. THIS is where the coal actually is; a civilization that HOLDS Britain should not be treated as coal-poor just because it has few people."
   },
   {
    "id": "hispania",
    "name": "Iberia",
-   "minerals": {
-    "coal": 0.0,
-    "saltpetre": 0.0
-   },
    "note": "Rio Tinto and Cartagena. The single richest metal ground in the Roman world and the reason the denarius exists."
   },
   {
    "id": "north_africa",
-   "name": "North Africa and Egypt",
-   "minerals": {
-    "coal": 0.0,
-    "tin": 0.0,
-    "lead": 0.0,
-    "silver": 0.0,
-    "saltpetre": 0.0
-   }
+   "name": "North Africa and Egypt"
   },
   {
    "id": "greece_anatolia",
    "name": "Greece and Anatolia",
-   "minerals": {
-    "coal": 0.0,
-    "tin": 0.0,
-    "saltpetre": 0.0
-   },
    "note": "Laurion silver funded the Athenian navy long before Rome got here."
   },
   {
    "id": "levant_mesopotamia",
    "name": "Syria and Mesopotamia",
-   "minerals": {
-    "coal": 0.0,
-    "tin": 0.0,
-    "lead": 0.0,
-    "silver": 0.0,
-    "saltpetre": 0.0
-   },
    "note": "Cyprus copper (the metal is named after the island) sits at this end of the Mediterranean."
   },
   {
    "id": "scandinavia",
    "name": "Scandinavia and the Baltic",
-   "minerals": {
-    "iron": 0.25,
-    "coal": 0.02,
-    "copper": 0.05,
-    "tin": 0.0,
-    "lead": 0.03,
-    "silver": 0.05,
-    "saltpetre": 0.0
-   },
    "note": "Outside the Empire but reachable by trade. Amber road is ancient. Bog iron, smelted from ore raked out of lakebeds, is real and is what the Norse actually work with (met_bloomery_bog_iron); it is decent for tools and blades and no substitute for a coalfield."
   },
   {
    "id": "arabia_horn",
-   "name": "Arabia and the Horn of Africa",
-   "minerals": {
-    "iron": 0.02,
-    "coal": 0.0,
-    "copper": 0.05,
-    "tin": 0.0,
-    "lead": 0.0,
-    "silver": 0.02,
-    "saltpetre": 0.0
-   }
+   "name": "Arabia and the Horn of Africa"
   },
   {
    "id": "india",
    "name": "India and Ceylon",
-   "minerals": {
-    "iron": 0.15,
-    "coal": 0.0,
-    "copper": 0.1,
-    "tin": 0.05,
-    "lead": 0.05,
-    "silver": 0.05,
-    "saltpetre": 1.0
-   },
    "note": "ALREADY REACHABLE IN 100 AD by the monsoon route, Berenice to Muziris. Rome runs this trade annually and Pliny complains about the bullion drain. route_difficulty is BELOW 1 here on purpose: the monsoon is a scheduled, reliable wind system, not an obstacle, and treating it as ordinary distance understates how easy this crossing actually is once you know the timing. Also the world's dominant saltpetre source (Bengal), see located_materials."
   },
   {
    "id": "persia_centralasia",
    "name": "Persia and Central Asia",
-   "minerals": {
-    "iron": 0.1,
-    "coal": 0.0,
-    "copper": 0.1,
-    "tin": 0.05,
-    "lead": 0.05,
-    "silver": 0.1,
-    "saltpetre": 0.05
-   },
    "note": "Silk Road via Palmyra. Parthia is hostile but trade passes. Not coastal in this model: the Persian Gulf littoral exists but the bulk of the region, and the route through it, is overland relay across mountains and desert, which is why route_difficulty is above 1."
   },
   {
    "id": "china",
    "name": "China",
-   "minerals": {
-    "iron": 0.9,
-    "coal": 1.2,
-    "copper": 0.3,
-    "tin": 0.15,
-    "lead": 0.2,
-    "silver": 0.15,
-    "saltpetre": 0.1
-   },
    "note": "Reachable by Silk Road relay and by sea via India. Roman embassy recorded at the Han court in 166 AD. Shanxi coal and iron are enormous by any pre-modern standard, which is exactly why Han China starts this simulator already holding the blast furnace and cast iron: the ground supports it."
   },
   {
    "id": "west_africa",
    "name": "West and Central Africa",
-   "minerals": {
-    "iron": 0.05,
-    "coal": 0.0,
-    "copper": 0.05,
-    "tin": 0.0,
-    "lead": 0.0,
-    "silver": 0.0,
-    "saltpetre": 0.0
-   },
    "note": "Coastal. Hanno the Carthaginian sailed down this coast c. 500 BC. Not hard, merely not done. West African iron-working (the Nok tradition and its successors) is real and older than most people assume; it is not a large exportable surplus by Roman-scale demand, hence the modest share."
   },
   {
    "id": "southeast_asia",
    "name": "Malaya, Indonesia, the Spice Islands",
-   "minerals": {
-    "iron": 0.05,
-    "coal": 0.0,
-    "copper": 0.05,
-    "tin": 0.3,
-    "lead": 0.0,
-    "silver": 0.0,
-    "saltpetre": 0.0
-   },
    "note": "Malayan tin is real and additional to the Cornwall/Iberia figures above, not a slice of them."
   },
   {
    "id": "east_africa_south",
    "name": "East Africa and the Cape",
-   "minerals": {
-    "iron": 0.05,
-    "coal": 0.0,
-    "copper": 0.05,
-    "tin": 0.0,
-    "lead": 0.0,
-    "silver": 0.02,
-    "saltpetre": 0.0
-   },
    "note": "Herodotus reports a Phoenician circumnavigation of Africa under Necho II. Contested, but the voyage is physically possible with era-appropriate ships; route_difficulty reflects a long, mostly unprecedented coastal haul, not an ocean crossing."
   },
   {
    "id": "siberia_urals",
    "name": "The Urals and Siberia",
-   "minerals": {
-    "iron": 0.15,
-    "coal": 0.05,
-    "copper": 0.15,
-    "tin": 0.0,
-    "lead": 0.05,
-    "silver": 0.05,
-    "saltpetre": 0.0
-   },
    "note": "Overland-reachable through Scythian and Sarmatian trade (see platinum in located_materials). Genuinely mineral-rich ground; genuinely hard to get a wagon to."
   },
   {
    "id": "americas_carib",
    "name": "The Caribbean and Mesoamerica",
-   "minerals": {
-    "iron": 0.05,
-    "coal": 0.0,
-    "copper": 0.35,
-    "tin": 0.02,
-    "lead": 0.05,
-    "silver": 0.15,
-    "saltpetre": 0.0
-   },
    "note": "No draught animals and no iron-working tradition here, but the ore exists in the ground; copper and gold are what the Mexica actually work, which is why iron is a small share and copper a large one."
   },
   {
    "id": "americas_south",
    "name": "South America, Amazonia and the Andes",
-   "minerals": {
-    "iron": 0.05,
-    "coal": 0.0,
-    "copper": 0.2,
-    "tin": 0.05,
-    "lead": 0.02,
-    "silver": 0.4,
-    "saltpetre": 0.0
-   },
    "note": "Andean silver (Potosi and its neighbours) is one of the largest silver endowments on Earth; the share here is deliberately generous rather than conservative."
   },
   {
    "id": "americas_north",
-   "name": "North America",
-   "minerals": {
-    "iron": 0.1,
-    "coal": 0.1,
-    "copper": 0.15,
-    "tin": 0.0,
-    "lead": 0.05,
-    "silver": 0.05,
-    "saltpetre": 0.0
-   }
+   "name": "North America"
   },
   {
    "id": "australia_pacific",
-   "name": "Australia and the Pacific",
-   "minerals": {
-    "iron": 0.02,
-    "coal": 0.02,
-    "copper": 0.02,
-    "tin": 0.0,
-    "lead": 0.0,
-    "silver": 0.0,
-    "saltpetre": 0.0
-   }
+   "name": "Australia and the Pacific"
   },
   {
    "id": "greenland_arctic",
    "name": "Greenland and the Arctic",
-   "minerals": {
-    "iron": 0.01,
-    "coal": 0.0,
-    "copper": 0.0,
-    "tin": 0.0,
-    "lead": 0.0,
-    "silver": 0.0,
-    "saltpetre": 0.0
-   },
    "note": "route_difficulty is the highest in the file on purpose: raw distance from most of Eurasia is not actually that large (Greenland is closer to Rome in a straight line than India is), but the ice-bound approach is what makes it hard, and only ships built for exactly this (Norse clinker hulls, base_reach 4) shrug it off. Distance alone would badly under-price this region."
   }
  ]

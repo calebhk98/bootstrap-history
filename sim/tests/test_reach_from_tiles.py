@@ -53,12 +53,12 @@ class ReachFromTilesTests(unittest.TestCase):
         for region_id, record in _fresh_sim("rome_100ad").geography.regions.items():
             self.assertFalse({"reach_from_italia", "route_difficulty", "coastal", "reach"} & set(record), region_id)
 
-    def test_a_located_material_costs_nothing_extra_where_a_tile_of_its_region_is_held(self):
+    def test_a_located_material_costs_nothing_extra_where_the_tile_of_a_place_is_held(self):
         for civilisation in ("rome_100ad", "mexica_1500"):
             sim = _fresh_sim(civilisation)
-            located = sim.geography.data["located_materials"]
             for node_id, material_key in sorted(sim.geography._mat_unlock.items()):
-                held = any(sim.geography.region_reach(region_id) == 0 for region_id in located[material_key]["regions"])
+                held = any(sim.geography.tile_reach(tile_id) == 0
+                           for tile_id in sim.geography._material_tiles[material_key])
                 factor = sim.geography.material_cost_factor(node_id)
                 if held:
                     self.assertEqual(factor, 1.0, (civilisation, node_id))

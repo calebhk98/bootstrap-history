@@ -7,8 +7,8 @@ tracked material actually costs to land at this household, given the
 material's own scarcity (material_price_factor(), reading the demand
 grouping _cached_material_demand()/_cached_demand_by_tag() prepare) and
 the real, physical distance an ox-cart has to haul it from the nearest
-region that has it (_land_freight_physical_inputs()/
-_material_source_regions()/material_freight_distance_km()/
+deposit tile that has it (_land_freight_physical_inputs()/
+_material_source_tiles()/material_freight_distance_km()/
 material_freight_cost_per_kg()/material_freight_factor() - see the
 freight section below for sim/geography/transport.py's own physics and
 what this crossing deliberately does and does not cover). Covers, in
@@ -137,13 +137,13 @@ class FreightMixin:
     # were the same book price here regardless of the thousand-odd
     # kilometres of open water between them.
     #
-    # THE CROSSING. the geography data's own per-region `minerals` table (read
+    # THE CROSSING. the named deposits' output shares (read
     # by mineral_scale()/_compute_mineral_scale() in geography.py to decide
     # how much of iron/coal/copper/lead/tin/silver/saltpetre you can BUY)
-    # already says which of this game's 22 regions actually produce each of
-    # those seven materials, with real latitude/longitude on every region.
+    # already say which tiles actually produce each of
+    # those seven materials, with a real position on every deposit.
     # This is the first place that same geography is also asked what buying
-    # the material should COST: find the nearest region that has it, price
+    # the material should COST: find the nearest tile that has it, price
     # an ordinary ox-cart haul from there with transport.py's own per-
     # tonne-km figures, and fold the result into material_price_factor() as
     # a markup on the book price - see material_freight_factor()'s own
@@ -151,12 +151,10 @@ class FreightMixin:
     #
     # WHY THIS MATERIAL SET AND NOT OTHERS. Extending this to gold, or to
     # commodities.json's own curated wool/cotton/coffee, was deliberately
-    # left alone: the geography data's `minerals` table is the ONLY per-region
-    # location data this engine carries at global (not just Roman-province)
+    # left alone: the deposit shares are the ONLY located-production data this engine carries at global (not just Roman-province)
     # coverage - commodities.json's "regions" field for those was written
     # Rome-centric (its `iron` entry alone lists only Roman provinces, none
-    # of the geography data's other 16 regions, even though the geography data's own
-    # `minerals` table credits China with more iron abundance than any
+    # of the geography data's other 16 regions, even though the deposit shares credit China with more iron abundance than any
     # Roman province has) - using it for a non-Roman civilization would
     # invent a worse-than-nothing answer ("Han China must import all its
     # iron from across the world") from data that was never meant to
@@ -230,35 +228,33 @@ class FreightMixin:
                     freight_physics.CART, freight_physics.DIRT_TRACK))
         return cached
 
-    def _material_source_regions(self, material):
-        """Regions the geography data's own per-region `minerals` table credits
-        with real abundance of `material` (iron, coal, copper, lead, tin,
+    def _material_source_tiles(self, material):
+        """Tiles whose named deposits produce `material` (iron, coal, copper, lead, tin,
         silver, saltpetre - mineral_scale()'s own tracked set; see
         geography.py's _compute_mineral_scale, which reads this exact same
-        field for the QUANTITY question). Nothing here is invented for
+        shares for the QUANTITY question). Nothing here is invented for
         freight: it is the same geology this file already uses to decide
         how much of a material you can buy, now also asked what buying it
         should cost."""
-        return [region_id for region_id, region in self.geography.regions.items()
-                if float((region.get("minerals") or {}).get(material, 0.0)) > 0.0]
+        return self.geography.source_tiles(material)
 
     def material_freight_distance_km(self, material):
         """Kilometres of the cheapest haul from the tiles this civilization holds to the nearest
-        region that actually produces `material`, over the carriage modes it holds and the ways it
+        tile whose deposits produce `material`, over the carriage modes it holds and the ways it
         has built (geography's route; the same "source from the easiest deposit" rule
         material_reach() uses for located materials).
 
-        Zero if any region this civilization already HOLDS a tile of produces the material at all:
+        Zero if a tile this civilization already HOLDS has a deposit of the material:
         "home is home", a material you already mine in your own territory costs nothing extra to
         move within it, by this module's simplification.
 
-        None if the geography data has no located-region data for `material` at all (everything
-        outside the seven tracked minerals - see _material_source_regions). An unknown distance is
+        None if no deposit shares out `material` over tiles (everything
+        outside the seven tracked minerals - see _material_source_tiles). An unknown distance is
         not licence to invent one, so this returns "unknown" and material_freight_cost_per_kg()
         charges nothing rather than something imaginary when it sees that.
         """
-        regions = self._material_source_regions(material)
-        return self.geography.route_km_to(regions) if regions else None
+        tiles = self._material_source_tiles(material)
+        return self.geography.route_km_to(tiles) if tiles else None
 
     def material_freight_cost_per_kg(self, material):
         """Denarii per kilogram to haul `material` from the nearest place it

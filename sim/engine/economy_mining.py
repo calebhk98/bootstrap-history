@@ -207,10 +207,7 @@ class MiningMixin(MineDepositsMixin):
     # second geology signal, means a civ that
     # cannot buy much tin also cannot simply out-organise its way to
     # unlimited tin by sinking shafts instead -- the same ground is short
-    # either way. Measured: a Rome run's mineral_scale sits at roughly
-    # 1.0-1.2 for every metal but saltpetre (it controls most of its own
-    # ore-bearing provinces); Mexica sits at 0.10-0.17 for iron and coal
-    # (Mesoamerica genuinely worked neither) and 0.47 for copper (it did).
+    # either way. Measure it per civilisation with Geography.mineral_scale().
     STATE_CAPACITY_DEFAULT_FALLBACK = declare(
         "STATE_CAPACITY_DEFAULT_FALLBACK", 0.5, kind="initial_condition",
         unit="dimensionless state-capacity index (0-1 scale), fallback",

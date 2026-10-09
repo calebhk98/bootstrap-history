@@ -709,7 +709,7 @@ class MaterialSupplyMixin:
                 share *= favour[1]["factor"]
             share = min(share, self.MARKET_STANDING_SHARE_CEILING)
         # GEOLOGY, NOT DEMOGRAPHY: mineral availability must scale with
-        # mineral_scale() - the regions this civilization actually holds
+        # mineral_scale() - the deposit tiles this civilization actually holds
         # and can trade with (see _compute_mineral_scale) - not with
         # self.pop_scale. A coalfield does not care how many people live
         # near it; England in 1300 gets a large share of Europe's coal

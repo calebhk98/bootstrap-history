@@ -9,7 +9,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 GEOGRAPHY_DIR = os.path.join(ROOT, "sim", "geography")
 FORBIDDEN_PACKAGES = ("sim.engine", "sim.ui", "sim.economy", "sim.labour", "sim.agents")
 # file -> sim.world modules it still reads; remove entries as the dependency is turned around
-WORLD_IMPORTS_ALLOWED = {"regions.py": {"sim.world.mineral_shares"}}
+WORLD_IMPORTS_ALLOWED = {}
 
 
 def imported_modules(path):

@@ -3,17 +3,17 @@
 Demand is its own households' purchases of final goods (its population and
 income at its own solved prices, the household model the home market uses for
 its ratios), held to the income they have; goods bought only as inputs to
-other goods are not traded until an industrial demand model prices them. Capacity is what its own regions and recipes can supply: a
-mined commodity follows its regions' mineral shares; a made or grown one
+other goods are not traded until an industrial demand model prices them. Capacity is what its own tiles and recipes can supply: a
+mined commodity follows the shares of the deposits on its tiles; a made or grown one
 follows its demand when the economy holds a technique for every step of the
-chain and every ore deposit on that chain lies in its regions; anything else
+chain and every ore deposit on that chain lies on its tiles; anything else
 has no capacity and is only bought.
 """
 import functools
 
 from sim.constants import declare
 from sim.geography.api import tiles_held
-from sim.world import demand as demand_model, mineral_shares
+from sim.world import demand as demand_model
 
 from .data import ROOT, load_civ, starting_schedule
 from .market_demand import MEAN_INCOME_HOURS_PER_CAPITA, household_demand_by_material
@@ -71,12 +71,6 @@ def household_tonnes_by_material(civilization_id):
     return budget_scaled_final_tonnes(prices_in_hours, float(civilization.get("population") or 0.0))
 
 
-def held_mineral_share(civilisation, geography, commodity):
-    """Share of a mined commodity on the tiles the civilisation holds: the deposits sitting on them,
-    plus the region tables' remainder (no deposit behind it) by the fraction of each region's tiles held."""
-    return mineral_shares.held_share(tiles_held(civilisation), commodity, geography)
-
-
 class ForeignCapacityMixin:
 
     def home_unmade_demand_tonnes(self, commodity):
@@ -116,13 +110,12 @@ class ForeignCapacityMixin:
         return self._national_output_tonnes(commodity) * scale * FOREIGN_OUTPUT_PER_POPULATION_SHARE
 
     def _tracked_mineral(self, commodity):
-        """Whether the geography file gives regional shares for it."""
-        return any(commodity in (region.get("minerals") or {})
-                   for region in self.geography.regions.values())
+        """Whether some deposit shares out its output over tiles."""
+        return commodity in self.geography.tracked_materials()
 
     def _foreign_mineral_share(self, civilization_id, commodity):
         """Share of a mined commodity on the tiles it holds."""
-        return held_mineral_share(load_civ(civilization_id), self.geography.data, commodity)
+        return self.geography.held_share(tiles_held(load_civ(civilization_id), self.world_map), commodity)
 
     def _foreign_can_make(self, civilization_id, material, solved, _seen=None):
         """Whether its techniques and regions supply the material: it holds
