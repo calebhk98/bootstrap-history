@@ -1000,18 +1000,14 @@ def _explain_revenue(sim, nodes, node_id, node):
             "indirect income; those variable effects are not included here. "
             "Compare 'money' before and after opening."
             if node_id in sim.CAPABILITY_INSTITUTIONS else None),
-        # WHAT IT PAYS YOU, which for something in your own practice is a
-        # third of the figure above: the tree quotes the trade as an
-        # organised concern, and one person in a rented room is not one,
-        # so both figures have to be shown or the plain revenue figure
-        # overstates practice income threefold.
+        # WHAT IT PAYS YOU: for a skill in your own practice, the practice's one income (your own
+        # hours worked as a tradesman, shared by every skill you practise), not a figure of its own.
         "but_it_pays_YOU": (
-            round(node["rev"] * sim.PRACTICE_SHARE * sim.practice_attention(), 1)
-            if node_id in ui_port.practice_set(sim) and node["rev"] else None),
-        "because": ("this is your own practice, not a concern: it pays about a "
-                    "third of what the tree quotes for the trade, and selling "
-                    "your hours for wages takes another bite"
-                    if node_id in ui_port.practice_set(sim) and node["rev"] else None),
+            round(sim.practice_income(), 1) if node_id in ui_port.practice_set(sim) else None),
+        "because": ("this is your own practice, not a concern: it pays your own hours at the going wage "
+                    "of a %s, once for all the skills you practise, and selling your hours for wages "
+                    "takes them out of it" % sim.practice_trade()
+                    if node_id in ui_port.practice_set(sim) else None),
     }
 
 

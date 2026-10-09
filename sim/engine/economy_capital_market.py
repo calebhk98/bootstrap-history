@@ -2,7 +2,7 @@
 
 The rate and the room a borrower may still be lent are the agent economy's credit market's. What the engine adds
 is who lends to its own actors: once a year, before the actors act, the lenders' offers are fixed from what
-households save, what the state holds beyond its need, what each seat and each firm holds, and the actors' draws on
+households save, what the state holds beyond its need and what each firm holds, and the actors' draws on
 their facilities are shared among them (`sim/agents/purses.py`). What the founder, firms and the state owe is the
 claims in that book.
 """
@@ -26,8 +26,6 @@ LENDABLE_RESERVE_SHARE = declare(
     unit="share of the state's reserve beyond a year's need", source=None, confidence="D",
     why="How much of its spare reserve a state puts into the loanable pool (the rest stays as coin and "
         "bullion). Stands in for a treasury's investment policy.")
-
-SEAT_SOURCE_PREFIX = "seat:"   # a seat's own savings among the funds lenders hold
 
 
 class CapitalMarketMixin:
@@ -56,8 +54,6 @@ class CapitalMarketMixin:
             "firms": firms,
             "state": LENDABLE_RESERVE_SHARE * spare,
         }
-        for seat_id, seat in self.state.seats.items():
-            funds[SEAT_SOURCE_PREFIX + seat_id] = max(0.0, seat.household.capital)
         return funds
 
     def state_lending(self):
@@ -67,11 +63,9 @@ class CapitalMarketMixin:
 
     def lender_offers(self, sources):
         """The funds each lender account offers this year, from the market's sources: the households' savings
-        stand behind the savers, the state's reserve behind its account, a seat's savings behind the seat's, and
-        each firm's purse behind the firm's."""
+        stand behind the savers, the state's reserve behind its account and each firm's purse behind the firm's. A
+        player's seat is not a lender: its purse is its own."""
         offers = {EDGE_SAVERS: sources["households"], self.state_treasury().actor_id: sources["state"]}
-        for seat_id in self.state.seats:
-            offers[seat_id] = sources[SEAT_SOURCE_PREFIX + seat_id]
         purses = self.actors.state.purses
         for firm in self.actors.active_firms():
             offers[firm.actor_id] = purses.purse(firm.actor_id)

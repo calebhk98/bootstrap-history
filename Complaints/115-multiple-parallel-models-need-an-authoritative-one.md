@@ -254,3 +254,12 @@ strata money moves only by what crossed the edge and the state's relief.
 Owner decision (2026-10-09): high priority: do it as soon as possible.
 
 Owner decision (2026-10-09, later): retire the agent-economy-off mode; the agent economy is the only economy (supersedes the earlier keep decision).
+
+Found in a whole-game check (2026-10-09): two hours of labour run side by side. The engine's money per labour hour
+(`sim/labour/labour_wages.py`, anchored to the coin's silver at the solver's labour price for silver, Complaint 349)
+and the agent economy's own wage for the unskilled trade differ by a large factor when a game opens, and the founder's
+side is split between them: wage work and hiring pay the economy's quote, while living cost, node money and the opening
+purse are priced in the engine's hour. Measure it with
+`python3 -c "from sim.tests.harness import sim; g = sim(); print(g.labour.money_per_labour_hour(), g.economy.agent.wage_per_hour('labourer'))"`.
+Until one hour is authoritative, a founder income has to be priced in the engine's hour to meet the founder's costs
+(`practice_income` in `sim/engine/economy_production.py` is), and `work` pays far less than a day's living.

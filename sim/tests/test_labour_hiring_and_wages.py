@@ -14,9 +14,9 @@ household = sim(capital=5000000.0)
 
 # --- The practice paid a third of the quoted figure with nothing saying so.
 _practice = sorted(household._practice_set())
-_expected_revenue = sum(NODES[node_id]["rev"] for node_id in _practice) * household.PRACTICE_SHARE
-check("the practice pays its share of the quoted figure, not a ramp step",
-      abs(household.revenue() - _expected_revenue) < 1e-3 * _expected_revenue,
+_expected_revenue = household.labour.director_pool() * household.labour.wage_per_hour(household.practice_trade())
+check("the practice pays the founder's own hours at the wage of the trade it is worked as",
+      _expected_revenue > 0.0 and abs(household.revenue() - _expected_revenue) < 1e-3 * _expected_revenue,
       (household.revenue(), _expected_revenue))
 check("a concern you opened is NOT described as your practice",
       all(node_id in household.granted for node_id in _practice), _practice[:3])
@@ -104,16 +104,15 @@ check("...and it is the real forecast: hiring one for real lands on the number q
 # --- Trained apprentices join the staff by the year named, and the practice
 # does not ramp up over those years.
 household_training = sim(capital=100000.0)
-_practice_expected = sum(NODES[node_id]["rev"] for node_id in sorted(household_training._practice_set())) \
-    * household_training.PRACTICE_SHARE
 _trained, _train_message = household_training.labour.train("machinist", 2, None)
 for _ in range(3):
     household_training.step()
 check("trained apprentices are really on the books, unprompted, by the year named",
       _trained and household_training.employees.get("machinist", 0.0) >= 1.999,
       (_train_message, household_training.employees.get("machinist")))
+_practice_expected = household_training.practice_income()
 check("...and the practice does not grow into the full figure over the ramp years",
-      abs(household_training.revenue() - _practice_expected) < 1e-3 * _practice_expected,
+      _practice_expected > 0.0 and abs(household_training.revenue() - _practice_expected) < 1e-3 * _practice_expected,
       (household_training.revenue(), _practice_expected))
 
 # --- A trade you taught counts as gone once the last one died, and is taught

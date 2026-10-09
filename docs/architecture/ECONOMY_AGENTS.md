@@ -153,6 +153,10 @@ partner's edge. The partner's side settles in that partner's coin ledger and the
 (`sim/engine/trader_cargo.py`), and the trader's purse is trued up from its decision-time booking to the result.
 The trader's purse is an account in the same book (see "Actors' money and debt in the book"); the cargo account is funded
 and emptied over `edge:cargo`, and the trader's booked result is trued up to what the book gave.
+A landing cargo's sales and a taking cargo's purchases cross the border, so the state's customs assess them: the
+economy is told which accounts are such (`YearInputs.import_accounts`, `export_accounts`), its ledger counts their
+sales and purchases as imports and exports, and the customs bases tax the cargo account out of its takings. A cargo
+bought for abroad with nothing left in its account owes no export duty (the duty is taken from what the account holds).
 
 **The founder's concerns sell in the same markets**, offered at their output's cost at the economy's
 own prices and wages; the takings go back out over `edge:legacy` (the founder's revenue is still the engine's
@@ -186,7 +190,7 @@ the actors. The decision for who may owe what, and to whom:
 - `Actor.money` stays the net position (purse less claim), so every reader keeps its meaning; `Actor.debt()` is the
   claim's principal and `spendable` the purse above zero plus the credit still open. Interest is added to the claim
   as before (`Borrower.pay_interest`); the market's pool still shares it among the lenders at the yearly meeting.
-- Lenders are the accounts that offer funds at the yearly meeting (a state's reserve, a seat's savings, a firm's spare
+- Lenders are the accounts that offer funds at the yearly meeting (a state's reserve, a firm's spare
   cash) and the household savers (`edge:savers`, the households the simulation does not model one by one). A draw is
   shared among them in proportion to what they offer, each lending no more than its purse holds, and each holds a claim
   for its part. Interest is paid straight to the claim holders in proportion to their claims (the savers' part reaches the

@@ -118,7 +118,7 @@ def close(economy, sales: Sequence[dict], purchases: Sequence[dict]):
     """Close every account after the clear. Unsold goods go back out; goods bought are used up; the money each
     account holds goes to the exchange edge. Returns ({seller: units of money its sales fetched}, {buyer: units of
     its budget left unspent}, {buyer: units of goods it bought})."""
-    book, currency = economy.record.book, economy.setup.currency_id
+    book, currency = economy_api.economy_book(economy), economy.setup.currency_id
     accounts = ([(sale_account(actor), actor, EDGE_LEGACY, "unsold actor output")
                  for actor in sorted({sale["seller"] for sale in sales})]
                 + [(buy_account(actor), actor, EDGE_CONSUMPTION, "used by the buyer")
