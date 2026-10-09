@@ -103,6 +103,8 @@ def _best_entry_per_line(entries: List[Dict[str, Any]], goods: Mapping[str, floa
     for entry in entries:
         if not entry.get("outputs") or any(material not in goods for material in entry["outputs"]):
             continue
+        if not energy.can_run(entry):
+            continue            # needs a grade of heat no technique held supplies
         if entry.get("extracted_from") and not entry.get("capital") and not entry.get("inputs"):
             continue            # gathered from a deposit or a by-product stream: set by that source, not by staff
         key = frozenset(entry["outputs"])

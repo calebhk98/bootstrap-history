@@ -16,6 +16,7 @@ every price here, traded or not, moves with money against goods.
 
 
 from . import prices as price_solver
+from .goods_market_imports import HOME_SELLER
 
 
 # how near a producer is to making a good, least to most
@@ -66,7 +67,8 @@ class IncumbentPricesMixin:
         """"solved" (a technique some producer runs), "gated" (one nobody runs yet, within reach),
         "imported" (no home producer in reach; a trading partner sells it) or None (no one does)."""
         basis = self._price_tables()[1].get(material)
-        if basis is None and self.goods_market.offered_by(material) is not None:
+        seller = self.goods_market.offered_by(material)
+        if seller is not None and (basis is None or seller != HOME_SELLER):
             return "imported"
         return basis
 

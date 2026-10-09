@@ -206,12 +206,14 @@ class GoodsMarket(GoodsOffers):
             return None
         emp_key = sim._material_tag(material)[0]
         ratio = sim.market_price_ratio(material)
+        brought = self.import_tonnes_available(material)      # a partner's good: its supply and the carriers' lift
         buy = (per_kg / tonnes_per_unit(material) * sim.price_index
                * sim.material_price_factor(emp_key) * ratio)
         return {"material": material, "stock_key": emp_key, "buy_per_tonne": buy,
                 "market_price_ratio": ratio,
                 "sell_per_tonne": buy * sim.MATERIAL_TRADE_SELL_SHARE_OF_BUY,
-                "market_available_tonnes_per_year": sim._material_market_tonnes(emp_key)}
+                "market_available_tonnes_per_year": (
+                    sim._material_market_tonnes(emp_key) if brought is None else brought)}
 
     def price(self, material):
         """Money to buy one tonne now, or None when the material has no price."""

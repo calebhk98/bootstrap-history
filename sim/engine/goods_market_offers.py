@@ -15,13 +15,14 @@ import math
 
 from sim.world import trader_response
 
+from .goods_market_imports import HOME_SELLER, GoodsImports
 
-HOME_SELLER = "home"
+
 RATE_DECIMALS = 3
 LEVEL_DECIMALS = 4
 
 
-class GoodsOffers:
+class GoodsOffers(GoodsImports):
     """Mixin of `GoodsMarket`: reads of who sells what."""
 
     def merchants_cost_share(self, route, material=None, civilization_id=None):
@@ -74,14 +75,22 @@ class GoodsOffers:
         routes = {partner: self._route_from(partner) for partner in partners}
         household = {material: price for material, price in prices.items()}
         sellers = {material: HOME_SELLER for material in prices}
-        for material in sorted(self._partner_made_materials(partners) - set(prices)):
+        # A technique the home society holds no producer of yet (priced as within reach) is a home seller
+        # only until a partner sells the same good cheaper: the cheapest seller in reach sells.
+        in_reach = {material for material in prices if self._home_basis(material) == "gated"}
+        for material in sorted((self._partner_made_materials(partners) - set(prices)) | in_reach):
             offers = [(landed, partner) for partner in partners
                       for landed in (self.landed_price(material, partner, routes[partner]),)
-                      if landed is not None and math.isfinite(landed)]
-            if offers:
+                      if landed is not None and math.isfinite(landed)
+                      and sim.foreign_supply_tonnes(partner, material) > 0.0]
+            if offers and min(offers)[0] < household.get(material, math.inf):
                 household[material], sellers[material] = min(offers)[0], min(offers)[1]
         sim.household._goods_offers_cache = (prices, key, household, sellers)
         return household, sellers
+
+    def _home_basis(self, material):
+        """How the home price table reaches a material ("solved", "gated"), None when it does not."""
+        return self._sim._price_tables()[1].get(material)
 
     def _partner_made_materials(self, partners):
         """Materials some trading partner makes with its own technologies."""
@@ -99,6 +108,8 @@ class GoodsOffers:
     def unit_price(self, material):
         """Money per unit to buy a material from the cheapest seller in reach (the home price
         table, else a partner's landed price), or None when no one in reach sells it."""
+        if self.offered_by(material) not in (None, HOME_SELLER):
+            return self.household_prices()[material]
         price = self._sim._material_price_per_kg(material)
         return price if price is not None else self.household_prices().get(material)
 
