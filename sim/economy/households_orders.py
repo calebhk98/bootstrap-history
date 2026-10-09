@@ -58,7 +58,7 @@ SAVINGS_RESPONSE_FLOOR = declare(
         "for that portfolio choice and for the saving motives that do not depend on the return (dearth, "
         "dowry, old age); no society's saving is measured against the real rate here.")
 WEALTH_DRAWDOWN_LIMIT = declare(
-    "WEALTH_DRAWDOWN_LIMIT", 0.5, kind="temporary_heuristic",
+    "WEALTH_DRAWDOWN_LIMIT", 1.0, kind="temporary_heuristic",
     unit="share of a year's income that wealth above target may add to spending in a year", source=None,
     confidence="D",
     why="Households smooth consumption: wealth above what they want to keep is spent down over several "
