@@ -49,7 +49,7 @@
    "parchment_sheet": 10
   },
   "cap_hours": 8064.75166965173,
-  "up_hours": 806.475166965173,
+  "up_hours": 800.0,
   "build_yrs": 0.1,
   "adopt_yrs": 0,
   "dev_years": 0,
@@ -111,7 +111,7 @@
   "mat": {
    "mat_leather": 1
   },
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 403.2375834825865,
   "build_yrs": 0.05,
   "adopt_yrs": 0,
@@ -430,7 +430,7 @@
    "steel_noric_kg": 30
   },
   "cap_hours": 60485.63752238797,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "build_yrs": 1,
   "adopt_yrs": 0,
   "dev_years": 0,
@@ -1124,7 +1124,7 @@
    "mat_olive_oil": 30
   },
   "cap_hours": 50404.69793532331,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "build_yrs": 0.9,
   "adopt_yrs": 2,
   "dev_years": 20,
@@ -1335,7 +1335,7 @@
    "silver_kg": 8.0
   },
   "cap_hours": 50404.69793532331,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "build_yrs": 0.8,
   "adopt_yrs": 1,
   "dev_years": 10,
@@ -1652,7 +1652,7 @@
    "steel_plate_kg": 15
   },
   "cap_hours": 50404.69793532331,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "build_yrs": 0.8,
   "adopt_yrs": 1,
   "dev_years": 20,
@@ -2057,7 +2057,7 @@
    "copper_kg": 12
   },
   "cap_hours": 50404.69793532331,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "build_yrs": 0.8,
   "adopt_yrs": 1,
   "dev_years": 20,
@@ -2196,7 +2196,7 @@
    "iron_bar_kg": 30
   },
   "cap_hours": 50404.69793532331,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "build_yrs": 0.7,
   "adopt_yrs": 2,
   "dev_years": 15,
@@ -2541,7 +2541,7 @@
    "copper_kg": 50
   },
   "cap_hours": 50404.69793532331,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "build_yrs": 0.8,
   "adopt_yrs": 1,
   "dev_years": 15,
@@ -3182,7 +3182,7 @@
    "paper_kg": 100
   },
   "cap_hours": 50404.69793532331,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "build_yrs": 0.7,
   "adopt_yrs": 1,
   "dev_years": 15,

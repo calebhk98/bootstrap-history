@@ -18,7 +18,7 @@
   "mat": {
    "iron_bar_kg": 15
   },
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 604.8563752238797,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
@@ -52,7 +52,7 @@
    "iron_bar_kg": 25
   },
   "cap_hours": 5040.469793532331,
-  "up_hours": 806.475166965173,
+  "up_hours": 800.0,
   "build_yrs": 0.4,
   "adopt_yrs": 0,
   "dev_years": 0,
@@ -149,7 +149,7 @@
    "iron_bar_kg": 40,
    "mat_wood": 80
   },
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 302.42818761193985,
   "build_yrs": 0.25,
   "adopt_yrs": 0,
@@ -664,7 +664,7 @@
    "iron_bar_kg": 40
   },
   "cap_hours": 5645.326168756211,
-  "up_hours": 806.475166965173,
+  "up_hours": 800.0,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "dev_years": 2,
@@ -693,7 +693,7 @@
   "mat": {
    "iron_bar_kg": 35
   },
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 604.8563752238797,
   "build_yrs": 0.25,
   "adopt_yrs": 0,
@@ -957,7 +957,7 @@
    "labourer": 120
   },
   "mat": {},
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 604.8563752238797,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
@@ -1074,7 +1074,7 @@
   "ph": 60,
   "lab": {},
   "mat": {},
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
@@ -1107,7 +1107,7 @@
    "mat_bone": 500
   },
   "cap_hours": 5645.326168756211,
-  "up_hours": 806.475166965173,
+  "up_hours": 800.0,
   "build_yrs": 0.4,
   "adopt_yrs": 0,
   "dev_years": 5,
@@ -1443,7 +1443,7 @@
    "labourer": 150
   },
   "mat": {},
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 604.8563752238797,
   "build_yrs": 0.5,
   "adopt_yrs": 0,
@@ -1481,7 +1481,7 @@
   "lab": {},
   "mat": {},
   "cap_hours": 5645.326168756211,
-  "up_hours": 806.475166965173,
+  "up_hours": 800.0,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "dev_years": 5,
@@ -1753,7 +1753,7 @@
    "labourer": 150
   },
   "mat": {},
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 604.8563752238797,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
@@ -2121,7 +2121,7 @@
    "mat_lime": 300
   },
   "cap_hours": 6048.563752238797,
-  "up_hours": 806.475166965173,
+  "up_hours": 800.0,
   "build_yrs": 0.4,
   "adopt_yrs": 0,
   "dev_years": 8,
@@ -2251,7 +2251,7 @@
    "pyrethrum_flower": 400
   },
   "cap_hours": 5645.326168756211,
-  "up_hours": 806.475166965173,
+  "up_hours": 800.0,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "dev_years": 6,
@@ -2707,7 +2707,7 @@
   },
   "mat": {},
   "cap_hours": 6451.801335721384,
-  "up_hours": 806.475166965173,
+  "up_hours": 800.0,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
   "dev_years": 8,
@@ -2740,7 +2740,7 @@
    "tobacco_extract": 800
   },
   "cap_hours": 5645.326168756211,
-  "up_hours": 806.475166965173,
+  "up_hours": 800.0,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "dev_years": 5,
@@ -3194,7 +3194,7 @@
   "ph": 50,
   "lab": {},
   "mat": {},
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 504.0469793532331,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
@@ -3578,7 +3578,7 @@
    "steel_plate_kg": 30
   },
   "cap_hours": 6048.563752238797,
-  "up_hours": 806.475166965173,
+  "up_hours": 800.0,
   "build_yrs": 0.4,
   "adopt_yrs": 0,
   "dev_years": 7,

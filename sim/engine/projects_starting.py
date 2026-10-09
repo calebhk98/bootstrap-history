@@ -84,7 +84,13 @@ class StartingMixin:
     BRIBE_LABOUR_HOURS_PER_SCANDAL_POINT = declare(
         "BRIBE_LABOUR_HOURS_PER_SCANDAL_POINT", 6050.0, kind="temporary_heuristic",
         unit="labour hours per point of household.scandal, at bribability=1", source=None, confidence="D",
-        why='What it costs to erase one point of scandal outright. Scandal itself has no independent source model for who spreads it or how fast (the same gap STANDING_SCANDAL_PENALTY_PER_POINT in economy.py notes), so this conversion rate is a placeholder for that whole missing mechanism, not a measured price of silence.' + ' An official accepts a payment worth the work and risk he gives up, so the sum is the hours of unskilled labour it buys.')
+        why='What it costs to erase one point of scandal outright. Scandal itself '
+            'has no independent source model for who spreads it or how fast (the '
+            'same gap STANDING_SCANDAL_PENALTY_PER_POINT in economy.py notes), so '
+            'this conversion rate is a placeholder for that whole missing '
+            'mechanism, not a measured price of silence. An official accepts a '
+            'payment worth the work and risk he gives up, so the sum is the hours '
+            'of unskilled labour it buys.')
     BRIBE_PER_SCANDAL_POINT = money_units.PricedInLabourHours("BRIBE_LABOUR_HOURS_PER_SCANDAL_POINT")
 
     def bribe(self, amount):
@@ -312,7 +318,13 @@ class StartingMixin:
     ARREARS_CHEAP_PROJECT_FLOOR_LABOUR_HOURS = declare(
         "ARREARS_CHEAP_PROJECT_FLOOR_LABOUR_HOURS", 12100.0, kind="temporary_heuristic",
         unit="labour hours", source=None, confidence="D",
-        why="Even deep in persistent arrears, a project costing less than this is always 'cheap enough to need nobody's permission' - a flat floor under ARREARS_CHEAP_PROJECT_SURPLUS_MULTIPLE's own surplus-based figure so a household with zero surplus is not locked out of every project whatever. Tuned, not measured." + ' How deep a debt a household can carry is the labour it would take to clear, so the floor is hours of work, the same burden whatever the coin is worth.')
+        why='Even deep in persistent arrears, a project costing less than this is '
+            "always 'cheap enough to need nobody's permission' - a flat floor under"
+            " ARREARS_CHEAP_PROJECT_SURPLUS_MULTIPLE's own surplus-based figure so "
+            'a household with zero surplus is not locked out of every project '
+            'whatever. Tuned, not measured. How deep a debt a household can carry '
+            'is the labour it would take to clear, so the floor is hours of work, '
+            'the same burden whatever the coin is worth.')
     ARREARS_CHEAP_PROJECT_FLOOR = money_units.PricedInLabourHours("ARREARS_CHEAP_PROJECT_FLOOR_LABOUR_HOURS")
     ARREARS_CHEAP_PROJECT_SURPLUS_MULTIPLE = declare(
         "ARREARS_CHEAP_PROJECT_SURPLUS_MULTIPLE", 2.0, kind="temporary_heuristic",
@@ -328,7 +340,13 @@ class StartingMixin:
     ARREARS_HARD_STOP_FLOOR_LABOUR_HOURS = declare(
         "ARREARS_HARD_STOP_FLOOR_LABOUR_HOURS", 80600.0, kind="temporary_heuristic",
         unit="labour hours", source=None, confidence="D",
-        why="However cheap a project looks, new work stops outright once the household is this far underwater - a flat floor under ARREARS_HARD_STOP_REVENUE_MULTIPLE's revenue-based figure so a household with negligible revenue is not exempted from the hard stop entirely. Tuned, not measured." + ' How deep a debt a household can carry is the labour it would take to clear, so the floor is hours of work, the same burden whatever the coin is worth.')
+        why='However cheap a project looks, new work stops outright once the '
+            'household is this far underwater - a flat floor under '
+            "ARREARS_HARD_STOP_REVENUE_MULTIPLE's revenue-based figure so a "
+            'household with negligible revenue is not exempted from the hard stop '
+            'entirely. Tuned, not measured. How deep a debt a household can carry '
+            'is the labour it would take to clear, so the floor is hours of work, '
+            'the same burden whatever the coin is worth.')
     ARREARS_HARD_STOP_FLOOR = money_units.PricedInLabourHours("ARREARS_HARD_STOP_FLOOR_LABOUR_HOURS")
     ARREARS_HARD_STOP_REVENUE_MULTIPLE = declare(
         "ARREARS_HARD_STOP_REVENUE_MULTIPLE", 2.0, kind="temporary_heuristic",

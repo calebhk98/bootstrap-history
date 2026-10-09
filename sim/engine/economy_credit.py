@@ -56,7 +56,12 @@ class CreditMixin:
     CREDIT_LINE_LABOUR_HOURS_PER_REPUTATION_POINT = declare(
         "CREDIT_LINE_LABOUR_HOURS_PER_REPUTATION_POINT", 5040.0, kind="temporary_heuristic",
         unit="labour hours of credit per reputation point", source=None, confidence="D",
-        why='How much a point of reputation (itself a heuristic score, see STANDING_* above) is worth in raw borrowing power. Doubly removed from any measurement: reputation is invented and this conversion rate is invented on top of it.' + ' A lender advances against expected repayment from labour, so the line is a count of labour hours; it follows what labour costs in the coin, not the coin itself.')
+        why='How much a point of reputation (itself a heuristic score, see '
+            'STANDING_* above) is worth in raw borrowing power. Doubly removed from'
+            ' any measurement: reputation is invented and this conversion rate is '
+            'invented on top of it. A lender advances against expected repayment '
+            'from labour, so the line is a count of labour hours; it follows what '
+            'labour costs in the coin, not the coin itself.')
     CREDIT_LINE_PER_REPUTATION_POINT = money_units.PricedInLabourHours("CREDIT_LINE_LABOUR_HOURS_PER_REPUTATION_POINT")
     CREDIT_LINE_LABOUR_HOURS_PER_FOREST_HA = declare(
         "CREDIT_LINE_LABOUR_HOURS_PER_FOREST_HA", 2420.0, kind="temporary_heuristic",

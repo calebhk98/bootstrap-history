@@ -16,7 +16,7 @@
    "labourer": 20.0
   },
   "mat": {},
-  "cap_hours": 806.475166965173,
+  "cap_hours": 800.0,
   "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 0,
@@ -117,7 +117,7 @@
    "mat_stone": 1000
   },
   "cap_hours": 20161.879174129324,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "build_yrs": 1,
   "adopt_yrs": 0,
   "risk": 0.0,

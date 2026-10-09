@@ -1766,7 +1766,12 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
     INSOLVENCY_FLOOR_MIN_LABOUR_HOURS = declare(
         "INSOLVENCY_FLOOR_MIN_LABOUR_HOURS", 80600.0, kind="temporary_heuristic",
         unit="labour hours", source=None, confidence="D",
-        why="Floor on how deep into arrears a household can sit before insolvency's staff bleed can begin, for a household with very low revenue - so a household earning almost nothing is not bled the instant it dips a denarius below zero. Round number, not measured." + ' How deep a debt a household can carry is the labour it would take to clear, so the floor is hours of work, the same burden whatever the coin is worth.')
+        why="Floor on how deep into arrears a household can sit before insolvency's"
+            ' staff bleed can begin, for a household with very low revenue - so a '
+            'household earning almost nothing is not bled the instant it dips a '
+            'denarius below zero. Round number, not measured. How deep a debt a '
+            'household can carry is the labour it would take to clear, so the floor'
+            ' is hours of work, the same burden whatever the coin is worth.')
     INSOLVENCY_FLOOR_MIN = money_units.PricedInLabourHours("INSOLVENCY_FLOOR_MIN_LABOUR_HOURS")
     INSOLVENCY_FLOOR_REVENUE_MULTIPLE = declare(
         "INSOLVENCY_FLOOR_REVENUE_MULTIPLE", 2.0, kind="temporary_heuristic",
@@ -1894,7 +1899,11 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
     AUTO_BRIBE_CAPITAL_THRESHOLD_LABOUR_HOURS = declare(
         "AUTO_BRIBE_CAPITAL_THRESHOLD_LABOUR_HOURS", 40300.0, kind="temporary_heuristic",
         unit="labour hours", source=None, confidence="D",
-        why="Minimum capital before the optimizer's bribery policy will spend at all, so a poor household is not bled dry bribing away scandal it might survive anyway. Round number, not measured." + ' Capital is a stock of labour-valued goods and coin, so the threshold is the hours of work it represents.')
+        why="Minimum capital before the optimizer's bribery policy will spend at "
+            'all, so a poor household is not bled dry bribing away scandal it might'
+            ' survive anyway. Round number, not measured. Capital is a stock of '
+            'labour-valued goods and coin, so the threshold is the hours of work it'
+            ' represents.')
     AUTO_BRIBE_CAPITAL_THRESHOLD = money_units.PricedInLabourHours("AUTO_BRIBE_CAPITAL_THRESHOLD_LABOUR_HOURS")
     AUTO_BRIBE_CAPITAL_SHARE = declare(
         "AUTO_BRIBE_CAPITAL_SHARE", 0.12, kind="temporary_heuristic",
@@ -1906,7 +1915,11 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
     AUTO_BRIBE_COST_LABOUR_HOURS_PER_SCANDAL_POINT = declare(
         "AUTO_BRIBE_COST_LABOUR_HOURS_PER_SCANDAL_POINT", 5240.0, kind="temporary_heuristic",
         unit="labour hours per scandal point", source=None, confidence="D",
-        why='What buying down one point of scandal costs, capping total spend alongside AUTO_BRIBE_CAPITAL_SHARE. Invented figure, not sourced to any attested bribe schedule.' + ' An official accepts a payment worth the work and risk he gives up, so the sum is the hours of unskilled labour it buys.')
+        why='What buying down one point of scandal costs, capping total spend '
+            'alongside AUTO_BRIBE_CAPITAL_SHARE. Invented figure, not sourced to '
+            'any attested bribe schedule. An official accepts a payment worth the '
+            'work and risk he gives up, so the sum is the hours of unskilled labour'
+            ' it buys.')
     AUTO_BRIBE_COST_PER_SCANDAL_POINT = money_units.PricedInLabourHours("AUTO_BRIBE_COST_LABOUR_HOURS_PER_SCANDAL_POINT")
     BRIBES_YTD_DECAY = declare(
         "BRIBES_YTD_DECAY", 0.7, kind="temporary_heuristic",
@@ -1920,7 +1933,11 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
     BRIBE_SCANDAL_REDUCTION_LABOUR_HOURS_PER_POINT = declare(
         "BRIBE_SCANDAL_REDUCTION_LABOUR_HOURS_PER_POINT", 6050.0, kind="temporary_heuristic",
         unit="labour hours per scandal point removed (before bribability)", source=None, confidence="D",
-        why="How much bribery spend it takes to remove one point of scandal, scaled further by this society's own bribability weight. Invented figure, not sourced to any attested bribe schedule." + ' An official accepts a payment worth the work and risk he gives up, so the sum is the hours of unskilled labour it buys.')
+        why='How much bribery spend it takes to remove one point of scandal, scaled'
+            " further by this society's own bribability weight. Invented figure, "
+            'not sourced to any attested bribe schedule. An official accepts a '
+            'payment worth the work and risk he gives up, so the sum is the hours '
+            'of unskilled labour it buys.')
     BRIBE_SCANDAL_REDUCTION_SCALE = money_units.PricedInLabourHours("BRIBE_SCANDAL_REDUCTION_LABOUR_HOURS_PER_POINT")
 
     SCANDAL_HAZARD_SCALE = declare(

@@ -169,7 +169,7 @@
    "timber_m3": 5.0
   },
   "cap_hours": 3024.2818761193985,
-  "up_hours": 806.475166965173,
+  "up_hours": 800.0,
   "build_yrs": 0.9,
   "adopt_yrs": 0,
   "dev_years": 0,
@@ -251,8 +251,8 @@
    "mat_bronze": 100,
    "cast_iron_kg": 200
   },
-  "cap_hours": 4032.375834825865,
-  "up_hours": 806.475166965173,
+  "cap_hours": 4000.0,
+  "up_hours": 800.0,
   "build_yrs": 2.0,
   "adopt_yrs": 0,
   "dev_years": 8,
@@ -645,7 +645,7 @@
    "timber_m3": 2.0
   },
   "cap_hours": 3024.2818761193985,
-  "up_hours": 806.475166965173,
+  "up_hours": 800.0,
   "build_yrs": 0.8,
   "adopt_yrs": 0,
   "dev_years": 8,
@@ -749,7 +749,7 @@
    "mat_bronze": 80,
    "wood_kg": 300
   },
-  "cap_hours": 806.475166965173,
+  "cap_hours": 800.0,
   "up_hours": 161.2950333930346,
   "build_yrs": 1.5,
   "adopt_yrs": 0.3,
@@ -863,7 +863,7 @@
    "iron_bar_kg": 200
   },
   "cap_hours": 3024.2818761193985,
-  "up_hours": 806.475166965173,
+  "up_hours": 800.0,
   "build_yrs": 2.5,
   "adopt_yrs": 1.0,
   "dev_years": 5,
@@ -1051,7 +1051,7 @@
    "cast_iron_kg": 600,
    "iron_bar_kg": 300
   },
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 1008.0939587064662,
   "build_yrs": 2.5,
   "adopt_yrs": 0.3,
@@ -1154,7 +1154,7 @@
    "iron_bar_kg": 200
   },
   "cap_hours": 3629.138251343278,
-  "up_hours": 806.475166965173,
+  "up_hours": 800.0,
   "build_yrs": 1.8,
   "adopt_yrs": 0.3,
   "dev_years": 7,
@@ -2000,8 +2000,8 @@
    "mat_bronze": 150,
    "cast_iron_kg": 300
   },
-  "cap_hours": 4032.375834825865,
-  "up_hours": 806.475166965173,
+  "cap_hours": 4000.0,
+  "up_hours": 800.0,
   "build_yrs": 2.2,
   "adopt_yrs": 0.1,
   "dev_years": 8,
@@ -2076,7 +2076,7 @@
    "tool_steel_kg": 30.0
   },
   "cap_hours": 24194.255008955188,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "build_yrs": 1.5,
   "adopt_yrs": 0.2,
   "dev_years": 6,
@@ -2539,7 +2539,7 @@
    "steel_plate_kg": 400,
    "mat_bronze": 200
   },
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 1008.0939587064662,
   "build_yrs": 3.0,
   "adopt_yrs": 0.5,
@@ -3623,7 +3623,7 @@
    "copper_kg": 800,
    "steel_plate_kg": 500
   },
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 0,
   "build_yrs": 5.0,
   "adopt_yrs": 2.0,
@@ -3733,7 +3733,7 @@
    "copper_kg": 300
   },
   "cap_hours": 20161.879174129324,
-  "up_hours": 4032.375834825865,
+  "up_hours": 4000.0,
   "build_yrs": 5.0,
   "adopt_yrs": 0.3,
   "dev_years": 12,
@@ -3969,7 +3969,7 @@
    "cast_iron_kg": 300,
    "lead_kg": 100
   },
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 705.6657710945263,
   "build_yrs": 2.2,
   "adopt_yrs": 0.4,
@@ -4039,7 +4039,7 @@
    "steel_plate_kg": 500,
    "iron_bar_kg": 300
   },
-  "cap_hours": 4032.375834825865,
+  "cap_hours": 4000.0,
   "up_hours": 705.6657710945263,
   "build_yrs": 2.5,
   "adopt_yrs": 0.2,

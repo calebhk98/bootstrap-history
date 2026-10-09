@@ -109,7 +109,7 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 1.0,
-    "cap_hours": 4032.375834825865,
+    "cap_hours": 4000.0,
     "cat": "mathematics",
     "conf": "C",
     "dev_people": null,
@@ -2733,7 +2733,7 @@
     "adopt_yrs": 0.0,
     "art": 1.0,
     "build_yrs": 0.5,
-    "cap_hours": 4032.375834825865,
+    "cap_hours": 4000.0,
     "cat": "semiconductor",
     "conf": "A",
     "dev_people": null,
@@ -3758,7 +3758,7 @@
     "traits": [
       "commerce"
     ],
-    "up_hours": 4032.375834825865,
+    "up_hours": 4000.0,
     "yrs": 0.5
   },
   {
@@ -4844,7 +4844,7 @@
     "traits": [
       "commerce"
     ],
-    "up_hours": 4032.375834825865,
+    "up_hours": 4000.0,
     "yrs": 0.5
   },
   {
