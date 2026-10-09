@@ -13,7 +13,8 @@ output is bounded by its deposit and a worked-out deposit closes it.
 
 Methods of Sim, a mixin only so they live in a file of their own.
 """
-from sim.geography import api as geography
+from sim.constants import declare
+import sim.geography.api as geography
 from sim.world import deposits as deposit_model
 
 NO_DEPOSIT_TEXT = ("you know of no deposit of %s with room on the tiles you hold; prospect for one "
@@ -119,7 +120,11 @@ class MineDepositsMixin:
         """What is left in a found deposit of `mat`, in tonnes of the resource (0 for one not found)."""
         return next((row["remaining_tonnes"] for row in self.found_deposits(mat) if row["id"] == deposit_id), 0.0)
 
-    PROSPECT_HOURS_PER_PERSON_DAY = 10.0
+    PROSPECT_HOURS_PER_PERSON_DAY = declare(
+        "PROSPECT_HOURS_PER_PERSON_DAY", 10.0, kind="temporary_heuristic",
+        unit="hours of the mining trade per person-day of prospecting", source=None, confidence="D",
+        why="Turns the effort geography's prospecting takes (person-days) into the hours the mining trade's "
+            "wage is paid for; the length of a working day, which the construction data states as ten hours.")
 
     def prospect_deposits(self, tile_id, mat, person_days):
         """Prospect a held tile for `mat` with `person_days` of effort, paid at the mining trade's wage; the
@@ -154,3 +159,24 @@ class MineDepositsMixin:
         return True, "spent %s prospecting %s at %s and found %d deposit(s): %s." % (
             "{:,.0f}".format(cost), resource_id, tile_id, len(new),
             ", ".join("%s (%.0f t)" % (found["id"], sizes.get(found["id"]) or 0.0) for found in new))
+
+    AUTO_PROSPECT_PERSON_DAYS = declare(
+        "AUTO_PROSPECT_PERSON_DAYS", 2000.0, kind="temporary_heuristic",
+        unit="person-days per tile per automatic search",
+        source=None, confidence="D",
+        why="How much prospecting the automatic mine buys on the held tile with most undiscovered resource "
+            "when the deposits found have no room for the material it is short of; a round figure, not "
+            "derived from how long a survey party took.")
+
+    def auto_prospect(self, mat):
+        """When the automatic mine finds no room in the deposits found for `mat`, prospect the held tile that is
+        expected to hold most of it undiscovered. Does nothing where a deposit has room or `mat` has no deposit data."""
+        resource_id = self.mine_resource_id(mat)
+        room = self.mine_room_in_deposits(mat)
+        if resource_id is None or room is None or room > 0.0:
+            return False
+        tiles = geography.tiles_held(self.civ, self.world_map)
+        if not tiles:
+            return False
+        best = max(sorted(tiles), key=lambda tile: geography.endowment(tile, resource_id, self.world_map)["undiscovered_expected"])
+        return self.prospect_deposits(best, mat, self.AUTO_PROSPECT_PERSON_DAYS)[0]

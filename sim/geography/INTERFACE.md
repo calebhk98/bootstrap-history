@@ -66,6 +66,9 @@ limit on gatherers (sim/labour/food_gathering.py) is applied by the caller, not 
 | `improvement_key(improvement, tile_a, tile_b)` | The key a built improvement is recorded under: the tile id for a port, the edge key otherwise. |
 | `train_carrier(mode_id)` | `{inputs, fuel_material, stock_material, stock_kg}` of a rail mode as a freight carrier (physical inputs per tonne-km, what the fuel and rolling stock are made of), or `null` for a mode that is not a train. |
 | `built_km(improvements, improvement)` | Kilometres of a way (`"road"`, `"rail"`, `"canal"`; a bridge's span or a port's quay) the caller's `improvements` record holds, counted as a build is. |
+| `worked_deposits(tile_ids, resource_id, year, found)` | The deposits of a resource a party holding these tiles can name, each `{id, name, tile_id, resource, size_tonnes (null: unknown), grade_kg_per_tonne, found_by}`: the catalogue's that were first worked by `year` (or have no date) and the prospected `found` ones. |
+| `working_rate_tonnes_per_year(size_tonnes)` | The most a deposit of this size yields a year (`resources_working_share_per_year`). |
+| `ore_tonnes_per_tonne(row)` | Tonnes of ore raised per tonne of the resource held, for a `worked_deposits` row. |
 | `edge_key(tile_a, tile_b)` | The key a built road or track between two tiles is stored under. |
 
 `improvements` is the caller's record of what has been built, `{edge_key: {"road": true,

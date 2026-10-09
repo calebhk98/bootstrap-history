@@ -17,7 +17,7 @@ from sim.economy.api import (EDGE_EXTERNAL, EDGE_LEGACY, AgentOrders, Economy, G
                              YearInputs, expected_output_prices, external_orders, live_input_prices, live_wages,
                              trade_premium, variable_cost_per_run)
 
-from . import economy_port_cargo, solve_cache
+from . import economy_port_cargo, economy_port_sites, solve_cache
 from .data import load_civ
 from .economy_port_key import spin_up_key
 from .economy_port_setup import build_setup, opening_values
@@ -138,6 +138,7 @@ class AgentEconomy:
         orders.update(cargo_orders)
         self._strike_state_coin(economy)
         outcome = economy.step(self._inputs(orders))
+        economy_port_sites.deplete(self._sim, outcome.extraction, self._recipe_outputs())
         self.outcomes.append(outcome)
         self._settle_seats()
         self._sim.settle_trader_cargo(economy_port_cargo.close_cargo_accounts(economy, legs, tonnes_per_unit))
@@ -318,7 +319,12 @@ class AgentEconomy:
         return YearInputs(year=sim.state.scenario.year, population_by_tile=sim.labour.settlement_tiles(),
                           working_age_share=population.working_age / total if total > 0.0 else 0.0,
                           entrant_share=entrant_share, attrition_share=attrition_share,
-                          yield_factor_by_producer=yields, engine_orders=engine_orders, harvest_factor=weather)
+                          yield_factor_by_producer=yields, engine_orders=engine_orders, harvest_factor=weather,
+                          site_limits=tuple(economy_port_sites.site_limits(sim, self._recipe_outputs())))
+
+    def _recipe_outputs(self):
+        """{recipe id: {good: quantity a run}} of the recipes the economy runs."""
+        return {recipe_id: recipe.outputs for recipe_id, recipe in self._economy.setup.recipes.items()}
 
     def _spin_up(self):
         """Hidden years from the opening until prices and the interest rate settle; then the price level

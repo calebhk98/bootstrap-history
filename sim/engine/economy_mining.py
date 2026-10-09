@@ -674,6 +674,7 @@ class MiningMixin(MineDepositsMixin):
         What it is NOT is free or instant. You pay to sink it, you wait for it,
         and you pay every year to work it.
         """
+        self.mine_refusal = None
         if t_per_yr <= 0:
             return 0.0
         mat = self._normalize_material_name(mat)
@@ -699,7 +700,6 @@ class MiningMixin(MineDepositsMixin):
         scenario = self.state.scenario
         t_per_yr = min(t_per_yr, max(0.0, ceiling - have_cap.get(mat, 0.0)
                                           - holdings.mine_pending.get(mat, 0.0)))
-        self.mine_refusal = None
         deposit_room = self.mine_room_in_deposits(mat, deposit)
         if deposit_room is not None:
             if deposit_room <= 0.0:

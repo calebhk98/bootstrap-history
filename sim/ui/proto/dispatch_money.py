@@ -120,7 +120,9 @@ def _buy_mine(sim, cmd, quantity):
     # not at all, never spend every denarius you have and hand back a
     # fraction without asking.
     price = sim.mine_quote(mat, quantity).get("to_sink_it") if hasattr(sim, "mine_quote") else None
-    got = sim.open_mine(mat, quantity, partial=False)
+    got = sim.open_mine(mat, quantity, partial=False, deposit=cmd.get("deposit"))
+    if got <= 0 and sim.mine_refusal:
+        return {"ok": False, "error": sim.mine_refusal}
     if got <= 0:
         if price is not None and not purchase_rule.can_pay(sim, price):
             return {"ok": False,

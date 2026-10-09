@@ -19,7 +19,7 @@ from .protocols import AgentOrders, YearInputs
 from .recipes import recipes_from_production_data
 from .record import EconomyRecord
 from .setup import EconomySetup, TradeSpec, goods_specs
-from .types import EDGE_CARGO, EDGE_EXTERNAL, EDGE_LEGACY, Bid, GoodsMove, Offer, Transfer, external_edge
+from .types import EDGE_CARGO, EDGE_EXTERNAL, EDGE_LEGACY, Bid, GoodsMove, Offer, SiteLimit, Transfer, external_edge
 from .unit_cost import variable_cost_per_run
 from .year_close import rebase_basket_price_level
 from .year_labour import trade_premium
@@ -29,7 +29,7 @@ __all__ = [
     "diagnostics", "households", "taxes", "tile_costs", "currency_from_coin_standard", "Economy", "external_orders",
     "price_response",
     "shown_prices", "Producer", "expected_output_prices", "live_input_prices", "live_wages", "AgentOrders",
-    "YearInputs", "recipes_from_production_data", "EconomyRecord", "EconomySetup", "TradeSpec",
+    "YearInputs", "recipes_from_production_data", "EconomyRecord", "EconomySetup", "TradeSpec", "SiteLimit",
     "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "EDGE_CARGO", "external_edge", "Bid", "GoodsMove", "Offer", "Transfer",
     "variable_cost_per_run", "rebase_basket_price_level", "trade_premium",
     "traded_volumes", "opening_quantities", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",

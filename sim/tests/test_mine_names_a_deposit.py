@@ -196,6 +196,14 @@ class ProspectingTests(unittest.TestCase):
         self.assertFalse(self.host.prospect_deposits("no_such_tile", "coal", 50.0)[0])
         self.assertFalse(self.host.prospect_deposits(self.tile, "aluminium_kg", 50.0)[0])
 
+    def test_the_automatic_mine_prospects_when_no_deposit_has_room_and_not_otherwise(self):
+        self.assertTrue(self.host.auto_prospect("coal"))
+        self.assertTrue(self.host.found_deposits("coal"))
+        paid = len(self.host.paid)
+        self.assertFalse(self.host.auto_prospect("coal"))
+        self.assertEqual(len(self.host.paid), paid)
+        self.assertFalse(self.host.auto_prospect("aluminium_kg"))
+
     def test_the_finds_survive_save_and_load(self):
         from sim.engine.state import deserialize_state, serialize_state
         self.host.prospect_deposits(self.tile, "coal", 1e9)
