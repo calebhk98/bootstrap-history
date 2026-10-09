@@ -81,6 +81,13 @@ class HouseholdParty:
 		with self._acting():
 			self.household.done.update(chain)
 
+	def accept_licence(self, node_id: str, chain: Any, world: Any) -> None:
+		"""Licensed know-how arrives complete. It was received, not built, so it is held as the society's
+		(never counted as the seat's own invention, never lost to a sack)."""
+		with self._acting():
+			self.household.done.update(chain)
+			self.household.granted.update(chain)
+
 	def credit(self, amount: float, purpose: Any) -> None:
 		with self._acting():
 			self.household.credit(amount, purpose)

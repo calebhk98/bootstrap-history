@@ -22,7 +22,7 @@ that they can live in a file of their own. Behaviour is unchanged and
 verified byte-identical.
 """
 from sim.constants import declare
-from . import category_traits
+from . import category_traits, seat_builds
 from .institution_societies import belongs_to_other_society
 
 
@@ -312,9 +312,8 @@ class DiffusionMixin:
         actor holds the node (copied from the founder, or licensed) and 0
         when it does not.
         """
-        projects = self.state.projects
         scenario = self.state.scenario
-        if node_id not in projects.done:
+        if not seat_builds.holders_of(self.state.seats, node_id):
             return 0.0
         node = self.nodes.get(node_id)
         if not node:
@@ -324,8 +323,8 @@ class DiffusionMixin:
             return 0.0
         if category_traits.diffusion_traits()[cat].get("government_held"):
             return 1.0 if node_id in self.state_treasury().knowledge else 0.0
-        done_year_map = projects.done_year or {}
-        age = max(0.0, scenario.year - done_year_map.get(node_id, scenario.year))
+        # the society copies from whichever seat finished it first
+        age = max(0.0, scenario.year - seat_builds.earliest_done_year(self.state.seats, node_id, scenario.year))
         half_life = (self._diffusion_half_life_years(cat)
                      / max(0.4, self._diffusion_pace(cat)))
         return max(0.0, min(1.0, 1.0 - 0.5 ** (age / half_life)))
@@ -343,9 +342,7 @@ class DiffusionMixin:
         # a founder innovation waiting to diffuse from the household.  Counting
         # newly explicit inherited grants here both diluted later projects and
         # treated those grants as if the founder had introduced them.
-        projects = self.state.projects
-        ids = [node_id for node_id in self._diffusible_ids(cat)
-               if node_id in projects.done and node_id not in projects.granted]
+        ids = sorted(seat_builds.built_by_any(self.state.seats, self._diffusible_ids(cat)))
         if not ids:
             return 0.0
         return sum(self.civ_diffusion(node_id) for node_id in sorted(ids)) / len(ids)
@@ -362,9 +359,7 @@ class DiffusionMixin:
     def state_military_diffusion(self):
         """Share of the founder's military work the government actor holds."""
         held = self.state_treasury().knowledge
-        projects = self.state.projects
-        ids = [node_id for node_id in self._diffusible_ids("military")
-               if node_id in projects.done and node_id not in projects.granted]
+        ids = sorted(seat_builds.built_by_any(self.state.seats, self._diffusible_ids("military")))
         return sum(1 for node_id in ids if node_id in held) / len(ids) if ids else 0.0
 
     # ---- DISEASE: THE COUNTRY IS HARDER TO KILL WHOLESALE ------------------
@@ -416,9 +411,8 @@ class DiffusionMixin:
     def state_military_weapons_held(self):
         """How many of the founder's military inventions the government holds."""
         held = self.state_treasury().knowledge
-        projects = self.state.projects
-        return sum(1 for node_id in self._diffusible_ids("military")
-                   if node_id in projects.done and node_id not in projects.granted and node_id in held)
+        return sum(1 for node_id in seat_builds.built_by_any(self.state.seats, self._diffusible_ids("military"))
+                   if node_id in held)
 
     def _state_military_diffusion_relief(self, per_weapon):
         weapons = self.state_military_weapons_held()

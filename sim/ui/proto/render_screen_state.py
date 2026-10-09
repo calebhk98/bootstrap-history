@@ -130,6 +130,8 @@ def render_state(out):
     rendered that way; one without it prints every section.
     """
     lines = render_view(out, out.get("state_view"))
+    if out.get("seat_count", 1) > 1 and out.get("seat"):
+        lines = ["Seat: %s (of %d in this game)" % (out["seat"], out["seat_count"]), ""] + lines
     lines = _state_completed_head(out, lines)
     emergency = out.get("demographic_emergency")
     if emergency:

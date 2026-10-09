@@ -22,6 +22,7 @@ def _agent_state_founder(sim):
     """
     return {
         "seat": sim.state.acting_seat,
+        "seat_count": len(sim.state.seats),
         "founder_alive": sim.founder_alive,
         "founder_age": (sim.founder_age()
                         if sim.founder_alive and not sim.cfg.get("immortal", True) else None),

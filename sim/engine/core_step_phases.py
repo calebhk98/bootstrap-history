@@ -104,6 +104,7 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
         # the CURRENT scandal, and scandal moves DURING the step, so the direction needs the year's opening mark.
         self.state.household.scandal_last_year = self.state.household.scandal
         automation_audit.begin_year(self)
+        self.hear_of_other_seats()
 
     def begin_world_year(self):
         """What the society notes before the year starts."""
