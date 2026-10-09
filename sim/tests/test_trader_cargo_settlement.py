@@ -10,6 +10,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.agents.api import ActorRecord, ActorRegistry, ActorsState
+from sim.engine.agents_port_trade import TradeView
 from sim.engine.trader_cargo import TraderCargoMixin
 
 PARTNER, OTHER, TRADER = "han_china_100ad", "norse_900ad", "trader:test"
@@ -51,6 +52,38 @@ class Stub(TraderCargoMixin):
     @property
     def purse(self):
         return self.registry.get(TRADER).money
+
+
+class ShippingWorld(TradeView):
+    """A trader's view of the world with prices fixed and its market seams recorded."""
+
+    def __init__(self, on_book):
+        self.on_book = on_book
+        self.notes, self._memo = [], {}
+        self.game = Stub()
+        self._sim = self.game
+        self.game.note_actor_home_trade = lambda *args: self.notes.append(("home", args))
+
+    def runs_agent_economy(self):
+        return self.on_book
+
+    def _home_place(self):
+        return "home"
+
+    def price_at(self, material, place):
+        return 10.0 if place == "home" else 4.0
+
+    def freight_between(self, source, destination, material, tonnes):
+        return 2.0 * tonnes
+
+    def commodity_of(self, material):
+        return material
+
+    def market_sale(self, seller_id, material, tonnes):
+        self.notes.append(("sale", tonnes))
+
+    def market_purchase(self, buyer_id, commodity, tonnes):
+        self.notes.append(("purchase", tonnes))
 
 
 def landing(game, tonnes=10.0, paid=100.0, received=160.0):
@@ -114,6 +147,22 @@ class CargoSettlement(unittest.TestCase):
         (leg,) = game.cargo_legs()
         game.settle_trader_cargo({leg["id"]: {"tonnes": 8.0, "money": 120.0}})
         self.assertAlmostEqual(game.registry.get(TRADER).record.last_margin, 50.0 - 40.0)
+
+
+class ShippingNotesTheLeg(unittest.TestCase):
+    def test_on_the_agent_economy_the_home_side_is_left_to_the_book(self):
+        world = ShippingWorld(on_book=True)
+        self.assertEqual(world.ship(TRADER, "grain", 5.0, PARTNER, "home"), (20.0, 50.0))
+        self.assertEqual([note for note in world.notes if note[0] in ("sale", "purchase")], [])
+        (leg,) = world.game.cargo_legs()
+        self.assertEqual((leg["kind"], leg["tonnes"], leg["paid"], leg["received"], leg["carriage"]), ("in", 5.0, 20.0, 50.0, 10.0))
+
+    def test_with_the_agent_economy_off_the_engines_own_market_still_takes_the_home_side(self):
+        world = ShippingWorld(on_book=False)
+        world.ship(TRADER, "grain", 5.0, "home", PARTNER)
+        world.ship(TRADER, "grain", 3.0, PARTNER, "home")
+        self.assertEqual([note for note in world.notes if note[0] in ("sale", "purchase")], [("purchase", 5.0), ("sale", 3.0)])
+        self.assertEqual(sorted(leg["kind"] for leg in world.game.cargo_legs()), ["in", "out"])
 
 
 if __name__ == "__main__":
