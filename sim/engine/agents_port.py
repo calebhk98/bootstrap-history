@@ -17,6 +17,7 @@ from .agents_port_groups import GroupView
 from .agents_port_revenue import RevenueView
 from .agents_port_site import SiteView
 from .agents_port_cast import CastView
+from .agents_port_seats import SeatView
 from .agents_port_coinage import CoinageView
 from .agents_port_trade import TradeView
 from . import seat_builds, visibility as visibility_of
@@ -24,7 +25,7 @@ from .data import TRADES_ABSENT
 from .industry_depth import RAMP_SHARE_AT_FULL_DEPTH
 
 
-class SimWorld(BudgetView, SiteView, RevenueView, GroupView, DisclosureView, CapitalView, CapacityView, TradeView, CastView, CoinageView):
+class SimWorld(BudgetView, SiteView, RevenueView, GroupView, DisclosureView, CapitalView, CapacityView, TradeView, CastView, CoinageView, SeatView):
 	"""The `Sim`'s answers to the questions actors ask."""
 
 	def __init__(self, sim: Any) -> None:

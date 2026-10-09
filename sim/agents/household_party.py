@@ -66,6 +66,11 @@ class HouseholdParty:
 			return self.household.operating
 
 	@property
+	def workforce(self) -> Any:
+		with self._acting():
+			return self.household.employees
+
+	@property
 	def knowledge(self) -> Any:
 		with self._acting():
 			return self.household.done
