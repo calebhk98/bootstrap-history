@@ -42,11 +42,13 @@ check("the navy is manned by sailors, the dole is grain, public buildings are ma
       "sailor" in lines["navy"].labour and lines["dole"].materials and "mason" in lines["public_buildings"].labour,
       (lines["navy"].labour, lines["dole"].materials, lines["public_buildings"].labour))
 landlocked = sim(civ="rome_100ad")
+landlocked.civ.pop("home_tiles", None)
 landlocked.civ["home_regions"] = ["levant_mesopotamia"]
 dry = lines_of(landlocked)
 check("a state's roads follow the tiles it holds",
       "roads" in dry and dry["roads"].money != lines["roads"].money, (dry.get("roads"), lines["roads"].money))
 inland = sim()
+inland.civ.pop("home_tiles", None)
 inland.civ["home_regions"] = []
 check("a state with no territory keeps no roads and no navy",
       not {"roads", "navy"} & set(lines_of(inland)), sorted(lines_of(inland)))

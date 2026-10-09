@@ -151,8 +151,21 @@
       ]
     }
   ],
-  "home_regions": [
-    "scandinavia"
+  "home_tiles": [
+    "finland_01",
+    "finland_02",
+    "finland_03",
+    "norway_01",
+    "norway_02",
+    "norway_03",
+    "norway_04",
+    "norway_05",
+    "norway_06",
+    "sweden_01",
+    "sweden_02",
+    "sweden_03",
+    "sweden_04",
+    "sweden_05"
   ],
   "id": "norse_900ad",
   "institutions": {

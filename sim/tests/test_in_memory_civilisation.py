@@ -16,6 +16,7 @@ def _variant(keep_file_id=False):
     civ = copy.deepcopy(S.load_civ("rome_100ad"))
     if not keep_file_id:
         civ["id"] = "variant_with_no_file"
+    civ.pop("home_tiles", None)
     civ["home_regions"] = ["scandinavia"]
     civ["starting_interest_rate"] = 0.31
     return civ

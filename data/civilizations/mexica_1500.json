@@ -321,8 +321,39 @@
       ]
     }
   ],
-  "home_regions": [
-    "americas_carib"
+  "home_tiles": [
+    "costa_rica_01",
+    "cuba_01",
+    "cuba_02",
+    "cuba_03",
+    "cuba_04",
+    "dominican_rep_01",
+    "guatemala_01",
+    "honduras_01",
+    "honduras_02",
+    "mexico_01",
+    "mexico_02",
+    "mexico_03",
+    "mexico_04",
+    "mexico_05",
+    "mexico_06",
+    "mexico_07",
+    "mexico_08",
+    "mexico_09",
+    "mexico_10",
+    "mexico_11",
+    "mexico_12",
+    "mexico_13",
+    "mexico_14",
+    "mexico_15",
+    "mexico_16",
+    "mexico_17",
+    "mexico_18",
+    "mexico_19",
+    "mexico_20",
+    "nicaragua_01",
+    "nicaragua_02",
+    "panama_01"
   ],
   "id": "mexica_1500",
   "institutions": {

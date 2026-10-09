@@ -274,9 +274,20 @@
       ]
     }
   ],
-  "home_regions": [
-    "britannia",
-    "gaul_germania"
+  "home_tiles": [
+    "france_01",
+    "france_02",
+    "france_03",
+    "france_04",
+    "france_05",
+    "germany_01",
+    "germany_02",
+    "germany_03",
+    "netherlands_01",
+    "united_kingdom_01",
+    "united_kingdom_02",
+    "united_kingdom_03",
+    "united_kingdom_04"
   ],
   "id": "england_1300",
   "institutions": {

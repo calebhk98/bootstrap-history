@@ -35,12 +35,15 @@ def _tile_area(sim_under_test, region_ids):
 
 _s = _fresh_sim()
 _s.civ = dict(_s.civ)
+_s.civ.pop("home_tiles", None)
 _s.civ["home_regions"] = ["italia"]
 _italia_area = _s.home_land_area_km2()
 check("home_land_area_km2() of a single region equals the area of that "
       "region's tiles, not '1 region'",
       _italia_area == _tile_area(_s, ["italia"]),
       _italia_area)
+
+_s.civ.pop("home_tiles", None)
 
 _s.civ["home_regions"] = ["italia", "britannia"]
 _two_region_area = _s.home_land_area_km2()
@@ -58,6 +61,7 @@ check("home_land_area_km2() of two home regions is the SUM of their real "
 _rome = _fresh_sim()
 _han = _fresh_sim()
 _han.civ = dict(_han.civ)
+_han.civ.pop("home_tiles", None)
 _han.civ["home_regions"] = ["china"]          # 1 region, 9,597,000 km2
 _han.civ["state_capacity"] = _rome.civ["state_capacity"]   # isolate area, not state capacity
 
@@ -86,9 +90,11 @@ check("...and with state_capacity held equal, their forest ceilings land "
 # 5% of its tile area (britannia + italia).
 _a = _fresh_sim()
 _a.civ = dict(_a.civ)
+_a.civ.pop("home_tiles", None)
 _a.civ["home_regions"] = ["levant_mesopotamia"]               # 1 region
 _b = _fresh_sim()
 _b.civ = dict(_b.civ)
+_b.civ.pop("home_tiles", None)
 _b.civ["home_regions"] = ["britannia", "italia"]              # 2 regions
 _a_area = _a.home_land_area_km2()
 _b_area = _b.home_land_area_km2()
@@ -136,6 +142,7 @@ check("Rome's own pre-revenue forest ceiling under the area-based formula "
 # is substituted for it (no content id is special-cased).
 _orphan = _fresh_sim()
 _orphan.civ = dict(_orphan.civ)
+_orphan.civ.pop("home_tiles", None)
 _orphan.civ["home_regions"] = ["not_a_real_region_id"]
 check("a civ that resolves to no tile holds no land, and no region stands in for it",
       _orphan.home_land_area_km2() == 0.0,

@@ -55,10 +55,9 @@ answer for it. So the mechanism exists. What blocks real use:
 5. **No dependency check on map ids.** `mods_ids.check_declared_dependencies` scans tech, recipe and
    civilisation data; it does not scan geography files, so a mod that places a tile in another mod's
    region does not need to declare that mod.
-6. **Civilisation start data names regions, not tiles.** `home_regions` in a civilisation file are
-   region ids; a region's tiles are the tiles labelled with it (`loading._region_to_tiles`). A mod
-   tile joins a civilisation by naming that civilisation's region in `old_region`, or by a mod
-   civilisation listing a mod region. That is workable; it only needs validation (a region with no
+6. **Civilisation start data names tiles.** Shipped civilisation files list `home_tiles`; a mod
+   civilisation may list `home_regions` labels instead (the tiles carrying them). A mod tile joins a
+   shipped civilisation by a patch that replaces its `home_tiles`, or a mod civilisation listing a mod region. That is workable; it only needs validation (a region with no
    tiles, a tile naming no region).
 
 ### 1.2 Commands

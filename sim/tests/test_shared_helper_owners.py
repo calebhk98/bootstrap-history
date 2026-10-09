@@ -99,8 +99,8 @@ class TilesOfACivilisation(unittest.TestCase):
                 continue
             with open(os.path.join(folder, name), encoding="utf-8") as handle:
                 civilisation = json.load(handle)
-            self.assertEqual(geography_api.tiles_of_regions(civilisation.get("home_regions") or []),
-                             geography_api.tiles_held(civilisation), name)
+            parcels = land.cultivable_land_for_civilization(name, civilizations={name: civilisation})
+            self.assertEqual(len(parcels), len(geography_api.tiles_held(civilisation)), name)
 
 
 if __name__ == "__main__":

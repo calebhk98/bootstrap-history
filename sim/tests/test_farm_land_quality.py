@@ -1,7 +1,7 @@
 """Each civilisation's farm sits on its own soil: land quality is the
 arable-area-weighted fertility of the regions it holds, and the farm is
 sized so the starting population is still fed on that soil."""
-from sim.geography.api import load_geography
+from sim.geography.api import load_geography, tiles_held, tiles_of_regions
 import copy
 import json
 import os
@@ -14,7 +14,6 @@ from sim.labour import labour_allocation
 _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 _GEOGRAPHY = load_geography()
 _TILES = _GEOGRAPHY["land_tiles"]["tiles"]
-_REGION_TO_TILES = _GEOGRAPHY["land_tiles"]["region_to_tiles"]
 
 _CIVILISATIONS = ("rome_100ad", "han_china_100ad", "norse_900ad")
 
@@ -28,20 +27,15 @@ def _game(civ_id):
     return _READ_ONLY_GAMES[civ_id]
 
 
-def _held_tiles(home_regions):
-    return sorted({tile_id for region in home_regions
-                   for tile_id in _REGION_TO_TILES[region]})
-
-
 def _arable_km2(tile_id):
     tile = _TILES[tile_id]
     return tile["land_area_km2"] * tile["arable_fraction"]
 
 
-def _expected_quality(home_regions, hectares=None):
+def _expected_quality(held_tiles, hectares=None):
     """Mean fertility of the best `hectares` of arable ground (all of it when
     None), hand-computed from the tiles."""
-    tile_ids = sorted(_held_tiles(home_regions),
+    tile_ids = sorted(held_tiles,
                       key=lambda tile_id: (-_TILES[tile_id]["fertility_quality_multiplier"], tile_id))
     remaining = float("inf") if hectares is None else hectares
     taken = weighted = 0.0
@@ -60,7 +54,7 @@ class FarmLandQualityTests(unittest.TestCase):
         for civ_id in _CIVILISATIONS:
             civ = S.load_civ(civ_id)
             test_sim = _game(civ_id)
-            expected = _expected_quality(civ["home_regions"], test_sim.farm_land.hectares)
+            expected = _expected_quality(tiles_held(civ), test_sim.farm_land.hectares)
             self.assertAlmostEqual(test_sim.farm_land.quality, expected, places=9, msg=civ_id)
 
     def test_civilisations_differ(self):
@@ -71,14 +65,16 @@ class FarmLandQualityTests(unittest.TestCase):
     def test_single_region_mod_civ_gets_the_mean_of_that_regions_tiles(self):
         civ = copy.deepcopy(S.load_civ("rome_100ad"))
         civ["id"] = "mod_single_region"
+        civ.pop("home_tiles", None)
         civ["home_regions"] = ["scandinavia"]
         test_sim = S.Sim(NODES, ORDER, random.Random(1), events=False, manual=True, civ=civ)
         self.assertAlmostEqual(
             test_sim.farm_land.quality,
-            _expected_quality(["scandinavia"], test_sim.farm_land.hectares))
+            _expected_quality(tiles_of_regions(["scandinavia"]), test_sim.farm_land.hectares))
 
     def test_region_without_land_data_fails_loudly(self):
         civ = copy.deepcopy(S.load_civ("rome_100ad"))
+        civ.pop("home_tiles", None)
         civ["home_regions"] = ["no_such_region_anywhere"]
         with self.assertRaises(KeyError):
             S.Sim(NODES, ORDER, random.Random(1), events=False, manual=True, civ=civ)
@@ -97,7 +93,7 @@ class FarmLandQualityTests(unittest.TestCase):
             test_sim = _game(civ_id)
             arable_hectares = 100.0 * sum(
                 _arable_km2(tile_id)
-                for tile_id in _held_tiles(test_sim.civ["home_regions"]))
+                for tile_id in tiles_held(test_sim.civ))
             self.assertLessEqual(test_sim.farm_land.hectares, arable_hectares + 1e-6)
 
 

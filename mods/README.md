@@ -135,6 +135,10 @@ whole. Unrelated mods patching the same field are an error naming both. A
 patch with `"hidden": true` keeps the civilisation out of the new-game menu and
 `civilization_ids()`; it still loads by name.
 
+A civilisation holds the tiles its `home_tiles` list names (shipped civilisations list nothing else). To give a shipped
+civilisation a mod's new tile, a patch replaces `home_tiles` whole; a new mod civilisation may instead list `home_regions`,
+region labels that resolve to the tiles carrying them, and `home_tiles` wins when both are present.
+
 ## Economic content
 
 Production is loaded once as a dependency-ordered catalogue and that same

@@ -5,6 +5,7 @@ The game holds start values (the civilisation the game began with) and the dated
 list. It holds no baseline run and no per-technology historical date, so the
 screen says what it cannot know instead of guessing.
 """
+from sim.geography import api as geography_api
 
 _HAPPENED = "happened"
 _UNDER_WAY = "under way"
@@ -55,8 +56,9 @@ def divergence_report(sim):
     def started(field):
         return None if start is None else start.get(field)
 
-    now_regions = sorted(sim.civ.get("home_regions") or [])
-    start_regions = sorted(started("home_regions") or [])
+    now_regions = geography_api.regions_of_tiles(geography_api.tiles_held(sim.civ, sim.world_map))
+    start_regions = [] if start is None else geography_api.regions_of_tiles(
+        geography_api.tiles_held(start, sim.world_map))
     spread = sim.world_diffusion_report()
     return {
         "ok": True,
