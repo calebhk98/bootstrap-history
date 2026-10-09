@@ -10,7 +10,6 @@ The stock shortens a concern's ramp (venture_ramp, agents_port.ramp), lowers the
 core keeps hours by trade but no tenure, so a worker-year here is a year of staff employed in the concern.
 """
 from sim.constants import declare
-from sim.economy import api as economy_api
 
 from .prices import default_production_entries
 
@@ -82,15 +81,12 @@ class IndustryDepthMixin:
         agent = self.economy.agent
         if agent is None:
             return None
-        economy = agent.economy()
         gate = {key: entry.get("requires_node") for key, entry in default_production_entries().items()}
         years = {}
-        for producer in economy_api.producers_of(economy).values():
-            node_id = gate.get(producer.recipe_id)
-            recipe = economy.setup.recipes.get(producer.recipe_id)
-            if node_id is not None and recipe is not None:
-                years[node_id] = years.get(node_id, 0.0) + (
-                    producer.capacity_runs * sum(recipe.labour_hours.values()) / economy.setup.working_hours_per_year)
+        for recipe_id, worker_years in agent.worker_years_by_recipe().items():
+            node_id = gate.get(recipe_id)
+            if node_id is not None:
+                years[node_id] = years.get(node_id, 0.0) + worker_years
         return years
 
     def industry_depth(self, node_id):

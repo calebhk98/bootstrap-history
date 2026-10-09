@@ -383,6 +383,17 @@ class AgentEconomy:
             return None
         return economy_api.people_by_trade(self.economy())
 
+    def worker_years_by_recipe(self):
+        """Worker-years a year the economy's producers can put into each recipe at full capacity."""
+        economy = self.economy()
+        years = {}
+        for producer in economy_api.producers_of(economy).values():
+            recipe = economy.setup.recipes.get(producer.recipe_id)
+            if recipe is not None:
+                years[producer.recipe_id] = years.get(producer.recipe_id, 0.0) + (
+                    producer.capacity_runs * sum(recipe.labour_hours.values()) / economy.setup.working_hours_per_year)
+        return years
+
     def wage_per_hour(self, trade):
         """The trade's wage in its labour markets; a trade no producer hires (soldiers, scribes) is paid
         what its training adds to the unskilled wage, so every wage stands on the same market."""
