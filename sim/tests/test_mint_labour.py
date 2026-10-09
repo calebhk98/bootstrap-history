@@ -164,9 +164,13 @@ class InTheYearLoop(unittest.TestCase):
         from sim.tests import economy_fixture
         from sim.economy.types import Recipe
         recipe = Recipe("strike_coin", {"strike_coin": 100.0}, {}, {economy_fixture.SMITH: 50.0})
-        _setup, _economy, without = self.run_years(None)
+        _setup, economy_without, _without = self.run_years(None)
         setup, economy, with_mint = self.run_years(recipe)
-        self.assertGreater(with_mint[0].wages[economy_fixture.SMITH], without[0].wages[economy_fixture.SMITH])
+        # the opening workforce already holds the mint's staff, so its hiring shows in hours, not in a scarcer wage
+        def smith_hours(held):
+            return sum(hours for key, hours in held.record.hours_hired.items()
+                       if key.startswith(economy_fixture.SMITH + "|"))
+        self.assertGreater(smith_hours(economy), smith_hours(economy_without))
         self.assertEqual(economy.record.book.balance(mint_labour.mint_agent(setup), "coin"), 0.0)
         self.assertTrue(economy.record.book.check_conservation(1e-6).ok)
 
