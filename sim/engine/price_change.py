@@ -10,3 +10,9 @@ PRICE_CHANGE_SCALE_FLOOR_HOURS_PER_UNIT = declare(
 
 def relative_price_change(previous_price, new_price):
     return abs(new_price - previous_price) / max(abs(previous_price), PRICE_CHANGE_SCALE_FLOOR_HOURS_PER_UNIT)
+
+
+def reference_prices_for_demand(prices):
+    """`prices` with a negative price (a disposal cost) replaced by its size, so a demand search that
+    centres on the current price can still see whether the waste has found a buyer."""
+    return {material: abs(price) for material, price in prices.items()}
