@@ -47,6 +47,7 @@ from .theft_charge import TheftChargeMixin
 from .coin_carriage import CoinCarriageMixin
 from .living_stock_trade import LivingStockTradeMixin
 from .living_stock_yearly import LivingStockYearlyMixin
+from .defence_stores import DefenceStoresMixin
 from .market_demand import MarketDemandMixin
 from .real_output import RealOutputMixin
 from .concern_volume import ConcernVolumeMixin
@@ -225,7 +226,7 @@ YEARLY_RECORD_LIMIT = 300
 class Sim(CoinRevaluationMixin, MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IndustryDepthMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, LabourPortMixin,
           ProjectsMixin, SeatMixin, WaysMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, InterestGroupsMixin, ForwardingPropertiesMixin, GoalsMixin,
           StepPhasesMixin, LivingStockMixin, CoinHoardMixin, CoinCarriageMixin, TheftChargeMixin,
-          LivingStockTradeMixin, LivingStockYearlyMixin, EconomyPortMixin, NodeRederiveMixin):
+          LivingStockTradeMixin, LivingStockYearlyMixin, DefenceStoresMixin, EconomyPortMixin, NodeRederiveMixin):
     STATE_CAPACITY_DEFAULT = declare(
         "STATE_CAPACITY_DEFAULT", 0.7, kind="temporary_heuristic",
         unit="dimensionless (0..1)", source=None, confidence="D",
@@ -2152,6 +2153,7 @@ class Sim(CoinRevaluationMixin, MechanicsMixin, EconomyMixin, MarketClearingMixi
         self._step_founder_mortality()          # 7. founder mortality
         self._step_market()                    # 7b. the year's market closes
         self.step_living_stock()               # 7c. held stock breeds and dies
+        self.step_defence_stores()             # 7d. threats spend the magazines, works restock them
 
         # 8. random events
         if self.events and not self.state.founder.dead_reason:

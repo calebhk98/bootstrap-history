@@ -18,6 +18,8 @@ def _household(powder_running):
     if powder_running:
         household.operating.add(POWDER)
     household._done_changed()
+    household.grant_stock("gunpowder_kg", 3000)
+    household.state.household.employees["soldier"] = 40.0
     return household
 
 
@@ -42,6 +44,30 @@ class GunsOnWallsNeedPowder(unittest.TestCase):
         _mult, why = _household(powder_running=True).hazard_relief("sack_chance")
         guns = [item for item in why if item.startswith(GUNS_LABEL)]
         self.assertTrue(guns and "lapsed" not in guns[0], why)
+
+
+class MagazineAndGarrisonInAWholeGame(unittest.TestCase):
+    """Whole-game checks of the stock ledger and the labour market (slow; not in the quick tier)."""
+
+    def test_guns_lapse_when_the_magazine_is_empty(self):
+        household = _household(powder_running=True)
+        household.change_stock("gunpowder_kg", -household.stock_held("gunpowder_kg"))
+        _mult, why = household.hazard_relief("sack_chance")
+        guns = [item for item in why if item.startswith(GUNS_LABEL)]
+        self.assertTrue(guns and "magazine" in guns[0], why)
+
+    def test_guns_lapse_without_a_crew_hired_from_the_labour_market(self):
+        household = _household(powder_running=True)
+        household.state.household.employees["soldier"] = 0.0
+        _mult, why = household.hazard_relief("sack_chance")
+        guns = [item for item in why if item.startswith(GUNS_LABEL)]
+        self.assertTrue(guns and "soldier" in guns[0], why)
+
+    def test_a_year_of_the_running_works_fills_the_magazine(self):
+        household = _household(powder_running=True)
+        before = household.stock_held("gunpowder_kg")
+        household.step_defence_stores()
+        self.assertGreater(household.stock_held("gunpowder_kg"), before)
 
 
 if __name__ == "__main__":

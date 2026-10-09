@@ -29,4 +29,11 @@ class OpenGateMixin:
                     "substitute for this trade."
                     % (foreman_fte, foreman_trade,
                        self.venture_foreman_free(foreman_trade), foreman_trade))
+        for trade, people in self.venture_garrison(node_id, unit_count).items():
+            free = self.venture_foreman_free(trade)
+            if people > free + 0.01:
+                return ("no garrison is free: this work needs %.2f %s to man it, and you have %.2f free. "
+                        "%s" % (people, trade, free,
+                                ("Hire %ss from the labour market or close another work using them."
+                                 % trade) if with_advice else ""))
         return None

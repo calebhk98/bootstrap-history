@@ -313,11 +313,17 @@
      "kind": "sack_chance",
      "share": 0.25,
      "label": "firearms in the hands of your own people",
-     "order": 3
+     "order": 3,
+     "magazine": {
+      "gunpowder_kg": 500
+     },
+     "draws": {
+      "gunpowder_kg": 500
+     }
     }
    ]
   },
-  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category. HEURISTIC: the powder held to count in full and spent in a year of live threat is one band of firearms, not derived from a rate of fire.]"
  },
  {
   "id": "mil_flintlock",
@@ -363,11 +369,17 @@
      "kind": "sack_chance",
      "share": 0.35,
      "label": "reliable firearms",
-     "order": 4
+     "order": 4,
+     "magazine": {
+      "gunpowder_kg": 500
+     },
+     "draws": {
+      "gunpowder_kg": 500
+     }
     }
    ]
   },
-  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category. HEURISTIC: the powder held to count in full and spent in a year of live threat is one band of firearms, not derived from a rate of fire.]"
  },
  {
   "id": "mil_percussion_cap",
@@ -1078,10 +1090,20 @@
      "order": 5,
      "requires_running": [
       "gunpowder"
-     ]
+     ],
+     "magazine": {
+      "gunpowder_kg": 3000
+     },
+     "draws": {
+      "gunpowder_kg": 3000
+     }
     }
    ]
-  }
+  },
+  "garrison": {
+   "soldier": 40
+  },
+  "_internal": "[HEURISTIC: the gun crew, the powder held to count at full and the powder spent in a year of live threat are sizes of one battery, not derived from a rate of fire or a ballistics model.]"
  },
  {
   "id": "mil_trunnion",
@@ -1739,8 +1761,11 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "_internal": "[HEURISTIC: yearly repair of stone and lime mortar taken as one percent of the construction labour of masons and labourers; no weathering or siege-damage model yet.]",
+  "_internal": "[HEURISTIC: yearly repair of stone and lime mortar taken as one percent of the construction labour of masons and labourers; no weathering or siege-damage model yet. The garrison is the soldiers to man the works, a size not derived from the length of curtain wall.]",
   "note": "The bastion answers the cannon because a round tower has dead ground at its foot where attackers hide, and an angled bastion does not. Low angled walls cannot be battered. Defense trades height for firepower.",
+  "garrison": {
+   "soldier": 60
+  },
   "mechanics": {
    "hazard_counters": [
     {
@@ -1784,8 +1809,11 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "_internal": "[HEURISTIC: yearly repair of stone and lime mortar taken as one percent of the construction labour of masons and labourers; no weathering or siege-damage model yet.]",
+  "_internal": "[HEURISTIC: yearly repair of stone and lime mortar taken as one percent of the construction labour of masons and labourers; no weathering or siege-damage model yet. The garrison is the soldiers to man the works, a size not derived from the length of curtain wall.]",
   "note": "Angled stone structure jutting from wall allows cannon to fire along curtain, eliminating dead ground. Acute angle makes it harder to breach. Replaces round tower.",
+  "garrison": {
+   "soldier": 120
+  },
   "mechanics": {
    "hazard_counters": [
     {
@@ -1952,7 +1980,7 @@
    "mat_stone": 2000
   },
   "cap_hours": 0,
-  "up_hours": 0,
+  "up_hours": 2,
   "build_yrs": 2,
   "adopt_yrs": 1.5,
   "risk": 0.02,
@@ -1960,6 +1988,10 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
+  "_internal": "[HEURISTIC: yearly repair of the concrete taken as one percent of the construction labour of engineers and masons; no weathering or siege-damage model yet. The garrison is the soldiers to man the works, a size not derived from the length of curtain wall.]",
+  "garrison": {
+   "soldier": 80
+  },
   "note": "Portland cement concrete resists artillery better than stone and is cheaper. Can be cast in place quickly. Allows reinforcement by iron bars or steel. Modern fortifications are mostly concrete.",
   "mechanics": {
    "hazard_counters": [
