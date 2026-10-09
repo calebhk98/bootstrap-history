@@ -8,9 +8,11 @@ import unittest
 
 from sim.agents.edges import Edge, EDGE_THIEVES
 from sim.engine import theft_exposure
+from sim.engine.holdings_exposure import Exposure
 from sim.engine.theft_charge import TheftChargeMixin
 
 VALUE = 1000.0
+ANNUAL = theft_exposure.THEFT_SHARE_PER_YEAR_AT_FULL_EXPOSURE
 CALM = dict(guard_hours_per_tonne_year=0.0, visible_scale=0.5, state_capacity=0.0, protection=0.0)
 
 
@@ -65,7 +67,8 @@ class TheftPaidToThieves(unittest.TestCase):
         thieves = Edge(EDGE_THIEVES, balances, {})
         purse = FakePurse(VALUE)
         world = types.SimpleNamespace(edge=lambda name: thieves)
-        stolen = TheftChargeMixin.steal_from(world, purse, {"coin": purse.money}, **CALM)
+        exposure = Exposure(values={"coin": purse.money}, purse=purse.money)
+        stolen = TheftChargeMixin.steal_from(world, purse, exposure, ANNUAL, **CALM)
         self.assertGreater(stolen, 0.0)
         self.assertAlmostEqual(purse.money + balances[EDGE_THIEVES], VALUE)
         self.assertAlmostEqual(balances[EDGE_THIEVES], stolen)
@@ -73,7 +76,8 @@ class TheftPaidToThieves(unittest.TestCase):
     def test_nothing_is_stolen_from_a_purse_holding_no_coin(self):
         purse = FakePurse(-20.0)
         world = types.SimpleNamespace(edge=lambda name: Edge(EDGE_THIEVES, {}, {}))
-        self.assertEqual(TheftChargeMixin.steal_from(world, purse, {"coin": 0.0}, **CALM), 0.0)
+        exposure = Exposure(values={}, purse=0.0)
+        self.assertEqual(TheftChargeMixin.steal_from(world, purse, exposure, ANNUAL, **CALM), 0.0)
         self.assertEqual(purse.money, -20.0)
 
 

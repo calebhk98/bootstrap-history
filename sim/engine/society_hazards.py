@@ -511,14 +511,15 @@ class HazardsMixin:
             "make the cash loss proportionate to the staff loss, not "
             "measured against any attested plague-year revenue collapse.")
     # Recovery: self.population vital rates, not a fixed parameter here.
-    SACK_CAPITAL_LOSS = declare(
-        "SACK_CAPITAL_LOSS", 0.60, kind="temporary_heuristic",
-        unit="dimensionless (fraction of capital)", source=None,
+    SACK_TAKE_STRENGTH = declare(
+        "SACK_TAKE_STRENGTH", 0.60, kind="temporary_heuristic",
+        unit="dimensionless (share of fully portable, visible, unguarded wealth)", source=None,
         confidence="D",
-        why="Fraction of capital a sack takes - the largest single-event "
-            "capital loss in this file, reflecting that a raid can carry "
-            "off cash and portable goods wholesale. Tuned, not measured "
-            "against any attested sacking's proceeds.")
+        why="Share of fully exposed wealth a sack takes - the largest single "
+            "theft in this file. What is actually taken is this share scaled "
+            "by theft_exposure: portability of each kind of holding, guarding "
+            "and visibility, with the state's order failed. Tuned, not "
+            "measured against any attested sacking's proceeds.")
     SACK_STAFF_RETENTION = declare(
         "SACK_STAFF_RETENTION", 0.55, kind="temporary_heuristic",
         unit="dimensionless (fraction of artisans/scholars/hired staff "
@@ -683,7 +684,7 @@ class HazardsMixin:
         _people0 = (household.artisans + household.scholars
                     + sum(household.employees.values()))
         _act0 = len(projects.active)
-        self.lose_capital(self.SACK_CAPITAL_LOSS, "sack and plunder")
+        self.plunder_founder(self.SACK_TAKE_STRENGTH, "sack and plunder", order_holds=False)
         _staff_before = self.labour.staff_snapshot()
         self.apply_staff_survival(self.SACK_STAFF_RETENTION)
         self.labour.log_staff_reduction("the sack of a site", _staff_before)
@@ -930,13 +931,14 @@ class HazardsMixin:
         confidence="D",
         why="Yearly chance banditry or a frontier war disrupts supply. "
             "Invented frequency, not fitted to any attested record.")
-    BANDITRY_CAPITAL_LOSS = declare(
-        "BANDITRY_CAPITAL_LOSS", 0.10, kind="temporary_heuristic",
-        unit="dimensionless (fraction of capital)", source=None,
+    BANDITRY_TAKE_STRENGTH = declare(
+        "BANDITRY_TAKE_STRENGTH", 0.10, kind="temporary_heuristic",
+        unit="dimensionless (share of fully portable, visible, unguarded wealth)", source=None,
         confidence="D",
-        why="Fraction of capital banditry or a frontier disruption costs - "
-            "smaller than FIRE_CAPITAL_LOSS, a supply disruption rather "
-            "than outright destruction. Tuned, not measured.")
+        why="Share of fully exposed wealth a bandit year takes. What is "
+            "actually taken is this share scaled by theft_exposure: "
+            "portability of each kind of holding, guarding, visibility and "
+            "the state's order. Tuned, not measured.")
 
     def _random_events(self, year):
         rng = self.rng
@@ -977,7 +979,7 @@ class HazardsMixin:
                                 self._loss_words(had))))
         if rng.random() < self.BANDITRY_ANNUAL_CHANCE:
             had = max(0.0, household.capital)
-            self.lose_capital(self.BANDITRY_CAPITAL_LOSS, "banditry")
+            self.plunder_founder(self.BANDITRY_TAKE_STRENGTH, "banditry", order_holds=True)
             household.log.append((year, "banditry or a frontier war disrupts supply: "
                                  "it cost you %s" % self._loss_words(had)))
 

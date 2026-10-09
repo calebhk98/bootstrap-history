@@ -6,6 +6,8 @@ as goods it needs carts and a buyer; kept as land it cannot be lifted at all; ke
 the debtor defaults. Guarding (guard hours per tonne a year) and the state's order both cut it, and the more
 visible the holder is, the more thieves know to come. Pure functions: callers pass the facts.
 """
+from typing import Mapping
+
 from sim.constants import declare
 
 # How much of a holding's value a thief can carry off and turn into money, per kind of holding.
@@ -26,6 +28,10 @@ PORTABILITY = {
         "THEFT_PORTABILITY_LOANS", 0.02, kind="temporary_heuristic", unit="dimensionless (0..1)", source=None,
         confidence="D", why="A loan is a claim on a debtor, so a thief takes nothing; the small figure stands for "
         "a debtor defaulting. Not measured."),
+    "shares": declare(
+        "THEFT_PORTABILITY_SHARES", 0.02, kind="temporary_heuristic", unit="dimensionless (0..1)", source=None,
+        confidence="D", why="A share is a claim on a company's profit like a loan is on a debtor; a thief takes "
+        "the dividends, not the firm. Not measured."),
     "land": declare(
         "THEFT_PORTABILITY_LAND", 0.0, kind="temporary_heuristic", unit="dimensionless (0..1)", source=None,
         confidence="D", why="Land cannot be carried off; losing it is seizure by a state or an army, a different "
@@ -80,15 +86,36 @@ def order_factor(state_capacity, protection):
     return 1.0 - ORDER_SUPPRESSION * (1.0 - uncovered)
 
 
-def theft_loss_by_kind(holdings, guard_hours_per_tonne_year, visible_scale, state_capacity, protection):
-    """Expected value stolen in a year from each kind of holding (kind -> value held); a debt is not stolen from."""
+def guard_hours_for(kind, guard_hours_per_tonne_year):
+    """Guard hours per tonne a year that watch this kind: a number applies to every guardable kind, a mapping
+    names them (a kind it leaves out is unwatched)."""
+    if isinstance(guard_hours_per_tonne_year, Mapping):
+        return guard_hours_per_tonne_year.get(kind, 0.0)
+    return guard_hours_per_tonne_year
+
+
+def share_taken(kind, strength, guard_hours_per_tonne_year, visible_scale, state_capacity, protection):
+    """Share of a holding of this kind that a theft of this strength takes: what is portable, unguarded, visible
+    and outside the state's order. Strength 1 is the share of a fully exposed holding taken by the event."""
+    guarded = (guarding_factor(guard_hours_for(kind, guard_hours_per_tonne_year))
+               if kind in GUARDABLE_KINDS else 1.0)
     around = visibility_factor(visible_scale) * order_factor(state_capacity, protection)
-    losses = {}
-    for kind, value in holdings.items():
-        guarded = guarding_factor(guard_hours_per_tonne_year) if kind in GUARDABLE_KINDS else 1.0
-        share = THEFT_SHARE_PER_YEAR_AT_FULL_EXPOSURE * portability_of(kind) * guarded * around
-        losses[kind] = max(0.0, value) * min(1.0, share)
-    return losses
+    return min(1.0, max(0.0, strength) * portability_of(kind) * guarded * around)
+
+
+def theft_shares_by_kind(kinds, strength, guard_hours_per_tonne_year, visible_scale, state_capacity, protection):
+    """Share taken of each kind named, for a theft of this strength."""
+    return {kind: share_taken(kind, strength, guard_hours_per_tonne_year, visible_scale, state_capacity,
+                              protection) for kind in kinds}
+
+
+def theft_loss_by_kind(holdings, guard_hours_per_tonne_year, visible_scale, state_capacity, protection,
+                       strength=THEFT_SHARE_PER_YEAR_AT_FULL_EXPOSURE):
+    """Expected value stolen in a year from each kind of holding (kind -> value held); a debt is not stolen from.
+    A larger `strength` prices an event (a sack, a bandit year) by the same exposure."""
+    shares = theft_shares_by_kind(holdings, strength, guard_hours_per_tonne_year, visible_scale, state_capacity,
+                                  protection)
+    return {kind: max(0.0, value) * shares[kind] for kind, value in holdings.items()}
 
 
 def expected_theft_loss(holdings, guard_hours_per_tonne_year, visible_scale, state_capacity, protection):

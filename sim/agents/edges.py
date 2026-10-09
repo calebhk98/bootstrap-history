@@ -5,7 +5,7 @@ enters one, so purses and edges together stay what they were; what crossed each 
 A name that stands for people or businesses the simulation will one day model as actors (workers,
 suppliers) is where those actors' purses land once they exist.
 """
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 EDGE_WORKERS = "edge:workers"            # wages and fees paid to people the founder's labour market holds
 EDGE_SUPPLIERS = "edge:suppliers"        # inputs, upkeep and project work bought from the economy
@@ -33,11 +33,22 @@ EDGE_THIEVES = "edge:thieves"            # what thieves take; people in the econ
 class Edge:
 	"""One named edge, reading and writing its balance and volume in the state that holds it."""
 
-	def __init__(self, name: str, balances: Dict[str, float], volumes: Dict[str, float]) -> None:
+	def __init__(self, name: str, balances: Dict[str, float], volumes: Dict[str, float],
+				 goods: Optional[Dict[str, Dict[str, float]]] = None) -> None:
 		self.name = name
 		self.actor_id = name
 		self._balances = balances
 		self._volumes = volumes
+		self._goods = goods if goods is not None else {}
+
+	def receive_goods(self, material: str, tonnes: float) -> None:
+		"""Goods taken by the edge (stolen stock): tonnes of a material it now holds."""
+		held = self._goods.setdefault(self.name, {})
+		held[material] = held.get(material, 0.0) + float(tonnes)
+
+	def goods_held(self) -> Dict[str, float]:
+		"""Tonnes of each material the edge holds."""
+		return dict(self._goods.get(self.name, {}))
 
 	def credit(self, amount: float, purpose: Any) -> None:
 		"""Money paid to the edge."""
