@@ -159,7 +159,6 @@ check("a firm founded by entry is placed on a tile", founded and all(
 
 # ---- the cost of winning customers: the merchants' agents are paid per tonne a carrier lifts
 check("a sale that needs no carrier needs no agents on the model's terms",
-	merchant_terms.agent_cost_per_tonne(None, 2000.0, 1.0) == 0.0)
+	merchant_terms.agent_cost_per_tonne(None, 2000.0, 1.0, 2.0) == 0.0)
 check("a sale across a route costs the agents' hours the lift takes, at the going wage",
-	abs(merchant_terms.agent_cost_per_tonne(0.01, 2000.0, 3.0)
-		- merchant_terms.AGENTS_PER_CARRIER * 0.01 * 2000.0 * 3.0) < 1e-9)
+	abs(merchant_terms.agent_cost_per_tonne(0.01, 2000.0, 3.0, 2.0) - 2.0 * 0.01 * 2000.0 * 3.0) < 1e-9)

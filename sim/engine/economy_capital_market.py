@@ -75,6 +75,7 @@ class CapitalMarketMixin:
             if actor.record.exited_year is not None:
                 continue
             loans[actor_id] = actor.debt()
+        loans[self.MERCHANTS_BORROWER] = self.merchant_borrowing()
         return loans
 
     def market_funds(self, world):

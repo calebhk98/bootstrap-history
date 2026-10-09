@@ -164,6 +164,21 @@ def hull_loss_per_thousand_km(crew=None):
     return SEA_WRECK_PER_THOUSAND_KM + PIRATE_ENCOUNTERS_PER_THOUSAND_KM * boarding_loss_share(crew)
 
 
+def defenders_to_hire(rig_crew, defender_cost_per_day, value_at_risk):
+    """Hands to sign on beyond the rig's need: the number that least sums their keep and the expected
+    loss of the hull and cargo (`value_at_risk`) over 1000 km sailed, since a larger crew is taken less
+    often. The rig's crew is the floor; the search stops where a crew far larger than the raiders'
+    party no longer lowers the loss."""
+    days_per_thousand_km = 1000.0 / ground_km_per_day()
+    cheapest, fewest = math.inf, 0
+    for defenders in range(int(4 * PIRATE_BOARDING_PARTY) + 1):
+        cost = (defenders * defender_cost_per_day * days_per_thousand_km
+                + max(0.0, value_at_risk) * hull_loss_per_thousand_km(rig_crew + defenders))
+        if cost < cheapest:
+            cheapest, fewest = cost, defenders
+    return fewest
+
+
 def sailing_freight_physical_inputs(cargo_tonnes=None, crew=None):
     """Physical inputs per tonne-km for a merchant hull under sail, crewed for its rig unless a crew
     is given."""

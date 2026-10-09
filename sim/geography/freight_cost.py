@@ -82,12 +82,12 @@ def freight_money_per_tonne_km(inputs, feed_price_per_kg: float, wage_per_hour: 
 
 
 def leg_money_per_tonne(money_per_tonne_km: float, inputs, distance_km: float,
-                        least_share: float = 0.0) -> float:
+                        restock_days=None) -> float:
     """Money to deliver a tonne over a leg: the rate over the distance, divided by the share of the
-    carrier's lift left for cargo once the crew and animals' food and water are carried (infinite
-    where the leg is longer than the carrier can provision, unless `least_share` floors the share).
-    """
-    share = max(least_share, provisions.delivered_share(inputs, distance_km))
+    carrier's lift left for cargo once the crew and animals' food and water are carried between
+    restocking places (`restock_days` of travel apart; the whole leg when None). Infinite where a
+    stage is longer than the carrier can provision."""
+    share = provisions.restocked_share(inputs, distance_km, restock_days)
     return float("inf") if share <= 0.0 else money_per_tonne_km * distance_km / share
 
 

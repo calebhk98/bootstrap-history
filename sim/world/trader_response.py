@@ -23,12 +23,15 @@ class TraderTerms:
     """`cost_share_of_price` is the merchants' cost over freight, as a share of the exporter's price
     per tonne. `adjustment_share` is the share of the distance from last year's flow to the
     arbitrage volume closed in a year. `agent_cost_per_tonne` is money for the agents at the two
-    ends. The capital limits are tonnes a year each way."""
+    ends. The capital limits are tonnes a year each way. `margin_share` and `cycle_years` are the
+    markup and the cycle the cost share was worked from, kept for the merchants' return."""
     cost_share_of_price: float
     adjustment_share: float
     capital_tonnes_in: float = math.inf
     capital_tonnes_out: float = math.inf
     agent_cost_per_tonne: float = 0.0
+    margin_share: float = 0.0
+    cycle_years: float = 0.0
 
 
 def cost_share_of_price(margin_share, loss_share, market_rate, cycle_years):
