@@ -208,8 +208,8 @@ class LabourWorld:
     def living_cost(self, _rev=None, _upkeep=None):
         return self._sim.living_cost(_rev, _upkeep)
 
-    def market_price_ratio(self, material):
-        return self._sim.market_price_ratio(material)
+    def last_market_price_ratio(self, material):
+        return self._sim.last_market_price_ratio(material)
 
     def material_price_factor(self, emp_key):
         return self._sim.material_price_factor(emp_key)

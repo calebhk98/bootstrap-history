@@ -233,6 +233,8 @@ class EconomyState:
 	foreign_actor_trade: Dict[str, Dict[str, Dict[str, float]]] = field(default_factory=dict)
 	# material -> tonnes actors landed in the home market and took from it this year (foreign_actor_trade.py)
 	home_actor_trade: Dict[str, Dict[str, float]] = field(default_factory=dict)
+	# material -> the market price ratio wages read, as of the last year's close (wage_market_ratios.py)
+	wage_market_ratios: Dict[str, float] = field(default_factory=dict)
 	# coin metal -> the market's price over the incumbents' cost at the last year's close (coin_revaluation.py)
 	coin_metal_ratios: Dict[str, float] = field(default_factory=dict)
 	# foreign economy id -> goods and coin paid, and the route's lift (foreign_payments.py)
