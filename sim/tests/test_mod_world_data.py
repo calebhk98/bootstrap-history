@@ -4,12 +4,14 @@ QUICK_TOPIC = True
 
 import json
 import unittest
+import unittest.mock
 
 from sim.engine.data import ROOT, STARTING_KITS, WIN_CONDITION_LABELS
 from sim.engine.mod_world_data import load_starting_kits, load_win_condition_labels
 from sim.engine.mods import ModError
 from sim.engine.mods_civ import apply_mod_civilization
 from sim.engine.mods_strategies import mod_strategy_names, mod_strategy_path
+from sim.engine.mods_constants import apply_override, constant_overrides
 from sim.engine.mods_world import merge_mod_list, merge_mod_map
 from sim.tests.test_mod_removal_and_civs import ModTestBase
 
@@ -109,6 +111,60 @@ class WorldDataTests(ModTestBase):
         self.assertIsNone(mod_strategy_path("rush", manifests))
         self.assertEqual(mod_strategy_names(manifests), [ACME + ":rush"])
 
+    def test_mod_adds_patches_and_removes_tech_effects(self):
+        self.add_mod(ACME)
+        self.write(ACME, "civilizations/_TECH_EFFECTS.json",
+                   {"_doc": "notes are ignored", ACME + ":spell": {"literacy_general": 0.1},
+                    "paper": {"override": True, "literacy_elite": 0.9}, "press": {"remove": True}})
+        base = {"paper": {"literacy_general": 0.02, "literacy_elite": 0.05}, "press": {"w_novelty": 0.1}}
+        merged = merge_mod_map(base, self.manifests(), "civilizations/_TECH_EFFECTS.json", None, "tech effect")
+        self.assertEqual(merged["paper"], {"literacy_general": 0.02, "literacy_elite": 0.9})
+        self.assertEqual(merged[ACME + ":spell"], {"literacy_general": 0.1})
+        self.assertNotIn("press", merged)
+
+    def test_mod_overrides_a_declared_number_with_a_reason(self):
+        self.add_mod(ACME)
+        self.write(ACME, "constants.json", {"constants": {"SOME_RATE": {"value": 0.5, "why": "magic world"}}})
+        found = constant_overrides(str(self.mods_dir))["SOME_RATE"]
+        self.assertEqual((found.mod_id, found.value), (ACME, 0.5))
+        self.assertEqual(apply_override("SOME_RATE", 2.0, str(self.mods_dir)).value, 0.5)
+        self.assertIsNone(apply_override("OTHER", 2.0, str(self.mods_dir)))
+
+    def test_override_without_a_reason_or_of_another_type_is_refused(self):
+        self.add_mod(ACME)
+        self.write(ACME, "constants.json", {"constants": {"SOME_RATE": {"value": 0.5}}})
+        with self.assertRaises(ModError):
+            constant_overrides(str(self.mods_dir))
+        self.write(ACME, "constants.json", {"constants": {"SOME_RATE": {"value": "high", "why": "x"}}})
+        constant_overrides.cache_clear()
+        with self.assertRaises(ModError):
+            apply_override("SOME_RATE", 2.0, str(self.mods_dir))
+
+    def test_unrelated_mods_overriding_one_number_name_both(self):
+        for mod_id in (ACME, BETA):
+            self.add_mod(mod_id)
+            self.write(mod_id, "constants.json", {"constants": {"SOME_RATE": {"value": 1.0, "why": "x"}}})
+        with self.assertRaises(ModError) as caught:
+            constant_overrides(str(self.mods_dir))
+        self.assertIn(ACME, str(caught.exception))
+        self.assertIn(BETA, str(caught.exception))
+
+    def test_declare_returns_the_override_and_records_who(self):
+        from sim import constants
+        constant_overrides.cache_clear()
+        with unittest.mock.patch("sim.constants._mod_override",
+                                 return_value=constant_overrides.__wrapped__(str(self._mod_with_rate()))["RATE_X"]):
+            value = constants.declare("TEST_ONLY_RATE_X", 2.0, kind="temporary_heuristic", unit="1",
+                                      why="test")
+        self.addCleanup(constants.REGISTRY.pop, "TEST_ONLY_RATE_X", None)
+        self.assertEqual(value, 0.25)
+        self.assertEqual(constants.REGISTRY["TEST_ONLY_RATE_X"]["overridden_by"], ACME)
+
+    def _mod_with_rate(self):
+        self.add_mod(ACME)
+        self.write(ACME, "constants.json", {"constants": {"RATE_X": {"value": 0.25, "why": "x"}}})
+        return self.mods_dir
+
     def civ_patch(self, mod_id, patch):
         self.add_mod(mod_id, civs={"rome": dict(patch, override=True)})
 
@@ -130,6 +186,12 @@ class WorldDataTests(ModTestBase):
         self.civ_patch(ACME, {"remove_items": {"hazards": ["Nope"]}})
         with self.assertRaises(ModError):
             self.apply({"id": "rome", "hazards": []})
+
+    def test_mod_adds_and_removes_a_seat_in_the_cast(self):
+        self.civ_patch(ACME, {"append": {"cast.seats": [{"id": "guild"}]}, "remove_items": {"cast.actors": ["old"]}})
+        civ = self.apply({"id": "rome", "cast": {"seats": [{"id": "founder"}], "actors": [{"actor_id": "old"}]}})
+        self.assertEqual([seat["id"] for seat in civ["cast"]["seats"]], ["founder", "guild"])
+        self.assertEqual(civ["cast"]["actors"], [])
 
     def test_two_unrelated_mods_may_both_append(self):
         self.civ_patch(ACME, {"append": {"hazards": [{"name": "A"}]}})

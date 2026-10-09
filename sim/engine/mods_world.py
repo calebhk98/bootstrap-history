@@ -2,27 +2,29 @@
 import copy
 import json
 import os
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, Iterable, List, Optional
 
 from .mods_base import (ModError, ModManifest, check_not_removed, claim_fields, claim_removal,
                         deep_merge)
 from .mods_ids import check_new_id
 
 
-def _read_entries(manifest: ModManifest, relative_path: str, collection_key: str):
+def _read_entries(manifest: ModManifest, relative_path: str, collection_key: Optional[str]):
     path = os.path.join(manifest.directory, "data", *relative_path.split("/"))
     if not os.path.isfile(path):
         return path, None
     with open(path, encoding="utf-8") as source:
         document = json.load(source)
-    entries = document.get(collection_key) or {}
+    # no collection key: the whole file is the map, and keys starting with "_" are notes
+    entries = ({key: value for key, value in document.items() if not key.startswith("_")}
+               if collection_key is None else document.get(collection_key) or {})
     if not isinstance(entries, dict):
         raise ModError("%s: %r must be an object keyed by id" % (path, collection_key))
     return path, entries
 
 
 def merge_mod_map(base: Dict[str, Any], manifests: Iterable[ModManifest], relative_path: str,
-                  collection_key: str, kind: str, namespaced: bool = True) -> Dict[str, Any]:
+                  collection_key: Optional[str], kind: str, namespaced: bool = True) -> Dict[str, Any]:
     """`base` (id to entry) with every mod's file applied in dependency order.
 
     An entry with `"remove": true` deletes an existing id; `"override": true` deep-merges over an

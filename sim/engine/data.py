@@ -29,6 +29,7 @@ from .identity_cache import IdentityCache
 from sim.geography.api import haversine_km, load_geography
 from .mods import get_ordered_mods, load_mod_tree
 from .mod_world_data import load_starting_kits, load_win_condition_labels
+from .mods_world import merge_mod_map
 from .tree_source import load_base_tree
 from .mods_civ import (apply_mod_civilization, check_all_civilizations, check_starting_techs,
                        is_hidden, mod_civ_ids)
@@ -128,9 +129,10 @@ def _load_tech_effects() -> JSONDict:
     try:
         with open(path) as source:
             effects = json.load(source)
-        return {key: value for key, value in effects.items() if not key.startswith("_")}
-    except Exception:
-        return {}
+        base = {key: value for key, value in effects.items() if not key.startswith("_")}
+    except OSError:
+        base = {}
+    return merge_mod_map(base, get_ordered_mods(MODDIR), "civilizations/_TECH_EFFECTS.json", None, "tech effect")
 
 
 TECH_EFFECTS: JSONDict = _load_tech_effects()

@@ -1,6 +1,7 @@
 """`mod-allow`, and the mod findings `validate` reports (code mods, command declarations)."""
-from sim.engine.ui_port import MODDIR, code_report, get_ordered_mods
+from sim import constants
 from sim.engine import ui_port
+from sim.engine.ui_port import MODDIR, code_report, constant_overrides, get_ordered_mods
 
 from .proto import mod_commands
 
@@ -25,6 +26,9 @@ def mod_findings():
         print("WARNING: " + line)
     try:
         mod_commands.load_mod_commands()
+        overrides = constant_overrides(MODDIR)
     except ValueError as error:
         return ["mods: %s" % error]
-    return []
+    constants._import_declaring_modules()
+    return ["mods: %s overrides the declared number %s, which no module declares" % (found.mod_id, name)
+            for name, found in sorted(overrides.items()) if name not in constants.REGISTRY]

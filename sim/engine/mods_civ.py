@@ -14,18 +14,31 @@ LIST_OPERATORS = ("append", "remove_items")
 
 
 def _item_key(item: Any) -> Any:
-    """A list item is identified by its `id`, else its `name`, else its own value."""
-    return item.get("id", item.get("name")) if isinstance(item, dict) else item
+    """A list item is identified by its `id`, `actor_id` or `name` (first present), else its own value."""
+    if not isinstance(item, dict):
+        return item
+    return next((item[key] for key in ("id", "actor_id", "name") if key in item), None)
+
+
+def _parent(civ: Dict[str, Any], dotted: str):
+    """(the mapping holding the list, the list's key) for a field name such as `cast.seats`; creates no maps."""
+    *walk, last = dotted.split(".")
+    holder: Any = civ
+    for step in walk:
+        holder = holder.get(step) if isinstance(holder, dict) else None
+    return (holder if isinstance(holder, dict) else {}), last
 
 
 def apply_list_operators(civ: Dict[str, Any], patch: Dict[str, Any], manifest: ModManifest,
                          by_id: Dict[str, ModManifest], claims: Dict[Any, str], path: str) -> Dict[str, Any]:
     """`append`: {field: [items]} adds to a list field; `remove_items`: {field: [keys]} deletes by key.
+    A field may be dotted to reach a list inside a map, for example `cast.seats` or `cast.actors`.
 
     Two unrelated mods may both append to a list; appending to a list another unrelated mod replaced
     whole, or removing an item it changed, is an error naming both."""
     for field, items in (patch.get("append") or {}).items():
-        held = civ.get(field)
+        holder, key = _parent(civ, field)
+        held = holder.get(key)
         if not isinstance(held, list) or not isinstance(items, list):
             raise ModError("mod %s: %s appends to %r which is not a list on civilisation %s" %
                            (manifest.id, path, field, civ.get("id")))
@@ -33,17 +46,18 @@ def apply_list_operators(civ: Dict[str, Any], patch: Dict[str, Any], manifest: M
         if _unrelated_claim(earlier, manifest, by_id):
             raise ModError("mods %s and %s both change list %r of civilisation %s; make one depend on "
                            "the other to choose a winner" % (earlier, manifest.id, field, civ.get("id")))
-        civ[field] = held + copy.deepcopy(items)
+        holder[key] = held + copy.deepcopy(items)
     for field, keys in (patch.get("remove_items") or {}).items():
-        held = civ.get(field)
+        holder, key = _parent(civ, field)
+        held = holder.get(key)
         if not isinstance(held, list):
             raise ModError("mod %s: %s removes from %r which is not a list on civilisation %s" %
                            (manifest.id, path, field, civ.get("id")))
-        missing = [key for key in keys if key not in {_item_key(item) for item in held}]
+        missing = [wanted for wanted in keys if wanted not in {_item_key(item) for item in held}]
         if missing:
             raise ModError("mod %s: %s removes missing %s item(s) %s of civilisation %s" %
                            (manifest.id, path, field, ", ".join(map(str, missing)), civ.get("id")))
-        civ[field] = [item for item in held if _item_key(item) not in keys]
+        holder[key] = [item for item in held if _item_key(item) not in keys]
     return civ
 
 

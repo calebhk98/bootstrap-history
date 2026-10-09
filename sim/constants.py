@@ -202,15 +202,25 @@ def declare(name, value, kind, unit, why, source=None, confidence="C"):
         raise ValueError("%s: every declared number needs a `why`. If nobody "
                          "can say why it is that number, that is the most "
                          "important thing to know about it." % name)
+    overridden_by = None
+    override = _mod_override(name, value)
+    if override is not None:
+        value, overridden_by = override.value, override.mod_id
     if name in REGISTRY and REGISTRY[name]["value"] != value:
         raise ValueError("%s declared twice with different values (%r, %r)"
                          % (name, REGISTRY[name]["value"], value))
     REGISTRY[name] = {
         "name": name, "value": value, "kind": kind, "unit": unit,
         "source": source, "confidence": confidence, "why": why.strip(),
-        "declared_in": _caller_module()
+        "declared_in": _caller_module(), "overridden_by": overridden_by
     }
     return value
+
+
+def _mod_override(name, declared):
+    """The installed mod's override of this number (data/constants.json of a mod), or None."""
+    from sim.engine.mods_constants import apply_override
+    return apply_override(name, declared)
 
 
 def _caller_module():

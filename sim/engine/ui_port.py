@@ -19,6 +19,7 @@ from sim.engine.default_civilisation import default_civilisation_id  # noqa: F40
 from sim.engine.fog import strip_self_play_advice  # noqa: F401
 from sim.engine.mod_code import COMMAND_REGISTRATIONS, code_report, run_mod_code  # noqa: F401
 from sim.engine.mod_code import allow as allow_mod_code  # noqa: F401
+from sim.engine.mods_constants import constant_overrides  # noqa: F401
 from sim.engine.ui_commands import load_command_specs  # noqa: F401
 from sim.engine.foreign_economy_data import foreign_economy_document  # noqa: F401
 from sim.engine.hazard_window import hazards_not_yet_past  # noqa: F401
