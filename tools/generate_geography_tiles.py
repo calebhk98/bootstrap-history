@@ -300,7 +300,7 @@ CLIMATE_SAMPLES_PER_AXIS = 5   # rule 6: a 5x5 = 25-point grid per tile,
 
 KOPPEN_ARABLE_AND_FERTILITY = {
     # ---- A: tropical -------------------------------------------------
-    "Af": (0.15, 0.65),  # rainforest, no dry season: canopy limits clearing, leaches soil
+    "Af": (0.30, 0.65),  # rainforest, no dry season: leaches soil; clearing is limited by the forest layer in sim/geography/food_land.py
     "Am": (0.30, 0.90),  # monsoon: a real dry season aids clearing; rice country
     "Aw": (0.30, 0.75),  # savanna, dry winter: workable but thinner, erodible soils
     "As": (0.30, 0.75),  # savanna, dry summer: same treatment as Aw

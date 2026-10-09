@@ -41,6 +41,7 @@ from .economy import EconomyMixin
 from .node_rederive import NodeRederiveMixin
 from .market_clearing import MarketClearingMixin
 from .foreign_economies import ForeignEconomiesMixin
+from .food_supply import FoodSupplyMixin
 from .living_stock import LivingStockMixin
 from .coin_hoard import CoinHoardMixin
 from .theft_charge import TheftChargeMixin
@@ -231,7 +232,7 @@ YEARLY_RECORD_LIMIT = 300
 class Sim(RealPriceRatiosMixin, CoinRevaluationMixin, WageMarketRatiosMixin, MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IndustryDepthMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, LabourPortMixin,
           ProjectsMixin, SeatMixin, WaysMixin, WorksMixin, HeldWorksMixin, ActionLossMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, InterestGroupsMixin, ForwardingPropertiesMixin, GoalsMixin,
           StepPhasesMixin, LivingStockMixin, CoinHoardMixin, CoinCarriageMixin, TheftChargeMixin,
-          LivingStockTradeMixin, LivingStockYearlyMixin, DefenceStoresMixin, EconomyPortMixin, NodeRederiveMixin):
+          LivingStockTradeMixin, LivingStockYearlyMixin, FoodSupplyMixin, DefenceStoresMixin, EconomyPortMixin, NodeRederiveMixin):
     STATE_CAPACITY_DEFAULT = declare(
         "STATE_CAPACITY_DEFAULT", 0.7, kind="temporary_heuristic",
         unit="dimensionless (0..1)", source=None, confidence="D",
@@ -2158,6 +2159,7 @@ class Sim(RealPriceRatiosMixin, CoinRevaluationMixin, WageMarketRatiosMixin, Mec
         self._step_founder_mortality()          # 7. founder mortality
         self._step_market()                    # 7b. the year's market closes
         self.step_living_stock()               # 7c. held stock breeds and dies
+        self.step_wild_stock()                 # 7c(ii). hunters thin the game, the game regrows
         self.step_defence_stores()             # 7d. threats spend the magazines, works restock them
 
         # 8. random events

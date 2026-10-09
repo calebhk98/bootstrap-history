@@ -22,6 +22,12 @@ def arable_fraction(world_map: WorldMap, tile_id: str) -> float:
         * _slope_factor(world_map, tile_id, "food_arable_ruggedness_envelope")
 
 
+def cleared_forest_fraction(world_map: WorldMap, tile_id: str) -> float:
+    """Share of the tile's land that is arable only because forest was cleared for it."""
+    open_land = 1.0 - tile_layers.number(world_map, tile_id, "forest_fraction", 0.0)
+    return max(0.0, arable_fraction(world_map, tile_id) - open_land)
+
+
 def grazable_fraction(world_map: WorldMap, tile_id: str) -> float:
     """Share of open land that is gentle enough for livestock to use."""
     return _slope_factor(world_map, tile_id, "food_pasture_ruggedness_envelope")

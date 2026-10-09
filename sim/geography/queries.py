@@ -9,7 +9,7 @@ import copy
 import math
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
-from sim.geography import (food_capacity, map_source, mechanisms, parameters, resource_links, resources_biotic,
+from sim.geography import (food_capacity, food_wild_harvest, map_source, mechanisms, parameters, resource_links, resources_biotic,
                            resources_catalogue, resources_endowment, resources_mined, resources_prospecting,
                            resources_summary, routes_carriage, routes_graph, routes_modes, routes_search, tile_holdings, tile_layers,
                            ways_build)
@@ -46,9 +46,32 @@ def layer_value(tile_id: str, layer_id: str, world_map: Optional[WorldMap] = Non
 
 
 def food_potential(tile_id: str, technique_factors: Optional[Mapping[str, float]] = None,
-                   world_map: Optional[WorldMap] = None) -> Dict[str, Any]:
-    """Sustainable food energy of a tile by source, and the people it feeds."""
-    return food_capacity.food_potential(_map(world_map), tile_id, dict(technique_factors or {}) or None)
+                   world_map: Optional[WorldMap] = None, wild_stock: Optional[Mapping[str, Any]] = None) -> Dict[str, Any]:
+    """Sustainable food energy of a tile by source, and the people it feeds. `wild_stock` is the game's
+    {tile: {species: share of carrying capacity left}}; a missing entry is a full stock."""
+    return food_capacity.food_potential(_map(world_map), tile_id, dict(technique_factors or {}) or None, wild_stock)
+
+
+def hunted_kcal(tile_id: str, wild_stock: Optional[Mapping[str, Any]] = None,
+                world_map: Optional[WorldMap] = None) -> Dict[str, float]:
+    """{species id: kcal a year's hunting can take now} on a tile."""
+    return food_wild_harvest.hunted_kcal_by_species(_map(world_map), tile_id, wild_stock)
+
+
+def game_food_sources(world_map: Optional[WorldMap] = None) -> List[str]:
+    """The food source ids that hunting wild animals goes under."""
+    return food_wild_harvest.game_food_sources(_map(world_map))
+
+
+def draw_wild_stock(wild_stock: Mapping[str, Any], tile_id: str, kcal_taken: Mapping[str, float],
+                    world_map: Optional[WorldMap] = None) -> Dict[str, Dict[str, float]]:
+    """The game's wild stock after hunters take `kcal_taken` ({species id: kcal}) on a tile."""
+    return food_wild_harvest.draw_down(_map(world_map), wild_stock, tile_id, kcal_taken)
+
+
+def regrow_wild_stock(wild_stock: Mapping[str, Any], world_map: Optional[WorldMap] = None) -> Dict[str, Dict[str, float]]:
+    """The game's wild stock a year on: every drawn-down species regrows."""
+    return food_wild_harvest.regrow(_map(world_map), wild_stock)
 
 
 def tiles_held(civilisation: Mapping[str, Any], world_map: Optional[WorldMap] = None) -> List[str]:

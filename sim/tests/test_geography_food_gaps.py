@@ -48,24 +48,40 @@ COLD = "canada_30"
 STEPPE = "canada_10"
 
 
-class SharedShelfTests(unittest.TestCase):
-    def test_neighbouring_coastal_tiles_split_one_shelf(self):
+class PartitionedShelfTests(unittest.TestCase):
+    def test_a_tiles_fishing_does_not_depend_on_its_neighbours(self):
         alone = mini_map({"a": (COASTAL, {}, [])})
-        trio = mini_map({name: (COASTAL, {}, [other for other in "abc" if other != name]) for name in "abc"})
+        crowded = mini_map({name: (COASTAL, {}, [other for other in "abc" if other != name]) for name in "abc"})
         whole = kcal(alone, "a", "marine_fishing")
         self.assertGreater(whole, 0.0)
-        shared = sum(kcal(trio, name, "marine_fishing") for name in "abc")
-        self.assertAlmostEqual(shared, whole, delta=0.01 * whole)
+        self.assertAlmostEqual(kcal(crowded, "a", "marine_fishing"), whole)
 
-    def test_a_coastal_tile_with_no_coastal_neighbour_keeps_its_whole_shelf(self):
-        alone = mini_map({"a": (COASTAL, {}, [])})
-        inland = mini_map({"a": (COASTAL, {}, ["b"]), "b": ("afghanistan_01", {}, ["a"])})
-        self.assertAlmostEqual(kcal(inland, "a", "marine_fishing"), kcal(alone, "a", "marine_fishing"))
+    def test_the_shelf_layer_adds_up_to_no_more_than_the_physical_shelf(self):
+        # Continental shelves (seabed shallower than 200 m) cover on the order of thirty million km2 worldwide.
+        total = sum(earth().layers["shelf_area_km2"]["values"].values())
+        self.assertLess(total, 30.0e6)
+        self.assertGreater(total, 15.0e6)
 
     def test_real_coastal_tiles_no_longer_out_fish_their_fields(self):
         for tile_id in ("united_kingdom_01", "china_45", "south_korea_01", "netherlands_01"):
             result = api.food_potential(tile_id)["kcal_per_year"]
             self.assertLess(result.get("marine_fishing", 0.0), 0.15 * result["crops"], tile_id)
+
+    def test_nearest_land_partition_splits_a_strait_down_the_middle(self):
+        try:
+            import shapely
+            from sim.geography.layer_build.layers_shelf import nearest_land_shares
+        except ImportError:
+            self.skipTest("the layer build needs shapely")
+        left = shapely.box(0, 0, 10000, 100000)
+        right = shapely.box(30000, 0, 40000, 100000)
+        sea = shapely.box(10000, 0, 30000, 100000)
+        shares = nearest_land_shares(sea, {"left": left, "right": right})
+        self.assertAlmostEqual(shares["left"], shares["right"], delta=0.02 * sea.area)
+        self.assertAlmostEqual(shares["left"] + shares["right"], sea.area, delta=0.01 * sea.area)
+        far = nearest_land_shares(sea, {"left": left, "right": shapely.box(50000, 0, 60000, 100000)})
+        self.assertAlmostEqual(far["left"], sea.area, delta=0.01 * sea.area)
+        self.assertLess(far["right"], 0.01 * sea.area)
 
 
 class SlopeTests(unittest.TestCase):
@@ -125,6 +141,33 @@ class CompetitionTests(unittest.TestCase):
         without_game = mini_map({"a": (STEPPE, {}, [])}, drop_wild=True)
         self.assertGreater(kcal(without_game, "a", "pastoral"), 1.05 * kcal(with_game, "a", "pastoral"))
         self.assertGreater(kcal(with_game, "a", "pastoral"), 0.0)
+
+
+class RainforestTests(unittest.TestCase):
+    def crops(self, rain, forest, arable=0.2):
+        layers = {"annual_precipitation_mm": rain, "forest_fraction": forest, "arable_fraction": arable,
+                  "ruggedness_index": 0.0, "river_km_navigable": 0.0, "river_km_all": 0.0}
+        return kcal(mini_map({"a": (FARMLAND, layers, [])}), "a", "crops")
+
+    def test_humid_tropical_rain_is_not_waterlogging(self):
+        self.assertAlmostEqual(self.crops(2400.0, 0.0), self.crops(1400.0, 0.0), delta=0.01 * self.crops(1400.0, 0.0))
+        self.assertGreater(self.crops(4500.0, 0.0), 0.0)
+        self.assertLess(self.crops(4500.0, 0.0), self.crops(2400.0, 0.0))
+
+    def test_land_cleared_from_forest_is_cropped_in_a_long_fallow_rotation(self):
+        open_land = self.crops(2400.0, 0.0)
+        cleared = self.crops(2400.0, 0.95)
+        self.assertLess(cleared, 0.6 * open_land)
+        self.assertGreater(cleared, 0.2 * open_land)
+
+    def test_rainforest_cropping_is_within_reach_of_savanna_cropping(self):
+        world_map = earth()
+        medians = {}
+        for koppen in ("Af", "Aw"):
+            values = sorted(api.food_potential(tile_id)["kcal_per_year"]["crops"] / tile["land_area_km2"]
+                            for tile_id, tile in world_map.tiles.items() if tile["koppen_class"] == koppen)
+            medians[koppen] = values[len(values) // 2]
+        self.assertGreater(medians["Af"], 0.5 * medians["Aw"])
 
 
 if __name__ == "__main__":

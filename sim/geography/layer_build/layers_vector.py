@@ -69,12 +69,3 @@ def sea_zones(tiles, side, cache_dir, source):
         reach = tile.land.simplify(ZONE_SIMPLIFY_METRES).buffer(side)
         zone = shapely.union(tile.cell, reach)
         yield tile, zone, shapely.union_all(_clipped(ocean, zone))
-
-
-def shelf_area_km2(tiles, side, cache_dir, source):
-    deep = read_natural_earth(source, "10m", "physical", "bathymetry_K_200", cache_dir)
-    result = {tile.tile_id: 0.0 for tile in tiles}
-    for tile, zone, sea in sea_zones(tiles, side, cache_dir, source):
-        deep_area = sum(piece.area for piece in _clipped(deep, zone))
-        result[tile.tile_id] = max(0.0, sea.area - deep_area) / 1e6
-    return result
