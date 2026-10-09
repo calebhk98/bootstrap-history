@@ -43,7 +43,7 @@ class PricesAtReachableTechniques(unittest.TestCase):
         provenance = data.goods_provenance(held, civilization_id="rome_100ad")
         self.assertEqual(provenance["steel_plate_kg"], "gated")
         self.assertEqual(provenance["iron_bar_kg"], "solved")
-        self.assertTrue(set(provenance.values()) <= {"solved", "gated", "mature"})
+        self.assertTrue(set(provenance.values()) <= {"solved", "gated"})
 
 
 if __name__ == "__main__":

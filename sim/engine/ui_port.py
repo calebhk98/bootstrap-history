@@ -49,7 +49,8 @@ def set_interface_memory(sim, memory):
 # Engine reads: private methods and fields of the `Sim`, under public names.
 
 def material_prices(sim):
-    return sim._material_prices()
+    """Every material someone in reach sells, at the price households are asked."""
+    return sim.goods_market.household_prices()
 
 
 def commodity_ledger(sim):

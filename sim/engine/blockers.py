@@ -82,7 +82,7 @@ class BlockersMixin:
         if check_name == "_check_missing_prereqs":
             return self._missing_prereq_entries(node_id, node, text)
         ids = []
-        if kind == "supply" and check_name != "check_unheld_stock":
+        if kind == "supply" and check_name not in ("check_unheld_stock", "check_materials_have_a_seller"):
             _group, options = getattr(self.household, "_last_subst_gap", None) or (None, [])
             ids = [option for option in options if self._visible_to_player(option)]
         if kind == "done" and self.is_venture(node_id) and not self.running(node_id):

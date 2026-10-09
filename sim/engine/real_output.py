@@ -23,14 +23,14 @@ from sim.engine import market_demand
 
 def opening_prices_in_hours(held, civ, opening_farmed_hectares):
     """{material: opening price in labour hours} the basket is valued at: the solved prices at the
-    opening's banded farmed area, less goods with no calculated price or only a mature-market one."""
+    opening's banded farmed area, less goods with no calculated price."""
     from .data import calculated_goods_table
     from .prices import band_farmed_hectares
-    in_hours, basis = calculated_goods_table(
+    in_hours, _basis = calculated_goods_table(
         held, civilization_id=civ.get("id"), civilization=civ,
         farmed_hectares=band_farmed_hectares(opening_farmed_hectares))
     return {material: price for material, price in sorted(in_hours.items())
-            if price > 0.0 and basis.get(material) != "mature"}
+            if price > 0.0}
 
 
 class RealOutputMixin:

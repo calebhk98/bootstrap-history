@@ -1,6 +1,6 @@
 # Deleting `data/prices.json`
 
-**Status:** partly - the file is deleted and nothing opens it; the commodity ledger prices from the solved table and the book labourer wage is gone; remains (see Remains): supply curves inferred from price, an import or unavailability policy for gated materials, authored node hour figures (Complaints/140), and two photovoltaic entries with no requires_node
+**Status:** partly - the file is deleted and nothing opens it; the commodity ledger prices from the solved table and the book labourer wage is gone; remains (see Remains): supply curves inferred from price, authored node hour figures (Complaints/140); the import and unavailability policy for gated materials and the two photovoltaic gates are done (see Remains)
 
 `data/prices.json` is not a calibration dataset and will not survive the
 migration. Historical observations that are independently worth testing may be
@@ -89,7 +89,7 @@ but is still a book figure. The commodity ledger's own base prices
 ### 3. Make endogenous material prices the only runtime path (done, with one labelled heuristic)
 
 - [x] `data.load()` returns solved prices only; `sim.engine.prices.priced_goods_table` no longer takes a book table. Every material a recipe makes has a price; ten production entries that had no technology gate (so every gated solve dropped them) now name one, and the iodine entry has labour. `python3 sim/simulator.py validate` and `python3 sim/simulator.py validate` report no unpriced material the tree needs.
-- [x] A material only a technology not yet held can make is priced as if every gate technology were held (provenance `gated`). This is a labelled transitional import price (CLAUDE.md 4.4), not a book figure; it goes when trade and availability decide what a civilisation can buy.
+- [x] A material only a technology not yet held can make is priced at the nearest such technique (provenance `gated`); one nothing in reach makes has no price unless a partner sells it (Complaints/38).
 
 `data.load()` defaults to the book goods table and overlays solved prices only
 when requested. Reverse that relationship material by material: a price must
@@ -170,10 +170,10 @@ sourced test fixture.
 `data/prices.json` is deleted and nothing opens it. Still open before this can close:
 
 - The generic national-output and market-share curves in `sim/engine/economy_materials.py` infer physical supply from price (blocker 4); with solved prices a cheap gated material such as aluminium gets an enormous fitted market. Replace with physical capacity and resource access.
-- Gated materials use the labelled mature-technique price above; trade, import and unavailability policy is not built.
+- (done) A material no one in reach makes has no price: priced by the home technique in reach, else the cheapest partner's landed price, else unavailable, and a project that needs it cannot start (Complaints/38, `sim/tests/test_no_seller_no_price.py`). The transitional "mature" price is gone from `priced_goods_table`; the energy-grade fallback in `sim/engine/energy_prices.py` remains and is labelled there.
 - (done) `data/world/commodities.json` carries no price: each commodity names a `price_material` and `CommodityLedger` takes the solved price of it in labour hours per kg.
 - (done) `BOOK_LABOURER_WAGE_DENARII_PER_HOUR` is deleted. Node `up_hours` and `cap_hours` are still authored hour figures (Complaints/140); node `rev` is now derived from output for nodes that gate production entries and have a staff or plant to derive from, and is nil for sciences that make nothing, while the rest keep authored `rev` (see Complaints/283, 295, 296).
-- `photovoltaic_panel_m2` and `electrical_mj_photovoltaic` have no `requires_node`, so no gated solve prices them. The complaint's claim that only a mod node fits is wrong: `silicon_path` (solar-grade silicon, already the gate of `silicon_kg`, which the panel is built from) fits. Gating both entries with it was tried and `data.load()` then did not finish within 30 seconds, probably because aluminium needs electricity and the panel needs aluminium, a cycle through the energy market the solver (the 135 agent's area) does not handle. Reverted; retry once the solver resolves that cycle.
+- (done) `photovoltaic_panel_m2` and `electrical_mj_photovoltaic` carry `requires_node: silicon_path` (solar-grade silicon, the gate of `silicon_kg`, which the panel is built from). The cycle the earlier attempt blamed (aluminium needs electricity, the panel needs aluminium) is not a solver fault: the resolvability pass takes the dynamo route topologically so the loop never forms there, and the numeric solve prices the loop to a fixed point in a few dozen rounds (`AlternativeEnergyCycleTests`). The 30 second overrun was the cold solve cache, which any edit under `sim/` or `data/` invalidates: `data.load()` takes longer than 30 seconds on a cold cache with or without the gate. Not re-timed on the real tree here.
 - `rg -n 'prices\.json|\bPRICES\b' sim tools` now finds only tests that guard against reading it and the harness's own `PRICES` name; the prose in `sim` comments is fixed, data and docs outside `sim` (mostly historical) still mention the file.
 
 Related: 38, 309.

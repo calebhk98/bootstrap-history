@@ -7,7 +7,8 @@ at comes from the market (market_clearing.py), where every producer offers at it
 
 TEMPORARY HEURISTIC (CLAUDE.md 4.4): a good no incumbent makes but some producer runs a technique for has
 no incumbent cost, so its reference is the solver's cost under every technique now run (the cheapest route
-among them) until a producer's own cost can anchor it.
+among them) until a producer's own cost can anchor it. A good no one in reach makes has no cost here and no
+price (goods_market_offers.py says who else may sell it).
 
 Money is the labour hour times what an hour is worth, which follows the one coin stock (labour_wages.py), so
 every price here, traded or not, moves with money against goods.
@@ -18,7 +19,7 @@ from . import prices as price_solver
 
 
 # how near a producer is to making a good, least to most
-REACH = {"mature": 0, "gated": 1, "solved": 2}
+REACH = {"gated": 1, "solved": 2}
 
 
 class IncumbentPricesMixin:
@@ -62,9 +63,12 @@ class IncumbentPricesMixin:
         return prices
 
     def material_price_basis(self, material):
-        """"solved" (a technique some producer runs), "gated" (one nobody runs yet), "mature" (nothing in
-        reach makes it) or None (not priced by the solver)."""
-        return self._price_tables()[1].get(material)
+        """"solved" (a technique some producer runs), "gated" (one nobody runs yet, within reach),
+        "imported" (no home producer in reach; a trading partner sells it) or None (no one does)."""
+        basis = self._price_tables()[1].get(material)
+        if basis is None and self.goods_market.offered_by(material) is not None:
+            return "imported"
+        return basis
 
     def _coin_metal_price(self, material):
         """Money per unit of the coin metal at the mint's standard: a unit of coin is a fixed weight of

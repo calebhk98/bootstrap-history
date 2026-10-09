@@ -87,9 +87,7 @@ finally:
 game = sim(civ="rome_100ad", capital=1e9)
 venture = next((node_id for node_id in sorted(game.nodes)
                 if game.is_venture(node_id) and game.nodes[node_id].get("_revenue_basis") == "output"
-                and game.concern_baskets_now(node_id) is not None and game.concern_baskets_now(node_id).outputs
-                and not any(game.material_price_basis(material) == "mature"
-                            for material in game.concern_baskets_now(node_id).outputs)), None)
+                and game.concern_baskets_now(node_id) is not None and game.concern_baskets_now(node_id).outputs), None)
 check("a concern whose revenue is its output exists", venture is not None)
 if venture is not None:
     material = sorted(game.concern_baskets_now(venture).outputs)[0]

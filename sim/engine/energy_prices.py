@@ -83,6 +83,8 @@ def graded(held_technology_ids, prices_json: Dict[str, Any], goods: Mapping[str,
     pool = {carrier: goods[carrier] for carrier in ENERGY_CARRIERS if carrier in goods}
     if cached is not None and cached[0] is entries:
         return EnergyPrices(pool, cached[1], cached[2])
+    # TEMPORARY HEURISTIC (CLAUDE.md 4.4, Complaints/38): a heat grade nothing held supplies is priced at
+    # the technique every technology would give, where it should be unavailable like a material.
     mature = price_solver.solved_prices(price_solver.all_gate_nodes(entries), prices_json,
                                         civilization_id=civilization_id, interest_rate=interest_rate,
                                         civilization=civilization)

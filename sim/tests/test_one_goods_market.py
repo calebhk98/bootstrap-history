@@ -99,7 +99,8 @@ check("a firm's takings carry the same output market factor the founder's do",
 # --- a good nobody offers has no household price and draws no spending -------------------------
 rome = sim(civ="rome_100ad", capital=1e9)
 market = rome.goods_market
-check("pepper is priced only as the mature technique would price it", rome.material_price_basis("pepper_kg") == "mature")
+check("pepper has no price: nothing in reach makes it", rome.material_price_basis("pepper_kg") is None)
+check("...so it cannot be quoted or bought", rome.material_trade_quote("pepper_kg") is None and not market.can_be_bought("pepper_kg"))
 check("no home technique in reach and no partner offers pepper", market.offered_by("pepper_kg") is None,
       market.offered_by("pepper_kg"))
 prices = market.household_prices()
@@ -112,6 +113,9 @@ check("a commodity nobody offers has no market book entry", rome.market_state("p
 check("a good the home makes keeps its price", "wheat_kg" in prices or "fabric_kg" in prices)
 
 check("a partner offers cassia", market.offered_by("cassia_kg") == "han_china_100ad", market.offered_by("cassia_kg"))
+check("...so cassia is an import, quoted at the landed price",
+      rome.material_price_basis("cassia_kg") == "imported" and market.can_be_bought("cassia_kg")
+      and rome.material_trade_quote("cassia_kg") is not None, rome.material_price_basis("cassia_kg"))
 facts = rome._foreign_economy_facts("han_china_100ad")
 route = rome._foreign_route(S.load_civ("han_china_100ad"))
 landed = (facts["prices_in_home_money"]["cassia_kg"] * market.partner_price_level("han_china_100ad")
