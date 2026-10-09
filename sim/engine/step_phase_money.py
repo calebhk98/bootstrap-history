@@ -39,12 +39,14 @@ class MoneyPhaseMixin:
         revenue, upkeep = self.revenue(), self.upkeep()
         # The guard is paid from what the purse and the credit line can bear, like any other spending.
         room = max(0.0, self.state.household.capital + self.credit_limit() + revenue - upkeep - living_cost - mine_cost)
-        keeping = min(self.coin_hoard()["keeping_cost_per_year"], room)
+        keeping_owed = self.coin_hoard()["keeping_cost_per_year"]
+        keeping = min(keeping_owed, room)
         self.receive_from_edge(edges.EDGE_CUSTOMERS, revenue, "venture revenue")
         self.pay_edge(edges.EDGE_SUPPLIERS, upkeep, "running costs of concerns")
         self.pay_wages(living_cost, "living costs")
         self.pay_edge(edges.EDGE_SUPPLIERS, mine_cost, "mine running costs")
         self.pay_edge(edges.EDGE_COIN_GUARDS, keeping, "keeping coin under guard")
+        self.charge_founder_for_theft(keeping, keeping_owed)
         # A mine you cannot pay for is a mine you stop working. Without this the
         # opex accrued for ever against a bankrupt enterprise: the England run
         # sank a large mine, lost its revenue and then ran three centuries at

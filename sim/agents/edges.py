@@ -28,6 +28,7 @@ EDGE_FREIGHT = "edge:freight"            # carriers paid for carrying a cargo
 EDGE_EMPLOYERS = "edge:employers"        # what employers pay a household for its own work
 EDGE_SLAVE_TRADERS = "edge:slave traders"  # what people bought as slaves cost
 EDGE_COIN_GUARDS = "edge:coin guards"    # guards paid to keep coin
+EDGE_THIEVES = "edge:thieves"            # what thieves take; people in the economy, so it is theirs, not destroyed
 
 
 class Edge:
