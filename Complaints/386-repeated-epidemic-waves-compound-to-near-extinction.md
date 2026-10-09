@@ -13,3 +13,5 @@ Evidence: run a mexica_1500 game with `cfg={"agent_economy": True}` (or `ROME_AG
 What it would take: express the hazard as a disease mechanism (an infection reaching a population without immunity, with mortality that falls as survivors gain immunity), or at least make the authored loss a total over the window rather than per wave. The docstring above `core.py`'s hazard mortality already names routing hazards through `Population.step` as the principled direction.
 
 Related: 95, 113.
+
+Research updated (2026-10-09): `Complaints/reports/epidemic-model-research.md` section 11 is the build plan (a disease package with a per-pathogen sub-year step, data files per pathogen, a validation range for the Americas, and a first code step with its tests). Several sources were seen only as search summaries and are tagged so.
