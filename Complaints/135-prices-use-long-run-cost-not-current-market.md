@@ -1,6 +1,6 @@
 # Prices use long-run cost, not the current market
 
-**Status:** closed - every price reads the year's clearing: the coin metal's market ratio revalues the coin (holders of coin and coin debts bear it), wages' food and tool terms and the goods market read the clearing, stock sells on its own bound apart from the producers' running-share floor, the partners' books use that floor, and mines' output is supply in the clearing on both paths
+**Status:** partly - the clearing work, stock bound, partner floor and mines are done, but the coin-metal revaluation runs away on the agent economy: silver's market ratio there (agent price over solved cost) is a few hundredths, dividing the price level by it raises every money price, which lowers the ratio further, so in a Rome game the price level reaches about 1,000 by the third year and the founder's capital about -4e11 by the eighth. The revaluation must measure the coin metal's value in real terms (against a basket of goods, relative to the opening) without referring to the money anchor it moves
 
 ## What is wrong
 
