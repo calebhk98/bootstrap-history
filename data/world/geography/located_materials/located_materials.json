@@ -1,13 +1,22 @@
 {
- "_note": "cost_multiplier is what a kilogramme costs delivered to the civilisation these figures were written for (map parameter located_material_reference_civilisation) relative to producing it locally, by TRADE, at its start. sim/geography/geography.py's Geography.material_reach() turns this into a cost multiplier for WHATEVER civilization you are actually playing, by comparing that civilization's own reach to the region (fewest days of the fastest route from its held tiles, banded) against the reference civilisation's reach at its start: at reach 0 (you hold the place) the multiplier is 1, at the reference civilisation's reach it reproduces this number, nearer it is cheaper and farther dearer. An expedition or a colony then cuts it further, which is the whole economic argument for both.",
+ "_note": "cost_multiplier is what a kilogramme costs delivered to the civilisation these figures were written for (map parameter located_material_reference_civilisation) relative to producing it locally, by TRADE, at its start. sim/geography/geography.py's Geography.material_reach() turns this into a cost multiplier for WHATEVER civilization you are actually playing, by comparing that civilization's own reach to the nearest of the material's places (fewest days of the fastest route from its held tiles to the tile holding the place, banded) against the reference civilisation's reach at its start: at reach 0 (you hold the place) the multiplier is 1, at the reference civilisation's reach it reproduces this number, nearer it is cheaper and farther dearer. An expedition or a colony then cuts it further, which is the whole economic argument for both. places lists where the material comes from: a position with its source, or a catalogued deposit by id; each resolves to the tile holding it.",
  "entries": [
   {
    "id": "rubber_latex",
-   "regions": [
-    "americas_south",
-    "west_africa"
+   "places": [
+    {
+     "name": "Amazon basin (Hevea brasiliensis)",
+     "lat": -3.1,
+     "lon": -60.0,
+     "source": "Hevea is native to the Amazon basin; Dean, Brazil and the Struggle for Rubber."
+    },
+    {
+     "name": "Guinea coast forest (Landolphia, Funtumia)",
+     "lat": 6.0,
+     "lon": -6.0,
+     "source": "Landolphia and Funtumia vines of the West African forest belt gave the wild rubber of the 1890s; Hanno's coast voyage reached it."
+    }
    ],
-   "primary": "americas_south",
    "cost_multiplier": 40,
    "note": "THE CLASSIC 'UNOBTAINABLE' AND IT IS NOT. Hevea brasiliensis is Amazonian, but Landolphia and Funtumia vines in West and Central Africa also yield real rubber and were the basis of a huge industry in the 1890s. West Africa is coastal sailing from the Pillars of Hercules, which Hanno did around 500 BC. You do not need to cross an ocean for rubber. You need to sail down a coast and know which vine to tap.",
    "unlocks": [
@@ -16,8 +25,13 @@
   },
   {
    "id": "gutta_percha",
-   "regions": [
-    "southeast_asia"
+   "places": [
+    {
+     "name": "Johor and Singapore (Palaquium gutta)",
+     "lat": 1.5,
+     "lon": 103.8,
+     "source": "Montgomerie sent the first gutta percha from Singapore in 1843; the tree is native to the Malay peninsula."
+    }
    ],
    "cost_multiplier": 60,
    "note": "Palaquium latex, Malaya. Reachable by extending the existing India route east, which Indian and Malay traders already do. Traders based IN China or India are already doing most of this journey as a matter of routine; the old Rome-only reach model could not say that.",
@@ -27,10 +41,14 @@
   },
   {
    "id": "cinchona_bark",
-   "regions": [
-    "americas_south"
+   "places": [
+    {
+     "name": "Loja, southern Ecuador",
+     "lat": -4.0,
+     "lon": -79.2,
+     "source": "Cinchona was first used and exported from the Loja highlands; Honigsbaum, The Fever Trail."
+    }
    ],
-   "primary": "americas_south",
    "cost_multiplier": 80,
    "note": "Andean, and genuinely only Andean until the 19th-century transplants to Java and India. Malaria is endemic around Rome, so this is worth an ocean crossing on its own. Once you have it, transplant it: the Dutch and British both did.",
    "unlocks": [
@@ -39,8 +57,13 @@
   },
   {
    "id": "sodium_nitrate",
-   "regions": [
-    "americas_south"
+   "places": [
+    {
+     "name": "Tarapaca and Atacama caliche",
+     "lat": -21.5,
+     "lon": -69.5,
+     "source": "Atacama caliche beds of Tarapaca and Antofagasta, the world's nitrate supply in the nineteenth century."
+    }
    ],
    "cost_multiplier": 50,
    "note": "Atacama caliche. Enormous, but you do not need it: Indian saltpetre from Bengal was the world's supply for centuries and is reachable on a route Rome already sails, and nitre beds work anywhere.",
@@ -50,8 +73,13 @@
   },
   {
    "id": "potassium_nitrate_natural",
-   "regions": [
-    "india"
+   "places": [
+    {
+     "name": "Bihar and Bengal nitre earths",
+     "lat": 25.8,
+     "lon": 85.1,
+     "source": "Saran, Tirhut and Patna districts; Buchanan-Hamilton and East India Company saltpetre records."
+    }
    ],
    "cost_multiplier": 6,
    "note": "BENGAL SALTPETRE. This is the important one and almost every bootstrap plan misses it. Natural nitre efflorescence on the Gangetic plain supplied the world's gunpowder for centuries. It is on a route Rome already sails annually. You can buy saltpetre instead of farming it, which removes the 24-month nitre-bed delay from the critical path entirely.",
@@ -61,8 +89,13 @@
   },
   {
    "id": "cryolite",
-   "regions": [
-    "greenland_arctic"
+   "places": [
+    {
+     "name": "Ivigtut, southwest Greenland",
+     "lat": 61.2,
+     "lon": -48.2,
+     "source": "Ivigtut was the world's only large cryolite deposit, mined from 1865; Geological Survey of Denmark and Greenland."
+    }
    ],
    "cost_multiplier": 200,
    "note": "Ivigtut, Greenland, essentially the only workable deposit. But synthetic fluoride baths from your own hydrofluoric acid work, which is what industry moved to anyway. Genuinely close to home for the Norse (base_reach 4, ships built for ice-bound coasts) and genuinely remote for everyone else, which is exactly the asymmetry this file exists to capture.",
@@ -72,9 +105,19 @@
   },
   {
    "id": "platinum",
-   "regions": [
-    "americas_south",
-    "siberia_urals"
+   "places": [
+    {
+     "name": "Choco placers, Colombia",
+     "lat": 5.7,
+     "lon": -76.7,
+     "source": "Platinum was first described from the Choco placers; Ulloa and Wood in the 1740s."
+    },
+    {
+     "name": "Nizhny Tagil placers, Urals",
+     "lat": 57.9,
+     "lon": 59.9,
+     "source": "Urals platinum placers found in 1819 at Nizhny Tagil; Demidov workings."
+    }
    ],
    "cost_multiplier": 120,
    "note": "Colombian placers and Ural placers. The Urals are overland-reachable through Scythian and Sarmatian trade.",
@@ -84,8 +127,13 @@
   },
   {
    "id": "potato",
-   "regions": [
-    "americas_south"
+   "places": [
+    {
+     "name": "Lake Titicaca basin",
+     "lat": -15.8,
+     "lon": -69.9,
+     "source": "The potato was domesticated in southern Peru (the Titicaca basin position is approximate); Spooner, McLean, Ramsay, Waugh and Bryan, A single domestication for potato based on multilocus amplified fragment length polymorphism genotyping, PNAS 102 (2005) 14694-14699."
+    }
    ],
    "cost_multiplier": 1,
    "one_time": true,
@@ -96,8 +144,13 @@
   },
   {
    "id": "maize",
-   "regions": [
-    "americas_carib"
+   "places": [
+    {
+     "name": "Balsas river valley, Mexico",
+     "lat": 18.0,
+     "lon": -101.0,
+     "source": "Maize descends from Balsas teosinte and arose in a single domestication in southern Mexico, the Balsas drainage being a candidate region; Matsuoka et al., A single domestication for maize shown by multilocus microsatellite genotyping, PNAS 99 (2002) 6080-6084."
+    }
    ],
    "cost_multiplier": 1,
    "one_time": true,
@@ -107,8 +160,13 @@
   },
   {
    "id": "cacao",
-   "regions": [
-    "americas_carib"
+   "places": [
+    {
+     "name": "Soconusco, Chiapas",
+     "lat": 15.0,
+     "lon": -92.3,
+     "source": "Soconusco was the classic cacao coast of Mesoamerica; Coe and Coe, The True History of Chocolate (Thames and Hudson, 1996), and cacao residues at Paso de la Amada in Soconusco, Powis et al., Oldest chocolate in the New World, Antiquity 81 (2007)."
+    }
    ],
    "cost_multiplier": 1,
    "one_time": true,
@@ -118,9 +176,19 @@
   },
   {
    "id": "tomato_chilli_tobacco_cassava",
-   "regions": [
-    "americas_carib",
-    "americas_south"
+   "places": [
+    {
+     "name": "Tehuacan valley, Mexico",
+     "lat": 18.5,
+     "lon": -97.4,
+     "source": "Chilli, tomato and tobacco domestication in Mesoamerica; MacNeish's Tehuacan sequence."
+    },
+    {
+     "name": "Southwest Amazonia",
+     "lat": -12.0,
+     "lon": -65.0,
+     "source": "Cassava was domesticated in southwestern Amazonia; Olsen and Schaal 1999."
+    }
    ],
    "cost_multiplier": 1,
    "one_time": true,
@@ -130,8 +198,13 @@
   },
   {
    "id": "coca_leaf",
-   "regions": [
-    "americas_south"
+   "places": [
+    {
+     "name": "Yungas, Bolivia",
+     "lat": -16.5,
+     "lon": -67.5,
+     "source": "The Yungas and the eastern Andean slopes are the old coca country; Plowman, The ethnobotany of coca, in Prance and Kallunki (eds), Ethnobotany in the Neotropics, Advances in Economic Botany 1 (1984) 62-111."
+    }
    ],
    "cost_multiplier": 90,
    "unlocks": [
@@ -140,169 +213,314 @@
   },
   {
    "id": "silk_raw",
-   "regions": [
-    "china"
+   "places": [
+    {
+     "name": "Lower Yangtze (Suzhou and Hangzhou)",
+     "lat": 30.5,
+     "lon": 120.2,
+     "source": "The Yangtze delta was China's leading silk region; Kuhn, Science and Civilisation in China vol 5 part 9, Textile Technology: Spinning and Reeling (Cambridge University Press, 1988)."
+    }
    ],
    "cost_multiplier": 30,
    "note": "Rome already buys it. The sericulture SECRET is the valuable thing; two monks smuggled silkworm eggs to Byzantium in 552 AD, so it is stealable."
   },
   {
    "id": "shellac",
-   "regions": [
-    "india"
+   "places": [
+    {
+     "name": "Chota Nagpur lac country",
+     "lat": 23.3,
+     "lon": 85.3,
+     "source": "Lac is raised on host trees across Chota Nagpur and Bengal; Watt, Dictionary of the Economic Products of India."
+    }
    ],
    "cost_multiplier": 12
   },
   {
    "id": "camphor",
-   "regions": [
-    "southeast_asia",
-    "china"
+   "places": [
+    {
+     "name": "Barus, Sumatra",
+     "lat": 2.0,
+     "lon": 98.4,
+     "source": "Barus camphor (Dryobalanops) was the Indian Ocean trade's prized camphor; Drakard, An Indian Ocean Port: Sources for the Earlier History of Barus, Archipel 37 (1989), doi 10.3406/arch.1989.2562."
+    },
+    {
+     "name": "Fujian and Taiwan (Cinnamomum camphora)",
+     "lat": 26.0,
+     "lon": 118.0,
+     "source": "Laurel camphor distilled in Fujian; Schafer, The Golden Peaches of Samarkand."
+    }
    ],
    "cost_multiplier": 25
   },
   {
    "id": "cloves_nutmeg",
-   "regions": [
-    "southeast_asia"
+   "places": [
+    {
+     "name": "Ternate and Tidore, Maluku",
+     "lat": 0.8,
+     "lon": 127.4,
+     "source": "Cloves grew only in the northern Moluccas until the eighteenth century; Turner, Spice."
+    },
+    {
+     "name": "Banda Islands",
+     "lat": -4.5,
+     "lon": 129.9,
+     "source": "Nutmeg and mace grew only in the Banda Islands; Turner, Spice."
+    }
    ],
    "cost_multiplier": 70,
    "note": "Maluku only, until transplanted. The single highest value-per-weight cargo in the pre-modern world."
   },
   {
    "id": "pepper",
-   "regions": [
-    "india"
+   "places": [
+    {
+     "name": "Malabar coast",
+     "lat": 10.0,
+     "lon": 76.3,
+     "source": "Malabar was the pepper coast of the Roman trade; Casson, The Periplus Maris Erythraei (Princeton University Press, 1989), on Limyrike."
+    }
    ],
    "cost_multiplier": 8,
    "note": "Rome buys this by the shipload already."
   },
   {
    "id": "cotton",
-   "regions": [
-    "india",
-    "north_africa"
+   "places": [
+    {
+     "name": "Gujarat",
+     "lat": 22.3,
+     "lon": 72.6,
+     "source": "Indian cotton cloth, from Gujarat and the Deccan, was the ancient world's cotton trade; Wild and Wild."
+    },
+    {
+     "name": "Nile valley",
+     "lat": 30.0,
+     "lon": 31.2,
+     "source": "Cotton growing in Egypt, small in antiquity and large after 1820; Owen, Cotton and the Egyptian Economy 1820-1914 (Oxford, 1969), which covers the period from 1820."
+    }
    ],
    "cost_multiplier": 4
   },
   {
    "id": "wootz_ingot",
-   "regions": [
-    "india"
+   "places": [
+    {
+     "name": "Konasamudram and Nirmal, Deccan",
+     "lat": 19.1,
+     "lon": 78.3,
+     "source": "The crucible-steel centre named in the iron deposit entry of the same district; Craddock."
+    }
    ],
    "cost_multiplier": 15,
    "note": "Crucible steel ingots. Rome imports these. Buying the product is not the same as knowing the process, but it lets you reverse-engineer it."
   },
   {
    "id": "tin",
-   "regions": [
-    "britannia",
-    "hispania",
-    "southeast_asia"
+   "places": [
+    {
+     "deposit": "cornish_tin_streaming"
+    },
+    {
+     "name": "Galicia and Tras-os-Montes",
+     "lat": 41.5,
+     "lon": -7.0,
+     "source": "Iberian northwest cassiterite known to Phoenician and Roman traders; Strabo 3.2.9."
+    },
+    {
+     "deposit": "kinta_tin"
+    }
    ],
    "cost_multiplier": 1
   },
   {
    "id": "amber",
-   "regions": [
-    "scandinavia"
+   "places": [
+    {
+     "name": "Samland, Baltic coast",
+     "lat": 54.9,
+     "lon": 20.0,
+     "source": "The Samland coast holds the largest amber deposit in the world and the source of the amber road; Pliny, Natural History 37."
+    }
    ],
    "cost_multiplier": 20,
    "note": "Also the best natural electrical insulator available to you, and the origin of the word electricity."
   },
   {
    "id": "mercury",
-   "regions": [
-    "hispania"
+   "places": [
+    {
+     "deposit": "almaden_cinnabar"
+    }
    ],
    "cost_multiplier": 1,
    "note": "Almaden, an imperial monopoly, so this is a political cost not a distance cost."
   },
   {
    "id": "bitumen_naphtha",
-   "regions": [
-    "levant_mesopotamia"
+   "places": [
+    {
+     "name": "Hit, on the Euphrates",
+     "lat": 33.64,
+     "lon": 42.83,
+     "source": "Natural bitumen seeps at Hit, used since Sumer; Forbes, Studies in Ancient Technology vol 1, Bitumen and Petroleum in Antiquity (Brill, 2nd ed 1964)."
+    }
    ],
    "cost_multiplier": 2,
    "note": "Surface seeps. Your entire petroleum industry starts here and needs no drilling."
   },
   {
    "id": "coal",
-   "regions": [
-    "britannia",
-    "gaul_germania",
-    "china"
+   "places": [
+    {
+     "deposit": "newcastle_coal"
+    },
+    {
+     "deposit": "ruhr_coal"
+    },
+    {
+     "deposit": "ordos_coal"
+    }
    ],
    "cost_multiplier": 1
   },
   {
    "id": "boric_acid",
-   "regions": [
-    "italia"
+   "places": [
+    {
+     "name": "Larderello, Tuscany",
+     "lat": 43.23,
+     "lon": 10.87,
+     "source": "Boric acid from the Tuscan lagoni steam fields, worked industrially from 1818 by Larderel, after Hoefer's discovery of boric acid in the lagoni; Wikipedia, Larderello."
+    }
    ],
    "cost_multiplier": 1,
    "note": "Larderello fumaroles, Tuscany. Verify on arrival."
   },
   {
    "id": "fluorspar",
-   "regions": [
-    "gaul_germania",
-    "britannia"
+   "places": [
+    {
+     "name": "Weardale, Northern Pennines",
+     "lat": 54.74,
+     "lon": -2.2,
+     "source": "Fluorspar mined with the Pennine lead veins; Dunham, Geology of the Northern Pennine Orefield vol 1, Tyne to Stainmore (British Geological Survey, 2nd ed 1990), and Dunham, Fluorspar and barytes in the Northern Pennines, Geological Magazine (1938)."
+    },
+    {
+     "name": "Freiberg, Saxony",
+     "lat": 50.92,
+     "lon": 13.34,
+     "source": "Fluorite and barite occur as gangue in the Erzgebirge and Freiberg vein deposits (Mineralium Deposita studies of the Freiberg sphalerite and the Niederschlag fluorite-barite mine); the Baumann et al. reference formerly cited was not found."
+    }
    ],
    "cost_multiplier": 2
   },
   {
    "id": "argyrodite_germanium",
-   "regions": [
-    "gaul_germania"
+   "places": [
+    {
+     "name": "Himmelsfuerst mine, Freiberg",
+     "lat": 50.92,
+     "lon": 13.34,
+     "source": "Argyrodite found at Freiberg in 1885, where Winkler isolated germanium."
+    }
    ],
    "cost_multiplier": 10,
    "note": "Freiberg, Saxony, outside the Empire in free Germania. Zinc smelter flue dust is the better route anyway."
   },
   {
    "id": "guano",
-   "regions": [
-    "americas_south"
+   "places": [
+    {
+     "name": "Chincha Islands, Peru",
+     "lat": -13.6,
+     "lon": -76.4,
+     "source": "The Chincha Islands guano trade from 1840; Mathew, The House of Gibbs and the Peruvian Guano Monopoly (Royal Historical Society, 1981)."
+    }
    ],
    "cost_multiplier": 30,
    "note": "Peruvian islands. Enormous nitrogen and phosphate resource, and it is why the guano trade mattered so much in the 19th century."
   },
   {
    "id": "sugar_cane",
-   "regions": [
-    "india",
-    "southeast_asia"
+   "places": [
+    {
+     "name": "Ganges plain",
+     "lat": 25.0,
+     "lon": 85.0,
+     "source": "Sugar boiling began in the Ganges plain; Daniels, Agro-industries: sugarcane technology, Science and Civilisation in China vol 6 part 3 (Cambridge University Press, 1996)."
+    },
+    {
+     "name": "Java",
+     "lat": -7.5,
+     "lon": 110.0,
+     "source": "Cane sugar grown on Java by the Chinese and Dutch from the seventeenth century."
+    }
    ],
    "cost_multiplier": 5,
    "one_time_transplant": true
   },
   {
    "id": "tea",
-   "regions": [
-    "china"
+   "places": [
+    {
+     "name": "Xishuangbanna and Pu'er, Yunnan",
+     "lat": 22.0,
+     "lon": 100.8,
+     "source": "Wild tea (Camellia sinensis var. assamica) of southwest Yunnan, a candidate tea homeland (origin debated); Kew POWO, Camellia sinensis."
+    }
    ],
    "cost_multiplier": 25,
    "one_time_transplant": true
   },
   {
    "id": "coffee",
-   "regions": [
-    "arabia_horn"
+   "places": [
+    {
+     "name": "Kaffa, Ethiopia",
+     "lat": 7.3,
+     "lon": 36.0,
+     "source": "Coffea arabica is native to the southwest Ethiopian highlands; Anthony, Combes, Astorga, Bertrand, Graziosi and Lashermes, The origin of cultivated Coffea arabica L. varieties revealed by AFLP and SSR markers, Theoretical and Applied Genetics 104 (2002) 894-900 (primary centre of diversity)."
+    }
    ],
    "cost_multiplier": 15,
    "one_time_transplant": true
   },
   {
    "id": "kola_palm_oil",
-   "regions": [
-    "west_africa"
+   "places": [
+    {
+     "name": "Niger delta oil palm belt",
+     "lat": 5.0,
+     "lon": 6.0,
+     "source": "The oil palm belt of the Bight of Benin and Biafra; Lynn, Commerce and Economic Change in West Africa: The Palm Oil Trade in the Nineteenth Century (Cambridge University Press, 1997)."
+    },
+    {
+     "name": "Ashanti kola country",
+     "lat": 6.7,
+     "lon": -1.6,
+     "source": "Kola nut grown in the forest of Ashanti and traded north; Lovejoy, Caravans of Kola: The Hausa Kola Trade 1700-1900 (Zaria, Ahmadu Bello University Press, 1980)."
+    }
    ],
    "cost_multiplier": 20
   },
   {
    "id": "ivory_gold_west_africa",
-   "regions": [
-    "west_africa"
+   "places": [
+    {
+     "name": "Bambuk and the upper Senegal",
+     "lat": 13.5,
+     "lon": -11.5,
+     "source": "Bambuk gold fed the trans-Saharan trade; Bovill, The Golden Trade of the Moors (Oxford University Press, 1958), which names Bambuk among the gold-bearing districts."
+    },
+    {
+     "name": "Akan goldfields",
+     "lat": 6.5,
+     "lon": -2.0,
+     "source": "Akan alluvial gold and forest ivory; Garrard, Akan Weights and the Gold Trade (Longman, 1980)."
+    }
    ],
    "cost_multiplier": 6,
    "note": "The West African gold trade is why the trans-Saharan routes existed. Reachable by sea, which is exactly what the Portuguese did to cut out the Saharan middlemen."

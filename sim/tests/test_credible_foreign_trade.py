@@ -102,15 +102,14 @@ check("a partner that cannot sail is reached overland, and dearly",
 # --- capacity comes from the partner's own regions and techniques.
 solved = facts["solved_materials"]
 iron_capacity, iron_demand = s.foreign_opening(PARTNER, "iron", solved)
-han_iron_share = sum(float(s.geography.regions[region]["minerals"].get("iron", 0.0))
-                     for region in geography_api.regions_of_tiles(_HAN_TILES))
-check("a mined commodity is the national output times its regions' share, not population scaled",
+han_iron_share = s.geography.held_share(_HAN_TILES, "iron")
+check("a mined commodity is the national output times the share of the deposits on its tiles, not population scaled",
       abs(iron_capacity - s._national_output_tonnes("iron") * han_iron_share) < 1e-6
       and han_iron_share > 0.0, (iron_capacity, han_iron_share))
 check("...and its own demand opens in balance with it", iron_demand == iron_capacity, None)
 _real_share = s._foreign_mineral_share
 s._foreign_mineral_share = lambda civilization_id, commodity: 0.0
-check("a mined commodity its regions hold no share of has no capacity",
+check("a mined commodity its tiles hold no share of has no capacity",
       s.foreign_opening(PARTNER, "iron", solved)[0] == 0.0, None)
 s._foreign_mineral_share = _real_share
 check("a material extracted from a deposit its regions do not hold cannot be made",

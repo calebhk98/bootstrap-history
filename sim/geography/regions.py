@@ -1,16 +1,12 @@
 """Regions as named groups of tiles: a derived view, never a second source.
 
 `the map folder (data/world/geography/)` keeps for each region only what a tile cannot
-say: its name, route difficulty, the reach figure for
-trade, and the shares of metal not yet tied to a deposit. Area, arable land
-and fertility are sums over the region's tiles (`land.load_region_lands`);
-a region's metal shares add the deposits on its tiles
-(`mineral_shares.regional_mineral_shares`). Standalone: data files only.
+say: its name and a note. Area, arable land and fertility are sums over the region's tiles
+(`land.load_region_lands`); reach and mineral access are read per tile. Standalone: data files only.
 """
 import math
 from typing import Any, Dict, Tuple
 
-from sim.world import mineral_shares
 from sim.geography import tile_lookup
 
 
@@ -34,9 +30,7 @@ def region_anchor(geography: Dict[str, Any], region_id: str) -> Tuple[float, flo
 
 
 def region_records(geography: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
-    """{region_id: label record with `minerals` completed from deposits}."""
-    shares = mineral_shares.regional_mineral_shares(geography)
-    return {region_id: dict(record, minerals=shares[region_id],
-                            **dict(zip(("lat", "lon"), region_anchor(geography, region_id))))
+    """{region_id: label record plus the anchor point derived from its tiles}."""
+    return {region_id: dict(record, **dict(zip(("lat", "lon"), region_anchor(geography, region_id))))
             for region_id, record in geography.get("regions", {}).items()
             if not region_id.startswith("_")}

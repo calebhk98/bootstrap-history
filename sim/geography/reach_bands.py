@@ -75,15 +75,29 @@ def level_of(world_map: WorldMap, days: Optional[float]) -> int:
     return top
 
 
+def _days_from(world_map: WorldMap, held_tiles: Iterable[str], held_nodes: Iterable[str],
+               improvements: Optional[Mapping[str, Mapping[str, Any]]]) -> Dict[str, float]:
+    """{tile: fewest days from any held tile} over the modes the held nodes open; empty when nothing is held."""
+    held_tiles = list(held_tiles)
+    if not held_tiles:
+        return {}
+    nodes = frozenset(held_nodes)
+    modes = routes_modes.usable_modes(world_map, [nodes])
+    return routes_search.reach(world_map, held_tiles, modes, UNBOUNDED_DAYS, improvements, held_nodes=nodes)
+
+
+def tile_levels(world_map: WorldMap, held_tiles: Iterable[str], held_nodes: Iterable[str],
+                improvements: Optional[Mapping[str, Mapping[str, Any]]] = None) -> Dict[str, int]:
+    """{tile: reach level} for every tile of the map, from the tiles held: 0 for a held tile, the farthest
+    level for a tile no route joins."""
+    days = _days_from(world_map, held_tiles, held_nodes, improvements)
+    return {tile_id: level_of(world_map, days.get(tile_id)) for tile_id in world_map.tiles}
+
+
 def region_levels(world_map: WorldMap, held_tiles: Iterable[str], held_nodes: Iterable[str],
                   improvements: Optional[Mapping[str, Mapping[str, Any]]] = None) -> Dict[str, int]:
-    """{region id: reach level} from the tiles held, over the modes the held nodes open."""
-    held_tiles = list(held_tiles)
-    nodes = frozenset(held_nodes)
-    days: Dict[str, float] = {}
-    if held_tiles:
-        modes = routes_modes.usable_modes(world_map, [nodes])
-        days = routes_search.reach(world_map, held_tiles, modes, UNBOUNDED_DAYS, improvements, held_nodes=nodes)
+    """{region id: reach level}: the nearest level among the region's tiles."""
+    days = _days_from(world_map, held_tiles, held_nodes, improvements)
     levels = {}
     for region_id in sorted(tile_holdings.region_ids(world_map)):
         reached = [days[tile] for tile in tile_holdings.tiles_of_regions([region_id], world_map) if tile in days]

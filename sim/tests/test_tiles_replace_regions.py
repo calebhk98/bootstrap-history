@@ -44,36 +44,30 @@ class DepositsReadTilesTests(unittest.TestCase):
 
 class MineralSharesAreNotDuplicatedTests(unittest.TestCase):
 
-    def test_a_deposit_share_is_not_also_in_its_region_table(self):
-        geography = _geography()
-        region_of_tile = {tile_id: region_id
-                          for region_id, tile_ids in geography["land_tiles"]["region_to_tiles"].items()
-                          for tile_id in tile_ids}
-        duplicated = []
-        for metal in deposits.METALS:
-            for deposit in deposits.load_deposits(metal):
-                region_id = region_of_tile.get(deposit.tile)
-                listed = (geography["regions"].get(region_id, {}).get("minerals") or {}).get(metal)
-                if listed:
-                    duplicated.append((deposit.name, region_id, metal))
-        self.assertEqual(duplicated, [])
+    def test_no_region_record_stores_a_share_of_output(self):
+        for region_id, region in _geography()["regions"].items():
+            if not region_id.startswith("_"):
+                self.assertNotIn("minerals", region, region_id)
 
-    def test_regional_totals_still_sum_to_one_over_the_home_regions(self):
-        from sim.world import mineral_shares
+    def test_a_deposit_stores_its_share_once(self):
+        both = [row["id"] for row in deposits.deposit_records()
+                if "share_of_empire_output" in row and "share_of_reference_output" in row]
+        self.assertEqual(both, [])
+
+    def test_the_reference_empires_shares_still_sum_to_one_over_its_tiles(self):
+        from sim.geography.api import mineral_shares
         geography = _geography()
         with open(os.path.join(_ROOT, "data", "civilizations", "rome_100ad.json"), encoding="utf-8") as handle:
-            home = regions_of_tiles(tiles_held(json.load(handle)))
-        regional = mineral_shares.regional_mineral_shares(geography)
+            held = tiles_held(json.load(handle))
         for metal in ("iron", "copper", "tin", "lead", "silver"):
-            total = sum(regional[region_id].get(metal, 0.0) for region_id in home)
-            self.assertAlmostEqual(total, 1.0, delta=0.06, msg=metal)
+            self.assertAlmostEqual(mineral_shares.held_share(held, metal, geography), 1.0, delta=0.1, msg=metal)
 
 
 class RegionRecordsHoldNoTileDataTests(unittest.TestCase):
 
-    LABEL_FIELDS = {"name", "minerals", "note"}
+    LABEL_FIELDS = {"name", "note"}
 
-    def test_a_region_record_is_a_label_with_the_shares_not_yet_on_a_tile(self):
+    def test_a_region_record_is_only_a_label(self):
         extra = {region_id: sorted(set(region) - self.LABEL_FIELDS)
                  for region_id, region in _geography()["regions"].items()
                  if not region_id.startswith("_") and set(region) - self.LABEL_FIELDS}
