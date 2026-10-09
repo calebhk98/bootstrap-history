@@ -48,22 +48,21 @@ class SpendingTests(unittest.TestCase):
 class SpendingSmoothingTests(unittest.TestCase):
     """Wealth above its target is spent down over the years, not in the one year the target falls."""
 
-    def bids(self, last_year_spending, cash=1e6, income=100000.0):
+    def bids(self, cash=1e6, income=100000.0):
         view = View()
         view.interest_rate = lambda currency: 0.12
-        orders = households.goods_orders(cohort(last_year_spending=last_year_spending, expected_inflation=0.2),
-                                         view, cash, income, BASKET, SPECS)
+        orders = households.goods_orders(cohort(expected_inflation=0.2), view, cash, income, BASKET, SPECS)
         return budget_total(orders)
 
-    def test_spending_from_excess_wealth_rises_by_at_most_a_limited_share_a_year(self):
-        limit = households_orders.SPENDING_GROWTH_LIMIT
-        self.assertLessEqual(self.bids(100000.0), 100000.0 * (1.0 + limit) * 1.001)
+    def test_spending_from_excess_wealth_adds_at_most_a_limited_share_of_income(self):
+        limit = households_orders.WEALTH_DRAWDOWN_LIMIT
+        self.assertLessEqual(self.bids(), 100000.0 * (1.0 + limit) * 1.001)
 
-    def test_spending_follows_income_above_the_limit(self):
-        self.assertGreater(self.bids(100000.0, income=400000.0), 300000.0)
+    def test_a_household_short_of_its_target_still_cuts_back(self):
+        self.assertLess(self.bids(cash=150000.0), 0.95 * 150000.0)
 
-    def test_no_history_means_no_limit(self):
-        self.assertGreater(self.bids(0.0), 150000.0)
+    def test_spending_scales_with_income_not_with_cash(self):
+        self.assertGreater(self.bids(income=400000.0), 3.0 * self.bids(income=100000.0) * 0.9)
 
 
 class UnsoldGoodTests(unittest.TestCase):

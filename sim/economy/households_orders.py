@@ -57,9 +57,9 @@ SAVINGS_RESPONSE_FLOOR = declare(
         "wealth in other forms (the durable store takes more of it then) and smooth. The floor stands in "
         "for that portfolio choice and for the saving motives that do not depend on the return (dearth, "
         "dowry, old age); no society's saving is measured against the real rate here.")
-SPENDING_GROWTH_LIMIT = declare(
-    "SPENDING_GROWTH_LIMIT", 0.10, kind="temporary_heuristic",
-    unit="share of last year's spending that wealth above target may add in a year", source=None,
+WEALTH_DRAWDOWN_LIMIT = declare(
+    "WEALTH_DRAWDOWN_LIMIT", 0.5, kind="temporary_heuristic",
+    unit="share of a year's income that wealth above target may add to spending in a year", source=None,
     confidence="D",
     why="Households smooth consumption: wealth above what they want to keep is spent down over several "
         "years, not in the one year their target falls. Without a limit a fall in the target sends the "
@@ -138,11 +138,9 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
     store_value = math.fsum(held[good] * store_prices[good] for good in weights)
     keep = target + savings_target(income_this_year - floor_cost, view.interest_rate(area_currency),
                                    cohort.expected_inflation)
-    spending = max(0.0, min(cash, income_this_year
-                            + currency.spending_adjustment(cash + claims + store_value, keep, income_this_year)))
-    if cohort.last_year_spending > 0.0:
-        # spending out of wealth is smoothed; income this year is always spent
-        spending = min(spending, max(income_this_year, cohort.last_year_spending * (1.0 + SPENDING_GROWTH_LIMIT)))
+    drawdown = min(currency.spending_adjustment(cash + claims + store_value, keep, income_this_year),
+                   WEALTH_DRAWDOWN_LIMIT * max(0.0, income_this_year))
+    spending = max(0.0, min(cash, income_this_year + drawdown))
     floors, totals = need_units(priced, basket, cohort.people, spending - floor_cost)
     # the stock of a durable is sized on the expected flow: this year's flow scaled by expected over actual
     # spending, but never below the flow the smoothed surplus (smoothed spending over smoothed floor cost)
