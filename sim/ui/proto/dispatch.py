@@ -17,6 +17,7 @@ from .help import _agent_help
 from .nodes import NODE_NAME_NORM, _did_you_mean, _norm_name, _resolve_by_name
 from sim.ui.memory import load_state, save_state
 from .score import victory_report
+from .seat_address import run_as_seat
 from .state_waiting import _agent_end_reason
 from .state import _agent_state
 from .wave_summary import wave_summary
@@ -415,7 +416,11 @@ def _add_compact_fields(command, out, sim=None, nodes=None):
 
 
 def _agent_dispatch(sim, nodes, cmd):
-    """Every reply, in the money of the place you are standing in."""
+    """Every reply, as the seat the command addresses (`as`, else the session's seat), in the money of the place you stand in."""
+    return run_as_seat(sim, cmd, lambda command: _agent_reply(sim, nodes, command))
+
+
+def _agent_reply(sim, nodes, cmd):
     _out = _agent_dispatch_inner(sim, nodes, cmd)
     if sim.fuzzy_estimates and isinstance(cmd, dict):
         _entry = command_registry.resolve(cmd.get("cmd") if isinstance(cmd.get("cmd"), str) else "")

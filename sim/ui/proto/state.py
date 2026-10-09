@@ -21,6 +21,7 @@ def _agent_state_founder(sim):
     headline counts that sit next to it on the same screen.
     """
     return {
+        "seat": sim.state.acting_seat,
         "founder_alive": sim.founder_alive,
         "founder_age": (sim.founder_age()
                         if sim.founder_alive and not sim.cfg.get("immortal", True) else None),

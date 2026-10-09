@@ -59,6 +59,10 @@ class SeatRunMixin:
 			self._wrap_seat_containers()
 		return seat
 
+	def society_techs_now(self) -> set:
+		"""The techniques the society holds now: what a seat joining today is granted."""
+		return set(self._society_held_techs())
+
 	def join_cast_seats(self) -> List[str]:
 		"""Add the seats the civilisation's cast lists for the start of the game; returns their ids."""
 		joined = []
