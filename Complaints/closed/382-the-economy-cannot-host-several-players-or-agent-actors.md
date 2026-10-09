@@ -1,6 +1,6 @@
 # The engine cannot yet host several players or an agent economy: one founder is wired in, households are not actors, and most money moves without a counterparty
 
-**Status:** open - steps 1 and 2 are done: every engine, agent and labour money posting goes through `ledger.transfer` and names an actor or a named edge (`sim/agents/edges.py`, held in `ActorsState.edges`), and wages, the state's pay and lenders' interest are paid to the home strata's purses (`sim/agents/payroll.py`); step 3 stages A (seat record, `act_as`, aliases not saved), B (economy, governance and scenario state split into world parts and seat parts: `state.holdings`, `state.governance`, `state.seat_progress` alias the acting seat, `sim/engine/state_holdings.py`) and C (one party id per seat: the goods market, credit, the capital market and the agent economy name the acting seat, no `FOUNDER` constant; unrun in a whole game) are built, and a seat holds patents and shares as an actor (Complaint 103); stage D (a second seat stepping with the year) is blocked as the plan's stage D status says (`_step_money` mixes world work, the end rule for several seats, the labour pool, no whole game to test on); stages E to I (commands addressing a seat, fog between seats) and step 4 remain. The one-sided volume is now zero by construction (`sim/tests/test_every_posting_names_a_counterparty.py` scans for new ones); what crosses each named edge is `state.actors.edge_volume`.
+**Status:** closed - several seats step together (stages D to F: the year runs world phases once and seat phases per seat, a seat's end stops that seat only, commands address a seat with `as`, fog and diffusion count every seat), households and money are actors with named counterparties (steps 1 and 2), and partner countries are economies in the same agent model (step 4 and stages G to I: tiles carry a country, producers follow its techniques, its pay, prices and output are read from its own markets, a seat of another country deals in them). Not yet run in a whole game: the proofs are the slow topics `test_two_seats_whole_game.py` and `test_partner_in_agent_economy.py`, and the partner switch `agent_economy` in `data/world/foreign_economies.json` stays off until the second has run.
 
 Multiplayer, and other countries as players, need every actor to be able to own money and goods, be somewhere, and pay someone. Today:
 
@@ -41,3 +41,6 @@ Overlapping issues closed into this one; each closed file keeps its full text.
 Owner decision (2026-10-09): high priority: do it as soon as possible.
 
 Owner decision (2026-10-09): when one player's founder dies in a run where founders are mortal, the game stops for that player only; every other seat keeps playing. In an immortal-founder run this never arises.
+
+
+Closed with the owner's end rule built (`sim/engine/seat_run.py`) and the plan's stage statuses in `docs/architecture/MULTI_ACTOR_STATE_PLAN.md`. What each part cannot do yet is listed there, per stage.
