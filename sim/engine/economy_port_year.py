@@ -157,7 +157,7 @@ class AgentEconomy:
         """Every seat's running concerns' output for the year, one agent per seat named by its seat id."""
         sim = self._sim
         orders = {}
-        for seat_id in sorted(sim.state.seats):
+        for seat_id in sorted(sim.playing_seats() or sim.state.seats):   # a seat whose run ended sells nothing
             with sim.act_as(seat_id):
                 orders.update(self._acting_seat_orders(seat_id))
         return orders

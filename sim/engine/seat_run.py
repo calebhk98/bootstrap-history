@@ -59,6 +59,16 @@ class SeatRunMixin:
 			self._wrap_seat_containers()
 		return seat
 
+	def join_cast_seats(self) -> List[str]:
+		"""Add the seats the civilisation's cast lists for the start of the game; returns their ids."""
+		joined = []
+		for template in (self.civ.get("cast") or {}).get("seats") or ():
+			seat_id = template["id"]
+			if seat_id not in self.state.seats:
+				self.join_seat(seat_id, template)
+				joined.append(seat_id)
+		return joined
+
 	def _new_founder_years(self) -> float:
 		"""Years a new founder has left: effectively unlimited in an immortal run, else drawn like the first."""
 		if self.cfg["immortal"]:

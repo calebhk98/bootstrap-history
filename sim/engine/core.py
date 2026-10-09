@@ -575,6 +575,7 @@ class Sim(RealPriceRatiosMixin, CoinRevaluationMixin, WageMarketRatiosMixin, Mec
             # own figures answer, and nothing computed from them may stay cached afterwards
             self.economy.open_agent()
             self._done_changed()
+        self.join_cast_seats()
 
     def _reconnect_state_hooks(self):
         """Reconnect transient cache state, version counters, and invalidating wrappers after save/load."""
