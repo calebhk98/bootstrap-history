@@ -13,7 +13,7 @@ import warnings
 
 from sim.constants import declare
 from sim.engine.default_civilisation import default_civilisation_id
-from sim.engine.joint_floor import JOINT_BYPRODUCT_FLOOR_SHARE, lift_to_floor  # noqa: F401
+from sim.engine.joint_floor import bound_to_disposal_cost, is_glutted
 from sim.world import demand, deposits
 
 DEFAULT_CIVILIZATION = default_civilisation_id()
@@ -33,7 +33,8 @@ MEAN_INCOME_LABOUR_HOURS_PER_CAPITA_PER_YEAR = declare(
 
 def allocate_joint_cost(outputs, current_prices, total_cost,
                         anchor_price_by_material=None,
-                        disposal_value_by_material=None):
+                        disposal_value_by_material=None,
+                        disposal_cost_by_material=None):
     """{material: price per unit} splitting `total_cost` over `outputs`.
 
     Outputs only have to recover the batch together; a bulk waste may carry
@@ -44,26 +45,36 @@ def allocate_joint_cost(outputs, current_prices, total_cost,
     An anchored output whose demand-clearing price is at or below its
     disposal value (default zero) is in surplus: it prices at the disposal
     value and the other outputs carry the rest of the batch.
+
+    An anchored output in glut (its demand clears at next to nothing) prices at minus its disposal cost
+    per unit, `disposal_cost_by_material`, and the other outputs carry the batch plus that cost.
+    No output is priced below minus its disposal cost.
     """
     if len(outputs) == 1:
         (name, quantity), = outputs.items()
         return {name: total_cost / quantity}
     anchors = anchor_price_by_material or {}
     disposal = disposal_value_by_material or {}
+    disposal_costs = disposal_cost_by_material or {}
     surplus = {name: disposal.get(name, 0.0) for name in outputs
                if name in anchors and anchors[name] <= disposal.get(name, 0.0)}
+    surplus.update({name: -disposal_costs[name] for name in outputs
+                    if name not in surplus and name in anchors and name in disposal_costs
+                    and is_glutted(anchors[name], disposal_costs[name])})
     if surplus and len(surplus) < len(outputs):
-        # Disposal revenue cannot exceed the batch, so the rest never goes negative.
-        surplus_revenue = min(total_cost, sum(
-            outputs[name] * value for name, value in surplus.items()))
-        scale = surplus_revenue / (sum(
-            outputs[name] * value for name, value in surplus.items()) or 1.0)
+        # Disposal revenue cannot exceed the batch, so the rest never goes negative; a disposal cost
+        # (negative value) is added to what the rest carry.
+        surplus_total = sum(outputs[name] * value for name, value in surplus.items())
+        surplus_revenue = min(total_cost, surplus_total)
+        scale = surplus_revenue / (surplus_total or 1.0)
         prices = {name: value * scale for name, value in surplus.items()}
         remaining = {name: quantity for name, quantity in outputs.items()
                      if name not in surplus}
         prices.update(allocate_joint_cost(
             remaining, current_prices, total_cost - surplus_revenue,
-            {name: price for name, price in anchors.items() if name in remaining}))
+            {name: price for name, price in anchors.items() if name in remaining},
+            disposal_cost_by_material={name: cost for name, cost in disposal_costs.items()
+                                       if name in remaining}))
         return prices
     mass = {name: demand.mass_in_kg_or_none(name, quantity)
             for name, quantity in outputs.items()}
@@ -86,7 +97,7 @@ def allocate_joint_cost(outputs, current_prices, total_cost,
         else standalone_cost_per_kg * kilograms_per_unit[name]
         for name in split_outputs}
     split = _split_by_value(split_outputs, reference_prices, total_cost)
-    prices.update(lift_to_floor(split, split_outputs, kilograms_per_unit, total_cost))
+    prices.update(bound_to_disposal_cost(split, split_outputs, disposal_costs))
     return prices
 
 
@@ -104,7 +115,7 @@ def cap_anchors(anchor_price_by_material, direct_price_by_material):
 
 
 def _split_by_value(outputs, reference_prices, total_cost):
-    values = {name: quantity * reference_prices.get(name, 1.0)
+    values = {name: quantity * max(reference_prices.get(name, 1.0), 0.0)
               for name, quantity in outputs.items()}
     total_value = sum(values.values())
     if total_value <= 0:
