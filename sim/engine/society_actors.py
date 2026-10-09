@@ -122,3 +122,4 @@ class ActorsMixin:
         self.update_capital_market()
         self.actors.advance(SimWorld(self))
         self.charge_actors_for_keeping_coin()
+        self.charge_actors_for_theft()
