@@ -9,7 +9,7 @@ import copy
 import math
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
-from sim.geography import (food_capacity, map_source, mechanisms, parameters, resource_links, resources_biotic,
+from sim.geography import (food_capacity, map_source, mechanisms, parameters, rail_freight, resource_links, resources_biotic,
                            resources_catalogue, resources_endowment, resources_mined, resources_prospecting,
                            resources_summary, routes_carriage, routes_graph, routes_modes, routes_search, tile_holdings, tile_layers,
                            ways_build, ways_works)
@@ -131,6 +131,14 @@ def build_requirements(tile_a: str, tile_b: Optional[str], improvement: str,
     crew_people, crew_hours_per_year}, or None when it cannot be built. Ground steeper than the way's
     natural limit is built `engineered` at more earthwork."""
     return ways_build.requirements(_map(world_map), tile_a, tile_b, improvement)
+
+
+def train_carrier(mode_id: str, world_map: Optional[WorldMap] = None) -> Optional[Dict[str, Any]]:
+    """{inputs, fuel_material, stock_material, stock_kg} of a rail mode as a freight carrier (its physical
+    inputs per tonne-km, what the fuel and the rolling stock are made of, the stock's mass), or None when
+    the mode is not a train."""
+    mode = routes_modes.modes(_map(world_map)).get(mode_id)
+    return rail_freight.carrier_record(mode["carrier"]) if mode is not None and mode.get("model") == "rail" else None
 
 
 def improvement_key(improvement: str, tile_a: str, tile_b: str, world_map: Optional[WorldMap] = None) -> str:

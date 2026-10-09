@@ -15,7 +15,7 @@ from typing import Tuple
 
 from sim.constants import declare
 from sim.world import trader_response
-from sim.geography.api import cargo_cost, freight_cost, provisions, sea_freight, tiles_held
+from sim.geography.api import cargo_cost, freight_cost, provisions, sea_freight, tiles_held, train_carrier
 from sim.geography.api import route as route_over_tiles
 from sim.geography.api import dues_hours_per_tonne
 from sim.geography.api import usable_modes as usable_route_modes
@@ -35,6 +35,8 @@ CARAVAN_STRING_SIZE = declare(
 
 SEA_CREW_WAGE_TRADE = "sailor"
 SEA_MODE = "sail"
+RAIL_MODE = "rail"
+CANAL_MODE = "canal"
 # Vehicles and hulls are priced as their timber (their iron fittings are left out).
 FREIGHT_VEHICLE_MATERIAL = "wood_kg"
 
@@ -98,6 +100,16 @@ def _caravan_inputs():
 
 class ForeignRoutesMixin:
 
+    def _train_carrier(self):
+        """Geography's train as a freight carrier ({inputs, fuel_material, stock_material, stock_kg})."""
+        return train_carrier(RAIL_MODE, self.world_map)
+
+    def _carrier_feed_material(self, mode):
+        """The material whose price a mode's feed (or fuel) is counted at: coal for a train, the draught
+        animals' feed otherwise."""
+        train = self._train_carrier() if mode == RAIL_MODE else None
+        return train["fuel_material"] if train else self.FREIGHT_FEED_PRICE_MATERIAL
+
     def _carrier_models(self):
         """{mode: (physical inputs, carrier prices, working days a year, hull loss per 1000 km)}:
         the carrier unit each mode's inputs describe, priced from this society's prices."""
@@ -109,6 +121,10 @@ class ForeignRoutesMixin:
         land_days = freight_cost.LAND_WORKING_DAYS_PER_YEAR
         hull_inputs = sea_freight.sailing_freight_physical_inputs()
         hull_kg = hull_inputs.cargo_tonnes * sea_freight.HULL_TIMBER_KG_PER_CARGO_TONNE
+        train = self._train_carrier()
+        stock_price = self._material_price_per_kg(train["stock_material"]) or 0.0
+        river_boat = (_river_inputs(), freight_cost.CarrierPrices(freight_physics.BARGE.self_mass_kg * vehicle_wood,
+                                                                   2.0 * ox_price), land_days, 0.0)
         return {
             "cart": (self._land_freight_physical_inputs(),
                      freight_cost.CarrierPrices(freight_physics.CART.self_mass_kg * vehicle_wood,
@@ -120,9 +136,9 @@ class ForeignRoutesMixin:
                         freight_cost.CarrierPrices(
                             string * freight_physics.PACK_SADDLE.self_mass_kg * vehicle_wood,
                             string * mule_price), land_days, 0.0),
-            "river_boat": (_river_inputs(),
-                      freight_cost.CarrierPrices(freight_physics.BARGE.self_mass_kg * vehicle_wood,
-                                                 2.0 * ox_price), land_days, 0.0),
+            "river_boat": river_boat,
+            CANAL_MODE: river_boat,
+            RAIL_MODE: (train["inputs"], freight_cost.CarrierPrices(train["stock_kg"] * stock_price), land_days, 0.0),
             SEA_MODE: (hull_inputs, freight_cost.CarrierPrices(hull_kg * vehicle_wood),
                     sea_freight.SAILING_DAYS_PER_YEAR, sea_freight.hull_loss_per_thousand_km())}
 
@@ -130,12 +146,11 @@ class ForeignRoutesMixin:
         """{mode: home money per tonne-km}: feed and crew, the carrier's capital at the market
         rate, hull losses, and the return leg (`imbalance` 0 when flows balance, 1 when the
         carrier comes back empty). The same function prices foreign legs and domestic hauls."""
-        feed_price = self._material_price_per_kg(self.FREIGHT_FEED_PRICE_MATERIAL) or 0.0
         land_wage = self.labour.wage_per_hour(self.FREIGHT_DRIVER_WAGE_TRADE)
         sea_wage = self.labour.wage_per_hour(SEA_CREW_WAGE_TRADE)
         rate = self.market_rate()
         return {mode: freight_cost.freight_money_per_tonne_km(
-                    inputs, feed_price, sea_wage if mode == SEA_MODE else land_wage, prices, rate,
+                    inputs, self._material_price_per_kg(self._carrier_feed_material(mode)) or 0.0, sea_wage if mode == SEA_MODE else land_wage, prices, rate,
                     working_days, imbalance, loss)
                 for mode, (inputs, prices, working_days, loss) in self._carrier_models().items()
                 if modes is None or mode in modes}

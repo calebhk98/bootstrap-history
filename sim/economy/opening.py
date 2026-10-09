@@ -47,9 +47,7 @@ def open_economy(setup: EconomySetup) -> Tuple[EconomyRecord, AreaMap, CarriageT
     carriage = setup.carriage_table()
     priced_goods = {good: price for good, price in setup.opening_prices.items()
                     if good in setup.specs and price > 0.0}
-    area_map = AreaMap(setup.tiles, carriage, [(setup.specs[good], price) for good, price in
-                                               sorted(priced_goods.items())],
-                       setup.opening_population_by_tile)
+    area_map = setup.area_map(carriage)
     memory = _opening_memory(setup, area_map, priced_goods)
     record = EconomyRecord(book=Book(), memory=memory, currency=setup.currency)
     view = YearView(memory, record.book, area_map, setup.currency_id, labour_area)
