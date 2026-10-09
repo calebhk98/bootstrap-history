@@ -27,6 +27,24 @@ class SeatRecord(ActorRecord):
 		if self.seat_holdings is not None:
 			self.seat_holdings.shares_issued = value
 
+	@property
+	def offers(self) -> Any:
+		return self.seat_holdings.offers if self.seat_holdings is not None else []
+
+	@offers.setter
+	def offers(self, value: Any) -> None:
+		if self.seat_holdings is not None:
+			self.seat_holdings.offers = value
+
+	@property
+	def offer_serial(self) -> int:
+		return self.seat_holdings.offer_serial if self.seat_holdings is not None else 0
+
+	@offer_serial.setter
+	def offer_serial(self, value: int) -> None:
+		if self.seat_holdings is not None:
+			self.seat_holdings.offer_serial = value
+
 
 class HouseholdParty:
 	"""Gives a `Household` the surface an exchange needs; holds no state of its own beyond a transient record."""
@@ -64,6 +82,11 @@ class HouseholdParty:
 	def concerns(self) -> Any:
 		with self._acting():
 			return self.household.operating
+
+	@property
+	def workforce(self) -> Any:
+		with self._acting():
+			return self.household.employees
 
 	@property
 	def knowledge(self) -> Any:

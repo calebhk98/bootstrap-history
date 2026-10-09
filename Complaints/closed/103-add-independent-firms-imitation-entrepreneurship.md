@@ -1,6 +1,6 @@
 # Add independent firms, imitation and entrepreneurship
 
-**Status:** partly - built: actor model, government imitation, market-bounded firm entry, shared labour pool and goods market, the per-invention choice (`disclose`), patents (`sim/agents/patent.py`, granted where a node declares the `patent_grant` mechanic, now on `fin_patent`, and binding on `exchange` through `patent.blocked_reason`; firm entry and imitation ignore them, owner decision 2026-10-09: many people ignored patents, so infringement should be a risk that follows how well the state enforces them, not a hard block), joint-stock shares and dividends, spin-off firms; the founder (every seat) now holds patents, shares and issued equity as an actor (`HoldingsState.patents`, `shares_held`, `shares_issued`; `Sim.seat_party`; `patent_entry` and `pay_dividends` see it; `sim/tests/test_seat_as_actor.py`); still open: a player command for the founder to apply for a patent, buy or issue shares (needs commands addressing a seat, stage E of Complaint 382 step 3), a seat issuing shares that pay dividends, staff leaving do not reduce the parent's workforce, strata and the founder investing in shares, the player's licence royalty flow for the founder, taught-only trades not drawn from a pool, concerns with no declared `annual_output_t` having no physical supply, fog of war, workers leaving to found firms, other countries as players
+**Status:** closed - independent firms are actors that copy what they can see, are funded by households of a stratum, hire from the shared pool and sell into the shared market; staff and the founder's own workers leave to found rivals; patents are a risk that follows the state's reach; the founder deals as an actor (patents, offers, licences with royalty, shares, dividends); the slow whole-game proofs are named below
 
 **Source:** playtest findings document, LATE-001. **Type:** Major
 roadmap-sized feature recommendation, not a fix.
@@ -107,3 +107,34 @@ Remains: the player's choices (license, publish, patent, keep secret, spin off) 
 Update (patents, joint-stock, spin-offs): actors can now hold a patent (`ActorRecord.patents`), sell it or licence it as the `patent` and `licence` sides of an exchange offer, and `licence.grant` refuses a licence from anyone but the holder. An actor's equity can be issued and traded as the `shares` side of an offer, and a spawner pays dividends by share through the ledger. A spawner founds a rival firm from the staff of a concern after a number of years, with a chance from staff size and years (declared heuristics in `tuning_spinoff.py`), funded from pooled capital, copying the concern's know-how while the parent keeps its own. Tests: `sim/tests/test_agents_patents.py`, `test_agents_spinoff.py`. The engine adapter asks the tree for a node declaring the `patent_grant` mechanic; no node does yet, so the founder's `data/branches` needs it declared on the patent-institution node and in `data/branches/MECHANICS.md` (not editable from the actors' folder). Staff leaving do not yet reduce the parent's workforce, and there is no stratum investor.
 
 Owner decision (2026-10-09): the founder should become an actor like any other (Complaint 382 step 3), so the founder can hold patents and shares.
+
+## Closed
+
+What closed it, with the test that shows each (run with `python3 -m sim.tests --only <topic>`):
+
+- Patents are a risk, not a block (owner decision): an unlicensed operator is found out each year with the chance the
+  state's capacity gives and pays the holder its margin; an entrant or spin-off weighs the same odds as an expected
+  cost. `sim/agents/enforcement.py`; topics `patent_enforcement`, `agents_spinoff`.
+- The founder deals as an actor: commands `patent`, `offer`, `offers`, `accept`, `decline`, `shares` address the acting
+  seat through the exchange (`sim/engine/seat_dealings.py`, `sim/ui/proto/dispatch_dealings.py`); offers made to a seat
+  are kept in its holdings and an AI actor's answer finds a seat by id. Topic `seat_dealings`.
+- A seat that issued equity pays dividends from its margin (`seat_margin`); topic `seat_as_actor`.
+- Strata invest in shares: a firm lenders will not fund for an expansion that pays raises equity from the best-placed
+  household of a stratum at the investor's own valuation (`sim/agents/equity_round.py`); the founder buys and issues
+  shares by command. Topic `equity_round`.
+- A licence sold through the exchange can carry a royalty on the licensee's takings, paid to the holder, firm or seat,
+  while the patent lives. Topic `licence_royalty`.
+- Staff who leave to found a rival come off the parent's payroll, and the founder's own workers leave the founder too
+  (a seat is a parent like any business). Topic `agents_spinoff`.
+- Taught-only trades have a pool: the people the founder taught, less the founder's staff and other actors'. Topic
+  `taught_trade_pool`.
+- A concern that declares no `annual_output_t` supplies what its staff and plant turn out by the production data, and a
+  node that operates a technique makes its outputs. Topic `concern_supply_derived`.
+- Fog of war for actors: a firm, an entrant or a state copies only what shows enough from where it stands (secrecy, the
+  know-how's opacity, distance). Topic `actor_fog`.
+- Other countries as players: closed by Complaint 382 (seats of a partner country, partner economies; topics
+  `seat_of_partner_country`, `country_economy`).
+
+Not run here, because a whole game takes too long in this container: the effect of these rules on firm counts, the
+founder's margin and wages over a long run. Measure it with `python3 -m sim.tests --slow --only firm_count_whole_game`
+and a long `simulator.py` run before relying on any level.

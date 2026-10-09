@@ -62,7 +62,7 @@ wages, real firm profits, real land rents) - all upstream work.
 `docs/architecture/HISTORICAL_SIM_ARCHITECTURE.md`'s own political-actor
 language, quoted above, is the direct overlap; a future agent scoping this
 should start from that document's existing entity list rather than
-reinventing one. `Complaints/103` (LATE-001) and `Complaints/105` (LATE-003)
+reinventing one. `Complaints/closed/103` (LATE-001) and `Complaints/105` (LATE-003)
 share the actor/state-balance-sheet prerequisites.
 
 Also reported (England 1300 fog playtest): by 1350 the household ran medicine, textiles, power and infrastructure, had created new professions, and had measurably cut national plague mortality; by 1375 it employed about two thirds of the reachable chemists, engineers, machinists, glassblowers and opticians, ran a university, and was the dominant local employer. The tester found the social reaction small for that scale and asked for political attention proportional to a dominant founder: crown demands and taxation, patronage offers, monopolies and patents, guild hostility, poaching of staff, espionage, foreign invitations, church scrutiny, and losers from technological change. They singled out the patronage gate on Newtonian mechanics as the best example of this kind of constraint and want more of it as wealth and disruption grow. See also 114. Report: `Complaints/reports/playtest-england-1300-fog-tester-notes.md`.

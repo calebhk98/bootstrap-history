@@ -32,7 +32,7 @@ addition to the roadmap, not a duplicate.
 mechanism: a household credit line with an interest rate and an affordability
 ceiling. There is no banking sector, no bond market, no equity instrument and
 no independent capital pool that a firm other than the founder's own
-household could draw on. `LATE-001`'s independent firms (`Complaints/103`)
+household could draw on. `LATE-001`'s independent firms (`Complaints/closed/103`)
 would need somewhere to raise capital from other than the founder personally
 underwriting them, which is exactly what this finding would supply.
 
@@ -55,7 +55,7 @@ as a follow-on to those two rather than a parallel track.
 
 ## Cross-references
 
-`Complaints/103` (LATE-001, independent firms) and `Complaints/105`
+`Complaints/closed/103` (LATE-001, independent firms) and `Complaints/105`
 (LATE-003, state fiscal model) are the natural prerequisites in practice,
 even though nothing formally blocks starting this first.
 

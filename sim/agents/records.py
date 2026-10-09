@@ -113,6 +113,8 @@ class ActorRecord:
 	patents: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 	holdings: Dict[str, float] = field(default_factory=dict)
 	issued: float = 0.0
+	# node id -> {"holder", "rate"}: the royalty on its takings from a concern the actor runs under a licence
+	royalty_owed: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 
 	# ---- a firm founded by staff leaving another: the parent's id, empty otherwise
 	spun_off_from: str = ""

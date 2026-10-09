@@ -1,7 +1,7 @@
 """One entrant into a niche: the test every new firm passes, whatever the niche or the year."""
 from typing import Any, List, Optional
 
-from . import firm_entry, imitation, ledger
+from . import enforcement, firm_entry, imitation, ledger
 from .edges import EDGE_POOLED_CAPITAL
 from .firm import Firm
 from .records import ActorRecord
@@ -21,7 +21,8 @@ class NicheEntry:
 		self.carried = firm_entry.carrying_cost(world, node_id, tile=self.tile)
 		self.costs = world.upkeep(node_id) + world.concern_wage_bill(node_id) + self.carried
 		probe = Firm("probe", ActorRecord(kind="firm", founded_year=world.year))
-		self.chain = imitation.missing_chain(node_id, world, probe)
+		self.seen = imitation.in_sight(self.tile, node_id, world)
+		self.chain = imitation.missing_chain(node_id, world, probe) if self.seen else None
 		self.plan = imitation.copy_plan(probe, self.chain, world) if self.chain else None
 
 	def found(self, rivals: float, waiting: int) -> Optional[str]:
@@ -30,6 +31,7 @@ class NicheEntry:
 		if self.plan is None:
 			return None
 		expected = firm_entry.expected_entry_gross(registry, world, node_id, rivals, waiting + 1) - self.costs
+		expected -= enforcement.expected_damages(world, "", node_id, expected)
 		if expected <= 0:
 			return None
 		probe = Firm("probe", ActorRecord(kind="firm", last_margin=expected, founded_year=world.year))
@@ -54,8 +56,7 @@ class NicheEntry:
 			kind="firm", name=firm_id, target=node_id, last_margin=expected, founded_year=world.year,
 			location=self.tile))
 		if founder is not None:
-			firm.record.plan["founder"] = founder.actor_id
-			ledger.transfer(founder, firm, pooled, "founding stake")
+			firm_entry.fund_from(founder, firm, pooled)
 		else:
 			self.pool[0] -= pooled
 			ledger.transfer(registry.state.edge(EDGE_POOLED_CAPITAL), firm, pooled, EDGE_POOLED_CAPITAL)

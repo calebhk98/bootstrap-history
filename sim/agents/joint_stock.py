@@ -77,22 +77,49 @@ def shares_worth(shares: Dict[str, float], find_actor: Any) -> float:
 	return worth
 
 
+def issuers_among(registry: Any, world: Any) -> List[Any]:
+	"""(issuer id, issuer, margin its dividends come from) for every actor in business that has outside
+	shareholders: those in the registry, and the seats (a seat's margin is what its concerns earn over upkeep)."""
+	found = []
+	for issuer_id in sorted(registry.actors):
+		issuer = registry.actors[issuer_id]
+		if issuer.record.exited_year is None and issuer.record.issued > 0.0:
+			found.append((issuer_id, issuer, issuer.record.last_margin))
+	seat_margin = getattr(world, "seat_margin", None)
+	for seat_id, party in sorted(getattr(world, "seat_parties", lambda: {})().items()):
+		if seat_margin is not None and party.record.issued > 0.0:
+			found.append((seat_id, party, seat_margin(seat_id)))
+	return found
+
+
+def issuers_among(registry: Any, world: Any) -> List[Any]:
+	"""(issuer id, issuer, margin its dividends come from) for every actor in business that has outside
+	shareholders: those in the registry, and the seats (a seat's margin is what its concerns earn over upkeep)."""
+	found = []
+	for issuer_id in sorted(registry.actors):
+		issuer = registry.actors[issuer_id]
+		if issuer.record.exited_year is None and issuer.record.issued > 0.0:
+			found.append((issuer_id, issuer, issuer.record.last_margin))
+	seat_margin = getattr(world, "seat_margin", None)
+	for seat_id, party in sorted(getattr(world, "seat_parties", lambda: {})().items()):
+		if seat_margin is not None and party.record.issued > 0.0:
+			found.append((seat_id, party, seat_margin(seat_id)))
+	return found
+
+
 def pay_dividends(registry: Any, world: Any) -> float:
-	"""Every actor with outside shareholders (an actor in the registry, or a seat) pays them a part of its last margin by share, never more
-	than its purse; returns the total paid."""
+	"""Every actor with outside shareholders (in the registry, or a seat) pays them a part of its last margin
+	by share, never more than its purse; returns the total paid."""
 	paid = 0.0
 	holders = dict(registry.actors)
 	holders.update(getattr(world, "seat_parties", lambda: {})())
-	for issuer_id in sorted(registry.actors):
-		issuer = registry.actors[issuer_id]
-		if issuer.record.exited_year is not None or issuer.record.issued <= 0.0:
-			continue
-		pool = min(DIVIDEND_PAYOUT_SHARE * max(0.0, issuer.record.last_margin), max(0.0, issuer.money))
+	for issuer_id, issuer, margin in issuers_among(registry, world):
+		pool = min(DIVIDEND_PAYOUT_SHARE * max(0.0, margin), max(0.0, issuer.money))
 		if pool <= 0.0:
 			continue
 		for holder_id in sorted(holders):
 			share = holders[holder_id].record.holdings.get(issuer_id, 0.0)
-			if share > 0.0:
+			if share > 0.0 and holder_id != issuer_id:
 				ledger.transfer(issuer, holders[holder_id], pool * share, "dividend")
 				paid += pool * share
 	return paid

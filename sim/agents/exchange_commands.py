@@ -1,7 +1,7 @@
 """Player commands for exchange, and the yearly answer of AI actors to the offers they hold."""
 from typing import Any, Callable, Dict, List
 
-from . import exchange, joint_stock, patent, spinoff  # noqa: F401  (patent and spinoff register commands and spawners)
+from . import enforcement, exchange, joint_stock, patent, spinoff  # noqa: F401  (patent and spinoff register commands and spawners)
 from .player_commands import CommandRejected, register_command
 from .registry import register_spawner
 from .tuning import VALUE_HORIZON_YEARS
@@ -45,7 +45,8 @@ def side_worth(side: Dict[str, Any], taker: Any, holder: Any, world: Any, find_a
 	if side.get("concern"):
 		worth += concern_worth(holder, side["concern"])
 	for node_id in set(side.get("patent", ())) | set(side.get("licence", ())):
-		worth += max(valuer(node_id, world) if valuer is not None else 0.0, concern_worth(holder, node_id))
+		kept = 1.0 - float(side.get("royalty", {}).get(node_id, 0.0))
+		worth += kept * max(valuer(node_id, world) if valuer is not None else 0.0, concern_worth(holder, node_id))
 	if side.get("shares") and find_actor is not None:
 		worth += joint_stock.shares_worth(side["shares"], find_actor)
 	return worth
@@ -75,13 +76,38 @@ def answer_offers(actor: Any, find_actor: Callable[[str], Any], world: Any) -> L
 	return answered
 
 
+def finder(registry: Any, world: Any) -> Callable[[str], Any]:
+	"""Finds a party to an exchange by id: an actor in the registry, else a seat."""
+	seats: Dict[str, Any] = {}
+
+	def find(actor_id: str) -> Any:
+		found = registry.get(actor_id)
+		if found is None and getattr(world, "seat_parties", None) is not None:
+			if not seats:
+				seats.update(world.seat_parties())
+			found = seats.get(actor_id)
+		return found
+	return find
+
+
 def exchange_answers(registry: Any, world: Any) -> List[str]:
 	"""Yearly: lapse old offers, then let every AI actor answer what it holds. Founds no actors."""
+	find = finder(registry, world)
 	for actor_id in sorted(registry.actors):
 		actor = registry.actors[actor_id]
 		exchange.expire_offers(actor, world.year)
-		answer_offers(actor, registry.get, registry.world_for(actor, world))
+		if actor.record.offers:
+			answer_offers(actor, find, registry.world_for(actor, world))
 	return []
 
 
 register_spawner("exchange_answers", exchange_answers)
+
+
+def patent_enforcement(registry: Any, world: Any) -> List[str]:
+	"""Yearly: holders pursue the operators of their patented concerns who have no licence. Founds no actors."""
+	enforcement.enforce_patents(registry, world)
+	return []
+
+
+register_spawner("patent_enforcement", patent_enforcement)

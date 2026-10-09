@@ -4,10 +4,13 @@ Actors never touch `Sim` directly. They ask this view, which keeps them free
 of the engine and lets a test or a second scenario supply another one.
 """
 import hashlib
+import math
 import random
 from typing import Any, Dict, List, Optional, Set
 
 from sim.agents.api import OBSERVATION_RANGE_KM, SECRET_EXPOSURE, payroll, supply
+from sim.economy.api import goods_specs
+from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from .agents_port_budget import BudgetView
 from .agents_port_capacity import CapacityView
@@ -17,6 +20,7 @@ from .agents_port_groups import GroupView
 from .agents_port_revenue import RevenueView
 from .agents_port_site import SiteView
 from .agents_port_cast import CastView
+from .agents_port_seats import SeatView
 from .agents_port_coinage import CoinageView
 from .agents_port_trade import TradeView
 from . import seat_builds, visibility as visibility_of
@@ -24,7 +28,17 @@ from .data import TRADES_ABSENT
 from .industry_depth import RAMP_SHARE_AT_FULL_DEPTH
 
 
-class SimWorld(BudgetView, SiteView, RevenueView, GroupView, DisclosureView, CapitalView, CapacityView, TradeView, CastView, CoinageView):
+_UNIT_MASS_KG: Dict[str, float] = {}
+
+
+def unit_mass_kg(material: str) -> float:
+	"""Kilograms in one unit of a material, as the freight model reads it (stated, then inferred from the id)."""
+	if material not in _UNIT_MASS_KG:
+		_UNIT_MASS_KG[material] = goods_specs({material: ""}, {})[material].unit_mass_kg
+	return _UNIT_MASS_KG[material]
+
+
+class SimWorld(BudgetView, SiteView, RevenueView, GroupView, DisclosureView, CapitalView, CapacityView, TradeView, CastView, CoinageView, SeatView):
 	"""The `Sim`'s answers to the questions actors ask."""
 
 	def __init__(self, sim: Any) -> None:
@@ -154,11 +168,12 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, DisclosureView, Cap
 
 	def free_fte(self, trade: str, actor_id: Optional[str]) -> Optional[float]:
 		"""People of a trade left in the pool for this actor after the founder's staff and
-		everyone else's. None for a trade nobody here practises yet, which has no pool."""
+		everyone else's. A trade nobody here practises has the people the founder taught as its pool;
+		None for a trade that cannot be had at all."""
 		sim = self._sim
-		if not sim.labour.trade_available(trade) or trade in TRADES_ABSENT:
+		if not sim.labour.trade_available(trade):
 			return None
-		exist = sim.labour.people_who_exist(trade)
+		exist = sim.labour.taught_trade_people(trade) if trade in TRADES_ABSENT else sim.labour.people_who_exist(trade)
 		founder = sum(seat.household.employees.get(trade, 0.0) for seat in sim.state.seats.values())
 		return max(0.0, exist - founder - sim.actors.staff_fte(trade, excluding=actor_id))
 
@@ -263,9 +278,23 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, DisclosureView, Cap
 		self._sim.economy.goods.note_purchase(buyer_id, commodity, tonnes)
 
 	def concern_output_tonnes(self, node_id: str, material: str, opened_year: int, staffed: float) -> float:
-		return supply.concern_output_tonnes(self.nodes[node_id], node_id, material,
+		node = self.nodes[node_id]
+		if not node.get("annual_output_t"):
+			return supply.concern_output_tonnes(node, node_id, material, self.ramp(opened_year, node_id), staffed,
+												self._derived_tonnes(node_id, material))
+		return supply.concern_output_tonnes(node, node_id, material,
 											self.ramp(opened_year, node_id), staffed
 											* self._sim.concern_volume_ratio(node_id))
+
+	def _derived_tonnes(self, node_id: str, material: str) -> float:
+		"""Tonnes a year of a material the concern's staff and plant turn out now, from the production data (its
+		baskets), the mass of a unit of the material taken from what the data states of it."""
+		baskets = self._sim.concern_baskets_now(node_id)
+		units = 0.0 if baskets is None else baskets.outputs.get(material, 0.0)
+		if units <= 0.0:
+			return 0.0
+		kilograms = unit_mass_kg(material)
+		return units * kilograms / KILOGRAMS_PER_TONNE if math.isfinite(kilograms) else 0.0
 
 	def upkeep(self, node_id: str, capacity: float = 1.0) -> float:
 		return self._sim.economy.concern_upkeep(node_id, capacity)

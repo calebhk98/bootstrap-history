@@ -31,7 +31,7 @@ from .mods import get_ordered_mods, load_mod_tree
 from .tree_source import load_base_tree
 from .mods_civ import (apply_mod_civilization, check_all_civilizations, check_starting_techs,
                        is_hidden, mod_civ_ids)
-from . import energy_prices, money_units, node_revenue
+from . import copy_visibility_defaults, energy_prices, money_units, node_revenue
 from sim.labour.api import wage_provider
 from .default_civilisation import default_civilisation_id
 from . import wage_schedule
@@ -317,6 +317,7 @@ def load(held_technology_ids: Optional[Iterable[str]] = None,
     check_all_civilizations(CIVDIR, manifests)
     tree = load_mod_tree(load_base_tree(), manifests, copy_base=False)
     nodes = {node["id"]: node for node in tree["nodes"]}
+    copy_visibility_defaults.apply_defaults(nodes.values(), copy_visibility_defaults.table())
     schedule = starting_schedule(civilization_id)
     wages = schedule.wages_per_hour()
     rate = schedule.money_per_labour_hour

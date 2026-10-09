@@ -446,6 +446,14 @@ class World(Protocol):
 		"""Every seat as an actor by seat id (they hold patents and shares like any actor)."""
 		...
 
+	def seat_margin(self, seat_id: str) -> float:
+		"""What a seat's concerns earn over their upkeep in a year; the margin its shareholders and an infringed holder draw on."""
+		...
+
+	def release_seat_staff(self, seat_id: str, trade: str, people: float) -> None:
+		"""People of a trade leave a seat's payroll (to found a rival, say)."""
+		...
+
 	# ---- What the home state asks of its people (sim/engine/agents_port_budget.py)
 
 	def country_strata(self) -> List[Any]:

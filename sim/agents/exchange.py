@@ -4,7 +4,8 @@ An offer is plain data `{"id", "from", "to", "give", "take", "year", "expires"}`
 receiver's record. Each side may hold `money`, `stores` ({material: tonnes}), `knowledge` ([node ids];
 the receiver learns, the giver keeps) and `concern` (a node id; the concern, with its opened year and
 size, moves), `patent` and `licence` ([node ids]; the right, or a licence to practise it, moves to the
-receiver; see patent.py) and `shares` ({actor id: share of its equity}; see joint_stock.py). Acceptance checks both sides again and moves nothing unless everything still holds.
+receiver; see patent.py) and `shares` ({actor id: share of its equity}; see joint_stock.py) and `royalty` ({node id: share of takings}; the
+share of a licensed concern's takings the licensee pays the holder every year, only for a node in `licence`). Acceptance checks both sides again and moves nothing unless everything still holds.
 """
 import math
 from typing import Any, Callable, Dict, List
@@ -13,7 +14,7 @@ from . import concern_ops, joint_stock, ledger, patent
 from .player_commands import CommandRejected
 from .tuning_exchange import OFFER_LIFETIME_YEARS
 
-SIDE_KEYS = ("money", "stores", "knowledge", "concern", "patent", "licence", "shares")
+SIDE_KEYS = ("money", "stores", "knowledge", "concern", "patent", "licence", "shares", "royalty")
 
 
 def clean_side(side: Any) -> Dict[str, Any]:
@@ -53,6 +54,16 @@ def clean_side(side: Any) -> Dict[str, Any]:
 			raise CommandRejected("%s is a list of node ids" % key)
 		if nodes:
 			clean[key] = sorted(set(nodes))
+	royalty = side.get("royalty") or {}
+	if not isinstance(royalty, dict):
+		raise CommandRejected("royalty is {node id: share of takings}")
+	rates = {str(node): float(rate) for node, rate in royalty.items()}
+	if any(node not in clean.get("licence", ()) for node in rates):
+		raise CommandRejected("a royalty goes with a licence for the same node")
+	if any(not math.isfinite(rate) or not 0.0 <= rate < 1.0 for rate in rates.values()):
+		raise CommandRejected("a royalty is a share of takings, from 0 up to but not including 1")
+	if any(rate > 0.0 for rate in rates.values()):
+		clean["royalty"] = {node: rate for node, rate in rates.items() if rate > 0.0}
 	if side.get("shares"):
 		try:
 			shares = joint_stock.clean_shares(side["shares"])
@@ -90,6 +101,8 @@ def receives_problem(taker: Any, incoming: Dict[str, Any], world: Any) -> str:
 			reason = patent.blocked_reason(world, taker, node_id)
 			if reason:
 				return "needs a licence: " + reason
+	if incoming.get("royalty") and taker.kind != "firm":
+		return "pays no royalty: only a firm has takings to share"
 	return joint_stock.receives_problem(taker, incoming.get("shares", {}))
 
 

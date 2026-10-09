@@ -2,7 +2,7 @@
 
 Who can own money, staff, know-how and works, and decide. Code:
 `sim/agents/`. Tests: `sim/tests/test_actors.py`. Tracking:
-`Complaints/103-add-independent-firms-imitation-entrepreneurship.md`.
+`Complaints/closed/103-add-independent-firms-imitation-entrepreneurship.md`.
 
 ## Class layout
 

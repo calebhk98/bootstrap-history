@@ -142,7 +142,7 @@ class Actor(Borrower):
 			if node_id in known or node_id in baseline or node_id in self.works:
 				continue
 			worth = self.imitation_worth(node_id, world)
-			if worth > 0:
+			if worth > 0 and imitation.in_sight(self.location(), node_id, world):
 				candidates.append((worth * world.exposure(node_id, self.location()), node_id))
 		candidates.sort(key=lambda item: (-item[0], item[1]))
 		options = []

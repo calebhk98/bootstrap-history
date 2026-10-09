@@ -92,6 +92,33 @@ paid = joint_stock.pay_dividends(Registry({"firm:2": issuer}), World())
 check("a firm pays its dividend to the seat that holds its shares", paid > 0.0 and abs(facade.money - before - paid) < 1e-6
       and entered, (paid, before, facade.money))
 
+class Shareholder:
+    actor_id = "firm:7"
+
+    def __init__(self):
+        self.record = ActorRecord(kind="firm", holdings={FIRST_SEAT_ID: 0.2})
+        self.money = 0.0
+
+    def credit(self, amount, purpose):
+        self.money += amount
+
+    def debit(self, amount, purpose):
+        self.money -= amount
+
+
+class MarginWorld(World):
+    def seat_margin(self, seat_id):
+        return 400.0
+
+
+# a seat that issued equity pays its shareholders a part of its margin
+holder = Shareholder()
+facade.capital = 1000.0
+before = facade.money
+paid = joint_stock.pay_dividends(Registry({"firm:7": holder}), MarginWorld())
+check("a seat that issued equity pays its shareholder by share of its margin", paid > 0.0 and abs(holder.money - paid) < 1e-9
+      and abs(before - facade.money - paid) < 1e-6, (paid, holder.money, before, facade.money))
+
 state.seats["second"] = SeatState(household=HouseholdState(capital=5.0), projects=ProjectsState(), founder=FounderState())
 seat.holdings.patents["lathe"] = {"granted": 10, "expires": 30, "licensees": []}
 loaded = deserialize_state(json.loads(json.dumps(serialize_state(state))), SimulationState)

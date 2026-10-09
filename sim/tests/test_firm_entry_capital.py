@@ -53,7 +53,7 @@ if firm is not None:
 	stratum = registry.actors["stratum:home:merchants"]
 	paid = sum(registry.actors[firm_id].record.income.get("founding stake", 0.0) for firm_id in founded)
 	check("the firms are funded from the stratum's purse", paid > 0.0 and abs(stratum.money - (1.0e6 - paid)) < 1e-6, (paid, stratum.money))
-	check("the firm names its founder", firm.record.plan.get("founder") == stratum.actor_id, firm.record.plan)
+	check("the firm names its founder", firm.record.plan.get("backer") == stratum.actor_id, firm.record.plan)
 	check("founding conserves money", abs(total_money(registry.actors.values()) - before) < 1e-6,
 		(before, total_money(registry.actors.values())))
 
@@ -93,7 +93,7 @@ world.rate = 0.05
 registry = make_registry(savings=0.0)
 founder = registry.actors["stratum:home:merchants"]
 weak = registry.add("firm:9", ActorRecord(kind="firm", money=500.0, founded_year=0, concerns={"shop"},
-	opened_year={"shop": 0}, last_margin=10.0, plan={"founder": founder.actor_id}))
+	opened_year={"shop": 0}, last_margin=10.0, plan={"backer": founder.actor_id}))
 before = total_money(registry.actors.values())
 check("a thin margin on a costly plant counts as weak", firm_exit.earns_less_than_plant_would_lend_for(weak, world))
 weak.record.last_margin = 1.0e6

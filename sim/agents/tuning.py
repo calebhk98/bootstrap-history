@@ -110,17 +110,18 @@ ENTRANT_EXPECTATION_ADJUSTMENT_SHARE = declare(
 	why="An entrant judges a market on the takings it expects, which follow the year's takings only in "
 		"part, so a one-year price spike does not draw a crowd of entrants (Complaints/reports/"
 		"agent-economy-review-round-four.md). How fast founders revise is not measured.")
-FOUNDER_WEALTH_MULTIPLE = declare(
-	"FOUNDER_WEALTH_MULTIPLE", 5.0, kind="temporary_heuristic",
-	unit="multiple of a stratum's average savings per person", source=None, confidence="D",
-	why="Who founds a firm is among the better off of their stratum, not its average member; stands "
-		"in for the spread of wealth within a body of people.")
+WEALTH_TAIL_INDEX = declare(
+	"WEALTH_TAIL_INDEX", 1.5, kind="temporary_heuristic",
+	unit="Pareto tail index of household savings within a stratum", source=None, confidence="D",
+	why="How unevenly a stratum's savings are spread over its households: the count holding at least a "
+		"sum falls as a power of it with this index (above 1; lower is more unequal). Stands in for a "
+		"measured distribution of wealth within each body of people, which the data does not give.")
 TACIT_SHARE_OF_COPYING = declare(
 	"TACIT_SHARE_OF_COPYING", 0.3, kind="temporary_heuristic",
 	unit="share of the copy chance", source=None, confidence="D",
 	why="How much of a copy's chance of success rests on reading, measuring and writing down what "
-		"is seen; a founder from an unlettered stratum loses that share. Stands in for declared "
-		"per-technique visibility (Complaint 376).")
+		"is seen; a founder from an unlettered stratum loses that share. Stands in for a measured "
+		"effect of literacy on copying; what is visible of each technique is declared in data.")
 ENTRY_EQUITY_SHARE = declare(
 	"ENTRY_EQUITY_SHARE", 0.3, kind="temporary_heuristic",
 	unit="share of an entrant's stake", source=None, confidence="D",

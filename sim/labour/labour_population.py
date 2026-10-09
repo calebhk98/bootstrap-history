@@ -325,7 +325,9 @@ class PopulationMixin:
         school_hours = ((household.trade_schools or {}).get(trade, 0.0)
                         * self._world.HOURS_PER_PERSON_YEAR)
         if trade in self._world.trades_absent:
-            return self._taught_trade_people(trade) * self._world.HOURS_PER_PERSON_YEAR
+            # firms draw from the same taught people, so what they employ is not on offer
+            return max(0.0, self._taught_trade_people(trade)
+                       - self._world.actor_staff_fte(trade)) * self._world.HOURS_PER_PERSON_YEAR
         cap = self._world.shared_answer(
             ("hiring_cap", trade), (self._world.civ.get("literacy_elite"), self._world.civ.get("literacy_general")),
             lambda: self._hiring_cap_before_actors(trade))
@@ -354,6 +356,10 @@ class PopulationMixin:
         if trade_data.literate_trades(trade_data.registry_of(self._world), (trade,)):
             return self.literate_capacity(trade)
         return self.market_supply(trade) / self._world.HOURS_PER_PERSON_YEAR
+
+    def taught_trade_people(self, trade):
+        """People in a trade only the founder teaches (see `_taught_trade_people`); what firms draw on too."""
+        return self._taught_trade_people(trade)
 
     def _taught_trade_people(self, trade):
         """People in a trade only you teach: your staff, their own students

@@ -14,6 +14,10 @@ from .agents_fake_world import FakeWorld, make_node
 
 class SpinWorld(FakeWorld):
 	patent = None
+	capacity = 1.0
+
+	def state_capacity(self):
+		return self.capacity
 
 	def entry_gross(self, node_id, rivals, entrants):
 		return float(self.nodes[node_id].get("rev", 0.0)) / (1.0 + rivals + entrants)
@@ -81,7 +85,10 @@ check("a player's concern can spawn a rival", len(spinoff.consider_spinoffs(regi
 # ---- what stops it ---------------------------------------------------------------------------------------
 registry, parent = make_parent()
 world.patent = {"holder": "player:z", "expires": 200, "licensees": []}
-check("a patent on the concern stops a rival", spinoff.consider_spinoffs(registry, world) == [])
+check("a patent a state fully enforces leaves a rival nothing to expect", spinoff.consider_spinoffs(registry, world) == [])
+world.capacity = 0.0
+check("a patent a state cannot enforce does not stop a rival", len(spinoff.consider_spinoffs(registry, world)) >= 1)
+world.capacity = 1.0
 world.patent = None
 world.output = 1.0
 check("capital too thin to fund the stake stops it", spinoff.consider_spinoffs(registry, world) == [])
@@ -92,3 +99,51 @@ world.nodes["mill"]["rev"] = 2000.0
 spinoff.SPINOFF_CHANCE_PER_STAFF_YEAR = 0.0
 check("no chance, no rival", spinoff.consider_spinoffs(registry, world) == [])
 spinoff.SPINOFF_CHANCE_PER_STAFF_YEAR = original_rate
+
+# ---- leavers come off the parent's staff -------------------------------------------------------------------
+spinoff.SPINOFF_CHANCE_PER_STAFF_YEAR = 1.0
+registry, parent = make_parent()
+founded = spinoff.consider_spinoffs(registry, world)
+check("each person who leaves the parent is one off its staff", abs(parent.workforce["labourer"] - (500.0 - len(founded))) < 1e-9, (parent.workforce, len(founded)))
+spinoff.SPINOFF_CHANCE_PER_STAFF_YEAR = original_rate
+
+
+# ---- the founder's own workers leave the founder too (a seat is a business like any) ----------------------
+class SeatParent:
+	"""A seat as an exchange sees it: an id, a kind, a payroll, concerns, an opened year and a record."""
+	kind = "household"
+	actor_id = "seat:first"
+
+	def __init__(self):
+		self.record = ActorRecord(kind="household", opened_year={"mill": 80})
+		self.workforce = {"labourer": 40.0}
+		self.concerns = {"mill"}
+		self.knowledge = {"gear", "mill"}
+		self.money = 1000.0
+
+	def opened_year_of(self, node_id, default):
+		return self.record.opened_year.get(node_id, default)
+
+
+class SeatWorld(SpinWorld):
+	released = None
+
+	def seat_parties(self):
+		return {"seat:first": self.seat}
+
+	def release_seat_staff(self, seat_id, trade, people):
+		self.released = (seat_id, trade, people)
+		self.seat.workforce[trade] -= people
+
+
+seat_world = SeatWorld(year=100)
+seat_world.nodes, seat_world.baseline, seat_world.output = world.nodes, world.baseline, 1.0e9
+seat_world.seat = SeatParent()
+registry = ActorRegistry(ActorsState(home_country="home"))
+spinoff.SPINOFF_CHANCE_PER_STAFF_YEAR = 1.0
+founded = spinoff.consider_spinoffs(registry, seat_world)
+spinoff.SPINOFF_CHANCE_PER_STAFF_YEAR = original_rate
+check("the founder's workers found rivals running the founder's concern", len(founded) >= 1
+	and registry.get(founded[0]).record.spun_off_from == "seat:first", founded)
+check("and leave the founder's payroll through the labour market", seat_world.released is not None
+	and seat_world.released[:2] == ("seat:first", "labourer") and seat_world.seat.workforce["labourer"] == 40.0 - len(founded))

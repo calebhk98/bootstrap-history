@@ -1,7 +1,8 @@
 """What it takes to found a firm: who funds the stake, what it must carry, how easily the founder copies."""
 from typing import Any, List, Optional, Tuple
 
-from .tuning import ENTRY_EQUITY_SHARE, ENTRANT_EXPECTATION_ADJUSTMENT_SHARE, FOUNDER_WEALTH_MULTIPLE, MANAGEMENT_SPAN_OF_CONTROL, TACIT_SHARE_OF_COPYING
+from . import household_wealth, ledger
+from .tuning import ENTRY_EQUITY_SHARE, ENTRANT_EXPECTATION_ADJUSTMENT_SHARE, MANAGEMENT_SPAN_OF_CONTROL, TACIT_SHARE_OF_COPYING
 
 
 def management_cost(world: Any, node_id: str, capacity: float = 1.0) -> float:
@@ -58,11 +59,17 @@ def expected_entry_gross(registry: Any, world: Any, node_id: str, rivals: float,
 
 
 def personal_capital(stratum: Any) -> float:
-	"""What one founder of this stratum can put up: a well-off member's share of its savings."""
-	members = stratum.record.members
-	if members <= 0.0 or stratum.money <= 0.0:
-		return 0.0
-	return min(stratum.money, stratum.money / members * FOUNDER_WEALTH_MULTIPLE)
+	"""What one founder of this stratum can put up: its best-placed household's free wealth."""
+	return household_wealth.personal_capital(stratum)
+
+
+def fund_from(founder: Any, firm: Any, amount: float) -> None:
+	"""A household of the founding stratum puts `amount` into the firm; the firm remembers which and how much."""
+	rank = household_wealth.commit(founder, amount)
+	ledger.transfer(founder, firm, amount, "founding stake")
+	firm.record.plan["backer"] = founder.actor_id
+	firm.record.plan["founder_household"] = rank
+	firm.record.plan["stake"] = amount
 
 
 def founder_candidates(registry: Any) -> List[Any]:
