@@ -41,20 +41,24 @@ class WorkforceIsTheCoresStateTests(unittest.TestCase):
         self.assertAlmostEqual(people_in(economy.record.workforce), before, places=6)
 
 
-def smith_to_labourer_wage_ratio(smith_training_years, years=45, settled_after=20):
-    """Mean over the settled years of the smith wage over the labourer wage in the town's labour area."""
+def smith_premium_in_floors(smith_training_years, years=30, settled_after=10):
+    """Mean over the settled years of how far the smith wage is over the labourer wage, in the labourer's
+    opening wage (the family's floor per hour). The labourer's ask falls with idle hands, so the ratio of
+    the two wages is not used: it blows up as the labourer wage nears nothing."""
     setup = fixture.small_setup()
     trades = {fixture.LABOURER: TradeSpec(fixture.LABOURER), fixture.MINER: TradeSpec(fixture.MINER, 1.0),
               fixture.SMITH: TradeSpec(fixture.SMITH, smith_training_years)}
     setup = dataclasses.replace(setup, trades=trades)
     economy = fixture.Economy(setup)
-    ratios = []
+    premiums, floor = [], None
     for year in range(years):
         economy.step(fixture.quiet_year(setup))
         wages = economy.record.workforce.wages[labour_area(fixture.TOWN)]
+        if floor is None:
+            floor = wages[fixture.LABOURER]
         if year >= settled_after and wages.get(fixture.SMITH) and wages.get(fixture.LABOURER):
-            ratios.append(wages[fixture.SMITH] / wages[fixture.LABOURER])
-    return sum(ratios) / len(ratios)
+            premiums.append((wages[fixture.SMITH] - wages[fixture.LABOURER]) / floor)
+    return sum(premiums) / len(premiums)
 
 
 class TrainingPremiumEmergesTests(unittest.TestCase):
@@ -62,13 +66,13 @@ class TrainingPremiumEmergesTests(unittest.TestCase):
     not because entrants will not take it up for the floor, and a trade anyone can take up does not."""
 
     def test_a_long_training_trade_pays_over_the_labourers_wage_once_settled(self):
-        self.assertGreater(smith_to_labourer_wage_ratio(5.0), 1.5)
+        self.assertGreater(smith_premium_in_floors(5.0), 1.0)
 
     def test_a_trade_needing_no_training_pays_what_the_labourer_gets(self):
-        self.assertLess(smith_to_labourer_wage_ratio(0.0), 1.1)
+        self.assertLess(smith_premium_in_floors(0.0), 0.2)
 
     def test_longer_training_keeps_a_higher_premium(self):
-        self.assertGreater(smith_to_labourer_wage_ratio(8.0), smith_to_labourer_wage_ratio(2.0))
+        self.assertGreater(smith_premium_in_floors(8.0), smith_premium_in_floors(2.0))
 
 
 if __name__ == "__main__":

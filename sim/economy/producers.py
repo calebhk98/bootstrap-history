@@ -22,7 +22,7 @@ from typing import Dict, List, Mapping, Optional, Tuple
 
 from sim.constants import declare
 
-from . import inventory, unit_cost
+from . import ask_raise, inventory, unit_cost
 from .protocols import MarketView
 from .types import (AgentId, Bid, EDGE_CONSUMPTION, EDGE_PRODUCTION, GoodId, GoodSpec, GoodsMove, LabourBid,
                     Offer, Recipe, TileId)
@@ -175,6 +175,9 @@ def next_expectations(producer: Producer, recipe: Recipe, view: MarketView) -> D
     if break_even is not None:
         for good in latest_prices:
             updated[good] += REGRESSIVE_EXPECTATION_WEIGHT * (updated[good] * break_even - updated[good])
+    for good in ask_raise.sold_out_outputs(producer, recipe, view):
+        if good in latest_prices:
+            updated[good] *= 1.0 + ask_raise.SOLD_OUT_ASK_RAISE_SHARE
     for good in unsold_outputs(producer, recipe, view):
         if good not in updated:
             continue  # never priced and nothing expected: there is no ask to mark down
