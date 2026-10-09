@@ -322,6 +322,7 @@ def _mine_rows_for_material(sim, material, workings, want):
         opened = working.get("opened_year")
         rows.append({
             "material": material,
+            "deposit": working.get("deposit"),
             "commissioned_year": opened if opened is not None else "unknown (from a save "
                                  "written before per-working tracking "
                                  "existed)",

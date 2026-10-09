@@ -8,12 +8,13 @@ import dataclasses
 import json
 import os
 
-from sim.economy.api import (EconomySetup, TradeSpec, currency_from_coin_standard, goods_specs, households,
+from sim.economy.api import (EconomySetup, SiteLimit, TradeSpec, currency_from_coin_standard, goods_specs, households,
                              recipes_from_production_data, taxes, tile_costs)
 from sim.world import demand, need_basket
 from sim.geography.api import layer_value, sea_freight, settlement, tiles_held
 from sim.labour import api as labour_api
 
+from . import economy_port_sites
 from .economy_port_stores import opening_store_values
 from .foreign_routes import SEA_MODE
 
@@ -81,6 +82,9 @@ def opening_values(sim):
         "carriage": dict(modes),
         "held_nodes": sorted(sim.held_and_running(include_starting=False)),
         "ways": {key: dict(way) for key, way in sorted(sim.state.economy.improvements.items())},
+        "site_limits": [[limit.recipe_id, limit.tile, limit.capacity_runs_per_year, limit.yield_factor]
+                        for limit in economy_port_sites.site_limits(
+                            sim, {entry_id: production[entry_id]["outputs"] for entry_id in allowed})],
         "stores": opening_store_values(sim.world_map, tile_ids, int(sim.cfg["start_year"])),
     }
 
@@ -170,6 +174,7 @@ def build_setup(sim, opening=None):
                       for recipe_id in recipes if production[recipe_id].get("land_hectare_years")},
         basket_by_tile=baskets_by_tile(basket, need_data, world_map, tile_ids), coin_per_unit=unit,
         world_map=world_map, improvements=dict(opening["ways"]),
+        site_limits=tuple(SiteLimit(*limit) for limit in opening["site_limits"]),
         opening_store_output={good: tuple(tuple(working) for working in entry["workings"])
                               for good, entry in sorted(opening["stores"].items()) if entry["workings"]},
         opening_store_gaps={good: entry["gap"] for good, entry in sorted(opening["stores"].items()) if entry["gap"]})

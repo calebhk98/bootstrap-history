@@ -3,21 +3,20 @@
 Any actor holding land tiles has a population per tile. Nothing here is
 specific to the founder; the founder's base is just one tile.
 
-[temporary_heuristic] A tile's share of its nation's people is its share of
-the nation's cultivable capacity (arable area times fertility), on the view
-that food limits where people can live. Tiles with no cultivable land hold
-nobody.
+A tile's share of its nation's people is its share of the nation's food
+potential: the sustainable food energy the tile's crops, herds, game, wild
+plants and fish give (`food_potential`, the land at a full stock), on the view
+that food limits where people can live. Tiles that give no food hold nobody.
 """
 import functools
 from typing import Dict, List, Optional, Tuple
 
-from sim.geography import tile_holdings
+from sim.geography import queries, tile_holdings
 from sim.geography.distance import haversine_km
 
 
 def _carrying_capacity(tile_id: str) -> float:
-    land = tile_holdings.tile_land(tile_id)
-    return land["arable_hectares"] * land["fertility_quality_multiplier"]
+    return float(queries.food_potential(tile_id)["total_kcal_per_year"])
 
 
 @functools.lru_cache(maxsize=64)

@@ -247,6 +247,7 @@ class ProjectStartPhaseMixin:
                 _ordered = min(want, self.state.household.capital * 0.25
                                / max(1.0, self._mine_capex(self.state.holdings.binding)))
                 _order = automation_audit.order_id("auto_mine", self.state.holdings.binding, self.state.scenario.year)
+                self.auto_prospect(self.state.holdings.binding)
                 self.open_mine(self.state.holdings.binding, _ordered, order=_order)
                 if _ordered > 0:
                     automation_audit.record(

@@ -296,6 +296,12 @@ Two fixes, usable separately or together:
                                                     years first. Pays at market prices and takes a
                                                     crew from the labour market for the build years;
                                                     built ways are what journeys and hauls route over.
+      {"cmd":"prospect","tile":"<tile>",           prospect a tile you hold for hidden deposits of a
+       "material":"coal","person_days":2000}       mined material (typed: `prospect <tile> coal
+                                                    2000`); pays prospectors and keeps the finds.
+                                                    A mine names a deposit you have found ("buy
+                                                    mine" takes an optional "deposit" id) and
+                                                    raises no more than the deposit allows.
       {"cmd":"map"} / {"cmd":"map","full":true}    the land you hold: "you_are_based_at",
                                                     "tiles" (name, region, terrain,
                                                     people, days_from_your_base,

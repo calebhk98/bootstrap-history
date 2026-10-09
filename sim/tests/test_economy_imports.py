@@ -8,7 +8,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 ECONOMY_DIR = os.path.join(ROOT, "sim", "economy")
 ENGINE_DIR = os.path.join(ROOT, "sim", "engine")
 ALLOWED_ENGINE_IMPORTERS = {"economy_port.py", "economy_port_setup.py", "economy_port_year.py", "economy_port_cargo.py",
-                           "economy_port_health.py"}
+                           "economy_port_health.py", "economy_port_sites.py"}
 
 
 def imported_modules(path):
