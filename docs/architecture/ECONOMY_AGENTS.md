@@ -85,7 +85,8 @@ debasing (struck coin) (`state_finance.py`, `state_policy.py`). Printing to cove
 with prices runs away.
 
 **Households save and lend.** Beyond their cash buffer they keep savings worth years of their income
-above subsistence, more when the real rate is high (`households_orders.savings_target`); what they hold
+above subsistence, more when the real rate is high, but never below a floor, so expected inflation reaching the rate does not
+make them spend their savings (`households_orders.savings_target`); what they hold
 beyond buffer and spending is offered to borrowers. Loans are claims in the lender's wealth
 (`credit_claims.py`): a default is the lender's loss and cuts its spending. Producers borrow for plant,
 merchants for cargo their cash cannot buy, households for a shortfall with income ahead.

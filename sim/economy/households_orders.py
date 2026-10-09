@@ -49,15 +49,25 @@ SAVINGS_RATE_RESPONSE_LIMIT = declare(
     unit="largest multiple of the savings target a high real rate draws", source=None, confidence="D",
     why="Saving rises with what it earns but not without bound; the bound stands in for the income effect "
         "that a model of lifetime choice would give.")
+SAVINGS_RESPONSE_FLOOR = declare(
+    "SAVINGS_RESPONSE_FLOOR", 1.0, kind="temporary_heuristic",
+    unit="share of the savings target kept when cash earns nothing in real terms", source=None,
+    confidence="D",
+    why="Households do not stop saving because expected inflation reaches the interest rate: they hold the "
+        "wealth in other forms (the durable store takes more of it then) and smooth. The floor stands in "
+        "for that portfolio choice and for the saving motives that do not depend on the return (dearth, "
+        "dowry, old age); no society's saving is measured against the real rate here.")
 
 
 def savings_target(surplus_income: float, interest_rate: float, expected_inflation: float) -> float:
     """Wealth a household wants to keep beyond its cash buffer: years of its income above subsistence,
-    more when saving pays more in real terms (bounded); none at subsistence."""
+    more when saving pays more in real terms (bounded, and never below a floor, since wealth held as goods
+    counts toward it); none at subsistence."""
     if surplus_income <= 0.0:
         return 0.0
     real_rate = max(0.0, interest_rate - expected_inflation)
-    response = min(SAVINGS_RATE_RESPONSE_LIMIT, real_rate / HOUSEHOLD_TIME_PREFERENCE)
+    response = max(SAVINGS_RESPONSE_FLOOR,
+                   min(SAVINGS_RATE_RESPONSE_LIMIT, real_rate / HOUSEHOLD_TIME_PREFERENCE))
     return SAVINGS_YEARS_OF_SURPLUS_INCOME * surplus_income * response
 
 
