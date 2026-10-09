@@ -1031,8 +1031,8 @@ def _explain_timing_and_risk(sim, nodes, node_id, node):
         # THE EXPECTED TOTAL, RETRIES INCLUDED - not the floor and the risk
         # left for the player to combine by hand. A 45%-risk, 4-year-floor
         # node is not a 4-year project: the bare geometric series 1/(1-p) is
-        # 1.82 attempts, and even that understates it once retry learning
-        # (RETRY_RISK_FLOOR/DECAY, RETRY_CALENDAR_CAP/DECAY - see
+        # 1.82 attempts, and even that understates it once learning from failures
+        # (the industry depth, RETRY_CALENDAR_CAP/DECAY - see
         # expected_calendar_years' own docstring in projects.py) starts
         # moving both the odds and the wait on every attempt after the
         # first. This must be computed through the SAME retry rule

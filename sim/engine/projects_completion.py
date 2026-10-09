@@ -189,6 +189,8 @@ class CompletionMixin:
             _yrs_before = projects.active[node_id]["yrs"]
             projects.failed_attempts[node_id] += 1
             _diagnosis = note_failure(self, node_id)
+            if failure_teaches(self, node_id):
+                self.learn_from_failed_attempt(node_id)
             claimed = node_id in projects.bountied
             # A bounty's claimant redoes the work: the poster's prize holds and
             # no hours or money fall on the poster.

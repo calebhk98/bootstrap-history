@@ -78,7 +78,15 @@ class VenturesMixin:
     VENTURE_HANDS_PER_REVENUE = money_units.PricedInLabourHours("VENTURE_HANDS_PER_REVENUE_LABOUR_HOURS")
 
     def venture_hands(self, node_id):
-        """(scholars, craftsmen) of your own that running this ties up."""
+        """(scholars, craftsmen) of your own that running this ties up. Once the staff hold a year's
+        running of the technique, the concern runs without its founder: the scholars drop out."""
+        scholars, craftsmen = self.venture_hands_founder_staffed(node_id)
+        if scholars > 0.0 and self.concern_runs_without_founder(node_id):
+            return 0.0, craftsmen
+        return scholars, craftsmen
+
+    def venture_hands_founder_staffed(self, node_id):
+        """(scholars, craftsmen) a concern of this kind needs while its founder still runs it."""
         node = self.nodes[node_id]
         # Capability institutions (school, workshop) and net-loss concerns
         # don't tie up supervision staff (avoids circular dependency).

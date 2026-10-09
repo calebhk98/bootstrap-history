@@ -121,11 +121,6 @@ TACIT_SHARE_OF_COPYING = declare(
 	why="How much of a copy's chance of success rests on reading, measuring and writing down what "
 		"is seen; a founder from an unlettered stratum loses that share. Stands in for declared "
 		"per-technique visibility (Complaint 376).")
-EXIT_GRACE_YEARS = declare(
-	"EXIT_GRACE_YEARS", 5, kind="temporary_heuristic",
-	unit="years", source=None, confidence="D",
-	why="Years after opening before a concern that earns less than its plant would lend for counts "
-		"against its firm; stands in for the ramp-up of a new concern.")
 ENTRY_EQUITY_SHARE = declare(
 	"ENTRY_EQUITY_SHARE", 0.3, kind="temporary_heuristic",
 	unit="share of an entrant's stake", source=None, confidence="D",

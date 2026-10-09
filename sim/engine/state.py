@@ -159,9 +159,9 @@ class ProjectsState:
 	done_year: Optional[Dict[str, int]] = None
 	operating: Set[str] = field(default_factory=set)
 	failed_attempts: DefaultDict[str, int] = field(default_factory=lambda: collections.defaultdict(int))
-	uninformed_failures: Dict[str, int] = field(default_factory=dict)
-	# technique -> retained worker-years of anyone running it (industry_depth.py)
-	industry_years: Dict[str, float] = field(default_factory=dict)
+	# trade -> technique -> retained worker-years of anyone running it (sim/labour/tenure.py, industry_depth.py)
+	tenure: Dict[str, Dict[str, float]] = field(default_factory=dict)
+	tenure_headcount: Dict[str, float] = field(default_factory=dict)
 	industry_seeded: bool = False
 	# technique -> worker-years a year the society's opening producers put in (industry_depth.py)
 	industry_opening_rate: Dict[str, float] = field(default_factory=dict)

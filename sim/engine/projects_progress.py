@@ -5,8 +5,7 @@ once a project is active this is everything about what happens to it each
 further year - project_hour_pace()/active_hours_still_wanted() and the
 hired-trade drawdown (lab_max_span, _effective_lab_left, trade_draw_plan,
 trade_demand_vs_supply, lab_year_draw) answer how many of the founder's own
-hours and how much of a hired trade's time it draws; _retry_risk_multiplier,
-_retry_calendar_retain, _control_relief_multiplier and effective_risk answer
+hours and how much of a hired trade's time it draws; _retry_calendar_retain, _control_relief_multiplier and effective_risk answer
 how likely THIS attempt is to fail, given how many times it already has; and
 calendar_floor/expected_calendar_years answer how many years, at best and on
 average across retries, an attempt of this kind takes. None of this decides
@@ -304,35 +303,6 @@ class ProgressMixin:
     # Risk (engineering lesson) and calendar (social groundwork) both decrease.
     # Both capped strictly short of zero; "should never be free".
     #
-    # RISK: Multiplies base risk, decaying geometrically toward RETRY_RISK_FLOOR.
-    RETRY_RISK_FLOOR = declare(
-        "RETRY_RISK_FLOOR", 0.40, kind="temporary_heuristic",
-        unit="fraction of the naive (bare node) risk", source=None,
-        confidence="D",
-        why="However many times a project has failed and learned from it, "
-            "the next attempt's risk never drops below this share of the "
-            "bare risk - understanding one failure mode does not mean "
-            "every failure mode is found, so retries should never be "
-            "free. Tuned floor, not measured against any real engineering "
-            "learning curve.")
-    RETRY_RISK_DECAY = declare(
-        "RETRY_RISK_DECAY", 0.6, kind="temporary_heuristic",
-        unit="fraction of the remaining risk closed per failure",
-        source=None, confidence="D",
-        why="Each failure closes 40% of the gap between the current risk "
-            "and RETRY_RISK_FLOOR, geometrically - the first failure buys "
-            "the most learning and every one after buys less. Tuned decay "
-            "rate, not fitted to any real learning-curve data.")
-
-    def _retry_risk_multiplier(self, node_id):
-        projects = self.state.projects
-        attempt_count = (projects.failed_attempts.get(node_id, 0)
-                         - projects.uninformed_failures.get(node_id, 0))
-        if attempt_count <= 0:
-            return 1.0
-        return (self.RETRY_RISK_FLOOR
-                + (1.0 - self.RETRY_RISK_FLOOR) * self.RETRY_RISK_DECAY ** attempt_count)
-
     # CALENDAR: Fraction of elapsed years banked toward next attempt, capped.
     # Retried programmes readier than last, never instant.
     RETRY_CALENDAR_CAP = declare(
@@ -355,8 +325,7 @@ class ProgressMixin:
             "curve.")
 
     def _retry_calendar_retain(self, node_id, attempt_index=None):
-        # See _retry_risk_multiplier's comment on `attempt_index` - same reason, same
-        # contract: the real failure count still drives every actual retry;
+        # The real failure count still drives every actual retry;
         # `attempt_index` only lets a projection ask about a hypothetical one.
         if attempt_index is None:
             attempt_index = self.state.projects.failed_attempts.get(node_id, 0)
@@ -393,8 +362,8 @@ class ProgressMixin:
 
     def effective_risk(self, node_id, precaution=None):
         """This node's actual chance of failing on its NEXT attempt, after
-        whatever retry-learning its past failures have already bought (see
-        _retry_risk_multiplier just above), whatever control-theory relief
+        whatever running the technique, and failing at it, has already taught
+        (the industry's depth, industry_depth.py), whatever control-theory relief
         a completed process controller has earned it (see
         _control_relief_multiplier just above) and whatever a bought
         precaution (a pilot plant, a redundant team) relieves. `precaution`
@@ -406,8 +375,8 @@ class ProgressMixin:
         node["risk"] - that number is no longer what the dice use.
         """
         bought = precaution_chosen(self, node_id) if precaution is None else precaution
-        # Retry learning and an established industry are one lesson: the stricter of the two, not their product.
-        learned = min(self._retry_risk_multiplier(node_id), depth_risk_multiplier(self.industry_depth(node_id)))
+        # Running the technique and failing at it are one stock of experience (industry_depth.py).
+        learned = depth_risk_multiplier(self.industry_depth(node_id))
         return (self.nodes[node_id]["risk"] * learned
                 * self._control_relief_multiplier(node_id)
                 * precaution_relief(self, node_id, bought))
@@ -489,16 +458,17 @@ class ProgressMixin:
 
         THE RISK TERM IS READ FROM effective_risk(node_id), NEVER REIMPLEMENTED.
         effective_risk is the one place allowed to know everything that
-        moves a node's odds - today that is only retry learning
-        (_retry_risk_multiplier), but it is the designated home for any
+        moves a node's odds - today the industry's depth, a
+        controller relief and a precaution, but it is the designated home for any
         OTHER multiplier this society's own choices might someday apply
         (a capability that makes a whole family of processes more
         reliable, say), and this function has no business knowing what
         those are or duplicating how they combine. To ask "what would
         attempt i+1's odds be" for a hypothetical future i without actually
         recording a failure, this stands in for "i failures so far" by
-        briefly setting failed_attempts[node_id] to i, reads effective_risk(node_id),
-        and restores the real count immediately after - in a `finally`, so
+        briefly setting failed_attempts[node_id] to i and adding i diagnosed failures
+        to the industry's stock (after_failed_attempts), reads effective_risk(node_id),
+        and restores both immediately after - in a `finally`, so
         a real failure count is never left clobbered even if something
         above raises. The calendar term has no such second multiplier (see
         _retry_calendar_retain) and is asked the same way, via its own `attempt_index`.
@@ -526,7 +496,6 @@ class ProgressMixin:
         floor = max(self.calendar_floor(node_id), self.payment_schedule_years(node_id))
         projects = self.state.projects
         initial_failed_attempts = projects.failed_attempts.get(node_id, 0)
-        initial_uninformed = projects.uninformed_failures.get(node_id, 0)
         teaches = failure_teaches(self, node_id)
         _had_key = node_id in projects.failed_attempts
         _active = projects.active.get(node_id) if node_id in projects.active else None
@@ -547,14 +516,12 @@ class ProgressMixin:
                 # Stand in for i failures, read effective_risk, restore in finally.
                 projects.failed_attempts[node_id] = attempt_index
                 # Failures nobody can diagnose add nothing to the learning.
-                projects.uninformed_failures[node_id] = initial_uninformed + (
-                    0 if teaches else attempt_index - initial_failed_attempts)
-                survive *= self.effective_risk(node_id)
+                with self.after_failed_attempts(node_id, attempt_index - initial_failed_attempts if teaches else 0):
+                    survive *= self.effective_risk(node_id)
                 attempt_index += 1
                 if survive < 1e-12 or attempt_index - initial_failed_attempts > _max_extra_attempts:
                     break
         finally:
-            projects.uninformed_failures[node_id] = initial_uninformed
             if _had_key:
                 projects.failed_attempts[node_id] = initial_failed_attempts
             else:

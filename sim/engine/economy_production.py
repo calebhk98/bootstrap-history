@@ -412,7 +412,7 @@ class ProductionMixin:
         carried to the techniques held now (concern_volume.py); callers apply the market's price."""
         economy = self.state.economy
         return (self.nodes[node_id]["rev"] * ramp * economy.output_factor * self.price_index
-                * self.concern_value_ratio(node_id))
+                * self.concern_value_ratio(node_id) * self.concern_learning_ratio(node_id))
 
     def ledger_concern_rows(self):
         """Yearly takings of every concern and practice that earns, by node

@@ -22,6 +22,9 @@ class EntryWorld(FakeWorld):
 	def plant_cost(self, node_id, actor, step):
 		return 1000.0 * step
 
+	def ramp(self, opened_year, node_id=None):
+		return min(1.0, (self.year - opened_year + 1) / 5.0)
+
 
 def make_world():
 	world = EntryWorld()

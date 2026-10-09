@@ -424,6 +424,16 @@ class AgentEconomy:
                     producer.capacity_runs * sum(recipe.labour_hours.values()) / economy.setup.working_hours_per_year)
         return years
 
+    def producers_by_good(self):
+        """{good: [(tile, recipe id)]} of the economy's producers for each good their recipes put out."""
+        economy = self.economy()
+        found = {}
+        for producer in sorted(economy_api.producers_of(economy).values(), key=lambda each: each.agent_id):
+            recipe = economy.setup.recipes.get(producer.recipe_id)
+            for good in (recipe.outputs if recipe is not None else ()):
+                found.setdefault(good, []).append((producer.tile, producer.recipe_id))
+        return found
+
     def wage_per_hour(self, trade, country=None):
         """The trade's wage in its labour markets; a trade no producer hires (soldiers, scribes) is paid
         what its training adds to the unskilled wage, so every wage stands on the same market."""
