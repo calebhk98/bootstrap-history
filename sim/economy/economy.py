@@ -7,6 +7,8 @@ import math
 from dataclasses import dataclass, field, replace
 from typing import Any, Dict, Mapping, Optional, Tuple
 
+from sim.world import capital_market
+
 from . import credit, credit_claims, currency, labour, land_market, lending, merchants_credit, producers, sites, state_budget, unit_cost
 from .credit_view import CreditView
 from .market_areas import AreaMap
@@ -258,7 +260,8 @@ class Economy:
         debt = credit_claims.principal_by_borrower(record.loans)
         loans, rate, _unmet = credit.clear(requests, funds, money, record.memory.rates.get(money), debt,
                                            credit_claims.arrears_history(record.loans, record.remembered_defaults),
-                                           year=view.year)
+                                           year=view.year,
+                                           rate_ceiling=capital_market.RATE_CEILING_SHARE * setup.opening_rate)
         record.book.transfer_many(credit.disbursements(loans))
         record.loans.extend(loans)
         for loan in loans:

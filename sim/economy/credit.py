@@ -60,11 +60,12 @@ def risk_premium(debt_after: float, collateral_value: float, arrears_history: fl
 def clear(requests: Sequence[LoanRequest], offers: Sequence[FundsOffer], currency: CurrencyId,
           last_rate: Optional[float], existing_debt_by_borrower: Mapping[AgentId, float],
           arrears_by_borrower: Optional[Mapping[AgentId, float]] = None, year: int = 0,
-          ) -> Tuple[List[Loan], float, List[LoanRequest]]:
+          rate_ceiling: Optional[float] = None) -> Tuple[List[Loan], float, List[LoanRequest]]:
     """Match funds with requests. Returns (new loans, base rate, requests left unmet).
 
     A request left unmet is returned with `amount` reduced to what it did not get. Each loan carries the
-    base rate plus its borrower's premium; `disbursements(loans)` gives the money to move.
+    base rate plus its borrower's premium; `disbursements(loans)` gives the money to move. The base rate
+    never passes `rate_ceiling`: when funds are scarce the rest is rationed, not priced without bound.
     """
     arrears_by_borrower = arrears_by_borrower or {}
     requests = sorted((request for request in requests if request.currency == currency and request.amount > 0),
@@ -84,6 +85,8 @@ def clear(requests: Sequence[LoanRequest], offers: Sequence[FundsOffer], currenc
         if lowest_ask is not None and base_rate < lowest_ask <= max(ceilings, default=-math.inf):
             # a sticky rate below every lender's ask would lend nothing while a borrower would pay it
             base_rate = lowest_ask
+    if rate_ceiling is not None:
+        base_rate = min(base_rate, rate_ceiling)
     lending =[offer for offer in offers if offer.minimum_rate <= base_rate]
     asking = [index for index, ceiling in enumerate(ceilings) if ceiling >= base_rate]
     supply = sum(offer.amount for offer in sorted(lending, key=lambda o: (o.lender, o.amount)))
