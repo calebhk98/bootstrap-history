@@ -198,6 +198,13 @@ class LabourMarket:
         scarcity = self.price_factor_after(trade, people) if people else self.price_factor(trade)
         return self._annual(trade, scarcity) * (1.0 + pay_premium)
 
+    def quote_annual_in(self, trade, country):
+        """Money one person-year of a trade costs in another country's labour markets, from the wages those
+        markets set (the agent economy's labour areas of that country); None while the country is not part of
+        the economy or its markets have no wage. The home country is `quote_annual`."""
+        answers = self._world.economy.agent_country(country)
+        return None if answers is None else answers.pay_per_person_year(trade)
+
     def unscarce_annual(self, trade):
         """One person-year of a trade before the local scarcity premium (a screen's 'wage table' figure)."""
         return self._annual(trade, 1.0)

@@ -54,16 +54,22 @@ class EconomyPort:
     def agent_price_ratio(self, materials):
         """The agent economy's price over the engine's own cost for a market, or None to use the engine's."""
         agent = self._answering_agent()
-        return None if agent is None else agent.price_ratio(materials, self._sim._material_prices())
+        return None if agent is None else agent.price_ratio(materials, self._sim._material_prices(), self._sim.acting_country())
 
     def agent_prices(self):
         """The agent economy's prices by good in coin, or None to use the engine's."""
         agent = self._answering_agent()
-        return None if agent is None else agent.answers()[0]
+        return None if agent is None else agent.answers(self._sim.acting_country())[0]
 
     def agent_wage_per_hour(self, trade):
+        """The wage in the acting seat's own labour markets: its country's when it is a partner country's seat."""
         agent = self._answering_agent()
-        return None if agent is None else agent.wage_per_hour(trade)
+        return None if agent is None else agent.wage_per_hour(trade, self._sim.acting_country())
+
+    def agent_country(self, country):
+        """What the agent economy answers for a partner country in it, or None (off, not in it, or no wage yet)."""
+        agent = self._answering_agent()
+        return None if agent is None else agent.country(country)
 
     def agent_land_rent_per_hectare(self):
         """Mean rent per hectare-year of the agent economy's land market, in coin; None while it is off."""

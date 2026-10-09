@@ -529,3 +529,30 @@ fixed number for the game. `credit_limit` falls as the market rate rises and is
 bounded by `lenders_will_still_advance_you`. The state's own debt and interest
 appear in the state's outlays (purpose `interest`; a negative purse is
 debt) and nowhere in the founder's replies.
+
+SEATS: SEVERAL PLAYERS IN ONE GAME
+-----------------------------------------------------------------------------
+A seat is one player: a household, what it has built and learned, its goal
+and its founder. A game starts with the first seat, and a civilisation file's
+`cast.seats` or the `join` command adds more.
+
+    {"cmd":"state","as":"second"}      any command, for the seat it names
+    {"cmd":"seats"}                    who is playing, and whose run has ended
+    {"cmd":"join","seat":"second"}     add a player (optional "kit", "country")
+    agent --seat second / play --seat second
+                                       the seat this process plays, when a
+                                       command names none
+
+Without `as` a command is for the session's seat, which is the first seat for
+every script written before seats existed. An unknown seat is a refusal that
+changes nothing. Reads about the world (`market`, `population`, `society`) are
+the same for every seat; reads about a holder (`state`, `available`, `log`,
+`money`) show the addressed seat. `seats` shows another seat's country and
+whether its run has ended, not its purse or its work.
+
+`step` advances the year for every seat still playing. A seat's run ends for
+that seat alone (a founder who dies with nobody to carry the work in a game
+with mortal founders, a denunciation, a fall): its commands that need a living
+holder are refused with the reason, and the others play on. The game is over
+when no seat is playing, or every seat still playing has reached its goal. In
+a game with immortal founders no founder dies, so this never arises.

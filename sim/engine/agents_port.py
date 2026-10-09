@@ -7,7 +7,7 @@ import hashlib
 import random
 from typing import Any, Dict, List, Optional, Set
 
-from sim.agents.api import OBSERVATION_RANGE_KM, payroll, supply
+from sim.agents.api import OBSERVATION_RANGE_KM, SECRET_EXPOSURE, payroll, supply
 
 from .agents_port_budget import BudgetView
 from .agents_port_capacity import CapacityView
@@ -19,6 +19,7 @@ from .agents_port_site import SiteView
 from .agents_port_cast import CastView
 from .agents_port_coinage import CoinageView
 from .agents_port_trade import TradeView
+from . import seat_builds, visibility as visibility_of
 from .data import TRADES_ABSENT
 from .industry_depth import RAMP_SHARE_AT_FULL_DEPTH
 
@@ -70,25 +71,31 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, DisclosureView, Cap
 		return self._once("baseline", lambda: set(self._sim.state.projects.granted))
 
 	def founder_inventions(self) -> List[str]:
-		"""Everything the founder has completed that the society did not have."""
-		def compute() -> List[str]:
-			projects = self._sim.state.projects
-			return sorted(projects.done - projects.granted)
-		return self._once("inventions", compute)
+		"""Everything any seat has completed that the society did not have."""
+		return self._once("inventions", lambda: sorted(seat_builds.built_by_any(self._sim.state.seats)))
 
 	def demonstrated(self) -> Set[str]:
 		return self._once("demonstrated", lambda: set(self.founder_inventions()))
 
 	def is_public(self, node_id: str) -> bool:
-		return node_id in self._sim.state.projects.operating
+		"""Whether some seat runs it as a concern, where anyone can see it."""
+		return seat_builds.operating_anywhere(self._sim.state.seats, node_id)
 
 	def exposure(self, node_id: str, location: Optional[str]) -> float:
-		"""How much of an invention an observer at `location` can learn, 0..1."""
-		visibility = self.base_visibility(node_id)
-		if location is None:
-			return visibility
-		distance = self.distance_km(location, None)  # type: ignore[attr-defined]
-		return visibility / (1.0 + distance / OBSERVATION_RANGE_KM)
+		"""How much of an invention an observer at `location` can learn, 0..1: the best view of any seat
+		that built it, from that seat's own place (the acting seat's when no seat built it)."""
+		sim = self._sim
+		builders = seat_builds.builders_of(sim.state.seats, node_id) or [sim.state.acting_seat]
+		public = self.is_public(node_id)
+		best = 0.0
+		for seat_id in builders:
+			mode = (sim.state.seats[seat_id].projects.disclosures.get(node_id) or {}).get("mode", "default")
+			visibility = visibility_of.base_visibility(mode, public, sim.copy_difficulty(node_id), SECRET_EXPOSURE)
+			if location is not None:
+				visibility = visibility_of.seen_from(
+					visibility, self.distance_km(location, sim.seat_place(seat_id)), OBSERVATION_RANGE_KM)
+			best = max(best, visibility)
+		return best
 
 	def state_weights(self) -> Dict[str, float]:
 		return self._once("weights", self._sim.state_trait_weights)
@@ -152,7 +159,7 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, DisclosureView, Cap
 		if not sim.labour.trade_available(trade) or trade in TRADES_ABSENT:
 			return None
 		exist = sim.labour.people_who_exist(trade)
-		founder = sim.state.household.employees.get(trade, 0.0)
+		founder = sum(seat.household.employees.get(trade, 0.0) for seat in sim.state.seats.values())
 		return max(0.0, exist - founder - sim.actors.staff_fte(trade, excluding=actor_id))
 
 	def copy_cost(self, node_id: str) -> float:
@@ -186,7 +193,15 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, DisclosureView, Cap
 		return self.concern_gross(node_id) - self.upkeep(node_id)
 
 	def proven_concerns(self) -> List[str]:
-		"""Founder concerns that have been running at a profit long enough to be believed."""
+		"""Concerns any seat has run at a profit long enough to be believed."""
+		sim = self._sim
+		proven: Set[str] = set()
+		for seat_id in sim.playing_seats() or [sim.state.acting_seat]:
+			with sim.act_as(seat_id):
+				proven.update(self._proven_concerns_of_acting_seat())
+		return sorted(proven)
+
+	def _proven_concerns_of_acting_seat(self) -> List[str]:
 		sim = self._sim
 		projects = sim.state.projects
 		proven = []

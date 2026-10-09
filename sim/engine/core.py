@@ -65,6 +65,12 @@ from .geography_port import GeographyPortMixin
 from .labour_port import LabourPortMixin
 from .projects import ProjectsMixin
 from .core_seats import SeatMixin
+from .year_run import run_year
+from .seat_run import SeatRunMixin
+from .seat_builds import SeatBuildsMixin
+from .seat_sight import SeatSightMixin
+from .shock_year import ShockYearMixin
+from .seat_defaults import default_policy
 from .ways import WaysMixin
 from .held_works import HeldWorksMixin
 from .works import WorksMixin
@@ -230,7 +236,7 @@ YEARLY_RECORD_LIMIT = 300
 
 
 class Sim(RealPriceRatiosMixin, CoinRevaluationMixin, WageMarketRatiosMixin, MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IndustryDepthMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, LabourPortMixin,
-          ProjectsMixin, SeatMixin, WaysMixin, WorksMixin, HeldWorksMixin, ActionLossMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, InterestGroupsMixin, ForwardingPropertiesMixin, GoalsMixin,
+          ProjectsMixin, SeatMixin, SeatRunMixin, SeatBuildsMixin, SeatSightMixin, ShockYearMixin, WaysMixin, WorksMixin, HeldWorksMixin, ActionLossMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, InterestGroupsMixin, ForwardingPropertiesMixin, GoalsMixin,
           StepPhasesMixin, LivingStockMixin, CoinHoardMixin, CoinCarriageMixin, TheftChargeMixin,
           LivingStockTradeMixin, LivingStockYearlyMixin, FoodSupplyMixin, DefenceStoresMixin, EconomyPortMixin, NodeRederiveMixin):
     STATE_CAPACITY_DEFAULT = declare(
@@ -502,47 +508,7 @@ class Sim(RealPriceRatiosMixin, CoinRevaluationMixin, WageMarketRatiosMixin, Mec
         # docstring: one key, auto_court_heir, is written for succession after
         # a mortal owner's death, and the rest of the dict is not worth
         # splitting away from it for that.
-        self.policy = {
-            "auto_hire":     not manual,   # grow the staff toward what you can support
-            # ON for the optimizer, OFF for a player: automatically buying
-            # people on a player's behalf, in a game they are playing by
-            # hand, with no prompt and no line in the log, is not modelling
-            # slavery, it is lying to the player about what is in their
-            # household. An unattended optimizer run that says "bought 6
-            # people for the workshop" in its log models the thing honestly.
-            "auto_buy_people": not manual,
-            "auto_manumit":  not manual,
-            "auto_train":    not manual,   # teach trades this society does not have
-            "auto_mine":     not manual,   # sink shafts when a material binds
-            "auto_forest":   not manual,   # buy coppice when charcoal binds
-            "auto_mothball": True,         # stop working what you cannot pay for
-            # OFF FOR A PLAYER, like every other automation, and on for the
-            # optimizer, which the long civilisation runs are calibrated
-            # against. This is the most consequential thing the game could
-            # do without being asked: it discards technologies you built,
-            # which under fog are the only score there is, so defaulting it
-            # on for a player would silently delete their work. Nothing
-            # stops a player shedding a loss-maker by hand - `mothball` does
-            # exactly that, and gets it back with `restore`.
-            "auto_shed":     not manual,
-            # Open every concern that plainly pays for itself. On for the
-            # optimizer, whose long runs are calibrated against a household
-            # that does run what it builds, and off for a player, for whom
-            # deciding what to actually operate is the point.
-            "auto_open":     not manual,
-            "auto_court_heir": not manual,  # court a dead patron's successor
-            # Buy a job from an outside shop when a few pairs of hands are the
-            # only thing standing between you and something you need.
-            "auto_commission": not manual,
-            "auto_bribe":    not manual,   # pay your way out of a scandal
-            # Rehire a specialist foreman an open concern has lost. Off by
-            # default in manual play, and off unattended too: the optimizer's
-            # auto_hire already replaces trades that concerns draw on.
-            "auto_replace_foreman": False,
-            # Keep `reserve` spare craftsmen and scholars above what open
-            # concerns hold, hiring and housing them each year. Off always.
-            "reserve_staff": False,
-        }
+        self.policy = default_policy(manual)
         # World-level "last time I said X" trackers; household ones live on HouseholdState.
         # THE FOLLOWING EIGHT FIELDS ARE BIOGRAPHICAL TO ONE MORTAL PERSON, not
         # to a household in general, and stay on `Sim` for exactly that reason
@@ -611,6 +577,7 @@ class Sim(RealPriceRatiosMixin, CoinRevaluationMixin, WageMarketRatiosMixin, Mec
             # own figures answer, and nothing computed from them may stay cached afterwards
             self.economy.open_agent()
             self._done_changed()
+        self.join_cast_seats()
 
     def _reconnect_state_hooks(self):
         """Reconnect transient cache state, version counters, and invalidating wrappers after save/load."""
@@ -2115,62 +2082,8 @@ class Sim(RealPriceRatiosMixin, CoinRevaluationMixin, WageMarketRatiosMixin, Mec
             "measured.")
 
     def step(self):
-        # WHERE SCANDAL STOOD WHEN THE PLAYER LAST LOOKED. `state` prints the
-        # chance of being denounced from the CURRENT scandal, and scandal
-        # moves DURING the step: without this snapshot, a player could read
-        # "0% chance of being denounced this year", press step once, and see
-        # "RUN ENDS: denounced: as a sorcerer" in the same batch - not
-        # because the earlier figure was wrong, but because it would be
-        # answering about a year that had already gone. A player needs the
-        # direction as well as the level, and this is the only place that
-        # knows both.
-        self.state.household.scandal_last_year = self.state.household.scandal
-        automation_audit.begin_year(self)
-        self.refresh_derived_nodes()
-        # open every book entry at the year's start, so a read before the first step cannot open one at another state
-        self._open_market_book()
-
-        # step() is a readable sequence of phase calls, in the same order the
-        # phases always ran in; the phases themselves are below, and each still
-        # reads and writes exactly the self.* state it always did. Only a
-        # handful of values flow forward between phases as arguments/returns
-        # rather than through self.*: pool and hired_left (start_projects into
-        # progress), and remaining/remaining_after_projects/hours_effective_total
-        # (progress into wage_fallback and reputation).
-        self._step_apprenticeships()          # 0.  people whose apprenticeship ended
-        self._step_staff()                     # 1.  staff, attrition
-        self._step_money()                     # 2.  money (and 2c. threshold goals)
-        if self._step_dated_shocks():          # 3.  dated shocks
-            if self.debug:
-                self.verify_step_invariants()
-            return
-        self._step_teach_trades()              # 4a. teach the trades this society does not have
-        self._step_standing_work_directive()   # 4a(ii). the standing "work" directive
-        pool, hired_left = self._step_start_projects()   # 4b. start new projects
-        self._step_materials()                 # 4c. materials
-        # 5. progress, director hours
-        remaining, remaining_after_projects, hours_effective_total = (
-            self._step_progress(pool, hired_left))
-        # 5b. if there is no work and no money, take a job
-        remaining = self._step_wage_fallback(remaining)
-        # 6. reputation, familiarity, protection, scandal
-        self._step_reputation(pool, remaining, remaining_after_projects, hours_effective_total)
-        self._step_bondage()                   # 6b. serving out a debt
-        self._step_founder_mortality()          # 7. founder mortality
-        self._step_market()                    # 7b. the year's market closes
-        self.step_living_stock()               # 7c. held stock breeds and dies
-        self.step_wild_stock()                 # 7c(ii). hunters thin the game, the game regrows
-        self.step_defence_stores()             # 7d. threats spend the magazines, works restock them
-
-        # 8. random events
-        if self.events and not self.state.founder.dead_reason:
-            self._random_events(self.state.scenario.year)
-
-        # The state's levy, the market and the shrinking of standing all move the purse after the money phase checked it.
-        self.enforce_credit_limit(self.state.scenario.year)
-        self.state.scenario.year += 1
-        if self.debug:
-            self.verify_step_invariants()
+        """Advance every seat one year (the order and what runs once or per seat: year_run.py)."""
+        run_year(self)
 
     # ---- THE YEAR'S PHASES ------------------------------------------------
     # _step_apprenticeships through _step_founder_mortality - the fourteen
@@ -2262,7 +2175,7 @@ class Sim(RealPriceRatiosMixin, CoinRevaluationMixin, WageMarketRatiosMixin, Mec
         self.state.projects.done_year = {}
         horizon = horizon or self.cfg["horizon_years"]
         end = self.cfg["start_year"] + horizon
-        while self.state.scenario.year < end and not self.state.founder.dead_reason and self.state.seat_progress.goal_year is None:
+        while self.state.scenario.year < end and not self.run_over():
             self.step()
         return self
 

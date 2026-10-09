@@ -78,6 +78,7 @@ class TileSpec:
     arable_fraction: float
     fertility: float
     climate_class: str = ""          # a climate label from data (Koppen); empty when not known
+    country: str = ""                # the civilisation whose people live and hold techniques here; empty is the home one
 
 
 @dataclass(frozen=True)

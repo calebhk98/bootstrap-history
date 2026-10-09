@@ -5,10 +5,10 @@ source of state pressure: what built defences take off it (_military_war_relief;
 relief itself is in hazard_relief.py), how long a hedge has left to be built
 (_calendar_floor_remaining, hazard_advice, hedge_first_steps), when it
 lands (_yr_words, hazard_timeline), what a loss does to the household
-(lose_capital, _resolve_hazard_condition, _shocks, _random_events,
+(lose_capital, _resolve_hazard_condition, _random_events,
 _loss_words), and the one path out of a run (_catastrophe).
 
-`_shocks` is a thin dispatcher over one method per hazard kind
+`_shocks` (shock_year.py) is a dispatcher over one method per hazard kind
 (_shock_staff_loss, _shock_sack_chance, _shock_output_factor,
 _shock_real_erosion, _shock_values). Each of those methods' self.rng draws
 must stay in the exact order they would run in if `_shocks` tested every
@@ -18,8 +18,8 @@ byte-for-byte if draw order is preserved. These are methods of Sim; they
 are a mixin only so that they can live in a file of their own.
 """
 from sim.constants import declare
-from . import cause_book, money_units
-from .data import (closure, critical_path, money_word)
+from . import money_units
+from .data import closure, critical_path
 from . import event_causes
 from .hazard_window import hazards_not_yet_past
 from sim.agents.api import edges, ledger
@@ -549,106 +549,6 @@ class HazardsMixin:
 
     # -- driver -------------------------------------------------------------
 
-    def _shocks(self, year):
-        """Dated catastrophes, read from the CIVILIZATION file.
-
-        Rome gets the Antonine plague and the third century crisis. England 1300
-        gets the Great Famine and the Black Death. The Mexica get the contact
-        epidemics, which are the most severe hazard in the whole directory and
-        are not a fair fight. None of it is hardcoded here any more.
-
-        One method per hazard kind (staff_loss, sack_chance, output_factor,
-        real_erosion, values), called here in this same order for every hazard
-        whose window is open this year. This order is load-bearing: it fixes
-        the number and sequence of self.rng draws this method (and
-        everything it calls) makes, and save/load and the fingerprint tests
-        depend on that sequence reproducing byte-for-byte.
-        """
-        for hazard in self.civ.get("hazards", []):
-            hazard_start, hazard_end = hazard.get("years", [0, 0])
-            if not (hazard_start <= year <= hazard_end):
-                continue
-            hazard = self._apply_event_causes(hazard, year, hazard_start)
-            if hazard is None:
-                continue
-            hazard = self._resolve_hazard_condition(hazard, year, hazard_start)
-            self._shock_staff_loss(hazard, year)
-            self._shock_sack_chance(hazard, year)
-            self._shock_output_factor(hazard, year)
-            self._shock_real_erosion(hazard, year)
-            self._shock_values(hazard, year, hazard_start, hazard_end)
-
-    def _shock_staff_loss(self, hazard, year):
-        """The staff_loss branch of _shocks: disease and famine years.
-
-        The self.rng draws here must stay in the exact order _shocks calls
-        this in relative to the other hazard-kind methods - see _shocks's
-        own docstring.
-        """
-        rng = self.rng
-        if "staff_loss" in hazard and rng.random() < self.STAFF_LOSS_HAZARD_ANNUAL_CHANCE:
-            historical = hazard["staff_loss"]
-            # National prevalence after the country's own medicine; the
-            # household is exposed to this, not to the historical rate. Its
-            # own mitigations cut its risk only where the nation has not
-            # adopted them.
-            exposure = self.staff_loss_exposure(historical)
-            med_relief, raw = exposure["national_relief"], exposure["before_defences"]
-            relief, why, loss = exposure["relief"], exposure["why"], exposure["loss"]
-            household = self.state.household
-            _people_before = (household.scholars + household.artisans
-                              + sum(household.employees.values()))
-            _staff_before = self.labour.staff_snapshot()
-            self.apply_staff_survival(1 - loss)
-            household.directors_extra *= (1 - loss)
-            self.labour.log_staff_reduction(hazard.get("name", "a plague"), _staff_before)
-            # Cash goes with the trade that stopped.
-            cash = self.lose_capital(loss * self.PLAGUE_CASH_LOSS_SHARE, "plague losses")
-            _wage_index_before = self.wage_index
-            self._apply_population_mortality_shock(raw)
-            cause_book.record_wage_shock(self, hazard.get("name", "a plague"), _wage_index_before)
-            # Refresh population and wage screens now, not at year end.
-            self._refresh_demographic_indexes(year)
-            _hit = []
-            if _people_before > 0.05:
-                if why and relief <= 0.25:
-                    _hit.append("staff -%d%%, held off almost entirely "
-                                "by what you built (%s)"
-                                % (loss * 100, "; ".join(why)))
-                elif why and relief <= 0.75:
-                    _hit.append("staff -%d%% (softened by %s)"
-                                % (loss * 100, "; ".join(why)))
-                else:
-                    _hit.append("staff -%d%%" % (loss * 100))
-            if cash > 0.5:
-                _hit.append("%s %s of takings lost while the trade stood idle"
-                            % ("{:,.0f}".format(cash), money_word(self.civ)))
-            if not _hit:
-                _hit.append("you had nothing it could take")
-            msg = "%s: %s" % (hazard.get("name", "hazard"), ", ".join(_hit))
-            # Separate sentence so a spared household does not read the national toll as its own.
-            if raw > 0.01:
-                msg += (". Empire-wide, population -%d%%%s - wages (and "
-                        "everything paid in them) stay dear until the "
-                        "population does, either way"
-                        % (raw * 100,
-                           (" (the country's own public health has "
-                            "spread far enough to hold this below the "
-                            "%d%% this would otherwise have been - "
-                            "%d%% softer; that is medical work you "
-                            "built (%s) spreading through the country)"
-                            % (round(historical * 100),
-                               round(med_relief * 100),
-                               self._national_sources_words()))
-                           if med_relief > 0.02 else ""))
-            elif med_relief > 0.02 and historical > 0.01:
-                msg += (". Empire-wide: the country's own public health "
-                        "(medical work you built: %s) has spread far enough that "
-                        "this, historically a %d%% loss, barely "
-                        "registers"
-                        % (self._national_sources_words(), round(historical * 100)))
-            self.state.household.log.append((year, msg))
-
     def _shock_sack_chance(self, hazard, year):
         """The sack_chance branch of _shocks: a site sacked.
 
@@ -781,95 +681,6 @@ class HazardsMixin:
                 "shape of it" % _on_road)
                if _on_road else "")))
 
-    def _shock_output_factor(self, hazard, year):
-        """The output_factor branch of _shocks: wars and the administrative
-        aftermath of one.
-
-        Makes no self.rng draws.
-        """
-        if "output_factor" in hazard:
-            relief, why = self.hazard_relief("output_factor")
-            # Self-sufficiency means less of your income was ever coming
-            # through the thing the war cut.
-            floor = self.output_floor(hazard["output_factor"], relief)
-            economy = self.state.economy
-            scenario = self.state.scenario
-            before = economy.output_factor
-            economy.output_factor = min(economy.output_factor, floor)
-            # Log only on first hit or after 20 years: avoid noise on recovery.
-            said = scenario._said_output or {}
-            key = hazard.get("name", "crisis")
-            if before > economy.output_factor and year - said.get(key, -99) >= 20:
-                said[key] = year
-                scenario._said_output = said
-                self.state.household.log.append((year, "%s: trade and output fall to %d%% of "
-                                     "normal%s"
-                                 % (key, economy.output_factor * 100,
-                                    " (your own strength holds off worse: %s)"
-                                    % "; ".join(why[:3]) if why else "")))
-
-    def _shock_real_erosion(self, hazard, year):
-        """The real_erosion branch of _shocks: currency debasement.
-
-        Makes no self.rng draws.
-        """
-        if "real_erosion" in hazard:
-            relief, why = self.hazard_relief("real_erosion")
-            economy = self.state.economy
-            scenario = self.state.scenario
-            household = self.state.household
-            economy.money_real *= (1 - hazard["real_erosion"])
-            bite = hazard["real_erosion"] * self.REAL_EROSION_CASH_LOSS_SHARE * relief
-            had = max(0.0, household.capital)
-            self.lose_capital(bite, "debasement and real erosion")
-            lost = had - max(0.0, household.capital)
-            if not scenario._said_debasement or year - scenario._said_debasement >= 15:
-                scenario._said_debasement = year
-                # Report the money lost held, not quoted costs (which reflect reality).
-                household.log.append((year, "%s: the coin is worth %d%% less than it "
-                                     "was%s. Quoted costs are what a thing "
-                                     "really takes to make, so they do not "
-                                     "move; what debases is the money in "
-                                     "your chest, and this year it took %s%s"
-                                 % (hazard.get("name", "debasement"),
-                                    (1 - economy.money_real) * 100,
-                                    "; you feel less of it (%s)" % "; ".join(why)
-                                    if why else "",
-                                    "{:,.0f}".format(lost)
-                                    if lost > 0.5 else "nothing, because you "
-                                    "were holding none",
-                                    " denarii" if lost > 0.5 else "")))
-
-    def _shock_values(self, hazard, year, hazard_start, hazard_end):
-        """The values branch of _shocks: gradual shifts in what the society
-        believes, spread evenly across the hazard's own window.
-
-        Makes no self.rng draws.
-        """
-        if "values" in hazard:
-            # Like apply_tech_effects but spread across years: 1/N of total delta yearly.
-            # Single-event tech logs once; multi-year hazard should shift gradually.
-            span = max(1, int(hazard_end) - int(hazard_start) + 1)
-            changed = {}
-            for field, total_delta in hazard["values"].items():
-                if field.startswith("_") or not isinstance(total_delta, (int, float)):
-                    continue
-                if field not in self.value_weights:
-                    continue
-                before = self.value_weights[field]
-                self.value_weights[field] = max(
-                    self.VALUE_WEIGHT_FLOOR,
-                    min(self.VALUE_WEIGHT_CEILING, before + total_delta / span))
-                if abs(self.value_weights[field] - before) > 1e-9:
-                    changed[field] = self.value_weights[field]
-            # Log at start, end, and every 10 years: visible change without noise.
-            if changed and (year == hazard_start or year == hazard_end or (year - hazard_start) % 10 == 0):
-                self.state.household.log.append((year, "%s: the society's values are shifting (%s)"
-                                 % (hazard.get("name", "hazard"),
-                                    ", ".join("%s now %.2f" % (field, value)
-                                              for field, value in sorted(changed.items())))))
-
-
     PATRON_DEATH_ANNUAL_CHANCE = declare(
         "PATRON_DEATH_ANNUAL_CHANCE", 0.05, kind="temporary_heuristic",
         unit="dimensionless (yearly probability, local patron only)",
@@ -940,7 +751,13 @@ class HazardsMixin:
             "portability of each kind of holding, guarding, visibility and "
             "the state's order. Tuned, not measured.")
 
-    def _random_events(self, year):
+    def _random_events(self, year, seats=None):
+        """Each seat in play meets its own patron's death, fire and banditry, on its own dice."""
+        for seat_id in (self.playing_seats() if seats is None else seats):
+            with self.act_as(seat_id):
+                self._random_events_for_seat(year)
+
+    def _random_events_for_seat(self, year):
         rng = self.rng
         # Patron death rolls once per cooldown, not every year.
         founder = self.state.founder

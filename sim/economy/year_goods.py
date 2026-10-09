@@ -233,7 +233,7 @@ def _produce_and_offer(setup, record, view, producer_id, plan, in_kind, order_bo
 
 
 def _tax_in_kind(setup, record, producer, recipe, forms, ledger) -> None:
-    if not forms:
+    if not forms or setup.country_of(producer.tile) != setup.civ_id:
         return
     output = {(producer.agent_id, good): ledger.output.get((producer.agent_id, good), 0.0) for good in recipe.outputs}
     held = {(producer.agent_id, good): record.book.stock(producer.agent_id, good, producer.tile)

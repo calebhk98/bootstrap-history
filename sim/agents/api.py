@@ -16,6 +16,7 @@ from .saving import SAVING_SHARE_OF_SURPLUS
 from .sector import CONCESSION_PREFIX, Sector, sector_key
 from .tuning_coinage import COIN_RESTRIKE_SHARE_PER_YEAR
 from .tuning import MANAGEMENT_SPAN_EXPONENT, OBSERVATION_RANGE_KM, PROOF_YEARS, SECRET_EXPOSURE
+from .tuning_player import PLAYER_VISIBLE_EXPOSURE
 from .tuning_spending import THREAT_ARMY_RESPONSE
 from .budget import SOLDIER_TRADE
 from .budget_lines import DOLE_MATERIAL
@@ -40,7 +41,7 @@ __all__ = ["demand_answer", "Actor", "RecordedActor", "Household", "HouseholdPar
            "CapitalMarketRecord", "CastEntry", "CountryProfile", "register_actor_kind",
            "register_spawner", "register_world_scope", "edges", "payroll", "ledger", "licence", "supply", "imitation", "joint_stock", "revenue",
            "SAVING_SHARE_OF_SURPLUS", "CONCESSION_PREFIX", "Sector", "sector_key",
-           "MANAGEMENT_SPAN_EXPONENT", "OBSERVATION_RANGE_KM", "PROOF_YEARS", "SECRET_EXPOSURE",
+           "MANAGEMENT_SPAN_EXPONENT", "OBSERVATION_RANGE_KM", "PLAYER_VISIBLE_EXPOSURE", "PROOF_YEARS", "SECRET_EXPOSURE",
            "THREAT_ARMY_RESPONSE", "SOLDIER_TRADE", "DOLE_MATERIAL", "FOOD_NEED", "cast_from_civilisations", "profile_from_civilisation", "seed_cast",
            "CountryWorld", "ForeignGovernment", "Player", "Stratum", "stratum_id", "seed_strata",
            "strata_definitions", "strata_spawner", "CommandRejected", "register_command", "exchange", "Trader",

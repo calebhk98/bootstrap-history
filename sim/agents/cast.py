@@ -2,7 +2,8 @@
 
 Pure functions. A civilisation file may carry an optional "cast" key: {"strata": [...], "treasury": money,
 "location": place, "countries": [civilisation-like dicts for countries with no file of their own],
-"actors": [CastEntry-like dicts, for example a second player]}. Nothing here names a civilisation.
+"actors": [CastEntry-like dicts, for example a second player],
+"seats": [{"id": ..., seat template keys}, the players who start with the game, read by the engine]}. Nothing here names a civilisation.
 """
 import copy
 import dataclasses
@@ -15,7 +16,7 @@ from .edges import EDGE_OPENING
 from .records import ActorRecord, CastEntry, CountryProfile
 
 # keys under "cast" this module reads itself; any others end up in the profile's `extra`
-CONSUMED_CAST_KEYS = ("strata", "countries", "actors", "treasury", "location")
+CONSUMED_CAST_KEYS = ("strata", "countries", "actors", "treasury", "location", "seats")
 # civilisation keys kept in a profile's `extra` for the mechanisms that read them
 CARRIED_CIVILISATION_KEYS = ("standing_army", "values", "debt_bondage", "bondage_years")
 GOVERNMENT_PREFIX = "government:"

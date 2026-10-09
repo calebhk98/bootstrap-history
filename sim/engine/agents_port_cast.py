@@ -53,6 +53,10 @@ class CastView:
 			costs[FOOD_NEED] = self.material_cost(DOLE_MATERIAL, tonnes)  # type: ignore[attr-defined]
 		return costs
 
+	def country_economy(self, country: str) -> Any:
+		"""The agent economy's answers for a partner country that is part of it; None for any other."""
+		return self._once("country:" + country, lambda: self._sim.economy.agent_country(country))  # type: ignore[attr-defined]
+
 	def subsistence_cost_per_person_year(self) -> float:
 		"""The food floor of `need_floor_costs_per_person_year`."""
 		return self.need_floor_costs_per_person_year().get(FOOD_NEED, 0.0)
@@ -73,7 +77,7 @@ class CastView:
 
 def opening_cast(sim: Any) -> Tuple[str, List[Any], Dict[str, Any]]:
 	"""(home country, entries, profiles): the civilisation played, and every economy trading with it."""
-	foreign = [load_civ(civilisation_id) for civilisation_id in sim.foreign_economies()]
+	foreign = [load_civ(civilisation_id) for civilisation_id in sim.partner_countries()]
 	return cast_from_civilisations(sim.civ, foreign)
 
 

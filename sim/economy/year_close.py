@@ -38,15 +38,29 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger) -> None:
         ledger.note_postings(done.transfers, "wages")
 
 
+def foreign_agents(setup, record) -> set:
+    """Agents living or working on another country's tiles: the home state does not assess them."""
+    if len(setup.countries()) < 2:
+        return set()
+    away = lambda tile: setup.country_of(tile) != setup.civ_id   # noqa: E731
+    return ({cohort.agent_id for cohort in record.cohorts.values() if away(cohort.tile)}
+            | {producer.agent_id for producer in record.producers.values() if away(producer.tile)}
+            | {merchant.agent_id for merchant in record.merchants.values() if away(merchant.home_tile)})
+
+
 def tax_facts(setup, record, view, ledger: YearLedger) -> YearFacts:
     money = setup.currency_id
     hours = setup.working_hours_per_year
-    working = {cohort.agent_id: cohort.working_people for cohort in record.cohorts.values()}
+    away = foreign_agents(setup, record)
+    home_cohorts = [cohort for cohort in record.cohorts.values() if cohort.agent_id not in away]
+    working = {cohort.agent_id: cohort.working_people for cohort in home_cohorts}
     wage_year = {cohort.agent_id: (view.wage(setup.unskilled_trade, labour_area(cohort.tile)) or 0.0) * hours
-                 for cohort in record.cohorts.values()}
-    cash = {agent: record.book.balance(agent, money) for agent in record.book.agents() if not is_edge(agent)}
+                 for cohort in home_cohorts}
+    cash = {agent: record.book.balance(agent, money) for agent in record.book.agents()
+            if not is_edge(agent) and agent not in away}
     return YearFacts(currency=money, working_people=working, wage_per_labour_year=wage_year, cash=cash,
-                     imports_paid=ledger.imports_paid, exports_received=ledger.exports_received)
+                     imports_paid={key: paid for key, paid in ledger.imports_paid.items() if key[0] not in away},
+                     exports_received={key: paid for key, paid in ledger.exports_received.items() if key[0] not in away})
 
 
 def money_taxes(setup, record, view, ledger: YearLedger) -> None:

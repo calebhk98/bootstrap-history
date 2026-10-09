@@ -412,6 +412,11 @@ class World(Protocol):
 		"""Money for one person's food at subsistence for a year."""
 		...
 
+	def country_economy(self, country: str) -> Any:
+		"""The economy's own answers for a country that is part of it (pay_per_person_year, society_output,
+		need_floor_costs_per_person_year), or None when the country is not, so the caller keeps its estimate."""
+		...
+
 	def need_floor_costs_per_person_year(self) -> Dict[str, float]:
 		"""Money for one person's floor of each need for a year, by need id, at the prices households pay
 		(the need-basket kernel, sim/world/need_basket.py)."""

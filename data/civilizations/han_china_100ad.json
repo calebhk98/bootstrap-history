@@ -472,6 +472,7 @@
     "what_this_models": "You are one household, not the Han bureaucracy. Fifty-eight million people live under this administration and roughly one in ten of them in a town at all - about 5,800,000 town dwellers - but every trade you can hire is sized to the ONE town your household actually reaches: the order of 46,000 people, not the empire. Type 'population' once you are playing to see how your own reach compares, trade by trade, to the empire's true numbers."
   },
   "population": 58000000,
+  "population_census": "han_ad2_census",
   "standing_army": 200000,
   "price_index": 0.75,
   "prerequisite_gaps": {

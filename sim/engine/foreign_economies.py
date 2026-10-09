@@ -76,13 +76,27 @@ def _foreign_prices_in_own_coin(civilization_id):
 class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPaymentsMixin,
                             ForeignTradersMixin, ForeignActorTradeMixin, TraderCargoMixin):
 
-    def foreign_economies(self):
-        """Economies trading with this society this year, sorted by id."""
+    def partner_countries(self):
+        """Every economy enabled for this year, sorted by id: those trading by the legacy partner books and
+        those that are part of the agent economy."""
         year = self.state.scenario.year
         own = self.civ.get("id")
         return sorted(record["civilization"] for record in foreign_economy_records()
                       if record.get("enabled", False) and record["civilization"] != own
                       and record["from_year"] <= year <= record["until_year"])
+
+    def partners_in_agent_economy(self):
+        """The enabled economies whose tiles, people and producers are in the agent economy itself, when it runs."""
+        if not self.state.economy.agent_economy.get("on"):
+            return []
+        inside = {record["civilization"] for record in foreign_economy_records() if record.get("agent_economy", False)}
+        return [partner for partner in self.partner_countries() if partner in inside]
+
+    def foreign_economies(self):
+        """Economies trading with this society this year by the partner books, sorted by id: the enabled ones
+        that are not themselves in the agent economy."""
+        inside = set(self.partners_in_agent_economy())
+        return [partner for partner in self.partner_countries() if partner not in inside]
 
     def partner_refusal(self, civilization_id, material):
         """Why the partner will not sell the material, else None."""

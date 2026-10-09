@@ -85,21 +85,48 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
             self.state.household.training = still
             self.labour.resync_pools()
 
-    def _step_dated_shocks(self):
-        # 3. dated shocks
+    def _step_dated_shocks(self, seats=None):
+        # 3. dated shocks: the world is hit once, each seat in `seats` meets them with its own works
         self.disaster_this_year = None
         if self.events:
             year = self.state.scenario.year
             logged_before = len(self.log)
-            self._shocks(year)
+            self._shocks(year, seats)
             names = [hazard.get("name", "a hazard") for hazard in self.civ.get("hazards", [])
                      if hazard.get("years", [0, 0])[0] <= year <= hazard.get("years", [0, 0])[-1]]
             if names:
                 self.disaster_this_year = {"name": ", ".join(names),
                                            "messages": [message for _, message in self.log[logged_before:]]}
-            if self.state.founder.dead_reason:
-                return True
-        return False
+
+    def begin_seat_year(self):
+        """What the acting seat notes before its year starts."""
+        # WHERE SCANDAL STOOD WHEN THE PLAYER LAST LOOKED: `state` prints the chance of being denounced from
+        # the CURRENT scandal, and scandal moves DURING the step, so the direction needs the year's opening mark.
+        self.state.household.scandal_last_year = self.state.household.scandal
+        automation_audit.begin_year(self)
+        self.hear_of_other_seats()
+
+    def begin_world_year(self):
+        """What the society notes before the year starts."""
+        self.refresh_derived_nodes()
+        # open every book entry at the year's start, so a read before the first step cannot open one at another state
+        self._open_market_book()
+
+    def _run_seat_work(self):
+        """What the acting seat does with its year once the money and the shocks are settled."""
+        self._step_teach_trades()              # 4a. teach the trades this society does not have
+        self._step_standing_work_directive()   # 4a(ii). the standing "work" directive
+        pool, hired_left = self._step_start_projects()   # 4b. start new projects
+        self._step_materials()                 # 4c. materials
+        # 5. progress, director hours
+        remaining, remaining_after_projects, hours_effective_total = (
+            self._step_progress(pool, hired_left))
+        # 5b. if there is no work and no money, take a job
+        remaining = self._step_wage_fallback(remaining)
+        # 6. reputation, familiarity, protection, scandal
+        self._step_reputation(pool, remaining, remaining_after_projects, hours_effective_total)
+        self._step_bondage()                   # 6b. serving out a debt
+        self._step_founder_mortality()          # 7. founder mortality
 
     def _step_teach_trades(self):
         # 4a2. TEACH THE TRADES THIS SOCIETY DOES NOT HAVE. The optimizer has to

@@ -206,6 +206,7 @@ def _play_build_sim(args):
             events=bool(app_cfg.get("default_events", True)), bounty_set=set(),
             manual=True, civ=load_civ(_civ_for_session(args)), cfg=cfg)
     sim.seed = seed
+    sim.session_seat = getattr(args, "seat", None)
     sim.goal = goal
     sim.done_year = {}
     sim.end_year = sim.cfg["start_year"] + horizon

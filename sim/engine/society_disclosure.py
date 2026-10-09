@@ -1,4 +1,4 @@
-"""What the founder does with an invention: keep it secret, license it, or publish it."""
+"""What a seat does with an invention it made: keep it secret, license it, or publish it."""
 from sim.agents.api import licence
 from .agents_port import SimWorld
 
@@ -56,13 +56,15 @@ class DisclosureMixin:
 
     def _license(self, node_id, licensee_id, fee, royalty):
         licensee = self.actors.get(licensee_id) if licensee_id else None
+        if licensee is None and licensee_id in self.state.seats and licensee_id != self.state.acting_seat:
+            licensee = self.seat_party(licensee_id)   # another player
         if licensee is None or licensee.kind == "interest_group":
             return {"ok": False, "error": "name a firm or the state to license it to: %s" % (
                 ", ".join(self.licensable_actor_ids()) or "none exist yet")}
         problem = licence.terms_problem(licensee, fee, royalty)
         if problem:
             return {"ok": False, "error": problem}
-        if not licence.grant(self.household, licensee, node_id, fee, SimWorld(self)):
+        if not licence.grant(self.seat_party(self.state.acting_seat), licensee, node_id, fee, SimWorld(self)):
             return {"ok": False, "error": "the licensee can already make it"}
         record = self._disclosure_record(node_id)
         if record["mode"] == "default":
@@ -72,8 +74,10 @@ class DisclosureMixin:
         return {"ok": True, "note": "licensed to %s" % licensee_id}
 
     def licensable_actor_ids(self):
+        """Firms, the state and the other seats still playing."""
+        others = [seat_id for seat_id in self.playing_seats() if seat_id != self.state.acting_seat]
         return [actor.identity() for kind in ("firm", "government") for actor in self.actors.of_kind(kind)
-                if getattr(actor.record, "exited_year", None) is None]
+                if getattr(actor.record, "exited_year", None) is None] + others
 
     def disclosure_listing(self):
         """Every invention of yours with what you have chosen for it."""

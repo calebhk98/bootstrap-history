@@ -1,0 +1,836 @@
+{
+ "_doc": {
+  "purpose": "The Western Han census of 2 AD as the Hanshu geography treatise records it: households and persons for each commandery and kingdom, placed at the seat of its government. Sizes the population the Han economy starts with on each tile.",
+  "source": "Hanshu (Book of Han), juan 28, Dili zhi (Treatise on Geography), the census figures of AD 2 (Yuanshi 2); text at zh.wikisource.org/wiki/漢書/卷028上. Tabulated in Bielenstein, 'The Census of China during the Period 2-742 A.D.', Bulletin of the Museum of Far Eastern Antiquities 19 (1947).",
+  "check": "The persons sum to 57,671,402 against the treatise's own total of 57,671,401.",
+  "seat_lat_lon": "Approximate position of each commandery's seat of government, to a few tenths of a degree: used only to choose the nearest held map tile, so a commandery sits on the right part of the map, not on a surveyed point.",
+  "fields": "name, chinese, households, persons, seat_lat, seat_lon"
+ },
+ "census_year": 2,
+ "entries": [
+  {
+   "name": "Jingzhao (Chang'an)",
+   "chinese": "京兆尹",
+   "households": 195702,
+   "persons": 682468,
+   "seat_lat": 34.3,
+   "seat_lon": 108.9
+  },
+  {
+   "name": "Zuopingyi (Gaoling)",
+   "chinese": "左馮翊",
+   "households": 235101,
+   "persons": 917822,
+   "seat_lat": 34.65,
+   "seat_lon": 109.05
+  },
+  {
+   "name": "Youfufeng (Huaili)",
+   "chinese": "右扶風",
+   "households": 216377,
+   "persons": 836070,
+   "seat_lat": 34.35,
+   "seat_lon": 108.45
+  },
+  {
+   "name": "Hongnong",
+   "chinese": "弘農郡",
+   "households": 118091,
+   "persons": 475954,
+   "seat_lat": 34.52,
+   "seat_lon": 110.88
+  },
+  {
+   "name": "Hedong (Anyi)",
+   "chinese": "河東郡",
+   "households": 236896,
+   "persons": 962912,
+   "seat_lat": 35.15,
+   "seat_lon": 111.15
+  },
+  {
+   "name": "Taiyuan (Jinyang)",
+   "chinese": "太原郡",
+   "households": 169863,
+   "persons": 680488,
+   "seat_lat": 37.7,
+   "seat_lon": 112.45
+  },
+  {
+   "name": "Shangdang (Zhangzi)",
+   "chinese": "上黨郡",
+   "households": 73798,
+   "persons": 337766,
+   "seat_lat": 36.1,
+   "seat_lon": 112.85
+  },
+  {
+   "name": "Henei (Huai)",
+   "chinese": "河內郡",
+   "households": 241246,
+   "persons": 1067097,
+   "seat_lat": 35.1,
+   "seat_lon": 113.3
+  },
+  {
+   "name": "Henan (Luoyang)",
+   "chinese": "河南郡",
+   "households": 276444,
+   "persons": 1740279,
+   "seat_lat": 34.68,
+   "seat_lon": 112.6
+  },
+  {
+   "name": "Dong (Puyang)",
+   "chinese": "東郡",
+   "households": 401297,
+   "persons": 1659028,
+   "seat_lat": 35.75,
+   "seat_lon": 115.0
+  },
+  {
+   "name": "Chenliu",
+   "chinese": "陳留郡",
+   "households": 296284,
+   "persons": 1509050,
+   "seat_lat": 34.77,
+   "seat_lon": 114.55
+  },
+  {
+   "name": "Yingchuan (Yangzhai)",
+   "chinese": "潁川郡",
+   "households": 432491,
+   "persons": 2210973,
+   "seat_lat": 34.15,
+   "seat_lon": 113.45
+  },
+  {
+   "name": "Runan (Shangcai)",
+   "chinese": "汝南郡",
+   "households": 461587,
+   "persons": 2596148,
+   "seat_lat": 33.27,
+   "seat_lon": 114.26
+  },
+  {
+   "name": "Nanyang (Wan)",
+   "chinese": "南陽郡",
+   "households": 359116,
+   "persons": 1942051,
+   "seat_lat": 33.0,
+   "seat_lon": 112.53
+  },
+  {
+   "name": "Nan (Jiangling)",
+   "chinese": "南郡",
+   "households": 125579,
+   "persons": 718540,
+   "seat_lat": 30.35,
+   "seat_lon": 112.19
+  },
+  {
+   "name": "Jiangxia (Xiyang)",
+   "chinese": "江夏郡",
+   "households": 56844,
+   "persons": 219218,
+   "seat_lat": 30.85,
+   "seat_lon": 114.8
+  },
+  {
+   "name": "Lujiang (Shu)",
+   "chinese": "廬江郡",
+   "households": 124383,
+   "persons": 457333,
+   "seat_lat": 31.2,
+   "seat_lon": 117.3
+  },
+  {
+   "name": "Jiujiang (Shouchun)",
+   "chinese": "九江郡",
+   "households": 150052,
+   "persons": 780525,
+   "seat_lat": 32.55,
+   "seat_lon": 116.8
+  },
+  {
+   "name": "Shanyang (Changyi)",
+   "chinese": "山陽郡",
+   "households": 172847,
+   "persons": 801288,
+   "seat_lat": 35.07,
+   "seat_lon": 116.3
+  },
+  {
+   "name": "Jiyin (Dingtao)",
+   "chinese": "濟陰郡",
+   "households": 292005,
+   "persons": 1386278,
+   "seat_lat": 35.07,
+   "seat_lon": 115.57
+  },
+  {
+   "name": "Pei (Xiang)",
+   "chinese": "沛郡",
+   "households": 409079,
+   "persons": 2030480,
+   "seat_lat": 33.95,
+   "seat_lon": 116.8
+  },
+  {
+   "name": "Wei (Ye)",
+   "chinese": "魏郡",
+   "households": 212849,
+   "persons": 909655,
+   "seat_lat": 36.33,
+   "seat_lon": 114.62
+  },
+  {
+   "name": "Julu",
+   "chinese": "鉅鹿郡",
+   "households": 155951,
+   "persons": 827177,
+   "seat_lat": 37.0,
+   "seat_lon": 115.0
+  },
+  {
+   "name": "Changshan (Yuanshi)",
+   "chinese": "常山郡",
+   "households": 141741,
+   "persons": 677956,
+   "seat_lat": 37.75,
+   "seat_lon": 114.55
+  },
+  {
+   "name": "Qinghe",
+   "chinese": "清河郡",
+   "households": 201774,
+   "persons": 875422,
+   "seat_lat": 37.05,
+   "seat_lon": 115.67
+  },
+  {
+   "name": "Zhuo",
+   "chinese": "涿郡",
+   "households": 195607,
+   "persons": 782764,
+   "seat_lat": 39.49,
+   "seat_lon": 115.97
+  },
+  {
+   "name": "Bohai (Fuyang)",
+   "chinese": "勃海郡",
+   "households": 256377,
+   "persons": 905119,
+   "seat_lat": 38.3,
+   "seat_lon": 116.9
+  },
+  {
+   "name": "Pingyuan",
+   "chinese": "平原郡",
+   "households": 154387,
+   "persons": 664543,
+   "seat_lat": 37.17,
+   "seat_lon": 116.43
+  },
+  {
+   "name": "Qiancheng",
+   "chinese": "千乘郡",
+   "households": 116727,
+   "persons": 490720,
+   "seat_lat": 37.2,
+   "seat_lon": 117.8
+  },
+  {
+   "name": "Jinan (Dongpingling)",
+   "chinese": "濟南郡",
+   "households": 140761,
+   "persons": 642884,
+   "seat_lat": 36.7,
+   "seat_lon": 117.5
+  },
+  {
+   "name": "Taishan (Fenggao)",
+   "chinese": "泰山郡",
+   "households": 172086,
+   "persons": 726604,
+   "seat_lat": 36.2,
+   "seat_lon": 117.1
+  },
+  {
+   "name": "Qi (Linzi)",
+   "chinese": "齊郡",
+   "households": 154826,
+   "persons": 554444,
+   "seat_lat": 36.87,
+   "seat_lon": 118.3
+  },
+  {
+   "name": "Beihai (Yingling)",
+   "chinese": "北海郡",
+   "households": 127000,
+   "persons": 593159,
+   "seat_lat": 36.7,
+   "seat_lon": 118.8
+  },
+  {
+   "name": "Donglai (Ye)",
+   "chinese": "東萊郡",
+   "households": 103292,
+   "persons": 502693,
+   "seat_lat": 37.18,
+   "seat_lon": 119.93
+  },
+  {
+   "name": "Langya (Dong)",
+   "chinese": "琅邪郡",
+   "households": 228960,
+   "persons": 1079100,
+   "seat_lat": 35.99,
+   "seat_lon": 119.4
+  },
+  {
+   "name": "Donghai (Tan)",
+   "chinese": "東海郡",
+   "households": 358414,
+   "persons": 1559357,
+   "seat_lat": 34.62,
+   "seat_lon": 118.35
+  },
+  {
+   "name": "Linhuai (Xuyi)",
+   "chinese": "臨淮郡",
+   "households": 268283,
+   "persons": 1237764,
+   "seat_lat": 32.97,
+   "seat_lon": 118.5
+  },
+  {
+   "name": "Kuaiji (Wu)",
+   "chinese": "會稽郡",
+   "households": 223038,
+   "persons": 1032604,
+   "seat_lat": 31.3,
+   "seat_lon": 120.6
+  },
+  {
+   "name": "Danyang (Wanling)",
+   "chinese": "丹揚郡",
+   "households": 107541,
+   "persons": 405171,
+   "seat_lat": 30.95,
+   "seat_lon": 118.75
+  },
+  {
+   "name": "Yuzhang (Nanchang)",
+   "chinese": "豫章郡",
+   "households": 67462,
+   "persons": 351965,
+   "seat_lat": 28.68,
+   "seat_lon": 115.9
+  },
+  {
+   "name": "Guiyang (Chen)",
+   "chinese": "桂陽郡",
+   "households": 28119,
+   "persons": 156488,
+   "seat_lat": 25.8,
+   "seat_lon": 113.0
+  },
+  {
+   "name": "Wuling (Linyuan)",
+   "chinese": "武陵郡",
+   "households": 34177,
+   "persons": 185758,
+   "seat_lat": 29.05,
+   "seat_lon": 111.7
+  },
+  {
+   "name": "Lingling",
+   "chinese": "零陵郡",
+   "households": 21092,
+   "persons": 139378,
+   "seat_lat": 26.2,
+   "seat_lon": 111.6
+  },
+  {
+   "name": "Hanzhong (Nanzheng)",
+   "chinese": "漢中郡",
+   "households": 101570,
+   "persons": 300614,
+   "seat_lat": 33.07,
+   "seat_lon": 107.0
+  },
+  {
+   "name": "Guanghan (Zi)",
+   "chinese": "廣漢郡",
+   "households": 167499,
+   "persons": 662249,
+   "seat_lat": 31.1,
+   "seat_lon": 105.1
+  },
+  {
+   "name": "Shu (Chengdu)",
+   "chinese": "蜀郡",
+   "households": 268279,
+   "persons": 1245929,
+   "seat_lat": 30.65,
+   "seat_lon": 104.07
+  },
+  {
+   "name": "Jianwei (Wuyang)",
+   "chinese": "犍為郡",
+   "households": 109419,
+   "persons": 489486,
+   "seat_lat": 30.2,
+   "seat_lon": 103.85
+  },
+  {
+   "name": "Yuexi (Qiongdu)",
+   "chinese": "越嶲郡",
+   "households": 61208,
+   "persons": 408405,
+   "seat_lat": 27.9,
+   "seat_lon": 102.27
+  },
+  {
+   "name": "Yizhou (Dian)",
+   "chinese": "益州郡",
+   "households": 81946,
+   "persons": 580463,
+   "seat_lat": 24.8,
+   "seat_lon": 102.7
+  },
+  {
+   "name": "Zangke",
+   "chinese": "牂柯郡",
+   "households": 24219,
+   "persons": 153360,
+   "seat_lat": 26.0,
+   "seat_lon": 106.7
+  },
+  {
+   "name": "Ba (Jiangzhou)",
+   "chinese": "巴郡",
+   "households": 158643,
+   "persons": 708148,
+   "seat_lat": 29.55,
+   "seat_lon": 106.55
+  },
+  {
+   "name": "Wudu",
+   "chinese": "武都郡",
+   "households": 51376,
+   "persons": 235560,
+   "seat_lat": 33.4,
+   "seat_lon": 105.6
+  },
+  {
+   "name": "Longxi (Didao)",
+   "chinese": "隴西郡",
+   "households": 53964,
+   "persons": 236824,
+   "seat_lat": 35.37,
+   "seat_lon": 103.85
+  },
+  {
+   "name": "Jincheng",
+   "chinese": "金城郡",
+   "households": 38470,
+   "persons": 149648,
+   "seat_lat": 36.1,
+   "seat_lon": 103.8
+  },
+  {
+   "name": "Tianshui (Pingxiang)",
+   "chinese": "天水郡",
+   "households": 60370,
+   "persons": 261348,
+   "seat_lat": 34.6,
+   "seat_lon": 105.7
+  },
+  {
+   "name": "Wuwei (Guzang)",
+   "chinese": "武威郡",
+   "households": 17581,
+   "persons": 76419,
+   "seat_lat": 37.93,
+   "seat_lon": 102.63
+  },
+  {
+   "name": "Zhangye",
+   "chinese": "張掖郡",
+   "households": 24352,
+   "persons": 88731,
+   "seat_lat": 38.93,
+   "seat_lon": 100.45
+  },
+  {
+   "name": "Jiuquan (Lushui)",
+   "chinese": "酒泉郡",
+   "households": 18137,
+   "persons": 76726,
+   "seat_lat": 39.73,
+   "seat_lon": 98.5
+  },
+  {
+   "name": "Dunhuang",
+   "chinese": "敦煌郡",
+   "households": 11200,
+   "persons": 38335,
+   "seat_lat": 40.14,
+   "seat_lon": 94.66
+  },
+  {
+   "name": "Anding (Gaoping)",
+   "chinese": "安定郡",
+   "households": 42725,
+   "persons": 143294,
+   "seat_lat": 36.0,
+   "seat_lon": 106.27
+  },
+  {
+   "name": "Beidi (Mayling)",
+   "chinese": "北地郡",
+   "households": 64461,
+   "persons": 210688,
+   "seat_lat": 36.0,
+   "seat_lon": 107.6
+  },
+  {
+   "name": "Shang (Fushi)",
+   "chinese": "上郡",
+   "households": 103683,
+   "persons": 606658,
+   "seat_lat": 37.5,
+   "seat_lon": 110.2
+  },
+  {
+   "name": "Xihe (Pingding)",
+   "chinese": "西河郡",
+   "households": 136390,
+   "persons": 698836,
+   "seat_lat": 39.0,
+   "seat_lon": 111.0
+  },
+  {
+   "name": "Shuofang",
+   "chinese": "朔方郡",
+   "households": 34338,
+   "persons": 136628,
+   "seat_lat": 40.7,
+   "seat_lon": 108.3
+  },
+  {
+   "name": "Wuyuan (Jiuyuan)",
+   "chinese": "五原郡",
+   "households": 39322,
+   "persons": 231328,
+   "seat_lat": 40.6,
+   "seat_lon": 109.8
+  },
+  {
+   "name": "Yunzhong",
+   "chinese": "雲中郡",
+   "households": 38303,
+   "persons": 173270,
+   "seat_lat": 40.3,
+   "seat_lon": 111.1
+  },
+  {
+   "name": "Dingxiang (Chengle)",
+   "chinese": "定襄郡",
+   "households": 38559,
+   "persons": 163144,
+   "seat_lat": 40.4,
+   "seat_lon": 111.8
+  },
+  {
+   "name": "Yanmen (Shanyin)",
+   "chinese": "鴈門郡",
+   "households": 73138,
+   "persons": 293454,
+   "seat_lat": 39.5,
+   "seat_lon": 112.4
+  },
+  {
+   "name": "Dai",
+   "chinese": "代郡",
+   "households": 56771,
+   "persons": 278754,
+   "seat_lat": 39.8,
+   "seat_lon": 114.7
+  },
+  {
+   "name": "Shanggu (Juyong)",
+   "chinese": "上谷郡",
+   "households": 36008,
+   "persons": 117762,
+   "seat_lat": 40.4,
+   "seat_lon": 115.9
+  },
+  {
+   "name": "Yuyang",
+   "chinese": "漁陽郡",
+   "households": 68802,
+   "persons": 264116,
+   "seat_lat": 40.4,
+   "seat_lon": 116.9
+  },
+  {
+   "name": "You Beiping (Pinggang)",
+   "chinese": "右北平郡",
+   "households": 66689,
+   "persons": 320780,
+   "seat_lat": 41.6,
+   "seat_lon": 119.3
+  },
+  {
+   "name": "Liaoxi (Qie)",
+   "chinese": "遼西郡",
+   "households": 72654,
+   "persons": 352325,
+   "seat_lat": 41.4,
+   "seat_lon": 121.1
+  },
+  {
+   "name": "Liaodong (Xiangping)",
+   "chinese": "遼東郡",
+   "households": 55972,
+   "persons": 272539,
+   "seat_lat": 41.27,
+   "seat_lon": 123.17
+  },
+  {
+   "name": "Xuantu",
+   "chinese": "玄菟郡",
+   "households": 45006,
+   "persons": 221845,
+   "seat_lat": 41.8,
+   "seat_lon": 124.8
+  },
+  {
+   "name": "Lelang (Chaoxian)",
+   "chinese": "樂浪郡",
+   "households": 62812,
+   "persons": 406748,
+   "seat_lat": 39.0,
+   "seat_lon": 125.7
+  },
+  {
+   "name": "Nanhai (Panyu)",
+   "chinese": "南海郡",
+   "households": 19613,
+   "persons": 94253,
+   "seat_lat": 23.13,
+   "seat_lon": 113.27
+  },
+  {
+   "name": "Yulin (Bushan)",
+   "chinese": "鬱林郡",
+   "households": 12415,
+   "persons": 71162,
+   "seat_lat": 23.4,
+   "seat_lon": 109.9
+  },
+  {
+   "name": "Cangwu (Guangxin)",
+   "chinese": "蒼梧郡",
+   "households": 24379,
+   "persons": 146160,
+   "seat_lat": 23.5,
+   "seat_lon": 111.3
+  },
+  {
+   "name": "Jiaozhi (Longbian)",
+   "chinese": "交趾郡",
+   "households": 92440,
+   "persons": 746237,
+   "seat_lat": 21.1,
+   "seat_lon": 105.9
+  },
+  {
+   "name": "Hepu",
+   "chinese": "合浦郡",
+   "households": 15398,
+   "persons": 78980,
+   "seat_lat": 21.65,
+   "seat_lon": 109.2
+  },
+  {
+   "name": "Jiuzhen (Xuqu)",
+   "chinese": "九真郡",
+   "households": 35743,
+   "persons": 166013,
+   "seat_lat": 19.8,
+   "seat_lon": 105.8
+  },
+  {
+   "name": "Rinan (Xilu)",
+   "chinese": "日南郡",
+   "households": 15460,
+   "persons": 69485,
+   "seat_lat": 16.5,
+   "seat_lon": 107.6
+  },
+  {
+   "name": "Zhao (Handan)",
+   "chinese": "趙國",
+   "households": 84202,
+   "persons": 349952,
+   "seat_lat": 36.6,
+   "seat_lon": 114.5
+  },
+  {
+   "name": "Guangping",
+   "chinese": "廣平國",
+   "households": 27984,
+   "persons": 198558,
+   "seat_lat": 36.8,
+   "seat_lon": 114.95
+  },
+  {
+   "name": "Zhending",
+   "chinese": "真定國",
+   "households": 37126,
+   "persons": 178616,
+   "seat_lat": 38.15,
+   "seat_lon": 114.6
+  },
+  {
+   "name": "Zhongshan (Lunu)",
+   "chinese": "中山國",
+   "households": 160873,
+   "persons": 668080,
+   "seat_lat": 38.5,
+   "seat_lon": 115.0
+  },
+  {
+   "name": "Xindu",
+   "chinese": "信都國",
+   "households": 65556,
+   "persons": 304384,
+   "seat_lat": 37.55,
+   "seat_lon": 115.55
+  },
+  {
+   "name": "Hejian (Le)",
+   "chinese": "河間國",
+   "households": 45043,
+   "persons": 187662,
+   "seat_lat": 38.2,
+   "seat_lon": 116.1
+  },
+  {
+   "name": "Guangyang (Ji)",
+   "chinese": "廣陽國",
+   "households": 20740,
+   "persons": 70658,
+   "seat_lat": 39.9,
+   "seat_lon": 116.35
+  },
+  {
+   "name": "Zichuan (Jian)",
+   "chinese": "甾川國",
+   "households": 50289,
+   "persons": 227031,
+   "seat_lat": 36.85,
+   "seat_lon": 118.8
+  },
+  {
+   "name": "Jiaodong (Jimo)",
+   "chinese": "膠東國",
+   "households": 72002,
+   "persons": 323331,
+   "seat_lat": 36.4,
+   "seat_lon": 120.45
+  },
+  {
+   "name": "Gaomi",
+   "chinese": "高密國",
+   "households": 40531,
+   "persons": 192536,
+   "seat_lat": 36.4,
+   "seat_lon": 119.75
+  },
+  {
+   "name": "Chengyang (Ju)",
+   "chinese": "城陽國",
+   "households": 56642,
+   "persons": 205784,
+   "seat_lat": 35.58,
+   "seat_lon": 118.85
+  },
+  {
+   "name": "Huaiyang (Chen)",
+   "chinese": "淮陽國",
+   "households": 135544,
+   "persons": 981423,
+   "seat_lat": 33.73,
+   "seat_lon": 114.88
+  },
+  {
+   "name": "Liang (Suiyang)",
+   "chinese": "梁國",
+   "households": 38709,
+   "persons": 106752,
+   "seat_lat": 34.4,
+   "seat_lon": 115.65
+  },
+  {
+   "name": "Dongping (Wuyan)",
+   "chinese": "東平國",
+   "households": 131753,
+   "persons": 607976,
+   "seat_lat": 35.95,
+   "seat_lon": 116.2
+  },
+  {
+   "name": "Lu (Qufu)",
+   "chinese": "魯國",
+   "households": 118045,
+   "persons": 607381,
+   "seat_lat": 35.6,
+   "seat_lon": 117.0
+  },
+  {
+   "name": "Chu (Pengcheng)",
+   "chinese": "楚國",
+   "households": 114738,
+   "persons": 497804,
+   "seat_lat": 34.2,
+   "seat_lon": 117.2
+  },
+  {
+   "name": "Sishui (Ling)",
+   "chinese": "泗水國",
+   "households": 25025,
+   "persons": 119114,
+   "seat_lat": 33.5,
+   "seat_lon": 118.2
+  },
+  {
+   "name": "Guangling",
+   "chinese": "廣陵國",
+   "households": 36773,
+   "persons": 140722,
+   "seat_lat": 32.4,
+   "seat_lon": 119.4
+  },
+  {
+   "name": "Liu'an (Liu)",
+   "chinese": "六安國",
+   "households": 38345,
+   "persons": 178616,
+   "seat_lat": 31.75,
+   "seat_lon": 116.5
+  },
+  {
+   "name": "Changsha (Linxiang)",
+   "chinese": "長沙國",
+   "households": 43470,
+   "persons": 235825,
+   "seat_lat": 28.2,
+   "seat_lon": 112.97
+  }
+ ]
+}

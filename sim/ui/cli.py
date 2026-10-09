@@ -1574,6 +1574,9 @@ def main():
                                 "and start. This is what a bare invocation does.")
     subparser = sub.add_parser("play", help="play the game interactively from the keyboard")
     subparser.add_argument("--strategy", default="recommended")
+    subparser.add_argument("--seat", default=None,
+                   help="the seat this process plays (default: the first seat). A command can still name "
+                        "another with its own \"as\" field; see the 'seats' command")
     subparser.add_argument("--goal", default=None,
                    help="which goal to play toward. See 'goals' for the roster "
                         "of all goals; default is the "
@@ -1658,6 +1661,9 @@ def main():
     subparser.add_argument("--mortal", action="store_true",
                    help="turn the founder's mortality back on (default: immortal, "
                         "same meaning as on 'run'/'compare'/'play')")
+    subparser.add_argument("--seat", default=None,
+                   help="the seat this process plays (default: the first seat). A command can still name "
+                        "another with its own \"as\" field; see the 'seats' command")
     subparser.add_argument("--deterministic", action="store_true",
                    help="replace this session's rng with one whose random() always "
                         "returns 1.0 (DetRNG - same class 'run'/'compare'/'play' "

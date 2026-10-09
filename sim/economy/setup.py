@@ -70,6 +70,8 @@ class EconomySetup:
     opening_store_output: Dict[GoodId, Tuple[Tuple[float, float, float], ...]] = field(default_factory=dict)
     # per durable good, its past workings (kg a year, years worked, years since the last output) from the deposits
     opening_store_gaps: Dict[GoodId, str] = field(default_factory=dict)   # why a good has no workings, for audit
+    # country -> the recipes its producers can run (what its society's techniques allow); empty: every recipe anywhere
+    recipes_by_country: Dict[str, Tuple[str, ...]] = field(default_factory=dict)
 
     def carriage_table(self, improvements=None) -> CarriageTable:
         """What it costs to move a tonne between this setup's tiles, over geography's route graph, with the
@@ -85,6 +87,25 @@ class EconomySetup:
                                               sorted(self.opening_prices.items())
                                               if good in self.specs and price > 0.0],
                        self.opening_population_by_tile)
+
+    def country_of(self, tile: TileId) -> str:
+        """The civilisation whose people live on a tile: the setup's own unless the tile names another."""
+        spec = self.tiles.get(tile)
+        return (spec.country if spec is not None and spec.country else self.civ_id)
+
+    def countries(self) -> Tuple[str, ...]:
+        """Every civilisation with tiles in this economy, the home one first."""
+        others = sorted({self.country_of(tile) for tile in self.tiles} - {self.civ_id})
+        return (self.civ_id,) + tuple(others)
+
+    def tiles_of(self, country: str) -> Tuple[TileId, ...]:
+        return tuple(sorted(tile for tile in self.tiles if self.country_of(tile) == country))
+
+    def recipe_allowed(self, recipe_id: str, tile: TileId) -> bool:
+        """Whether the people on `tile` can run the recipe: their country's techniques allow it."""
+        if not self.recipes_by_country:
+            return True
+        return recipe_id in self.recipes_by_country.get(self.country_of(tile), ())
 
     def basket_for(self, tile: TileId):
         """The needs of people living on a tile: the common basket with that tile's floors."""
