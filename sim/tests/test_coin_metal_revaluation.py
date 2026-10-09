@@ -50,6 +50,8 @@ class Coinage(CoinRevaluationMixin, ForeignPaymentsMixin, IncumbentPricesMixin):
     def real_price_ratio(self, material):
         return self.market_price_ratio(material)
 
+    coin_value_ratio = real_price_ratio
+
 
 class RevaluationTests(unittest.TestCase):
     def test_a_glut_of_the_coin_metal_raises_the_price_level(self):

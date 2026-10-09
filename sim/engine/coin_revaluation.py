@@ -16,6 +16,12 @@ REVALUATION_YEARLY_SHARE = declare(
     why="Coin is a stock: its value follows the metal's price as holders and mints reprice, not at once. "
         "Damping also keeps one year's market noise out of the price level. Mint behaviour would replace it.")
 
+REVALUATION_YEARLY_CAP = declare(
+    "REVALUATION_YEARLY_CAP", 1.25, kind="temporary_heuristic",
+    unit="largest factor the coin's recorded value moves by in a year, either way", source=None, confidence="D",
+    why="A safeguard: a mismeasured year cannot send the price level far. A mint's and holders' repricing "
+        "speed would replace it.")
+
 
 class CoinRevaluationMixin:
 
@@ -35,8 +41,9 @@ class CoinRevaluationMixin:
         metals.update(self.partner_coin_metal(partner) for partner in self.foreign_economies())
         ratios = self.state.economy.coin_metal_ratios
         for metal in sorted(metals):
-            measured = self.real_price_ratio(metal)
+            measured = self.coin_value_ratio(metal)
             if not measured > 0.0:
                 measured = 1.0
             held = ratios.get(metal, 1.0)
-            ratios[metal] = held ** (1.0 - REVALUATION_YEARLY_SHARE) * measured ** REVALUATION_YEARLY_SHARE
+            moved = held ** (1.0 - REVALUATION_YEARLY_SHARE) * measured ** REVALUATION_YEARLY_SHARE
+            ratios[metal] = min(held * REVALUATION_YEARLY_CAP, max(held / REVALUATION_YEARLY_CAP, moved))

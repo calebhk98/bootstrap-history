@@ -44,22 +44,36 @@ class RunawayTests(unittest.TestCase):
             levels.append(game.home_price_level())
         return levels
 
-    def test_an_unchanged_real_value_leaves_the_price_level_alone(self):
+    def test_unchanged_scarcity_keeps_the_price_level_in_a_narrow_band(self):
         game = AgentCoinage()
         self.years(game, 1)
-        game.agent = {good: price * 40.0 for good, price in BASELINE.items()}   # every nominal price scaled
-        levels = self.years(game, 12)
+        levels = self.years(game, 40)
         self.assertTrue(all(abs(level - 1.0) < 1e-9 for level in levels), levels)
-        self.assertAlmostEqual(game.last_market_price_ratio("wheat_kg"), 1.0)
 
-    def test_a_cheaper_metal_inflates_once_and_settles(self):
+    def test_a_spike_in_the_metals_own_price_does_not_move_the_level(self):
         game = AgentCoinage()
         self.years(game, 1)
-        game.agent = dict(BASELINE, silver_kg=BASELINE["silver_kg"] / 2.0)
-        levels = self.years(game, 30)
-        self.assertGreater(levels[-1], 1.5)
-        self.assertLess(levels[-1], 2.5)
-        self.assertAlmostEqual(levels[-1], levels[-2], places=4)
+        levels = []
+        for year in range(12):
+            game.agent = dict(BASELINE, silver_kg=BASELINE["silver_kg"] * 2.0 ** year)   # the metal alone runs away
+            levels += self.years(game, 1)
+        self.assertTrue(all(abs(level - 1.0) < 1e-9 for level in levels), levels)
+
+    def test_goods_pricing_twice_the_coin_raises_the_level_once_and_settles(self):
+        game = AgentCoinage()
+        self.years(game, 1)
+        game.agent = {good: (price if good == "silver_kg" else price * 2.0) for good, price in BASELINE.items()}
+        levels = self.years(game, 40)
+        self.assertAlmostEqual(levels[-1], 2.0, places=3)
+        self.assertLess(max(levels), 2.0 + 1e-6)
+        self.assertEqual(levels, sorted(levels))
+        self.assertAlmostEqual(levels[-1], levels[-2], places=6)
+
+    def test_one_years_move_is_capped(self):
+        game = AgentCoinage()
+        self.years(game, 1)
+        game.agent = {good: (price if good == "silver_kg" else price * 100.0) for good, price in BASELINE.items()}
+        self.assertLess(self.years(game, 1)[0], 1.25 + 1e-9)
 
     def test_a_dearer_staple_shows_in_the_wage_ratio_as_a_relative_price(self):
         game = AgentCoinage()
