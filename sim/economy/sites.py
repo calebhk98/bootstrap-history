@@ -31,8 +31,10 @@ def climate_allows(recipe: Recipe, tile_spec) -> bool:
     return not classes or not climate or climate in classes
 
 
-def suited_tiles(recipe: Recipe, tile_specs, tiles: Sequence[TileId]) -> Tuple[TileId, ...]:
-    return tuple(tile for tile in tiles if climate_allows(recipe, tile_specs.get(tile)))
+def suited_tiles(recipe: Recipe, tile_specs, tiles: Sequence[TileId], runnable=None) -> Tuple[TileId, ...]:
+    """The tiles whose climate allows the recipe and, when `runnable(recipe_id, tile)` is given, whose people can run it."""
+    return tuple(tile for tile in tiles if climate_allows(recipe, tile_specs.get(tile))
+                 and (runnable is None or runnable(recipe.recipe_id, tile)))
 
 
 def limits_by_recipe(limits: Iterable[SiteLimit]) -> LimitsByRecipe:

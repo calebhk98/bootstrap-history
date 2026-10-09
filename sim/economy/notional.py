@@ -40,14 +40,14 @@ def mean_wages(memory: MarketMemory) -> Dict[str, float]:
     return {trade: math.fsum(rows) / len(rows) for trade, rows in by_trade.items()}
 
 
-def notional_prices(setup, record) -> Dict[str, float]:
+def notional_prices(setup, record, market=None) -> Dict[str, float]:
     """Cost per unit of the cheapest recipe making each good that has not traded lately, at the live
     prices of its inputs, the live wages and interest rate; a joint run's cost is shared among its
     outputs by value. A good is priced after the goods it is made from, so a chain of untraded goods
     follows its inputs. A good whose cheapest maker cannot be priced is left out."""
     memory = record.memory
     recent = recently_traded_goods(memory)
-    market = national_prices(record)
+    market = national_prices(record) if market is None else market
     wages = mean_wages(memory)
     rate = memory.rates.get(setup.currency_id, 0.0)
     live = dict(market)
@@ -94,11 +94,11 @@ def cheapest_cost(setup, good, live, wages, rate):
     return best if math.isfinite(best) and best > 0.0 else None
 
 
-def shown_prices(setup, record) -> Tuple[Dict[str, float], Set[str]]:
+def shown_prices(setup, record, market=None) -> Tuple[Dict[str, float], Set[str]]:
     """(prices, stale goods) the game is shown. A recently traded good shows its market price. An
     untraded good somebody can make shows what it costs to make; one nobody can make keeps its last
     price. Both kinds are listed as stale: not a price a market has set lately."""
-    prices = national_prices(record)
+    prices = dict(national_prices(record) if market is None else market)
     stale = set(prices) - recently_traded_goods(record.memory)
-    prices.update(notional_prices(setup, record))
+    prices.update(notional_prices(setup, record, prices))
     return prices, stale

@@ -6,6 +6,7 @@ prices, through the recipes the society already runs (input-output: final demand
 producers of it consume, back to raw materials). Each agent's opening cash is what it wants to hold,
 struck at the mint: the money stock is derived, not authored. After this the markets take over.
 """
+import dataclasses
 import math
 from typing import Dict, List, Mapping, Tuple
 
@@ -55,9 +56,8 @@ def open_economy(setup: EconomySetup) -> Tuple[EconomyRecord, AreaMap, CarriageT
     _open_cohorts(setup, record)
     _seed_durable_stocks(setup, record, view)
     final_by_tile = _final_demand(setup, record, view)
-    incumbents = incumbent_recipes(setup.recipes, priced_goods, setup.opening_wages, setup.opening_rate)
-    runs = required_runs(final_by_tile, incumbents, setup.recipes)
-    _place_producers(setup, record, area_map, final_by_tile, incumbents, runs)
+    for country in setup.countries():
+        _open_country_producers(setup, record, area_map, priced_goods, final_by_tile, country)
     sites.apply_site_limits(record, setup)
     record.workforce = labour_state.opening_workforce(setup, record)
     _open_merchants(setup, record, priced_goods, final_by_tile)
@@ -66,6 +66,18 @@ def open_economy(setup: EconomySetup) -> Tuple[EconomyRecord, AreaMap, CarriageT
     opening_stores.seed_opening_stores(setup, record, _store_goods(setup, view, area_map, priced_goods))
     record.opening_basket = _national(final_by_tile)
     return record, area_map, carriage
+
+
+def _open_country_producers(setup, record, area_map, priced_goods, final_by_tile, country) -> None:
+    """One country's producers: its own people's demand met through the recipes its techniques allow, placed
+    on its own tiles. With one country and every recipe allowed everywhere this is the whole economy's opening."""
+    tiles = set(setup.tiles_of(country))
+    recipes = {recipe_id: recipe for recipe_id, recipe in setup.recipes.items()
+               if not setup.recipes_by_country or recipe_id in setup.recipes_by_country.get(country, ())}
+    final = {tile: demand for tile, demand in final_by_tile.items() if tile in tiles}
+    incumbents = incumbent_recipes(recipes, priced_goods, setup.opening_wages, setup.opening_rate)
+    runs = required_runs(final, incumbents, recipes)
+    _place_producers(setup, record, area_map, final, incumbents, runs, tiles if len(setup.countries()) > 1 else None)
 
 
 def _store_goods(setup, view, area_map, priced_goods) -> set:
@@ -226,7 +238,16 @@ def _placement_order(runs, recipes, setup) -> List[str]:
     return ordered
 
 
-def _place_producers(setup, record, area_map, final_by_tile, incumbents, runs) -> None:
+def _within(area, tiles):
+    """The part of a market area on `tiles`; None when none of it is."""
+    kept = tuple(tile for tile in area.tiles if tile in tiles)
+    if not kept:
+        return None
+    return area if len(kept) == len(area.tiles) else dataclasses.replace(
+        area, tiles=kept, anchor_tile=area.anchor_tile if area.anchor_tile in kept else kept[0])
+
+
+def _place_producers(setup, record, area_map, final_by_tile, incumbents, runs, within=None) -> None:
     """Each market area of the recipe's main output gets its share of the runs, sized by the area's share
     of the demand for that good (households' and the already placed producers' that use it as an input; its
     people's share when nobody buys it), spread over its tiles by location.opening_split: one producer per
@@ -240,6 +261,8 @@ def _place_producers(setup, record, area_map, final_by_tile, incumbents, runs) -
         recipe = setup.recipes[recipe_id]
         main = _main_output(recipe, setup.opening_prices)
         areas = area_map.areas(main) if main in area_map.goods() else ()
+        if within is not None:
+            areas = tuple(part for part in (_within(area, within) for area in areas) if part is not None)
         if not areas:
             continue
         weights = {}
