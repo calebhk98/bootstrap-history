@@ -45,6 +45,27 @@ class SpendingTests(unittest.TestCase):
         self.assertLess(self.spending(0.24), 0.75 * 300000.0)
 
 
+class SpendingSmoothingTests(unittest.TestCase):
+    """Wealth above its target is spent down over the years, not in the one year the target falls."""
+
+    def bids(self, last_year_spending, cash=1e6, income=100000.0):
+        view = View()
+        view.interest_rate = lambda currency: 0.12
+        orders = households.goods_orders(cohort(last_year_spending=last_year_spending, expected_inflation=0.2),
+                                         view, cash, income, BASKET, SPECS)
+        return budget_total(orders)
+
+    def test_spending_from_excess_wealth_rises_by_at_most_a_limited_share_a_year(self):
+        limit = households_orders.SPENDING_GROWTH_LIMIT
+        self.assertLessEqual(self.bids(100000.0), 100000.0 * (1.0 + limit) * 1.001)
+
+    def test_spending_follows_income_above_the_limit(self):
+        self.assertGreater(self.bids(100000.0, income=400000.0), 300000.0)
+
+    def test_no_history_means_no_limit(self):
+        self.assertGreater(self.bids(0.0), 150000.0)
+
+
 class UnsoldGoodTests(unittest.TestCase):
     """A good with no seller has no price, so it draws no bid and its need's money goes to goods that have one."""
     SHELTER = households.make_basket({

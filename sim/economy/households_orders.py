@@ -57,6 +57,14 @@ SAVINGS_RESPONSE_FLOOR = declare(
         "wealth in other forms (the durable store takes more of it then) and smooth. The floor stands in "
         "for that portfolio choice and for the saving motives that do not depend on the return (dearth, "
         "dowry, old age); no society's saving is measured against the real rate here.")
+SPENDING_GROWTH_LIMIT = declare(
+    "SPENDING_GROWTH_LIMIT", 0.10, kind="temporary_heuristic",
+    unit="share of last year's spending that wealth above target may add in a year", source=None,
+    confidence="D",
+    why="Households smooth consumption: wealth above what they want to keep is spent down over several "
+        "years, not in the one year their target falls. Without a limit a fall in the target sends the "
+        "whole stock of cash to the shops at once and nothing is left to lend. The pace is an assumption; "
+        "no society's spending is measured against its wealth here.")
 
 
 def savings_target(surplus_income: float, interest_rate: float, expected_inflation: float) -> float:
@@ -132,6 +140,9 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
                                    cohort.expected_inflation)
     spending = max(0.0, min(cash, income_this_year
                             + currency.spending_adjustment(cash + claims + store_value, keep, income_this_year)))
+    if cohort.last_year_spending > 0.0:
+        # spending out of wealth is smoothed; income this year is always spent
+        spending = min(spending, max(income_this_year, cohort.last_year_spending * (1.0 + SPENDING_GROWTH_LIMIT)))
     floors, totals = need_units(priced, basket, cohort.people, spending - floor_cost)
     # the stock of a durable is sized on the expected flow: this year's flow scaled by expected over actual
     # spending, but never below the flow the smoothed surplus (smoothed spending over smoothed floor cost)
