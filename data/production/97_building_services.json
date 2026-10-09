@@ -1,0 +1,70 @@
+{
+ "_note": "Services that turn materials builders already have into what households use: laid walls (shelter is a volume of structure, not a heap of bricks). Each is a recipe on the materials it consumes, so the trades that do the work (mason, carpenter) get labour need from the same household demand that wants the shelter. Every labour figure is an order-of-magnitude estimate of pre-industrial work rates, confidence D, and none is fitted to a target headcount.",
+ "materials": {
+  "brick_wall_m3": {
+   "outputs": {
+    "brick_wall_m3": 1.0
+   },
+   "inputs": {
+    "brick_1000": 0.714,
+    "mortar_kg": 360.0
+   },
+   "labour_hours": {
+    "mason": 24.0,
+    "labourer": 24.0
+   },
+   "satisfies": {
+    "shelter": 1.0
+   },
+   "unit_dimension": "volume",
+   "unit_mass_kg": 1800.0,
+   "basis": "per cubic metre of laid brick wall",
+   "yield_basis": "The bricks are the number that build a cubic metre at the effectiveness data/world/needs.json gives brick_1000 for shelter (1.4 cubic metres of wall per thousand bricks, so 1/1.4 = 0.714 thousand). Mortar joints are about a fifth of a brick wall by volume, at about 1800 kg per cubic metre of lime-sand mortar, so about 360 kg. A bricklayer laid a few hundred bricks in a working day by hand (here 300 in ten hours), which is 0.714 * 1000 / 300 * 10 = 24 mason hours; a labourer carries bricks and mortar to him hour for hour. Order of magnitude only; the rate is the estimate, the quantities are arithmetic.",
+   "conf": "D",
+   "requires_node": "cap_heat_0700"
+  },
+  "stone_wall_m3": {
+   "outputs": {
+    "stone_wall_m3": 1.0
+   },
+   "inputs": {
+    "stone_blocks": 18.5,
+    "mortar_kg": 100.0
+   },
+   "labour_hours": {
+    "mason": 18.5,
+    "labourer": 37.0
+   },
+   "satisfies": {
+    "shelter": 1.0
+   },
+   "unit_dimension": "volume",
+   "unit_mass_kg": 2400.0,
+   "basis": "per cubic metre of laid dressed-stone wall",
+   "yield_basis": "Blocks follow the effectiveness data/world/needs.json gives stone_blocks (0.054 cubic metres of wall per block, so 1/0.054 = 18.5 blocks). Ashlar joints are thin, taken as a twentieth of the wall by volume at about 1800 kg per cubic metre, so about 100 kg of mortar. A mason sets a block of about 140 kg (the stone_blocks unit mass) with a gang to lift it, taken as one mason hour per block, and two labourers hoist and bed it: 18.5 mason hours and 37 labourer hours. An estimate of the work rate, confidence D.",
+   "conf": "D",
+   "requires_node": null
+  },
+  "timber_frame_m3": {
+   "outputs": {
+    "timber_frame_m3": 1.0
+   },
+   "inputs": {
+    "timber_m3": 1.0
+   },
+   "labour_hours": {
+    "carpenter": 30.0,
+    "labourer": 10.0
+   },
+   "satisfies": {
+    "shelter": 1.0
+   },
+   "unit_dimension": "volume",
+   "unit_mass_kg": 600.0,
+   "basis": "per cubic metre of timber in a framed wall or roof, cut, jointed and raised",
+   "yield_basis": "One cubic metre of timber in the frame is one cubic metre of the structure the shelter need counts (the effectiveness data/world/needs.json gives timber_m3). Hewing to size, cutting joints and raising a frame by hand took a carpenter some tens of hours per cubic metre of timber, taken as 30; labourers help to raise it. An estimate of the work rate, confidence D.",
+   "conf": "D",
+   "requires_node": null
+  }
+ }
+}

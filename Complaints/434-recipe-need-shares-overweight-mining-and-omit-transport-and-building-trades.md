@@ -1,6 +1,16 @@
 # Recipe need shares overweight mining and leave out transport and much of building
 
-**Status:** open
+**Status:** partly done. Done: carriage labour enters the need shares (`workforce_carriage.py`, crew hours per
+tonne-km from the route modes through `geography.carriage_rates`, `crew_trade` in `route_modes/modes.json`), so
+sailors now get a derived share in every civilisation that holds a sailing or boat mode; the share denominator now keeps
+farm hours, so farm-heavy goods no longer pour their whole weight into the few non-farm trades they touch; laid-wall
+services (`data/production/97_building_services.json`) give masons and carpenters shelter-driven need. Open: land
+carriers (carters, drovers, muleteers) have no trade, so land carriage falls on the farm trade and is dropped; plumbers
+need a household water need with piped delivery (see below); millwrights stay near zero because physically a few
+hundred wheel-years of upkeep is tiny against a whole economy; mining stays about half because undeclared end goods
+(obscure minerals no need names) each take the generic weight; within-need weights are still an equal split because
+the need data holds effectiveness but no spending shares. `MEAN_HAUL_KM` and the land/water equal split are labelled
+heuristics.
 
 The labour package now sizes each trade's town and national population from its share of non-farm
 labour need. The source is `workforce_spinup.need_shares_by_trade` (the recipe graph under an equal

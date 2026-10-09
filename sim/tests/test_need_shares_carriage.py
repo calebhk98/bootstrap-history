@@ -56,5 +56,27 @@ class CarriageEntersTheNeedTests(unittest.TestCase):
         self.assertGreater(_shares(reached, carriage)["sailor"], 0.001)
 
 
+_SERVICES = ("brick_wall_m3", "stone_wall_m3", "timber_frame_m3")
+
+
+class BuildingServicesTests(unittest.TestCase):
+
+    def _without_services(self):
+        return {key: entry for key, entry in _PRODUCTION.items() if key not in _SERVICES}
+
+    def test_wall_services_serve_shelter_through_the_builders(self):
+        for key, trade in (("brick_wall_m3", "mason"), ("stone_wall_m3", "mason"),
+                           ("timber_frame_m3", "carpenter")):
+            self.assertIn("shelter", _PRODUCTION[key]["satisfies"])
+            self.assertGreater(_PRODUCTION[key]["labour_hours"][trade], 0.0)
+
+    def test_laying_walls_adds_to_the_masons_and_carpenters_need(self):
+        reached = _civ("rome_100ad")["starting_techs"]
+        without = workforce_spinup.need_shares_by_trade(
+            self._without_services(), set(reached), techniques_available_to)
+        with_services = _shares(reached)
+        self.assertGreater(with_services["mason"], without["mason"])
+
+
 if __name__ == "__main__":
     unittest.main()

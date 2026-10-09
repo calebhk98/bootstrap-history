@@ -12,6 +12,10 @@ consumes) that no need names takes an equal generic weight, and a material
 with several available producers is split equally among them, until
 price-responsive shares and technique-choice costs exist to replace these.
 
+Carriage is part of a good's chain: every tonne a recipe makes is carried a typical haul by the crews of
+the carriage modes the society's technologies unlock (workforce_carriage.py, from geography's rates).
+Farm hours count in a chain's total, so a farm-heavy good gives the other trades only their own slice.
+
 Farm labour is not decided here; the engine pins it from the farm-labour
 logic in sim.world.agriculture and this module splits the remaining hours.
 """
