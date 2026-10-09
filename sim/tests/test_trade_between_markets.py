@@ -15,7 +15,7 @@ from sim.world import market, trade_between
 def conditions(**changes):
     base = dict(household_demand_at_anchor_tonnes=100.0, committed_demand_tonnes=0.0,
                 society_capacity_tonnes=100.0, actor_supply_tonnes=0.0,
-                founder_sales_tonnes=0.0, stock_tonnes=0.0)
+                founder_sales_tonnes=0.0, stock_tonnes=0.0, floor_ratio=0.4)
     base.update(changes)
     return market.MarketConditions(**base)
 

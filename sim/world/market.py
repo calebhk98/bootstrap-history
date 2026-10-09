@@ -14,10 +14,11 @@ against what is wanted, with capacity already built treated as sunk:
               for a price (the founder's and projects')
 
 The price ratio (price over long-run cost) is the one that clears the two.
-It is held between a floor, what running built capacity costs without paying
-its capital back, and a ceiling. Above the floor everything on offer sells;
-at the floor the surplus goes unsold, society producers (who can idle) take
-the unsold part, and it is carried as stock. Capacity then follows the price:
+It is held between a ceiling and two floors. Producers' floor: what running built capacity costs
+without paying its capital back; below it society producers idle. Stock's floor: stock and price takers
+(the founder's sales, actors' output) sell below any producer's cost, down to their own bound. Above the
+producers' floor everything on offer sells; at it the surplus goes unsold, society producers (who can
+idle) take the unsold part, and it is carried as stock. Capacity then follows the price:
 it grows while the price sits above cost and shrinks while below.
 
 Standalone: it takes tonnes and returns tonnes. `sim/engine/market_clearing.py`
@@ -52,14 +53,13 @@ SHORT_RUN_SUPPLY_PRICE_ELASTICITY = declare(
 
 CLEARING_BISECTION_STEPS = 34
 
-DEFAULT_FLOOR_RATIO = declare(
-    "DEFAULT_FLOOR_RATIO", 0.4, kind="temporary_heuristic",
-    unit="price over long-run cost (minimum)", source=None, confidence="D",
-    why="What running capacity that is already built costs, as a share of the "
-        "long-run cost, which also repays the capital. Taken from the share "
-        "commodities.json already uses as its default price floor; a split "
-        "of each recipe's cost into running and capital parts would replace "
-        "it.")
+UNSPLIT_FLOOR_RATIO = 1.0   # a producer whose cost has no running part to idle on sells at no less than its cost
+
+STOCK_FLOOR_RATIO = declare(
+    "STOCK_FLOOR_RATIO", 0.01, kind="temporary_heuristic",
+    unit="price over long-run cost (minimum for stock)", source=None, confidence="D",
+    why="Stock already made sells at whatever it fetches, below any producer's cost, down to this "
+        "share. A holder's reservation (salvage value, the loss from carrying it on) would replace it.")
 
 DEFAULT_CEILING_RATIO = declare(
     "DEFAULT_CEILING_RATIO", 6.0, kind="temporary_heuristic",
@@ -105,7 +105,8 @@ class MarketConditions:
     offers: Tuple[Offer, ...] = ()
     demand_price_elasticity: float = DEFAULT_DEMAND_PRICE_ELASTICITY
     supply_price_elasticity: float = SHORT_RUN_SUPPLY_PRICE_ELASTICITY
-    floor_ratio: float = DEFAULT_FLOOR_RATIO
+    floor_ratio: float = UNSPLIT_FLOOR_RATIO
+    stock_floor_ratio: float = STOCK_FLOOR_RATIO
     ceiling_ratio: float = DEFAULT_CEILING_RATIO
 
 
@@ -127,7 +128,10 @@ def _demand_at(conditions: MarketConditions, price_ratio: float) -> float:
 
 def _society_output_at(conditions: MarketConditions, price_ratio: float) -> float:
     """What the society's producers bring to market at this price: their
-    dearest working only pays above the cost it is already priced at."""
+    dearest working only pays above the cost it is already priced at, and
+    below their floor they idle."""
+    if price_ratio < conditions.floor_ratio:
+        return 0.0
     return conditions.society_capacity_tonnes * (
         price_ratio ** conditions.supply_price_elasticity)
 
@@ -140,8 +144,8 @@ def _supply_at(conditions: MarketConditions, price_ratio: float) -> float:
 
 def clearing_price_ratio(conditions: MarketConditions) -> float:
     """The price over long-run cost at which demand equals the supply on
-    offer, held between the floor and the ceiling."""
-    low, high = conditions.floor_ratio, conditions.ceiling_ratio
+    offer, held between the stock's floor and the ceiling."""
+    low, high = min(conditions.stock_floor_ratio, conditions.floor_ratio), conditions.ceiling_ratio
     if (conditions.committed_demand_tonnes == 0.0 and conditions.actor_demand_tonnes == 0.0
             and conditions.actor_supply_tonnes == 0.0 and not conditions.offers
             and conditions.founder_sales_tonnes == 0.0 and conditions.stock_tonnes == 0.0
@@ -152,7 +156,7 @@ def clearing_price_ratio(conditions: MarketConditions) -> float:
                           + conditions.supply_price_elasticity)
         ratio = (conditions.household_demand_at_anchor_tonnes
                  / conditions.society_capacity_tonnes) ** exponent
-        return min(high, max(low, ratio))
+        return min(high, max(conditions.floor_ratio, ratio))
     if _demand_at(conditions, low) <= _supply_at(conditions, low):
         return low
     if _demand_at(conditions, high) >= _supply_at(conditions, high):

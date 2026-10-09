@@ -68,7 +68,7 @@ class ForeignActorTradeMixin:
             household_demand_at_anchor_tonnes=entry["reference_tonnes"], committed_demand_tonnes=0.0,
             society_capacity_tonnes=entry["capacity_tonnes"], actor_supply_tonnes=sold,
             founder_sales_tonnes=0.0, stock_tonnes=entry["stock_tonnes"], actor_demand_tonnes=bought,
-            floor_ratio=float(record.get("price_floor_factor", market.DEFAULT_FLOOR_RATIO)),
+            floor_ratio=self._floor_ratio(commodity),
             ceiling_ratio=float(record.get("price_ceiling_factor", market.DEFAULT_CEILING_RATIO))))
 
     def partner_price_response(self, partner, material, tonnes, landing):
