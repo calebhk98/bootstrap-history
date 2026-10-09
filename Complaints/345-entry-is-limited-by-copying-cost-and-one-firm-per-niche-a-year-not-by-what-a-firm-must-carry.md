@@ -22,3 +22,5 @@ Overlapping issues closed into this one; each closed file keeps its full text.
 
 - 330 (`closed/330-firm-count-grows-without-bound-and-licences-never-reach-the-state.md`): firm count can grow without bound and licences never reach the state; a separate piece is state war relief per held weapon.
 - 331 (`closed/331-markets-outgrow-the-fixed-size-concern.md`): incumbents now expand and exit; what remains is the entry limit here.
+
+Owner decision (2026-10-09): a rule of one new firm per niche per year does not match real life. The number of firms should follow from what a firm must carry (site, management, customers) against what the market pays, derived, with no per-year entry cap.

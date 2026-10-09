@@ -62,3 +62,5 @@ this finding explicitly echoes. `Complaints/102` (ECON-004) for the labour-
 market wiring this depends on. `Complaints/44` and `Complaints/47` (open)
 both independently point at the same underlying gap (professions do not
 move in response to scarcity) that `labour_market.py` exists to close.
+
+Owner decision (2026-10-09): supplier depth must come out of the simulation automatically (operating concerns, trained workers, years of running), never a manual or authored value per technology.

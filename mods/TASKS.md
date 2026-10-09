@@ -20,8 +20,9 @@ Ordered by value per cost.
    and `data/world/foreign_economies.json` (a mod can add a civilisation but
    not enable it as a trading partner).
 
-2. **Manifest hardening (partly done):** unknown manifest keys are rejected
-   (`test_mod_manifest_keys`). Still open: a minimum game version (the game has
+2. **Manifest hardening (partly done):** a missing required key is refused; extra
+   keys are the author's metadata and are kept out of the way, never refused
+   (owner decision, `test_mod_manifest_keys`). Still open: a minimum game version (the game has
    no version number to compare against yet, so it needs one first) and
    compared versions for dependencies (`dependencies` is a list of ids today).
 

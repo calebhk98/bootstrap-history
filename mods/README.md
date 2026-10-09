@@ -39,9 +39,9 @@ A manifest has this shape:
 }
 ```
 
-All five keys are required. Any other key is refused with a message naming it and
-the known keys (the list is the manifest type's own fields in
-`sim/engine/mods_base.py`). The game has no version number to compare against, so
+All five keys are required; a manifest missing one is refused with a message naming
+it. Any other key (author, credits, a description, a homepage) is the author's own
+metadata: the loader ignores it and the mod loads. The game has no version number to compare against, so
 there is no minimum-game-version field yet.
 
 A mod may provide:

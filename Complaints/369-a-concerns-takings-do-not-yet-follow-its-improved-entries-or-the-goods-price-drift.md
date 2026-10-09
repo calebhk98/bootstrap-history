@@ -21,3 +21,5 @@ Overlapping issues closed into this one; each closed file keeps its full text.
 
 - 370 (`closed/370-real-output-ignores-goods-offered-after-the-opening-and-household-income-does-not-follow-wages.md`): real output ignores goods offered after the opening; household income does not follow wages.
 - 354 (`closed/354-the-founders-takeoff-needs-costs-that-lag-the-economy-index.md`): the founder's takeoff economy index is gone; the remaining ask is aggregate labour demand cleared against the working population.
+
+Owner decision (2026-10-09): authored node revenue means the economy is still partly fake; this is the next priority after 119 and 135.

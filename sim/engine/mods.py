@@ -17,10 +17,6 @@ from .mods_remove import (RECIPE, TECH, check_recipe_references, check_tree_refe
 def _manifest(path: str) -> ModManifest:
     with open(path, encoding="utf-8") as source:
         raw = json.load(source)
-    unknown = sorted(set(raw) - set(MANIFEST_KEYS))
-    if unknown:
-        raise ModError("%s has unknown manifest keys: %s (known keys: %s)" %
-                       (path, ", ".join(unknown), ", ".join(MANIFEST_KEYS)))
     missing = [name for name in MANIFEST_KEYS if name not in raw]
     if missing:
         raise ModError("%s is missing manifest fields: %s" % (path, ", ".join(missing)))

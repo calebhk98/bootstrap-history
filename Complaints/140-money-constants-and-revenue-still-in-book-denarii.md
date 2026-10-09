@@ -100,3 +100,5 @@ Overlapping issues closed into this one; each closed file keeps its full text.
 ## Moved from 132
 
 - Production data still names land in iugera (`iugerum_land`, `land_iugera_years`) and the price solver converts at that one edge; `sim/world/land.py` works in hectares. Engine message source spells money "denarii" and the display edge (`sim/ui/proto/util.py`, `_localise_money`) swaps the civilisation's own word in. Both are internal names, not what a player reads (`closed/132-the-game-assumes-rome-exists.md`).
+
+Owner decision (2026-10-09): a money amount in book denarii is an error, not a documented exception: remove Rome from the game and the figure means nothing. Every money amount becomes a physical quantity (labour hours, a mass of goods or coin metal) converted at the display edge.

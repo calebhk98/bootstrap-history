@@ -224,3 +224,5 @@ strata money moves only by what crossed the edge and the state's relief.
   and stage 7 (retire what the kernel replaced).
 - The engine's `market_loans`, `update_capital_market` and its rate still run (and set the rate) when the agent economy is off;
   only the reading side is unified.
+
+Owner decision (2026-10-09): high priority: do it as soon as possible.

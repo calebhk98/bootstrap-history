@@ -36,3 +36,5 @@ thousands of millwrights, against the registry's own notes. The fix is data:
 - lead pipe and water-works demand in the recipe graph;
 - or the civilisation file stating the trades already established there, an initial condition
   CLAUDE.md 4.1 allows.
+
+Owner decision (2026-10-09): comes after 119 and 135. Once transport is costed properly, demand for shipping and carriage should rise by itself; prefer that to stating the demand.

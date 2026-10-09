@@ -5,7 +5,7 @@ from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 from .records import ActorRecord, ActorsState
 
-from . import firm_entry, imitation, ledger, patent
+from . import firm_entry, imitation, ledger
 from .base import RecordedActor
 from .concern_totals import ConcernTotals
 from .edges import EDGE_ENTRY_PREMIUM, EDGE_POOLED_CAPITAL
@@ -374,7 +374,7 @@ class ActorRegistry:
 				continue
 			probe = Firm("probe", ActorRecord(kind="firm", last_margin=expected, founded_year=world.year))
 			chain = imitation.missing_chain(node_id, world, probe)
-			if not chain or patent.chain_blocked_reason(world, probe, chain):
+			if not chain:
 				continue
 			plan = imitation.copy_plan(probe, chain, world)
 			founders = firm_entry.founder_candidates(self) if strata_exist else []

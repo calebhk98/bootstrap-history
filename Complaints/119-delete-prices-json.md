@@ -177,3 +177,5 @@ sourced test fixture.
 - `rg -n 'prices\.json|\bPRICES\b' sim tools` still finds prose in comments, test docstrings and the test harness's own `PRICES` name for the wage document; data and docs outside `sim` also mention the file.
 
 Related: 38, 309.
+
+Owner decision (2026-10-09): high priority: do it soon, it likely causes economic errors.

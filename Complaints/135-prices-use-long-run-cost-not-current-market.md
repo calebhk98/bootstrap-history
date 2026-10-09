@@ -66,3 +66,5 @@ Related: 102, 326, 338, 359, 364.
 ## Update (Complaint 375)
 
 The price a good clears at is no longer one solved long-run cost for the society: each producer offers at the cost of the entry it runs and the market clears the offers against demand. The solver gives the incumbents' cost, the cost of one entry for a producer, and a baseline for a good nobody yet makes. A mine's amortised cost still enters through the solver's cost of the entry; a producer that has sunk its capital selling below the full cost (the floor) is the existing floor ratio, not yet each producer's own running cost.
+
+Owner decision (2026-10-09): high priority: a bigger issue than it looks; do it soon.

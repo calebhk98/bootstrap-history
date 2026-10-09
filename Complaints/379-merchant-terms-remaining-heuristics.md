@@ -28,3 +28,5 @@ Related: 346, 339.
 Overlapping issues closed into this one; each closed file keeps its full text.
 
 - 346 (`closed/346-merchant-terms-and-ornament-limit-are-heuristics.md`): merchant terms are derived; the remaining heuristics are listed here, ornament held stock is in 442.
+
+Owner decision (2026-10-09): derive the merchants' terms instead of stating them: crew per ship from what the ship needs to sail and defend itself, food and water for the crew and animals over the voyage, the mass of the cargo and of the coin carried to pay for it, and the risk of robbery against crew size. Done right, heavy cheap goods (grain) only move a few tiles by land, because the carriage or the animals' feed eats the value, while a ship moves the same grain much further at a lower cost per kg.

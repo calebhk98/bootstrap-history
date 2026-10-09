@@ -37,3 +37,5 @@ Overlapping issues closed into this one; each closed file keeps its full text.
 - 402 (`closed/402-the-founder-is-not-a-player-actor.md`): the founder is not a player actor.
 - 392 (`closed/392-one-money-per-economy-so-mexica-cloth-is-a-good.md`): one money per economy, so Mexica cloth is a good (design report: Complaints/reports/agent-economy-several-moneys.md).
 - 270 (`closed/270-request-private-militia-bribery-and-campaign-influence.md`): private militia, bribery and campaign influence (owner: wait for multiplayer).
+
+Owner decision (2026-10-09): high priority: do it as soon as possible.

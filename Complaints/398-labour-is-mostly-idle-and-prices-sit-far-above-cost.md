@@ -26,3 +26,5 @@ Overlapping issues closed into this one; each closed file keeps its full text.
 - 388 (`closed/388-unskilled-wages-low-in-rome-and-mexica.md`): unskilled wages look low in Rome and Mexica; needs sourced day wages.
 - 393 (`closed/393-land-has-no-price-so-free-entry-drives-food-to-labour-cost.md`): land has a market now; entry on price is off and rents swing.
 - 395 (`closed/395-recipes-for-crops-carry-no-seed-or-draught-input.md`): crop recipes carry no seed or draught input; physical shares needed in the wheat entries and other crops.
+
+Owner decision (2026-10-09): the model is wrong where a seller (of a good or of their own hours) who cannot sell keeps the same ask. A seller who cannot sell lowers the ask year by year until it sells (a household that cannot sell its hours must eat), and a seller who sells out raises it until it no longer does; margins and idle labour should fall out of that. Look at how the industrial revolution moved wages off subsistence for the shape to expect.

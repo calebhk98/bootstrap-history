@@ -72,3 +72,5 @@ Related: 332.
 ## Agent economy (current)
 
 The first increment above describes the old engine market, which the game no longer runs. The agent economy has pooled credit with household lenders only (`sim/economy/credit.py`, `credit_claims.py`, `lending.py`); no banks, bonds, equity or insurance. What exists, what is missing, a first step (a bank as an ordinary agent, deposits and loans as claims in `credit_claims`) and the heuristics it needs are in `Complaints/reports/agent-economy-capital-markets.md`. Complaint 307 no longer applies there (the state offers no funds).
+
+Owner decision (2026-10-09): lower priority; it should come when it can, and a civilisation that has no banking institution yet must not get banks.

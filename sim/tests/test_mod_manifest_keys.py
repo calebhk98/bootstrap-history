@@ -1,4 +1,4 @@
-"""A mod manifest with a key the loader does not read is refused."""
+"""A mod manifest must carry the keys the loader reads; any other key (author, credits, a description) is the author's own metadata and loads."""
 
 QUICK_TOPIC = True
 
@@ -11,21 +11,26 @@ from sim.tests.test_mod_removal_and_civs import ModTestBase
 
 
 class ManifestKeyTests(ModTestBase):
-    def add_with_extra_key(self, key):
+    def add_with_extra_keys(self, **extra):
         self.add_mod("test_acme_k3f9")
         path = self.mods_dir / "test_acme_k3f9" / "mod.json"
         manifest = json.loads(path.read_text())
-        manifest[key] = "1.0"
+        manifest.update(extra)
         path.write_text(json.dumps(manifest))
 
-    def test_unknown_key_is_refused_naming_key_and_known_keys(self):
-        self.add_with_extra_key("min_game_version")
+    def test_extra_metadata_keys_load(self):
+        self.add_with_extra_keys(author="Bob", coauthors=["Ann"], description="A mod.")
+        self.assertEqual([found.id for found in self.manifests()], ["test_acme_k3f9"])
+
+    def test_missing_key_is_refused(self):
+        self.add_mod("test_acme_k3f9")
+        path = self.mods_dir / "test_acme_k3f9" / "mod.json"
+        manifest = json.loads(path.read_text())
+        del manifest["conflicts"]
+        path.write_text(json.dumps(manifest))
         with self.assertRaises(ModError) as caught:
             self.manifests()
-        message = str(caught.exception)
-        self.assertIn("min_game_version", message)
-        for known in MANIFEST_KEYS:
-            self.assertIn(known, message)
+        self.assertIn("conflicts", str(caught.exception))
 
     def test_known_keys_come_from_the_manifest_type(self):
         self.assertEqual(set(MANIFEST_KEYS),
