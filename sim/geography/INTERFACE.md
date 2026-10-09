@@ -56,12 +56,17 @@ caller from what the actor knows; geography does not read the tech tree.
 | `works_priced_from_deposits()` | `[resource_id]` whose catalogue row says its mine running cost comes from the deposits' physical works. |
 | `mine_demand_goods()` | `{resource_id: [good]}`: the goods whose annual demand a mine of that resource supplies (`mine_demand_goods` on its catalogue row). |
 | `parameter_value(parameter_id)` | The value of one map parameter (for example `mining_trade`, the trade whose wage prices mine labour). |
-| `build_requirements(tile_a, tile_b, improvement)` | `{km, grade, trade, labour_hours, materials: {material: tonnes}, node}` of building a way (`"road"`, `"rail"`) over the land edge between two bordering tiles, from the terrain (earthwork on the slope, surface and fixed materials from the mode's `construction` data), or `null` when it cannot be built there. |
-| `built_km(improvements, improvement)` | Kilometres of a way (`"road"`, `"rail"`) the caller's `improvements` record holds, over land edges, counted as a build is. |
+| `build_requirements(tile_a, tile_b, improvement)` | `{km, grade, trade, labour_hours, materials: {material: tonnes}, node, build_years, engineered, crew_people, crew_hours_per_year}` of building a way (`"road"`, `"rail"`, `"canal"`) over the land edge between two bordering tiles, from the terrain (earthwork on the slope, surface and fixed materials from the mode's `construction` data), a `"bridge"` over a land edge between tiles on the same river, or a `"port"` on one coastal tile with no natural harbour (`tile_b` the same tile); or `null` when it cannot be built there. Ground steeper than a way's natural limit is `engineered` at more earthwork, up to its engineered limit. |
+| `improvement_key(improvement, tile_a, tile_b)` | The key a built improvement is recorded under: the tile id for a port, the edge key otherwise. |
+| `train_carrier(mode_id)` | `{inputs, fuel_material, stock_material, stock_kg}` of a rail mode as a freight carrier (physical inputs per tonne-km, what the fuel and rolling stock are made of), or `null` for a mode that is not a train. |
+| `built_km(improvements, improvement)` | Kilometres of a way (`"road"`, `"rail"`, `"canal"`; a bridge's span or a port's quay) the caller's `improvements` record holds, counted as a build is. |
 | `edge_key(tile_a, tile_b)` | The key a built road or track between two tiles is stored under. |
 
 `improvements` is the caller's record of what has been built, `{edge_key: {"road": true,
-"rail": true}}`: geography never stores who built what. `mode_costs` is money per tonne-km by
+"rail": true, "canal": true, "bridge": true, "engineered": true}, tile_id: {"port": true}}`: geography never
+stores who built what. A land edge between tiles on the same river is a river crossing: land modes ford it at
+their own handling, a mode marked `bridge_only` (rail) cannot cross it without a `bridge`. A built `port`
+joins its tile to the sea edges of the bordering tiles that have a harbour. `mode_costs` is money per tonne-km by
 mode and `handling_costs` money per tonne per change of mode; without them costs are physical
 (labour-hours). `held_nodes` opens sea lanes that need a technique (the monsoon crossing).
 

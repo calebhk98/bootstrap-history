@@ -27,7 +27,7 @@ def _buildable_pair(sim, way="road"):
 
 def _finish_building(sim):
     """Move the calendar to the year the last way under construction opens, and open it."""
-    due_years = [year for ways in sim.state.economy.ways_under_construction.values() for year in ways.values()]
+    due_years = [build["due"] for ways in sim.state.economy.ways_under_construction.values() for build in ways.values()]
     if due_years:
         sim.state.scenario.year = max(due_years)
     sim.finish_ways()

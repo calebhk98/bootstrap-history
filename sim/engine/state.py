@@ -208,10 +208,10 @@ class ProjectsState:
 @dataclass
 class EconomyState:
 	"""Physical plants, extractive workings, durable inventory, and material flows."""
-	# edge key -> {way: true} of the roads and track built (ways.py); geography's routes read it
+	# edge key (a port: tile id) -> {way: true} of the roads, track, canals, bridges and ports built (ways.py); geography's routes read it
 	improvements: Dict[str, Dict[str, bool]] = field(default_factory=dict)
-	# edge key -> {way: year it is finished} of the roads and track paid for and being built (ways.py)
-	ways_under_construction: Dict[str, Dict[str, float]] = field(default_factory=dict)
+	# the same key -> {way: {due year, crew trade and hours a year, engineered, year last pressed}} of the ways paid for and being built (ways.py)
+	ways_under_construction: Dict[str, Dict[str, Dict[str, Any]]] = field(default_factory=dict)
 	# tile -> {construction node id: capacity built there} (works.py)
 	works: Dict[str, Dict[str, float]] = field(default_factory=dict)
 	# tile -> {construction node id: [year it is finished, capacity]} of works paid for and being built (works.py)

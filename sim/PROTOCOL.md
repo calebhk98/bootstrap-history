@@ -285,12 +285,17 @@ Two fixes, usable separately or together:
                                                     this year's founder hours, local
                                                     contracts and most local standing.
                                                     Refused for a tile nobody lives on.
-      {"cmd":"build_way","way":"road",             build a road ("road") or railway ("rail") between
-       "from":"<tile>","to":"<tile>"}                two bordering tiles you hold (typed: `build_way
-                                                    road <tile> <tile>`); add "preview":true to
-                                                    quote the km, labour hours, tonnes of material
-                                                    and money first. Pays at market prices; built
-                                                    ways are what journeys and hauls route over.
+      {"cmd":"build_way","way":"road",             build a road ("road"), railway ("rail"), canal
+       "from":"<tile>","to":"<tile>"}                ("canal") or bridge ("bridge", over a river
+                                                    between two tiles on it) between two bordering
+                                                    tiles you hold, or a port ("port", "to" the same
+                                                    tile) on a coast tile without a natural harbour
+                                                    (typed: `build_way road <tile> <tile>`, `build_way
+                                                    port <tile>`); add "preview":true to quote the km,
+                                                    labour hours, tonnes of material, money and
+                                                    years first. Pays at market prices and takes a
+                                                    crew from the labour market for the build years;
+                                                    built ways are what journeys and hauls route over.
       {"cmd":"map"} / {"cmd":"map","full":true}    the land you hold: "you_are_based_at",
                                                     "tiles" (name, region, terrain,
                                                     people, days_from_your_base,
