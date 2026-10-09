@@ -86,7 +86,10 @@ with prices runs away.
 
 **Households save and lend.** Beyond their cash buffer they keep savings worth years of their income
 above subsistence, more when the real rate is high, but never below a floor, so expected inflation reaching the rate does not
-make them spend their savings (`households_orders.savings_target`); what they hold
+make them spend their savings (`households_orders.savings_target`). Wealth above target is spent down at a limited pace
+(`WEALTH_DRAWDOWN_LIMIT`, set by the larger of this and last year's income), and a year's spending falls by at most
+a limited share of expected spending (`SPENDING_CUT_LIMIT`), so a swing in the target does not swing demand for
+durables; what they hold
 beyond buffer and spending is offered to borrowers. Loans are claims in the lender's wealth
 (`credit_claims.py`): a default is the lender's loss and cuts its spending. Producers borrow for plant,
 merchants for cargo their cash cannot buy, households for a shortfall with income ahead.

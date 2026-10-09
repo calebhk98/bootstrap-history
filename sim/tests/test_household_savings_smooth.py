@@ -65,6 +65,31 @@ class SpendingSmoothingTests(unittest.TestCase):
         self.assertGreater(self.bids(income=400000.0), 2.0 * self.bids(income=100000.0))
 
 
+class SpendingCutSmoothingTests(unittest.TestCase):
+    """A rise in the savings a household wants is met over several years: spending falls by a limited share."""
+
+    def bids(self, **changes):
+        view = View()
+        view.interest_rate = lambda currency: 0.3
+        return budget_total(households.goods_orders(cohort(**changes), view, 150000.0, 100000.0, BASKET, SPECS))
+
+    def test_spending_falls_by_at_most_the_limit_from_expected_spending(self):
+        expected = 120000.0
+        floor = (1.0 - households_orders.SPENDING_CUT_LIMIT) * expected
+        self.assertGreaterEqual(self.bids(expected_spending=expected, expected_floor_cost=1.0), floor * 0.95)
+
+    def test_a_household_with_no_history_is_not_held_up(self):
+        self.assertLess(self.bids(), self.bids(expected_spending=120000.0, expected_floor_cost=1.0))
+
+    def test_a_first_year_with_little_income_so_far_spends_its_wealth_at_the_pace_of_its_usual_income(self):
+        def spending(**changes):
+            view = View()
+            view.interest_rate = lambda currency: 0.12
+            return budget_total(households.goods_orders(cohort(expected_inflation=0.2, **changes), view, 1e6,
+                                                        20000.0, BASKET, SPECS))
+        self.assertGreater(spending(last_year_income=100000.0), 1.5 * spending())
+
+
 class UnsoldGoodTests(unittest.TestCase):
     """A good with no seller has no price, so it draws no bid and its need's money goes to goods that have one."""
     SHELTER = households.make_basket({
