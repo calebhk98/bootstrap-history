@@ -10,7 +10,7 @@ import math
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
 from sim.geography import (food_capacity, food_wild_harvest, map_source, mechanisms, parameters, resource_links, resources_biotic, rail_freight,
-                           resources_catalogue, resources_endowment, resources_mined, resources_prospecting,
+                           resources_catalogue, resources_endowment, resources_mined, resources_prospecting, resources_sites,
                            resources_summary, routes_carriage, routes_graph, routes_modes, routes_search, tile_holdings, tile_layers,
                            ways_build, ways_works)
 
@@ -235,6 +235,24 @@ def mined_before(tile_ids: Iterable[str], resource_id: str, year: int,
     deposits_in_tiles, unit}, a working being {id, tile_id, output_per_year, years_worked, years_since_last_output}
     in the resource's unit. Deposits with no working date are listed in `unworked`, never guessed."""
     return resources_mined.mined_before(_map(world_map), tile_ids, resource_id, year)
+
+
+def worked_deposits(tile_ids: Iterable[str], resource_id: str, year: int, found: Iterable[Mapping[str, Any]] = (),
+                    world_map: Optional[WorldMap] = None) -> List[Dict[str, Any]]:
+    """The deposits of a resource a party holding these tiles can name: the catalogue's that were first worked by
+    `year` (or have no date), and the prospected deposits `found`; each {id, name, tile_id, resource, size_tonnes,
+    grade_kg_per_tonne, found_by}, the size None where the data gives none."""
+    return resources_sites.worked_deposits(_map(world_map), tile_ids, resource_id, year, found)
+
+
+def working_rate_tonnes_per_year(size_tonnes: float, world_map: Optional[WorldMap] = None) -> float:
+    """The most a deposit of this size yields a year."""
+    return resources_sites.working_rate_tonnes_per_year(_map(world_map), size_tonnes)
+
+
+def ore_tonnes_per_tonne(row: Mapping[str, Any]) -> float:
+    """Tonnes of ore raised per tonne of the resource held, for a `worked_deposits` row."""
+    return resources_sites.ore_tonnes_per_tonne(row)
 
 
 def prospect(tile_id: str, resource_id: str, effort: float, seed: Any,

@@ -32,6 +32,7 @@ from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import deposits as deposit_model, mine_technique
 from sim.geography.api import mine_demand_goods, parameter_value, tile_facts, tiles_held, works_priced_from_deposits
 from . import purchase_rule
+from .mine_deposits import MineDepositsMixin, NO_DEPOSIT_TEXT
 from sim.agents.api import edges
 
 
@@ -53,7 +54,9 @@ def mine_catalog_hint_for(materials):
             % ", ".join(sorted(materials)))
 
 
-class MiningMixin:
+class MiningMixin(MineDepositsMixin):
+    mine_refusal = None   # why the last open_mine opened nothing, when a deposit was the reason
+
     @property
     def MINE_OPEX_MATERIALS(self):
         """Materials whose mine running cost comes from the deposits' physical works, from the map's catalogue."""
@@ -413,7 +416,27 @@ class MiningMixin:
             mat = working["material"]
             if mat not in ceilings:
                 ceilings[mat] = max(1.0, self.mine_land_ceiling(mat))
+            self._draw_working(working)
             working["intensity_yrs"] = working.get("intensity_yrs", 0.0) + working["capacity"] / ceilings[mat]
+        self._close_worked_out()
+
+    def _draw_working(self, working):
+        """This year's yield of a working comes out of the deposit it names."""
+        if working.get("deposit"):
+            self.draw_deposit(working["deposit"], self.mine_yield_t_for(working))
+
+    def _close_worked_out(self):
+        """Workings whose deposit has nothing left close."""
+        holdings = self.state.holdings
+        kept = []
+        for working in holdings.mines or ():
+            deposit_id = working.get("deposit")
+            if deposit_id and self.deposit_remaining_tonnes(working["material"], deposit_id) <= 0.0:
+                self.state.household.log.append((self.state.scenario.year, "the %s workings at %s are worked out and close"
+                                                 % (working["material"], deposit_id)))
+            else:
+                kept.append(working)
+        holdings.mines = kept
 
     # ---- TECHNOLOGY: the pump, the railway and cheap steel fight back -----
     #
@@ -490,7 +513,10 @@ class MiningMixin:
     def mine_yield_t_for(self, working):
         """Tonnes a year THIS working actually raises this year, after ITS
         OWN depletion."""
-        return working["capacity"] * self.mine_depletion_factor_for(working)
+        yield_t = working["capacity"] * self.mine_depletion_factor_for(working)
+        if working.get("deposit"):
+            yield_t = min(yield_t, self.deposit_remaining_tonnes(working["material"], working["deposit"]))
+        return yield_t
 
     def mine_operating_cost_for(self, working):
         """What THIS working costs to run this year, whether or not you use
@@ -527,6 +553,9 @@ class MiningMixin:
         room = max(0.0, ceiling - self.mine_capacity.get(mat, 0.0)
                    - holdings.mine_pending.get(mat, 0.0))
         depl = self.mine_depletion_factor(mat)
+        deposit_room = self.mine_room_in_deposits(mat)
+        if deposit_room is not None:
+            room = min(room, deposit_room)
         note = ("The yearly cost is charged whether or not you use the "
                 "output, and goes on until you close it. Mothballing is "
                 "not free to reverse: the shaft floods and the crew "
@@ -546,6 +575,9 @@ class MiningMixin:
                 "afford_means": purchase_rule.afford_means(),
                 "the_ground_here_could_ever_support": round(ceiling, 1),
                 "room_left_before_geology_stops_you": round(room, 1),
+                "deposits_you_have_found": [
+                    {"id": row["id"], "tile": row["tile_id"], "room_t_per_year": round(row["room_tonnes_per_year"], 1),
+                     "left_t": round(row["remaining_tonnes"])} for row in self.found_deposits(mat)],
                 "current_yield_is_this_fraction_of_day_one": round(depl, 3),
                 "note": note}
 
@@ -625,8 +657,10 @@ class MiningMixin:
                       "What you spent sinking them is gone, and reopening means "
                       "sinking them again." % (mat, saved))
 
-    def open_mine(self, mat, t_per_yr, partial=True, order=""):
-        """Open your own workings.
+    def open_mine(self, mat, t_per_yr, partial=True, order="", deposit=None):
+        """Open your own workings, each naming a deposit you have found (`deposit` picks one; otherwise the
+        deposits with most room are worked first) and bounded by it. A material with no deposit data is
+        bounded by the ceiling alone. When none has room, nothing opens and `mine_refusal` says why.
 
         The Empire's ATTESTED output is not a hard ceiling: a founder who
         needs twenty thousand tonnes of coal a year must not be throttled by
@@ -665,6 +699,13 @@ class MiningMixin:
         scenario = self.state.scenario
         t_per_yr = min(t_per_yr, max(0.0, ceiling - have_cap.get(mat, 0.0)
                                           - holdings.mine_pending.get(mat, 0.0)))
+        self.mine_refusal = None
+        deposit_room = self.mine_room_in_deposits(mat, deposit)
+        if deposit_room is not None:
+            if deposit_room <= 0.0:
+                self.mine_refusal = NO_DEPOSIT_TEXT % (mat, mat)
+                return 0.0
+            t_per_yr = min(t_per_yr, deposit_room)
         if t_per_yr <= 0:
             return 0.0
         # DEEPER ONES COST MORE. mining_cost_scale() is 1.0 on a fresh
@@ -703,7 +744,9 @@ class MiningMixin:
         # a figure recomputed later against a price_index that has since moved.
         if holdings.mine_tranches is None:
             holdings.mine_tranches = []
-        holdings.mine_tranches.append([mat, t_per_yr, scenario.year + self.MINE_LEAD_YEARS, cost, order])
+        for deposit_id, tonnes in self.allocate_to_deposits(mat, t_per_yr, deposit):
+            holdings.mine_tranches.append([mat, tonnes, scenario.year + self.MINE_LEAD_YEARS,
+                                           cost * tonnes / t_per_yr, order, deposit_id])
         holdings.mine_pending[mat] = holdings.mine_pending.get(mat, 0.0) + t_per_yr
         return t_per_yr
 
@@ -728,10 +771,11 @@ class MiningMixin:
             # unknown, not fabricated, so 0.0 rather than a guess.
             capex_paid = tranche[3] if len(tranche) > 3 else 0.0
             order = tranche[4] if len(tranche) > 4 else ""
+            deposit_id = tranche[5] if len(tranche) > 5 else None
             if scenario.year >= ready:
                 holdings.mines.append({"material": mat, "capacity": amount,
                                    "opened_year": ready, "capex_paid": capex_paid, "order": order,
-                                   "intensity_yrs": 0.0})
+                                   "intensity_yrs": 0.0, "deposit": deposit_id})
                 holdings.mine_pending[mat] = max(0.0, holdings.mine_pending.get(mat, 0.0) - amount)
                 if holdings.mine_pending.get(mat, 0.0) <= 0:
                     holdings.mine_pending.pop(mat, None)

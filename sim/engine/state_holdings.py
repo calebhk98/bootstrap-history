@@ -12,6 +12,11 @@ class HoldingsState:
 	mine_ready: Dict[str, int] = field(default_factory=dict)
 	mine_cost_paid: float = 0.0
 	mine_tranches: Optional[List[Any]] = None
+	# hidden deposits the seat's prospecting found (as geography's prospect returns them), the tonnes drawn from
+	# each deposit by id, and the person-days spent prospecting each "tile:resource" (mine_deposits.py)
+	deposits_found: List[Dict[str, Any]] = field(default_factory=list)
+	deposit_drawn: Dict[str, float] = field(default_factory=dict)
+	prospected_person_days: Dict[str, float] = field(default_factory=dict)
 	shortages: collections.Counter = field(default_factory=collections.Counter)
 	throttle: float = 1.0
 	binding: Optional[str] = None
