@@ -2280,6 +2280,7 @@
   "pre": [
    "telegraph_electric"
   ],
+  "requires_running": ["telegraph_electric"],
   "traits": [
    "commerce",
    "information",
@@ -2307,7 +2308,7 @@
   "note": "Companies operate telegraph networks and sell message transmission by the word. Enables rapid long-distance communication of prices and news.",
   "gov": -1,
   "sus": 3,
-  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.] [GATE: Rides on the running telegraph network (lines, operators, cells); with the network shut it has nothing to carry.]"
  },
  {
   "id": "fin_news_agency",
@@ -2802,6 +2803,8 @@
    "fin_canal_company",
    "railway"
   ],
+  "requires_running": ["railway"],
+  "requires_ways": {"rail": 75},
   "traits": [
    "commerce",
    "infrastructure"
@@ -2828,7 +2831,7 @@
   "note": "Company operates railroad and charges passengers and freight shippers. Transforms inland transportation but requires massive capital investment and creates monopoly power.",
   "gov": 2,
   "sus": 1,
-  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.] [GATE: Operates over the railway works, and only while they are open. Needs track the actor has built: a line joining at least two held tiles is the least that can carry a service, and the figure is that single line measured the way geography counts a rail build.]"
  },
  {
   "id": "fin_tramway",

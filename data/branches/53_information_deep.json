@@ -2283,6 +2283,8 @@
    "telegraph_electric",
    "mat_gutta_percha"
   ],
+  "requires_running": ["telegraph_electric"],
+  "_internal": "[GATE: Rides on the running telegraph network (lines, operators, cells); with the network shut it has nothing to carry.]",
   "traits": [
    "infrastructure",
    "military"

@@ -2912,6 +2912,8 @@
    "tr_canal_lock",
    "civ_pumping_station"
   ],
+  "requires_running": ["civ_harbour_dock"],
+  "_internal": "[GATE: Built into a harbour that is kept up: breakwater and quay shelter it, and a drydock basin or a lighthouse serves a port that exists.]",
   "traits": [
    "infrastructure"
   ],

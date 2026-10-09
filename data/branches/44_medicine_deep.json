@@ -2566,6 +2566,7 @@
   "pre": [
    "civ_aqueduct_roman"
   ],
+  "requires_running": ["civ_aqueduct_roman"],
   "traits": [
    "infrastructure"
   ],
@@ -2596,7 +2597,7 @@
    ]
   },
   "up_hours": 4.5,
-  "_internal": "[HEURISTIC: yearly upkeep taken as one percent of the construction labour hours (repair and keeping the works in service); no wear or failure model yet.]"
+  "_internal": "[HEURISTIC: yearly upkeep taken as one percent of the construction labour hours (repair and keeping the works in service); no wear or failure model yet.] [GATE: Draws on a water supply that is built and kept in service; with the aqueduct shut there is no flow to treat, lift or distribute.]"
  },
  {
   "id": "md2_chlorination",
@@ -2631,6 +2632,7 @@
    "civ_aqueduct_roman",
    "civ_sewer_roman"
   ],
+  "requires_running": ["civ_sewer_roman"],
   "traits": [
    "infrastructure"
   ],
@@ -2651,7 +2653,7 @@
   "note": "Storm overflows during rain; prevents plant overload; but combined systems cheaper; infiltration and inflow challenges",
   "conf": "B",
   "up_hours": 5.5,
-  "_internal": "[HEURISTIC: yearly upkeep taken as one percent of the construction labour hours (repair and keeping the works in service); no wear or failure model yet.]"
+  "_internal": "[HEURISTIC: yearly upkeep taken as one percent of the construction labour hours (repair and keeping the works in service); no wear or failure model yet.] [GATE: Takes its flow from, or is laid into, a sewer that is built and kept clear; with the sewer shut it has nothing to act on.]"
  },
  {
   "id": "md2_activated_sludge",
@@ -2661,6 +2663,7 @@
   "pre": [
    "md2_sewage_separation"
   ],
+  "requires_running": ["md2_sewage_separation"],
   "traits": [
    "infrastructure"
   ],
@@ -2680,7 +2683,7 @@
   "note": "Microorganism flocs oxidize organic matter; aeration essential; solids separation by settling; sludge recycling; process control critical",
   "conf": "B",
   "up_hours": 5.5,
-  "_internal": "[HEURISTIC: yearly upkeep taken as one percent of the construction labour hours (repair and keeping the works in service); no wear or failure model yet.]"
+  "_internal": "[HEURISTIC: yearly upkeep taken as one percent of the construction labour hours (repair and keeping the works in service); no wear or failure model yet.] [GATE: The sludge works treat the foul flow that separate collection delivers; without it there is nothing to aerate.]"
  },
  {
   "id": "md2_milk_pasteurisation",

@@ -988,6 +988,8 @@
    "mat_pozzolana",
    "water_power_scale"
   ],
+  "requires_running": ["civ_harbour_dock"],
+  "_internal": "[GATE: Built into a harbour that is kept up: breakwater and quay shelter it, and a drydock basin or a lighthouse serves a port that exists.]",
   "kb": "85_transport_civil.md",
   "ph": 300,
   "lab": {
@@ -1455,6 +1457,8 @@
    "telegraph_electric",
    "mat_gutta_percha"
   ],
+  "requires_running": ["telegraph_electric"],
+  "_internal": "[GATE: Rides on the running telegraph network (lines, operators, cells); with the network shut it has nothing to carry.]",
   "kb": "",
   "ph": 200,
   "lab": {

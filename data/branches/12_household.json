@@ -1750,6 +1750,7 @@
    "cap_power_electric",
    "cap_vac_1e3"
   ],
+  "requires_running": ["power_grid"],
   "kb": "91_household.md",
   "ph": 150,
   "lab": {
@@ -1777,7 +1778,7 @@
    "inexplicable",
    "infrastructure"
   ],
-  "_internal": "[REVIEWED: prerequisite(s) cap_vac_1e3 added by a reviewer working node by node. Reason: incandescent filament requires vacuum to prevent oxidation] [REVIEWED: prerequisite(s) cap_vac_1e3 added by a reviewer working node by node. Reason: incandescent filament requires vacuum to prevent oxidation]"
+  "_internal": "[REVIEWED: prerequisite(s) cap_vac_1e3 added by a reviewer working node by node. Reason: incandescent filament requires vacuum to prevent oxidation] [REVIEWED: prerequisite(s) cap_vac_1e3 added by a reviewer working node by node. Reason: incandescent filament requires vacuum to prevent oxidation] [GATE: Operates only on a running grid: it draws mains power from it, so a shut or never-built grid leaves it dead. Knowledge of the technique stays in pre.]"
  },
  {
   "id": "hom_electric_fan",
@@ -1964,6 +1965,7 @@
   "pre": [
    "hom_latrine_water_trap"
   ],
+  "requires_running": ["civ_sewer_roman"],
   "kb": "91_household.md",
   "ph": 180,
   "lab": {
@@ -1989,7 +1991,7 @@
   "traits": [
    "infrastructure"
   ],
-  "_internal": "[HEURISTIC: yearly upkeep taken as one percent of the construction labour hours (repair and keeping the works in service); no wear or failure model yet.] [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
+  "_internal": "[HEURISTIC: yearly upkeep taken as one percent of the construction labour hours (repair and keeping the works in service); no wear or failure model yet.] [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.] [GATE: Takes its flow from, or is laid into, a sewer that is built and kept clear; with the sewer shut it has nothing to act on.]"
  },
  {
   "id": "hom_bath_piped_hot_water",

@@ -399,6 +399,8 @@
    "cap_tol_100um",
    "mat_gutta_percha"
   ],
+  "requires_running": ["telegraph_electric"],
+  "_internal": "[GATE: Rides on the running telegraph network (lines, operators, cells); with the network shut it has nothing to carry.]",
   "kb": "50_electricity.md",
   "ph": 200,
   "lab": {
@@ -683,6 +685,8 @@
    "telegraph_electric",
    "com_morse_sounder"
   ],
+  "requires_running": ["telegraph_electric"],
+  "_internal": "[GATE: Rides on the running telegraph network (lines, operators, cells); with the network shut it has nothing to carry.]",
   "kb": "50_electricity.md",
   "ph": 100,
   "lab": {

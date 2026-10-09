@@ -1988,6 +1988,7 @@
    "power_grid",
    "el2_substation_voltage_regulation"
   ],
+  "requires_running": ["power_grid"],
   "req_any": [
    {
     "group": "feeder",
@@ -2030,7 +2031,7 @@
   "note": "Fault location critical; relay must see direction of fault current; current sharing unequal; network analysis complex.",
   "gov": 2,
   "sus": 3,
-  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.] [GATE: Operates only on a running grid: it draws mains power from it, so a shut or never-built grid leaves it dead. Knowledge of the technique stays in pre.]"
  },
  {
   "id": "el2_substation_voltage_regulation",
@@ -2360,6 +2361,7 @@
    "power_grid",
    "telegraph_electric"
   ],
+  "requires_running": ["power_grid", "telegraph_electric"],
   "req_any": [
    {
     "group": "communication",
@@ -2401,7 +2403,7 @@
   "note": "System frequency is barometer of balance; shortage lowers frequency, surplus raises it; operator must manually adjust generation.",
   "gov": 2,
   "sus": 3,
-  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.] [GATE: Dispatch balances a running grid and reaches stations over the telegraph; without either it has nothing to direct or no way to give orders.]"
  },
  {
   "id": "el2_standardised_voltage_nominal",
@@ -5055,6 +5057,8 @@
    "el2_induction_motor_squirrel_cage",
    "power_grid"
   ],
+  "requires_running": ["power_grid"],
+  "requires_ways": {"rail": 75},
   "req_any": [
    {
     "group": "motor",
@@ -5104,7 +5108,7 @@
   "note": "Regenerative braking possible with proper control; efficiency high compared to diesel; requires substantial electrical infrastructure.",
   "gov": 1,
   "sus": 8,
-  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.] [GATE: Operates only on a running grid: it draws mains power from it, so a shut or never-built grid leaves it dead. Knowledge of the technique stays in pre. A locomotive also needs track to run on. Needs track the actor has built: a line joining at least two held tiles is the least that can carry a service, and the figure is that single line measured the way geography counts a rail build.]"
  },
  {
   "id": "el2_trolleybus_catenary_power",
@@ -5115,6 +5119,7 @@
    "el2_electric_locomotive_traction_motor",
    "el2_universal_motor_AC_DC"
   ],
+  "requires_running": ["power_grid"],
   "req_any": [
    {
     "group": "motor",
@@ -5157,7 +5162,7 @@
   "note": "Pantograph contact must handle gaps and curves; power loss in catenary cable significant; quiet urban transport advantage.",
   "gov": 2,
   "sus": 3,
-  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.] [GATE: Operates only on a running grid: it draws mains power from it, so a shut or never-built grid leaves it dead. Knowledge of the technique stays in pre.]"
  },
  {
   "id": "el2_electric_lift_motor_gear_reduction",

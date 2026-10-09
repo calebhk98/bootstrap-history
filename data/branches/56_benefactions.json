@@ -239,6 +239,7 @@
    "civ_aqueduct_roman",
    "civ_sewer_roman"
   ],
+  "requires_running": ["civ_aqueduct_roman", "civ_sewer_roman"],
   "traits": [
    "infrastructure"
   ],
@@ -268,7 +269,7 @@
   "gov": 0,
   "sus": 0,
   "note": "A town's water supply given as a gift: the channel, the pipes, public baths that heat it, and the sewer that takes it away. It needs crews to keep it clear every year or it silts and leaks. It lowers the loss of your people to the water-borne diseases; the next town is another unit.",
-  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"labourer\": 6000, \"mason\": 2000, \"plumber\": 2000}. Annual consumables: {\"charcoal_kg\": 50000}. Sizes of the foundation and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing.",
+  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"labourer\": 6000, \"mason\": 2000, \"plumber\": 2000}. Annual consumables: {\"charcoal_kg\": 50000}. Sizes of the foundation and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing. [GATE: A town's water gift builds on the supply channel and the sewer that take water in and out; with either shut the baths and pipes it adds are cut off.]",
   "mechanics": {
    "upkeep_full": true,
    "capability": {
@@ -297,6 +298,7 @@
    "civ_harbour_dock",
    "sea_pharos_lighthouse"
   ],
+  "requires_running": ["civ_harbour_dock"],
   "traits": [
    "infrastructure",
    "commerce"
@@ -327,7 +329,7 @@
   "gov": 0,
   "sus": 0,
   "note": "A breakwater, quays and a fire on a tower. Ships that can shelter and find the mouth at night arrive; those that arrive bring buyers, so it widens the market you can reach and spares some losses at sea. The fire burns charcoal and the moles need dredging for as long as the harbour is kept.",
-  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"labourer\": 4000, \"mason\": 1500, \"sailor\": 3000}. Annual consumables: {\"charcoal_kg\": 100000, \"olive_oil_kg\": 5000}. Sizes of the foundation and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing.",
+  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"labourer\": 4000, \"mason\": 1500, \"sailor\": 3000}. Annual consumables: {\"charcoal_kg\": 100000, \"olive_oil_kg\": 5000}. Sizes of the foundation and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing. [GATE: Built into a harbour that is kept up: breakwater and quay shelter it, and a drydock basin or a lighthouse serves a port that exists.]",
   "mechanics": {
    "upkeep_full": true,
    "capability": {
