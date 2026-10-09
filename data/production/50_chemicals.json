@@ -204,6 +204,7 @@
    },
    "extracted_from": "river, spring or well (fresh water at the point of use)",
    "unit_dimension": "mass",
+   "carriage_km": 0.0,
    "basis": "per tonne of fresh water hauled from a nearby source",
    "yield_basis": "This is a GEOGRAPHY fact, not a production recipe, and is deliberately not treated as one - there is no chemistry or physical transformation in drawing water. The labour figure here (half an hour to haul a tonne by hand from a river bank or a shallow well) is only the baseline case of a settlement sited on water. What actually sets water's real cost - a desert caravan town paying camel-loads of water a very long way, versus a riverside town where it is nearly free - is DISTANCE AND LIFT from the source, which is a transport/rent fact belonging to wherever this simulator prices geography and haulage, not something this entry should fake by inventing a recipe. Treat this entry as the cheap end of a range whose expensive end this file does not attempt to compute.",
    "conf": "C",

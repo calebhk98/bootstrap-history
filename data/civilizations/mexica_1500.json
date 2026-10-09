@@ -514,7 +514,8 @@
     "soap_kg": "no soft soap from tallow and ash lye here; washing used other means (ash lye, plant saponins, pods) that the recipe set does not model",
     "steel_noric_kg": "no ironworking, so no bloomery steel",
     "steel_plate_kg": "plate steel needs the later cementation and refining processes and no partner holds them; ordinary iron or bronze serves implements until a founder brings them",
-    "tool_steel_kg": "tool steel needs the later cementation process and no partner holds it; households fall back on other implement metals"
+    "tool_steel_kg": "tool steel needs the later cementation process and no partner holds it; households fall back on other implement metals",
+    "water_piped_kg": "No lead-pipe working node is held and no partner supplies one: its households draw water from wells and carry it from the river or spring, as they did before piped supply."
   },
   "year": 1500,
   "needs_first": {

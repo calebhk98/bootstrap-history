@@ -1,0 +1,83 @@
+{
+ "_note": "Ways of delivering household water beside carrying it from a river or spring (water_kg in 50_chemicals.json): drawing from a dug well and piping from a header through lead. Each is a recipe on the materials and trades that do the work, so plumbers, masons and labourers get need from the water households must have (the water need in data/world/needs.json). Water is drawn where it is used, so each states carriage_km zero: the walking and lifting are already in its labour hours. Figures are order-of-magnitude estimates, confidence C or D, none fitted to a headcount.",
+ "materials": {
+  "water_well_kg": {
+   "outputs": {
+    "water_well_kg": 1000.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 0.8
+   },
+   "capital": [
+    {
+     "good": "one dug and stone-lined well shaft with windlass, serving about ten households",
+     "build_materials": {
+      "stone_wall_m3": 12.0
+     },
+     "build_labour_hours": {
+      "labourer": 170.0
+     },
+     "service_life_years": 50,
+     "annual_output_at_basis": 365000.0,
+     "capital_basis": "A shaft about 1.2 m across and 10 m deep is about 11 cubic metres of earth to dig and hoist, at about 15 labourer hours a cubic metre (digging and hoisting from depth, an estimate), so 170 hours. A lining 0.3 m thick on a mean 1.35 m diameter is about 12 cubic metres of laid wall. Lined shafts stand for generations; 50 years is an estimate. Ten households of five at 20 litres a head a day draw 50 * 20 * 365 = 365,000 kg a year.",
+     "conf": "D"
+    }
+   ],
+   "extracted_from": "groundwater at a shaft's depth",
+   "unit_dimension": "mass",
+   "carriage_km": 0.0,
+   "basis": "per tonne of water drawn from a dug well by bucket and windlass",
+   "yield_basis": "A tonne is fifty 20 kg buckets; one drawn from 10 m takes about a minute on a windlass, so about 50 minutes, 0.8 labourer hours. The lift work is only 1000 * 9.81 * 10 = 98 kJ, so time, not energy, is the cost. The well is dearer per tonne than the river bank's carry (water_kg) where the river is close and cheaper where it is far, which this entry does not model; the choice between ways is the household mix's. An estimate of the work rate.",
+   "requires_node": null,
+   "conf": "D"
+  },
+  "water_piped_kg": {
+   "outputs": {
+    "water_piped_kg": 14600000.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "plumber": 25.0,
+    "mason": 25.0,
+    "labourer": 50.0
+   },
+   "capital": [
+    {
+     "good": "about 200 m of quinaria-class lead pipe laid in a trench with its fittings",
+     "build_materials": {
+      "lead_kg": 1320.0
+     },
+     "build_labour_hours": {
+      "plumber": 400.0,
+      "labourer": 300.0
+     },
+     "service_life_years": 50,
+     "annual_output_at_basis": 14600000.0,
+     "capital_basis": "Smith's Dictionary (Fistula) and Vitruvius 8.6.4 give the series: 12 Roman pounds per digit of plate width per ten-foot length, so 60 pounds for the five-digit quinaria, about 19.6 kg (a Roman pound is about 0.327 kg) over 2.96 m, about 6.6 kg a metre; 200 m is 1320 kg of lead. A plumber rolled the plate, soldered the seam and joined the lengths: about six hours a ten-foot length, 67 lengths, about 400 hours. Trenching and backfill are about 1.5 labourer hours a metre. The length per stream of flow, the hours and the 50-year life are estimates; lead pipe lasted far longer where the water left no sinter.",
+     "conf": "C"
+    },
+    {
+     "good": "the water-carrying channel, header cistern and settling tank that feed one quinaria of flow",
+     "build_materials": {
+      "stone_wall_m3": 25.0
+     },
+     "build_labour_hours": {
+      "labourer": 300.0
+     },
+     "service_life_years": 100,
+     "annual_output_at_basis": 14600000.0,
+     "capital_basis": "An aqueduct is about 2000 cubic metres of masonry a kilometre averaged over buried channel and arcade; a 50 km line feeding about four thousand quinariae of flow is about 25 cubic metres of laid wall for each. Both the masonry rate and the flow it feeds are estimates, and a short conduit from a spring needs far less; the labourer hours are for digging and centring.",
+     "conf": "D"
+    }
+   ],
+   "extracted_from": "a spring or aqueduct head (the water itself is a natural endowment)",
+   "unit_dimension": "mass",
+   "carriage_km": 0.0,
+   "basis": "per year of one laid quinaria-class lead pipe delivering at full flow",
+   "yield_basis": "A quinaria pipe (five quarter-digits of bore, 2.3 cm) is the unit Frontinus delivers in; one runs about 40 cubic metres a day (about 0.48 litres a second, recalled from the Encyclopaedia Romana quinaria page, which the second-pass research opened for the bore and area), so 40 * 365 = 14,600 cubic metres, 14,600,000 kg, a year at full flow. Full flow is an upper bound on use, taken as the waterwheel entry takes continuous operation. Upkeep is a gang's work: Frontinus lists a public gang of 240 and Caesar's of 460 slaves for the aqueducts that delivered 14,018 quinariae, about 0.05 workers for each, about 100 hours a year at about 2000 hours a worker; the split between plumber, mason and labourer is an estimate. Delivery has almost no running cost, so per tonne piped water costs a small fraction of a tonne carried by hand wherever the flow is used.",
+   "requires_node": "hom_lead_plumbing",
+   "conf": "C"
+  }
+ }
+}

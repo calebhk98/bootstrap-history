@@ -118,11 +118,14 @@ def declared_supply(need_data: Mapping[str, Any],
 
 
 def budget_weights_by_good(need_data: Mapping[str, Any], production: Mapping[str, Any],
-                           available_materials: Set[str]) -> Dict[str, float]:
-    """{good: share of household spending} with no prices: each need's budget
-    weight, normalised over needs an available good serves, split equally
-    among those goods."""
-    # TEMPORARY HEURISTIC: equal split inside a need, since no prices are known here.
+                           available_materials: Set[str],
+                           cost_per_unit: Optional[Mapping[str, float]] = None) -> Dict[str, float]:
+    """{good: share of household spending} with no prices: each need's budget weight, normalised over
+    needs an available good serves, split among those goods. `cost_per_unit` is what a unit of a good costs
+    in any one currency (labour value when prices are unknown); the goods of a need then take spending as
+    the household mix does (constant elasticity on cost per need unit, sim/world/need_basket.py). A good
+    without a positive cost takes the mean weight of its need's priced goods; with no costs at all the
+    split inside a need is equal."""
     attributes = goods_attributes(need_data, production)
     servers: Dict[str, List[str]] = collections.defaultdict(list)
     for material in sorted(available_materials):
@@ -133,9 +136,25 @@ def budget_weights_by_good(need_data: Mapping[str, Any], production: Mapping[str
     weights: Dict[str, float] = collections.defaultdict(float)
     for need_id, materials in servers.items():
         share = need_data["needs"][need_id]["surplus_budget_share"] / weight_total
+        inside = _mix_inside_need(need_id, materials, attributes, cost_per_unit or {})
         for material in materials:
-            weights[material] += share / len(materials)
+            weights[material] += share * inside[material]
     return dict(weights)
+
+
+def _mix_inside_need(need_id: str, materials: List[str], attributes: Mapping[str, Any],
+                     cost_per_unit: Mapping[str, float]) -> Dict[str, float]:
+    """Each good's share of its need's spending: cost per need unit to the power of one minus the substitution
+    elasticity, normalised; equal where no cost is known."""
+    exponent = 1.0 - NEED_SUBSTITUTION_ELASTICITY
+    raw = {material: (cost_per_unit[material] / attributes[material]["satisfies"][need_id]) ** exponent
+           for material in materials if cost_per_unit.get(material, 0.0) > 0.0}
+    if not raw:
+        return {material: 1.0 / len(materials) for material in materials}
+    mean_raw = sum(raw.values()) / len(raw)
+    filled = {material: raw.get(material, mean_raw) for material in materials}
+    total = sum(filled.values())
+    return {material: weight / total for material, weight in filled.items()}
 
 
 def _polish_root(function, low: float, high: float) -> float:

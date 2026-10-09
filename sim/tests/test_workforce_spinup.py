@@ -11,7 +11,8 @@ from sim.labour import labour_allocation
 from sim.engine.catalog import load_production_catalog
 from sim.engine.solve_prices_core import techniques_available_to
 from sim.world import agriculture
-from sim.labour import workforce_spinup
+from sim.labour import workforce_carriage, workforce_spinup
+from sim.world import need_demand
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 _CIV_PATHS = sorted(glob.glob(os.path.join(_ROOT, "data", "civilizations", "*.json")))
@@ -26,18 +27,25 @@ def _civilisations():
             yield civ
 
 
+def _trades_of_recipe(entry):
+    trades = set(entry.get("labour_hours") or {})
+    for capital in entry.get("capital") or ():
+        trades.update(capital.get("build_labour_hours") or {})
+    return trades
+
+
 def _trades_of_available_recipes(production, reached):
     available, _unreached, _unclassified = techniques_available_to(production, reached)
     trades = set()
     for entry in available.values():
-        trades.update(entry.get("labour_hours") or {})
-        for capital in entry.get("capital") or ():
-            trades.update(capital.get("build_labour_hours") or {})
+        trades.update(_trades_of_recipe(entry))
     return trades
 
 
 def _shares(production, reached):
-    return workforce_spinup.need_shares_by_trade(production, set(reached), techniques_available_to)
+    return workforce_spinup.need_shares_by_trade(
+        production, set(reached), techniques_available_to,
+        workforce_carriage.carriage_hours_per_tonne_by_trade(reached))
 
 
 class NeedSharesTests(unittest.TestCase):
@@ -46,13 +54,25 @@ class NeedSharesTests(unittest.TestCase):
         for civ in _civilisations():
             self.assertAlmostEqual(sum(_shares(_PRODUCTION, civ["starting_techs"]).values()), 1.0, places=9)
 
-    def test_every_available_trade_gets_a_share_and_no_other_does(self):
+    def test_a_trade_with_an_available_recipe_goes_without_a_share_only_for_goods_no_need_names(self):
+        # A trade whose every recipe makes a good no need names has no demand of its own unless a recipe
+        # uses the good (the need data has no vessel, ink or coin need); the labour package floors such
+        # trades (NO_DEMAND_TRADE_SHARE). Any other trade must be in the shares.
         farm_trade = labour_allocation.FARM_TRADE
+        needs = need_demand.load_needs(_ROOT)
         for civ in _civilisations():
             reached = set(civ["starting_techs"])
             shares = _shares(_PRODUCTION, reached)
-            expected = _trades_of_available_recipes(_PRODUCTION, reached) - {farm_trade}
-            self.assertEqual({trade for trade, share in shares.items() if share > 0.0}, expected, civ["id"])
+            available, _unreached, _unclassified = techniques_available_to(_PRODUCTION, reached)
+            carriers = set(workforce_carriage.carriage_hours_per_tonne_by_trade(reached))
+            expected = (_trades_of_available_recipes(_PRODUCTION, reached) | carriers) - {farm_trade}
+            self.assertLessEqual({trade for trade, share in shares.items() if share > 0.0}, expected, civ["id"])
+            named = {good for good, attributes in need_demand.goods_attributes(needs, available).items()
+                     if attributes["satisfies"]}
+            for trade in expected - set(shares):
+                for recipe_id, entry in available.items():
+                    if trade in _trades_of_recipe(entry):
+                        self.assertNotIn(workforce_spinup._dominant_output(entry), named, (civ["id"], trade, recipe_id))
             self.assertTrue(all(share >= 0.0 for share in shares.values()))
 
     def test_civilisations_with_different_technology_split_differently(self):
@@ -62,7 +82,7 @@ class NeedSharesTests(unittest.TestCase):
     def test_a_mod_trade_with_an_available_recipe_gets_a_share(self):
         production = copy.deepcopy(_PRODUCTION)
         production["zz_gadget"] = {
-            "outputs": {"zz_gadget": 1.0}, "inputs": {"iron_bar_kg": 0.5},
+            "outputs": {"zz_gadget": 1.0}, "inputs": {"iron_bar_kg": 0.5}, "satisfies": {"shelter": 1.0},
             "labour_hours": {"zz_wright": 3.0}, "requires_node": None,
             "basis": "one gadget", "yield_basis": "test", "conf": "C"}
         production["zz_locked"] = {
@@ -99,8 +119,9 @@ class EngineStartTests(unittest.TestCase):
     def test_start_workforce_is_split_by_trade_not_pooled(self):
         for civ in _civilisations():
             _test_sim, hours = self._first_year(civ["id"])
-            expected = _trades_of_available_recipes(
-                _PRODUCTION, set(civ["starting_techs"])) | {labour_allocation.FARM_TRADE}
+            expected = (_trades_of_available_recipes(_PRODUCTION, set(civ["starting_techs"]))
+                        | set(workforce_carriage.carriage_hours_per_tonne_by_trade(civ["starting_techs"]))
+                        | {labour_allocation.FARM_TRADE})
             held = {trade for trade, value in hours.items() if value > 0.0}
             # a trade the labour core holds nobody in (none needed it at the opening) has no hours
             self.assertLessEqual(held, expected, civ["id"])

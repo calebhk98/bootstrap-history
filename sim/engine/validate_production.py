@@ -135,6 +135,16 @@ def check_unit_mass(where, entry):
     return []
 
 
+def check_carriage_km(where, entry):
+    """A stated `carriage_km` is a non-negative finite number of kilometres."""
+    if "carriage_km" not in entry:
+        return []
+    distance = entry["carriage_km"]
+    if isinstance(distance, bool) or not isinstance(distance, (int, float)) or not 0 <= distance < float("inf"):
+        return ["%s: carriage_km is %r, not a non-negative number of kilometres" % (where, distance)]
+    return []
+
+
 def primary_output(name, entry):
     """The good an entry is named for: its own key when it outputs it, else its first output."""
     outputs = entry.get("outputs") or {}
@@ -451,6 +461,7 @@ def check(entries, known_materials, known_trades, known_nodes=None):
         problems.extend(check_inputs(where, entry, known_materials))
         problems.extend(check_has_source(where, entry))
         problems.extend(check_unit_mass(where, entry))
+        problems.extend(check_carriage_km(where, entry))
         problems.extend(check_unit_dimension(where, entry))
         problems.extend(check_labour_hours(where, entry, known_trades))
         problems.extend(check_energy_carrier_fields(where, entry))

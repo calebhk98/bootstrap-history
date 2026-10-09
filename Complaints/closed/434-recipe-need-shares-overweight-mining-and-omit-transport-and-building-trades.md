@@ -1,16 +1,6 @@
 # Recipe need shares overweight mining and leave out transport and much of building
 
-**Status:** partly done. Done: carriage labour enters the need shares (`workforce_carriage.py`, crew hours per
-tonne-km from the route modes through `geography.carriage_rates`, `crew_trade` in `route_modes/modes.json`), so
-sailors now get a derived share in every civilisation that holds a sailing or boat mode; the share denominator now keeps
-farm hours, so farm-heavy goods no longer pour their whole weight into the few non-farm trades they touch; laid-wall
-services (`data/production/97_building_services.json`) give masons and carpenters shelter-driven need. Open: land
-carriers (carters, drovers, muleteers) have no trade, so land carriage falls on the farm trade and is dropped; plumbers
-need a household water need with piped delivery (see below); millwrights stay near zero because physically a few
-hundred wheel-years of upkeep is tiny against a whole economy; mining stays about half because undeclared end goods
-(obscure minerals no need names) each take the generic weight; within-need weights are still an equal split because
-the need data holds effectiveness but no spending shares. `MEAN_HAUL_KM` and the land/water equal split are labelled
-heuristics.
+**Status:** closed - need shares now include land carriers (a `carter` trade on the animal-drawn land modes), a household water need met by carried, well and piped water (plumbers get demand from lead pipe laying and upkeep), millwright hours wherever a recipe draws shaft work, spending inside a need split by labour value per unit of need, and no generic weight for end goods nobody demands. Millwrights stay near zero in every shipped start, by result, not by omission: wheels charge millwright hours, but no recipe a shipped start can run draws shaft work. Remaining uncertainty is in labelled heuristics (`MEAN_HAUL_KM`, the land/water equal split, water's budget share), not in a missing mechanism.
 
 The labour package now sizes each trade's town and national population from its share of non-farm
 labour need. The source is `workforce_spinup.need_shares_by_trade` (the recipe graph under an equal
