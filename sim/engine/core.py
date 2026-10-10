@@ -1520,7 +1520,7 @@ class Sim(RealPriceRatiosMixin, CoinRevaluationMixin, WageMarketRatiosMixin, Mec
                        "births": round(flows.births), "deaths": round(flows.deaths),
                        "nutrition_ratio": round(flows.nutrition_ratio, 4)})
         del record[:-YEARLY_RECORD_LIMIT]
-        self.advance_colonies(year, food_eaten_kcal_per_day)
+        self.advance_colonies(year)
         self._refresh_demographic_indexes(year)
 
     def _disease_burden(self):

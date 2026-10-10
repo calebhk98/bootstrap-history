@@ -4,15 +4,20 @@ A work declares `mechanics.settlement = {"settlers": n, "outfit_hours_per_settle
 knows one, it can found a colony on a tile that borders what it holds (or, by sea, a coastal tile when it holds a coastal
 one): the settlers leave the home country's working age and the outfit is paid at the society's wage. The colony's people
 are three age cohorts stepped each year by the same demography as the home country's (`sim/world/demography.py`),
-fed by the tile's land but only as far as the settlers' own hands, at the home country's output per worker, can work it.
-A colony whose people die out is lost.
+fed by the tile's land in the share its working-age people can hold, as many hectares each as a farm worker holds at
+home. A colony whose people die out is lost.
 """
 from sim.agents.api import edges
 from sim.geography.api import settlement, tiles_held
 
+from sim.world.shared_constants import (
+    ANNUAL_LABOUR_HOURS_PER_FARM_WORKER, FALLOW_SHARE_OF_HOLDING, REFERENCE_LABOUR_HOURS_PER_HECTARE)
+
 from .units_prose import money_text, plain_number
 
-DAYS_PER_YEAR = 365.0
+# land one farm worker holds, fallow included: the hours a worker gives a year over the hours a cropped hectare takes
+HOLDING_HECTARES_PER_WORKER = (ANNUAL_LABOUR_HOURS_PER_FARM_WORKER / REFERENCE_LABOUR_HOURS_PER_HECTARE
+                               / (1.0 - FALLOW_SHARE_OF_HOLDING))
 
 
 class ColoniesMixin:
@@ -76,15 +81,13 @@ class ColoniesMixin:
                                                       / self._demography.SUBSISTENCE_CALORIES_PER_ADULT_EQUIVALENT_DAY)})
         return rows
 
-    def advance_colonies(self, year, food_eaten_kcal_per_day):
-        """One year for every seat's colonies. The settlers feed themselves from the tile at the home country's food
-        per working-age person, never beyond what the land gives."""
-        per_worker = food_eaten_kcal_per_day / max(1.0, self.population.working_age)
+    def advance_colonies(self, year):
+        """One year for every seat's colonies: the people work the land they can hold and eat what it gives."""
         burden = self._disease_burden()
         for seat_id, seat in self.state.seats.items():
             for colony in list(seat.holdings.colonies):
                 people = self._demography.Population(colony["children"], colony["working_age"], colony["elderly"])
-                food = min(settlement.capacity_kcal_per_day(colony["tile"]), people.working_age * per_worker)
+                food = settlement.worked_kcal_per_day(colony["tile"], people.working_age * HOLDING_HECTARES_PER_WORKER)
                 people.step(food, jitter=False, disease_burden=burden)
                 colony.update(children=people.children, working_age=people.working_age, elderly=people.elderly)
                 if people.total < 1.0:

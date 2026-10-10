@@ -67,4 +67,4 @@ class CoverageMixin:
         ok, text = self.open_venture(node_id, units=wanted - have if have > 0.0 else wanted)
         if not ok:
             return False, text
-        return True, "%s It now covers %d%% of the people." % (text, round(100 * self.coverage_share(node_id)))
+        return True, "%s. It now covers %d%% of the people." % (text.rstrip("."), round(100 * self.coverage_share(node_id)))

@@ -162,6 +162,9 @@ class CapabilityMixin:
         """
         if node_id not in self.SCALABLE_INSTITUTIONS:
             return 1.0
+        if node_id in self.coverage_nodes():
+            # a work that serves a share of the people is repeated until everyone who can use it is served
+            return max(1.0, self.units_for_coverage(node_id, 1.0))
         if self.mechanic(node_id, "capability").get("scalable") == "literacy":
             lit = max(self.LITERACY_GENERAL_FLOOR,
                       float(self.civ.get("literacy_general", self.labour.LITERACY_REFERENCE_GENERAL)))

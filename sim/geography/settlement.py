@@ -73,6 +73,15 @@ def capacity_kcal_per_day(tile_id: str) -> float:
     return _carrying_capacity(tile_id) / 365.0
 
 
+def worked_kcal_per_day(tile_id: str, hectares_worked: float) -> float:
+    """The food energy a day the people working `hectares_worked` of a tile bring in: the tile's full yield over its
+    whole land, in the share of that land they work."""
+    land_hectares = tile_holdings.tile_land(tile_id)["land_area_km2"] * tile_holdings.HECTARES_PER_KM2
+    if land_hectares <= 0.0:
+        return 0.0
+    return capacity_kcal_per_day(tile_id) * min(1.0, max(0.0, hectares_worked) / land_hectares)
+
+
 def candidate_tiles(held_tiles: List[str], claimed_tiles: List[str], by_sea: bool = False) -> List[str]:
     """Tiles a settlement could be sent to, best land first (ties by id): tiles nobody holds that border a tile
     already held or claimed, and, when the voyage is by sea, coastal tiles when a held or claimed tile is coastal."""

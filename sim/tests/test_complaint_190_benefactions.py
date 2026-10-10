@@ -13,6 +13,9 @@ from .harness import *
 with open(os.path.join(S.ROOT, "data", "branches", "56_benefactions.json")) as _branch:
     WORKS = tuple(node["id"] for node in json.load(_branch))
 PRESENT = [work for work in WORKS if work in NODES]
+# a work with a yearly programme is kept up; one without is paid for once (a transfer, a charter) and is knowledge after
+KEPT = [work for work in PRESENT if NODES[work].get("annual_labour_hours")]
+ONCE = [work for work in PRESENT if work not in KEPT]
 
 check("every work declared in the benefactions branch reaches the tree and there is at least one",
       bool(WORKS) and len(PRESENT) == len(WORKS), sorted(set(WORKS) - set(PRESENT)))
@@ -46,8 +49,15 @@ listed = str(listing)
 check("`available` offers the benefactions to a late-game household",
       bool(PRESENT) and all(work in listed for work in PRESENT), [w for w in PRESENT if w not in listed])
 
-# ---- each is a costed, non-earning, upkeep-bearing work built from labour and materials ----
-for work in PRESENT:
+# ---- each is a costed, non-earning work built from labour; a kept one bears upkeep and a once-paid one none ----
+check("some works are paid once and the rest are kept up", bool(ONCE) and bool(KEPT), (ONCE, KEPT))
+for work in ONCE:
+    node = NODES[work]
+    check("%s earns nothing and costs nothing to keep: it is paid once" % work,
+          node["rev"] == 0 and node["up"] == 0 and not late.is_venture(work), (node["rev"], node["up"]))
+    check("%s costs labour to bring about" % work, node["_labour_cost"] > 0 and node["cap"] == 0)
+    check("%s declares mechanics" % work, bool(node.get("mechanics")))
+for work in KEPT:
     node = NODES[work]
     check("%s earns nothing of its own" % work, node["rev"] == 0)
     check("%s is built from labour and materials, not a bare capital figure" % work,
@@ -95,11 +105,11 @@ def channel_probes(mechanics):
     return probes
 
 
-PROBES = {work: channel_probes(NODES[work]["mechanics"]) for work in PRESENT}
-for work in PRESENT:
+PROBES = {work: channel_probes(NODES[work]["mechanics"]) for work in KEPT}
+for work in KEPT:
     check("%s declares at least one effect channel this test can measure" % work, bool(PROBES[work]))
 
-for work in PRESENT:
+for work in KEPT:
     before = [probe(late) for _label, probe, _direction in PROBES[work]]
     run_it(late, work)
     for (label, probe, direction), value_before in zip(PROBES[work], before):
@@ -119,7 +129,7 @@ for work in PRESENT:
           abs(probe(late) - before[0]) < abs(opened_value - before[0]), (before[0], opened_value, probe(late)))
 
 # ---- repeatable: a further unit of a scalable work is more of it, at a higher price ----
-for work in PRESENT:
+for work in KEPT:
     if work not in late.SCALABLE_INSTITUTIONS:
         continue
     ok_first, message_first = late.open_venture(work)
