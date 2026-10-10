@@ -2,11 +2,12 @@
 
 Both are read from the state's budget (`Government.record.need` and `.unfunded` by line, its revenue through the
 world), not from a table of their own. Office-holders expect what they have come to be paid in salary and fees;
-a cut in the salary lines or a fall in the revenue their fees come from is their loss. An army that goes unpaid
-loses its loyalty, and an army without loyalty acts on the state: soldiers desert and the rest take their back
-pay from the treasury (`mutiny`).
+a cut in the salary lines or a fall in the revenue their fees come from is their loss. Soldiers expect the share
+of their pay they have come to get: an army paid less of it than it expected loses its loyalty, and an army without
+loyalty acts on the state: soldiers desert and the rest take their back pay from the treasury (`mutiny`). A state
+that has always paid part of its army is not mutinied against for it; the fall is the grievance.
 """
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from . import budget, ledger
 from .edges import EDGE_STATE_SPENDING
@@ -22,6 +23,8 @@ FEES = "fees"
 # the budget lines that pay people in office
 SALARY_LINES = ("administration", "court")
 ARMY_LINE = "army"
+# the key under which the government's record remembers the share of the army's pay it has come to get
+ARMY_PAY_SHARE = "army_pay_share"
 
 
 def salaries_paid(record: Any) -> float:
@@ -36,13 +39,30 @@ def office_income(government: Any, world: Any) -> Dict[str, float]:
 	return {SALARIES: salaries_paid(government.record), FEES: OFFICE_FEE_SHARE_OF_REVENUE * world.state_revenue()}
 
 
+def army_paid_share(record: Any) -> Optional[float]:
+	"""The share of the army's pay the state paid last year; None while the state has no army line."""
+	due = record.need.get(ARMY_LINE, 0.0)
+	return 1.0 - record.unfunded.get(ARMY_LINE, 0.0) / due if due > 0.0 else None
+
+
+def army_fall(record: Any) -> float:
+	"""How far below the share of its pay the army has come to expect it was paid last year, as a share of that
+	expectation (0 for an army paid as it expected, or with nothing remembered yet)."""
+	paid, expected = army_paid_share(record), record.income_reference.get(ARMY_PAY_SHARE, 0.0)
+	return max(0.0, (expected - paid) / expected) if paid is not None and expected > 0.0 else 0.0
+
+
 def remember_servants(government: Any, world: Any) -> None:
-	"""Each year what the office-holders expect moves toward what they took (at the rate a body of people
-	comes to expect its welfare)."""
+	"""Each year what the office-holders expect moves toward what they took, and what the soldiers expect toward
+	the share of their pay they got (at the rate a body of people comes to expect its welfare)."""
 	record = government.record
 	for line, amount in office_income(government, world).items():
 		reference = record.income_reference.get(line, 0.0)
 		record.income_reference[line] = amount if reference <= 0.0 else reference + STRATUM_WELFARE_MEMORY_RATE * (amount - reference)
+	paid = army_paid_share(record)
+	if paid is not None:
+		expected = record.income_reference.get(ARMY_PAY_SHARE, 0.0)
+		record.income_reference[ARMY_PAY_SHARE] = paid if expected <= 0.0 else expected + STRATUM_WELFARE_MEMORY_RATE * (paid - expected)
 
 
 def servant_sectors(government: Any, world: Any) -> List[Sector]:
@@ -53,7 +73,7 @@ def servant_sectors(government: Any, world: Any) -> List[Sector]:
 	income = office_income(government, world)
 	falls = {line: record.income_reference.get(line, 0.0) - amount for line, amount in income.items()
 			 if record.income_reference.get(line, 0.0) > 0.0 and record.income_reference.get(line, 0.0) - amount > 0.0}
-	expected = sum(record.income_reference.values())
+	expected = sum(record.income_reference.get(line, 0.0) for line in (SALARIES, FEES))
 	if expected > 0.0 and sum(falls.values()) >= STRATUM_GRIEVANCE_THRESHOLD * expected:
 		words = ", ".join("%s %d%% below what they had come to expect" % (line, round(100.0 * fall / record.income_reference[line]))
 						  for line, fall in sorted(falls.items()))
@@ -63,18 +83,20 @@ def servant_sectors(government: Any, world: Any) -> List[Sector]:
 		sectors.append(Sector(OFFICE_HOLDERS, "administration", "the state's office-holders",
 							  "what they take from the state has fallen: " + words,
 							  sum(falls.values()), expected, budget.officials_kept(world), 1.0))
+	fall = army_fall(record)
 	due = record.need.get(ARMY_LINE, 0.0)
-	unpaid = record.unfunded.get(ARMY_LINE, 0.0)
-	if due > 0.0 and unpaid > 0.0:
+	if fall >= STRATUM_GRIEVANCE_THRESHOLD:
+		expected_pay = due * record.income_reference[ARMY_PAY_SHARE]
 		sectors.append(Sector(SOLDIERS, "army", "the state's soldiers",
-							  "the army's pay is %d%% in arrears" % round(100.0 * unpaid / due),
-							  unpaid, due, record.army * unpaid / due, 1.0))
+							  "the army's pay is %d%% below what it had come to expect" % round(100.0 * fall),
+							  fall * expected_pay, expected_pay, record.army * fall, 1.0))
 	return sectors
 
 
-def step_loyalty(loyalty: float, unpaid_share: float) -> float:
-	"""0..1: the army's loyalty a year on; it moves toward the share of its pay it got."""
-	target = max(0.0, min(1.0, 1.0 - unpaid_share))
+def step_loyalty(loyalty: float, fall: float) -> float:
+	"""0..1: the army's loyalty a year on; it moves toward what is left of it after the fall in its pay (as a
+	share of what it expected)."""
+	target = max(0.0, min(1.0, 1.0 - fall))
 	return max(0.0, min(1.0, loyalty + LOYALTY_ADJUSTMENT_RATE * (target - loyalty)))
 
 
@@ -91,9 +113,12 @@ def mutiny(loyalty: float, soldiers: float, arrears: float, treasury: float) -> 
 def run_army_year(government: Any, world: Any) -> Dict[str, float]:
 	"""The year's turn of the army's loyalty and, when it has none left, of its mutiny against the state."""
 	record = government.record
-	due = record.need.get(ARMY_LINE, 0.0)
-	arrears = record.unfunded.get(ARMY_LINE, 0.0)
-	record.loyalty = step_loyalty(record.loyalty, arrears / due if due > 0.0 else 0.0)
+	paid = army_paid_share(record)
+	if paid is not None and record.income_reference.get(ARMY_PAY_SHARE, 0.0) <= 0.0:
+		record.income_reference[ARMY_PAY_SHARE] = paid   # the first year's pay is what it expects
+	fall = army_fall(record)
+	arrears = fall * record.need.get(ARMY_LINE, 0.0) * record.income_reference.get(ARMY_PAY_SHARE, 0.0)
+	record.loyalty = step_loyalty(record.loyalty, fall)
 	acted = mutiny(record.loyalty, record.army, arrears, government.money)
 	if acted["severity"] > 0.0:
 		record.army = max(0.0, record.army - acted["deserters"])

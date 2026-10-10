@@ -36,6 +36,11 @@ check("the groups screen still reads", isinstance(game.interest_groups(), list))
 treasury = game.state_treasury()
 treasury.money = 1.0e9
 soldiers_before = treasury.record.army
+check("a state that pays its army as little as it always has is not mutinied against in a quiet game",
+      "soldiers" not in {row["kind"] for row in game.interest_groups()} and treasury.record.loyalty == 1.0,
+      (game.interest_groups(), treasury.record.loyalty))
+# the army had come to expect its full pay, and then gets a fifth of it
+treasury.record.income_reference["army_pay_share"] = 1.0
 for _year in range(5):
     a_year(game)
     treasury.record.need["army"] = max(1.0, treasury.record.need.get("army", 1.0))

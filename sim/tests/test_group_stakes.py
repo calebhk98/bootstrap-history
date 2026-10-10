@@ -217,9 +217,23 @@ check("office-holders whose salaries go unpaid and whose fees fall form a group"
       ("office_holders", "administration") in found, list(found))
 check("the grievance names the salaries and the fees", "salaries" in found[("office_holders", "administration")].cause
       and "fees" in found[("office_holders", "administration")].cause, found[("office_holders", "administration")].cause)
-check("soldiers whose line goes half unpaid form a group whose loss is the arrears",
+check("soldiers whose line goes half unpaid, against full pay, form a group whose loss is the arrears",
       abs(found[("soldiers", "army")].lost_income - 90000.0) < 1e-9 and abs(found[("soldiers", "army")].members - 500.0) < 1e-9,
       (found[("soldiers", "army")].lost_income, found[("soldiers", "army")].members))
+for _year in range(40):
+    group_servants.remember_servants(government, world)
+check("an army always paid half is not a grievance: the fall becomes the new normal",
+      ("soldiers", "army") not in by_key(Sector.of_servants(government, world)))
+poor_state = Government("government:poor", ActorRecord(kind="government", army=1000.0))
+poor_state.record.need = {"army": 180000.0}
+poor_state.record.unfunded = {"army": 153000.0}
+poor_state.money = 50000.0
+group_servants.run_army_year(poor_state, world)
+check("a state that has paid only part of its army from the start does not meet a mutiny in its first year",
+      poor_state.record.loyalty == 1.0 and poor_state.record.army == 1000.0 and ("soldiers", "army") not in by_key(Sector.of_servants(poor_state, world)),
+      (poor_state.record.loyalty, poor_state.record.army))
+government.record.income_reference["army_pay_share"] = 1.0
+government.record.unfunded = {"administration": 2500.0, "army": 90000.0}
 
 check("an army that is paid keeps its loyalty", group_servants.step_loyalty(1.0, 0.0) == 1.0)
 check("an army that goes unpaid loses it", group_servants.step_loyalty(1.0, 0.5) < 1.0)
