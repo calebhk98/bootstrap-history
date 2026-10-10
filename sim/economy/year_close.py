@@ -4,6 +4,9 @@ import dataclasses
 import math
 from typing import Dict, Tuple
 
+from sim.geography.api import flow_ledger
+from sim.unit_conversions import KILOGRAMS_PER_TONNE
+
 from . import (currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit,
                producers, producers_close, state_budget, taxes)
 from .households_cohort import renewed
@@ -27,6 +30,7 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger) -> None:
         held = carriers.get(cohort.tile)
         if held is None or cohort.income_class < record.cohorts[held].income_class:
             carriers[cohort.tile] = cohort.agent_id
+    carried: dict = {}
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
         fills = ledger.buy_fills.get(merchant.agent_id, [])
         if not fills:
@@ -36,6 +40,10 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger) -> None:
                                   carrier_of=carriers.get)
         record.book.post(done.transfers, done.moves)
         ledger.note_postings(done.transfers, "wages")
+        for move in done.moves:
+            flow_ledger.record_flow(carried, move.tile, move.receiver_tile,
+                                    move.quantity * setup.specs[move.good].unit_mass_kg / KILOGRAMS_PER_TONNE)
+    record.carried = carried
 
 
 def foreign_agents(setup, record) -> set:

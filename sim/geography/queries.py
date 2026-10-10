@@ -9,7 +9,7 @@ import copy
 import math
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
-from sim.geography import (food_capacity, food_wild_harvest, map_source, mechanisms, parameters, resource_links, resources_biotic, rail_freight,
+from sim.geography import (droving, food_capacity, food_wild_harvest, map_source, mechanisms, parameters, resource_links, resources_biotic, rail_freight,
                            resources_catalogue, resources_endowment, resources_mined, resources_prospecting, resources_sites,
                            resources_summary, routes_carriage, routes_graph, routes_modes, routes_search, tile_holdings, tile_layers,
                            ways_build, ways_works)
@@ -90,9 +90,37 @@ def regions_of_tiles(tile_ids: Iterable[str], world_map: Optional[WorldMap] = No
     return tile_holdings.regions_of_tiles(tile_ids, _map(world_map))
 
 
-def usable_modes(known_nodes_per_party: Iterable[Iterable[str]], world_map: Optional[WorldMap] = None) -> List[str]:
-    """Route modes every party can use, from the tech nodes each holds."""
-    return sorted(routes_modes.usable_modes(_map(world_map), known_nodes_per_party))
+def usable_modes(known_nodes_per_party: Iterable[Iterable[str]], world_map: Optional[WorldMap] = None,
+                 cargo: str = "goods") -> List[str]:
+    """Route modes that carry `cargo` ("goods" or "living_stock") and that every party can use, from the
+    tech nodes each holds."""
+    return sorted(routes_modes.usable_modes(_map(world_map), known_nodes_per_party, cargo))
+
+
+def modes_carrying(cargo: str, world_map: Optional[WorldMap] = None) -> List[str]:
+    """Every route mode that takes this class of cargo, whatever it needs to be unlocked."""
+    return sorted(mode_id for mode_id, mode in routes_modes.modes(_map(world_map)).items()
+                  if routes_modes.carries(mode, cargo))
+
+
+def cargo_loss_per_day(world_map: Optional[WorldMap] = None) -> Dict[str, float]:
+    """{mode_id: share of the cargo lost each day on the road} for the modes that state one."""
+    return routes_modes.cargo_loss_per_day(_map(world_map))
+
+
+def walking_cargo_modes(world_map: Optional[WorldMap] = None) -> List[str]:
+    """Modes where the cargo is the carrier (live animals driven to market): no carrier capital, and
+    the cargo's feed is eaten on the loaded leg only."""
+    return sorted(routes_modes.walking_cargo_modes(_map(world_map)))
+
+
+def droving_carrier(mode_id: str, world_map: Optional[WorldMap] = None) -> Optional[Dict[str, Any]]:
+    """{inputs} of a mode whose cargo walks, as a freight carrier (physical inputs per tonne-km: the herd's
+    feed, the drovers' hours), or None for any other mode."""
+    mode = routes_modes.modes(_map(world_map)).get(mode_id)
+    if mode is None or mode.get("model") != "droving":
+        return None
+    return {"inputs": droving.freight_physical_inputs(mode["carrier"])}
 
 
 def dues_hours_per_tonne(world_map: Optional[WorldMap] = None) -> Dict[str, float]:

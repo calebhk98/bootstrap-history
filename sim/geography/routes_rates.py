@@ -12,7 +12,7 @@ Standalone: `transport`, `sea_freight` and the map's parameters.
 from dataclasses import dataclass
 from typing import Any, Dict, Optional, Tuple
 
-from sim.geography import parameters, sea_freight, transport
+from sim.geography import droving, parameters, sea_freight, transport
 from sim.geography.map_source import MapDataError, WorldMap
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
@@ -100,6 +100,8 @@ def compute_rate(world_map: WorldMap, mode: Dict[str, Any], edge_class: str, gra
             return _from_freight_inputs(transport.barge_freight_physical_inputs(
                 _named(carrier["animal"]), carrier["team_size"], _named(carrier["vehicle"]),
                 current_km_per_hour=current_km_per_hour), pace)
+        if model == "droving":
+            return _from_freight_inputs(droving.freight_physical_inputs(carrier), pace)
         if model == "sailing":
             return _from_freight_inputs(sea_freight.sailing_freight_physical_inputs(), pace)
         if model == "rail":

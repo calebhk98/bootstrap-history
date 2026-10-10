@@ -280,20 +280,19 @@ class FreightMixin:
         kilogram than real fodder, so this reads as a conservative
         (upper-bound), not measured, feed cost.
 
-        THE CARRIER'S CAPITAL AND EMPTY RETURN ARE INCLUDED, by the same
-        function foreign routes use (`land_freight_money_per_tonne_km`): oxen
-        and cart at the market rate, their depreciation, and the return trip
-        empty (a labelled heuristic: no domestic flow ledger says what comes
-        back). The cargo's own interest and spoilage enter through
+        THE CARRIER'S CAPITAL, ITS RETURN AND THE DUES ARE INCLUDED, by the
+        one freight function foreign routes use (`domestic_haul_money_per_tonne`
+        in domestic_haul.py): oxen and cart at the market rate, their
+        depreciation, the return trip by last year's domestic flow ledger
+        (empty while none is recorded), and the tolls the geography states
+        for the mode. Living stock walks (droving) at the cost of its own feed.
+        The cargo's own interest and spoilage enter through
         material_freight_factor().
         """
         distance_km = self.material_freight_distance_km(material)
         if not distance_km:
             return 0.0
-        denarii_per_tonne = freight_cost.leg_money_per_tonne(
-            self.land_freight_money_per_tonne_km(), self._land_freight_physical_inputs(), distance_km,
-            restock_days=provisions.RESTOCK_INTERVAL_DAYS)
-        return denarii_per_tonne / KILOGRAMS_PER_TONNE
+        return self.domestic_haul_money_per_tonne(material, distance_km) / KILOGRAMS_PER_TONNE
 
     def material_freight_factor(self, emp_key):
         """Multiplicative markup material_price_factor() applies on top of
