@@ -240,10 +240,13 @@ def _quick_batches(slugs, seconds_before, count):
     """Quick topics shared out over `count` workers, longest first onto the least loaded."""
     batches = [[] for _ in range(max(1, min(count, len(slugs))))]
     loads = [0.0] * len(batches)
-    for slug in sorted(slugs, key=lambda slug: -seconds_before.get(slug, 0.0)):
+    # A topic with no remembered time counts as a typical one, so a first run still spreads the work.
+    known = sorted(seconds_before[slug] for slug in slugs if slug in seconds_before)
+    unknown_guess = max(known[len(known) // 2] if known else 0.0, 0.01)
+    for slug in sorted(slugs, key=lambda slug: -seconds_before.get(slug, unknown_guess)):
         lightest = loads.index(min(loads))
         batches[lightest].append(slug)
-        loads[lightest] += seconds_before.get(slug, 0.0)
+        loads[lightest] += seconds_before.get(slug, unknown_guess)
     return [batch for batch in batches if batch]
 
 
@@ -301,11 +304,12 @@ def _fork_topics(slugs, harness, result_dir, held_slots=()):
 def _run_topics_forked(run_now, harness, jobs):
     """Run topics in children forked from this process, `jobs` at a time: each other topic in a
     child of its own, the quick ones shared out over a few."""
-    harness.sim()       # warm what every game build shares before the first fork
+    quick = set(harness.QUICK_TOPICS)
+    if any(slug not in quick for slug in run_now):
+        harness.sim()       # warm what every game build shares before the first fork; quick topics build none
     seconds_before = _load_topic_seconds()
     known = sorted(seconds_before.values())
     unknown_guess = known[len(known) // 2] if known else 0.0
-    quick = set(harness.QUICK_TOPICS)
     pending = [[slug] for slug in run_now if slug not in quick]
     pending += _quick_batches([slug for slug in run_now if slug in quick], seconds_before, jobs)
     pending.sort(key=lambda slugs: -sum(seconds_before.get(slug, unknown_guess) for slug in slugs))

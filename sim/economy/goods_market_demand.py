@@ -2,7 +2,7 @@
 (reference price, elasticity) pair instead of one per buyer. Rows keep the order of the bids given."""
 import math
 from operator import attrgetter
-from typing import List, Sequence
+from typing import List, Optional, Sequence
 
 from .types import Bid
 
@@ -40,6 +40,8 @@ class DemandSchedule:
                 self.group_rows[group].append(row)
 
         self.price_capped = any(maximum < math.inf for maximum in self.maximums)
+        self._totals: dict = {}              # total_at by price: a market is cleared at the same prices many times
+        self._ceilings: Optional[List[float]] = None
 
     def distinct_schedules(self) -> int:
         return len(self.group_terms)
@@ -61,8 +63,20 @@ class DemandSchedule:
                 factors.append(math.inf)
         return factors
 
+    def ceilings_descending(self) -> List[float]:
+        """The buyers' finite maximum prices, distinct, dearest first."""
+        if self._ceilings is None:
+            self._ceilings = sorted({maximum for maximum in self.maximums if maximum < math.inf}, reverse=True)
+        return self._ceilings
+
     def total_at(self, price: float) -> float:
         """Total quantity wanted at a positive price."""
+        total = self._totals.get(price)
+        if total is None:
+            total = self._totals[price] = self._total_at(price)
+        return total
+
+    def _total_at(self, price: float) -> float:
         if self.price_capped:
             return math.fsum(self.each_at(price))
         total = 0.0
