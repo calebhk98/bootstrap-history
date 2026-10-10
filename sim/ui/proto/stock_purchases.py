@@ -79,8 +79,8 @@ def buy_smuggled_stock(sim, cmd, quantity):
     before = sim.capital
     outcome = sim.settle_stock_smuggle(terms)
     if not outcome:
-        return {"ok": False, "error": "cannot pay %.1f to carry %s of %s. Nothing was changed."
-                % (terms["cost"], terms["units"], terms["material"])}
+        return {"ok": False, "error": "cannot pay %s to carry %s of %s. Nothing was changed."
+                % (money_text(terms["cost"], sim, digits=1), terms["units"], terms["material"])}
     reply = {"ok": True, "material": terms["material"], "partner": terms["partner"], "caught": outcome["caught"],
              "delivered_units": round(outcome["delivered_units"], 6), "paid": round(before - sim.capital, 1),
              "held_now": round(sim.stock_held(terms["material"]), 3), "capital": round(sim.capital, 1)}

@@ -81,6 +81,7 @@ NOT_NUMERIC_KEYS = {
 # Rounded reply fields that are counts, hours, people, factors, shares, distances or years: not a mass, area, sum of money or
 # temperature. A new rounded field not in a field rule, not tagged by its producer (units.tagged) and not here fails.
 ROUND_NOT_A_UNIT_QUANTITY = {
+    "arrives_units", "chance_caught", "delivered_units",  # stock counts in the material's own unit; a chance
     "artisan_capacity", "artisans", "births", "calendar_floor_years", "calendar_years_left",
     "chance_of_being_denounced_this_year", "change_share", "children", "civ_domain_factor", "committed_hours",
     "corpus_kept", "craftsmen", "craftsmen_on_your_staff", "days_on_the_road", "deaths", "deaths_children",

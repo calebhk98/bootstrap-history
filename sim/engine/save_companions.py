@@ -8,6 +8,7 @@ import shutil
 
 from sim.constants import declare
 from sim.engine.saveload import save_state
+from sim.engine.units_prose import money_text
 
 CHECKPOINTS_KEPT = declare(
     "CHECKPOINTS_KEPT", 5, kind="temporary_heuristic", unit="copies of a session save",
@@ -27,7 +28,7 @@ def summary_text(sim):
         "civilisation: %s" % sim.civ.get("id"),
         "year: %s" % sim.year,
         "goal: %s" % sim.goal,
-        "capital: %.0f" % sim.capital,
+        "capital: %s" % money_text(sim.capital, sim, grouped=True),
         "projects done: %d" % len(sim.done),
         "written by game version: %s" % state._game_version,
         "seed: %s" % state._seed,
