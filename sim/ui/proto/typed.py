@@ -709,7 +709,7 @@ def _parse_buy_or_quote(command, rest, words, nums, want_json):
         out["material"], out["what"] = out["what"], "mine"
     if out["what"] == "mines":
         out["what"] = "mine"
-    if len(words) > 2 and canonical_target(out["what"]) == "living_stock":
+    if len(words) > 2 and canonical_target(out["what"]) in ("living_stock", "smuggled_stock"):
         out["partner"] = words[2].lower()
     if nums:
         out["n"] = nums[0]

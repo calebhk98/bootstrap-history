@@ -73,9 +73,36 @@ class IdlePolicy(Policy):
 		return []
 
 
+EXPORT_DECISION = "export"
+
+
+class ExportPolicy(ValuePolicy):
+	"""A state's answer to selling goods abroad: it keeps back what it holds as a state monopoly (its
+	record's `state_monopolies`, set at the start by its country's data and changeable like any record
+	field) and sells what pays. Any other decision is taken as ValuePolicy takes it."""
+
+	def choose(self, actor: Any, decision: Decision) -> List[Option]:
+		if decision.kind != EXPORT_DECISION:
+			return super().choose(actor, decision)
+		kept_back = getattr(getattr(actor, "record", None), "state_monopolies", None) or ()
+		offered = [option for option in decision.options if option.subject not in kept_back]
+		return super().choose(actor, Decision(decision.kind, offered, decision.budget))
+
+
+def exports_allowed(actor: Any, materials: Iterable[str]) -> List[str]:
+	"""The materials, sorted, that the actor's state will sell abroad: it is asked, as an export decision,
+	through its own policy. Each sale is worth something and costs nothing, so only a policy that holds
+	a good back keeps it from leaving."""
+	decision = Decision(EXPORT_DECISION, [Option(subject=material, worth=1.0, cost=0.0)
+										  for material in sorted(set(materials))], float("inf"))
+	policy = getattr(actor, "decision_policy", None) or ExportPolicy()
+	return sorted(option.subject for option in policy.choose(actor, decision))
+
+
 POLICY_FACTORIES: Dict[str, Callable[[], Policy]] = {
 	"value": ValuePolicy,
 	"idle": IdlePolicy,
+	"export": ExportPolicy,
 }
 
 

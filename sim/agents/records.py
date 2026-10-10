@@ -69,6 +69,12 @@ class ActorRecord:
 	patron_grant: float = 0.0
 	# how the actor answers the state's demands ("comply" or "refuse", sim/agents/demand_answer.py)
 	demand_stance: str = "comply"
+	# a state's goods it will not sell abroad (its monopolies, set at the start by its country's data), and
+	# the parties it has shut its markets to: party id -> the first year they are open to them again
+	state_monopolies: Set[str] = field(default_factory=set)
+	closed_markets: Dict[str, int] = field(default_factory=dict)
+	# material -> units of the state's stock that smugglers have taken, which it can no longer sell
+	stock_taken: Dict[str, float] = field(default_factory=dict)
 	# ---- every actor: the country whose government it answers to and whose techniques it starts
 	# with (None = the home country), and who drives it ("ai", "human", "llm")
 	country: Optional[str] = None

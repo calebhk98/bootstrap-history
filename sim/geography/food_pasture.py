@@ -36,6 +36,21 @@ def usable_forage_kg(world_map: WorldMap, tile_id: str, wild_stock: Optional[Map
             * parameter(world_map, "food_pasture_mobility_factor"))
 
 
+def fodder_charge(world_map: WorldMap, tile_id: str) -> float:
+    """Dry matter an animal must be given per unit of what it eats in the growing season, averaged over the
+    year: months with no growth are fed from cut and stored fodder, which loses part of what was grown."""
+    season = growing_season_fraction(world_map, tile_id)
+    return season + (1.0 - season) / parameter(world_map, "food_pasture_winter_fodder_efficiency")
+
+
+def live_weight_capacity_kg(world_map: WorldMap, tile_id: str, wild_stock: Optional[Mapping] = None) -> float:
+    """Live weight of grazing animals the tile's usable forage keeps through a year: the forage over what a
+    kilogram of animal eats in a year, winter fodder included."""
+    intake_per_kg = (parameter(world_map, "food_livestock_intake_fraction_per_day") * CIVIL_DAYS_PER_YEAR
+                     * fodder_charge(world_map, tile_id))
+    return usable_forage_kg(world_map, tile_id, wild_stock) / intake_per_kg
+
+
 def kcal_per_head_year(row: dict) -> float:
     return (row["milk_litres_per_head_year"] * row["milk_kcal_per_litre"]
             + row["offtake_fraction_per_year"] * row["carcass_kg"] * row["carcass_kcal_per_kg"])
@@ -52,12 +67,10 @@ def herd_contributions(world_map: WorldMap, tile_id: str,
     forage = usable_forage_kg(world_map, tile_id, wild_stock)
     crowding = max(1.0, sum(fit for _row, fit in suited))
     intake_fraction = parameter(world_map, "food_livestock_intake_fraction_per_day")
-    # Months with no growth are fed from cut and stored fodder, which loses part of what was grown.
-    season = growing_season_fraction(world_map, tile_id)
-    fodder_charge = season + (1.0 - season) / parameter(world_map, "food_pasture_winter_fodder_efficiency")
+    charge = fodder_charge(world_map, tile_id)
     result = []
     for row, fit in suited:
-        intake_per_head = row["adult_mass_kg"] * intake_fraction * CIVIL_DAYS_PER_YEAR * fodder_charge
+        intake_per_head = row["adult_mass_kg"] * intake_fraction * CIVIL_DAYS_PER_YEAR * charge
         heads = forage * fit / crowding / intake_per_head
         result.append((row["food_source"], row["id"], heads * kcal_per_head_year(row)))
     return result

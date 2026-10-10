@@ -22,6 +22,7 @@ CARRIED_CIVILISATION_KEYS = ("standing_army", "values", "debt_bondage", "bondage
 GOVERNMENT_PREFIX = "government:"
 # record fields a scenario may not set: the purse and its books, what the actor is, and its life
 BOOKKEEPING_FIELDS = frozenset({"money", "income", "outlays", "kind", "exited_year", "founded_year"})
+EXPORT_POLICY_KIND = "export"
 HOME_GOVERNMENT_KIND = "government"
 FOREIGN_GOVERNMENT_KIND = "foreign_government"
 
@@ -95,7 +96,8 @@ def cast_from_civilisations(home_civ: Mapping[str, Any], foreign_civs: List[Mapp
 		entries.append(CastEntry(
 			actor_id=GOVERNMENT_PREFIX + profile.country, country=None if at_home else profile.country,
 			kind=HOME_GOVERNMENT_KIND if at_home else FOREIGN_GOVERNMENT_KIND, name=profile.name,
-			money=_number(cast.get("treasury"), 0.0), location=profile.location))
+			money=_number(cast.get("treasury"), 0.0), location=profile.location, policy_kind=EXPORT_POLICY_KIND,
+			params={"state_monopolies": list(civ.get("state_monopolies") or ())}))
 		pending.extend(cast.get("countries") or ())
 		for declared in cast.get("actors") or ():
 			entry = _entry_from_declaration(declared, None if at_home else profile.country)

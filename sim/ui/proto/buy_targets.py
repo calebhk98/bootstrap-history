@@ -14,6 +14,7 @@ BUY_TARGETS = {
     "material": (("stock",), "buy material <name> <tonnes>"),
     "mine": (("mines",), "buy mine <material> <tonnes_per_year>"),
     "living_stock": (("livestock", "breeding_stock"), "buy living_stock <material> <units> [<partner>]"),
+    "smuggled_stock": (("smuggle", "steal"), "buy smuggled_stock <material> <units> [<partner>]"),
     "slaves": (("people",), "buy slaves <n>"),
     "manumit": (("manumission", "free"), "buy manumit <n>"),
 }

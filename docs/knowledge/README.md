@@ -32,7 +32,7 @@ in this directory, read that one.
 | [`60_mathematics_method.md`](60_mathematics_method.md) | Mathematics, physics and the scientific method | 13 | 71 |
 | [`70_medicine_biology.md`](70_medicine_biology.md) | Medicine, public health and biology | 13 | 153 |
 | [`75_agriculture_food.md`](75_agriculture_food.md) | Agriculture, food and surplus | 12 | 62 |
-| [`76_farming_food_deep.md`](76_farming_food_deep.md) |  | 115 | 112 |
+| [`76_farming_food_deep.md`](76_farming_food_deep.md) |  | 116 | 113 |
 | [`80_information_printing.md`](80_information_printing.md) | Paper, printing and the survival of knowledge | 11 | 51 |
 | [`85_transport_civil.md`](85_transport_civil.md) | Transport, mining and civil engineering | 12 | 185 |
 | [`86_transport_deep.md`](86_transport_deep.md) |  | 211 | 192 |
@@ -1450,6 +1450,7 @@ Sorted by module, then by node id.
 | `ag2_retort` | 110.0 | [`ag2_canning`](76_farming_food_deep.md#ag2_canning-ag2_retort-ag2_double_seam_can---preservation-that-worked-before-anyone-knew-why) |
 | `ag2_rhizobia` | 150.0 | [`ag2_rhizobia`](76_farming_food_deep.md#ag2_rhizobia---legume-root-nodules-and-the-nitrogen-cycle-attributed) |
 | `ag2_ridging_plough` | 60.0 | [`ag2_ridging_plough`](76_farming_food_deep.md#ag2_ridging_plough-ag2_root_cutter-ag2_potato_lifter---handling-root-crops) |
+| `ag2_rubber_plantation` | 110.0 | [`ag2_rubber_plantation`](76_farming_food_deep.md#ag2_rubber_plantation---planted-rubber-budded-stump-nurseries-and-tapping) |
 | `ag2_roller` | 40.0 | [`ag2_cultivator`](76_farming_food_deep.md#ag2_cultivator-ag2_subsoiler-ag2_harrow-ag2_roller---working-ground-between-sowing-and-harvest) |
 | `ag2_root_cutter` | 60.0 | [`ag2_ridging_plough`](76_farming_food_deep.md#ag2_ridging_plough-ag2_root_cutter-ag2_potato_lifter---handling-root-crops) |
 | `ag2_rootstocks` | 100.0 | [`ag2_grafting`](76_farming_food_deep.md#ag2_grafting-ag2_budding-ag2_layering-ag2_rootstocks---vegetative-propagation-as-knowledge) |

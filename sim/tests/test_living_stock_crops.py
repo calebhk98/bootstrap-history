@@ -27,8 +27,8 @@ for material, node_id in sorted(WIRING.items()):
     check("%s has a living-stock row" % material, row is not None, None)
     if row is None:
         continue
-    check("%s: rates are fractions and the minimum is not negative" % material,
-          0.0 <= row["natural_increase"] <= 1.0 and 0.0 <= row["annual_loss"] <= 1.0
+    check("%s: increase is not negative, loss is a fraction and the minimum is not negative" % material,
+          0.0 <= row["natural_increase"] and 0.0 <= row["annual_loss"] <= 1.0
           and row["breeding_minimum_units"] >= 0.0, row)
     check("%s names a source with a confidence grade" % material,
           len(row.get("source", "")) > 40 and row.get("confidence") in ("A", "B", "C"), row)

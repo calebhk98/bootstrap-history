@@ -1900,6 +1900,36 @@
   "note": "Establishing coffee in a new land after bringing seedlings or seed. Shade trees and altitude matching matter, and it takes years before the first harvest after planting. It needs eastern trade routes and a suitable climate. Seed loses its ability to sprout quickly, so it must be planted soon after the journey."
  },
  {
+  "grants": {"rubber_planting_stock_kg": 50},
+  "id": "ag2_rubber_plantation",
+  "name": "Planted rubber: budded-stump nurseries and tapping",
+  "cat": "plants",
+  "kind": "ENGINEERING",
+  "pre": [
+   "exp_americas_factory",
+   "exp_transplant_botany"
+  ],
+  "traits": [
+   "food",
+   "commerce"
+  ],
+  "kb": "76_farming_food_deep.md#ag2_rubber_plantation",
+  "ph": 110,
+  "lab": {},
+  "mat": {},
+  "up_hours": 0,
+  "build_yrs": 2,
+  "adopt_yrs": 1,
+  "dev_years": 10,
+  "dev_people": 3,
+  "risk": 0.25,
+  "rev_hours": 0,
+  "sch": 2,
+  "art": 2,
+  "conf": "C",
+  "note": "The tree is Amazonian and its seed dies within days, so the stock has to cross an ocean fast and be multiplied in nurseries; the plantation's value is the tapping cut, which bleeds the bark's latex vessels without killing the tree, and stumps budded from a selected high-yielding clone, which give several times the latex of seedling stock. Six or seven years before the first tapping."
+ },
+ {
   "id": "ag2_potato_newworld",
   "name": "Potato from the New World",
   "cat": "plants",

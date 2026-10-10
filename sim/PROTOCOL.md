@@ -243,6 +243,14 @@ Two fixes, usable separately or together:
       {"cmd":"buy","what":"mine","material":"iron","n":500}   sink a mine
       {"cmd":"buy","what":"slaves","n":4}          the economic actions the optimizer
       {"cmd":"buy","what":"manumit","n":4}         could take, exposed to the player
+      {"cmd":"buy","what":"living_stock","material":"ramie_stock_kg","n":100,"partner":"han_china_100ad"}
+                                                    stock bought from a partner that sells it
+      {"cmd":"buy","what":"smuggled_stock","material":"silkworm_eggs_kg","n":0.1}
+                                                    stock taken from a partner that will not sell it:
+                                                    the carrying is paid either way, the partner's state
+                                                    may catch it (`caught`), seize the stock and shut its
+                                                    markets to you for years; `quote` first gives the
+                                                    cost and `chance_caught`
       {"cmd":"policy","set":{"auto_hire":"replace"}}   auto_hire takes true, false or "replace":
                                                     replace-only hires back only the people lost
                                                     that year and never grows the staff; its audit

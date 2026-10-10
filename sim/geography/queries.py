@@ -9,7 +9,7 @@ import copy
 import math
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
-from sim.geography import (food_capacity, food_wild_harvest, map_source, mechanisms, parameters, resource_links, resources_biotic, rail_freight,
+from sim.geography import (food_capacity, food_land, food_pasture, food_wild_harvest, map_source, mechanisms, parameters, resource_links, resources_biotic, rail_freight,
                            resources_catalogue, resources_endowment, resources_mined, resources_prospecting, resources_sites,
                            resources_summary, routes_carriage, routes_graph, routes_modes, routes_search, tile_holdings, tile_layers,
                            ways_build, ways_works)
@@ -50,6 +50,17 @@ def food_potential(tile_id: str, technique_factors: Optional[Mapping[str, float]
     """Sustainable food energy of a tile by source, and the people it feeds. `wild_stock` is the game's
     {tile: {species: share of carrying capacity left}}; a missing entry is a full stock."""
     return food_capacity.food_potential(_map(world_map), tile_id, dict(technique_factors or {}) or None, wild_stock)
+
+
+def pasture_capacity_kg(tile_id: str, wild_stock: Optional[Mapping[str, Any]] = None,
+                        world_map: Optional[WorldMap] = None) -> float:
+    """Live weight in kilograms of grazing animals the tile's usable forage keeps through a year."""
+    return food_pasture.live_weight_capacity_kg(_map(world_map), tile_id, wild_stock)
+
+
+def arable_hectares(tile_id: str, world_map: Optional[WorldMap] = None) -> float:
+    """Hectares of the tile that can be ploughed, after slope and forest."""
+    return food_land.arable_hectares(_map(world_map), tile_id)
 
 
 def hunted_kcal(tile_id: str, wild_stock: Optional[Mapping[str, Any]] = None,

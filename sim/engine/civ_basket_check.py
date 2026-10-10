@@ -9,11 +9,23 @@ only warns.
 
 Used by `simulator.py validate`, and importable for tests.
 """
+from types import SimpleNamespace
+
+from sim.agents.api import exports_allowed
+
 from .civ_start_check import UNREVIEWED, MINIMUM_REASON_LENGTH, _producers
 
 
 def _makes(held, gates):
     return any(gate is None or gate in held for gate in gates)
+
+
+def _sells_abroad(partner, good):
+    """Whether the partner's state, at its start, lets the good leave: its export policy answers from the
+    monopolies its data gives it."""
+    state = SimpleNamespace(record=SimpleNamespace(state_monopolies=set(partner.get("state_monopolies") or ())),
+                            decision_policy=None)
+    return bool(exports_allowed(state, [good]))
 
 
 def _partners_for(civilisation_id, civilisation, civilisations, economies):
@@ -42,7 +54,7 @@ def unsupplied_basket_goods(civilisation_id, civilisations, production, goods, e
         gates = [gate for gate, _entry in by_material.get(good, ())]
         if not gates or _makes(held, gates):
             continue
-        if any(good not in (partner.get("will_not_sell") or ())
+        if any(_sells_abroad(partner, good)
                and _makes(set(partner.get("starting_techs") or ()), gates) for partner in partners):
             continue
         missing.append(good)

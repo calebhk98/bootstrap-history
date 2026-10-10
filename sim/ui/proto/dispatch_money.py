@@ -14,7 +14,7 @@ from .explain_once import already_explained
 from .util import _qty
 from .buy_targets import canonical_target, target_names, usage_lines
 from .quote_purchases import FLAT_QUOTERS
-from .stock_purchases import buy_living_stock
+from .stock_purchases import buy_living_stock, buy_smuggled_stock
 from .quote_spending import SPENDING_QUOTERS, bounty_refusal
 from sim.engine.ui_port import cash_book, purchase_rule, money_word
 
@@ -195,6 +195,7 @@ _BUY_HANDLERS = {
     "material": _buy_material,
     "mine": _buy_mine,
     "living_stock": buy_living_stock,
+    "smuggled_stock": buy_smuggled_stock,
     "slaves": _buy_slaves,
     "manumit": _buy_manumit,
 }

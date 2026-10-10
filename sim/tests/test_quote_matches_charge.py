@@ -177,3 +177,13 @@ check("living stock: the ledger shows exactly what was quoted",
       _stock_reply.get("ok") and abs(_ledger_outflow(_stocked, "stock bought abroad")
                                      - _stock_quote["to_buy_it"]) <= 0.051,
       (_ledger_outflow(_stocked, "stock bought abroad"), _stock_quote.get("to_buy_it")))
+
+# Smuggled stock: the carrying is charged whether or not the taker is caught, and it is the quoted cost.
+_smuggle_args = {"what": "smuggled_stock", "material": "silkworm_eggs_kg", "n": 0.1}
+_smuggler = _ledger_game()
+_smuggle_quote = S._agent_dispatch(_smuggler, NODES, dict(_smuggle_args, cmd="quote"))
+_smuggle_reply = S._agent_dispatch(_smuggler, NODES, dict(_smuggle_args, cmd="buy"))
+check("smuggled stock: the ledger shows exactly what was quoted, caught or not",
+      _smuggle_reply.get("ok") and abs(_ledger_outflow(_smuggler, "stock smuggled")
+                                       - _smuggle_quote["to_buy_it"]) <= 0.051,
+      (_ledger_outflow(_smuggler, "stock smuggled"), _smuggle_quote.get("to_buy_it")))
