@@ -2,6 +2,8 @@
 the live adapters (`SimWorld`), the servants and strata sectors are read from the real world's budget and labour core,
 an unpaid army mutinies against the real treasury, and the founder's answers to a demand (negotiate, conceal,
 confiscation) work on the real household. Builds whole games, so it is not in the quick tier."""
+import random
+
 from .harness import check, unopened_sim
 
 from sim.agents import group_servants
@@ -15,10 +17,6 @@ def a_year(game):
 
 
 game = unopened_sim(civ="england_1300")
-church = game.actors.of_kind("church")
-academy = game.actors.of_kind("academy")
-check("the civilisation's file founded a church and an academy", len(church) == 1 and len(academy) == 1, (church, academy))
-
 view = SimWorld(game)
 check("the live world answers what a stake asks of it",
       isinstance(view.idle_hours_by_trade(), dict) and isinstance(view.land_rent_per_hectare(), float)
@@ -27,6 +25,8 @@ check("the live world answers what a stake asks of it",
 
 for _year in range(3):
     a_year(game)
+check("the civilisation's file founded a church and an academy at the first actor year",
+      len(game.actors.of_kind("church")) == 1 and len(game.actors.of_kind("academy")) == 1)
 church = game.actors.of_kind("church")[0]
 check("the church ran its years: it counted what it collected and what it owed its clergy",
       "stipends" in church.record.need and church.record.need["stipends"] > 0.0, church.record.need)
@@ -57,6 +57,7 @@ household = game.state.household
 household.capital = 1.0e6
 scale_open = game.household_scale()
 set_household_stance(game, "conceal")
+game.rng = random.Random(2)   # a first draw high enough that the state does not find the hoard
 settle_household_year(game)
 check("a founder who conceals holds part of his wealth out of sight, and the state assesses him as smaller",
       household.concealed > 0.0 and game.household_scale() <= scale_open, (household.concealed, scale_open, game.household_scale()))
