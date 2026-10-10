@@ -3,8 +3,6 @@ holds against risk is lent through the loanable-funds market (the state as a sav
 spent on works, a named purchase that hires people; no outlay of the state goes to nobody."""
 from .harness import *  # noqa: F401,F403
 
-sim = unopened_sim   # legacy: pins how the engine's budget spends a surplus; the agent-economy budget is test_economy_agent_state.py
-
 
 from sim.agents.purses import COIN, INTEREST_PAID, LENT
 from sim.engine.coin_hoard import KEEPING_CAUSE

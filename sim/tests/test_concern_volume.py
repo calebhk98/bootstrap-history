@@ -14,6 +14,10 @@ from sim.engine import prices as price_solver
 from sim.engine.agents_port import SimWorld
 
 
+# a plant may bind before the staff do, so a clear gain is well short of the doubling the labour allows
+CLEAR_GAIN = 1.25
+
+
 def complete(game, node_id):
     game.state.projects.done.add(node_id)
     game._done_changed()
@@ -40,11 +44,15 @@ def staff_bound_node(game):
         base = node_output.output_baskets(node, production, goods)
         doubled = dict(node, sch=node["sch"] * 2, art=node["art"] * 2)
         more = node_output.output_baskets(doubled, production, goods)
-        if base and more and sum(more.outputs.values()) > 1.5 * sum(base.outputs.values()):
+        if base and more and sum(more.outputs.values()) > CLEAR_GAIN * sum(base.outputs.values()):
             entry = max(node_output.entries_gated_by(node_id, production),
                         key=lambda candidate: sum(candidate["outputs"].values()))
-            if sorted(entry["outputs"]) == sorted(base.outputs) and not entry.get("capital"):
-                return node_id, entry
+            if sorted(entry["outputs"]) == sorted(base.outputs):
+                halved = dict(entry, labour_hours={trade: hours / 2.0 for trade, hours in entry["labour_hours"].items()})
+                faster = node_output.output_baskets(node, production, goods, entries=[halved])
+                if (faster and sum(faster.outputs.values()) > CLEAR_GAIN * sum(base.outputs.values())   # the plant does not bind first
+                        and game.concern_takings(node_id, 1.0) > 0.0):   # and the opening earns from it
+                    return node_id, entry
     raise AssertionError("no staff-bound node")
 
 
@@ -63,11 +71,14 @@ unused = next(candidate for candidate in sorted(NODES) if candidate not in
               price_solver.all_gate_nodes(original) and candidate not in probe.state.projects.done
               and not NODES[candidate]["rev"])
 improved["requires_node"] = unused
+improved["operated_by"] = []       # only the node that gates it brings it in; a copy would be run by the original's operators
 patched["_improved_" + node_id] = improved
 price_solver.reset_caches_for_tests()
 price_solver._DEFAULT_PRODUCTION_ENTRIES = patched
 try:
     game, twin = sim(civ="rome_100ad", capital=1e9), sim(civ="rome_100ad", capital=1e9)
+    for veteran in (game, twin):
+        veteran.add_industry_years(node_id, 1.0e6)    # a settled concern: its takings follow its volume, not a new plant's learning
     check("a concern's volume is its opening's before the technique is held",
           game.concern_volume_ratio(node_id) == 1.0 and game.concern_value_ratio(node_id) == 1.0)
     complete(game, unused)
@@ -78,7 +89,7 @@ try:
           game.concern_volume_ratio(node_id) == 1.0)
     game.state.scenario.year += imitation.copy_years(NODES[unused]) + 1
     check("an entry whose labour per unit halves lets the same staff turn out more",
-          game.concern_volume_ratio(node_id) > 1.5, game.concern_volume_ratio(node_id))
+          game.concern_volume_ratio(node_id) > CLEAR_GAIN, game.concern_volume_ratio(node_id))
     check("...with the staff unchanged", game.nodes[node_id]["sch"] == twin.nodes[node_id]["sch"]
           and game.nodes[node_id]["art"] == twin.nodes[node_id]["art"])
     check("...and an actor's concern puts more of it on the market",
@@ -88,7 +99,7 @@ try:
                                                   game.state.scenario.year, 1.0))
     got = takings(game, node_id) / takings(twin, node_id)
     check("a concern's takings rise with its volume, at the price the market clears at",
-          got > 1.5 * game.node_output_market_factor(game.nodes[node_id]) / twin.node_output_market_factor(
+          got > CLEAR_GAIN * game.node_output_market_factor(game.nodes[node_id]) / twin.node_output_market_factor(
               twin.nodes[node_id]), got)
     check("...and the technique run by one producer leaves the incumbents' cost of every good they make alone",
           all(game._material_prices()[material] == price for material, price in twin._material_prices().items()
@@ -101,7 +112,8 @@ game = sim(civ="rome_100ad", capital=1e9)
 material = "iron_bar_kg"
 commodity = game._material_tag(material)[0]
 price_before = game.market_price_ratio(material)
-game.goods_market.note_sale("another_operator", commodity, game._market_entry(commodity)["reference_tonnes"])
+# a seller whose output meets the demand at the incumbents' cost leaves the price at it; more than that pushes it below
+game.goods_market.note_sale("another_operator", commodity, 2.0 * game._market_entry(commodity)["reference_tonnes"])
 price_after = game.market_price_ratio(material)
 check("more operators selling a good lower the price it clears at", price_after < price_before,
       (price_before, price_after))
@@ -109,32 +121,37 @@ check("more operators selling a good lower the price it clears at", price_after 
 # --- household income follows productivity and the wage; they buy more.
 original = price_solver.default_production_entries()
 patched = dict(original)
-source_key = next(key for key, candidate in original.items() if "fat_kg" in (candidate.get("outputs") or {}))
+probe = sim(civ="rome_100ad", capital=1e9)
+cheap_material, source_key = next(
+    (material, key) for key, candidate in sorted(original.items()) for material in sorted(candidate.get("outputs") or {})
+    if candidate.get("labour_hours") and probe._material_tag(material)[0] == material
+    and probe._market_entry(material) is not None and probe.household_demand_ratio(material) > 0.0)
 cheaper_entry = copy.deepcopy(original[source_key])
 cheaper_entry["labour_hours"] = {trade: hours / 2.0 for trade, hours in cheaper_entry["labour_hours"].items()}
 cheaper_entry["requires_node"] = unused
-patched["_cheaper_fat"] = cheaper_entry
+cheaper_entry["operated_by"] = []
+patched["_cheaper_good"] = cheaper_entry
 price_solver.reset_caches_for_tests()
 price_solver._DEFAULT_PRODUCTION_ENTRIES = patched
 try:
     game = sim(civ="rome_100ad", capital=1e9)
     check("household real income is the opening's before any technique",
           abs(game.household_real_income_ratio() - 1.0) < 1e-9, game.household_real_income_ratio())
-    demand_before = game.household_demand_ratio("fat_kg")
+    demand_before = game.household_demand_ratio(cheap_material)
     complete(game, unused)
     check("household real income does not rise with a technique nobody runs",
           abs(game.household_real_income_ratio() - 1.0) < 1e-9)
     run(game, unused)
     check("household real income does not rise because one producer runs a cheaper entry: the incumbents' "
           "cost is not repriced", abs(game.household_real_income_ratio() - 1.0) < 1e-9)
-    commodity = game._material_tag("fat_kg")[0]
-    traded_before = game._market_outcome(commodity)[1].quantity_traded_tonnes
+    commodity = game._material_tag(cheap_material)[0]
+    cheap_sold_before = game._market_outcome(commodity)[1].offers_sold_tonnes
     game.goods_market.note_sale("cheap_firm", commodity, game._market_entry(commodity)["reference_tonnes"] * 0.5,
-                                game.entry_cost_ratio("_cheaper_fat", "fat_kg"))
-    check("...but the market sells more of what that producer makes cheaper",
-          game._market_outcome(commodity)[1].quantity_traded_tonnes > traded_before)
+                                game.entry_cost_ratio("_cheaper_good", cheap_material))
+    check("...but the market buys more from the producer whose entry is cheaper, which sells at its own cost",
+          game._market_outcome(commodity)[1].offers_sold_tonnes > cheap_sold_before)
     income_before = game.household_income_hours_per_capita()
-    demand_before = game.household_demand_ratio("fat_kg")
+    demand_before = game.household_demand_ratio(cheap_material)
     game._apply_population_mortality_shock(0.3)
     check("a wage that rises with the scarcity of hands raises household income",
           game.household_income_hours_per_capita() > income_before,
