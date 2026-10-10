@@ -1,11 +1,8 @@
 """The cash a producer still presses to raise when it offers its output: what its target lacks after the
 year's costs, which the sale of that very output repays, are set aside.
 
-A producer pays its wages and inputs before it sells, so at the point of sale its cash always sits below its
-target by about what it laid out. Treating that gap as distress made every seller ask a fraction of its
-expected price in a year it sold at a profit, and in a thin market (an input whose cost is most of its price)
-the clearing price then fell to those asks in any year of surplus and rose to the buyers' ceiling in any year
-of shortage.
+A producer pays its wages and inputs before it sells, so at the point of sale its cash sits below its
+target by about what it laid out; that gap is not distress and does not lower its ask.
 """
 
 
