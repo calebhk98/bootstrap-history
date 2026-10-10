@@ -1,8 +1,8 @@
 """What workers ask, as a multiple of the reservation wage, remembered per (area, trade).
 
 A worker sells hours like a seller sells goods. The reservation wage (the family's subsistence per hour plus
-pay for the trade's danger) is where the ask starts; the bound under it is the wage floor (the household's
-costs less its plot, economy/labour_ask_floor.py): hours employers would not take at
+pay for the trade's danger) is where the ask starts; the bound under it is the wage floor (what an hour is worth on the
+household's own plot, economy/labour_ask_floor.py): hours employers would not take at
 the ask are offered cheaper the next year, by the share of them left unsold, and when employers want more
 than is offered the ask is raised by the share of demand left unmet. Nothing here names a trade or an area.
 A family with hours nobody buys still eats from its own plot and savings (the economy keeps those hours
