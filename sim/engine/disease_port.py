@@ -19,6 +19,7 @@ AGE_VULNERABILITY = {"children": demography.STARVATION_VULNERABILITY_CHILD,
 AGEING = {"children": ("working_age", 1.0 / demography.CHILD_BAND_WIDTH_YEARS),
           "working_age": ("elderly", 1.0 / demography.WORKING_AGE_BAND_WIDTH_YEARS)}
 INTRODUCTION_BAND = "working_age"
+CAREGIVER_BANDS = ("working_age",)
 
 DISEASE_CONTACT_ANNUAL_CHANCE = declare(
     "DISEASE_CONTACT_ANNUAL_CHANCE", 0.25, kind="temporary_heuristic",
@@ -42,6 +43,22 @@ AGE_FATALITY_FROM_STARVATION_VULNERABILITY = declare(
         "famine, direction supported for epidemic disease, magnitude borrowed), rescaled so the population-weighted "
         "mean stays the pathogen's own figure. The nutrition shortfall multiplies it by the same curve baseline "
         "mortality uses. Replaced by per-band fatality in the pathogen files when sourced.")
+DISEASE_CARE_COLLAPSE_SENSITIVITY = declare(
+    "DISEASE_CARE_COLLAPSE_SENSITIVITY", 1.0, kind="temporary_heuristic",
+    unit="dimensionless (extra case fatality, as a multiple of the base, when every caregiving adult is ill at once)",
+    source=None, confidence="D",
+    why="When most adults fall ill together nobody fetches water, feeds the sick or tends the harvest, so fatality "
+        "rises (the sociocultural account of virgin-soil epidemics, Neel 1970 on the Yanomami measles epidemic, "
+        "controversial; no figure read). The multiplier is one plus this times the ill share of the caregiving "
+        "band, so a small outbreak is unchanged and the figure is only the direction. Vary across the ensemble; "
+        "replaced by a sourced curve or by a nursing-capacity mechanism once households exist in the model.")
+DISEASE_URBAN_DENSITY_RATIO = declare(
+    "DISEASE_URBAN_DENSITY_RATIO", 4.0, kind="temporary_heuristic",
+    unit="dimensionless (density of an urban resident's neighbourhood over a rural resident's)",
+    source=None, confidence="D",
+    why="The nation is one patch, so its crowding is the person-weighted density index: rural people at one, urban "
+        "people at this ratio, weighted by the civilisation's urban share. Pathogen transmissibilities are stated for "
+        "the rural index of one. Retired when the spatial stage gives each tile its own population and settlement.")
 
 
 @functools.lru_cache(maxsize=1)
@@ -84,6 +101,12 @@ class DiseaseWorld:
                 if draw < DISEASE_CONTACT_ANNUAL_CHANCE:
                     arrivals.append(pathogen_id)
         return arrivals
+
+    def crowding_index(self):
+        """The person-weighted density of the nation relative to a rural settlement: one for a wholly rural
+        people, rising toward the urban density ratio with the civilisation's urban share."""
+        urban = min(1.0, max(0.0, float(self._sim.civ.get("urban_fraction", 0.0))))
+        return (1.0 - urban) + urban * DISEASE_URBAN_DENSITY_RATIO
 
     def fatality_scale_by_band(self, nutrition_ratio):
         """Each band's multiplier on a pathogen's case fatality: its relative vulnerability, rescaled to a
@@ -135,7 +158,8 @@ class DiseasePortMixin:
             known, state.records, world.people_by_band(), world.seed_text(), introductions=arrivals,
             introduction_band=INTRODUCTION_BAND, introduction_size=DISEASE_CONTACT_INFECTED_PEOPLE, ageing=AGEING,
             fatality_scale=world.fatality_scale_by_band(nutrition_ratio), transmission_scale=transmission,
-            fatality_factor=fatality_by_pathogen)
+            fatality_factor=fatality_by_pathogen, crowding=world.crowding_index(),
+            care_collapse=(CAREGIVER_BANDS, DISEASE_CARE_COLLAPSE_SENSITIVITY))
         for pathogen_id in result.introduced:
             state.introduced.setdefault(pathogen_id, []).append(year)
         for pathogen_id, deaths in result.deaths_by_pathogen.items():

@@ -16,6 +16,7 @@ class Pathogen:
     immunity_permanent: bool
     immunity_duration_in_days: Optional[float]
     reproduction_number_range: Tuple[float, float] = (0.0, float("inf"))
+    density_exponent: float = 0.0
 
     @classmethod
     def from_plain(cls, plain):
@@ -26,7 +27,8 @@ class Pathogen:
                    case_fatality=float(plain["case_fatality"]),
                    immunity_permanent=bool(immunity.get("permanent", True)),
                    immunity_duration_in_days=immunity.get("duration_in_days"),
-                   reproduction_number_range=tuple(plain.get("reproduction_number_range") or (0.0, float("inf"))))
+                   reproduction_number_range=tuple(plain.get("reproduction_number_range") or (0.0, float("inf"))),
+                   density_exponent=float(plain.get("density_exponent", 0.0)))
 
 
 @dataclass

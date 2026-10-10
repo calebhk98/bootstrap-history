@@ -249,5 +249,52 @@ class TechnologyScaleTest(unittest.TestCase):
         self.assertLess(immune(covered), immune(bare))
 
 
+class CareCollapseAndDensityTest(unittest.TestCase):
+    """Complaint 471: fatality rises with the share of caregivers ill at once; contact scales with crowding."""
+
+    def run_year(self, pathogen_extra=None, introduction_size=20, **options):
+        plain = pathogen_plain()
+        plain.update(pathogen_extra or {})
+        records = {}
+        result = disease.advance_year({"test_pathogen": disease.Pathogen.from_plain(plain)}, records, PEOPLE,
+                                      "wiring-test", introductions=("test_pathogen",), introduction_band="working_age",
+                                      introduction_size=introduction_size, **options)
+        return records, result
+
+    def test_the_multiplier_is_one_for_no_sensitivity_and_grows_with_the_ill_share(self):
+        from sim.disease.step import care_collapse_multiplier
+        pathogen = pathogens()["test_pathogen"]
+        patch = disease.Patch.naive(pathogen, 1000, seed=1)
+        self.assertEqual(care_collapse_multiplier({"a": patch}, None), 1.0)
+        self.assertEqual(care_collapse_multiplier({"a": patch}, (("a",), 2.0)), 1.0)
+        patch.seed_infection(pathogen, 250)
+        self.assertAlmostEqual(care_collapse_multiplier({"a": patch}, (("a",), 2.0)), 1.5)
+        self.assertEqual(care_collapse_multiplier({"a": patch}, (("elsewhere",), 2.0)), 1.0)
+
+    def test_a_mass_epidemic_kills_more_with_care_collapse_than_without(self):
+        _, bare = self.run_year()
+        _, collapsing = self.run_year(care_collapse=(("working_age",), 3.0))
+        self.assertGreater(sum(collapsing.deaths_by_band.values()), sum(bare.deaths_by_band.values()))
+
+    def test_zero_density_exponent_ignores_crowding_and_a_positive_one_speeds_spread(self):
+        flat, _ = self.run_year({"density_exponent": 0.0}, crowding=1.0)
+        flat_crowded, _ = self.run_year({"density_exponent": 0.0}, crowding=4.0)
+        self.assertEqual(flat, flat_crowded)
+        immune = lambda records: sum(records["test_pathogen"][band]["counts"]["recovered"] for band in BANDS)
+        sparse, _ = self.run_year({"density_exponent": 0.5}, crowding=1.0, introduction_size=2)
+        crowded, _ = self.run_year({"density_exponent": 0.5}, crowding=4.0, introduction_size=2)
+        self.assertGreater(immune(crowded), immune(sparse))
+
+    def test_crowding_rises_with_the_urban_share_and_is_one_when_rural(self):
+        index = lambda urban: disease_port.DiseaseWorld(StandIn(civ={"id": "x", "urban_fraction": urban})).crowding_index()
+        self.assertEqual(index(0.0), 1.0)
+        self.assertLess(index(0.1), index(0.3))
+        self.assertEqual(disease_port.DiseaseWorld(StandIn()).crowding_index(), 1.0)
+
+    def test_every_pathogen_file_declares_a_density_exponent_between_the_poles(self):
+        for pathogen in disease.load_pathogens().values():
+            self.assertTrue(0.0 <= pathogen.density_exponent <= 1.0, pathogen.id)
+
+
 if __name__ == "__main__":
     unittest.main()

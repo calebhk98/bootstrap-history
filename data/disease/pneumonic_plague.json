@@ -29,6 +29,7 @@
   1.3,
   1.3
  ],
+ "density_exponent": 0.5,
  "sources": {
   "reproduction_number_range": {
    "confidence": "read",
@@ -53,6 +54,10 @@
   "stage.infectious": {
    "confidence": "read",
    "source": "Gani and Leach 2004: infectious mean 2.5 days, SD 1.2, lognormal. Shape 4 is the Erlang nearest that mean and SD"
+  },
+  "density_exponent": {
+   "confidence": "unsourced",
+   "source": "Heuristic inside the range Rader et al. 2020 (Nature Medicine, abstract read: crowded cities see longer epidemics with larger attack rates; scaling weaker than linear) supports; the report gives no exponent per route. Respiratory person-to-person contact sits mid-range; vary across the ensemble"
   }
  }
 }

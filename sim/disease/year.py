@@ -33,7 +33,7 @@ def is_circulating(records, pathogen_id):
 
 def advance_year(pathogens, records, people_by_band, seed_text, introductions=(), introduction_band=None,
                  introduction_size=0, ageing=None, fatality_scale=None, transmission_scale=None,
-                 fatality_factor=None):
+                 fatality_factor=None, crowding=1.0, care_collapse=None):
     """Run a year for every pathogen with saved `records` (`{pathogen id: {band: plain Patch}}`, rewritten in
     place) or in `introductions`, and return a YearResult.
 
@@ -41,7 +41,10 @@ def advance_year(pathogens, records, people_by_band, seed_text, introductions=()
     `{band: (next band, share of the band that crosses into it per year)}`, applied to the saved counts
     before fitting. `fatality_scale` is `{band: multiplier on the pathogen's case fatality}`;
     `transmission_scale` and `fatality_factor` are `{pathogen id: multiplier}` (what the caller's technology does
-    to that pathogen's spread and to its case fatality)."""
+    to that pathogen's spread and to its case fatality). `crowding` is the nation's person-weighted density
+    relative to the density the transmissibilities are stated at; contact scales as it to the power of each
+    pathogen's `density_exponent`. `care_collapse` is `(caregiver bands, sensitivity)`: fatality rises with
+    the share of those bands ill at once."""
     result = YearResult()
     bands = list(people_by_band)
     transmission_scale = transmission_scale or {}
@@ -56,7 +59,8 @@ def advance_year(pathogens, records, people_by_band, seed_text, introductions=()
         if any(patch.infected_now() for patch in patches.values()):
             scale = {band: (fatality_scale or {}).get(band, 1.0) * fatality_factor.get(pathogen_id, 1.0) for band in bands}
             advance_groups(pathogen, patches, DAYS_PER_YEAR, fatality_scale=scale,
-                           transmission_scale=transmission_scale.get(pathogen_id, 1.0))
+                           transmission_scale=transmission_scale.get(pathogen_id, 1.0) * crowding ** pathogen.density_exponent,
+                           care_collapse=care_collapse)
         else:
             for patch in patches.values():
                 wane_idle(pathogen, patch, DAYS_PER_YEAR)
