@@ -7,7 +7,7 @@ second scenario may supply another. Nothing here is imported at run time; it nam
 actors call, so a change to what an actor asks shows up as a change to this file.
 """
 import random
-from typing import Any, Dict, List, Optional, Protocol, Set, Tuple
+from typing import Any, Dict, FrozenSet, List, Optional, Protocol, Set, Tuple
 
 from .revenue import Assessment
 from .sector import Sector
@@ -113,8 +113,17 @@ class World(Protocol):
 		"""Rent producers paid last year on each tile where land was let, in coin; empty without an agent economy."""
 		...
 
-	def land_rent_owners(self) -> List[Tuple[Any, float]]:
-		"""(actor, rent received) where the world can say which actors the rent went to; empty where it cannot."""
+	def land_rent_owners(self, tiles: Optional[FrozenSet[str]] = None) -> List[Tuple[Any, float]]:
+		"""(actor, rent received) of the rent paid on `tiles` (all when none), where the world can say which actors
+		the rent went to; empty where it cannot."""
+		...
+
+	def held_tiles(self) -> List[str]:
+		"""The tiles the state holds."""
+		...
+
+	def arable_share(self, tiles: FrozenSet[str]) -> float:
+		"""The share of the arable land the state holds that lies on `tiles`."""
 		...
 
 	# ---- Who is hurt, and what an interest group can see

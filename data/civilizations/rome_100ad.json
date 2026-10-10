@@ -840,8 +840,19 @@
       "basis": "harvest",
       "rate": 0.1,
       "paid_in": "wheat_kg",
+      "except_tiles": ["syria_01", "lebanon_01"],
       "_internal": {
-        "source": "A tenth of the crop, taken in grain: the decuma of Sicily under the Lex Hieronica (Cicero, Verrines 2.3) and the provincial tribute in grain; Egypt took more. Rome's provincial land tax is not known as one rate; a tenth is the attested modal share.",
+        "source": "A tenth of the crop, taken in grain, in the provinces that paid the provincial tribute as a share of the harvest: the decuma of Sicily under the Lex Hieronica (Cicero, Verrines 2.3) and the grain tribute of the other grain provinces; Egypt took more. The tenth is the attested modal share, not one rate for every province. The tiles of Syria pay the property form below instead, so no land is taxed twice. The harvest of the excepted tiles is left out by arable-land share (a labelled heuristic in revenue_bases.py).",
+        "confidence": "C"
+      }
+    },
+    {
+      "form": "property_tribute",
+      "basis": "land_value",
+      "rate": 0.01,
+      "tiles": ["syria_01", "lebanon_01"],
+      "_internal": {
+        "source": "Syria paid its tribute as one per cent of assessed property, set by Pompey after 64 BC (Appian, Syrian Wars 50). The land's capital value (rent capitalised at the market rate) stands in for the assessed property, which also counted movables; the province is the tiles of Syria and the Phoenician coast (map tiles syria_01 and lebanon_01).",
         "confidence": "C"
       }
     },
