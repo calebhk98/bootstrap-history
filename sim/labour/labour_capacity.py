@@ -431,7 +431,7 @@ class CapacityMixin:
                 "it" if len(reopen) == 1 else "them"))
             if reopen else "")
         _housing_bit = ("Housing is bought: 'buy housing N' adds N places at %s each. "
-                        % "{:,.0f}".format(self._world.housing_price_per_place()))
+                        % self._world.money_text(self._world.housing_price_per_place(), grouped=True))
         if not want:
             if reopen:
                 return ("%sThe rest is built - or in this case, "

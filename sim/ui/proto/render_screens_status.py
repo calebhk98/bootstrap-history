@@ -14,6 +14,7 @@ table of startable-today nodes, the one place here that reaches into the
 
 from .score import _score_lines
 from sim.engine.ui_port import warning_lines
+from sim.ui import units_text
 from .util import _factor, _fmt_num, _pct, _wrap
 from .hazard_words import advice_header
 from .render_screen_available import _available_row, available_header
@@ -447,7 +448,7 @@ def render_path(out):
     or with a script outside the game.
     """
     lines = ["ROUTE TO %s  [%s]" % (out.get("name"), out.get("id"))]
-    lines += [_wrap(line) for line in warning_lines(out.get("knowledge_loss_warning"))]
+    lines += [_wrap(line) for line in warning_lines(out.get("knowledge_loss_warning"), units_text.text_label("money", "denarii"))]
     if out.get("done"):
         lines.append("You have already built this.")
         return "\n".join(lines)

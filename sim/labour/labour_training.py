@@ -307,11 +307,11 @@ class TrainingMixin:
         # the trade, with no number, gives a player no way to notice a
         # request for eight landing as one. A verb that takes a quantity
         # has to report the quantity.
-        return True, ("%g %s%s taken on for %s denarii (a finder's fee and the "
+        return True, ("%g %s%s taken on for %s (a finder's fee and the "
                       "first year in advance). You now have %.1f, and %.2f "
                       "household place(s) left.%s"
                       % (count, trade, "" if count == 1 else "s",
-                         "{:,.0f}".format(fee), household.employees[trade],
+                         self._world.money_text(fee, grouped=True), household.employees[trade],
                          max(0.0, self.household_room()), unfound))
 
     def fire(self, trade, count):
@@ -505,10 +505,10 @@ class TrainingMixin:
                       "- no 'hire' needed for them. "
                       "Until then they cannot do a day of the work. It took "
                       "%s of your own hours (%s left this year) and %s "
-                      "denarii to keep them while they learn"
+                      "to keep them while they learn"
                       % (count, trade, "s" if count != 1 else "", current_year + self.TEACHING_MATURATION_YEARS,
-                         "{:,.0f}".format(hours), "{:,.0f}".format(_left),
-                         "{:,.0f}".format(fee)))
+                         self._world.plain_number(hours), self._world.plain_number(_left),
+                         self._world.money_text(fee, grouped=True)))
 
     def auto_commission_for_blocked(self, look=40):
         """Buy the hands for the nearest thing that is blocked ONLY on hands.
@@ -659,4 +659,4 @@ class TrainingMixin:
         household.contract_hours[trade] = household.contract_hours.get(trade, 0.0) + hours
         household.commissioned[trade] = household.commissioned.get(trade, 0.0) + hours
         self.labour_market.hire(household, trade, hours)
-        return True, ("%.0f hours of a %s bought for %.0f denarii" % (hours, trade, fee))
+        return True, ("%.0f hours of a %s bought for %s" % (hours, trade, self._world.money_text(fee)))

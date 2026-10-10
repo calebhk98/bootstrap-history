@@ -3,6 +3,7 @@
 A part of the year's phases (core_step_phases.py); Sim inherits it through StepPhasesMixin."""
 
 from sim.agents.api import edges
+from .units_prose import plain_number
 
 
 class ProjectProgressPhaseMixin:
@@ -211,7 +212,7 @@ class ProjectProgressPhaseMixin:
                     "its own pace this year - at most %s hours, set "
                     "by how much of it is left to do or its "
                     "calendar floor, not by your hours - could not "
-                    "use the rest" % "{:,.0f}".format(
+                    "use the rest" % plain_number(
                         _pace_cap * _project_throttle)))
             else:
                 _directed_hours_unused.append((node_id, round(_dir_hours - per, 0),
@@ -219,7 +220,7 @@ class ProjectProgressPhaseMixin:
                     "work already claimed the rest of this year's "
                     "%s hours before this one's turn came ('priority "
                     "<id> first' moves a project up the queue)"
-                    % "{:,.0f}".format(_pool_total_this_year)))
+                    % plain_number(_pool_total_this_year)))
         return remaining, per, spent_hours, _dir_hours
 
     def _project_progress_labour_and_bill(self, node_id, project_state, node,
@@ -542,7 +543,7 @@ class ProjectProgressPhaseMixin:
         # about which project or how much.
         if _arrears_hours_lost:
             _total_lost = sum(hours for _, hours in _arrears_hours_lost)
-            _names = ", ".join("%s (%s hr)" % (node_id, "{:,.0f}".format(hours))
+            _names = ", ".join("%s (%s hr)" % (node_id, plain_number(hours))
                                 for node_id, hours in _arrears_hours_lost)
             self.state.household.log.append((self.state.scenario.year, "IN ARREARS: %s founder-hours meant for %s did "
                                  "almost nothing this year, on top of the money "
@@ -550,7 +551,7 @@ class ProjectProgressPhaseMixin:
                                  "'work' sells idle hours for wages instead of "
                                  "losing them here; clearing the arrears is what "
                                  "stops it happening again"
-                             % ("{:,.0f}".format(_total_lost), _names)))
+                             % (plain_number(_total_lost), _names)))
 
         # A STANDING ALLOCATION THE PLAYER GAVE, AND DID NOT GET - SAID, NOT
         # LEFT FOR THEM TO NOTICE. `allocate` is a promise about the one

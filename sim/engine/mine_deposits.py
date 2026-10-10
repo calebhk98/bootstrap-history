@@ -14,6 +14,7 @@ output is bounded by its deposit and a worked-out deposit closes it.
 Methods of Sim, a mixin only so they live in a file of their own.
 """
 from sim.constants import declare
+from .units_prose import mass_text, money_text
 import sim.geography.api as geography
 from sim.world import deposits as deposit_model
 
@@ -141,7 +142,7 @@ class MineDepositsMixin:
         from . import purchase_rule
         if not purchase_rule.can_pay(self, cost):
             return False, "prospecting %.0f person-days costs about %s; %s." % (
-                person_days, "{:,.0f}".format(cost), purchase_rule.afford_means())
+                person_days, money_text(cost, self, grouped=True), purchase_rule.afford_means())
         from sim.agents.api import edges
         self.pay_edge(edges.EDGE_BUILDERS, cost, "prospecting")
         holdings = self.state.holdings
@@ -154,11 +155,12 @@ class MineDepositsMixin:
         holdings.deposits_found.extend(new)
         if not new:
             return True, "spent %s on prospecting %s at %s and found nothing new." % (
-                "{:,.0f}".format(cost), resource_id, tile_id)
+                money_text(cost, self, grouped=True), resource_id, tile_id)
         sizes = {row["id"]: row["size_tonnes"] for row in self.found_deposits(mat)}
         return True, "spent %s prospecting %s at %s and found %d deposit(s): %s." % (
-            "{:,.0f}".format(cost), resource_id, tile_id, len(new),
-            ", ".join("%s (%.0f t)" % (found["id"], sizes.get(found["id"]) or 0.0) for found in new))
+            money_text(cost, self, grouped=True), resource_id, tile_id, len(new),
+            ", ".join("%s (%s)" % (found["id"], mass_text(sizes.get(found["id"]) or 0.0, self, short=True))
+                      for found in new))
 
     AUTO_PROSPECT_PERSON_DAYS = declare(
         "AUTO_PROSPECT_PERSON_DAYS", 2000.0, kind="temporary_heuristic",

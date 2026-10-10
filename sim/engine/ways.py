@@ -14,6 +14,7 @@ other employers pay more for it, and the hands go back when the way opens.
 """
 import sim.geography.api as geography
 from sim.agents.api import edges
+from .units_prose import money_text
 
 
 class WaysMixin:
@@ -77,7 +78,7 @@ class WaysMixin:
         from . import purchase_rule
         if not purchase_rule.can_pay(self, quote["money"]):
             return False, "a %s of %.1f km costs about %s; %s." % (
-                way, quote["km"], "{:,.0f}".format(quote["money"]), purchase_rule.afford_means())
+                way, quote["km"], money_text(quote["money"], self, grouped=True), purchase_rule.afford_means())
         self.pay_edge(edges.EDGE_BUILDERS, quote["money"], "building a %s" % way)
         year = self.state.scenario.year
         self.labour.labour_market.hire(self.state.household, quote["trade"], quote["crew_hours"])
@@ -85,7 +86,7 @@ class WaysMixin:
             "due": year + quote["years"], "trade": quote["trade"], "crew_hours": quote["crew_hours"],
             "engineered": quote["engineered"], "pressed": year}
         return True, "started a %s of %.1f km %s for %s%s; a crew of %d will take about %.1f years." % (
-            way, quote["km"], where, "{:,.0f}".format(quote["money"]),
+            way, quote["km"], where, money_text(quote["money"], self, grouped=True),
             ", engineered through steep ground" if quote["engineered"] else "", quote["crew"], quote["years"])
 
     def finish_ways(self):

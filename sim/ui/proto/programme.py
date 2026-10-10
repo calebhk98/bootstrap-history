@@ -1,5 +1,6 @@
 """A standing development programme: each year before time passes it starts what its target allows."""
 
+from sim.engine.ui_port import money_text, plain_number
 from sim.ui.memory import remembered
 from .dispatch_ventures import _cmd_rush
 from .programme_draw import remember_starts, standing_draw
@@ -134,9 +135,12 @@ def programme_before_year(sim, nodes):
     return [row]
 
 
-def caps_text(programme):
-    parts = ["%s %s" % (key, "{:,.0f}".format(programme["caps"][key])) for key in CAP_KEYS + (ANNUAL_HOURS_KEY,)
-             if programme.get("caps", {}).get(key) is not None]
+def caps_text(programme, sim):
+    """The caps as written, money caps in the player's chosen money unit and hour caps as hours."""
+    hour_keys = (ANNUAL_HOURS_KEY, "max_total_hours")
+    parts = ["%s %s" % (key, plain_number(programme["caps"][key]) if key in hour_keys
+                        else money_text(programme["caps"][key], sim, grouped=True, short=True))
+             for key in CAP_KEYS + (ANNUAL_HOURS_KEY,) if programme.get("caps", {}).get(key) is not None]
     if programme.get("limit") is not None:
         parts.append("limit %d per year" % programme["limit"])
     return ", ".join(parts) or "no caps"

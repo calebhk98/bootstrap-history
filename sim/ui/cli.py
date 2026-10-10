@@ -42,7 +42,7 @@ import argparse, sys
 
 from sim.engine.ui_port import Sim
 from . import protocol as _protocol
-from sim.engine.ui_port import settings
+from sim.engine.ui_port import settings, units
 from . import cli_mods, cli_units_options, validate_map
 # civ_of_save/goal_of_save are the only names this file reads from
 # .protocol; `cmd_agent` and everything else that needs
@@ -402,6 +402,8 @@ def cmd_validate(args):
     errs += validate_material_gating.check_material_gating(nodes, validate_material_gating.load_gating(ROOT))
     from sim.engine.ui_port import civ_start_check
     errs += validate_unheld_gates.check_unheld_gates(nodes, civ_start_check.load_civilisations(ROOT), production)
+    errs += [problem for civ_id, civ in civ_start_check.load_civilisations(ROOT).items()
+             for problem in units.check_civ_units(units.registry(), civ_id, civ)]
     from sim.engine import validate_event_causes
     errs += validate_event_causes.check_event_causes(civ_start_check.load_civilisations(ROOT), set(nodes))
     errs += validate_running_gates.check_running_gates(nodes)

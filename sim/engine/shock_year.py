@@ -5,7 +5,7 @@ exposure (own dice, own log); population, output, the coin and the society's val
 mildest figure any seat's works leave (sim/engine/hazard_merge.py). One seat runs the same draws in the same
 order as a game with no other seat."""
 from . import cause_book
-from .data import money_word
+from .units_prose import money_text
 from .hazard_merge import mildest_hazard
 
 
@@ -101,8 +101,8 @@ class ShockYearMixin:
             else:
                 hit.append("staff -%d%%" % (loss * 100))
         if report["cash"] > 0.5:
-            hit.append("%s %s of takings lost while the trade stood idle"
-                       % ("{:,.0f}".format(report["cash"]), money_word(self.civ)))
+            hit.append("%s of takings lost while the trade stood idle"
+                       % money_text(report["cash"], self, grouped=True))
         if not hit:
             hit.append("you had nothing it could take")
         message = "%s: %s" % (hazard.get("name", "hazard"), ", ".join(hit))
@@ -180,11 +180,10 @@ class ShockYearMixin:
                 # Report the money lost held, not quoted costs (which reflect reality).
                 self.state.seats[seat_id].household.log.append((year, "%s: the coin is worth %d%% less than it "
                     "was%s. Quoted costs are what a thing really takes to make, so they do not move; what debases "
-                    "is the money in your chest, and this year it took %s%s"
+                    "is the money in your chest, and this year it took %s"
                     % (hazard.get("name", "debasement"), (1 - economy.money_real) * 100,
                        "; you feel less of it (%s)" % "; ".join(why) if why else "",
-                       "{:,.0f}".format(lost) if lost > 0.5 else "nothing, because you were holding none",
-                       " denarii" if lost > 0.5 else "")))
+                       money_text(lost, self, grouped=True) if lost > 0.5 else "nothing, because you were holding none")))
 
     # ---- values: the society's beliefs shift once -------------------------------------------
 

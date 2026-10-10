@@ -1,5 +1,7 @@
 {
-  "_about": "Unit registry (Complaint 285). Each unit converts to its dimension's base unit: base = value * factor + offset. `factor_from` names a context value the engine supplies (hours_per_coin: labour hours one unit of the civilisation's coin is worth). `civilisations` limits a unit to those civilisations' menus. `label_from: civ_currency` takes the name and symbol from the civilisation's currency_words. A mod adds units in data/world/units.json named <mod_id>:<name>. field_rules say which reply fields hold a quantity of a dimension and in which unit the engine writes it; a pattern is a regular expression on the field name; the first rule that matches wins, so a rule for a rate comes before the plain-quantity rule it would also match; `per` makes the rule a rate over that time word, which text screens print after the unit symbol (units_text.rate_label). `per_dimension` and `per_native` make the rule a compound (money per mass): both parts follow the player's choices and text screens read the label with rate_label(dimension, per_dimension).",
+  "_about": "Unit registry (Complaint 285). Each unit converts to its dimension's base unit: base = value * factor + offset. `factor_from` names a context value the engine supplies (hours_per_coin: labour hours one unit of the civilisation's coin is worth). `civilisations` limits a unit to those civilisations' menus. `label_from: civ_currency` takes the name and symbol from the civilisation's currency_words. A civilisation's own file may name `display_units` ({dimension: unit id}), which are shown for any dimension the player has not chosen. `within` limits a rule to fields inside a field of that name. `quantity_words` and `not_quantities` are the name patterns the tests use to find a reply field that reads like a quantity but has no rule. A mod adds units in data/world/units.json named <mod_id>:<name>. field_rules say which reply fields hold a quantity of a dimension and in which unit the engine writes it; a pattern is a regular expression on the field name; the first rule that matches wins, so a rule for a rate comes before the plain-quantity rule it would also match; `per` makes the rule a rate over that time word, which text screens print after the unit symbol (units_text.rate_label). `per_dimension` and `per_native` make the rule a compound (money per mass): both parts follow the player's choices and text screens read the label with rate_label(dimension, per_dimension).",
+  "quantity_words": "(^|_)(tonnes?|kg|hectares?|ha|den|denarii|price|prices|cost|costs|wage|wages|revenue|debt|cash|capital|interest|bill|income|net|earn|earns|earned|spend|spent|fee|fees|loss|lost|paid|pay|owed|owe|upkeep|rent|profit|worth|budget|savings|money|coin|sum)($|_)",
+  "not_quantities": "(index|ratio|rate|chance|share|fraction|count|number|price_over_long_run_cost|food_cost_factor|startable_at_no_cash_cost|founder_hours|wage_work|in_bondage_for_debt|price_factor|price_multiplier|price_level|purchasing_power)",
   "dimensions": {
     "area": {"base": "hectare"},
     "mass": {"base": "kilogram"},
@@ -8,21 +10,24 @@
   },
   "units": {
     "hectare": {"name": "hectare", "symbol": "ha", "dimension": "area", "factor": 1},
-    "square_kilometre": {"name": "square kilometre", "symbol": "km2", "dimension": "area", "factor": 100},
-    "square_metre": {"name": "square metre", "symbol": "m2", "dimension": "area", "factor": 0.0001},
+    "square_kilometre": {"name": "square kilometre", "plural": "square kilometres", "symbol": "km2", "dimension": "area", "factor": 100},
+    "square_metre": {"name": "square metre", "plural": "square metres", "symbol": "m2", "dimension": "area", "factor": 0.0001},
     "acre": {"name": "acre", "symbol": "ac", "dimension": "area", "factor": 0.40468564224},
-    "iugerum": {"name": "iugerum", "symbol": "iug", "dimension": "area", "factor": 0.2518, "civilisations": ["rome_100ad"]},
+    "iugerum": {"name": "iugerum", "plural": "iugera", "symbol": "iug", "dimension": "area", "factor": 0.2518, "civilisations": ["rome_100ad"]},
+    "mu": {"name": "mu", "plural": "mu", "symbol": "mu", "dimension": "area", "factor": 0.0461, "civilisations": ["han_china_100ad"]},
     "kilogram": {"name": "kilogram", "symbol": "kg", "dimension": "mass", "factor": 1},
     "tonne": {"name": "tonne", "symbol": "t", "dimension": "mass", "factor": 1000},
     "pound": {"name": "pound", "symbol": "lb", "dimension": "mass", "factor": 0.45359237},
-    "libra": {"name": "libra", "symbol": "lib", "dimension": "mass", "factor": 0.3272, "civilisations": ["rome_100ad"]},
-    "celsius": {"name": "degree Celsius", "symbol": "C", "dimension": "temperature", "factor": 1, "offset": 0},
-    "fahrenheit": {"name": "degree Fahrenheit", "symbol": "F", "dimension": "temperature", "factor": 0.5555555555555556, "offset": -17.77777777777778},
-    "kelvin": {"name": "kelvin", "symbol": "K", "dimension": "temperature", "factor": 1, "offset": -273.15},
-    "labour_hour": {"name": "labour hour", "symbol": "h", "dimension": "money", "factor": 1},
+    "libra": {"name": "libra", "plural": "librae", "symbol": "lib", "dimension": "mass", "factor": 0.3272, "civilisations": ["rome_100ad"]},
+    "jin": {"name": "jin", "plural": "jin", "symbol": "jin", "dimension": "mass", "factor": 0.2227, "civilisations": ["han_china_100ad"]},
+    "celsius": {"name": "degree Celsius", "plural": "degrees Celsius", "symbol": "C", "dimension": "temperature", "factor": 1, "offset": 0},
+    "fahrenheit": {"name": "degree Fahrenheit", "plural": "degrees Fahrenheit", "symbol": "F", "dimension": "temperature", "factor": 0.5555555555555556, "offset": -17.77777777777778},
+    "kelvin": {"name": "kelvin", "plural": "kelvin", "symbol": "K", "dimension": "temperature", "factor": 1, "offset": -273.15},
+    "labour_hour": {"name": "labour hour", "plural": "labour hours", "symbol": "h", "dimension": "money", "factor": 1},
     "civ_coin": {"name": "the civilisation's coin", "symbol": "coin", "dimension": "money", "factor_from": "hours_per_coin", "label_from": "civ_currency"}
   },
   "field_rules": [
+    {"pattern": "(^|_)temperature(_[a-z]+)*_c$", "dimension": "temperature", "native": "celsius"},
     {"pattern": "(^|_)(t|tonnes?)_per_(yr|year)($|_)", "word": "(?<![a-z])(t|tonnes?)(?=_per_(yr|year))", "dimension": "mass", "native": "tonne", "per": "yr"},
     {"pattern": "(?<!per)(^|_)(hectares?|ha)($|_)", "word": "hectares?|ha", "dimension": "area", "native": "hectare"},
     {"pattern": "(?<!per)(^|_)m2($|_)", "word": "m2", "dimension": "area", "native": "square_metre"},
@@ -31,6 +36,15 @@
     {"pattern": "(^|_)celsius($|_)", "word": "celsius", "dimension": "temperature", "native": "celsius"},
     {"pattern": "^(capital|revenue|net_per_year|net_after_project_spend|project_spend_this_year|sustainable_debt)$", "dimension": "money", "native": "civ_coin"},
     {"pattern": "^(annual_wage_bill|wage_bill|wages|cash_on_hand|cash_cost|total_cost|cost|living_cost|cost_of_living_a_year|keeping_cost_per_year|mine_operating_cost|debt_still_to_work_off|interest_on_arrears(_this_year)?|interest_paid_(in_)?total|income_lost_per_year|they_cost_you_a_year_in_all|your_revenue_is|standing_net_per_year|recurring_net_per_year|earns_per_year|costs_per_year_after)$", "dimension": "money", "native": "civ_coin"},
-    {"pattern": "^(buy_per_tonne|sell_per_tonne|per_tonne|sells_back_per_tonne|average_per_tonne_for_this_order)$", "dimension": "money", "native": "civ_coin", "per_dimension": "mass", "per_native": "tonne"}
+    {"pattern": "^(paid_now|paid|upkeep|earns|net|price|money|spent|earned|cash|cost_of_missing|chain_cost|failure_costs|ordinary_build_cost|already_paid_towards_this|spent_on_projects_last_year|still_owed_on_work_in_hand|upkeep_of_what_you_built|you_would_then_owe|still_to_pay|the_bill_you_have_taken_on|of_which_already_paid_as_hiring_advances|living_and_appearances|base_for_skill_and_difficulty|extra_cost|wages_paid_on_the_way|wages_you_have_already_paid_this_year)$", "dimension": "money", "native": "civ_coin"},
+    {"pattern": "^(earns_a_year(_when_ramped)?|costs_a_year(_to_run)?|costs_you_a_year|wage_bill_added_per_year|net_income_per_year|estimated_annual_interest|would_earn_a_year|shut_concerns_would_earn_a_year)$", "dimension": "money", "native": "civ_coin"},
+    {"pattern": "^(a_year_of_one(_after_you_hire_one)?|wage_bill_for_this_trade_(now|after_hiring_one_more)|charge_to_open|what_start_would_actually_charge|but_it_pays_YOU)$", "dimension": "money", "native": "civ_coin"},
+    {"pattern": "^(total|labour|materials)$", "within": "^cost$", "dimension": "money", "native": "civ_coin"},
+    {"pattern": "^(annual_draw|total_annual_draw|base_total|cheapest|dearest|committed_so_far|credit_limit|from_next_year_per_year|likely_to_draw_on_credit_between_them|mines_standing|no_one_advances_past|opening_charge|per_person_base|to_buy_it|to_buy_them|to_lay_it|you_could_actually_fund_up_to|you_could_raise(_for_a_project|_now|_right_now)?|you_currently_hold|you_have|you_have_promised|you_would_borrow|your_real_ceiling_if_it_comes_to_that)$", "dimension": "money", "native": "civ_coin"},
+    {"pattern": "^per_square_metre$", "dimension": "money", "native": "civ_coin", "per_dimension": "area", "per_native": "square_metre"},
+    {"pattern": "^square_metres$", "dimension": "area", "native": "square_metre"},
+    {"pattern": "^wage_per_hour$", "dimension": "money", "native": "civ_coin", "per": "hr"},
+    {"pattern": "^per_hectare$", "dimension": "money", "native": "civ_coin", "per_dimension": "area", "per_native": "hectare"},
+    {"pattern": "^(buy_per_tonne|sell_per_tonne|per_tonne|price_per_tonne|sells_back_per_tonne|average_per_tonne_for_this_order)$", "dimension": "money", "native": "civ_coin", "per_dimension": "mass", "per_native": "tonne"}
   ]
 }

@@ -523,7 +523,21 @@ quantity of that dimension in any reply gains a sibling field
 original field is unchanged and still in its documented unit (`*_hectares` in
 hectares, `*_tonnes` in tonnes, `*_kg` in kilograms, money fields in the
 civilisation's coin). With nothing chosen no `_display` field appears and replies
-are byte-identical to before. Commands take the units their help names.
+are byte-identical to before. A civilisation's own file may name `display_units`
+(`{"area": "iugerum", "mass": "libra"}`); the front end for people uses them for
+any dimension the player has not chosen, and `agent --pretty` does too (JSON
+replies for scripts do not).
+
+Commands take the units their help names (`buy farm` hectares, `buy mine`
+tonnes a year, `buy nitre` square metres, `sell`/`quote material` tonnes,
+`bribe` and the `rush` caps in the civilisation's coin). Any of them also
+takes a `unit`: `{"cmd":"buy","what":"farm","n":10,"unit":"acre"}`, the text
+form `buy farm 10 acre`, or `"n": "10 acre"`. The unit is any registry unit of
+that quantity's dimension (id, name, plural or symbol; a civilisation's own unit
+only in its civilisation), or `shown` for the unit the player displays. The
+engine converts through the registry; without a `unit` the quantity is the
+named native unit, so a script never depends on a display choice. A unit of the
+wrong kind is refused with the units that would do.
 
 Which fields are quantities is data: `field_rules` in `data/world/units.json`
 (a regular expression on the field name, the dimension, the native unit).
@@ -532,7 +546,11 @@ Units, their symbols and conversions are data in the same file; a mod adds
 (registry, one `format_<dimension>` per dimension, `add_display`),
 `sim/ui/units_text.py` (text screens), `sim/ui/cli_units_options.py` (the
 options entry). Text screens show the chosen unit's value and symbol.
-Compound units (price per tonne, yield per hectare) are not converted yet.
+Compound units (price per tonne, price per hectare) follow both choices. Quantities written inside
+sentences by the engine go through `sim/engine/units_prose.py`
+(`mass_text`, `area_text`, `money_text`, `temperature_text`);
+`sim/tests/test_complaint_285_no_hand_units.py` fails on a sentence that
+formats one by hand.
 
 
 LOANABLE-FUNDS MARKET (Complaint 106)

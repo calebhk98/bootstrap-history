@@ -19,6 +19,7 @@ from .data import closure
 from .failure_cause import failure_cause
 from .failure_diagnosis import failure_teaches, note_failure
 from .permanent_benefit import permanent_parts
+from .units_prose import money_text, plain_number
 from sim.agents.api import edges
 
 FAILED_PREFIX = "FAILED at"
@@ -233,10 +234,10 @@ class CompletionMixin:
                 return
             if _severity == "minor":
                 household.log.append((scenario.year,
-                    "%s %s %s: lost %s denarii, %d%% of the hours to redo; "
+                    "%s %s %s: lost %s, %d%% of the hours to redo; "
                     "attempt %d, next attempt's live chance of failing %d%%."
                     % (FAILED_PREFIX, node["name"], MINOR_MARK,
-                       "{:,.0f}".format(max(0.0, _lost)),
+                       money_text(max(0.0, _lost), self, grouped=True),
                        round(self.FAILURE_RESET_SHARE * 100),
                        projects.failed_attempts[node_id] + 1,
                        round(_next_risk * 100)) + (" " + _diagnosis if _diagnosis else "")))
@@ -252,8 +253,8 @@ class CompletionMixin:
                              "spent count toward next time's wait. %s"
                              % (node["name"], failure_cause(self, node_id),
                                 round(self.FAILURE_RESET_SHARE * 100),
-                                "{:,.0f}".format(node["ph"] * self.FAILURE_RESET_SHARE),
-                                "{:,.0f}".format(max(0.0, _lost)),
+                                plain_number(node["ph"] * self.FAILURE_RESET_SHARE),
+                                money_text(max(0.0, _lost), self, grouped=True),
                                 projects.failed_attempts[node_id] + 1,
                                 "What went wrong is now understood well enough that"
                                 if failure_teaches(self, node_id) else "Nothing was learned, so",

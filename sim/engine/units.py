@@ -22,6 +22,8 @@ Registry = Dict[str, Any]
 # What the player chose, per dimension; set from the saved options by the
 # front end. Empty means every field is shown exactly as written.
 PREFERENCES: Dict[str, str] = {}
+# What the civilisation's own data names as its display units; used for any dimension the player left unchosen.
+CIV_DEFAULTS: Dict[str, str] = {}
 _registry_override: Optional[Registry] = None
 _default_registry: Optional[Registry] = None
 
@@ -31,6 +33,8 @@ def load_units(root: str = ROOT, mods_dir: Optional[str] = None) -> Registry:
     mods_dir = mods_dir or os.path.join(root, "mods")
     registry = read_json(os.path.join(root, "data", "world", "units.json"))
     registry.setdefault("field_rules", [])
+    registry.setdefault("quantity_words", "$^")
+    registry.setdefault("not_quantities", "$^")
     for manifest in get_ordered_mods(mods_dir):
         path = os.path.join(manifest.directory, "data", "world", "units.json")
         if not os.path.isfile(path):
@@ -82,6 +86,29 @@ def set_preferences(chosen: Optional[Mapping[str, str]]) -> None:
     PREFERENCES.update(chosen or {})
 
 
+def set_civ_defaults(civ: Optional[Mapping[str, Any]]) -> None:
+    """Take the display units a civilisation's data names (`display_units`: {dimension: unit id}); none for no civilisation."""
+    CIV_DEFAULTS.clear()
+    CIV_DEFAULTS.update((civ or {}).get("display_units") or {})
+
+
+def chosen_units() -> Dict[str, str]:
+    """The unit shown per dimension: the player's choice, else the civilisation's own."""
+    return {**CIV_DEFAULTS, **PREFERENCES}
+
+
+def check_civ_units(reg: Registry, civ_id: str, civ: Mapping[str, Any]) -> List[str]:
+    """Problems with the `display_units` a civilisation file names."""
+    problems = []
+    for dimension, unit_id in ((civ.get("display_units") or {}).items()):
+        spec = reg["units"].get(unit_id)
+        if spec is None or spec["dimension"] != dimension:
+            problems.append("%s: display_units %s=%s is not a %s unit in the registry" % (civ_id, dimension, unit_id, dimension))
+        elif spec.get("civilisations") and civ_id not in spec["civilisations"]:
+            problems.append("%s: display unit %s is not listed for this civilisation" % (civ_id, unit_id))
+    return problems
+
+
 def unit_context(sim: Any) -> Dict[str, float]:
     """The per-game numbers some units need; none for no game."""
     if sim is None:
@@ -113,11 +140,47 @@ def unit_label(spec: Mapping[str, Any], civ: Optional[Mapping[str, Any]]) -> Tup
     return spec["name"], spec["symbol"]
 
 
-def field_rule(reg: Registry, field: str) -> Optional[Dict[str, Any]]:
+def field_rule(reg: Registry, field: str, parent: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    """The first rule matching a field name; a rule with `within` matches only inside a field whose name fits it."""
     for rule in reg["field_rules"]:
-        if re.search(rule["pattern"], field):
+        if re.search(rule["pattern"], field) and (
+                not rule.get("within") or (parent is not None and re.search(rule["within"], parent))):
             return rule
     return None
+
+
+def tagged(reply: Dict[str, Any], **fields: str) -> Dict[str, Any]:
+    """Declare, where a reply is built, the dimension and native unit of fields no name rule covers:
+    `tagged(reply, hull_cargo="mass:tonne")`; a price per another dimension is `"money:civ_coin/area:hectare"`. The tag
+    travels in the reply's `field_units`, which also tells a script the unit."""
+    if fields:
+        reply.setdefault("field_units", {}).update(fields)
+    return reply
+
+
+def rule_for(reg: Registry, node: Mapping[str, Any], field: str, parent: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    """The rule for one field of a reply: the producer's own `field_units` tag first, then the name rules."""
+    tag = (node.get("field_units") or {}).get(field) if isinstance(node.get("field_units"), dict) else None
+    if tag:
+        quantity, _, per = str(tag).partition("/")
+        dimension, _, native = quantity.partition(":")
+        rule = {"dimension": dimension, "native": native}
+        if per:
+            rule["per_dimension"], _, rule["per_native"] = per.partition(":")
+        if (reg["units"].get(native, {}).get("dimension") == dimension
+                and (not per or reg["units"].get(rule["per_native"], {}).get("dimension") == rule["per_dimension"])):
+            return rule
+    return field_rule(reg, field, parent)
+
+
+def looks_like_quantity(reg: Registry, field: str) -> bool:
+    """Whether a reply field's name reads like a mass, area or sum of money (the registry's `quantity_words`, less its `not_quantities`)."""
+    return bool(re.search(reg["quantity_words"], field)) and not re.search(reg["not_quantities"], field)
+
+
+def known_field(reg: Registry, field: str) -> bool:
+    """Whether some field rule covers this name, whatever field it sits inside."""
+    return any(re.search(rule["pattern"], field) for rule in reg["field_rules"])
 
 
 def native_factor(reg: Registry, rule: Mapping[str, Any], sim: Any) -> float:
@@ -132,7 +195,7 @@ def available_units(reg: Registry, dimension: str, civ_id: Optional[str]) -> Lis
 
 
 def _format(dimension: str, base_value: float, sim: Any, preference: Optional[str]) -> Optional[Tuple[float, str, str]]:
-    chosen = (PREFERENCES if preference is None else {dimension: preference}).get(dimension)
+    chosen = (chosen_units() if preference is None else {dimension: preference}).get(dimension)
     reg = registry()
     if not chosen or chosen not in reg["units"]:
         return None
@@ -169,7 +232,7 @@ def _format_compound(rule: Mapping[str, Any], value: float, sim: Any):
     civ = getattr(sim, "civ", None)
     parts = []
     for dimension, native in ((rule["dimension"], rule["native"]), (rule["per_dimension"], rule["per_native"])):
-        chosen = PREFERENCES.get(dimension)
+        chosen = chosen_units().get(dimension)
         if not chosen or chosen not in reg["units"] or chosen == native:
             parts.append((native, 1.0))
         else:
@@ -186,7 +249,7 @@ def format_field(rule: Mapping[str, Any], value: float, sim: Any):
     reg = registry()
     if rule.get("per_dimension"):
         return _format_compound(rule, value, sim)
-    chosen = PREFERENCES.get(rule["dimension"])
+    chosen = chosen_units().get(rule["dimension"])
     if not chosen or chosen == rule["native"] or chosen not in reg["units"]:
         return None
     base = to_base(reg, rule["native"], value, unit_context(sim))
@@ -197,24 +260,45 @@ def add_display(reply: Any, sim: Any) -> Any:
     """A copy of a reply with `<field>_display` beside every quantity whose
     dimension has a chosen unit: {"value", "unit", "symbol"}. The base-unit
     field is never changed. No preference chosen: the reply is returned as is."""
-    if not PREFERENCES:
+    if not chosen_units():
         return reply
     reg = registry()
 
-    def walk(node):
+    def walk(node, parent=None):
         if isinstance(node, list):
-            return [walk(item) for item in node]
+            return [walk(item, parent) for item in node]
         if not isinstance(node, dict):
             return node
         out = {}
         for key, value in node.items():
-            out[key] = walk(value) if isinstance(value, (dict, list)) else value
+            out[key] = walk(value, key) if isinstance(value, (dict, list)) else value
             if (isinstance(value, (int, float)) and not isinstance(value, bool)
                     and not key.endswith("_display")):
-                rule = field_rule(reg, key)
+                rule = rule_for(reg, node, key, parent)
                 shown = format_field(rule, value, sim) if rule else None
                 if shown is not None:
                     out[key + "_display"] = {"value": round(shown[0], 4), "unit": shown[1],
                                              "symbol": shown[2]}
         return out
     return walk(reply)
+
+
+def find_unit(reg: Registry, text: str, dimension: Optional[str] = None, civ_id: Optional[str] = None) -> Optional[str]:
+    """The unit id a player word names (id, name, plural or symbol), or None. With a civilisation id, units limited to other civilisations are not found."""
+    word = str(text or "").strip().lower()
+    if not word:
+        return None
+    for unit_id, spec in reg["units"].items():
+        if dimension and spec["dimension"] != dimension:
+            continue
+        if civ_id is not None and spec.get("civilisations") and civ_id not in spec["civilisations"]:
+            continue
+        names = {unit_id.lower(), spec["name"].lower(), str(spec.get("plural", "")).lower(), spec["symbol"].lower()}
+        if word in names or word.replace(" ", "_") in names or (word.endswith("s") and word[:-1] in names):
+            return unit_id
+    return None
+
+
+def convert_between(reg: Registry, value: float, from_unit: str, to_unit: str, context: Mapping[str, float]) -> float:
+    """A value in one unit of a dimension expressed in another."""
+    return from_base(reg, to_unit, to_base(reg, from_unit, value, context), context)

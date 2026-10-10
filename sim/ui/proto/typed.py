@@ -3,6 +3,7 @@
 import json
 
 from . import available_args, command_registry
+from sim.engine.ui_port import units
 from .buy_targets import canonical_target
 from .dispatch import KNOWN_COMMANDS
 from .nodes import NODE_IDS, NODE_IDS_LOWER
@@ -276,7 +277,22 @@ def _parse_market(command, rest, words, nums, want_json):
     return out, None
 
 
+def _split_unit(words, nums):
+    """(words without a trailing unit word, that word or None): a unit follows the number it measures ('buy farm 10 acre')."""
+    if nums and len(words) > 1 and units.find_unit(units.registry(), words[-1]) is not None:
+        return words[:-1], words[-1]
+    return words, None
+
+
 def _parse_sell(command, rest, words, nums, want_json):
+    words, unit_word = _split_unit(words, nums)
+    parsed, error = _parse_sell_words(words, nums)
+    if parsed is not None and unit_word:
+        parsed["unit"] = unit_word
+    return parsed, error
+
+
+def _parse_sell_words(words, nums):
     if len(words) > 1 and words[0].lower() == "concern":
         return {"cmd": "sell", "what": "concern", "id": words[1]}, None
     if words and words[0].lower() == "farm" and nums:
@@ -684,6 +700,14 @@ def _parse_spending_quote(words, nums):
 
 
 def _parse_buy_or_quote(command, rest, words, nums, want_json):
+    words, unit_word = _split_unit(words, nums)
+    parsed, error = _parse_buy_or_quote_words(command, words, nums)
+    if parsed is not None and unit_word:
+        parsed["unit"] = unit_word
+    return parsed, error
+
+
+def _parse_buy_or_quote_words(command, words, nums):
     if not words:
         return None, ("%s needs something to %s, e.g. '%s iron 500'."
                       % (command, command, command))

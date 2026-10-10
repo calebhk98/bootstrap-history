@@ -15,7 +15,7 @@ from sim.engine.ui_port import Sim
 from . import replay
 from .protocol import _agent_dispatch, _agent_end_reason, _agent_help, load_state, render_pretty, save_state
 from .memory import save_session
-from sim.engine.ui_port import settings
+from sim.engine.ui_port import settings, units
 from sim.ui.proto import step_progress
 
 # Session helpers: shared with cli_interactive.py's cmd_play for the same
@@ -68,6 +68,8 @@ def cmd_agent(args):
     sim.fuzzy_estimates = bool(getattr(args, "fuzzy_estimates", False))
     sim.revealed = set()
     pretty = bool(getattr(args, "pretty", False))
+    if pretty:
+        units.set_civ_defaults(sim.civ)
 
     session = getattr(args, "session", None)
     checkpoint_source = None

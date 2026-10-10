@@ -62,6 +62,7 @@ from . import commodities as _commod
 from sim.constants import declare
 from . import money_units
 from . import purchase_rule
+from .units_prose import area_text, mass_per_area_text, mass_rate_text, money_text
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from sim.geography.api import freight_cost, provisions, transport as freight_physics
@@ -602,11 +603,11 @@ class FreightMixin:
                        / KILOGRAMS_PER_TONNE - self.state.holdings.forest_ha * self.CHARCOAL_PER_HA)
             hectares_needed = max(1.0, round(need / max(self.CHARCOAL_PER_HA, 1e-9)))
             return {"text": (
-                "Charcoal is grown, not bought: about %s more hectare%s of "
-                "coppice would cover it ('buy forest %d', roughly %s "
-                "denarii). Ask the price first with 'quote forest %d'."
-                % ("{:,.0f}".format(hectares_needed), "" if hectares_needed == 1 else "s", hectares_needed,
-                   "{:,.0f}".format(hectares_needed * self.FOREST_COST_PER_HA * self.price_index),
+                "Charcoal is grown, not bought: about %s more of "
+                "coppice would cover it ('buy forest %d', roughly %s"
+                "). Ask the price first with 'quote forest %d'."
+                % (area_text(hectares_needed, self, grouped=True), hectares_needed,
+                   money_text(hectares_needed * self.FOREST_COST_PER_HA * self.price_index, self, grouped=True),
                    hectares_needed)),
                 "commands": ["quote forest %d" % hectares_needed, "buy forest %d" % hectares_needed]}
         if shortfall_t is None:
@@ -625,12 +626,13 @@ class FreightMixin:
                 / max(self.NITRE_YIELD_T_PER_M2, 1e-12) / 100.0)) * 100)
             return {"text": (
                 "Saltpetre is made in nitre beds, not mined: you are about "
-                "%.2f tonnes/year short. With a 20%% safety buffer, 'buy "
-                "nitre %d' lays enough bed at %.4f tonnes per square metre "
-                "per year (about %s denarii)."
-                % (deficit, square_meters, self.NITRE_YIELD_T_PER_M2,
-                   "{:,.0f}".format(square_meters * self.NITRE_COST_PER_M2
-                                   * self.price_index))),
+                "%s short. With a 20%% safety buffer, 'buy "
+                "nitre %d' lays enough bed at %s "
+                "per year (about %s)."
+                % (mass_rate_text(deficit, self, digits=2, short=False), square_meters,
+                   mass_per_area_text(self.NITRE_YIELD_T_PER_M2, self, digits=4),
+                   money_text(square_meters * self.NITRE_COST_PER_M2
+                              * self.price_index, self, grouped=True))),
                 "commands": ["buy nitre %d" % square_meters]}
         if binding in self.MINE_OPEX_MATERIALS:
             sinking = [tranche for tranche in (self.state.holdings.mine_tranches or []) if tranche[0] == binding]
@@ -638,8 +640,8 @@ class FreightMixin:
             if sinking_tonnes > 0.0:
                 ready_year = int(min(tranche[2] for tranche in sinking))
                 shortfall_t = max(0.0, shortfall_t - sinking_tonnes)
-                sinking_text = ("A working of %s tonnes a year is already being sunk, ready in %d. "
-                                % ("{:,.0f}".format(sinking_tonnes), ready_year))
+                sinking_text = ("A working of %s is already being sunk, ready in %d. "
+                                % (mass_rate_text(sinking_tonnes, self, grouped=True, short=False), ready_year))
                 if shortfall_t < 1.0:
                     return {"text": sinking_text + "It covers the shortfall; wait for it.", "commands": []}
             else:
@@ -650,8 +652,8 @@ class FreightMixin:
                 "it: %s. 'quote mine %s %d' for the price, then 'buy mine "
                 "%s %d'. A shaft takes a few years to come into production."
                 % (binding,
-                   ("you are about %s tonnes a year short"
-                    % "{:,.0f}".format(shortfall_t)) if shortfall_t >= 1.0
+                   ("you are about %s short"
+                    % mass_rate_text(shortfall_t, self, grouped=True, short=False)) if shortfall_t >= 1.0
                    else "your own workings already cover the demand you have "
                         "today, so this is the market, not you"
                    if self.mine_capacity.get(binding, 0.0) > 0.0

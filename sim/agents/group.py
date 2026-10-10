@@ -96,16 +96,16 @@ class InterestGroup(RecordedActor):
 		blame = blame_after_protection(response["blame"], world.founder_protection(), record.blame_share)
 		if blame > 0.0:
 			record.petitions += 1
-			world.lodge_blame(blame, self.words(), GROUP_LOG_INTERVAL_YEARS, record)
+			world.lodge_blame(blame, self.words(world), GROUP_LOG_INTERVAL_YEARS, record)
 
-	def words(self) -> str:
+	def words(self, world: Any) -> str:
 		"""The log line a petition produces: who, how many, caused by what, asking what."""
 		record = self.record
-		asks = ["to be made good (%s a year)" % "{:,.0f}".format(record.claim)] if record.claim > 0.5 else []
+		asks = ["to be made good (%s a year)" % world.money_text(record.claim, grouped=True)] if record.claim > 0.5 else []
 		asks.extend(record.demands)
 		return ("INTEREST GROUP %s petitions the state: about %s people out of pocket %s a year because %s; "
 				"they ask %s. The blame lands on you"
-				% (record.name, "{:,.0f}".format(record.members), "{:,.0f}".format(record.lost_income),
+				% (record.name, world.plain_number(record.members), world.money_text(record.lost_income, grouped=True),
 				   record.cause, " and ".join(asks) if asks else "to be heard"))
 
 	@classmethod

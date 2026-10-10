@@ -3,7 +3,7 @@
 import sim.engine.ui_port as ui_port
 from sim.engine.ui_port import WAGES, trade_family
 from sim.ui import figures_headline  # noqa: F401  (registers the headline figures)
-from sim.engine.ui_port import cash_book, cause_book
+from sim.engine.ui_port import cash_book, cause_book, plain_number
 from sim.ui.figures import figure_snapshot
 
 from .state import _agent_state
@@ -637,7 +637,7 @@ def _agent_portfolio(sim, nodes, cmd=None):
                 "<id> first' changes who is served first."
                 % (count, "" if count == 1 else "s",
                    "is" if count == 1 else "are",
-                   "{:,.0f}".format(pool_total or 0.0))) if count else
+                   plain_number(pool_total or 0.0))) if count else
                 "nothing active yet - 'available' or 'stuck' says what you "
                 "could begin today.",
     }

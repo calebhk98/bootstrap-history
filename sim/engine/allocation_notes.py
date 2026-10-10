@@ -1,6 +1,8 @@
 """Telling the player their standing `allocate` orders fell short, once per change."""
 import re
 
+from .units_prose import plain_number
+
 
 class AllocationNotesMixin:
 
@@ -38,5 +40,5 @@ class AllocationNotesMixin:
                 "shows the rest; 'allocate %s %s' lowers the standing order to what "
                 "it can use, or 'allocate %s 0' clears it. This is said once until "
                 "the order or the reason changes."
-                % (self.nodes[node_id]["name"], "{:,.0f}".format(hours), why,
-                   node_id, "{:,.0f}".format(max(0.0, directed - hours)), node_id)))
+                % (self.nodes[node_id]["name"], plain_number(hours), why,
+                   node_id, plain_number(max(0.0, directed - hours)), node_id)))

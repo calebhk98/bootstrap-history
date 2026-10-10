@@ -144,6 +144,14 @@ class World(Protocol):
 		"""A group's petition puts blame on the founder; the log says who and why, once in a while."""
 		...
 
+	def money_text(self, amount: float, grouped: bool = False, short: bool = False) -> str:
+		"""A sum of money as the player's chosen unit writes it, for a line the founder reads."""
+		...
+
+	def plain_number(self, value: float) -> str:
+		"""A count or number of people for a line the founder reads."""
+		...
+
 	def say(self, text: str) -> None:
 		"""A line in the founder's log, for a change in who is organised against him."""
 		...

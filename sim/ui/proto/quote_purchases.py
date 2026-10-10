@@ -4,19 +4,21 @@ Each quoter mirrors the price its `buy` handler charges and the rule that
 handler refuses on, and returns a reply dict (or an error dict).
 """
 
-from sim.engine.ui_port import purchase_rule
+from sim.engine.ui_port import mass_rate_text, purchase_rule, tagged
 from .stock_purchases import quote_living_stock, quote_smuggled_stock
 
 
 def _flat_unit_quote(sim, what, unit_name, unit_price, quantity, note, **extra):
     total = unit_price * quantity
-    return dict({
+    # the price per unit is a price per hectare for land, per place or seat for the rest
+    price_unit = "money:civ_coin/area:hectare" if unit_name == "hectares" else "money:civ_coin"
+    return tagged(dict({
         "ok": True, "what": what, unit_name: quantity,
         "to_buy_it": round(total, 1),
         "per_unit": round(unit_price, 2),
         "you_have": round(sim.capital, 1),
         "you_can_afford_about": (int(sim.capital / unit_price) if unit_price > 0 else None),
-        "note": note}, **extra)
+        "note": note}, **extra), per_unit=price_unit)
 
 
 def _quote_farm(sim, cmd, quantity):
@@ -64,8 +66,8 @@ def _quote_material(sim, cmd, quantity):
             "you_have": round(sim.capital, 1),
             "you_could_raise": round(purchase_rule.purchase_budget(sim), 1),
             "afford_means": purchase_rule.afford_means(),
-            "note": ("The market will sell at most %.1f tonnes a year, so a larger "
-                     "order is cut to that." % quote["market_available_tonnes_per_year"]
+            "note": ("The market will sell at most %s, so a larger "
+                     "order is cut to that." % mass_rate_text(quote["market_available_tonnes_per_year"], sim, digits=1, short=False)
                      if quantity > quote["market_available_tonnes_per_year"] else
                      "The price rises as the order is filled, and moves as you and others buy.")}
 

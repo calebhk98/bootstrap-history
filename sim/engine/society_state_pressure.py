@@ -20,6 +20,7 @@ import math
 
 from sim.constants import declare
 from sim.engine import money_units
+from sim.engine.units_prose import mass_text, money_text
 
 from sim.world import military_logistics
 
@@ -1195,10 +1196,10 @@ class StatePressureMixin:
             out["military_supply"] = ("%s may demand your output; refusing a "
                                       "state that can still fight is not free "
                                       "(equipping one soldier your way costs "
-                                      "it about %.1f kg of iron and "
+                                      "it about %s of iron and "
                                       "ammunition a year)"
                                       % (state_pressure_cfg.get("military_name", "the arsenal"),
-                                         burden_kg))
+                                         mass_text(burden_kg, self, digits=1, unit="kilogram")))
         if conf_p > 0:
             out["confiscation_chance_this_year"] = round(conf_p, 4)
             out["confiscation_reduced_by"] = conf_why
@@ -1241,10 +1242,10 @@ class StatePressureMixin:
             answer = answer_state_demand(self, took - office_paid)
             if answer["penalty"] > 0.0:
                 self.state.household.log.append((year, "You refused the requisition and the state enforced it: "
-                                     "the demand and a penalty of %s on top" % "{:,.0f}".format(answer["penalty"])))
+                                     "the demand and a penalty of %s on top" % money_text(answer["penalty"], self, grouped=True)))
             elif answer["withheld"] > 0.5:
                 self.state.household.log.append((year, "You refused the requisition and the state did not "
-                                     "enforce it this year: %s withheld" % "{:,.0f}".format(answer["withheld"])))
+                                     "enforce it this year: %s withheld" % money_text(answer["withheld"], self, grouped=True)))
             took = office_paid + answer["paid"]
             self.pay_state(took, {"office": office_paid, "requisition": answer["paid"] - answer["penalty"],
                                   "penalty": answer["penalty"]})
@@ -1253,13 +1254,13 @@ class StatePressureMixin:
                 self.state.household._said_requisition = year
                 bits = ["%s takes %s this year" % (
                     state_pressure_cfg.get("requisition_name", "the state"),
-                    "{:,.0f}".format(req_share * rev))]
+                    money_text(req_share * rev, self, grouped=True))]
                 if req_why:
                     bits.append("; ".join(req_why))
                 if off_share > 0.0005 and off_name:
                     bits.append("%s costs %s more, and is not something you "
                                 "get to decline cheaply"
-                                % (off_name, "{:,.0f}".format(off_share * rev)))
+                                % (off_name, money_text(off_share * rev, self, grouped=True)))
                 self.state.household.log.append((year, "THE STATE HAS NOTICED YOU: " + "; ".join(bits)))
         elif notice > self.STATE_NOTICE_THRESHOLD * 0.7:
             # APPROACHING, NOT YET BITING. The same fairness standard as
@@ -1298,13 +1299,13 @@ class StatePressureMixin:
                 if self.state.household.demand_stance == "comply":
                     said = ("%s asks for your output: %s handed over in powder, iron or finished pieces. "
                             "Refusing a state that can still fight is not free, and this was the cheaper "
-                            "choice (the 'answer' command changes how you answer)" % (name, "{:,.0f}".format(take)))
+                            "choice (the 'answer' command changes how you answer)" % (name, money_text(take, self, grouped=True)))
                 elif answered["enforced"]:
                     said = ("%s asked for %s of your output, you refused and it enforced: %s taken with the penalty"
-                            % (name, "{:,.0f}".format(asked), "{:,.0f}".format(take)))
+                            % (name, money_text(asked, self, grouped=True), money_text(take, self, grouped=True)))
                 else:
                     said = ("%s asked for %s of your output, you refused and it could not enforce: nothing taken"
-                            % (name, "{:,.0f}".format(asked)))
+                            % (name, money_text(asked, self, grouped=True)))
                 self.state.household.log.append((year, said))
 
         probability, conf_why = self.confiscation_risk()
@@ -1332,7 +1333,7 @@ class StatePressureMixin:
                 self.state.household.log.append((year, "%s: the state takes what it judges a "
                                      "fortune too large to go on merely "
                                      "taxing - %s gone"
-                                 % (name, "{:,.0f}".format(lost)
+                                 % (name, money_text(lost, self, grouped=True)
                                     if lost > 0.5 else "nothing, because you "
                                     "were holding none")))
         else:

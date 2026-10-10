@@ -10,6 +10,7 @@ A work is paid for when it is started and counts once its build time has passed.
 The build time does not scale with capacity, and the crew is not drawn from the labour market's pools.
 """
 from sim.agents.api import edges
+from .units_prose import money_text
 
 
 class WorksMixin:
@@ -50,11 +51,11 @@ class WorksMixin:
         from . import purchase_rule
         if not purchase_rule.can_pay(self, quote["money"]):
             return False, "%.2g of %s costs about %s; %s." % (
-                capacity, node_id, "{:,.0f}".format(quote["money"]), purchase_rule.afford_means())
+                capacity, node_id, money_text(quote["money"], self, grouped=True), purchase_rule.afford_means())
         self.pay_edge(edges.EDGE_BUILDERS, quote["money"], "building %s" % node_id)
         self.state.economy.works_under_construction.setdefault(tile, {})[node_id] = [self.state.scenario.year + quote["years"], capacity]
         return True, "started %.2g of %s on %s for %s; it will take about %.1f years." % (
-            capacity, node_id, tile, "{:,.0f}".format(quote["money"]), quote["years"])
+            capacity, node_id, tile, money_text(quote["money"], self, grouped=True), quote["years"])
 
     def finish_works(self):
         """Count the works whose build time has passed on their tiles."""

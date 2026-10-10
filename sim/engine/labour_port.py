@@ -2,7 +2,7 @@
 the simulation keeps its `Labour`."""
 from sim.agents.api import edges
 from sim.labour.api import Labour
-from . import data, purchase_rule, solve_prices_core, wage_schedule
+from . import data, purchase_rule, solve_prices_core, units_prose, wage_schedule
 
 
 class LabourWorld:
@@ -17,6 +17,14 @@ class LabourWorld:
     def __init__(self, sim):
         self._sim = sim
         self._trade_registry = None
+
+    def money_text(self, amount, digits=0, grouped=False, short=False):
+        """A sum in the civilisation's coin as the player's chosen unit writes it (units_prose)."""
+        return units_prose.money_text(amount, self._sim, digits, grouped, short)
+
+    def plain_number(self, value, digits=0):
+        """A count, a number of people or of hours (units_prose)."""
+        return units_prose.plain_number(value, digits)
 
     def pay_edge(self, edge_name, amount, purpose):
         """The founder's household pays a named edge."""
