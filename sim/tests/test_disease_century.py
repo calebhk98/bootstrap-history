@@ -74,15 +74,40 @@ def mexica():
     return civ
 
 
-@functools.lru_cache(maxsize=1)
-def century_runs():
-    """{seed: (people at the start, [(year, people, deaths)], saved disease state)}; computed once per process."""
+@functools.lru_cache(maxsize=4)
+def century_runs(care_collapse=True, density=True):
+    """{seed: (people at the start, [(year, people, deaths)], saved disease state)}; computed once per process
+    for each setting. `care_collapse=False` zeroes the care-collapse sensitivity and `density=False` makes the
+    nation as sparse as a rural one (crowding index one), so each modifier's effect can be read against a run
+    without it (Complaint 471)."""
     runs = {}
-    for seed in SEEDS:
-        sim = StandInSim(mexica(), seed)
-        start = sim.population.total
-        runs[seed] = (start, sim.run(100), sim.state.disease)
+    saved = (disease_port.DISEASE_CARE_COLLAPSE_SENSITIVITY, disease_port.DISEASE_URBAN_DENSITY_RATIO)
+    try:
+        if not care_collapse:
+            disease_port.DISEASE_CARE_COLLAPSE_SENSITIVITY = 0.0
+        if not density:
+            disease_port.DISEASE_URBAN_DENSITY_RATIO = 1.0
+        for seed in SEEDS:
+            sim = StandInSim(mexica(), seed)
+            start = sim.population.total
+            runs[seed] = (start, sim.run(100), sim.state.disease)
+    finally:
+        disease_port.DISEASE_CARE_COLLAPSE_SENSITIVITY, disease_port.DISEASE_URBAN_DENSITY_RATIO = saved
     return runs
+
+
+def deepest_fall(runs, seed):
+    """Share of the population at first contact lost at the lowest point within the validation window."""
+    disease_state = runs[seed][2]
+    first_year = min(years[0] for years in disease_state.introduced.values())
+    rows = [row for row in runs[seed][1] if row[0] >= first_year]
+    return 1.0 - min(people for _y, people, _d in rows[:YEARS_AFTER_CONTACT]) / rows[0][1]
+
+
+def first_forty_years_deaths(runs, seed):
+    disease_state = runs[seed][2]
+    first_year = min(years[0] for years in disease_state.introduced.values())
+    return sum(row[2] for row in runs[seed][1] if row[0] >= first_year)
 
 
 class CenturyTest(unittest.TestCase):
@@ -128,6 +153,23 @@ class CenturyTest(unittest.TestCase):
             _first, rows = self.contact_row(seed)
             deaths = [row[2] for row in rows]
             self.assertLess(sum(deaths[40:]), sum(deaths[:40]))
+
+    def test_care_collapse_and_density_each_deepen_the_fall_and_stay_in_the_envelope(self):
+        # Complaint 471. Prints the deepest fall with each modifier switched off (the 'before' figure) and on.
+        plain = century_runs(care_collapse=False, density=False)
+        care_only = century_runs(care_collapse=True, density=False)
+        density_only = century_runs(care_collapse=False, density=True)
+        both = century_runs()
+        for seed in SEEDS:
+            falls = [deepest_fall(runs, seed) for runs in (plain, care_only, density_only, both)]
+            print("  seed %d deepest fall in %d years: neither %.3f, care collapse %.3f, density %.3f, both %.3f"
+                  % ((seed, YEARS_AFTER_CONTACT) + tuple(falls)))
+            self.assertLessEqual(falls[3], PUBLISHED_DECLINE_HIGHEST)
+            self.assertGreaterEqual(falls[3], PUBLISHED_DECLINE_LOWEST)
+        total = {name: sum(first_forty_years_deaths(runs, seed) for seed in SEEDS)
+                 for name, runs in (("plain", plain), ("care", care_only), ("density", density_only))}
+        self.assertGreater(total["care"], total["plain"])
+        self.assertGreater(total["density"], total["plain"])
 
 
 if __name__ == "__main__":
