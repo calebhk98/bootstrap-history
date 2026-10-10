@@ -128,7 +128,7 @@
   "sch": 0,
   "art": 1,
   "conf": "A",
-  "note": "Linen thread with bronze needle, removing thread after 2-3 weeks. Works well for clean wounds.",
+  "note": "Closing a wound by sewing its edges together so it heals cleanly. A bronze needle carries linen thread through the skin, and the thread is removed after a few weeks once the wound has knit. It needs a good surgical instrument kit and linen. It works well for clean wounds, but a dirty wound sewn shut traps infection inside, so the surgeon must judge when to close and when to leave open.",
   "traits": [
    "medical"
   ]
@@ -765,7 +765,7 @@
   "sch": 0,
   "art": 1,
   "conf": "B",
-  "note": "Mirror and lens to view the retina. Reveals aneurysms, cotton-wool spots, diabetic changes. Requires skilled assembly.",
+  "note": "An instrument for looking into the living eye through the pupil to see the retina at the back. A mirror sends light into the eye and a lens lets the examiner see the lit surface clearly. It needs ground and polished lenses, a silvered mirror, a bright lamp and parts made to fine tolerance. It reveals aneurysms (swollen blood vessels), cotton-wool spots and diabetic changes. Skilled assembly is the hard part.",
   "traits": [
    "medical",
    "information"
@@ -1373,7 +1373,7 @@
   "sch": 0,
   "art": 1,
   "conf": "B",
-  "note": "Electric motor driving high-speed burr removes decay and drills for filling. Eliminates hand-cranked slowness and pain.",
+  "note": "Removing tooth decay with a rapidly spinning burr (a small cutting head) driven by an electric motor, then filling the cavity. The speed cuts quickly and lessens the pain that slow hand-cranked drills cause. It needs electric power at the surgery, a small motor, and metalwork that can make and hold sharp cutters. Without steady power and clean tools the drill does more harm than good.",
   "traits": [
    "medical",
    "labour_saving"

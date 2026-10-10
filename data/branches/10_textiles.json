@@ -18,7 +18,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Wool fibre from sheep, available wherever sheep are kept. No processing required beyond shearing and basic cleaning.",
+  "note": "Wool is the hair of sheep, spun into thread for cloth, and is available wherever sheep are kept. It needs only shearing and basic cleaning (washing out grease and dirt) before it can be combed or carded and spun. Wool is warm, takes dye well and felts when worked wet. The labour lies in the many later steps, and quality depends on the breed of sheep.",
   "traits": [
    "commerce",
    "labour_saving"
@@ -88,7 +88,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Silk traded via Silk Road, closely guarded by Persia. Rare, luxury good.",
+  "note": "Silk is a fine, strong thread made by silkworms, and here it is obtained only by trade along the overland routes from the far east, with Persia controlling much of the passage. The founder buys finished thread or cloth and cannot make it, because the silkworm and its methods are guarded. It is rare and a luxury, and the cost reflects every middleman between producer and buyer.",
   "traits": [
    "commerce",
    "labour_saving"
@@ -209,7 +209,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Vertical loom with weights hanging on warp threads. Slow but reliable for narrow textiles and tapestries.",
+  "note": "An upright loom on which the lengthwise warp threads hang from a beam, each bunch held taut by a hanging stone or clay weight. The weaver passes the crosswise weft thread through by hand and beats it upward. It needs only a frame, weights, threads and a skilled weaver. It is slow, but reliable, and suits narrow cloth and tapestries; it cannot weave very wide cloth.",
   "traits": [
    "commerce",
    "labour_saving"
@@ -338,7 +338,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Purple dye from murex snail gland secretion. Tyrian purple, supremely expensive, only for imperial and elite garments.",
+  "note": "Purple dye made from a gland secretion of murex sea snails, which turns purple when the cloth is exposed to light and air. A very large number of snails must be collected and processed for a small amount of dye, so Tyrian purple is supremely expensive and tied to elite and imperial garments. It needs coastal access to the snails, vats for a smelly process and trained dyers.",
   "traits": [
    "commerce",
    "labour_saving"

@@ -405,6 +405,9 @@ def cmd_validate(args):
     from sim.engine import validate_event_causes
     errs += validate_event_causes.check_event_causes(civ_start_check.load_civilisations(ROOT), set(nodes))
     errs += validate_running_gates.check_running_gates(nodes)
+    from sim.engine import validate_note_quality
+    print("\n".join(validate_note_quality.report_lines(nodes)))
+    errs += validate_note_quality.check_note_quality(nodes)
     from sim.engine import validate_action_results
     from sim.geography.api import open_map
     carriage_map = open_map()

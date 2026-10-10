@@ -2801,7 +2801,7 @@
     },
     "mat": {},
     "name": "Coordinate geometry and trigonometric tables",
-    "note": "Hipparchus and Ptolemy already have chord tables, so this lands on prepared ground.",
+    "note": "Describing any point by two signed distances from perpendicular reference lines, so a curve becomes the set of points that satisfy an equation, plus tables that turn an angle directly into a ratio of sides. It needs symbolic algebra. The hard step is the idea that an equation can be a shape. Roman surveyors already lay out grids with perpendicular baselines and Hipparchus and Ptolemy already have chord tables, so teach from those.",
     "ph": 350.0,
     "pre": [
       "algebra_symbolic"
@@ -4227,7 +4227,7 @@
     "lab": {},
     "mat": {},
     "name": "Mineral concessions and access to imperial mines",
-    "note": "Mercury (Almaden) and much else is an imperial monopoly. Halves the cost of all ore and metal inputs thereafter.",
+    "note": "Legal permission to work or buy from mines the emperor controls. Mercury, which is needed to extract gold and silver, and much else is an imperial monopoly, so without a concession those inputs are closed to a private founder or reach him only through middlemen. It needs patronage at court. Holding a concession lowers the cost of all ore and metal inputs thereafter, but it can be withdrawn.",
     "ph": 400.0,
     "pre": [
       "patron_imperial"
@@ -4707,7 +4707,7 @@
       }
     },
     "name": "Senatorial patronage",
-    "note": "Bought with a cure, a profit, or a public benefaction in their name. Pliny the Younger's circle is the target type.",
+    "note": "Protection from a senator, which reaches above the province. A governor can end the founder, but a governor who knows a senator is watching will not. It cannot be bought with money, since senators have money; it is bought with a cure, a profit, or a public benefaction in their name. Pliny the Younger's circle is the target type. Approach through his freedmen and procurator, never directly.",
     "ph": 600.0,
     "pre": [
       "school_founded"
