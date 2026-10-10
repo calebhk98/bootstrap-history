@@ -49,6 +49,11 @@ class ActorRecord:
 	# material -> tonnes the state took in kind last year, and tonnes it holds in store now
 	in_kind_received: Dict[str, float] = field(default_factory=dict)
 	stores: Dict[str, float] = field(default_factory=dict)
+	# a state's works in stock by name (m2 of masonry equivalent), the grain price it takes as normal, and whether
+	# a new ruler has acceded whose donative is still to be paid
+	works_stock: Dict[str, float] = field(default_factory=dict)
+	grain_price_reference: float = 0.0
+	accession_due: bool = False
 	# an interest group's kind (what hurt it), subject (the commodity or trade), what caused the
 	# hurt in words, people it speaks for, the income it lost (net of what the state made good),
 	# the share of the state's attention it commands, and what it asks of the state

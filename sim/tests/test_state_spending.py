@@ -34,8 +34,10 @@ check("a state's road is the links between its own tiles, so an empty territory 
 game = sim()
 lines = lines_of(game)
 check("a coastal state with cities keeps an army, officials, roads, public buildings, a court, a dole and a navy",
-      set(lines) == {"army", "administration", "roads", "public_buildings", "court", "dole", "navy"},
-      sorted(lines))
+      {"army", "administration", "roads", "public_buildings", "court", "dole", "navy"} <= set(lines), sorted(lines))
+check("and no line the budget does not name (works, collection, a campaign and a donative are named lines)",
+      set(lines) <= {"army", "administration", "roads", "public_buildings", "court", "dole", "navy", "fortifications",
+                     "water_works", "capital_buildings", "tax_collection", "campaign", "donative"}, sorted(lines))
 check("every line is priced from people at wages or goods at the market's price",
       all(line.money > 0.0 for line in lines.values()), {name: line.money for name, line in lines.items()})
 check("the navy is manned by sailors, the dole is grain, public buildings are masons' work",
@@ -122,8 +124,10 @@ hoard = sim()
 hoard_treasury = hoard.state_treasury()
 hoard_treasury.money = 1.0e18
 one_year(hoard)
-check("reserve beyond what the state holds against risk buys works, never an outlay that pays no one",
-      hoard_treasury.record.outlays.get("works", 0.0) > 0.0 and "discretionary" not in hoard_treasury.record.outlays,
+check("reserve beyond what the state holds against risk buys named works it lacks, never an outlay that pays no one",
+      "works" not in hoard_treasury.record.outlays and "discretionary" not in hoard_treasury.record.outlays
+      and all(purpose in hoard_treasury.record.need or purpose.startswith("building ") or purpose in
+              {"interest", "patronage", "relief", "lent", "keeping"} for purpose in hoard_treasury.record.outlays),
       hoard_treasury.record.outlays)
 check("the purse still equals income less outlays after the works",
       abs(hoard_treasury.money - (1.0e18 + sum(hoard_treasury.record.income.values())

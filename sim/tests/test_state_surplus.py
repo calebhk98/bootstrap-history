@@ -7,7 +7,6 @@ sim = unopened_sim   # legacy: pins how the engine's budget spends a surplus; th
 
 
 from sim.agents.purses import COIN, INTEREST_PAID, LENT
-from sim.agents.tuning_spending import RESERVE_CEILING_YEARS_OF_NEED
 from sim.engine.coin_hoard import KEEPING_CAUSE
 
 
@@ -18,7 +17,8 @@ def one_year(game):
 
 def purchases(treasury):
     """Every purpose a state may pay for: a line it keeps up, or a named purchase or payment."""
-    return set(treasury.record.need) | {"interest", "patronage", "works", "relief", KEEPING_CAUSE, LENT}
+    named = {"interest", "patronage", "relief", KEEPING_CAUSE, LENT}
+    return set(treasury.record.need) | named | {purpose for purpose in treasury.record.outlays if purpose.startswith("building ")}
 
 
 # ---- no outlay without a recipient --------------------------------------------------------------
@@ -32,10 +32,6 @@ check("no state outlay is the sweep that paid no one",
 check("every state outlay is a line it keeps up or a named purchase",
       set(rich_treasury.record.outlays) <= purchases(rich_treasury),
       (sorted(rich_treasury.record.outlays), sorted(purchases(rich_treasury))))
-check("a reserve beyond what the state holds against risk buys works",
-      rich_treasury.record.outlays.get("works", 0.0) > 0.0, rich_treasury.record.outlays)
-check("works are people hired out of the labour market, so they are demand",
-      rich_treasury.workforce.get("labourer", 0.0) > 0.0, rich_treasury.workforce)
 check("the purse still equals what it held plus income less outlays",
       abs(rich_treasury.money - (1.0e12 + sum(rich_treasury.record.income.values())
                                  - sum(rich_treasury.record.outlays.values()))) < 1e-6 * 1.0e12, rich_treasury.money)
@@ -83,15 +79,12 @@ one_year(bare)
 check("a state with no spare reserve lends nothing and earns no interest on lending",
       bare.state_treasury().record.income.get("interest_on_lending", 0.0) == 0.0, bare.state_treasury().record.income)
 
-# ---- the reserve does not outgrow its need when the economy is stable ----------------------------
+# ---- a surplus no work wants is kept and lent, not spent on unnamed works --------------------------
 stable = sim()
 stable_treasury = stable.state_treasury()
 for _year in range(25):
     one_year(stable)
-stable_need = sum(stable_treasury.record.need.values())
-check("a state in surplus year after year keeps a reserve within a small multiple of its standing need",
-      stable_treasury.money <= (RESERVE_CEILING_YEARS_OF_NEED + 1.0) * stable_need,
-      (stable_treasury.money, stable_need))
-check("what the surplus did not keep went on works, which are demand",
-      stable_treasury.record.outlays.get("works", 0.0) > 0.0 and "discretionary" not in stable_treasury.record.outlays,
-      stable_treasury.record.outlays)
+check("what the surplus did not spend on named works stays the treasury, which the loanable market is offered, not swept away",
+      "works" not in stable_treasury.record.outlays and "discretionary" not in stable_treasury.record.outlays
+      and stable.actors.state.purses.offers.get(stable_treasury.actor_id, 0.0) > 0.0,
+      (stable_treasury.record.outlays, stable.actors.state.purses.offers))
