@@ -125,7 +125,7 @@ check("...and names restore, which is the verb that reopens it",
 # --- BREAK: "no viable option in a required substitution group (fuel, vessel,
 # etc.)" - the one blocked-reason a play tester never decoded. It named no
 # candidate and no fix.
-s_sub = sim()
+s_sub = _game   # these two checks only read the opening game
 _gap = next((node_id for node_id in sorted(NODES) if NODES[node_id].get("req_any")
              and not s_sub.substitution_quality(node_id)[1]
              and all(prereq_id in s_sub.done for prereq_id in NODES[node_id]["pre"])), None)
@@ -138,7 +138,7 @@ else:
     check("a substitution group says what it wants and what would serve",
           True, "no unmet group reachable in rome_100ad")
 # And it may not name an option under fog that the player has not heard of.
-s_sub_f = sim()
+s_sub_f = _game
 s_sub_f.fog = True
 for _k in sorted(NODES):
     if not NODES[_k].get("req_any") or s_sub_f.substitution_quality(_k)[1]:
@@ -151,6 +151,7 @@ for _k in sorted(NODES):
         break
 else:
     check("a substitution refusal never names a node you cannot see", True, "")
+_game.fog = False
 
 # --- BREAK: "unknown_source" reached a player-facing refusal, which is data,
 # not English.
@@ -167,7 +168,7 @@ check("a substitution group reads as English, not as a data slug",
 # applied none of the multipliers the same page prints. The eight
 # prerequisites of a telescope came out at 24,175 in all five civilisations.
 _chain_cids = ("rome_100ad", "han_china_100ad", "norse_900ad")
-_chain_games = {cid: sim(civ=cid) for cid in _chain_cids}
+_chain_games = {cid: _game if cid == "rome_100ad" else sim(civ=cid) for cid in _chain_cids}
 _chains = {cid: _ask(_chain_games[cid], cmd="why", id="telescope").get("chain_cost") for cid in _chain_cids}
 _chain_years = {cid: cost / S.starting_schedule(cid).annual_wage("labourer")
                 for cid, cost in _chains.items()}
@@ -191,7 +192,7 @@ check("...and it is the sum of what each of those nodes would actually cost",
 
 # --- BREAK: `bribe 1` refused at 0% protection as "already as protected as
 # money can make you".
-_rb = _ask(sim(), cmd="bribe", amount=1)
+_rb = _ask(_game, cmd="bribe", amount=1)
 check("a bribe too small to matter says so, not that you are already covered",
       "too little" in (_rb.get("error") or ""), _rb.get("error"))
 
@@ -309,11 +310,7 @@ check("...and instead says the true reason (craftsmen, here) it cannot be "
 
 # ...and the old, simpler advice still fires once the household genuinely CAN
 # open the thing - the fix narrows the claim, it does not silence it.
-s_can = sim(capital=10_000_000.0)
-for _p in S.closure(NODES, "lens_grinding"):
-    s_can.done.add(_p)
-s_can.done.add("lens_grinding")
-s_can._done_changed()
+s_can = s_shut   # the same household, now with hands to spare
 s_can.artisans = 10.0
 s_can.employees[s_can.venture_foreman("lens_grinding")[0] or "artisan"] = 4.0
 _stuck_can = S._agent_dispatch(s_can, NODES, {"cmd": "stuck"})

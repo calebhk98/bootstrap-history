@@ -79,10 +79,22 @@ def _food_ratio_with_everyone_farming(test_sim, fertility):
     return (year.gross_harvest_kg - year.seed_sown_kg) / year.food_demand_kg
 
 
+_SHARED = {}   # one read-only game and the answers computed from it, built on first use
+
+
+def _read_only_game():
+    """A game nothing runs or changes: tests that only read its opening figures share it."""
+    if "game" not in _SHARED:
+        _SHARED["game"] = sim(CIV_ID, events=False)
+    return _SHARED["game"]
+
+
 def _fertility_for_food_ratio(target_ratio):
     """Fertility at which everyone farming just yields `target_ratio` of the
     food the whole population needs (bisection on a monotone relation)."""
-    probe = sim(CIV_ID, events=False)
+    if target_ratio in _SHARED:
+        return _SHARED[target_ratio]
+    probe = _read_only_game()
     low, high = 0.05, 3.0
     for _ in range(50):
         middle = (low + high) / 2.0
@@ -90,7 +102,20 @@ def _fertility_for_food_ratio(target_ratio):
             low = middle
         else:
             high = middle
+    _SHARED[target_ratio] = high
     return high
+
+
+def _undisturbed_run(years):
+    """(history of the first `years` years, farm share at the end of the run) of an ordinary game left alone
+    for `years` years; the run is made once and its early rows serve every test that reads a shorter one."""
+    if "undisturbed" not in _SHARED:
+        game = sim(CIV_ID, events=False)
+        history = _run(game, years)
+        _SHARED["undisturbed"] = (history, _farm_share(game), years)
+    history, final_share, run_years = _SHARED["undisturbed"]
+    assert run_years == years
+    return history, final_share
 
 
 def _ample_land_sim(fertility):
@@ -145,7 +170,7 @@ class SubSubsistenceLandTests(unittest.TestCase):
         self.fertility = _fertility_for_food_ratio(0.95)
 
     def test_the_construction_is_below_subsistence(self):
-        probe = sim(CIV_ID, events=False)
+        probe = _read_only_game()
         self.assertLess(_food_ratio_with_everyone_farming(probe, self.fertility), 1.0)
 
     def test_population_declines_and_everyone_ends_up_farming(self):
@@ -209,9 +234,8 @@ class FarmLabourOversupplyTests(unittest.TestCase):
     def test_the_farm_settles_at_the_share_a_right_sized_farm_has(self):
         settled = self._oversupplied(0.9)
         _run(settled, 60, first_year=WARM_UP_YEARS + 101)
-        reference = sim(CIV_ID, events=False)
-        _run(reference, WARM_UP_YEARS + 60)
-        self.assertAlmostEqual(_farm_share(settled), _farm_share(reference), delta=0.05)
+        _history, reference_share = _undisturbed_run(WARM_UP_YEARS + 60)
+        self.assertAlmostEqual(_farm_share(settled), reference_share, delta=0.05)
 
 
 class ClearingLadderTests(unittest.TestCase):
@@ -288,7 +312,7 @@ class NetMarginalProductTests(unittest.TestCase):
 
     def test_ordinary_land_is_farmed_as_before(self):
         # Reference values recorded from the gross-product allocator.
-        history = _run(sim(CIV_ID, events=False), 30)
+        history = _undisturbed_run(WARM_UP_YEARS + 60)[0]
         for year_index, population, farm_share in (
                 (9, 63794202.8, 0.36154), (19, 64504643.0, 0.37042),
                 (29, 65121381.1, 0.3665)):

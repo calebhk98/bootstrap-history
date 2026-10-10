@@ -43,18 +43,21 @@ check("every line is priced from people at wages or goods at the market's price"
 check("the navy is manned by sailors, the dole is grain, public buildings are masons' work",
       "sailor" in lines["navy"].labour and lines["dole"].materials and "mason" in lines["public_buildings"].labour,
       (lines["navy"].labour, lines["dole"].materials, lines["public_buildings"].labour))
-landlocked = sim(civ="rome_100ad")
+pristine_civ = copy.deepcopy(game.civ)   # the one game below is shared; each check restores what it changed
+pristine_population = {cohort: getattr(game.population, cohort) for cohort in ("children", "working_age", "elderly")}
+landlocked = game
 landlocked.civ.pop("home_tiles", None)
 landlocked.civ["home_regions"] = ["levant_mesopotamia"]
 dry = lines_of(landlocked)
 check("a state's roads follow the tiles it holds",
       "roads" in dry and dry["roads"].money != lines["roads"].money, (dry.get("roads"), lines["roads"].money))
-inland = sim()
+inland = game
 inland.civ.pop("home_tiles", None)
 inland.civ["home_regions"] = []
 check("a state with no territory keeps no roads and no navy",
       not {"roads", "navy"} & set(lines_of(inland)), sorted(lines_of(inland)))
-bigger_city = sim()
+game.civ = copy.deepcopy(pristine_civ)
+bigger_city = game
 for cohort in ("children", "working_age", "elderly"):
     setattr(bigger_city.population, cohort, getattr(bigger_city.population, cohort) * 2.0)
 check("a larger population keeps up more public buildings and feeds more of its poor",
@@ -62,36 +65,39 @@ check("a larger population keeps up more public buildings and feeds more of its 
       and lines_of(bigger_city)["dole"].money > 1.5 * lines["dole"].money)
 check("the garrison does not grow with the people: it follows the frontier and the threat",
       abs(lines_of(bigger_city)["army"].labour["soldier"] - lines["army"].labour["soldier"]) < 1e-6)
+for cohort, people in pristine_population.items():
+    setattr(game.population, cohort, people)
 
 # ---- the army the state wants follows the threat its hazards describe ---------------------------
-calm = sim()
-calm.state.scenario.year = 120
-crisis = sim()
-crisis.state.scenario.year = 240
+opening_year = game.state.scenario.year
+game.state.scenario.year = 120
+army_in_calm = SimWorld(game).army_wanted()
+game.state.scenario.year = 240
+army_in_crisis = SimWorld(game).army_wanted()
+game.state.scenario.year = opening_year
 check("in the opening year the state wants the civilisation's opening force",
-      abs(SimWorld(calm).army_wanted() - calm.civ["standing_army"]) < 1e-6 * calm.civ["standing_army"],
-      (SimWorld(calm).army_wanted(), calm.civ["standing_army"]))
+      abs(army_in_calm - game.civ["standing_army"]) < 1e-6 * game.civ["standing_army"],
+      (army_in_calm, game.civ["standing_army"]))
 check("while the civilisation's own hazards threaten a sack the state wants a bigger army",
-      SimWorld(crisis).army_wanted() > 1.2 * SimWorld(calm).army_wanted(),
-      (SimWorld(crisis).army_wanted(), SimWorld(calm).army_wanted()))
+      army_in_crisis > 1.2 * army_in_calm, (army_in_crisis, army_in_calm))
+norse = sim(civ="norse_900ad")
 check("a hazard that does not threaten a sack leaves the army alone",
-      abs(SimWorld(sim(civ="norse_900ad")).army_wanted() - sim(civ="norse_900ad").civ["standing_army"]) < 1e-6)
+      abs(SimWorld(norse).army_wanted() - norse.civ["standing_army"]) < 1e-6)
 
 # ---- soldiers are out of production -------------------------------------------------------------
-free = sim()
-free.state_treasury().record.army = 0.0
-drawn = sim()
-drawn.state_treasury().record.army = 1.0e6
+game.state_treasury().record.army = 0.0
+revenue_without_army = SimWorld(game).state_revenue()
+game.state_treasury().record.army = 1.0e6
+revenue_with_army = SimWorld(game).state_revenue()
 check("soldiers kept under arms owe no poll tax, so the people it is assessed on and the state's revenue are smaller",
-      SimWorld(drawn).state_revenue() < SimWorld(free).state_revenue(),
-      (SimWorld(drawn).state_revenue(), SimWorld(free).state_revenue()))
-slump = sim()
-slump.state.holdings.farm_last_harvest_kg = 1.0e9
-steady = sim()
-steady.state.holdings.farm_last_harvest_kg = 2.0e9
-check("a failed harvest cuts what the state can take",
-      SimWorld(slump).state_revenue() < SimWorld(steady).state_revenue(),
-      (SimWorld(slump).state_revenue(), SimWorld(steady).state_revenue()))
+      revenue_with_army < revenue_without_army, (revenue_with_army, revenue_without_army))
+game.state_treasury().record.army = 0.0
+game.state.holdings.farm_last_harvest_kg = 1.0e9
+revenue_in_slump = SimWorld(game).state_revenue()
+game.state.holdings.farm_last_harvest_kg = 2.0e9
+revenue_when_steady = SimWorld(game).state_revenue()
+check("a failed harvest cuts what the state can take", revenue_in_slump < revenue_when_steady,
+      (revenue_in_slump, revenue_when_steady))
 
 # ---- patron funding is a payment out of the treasury --------------------------------------------
 patron = sim()
@@ -99,7 +105,7 @@ patron.running_with_mechanic = lambda name: [name]
 check("before the treasury has paid anything the founder has no patron funding", patron.state_funding() == 0.0)
 ask = patron.patron_funding_ask()
 check("what a patron would give is a formula (a labelled heuristic), no longer income by itself", ask > 0.0, ask)
-rich = sim()
+rich = patron
 rich.running_with_mechanic = lambda name: [name]
 rich_treasury = rich.state_treasury()
 rich_treasury.money = 1.0e15

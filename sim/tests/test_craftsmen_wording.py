@@ -163,12 +163,13 @@ check("medical diffusion relief has no fixed ceiling: full coverage with a "
 
 # --- and this never touches the founder's own, personal figure (`loss`),
 # nor sack_chance/output_factor, which are a different category entirely.
+s_bare_h = sim(civ="rome_100ad")   # never changed: only read below, then shared with later read-only checks
 s_med_mil = sim(civ="rome_100ad")
 for k in _MED_NODES:
     s_med_mil.done.add(k); s_med_mil.done_year[k] = s_med_mil.year - 300
-_out_nomed = sim(civ="rome_100ad").hazard_relief("output_factor")[0]
+_out_nomed = s_bare_h.hazard_relief("output_factor")[0]
 _out_med = s_med_mil.hazard_relief("output_factor")[0]
-_sack_nomed = sim(civ="rome_100ad").hazard_relief("sack_chance")[0]
+_sack_nomed = s_bare_h.hazard_relief("sack_chance")[0]
 _sack_med = s_med_mil.hazard_relief("sack_chance")[0]
 check("diffused medicine gives no relief against output_factor or "
       "sack_chance - those are war's categories, not medicine's, the same "
@@ -183,7 +184,6 @@ check("diffused medicine gives no relief against output_factor or "
 # line the brief draws around it: the Gothic wars cost the country less -
 # they do not stop happening, and nothing here ever deletes a hazard or
 # moves its calendar.
-s_bare_h = sim(civ="rome_100ad")
 s_armed_h = sim(civ="rome_100ad")
 run_it(s_armed_h, "patron_imperial")
 for k in _MIL_NODES2:
@@ -321,7 +321,7 @@ _soc_room = {}
 _soc_sims = {}
 for _civ in ("rome_100ad", "han_china_100ad", "norse_900ad", "england_1300",
              "mexica_1500"):
-    _s_soc = _soc_sims[_civ] = sim(civ=_civ)
+    _s_soc = _soc_sims[_civ] = s_bare_h if _civ == "rome_100ad" else sim(civ=_civ)
     _soc_room[_civ] = (_s_soc.has("fin_societas"), _s_soc.labour.supervision_room())
 check("Rome alone starts with a partnership, and so oversees more people in "
       "its first year than the four civilisations that must build one",
@@ -356,7 +356,7 @@ check("...and the rows add up to exactly the figure they explain, for every "
 # AI agent that has played built a tmux or FIFO harness to hold the process
 # open, because the one place that explained otherwise was filed under
 # "sittings" - a word about a person at a keyboard over several evenings.
-_s_sit = sim()
+_s_sit = s_bare_h
 for _alias in ("script", "agent", "batch", "oneshot", "non-interactive"):
     _h = S._agent_dispatch(_s_sit, NODES, {"cmd": "help", "topic": _alias})
     check("'help %s' reaches the page that explains one command per "

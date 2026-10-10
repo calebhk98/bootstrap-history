@@ -94,7 +94,8 @@ slow_check("...and it finishes, slowly, longer than its calendar floor, instead 
 # abandoned enterprise" - so when the creditors were about to take everything,
 # stopping something yourself cost exactly as much as letting them, and `stop`
 # was never the right move. The site does not un-dig itself either way.
-s_sp = sim(capital=round(0.3 * sim().project_cost("identity_cover")))   # part-payable at any wage scale
+s_sp2 = sim()   # prices the project here, then serves the nearly-paid check below
+s_sp = sim(capital=round(0.3 * s_sp2.project_cost("identity_cover")))   # part-payable at any wage scale
 s_sp.start_project("identity_cover")
 s_sp.step()
 _spent_sp = s_sp.active["identity_cover"]["spent"]
@@ -115,7 +116,6 @@ check("...but the hours really are gone: that was your year",
       s_sp.active["identity_cover"]["ph_left"])
 # And the affordability gate has to test the REMAINDER, or a nearly-paid-for
 # project is refused for a bill it no longer owes.
-s_sp2 = sim()
 s_sp2.paid_towards = {"identity_cover": s_sp2.project_cost("identity_cover") - 5.0}
 check("...and a nearly-paid project is not refused for its gross price",
       s_sp2.start_project("identity_cover")[0],

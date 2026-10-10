@@ -219,8 +219,7 @@ check("a real node's project_cost() itself falls once an aluminium mine "
 
 # --- a garbage material name is still refused, not silently accepted -
 # generalising to "every material the tree prices" is not the same as
-# accepting an arbitrary string.
-s = sim(civ="rome_100ad", capital=1e9)
+# accepting an arbitrary string. (Quoting and listing mines read no state the mine above changed.)
 check("a material this file genuinely cannot price is still refused",
       s.mine_quote("not_a_real_material_xyz", 100.0) is None,
       s.mine_quote("not_a_real_material_xyz", 100.0))
