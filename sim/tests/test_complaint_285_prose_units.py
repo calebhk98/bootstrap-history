@@ -113,6 +113,12 @@ class TaggedFields(UnitSetup):
         shown = U.add_display(U.tagged({"haul": 14.0}, haul="area:tonne"), self.game)
         self.assertNotIn("haul_display", shown)
 
+    def test_a_text_screen_never_prints_the_tags(self):
+        from sim.ui.units_text import for_text
+        shown = for_text(U.tagged({"ok": True, "haul": 14.0, "rows": [U.tagged({"x": 1}, x="mass:tonne")]},
+                                  haul="mass:tonne"), False)
+        self.assertNotIn("field_units", json.dumps(shown))
+
     def test_a_tagged_field_reaches_the_text_screen(self):
         from sim.ui.units_text import for_text
         U.set_preferences({"mass": "blob_mass"})

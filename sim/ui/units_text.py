@@ -37,12 +37,22 @@ def _renamed(key: str, rule: Mapping[str, Any], name: str) -> str:
     return "%s_in_%s" % (key, spelled)
 
 
+def _without_tags(node: Any) -> Any:
+    """The reply without the `field_units` tags producers add for scripts; a text screen never prints them."""
+    if isinstance(node, list):
+        return [_without_tags(item) for item in node]
+    if isinstance(node, dict):
+        return {key: _without_tags(value) for key, value in node.items() if key != "field_units"}
+    return node
+
+
 def for_text(reply: Any, rename: bool) -> Any:
     """A reply as a text screen shows it: each field with a `_display`
     sibling carries the displayed value, the sibling is dropped, and
     TEXT_LABELS records the unit symbols. `rename` also renames the field
     after the unit, for screens that print field names as labels."""
     TEXT_LABELS.clear()
+    reply = _without_tags(reply)
     if not units.chosen_units():
         return reply
     reg = units.registry()
