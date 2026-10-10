@@ -9,6 +9,7 @@ from sim.economy import producers, producers_close
 from sim.tests import economy_innovator_scenario as scenario
 
 BOOK_MERGE_TOLERANCE = 1.25     # the summarised book merges buyers, so its ceiling is approximate
+YEAR_TO_YEAR_RISE_LIMIT = 1.2   # a year's price against the year before, in the years after entry
 _ROWS = []
 
 
@@ -41,26 +42,26 @@ class InnovatorPricingTests(unittest.TestCase):
         self.assertLess(late, 0.8 * before)
 
     def test_the_price_path_falls_steadily_without_a_swing_between_years(self):
+        # Spending is smoothed across years (households_orders.SPENDING_CUT_LIMIT), so a low price one year
+        # does not send a larger budget to the next year's market; the bound is on each year against the last.
         table = rows()[scenario.ENTRY_YEAR:]
-        pairs = [mean(row["price"] for row in table[i:i + 2]) for i in range(0, len(table) - 1, 2)]
-        for earlier, later in zip(pairs, pairs[1:]):
-            self.assertLessEqual(later, 1.1 * earlier)
+        for earlier, later in zip(table, table[1:]):
+            self.assertLessEqual(later["price"], YEAR_TO_YEAR_RISE_LIMIT * earlier["price"],
+                                 msg="year %d" % later["year"])
 
-    def test_dearer_incumbents_leave_once_the_entrant_can_serve_the_market(self):
-        # They stay while the price covers what they cost to run (the market is not theirs to lose until
-        # the cheap technique's output reaches what they served), then go at the pace a market loses makers:
-        # the loss years a producer waits, then the share of its workplaces that close a year.
+    def test_dearer_incumbents_leave_once_the_price_stops_covering_their_cost(self):
+        # They stay while the price covers what they cost to run, then go at the pace a market loses makers:
+        # the loss years a producer waits, then the share of its workplaces that close a year. The entrant's
+        # capacity need not have caught up with the old volume: demand grows as the price falls.
         table = rows()
-        quantity_before = table[scenario.ENTRY_YEAR - 1]["volume"]
-        served = next(row for row in table if row["entrant_runs"] * scenario.CHEAP.outputs[scenario.COFFEE]
-                      >= quantity_before)
         before = table[0]["incumbent_runs"]
+        unpaid = next(row for row in table if row["price"] < row["incumbent_cost"])
         for row in table:
-            if row["year"] < served["year"]:
-                self.assertAlmostEqual(row["incumbent_runs"], before, msg="left before the entrant could serve")
+            if row["year"] < unpaid["year"]:
+                self.assertAlmostEqual(row["incumbent_runs"], before, msg="left while the price covered the cost")
         shedding_years = math.ceil(math.log(0.5) / math.log(1.0 - producers.OUTPUT_CHANGE_SHARE_PER_YEAR))
         later = [row for row in table
-                 if row["year"] >= served["year"] + producers_close.LOSS_YEARS_BEFORE_EXIT + shedding_years]
+                 if row["year"] >= unpaid["year"] + producers_close.LOSS_YEARS_BEFORE_EXIT + shedding_years]
         self.assertTrue(later and later[0]["incumbent_runs"] <= 0.5 * before)
 
     def test_the_entrants_takings_stay_within_what_demand_allows(self):

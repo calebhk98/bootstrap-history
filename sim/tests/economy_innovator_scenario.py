@@ -4,7 +4,7 @@ maker's capacity grows year by year. The test states every figure; nothing is re
 import dataclasses
 from typing import Dict, List
 
-from sim.economy import goods_market, market_curves
+from sim.economy import goods_market, market_curves, unit_cost
 from sim.economy.economy import Economy
 from sim.economy.households_basket import Basket, NeedSpec
 from sim.economy.market_memory import market_key
@@ -62,7 +62,7 @@ def revenue_ceiling(economy: Economy) -> float:
 
 def run_scenario(years: int = YEARS) -> List[Dict[str, float]]:
     """One row a year: price, volume at the port market, the entrant's and incumbents' capacity, the
-    most revenue demand allows there."""
+    most revenue demand allows there, what the dear technique costs per unit at the year's prices."""
     setup = coffee_setup()
     economy = Economy(setup)
     rows = []
@@ -85,5 +85,7 @@ def run_scenario(years: int = YEARS) -> List[Dict[str, float]]:
             "entrant_runs": producers[ENTRANT].capacity_runs if ENTRANT in producers else 0.0,
             "incumbent_runs": sum(producer.capacity_runs for producer in producers.values()
                                   if producer.recipe_id == DEAR.recipe_id),
+            "incumbent_cost": unit_cost.variable_cost_per_run(DEAR, outcome.prices, outcome.wages)
+            / DEAR.outputs[COFFEE],
             "revenue_ceiling": revenue_ceiling(economy)})
     return rows

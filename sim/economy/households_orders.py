@@ -150,7 +150,9 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
     drawdown = min(currency.spending_adjustment(cash + claims + store_value, keep, income_this_year),
                    WEALTH_DRAWDOWN_LIMIT * max(0.0, income_this_year, cohort.last_year_income))
     spending = max(0.0, min(cash, income_this_year + drawdown))
-    if cohort.expected_spending > 0.0:      # a rise in the savings target is saved over years, not at once
+    if cohort.expected_spending > 0.0:
+        # a rise in the savings target is saved over years, not at once; a windfall is spent over years too
+        spending = min(spending, max(income_this_year, (1.0 + SPENDING_CUT_LIMIT) * cohort.expected_spending))
         spending = max(spending, min(cash, (1.0 - SPENDING_CUT_LIMIT) * cohort.expected_spending))
     floors, totals = need_units(priced, basket, cohort.people, spending - floor_cost)
     # the stock of a durable is sized on the expected flow: this year's flow scaled by expected over actual
