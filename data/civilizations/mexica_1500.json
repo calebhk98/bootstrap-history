@@ -2,6 +2,12 @@
   "_note_cost_multipliers": "No domesticable large mammal exists in Mesoamerica, so every load moves on a human back and every plough, cart, harness and horse-hoe in the tree is a far worse deal here. That is a fact about the continent, not something the founder can teach away, and it is the single largest handicap any civilization in this file carries. Against it: superb calendrical astronomy, intensive chinampa agriculture that outyields Roman farming per hectare, and cotton textiles.",
   "_note_debt_bondage": "Tlacotin: servitude entered into for debt, worked off, not heritable, and the person could buy their own freedom. Not chattel slavery, and the model should not flatten it into one.",
   "blurb": "A large, dense, literate, well-administered state with monumental construction, chinampa agriculture that outyields anything in Europe, and no draught animals, no iron, no wheel in practical use.",
+  "cast": {
+    "actors": [
+      {"actor_id": "church:home", "kind": "church", "name": "the priesthood", "members": 40000, "stipend_trade": "scribe", "endowment_hectares": 100000, "tithe_rate": 0.05, "tithe_need": "food"},
+      {"actor_id": "academy:home", "kind": "academy", "name": "the scholars", "members": 2000, "stipend_trade": "scholar", "endowment_hectares": 0, "patronage_rate": 0.5}
+    ]
+  },
   "bondage_years": 8,
   "cost_multipliers": {
     "agriculture": 1.3,
@@ -787,6 +793,10 @@
     }
   ],
   "_internal": {
+    "cast_actors": {
+      "source": "Initial conditions of a church and an academy, placeholders to be replaced by a count of the clergy and scholars and of the land and tithes that kept them. Only the starting sizes are set here; what each collects and whether its people are out of pocket later follow from the land market's rent, the sales of the goods tithed and the spread of schooling.",
+      "confidence": "D"
+    },
     "starting_interest_rate": {
       "source": "Credit was in kind (cacao, cloth, maize) with pledges of labour; no attested monetary interest rate. A placeholder for near-absent formal lending.",
       "confidence": "E"

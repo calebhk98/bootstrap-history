@@ -102,7 +102,11 @@ class GroupView:
 			goods = Sector.of_goods(strata, self.goods_categories(), self) if strata else []
 			caused = self.displaced_producers() + goods + self.squeezed_employers()
 			firms = [firm for firm in self._sim.actors.of_kind("firm")]  # type: ignore[attr-defined]
-			falling = Sector.of_strata(strata, self) + Sector.of_firms(firms, self)
+			foundations = [foundation for kind in ("church", "academy") for foundation in self._sim.actors.of_kind(kind)]  # type: ignore[attr-defined]
+			governments = [government for government in self._sim.actors.of_kind("government")  # type: ignore[attr-defined]
+						   if government.record.country is None]
+			servants = [sector for government in governments for sector in Sector.of_servants(government, self)]
+			falling = Sector.of_strata(strata, self) + Sector.of_firms(firms, self) + Sector.of_foundations(foundations) + servants
 			total_fall = sum(sector.lost_income for sector in falling)
 			# what the founder is blamed for in a body's loss: the share of it his measured doing explains
 			share = min(1.0, sum(sector.lost_income for sector in caused) / total_fall) if total_fall > 0.0 else 0.0
@@ -110,6 +114,9 @@ class GroupView:
 				sector.blame_share = share
 			Sector.remember_welfare(strata, self)
 			Sector.remember_margins(firms)
+			Sector.remember_foundations(foundations)
+			for government in governments:
+				Sector.remember_servants(government, self)
 			return {sector_key(sector.kind, sector.subject): sector for sector in caused + falling}
 		return self._once("sectors", compute)  # type: ignore[attr-defined,no-any-return]
 

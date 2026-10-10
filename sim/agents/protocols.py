@@ -134,6 +134,26 @@ class World(Protocol):
 	def squeezed_employers(self) -> List[Sector]:
 		...
 
+	def idle_hours_by_trade(self) -> Dict[str, Tuple[float, float]]:
+		"""(hours offered and not hired, hours offered) of each trade in the labour core's last clearing; empty without an agent economy."""
+		...
+
+	def displacing_technique(self, trade: str) -> Optional[str]:
+		"""The running technique that most recently began doing its category's work with fewer hands of `trade`, or None."""
+		...
+
+	def technique_name(self, node_id: str) -> str:
+		"""A technique as the player reads it."""
+		...
+
+	def land_rent_per_hectare(self) -> float:
+		"""Mean rent per hectare-year the land market let land at last year, in coin; zero without an agent economy."""
+		...
+
+	def tithable_sales_value(self, need_id: str) -> float:
+		"""Money's worth of what the society's producers sold this year of the goods that serve one need."""
+		...
+
 	def sectors(self) -> Dict[str, Sector]:
 		"""Everyone hurt this year, by key."""
 		...

@@ -2,6 +2,11 @@
   "_note_cost_multipliers": "The best shipwrights and among the best smiths in Europe, and no state at all. Anything that is a public work rather than a private one costs nearly twice what it costs Rome, because there is nobody to compel or fund it. Concrete is worse still: no pozzolana, no tradition of masonry at scale.",
   "_note_debt_bondage": "A man who could not pay became a skuldarmadr, a debt-thrall, and the law provided for working the debt off and going free.",
   "blurb": "Small population, no state to speak of, superb shipbuilding and ironworking, and the best long-range mobility in Europe. The opposite problem from Rome: nobody will stop you, and nobody can fund you either.",
+  "cast": {
+    "actors": [
+      {"actor_id": "church:home", "kind": "church", "name": "the priesthood", "members": 1500, "stipend_trade": "scribe", "endowment_hectares": 5000, "tithe_rate": 0.0, "tithe_need": "food"}
+    ]
+  },
   "bondage_years": 10,
   "cost_multipliers": {
     "alloys": 0.9,
@@ -527,6 +532,10 @@
     }
   ],
   "_internal": {
+    "cast_actors": {
+      "source": "Initial conditions of a church and an academy, placeholders to be replaced by a count of the clergy and scholars and of the land and tithes that kept them. Only the starting sizes are set here; what each collects and whether its people are out of pocket later follow from the land market's rent, the sales of the goods tithed and the spread of schooling.",
+      "confidence": "D"
+    },
     "starting_interest_rate": {
       "source": "No Norse lending record survives for this date. Set from the neighbouring Carolingian and Anglo-Saxon world, where credit was informal and short-term rates high. Weak evidence.",
       "confidence": "D"

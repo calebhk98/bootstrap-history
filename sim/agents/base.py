@@ -123,6 +123,24 @@ class Actor(Borrower):
 		"""Answer the state's demands from now on with `stance`."""
 		raise NotImplementedError
 
+	def service_worth(self) -> float:
+		"""Money's worth of service the actor will offer the state in place of part of a demand."""
+		return 0.0
+
+	def concealed_wealth(self) -> float:
+		"""Wealth the actor holds where the state cannot count it."""
+		return 0.0
+
+	def defiance(self) -> float:
+		"""0..1: how far the state holds the actor's refusals against it."""
+		return 0.0
+
+	def set_concealed_wealth(self, amount: float) -> None:
+		"""Hold `amount` of its wealth out of the state's sight."""
+
+	def set_defiance(self, level: float) -> None:
+		"""The state now holds the actor's defiance at `level`."""
+
 	def copy_budget(self, world: Any) -> float:
 		"""Money it will commit to new copies this year: its purse and what it may still borrow."""
 		committed = sum((1.0 - work["progress"]) * (work["money"] + work["labour_cost"])
@@ -297,6 +315,21 @@ class RecordedActor(Actor):
 
 	def set_demand_stance(self, stance: str) -> None:
 		self.record.demand_stance = stance
+
+	def service_worth(self) -> float:
+		return self.record.service_offer
+
+	def concealed_wealth(self) -> float:
+		return self.record.concealed
+
+	def defiance(self) -> float:
+		return self.record.defiance
+
+	def set_concealed_wealth(self, amount: float) -> None:
+		self.record.concealed = max(0.0, amount)
+
+	def set_defiance(self, level: float) -> None:
+		self.record.defiance = level
 
 	def opened_year_of(self, node_id: str, default: int) -> int:
 		return self.record.opened_year.get(node_id, default)

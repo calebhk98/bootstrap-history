@@ -41,6 +41,7 @@ class EconomyRecord:
     land_rent: Dict[TileId, float] = field(default_factory=dict)         # rent per hectare producers paid, by tile
     margin_years: Dict[str, int] = field(default_factory=dict)           # market_key -> years in a row the expected price stood above the entry price
     hours_hired: Dict[str, float] = field(default_factory=dict)          # labour market_key -> hours hired last year
+    hours_idle: Dict[str, float] = field(default_factory=dict)           # labour market_key -> hours offered and not hired last year
     funds_offered: float = 0.0                                           # savings on offer at the last lending, home currency
     lent_by_borrower: Dict[AgentId, float] = field(default_factory=dict)  # what each borrower was lent at the last lending
     curves: Dict[str, Any] = field(default_factory=dict)                 # market_key -> the book of the last clearing at the port (market_curves.py)
@@ -71,6 +72,7 @@ class EconomyRecord:
             "land_rent": self.land_rent,
             "margin_years": self.margin_years,
             "hours_hired": self.hours_hired,
+            "hours_idle": self.hours_idle,
             "funds_offered": self.funds_offered,
             "lent_by_borrower": self.lent_by_borrower,
             "curves": self.curves,
@@ -102,6 +104,7 @@ class EconomyRecord:
             land_rent=dict(record["land_rent"]),
             margin_years=dict(record["margin_years"]),
             hours_hired=dict(record["hours_hired"]),
+            hours_idle=dict(record["hours_idle"]),
             funds_offered=record["funds_offered"],
             lent_by_borrower=dict(record["lent_by_borrower"]),
             curves=dict(record["curves"]),

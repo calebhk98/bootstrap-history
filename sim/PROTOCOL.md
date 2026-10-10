@@ -506,21 +506,41 @@ Two fixes, usable separately or together:
       `interest_groups` (names and causes) while any group is organised. Groups are actors of
       kind `interest_group` in the actor registry (ActorRecord fields `group_kind`, `subject`,
       `cause`, `members`, `lost_income`, `grievance`, `strength`, `claim`, `demands`).
-      Other kinds are measured from the bodies of people and the firms: `displaced_workers` (a
-      stratum whose trade's pay fell below what it had come to expect), `landholders` (a propertied
-      stratum whose property income fell), `firm_owners` (firms whose profit fell below what their
-      owners expected) and `falling_incomes` (the part of a stratum's fall in welfare those do not
-      explain). Only `displaced_producers` can obtain a prohibition; the rest are made good from the
-      state's purse as far as its capacity lets it.
+      Other kinds are measured from the bodies of people, the firms and the state's own books:
+      `displaced_workers` (a stratum whose trade's pay fell below what it had come to expect),
+      `jobless_workers` (a stratum whose trade's hours the labour core's clearing left unhired by
+      more than it expected; `technique` names the running technique that did the work with fewer
+      hands), `landholders` (a propertied stratum whose share of the land market's rent fell; the
+      share of the society's output where no land was let), `firm_owners` (firms whose profit fell
+      below what their owners expected), `clergy` and `scholars` (a church or an academy, actors
+      founded by a civilisation's `cast.actors`, whose collections fell: the rent of its
+      endowment, a tithe on the sales of the goods that serve one need, patronage that falls as
+      schooling spreads), `office_holders` (salaries paid on the state's administration and court
+      lines and the fees on its revenue fell below what they expected), `soldiers` (the army's
+      budget line is in arrears; an army without its pay loses loyalty and, below the mutiny line,
+      deserts and takes its arrears from the treasury, logged as MUTINY) and `falling_incomes` (the
+      part of a stratum's fall in welfare those do not explain). `displaced_producers` and
+      `jobless_workers` can obtain a prohibition: producers against the techniques that make their
+      commodity, a substitute for it (goods that serve the same household need), their goods
+      category or the line it refines; jobless workers against `technique` and any technique that
+      makes what it makes or a substitute for it. The rest are made good from the state's purse as
+      far as its capacity lets it.
 
       ANSWERING THE STATE'S DEMANDS (Complaint 110). `answer` (aliases `answer_demand`, `stance`) with
-      `{"cmd":"answer","what":"comply"|"refuse"}` sets how you meet the requisition and the supply
-      levy the state assesses (the office it presses on you is not declinable); bare `answer` shows
-      the stance. The reply's `note` gives the odds: a refusal is enforced with a chance set by the
-      state's capacity, turned aside in part by your protection; if enforced the state takes the
-      demand and a penalty in proportion to its capacity, otherwise nothing. The log names each
-      refusal and its outcome. Any other actor answers the same way through the player command
-      `{"command":"answer_demand","stance":"refuse"}` (ActorRecord field `demand_stance`).
+      `{"cmd":"answer","what":"comply"|"refuse"|"negotiate"|"conceal"}` sets how you meet the
+      requisition and the supply levy the state assesses and a confiscation it demands (the office it
+      presses on you is not declinable); bare `answer` shows the stance. The reply's `note` gives the
+      odds. Refusing: enforced with a chance set by the state's capacity, turned aside in part by your
+      protection; if enforced the state takes the demand and a penalty in proportion to its capacity,
+      otherwise nothing; either way the state marks you defiant (it assesses you as more visible, fading
+      over the years) and the blame lands on you. Negotiating (with optional `"service": <money's worth
+      of work>`): you offer a smaller sum, the state takes it with a chance that falls with its capacity
+      and rises with the share offered, else insists on the whole. Concealing: part of your wealth is
+      held where the state cannot count it (its visible scale, and so the confiscation it can demand,
+      shrink), costs a share a year, and is taken with a penalty if the state finds it. The log names each
+      outcome. Any other actor answers the same way through the player command
+      `{"command":"answer_demand","stance":"negotiate","service":0}` (ActorRecord fields `demand_stance`,
+      `service_offer`, `concealed`, `defiance`).
 
       MACHINE-READABLE MODES. 'state json', 'portfolio json' and 'risk json'
       (typed, inside `play`) print the raw reply - the exact line a script

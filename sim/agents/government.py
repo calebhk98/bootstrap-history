@@ -63,13 +63,18 @@ class Government(CoinageMixin, GranaryMixin, StoresMixin, SurplusMixin, Recorded
 		"""Levy `payer` and receive it; the amount taken."""
 		levy, parts = self.assess(payer, taxable, world)
 		if parts["requisition"] > 0.0 and payer.demand_stance() != demand_answer.COMPLY:
-			# a refused requisition is paid, with a penalty, only if the state can enforce it
+			# a refused requisition is paid, with a penalty, only if the state can enforce it; a negotiated
+			# one is paid in part, and in service, if the state takes the offer
 			draw = world.rng_for("demand", getattr(payer, "actor_id", ""), world.year).random()
 			answer = demand_answer.settle_demand(payer.demand_stance(), parts["requisition"], world.state_capacity(),
-												 payer.standing(), draw)
+												 payer.standing(), draw, payer.service_worth())
 			parts["requisition"] = answer["paid"] - answer["penalty"]
 			if answer["penalty"] > 0.0:
 				parts["penalty"] = answer["penalty"]
+			if answer["service"] > 0.0:
+				ledger.transfer(payer, world.edge(EDGE_STATE_SPENDING), answer["service"], "service to the state")
+			if answer["refused"]:
+				payer.set_defiance(demand_answer.defiance_after_refusal(payer.defiance()))
 			levy = sum(parts.values())
 		if levy > 0.0:
 			ledger.transfer(payer, self, levy, parts)

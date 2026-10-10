@@ -9,6 +9,10 @@
       {"name": "labourers", "share": 0.7362, "trade": "labourer", "literacy": 0.12, "own_plot": true, "rises_to": "artisans", "falls_to": "poor"},
       {"name": "poor", "share": 0.09, "trade": "labourer", "work_share": 0.2, "literacy": 0.12, "rises_to": "labourers"},
       {"name": "slaves", "share": 0.1, "bonded": true, "owner": "rich", "trade": "labourer", "literacy": 0.0, "rises_to": "poor"}
+    ],
+    "actors": [
+      {"actor_id": "church:home", "kind": "church", "name": "the temples", "members": 15000, "stipend_trade": "scribe", "endowment_hectares": 100000, "tithe_rate": 0.0, "tithe_need": "food"},
+      {"actor_id": "academy:home", "kind": "academy", "name": "the scholars", "members": 2000, "stipend_trade": "scholar", "endowment_hectares": 0, "patronage_rate": 0.8}
     ]
   },
   "blurb": "Peak territorial extent, sound currency, superb civil engineering, an economy resting on slavery, and an elite that despises manual work.",
@@ -885,6 +889,10 @@
     }
   ],
   "_internal": {
+    "cast_actors": {
+      "source": "Initial conditions of a church and an academy, placeholders to be replaced by a count of the clergy and scholars and of the land and tithes that kept them. Only the starting sizes are set here; what each collects and whether its people are out of pocket later follow from the land market's rent, the sales of the goods tithed and the spread of schooling.",
+      "confidence": "D"
+    },
     "cast": {
       "source": "Slaves as a share of the empire's people: about a tenth (Scheidel 2005, 'Human Mobility in Roman Italy, II: The Slave Population', JRS 95: 64-79, which counts one to one and a half million in Italy at most; the empire-wide tenth is a secondary summary of Scheidel, a plausible range being 8 to 15 per cent). Italy and the cities ran higher, the provinces lower; one stratum holds the empire-wide share. The other strata keep the default split's proportions (sim/agents/strata_seed.py) scaled to fill the rest of the people. Owners are the rich stratum. The older third-to-two-fifths figure for Italy is unsupported (Scheidel 2005: 65).",
       "confidence": "C"

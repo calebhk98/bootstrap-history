@@ -70,10 +70,27 @@ class ActorRecord:
 	demands: List[str] = field(default_factory=list)
 	petitions: int = 0
 	last_logged_year: Optional[int] = None
+	# a technique an interest group asks the state to forbid (the one that took its members' jobs)
+	technique: str = ""
+	# a foundation (a church, an academy): hectares of endowed land, the share of the sales of the goods serving
+	# one need that it takes as tithe, the trade whose pay is its people's stipend, and the share of the
+	# stipends patrons cover while learning is scarce; its people are `members`
+	endowment_hectares: float = 0.0
+	tithe_rate: float = 0.0
+	tithe_need: str = ""
+	stipend_trade: str = ""
+	patronage_rate: float = 0.0
+	# a state's army: how loyal it is to its paymaster (0..1)
+	loyalty: float = 1.0
 	# what the treasury paid the founder as patron this year
 	patron_grant: float = 0.0
 	# how the actor answers the state's demands ("comply" or "refuse", sim/agents/demand_answer.py)
 	demand_stance: str = "comply"
+	# money's worth of service (work, goods at cost) the actor will offer the state when it negotiates; the
+	# wealth it holds out of the state's sight; and how far the state holds a refusal against it (0..1)
+	service_offer: float = 0.0
+	concealed: float = 0.0
+	defiance: float = 0.0
 	# a state's goods it will not sell abroad (its monopolies, set at the start by its country's data), and
 	# the parties it has shut its markets to: party id -> the first year they are open to them again
 	state_monopolies: Set[str] = field(default_factory=set)
