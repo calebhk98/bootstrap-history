@@ -45,8 +45,8 @@ class CoinHoardMixin:
 
     def charge_actors_for_keeping_coin(self):
         """Every actor in business that holds money (a state, a firm) pays to keep it as coin. The founder's
-        household is charged in its own money step. A foreign country's actor pays at its country's pay level
-        (the scope's labelled rescale, Complaint 407) to its own country's guards."""
+        household is charged in its own money step. A foreign country's actor pays at its country's own pay level
+        (its own labour markets) to its own country's guards."""
         from .agents_port import SimWorld
         world = SimWorld(self)
         home_pay = max(1e-9, world.pay_per_person_year(KEEPING_PAY_TRADE))
