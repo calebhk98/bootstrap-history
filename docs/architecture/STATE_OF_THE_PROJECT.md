@@ -55,9 +55,11 @@ Each point names the issue that tracks it; read its status line before acting.
   household-funded credit market exists; banks, bonds, equity and insurance
   do not (`Complaints/106`), and foreign countries' pay and output are the
   home figures rescaled (`Complaints/407`).
-- **Disease.** `sim/disease/` steps one patch against one pathogen but is not
-  wired into `Sim`; authored epidemic losses are still in force
-  (`Complaints/386`).
+- **Disease.** `sim/disease/` is wired into `step_year` for the Mexica start
+  (`sim/engine/disease_port.py`): the nation is one patch of three age bands and
+  pathogens arrive by a labelled contact heuristic. Other civilisations still
+  use authored staff_loss plagues; care collapse and density are open
+  (`Complaints/471`).
 
 ## Order of work
 

@@ -104,25 +104,16 @@
       "residual": 1.15
     }
   },
+  "disease_exposure": {
+    "_note": "Initial conditions for the disease model (sim/disease), not outcomes. Nothing here is endemic: the nation has met none of the pathogens, so every person is susceptible. `outside_contact` lists pathogens the outside world carries to this nation in the years given. Temporary heuristic (DISEASE_CONTACT_ANNUAL_CHANCE in sim/engine/disease_port.py): until infected travellers cross geography routes, an arrival is a yearly chance while the window is open and the pathogen is absent. How many die, and when, comes from immunity, age, food and technology, not from this file. History, kept for the reader: smallpox, measles and typhus in a population with no immunity; typhus has no pathogen file yet.",
+    "outside_contact": [
+      {
+        "pathogens": ["smallpox", "measles", "influenza_pandemic"],
+        "years": [1520, 1600]
+      }
+    ]
+  },
   "hazards": [
-    {
-      "name": "Old World epidemics on contact",
-      "causes": [
-        {
-          "quantity": "population",
-          "op": ">=",
-          "value": 0.5,
-          "relative_to_start": true,
-          "why": "A pandemic runs through crowded, connected settlements. Below half the opening population the opening density of towns and trade is gone, so there is nothing to carry it at the recorded scale. A reasoning bound, to be fitted against a baseline ensemble."
-        }
-      ],
-      "note": "Smallpox, measles and typhus in a population with no immunity. This is the single most severe hazard of any civilization in this directory and it is not a fair fight.",
-      "staff_loss": 0.8,
-      "years": [
-        1520,
-        1600
-      ]
-    },
     {
       "name": "Spanish invasion",
       "causes_not_modelled": [

@@ -988,7 +988,13 @@
      "label": "variolation and then vaccination",
      "order": 4
     }
-   ]
+   ],
+   "disease_effects": {
+     "acts_on": "transmission",
+     "factor": 0.55,
+     "pathogens": ["smallpox"],
+     "label": "variolation and then vaccination"
+   }
   },
   "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
@@ -1119,7 +1125,12 @@
      "label": "quarantine, clean water, sewage",
      "order": 1
     }
-   ]
+   ],
+   "disease_effects": {
+     "acts_on": "transmission",
+     "factor": 0.7,
+     "label": "quarantine, clean water, sewage"
+   }
   }
  },
  {
@@ -1468,7 +1479,12 @@
      "label": "people trained to nurse the sick",
      "order": 10
     }
-   ]
+   ],
+   "disease_effects": {
+     "acts_on": "case_fatality",
+     "factor": 0.88,
+     "label": "people trained to nurse the sick"
+   }
   }
  },
  {
