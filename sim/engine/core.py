@@ -62,6 +62,7 @@ from .incumbent_prices import IncumbentPricesMixin
 from .producer_costs import ProducerCostsMixin
 from .fog import FogMixin
 from .mechanics import MechanicsMixin
+from .disease_port import DiseasePortMixin
 from .geography_port import GeographyPortMixin
 from .labour_port import LabourPortMixin
 from .projects import ProjectsMixin
@@ -237,7 +238,7 @@ FARM_WEATHER_POOLED_CELL_CAP = declare(
 YEARLY_RECORD_LIMIT = 300
 
 
-class Sim(RealPriceRatiosMixin, CoinRevaluationMixin, WageMarketRatiosMixin, MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IndustryDepthMixin, IndustryConcernMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, LabourPortMixin,
+class Sim(RealPriceRatiosMixin, CoinRevaluationMixin, WageMarketRatiosMixin, MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IndustryDepthMixin, IndustryConcernMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, DiseasePortMixin, LabourPortMixin,
           ProjectsMixin, SeatMixin, SeatRunMixin, SeatBuildsMixin, SeatSightMixin, ShockYearMixin, WaysMixin, WorksMixin, HeldWorksMixin, ActionLossMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, SeatDealingsMixin, InterestGroupsMixin, ForwardingPropertiesMixin, GoalsMixin,
           StepPhasesMixin, LivingStockMixin, CoinHoardMixin, CoinCarriageMixin, TheftChargeMixin,
           LivingStockTradeMixin, LivingStockYearlyMixin, FoodSupplyMixin, DefenceStoresMixin, EconomyPortMixin, NodeRederiveMixin):
@@ -1506,9 +1507,10 @@ class Sim(RealPriceRatiosMixin, CoinRevaluationMixin, WageMarketRatiosMixin, Mec
         # or a future player-facing message can read THIS year's
         # nutrition_ratio without re-deriving it from the cohort counts by
         # hand a second time.
+        epidemic_deaths = self.disease_year(farm_year.food_available_kcal_per_day, year)
         self._last_demographic_step = self.population.step(
             farm_year.food_available_kcal_per_day, jitter=False,
-            disease_burden=self._disease_burden())
+            disease_burden=self._disease_burden(), epidemic_deaths=epidemic_deaths)
         flows = self._last_demographic_step
         record = self.state.population.yearly_record
         record.append({"year": year, "population": round(self.population.total, 1),

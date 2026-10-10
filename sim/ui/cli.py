@@ -416,7 +416,7 @@ def cmd_validate(args):
         nodes, list(carriage_map.catalogue("route_modes").values()) + list(carriage_map.catalogue("sea_lanes").values()))
     errs += validate_defence_stores.check_defence_stores(nodes, set(wages), producible)
     from sim.engine import validate_disease_data
-    errs += validate_disease_data.check_disease_data()
+    errs += validate_disease_data.check_disease_data(nodes, civ_start_check.load_civilisations(ROOT))
     goal_errs, default_goal, goal_rows = _validate_goal_rows(tree, nodes)
     errs += goal_errs
 

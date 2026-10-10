@@ -33,7 +33,7 @@ class Pathogen:
 class Patch:
     """People in one place, by compartment, with the package's own seeded random generator."""
     counts: Dict[str, int]
-    seed: int
+    seed: Any
     births_per_person_per_year: float = 0.0
     background_deaths_per_person_per_year: float = 0.0
     deaths_from_disease: int = 0

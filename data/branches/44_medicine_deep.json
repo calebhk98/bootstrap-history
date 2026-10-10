@@ -2162,7 +2162,13 @@
      "label": "smallpox vaccine",
      "order": 5
     }
-   ]
+   ],
+   "disease_effects": {
+     "acts_on": "transmission",
+     "factor": 0.6,
+     "pathogens": ["smallpox"],
+     "label": "smallpox vaccine"
+   }
   }
  },
  {
@@ -2282,7 +2288,13 @@
      "label": "plague vaccine",
      "order": 6
     }
-   ]
+   ],
+   "disease_effects": {
+     "acts_on": "transmission",
+     "factor": 0.65,
+     "pathogens": ["pneumonic_plague"],
+     "label": "plague vaccine"
+   }
   }
  },
  {
@@ -2842,7 +2854,12 @@
      "label": "the sick kept apart from the well",
      "order": 3
     }
-   ]
+   ],
+   "disease_effects": {
+     "acts_on": "transmission",
+     "factor": 0.8,
+     "label": "the sick kept apart from the well"
+   }
   },
   "_internal": "[HEURISTIC: yearly upkeep taken as one percent of the construction labour hours (repair and keeping the works in service); no wear or failure model yet.]"
  },

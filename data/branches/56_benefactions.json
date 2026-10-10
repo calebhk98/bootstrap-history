@@ -224,6 +224,11 @@
      "order": 15
     }
    ],
+   "disease_effects": {
+     "acts_on": "case_fatality",
+     "factor": 0.85,
+     "label": "an endowed hospital that takes the sick in"
+   },
    "standing": {
     "per_sqrt_unit": 2.0,
     "order": 10

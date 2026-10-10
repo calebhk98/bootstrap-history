@@ -346,6 +346,14 @@ class PopulationState:
 
 
 @dataclass
+class DiseaseState:
+	"""Epidemics in the nation: who is susceptible, infected or immune, by pathogen and age band."""
+	records: Dict[str, Any] = field(default_factory=dict)   # pathogen id -> age band -> saved Patch (sim/disease)
+	introduced: Dict[str, List[int]] = field(default_factory=dict)   # pathogen id -> years it arrived
+	deaths: Dict[str, int] = field(default_factory=dict)   # pathogen id -> deaths so far
+
+
+@dataclass
 class SimulationState:
 	"""Root coordinator aggregating authoritative persistent subsystem states."""
 	# household, projects, founder, governance, holdings and seat_progress alias the acting seat's objects and are not saved (seats are)
@@ -360,6 +368,7 @@ class SimulationState:
 	acting_seat: str = "founder"
 	scenario: Optional[ScenarioState] = None
 	population: Optional[PopulationState] = None
+	disease: DiseaseState = field(default_factory=DiseaseState)
 	actors: Optional[ActorsState] = None
 	_civ: Optional[str] = None
 	_civ_live: Dict[str, Any] = field(default_factory=dict)
@@ -409,6 +418,7 @@ ALL_STATE_CLASSES = (
 	SeatProgressState,
 	ScenarioState,
 	PopulationState,
+	DiseaseState,
 	ActorsState,
 )
 

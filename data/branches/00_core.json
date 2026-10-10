@@ -2842,7 +2842,12 @@
           "label": "knowing what is actually killing them",
           "order": 2
         }
-      ]
+      ],
+      "disease_effects": {
+        "acts_on": "case_fatality",
+        "factor": 0.75,
+        "label": "knowing what is actually killing them"
+      }
     },
     "name": "Germ theory of disease",
     "note": "The bead microscope makes this demonstrable rather than assertable, which is the whole difference. Galen's humoral theory is the obstacle and it is defended by the entire medical profession.",
@@ -4838,7 +4843,12 @@
           "label": "a plan made before the plague",
           "order": 11
         }
-      ]
+      ],
+      "disease_effects": {
+        "acts_on": "transmission",
+        "factor": 0.65,
+        "label": "a plan made before the plague"
+      }
     },
     "name": "Quarantine, clean water, sanitation and variolation programme",
     "note": "You know the Antonine Plague arrives in 165 AD. This node is what decides whether your institute survives it. Highest expected-value defensive investment in the game. It is also the thing most likely to be called sorcery, so do it under a patron and in public.",
@@ -5395,7 +5405,12 @@
           "label": "boiled water, handwashing, clean wounds",
           "order": 0
         }
-      ]
+      ],
+      "disease_effects": {
+        "acts_on": "case_fatality",
+        "factor": 0.7,
+        "label": "boiled water, handwashing, clean wounds"
+      }
     },
     "name": "Boiled water, handwashing, wound irrigation, quarantine",
     "note": "Costs an argument, not a coin. Saves more lives than every machine in this document combined, wherever it is adopted. Sell it to the army first: an army already has field hospitals and an officer class that measures results (Rome's valetudinaria is the model).",
@@ -5895,7 +5910,12 @@
           "label": "hard soap, in quantity",
           "order": 9
         }
-      ]
+      ],
+      "disease_effects": {
+        "acts_on": "transmission",
+        "factor": 0.9,
+        "label": "hard soap, in quantity"
+      }
     },
     "name": "Hard soap from oil and causticised lye",
     "note": "Soap as a cleanser is missing from some ancient economies and already known in others (notably attested among Gallic and Germanic peoples, per Pliny). This word is already in the vocabulary wherever it applies; do not redefine it. It is included here to prevent anachronism where soap does not yet exist for you.",
