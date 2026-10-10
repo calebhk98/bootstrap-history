@@ -91,7 +91,9 @@ def prices(economy, country: Optional[str]) -> Dict[str, float]:
     areas_of: Dict[str, Dict[str, Set[TileId]]] = {}
     for key, price in sorted(record.memory.prices.items()):
         good, area = key.split(KEY_SEPARATOR, 1)
-        by_area = areas_of.setdefault(good, _area_tiles(economy, good))
+        by_area = areas_of.get(good)
+        if by_area is None:
+            by_area = areas_of[good] = _area_tiles(economy, good)
         if area in by_area and not (by_area[area] & tiles):
             continue
         volume = weights.get(key, 0.0)
