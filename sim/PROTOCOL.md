@@ -496,13 +496,20 @@ Two fixes, usable separately or together:
       state's purse as far as its capacity lets it.
 
       ANSWERING THE STATE'S DEMANDS (Complaint 110). `answer` (aliases `answer_demand`, `stance`) with
-      `{"cmd":"answer","what":"comply"|"refuse"}` sets how you meet the requisition and the supply
-      levy the state assesses (the office it presses on you is not declinable); bare `answer` shows
-      the stance. The reply's `note` gives the odds: a refusal is enforced with a chance set by the
-      state's capacity, turned aside in part by your protection; if enforced the state takes the
-      demand and a penalty in proportion to its capacity, otherwise nothing. The log names each
-      refusal and its outcome. Any other actor answers the same way through the player command
-      `{"command":"answer_demand","stance":"refuse"}` (ActorRecord field `demand_stance`).
+      `{"cmd":"answer","what":"comply"|"refuse"|"negotiate"|"conceal"}` sets how you meet the
+      requisition and the supply levy the state assesses and a confiscation it demands (the office it
+      presses on you is not declinable); bare `answer` shows the stance. The reply's `note` gives the
+      odds. Refusing: enforced with a chance set by the state's capacity, turned aside in part by your
+      protection; if enforced the state takes the demand and a penalty in proportion to its capacity,
+      otherwise nothing; either way the state marks you defiant (it assesses you as more visible, fading
+      over the years) and the blame lands on you. Negotiating (with optional `"service": <money's worth
+      of work>`): you offer a smaller sum, the state takes it with a chance that falls with its capacity
+      and rises with the share offered, else insists on the whole. Concealing: part of your wealth is
+      held where the state cannot count it (its visible scale, and so the confiscation it can demand,
+      shrink), costs a share a year, and is taken with a penalty if the state finds it. The log names each
+      outcome. Any other actor answers the same way through the player command
+      `{"command":"answer_demand","stance":"negotiate","service":0}` (ActorRecord fields `demand_stance`,
+      `service_offer`, `concealed`, `defiance`).
 
       MACHINE-READABLE MODES. 'state json', 'portfolio json' and 'risk json'
       (typed, inside `play`) print the raw reply - the exact line a script

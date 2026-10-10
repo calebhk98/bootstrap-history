@@ -8,7 +8,7 @@ import math
 import random
 from typing import Any, Dict, List, Optional, Set
 
-from sim.agents.api import OBSERVATION_RANGE_KM, SECRET_EXPOSURE, payroll, supply
+from sim.agents.api import OBSERVATION_RANGE_KM, SECRET_EXPOSURE, demand_answer, payroll, supply
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from .agents_port_budget import BudgetView
@@ -118,7 +118,8 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, DisclosureView, Cap
 
 	def visible_scale_of(self, actor: Any) -> float:
 		"""How large and visible any actor looks to the state: its staff, its wealth and its prominence."""
-		return self._sim.visible_scale(sum(actor.workforce.values()), actor.money, actor.prominence())
+		return self._sim.visible_scale(sum(actor.workforce.values()), demand_answer.visible_wealth(actor.money, actor.concealed_wealth()),
+									   actor.prominence(), actor.defiance())
 
 	def levy_shares(self, scale: float, protection: float = 0.0) -> Any:
 		"""(requisition, office) shares of income the state assesses at this visible scale."""

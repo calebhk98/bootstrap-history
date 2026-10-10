@@ -24,6 +24,7 @@ from dataclasses import dataclass
 from sim.unit_conversions import PERCENT_SCALE
 from . import automation_audit
 from .units_prose import money_text, plain_number
+from .state_demand import answer_confiscation
 from .invariants import check_labour_market_invariants
 from .step_phase_money import MoneyPhaseMixin
 from .step_phase_project_start import ProjectStartPhaseMixin
@@ -496,13 +497,18 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
             if self.rng.random() < probability:
                 roll = self.rng.random()
                 if roll < self.EMINENCE_OUTCOME_CONFISCATION_SHARE:
-                    take = self.state.household.capital * self.EMINENCE_CONFISCATION_CAPITAL_LOSS
-                    ledger.transfer(self.state.household, self.state_treasury(), take, "confiscation by the state")
-                    self.state.household.reputation = max(0.0, self.state.household.reputation - self.EMINENCE_CONFISCATION_REPUTATION_LOSS)
+                    # a demand the household answers like any other (comply, refuse, negotiate, conceal)
+                    _answer, _demanded, take = answer_confiscation(self, self.EMINENCE_CONFISCATION_CAPITAL_LOSS,
+                                                                   "confiscation by the state")
+                    if take > 0.0:
+                        self.state.household.reputation = max(0.0, self.state.household.reputation - self.EMINENCE_CONFISCATION_REPUTATION_LOSS)
+                        self.state.household.log.append((self.state.scenario.year, "PROMINENCE: property confiscated, %s lost, "
+                                             "and you withdraw from public life for a while"
+                                             % money_text(take, self, short=True)))
+                    else:
+                        self.state.household.log.append((self.state.scenario.year, "PROMINENCE: the court demanded your "
+                                             "property and you kept it, but you withdraw from public life for a while"))
                     self.state.household.eminence *= self.EMINENCE_CONFISCATION_RETENTION
-                    self.state.household.log.append((self.state.scenario.year, "PROMINENCE: property confiscated, %s lost, "
-                                         "and you withdraw from public life for a while"
-                                         % money_text(take, self, short=True)))
                 elif roll < (self.EMINENCE_OUTCOME_CONFISCATION_SHARE + self.EMINENCE_OUTCOME_PATRON_LOST_SHARE):
                     for pat in self.patrons_lost_to_eminence():
                         if pat in self.state.projects.done:

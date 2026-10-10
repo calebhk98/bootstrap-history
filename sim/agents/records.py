@@ -69,6 +69,11 @@ class ActorRecord:
 	patron_grant: float = 0.0
 	# how the actor answers the state's demands ("comply" or "refuse", sim/agents/demand_answer.py)
 	demand_stance: str = "comply"
+	# money's worth of service (work, goods at cost) the actor will offer the state when it negotiates; the
+	# wealth it holds out of the state's sight; and how far the state holds a refusal against it (0..1)
+	service_offer: float = 0.0
+	concealed: float = 0.0
+	defiance: float = 0.0
 	# a state's goods it will not sell abroad (its monopolies, set at the start by its country's data), and
 	# the parties it has shut its markets to: party id -> the first year they are open to them again
 	state_monopolies: Set[str] = field(default_factory=set)
