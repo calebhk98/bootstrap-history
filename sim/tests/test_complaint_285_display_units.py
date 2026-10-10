@@ -44,6 +44,11 @@ NATIVE_WORDS = {"area": r"\bhectares?\b|\bha\b", "mass": r"\btonnes?\b",
                 "money": r"\bden\b|\bdenarii\b"}
 
 
+# One game serves every screen: the replies are read for their unit fields and
+# the buys only move prices and cash.
+_GAME = sim(capital=5_000_000.0)
+
+
 def _fields(reply, dimension, registry, found=None):
     """Every (key, value, sibling display, rule) of a dimension in a reply tree."""
     found = [] if found is None else found
@@ -68,7 +73,7 @@ def _run(registry, label, fake_ids, fake_specs):
         spec = fake_specs[fake_ids[dimension]]
         U.set_preferences({dimension: fake_ids[dimension]})
         for command_name, command in screens:
-            game = sim(capital=5_000_000.0)
+            game = _GAME
             reply = _agent_dispatch(game, NODES, dict(command))
             found = _fields(reply, dimension, registry)
             screen = "%s: %s %s %s" % (label, command["cmd"], command.get("what", ""), dimension)
@@ -124,7 +129,7 @@ _run(_with_fakes, "in-memory", FAKE, FAKE_UNITS)
 # Default preference leaves every covered reply untouched.
 U.set_registry(_with_fakes)
 U.set_preferences({})
-_default = _agent_dispatch(sim(capital=5_000_000.0), NODES, {"cmd": "state"})
+_default = _agent_dispatch(_GAME, NODES, {"cmd": "state"})
 check("default adds no _display fields", "_display" not in _json.dumps(_default))
 
 # The same, with a real mod directory supplying the fake units.
