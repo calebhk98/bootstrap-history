@@ -145,7 +145,7 @@
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "Weight and bearing design determine how much clod-breaking it achieves without crushing the soil"
+  "note": "A heavy cylinder drawn across a ploughed field to break clods and press the soil firm around seed. Its weight and its bearings decide how much clod-breaking it achieves without crushing the soil into a crust. It needs a horse collar so that horses can pull the load, a stone or iron cylinder and a frame. Too light and it does nothing; too heavy and it packs wet soil hard."
  },
  {
   "id": "ag2_cultivator",
@@ -174,7 +174,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "The adjustable parallelogram linkage that keeps tines parallel and depth constant despite ground variation"
+  "note": "A horse-drawn frame with tines (curved iron teeth) that loosen and weed the soil between crop rows. An adjustable parallelogram linkage keeps the tines parallel and the depth constant even as the ground rises and falls. It needs a rigid horse collar for pulling and iron parts. Without the linkage the tines dive into the soil or skip over it, and damage the crop."
  },
  {
   "id": "ag2_horse_hoe",
@@ -395,7 +395,7 @@
   "sch": 1,
   "art": 2,
   "conf": "C",
-  "note": "The sickle action copied from grain reaping but adapted for the softer stems and different height of hay"
+  "note": "A horse-drawn machine that cuts grass for hay. Its cutter bar moves a sickle (a row of triangular blades) to and fro through fixed guards, a scissor action copied from grain reaping but adapted for the softer stems and lower height of grass. It needs the reaper and a horse collar. Blades must be kept sharp, and the cutter bar clogs in wet or lodged (flattened) grass."
  },
  {
   "id": "ag2_tedder",
@@ -424,7 +424,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "The timing of tine speed to forward motion so hay is tossed upward and backward evenly"
+  "note": "A horse-drawn machine that tosses cut hay into the air so it dries evenly in the sun and wind. The tines must turn at the right speed relative to the forward motion, so hay is thrown upward and backward and spread evenly. It needs a horse collar and an iron frame. Poor timing leaves hay in clumps that rot in the stack."
  },
  {
   "id": "ag2_baler",
@@ -465,7 +465,7 @@
   "sch": 1,
   "art": 3,
   "conf": "B",
-  "note": "The double-screw compression mechanism that packs dense bales and the knotter that wraps twine on the fly"
+  "note": "A machine that compresses hay or straw into dense bales and ties them. A double-screw compression mechanism packs the bale densely and a knotter ties twine around it as the machine moves. It needs steam power and high pressure boilers, and well-made gears and twine. It saves storage space and eases transport, but a bale that is too moist heats and may catch fire."
  },
  {
   "id": "ag2_threshing_machine",
@@ -620,7 +620,7 @@
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "The blade angle and spacing that produces small chips without clogging or requiring hand-feeding"
+  "note": "A hand or horse-powered machine that slices turnips, mangolds and other roots into chips for feeding livestock. Blades set at the right angle and spacing produce small chips without clogging or needing hand-feeding. It needs a horse collar for powered use and iron blades. Large chunks can choke an animal, so chip size matters."
  },
  {
   "id": "ag2_chaff_cutter",
@@ -647,7 +647,7 @@
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "Simple but the blade speed and feed rate determine length consistency and safety"
+  "note": "A machine that chops straw or hay into short lengths (chaff) for animal feed. Rotating blades slice the straw as it is fed past them. It is simple, but the blade speed and feed rate determine how consistent the length is and how safe it is for the operator's hands. It needs iron blades and a frame. Poorly chopped straw is wasted and animals sort it out."
  },
  {
   "id": "ag2_potato_lifter",
@@ -677,7 +677,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "The tine spacing and angle that lifts potatoes and shakes soil without burying them again"
+  "note": "A horse-drawn plough-like machine that digs up potatoes from the ridges and shakes the soil off. The tine spacing and angle lift the potatoes and shake off soil without burying them again or cutting them. It needs a horse collar and a ridging plough, which makes the ridges they grow in. Bruised or cut tubers rot in storage."
  },
  {
   "id": "ag2_tractor_steam",
@@ -709,7 +709,7 @@
   "sch": 2,
   "art": 4,
   "conf": "B",
-  "note": "The compound cylinder efficiency and the differential gear that lets rear wheels turn at different speeds on curves"
+  "note": "A steam engine mounted on wheels that pulls ploughs and machinery in the field. The efficiency of the compound cylinder (steam used in two stages) saves fuel, and the differential gear lets the rear wheels turn at different speeds on curves. It needs a high pressure boiler, water and coal. It is heavy and expensive, and sinks into soft ground."
  },
  {
   "id": "ag2_caterpillar_track",
@@ -806,7 +806,7 @@
   "sch": 1,
   "art": 2,
   "conf": "C",
-  "note": "The lower-link depth control that automatically adjusts based on soil resistance, freeing the driver to steer"
+  "note": "A hitch in which an implement is attached to the tractor at three points, so the weight transfers to the tractor's rear wheels and improves grip. The lower links adjust the depth automatically according to soil resistance, freeing the driver to steer. It needs a steam tractor and a power take-off shaft. Its design needs careful geometry; a poor set keeps the implement from holding a depth."
  },
  {
   "id": "ag2_liming",
@@ -833,7 +833,7 @@
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "Knowledge that clay binds up phosphorus and lime unlocks it, plus calculation of dose per acre-inch depth"
+  "note": "Spreading lime on acid soil to neutralise it. In acid soil clay binds up phosphorus, and lime releases it for crops. The farmer must work out the dose for each acre and the depth of ploughing. It needs a supply of quicklime or ground limestone and a plough. Too much lime locks up other nutrients, and lime scatters poorly in wind or rain."
  },
  {
   "id": "ag2_marling",
@@ -887,7 +887,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "The timing of ploughing in clover before seed maturity to fix nitrogen but before decay makes it plant-unusable"
+  "note": "Growing a crop, such as clover, and ploughing it into the soil before harvest to add nitrogen and organic matter. The timing is critical: it must be ploughed in before the seed matures, when the crop holds the most nitrogen, but not so late that decay makes the nitrogen unavailable to plants. It needs legume rotation (rotating crops that include legumes), a heavy plough and marling (spreading clay-rich lime earth)."
  },
  {
   "id": "ag2_composting",
@@ -912,7 +912,7 @@
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "Temperature control and moisture management that turns putrefaction into complete decomposition in months not years"
+  "note": "Piling manure, straw and waste plants so they rot down into crumbly fertiliser. Controlling the temperature and moisture of the heap turns putrefaction (smelly decay) into complete decomposition in months, not years, and the heat kills weed seeds. It needs a mix of green and dry material and regular turning. A heap that is too wet turns sour, and one too dry stops."
  },
  {
   "id": "ag2_nitrogen_cycle",
@@ -941,7 +941,7 @@
   "sch": 0,
   "art": 3,
   "conf": "B",
-  "note": "The distinction between nitrogen already in manure versus nitrogen fixed from air, explaining why legumes restore soil"
+  "note": "Understanding how plants obtain nitrogen. Nitrogen already in manure differs from nitrogen fixed from the air, which explains why growing legumes restores soil. Knowing the cycle lets a farmer plan rotations and fertiliser. It needs the habit of controlled experiments, with hypotheses, replication and publication. Without it, a farmer follows habits without understanding."
  },
  {
   "id": "ag2_rhizobia",
@@ -971,7 +971,7 @@
   "sch": 1,
   "art": 3,
   "conf": "B",
-  "note": "The observation that nodules appear only on legumes, contain bacteria, and contain fixed nitrogen not atmospheric"
+  "note": "The discovery that nodules on the roots of legumes (peas, beans, clover) contain bacteria called rhizobia, which turn nitrogen gas from the air into a form plants can use. Nodules appear only on legumes. It needs knowledge of the nitrogen cycle and a good microscope to see the bacteria. It explains why legumes enrich the soil, and why seed is sometimes inoculated."
  },
  {
   "id": "ag2_norfolk_course",
@@ -1027,7 +1027,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "Steam processing and fine grinding that makes phosphorus available on a 3-5 year curve instead of 20 years"
+  "note": "Fertiliser made by steaming and finely grinding bones. The steaming removes the fat and the fine grinding makes the phosphorus (a nutrient needed for roots and seeds) available to plants within a few years, instead of decades for raw bones. It needs a supply of bones and large amounts of charcoal-scale fuel. Whole bones release phosphorus very slowly."
  },
  {
   "id": "ag2_superphosphate",
@@ -1086,7 +1086,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "A recycling of blast-furnace slag waste that becomes a double amendment of phosphate and lime simultaneously"
+  "note": "A fertiliser made from the waste slag of steel made in a converter lined to remove phosphorus. The slag, rich in phosphate and lime, is ground to powder and spread on the field, giving a double amendment: phosphorus for crops and lime to sweeten acid soil. It needs bulk steelmaking. It is a recycling of waste, and grinding it fine is essential."
  },
  {
   "id": "ag2_potash",
@@ -1113,7 +1113,7 @@
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "The dose-response curve showing modest rates boost yield but excessive rates cause soil salinisation"
+  "note": "Potassium salts used as fertiliser, needed by crops for strong stems and fruit. A trial shows a dose-response curve: modest rates boost yield, but excessive rates cause the soil to become saline (salty) and harm crops. It needs a source of potash, such as wood ash or mined salts, and field trials to find the right dose. Heavy dressing is wasted."
  },
  {
   "id": "ag2_guano",
@@ -1143,7 +1143,7 @@
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "Soluble enough to leach in rain, requiring application in late spring with incorporation, not spreading months ahead"
+  "note": "Seabird droppings from dry islands, rich in nitrogen and phosphorus, used as a very powerful fertiliser. It is soluble enough to leach away in rain, so it must be applied in late spring and worked into the soil, not spread months ahead. It needs a surveyed and secured deposit and shipping. Overdoses burn crops, and deposits are limited and can be exhausted."
  },
  {
   "id": "ag2_gasworks_ammonia",
@@ -1173,7 +1173,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "The first synthetic nitrogen fertiliser, 20% nitrogen, soluble and available within weeks of application"
+  "note": "Ammonium sulphate, made from the ammonia in coal gas at gasworks, by absorbing it in sulphuric acid. It is the first synthetic nitrogen fertiliser; about a fifth of it is nitrogen, and it is soluble and available to plants within weeks. It needs coal, coking and sulphuric acid (oil of vitriol). It acidifies soil with repeated use."
  },
  {
   "id": "ag2_urea",
@@ -1205,7 +1205,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "The first fertiliser that is pure chemical rather than a byproduct or mined mineral, concentrated and easily stored",
+  "note": "A fertiliser made by synthesis from ammonia and carbon dioxide, a pure chemical rather than a by-product or a mined mineral. It is concentrated in nitrogen and easily stored. It needs the Haber-Bosch process (making ammonia from nitrogen and hydrogen under pressure) and urea synthesis. Urea left on the surface loses nitrogen as ammonia gas, so it should be worked in.",
   "req_any": [
    {
     "group": "ammonia_supply",
@@ -1244,7 +1244,7 @@
   "sch": 1,
   "art": 2,
   "conf": "C",
-  "note": "Gravimetric nitrogen determination and acid-extraction phosphate giving farmers concrete data instead of guesswork"
+  "note": "Measuring what a soil contains. Gravimetric nitrogen determination (weighing a product to find the amount) and acid-extraction of phosphate give farmers concrete data instead of guesswork on how much fertiliser to apply. It needs gravimetric and volumetric analysis and a laboratory. A soil sample must represent the whole field, or the result misleads."
  },
  {
   "id": "ag2_tile_drainage",
@@ -1274,7 +1274,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "The layout pattern of mains and laterals, the gradient calculation, and the filter cloth to prevent silting"
+  "note": "Draining wet fields with buried pipes of fired clay tile. A main pipe collects water from lateral pipes laid in a pattern across the field, with the gradient calculated so water flows without silting. A filter cloth around joints stops silt from blocking them. It needs clay tiles, a plough or trench digger and a horse collar. Poor gradients clog, and the work is hidden once buried."
  },
  {
   "id": "ag2_gravity_irrigation",
@@ -1316,7 +1316,7 @@
   "sch": 1,
   "art": 2,
   "conf": "C",
-  "note": "The weir and sluice design that manages flow, and the laterals spaced to avoid either drowning or drought"
+  "note": "Watering fields through channels fed by gravity or lifted by a pump. A weir and sluice manage the flow, and the laterals are spaced to avoid either drowning or drought. It needs a mill system with leats (channels), levelling skill and good water rights. Poor drainage with irrigation leaves salt in the soil."
  },
  {
   "id": "ag2_terracing",
@@ -1342,7 +1342,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "The crucial detail is the slight inward slope that keeps water on the bench instead of running off the outer edge",
+  "note": "Cutting hillsides into flat benches so crops can be grown on slopes without the soil washing away. The crucial detail is a slight inward slope of each bench, which keeps water on the bench instead of running off the outer edge. It needs stone walls, much labour and drainage. A failing wall lets the whole terrace slump.",
   "req_any": [
    {
     "group": "intensive_land",
@@ -1432,7 +1432,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "The disciplines of isolating traits, preventing cross-pollination from other varieties, and multi-year observation"
+  "note": "Systematic selection of the best plants for breeding. The discipline needed is to isolate traits, to prevent cross-pollination from other varieties and to observe for many years. It needs written records and the habit of controlled experiments. It improves crops slowly but surely; without records, good plants are lost in the mix."
  },
  {
   "id": "ag2_controlled_pollination",
@@ -1489,7 +1489,7 @@
   "sch": 1,
   "art": 3,
   "conf": "B",
-  "note": "The inbreeding of pure lines to extinction and then the crossing that resurrects vigour through heterozygosis"
+  "note": "Crossing two different pure lines to produce offspring that are more vigorous than either parent. First, plants are inbred over generations until their vigour is nearly gone (inbreeding to extinction), then two such lines are crossed and vigour returns (heterosis). It needs controlled pollination. The seed must be bought fresh each year, because the hybrid's own seed does not breed true."
  },
  {
   "id": "ag2_hybrid_maize",
@@ -1519,7 +1519,7 @@
   "sch": 2,
   "art": 4,
   "conf": "B",
-  "note": "The discovery that yield doubles across the board because hybrid plants show superior root and kernel density"
+  "note": "Maize grown from the cross of two inbred lines. The discovery was that yield rises across the board because hybrid plants show superior roots and kernels. It needs hybridisation and pure line selection. Farmers must buy fresh seed every year, since seed saved from a hybrid crop yields poorly."
  },
  {
   "id": "ag2_pure_line_selection",
@@ -1548,7 +1548,7 @@
   "sch": 1,
   "art": 2,
   "conf": "C",
-  "note": "The counterintuitive insight that inbreeding purifies traits and makes them transmissible even as vigour drops"
+  "note": "Selecting and inbreeding plants over generations to get a uniform line that breeds true. The counterintuitive insight is that inbreeding purifies traits so they pass on reliably, even as vigour drops. It needs record-keeping and breeding selection, and a garden. It is the first step to hybrid crops."
  },
  {
   "id": "ag2_seed_trade",
@@ -1578,7 +1578,7 @@
   "sch": 1,
   "art": 2,
   "conf": "C",
-  "note": "The isolation fields that prevent cross-pollination, the testing plots that verify purity before sale"
+  "note": "A trade in seed of known varieties. Isolation fields prevent cross-pollination, and testing plots verify purity before sale. It needs record-keeping and breeding selection, and merchants who can store and ship seed. Buyers must trust the seller, and mixed or old seed ruins a crop."
  },
  {
   "id": "ag2_seed_certification",
@@ -1609,7 +1609,7 @@
   "sch": 1,
   "art": 2,
   "conf": "C",
-  "note": "The standard germination test and the genetic purity test that confirm seed meets specifications before sale"
+  "note": "A system that tests and certifies seed before sale. The standard germination test shows how many seeds sprout, and the genetic purity test confirms it is the stated variety. It needs a seed trade and soil testing methods, and an inspector or body trusted to certify. It protects farmers from fraud."
  },
  {
   "id": "ag2_grafting",
@@ -1634,7 +1634,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "The cambium contact and timing that determine success, and which combinations produce fertile trees"
+  "note": "Joining a shoot (scion) from one tree to the rooted stock of another so the two grow as one. Success depends on the cambium (the thin growing layer under the bark) of both pieces touching, and on timing, usually in dormancy. Not every combination works: they must be close relatives. It needs a sharp knife, binding and wax. It copies a good variety exactly, which seed cannot do."
  },
  {
   "id": "ag2_budding",
@@ -1661,7 +1661,7 @@
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "Timing the bark slip in spring and the healing period through summer before growth resumes in spring"
+  "note": "A form of grafting that uses a single bud, not a whole shoot. A bud is slipped under the bark of the rootstock at a time when the bark lifts easily, and it heals over during summer, and grows the following spring. It needs grafting skill, a sharp knife and good timing. It saves scion wood, and many buds can come from one shoot."
  },
  {
   "id": "ag2_layering",
@@ -1686,7 +1686,7 @@
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "Moss-wrapping or soil-mounding that maintains moisture while roots form in 1-2 seasons"
+  "note": "Making a new plant by bending a branch down so a part of it touches the soil, or wrapping a branch with moss, so that it grows roots while still attached to the parent. It takes one or two seasons for roots to form. Moisture must be maintained. It needs no tools. The new plant is a copy of the parent."
  },
  {
   "id": "ag2_rootstocks",
@@ -1715,7 +1715,7 @@
   "sch": 1,
   "art": 2,
   "conf": "C",
-  "note": "The phenotypic differences between rootstock types that a grower can match to field conditions and desired tree size"
+  "note": "Rootstocks are the root systems onto which fruit trees are grafted. They differ in vigour, soil tolerance and the size of the tree they produce, so a grower can match a rootstock to the field conditions and the tree size wanted. It needs grafting and years of trial. A poorly matched rootstock can cause a weak or unproductive tree."
  },
  {
   "id": "ag2_plant_quarantine",
@@ -1746,7 +1746,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "The isolation period that allows disease symptoms to manifest and the inspection criteria that catch pests"
+  "note": "Holding imported plants in isolation before they are released, so that any diseases or pests show themselves before they spread. The isolation period allows disease symptoms to show, and inspectors check against criteria for known pests. It needs the principle of quarantine and controlled observation. Cutting corners can import a plague that ruins a whole crop."
  },
  {
   "id": "ag2_botanic_garden",
@@ -1775,7 +1775,7 @@
   "sch": 1,
   "art": 3,
   "conf": "C",
-  "note": "The staggered shipments from multiple botanical gardens ensuring a crop could not be lost in a single voyage"
+  "note": "A garden that collects, grows and studies plants from all over the world, used by empires to move valuable crops between colonies. Shipments were staggered, sent from several gardens, so that a crop could not be lost in a single voyage. It needs gardeners, ships and a network of correspondents. Plants die on long voyages unless they are protected."
  },
  {
   "id": "ag2_wardian_case",
@@ -1808,7 +1808,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "The sealed ecosystem that recycles condensation, keeping tropical cuttings alive for months at sea"
+  "note": "A sealed glass case in which plants carry their own moisture: water evaporates, condenses on the glass and drips back, making a small closed ecosystem. It keeps tropical cuttings alive for months at sea. It needs clear soda-lime glass and fine laboratory glassware skills. It lets the founder move plants across the world, which was nearly impossible before."
  },
  {
   "grants": {"sugar_cane_sett_kg": 5000},
@@ -1837,7 +1837,7 @@
   "sch": 1,
   "art": 2,
   "conf": "C",
-  "note": "Once a few cuttings establish, perpetual harvest with harvest planning and burn timing to prevent disease"
+  "note": "Establishing sugar cane in a new land after carrying cuttings across the sea. Once a few cuttings take root, the plantation can be harvested continuously, with harvest planning and burn timing (cane is burned before cutting) to prevent disease. It needs eastern trade routes to bring the plants, a suitable warm climate and mills."
  },
  {
   "grants": {"tea_plant_stock_kg": 50},
@@ -1867,7 +1867,7 @@
   "sch": 2,
   "art": 2,
   "conf": "B",
-  "note": "Tea requires high altitude, shade trees, and careful plucking timing; four years to first harvest after planting"
+  "note": "Establishing tea plantations in a new land after bringing plants. Tea requires high altitude, shade trees and careful timing of plucking; it takes years before the first harvest after planting. It needs a botanic garden to supply plants and a hill country with the right climate. Without the knowledge of how the leaf is processed, a plantation yields little."
  },
  {
   "grants": {"coffee_seedling_kg": 50},
@@ -1897,7 +1897,7 @@
   "sch": 1,
   "art": 1,
   "conf": "C",
-  "note": "Shade trees and altitude matching matter; three years to first harvest after planting"
+  "note": "Establishing coffee in a new land after bringing seedlings or seed. Shade trees and altitude matching matter, and it takes years before the first harvest after planting. It needs eastern trade routes and a suitable climate. Seed loses its ability to sprout quickly, so it must be planted soon after the journey."
  },
  {
   "id": "ag2_potato_newworld",
@@ -1924,7 +1924,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "One successful voyage and it propagates forever via tubers; varieties diverge by latitude and day length"
+  "note": "Bringing the potato from the Americas. One successful voyage is enough, because it propagates forever via tubers (the potatoes themselves are planted). Varieties diverge by latitude and day length: a variety from the tropics does not set tubers in long summer days. It needs a voyage across the Atlantic. Reliance on one variety invites disease."
  },
  {
   "id": "ag2_maize_newworld",
@@ -1951,7 +1951,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "Flint varieties travelled farther north than dent varieties; indigenous varieties per region arose within decades"
+  "note": "Bringing maize from the Americas. Flint varieties (hard-kernelled) travelled farther north than dent varieties, and indigenous varieties for each region arose within decades from crossing and selection. It needs a voyage across the Atlantic. Maize needs warm summers and deep soil to ripen."
  },
  {
   "id": "ag2_bordeaux_mixture",
@@ -1983,7 +1983,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "The precise ratio of copper to lime and the timing relative to rain that prevents phytotoxicity"
+  "note": "A fungicide made by mixing copper sulphate with lime in water and spraying it on vines and fruit trees to stop mildew. The precise ratio of copper to lime and the timing relative to rain prevent phytotoxicity (the spray burning the plant). It needs sulphuric acid (oil of vitriol), copper and slaked lime. Too much copper scorches leaves; too little protects nothing."
  },
  {
   "id": "ag2_lime_sulphur",
@@ -2015,7 +2015,7 @@
   "sch": 1,
   "art": 2,
   "conf": "C",
-  "note": "The boiling time that converts sulfur to polysulphide and the heat stability on cold mornings"
+  "note": "A spray made by boiling sulphur with lime in water, which makes a polysulphide solution that kills fungi and mites. The boiling time is what converts the sulphur into polysulphide, and the mixture must be stable on cold mornings. It needs sulphur, quicklime and sulphuric acid. It burns leaves in hot weather."
  },
  {
   "id": "ag2_lead_arsenate",
@@ -2046,7 +2046,7 @@
   "sch": 1,
   "art": 3,
   "conf": "B",
-  "note": "Insoluble so it clings to leaves without running off rain; concern about residue on harvested fruit emerges late"
+  "note": "An insecticide made by combining a lead salt with arsenic. It is insoluble, so it clings to leaves without being washed off by rain. It needs lead and arsenic compounds. It is poisonous to people, and the concern about residue on harvested fruit and in the soil emerges late. Workers must use care when mixing and spraying it."
  },
  {
   "id": "ag2_nicotine_pesticide",
@@ -2074,7 +2074,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "Extracted from tobacco waste and sulphate salt for solubility; neurotoxin that works on insects before mammals notice"
+  "note": "An insecticide extracted from tobacco waste and turned into a sulphate salt to make it soluble in water. It is a neurotoxin that works on insects before mammals notice, but it is poisonous to people too. It needs tobacco waste and sulphuric acid. Aphids and soft-bodied insects are controlled, but spraying needs protective care."
  },
  {
   "id": "ag2_pyrethrum",
@@ -2102,7 +2102,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "Grown in highlands and dried for extract; rapidly degraded in sunlight so evening spray timing matters"
+  "note": "An insecticide made from the dried flower heads of a daisy-like plant grown in highlands. The flowers are dried and ground or extracted, and the active compound kills insects on contact. It degrades rapidly in sunlight, so evening spraying matters. It needs pyrethrum planting stock and highland farmland. It is much less harmful to mammals than metal poisons."
  },
  {
   "id": "ag2_ddt",
@@ -2138,7 +2138,7 @@
   "sch": 2,
   "art": 4,
   "conf": "B",
-  "note": "Persistence is the point and the peril: it accumulates in wildlife fat and breaks eggshells decades later"
+  "note": "A powerful synthetic insecticide, a chlorinated hydrocarbon made from chlorine, benzene and other chemicals. Persistence is the point and the peril: it stays active for a long time, but it accumulates in the fat of wildlife and thins the shells of birds' eggs, with effects decades later. It needs a chlor-alkali plant, benzene from coal tar and sulphuric acid."
  },
  {
   "id": "ag2_sprayer",
@@ -2179,7 +2179,7 @@
   "sch": 1,
   "art": 2,
   "conf": "C",
-  "note": "Nozzle geometry and pressure that produce droplet size fine enough to coat leaves without dripping waste"
+  "note": "A device with a pump that puts liquid pesticide under pressure and sends it through a nozzle as a fine spray. The nozzle geometry and pressure produce droplets fine enough to coat leaves without dripping waste. It needs a horse hoe for the crop rows, pumps and nozzles made to tolerance. Blocked nozzles give streaky coverage."
  },
  {
   "id": "ag2_biological_control",
