@@ -270,3 +270,5 @@ Until one hour is authoritative, a founder income has to be priced in the engine
 Done (2026-10-09): the engine's money per labour hour is the economy's wage for the unskilled trade; the opening is
 repriced to it when the economy opens (`sim/engine/opening_money.py`). `python3 -m sim.tests --jobs 1 --only
 one_money_per_labour_hour` prints both and checks they are equal.
+
+Owner decision (2026-10-10): item 5 is satisfied by trading with the economy's merchants: the founder sells into and buys from the market at their own tile, and the merchants carry goods between tiles. No separate player-run domestic trader is wanted.

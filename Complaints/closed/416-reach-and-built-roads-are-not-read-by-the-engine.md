@@ -34,3 +34,5 @@ Overlapping issues closed into this one; each closed file keeps its full text.
 - 440 (`440-the-port-does-not-hand-the-economy-site-limits-or-read-its-extraction.md`): the port does not hand the economy site limits or read its extraction.
 - 138 (`138-barren-land-has-no-food-but-farming.md`): barren land has no food but farming: the remaining piece is 414 (above).
 - 281 (`281-deposit-tile-is-a-coarse-hand-assignment.md`): deposit tile is a coarse hand assignment; surveyed positions per mine (owner: later).
+
+Owner decision (2026-10-10): 416 closes with 281 (surveyed positions per mine) left for later.
