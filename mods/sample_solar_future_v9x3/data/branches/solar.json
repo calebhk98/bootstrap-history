@@ -6,7 +6,7 @@
     "pre": [
       "pwr_selenium_cell"
     ],
-    "note": "Refine semiconductor junctions into durable silicon photovoltaic cells.",
+    "note": "A photovoltaic cell turns sunlight directly into electric current at a junction, the boundary between two differently treated layers of semiconductor. Silicon is refined to high purity and given such a junction. It needs purified silicon and semiconductor processing. The hard part is making cells that last for years outdoors without degrading.",
     "ph": 400,
     "lab": {
       "engineer": 200,
@@ -33,7 +33,7 @@
       "sample_solar_future_v9x3:silicon_cell",
       "power_grid"
     ],
-    "note": "Wire photovoltaic cells into maintainable grid-connected arrays.",
+    "note": "An array joins many photovoltaic cells in series and parallel so their small voltages and currents add up, and connects them to the electricity grid through converters. It needs working silicon cells, frames, wiring and a grid to feed. The hard part is keeping the array maintained, since dirt, shade and failing cells cut output.",
     "ph": 400,
     "lab": {
       "engineer": 200,
@@ -63,7 +63,7 @@
     "pre": [
       "sample_solar_future_v9x3:panel_array"
     ],
-    "note": "A measured goal reached when essentially all available electrical generation is solar.",
+    "note": "A measured goal, reached when essentially all of the electricity a society generates comes from solar power. It needs cells and arrays built at very large scale, together with a grid able to cope with output that stops at night and varies with weather. The hard part is storage and matching supply to demand, not the panels alone.",
     "ph": 0,
     "lab": {},
     "mat": {},
