@@ -114,6 +114,14 @@ class AgentEconomy:
     def cohort_incomes(self):
         return economy_api.cohort_incomes(self.economy())
 
+    def goods_level_over_opening(self):
+        """How dear the economy's goods are against the opening's solver prices (both counted in the economy's
+        unit); None when no good has traded lately."""
+        economy = self.economy()
+        unit = economy.setup.coin_per_unit
+        opening = {good: price / unit for good, price in self.stored["opening"]["prices"].items()}
+        return economy_api.goods_level_over_opening(economy.record, opening)
+
     # ---- the year -----------------------------------------------------------------------------
     def run_year(self):
         economy = self.economy()

@@ -28,6 +28,7 @@ class Coinage(CoinRevaluationMixin, ForeignPaymentsMixin, IncumbentPricesMixin):
         self.state = types.SimpleNamespace(economy=types.SimpleNamespace(coin_metal_ratios={}, foreign_ledger={}))
         self.civ = {"coin_standard": {"material": "silver_kg"}}
         self.stock_level = 1.0
+        self.economy = types.SimpleNamespace(goods_price_over_wage=lambda: 1.0)
 
     def _home_opening_coin_units(self):
         return 100.0

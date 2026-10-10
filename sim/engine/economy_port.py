@@ -58,6 +58,20 @@ class EconomyPort:
         agent = self._answering_agent()
         return None if agent is None else agent.unskilled_wage_per_hour()
 
+    def goods_price_over_wage(self):
+        """How much further the economy's goods have risen against the opening's solver prices than the unskilled
+        wage has (1.0 until the game's money is priced at the economy). The engine's own price table is the solver's
+        hours times the wage, so it follows the wage; a partner's coin is worth what it buys at home, which follows
+        the goods."""
+        if not self._sim.state.economy.money_from_economy or self._opening:
+            return 1.0
+        agent = self._answering_agent()
+        level = None if agent is None else agent.goods_level_over_opening()
+        if level is None:
+            return 1.0
+        labour = self._sim.labour
+        return level / (labour.money_per_labour_hour() / labour.wage_schedule().opening_money_per_labour_hour)
+
     def agent_country(self, country):
         """What the agent economy answers for a partner country in it, or None (not in it, or no wage yet)."""
         agent = self._answering_agent()

@@ -76,6 +76,11 @@ class IncumbentPricesMixin:
         """Money per unit of the coin metal at the mint's standard: a unit of coin is a fixed weight of
         metal, so the metal's price in coin does not follow the stock of coin, but does follow the metal's
         market price. The price level already carries the home coin metal's revaluation, so dividing by
-        it and multiplying by the ratio counts the market's price once."""
+        it and multiplying by the ratio counts the market's price once. The price table follows the wage, so
+        the metal's price is carried to the goods' level (economy.goods_price_over_wage): a partner's coin is
+        worth what it buys here."""
         price = self._material_prices().get(material)
-        return None if price is None else price / self.home_price_level() * self.coin_metal_ratio(material)
+        if price is None:
+            return None
+        return (price / self.home_price_level() * self.coin_metal_ratio(material)
+                * self.economy.goods_price_over_wage())
