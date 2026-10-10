@@ -1,6 +1,6 @@
 # Foreign countries have no labour market or output of their own: their wages and output are the home ones rescaled
 
-**Status:** open
+**Status:** closed - `CountryWorld` forwards pay, output and need floors to the country's own part of the agent economy and has no rescaled fallback (`_relative`, `_home_profile` and the four scaled answers are gone). Han, the only declared foreign economy, is in the agent economy (`agent_economy` true; the slow proof `test_partner_in_agent_economy.py` ran on the close-complaints-batch-3 branch: 8 checks, 0 failures). A country with no economy of its own, or whose markets cannot answer a figure yet, raises `NoCountryEconomy` (a `LookupError`) instead of answering with a home figure; the callers (foreign government revenue and budget, strata incomes, foreign firms' wage bills) need no handling because every declared foreign economy is in the agent economy. `test_one_labour_market.py` now also flags a `.wage_index` read or a "wage_index" argument outside the labour market and the named level reporters.
 
 An actor of a foreign country sees `CountryWorld` (`sim/agents/country_view.py`). It answers several
 questions by scaling the home answer with the country's profile:
