@@ -52,6 +52,13 @@ class StakeWorld(FakeWorld):
     def idle_hours_by_trade(self):
         return dict(self.idle)
 
+    def land_rent_owners(self, tiles=None):
+        # the cohorts that own the land, sliced into strata: here the propertied strata own it by property share
+        total = sum(self.rent.values())
+        holders = [(stratum, float(stratum.record.plan.get("property_share") or 0.0)) for stratum in self.strata]
+        weights = sum(weight for _, weight in holders)
+        return [(stratum, total * weight / weights) for stratum, weight in holders if weight > 0.0 and total > 0.0]
+
     def displacing_technique(self, trade):
         return self.technique
 

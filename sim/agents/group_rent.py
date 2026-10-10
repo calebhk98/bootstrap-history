@@ -1,5 +1,5 @@
-"""Landholders' income from the land market: the rent producers paid on the land they let, shared among the
-propertied bodies of people, in place of their property share of the society's output."""
+"""Landholders' income from the land market: the rent producers paid on the land they let, as each body of people
+received it, in place of their property share of the society's output."""
 from typing import Any, Dict, List, Optional
 
 from .stratum_year import PROPERTY, income_parts
@@ -11,15 +11,12 @@ def rent_total(world: Any) -> float:
 
 
 def rent_of(stratum: Any, holders: List[Any], world: Any) -> Optional[float]:
-	"""The rent that went to this stratum: the land market's rent shared among the propertied strata in
-	proportion to their property share (TEMPORARY HEURISTIC, CLAUDE.md 4.4: the agent economy keeps rent with
-	its household cohorts, not with the strata, until ownership of tiles is recorded). None where no land was let."""
-	total = rent_total(world)
-	weight = float(stratum.record.plan.get("property_share") or 0.0)
-	weights = sum(float(holder.record.plan.get("property_share") or 0.0) for holder in holders)
-	if total <= 0.0 or weight <= 0.0 or weights <= 0.0:
+	"""The rent that went to this stratum: its slice of the rent the household cohorts received by what each owns
+	(`world.land_rent_owners`, the same owners a land tax is drawn from). None where no land was let."""
+	if rent_total(world) <= 0.0:
 		return None
-	return total * weight / weights
+	received = dict((owner.actor_id, rent) for owner, rent in world.land_rent_owners())
+	return received.get(stratum.actor_id, 0.0) if received else None
 
 
 def grievance_parts(stratum: Any, holders: List[Any], world: Any) -> Dict[str, float]:
