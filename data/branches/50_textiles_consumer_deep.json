@@ -237,7 +237,7 @@
   },
   "build_yrs": 0.1,
   "adopt_yrs": 0,
-  "note": "Coiled card output into sliver can, preparatory to drawing frame, loose strand of carded fibres with no twist",
+  "note": "A sliver is a loose, untwisted rope of carded fibres, the product that comes off a carding machine. It is coiled into a tall can so it can be fed to the drawing frame, which evens it out before spinning. It needs carding, which opens and aligns the fibres. With no twist the sliver is weak, so it must be handled gently and kept from tangling.",
   "up_hours": 0,
   "gov": -1,
   "sus": 1
@@ -475,7 +475,7 @@
   "mat": {},
   "build_yrs": 0,
   "adopt_yrs": 0,
-  "note": "Opening between warp threads for shuttle passage, basic concept behind all weaving machines",
+  "note": "The shed is the opening made between two sets of warp (lengthwise) threads, raised and lowered, through which the shuttle carries the weft (crosswise) thread. Every weaving machine, however complex, is built on this idea. The weaver needs a way to lift some warp threads and not others, then change over, so the weft interlocks. A shed that is too narrow catches the shuttle and breaks threads.",
   "up_hours": 0
  },
  {
@@ -495,7 +495,7 @@
   },
   "build_yrs": 0.1,
   "adopt_yrs": 0,
-  "note": "Metal or string loop holding warp thread, rises and falls to create shed, hand production in early looms",
+  "note": "A heddle is a loop of metal or string that holds one warp thread. Raising and lowering a row of heddles lifts chosen warp threads to open the shed for the weft. In early looms the heddles were made and tied by hand, which is slow work. The heddles must be uniform and strong, or threads catch and break, and the pattern of which threads go on which heddle fixes the weave.",
   "up_hours": 0
  },
  {
@@ -673,7 +673,7 @@
   },
   "build_yrs": 0.3,
   "adopt_yrs": 0,
-  "note": "Graduated drum winds woven cloth at controlled rate, compensates for warp tension, prevents bunching",
+  "note": "The take-up motion winds finished cloth onto a roller as it is woven. A graduated drum turns at a controlled rate that sets how closely the weft threads are packed, and it compensates for warp tension so the cloth does not bunch up. It works together with the let-off, which feeds warp. It needs a ratchet or gear drive made to fine tolerance. A fault gives uneven cloth.",
   "up_hours": 0
  },
  {
@@ -696,7 +696,7 @@
   },
   "build_yrs": 0.3,
   "adopt_yrs": 0,
-  "note": "Brake on warp beam, maintains constant tension as yarn unwound, keeps warp on take-up synchronized",
+  "note": "The let-off motion feeds warp threads from the warp beam as weaving uses them up. A brake on the beam keeps the tension constant as the yarn unwinds, so the cloth is even and threads do not break. It is synchronised with the take-up motion that winds up the cloth. It needs a weighted lever or friction brake. Too tight and threads snap; too loose and the weave is slack.",
   "up_hours": 0
  },
  {
@@ -719,7 +719,7 @@
   },
   "build_yrs": 0.2,
   "adopt_yrs": 0,
-  "note": "Expanding frame with sharp points, maintains woven cloth width against warp tension, prevents draw-in",
+  "note": "The temple is a frame with sharp points that grips both edges of the cloth as it is woven and holds it to full width. Without it the weft thread pulls the warp inward (draw-in) and breaks threads at the edge. It expands as the cloth comes forward. It needs small, sharp, polished points and a precise mount. Points that are too coarse tear the edges.",
   "up_hours": 0
  },
  {
@@ -782,7 +782,7 @@
   },
   "build_yrs": 0.2,
   "adopt_yrs": 0,
-  "note": "Heavy wooden roller wound with warp, large diameter maintains even tension, critical support structure",
+  "note": "The beam is a heavy wooden roller on which the warp threads are wound before weaving. A large diameter keeps the tension even from the first turn to the last, and it is the main support structure of the loom. It needs strong, straight timber, carefully turned. A bent or uneven beam causes uneven tension, and uneven tension makes flawed cloth.",
   "up_hours": 0
  },
  {
@@ -908,7 +908,7 @@
   },
   "build_yrs": 0.5,
   "adopt_yrs": 1,
-  "note": "Rotating bed of needles forms tube, true circular motion, enables continuous production, coarse and fine gauges",
+  "note": "A knitting machine with a ring of needles on a rotating bed that makes cloth as a continuous tube, ideal for stockings and underwear. The motion is truly circular, so production runs without stopping, and coarse or fine gauges (needle spacing) can be chosen. It needs the stocking frame as a base and needles made to fine tolerance. A single bent needle ladders the fabric.",
   "up_hours": 0
  },
  {
@@ -1026,7 +1026,7 @@
   "mat": {},
   "build_yrs": 0.2,
   "adopt_yrs": 0,
-  "note": "Continued fulling process, creates thick dense cloth, especially for woollen fabrics and felt-like handle",
+  "note": "Milling is a longer fulling: woollen cloth is beaten and pressed wet, so the scales on the fibres lock together and the cloth shrinks into a thick, dense, felt-like fabric. It needs fulling equipment and hot water or soap. Cloth shrinks a lot, so it must be woven loose to begin with. Over-milling makes it stiff and brittle.",
   "up_hours": 0
  },
  {
@@ -1106,7 +1106,7 @@
   },
   "build_yrs": 0.3,
   "adopt_yrs": 0,
-  "note": "Stationary blade against rotating grooved drum cuts pile uniformly, produces velvet and pile fabrics",
+  "note": "Shearing cuts the pile of cloth to an even height using a stationary blade against a rotating grooved drum, like a lawn mower. It gives the smooth surface of velvet and other pile fabrics. It needs cropping (trimming nap) and blades ground to fine tolerance. A blade set wrongly cuts holes in the cloth or leaves ridges.",
   "up_hours": 0
  },
  {
@@ -1132,7 +1132,7 @@
   },
   "build_yrs": 0.4,
   "adopt_yrs": 0.5,
-  "note": "Heated rollers under controlled pressure compact surface, produces sheen and smoothness, essential for cotton satins",
+  "note": "Calendering passes cloth between heated rollers under controlled pressure so the surface is compacted and shines. It gives smoothness and sheen, and it is essential for cotton satins. It needs heavy rollers ground true and a source of heat. Too much heat or pressure scorches or flattens the cloth, and the finish washes out unless it is set.",
   "up_hours": 0
  },
  {
@@ -1205,7 +1205,7 @@
   },
   "build_yrs": 0.2,
   "adopt_yrs": 0,
-  "note": "Enzymatic or chemical removal of starch sizing applied to warp, must precede dyeing and finishing",
+  "note": "Desizing removes the starch size that was applied to warp threads to strengthen them for weaving. It is done with enzymes or chemicals. It must come before dyeing and finishing, because the size blocks dye and makes uneven colour. It needs scouring and a hot vessel. Leaving size in the cloth gives blotchy dye and a stiff, spotty finish.",
   "up_hours": 0
  },
  {
@@ -1320,7 +1320,7 @@
   },
   "build_yrs": 0.3,
   "adopt_yrs": 0,
-  "note": "Skeins hung in dye bath, requires even access to liquor, risk of uneven colour, essential for solid-colour fabrics",
+  "note": "Dyeing yarn in skeins: loops of yarn are hung in a dye bath so the colour penetrates every thread before weaving. It gives solid colours and woven patterns. The dye liquor must reach all the yarn evenly, or colour is patchy, so skeins are turned. It needs a vessel, heat and dyes with mordants. It is essential for solid-colour fabrics.",
   "up_hours": 0
  },
  {
@@ -1391,7 +1391,7 @@
   },
   "build_yrs": 0.5,
   "adopt_yrs": 0,
-  "note": "Hand-carved wooden blocks with raised design, dipped in dye and stamped repeatedly, high labour for design creation",
+  "note": "Block printing applies a design to cloth by dipping a hand-carved wooden block with a raised pattern in dye and stamping it again and again. It needs wood, carving skill, dye thick enough not to run, and cloth. Making the design blocks takes a great deal of labour, and every colour needs its own block; alignment between blocks is the hard part.",
   "up_hours": 0
  },
  {
@@ -1582,7 +1582,7 @@
   },
   "build_yrs": 0.3,
   "adopt_yrs": 1,
-  "note": "Toxic treatment repels moths, essential for wool storage, formulations including arsenic compounds, durability limited",
+  "note": "Treating wool so that moth larvae will not eat it. The chemicals are toxic and repel the insects; some old formulations include arsenic compounds, which are dangerous to workers and wearers. It is essential for wool stored for long periods. It needs a chemical source such as coal tar benzene extracts. The protection wears off and must be renewed.",
   "up_hours": 0
  },
  {
@@ -1645,7 +1645,7 @@
   "mat": {},
   "build_yrs": 0,
   "adopt_yrs": 0,
-  "note": "Similar to flax, coarser and stronger, rope and canvas use, European cultivation common",
+  "note": "Hemp is a tall plant grown for the fibre in its stem. It is like flax but coarser and stronger, and is used for rope and canvas. The stems are retted (soaked so the woody part rots away from the fibre) and then beaten to free the fibre. It needs farmland and water for retting. Retting pits smell badly and can foul streams.",
   "up_hours": 0
  },
  {
@@ -1684,7 +1684,7 @@
   "mat": {},
   "build_yrs": 0,
   "adopt_yrs": 0,
-  "note": "Asian bast fibre, fine and strong, China and India production, difficult processing limits adoption",
+  "note": "Ramie is an Asian plant whose stem bark gives a fine, strong, lustrous bast fibre (plant fibre from the inner bark). It is grown in China and India. The fibre is held together with gum that is hard to remove, and this difficult processing limits its adoption. It needs a warm, wet climate and hand labour for stripping.",
   "up_hours": 0
  },
  {
@@ -1727,7 +1727,7 @@
   },
   "build_yrs": 0.2,
   "adopt_yrs": 0,
-  "note": "Combed long-staple wool, smooth and strong, fine suiting yarns, English West Country specialty from medieval period",
+  "note": "Worsted is yarn spun from long-staple wool fibres that have been combed so the fibres lie parallel. It is smooth and strong, and is used for fine suiting. It needs wool of long fibre and combing to align it. Short, carded wool makes a different, fuzzier yarn. It was a speciality of the English West Country.",
   "up_hours": 0
  },
  {
@@ -1747,7 +1747,7 @@
   "mat": {},
   "build_yrs": 0,
   "adopt_yrs": 0,
-  "note": "Turkish angora goat fibre, lustrous and strong, luxury use, Istanbul region monopoly until late 19th century",
+  "note": "Mohair is the fibre from the Angora goat, a breed originating around Ankara in Turkey. It is lustrous and strong, and used for luxury cloth. Production was long a monopoly of the region around Istanbul, and exporting the goats was forbidden. It needs the goats and a suitable pasture. Supply was restricted, so cloth was dear.",
   "up_hours": 0
  },
  {
@@ -1767,7 +1767,7 @@
   "mat": {},
   "build_yrs": 0,
   "adopt_yrs": 0,
-  "note": "Mongolian and Himalayan goat undercoat, extremely fine and soft, luxury fibre, Kashmir region centres of trade",
+  "note": "Cashmere is the fine, soft undercoat of goats raised in Mongolia and the Himalaya. It grows beneath the coarse outer hair and is combed or sheared and sorted by hand. It is extremely fine and warm, a luxury fibre. Kashmir was the trading centre. The animals give little fibre each, so it is scarce and costly.",
   "up_hours": 0
  },
  {
@@ -1790,7 +1790,7 @@
   },
   "build_yrs": 0,
   "adopt_yrs": 0,
-  "note": "Protein fibre from silkworm cocoon, continuous filament, lustrous, expensive, Asian production trademarked",
+  "note": "Silk is a protein fibre spun by silkworms in making their cocoons. It is a single continuous filament, lustrous and strong, and expensive. Production in Asia was long guarded so the methods did not travel. The founder cannot get silk without silkworms and mulberry leaves to feed them. Silk is a cultivated fibre, unlike wool or flax gathered from animals or fields.",
   "up_hours": 0
  },
  {
@@ -1814,7 +1814,7 @@
   },
   "build_yrs": 1,
   "adopt_yrs": 0,
-  "note": "Silkworm rearing and cocoon processing, stifling and degumming, labour-intensive, Chinese and Indian expertise",
+  "note": "Sericulture is silk farming: silkworms are raised on mulberry leaves, then their cocoons are stifled (killed with heat so the moth does not break out and cut the filament) and unwound; degumming removes the sericin gum that coats the thread. It is very labour-intensive. It needs silk stock, mulberry trees and skilled workers. Chinese and Indian expertise remained long unmatched.",
   "up_hours": 0
  },
  {
@@ -1834,7 +1834,7 @@
   "mat": {},
   "build_yrs": 0.3,
   "adopt_yrs": 0,
-  "note": "Silk from wild moth cocoons, shorter filament and darker colour, Tussar and Muga silks from India and China",
+  "note": "Wild silk comes from the cocoons of silk moths that live in the wild, such as the Tussar and Muga silks of India and China. The filament is shorter and darker in colour than cultivated silk, and the cocoons are harder to unwind. It needs sericulture methods adapted to the wild moths. It is cheaper than cultivated silk but coarser.",
   "up_hours": 0
  },
  {
@@ -1931,7 +1931,7 @@
   },
   "build_yrs": 0.6,
   "adopt_yrs": 2,
-  "note": "Cellulose acetate spun directly, not regenerated cellulose, safer and easier than cupro, emerges in 1920s",
+  "note": "A fibre made by dissolving cellulose acetate (cellulose treated with acetic acid) and spinning it directly through fine holes, rather than regenerating plain cellulose as other rayons do. It is safer and easier than cupro rayon. It needs the cellulose acetate plastic and chemical plant. It is weaker than other rayons when wet and melts under a hot iron.",
   "up_hours": 0
  },
  {
@@ -2023,7 +2023,7 @@
   },
   "build_yrs": 1,
   "adopt_yrs": 2,
-  "note": "Acrylonitrile-based polymerisation, wool-like properties, developed in 1940s, emerges as major fibre by late 1940s",
+  "note": "A synthetic fibre made by polymerising acrylonitrile (joining many small molecules into long chains), then dissolving the polymer and spinning it. It feels like wool and holds shape. It needs addition polymerisation and a supply of acrylonitrile from refined petroleum. Controlling the reaction and finding a solvent for the polymer are the hard parts.",
   "up_hours": 0
  },
  {
@@ -2045,7 +2045,7 @@
   },
   "build_yrs": 0.8,
   "adopt_yrs": 2,
-  "note": "Fine glass filaments drawn from melt, high strength and temperature resistance, industrial applications in 1930s",
+  "note": "Fine threads drawn from molten glass. Because glass drawn into thin fibres is strong and does not burn, it is used in insulation, reinforcement and heat-resistant cloth. The glass must be melted at very high temperature and pulled quickly into filaments through tiny holes. It needs a furnace of regenerative type for sustained heat. Broken fibres can irritate skin and lungs.",
   "gov": 1,
   "sus": 2,
   "up_hours": 0,
@@ -2095,7 +2095,7 @@
   },
   "build_yrs": 0.15,
   "adopt_yrs": 0,
-  "note": "Needle with eye at point, thread slides in from end during forward motion, essential for mechanical sewing machines",
+  "note": "A needle with its eye at the point instead of at the blunt end. As it goes through the cloth it pulls the thread with it in a loop, so the machine need not thread it from behind. Sewing machines depend on it. It needs steel wire drawn fine and a punch or drill that can make a tiny eye at the tip. Eyes that are rough cut the thread.",
   "up_hours": 0
  },
  {
@@ -2121,7 +2121,7 @@
   "mat": {},
   "build_yrs": 0.3,
   "adopt_yrs": 1,
-  "note": "Needle loop interlocks with bobbin loop, requires precise timing and tension, most important sewing machine invention",
+  "note": "A stitch made with two threads: a needle thread passes through the cloth and its loop interlocks with a thread from a bobbin underneath. The two lock in the middle of the cloth, so the seam looks the same on both sides and is strong. The timing of the hook and needle and the tension on both threads must be exact. It is the most important sewing machine invention.",
   "up_hours": 0
  },
  {
@@ -2144,7 +2144,7 @@
   "mat": {},
   "build_yrs": 0.3,
   "adopt_yrs": 0.5,
-  "note": "Single needle thread creates loops, used in early machines and special applications, less strong than lockstitch",
+  "note": "A stitch made with a single thread: the needle thread forms a loop that is caught by the next loop, like a chain. It was used in early machines and still serves special purposes. It needs an eye-pointed needle and a looper made to fine tolerance. It is less strong than lockstitch, because pulling the end unravels the whole seam.",
   "up_hours": 0
  },
  {
@@ -2168,7 +2168,7 @@
   "mat": {},
   "build_yrs": 0.4,
   "adopt_yrs": 1,
-  "note": "Multiple threads bind over edge, prevents fraying and seals edge, specialist machines emerge in 1890s",
+  "note": "A stitch that binds several threads over the raw edge of cloth, preventing fraying and sealing the edge. The machine sews, trims and covers in one pass. It needs the chain stitch mechanism extended with loopers for several threads. It is used on knitted garments and seam edges. Setting the tensions for multiple threads is difficult.",
   "up_hours": 0
  },
  {
@@ -2196,7 +2196,7 @@
   },
   "build_yrs": 0.5,
   "adopt_yrs": 1,
-  "note": "Cuts buttonhole and simultaneously binds edge with thread, replaces hand work, enables mass production of shirts",
+  "note": "A machine that cuts a buttonhole slit in cloth and at the same time binds its edges with stitching so they do not fray. It replaces hand work and makes mass production of shirts possible. It needs an eye-pointed needle and a mechanism made to fine tolerance to control the cutter and the stitching. A badly bound hole frays quickly.",
   "up_hours": 0
  },
  {
@@ -2218,7 +2218,7 @@
   },
   "build_yrs": 0.3,
   "adopt_yrs": 0,
-  "note": "Large flat table with edge, cloth stacked and cut to pattern, enables multiple pieces from single cutting",
+  "note": "A large flat table with an edge, on which many layers of cloth are stacked and cut to the same pattern together. It lets many garment pieces be cut from a single cutting, saving labour. It needs a smooth, long, level table and sharp shears. Cutting too thick a stack makes the lower layers inaccurate.",
   "up_hours": 0
  },
  {
@@ -2246,7 +2246,7 @@
   },
   "build_yrs": 0.4,
   "adopt_yrs": 1,
-  "note": "Motor-driven reciprocating blade cuts through stacked cloth, pattern template guides cutting, eliminates hand scissors",
+  "note": "A cutting machine with an endless blade, driven by a motor in a reciprocating movement, that cuts through a thick stack of cloth. The cutter follows a pattern template or a drawn line. It replaces hand scissors and speeds cutting a great deal. It needs the cutting table, a reliable electric motor and blades ground to fine tolerance. A blunt blade frays the cut edge and drags the cloth.",
   "up_hours": 0
  },
  {
@@ -2270,7 +2270,7 @@
   },
   "build_yrs": 0.3,
   "adopt_yrs": 0,
-  "note": "Master patterns scaled to multiple sizes, essential for ready-to-wear, ratio grading becomes standard practice",
+  "note": "Scaling a master pattern to several sizes, so that garments fit a range of bodies without being designed one by one. Ratio grading means each measurement is increased by a proportion, not by a fixed amount. It is essential for ready-to-wear clothing. It needs standard pattern cutting and sizing systems based on body measurements. Poor grading gives garments that fit the middle size but no other.",
   "up_hours": 0
  },
  {
@@ -2363,7 +2363,7 @@
   },
   "build_yrs": 0.3,
   "adopt_yrs": 1,
-  "note": "Four-piece metal fastener, ball and socket interlock, emerges in late 19th century, easier than buttons for infant wear",
+  "note": "A fastener made of four pieces of metal: two form a ball and socket that snap together under light pressure and pull apart on a firm tug. It is easier than buttons for infant wear. It needs brass or similar metal stamped and shaped to close tolerance, because a loose fit pops open and a tight one is hard to open.",
   "up_hours": 0
  },
  {
@@ -2386,7 +2386,7 @@
   },
   "build_yrs": 0.2,
   "adopt_yrs": 0,
-  "note": "A matched bent-wire hook and closed eye made from consistently drawn wire, sewn to a garment as a reusable fastening.",
+  "note": "A matched pair of bent-wire pieces: a hook and a closed eye that it catches, each sewn to a garment edge so the garment can be closed and opened again. The wire must be drawn to a consistent diameter, and the pieces bent to a uniform shape. It needs a wire drawing bench. Poor hooks bend open and let go.",
   "up_hours": 0
  },
  {
@@ -2563,7 +2563,7 @@
   "mat": {},
   "build_yrs": 0,
   "adopt_yrs": 0,
-  "note": "Three or more yarns twisted together, fundamental construction, creates rope from fibre strands",
+  "note": "Rope laying is twisting three or more yarns together into a strand, and strands together into a rope. The twist in opposing directions at each stage locks the rope so that it does not unravel and shares load among fibres. It needs fibre, such as hemp, and a long walk or machine for twisting. The basic construction of all ropes. A rope twisted too loosely is weak; too tightly, it is stiff.",
   "up_hours": 0
  },
  {
@@ -2590,7 +2590,7 @@
   },
   "build_yrs": 0.5,
   "adopt_yrs": 1,
-  "note": "Rotating frames twist strand into rope, water-powered mills standard, enables continuous production",
+  "note": "A machine of rotating frames that twists strands into rope, usually in water-powered mills. It makes continuous rope of consistent quality and great length. It needs rope laying methods, a power source and metal parts made to fine tolerance. Hand ropewalks, long sheds where rope is twisted by hand, produce far less.",
   "up_hours": 0
  },
  {
@@ -2612,7 +2612,7 @@
   },
   "build_yrs": 0.2,
   "adopt_yrs": 0,
-  "note": "Paper pulp twisted into cord, intermediate product for paperboard and containers",
+  "note": "Cord made from paper pulp, twisted into a rope and used as an intermediate product for paperboard and containers. It needs rope laying methods and paper pulp. It gives a strong, cheap string where fibre rope would be wasteful. Moisture weakens it, and it is not for use where it would get wet.",
   "up_hours": 0
  },
  {
@@ -2675,7 +2675,7 @@
   },
   "build_yrs": 0.4,
   "adopt_yrs": 0,
-  "note": "Alum and salt pickle hides, faster than vegetable tanning, less durable, primarily for light leather goods",
+  "note": "Tanning hides with alum (a mineral salt of aluminium) and common salt in a pickle instead of with plant extracts. It is much faster than vegetable tanning, but the leather is less durable, and washes out in water, so it is mostly used for light leather goods such as gloves. It needs alum and a vat. The leather is white, soft and thin.",
   "up_hours": 0
  },
  {
@@ -2695,7 +2695,7 @@
   },
   "build_yrs": 0.3,
   "adopt_yrs": 0,
-  "note": "Oil dressing and working of leather after tanning, imparts finish and handling, essential finishing step",
+  "note": "Currying is the finishing of leather after tanning: it is worked and dressed with oil and grease so it becomes supple, waterproofed and of even thickness and colour. It is an essential finishing step before leather can be made into goods. It needs oils or tallow, tools to scrape and stretch the hide, and skilled workers. Poorly curried leather cracks.",
   "up_hours": 0
  },
  {
@@ -2741,7 +2741,7 @@
   },
   "build_yrs": 0.4,
   "adopt_yrs": 1,
-  "note": "Hot press with pattern die creates surface texture, replicates grain or adds decoration, mechanical equipment by 1890s",
+  "note": "Pressing a pattern into the surface of leather with a hot press and a pattern die, creating a texture. It replicates the look of natural grain or adds decoration. Mechanical equipment made it faster. It needs engraved dies made to fine tolerance, and a heated press. Too much heat scorches the leather, and too little leaves a faint pattern.",
   "up_hours": 0
  },
  {
@@ -2767,7 +2767,7 @@
   },
   "build_yrs": 0.5,
   "adopt_yrs": 1,
-  "note": "Pneumatic or mechanical clamps pull upper leather over wooden last, tension nails sole attachment, eliminates hand work",
+  "note": "A machine for pulling the upper leather of a shoe tightly over a wooden last (a foot-shaped form) and holding it while the sole is attached. Pneumatic or mechanical clamps do the work, and the tension is maintained while nails fix the sole. It replaces skilled hand work. It needs tolerance machining and pneumatic or lever parts. Uneven pulling gives a misshapen shoe.",
   "up_hours": 0
  },
  {
@@ -2915,7 +2915,7 @@
   },
   "build_yrs": 0.3,
   "adopt_yrs": 1,
-  "note": "Stamped and honed thin steel blade, consumable product, razor-blade business model generates recurring revenue",
+  "note": "A thin blade of hardened steel, stamped and honed to a sharp edge, made to be thrown away when it is dull. The business model is a cheap holder with a steady sale of blades to replace. It needs steel that takes a keen edge, precise stamping and sharpening. Blades that are too soft dull quickly; too hard, they chip.",
   "up_hours": 0
  },
  {
@@ -2961,7 +2961,7 @@
   },
   "build_yrs": 0.4,
   "adopt_yrs": 1,
-  "note": "Standardised formulation and cutting, wrapped and branded, Procter and Gamble transforms soap into mass-market good",
+  "note": "Soap made in standard formulation, cut into uniform bars, wrapped and branded, so it can be sold widely instead of being made locally. It transformed soap into a mass-market good. It needs hard soap from oil and lye (an alkali solution), and a kiln for heat. Consistent quality, packaging and distribution are the difficult parts, more than the chemistry.",
   "up_hours": 0
  },
  {
@@ -2987,7 +2987,7 @@
   },
   "build_yrs": 0.3,
   "adopt_yrs": 1,
-  "note": "Liquid soap formulation specifically for hair, emerges in early 20th century, mass production and branding key factors",
+  "note": "A liquid soap formulated specifically to clean hair. Plain bar soap leaves scum in hard water and strips the hair. It needs hard soap made from oil and lye, and a heated vessel to dissolve it. Mass production and branding were the key factors in making it a common product.",
   "up_hours": 0
  },
  {
@@ -3009,7 +3009,7 @@
   },
   "build_yrs": 0.2,
   "adopt_yrs": 0,
-  "note": "Horn or bone cut into teeth, traditional technology, mass production emerges in 1800s with celluloid versions",
+  "note": "A tool for grooming hair, made of horn or bone cut into teeth. It is a traditional technology. Mass production came with celluloid combs, which could be moulded rather than cut. It needs horn or bone, a saw and files. The teeth must be cut evenly and smoothed or they snag hair.",
   "up_hours": 0
  },
  {
@@ -3056,7 +3056,7 @@
   },
   "build_yrs": 0.1,
   "adopt_yrs": 0,
-  "note": "Shaped horn disc, drilled and edges finished, traditional high-quality material, medieval production",
+  "note": "A button made of horn: a disc is cut from animal horn, softened with heat, shaped, drilled with holes for thread, and its edges finished. It is a traditional high-quality material and has been made since the Middle Ages. It needs horn and tools to saw and drill it. Horn is tough and takes dye.",
   "up_hours": 0
  },
  {
@@ -3078,7 +3078,7 @@
   },
   "build_yrs": 0.1,
   "adopt_yrs": 0,
-  "note": "Carved bone disc, fine quality and good durability, medieval production standard",
+  "note": "A button made of bone: a disc is carved out of animal bone, drilled with holes for thread and finished. It is fine in quality and durable, and was the standard in the Middle Ages. It needs bone, saws, files and a drill. Bone buttons can crack if the holes are drilled too close to the edge.",
   "up_hours": 0
  },
  {
@@ -3100,7 +3100,7 @@
   },
   "build_yrs": 0.15,
   "adopt_yrs": 0,
-  "note": "Mother-of-pearl and other shells cut into discs, lustrous appearance, waterborne trade commodity",
+  "note": "A button cut from mother-of-pearl or other shell into discs, drilled and polished. The shell is lustrous and a trade commodity moved by water, since it comes from seas and rivers. It needs shell, saws and drills. The supply depends on shell fishing, and shell splits easily if drilled carelessly.",
   "up_hours": 0
  },
  {
@@ -3125,7 +3125,7 @@
   },
   "build_yrs": 0.2,
   "adopt_yrs": 1,
-  "note": "Molded celluloid sheets stamped into buttons, cheaper and easier than natural materials, emerges in 1870s",
+  "note": "A button made by pressing or stamping celluloid, an early plastic, softened with heat, into shape. It is cheaper and easier to make than natural materials, and it can be made in any colour. It needs celluloid, which is made from nitrocellulose and camphor, and a heated press. Celluloid is flammable.",
   "up_hours": 0
  },
  {
@@ -3145,7 +3145,7 @@
   },
   "build_yrs": 0.1,
   "adopt_yrs": 0,
-  "note": "Drawn wire with point and head, hand-made labour-intensive process, medieval production by thousands",
+  "note": "A sewing pin: a length of drawn wire sharpened to a point at one end and fitted with a head at the other. It is used to hold cloth together while sewing. Each was made by hand in many separate operations, which was labour-intensive, and pins were made by the thousand in medieval workshops. It needs wire that has been drawn through a die.",
   "up_hours": 0
  },
  {
@@ -3189,7 +3189,7 @@
   },
   "build_yrs": 0.1,
   "adopt_yrs": 0,
-  "note": "Polished iron or steel with eye, essential tool before sewing machines, hand-forged labour-intensive",
+  "note": "A sewing needle: a thin rod of polished iron or steel with an eye at one end. It is the essential tool of hand sewing before sewing machines. It is hand-forged: the wire is cut, pointed, flattened where the eye goes, punched, hardened and tempered, and polished. It needs steel wire and files fine enough to work to a tenth of a millimetre. Needles that are not tempered bend or break.",
   "up_hours": 0
  },
  {
@@ -3336,7 +3336,7 @@
   },
   "build_yrs": 0.3,
   "adopt_yrs": 1,
-  "note": "Rubber abrasion removes graphite, cap-mounted or pencil-top versions, mass production emerges in late 1800s",
+  "note": "A piece of rubber that removes pencil marks by abrasion, picking up graphite particles. Versions are mounted in a cap or on the end of a pencil. It needs natural rubber, cured by heat, and a source of latex. Mass production came with the rubber industry. Rubber perishes with age and hardens, and then smears instead of cleaning.",
   "up_hours": 0
  },
  {
@@ -3361,7 +3361,7 @@
   },
   "build_yrs": 0.2,
   "adopt_yrs": 0.5,
-  "note": "Wire bent into overlapping loops, simple but effective, mass production by 1900s enables cheap office supplies",
+  "note": "A paper fastener made of wire bent into overlapping loops, which grips sheets by spring tension. It is simple but effective. It needs drawn wire of springy steel, tempered so it returns to shape, and a bending machine. Mass production made cheap office supplies. A soft wire loses its spring.",
   "up_hours": 0
  },
  {
@@ -3386,7 +3386,7 @@
   },
   "build_yrs": 0.4,
   "adopt_yrs": 1,
-  "note": "Lever mechanism bends staple through papers, powered by hand, emerges in late 1800s as office automation",
+  "note": "A hand-powered device that drives a metal staple through sheets of paper and bends its legs over to clinch them. A lever pushes the staple, and an anvil folds the legs. It needs precisely machined parts and drawn wire formed into staples. It speeds up office work. A bent or jammed staple stops the machine.",
   "up_hours": 0
  },
  {
@@ -3410,7 +3410,7 @@
   },
   "build_yrs": 0.2,
   "adopt_yrs": 0,
-  "note": "Short point with wide head, brass or steel, holds paper to boards without permanent damage",
+  "note": "A short metal point with a wide flat head, made of brass or steel, which can be pushed by thumb into a board to hold paper in place. It leaves only a small hole when taken out, so it does not permanently damage. It needs drawn wire or stamped sheet and tolerance machining. A badly made pin bends before it enters.",
   "up_hours": 0
  },
  {
@@ -3432,7 +3432,7 @@
   },
   "build_yrs": 0.3,
   "adopt_yrs": 0,
-  "note": "Paper folded and gummed, gummed flap seals contents, mass production by 1850s transforms postal efficiency",
+  "note": "An envelope: paper folded into a pocket and gummed so the flap seals the contents. Folding machines made them in mass production and transformed postal efficiency, because a letter could be sent without wrapping and sealing each time. It needs rag paper and gum. The paper must be cut to a pattern that folds square.",
   "up_hours": 0
  },
  {
@@ -3455,7 +3455,7 @@
   },
   "build_yrs": 0.2,
   "adopt_yrs": 0,
-  "note": "Starch-based adhesive applied to flap, dries to enable moistening, improvement over wax seals and tape",
+  "note": "An adhesive strip along the envelope flap, made of starch paste that dries hard and becomes sticky when moistened. It improves on sealing letters with wax or tape. It needs starch and a kiln or oven to dry it. If it is too weak the envelope opens in the post; if too strong, it is hard to seal.",
   "up_hours": 0
  },
  {
@@ -3479,7 +3479,7 @@
   },
   "build_yrs": 0.3,
   "adopt_yrs": 1,
-  "note": "Thin card with pre-printed postage, emerges as cheap alternative to letters, mass-produced by 1870s",
+  "note": "A thin card with the postage pre-printed on it, offered as a cheap alternative to a letter. It travels open, without an envelope, so the message can be read by anyone. It needs paper, printing and a postal service that accepts it. Mass production of cards followed the postal service's introduction of a cheap rate.",
   "up_hours": 0
  },
  {
@@ -3530,7 +3530,7 @@
   },
   "build_yrs": 0.4,
   "adopt_yrs": 1,
-  "note": "Printed game board with rules and pieces, mass production of family entertainment, 19th century emergence",
+  "note": "A printed game board with rules and playing pieces, made in mass production for family entertainment. It needs printed playing card technology, paper and boards, and printing in colour. Families with spare time and money must exist to buy it. Rules must be printed clearly, or the game is not played.",
   "up_hours": 0
  },
  {
@@ -3575,7 +3575,7 @@
   },
   "build_yrs": 0.4,
   "adopt_yrs": 1,
-  "note": "Articulated limbs and face, wood or cloth construction, mass production with porcelain heads emerges in 19th century",
+  "note": "A doll: a child's toy figure with articulated limbs and a face, made from wood or cloth. Mass production with porcelain heads came with factory methods. It needs skilled craftsmen for carving and painting, and tolerance in the joints. Porcelain heads need a kiln; wood and cloth are cheaper but less durable.",
   "up_hours": 0
  },
  {
@@ -3600,7 +3600,7 @@
   },
   "build_yrs": 0.4,
   "adopt_yrs": 1,
-  "note": "Stamped and lithographed tin plate toy, jointed or wheeled, German and Japanese production emerges in late 1800s",
+  "note": "A toy stamped out of thin sheets of tin plate and decorated by lithographic printing, with joints or wheels. Germany and Japan became major producers. It needs tin plate, stamping dies made to fine tolerance and a printing process for the colours. Sharp edges are a risk to children, and rust spoils tin toys in damp.",
   "up_hours": 0
  },
  {
@@ -3626,7 +3626,7 @@
   },
   "build_yrs": 0.5,
   "adopt_yrs": 1,
-  "note": "Spring-wound mechanism drives gears and linkages, walking or mechanical action, premium toy for wealthy children",
+  "note": "A toy driven by a wound spring that turns gears and linkages, making it walk or move. It was a premium toy for the children of wealthy families. It needs spring steel and small gears cut to fine tolerance, as in clockmaking. A spring wound too hard breaks, and the toy runs down quickly.",
   "up_hours": 0
  },
  {
@@ -3654,7 +3654,7 @@
   },
   "build_yrs": 0.6,
   "adopt_yrs": 2,
-  "note": "Chain drive and pneumatic tyres, mass production enables affordability, transforms personal transport from 1890s",
+  "note": "A bicycle: a frame carries two wheels, pedals drive the rear wheel by a chain, and pneumatic (air-filled) rubber tyres cushion the ride. Mass production made it cheap enough for ordinary people and transformed personal transport. It needs tolerance machining for bearings, chains and gears, and vulcanised rubber. Bad tyres and loose bearings make a bicycle hard to ride.",
   "up_hours": 0
  },
  {
@@ -3680,7 +3680,7 @@
   },
   "build_yrs": 0.5,
   "adopt_yrs": 2,
-  "note": "Fixed-focus simple lens, roll film, Kodak Brownie 1900 makes photography accessible to masses",
+  "note": "A simple camera sold to the general public, with a fixed-focus lens and loaded with roll film, so the user only points and presses a button; the maker develops the film. It made photography available to the masses. It needs tolerance machining, roll film and a developing service. A low price depends on volume.",
   "up_hours": 0
  },
  {
@@ -3735,7 +3735,7 @@
   },
   "build_yrs": 0.6,
   "adopt_yrs": 2,
-  "note": "Crystal set or valve receiver and loudspeaker, mass production transforms home entertainment, major emergence in 1920s",
+  "note": "A radio receiver for the home: a crystal set or a valve (vacuum tube) receiver, with a loudspeaker. Mass production made it cheap and changed home entertainment. It needs radio technology, parts made to fine tolerance and a broadcasting service to listen to. Without programmes to broadcast there is no market for sets.",
   "up_hours": 0
  },
  {
@@ -3778,7 +3778,7 @@
   },
   "build_yrs": 0.3,
   "adopt_yrs": 1,
-  "note": "Rolled and soldered tin plate, preserves food and other goods, mass production from 1810s onwards",
+  "note": "A sealed can made of rolled and soldered tin plate (iron sheet coated with tin), used to preserve food and other goods. It needs tin plate and soldering. Food inside must be cooked after sealing, so that it keeps; a poor seal lets spoilage in. Early cans were closed by hand, so mass production brought them within reach of ordinary people.",
   "up_hours": 0
  },
  {
@@ -3800,7 +3800,7 @@
   },
   "build_yrs": 0.3,
   "adopt_yrs": 1,
-  "note": "Kraft paper folded and glued, bottom gussets for capacity, replaces cloth sacks for retail goods",
+  "note": "A bag of strong kraft paper, folded and glued, with gussets (folded sides) at the bottom for capacity. It replaced cloth sacks for retail goods. It needs rag paper or other strong paper and glue, and a folding machine. A weak bottom seam splits under load.",
   "up_hours": 0
  },
  {
@@ -3823,7 +3823,7 @@
   },
   "build_yrs": 0.3,
   "adopt_yrs": 1,
-  "note": "Laminated paper sheets glued and folded, replaces wooden crates for many applications, mass production by 1870s",
+  "note": "A box of paper sheets laminated (glued in layers) and folded, replacing wooden crates for many goods. It is cheaper and lighter than wood. It needs paper and glue and a folding or die-cutting step, and tolerance machining. Damp weakens it, so it is not for use where it would get wet.",
   "up_hours": 0
  },
  {
@@ -3849,7 +3849,7 @@
   },
   "build_yrs": 0.4,
   "adopt_yrs": 1,
-  "note": "Wavy paper core between flat faces, light and strong, enables efficient shipping, emerges in 1890s",
+  "note": "A box made from board with a wavy (fluted) paper core between flat faces. The flutes act like many small arches, making it light and strong, and it supports stacking and shipping. It needs paper and a machine to crimp the flutes, made to fine tolerance. It cushions goods better than flat cardboard, but is damaged by water.",
   "up_hours": 0
  },
  {
@@ -3871,7 +3871,7 @@
   },
   "build_yrs": 0.3,
   "adopt_yrs": 0,
-  "note": "Hand-blown or later molded glass, seals and preserves liquids, mass production by 1870s",
+  "note": "A glass container for liquids, hand-blown at first and later moulded, which seals and preserves its contents. A gather of molten glass is blown into a mould. It needs a furnace that sustains the glass at working temperature. The glass must be annealed (cooled slowly) or the bottle cracks. Moulds made mass production possible.",
   "up_hours": 0
  },
  {
@@ -3913,7 +3913,7 @@
   },
   "build_yrs": 0.3,
   "adopt_yrs": 1,
-  "note": "Threaded metal cap screws onto grooved bottle neck, reusable and reversible, evolves from wood to plastic",
+  "note": "A closure with a thread that screws onto the grooved neck of a bottle. Unlike a cork it can be removed and replaced, and it seals well. Early caps were of wood and later of metal and plastic. It needs tolerance machining to cut matching threads on both neck and cap. If the thread does not match, it leaks.",
   "up_hours": 0
  },
  {
@@ -3938,7 +3938,7 @@
   },
   "build_yrs": 0.4,
   "adopt_yrs": 1,
-  "note": "Collapsible metal tube with sealed cap, contents extruded by squeezing, enables portable toothpaste",
+  "note": "A collapsible metal tube with a sealed cap, from which the contents are squeezed out. It enables portable toothpaste, paints and ointments, and keeps the contents sealed from air. It needs thin soft metal sheet and tolerance machining for the cap thread. Metal tubes do not return to shape, so the contents cannot be sucked back.",
   "up_hours": 0
  },
  {
@@ -3956,6 +3956,6 @@
   "mat": {},
   "build_yrs": 0,
   "adopt_yrs": 0,
-  "note": "Prerequisite placeholder for electric motor power availability in textile machinery"
+  "note": "A stage in the textile tree that stands for having a reliable electric motor to run the machines. It marks that the power supply is available to drive textile machinery. It requires local electric power. Without a steady supply, motor-driven machines run unevenly or stop."
  }
 ]
