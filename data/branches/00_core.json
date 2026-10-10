@@ -4227,7 +4227,7 @@
     "lab": {},
     "mat": {},
     "name": "Mineral concessions and access to imperial mines",
-    "note": "Legal permission to work or buy from mines the emperor controls. Mercury, which is needed to extract gold and silver, and much else is an imperial monopoly, so without a concession those inputs are closed to a private founder or reach him only through middlemen. It needs patronage at court. Holding a concession lowers the cost of all ore and metal inputs thereafter, but it can be withdrawn.",
+    "note": "Legal permission to work or buy from mines the emperor controls. Mercury, which is needed to extract gold and silver, and much else is an imperial monopoly, so without a concession those inputs are closed to a private founder or reach them only through middlemen. It needs patronage at court. Holding a concession lowers the cost of all ore and metal inputs thereafter, but it can be withdrawn.",
     "ph": 400.0,
     "pre": [
       "patron_imperial"
