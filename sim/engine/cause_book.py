@@ -3,16 +3,18 @@
 Closures and openings are written where they happen; a wage shock is written by the hazard that
 caused it. Closing the yearly period (the snapshot calls it) stamps those rows with the year and adds
 what the year's change leaves over: the wage index change not named by a shock, and the change in
-state notice split by what moved it (the state, headcount, wealth, eminence). Only the last few
+state notice split by what moved it (the state, headcount, wealth, eminence, defiance). Only the last few
 years are kept, so a save holds a bounded history.
 """
+
+from sim.agents.api import demand_answer
 
 YEARS_KEPT = 5
 ROWS_KEPT = 400   # a hard cap for runs that never close a period
 WAGE = "wage"
 NOTICE = "notice"
 STATE_CAUSE = "state capacity"
-SCALE_CAUSES = ("headcount", "wealth", "eminence")
+SCALE_CAUSES = ("headcount", "wealth", "eminence", "defiance")
 UNSHOCKED_WAGE_CAUSE = "births and deaths outside dated shocks"
 
 
@@ -43,8 +45,8 @@ def record_wage_shock(sim, cause, index_before):
 def _readings(sim):
     household = sim.state.household
     return {"wage_index": sim.labour.market.wage_index(), "state_capacity": sim.state_capacity,
-            "headcount": sim.labour.headcount(), "wealth": household.capital,
-            "eminence": household.eminence}
+            "headcount": sim.labour.headcount(), "wealth": demand_answer.visible_wealth(household.capital, household.concealed),
+            "eminence": household.eminence, "defiance": household.defiance}
 
 
 def _notice_steps(sim, before, after):
@@ -53,7 +55,7 @@ def _notice_steps(sim, before, after):
     capacity = before["state_capacity"]
 
     def level():
-        return capacity * sim.visible_scale(inputs["headcount"], inputs["wealth"], inputs["eminence"])
+        return capacity * sim.visible_scale(inputs["headcount"], inputs["wealth"], inputs["eminence"], inputs["defiance"])
 
     parts = {}
     last = level()

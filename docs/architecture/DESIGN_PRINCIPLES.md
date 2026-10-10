@@ -43,7 +43,7 @@ scaling revenue down until the player stays poor. That is a hardcoded outcome
 that redistribute or constrain a growing economy: independent firms and
 imitation competing margins away (`Complaints/103`), a state that taxes and
 requisitions (`Complaints/105`), deeper capital markets (`Complaints/106`),
-and political interest groups extracting concessions (`Complaints/110`). Any
+and political interest groups extracting concessions (`Complaints/closed/110-add-political-interest-groups.md`). Any
 of those will lower the founder's share as a side effect; that is the point,
 and it is not a licence to shrink the economy directly.
 

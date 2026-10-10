@@ -36,8 +36,8 @@ an open licence, so they must not be copied into the repository.
    rule that names candles.
 4. Institutional consumers. A tavern that lights candles for its customers, or a temple that burns many,
    should demand them because the service it sells or the rite it performs consumes them through its
-   recipe or its upkeep, not through a rule naming taverns or temples. Clergy and temples as actors with
-   endowments are not modelled yet (`Complaints/110`), so this part may need that first.
+   recipe or its upkeep, not through a rule naming taverns or temples. Churches and academies are actors with
+   endowments, tithes and stipends (`sim/agents/foundation.py`, Complaint 110), but they do not yet consume candles; this part can build on them.
 
 ## How to close it
 
