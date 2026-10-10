@@ -87,6 +87,19 @@ tiny = running(CLINICS, units=1.0)
 check("one clinic does almost nothing for a nation", 1.0 - tiny._disease_burden() < 0.001 * weights[CLINICS] / total + 1e-9,
       tiny._disease_burden())
 
+# a benefit that holds only while the doors are open and for the share reached is not promised as permanent
+from sim.engine.permanent_benefit import permanent_parts
+
+check("a knowledge node's disease benefit is permanent", any("disease" in part for part in permanent_parts(
+      NODES["germ_theory"], TECH_EFFECTS["germ_theory"])), permanent_parts(NODES["germ_theory"], TECH_EFFECTS["germ_theory"]))
+check("clinics' disease benefit is not called permanent", not any("disease" in part for part in permanent_parts(
+      NODES[CLINICS], TECH_EFFECTS[CLINICS])), permanent_parts(NODES[CLINICS], TECH_EFFECTS[CLINICS]))
+finished = unopened_sim()
+finished.done.add(CLINICS)
+finished.apply_tech_effects(CLINICS)
+check("finishing the clinics does not announce a lower disease burden before any clinic is open",
+      not any("disease burden" in line for _year, line in finished.state.household.log), finished.state.household.log[-2:])
+
 # ---- the rollout opens the units a share needs -------------------------------------------------------------
 asked = []
 
