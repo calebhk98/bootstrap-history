@@ -1937,7 +1937,7 @@
   "sch": 0,
   "art": 4,
   "conf": "C",
-  "note": "Diamond anvil for optics; hardened steel for liquids. Seal design and pressure measurement calibration are critical."
+  "note": "A strong sealed chamber that holds a sample at very high pressure so its behaviour can be studied. A diamond anvil squeezes a sample between two diamond points and lets light through, so it suits optical work; hardened steel autoclaves hold liquids. It needs fine machining and heat-treated steel. Seal design is the hard part, and the pressure reading must be calibrated against a known reference, or the numbers mean nothing."
  },
  {
   "id": "in2_cryostat_dewar_flask",
@@ -2619,7 +2619,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Greenwich time determined independently; comparison over several days averages out daily variations."
+  "note": "Measuring how fast or slow a marine chronometer runs by comparing it with a time known independently, such as time determined at a fixed observatory. A chronometer is never exactly right; what matters is that its error grows steadily, so a known daily rate can be corrected for. Comparing over several days averages out daily variations. It needs a reliable reference time and patience."
  },
  {
   "id": "in2_sounding_machine_lead_line",
@@ -2741,7 +2741,7 @@
   "sch": 0,
   "art": 3,
   "conf": "C",
-  "note": "Gyroscopic inertia holds attitude; erection mechanism cancels slow drift. Precession rate ~ mass imbalance * gravity."
+  "note": "An instrument that shows the horizon to a pilot or navigator who cannot see it, built on a spinning rotor. A fast-spinning wheel resists being tilted, so it holds its attitude (gyroscopic inertia). Friction and imbalance make it drift slowly, so an erection mechanism gently pushes it back to level. It needs a gyrocompass rotor, well balanced, and a precise bearing. The drift rate depends on the imbalance."
  },
  {
   "id": "in2_radio_direction_finder",
@@ -2862,7 +2862,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Standard candle defined (1 candela); distance squared from unknown source matched to known distance from standard."
+  "note": "An instrument that compares the brightness of two light sources by eye. The observer moves the unknown lamp until it matches the standard candle, and because light spreads out, the brightness falls with the square of the distance, so the ratio of distances gives the ratio of strengths. It needs a defined standard candle and a screen or lens. Judging equal brightness by eye is subjective, so readings must be repeated."
  },
  {
   "id": "in2_bolometer_thermal_detector",
@@ -2893,7 +2893,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Time constant must be < 0.1 second to follow modulated light; thermal mass vs sensitivity tradeoff."
+  "note": "A detector of radiant heat: a thin blackened strip of platinum absorbs radiation and warms slightly, and the change in its electrical resistance is measured with a bridge circuit. A thin strip responds quickly but absorbs little, so there is a trade-off between speed and sensitivity. To follow modulated light, its response must be fast, within a fraction of a second. It needs pure platinum and very fine measuring gauges."
  },
  {
   "id": "in2_photocell_vacuum_photoelectric",
@@ -3196,7 +3196,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Sensitivity depends on balance arm length and pivot sharpness. Rider on beam allows fractional weights."
+  "note": "A very sensitive weighing scale with two equal arms. The sensitivity depends on the length of the arms and on how sharp and hard the pivot is. A small movable rider on the beam lets the weigher add fractions of the smallest weight. It needs a rigid beam, a hard knife-edge pivot and a calibrated set of weights. A dull pivot introduces error, so the balance must be checked by repeated weighings."
  },
  {
   "id": "in2_torsion_balance",
@@ -3256,7 +3256,7 @@
   "sch": 0,
   "art": 3,
   "conf": "C",
-  "note": "Sensitivity nanogram range; frequency stable to 0.01 Hz. Used for film thickness measurement and chemical detection."
+  "note": "A very sensitive scale: a quartz crystal vibrates at a stable frequency, and when a tiny mass is added to its surface the frequency shifts downward in proportion. Measuring that shift tells the added mass, to the range of nanograms (billionths of a gram). It needs a quartz resonator and an electronic oscillator and counter. It measures the thickness of deposited films and detects chemicals that stick to the surface."
  },
  {
   "id": "in2_thermocouple",
@@ -3517,7 +3517,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "Cheap and simple; but discharge coefficient depends on Reynolds number and geometry. Pressure recovery poor."
+  "note": "A flow meter: a plate with a round hole is placed in a pipe, and the pressure drop across it, read with a manometer (a liquid-filled U-tube), tells how fast the fluid flows. It is cheap and simple, but the discharge coefficient (the factor linking pressure drop to flow) depends on the flow regime and the geometry, so it must be calibrated for the installation. It recovers pressure poorly, wasting energy."
  },
  {
   "id": "in2_venturi_flow_meter",
@@ -3629,6 +3629,6 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Frequency stable to 0.1 percent; frequencies 100 Hz to 1000 Hz common. Used as timekeeping standard before quartz."
+  "note": "A two-pronged metal fork that, once struck, vibrates at one steady frequency set by its shape and material. It is a mechanical resonator, used to tune instruments and, before quartz, as a timekeeping standard. It needs good steel, shaped and tempered with care, and a furnace hot enough to work it. Its frequency drifts a little with temperature, so it is a crude but reliable standard."
  }
 ]

@@ -170,7 +170,7 @@
   },
   "mat": {},
   "name": "Acquire pyrethrum planting stock",
-  "note": "Obtain viable Tanacetum cinerariifolium seed or divisions and establish a flower crop before extracting pyrethrins.",
+  "note": "Pyrethrum is a daisy-like flower (Tanacetum cinerariifolium) whose dried flowers contain pyrethrins, natural insecticides that kill insects on contact. Before any extraction the founder must obtain viable seed or root divisions and establish a flower crop. It needs a botanic garden that can carry plants from distant lands. Seed can lose viability on the journey, and the plant needs a suitable climate.",
   "ph": 80.0,
   "pre": [
    "ag2_botanic_garden"
