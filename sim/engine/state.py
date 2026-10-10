@@ -370,6 +370,7 @@ class SimulationState:
 	_immortal: bool = True
 	_rng: Optional[List[Any]] = None
 	_seed: Optional[Union[int, str]] = None
+	_game_version: Optional[str] = None  # which build wrote the save; shown to people, never checked on load
 	interface: Dict[str, Any] = field(default_factory=dict)  # the UI's own memory; the engine never reads it
 
 	def __post_init__(self) -> None:

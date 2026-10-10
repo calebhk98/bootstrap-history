@@ -14,6 +14,7 @@ from sim.engine.ui_port import load, load_civ, STARTING_KITS
 from sim.engine.ui_port import Sim
 from . import replay
 from .protocol import _agent_dispatch, _agent_end_reason, _agent_help, load_state, render_pretty, save_state
+from .memory import save_session
 from sim.engine.ui_port import settings
 from sim.ui.proto import step_progress
 
@@ -87,7 +88,7 @@ def cmd_agent(args):
         if settings.is_checkpoint(session):
             checkpoint_source = session
             session = _pick_session_filename(sim.civ.get("id") or "game")
-            save_state(sim, session)
+            save_session(sim, session)
             sys.stderr.write(json.dumps(
                 {"checkpoint_resumed":
                  "%s is a frozen checkpoint; nothing further is written back "
@@ -153,7 +154,7 @@ def cmd_agent(args):
             # something that closes early must not lose state that already
             # happened, the same as the stdin loop below.
             if session:
-                save_state(sim, session)
+                save_session(sim, session)
                 if _agent_end_reason(sim):
                     replay.record_end_of_run(sim, session)
             try:
@@ -205,7 +206,7 @@ def cmd_agent(args):
         # promise that holds only when nobody closes the pipe first is not
         # that promise.
         if session:
-            save_state(sim, session)
+            save_session(sim, session)
             if _agent_end_reason(sim):
                 replay.record_end_of_run(sim, session)
         try:
