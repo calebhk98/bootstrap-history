@@ -358,6 +358,23 @@
    "unit_dimension": "mass",
    "basis": "per tonne of pine wood tar from a tar kiln, with the charcoal left in the kiln",
    "yield_basis": "PYROLYSIS. Resinous pine burned slowly in a closed kiln drains about 10 percent of its mass as tar, and the residue is charcoal at the same 25 percent of wood mass charcoal_kg's clamp burn uses, so 10000 kg of wood gives 1000 kg of tar and 2500 kg of charcoal. Labour is charcoal_kg's 30 collier-hours per 4000 kg of wood, scaled to 10000 kg. Conf C.",
+   "capital": [
+    {
+     "good": "tar kiln hearth, hut and tools",
+     "build_materials": {
+      "timber_m3": 2.0,
+      "iron_bar_kg": 40.0
+     },
+     "build_labour_hours": {
+      "carpenter": 60.0,
+      "labourer": 100.0
+     },
+     "service_life_years": 15,
+     "annual_output_at_basis": 30000.0,
+     "capital_basis": "A tar kiln is a clamp like the charcoal burner's, a conical heap on a dished hearth drained to a pot, run by the same kind of team with the same pole-and-turf hut and tools, so the charcoal clamp's plant is taken unchanged. Capacity is quoted in kilograms of charcoal, the batch's larger output, which is what the solver divides the charge by; the same thirty tonnes a year at the entry's yield. Reasoned estimates (conf D).",
+     "conf": "D"
+    }
+   ],
    "conf": "C",
    "requires_node": null
   },

@@ -52,7 +52,7 @@
     {
      "good": "collier's hearth platform, hut and tools",
      "build_materials": {
-      "timber_m3": 5.0,
+      "timber_m3": 2.0,
       "iron_bar_kg": 40.0
      },
      "build_labour_hours": {
@@ -61,7 +61,7 @@
      },
      "service_life_years": 15,
      "annual_output_at_basis": 30000.0,
-     "capital_basis": "An earth-clamp burn is built afresh on a levelled hearth, so the lasting plant is only the hut, rakes, shovels and the cleared platform. A collier's team burns a clamp over about a week and keeps several going, which is the order of thirty tonnes of charcoal a year at the four-to-one wood the entry states; the figures are reasoned estimates.",
+     "capital_basis": "An earth-clamp burn is built afresh on a levelled hearth, so the lasting plant is only a pole-and-turf hut of some two cubic metres of poles, rakes, shovels and the cleared platform. A collier's team burns a clamp over about a week and keeps several going, which is the order of thirty tonnes of charcoal a year at the four-to-one wood the entry states; the figures are reasoned estimates.",
      "conf": "D"
     }
    ],
