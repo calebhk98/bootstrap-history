@@ -40,9 +40,27 @@ def by_form(assessments):
 
 class FormsTests(unittest.TestCase):
     def test_forms_are_read_from_the_civilisations_data(self):
-        self.assertEqual([form.name for form in FORMS], [entry["form"] for entry in ROME["state_revenue"]])
+        self.assertEqual([form.name for form in FORMS], [entry["form"] for entry in ROME["state_revenue"]
+                                                         if entry["basis"] != "land_value"])
         self.assertEqual(FORMS[0].paid_in, "wheat_kg")
         self.assertEqual(FORMS[1].paid_in, "")
+
+
+class ProvinceTests(unittest.TestCase):
+    def test_a_form_on_the_harvest_is_levied_only_on_the_tiles_it_covers(self):
+        form = TaxForm("tithe", "harvest", 0.1, GRAIN, None, frozenset({"t2"}))
+        _transfers, moves, _assessments = assess((form,), facts_with(), STATE, PRICES)
+        self.assertEqual({move.giver for move in moves}, {"farm_a"})
+        named = TaxForm("tithe", "harvest", 0.1, GRAIN, frozenset({"t2"}))
+        _transfers, moves, _assessments = assess((named,), facts_with(), STATE, PRICES)
+        self.assertEqual({move.giver for move in moves}, {"farm_b"})
+
+    def test_forms_on_actors_purses_are_left_to_the_actor_layer(self):
+        data = [{"form": "a", "basis": "land_value", "rate": 0.01, "tiles": ["t1"]},
+                {"form": "b", "basis": "harvest", "rate": 0.1, "paid_in": GRAIN, "except_tiles": ["t1"]}]
+        forms = forms_from_civ_data(data)
+        self.assertEqual([form.name for form in forms], ["b"])
+        self.assertEqual(forms[0].except_tiles, frozenset({"t1"}))
 
 
 class InKindTests(unittest.TestCase):

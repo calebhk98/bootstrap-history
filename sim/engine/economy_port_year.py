@@ -112,7 +112,14 @@ class AgentEconomy:
         return economy_api.export_record(self._economy, (PURSE_CURRENCY,))
 
     def cohort_incomes(self):
-        return economy_api.cohort_incomes(self.economy())
+        """(people, yearly income in coin) of the household cohorts, poorest per head first."""
+        coin = self._economy.setup.coin_per_unit
+        return [(people, income * coin) for people, income in economy_api.cohort_incomes(self.economy())]
+
+    def cohort_land_rents(self, tiles=None):
+        """(people, rent received last year in coin) in the order of `cohort_incomes`; only rent paid on `tiles` when given."""
+        coin = self._economy.setup.coin_per_unit
+        return [(people, rent * coin) for people, rent in economy_api.cohort_land_rents(self.economy(), tiles)]
 
     def goods_level_over_opening(self):
         """How dear the economy's goods are against the opening's solver prices (both counted in the economy's

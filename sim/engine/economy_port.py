@@ -142,6 +142,11 @@ class EconomyPort:
             return None
         return agent.cohort_incomes()
 
+    def agent_cohort_land_rents(self, tiles=None):
+        """[(people, rent received in coin)] in the order of `agent_cohort_incomes`, or None while the economy opens."""
+        agent = self._answering_agent()
+        return None if agent is None else agent.cohort_land_rents(tiles)
+
     def note_actor_sale(self, seller, material, tonnes, from_concerns):
         """An actor's tonnes of a material for the agent economy's market this year."""
         self.agent.note_sale(seller, material, tonnes, from_concerns)
