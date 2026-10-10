@@ -11,7 +11,7 @@ What was built:
 - Its takings are the loaded figure carried by `concern_value_ratio` (net sales at the solved prices of the techniques in use over the opening's), times the market's spot-over-solved ratio on the baskets it makes now (`node_output_market_factor`): volume times the price the goods market clears at, less what it buys at that price. A technique that cheapens its good lowers its takings unless volume rises with it; a concern on a technique the market has overtaken goes to nothing.
 - A technology held but run by no producer changes no price (`Sim.techniques_in_use`, Complaint 375 for what remains).
 
-Measured (`_fp/measure.py`-style driver, seed 1, 150 years from the opening): output-derived concerns are few, and the founder runs few of them; Rome's real output per head moves by under one percent from adoption in the years before the mortality shock, Han's is unchanged. See 354.
+Measured (a scratch driver, no committed command; seed 1, 150 years from the opening): output-derived concerns are few, and the founder runs few of them; Rome's real output per head moves by under one percent from adoption in the years before the mortality shock, Han's is unchanged. See 354.
 
 Related: 101, 112, 119, 140, 283, 354, 370, 375.
 

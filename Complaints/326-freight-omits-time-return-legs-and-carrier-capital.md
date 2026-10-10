@@ -12,8 +12,7 @@ but unused.
 
 ## Evidence
 
-`python3 sim/foreign_trade_report.py` (script since removed; recover with `git show 97473f1:sim/foreign_trade_report.py`) prints each leg's distance and cost per
-tonne; none carries a duration.
+No committed command prints each leg's cost; `freight_money_per_tonne_km` in `sim/geography/freight_cost.py` takes the travel days, and its tests are the place to read the terms.
 
 ## What it would take (remaining)
 
