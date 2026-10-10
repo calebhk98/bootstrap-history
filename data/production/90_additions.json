@@ -101,6 +101,24 @@
    "yield_basis": "Hemp fibre laid up (twisted in multiple strands against each other, the technique a rope walk exists to do at length and consistent tension) into thick rope. Mirrors canvas_kg's own reasoning exactly: a thick rope has far less total twisted/laid length per kilogram than a fine thread or thin twine, so it needs FEWER labour hours per kilogram despite the more elaborate multi-strand construction - the same physical trade-off canvas_kg's entry gives for why heavy sailcloth was historically cheaper per kilogram than fine linen. The 15% processing loss is taken directly from canvas_kg's own figure for the same fibre going through a comparable mechanical process. Gated on the rope-walk apparatus itself, rather than left ungated, because consistent long heavy rope of uniform lay is what that apparatus specifically buys over ad hoc hand-twisting (this file's own twine_kg).",
    "conf": "C",
    "requires_node": "tex_rope_walk",
+   "capital": [
+    {
+     "good": "rope-walk building, spinning wheel and laying gear",
+     "build_materials": {
+      "timber_m3": 90.0,
+      "iron_bar_kg": 200.0
+     },
+     "build_labour_hours": {
+      "carpenter": 1500.0,
+      "millwright": 150.0,
+      "labourer": 400.0
+     },
+     "service_life_years": 30,
+     "annual_output_at_basis": 4000.0,
+     "capital_basis": "A rope-walk is a long low timber-framed shed over which yarn is spun and laid; a walk worked by about twelve hands at the entry's six labourer-hours a kilogram makes about four tonnes a year, the capacity stated on the node itself. Timber volume is an order-of-magnitude figure for a shed of that length.",
+     "conf": "C"
+    }
+   ],
    "operated_by": ["tex_rope_walk"]
   },
   "sailcloth_kg": {
@@ -168,6 +186,25 @@
    "yield_basis": "STOICHIOMETRY for the core ratio: NH3 (17.03 g/mol) + HNO3 (63.01 g/mol) -> NH4NO3 (80.04 g/mol), a straight acid-base neutralisation with no by-product to allocate against. Per tonne of product that is 213 kg of ammonia and 787 kg of nitric acid at perfect conversion; taken here at 215 and 800 kg with a small margin for the imperfect conversion and minor liquor losses any real neutralisation and crystallisation run carries. THERMAL: the neutralised liquor is a dilute aqueous solution that must be evaporated to crystallise solid ammonium nitrate out of it; taken at a modest 500 MJ/tonne for that evaporation, well below sodium_carbonate_solvay_kg's own 500 MJ/tonne evaporative figure in this file scaled to a comparable order of magnitude rather than independently measured, which is the softest number in this entry and the reason it is marked C rather than B despite the exact stoichiometric core. Gated on `nitric_acid` (rather than on `mat_ammonia`, which this recipe also genuinely needs) because nitric acid is the harder-won of the two precursors - it needs BOTH a nitre-bed supply and a sulfuric-acid lead chamber already working, a taller and later compound requirement than ammonia's own gate - matching this schema's own instruction to name the later, real bottleneck rather than the earliest node the process happens to touch.",
    "conf": "C",
    "requires_node": "nitric_acid",
+   "capital": [
+    {
+     "good": "neutralising and evaporating pans, crystalliser",
+     "build_materials": {
+      "iron_bar_kg": 1500.0,
+      "timber_m3": 5.0,
+      "stone_kg": 3000.0
+     },
+     "build_labour_hours": {
+      "smith": 200.0,
+      "carpenter": 60.0,
+      "mason": 80.0
+     },
+     "service_life_years": 12,
+     "annual_output_at_basis": 100000.0,
+     "capital_basis": "Ammonia is neutralised with nitric acid in a pan and the solution evaporated and crystallised or prilled; a pan of this size runs a charge a day and turns out about a hundred tonnes a year. Masses are order-of-magnitude figures.",
+     "conf": "D"
+    }
+   ],
    "operated_by": ["nitric_acid"]
   },
   "ox": {

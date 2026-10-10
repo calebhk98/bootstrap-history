@@ -91,6 +91,25 @@
    "yield_basis": "EXTRACTED FROM A BY-PRODUCT. High-temperature coal tar carries on the order of one percent phenol by mass in its carbolic-oil fraction; recovery by fractionation, extraction into caustic soda and re-acidification is taken at 80 percent, giving 1 / (0.01 x 0.8) = 125 t of tar per tonne. The tar grade is an order-of-magnitude figure for tar from coking (conf C). Labour is borrowed from acetic_acid_kg's distillation line (the same fractionate-and-purify work), not derived. Caustic and acid reagents are not modelled.",
    "conf": "C",
    "requires_node": "chm_phenol",
+   "capital": [
+    {
+     "good": "coal-tar still, condenser and caustic wash tanks",
+     "build_materials": {
+      "iron_bar_kg": 5500.0,
+      "copper_kg": 400.0,
+      "brick_1000": 8.0
+     },
+     "build_labour_hours": {
+      "smith": 700.0,
+      "plumber": 150.0,
+      "mason": 120.0
+     },
+     "service_life_years": 15,
+     "annual_output_at_basis": 40000.0,
+     "capital_basis": "Phenol is recovered from the carbolic oil fraction of coal tar by fractional distillation and caustic washing; at the entry's hundred and twenty-five tonnes of tar to a tonne of phenol, a still taking five thousand tonnes of tar a year gives about forty tonnes. Iron still mass is an order-of-magnitude figure.",
+     "conf": "D"
+    }
+   ],
    "operated_by": ["chm_phenol"]
   },
   "adipic_acid_kg": {
@@ -186,6 +205,23 @@
    "yield_basis": "COMPOSITION. The classic textile fireproofing bath is borax and boric acid dissolved together, the mix commonly given as seven parts borax to three parts boric acid by mass. The blend conserves mass, so a tonne of blend is 700 kg of one and 300 kg of the other. The ratio is a recipe convention, not derived (conf C). Labour of mixing and the water of solution are not modelled.",
    "conf": "C",
    "requires_node": "soda_leblanc",
+   "capital": [
+    {
+     "good": "dry-blending floor with sieves and mixing trough",
+     "build_materials": {
+      "timber_m3": 3.0,
+      "iron_bar_kg": 100.0
+     },
+     "build_labour_hours": {
+      "carpenter": 60.0,
+      "smith": 20.0
+     },
+     "service_life_years": 15,
+     "annual_output_at_basis": 100000.0,
+     "capital_basis": "Dry borax and boric acid are ground, sieved and mixed on a floor with a trough; there is nothing hot or corrosive, so wood and a little iron serve for decades. Output is bounded by the floor and sieves, taken at the order of a hundred tonnes a year.",
+     "conf": "D"
+    }
+   ],
    "operated_by": ["soda_leblanc"]
   },
   "aluminium_soap_kg": {
@@ -239,6 +275,25 @@
    "yield_basis": "STOICHIOMETRIC MINIMUM. Mercury fulminate is 284.63 g/mol containing one mercury (200.59 g) and two nitrogen atoms, taken from two molecules of nitric acid (2 x 63.01 g); the two carbon atoms are taken from one molecule of ethanol (46.07 g). Per kg: 0.705 kg mercury, 0.443 kg nitric acid, 0.162 kg ethanol. A real batch uses a large excess of acid and ethanol and recovers a fraction, so this understates cost (heuristic, conf C). Labour is copied from nitroglycerin_kg, the neighbouring hazardous batch synthesis.",
    "conf": "C",
    "requires_node": "chm_fulminate",
+   "capital": [
+    {
+     "good": "glass flasks, copper water-bath and fume flue",
+     "build_materials": {
+      "clay_kg": 300.0,
+      "copper_kg": 60.0,
+      "brick_1000": 1.0
+     },
+     "build_labour_hours": {
+      "potter": 40.0,
+      "smith": 40.0,
+      "mason": 30.0
+     },
+     "service_life_years": 10,
+     "annual_output_at_basis": 3000.0,
+     "capital_basis": "Mercury is dissolved in nitric acid and run into alcohol in small flasks over a water bath, in batches of hundreds of grams because the product is dangerous; the percussion-cap trade used a few tonnes a year. Masses are reasoned estimates.",
+     "conf": "D"
+    }
+   ],
    "operated_by": ["chm_fulminate"]
   },
   "uranium_ore_kg": {

@@ -212,6 +212,23 @@
    "yield_basis": "COMPOSITION AND STOICHIOMETRY. Age-hardening copper-beryllium is about 1.9% beryllium. That is 19 kg beryllium per tonne; beryl is 5.03% beryllium (3*9.012/537.5) and taken as 70% recovered through opening and reduction, so 19/(0.0503*0.70) = 540 kg. BeO + C -> Be + CO needs 1.333 kg carbon per kg beryllium, 25.3 kg. Copper is 981 kg with the 2% melt loss bronze_kg uses, 1001 kg. Heat is a floor: the reduction takes about 499 kJ per mole beryllium (formation enthalpies of BeO and CO), 55.4 MJ/kg, 1052 MJ for 19 kg, plus heating and melting 981 kg copper (0.385 kJ/kg/K to 1085 C and 205 kJ/kg fusion), about 610 MJ; total 1665 MJ at about 2000 C, which only arc heating reaches. Reagents to open the beryl are not costed. Alloying labour is copied from bronze_kg.",
    "conf": "C",
    "requires_node": "arc_furnace_ferroalloys",
+   "capital": [
+    {
+     "good": "crucible furnace and casting pit",
+     "build_materials": {
+      "brick_1000": 6.0,
+      "clay_kg": 800.0
+     },
+     "build_labour_hours": {
+      "mason": 100.0,
+      "potter": 60.0
+     },
+     "service_life_years": 10,
+     "annual_output_at_basis": 20000.0,
+     "capital_basis": "Beryl is reduced with carbon in a copper melt in crucibles; crucibles last only a handful of melts so are in the clay mass. A master-alloy house of this size makes the order of twenty tonnes of alloy a year; masses are reasoned estimates.",
+     "conf": "D"
+    }
+   ],
    "operated_by": ["arc_furnace_ferroalloys"]
   },
   "cemented_carbide_kg": {
@@ -253,6 +270,24 @@
    "yield_basis": "STOICHIOMETRY. SiO2 + 3 C -> SiC + 2 CO needs 60.08/40.10 = 1.498 kg silica and 36.03/40.10 = 0.899 kg carbon per kg SiC. Heat is a floor: the reaction takes 618 kJ per mole SiC (formation enthalpies of SiO2, SiC and CO), 15.4 GJ per tonne, plus about 2.6 GJ to bring the charge to 2300 C, about 18000 MJ, which only resistance heating reaches. Carbon monoxide off-gas heat is not credited, and real furnaces leave unreacted charge, so material yield is optimistic. Crew hours are copied from cement_portland_kg's kiln crew.",
    "conf": "C",
    "requires_node": "arc_furnace_ferroalloys",
+   "capital": [
+    {
+     "good": "Acheson resistance furnace: brick walls and carbon core",
+     "build_materials": {
+      "brick_1000": 20.0,
+      "carbon_kg": 3000.0,
+      "iron_bar_kg": 1000.0
+     },
+     "build_labour_hours": {
+      "mason": 300.0,
+      "electrician": 100.0
+     },
+     "service_life_years": 8,
+     "annual_output_at_basis": 100000.0,
+     "capital_basis": "Acheson's furnace is a brick trough with an electrode at each end and a carbon core; a charge of tens of tonnes is run for a couple of days and the walls are then partly taken down. Taking a run a fortnight at some four tonnes yields on the order of a hundred tonnes a year. Masses are reasoned estimates.",
+     "conf": "D"
+    }
+   ],
    "operated_by": ["arc_furnace_ferroalloys"]
   },
   "alnico_kg": {
@@ -350,6 +385,24 @@
    "yield_basis": "STOICHIOMETRY. MgCl2 + CaF2 + H2SO4 -> MgF2 + CaSO4 + 2 HCl, with fluoride released as hydrogen fluoride from fluorspar and acid. MgF2 is 62.30 g/mol, so per kg: 95.21/62.30 = 1.528 kg MgCl2, 78.07/62.30 = 1.253 kg CaF2 and 98.08/62.30 = 1.574 kg H2SO4, all at an assumed 90% yield: 1698, 1392 and 1749 kg. Hydrochloric acid and calcium sulphate are discarded. Drying and vacuum-grade purification are not modelled. Labour is copied from molybdenum_kg's chemist hours.",
    "conf": "C",
    "requires_node": "hydrofluoric_acid",
+   "capital": [
+    {
+     "good": "lead retort and condenser for hydrofluoric acid, precipitation tanks",
+     "build_materials": {
+      "lead_kg": 1500.0,
+      "iron_bar_kg": 500.0
+     },
+     "build_labour_hours": {
+      "plumber": 250.0,
+      "smith": 100.0,
+      "mason": 100.0
+     },
+     "service_life_years": 6,
+     "annual_output_at_basis": 5000.0,
+     "capital_basis": "Hydrofluoric acid attacks glass and clay but not lead, so fluorspar and oil of vitriol were heated in lead retorts with lead condensers; the fluoride is precipitated from the acid in wax- or lead-lined tanks. Optical coatings call for a few tonnes a year. Masses are reasoned estimates.",
+     "conf": "D"
+    }
+   ],
    "operated_by": ["hydrofluoric_acid"]
   },
   "mica_kg": {

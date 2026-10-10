@@ -104,6 +104,27 @@
    "basis": "per tonne of iron castings, cast to shape directly from a blast furnace's own liquid pig iron (moulding, pouring, fettling)",
    "yield_basis": "Cast iron is pig iron poured to shape rather than refined further, so its composition is essentially unchanged - this entry is casting loss, not a metallurgical transformation, which is exactly why a blast furnace's output is described as producing CAST iron rather than bar: nothing here removes carbon. Loss is oxide dross skimmed from the ladle before pouring, plus gate, riser and sprue metal that does not end up in the finished casting, plus the occasional mis-cast reject; taken together at roughly 8%, which is why the input figure exceeds the output. Fettling (knocking off gates and risers, filing the parting line) is a smith's finishing work rather than a furnace process, hence the modest labour figure.",
    "requires_node": "blast_furnace",
+   "capital": [
+    {
+     "good": "foundry building, air furnace and moulding floor",
+     "build_materials": {
+      "stone_kg": 60000.0,
+      "brick_1000": 6.0,
+      "timber_m3": 30.0,
+      "iron_bar_kg": 500.0
+     },
+     "build_labour_hours": {
+      "mason": 400.0,
+      "labourer": 300.0,
+      "carpenter": 150.0,
+      "smith": 100.0
+     },
+     "service_life_years": 30,
+     "annual_output_at_basis": 300000.0,
+     "capital_basis": "An eighteenth-century jobbing foundry was a stone shed with a reverberatory (air) furnace lined with firebrick, a sand-moulding floor and a timber roof; the masonry shell stands for decades. A few hundred tonnes of castings a year is the order of one such foundry running most weeks; stone, brick and timber masses are order-of-magnitude figures for a building of that size, not a survey of a particular works.",
+     "conf": "D"
+    }
+   ],
    "operated_by": ["blast_furnace"],
    "conf": "C"
   },

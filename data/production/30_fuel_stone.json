@@ -48,6 +48,23 @@
    "yield_basis": "THE classic yield, and one of the most consequential ratios in the whole dataset: a traditional earth-covered clamp (wood stacked, turfed over, lit and controlled by choking the air supply so it smoulders rather than flames) converts roughly 20-25% of the dry wood mass into charcoal, the rest leaving as smoke, water vapour and volatile tars. Taking 25% (the better-run end of that range) gives 4 kg of wood per kg of charcoal, i.e. 4000 kg wood_kg for a tonne of charcoal. No external fuel input is listed because the clamp is self-firing - part of the charge itself supplies the heat that pyrolyses the rest, which is exactly why the yield is capped in the 20-25% band rather than higher. This ratio is what makes charcoal iron a forest-eating industry: every tonne of charcoal a furnace burns stands for four tonnes of wood that had to grow somewhere first. Labour is a collier tending the clamp around the clock for several days per burn (building it, watching for blue smoke that signals a breach, breaking it open and sorting the product), amortised over the wood charged.",
    "conf": "B",
    "requires_node": null,
+   "capital": [
+    {
+     "good": "collier's hearth platform, hut and tools",
+     "build_materials": {
+      "timber_m3": 5.0,
+      "iron_bar_kg": 40.0
+     },
+     "build_labour_hours": {
+      "carpenter": 60.0,
+      "labourer": 100.0
+     },
+     "service_life_years": 15,
+     "annual_output_at_basis": 30000.0,
+     "capital_basis": "An earth-clamp burn is built afresh on a levelled hearth, so the lasting plant is only the hut, rakes, shovels and the cleared platform. A collier's team burns a clamp over about a week and keeps several going, which is the order of thirty tonnes of charcoal a year at the four-to-one wood the entry states; the figures are reasoned estimates.",
+     "conf": "D"
+    }
+   ],
    "operated_by": ["en_charcoal_burning", "charcoal_industrial"]
   },
   "coal_kg": {
@@ -115,6 +132,24 @@
    "yield_basis": "JOINT PRODUCTION: destructively distilling coal in a sealed oven at 1000-1100 C drives off its volatile matter, some of which is condensed rather than burned - a byproduct oven (as opposed to an open beehive oven that just burns the volatiles off) recovers coal tar and leaves a high-fixed-carbon solid residue (coke, called carbon_kg here since the tree uses it for electrodes, motor brushes and electrolysis anodes - applications that want a carbon block, not iron). Byproduct coking of bituminous coal is well-documented industrial chemistry: coke yield runs 65-75% of the coal charged (taken here at 70%), and tar condenses out at roughly 3-5% of the charge (taken at 3.5%); the remainder leaves as coal gas and ammonia liquor, which are not modelled as materials here. The furnaceman hours are the least certain number in the entry - a coking cycle runs 2-3 days but one crew tends many ovens charging and drawing in sequence, so the per-tonne figure is an amortised estimate, not a stopwatch reading.",
    "conf": "B",
    "requires_node": "coal_coke",
+   "capital": [
+    {
+     "good": "coke oven with tar recovery: silica brick walls, doors and bands",
+     "build_materials": {
+      "brick_1000": 6.0,
+      "iron_bar_kg": 300.0
+     },
+     "build_labour_hours": {
+      "mason": 120.0,
+      "labourer": 100.0,
+      "smith": 30.0
+     },
+     "service_life_years": 20,
+     "annual_output_at_basis": 420000.0,
+     "capital_basis": "One oven of the smallest slot or beehive size takes a charge of about six tonnes of coal and cokes it in two to three days, so about a hundred charges a year, six hundred tonnes of coal and at the entry's seven tenths yield about four hundred tonnes of coke. Ovens are lined with firebrick and stand for a campaign of some twenty years before the crown is rebuilt; brick count is the order of a beehive's six thousand.",
+     "conf": "C"
+    }
+   ],
    "operated_by": ["coal_coke"]
   },
   "graphite_kg": {

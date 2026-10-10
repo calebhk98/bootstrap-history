@@ -126,5 +126,33 @@ class MakersWithAStatedPlant(unittest.TestCase):
                          "now adds its staff cost, remove from the list: %s" % sorted(INPUTS_DEARER_THAN_PRODUCT - short))
 
 
+# Extraction streams: a deposit or a parent stream sets their output, so no plant of their own is stated.
+def is_extraction_stream(entry):
+    return bool(entry.get("extracted_from")) and not entry.get("inputs")
+
+
+class OutputEarningEntriesStateAPlant(unittest.TestCase):
+    """A node earns only from the entries that name it in `operated_by`; an entry with no plant leaves it
+    earning its staff's wages and nothing above (Complaints/319), so each such entry states one."""
+
+    def operated_entries(self):
+        return {key: entry for key, entry in production_data().items()
+                if entry.get("operated_by") and not is_extraction_stream(entry)}
+
+    def test_every_entry_run_by_an_output_earning_node_states_a_plant(self):
+        bare = sorted(key for key, entry in self.operated_entries().items() if not entry.get("capital"))
+        self.assertEqual(bare, [], "operated_by entries with no capital: %s" % bare)
+
+    def test_every_plant_item_states_its_bill_life_capacity_and_basis(self):
+        for key, entry in self.operated_entries().items():
+            for item in entry.get("capital") or []:
+                where = "%s / %s" % (key, item.get("good"))
+                self.assertTrue(item.get("build_materials") or item.get("build_labour_hours"), where)
+                self.assertGreater(float(item.get("service_life_years") or 0.0), 0.0, where)
+                self.assertGreater(float(item.get("annual_output_at_basis") or 0.0), 0.0, where)
+                self.assertGreaterEqual(len(item.get("capital_basis") or ""), 50, where)
+                self.assertIn(item.get("conf"), ("A", "B", "C", "D"), where)
+
+
 if __name__ == "__main__":
     unittest.main()
