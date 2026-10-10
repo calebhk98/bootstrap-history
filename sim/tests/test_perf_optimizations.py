@@ -29,7 +29,7 @@ def _test_start_reason_why_false_boolean_equivalence():
     return len(mismatches) == 0, f"Mismatches found: {mismatches[:5]}"
 
 
-check("start_reason _why=False boolean equivalence", _test_start_reason_why_false_boolean_equivalence)
+slow_check("start_reason _why=False boolean equivalence", _test_start_reason_why_false_boolean_equivalence)
 
 
 def _test_afford_gate_behavior():
@@ -56,7 +56,7 @@ def _test_afford_gate_behavior():
     return isinstance(res1, tuple) and len(res1) == 2, f"Unexpected return: {res1}"
 
 
-check("_project_progress_afford_gate returns (money, refunded)", _test_afford_gate_behavior)
+slow_check("_project_progress_afford_gate returns (money, refunded)", _test_afford_gate_behavior)
 
 
 def _test_perf_fingerprint_quick_scenarios():
@@ -73,14 +73,14 @@ def _test_perf_fingerprint_quick_scenarios():
     return valid, f"Quick scenarios check: {scenarios}"
 
 
-check("perf_fingerprint QUICK_SCENARIOS validity", _test_perf_fingerprint_quick_scenarios)
+check("perf_fingerprint QUICK_SCENARIOS validity", *_test_perf_fingerprint_quick_scenarios())
 
 
 def _test_perf_fingerprint_state_retention_toggle():
     """Verify run(scenario, keep_states=False) does not retain full states."""
     from sim.tests import fingerprint as F
     
-    sc = F.QUICK_SCENARIOS[0]
+    sc = dict(F.QUICK_SCENARIOS[0], years=2)     # the toggle shows in any run; two years keep it cheap
     digests_no_states, cpu_no_states, states_no_states = F.run(sc, keep_states=False)
     digests_with_states, cpu_with_states, states_with_states = F.run(sc, keep_states=True)
     
@@ -91,5 +91,5 @@ def _test_perf_fingerprint_state_retention_toggle():
     return ok1 and ok2 and ok3, f"no_states: {len(states_no_states)}, with_states: {len(states_with_states)}"
 
 
-check("perf_fingerprint keep_states toggle", _test_perf_fingerprint_state_retention_toggle)
+slow_check("perf_fingerprint keep_states toggle", _test_perf_fingerprint_state_retention_toggle)
 

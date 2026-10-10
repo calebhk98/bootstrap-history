@@ -8,8 +8,6 @@ Three static scans (no game is built):
 A new sentence or reply field that breaks one fails here.
 """
 
-QUICK_TOPIC = True
-
 import ast
 import os
 import re
