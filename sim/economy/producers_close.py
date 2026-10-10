@@ -10,7 +10,7 @@
 """
 import math
 from dataclasses import dataclass, replace
-from typing import Collection, List, Mapping, Optional, Sequence, Tuple
+from typing import Callable, Collection, List, Mapping, Optional, Sequence, Tuple
 
 from sim.constants import declare
 
@@ -18,7 +18,7 @@ from . import unit_cost
 from .producers import (OUTPUT_CHANGE_SHARE_PER_YEAR, Producer, expected_output_prices, live_input_prices,
                         live_wages, next_expectations, share_working)
 from .protocols import MarketView
-from .types import AgentId, LoanRequest, Recipe, TileId, Transfer
+from .types import AgentId, GoodId, LoanRequest, Recipe, TileId, Transfer
 
 LOSS_YEARS_BEFORE_EXIT = declare(
     "LOSS_YEARS_BEFORE_EXIT", 3, kind="temporary_heuristic", unit="consecutive years",
@@ -67,9 +67,12 @@ def working_capital_target(recipe: Recipe, capacity_runs: float, input_prices, w
 
 
 def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float, view: MarketView,
-               worked_runs: Optional[float] = None) -> YearClose:
+               worked_runs: Optional[float] = None,
+               price_share_after: Optional[Callable[[GoodId, float], float]] = None) -> YearClose:
     """`worked_runs` is what the producer ran this year (all its capacity when not given). Idle plant is
-    sunk, so the year's capital charge falls only on the capacity worked."""
+    sunk, so the year's capital charge falls only on the capacity worked. `price_share_after(good, added)` is
+    the share of a good's price that remains when the producer adds that much output a year (expansion_price.py);
+    without it the producer expects the price it sees."""
     first_output = sorted(recipe.outputs)[0]
     currency = view.currency_of(view.area_of(first_output, producer.tile))
     rate = view.interest_rate(currency)
@@ -105,7 +108,8 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
         capacity = min(capacity, max(paying * producer.capacity_runs,
                                      (1.0 - OUTPUT_CHANGE_SHARE_PER_YEAR) * producer.capacity_runs))
     target = working_capital_target(recipe, capacity, inputs, wages)
-    request, rebuilt = _expansion(producer, recipe, view, currency, rate, wear, inputs, wages)
+    request, rebuilt = _expansion(producer, recipe, view, currency, rate, wear, inputs, wages,
+                                  price_share_after)
     survivor = replace(producer, capacity_runs=capacity, years_of_loss=losses,
                        expected_prices=expectations, cash_target=target)
     surplus = max(0.0, cash - target)
@@ -131,18 +135,22 @@ def _dividend(producer: Producer, currency: str, amount: float) -> Tuple[Transfe
     return (Transfer(producer.agent_id, producer.owner, currency, amount, "dividend"),)
 
 
-def _expansion(producer, recipe, view, currency, rate, wear, inputs, wages):
-    """A loan to grow, when a run of new capacity would earn more than the live rate. Plant that wore
-    out is rebuilt from the producer's own cash (the economy's year does it). Only a recipe with
-    plant needs one; without plant the site and the owner bound it."""
+def _expansion(producer, recipe, view, currency, rate, wear, inputs, wages, price_share_after=None):
+    """A loan to grow, when a run of new capacity would earn more than the live rate at the price expected
+    once the new capacity's output is on the market. Plant that wore out is rebuilt from the producer's own
+    cash (the economy's year does it). Only a recipe with plant needs one; without plant the site and the
+    owner bound it."""
     value = unit_cost.plant_value_per_run(recipe, inputs, wages)
     if recipe.plant_life_years <= 0.0 or value <= 0.0 or not math.isfinite(value):
         return None, 0.0
-    yearly_return = unit_cost.return_on_capital(
-        recipe, expected_output_prices(producer, recipe, view) or {}, inputs, wages)
+    runs = EXPANSION_SHARE_PER_YEAR * producer.capacity_runs
+    prices = expected_output_prices(producer, recipe, view) or {}
+    if price_share_after is not None:
+        prices = {good: price * price_share_after(good, runs * recipe.outputs[good] * producer.yield_factor)
+                  for good, price in prices.items()}
+    yearly_return = unit_cost.return_on_capital(recipe, prices, inputs, wages)
     if yearly_return <= rate:
         return None, 0.0
-    runs = EXPANSION_SHARE_PER_YEAR * producer.capacity_runs
     amount = runs * value
     return LoanRequest(producer.agent_id, currency, amount, yearly_return, recipe.plant_life_years,
                        amount, "expand"), runs

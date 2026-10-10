@@ -4,8 +4,8 @@ import dataclasses
 import math
 from typing import Dict, Tuple
 
-from . import (currency, households, inventory, merchants, metal_stock, ownership, producer_exit, producers, producers_close,
-               state_budget, taxes)
+from . import (currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit,
+               producers, producers_close, state_budget, taxes)
 from .households_cohort import renewed
 from .market_memory import market_key
 from .national_prices import national_prices
@@ -94,6 +94,7 @@ def wear_and_spoilage(setup, record) -> None:
 def close_agents(setup, record, view, ledger: YearLedger, area_map) -> None:
     money = setup.currency_id
     property_income: Dict[str, float] = {}
+    traded = {(result.good, result.area): result.quantity for result in ledger.clearings}
     for producer_id, producer in sorted(record.producers.items()):
         recipe = setup.recipes[producer.recipe_id]
         revenue = ledger.sales_in.get(producer_id, 0.0)
@@ -101,7 +102,8 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map) -> None:
         per_run = recipe.outputs[producers.main_output(recipe)]
         worked = ledger.output.get((producer_id, producers.main_output(recipe)), 0.0) / (
             per_run * producer.yield_factor or per_run)
-        closed = producers_close.close_year(producer, recipe, revenue, costs, view, worked)
+        price_share = expansion_price.price_share_of(ledger.bids_by_market, traded, area_map.area_of, producer.tile)
+        closed = producers_close.close_year(producer, recipe, revenue, costs, view, worked, price_share)
         if closed.exited:
             paid = producer_exit.exit_producer(record, producer_id, list(closed.transfers))
             for transfer in paid:
