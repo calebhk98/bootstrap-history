@@ -7,7 +7,7 @@ from .harness import *  # noqa: F401,F403
 
 
 def _fresh():
-    return sim(civ="rome_100ad", capital=1e9)
+    return unopened_sim(civ="rome_100ad", capital=1e9)
 
 
 def _plague_hazard(household):

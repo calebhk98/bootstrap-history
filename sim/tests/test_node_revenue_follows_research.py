@@ -8,14 +8,15 @@ import unittest
 from sim import simulator
 from sim.engine import node_revenue, prices
 from sim.engine.saveload import load_state, save_state
+from sim.tests.harness import build_unopened
 
 CIVILISATION = "rome_100ad"
 
 
 def make_sim():
     _tree, _prices, nodes, _wages, _goods = simulator.load()
-    sim = simulator.Sim(nodes, [], random.Random(1), events=False, manual=True,
-                        civ=simulator.load_civ(CIVILISATION))
+    sim = build_unopened(lambda: simulator.Sim(nodes, [], random.Random(1), events=False, manual=True,
+                                               civ=simulator.load_civ(CIVILISATION)))
     sim.goal, sim.done_year = sorted(nodes)[0], {}
     return sim
 

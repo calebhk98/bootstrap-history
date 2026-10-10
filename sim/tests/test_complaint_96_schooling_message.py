@@ -19,12 +19,13 @@ if _REPOSITORY_ROOT not in sys.path:
     sys.path.insert(0, _REPOSITORY_ROOT)
 from sim import simulator
 from sim.engine.core import Sim
+from sim.tests.harness import build_unopened
 
 _TREE, _PRICES, _NODES, _WAGES, _GOODS = simulator.load()
 
 
 def _fresh_sim():
-    return Sim(_NODES, list(_NODES), random.Random(1))
+    return build_unopened(lambda: Sim(_NODES, list(_NODES), random.Random(1)))
 
 
 class SchoolingMessageTimingTests(unittest.TestCase):

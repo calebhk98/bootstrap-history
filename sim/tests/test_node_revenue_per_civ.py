@@ -6,12 +6,13 @@ import unittest
 
 from sim import simulator
 from sim.engine import data, node_revenue
+from sim.tests.harness import build_unopened
 
 
 def sim_for(civilization_id):
     _tree, _prices, nodes, _wages, _goods = simulator.load()
-    return simulator.Sim(nodes, [], random.Random(1), events=False, manual=True,
-                         civ=simulator.load_civ(civilization_id))
+    return build_unopened(lambda: simulator.Sim(nodes, [], random.Random(1), events=False, manual=True,
+                                                civ=simulator.load_civ(civilization_id)))
 
 
 class PerCivilisation(unittest.TestCase):
@@ -44,7 +45,7 @@ class PerCivilisation(unittest.TestCase):
     def test_the_reference_civilisation_reuses_the_tree_it_was_loaded_with(self):
         _tree, _prices, nodes, _wages, _goods = simulator.load()
         reference = simulator.load_civ()
-        sim = simulator.Sim(nodes, [], random.Random(1), events=False, manual=True, civ=reference)
+        sim = build_unopened(lambda: simulator.Sim(nodes, [], random.Random(1), events=False, manual=True, civ=reference))
         self.assertEqual(sim.nodes["blast_furnace"]["rev_hours"], nodes["blast_furnace"]["rev_hours"])
 
     def test_the_derivation_is_cached_on_what_it_depends_on(self):

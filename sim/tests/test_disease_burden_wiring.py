@@ -24,7 +24,7 @@ from sim.engine.core import demography
 
 
 def _rome_sim(events=False):
-    return sim(civ="rome_100ad", events=events)
+    return unopened_sim(civ="rome_100ad", events=events)
 
 
 _SHARED = []

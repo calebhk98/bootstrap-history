@@ -18,12 +18,13 @@ from sim.engine.core import Sim
 from sim.engine.invariants import check_labour_market_invariants
 from sim.ui.proto.dispatch import _agent_dispatch
 from sim.ui.proto.typed import parse_typed
+from sim.tests.harness import build_unopened
 
 _TREE, _PRICES, _NODES, _WAGES, _GOODS = simulator.load()
 
 
 def _fresh_sim(civ="rome_100ad"):
-    return Sim(_NODES, list(_NODES), random.Random(1), civ=simulator.load_civ(civ))
+    return build_unopened(lambda: Sim(_NODES, list(_NODES), random.Random(1), civ=simulator.load_civ(civ)))
 
 
 def _shrink_nation(sim, total):

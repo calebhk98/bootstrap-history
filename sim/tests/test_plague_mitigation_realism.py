@@ -10,7 +10,7 @@ _MEDICAL_NODES = ("germ_theory", "med_quarantine_sanitation", "md2_vaccine_plagu
 
 
 def _fresh():
-    return sim(civ="rome_100ad", capital=1e9)
+    return unopened_sim(civ="rome_100ad", capital=1e9)
 
 
 def _plague_hazard(household):
