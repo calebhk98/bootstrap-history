@@ -13,6 +13,7 @@ from typing import Dict, List, Optional, Tuple
 
 from sim.geography import queries, tile_holdings
 from sim.geography.distance import haversine_km
+from sim.unit_conversions import CIVIL_DAYS_PER_YEAR
 
 
 @functools.lru_cache(maxsize=2048)
@@ -70,7 +71,7 @@ def distance_km(held_tiles: List[str], from_tile: str, to_tile: str) -> float:
 
 def capacity_kcal_per_day(tile_id: str) -> float:
     """The food energy a day a tile's land gives at a full stock: what a settlement there can live on at most."""
-    return _carrying_capacity(tile_id) / 365.0
+    return _carrying_capacity(tile_id) / CIVIL_DAYS_PER_YEAR
 
 
 def worked_kcal_per_day(tile_id: str, hectares_worked: float) -> float:

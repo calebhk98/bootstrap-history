@@ -6,7 +6,7 @@ as far as the work really buys and distributes grain. The people's nutrition rat
 born (`sim/world/demography.py`), counts them with the year's food.
 """
 
-DAYS_PER_YEAR = 365.0
+from sim.unit_conversions import CIVIL_DAYS_PER_YEAR
 
 
 class FoodReliefMixin:
@@ -26,4 +26,4 @@ class FoodReliefMixin:
         total = 0.0
         for node_id, kilograms in self.relief_kilograms_per_year().items():
             total += kilograms * self.mechanic(node_id, "food_relief")["energy_kcal_per_kg"]
-        return total / DAYS_PER_YEAR
+        return total / CIVIL_DAYS_PER_YEAR
