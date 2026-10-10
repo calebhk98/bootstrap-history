@@ -33,6 +33,7 @@ from .strata_observed import observed_incomes
 from .strata_seed import seed_strata, strata_definitions, strata_spawner
 from .player_commands import CommandRejected, register_command
 from . import equity_round, exchange, exchange_commands, exchange_sale  # noqa: F401  (registers the offer commands, the answers and equity rounds)
+from . import foundation, group_servants  # noqa: F401  (registers the church and academy kinds and the state servants' yearly turn)
 from . import demand_answer, demand_commands, demand_year  # noqa: F401  (registers the command that answers the state's demands, and its yearly turn)
 from .trader import Trader
 from .trader_entry import trader_entry
