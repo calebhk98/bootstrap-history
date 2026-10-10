@@ -256,7 +256,7 @@ class AgentEconomy:
         from .prices import default_production_entries
         from .producer_costs import entry_keys_held_for
         recipes = self._economy.setup.recipes
-        keys = entry_keys_held_for(node_id, default_production_entries(), self._sim.techniques_in_use())
+        keys = entry_keys_held_for(node_id, default_production_entries(), self._sim.techniques_spread())
         best = None
         for key in sorted(keys):
             recipe = recipes.get(key)

@@ -268,6 +268,9 @@ class EconomyState:
 	output_per_head: float = 1.0
 	# material -> its price in labour hours the first year households were offered it, which values it in real output
 	introduction_prices: Dict[str, float] = field(default_factory=dict)
+	# node -> the year some producer was first seen running it (technique_spread.py)
+	technique_first_run: Dict[str, int] = field(default_factory=dict)
+	technique_record_started: bool = False
 	money_real: float = 1.0
 	# commodity -> society capacity, stock and last price ratio (market_clearing.py)
 	market_book: Dict[str, Dict[str, float]] = field(default_factory=dict)
