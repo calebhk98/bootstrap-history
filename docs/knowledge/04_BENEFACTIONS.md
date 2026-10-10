@@ -256,7 +256,7 @@ Some works are paid once rather than kept up: paying off the state's debt, settl
 
 **Why you would never guess this.** The grant eases the state's deficit; it does not feed anyone by itself. Grain handed out directly to the hungry is the work of the public granary, which the nation's people eat.
 
-**Prerequisites.** `fin_annona`, `fin_government`.
+**Prerequisites.** `fin_annona`, `fin_public_debt`.
 
 **Cost & labour.** Clerks; the sum itself. ESTIMATED.
 
@@ -276,7 +276,7 @@ Some works are paid once rather than kept up: paying off the state's debt, settl
 
 **Why you would never guess this.** One clinic does almost nothing for a nation. The burden falls in proportion to the share of the people within reach of an open clinic, which is why a rollout (many clinics until a chosen share is covered) is the work, not the first building.
 
-**Prerequisites.** `md2_child_clinic`, `md2_maternal_clinic`, `ben_hospital_foundation`.
+**Prerequisites.** `md2_child_clinic`, `md2_maternal_clinic`.
 
 **Cost & labour.** Masons and carpenters to build; a nurse, a physician and labourers on the payroll, soap and fuel each year. ESTIMATED.
 

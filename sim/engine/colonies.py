@@ -31,8 +31,8 @@ class ColoniesMixin:
         return max(fit, key=lambda item: (item[1]["settlers"], item[0]), default=None)
 
     def claimed_tiles(self):
-        """Tiles the acting seat's colonies stand on."""
-        return [colony["tile"] for colony in self.state.holdings.colonies]
+        """Tiles any seat's colonies stand on: a tile has one holder."""
+        return [colony["tile"] for seat in self.state.seats.values() for colony in seat.holdings.colonies]
 
     def settlement_candidates(self, by_sea=False):
         """Tiles a colony could be founded on now, best land first."""

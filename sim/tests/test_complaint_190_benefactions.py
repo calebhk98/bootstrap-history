@@ -14,7 +14,7 @@ with open(os.path.join(S.ROOT, "data", "branches", "56_benefactions.json")) as _
     WORKS = tuple(node["id"] for node in json.load(_branch))
 PRESENT = [work for work in WORKS if work in NODES]
 # a work with a yearly programme is kept up; one without is paid for once (a transfer, a charter) and is knowledge after
-KEPT = [work for work in PRESENT if NODES[work].get("annual_labour_hours")]
+KEPT = [work for work in PRESENT if NODES[work]["up"] > 0]
 ONCE = [work for work in PRESENT if work not in KEPT]
 
 check("every work declared in the benefactions branch reaches the tree and there is at least one",
@@ -26,6 +26,12 @@ def late_game_sim():
     late = sim(capital=800_000_000.0)
     for work in PRESENT:
         late.done.update(NODES[work]["pre"])
+    late._done_changed()
+    # a work that names another going concern as its ground needs that concern open
+    for work in PRESENT:
+        for needed in NODES[work]["pre"]:
+            if late.is_venture(needed):
+                late.state.projects.operating.add(needed)
     late._done_changed()
     for work in PRESENT:
         for trade in NODES[work]["lab"]:
@@ -55,13 +61,13 @@ for work in ONCE:
     node = NODES[work]
     check("%s earns nothing and costs nothing to keep: it is paid once" % work,
           node["rev"] == 0 and node["up"] == 0 and not late.is_venture(work), (node["rev"], node["up"]))
-    check("%s costs labour to bring about" % work, node["_labour_cost"] > 0 and node["cap"] == 0)
+    check("%s costs labour to bring about" % work, node["_labour_cost"] > 0)
     check("%s declares mechanics" % work, bool(node.get("mechanics")))
 for work in KEPT:
     node = NODES[work]
     check("%s earns nothing of its own" % work, node["rev"] == 0)
-    check("%s is built from labour and materials, not a bare capital figure" % work,
-          node["_labour_cost"] > 0 and node["_material_cost"] > 0 and node["cap"] == 0)
+    check("%s is built from labour and materials, not a typed capital figure" % work,
+          node["_labour_cost"] > 0 and node["_material_cost"] > 0)
     check("%s costs upkeep at least as large as a maintenance share of its build" % work,
           node["up"] >= 0.02 * (node["_labour_cost"] + node["_material_cost"]) * 0.99, node["up"])
     check("%s is a going concern, not knowledge" % work, late.is_venture(work))

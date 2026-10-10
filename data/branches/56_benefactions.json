@@ -1402,7 +1402,7 @@
   "cat": "benefaction",
   "pre": [
    "fin_annona",
-   "fin_government"
+   "fin_public_debt"
   ],
   "traits": [
    "food",
@@ -1480,8 +1480,7 @@
   "cat": "benefaction",
   "pre": [
    "md2_child_clinic",
-   "md2_maternal_clinic",
-   "ben_hospital_foundation"
+   "md2_maternal_clinic"
   ],
   "traits": [
    "medical",
@@ -1518,7 +1517,7 @@
   "conf": "C",
   "gov": 0,
   "sus": 0,
-  "note": "A clinic in each district where mothers and children are weighed, vaccinated and treated early, with a nurse and a physician on the payroll, soap and fuel bought every year. Each clinic serves only the people of its own district, so the nation's burden of disease falls only as far as the share of people the clinics reach, and the rollout command lays more of them until a chosen share is covered. It needs the hospital, and the knowledge of how infection spreads and how children and mothers are cared for.",
+  "note": "A clinic in each district where mothers and children are weighed, vaccinated and treated early, with a nurse and a physician on the payroll, soap and fuel bought every year. Each clinic serves only the people of its own district, so the nation's burden of disease falls only as far as the share of people the clinics reach, and the rollout command lays more of them until a chosen share is covered. It needs the knowledge of how infection spreads and how children and mothers are cared for.",
   "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"artisan\": 30000, \"scholar\": 8000, \"labourer\": 2000}. Annual consumables: {\"soap_kg\": 4000, \"charcoal_kg\": 20000}. Sizes of the foundation and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing.",
   "mechanics": {
    "upkeep_full": true,

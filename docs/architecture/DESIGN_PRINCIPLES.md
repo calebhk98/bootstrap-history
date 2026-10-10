@@ -58,4 +58,4 @@ Playtests show broad development compounds far faster than beelining a goal, and
 
 ## Dated hazards stay until dynamic systems produce them, and late surplus is intended
 
-Dated historical crises stay until the economy, population, medical and multiplayer systems can produce them per country; do not replace them with random draws. A large late-game surplus is the intended result of developing the whole society; what is missing is things to spend it on (190). (`Complaints/closed/180-dated-hazards-and-late-money.md`)
+Dated historical crises stay until the economy, population, medical and multiplayer systems can produce them per country; do not replace them with random draws. A large late-game surplus is the intended result of developing the whole society; what the founder spends it on is the benefaction works and the mechanics they use (`Complaints/closed/190-late-game-uses-for-money.md`). (`Complaints/closed/180-dated-hazards-and-late-money.md`)

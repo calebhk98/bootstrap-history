@@ -122,7 +122,7 @@ class AdoptionMixin:
                 changed.append("%s %.1f%% -> %.1f%% (%+.1f points, one step)" % (
                     field, before * 100, self.civ[field] * 100,
                     (self.civ[field] - before) * 100))
-            elif field == "population":
+            elif field == "population" and node_id not in self.coverage_nodes():
                 # Only the disease technologies carry this weight; the
                 # disease burden reads it live from the tree.
                 burden = self._disease_burden()
