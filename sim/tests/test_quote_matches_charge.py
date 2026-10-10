@@ -1,7 +1,8 @@
 """quote_matches_charge: every command with a quote is charged what it quoted.
 
 One parametrised table: each row is a quote command, the command that spends,
-and the reply key holding the quoted price. Both run on identical games.
+and the reply key holding the quoted price. Each quote is taken on the state its
+action then runs on, so the rows share one game and run in turn.
 """
 from .harness import *  # noqa: F401,F403
 
@@ -12,8 +13,11 @@ def _fresh():
     return sim(capital=_CAPITAL)
 
 
+_TABLE_GAME = _fresh()
+
+
 def _bounty_node():
-    probe = _fresh()
+    probe = _TABLE_GAME
     for node_id in sorted(NODES):
         if node_id not in probe.done and probe.bounty_eligible(node_id):
             return node_id
@@ -50,7 +54,7 @@ if _bounty_id:
                   "bounty", {"id": _bounty_id}, "paid_now"))
 
 for _name, _quote_args, _action, _action_args, _key in _ROWS:
-    _game = _fresh()
+    _game = _TABLE_GAME
     _quote = S._agent_dispatch(_game, NODES, dict(_quote_args, cmd="quote"))
     _before = _game.capital
     _reply = S._agent_dispatch(_game, NODES, dict(_action_args, cmd=_action))
@@ -70,7 +74,7 @@ check("every buy target has a row in the quote-equals-charge table",
       not _uncovered, _uncovered)
 
 # Farm and school take their price from one engine function, quote and action alike.
-_priced = _fresh()
+_priced = _TABLE_GAME
 _farm_quote = S._agent_dispatch(_priced, NODES, {"cmd": "quote", "what": "farm", "n": 1})
 _school_quote = S._agent_dispatch(
     _priced, NODES, {"cmd": "quote", "what": "school", "trade": "smith"})
@@ -97,8 +101,11 @@ def _ledger_game():
     return game
 
 
+_PROBE = _ledger_game()
+
+
 def _first_node(test):
-    probe = _ledger_game()
+    probe = _PROBE
     for node_id in ORDER:
         if node_id not in probe.done and probe.can_start(node_id) and test(NODES[node_id]):
             return node_id
@@ -107,17 +114,17 @@ def _first_node(test):
 
 def _first_openable():
     """A venture whose opening quote needs no extra staff, found on one probe game."""
-    probe = _ledger_game()
+    probe = _PROBE
     for node_id in ORDER:
         if node_id in probe.done or not probe.is_venture(node_id):
             continue
         probe.state.projects.done.add(node_id)
         probe._done_changed()
         reply = S._agent_dispatch(probe, NODES, {"cmd": "quote", "what": "open", "id": node_id})
-        if reply.get("ok") and not reply.get("staff_short"):
-            return node_id
         probe.state.projects.done.discard(node_id)
         probe._done_changed()
+        if reply.get("ok") and not reply.get("staff_short"):
+            return node_id
     return None
 
 
@@ -133,9 +140,13 @@ def _run_project(node_id):
 
 
 _open_id = _first_openable()
+_PROJECT_TESTS = (
+    ("research", lambda node: not node["rev"] and not node["mat"]),
+    ("project", lambda node: node["rev"] > 0 and node["mat"]))
+_PROJECT_NODES = [_first_node(_test) for _label, _test in _PROJECT_TESTS]
 check("a venture exists to open in the table", _open_id is not None)
 if _open_id:
-    _opener = _ledger_game()
+    _opener = _PROBE
     _opener.state.projects.done.add(_open_id)
     _opener._done_changed()
     _open_quote = S._agent_dispatch(_opener, NODES, {"cmd": "quote", "what": "open", "id": _open_id})
@@ -145,10 +156,7 @@ if _open_id:
           abs(_ledger_outflow(_opener, "opening a venture") - _open_quote["paid_now"]) <= 0.051,
           (_ledger_outflow(_opener, "opening a venture"), _open_quote["paid_now"]))
 
-for _label, _test in (
-        ("research", lambda node: not node["rev"] and not node["mat"]),
-        ("project", lambda node: node["rev"] > 0 and node["mat"])):
-    _node_id = _first_node(_test)
+for (_label, _test), _node_id in zip(_PROJECT_TESTS, _PROJECT_NODES):
     check("%s: a node exists to start in the table" % _label, _node_id is not None)
     if not _node_id:
         continue
@@ -173,7 +181,7 @@ check("hire wage: the first year's charge through the ledger is the quoted yearl
 
 # Living stock: the ledger "stock bought abroad" outflow is exactly the quoted cost.
 _stock_args = {"what": "living_stock", "material": "ramie_stock_kg", "n": 100}
-_stocked = _ledger_game()
+_stocked = _PROBE
 _stock_quote = S._agent_dispatch(_stocked, NODES, dict(_stock_args, cmd="quote"))
 _stock_reply = S._agent_dispatch(_stocked, NODES, dict(_stock_args, cmd="buy"))
 check("living stock: the ledger shows exactly what was quoted",
@@ -183,7 +191,7 @@ check("living stock: the ledger shows exactly what was quoted",
 
 # Smuggled stock: the carrying is charged whether or not the taker is caught, and it is the quoted cost.
 _smuggle_args = {"what": "smuggled_stock", "material": "silkworm_eggs_kg", "n": 0.1}
-_smuggler = _ledger_game()
+_smuggler = _PROBE
 _smuggle_quote = S._agent_dispatch(_smuggler, NODES, dict(_smuggle_args, cmd="quote"))
 _smuggle_reply = S._agent_dispatch(_smuggler, NODES, dict(_smuggle_args, cmd="buy"))
 check("smuggled stock: the ledger shows exactly what was quoted, caught or not",
