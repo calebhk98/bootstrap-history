@@ -75,7 +75,7 @@ class LivingStockMixin:
 
     def partner_quote_per_tonne(self, material, civilization_id):
         """Home money per tonne delivered from a partner, or None when it cannot supply it."""
-        if civilization_id not in self.foreign_economies() or self.partner_refusal(civilization_id, material):
+        if civilization_id not in self.partner_countries() or self.partner_refusal(civilization_id, material):
             return None
         facts = self._foreign_economy_facts(civilization_id)
         price = facts["prices_in_home_money"].get(material)

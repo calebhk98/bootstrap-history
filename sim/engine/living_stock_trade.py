@@ -24,7 +24,7 @@ class LivingStockTradeMixin:
         units = float(units)
         if units <= 0.0:
             return {"ok": False, "error": "buy a positive amount of %s" % material}
-        trading = self.foreign_economies()
+        trading = self.partner_countries()
         if partner and partner not in trading:
             return {"ok": False, "error": "%s is not trading with you this year; those that are: %s"
                     % (partner, ", ".join(trading) or "none")}
