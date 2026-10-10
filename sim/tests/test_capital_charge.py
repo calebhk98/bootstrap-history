@@ -11,7 +11,7 @@ import unittest
 from unittest import mock
 
 from sim.engine import solve_prices
-from sim.engine import data, energy_prices, node_output, node_revenue
+from sim.engine import data, energy_prices, incumbent_prices, node_output, node_revenue, prices
 from sim.world import capital_market
 from sim.labour.labour_market import production_data
 
@@ -124,6 +124,108 @@ class MakersWithAStatedPlant(unittest.TestCase):
         self.assertLessEqual(short, INPUTS_DEARER_THAN_PRODUCT, "adds less than its staff: %s" % sorted(short))
         self.assertFalse(INPUTS_DEARER_THAN_PRODUCT - short,
                          "now adds its staff cost, remove from the list: %s" % sorted(INPUTS_DEARER_THAN_PRODUCT - short))
+
+
+# Extraction streams: a deposit or a parent stream sets their output, so no plant of their own is stated.
+def is_extraction_stream(entry):
+    return bool(entry.get("extracted_from")) and not entry.get("inputs")
+
+
+class OutputEarningEntriesStateAPlant(unittest.TestCase):
+    """A node earns only from the entries that name it in `operated_by`; an entry with no plant leaves it
+    earning its staff's wages and nothing above (Complaints/319), so each such entry states one."""
+
+    def operated_entries(self):
+        return {key: entry for key, entry in production_data().items()
+                if entry.get("operated_by") and not is_extraction_stream(entry)}
+
+    def test_every_entry_run_by_an_output_earning_node_states_a_plant(self):
+        bare = sorted(key for key, entry in self.operated_entries().items() if not entry.get("capital"))
+        self.assertEqual(bare, [], "operated_by entries with no capital: %s" % bare)
+
+    def test_every_plant_item_states_its_bill_life_capacity_and_basis(self):
+        for key, entry in self.operated_entries().items():
+            for item in entry.get("capital") or []:
+                where = "%s / %s" % (key, item.get("good"))
+                self.assertTrue(item.get("build_materials") or item.get("build_labour_hours"), where)
+                self.assertGreater(float(item.get("service_life_years") or 0.0), 0.0, where)
+                self.assertGreater(float(item.get("annual_output_at_basis") or 0.0), 0.0, where)
+                self.assertGreaterEqual(len(item.get("capital_basis") or ""), 50, where)
+                self.assertIn(item.get("conf"), ("A", "B", "C", "D"), where)
+
+
+class InventoryAndLiveRate(unittest.TestCase):
+    """Stock carried costs the market rate (Complaints/337), and the solver is keyed on a band of the live rate."""
+
+    def price(self, rate, holding_years):
+        entry = works_entry()
+        entry["capital"] = []
+        entry["holding_years"] = holding_years
+        return solve_prices.recipe_cost_and_allocation(
+            "widget_kg", entry, {"ore_kg": 1.0}, WAGES, interest_rate=rate)[1]["widget_kg"]
+
+    def test_inputs_held_for_a_year_cost_the_rate_on_what_was_laid_out(self):
+        inputs_per_unit = 10.0 * 1.0 / 10.0
+        self.assertAlmostEqual(self.price(0.1, 1.0) - self.price(0.1, 0.0), inputs_per_unit * 0.1)
+
+    def test_nothing_is_held_unless_the_entry_says_so(self):
+        self.assertAlmostEqual(self.price(0.3, 0.0), self.price(0.0, 0.0))
+
+    def test_a_longer_hold_or_a_dearer_rate_costs_more(self):
+        self.assertGreater(self.price(0.1, 2.0), self.price(0.1, 1.0))
+        self.assertGreater(self.price(0.2, 1.0), self.price(0.1, 1.0))
+
+    def test_ripening_and_curing_entries_state_how_long_the_stock_is_held(self):
+        held = {key for key, entry in production_data().items() if entry.get("holding_years")}
+        self.assertLessEqual({"leather_kg", "nitre_kg"}, held)
+
+    def test_the_starting_rate_is_its_own_band(self):
+        self.assertEqual(prices.band_interest_rate(0.05, 0.05), 0.05)
+
+    def test_rates_within_a_band_share_it_and_a_far_rate_does_not(self):
+        start = 0.05
+        near = prices.band_interest_rate(start + prices.INTEREST_RATE_BAND * 0.3, start)
+        self.assertEqual(near, start)
+        far = prices.band_interest_rate(start + prices.INTEREST_RATE_BAND * 3.2, start)
+        self.assertGreater(far, start)
+        self.assertEqual(far, prices.band_interest_rate(far + prices.INTEREST_RATE_BAND * 0.2, start))
+
+    def test_a_negative_rate_is_not_charged(self):
+        self.assertEqual(prices.band_interest_rate(-0.5, 0.05), 0.0)
+
+
+class IncumbentTablesFollowTheLiveRate(unittest.TestCase):
+
+    def sim(self, rates):
+        class Stub(incumbent_prices.IncumbentPricesMixin):
+            civ = {"id": "x", "starting_interest_rate": 0.05}
+            state = mock.Mock(projects=mock.Mock(granted=frozenset({"a"})))
+            farm_land = mock.Mock(hectares=100.0)
+
+            def techniques_in_use(self):
+                return self.state.projects.granted
+
+            def market_rate(self):
+                return rates[0]
+        return Stub()
+
+    def test_the_solve_takes_the_banded_live_rate_and_repeats_only_when_a_band_moves(self):
+        rates = [0.05]
+        stub = self.sim(rates)
+        with mock.patch("sim.engine.data.calculated_goods_table", return_value=({}, {})) as solve:
+            stub._price_tables()
+            rates[0] = 0.05 + prices.INTEREST_RATE_BAND * 0.2
+            stub._price_tables()
+            self.assertEqual(solve.call_count, 1)
+            rates[0] = 0.05 + prices.INTEREST_RATE_BAND * 4
+            stub._price_tables()
+            self.assertEqual(solve.call_count, 2)
+            self.assertAlmostEqual(solve.call_args.kwargs["interest_rate"], 0.09)
+
+    def test_a_market_rate_that_needs_the_prices_answers_the_starting_rate_instead_of_recursing(self):
+        stub = self.sim([0.2])
+        stub.market_rate = lambda: stub._banded_market_rate() + 0.2
+        self.assertAlmostEqual(stub._banded_market_rate(), 0.25)
 
 
 if __name__ == "__main__":

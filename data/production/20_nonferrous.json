@@ -269,6 +269,39 @@
    "basis": "per tonne of metallic zinc produced by retort distillation",
    "yield_basis": "RETORT DISTILLATION - the achievement that eluded Europe until the Bristol process of 1738 (India's Zawar mines managed it centuries earlier), despite brass having been made for two thousand years, precisely because it requires not just reducing the ore but condensing the escaping zinc vapour as metal without letting it reoxidise - a sealed fireclay retort with a cooled condenser, not just a hot crucible. calamine_kg is the raw ore at ~35% Zn (see that entry); ZnO + C -> Zn + CO (0.18 kg C/kg Zn stoichiometric) reduces it after an in-furnace calcining roast, and overall recovery of the ore's zinc content as condensed metal is assumed at 70% - better than cementation's capture (this process is built for condensation) but still well short of complete. Retorts themselves were notoriously short-lived, cracking under repeated thermal cycling - reflected in the heavy furnaceman and labourer hours (retort construction/replacement, multi-day firings). This entry and the electrolytic one below produce the identical metal; the difference between them is entirely how hard it is to make, exactly as the aluminium pair below tells the same kind of story.",
    "requires_node": "zinc_metal",
+   "capital": [
+    {
+     "good": "horizontal retort furnace, brickwork",
+     "build_materials": {
+      "brick_1000": 16.0,
+      "stone_kg": 6000.0,
+      "iron_bar_kg": 320.0
+     },
+     "build_labour_hours": {
+      "mason": 200.0,
+      "labourer": 100.0,
+      "smith": 32.0
+     },
+     "service_life_years": 15,
+     "annual_output_at_basis": 40000.0,
+     "capital_basis": "A Belgian-type zinc furnace is a brick casing holding tiers of horizontal fireclay retorts fired from below; about fifty retorts each turn out some seven kilograms of zinc per daily charge, which over a working year is the order of a hundred tonnes a furnace. The brickwork is rebuilt after a campaign of some years; masses are order-of-magnitude figures for a furnace of that capacity. The plant is taken at the size the node's own crew can run at the entry's labour hours, a smaller plant of the same kind, so the figures are scaled down from the full-size works.",
+     "conf": "D"
+    },
+    {
+     "good": "fireclay distillation retorts",
+     "build_materials": {
+      "clay_kg": 1200.0
+     },
+     "build_labour_hours": {
+      "potter": 100.0,
+      "labourer": 32.0
+     },
+     "service_life_years": 0.2,
+     "annual_output_at_basis": 40000.0,
+     "capital_basis": "Zinc vapour and the hot ore charge attack fireclay, so retorts crack and are replaced after a few weeks to a couple of months in a Belgian furnace, which is why they are an item of their own with a life well inside the furnace's. About fifty retorts at some sixty kilograms of clay each is the order of three tonnes. The plant is taken at the size the node's own crew can run at the entry's labour hours, a smaller plant of the same kind, so the figures are scaled down from the full-size works.",
+     "conf": "D"
+    }
+   ],
    "operated_by": ["zinc_metal"],
    "conf": "C"
   },
@@ -517,6 +550,25 @@
    "basis": "per tonne of cold-drawn copper wire",
    "yield_basis": "Wire drawing is purely mechanical - copper rod is pulled through progressively smaller dies, with no chemical change and no reduction, so there is no ore or fuel-for-reduction input here, only the copper feedstock itself plus a 2% allowance for trim scrap and oxide scale not recovered within this entry's basis. Copper work-hardens as it is drawn and must be periodically annealed (heated and slow-cooled) to restore ductility for further drawing, hence a small furnaceman allowance alongside the machinist hours for the drawing bench itself.",
    "requires_node": "drawplate_wire",
+   "capital": [
+    {
+     "good": "water-powered wire-drawing bench and dies",
+     "build_materials": {
+      "iron_bar_kg": 200.0,
+      "timber_m3": 15.0,
+      "tool_steel_kg": 50.0
+     },
+     "build_labour_hours": {
+      "millwright": 200.0,
+      "smith": 150.0,
+      "carpenter": 80.0
+     },
+     "service_life_years": 8,
+     "annual_output_at_basis": 60000.0,
+     "capital_basis": "The same draw-bench and dies that wire_drawn_kg states: one bench turns out tens of tonnes of wire of either metal a year, and copper draws on the same dies, so the item is copied rather than invented; the bench is shared, so the capacity is the stated bench's, conservatively not halved.",
+     "conf": "C"
+    }
+   ],
    "operated_by": ["drawplate_wire"],
    "conf": "C"
   },
@@ -991,6 +1043,25 @@
    "yield_basis": "Cs2O is 94.3% caesium by mass (265.82/281.82); a 20% Cs2O ore is ~18.9% contained caesium. Refining pollucite to metal is a genuinely multi-step chemical process (acid digestion, ion exchange or fractional crystallisation to isolate a caesium salt, then reduction to metal, historically by reaction with calcium metal or by electrolysis) that this entry does not model step by step; an ASSUMED 80% overall recovery (LABELLED HEURISTIC, conf C) is applied instead, giving ~6.6 g of pollucite ore per gram of caesium metal. The chemist-hour figure is large per gram because it is per GRAM - world caesium metal output has always been measured in kilograms per year, reflecting both the ore's rarity and the chemistry's difficulty, and the labour figure is trying to represent that scale honestly rather than pretend caesium is a bulk metal with a small unit cost.",
    "conf": "C",
    "requires_node": "opt_spectroscopy_emission",
+   "capital": [
+    {
+     "good": "spectroscopic laboratory bench, evaporating dishes and reduction retort",
+     "build_materials": {
+      "iron_bar_kg": 20.0,
+      "clay_kg": 40.0,
+      "brick_1000": 0.2
+     },
+     "build_labour_hours": {
+      "smith": 16.0,
+      "potter": 6.0,
+      "mason": 8.0
+     },
+     "service_life_years": 20,
+     "annual_output_at_basis": 400.0,
+     "capital_basis": "Caesium was first isolated in grams by Bunsen and Kirchhoff in 1860 from mineral-water residues in an ordinary chemical laboratory: a furnace, evaporating dishes, a retort and a spectroscope. A laboratory of that kind turns out grams of the metal a year, not kilograms; masses are the order of a small furnace and bench, and the capacity is a reasoned figure. The plant is taken at the size the node's own crew can run at the entry's labour hours, a smaller plant of the same kind, so the figures are scaled down from the full-size works.",
+     "conf": "D"
+    }
+   ],
    "operated_by": ["opt_spectroscopy_emission"]
   },
   "phosphor_bronze_g": {

@@ -79,6 +79,7 @@
    "basis": "per year of continuous operation of one typical water wheel (data/world/resources.json's water_power.kw_per_wheel_typical)",
    "yield_basis": "The annual output figure IS the power-to-energy conversion described in this entry's own capital_basis above (4 kW sustained, continuous operation assumed and flagged as an upper bound) - restated here as the recipe's own basis output so that recipe_cost_and_allocation's per-unit capital charge (build cost / (service_life_years * annual_output_at_basis)) lands on the same footing as every other unit in this file. The only running cost beyond the wheel's own amortised build is a millwright's periodic attention - checking gearing, clearing the leat, working the sluice - taken at a modest 40 hours a year for a single wheel, distinct from the one-off build labour above.",
    "requires_node": "cap_power_water",
+   "operated_by": ["en_undershot_wheel"],
    "conf": "C"
   },
 

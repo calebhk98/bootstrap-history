@@ -50,7 +50,7 @@ Each point names the issue that tracks it; read its status line before acting.
 
 - **Node earnings.** Most nodes make no product and so earn nothing from
   output; whether a concern's takings follow the techniques in use is
-  `Complaints/369`, and plant on the entries is `Complaints/335`.
+  `Complaints/369`, and every entry an output-earning node runs states a plant (closed, `Complaints/closed/335`).
 - **Deeper capital markets and other countries as full economies.** A pooled
   household-funded credit market exists; banks, bonds, equity and insurance
   do not (`Complaints/106`), and foreign countries' pay and output are the

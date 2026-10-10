@@ -392,7 +392,8 @@ def calculated_goods_prices(held_technology_ids: Iterable[str] = (),
 def calculated_goods_table(held_technology_ids: Iterable[str] = (),
                            civilization_id: Optional[str] = None,
                            civilization: Optional[JSONDict] = None,
-                           farmed_hectares: Optional[float] = None
+                           farmed_hectares: Optional[float] = None,
+                           interest_rate: Optional[float] = None
                            ) -> Tuple[Dict[str, float], Dict[str, str]]:
     """(labour-hour price, provenance) of every material the solver prices, from one solve."""
     from . import prices as price_solver
@@ -401,7 +402,7 @@ def calculated_goods_table(held_technology_ids: Iterable[str] = (),
     document = schedule.document()
     goods, provenance = price_solver.priced_goods_table(
         held_technology_ids, document, civilization_id=civilization_id, civilization=civilization,
-        farmed_hectares=farmed_hectares)
+        farmed_hectares=farmed_hectares, interest_rate=interest_rate)
     return ({material: _in_coin(price, document, 1.0) for material, price in goods.items()}, provenance)
 
 
