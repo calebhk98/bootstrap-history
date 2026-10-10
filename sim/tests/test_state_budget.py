@@ -9,7 +9,6 @@ import tempfile
 
 from .harness import *  # noqa: F401,F403
 
-sim = unopened_sim   # legacy: pins the engine's own state budget; the agent-economy budget is test_economy_agent_state.py
 
 
 from sim.engine.agents_port import SimWorld
