@@ -82,6 +82,13 @@ Sorted by module, then by node id.
 | Node | Your hours | Recipe |
 |---|---:|---|
 | `ben_civic_water_works` | 200.0 | [`ben_civic_water_works`](04_BENEFACTIONS.md#ben_civic_water_works---aqueduct-baths-and-sewers-for-a-town) |
+| `ben_state_debt_redemption` | 150.0 | [`ben_state_debt_redemption`](04_BENEFACTIONS.md#ben_state_debt_redemption---redemption-of-the-states-debt) |
+| `ben_political_settlement` | 120.0 | [`ben_political_settlement`](04_BENEFACTIONS.md#ben_political_settlement---settlement-of-an-interest-groups-claims) |
+| `ben_disaster_relief_grant` | 100.0 | [`ben_disaster_relief_grant`](04_BENEFACTIONS.md#ben_disaster_relief_grant---grant-to-the-state-for-disaster-relief) |
+| `ben_settlement_charter` | 200.0 | [`ben_settlement_charter`](04_BENEFACTIONS.md#ben_settlement_charter---charter-and-outfit-for-a-settlement) |
+| `ben_district_clinics` | 200.0 | [`ben_district_clinics`](04_BENEFACTIONS.md#ben_district_clinics---district-clinics) |
+| `ben_village_schools` | 200.0 | [`ben_village_schools`](04_BENEFACTIONS.md#ben_village_schools---schools-in-every-parish) |
+| `ben_endowed_college` | 250.0 | [`ben_endowed_college`](04_BENEFACTIONS.md#ben_endowed_college---endowed-college-for-scholars) |
 | `ben_free_school_foundation` | 200.0 | [`ben_free_school_foundation`](04_BENEFACTIONS.md#ben_free_school_foundation---free-school-foundation-alimenta) |
 | `ben_grain_dole` | 200.0 | [`ben_grain_dole`](04_BENEFACTIONS.md#ben_grain_dole---public-granary-and-grain-dole) |
 | `ben_harbour_and_lighthouse` | 200.0 | [`ben_harbour_and_lighthouse`](04_BENEFACTIONS.md#ben_harbour_and_lighthouse---harbour-works-and-lighthouse) |

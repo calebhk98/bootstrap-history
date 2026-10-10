@@ -1,0 +1,63 @@
+{
+ "_note": "Light: the light need (data/world/needs.json) is met by a flame or a lamp, each priced from the fuel it burns and the work of keeping it. One recipe for each way of making light; the household mix chooses among them by cost per thousand lumen-hours, so a candle's worth comes from its burn time and light, not from a rule that names candles. The sizes are recalled figures, not re-opened sources, confidence D.",
+ "materials": {
+  "light_tallow_candle": {
+   "outputs": {
+    "light_tallow_candle": 1.0
+   },
+   "inputs": {
+    "tallow_kg": 0.53,
+    "wick_cotton_m": 2.0
+   },
+   "labour_hours": {
+    "labourer": 0.15
+   },
+   "unit_dimension": "count",
+   "basis": "per thousand lumen-hours of light from dipped tallow candles",
+   "yield_basis": "A tallow candle gives about one candela, about 12.6 lumens, so a thousand lumen-hours is about eighty candle-hours. A candle burns about seven grams of tallow an hour, so eighty hours burn about half a kilogram, taken as 0.53 kg with the stub. A wick burns down as the tallow does, about two and a half centimetres an hour, so about two metres. Dipping and trimming take a labourer a few minutes for each candle of six hours' burning, about thirteen candles, taken as 0.15 hours. Burn rate, brightness and dipping rate are recalled figures, confidence D.",
+   "requires_node": null,
+   "conf": "D",
+   "satisfies": {
+    "light": 1.0
+   }
+  },
+  "light_oil_lamp": {
+   "outputs": {
+    "light_oil_lamp": 1.0
+   },
+   "inputs": {
+    "olive_oil_kg": 0.64,
+    "wick_cotton_m": 1.6
+   },
+   "labour_hours": {
+    "labourer": 0.3
+   },
+   "unit_dimension": "count",
+   "basis": "per thousand lumen-hours of light from open oil lamps",
+   "yield_basis": "An open clay lamp burning olive oil gives about the light of a candle and burns about eight grams of oil an hour, so eighty hours burn about 0.64 kg. The wick is drawn up about two centimetres an hour, about 1.6 m. Filling, trimming and lighting each lamp each evening is a minute or so of a labourer's time an hour of burning, taken as 0.3 hours. Burn rate and brightness are recalled figures, confidence D.",
+   "requires_node": "hom_oil_lamp_simple",
+   "conf": "D",
+   "satisfies": {
+    "light": 1.0
+   }
+  },
+  "light_electric_lamp": {
+   "outputs": {
+    "light_electric_lamp": 1.0
+   },
+   "inputs": {},
+   "electrical_mj": 1.2,
+   "labour_hours": {
+    "electrician": 0.01
+   },
+   "unit_dimension": "count",
+   "basis": "per thousand lumen-hours of light from carbon-filament electric lamps",
+   "yield_basis": "An early carbon-filament lamp gave about three lumens for each watt it drew, so a thousand lumen-hours takes about 330 watt-hours, 1.2 megajoules. The electrician's time is for replacing filaments and keeping the wiring, a hundredth of an hour for each thousand lumen-hours. The efficacy is a recalled figure, confidence D.",
+   "requires_node": "hom_electric_lighting",
+   "conf": "D",
+   "satisfies": {
+    "light": 1.0
+   }
+  }
+ }
+}

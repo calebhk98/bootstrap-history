@@ -444,6 +444,7 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
         # resolved in the same breath as two unrelated draws on the same
         # stale numbers.
         self._state_pressure(self.state.scenario.year)
+        self.pay_concern_levies(self.state.scenario.year)
         self.state.household.scandal *= self.SCANDAL_DECAY_RATE
         # Eminence accumulates in a SEPARATE pool, because bribery does not
         # touch it. You can buy a magistrate, an accuser and a jury. You cannot

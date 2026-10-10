@@ -717,7 +717,7 @@
   "conf": "C",
   "gov": 0,
   "sus": 0,
-  "note": "Granaries and a register of households, grain bought each harvest and handed out each month. A bad harvest hurts the town less and the crowd owes its bread to a name. The grain bought every year is the cost, and it does not fall while the town grows.",
+  "note": "Granaries and a register of households, grain bought each harvest and handed out each month. A bad harvest hurts the town less and the crowd owes its bread to a name. The grain bought every year is the cost, and it does not fall while the town grows. The grain is eaten by the country's hungry as well as the town's, so in a famine fewer of the people die.",
   "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"labourer\": 30000, \"merchant\": 6000, \"scribe\": 6000}. Annual consumables: {\"wheat_kg\": 8000000}. Sizes of the foundation and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing.",
   "mechanics": {
    "upkeep_full": true,
@@ -737,6 +737,11 @@
      "order": 19
     }
    ],
+   "food_relief": {
+    "material": "wheat_kg",
+    "energy_kcal_per_kg": 3400.0,
+    "source": "Whole wheat grain gives about 3,400 kilocalories a kilogram (WHEAT_ENERGY_KCAL_PER_KG in sim/world/shared_constants.py)."
+   },
    "standing": {
     "per_sqrt_unit": 2.0,
     "order": 16
@@ -945,8 +950,8 @@
   "conf": "C",
   "gov": 0,
   "sus": 0,
-  "note": "Money to keep a paper printing whether or not it sells: printers, correspondents, engravers and a stock of paper and ink, with the news and the prices of distant markets in every issue. It teaches the town to read by giving it something to read, it widens the markets you can sell to, and it earns a name. A paper that prints what officials would rather not read draws their eye to your work and to you. More papers in more towns are further units.",
-  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"artisan\": 8000, \"engraver\": 3000, \"scribe\": 12000}. Annual consumables: {\"ink_kg\": 800, \"paper_kg\": 8000}. Sizes of the work and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing. Engine readers checked: schooling_flow in _schooling_flow, reach in goods_reach_factor, alarm_factor in node alarm, eminence_hazard_factor in prominence_hazard and eminence_report, standing in standing_floor. The alarm and eminence factors are labelled heuristics; the alarm factor multiplies the alarm of every project while the press is open because the engine has no per-state legitimacy or public opinion field. The prerequisite prn_newspaper_institution already carries the status_threatening trait and a negative government stance.",
+  "note": "Money to keep a paper printing whether or not it sells: printers, correspondents, engravers and a stock of paper and ink, with the news and the prices of distant markets in every issue. It teaches the town to read by giving it something to read, it widens the markets you can sell to, and it earns a name. A paper that prints what officials would rather not read draws their eye to your work and to you, and wears away the people's trust in those officials, so the state can collect and command a little less. More papers in more towns are further units.",
+  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"artisan\": 8000, \"engraver\": 3000, \"scribe\": 12000}. Annual consumables: {\"ink_kg\": 800, \"paper_kg\": 8000}. Sizes of the work and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing. Engine readers checked: schooling_flow in _schooling_flow, reach in goods_reach_factor, alarm_factor in node alarm, eminence_hazard_factor in prominence_hazard and eminence_report, standing in standing_floor. The alarm and eminence factors are labelled heuristics; the alarm factor multiplies the alarm of every project while the press is open, and state_legitimacy lowers the share of its capacity the state keeps (state_legitimacy in sim/engine/legitimacy.py, read by the state's authority in sim/engine/agents_port_budget.py). The prerequisite prn_newspaper_institution already carries the status_threatening trait and a negative government stance.",
   "mechanics": {
    "upkeep_full": true,
    "capability": {
@@ -967,6 +972,10 @@
    },
    "alarm_factor": {
     "factor": 1.05
+   },
+   "state_legitimacy": {
+    "per_sqrt_unit": -0.02,
+    "order": 1
    },
    "eminence_hazard_factor": {
     "factor": 1.08,
@@ -1011,7 +1020,7 @@
   "conf": "C",
   "gov": 0,
   "sus": 0,
-  "note": "Arc and filament lamps along a town's streets and squares, with the lamplighters' replacement: electricians to keep the lines and lamps, glass and copper to renew them. It draws power from the grid the whole time it is lit. Lit streets are safer for the people you employ after dark, lend your name a little respect, and discourage the thieves who work in the dark. The next town is another unit.",
+  "note": "Arc and filament lamps along a town's streets and squares, with the lamplighters' replacement: electricians to keep the lines and lamps, glass and copper to renew them. It draws power from the grid the whole time it is lit. Lit streets are safer for the people you employ after dark, lend your name a little respect, and discourage the thieves who work in the dark. The people of a lit town can also work two hours more of each day, so the more of the country it lights, the more hours the country works. The next town is another unit, and the rollout command lights more of the people.",
   "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"electrician\": 9000, \"labourer\": 3000}. Annual consumables: {\"copper_kg\": 300, \"glass_raw_kg\": 800}. Sizes of the work and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing. Engine readers checked: hazard_counters in HAZARD_COUNTERS (staff_loss), protection in update_protection, standing in standing_floor. No electricity_gate is declared here: the node's prerequisites already lead through power_grid, which the electricity load scan (_electricity_load_node_ids) treats as needing generated electricity, so the open works draws the standing electric load without a second declaration. The shares are labelled heuristics. The working-day and light-demand effects of street lighting have no field and are not modelled.",
   "mechanics": {
    "upkeep_full": true,
@@ -1027,6 +1036,13 @@
      "order": 20
     }
    ],
+   "coverage": {
+    "staff_hours_per_person_year": 0.2,
+    "serves": "people in lit streets"
+   },
+   "working_day": {
+    "extra_hours_per_day": 2.0
+   },
    "protection": {
     "flat": 0.02,
     "order": 10
@@ -1293,6 +1309,366 @@
    "standing": {
     "flat": 2.0,
     "order": 25
+   }
+  }
+ },
+ {
+  "id": "ben_state_debt_redemption",
+  "name": "Redemption of the state's debt",
+  "cat": "benefaction",
+  "pre": [
+   "fin_public_debt"
+  ],
+  "traits": [
+   "commerce"
+  ],
+  "kb": "04_BENEFACTIONS.md#ben_state_debt_redemption",
+  "ph": 150,
+  "lab": {
+   "merchant": 800,
+   "scribe": 1500
+  },
+  "mat": {},
+  "up_hours": 0,
+  "build_yrs": 1,
+  "adopt_yrs": 1,
+  "risk": 0.1,
+  "rev_hours": 0,
+  "sch": 1,
+  "art": 1,
+  "conf": "C",
+  "gov": 0,
+  "sus": 0,
+  "note": "Clerks and bankers draw up the bonds the state owes, find the holders and buy them out, and the founder pays the whole of what the state owes in one sum, or as much of it as the founder's money covers. A state that owes less pays less interest, can borrow more cheaply and has no lender to answer to, and it is slow to forget who cleared its books. It needs a state that already borrows, and money in hand on the day; the same payment can be made at any time with the pay command.",
+  "mechanics": {
+   "transfer": {
+    "of": "debt",
+    "share": 1.0,
+    "purpose": "debt redemption"
+   },
+   "standing": {
+    "flat": 3.0,
+    "order": 30
+   },
+   "patron_protection": {
+    "flat": 0.03,
+    "order": 4
+   }
+  }
+ },
+ {
+  "id": "ben_political_settlement",
+  "name": "Settlement of an interest group's claims",
+  "cat": "benefaction",
+  "pre": [
+   "fin_government",
+   "fin_guild"
+  ],
+  "traits": [
+   "commerce"
+  ],
+  "kb": "04_BENEFACTIONS.md#ben_political_settlement",
+  "ph": 120,
+  "lab": {
+   "merchant": 600,
+   "scribe": 800
+  },
+  "mat": {},
+  "up_hours": 0,
+  "build_yrs": 1,
+  "adopt_yrs": 1,
+  "risk": 0.1,
+  "rev_hours": 0,
+  "sch": 1,
+  "art": 1,
+  "conf": "C",
+  "gov": 0,
+  "sus": 0,
+  "note": "Envoys call on the guilds, landholders or craftsmen who have lost income to the founder's methods and pay what the state has undertaken to make good to them, so that the state does not have to raise it from the taxpayers, the founder among them. A body that is paid stops pressing the state and stops blaming the founder for its loss. The payment is once, for the claims standing today; when new claims arise they are paid again with the pay command.",
+  "mechanics": {
+   "transfer": {
+    "of": "claims",
+    "share": 1.0,
+    "purpose": "settlement of group claims"
+   },
+   "alarm_factor": {
+    "factor": 0.98
+   }
+  }
+ },
+ {
+  "id": "ben_disaster_relief_grant",
+  "name": "Grant to the state for disaster relief",
+  "cat": "benefaction",
+  "pre": [
+   "fin_annona",
+   "fin_government"
+  ],
+  "traits": [
+   "food",
+   "commerce"
+  ],
+  "kb": "04_BENEFACTIONS.md#ben_disaster_relief_grant",
+  "ph": 100,
+  "lab": {
+   "merchant": 400,
+   "scribe": 600
+  },
+  "mat": {},
+  "up_hours": 0,
+  "build_yrs": 1,
+  "adopt_yrs": 1,
+  "risk": 0.1,
+  "rev_hours": 0,
+  "sch": 1,
+  "art": 1,
+  "conf": "C",
+  "gov": 0,
+  "sus": 0,
+  "note": "After a flood, a fire or a failed harvest the founder pays the state a large sum to feed the homeless, pull down what is unsafe and rebuild. The state spends it through its own officials, on its own dole and public works, so it eases the state's deficit and the founder's name is blessed in the stricken towns. It is a gift paid once; grain handed out directly to the hungry is the work of the public granary.",
+  "mechanics": {
+   "transfer": {
+    "labour_hours": 20000000,
+    "purpose": "relief"
+   },
+   "standing": {
+    "flat": 2.0,
+    "order": 31
+   }
+  }
+ },
+ {
+  "id": "ben_settlement_charter",
+  "name": "Charter and outfit for a settlement",
+  "cat": "benefaction",
+  "pre": [
+   "exp_colony_administration"
+  ],
+  "traits": [
+   "commerce",
+   "infrastructure"
+  ],
+  "kb": "04_BENEFACTIONS.md#ben_settlement_charter",
+  "ph": 200,
+  "lab": {
+   "scribe": 2000,
+   "merchant": 1500
+  },
+  "mat": {},
+  "up_hours": 0,
+  "build_yrs": 2,
+  "adopt_yrs": 1,
+  "risk": 0.1,
+  "rev_hours": 0,
+  "sch": 1,
+  "art": 1,
+  "conf": "C",
+  "gov": 0,
+  "sus": 0,
+  "note": "A grant of land and the right to govern it, with the ships, stores, tools and seed that settlers need for their first year. Families from the home country go to a tile nobody holds that borders what the founder holds, or to a coast across the sea, and become a people of their own: they farm that tile's land with their own hands, bear children there and die there. A colony costs the settlers' outfit and takes working-age people from home; many die in the first years if the land cannot feed them. The settle command lists the tiles and founds a colony on one.",
+  "mechanics": {
+   "settlement": {
+    "settlers": 400,
+    "outfit_hours_per_settler": 2000,
+    "by_sea": true
+   }
+  }
+ },
+ {
+  "id": "ben_district_clinics",
+  "name": "District clinics",
+  "cat": "benefaction",
+  "pre": [
+   "md2_child_clinic",
+   "md2_maternal_clinic",
+   "ben_hospital_foundation"
+  ],
+  "traits": [
+   "medical",
+   "infrastructure"
+  ],
+  "kb": "04_BENEFACTIONS.md#ben_district_clinics",
+  "ph": 200,
+  "lab": {
+   "mason": 2000,
+   "carpenter": 1000,
+   "labourer": 2000,
+   "plumber": 300
+  },
+  "mat": {
+   "brick_1000": 100,
+   "timber_m3": 200,
+   "iron_bar_kg": 500
+  },
+  "annual_labour_hours": {
+   "artisan": 30000,
+   "scholar": 8000,
+   "labourer": 2000
+  },
+  "annual_consumables": {
+   "soap_kg": 4000,
+   "charcoal_kg": 20000
+  },
+  "build_yrs": 2,
+  "adopt_yrs": 2,
+  "risk": 0.1,
+  "rev_hours": 0,
+  "sch": 2,
+  "art": 2,
+  "conf": "C",
+  "gov": 0,
+  "sus": 0,
+  "note": "A clinic in each district where mothers and children are weighed, vaccinated and treated early, with a nurse and a physician on the payroll, soap and fuel bought every year. Each clinic serves only the people of its own district, so the nation's burden of disease falls only as far as the share of people the clinics reach, and the rollout command lays more of them until a chosen share is covered. It needs the hospital, and the knowledge of how infection spreads and how children and mothers are cared for.",
+  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"artisan\": 30000, \"scholar\": 8000, \"labourer\": 2000}. Annual consumables: {\"soap_kg\": 4000, \"charcoal_kg\": 20000}. Sizes of the foundation and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing.",
+  "mechanics": {
+   "upkeep_full": true,
+   "capability": {
+    "lost_benefit": "The lower death toll among the people the clinics reach and the standing they earn",
+    "scalable": "population"
+   },
+   "coverage": {
+    "staff_hours_per_person_year": 1.0,
+    "serves": "patients"
+   },
+   "disease_burden": true,
+   "hazard_counters": [
+    {
+     "kind": "staff_loss",
+     "share": 0.06,
+     "label": "district clinics that catch disease early",
+     "order": 32
+    }
+   ],
+   "standing": {
+    "per_sqrt_unit": 1.5,
+    "order": 33
+   }
+  }
+ },
+ {
+  "id": "ben_village_schools",
+  "name": "Schools in every parish",
+  "cat": "benefaction",
+  "pre": [
+   "school_founded",
+   "endowment_land"
+  ],
+  "traits": [
+   "information"
+  ],
+  "kb": "04_BENEFACTIONS.md#ben_village_schools",
+  "ph": 200,
+  "lab": {
+   "scribe": 3000,
+   "mason": 2500,
+   "carpenter": 1500,
+   "labourer": 2500
+  },
+  "mat": {
+   "timber_m3": 300,
+   "brick_1000": 60,
+   "parchment_sheet": 2000
+  },
+  "annual_labour_hours": {
+   "scribe": 30000
+  },
+  "annual_consumables": {
+   "parchment_sheet": 3000
+  },
+  "build_yrs": 3,
+  "adopt_yrs": 2,
+  "risk": 0.1,
+  "rev_hours": 0,
+  "sch": 2,
+  "art": 2,
+  "conf": "C",
+  "gov": 0,
+  "sus": 0,
+  "note": "A reading school in each parish for the children of ordinary families, paid for out of an endowment of land, with a teacher who reads and writes and a stock of parchment. It teaches the many to read, so general literacy rises faster; the lettered few are already taught elsewhere and gain nothing from it. Each school serves only the children of its own parish, so the rollout command lays more of them until a chosen share of the school-age children is reached.",
+  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"scribe\": 30000}. Annual consumables: {\"parchment_sheet\": 3000}. Sizes of the foundation and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing.",
+  "mechanics": {
+   "upkeep_full": true,
+   "capability": {
+    "lost_benefit": "The children of ordinary families it teaches and the standing it earns",
+    "scalable": "literacy"
+   },
+   "schooling_flow": {
+    "per_sqrt_unit": 0.4,
+    "order": 34,
+    "reaches": [
+     "literacy_general"
+    ]
+   },
+   "coverage": {
+    "staff_hours_per_person_year": 50.0,
+    "eligible_share": 0.25,
+    "serves": "pupils"
+   },
+   "standing": {
+    "per_sqrt_unit": 1.0,
+    "order": 35
+   }
+  }
+ },
+ {
+  "id": "ben_endowed_college",
+  "name": "Endowed college for scholars",
+  "cat": "benefaction",
+  "pre": [
+   "school_founded",
+   "endowment_land"
+  ],
+  "traits": [
+   "information"
+  ],
+  "kb": "04_BENEFACTIONS.md#ben_endowed_college",
+  "ph": 250,
+  "lab": {
+   "scholar": 4000,
+   "mason": 3000,
+   "carpenter": 1500,
+   "labourer": 2000
+  },
+  "mat": {
+   "timber_m3": 300,
+   "brick_1000": 80,
+   "parchment_sheet": 4000,
+   "hectare_land": 100.92
+  },
+  "annual_labour_hours": {
+   "scholar": 20000,
+   "scribe": 5000
+  },
+  "annual_consumables": {
+   "parchment_sheet": 3000
+  },
+  "build_yrs": 3,
+  "adopt_yrs": 2,
+  "risk": 0.1,
+  "rev_hours": 0,
+  "sch": 2,
+  "art": 2,
+  "conf": "C",
+  "gov": 0,
+  "sus": 0,
+  "note": "Lodgings, a hall and a library for young men of the propertied classes, kept by the rents of an endowment of land, with fellows who teach them letters, law and arithmetic. It raises the share of the lettered class who can read and reason, which is what the learned trades and the state's offices draw on, and does nothing for the reading of the common people. A college in another town is a further unit.",
+  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"scholar\": 20000, \"scribe\": 5000}. Annual consumables: {\"parchment_sheet\": 3000}. Sizes of the foundation and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing.",
+  "mechanics": {
+   "upkeep_full": true,
+   "capability": {
+    "lost_benefit": "The scholars it trains and the standing it earns",
+    "scalable": "literacy"
+   },
+   "schooling_flow": {
+    "per_sqrt_unit": 0.5,
+    "order": 36,
+    "reaches": [
+     "literacy_elite"
+    ]
+   },
+   "standing": {
+    "per_sqrt_unit": 2.0,
+    "order": 37
    }
   }
  }
