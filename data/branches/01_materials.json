@@ -52,7 +52,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Already available wherever there is bronze-casting skill. Casting, bearings, statuary, instruments."
+  "note": "Bronze is copper alloyed with tin, harder than copper alone and easy to cast, and it is already made wherever casters know the craft. It is melted in a crucible, poured into a mould and finished by hand. It supplies castings, bearings, statuary and instruments. The limit is the supply of tin, which must be hauled from far away, and the quality of the mould."
  },
  {
   "id": "mat_brass",
@@ -117,7 +117,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Already available wherever there is trade access to a source (Cornwall and Iberia supply Rome's). Expensive, long haul."
+  "note": "Tin is a soft, low-melting metal that is mixed with copper to make bronze and used to coat other metals. It is already available wherever there is trade access to a source; Rome's comes from Cornwall and Iberia. Tin ore is found in few places, so it is expensive and travels a long way by sea and river, and a cut trade route leaves bronze makers short of it."
  },
  {
   "id": "mat_copper",
@@ -202,7 +202,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Already mined wherever there is a working goldfield (Rome's include Las Medulas, and Dacia from 106 AD)."
+  "note": "Gold is a soft, dense, heavy yellow metal that does not tarnish, so it is used for coin, ornament and as a store of wealth. It is already mined wherever there is a working goldfield; Rome's include Las Medulas in Spain, and Dacia from 106 AD. It is won by washing gold-bearing gravel or by crushing and processing ore, and the mines belong to the state, so the founder gets it by trade or concession."
  },
  {
   "id": "mat_mercury",
@@ -244,7 +244,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Already available wherever there is trade access to a volcanic source (Sicily and the Aeolian islands supply Rome's)."
+  "note": "Sulfur is a yellow, brittle solid that burns with a choking blue flame. It is used to fumigate, to bleach, in medicines and, later, in black powder and sulfuric acid. It is already available wherever there is trade access to a volcanic source; Sicily and the Aeolian islands supply Rome's. It is dug from volcanic vents, so the founder depends on a distant supplier."
  },
  {
   "id": "mat_natron",
@@ -286,7 +286,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Already produced wherever limestone is burned. Mortar, glass flux, causticising, agriculture."
+  "note": "Quicklime is limestone heated in a kiln until it gives off carbon dioxide; slaked lime is quicklime mixed with water, which releases much heat. It is already produced wherever limestone is burned, and it needs a steady supply of fuel for the kiln. It serves as mortar, glass flux, causticising (making alkalis stronger) and a field dressing in agriculture. Quicklime burns skin and eyes, so it is handled with care."
  },
  {
   "id": "mat_gypsum",
@@ -307,7 +307,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Already available wherever there is a gypsum deposit."
+  "note": "Gypsum is a soft white mineral (calcium sulfate with water locked in it). Heating it gently drives off some of that water to give plaster, which sets hard again when mixed with water. It is already available wherever there is a gypsum deposit. It is used for plaster, casting moulds and cement additives. Overheat it and it will no longer set properly."
  },
  {
   "id": "mat_alum",
@@ -412,7 +412,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Already mined and already smelted into brass wherever both ore and the skill exist.",
+  "note": "Calamine is a zinc ore (a carbonate or a silicate). Heated with copper and charcoal, the zinc is absorbed into the copper to make brass, without ever being melted off as a separate metal. It is already mined and made into brass wherever both ore and the skill exist. Free zinc metal cannot be produced this way, because zinc vapour escapes and burns.",
   "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
@@ -455,7 +455,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Already available wherever there is trade access to a deposit. Your abrasive for every ground surface in this document.",
+  "note": "Emery is a naturally occurring very hard grit of corundum (aluminium oxide) mixed with iron minerals, used crushed as an abrasive to grind and polish metal, glass and stone. It is already available wherever there is trade access to a deposit; the famous source is the Greek island of Naxos. It is the founder's abrasive for every ground surface, and the supply of it limits fine grinding.",
   "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
@@ -507,7 +507,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Papyrus does not cure; it works wet. Plant laminae naturally adhere without paste if pressed fresh.",
+  "note": "Papyrus is a writing sheet made from the pith of a Nile reed: strips are laid crosswise, wetted and pressed, and the plant's own sap glues them as they dry. It never becomes pulp, so it works fresh and wet and does not cure with paste. It needs reeds from Egypt and a flat press. It is cheap and smooth but brittle, cannot be erased well and rots in damp climates.",
   "traits": [
    "information"
   ]
@@ -533,7 +533,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Scraped skin accepts ink and erasure. Alkali lime wash removes hair without destroying fibre.",
+  "note": "Parchment is a writing surface made from animal skin that is unhaired, scraped and dried under tension but never tanned. It accepts ink, and mistakes can be scraped off and rewritten. The skin is soaked in a lime bath to loosen the hair: too much lime dissolves the fibre, too little leaves hair. It needs skins, lime, scraping knives and a frame, and costs far more per page than papyrus.",
   "traits": [
    "information"
   ]
@@ -605,7 +605,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Already produced wherever livestock are kept and tanned. Bellows, seals, gaskets, drive belts."
+  "note": "Leather is animal skin tanned with plant tannins or minerals so that it no longer rots and stays flexible. It is already produced wherever livestock are kept and tanned, and it needs hides, tanning vats and a supply of tannin from bark or galls, and time. Tanning is slow and the vats smell badly. The founder uses it for bellows, seals, gaskets and drive belts."
  },
  {
   "id": "mat_beeswax",
@@ -626,7 +626,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Already available wherever bees are kept. Lost wax casting, luting, acid-proof coating."
+  "note": "Beeswax is a wax made by honeybees to build their combs, solid at room temperature and soft when warm. It is already available wherever bees are kept, collected when honey is taken and melted clean. It is used in lost wax casting (a wax model is coated in clay, melted out and replaced by metal), in luting (sealing joints) and as an acid-proof coating. The supply depends on bee keepers."
  },
  {
   "id": "mat_tallow",
@@ -647,7 +647,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Already available wherever animals are rendered. Lubricant for wire drawing and machining."
+  "note": "Tallow is hard animal fat, rendered by heating fatty tissue and straining the liquid. It is already available wherever animals are rendered. It burns in candles and, more importantly for the founder, it lubricates wire drawing and machining so that metal slides through dies and cutters without tearing. It goes rancid with time, so it must be fresh or well kept."
  },
  {
   "id": "mat_olive_oil",
@@ -668,7 +668,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Already available in industrial quantity wherever olives are grown at scale. Soap, lighting, quenching, varnish base.",
+  "note": "Olive oil is pressed from olives, crushing the fruit to a paste and squeezing it between mats or beams. It is already available in industrial quantity wherever olives are grown at scale. It serves as food, lamp fuel, soap base, quenching oil for tempering steel and a varnish base. It needs groves, presses and containers, and a poor harvest cuts the supply for every use at once.",
   "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
@@ -758,7 +758,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Already produced wherever wood is burned for it. The real ceiling on iron output is forest, not ore."
+  "note": "Charcoal is wood heated in a pile or kiln with too little air for it to burn, leaving nearly pure carbon that burns hotter and cleaner than wood. It is already produced wherever wood is burned for it. Smelting metal and firing glass all need it. The real ceiling on iron output is forest, not ore, because a furnace consumes enormous amounts of fuel and trees regrow slowly."
  },
  {
   "id": "mat_silk",
@@ -1155,7 +1155,7 @@
   "sch": 4,
   "art": 8,
   "conf": "B",
-  "note": "Tungsten and chromium carbides that hold an edge red hot. Multiplies every machine tool's output several fold.",
+  "note": "Tool steel that keeps its hardness when it gets red hot, because it contains tungsten and chromium that form hard carbides (compounds of metal with carbon). It is made in a hot furnace from tungsten, chromium and analysed carbon steel. Cutting tools of ordinary steel soften at high cutting speeds; these do not, so every machine tool can cut much faster and its output rises greatly.",
   "traits": [
    "labour_saving"
   ]
@@ -1184,7 +1184,7 @@
   "sch": 4,
   "art": 8,
   "conf": "B",
-  "note": "Chromium above about 11% forms a self-healing passive oxide. Chemical plant, cutlery, vacuum systems.",
+  "note": "Stainless steel is steel with enough chromium (above about eleven per cent) that its surface forms a thin, self-healing layer of chromium oxide that stops rust. It needs pure chromium, a very hot furnace and precise analysis to hit the right composition. It does not corrode, so it serves chemical plant, cutlery and vacuum systems, but it is hard to forge and machine.",
   "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_heat_1600 added by a reviewer working node by node. Reason: steel with 11% chromium requires 1500-1600 C melting] [REVIEWED: prerequisite(s) cap_heat_1600 added by a reviewer working node by node. Reason: steel with 11% chromium requires 1500-1600 C melting]"
  },
  {
@@ -1260,7 +1260,7 @@
   "sch": 4,
   "art": 8,
   "conf": "B",
-  "note": "Aluminothermic or carbon reduction of chromite. Stainless, plating, refractories."
+  "note": "Chromium is a hard, bright metal that resists corrosion, obtained from chromite ore by reducing it, either with aluminium powder (aluminothermic) or with carbon at very high temperature. It needs the electric furnace for high heat and quantitative analysis to control the product. It is the alloying element of stainless steel and is used for plating and furnace linings (refractories)."
  },
  {
   "id": "mat_manganese",
@@ -1365,7 +1365,7 @@
   "sch": 4,
   "art": 8,
   "conf": "B",
-  "note": "Electrolysis of fused chloride. Light alloys, flashlight powder, reducing agent."
+  "note": "Magnesium is a very light metal, made by passing electric current through molten magnesium chloride so that metal collects at one electrode and chlorine at the other. It needs cheap grid electricity and an industrial electrochemistry plant. It makes light alloys and a brilliant white flash powder for photography, and it is a powerful reducing agent. Magnesium burns fiercely, so fires are a hazard."
  },
  {
   "id": "mat_graphite_pure",
@@ -1640,7 +1640,7 @@
   "sch": 1,
   "art": 3,
   "conf": "B",
-  "note": "Reachable via the Indian Ocean and Chinese trade, expensive. Needed for celluloid and for smokeless powder."
+  "note": "Camphor is a waxy, strongly scented solid distilled from the wood of the camphor tree, which grows in east Asia. It is reachable only through the Indian Ocean and Chinese trade, and is expensive. The founder needs it to plasticise celluloid (an early plastic made from cellulose nitrate) and for some smokeless powders. Supply is thin and controlled by distant traders."
  },
  {
   "id": "mat_bakelite",
@@ -1686,7 +1686,7 @@
   "sch": 4,
   "art": 8,
   "conf": "B",
-  "note": "Catalytic oxidation of methanol from wood distillation. Resins, and the first practical tissue preservative."
+  "note": "Formaldehyde is a pungent gas, made by passing methanol vapour mixed with air over a hot catalyst (a substance that speeds a reaction without being used up). The methanol comes from the destructive distillation of wood. It needs pure chemicals and a heated catalytic reactor. Dissolved in water it is the first practical tissue preservative, and it makes resins; it is toxic and irritates the lungs."
  },
  {
   "id": "mat_synthetic_rubber",

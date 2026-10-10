@@ -1307,7 +1307,7 @@
   "adopt_yrs": 6,
   "dev_years": 12,
   "dev_people": 2,
-  "note": "Fisher (1920s). Teaching: one-way then multi-way. Adoption by agricultural and later all experimental science.",
+  "note": "Analysis of variance, a method devised by Ronald Fisher in the 1920s for comparing the means of several groups at once. It splits the total scatter in the results into the part due to the treatments and the part due to chance, and the ratio shows whether the treatments really differ. It needs the t-test, regression and the normal distribution as foundations. It is taught one-way first, then multi-way, and suits farm trials and all experimental science.",
   "up_hours": 0
  },
  {
@@ -1332,7 +1332,7 @@
   "adopt_yrs": 5,
   "dev_years": 10,
   "dev_people": 2,
-  "note": "Practical foundation for all surveys. Teaching: simulate draws from a population. Adoption: fast in quality control.",
+  "note": "The mathematics of how far a measurement made on a sample can be trusted to describe the whole population. The standard error shrinks as the sample grows, and it is what lets a survey or a batch test give a result with a stated margin of doubt. It needs the central limit theorem and the normal distribution. It is taught by simulating draws from a population, and it is used quickly in quality control.",
   "up_hours": 0
  },
  {
@@ -1750,7 +1750,7 @@
   "adopt_yrs": 2,
   "dev_years": 5,
   "dev_people": 1,
-  "note": "Archimedes and Hero knew it. Teaching: submerged objects. Adoption: immediate in navigation and dam engineering.",
+  "note": "The physics of fluids at rest: pressure rises with depth, and a submerged or floating body feels an upward force equal to the weight of the fluid it displaces (Archimedes' principle). It needs the statics of forces. Archimedes and Hero already knew it. It is taught with submerged objects and explains why ships float, how to design dams that resist pressure, and how a hydrometer works.",
   "up_hours": 0
  },
  {
@@ -1954,7 +1954,7 @@
   "adopt_yrs": 6,
   "dev_years": 11,
   "dev_people": 2,
-  "note": "Fraunhofer (1819-1823). Teaching: how gratings work (parallel slits). Adoption: transforms spectroscopy.",
+  "note": "The bending and spreading of light as it passes through narrow slits or around edges, producing patterns of bright and dark bands, described by Fraunhofer (1819-1823). A grating (many fine parallel slits) spreads light into its colours by wavelength. It needs lenses, light treated as a wave, and a way to rule fine lines. Taught through how gratings work, it transforms spectroscopy.",
   "up_hours": 0
  },
  {
@@ -2027,7 +2027,7 @@
   "adopt_yrs": 4,
   "dev_years": 8,
   "dev_people": 2,
-  "note": "Ampere and Gauss. Teaching: bar magnet, compass, current loop. Adoption: immediate in motors and generators.",
+  "note": "The description of the magnetic field of steady magnets and currents, worked out by Ampere and Gauss. A bar magnet, a compass needle and a loop of current all produce fields that can be mapped and predicted. It needs the electrical foundation of friction machine, Leyden jar and electroscope. It is taught with a bar magnet, a compass and a current loop, and it is used at once in the design of motors and generators.",
   "up_hours": 0
  },
  {
