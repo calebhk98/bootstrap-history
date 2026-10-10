@@ -10,7 +10,7 @@
   "w_information": "how a society reacts to information moving freely",
   "adaptation_rate": "how fast people habituate to a marvel",
   "bribability": "how far money moves a verdict",
-  "population": "Disease and sanitation technologies only: a WEIGHT. _disease_burden() reads which of the eight technologies in Sim.DISEASE_BURDEN_TECH_IDS the civilisation holds, divides their weight by the weight of all eight, and hands the cohort model a burden that lowers the death rate. Only the ratio between the eight matters. Food technologies carry no population effect: they change the farming technique (sim/world/farming_technique.py) and population follows from the food."
+  "population": "Disease and sanitation technologies only: a WEIGHT. _disease_burden() reads which of the technologies in Sim.DISEASE_BURDEN_TECH_IDS (every node declaring the disease_burden mechanic) the civilisation holds, divides their weight by the weight of all of them, and hands the cohort model a burden that lowers the death rate. A technology that also declares coverage (district clinics) counts for the share of the people its open works reach. Only the ratio between the weights matters. Food technologies carry no population effect: they change the farming technique (sim/world/farming_technique.py) and population follows from the food."
  },
  "rag_paper": {
   "literacy_general": 0.02,
@@ -104,6 +104,10 @@
  "med_quarantine_sanitation": {
   "population": 0.02,
   "_why": "Separating the sick kept outbreaks from becoming famines-of-labour as well as famines-of-food; this is the same mechanism _shocks' staff_loss hedges reward, seen from the demographic side instead of the plague side."
+ },
+ "ben_district_clinics": {
+  "population": 0.02,
+  "_why": "Early weighing, vaccination and treatment of mothers and children in a clinic in each district lowers deaths in the first years of life, where most deaths fell. It is weighted like the sanitation works beside it, and counts only for the share of the people its clinics reach (the coverage mechanic), so a nation with one clinic gains almost nothing."
  },
  "med_vector_control": {
   "population": 0.02,

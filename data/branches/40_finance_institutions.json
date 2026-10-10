@@ -2353,15 +2353,18 @@
   "adopt_yrs": 1,
   "risk": 0.25,
   "sch": 0,
-  "art": 0,
+  "art": 3,
   "conf": "B",
-  "note": "Establishment where customers gamble, with the house taking a cut of all winnings. Highly profitable but attracts violence and is often banned or heavily taxed. Officials who are paid to look away give a little cover, and the house draws the state's attention.",
+  "note": "Establishment where customers gamble, with the house taking a cut of all winnings. Highly profitable but attracts violence and is often banned or heavily taxed. Officials who are paid to look away give a little cover, and the house draws the state's attention. The state takes a share of the takings each year as the price of letting it stand.",
   "mechanics": {
    "alarm_factor": {
     "factor": 1.08
    },
    "protection": {
     "flat": 0.01
+   },
+   "state_levy": {
+    "share": 0.1
    }
   }
  },
@@ -2392,13 +2395,17 @@
   "sch": 1,
   "art": 1,
   "conf": "B",
-  "note": "A government-authorised sale of numbered chances funds a declared public purpose, with published drawing and payout rules. Private lots and prize distributions are ancient; the reform is a recurring revenue-raising institution. A state that draws its revenue through the operator is slow to think ill of the operator.",
+  "note": "A government-authorised sale of numbered chances funds a declared public purpose, with published drawing and payout rules. Private lots and prize distributions are ancient; the reform is a recurring revenue-raising institution. A state that draws its revenue through the operator is slow to think ill of the operator, and it takes a large share of the takings each year.",
+  "unheld_reason": "state lotteries for public revenue belong to the early modern states, the English one from 1694; no starting society of the game ran one",
   "mechanics": {
    "alarm_factor": {
     "factor": 0.97
    },
    "protection": {
     "flat": 0.02
+   },
+   "state_levy": {
+    "share": 0.3
    }
   }
  },

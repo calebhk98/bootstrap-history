@@ -276,6 +276,7 @@ class CompletionMixin:
         self._done_changed()
         for material, units in (node.get("grants") or {}).items():
             self.grant_stock(material, units)
+        self.carry_out_transfers(node_id)
         if projects.done_year is None:
             projects.done_year = {}
         projects.done_year[node_id] = scenario.year

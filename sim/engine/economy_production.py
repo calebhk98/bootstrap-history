@@ -194,6 +194,15 @@ class ProductionMixin:
         self.household._revenue_cache_val = value
         return value
 
+    def concern_revenue(self, node_id):
+        """What one open concern earns in a year before the market ceiling: its revenue per unit, the units run
+        (a school you founded three of earns three schools' worth; 1.0 for what was never expanded), its ramp,
+        the price level and the market's room for its output."""
+        node = self.nodes[node_id]
+        units = self.institution_units(node_id) if node_id in self.SCALABLE_INSTITUTIONS else 1.0
+        return (node["rev"] * units * self.venture_ramp(node_id) * self.price_index
+                * self.node_output_market_factor(node))
+
     def _compute_revenue_uncached(self):
         total_revenue = 0.0
         practice_set = self._practice_set()
@@ -218,12 +227,7 @@ class ProductionMixin:
             node = self.nodes[node_id]
             # a practised skill earns through the founder's own hours (practice_income), not through the node
             if node["rev"] and not practice:
-                # A SCHOOL YOU FOUNDED THREE OF EARNS THREE SCHOOLS' WORTH: institution_units is 1.0 for
-                # everything never expanded (see ProjectsMixin.institution_units).
-                _units = (self.institution_units(node_id)
-                          if node_id in self.SCALABLE_INSTITUTIONS else 1.0)
-                total_revenue += (node["rev"] * _units * self.venture_ramp(node_id) * self.price_index
-                                  * self.node_output_market_factor(node))
+                total_revenue += self.concern_revenue(node_id)
         # THERE IS ONLY SO MUCH MARKET. Uncapped, this compounds: every venture
         # pays back quickly, so its income buys the next one, and nothing
         # stops a run's capital from growing far past what a real market this

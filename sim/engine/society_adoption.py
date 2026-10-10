@@ -122,15 +122,14 @@ class AdoptionMixin:
                 changed.append("%s %.1f%% -> %.1f%% (%+.1f points, one step)" % (
                     field, before * 100, self.civ[field] * 100,
                     (self.civ[field] - before) * 100))
-            elif field == "population":
+            elif field == "population" and node_id not in self.coverage_nodes():
                 # Only the disease technologies carry this weight; the
                 # disease burden reads it live from the tree.
                 burden = self._disease_burden()
                 total_weight = sum(self._tech_effects[tech_id].get("population", 0.0)
                                    for tech_id in self.DISEASE_BURDEN_TECH_IDS)
-                burden_before = (min(1.0, burden + delta / total_weight)
-                                 if total_weight > 0 and self.has(node_id)
-                                 and node_id in self.DISEASE_BURDEN_TECH_IDS else burden)
+                burden_before = (min(1.0, burden + delta * self.disease_burden_held(node_id) / total_weight)
+                                 if total_weight > 0 and node_id in self.DISEASE_BURDEN_TECH_IDS else burden)
                 changed.append("population (disease burden %.2f -> %.2f of the "
                                "pre-industrial level, which slows deaths and "
                                "raises survival from the next year)"
@@ -177,7 +176,7 @@ class AdoptionMixin:
         only those who cannot learn to read are left out."""
         return 1.0 - self.UNABLE_TO_READ_SHARE
 
-    def _schooling_flow(self):
+    def _schooling_flow(self, field=None):
         """0 if no school is open here at all; otherwise a small positive
         number that grows, with diminishing returns, in how much school and
         academy capacity is actually running.
@@ -195,7 +194,14 @@ class AdoptionMixin:
         for node_id, spec in self._effect_terms("schooling_flow"):
             if spec.get("required") and not self.running(node_id):
                 return 0.0
-        return self.effect_sum("schooling_flow")
+        if field is None:
+            return self.effect_sum("schooling_flow")
+        # a school declares `reaches`, the literacy fields it teaches; one that names none teaches them all
+        total = 0.0
+        for node_id, value in self.effect_values("schooling_flow"):
+            if field in self.mechanic(node_id, "schooling_flow").get("reaches", (field,)):
+                total += value
+        return total
 
 
     # HOW FAST LITERACY CLOSES THE GAP TO ITS CEILING, per unit of
@@ -245,11 +251,12 @@ class AdoptionMixin:
             "visible boost without letting a country of diffused printing "
             "teach anyone by itself (still requires flow>0); not measured.")
 
-    def effective_schooling_flow(self):
+    def effective_schooling_flow(self, field=None):
         """Schooling flow once diffused printing is counted: texts to teach
         from make the same schooling effort teach faster, but only where
-        some school is open (a flow of zero stays zero)."""
-        flow = self._schooling_flow()
+        some school is open (a flow of zero stays zero). With `field`, only
+        the schools that teach that literacy figure."""
+        flow = self._schooling_flow(field)
         if flow <= 0.0:
             return 0.0
         return flow * (1.0 + self.PRINTING_DIFFUSION_SCHOOLING_BOOST
@@ -258,15 +265,16 @@ class AdoptionMixin:
     def literacy_next_year(self):
         """{civ field: value} for each literacy figure the next year of
         schooling would move, without applying it."""
-        flow = self.effective_schooling_flow()
         moved = {}
-        if flow <= 0.0:
+        if self.effective_schooling_flow() <= 0.0:
             return moved
         for field, ceiling, rate in (
                 ("literacy_general", self.literacy_ceiling_general(),
                  self.LITERACY_GROWTH_RATE_GENERAL),
                 ("literacy_elite", self.literacy_ceiling_elite(),
                  self.LITERACY_GROWTH_RATE_ELITE)):
+            # each figure moves with the schools that teach it
+            flow = self.effective_schooling_flow(field)
             current = float(self.civ.get(field, 0.0))
             if current < ceiling - 1e-6:
                 after = min(ceiling, current + rate * flow * (ceiling - current))

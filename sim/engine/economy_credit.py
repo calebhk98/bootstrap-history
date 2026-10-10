@@ -19,7 +19,6 @@ grouping evidence.
 """
 from .data import WAGES
 from sim.constants import declare
-from sim.unit_conversions import HOURS_PER_PERSON_YEAR
 from . import money_units
 from .units_prose import money_text
 from sim.world import capital_market
@@ -878,4 +877,7 @@ class CreditMixin:
             "is tuned game balance, not derived from any household-budget "
             "study.")
 
-    HOURS_PER_PERSON_YEAR = HOURS_PER_PERSON_YEAR
+    @property
+    def HOURS_PER_PERSON_YEAR(self):
+        """Hours a person gives in a year, the working day's length counted (sim/engine/working_day.py)."""
+        return self.working_hours_per_person_year()

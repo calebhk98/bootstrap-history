@@ -83,10 +83,16 @@ class DiseaseBurdenRespondsToUnlockedTechnologyTests(unittest.TestCase):
         with _holding(test_sim, ["germ_theory"]):
             self.assertAlmostEqual(test_sim._disease_burden(), expected, places=12)
 
-    def test_holding_all_eight_reaches_fully_modern_disease_burden(self):
+    def test_holding_every_technology_leaves_only_the_share_of_works_that_serve_a_share_of_the_people(self):
+        from sim.engine.core import TECH_EFFECTS
         test_sim = _shared_rome_sim()
+        coverage = [tech_id for tech_id in test_sim.DISEASE_BURDEN_TECH_IDS if tech_id in test_sim.coverage_nodes()]
+        total_weight = sum(TECH_EFFECTS[tech_id]["population"] for tech_id in test_sim.DISEASE_BURDEN_TECH_IDS)
         with _holding(test_sim, test_sim.DISEASE_BURDEN_TECH_IDS):
-            self.assertEqual(test_sim._disease_burden(), 0.0)
+            # works that serve a share of the people count for the share they reach: shut, they count for none
+            self.assertAlmostEqual(
+                test_sim._disease_burden(),
+                sum(TECH_EFFECTS[tech_id]["population"] for tech_id in coverage) / total_weight, places=12)
 
     def test_food_effect_technologies_do_not_move_disease_burden_at_all(self):
         # Food technologies act through the farming technique, not disease.
