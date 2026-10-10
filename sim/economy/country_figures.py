@@ -53,6 +53,20 @@ def wages_per_hour(economy, country: Optional[str]) -> Dict[str, float]:
     return dict(sorted(wages.items()))
 
 
+def idle_hours_by_trade(economy, country: Optional[str]) -> Dict[str, tuple]:
+    """(hours offered and not hired, hours offered) of each trade in the country's labour markets last year:
+    the labour core's clearing, summed over the markets."""
+    tiles = country_tiles(economy, country)
+    idle: Dict[str, float] = {}
+    hired: Dict[str, float] = {}
+    for key, hours in economy.record.hours_idle.items():
+        if _labour_key_in(key, tiles):
+            trade = key.split(KEY_SEPARATOR, 1)[0]
+            idle[trade] = idle.get(trade, 0.0) + hours
+            hired[trade] = hired.get(trade, 0.0) + economy.record.hours_hired.get(key, 0.0)
+    return {trade: (idle[trade], idle[trade] + hired[trade]) for trade in sorted(idle)}
+
+
 def people_by_trade(economy, country: Optional[str]) -> Dict[str, float]:
     """Working people by trade in the country's labour markets."""
     from .labour_state import people_by_trade as in_area

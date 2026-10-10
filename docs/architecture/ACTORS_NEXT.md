@@ -191,7 +191,7 @@ shares as civilisation data (`Complaints/105`).
 
 Several governments, each with its own location, purse and view. A foreign
 state sees only what reaches it (`Complaints/109`). Interest groups
-(`Complaints/110`) are actors that press the state's policy.
+(`Complaints/closed/110-add-political-interest-groups.md`) are actors that press the state's policy.
 
 ## Not decided here
 

@@ -182,6 +182,18 @@ class FakeWorld:
 	def market_key(self, node_id: str) -> str:
 		return node_id
 
+	def land_rent_paid_by_tile(self) -> Dict[str, float]:
+		return {}
+
+	def idle_hours_by_trade(self) -> Dict[str, Any]:
+		return {}
+
+	def displacing_technique(self, trade: str) -> Optional[str]:
+		return None
+
+	def technique_name(self, node_id: str) -> str:
+		return node_id
+
 	def sectors(self) -> Dict[str, Any]:
 		return {}
 

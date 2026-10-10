@@ -39,6 +39,11 @@ class HouseholdState:
 	protection: float = 0.0
 	# how the household answers the state's demands: "comply" or "refuse" (sim/agents/demand_answer.py)
 	demand_stance: str = "comply"
+	# money's worth of service offered the state when negotiating; wealth held out of its sight; and how far
+	# the state holds the household's refusals against it (0..1)
+	service_offer: float = 0.0
+	concealed: float = 0.0
+	defiance: float = 0.0
 	bribes_ytd: float = 0.0
 	slaves: int = 0
 	freedmen: int = 0

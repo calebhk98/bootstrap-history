@@ -552,6 +552,10 @@ class AgentEconomy:
         """Rent per hectare-year on one tile in coin (the mean where none was let there)."""
         return economy_api.land_rent_at_tile(self.economy(), tile) * self._economy.setup.coin_per_unit
 
+    def idle_hours_by_trade(self):
+        """(hours offered and not hired, hours offered) of each trade in the home labour markets last year."""
+        return economy_api.idle_hours_by_trade(self.economy())
+
     def land_rent_paid_by_tile(self):
         """Rent producers paid on each tile where land was let last year, in coin."""
         coin = self._economy.setup.coin_per_unit
