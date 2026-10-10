@@ -92,6 +92,7 @@
   "mat_sugar": {"satisfies": {"food": 1.2}},
   "cacao_kg": {"satisfies": {"food": 1.6}},
   "starch_kg": {"satisfies": {"food": 1.05}},
+  "flour_kg": {"satisfies": {"food": 1.0}},
   "wine_common_kg": {"satisfies": {"food": 0.2}},
 
   "brick_1000": {"satisfies": {"shelter": 1.4}},
