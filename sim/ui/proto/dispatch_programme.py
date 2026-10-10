@@ -36,7 +36,7 @@ def _describe(sim):
                 "note": "no programme set; 'programme set <goal or category> max_annual_draw:<n> "
                         "reserve_cash:<n> max_total_cost:<n>' starts one"}
     return {"ok": True, "programme": {
-        "target": target_text(sim, programme["target"]), "caps": caps_text(programme),
+        "target": target_text(sim, programme["target"]), "caps": caps_text(programme, sim),
         "paused": bool(programme.get("paused")), "committed_so_far": round(programme.get("committed", 0.0), 1),
         "hours_committed_so_far": round(programme.get("hours", 0.0), 1),
         "pauses": pauses_text(programme), "paused_because": programme.get("paused_by"),

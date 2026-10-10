@@ -19,6 +19,7 @@ are a mixin only so that they can live in a file of their own.
 """
 from sim.constants import declare
 from . import money_units
+from .units_prose import money_text
 from .data import closure, critical_path
 from . import event_causes
 from .hazard_window import hazards_not_yet_past
@@ -597,7 +598,7 @@ class HazardsMixin:
         _took = []
         if _cap0 - max(0.0, household.capital) > 0.5:
             _took.append("%s taken"
-                         % "{:,.0f}".format(_cap0 - max(0.0, household.capital)))
+                         % money_text(_cap0 - max(0.0, household.capital), self, grouped=True))
         if _people0 - _people_after > 0.05:
             _took.append("%.1f of your people gone"
                          % (_people0 - _people_after))
@@ -778,9 +779,9 @@ class HazardsMixin:
                 self.pay_edge(edges.EDGE_OFFICIALS, gift, "courting a patron's heir")
             if courted:
                 msg = ("your patron dies; auto_court_heir courts his heir "
-                       "afresh for %s denarii. Protection falls from %d%% to "
+                       "afresh for %s. Protection falls from %d%% to "
                        "%d%% and scandal rises by %d"
-                       % ("{:,.0f}".format(gift), was * 100,
+                       % (money_text(gift, self, grouped=True), was * 100,
                           household.protection * 100, self.PATRON_DEATH_SCANDAL))
             else:
                 msg = ("your patron dies. No money was spent because "
@@ -810,7 +811,7 @@ class HazardsMixin:
         lost = had_before - max(0.0, self.state.household.capital)
         if lost <= 0.5:
             return "nothing, because you were holding none"
-        return "{:,.0f} denarii".format(lost)
+        return money_text(lost, self, grouped=True)
 
     def _catastrophe(self, why):
         self.state.founder.dead_reason = why

@@ -1,5 +1,6 @@
 """The blocks of the state screen: header, money, founder, running, concerns, employment, standing and at-risk sections."""
 
+from sim.ui import units_text
 from .util import _coin_hoard_line, _fmt_num, _pct, _wrap
 from sim.engine.ui_port import condition_line
 from sim.engine.ui_port import warning_lines
@@ -319,14 +320,14 @@ def _state_standing(out):
 
 
 def _state_knowledge_warning(out):
-    return [""] + warning_lines(out.get("knowledge_loss_warning")) if out.get("knowledge_loss_warning") else []
+    return [""] + warning_lines(out.get("knowledge_loss_warning"), units_text.text_label("money", "denarii")) if out.get("knowledge_loss_warning") else []
 
 
 def _state_conditions(out):
     rows = out.get("conditions")
     if not rows:
         return []
-    return [""] + ["CONDITION: " + condition_line(row) for row in rows]
+    return [""] + ["CONDITION: " + condition_line(row, units_text.rate_label("mass", "yr", "t/year")) for row in rows]
 
 
 def _state_at_risk(out):

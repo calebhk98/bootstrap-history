@@ -26,6 +26,7 @@
   },
   "currency": "denarius",
   "currency_words": {"long": "denarii", "short": "den"},
+  "display_units": {"area": "iugerum", "mass": "libra"},
   "coin_standard": {
     "regime": "struck_coin",
     "material": "silver_kg",

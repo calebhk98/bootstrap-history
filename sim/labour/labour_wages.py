@@ -167,8 +167,8 @@ class WagesMixin(WageLedgerMixin):
             _msg = ("you earned %s, and the practice those hours were "
                     "running was worth %s a year - so this cost you %s. "
                     "Wage work is for when you have no practice to lose."
-                    % ("{:,.0f}".format(_paid), "{:,.0f}".format(_lost),
-                       "{:,.0f}".format(_lost - _paid)))
+                    % (self._world.money_text(_paid, grouped=True), self._world.money_text(_lost, grouped=True),
+                       self._world.money_text(_lost - _paid, grouped=True)))
             if _starve:
                 _msg += " Also: " + _starve
             return pay, _msg

@@ -5,7 +5,7 @@ translated from the constraint `portfolio` already reads off `waiting_on`; the
 pools are the engine's own demand and supply figures.
 """
 
-from sim.engine.ui_port import BLOCKER_MEANING, RUNNING_CONSTRAINT_KIND
+from sim.engine.ui_port import BLOCKER_MEANING, RUNNING_CONSTRAINT_KIND, tagged
 
 # Triage order: what only the player can fix first, pace last.
 KIND_ORDER = ("specialists", "supply", "money", "hours", "calendar", "idle")
@@ -26,8 +26,8 @@ def _pools(sim, kind, rows, trade_rows, pool_total, throttle, binding):
                  "projects_affected": len(members & set(row["projects_drawing_on_it"]))}
                 for row in trade_rows if members & set(row["projects_drawing_on_it"])]
     if kind == "money":
-        return [{"pool": "capital", "demand": round(sum(row["still_to_pay"] or 0.0 for row in rows), 1),
-                 "supply": round(sim.spending_power("start"), 1)}]
+        return [tagged({"pool": "capital", "demand": round(sum(row["still_to_pay"] or 0.0 for row in rows), 1),
+                        "supply": round(sim.spending_power("start"), 1)}, demand="money:civ_coin", supply="money:civ_coin")]
     if kind == "hours":
         return [{"pool": "directed hours",
                  "demand_hours_this_year": round(sum(row["founder_hours_left"] or 0.0 for row in rows), 1),

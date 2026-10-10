@@ -20,6 +20,7 @@
     "long": "cash",
     "short": "cash"
   },
+  "display_units": {"area": "mu", "mass": "jin"},
   "briefing_absent": [
     {
       "claim": "Glass: the Han have almost none and the optical branch must be started from sand and a furnace",

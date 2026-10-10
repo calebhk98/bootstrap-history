@@ -2,10 +2,12 @@
 
 import math
 
+from sim.engine.ui_port import mass_rate_text, plain_number
+
 def _material_remedy(sim, row):
     plan = sim.shortage_remedy_plan(row["material"], row["shortfall_t_per_yr"])
     return {"shortage": row["material"],
-            "short": "%s t/year" % "{:,.0f}".format(row["shortfall_t_per_yr"]),
+            "short": mass_rate_text(row["shortfall_t_per_yr"], sim, grouped=True),
             "commands": plan["commands"], "how": plan["text"]}
 
 
@@ -17,7 +19,7 @@ def _trade_remedy(sim, row):
     homeless = people - max(0, math.floor(sim.labour.household_room()))
     if homeless > 0:
         commands.append("buy housing %d" % homeless)
-    return {"shortage": trade, "short": "%s hours/year" % "{:,.0f}".format(hours_short),
+    return {"shortage": trade, "short": "%s hours/year" % plain_number(hours_short),
             "commands": commands,
             "how": "%d more %s would cover it%s" % (
                 people, trade, "; the household has room for fewer, so house them too" if homeless > 0 else "")}

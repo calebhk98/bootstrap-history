@@ -18,6 +18,15 @@ BUY_TARGETS = {
     "manumit": (("manumission", "free"), "buy manumit <n>"),
 }
 
+# canonical target -> (dimension, the unit the engine takes its quantity in); the player may type another unit of the dimension
+TARGET_QUANTITY = {
+    "forest": ("area", "hectare"),
+    "nitre": ("area", "square_metre"),
+    "farm": ("area", "hectare"),
+    "material": ("mass", "tonne"),
+    "mine": ("mass", "tonne"),
+}
+
 _CANONICAL_BY_SPELLING = {
     spelling: target
     for target, (spellings, _usage) in BUY_TARGETS.items()

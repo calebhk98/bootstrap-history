@@ -6,6 +6,7 @@ import random
 
 from sim.world.demography import BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE
 from . import automation_audit
+from .units_prose import plain_number
 from .staff_replacement import REPLACE_ONLY, replace_lost_staff
 from sim.agents.api import edges
 
@@ -289,5 +290,5 @@ class StaffPhaseMixin:
                                  "your name: your year is %s hours instead of "
                                  "%s. They came with the institutions you built"
                              % (_whole, "y" if _whole == 1 else "ies",
-                                "{:,.0f}".format(self.labour.director_pool()),
-                                "{:,.0f}".format(self.cfg["founder_hours_per_year"]))))
+                                plain_number(self.labour.director_pool()),
+                                plain_number(self.cfg["founder_hours_per_year"]))))

@@ -36,11 +36,12 @@ import json, os, random, re, sys, time
 
 from sim.engine.ui_port import (
     CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog, selectable_goals,
-    load, load_civ, load_geography, money_short, money_unit_note, money_word, STARTING_KITS,
+    load, load_civ, load_geography, money_short, money_unit_note, STARTING_KITS,
     win_condition_describe)
 from sim.engine.ui_port import Sim
 from . import protocol as _protocol
 from sim.engine.ui_port import settings
+from sim.engine.ui_port import money_text, units
 from . import cli_options, cli_units_options, replay
 from sim.engine.ui_port import normal_seed, valid_seed_text
 from sim.ui.proto import step_progress
@@ -227,6 +228,7 @@ def _play_build_sim(args):
     _protocol.MONEY_SHORT = money_short(sim.civ)
     _protocol.COMMISSION_DISPLAY = settings.resolve_commission_display(app_cfg)
     cli_units_options.apply_saved_preferences(app_cfg)
+    units.set_civ_defaults(sim.civ)
     return sim, nodes, session, app_cfg, kit, horizon
 
 
@@ -319,16 +321,16 @@ def _play_print_welcome(sim, kit):
     sitting is fresh and that preference is on.
     """
     print()
-    print(_wrap("You arrive in %d AD with %d %s and nothing else: no "
+    print(_wrap("You arrive in %d AD with %s and nothing else: no "
                 "employees, no slaves, and nobody who owes you anything. "
                 "What you have is everything you know."
-                % (sim.year, sim.capital, money_word(sim.civ))))
+                % (sim.year, money_text(sim.capital, sim))))
     # A kit is a number of labourer-years, so it is stated here in the
     # civilisation's own money at its own opening wage.
     if kit and kit in STARTING_KITS:
-        print(_wrap('The "%s" kit is %.1f labourer-years of wages, which here is %d %s. %s'
-                    % (kit, STARTING_KITS[kit]["labourer_years"], sim.capital,
-                       money_word(sim.civ), money_unit_note(sim.civ))))
+        print(_wrap('The "%s" kit is %.1f labourer-years of wages, which here is %s. %s'
+                    % (kit, STARTING_KITS[kit]["labourer_years"], money_text(sim.capital, sim),
+                       money_unit_note(sim.civ))))
     print()
     # `open` BELONGS IN THE OPENING. Finishing a project earns you
     # nothing until you open its doors, auto_open ships off for a player
@@ -397,8 +399,8 @@ def _play_prompt(sim):
     # hours under contract. A prompt reading "sch 0 art 0" against a `why`
     # showing "(you have 1, 0)" on the same turn would read as the game
     # having lost count of the player's own staff.
-    return ("[%d AD | %d %s | you:%d hr | sch %.0f art %.0f | rep %.0f] > "
-              % (sim.year, sim.capital, money_short(sim.civ), free_hours,
+    return ("[%d AD | %s | you:%d hr | sch %.0f art %.0f | rep %.0f] > "
+              % (sim.year, money_text(sim.capital, sim, short=True), free_hours,
                  sim.labour.effective_scholars(), sim.labour.craft_hands_available(),
                  sim.reputation))
 

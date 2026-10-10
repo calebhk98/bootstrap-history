@@ -21,6 +21,7 @@ from .data import WAGES
 from sim.constants import declare
 from sim.unit_conversions import HOURS_PER_PERSON_YEAR
 from . import money_units
+from .units_prose import money_text
 from sim.world import capital_market
 from sim.agents.api import edges, ledger
 
@@ -324,8 +325,8 @@ class CreditMixin:
         self.pay_interest(self.household, owed, "interest on arrears")
         household.interest_paid = (household.interest_paid or 0.0) + owed
         if owed > 0 and (household.insolvent_years in (1, 5, 15)):
-            household.log.append((year, "interest on %0.f denarii of arrears at %.1f%% a year"
-                                 % (-household.capital, rate * 100)))
+            household.log.append((year, "interest on %s of arrears at %.1f%% a year"
+                                 % (money_text(-household.capital, self), rate * 100)))
         return owed
 
     def warn_near_the_limit(self, year):
@@ -365,8 +366,8 @@ class CreditMixin:
                              "funds new work for some years. 'stop' a project, "
                              "'mothball' a loss-maker or 'fire' somebody while "
                              "it is still your choice"
-                         % ("{:,.0f}".format(-household.capital),
-                            "{:,.0f}".format(limit), used * 100)))
+                         % (money_text(-household.capital, self, grouped=True),
+                            money_text(limit, self, grouped=True), used * 100)))
 
     CREDIT_FREEZE_YEARS_AFTER_HALT = declare(
         "CREDIT_FREEZE_YEARS_AFTER_HALT", 5, kind="temporary_heuristic",
@@ -471,14 +472,14 @@ class CreditMixin:
                 projects.bountied.discard(node_id)
             household.credit_frozen_until = year + self.CREDIT_FREEZE_YEARS_AFTER_HALT
             household.log.append((year, "CREDIT EXHAUSTED: %d project%s stopped, "
-                                 "unfinished: %s. The %s denarii already paid "
+                                 "unfinished: %s. The %s already paid "
                                  "stands to your credit and comes off the "
                                  "bill if you begin again. Nobody will fund new "
                                  "work here until %d"
                              % (len(dropped), "" if len(dropped) == 1 else "s",
                                 ", ".join(dropped[:4])
                                 + (" and others" if len(dropped) > 4 else ""),
-                                "{:,.0f}".format(_kept), year + self.CREDIT_FREEZE_YEARS_AFTER_HALT)))
+                                money_text(_kept, self, grouped=True), year + self.CREDIT_FREEZE_YEARS_AFTER_HALT)))
         # let go of what you cannot maintain
         if household.capital < -limit:
             self.mothball_mines()
@@ -595,10 +596,10 @@ class CreditMixin:
             _moved = (_frozen_before > year
                      and household.credit_frozen_until > _frozen_before)
             household.log.append((year, "INSOLVENCY SETTLED: most of the debt is written "
-                                 "off and you still owe about %s denarii. Your "
+                                 "off and you still owe about %s. Your "
                                  "name is worth less for it (reputation %s), and "
                                  "you keep your knowledge and your practice%s"
-                                 % ("{:,.0f}".format(limit * self.SETTLEMENT_CAPITAL_RETAINED_FRACTION),
+                                 % (money_text(limit * self.SETTLEMENT_CAPITAL_RETAINED_FRACTION, self, grouped=True),
                                     "-%.1f" % _rep_hit if _rep_hit > 0.05
                                     else "already at nothing, so no further",
                                     (". Settling again while still frozen out "
@@ -653,9 +654,9 @@ class CreditMixin:
                                 "the %s of practice they come out of, so you are "
                                 "up %s. Nobody has to lend you anything for that"
                                 % (best_trade, hours,
-                                   "{:,.0f}".format(would_earn),
-                                   "{:,.0f}".format(would_cost),
-                                   "{:,.0f}".format(would_earn - would_cost)))
+                                   money_text(would_earn, self, grouped=True),
+                                   money_text(would_cost, self, grouped=True),
+                                   money_text(would_earn - would_cost, self, grouped=True)))
         losers = sorted((node_id for node_id in projects.operating
                          if self.nodes[node_id]["up"] > self.nodes[node_id]["rev"]),
                         key=lambda node_id: self.nodes[node_id]["rev"] - self.nodes[node_id]["up"])
@@ -666,10 +667,10 @@ class CreditMixin:
                                     for node_id in losers[:3]))
         if self.labour.wage_bill() > 0:
             ways.append("let people go: your payroll is %s a year"
-                        % "{:,.0f}".format(self.labour.wage_bill()))
+                        % money_text(self.labour.wage_bill(), self, grouped=True))
         if self.mine_operating_cost() > 0:
             ways.append("close a mine: they cost %s a year whether you use them "
-                        "or not" % "{:,.0f}".format(self.mine_operating_cost()))
+                        "or not" % money_text(self.mine_operating_cost(), self, grouped=True))
         if not ways:
             ways.append("there is nothing left to cut; your living costs alone "
                         "exceed what you earn, and only new income will move it")
@@ -677,12 +678,12 @@ class CreditMixin:
             ways.append("%s of that %s is interest on the arrears themselves, "
                         "which is the one cost that goes away as the balance "
                         "comes back up"
-                        % ("{:,.0f}".format(interest), "{:,.0f}".format(-net)))
+                        % (money_text(interest, self, grouped=True), money_text(-net, self, grouped=True)))
         return {"you_are_stuck": ("you have been in arrears %d years and you "
-                                  "lose %s denarii a year, so nothing you start "
+                                  "lose %s a year, so nothing you start "
                                   "will ever be paid for"
                                   % (household.insolvent_years,
-                                     "{:,.0f}".format(-net))),
+                                     money_text(-net, self, grouped=True))),
                 "this_is_not_the_end_of_the_run": ("it is escapable, and none of "
                                                    "these need anybody to lend "
                                                    "you a denarius"),

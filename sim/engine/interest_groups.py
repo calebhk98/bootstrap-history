@@ -6,6 +6,7 @@ reading side, plus the one prohibition check the start gate calls.
 """
 from sim.agents.api import Sector, supply
 from .blockers import blocker_kind
+from .units_prose import money_text
 
 
 class InterestGroupsMixin:
@@ -60,7 +61,7 @@ class InterestGroupsMixin:
             if amount > 0.5:
                 reasons.append("the state is making good %s a year to %s (%s) and raising what its purse "
                                "cannot pay from the taxpayers it sees"
-                               % ("{:,.0f}".format(record.claim), record.name, record.cause))
+                               % (money_text(record.claim, self, grouped=True), record.name, record.cause))
         return reasons
 
     def group_prohibition_of(self, node_id):

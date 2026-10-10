@@ -9,14 +9,16 @@ these live in a separate file).
 """
 
 import sim.engine.ui_port as ui_port
+from sim.engine.ui_port import area_text, mass_per_area_text, mass_rate_text, money_text
 from .command_registry import command
 from .explain_once import already_explained
 from .util import _qty
+from .quantity_units import read_quantity, read_target_quantity
 from .buy_targets import canonical_target, target_names, usage_lines
 from .quote_purchases import FLAT_QUOTERS
 from .stock_purchases import buy_living_stock
 from .quote_spending import SPENDING_QUOTERS, bounty_refusal
-from sim.engine.ui_port import cash_book, purchase_rule, money_word
+from sim.engine.ui_port import cash_book, purchase_rule
 
 
 @command("bounty", shape="tech", group="projects",
@@ -34,8 +36,9 @@ def _cmd_bounty(sim, nodes, cmd, ended):
         return {"ok": False, "error": refusal}
     price = sim.bounty_price(node_id)
     if not sim.post_bounty(node_id):
-        return {"ok": False, "error": "cannot afford the bounty: needs about %.0f %s, "
-                                      "you have %.0f. Earn or wait, then try again" % (price, money_word(sim.civ), sim.capital)}
+        return {"ok": False, "error": "cannot afford the bounty: needs about %s, "
+                                      "you have %s. Earn or wait, then try again"
+                                      % (money_text(price, sim), money_text(sim.capital, sim))}
     return {"ok": True, "posted": node_id, "price": round(price, 1),
             "paid_now": round(price, 1), "capital": round(sim.capital, 1)}
 
@@ -46,9 +49,18 @@ def _buy_forest(sim, cmd, quantity):
     if got <= 0:
         cost = quantity * sim.FOREST_COST_PER_HA * sim.price_index
         return {"ok": False, "error": purchase_rule.refusal_text(
-            sim, "%.0f ha of coppice woodland" % quantity, cost)}
+            sim, "%s of coppice woodland" % area_text(quantity, sim), cost)}
     return {"ok": True, "bought_ha": got, "forest_ha": round(sim.forest_ha, 1),
             "capital": round(sim.capital, 1)}
+
+
+def _share_of_limit_used(sim):
+    """How much of the credit limit the arrears have used, as a percentage text, or none."""
+    limit = sim.credit_limit()
+    if sim.capital < 0 and limit > 0:
+        percent_used = 100.0 * -sim.capital / max(1e-9, limit)
+        return "%d%%" % percent_used
+    return "none"
 
 
 def _buy_nitre(sim, cmd, quantity):
@@ -56,7 +68,7 @@ def _buy_nitre(sim, cmd, quantity):
     if got <= 0:
         return {"ok": False,
                 "error": purchase_rule.refusal_text(
-                    sim, "%.0f square metres of nitre bed" % quantity,
+                    sim, "%s of nitre bed" % area_text(quantity, sim, unit="square_metre"),
                     quantity * sim.NITRE_COST_PER_M2 * sim.price_index)}
     return {"ok": True, "laid_m2": got,
             "nitre_bed_m2": round(sim.nitre_bed_m2, 1),
@@ -127,7 +139,7 @@ def _buy_mine(sim, cmd, quantity):
         if price is not None and not purchase_rule.can_pay(sim, price):
             return {"ok": False,
                     "error": purchase_rule.refusal_text(
-                        sim, "%.0f tonnes a year of %s" % (float(quantity), mat), price)
+                        sim, "%s of %s" % (mass_rate_text(float(quantity), sim, short=False), mat), price)
                     + ' Check the price first with {"cmd":"quote","what":"mine",'
                       '"material":"%s","n":%g}.' % (mat, float(quantity))}
         return {"ok": False, "error": "could not commission any %s capacity right now "
@@ -170,10 +182,11 @@ def _buy_slaves(sim, cmd, quantity):
         # while charging far more is the model lying to the player.
         quote = sim.labour.slave_quote(int(quantity))
         return {"ok": False,
-                "error": "cannot afford %d slaves: %.0f %s "
-                         "(%.0f each after the market moves against a purchase "
-                         "this size) and you have %.0f"
-                         % (int(quantity), quote, money_word(sim.civ), quote / max(1, int(quantity)), sim.capital)}
+                "error": "cannot afford %d slaves: %s "
+                         "(%s each after the market moves against a purchase "
+                         "this size) and you have %s"
+                         % (int(quantity), money_text(quote, sim), money_text(quote / max(1, int(quantity)), sim),
+                            money_text(sim.capital, sim))}
     return {"ok": True, "bought": got, "slaves": sim.slaves, "capital": round(sim.capital, 1)}
 
 
@@ -204,7 +217,8 @@ _BUY_HANDLERS = {
          summary="farmland, housing, schools, stock, living stock, forest, nitre, mines, slaves",
          usage=usage_lines(),
          options={"what": ", ".join(target_names()),
-                  "n": "the amount"},
+                  "n": "the amount, in the unit the usage names",
+                  "unit": "optional: another unit of the same kind (acre, pound, ...), or shown for the unit you display"},
          description="Spends capital on durable things. Ask the price first with quote. "
                      "See the economy topic for what each one does.")
 def _cmd_buy(sim, nodes, cmd, ended):
@@ -214,7 +228,7 @@ def _cmd_buy(sim, nodes, cmd, ended):
     # THE SAME READER AS EVERY OTHER QUANTITY: a bare float() here instead
     # of _qty would miss its guards, letting a huge or malformed number
     # through to print a refusal in binary rounding error.
-    quantity, _err_n = _qty(cmd, "n", 0)
+    quantity, _err_n = read_target_quantity(cmd, "n", 0, what, sim)
     if _err_n:
         return {"ok": False, "error": _err_n + ". Nothing was changed."}
     # A negative n would let buy_forest compute a NEGATIVE cost, pass the
@@ -234,7 +248,7 @@ def _cmd_buy(sim, nodes, cmd, ended):
 @command("sell", group="money",
          summary="sell material, a concern you run, or farmland",
          usage=["sell <material> <tonnes>", "sell concern <id>", "sell farm <hectares>"],
-         options={"<material>": "a material in stock", "<tonnes>": "amount",
+         options={"<material>": "a material in stock", "<tonnes>": "amount; add a unit word ('sell iron 50 lb') for another unit",
                   "concern <id>": "a concern you run: the exchange picks the buyer and the price",
                   "farm <hectares>": "farmland sold back at the price buy farm charges"},
          description="Material sells at the current value; you can only sell what you hold. A "
@@ -246,12 +260,12 @@ def _cmd_sell(sim, nodes, cmd, ended):
     if what == "concern":
         return sim.sell_concern(str(cmd.get("id") or ""))
     if what == "farm":
-        quantity, err = _qty(cmd, "n", 0)
+        quantity, err = read_target_quantity(cmd, "n", 0, "farm", sim)
         if err or quantity <= 0:
             return {"ok": False, "error": err or "n must be greater than zero"}
         return sim.sell_farm(quantity)
     material = str(cmd.get("material") or cmd.get("what") or "").lower()
-    quantity, err = _qty(cmd, "n", 0)
+    quantity, err = read_target_quantity(cmd, "n", 0, "material", sim)
     if err or quantity <= 0:
         return {"ok": False, "error": err or "n must be greater than zero"}
     sold = sim.sell_material_stock(material, quantity)
@@ -349,8 +363,7 @@ def _cmd_money(sim, nodes, cmd, ended):
             "interest_paid_in_total": round(getattr(sim, "interest_paid", 0.0), 1),
             # HOW CLOSE, not just how far it goes. See warn_near_the_limit.
             "of_that_limit_you_have_used": (
-                "%d%%" % (100.0 * -sim.capital / max(1e-9, sim.credit_limit()))
-                if sim.capital < 0 and sim.credit_limit() > 0 else "none"),
+                _share_of_limit_used(sim)),
             # committed_spend(), NOT A SECOND SUM OF THE SAME FIELD: 'start'
             # needs the identical total for its own aggregate warning (see
             # committed_spend()'s docstring, economy.py). One call, read
@@ -374,7 +387,8 @@ def _cmd_money(sim, nodes, cmd, ended):
          summary="what something costs before you commit",
          usage=[usage.replace("buy ", "quote ", 1) for usage in usage_lines()],
          options={"what": "any buy target: " + ", ".join(target_names()), "material": "the material",
-                  "n": "the amount"},
+                  "n": "the amount, in the unit the usage names",
+                  "unit": "optional: another unit of the same kind (acre, pound, ...), or shown for the unit you display"},
          description="Prices a purchase without making it.")
 def _cmd_quote(sim, nodes, cmd, ended):
     spending_target = str(cmd.get("what") or "").strip().lower()
@@ -386,7 +400,7 @@ def _cmd_quote(sim, nodes, cmd, ended):
     # it back into risks spending far more than intended. `quote` has to
     # cover every counter, not just one.
     if what == "forest":
-        n_f, err_f = _qty(cmd, "n", 100)
+        n_f, err_f = read_target_quantity(cmd, "n", 100, "forest", sim)
         if err_f:
             return {"ok": False, "error": err_f}
         per = sim.FOREST_COST_PER_HA * sim.price_index
@@ -398,11 +412,11 @@ def _cmd_quote(sim, nodes, cmd, ended):
                 "you_can_afford_about": purchase_rule.affordable_units(sim, per),
                 "afford_means": purchase_rule.afford_means(),
                 "it_yields_per_hectare_per_year":
-                    "%.2f tonnes of charcoal, sustainably" % sim.CHARCOAL_PER_HA,
+                    "%s of charcoal, sustainably" % mass_per_area_text(sim.CHARCOAL_PER_HA, sim, digits=2, area="hectare"),
                 "note": "Coppice is bought once and yields every year after. "
                         "There is no market to sell it back into."}
     if what == "nitre":
-        n_n, err_n = _qty(cmd, "n", 10000)
+        n_n, err_n = read_target_quantity(cmd, "n", 10000, "nitre", sim)
         if err_n:
             return {"ok": False, "error": err_n}
         per_n = sim.NITRE_COST_PER_M2 * sim.price_index
@@ -414,7 +428,7 @@ def _cmd_quote(sim, nodes, cmd, ended):
                 "you_can_afford_about": purchase_rule.affordable_units(sim, per_n, decimals=0),
                 "afford_means": purchase_rule.afford_means(),
                 "it_yields_per_square_metre_per_year":
-                    "%.4f tonnes of saltpetre" % sim.NITRE_YIELD_T_PER_M2,
+                    "%s of saltpetre" % mass_per_area_text(sim.NITRE_YIELD_T_PER_M2, sim, digits=4),
                 "note": "Saltpetre is made, not mined: dung, straw and ash "
                         "turned for a couple of years. Cheap by the metre "
                         "and thin by the metre, so beds are laid in "
@@ -448,7 +462,7 @@ def _cmd_quote(sim, nodes, cmd, ended):
                         "years while they learn the work. Freeing them "
                         "afterwards makes them worth more, not less."}
     if what in FLAT_QUOTERS:
-        quantity, err = _qty(cmd, "n", 1)
+        quantity, err = read_target_quantity(cmd, "n", 1, what, sim)
         if err:
             return {"ok": False, "error": err}
         return FLAT_QUOTERS[what](sim, cmd, quantity)
@@ -458,7 +472,7 @@ def _cmd_quote(sim, nodes, cmd, ended):
                          + ", and for " + ", ".join(SPENDING_QUOTERS)
                          + ". For example: quote mine coal 500, quote farm 20, "
                            "quote material iron 10"}
-    quantity, err = _qty(cmd, "n", 1)
+    quantity, err = read_target_quantity(cmd, "n", 1, "mine", sim)
     if err:
         return {"ok": False, "error": err}
     quote = sim.mine_quote(cmd.get("material"), quantity)
@@ -520,7 +534,7 @@ def _cmd_withdraw(sim, nodes, cmd, ended):
 def _cmd_bribe(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}
-    amount, err = _qty(cmd, "amount")
+    amount, err = read_quantity(cmd, "amount", None, "money", "civ_coin", sim)
     if err:
         return {"ok": False, "error": err + ". Nothing was changed."}
     bribed, msg = sim.bribe(amount)

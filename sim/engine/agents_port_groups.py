@@ -3,6 +3,7 @@ employers whose hands the founder's hiring bids up. Mixed into `SimWorld`."""
 from typing import Any, Dict, List
 
 from sim.agents.api import CONCESSION_PREFIX, Sector, sector_key
+from .units_prose import mass_rate_text, money_text, plain_number
 
 
 class GroupView:
@@ -42,7 +43,7 @@ class GroupView:
 			base = (state["society_sales_tonnes"] + displaced) * price
 			sectors.append(Sector(
 				"displaced_producers", commodity, "producers of " + commodity,
-				"your sales of %s take %s tonnes a year from their market" % (commodity, "{:,.0f}".format(displaced)),
+				"your sales of %s take %s from their market" % (commodity, mass_rate_text(displaced, sim, grouped=True, short=False)),
 				lost, base, lost / wage, 1.0))
 		return sectors
 
@@ -63,7 +64,7 @@ class GroupView:
 			sectors.append(Sector(
 				"squeezed_employers", trade, "employers of %s in the founder's town" % trade,
 				"hiring by you and the firms has raised the going price of %s by %d%% and priced out about %s hands"
-				% (trade, round((factor - 1.0) * 100), "{:,.0f}".format(priced_out)),
+				% (trade, round((factor - 1.0) * 100), plain_number(priced_out)),
 				priced_out * wage, pool * wage * factor, priced_out * wage / self._annual_labourer_wage(),
 				sim.labour.local_market_share()))
 		return sectors
@@ -133,6 +134,12 @@ class GroupView:
 		if last is None or self.year - last >= year_gap:  # type: ignore[attr-defined]
 			group_record.last_logged_year = self.year  # type: ignore[attr-defined]
 			household.log.append((self.year, text))  # type: ignore[attr-defined]
+
+	def money_text(self, amount: float, grouped: bool = False, short: bool = False) -> str:
+		return money_text(amount, self._sim, grouped=grouped, short=short)
+
+	def plain_number(self, value: float) -> str:
+		return plain_number(value)
 
 	def say(self, text: str) -> None:
 		"""A line in the founder's log, for a change in who is organised against him."""

@@ -517,5 +517,5 @@ class PopulationMixin:
                 "specialist does not practise in every town and the ones who "
                 "do are not all for hire. The common crafts are the ones "
                 "sized straight off a town's own population."
-                % "{:,.0f}".format(pop)),
+                % self._world.plain_number(pop)),
         }

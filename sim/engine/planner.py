@@ -78,6 +78,7 @@ if _REPO_ROOT not in sys.path:
 from sim.engine.data import (STRATS, closure, downstream_count, hard_pre, load, load_civ,
                              topo_order, resolve_goal)
 from sim.engine.core import Sim
+from sim.engine.units_prose import money_text
 from sim.engine.default_civilisation import default_civilisation_id
 from sim.engine.mechanics import staff_capacity_sources
 from sim.engine.run_setup import load_strategy, strategy_file
@@ -563,13 +564,13 @@ def plan(civ=default_civilisation_id(), goal=None, seed_strategy=None, side_bran
             "because a node's prerequisites are other nodes while its demand "
             "for trained staff is a demand on the household. The %d "
             "institution(s) that could supply them - %s - cost about %s "
-            "denarii to found and carry upkeep from the day they open; "
+            "to found and carry upkeep from the day they open; "
             "measured, putting them in this order made the run worse, not "
             "better. When and whether to found them is a judgement about a "
             "particular run's income, which a structural pass over the tech "
             "tree cannot make."
             % (peak_scholars, peak_artisans, civ, len(staffing), ", ".join(staffing),
-               "{:,.0f}".format(sum(nodes[node_id]["_total_cost"] for node_id in staffing))))
+               money_text(sum(nodes[node_id]["_total_cost"] for node_id in staffing), sim, grouped=True)))
     if extras:
         rationale.append(
             "%d revenue-positive side branch(es) outside the goal's own "

@@ -1,6 +1,7 @@
 """The conditions a player sets under which a programme stops acting: debt, war risk, a resource shortage."""
 
 from sim.engine.hazard_window import hazards_not_yet_past
+from sim.engine.ui_port import money_text
 from sim.engine.shortage_conditions import condition_rows
 
 PAUSE_KEYS = ("pause_debt", "pause_war_risk", "pause_shortage")
@@ -25,7 +26,7 @@ def tripped(sim, pauses):
     """Why a player-set pause condition holds now, or None."""
     limit = pauses.get("pause_debt")
     if limit is not None and -sim.capital > limit:
-        return "debt over the %s you allowed" % "{:,.0f}".format(limit)
+        return "debt over the %s you allowed" % money_text(limit, sim, grouped=True)
     limit = pauses.get("pause_war_risk")
     risk = war_risk(sim) if limit is not None else 0.0
     if limit is not None and risk > limit:
