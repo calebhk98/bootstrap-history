@@ -18,7 +18,7 @@ DEAR = Recipe("grow_coffee_dear", {COFFEE: 100.0}, {fixture.GRAIN: 1000.0}, {fix
 CHEAP = Recipe("grow_coffee_cheap", {COFFEE: 100.0}, {fixture.GRAIN: 10.0}, {fixture.LABOURER: 1.0})
 ENTRANT = "producer:cheap_coffee"
 ENTRY_YEAR = 3
-YEARS = 24
+YEARS = 32                              # long enough for the incumbents to stop covering cost, wait out the loss years and shed
 START_CAPACITY_RUNS = 2.0
 CAPACITY_GROWTH_PER_YEAR = 1.6          # the entrant's build-out is the scenario's input, not a decision
 

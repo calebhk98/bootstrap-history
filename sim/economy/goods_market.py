@@ -128,11 +128,15 @@ def clear(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: Area
 
 def _at_a_ceiling(price: float, schedule, levels, lowest: float) -> float:
     """Where demand falls off a buyer's ceiling, the crossing can sit just above it with nothing
-    wanted: then the market clears at that ceiling, with buyers rationed to the supply there."""
+    wanted: then the market clears at that ceiling, with buyers rationed to the supply there. A ceiling
+    only clears the market if what is still wanted just above it fits in the supply at it; otherwise the
+    buyers left would bid on past it to the next seller's step, where the crossing already is."""
     if schedule.total_at(price) >= _supply_at(levels, price):
         return price
     for ceiling in sorted({maximum for maximum in schedule.maximums if maximum < math.inf}, reverse=True):
-        if lowest <= ceiling <= price and schedule.total_at(ceiling) >= _supply_at(levels, ceiling):
+        supply = _supply_at(levels, ceiling)
+        if (lowest <= ceiling <= price and schedule.total_at(ceiling) >= supply
+                and schedule.total_at(ceiling * (1.0 + ROUNDING_SHARE)) <= supply * (1.0 + ROUNDING_SHARE)):
             return ceiling
     return price
 

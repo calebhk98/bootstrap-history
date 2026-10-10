@@ -247,5 +247,17 @@ class SpeedBoundTests(unittest.TestCase):
         self.assertLess((time.perf_counter() - start) / 5, 0.25)
 
 
+class CeilingShadowTests(unittest.TestCase):
+    def test_buyers_still_wanting_are_served_where_supply_appears_not_rationed_at_a_lower_ceiling(self):
+        # a big buyer bids up to 0.95 only; a household wants twenty at any price; the cheap seller has two
+        # units and a dear one, asking above the big buyer's ceiling, has plenty: the household is served
+        big = Bid("big", "grain", "area", "tile", 0.0, 150.0, 0.95, 0.0, 1e9, maximum_price=0.95)
+        household = bid("household", floor=0.0, flexible=20.0, reference=0.95, elasticity=2.0)
+        result = run([big, household], [offer("cheap", 2.0, 0.9), offer("dear", 150.0, 1.0)])
+        bought = {fill.agent: fill.quantity for fill in result.fills if fill.side == "buy"}
+        self.assertAlmostEqual(result.price, 1.0)
+        self.assertGreater(bought["household"], 10.0)
+
+
 if __name__ == "__main__":
     unittest.main()
