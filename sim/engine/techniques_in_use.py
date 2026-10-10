@@ -47,6 +47,8 @@ class TechniquesInUseMixin:
         """The techniques in use that concerns in the same line of business have had time to copy."""
         in_use = self.techniques_in_use()
         year = self.state.scenario.year
-        first_run = self.state.economy.technique_first_run
-        technique_spread.note_first_run(first_run, in_use, year)
+        economy = self.state.economy
+        first_run = economy.technique_first_run
+        technique_spread.note_first_run(first_run, in_use, year, not economy.technique_record_started)
+        economy.technique_record_started = True
         return technique_spread.spread_techniques(in_use, self.state.projects.granted, first_run, self.nodes, year)

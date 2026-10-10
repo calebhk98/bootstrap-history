@@ -16,10 +16,10 @@ check("a longer invention takes longer to copy",
 years_needed = imitation.copy_years(nodes["new_way"])
 
 first_run = {}
-technique_spread.note_first_run(first_run, ["old_way"], 1000)
+technique_spread.note_first_run(first_run, ["old_way"], 1000, True)
 check("what is run when the record starts counts as spread",
       "old_way" in technique_spread.spread_techniques(["old_way"], [], first_run, nodes, 1000))
-technique_spread.note_first_run(first_run, ["old_way", "new_way"], 1010)
+technique_spread.note_first_run(first_run, ["old_way", "new_way"], 1010, False)
 check("a technique first run now is not yet copied",
       "new_way" not in technique_spread.spread_techniques(["old_way", "new_way"], [], first_run, nodes, 1010))
 check("...nor one year short of the copying time",
@@ -44,7 +44,7 @@ check("...and gains the better one once it is",
 # --- the Sim method reads the economy record and the year
 game = SimpleNamespace(
     state=SimpleNamespace(scenario=SimpleNamespace(year=1000), projects=SimpleNamespace(granted={"old_way"}),
-                          economy=SimpleNamespace(technique_first_run={})),
+                          economy=SimpleNamespace(technique_first_run={}, technique_record_started=False)),
     nodes=nodes, techniques_in_use=lambda: frozenset({"old_way", "new_way"}))
 game.techniques_spread = lambda: TechniquesInUseMixin.techniques_spread(game)
 check("at the opening every technique in use is spread", game.techniques_spread() == {"old_way", "new_way"})
@@ -53,3 +53,14 @@ game.state.scenario.year = 1005
 check("a technique that appears later waits", "quick_way" not in game.techniques_spread())
 game.state.scenario.year = 1006
 check("...then spreads", "quick_way" in game.techniques_spread())
+
+# --- an opening with nothing running still starts the record, so the first later technique waits
+empty = SimpleNamespace(
+    state=SimpleNamespace(scenario=SimpleNamespace(year=1000), projects=SimpleNamespace(granted=set()),
+                          economy=SimpleNamespace(technique_first_run={}, technique_record_started=False)),
+    nodes=nodes, techniques_in_use=lambda: frozenset())
+empty.techniques_spread = lambda: TechniquesInUseMixin.techniques_spread(empty)
+check("an opening with no technique running is still the opening", empty.techniques_spread() == frozenset())
+empty.techniques_in_use = lambda: frozenset({"new_way"})
+empty.state.scenario.year = 1001
+check("...so the first technique run after it waits its copying time", "new_way" not in empty.techniques_spread())

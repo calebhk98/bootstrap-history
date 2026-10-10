@@ -12,10 +12,10 @@ from sim.agents.api import imitation
 OPENING_SPREAD_YEARS = 10000
 
 
-def note_first_run(first_run: Dict[str, int], in_use: Iterable[str], year: int) -> None:
-    """Record the year each technique in use was first seen. What is run when the record starts is the opening's
+def note_first_run(first_run: Dict[str, int], in_use: Iterable[str], year: int, opening: bool) -> None:
+    """Record the year each technique in use was first seen. On the `opening` call what is run is the opening's
     and was already spread, so it is stamped long before."""
-    stamp = year if first_run else year - OPENING_SPREAD_YEARS
+    stamp = year - OPENING_SPREAD_YEARS if opening else year
     for node_id in sorted(in_use):
         first_run.setdefault(node_id, stamp)
 
