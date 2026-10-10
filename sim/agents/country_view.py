@@ -1,8 +1,8 @@
 """`CountryWorld`: the world an actor of another country sees.
 
-Questions about the country (its people, state, techniques, values, government, wages and how much of the
-founder's work reaches it) are answered from its profile. Every other member of the shared world passes
-straight through, by explicit forwarding methods generated from the `World` protocol at class creation.
+Questions about the country (its people, state, techniques, values, government, how much of the founder's work
+reaches it) are answered from its profile, and its pay, output and prices from its own part of the economy.
+Every other member of the shared world passes straight through, by explicit forwarding methods generated from the `World` protocol at class creation.
 """
 import inspect
 from typing import Any, Dict, Optional, Set
@@ -17,6 +17,14 @@ from .tuning_country import ARMY_SHARE_OF_POPULATION, COUNTRY_OBSERVATION_RANGE_
 EXTRA_FORWARDED: tuple = ()
 # the word a civilisation's values use for a weight, as in `w_military`
 WEIGHT_PREFIX = "w_"
+
+
+class NoCountryEconomy(LookupError):
+	"""A figure was asked of a country that has no part of the economy (or whose markets cannot answer yet).
+	Every declared foreign economy is in the agent economy; there is no home answer to stand in for it."""
+
+	def __init__(self, country: str, figure: str = "economy") -> None:
+		super().__init__("country %r has no %s of its own in the agent economy" % (country, figure))
 
 
 class _NoGovernment:
@@ -81,57 +89,34 @@ class CountryWorld:
 					weights[key[len(WEIGHT_PREFIX):]] = float(weight)
 		return weights
 
-	def _home_profile(self) -> Optional[CountryProfile]:
-		state = getattr(self._holder, "state", self._holder)
-		return getattr(state, "countries", {}).get(getattr(state, "home_country", ""))
-
-	def _relative(self, field: str) -> float:
-		"""This country's level of a profile figure over the home country's (one when either is unknown)."""
-		home = self._home_profile()
-		home_level = getattr(home, field, 0.0) if home is not None else 0.0
-		own_level = getattr(self.profile, field, 0.0)
-		return own_level / home_level if home_level > 0.0 and own_level > 0.0 else 1.0
-
 	def _own_economy(self) -> Any:
-		"""The economy's answers for this country when it is part of the economy, else None."""
+		"""The economy's answers for this country; raises NoCountryEconomy when it has none."""
 		lookup = getattr(self._shared, "country_economy", None)
-		return lookup(self.profile.country) if callable(lookup) else None
+		own = lookup(self.profile.country) if callable(lookup) else None
+		if own is None:
+			raise NoCountryEconomy(self.profile.country)
+		return own
+
+	def _answer(self, figure: str, answer: Any) -> Any:
+		if answer is None or answer == {}:
+			raise NoCountryEconomy(self.profile.country, figure)
+		return answer
 
 	def pay_per_person_year(self, trade: str) -> float:
-		"""What a person-year of a trade pays in this country's own labour markets when it is in the economy;
-		otherwise the shared pay scaled by this country's wage level relative to the home country's.
-
-		TEMPORARY HEURISTIC (CLAUDE.md 4.4), only for a country not yet in the economy: a wage computed outside
-		the labour market (Complaint 407); its output below is scaled alike."""
-		own = self._own_economy()
-		pay = None if own is None else own.pay_per_person_year(trade)
-		return pay if pay is not None else self._shared.pay_per_person_year(trade) * self._relative("wage_index")
+		"""What a person-year of a trade pays in this country's own labour markets."""
+		return self._answer("pay", self._own_economy().pay_per_person_year(trade))
 
 	def society_output(self) -> float:
-		"""What this country's producers make at its prices when it is in the economy; otherwise the home
-		society's output scaled by this country's people and its wage level (TEMPORARY HEURISTIC, as pay)."""
-		own = self._own_economy()
-		output = None if own is None else own.society_output()
-		if output is not None:
-			return output
-		return self._shared.society_output() * self._relative("population") * self._relative("wage_index")
-
-	def subsistence_cost_per_person_year(self) -> float:
-		"""The country's food floor from its own prices; else the home figure over its price level (TEMPORARY HEURISTIC)."""
-		own = self._own_economy()
-		floors = {} if own is None else own.need_floor_costs_per_person_year()
-		if floors.get(FOOD_NEED):
-			return floors[FOOD_NEED]
-		return self._shared.subsistence_cost_per_person_year() * self._relative("price_index")
+		"""What this country's producers make at its prices."""
+		return self._answer("output", self._own_economy().society_output())
 
 	def need_floor_costs_per_person_year(self) -> Dict[str, float]:
-		"""The country's floors from its own prices; else the home floors over its price level (TEMPORARY HEURISTIC)."""
-		own = self._own_economy()
-		floors = {} if own is None else own.need_floor_costs_per_person_year()
-		if floors:
-			return floors
-		level = self._relative("price_index")
-		return {need_id: cost * level for need_id, cost in self._shared.need_floor_costs_per_person_year().items()}
+		"""The country's floor of each need at its own prices."""
+		return self._answer("need floors", self._own_economy().need_floor_costs_per_person_year())
+
+	def subsistence_cost_per_person_year(self) -> float:
+		"""The country's food floor at its own prices."""
+		return self._answer("food floor", self.need_floor_costs_per_person_year().get(FOOD_NEED))
 
 	def exposure(self, node_id: str, location: Optional[str]) -> float:
 		"""How much of the founder's work reaches an observer here: the shared visibility, thinned by

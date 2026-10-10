@@ -423,7 +423,7 @@ class World(Protocol):
 
 	def country_economy(self, country: str) -> Any:
 		"""The economy's own answers for a country that is part of it (pay_per_person_year, society_output,
-		need_floor_costs_per_person_year), or None when the country is not, so the caller keeps its estimate."""
+		need_floor_costs_per_person_year), or None when the country is not (a country view then raises NoCountryEconomy)."""
 		...
 
 	def need_floor_costs_per_person_year(self) -> Dict[str, float]:
