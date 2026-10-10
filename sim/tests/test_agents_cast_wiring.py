@@ -6,6 +6,7 @@ from .harness import *  # noqa: F401,F403
 
 from sim.agents.api import ActorRecord, Player
 from sim.engine.coin_hoard import KEEPING_CAUSE
+from sim.engine.theft_charge import THEFT_CAUSE
 
 GAME = S.Sim(NODES, list(ORDER), random.Random(1), events=False, manual=True,
              civ=S.load_civ("rome_100ad"))
@@ -44,8 +45,9 @@ second.record.orders.append({"command": "transfer", "to": payee.actor_id, "amoun
 second.record.orders.append({"command": "no_such_command"})
 actor_year(GAME)
 guards_paid = second.record.outlays.get(KEEPING_CAUSE, 0.0)
+stolen = second.record.outlays.get(THEFT_CAUSE, 0.0)     # coin held unguarded is exposed to theft
 check("a player's transfer leaves its purse and reaches the other actor's, creating no money",
-      abs(second.money + guards_paid - 750.0) < 1e-9 and payee.record.income.get("transfer", 0.0) - received_before == 250.0
+      abs(second.money + guards_paid + stolen - 750.0) < 1e-9 and payee.record.income.get("transfer", 0.0) - received_before == 250.0
       and any(entry["command"] == "transfer" and entry["ok"] for entry in second.record.journal),
       (second.money, second.record.journal))
 check("a command the game does not know is refused in the journal, not raised",
