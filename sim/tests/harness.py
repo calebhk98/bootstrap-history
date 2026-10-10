@@ -171,23 +171,59 @@ def _progress_ping():
         sys.stderr.flush()
 
 
-def book_money(denarii, civ="rome_100ad"):
-    """Book denarii in a civilisation's own coin (Rome's by default)."""
-    from sim.engine import money_units
-    return money_units.book_to_money(
-        denarii, S.starting_schedule(civ).money_per_labour_hour)
+def hours_money(hours, civ="rome_100ad"):
+    """Labour hours in a civilisation's own coin (Rome's by default)."""
+    return hours * S.starting_schedule(civ).money_per_labour_hour
 
 
-def sim(civ="rome_100ad", capital=None, manual=True, events=False, agent_economy=None):
-    """A game on the default economy; `agent_economy=False` opts out to the engine's own yearly market."""
-    config = {"start_capital": capital} if capital is not None else {}
-    if agent_economy is not None:
-        config["agent_economy"] = agent_economy
-    config = config or None
+def sim(civ="rome_100ad", capital=None, manual=True, events=False, surveyed=None):
+    """A game on the agent economy. `surveyed` lists the materials whose deposits the game has already found
+    (a mine names a found deposit; the metals and coal by default, `()` for none)."""
+    config = {"start_capital": capital} if capital is not None else None
     test_sim = S.Sim(NODES, ORDER, random.Random(1), events=events, manual=manual,
               civ=S.load_civ(civ), cfg=config)
     test_sim.goal, test_sim.done_year = GOAL, {}
+    for material in (("coal",) + tuple(_ore_goods(test_sim.world_map))) if surveyed is None else tuple(surveyed):
+        found_deposits_of(test_sim, material)
     return test_sim
+
+
+def unopened_sim(civ="rome_100ad", capital=None, manual=True, events=False, surveyed=None):
+    """A game whose agent economy has not opened: the engine's own figures answer every question, as they do while
+    the economy opens, and no hidden years run. For tests that read only the data, the map or the setup built from
+    them (and, since nothing is cleared, for mechanisms that need the engine's own tables)."""
+    return build_unopened(lambda: sim(civ=civ, capital=capital, manual=manual, events=events, surveyed=surveyed))
+
+
+def build_unopened(factory):
+    """`factory()` (a call that builds a `Sim`) with the agent economy left unopened: see `unopened_sim`."""
+    from unittest import mock
+    from sim.engine.economy_port import EconomyPort
+    with mock.patch.object(EconomyPort, "open_agent", lambda self: None):
+        game = factory()
+    game.economy._opening = True
+    return game
+
+
+def _ore_goods(world_map):
+    from sim.geography import api as _geography
+    return _geography.ore_goods(world_map)
+
+
+def found_deposits_of(game, material):
+    """Give the game the deposits of `material` that thorough prospecting of its held tiles would find, without
+    paying for the search, so a test can open a mine (a mine names a deposit it has found)."""
+    from sim.geography import api as _geography
+    resource_id = game.mine_resource_id(material)
+    if resource_id is None:
+        return []
+    seed = "tests"
+    held = _geography.tiles_held(game.civ, game.world_map)
+    for tile in sorted(held, key=lambda tile: -_geography.endowment(tile, resource_id, game.world_map)["undiscovered_expected"]):
+        found = _geography.prospect(tile, resource_id, 1e12, seed, game.world_map)
+        known = {row["id"] for row in game.state.holdings.deposits_found}
+        game.state.holdings.deposits_found.extend(dict(row) for row in found if row["id"] not in known)
+    return game.found_deposits(material)
 
 
 def concern_needing_craftsmen_to_supervise():
@@ -386,7 +422,7 @@ def _mk_loom_sim(n_looms, age_years):
                   if node.get("cat") == "textiles" and node.get("rev"))
     assert len(candidates) >= n_looms, "not enough textiles venture nodes in the tree"
     chosen = candidates[:n_looms]
-    loom_sim = sim(civ="rome_100ad", capital=5_000_000.0, agent_economy=False)   # legacy: callers assert on the engine's goods-market arithmetic
+    loom_sim = sim(civ="rome_100ad", capital=5_000_000.0)
     loom_sim.artisans = loom_sim.scholars = 100.0 * n_looms
     # These fixtures exercise goods-market arithmetic, not labour scarcity.
     # Supply every qualified trade so each selected historical concern can

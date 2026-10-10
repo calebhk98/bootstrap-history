@@ -1,7 +1,7 @@
 """A firm grows the concerns it runs while the market's return on the added capacity beats its cost of capital."""
 from typing import Any
 
-from . import ledger
+from . import equity_need, ledger
 from .edges import EDGE_BUILDERS
 from .tuning import EXPANSION_RATE
 
@@ -18,6 +18,8 @@ class ExpansionMixin:
 			if self.record.staffing.get(node_id, 1.0) < 1.0:  # type: ignore[attr-defined]
 				continue
 			capacity = self.capacity_of(node_id)  # type: ignore[attr-defined]
+			if capacity >= world.scale_ceiling(node_id):
+				continue
 			step = capacity * EXPANSION_RATE
 			rivals = self.rivals_of(node_id, self.actor_id) if self.rivals_of else 0.0  # type: ignore[attr-defined]
 			gain = world.expansion_gain(node_id, self.record.opened_year[node_id], capacity, step, rivals)  # type: ignore[attr-defined]
@@ -28,6 +30,8 @@ class ExpansionMixin:
 			rate = world.market_rate()
 			if shortfall > 0.0:
 				if shortfall > self.credit_ceiling(world) - self.debt():  # type: ignore[attr-defined]
+					if gain > cost * rate:
+						equity_need.note_need(self, shortfall)  # lenders will not fund it, so it raises equity
 					continue
 				rate = max(rate, self.borrowing_rate(world))  # type: ignore[attr-defined]
 			if gain <= cost * rate:

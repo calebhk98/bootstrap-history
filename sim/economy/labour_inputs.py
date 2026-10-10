@@ -13,6 +13,7 @@ from sim.labour.api import CAREER_YEARS, Route, YearInputs as CoreInputs, people
 
 from .households_cohort import VALUE_OF_LIFE_YEARS_OF_INCOME
 from .households_orders import HOUSEHOLD_TIME_PREFERENCE
+from .labour_ask_floor import ask_floor_by_tile
 from .setup import labour_area
 from .year_labour import outside_option_by_tile
 
@@ -36,13 +37,16 @@ def routes_by_area(setup, carriage) -> Dict[str, List[Route]]:
     return routes
 
 
-def labour_context(setup, record, view, carriage, inputs) -> CoreInputs:
-    """The core's inputs for the year without trades or bids (the clearing adds them)."""
+def labour_context(setup, record, view, carriage, inputs, own_plot_options=None) -> CoreInputs:
+    """The core's inputs for the year without trades or bids (the clearing adds them). `own_plot_options`
+    (households_own.own_production_options) sets how low a worker's ask can fall: the household's costs less what the plot gives."""
     outside = outside_option_by_tile(setup, record, view)
+    plot = ask_floor_by_tile(setup, record, view, own_plot_options or {})
     areas = [labour_area(tile) for tile in sorted(setup.tiles)]
     return CoreInputs(
         trades={}, bids=(),
         subsistence_per_worker_year={labour_area(tile): cost for tile, cost in outside.items()},
+        ask_floor_per_worker_year={labour_area(tile): value for tile, value in plot.items()},
         hours_per_worker_year=setup.working_hours_per_year,
         discount_rate=HOUSEHOLD_TIME_PREFERENCE, career_years=CAREER_YEARS,
         entrants={area: people_in(record.workforce, area) * inputs.entrant_share for area in areas},

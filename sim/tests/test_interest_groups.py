@@ -5,18 +5,17 @@ from .harness import *
 
 from sim.agents.api import supply
 from sim.engine.agents_port import SimWorld
-from sim.engine.goods_market_api import FOUNDER
 from sim.agents.group import state_response
 from sim.engine.saveload import load_state, save_state
 
 
 def grievance_game(civ="rome_100ad", share=0.6, capacity=None, purse=1.0e12):
     """A game whose founder has sold `share` of the opening iron market this year."""
-    game = sim(civ=civ, agent_economy=False)   # the displaced-sales market is the engine's own
+    game = unopened_sim(civ=civ)   # the displaced-sales market is the engine's own
     if capacity is not None:
         game.state_capacity = capacity
     game._open_market_book()
-    game.goods_market.note_sale(FOUNDER, "iron", game._market_entry("iron")["reference_tonnes"] * share)
+    game.goods_market.note_sale(game.goods_market.acting_party_id, "iron", game._market_entry("iron")["reference_tonnes"] * share)
     game.state_treasury().money = purse
     return game
 
@@ -94,7 +93,7 @@ check("what the state paid arrives in the group's purse",
 broke = sim()
 broke.civ["standing_army"] = 1.0e8
 broke._open_market_book()
-broke.goods_market.note_sale(FOUNDER, "iron", broke._market_entry("iron")["reference_tonnes"] * 0.6)
+broke.goods_market.note_sale(broke.goods_market.acting_party_id, "iron", broke._market_entry("iron")["reference_tonnes"] * 0.6)
 broke.state_treasury().money = 0.0
 a_year(broke)
 a_year(broke)
@@ -190,7 +189,7 @@ for _year in range(60):
 check("when the cause stops, the group's loss fades and it disbands", the_group(fading) is None, fading.interest_groups())
 check("the log says the group is no longer organised",
       any("no longer organised" in text and "producers of iron" in text for _year, text in fading.state.household.log))
-fading.goods_market.note_sale(FOUNDER, "iron", fading._market_entry("iron")["reference_tonnes"] * 0.6)
+fading.goods_market.note_sale(fading.goods_market.acting_party_id, "iron", fading._market_entry("iron")["reference_tonnes"] * 0.6)
 a_year(fading)
 check("the same group organises again when the cause returns", the_group(fading) is not None)
 

@@ -1,6 +1,6 @@
 # Audit: action and construction nodes in the tech tree
 
-Audit for `Complaints/133-some-technologies-are-actions-not-research.md`.
+Audit for `Complaints/closed/133-some-technologies-are-actions-not-research.md`.
 Measured on 2026-10-06 on branch `structural-dedupe-and-owner-decisions`
 (written on `action-and-construction-node-audit`). No code or data was
 changed.
@@ -270,6 +270,12 @@ says that yet.
 
 ### Engine work the rest needs
 
+Status (closed with Complaint 133): all seven items are built, see the Closing section of that complaint. Earlier status: items 1 and 6 are built as a node field (`requires_running`, see
+`sim/engine/projects_running_gates.py`), item 3 is built for roads and railways as `requires_ways`,
+item 2 is still open (no register of works on tiles), item 4 is described below and not built,
+item 5 and 7 are untouched. The grid, telegraph, railway, harbour, aqueduct, sewer and road-network dependents that operate now name the
+works they need running (`sim/tests/test_dependents_need_running.py` lists them); knowledge nodes keep `pre` only.
+
 1. A general running gate on dependents. A node field (name to be chosen; the
    `requires_running` on counters is the model) listing nodes that must be
    running, read beside `_check_missing_prereqs` in
@@ -292,7 +298,12 @@ says that yet.
 3. Size. `capability.scalable` sizes institutions by units; a grid, a railway
    or a telegraph network should scale by the length or load built, with cost
    rising with size, as the benefactions already do for each repeat foundation.
-4. Action results. `grants` covers living stock only. Routes opened, places
+4. Action results. (Not built. A declared result needs a saved record per actor, for example a set of
+   lanes sailed, which is a new field in `sim/engine/state*.py`, plus every reader of `requires_nodes`
+   on modes and sea lanes asking for it: `geography_port.held_nodes`, `economy_port_setup`,
+   `foreign_routes` and `labour_settlement` each build their own held set from `done`, so one change
+   would be partial. The smallest honest step is one engine method answering "held and running" that
+   those four call.) `grants` covers living stock only. Routes opened, places
    known, deposits secured and posts held need a declared result a dependent
    can check, for example a record that this actor has sailed this lane, read
    by sea lanes in place of `requires_nodes`.

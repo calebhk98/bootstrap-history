@@ -2,6 +2,7 @@
 
 from .command_registry import command
 from .economy import (_agent_values)
+from sim.engine.state_demand import set_household_stance
 
 
 @command("risk", group="society", aliases=("hazards", "risks"),
@@ -31,6 +32,26 @@ def _cmd_groups(sim, nodes, cmd, ended):
     report["ok"] = True
     return report
 
+
+@command("answer", shape="word", group="society", aliases=("answer_demand", "stance"),
+         summary="comply with or refuse the state's requisitions",
+         usage=["answer", "answer comply", "answer refuse", '{"cmd":"answer","what":"refuse"}'],
+         options={"comply": "meet every requisition and supply levy (the default)",
+                  "refuse": "withhold them; the state takes the demand and a penalty if it can enforce, else nothing"},
+         description="How you answer what the state demands of you (the requisition and the supply levy; "
+                     "the office it presses on you is not a demand you can decline cheaply). A refusal "
+                     "is a gamble the state's capacity and your standing decide, and the reply gives the "
+                     "odds. Negotiating (standing already bargains the rate down) and concealing "
+                     "are not built yet. Bare 'answer' shows your current stance.")
+def _cmd_answer(sim, nodes, cmd, ended):
+    what = cmd.get("what") or cmd.get("id")
+    if what is None:
+        return {"ok": True, "stance": sim.state.household.demand_stance}
+    try:
+        note = set_household_stance(sim, str(what).strip().lower())
+    except ValueError as reason:
+        return {"ok": False, "error": str(reason)}
+    return {"ok": True, "stance": sim.state.household.demand_stance, "note": note}
 
 
 @command("values", shape="bare", group="society", aliases=("beliefs", "traits", "society"),

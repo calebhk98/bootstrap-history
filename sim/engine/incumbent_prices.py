@@ -7,7 +7,8 @@ at comes from the market (market_clearing.py), where every producer offers at it
 
 TEMPORARY HEURISTIC (CLAUDE.md 4.4): a good no incumbent makes but some producer runs a technique for has
 no incumbent cost, so its reference is the solver's cost under every technique now run (the cheapest route
-among them) until a producer's own cost can anchor it.
+among them) until a producer's own cost can anchor it. A good no one in reach makes has no cost here and no
+price (goods_market_offers.py says who else may sell it).
 
 Money is the labour hour times what an hour is worth, which follows the one coin stock (labour_wages.py), so
 every price here, traded or not, moves with money against goods.
@@ -15,10 +16,11 @@ every price here, traded or not, moves with money against goods.
 
 
 from . import prices as price_solver
+from .goods_market_imports import HOME_SELLER
 
 
 # how near a producer is to making a good, least to most
-REACH = {"mature": 0, "gated": 1, "solved": 2}
+REACH = {"gated": 1, "solved": 2}
 
 
 class IncumbentPricesMixin:
@@ -62,12 +64,23 @@ class IncumbentPricesMixin:
         return prices
 
     def material_price_basis(self, material):
-        """"solved" (a technique some producer runs), "gated" (one nobody runs yet), "mature" (nothing in
-        reach makes it) or None (not priced by the solver)."""
-        return self._price_tables()[1].get(material)
+        """"solved" (a technique some producer runs), "gated" (one nobody runs yet, within reach),
+        "imported" (no home producer in reach; a trading partner sells it) or None (no one does)."""
+        basis = self._price_tables()[1].get(material)
+        seller = self.goods_market.offered_by(material)
+        if seller is not None and (basis is None or seller != HOME_SELLER):
+            return "imported"
+        return basis
 
     def _coin_metal_price(self, material):
         """Money per unit of the coin metal at the mint's standard: a unit of coin is a fixed weight of
-        metal, so the metal's price in coin does not follow the price level of the goods."""
+        metal, so the metal's price in coin does not follow the stock of coin, but does follow the metal's
+        market price. The price level already carries the home coin metal's revaluation, so dividing by
+        it and multiplying by the ratio counts the market's price once. The price table follows the wage, so
+        the metal's price is carried to the goods' level (economy.goods_price_over_wage): a partner's coin is
+        worth what it buys here."""
         price = self._material_prices().get(material)
-        return None if price is None else price / self.home_price_level()
+        if price is None:
+            return None
+        return (price / self.home_price_level() * self.coin_metal_ratio(material)
+                * self.economy.goods_price_over_wage())

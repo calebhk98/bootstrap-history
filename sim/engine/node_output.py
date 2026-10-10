@@ -20,19 +20,21 @@ from . import energy_prices
 
 ENERGY_CARRIERS = energy_prices.ENERGY_CARRIERS
 
-# (production table, {node id: entries}); the table is kept so a hit is confirmed with `is`
+# (production table, {node id: entries run}); the table is kept so a hit is confirmed with `is`
 _ENTRIES_BY_NODE: List[Any] = [None, None]
 
 
 def entries_gated_by(node_id: str, production: Mapping[str, Any]) -> List[Dict[str, Any]]:
-    """Production entries that become available with this node, in key order."""
+    """Production entries a node's concern runs, in key order: those that become available with it
+    (`requires_node`) and those that name it in `operated_by`."""
     index = _ENTRIES_BY_NODE[1] if _ENTRIES_BY_NODE[0] is production else None
     if index is None:
         index = defaultdict(list)
         for key in sorted(production):
-            gate = production[key].get("requires_node")
-            if gate:
-                index[gate].append(production[key])
+            entry = production[key]
+            for operator in dict.fromkeys([entry.get("requires_node"), *(entry.get("operated_by") or [])]):
+                if operator:
+                    index[operator].append(entry)
         _ENTRIES_BY_NODE[:] = [production, index]
     return index.get(node_id, [])
 
@@ -101,6 +103,8 @@ def _best_entry_per_line(entries: List[Dict[str, Any]], goods: Mapping[str, floa
     for entry in entries:
         if not entry.get("outputs") or any(material not in goods for material in entry["outputs"]):
             continue
+        if not energy.can_run(entry):
+            continue            # needs a grade of heat no technique held supplies
         if entry.get("extracted_from") and not entry.get("capital") and not entry.get("inputs"):
             continue            # gathered from a deposit or a by-product stream: set by that source, not by staff
         key = frozenset(entry["outputs"])

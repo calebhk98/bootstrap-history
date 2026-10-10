@@ -12,7 +12,7 @@ class FreightDues(unittest.TestCase):
 
     def test_foreign_routes_charge_the_dues_in_wages(self):
         from . import harness
-        game = harness.sim(agent_economy=False)
+        game = harness.unopened_sim()
         wage = game.labour.wage_per_hour(game.FREIGHT_DRIVER_WAGE_TRADE)
         charges = game._freight_handling_costs()
         dues = dues_hours_per_tonne()

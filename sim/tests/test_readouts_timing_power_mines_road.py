@@ -76,12 +76,12 @@ mine_sim = reputation_sim
 before = mine_sim.shortage_remedy_plan("coal", 100.0)
 check("set-up: with nothing sunk the plan proposes the full mine", "buy mine coal 100" in before["commands"], before)
 ready_year = int(mine_sim.state.scenario.year) + 3
-mine_sim.state.economy.mine_tranches = [["coal", 100.0, ready_year, 1000.0]]
+mine_sim.state.holdings.mine_tranches = [["coal", 100.0, ready_year, 1000.0]]
 after = mine_sim.shortage_remedy_plan("coal", 100.0)
 check("a mine already being sunk is not recommended again", not after["commands"], after)
 check("the plan says the commissioned tonnage and the year it is ready",
       "already being sunk" in after["text"] and str(ready_year) in after["text"], after["text"])
-mine_sim.state.economy.mine_tranches = [["coal", 40.0, ready_year, 400.0]]
+mine_sim.state.holdings.mine_tranches = [["coal", 40.0, ready_year, 400.0]]
 partial = mine_sim.shortage_remedy_plan("coal", 100.0)
 check("only the tonnage still uncovered is proposed", "buy mine coal 60" in partial["commands"], partial)
 

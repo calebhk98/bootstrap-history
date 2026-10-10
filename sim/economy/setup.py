@@ -11,6 +11,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 from sim.world import demand
 
 from .good_mass import unit_mass_and_source
+from .market_areas import AreaMap
 from .state_policy import StatePolicy
 from .tile_costs import CarriageTable, carriage_table
 from .types import AgentId, CurrencySpec, GoodId, GoodSpec, Recipe, SiteLimit, TileId, TileSpec, TradeId
@@ -61,13 +62,50 @@ class EconomySetup:
     basket_by_tile: Dict[TileId, Any] = field(default_factory=dict)   # floors that follow the tile's climate
     state_policy: StatePolicy = field(default_factory=StatePolicy)   # how the state budgets and finances a deficit
     site_limits: Tuple[SiteLimit, ...] = ()     # where site-bound recipes can run, and how much (sites.py)
+    mint_recipe: Optional[Recipe] = None   # how the mint strikes coin: the production entry the coin standard names
     held_nodes: Tuple[str, ...] = ()    # tech nodes the society holds; geography's sea lanes may need them
     world_map: Any = None               # geography's map the tiles lie on (the base map when None)
     coin_per_unit: float = 1.0          # the economy counts money in this many coins (the port converts)
+    improvements: Dict[str, Dict[str, Any]] = field(default_factory=dict)   # built roads and track by edge key
+    opening_store_output: Dict[GoodId, Tuple[Tuple[float, float, float], ...]] = field(default_factory=dict)
+    # per durable good, its past workings (kg a year, years worked, years since the last output) from the deposits
+    opening_store_gaps: Dict[GoodId, str] = field(default_factory=dict)   # why a good has no workings, for audit
+    # country -> the recipes its producers can run (what its society's techniques allow); empty: every recipe anywhere
+    recipes_by_country: Dict[str, Tuple[str, ...]] = field(default_factory=dict)
 
-    def carriage_table(self) -> CarriageTable:
-        """What it costs to move a tonne between this setup's tiles, over geography's route graph."""
-        return carriage_table(self.tiles, self.carriage_rates, self.handling_rates, self.held_nodes, self.world_map)
+    def carriage_table(self, improvements=None) -> CarriageTable:
+        """What it costs to move a tonne between this setup's tiles, over geography's route graph, with the
+        built ways (this setup's own when none are given)."""
+        ways = self.improvements if improvements is None else improvements
+        return carriage_table(self.tiles, self.carriage_rates, self.handling_rates, self.held_nodes, self.world_map, ways)
+
+    def area_map(self, carriage: Optional[CarriageTable] = None) -> AreaMap:
+        """Market areas over this setup's tiles at its opening prices and people, partitioned by `carriage`
+        (this setup's own carriage table when none is given)."""
+        carriage = self.carriage_table() if carriage is None else carriage
+        return AreaMap(self.tiles, carriage, [(self.specs[good], price) for good, price in
+                                              sorted(self.opening_prices.items())
+                                              if good in self.specs and price > 0.0],
+                       self.opening_population_by_tile)
+
+    def country_of(self, tile: TileId) -> str:
+        """The civilisation whose people live on a tile: the setup's own unless the tile names another."""
+        spec = self.tiles.get(tile)
+        return (spec.country if spec is not None and spec.country else self.civ_id)
+
+    def countries(self) -> Tuple[str, ...]:
+        """Every civilisation with tiles in this economy, the home one first."""
+        others = sorted({self.country_of(tile) for tile in self.tiles} - {self.civ_id})
+        return (self.civ_id,) + tuple(others)
+
+    def tiles_of(self, country: str) -> Tuple[TileId, ...]:
+        return tuple(sorted(tile for tile in self.tiles if self.country_of(tile) == country))
+
+    def recipe_allowed(self, recipe_id: str, tile: TileId) -> bool:
+        """Whether the people on `tile` can run the recipe: their country's techniques allow it."""
+        if not self.recipes_by_country:
+            return True
+        return recipe_id in self.recipes_by_country.get(self.country_of(tile), ())
 
     def basket_for(self, tile: TileId):
         """The needs of people living on a tile: the common basket with that tile's floors."""

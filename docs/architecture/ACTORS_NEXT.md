@@ -137,10 +137,14 @@ concerns in tonnes a year, scaled by ramp and staffing, excluding the
 founder's; `actor_concerns_in(category)` and `actor_market_version()` key the
 goods-category cache. Firms also hire from the same reachable trade pool as
 the founder (`actor_staff_fte` is subtracted in `market_supply` and
-`hire_check`), except taught-only trades. Still open: a node that makes
-several materials splits its output equally among them (an unlabelled
-heuristic), and a firm's entry value still uses the founder's gross split by
-operators.
+`hire_check`). A trade nobody here practises draws on the people the founder
+taught (`taught_trade_people`), less the founder's staff and every other
+actor's. A concern that declares no `annual_output_t` puts on the market what
+its staff and plant turn out by the production data (`concern_baskets_now`),
+and a node that operates a technique (`operated_by`) makes its outputs. Still
+open: a node that makes several materials splits a declared output equally
+among them (an unlabelled heuristic), and a firm's entry value still uses the
+founder's gross split by operators.
 
 Reads: every actor's concerns as supply into a goods category.
 Changes: the founder's goods market factor counts firm supply. A firm's takings

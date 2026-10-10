@@ -2,7 +2,6 @@
 
 import sim.engine.ui_port as ui_port
 from sim.engine.ui_port import WAGES, trade_family
-from sim.ui.market_report import goods_demand
 from sim.ui import figures_headline  # noqa: F401  (registers the headline figures)
 from sim.engine.ui_port import cash_book, cause_book
 from sim.ui.figures import figure_snapshot
@@ -322,6 +321,7 @@ def _mine_rows_for_material(sim, material, workings, want):
         opened = working.get("opened_year")
         rows.append({
             "material": material,
+            "deposit": working.get("deposit"),
             "commissioned_year": opened if opened is not None else "unknown (from a save "
                                  "written before per-working tracking "
                                  "existed)",
@@ -740,7 +740,6 @@ def _agent_economy(sim, cmd=None):
         "household_places_used_of_all": "%.1f of %.1f" % (
             sim.labour.headcount(), sim.labour.headcount() + max(0.0, sim.labour.household_room())),
         "where_the_money_comes_from": sim.revenue_sources(),
-        "market_saturation": sim.goods_market_summary(),
         "materials_at_a_premium": sim.material_market_summary(),
         "what_moved_most": moved or "not enough history yet - step forward "
                                     "and ask again",
@@ -759,7 +758,6 @@ def _agent_economy(sim, cmd=None):
             seen.add(material_key)
             rows.append({"material": material_key,
                         "price_factor_over_book": round(sim.material_price_factor(material_key), 3)})
-        out["goods_demand"] = goods_demand(sim)
         out["tracked_material_prices"] = sorted(rows, key=lambda r: -r["price_factor_over_book"])
         # THE SAME FORMULA `labour`'s own row() uses for "a_year_of_one", not
         # a second version of a wage this file already prints elsewhere.

@@ -109,6 +109,14 @@ class World(Protocol):
 		"""Money's worth of the coin this society holds, from its coin standard."""
 		...
 
+	def land_rent_paid_by_tile(self) -> Dict[str, float]:
+		"""Rent producers paid last year on each tile where land was let, in coin; empty without an agent economy."""
+		...
+
+	def land_rent_owners(self) -> List[Tuple[Any, float]]:
+		"""(actor, rent received) where the world can say which actors the rent went to; empty where it cannot."""
+		...
+
 	# ---- Who is hurt, and what an interest group can see
 
 	def displaced_producers(self) -> List[Sector]:
@@ -170,8 +178,8 @@ class World(Protocol):
 		"""(what the state has out on loan, the yearly rate lenders earn) at the last meeting."""
 		...
 
-	def note_interest_paid(self, amount: float) -> None:
-		"""A borrower's interest joins the pool lenders are paid from."""
+	def pay_interest(self, payer: Any, owed: float, purpose: str = "interest") -> None:
+		"""A borrower pays the interest on its debt to its lenders."""
 		...
 
 	def household_saving(self) -> float:
@@ -280,6 +288,10 @@ class World(Protocol):
 	def concern_wage_bill(self, node_id: str, capacity: float = 1.0) -> float:
 		...
 
+	def site_rent(self, node_id: str, capacity: float = 1.0, tile: Optional[str] = None) -> float:
+		"""Yearly rent of the site a concern run at `capacity` times its founding size occupies, on `tile`."""
+		...
+
 	def free_fte(self, trade: str, actor_id: Optional[str]) -> Optional[float]:
 		...
 
@@ -309,7 +321,11 @@ class World(Protocol):
 		"""Founder concerns that have been running at a profit long enough to be believed."""
 		...
 
-	def ramp(self, opened_year: int) -> float:
+	def ramp(self, opened_year: int, node_id: Optional[str] = None) -> float:
+		...
+
+	def scale_ceiling(self, node_id: str) -> float:
+		"""The most founding sizes one concern of this kind can be run at."""
 		...
 
 	def concern_takings(self, node_id: str, opened_year: int, rivals: float = 0.0, capacity: float = 1.0) -> float:
@@ -324,16 +340,17 @@ class World(Protocol):
 		...
 
 	def market_forget(self, actor_id: str) -> None:
-		"""An actor's standing sales and purchases in the one goods market end; it deals afresh this year."""
-		...
-
-	def runs_agent_economy(self) -> bool:
+		"""An actor's sales and purchases noted for this year's market end; it deals afresh."""
 		...
 
 	def market_sale(self, seller_id: str, material: str, tonnes: float, from_concerns: Any = None) -> None:
 		...
 
-	def market_purchase(self, buyer_id: str, commodity: str, tonnes: float) -> None:
+	def sells_on_book(self, node_id: str) -> bool:
+		"""Whether a concern's output is sold in the agent economy's book, so its takings are the market's."""
+		...
+
+	def market_purchase(self, buyer_id: str, commodity: str, tonnes: float, budget: float = 0.0) -> None:
 		"""An actor buys `tonnes` of a commodity at the one goods market this year."""
 		...
 
@@ -396,6 +413,11 @@ class World(Protocol):
 		"""Money for one person's food at subsistence for a year."""
 		...
 
+	def country_economy(self, country: str) -> Any:
+		"""The economy's own answers for a country that is part of it (pay_per_person_year, society_output,
+		need_floor_costs_per_person_year), or None when the country is not, so the caller keeps its estimate."""
+		...
+
 	def need_floor_costs_per_person_year(self) -> Dict[str, float]:
 		"""Money for one person's floor of each need for a year, by need id, at the prices households pay
 		(the need-basket kernel, sim/world/need_basket.py)."""
@@ -419,6 +441,18 @@ class World(Protocol):
 
 	def patent_entry(self, node_id: str) -> Optional[Dict[str, Any]]:
 		"""The live patent on a node ({"holder", "expires", "licensees"}), else None."""
+		...
+
+	def seat_parties(self) -> Dict[str, Any]:
+		"""Every seat as an actor by seat id (they hold patents and shares like any actor)."""
+		...
+
+	def seat_margin(self, seat_id: str) -> float:
+		"""What a seat's concerns earn over their upkeep in a year; the margin its shareholders and an infringed holder draw on."""
+		...
+
+	def release_seat_staff(self, seat_id: str, trade: str, people: float) -> None:
+		"""People of a trade leave a seat's payroll (to found a rival, say)."""
 		...
 
 	# ---- What the home state asks of its people (sim/engine/agents_port_budget.py)

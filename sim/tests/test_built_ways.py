@@ -27,7 +27,7 @@ def _buildable_pair(sim, way="road"):
 
 def _finish_building(sim):
     """Move the calendar to the year the last way under construction opens, and open it."""
-    due_years = [year for ways in sim.state.economy.ways_under_construction.values() for year in ways.values()]
+    due_years = [build["due"] for ways in sim.state.economy.ways_under_construction.values() for build in ways.values()]
     if due_years:
         sim.state.scenario.year = max(due_years)
     sim.finish_ways()
@@ -98,6 +98,19 @@ class BuiltWaysTests(unittest.TestCase):
         built = geography.route([base], [far], modes, sim.ways_built(), held_nodes=held)
         self.assertLess(built["cost_per_tonne"], route["cost_per_tonne"])
         self.assertLessEqual(sim.labour.travel_days_to_tile(far), days_before + 1e-9)
+
+    def test_a_way_takes_its_crew_from_the_labour_market_until_it_opens(self):
+        sim = _fresh_sim()
+        tile_a, tile_b = _buildable_pair(sim)
+        sim.state.household.capital = 1e12
+        market = sim.labour.labour_market
+        before = market.pressure("labourer")
+        ok, message = sim.build_way(tile_a, tile_b, "road")
+        self.assertTrue(ok, message)
+        self.assertGreater(market.pressure("labourer"), before)
+        pressed = market.pressure("labourer")
+        _finish_building(sim)
+        self.assertLess(market.pressure("labourer"), pressed)
 
     def test_the_command_previews_and_builds(self):
         from sim.ui.proto.dispatch import _agent_dispatch

@@ -24,6 +24,7 @@ from .harness import *  # noqa: F401,F403
 
 from sim.engine.core import agriculture
 from sim.engine import data
+from sim.geography import api as geography_api
 from sim.tests.weather_test_helpers import assert_matching_century, assert_save_reload_trajectory
 
 # Long enough for weather to shape population and stock, short enough to stay cheap; the
@@ -32,7 +33,7 @@ DETERMINISM_YEARS = 20
 
 
 def _market_free_rome():
-    return sim(civ="rome_100ad", events=False, agent_economy=False)
+    return unopened_sim(civ="rome_100ad", events=False)
 
 
 
@@ -42,6 +43,7 @@ def _rome_sim(events=False):
 
 # Read-only checks share one game; checks that change the civilisation restore it.
 SHARED_ROME = _rome_sim()
+HOME_REGIONS = geography_api.regions_of_tiles(geography_api.tiles_held(SHARED_ROME.civ))
 
 
 class RegionWeightsTests(unittest.TestCase):
@@ -59,7 +61,7 @@ class RegionWeightsTests(unittest.TestCase):
         # from a region it does not.
         test_sim = SHARED_ROME
         cells = list(test_sim._farm_weather_cells)
-        home_regions = set(test_sim.civ["home_regions"])
+        home_regions = set(geography_api.regions_of_tiles(geography_api.tiles_held(test_sim.civ)))
         tiles = data.load_geography()["land_tiles"]["tiles"]
         for cell in cells:
             self.assertIn(tiles[cell.cell_id]["old_region"], home_regions,
@@ -139,8 +141,8 @@ class WeatherSeedPurityTests(unittest.TestCase):
     def test_different_regions_give_different_seeds(self):
         test_sim = SHARED_ROME
         seeds = {test_sim._farm_year_weather_seed(150, region=region)
-                 for region in test_sim.civ["home_regions"]}
-        self.assertEqual(len(seeds), len(test_sim.civ["home_regions"]), seeds)
+                 for region in HOME_REGIONS}
+        self.assertEqual(len(seeds), len(HOME_REGIONS), seeds)
 
     def test_omitting_region_mixes_in_no_region_ingredient(self):
         # Without a region the seed is a function of civilisation id, year and the game's

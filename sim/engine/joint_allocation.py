@@ -13,7 +13,7 @@ import warnings
 
 from sim.constants import declare
 from sim.engine.default_civilisation import default_civilisation_id
-from sim.engine.joint_floor import JOINT_BYPRODUCT_FLOOR_SHARE, lift_to_floor  # noqa: F401
+from sim.engine.joint_floor import bound_to_disposal_cost
 from sim.world import demand, deposits
 
 DEFAULT_CIVILIZATION = default_civilisation_id()
@@ -33,7 +33,9 @@ MEAN_INCOME_LABOUR_HOURS_PER_CAPITA_PER_YEAR = declare(
 
 def allocate_joint_cost(outputs, current_prices, total_cost,
                         anchor_price_by_material=None,
-                        disposal_value_by_material=None):
+                        disposal_value_by_material=None,
+                        disposal_cost_by_material=None,
+                        glutted_materials=frozenset()):
     """{material: price per unit} splitting `total_cost` over `outputs`.
 
     Outputs only have to recover the batch together; a bulk waste may carry
@@ -44,26 +46,36 @@ def allocate_joint_cost(outputs, current_prices, total_cost,
     An anchored output whose demand-clearing price is at or below its
     disposal value (default zero) is in surplus: it prices at the disposal
     value and the other outputs carry the rest of the batch.
+
+    An output in glut (`glutted_materials`: the demand search found supply above demand at every price) prices
+    at minus its disposal cost per unit, `disposal_cost_by_material`, and the other outputs carry the batch
+    plus that cost.
+    No output is priced below minus its disposal cost.
     """
     if len(outputs) == 1:
         (name, quantity), = outputs.items()
         return {name: total_cost / quantity}
     anchors = anchor_price_by_material or {}
     disposal = disposal_value_by_material or {}
+    disposal_costs = disposal_cost_by_material or {}
     surplus = {name: disposal.get(name, 0.0) for name in outputs
                if name in anchors and anchors[name] <= disposal.get(name, 0.0)}
+    surplus.update({name: -disposal_costs[name] for name in outputs
+                    if name not in surplus and name in glutted_materials and name in disposal_costs})
     if surplus and len(surplus) < len(outputs):
-        # Disposal revenue cannot exceed the batch, so the rest never goes negative.
-        surplus_revenue = min(total_cost, sum(
-            outputs[name] * value for name, value in surplus.items()))
-        scale = surplus_revenue / (sum(
-            outputs[name] * value for name, value in surplus.items()) or 1.0)
+        # Disposal revenue cannot exceed the batch, so the rest never goes negative; a disposal cost
+        # (negative value) is added to what the rest carry.
+        surplus_total = sum(outputs[name] * value for name, value in surplus.items())
+        surplus_revenue = min(total_cost, surplus_total)
+        scale = surplus_revenue / (surplus_total or 1.0)
         prices = {name: value * scale for name, value in surplus.items()}
         remaining = {name: quantity for name, quantity in outputs.items()
                      if name not in surplus}
         prices.update(allocate_joint_cost(
             remaining, current_prices, total_cost - surplus_revenue,
-            {name: price for name, price in anchors.items() if name in remaining}))
+            {name: price for name, price in anchors.items() if name in remaining},
+            disposal_cost_by_material={name: cost for name, cost in disposal_costs.items()
+                                       if name in remaining}))
         return prices
     mass = {name: demand.mass_in_kg_or_none(name, quantity)
             for name, quantity in outputs.items()}
@@ -86,7 +98,7 @@ def allocate_joint_cost(outputs, current_prices, total_cost,
         else standalone_cost_per_kg * kilograms_per_unit[name]
         for name in split_outputs}
     split = _split_by_value(split_outputs, reference_prices, total_cost)
-    prices.update(lift_to_floor(split, split_outputs, kilograms_per_unit, total_cost))
+    prices.update(bound_to_disposal_cost(split, split_outputs, disposal_costs))
     return prices
 
 
@@ -104,7 +116,7 @@ def cap_anchors(anchor_price_by_material, direct_price_by_material):
 
 
 def _split_by_value(outputs, reference_prices, total_cost):
-    values = {name: quantity * reference_prices.get(name, 1.0)
+    values = {name: quantity * max(reference_prices.get(name, 1.0), 0.0)
               for name, quantity in outputs.items()}
     total_value = sum(values.values())
     if total_value <= 0:
@@ -133,6 +145,18 @@ def _civilisation(civilization_id):
             _ROOT, "data", "civilizations", "%s.json" % DEFAULT_CIVILIZATION)
     with open(path) as handle:
         return json.load(handle)
+
+
+def _climate_basket(basket, civilisation):
+    """The basket with the warmth, clothing and shelter floors the climate of the civilisation's tiles sets,
+    as households face them (the installed mods' map)."""
+    from sim.engine import market_demand
+    from sim.engine.mods import get_ordered_mods
+    from sim.geography.api import open_map
+    from sim.world import need_basket
+    world_map = open_map([(manifest.id, manifest.directory)
+                          for manifest in get_ordered_mods(os.path.join(_ROOT, "mods"))])
+    return need_basket.mean_climate_basket(basket, market_demand.climate_records(civilisation, world_map))
 
 
 def build_demand_anchors(civilization_id=None, supply_by_material=None, civilization=None):
@@ -169,4 +193,6 @@ def build_demand_anchors(civilization_id=None, supply_by_material=None, civiliza
     technology_demand = need_demand.technology_material_demand(
         catalog.load_mod_tree_nodes(_ROOT), set(civilisation.get("starting_techs") or ()))
     model = need_demand.NeedDemandModel(needs, production, bins, technology_demand)
+    model.basket = _climate_basket(model.basket, civilisation)
+    model.subsistence = {need.need_id: need.subsistence_per_person for need in model.basket.needs}
     return need_demand.NeedDemandAnchors(model, supply_by_material, table_supply)

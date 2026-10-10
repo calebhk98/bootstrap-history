@@ -12,12 +12,14 @@ from .records import ActorRecord
 from . import imitation, ledger
 from .borrowing import Borrower
 from .ledger import Purpose
+from .purses import EDGE_OUTSIDE, Purses
 from .policy import Decision, Option, Policy, ValuePolicy
 from .tuning import ATTENTION_SPAN
 
 
 class Actor(Borrower):
 	kind = "actor"
+	purses: Any = None   # the book of purses the actor keeps its account in, when it keeps one
 
 	def __init__(self, policy: Optional[Policy] = None) -> None:
 		self.decision_policy = policy or ValuePolicy()
@@ -113,6 +115,14 @@ class Actor(Borrower):
 		"""Standing and patronage that bargain a levy down, 0..1."""
 		return 0.0
 
+	def demand_stance(self) -> str:
+		"""How the actor answers the state's demands: comply unless it has said otherwise."""
+		return "comply"
+
+	def set_demand_stance(self, stance: str) -> None:
+		"""Answer the state's demands from now on with `stance`."""
+		raise NotImplementedError
+
 	def copy_budget(self, world: Any) -> float:
 		"""Money it will commit to new copies this year: its purse and what it may still borrow."""
 		committed = sum((1.0 - work["progress"]) * (work["money"] + work["labour_cost"])
@@ -134,7 +144,7 @@ class Actor(Borrower):
 			if node_id in known or node_id in baseline or node_id in self.works:
 				continue
 			worth = self.imitation_worth(node_id, world)
-			if worth > 0:
+			if worth > 0 and imitation.in_sight(self.location(), node_id, world):
 				candidates.append((worth * world.exposure(node_id, self.location()), node_id))
 		candidates.sort(key=lambda item: (-item[0], item[1]))
 		options = []
@@ -227,14 +237,41 @@ class RecordedActor(Actor):
 		super().__init__(policy)
 		self.actor_id = actor_id
 		self.record = record
+		self._purses: Optional[Purses] = None
+
+	def attach(self, purses: Purses) -> None:
+		"""Keep the actor's account in `purses`; funds its record was created with are placed there once."""
+		self._purses = purses
+		if self.record.money:
+			funds, self.record.money = self.record.money, 0.0
+			self.money = self.money + funds
+
+	@property
+	def purses(self) -> Purses:  # type: ignore[override]
+		if self._purses is None:
+			self.attach(Purses())
+		return self._purses  # type: ignore[return-value]
+
+	@property
+	def account_id(self) -> str:
+		return self.actor_id
 
 	@property
 	def money(self) -> float:
-		return self.record.money
+		"""The actor's net position: its purse (never below zero) less what it has drawn on its facility."""
+		return self.purses.net(self.actor_id)
 
 	@money.setter
 	def money(self, value: float) -> None:
-		self.record.money = float(value)
+		self.purses.set_net(self.actor_id, float(value), "set")
+
+	def credit(self, amount: float, purpose: Purpose) -> None:
+		self.purses.transfer(EDGE_OUTSIDE, self.actor_id, amount, ledger.purposes_label(purpose))
+		self.note_income(purpose, amount)
+
+	def debit(self, amount: float, purpose: Purpose) -> None:
+		self.purses.transfer(self.actor_id, EDGE_OUTSIDE, amount, ledger.purposes_label(purpose))
+		self.note_outlay(purpose, amount)
 
 	@property
 	def workforce(self) -> Dict[str, float]:
@@ -254,6 +291,12 @@ class RecordedActor(Actor):
 
 	def location(self) -> Optional[str]:
 		return self.record.location
+
+	def demand_stance(self) -> str:
+		return self.record.demand_stance
+
+	def set_demand_stance(self, stance: str) -> None:
+		self.record.demand_stance = stance
 
 	def opened_year_of(self, node_id: str, default: int) -> int:
 		return self.record.opened_year.get(node_id, default)

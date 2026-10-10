@@ -2,14 +2,13 @@
 reserve goes to named people (relief of the hunger its strata report, then works), by `ledger.transfer`, so no
 money appears or vanishes between actors."""
 from .harness import *  # noqa: F401,F403
-from functools import partial
 
 from sim.agents import revenue
 from sim.agents.api import Government, Stratum, stratum_id
 from sim.agents.records import ActorRecord
 from sim.tests.agents_fake_world import FakeWorld
 
-sim = partial(sim, agent_economy=False)   # legacy: pins the engine's budget by stratum; the agent-economy budget is test_economy_agent_state.py
+sim = unopened_sim   # legacy: pins the engine's budget by stratum; the agent-economy budget is test_economy_agent_state.py
 
 
 class FiscalWorld(FakeWorld):

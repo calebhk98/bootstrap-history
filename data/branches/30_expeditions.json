@@ -16,7 +16,6 @@
   "mat": {
    "wine_common_kg": 2000
   },
-  "cap_hours": 12097.127504477594,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.15,
@@ -36,6 +35,7 @@
   "id": "exp_openocean_navigation",
   "name": "Open ocean navigation out of sight of land",
   "cat": "expedition",
+  "returns": {"route": ["open_pacific_east", "open_pacific_west"]},
   "kind": "INFRASTRUCTURE",
   "pre": [
    "sea_magnetic_compass",
@@ -50,7 +50,6 @@
    "artisan": 800
   },
   "mat": {},
-  "cap_hours": 24194.255008955188,
   "up_hours": 0,
   "yrs": 2.0,
   "risk": 0.2,
@@ -97,7 +96,6 @@
    "iron_bar_kg": 2000,
    "canvas_kg": 900
   },
-  "cap_hours": 181456.9125671639,
   "up_hours": 0,
   "yrs": 3.0,
   "risk": 0.25,
@@ -138,13 +136,10 @@
    "sailor": 3000
   },
   "mat": {},
-  "cap_hours": 80647.5166965173,
-  "up_hours": 36291.382513432785,
   "yrs": 2.0,
   "risk": 0.2,
   "sus": 0,
   "gov": 1,
-  "rev_hours": 70566.57710945263,
   "sch": 0,
   "art": 1,
   "conf": "A",
@@ -172,6 +167,8 @@
   "id": "exp_coastal_africa",
   "name": "Coastal voyage down West Africa",
   "cat": "expedition",
+  "returns": {"route": ["west_african_coast"]},
+  "risks": {"crew": {"sailor": 0.3}, "hull": {"timber_m3": 0.5, "iron_bar_kg": 0.5, "canvas_kg": 0.5}, "cargo": {"wine_common_kg": 0.3}},
   "kind": "INFRASTRUCTURE",
   "pre": [
    "exp_oceangoing_hull",
@@ -186,13 +183,10 @@
    "carpenter": 2000
   },
   "mat": {},
-  "cap_hours": 282266.3084378105,
-  "up_hours": 100809.39587064662,
   "yrs": 3.0,
   "risk": 0.35,
   "sus": 0,
   "gov": 2,
-  "rev_hours": 181456.9125671639,
   "sch": 1,
   "art": 4,
   "conf": "B",
@@ -206,12 +200,15 @@
    "precaution": {
     "kind": "pilot_plant"
    }
-  }
+  },
+  "_internal": "[HEURISTIC: the shares of crew, hull and cargo a failed voyage loses are round figures set beside the node's chance of failing; ships are not yet assets, so the hull is taken as the share of the hull timber, ironwork and canvas held in stock, and the cargo as the share of the provisions held. No wreck, rescue or salvage model yet.]"
  },
  {
   "id": "exp_africa_circumnavigation",
   "name": "Round the Cape",
   "cat": "expedition",
+  "returns": {"route": ["cape_passage"]},
+  "risks": {"crew": {"sailor": 0.4}, "hull": {"timber_m3": 0.6, "iron_bar_kg": 0.6, "canvas_kg": 0.6}, "cargo": {"wine_common_kg": 0.4}},
   "kind": "INFRASTRUCTURE",
   "pre": [
    "exp_coastal_africa",
@@ -224,13 +221,10 @@
    "merchant": 3000
   },
   "mat": {},
-  "cap_hours": 604856.3752238797,
-  "up_hours": 181456.9125671639,
   "yrs": 4.0,
   "risk": 0.45,
   "sus": 0,
   "gov": 3,
-  "rev_hours": 443561.3418308451,
   "sch": 2,
   "art": 6,
   "conf": "B",
@@ -244,12 +238,15 @@
    "precaution": {
     "kind": "pilot_plant"
    }
-  }
+  },
+  "_internal": "[HEURISTIC: the shares of crew, hull and cargo a failed voyage loses are round figures set beside the node's chance of failing; ships are not yet assets, so the hull is taken as the share of the hull timber, ironwork and canvas held in stock, and the cargo as the share of the provisions held. No wreck, rescue or salvage model yet.]"
  },
  {
   "id": "exp_atlantic_crossing",
   "name": "Cross the Atlantic",
   "cat": "expedition",
+  "returns": {"route": ["open_atlantic"]},
+  "risks": {"crew": {"sailor": 0.5}, "hull": {"timber_m3": 0.6, "iron_bar_kg": 0.6, "canvas_kg": 0.6}, "cargo": {"wine_common_kg": 0.5}},
   "kind": "INFRASTRUCTURE",
   "pre": [
    "exp_oceangoing_hull",
@@ -263,7 +260,6 @@
    "carpenter": 3000
   },
   "mat": {},
-  "cap_hours": 524208.8585273624,
   "up_hours": 0,
   "yrs": 4.0,
   "risk": 0.5,
@@ -284,7 +280,8 @@
    "precaution": {
     "kind": "pilot_plant"
    }
-  }
+  },
+  "_internal": "[HEURISTIC: the shares of crew, hull and cargo a failed voyage loses are round figures set beside the node's chance of failing; ships are not yet assets, so the hull is taken as the share of the hull timber, ironwork and canvas held in stock, and the cargo as the share of the provisions held. No wreck, rescue or salvage model yet.]"
  },
  {
   "id": "exp_americas_factory",
@@ -307,13 +304,10 @@
   "mat": {
    "timber_m3": 900
   },
-  "cap_hours": 1209712.7504477594,
-  "up_hours": 504046.9793532331,
   "yrs": 8.0,
   "risk": 0.45,
   "sus": 8,
   "gov": 2,
-  "rev_hours": 907284.5628358196,
   "sch": 3,
   "art": 15,
   "conf": "C",
@@ -347,13 +341,10 @@
    "merchant": 4000
   },
   "mat": {},
-  "cap_hours": 241942.5500895519,
-  "up_hours": 120971.27504477595,
   "yrs": 3.0,
   "risk": 0.3,
   "sus": 0,
   "gov": 2,
-  "rev_hours": 302428.18761193985,
   "sch": 1,
   "art": 3,
   "conf": "B",
@@ -388,13 +379,10 @@
   "mat": {
    "hectare_land": 25.23
   },
-  "cap_hours": 141133.15421890526,
-  "up_hours": 60485.63752238797,
   "yrs": 6.0,
   "risk": 0.35,
   "sus": 0,
   "gov": 1,
-  "rev_hours": 403237.5834825865,
   "sch": 2,
   "art": 3,
   "conf": "B",
@@ -426,13 +414,10 @@
    "smith": 6000
   },
   "mat": {},
-  "cap_hours": 1612950.333930346,
-  "up_hours": 604856.3752238797,
   "yrs": 5.0,
   "risk": 0.55,
   "sus": 4,
   "gov": 3,
-  "rev_hours": 1209712.7504477594,
   "sch": 1,
   "art": 10,
   "conf": "C",

@@ -1,6 +1,6 @@
 # Add political interest groups created by industrialisation
 
-**Status:** partly - interest groups are actors that organise, press the state and are answered (test interest_groups); remaining: add measured sources for groups beyond displaced producers and employers (landholders, workers, clergy, military, bureaucracy, urban poor, academics), model society-side producers in goods categories, and link group prohibitions to techniques through substitutes not just production-entry gates
+**Status:** partly - interest groups are actors that organise, press the state and are answered (tests interest_groups, agents_group_sources, agents_group_incomes). Built since the first increment: groups of workers (a stratum whose trade's pay fell below what it expected), landholders (property income fell), owners of firms (profit fell below what owners expected) and a residual fall of incomes, all measured; and a comply or refuse answer to the state's requisition and supply levy for every actor, with the outcome from the state's capacity and the actor's standing (test state_demand_answer). Remaining: land rent from the land market and jobs lost (idle hours) for workers, with the technique that displaced them; clergy, military, bureaucracy and academics (each needs a mechanism, listed under Second increment); negotiate and conceal answers and an answer to confiscation; model society-side producers in goods categories further, and link group prohibitions to techniques through substitutes not just production-entry gates
 
 **Source:** playtest findings document, LATE-008. **Type:** Feature
 recommendation, roadmap-sized, substantially overlapping already-planned
@@ -62,7 +62,7 @@ wages, real firm profits, real land rents) - all upstream work.
 `docs/architecture/HISTORICAL_SIM_ARCHITECTURE.md`'s own political-actor
 language, quoted above, is the direct overlap; a future agent scoping this
 should start from that document's existing entity list rather than
-reinventing one. `Complaints/103` (LATE-001) and `Complaints/105` (LATE-003)
+reinventing one. `Complaints/closed/103` (LATE-001) and `Complaints/105` (LATE-003)
 share the actor/state-balance-sheet prerequisites.
 
 Also reported (England 1300 fog playtest): by 1350 the household ran medicine, textiles, power and infrastructure, had created new professions, and had measurably cut national plague mortality; by 1375 it employed about two thirds of the reachable chemists, engineers, machinists, glassblowers and opticians, ran a university, and was the dominant local employer. The tester found the social reaction small for that scale and asked for political attention proportional to a dominant founder: crown demands and taxation, patronage offers, monopolies and patents, guild hostility, poaching of staff, espionage, foreign invitations, church scrutiny, and losers from technological change. They singled out the patronage gate on Newtonian mechanics as the best example of this kind of constraint and want more of it as wealth and disruption grow. See also 114. Report: `Complaints/reports/playtest-england-1300-fog-tester-notes.md`.
@@ -83,3 +83,20 @@ Overlapping issues closed into this one; each closed file keeps its full text.
 - 312 (`closed/312-founders-goods-concerns-have-no-incumbents-to-displace.md`): founder's goods concerns have no incumbents to displace; founder concern output does not enter market flows.
 - 313 (`closed/313-group-prohibitions-reach-almost-no-technique.md`): group prohibitions reach almost no technique; needs a substitute/complement relation in the tree.
 - 114 (`closed/114-wealth-notice-saturation-too-flat.md`): wealth-notice pressure caps are deliberate and labelled; scaling consequences past saturation need an owner decision.
+
+## Second increment (built)
+
+Groups from the measured incomes of bodies of people and firms (`sim/agents/group_strata.py`, `group_firms.py`, income parts in `stratum_year.income_parts`). Each body remembers what it has come to expect (`income_reference` for wages and property, `margin_reference` for a firm) and a group forms when an income falls below that by more than the grievance threshold; the loss, the people and the cause words are the measured fall. A fall in welfare that those incomes explain is not counted twice as a general fall. The kinds are `displaced_workers`, `landholders`, `firm_owners` and `falling_incomes`; the state answers them by compensation only (a prohibition is still the producers' alone). The live adapters (`GroupView.sectors`) were exercised only through the small fixtures, not a whole game (a whole game takes about half an hour here); a slow check against a real game is still to run.
+
+State demands: `sim/agents/demand_answer.py` (the rule), `demand_commands.py` (the player command `answer_demand`), `sim/engine/state_demand.py` (the founder), `Government.collect` (every other actor) and the proto command `answer`. Comply pays as before. Refuse pays nothing unless the state enforces, with a chance of its capacity less what the actor's standing turns aside, and then it takes the demand and a penalty scaled by its capacity. The two numbers are declared temporary heuristics (`tuning_demand.py`).
+
+### Still to do
+
+- Stakes for the other bodies the playtest names, none of which has a measurable stake yet:
+  - clergy: needs a church with endowments, tithes and a stipend line, so that a technique can cut what it collects;
+  - military: the army's unpaid share is measured (the state's `unfunded` army line) but a grievance of the state's own servants needs a loyalty or mutiny mechanism to act on the state;
+  - bureaucracy: needs office-holders with salaries and fees in the state's budget lines, so that a falling or unpaid salary is a loss;
+  - urban poor: already organised as the poor stratum, through falling incomes;
+  - academics: needs scholars with patrons or endowments and a way for a technique to take their standing.
+- Landholders from the land market's rent (`record.land_rent` per tile times hectares let) rather than the property share of output; workers' lost jobs (idle hours in the labour core's clearing) and which technique displaced them.
+- Answers to a state demand beyond comply and refuse: negotiate (offer a smaller sum or a service; standing already bargains the requisition rate down), conceal (hold wealth where the state cannot see it, which lowers the visible scale it assesses), and an answer to a confiscation, which is a roll and not a demand today. Refusal could also raise the state's notice of the actor and the blame on it.

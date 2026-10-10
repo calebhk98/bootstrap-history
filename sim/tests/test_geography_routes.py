@@ -13,7 +13,7 @@ ROUTES_SMALL = os.path.join(FIXTURES, "routes_small")
 MOD_OVERLAY = os.path.join(FIXTURES, "routes_mod", "data", "world", "geography")
 MOD_ID = "test_routes_k9"
 DATA_FOLDER = map_source.BASE_MAP_FOLDER
-ROUTE_CATALOGUES = ("route_modes", "sea_lanes", "parameters")
+ROUTE_CATALOGUES = ("route_modes", "sea_lanes", "parameters", "ways")
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ANCIENT_NODES = {"sea_square_sail", "lnd_mule_transport", "lnd_two_wheel_cart", "lnd_ox_transport"}
 
@@ -80,7 +80,9 @@ class SmallMapTests(unittest.TestCase):
     def test_no_route_by_rail_without_track(self):
         self.assertIsNone(routes_search.route(self.world_map, ["a1"], ["a2"], {"rail"}))
         built = {routes_search.edge_key("a1", "a2"): {"rail": True}}
-        railway = routes_search.route(self.world_map, ["a1"], ["a2"], {"rail"}, improvements=built)
+        self.assertIsNone(routes_search.route(self.world_map, ["a1"], ["a2"], {"rail"}, improvements=built))
+        bridged = {routes_search.edge_key("a1", "a2"): {"rail": True, "bridge": True}}
+        railway = routes_search.route(self.world_map, ["a1"], ["a2"], {"rail"}, improvements=bridged)
         self.assertEqual([leg["mode"] for leg in railway["legs"]], ["rail"])
 
     def test_sea_needs_coastal_ends(self):
@@ -228,7 +230,7 @@ class EarthSeaLinkTests(unittest.TestCase):
         by_sail = routes_search.route(self.world_map, ["egypt_08"], ["saudi_arabia_10"], {"sail"})
         self.assertIsNone(by_sail)
         round_africa = routes_search.route(self.world_map, ["egypt_08"], ["saudi_arabia_10"], {"sail"},
-                                           held_nodes={"exp_africa_circumnavigation", "exp_coastal_africa"})
+                                           held_nodes={"route:cape_passage", "route:west_african_coast"})
         self.assertIsNotNone(round_africa)
 
     def test_a_landlocked_looking_tile_is_not_a_port(self):
@@ -239,15 +241,15 @@ class EarthSeaLinkTests(unittest.TestCase):
         black_sea, aegean = self._tile_near(45.3, 33.0), self._tile_near(36.8, 30.5)
         self.assertIsNotNone(routes_search.route(self.world_map, [black_sea], [aegean], {"sail"}))
         caribbean, pacific = self._tile_near(22.0, -80.0), self._tile_near(-1.5, -80.5)
-        everything = {"exp_africa_circumnavigation", "exp_coastal_africa", "exp_atlantic_crossing"}
+        everything = {"route:cape_passage", "route:west_african_coast", "route:open_atlantic"}
         legs = routes_search.route(self.world_map, [caribbean], [pacific], {"sail"}, held_nodes=everything)["legs"]
         self.assertNotIn("panama_01", {tile for leg in legs for tile in (leg["from"], leg["to"])})
 
     def test_england_reaches_han_by_land_across_the_suez_isthmus(self):
         england, han = self._civilisation("england_1300"), self._civilisation("han_china_100ad")
         modes = api.usable_modes([england["starting_techs"], han["starting_techs"]])
-        result = api.route(tile_holdings.tiles_of_regions(england["home_regions"]),
-                           tile_holdings.tiles_of_regions(han["home_regions"]), modes,
+        result = api.route(tile_holdings.tiles_held(england),
+                           tile_holdings.tiles_held(han), modes,
                            held_nodes=set(england["starting_techs"]) | set(han["starting_techs"]))
         land_legs = [leg for leg in result["legs"] if leg["mode"] in ("pack", "cart", "foot")]
         self.assertTrue(land_legs)

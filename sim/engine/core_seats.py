@@ -1,7 +1,7 @@
 """Switching the acting seat: which player's household, projects and founder the root state shows."""
 import contextlib
 
-from sim.agents.api import Household
+from sim.agents.api import Household, HouseholdParty
 from .agents_port_household import HouseholdPort
 from .state_seat import SeatState, bind_seat
 
@@ -14,6 +14,7 @@ class SeatMixin:
 		if seat_id in self.state.seats:
 			raise ValueError("seat %r already exists" % (seat_id,))
 		self.state.seats[seat_id] = seat
+		self.state.attach_purses()
 		self._seat_facades[seat_id] = self._new_facade(seat_id)
 
 	def _new_facade(self, seat_id: str) -> Household:
@@ -34,6 +35,14 @@ class SeatMixin:
 		finally:
 			bind_seat(self.state, acting)
 		return facade
+
+	def seat_party(self, seat_id: str, margins=None) -> HouseholdParty:
+		"""`seat_id` as an actor an exchange can deal with: it holds patents and shares, pays and is paid."""
+		return HouseholdParty(self._seat_facades[seat_id], margins, seat_id, self.act_as)
+
+	def seat_parties(self) -> dict:
+		"""Every seat as an actor, by seat id."""
+		return {seat_id: self.seat_party(seat_id) for seat_id in self.state.seats}
 
 	def _switch_seat(self, seat_id: str) -> None:
 		bind_seat(self.state, seat_id)

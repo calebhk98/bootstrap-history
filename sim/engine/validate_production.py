@@ -116,7 +116,9 @@ def check_has_source(where, entry):
     # read as claiming its output appears from nothing.
     draws_on_energy_carrier = any(
         entry.get(energy_field) for energy_field in ENERGY_CARRIER_FIELDS)
-    if not inputs and not entry.get("extracted_from") and not draws_on_energy_carrier:
+    # A service (carrying, holding ground) makes no matter, so it consumes labour or land and nothing else.
+    is_service = entry.get("service") is True and bool(entry.get("labour_hours") or entry.get("land_hectare_years"))
+    if not inputs and not entry.get("extracted_from") and not draws_on_energy_carrier and not is_service:
         problems.append("%s: no inputs, no extracted_from and no energy "
                         "carrier field - this material appears from "
                         "nowhere" % where)
@@ -132,6 +134,16 @@ def check_unit_mass(where, entry):
         return ["%s: unit_mass_kg is %r, not a positive number of kilograms" % (where, mass)]
     if where not in (entry.get("outputs") or {}):
         return ["%s: unit_mass_kg is stated but the entry does not output %s" % (where, where)]
+    return []
+
+
+def check_carriage_km(where, entry):
+    """A stated `carriage_km` is a non-negative finite number of kilometres."""
+    if "carriage_km" not in entry:
+        return []
+    distance = entry["carriage_km"]
+    if isinstance(distance, bool) or not isinstance(distance, (int, float)) or not 0 <= distance < float("inf"):
+        return ["%s: carriage_km is %r, not a non-negative number of kilometres" % (where, distance)]
     return []
 
 
@@ -222,6 +234,19 @@ def check_requires_node(where, entry, known_nodes):
                                 "removes this technique from every gated "
                                 "solve" % (where, required))
     return problems
+
+
+def check_operated_by(where, entry, known_nodes):
+    """`operated_by` lists the tree nodes whose concern runs this technique."""
+    if "operated_by" not in entry:
+        return []
+    operators = entry["operated_by"]
+    if not isinstance(operators, list) or not all(isinstance(operator, str) for operator in operators):
+        return ["%s: operated_by must be a list of tech-tree node ids, not %r" % (where, operators)]
+    if known_nodes is None:
+        return []
+    return ["%s: operated_by '%s' is not a node in the tech tree" % (where, operator)
+            for operator in operators if operator not in known_nodes]
 
 
 def check_capital_build_materials(good_where, build_materials, known_materials):
@@ -438,10 +463,12 @@ def check(entries, known_materials, known_trades, known_nodes=None):
         problems.extend(check_inputs(where, entry, known_materials))
         problems.extend(check_has_source(where, entry))
         problems.extend(check_unit_mass(where, entry))
+        problems.extend(check_carriage_km(where, entry))
         problems.extend(check_unit_dimension(where, entry))
         problems.extend(check_labour_hours(where, entry, known_trades))
         problems.extend(check_energy_carrier_fields(where, entry))
         problems.extend(check_requires_node(where, entry, known_nodes))
+        problems.extend(check_operated_by(where, entry, known_nodes))
         problems.extend(check_capital(where, entry, known_materials, known_trades))
         problems.extend(check_yield_basis(where, entry))
         problems.extend(check_conf(where, entry))

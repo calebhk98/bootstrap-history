@@ -12,6 +12,8 @@ from dataclasses import dataclass
 
 from sim.constants import declare
 
+from . import provisions
+
 LAND_WORKING_DAYS_PER_YEAR = declare(
     "LAND_WORKING_DAYS_PER_YEAR", 250.0, kind="engineering_estimate",
     unit="days of travel per year for a cart or pack string",
@@ -25,11 +27,6 @@ ANIMAL_WORKING_LIFE_YEARS = declare(
     unit="years", source="Draught oxen worked from about four years old to ten or twelve; "
     "mules longer.", confidence="C",
     why="An animal's price is written off over its working life.")
-HULL_LOSS_PER_THOUSAND_KM = declare(
-    "HULL_LOSS_PER_THOUSAND_KM", 0.005, kind="temporary_heuristic",
-    unit="share of hulls lost per 1000 km sailed", source=None, confidence="D",
-    why="Wrecks, piracy and capture take a share of hulls on every voyage; the rate is not "
-        "yet derived from weather, coast and escort models.")
 
 
 @dataclass(frozen=True)
@@ -82,6 +79,16 @@ def freight_money_per_tonne_km(inputs, feed_price_per_kg: float, wage_per_hour: 
     capital = capital_money_per_tonne_km(inputs, prices, annual_rate, working_days_per_year)
     losses = loss_money_per_tonne_km(inputs, prices, loss_per_thousand_km)
     return (running + capital) * return_leg_factor(imbalance) + losses
+
+
+def leg_money_per_tonne(money_per_tonne_km: float, inputs, distance_km: float,
+                        restock_days=None) -> float:
+    """Money to deliver a tonne over a leg: the rate over the distance, divided by the share of the
+    carrier's lift left for cargo once the crew and animals' food and water are carried between
+    restocking places (`restock_days` of travel apart; the whole leg when None). Infinite where a
+    stage is longer than the carrier can provision."""
+    share = provisions.restocked_share(inputs, distance_km, restock_days)
+    return float("inf") if share <= 0.0 else money_per_tonne_km * distance_km / share
 
 
 def days_on_leg(distance_km: float, inputs) -> float:

@@ -32,25 +32,25 @@ game = sim()
 game.goal = general_goal
 game.civ["literacy_general"] = 0.5
 game._check_win_conditions(1000)
-check("the first goal records its year", game.goal_year == 1000 and game.state.scenario.goal_years == {general_goal: 1000},
-      game.state.scenario.goal_years)
+check("the first goal records its year", game.goal_year == 1000 and game.state.seat_progress.goal_years == {general_goal: 1000},
+      game.state.seat_progress.goal_years)
 game.set_goal(elite_goal)
 check("a new goal starts with no reach year", game.goal_year is None and game.goal == elite_goal)
 game.civ["literacy_general"] = 0.9
 game._check_win_conditions(1007)
 check("the second goal records its own year", game.goal_year == 1007, game.goal_year)
-check("the first goal's year is kept", game.state.scenario.goal_years == {general_goal: 1000, elite_goal: 1007},
-      game.state.scenario.goal_years)
+check("the first goal's year is kept", game.state.seat_progress.goal_years == {general_goal: 1000, elite_goal: 1007},
+      game.state.seat_progress.goal_years)
 game.set_goal(general_goal)
 check("returning to a reached goal restores its year", game.goal_year == 1000, game.goal_year)
 
 with tempfile.TemporaryDirectory() as folder:
     path = os.path.join(folder, "game.json")
     memory.save_state(game, path)
-    game.state.scenario.goal_years = {}
+    game.state.seat_progress.goal_years = {}
     memory.load_state(game, path)
-    check("goal years round-trip a save", game.state.scenario.goal_years == {general_goal: 1000, elite_goal: 1007},
-          game.state.scenario.goal_years)
+    check("goal years round-trip a save", game.state.seat_progress.goal_years == {general_goal: 1000, elite_goal: 1007},
+          game.state.seat_progress.goal_years)
 
 # A watched goal is promoted once the formal goal is reached.
 game = sim()
@@ -67,7 +67,7 @@ promoted = ask(game, cmd="goals", action="promote", goal=other)
 check("a watched goal becomes the formal goal after a win", promoted["ok"] is not False and game.goal == other, promoted)
 check("the promoted goal leaves the watch list", promoted["watched"] == [] and promoted["formal"]["id"] == other, promoted)
 check("the new formal goal has no year yet, the old one keeps its", game.goal_year is None
-      and game.state.scenario.goal_years == {general_goal: 1000})
+      and game.state.seat_progress.goal_years == {general_goal: 1000})
 check("only a watched goal can be promoted", ask(game, cmd="goals", action="promote", goal=general_goal)["ok"] is False)
 
 # The anatomy hook.

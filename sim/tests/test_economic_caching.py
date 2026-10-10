@@ -5,7 +5,7 @@ Proves that:
 2. revenue() memoizes its aggregate computation when inputs are stable.
 3. revenue() properly invalidates when operating, done, workforce, or year changes.
 4. revenue_capacity() and revenue() do not corrupt each other's cached values.
-5. _goods_category_ratios() and goods_market_factor() memoize correctly.
+5. _goods_category_ratios() and goods_category_factor() memoize correctly.
 6. annual_material_demand() memoizes and invalidates on active/done changes.
 7. Save and load operations preserve clean derived state.
 """
@@ -14,10 +14,10 @@ from .harness import *  # noqa: F401,F403
 # One game for the container and version-counter tests (each only adds and
 # removes its own entries and compares versions relative to its own start),
 # one stepped game for the memoisation tests.
-CONTAINERS = sim(civ="rome_100ad", capital=book_money(10000.0))
-STEPPED = sim(civ="rome_100ad", capital=book_money(10000.0))
+CONTAINERS = sim(civ="rome_100ad", capital=hours_money(202000))
+STEPPED = sim(civ="rome_100ad", capital=hours_money(202000))
 STEPPED.step()
-GOODS = sim(civ="rome_100ad", capital=book_money(10000.0), agent_economy=False)
+GOODS = unopened_sim(civ="rome_100ad", capital=hours_money(202000))
 
 
 def _test_done_and_operating_versions():
@@ -162,14 +162,14 @@ check("revenue() memoization and invalidation", _ok, _detail)
 
 
 def _test_goods_market_memoization_and_invalidation():
-	"""Verify _goods_category_ratios and goods_market_factor cache and invalidate."""
+	"""Verify _goods_category_ratios and goods_category_factor cache and invalidate."""
 	sim_inst = GOODS
 	loom_node = "tex_power_loom"
 	if loom_node in sim_inst.nodes:
 		sim_inst.household.operating.add(loom_node)
 
 	# Initial call
-	f1 = sim_inst.goods_market_factor(loom_node)
+	f1 = sim_inst.goods_category_factor("textiles")
 	cat_cache = getattr(sim_inst.household, "_goods_category_ratios_cache", None)
 	if cat_cache is None:
 		return False, "_goods_category_ratios_cache was not populated"
@@ -177,23 +177,17 @@ def _test_goods_market_memoization_and_invalidation():
 	if op_cache is None:
 		return False, "_goods_mkt_op_factor_cache was not populated"
 
-	f2 = sim_inst.goods_market_factor(loom_node)
+	f2 = sim_inst.goods_category_factor("textiles")
 	if f1 != f2:
-		return False, f"goods_market_factor returned different values: {f1} != {f2}"
+		return False, f"goods_category_factor returned different values: {f1} != {f2}"
 
 	# Mutate farm_hectares to test essential/income_factor invalidation
 	sim_inst.invest_farm(50.0)
-	f3 = sim_inst.goods_market_factor(loom_node)
+	f3 = sim_inst.goods_category_factor("textiles")
 	if f3 == f1:
-		return False, f"goods_market_factor should have updated after farm investment: {f3} == {f1}"
+		return False, f"goods_category_factor should have updated after farm investment: {f3} == {f1}"
 
-	# Mutate operating to test invalidation
-	sim_inst.household.operating.discard(loom_node)
-	f4 = sim_inst.goods_market_factor(loom_node)
-	if f4 != 1.0:
-		return False, f"Non-operating node should have market factor 1.0: got {f4}"
-
-	return True, "goods market factor memoizes and invalidates properly"
+	return True, "goods category factor memoizes and invalidates properly"
 
 
 _ok, _detail = _test_goods_market_memoization_and_invalidation()
@@ -371,14 +365,14 @@ def _test_multiple_goods_concerns_competition():
 	loom_node = "tex_power_loom"
 	if loom_node in sim_inst.nodes:
 		sim_inst.household.operating.add(loom_node)
-		factor_single = sim_inst.goods_market_factor(loom_node)
+		factor_single = sim_inst.goods_category_factor("textiles")
 
 		# Add a second concern in textiles if another exists
 		textile_nodes = [nid for nid in sim_inst.nodes if sim_inst.nodes[nid].get("cat") == "textiles" and nid != loom_node]
 		if textile_nodes:
 			second_loom = textile_nodes[0]
 			sim_inst.household.operating.add(second_loom)
-			factor_double = sim_inst.goods_market_factor(loom_node)
+			factor_double = sim_inst.goods_category_factor("textiles")
 
 			if factor_double >= factor_single:
 				return False, f"Market factor did not decrease under competition: {factor_double} >= {factor_single}"

@@ -101,7 +101,7 @@ def opening_split(setup, recipe: Recipe, area: MarketArea, runs: float) -> Dict[
     (sites.UNSITED_EXTRACTION_ANYWHERE)."""
     by_recipe = sites.limits_by_recipe(setup.site_limits)
     population = setup.opening_population_by_tile
-    suited = sites.suited_tiles(recipe, setup.tiles, area.tiles)
+    suited = sites.suited_tiles(recipe, setup.tiles, area.tiles, setup.recipe_allowed)
     if not suited:
         return {}
     if recipe.site_bound and not by_recipe.get(recipe.recipe_id):
@@ -134,12 +134,13 @@ def entry_siting(setup, record, view, area_map, carriage) -> Siting:
         recipe = setup.recipes[recipe_id]
         area = area_map.market_area_of(demand.good, demand.anchor_tile)
         if recipe.site_bound and not by_recipe.get(recipe_id) and sites.climate_allows(
-                recipe, setup.tiles.get(demand.anchor_tile)):
+                recipe, setup.tiles.get(demand.anchor_tile)) and setup.recipe_allowed(recipe_id, demand.anchor_tile):
             return demand.anchor_tile, runs
         tonnes = output_tonnes(recipe, setup.specs)
         candidates: List[Candidate] = []
         for tile in sites.suited_tiles(recipe, setup.tiles, sites.allowed_tiles(
-                recipe, by_recipe, area.tiles if not sites.is_sited(recipe, by_recipe) else tuple(setup.tiles))):
+                recipe, by_recipe, area.tiles if not sites.is_sited(recipe, by_recipe) else tuple(setup.tiles)),
+                setup.recipe_allowed):
             probe = Producer("probe", "probe", recipe_id, tile, 1.0)
             wages = {trade: _wage(setup, view, trade, tile) for trade in recipe.labour_hours}
             factor = sites.yield_at(recipe, tile, by_recipe, setup.yield_factor_by_recipe_tile.get(

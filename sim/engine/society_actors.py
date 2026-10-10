@@ -1,5 +1,6 @@
 """Actors other than the founder, run once a year inside the simulation."""
-from sim.agents.api import ActorRegistry, edges, ledger, payroll, SOLDIER_TRADE
+from sim.agents.api import ActorRegistry, ledger, payroll, SOLDIER_TRADE
+from .actor_kinds_data import register_mod_actor_kinds
 from .agents_port import SimWorld
 from .agents_port_cast import seed_opening_cast
 from .state import ActorsState
@@ -15,6 +16,7 @@ class ActorsMixin:
             state.actors = ActorsState()
         registry = self.__dict__.get("_actor_registry")
         if registry is None or registry.state is not state.actors:
+            register_mod_actor_kinds()
             registry = ActorRegistry(state.actors)
             self._actor_registry = registry
         return registry
@@ -32,10 +34,6 @@ class ActorsMixin:
     def pay_wages(self, amount, purpose):
         """The founder's household pays wages: the home country's people receive them."""
         payroll.pay_wages(self.actors, self.state.household, amount, purpose, self)
-
-    def pay_savers(self, amount):
-        """Interest due to households as lenders is paid out of the interest edge to the savers."""
-        payroll.pay_savers(self.actors, self.edge(edges.EDGE_INTEREST), amount)
 
     def receive_from_edge(self, edge_name, amount, purpose):
         """A named edge pays the founder's household."""
@@ -107,18 +105,32 @@ class ActorsMixin:
         return self.actors.version[0]
 
     def state_treasury(self):
-        """The government actor of the founder's civilisation."""
+        """The government actor of the acting seat's country: the founder's civilisation unless the seat belongs
+        to a partner country that has a government of its own in the cast."""
         seed_opening_cast(self)  # a bare record made first would keep the cast from giving it its place and kind
+        country = self.acting_country()
+        if country is not None:
+            government = self.actors.government_of(country)
+            if government is not None:
+                return government
         return self.actors.ensure_government(str(self.civ.get("id")), self.civ.get("name", ""))
 
     def pay_state(self, amount, purpose):
         """The household pays the state: the founder's loss is the treasury's gain."""
-        ledger.transfer(self.household, self.state_treasury(), amount, purpose)
+        with self.coin_carriage_listening():
+            ledger.transfer(self.household, self.state_treasury(), amount, purpose)
 
     def advance_actors(self, year):
-        """Give every actor its year: the countries, players, firms, traders and bodies of people."""
+        """Give every actor its year: the countries, players, firms, traders and bodies of people. Coin moved
+        between actors in different places pays carriage meanwhile."""
+        with self.coin_carriage_listening():
+            self._advance_actors_year(year)
+
+    def _advance_actors_year(self, year):
         seed_opening_cast(self)
         self.state_treasury()
-        self.update_capital_market()
+        self.refresh_lender_offers()
         self.actors.advance(SimWorld(self))
+        self.accrue_industry_experience()
         self.charge_actors_for_keeping_coin()
+        self.charge_actors_for_theft()

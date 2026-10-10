@@ -1,15 +1,15 @@
-"""The agent economy inside a game: the switch, opening it, its year, and what the engine's seams read.
+"""The agent economy inside a game: opening it, its year, and what the engine's seams read.
 
 Part of the port (with economy_port.py and economy_port_setup.py, the only engine modules that import
 `sim.economy`). Its whole state lives in `state.economy.agent_economy`, so a saved game resumes the
-same economy. The engine's own price, wage and rate code asks `answers()` and falls back to its old
-figures while the switch is off or before the economy has opened.
+same economy. The engine's own price, wage and rate code asks `answers()`; while the economy opens (it
+reads the engine's own opening figures to build its setup) those figures answer instead.
 """
 import collections
 import math
 import os
 
-from sim.agents.api import COIN_RESTRIKE_SHARE_PER_YEAR
+from sim.agents.api import COIN_RESTRIKE_SHARE_PER_YEAR, EDGE_EXCHANGE as COIN_EXCHANGE, PURSE_CURRENCY
 from sim.constants import declare
 from sim.economy import api as economy_api
 from sim.world.demography_turnover import working_age_turnover
@@ -17,12 +17,12 @@ from sim.economy.api import (EDGE_EXTERNAL, EDGE_LEGACY, AgentOrders, Economy, G
                              YearInputs, expected_output_prices, external_orders, live_input_prices, live_wages,
                              trade_premium, variable_cost_per_run)
 
-from . import solve_cache
+from . import economy_port_actors, economy_port_cargo, economy_port_sites, material_capacity, solve_cache
 from .data import load_civ
 from .economy_port_key import spin_up_key
 from .economy_port_setup import build_setup, opening_values
+from .material_units import tonnes_per_unit
 
-SWITCH_ENVIRONMENT = "ROME_AGENT_ECONOMY"
 OUTCOMES_KEPT = 100   # yearly outcomes held in memory for the health figures
 SPIN_UP_CACHE_DIRECTORY = os.path.join(os.path.dirname(solve_cache.DEFAULT_CACHE_DIRECTORY), "agent_economy")
 SPIN_UP_TOLERANCE = declare(
@@ -57,16 +57,6 @@ PARTNER_SPEND_SHARE_PER_YEAR = declare(
     why="A partner pays for what it buys from the coin it holds, so its purchases fall as it pays coin out "
         "(price-specie flow). How much of its money a partner spends abroad a year is not measured; the "
         "partner as a full economy (Complaint 382) would decide it.")
-FOUNDER_AGENT = "founder"
-
-
-def switch_requested(cfg) -> bool:
-    """On unless config `agent_economy` is explicitly False; the environment variable overrides
-    the config either way ("1" forces on, "0" forces off)."""
-    override = os.environ.get(SWITCH_ENVIRONMENT)
-    if override in ("0", "1"):
-        return override == "1"
-    return cfg.get("agent_economy") is not False
 
 
 class AgentEconomy:
@@ -76,6 +66,7 @@ class AgentEconomy:
         self._sim = sim
         self._economy = None
         self._answers = None
+        self._country_answers = {}
         self._stale = set()
         self.outcomes = collections.deque(maxlen=OUTCOMES_KEPT)   # recent yearly outcomes, for health figures; not saved
         self._built_from = None          # the stored dict the live economy belongs to; a load replaces it
@@ -84,15 +75,12 @@ class AgentEconomy:
     def stored(self):
         return self._sim.state.economy.agent_economy
 
-    def on(self) -> bool:
-        return bool(self.stored.get("on"))
-
     def opened(self) -> bool:
         return self._economy is not None or "record" in self.stored
 
     def economy(self) -> Economy:
         if self._built_from is not self.stored:
-            self._economy, self._answers = None, None
+            self._economy, self._answers, self._country_answers = None, None, {}
         if self._economy is None:
             if "record" in self.stored:
                 setup = build_setup(self._sim, self.stored["opening"])
@@ -107,40 +95,135 @@ class AgentEconomy:
                 self.stored["opening"] = opening
                 self._save()
             self._built_from = self.stored
+            self._sim.state.actors.purses.adopt_book(economy_api.economy_book(self._economy))
+            self.sync_ways()
         return self._economy
+
+    def sync_ways(self):
+        """Give the live economy the ways the game has built so far; its hauls are priced over them from now on."""
+        if self._economy is not None:
+            economy_api.set_improvements(self._economy, self._sim.state.economy.improvements)
 
     def _spun_up(self, setup):
         """The record after the hidden years; the same opening always gives the same one, so it is cached
         on disk with the price solver's results (keyed on the data files and the source)."""
         self._economy = economy_api.blank_economy(setup)
         self._spin_up()
-        return economy_api.export_record(self._economy)
+        return economy_api.export_record(self._economy, (PURSE_CURRENCY,))
 
     def cohort_incomes(self):
         return economy_api.cohort_incomes(self.economy())
 
+    def goods_level_over_opening(self):
+        """How dear the economy's goods are against the opening's solver prices (both counted in the economy's
+        unit); None when no good has traded lately."""
+        economy = self.economy()
+        unit = economy.setup.coin_per_unit
+        opening = {good: price / unit for good, price in self.stored["opening"]["prices"].items()}
+        return economy_api.goods_level_over_opening(economy, opening)
+
     # ---- the year -----------------------------------------------------------------------------
     def run_year(self):
         economy = self.economy()
-        orders = self._founder_orders()
+        self.sync_ways()
+        orders = self._seat_orders()
         orders.update(self._external_orders())
+        from .material_units import tonnes_per_unit
+        legs = self._sim.cargo_legs()
+        moves, cargo_orders, fundings = economy_port_cargo.cargo_orders(economy, legs, tonnes_per_unit)
+        economy_api.move_goods(economy, moves)
+        economy_api.post_transfers(economy, fundings)
+        orders.update(cargo_orders)
         self._strike_state_coin(economy)
-        outcome = economy.step(self._inputs(orders))
+        sales, purchases = self._actor_trade_orders(orders)
+        outcome = economy.step(self._inputs(orders, economy_port_cargo.border_accounts(economy, legs)))
+        economy_port_sites.deplete(self._sim, outcome.extraction, self._recipe_outputs())
         self.outcomes.append(outcome)
-        self._settle_founder()
+        self._settle_actor_trade(sales, purchases)
+        self._settle_seats()
+        self._sim.settle_trader_cargo(economy_port_cargo.close_cargo_accounts(economy, legs, tonnes_per_unit))
         self._settle_foreign_coin()
         self._answers = None
+        self._country_answers = {}
         self._save()
         return outcome
+
+    # ---- firms', states' and traders' sales and purchases (economy_port_actors.py) ------------------
+    def note_sale(self, seller, material, tonnes, from_concerns):
+        economy_port_actors.note_sale(self.stored.setdefault("sales", []), seller, material, tonnes, from_concerns)
+
+    def note_purchase(self, buyer, commodity, tonnes, budget):
+        economy_port_actors.note_purchase(self.stored.setdefault("purchases", []), buyer, commodity, tonnes, budget)
+
+    def forget_orders(self, actor_id):
+        for kind, key in (("sales", "seller"), ("purchases", "buyer")):
+            if kind in self.stored:
+                self.stored[kind] = [order for order in self.stored[kind] if order[key] != actor_id]
+
+    def trades_good(self, material):
+        """Whether the economy has a market for the material."""
+        return material in self.economy().area_map.goods()
+
+    def _actor_tile(self, actor_id):
+        actor = self._sim.actors.actors.get(actor_id)
+        place = actor.location() if actor is not None else None
+        return place if place in self._economy.setup.tiles else self._economy.setup.capital_tile
+
+    def _actor_trade_orders(self, orders):
+        """Put the year's noted sales and purchases of the actors in the book as orders; (the sales and the purchases
+        that entered, as dicts)."""
+        economy, sim = self._economy, self._sim
+        known = sim.actors.actors
+        sales = [sale for sale in self.stored.pop("sales", []) if sale["seller"] in known]
+        purchases = [purchase for purchase in self.stored.pop("purchases", []) if purchase["buyer"] in known]
+        from .material_units import tonnes_per_unit
+        view = economy.view()
+
+        def reservation(seller, node_id, material, tile):
+            return self._concern_reservation(node_id, material, tile, view, seller)
+
+        moves, sale_orders = economy_port_actors.sale_orders(economy, sales, tonnes_per_unit, self._actor_tile, reservation)
+        coin = economy.setup.coin_per_unit
+        purchase_orders, funding = economy_port_actors.purchase_orders(
+            economy, purchases, tonnes_per_unit, self._actor_tile, sim.economy.materials_in, coin)
+        economy_api.move_goods(economy, moves)
+        purses = sim.actors.state.purses
+        for buyer, coin_spent, _units in funding:
+            purses.transfer(buyer, COIN_EXCHANGE, coin_spent, "exchange")
+            known[buyer].note_outlay("market purchases", coin_spent)
+        economy_port_actors.fund(economy, funding)
+        orders.update(sale_orders)
+        orders.update(purchase_orders)
+        return sales, purchases
+
+    def _settle_actor_trade(self, sales, purchases):
+        """What the actors' sales fetched and their budgets left over turn back into their coin; the goods unsold go
+        back out and the goods bought are used up."""
+        proceeds, refunds, _bought = economy_port_actors.close(self._economy, sales, purchases)
+        coin = self._economy.setup.coin_per_unit
+        purses, known = self._sim.actors.state.purses, self._sim.actors.actors
+        for amounts, label in ((proceeds, "market sales"), (refunds, "market purchases returned")):
+            for actor_id, units in sorted(amounts.items()):
+                purses.transfer(COIN_EXCHANGE, actor_id, units * coin, "exchange")
+                known[actor_id].note_income(label, units * coin)
 
     def _strike_state_coin(self, economy):
         """The cut the home state decided on this year lowers the metal in the coin it issues."""
         cut = self._sim.state_treasury().record.coin_cut_share
         economy.strike_lighter_coin(cut, COIN_RESTRIKE_SHARE_PER_YEAR)
 
-    # ---- the founder's concerns sell in the same market ----------------------------------------
-    def _founder_orders(self):
-        """The founder's running concerns' output for the year, handed over from the engine through the
+    # ---- each seat's concerns sell in the same market ----------------------------------------
+    def _seat_orders(self):
+        """Every seat's running concerns' output for the year, one agent per seat named by its seat id."""
+        sim = self._sim
+        orders = {}
+        for seat_id in sorted(sim.playing_seats() or sim.state.seats):   # a seat whose run ended sells nothing
+            with sim.act_as(seat_id):
+                orders.update(self._acting_seat_orders(seat_id))
+        return orders
+
+    def _acting_seat_orders(self, agent_id):
+        """The acting seat's running concerns' output for the year, handed over from the engine through the
         legacy edge (the engine's purse is not yet an account in the book: Complaint 382) and offered at
         what the concern costs to make it at the economy's own prices and wages (_concern_reservation)."""
         sim, economy = self._sim, self._economy
@@ -160,14 +243,14 @@ class AgentEconomy:
                 quantity = units * ramp
                 if quantity <= 0.0 or material not in area_map.goods():
                     continue
-                moves.append(GoodsMove(EDGE_LEGACY, FOUNDER_AGENT, material, tile, quantity, "concern output"))
-                cost = self._concern_reservation(node_id, material, tile, view)
-                offers.append(Offer(FOUNDER_AGENT, material, area_map.area_of(material, tile), tile, quantity, cost))
+                moves.append(GoodsMove(EDGE_LEGACY, agent_id, material, tile, quantity, "concern output"))
+                cost = self._concern_reservation(node_id, material, tile, view, agent_id)
+                offers.append(Offer(agent_id, material, area_map.area_of(material, tile), tile, quantity, cost))
         economy_api.move_goods(economy, moves)
-        return {FOUNDER_AGENT: AgentOrders(offers=tuple(offers))} if offers else {}
+        return {agent_id: AgentOrders(offers=tuple(offers))} if offers else {}
 
-    def _concern_reservation(self, node_id, material, tile, view) -> float:
-        """The least the founder takes for a unit of a concern's output: the unit's share, by value, of
+    def _concern_reservation(self, node_id, material, tile, view, agent_id) -> float:
+        """The least the seat takes for a unit of a concern's output: the unit's share, by value, of
         the variable cost of the cheapest technique the concern holds that the economy knows, at the
         economy's live prices and wages. With no such technique it sells at what the market pays."""
         from .prices import default_production_entries
@@ -179,7 +262,7 @@ class AgentEconomy:
             recipe = recipes.get(key)
             if recipe is None or material not in recipe.outputs:
                 continue
-            probe = Producer(FOUNDER_AGENT, FOUNDER_AGENT, key, tile, 1.0)
+            probe = Producer(agent_id, agent_id, key, tile, 1.0)
             prices = expected_output_prices(probe, recipe, view) or {}
             revenue = sum(recipe.outputs[good] * prices.get(good, 0.0) for good in recipe.outputs)
             cost = variable_cost_per_run(recipe, live_input_prices(probe, recipe, view),
@@ -199,7 +282,7 @@ class AgentEconomy:
         partners = sim.foreign_economies()
         if not partners:
             return {}
-        from .project_materials import tonnes_per_unit
+        from .material_units import tonnes_per_unit
         offers_api = sim.goods_market
         routes = {partner: offers_api._route_from(partner) for partner in partners}
         volumes = economy_api.traded_volumes(economy)
@@ -232,7 +315,7 @@ class AgentEconomy:
     def price_response(self, material, landed_tonnes, taken_tonnes):
         """Factor on a material's price at the port once more tonnes land there or are taken out, from the book the
         market last cleared; None when the market has none."""
-        from .project_materials import tonnes_per_unit
+        from .material_units import tonnes_per_unit
         per_unit = tonnes_per_unit(material)
         if not per_unit or per_unit <= 0.0 or material not in self.economy().area_map.goods():
             return None
@@ -277,12 +360,14 @@ class AgentEconomy:
             if exports > 0.0:
                 sim._settle_flow(partner, -1.0, exports / len(partners), per_partner_coin)
 
-    def _settle_founder(self):
-        """What the founder's goods fetched goes back to the engine; what did not sell goes back too."""
-        proceeds = economy_api.settle_founder_takings(self._economy, FOUNDER_AGENT, EDGE_LEGACY)
-        self.stored["founder_takings"] = proceeds * self._economy.setup.coin_per_unit
+    def _settle_seats(self):
+        """What each seat's goods fetched goes back to the engine; what did not sell goes back too."""
+        coin = self._economy.setup.coin_per_unit
+        self.stored["seat_takings"] = {
+            seat_id: economy_api.settle_agent_takings(self._economy, seat_id, EDGE_LEGACY) * coin
+            for seat_id in sorted(self._sim.state.seats)}
 
-    def _inputs(self, engine_orders) -> YearInputs:
+    def _inputs(self, engine_orders, border_accounts=((), ())) -> YearInputs:
         sim = self._sim
         population = sim.population
         total = float(population.total)
@@ -294,7 +379,13 @@ class AgentEconomy:
         return YearInputs(year=sim.state.scenario.year, population_by_tile=sim.labour.settlement_tiles(),
                           working_age_share=population.working_age / total if total > 0.0 else 0.0,
                           entrant_share=entrant_share, attrition_share=attrition_share,
-                          yield_factor_by_producer=yields, engine_orders=engine_orders, harvest_factor=weather)
+                          yield_factor_by_producer=yields, engine_orders=engine_orders, harvest_factor=weather,
+                          import_accounts=border_accounts[0], export_accounts=border_accounts[1],
+                          site_limits=tuple(economy_port_sites.site_limits(sim, self._recipe_outputs())))
+
+    def _recipe_outputs(self):
+        """{recipe id: {good: quantity a run}} of the recipes the economy runs."""
+        return {recipe_id: recipe.outputs for recipe_id, recipe in self._economy.setup.recipes.items()}
 
     def _spin_up(self):
         """Hidden years from the opening until prices and the interest rate settle; then the price level
@@ -331,13 +422,25 @@ class AgentEconomy:
             economy.step(inputs)
 
     def _save(self):
-        self.stored["record"] = economy_api.export_record(self._economy)
+        self.stored["record"] = economy_api.export_record(self._economy, (PURSE_CURRENCY,))
 
     # ---- what the seams read ------------------------------------------------------------------
-    def answers(self):
+    def answers(self, country=None):
         """(prices by good, hours-weighted wage per hour by trade, rate), for this year; built once a year. A good
         whose markets have not cleared lately shows what it costs to make at today's prices and wages, or
-        its last price when nothing makes it; `stale_goods()` names those."""
+        its last price when nothing makes it; `stale_goods()` names those. For a partner `country` that is part
+        of the economy, those of its own markets; any other country is answered as the home country."""
+        if country is not None and country != self._sim.civ.get("id"):
+            home = self.answers()
+            if country not in self._economy.setup.countries():
+                return home
+            if country not in self._country_answers:
+                coin = self._economy.setup.coin_per_unit
+                prices, _stale = economy_api.shown_prices_of(self._economy, country)
+                wages = economy_api.wages_by_trade_weighted(self._economy, country)
+                self._country_answers[country] = ({good: price * coin for good, price in prices.items()},
+                                                  {trade: wage * coin for trade, wage in wages.items()}, home[2])
+            return self._country_answers[country]
         if self._answers is None or self._built_from is not self.stored:
             self.economy()
             wages = economy_api.wages_by_trade_weighted(self._economy)
@@ -353,9 +456,9 @@ class AgentEconomy:
         self.answers()
         return set(self._stale)
 
-    def price_ratio(self, materials, old_prices):
+    def price_ratio(self, materials, old_prices, country=None):
         """The new price over the engine's own cost, for the first of `materials` both price; None if none."""
-        prices = self.answers()[0]
+        prices = self.answers(country)[0]
         for material in materials:
             old = old_prices.get(material, 0.0)
             new = prices.get(material)
@@ -369,10 +472,45 @@ class AgentEconomy:
             return None
         return economy_api.people_by_trade(self.economy())
 
-    def wage_per_hour(self, trade):
+    def producer_capacity_tonnes(self, material):
+        """Tonnes a year the economy's producers can make of a material at full capacity; zero before the
+        economy has opened."""
+        if not self.opened():
+            return 0.0
+        economy = self.economy()
+        return material_capacity.producer_capacity_tonnes(
+            economy_api.producers_of(economy).values(), economy.setup.recipes, material, tonnes_per_unit(material))
+
+    def worker_years_by_recipe(self):
+        """Worker-years a year the economy's producers can put into each recipe at full capacity."""
+        economy = self.economy()
+        years = {}
+        for producer in economy_api.producers_of(economy).values():
+            recipe = economy.setup.recipes.get(producer.recipe_id)
+            if recipe is not None:
+                years[producer.recipe_id] = years.get(producer.recipe_id, 0.0) + (
+                    producer.capacity_runs * sum(recipe.labour_hours.values()) / economy.setup.working_hours_per_year)
+        return years
+
+    def producers_by_good(self):
+        """{good: [(tile, recipe id)]} of the economy's producers for each good their recipes put out."""
+        economy = self.economy()
+        found = {}
+        for producer in sorted(economy_api.producers_of(economy).values(), key=lambda each: each.agent_id):
+            recipe = economy.setup.recipes.get(producer.recipe_id)
+            for good in (recipe.outputs if recipe is not None else ()):
+                found.setdefault(good, []).append((producer.tile, producer.recipe_id))
+        return found
+
+    def unskilled_wage_per_hour(self):
+        """The home labour markets' wage for an hour of the trade anyone can take up, in coin."""
+        wages = self.answers()[1]
+        return wages.get(self._economy.setup.unskilled_trade)
+
+    def wage_per_hour(self, trade, country=None):
         """The trade's wage in its labour markets; a trade no producer hires (soldiers, scribes) is paid
         what its training adds to the unskilled wage, so every wage stands on the same market."""
-        wages = self.answers()[1]
+        wages = self.answers(country)[1]
         if trade in wages:
             return wages[trade]
         setup = self._economy.setup
@@ -380,6 +518,37 @@ class AgentEconomy:
         if unskilled is None:
             return None
         return unskilled * (1.0 + trade_premium(setup, trade))
+
+    def country(self, country):
+        """What the economy answers for a partner country in it (`CountryAnswers`), or None when the country is
+        not in this economy or its labour markets have no wage yet."""
+        economy = self.economy()
+        if country == economy.setup.civ_id or country not in economy.setup.countries():
+            return None
+        from .economy_port_country import CountryAnswers
+        answers = CountryAnswers(economy, country)
+        return answers if answers.has_labour_market() else None
+
+    def land_rent_per_hectare(self):
+        """Mean rent per hectare-year the land market let land at last year, in coin."""
+        return economy_api.land_rent_per_hectare(self.economy()) * self._economy.setup.coin_per_unit
+
+    def need_floor_costs_per_person_year(self, country=None):
+        """What a person's floor of each need costs a year at the prices on the home tiles (the mean over the
+        people there), in coin; empty before any tile holds people."""
+        economy = self.economy()
+        scope = economy_api.country_figures.home_when_shared(economy, country)
+        costs = economy_api.country_figures.need_floor_costs_per_person_year(economy, scope)
+        return {need: cost * economy.setup.coin_per_unit for need, cost in costs.items()}
+
+    def land_rent_at_tile(self, tile):
+        """Rent per hectare-year on one tile in coin (the mean where none was let there)."""
+        return economy_api.land_rent_at_tile(self.economy(), tile) * self._economy.setup.coin_per_unit
+
+    def land_rent_paid_by_tile(self):
+        """Rent producers paid on each tile where land was let last year, in coin."""
+        coin = self._economy.setup.coin_per_unit
+        return {tile: rent * coin for tile, rent in economy_api.land_rent_paid_by_tile(self.economy()).items()}
 
     def rate(self):
         return self.answers()[2]

@@ -73,16 +73,15 @@ check("...so the SAME node cost calculation prices coal higher for a "
 # has to equal geography's own route from the tiles held to the nearest
 # producing region, not a number this crossing made up (CLAUDE.md SS3.1).
 # =============================================================================
-_candidates = [region_id for region_id, region in s_mexica.geography.regions.items()
-               if float((region.get("minerals") or {}).get("coal", 0.0)) > 0.0]
+_candidates = list(s_mexica.geography.source_tiles("coal"))
 _held = geography_api.tiles_held(s_mexica.civ, s_mexica.world_map)
 _held_nodes = s_mexica.geography._world.held_nodes
-_route = geography_api.route(_held, geography_api.tiles_of_regions(_candidates, s_mexica.world_map),
+_route = geography_api.route(_held, _candidates,
                              geography_api.usable_modes([_held_nodes]), s_mexica.state.economy.improvements,
                              held_nodes=_held_nodes, world_map=s_mexica.world_map)
 _expected_km = _route["km"] if _route else None
 check("the freight distance is the kilometres of geography's cheapest route over the modes held "
-      "from the tiles held to the nearest coal-bearing region",
+      "from the tiles held to the nearest coal-bearing tile",
       _expected_km is not None and abs(_mexica_coal_km - _expected_km) < 1e-6,
       (_mexica_coal_km, _expected_km))
 

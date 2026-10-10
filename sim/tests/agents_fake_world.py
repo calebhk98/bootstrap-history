@@ -123,8 +123,11 @@ class FakeWorld:
 	def credit_headroom(self, actor_id: str) -> Optional[float]:
 		return None
 
-	def note_interest_paid(self, amount: float) -> None:
-		self.interest_paid += amount
+	def pay_interest(self, payer: Any, owed: float, purpose: Any = "interest") -> None:
+		"""Interest goes to the lenders the payer's purses name; the fixture keeps the total paid."""
+		payer.purses.pay_interest(payer.account_id, owed)
+		payer.note_outlay(purpose, owed)
+		self.interest_paid += owed
 
 	def collect_royalty(self, actor: Any, node_id: str, takings: float) -> float:
 		return 0.0
@@ -143,6 +146,9 @@ class FakeWorld:
 	def concern_wage_bill(self, node_id: str, capacity: float = 1.0) -> float:
 		return capacity * sum(people * self.hours_per_person_year * self.labour_market.wage_per_hour
 							  for people in self.concern_staff(node_id).values())
+
+	def site_rent(self, node_id: str, capacity: float = 1.0, tile: Optional[str] = None) -> float:
+		return 0.0
 
 	def concern_takings(self, node_id: str, opened_year: int, rivals: float = 0.0, capacity: float = 1.0) -> float:
 		return capacity * float(self.nodes[node_id].get("rev", 0.0)) / (1.0 + rivals)
@@ -193,13 +199,13 @@ class FakeWorld:
 	def market_forget(self, actor_id: str) -> None:
 		pass
 
-	def runs_agent_economy(self) -> bool:
-		return False
-
 	def market_sale(self, seller_id: str, material: str, tonnes: float, from_concerns: Any = None) -> None:
 		self.sales.append((seller_id, material, tonnes))
 
-	def market_purchase(self, buyer_id: str, commodity: str, tonnes: float) -> None:
+	def sells_on_book(self, node_id: str) -> bool:
+		return False
+
+	def market_purchase(self, buyer_id: str, commodity: str, tonnes: float, budget: float = 0.0) -> None:
 		self.purchases.append((buyer_id, commodity, tonnes))
 
 	def material_price(self, material: str) -> float:

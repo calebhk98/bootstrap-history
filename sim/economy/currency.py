@@ -39,8 +39,9 @@ EXPECTATION_ADJUSTMENT_SPEED = declare(
 def currency_from_coin_standard(civ_id: str, coin_standard: Mapping, currency_name: str,
                                 issuer: Optional[AgentId] = None) -> CurrencySpec:
     """Read a civilisation's `coin_standard` block. Fields used: `regime` (one of REGIMES, required),
-    `material`, `kg_per_unit`, and `mint_charge_share` (struck coin only: the share of the metal the
-    issuer keeps for striking). A regime with no metal or commodity behind it must be fiat."""
+    `material`, `kg_per_unit` (of the fine metal), `fineness` (struck coin only: the share of the coin's
+    mass that is that metal, default 1) and `mint_charge_share` (struck coin only: the share of the metal
+    the issuer keeps for striking). A regime with no metal or commodity behind it must be fiat."""
     regime = coin_standard.get("regime")
     if regime not in REGIMES:
         raise ValueError("%s: coin_standard needs a regime, one of %s (got %r)" % (civ_id, ", ".join(REGIMES), regime))
@@ -55,7 +56,13 @@ def currency_from_coin_standard(civ_id: str, coin_standard: Mapping, currency_na
         raise ValueError("%s: only a struck coin has a mint charge, not %s" % (civ_id, regime))
     if not 0.0 <= charge < 1.0:
         raise ValueError("%s: mint_charge_share must be in [0, 1)" % civ_id)
-    return CurrencySpec(currency_name, regime, material, per_unit, issuer if regime == "struck_coin" else None, charge)
+    fineness = float(coin_standard.get("fineness", 1.0))
+    if fineness != 1.0 and regime != "struck_coin":
+        raise ValueError("%s: only a struck coin has a fineness, not %s" % (civ_id, regime))
+    if not 0.0 < fineness <= 1.0:
+        raise ValueError("%s: fineness must be above 0 and at most 1" % civ_id)
+    return CurrencySpec(currency_name, regime, material, per_unit, issuer if regime == "struck_coin" else None,
+                        charge, fineness)
 
 
 def has_mint(spec: CurrencySpec) -> bool:
@@ -98,7 +105,9 @@ def debase(spec: CurrencySpec, new_backing_per_unit: float) -> CurrencySpec:
         raise ValueError("only a struck coin can be debased")
     if new_backing_per_unit <= 0.0:
         raise ValueError("a struck coin keeps some metal")
-    return dataclasses.replace(spec, backing_per_unit=new_backing_per_unit)
+    # the coin keeps its weight, so less metal in it is a lower fineness
+    return dataclasses.replace(spec, backing_per_unit=new_backing_per_unit,
+                               fineness=spec.fineness * new_backing_per_unit / spec.backing_per_unit)
 
 
 def debase_by_cut(spec: CurrencySpec, cut_share: float, restrike_share: float) -> CurrencySpec:

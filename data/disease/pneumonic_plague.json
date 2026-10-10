@@ -1,0 +1,58 @@
+{
+ "id": "pneumonic_plague",
+ "name": "Pneumonic plague (secondary, person to person)",
+ "tags": [
+  "respiratory",
+  "zoonotic"
+ ],
+ "stages": [
+  {
+   "id": "latent",
+   "infectiousness": 0.0,
+   "mean_duration_in_days": 4.3,
+   "shape": 6
+  },
+  {
+   "id": "infectious",
+   "infectiousness": 1.0,
+   "mean_duration_in_days": 2.5,
+   "shape": 4
+  }
+ ],
+ "transmissibility_per_day": 0.52,
+ "case_fatality": 1.0,
+ "immunity": {
+  "permanent": true,
+  "duration_in_days": null
+ },
+ "reproduction_number_range": [
+  1.3,
+  1.3
+ ],
+ "sources": {
+  "reproduction_number_range": {
+   "confidence": "read",
+   "source": "Gani and Leach 2004, EID (PMC3323083): about 1.3 before control, geometric offspring distribution"
+  },
+  "transmissibility_per_day": {
+   "confidence": "derived",
+   "source": "Reproduction number 1.3 divided by the infectious days"
+  },
+  "case_fatality": {
+   "confidence": "read",
+   "source": "Gani and Leach 2004 (close to 100 percent) and WHO plague fact sheet (always fatal untreated for pneumonic and septicaemic forms)"
+  },
+  "immunity": {
+   "confidence": "derived",
+   "source": "Immunity duration is moot: no case survives untreated"
+  },
+  "stage.latent": {
+   "confidence": "read",
+   "source": "Gani and Leach 2004: latent mean 4.3 days, SD 1.8, lognormal. Shape 6 is the Erlang with that mean and SD"
+  },
+  "stage.infectious": {
+   "confidence": "read",
+   "source": "Gani and Leach 2004: infectious mean 2.5 days, SD 1.2, lognormal. Shape 4 is the Erlang nearest that mean and SD"
+  }
+ }
+}

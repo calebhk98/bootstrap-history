@@ -9,10 +9,10 @@ import copy
 import math
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
-from sim.geography import (food_capacity, map_source, mechanisms, parameters, resource_links, resources_biotic,
-                           resources_catalogue, resources_endowment, resources_prospecting,
-                           resources_summary, routes_graph, routes_modes, routes_search, tile_holdings, tile_layers,
-                           ways_build)
+from sim.geography import (food_capacity, food_wild_harvest, map_source, mechanisms, parameters, resource_links, resources_biotic, rail_freight,
+                           resources_catalogue, resources_endowment, resources_mined, resources_prospecting, resources_sites,
+                           resources_summary, routes_carriage, routes_graph, routes_modes, routes_search, tile_holdings, tile_layers,
+                           ways_build, ways_works)
 
 WorldMap = map_source.WorldMap
 
@@ -46,9 +46,32 @@ def layer_value(tile_id: str, layer_id: str, world_map: Optional[WorldMap] = Non
 
 
 def food_potential(tile_id: str, technique_factors: Optional[Mapping[str, float]] = None,
-                   world_map: Optional[WorldMap] = None) -> Dict[str, Any]:
-    """Sustainable food energy of a tile by source, and the people it feeds."""
-    return food_capacity.food_potential(_map(world_map), tile_id, dict(technique_factors or {}) or None)
+                   world_map: Optional[WorldMap] = None, wild_stock: Optional[Mapping[str, Any]] = None) -> Dict[str, Any]:
+    """Sustainable food energy of a tile by source, and the people it feeds. `wild_stock` is the game's
+    {tile: {species: share of carrying capacity left}}; a missing entry is a full stock."""
+    return food_capacity.food_potential(_map(world_map), tile_id, dict(technique_factors or {}) or None, wild_stock)
+
+
+def hunted_kcal(tile_id: str, wild_stock: Optional[Mapping[str, Any]] = None,
+                world_map: Optional[WorldMap] = None) -> Dict[str, float]:
+    """{species id: kcal a year's hunting can take now} on a tile."""
+    return food_wild_harvest.hunted_kcal_by_species(_map(world_map), tile_id, wild_stock)
+
+
+def game_food_sources(world_map: Optional[WorldMap] = None) -> List[str]:
+    """The food source ids that hunting wild animals goes under."""
+    return food_wild_harvest.game_food_sources(_map(world_map))
+
+
+def draw_wild_stock(wild_stock: Mapping[str, Any], tile_id: str, kcal_taken: Mapping[str, float],
+                    world_map: Optional[WorldMap] = None) -> Dict[str, Dict[str, float]]:
+    """The game's wild stock after hunters take `kcal_taken` ({species id: kcal}) on a tile."""
+    return food_wild_harvest.draw_down(_map(world_map), wild_stock, tile_id, kcal_taken)
+
+
+def regrow_wild_stock(wild_stock: Mapping[str, Any], world_map: Optional[WorldMap] = None) -> Dict[str, Dict[str, float]]:
+    """The game's wild stock a year on: every drawn-down species regrows."""
+    return food_wild_harvest.regrow(_map(world_map), wild_stock)
 
 
 def tiles_held(civilisation: Mapping[str, Any], world_map: Optional[WorldMap] = None) -> List[str]:
@@ -62,6 +85,11 @@ def tiles_of_regions(region_labels: Iterable[str], world_map: Optional[WorldMap]
     return tile_holdings.tiles_of_regions(region_labels, _map(world_map))
 
 
+def regions_of_tiles(tile_ids: Iterable[str], world_map: Optional[WorldMap] = None) -> List[str]:
+    """Sorted region labels the tiles carry (labels only; a region owns no data)."""
+    return tile_holdings.regions_of_tiles(tile_ids, _map(world_map))
+
+
 def usable_modes(known_nodes_per_party: Iterable[Iterable[str]], world_map: Optional[WorldMap] = None) -> List[str]:
     """Route modes every party can use, from the tech nodes each holds."""
     return sorted(routes_modes.usable_modes(_map(world_map), known_nodes_per_party))
@@ -71,6 +99,12 @@ def dues_hours_per_tonne(world_map: Optional[WorldMap] = None) -> Dict[str, floa
     """{mode_id: labour-hours of tolls or port dues per tonne, charged each time a haul changes to the mode}."""
     return {mode_id: float(mode.get("dues_hours_per_tonne", 0.0))
             for mode_id, mode in sorted(routes_modes.modes(_map(world_map)).items())}
+
+
+def carriage_rates(mode_ids: Iterable[str], world_map: Optional[WorldMap] = None) -> Dict[str, Dict[str, Any]]:
+    """{mode_id: {crew_trade, crew_hours_per_tonne_km, handling_hours_per_tonne, edge_classes}} on level ground
+    for the modes that name a crew trade."""
+    return routes_carriage.carriage_rates(_map(world_map), mode_ids)
 
 
 def route(origin_tiles: Iterable[str], destination_tiles: Iterable[str], modes: Iterable[str],
@@ -112,11 +146,34 @@ def freight_links(mode_ids: Iterable[str], world_map: Optional[WorldMap] = None)
     return routes_graph.links(_map(world_map), tuple(mode_ids))
 
 
-def build_requirements(tile_a: str, tile_b: str, improvement: str,
+def build_requirements(tile_a: str, tile_b: Optional[str], improvement: str,
                        world_map: Optional[WorldMap] = None) -> Optional[Dict[str, Any]]:
-    """What building `improvement` ("road", "rail") over the land edge between two bordering tiles takes:
-    {km, grade, trade, labour_hours, materials: {material: tonnes}, node}, or None when it cannot be built."""
+    """What building `improvement` ("road", "rail", "canal", "bridge") over the land edge between two
+    bordering tiles takes, or a "port" on one coastal tile (`tile_b` the same tile or None):
+    {km, grade, trade, labour_hours, materials: {material: tonnes}, node, build_years, engineered,
+    crew_people, crew_hours_per_year}, or None when it cannot be built. Ground steeper than the way's
+    natural limit is built `engineered` at more earthwork."""
     return ways_build.requirements(_map(world_map), tile_a, tile_b, improvement)
+
+
+def train_carrier(mode_id: str, world_map: Optional[WorldMap] = None) -> Optional[Dict[str, Any]]:
+    """{inputs, fuel_material, stock_material, stock_kg} of a rail mode as a freight carrier (its physical
+    inputs per tonne-km, what the fuel and the rolling stock are made of, the stock's mass), or None when
+    the mode is not a train."""
+    mode = routes_modes.modes(_map(world_map)).get(mode_id)
+    return rail_freight.carrier_record(mode["carrier"]) if mode is not None and mode.get("model") == "rail" else None
+
+
+def improvement_key(improvement: str, tile_a: str, tile_b: str, world_map: Optional[WorldMap] = None) -> str:
+    """The key a built `improvement` is recorded under: the tile id for a port, else the edge key."""
+    return ways_works.key_of(_map(world_map), improvement, tile_a, tile_b)
+
+
+def built_km(improvements: Mapping[str, Mapping[str, Any]], improvement: str,
+             world_map: Optional[WorldMap] = None) -> float:
+    """Kilometres of `improvement` ("road", "rail", "canal"; a bridge's span or a port's quay for those works)
+    the caller's `improvements` record holds."""
+    return ways_build.built_km(_map(world_map), improvements, improvement)
 
 
 def edge_key(tile_a: str, tile_b: str) -> str:
@@ -172,6 +229,32 @@ def parameter_value(parameter_id: str, world_map: Optional[WorldMap] = None) -> 
     return parameters.parameter(_map(world_map), parameter_id)
 
 
+def mined_before(tile_ids: Iterable[str], resource_id: str, year: int,
+                 world_map: Optional[WorldMap] = None) -> Dict[str, Any]:
+    """What the known deposits of a resource in these tiles had yielded by `year`: {workings, unworked,
+    deposits_in_tiles, unit}, a working being {id, tile_id, output_per_year, years_worked, years_since_last_output}
+    in the resource's unit. Deposits with no working date are listed in `unworked`, never guessed."""
+    return resources_mined.mined_before(_map(world_map), tile_ids, resource_id, year)
+
+
+def worked_deposits(tile_ids: Iterable[str], resource_id: str, year: int, found: Iterable[Mapping[str, Any]] = (),
+                    world_map: Optional[WorldMap] = None) -> List[Dict[str, Any]]:
+    """The deposits of a resource a party holding these tiles can name: the catalogue's that were first worked by
+    `year` (or have no date), and the prospected deposits `found`; each {id, name, tile_id, resource, size_tonnes,
+    grade_kg_per_tonne, found_by}, the size None where the data gives none."""
+    return resources_sites.worked_deposits(_map(world_map), tile_ids, resource_id, year, found)
+
+
+def working_rate_tonnes_per_year(size_tonnes: float, world_map: Optional[WorldMap] = None) -> float:
+    """The most a deposit of this size yields a year."""
+    return resources_sites.working_rate_tonnes_per_year(_map(world_map), size_tonnes)
+
+
+def ore_tonnes_per_tonne(row: Mapping[str, Any]) -> float:
+    """Tonnes of ore raised per tonne of the resource held, for a `worked_deposits` row."""
+    return resources_sites.ore_tonnes_per_tonne(row)
+
+
 def prospect(tile_id: str, resource_id: str, effort: float, seed: Any,
              world_map: Optional[WorldMap] = None) -> List[Dict[str, Any]]:
     """Hidden deposits found with `effort` person-days; the same seed and effort give the same finds."""
@@ -195,6 +278,7 @@ def problems(world_map: Optional[WorldMap] = None) -> List[str]:
              for parameter_id in parameters.invalid_entries(world_map)]
     found += ["resource %r names an unknown mechanism" % row_id for row_id in mechanisms.unknown_rows(world_map)]
     found += ["route mode %r is incomplete" % mode_id for mode_id in routes_modes.invalid_entries(world_map)]
+    found += ["built work %r is incomplete" % work_id for work_id in ways_works.invalid_entries(world_map)]
     found += resources_catalogue.validate(world_map)
     return found
 

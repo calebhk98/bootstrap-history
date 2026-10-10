@@ -2,9 +2,8 @@
 opening prices. A technology raises it only through the production entries it improves and the
 goods those entries make; nothing counts completed technologies."""
 from .harness import *  # noqa: F401,F403
-from functools import partial
 
-sim = partial(sim, agent_economy=False)   # legacy: pins real output through the engine's yearly material market, which the agent economy replaces
+sim = unopened_sim   # legacy: pins real output through the engine's yearly material market, which the agent economy replaces
 
 
 import copy

@@ -92,9 +92,12 @@ class BudgetView:
 		return self._sim.notice_over(scale)
 
 	def visible_taxpayers(self) -> List[Tuple[float, float]]:
-		"""(visible scale, taxable income) of every actor the state can see: the founder and the firms."""
+		"""(visible scale, taxable income) of every actor the state can see: the seats still playing and the firms."""
 		sim = self._sim
-		payers = [(self.visible_scale_of(sim.household), max(0.0, sim.revenue()))]  # type: ignore[attr-defined]
+		payers = []
+		for seat_id in sim.playing_seats() or [sim.state.acting_seat]:
+			with sim.act_as(seat_id):
+				payers.append((self.visible_scale_of(sim.household), max(0.0, sim.revenue())))  # type: ignore[attr-defined]
 		for firm in sim.actors.active_firms():
 			payers.append((self.visible_scale_of(firm), max(0.0, firm.record.last_margin)))  # type: ignore[attr-defined]
 		return payers

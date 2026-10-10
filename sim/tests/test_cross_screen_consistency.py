@@ -78,20 +78,17 @@ _st2 = _ask(_game_b, cmd="state")
 check("...and the after figure is the one `state` prints, to the decimal",
       "net_after_project_spend" in _st2, list(_st2)[:5])
 
-# --- BREAK: `why med_cataract_couching` said "REVENUE: 500 den/yr" beside a
-# ledger crediting 166.7 for the same node - `why` overstating income
-# threefold, as a break tester put it.
+# --- BREAK: `why med_cataract_couching` printed the trade's quoted revenue beside a ledger crediting
+# the practice another figure. A practised skill's line is the practice's one income, the ledger's own row.
 _game_c = sim()
 _rwy = [_ask(_game_c, cmd="why", id="med_cataract_couching")]
-check("why says what a practice node pays YOU, not only what the trade is worth",
-      _rwy[0].get("but_it_pays_YOU") is not None
-      and _rwy[0]["but_it_pays_YOU"] < _rwy[0]["revenue"],
+check("why says what a practice node pays YOU",
+      _rwy[0].get("but_it_pays_YOU") is not None and _rwy[0]["but_it_pays_YOU"] > 0.0,
       (_rwy[0].get("revenue"), _rwy[0].get("but_it_pays_YOU")))
 _st_r = [_ask(_game_c, cmd="money")]
 _led = _st_r[0].get("where_the_money_comes_from") or {}
-check("...and that figure is the ledger's, to the decimal",
-      abs(_rwy[0]["but_it_pays_YOU"]
-          - _led.get("med_cataract_couching", -1)) < 0.05 * len(_led) + 0.06,
+check("...and that figure is the ledger's practice row, to the decimal",
+      abs(_rwy[0]["but_it_pays_YOU"] - _led.get("_your_own_practice", -1)) < 0.06,
       (_rwy[0].get("but_it_pays_YOU"), sorted(_led)[:4]))
 _rwy2 = [_ask(_game_c, cmd="why", id="horse_collar")]
 check("...and a node that is NOT your practice carries no such line",

@@ -8,6 +8,7 @@ from dataclasses import replace
 from typing import Dict, Tuple
 
 from . import location, ownership, sites, unit_cost
+from .entry_margin import margin_entry_plans
 from .entry_trial import trial_entry_plans
 from .entry import (ENTRANT_OWNER_STAKE_SHARE, UnmetDemand, entrant_loan, entry_plans, gap_beyond_spare,
                     producers_to_close, restake)
@@ -22,7 +23,8 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
                   carriage=None, bids_by_market=None) -> int:
     """Start the year's new producers; returns how many started. With the carriage table a newcomer is
     sited by location.entry_siting; without it one is built from the setup (slower on a large map). With
-    the year's bids, a market with buyers and no maker draws a trial newcomer (entry_trial.py)."""
+    the year's bids, a market whose expected price stays above its entry price draws newcomers
+    (entry_margin.py) and a market with buyers and no maker draws a trial newcomer (entry_trial.py)."""
     spare = _spare_output(setup, record, view)
     unmet = {}
     for (good, area_id), quantity in sorted(unmet_by_market.items()):
@@ -39,6 +41,8 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
                         _traded_volume(record, view, area_map), siting)
     if bids_by_market:
         planned = tuple((plan.good, view.area_of(plan.good, plan.tile)) for plan in plans)
+        plans += margin_entry_plans(setup, record, view, area_map, bids_by_market, planned, siting)
+        planned += tuple((plan.good, view.area_of(plan.good, plan.tile)) for plan in plans)
         plans += trial_entry_plans(setup, record, view, area_map, bids_by_market, planned, siting)
     for plan in plans:
         recipe = setup.recipes[plan.recipe_id]

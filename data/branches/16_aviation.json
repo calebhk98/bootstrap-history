@@ -17,7 +17,6 @@
    "silk_kg": 0.5,
    "linen_kg": 1
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0.1,
   "risk": 0.05,
@@ -54,7 +53,6 @@
    "silk_kg": 4,
    "beeswax_kg": 2
   },
-  "cap_hours": 2016.1879174129324,
   "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.1,
@@ -83,7 +81,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0,
   "risk": 0,
@@ -112,7 +109,6 @@
    "leather_kg": 4,
    "beeswax_kg": 1
   },
-  "cap_hours": 1612.950333930346,
   "up_hours": 0,
   "yrs": 1,
   "risk": 0.15,
@@ -147,7 +143,6 @@
    "silk_kg": 6,
    "shellac_kg": 1
   },
-  "cap_hours": 1209.7127504477594,
   "up_hours": 0,
   "yrs": 0.8,
   "risk": 0.12,
@@ -187,7 +182,6 @@
    "salt_kg": 1,
    "clay_kg": 1
   },
-  "cap_hours": 2419.425500895519,
   "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.2,
@@ -224,13 +218,10 @@
    "charcoal_kg": 10,
    "clay_kg": 2
   },
-  "cap_hours": 4032.375834825865,
-  "up_hours": 1209.7127504477594,
   "yrs": 1,
   "risk": 0.15,
   "sus": 0,
   "gov": 1,
-  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -261,7 +252,6 @@
    "iron_bar_kg": 0.5,
    "leather_kg": 1
   },
-  "cap_hours": 806.475166965173,
   "up_hours": 0,
   "yrs": 0.2,
   "risk": 0.08,
@@ -293,7 +283,6 @@
   "mat": {
    "sand_quartz_kg": 5
   },
-  "cap_hours": 201.61879174129325,
   "up_hours": 0,
   "yrs": 0.1,
   "risk": 0.05,
@@ -326,7 +315,6 @@
   "mat": {
    "linen_kg": 5
   },
-  "cap_hours": 1209.7127504477594,
   "up_hours": 0,
   "yrs": 0.3,
   "risk": 0.1,
@@ -360,7 +348,6 @@
    "silk_kg": 10,
    "shellac_kg": 2
   },
-  "cap_hours": 1612.950333930346,
   "up_hours": 0,
   "yrs": 0.4,
   "risk": 0.12,
@@ -396,7 +383,6 @@
    "timber_m3": 1,
    "iron_bar_kg": 20
   },
-  "cap_hours": 3024.2818761193985,
   "up_hours": 0,
   "yrs": 0.6,
   "risk": 0.18,
@@ -434,7 +420,6 @@
    "iron_bar_kg": 10,
    "aluminium_kg": 15
   },
-  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "yrs": 1.5,
   "risk": 0.2,
@@ -467,7 +452,6 @@
    "scholar": 100
   },
   "mat": {},
-  "cap_hours": 1008.0939587064662,
   "up_hours": 0,
   "yrs": 0.3,
   "risk": 0.05,
@@ -500,7 +484,6 @@
    "scholar": 200
   },
   "mat": {},
-  "cap_hours": 1612.950333930346,
   "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.1,
@@ -534,7 +517,6 @@
    "scholar": 300
   },
   "mat": {},
-  "cap_hours": 2016.1879174129324,
   "up_hours": 0,
   "yrs": 0.8,
   "risk": 0.08,
@@ -573,7 +555,6 @@
    "timber_m3": 2,
    "iron_bar_kg": 15
   },
-  "cap_hours": 2419.425500895519,
   "up_hours": 0,
   "yrs": 0.6,
   "risk": 0.1,
@@ -609,7 +590,6 @@
    "timber_m3": 1.5,
    "linen_kg": 3
   },
-  "cap_hours": 2016.1879174129324,
   "up_hours": 0,
   "yrs": 0.4,
   "risk": 0.25,
@@ -644,7 +624,6 @@
    "timber_m3": 0.5,
    "linen_kg": 2
   },
-  "cap_hours": 1612.950333930346,
   "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.2,
@@ -677,7 +656,6 @@
    "timber_m3": 0.3,
    "linen_kg": 1.5
   },
-  "cap_hours": 1209.7127504477594,
   "up_hours": 0,
   "yrs": 0.3,
   "risk": 0.15,
@@ -716,7 +694,6 @@
    "linen_kg": 1,
    "iron_bar_kg": 2
   },
-  "cap_hours": 1411.3315421890527,
   "up_hours": 0,
   "yrs": 0.3,
   "risk": 0.12,
@@ -752,7 +729,6 @@
    "timber_m3": 0.2,
    "linen_kg": 1
   },
-  "cap_hours": 806.475166965173,
   "up_hours": 0,
   "yrs": 0.2,
   "risk": 0.08,
@@ -785,7 +761,6 @@
    "timber_m3": 0.15,
    "linen_kg": 1
   },
-  "cap_hours": 705.6657710945263,
   "up_hours": 0,
   "yrs": 0.15,
   "risk": 0.08,
@@ -820,7 +795,6 @@
    "timber_m3": 0.5,
    "iron_bar_kg": 3
   },
-  "cap_hours": 1814.569125671639,
   "up_hours": 0,
   "yrs": 0.4,
   "risk": 0.12,
@@ -860,13 +834,10 @@
    "steel_plate_kg": 5,
    "iron_bar_kg": 4
   },
-  "cap_hours": 4032.375834825865,
-  "up_hours": 806.475166965173,
   "yrs": 1.2,
   "risk": 0.2,
   "sus": 10,
   "gov": 3,
-  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -894,7 +865,6 @@
    "scholar": 200
   },
   "mat": {},
-  "cap_hours": 1612.950333930346,
   "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.1,
@@ -937,13 +907,10 @@
    "aluminium_kg": 10,
    "steel_plate_kg": 3
   },
-  "cap_hours": 5040.469793532331,
-  "up_hours": 1209.7127504477594,
   "yrs": 2,
   "risk": 0.3,
   "sus": 3,
   "gov": 1,
-  "rev_hours": 10080.939587064662,
   "sch": 1,
   "art": 0,
   "conf": "C",
@@ -974,13 +941,10 @@
    "iron_bar_kg": 5,
    "aluminium_kg": 3
   },
-  "cap_hours": 3629.138251343278,
-  "up_hours": 705.6657710945263,
   "yrs": 1,
   "risk": 0.18,
   "sus": 10,
   "gov": 3,
-  "rev_hours": 5040.469793532331,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1014,13 +978,10 @@
    "iron_bar_kg": 4,
    "aluminium_kg": 4
   },
-  "cap_hours": 4032.375834825865,
-  "up_hours": 806.475166965173,
   "yrs": 1.1,
   "risk": 0.2,
   "sus": 10,
   "gov": 3,
-  "rev_hours": 5645.326168756211,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1051,7 +1012,6 @@
    "wire_drawn_kg": 5,
    "linen_kg": 5
   },
-  "cap_hours": 2016.1879174129324,
   "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.12,
@@ -1091,7 +1051,6 @@
    "steel_plate_kg": 12,
    "aluminium_kg": 8
   },
-  "cap_hours": 3024.2818761193985,
   "up_hours": 0,
   "yrs": 2.0,
   "risk": 0.15,
@@ -1138,7 +1097,6 @@
    "aluminium_kg": 15,
    "steel_plate_kg": 3
   },
-  "cap_hours": 3629.138251343278,
   "up_hours": 0,
   "yrs": 2.0,
   "risk": 0.16,
@@ -1178,7 +1136,6 @@
    "brass_kg": 2,
    "steel_noric_kg": 0.5
   },
-  "cap_hours": 1411.3315421890527,
   "up_hours": 0,
   "yrs": 0.3,
   "risk": 0.1,
@@ -1216,7 +1173,6 @@
    "brass_kg": 3.0,
    "glass_raw_kg": 0.3
   },
-  "cap_hours": 8064.75166965173,
   "up_hours": 0,
   "yrs": 0.1,
   "risk": 0.05,
@@ -1253,7 +1209,6 @@
    "steel_noric_kg": 1,
    "glass_raw_kg": 0.5
   },
-  "cap_hours": 1814.569125671639,
   "up_hours": 0,
   "yrs": 0.4,
   "risk": 0.1,
@@ -1288,7 +1243,6 @@
    "iron_bar_kg": 0.2,
    "silk_kg": 0.2
   },
-  "cap_hours": 403.2375834825865,
   "up_hours": 0,
   "yrs": 0.1,
   "risk": 0.05,
@@ -1329,7 +1283,6 @@
    "steel_plate_kg": 8.0,
    "timber_m3": 0.1
   },
-  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "yrs": 1,
   "risk": 0.15,
@@ -1365,13 +1318,10 @@
    "linen_kg": 6,
    "steel_plate_kg": 8
   },
-  "cap_hours": 4032.375834825865,
-  "up_hours": 1209.7127504477594,
   "yrs": 1.2,
   "risk": 0.2,
   "sus": 2,
   "gov": 2,
-  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -1398,13 +1348,10 @@
   "mat": {
    "brick_1000": 5
   },
-  "cap_hours": 6048.563752238797,
-  "up_hours": 1008.0939587064662,
   "yrs": 0.5,
   "risk": 0.1,
   "sus": 0,
   "gov": 2,
-  "rev_hours": 2016.1879174129324,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1431,13 +1378,10 @@
    "artisan": 80
   },
   "mat": {},
-  "cap_hours": 2016.1879174129324,
-  "up_hours": 604.8563752238797,
   "yrs": 0.4,
   "risk": 0.15,
   "sus": 1,
   "gov": 3,
-  "rev_hours": 1774.2453673233806,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1462,13 +1406,10 @@
    "scholar": 150
   },
   "mat": {},
-  "cap_hours": 1612.950333930346,
-  "up_hours": 806.475166965173,
   "yrs": 0.3,
   "risk": 0.2,
   "sus": 1,
   "gov": 3,
-  "rev_hours": 16129.50333930346,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1490,13 +1431,10 @@
    "artisan": 100
   },
   "mat": {},
-  "cap_hours": 2419.425500895519,
-  "up_hours": 1612.950333930346,
   "yrs": 0.6,
   "risk": 0.25,
   "sus": 2,
   "gov": 2,
-  "rev_hours": 2459.7492592437775,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -1528,13 +1466,10 @@
    "steel_plate_kg": 10,
    "aluminium_kg": 8
   },
-  "cap_hours": 5040.469793532331,
-  "up_hours": 1411.3315421890527,
   "yrs": 1.5,
   "risk": 0.22,
   "sus": 2,
   "gov": 1,
-  "rev_hours": 12097.127504477594,
   "sch": 1,
   "art": 0,
   "conf": "C",
@@ -1565,13 +1500,10 @@
    "steel_plate_kg": 8,
    "aluminium_kg": 6
   },
-  "cap_hours": 3629.138251343278,
-  "up_hours": 1008.0939587064662,
   "yrs": 1.2,
   "risk": 0.18,
   "sus": 1,
   "gov": 1,
-  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -1599,7 +1531,6 @@
    "chemist": 100
   },
   "mat": {},
-  "cap_hours": 2419.425500895519,
   "up_hours": 0,
   "yrs": 2.0,
   "risk": 0.1,
@@ -1640,13 +1571,10 @@
    "nickel_kg": 3,
    "copper_kg": 2
   },
-  "cap_hours": 7056.657710945264,
-  "up_hours": 2016.1879174129324,
   "yrs": 2.5,
   "risk": 0.25,
   "sus": 0,
   "gov": 2,
-  "rev_hours": 9724.074325682574,
   "sch": 1,
   "art": 0,
   "conf": "C",

@@ -1,22 +1,19 @@
-"""Foreign freight is priced from the carrier, and trade is paid in coin and carried by a fleet
+"""Foreign freight is priced from the carrier, and trade is paid in coin
 (Complaints/326, 323).
 
 Freight per tonne-km comes from the carrier's physics: travel time, the empty return where flows
 are one-sided, the carrier's capital at the market rate and losses at sea. Goods cross in coin
-metal, a persistent deficit drains the coin stock and lowers the traded price level, and a route
-lifts only what its carriers can.
+metal, and a persistent deficit drains the coin stock and lowers the traded price level.
 """
 from .harness import *  # noqa: F401,F403
-from functools import partial
 
-sim = partial(sim, agent_economy=False)   # legacy: pins freight lift and coin balances of the engine's own foreign trade; see test_economy_agent_foreign.py
+sim = unopened_sim   # the freight and the coin ledger read the engine's own figures
 
 
 from sim.engine.data import load_civ
-from sim.world import balance_of_payments, trade_between
+from sim.world import balance_of_payments
 from sim.geography import api as geography_api
 from sim.geography import freight_cost, sea_freight, transport
-from sim.world.market import MarketConditions
 
 PARTNER = "han_china_100ad"
 
@@ -57,7 +54,7 @@ def _route(destination_tiles):
         mode_costs={"cart": _rate_of(imbalance=1.0)}, held_nodes=held)
 
 
-_HAN_TILES = geography_api.tiles_of_regions(load_civ(PARTNER)["home_regions"])
+_HAN_TILES = geography_api.tiles_held(load_civ(PARTNER))
 _NEAR = geography_api.reach(_HAN_TILES[:1], ["cart"], 60.0, held_nodes={"lnd_two_wheel_cart"})
 _FAR = geography_api.reach(_HAN_TILES[:1], ["cart"], 250.0, held_nodes={"lnd_two_wheel_cart"})
 _near_tile = sorted((tile for tile in _NEAR if tile != _HAN_TILES[0]), key=_NEAR.get)[-1]
@@ -118,10 +115,8 @@ check("with no trade the home stock is its opening one and the price level is on
       r.home_price_level() == 1.0 and r.partner_price_level(PARTNER) == 1.0, None)
 r._coin_carriage_money_per_tonne = lambda civilization_id: 0.0   # carriage of coin: test_coin_carriage_and_treasury_keeping
 r._settle_flow(PARTNER, 5.0, 0.1 * home_opening, home_per_coin)
-paid = r.foreign_balance_of_payments(PARTNER)
 check("an import is paid in coin that leaves the home stock",
-      abs(r.home_coin_stock_units() - 0.9 * home_opening) < 1e-6 * home_opening
-      and paid["coin_paid_out_units"] > 0.0 and paid["goods_in_value"] > 0.0, paid)
+      abs(r.home_coin_stock_units() - 0.9 * home_opening) < 1e-6 * home_opening, r.home_coin_stock_units())
 check("...and arrives in the partner's stock, at its own coin's value",
       abs(r._foreign_ledger(PARTNER)["partner_coin_units"] * home_per_coin
           - 0.1 * home_opening) < 1e-6 * home_opening, None)
@@ -133,96 +128,3 @@ check("an import beyond the coin held is paid only as far as the stock goes",
 r._settle_flow(PARTNER, -5.0, 0.2 * home_opening, home_per_coin)
 check("an export brings coin back in",
       r.home_coin_stock_units() > 0.1 * home_opening, r.home_coin_stock_units() / home_opening)
-
-# --- a drained home economy exports more and imports less, at the same stated prices.
-
-
-def stubbed_pair(simulation, home_price, foreign_price, freight=1.0):
-    # the home price is in home money, which already follows the home coin stock
-    simulation._foreign_price_pair = lambda commodity, facts: (
-        home_price * simulation.home_price_level(), foreign_price)
-    simulation._foreign_sides = lambda commodity, facts: (True, True)
-    simulation._route_freight_per_tonne = lambda civilization, imbalance=None: freight
-    simulation._agent_cost_per_tonne = lambda civilization_id, route: 0.0
-    simulation._output_is_sourced = lambda commodity: True
-    simulation.foreign_opening = lambda civilization_id, commodity, solved: (500.0, 500.0)
-    simulation.foreign_lift_left_tonnes = lambda civilization_id, route: (1e9, 1e9)
-    simulation.household._foreign_facts_cache = None
-    return simulation
-
-
-GOOD = "silk_kg"
-level_normal = stubbed_pair(sim(civ="rome_100ad", capital=1e9), 100.0, 100.0)
-level_normal.foreign_economies = lambda: [PARTNER]
-normal_flow = level_normal.market_state(GOOD)["trade_tonnes"]
-level_drained = stubbed_pair(sim(civ="rome_100ad", capital=1e9), 100.0, 100.0)
-level_drained.foreign_economies = lambda: [PARTNER]
-level_drained._foreign_ledger(PARTNER, create=True)["home_coin_units"] = (
-    -0.5 * level_drained.home_coin_stock_units())
-drained_flow = level_drained.market_state(GOOD)["trade_tonnes"]
-check("with the home price level lowered by an outflow of coin, flows turn toward exports",
-      drained_flow < normal_flow, (normal_flow, drained_flow))
-
-# --- a route lifts only what its carriers can.
-cheap = MarketConditions(household_demand_at_anchor_tonnes=500.0, committed_demand_tonnes=0.0,
-                         society_capacity_tonnes=0.0, actor_supply_tonnes=0.0,
-                         founder_sales_tonnes=0.0, stock_tonnes=0.0, floor_ratio=0.5, ceiling_ratio=4.0)
-rich = MarketConditions(household_demand_at_anchor_tonnes=10.0, committed_demand_tonnes=0.0,
-                        society_capacity_tonnes=500.0, actor_supply_tonnes=0.0,
-                        founder_sales_tonnes=0.0, stock_tonnes=0.0, floor_ratio=0.5, ceiling_ratio=4.0)
-free_trade = trade_between.clear_trading_markets(cheap, rich, 100.0, 10.0, 1.0)
-lifted = trade_between.clear_trading_markets(cheap, rich, 100.0, 10.0, 1.0, lift_into_home_tonnes=20.0)
-check("goods flow without a limit when the price gap pays", free_trade.flow_tonnes > 20.0,
-      free_trade.flow_tonnes)
-check("a carrier capacity caps the tonnes that cross",
-      0.0 < lifted.flow_tonnes <= 20.0 + 1e-9, lifted.flow_tonnes)
-
-fleet = stubbed_pair(sim(civ="rome_100ad", capital=1e9), 100.0, 10.0)
-fleet.foreign_economies = lambda: [PARTNER]
-del fleet.foreign_lift_left_tonnes
-route = fleet._foreign_economy_facts(PARTNER)["route"]
-opening_lift = fleet.foreign_lift_capacity_tonnes(PARTNER, route)
-check("a route's opening lift is its opening carriers' tonnes a year, finite and positive",
-      0.0 < opening_lift < 1e9, opening_lift)
-fleet._foreign_ledger(PARTNER, create=True)["lift_tonnes_per_year"] = 5.0
-capped = fleet.market_state(GOOD)["trade_tonnes"]
-check("a small fleet limits the volume traded", abs(capped) <= 5.0 + 1e-6, capped)
-# Merchants adjust part of the way each year, so the flow reaches the fleet's lift over years;
-# start from a year when it already has.
-fleet.state.economy.foreign_market_book[PARTNER][GOOD]["trade_tonnes"] = -5.0
-fleet._step_market()
-ledger = fleet._foreign_ledger(PARTNER)
-check("tonnes the fleet could not lift are recorded as unmet, then the fleet grows from them",
-      ledger["lift_tonnes_per_year"] > 5.0 * (1.0 - 1.0 / sea_freight.HULL_SERVICE_LIFE_YEARS)
-      and ledger["fleet_capital"] > 0.0, ledger)
-check("the fleet grows by no more than yards can build in a year",
-      ledger["lift_tonnes_per_year"] <= max(5.0, opening_lift) * 1.1 + 5.0, ledger)
-
-# --- the ledger saves and loads, so a loaded game pays and lifts as the unbroken one does.
-saved = stubbed_pair(sim(civ="rome_100ad", capital=1e9), 100.0, 10.0)
-saved.foreign_economies = lambda: [PARTNER]
-saved._step_market()
-_save_path = os.path.join(tempfile.gettempdir(), "foreign_ledger_save_test.json")
-_protocol.save_state(saved, _save_path)
-loaded = sim(civ="rome_100ad", capital=1e9)
-_protocol.load_state(loaded, _save_path)
-os.remove(_save_path)
-check("the foreign ledger is not empty after a year of trade",
-      bool(saved.state.economy.foreign_ledger.get(PARTNER)), saved.state.economy.foreign_ledger)
-check("the foreign ledger survives a save and a load",
-      loaded.state.economy.foreign_ledger == saved.state.economy.foreign_ledger, None)
-
-# --- merchants add their own cost and a limit of capital to the route's freight (Complaints/339, 340).
-traders = stubbed_pair(sim(civ="rome_100ad", capital=1e9), 100.0, 10.0)
-traders.foreign_economies = lambda: [PARTNER]
-trader_facts = traders._foreign_economy_facts(PARTNER)
-trader_terms = traders.trader_terms(PARTNER, trader_facts, 100.0, 10.0)
-check("merchants' cost over freight is a positive share of the price",
-      0.0 < trader_terms.cost_share_of_price < 1.0, trader_terms.cost_share_of_price)
-check("merchants finance a finite tonnage a year, more where the goods are cheaper",
-      0.0 < trader_terms.capital_tonnes_out < trader_terms.capital_tonnes_in < float("inf"),
-      trader_terms)
-traders._foreign_ledger(PARTNER, create=True).update(
-    {"lift_year": traders.state.scenario.year, "merchant_capital_used": 1e30})
-check("capital already tied up this year leaves none for more trade",
-      traders.merchant_capital_left(PARTNER) == 0.0, None)

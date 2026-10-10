@@ -13,7 +13,6 @@
    "mason": 120.0
   },
   "mat": {},
-  "cap_hours": 7056.657710945264,
   "up_hours": 0,
   "yrs": 0.5,
   "risk": 0,
@@ -41,7 +40,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0,
   "risk": 0,
@@ -73,7 +71,6 @@
    "mason": 300.0
   },
   "mat": {},
-  "cap_hours": 50404.69793532331,
   "up_hours": 0,
   "yrs": 1.5,
   "risk": 0,
@@ -106,8 +103,6 @@
    "mason": 400.0
   },
   "mat": {},
-  "cap_hours": 60485.63752238797,
-  "up_hours": 3024.2818761193985,
   "yrs": 2.0,
   "risk": 0,
   "sus": 0,
@@ -134,7 +129,6 @@
    "mason": 100.0
   },
   "mat": {},
-  "cap_hours": 24194.255008955188,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0,
@@ -173,7 +167,6 @@
    "carpenter": 20.0
   },
   "mat": {},
-  "cap_hours": 2016.1879174129324,
   "up_hours": 0,
   "yrs": 0.2,
   "risk": 0,
@@ -201,7 +194,6 @@
    "carpenter": 30.0
   },
   "mat": {},
-  "cap_hours": 2419.425500895519,
   "up_hours": 0,
   "yrs": 0.2,
   "risk": 0,
@@ -233,8 +225,6 @@
    "mason": 300.0
   },
   "mat": {},
-  "cap_hours": 44356.13418308451,
-  "up_hours": 1814.569125671639,
   "yrs": 1.5,
   "risk": 0,
   "sus": 0,
@@ -258,7 +248,6 @@
    "potter": 80.0
   },
   "mat": {},
-  "cap_hours": 4032.375834825865,
   "up_hours": 0,
   "yrs": 0.3,
   "risk": 0,
@@ -281,7 +270,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0,
   "risk": 0,
@@ -309,7 +297,6 @@
    "mason": 250.0
   },
   "mat": {},
-  "cap_hours": 36291.382513432785,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0,
@@ -334,7 +321,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0,
   "risk": 0,
@@ -362,7 +348,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0,
   "risk": 0,
@@ -385,7 +370,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0,
   "risk": 0,
@@ -417,8 +401,6 @@
    "iron_bar_kg": 50.0,
    "wood_kg": 200.0
   },
-  "cap_hours": 14113.315421890527,
-  "up_hours": 2016.1879174129324,
   "yrs": 0,
   "risk": 0,
   "sus": 0,
@@ -451,7 +433,6 @@
    "timber_m3": 3,
    "iron_bar_kg": 15
   },
-  "cap_hours": 1008.0939587064662,
   "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.1,
@@ -484,7 +465,6 @@
    "timber_m3": 2.0,
    "wood_kg": 250.0
   },
-  "cap_hours": 7056.657710945264,
   "up_hours": 0,
   "yrs": 0.3,
   "risk": 0.05,
@@ -514,8 +494,6 @@
   "mat": {
    "timber_m3": 2.5
   },
-  "cap_hours": 806.475166965173,
-  "up_hours": 120.97127504477595,
   "yrs": 0.3,
   "risk": 0.08,
   "sus": 0,
@@ -545,7 +523,6 @@
    "timber_m3": 8,
    "iron_bar_kg": 50
   },
-  "cap_hours": 3024.2818761193985,
   "up_hours": 0,
   "yrs": 1,
   "risk": 0.15,
@@ -579,7 +556,6 @@
   "mat": {
    "cast_iron_kg": 80
   },
-  "cap_hours": 4032.375834825865,
   "up_hours": 0,
   "yrs": 0.8,
   "risk": 0.2,
@@ -608,7 +584,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0,
   "risk": 0,
@@ -641,7 +616,6 @@
   "mat": {
    "iron_bar_kg": 120
   },
-  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "yrs": 1.5,
   "risk": 0.1,
@@ -674,13 +648,10 @@
   "mat": {
    "iron_bar_kg": 20
   },
-  "cap_hours": 1612.950333930346,
-  "up_hours": 201.61879174129325,
   "yrs": 0.5,
   "risk": 0.08,
   "sus": 0,
   "gov": 0,
-  "rev_hours": 1008.0939587064662,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -706,7 +677,6 @@
   "mat": {
    "iron_bar_kg": 250
   },
-  "cap_hours": 10080.939587064662,
   "up_hours": 0,
   "yrs": 2,
   "risk": 0.15,
@@ -737,7 +707,6 @@
    "scholar": 400
   },
   "mat": {},
-  "cap_hours": 4032.375834825865,
   "up_hours": 0,
   "yrs": 1,
   "risk": 0.1,
@@ -766,7 +735,6 @@
    "scholar": 300
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0.8,
   "risk": 0.05,
@@ -796,7 +764,6 @@
    "scholar": 400
   },
   "mat": {},
-  "cap_hours": 1008.0939587064662,
   "up_hours": 0,
   "yrs": 1.2,
   "risk": 0.1,
@@ -825,7 +792,6 @@
    "scholar": 250
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0.6,
   "risk": 0.05,
@@ -853,7 +819,6 @@
    "scholar": 400
   },
   "mat": {},
-  "cap_hours": 1008.0939587064662,
   "up_hours": 0,
   "yrs": 1,
   "risk": 0.12,
@@ -883,7 +848,6 @@
    "scholar": 600
   },
   "mat": {},
-  "cap_hours": 2016.1879174129324,
   "up_hours": 0,
   "yrs": 2,
   "risk": 0.1,
@@ -910,7 +874,6 @@
    "scholar": 200
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.05,
@@ -938,7 +901,6 @@
    "artisan": 200
   },
   "mat": {},
-  "cap_hours": 4032.375834825865,
   "up_hours": 0,
   "yrs": 1,
   "risk": 0.1,
@@ -967,7 +929,6 @@
   "mat": {
    "timber_m3": 5
   },
-  "cap_hours": 2016.1879174129324,
   "up_hours": 0,
   "yrs": 0.8,
   "risk": 0.1,
@@ -995,7 +956,6 @@
   "mat": {
    "timber_m3": 1
   },
-  "cap_hours": 1008.0939587064662,
   "up_hours": 0,
   "yrs": 0.3,
   "risk": 0.15,
@@ -1024,8 +984,6 @@
    "timber_m3": 8,
    "iron_bar_kg": 40
   },
-  "cap_hours": 6048.563752238797,
-  "up_hours": 403.2375834825865,
   "yrs": 1.2,
   "risk": 0.2,
   "sus": 0,
@@ -1054,7 +1012,6 @@
   "mat": {
    "iron_bar_kg": 80
   },
-  "cap_hours": 10080.939587064662,
   "up_hours": 0,
   "yrs": 1.5,
   "risk": 0.3,
@@ -1085,7 +1042,6 @@
    "scholar": 500
   },
   "mat": {},
-  "cap_hours": 3024.2818761193985,
   "up_hours": 0,
   "yrs": 1.5,
   "risk": 0.1,
@@ -1116,7 +1072,6 @@
    "timber_m3": 4,
    "iron_bar_kg": 30
   },
-  "cap_hours": 4032.375834825865,
   "up_hours": 0,
   "yrs": 1,
   "risk": 0.2,
@@ -1148,8 +1103,6 @@
   "mat": {
    "iron_bar_kg": 100
   },
-  "cap_hours": 8064.75166965173,
-  "up_hours": 1008.0939587064662,
   "yrs": 2,
   "risk": 0.25,
   "sus": 0,
@@ -1179,8 +1132,6 @@
    "brick_1000": 200,
    "lime_kg": 100
   },
-  "cap_hours": 10080.939587064662,
-  "up_hours": 1008.0939587064662,
   "yrs": 2,
   "risk": 0.15,
   "sus": 0,
@@ -1213,8 +1164,6 @@
   "mat": {
    "lime_kg": 80
   },
-  "cap_hours": 8064.75166965173,
-  "up_hours": 806.475166965173,
   "yrs": 2,
   "risk": 0.2,
   "sus": 0,
@@ -1245,8 +1194,6 @@
   "mat": {
    "timber_m3": 2
   },
-  "cap_hours": 6048.563752238797,
-  "up_hours": 1008.0939587064662,
   "yrs": 1.5,
   "risk": 0.25,
   "sus": 0,
@@ -1278,8 +1225,6 @@
    "brick_1000": 50,
    "iron_bar_kg": 30
   },
-  "cap_hours": 4032.375834825865,
-  "up_hours": 604.8563752238797,
   "yrs": 1,
   "risk": 0.1,
   "sus": 0,
@@ -1299,6 +1244,8 @@
    "civ_aqueduct_roman",
    "analytical_chemistry"
   ],
+  "requires_running": ["civ_aqueduct_roman"],
+  "_internal": "[GATE: Draws on a water supply that is built and kept in service; with the aqueduct shut there is no flow to treat, lift or distribute.]",
   "kb": "85_transport_civil.md",
   "ph": 200,
   "lab": {
@@ -1308,8 +1255,6 @@
   "mat": {
    "alum_kg": 50
   },
-  "cap_hours": 5040.469793532331,
-  "up_hours": 806.475166965173,
   "yrs": 1.2,
   "risk": 0.1,
   "sus": 0,
@@ -1332,6 +1277,8 @@
    "bellows_water_blown",
    "civ_aqueduct_roman"
   ],
+  "requires_running": ["civ_aqueduct_roman"],
+  "_internal": "[GATE: Draws on a water supply that is built and kept in service; with the aqueduct shut there is no flow to treat, lift or distribute.]",
   "kb": "85_transport_civil.md",
   "ph": 150,
   "lab": {
@@ -1341,13 +1288,10 @@
   "mat": {
    "iron_bar_kg": 80
   },
-  "cap_hours": 6048.563752238797,
-  "up_hours": 1008.0939587064662,
   "yrs": 1,
   "risk": 0.15,
   "sus": 0,
   "gov": 2,
-  "rev_hours": 2016.1879174129324,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1364,6 +1308,8 @@
   "pre": [
    "civ_pumping_station"
   ],
+  "requires_running": ["civ_pumping_station"],
+  "_internal": "[GATE: The tower is filled by the pumping station and holds pressure only while it lifts water into it.]",
   "kb": "85_transport_civil.md",
   "ph": 100,
   "lab": {
@@ -1374,13 +1320,10 @@
    "timber_m3": 4,
    "iron_bar_kg": 40
   },
-  "cap_hours": 3024.2818761193985,
-  "up_hours": 403.2375834825865,
   "yrs": 0.8,
   "risk": 0.1,
   "sus": 0,
   "gov": 1,
-  "rev_hours": 1008.0939587064662,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1394,6 +1337,7 @@
   "pre": [
    "civ_sewer_roman"
   ],
+  "requires_running": ["civ_sewer_roman"],
   "kb": "85_transport_civil.md",
   "ph": 120,
   "lab": {
@@ -1403,8 +1347,6 @@
   "mat": {
    "brick_1000": 80
   },
-  "cap_hours": 16129.50333930346,
-  "up_hours": 604.8563752238797,
   "yrs": 5.0,
   "risk": 0.1,
   "sus": 0,
@@ -1419,7 +1361,7 @@
   ],
   "build_yrs": 2,
   "adopt_yrs": 5,
-  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.] [GATE: Takes its flow from, or is laid into, a sewer that is built and kept clear; with the sewer shut it has nothing to act on.]"
  },
  {
   "id": "civ_sewage_treatment",
@@ -1430,6 +1372,7 @@
    "civ_sewer_separate",
    "germ_theory"
   ],
+  "requires_running": ["civ_sewer_separate"],
   "kb": "85_transport_civil.md",
   "ph": 200,
   "lab": {
@@ -1439,8 +1382,6 @@
   "mat": {
    "iron_bar_kg": 60
   },
-  "cap_hours": 6048.563752238797,
-  "up_hours": 1209.7127504477594,
   "yrs": 1.5,
   "risk": 0.15,
   "sus": 0,
@@ -1453,7 +1394,7 @@
   "traits": [
    "infrastructure"
   ],
-  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.] [GATE: Treatment works receive what the separate foul sewer collects; with that sewer shut there is no foul flow.]"
  },
  {
   "id": "civ_steel_frame",
@@ -1478,13 +1419,10 @@
   "mat": {
    "steel_plate_kg": 800.0
   },
-  "cap_hours": 60485.63752238797,
-  "up_hours": 10080.939587064662,
   "yrs": 2,
   "risk": 0.1,
   "sus": 0,
   "gov": 1,
-  "rev_hours": 10080.939587064662,
   "sch": 2,
   "art": 0,
   "conf": "B",
@@ -1510,8 +1448,6 @@
    "iron_bar_kg": 60,
    "glass_raw_kg": 100
   },
-  "cap_hours": 6048.563752238797,
-  "up_hours": 604.8563752238797,
   "yrs": 1,
   "risk": 0.05,
   "sus": 0,
@@ -1543,13 +1479,10 @@
   "mat": {
    "iron_bar_kg": 250.0
   },
-  "cap_hours": 24194.255008955188,
-  "up_hours": 4032.375834825865,
   "yrs": 1.5,
   "risk": 0.1,
   "sus": 0,
   "gov": 2,
-  "rev_hours": 10080.939587064662,
   "sch": 1,
   "art": 0,
   "conf": "A",
@@ -1576,8 +1509,6 @@
   "mat": {
    "steel_plate_kg": 80
   },
-  "cap_hours": 4032.375834825865,
-  "up_hours": 604.8563752238797,
   "yrs": 1,
   "risk": 0.1,
   "sus": 0,
@@ -1604,8 +1535,6 @@
   "mat": {
    "steel_plate_kg": 70
   },
-  "cap_hours": 5040.469793532331,
-  "up_hours": 806.475166965173,
   "yrs": 1.2,
   "risk": 0.12,
   "sus": 0,
@@ -1634,8 +1563,6 @@
   "mat": {
    "steel_plate_kg": 120
   },
-  "cap_hours": 12097.127504477594,
-  "up_hours": 1209.7127504477594,
   "yrs": 2,
   "risk": 0.1,
   "sus": 0,
@@ -1664,7 +1591,6 @@
   "mat": {
    "steel_plate_kg": 100
   },
-  "cap_hours": 10080.939587064662,
   "up_hours": 0,
   "yrs": 1.8,
   "risk": 0.12,
@@ -1696,8 +1622,6 @@
   "mat": {
    "steel_plate_kg": 50
   },
-  "cap_hours": 3024.2818761193985,
-  "up_hours": 403.2375834825865,
   "yrs": 0.8,
   "risk": 0.08,
   "sus": 0,
@@ -1726,13 +1650,10 @@
   "mat": {
    "glass_raw_kg": 100
   },
-  "cap_hours": 4032.375834825865,
-  "up_hours": 604.8563752238797,
   "yrs": 1.2,
   "risk": 0.15,
   "sus": 2,
   "gov": 1,
-  "rev_hours": 2016.1879174129324,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -1760,7 +1681,6 @@
    "brick_1000": 100,
    "clay_kg": 50
   },
-  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "yrs": 1,
   "risk": 0.1,
@@ -1789,7 +1709,6 @@
    "scholar": 400
   },
   "mat": {},
-  "cap_hours": 2016.1879174129324,
   "up_hours": 0,
   "yrs": 1.5,
   "risk": 0.05,
@@ -1823,7 +1742,6 @@
   "mat": {
    "iron_bar_kg": 15
   },
-  "cap_hours": 2016.1879174129324,
   "up_hours": 0,
   "yrs": 0.4,
   "risk": 0.05,
@@ -1853,13 +1771,10 @@
    "brass_kg": 20,
    "glass_raw_kg": 5
   },
-  "cap_hours": 5040.469793532331,
-  "up_hours": 201.61879174129325,
   "yrs": 1,
   "risk": 0.08,
   "sus": 0,
   "gov": 1,
-  "rev_hours": 1008.0939587064662,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1882,7 +1797,6 @@
   "mat": {
    "brass_kg": 10
   },
-  "cap_hours": 4032.375834825865,
   "up_hours": 0,
   "yrs": 0.8,
   "risk": 0.05,
@@ -1911,7 +1825,6 @@
    "scholar": 300
   },
   "mat": {},
-  "cap_hours": 4032.375834825865,
   "up_hours": 0,
   "yrs": 1,
   "risk": 0.1,
@@ -1947,13 +1860,10 @@
    "brick_1000": 150,
    "iron_bar_kg": 50
   },
-  "cap_hours": 8064.75166965173,
-  "up_hours": 1209.7127504477594,
   "yrs": 1.5,
   "risk": 0.15,
   "sus": 0,
   "gov": 3,
-  "rev_hours": 4032.375834825865,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1981,13 +1891,10 @@
    "timber_m3": 6,
    "brick_1000": 50
   },
-  "cap_hours": 5040.469793532331,
-  "up_hours": 604.8563752238797,
   "yrs": 1,
   "risk": 0.12,
   "sus": 0,
   "gov": 2,
-  "rev_hours": 2016.1879174129324,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -2016,13 +1923,10 @@
    "timber_m3": 2,
    "iron_bar_kg": 20
   },
-  "cap_hours": 2016.1879174129324,
-  "up_hours": 201.61879174129325,
   "yrs": 0.6,
   "risk": 0.1,
   "sus": 0,
   "gov": 1,
-  "rev_hours": 1008.0939587064662,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2048,13 +1952,10 @@
    "iron_bar_kg": 100.0,
    "timber_m3": 20.0
   },
-  "cap_hours": 60485.63752238797,
-  "up_hours": 8064.75166965173,
   "yrs": 1,
   "risk": 0.15,
   "sus": 0,
   "gov": 2,
-  "rev_hours": 2016.1879174129324,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2081,7 +1982,6 @@
    "brick_1000": 50,
    "sand_quartz_kg": 100
   },
-  "cap_hours": 2016.1879174129324,
   "up_hours": 0,
   "yrs": 0.8,
   "risk": 0.08,
@@ -2106,6 +2006,7 @@
    "arc_light_lamp",
    "power_grid"
   ],
+  "requires_running": ["power_grid"],
   "kb": "85_transport_civil.md",
   "ph": 120,
   "lab": {
@@ -2114,8 +2015,6 @@
   "mat": {
    "copper_kg": 15
   },
-  "cap_hours": 4032.375834825865,
-  "up_hours": 3,
   "yrs": 1,
   "risk": 0.1,
   "sus": 0,
@@ -2128,6 +2027,6 @@
   "traits": [
    "infrastructure"
   ],
-  "_internal": "[HEURISTIC: yearly upkeep taken as one percent of the construction labour hours (repair and keeping the works in service); no wear or failure model yet.] [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
+  "_internal": "[HEURISTIC: yearly upkeep taken as one percent of the construction labour hours (repair and keeping the works in service); no wear or failure model yet.] [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.] [GATE: Operates only on a running grid: it draws mains power from it, so a shut or never-built grid leaves it dead. Knowledge of the technique stays in pre.]"
  }
 ]

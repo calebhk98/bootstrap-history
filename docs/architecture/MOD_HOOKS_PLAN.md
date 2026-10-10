@@ -1,5 +1,7 @@
 # Mod hooks plan: land tiles, commands and new actor kinds
 
+Status: commands, policies, actor kinds and mod code (stages 2 to 4) are built, as described in `mods/README.md`; the land-tile readers of section 1.1 are the work that remains outside Complaint 118.
+
 Complaint 118 left three things a mod cannot do: add land tiles, add commands, add actor kinds.
 This document says how each is discovered today, where a mod would hook in, what blocks it, the
 mechanism proposed, a staged plan with tests, and an audit of other places where adding content
@@ -55,10 +57,9 @@ answer for it. So the mechanism exists. What blocks real use:
 5. **No dependency check on map ids.** `mods_ids.check_declared_dependencies` scans tech, recipe and
    civilisation data; it does not scan geography files, so a mod that places a tile in another mod's
    region does not need to declare that mod.
-6. **Civilisation start data names regions, not tiles.** `home_regions` in a civilisation file are
-   region ids; a region's tiles are the tiles labelled with it (`loading._region_to_tiles`). A mod
-   tile joins a civilisation by naming that civilisation's region in `old_region`, or by a mod
-   civilisation listing a mod region. That is workable; it only needs validation (a region with no
+6. **Civilisation start data names tiles.** Shipped civilisation files list `home_tiles`; a mod
+   civilisation may list `home_regions` labels instead (the tiles carrying them). A mod tile joins a
+   shipped civilisation by a patch that replaces its `home_tiles`, or a mod civilisation listing a mod region. That is workable; it only needs validation (a region with no
    tiles, a tile naming no region).
 
 ### 1.2 Commands

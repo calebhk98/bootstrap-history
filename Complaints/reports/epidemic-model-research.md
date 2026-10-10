@@ -2,6 +2,15 @@
 
 Status: research report, no code changed. Written for the owner's decision on Complaint 386.
 
+Revision 2026-10-09 (review pass): the owner decided on 2026-10-06 to replace the authored fraction with
+a population-level model that spreads through trade and geography and responds to technology. This pass
+checked the report against the current code, closed research gaps and added Section 11 (build-ready
+detail: sub-year stepping, virgin-soil versus endemic parameters, Americas validation range, codebase
+hookup, first code step and test). Everything corrected in place is marked "[corrected 2026-10-09]";
+Section 11.1 lists every change. Source strength tags: `read` (opened and read, possibly only an
+abstract, said so), `summary` (seen only in a search-result summary, page not opened), `recalled`
+(standard literature not re-verified), `disputed` (sources disagree).
+
 ## 0. Summary
 
 Replace the authored "fraction lost per wave, any year of a window" hazard with a
@@ -38,8 +47,20 @@ Read from the code (no numbers stated, run the commands to measure).
   and a note. `data/civilizations/mexica_1500.json` "Old World epidemics on
   contact" is one such entry.
 - `sim/engine/society_hazards.py` rolls these in `_shock_staff_loss`; the chance of
-  a wave per year in the window is a constant (see `sim/engine/fog.py`, grep
-  `staff_loss_wave_chance_per_year`); each wave removes the authored share.
+  a wave per year in the window is the declared temporary heuristic
+  `STAFF_LOSS_HAZARD_ANNUAL_CHANCE` in the same file (grep it); `sim/engine/fog.py` repeats the same
+  number as a literal for the player's forecast (grep `staff_loss_wave_chance_per_year`), so it must
+  be removed in two places [corrected 2026-10-09: the earlier text pointed only at fog.py]. Each wave
+  removes the authored share: `staff_loss_exposure` applies the relief from technology,
+  `apply_staff_survival` thins the founder's household staff, and `_apply_population_mortality_shock`
+  in `sim/engine/core.py` cuts the single national `Population` by band, weighted by the starvation
+  vulnerability ratios (which core.py itself labels a temporary heuristic, because those ratios were
+  sourced for famine, not epidemics).
+- The engine holds one national `Population` (`sim.population`), not one per tile. Tile populations
+  are derived by multiplying the national total by a share from `sim.geography.api.settlement`
+  (`population_share`, from food capacity); see `sim/engine/economy_port_setup.py` and
+  `economy_port_year.py` [corrected 2026-10-09: Section 6.2 earlier assumed people by tile and band
+  come from demography; they do not, see Section 11.4].
 - Technology reduces a wave through `hazard_counters` entries on tree nodes
   (`kind`, `share`, `label`, `order`, optional `requires_running`) combined in
   `sim/engine/hazard_relief.py`, with a residue once an institution is closed
@@ -303,10 +324,10 @@ cites its source per field; ranges, not points, go in the `validate` check.
 | Plague, bubonic | Depends on the vector route; Dean et al. (2018) fit a human ectoparasite model to nine European outbreaks better than pneumonic or rodent models (Park et al. 2018 dispute the inference; `read`: Dean et al. 2018, PMC5819418, the ectoparasite model had the lowest BIC for all outbreaks except Eyam and Givry, so "better" holds for seven of nine; ectoparasite R0 1.48 to 1.91 across the nine cities) | One to seven days incubation (`read`: WHO plague fact sheet) | Thirty to sixty percent for the bubonic type (`read`: WHO plague fact sheet) | Partial, duration poorly constrained (open) | Rodent and flea epizootic, human lice and fleas, goods and people carry vectors | `read` for WHO figures and Dean outbreak count; Park critique `read` second hand: Dean et al. 2018 reply, PNAS 115(34):E7894-E7895, PMC6112737, which summarises Park et al.'s three objections (a mixed pneumonic and rat-flea model is not excluded; omitted incubation periods and questioned priors; uncertainty possibly understated); Park et al.'s own letter not opened |
 | Plague, pneumonic (secondary) | About 1.3 before control, variance about 3.1, geometric offspring distribution (`read`: Gani and Leach 2004, EID, PMC3323083) | Latent mean 4.3 days (SD 1.8) and infectious mean 2.5 days (SD 1.2), lognormal (`read`: same paper) | Close to 100 percent in the Gani and Leach review; always fatal untreated for pneumonic and septicaemic forms (`read`: WHO plague fact sheet) | n/a | Respiratory, only from a pneumonic case | `read` |
 | Smallpox (variola major) | 3.5 to 6 in isolated pre-twentieth century populations with negligible herd immunity (`read`: Gani and Leach 2001, Nature, abstract via Europe PMC; the same abstract says earlier applied estimates ranged from 1.5 to above 20, so older estimates are `disputed`) | Incubation averages about 12 to 14 days, range 7 to 17 (corrected from "about 12"; `read`: CDC smallpox overview, stacks.cdc.gov/view/cdc/26503); contagious from fever onset, most from rash, until the last scab falls off (`read`: same CDC document) | About 30 percent overall; variola minor 1 percent or less (`read`: same CDC document) | Lifelong after recovery (`recalled`, not found in the CDC document and not found in a source on infection-derived immunity). Vaccination: antibody stable 1 to 75 years, T-cell half-life 8 to 15 years, over 90 percent of those vaccinated 25 to 75 years earlier kept humoral or cellular immunity (`read`: Hammarlund et al. 2003, Nature Medicine 9:1131, nm1273, abstract via CIDRAP summary https://www.cidrap.umn.edu/smallpox/protective-effect-smallpox-vaccine-may-last-decades and a search abstract; this is vaccinia, not variola) | Respiratory and fomites; no animal reservoir (`recalled`) | `read` except immunity duration after infection |
-| Measles | Often cited 12 to 18, but estimates vary more widely than that range (`read`: Guerra et al. 2017, Lancet Infect Dis, abstract via Europe PMC; 58 estimates from 18 studies) | Incubation about two weeks (`read`: Hektoen International summary of Panum, secondary source); infectious period `recalled`, verify | 2.8 percent in the 1846 Faroe epidemic, 6100 of 7864 residents infected, 170 deaths (`read`: Hektoen International summary of Panum, secondary source); higher with malnutrition and in first-contact outbreaks (`recalled`) | Lifelong (`read`: Panum 1846 via Hektoen, no reinfection after 65 years) | Respiratory; needs a population of the order of a few hundred thousand to persist (critical community size `disputed`, range 250 thousand to 1 million: Bartlett 1957 gives 250 to 300 thousand from England and Wales data, Black 1966 island data above 500 thousand, and appropriately parametrised models give 500 thousand to 1 million; `read`: Conlan, Rohani, Lloyd, Keeling and Grenfell 2009, J R Soc Interface, PMC2842776, which also says the value varies with birth rate and social structure; Bartlett and Black read second hand; Keeling and Grenfell 1997, Science 275:65, abstract only, defines the threshold without a number in the abstract; Ferrari et al. 2008 not opened) | `read` for Faroe and R0 range; critical community size `read` second hand, `disputed` |
+| Measles | Often cited 12 to 18, but estimates vary more widely than that range (`read`: Guerra et al. 2017, Lancet Infect Dis, abstract via Europe PMC; 58 estimates from 18 studies) | Incubation about two weeks (`read`: Hektoen International summary of Panum, secondary source); infectious from about four days before to four days after rash onset, rash about 14 days after exposure with a range of 7 to 21 (`summary`: CDC clinician measles materials and Pink Book chapter 13 as reported by search results, https://www.cdc.gov/vaccines/pubs/pinkbook/meas.html, page text not opened; incubation 10 to 12 days appears in a CDC slide deck, so the sources differ by a day or two) [filled 2026-10-09] | 2.8 percent in the 1846 Faroe epidemic, 6100 of 7864 residents infected, 170 deaths (`read`: Hektoen International summary of Panum, secondary source); higher with malnutrition and in first-contact outbreaks (`recalled`) | Lifelong (`read`: Panum 1846 via Hektoen, no reinfection after 65 years) | Respiratory; needs a population of the order of a few hundred thousand to persist (critical community size `disputed`, range 250 thousand to 1 million: Bartlett 1957 gives 250 to 300 thousand from England and Wales data, Black 1966 island data above 500 thousand, and appropriately parametrised models give 500 thousand to 1 million; `read`: Conlan, Rohani, Lloyd, Keeling and Grenfell 2009, J R Soc Interface, PMC2842776, which also says the value varies with birth rate and social structure; Bartlett and Black read second hand; Keeling and Grenfell 1997, Science 275:65, abstract only, defines the threshold without a number in the abstract; Ferrari et al. 2008 not opened) | `read` for Faroe and R0 range; critical community size `read` second hand, `disputed` |
 | Cholera | 2.06 to 2.78 in the 2010 Haiti epidemic with mixed person and water routes (`read`: Tuite et al. 2011, Ann Intern Med, PDF opened: best fit about 2.78, plausible range 2.06 to 2.78; a recalibration to January 2011 data gave 2.90) | Median incubation 1.4 days (95 percent CI 1.3 to 1.6), 95 percent of cases by about 4.4 days (`read`: Azman et al. 2013, J Infect, systematic review, PMC3677557, abstract via Europe PMC); hours to five days (`read`: MSF clinical guidelines) | Up to 50 percent for untreated severe cholera; 1 percent or less when treated (`read`: MSF clinical guidelines; "below one percent" corrected to "1 percent or less") | Estimates range from a few months to 9 years; strong evidence of protection at 3 years in observational and challenge studies, while serological markers return to baseline within 1 year; subclinical infection protects less (`read`: Leung and Matrajt 2021, PLoS Negl Trop Dis, PMC8136710, abstract and text; corrected from "short, months to a few years"; `disputed`, range months to 9 years) | Water, aquatic reservoir, rainfall and temperature forced (Codeco 2001; Rinaldo, Bertuzzo and coworkers' spatially explicit hydrological network models of Haiti) | `read` for R0, incubation, fatality and immunity |
 | Malaria (falciparum) | Estimates range from about one to over three thousand, a wide spread driven by mosquito biting rate (`read`: Smith et al. 2007, PLoS Biol 5:e42, PMC1802755, summary via Europe PMC: 121 African populations; the earlier link PMC3128496 was the wrong paper) | Mosquito extrinsic incubation temperature dependent; optimum transmission 25 C and a dramatic decline above 28 C (`read`: Mordecai et al. 2013, Ecol Lett, abstract via Europe PMC); the "17 to 34 C" limits are not in the abstract and stay `recalled` | Concentrated in young children; adults acquire partial immunity with exposure (`read` in part: Doolan, Dobano and Baird 2009, Clin Microbiol Rev, PMC2620631, first 100000 characters only; the Papua transmigrant data show an age-dependent pattern after 18 to 24 months of exposure; the review says the concentration in young children is not settled as exposure alone) | Partial, maintained by repeated exposure, lost without it (`read`: same review, "in the absence of continual exposure, the solid immunity against severe disease is apparently relatively short lived" and adults removed from exposure lose it at least temporarily); genetic resistance in endemic populations: sickle haemoglobin, Duffy negativity, G6PD deficiency, thalassaemia | Anopheles vector, human reservoir; entomological inoculation rate below one to above one thousand bites per person per year across Africa (`recalled`; not found in an opened source) | `read` for R0 range and optimum temperature; thermal limits and EIR range unverified |
-| Epidemic typhus | Not sourced; derive from a louse model (the Dean et al. 2018 louse parameters are a starting point; `read`, PMC5819418: body louse carrying capacity 15 per person, louse infectious period 3 days, lice growth rate 0.11 per day, human flea transmission rate 0.05) | Louse borne, Rickettsia prowazekii | 10 to 30 percent of untreated clinical cases, higher in debilitated populations and the elderly, up to 60 percent or more reported in untreated cases in the elderly or debilitated (`read`: CFSPH typhus fact sheet, which summarises the literature; Raoult and Walker chapter not opened); "about 20 percent in healthy adults" is `snippet`: a search result states 20 percent in otherwise healthy individuals and 60 percent in the elderly or debilitated, but the Wikipedia Epidemic typhus page opened (first 100000 characters) gives only about 40 percent overall and 10 to 60 percent, so no opened source confirms it | Long, with recrudescent Brill-Zinsser disease (`read`: CFSPH typhus fact sheet, reactivation years after infection when immunity wanes) | Body louse; crowding, cold, cloth and war and famine drive it | `read` for fatality and recrudescence |
+| Epidemic typhus | Not sourced; a 2026-10-09 search found no published R0 for epidemic typhus, so the file must derive it from a louse model and carry no sourced R0 range (validate then checks only that the implied value is finite and above one for crowded louse-infested tiles). Louse becomes infective 2 to 6 days after an infected meal, patients infect lice during fever and perhaps 2 to 3 days after (`summary`: search result quoting a Public Health Agency of Canada pathogen safety data sheet, page not opened); derive from a louse model (the Dean et al. 2018 louse parameters are a starting point; `read`, PMC5819418: body louse carrying capacity 15 per person, louse infectious period 3 days, lice growth rate 0.11 per day, human flea transmission rate 0.05) | Louse borne, Rickettsia prowazekii | 10 to 30 percent of untreated clinical cases, higher in debilitated populations and the elderly, up to 60 percent or more reported in untreated cases in the elderly or debilitated (`read`: CFSPH typhus fact sheet, which summarises the literature; Raoult and Walker chapter not opened); "about 20 percent in healthy adults" is `snippet`: a search result states 20 percent in otherwise healthy individuals and 60 percent in the elderly or debilitated, but the Wikipedia Epidemic typhus page opened (first 100000 characters) gives only about 40 percent overall and 10 to 60 percent, so no opened source confirms it | Long, with recrudescent Brill-Zinsser disease (`read`: CFSPH typhus fact sheet, reactivation years after infection when immunity wanes) | Body louse; crowding, cold, cloth and war and famine drive it | `read` for fatality and recrudescence |
 | Influenza (pandemic) | 1918 strain: median 2 (interquartile range 1.7 to 2.3) over 45 US cities from early data, 2.7 (2.3 to 3.4) over the period of fastest growth (`read`: Mills et al. 2004, PMC7095078; corrected: the earlier "1.9 to 4.1" were the assumed latent and infectious periods in days, not R); Biggerstaff et al. 2014 medians: 1918 1.80 (IQR 1.47 to 2.27), 1957 1.65, 1968 1.80, 2009 1.46, seasonal 1.28 (IQR 1.19 to 1.37) (`read`: abstract via Europe PMC; seasonal corrected from "close to one and a third"); 1918 is `disputed` between the two reviews, medians 1.8 to 2.7 | Mean latent period 1.9 days and infectious period 4.1 days (`read`: Mills et al. 2004, assumed values) | Strongly strain dependent; 1918 was far more lethal than other pandemics and age distinct (`recalled`) | Short to long, antigenic drift handled by waning to susceptible | Respiratory; humidity forced; animal reservoir spillover | `read` for R and periods |
 
 Two points for the data design, from the table:
@@ -541,7 +562,7 @@ ratio as plain data through the adapter rather than importing it.
 
 Inputs per year (a `YearInputs` record, plain data):
 
-- from demography (through the adapter): people by tile and age band; the `nutrition_ratio` by tile;
+- from demography (through the adapter): the national people by age band, split to tiles by the settlement share (Section 11.4) [corrected 2026-10-09]; the `nutrition_ratio` (national today, per tile once agriculture reports it);
   births and deaths already computed (so there is no double counting);
 - from `sim.geography.api`: tile facts (area, coastal, neighbours, climate class),
   per-tile layers (precipitation, forest), monthly temperature by climate class;
@@ -701,7 +722,10 @@ births, nutrition and care dependent case fatality, deterministic plus
 chain-binomial at small counts, deaths by band returned to demography. Ship
 smallpox and measles files (best sourced, respiratory person to person, no
 vector). Replace the Mexica "Old World epidemics on contact" hazard with a
-scenario seeding event and delete its `staff_loss`. Tests: items 1, 2, 3 and 5
+scenario seeding event and delete its `staff_loss`. [corrected 2026-10-09: a seeding event with a year
+is a dated trigger, which CLAUDE.md 4.2 warns against. Declare it with `declare(..., kind="temporary_heuristic")`
+so `python3 sim/constants.py --burndown` counts it, retire it in stage 2 when the outside world exports
+infected travellers along routes, and delete the duplicate literal in `sim/engine/fog.py`.] Tests: items 1, 2, 3 and 5
 of Section 7 for a single tile; the 386 reproduction passes.
 
 Stage 2: spatial coupling over routes. Route flux from trade volumes and
@@ -856,3 +880,329 @@ Historical epidemiology and demography
 
 Items still marked recalled or snippet were not re-read during this research and must be checked
 against the paper before a number goes into a data file.
+
+## 11. Review pass 2026-10-09: what is build-ready
+
+### 11.1 What this pass changed
+
+Kept: the model family (Section 2), pathogen-as-data (Section 3), the technology vocabulary (Section 4),
+the package layout (Section 6.1) and the staged plan (Section 8). They hold up against the code and the
+owner's decision. Changed or added:
+
+1. Section 1: the wave-chance constant lives in `sim/engine/society_hazards.py`
+   (`STAFF_LOSS_HAZARD_ANNUAL_CHANCE`), with a duplicated literal in `sim/engine/fog.py`; the removal
+   path of a cut is listed; the engine has one national `Population`, not per-tile ones.
+2. Section 6.2: people by tile and band is derived, not supplied (11.4).
+3. Section 3.2: measles infectious period filled (`summary`); a search for a typhus R0 found none, now stated.
+4. Section 8 stage 1: the dated seeding event is labelled a temporary heuristic with a retirement stage.
+5. New 11.2 (stepping inside a year), 11.3 (virgin-soil versus endemic parameters and modifiers),
+   11.4 (hookup to this codebase), 11.5 (Americas validation range), 11.6 (first code step and test),
+   11.7 (remaining gaps), and new sources at the end of Section 10 material (11.8).
+6. Arithmetic behind the Complaint 386 collapse (11.5) so the baseline failure is explained, not just reported.
+
+### 11.2 Stepping a year at sub-year resolution, cheaply
+
+Recommendation: a discrete-time chain-binomial metapopulation, with one fixed step per pathogen,
+not an ordinary differential equation solver and not an event-by-event simulation.
+
+- Each transition out of a state with mean sojourn time `mean_duration_in_days` over a step of
+  `step_length_in_days` fires for each person with probability
+  `1 - exp(-step_length_in_days / mean_duration_in_days)`; infection fires with probability
+  `1 - exp(-force_of_infection_per_day * step_length_in_days)`. The number moving is a binomial draw
+  whose size is the count in the source state, so counts never go negative and never exceed the source.
+  `recalled` (standard construction; Reed-Frost is the one-generation case, summary:
+  https://en.wikipedia.org/wiki/Reed%E2%80%93Frost_model; the binomial tau-leap is Chatterjee, Vlachos
+  and Katsoulakis 2005, named in https://en.wikipedia.org/wiki/Tau-leaping, paper not opened). The
+  plain Poisson tau-leap can drive populations negative, which Cao, Gillespie and Petzold 2005 address
+  (same Wikipedia page, `summary`); the binomial form avoids the problem by construction.
+- Fitted measles work uses the same idea: the time-series SIR model of Finkenstadt and Grenfell 2000 is a
+  discrete-time SEIR-type model fitted to biweekly case counts (`summary`:
+  https://ideas.repec.org/a/bla/jorssc/v49y2000i2p187-205.html and the Bjornstad, Finkenstadt and
+  Grenfell 2002 abstract, https://ento.psu.edu/research/labs/ottar-bjornstad/ottar-lab-abstracts/endemic-and-epidemic-dynamics-of-measles-i-estimating-transmission-rates-and-their-scaling-using-a-time-series-sir-model;
+  the abstract states transmission rates scale with community size and seasonal terms, but gives no
+  generation time or exponent, which I did not find). So a fixed step of about one generation is an
+  established, validated pattern for exactly the measles case this game needs.
+- Step length per pathogen: `step_length_in_days = clamp(shortest_mean_duration_in_days / divisor,
+  1 day, 7 days)`. The divisor is a labelled numerical heuristic (CLAUDE.md 4.4), set by a convergence test
+  (halve the step, final size and arrival time must agree within a tolerance) and printed by
+  `python3 sim/constants.py --burndown`. Why a floor of a day: the shortest durations sourced in Section 3.2
+  are cholera incubation (median 1.4 days) and the pneumonic plague infectious period (mean 2.5 days), both
+  `read`. Slow processes (aging, births, waning, endemic malaria) run once a year at year end.
+- Non-exponential durations (smallpox incubation 7 to 17 days, a bell-shaped period, not a decay) need a
+  chain of equal exponential stages (Erlang approximation, `recalled`: Wearing, Rohani and Keeling 2005,
+  PLoS Medicine, not opened): the data file gives `mean_duration` and `shape` (stage count), as Section 3.1
+  already allows. Gani and Leach 2004 used lognormal periods for pneumonic plague (`read`), which a
+  small stage chain approximates.
+- Three tiers per tile and pathogen, so the cost tracks the epidemic, not the map (extends 6.4):
+  (a) dormant: no infectious and no reservoir; cost is one import test per incoming route per step,
+  `1 - exp(-imported_pressure * step_length_in_days)`; (b) epidemic: the stepping above, with chain-binomial
+  draws, so small outbreaks can die out; (c) endemic mean field, once a year, only for pathogens the tile
+  sustains. A tile drops from (b) to (a) when infectious and exposed counts reach zero, and a reservoir
+  tile never drops below (c).
+- Closed-form shortcut for a tile whose whole epidemic fits inside one step is not needed; use the
+  final size relation below only as a test oracle and as the mean-field year update:
+  `final_fraction_infected = 1 - initial_susceptible_fraction * exp(-reproduction_number * final_fraction_infected)`
+  (closed SIR, standard; `recalled`, Hethcote 2000 and Keeling and Rohani 2008). Computed here by iterating the
+  relation for a fully susceptible population: reproduction number 3.5 gives 0.966, 6 gives 0.9975, 15
+  gives 1.0 to four places, 1.5 gives 0.583. These are mathematical consequences of the relation, not data.
+- Determinism: draw from a per-package `random.Random` seeded once, in a fixed order (tiles sorted, then
+  pathogens sorted, then states in file order), so save, load and fingerprint reproduce (CLAUDE.md 6).
+  Hazard rolls on `Sim.rng` today are order sensitive (`_shocks` documents it), so the disease package
+  must not draw from `Sim.rng`.
+
+### 11.3 Parameters: virgin soil versus endemic, and what moves them
+
+The mapping to data is: a transmissibility and durations (which give the reproduction number), a base case
+fatality per age band, and modifiers. Never store "mortality of the epidemic". Section 3.2 has the table;
+what this pass adds is the contrast and the modifiers.
+
+Virgin-soil versus endemic. The difference is not a parameter of the pathogen; it is the immune share at
+introduction (Section 5.1) plus the age at first infection:
+
+| Pathogen | Endemic setting | First contact setting | Strength |
+|---|---|---|---|
+| Smallpox | Case fatality about 30 percent overall in variola major (`read`: CDC overview). R0 3.5 to 6 in isolated populations with negligible herd immunity (`read`: Gani and Leach 2001 abstract, matches a second search). Press coverage of the same paper says 10 to 12 can occur transiently in poor, crowded settings and hospitals (`summary`: CIDRAP, https://www.cidrap.umn.edu/measles/early-smallpox-outbreak-each-patient-could-infect-10-12-more) | Population mortality of the 1520 Mexican epidemic is `disputed`: McCaa's reassessment says the fraction lay between one tenth and one half of the population, "perhaps near the mid-point", and several times Europe's impact (`read`: https://users.pop.umn.edu/~rmccaa/vircatas/, page summary); Acuna-Soto et al. 2002 give 5 to 8 million deaths with no inline citation (`read`: https://wwwnc.cdc.gov/eid/article/8/4/01-0175_article). A university lecture page gives 80 to 90 percent case fatality in Native American epidemics; weak source, no primary data (`summary`: https://sites.pitt.edu/~super1/lecture/lec38681/022.htm), treat as an upper bound to test, not a parameter | Case fatality: `read`; first contact fatality: `disputed` |
+| Measles | Faroe 1846: 2.8 percent of the infected died in a well-nourished, isolated, first-contact-in-65-years island (`read` second hand, Panum via Hektoen). Sub-Saharan endemic settings often 5 to 10 percent, developed countries under one in a thousand (`summary`: PLoS Medicine 2007 article found via search, https://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0040024); a review of community studies reports a median case fatality of 0.039 and a range 0 to 0.40, and that most community-based studies found no link to nutritional status while hospital-based ones did (`summary`: https://pubmed.ncbi.nlm.nih.gov/19188207/) | Adults infected too, so the age pattern shifts (consequence of immune share, not a parameter). Care collapse (2.6) is the mechanism for excess | Mixed; the nutrition effect on measles fatality is contested, so the nutrition sensitivity in the measles file should be small and ensemble-varied |
+| Plague | Reintroduced from foci rather than endemic in Europe (`read`: Schmid et al. 2015) | Black Death mortality is `disputed` between a quarter and 65 percent (Section 7 item 4) | `disputed` |
+| Cholera, malaria, typhus | Immunity and recrudescence as in Section 3.2 | Not asserted; no source read for first-contact case fatality | open |
+
+Modifiers (each is a multiplier or a transition in the pathogen file, with its own source and an ensemble
+range; the engine has no per-disease code):
+
+- Crowding and density: contact scales sublinearly with density (Rader et al. 2020, `read` abstract: crowded
+  cities see longer epidemics with larger attack rates). The exponent per route is data. Measles
+  persistence needs a large population (critical community size 250 thousand to 1 million, `disputed`,
+  `read` in Conlan et al. 2009), which sets which tiles are reservoirs for which pathogens.
+- Urban share: urban tiles use their own density; the tile layer must say how many people live on the city
+  part (open question 4 still stands, and 11.4 notes the settlement module gives a capacity share per tile,
+  not a city share).
+- Nutrition: reuse `_excess_mortality_multiplier(nutrition_ratio, vulnerability)` from demography as in 2.6;
+  the vulnerability is per pathogen data. Source strength is weak for infections (see measles above),
+  so label the default heuristic and vary it across the ensemble.
+- Sanitation: acts on environmental routes (cholera, Codeco 2001, `read` abstract) and on louse routes
+  through washing; a tile state variable, 4.2.
+- Quarantine: a flux multiplier plus detention days (2.3). Historical form: Ragusa's 1377 order of a month's
+  isolation, later forty days for land travellers (`summary`: https://brewminate.com/the-concept-of-quarantine-in-history/
+  and Gensini et al., https://library.alnap.org/system/files/content/resource/files/main/gensini%2C-g-the-concept-of-quarantine-in-history.pdf,
+  neither opened); the sources I saw say effectiveness is unknown, so the model must derive it (detention days
+  against incubation and infectious durations), and a test confirms detention shorter than the incubation does
+  not prevent arrival.
+- Variolation: Boston 1721 recorded about 2 to 2.5 percent deaths among about 240 to 300 inoculated against
+  about 14 to 15 percent of naturally infected (844 deaths among 5759 infected of about 10600) (`summary`:
+  https://en.wikipedia.org/wiki/1721_Boston_smallpox_outbreak, https://historyofvaccines.org/history/vaccine-timeline/timeline,
+  https://www.jameslindlibrary.org/articles/zabdiel-boylstons-evaluation-of-inoculation-against-smallpox/).
+  The groups were not randomised, so use the ratio only to check the direction and the order of the
+  variolation transition's fatality (Section 4.4), not as the parameter.
+- Vaccination: vaccinia immunity lasts decades (`read`, Hammarlund et al. 2003, Section 3.2).
+
+### 11.4 How the model plugs into this codebase
+
+Verified by reading the code on 2026-10-09; commands to re-verify are given.
+
+Data it needs (a data file, never engine code, CLAUDE.md 4.7):
+
+- `data/disease/<pathogen_id>.json` with a `_SCHEMA.md`, fields as Section 3.1. Add the loader check to
+  `python3 sim/simulator.py validate`: schema, next-generation reproduction number inside the sourced range,
+  compartments connected, every numeric field carries a source tag.
+- Scenario data: per region the list of endemic pathogen ids (initial conditions, 5.2), and the external
+  reservoirs. A civilisation file lists no epidemic sizes. Remove the "Old World epidemics on contact"
+  `staff_loss` entry from `data/civilizations/mexica_1500.json` when stage 1 lands; keep the note as history.
+- Technology: a `disease_effects` list on node `mechanics` beside `hazard_counters` (4.3). Check how
+  `hazard_counters` nodes are read with `grep -rn hazard_counters sim data`.
+
+State saved: the save file is the model (CLAUDE.md 5), fields detected automatically. The disease state is one
+`DiseaseState` on `SimulationState`: per tile, per pathogen id, per age band, the counts in each compartment
+(floats for tiers b and c, integers inside a step), the tier, the per-package random generator state, and
+immunity by band. Exclusions only for derived caches. No migration shim (CLAUDE.md 4.6). A round-trip test
+(save, load, continue) must equal a straight run.
+
+Population is national, tiles are derived. Today `sim.population` is one `Population` (three bands). The
+economy port derives tile people as national total times `settlement.population_share(held_tiles, tile)`
+(`sim/engine/economy_port_setup.py`, `sim/engine/economy_port_year.py`, `sim/labour` `settlement_tiles()`),
+a share of food-supported capacity. Consequences:
+
+- Stage 1 treats the whole nation as one patch: no geography needed, `Population` bands in and deaths by
+  band out. This is the smallest change that fixes Complaint 386.
+- Stage 2 (spatial) needs a tile population. Two honest options: (a) assume the national age mix on every tile
+  (a labelled heuristic: tiles do not own bands today) and apportion deaths back by the same shares, which
+  keeps the accounting identity exact; (b) give `Population` a per-tile split, which is a demography change and
+  belongs to its own plan. Pick (a) first.
+- Deaths come back to the cohorts the agent economy already follows through the engine population (the
+  complaint reports this link; the economy port reads `sim.population`, confirmed above). Do not cut cohorts
+  from inside the disease package.
+
+Contact through trade and geography, from the real surface (`sim/geography/INTERFACE.md`, `sim/geography/api.py`):
+
+- Edges: `freight_links(modes)` returns `(tile_a, tile_b, mode, km)` for every edge a mode uses; `route(origins,
+  destinations, modes, ..., fastest=True)` returns legs with `days`, and `fastest` is the people-travel
+  option the contract describes ("how people travel, not goods"); `reach(origins, modes, days_budget)` gives
+  tiles within a travel budget. So the days an infected traveller spends in transit come from geography, and
+  the route modes come from `usable_modes`, which depends on technology held by the parties, so a ship tech
+  node opens sea contact with no disease edits.
+- Traveller volume does not exist yet. I grepped `sim` for traveller and per-route person counts and found none,
+  and `sim/economy/api.py` exposes no flow table. The disease adapter must derive persons per year per edge
+  from tonnes carried on that edge (the economy computes haul costs through `route_costs`; the tonnage
+  per edge needs a new read-only member on the economy port) times a crew-and-merchant factor. That factor
+  is a new labelled heuristic until a mechanism (crew hours per tonne-km from the freight data, which
+  `sim/geography/freight_cost.py` already prices in labour hours) replaces it. Check: `grep -n labour_hours
+  sim/geography/freight_cost.py`.
+- A comparable empirical check exists for the gravity-type coupling: Boerner and Severgnini 2012 fit a
+  gravity model to Black Death arrival times and report that speed depends on distance, political borders,
+  rivers, sea and the importance of the city, with Florence-to-Bologna (about 110 km) within the same months
+  and Florence-to-Siena (about 70 km) almost two months (`summary`: https://research.cbs.dk/en/publications/epidemic-trade/
+  and https://www.medievalists.net/2012/09/epidemic-trade-2/, paper not opened). Use it for the rank-order
+  test (Section 7 item 6), not as a speed to match.
+- Geography does not read the tech tree; the caller passes held nodes. The disease adapter therefore builds
+  `held_nodes` per party and passes it, as other callers do.
+
+Technology to parameters: tile public health state (4.2) is computed by the adapter from installed capacity
+and the `disease_effects` of the nodes the actor knows and runs (the `requires_running` convention); the
+pathogen file's `sensitivities` read it. Existing mitigations (`germ_theory`, `med_quarantine_sanitation`,
+`md2_vaccine_plague` in `sim/tests/test_plague_mitigation_realism.py`) migrate by turning their
+`hazard_counters` into `disease_effects`. Until then the old `staff_loss` path stays for hazards not yet
+replaced (famine, war), so the two systems can coexist during stages 1 to 3.
+
+Sequencing within `step_year`: epidemic runs after agriculture sets the nutrition ratio and before
+`Population.step`, so deaths are subtracted and demography's accounting identity (births, deaths,
+aging) stays exact; the adapter passes the pre-step cohort counts and receives deaths by band. Do not
+double count: stage 1 adds epidemic excess only over the baseline mortality (6.5).
+
+### 11.5 Validation range for the Americas (a range for an ensemble, never a target)
+
+Why the authored hazard fails, as arithmetic. The Mexica hazard declares a loss of 0.8 per wave, a wave chance
+of 0.32 per year (the declared heuristic), over the years 1520 to 1600. Expected waves in 20 years: 0.32 times
+20 = 6.4. Surviving share per wave is 0.2, so after 6.4 waves 0.2 to the power 6.4 is about 3.4e-5, and 5
+million people become about 170, matching the complaint's "a few hundred". This is mine, derived from the
+numbers in the complaint, `data/civilizations/mexica_1500.json` and `society_hazards.py`; it ignores the
+technology relief and the re-growth between waves. The fault is structural: a wave has no memory of who is
+immune.
+
+What the record offers (all contested, which is the point):
+
+| Source | Region and dates | Figures | Strength |
+|---|---|---|---|
+| McCaa's table of published estimates | Indian population of Mexico, 1519 to 1595 | Rosenblat 4.5 to 3.5 million (22 percent decline); Aguirre-Beltran 4.5 to 2.0 (56); Zambardino 5 to 10 to 1.1 to 1.7 (64 to 89); Mendizabal 8.2 to 2.4 (71); Cook and Simpson 10.5 to 2.1 to 3.0 (71 to 80); Cook and Borah 18 to 30 to 1.4 (78 to 95); Sanders (central Mexico, extrapolated) 2.6 to 3.1 to 0.4 (85 to 87); Whitmore (Valley of Mexico) 1.3 to 2.7 to 0.1 to 0.4 (69 to 96) | `read`: https://users.pop.umn.edu/~rmccaa/vircatas/virtab3.htm |
+| Cook and Borah time series, central Mexico including Nueva Galicia | 1518 to 1605 | 25.2 million (1518), 16.8 (1532), 6.3 (1548), 2.65 (1568), 1.9 (1585), 1.375 (1595), 1.075 (1605). By the figures the 1605 value is 4.3 percent of 1518 (1.075 divided by 25.2); the source text says about 3 percent, an inconsistency I note without resolving | `summary`: search result quoting their volume's summary table, https://publishing.cdlib.org/ucpressebooks/public/book/essays-in-population-history-vol-iii-mexico-and-california.html, page not opened. Rosenblat accepted the base count (about 1.37 million) but rejected the adjustments to the 1548 figure (`summary`) |
+| Acuna-Soto et al. 2002 | Mexican highlands | 1519 to 1520 smallpox 5 to 8 million deaths; 1545 cocoliztli 5 to 15 million deaths or up to 80 percent of the native population; 1576 an additional 2 to 2.5 million or about 50 percent of those remaining. Tree rings show a sustained megadrought, "the most severe and sustained drought to impact north central Mexico in the past 600 years"; the cocoliztli were not matched to a known Old World disease and the authors suggest an indigenous rodent-borne haemorrhagic fever. The population numbers are uncited inline. | `read`: https://wwwnc.cdc.gov/eid/article/8/4/01-0175_article. The rodent hypothesis is a hypothesis; the pathogen identity is not settled in what I read |
+| Koch et al. 2019 | Whole Americas | 90 percent (IQR 87 to 92) decline over the next century from 60.5 million (IQR 44.8 to 78.2 million) before 1492 | `read` abstract, already in Section 7 item 5 |
+| McCaa 1995 | 1520 smallpox in Mexico | Smallpox deaths between one tenth and one half of the population, probably near the middle; "several times" Europe's impact | `read`: summary page |
+
+Validation envelope proposed (ensemble level, distributions; no dated event):
+
+1. Long run: over 75 years after first contact, the ensemble median native-population decline for a Mexican
+   start (disease plus the scenario's war, forced labour and famine hazards, which stay authored for now)
+   lies inside the span of published estimates, that is between the lowest and highest rows of McCaa's table
+   (22 to 96 percent), and the interquartile range of the ensemble overlaps the cluster of 64 to 95 percent.
+   A simulator that always lands at one value is also wrong: the ensemble spread should be comparable to the
+   spread among authors, since the same uncertainty (R0, first-contact fatality, social collapse) exists in the
+   model inputs.
+2. Short run (the Complaint 386 criterion): within 20 years of first contact no seed falls to near
+   extinction. Cook and Borah's own maximalist series loses about a third of the people in the first 14 years
+   and about three quarters in 30 (16.8 and 6.3 million against 25.2, my arithmetic on `summary` numbers), so
+   an ensemble whose 20-year decline sits far above that series is out of range, and one far below is less
+   alarming than the declared hazard but not forbidden. State the exact numerical gates in the test as
+   ensemble quantiles from the sourced series; do not tune the model to hit them.
+3. Multi-cause: disease alone must not be asked to produce the whole decline. Run ablations (disease only,
+   disease plus labour demand shock, disease plus famine from lost harvest labour) and report the share of
+   deaths by cause. Livi-Bacci 2006 and Jones 2003 argue multiple causes (`read` abstracts, Section 5.3).
+4. Several pathogens in sequence: at least smallpox, measles, typhus and an influenza, in an order the contact
+   structure produces. Waves of different pathogens should be able to arrive within the same decade (the
+   record shows 1520, 1545 and 1576 as separate large events; the model need not reproduce those years).
+5. Famine-and-drought coupling as an optional variant: the 1545 and 1576 events coincide with a megadrought
+   (Acuna-Soto et al. 2002). A reservoir route driven by a rainfall seasonal driver (Section 2.4) with a rodent
+   focus lets the ensemble include this hypothesis and its absence. Weather in the sim is the source of
+   drought; the engine must not read a dated drought table.
+
+The arithmetic check below also constrains the model: with only the sourced inputs, one first-contact smallpox
+wave with reproduction number 3.5 to 6 infects 0.966 to 0.9975 of a fully susceptible closed population
+(final size relation above) and, at the sourced overall case fatality of about 30 percent, kills about 29 to
+30 percent. One wave cannot give nine tenths; several pathogens, care collapse and famine feedback are
+required, which is the model's designed route to the century-scale decline (Section 5.3). If an ensemble
+shows a 90 percent loss from smallpox alone, the case fatality inputs are over-tuned.
+
+### 11.6 Minimal first code step and its regression test
+
+Scope (stage 1, one patch, no geography). Nothing runs inside a whole game for the test; the test fixture is a
+patch of plain numbers.
+
+- `sim/disease/api.py` (with `WALL = "two-way"`, per Section 6.1), `sim/disease/network.py` (compartments
+  and transitions as plain data, next-generation reproduction number), `sim/disease/step.py` (one chain-binomial
+  step of one patch). `sim/disease/api.py` exports `Pathogen`, `Patch`, `step_patch`, `reproduction_number`.
+  Data file `data/disease/smallpox.json` is not needed for the first test: the test builds the `Pathogen`
+  from a literal dict, so data and engine are separable.
+- Do not wire into `Sim` in this step. The adapter (`sim/engine/disease_port.py`) and the Complaint 386
+  reproduction come next.
+
+Test file `sim/tests/test_disease_patch.py`, `QUICK_TOPIC = True` (functions and a tiny fixture, one patch of
+a few thousand people, a few hundred weekly steps; well under a second; the same unittest style as
+`sim/tests/test_demography.py`). Properties, no outcomes:
+
+1. Conservation: people in all compartments plus cumulative deaths equals the start every step.
+2. No spread when reproduction number is below one: the infectious count dies out and the final infected
+   share is small; with zero infectious people nothing happens.
+3. Final size: with births and deaths off and all people susceptible, the mean final infected share over a
+   modest number of seeds agrees with the closed final size relation for the declared reproduction number
+   within a tolerance (reproduction number 3.5 gives 0.966 by the relation above; check by iterating, not by
+   copying the number).
+4. Step convergence: halving `step_length_in_days` changes the mean final size by less than the tolerance.
+5. Memory (the Complaint 386 property, in miniature): with births on, introduce the same pathogen a second
+   time soon after the first wave; the second wave's deaths are a small fraction of the first's, and the
+   immune share is above the herd threshold `1 - 1 / reproduction_number`. This is the failing behaviour of the
+   authored hazard, shown as a model property.
+6. Determinism: same seed gives the same trajectory; a saved and restored `Patch` continues identically.
+7. Virgin versus endemic: the same pathogen into a patch with an equilibrium immune share kills several times
+   fewer people than into a naive patch (direction test, not a number).
+
+Run: `python3 -m sim.tests --only disease_patch`, then `python3 -m sim.tests` and
+`python3 -m sim.tests.fingerprint check before.json` (must be unchanged because nothing is wired). Per
+CLAUDE.md 6, write the test first. Per CLAUDE.md section 1, name the branch for what it does, for example `disease-patch-model`.
+
+Next steps after this: `disease_port.py` adapter and the `YearResult` (deaths by band into `Population`), the
+Mexica scenario seeding as a labelled temporary heuristic, the 386 evidence command as an ensemble check
+in the slow tier (not quick, it builds a whole game), then stage 2.
+
+### 11.7 Gaps that remain after this pass
+
+- Not found: a sourced R0 for epidemic typhus; first-contact case fatality for any Old World disease in an
+  American population from a primary source (only reviews and secondary summaries were seen); immunity
+  duration after smallpox infection (`recalled`); the generation-time and exponent values in the
+  time-series SIR papers (abstracts give none); a traveller-volume mechanism in the repo.
+- Opened only as search summaries: McCaa's body text beyond the pages cited, Cook and Borah's volume,
+  Boerner and Severgnini, the 1721 Boston papers, the PLoS Medicine measles article, the Gensini quarantine paper.
+  Re-read each before its number goes into a data file.
+- Plague-route dispute (open question 1), endemic-burden double counting (open question 2) and the
+  city-versus-hinterland structure (open question 4) are not settled by evidence found here; the code
+  hookup above does not depend on them for stages 1 and 2.
+
+### 11.8 Sources added in this pass
+
+- McCaa, R., table of published estimates, Indian population of Mexico 1519 to 1595 (`read`):
+  https://users.pop.umn.edu/~rmccaa/vircatas/virtab3.htm ; McCaa, R. (1995), Spanish and Nahuatl views on
+  smallpox and demographic catastrophe in the conquest of Mexico, Journal of Interdisciplinary History
+  (`read` summary page): https://users.pop.umn.edu/~rmccaa/vircatas/
+- Acuna-Soto, R., Stahle, D. W., Cleaveland, M. K. and Therrell, M. D. (2002), Megadrought and megadeath in
+  16th century Mexico, Emerging Infectious Diseases 8(4):360-362 (`read`):
+  https://wwwnc.cdc.gov/eid/article/8/4/01-0175_article
+- Cook, S. F. and Borah, W. (1960s to 1970s), Essays in Population History vol. III, University of California
+  Press (`summary`): https://publishing.cdlib.org/ucpressebooks/public/book/essays-in-population-history-vol-iii-mexico-and-california.html
+- Finkenstadt, B. F. and Grenfell, B. T. (2000), Time series modelling of childhood diseases, J R Stat Soc C
+  49:187-205 (`summary`): https://ideas.repec.org/a/bla/jorssc/v49y2000i2p187-205.html ; Bjornstad, O. N.,
+  Finkenstadt, B. F. and Grenfell, B. T. (2002), Dynamics of measles epidemics: estimating scaling of
+  transmission rates using a time series SIR model, Ecological Monographs (`read` abstract):
+  https://ento.psu.edu/research/labs/ottar-bjornstad/ottar-lab-abstracts/endemic-and-epidemic-dynamics-of-measles-i-estimating-transmission-rates-and-their-scaling-using-a-time-series-sir-model
+- Chatterjee, A., Vlachos, D. G. and Katsoulakis, M. A. (2005), Binomial distribution based tau-leap
+  accelerated stochastic simulation, J Chem Phys; Cao, Y., Gillespie, D. T. and Petzold, L. R. (2005),
+  Avoiding negative populations in explicit Poisson tau-leaping, J Chem Phys (both named in
+  https://en.wikipedia.org/wiki/Tau-leaping, `summary`, papers not opened)
+- CDC, Measles (Pink Book chapter 13), https://www.cdc.gov/vaccines/pubs/pinkbook/meas.html (`summary`)
+- Perry, R. T. and Halsey, N. A. (2004), The clinical significance of measles: a review, J Infect Dis 189:S4-16
+  (named in a search result, not opened); measles case fatality review of community-based studies,
+  https://pubmed.ncbi.nlm.nih.gov/19188207/ and PLoS Medicine 2007 (`summary`)
+- Boerner, L. and Severgnini, B. (2012), Epidemic trade, EHES Working Paper 24 (`summary`):
+  https://research.cbs.dk/en/publications/epidemic-trade/
+- Gensini, G. F. et al., The concept of quarantine in history (`summary`, not opened):
+  https://library.alnap.org/system/files/content/resource/files/main/gensini%2C-g-the-concept-of-quarantine-in-history.pdf
+- 1721 Boston inoculation figures (`summary`, uncontrolled comparison): https://en.wikipedia.org/wiki/1721_Boston_smallpox_outbreak ,
+  https://www.jameslindlibrary.org/articles/zabdiel-boylstons-evaluation-of-inoculation-against-smallpox/
+- Gani, R. and Leach, S. (2001), re-checked via search abstract and CIDRAP coverage (`summary` for the
+  10 to 12 transient figure): https://www.cidrap.umn.edu/measles/early-smallpox-outbreak-each-patient-could-infect-10-12-more

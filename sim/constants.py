@@ -183,12 +183,8 @@ KINDS = (
 CONFIDENCES = ("A", "B", "C", "D")
 
 
-def declare(name, value, kind, unit, why, source=None, confidence="C",
-            book_money=False):
+def declare(name, value, kind, unit, why, source=None, confidence="C"):
     """Record a number's provenance and hand back the plain number.
-
-    `book_money=True` marks an absolute amount of money written in the book's
-    denarii; each Sim converts it once into its civilisation's coin.
 
     `name` is passed explicitly and looks redundant next to the assignment it
     is bound to. It earns its place: sim/tests/test_constants.py asserts that
@@ -206,20 +202,25 @@ def declare(name, value, kind, unit, why, source=None, confidence="C",
         raise ValueError("%s: every declared number needs a `why`. If nobody "
                          "can say why it is that number, that is the most "
                          "important thing to know about it." % name)
+    overridden_by = None
+    override = _mod_override(name, value)
+    if override is not None:
+        value, overridden_by = override.value, override.mod_id
     if name in REGISTRY and REGISTRY[name]["value"] != value:
         raise ValueError("%s declared twice with different values (%r, %r)"
                          % (name, REGISTRY[name]["value"], value))
     REGISTRY[name] = {
         "name": name, "value": value, "kind": kind, "unit": unit,
         "source": source, "confidence": confidence, "why": why.strip(),
-        "declared_in": _caller_module(), "book_money": bool(book_money),
+        "declared_in": _caller_module(), "overridden_by": overridden_by
     }
     return value
 
 
-def book_money_names():
-    """Names of every declared constant that is authored in book denarii."""
-    return [name for name, entry in REGISTRY.items() if entry.get("book_money")]
+def _mod_override(name, declared):
+    """The installed mod's override of this number (data/constants.json of a mod), or None."""
+    from sim.engine.mods_constants import apply_override
+    return apply_override(name, declared)
 
 
 def _caller_module():
@@ -330,6 +331,7 @@ def _import_declaring_modules():
                    "sim.engine.core",
                    "sim.engine.society",
                    "sim.labour.labour",
+                   "sim.disease.numerics",
                    "sim.engine.projects",
                    "sim.unit_conversions",
                    "sim.world.agriculture",

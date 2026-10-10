@@ -8,7 +8,7 @@ deposits from sim.world.deposits.
 import functools
 
 from sim.world import deposits as deposit_model
-from sim.geography.api import tile_names
+from sim.geography.api import regions_of_tiles, tile_names, tiles_held
 
 TILES_SHOWN_BY_DEFAULT = 12
 
@@ -60,7 +60,7 @@ def map_report(sim, full=False):
         "civilisation": sim.civ.get("short_name", sim.civ.get("name", "")),
         "population": round(sim.population.total),
         "regions": [tile_names.region_names().get(region_id, region_id)
-                    for region_id in sim.civ.get("home_regions") or []],
+                    for region_id in regions_of_tiles(tiles_held(sim.civ, sim.world_map))],
         "you_are_based_at": dict(
             tile_place(base), people=round(base_people),
             town_people=round(sim.labour.home_town_population_estimate())),

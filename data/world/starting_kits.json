@@ -1,0 +1,33 @@
+{
+ "_doc": "Starting wealth kits: labourer_years is the years of an unskilled worker's opening wage the kit represents (kit_capital converts it to money); desc is the player-facing line. A mod adds kits as <mod_id>:<name> in data/world/starting_kits.json, or patches one with override or remove.",
+ "kits": {
+  "destitute": {
+   "labourer_years": 0.0,
+   "desc": "the clothes you stand in. You must earn your first meal."
+  },
+  "poor_scholar": {
+   "labourer_years": 4.033,
+   "desc": "DEFAULT. A few years of a labourer's wages in cash, a knife, a lens, a codex of notes. About what a working teacher has."
+  },
+  "artisan": {
+   "labourer_years": 12.1,
+   "desc": "enough to rent a workshop and buy a first set of tools."
+  },
+  "merchant": {
+   "labourer_years": 40.33,
+   "desc": "a modest trading capital. You can fund one real venture."
+  },
+  "rich_merchant": {
+   "labourer_years": 201.6,
+   "desc": "wealthy, but well short of the fortune that marks the top of society."
+  },
+  "equestrian": {
+   "labourer_years": 1008.0,
+   "desc": "the fortune that marks the top rank of the local elite, exactly. Conspicuous."
+  },
+  "absurd": {
+   "labourer_years": 10081.0,
+   "desc": "four great fortunes in unminted gold. Once money can be converted into protection and into sunk mines, wealth helps. What it does NOT do is make you a magician: a vast fortune buys perhaps a tenth off the time, not a different game. What money changes most is the OPENING - the first fifty years, where a poor founder is choosing between eating and building."
+  }
+ }
+}

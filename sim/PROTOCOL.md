@@ -187,6 +187,28 @@ Two fixes, usable separately or together:
                                                     share R of its takings each year (a state has
                                                     no takings, so no royalty). Replies {ok, note,
                                                     inventions} or {ok:false, error}.
+      {"cmd":"patent"}                             {patents:{id:{granted, expires, licensees, live}},
+                                                    shares_held, shares_issued, offers}: what the seat
+                                                    holds as an actor. {"cmd":"patent","id":"<id>"}
+                                                    applies for the exclusive right to an invention you
+                                                    hold, where a state knows the institution. Others may
+                                                    still practise it unlicensed: the state enforces the
+                                                    right only as far as its capacity reaches, and a holder
+                                                    who catches an infringer is paid its margin.
+      {"cmd":"offer","to":"<actor id>","give":{...},"take":{...}}
+                                                   offer a firm, a state, a stratum or another seat things
+                                                    for things: money, patent [ids], licence [ids] with
+                                                    royalty {id: share of takings}, shares {issuer id: share
+                                                    of its equity}. An AI actor answers at its next turn;
+                                                    another seat uses accept or decline. {ok, offered, to,
+                                                    expires} or {ok:false, error}.
+      {"cmd":"offers"}                             the offers made to this seat. {"cmd":"accept","offer":"<id>"}
+                                                    and {"cmd":"decline","offer":"<id>"} answer one.
+      {"cmd":"shares","do":"issue","share":S,"to":"<id>","price":P}
+                                                   sell share S of your own equity; its holders draw
+                                                    dividends from your margin each year.
+                                                    {"cmd":"shares","do":"buy","issuer":"<id>","share":S,"from":"<id>","price":P}
+                                                    buys shares in another actor. Both are offers.
       {"cmd":"idle"}                               {directed_hours_this_year, committed_hours,
                                                     idle_hours, delay_kinds:{kind:[ids]},
                                                     what_the_wait_is, potential_uses:{
@@ -285,12 +307,23 @@ Two fixes, usable separately or together:
                                                     this year's founder hours, local
                                                     contracts and most local standing.
                                                     Refused for a tile nobody lives on.
-      {"cmd":"build_way","way":"road",             build a road ("road") or railway ("rail") between
-       "from":"<tile>","to":"<tile>"}                two bordering tiles you hold (typed: `build_way
-                                                    road <tile> <tile>`); add "preview":true to
-                                                    quote the km, labour hours, tonnes of material
-                                                    and money first. Pays at market prices; built
-                                                    ways are what journeys and hauls route over.
+      {"cmd":"build_way","way":"road",             build a road ("road"), railway ("rail"), canal
+       "from":"<tile>","to":"<tile>"}                ("canal") or bridge ("bridge", over a river
+                                                    between two tiles on it) between two bordering
+                                                    tiles you hold, or a port ("port", "to" the same
+                                                    tile) on a coast tile without a natural harbour
+                                                    (typed: `build_way road <tile> <tile>`, `build_way
+                                                    port <tile>`); add "preview":true to quote the km,
+                                                    labour hours, tonnes of material, money and
+                                                    years first. Pays at market prices and takes a
+                                                    crew from the labour market for the build years;
+                                                    built ways are what journeys and hauls route over.
+      {"cmd":"prospect","tile":"<tile>",           prospect a tile you hold for hidden deposits of a
+       "material":"coal","person_days":2000}       mined material (typed: `prospect <tile> coal
+                                                    2000`); pays prospectors and keeps the finds.
+                                                    A mine names a deposit you have found ("buy
+                                                    mine" takes an optional "deposit" id) and
+                                                    raises no more than the deposit allows.
       {"cmd":"map"} / {"cmd":"map","full":true}    the land you hold: "you_are_based_at",
                                                     "tiles" (name, region, terrain,
                                                     people, days_from_your_base,
@@ -319,7 +352,18 @@ Two fixes, usable separately or together:
                                                     "territory"), "technologies_you_built",
                                                     "dated_events" (status happened, under
                                                     way, upcoming or before the run began;
-                                                    "causes_checked" is false for all) and
+                                                    "causes_checked" is true when the event
+                                                    states causes, with "causes_hold_now" and
+                                                    "failed_causes"; "causes_not_modelled"
+                                                    lists causes with no simulated
+                                                    counterpart), "baseline" (the run
+                                                    against the baseline ensemble: each
+                                                    measure against its band, and which
+                                                    built technologies the baseline society
+                                                    would not yet hold; when no ensemble is
+                                                    cached, "available" is false and
+                                                    "how_to_generate" names the command
+                                                    `simulator.py baseline-ensemble`) and
                                                     "cannot_know". Under fog an upcoming
                                                     event has no name.
       {"cmd":"finish"}                             end the run here and return the final
@@ -436,6 +480,21 @@ Two fixes, usable separately or together:
       `interest_groups` (names and causes) while any group is organised. Groups are actors of
       kind `interest_group` in the actor registry (ActorRecord fields `group_kind`, `subject`,
       `cause`, `members`, `lost_income`, `grievance`, `strength`, `claim`, `demands`).
+      Other kinds are measured from the bodies of people and the firms: `displaced_workers` (a
+      stratum whose trade's pay fell below what it had come to expect), `landholders` (a propertied
+      stratum whose property income fell), `firm_owners` (firms whose profit fell below what their
+      owners expected) and `falling_incomes` (the part of a stratum's fall in welfare those do not
+      explain). Only `displaced_producers` can obtain a prohibition; the rest are made good from the
+      state's purse as far as its capacity lets it.
+
+      ANSWERING THE STATE'S DEMANDS (Complaint 110). `answer` (aliases `answer_demand`, `stance`) with
+      `{"cmd":"answer","what":"comply"|"refuse"}` sets how you meet the requisition and the supply
+      levy the state assesses (the office it presses on you is not declinable); bare `answer` shows
+      the stance. The reply's `note` gives the odds: a refusal is enforced with a chance set by the
+      state's capacity, turned aside in part by your protection; if enforced the state takes the
+      demand and a penalty in proportion to its capacity, otherwise nothing. The log names each
+      refusal and its outcome. Any other actor answers the same way through the player command
+      `{"command":"answer_demand","stance":"refuse"}` (ActorRecord field `demand_stance`).
 
       MACHINE-READABLE MODES. 'state json', 'portfolio json' and 'risk json'
       (typed, inside `play`) print the raw reply - the exact line a script
@@ -492,3 +551,37 @@ fixed number for the game. `credit_limit` falls as the market rate rises and is
 bounded by `lenders_will_still_advance_you`. The state's own debt and interest
 appear in the state's outlays (purpose `interest`; a negative purse is
 debt) and nowhere in the founder's replies.
+
+SEATS: SEVERAL PLAYERS IN ONE GAME
+-----------------------------------------------------------------------------
+A seat is one player: a household, what it has built and learned, its goal
+and its founder. A game starts with the first seat, and a civilisation file's
+`cast.seats` or the `join` command adds more.
+
+    {"cmd":"state","as":"second"}      any command, for the seat it names
+    {"cmd":"seats"}                    who is playing, and whose run has ended
+    {"cmd":"join","seat":"second"}     add a player (optional "kit", "country")
+    agent --seat second / play --seat second
+                                       the seat this process plays, when a
+                                       command names none
+
+Without `as` a command is for the session's seat, which is the first seat for
+every script written before seats existed. An unknown seat is a refusal that
+changes nothing. Reads about the world (`market`, `population`, `society`) are
+the same for every seat; reads about a holder (`state`, `available`, `log`,
+`money`) show the addressed seat. `seats` shows another seat's country and
+whether its run has ended, not its purse or its work.
+
+`step` advances the year for every seat still playing. A seat's run ends for
+that seat alone (a founder who dies with nobody to carry the work in a game
+with mortal founders, a denunciation, a fall): its commands that need a living
+holder are refused with the reason, and the others play on. The game is over
+when no seat is playing, or every seat still playing has reached its goal. In
+a game with immortal founders no founder dies, so this never arises.
+
+## Commands from mods
+
+A mod may add commands, named `<mod_id>:<name>` (typed or as `{"cmd": "<mod_id>:<name>"}`), with an optional bare
+alias that works while nothing else claims the word. They appear in `help` like any command. A macro replays existing
+commands through this same protocol, so fog guards and option checks apply to it; a mod policy runs at the start or
+end of each year of a `step` and appears in the `programme` lines of the reply. See `mods/README.md`.

@@ -8,8 +8,10 @@
 techniques allow); a missing source counts 1. Source ids come from the content rows (and the
 `food_source_crops` parameter), group names from the `food_species_group_of_mechanism` parameter.
 Every source module returns (source_id, species_id, kcal) tuples; this module only adds them.
+`wild_stock` is the game's {tile: {species id: share of its carrying capacity left}} (food_wild_stock.py);
+a missing entry counts as a full stock.
 """
-from typing import Dict, Optional
+from typing import Dict, Mapping, Optional
 
 from sim.geography.food_crops import crop_contributions
 from sim.geography.food_fishing import fishing_contributions
@@ -29,13 +31,13 @@ def _species_group(world_map: WorldMap, species_id: str) -> Optional[str]:
     return None if row is None else mechanisms.get(row.get("mechanism"))
 
 
-def food_potential(world_map: WorldMap, tile_id: str,
-                   technique_factors: Optional[Dict[str, float]] = None) -> dict:
+def food_potential(world_map: WorldMap, tile_id: str, technique_factors: Optional[Dict[str, float]] = None,
+                   wild_stock: Optional[Mapping] = None) -> dict:
     factors = technique_factors or {}
     kcal_by_source: Dict[str, float] = {}
     species: Dict[str, list] = {group: [] for group in parameter(world_map, "food_species_group_of_mechanism").values()}
     for source_module in SOURCE_MODULES:
-        for source_id, species_id, kcal in source_module(world_map, tile_id):
+        for source_id, species_id, kcal in source_module(world_map, tile_id, wild_stock):
             kcal = max(0.0, kcal) * factors.get(source_id, 1.0)
             kcal_by_source[source_id] = kcal_by_source.get(source_id, 0.0) + kcal
             group = None if species_id is None else _species_group(world_map, species_id)

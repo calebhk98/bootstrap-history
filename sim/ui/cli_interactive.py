@@ -206,6 +206,7 @@ def _play_build_sim(args):
             events=bool(app_cfg.get("default_events", True)), bounty_set=set(),
             manual=True, civ=load_civ(_civ_for_session(args)), cfg=cfg)
     sim.seed = seed
+    sim.session_seat = getattr(args, "seat", None)
     sim.goal = goal
     sim.done_year = {}
     sim.end_year = sim.cfg["start_year"] + horizon
@@ -848,10 +849,10 @@ CIVS_EMINENCE_DANGER_DEFAULT = declare(
 def cmd_civs(args):
     """List the civilizations you can play, and what makes each one different.
 
-    home_regions are shown here because they name the tiles the civilisation holds,
-    which drive Geography.region_reach() and material_reach(), so this names the
-    home ground itself, not just the region ids.
+    The home ground is the region labels of the tiles the civilisation holds; those tiles
+    drive Geography.region_reach() and material_reach().
     """
+    from sim.geography.api import regions_of_tiles, tiles_held
     geo = load_geography()
     region_names = {rid: region_record.get("name", rid)
                     for rid, region_record in (geo.get("regions") or {}).items()
@@ -865,7 +866,7 @@ def cmd_civs(args):
         value = civ_data["values"]
         print("%-16s %s, %s" % (civ_data["id"], civ_data["name"], civ_data["year"]))
         print("   %s" % civ_data.get("blurb", ""))
-        homes = [region_names.get(region_id, region_id) for region_id in civ_data.get("home_regions") or []]
+        homes = [region_names.get(region_id, region_id) for region_id in regions_of_tiles(tiles_held(civ_data))]
         print("   home ground: %s" % (", ".join(homes) if homes else "(none set)"))
         print("   population %s   state capacity %.2f   starts with %d technologies"
               % (f"{civ_data.get('population',0):,}", civ_data.get("state_capacity", 0),

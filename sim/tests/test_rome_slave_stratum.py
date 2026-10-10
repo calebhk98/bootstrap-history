@@ -13,7 +13,7 @@ check("the declared shares add up to every person", abs(sum(entry["share"] for e
 check("the enslaved share carries its source and confidence",
       civ["_internal"]["cast"]["source"] and civ["_internal"]["cast"]["confidence"] in "ABCD")
 
-game = S.Sim(NODES, list(ORDER), random.Random(1), events=False, manual=True, civ=civ, cfg={"agent_economy": False})
+game = build_unopened(lambda: S.Sim(NODES, list(ORDER), random.Random(1), events=False, manual=True, civ=civ))
 for _ in range(2):  # the first year only seeds the roster
     game.state.scenario.year += 1
     game.advance_actors(game.state.scenario.year)

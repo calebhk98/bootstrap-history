@@ -46,8 +46,8 @@ class IdleCapacityTests(unittest.TestCase):
 
 
 class ExitTests(unittest.TestCase):
-    def test_a_plantless_producer_with_no_margin_over_variable_cost_exits_after_the_loss_years(self):
-        view = farm_view(0.5, cash=20.0)
+    def test_a_plantless_producer_no_workplace_of_which_pays_exits_after_the_loss_years(self):
+        view = farm_view(0.001, cash=20.0)
         producer = farmer()
         for _year in range(producers_close.LOSS_YEARS_BEFORE_EXIT):
             result = producers_close.close_year(producer, FARM, 3.0, 70.0, view, 1.0)
@@ -55,6 +55,23 @@ class ExitTests(unittest.TestCase):
         self.assertTrue(result.exited)
         self.assertEqual(producer.capacity_runs, 0.0)
         self.assertAlmostEqual(sum(transfer.amount for transfer in result.transfers), 20.0)
+
+    def test_workplaces_that_do_not_pay_close_no_faster_than_workplaces_open(self):
+        # the price covers the cost of some workplaces: the producer keeps them and sheds the rest by a
+        # quarter of its capacity a year, as the market loses makers without losing the market
+        view = farm_view(0.5, cash=20.0)
+        producer = farmer(capacity_runs=10.0)
+        capacities = []
+        for _year in range(producers_close.LOSS_YEARS_BEFORE_EXIT + 3):
+            result = producers_close.close_year(producer, FARM, 3.0, 70.0, view, 1.0)
+            self.assertFalse(result.exited)
+            producer = result.producer
+            capacities.append(producer.capacity_runs)
+        shed = [after for before, after in zip(capacities, capacities[1:]) if after < before]
+        self.assertTrue(shed)
+        for before, after in zip(capacities, capacities[1:]):
+            self.assertGreaterEqual(after, (1.0 - producers.OUTPUT_CHANGE_SHARE_PER_YEAR) * before - 1e-9)
+        self.assertGreater(capacities[-1], 0.0)
 
     def test_a_loser_whose_runs_still_cover_variable_cost_does_not_exit(self):
         view = farm_view(2.0)
@@ -145,7 +162,7 @@ class ScenarioTests(unittest.TestCase):
             economy.step(quiet_year(setup))
             mines_by_year.append(sum(producer.capacity_runs for producer in economy.record.producers.values()
                                      if producer.recipe_id == MINE))
-        self.assertIn(0.0, mines_by_year)       # it left; it may come back once miners' wages fall
+        self.assertLess(min(mines_by_year), 0.75 * mines_by_year[0])   # it shed makers; it may regrow once wages fall
         self.assertEqual(economy.record.book.check_conservation(1e-6).breaches, ())
 
     def test_a_healthy_economy_keeps_its_grain_producer(self):

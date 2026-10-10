@@ -12,11 +12,11 @@ def note_shortage(sim, material, throughput):
 
     News is a new material, or a throughput that has moved materially since
     the last time it was reported."""
-    economy = sim.state.economy
-    condition = economy.shortage_condition
+    holdings = sim.state.holdings
+    condition = holdings.shortage_condition
     year = sim.state.scenario.year
     if not condition or condition["material"] != material:
-        economy.shortage_condition = {"material": material, "since": year, "reported": throughput,
+        holdings.shortage_condition = {"material": material, "since": year, "reported": throughput,
                                       "previous": throughput, "latest": throughput}
         return True
     condition["previous"] = condition["latest"]
@@ -29,12 +29,12 @@ def note_shortage(sim, material, throughput):
 
 def clear_shortage(sim):
     """The shortage is over; the next one is news again."""
-    sim.state.economy.shortage_condition = None
+    sim.state.holdings.shortage_condition = None
 
 
 def condition_rows(sim):
     """The standing shortage as rows for the state screen, empty when none."""
-    condition = sim.state.economy.shortage_condition
+    condition = sim.state.holdings.shortage_condition
     if not condition:
         return []
     change = condition["latest"] - condition["previous"]

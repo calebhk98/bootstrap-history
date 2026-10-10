@@ -120,7 +120,9 @@ def _buy_mine(sim, cmd, quantity):
     # not at all, never spend every denarius you have and hand back a
     # fraction without asking.
     price = sim.mine_quote(mat, quantity).get("to_sink_it") if hasattr(sim, "mine_quote") else None
-    got = sim.open_mine(mat, quantity, partial=False)
+    got = sim.open_mine(mat, quantity, partial=False, deposit=cmd.get("deposit"))
+    if got <= 0 and sim.mine_refusal:
+        return {"ok": False, "error": sim.mine_refusal}
     if got <= 0:
         if price is not None and not purchase_rule.can_pay(sim, price):
             return {"ok": False,
@@ -280,7 +282,6 @@ def _cmd_money(sim, nodes, cmd, ended):
     _ramp, _prac = sim.still_ramping(), sim.practice_note()
     if _prac and already_explained(sim, "practice", cmd):
         _prac = sim.practice_note(brief=True)
-    _mkt = sim.goods_market_summary()
     # A PLAYER MUST SEE IT (data/review/COMMODITY_DYNAMISM.md):
     # material_price_factor() responds for every material a node
     # buys, not just the 9 curated commodities, so what it
@@ -304,7 +305,6 @@ def _cmd_money(sim, nodes, cmd, ended):
             **({"still_building_up_custom": _ramp} if _ramp else {}),
             **({"about_your_own_practice": _prac} if _prac else {}),
             **({"materials_costing_you_a_premium": _mat_mkt} if _mat_mkt else {}),
-            **({"the_market_you_sell_into": _mkt} if _mkt else {}),
             "what_it_costs_you": {
                 "upkeep_of_what_you_built": round(sim.upkeep(), 1),
                 "living_and_appearances": round(sim.living_cost() - sim.labour.wage_bill(), 1),

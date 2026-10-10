@@ -23,6 +23,7 @@ from .data import trade_family
 from sim.constants import declare
 from . import category_traits, money_units, node_revenue_market
 from .readable import readable
+from .industry_depth import RAMP_SHARE_AT_FULL_DEPTH
 
 
 class ProductionMixin:
@@ -89,7 +90,10 @@ class ProductionMixin:
         if started is None:
             started = projects.done_year.get(node_id, scenario.year)
         age = scenario.year - started
-        return min(1.0, (age + 1) / self.cfg["revenue_ramp_years"])
+        # An established industry (anyone's worker-years running it) finds its custom sooner.
+        ramp_years = self.cfg["revenue_ramp_years"] * (
+            1.0 - (1.0 - RAMP_SHARE_AT_FULL_DEPTH) * self.industry_depth(node_id))
+        return min(1.0, (age + 1) / ramp_years)
 
     def practice_attention(self):
         """How much of your practice you are actually there to run.
@@ -143,6 +147,7 @@ class ProductionMixin:
           - self.household._workforce_ver: changes whenever self.household.employees is mutated
           - self.household.freedmen, self.household.slaves: workforce headcount
           - self.household.wage_hours_this_year: practice attention (e.g. temporary 0.0 in revenue_capacity)
+          - self.household.directors_extra, bondage_years_left: the own hours the practice is paid for
           - self.household.farm_hectares: household farmland staples affecting food price ratio
           - self.household.gov: governance quality affecting state funding
           - self.household._inst_units_ver: scalable institution units
@@ -155,6 +160,7 @@ class ProductionMixin:
         """
         scenario = self.state.scenario
         economy = self.state.economy
+        holdings = self.state.holdings
         projects = self.state.projects
         household = self.state.household
         governance = self.state.governance
@@ -168,7 +174,9 @@ class ProductionMixin:
             self.household.workforce_version,
             self.household.institution_units_version,
             household.wage_hours_this_year,
-            getattr(economy, "farm_hectares", 0.0) or 0.0,
+            household.directors_extra,
+            household.bondage_years_left,
+            getattr(holdings, "farm_hectares", 0.0) or 0.0,
             getattr(household, "freedmen", 0.0) or 0.0,
             getattr(household, "slaves", 0.0) or 0.0,
             getattr(governance, "gov", 0.0) or 0.0,
@@ -188,7 +196,6 @@ class ProductionMixin:
 
     def _compute_revenue_uncached(self):
         total_revenue = 0.0
-        attention = self.practice_attention()
         practice_set = self._practice_set()
         projects = self.state.projects
         granted = projects.granted
@@ -209,30 +216,14 @@ class ProductionMixin:
             if not practice and node_id not in operating:
                 continue
             node = self.nodes[node_id]
-            if node["rev"]:
-                # AT THIS SOCIETY'S PRICES, like everything else it charges you.
-                # The tree's revenue figures are labour hours and this
-                # was the one flow that never converted them, so a physician's
-                # practice paid exactly 233.5 in Tenochtitlan, in Luoyang and
-                # in Scandinavia while the cost of building anything differed
-                # by up to 1.4x. See living_cost for the other half.
-                if practice:
-                    total_revenue += node["rev"] * self.PRACTICE_SHARE * attention * self.price_index
-                else:
-                    # A SCHOOL YOU FOUNDED THREE OF EARNS THREE SCHOOLS' WORTH.
-                    # institution_units is 1.0 for everything that was never
-                    # expanded - the whole rest of the tree, and a single
-                    # ordinary founding of the five that CAN be - so this
-                    # changes nothing for a run that never asks `open` for a
-                    # second one. See ProjectsMixin.institution_units.
-                    _units = (self.institution_units(node_id)
-                              if node_id in self.SCALABLE_INSTITUTIONS else 1.0)
-                    # goods_market_factor() is 1.0 for anything outside
-                    # GOODS_CATEGORIES, so this changes nothing for the
-                    # services, institutions and patronage the brief asked to
-                    # leave alone - see that method's own comment for why.
-                    total_revenue += (node["rev"] * _units * self.venture_ramp(node_id) * self.price_index
-                          * self.goods_market_factor(node_id) * self.node_output_market_factor(node))
+            # a practised skill earns through the founder's own hours (practice_income), not through the node
+            if node["rev"] and not practice:
+                # A SCHOOL YOU FOUNDED THREE OF EARNS THREE SCHOOLS' WORTH: institution_units is 1.0 for
+                # everything never expanded (see ProjectsMixin.institution_units).
+                _units = (self.institution_units(node_id)
+                          if node_id in self.SCALABLE_INSTITUTIONS else 1.0)
+                total_revenue += (node["rev"] * _units * self.venture_ramp(node_id) * self.price_index
+                                  * self.node_output_market_factor(node))
         # THERE IS ONLY SO MUCH MARKET. Uncapped, this compounds: every venture
         # pays back quickly, so its income buys the next one, and nothing
         # stops a run's capital from growing far past what a real market this
@@ -246,6 +237,7 @@ class ProductionMixin:
         # to work: a staff with no workshop is an expense, which is exactly why
         # workshop_first matters and why it is cheap.
         total_revenue += self.workshop_output()
+        total_revenue += self.practice_income()
         economy = self.state.economy
         gross = total_revenue
         ceiling = self.REVENUE_CEILING_PER_POP_SCALE * self.pop_scale \
@@ -407,36 +399,41 @@ class ProductionMixin:
         carried to the techniques held now (concern_volume.py); callers apply the market's price."""
         economy = self.state.economy
         return (self.nodes[node_id]["rev"] * ramp * economy.output_factor * self.price_index
-                * self.concern_value_ratio(node_id))
+                * self.concern_value_ratio(node_id) * self.concern_learning_ratio(node_id))
 
     def ledger_concern_rows(self):
-        """Yearly takings of every concern and practice that earns, by node
-        id, as the ledger credits them."""
+        """Yearly takings of every opened concern that earns, by node id, as the ledger credits them. The
+        founder's own practice is one row of `revenue_sources`, not one per skill."""
         rows = {}
         projects = self.state.projects
-        economy = self.state.economy
         for node_id in self.done_in_order():
-            practice = node_id in projects.granted and self._practisable(node_id)
-            if node_id in projects.granted and not practice:
+            if node_id in projects.granted or node_id not in projects.operating:
                 continue
-            if not practice and node_id not in projects.operating:
+            if not self.nodes[node_id]["rev"]:
                 continue
-            node = self.nodes[node_id]
-            if not node["rev"]:
-                continue
-            if practice:
-                ramp = self.PRACTICE_SHARE
-            else:
-                ramp = self.venture_ramp(node_id)
-            if practice:
-                amt = self.concern_takings(node_id, ramp) * self.practice_attention()
-            else:
-                # The figure `ventures` and `why` print, and the factor
-                # revenue() applies, so the ledger's parts add up to its total.
-                amt = self.venture_real_earnings(node_id)
-            if amt > 0.5:
-                rows[node_id] = round(amt, 1)
+            # The figure `ventures` and `why` print, and the factor revenue() applies, so the ledger's
+            # parts add up to its total.
+            amount = self.venture_real_earnings(node_id)
+            if amount > 0.5:
+                rows[node_id] = round(amount, 1)
         return rows
+
+    def practice_trade(self):
+        """The trade the founder's own practice is paid as: scholar when a practised skill asks for
+        scholars, else artisan; None when no skill is practised."""
+        practice = self._practice_set()
+        if not practice:
+            return None
+        return "scholar" if any(self.nodes[node_id]["sch"] > 0 for node_id in practice) else "artisan"
+
+    def practice_income(self):
+        """Yearly fees of the founder's own practice: the own hours not sold for wages, at the wage of
+        the trade the practice is worked as. One person's hours earn once however many skills the
+        practice covers, and a dead founder has none (practice_attention)."""
+        trade = self.practice_trade()
+        if trade is None:
+            return 0.0
+        return self.labour.director_pool() * self.practice_attention() * self.labour.wage_per_hour(trade)
 
     @readable
     def revenue_sources(self):
@@ -463,6 +460,9 @@ class ProductionMixin:
         workshop_total = self.workshop_output() * economy.output_factor
         if workshop_total > 0.5:
             out["_what_your_own_workshop_sells"] = round(workshop_total, 1)
+        practice_total = self.practice_income() * economy.output_factor
+        if practice_total > 0.5:
+            out["_your_own_practice"] = round(practice_total, 1)
         if self.state_funding() > 0.5:
             out["_state_funding"] = round(self.state_funding() * economy.output_factor, 1)
         # And the difference between the parts and the whole, which is the
@@ -530,28 +530,21 @@ class ProductionMixin:
                    young[0][1] * 100, self.cfg["revenue_ramp_years"]))
 
     def practice_note(self, brief=False):
-        """Why the practice pays less than the tree quotes, said once, plainly.
-        `brief` is the one-line form for screens that already explained it."""
-        # ONLY WHAT THE LEDGER ACTUALLY SHOWS. Naming rows that were dropped
-        # for being under half a denarius invites the reader to look for them.
-        economy = self.state.economy
-        scale = self.PRACTICE_SHARE * self.practice_attention() * economy.output_factor
-        prac = sorted(node_id for node_id in self._practice_set()
-                      if self.nodes[node_id]["rev"] * scale > 0.5)
-        if not prac:
+        """What the practice is and what it pays, said once, plainly. `brief` is the one-line form for
+        screens that already explained it."""
+        income = self.practice_income() * self.state.economy.output_factor
+        trade = self.practice_trade()
+        if trade is None or income <= 0.5:
             return None
+        prac = sorted(self._practice_set())
+        names = ", ".join(prac[:4])
         if brief:
-            return ("%s %s your own practice, paid at about a third of what "
-                    "the tree quotes ('money full' says why)."
-                    % (", ".join(prac[:4]), "is" if len(prac) == 1 else "are"))
-        return ("%s %s your own practice, and %s about a third of what the tree "
-                "quotes for the trade: the difference between one person in a "
-                "rented room and an organised concern. That gap does not close "
-                "with time. Selling your hours for wages takes another bite out "
-                "of it, because you cannot be in two places."
-                % (", ".join(prac[:4]),
-                   "is" if len(prac) == 1 else "are",
-                   "it pays" if len(prac) == 1 else "they pay"))
+            return ("%s %s your own practice, paid as a %s for the hours you do not sell ('money full' says why)."
+                    % (names, "is" if len(prac) == 1 else "are", trade))
+        return ("%s %s your own practice: your own hours, worked as a %s at the going wage, so what it pays is "
+                "the hours you have not sold for wages. Selling your hours for wages takes them out of it, "
+                "because you cannot be in two places."
+                % (names, "is" if len(prac) == 1 else "are", trade))
 
     def _practice_set(self):
         """The granted skills you actually practise, as a set, computed once.

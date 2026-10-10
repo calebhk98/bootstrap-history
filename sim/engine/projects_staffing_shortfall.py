@@ -12,10 +12,12 @@ class StaffingShortfallMixin:
         """
         scholars, craftsmen = self.venture_hands(node_id)
         held = {"scholars": scholars, "craftsmen": craftsmen}
+        units = self.institution_units(node_id) if foreman_units is None else foreman_units
         trade, fte = self.venture_foreman(node_id)
         if trade:
-            units = self.institution_units(node_id) if foreman_units is None else foreman_units
             held[trade] = held.get(trade, 0.0) + fte * units
+        for trade, people in self.venture_garrison(node_id, units).items():
+            held[trade] = held.get(trade, 0.0) + people
         return {resource: amount for resource, amount in held.items() if amount > 0.005}
 
     def _staffing_draws(self):

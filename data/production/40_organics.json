@@ -22,12 +22,41 @@
    "labour_hours": {
     "labourer": 150.0
    },
+   "land_hectare_years": 1.2399911,
+   "capital": [
+    {
+     "good": "plough team: a yoke of two draught oxen",
+     "build_materials": {
+      "draught_animal_kg": 600.0
+     },
+     "build_labour_hours": {},
+     "service_life_years": 10,
+     "annual_output_at_basis": 5775.0,
+     "capital_basis": "A yoke of two working oxen of about 300 kg live weight each (the weight data/world/living_stock.json takes for working cattle). Under the two-field rotation one yoke serves about 10 hectares cropped a year (a holding of about 20 hectares), so annual output at the basis is ten hectares of wheat; Roman practice put about one yoke to 25-50 hectares of mixed arable in Cato, De Agri Cultura 10-11 and Columella 2.12 and a medieval English plough team of eight oxen served a carucate of about 50 hectares, so this is the thick end of the range for a grain-only holding. A working ox lasts about ten years in the yoke. Order of magnitude, not checked against a single source.",
+     "conf": "C"
+    }
+   ],
+   "extracted_from": "arable land",
+   "unit_dimension": "mass",
+   "basis": "per hectare CROPPED with wheat for one growing season, output as kg of threshed grain delivered to the granary, net of the seed corn held back for next year's sowing. A hectare cropped is not a hectare held: under the two-field rotation of this period an equal area lies fallow, so a holding is about twice this area - see sim/world/agriculture.py's FALLOW_SHARE_OF_HOLDING, which is where that land requirement lives.",
+   "yield_basis": "GROWN, so the limit is land and a yield-to-seed ratio, not a recipe with material inputs - this is the single number that decides what share of a pre-industrial population must farm, so it deserves the most defensible physical basis in this file. Ancient Mediterranean wheat under an ard (a scratch plough that does not invert the sod, so a field needs several cross-ploughings rather than one deep one) without heavy manuring returned on the order of 4-5 fold on the seed sown - Columella's own figures and modern archaeobotanical estimates for Roman Italy agree on this order of magnitude. Taking the midpoint 4.5 fold at a seeding rate of 165 kg/ha (the midpoint of the 150-180 kg/ha broadcast range) gives a GROSS yield of 742.5 kg/ha, and subtracting the 165 kg/ha of seed corn held back gives the 577.5 kg/ha stated as this entry's output. ARITHMETIC CORRECTION, RECORDED RATHER THAN QUIETLY APPLIED: this entry previously stated 800 kg/ha and called it net of seed while deriving it from the same fold times seed arithmetic, which yields a GROSS figure by definition - fold return is measured against the seed sown, so the seed is inside it. 800 is a defensible gross number and was an indefensible net one; the two readings differ by 28%, and everything downstream (surplus, the farm-population share, the price of bread) scales off which one is meant. inputs stays empty rather than listing wheat_kg as its own seed input because sim/engine/solve_prices.py's resolvability pass treats a material that appears among its own inputs as never bottoming out in labour, which is wrong for a self-reproducing crop but is the tool's rule today - see Complaints/31. LABOUR. Cross-ploughing, broadcast sowing, weeding, sickle reaping, and threshing and winnowing by flail or ox-treading - about 150 hours/ha in aggregate for pre-mechanical technique. This aggregate is under suspicion and is NOT to be treated as settled: hand reaping with a sickle runs at roughly 0.1 ha per worker-day, which is on the order of 100 hours per hectare for the reaping alone, and that does not leave room inside 150 for the other five sub-tasks. Correcting it means re-deriving this line from its sub-tasks at defensible rates, which has not been done, so the number stands with the doubt attached rather than being adjusted by guess. TEAM (Complaint 398): the ard is drawn by a yoke of oxen, held as plant (capital above, the draught_animal_kg the economy rears and the engine breeds), and the team grazes: land_hectare_years is the one hectare cropped plus about a quarter hectare-year of pasture and hay meadow for the team (a hectare cropped needs 0.2 of an ox, an ox about 1.2 hectares of grazing and hay for roughly 3 tonnes of dry matter a year; order of magnitude, conf C), so fodder is land, not a good. Available only to a society that can keep draught animals (requires_node cap_power_muscle); wheat_hoe_kg is the same crop without a team. LAND (Complaints/48): this entry's whole batch already IS the one hectare-year its own basis states, so land_hectare_years is exactly that hectare expressed in the unit hectare_land is priced in - 1 hectare-year, not a new area estimate. sim/engine/solve_prices.py charges this against hectare_land's own solved price (sim/world/land.py's Ricardian margin of cultivation for the civilization being solved) exactly like any ordinary input, which is how the rent that module computes finally reaches the price of bread - see LAND in _SCHEMA.md.",
+   "conf": "B",
+   "requires_node": "cap_power_muscle"
+  },
+  "wheat_hoe_kg": {
+   "outputs": {
+    "wheat_kg": 577.5
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 350.0
+   },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
    "unit_dimension": "mass",
    "basis": "per hectare CROPPED with wheat for one growing season, output as kg of threshed grain delivered to the granary, net of the seed corn held back for next year's sowing. A hectare cropped is not a hectare held: under the two-field rotation of this period an equal area lies fallow, so a holding is about twice this area - see sim/world/agriculture.py's FALLOW_SHARE_OF_HOLDING, which is where that land requirement lives.",
-   "yield_basis": "GROWN, so the limit is land and a yield-to-seed ratio, not a recipe with material inputs - this is the single number that decides what share of a pre-industrial population must farm, so it deserves the most defensible physical basis in this file. Ancient Mediterranean wheat under an ard (a scratch plough that does not invert the sod, so a field needs several cross-ploughings rather than one deep one) without heavy manuring returned on the order of 4-5 fold on the seed sown - Columella's own figures and modern archaeobotanical estimates for Roman Italy agree on this order of magnitude. Taking the midpoint 4.5 fold at a seeding rate of 165 kg/ha (the midpoint of the 150-180 kg/ha broadcast range) gives a GROSS yield of 742.5 kg/ha, and subtracting the 165 kg/ha of seed corn held back gives the 577.5 kg/ha stated as this entry's output. ARITHMETIC CORRECTION, RECORDED RATHER THAN QUIETLY APPLIED: this entry previously stated 800 kg/ha and called it net of seed while deriving it from the same fold times seed arithmetic, which yields a GROSS figure by definition - fold return is measured against the seed sown, so the seed is inside it. 800 is a defensible gross number and was an indefensible net one; the two readings differ by 28%, and everything downstream (surplus, the farm-population share, the price of bread) scales off which one is meant. inputs stays empty rather than listing wheat_kg as its own seed input because sim/engine/solve_prices.py's resolvability pass treats a material that appears among its own inputs as never bottoming out in labour, which is wrong for a self-reproducing crop but is the tool's rule today - see Complaints/31. LABOUR. Cross-ploughing, broadcast sowing, weeding, sickle reaping, and threshing and winnowing by flail or ox-treading - about 150 hours/ha in aggregate for pre-mechanical technique. This aggregate is under suspicion and is NOT to be treated as settled: hand reaping with a sickle runs at roughly 0.1 ha per worker-day, which is on the order of 100 hours per hectare for the reaping alone, and that does not leave room inside 150 for the other five sub-tasks. Correcting it means re-deriving this line from its sub-tasks at defensible rates, which has not been done, so the number stands with the doubt attached rather than being adjusted by guess. LAND (Complaints/48): this entry's whole batch already IS the one hectare-year its own basis states, so land_hectare_years is exactly that hectare expressed in the unit hectare_land is priced in - 1 hectare-year, not a new area estimate. sim/engine/solve_prices.py charges this against hectare_land's own solved price (sim/world/land.py's Ricardian margin of cultivation for the civilization being solved) exactly like any ordinary input, which is how the rent that module computes finally reaches the price of bread - see LAND in _SCHEMA.md.",
-   "conf": "B",
+   "yield_basis": "GROWN, the same wheat as wheat_kg without a plough team, for a society that keeps no draught animals: the ground is turned by spade and hoe instead of the ard, so the yield per hectare is taken as wheat_kg's and the labour rises by the ploughing and cross-ploughing done by hand, about 200 hours per hectare on top of wheat_kg's 150 (spade culture runs to several hundred hours a hectare against well under a hundred for ploughing with a yoke; Columella 2.12 sets hand digging at many times a ploughman's day; order of magnitude, conf C, TEMPORARY HEURISTIC: yield equal to the ard's is assumed, not sourced). No team, so no capital and no pasture: the land is the one hectare cropped. LAND: the batch is one hectare-year as in wheat_kg.",
+   "conf": "C",
    "requires_node": null
   },
   "olive_oil_kg": {
@@ -255,7 +284,8 @@
    "basis": "per kg of finished vegetable (oak-bark) tanned leather",
    "yield_basis": "Leather is hides plus tannin plus a great deal of TIME - and time is not labour, so this entry is explicit about which is which. Fleshing and liming (soaking in a lime bath to loosen hair and dissolve the epidermis) removes hair and some tissue, a mass loss partly offset by the tannin the hide later absorbs, netting to roughly 1.15 kg of raw hide needed per kg of finished leather. Traditional oak-bark vegetable tanning used large quantities of ground bark relative to the hide's own weight - historical tanneries are commonly described using several times the hide's weight in bark across the whole tan - taken here at 3 kg of oak_bark_kg per kg of leather. The labour figures (fleshing, liming, working the hide by hand in the tan pits; then currying/finishing - shaving to thickness, working in oils) are what a tanner and his labourers actually DO with their hands; they do NOT include the months the hide spends soaking in progressively stronger tan liquors in a pit, which for heavy leather traditionally ran six months to well over a year. That soak time ties up PIT CAPACITY AND CAPITAL, not labour-hours, and belongs in whatever the sim uses to model production lead time, not in labour_hours here.",
    "conf": "C",
-   "requires_node": "tex_vegetable_tanning"
+   "requires_node": "tex_vegetable_tanning",
+   "operated_by": ["tex_vegetable_tanning"]
   },
   "parchment_sheet": {
    "outputs": {
@@ -368,7 +398,8 @@
    "basis": "per kg of calcined bone ash",
    "yield_basis": "Bone is roughly two-thirds mineral (calcium phosphate) and the rest organic matter - collagen, fat, marrow. Calcining (burning) a bone white in a hot, sustained fire drives off all of the organic fraction as smoke and gas, leaving only the mineral ash behind at roughly 65-70% of the original dry weight, so about 1.4 kg of raw bone is needed per kg of finished ash - the inverse of that yield. This needs a genuinely hot, sustained fire rather than a quick burn, priced here as charcoal fuel and a furnaceman's hours tending the kiln until the bone is fully white through and through rather than just charred black on the surface.",
    "conf": "C",
-   "requires_node": "cap_heat_0700"
+   "requires_node": "cap_heat_0700",
+   "operated_by": ["ag2_bone_meal"]
   },
   "gelatin_kg": {
    "outputs": {
@@ -548,7 +579,8 @@
    "basis": "per kg of steam-distilled essential oil (rose otto taken as the representative case)",
    "yield_basis": "Flower petals hold their aromatic oil at an extremely low concentration - on the order of a few hundredths of a percent by weight for rose, which is why attar of rose is one of the most valuable liquids by weight in the pre-modern world. Perfumery sources consistently put the ratio at several thousand kilograms of fresh petals per kilogram of finished oil after steam distillation; taken here at 3500:1. Steam distilling that much plant material needs a correspondingly large, sustained fire under a still (a copper alembic historically) across many batches, priced as firewood. Labour is split between the huge quantity of hand-picking needed upstream (folded in here as labourer hours on top of rose_petals_kg's own harvest, since a still-load is picked and processed in a short window before the oil volatilises away) and the artisan's skilled hours running the still and separating the oil from the distillate.",
    "conf": "B",
-   "requires_node": "distillation_alcohol"
+   "requires_node": "distillation_alcohol",
+   "operated_by": ["distillation_alcohol"]
   },
   "rose_petals_kg": {
    "outputs": {
@@ -731,7 +763,8 @@
    "basis": "per kg of finished, dried and sized rag paper",
    "yield_basis": "PAPER FROM RAGS IS A REAL CHAIN, and rags are themselves worn-out linen - see linen_rag_kg's own entry for why that input already carries a collection cost rather than a fresh-manufacture one. Turning rags into paper: the rags are boiled with a weak lye (wood ash again, as in soap_kg) to loosen dirt and help break down the fibre, then beaten (historically by hand with mallets, later by water-powered stamping mills - this entry assumes the more labour-heavy hand/tended-mill case) into a fibrous pulp slurry, which a vatman forms into sheets on a wire mould, couches onto felts, presses to squeeze out water, and hangs to dry before sizing (typically with gelatin_kg or a starch, omitted here as a small addition) to stop ink from feathering. Washing, boiling and beating loses some fibre, so roughly 1.4 kg of rag is needed per kg of finished dry paper. Labour splits into the pulping/beating/vatting (labourer) and the more skilled sheet-forming, couching, pressing and sizing (artisan).",
    "conf": "C",
-   "requires_node": "prn_hand_papermaking"
+   "requires_node": "prn_hand_papermaking",
+   "operated_by": ["prn_hand_papermaking"]
   },
   "linen_rag_kg": {
    "outputs": {

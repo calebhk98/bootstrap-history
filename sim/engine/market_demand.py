@@ -52,6 +52,15 @@ def _household_model():
 _CLIMATE_BASKETS = {}
 
 
+def climate_records(civ, world_map):
+    """[(a tile's climate record, its share of the opening population)] for the tiles the civilisation holds."""
+    tile_ids = tiles_held(civ, world_map)
+    return [({"lat": layer_value(tile, "lat", world_map),
+              "koppen_class": layer_value(tile, "koppen_class", world_map),
+              "koppen_sample_mix": layer_value(tile, "koppen_sample_mix", world_map)},
+             settlement.population_share(tile_ids, tile)) for tile in tile_ids]
+
+
 def _civilisation_basket(model, civ, world_map):
     """The model's basket with the floors the climate of the civilisation's tiles sets, each tile
     weighted by its share of the opening population (cached for the map it was built on)."""
@@ -59,12 +68,7 @@ def _civilisation_basket(model, civ, world_map):
     cached = _CLIMATE_BASKETS.get(key)
     if cached is not None and cached[0] is world_map:
         return cached[1]
-    tile_ids = tiles_held(civ, world_map)
-    records = [({"lat": layer_value(tile, "lat", world_map),
-                 "koppen_class": layer_value(tile, "koppen_class", world_map),
-                 "koppen_sample_mix": layer_value(tile, "koppen_sample_mix", world_map)},
-                settlement.population_share(tile_ids, tile)) for tile in tile_ids]
-    basket = need_basket.mean_climate_basket(model.basket, records)
+    basket = need_basket.mean_climate_basket(model.basket, climate_records(civ, world_map))
     _CLIMATE_BASKETS[key] = (world_map, basket)
     return basket
 

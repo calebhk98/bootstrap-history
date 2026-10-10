@@ -1,24 +1,6 @@
 {
- "_doc": "How far a place is from a civilisation's home tiles, banded onto the reach levels (../reach_levels/). The days themselves come from geography's fastest route over the modes the civilisation holds (sim/geography/reach_bands.py).",
+ "_doc": "How far a place is from a civilisation's home tiles, banded onto the reach levels (../reach_levels/). The days themselves come from geography's fastest route over the modes the civilisation holds, and the bands from the carriers' own days per tile (sim/geography/reach_bands.py).",
  "entries": [
-  {
-   "id": "reach_band_first_days",
-   "value": 6,
-   "unit": "days of the fastest route from a held tile",
-   "kind": "heuristic",
-   "conf": "D",
-   "source": "Labelled heuristic: about a week's travel is still inside the home trading sphere (reach level 1). Not fitted to a source.",
-   "why": "Sets where the reach levels begin on the days of the fastest route; each later level takes a fixed multiple of it."
-  },
-  {
-   "id": "reach_band_ratio",
-   "value": 2.0,
-   "unit": "days of one reach level per days of the one before",
-   "kind": "heuristic",
-   "conf": "D",
-   "source": "Labelled heuristic: each step of the reach scale (own trade routes, coastal sailing, deep voyage, ocean crossing) is a doubling of the journey. Not fitted to a source.",
-   "why": "Turns days of travel into the reach level that gates expeditions and prices distant materials."
-  },
   {
    "id": "located_material_reference_civilisation",
    "value": "rome_100ad",

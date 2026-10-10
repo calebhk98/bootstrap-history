@@ -3,6 +3,10 @@ import math
 from typing import Dict, List, Optional, Sequence, Set, Tuple
 
 from sim.constants import declare
+from sim.labour import wages
+
+from . import asks
+from .trades import fallback_trade
 from .records import Bid, Clearing, MarketState, YearInputs
 
 WAGE_SHARE_CLOSED_PER_YEAR = declare(
@@ -42,6 +46,29 @@ def reservation_wage(inputs: YearInputs, area: str, risk: float) -> float:
     return floor * (1.0 + risk * inputs.value_of_life_years_of_income)
 
 
+def unskilled_option(state: MarketState, inputs: YearInputs, area: str, trade: str) -> float:
+    """What a skilled worker can always earn instead: the unskilled wage the area paid last year, taken
+    straight up with no retraining, so no trade quotes below it."""
+    fallback = fallback_trade(inputs.trades)
+    if trade == fallback:
+        return 0.0
+    return state.wages.get(area, {}).get(fallback) or 0.0
+
+
+def trained_substitute_wage(state: MarketState, inputs: YearInputs, area: str, trade: str) -> float:
+    """The most an hour of a trade can command where hands are few: what it takes to train a substitute. A
+    person who trains goes the trade's training years unpaid, so the trade pays the unskilled wage times the
+    training premium (wages.training_premium: the multiple that leaves a trainee indifferent) and the risk
+    of the work priced as in the reservation wage. Unlimited for the unskilled trade itself."""
+    spec = inputs.trades[trade]
+    fallback = fallback_trade(inputs.trades)
+    if trade == fallback or spec.training_years <= 0.0:
+        return math.inf
+    unskilled = max(state.wages.get(area, {}).get(fallback) or 0.0, reservation_wage(inputs, area, 0.0))
+    premium = wages.training_premium(spec.training_years, inputs.discount_rate, inputs.career_years)
+    return unskilled * premium * (1.0 + spec.fatality_risk_per_year * inputs.value_of_life_years_of_income)
+
+
 def clearing_target(reservation: float, offered: float, bids: Sequence[Bid]) -> float:
     """Price where the offered hours (all at `reservation`) meet bids taken highest maximum first."""
     live = sorted(((bid.maximum_wage, bid.hours) for bid in bids if bid.maximum_wage >= reservation), reverse=True)
@@ -56,13 +83,16 @@ def clearing_target(reservation: float, offered: float, bids: Sequence[Bid]) -> 
 
 
 def market_wage(last: Optional[float], reservation: float, offered: float, bids: Sequence[Bid]) -> float:
-    if offered <= 0.0 or not bids:
+    if offered <= 0.0:
         return last if last is not None else max((bid.maximum_wage for bid in bids), default=reservation)
+    if not bids:    # hours on offer and nobody wanting them: the quote drifts down to the ask
+        return reservation if last is None else last + WAGE_SHARE_CLOSED_PER_YEAR * (reservation - last)
     target = clearing_target(reservation, offered, bids)
     wage = target if last is None else last + WAGE_SHARE_CLOSED_PER_YEAR * (target - last)
     if any(bid.maximum_wage >= reservation for bid in bids):
         wage = max(wage, reservation)
-    return wage
+    # no employer can pay above its maximum: a wage that lags above every maximum falls to the best of them
+    return min(wage, max(max(bid.maximum_wage for bid in bids), reservation))
 
 
 def premium_factor(paid: float, rival_paid: float) -> float:
@@ -138,10 +168,13 @@ def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bid
     spec = inputs.trades[trade]
     workers = sum(state.workers.get(area, {}).get(trade, []))
     offered = workers * inputs.hours_per_worker_year
-    reservation = reservation_wage(inputs, area, spec.fatality_risk_per_year)
+    base_reservation = reservation_wage(inputs, area, spec.fatality_risk_per_year)
+    lowest = inputs.ask_floor_per_worker_year.get(area, 0.0) / max(inputs.hours_per_worker_year, 1e-12)
+    reservation = max(base_reservation * asks.scale_of(state, area, trade), lowest, unskilled_option(state, inputs, area, trade))
     last = state.wages.get(area, {}).get(trade)
-    wage = market_wage(last, reservation, offered, bids)
-    target = clearing_target(reservation, offered, bids) if offered > 0.0 and bids else wage
+    ceiling = max(trained_substitute_wage(state, inputs, area, trade), reservation)
+    wage = min(market_wage(last, reservation, offered, bids), ceiling)
+    target = min(clearing_target(reservation, offered, bids), ceiling) if offered > 0.0 and bids else wage
     wanted, paid = eligible_bids(bids, wage)
     previous = state.hired_hours.get(area, {}).get(trade, {})
     hired = retain(wanted, previous, offered) if offered > 0.0 else {employer: 0.0 for employer in wanted}
@@ -150,6 +183,7 @@ def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bid
         poach(hired, wanted, paid)
     hired = {employer: hours for employer, hours in hired.items() if hours > 0.0}
     state.wages.setdefault(area, {})[trade] = wage
+    asks.record(state, area, trade, offered, sum(wanted.values()), wage, base_reservation, lowest)
     state.hired_hours.setdefault(area, {})[trade] = dict(hired)
     total = sum(hired.values())
     average = sum(hours * paid[employer] for employer, hours in hired.items()) / total if total > 0.0 else wage

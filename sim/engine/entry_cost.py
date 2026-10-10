@@ -47,13 +47,28 @@ class CostBook:
         self.anchors = anchors.prices(prices_in_hours) if anchors else None
         self.interest = float(civilization["starting_interest_rate"])
 
-    def unit_cost_hours(self, entry_key: str, material: str) -> Optional[float]:
+    def unit_cost_hours(self, entry_key: str, material: str, include_capital: bool = True) -> Optional[float]:
         """Labour hours one unit of `material` costs when made by this entry with every input bought at
-        the table's prices; None where the entry does not make it or an input has no price."""
+        the table's prices; None where the entry does not make it or an input has no price. Without
+        `include_capital` the plant's repayment is left out: the running cost of a built plant."""
         entry = self.production.get(entry_key)
         if entry is None or material not in (entry.get("outputs") or {}):
             return None
         result = solve_prices_core.recipe_cost_and_allocation(
             entry_key, entry, self.prices, self.wages, rent_hours_per_kg_by_material=self.rent,
-            demand_anchor_price_by_material=self.anchors, interest_rate=self.interest)
+            demand_anchor_price_by_material=self.anchors, interest_rate=self.interest,
+            include_capital=include_capital)
         return None if result is None else result[1].get(material)
+
+    def running_unit_cost_hours(self, entry_key: str, material: str) -> Optional[float]:
+        """What a unit costs a producer whose plant is built: the full cost without the plant's repayment."""
+        return self.unit_cost_hours(entry_key, material, include_capital=False)
+
+    def running_share(self, entry_key: str, material: str) -> Optional[float]:
+        """Running cost over full cost of a unit of `material` by this entry (one where it has no plant);
+        None where it cannot be costed."""
+        full = self.unit_cost_hours(entry_key, material)
+        running = self.running_unit_cost_hours(entry_key, material)
+        if full is None or running is None or not full > 0.0:
+            return None
+        return min(1.0, max(0.0, running / full))

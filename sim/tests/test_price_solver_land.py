@@ -226,8 +226,10 @@ class TheFiveCivilizationsSeparateTests(unittest.TestCase):
         # wiring land into the crop's cost. Uses each civilization's OWN
         # solved rent (not a pinned number) so this stays true even if
         # sim/world/land.py's own inputs change later.
+        # Mexica grows wheat by hand (no draught team, wheat_hoe_kg), a different technique with its own
+        # labour, so it is left out of a comparison of rent alone.
         measurements = [self._solved_wheat_price(civ)
-                        for civ in self.CIVILIZATIONS_BY_EXPECTED_RENT_ORDER]
+                        for civ in self.CIVILIZATIONS_BY_EXPECTED_RENT_ORDER if civ != "mexica_1500"]
         by_rent = sorted(measurements, key=lambda pair: pair[1])
         wheat_prices_by_ascending_rent = [price for price, _rent in by_rent]
         self.assertEqual(wheat_prices_by_ascending_rent,
@@ -366,7 +368,7 @@ class NoRomanAreaUnitInDataTests(unittest.TestCase):
     def test_a_hectare_year_crop_states_one_hectare_year(self):
         production_entries, _duplicates = solve_prices.load_production()
         self.assertAlmostEqual(
-            production_entries["wheat_kg"]["land_hectare_years"], 1.0, places=3)
+            production_entries["wheat_hoe_kg"]["land_hectare_years"], 1.0, places=3)
 
     def test_solver_has_no_roman_area_conversion(self):
         from sim.world import land

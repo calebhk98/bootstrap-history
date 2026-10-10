@@ -98,28 +98,30 @@ MANAGEMENT_SPAN_EXPONENT = declare(
 	unit="exponent of capacity on the wage bill beyond the people hired", source=None, confidence="D",
 	why="Wages of a concern run at several times its founding size grow faster than its staff: the "
 		"overseers and managers a larger concern needs. Stands in for a model of span of control.")
-ENTRY_PREMIUM_PER_OPERATOR = declare(
-	"ENTRY_PREMIUM_PER_OPERATOR", 0.05, kind="temporary_heuristic",
-	unit="share of the copy cost per operator already in the market", source=None, confidence="D",
-	why="A fixed cost an entrant pays however small it is (a site, a custom to win from those who "
-		"already serve it) that rises with the operators crowding the market; stands in for rents, "
-		"licences and the cost of finding customers, so that the number of firms follows what each must carry.")
-FOUNDER_WEALTH_MULTIPLE = declare(
-	"FOUNDER_WEALTH_MULTIPLE", 5.0, kind="temporary_heuristic",
-	unit="multiple of a stratum's average savings per person", source=None, confidence="D",
-	why="Who founds a firm is among the better off of their stratum, not its average member; stands "
-		"in for the spread of wealth within a body of people.")
+MANAGEMENT_SPAN_OF_CONTROL = declare(
+	"MANAGEMENT_SPAN_OF_CONTROL", 10.0, kind="temporary_heuristic",
+	unit="people one manager supervises", source=None, confidence="D",
+	why="A firm must pay for the hours of a manager in proportion to the people it employs; how many a "
+		"manager can oversee is not sourced for any society here (historical spans of control, such as "
+		"a Roman decurion's or a medieval steward's, would replace it).")
+ENTRANT_EXPECTATION_ADJUSTMENT_SHARE = declare(
+	"ENTRANT_EXPECTATION_ADJUSTMENT_SHARE", 0.3, kind="temporary_heuristic",
+	unit="share of the gap between expected and this year's takings closed each year", source=None, confidence="D",
+	why="An entrant judges a market on the takings it expects, which follow the year's takings only in "
+		"part, so a one-year price spike does not draw a crowd of entrants (Complaints/reports/"
+		"agent-economy-review-round-four.md). How fast founders revise is not measured.")
+WEALTH_TAIL_INDEX = declare(
+	"WEALTH_TAIL_INDEX", 1.5, kind="temporary_heuristic",
+	unit="Pareto tail index of household savings within a stratum", source=None, confidence="D",
+	why="How unevenly a stratum's savings are spread over its households: the count holding at least a "
+		"sum falls as a power of it with this index (above 1; lower is more unequal). Stands in for a "
+		"measured distribution of wealth within each body of people, which the data does not give.")
 TACIT_SHARE_OF_COPYING = declare(
 	"TACIT_SHARE_OF_COPYING", 0.3, kind="temporary_heuristic",
 	unit="share of the copy chance", source=None, confidence="D",
 	why="How much of a copy's chance of success rests on reading, measuring and writing down what "
-		"is seen; a founder from an unlettered stratum loses that share. Stands in for declared "
-		"per-technique visibility (Complaint 376).")
-EXIT_GRACE_YEARS = declare(
-	"EXIT_GRACE_YEARS", 5, kind="temporary_heuristic",
-	unit="years", source=None, confidence="D",
-	why="Years after opening before a concern that earns less than its plant would lend for counts "
-		"against its firm; stands in for the ramp-up of a new concern.")
+		"is seen; a founder from an unlettered stratum loses that share. Stands in for a measured "
+		"effect of literacy on copying; what is visible of each technique is declared in data.")
 ENTRY_EQUITY_SHARE = declare(
 	"ENTRY_EQUITY_SHARE", 0.3, kind="temporary_heuristic",
 	unit="share of an entrant's stake", source=None, confidence="D",

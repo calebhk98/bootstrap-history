@@ -94,3 +94,23 @@ def run(setup: EconomySetup = None, years: int = 5, inputs_for_year=None):
         outcomes.append(economy.step(inputs))
     return economy, outcomes
 
+
+
+NORTH_PORT, NORTH_FARMS = "north_port", "north_farms"
+NORTH = "north"
+
+
+def two_country_setup(**changes) -> EconomySetup:
+    """The three-tile economy and a second country on two tiles to its north, which can grow grain but has no
+    miners or smiths (its techniques allow only the farm recipe)."""
+    base = small_setup()
+    the_tiles = dict(base.tiles)
+    the_tiles[FARMS] = dataclasses.replace(the_tiles[FARMS], borders=the_tiles[FARMS].borders + (NORTH_FARMS,))
+    the_tiles[NORTH_FARMS] = TileSpec(NORTH_FARMS, 40.0, 9.5, 2000.0, False, (FARMS, NORTH_PORT), 0.6, 1.0, country=NORTH)
+    the_tiles[NORTH_PORT] = TileSpec(NORTH_PORT, 40.0, 9.0, 1000.0, True, (NORTH_FARMS,), 0.3, 1.0, country=NORTH)
+    people = dict(base.opening_population_by_tile)
+    people.update({NORTH_FARMS: 2500.0, NORTH_PORT: 1500.0})
+    setup = dataclasses.replace(
+        base, tiles=the_tiles, world_map=world_map_of(the_tiles), opening_population_by_tile=people,
+        recipes_by_country={base.civ_id: tuple(sorted(base.recipes)), NORTH: (FARM,)})
+    return dataclasses.replace(setup, **changes) if changes else setup

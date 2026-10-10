@@ -6,7 +6,7 @@ import os
 from sim.world import stock_dynamics
 
 from .data import ROOT
-from .project_materials import tonnes_per_unit
+from .material_units import tonnes_per_unit
 
 LIVING_STOCK_PATH = os.path.join(ROOT, "data", "world", "living_stock.json")
 

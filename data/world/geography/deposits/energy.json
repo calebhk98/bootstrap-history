@@ -405,7 +405,8 @@
    "status": "modern",
    "first_worked": 1750,
    "source": "Production plus reserves across the region, order of magnitude from memory; coordinate approximate.",
-   "conf": "C"
+   "conf": "C",
+   "share_of_reference_output": 0.1
   },
   {
    "id": "illinois_coal",
@@ -433,7 +434,8 @@
    "status": "modern",
    "first_worked": 1851,
    "source": "Coordinate from Wikipedia. Production plus reserves, order of magnitude from memory.",
-   "conf": "B"
+   "conf": "B",
+   "share_of_reference_output": 0.05
   },
   {
    "id": "ordos_coal",
@@ -447,7 +449,8 @@
    "status": "modern",
    "first_worked": 1900,
    "source": "Shaanxi-Shanxi-Inner Mongolia coal; reserves plus production, order of magnitude from memory; coordinate approximate.",
-   "conf": "C"
+   "conf": "C",
+   "share_of_reference_output": 1.2
   },
   {
    "id": "donbas_coal",
@@ -489,7 +492,8 @@
    "status": "modern",
    "first_worked": 1797,
    "source": "Wikipedia gives the basin centre at 33.95S 150.76E, but the working coalfields (Newcastle, Hunter, Illawarra) lie across the whole basin; production plus resource, order of magnitude from memory.",
-   "conf": "C"
+   "conf": "C",
+   "share_of_reference_output": 0.02
   },
   {
    "id": "newcastle_coal",
@@ -503,7 +507,8 @@
    "status": "historic",
    "first_worked": 1200,
    "source": "Cumulative production, order of magnitude from memory; coordinate approximate.",
-   "conf": "C"
+   "conf": "C",
+   "share_of_reference_output": 0.45
   },
   {
    "id": "ruhr_coal",
@@ -517,7 +522,8 @@
    "status": "historic",
    "first_worked": 1750,
    "source": "Coordinate from Wikipedia. Cumulative production, order of magnitude from memory.",
-   "conf": "B"
+   "conf": "B",
+   "share_of_reference_output": 0.55
   },
   {
    "id": "jharia_coal",

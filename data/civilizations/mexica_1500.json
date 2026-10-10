@@ -107,6 +107,15 @@
   "hazards": [
     {
       "name": "Old World epidemics on contact",
+      "causes": [
+        {
+          "quantity": "population",
+          "op": ">=",
+          "value": 0.5,
+          "relative_to_start": true,
+          "why": "A pandemic runs through crowded, connected settlements. Below half the opening population the opening density of towns and trade is gone, so there is nothing to carry it at the recorded scale. A reasoning bound, to be fitted against a baseline ensemble."
+        }
+      ],
       "note": "Smallpox, measles and typhus in a population with no immunity. This is the single most severe hazard of any civilization in this directory and it is not a fair fight.",
       "staff_loss": 0.8,
       "years": [
@@ -116,6 +125,19 @@
     },
     {
       "name": "Spanish invasion",
+      "causes_not_modelled": [
+        "Indigenous allies in the tens of thousands, chiefly Tlaxcalans: no allied or rival city-state is simulated as an actor.",
+        "The weapons gap (steel, horses, firearms): the sources dispute its weight, so it is left to the hedges that soften sack chances through hazard counters rather than made a gate.",
+        "Tribute resentment among subject peoples: relations between polities are not simulated."
+      ],
+      "causes": [
+        {
+          "quantity": "army_share_of_wanted",
+          "op": "<=",
+          "value": 1.0,
+          "why": "A small expedition with large allied armies took a state whose own force did not exceed what the threat called for; a state that keeps more than that is not taken this way. How much weapons, allies and smallpox each weighed is disputed (Restall, Hassig), so only the force against the threat is stated here."
+        }
+      ],
       "note": "The conquest does not just take the city, it replaces the religious order that ran it. Franciscan and Dominican friars begin systematic campaigns against indigenous ritual almost immediately, and the colonial administration that follows is far less willing than the tlatoani's court to read an inexplicable effect as divine favour rather than as diabolism or sorcery to be extirpated -- applied gradually below as shifts in what this society values, over the same short years as the the chance of being sacked, because there is no long war here to spread it across.",
       "sack_chance": 0.9,
       "values": {
@@ -130,6 +152,17 @@
     },
     {
       "name": "The colonial order: encomienda, repartimiento, congregacion",
+      "causes": [
+        {
+          "quantity": "territory_share_of_start",
+          "op": "<",
+          "value": 1.0,
+          "why": "The event follows the division or loss of a realm (to reunify, refound, reconquer or succeed it). A state still holding every tile it began with has nothing to reunify or retake."
+        }
+      ],
+      "causes_not_modelled": [
+        "A colonial crown's institutions: foreign rulers are not simulated."
+      ],
       "note": "The conquest is a short event; the thing it installs is not. Encomienda grants of tribute and labour ran from 1521, were curtailed by the New Laws of 1542 and were replaced by the repartimiento, a rotating draft on indigenous villages for mine and estate work. The congregaciones of about 1595 to 1605 moved the survivors of the epidemics into planned towns where they could be counted and taxed. The legal position of an indigenous man under this order is the point: he is a permanent minor in law, with a protective court of his own (the Juzgado General de Indios, from 1592) and correspondingly without the standing to contract freely; the Spanish craft guilds' ordinances in Mexico City reserved masterships to Spaniards; and the Crown's mercantile policy actively suppressed New Spanish manufactures that competed with Spain's. The one genuinely surprising fact is on the other side: the Holy Office, established in Mexico in 1571, was forbidden to try Indians, who went instead to the bishop's provisorato de indios. That is a lesser danger than a Spaniard faced, not a greater one, which is why how readily an inexplicable effect is called sorcery does not rise further here beyond what the conquest already did.",
       "output_factor": 0.72,
       "values": {
@@ -145,6 +178,17 @@
     },
     {
       "name": "The silver cycle and the patio process",
+      "causes": [
+        {
+          "quantity": "territory_share_of_start",
+          "op": "<",
+          "value": 1.0,
+          "why": "The event follows the division or loss of a realm (to reunify, refound, reconquer or succeed it). A state still holding every tile it began with has nothing to reunify or retake."
+        }
+      ],
+      "causes_not_modelled": [
+        "Demand for silver in the colonial metropole and world prices: no metropole is simulated."
+      ],
       "note": "Zacatecas was struck in 1546 and Guanajuato in 1548, and in 1554 Bartolome de Medina worked out the patio amalgamation process at Pachuca - crushed ore spread in a yard with salt, copper sulphate and mercury and turned by mules for weeks - which made low-grade ore payable and is a genuine New World invention rather than an import. New Spain became the largest silver producer on earth and the Valenciana at Guanajuato the richest single mine in the world by the 1780s. The institutional consequences matter more here than the bullion: the Real Tribunal de Mineria was chartered in 1777 with its own court and credit fund, and its Real Seminario de Mineria opened in 1792 under Fausto Elhuyar, co-discoverer of tungsten, with Andres Manuel del Rio teaching mineralogy there - del Rio identified vanadium in a Zimapan ore in 1801, in Mexico, nine years before anyone in Europe. Mining is the one field in which colonial New Spain actively wanted new machinery, imported the men who understood it and paid for the schooling, and it is the best environment this civilization offers a technologist between the conquest and the twentieth century. No damage fields: this is the opening, and it runs for two and a half centuries.",
       "values": {
         "w_commerce": 0.2,
@@ -158,6 +202,15 @@
     },
     {
       "name": "The matlazahuatl of 1736",
+      "causes": [
+        {
+          "quantity": "population",
+          "op": ">=",
+          "value": 0.5,
+          "relative_to_start": true,
+          "why": "A pandemic runs through crowded, connected settlements. Below half the opening population the opening density of towns and trade is gone, so there is nothing to carry it at the recorded scale. A reasoning bound, to be fitted against a baseline ensemble."
+        }
+      ],
       "note": "Probably typhus. It began at Tacuba in August 1736 and ran through the valley of Mexico for three years; the usual figures are forty to fifty thousand dead in Mexico City and something like two hundred thousand across New Spain. It is the last great colonial epidemic before the smallpox of 1797, which is itself the immediate reason the Crown sent the Balmis expedition out from A Coruna at the end of 1803, carrying live vaccine to America in relays of orphan boys arm to arm - the first mass vaccination campaign anywhere in the world, and one that began here.",
       "staff_loss": 0.25,
       "years": [
@@ -167,6 +220,17 @@
     },
     {
       "name": "The Bourbon reforms",
+      "causes": [
+        {
+          "quantity": "state_funded_share",
+          "op": "<",
+          "value": 1.0,
+          "why": "Fiscal strain is the shared root of the collapses and wars of this kind: a state whose revenue covers everything it needs has no arrears, no mutiny over pay and no pressure to seize new sources of money."
+        }
+      ],
+      "causes_not_modelled": [
+        "A metropolitan court's reform programme: foreign rulers are not simulated."
+      ],
       "note": "Jose de Galvez's visita general from 1765, the intendancy system of 1786 that replaced the old patchwork of jurisdictions with salaried administrators, the comercio libre decree of 1778 that let New Spain trade with ports other than Cadiz, and the Royal Botanical Expedition of 1787 with its garden and its chair of botany in Mexico City. The Enlightenment arrives in New Spain through the Bourbon state rather than against it, which is why novelty gets cheaper here and doctrine gets lighter at the same time. The cost side is the expulsion of the Jesuits in 1767, which closed the best schools in the viceroyalty overnight and turned a generation of creole intellectuals against Madrid - the reforms that made the colony richer and better run are also what made it want to leave.",
       "values": {
         "patronage_weight": -0.05,
@@ -181,6 +245,23 @@
     },
     {
       "name": "The wars of independence",
+      "causes": [
+        {
+          "quantity": "state_funded_share",
+          "op": "<",
+          "value": 1.0,
+          "why": "Fiscal strain is the shared root of the collapses and wars of this kind: a state whose revenue covers everything it needs has no arrears, no mutiny over pay and no pressure to seize new sources of money."
+        },
+        {
+          "quantity": "elite_share_vs_opening",
+          "op": ">=",
+          "value": 1.0,
+          "why": "Civil war follows elite overproduction: more claimants to the same offices. The propertied bodies must be at least as large a share of the people as they began."
+        }
+      ],
+      "causes_not_modelled": [
+        "A metropole weakened by invasion and the claim to sovereignty: foreign rulers and legitimacy are not simulated."
+      ],
       "note": "Hidalgo called the rising at Dolores on 16 September 1810; within a fortnight his followers had taken Guanajuato and stormed the Alhondiga de Granaditas, and the mining districts were the first thing wrecked. Morelos was shot in 1815, and Iturbide ended the war in 1821 by changing sides, entering Mexico City on 27 September under the Plan de Iguala. For anyone who needs capital, metal or machinery this is the worst event in Mexican history and worse than the conquest was for the economy. Silver output fell by about three quarters and did not regain its 1809 level until the 1880s, because the deep workings flooded the moment the drainage engines stopped and re-draining them needed capital that no government of the next fifty years had. The Real Seminario de Mineria survived but its graduates had nothing to work on.",
       "output_factor": 0.5,
       "sack_chance": 0.07,
@@ -202,6 +283,17 @@
     },
     {
       "name": "The unstable republic and the foreign wars",
+      "causes": [
+        {
+          "quantity": "state_funded_share",
+          "op": "<",
+          "value": 1.0,
+          "why": "Fiscal strain is the shared root of the collapses and wars of this kind: a state whose revenue covers everything it needs has no arrears, no mutiny over pay and no pressure to seize new sources of money."
+        }
+      ],
+      "causes_not_modelled": [
+        "Foreign armies invading: no neighbouring polity is simulated."
+      ],
       "note": "Something like fifty governments in the first thirty years; Santa Anna in and out of the presidency eleven times; Texas gone in 1836; the war with the United States from 1846 to 1848 ending at Guadalupe Hidalgo on 2 February 1848 with the loss of half the national territory. Then the Reform, which is the largest favourable shifts in what this society values change in this file: the Ley Juarez of 1855 abolished the ecclesiastical and military fueros, the Ley Lerdo of 1856 forced the Church to sell its landholding, the constitution of 1857 secularised civil life and the Leyes de Reforma of 1859-1860 nationalised Church property outright and established civil marriage, civil registry, secular cemeteries and freedom of worship. The three-year civil war it caused from 1858, the French intervention that followed, Maximilian, and his execution at Queretaro on 19 June 1867 are the price of it. A society that began this file governed by a ritual calendar ends it with doctrine having very little formal power over anything, and how much doctrine constrains what may be said has to say so. The erosion field here is not metal debasement: the silver peso stayed good, and that is exactly why every one of these governments financed itself by prestamos forzosos, forced loans levied on whoever in the capital was visibly solvent, and by pledging customs revenue years ahead. Being known to have money is the danger, which is also why patronage and how much money can buy in a courtroom both rise: a protector in the current government is the only asset that holds its value.",
       "output_factor": 0.6,
       "real_erosion": 0.015,
@@ -218,6 +310,9 @@
     },
     {
       "name": "The Porfiriato",
+      "causes_not_modelled": [
+        "A strongman's rule and foreign investment: ruler legitimacy and foreign investors are not simulated, so no necessary condition can be checked."
+      ],
       "note": "Porfirio Diaz held power from 1876 to 1911 under the slogan of order and progress, and for a technologist the order was real and so was the progress. Railway line went from about 640 km in 1876 to some 19,000 km by 1910, with the telegraph following the track; electric light reached Guanajuato in 1879 and the first central generating station in Mexico City opened in 1897; foreign capital rebuilt the mines around steam pumps, dynamite and cyanide leaching, so silver and then copper and lead output passed their colonial peaks; commercial oil began at Ebano in 1901. It was paid for with land concentration, debt peonage on the henequen and tobacco estates, and the shootings at Cananea in 1906 and Rio Blanco in 1907, which is what produced what comes next. Inside this window it is the most favourable environment for building something new that this civilization has had since 1519, and the shifts in what this society values here say so.",
       "values": {
         "patronage_weight": 0.05,
@@ -232,6 +327,23 @@
     },
     {
       "name": "The Revolution",
+      "causes": [
+        {
+          "quantity": "lowest_stratum_welfare",
+          "op": "<",
+          "value": 1.0,
+          "why": "Popular rebellion needs people who cannot meet their food bill; where every free body of people can, mobilisation potential is low."
+        },
+        {
+          "quantity": "elite_share_vs_opening",
+          "op": ">=",
+          "value": 1.0,
+          "why": "Civil war follows elite overproduction: more claimants to the same offices. The propertied bodies must be at least as large a share of the people as they began."
+        }
+      ],
+      "causes_not_modelled": [
+        "A disputed election and regional leaders: succession and legitimacy are not simulated."
+      ],
       "note": "Madero's Plan de San Luis Potosi called the rising for 20 November 1910; Huerta's coup in February 1913 turned it into a general war between Carranza, Villa and Zapata that was not settled until Obregon in 1920. Demographers put the net population loss at between one and two million out of about fifteen, counting deaths, births that did not happen and emigration to the United States; the influenza of 1918 took perhaps another three hundred thousand on top of that. The railways were both the armies' chief weapon and their chief target, so the Porfirian network that made the previous entry possible was systematically destroyed, and the mines closed. The constitution of 1917 that came out of it vested subsoil rights in the nation - article 27, and the origin of the oil expropriation twenty-one years later.",
       "output_factor": 0.45,
       "sack_chance": 0.09,
@@ -243,6 +355,9 @@
     },
     {
       "name": "The Cristero war",
+      "causes_not_modelled": [
+        "A conflict between the state and a church: no religious institution is simulated, so no necessary condition can be checked."
+      ],
       "note": "The anticlerical articles of the 1917 constitution were enforced in earnest from 1926 and the countryside of the centre-west rose against it; perhaps 250,000 died before the arreglos of 1929 patched up a modus vivendi. It is a small entry because it was regional - Jalisco, Michoacan, Guanajuato, Zacatecas - and because the cities and the mines largely kept working through it. The shifts in what this society values shift here is downward, not upward, which reads oddly for a religious war: the anticlerical articles won. Article 3 made education secular, article 130 denied priests the vote and let the states cap their numbers, and the 1929 settlement conceded the practice of religion while leaving all of that standing.",
       "output_factor": 0.85,
       "values": {
@@ -255,6 +370,14 @@
     },
     {
       "name": "The Mexican miracle",
+      "causes": [
+        {
+          "quantity": "state_funded_share",
+          "op": ">=",
+          "value": 0.9,
+          "why": "A settlement, revival or peace dividend needs a state that can pay its army and officials; one in arrears has nothing left over for it. A reasoning bound, to be fitted against a baseline ensemble."
+        }
+      ],
       "note": "Thirty years of growth averaging above six per cent a year with a stable peso, on import-substituting industrialisation behind tariffs. The institutional base was laid just before it: the Instituto Politecnico Nacional in 1936, the oil expropriation and the founding of Pemex in 1938, and after the war the Ciudad Universitaria of UNAM in 1954 and the national nuclear energy commission in 1955. From here on Mexico trains its own physicists and engineers at home instead of sending its sons to Europe or doing without. Adult literacy goes from roughly a half in 1940 to roughly three quarters by 1970, which is why how freely knowledge travels moves furthest of anything here: for the first time in this file, information reaching ordinary people is something the state is spending money to cause rather than to prevent. how readily an inexplicable effect is called sorcery falls with it: a state that is building a nuclear commission and a university city of a hundred thousand students is not a state that reads an unexplained effect as sorcery.",
       "values": {
         "w_commerce": 0.15,
@@ -280,6 +403,17 @@
     },
     {
       "name": "The debt crisis and the lost decade",
+      "causes": [
+        {
+          "quantity": "state_funded_share",
+          "op": "<",
+          "value": 1.0,
+          "why": "Fiscal strain is the shared root of the collapses and wars of this kind: a state whose revenue covers everything it needs has no arrears, no mutiny over pay and no pressure to seize new sources of money."
+        }
+      ],
+      "causes_not_modelled": [
+        "Foreign lenders and oil prices: no lender is simulated."
+      ],
       "note": "The peso was devalued in 1976 for the first time in twenty-two years; the oil boom that followed it collapsed with the oil price, and on 20 August 1982 Mexico told its creditors it could not pay, which is the event that started the whole Latin American debt crisis. Inflation ran above a hundred per cent for most of the 1980s and touched about 160 per cent in 1987; the banks were nationalised in 1982; the currency was redenominated a thousand old pesos to one new one in 1993; and the devaluation of December 1994 halved it again inside a fortnight. The erosion here is set far below what actually happened - the peso lost more than three orders of magnitude against the dollar between 1976 and 1995, and modelling that honestly would end every run - but the direction is the point: anything saved in the currency over these years was destroyed, and only land, metal and machinery held.",
       "output_factor": 0.82,
       "real_erosion": 0.07,
@@ -290,6 +424,9 @@
     },
     {
       "name": "NAFTA and the end of PRI hegemony",
+      "causes_not_modelled": [
+        "A trade treaty and a ruling party losing its hold: treaties and political parties are not simulated, so no necessary condition can be checked."
+      ],
       "note": "The North American Free Trade Agreement took effect on 1 January 1994, the same year the peso crisis above technically begins with the Chiapas uprising and the assassination of the ruling party's own presidential candidate, Luis Donaldo Colosio. It takes six more years for the rest of the one-party system Mexico had lived under since 1929 to give way: Vicente Fox's win in July 2000 is the first time the Institutional Revolutionary Party has lost the presidency in seventy-one years. Trade opens and the old patronage machine that had run every election loses its grip at the same time, which is why both belong in one entry.",
       "values": {
         "w_commerce": 0.1,
@@ -303,6 +440,9 @@
     },
     {
       "name": "The drug war",
+      "causes_not_modelled": [
+        "Criminal organisations and foreign demand: neither is simulated, so no necessary condition can be checked."
+      ],
       "note": "President Felipe Calderon declared war on the cartels in December 2006 and deployed the army against them; the killing that followed is usually put at well over a hundred thousand dead by the mid-2010s and has not stopped since, concentrated in particular states and along particular trafficking routes rather than spread evenly, which is why this is modelled as a standing, low sack risk and a drag on trade rather than as a single mortality event. This file stops adding history at approximately the point it is being written, 2026: nothing after that is invented, and the long quiet stretch after this entry toward the edge of a 700-year run is the honest shape of not yet knowing what happens next, not a gap in the research.",
       "output_factor": 0.92,
       "sack_chance": 0.02,
@@ -321,8 +461,39 @@
       ]
     }
   ],
-  "home_regions": [
-    "americas_carib"
+  "home_tiles": [
+    "costa_rica_01",
+    "cuba_01",
+    "cuba_02",
+    "cuba_03",
+    "cuba_04",
+    "dominican_rep_01",
+    "guatemala_01",
+    "honduras_01",
+    "honduras_02",
+    "mexico_01",
+    "mexico_02",
+    "mexico_03",
+    "mexico_04",
+    "mexico_05",
+    "mexico_06",
+    "mexico_07",
+    "mexico_08",
+    "mexico_09",
+    "mexico_10",
+    "mexico_11",
+    "mexico_12",
+    "mexico_13",
+    "mexico_14",
+    "mexico_15",
+    "mexico_16",
+    "mexico_17",
+    "mexico_18",
+    "mexico_19",
+    "mexico_20",
+    "nicaragua_01",
+    "nicaragua_02",
+    "panama_01"
   ],
   "id": "mexica_1500",
   "institutions": {
@@ -457,7 +628,9 @@
     "soap_kg": "no soft soap from tallow and ash lye here; washing used other means (ash lye, plant saponins, pods) that the recipe set does not model",
     "steel_noric_kg": "no ironworking, so no bloomery steel",
     "steel_plate_kg": "plate steel needs the later cementation and refining processes and no partner holds them; ordinary iron or bronze serves implements until a founder brings them",
-    "tool_steel_kg": "tool steel needs the later cementation process and no partner holds it; households fall back on other implement metals"
+    "tool_steel_kg": "tool steel needs the later cementation process and no partner holds it; households fall back on other implement metals",
+    "water_piped_kg": "No lead-pipe working node is held and no partner supplies one: its households draw water from wells and carry it from the river or spring, as they did before piped supply.",
+    "glass_raw_kg": "No glass working is held and no partner supplies it: its households keep their food and drink in fired clay, wood and gourds."
   },
   "year": 1500,
   "needs_first": {

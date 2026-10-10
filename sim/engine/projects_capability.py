@@ -230,6 +230,9 @@ class CapabilityMixin:
         projects = self.state.projects
         if node_id not in projects.done:
             return False
+        node = self.nodes[node_id]
+        if (node.get("requires_running") or node.get("requires_ways")) and self.gate_blocked(node_id):
+            return False
         if node_id in projects.granted or not self.is_venture(node_id):
             return True
         # UNPARKED. This returned True unconditionally for a long time, with a

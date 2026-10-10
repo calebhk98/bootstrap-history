@@ -42,7 +42,7 @@ poor.state.household.automation_audit = []
 poor.state.founder.policy["auto_mine"] = True
 poor.annual_material_demand = lambda: {"coal_kg": 1_000_000.0}
 poor.resource_throttle = lambda: 0.3
-poor.state.economy.binding = "coal"
+poor.state.holdings.binding = "coal"
 poor.spending_power = lambda kind: 1e12
 poor._step_materials()
 rows = [row for row in skip_rows(poor) if row["policy"] == "auto_mine"]

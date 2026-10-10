@@ -1,11 +1,11 @@
 """Who offers a good, and what households are asked to pay for it.
 
-A good is offered by a modelled seller or it cannot be had. The sellers are the home society (a
-technique it holds, or one within reach of what it holds) and a trading partner (priced at what it
-costs the partner, the freight and the merchants' terms). A good neither offers is priced only "as if
-every technology were held" (provenance "mature"); the
-founder's own quote and the cost of a project that needs it still read that figure, but households
-are given no price for it, so the need it served draws no spending on it.
+A good is offered by a modelled seller or it cannot be had, and a good no one offers has no price. The
+sellers are the home society (a technique it holds, or one within reach of what it holds, in the price
+table) and a trading partner that makes it (priced at what it costs the partner, the freight and the
+merchants' terms, over a route that joins the two). A good neither offers is unavailable: it has no
+price, cannot be bought, and anything that needs it cannot start until a seller appears (a technique is
+reached, a route opens, a partner gains it).
 
 The offers are worked out once a year (and again when the technologies held or the partners change),
 from figures held to a few decimals, so the table is a function of its key and not of the moment it
@@ -15,13 +15,14 @@ import math
 
 from sim.world import trader_response
 
+from .goods_market_imports import HOME_SELLER, GoodsImports
 
-HOME_SELLER = "home"
+
 RATE_DECIMALS = 3
 LEVEL_DECIMALS = 4
 
 
-class GoodsOffers:
+class GoodsOffers(GoodsImports):
     """Mixin of `GoodsMarket`: reads of who sells what."""
 
     def merchants_cost_share(self, route, material=None, civilization_id=None):
@@ -46,7 +47,7 @@ class GoodsOffers:
         the merchants' costs as a share of that, and the freight. None when the partner does not
         make it, it may not cross a border, or no route joins the two."""
         from .foreign_economies import not_traded_materials
-        from .project_materials import tonnes_per_unit
+        from .material_units import tonnes_per_unit
         facts = self._sim._foreign_economy_facts(civilization_id)
         route = route or self._route_from(civilization_id)
         if (route is None or material not in facts["solved_materials"]
@@ -72,18 +73,31 @@ class GoodsOffers:
         if cache is not None and cache[0] is prices and cache[1] == key:
             return cache[2], cache[3]
         routes = {partner: self._route_from(partner) for partner in partners}
-        household, sellers = {}, {}
-        for material, price in prices.items():
-            if sim.material_price_basis(material) != "mature":
-                household[material], sellers[material] = price, HOME_SELLER
-                continue
+        household = {material: price for material, price in prices.items()}
+        sellers = {material: HOME_SELLER for material in prices}
+        # A technique the home society holds no producer of yet (priced as within reach) is a home seller
+        # only until a partner sells the same good cheaper: the cheapest seller in reach sells.
+        in_reach = {material for material in prices if self._home_basis(material) == "gated"}
+        for material in sorted((self._partner_made_materials(partners) - set(prices)) | in_reach):
             offers = [(landed, partner) for partner in partners
                       for landed in (self.landed_price(material, partner, routes[partner]),)
-                      if landed is not None and math.isfinite(landed)]
-            if offers:
+                      if landed is not None and math.isfinite(landed)
+                      and sim.foreign_supply_tonnes(partner, material) > 0.0]
+            if offers and min(offers)[0] < household.get(material, math.inf):
                 household[material], sellers[material] = min(offers)[0], min(offers)[1]
         sim.household._goods_offers_cache = (prices, key, household, sellers)
         return household, sellers
+
+    def _home_basis(self, material):
+        """How the home price table reaches a material ("solved", "gated"), None when it does not."""
+        return self._sim._price_tables()[1].get(material)
+
+    def _partner_made_materials(self, partners):
+        """Materials some trading partner makes with its own technologies."""
+        made = set()
+        for partner in partners:
+            made |= self._sim._foreign_economy_facts(partner)["solved_materials"]
+        return made
 
     def household_prices(self):
         """{material: money per unit} households are asked to pay: the solver's price where the
@@ -91,15 +105,23 @@ class GoodsOffers:
         one does. The same object while nothing it reads has changed."""
         return self._worked_out_offers()[0]
 
+    def unit_price(self, material):
+        """Money per unit to buy a material from the cheapest seller in reach (the home price
+        table, else a partner's landed price), or None when no one in reach sells it."""
+        if self.offered_by(material) not in (None, HOME_SELLER):
+            return self.household_prices()[material]
+        price = self._sim._material_price_per_kg(material)
+        return price if price is not None else self.household_prices().get(material)
+
+    def can_be_bought(self, material):
+        return self.unit_price(material) is not None
+
     def offered_by(self, material):
         """HOME_SELLER when a technique the society holds or can reach makes the material, the
         trading partner's id when only a partner offers it, None when nothing does."""
         return self._worked_out_offers()[1].get(material)
 
     def commodity_is_unsourced(self, commodity):
-        """Whether every material the solver prices under this commodity is one nothing offers."""
-        sim = self._sim
-        prices = sim._material_prices()
+        """Whether no material filed under this commodity has a seller in reach."""
         sellers = self._worked_out_offers()[1]
-        priced = [material for material in sim._commodity_materials(commodity) if material in prices]
-        return bool(priced) and all(material not in sellers for material in priced)
+        return not any(material in sellers for material in self._sim._commodity_materials(commodity))

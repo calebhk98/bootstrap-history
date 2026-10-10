@@ -39,7 +39,8 @@ def expected_income(state: MarketState, inputs: YearInputs, clearings: ClearingI
         return floor
     # a vacancy beside idle hands is friction: a newcomer finds one of the places employers want filled
     share = min(1.0, clearing.hours_wanted / clearing.hours_offered) if clearing.hours_offered > 0.0 else 1.0
-    earned = clearing.average_wage * inputs.hours_per_worker_year
+    # a wage under the outside option does not pay a worker less than it: the hours go to the plot instead
+    earned = max(floor, clearing.average_wage * inputs.hours_per_worker_year)
     return share * earned + (1.0 - share) * floor
 
 

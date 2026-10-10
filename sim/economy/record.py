@@ -39,14 +39,17 @@ class EconomyRecord:
     worn_runs: Dict[AgentId, float] = field(default_factory=dict)        # plant that wore out last year, to rebuild
     state_budget: StateBudget = field(default_factory=StateBudget)       # the state's revenue and this year's plan
     land_rent: Dict[TileId, float] = field(default_factory=dict)         # rent per hectare producers paid, by tile
+    margin_years: Dict[str, int] = field(default_factory=dict)           # market_key -> years in a row the expected price stood above the entry price
     hours_hired: Dict[str, float] = field(default_factory=dict)          # labour market_key -> hours hired last year
     funds_offered: float = 0.0                                           # savings on offer at the last lending, home currency
     lent_by_borrower: Dict[AgentId, float] = field(default_factory=dict)  # what each borrower was lent at the last lending
     curves: Dict[str, Any] = field(default_factory=dict)                 # market_key -> the book of the last clearing at the port (market_curves.py)
+    ways: Dict[str, Dict[str, Any]] = field(default_factory=dict)        # the built ways the market areas are partitioned for
 
-    def to_record(self) -> Dict[str, Any]:
+    def to_record(self, skip_currencies=()) -> Dict[str, Any]:
+        """The record as plain data; money in `skip_currencies` (another owner's currency in the shared book) is left out."""
         return {
-            "book": self.book.to_record(),
+            "book": self.book.to_record(skip=skip_currencies),
             "memory": plain(self.memory),
             "currency": plain(self.currency),
             "cohorts": {key: plain(value) for key, value in sorted(self.cohorts.items())},
@@ -65,10 +68,12 @@ class EconomyRecord:
             "worn_runs": self.worn_runs,
             "state_budget": plain(self.state_budget),
             "land_rent": self.land_rent,
+            "margin_years": self.margin_years,
             "hours_hired": self.hours_hired,
             "funds_offered": self.funds_offered,
             "lent_by_borrower": self.lent_by_borrower,
             "curves": self.curves,
+            "ways": {key: dict(built) for key, built in sorted(self.ways.items())},
         }
 
     @classmethod
@@ -93,10 +98,12 @@ class EconomyRecord:
             worn_runs=dict(record["worn_runs"]),
             state_budget=StateBudget(**record["state_budget"]),
             land_rent=dict(record["land_rent"]),
+            margin_years=dict(record["margin_years"]),
             hours_hired=dict(record["hours_hired"]),
             funds_offered=record["funds_offered"],
             lent_by_borrower=dict(record["lent_by_borrower"]),
             curves=dict(record["curves"]),
+            ways={key: dict(built) for key, built in record["ways"].items()},
         )
 
 

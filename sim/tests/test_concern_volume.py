@@ -2,9 +2,8 @@
 follow the price its goods clear at, wider adoption lowers that price, household income follows the wage and
 output per head, and a good offered after the opening becomes demand when a need it serves exists."""
 from .harness import *  # noqa: F401,F403
-from functools import partial
 
-sim = partial(sim, agent_economy=False)   # legacy: pins concern takings through the engine's yearly material market
+sim = unopened_sim   # legacy: pins concern takings through the engine's yearly material market
 
 
 import copy
@@ -40,8 +39,7 @@ def staff_bound_node(game):
         base = node_output.output_baskets(node, production, goods)
         doubled = dict(node, sch=node["sch"] * 2, art=node["art"] * 2)
         more = node_output.output_baskets(doubled, production, goods)
-        if base and more and sum(more.outputs.values()) > 1.5 * sum(base.outputs.values()) \
-                and all(game.material_price_basis(material) != "mature" for material in base.outputs):
+        if base and more and sum(more.outputs.values()) > 1.5 * sum(base.outputs.values()):
             entry = max(node_output.entries_gated_by(node_id, production),
                         key=lambda candidate: sum(candidate["outputs"].values()))
             if sorted(entry["outputs"]) == sorted(base.outputs) and not entry.get("capital"):

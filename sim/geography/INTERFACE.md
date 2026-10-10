@@ -31,7 +31,7 @@ the layout and the merge rules (new ids `<mod_id>:<name>`, `"override": true`, `
 
 ## Food
 
-`food_potential(tile_id, technique_factors)` answers
+`food_potential(tile_id, technique_factors, wild_stock=None)` answers
 
     {"tile": id, "kcal_per_year": {source_id: kcal}, "total_kcal_per_year": kcal,
      "people_supported": people, "species": {"hunted": [id], "herded": [id], "fished": [id], "foraged": [id]}}
@@ -39,6 +39,12 @@ the layout and the merge rules (new ids `<mod_id>:<name>`, `"override": true`, `
 Each source is sustainable yield (crops, pastoral, hunting, foraging, marine and freshwater
 fishing; ids come from data). `technique_factors` is `{source_id: multiplier}` chosen by the
 caller from what the actor knows; geography does not read the tech tree.
+
+`wild_stock` is the game's `{tile_id: {species_id: share of carrying capacity left}}`, a missing entry
+meaning a full stock. `hunted_kcal(tile_id, wild_stock)` gives `{species_id: kcal}` a year's hunting can take
+now; `game_food_sources()` names the food source ids hunting goes under; `draw_wild_stock(wild_stock, tile_id, kcal_taken)` returns the stock after hunters take that;
+`regrow_wild_stock(wild_stock)` returns it a year later. The game keeps and saves the stock. Labour's
+limit on gatherers (sim/labour/food_gathering.py) is applied by the caller, not here.
 
 ## Pathways
 
@@ -49,17 +55,27 @@ caller from what the actor knows; geography does not read the tech tree.
 | `route_costs(origins, modes, improvements, mode_costs, handling_costs, held_nodes)` | `{tile_id: cost_per_tonne}`: the least cost from any origin to every tile a haul reaches (origins cost 0), priced as `route` prices a haul. One search serves all destinations; the economy's market areas take their carriage costs from it. |
 | `reach(origins, modes, days_budget, improvements, held_nodes)` | `{tile_id: days}` within the budget. |
 | `dues_hours_per_tonne()` | `{mode_id: hours}` of tolls or port dues per tonne a haul pays when it changes to the mode (the mode's `dues_hours_per_tonne`, with `dues_source` and `dues_conf`). |
+| `carriage_rates(mode_ids)` | `{mode_id: {crew_trade, crew_hours_per_tonne_km, handling_hours_per_tonne, edge_classes}}` on level ground for the modes that name a `crew_trade`, from the same physical rates the route search uses. |
 | `freight_links(modes)` | `[(tile_a, tile_b, mode, km)]` for edges these modes use with nothing built. |
 | `map_of_tiles({tile_id: {lat, lon, coastal, borders}})` | A map of just those tiles with the base map's modes, sea lanes and parameters, for a scenario or test that places its own tiles. |
 | `ore_goods()` | `{resource_id: {ore_good: [smelting_recipe_id, ...]}}` for the resources whose catalogue row names ore goods (`ore_goods`), in catalogue order; a mod adds a mineral by adding a row. |
 | `works_priced_from_deposits()` | `[resource_id]` whose catalogue row says its mine running cost comes from the deposits' physical works. |
 | `mine_demand_goods()` | `{resource_id: [good]}`: the goods whose annual demand a mine of that resource supplies (`mine_demand_goods` on its catalogue row). |
 | `parameter_value(parameter_id)` | The value of one map parameter (for example `mining_trade`, the trade whose wage prices mine labour). |
-| `build_requirements(tile_a, tile_b, improvement)` | `{km, grade, trade, labour_hours, materials: {material: tonnes}, node}` of building a way (`"road"`, `"rail"`) over the land edge between two bordering tiles, from the terrain (earthwork on the slope, surface and fixed materials from the mode's `construction` data), or `null` when it cannot be built there. |
+| `build_requirements(tile_a, tile_b, improvement)` | `{km, grade, trade, labour_hours, materials: {material: tonnes}, node, build_years, engineered, crew_people, crew_hours_per_year}` of building a way (`"road"`, `"rail"`, `"canal"`) over the land edge between two bordering tiles, from the terrain (earthwork on the slope, surface and fixed materials from the mode's `construction` data), a `"bridge"` over a land edge between tiles on the same river, or a `"port"` on one coastal tile with no natural harbour (`tile_b` the same tile); or `null` when it cannot be built there. Ground steeper than a way's natural limit is `engineered` at more earthwork, up to its engineered limit. |
+| `improvement_key(improvement, tile_a, tile_b)` | The key a built improvement is recorded under: the tile id for a port, the edge key otherwise. |
+| `train_carrier(mode_id)` | `{inputs, fuel_material, stock_material, stock_kg}` of a rail mode as a freight carrier (physical inputs per tonne-km, what the fuel and rolling stock are made of), or `null` for a mode that is not a train. |
+| `built_km(improvements, improvement)` | Kilometres of a way (`"road"`, `"rail"`, `"canal"`; a bridge's span or a port's quay) the caller's `improvements` record holds, counted as a build is. |
+| `worked_deposits(tile_ids, resource_id, year, found)` | The deposits of a resource a party holding these tiles can name, each `{id, name, tile_id, resource, size_tonnes (null: unknown), grade_kg_per_tonne, found_by}`: the catalogue's that were first worked by `year` (or have no date) and the prospected `found` ones. |
+| `working_rate_tonnes_per_year(size_tonnes)` | The most a deposit of this size yields a year (`resources_working_share_per_year`). |
+| `ore_tonnes_per_tonne(row)` | Tonnes of ore raised per tonne of the resource held, for a `worked_deposits` row. |
 | `edge_key(tile_a, tile_b)` | The key a built road or track between two tiles is stored under. |
 
 `improvements` is the caller's record of what has been built, `{edge_key: {"road": true,
-"rail": true}}`: geography never stores who built what. `mode_costs` is money per tonne-km by
+"rail": true, "canal": true, "bridge": true, "engineered": true}, tile_id: {"port": true}}`: geography never
+stores who built what. A land edge between tiles on the same river is a river crossing: land modes ford it at
+their own handling, a mode marked `bridge_only` (rail) cannot cross it without a `bridge`. A built `port`
+joins its tile to the sea edges of the bordering tiles that have a harbour. `mode_costs` is money per tonne-km by
 mode and `handling_costs` money per tonne per change of mode; without them costs are physical
 (labour-hours). `held_nodes` opens sea lanes that need a technique (the monsoon crossing).
 
@@ -72,6 +88,7 @@ mode and `handling_costs` money per tonne per change of mode; without them costs
 | `endowment(tile_id, resource_id)` | `{resource, unit, known, undiscovered_expected, total, expected_undiscovered_count, ceiling}` |
 | `known_deposits(resource_id)` | `[{id, name, tile_id, lat, lon, deposit_type, quantity, unit, depth_class, status}]` |
 | `deposit_records(resource_id=None)` | the catalogue rows as copied dicts with every field the data carries, for one resource or all, sorted by `order` (rows without one last) then id |
+| `mined_before(tile_ids, resource_id, year)` | `{workings: [{id, tile_id, output_per_year, years_worked, years_since_last_output}], unworked: [deposit ids with no working date, not yet worked or no known size], deposits_in_tiles, unit}`; output in the resource's unit, each deposit worked at a fixed share of its endowment a year until worked out |
 | `prospect(tile_id, resource_id, effort, seed)` | `[deposit]` found with `effort` person-days: `{id, deposit_type, tile_id, lat, lon, ore_tonnes, contained, unit, depth_class, small_scale}`. The same seed and effort give the same finds, and more effort finds a superset. |
 | `supports(tile_id, resource_id)` | 0 to 1: how well a tile suits a living resource. |
 | `stand(tile_id, resource_id)` | Area, standing stock and regrowth of a living resource on a tile. |

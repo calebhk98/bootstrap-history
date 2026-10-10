@@ -48,8 +48,10 @@ def _quote_school(sim, cmd, quantity):
 def _quote_material(sim, cmd, quantity):
     quote = sim.material_trade_quote(cmd.get("material"))
     if quote is None:
-        return {"ok": False, "error": "no market price for material %r; 'materials' lists "
-                                      "the ones with a market" % (cmd.get("material"),)}
+        return {"ok": False, "error": "material %r cannot be bought: no one in reach makes or sells it, so it has "
+                                      "no price (a technique that makes it, a route to a partner that does, or "
+                                      "a partner that gains it would give it one); 'materials' lists the ones "
+                                      "with a market" % (cmd.get("material"),)}
     tonnes = min(quantity, quote["market_available_tonnes_per_year"])
     total = sim.material_purchase_cost(quote["material"], tonnes)[0]
     return {"ok": True, "what": "material", "material": quote["material"],

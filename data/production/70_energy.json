@@ -108,6 +108,7 @@
    "basis": "per 1000 MJ of mechanical (shaft) work delivered by a heat engine of this class",
    "yield_basis": "CARNOT-LIMITED, and this is the WORST end of the historical range on purpose - the thermal-to-mechanical conversion whose improvement over two centuries IS a large part of what the industrial revolution physically was, so it is modelled as a genuine range of competing techniques (this entry, mechanical_mj_heat_engine_compound and mechanical_mj_heat_engine_modern_steam) rather than one number. A Newcomen atmospheric engine condensed steam to create a vacuum and let atmospheric pressure do the work, with no attempt at thermodynamic efficiency at all - commonly cited overall efficiency is on the order of 1%, sometimes quoted as low as 0.5%, reflecting both the working principle itself and the total absence of insulation, expansive working or condenser separation that later engines added one at a time. Taken here at 1%: 1000 MJ of mechanical output needs 1000 / 0.01 = 100,000 MJ of thermal_mj input. Labour is the engine-house crew - stoking, watching the beam, greasing - not the fuel itself, which is priced through thermal_mj. TEMPERATURE (Complaints/43, see CAPABILITY_CAP_FIELDS in sim/engine/solve_prices.py's module docstring): `temperature_needed_c` below is a genuine boiler-firebox fact, not an engine-class one, which is why it is the SAME 1000 C on all three heat-engine entries here despite their very different thermal efficiencies - the STEAM this engine actually uses is barely above 100 C (an atmospheric-pressure vacuum engine needs no more), but raising that steam through an iron boiler wall at a workable RATE needs the fire on the other side of that wall running at ordinary combustion-flame temperature, many hundreds of degrees above the water, or the heat transfer collapses toward zero as the two sides approach the same temperature - textbook boiler practice (a real firebox commonly runs upward of 1000 C), not a per-engine assumption. This is also why no historical engine, however primitive, was ever friction-fired: a 100 C friction source (see thermal_mj_friction's own yield_basis) sitting next to 100 C water has no temperature difference to drive heat through the wall at all.",
    "requires_node": "steam_atmospheric",
+   "operated_by": ["steam_atmospheric"],
    "temperature_needed_c": 1000.0,
    "conf": "C"
   },
@@ -138,6 +139,7 @@
    "basis": "per 1000 MJ of mechanical (shaft) work delivered by a heat engine of this class",
    "yield_basis": "A good compound engine of the later 19th century - multiple expansion stages, a real condenser recovering vacuum properly, higher steam pressure than an atmospheric engine could use at all - is commonly cited at roughly 10% overall thermal efficiency, an order of magnitude past a Newcomen and still an order of magnitude short of a modern cycle, which is exactly the point of carrying this as a distinct middle technique rather than interpolating between the other two. 1000 / 0.10 = 10,000 MJ of thermal_mj input per 1000 MJ of mechanical output. TEMPERATURE: see mechanical_mj_heat_engine_atmospheric's own yield_basis for why `temperature_needed_c` is the same firebox figure here despite this engine's higher steam pressure and much better efficiency - the fire still has to run far hotter than the steam side to move heat through the boiler wall at all, regardless of what the steam itself is then used for.",
    "requires_node": "en_compound_engine",
+   "operated_by": ["en_compound_engine"],
    "temperature_needed_c": 1000.0,
    "conf": "C"
   },
@@ -168,6 +170,7 @@
    "basis": "per 1000 MJ of mechanical (shaft) work delivered by a heat engine of this class",
    "yield_basis": "A modern high-pressure, reheat steam cycle (the kind behind most fossil and nuclear generating capacity today) commonly reaches on the order of 40% thermal efficiency - itself well short of the roughly 60% Carnot ceiling a boiler-to-condenser temperature spread of this kind implies, the gap being real irreversibilities (throttling, finite heat-transfer temperature differences, turbine blade losses) rather than an achievable target left on the table. 1000 / 0.40 = 2500 MJ of thermal_mj input per 1000 MJ of mechanical output - and even at this, the best end of the historical range, this technique still cannot beat mechanical_mj_waterwheel for any material in this file (see ENERGY in sim/engine/solve_prices.py's module docstring): 2500 MJ of thermal_mj at coal's solved price is comfortably more than 1000 MJ of mechanical_mj at the water wheel's, so water keeps winning on the arithmetic, not by assumption. TEMPERATURE: see mechanical_mj_heat_engine_atmospheric's own yield_basis for why `temperature_needed_c` is the same firebox figure here too - a modern superheated boiler's steam runs far hotter than an atmospheric engine's, but its firebox has to run hotter still, for the same heat-transfer reason.",
    "requires_node": "en_steam_turbine_reaction",
+   "operated_by": ["en_steam_turbine_reaction"],
    "temperature_needed_c": 1000.0,
    "conf": "C"
   },
@@ -197,6 +200,7 @@
    "basis": "per 1000 MJ of electricity generated at the busbar by a dynamo converting mechanical (shaft) input",
    "yield_basis": "A real dynamo/generator converts shaft work to electrical output at roughly 90-95% efficiency, the loss being resistive heating in the windings and friction in the bearings - taken here at the range's midpoint, 92.5%. 1000 / 0.925 = 1081.1 MJ of mechanical_mj input per 1000 MJ of electrical output. This is the conversion this round's fix routes aluminium_kg's 46,000 MJ/tonne electrolysis current through, in place of the old, direct mechanical_mj charge - see THE ALUMINIUM DEFECT in sim/engine/solve_prices.py's module docstring. Attendant labour (0.1 electrician-hours per 1000 MJ) is calibrated against mechanical_mj_waterwheel's own millwright figure in THIS file (40 hours per 126,144 MJ/year = 0.317 h per 1000 MJ) rather than invented independently: a dynamo bolted onto an already-tended wheel needs a modest ADDITION to that existing attendance, not a separate, larger labour charge of its own - an earlier draft of this entry charged a full 1.0 h/1000 MJ, which on its own accounted for most of the technique's cost and was an internal inconsistency (dynamos do not need three times the tending the prime mover driving them needs), not a physical fact, so it was corrected against this file's own water-wheel entry rather than against any price.",
    "requires_node": "dynamo",
+   "operated_by": ["dynamo"],
    "conf": "B"
   },
 
@@ -225,6 +229,7 @@
    "basis": "per 1000 MJ of mechanical (shaft) work delivered by a motor converting electrical input",
    "yield_basis": "A real induction or DC motor converts electrical input to shaft output at roughly 90-95% efficiency, resistive and frictional losses again setting the ceiling - taken here at the same 92.5% midpoint as electrical_mj_dynamo, since it is the same class of machine. 1000 / 0.925 = 1081.1 MJ of electrical_mj input per 1000 MJ of mechanical output. Attendant labour (0.05 electrician-hours per 1000 MJ) is kept smaller again than the dynamo's own, matching electrical_mj_dynamo's own reasoning for why that figure is calibrated against this file's water-wheel millwright attendance rather than invented independently.",
    "requires_node": "tl_motor_dc",
+   "operated_by": ["tl_motor_dc"],
    "conf": "B"
   },
 
@@ -278,6 +283,8 @@
     }
    ],
    "unit_dimension": "energy",
+   "requires_node": "silicon_path",
+   "operated_by": ["silicon_path"],
    "basis": "per 1000 MJ of electricity generated at the busbar by installed photovoltaic capacity",
    "yield_basis": "The entire cost of this technique is its capital amortisation - there is no fuel, no labour beyond the panel's own construction, and no running cost at all, which is itself a real and verifiable feature of photovoltaic economics (its cost is famously almost all up-front capital, unlike every combustion or muscle-powered technique in this file) rather than an oversight. See this entry's own capital_basis for the full derivation of the annual output figure the amortisation divides by.",
    "conf": "C"
@@ -320,6 +327,7 @@
   "basis": "per 1000 MJ of electricity delivered at the lamp over one two-wire low-voltage DC main (generated energy in, delivered energy out)",
   "yield_basis": "A conductor of resistivity rho and current density J on a circuit of length 2L loses rho * 2L * J / V of the power it delivers at voltage V (current times resistance over voltage). TWO-WIRE MAIN, Pearl Street's first form: a lamp circuit at 110 V carried out and back on two conductors. Here rho = 1.68e-8 ohm m, 2L = 1600 m, J = 1.3157e6 A/m2, V = 110 V, so the loss is 0.3215 of the delivered energy and 1000 * (1 + 0.3215) = 1321.5 MJ of electricity_generated_mj is drawn for each 1000 MJ delivered. FIGURES: resistivity 1.68e-8 ohm m and density 8960 kg/m3 for copper are physical constants (CRC Handbook). Voltage 110 V at the lamp and 100 kW per generator are Pearl Street 1882 (ETHW, Pearl Street Station; Wikipedia, Pearl Street Station). The district is about one square mile (ETHW), so a station at its middle reaches the far edge by a rectilinear route of half the side, 804.7 m, taken as 800 m. Line patrol of one patrolman per about 20 miles (Fowle, Standard Handbook for Electrical Engineers, 5th ed., 1922, Sec. 11 par. 230). TRANSITIONAL (CLAUDE.md 4.4): the design current density, 1500 circular mils per ampere, is the middle of the 1000 to 2000 circular mils per ampere Foster (Electrical Engineer's Pocket-Book, 3rd ed., 1903, p. 335) gives for transformer windings, used here for the line conductor because no line figure has been read; Del Mar (Electric Power Conductors, 1909, pp. 156-157) shows the economic density is set by the price of copper and of station capacity (Kelvin's law), which this entry does not solve. It goes when the conductor section is chosen by that law. Patrol labour: one patrolman per 32.19 km of line at 2000 hours a year (HOURS_PER_PERSON_YEAR) on 0.8 km is 49.7 hours a year, over 883.008 batches of 1000 MJ a year is 0.0563 hours per 1000 MJ.",
   "requires_node": "dynamo",
+  "operated_by": ["dynamo"],
   "conf": "C"
  },
 
@@ -359,6 +367,7 @@
   "basis": "per 1000 MJ of electricity delivered at the lamp over one three-wire low-voltage DC main (generated energy in, delivered energy out)",
   "yield_basis": "A conductor of resistivity rho and current density J on a circuit of length 2L loses rho * 2L * J / V of the power it delivers at voltage V (current times resistance over voltage). THREE-WIRE MAIN (el2_three_wire_distribution_system), reached by Edison, Hopkinson and Siemens at about the same time. Here rho = 1.68e-8 ohm m, 2L = 1600 m, J = 1.3157e6 A/m2, V = 220 V, so the loss is 0.1608 of the delivered energy and 1000 * (1 + 0.1608) = 1160.8 MJ of electricity_generated_mj is drawn for each 1000 MJ delivered. FIGURES: resistivity 1.68e-8 ohm m and density 8960 kg/m3 for copper are physical constants (CRC Handbook). Voltage 110 V at the lamp and 100 kW per generator are Pearl Street 1882 (ETHW, Pearl Street Station; Wikipedia, Pearl Street Station). The district is about one square mile (ETHW), so a station at its middle reaches the far edge by a rectilinear route of half the side, 804.7 m, taken as 800 m. Line patrol of one patrolman per about 20 miles (Fowle, Standard Handbook for Electrical Engineers, 5th ed., 1922, Sec. 11 par. 230). TRANSITIONAL (CLAUDE.md 4.4): the design current density, 1500 circular mils per ampere, is the middle of the 1000 to 2000 circular mils per ampere Foster (Electrical Engineer's Pocket-Book, 3rd ed., 1903, p. 335) gives for transformer windings, used here for the line conductor because no line figure has been read; Del Mar (Electric Power Conductors, 1909, pp. 156-157) shows the economic density is set by the price of copper and of station capacity (Kelvin's law), which this entry does not solve. It goes when the conductor section is chosen by that law. Three-wire: 220 V across the two outer conductors with lamps split across the neutral, so for the same power the current halves and the loss ratio halves at the same current density; the neutral is taken the same section as an outer and carries only the imbalance. Copper is 3 * (1/2) / 2 = 3/4 of the two-wire mass; at equal loss the section could fall to a quarter and the bill to 3/8, which matches the 60 to 70 percent saving Insull reports (Central-Station Electric Service, 1915, p. 17). Patrol labour: one patrolman per 32.19 km of line at 2000 hours a year (HOURS_PER_PERSON_YEAR) on 0.8 km is 49.7 hours a year, over 883.008 batches of 1000 MJ a year is 0.0563 hours per 1000 MJ.",
   "requires_node": "el2_three_wire_distribution_system",
+  "operated_by": ["el2_three_wire_distribution_system"],
   "conf": "C"
  }
  }

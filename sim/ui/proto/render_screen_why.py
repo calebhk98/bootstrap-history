@@ -3,7 +3,6 @@
 from .render_screen_state import _render_sections
 from .util import _factor, _fmt_num, _fmt_range, _pct, _wrap
 from sim.ui import units_text
-from .render_screens_market import why_goods_market_lines
 from .hazard_words import why_hazard_lines, why_standing_lines
 
 
@@ -338,7 +337,7 @@ def render_why(out):
     return "\n".join(_render_sections(out, (
         _why_header, _why_cost, _why_hours_risk, _why_staff_needed,
         _why_staff_keep_open, _why_labour_materials, _why_upkeep_revenue,
-        why_goods_market_lines, _why_status, _why_living_stock, _why_benefit, why_standing_lines,
+        _why_status, _why_living_stock, _why_benefit, why_standing_lines,
         why_hazard_lines, _why_chain, _why_unlocks_downstream,
         _why_notes, _why_trailing,
     )))

@@ -3,20 +3,21 @@
 Demand is its own households' purchases of final goods (its population and
 income at its own solved prices, the household model the home market uses for
 its ratios), held to the income they have; goods bought only as inputs to
-other goods are not traded until an industrial demand model prices them. Capacity is what its own regions and recipes can supply: a
-mined commodity follows its regions' mineral shares; a made or grown one
+other goods are not traded until an industrial demand model prices them. Capacity is what its own tiles and recipes can supply: a
+mined commodity follows the shares of the deposits on its tiles; a made or grown one
 follows its demand when the economy holds a technique for every step of the
-chain and every ore deposit on that chain lies in its regions; anything else
+chain and every ore deposit on that chain lies on its tiles; anything else
 has no capacity and is only bought.
 """
 import functools
 
 from sim.constants import declare
+from sim.geography.api import tiles_held
 from sim.world import demand as demand_model
 
 from .data import ROOT, load_civ, starting_schedule
 from .market_demand import MEAN_INCOME_HOURS_PER_CAPITA, household_demand_by_material
-from .project_materials import tonnes_per_unit
+from .material_units import tonnes_per_unit
 
 FOREIGN_OPENING_IN_BALANCE = declare(
     "FOREIGN_OPENING_IN_BALANCE", 1.0, kind="temporary_heuristic",
@@ -26,6 +27,14 @@ FOREIGN_OPENING_IN_BALANCE = declare(
         "equal to its households' demand, so its own market is in balance "
         "until trade moves it; its land, labour and trades do not yet cap "
         "that output (Complaints/109).")
+
+FOREIGN_OUTPUT_PER_POPULATION_SHARE = declare(
+    "FOREIGN_OUTPUT_PER_POPULATION_SHARE", 1.0, kind="temporary_heuristic",
+    unit="a partner's output of a good it can make over the stated national output, per unit of population ratio",
+    source=None, confidence="D",
+    why="A good bought only as an input has no partner demand figure to size its supply, so a partner that "
+        "holds every technique, input and deposit for it makes the stated national output scaled one-for-one "
+        "by its population over the one the table is stated for, until an industrial output model sizes it.")
 
 
 @functools.lru_cache(maxsize=None)
@@ -64,34 +73,35 @@ def household_tonnes_by_material(civilization_id):
 
 class ForeignCapacityMixin:
 
-    def home_unmade_demand_tonnes(self, commodity):
-        """Tonnes a year this society's own households want of a commodity
-        it cannot make, from the same model at its own prices and size now;
-        zero when no household good is part of the commodity."""
-        prices = self.goods_market.household_prices()
-        cache = getattr(self.household, "_home_final_tonnes_cache", None)
-        if cache is None or cache[0] is not prices:
-            per_hour = self.labour.money_per_labour_hour()
-            tonnes = budget_scaled_final_tonnes(
-                {material: price / per_hour for material, price in prices.items() if price > 0.0},
-                self._opening_population())
-            by_commodity = {}
-            for material, amount in sorted(tonnes.items()):
-                key = self._material_tag(material)[0]
-                by_commodity[key] = by_commodity.get(key, 0.0) + amount
-            cache = self.household._home_final_tonnes_cache = (prices, by_commodity)
-        return cache[1].get(commodity, 0.0) * self.household_demand_ratio(commodity)
+
+    def foreign_supply_tonnes(self, civilization_id, material):
+        """Tonnes a year a partner can sell of a material: what its own techniques, inputs and regions
+        make, and what it holds. Zero when it cannot make the material. A partner's book, once opened,
+        carries its capacity and stock; before that the opening figures stand."""
+        facts = self._foreign_economy_facts(civilization_id)
+        commodity = self._material_tag(material)[0]
+        solved = facts["solved_materials"]
+        if material not in solved or not self._foreign_can_make(civilization_id, material, solved):
+            return 0.0
+        entry = self.state.economy.foreign_market_book.get(civilization_id, {}).get(commodity)
+        if entry is not None:
+            return entry["capacity_tonnes"] + entry["stock_tonnes"]
+        capacity, _demand = self.foreign_opening(civilization_id, commodity, solved)
+        if capacity > 0.0 or self._tracked_mineral(commodity):
+            return capacity
+        # a curated output is the reference empire's; any other is this society's own capacity
+        reference = (self.DEFAULT_POPULATION_100AD if commodity in self.res["empire_output_100ad"]
+                     else float(self.civ.get("population") or self.DEFAULT_POPULATION_100AD))
+        scale = float(load_civ(civilization_id).get("population") or 0.0) / reference
+        return self._national_output_tonnes(commodity) * scale * FOREIGN_OUTPUT_PER_POPULATION_SHARE
 
     def _tracked_mineral(self, commodity):
-        """Whether the geography file gives regional shares for it."""
-        return any(commodity in (region.get("minerals") or {})
-                   for region in self.geography.regions.values())
+        """Whether some deposit shares out its output over tiles."""
+        return commodity in self.geography.tracked_materials()
 
     def _foreign_mineral_share(self, civilization_id, commodity):
-        """Sum of its home regions' shares of a mined commodity."""
-        return sum(float((self.geography.regions[region_id].get("minerals") or {}).get(commodity, 0.0))
-                   for region_id in load_civ(civilization_id).get("home_regions") or []
-                   if region_id in self.geography.regions)
+        """Share of a mined commodity on the tiles it holds."""
+        return self.geography.held_share(tiles_held(load_civ(civilization_id), self.world_map), commodity)
 
     def _foreign_can_make(self, civilization_id, material, solved, _seen=None):
         """Whether its techniques and regions supply the material: it holds

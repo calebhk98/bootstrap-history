@@ -44,12 +44,12 @@ def _shorten_credit_forecast(sim, cmd, out):
     blocks = [key for key in _CREDIT_PROSE if key in out]
     if not blocks:
         return
-    scenario = sim.state.scenario
-    said = ui_port.said_explanations(scenario) or {}
+    seat_progress = sim.state.seat_progress
+    said = ui_port.said_explanations(seat_progress) or {}
     full = bool(cmd.get("full")) or said.get("credit_forecast") != sim.year
     if full:
         said["credit_forecast"] = sim.year
-        ui_port.set_said_explanations(scenario, said)
+        ui_port.set_said_explanations(seat_progress, said)
     else:
         for key in blocks:
             for prose_key in _CREDIT_PROSE[key]:
@@ -719,9 +719,6 @@ def _cmd_ventures(sim, nodes, cmd, ended):
                 "specialist_foreman": (
                     {"trade": _foreman_trade, "fte": round(_foreman_fte, 2)}
                     if _foreman_trade else None)}
-        _note = sim.goods_market_note(node_id)
-        if _note:
-            row["market"] = _note
         # A CAPABILITY, NOT ONLY A BUSINESS: every other row here is a
         # straightforward earn-vs-cost decision; these are not, because
         # closing one loses scholars it supports, household places it

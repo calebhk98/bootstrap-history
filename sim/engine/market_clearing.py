@@ -23,7 +23,10 @@ posted price leaves out the founder's flows and counts everyone else's.
 """
 from sim.world import market
 
-from .goods_market_api import FOUNDER, GoodsMarket
+from .goods_market_api import GoodsMarket
+
+# The clearing searches between floor and ceiling in logs, so the floor stays above nothing.
+MINIMUM_FLOOR_RATIO = 0.01
 
 
 class MarketClearingMixin:
@@ -42,7 +45,7 @@ class MarketClearingMixin:
             previous = flows or {}
             flows = economy.market_flows = {"year": year, "drawn": {}}
             for kind in ("bought", "sold", "reservation"):
-                standing = {commodity: {party: tonnes for party, tonnes in parties.items() if party != FOUNDER}
+                standing = {commodity: {party: tonnes for party, tonnes in parties.items() if party not in self.state.seats}
                             for commodity, parties in (previous.get(kind) or {}).items()}
                 flows[kind] = {commodity: parties for commodity, parties in standing.items() if parties}
         return flows
@@ -78,10 +81,11 @@ class MarketClearingMixin:
         own orders count only `with_flows`; every other party's always do."""
         market_api = self.goods_market
         committed = founder_sales = 0.0
+        asking = market_api.acting_party_id
         if with_flows:
-            committed = (market_api.bought_tonnes(commodity, FOUNDER)
+            committed = (market_api.bought_tonnes(commodity, asking)
                          + market_api.drawn_tonnes(commodity))
-            founder_sales = market_api.sold_tonnes(commodity, FOUNDER)
+            founder_sales = market_api.sold_tonnes(commodity, asking)
         offers = market_api.others_offers(commodity)
         price_takers = market_api.others_sold_tonnes(commodity) - sum(offer.tonnes for offer in offers)
         return (committed, founder_sales, max(0.0, price_takers), market_api.others_bought_tonnes(commodity),
@@ -100,8 +104,15 @@ class MarketClearingMixin:
             actor_demand_tonnes=actor_demand, offers=offers,
             founder_sales_tonnes=founder_sales,
             stock_tonnes=entry["stock_tonnes"],
-            floor_ratio=float(record.get("price_floor_factor", market.DEFAULT_FLOOR_RATIO)),
+            floor_ratio=self._floor_ratio(commodity),
             ceiling_ratio=float(record.get("price_ceiling_factor", market.DEFAULT_CEILING_RATIO)))
+
+    def _floor_ratio(self, commodity):
+        """The lowest price over the incumbents' cost their producers sell at: a built plant sells at least
+        at what running it costs, the running share of that cost; without a split, at its full cost. Stock
+        and price takers sell below this, down to the clearing's own stock bound."""
+        running_share = self.commodity_floor_ratio(commodity)
+        return market.UNSPLIT_FLOOR_RATIO if running_share is None else max(MINIMUM_FLOOR_RATIO, running_share)
 
     def _market_outcome(self, commodity, with_flows=False):
         """(conditions, outcome) of the clearing, or None for a commodity
@@ -114,8 +125,7 @@ class MarketClearingMixin:
         signature = (self.population.total,
                      entry["capacity_tonnes"], entry["stock_tonnes"],
                      self._market_flow_figures(commodity, with_flows),
-                     self.actor_market_version(), self.state.scenario.year,
-                     tuple(self.foreign_economies()), self.actor_trade_signature())
+                     self.actor_market_version(), self.state.scenario.year)
         cache = getattr(self.household, "_market_outcome_cache", None)
         if cache is None:
             cache = self.household._market_outcome_cache = {}
@@ -123,13 +133,9 @@ class MarketClearingMixin:
         cached = cache.get((commodity, with_flows))
         if cached is not None and cached[0] == signature and cached[2] is prices:
             return cached[1]
-        conditions, trade_flows = self.foreign_trade(
-            commodity, entry, self._market_conditions(commodity, entry, with_flows))
+        conditions = self._market_conditions(commodity, entry, with_flows)
         result = (conditions, market.clear_market(conditions))
         cache[(commodity, with_flows)] = (signature, result, prices)
-        self.household._trade_tonnes_cache = getattr(self.household, "_trade_tonnes_cache", {})
-        self.household._trade_tonnes_cache[(commodity, with_flows)] = sum(
-            flow for _id, flow, _outcome in trade_flows)
         return result
 
     # ---- what callers read --------------------------------------------------
@@ -164,7 +170,7 @@ class MarketClearingMixin:
             "reference_capacity_tonnes": entry["reference_tonnes"],
             "stock_tonnes": entry["stock_tonnes"],
             "household_demand_tonnes_at_anchor": conditions.household_demand_at_anchor_tonnes,
-            "founder_purchases_tonnes": (self.goods_market.bought_tonnes(commodity, FOUNDER)
+            "founder_purchases_tonnes": (self.goods_market.bought_tonnes(commodity, self.goods_market.acting_party_id)
                                         + self.goods_market.drawn_tonnes(commodity)),
             "founder_sales_tonnes": closing_conditions.founder_sales_tonnes,
             "actor_supply_tonnes": conditions.actor_supply_tonnes + sum(
@@ -175,7 +181,6 @@ class MarketClearingMixin:
                 market.society_sales_displaced_by_founder(closing_conditions),
             "unsold_tonnes": closing.unsold_tonnes,
             "unmet_demand_tonnes": closing.unmet_demand_tonnes,
-            "trade_tonnes": self.household._trade_tonnes_cache[(commodity, True)],
         }
 
     # ---- the turn of the year -----------------------------------------------
@@ -187,37 +192,11 @@ class MarketClearingMixin:
             self._market_entry(self._material_tag(material)[0])
 
     def _step_market(self):
-        """Close the year: capacity follows the price, unsold goods carry on. Every commodity clears at the
-        price level the year opened with; the coin the year's trade moves counts from the next year."""
+        """Close the year: the agent economy's year runs, then the partners' books close on what crossed."""
         self.finish_ways()
         self._open_market_book()
-        if self.economy.run_agent_year():
-            self.close_partner_books()
-            self._close_real_output()
-            return
-        self._price_level_held = self.home_price_level()
-        try:
-            self._close_commodities()
-        finally:
-            self._price_level_held = None
-        self.close_partner_books(cargo_only=True)
-        self.foreign_fleet_year_end()
+        self.economy.run_agent_year()
+        self.close_partner_books()
         self._close_real_output()
-
-    def _close_commodities(self):
-        book = self.state.economy.market_book
-        for commodity in sorted(book):
-            entry = book[commodity]
-            conditions, trade_flows = self.foreign_trade(
-                commodity, entry, self._market_conditions(commodity, entry, True))
-            outcome = market.clear_market(conditions)
-            self.foreign_trade_year_end(commodity, entry, trade_flows)
-            if self.home_makes_commodity(commodity, trade_flows):
-                entry["capacity_tonnes"] = market.adjusted_capacity(
-                    entry["capacity_tonnes"], outcome.price_ratio)
-            entry["stock_tonnes"] = market.stock_after_year(outcome)
-            entry["price_ratio"] = outcome.price_ratio
-            entry["society_sales_tonnes"] = outcome.society_sales_tonnes
-            entry["traded_tonnes"] = outcome.quantity_traded_tonnes
-            wanted = outcome.quantity_traded_tonnes + outcome.unmet_demand_tonnes
-            entry["cleared_share"] = outcome.quantity_traded_tonnes / wanted if wanted > 0.0 else 1.0
+        self.revalue_coin_metals()
+        self.record_wage_market_ratios()

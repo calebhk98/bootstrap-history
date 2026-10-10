@@ -2,8 +2,9 @@
 
 The economy answers what a good's price would be after more of it lands in (or is taken from) the port's market,
 by clearing the book that market last cleared with one more order; the engine hands that to the traders as
-`price_after_cargo` for home. The cargo is a hypothetical order there: it is not entered in the economy's book (the
-trader's money is not an account in it), so a year with cargo moves no money in the economy or the partner's coin.
+`price_after_cargo` for home. Once shipped, the cargo is entered in the book as a cargo account's orders and settled
+after the clear (`test_trader_cargo_book.py` and `test_trader_cargo_settlement.py` pin that on small fixtures); here a
+whole game checks the quote and that a year with cargo posts the foreign coin once.
 """
 from .harness import *  # noqa: F401,F403
 
@@ -17,15 +18,14 @@ from sim.economy.api import EDGE_EXTERNAL
 from sim.economy import api as economy_api
 from sim.economy.types import Bid, Offer
 from sim.engine.agents_port import SimWorld
-from sim.engine.project_materials import tonnes_per_unit
+from sim.engine.material_units import tonnes_per_unit
 
 PARTNER = "han_china_100ad"
 TRADER = "trader:test"
 
 
 def agent_game():
-    game = S.Sim(NODES, ORDER, random.Random(1), events=True, manual=False, civ=S.load_civ("rome_100ad"),
-                 cfg={"agent_economy": True})
+    game = S.Sim(NODES, ORDER, random.Random(1), events=True, manual=False, civ=S.load_civ("rome_100ad"))
     game.goal, game.done_year = GOAL, {}
     return game
 
@@ -79,7 +79,7 @@ record = game.economy.agent.economy().record.to_record()
 check("the books survive the record's round trip", record["curves"] == json.loads(json.dumps(record["curves"])),
       None)
 
-# --- (d) the cargo is quoted, not booked: a year with trader cargo moves no money in the economy or at the partner.
+# --- (d) a year with trader cargo settles the partner's side once, in the foreign coin ledger.
 def coin_imbalance(played):
     """What the home and partner coin ledgers together gained or lost in a year: each coin paid out is one received, so
     it is zero when the year's foreign money is posted once."""
@@ -105,12 +105,21 @@ check("a cargo's money is what the trader books: price times tonnes at each end"
 check("the cargo is tallied at home for the quote", with_cargo.actor_home_trade(priced[0]) == (5.0, 5.0),
       with_cargo.actor_home_trade(priced[0]))
 orders = with_cargo.economy.agent._external_orders()[EDGE_EXTERNAL]
+check("the cargo's legs are noted until the year's market has cleared", len(with_cargo.cargo_legs()) == 2,
+      with_cargo.cargo_legs())
 check("the cargo adds no order to the economy's external orders",
       all(bid.flexible_quantity > 0.0 for bid in orders.bids) and all(offer.reservation_price > 0.0 for offer in orders.offers), None)
+settled_before = dict(with_cargo._foreign_ledger(PARTNER))
 with_cargo.step()
 without.step()
 check("money and goods are conserved in the economy's book with the cargo's year",
       with_cargo.economy.agent.economy().record.book.check_conservation(1e-9).ok, None)
+check("the cargo's legs are settled when the year closes", not with_cargo.cargo_legs(), with_cargo.cargo_legs())
+extra_in = with_cargo._foreign_ledger(PARTNER)["goods_in_value"] - settled_before["goods_in_value"]
+extra_out = with_cargo._foreign_ledger(PARTNER)["goods_out_value"] - settled_before["goods_out_value"]
+check("the partner is paid in coin for the cargo brought home, at the booked price at least",
+      extra_in >= paid_in * (1.0 - 1e-6), (extra_in, paid_in))
+check("the partner pays in coin for the cargo taken from home that the home market sold", extra_out > 0.0, extra_out)
 for label, played in (("with", with_cargo), ("without", without)):
     imbalance, scale = coin_imbalance(played)
     check("coin paid between home and the partner is posted once in a year %s trader cargo" % label,

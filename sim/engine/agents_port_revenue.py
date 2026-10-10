@@ -1,5 +1,5 @@
 """What a state asks the simulated world when it assesses revenue: its declared forms and the bases they read."""
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 from sim.agents.api import revenue
 
@@ -24,7 +24,7 @@ class RevenueView:
 		"""Grain the farm harvested last, in tonnes. Before the first harvest, TEMPORARY HEURISTIC (CLAUDE.md
 		4.4): the people are taken to have harvested what they eat."""
 		sim = self._sim
-		kilograms = sim.state.economy.farm_last_harvest_kg
+		kilograms = sim.state.holdings.farm_last_harvest_kg
 		if not kilograms > 0.0:
 			technique = sim._farm_technique_this_year
 			kilograms = (sim._adult_equivalent_population(sim.population)
@@ -43,3 +43,11 @@ class RevenueView:
 	def coin_stock_value(self) -> float:
 		"""Money's worth of the coin this society holds, from its coin standard."""
 		return self._sim.economy.coin_stock_value()
+
+	def land_rent_paid_by_tile(self) -> Dict[str, float]:
+		return self._sim.economy.agent_land_rent_paid_by_tile()
+
+	def land_rent_owners(self) -> List[Tuple[Any, float]]:
+		"""The agent economy keeps rent with its household cohorts, not with the strata, so no payer is named and
+		the tax is drawn from the edge (taxpayers outside the modelled actors)."""
+		return []

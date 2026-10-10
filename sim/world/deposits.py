@@ -139,7 +139,7 @@ metal-specific process with its own fuel and labour (data/world/
 resources.json's own `constraints` section already carries some of that,
 e.g. `charcoal_kg_per_kg_metal` for copper and lead smelting). This matters
 most for mercury: cinnabar ore can be sold AS ITSELF (the pigment minium,
-data/prices.json's cinnabar_kg), needing no metallurgy at all, but metallic
+the solved price of cinnabar_kg), needing no metallurgy at all, but metallic
 mercury needs roasting the ore and condensing the vapour, a real added cost
 this module does not carry. See the module's own CALIBRATION TARGETS section
 and sim/tests/test_deposits.py's BookPriceComparisonTests for exactly how
@@ -268,7 +268,7 @@ from typing import Any, Dict, List, Optional
 
 from sim.constants import declare
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
-from sim.world import mine_fire_setting, mine_works
+from sim.world import mine_breaking, mine_fire_setting, mine_lift, mine_technique, mine_works
 from sim.geography.api import deposit_records, ore_goods, tile_lookup
 
 # ============================================================================
@@ -499,7 +499,25 @@ SHAFT_DRAINAGE_HOURS_PER_METRE_OF_HEAD = declare(
     unit="labourer-hours per metre of depth, to build the water-lifting works",
     source=None, confidence="D",
     why="The water a shaft meets must be lifted out; the works to do it "
-        "grow with the height to lift.")
+        "grow with the height to lift. A running technique lowers it through "
+        "the head an adit leaves to lift and the labour the lifting device "
+        "needs per tonne-metre, against bailing (shaft_cost_labour_hours).")
+
+FUEL_LABOUR_HOURS_PER_KILOGRAM = declare(
+    "FUEL_LABOUR_HOURS_PER_KILOGRAM", BREAKING_HOURS_PER_TONNE_SOFT / KILOGRAMS_PER_TONNE,
+    kind="temporary_heuristic", unit="labourer-hours per kilogram of coal at the pithead",
+    source=None, confidence="D",
+    why="An engine at a mine burns coal the mine itself wins, taken here as the soft-ground "
+        "breaking labour per tonne with no haulage. Replace with the coal labour the price solver "
+        "derives for the working that burns it.")
+
+BLASTING_EXPLOSIVE_HOURS_NOT_CHARGED = declare(
+    "BLASTING_EXPLOSIVE_HOURS_NOT_CHARGED", 0.0, kind="temporary_heuristic",
+    unit="labourer-hours of making the explosive, per tonne of rock",
+    source=None, confidence="D",
+    why="Blasting is charged its drilling and charging labour only; the powder or dynamite the "
+        "round burns is a produced good whose labour the price solver knows, and is not yet added "
+        "to the mine's works. Replace with the powder factor times the explosive's labour.")
 
 SHAFT_SERVICE_LIFE_YEARS = declare(
     "SHAFT_SERVICE_LIFE_YEARS", 30.0, kind="engineering_estimate",
@@ -630,7 +648,7 @@ Deposit = collections.namedtuple("Deposit", [
 ], defaults=((), "primary"))
 
 
-def extraction_cost_labour_hours_per_kg(deposit: "Deposit") -> float:
+def extraction_cost_labour_hours_per_kg(deposit: "Deposit", effects=None) -> float:
     """Labour-hours to raise one kilogram of CONTAINED METAL from `deposit`,
     from physical properties alone. Never reads a price anywhere - see the
     module docstring's EXTRACTION COST MECHANICS section for what each of
@@ -647,27 +665,28 @@ def extraction_cost_labour_hours_per_kg(deposit: "Deposit") -> float:
     total_cost_labour_hours_per_kg (see SINKING COST).
     """
     if deposit.depth_class == "alluvial_hydraulic":
-        hours_per_tonne_material = ALLUVIAL_HYDRAULIC_PROCESSING_HOURS_PER_TONNE
+        hours_per_tonne_material = (
+            ALLUVIAL_HYDRAULIC_PROCESSING_HOURS_PER_TONNE
+            / (effects or {}).get("gravel_moved_multiple", 1.0))
     elif deposit.depth_class == "alluvial":
         hours_per_tonne_material = ALLUVIAL_HAND_PROCESSING_HOURS_PER_TONNE
     else:
-        hours_per_tonne_material = vein_hours_per_tonne_ore(deposit)
+        hours_per_tonne_material = vein_hours_per_tonne_ore(deposit, effects)
     return hours_per_tonne_material / deposit.ore_grade_kg_per_tonne
 
 
-def vein_hours_per_tonne_ore(deposit: "Deposit") -> float:
+def vein_hours_per_tonne_ore(deposit: "Deposit", effects=None) -> float:
     """Labourer-hours per tonne of ore presented from a vein or surface
     working: breaking and fire-setting every tonne of rock broken (ore plus
     the barren rock that comes with it), then hoisting, carrying, draining
     and timbering (sim/world/mine_works.py)."""
     rock_per_ore = mine_works.rock_broken_tonnes_per_tonne_ore(deposit.depth_class)
-    on_rock = (_HARDNESS_BREAKING_HOURS[deposit.hardness_class]
-               + mine_fire_setting.fire_setting_labour_hours_per_tonne_rock(
-                   deposit.hardness_class))
-    on_ore = sum(mine_works.works_hours_per_tonne_ore(
-        deposit.depth_class, deposit.hardness_class,
-        _lift_hours_per_tonne_metre(), shaft_depth_metres(deposit),
-        mine_fire_setting.MINING_SHIFT_HOURS).values())
+    on_rock = (mine_breaking.breaking_hours_per_tonne_rock(
+        _HARDNESS_BREAKING_HOURS[deposit.hardness_class],
+        mine_fire_setting.fire_setting_labour_hours_per_tonne_rock(deposit.hardness_class),
+        deposit.hardness_class, effects)
+        + BLASTING_EXPLOSIVE_HOURS_NOT_CHARGED)
+    on_ore = sum(works_terms(deposit, effects).values())
     return on_rock * rock_per_ore + on_ore
 
 
@@ -684,21 +703,53 @@ def shaft_depth_metres(deposit: "Deposit") -> float:
     return _SHAFT_DEPTH_METRES.get(deposit.depth_class, 0.0)
 
 
-def _lift_hours_per_tonne_metre() -> float:
-    """Labourer-hours to lift one tonne one metre by hand windlass."""
-    joules_per_tonne_metre = (GRAVITY_METRES_PER_SECOND_SQUARED
-                              * KILOGRAMS_PER_TONNE)
-    return joules_per_tonne_metre / (
+def _joules_per_tonne_metre() -> float:
+    return GRAVITY_METRES_PER_SECOND_SQUARED * KILOGRAMS_PER_TONNE
+
+
+def _lift_hours_per_tonne_metre(effects=None) -> float:
+    """Labourer-hours to lift one tonne one metre: the hand windlass unless
+    a running technique brings a hoisting engine."""
+    by_hand = _joules_per_tonne_metre() / (
         HUMAN_SUSTAINED_POWER_WATTS * HOIST_MECHANICAL_EFFICIENCY
         * SECONDS_PER_HOUR)
+    return mine_lift.cheapest_hours_per_tonne_metre(
+        by_hand, (effects or {}).get("hoist_engines"), _joules_per_tonne_metre(),
+        FUEL_LABOUR_HOURS_PER_KILOGRAM)
 
 
-def shaft_cost_labour_hours(deposit: "Deposit") -> float:
+def drainage_lift_hours_per_tonne_metre(effects=None) -> float:
+    """Labourer-hours to lift one tonne of water one metre: bailing unless a
+    running technique brings a more efficient device (screw, wheel) or an
+    engine; the cheapest is used."""
+    efficiency = (effects or {}).get(
+        "drainage_lift_efficiency", mine_technique.BAILING_MECHANICAL_EFFICIENCY)
+    by_hand = _joules_per_tonne_metre() / (
+        HUMAN_SUSTAINED_POWER_WATTS * efficiency * SECONDS_PER_HOUR)
+    return mine_lift.cheapest_hours_per_tonne_metre(
+        by_hand, (effects or {}).get("drainage_engines"), _joules_per_tonne_metre(),
+        FUEL_LABOUR_HOURS_PER_KILOGRAM)
+
+
+def works_terms(deposit: "Deposit", effects=None) -> Dict[str, float]:
+    """{term: labourer-hours per tonne of ore} of hoisting, haulage, drainage and
+    timbering for a vein deposit under the running techniques' effects."""
+    return mine_works.works_hours_per_tonne_ore(
+        deposit.depth_class, deposit.hardness_class,
+        _lift_hours_per_tonne_metre(effects), shaft_depth_metres(deposit),
+        mine_fire_setting.MINING_SHIFT_HOURS, effects=effects,
+        drainage_hours_per_tonne_metre=drainage_lift_hours_per_tonne_metre(effects))
+
+
+def shaft_cost_labour_hours(deposit: "Deposit", effects=None) -> float:
     """Labour-hours to sink and equip ONE shaft (or build one aqueduct
     system for hydraulic ground): breaking the rock, lifting the spoil,
     timbering, draining, and the hoist frame. Reads depth and hardness
     only, never grade or quantity. Zero for surface and hand-worked
-    alluvial ground.
+    alluvial ground. `effects` (mine_technique.combine) change the terms a
+    technique acts on: the breaking of the shaft, the lift of its spoil, and
+    the drainage works (the head an adit leaves to lift, and the labour of
+    the device that lifts it against bailing).
     """
     if deposit.depth_class == "alluvial_hydraulic":
         return AQUEDUCT_CONSTRUCTION_HOURS_ALLUVIAL_HYDRAULIC
@@ -707,14 +758,18 @@ def shaft_cost_labour_hours(deposit: "Deposit") -> float:
         return 0.0
     tonnes_per_metre = (SHAFT_CROSS_SECTION_SQUARE_METRES
                         * ROCK_DENSITY_TONNES_PER_CUBIC_METRE)
-    breaking = (tonnes_per_metre * depth
-                * _HARDNESS_BREAKING_HOURS[deposit.hardness_class])
+    breaking = (tonnes_per_metre * depth * mine_breaking.breaking_hours_per_tonne_rock(
+        _HARDNESS_BREAKING_HOURS[deposit.hardness_class], 0.0, deposit.hardness_class, effects))
     # Spoil from depth z is lifted z metres; summed over the shaft that is depth^2 / 2.
-    spoil_lift = tonnes_per_metre * _lift_hours_per_tonne_metre() * depth ** 2 / 2.0
+    spoil_lift = (tonnes_per_metre * _lift_hours_per_tonne_metre(effects)
+                  * depth ** 2 / 2.0)
     # Support per metre grows linearly with depth.
     support = SHAFT_SUPPORT_HOURS_PER_METRE * (
         depth + depth ** 2 / (2.0 * SHAFT_SUPPORT_DEPTH_SCALE_METRES))
-    drainage = SHAFT_DRAINAGE_HOURS_PER_METRE_OF_HEAD * depth
+    drainage = (SHAFT_DRAINAGE_HOURS_PER_METRE_OF_HEAD * depth
+                * (1.0 - (effects or {}).get("gravity_drained_head_share", 0.0))
+                * drainage_lift_hours_per_tonne_metre(effects)
+                / drainage_lift_hours_per_tonne_metre())
     # A ventilation shaft is sunk and lined like the working shaft but has
     # no hoist frame and no sump.
     ventilation = (mine_works.VENTILATION_OPENINGS_PER_WORKING_SHAFT
@@ -723,11 +778,13 @@ def shaft_cost_labour_hours(deposit: "Deposit") -> float:
             + ventilation)
 
 
-def shaft_rock_capacity_tonnes_per_year(deposit: "Deposit") -> float:
+def shaft_rock_capacity_tonnes_per_year(deposit: "Deposit", effects=None) -> float:
     """Tonnes of rock (or gravel) one shaft's hoist, or one aqueduct
     system's flow, can raise or wash per year. Hoisting is work-limited:
     crew power times efficiency times hours, over the weight lifted
-    through the shaft's depth. Infinite where no works are needed.
+    through the shaft's depth; a hoisting engine running all the hoist
+    hours replaces the crew's work when it lifts more. Infinite where no
+    works are needed.
     """
     if deposit.depth_class == "alluvial_hydraulic":
         return (AQUEDUCT_WATER_FLOW_CUBIC_METRES_PER_SECOND * SECONDS_PER_YEAR
@@ -735,15 +792,15 @@ def shaft_rock_capacity_tonnes_per_year(deposit: "Deposit") -> float:
     depth = shaft_depth_metres(deposit)
     if depth <= 0.0:
         return float("inf")
-    crew_work_joules = (HOIST_CREW_SIZE * HUMAN_SUSTAINED_POWER_WATTS
-                        * HOIST_MECHANICAL_EFFICIENCY * HOIST_HOURS_PER_YEAR
-                        * SECONDS_PER_HOUR)
+    powers = [HOIST_CREW_SIZE * HUMAN_SUSTAINED_POWER_WATTS * HOIST_MECHANICAL_EFFICIENCY]
+    powers += [engine[0] for engine in (effects or {}).get("hoist_engines", ())]
+    crew_work_joules = max(powers) * HOIST_HOURS_PER_YEAR * SECONDS_PER_HOUR
     joules_per_tonne = (GRAVITY_METRES_PER_SECOND_SQUARED * KILOGRAMS_PER_TONNE
                         * depth)
     return crew_work_joules / joules_per_tonne
 
 
-def shafts_needed_fractional(deposit: "Deposit", tonnes_metal_per_year: float) -> float:
+def shafts_needed_fractional(deposit: "Deposit", tonnes_metal_per_year: float, effects=None) -> float:
     """Shafts (or aqueduct systems) `tonnes_metal_per_year` of contained
     metal needs, before rounding up: rock to raise per year over what one
     shaft raises."""
@@ -751,38 +808,41 @@ def shafts_needed_fractional(deposit: "Deposit", tonnes_metal_per_year: float) -
         return 0.0
     rock_tonnes_per_year = (tonnes_metal_per_year * KILOGRAMS_PER_TONNE
                             * material_moved_tonnes_per_kg_metal(deposit))
-    return rock_tonnes_per_year / shaft_rock_capacity_tonnes_per_year(deposit)
+    return rock_tonnes_per_year / shaft_rock_capacity_tonnes_per_year(deposit, effects)
 
 
-def shafts_needed(deposit: "Deposit", tonnes_metal_per_year: float) -> int:
+def shafts_needed(deposit: "Deposit", tonnes_metal_per_year: float, effects=None) -> int:
     """Whole shafts needed to raise `tonnes_metal_per_year` of metal."""
-    fractional = shafts_needed_fractional(deposit, tonnes_metal_per_year)
+    fractional = shafts_needed_fractional(deposit, tonnes_metal_per_year, effects)
     if fractional <= 0.0:
         return 0
     # The tolerance absorbs floating-point noise on an exact multiple.
     return math.ceil(fractional - 1e-9)
 
 
-def build_cost_labour_hours(deposit: "Deposit", tonnes_metal_per_year: float) -> float:
+def build_cost_labour_hours(deposit: "Deposit", tonnes_metal_per_year: float, effects=None) -> float:
     """Labour-hours to open capacity for `tonnes_metal_per_year`: whole
     shafts times the per-shaft cost."""
-    return shafts_needed(deposit, tonnes_metal_per_year) * shaft_cost_labour_hours(deposit)
+    return (shafts_needed(deposit, tonnes_metal_per_year, effects)
+            * shaft_cost_labour_hours(deposit, effects))
 
 
-def build_cost_labour_hours_per_tonne_year(deposit: "Deposit") -> float:
+def build_cost_labour_hours_per_tonne_year(deposit: "Deposit", effects=None) -> float:
     """Build cost per tonne/year of capacity, shafts counted fractionally,
     for pricing a fleet large enough that rounding is immaterial."""
-    return shafts_needed_fractional(deposit, 1.0) * shaft_cost_labour_hours(deposit)
+    return (shafts_needed_fractional(deposit, 1.0, effects)
+            * shaft_cost_labour_hours(deposit, effects))
 
 
 def amortized_sinking_cost_labour_hours_per_kg(
-        deposit: "Deposit", shaft_service_life_years: Optional[float] = None) -> float:
+        deposit: "Deposit", shaft_service_life_years: Optional[float] = None,
+        effects=None) -> float:
     """The whole district's build cost (shafts for its own annual output
     times the per-shaft cost), spread over the metal raised during one
     shaft service life (SHAFT_SERVICE_LIFE_YEARS), not over the assumed
     reserve. Zero where no works are needed.
     """
-    fixed_hours = build_cost_labour_hours(deposit, deposit.quantity_tonnes_per_year)
+    fixed_hours = build_cost_labour_hours(deposit, deposit.quantity_tonnes_per_year, effects)
     if fixed_hours <= 0.0:
         return 0.0
     shaft_service_life_years = (SHAFT_SERVICE_LIFE_YEARS
@@ -795,7 +855,7 @@ def amortized_sinking_cost_labour_hours_per_kg(
     return fixed_hours / output_over_service_life_kg
 
 
-def total_cost_labour_hours_per_kg(deposit: "Deposit") -> float:
+def total_cost_labour_hours_per_kg(deposit: "Deposit", effects=None) -> float:
     """The deposit's full unit cost: the recurring extraction cost plus its
     fixed sinking cost amortised over one shaft service life. This is
     what supply_curve and find_marginal_deposit actually sort and price by
@@ -803,8 +863,8 @@ def total_cost_labour_hours_per_kg(deposit: "Deposit") -> float:
     per-tonne cost cannot, on its own, make a poor deposit uneconomic at
     low demand and economic at high demand.
     """
-    return (extraction_cost_labour_hours_per_kg(deposit)
-            + amortized_sinking_cost_labour_hours_per_kg(deposit))
+    return (extraction_cost_labour_hours_per_kg(deposit, effects)
+            + amortized_sinking_cost_labour_hours_per_kg(deposit, effects=effects))
 
 
 # ============================================================================
@@ -829,7 +889,7 @@ def current_ore_grade_kg_per_tonne(deposit: "Deposit", fraction_extracted: float
 
 
 def current_extraction_cost_labour_hours_per_kg(
-        deposit: "Deposit", fraction_extracted: float) -> float:
+        deposit: "Deposit", fraction_extracted: float, effects=None) -> float:
     """extraction_cost_labour_hours_per_kg, but at the grade actually being
     worked at this point in the deposit's life rather than its virgin
     grade. The effort per tonne of ROCK (hardness_class, depth_class) is
@@ -842,7 +902,7 @@ def current_extraction_cost_labour_hours_per_kg(
     if grade_now <= 0.0:
         return float("inf")
     return extraction_cost_labour_hours_per_kg(
-        deposit._replace(ore_grade_kg_per_tonne=grade_now))
+        deposit._replace(ore_grade_kg_per_tonne=grade_now), effects)
 
 
 # ============================================================================

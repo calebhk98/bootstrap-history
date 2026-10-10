@@ -3,13 +3,13 @@ import unittest
 
 from sim.engine.agents_port import SimWorld
 
-from .harness import sim
+from .harness import unopened_sim
 
 
 class EngineFloorCostsTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.world = SimWorld(sim(civ="rome_100ad", agent_economy=False))
+        cls.world = SimWorld(unopened_sim(civ="rome_100ad"))
 
     def test_every_floor_need_with_a_priced_good_has_a_positive_cost(self):
         costs = self.world.need_floor_costs_per_person_year()

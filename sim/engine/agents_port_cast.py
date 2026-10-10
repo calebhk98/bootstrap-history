@@ -41,9 +41,13 @@ class CastView:
 		return haversine_km(first[0], first[1], second[0], second[1])
 
 	def need_floor_costs_per_person_year(self) -> Dict[str, float]:
-		"""What one person's floor of each need costs a year at the prices households pay: the need-basket
-		kernel (sim/world/need_basket.py) on the civilisation's climate floors and the goods market's
-		prices. A need with no priced good is left out; with none priced, the food floor is the dole."""
+		"""What one person's floor of each need costs a year at the prices households pay: the economy's own
+		tile prices on each tile's climate floors (the need-basket kernel, sim/world/need_basket.py). While the
+		economy opens, the same kernel on the engine's goods market prices. A need with no priced good is left
+		out; with none priced, the food floor is the dole."""
+		from_tiles = self._sim.economy.agent_need_floor_costs()  # type: ignore[attr-defined]
+		if from_tiles:
+			return from_tiles
 		basket = market_demand.household_basket(self._sim.civ, self._sim.world_map)
 		prices = self._sim.goods_market.household_prices()  # type: ignore[attr-defined]
 		costs = {need.spec.need_id: need.price_index * need.spec.subsistence_per_person
@@ -53,13 +57,17 @@ class CastView:
 			costs[FOOD_NEED] = self.material_cost(DOLE_MATERIAL, tonnes)  # type: ignore[attr-defined]
 		return costs
 
+	def country_economy(self, country: str) -> Any:
+		"""The agent economy's answers for a partner country that is part of it; None for any other."""
+		return self._once("country:" + country, lambda: self._sim.economy.agent_country(country))  # type: ignore[attr-defined]
+
 	def subsistence_cost_per_person_year(self) -> float:
 		"""The food floor of `need_floor_costs_per_person_year`."""
 		return self.need_floor_costs_per_person_year().get(FOOD_NEED, 0.0)
 
 	def observed_stratum(self, country: Optional[str], name: str) -> Optional[Dict[str, float]]:
 		"""The home strata's income from the agent economy's household cohorts (`sim/agents/strata_observed.py`);
-		None for another country, or while the agent economy is off (the strata then keep their own wage bridge)."""
+		None for another country, or while the economy opens (the strata then keep their own wage bridge)."""
 		if country is not None:
 			return None
 		curve = self._sim.economy.agent_cohort_incomes()  # type: ignore[attr-defined]
@@ -73,7 +81,7 @@ class CastView:
 
 def opening_cast(sim: Any) -> Tuple[str, List[Any], Dict[str, Any]]:
 	"""(home country, entries, profiles): the civilisation played, and every economy trading with it."""
-	foreign = [load_civ(civilisation_id) for civilisation_id in sim.foreign_economies()]
+	foreign = [load_civ(civilisation_id) for civilisation_id in sim.partner_countries()]
 	return cast_from_civilisations(sim.civ, foreign)
 
 

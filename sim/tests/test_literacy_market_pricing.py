@@ -250,7 +250,12 @@ check("...but still refuses a genuinely unpriced name, with a hint rather "
 # NODES rather than going through `sim()`/`proto()`. See the design doc for
 # what each claim below is meant to prove and why.
 
-LED = COMMOD.CommodityLedger(nodes=NODES)
+# A fixture price table (labour hours per kg): the ledger's base price is the solved price of
+# the material each commodity names, so a test states its own.
+FIXTURE_PRICES_HOURS_PER_KG = {"iron_bar_kg": 20.0, "copper_kg": 80.0, "copper_wire_kg": 120.0,
+                               "coal_kg": 0.4, "gold_kg": 70000.0, "wool_kg": 40.0,
+                               "cloth_kg": 60.0, "cotton_kg": 80.0}
+LED = COMMOD.CommodityLedger(nodes=NODES, price_hours_per_kg=FIXTURE_PRICES_HOURS_PER_KG)
 
 check("commodities.json defines the nine commodities the design doc promises",
       set(LED.commodities) == {"iron", "copper", "copper_wire", "coal", "gold",
@@ -282,13 +287,13 @@ check("a power loom makes cloth more available (higher national output) "
 check("...which drops the market price of cloth, not just a premium on top "
       "of a flat floor (the thing economy.py's material_price_factor cannot do)",
       price_power < price_hand * 0.5,
-      "hand loom=%.2f power loom=%.2f den/kg" % (price_hand, price_power))
+      "hand loom=%.2f power loom=%.2f h/kg" % (price_hand, price_power))
 balloon_linen_kg = NODES["hot_air_balloon"]["mat"]["linen_kg"]
 cost_hand = balloon_linen_kg * price_hand
 cost_power = balloon_linen_kg * price_power
 check("...which makes the real hot_air_balloon node's linen bill cheaper "
       "to buy once the power loom exists",
-      cost_power < cost_hand, "hand=%.0f power=%.0f denarii" % (cost_hand, cost_power))
+      cost_power < cost_hand, "hand=%.0f power=%.0f labour hours" % (cost_hand, cost_power))
 
 # --- copper wire: the real test. A modest order is fully met; an industrial
 # order of 'kilometres of copper wire' is not, and the shortfall is
@@ -336,7 +341,7 @@ check("...but never above what a buyer's next-best alternative would cost "
 # --- price never runs away in either direction, however extreme the ratio
 # (price_floor_factor / price_ceiling_factor, COMMODITIES.md section 2).
 c = LED.commodities["iron"]
-base = c["base_price_denarii_per_kg"]
+base = LED.base_price_hours_per_kg("iron")
 lo = LED.price("iron", demand_t=0.0001, supply_t=1e9)
 hi = LED.price("iron", demand_t=1e9, supply_t=0.0001)
 check("a total glut never prices a commodity below its floor",

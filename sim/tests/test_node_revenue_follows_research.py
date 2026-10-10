@@ -1,4 +1,4 @@
-"""Researching a technique that gates production changes the derived figures of the nodes that use it
+"""A technique the society learns that gates production changes the derived figures of the nodes that use it
 (Complaints/317): the Sim re-derives when its held gate set changes, and a save keeps the result."""
 import os
 import random
@@ -21,9 +21,8 @@ def make_sim():
 
 
 def research(sim, tech_ids):
-    for tech_id in tech_ids:
-        sim.state.projects.done.add(tech_id)
-    sim._done_changed()
+    """The society learns the techniques (the state holds them); the founder's own completions do not move them."""
+    sim.state_treasury().knowledge.update(tech_ids)
 
 
 def figures(sim):

@@ -62,3 +62,5 @@ missing (see What is done and What remains below):
 Overlapping issues closed into this one; each closed file keeps its full text.
 
 - 365 (`closed/365-living-stock-is-modelled-as-research.md`): living stock is modelled as research; pepper, rubber, dairy cattle, tea, coffee and sugar have no stock nodes.
+
+Owner decision (2026-10-09): a breeding animal sells like any other good through `sell`, at the market's price; there is no separate breeding-stock price, so that item is dropped.

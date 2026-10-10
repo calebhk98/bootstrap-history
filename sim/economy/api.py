@@ -8,18 +8,19 @@ WALL = "two-way"  # nothing here reaches sim/engine/; the engine hands it what i
 
 import math
 
-from . import diagnostics, households, labour_state, market_curves, taxes, tile_costs, workforce_settle
+from . import country_figures, diagnostics, households, labour_state, land_rents, market_curves, taxes, tile_costs, workforce_settle
 from .currency import currency_from_coin_standard
 from .economy import Economy
 from .foreign import external_orders
 from .market_memory import market_key
 from .notional import shown_prices
+from .price_level import goods_level_over_opening
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
 from .protocols import AgentOrders, YearInputs
 from .recipes import recipes_from_production_data
 from .record import EconomyRecord
 from .setup import EconomySetup, TradeSpec, goods_specs
-from .types import EDGE_EXTERNAL, EDGE_LEGACY, GoodsMove, Offer, Transfer
+from .types import EDGE_CARGO, EDGE_CONSUMPTION, EDGE_EXCHANGE, EDGE_EXTERNAL, EDGE_LEGACY, Bid, GoodsMove, Offer, SiteLimit, Transfer, external_edge
 from .unit_cost import variable_cost_per_run
 from .year_close import rebase_basket_price_level
 from .year_labour import trade_premium
@@ -28,14 +29,15 @@ from sim.world import capital_market
 __all__ = [
     "diagnostics", "households", "taxes", "tile_costs", "currency_from_coin_standard", "Economy", "external_orders",
     "price_response",
-    "shown_prices", "Producer", "expected_output_prices", "live_input_prices", "live_wages", "AgentOrders",
-    "YearInputs", "recipes_from_production_data", "EconomyRecord", "EconomySetup", "TradeSpec",
-    "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "GoodsMove", "Offer", "Transfer",
+    "shown_prices", "goods_level_over_opening", "Producer", "expected_output_prices", "live_input_prices", "live_wages", "AgentOrders",
+    "YearInputs", "recipes_from_production_data", "EconomyRecord", "EconomySetup", "TradeSpec", "SiteLimit",
+    "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "EDGE_CARGO", "EDGE_CONSUMPTION", "EDGE_EXCHANGE", "external_edge", "Bid", "GoodsMove", "Offer", "Transfer",
     "variable_cost_per_run", "rebase_basket_price_level", "trade_premium",
     "traded_volumes", "opening_quantities", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
-    "credit_room", "economy_from_record", "blank_economy", "export_record", "finish_spin_up", "shown_prices_of",
-    "settle_founder_takings", "move_goods", "cohort_incomes",
+    "credit_room", "economy_from_record", "blank_economy", "export_record", "economy_book", "finish_spin_up", "shown_prices_of",
+    "settle_agent_takings", "move_goods", "post_transfers", "cohort_incomes", "land_rent_per_hectare",
+    "land_rent_paid_by_tile", "land_rent_at_tile", "country_figures",
 ]
 
 _KEY_SEPARATOR = "|"
@@ -55,9 +57,13 @@ def opening_quantities(economy):
     return dict(economy.record.opening_basket)
 
 
-def people_by_trade(economy):
-    """Working people by trade across every labour area, as the labour core's state holds them."""
-    return labour_state.people_by_trade_everywhere(economy.record.workforce)
+def people_by_trade(economy, country=None):
+    """Working people by trade across the labour areas of `country` (the home country when the economy holds
+    several and none is named; every area when it holds one), as the labour core's state holds them."""
+    scope = country_figures.home_when_shared(economy, country)
+    if scope is None:
+        return labour_state.people_by_trade_everywhere(economy.record.workforce)
+    return country_figures.people_by_trade(economy, scope)
 
 
 def wages_by_trade(economy):
@@ -68,10 +74,34 @@ def wages_by_trade(economy):
     return rows
 
 
-def wages_by_trade_weighted(economy):
+def land_rent_per_hectare(economy, country=None):
+    """Mean rent per hectare-year producers paid last year over the tiles of `country` where land was let
+    (the home country's when the economy holds several; zero where none was)."""
+    scope = country_figures.home_when_shared(economy, country)
+    tiles = country_figures.country_tiles(economy, scope)
+    rents = [rent for tile, rent in economy.record.land_rent.items() if rent > 0.0 and tile in tiles]
+    return sum(rents) / len(rents) if rents else 0.0
+
+
+def land_rent_at_tile(economy, tile):
+    """Rent per hectare-year the land market let land at on one tile last year; the mean over the tiles where
+    land was let where none was let on this tile (zero where none was let anywhere)."""
+    rent = economy.record.land_rent.get(tile, 0.0)
+    return rent if rent > 0.0 else land_rent_per_hectare(economy)
+
+
+def land_rent_paid_by_tile(economy):
+    """Rent producers paid on each tile where land was let last year, in the economy's units."""
+    return land_rents.rent_paid_by_tile(economy.setup, economy.record)
+
+
+def wages_by_trade_weighted(economy, country=None):
     """Last year's wage per hour of each trade: the remembered wage of each of its labour markets weighted
     by the hours hired there last year. A trade that hired nowhere falls back to the unweighted mean of
-    its remembered wages."""
+    its remembered wages. Of `country`'s markets (the home country's when the economy holds several)."""
+    scope = country_figures.home_when_shared(economy, country)
+    if scope is not None:
+        return country_figures.wages_per_hour(economy, scope)
     rows = {}
     for key, wage in economy.record.memory.wages.items():
         rows.setdefault(key.split(_KEY_SEPARATOR, 1)[0], []).append((wage, economy.record.hours_hired.get(key, 0.0)))
@@ -96,9 +126,14 @@ def credit_room(economy, borrower_id):
     return capital_market.headroom(capital_market.lendable_capacity(record.funds_offered), others)
 
 
-def producers_of(economy):
-    """The producers by agent id."""
-    return dict(economy.record.producers)
+def producers_of(economy, country=None):
+    """The producers by agent id: those working on `country`'s tiles (the home country's when the economy
+    holds several and none is named)."""
+    scope = country_figures.home_when_shared(economy, country)
+    if scope is None:
+        return dict(economy.record.producers)
+    tiles = country_figures.country_tiles(economy, scope)
+    return {producer_id: producer for producer_id, producer in economy.record.producers.items() if producer.tile in tiles}
 
 
 def external_trade_net(economy):
@@ -111,11 +146,13 @@ def external_trade_volume(economy):
     return economy.record.book.edge_volume(EDGE_EXTERNAL, economy.setup.currency_id)
 
 
-def cohort_incomes(economy):
+def cohort_incomes(economy, country=None):
     """(people, last year's money income) of every household cohort, poorest per head first: the economy's
-    own answer to what its bodies of people earn."""
+    own answer to what its bodies of people earn. Of `country` (the home country when the economy holds several)."""
+    scope = country_figures.home_when_shared(economy, country)
+    tiles = country_figures.country_tiles(economy, scope)
     rows = [(cohort.people, cohort.last_year_income) for cohort in economy.record.cohorts.values()
-            if cohort.people > 0.0]
+            if cohort.people > 0.0 and cohort.tile in tiles]
     return sorted(rows, key=lambda row: (row[1] / row[0], row[0]))
 
 
@@ -176,9 +213,20 @@ def blank_economy(setup):
     return Economy(setup)
 
 
-def export_record(economy):
-    """The economy's record as plain data, for saving."""
-    return economy.record.to_record()
+def set_improvements(economy, improvements):
+    """Give the economy's hauls the built ways `{edge_key: {"road": true}}`; False when nothing changed."""
+    return economy.set_improvements(improvements)
+
+
+def export_record(economy, skip_currencies=()):
+    """The economy's record as plain data, for saving; `skip_currencies` leaves out money another owner keeps in the
+    same book."""
+    return economy.record.to_record(skip_currencies)
+
+
+def economy_book(economy):
+    """The double-entry book the economy's agents keep their money and goods in."""
+    return economy.record.book
 
 
 def finish_spin_up(economy):
@@ -192,9 +240,13 @@ def trim_workforce_to_expected_hours(economy):
     workforce_settle.trim_to_expected_hours(economy.setup, economy.record, economy.view())
 
 
-def shown_prices_of(economy):
-    """(prices, stale goods) the game is shown for this economy; see `notional.shown_prices`."""
-    return shown_prices(economy.setup, economy.record)
+def shown_prices_of(economy, country=None):
+    """(prices, stale goods) the game is shown for this economy; see `notional.shown_prices`. Over the market
+    areas touching `country` (the home country's when the economy holds several)."""
+    scope = country_figures.home_when_shared(economy, country)
+    if scope is None:
+        return shown_prices(economy.setup, economy.record)
+    return shown_prices(economy.setup, economy.record, country_figures.prices(economy, scope))
 
 
 def move_goods(economy, moves):
@@ -202,7 +254,12 @@ def move_goods(economy, moves):
     economy.record.book.move_many(moves)
 
 
-def settle_founder_takings(economy, agent_id, edge_id, tile_note="founder's takings"):
+def post_transfers(economy, transfers):
+    """Applies money transfers to the economy's book."""
+    economy.record.book.transfer_many(transfers)
+
+
+def settle_agent_takings(economy, agent_id, edge_id, tile_note="agent's takings"):
     """Sends an agent's money and every unsold holding back over an edge; returns the money sent."""
     book, money = economy.record.book, economy.setup.currency_id
     proceeds = book.balance(agent_id, money)

@@ -12,7 +12,7 @@ weight (military, infrastructure, prestige, ...), through its policy.
 """
 from typing import Any, Dict, List, Tuple
 
-from . import budget, ledger
+from . import budget, demand_answer, ledger
 from .base import Actor, RecordedActor
 from .government_coinage import CoinageMixin
 from .government_stores import StoresMixin
@@ -60,6 +60,15 @@ class Government(CoinageMixin, StoresMixin, SurplusMixin, RecordedActor):
 	def collect(self, payer: Actor, taxable: float, world: Any) -> float:
 		"""Levy `payer` and receive it; the amount taken."""
 		levy, parts = self.assess(payer, taxable, world)
+		if parts["requisition"] > 0.0 and payer.demand_stance() != demand_answer.COMPLY:
+			# a refused requisition is paid, with a penalty, only if the state can enforce it
+			draw = world.rng_for("demand", getattr(payer, "actor_id", ""), world.year).random()
+			answer = demand_answer.settle_demand(payer.demand_stance(), parts["requisition"], world.state_capacity(),
+												 payer.standing(), draw)
+			parts["requisition"] = answer["paid"] - answer["penalty"]
+			if answer["penalty"] > 0.0:
+				parts["penalty"] = answer["penalty"]
+			levy = sum(parts.values())
 		if levy > 0.0:
 			ledger.transfer(payer, self, levy, parts)
 		return levy
@@ -83,20 +92,20 @@ class Government(CoinageMixin, StoresMixin, SurplusMixin, RecordedActor):
 		soldiers = self.record.army if self.record.army > 0.0 else wanted
 		standing = budget.standing_lines(world, soldiers) + budget.concession_lines(world.group_claims())
 		lines = self.draw_stores(standing, world)
-		if not world.runs_agent_economy():   # on the agent economy the state's tax grain is in its own book
-			self.sell_surplus(standing, world)
 		share = budget.funded_share(sum(line.money for line in lines), self.money + self.credit_ceiling(world))
 		self.record.army = budget.army_next_year(soldiers, wanted, share)
 		self.record.need = {line.name: line.money for line in lines}
 		self.record.unfunded = {line.name: line.money * (1.0 - share) for line in lines}
 		for line in lines:
+			bought = line.material_cost if line.materials else 0.0   # its materials are bought with bids in the agent economy's book
 			if share > 0.0:
 				if line.labour:
-					world.pay_wages(self, line.money * share, line.name)   # the state's pay reaches its people
+					world.pay_wages(self, (line.money - bought) * share, line.name)   # the state's pay reaches its people
 				else:
-					ledger.transfer(self, world.edge(EDGE_STATE_SPENDING), line.money * share, line.name)
+					ledger.transfer(self, world.edge(EDGE_STATE_SPENDING), (line.money - bought) * share, line.name)
+			weight = sum(line.materials.values())
 			for commodity, tonnes in line.materials.items():
-				world.market_purchase(self.actor_id, commodity, tonnes * share)
+				world.market_purchase(self.actor_id, commodity, tonnes * share, bought * share * tonnes / weight)
 		return lines, share
 
 	def pay_patron(self, share: float, world: Any) -> None:

@@ -27,8 +27,7 @@ def _geography_with_fertility(civ_id, fertility_of_tile):
     geography = copy.deepcopy(_GEOGRAPHY)
     land_tiles = geography["land_tiles"]
     tile_ids = []
-    for region in S.load_civ(civ_id)["home_regions"]:
-        tile_ids.extend(land_tiles["region_to_tiles"][region])
+    tile_ids.extend(tiles_held(S.load_civ(civ_id)))
     ranked = sorted(set(tile_ids), key=lambda tile_id: (
         -land_tiles["tiles"][tile_id]["fertility_quality_multiplier"], tile_id))
     for rank, tile_id in enumerate(ranked):

@@ -904,7 +904,7 @@ def _illustrative_recursive_labour_content_price_per_kg(
     THIS IS NOT PART OF THIS MODULE'S DEMAND MECHANISM. It exists only so
     this module's own __main__ block and sim/tests/test_demand.py have
     SOME cost-side price to anchor a demo against, without reading
-    data/prices.json (a book value) or importing sim/engine/solve_prices.py (out
+    a book value or importing sim/engine/solve_prices.py (out
     of scope - see the module docstring's STANDALONE section). It is
     deliberately a leading-underscore helper: no production code above
     this line calls it, and market_clearing_price and
@@ -1020,9 +1020,9 @@ SILVER_TO_LEAD_PRICE_RATIO_HISTORICAL = declare(
     unit="dimensionless (price ratio, silver per kg over lead per kg)",
     source="The task that produced this module states the historical "
            "silver-to-lead price ratio as 'on the order of 100:1'. Note "
-           "for whoever reads this next to data/prices.json: that file's "
-           "own purchase_prices_denarii gives roughly 528:1 (317/0.6), "
-           "but silver_kg's book entry is marked definitional - 1 "
+           "for whoever compares it with the old price book (deleted): its "
+           "own entries gave roughly 528:1 (317/0.6), "
+           "but silver_kg's book entry was marked definitional - 1 "
            "denarius IS ~3.15 g of fine silver by fiat, not a market "
            "price - so the two are not measuring quite the same thing "
            "and should not be expected to agree; both are reported by "

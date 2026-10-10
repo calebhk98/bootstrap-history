@@ -7,8 +7,8 @@ tracked material actually costs to land at this household, given the
 material's own scarcity (material_price_factor(), reading the demand
 grouping _cached_material_demand()/_cached_demand_by_tag() prepare) and
 the real, physical distance an ox-cart has to haul it from the nearest
-region that has it (_land_freight_physical_inputs()/
-_material_source_regions()/material_freight_distance_km()/
+deposit tile that has it (_land_freight_physical_inputs()/
+_material_source_tiles()/material_freight_distance_km()/
 material_freight_cost_per_kg()/material_freight_factor() - see the
 freight section below for sim/geography/transport.py's own physics and
 what this crossing deliberately does and does not cover). Covers, in
@@ -64,7 +64,7 @@ from . import money_units
 from . import purchase_rule
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
-from sim.geography.api import transport as freight_physics
+from sim.geography.api import freight_cost, provisions, transport as freight_physics
 from sim.agents.api import edges
 
 
@@ -137,13 +137,13 @@ class FreightMixin:
     # were the same book price here regardless of the thousand-odd
     # kilometres of open water between them.
     #
-    # THE CROSSING. the geography data's own per-region `minerals` table (read
+    # THE CROSSING. the named deposits' output shares (read
     # by mineral_scale()/_compute_mineral_scale() in geography.py to decide
     # how much of iron/coal/copper/lead/tin/silver/saltpetre you can BUY)
-    # already says which of this game's 22 regions actually produce each of
-    # those seven materials, with real latitude/longitude on every region.
+    # already say which tiles actually produce each of
+    # those seven materials, with a real position on every deposit.
     # This is the first place that same geography is also asked what buying
-    # the material should COST: find the nearest region that has it, price
+    # the material should COST: find the nearest tile that has it, price
     # an ordinary ox-cart haul from there with transport.py's own per-
     # tonne-km figures, and fold the result into material_price_factor() as
     # a markup on the book price - see material_freight_factor()'s own
@@ -151,12 +151,10 @@ class FreightMixin:
     #
     # WHY THIS MATERIAL SET AND NOT OTHERS. Extending this to gold, or to
     # commodities.json's own curated wool/cotton/coffee, was deliberately
-    # left alone: the geography data's `minerals` table is the ONLY per-region
-    # location data this engine carries at global (not just Roman-province)
+    # left alone: the deposit shares are the ONLY located-production data this engine carries at global (not just Roman-province)
     # coverage - commodities.json's "regions" field for those was written
     # Rome-centric (its `iron` entry alone lists only Roman provinces, none
-    # of the geography data's other 16 regions, even though the geography data's own
-    # `minerals` table credits China with more iron abundance than any
+    # of the geography data's other 16 regions, even though the deposit shares credit China with more iron abundance than any
     # Roman province has) - using it for a non-Roman civilization would
     # invent a worse-than-nothing answer ("Han China must import all its
     # iron from across the world") from data that was never meant to
@@ -186,7 +184,7 @@ class FreightMixin:
     # real seagoing-hull mode. It also does not amortise the cart's own
     # capital cost or wear (transport.py's own vehicle_wear_fraction_per_
     # tonne_km) into the price: there is no market price for a cart
-    # anywhere in prices.json to convert that fraction into denarii, so
+    # anywhere in the production data to convert that fraction into denarii, so
     # this prices feed and driver time only, which UNDERSTATES the true
     # cost - a conservative simplification, named per CLAUDE.md SS3.4, not
     # a hidden one.
@@ -230,35 +228,33 @@ class FreightMixin:
                     freight_physics.CART, freight_physics.DIRT_TRACK))
         return cached
 
-    def _material_source_regions(self, material):
-        """Regions the geography data's own per-region `minerals` table credits
-        with real abundance of `material` (iron, coal, copper, lead, tin,
+    def _material_source_tiles(self, material):
+        """Tiles whose named deposits produce `material` (iron, coal, copper, lead, tin,
         silver, saltpetre - mineral_scale()'s own tracked set; see
         geography.py's _compute_mineral_scale, which reads this exact same
-        field for the QUANTITY question). Nothing here is invented for
+        shares for the QUANTITY question). Nothing here is invented for
         freight: it is the same geology this file already uses to decide
         how much of a material you can buy, now also asked what buying it
         should cost."""
-        return [region_id for region_id, region in self.geography.regions.items()
-                if float((region.get("minerals") or {}).get(material, 0.0)) > 0.0]
+        return self.geography.source_tiles(material)
 
     def material_freight_distance_km(self, material):
         """Kilometres of the cheapest haul from the tiles this civilization holds to the nearest
-        region that actually produces `material`, over the carriage modes it holds and the ways it
+        tile whose deposits produce `material`, over the carriage modes it holds and the ways it
         has built (geography's route; the same "source from the easiest deposit" rule
         material_reach() uses for located materials).
 
-        Zero if any region this civilization already HOLDS a tile of produces the material at all:
+        Zero if a tile this civilization already HOLDS has a deposit of the material:
         "home is home", a material you already mine in your own territory costs nothing extra to
         move within it, by this module's simplification.
 
-        None if the geography data has no located-region data for `material` at all (everything
-        outside the seven tracked minerals - see _material_source_regions). An unknown distance is
+        None if no deposit shares out `material` over tiles (everything
+        outside the seven tracked minerals - see _material_source_tiles). An unknown distance is
         not licence to invent one, so this returns "unknown" and material_freight_cost_per_kg()
         charges nothing rather than something imaginary when it sees that.
         """
-        regions = self._material_source_regions(material)
-        return self.geography.route_km_to(regions) if regions else None
+        tiles = self._material_source_tiles(material)
+        return self.geography.route_km_to(tiles) if tiles else None
 
     def material_freight_cost_per_kg(self, material):
         """Denarii per kilogram to haul `material` from the nearest place it
@@ -279,7 +275,7 @@ class FreightMixin:
         FEED PRICE IS A LABELLED STAND-IN. transport.py's own FEED_ENERGY_
         DENSITY_KCAL_PER_KG declaration describes the ration it costs
         against as hay-heavy, and this project has no hay or fodder price
-        anywhere in prices.json - FREIGHT_FEED_PRICE_MATERIAL (wheat_kg) is
+        anywhere in the production data - FREIGHT_FEED_PRICE_MATERIAL (wheat_kg) is
         the closest book price that exists, and wheat is dearer per
         kilogram than real fodder, so this reads as a conservative
         (upper-bound), not measured, feed cost.
@@ -294,8 +290,9 @@ class FreightMixin:
         distance_km = self.material_freight_distance_km(material)
         if not distance_km:
             return 0.0
-        denarii_per_tonne_km = self.land_freight_money_per_tonne_km()
-        denarii_per_tonne = denarii_per_tonne_km * distance_km
+        denarii_per_tonne = freight_cost.leg_money_per_tonne(
+            self.land_freight_money_per_tonne_km(), self._land_freight_physical_inputs(), distance_km,
+            restock_days=provisions.RESTOCK_INTERVAL_DAYS)
         return denarii_per_tonne / KILOGRAMS_PER_TONNE
 
     def material_freight_factor(self, emp_key):
@@ -561,7 +558,7 @@ class FreightMixin:
         if not purchase_rule.can_pay(self, cost):
             return 0.0
         self.pay_edge(edges.EDGE_BUILDERS, cost, "nitre beds laid down")
-        self.state.economy.nitre_bed_m2 += square_metres
+        self.state.holdings.nitre_bed_m2 += square_metres
         return square_metres
 
     NITRE_SHORTAGE_SAFETY_BUFFER = declare(
@@ -603,7 +600,7 @@ class FreightMixin:
             return {"text": "", "commands": []}
         if binding == "charcoal":
             need = max(0.0, self.annual_material_demand().get("charcoal_kg", 0.0)
-                       / KILOGRAMS_PER_TONNE - self.state.economy.forest_ha * self.CHARCOAL_PER_HA)
+                       / KILOGRAMS_PER_TONNE - self.state.holdings.forest_ha * self.CHARCOAL_PER_HA)
             hectares_needed = max(1.0, round(need / max(self.CHARCOAL_PER_HA, 1e-9)))
             return {"text": (
                 "Charcoal is grown, not bought: about %s more hectare%s of "
@@ -617,7 +614,7 @@ class FreightMixin:
             shortfall_t = self.material_shortfall_t(binding)
         if binding == "saltpetre":
             demand = self.annual_material_demand().get("saltpetre_kg", 0.0) / KILOGRAMS_PER_TONNE
-            available = (self.state.economy.nitre_bed_m2 * self.NITRE_YIELD_T_PER_M2
+            available = (self.state.holdings.nitre_bed_m2 * self.NITRE_YIELD_T_PER_M2
                          + self._material_market_tonnes("saltpetre")
                          + self._material_stock().get("saltpetre", 0.0))
             deficit = max(shortfall_t, demand - available, 0.0)
@@ -637,7 +634,7 @@ class FreightMixin:
                                    * self.price_index))),
                 "commands": ["buy nitre %d" % square_meters]}
         if binding in self.MINE_OPEX_MATERIALS:
-            sinking = [tranche for tranche in (self.state.economy.mine_tranches or []) if tranche[0] == binding]
+            sinking = [tranche for tranche in (self.state.holdings.mine_tranches or []) if tranche[0] == binding]
             sinking_tonnes = sum(tranche[1] for tranche in sinking)
             if sinking_tonnes > 0.0:
                 ready_year = int(min(tranche[2] for tranche in sinking))

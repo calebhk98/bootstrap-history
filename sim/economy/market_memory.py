@@ -27,6 +27,12 @@ VOLUME_WEIGHT_SPEED = declare(
         "between areas from year to year does not swing it. How long 'usually' is has no measured "
         "basis; a fixed-basket index with weights from earlier years is the same idea.")
 
+USUAL_PRICE_SPEED = declare(
+    "USUAL_PRICE_SPEED", 0.1, kind="temporary_heuristic",
+    unit="share of the gap to this year's price closed in a year", source=None, confidence="D",
+    why="Holders of a durable good judge a price high or low against what it has usually been. How long "
+        "'usually' is has no measured basis; a moving average over about a decade is the same idea.")
+
 
 def market_key(first: str, area: AreaId) -> str:
     """One string key per (good or trade, area), so the memory saves as plain JSON."""
@@ -43,10 +49,19 @@ class MarketMemory:
     basket_price_levels: Dict[CurrencyId, float] = field(default_factory=dict)
     expected_inflation: Dict[CurrencyId, float] = field(default_factory=dict)
     currency_of_area: Dict[AreaId, CurrencyId] = field(default_factory=dict)
+    usual_prices: Dict[str, float] = field(default_factory=dict)        # market_key(good, area), slow average
     volume_weights: Dict[str, float] = field(default_factory=dict)      # market_key(good, area), smoothed
     trade_age: Dict[str, int] = field(default_factory=dict)     # market_key(good, area); absent: never cleared
     years_without_bids: Dict[str, int] = field(default_factory=dict)   # market_key(good, area); absent: bids last year
     years_without_offers: Dict[str, int] = field(default_factory=dict)   # market_key(good, area); absent: offers last year
+
+    def note_usual_price(self, key: str) -> None:
+        """Move the usual price of a market toward its remembered price (start at it when new)."""
+        price = self.prices.get(key)
+        if price is None:
+            return
+        usual = self.usual_prices.get(key)
+        self.usual_prices[key] = price if usual is None else usual + USUAL_PRICE_SPEED * (price - usual)
 
     def years_since_trade(self, key: str) -> Optional[int]:
         return self.trade_age.get(key)
@@ -89,6 +104,10 @@ class YearView:
 
     def price(self, good: GoodId, area: AreaId) -> Optional[float]:
         return self._memory.prices.get(good + KEY_SEPARATOR + area)
+
+    def usual_price(self, good: GoodId, area: AreaId) -> Optional[float]:
+        """A slow average of the price, what holders compare today's price with; None before any."""
+        return self._memory.usual_prices.get(good + KEY_SEPARATOR + area)
 
     def wage(self, trade: TradeId, area: AreaId) -> Optional[float]:
         return self._memory.wages.get(trade + KEY_SEPARATOR + area)

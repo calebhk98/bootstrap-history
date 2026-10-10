@@ -118,24 +118,46 @@ def declared_supply(need_data: Mapping[str, Any],
 
 
 def budget_weights_by_good(need_data: Mapping[str, Any], production: Mapping[str, Any],
-                           available_materials: Set[str]) -> Dict[str, float]:
-    """{good: share of household spending} with no prices: each need's budget
-    weight, normalised over needs an available good serves, split equally
-    among those goods."""
-    # TEMPORARY HEURISTIC: equal split inside a need, since no prices are known here.
+                           available_materials: Set[str],
+                           cost_per_unit: Optional[Mapping[str, float]] = None,
+                           civ_values: Optional[Mapping[str, Any]] = None) -> Dict[str, float]:
+    """{good: share of household spending} with no prices: each need's budget weight, normalised over
+    needs an available good serves, split among those goods. `cost_per_unit` is what a unit of a good costs
+    in any one currency (labour value when prices are unknown); the goods of a need then take spending as
+    the household mix does (constant elasticity on cost per need unit, sim/world/need_basket.py). A good
+    without a positive cost takes the mean weight of its need's priced goods; with no costs at all the
+    split inside a need is equal. A need that scales with a civilisation field (`civ_values`) weighs by it."""
     attributes = goods_attributes(need_data, production)
     servers: Dict[str, List[str]] = collections.defaultdict(list)
     for material in sorted(available_materials):
         for need_id in attributes.get(material, {}).get("satisfies", {}):
             servers[need_id].append(material)
-    weight_total = sum(need_data["needs"][need_id]["surplus_budget_share"]
-                       for need_id in servers)
+    civ_values = civ_values or {}
+    need_weight = {need_id: need_data["needs"][need_id]["surplus_budget_share"]
+                   * need_basket.civ_scale(need_data["needs"][need_id], civ_values) for need_id in servers}
+    weight_total = sum(need_weight.values())
     weights: Dict[str, float] = collections.defaultdict(float)
     for need_id, materials in servers.items():
-        share = need_data["needs"][need_id]["surplus_budget_share"] / weight_total
+        share = need_weight[need_id] / weight_total if weight_total > 0.0 else 0.0
+        inside = _mix_inside_need(need_id, materials, attributes, cost_per_unit or {})
         for material in materials:
-            weights[material] += share / len(materials)
+            weights[material] += share * inside[material]
     return dict(weights)
+
+
+def _mix_inside_need(need_id: str, materials: List[str], attributes: Mapping[str, Any],
+                     cost_per_unit: Mapping[str, float]) -> Dict[str, float]:
+    """Each good's share of its need's spending: cost per need unit to the power of one minus the substitution
+    elasticity, normalised; equal where no cost is known."""
+    exponent = 1.0 - NEED_SUBSTITUTION_ELASTICITY
+    raw = {material: (cost_per_unit[material] / attributes[material]["satisfies"][need_id]) ** exponent
+           for material in materials if cost_per_unit.get(material, 0.0) > 0.0}
+    if not raw:
+        return {material: 1.0 / len(materials) for material in materials}
+    mean_raw = sum(raw.values()) / len(raw)
+    filled = {material: raw.get(material, mean_raw) for material in materials}
+    total = sum(filled.values())
+    return {material: weight / total for material, weight in filled.items()}
 
 
 def _polish_root(function, low: float, high: float) -> float:
@@ -338,6 +360,13 @@ class NeedDemandModel:
 
         Materials nobody demands at all are left out.
         """
+        return self.clearing_with_glut(prices, supply_by_material, report)[0]
+
+    def clearing_with_glut(self, prices: Mapping[str, float],
+                           supply_by_material: Mapping[str, float],
+                           report: Optional[Iterable[str]] = None):
+        """(clearing prices, materials in glut): the glut is where the first pass of the search found supply
+        above demand at every price down to the span's floor, so no price clears the market."""
         wanted = set(supply_by_material if report is None else report)
         # Only goods sharing a need with a reported good can move its price.
         rival_needs = {need_id for need_id, goods in self._need_goods.items()
@@ -353,15 +382,21 @@ class NeedDemandModel:
         # not their costs, so each is re-cleared against the others' latest.
         working = dict(prices)
         clearing: Dict[str, float] = {}
+        glutted: Set[str] = set()
         for _pass in range(CLEARING_PASSES):
             for material in targets:
-                clearing[material] = self._clear(
+                clearing[material], is_glut = self._clear(
                     material, supply_by_material[material], working, prices[material])
                 working[material] = clearing[material]
-        return {material: price for material, price in clearing.items() if material in wanted}
+                # Only the first pass searches the full span below the good's own price.
+                if is_glut and _pass == 0:
+                    glutted.add(material)
+        return ({material: price for material, price in clearing.items() if material in wanted},
+                {material for material in glutted if material in wanted})
 
     def _clear(self, material: str, supply: float, prices: Dict[str, float],
-               reference: float) -> float:
+               reference: float):
+        """(clearing price, whether supply exceeds demand at every price searched)."""
         current = reference
         weights = self._influence(material)
 
@@ -382,13 +417,13 @@ class NeedDemandModel:
 
         centre = prices[material]
         if not centre > 0.0:
-            return centre
+            return centre, False
         low = max(centre * 10.0 ** (-CLEARING_SEARCH_SPAN_DECADES), sys.float_info.min)
         high = centre * 10.0 ** CLEARING_SEARCH_SPAN_DECADES
         if excess_demand(high) > 0.0:
-            return high
+            return high, False
         if excess_demand(low) < 0.0:
-            return low
+            return low, True
         for _step in range(CLEARING_BISECTION_STEPS):
             # Geometric midpoint in log space, so tiny prices cannot underflow to zero.
             middle = math.exp((math.log(low) + math.log(high)) / 2.0)
@@ -396,7 +431,7 @@ class NeedDemandModel:
                 low = middle
             else:
                 high = middle
-        return _polish_root(excess_demand, low, high)
+        return _polish_root(excess_demand, low, high), False
 
 
 class NeedDemandAnchors:
@@ -436,7 +471,7 @@ class NeedDemandAnchors:
             return cached[1]
         supply = self.model.byproduct_supply(current_prices)
         supply.update(self.supply_by_material)
-        result = self.model.clearing_prices(current_prices, supply, report=materials)
+        result = self.model.clearing_with_glut(current_prices, supply, report=materials)
         self._last[key] = (inputs, result)
         return result
 
@@ -448,7 +483,7 @@ class NeedDemandAnchors:
         graph and final needs do not yet cover every use of such a good.
         """
         # TEMPORARY HEURISTIC: an anchor below the current price is dropped, not used as a glut.
-        clearing = self._clearing(current_prices, self.anchor_materials)
+        clearing = self._clearing(current_prices, self.anchor_materials)[0]
         return {material: price for material, price in clearing.items()
                 if material not in self.table_supply_materials
                 or price >= current_prices[material]}
@@ -457,4 +492,24 @@ class NeedDemandAnchors:
         """{material: lowest price its limited supply allows}."""
         if not self.scarcity_materials:
             return {}
-        return self._clearing(current_prices, self.scarcity_materials)
+        return self._clearing(current_prices, self.scarcity_materials)[0]
+
+    def glutted_materials(self, current_prices: Mapping[str, float],
+                          disposal_cost_by_material: Optional[Mapping[str, float]] = None) -> Set[str]:
+        """Materials nobody pays for: supply exceeds demand at every price the clearing search tried, or the
+        market clears below what it costs to dispose of a unit (buyers then take it for less than dumping it
+        costs, so it is a waste, not a product).
+
+        The search for a waste is centred at no less than its disposal cost, so a price that has decayed
+        towards zero cannot hide a market that clears well above it. A good supplied from a resource table
+        is left out: the recipe graph does not yet cover every use of it, so a shortfall of demand there is
+        not a glut."""
+        costs = {material: cost for material, cost in (disposal_cost_by_material or {}).items()
+                 if cost > 0.0 and material in self.anchor_materials}
+        centred = dict(current_prices)
+        for material, cost in costs.items():
+            centred[material] = max(centred.get(material, 0.0), cost)
+        clearing, glut = self._clearing(centred, self.anchor_materials)
+        glut = set(glut) | {material for material, cost in costs.items()
+                            if material in clearing and clearing[material] < cost}
+        return {material for material in glut if material not in self.table_supply_materials}

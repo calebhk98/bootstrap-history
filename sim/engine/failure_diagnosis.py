@@ -41,8 +41,6 @@ def note_failure(sim, node_id):
         return ("Measured with %s: %s reached %.3g %s against %.3g needed (%s)."
                 % (sim.nodes[spec["instrument"]]["name"], spec["quantity"],
                    reached, spec["unit"], spec["needed"], spec["needed_words"]))
-    uninformed = sim.state.projects.uninformed_failures
-    uninformed[node_id] = uninformed.get(node_id, 0) + 1
     return ("You cannot tell why: this work needs %s, and nothing you hold can "
             "measure it. %s would. This failure teaches nothing, so the next "
             "attempt is no safer."

@@ -1,13 +1,12 @@
 """Complaint 273: coin moved across a route pays carriage by its mass, and a state's or firm's coin pays the
 yearly keeping cost the household's does."""
 from .harness import *  # noqa: F401,F403
-from functools import partial
 
 from sim.engine.data import load_civ
 from sim.engine.state import ActorRecord
 from sim.engine.coin_hoard import KEEPING_CAUSE
 
-sim = partial(sim, agent_economy=False)
+sim = unopened_sim
 
 PARTNER = "han_china_100ad"
 COIN = load_civ(PARTNER)["coin_standard"]
@@ -62,7 +61,7 @@ def keeping_paid(treasury_money, firm_money):
     """(the state's, a firm's) outlay on keeping coin after one year of actors."""
     game = sim(civ="rome_100ad", capital=1e6, manual=False, events=False)
     treasury = game.state_treasury()
-    treasury.record.money = treasury_money
+    treasury.money = treasury_money
     firm = game.actors.add("firm:coin_keeper", ActorRecord(kind="firm", name="coin keeper", money=firm_money))
     game.advance_actors(game.state.scenario.year)
     cause = KEEPING_CAUSE

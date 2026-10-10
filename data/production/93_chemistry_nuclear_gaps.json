@@ -90,7 +90,8 @@
    "basis": "per tonne of phenol recovered from coal tar by fractionation and caustic wash",
    "yield_basis": "EXTRACTED FROM A BY-PRODUCT. High-temperature coal tar carries on the order of one percent phenol by mass in its carbolic-oil fraction; recovery by fractionation, extraction into caustic soda and re-acidification is taken at 80 percent, giving 1 / (0.01 x 0.8) = 125 t of tar per tonne. The tar grade is an order-of-magnitude figure for tar from coking (conf C). Labour is borrowed from acetic_acid_kg's distillation line (the same fractionate-and-purify work), not derived. Caustic and acid reagents are not modelled.",
    "conf": "C",
-   "requires_node": "chm_phenol"
+   "requires_node": "chm_phenol",
+   "operated_by": ["chm_phenol"]
   },
   "adipic_acid_kg": {
    "outputs": {
@@ -184,7 +185,8 @@
    "basis": "per tonne of dry borax and boric acid blend for treating cellulose fabric",
    "yield_basis": "COMPOSITION. The classic textile fireproofing bath is borax and boric acid dissolved together, the mix commonly given as seven parts borax to three parts boric acid by mass. The blend conserves mass, so a tonne of blend is 700 kg of one and 300 kg of the other. The ratio is a recipe convention, not derived (conf C). Labour of mixing and the water of solution are not modelled.",
    "conf": "C",
-   "requires_node": "soda_leblanc"
+   "requires_node": "soda_leblanc",
+   "operated_by": ["soda_leblanc"]
   },
   "aluminium_soap_kg": {
    "outputs": {
@@ -236,7 +238,8 @@
    "basis": "per tonne of mercury fulminate, Hg(ONC)2, made by dissolving mercury in nitric acid and adding ethanol",
    "yield_basis": "STOICHIOMETRIC MINIMUM. Mercury fulminate is 284.63 g/mol containing one mercury (200.59 g) and two nitrogen atoms, taken from two molecules of nitric acid (2 x 63.01 g); the two carbon atoms are taken from one molecule of ethanol (46.07 g). Per kg: 0.705 kg mercury, 0.443 kg nitric acid, 0.162 kg ethanol. A real batch uses a large excess of acid and ethanol and recovers a fraction, so this understates cost (heuristic, conf C). Labour is copied from nitroglycerin_kg, the neighbouring hazardous batch synthesis.",
    "conf": "C",
-   "requires_node": "chm_fulminate"
+   "requires_node": "chm_fulminate",
+   "operated_by": ["chm_fulminate"]
   },
   "uranium_ore_kg": {
    "outputs": {

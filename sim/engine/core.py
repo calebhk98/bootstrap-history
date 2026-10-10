@@ -1,9 +1,8 @@
 """The simulation itself: what one year does, and the loop over years."""
 import collections, copy, math, os, random, sys
 
-from sim.constants import book_money_names, declare
-from .money_units import book_money_factor
-from .wage_schedule import build_schedule
+from sim.constants import declare
+from . import money_units
 from . import automation_audit
 from sim.engine.state import SimulationState, ActiveProjectState
 from sim.engine.state_seat import bind_seat
@@ -42,14 +41,23 @@ from .economy import EconomyMixin
 from .node_rederive import NodeRederiveMixin
 from .market_clearing import MarketClearingMixin
 from .foreign_economies import ForeignEconomiesMixin
+from .food_supply import FoodSupplyMixin
 from .living_stock import LivingStockMixin
 from .coin_hoard import CoinHoardMixin
+from .theft_charge import TheftChargeMixin
+from .coin_carriage import CoinCarriageMixin
 from .living_stock_trade import LivingStockTradeMixin
 from .living_stock_yearly import LivingStockYearlyMixin
+from .defence_stores import DefenceStoresMixin
 from .market_demand import MarketDemandMixin
 from .real_output import RealOutputMixin
 from .concern_volume import ConcernVolumeMixin
 from .techniques_in_use import TechniquesInUseMixin
+from .industry_concern import IndustryConcernMixin
+from .industry_depth import IndustryDepthMixin
+from .coin_revaluation import CoinRevaluationMixin
+from .real_price_ratios import RealPriceRatiosMixin
+from .wage_market_ratios import WageMarketRatiosMixin
 from .incumbent_prices import IncumbentPricesMixin
 from .producer_costs import ProducerCostsMixin
 from .fog import FogMixin
@@ -58,16 +66,26 @@ from .geography_port import GeographyPortMixin
 from .labour_port import LabourPortMixin
 from .projects import ProjectsMixin
 from .core_seats import SeatMixin
+from .year_run import run_year
+from .seat_run import SeatRunMixin
+from .seat_builds import SeatBuildsMixin
+from .seat_sight import SeatSightMixin
+from .shock_year import ShockYearMixin
+from .seat_defaults import default_policy
 from .ways import WaysMixin
+from .held_works import HeldWorksMixin
+from .works import WorksMixin
+from .action_loss import ActionLossMixin
 from .society import SocietyMixin
 from .society_actors import ActorsMixin
 from .society_disclosure import DisclosureMixin
 from .founder_sales import FounderSalesMixin
+from .seat_dealings import SeatDealingsMixin
 from .interest_groups import InterestGroupsMixin
 from .core_properties import ForwardingPropertiesMixin
 from .goals import GoalsMixin
 from .core_step_phases import StepContext, StepPhasesMixin
-from .economy_port import EconomyPortMixin, switch_requested
+from .economy_port import EconomyPortMixin
 from .data import trade_family
 from .invariants import check_simulation_invariants
 from sim.agents.api import Household
@@ -219,10 +237,10 @@ FARM_WEATHER_POOLED_CELL_CAP = declare(
 YEARLY_RECORD_LIMIT = 300
 
 
-class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, LabourPortMixin,
-          ProjectsMixin, SeatMixin, WaysMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, InterestGroupsMixin, ForwardingPropertiesMixin, GoalsMixin,
-          StepPhasesMixin, LivingStockMixin, CoinHoardMixin,
-          LivingStockTradeMixin, LivingStockYearlyMixin, EconomyPortMixin, NodeRederiveMixin):
+class Sim(RealPriceRatiosMixin, CoinRevaluationMixin, WageMarketRatiosMixin, MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IndustryDepthMixin, IndustryConcernMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, LabourPortMixin,
+          ProjectsMixin, SeatMixin, SeatRunMixin, SeatBuildsMixin, SeatSightMixin, ShockYearMixin, WaysMixin, WorksMixin, HeldWorksMixin, ActionLossMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, SeatDealingsMixin, InterestGroupsMixin, ForwardingPropertiesMixin, GoalsMixin,
+          StepPhasesMixin, LivingStockMixin, CoinHoardMixin, CoinCarriageMixin, TheftChargeMixin,
+          LivingStockTradeMixin, LivingStockYearlyMixin, FoodSupplyMixin, DefenceStoresMixin, EconomyPortMixin, NodeRederiveMixin):
     STATE_CAPACITY_DEFAULT = declare(
         "STATE_CAPACITY_DEFAULT", 0.7, kind="temporary_heuristic",
         unit="dimensionless (0..1)", source=None, confidence="D",
@@ -259,16 +277,6 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
     # DISEASE_BURDEN_TECH_IDS (nodes declaring the `disease_burden` mechanic) is
     # provided by MechanicsMixin; food techs in _TECH_EFFECTS.json do not declare it.
 
-    def _localise_book_money_constants(self):
-        """Give this Sim its own copy of every money constant authored in book
-        denarii, in its civilisation's coin."""
-        factor = book_money_factor(build_schedule(
-            TRADE_REGISTRY, self.civ).money_per_labour_hour)
-        self._book_money_scale = factor
-        for name in book_money_names():
-            if hasattr(type(self), name):
-                setattr(self, name, getattr(type(self), name) * factor)
-
     def __init__(self, nodes, order, rng, events=True, cfg=None, verbose=False,
                  bounty_set=None, civ=None, manual=False, debug=None):
         self.nodes = nodes
@@ -304,7 +312,6 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         self.start_civ = copy.deepcopy(self.civ)    # the opening values, kept while self.civ drifts
         self.nodes = nodes_in_civ_money(nodes, self.civ)
         self._remember_derived_gates(self.civ["starting_techs"])
-        self._localise_book_money_constants()
         # Authoritative live SimulationState hierarchy
         from sim.engine.state import (
             SimulationState, HouseholdState, ProjectsState, ActorsState,
@@ -322,8 +329,6 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
             actors=ActorsState(),
             _civ=self.civ.get("id"),
         )
-        if switch_requested(self.cfg):
-            self.state.economy.agent_economy["on"] = True
         # SET HERE SO EVERY READER CAN READ THEM DIRECTLY. Both are assigned
         # afterwards by whoever builds the game - cli_interactive, cli_agent,
         # sim/tests/fingerprint.py - and both round-trip through saveload's `_fog`
@@ -385,14 +390,12 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         # population at reference soil, on the best ground the held tiles
         # offer; later clearing works down the same best-first ladder.
         held_tiles = tiles_held(self.civ, self.world_map)
-        if held_tiles:
-            territory = land.territory_farmland(held_tiles, load_geography(self.world_map))
-            self._farm_ladder = territory.ladder
-            self._farm_arable_ceiling = territory.arable_hectares
-        else:
-            # temporary_heuristic: no territory declared, so reference soil, no ceiling.
-            self._farm_ladder = []
-            self._farm_arable_ceiling = None
+        if not held_tiles:
+            raise ValueError("civilisation %r holds no tiles: the agent economy needs a territory to run its markets on; "
+                             "name its starting claim in `home_tiles`" % (self.civ.get("id"),))
+        territory = land.territory_farmland(held_tiles, load_geography(self.world_map))
+        self._farm_ladder = territory.ladder
+        self._farm_arable_ceiling = territory.arable_hectares
         sized = self._agriculture.farmland_for_population(
             self._adult_equivalent_population(self.population),
             arable_hectares_ceiling=self._farm_arable_ceiling)
@@ -503,47 +506,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         # docstring: one key, auto_court_heir, is written for succession after
         # a mortal owner's death, and the rest of the dict is not worth
         # splitting away from it for that.
-        self.policy = {
-            "auto_hire":     not manual,   # grow the staff toward what you can support
-            # ON for the optimizer, OFF for a player: automatically buying
-            # people on a player's behalf, in a game they are playing by
-            # hand, with no prompt and no line in the log, is not modelling
-            # slavery, it is lying to the player about what is in their
-            # household. An unattended optimizer run that says "bought 6
-            # people for the workshop" in its log models the thing honestly.
-            "auto_buy_people": not manual,
-            "auto_manumit":  not manual,
-            "auto_train":    not manual,   # teach trades this society does not have
-            "auto_mine":     not manual,   # sink shafts when a material binds
-            "auto_forest":   not manual,   # buy coppice when charcoal binds
-            "auto_mothball": True,         # stop working what you cannot pay for
-            # OFF FOR A PLAYER, like every other automation, and on for the
-            # optimizer, which the long civilisation runs are calibrated
-            # against. This is the most consequential thing the game could
-            # do without being asked: it discards technologies you built,
-            # which under fog are the only score there is, so defaulting it
-            # on for a player would silently delete their work. Nothing
-            # stops a player shedding a loss-maker by hand - `mothball` does
-            # exactly that, and gets it back with `restore`.
-            "auto_shed":     not manual,
-            # Open every concern that plainly pays for itself. On for the
-            # optimizer, whose long runs are calibrated against a household
-            # that does run what it builds, and off for a player, for whom
-            # deciding what to actually operate is the point.
-            "auto_open":     not manual,
-            "auto_court_heir": not manual,  # court a dead patron's successor
-            # Buy a job from an outside shop when a few pairs of hands are the
-            # only thing standing between you and something you need.
-            "auto_commission": not manual,
-            "auto_bribe":    not manual,   # pay your way out of a scandal
-            # Rehire a specialist foreman an open concern has lost. Off by
-            # default in manual play, and off unattended too: the optimizer's
-            # auto_hire already replaces trades that concerns draw on.
-            "auto_replace_foreman": False,
-            # Keep `reserve` spare craftsmen and scholars above what open
-            # concerns hold, hiring and housing them each year. Off always.
-            "reserve_staff": False,
-        }
+        self.policy = default_policy(manual)
         # World-level "last time I said X" trackers; household ones live on HouseholdState.
         # THE FOLLOWING EIGHT FIELDS ARE BIOGRAPHICAL TO ONE MORTAL PERSON, not
         # to a household in general, and stay on `Sim` for exactly that reason
@@ -607,17 +570,19 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         # particular, never infer one civilization's materials or institutions for another
         # civilization from those fields.
         self._reconnect_state_hooks()
-        if self.economy.runs_agent_economy():
-            # opened now, not by the first question a screen or a cost asks: while it opens the engine's
-            # own figures answer, and nothing computed from them may stay cached afterwards
-            self.economy.open_agent()
-            self._done_changed()
+        # opened now, not by the first question a screen or a cost asks: while it opens the engine's
+        # own figures answer, and nothing computed from them may stay cached afterwards
+        self.economy.open_agent()
+        self._done_changed()
+        self.join_cast_seats()
 
     def _reconnect_state_hooks(self):
         """Reconnect transient cache state, version counters, and invalidating wrappers after save/load."""
         # Household façades first, so version bumps fired while reconnecting land on this state
         if hasattr(self, "household"):
             self.sync_seat_facades()
+        self.state.attach_purses()
+        self.state.actors.purses.observer = self.note_lender_posting
         acting = self.state.acting_seat
         try:
             for seat_id in self.state.seats:
@@ -625,7 +590,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
                 self._wrap_seat_containers()
         finally:
             bind_seat(self.state, acting)
-        cleared = getattr(self.state.economy, "farm_cleared_hectares", None)
+        cleared = getattr(self.state.holdings, "farm_cleared_hectares", None)
         if cleared is not None:
             self.labour.set_farm_area(cleared)
         # Synchronize demographic cohort floats
@@ -654,7 +619,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         # Reset transient caches
         self._reset_economic_caches()
         # the demand the last throttle saw is read before the next one, so it is carried
-        held_demand = self.state.economy.material_demand_at_last_throttle
+        held_demand = self.state.holdings.material_demand_at_last_throttle
         self.household._material_demand_cache = None if held_demand is None else collections.Counter(held_demand)
 
     def _wrap_seat_containers(self):
@@ -1530,9 +1495,9 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         # so a stale or missing value right after a fresh `Sim()` (before
         # this method has run once) costs nothing correctness-sensitive.
         self._last_farm_year = farm_year
-        self.state.economy.farm_last_shortfall_kg = farm_year.food_shortfall_kg
-        self.state.economy.farm_last_harvest_kg = farm_year.gross_harvest_kg
-        self.state.economy.farm_last_marginal_product = (
+        self.state.holdings.farm_last_shortfall_kg = farm_year.food_shortfall_kg
+        self.state.holdings.farm_last_harvest_kg = farm_year.gross_harvest_kg
+        self.state.holdings.farm_last_marginal_product = (
             farm_year.marginal_product_last_hour_kg_per_hour)
         self.labour.update_wages()
 
@@ -1775,15 +1740,16 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
             "damage linger for decades, not measured against any attested "
             "postwar recovery rate.")
 
-    INSOLVENCY_FLOOR_MIN = declare(
-        "INSOLVENCY_FLOOR_MIN", 4000.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii", source=None, confidence="D",
-        why="Genuinely a money amount: it is a nominal debt threshold, and a debt is a promise of a fixed sum of the coin it was contracted in, whatever that coin later buys. "
-            "Floor on how deep into arrears a household can sit before "
-            "insolvency's staff bleed can begin, for a household with "
-            "very low revenue - so a household earning almost nothing is "
-            "not bled the instant it dips a denarius below zero. Round "
-            "number, not measured.")
+    INSOLVENCY_FLOOR_MIN_LABOUR_HOURS = declare(
+        "INSOLVENCY_FLOOR_MIN_LABOUR_HOURS", 80600.0, kind="temporary_heuristic",
+        unit="labour hours", source=None, confidence="D",
+        why="Floor on how deep into arrears a household can sit before insolvency's"
+            ' staff bleed can begin, for a household with very low revenue - so a '
+            'household earning almost nothing is not bled the instant it dips a '
+            'denarius below zero. Round number, not measured. How deep a debt a '
+            'household can carry is the labour it would take to clear, so the floor'
+            ' is hours of work, the same burden whatever the coin is worth.')
+    INSOLVENCY_FLOOR_MIN = money_units.PricedInLabourHours("INSOLVENCY_FLOOR_MIN_LABOUR_HOURS")
     INSOLVENCY_FLOOR_REVENUE_MULTIPLE = declare(
         "INSOLVENCY_FLOOR_REVENUE_MULTIPLE", 2.0, kind="temporary_heuristic",
         unit="years of revenue", source=None, confidence="D",
@@ -1907,14 +1873,15 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         why="Scandal level above which the optimizer's standing bribery "
             "policy actually starts spending - below it, scandal is not "
             "yet worth buying down. Tuned, not measured.")
-    AUTO_BRIBE_CAPITAL_THRESHOLD = declare(
-        "AUTO_BRIBE_CAPITAL_THRESHOLD", 2000, kind="temporary_heuristic",
-        book_money=True, unit="denarii", source=None, confidence="D",
-        why="Genuinely a money amount: it is a threshold on coin held, so it is compared against capital as it is counted. "
-            "Minimum capital before the optimizer's bribery policy will "
-            "spend at all, so a poor household is not bled dry bribing "
-            "away scandal it might survive anyway. Round number, not "
-            "measured.")
+    AUTO_BRIBE_CAPITAL_THRESHOLD_LABOUR_HOURS = declare(
+        "AUTO_BRIBE_CAPITAL_THRESHOLD_LABOUR_HOURS", 40300.0, kind="temporary_heuristic",
+        unit="labour hours", source=None, confidence="D",
+        why="Minimum capital before the optimizer's bribery policy will spend at "
+            'all, so a poor household is not bled dry bribing away scandal it might'
+            ' survive anyway. Round number, not measured. Capital is a stock of '
+            'labour-valued goods and coin, so the threshold is the hours of work it'
+            ' represents.')
+    AUTO_BRIBE_CAPITAL_THRESHOLD = money_units.PricedInLabourHours("AUTO_BRIBE_CAPITAL_THRESHOLD_LABOUR_HOURS")
     AUTO_BRIBE_CAPITAL_SHARE = declare(
         "AUTO_BRIBE_CAPITAL_SHARE", 0.12, kind="temporary_heuristic",
         unit="dimensionless (share of capital)", source=None,
@@ -1922,13 +1889,15 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         why="Ceiling on how much of current capital one year's bribery "
             "spend can be, so buying down scandal cannot alone bankrupt "
             "the household. Tuned, not measured.")
-    AUTO_BRIBE_COST_PER_SCANDAL_POINT = declare(
-        "AUTO_BRIBE_COST_PER_SCANDAL_POINT", 260, kind="temporary_heuristic",
-        book_money=True, unit="denarii per scandal point", source=None, confidence="D",
-        why="Genuinely a money amount: a bribe is handed over as coin and the sum is negotiated between the parties, not fixed by the labour of any good. "
-            "What buying down one point of scandal costs, capping total "
-            "spend alongside AUTO_BRIBE_CAPITAL_SHARE. Invented figure, "
-            "not sourced to any attested bribe schedule.")
+    AUTO_BRIBE_COST_LABOUR_HOURS_PER_SCANDAL_POINT = declare(
+        "AUTO_BRIBE_COST_LABOUR_HOURS_PER_SCANDAL_POINT", 5240.0, kind="temporary_heuristic",
+        unit="labour hours per scandal point", source=None, confidence="D",
+        why='What buying down one point of scandal costs, capping total spend '
+            'alongside AUTO_BRIBE_CAPITAL_SHARE. Invented figure, not sourced to '
+            'any attested bribe schedule. An official accepts a payment worth the '
+            'work and risk he gives up, so the sum is the hours of unskilled labour'
+            ' it buys.')
+    AUTO_BRIBE_COST_PER_SCANDAL_POINT = money_units.PricedInLabourHours("AUTO_BRIBE_COST_LABOUR_HOURS_PER_SCANDAL_POINT")
     BRIBES_YTD_DECAY = declare(
         "BRIBES_YTD_DECAY", 0.7, kind="temporary_heuristic",
         unit="dimensionless (fraction kept per year)", source=None,
@@ -1938,15 +1907,15 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
             "protection term) survives into next year - a bribe's "
             "protective effect fades rather than accumulating forever. "
             "Tuned, not measured.")
-    BRIBE_SCANDAL_REDUCTION_SCALE = declare(
-        "BRIBE_SCANDAL_REDUCTION_SCALE", 300.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii per scandal point removed (before bribability)",
-        source=None, confidence="D",
-        why="Genuinely a money amount: a bribe is handed over as coin and the sum is negotiated between the parties, not fixed by the labour of any good. "
-            "How much bribery spend it takes to remove one point of "
-            "scandal, scaled further by this society's own bribability "
-            "weight. Invented figure, not sourced to any attested bribe "
-            "schedule.")
+    BRIBE_SCANDAL_REDUCTION_LABOUR_HOURS_PER_POINT = declare(
+        "BRIBE_SCANDAL_REDUCTION_LABOUR_HOURS_PER_POINT", 6050.0, kind="temporary_heuristic",
+        unit="labour hours per scandal point removed (before bribability)", source=None, confidence="D",
+        why='How much bribery spend it takes to remove one point of scandal, scaled'
+            " further by this society's own bribability weight. Invented figure, "
+            'not sourced to any attested bribe schedule. An official accepts a '
+            'payment worth the work and risk he gives up, so the sum is the hours '
+            'of unskilled labour it buys.')
+    BRIBE_SCANDAL_REDUCTION_SCALE = money_units.PricedInLabourHours("BRIBE_SCANDAL_REDUCTION_LABOUR_HOURS_PER_POINT")
 
     SCANDAL_HAZARD_SCALE = declare(
         "SCANDAL_HAZARD_SCALE", 60.0, kind="temporary_heuristic",
@@ -2112,60 +2081,8 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
             "measured.")
 
     def step(self):
-        # WHERE SCANDAL STOOD WHEN THE PLAYER LAST LOOKED. `state` prints the
-        # chance of being denounced from the CURRENT scandal, and scandal
-        # moves DURING the step: without this snapshot, a player could read
-        # "0% chance of being denounced this year", press step once, and see
-        # "RUN ENDS: denounced: as a sorcerer" in the same batch - not
-        # because the earlier figure was wrong, but because it would be
-        # answering about a year that had already gone. A player needs the
-        # direction as well as the level, and this is the only place that
-        # knows both.
-        self.state.household.scandal_last_year = self.state.household.scandal
-        automation_audit.begin_year(self)
-        self.refresh_derived_nodes()
-        # open every book entry at the year's start, so a read before the first step cannot open one at another state
-        self._open_market_book()
-
-        # step() is a readable sequence of phase calls, in the same order the
-        # phases always ran in; the phases themselves are below, and each still
-        # reads and writes exactly the self.* state it always did. Only a
-        # handful of values flow forward between phases as arguments/returns
-        # rather than through self.*: pool and hired_left (start_projects into
-        # progress), and remaining/remaining_after_projects/hours_effective_total
-        # (progress into wage_fallback and reputation).
-        self._step_apprenticeships()          # 0.  people whose apprenticeship ended
-        self._step_staff()                     # 1.  staff, attrition
-        self._step_money()                     # 2.  money (and 2c. threshold goals)
-        if self._step_dated_shocks():          # 3.  dated shocks
-            if self.debug:
-                self.verify_step_invariants()
-            return
-        self._step_teach_trades()              # 4a. teach the trades this society does not have
-        self._step_standing_work_directive()   # 4a(ii). the standing "work" directive
-        pool, hired_left = self._step_start_projects()   # 4b. start new projects
-        self._step_materials()                 # 4c. materials
-        # 5. progress, director hours
-        remaining, remaining_after_projects, hours_effective_total = (
-            self._step_progress(pool, hired_left))
-        # 5b. if there is no work and no money, take a job
-        remaining = self._step_wage_fallback(remaining)
-        # 6. reputation, familiarity, protection, scandal
-        self._step_reputation(pool, remaining, remaining_after_projects, hours_effective_total)
-        self._step_bondage()                   # 6b. serving out a debt
-        self._step_founder_mortality()          # 7. founder mortality
-        self._step_market()                    # 7b. the year's market closes
-        self.step_living_stock()               # 7c. held stock breeds and dies
-
-        # 8. random events
-        if self.events and not self.state.founder.dead_reason:
-            self._random_events(self.state.scenario.year)
-
-        # The state's levy, the market and the shrinking of standing all move the purse after the money phase checked it.
-        self.enforce_credit_limit(self.state.scenario.year)
-        self.state.scenario.year += 1
-        if self.debug:
-            self.verify_step_invariants()
+        """Advance every seat one year (the order and what runs once or per seat: year_run.py)."""
+        run_year(self)
 
     # ---- THE YEAR'S PHASES ------------------------------------------------
     # _step_apprenticeships through _step_founder_mortality - the fourteen
@@ -2257,7 +2174,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         self.state.projects.done_year = {}
         horizon = horizon or self.cfg["horizon_years"]
         end = self.cfg["start_year"] + horizon
-        while self.state.scenario.year < end and not self.state.founder.dead_reason and self.state.scenario.goal_year is None:
+        while self.state.scenario.year < end and not self.run_over():
             self.step()
         return self
 

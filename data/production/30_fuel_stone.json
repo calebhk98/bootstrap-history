@@ -47,7 +47,8 @@
    "basis": "per tonne of charcoal from an earth-clamp burn",
    "yield_basis": "THE classic yield, and one of the most consequential ratios in the whole dataset: a traditional earth-covered clamp (wood stacked, turfed over, lit and controlled by choking the air supply so it smoulders rather than flames) converts roughly 20-25% of the dry wood mass into charcoal, the rest leaving as smoke, water vapour and volatile tars. Taking 25% (the better-run end of that range) gives 4 kg of wood per kg of charcoal, i.e. 4000 kg wood_kg for a tonne of charcoal. No external fuel input is listed because the clamp is self-firing - part of the charge itself supplies the heat that pyrolyses the rest, which is exactly why the yield is capped in the 20-25% band rather than higher. This ratio is what makes charcoal iron a forest-eating industry: every tonne of charcoal a furnace burns stands for four tonnes of wood that had to grow somewhere first. Labour is a collier tending the clamp around the clock for several days per burn (building it, watching for blue smoke that signals a breach, breaking it open and sorting the product), amortised over the wood charged.",
    "conf": "B",
-   "requires_node": null
+   "requires_node": null,
+   "operated_by": ["en_charcoal_burning", "charcoal_industrial"]
   },
   "coal_kg": {
    "outputs": {
@@ -113,7 +114,8 @@
    "basis": "per tonne of coal carbonised (coked) in a byproduct coke oven",
    "yield_basis": "JOINT PRODUCTION: destructively distilling coal in a sealed oven at 1000-1100 C drives off its volatile matter, some of which is condensed rather than burned - a byproduct oven (as opposed to an open beehive oven that just burns the volatiles off) recovers coal tar and leaves a high-fixed-carbon solid residue (coke, called carbon_kg here since the tree uses it for electrodes, motor brushes and electrolysis anodes - applications that want a carbon block, not iron). Byproduct coking of bituminous coal is well-documented industrial chemistry: coke yield runs 65-75% of the coal charged (taken here at 70%), and tar condenses out at roughly 3-5% of the charge (taken at 3.5%); the remainder leaves as coal gas and ammonia liquor, which are not modelled as materials here. The furnaceman hours are the least certain number in the entry - a coking cycle runs 2-3 days but one crew tends many ovens charging and drawing in sequence, so the per-tonne figure is an amortised estimate, not a stopwatch reading.",
    "conf": "B",
-   "requires_node": "coal_coke"
+   "requires_node": "coal_coke",
+   "operated_by": ["coal_coke"]
   },
   "graphite_kg": {
    "outputs": {

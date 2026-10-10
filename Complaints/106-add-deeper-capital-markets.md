@@ -32,7 +32,7 @@ addition to the roadmap, not a duplicate.
 mechanism: a household credit line with an interest rate and an affordability
 ceiling. There is no banking sector, no bond market, no equity instrument and
 no independent capital pool that a firm other than the founder's own
-household could draw on. `LATE-001`'s independent firms (`Complaints/103`)
+household could draw on. `LATE-001`'s independent firms (`Complaints/closed/103`)
 would need somewhere to raise capital from other than the founder personally
 underwriting them, which is exactly what this finding would supply.
 
@@ -55,7 +55,7 @@ as a follow-on to those two rather than a parallel track.
 
 ## Cross-references
 
-`Complaints/103` (LATE-001, independent firms) and `Complaints/105`
+`Complaints/closed/103` (LATE-001, independent firms) and `Complaints/105`
 (LATE-003, state fiscal model) are the natural prerequisites in practice,
 even though nothing formally blocks starting this first.
 
@@ -72,3 +72,5 @@ Related: 332.
 ## Agent economy (current)
 
 The first increment above describes the old engine market, which the game no longer runs. The agent economy has pooled credit with household lenders only (`sim/economy/credit.py`, `credit_claims.py`, `lending.py`); no banks, bonds, equity or insurance. What exists, what is missing, a first step (a bank as an ordinary agent, deposits and loans as claims in `credit_claims`) and the heuristics it needs are in `Complaints/reports/agent-economy-capital-markets.md`. Complaint 307 no longer applies there (the state offers no funds).
+
+Owner decision (2026-10-09): lower priority; it should come when it can, and a civilisation that has no banking institution yet must not get banks.

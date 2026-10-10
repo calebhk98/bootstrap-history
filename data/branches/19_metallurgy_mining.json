@@ -14,8 +14,6 @@
    "timber_m3": 1,
    "iron_bar_kg": 5
   },
-  "cap_hours": 1008.0939587064662,
-  "up_hours": 201.61879174129325,
   "yrs": 0.3,
   "risk": 0.05,
   "sus": 0,
@@ -48,13 +46,10 @@
    "lead_kg": 2,
    "charcoal_kg": 1
   },
-  "cap_hours": 2016.1879174129324,
-  "up_hours": 403.2375834825865,
   "yrs": 0.5,
   "risk": 0.1,
   "sus": 0,
   "gov": 0,
-  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "A",
@@ -94,13 +89,10 @@
    "iron_bar_kg": 30,
    "iron_bloom_kg": 20
   },
-  "cap_hours": 10080.939587064662,
-  "up_hours": 1612.950333930346,
   "yrs": 1.5,
   "risk": 0.1,
   "sus": 1,
   "gov": 1,
-  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 1,
   "conf": "A",
@@ -137,13 +129,10 @@
    "iron_bar_kg": 8,
    "sand_quartz_kg": 50
   },
-  "cap_hours": 4032.375834825865,
-  "up_hours": 806.475166965173,
   "yrs": 0.8,
   "risk": 0.08,
   "sus": 0,
   "gov": 0,
-  "rev_hours": 5040.469793532331,
   "sch": 0,
   "art": 1,
   "conf": "A",
@@ -171,8 +160,6 @@
    "charcoal_kg": 50,
    "iron_ore_kg": 100
   },
-  "cap_hours": 3024.2818761193985,
-  "up_hours": 1008.0939587064662,
   "yrs": 0.6,
   "risk": 0.12,
   "sus": 0,
@@ -207,8 +194,6 @@
    "timber_m3": 5,
    "iron_bar_kg": 40
   },
-  "cap_hours": 20161.879174129324,
-  "up_hours": 4032.375834825865,
   "yrs": 2,
   "risk": 0.15,
   "sus": 0,
@@ -242,8 +227,6 @@
    "iron_bar_kg": 30,
    "timber_m3": 3
   },
-  "cap_hours": 16129.50333930346,
-  "up_hours": 2419.425500895519,
   "yrs": 1.8,
   "risk": 0.12,
   "sus": 0,
@@ -283,14 +266,10 @@
    "sulfur_kg": 100.0,
    "timber_m3": 4.0
   },
-  "cap_hours": 24194.255008955188,
-  "up_hours": 4032.375834825865,
   "yrs": 3,
   "risk": 0.25,
   "sus": 0,
   "gov": 2,
-  "rev_hours": 10080.939587064662,
-  "output_unbounded_reason": "extraction: a deposit or a parent stream sets the output, not a plant or staff the node states",
   "sch": 1,
   "art": 1,
   "conf": "B",
@@ -321,8 +300,6 @@
    "limestone_kg": 20,
    "iron_bar_kg": 40
   },
-  "cap_hours": 40323.75834825865,
-  "up_hours": 6048.563752238797,
   "yrs": 2.5,
   "risk": 0.2,
   "sus": 0,
@@ -362,7 +339,6 @@
    "dolomite_kg": 50,
    "iron_ore_kg": 50
   },
-  "cap_hours": 30242.818761193987,
   "up_hours": 0,
   "yrs": 2.8,
   "risk": 0.18,
@@ -397,8 +373,6 @@
    "limestone_kg": 30,
    "iron_bar_kg": 50
   },
-  "cap_hours": 50404.69793532331,
-  "up_hours": 8064.75166965173,
   "yrs": 3,
   "risk": 0.15,
   "sus": 0,
@@ -444,8 +418,6 @@
    "timber_m3": 3,
    "clay_kg": 100
   },
-  "cap_hours": 16129.50333930346,
-  "up_hours": 3024.2818761193985,
   "yrs": 1.5,
   "risk": 0.12,
   "sus": 0,
@@ -483,8 +455,6 @@
    "timber_m3": 6,
    "coal_kg": 200
   },
-  "cap_hours": 70566.57710945263,
-  "up_hours": 10080.939587064662,
   "yrs": 3,
   "risk": 0.18,
   "sus": 1,
@@ -516,8 +486,6 @@
    "steel_plate_kg": 100,
    "timber_m3": 5
   },
-  "cap_hours": 56453.26168756211,
-  "up_hours": 8064.75166965173,
   "yrs": 2.5,
   "risk": 0.15,
   "sus": 1,
@@ -556,8 +524,6 @@
    "copper_kg": 30,
    "timber_m3": 6
   },
-  "cap_hours": 80647.5166965173,
-  "up_hours": 12097.127504477594,
   "yrs": 3,
   "risk": 0.2,
   "sus": 1,
@@ -588,8 +554,6 @@
    "iron_bar_kg": 80,
    "timber_m3": 5
   },
-  "cap_hours": 64518.01335721384,
-  "up_hours": 10080.939587064662,
   "yrs": 2.8,
   "risk": 0.17,
   "sus": 0,
@@ -620,8 +584,6 @@
    "iron_bar_kg": 100,
    "coal_kg": 150
   },
-  "cap_hours": 60485.63752238797,
-  "up_hours": 9072.845628358196,
   "yrs": 2.5,
   "risk": 0.16,
   "sus": 0,
@@ -656,8 +618,6 @@
    "coal_kg": 100,
    "timber_m3": 4
   },
-  "cap_hours": 44356.13418308451,
-  "up_hours": 7056.657710945264,
   "yrs": 2.2,
   "risk": 0.14,
   "sus": 0,
@@ -692,8 +652,6 @@
    "iron_bar_kg": 100,
    "coal_kg": 150
   },
-  "cap_hours": 76615.14086169143,
-  "up_hours": 11089.033545771128,
   "yrs": 2.9,
   "risk": 0.18,
   "sus": 0,
@@ -724,7 +682,6 @@
    "timber_m3": 2,
    "iron_bar_kg": 20
   },
-  "cap_hours": 10080.939587064662,
   "up_hours": 0,
   "yrs": 2,
   "risk": 0.2,
@@ -757,8 +714,6 @@
    "coal_kg": 80,
    "soap_kg": 2
   },
-  "cap_hours": 16129.50333930346,
-  "up_hours": 3024.2818761193985,
   "yrs": 1.5,
   "risk": 0.12,
   "sus": 0,
@@ -793,8 +748,6 @@
    "iron_bar_kg": 60,
    "iron_bloom_kg": 30
   },
-  "cap_hours": 12097.127504477594,
-  "up_hours": 2419.425500895519,
   "yrs": 1.2,
   "risk": 0.1,
   "sus": 0,
@@ -838,8 +791,6 @@
    "iron_bloom_kg": 40.0,
    "timber_m3": 8.0
   },
-  "cap_hours": 20161.879174129324,
-  "up_hours": 4032.375834825865,
   "yrs": 1.5,
   "risk": 0.12,
   "sus": 0,
@@ -874,8 +825,6 @@
    "steel_plate_kg": 60,
    "coal_kg": 200
   },
-  "cap_hours": 50404.69793532331,
-  "up_hours": 8064.75166965173,
   "yrs": 2.5,
   "risk": 0.16,
   "sus": 0,
@@ -913,8 +862,6 @@
    "steel_plate_kg": 100.0,
    "timber_m3": 4.0
   },
-  "cap_hours": 100809.39587064662,
-  "up_hours": 20161.879174129324,
   "yrs": 2.8,
   "risk": 0.18,
   "sus": 0,
@@ -953,8 +900,6 @@
    "iron_bar_kg": 200.0,
    "steel_plate_kg": 120.0
   },
-  "cap_hours": 60485.63752238797,
-  "up_hours": 12097.127504477594,
   "yrs": 2.5,
   "risk": 0.17,
   "sus": 0,
@@ -994,8 +939,6 @@
    "soap_kg": 3.0,
    "steel_plate_kg": 100.0
   },
-  "cap_hours": 52420.885852736246,
-  "up_hours": 8467.989253134316,
   "yrs": 2.6,
   "risk": 0.16,
   "sus": 0,
@@ -1029,7 +972,6 @@
    "charcoal_kg": 10,
    "timber_m3": 2
   },
-  "cap_hours": 8064.75166965173,
   "up_hours": 0,
   "yrs": 1,
   "risk": 0.1,
@@ -1061,7 +1003,6 @@
    "clay_kg": 150,
    "timber_m3": 3
   },
-  "cap_hours": 14113.315421890527,
   "up_hours": 0,
   "yrs": 1.5,
   "risk": 0.12,
@@ -1092,7 +1033,6 @@
    "clay_kg": 200,
    "sand_quartz_kg": 100
   },
-  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "yrs": 0.8,
   "risk": 0.08,
@@ -1126,7 +1066,6 @@
    "steel_plate_kg": 80,
    "timber_m3": 2
   },
-  "cap_hours": 44356.13418308451,
   "up_hours": 0,
   "yrs": 2.2,
   "risk": 0.15,
@@ -1161,7 +1100,6 @@
    "copper_kg": 20,
    "timber_m3": 2
   },
-  "cap_hours": 12097.127504477594,
   "up_hours": 0,
   "yrs": 1.2,
   "risk": 0.1,
@@ -1200,8 +1138,6 @@
    "charcoal_kg": 100,
    "coal_kg": 80
   },
-  "cap_hours": 48388.510017910376,
-  "up_hours": 8064.75166965173,
   "yrs": 2.5,
   "risk": 0.2,
   "sus": 0,
@@ -1247,13 +1183,10 @@
    "silver_kg": 2,
    "sulfuric_acid_kg": 10
   },
-  "cap_hours": 8064.75166965173,
-  "up_hours": 1612.950333930346,
   "yrs": 0.8,
   "risk": 0.08,
   "sus": 0,
   "gov": 0,
-  "rev_hours": 4032.375834825865,
   "sch": 1,
   "art": 0,
   "conf": "A",
@@ -1279,13 +1212,10 @@
    "sulfuric_acid_kg": 20,
    "timber_m3": 1
   },
-  "cap_hours": 12097.127504477594,
-  "up_hours": 2419.425500895519,
   "yrs": 1,
   "risk": 0.1,
   "sus": 0,
   "gov": 0,
-  "rev_hours": 6048.563752238797,
   "sch": 1,
   "art": 0,
   "conf": "A",
@@ -1335,7 +1265,6 @@
    "zinc_kg": 20,
    "sulfuric_acid_kg": 5
   },
-  "cap_hours": 16129.50333930346,
   "up_hours": 0,
   "yrs": 1.5,
   "risk": 0.12,
@@ -1381,7 +1310,6 @@
    "tin_kg": 10,
    "sulfuric_acid_kg": 8
   },
-  "cap_hours": 18145.691256716393,
   "up_hours": 0,
   "yrs": 1.6,
   "risk": 0.11,
@@ -1426,7 +1354,6 @@
    "charcoal_kg": 50,
    "timber_m3": 2
   },
-  "cap_hours": 8064.75166965173,
   "up_hours": 0,
   "yrs": 1,
   "risk": 0.08,
@@ -1462,7 +1389,6 @@
    "tallow_kg": 10,
    "timber_m3": 2
   },
-  "cap_hours": 12097.127504477594,
   "up_hours": 0,
   "yrs": 1.4,
   "risk": 0.13,
@@ -1498,7 +1424,6 @@
    "charcoal_kg": 30,
    "timber_m3": 1.5
   },
-  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "yrs": 1,
   "risk": 0.1,
@@ -1529,7 +1454,6 @@
    "charcoal_kg": 50,
    "timber_m3": 2
   },
-  "cap_hours": 8064.75166965173,
   "up_hours": 0,
   "yrs": 1,
   "risk": 0.09,
@@ -1564,7 +1488,6 @@
    "iron_bar_kg": 50,
    "charcoal_kg": 50
   },
-  "cap_hours": 20161.879174129324,
   "up_hours": 0,
   "yrs": 2,
   "risk": 0.15,
@@ -1597,7 +1520,6 @@
    "manganese_kg": 10,
    "iron_bar_kg": 50
   },
-  "cap_hours": 30242.818761193987,
   "up_hours": 0,
   "yrs": 2.5,
   "risk": 0.18,
@@ -1650,7 +1572,6 @@
    "ethanol_kg": 5,
    "sulfuric_acid_kg": 3
   },
-  "cap_hours": 16129.50333930346,
   "up_hours": 0,
   "yrs": 1.8,
   "risk": 0.12,
@@ -1694,8 +1615,6 @@
    "steel_plate_kg": 30,
    "timber_m3": 3
   },
-  "cap_hours": 36291.382513432785,
-  "up_hours": 6048.563752238797,
   "yrs": 2.2,
   "risk": 0.16,
   "sus": 0,
@@ -1725,7 +1644,6 @@
    "diamond_g": 1,
    "steel_plate_kg": 5
   },
-  "cap_hours": 24194.255008955188,
   "up_hours": 0,
   "yrs": 1.6,
   "risk": 0.11,
@@ -1758,7 +1676,6 @@
    "iron_bar_kg": 100,
    "coal_kg": 100
   },
-  "cap_hours": 50404.69793532331,
   "up_hours": 0,
   "yrs": 3,
   "risk": 0.2,
@@ -1792,7 +1709,6 @@
    "copper_kg": 1,
    "glass_raw_kg": 0.5
   },
-  "cap_hours": 28226.630843781055,
   "up_hours": 0,
   "yrs": 2,
   "risk": 0.14,
@@ -1825,8 +1741,6 @@
    "timber_m3": 4,
    "coal_kg": 50
   },
-  "cap_hours": 18145.691256716393,
-  "up_hours": 3629.138251343278,
   "yrs": 1.8,
   "risk": 0.16,
   "sus": 0,
@@ -1861,8 +1775,6 @@
    "copper_kg": 20,
    "lead_kg": 10
   },
-  "cap_hours": 40323.75834825865,
-  "up_hours": 8064.75166965173,
   "yrs": 2.5,
   "risk": 0.15,
   "sus": 1,
@@ -1877,9 +1789,120 @@
    "religious_adjacent"
   ],
   "mechanics": {
-   "mining_tech": {
-    "yield": 1.4,
-    "cost": 0.85
+   "mine_works": {
+    "drainage_engine": {
+     "lift_power_watts": 5900.0,
+     "attendants": 2,
+     "fuel_kg_per_tonne_metre": 0.0
+    },
+    "source": "temporary_heuristic: force pumps worked by a water wheel, no fuel. Power = water density times gravity times flow times fall times wheel efficiency, for a stream of 0.1 cubic metres a second falling 10 m at 0.6, about 5.9 kW; Pryce 1778 pp. 151-152 describes a 48-foot wheel working pumps in four lifts but gives no flow. Attendants (wheel keeper, pump man) are a guess."
+   }
+  }
+ },
+ {
+  "id": "met_archimedean_screw",
+  "name": "Archimedean screw for mine drainage",
+  "cat": "mining",
+  "kind": "ENGINEERING",
+  "pre": [],
+  "kb": "10_metallurgy.md",
+  "ph": 40,
+  "lab": {
+   "carpenter": 60
+  },
+  "mat": {
+   "timber_m3": 2,
+   "iron_bar_kg": 5
+  },
+  "yrs": 0.2,
+  "risk": 0.08,
+  "sus": 0,
+  "gov": 1,
+  "rev_hours": 0,
+  "sch": 0,
+  "art": 1,
+  "conf": "B",
+  "note": "A timber screw in a sloping trough, turned by one person, lifts water a metre or so per screw; several set in steps drain a deep working (Diodorus 5.37, Vitruvius, screws found at Sotiel Coronada and Centenillo). It lifts more per hour of labour than passing buckets by hand.",
+  "traits": [
+   "infrastructure"
+  ],
+  "mechanics": {
+   "mine_works": {
+    "drainage_lift_efficiency": 0.45,
+    "source": "Landels 1978 p. 63 via the earthsci.org summary: delivery at 40 to 50 percent efficiency; midpoint taken. Complaints/reports/silver-grades-and-processing-research.md section 4."
+   }
+  }
+ },
+ {
+  "id": "met_bucket_wheel_battery",
+  "name": "Bucket-wheel battery for mine drainage",
+  "cat": "mining",
+  "kind": "ENGINEERING",
+  "pre": [
+   "cn_crane_treadwheel"
+  ],
+  "kb": "10_metallurgy.md",
+  "ph": 40,
+  "lab": {
+   "carpenter": 200,
+   "smith": 40
+  },
+  "mat": {
+   "timber_m3": 12,
+   "iron_bar_kg": 40
+  },
+  "yrs": 0.6,
+  "risk": 0.08,
+  "sus": 0,
+  "gov": 1,
+  "rev_hours": 0,
+  "sch": 0,
+  "art": 1,
+  "conf": "B",
+  "note": "Treadmill-driven bucket wheels set in pairs one above another, each lifting water a few metres into the next stage (Rio Tinto, San Domingos). A man walking the wheel turns far more of his effort into lift than one passing buckets.",
+  "traits": [
+   "infrastructure"
+  ],
+  "mechanics": {
+   "mine_works": {
+    "drainage_lift_efficiency": 0.69,
+    "source": "Derived from Landels 1978 p. 69 via the earthsci.org summary: 19 gallons a minute through 12 feet for 0.1 horsepower of treadmill input is about 52 W of lift from 75 W; imperial gallons assumed. Complaints/reports/silver-grades-and-processing-research.md section 4."
+   }
+  }
+ },
+ {
+  "id": "met_drainage_adit",
+  "name": "Drainage adit",
+  "cat": "mining",
+  "kind": "ENGINEERING",
+  "pre": [
+   "met_ore_crushing_sorting"
+  ],
+  "kb": "10_metallurgy.md",
+  "ph": 40,
+  "lab": {
+   "miner": 600
+  },
+  "mat": {
+   "timber_m3": 4,
+   "iron_bar_kg": 30
+  },
+  "yrs": 1.5,
+  "risk": 0.08,
+  "sus": 0,
+  "gov": 1,
+  "rev_hours": 0,
+  "sch": 0,
+  "art": 1,
+  "conf": "B",
+  "note": "A level gallery driven from a valley side to the workings lets water below its mouth's level run out by gravity, so only the water below the adit is lifted. Long adits were a standing work of Roman and later mines (Bettenay 2022).",
+  "traits": [
+   "infrastructure"
+  ],
+  "mechanics": {
+   "mine_works": {
+    "gravity_drained_head_share": 0.4,
+    "source": "temporary_heuristic: no relief data in the deposit catalogue to derive the adit level; Bettenay 2022 and Agricola describe adits qualitatively. Share of the working depth drained by gravity."
    }
   }
  },
@@ -1903,8 +1926,6 @@
    "steel_plate_kg": 100,
    "coal_kg": 300
   },
-  "cap_hours": 60485.63752238797,
-  "up_hours": 10080.939587064662,
   "yrs": 2.8,
   "risk": 0.18,
   "sus": 1,
@@ -1916,7 +1937,17 @@
   "note": "A steam engine driving a large reel with steel wire rope hoists ore and workers from depth. The rope must be wire, not hemp, or it breaks under load and falls into the shaft. The brake must hold the maximum load suspended or a rope failure is a catastrophe. Regular inspections for wear and fraying are essential; a frayed rope is a widow-maker.",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "mechanics": {
+   "mine_works": {
+    "hoist_engine": {
+     "lift_power_watts": 7500.0,
+     "attendants": 2,
+     "fuel_kg_per_tonne_metre": 0.0118
+    },
+    "source": "Fuel: Watt's 1778 duty, 23.44 million foot-pounds per 84 lb bushel, derived 0.0118 kg of coal per tonne-metre (Farey 1827 p. 337; Complaints/reports/mining-techniques-physics-research.md section 2.11). Power (a rotative engine of about 10 horsepower) and attendants (engineman, brakeman) are a temporary_heuristic: no winding engine rating was opened."
+   }
+  }
  },
  {
   "id": "met_black_powder_blasting",
@@ -1938,8 +1969,6 @@
    "sulfur_kg": 10,
    "nitre_kg": 50
   },
-  "cap_hours": 12097.127504477594,
-  "up_hours": 2419.425500895519,
   "yrs": 1.4,
   "risk": 0.25,
   "sus": 1,
@@ -1953,9 +1982,16 @@
    "infrastructure"
   ],
   "mechanics": {
-   "mining_tech": {
-    "yield": 1.0,
-    "cost": 0.85
+   "mine_works": {
+    "blasting": {
+     "drilling_hours_per_tonne_rock": {
+      "soft": 1.5,
+      "medium": 2.9,
+      "hard": 4.4
+     },
+     "charging_hours_per_tonne_rock": 0.5
+    },
+    "source": "Hand drilling takes 1.5 to 2.1 m of hole per man-shift in hard rock (Hoover, Principles of Mining, 1909, p. 150); 1.8 m in an 8 hour shift is 4.4 hours per metre of hole. The rock one metre of hole breaks (1 tonne), the faster drilling of medium (1.5 times) and soft (3 times) rock, and the charging, tamping and firing hours are a temporary_heuristic. The powder itself is not charged (BLASTING_EXPLOSIVE_HOURS_NOT_CHARGED)."
    }
   },
   "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
@@ -1979,8 +2015,6 @@
    "mat_nitroglycerin_kg": 10,
    "kieselguhr_kg": 20
   },
-  "cap_hours": 20161.879174129324,
-  "up_hours": 4032.375834825865,
   "yrs": 1.8,
   "risk": 0.3,
   "sus": 1,
@@ -1994,9 +2028,16 @@
    "infrastructure"
   ],
   "mechanics": {
-   "mining_tech": {
-    "yield": 1.0,
-    "cost": 0.65
+   "mine_works": {
+    "blasting": {
+     "drilling_hours_per_tonne_rock": {
+      "soft": 1.0,
+      "medium": 1.9,
+      "hard": 2.9
+     },
+     "charging_hours_per_tonne_rock": 0.5
+    },
+    "source": "temporary_heuristic: as black powder, with a stronger explosive breaking 1.5 times the rock per metre of hole (the node note puts it at three times the power per unit mass; the burden does not grow in proportion). Hand-drilling rate as met_black_powder_blasting."
    }
   },
   "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
@@ -2021,8 +2062,6 @@
    "steel_plate_kg": 60,
    "coal_kg": 150
   },
-  "cap_hours": 36291.382513432785,
-  "up_hours": 7056.657710945264,
   "yrs": 2.2,
   "risk": 0.17,
   "sus": 0,
@@ -2056,8 +2095,6 @@
    "iron_bar_kg": 200,
    "coal_kg": 300
   },
-  "cap_hours": 100809.39587064662,
-  "up_hours": 20161.879174129324,
   "yrs": 5,
   "risk": 0.22,
   "sus": 0,
@@ -2093,8 +2130,6 @@
    "flux_kg": 2,
    "iron_bar_kg": 10
   },
-  "cap_hours": 24194.255008955188,
-  "up_hours": 4032.375834825865,
   "yrs": 1.8,
   "risk": 0.14,
   "sus": 0,
@@ -2124,8 +2159,6 @@
    "flux_kg": 2,
    "copper_kg": 5
   },
-  "cap_hours": 28226.630843781055,
-  "up_hours": 5040.469793532331,
   "yrs": 2,
   "risk": 0.15,
   "sus": 0,
@@ -2154,8 +2187,6 @@
    "copper_kg": 5,
    "coal_kg": 100
   },
-  "cap_hours": 36291.382513432785,
-  "up_hours": 6048.563752238797,
   "yrs": 2.2,
   "risk": 0.16,
   "sus": 0,
@@ -2188,7 +2219,6 @@
    "timber_m3": 2,
    "coal_kg": 100
   },
-  "cap_hours": 32259.00667860692,
   "up_hours": 0,
   "yrs": 2.2,
   "risk": 0.18,

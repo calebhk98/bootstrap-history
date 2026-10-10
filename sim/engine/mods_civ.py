@@ -1,13 +1,64 @@
 """Mod civilisations: new files, override patches of any civ, and starting-tech checks."""
+import copy
 import json
 import os
 from typing import Any, Dict, Iterable, List, Optional
 
-from .mods_base import ModError, ModManifest, claim_fields, deep_merge
+from .mods_base import ModError, ModManifest, claim_fields, deep_merge, unrelated as _unrelated_claim
 from .mods_ids import SEPARATOR, check_new_id
 from .mods_remove import TECH, scan_removed
 
 CIVILIZATION = "civilization"
+# Patch keys that edit the lists of a civilisation (hazards, starting_techs, notes) item by item.
+LIST_OPERATORS = ("append", "remove_items")
+
+
+def _item_key(item: Any) -> Any:
+    """A list item is identified by its `id`, `actor_id` or `name` (first present), else its own value."""
+    if not isinstance(item, dict):
+        return item
+    return next((item[key] for key in ("id", "actor_id", "name") if key in item), None)
+
+
+def _parent(civ: Dict[str, Any], dotted: str):
+    """(the mapping holding the list, the list's key) for a field name such as `cast.seats`; creates no maps."""
+    *walk, last = dotted.split(".")
+    holder: Any = civ
+    for step in walk:
+        holder = holder.get(step) if isinstance(holder, dict) else None
+    return (holder if isinstance(holder, dict) else {}), last
+
+
+def apply_list_operators(civ: Dict[str, Any], patch: Dict[str, Any], manifest: ModManifest,
+                         by_id: Dict[str, ModManifest], claims: Dict[Any, str], path: str) -> Dict[str, Any]:
+    """`append`: {field: [items]} adds to a list field; `remove_items`: {field: [keys]} deletes by key.
+    A field may be dotted to reach a list inside a map, for example `cast.seats` or `cast.actors`.
+
+    Two unrelated mods may both append to a list; appending to a list another unrelated mod replaced
+    whole, or removing an item it changed, is an error naming both."""
+    for field, items in (patch.get("append") or {}).items():
+        holder, key = _parent(civ, field)
+        held = holder.get(key)
+        if not isinstance(held, list) or not isinstance(items, list):
+            raise ModError("mod %s: %s appends to %r which is not a list on civilisation %s" %
+                           (manifest.id, path, field, civ.get("id")))
+        earlier = claims.get((CIVILIZATION, civ.get("id"), field))
+        if _unrelated_claim(earlier, manifest, by_id):
+            raise ModError("mods %s and %s both change list %r of civilisation %s; make one depend on "
+                           "the other to choose a winner" % (earlier, manifest.id, field, civ.get("id")))
+        holder[key] = held + copy.deepcopy(items)
+    for field, keys in (patch.get("remove_items") or {}).items():
+        holder, key = _parent(civ, field)
+        held = holder.get(key)
+        if not isinstance(held, list):
+            raise ModError("mod %s: %s removes from %r which is not a list on civilisation %s" %
+                           (manifest.id, path, field, civ.get("id")))
+        missing = [wanted for wanted in keys if wanted not in {_item_key(item) for item in held}]
+        if missing:
+            raise ModError("mod %s: %s removes missing %s item(s) %s of civilisation %s" %
+                           (manifest.id, path, field, ", ".join(map(str, missing)), civ.get("id")))
+        holder[key] = [item for item in held if _item_key(item) not in keys]
+    return civ
 
 
 def civ_file_stem(civ_id: str) -> str:
@@ -53,8 +104,10 @@ def apply_mod_civilization(name: str, base: Optional[Dict[str, Any]],
         if patch.get("override") is True:
             if civ is None:
                 raise ModError("%s overrides missing civilization %r" % (path, name))
-            claim_fields(claims, CIVILIZATION, name, patch, manifest, by_id)
-            civ = deep_merge(civ, dict(patch, id=name))
+            fields = {key: value for key, value in patch.items() if key not in LIST_OPERATORS}
+            claim_fields(claims, CIVILIZATION, name, fields, manifest, by_id)
+            civ = deep_merge(civ, dict(fields, id=name))
+            civ = apply_list_operators(civ, patch, manifest, by_id, claims, path)
             continue
         check_new_id(manifest, name, False, path)
         if civ is not None:

@@ -31,3 +31,5 @@ topics in that table are where the next cut belongs.
    reference, so tests cannot build one game and hand out copies. Construction itself has
    per-map work that could be memoised per process (`market_areas.carriage_unit`, the tile
    deep-copy in `geography/loading.py`, region and weather tables).
+
+Owner decision (2026-10-09): the spin-up and test-time work is handled in a separate session; not in this batch.

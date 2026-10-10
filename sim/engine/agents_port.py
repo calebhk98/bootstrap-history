@@ -4,10 +4,12 @@ Actors never touch `Sim` directly. They ask this view, which keeps them free
 of the engine and lets a test or a second scenario supply another one.
 """
 import hashlib
+import math
 import random
 from typing import Any, Dict, List, Optional, Set
 
-from sim.agents.api import OBSERVATION_RANGE_KM, payroll, supply
+from sim.agents.api import OBSERVATION_RANGE_KM, SECRET_EXPOSURE, payroll, supply
+from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from .agents_port_budget import BudgetView
 from .agents_port_capacity import CapacityView
@@ -15,13 +17,18 @@ from .agents_port_capital import CapitalView
 from .agents_port_disclosure import DisclosureView
 from .agents_port_groups import GroupView
 from .agents_port_revenue import RevenueView
+from .agents_port_site import SiteView
 from .agents_port_cast import CastView
+from .agents_port_seats import SeatView
 from .agents_port_coinage import CoinageView
 from .agents_port_trade import TradeView
+from . import seat_builds, visibility as visibility_of
 from .data import TRADES_ABSENT
+from .economy_port_setup import unit_mass_kg
+from .industry_depth import RAMP_SHARE_AT_FULL_DEPTH
 
 
-class SimWorld(BudgetView, RevenueView, GroupView, DisclosureView, CapitalView, CapacityView, TradeView, CastView, CoinageView):
+class SimWorld(BudgetView, SiteView, RevenueView, GroupView, DisclosureView, CapitalView, CapacityView, TradeView, CastView, CoinageView, SeatView):
 	"""The `Sim`'s answers to the questions actors ask."""
 
 	def __init__(self, sim: Any) -> None:
@@ -68,25 +75,31 @@ class SimWorld(BudgetView, RevenueView, GroupView, DisclosureView, CapitalView, 
 		return self._once("baseline", lambda: set(self._sim.state.projects.granted))
 
 	def founder_inventions(self) -> List[str]:
-		"""Everything the founder has completed that the society did not have."""
-		def compute() -> List[str]:
-			projects = self._sim.state.projects
-			return sorted(projects.done - projects.granted)
-		return self._once("inventions", compute)
+		"""Everything any seat has completed that the society did not have."""
+		return self._once("inventions", lambda: sorted(seat_builds.built_by_any(self._sim.state.seats)))
 
 	def demonstrated(self) -> Set[str]:
 		return self._once("demonstrated", lambda: set(self.founder_inventions()))
 
 	def is_public(self, node_id: str) -> bool:
-		return node_id in self._sim.state.projects.operating
+		"""Whether some seat runs it as a concern, where anyone can see it."""
+		return seat_builds.operating_anywhere(self._sim.state.seats, node_id)
 
 	def exposure(self, node_id: str, location: Optional[str]) -> float:
-		"""How much of an invention an observer at `location` can learn, 0..1."""
-		visibility = self.base_visibility(node_id)
-		if location is None:
-			return visibility
-		distance = self.distance_km(location, None)  # type: ignore[attr-defined]
-		return visibility / (1.0 + distance / OBSERVATION_RANGE_KM)
+		"""How much of an invention an observer at `location` can learn, 0..1: the best view of any seat
+		that built it, from that seat's own place (the acting seat's when no seat built it)."""
+		sim = self._sim
+		builders = seat_builds.builders_of(sim.state.seats, node_id) or [sim.state.acting_seat]
+		public = self.is_public(node_id)
+		best = 0.0
+		for seat_id in builders:
+			mode = (sim.state.seats[seat_id].projects.disclosures.get(node_id) or {}).get("mode", "default")
+			visibility = visibility_of.base_visibility(mode, public, sim.copy_difficulty(node_id), SECRET_EXPOSURE)
+			if location is not None:
+				visibility = visibility_of.seen_from(
+					visibility, self.distance_km(location, sim.seat_place(seat_id)), OBSERVATION_RANGE_KM)
+			best = max(best, visibility)
+		return best
 
 	def state_weights(self) -> Dict[str, float]:
 		return self._once("weights", self._sim.state_trait_weights)
@@ -132,6 +145,8 @@ class SimWorld(BudgetView, RevenueView, GroupView, DisclosureView, CapitalView, 
 		staff = {"scholar": scholars, "artisan": craftsmen}
 		if foreman_trade:
 			staff[foreman_trade] = staff.get(foreman_trade, 0.0) + foreman_fte
+		for trade, people in sim.venture_garrison(node_id).items():
+			staff[trade] = staff.get(trade, 0.0) + people
 		return {trade: people for trade, people in staff.items() if people > 0.0}
 
 	def concern_wage_bill(self, node_id: str, capacity: float = 1.0) -> float:
@@ -143,12 +158,13 @@ class SimWorld(BudgetView, RevenueView, GroupView, DisclosureView, CapitalView, 
 
 	def free_fte(self, trade: str, actor_id: Optional[str]) -> Optional[float]:
 		"""People of a trade left in the pool for this actor after the founder's staff and
-		everyone else's. None for a trade nobody here practises yet, which has no pool."""
+		everyone else's. A trade nobody here practises has the people the founder taught as its pool;
+		None for a trade that cannot be had at all."""
 		sim = self._sim
-		if not sim.labour.trade_available(trade) or trade in TRADES_ABSENT:
+		if not sim.labour.trade_available(trade):
 			return None
-		exist = sim.labour.people_who_exist(trade)
-		founder = sim.state.household.employees.get(trade, 0.0)
+		exist = sim.labour.taught_trade_people(trade) if trade in TRADES_ABSENT else sim.labour.people_who_exist(trade)
+		founder = sum(seat.household.employees.get(trade, 0.0) for seat in sim.state.seats.values())
 		return max(0.0, exist - founder - sim.actors.staff_fte(trade, excluding=actor_id))
 
 	def copy_cost(self, node_id: str) -> float:
@@ -182,7 +198,15 @@ class SimWorld(BudgetView, RevenueView, GroupView, DisclosureView, CapitalView, 
 		return self.concern_gross(node_id) - self.upkeep(node_id)
 
 	def proven_concerns(self) -> List[str]:
-		"""Founder concerns that have been running at a profit long enough to be believed."""
+		"""Concerns any seat has run at a profit long enough to be believed."""
+		sim = self._sim
+		proven: Set[str] = set()
+		for seat_id in sim.playing_seats() or [sim.state.acting_seat]:
+			with sim.act_as(seat_id):
+				proven.update(self._proven_concerns_of_acting_seat())
+		return sorted(proven)
+
+	def _proven_concerns_of_acting_seat(self) -> List[str]:
 		sim = self._sim
 		projects = sim.state.projects
 		proven = []
@@ -194,8 +218,15 @@ class SimWorld(BudgetView, RevenueView, GroupView, DisclosureView, CapitalView, 
 				proven.append(node_id)
 		return proven
 
-	def ramp(self, opened_year: int) -> float:
-		return min(1.0, (self.year - opened_year + 1) / self._sim.cfg["revenue_ramp_years"])
+	def ramp(self, opened_year: int, node_id: Optional[str] = None) -> float:
+		ramp_years = self._sim.cfg["revenue_ramp_years"]
+		if node_id is not None:
+			ramp_years *= 1.0 - (1.0 - RAMP_SHARE_AT_FULL_DEPTH) * self._sim.industry_depth(node_id)
+		return min(1.0, (self.year - opened_year + 1) / ramp_years)
+
+	def scale_ceiling(self, node_id: str) -> float:
+		"""The most founding sizes one concern of this kind can be run at, from the industry's experience."""
+		return float(self._sim.industry_scale_ceiling(node_id))
 
 	def concern_takings(self, node_id: str, opened_year: int, rivals: float = 0.0, capacity: float = 1.0) -> float:
 		"""Yearly takings of a concern an actor runs at `capacity` times its founding size. A goods
@@ -203,7 +234,7 @@ class SimWorld(BudgetView, RevenueView, GroupView, DisclosureView, CapitalView, 
 		of capacity gets its share of the demand; a concern with no market model splits with the
 		capacity of its rivals."""
 		sim = self._sim
-		takings = (sim.concern_takings(node_id, self.ramp(opened_year)) * capacity
+		takings = (sim.concern_takings(node_id, self.ramp(opened_year, node_id)) * capacity
 				   * sim.node_output_market_factor(self.nodes[node_id]))
 		category = self.nodes[node_id].get("cat")
 		if category in sim.GOODS_CATEGORIES:
@@ -219,25 +250,43 @@ class SimWorld(BudgetView, RevenueView, GroupView, DisclosureView, CapitalView, 
 		return supply.materials_made_by(node_id)
 
 	def market_forget(self, actor_id: str) -> None:
-		"""An actor's standing sales and purchases in the one goods market end; it deals afresh this year."""
-		self._sim.economy.goods.forget(actor_id)
-
-	def runs_agent_economy(self) -> bool:
-		return self._sim.economy.runs_agent_economy()
+		"""An actor's sales and purchases noted for this year's market end; it deals afresh."""
+		self._sim.economy.forget_actor_orders(actor_id)
 
 	def market_sale(self, seller_id: str, material: str, tonnes: float, from_concerns: Any = None) -> None:
 		"""An actor sells `tonnes` of a material into the one goods market this year. One whose concerns
-		made it, [(node id, tonnes)], will not sell below what they cost it to make."""
-		self._sim.economy.offer_sale(seller_id, material, tonnes, from_concerns)
+		made it, [(node id, tonnes)], will not sell below what they cost it to make. The goods are offered in the agent
+		economy's book and the proceeds reach the seller's purse when the year's market has cleared."""
+		self._sim.economy.note_actor_sale(seller_id, material, tonnes, from_concerns)
 
-	def market_purchase(self, buyer_id: str, commodity: str, tonnes: float) -> None:
-		"""An actor buys `tonnes` of a commodity at the one goods market this year."""
-		self._sim.economy.goods.note_purchase(buyer_id, commodity, tonnes)
+	def market_purchase(self, buyer_id: str, commodity: str, tonnes: float, budget: float = 0.0) -> None:
+		"""An actor buys `tonnes` of a commodity at the one goods market this year: it bids for them in the agent
+		economy's book, paying up to `budget` out of its purse."""
+		self._sim.economy.note_actor_purchase(buyer_id, commodity, tonnes, budget)
+
+	def sells_on_book(self, node_id: str) -> bool:
+		"""Whether what a concern makes is sold in the agent economy's book, so its takings are the market's and not the
+		engine's estimate."""
+		return any(self._sim.economy.agent_trades_good(material) for material in supply.materials_made_by(node_id))
 
 	def concern_output_tonnes(self, node_id: str, material: str, opened_year: int, staffed: float) -> float:
-		return supply.concern_output_tonnes(self.nodes[node_id], node_id, material,
-											self.ramp(opened_year), staffed
+		node = self.nodes[node_id]
+		if not node.get("annual_output_t"):
+			return supply.concern_output_tonnes(node, node_id, material, self.ramp(opened_year, node_id), staffed,
+												self._derived_tonnes(node_id, material))
+		return supply.concern_output_tonnes(node, node_id, material,
+											self.ramp(opened_year, node_id), staffed
 											* self._sim.concern_volume_ratio(node_id))
+
+	def _derived_tonnes(self, node_id: str, material: str) -> float:
+		"""Tonnes a year of a material the concern's staff and plant turn out now, from the production data (its
+		baskets), the mass of a unit of the material taken from what the data states of it."""
+		baskets = self._sim.concern_baskets_now(node_id)
+		units = 0.0 if baskets is None else baskets.outputs.get(material, 0.0)
+		if units <= 0.0:
+			return 0.0
+		kilograms = unit_mass_kg(material)
+		return units * kilograms / KILOGRAMS_PER_TONNE if math.isfinite(kilograms) else 0.0
 
 	def upkeep(self, node_id: str, capacity: float = 1.0) -> float:
 		return self._sim.economy.concern_upkeep(node_id, capacity)

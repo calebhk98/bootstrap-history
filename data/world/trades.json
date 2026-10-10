@@ -24,6 +24,14 @@
       "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
       "fatality_confidence": "D"
     },
+    "carter": {
+      "family": "labour",
+      "note": "Drives a cart or leads a pack train: carter, teamster, muleteer, drover. Land carriage by animal is this trade's work; porters on foot stay labourers.",
+      "training_years": 1,
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
+    },
     "chemist": {
       "family": "scholar",
       "initially_absent": true,
@@ -78,6 +86,18 @@
       "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
       "fatality_confidence": "D"
     },
+    "fisher": {
+      "family": "labour",
+      "note": "Takes fish and shellfish from the sea, lakes and rivers with boat, net, line and weir. The food a society takes from the water is bounded by the hours its fishers work (sim/labour/food_gathering.py).",
+      "training_years": 2,
+      "gathers_food_sources": ["marine_fishing", "freshwater_fishing"],
+      "food_kcal_per_hour": 1000,
+      "food_kcal_per_hour_source": "Kelly 2013, The Lifeways of Hunter-Gatherers, Table 3-4: forager return rates for fish and shellfish run from a few hundred to over ten thousand kcal per hour; the low end is taken for shore and day-boat work. No source for per-boat catch was found.",
+      "food_kcal_per_hour_confidence": "D",
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
+    },
     "furnaceman": {
       "family": "craft",
       "training_years": 2,
@@ -95,6 +115,18 @@
         "glass",
         "charcoal"
       ],
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
+    },
+    "hunter": {
+      "family": "labour",
+      "note": "Hunts game with bow, spear, snare and dogs. The food a society takes from wild animals is bounded by the hours its hunters work (sim/labour/food_gathering.py).",
+      "training_years": 3,
+      "gathers_food_sources": ["hunting"],
+      "food_kcal_per_hour": 1115,
+      "food_kcal_per_hour_source": "Kelly 2013, The Lifeways of Hunter-Gatherers, ch. 3: the Ache average from hunting alone is 1,115 kcal per hour including search time.",
+      "food_kcal_per_hour_confidence": "C",
       "fatality_risk_per_year": 0.0,
       "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
       "fatality_confidence": "D"

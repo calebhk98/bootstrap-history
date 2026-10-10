@@ -106,12 +106,12 @@ check("auto_resume programme resumes when the risk clears",
       "war risk" not in str(_rows[0].get("did_nothing_because")) and not _run(game, cmd="programme")["programme"]["paused"], _rows)
 
 _run(game, cmd="programme", action="set", target=GOAL, limit=50, pause_shortage=0.2, auto_resume=True)
-game.state.economy.shortage_condition = {"material": "iron", "since": game.year, "reported": 0.5,
+game.state.holdings.shortage_condition = {"material": "iron", "since": game.year, "reported": 0.5,
                                          "previous": 0.5, "latest": 0.5}
 _rows = programme_before_year(game, NODES) or [{}]
 check("a shortage past the threshold pauses and names the material",
       "iron" in str(_rows[0].get("did_nothing_because")) and "shortage" in str(_rows[0].get("did_nothing_because")), _rows)
-game.state.economy.shortage_condition = None
+game.state.holdings.shortage_condition = None
 _rows = programme_before_year(game, NODES) or [{}]
 check("auto_resume programme resumes when the shortage clears",
       "shortage" not in str(_rows[0].get("did_nothing_because")), _rows)

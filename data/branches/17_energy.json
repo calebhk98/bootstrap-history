@@ -10,7 +10,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0.0,
   "risk": 0,
@@ -33,7 +32,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0.0,
   "risk": 0,
@@ -56,7 +54,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0.0,
   "risk": 0,
@@ -80,7 +77,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0.0,
   "risk": 0,
@@ -107,7 +103,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0.0,
   "risk": 0,
@@ -135,7 +130,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0.0,
   "risk": 0,
@@ -163,7 +157,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0.0,
   "risk": 0,
@@ -196,7 +189,6 @@
    "timber_m3": 3,
    "iron_bar_kg": 12
   },
-  "cap_hours": 1612.950333930346,
   "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.1,
@@ -229,8 +221,6 @@
    "timber_m3": 5,
    "iron_bar_kg": 20
   },
-  "cap_hours": 3024.2818761193985,
-  "up_hours": 806.475166965173,
   "yrs": 1.0,
   "risk": 0.15,
   "sus": 0,
@@ -261,7 +251,6 @@
   "mat": {
    "paper_kg": 50
   },
-  "cap_hours": 2016.1879174129324,
   "up_hours": 0,
   "yrs": 2.0,
   "risk": 0.2,
@@ -294,7 +283,6 @@
    "timber_m3": 2,
    "stone_kg": 1000
   },
-  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.1,
@@ -327,7 +315,6 @@
    "stone_kg": 2000,
    "timber_m3": 3
   },
-  "cap_hours": 4032.375834825865,
   "up_hours": 0,
   "yrs": 2.0,
   "risk": 0.15,
@@ -356,14 +343,10 @@
   "mat": {
    "timber_m3": 1
   },
-  "cap_hours": 1008.0939587064662,
-  "up_hours": 806.475166965173,
   "yrs": 0.5,
   "risk": 0.1,
   "sus": 0,
   "gov": 0,
-  "rev_hours": 907.2845628358195,
-  "output_unbounded_reason": "extraction: a deposit or a parent stream sets the output, not a plant or staff the node states",
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -384,13 +367,10 @@
    "labourer": 100
   },
   "mat": {},
-  "cap_hours": 806.475166965173,
-  "up_hours": 604.8563752238797,
   "yrs": 0.5,
   "risk": 0.15,
   "sus": 0,
   "gov": 0,
-  "rev_hours": 639.1315698198996,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -419,7 +399,6 @@
    "cast_iron_kg": 50,
    "iron_bar_kg": 30
   },
-  "cap_hours": 8064.75166965173,
   "up_hours": 0,
   "yrs": 1.5,
   "risk": 0.2,
@@ -455,8 +434,6 @@
    "cast_iron_kg": 40,
    "iron_bar_kg": 25
   },
-  "cap_hours": 7056.657710945264,
-  "up_hours": 1411.3315421890527,
   "yrs": 1.5,
   "risk": 0.18,
   "sus": 0,
@@ -477,6 +454,8 @@
    "dynamo",
    "power_grid"
   ],
+  "requires_running": ["power_grid"],
+  "_internal": "[GATE: Operates only on a running grid: it draws mains power from it, so a shut or never-built grid leaves it dead. Knowledge of the technique stays in pre.]",
   "kb": "",
   "ph": 400,
   "lab": {
@@ -489,13 +468,10 @@
    "copper_kg": 50,
    "copper_wire_kg": 30
   },
-  "cap_hours": 20161.879174129324,
-  "up_hours": 4032.375834825865,
   "yrs": 2.0,
   "risk": 0.15,
   "sus": 0,
   "gov": 2,
-  "rev_hours": 40323.75834825865,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -518,13 +494,10 @@
    "timber_m3": 8,
    "iron_bar_kg": 40
   },
-  "cap_hours": 6048.563752238797,
-  "up_hours": 1209.7127504477594,
   "yrs": 1.0,
   "risk": 0.12,
   "sus": 0,
   "gov": 0,
-  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -551,13 +524,10 @@
    "iron_bar_kg": 50,
    "cast_iron_kg": 30
   },
-  "cap_hours": 10080.939587064662,
-  "up_hours": 1612.950333930346,
   "yrs": 2.0,
   "risk": 0.15,
   "sus": 0,
   "gov": 0,
-  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -582,8 +552,6 @@
    "timber_m3": 2,
    "iron_bar_kg": 20
   },
-  "cap_hours": 3024.2818761193985,
-  "up_hours": 806.475166965173,
   "yrs": 1.0,
   "risk": 0.1,
   "sus": 0,
@@ -612,7 +580,6 @@
    "timber_m3": 4,
    "iron_bar_kg": 15
   },
-  "cap_hours": 4032.375834825865,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.15,
@@ -648,13 +615,10 @@
    "brick_1000": 10,
    "stone_kg": 2000
   },
-  "cap_hours": 8064.75166965173,
-  "up_hours": 2016.1879174129324,
   "yrs": 2.0,
   "risk": 0.2,
   "sus": 0,
   "gov": 1,
-  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -677,14 +641,10 @@
   "mat": {
    "timber_m3": 5
   },
-  "cap_hours": 5040.469793532331,
-  "up_hours": 2016.1879174129324,
   "yrs": 1.0,
   "risk": 0.25,
   "sus": 0,
   "gov": 2,
-  "rev_hours": 4314.642143263675,
-  "output_unbounded_reason": "extraction: a deposit or a parent stream sets the output, not a plant or staff the node states",
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -711,13 +671,10 @@
   "mat": {
    "coal_kg": 500
   },
-  "cap_hours": 6048.563752238797,
-  "up_hours": 1612.950333930346,
   "yrs": 1.5,
   "risk": 0.15,
   "sus": 3,
   "gov": 2,
-  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -747,13 +704,10 @@
    "coal_kg": 1000,
    "iron_bar_kg": 40
   },
-  "cap_hours": 16129.50333930346,
-  "up_hours": 3024.2818761193985,
   "yrs": 2.0,
   "risk": 0.2,
   "sus": 0,
   "gov": 1,
-  "rev_hours": 8064.75166965173,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -781,13 +735,10 @@
    "iron_bar_kg": 100,
    "iron_sheet_kg": 80
   },
-  "cap_hours": 20161.879174129324,
-  "up_hours": 4032.375834825865,
   "yrs": 2.0,
   "risk": 0.15,
   "sus": 0,
   "gov": 1,
-  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -815,13 +766,10 @@
    "iron_bar_kg": 15,
    "brass_kg": 8
   },
-  "cap_hours": 4032.375834825865,
-  "up_hours": 604.8563752238797,
   "yrs": 1.0,
   "risk": 0.12,
   "sus": 0,
   "gov": 1,
-  "rev_hours": 1008.0939587064662,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -844,13 +792,10 @@
   "mat": {
    "timber_m3": 2
   },
-  "cap_hours": 2016.1879174129324,
-  "up_hours": 1008.0939587064662,
   "yrs": 0.5,
   "risk": 0.1,
   "sus": 3,
   "gov": 2,
-  "rev_hours": 1612.950333930346,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -881,7 +826,6 @@
    "steel_plate_kg": 50,
    "timber_m3": 5
   },
-  "cap_hours": 16129.50333930346,
   "up_hours": 0,
   "yrs": 1.5,
   "risk": 0.2,
@@ -917,7 +861,6 @@
    "steel_plate_kg": 80,
    "iron_bar_kg": 100
   },
-  "cap_hours": 24194.255008955188,
   "up_hours": 0,
   "yrs": 2.0,
   "risk": 0.25,
@@ -932,9 +875,9 @@
    "infrastructure"
   ],
   "mechanics": {
-   "mining_tech": {
-    "yield": 1.0,
-    "cost": 0.8
+   "mine_works": {
+    "drilling_rate_multiple": 2.5,
+    "source": "A heavy drill with two men puts in 20 to 40 ft of hole per 8 hour shift, 15 ft per man-shift at the middle, against 5 to 7 ft by hand, 6 ft (Hoover, Principles of Mining, 1909, pp. 149-150): 2.5 times. It speeds the drilling of blasting holes and does nothing without blasting."
    }
   },
   "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
@@ -961,13 +904,10 @@
    "iron_bar_kg": 100,
    "copper_kg": 30
   },
-  "cap_hours": 30242.818761193987,
-  "up_hours": 6048.563752238797,
   "yrs": 2.5,
   "risk": 0.2,
   "sus": 0,
   "gov": 1,
-  "rev_hours": 40323.75834825865,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -992,13 +932,10 @@
    "glass_raw_kg": 5,
    "brass_kg": 2
   },
-  "cap_hours": 1612.950333930346,
-  "up_hours": 403.2375834825865,
   "yrs": 0.5,
   "risk": 0.08,
   "sus": 0,
   "gov": 0,
-  "rev_hours": 3024.2818761193985,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1020,13 +957,10 @@
    "chemist": 285.0
   },
   "mat": {},
-  "cap_hours": 2520.2348967661655,
-  "up_hours": 806.475166965173,
   "yrs": 1.0,
   "risk": 0.1,
   "sus": 3,
   "gov": 2,
-  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1055,13 +989,10 @@
    "steel_plate_kg": 150,
    "iron_bar_kg": 50
   },
-  "cap_hours": 40323.75834825865,
-  "up_hours": 8064.75166965173,
   "yrs": 2.0,
   "risk": 0.15,
   "sus": 0,
   "gov": 1,
-  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1092,8 +1023,6 @@
    "cast_iron_kg": 80,
    "copper_kg": 40
   },
-  "cap_hours": 40323.75834825865,
-  "up_hours": 8064.75166965173,
   "yrs": 2.5,
   "risk": 0.2,
   "sus": 0,
@@ -1124,7 +1053,6 @@
    "iron_bar_kg": 40,
    "brass_kg": 20
   },
-  "cap_hours": 12097.127504477594,
   "up_hours": 0,
   "yrs": 1.5,
   "risk": 0.12,
@@ -1157,8 +1085,6 @@
    "iron_sheet_kg": 80,
    "iron_bar_kg": 30
   },
-  "cap_hours": 6048.563752238797,
-  "up_hours": 1612.950333930346,
   "yrs": 1.0,
   "risk": 0.2,
   "sus": 0,
@@ -1186,8 +1112,6 @@
    "iron_sheet_kg": 100,
    "iron_bar_kg": 40
   },
-  "cap_hours": 8064.75166965173,
-  "up_hours": 2016.1879174129324,
   "yrs": 1.0,
   "risk": 0.2,
   "sus": 0,
@@ -1218,8 +1142,6 @@
    "iron_bar_kg": 50,
    "copper_kg": 20
   },
-  "cap_hours": 12097.127504477594,
-  "up_hours": 3024.2818761193985,
   "yrs": 1.5,
   "risk": 0.18,
   "sus": 0,
@@ -1250,8 +1172,6 @@
    "iron_bar_kg": 60,
    "copper_kg": 30
   },
-  "cap_hours": 14113.315421890527,
-  "up_hours": 3225.900667860692,
   "yrs": 1.5,
   "risk": 0.16,
   "sus": 0,
@@ -1283,8 +1203,6 @@
    "iron_bar_kg": 80,
    "copper_kg": 40
   },
-  "cap_hours": 20161.879174129324,
-  "up_hours": 4032.375834825865,
   "yrs": 2.0,
   "risk": 0.18,
   "sus": 0,
@@ -1313,8 +1231,6 @@
    "iron_bar_kg": 50,
    "copper_kg": 20
   },
-  "cap_hours": 10080.939587064662,
-  "up_hours": 1612.950333930346,
   "yrs": 1.0,
   "risk": 0.15,
   "sus": 0,
@@ -1344,7 +1260,6 @@
    "iron_bar_kg": 60,
    "copper_kg": 30
   },
-  "cap_hours": 8064.75166965173,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.12,
@@ -1378,8 +1293,6 @@
    "brass_kg": 10,
    "iron_bar_kg": 8
   },
-  "cap_hours": 3024.2818761193985,
-  "up_hours": 403.2375834825865,
   "yrs": 0.5,
   "risk": 0.1,
   "sus": 0,
@@ -1409,7 +1322,6 @@
    "brass_kg": 5,
    "paper_kg": 20
   },
-  "cap_hours": 4032.375834825865,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.1,
@@ -1442,7 +1354,6 @@
    "cast_iron_kg": 60,
    "iron_bar_kg": 30
   },
-  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.12,
@@ -1476,8 +1387,6 @@
    "copper_kg": 30,
    "iron_bar_kg": 40
   },
-  "cap_hours": 16129.50333930346,
-  "up_hours": 2419.425500895519,
   "yrs": 1.5,
   "risk": 0.18,
   "sus": 0,
@@ -1508,8 +1417,6 @@
    "tool_steel_kg": 30,
    "iron_bar_kg": 50
   },
-  "cap_hours": 24194.255008955188,
-  "up_hours": 4032.375834825865,
   "yrs": 2.0,
   "risk": 0.2,
   "sus": 0,
@@ -1541,7 +1448,6 @@
    "zinc_kg": 5,
    "bismuth_kg": 2
   },
-  "cap_hours": 4032.375834825865,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.15,
@@ -1579,7 +1485,6 @@
    "bismuth_kg": 3,
    "iron_bar_kg": 10
   },
-  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.12,
@@ -1615,7 +1520,6 @@
    "iron_bar_kg": 5,
    "brass_kg": 3
   },
-  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.2,
@@ -1651,13 +1555,10 @@
    "brass_kg": 4,
    "copper_kg": 2
   },
-  "cap_hours": 5040.469793532331,
-  "up_hours": 403.2375834825865,
   "yrs": 2.0,
   "risk": 0.15,
   "sus": 3,
   "gov": 2,
-  "rev_hours": 1008.0939587064662,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1689,8 +1590,6 @@
    "glass_raw_kg": 20,
    "wood_ash_kg": 5
   },
-  "cap_hours": 8064.75166965173,
-  "up_hours": 1612.950333930346,
   "yrs": 1.5,
   "risk": 0.15,
   "sus": 0,
@@ -1721,8 +1620,6 @@
    "natron_kg": 10,
    "steel_plate_kg": 8
   },
-  "cap_hours": 12097.127504477594,
-  "up_hours": 2016.1879174129324,
   "yrs": 2.0,
   "risk": 0.18,
   "sus": 0,
@@ -1750,8 +1647,6 @@
    "cast_iron_kg": 150,
    "iron_bar_kg": 60
   },
-  "cap_hours": 12097.127504477594,
-  "up_hours": 2016.1879174129324,
   "yrs": 1.0,
   "risk": 0.12,
   "sus": 0,
@@ -1772,6 +1667,8 @@
    "motor_transformer_ac",
    "power_grid"
   ],
+  "requires_running": ["power_grid"],
+  "_internal": "[GATE: Operates only on a running grid: it draws mains power from it, so a shut or never-built grid leaves it dead. Knowledge of the technique stays in pre.]",
   "kb": "",
   "ph": 400,
   "lab": {
@@ -1784,13 +1681,10 @@
    "concrete_reinforced_kg": 500,
    "timber_m3": 10
   },
-  "cap_hours": 100809.39587064662,
-  "up_hours": 10080.939587064662,
   "yrs": 3.0,
   "risk": 0.15,
   "sus": 0,
   "gov": 2,
-  "rev_hours": 30242.818761193987,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -1816,13 +1710,10 @@
    "iron_bar_kg": 80,
    "porcelain_kg": 50
   },
-  "cap_hours": 60485.63752238797,
-  "up_hours": 8064.75166965173,
   "yrs": 2.0,
   "risk": 0.12,
   "sus": 0,
   "gov": 2,
-  "rev_hours": 20161.879174129324,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -1858,8 +1749,6 @@
    "cast_iron_kg": 80,
    "oil_mineral_kg": 30
   },
-  "cap_hours": 16129.50333930346,
-  "up_hours": 3024.2818761193985,
   "yrs": 1.5,
   "risk": 0.1,
   "sus": 0,
@@ -1889,7 +1778,6 @@
    "copper_kg": 80,
    "cast_iron_kg": 100
   },
-  "cap_hours": 20161.879174129324,
   "up_hours": 0,
   "yrs": 1.5,
   "risk": 0.12,
@@ -1924,13 +1812,10 @@
    "copper_kg": 60,
    "porcelain_kg": 40
   },
-  "cap_hours": 40323.75834825865,
-  "up_hours": 6048.563752238797,
   "yrs": 2.0,
   "risk": 0.1,
   "sus": 0,
   "gov": 2,
-  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -1954,7 +1839,6 @@
   "mat": {
    "paper_kg": 30
   },
-  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.1,
@@ -1989,7 +1873,6 @@
    "cast_iron_kg": 80,
    "steel_plate_kg": 30
   },
-  "cap_hours": 20161.879174129324,
   "up_hours": 0,
   "yrs": 1.5,
   "risk": 0.1,
@@ -2025,7 +1908,6 @@
    "glass_raw_kg": 10,
    "sulfuric_acid_kg": 5
   },
-  "cap_hours": 16129.50333930346,
   "up_hours": 0,
   "yrs": 1.5,
   "risk": 0.25,
@@ -2077,13 +1959,10 @@
    "copper_ore_kg": 100,
    "sulfuric_acid_kg": 50
   },
-  "cap_hours": 10080.939587064662,
-  "up_hours": 2016.1879174129324,
   "yrs": 1.5,
   "risk": 0.15,
   "sus": 3,
   "gov": 2,
-  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2123,14 +2002,10 @@
    "uranium_kg": 50,
    "steel_plate_kg": 1500
   },
-  "cap_hours": 1008093.9587064662,
-  "up_hours": 40323.75834825865,
   "yrs": 5.0,
   "risk": 0.3,
   "sus": 2,
   "gov": 3,
-  "rev_hours": 100809.39587064662,
-  "output_unbounded_reason": "extraction: a deposit or a parent stream sets the output, not a plant or staff the node states",
   "sch": 3,
   "art": 2,
   "conf": "A",

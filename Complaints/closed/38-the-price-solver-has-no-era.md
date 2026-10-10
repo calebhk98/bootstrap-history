@@ -1,0 +1,189 @@
+# The price solver prices everything with all of human technology available
+
+**Status:** closed - era gating, nearest-technique pricing, derived node figures and the no-seller-no-price rule are built for materials, heat grades and imports: the cheapest seller in reach sells, an import is bounded by what the partner makes and the carriers lift, and the whole-game re-measure is a slow topic
+
+**Type:** Structural, and it affects every number the solver has ever printed
+**Priority:** High. Not urgent - nothing is broken today - but it silently bounds what the whole tool means.
+
+## What made it visible
+
+Adding photovoltaic panels as one more technique for making electricity.
+The solver picks the cheapest technique for every material, so it picked
+solar - and because electricity can be converted back into both heat and
+shaft work, that choice cascaded through the entire energy market:
+
+```
+electrical_mj   0.00122  [electrical_mj_photovoltaic]
+mechanical_mj   0.00201  [mechanical_mj_motor]                <- from electricity
+thermal_mj      0.00125  [thermal_mj_electrical_resistance]   <- from electricity
+```
+
+Every energy carrier in a simulation whose scenario is Rome in 100 AD now
+bottoms out in a silicon panel. Not because anything is broken: because the
+solver was asked which technique is cheapest, and it answered correctly.
+
+## The actual defect, which is older than the panels
+
+**`sim/engine/solve_prices.py` has no notion of WHEN.** It has always solved the
+whole tree with every technique in it simultaneously available. Hall-Heroult
+aluminium and bloomery iron sit in the same solve, and the bloomery only
+survives because nobody had yet added a technique that undercut it
+everywhere. Photovoltaic is the first entry cheap enough to win globally,
+so it is the first one to make the absence obvious.
+
+This means **every price this tool has printed is the price of that thing in
+a world with all of human technology available**, not the price in the
+scenario being simulated. The 14x iron gap, the mercury result, the
+capital and rent measurements - all of them were computed under that
+assumption without anyone stating it.
+
+It does not invalidate the findings that were about RELATIVE structure - the
+joint-production reversal in `Complaints/29`, the rent mechanism in
+`Complaints/32` - because those compared things inside one solve. It does
+bound any claim of the form "in Rome, X costs Y".
+
+## Evidence the mechanism itself is right
+
+Re-run with photovoltaic excluded - the counterfactual for a civilisation
+that does not have it:
+
+```
+electrical_mj   0.00388 h/MJ   via the dynamo
+mechanical_mj   0.00258 h/MJ   via the waterwheel
+aluminium_kg    0.442 h/kg
+```
+
+Electricity costs about 50% more than shaft work, which is the dynamo's
+losses plus its labour and capital - exactly what it should be, and exactly
+what was predicted before the run. So the conversion graph is right and the
+era problem is separate from it.
+
+## What a fix looks like
+
+The tree already knows what is available when: nodes have prerequisites, and
+a civilisation has a set of technologies it has actually reached. The solver
+ignores all of it. A technique should be admissible only when the node that
+produces it is reached, and the solve should be parameterised by that set.
+
+That is not a small change - it turns one global solve into a solve per
+technological state - but it is the difference between "what does aluminium
+cost" and "what does aluminium cost HERE, NOW", and the second is the only
+question this project is actually asking.
+
+## Do not fix it by deleting the panels
+
+The obvious shortcut is to drop `electrical_mj_photovoltaic` and let the
+Roman answer come back. That hides the defect instead of fixing it, and it
+would leave the tool still claiming a Roman price while quietly using
+Hall-Heroult and the compound steam engine. The panels are correct data.
+The solver's silence about time is the bug.
+
+## Also found, and cheap
+
+Three entries carry a genuinely ELECTRICAL requirement as `mechanical_mj`,
+the same mislabelling that started this: `zinc_electrolytic_kg` (Faraday's
+law electrolysis), `tungsten_kg` (induction sintering), and
+`calcium_carbide_kg` - whose own `yield_basis` says outright that "the arc
+furnace must reach roughly 2000 C, well above anything a combustion furnace
+reaches" while still charging the heat as shaft work. One field each.
+
+## Follow-up: the three mislabelled entries are fixed
+
+Done as a separate commit from the era problem, which stays open. One field
+each moved from `mechanical_mj` to `electrical_mj`, plus the sentences in
+each `yield_basis` that asserted the now-wrong reason - two of the three
+argued explicitly that electricity *is* shaft work through a dynamo, so
+appending a correction without deleting the old claim would have left the
+reader two answers.
+
+Measured, same solve before and after:
+
+```
+                       before      after     change
+calcium_carbide_kg    0.15605    0.14607     -6.4%
+germanium_g            16.302     15.229     -6.6%   (*)
+indium_g               16.302     15.229     -6.6%   (*)
+tungsten_kg           0.27352    0.27114     -0.9%
+zinc_kg               0.32024    0.31943     -0.2%
+```
+
+All five fall, and they fall because `electrical_mj` (0.00122/MJ) is cheaper
+than `mechanical_mj` (0.00201/MJ) in this solve: shaft work is now made FROM
+electricity through a motor, so the old labelling charged an electrolysis
+cell for a conversion it never performs. The sizes track energy intensity -
+calcium carbide is 12,600 MJ per tonne and moves 6%, zinc's 10,500 MJ is a
+small share of a cost dominated by ore and acid and moves 0.2%.
+
+The numbers above come from the photovoltaic-rooted solve this complaint is
+about, so read them as a ratio between two labellings, not as prices.
+
+### The remaining `mechanical_mj` entries were checked and are correct
+
+Three non-energy entries still carry one: `oxygen_m3` (a Linde-process
+compressor), `barium_kg` (a vacuum pump on the aluminothermic reduction) and
+`wire_drawn_kg` (a drawbench). Each is a genuine rotating shaft that a belt
+from a waterwheel or a steam engine drives directly, with no electricity
+anywhere in the chain - which is the test. That makes the set complete;
+there is no fourth one waiting to be found.
+
+## The mechanism is built; the labelling is not
+
+The gate exists as of this branch. `sim/engine/solve_prices.py --civ rome_100ad`
+filters the technique set down to what that civilization can run and solves
+the smaller system, and `sim/tests/test_price_solver_era_gate.py` pins it.
+
+It does nothing yet, and the tool says so:
+
+```
+ERA GATE: rome_100ad holds 223 technologies; 0 of 196 techniques are
+available to it (0 need a node it has not reached, 196 carry no
+requires_node and are dropped unclassified).
+```
+
+That is the honest reading, not a bug. The gate needs each production entry
+to say which tech-tree node lets anyone run it, and until this round the
+production data had no link to the tree at all - `data/production/_SCHEMA.md`
+says so outright, and `sim/audit_costs.py` (script since removed; recover with `git show 97473f1:sim/audit_costs.py`) has been guessing the link by
+stripping a unit suffix off a material key and hoping a node id matches,
+which works for 47 of 162. So the missing piece was never a solver
+mechanism. It was a field.
+
+`requires_node` is that field, with three states that are deliberately
+three (schema, validator and solver all agree on them): absent means nobody
+has classified the entry and a gated solve drops it; `null` means no
+technology is needed at all; a node id means available once that node is
+reached. `engine/validate_production.py` checks every id against the tree, because
+a typo here reads as "never available" and would price a material out of
+existence in every dated scenario without a word.
+
+The remaining work is 196 judgements, one per entry, and it is the kind that
+wants care rather than a sweep: the gate on electrolytic zinc is whatever
+supplies an industrial current, not the node that first roasts an ore.
+Coverage is printed by `engine/validate_production.py` on every run, so the
+progress is measurable from zero.
+
+### What the labelling must not turn into
+
+A table of invention dates. There is none in the solver and there must not
+be one: availability comes from the tree's own prerequisite structure and
+from a civilization's `starting_techs`, both initial conditions, and a
+century written next to a technique would be a hardcoded outcome under
+CLAUDE.md section 3.1. The `--civ` flag reads `starting_techs` and nothing
+else for exactly that reason.
+
+## Update: priced at what a civilisation can reach
+
+A material nothing held makes is no longer priced at the mature technique when something in reach makes it: it is priced at the nearest technique in the tree with the civilisation's own techniques for everything else (`Complaints/302`, `sim/engine/prices.py` `entries_in_reach`). What remains: materials nothing in reach delivers still fall back to the mature technique, labelled "mature". Measured (re-measured against the current code): `python3 -c` over `data.goods_provenance(starting_techs, "rome_100ad", civilisation)` gives a minority of materials as mature for Rome, and they are of two kinds. A crop the territory's climate cannot grow (cacao, cassia, pepper) is priced as an import, which is what the label stands for. The rest need a heat or an input no held or reachable technique supplies (portland cement, silicon carbide, cobalt, nickel, stainless steel, nichrome, manganin, constantan, ferrite, alnico, cemented carbide, borosilicate glass, acrylonitrile, hydrogen cyanide, germanium, indium); for these the mature price stands for an import that no Roman trader could actually bring, so it is the transitional shortcut to replace with trade availability (no foreign supplier exists in the data yet). Derived node revenue (Complaints/310, 317) and the placeholder price (Complaints/309, whose remaining question is the by-product floor) are no longer open here.
+
+Update (no seller, no price): `sim/engine/prices.py` `priced_goods_table` no longer solves the all-technology table; a material nothing in reach makes is absent, and the provenance labels are "solved" and "gated" only. `sim/engine/goods_market_offers.py` prices what the home table lacks at the cheapest partner that makes it (its cost, the merchants' terms and the route's freight), so a crop the climate cannot grow but a partner sells is an import (provenance "imported" on the market screen), and `unit_price` / `can_be_bought` answer for any buyer; a quote of a material no one sells says it cannot be bought (`sim/ui/proto/quote_purchases.py`). `sim/engine/material_availability.py` is a start check: a project needing more of a material than is held, with no seller in reach, reports which material and why (blocker kind supply). A node whose entries make only unpriced materials keeps its authored revenue (`sim/engine/node_output.py` already skips an entry with an unpriced output). Tests: `sim/tests/test_no_seller_no_price.py` (small fixtures). A gated home technique is a home seller only until a partner sells the same good cheaper (see the closing update).
+
+Related: 119.
+
+Owner decision (2026-10-09): a material priced from a 'mature' technique nobody in reach runs is an economic-model failure: a price needs a seller. If no one in reach (home or a trading partner) can make or sell it, it is unavailable, not priced.
+
+Closing update (no seller, no price, heat and imports):
+- Heat grades: `sim/engine/energy_prices.py` no longer solves an all-technology table for a grade nothing held supplies. A grade no held technique reaches has no band and is recorded as unreachable (`grade_bands`); heat cannot be imported, so a production line that states such a grade cannot run (`EnergyPrices.can_run`, honoured by `node_output._best_entry_per_line`), and a node whose lines all need it derives no output. The fallback to the pool price was a quiet "mature" price in another form, so it is not kept for a line that states its grade. Test: `sim/tests/test_heat_grade_has_a_supplier.py` (quick).
+- Cheapest seller in reach: `sim/engine/goods_market_offers.py` lets a partner replace a home technique that is only within reach (provenance "gated") when its landed price is lower, and only if the partner can supply the good (`ForeignCapacityMixin.foreign_supply_tonnes`). A good the home society already runs a producer for stays a home seller. `unit_price` and `material_price_basis` follow the seller.
+- Import volume: `sim/engine/goods_market_imports.py` bounds what an import can bring to the smaller of what the partner makes and holds (`sim/engine/foreign_capacity.py`) and the lift left on the route's carriers, less what was already bought this year; the quote (`goods_market_api.quote`) states that figure in place of the home output curves. A good bought only as an input has no partner demand figure, so its supply follows the partner's size against the table it is stated for (`FOREIGN_OUTPUT_PER_POPULATION_SHARE`, a labelled temporary heuristic). Tests: `sim/tests/test_no_seller_no_price.py` (quick).
+- Whole-game re-measure: `sim/tests/test_whole_game_no_seller_no_price.py` is a slow topic that builds Rome, checks the rules above and prints the node revenue total, the unreachable heat grades, the imported materials and the opening basket cost on one line (`python3 -m sim.tests --slow --only whole_game_no_seller_no_price`). It was written here but not run, because a game takes about half an hour to build in this container.
+- Complaint 309's placeholder floor decision is done: the placeholder price is gone, `JOINT_BYPRODUCT_FLOOR_SHARE` is deleted and a glutted joint by-product prices at minus its disposal cost (`sim/engine/joint_floor.py`, `sim/engine/disposal_cost.py`, `sim/tests/test_negative_byproduct_value.py`). What 309 still lists is its own work, not this complaint's.

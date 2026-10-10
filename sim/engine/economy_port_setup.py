@@ -7,13 +7,16 @@ nodes it holds; the economy only receives the recipes.
 import dataclasses
 import json
 import os
+from typing import Dict
 
-from sim.economy.api import (EconomySetup, TradeSpec, currency_from_coin_standard, goods_specs, households,
+from sim.economy.api import (EconomySetup, SiteLimit, TradeSpec, currency_from_coin_standard, goods_specs, households,
                              recipes_from_production_data, taxes, tile_costs)
 from sim.world import demand, need_basket
 from sim.geography.api import layer_value, sea_freight, settlement, tiles_held
 from sim.labour import api as labour_api
 
+from . import economy_port_sites
+from .economy_port_stores import opening_store_values
 from .foreign_routes import SEA_MODE
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data")
@@ -24,21 +27,49 @@ def _load(*parts):
         return json.load(handle)
 
 
+_UNIT_MASS_KG: Dict[str, float] = {}
+
+
+def unit_mass_kg(material: str) -> float:
+    """Kilograms in one unit of a material, as the freight model reads it (stated, then inferred from the id)."""
+    if material not in _UNIT_MASS_KG:
+        _UNIT_MASS_KG[material] = goods_specs({material: ""}, {})[material].unit_mass_kg
+    return _UNIT_MASS_KG[material]
+
+
 def civilisation_tiles(civ, world_map):
     """The tiles a civilisation holds on the engine's map, and that map."""
     return tiles_held(civ, world_map), world_map
 
 
+def _runnable(entry, held_nodes):
+    return entry.get("requires_node") is None or entry.get("requires_node") in held_nodes
+
+
 def allowed_entries(production, held_nodes):
-    """Production entries the society can run: those needing no node, or a node it holds."""
+    """Production entries the society's producers can run: those needing no node, or a node it holds.
+    An entry whose `actor` is the mint is the mint's way of striking coin, not a firm's."""
     return sorted(entry_id for entry_id, entry in production.items()
                   if not entry_id.startswith("_") and isinstance(entry, dict)
-                  and (entry.get("requires_node") is None or entry.get("requires_node") in held_nodes))
+                  and entry.get("actor") != "mint" and _runnable(entry, held_nodes))
+
+
+def mint_recipe_id(civ, production, held_nodes):
+    """The production entry the coin standard names for striking its coin, when the society can run it."""
+    entry_id = civ.get("coin_standard", {}).get("mint_recipe")
+    entry = production.get(entry_id) if entry_id else None
+    return entry_id if isinstance(entry, dict) and entry.get("actor") == "mint" and _runnable(entry, held_nodes) else None
 
 
 def unskilled_trade(trades_data):
     """The trade anyone can take up at once, which the labour package names from the trade registry."""
     return labour_api.fallback_trade(labour_api.trade_specs(trades_data))
+
+
+def partner_openings(sim):
+    """{partner id: its tiles, people and recipes} for the partners that are part of the agent economy."""
+    from .economy_port_partners import partner_opening
+    return {partner: partner_opening(sim, partner) for partner in sim.partners_in_agent_economy()}
 
 
 def opening_values(sim):
@@ -50,20 +81,36 @@ def opening_values(sim):
     production = demand.production_data()
     trades_data = _load("world", "trades.json").get("trades", {})
     allowed = allowed_entries(production, set(sim.state.projects.granted))
+    mint_recipe = mint_recipe_id(civ, production, set(sim.state.projects.granted))
     unskilled = unskilled_trade(trades_data)
-    labour_trades = sorted({trade for entry_id in allowed for trade in (production[entry_id].get("labour_hours") or {})}
+    partners = partner_openings(sim)
+    partner_prices = {}
+    for opened in partners.values():
+        partner_prices.update(opened.pop("prices"))
+    everyone_runs = sorted(set(allowed).union(*(opened["recipes"] for opened in partners.values())))
+    labour_trades = sorted({trade for entry_id in everyone_runs + ([mint_recipe] if mint_recipe else [])
+                            for trade in (production[entry_id].get("labour_hours") or {})}
                            | {unskilled})
     modes = sim._freight_mode_costs()
+    prices = dict(partner_prices)
+    prices.update({good: price for good, price in sim.economy.material_prices().items() if price > 0.0})
     return {
+        "partners": partners,
         "population_by_tile": {tile: people * settlement.population_share(tile_ids, tile) for tile in tile_ids},
         "working_share": sim.population.working_age / people if people > 0.0 else 0.0,
         "recipes": allowed,
-        "prices": {good: price for good, price in sim.economy.material_prices().items() if price > 0.0},
+        "mint_recipe": mint_recipe,
+        "prices": prices,
         "wages": {trade: sim.economy.labour.quote(trade) for trade in labour_trades if trade in trades_data},
         "unskilled_trade": unskilled,
         "rate": float(sim.economy.base_rate()),
         "carriage": dict(modes),
-        "held_nodes": sorted(sim.state.projects.done | sim.state.projects.granted),
+        "held_nodes": sorted(sim.held_and_running(include_starting=False)),
+        "ways": {key: dict(way) for key, way in sorted(sim.state.economy.improvements.items())},
+        "site_limits": [[limit.recipe_id, limit.tile, limit.capacity_runs_per_year, limit.yield_factor]
+                        for limit in economy_port_sites.site_limits(
+                            sim, {entry_id: production[entry_id]["outputs"] for entry_id in allowed})],
+        "stores": opening_store_values(sim.world_map, tile_ids, int(sim.cfg["start_year"])),
     }
 
 
@@ -109,12 +156,22 @@ def build_setup(sim, opening=None):
     opening = in_units(opening)
     civ = sim.civ
     tile_ids, world_map = civilisation_tiles(civ, sim.world_map)
-    tiles = tile_costs.tiles_from_map(world_map, tile_ids)
+    partners = opening.get("partners") or {}
+    all_tile_ids = list(tile_ids) + [tile for opened in partners.values() for tile in opened["tiles"]]
+    tiles = tile_costs.tiles_from_map(world_map, all_tile_ids)
+    for partner_id, opened in partners.items():
+        for tile in opened["tiles"]:
+            tiles[tile] = dataclasses.replace(tiles[tile], country=partner_id)
     population_by_tile = {tile: float(opening["population_by_tile"].get(tile, 0.0)) for tile in tile_ids}
+    for opened in partners.values():
+        population_by_tile.update({tile: float(people) for tile, people in opened["population_by_tile"].items()})
     production = demand.production_data()
-    recipes = recipes_from_production_data(production, opening["recipes"])
+    every_recipe = sorted(set(opening["recipes"]).union(*(opened["recipes"] for opened in partners.values())))
+    recipes = recipes_from_production_data(production, every_recipe)
+    mint_recipe = (recipes_from_production_data(production, [opening["mint_recipe"]])[opening["mint_recipe"]]
+                   if opening.get("mint_recipe") else None)
     need_data = _load("world", "needs.json")
-    basket = households.make_basket(need_data, production)
+    basket = households.make_basket(need_data, production, civ_values=civ)
     goods = set()
     for recipe in recipes.values():
         goods.update(recipe.outputs, recipe.inputs, recipe.plant_goods)
@@ -130,7 +187,7 @@ def build_setup(sim, opening=None):
                                float(spec.get("fatality_risk_per_year", 0.0)), str(spec.get("family", "")))
               for trade, spec in sorted(trades_data.items())}
     wages = dict(opening["wages"])
-    by_people = sorted(tile_ids, key=lambda tile: (-population_by_tile[tile], tile))
+    by_people = sorted(tile_ids, key=lambda tile: (-population_by_tile[tile], tile))   # the home country's tiles
     coastal = [tile for tile in by_people if tiles[tile].coastal]
     return EconomySetup(
         civ_id=str(civ["id"]),
@@ -139,7 +196,7 @@ def build_setup(sim, opening=None):
         carriage_rates=dict(opening["carriage"]),
         handling_rates={SEA_MODE: sea_freight.PORT_HANDLING_HOURS_PER_TONNE * wages.get(opening["unskilled_trade"], 0.0)},
         held_nodes=tuple(opening["held_nodes"]),
-        specs=specs, recipes=recipes, basket=basket, trades=trades,
+        specs=specs, recipes=recipes, mint_recipe=mint_recipe, basket=basket, trades=trades,
         tax_forms=taxes.forms_from_civ_data(civ.get("state_revenue") or []),
         state_capacity=min(1.0, max(0.0, float(civ.get("state_capacity", 1.0)))),
         working_hours_per_year=float(sim.HOURS_PER_PERSON_YEAR), working_share=float(opening["working_share"]),
@@ -148,8 +205,22 @@ def build_setup(sim, opening=None):
         capital_tile=by_people[0], port_tile=(coastal or by_people)[0],
         land_per_run={recipe_id: float(production[recipe_id].get("land_hectare_years") or 0.0)
                       for recipe_id in recipes if production[recipe_id].get("land_hectare_years")},
-        basket_by_tile=baskets_by_tile(basket, need_data, world_map, tile_ids), coin_per_unit=unit,
-        world_map=world_map)
+        basket_by_tile=baskets_by_tile(basket, need_data, world_map, all_tile_ids), coin_per_unit=unit,
+        recipes_by_country=recipes_by_country(str(civ["id"]), opening["recipes"], partners),
+        world_map=world_map, improvements=dict(opening["ways"]),
+        site_limits=tuple(SiteLimit(*limit) for limit in opening["site_limits"]),
+        opening_store_output={good: tuple(tuple(working) for working in entry["workings"])
+                              for good, entry in sorted(opening["stores"].items()) if entry["workings"]},
+        opening_store_gaps={good: entry["gap"] for good, entry in sorted(opening["stores"].items()) if entry["gap"]})
+
+
+def recipes_by_country(home_id, home_recipes, partners):
+    """Which recipes each country's producers can run; empty when there is only the home country."""
+    if not partners:
+        return {}
+    by_country = {home_id: tuple(sorted(home_recipes))}
+    by_country.update({partner: tuple(sorted(opened["recipes"])) for partner, opened in partners.items()})
+    return by_country
 
 
 def _counted_currency(civ, unit):

@@ -6,12 +6,13 @@ prices, through the recipes the society already runs (input-output: final demand
 producers of it consume, back to raw materials). Each agent's opening cash is what it wants to hold,
 struck at the mint: the money stock is derived, not authored. After this the markets take over.
 """
+import dataclasses
 import math
 from typing import Dict, List, Mapping, Tuple
 
 from sim.constants import declare
 
-from . import currency, goods_market, households, labour_state, location, mint, ownership, sites, unit_cost
+from . import currency, goods_market, households, households_store, labour_state, location, mint, opening_stores, ownership, sites, unit_cost
 from .accounts import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
@@ -21,7 +22,7 @@ from .producers_close import working_capital_target
 from .record import EconomyRecord
 from .setup import EconomySetup, labour_area, recipe_tile_key
 from .tile_costs import CarriageTable
-from .types import EDGE_MINT, GoodId, Recipe, TileId, Transfer
+from .types import EDGE_MINT, EDGE_PRODUCTION, GoodId, GoodsMove, Recipe, TileId, Transfer
 
 OPENING_SPARE_CAPACITY_SHARE = declare(
     "OPENING_SPARE_CAPACITY_SHARE", 0.1, kind="temporary_heuristic",
@@ -47,24 +48,44 @@ def open_economy(setup: EconomySetup) -> Tuple[EconomyRecord, AreaMap, CarriageT
     carriage = setup.carriage_table()
     priced_goods = {good: price for good, price in setup.opening_prices.items()
                     if good in setup.specs and price > 0.0}
-    area_map = AreaMap(setup.tiles, carriage, [(setup.specs[good], price) for good, price in
-                                               sorted(priced_goods.items())],
-                       setup.opening_population_by_tile)
+    area_map = setup.area_map(carriage)
     memory = _opening_memory(setup, area_map, priced_goods)
-    record = EconomyRecord(book=Book(), memory=memory, currency=setup.currency)
+    record = EconomyRecord(book=Book(), memory=memory, currency=setup.currency,
+                           ways={key: dict(built) for key, built in setup.improvements.items()})
     view = YearView(memory, record.book, area_map, setup.currency_id, labour_area)
     _open_cohorts(setup, record)
+    _seed_durable_stocks(setup, record, view)
     final_by_tile = _final_demand(setup, record, view)
-    incumbents = incumbent_recipes(setup.recipes, priced_goods, setup.opening_wages, setup.opening_rate)
-    runs = required_runs(final_by_tile, incumbents, setup.recipes)
-    _place_producers(setup, record, area_map, final_by_tile, incumbents, runs)
+    for country in setup.countries():
+        _open_country_producers(setup, record, area_map, priced_goods, final_by_tile, country)
     sites.apply_site_limits(record, setup)
-    record.workforce = labour_state.opening_workforce(setup, record)
     _open_merchants(setup, record, priced_goods, final_by_tile)
     _strike_opening_cash(setup, record)
+    record.workforce = labour_state.opening_workforce(setup, record)   # the mint's capacity follows the money struck
     mint.seed_opening_metal(setup, record)
+    opening_stores.seed_opening_stores(setup, record, _store_goods(setup, view, area_map, priced_goods))
     record.opening_basket = _national(final_by_tile)
     return record, area_map, carriage
+
+
+def _open_country_producers(setup, record, area_map, priced_goods, final_by_tile, country) -> None:
+    """One country's producers: its own people's demand met through the recipes its techniques allow, placed
+    on its own tiles. With one country and every recipe allowed everywhere this is the whole economy's opening."""
+    tiles = set(setup.tiles_of(country))
+    recipes = {recipe_id: recipe for recipe_id, recipe in setup.recipes.items()
+               if not setup.recipes_by_country or recipe_id in setup.recipes_by_country.get(country, ())}
+    final = {tile: demand for tile, demand in final_by_tile.items() if tile in tiles}
+    incumbents = incumbent_recipes(recipes, priced_goods, setup.opening_wages, setup.opening_rate)
+    runs = required_runs(final, incumbents, recipes)
+    _place_producers(setup, record, area_map, final, incumbents, runs, tiles if len(setup.countries()) > 1 else None)
+
+
+def _store_goods(setup, view, area_map, priced_goods) -> set:
+    """The goods fit to hold as wealth at the opening prices, as households choose them."""
+    tile = setup.capital_tile
+    staple = households_store.staple_price_per_kg(households.need_prices(setup.basket_for(tile), view, tile), setup.specs)
+    prices = {good: view.price(good, area_map.area_of(good, tile)) or 0.0 for good in priced_goods}
+    return set(households_store.store_candidates(setup.specs, prices, staple)) if math.isfinite(staple) else set()
 
 
 def _opening_memory(setup, area_map, priced_goods) -> MarketMemory:
@@ -73,6 +94,7 @@ def _opening_memory(setup, area_map, priced_goods) -> MarketMemory:
     for good, price in priced_goods.items():
         for area in area_map.areas(good):
             memory.prices[market_key(good, area.area_id)] = price
+            memory.note_usual_price(market_key(good, area.area_id))
     for trade, wage in setup.opening_wages.items():
         for tile in setup.tiles:
             memory.wages[market_key(trade, labour_area(tile))] = wage
@@ -91,20 +113,44 @@ def _open_cohorts(setup, record) -> None:
             record.cohorts[cohort.agent_id] = cohort
 
 
-def _final_demand(setup, record, view) -> Dict[TileId, Dict[GoodId, float]]:
-    """What each tile's households buy at the opening prices with the opening income."""
-    final: Dict[TileId, Dict[GoodId, float]] = {}
+def _opening_bids(setup, record, view):
+    """(cohort, bid, price) for what each cohort would buy at the opening prices with the opening income."""
     priced_by_tile = {}
     for cohort in sorted(record.cohorts.values(), key=lambda each: each.agent_id):
         priced = priced_by_tile.setdefault(cohort.tile, households.need_prices(setup.basket_for(cohort.tile), view, cohort.tile))
         income = cohort.last_year_income
         orders = households.goods_orders(cohort, view, income, income, setup.basket_for(cohort.tile), setup.specs,
                                          priced)
-        demand = final.setdefault(cohort.tile, {})
         for bid in orders.bids:
             price = view.price(bid.good, bid.area)
             if price:
-                demand[bid.good] = demand.get(bid.good, 0.0) + goods_market.quantity_at(bid, price)
+                yield cohort, bid, price
+
+
+def _seed_durable_stocks(setup, record, view) -> None:
+    """Households open holding the durables they keep in use (dwellings, vessels, tools): the stock their
+    expected flow wants over the good's service life. Without it the first year's demand is the whole
+    stock built at once, thirty years of walls in one, and the opening staffs for a building boom that is
+    never repeated."""
+    moves = []
+    for cohort, bid, price in _opening_bids(setup, record, view):
+        spec = setup.specs.get(bid.good)
+        if spec is None or spec.service_life_years <= 0.0 or bid.priority == households_store.STORE_PRIORITY:
+            continue     # a store of wealth is seeded from the deposits (opening_stores), not from need
+        quantity = bid.floor_quantity + bid.flexible_quantity     # the stock wanted, whatever the cash
+        if quantity > 0.0:
+            moves.append(GoodsMove(EDGE_PRODUCTION, cohort.agent_id, bid.good, cohort.tile, quantity,
+                                   "opening stock of a durable in use"))
+    if moves:
+        record.book.move_many(moves)
+
+
+def _final_demand(setup, record, view) -> Dict[TileId, Dict[GoodId, float]]:
+    """What each tile's households buy at the opening prices with the opening income."""
+    final: Dict[TileId, Dict[GoodId, float]] = {}
+    for cohort, bid, price in _opening_bids(setup, record, view):
+        demand = final.setdefault(cohort.tile, {})
+        demand[bid.good] = demand.get(bid.good, 0.0) + goods_market.quantity_at(bid, price)
     return final
 
 
@@ -172,21 +218,57 @@ def _main_output(recipe: Recipe, prices: Mapping[GoodId, float]) -> GoodId:
     return max(sorted(recipe.outputs), key=lambda good: recipe.outputs[good] * prices.get(good, 0.0))
 
 
-def _place_producers(setup, record, area_map, final_by_tile, incumbents, runs) -> None:
+def _placement_order(runs, recipes, setup) -> List[str]:
+    """Recipes in the order they are placed: a recipe after every recipe that uses what it makes, so the
+    users of an input are on the map before its suppliers are placed beside them. A cycle falls back to id order."""
+    users = {}
+    for recipe_id in runs:
+        recipe = recipes[recipe_id]
+        for good in list(recipe.inputs) + list(recipe.plant_goods):
+            users.setdefault(good, set()).add(recipe_id)
+    produced = {recipe_id: _main_output(recipes[recipe_id], setup.opening_prices) for recipe_id in runs}
+    ordered: List[str] = []
+    waiting = sorted(runs)
+    while waiting:
+        ready = [recipe_id for recipe_id in waiting
+                 if all(user in ordered or user == recipe_id for user in users.get(produced[recipe_id], ()))]
+        step = ready or waiting[:1]
+        ordered.extend(step)
+        waiting = [recipe_id for recipe_id in waiting if recipe_id not in step]
+    return ordered
+
+
+def _within(area, tiles):
+    """The part of a market area on `tiles`; None when none of it is."""
+    kept = tuple(tile for tile in area.tiles if tile in tiles)
+    if not kept:
+        return None
+    return area if len(kept) == len(area.tiles) else dataclasses.replace(
+        area, tiles=kept, anchor_tile=area.anchor_tile if area.anchor_tile in kept else kept[0])
+
+
+def _place_producers(setup, record, area_map, final_by_tile, incumbents, runs, within=None) -> None:
     """Each market area of the recipe's main output gets its share of the runs, sized by the area's share
-    of demand for that good (its people's share when no household buys it), spread over its tiles by
-    location.opening_split: one producer per (recipe, tile)."""
+    of the demand for that good (households' and the already placed producers' that use it as an input; its
+    people's share when nobody buys it), spread over its tiles by location.opening_split: one producer per
+    (recipe, tile). An input is therefore opened where its users are, with the supply their capacity needs,
+    not where people happen to live (a good too cheap to carry has a market the size of a tile)."""
     population = setup.opening_population_by_tile
     by_limits = sites.limits_by_recipe(setup.site_limits)
-    for recipe_id, count in sorted(runs.items()):
+    input_demand: Dict[TileId, Dict[GoodId, float]] = {}
+    for recipe_id in _placement_order(runs, setup.recipes, setup):
+        count = runs[recipe_id]
         recipe = setup.recipes[recipe_id]
         main = _main_output(recipe, setup.opening_prices)
         areas = area_map.areas(main) if main in area_map.goods() else ()
+        if within is not None:
+            areas = tuple(part for part in (_within(area, within) for area in areas) if part is not None)
         if not areas:
             continue
         weights = {}
         for area in areas:
-            weight = math.fsum(final_by_tile.get(tile, {}).get(main, 0.0) for tile in area.tiles)
+            weight = math.fsum(final_by_tile.get(tile, {}).get(main, 0.0) + input_demand.get(tile, {}).get(main, 0.0)
+                               for tile in area.tiles)
             weights[area.area_id] = (area, weight)
         if math.fsum(weight for _area, weight in weights.values()) <= 0.0:
             weights = {area.area_id: (area, math.fsum(population.get(tile, 0.0) for tile in area.tiles))
@@ -208,6 +290,12 @@ def _place_producers(setup, record, area_map, final_by_tile, incumbents, runs) -
                     expected_sales=capacity / (1.0 + OPENING_SPARE_CAPACITY_SHARE),
                     yield_factor=sites.yield_at(recipe, tile, by_limits, setup.yield_factor_by_recipe_tile.get(
                         recipe_tile_key(recipe_id, tile), 1.0)))
+                wanted = input_demand.setdefault(tile, {})
+                for good, quantity in recipe.inputs.items():
+                    wanted[good] = wanted.get(good, 0.0) + capacity * quantity
+                if recipe.plant_life_years > 0.0:
+                    for good, quantity in recipe.plant_goods.items():
+                        wanted[good] = wanted.get(good, 0.0) + capacity * quantity / recipe.plant_life_years
 
 
 def _has_people(record, tile) -> bool:

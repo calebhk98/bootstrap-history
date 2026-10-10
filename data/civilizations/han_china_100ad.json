@@ -36,6 +36,7 @@
     "regime": "struck_coin",
     "material": "bronze_kg",
     "kg_per_unit": 0.003,
+    "mint_recipe": "cast_bronze_cash_kg",
     "source": "Wu zhu cash were cast copper-alloy coins of about 3.0 g, range 2.5 to 3.5 g (Wikipedia, Wu Zhu; Hartill, Cast Chinese Coins, 2005). Confidence medium. Regime: the wu zhu was cast in state moulds at the imperial mint (Shanglin) under Emperor Wu and, after AD 40, again by the Eastern Han court, so the state is the issuer of a standard piece circulating by count; no mint charge is attested, so none is set. The cast cash is modelled as struck coin, the regime of a state-made standard piece."
   },
   "debt_bondage": true,
@@ -54,6 +55,17 @@
   "hazards": [
     {
       "name": "The regency cycle and the Partisan Prohibitions",
+      "causes": [
+        {
+          "quantity": "territory_share_of_start",
+          "op": ">=",
+          "value": 0.5,
+          "why": "The event is a struggle inside a realm that still holds most of its provinces; a state that has lost most of its opening territory has no such court left."
+        }
+      ],
+      "causes_not_modelled": [
+        "Child emperors, consort families against eunuchs, and the court's legitimacy: factions and succession are not simulated."
+      ],
       "note": "Emperor He died in 105 leaving an infant heir, and for most of the second century the throne passes to boy emperors under a regency of their mother's clan, who are then removed by the palace eunuchs when the boy comes of age and wants his own men in - four times over, by the reigns of Shang, Chong and Zhi alone. Under Emperor Huan this hardens into open persecution: the Partisan Prohibitions of 166 and 169 barred the reformist scholar-officials who had denounced the eunuchs' faction from office for life, hollowing out exactly the class of administrator this civilization's whole advantage rests on. This is what a break tester meant by nothing happening for eighty years: the fall of the Han did not begin with the Yellow Turbans, it began here.",
       "output_factor": 0.94,
       "values": {
@@ -67,6 +79,26 @@
     },
     {
       "name": "Yellow Turban rebellion",
+      "causes": [
+        {
+          "quantity": "lowest_stratum_welfare",
+          "op": "<",
+          "value": 1.0,
+          "why": "Popular rebellion needs people who cannot meet their food bill; where every free body of people can, mobilisation potential is low."
+        },
+        {
+          "quantity": "food_supply_ratio",
+          "op": "<",
+          "value": 1.1,
+          "why": "A dearth or famine strikes a society without a harvest margin; with a margin above need a bad year is absorbed. A reasoning bound, to be fitted against a baseline ensemble."
+        }
+      ],
+      "causes_effect": "scale",
+      "causes_not_modelled": [
+        "Repeated epidemics and Yellow River floods: no epidemic introduction or flood model exists, only the food supply they would lower.",
+        "Eunuch misrule and a perceived loss of the Mandate of Heaven: ruler legitimacy is not simulated.",
+        "A religious movement as organiser: no religious institution is simulated."
+      ],
       "note": "Not a bandit revolt: the Way of Supreme Peace was a millenarian Daoist religious movement, and it very nearly took the dynasty down. The court's lasting reaction, applied gradually below as shifts in what this society values, is to stop treating unlicensed religious movements as a nuisance and start treating them as a standing threat to the state, a genuine tightening relative to the easy tolerance of alchemy and technical craft this civilization's baseline shifts in what this society values describes.",
       "sack_chance": 0.2,
       "values": {
@@ -79,6 +111,23 @@
     },
     {
       "name": "Three Kingdoms fragmentation",
+      "causes": [
+        {
+          "quantity": "state_funded_share",
+          "op": "<",
+          "value": 1.0,
+          "why": "Fiscal strain is the shared root of the collapses and wars of this kind: a state whose revenue covers everything it needs has no arrears, no mutiny over pay and no pressure to seize new sources of money."
+        },
+        {
+          "quantity": "territory_share_of_start",
+          "op": "<",
+          "value": 1.0,
+          "why": "The event follows the division or loss of a realm (to reunify, refound, reconquer or succeed it). A state still holding every tile it began with has nothing to reunify or retake."
+        }
+      ],
+      "causes_not_modelled": [
+        "Warlord armies raised outside the state: command of soldiers by individual generals is not simulated."
+      ],
       "note": "The examined bureaucracy that makes Han China the easiest place in this game to organise anything depends on there being one court to examine for; once Wei, Shu and Wu each run their own court, a distant and increasingly fictional emperor buys you far less than a warlord's own favour does, applied gradually below as shifts in what this society values. The unified currency and the state's coordination of long-distance trade fragment with the court, which is the shifts in what this society values-side counterpart to the the fall in trade and output loss.",
       "output_factor": 0.6,
       "values": {
@@ -92,6 +141,17 @@
     },
     {
       "name": "Jin reunification and the Taikang peace",
+      "causes": [
+        {
+          "quantity": "territory_share_of_start",
+          "op": "<",
+          "value": 1.0,
+          "why": "The event follows the division or loss of a realm (to reunify, refound, reconquer or succeed it). A state still holding every tile it began with has nothing to reunify or retake."
+        }
+      ],
+      "causes_not_modelled": [
+        "A victor who collapses the cost of war: rival states are not simulated."
+      ],
       "note": "Sima Yan's Jin took Wu in 280 and China had one court again for the first time since 220. The Taikang years (280-289) are remembered as a decade in which registered households climbed back, the canals were dredged and the roads were safe; the occupation-field and tax-field settlement of 280 put people back on land they were allowed to keep. This partly undoes the Three Kingdoms shift above and is modelled exactly that way, as a partial reversal rather than a return to the Han baseline. It does not last: the dynasty that made it spends the next fifteen years killing itself.",
       "values": {
         "patronage_weight": -0.08,
@@ -104,6 +164,23 @@
     },
     {
       "name": "War of the Eight Princes",
+      "causes": [
+        {
+          "quantity": "elite_share_vs_opening",
+          "op": ">=",
+          "value": 1.0,
+          "why": "Civil war follows elite overproduction: more claimants to the same offices. The propertied bodies must be at least as large a share of the people as they began."
+        },
+        {
+          "quantity": "state_funded_share",
+          "op": "<",
+          "value": 1.0,
+          "why": "Fiscal strain is the shared root of the collapses and wars of this kind: a state whose revenue covers everything it needs has no arrears, no mutiny over pay and no pressure to seize new sources of money."
+        }
+      ],
+      "causes_not_modelled": [
+        "A disputed regency and the princes' claims: succession and legitimacy are not simulated."
+      ],
       "note": "Sixteen years of civil war inside the imperial clan, beginning with the coup against Empress Jia Nanfeng in 291 and grinding on until Sima Yue was left standing in 306. It consumed the Jin field armies, and - decisively - it taught the Xiongnu, Xianbei and Jie horsemen the princes hired against each other that the dynasty could be beaten by people who were already inside it. Nothing else in this file does so much damage with so little to show for it.",
       "output_factor": 0.65,
       "sack_chance": 0.05,
@@ -114,6 +191,17 @@
     },
     {
       "name": "The Yongjia disaster and the fall of Luoyang",
+      "causes": [
+        {
+          "quantity": "state_funded_share",
+          "op": "<",
+          "value": 1.0,
+          "why": "Fiscal strain is the shared root of the collapses and wars of this kind: a state whose revenue covers everything it needs has no arrears, no mutiny over pay and no pressure to seize new sources of money."
+        }
+      ],
+      "causes_not_modelled": [
+        "Steppe polities that sacked the capital: no neighbouring polity or its army is simulated."
+      ],
       "note": "Liu Yuan declared his own Han dynasty in 304. In 311 his son Liu Cong's army took Luoyang, burned the palaces and the imperial library and carried the emperor off as a prisoner - the Yongjia catastrophe, which Chinese historiography treats as the end of the ancient world in the way the west treats 410. Chang'an fell in 316 and the Western Jin was finished. The court and a large part of the northern elite fled south of the Yangtze - the yiguan nandu, the crossing south of caps and gowns - and proclaimed the Eastern Jin at Jiankang in 317. If your workshop is anywhere north of the Huai river, it is in the path of this.",
       "output_factor": 0.5,
       "sack_chance": 0.2,
@@ -125,6 +213,17 @@
     },
     {
       "name": "The Sixteen Kingdoms",
+      "causes": [
+        {
+          "quantity": "territory_share_of_start",
+          "op": "<",
+          "value": 1.0,
+          "why": "The event follows the division or loss of a realm (to reunify, refound, reconquer or succeed it). A state still holding every tile it began with has nothing to reunify or retake."
+        }
+      ],
+      "causes_not_modelled": [
+        "The successor states of steppe peoples: no neighbouring polity is simulated."
+      ],
       "note": "A hundred and twenty years in which northern China was ruled by a rapid succession of short-lived states founded by Xiongnu, Jie, Xianbei, Di and Qiang rulers - conventionally sixteen, in fact rather more. Fu Jian's Former Qin came within one battle of reunifying everything and lost it in an afternoon at the Fei river in 383. Registered population in the north over this period is a small fraction of the Later Han totals; how much of that gap is death and how much is flight south and households that simply stopped being counted is disputed, which is why this is modelled as long sustained lost output and a low standing sack risk rather than as mass mortality. What is not disputed is that the thing that made Han China the easiest place in this game to organise anything - one court, one coinage, one set of examinations - is gone, and what replaces it is a warlord whose favour you either have or do not.",
       "output_factor": 0.62,
       "sack_chance": 0.025,
@@ -139,6 +238,17 @@
     },
     {
       "name": "Northern Wei, the equal-field system, and the monasteries",
+      "causes": [
+        {
+          "quantity": "territory_share_of_start",
+          "op": "<",
+          "value": 1.0,
+          "why": "The event follows the division or loss of a realm (to reunify, refound, reconquer or succeed it). A state still holding every tile it began with has nothing to reunify or retake."
+        }
+      ],
+      "causes_not_modelled": [
+        "A conquest dynasty's land policy and the Buddhist monastic estates: no religious institution is simulated."
+      ],
       "note": "The Tuoba Wei finished off the last of the northern states in 439 and held the north for a century. The equal-field allotment of 485 and the three-elders village registration of 486 rebuilt a taxable peasantry out of the wreckage, and Emperor Xiaowen moved the capital to Luoyang in 494 and required Xianbei families to take Chinese dress, language and surnames. The part that matters for a workshop is the Buddhist establishment: Yungang from 460 and Longmen from 493 are the visible end of it, but the monasteries were also very large landholders that ran water-powered grain mills and oil presses on their estates and litigated to keep the water rights. That is an institutional home for machinery, with capital and a reason to want it, that Han China did not have. The cost side is that the state notices: Emperor Taiwu suppressed Buddhism in 446 and the Northern Zhou did it again from 574 to 577, forcibly returning something like three million monks and nuns and their land to the tax rolls, which is a state deciding what may be believed in a way the Later Han rarely did.",
       "values": {
         "w_labour_saving": 0.12,
@@ -151,6 +261,17 @@
     },
     {
       "name": "The Hou Jing rebellion and the sack of Jiankang",
+      "causes": [
+        {
+          "quantity": "state_funded_share",
+          "op": "<",
+          "value": 1.0,
+          "why": "Fiscal strain is the shared root of the collapses and wars of this kind: a state whose revenue covers everything it needs has no arrears, no mutiny over pay and no pressure to seize new sources of money."
+        }
+      ],
+      "causes_not_modelled": [
+        "A frontier general's defection and the court's succession quarrel: command of soldiers by individuals is not simulated."
+      ],
       "note": "Hou Jing, a general who defected from the Eastern Wei and was taken in by the Liang, turned on his hosts and besieged Jiankang for five months across 548 and 549; Emperor Wu, who had reigned for forty-seven years, starved to death in his own palace. The richest city in the Chinese world, and the refuge the northern elite had been building since 317, was destroyed, and the Liang state with it. Six years later, when Jiangling fell to the Western Wei in the winter of 554-555, Emperor Yuan burned the imperial library - some hundred and forty thousand scrolls by the traditional count - rather than hand it over, which is the single largest deliberate destruction of books in this file. The south never recovered its weight against the north after this, which is why reunification, when it came thirty-four years later, came from the north.",
       "output_factor": 0.6,
       "sack_chance": 0.18,
@@ -162,6 +283,17 @@
     },
     {
       "name": "Sui reunification",
+      "causes": [
+        {
+          "quantity": "territory_share_of_start",
+          "op": "<",
+          "value": 1.0,
+          "why": "The event follows the division or loss of a realm (to reunify, refound, reconquer or succeed it). A state still holding every tile it began with has nothing to reunify or retake."
+        }
+      ],
+      "causes_not_modelled": [
+        "A usurping general's conquest of a rival state: no rival state is simulated."
+      ],
       "note": "Yang Jian took the Northern Zhou throne in 581 and in 589 his armies crossed the Yangtze, took Jiankang and ended two hundred and seventy years of division. For anyone trying to build something, this is the most important favourable event in the whole file and it deserves to be said plainly. The Sui restored one five-zhu coinage for the whole country and closed the private mints; standardised weights, measures and the foot; issued the Kaihuang code of 581, which cut the number of capital offences sharply; and abolished the nine-rank system in 587 in favour of provincial candidates sent up to be examined, which is the root the imperial examination grows from - the jinshi degree itself is a few years later, under Yang - and which makes an unconnected clever man employable again. Canal-building starts immediately - the Guangtong canal from Chang'an to the Yellow River was cut in 584 - and the great works joining the Yangtze to the Yellow River and on to the northern frontier follow in 605-610, just past this simulation's horizon. The corvee that dug them was murderous and destroyed the dynasty within two generations; inside this window, it is the reunification that counts. how much trade is honoured rises because there is one currency and one market again, and how much a patron's protection is worth falls back because there is one court to be examined by instead of a warlord to be favoured by.",
       "values": {
         "patronage_weight": -0.1,
@@ -175,6 +307,17 @@
     },
     {
       "name": "Tang founding and the Zhenguan peace",
+      "causes": [
+        {
+          "quantity": "territory_share_of_start",
+          "op": "<",
+          "value": 1.0,
+          "why": "The event follows the division or loss of a realm (to reunify, refound, reconquer or succeed it). A state still holding every tile it began with has nothing to reunify or retake."
+        }
+      ],
+      "causes_not_modelled": [
+        "A rebel general's seizure of a collapsing dynasty: succession and legitimacy are not simulated."
+      ],
       "note": "Li Yuan took the throne in 618 as Sui authority collapsed under the weight of the canal corvee; his son Li Shimin, Emperor Taizong, is the one who matters, and the Zhenguan era (626-649) of his reign is the single period later Chinese historiography holds up as the model of good government - a legal code completed in 637, the examination system widened rather than narrowed, the Eastern Turkic Khaganate broken in 630 so the Silk Road reopens under a single protector again, and Taizong's own recorded habit of accepting correction from his ministers, most famously Wei Zheng, without having them executed for it. One court, one currency, one examination, and it lasts.",
       "values": {
         "w_commerce": 0.1,
@@ -188,6 +331,9 @@
     },
     {
       "name": "Empress Wu's Zhou interregnum",
+      "causes_not_modelled": [
+        "A dowager's seizure of the throne: succession and ruler legitimacy are not simulated, so no necessary condition can be checked."
+      ],
       "note": "Wu Zetian rose from concubine to empress to, in 690, emperor in her own name, the only woman ever to hold the title in Chinese history, ruling as the Zhou dynasty until she was forced to abdicate in 705. She expanded the examinations and drew administrators from outside the established aristocratic clans to build a base independent of them, and patronised Buddhism heavily - the Longmen grottoes' largest carvings date from her reign - in a court that had previously ranked the imperial ancestral cult above it. It is a genuine anomaly inside an otherwise unbroken line of male emperors, and the succeeding Tang restoration treated her as one, which is why her own effect on how rigid orthodoxy is runs the opposite way from the Buddhist patronage under Northern Wei above: a woman emperor and a favoured foreign religion together read, to the literati who wrote the history, as exactly what a rigid order is supposed to prevent.",
       "values": {
         "w_religious_rigidity": -0.05,
@@ -200,6 +346,24 @@
     },
     {
       "name": "The An Lushan rebellion",
+      "causes": [
+        {
+          "quantity": "army_share_of_wanted",
+          "op": ">=",
+          "value": 0.5,
+          "why": "A war or a rebellion by soldiers needs a standing force to fight it; a state that has let its army fall below half of what its threat calls for is not the one that went to war. A reasoning bound, to be fitted against a baseline ensemble."
+        },
+        {
+          "quantity": "state_funded_share",
+          "op": "<",
+          "value": 1.0,
+          "why": "Fiscal strain is the shared root of the collapses and wars of this kind: a state whose revenue covers everything it needs has no arrears, no mutiny over pay and no pressure to seize new sources of money."
+        }
+      ],
+      "causes_not_modelled": [
+        "Concentration of frontier armies under provincial military governors: command of soldiers by individuals is not simulated.",
+        "Court faction conflict: factions and legitimacy are not simulated."
+      ],
       "note": "An Lushan, a frontier general of Sogdian and Turkic descent who had risen high in Xuanzong's favour, declared his own dynasty and took both capitals, Luoyang in 755 and Chang'an in 756, sending the court fleeing west; the emperor's own guard mutinied at Mawei and forced him to have his favourite consort Yang Guifei put to death before they would go on. The rebellion was put down by 763 only with the help of Uighur cavalry the Tang had to pay for in loot and tribute, and the census after it records something like two-thirds of the registered population of 755 simply gone from the rolls - the true death toll is disputed and was certainly inflated by flight and lost registration rather than killing alone, but by any reading this is the worst single demographic event in the file and the one the Tang never fully recovers its old reach from.",
       "output_factor": 0.55,
       "sack_chance": 0.12,
@@ -210,8 +374,76 @@
       ]
     }
   ],
-  "home_regions": [
-    "china"
+  "home_tiles": [
+    "china_01",
+    "china_02",
+    "china_03",
+    "china_04",
+    "china_05",
+    "china_06",
+    "china_07",
+    "china_08",
+    "china_09",
+    "china_10",
+    "china_11",
+    "china_12",
+    "china_13",
+    "china_14",
+    "china_15",
+    "china_16",
+    "china_17",
+    "china_18",
+    "china_19",
+    "china_20",
+    "china_21",
+    "china_22",
+    "china_23",
+    "china_24",
+    "china_25",
+    "china_26",
+    "china_27",
+    "china_28",
+    "china_29",
+    "china_30",
+    "china_31",
+    "china_32",
+    "china_33",
+    "china_34",
+    "china_35",
+    "china_36",
+    "china_37",
+    "china_38",
+    "china_39",
+    "china_40",
+    "china_41",
+    "china_42",
+    "china_43",
+    "china_44",
+    "china_45",
+    "china_46",
+    "china_47",
+    "china_48",
+    "china_49",
+    "china_50",
+    "china_51",
+    "china_52",
+    "china_53",
+    "china_54",
+    "china_55",
+    "china_56",
+    "china_57",
+    "china_58",
+    "china_59",
+    "china_60",
+    "china_61",
+    "china_62",
+    "china_63",
+    "china_64",
+    "china_65",
+    "china_66",
+    "china_67",
+    "china_68",
+    "taiwan_01"
   ],
   "id": "han_china_100ad",
   "institutions": {
@@ -240,6 +472,7 @@
     "what_this_models": "You are one household, not the Han bureaucracy. Fifty-eight million people live under this administration and roughly one in ten of them in a town at all - about 5,800,000 town dwellers - but every trade you can hire is sized to the ONE town your household actually reaches: the order of 46,000 people, not the empire. Type 'population' once you are playing to see how your own reach compares, trade by trade, to the empire's true numbers."
   },
   "population": 58000000,
+  "population_census": "han_ad2_census",
   "standing_army": 200000,
   "price_index": 0.75,
   "prerequisite_gaps": {
@@ -415,7 +648,9 @@
     "pepper_kg": "black pepper came from southern India or the tropics, regions the model has no partner for; the cultivation node is not held",
     "soap_kg": "no soft soap from tallow and ash lye here; washing used other means (ash lye, plant saponins, pods) that the recipe set does not model",
     "steel_plate_kg": "plate steel needs the later cementation and refining processes and no partner holds them; ordinary iron or bronze serves implements until a founder brings them",
-    "tool_steel_kg": "tool steel needs the later cementation process and no partner holds it; households fall back on other implement metals"
+    "tool_steel_kg": "tool steel needs the later cementation process and no partner holds it; households fall back on other implement metals",
+    "water_piped_kg": "No lead-pipe working node is held and no partner supplies one: its households draw water from wells and carry it from the river or spring, as they did before piped supply.",
+    "glass_raw_kg": "No glass working is held and no partner supplies it: its households keep their food and drink in fired clay, wood and gourds."
   },
   "year": 100,
   "local_words": {

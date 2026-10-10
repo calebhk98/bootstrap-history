@@ -11,11 +11,9 @@ import functools
 
 from sim.constants import declare
 from sim.world import balance_of_payments
-from sim.geography.api import freight_cost, sea_freight
 from sim.unit_conversions import HOURS_PER_PERSON_YEAR
 
 from .data import load_civ
-from .foreign_routes import SEA_MODE
 from sim.labour.api import people_fed_per_worker
 
 OPENING_CARRIERS_PER_ROUTE = declare(
@@ -23,17 +21,6 @@ OPENING_CARRIERS_PER_ROUTE = declare(
     unit="hull-equivalents on a route at the start", source=None, confidence="D",
     why="Merchants already ply a route when the game opens, so lift is not zero; the number is an "
         "initial condition not yet derived from the route's known traffic.")
-YARD_GROWTH_SHARE_PER_YEAR = declare(
-    "YARD_GROWTH_SHARE_PER_YEAR", 0.1, kind="temporary_heuristic",
-    unit="share of a route's lift added per year at most", source=None, confidence="D",
-    why="How fast shipwrights and breeders can add carriers; stands in for yards, timber and "
-        "crews, which are not modelled.")
-FLEET_MARGIN_ADJUSTMENT_SHARE_PER_YEAR = declare(
-    "FLEET_MARGIN_ADJUSTMENT_SHARE_PER_YEAR", 0.5, kind="temporary_heuristic",
-    unit="share of the lift gap closed per year", source=None, confidence="D",
-    why="How much of the gap between the carriage asked for and the lift on offer owners close in a "
-        "year, by building (limited by yards) or laying up and selling hulls and animals; there is no "
-        "ship market or owners' expectations model yet.")
 
 
 def _lift_years_per_tonne(inputs, working_days, days_on_leg):
@@ -54,7 +41,7 @@ class ForeignPaymentsMixin:
 
     LEDGER_FIELDS = ("goods_in_value", "goods_out_value", "home_coin_units", "partner_coin_units",
                      "lift_tonnes_per_year", "lift_used_in", "lift_used_out", "lift_unmet",
-                     "lift_year", "fleet_capital", "coin_carriage_units", "merchant_capital_used", "merchant_retained")
+                     "lift_year", "coin_carriage_units")
 
     def _foreign_ledger(self, civilization_id, create=False):
         """The partner's ledger; an empty one when nothing has been recorded and `create` is false."""
@@ -91,12 +78,10 @@ class ForeignPaymentsMixin:
         level of every good and wage in the home money, traded or not. This is the one price level the
         engine reads (wages, caches, clearing); the agent economy's `basket_price_level` is its own
         index of its own prices, kept for its households' and state's expectations."""
-        held = self.__dict__.get("_price_level_held")
-        if held is not None:
-            return held
         opening = self.__dict__.get("_opening_coin_value") or self._home_opening_coin_units()
         stock = opening + sum(ledger["home_coin_units"] for ledger in self.state.economy.foreign_ledger.values())
-        return balance_of_payments.money_stock_price_level(stock, opening)
+        return (balance_of_payments.money_stock_price_level(stock, opening)
+                / self.coin_metal_ratio(self.home_coin_metal()))
 
     def _partner_coin_opening_units(self, civilization_id):
         return _partner_opening_units(civilization_id)
@@ -104,18 +89,9 @@ class ForeignPaymentsMixin:
     def partner_price_level(self, civilization_id):
         ledger = self._foreign_ledger(civilization_id)
         opening = self._partner_coin_opening_units(civilization_id)
-        return balance_of_payments.money_stock_price_level(opening + ledger["partner_coin_units"], opening)
+        return (balance_of_payments.money_stock_price_level(opening + ledger["partner_coin_units"], opening)
+                / self.coin_metal_ratio(self.partner_coin_metal(civilization_id)))
 
-    def foreign_balance_of_payments(self, civilization_id):
-        """{goods in, goods out, net coin paid out by this society, home coin stock, price levels, the
-        fleet's yearly lift}, money in home units, cumulative."""
-        ledger = self._foreign_ledger(civilization_id)
-        return {"goods_in_value": ledger["goods_in_value"], "goods_out_value": ledger["goods_out_value"],
-                "coin_paid_out_units": -ledger["home_coin_units"],
-                "home_coin_stock_units": self.home_coin_stock_units(),
-                "home_price_level": self.home_price_level(),
-                "partner_price_level": self.partner_price_level(civilization_id),
-                "fleet_lift_tonnes_per_year": ledger["lift_tonnes_per_year"]}
 
     TRADE_YEARS_KEPT = 3
 
@@ -196,41 +172,13 @@ class ForeignPaymentsMixin:
         return (max(0.0, capacity - ledger["lift_used_in"]),
                 max(0.0, capacity - ledger["lift_used_out"]))
 
-    def _record_lift(self, civilization_id, route, flow_tonnes, unmet_tonnes, capital_tied=0.0):
+    def _record_lift(self, civilization_id, route, flow_tonnes, unmet_tonnes):
         ledger = self._foreign_ledger(civilization_id, create=True)
         year = self.state.scenario.year
         if ledger["lift_year"] != year:
             ledger["lift_year"] = year
             ledger["lift_used_in"] = ledger["lift_used_out"] = ledger["lift_unmet"] = 0.0
-            ledger["merchant_capital_used"] = 0.0
         if ledger["lift_tonnes_per_year"] <= 0.0:
             ledger["lift_tonnes_per_year"] = self.foreign_lift_capacity_tonnes(civilization_id, route)
         ledger["lift_used_in" if flow_tonnes > 0.0 else "lift_used_out"] += abs(flow_tonnes)
         ledger["lift_unmet"] += unmet_tonnes
-        ledger["merchant_capital_used"] += capital_tied
-
-    def foreign_fleet_year_end(self):
-        """Move each route's fleet toward the carriage asked of it. The freight rate pays the carrier's
-        capital at the market rate over a full working year, so a fleet earns more than its capital
-        costs when the carriage asked for (carried plus left behind) exceeds its lift, and less when
-        it sits idle. Owners close part of that gap each year (growth within what yards can build),
-        and the worn share of the fleet is retired; a route keeps at least one carrier."""
-        for civilization_id in self.foreign_economies():
-            ledger = self.state.economy.foreign_ledger.get(civilization_id)
-            if not ledger or ledger["lift_year"] != self.state.scenario.year:
-                continue
-            route = self._foreign_economy_facts(civilization_id)["route"]
-            capacity = self.foreign_lift_capacity_tonnes(civilization_id, route)
-            if route is None or capacity == float("inf"):
-                continue
-            years_per_tonne = self._route_lift_years_per_tonne(route)
-            opening = OPENING_CARRIERS_PER_ROUTE / years_per_tonne
-            asked = max(ledger["lift_used_in"], ledger["lift_used_out"]) + ledger["lift_unmet"]
-            gap = (asked - capacity) * FLEET_MARGIN_ADJUSTMENT_SHARE_PER_YEAR
-            built = min(max(gap, -capacity), max(capacity, opening) * YARD_GROWTH_SHARE_PER_YEAR)
-            life = (sea_freight.HULL_SERVICE_LIFE_YEARS if any(leg.mode == SEA_MODE for leg in route.legs)
-                    else freight_cost.ANIMAL_WORKING_LIFE_YEARS)
-            ledger["fleet_capital"] += max(0.0, built) * self._route_capital_per_lift_tonne(route)
-            ledger["lift_tonnes_per_year"] = max(1.0 / years_per_tonne,
-                                                 capacity * (1.0 - 1.0 / life) + built)
-            ledger["lift_unmet"] = 0.0

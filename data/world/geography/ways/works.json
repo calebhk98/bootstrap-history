@@ -1,0 +1,17 @@
+{"_doc": "Built works that are not a carriage mode of their own. type \"crossing\": a bridge over a river crossing (a land edge between tiles on the same river), recorded on the edge key like a road; with it land modes cross without the ford and a railway can cross at all. type \"harbour\": a port on a coastal tile with no natural harbour (the map's is_port layer), recorded on the tile id; it joins the tile to the sea edges of the bordering harbours. construction: trade (the wage that pays the work), length_m and section_m2 (the solid volume placed), material and tonnes_per_m3 (what the volume is made of), fixed_materials_tonnes (timber for centring, gates and fittings, per work), person_days_per_m3 (all-in labour: quarrying, dressing, hauling, laying, foundations in water), crew_people and work_days_per_year (how many work at once and how long a year), work_hours_per_day. improvement_node: the tech node that lets an actor build it.",
+ "entries": [
+  {"id": "bridge", "type": "crossing", "label": "Bridge over a river crossing", "improvement_node": "lnd_bridge",
+   "construction": {"trade": "labourer", "length_m": 200.0, "section_m2": 15.0, "material": "stone_kg", "tonnes_per_m3": 1.8,
+    "fixed_materials_tonnes": {"wood_kg": 400.0}, "person_days_per_m3": 20.0, "work_hours_per_day": 10.0,
+    "work_days_per_year": 250.0, "crew_people": 150.0},
+   "kind": "heuristic", "conf": "D",
+   "source": "Labelled heuristic: a river crossing of a couple of hundred metres, a masonry bridge six metres wide with piers and arch ring equal to a solid section of a few metres, timber centring; the all-in labour per cubic metre covers quarrying to foundations and is a round figure. Not fitted to a source.",
+   "why": "What bridging a river costs from the volume of masonry and timber; a stone bridge of this size took years with a crew of over a hundred."},
+  {"id": "port", "type": "harbour", "label": "Port on a coast tile", "improvement_node": "civ_harbour_dock",
+   "construction": {"trade": "labourer", "length_m": 300.0, "section_m2": 60.0, "material": "stone_kg", "tonnes_per_m3": 1.8,
+    "fixed_materials_tonnes": {"wood_kg": 200.0}, "person_days_per_m3": 8.0, "work_hours_per_day": 10.0,
+    "work_days_per_year": 250.0, "crew_people": 500.0},
+   "kind": "heuristic", "conf": "D",
+   "source": "Labelled heuristic: a mole and quay a few hundred metres long of rubble and cut stone, ten metres wide and six high, with bollards and fittings of timber; the labour per cubic metre is a round figure for rubble laid in water. Not fitted to a source.",
+   "why": "What opening a coast tile to ships costs from the volume of its mole and quay."}
+ ]}

@@ -1,0 +1,58 @@
+{
+ "id": "influenza_pandemic",
+ "name": "Pandemic influenza",
+ "tags": [
+  "respiratory",
+  "crowd"
+ ],
+ "stages": [
+  {
+   "id": "latent",
+   "infectiousness": 0.0,
+   "mean_duration_in_days": 1.9,
+   "shape": 2
+  },
+  {
+   "id": "infectious",
+   "infectiousness": 1.0,
+   "mean_duration_in_days": 4.1,
+   "shape": 2
+  }
+ ],
+ "transmissibility_per_day": 0.487805,
+ "case_fatality": 0.02,
+ "immunity": {
+  "permanent": false,
+  "duration_in_days": 3650.0
+ },
+ "reproduction_number_range": [
+  1.5,
+  2.7
+ ],
+ "sources": {
+  "reproduction_number_range": {
+   "confidence": "disputed",
+   "source": "Mills et al. 2004 (PMC7095078): 1918 median 2, interquartile 1.7 to 2.3, 2.7 over fastest growth; Biggerstaff et al. 2014: 1918 median 1.80, interquartile 1.47 to 2.27"
+  },
+  "transmissibility_per_day": {
+   "confidence": "derived",
+   "source": "Reproduction number 2.0 divided by the infectious days; not itself observed"
+  },
+  "case_fatality": {
+   "confidence": "unsourced",
+   "source": "Placeholder: the research report gives no case fatality figure for pandemic influenza; replace with a read source before this file is used in a scenario"
+  },
+  "immunity": {
+   "confidence": "unsourced",
+   "source": "Placeholder: the report says only that antigenic drift is handled by waning to susceptible; the duration is not sourced"
+  },
+  "stage.latent": {
+   "confidence": "read",
+   "source": "Mills et al. 2004 (PMC7095078): assumed mean latent period 1.9 days; shape 2 is a derived choice"
+  },
+  "stage.infectious": {
+   "confidence": "read",
+   "source": "Mills et al. 2004 (PMC7095078): assumed mean infectious period 4.1 days; shape 2 is a derived choice"
+  }
+ }
+}

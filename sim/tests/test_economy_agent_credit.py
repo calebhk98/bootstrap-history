@@ -79,6 +79,20 @@ class BorrowersAgainstFundsTests(unittest.TestCase):
         economy = lend_once([], [request()])
         self.assertGreater(economy.record.memory.rates[COIN], START_RATE)
 
+    def test_borrowers_with_a_sky_high_ceiling_and_almost_no_funds_do_not_lift_the_rate_past_the_market_ceiling(self):
+        economy = Economy(fixture.small_setup())
+        ceiling = capital_market.RATE_CEILING_SHARE * economy.setup.opening_rate
+        economy.record.memory.rates[COIN] = START_RATE
+        lender = max(economy.record.cohorts, key=lambda agent: economy.record.book.balance(agent, COIN))
+        economy.record.loan_requests = [request(amount=1000.0, maximum_rate=50.0 * ceiling)]
+        with mock.patch.object(economy_module.lending, "household_requests", return_value=[]), \
+                mock.patch.object(economy_module.lending, "merchant_requests", return_value=[]):
+            for _year in range(20):
+                economy._lend([offer(amount=1.0, minimum_rate=0.02, lender=lender)], economy.view(), {}, None)
+                economy.record.loan_requests = [request(amount=1000.0, maximum_rate=50.0 * ceiling)]
+        self.assertLessEqual(economy.record.memory.rates[COIN], ceiling + 1e-12)
+        self.assertGreater(economy.record.memory.rates[COIN], START_RATE)
+
     def test_more_funds_against_the_same_borrowing_clear_at_a_lower_rate(self):
         borrowing = [request(amount=500.0)]
         scarce_funds = [offer(amount=100.0, minimum_rate=0.03)]

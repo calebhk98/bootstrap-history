@@ -25,8 +25,8 @@
    "hectare_land": 100.92,
    "parchment_sheet": 2000
   },
-  "cap_hours": 0,
-  "up_hours": 445476.7203523874,
+  "annual_labour_hours": {"scholar": 25000, "scribe": 5000},
+  "annual_consumables": {"parchment_sheet": 2000, "wheat_kg": 60000},
   "build_yrs": 3,
   "adopt_yrs": 2,
   "risk": 0.1,
@@ -79,8 +79,8 @@
    "parchment_sheet": 20000,
    "paper_kg": 5000
   },
-  "cap_hours": 0,
-  "up_hours": 129338.45490203961,
+  "annual_labour_hours": {"scribe": 15000},
+  "annual_consumables": {"paper_kg": 1000, "parchment_sheet": 3000},
   "build_yrs": 2,
   "adopt_yrs": 2,
   "risk": 0.1,
@@ -137,8 +137,7 @@
    "iron_bar_kg": 2000,
    "paper_kg": 2000
   },
-  "cap_hours": 0,
-  "up_hours": 769558.7661973422,
+  "annual_consumables": {"coal_kg": 20000, "copper_kg": 200, "glass_raw_kg": 1000, "iron_bar_kg": 500, "paper_kg": 2000, "silver_kg": 100},
   "build_yrs": 4,
   "adopt_yrs": 3,
   "risk": 0.1,
@@ -198,8 +197,8 @@
    "hectare_land": 50.46,
    "lead_kg": 3000
   },
-  "cap_hours": 0,
-  "up_hours": 623627.0847349941,
+  "annual_labour_hours": {"artisan": 50000, "scholar": 10000, "scribe": 2500},
+  "annual_consumables": {"charcoal_kg": 60000, "wheat_kg": 100000, "wine_common_kg": 20000},
   "build_yrs": 3,
   "adopt_yrs": 2,
   "risk": 0.1,
@@ -239,6 +238,7 @@
    "civ_aqueduct_roman",
    "civ_sewer_roman"
   ],
+  "requires_running": ["civ_aqueduct_roman", "civ_sewer_roman"],
   "traits": [
    "infrastructure"
   ],
@@ -256,8 +256,8 @@
    "lead_kg": 80000,
    "timber_m3": 1000
   },
-  "cap_hours": 0,
-  "up_hours": 196961.39765206937,
+  "annual_labour_hours": {"labourer": 6000, "mason": 2000, "plumber": 2000},
+  "annual_consumables": {"charcoal_kg": 50000},
   "build_yrs": 4,
   "adopt_yrs": 2,
   "risk": 0.1,
@@ -268,7 +268,7 @@
   "gov": 0,
   "sus": 0,
   "note": "A town's water supply given as a gift: the channel, the pipes, public baths that heat it, and the sewer that takes it away. It needs crews to keep it clear every year or it silts and leaks. It lowers the loss of your people to the water-borne diseases; the next town is another unit.",
-  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"labourer\": 6000, \"mason\": 2000, \"plumber\": 2000}. Annual consumables: {\"charcoal_kg\": 50000}. Sizes of the foundation and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing.",
+  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"labourer\": 6000, \"mason\": 2000, \"plumber\": 2000}. Annual consumables: {\"charcoal_kg\": 50000}. Sizes of the foundation and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing. [GATE: A town's water gift builds on the supply channel and the sewer that take water in and out; with either shut the baths and pipes it adds are cut off.]",
   "mechanics": {
    "upkeep_full": true,
    "capability": {
@@ -297,6 +297,7 @@
    "civ_harbour_dock",
    "sea_pharos_lighthouse"
   ],
+  "requires_running": ["civ_harbour_dock"],
   "traits": [
    "infrastructure",
    "commerce"
@@ -315,8 +316,8 @@
    "timber_m3": 3000,
    "iron_bar_kg": 10000
   },
-  "cap_hours": 0,
-  "up_hours": 359849.2194998602,
+  "annual_labour_hours": {"labourer": 4000, "mason": 1500, "sailor": 3000},
+  "annual_consumables": {"charcoal_kg": 100000, "olive_oil_kg": 5000},
   "build_yrs": 5,
   "adopt_yrs": 3,
   "risk": 0.1,
@@ -327,7 +328,7 @@
   "gov": 0,
   "sus": 0,
   "note": "A breakwater, quays and a fire on a tower. Ships that can shelter and find the mouth at night arrive; those that arrive bring buyers, so it widens the market you can reach and spares some losses at sea. The fire burns charcoal and the moles need dredging for as long as the harbour is kept.",
-  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"labourer\": 4000, \"mason\": 1500, \"sailor\": 3000}. Annual consumables: {\"charcoal_kg\": 100000, \"olive_oil_kg\": 5000}. Sizes of the foundation and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing.",
+  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"labourer\": 4000, \"mason\": 1500, \"sailor\": 3000}. Annual consumables: {\"charcoal_kg\": 100000, \"olive_oil_kg\": 5000}. Sizes of the foundation and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing. [GATE: Built into a harbour that is kept up: breakwater and quay shelter it, and a drydock basin or a lighthouse serves a port that exists.]",
   "mechanics": {
    "upkeep_full": true,
    "capability": {
@@ -377,8 +378,8 @@
    "iron_bar_kg": 3000,
    "glass_raw_kg": 5000
   },
-  "cap_hours": 0,
-  "up_hours": 427835.07607502426,
+  "annual_labour_hours": {"electrician": 20000, "labourer": 8000},
+  "annual_consumables": {"coal_kg": 30000, "copper_kg": 2000},
   "build_yrs": 3,
   "adopt_yrs": 3,
   "risk": 0.1,
@@ -428,8 +429,8 @@
   "mat": {
    "timber_m3": 300
   },
-  "cap_hours": 0,
-  "up_hours": 13158569.795478808,
+  "annual_labour_hours": {"artisan": 40000, "carpenter": 3000, "labourer": 15000},
+  "annual_consumables": {"olive_oil_kg": 100000, "wheat_kg": 3000000, "wine_common_kg": 1500000},
   "build_yrs": 1,
   "adopt_yrs": 1,
   "risk": 0.1,
@@ -487,8 +488,8 @@
    "bronze_kg": 800,
    "hectare_land": 100.92
   },
-  "cap_hours": 0,
-  "up_hours": 214663.5275669549,
+  "annual_labour_hours": {"artisan": 10000, "labourer": 2000},
+  "annual_consumables": {"olive_oil_kg": 5000, "wheat_kg": 20000, "wine_common_kg": 5000},
   "build_yrs": 4,
   "adopt_yrs": 2,
   "risk": 0.1,
@@ -539,8 +540,7 @@
    "timber_m3": 100,
    "parchment_sheet": 500
   },
-  "cap_hours": 0,
-  "up_hours": 432230.36573498446,
+  "annual_consumables": {"paper_kg": 1000, "parchment_sheet": 2000, "silver_kg": 60},
   "build_yrs": 1,
   "adopt_yrs": 1,
   "risk": 0.1,
@@ -596,8 +596,8 @@
    "iron_bar_kg": 2000,
    "silver_kg": 300
   },
-  "cap_hours": 0,
-  "up_hours": 146617.18535426844,
+  "annual_labour_hours": {"merchant": 12000, "scribe": 10000},
+  "annual_consumables": {"parchment_sheet": 500},
   "build_yrs": 2,
   "adopt_yrs": 2,
   "risk": 0.1,
@@ -616,8 +616,8 @@
     "scalable": "population"
    },
    "credit_line": {
-    "per_unit": 12000.0,
-    "book_money": true,
+    "per_unit": 242000.0,
+    "labour_hours": true,
     "order": 6
    },
    "debt_rate_discount": {
@@ -648,8 +648,8 @@
    "silver_kg": 2000,
    "parchment_sheet": 500
   },
-  "cap_hours": 0,
-  "up_hours": 334767.8418072433,
+  "annual_labour_hours": {"merchant": 8000, "scribe": 8000},
+  "annual_consumables": {"parchment_sheet": 500},
   "build_yrs": 2,
   "adopt_yrs": 3,
   "risk": 0.1,
@@ -701,8 +701,8 @@
    "timber_m3": 1500,
    "wheat_kg": 4000000
   },
-  "cap_hours": 0,
-  "up_hours": 21361228.71868158,
+  "annual_labour_hours": {"labourer": 30000, "merchant": 6000, "scribe": 6000},
+  "annual_consumables": {"wheat_kg": 8000000},
   "build_yrs": 2,
   "adopt_yrs": 2,
   "risk": 0.1,
@@ -759,8 +759,8 @@
   "mat": {
    "silver_kg": 3000
   },
-  "cap_hours": 0,
-  "up_hours": 19567668.271109384,
+  "annual_labour_hours": {"merchant": 2000},
+  "annual_consumables": {"silver_kg": 3000},
   "build_yrs": 1,
   "adopt_yrs": 1,
   "risk": 0.1,
@@ -820,8 +820,8 @@
    "wheat_kg": 300000,
    "wine_common_kg": 50000
   },
-  "cap_hours": 0,
-  "up_hours": 769336.9855264267,
+  "annual_labour_hours": {"carpenter": 4000, "merchant": 3000, "sailor": 20000},
+  "annual_consumables": {"iron_bar_kg": 1000, "timber_m3": 500, "twine_kg": 3000, "wheat_kg": 200000},
   "build_yrs": 3,
   "adopt_yrs": 2,
   "risk": 0.15,
@@ -874,8 +874,8 @@
    "stone_blocks": 5000,
    "parchment_sheet": 1000
   },
-  "cap_hours": 0,
-  "up_hours": 62281.98057834831,
+  "annual_labour_hours": {"labourer": 3000, "scholar": 6000, "scribe": 4000},
+  "annual_consumables": {"charcoal_kg": 20000, "paper_kg": 500},
   "build_yrs": 3,
   "adopt_yrs": 2,
   "risk": 0.1,
@@ -929,8 +929,8 @@
    "paper_kg": 3000,
    "ink_kg": 200
   },
-  "cap_hours": 0,
-  "up_hours": 475086.8112608162,
+  "annual_labour_hours": {"artisan": 8000, "engraver": 3000, "scribe": 12000},
+  "annual_consumables": {"ink_kg": 800, "paper_kg": 8000},
   "build_yrs": 1.5,
   "adopt_yrs": 2,
   "risk": 0.15,
@@ -995,8 +995,8 @@
    "glass_raw_kg": 2000,
    "timber_m3": 300
   },
-  "cap_hours": 0,
-  "up_hours": 25981.469300938956,
+  "annual_labour_hours": {"electrician": 9000, "labourer": 3000},
+  "annual_consumables": {"copper_kg": 300, "glass_raw_kg": 800},
   "build_yrs": 2,
   "adopt_yrs": 2,
   "risk": 0.1,
@@ -1040,6 +1040,7 @@
    "civ_aqueduct_roman",
    "patron_local"
   ],
+  "requires_running": ["civ_aqueduct_roman"],
   "traits": [
    "infrastructure"
   ],
@@ -1057,8 +1058,8 @@
    "twine_kg": 3000,
    "lead_kg": 1000
   },
-  "cap_hours": 0,
-  "up_hours": 26700.294934554375,
+  "annual_labour_hours": {"carpenter": 1500, "labourer": 12000},
+  "annual_consumables": {"iron_bar_kg": 300, "twine_kg": 600},
   "build_yrs": 1,
   "adopt_yrs": 1,
   "risk": 0.1,
@@ -1069,7 +1070,7 @@
   "gov": 0,
   "sus": 0,
   "note": "Paid crews with buckets, pumps, hooks, ladders and sandbags, drilled to turn out at a bell for fire in the town or water at the wall. They hold fire and flood damage to your workshops and people to a part of what it would be, and they earn the thanks of the neighbours. A brigade in another quarter is another unit.",
-  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"carpenter\": 1500, \"labourer\": 12000}. Annual consumables: {\"iron_bar_kg\": 300, \"twine_kg\": 600}. Sizes of the work and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing. Engine readers checked: hazard_counters kinds output_factor and staff_loss in HAZARD_COUNTERS and hazard_relief; they reduce the founder household's own losses, not the nation's, and a hazard is countered by its kind, not by whether it was a fire or a flood. The shares are labelled heuristics.",
+  "_internal": "[GATE: Pumps and hydrants draw on a water supply that is built and kept in service; with the aqueduct shut there is no water to turn out with.] Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"carpenter\": 1500, \"labourer\": 12000}. Annual consumables: {\"iron_bar_kg\": 300, \"twine_kg\": 600}. Sizes of the work and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing. Engine readers checked: hazard_counters kinds output_factor and staff_loss in HAZARD_COUNTERS and hazard_relief; they reduce the founder household's own losses, not the nation's, and a hazard is countered by its kind, not by whether it was a fire or a flood. The shares are labelled heuristics.",
   "mechanics": {
    "upkeep_full": true,
    "capability": {
@@ -1122,8 +1123,8 @@
    "stone_blocks": 3000,
    "parchment_sheet": 500
   },
-  "cap_hours": 0,
-  "up_hours": 32535.504745164533,
+  "annual_labour_hours": {"mason": 5000, "scholar": 3000},
+  "annual_consumables": {"paper_kg": 200, "parchment_sheet": 500},
   "build_yrs": 2,
   "adopt_yrs": 2,
   "risk": 0.1,
@@ -1187,8 +1188,8 @@
    "iron_bar_kg": 3000,
    "paper_kg": 500
   },
-  "cap_hours": 0,
-  "up_hours": 44591.25235842318,
+  "annual_labour_hours": {"machinist": 6000, "scholar": 4000},
+  "annual_consumables": {"coal_kg": 20000, "iron_bar_kg": 1000, "paper_kg": 300},
   "build_yrs": 2,
   "adopt_yrs": 2,
   "risk": 0.1,
@@ -1253,8 +1254,8 @@
    "iron_bar_kg": 3000,
    "wheat_kg": 100000
   },
-  "cap_hours": 0,
-  "up_hours": 109762.98555878915,
+  "annual_labour_hours": {"labourer": 12000, "merchant": 8000, "scribe": 4000},
+  "annual_consumables": {"iron_bar_kg": 500, "wheat_kg": 120000},
   "build_yrs": 3,
   "adopt_yrs": 2,
   "risk": 0.2,

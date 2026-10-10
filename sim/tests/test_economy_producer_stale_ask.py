@@ -53,6 +53,11 @@ def frozen_market(stock):
 
 
 class UnsoldAskTests(unittest.TestCase):
+    def test_unsold_output_with_no_price_and_no_expectation_is_left_alone(self):
+        unpriced = View({"seed": 1.0}, {"hand": 1.0}, stock=500.0)
+        expected = producers.next_expectations(seller(expected_prices={}), FARM, unpriced)
+        self.assertNotIn("grain", expected)
+
     def test_unsold_stock_lowers_the_expected_price(self):
         expected = producers.next_expectations(seller(), FARM, frozen_market(stock=500.0))["grain"]
         self.assertLess(expected, 0.63)

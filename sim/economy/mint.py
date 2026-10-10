@@ -11,7 +11,7 @@ from typing import Dict
 
 from sim.constants import declare
 
-from . import currency
+from . import currency, mint_labour
 from .types import EDGE_EXTERNAL, EDGE_MINT, EDGE_PRODUCTION, EDGE_WEAR, Bid, GoodsMove, Offer, Transfer
 
 MINT_PRIORITY = 9          # the mint is served after every other buyer at the same price
@@ -104,8 +104,22 @@ def _loss_share(setup, spec) -> float:
     return backing.spoilage_per_year if backing is not None else 0.0
 
 
-def mint_orders(setup, record, area_map, order_book) -> Dict[str, float]:
-    """Post the mint's bids and offers; returns the metal it holds by tile, for `settle_mint`."""
+def capacity_fine_kilograms(setup, record) -> float:
+    """Fine metal the mint can strike in a year: what it bids hours for."""
+    spec = record.currency
+    return yearly_monetisation(setup, record) * spec.backing_per_unit if spec.backing_per_unit > 0.0 else 0.0
+
+
+def staff(setup, record, view, labour_bids) -> None:
+    """Before the labour market clears: the mint bids for the hours of its yearly capacity."""
+    if record.currency.backing_per_unit > 0.0:
+        mint_labour.staff(setup, record, view, labour_bids, capacity_fine_kilograms(setup, record))
+
+
+def mint_orders(setup, record, area_map, order_book, hours_hired=None) -> Dict[str, float]:
+    """Post the mint's bids and offers; returns the metal it holds by tile, for `settle_mint`.
+    `hours_hired` is what the mint's staff were hired for this year, by trade; it limits the metal struck
+    where the coin standard names a minting recipe."""
     spec = record.currency
     metal = spec.backing_good
     if not metal or spec.backing_per_unit <= 0.0 or metal not in area_map.goods():
@@ -116,7 +130,8 @@ def mint_orders(setup, record, area_map, order_book) -> Dict[str, float]:
         offer = Offer(EDGE_MINT, metal, area_map.area_of(metal, tile), tile, quantity, currency.mint_parity(spec))
         order_book.setdefault((metal, offer.area), ([], []))[1].append(offer)
     strike_price = currency.mint_price(spec)
-    coin_metal = yearly_monetisation(setup, record) * spec.backing_per_unit
+    coin_metal = min(yearly_monetisation(setup, record) * spec.backing_per_unit,
+                     mint_labour.strike_limit_fine_kilograms(setup, spec, hours_hired or {}))
     for area in area_map.areas(metal):
         capacity = coin_metal * len(area.tiles) / max(1, len(setup.tiles))
         bid = Bid(EDGE_MINT, metal, area.area_id, area.anchor_tile, 0.0, capacity, strike_price, 0.0,

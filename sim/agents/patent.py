@@ -76,6 +76,9 @@ def hand_over(source: Any, target: Any, side: Dict[str, Any]) -> None:
 		licensees = source.record.patents[node_id]["licensees"]
 		if target.actor_id not in licensees:
 			licensees.append(target.actor_id)
+		rate = side.get("royalty", {}).get(node_id)
+		if rate:
+			target.record.royalty_owed[node_id] = {"holder": source.actor_id, "rate": rate}
 
 
 def note_licence(licensor: Any, licensee: Any, node_id: str) -> None:

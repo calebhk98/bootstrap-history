@@ -20,13 +20,10 @@
    "cordage_kg": 6000.0,
    "sailcloth_kg": 2500.0
   },
-  "cap_hours": 120971.27504477595,
-  "up_hours": 30242.818761193987,
   "yrs": 2.0,
   "risk": 0.08,
   "sus": 0,
   "gov": 3,
-  "rev_hours": 161295.0333930346,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -47,7 +44,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0,
   "risk": 0,
@@ -73,7 +69,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0,
   "risk": 0,
@@ -99,7 +94,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0,
   "risk": 0,
@@ -129,7 +123,6 @@
   "mat": {
    "lead_kg": 1500
   },
-  "cap_hours": 16129.50333930346,
   "up_hours": 0,
   "yrs": 0,
   "risk": 0,
@@ -155,7 +148,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0,
   "risk": 0,
@@ -181,7 +173,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0,
   "risk": 0,
@@ -207,7 +198,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0,
   "risk": 0,
@@ -233,7 +223,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0,
   "risk": 0,
@@ -259,7 +248,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0,
   "risk": 0,
@@ -285,10 +273,8 @@
   ],
   "kb": "85_transport_civil.md",
   "ph": 0,
-  "lab": {},
+  "lab": {"mason": 600, "labourer": 800},
   "mat": {},
-  "cap_hours": 0,
-  "up_hours": 0,
   "yrs": 0,
   "risk": 0,
   "sus": 0,
@@ -297,6 +283,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
+  "_internal": "[HEURISTIC: no construction labour was authored for this work, so it is taken as the crew bill of civ_harbour_dock (a concrete mole is the same masons and labourers at a larger scale); upkeep one percent of it a year, repair of the mole and clearing of the basin; no silting or wear model yet.]",
   "note": "Harbours built in hydraulic concrete that sets underwater are already achievable wherever pozzolana or an equivalent hydraulic binder exists (Rome's Portus and Caesarea are the standing examples); breakwaters and jetties protect anchorages.",
   "traits": [
    "infrastructure"
@@ -312,7 +299,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0,
   "risk": 0,
@@ -347,7 +333,6 @@
    "timber_m3": 0.5,
    "wood_kg": 200.0
   },
-  "cap_hours": 8064.75166965173,
   "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.1,
@@ -380,8 +365,6 @@
   "mat": {
    "linen_kg": 25
   },
-  "cap_hours": 4032.375834825865,
-  "up_hours": 604.8563752238797,
   "yrs": 0.25,
   "risk": 0.12,
   "sus": 0,
@@ -409,8 +392,6 @@
    "linen_kg": 40,
    "timber_m3": 1
   },
-  "cap_hours": 10080.939587064662,
-  "up_hours": 1209.7127504477594,
   "yrs": 0.5,
   "risk": 0.15,
   "sus": 0,
@@ -441,7 +422,6 @@
    "timber_m3": 2.0,
    "wood_kg": 200.0
   },
-  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "yrs": 0.25,
   "risk": 0.08,
@@ -473,7 +453,6 @@
   "mat": {
    "linen_kg": 15
   },
-  "cap_hours": 3024.2818761193985,
   "up_hours": 0,
   "yrs": 0.2,
   "risk": 0.08,
@@ -506,7 +485,6 @@
   "mat": {
    "timber_m3": 4
   },
-  "cap_hours": 16129.50333930346,
   "up_hours": 0,
   "yrs": 1,
   "risk": 0.2,
@@ -538,8 +516,6 @@
   "mat": {
    "timber_m3": 3
   },
-  "cap_hours": 12097.127504477594,
-  "up_hours": 1612.950333930346,
   "yrs": 0.75,
   "risk": 0.18,
   "sus": 0,
@@ -565,8 +541,6 @@
   "mat": {
    "timber_m3": 2.5
   },
-  "cap_hours": 8064.75166965173,
-  "up_hours": 1209.7127504477594,
   "yrs": 0.5,
   "risk": 0.12,
   "sus": 0,
@@ -596,7 +570,6 @@
   "mat": {
    "timber_m3": 5
   },
-  "cap_hours": 24194.255008955188,
   "up_hours": 0,
   "yrs": 8.0,
   "risk": 0.22,
@@ -626,7 +599,6 @@
    "scholar": 80
   },
   "mat": {},
-  "cap_hours": 2016.1879174129324,
   "up_hours": 0,
   "yrs": 0.2,
   "risk": 0.05,
@@ -660,7 +632,6 @@
    "brass_kg": 0.2,
    "linen_kg": 0.1
   },
-  "cap_hours": 4032.375834825865,
   "up_hours": 0,
   "yrs": 0.3,
   "risk": 0.15,
@@ -692,7 +663,6 @@
   "mat": {
    "linen_kg": 0.5
   },
-  "cap_hours": 1008.0939587064662,
   "up_hours": 0,
   "yrs": 0.1,
   "risk": 0.05,
@@ -725,7 +695,6 @@
   "mat": {
    "wood_ash_kg": 0.1
   },
-  "cap_hours": 2016.1879174129324,
   "up_hours": 0,
   "yrs": 0.15,
   "risk": 0.05,
@@ -759,7 +728,6 @@
    "timber_m3": 0.2,
    "brass_kg": 0.5
   },
-  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "yrs": 0.25,
   "risk": 0.12,
@@ -794,7 +762,6 @@
    "wood_ash_kg": 0.2,
    "brass_kg": 1
   },
-  "cap_hours": 8064.75166965173,
   "up_hours": 0,
   "yrs": 0.3,
   "risk": 0.15,
@@ -829,8 +796,6 @@
    "brass_kg": 2,
    "glass_raw_kg": 0.5
   },
-  "cap_hours": 12097.127504477594,
-  "up_hours": 1008.0939587064662,
   "yrs": 0.4,
   "risk": 0.15,
   "sus": 0,
@@ -860,7 +825,6 @@
    "brass_kg": 1,
    "iron_bar_kg": 0.3
   },
-  "cap_hours": 5040.469793532331,
   "up_hours": 0,
   "yrs": 0.25,
   "risk": 0.1,
@@ -894,7 +858,6 @@
   "mat": {
    "parchment_sheet": 200
   },
-  "cap_hours": 10080.939587064662,
   "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.2,
@@ -929,7 +892,6 @@
   "mat": {
    "parchment_sheet": 150
   },
-  "cap_hours": 8064.75166965173,
   "up_hours": 0,
   "yrs": 0.4,
   "risk": 0.15,
@@ -963,7 +925,6 @@
   "mat": {
    "lead_kg": 5
   },
-  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "yrs": 0.3,
   "risk": 0.1,
@@ -988,6 +949,8 @@
    "mat_pozzolana",
    "water_power_scale"
   ],
+  "requires_running": ["civ_harbour_dock"],
+  "_internal": "[GATE: Built into a harbour that is kept up: breakwater and quay shelter it, and a drydock basin or a lighthouse serves a port that exists.]",
   "kb": "85_transport_civil.md",
   "ph": 300,
   "lab": {
@@ -999,13 +962,10 @@
    "timber_m3": 50,
    "brick_1000": 100
   },
-  "cap_hours": 100809.39587064662,
-  "up_hours": 8064.75166965173,
   "yrs": 2,
   "risk": 0.25,
   "sus": 0,
   "gov": 3,
-  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -1033,8 +993,6 @@
    "brass_kg": 2,
    "steel_noric_kg": 1
   },
-  "cap_hours": 40323.75834825865,
-  "up_hours": 2016.1879174129324,
   "yrs": 1.5,
   "risk": 0.25,
   "sus": 0,
@@ -1063,7 +1021,6 @@
   "mat": {
    "parchment_sheet": 100
   },
-  "cap_hours": 8064.75166965173,
   "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.2,
@@ -1096,8 +1053,6 @@
   "mat": {
    "copper_kg": 2000
   },
-  "cap_hours": 60485.63752238797,
-  "up_hours": 6048.563752238797,
   "yrs": 0.75,
   "risk": 0.18,
   "sus": 0,
@@ -1126,8 +1081,6 @@
    "timber_m3": 3,
    "iron_bar_kg": 150
   },
-  "cap_hours": 40323.75834825865,
-  "up_hours": 5040.469793532331,
   "yrs": 0.75,
   "risk": 0.2,
   "sus": 0,
@@ -1157,8 +1110,6 @@
    "iron_bar_kg": 80,
    "bronze_kg": 20
   },
-  "cap_hours": 50404.69793532331,
-  "up_hours": 4032.375834825865,
   "yrs": 0.75,
   "risk": 0.18,
   "sus": 0,
@@ -1193,7 +1144,6 @@
    "iron_bar_kg": 600.0,
    "iron_sheet_kg": 5000.0
   },
-  "cap_hours": 80647.5166965173,
   "up_hours": 0,
   "yrs": 1,
   "risk": 0.25,
@@ -1226,7 +1176,6 @@
   "mat": {
    "iron_sheet_kg": 1000
   },
-  "cap_hours": 30242.818761193987,
   "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.15,
@@ -1258,8 +1207,6 @@
   "mat": {
    "steel_plate_kg": 4000
   },
-  "cap_hours": 60485.63752238797,
-  "up_hours": 5040.469793532331,
   "yrs": 0.75,
   "risk": 0.2,
   "sus": 0,
@@ -1289,8 +1236,6 @@
    "steel_noric_kg": 200,
    "iron_bar_kg": 300
   },
-  "cap_hours": 100809.39587064662,
-  "up_hours": 12097.127504477594,
   "yrs": 1.5,
   "risk": 0.25,
   "sus": 0,
@@ -1322,7 +1267,6 @@
    "steel_noric_kg": 150,
    "brass_kg": 50
   },
-  "cap_hours": 90728.45628358195,
   "up_hours": 0,
   "yrs": 1.2,
   "risk": 0.22,
@@ -1358,7 +1302,6 @@
    "steel_noric_kg": 100,
    "brass_kg": 40
   },
-  "cap_hours": 70566.57710945263,
   "up_hours": 0,
   "yrs": 1,
   "risk": 0.2,
@@ -1394,8 +1337,6 @@
    "nitre_kg": 50,
    "mercury_kg": 10
   },
-  "cap_hours": 30242.818761193987,
-  "up_hours": 4032.375834825865,
   "yrs": 0.5,
   "risk": 0.3,
   "sus": 2,
@@ -1430,7 +1371,6 @@
    "brass_kg": 100.0,
    "steel_plate_kg": 2500.0
   },
-  "cap_hours": 201618.79174129324,
   "up_hours": 0,
   "yrs": 1.5,
   "risk": 0.35,
@@ -1455,6 +1395,8 @@
    "telegraph_electric",
    "mat_gutta_percha"
   ],
+  "requires_running": ["telegraph_electric"],
+  "_internal": "[GATE: Rides on the running telegraph network (lines, operators, cells); with the network shut it has nothing to carry.]",
   "kb": "",
   "ph": 200,
   "lab": {
@@ -1465,13 +1407,10 @@
    "copper_kg": 50,
    "bitumen_kg": 100
   },
-  "cap_hours": 50404.69793532331,
-  "up_hours": 6048.563752238797,
   "yrs": 1,
   "risk": 0.25,
   "sus": 0,
   "gov": 2,
-  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1497,7 +1436,6 @@
    "brass_kg": 10,
    "quartz_tube_kg": 2
   },
-  "cap_hours": 60485.63752238797,
   "up_hours": 0,
   "yrs": 2.0,
   "risk": 0.2,
@@ -1540,8 +1478,6 @@
    "timber_m3": 1.5,
    "brass_kg": 2
   },
-  "cap_hours": 10080.939587064662,
-  "up_hours": 1008.0939587064662,
   "yrs": 0.2,
   "risk": 0.1,
   "sus": 0,
@@ -1573,7 +1509,6 @@
    "brass_kg": 30.0,
    "glass_raw_kg": 50.0
   },
-  "cap_hours": 40323.75834825865,
   "up_hours": 0,
   "yrs": 2.0,
   "risk": 0.15,
@@ -1598,6 +1533,7 @@
   "pre": [
    "sea_harbours_pozzolana"
   ],
+  "requires_running": ["sea_harbours_pozzolana"],
   "kb": "85_transport_civil.md",
   "ph": 60,
   "lab": {
@@ -1608,8 +1544,6 @@
    "timber_m3": 0.5,
    "lead_kg": 50
   },
-  "cap_hours": 6048.563752238797,
-  "up_hours": 0,
   "yrs": 0.25,
   "risk": 0.1,
   "sus": 0,
@@ -1623,7 +1557,7 @@
    "commerce",
    "infrastructure"
   ],
-  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
+  "_internal": "[HEURISTIC: yearly upkeep taken as one percent of the construction labour hours (repair and keeping the works in service); no wear or failure model yet.] [GATE: A buoy is moored, tended and re-laid by a harbour's crews; with no harbour in service the markers drift and foul.] [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "sea_canal_lock",
@@ -1646,13 +1580,10 @@
    "timber_m3": 100,
    "brick_1000": 200
   },
-  "cap_hours": 161295.0333930346,
-  "up_hours": 12097.127504477594,
   "yrs": 2,
   "risk": 0.25,
   "sus": 0,
   "gov": 2,
-  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1676,8 +1607,6 @@
    "timber_m3": 20,
    "iron_bar_kg": 100
   },
-  "cap_hours": 60485.63752238797,
-  "up_hours": 8064.75166965173,
   "yrs": 0.75,
   "risk": 0.2,
   "sus": 0,
@@ -1706,13 +1635,10 @@
    "timber_m3": 1,
    "iron_bar_kg": 100
   },
-  "cap_hours": 16129.50333930346,
-  "up_hours": 2016.1879174129324,
   "yrs": 0.4,
   "risk": 0.2,
   "sus": 1,
   "gov": 0,
-  "rev_hours": 2016.1879174129324,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1739,13 +1665,10 @@
    "brass_kg": 5,
    "iron_bar_kg": 20
   },
-  "cap_hours": 30242.818761193987,
-  "up_hours": 4032.375834825865,
   "yrs": 0.5,
   "risk": 0.25,
   "sus": 1,
   "gov": 0,
-  "rev_hours": 3024.2818761193985,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1767,7 +1690,6 @@
   "mat": {
    "parchment_sheet": 500
   },
-  "cap_hours": 20161.879174129324,
   "up_hours": 0,
   "yrs": 1,
   "risk": 0.15,
@@ -1803,8 +1725,6 @@
    "steel_plate_kg": 300,
    "brass_kg": 50
   },
-  "cap_hours": 50404.69793532331,
-  "up_hours": 6048.563752238797,
   "yrs": 0.75,
   "risk": 0.2,
   "sus": 0,
@@ -1834,7 +1754,6 @@
    "steel_plate_kg": 50,
    "brass_kg": 10
   },
-  "cap_hours": 24194.255008955188,
   "up_hours": 0,
   "yrs": 2.0,
   "risk": 0.18,
@@ -1866,7 +1785,6 @@
    "scholar": 500
   },
   "mat": {},
-  "cap_hours": 10080.939587064662,
   "up_hours": 0,
   "yrs": 2.0,
   "risk": 0.1,

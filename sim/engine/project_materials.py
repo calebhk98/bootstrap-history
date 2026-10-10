@@ -8,20 +8,12 @@ project pay that money at the start so the tonnes arrive in stock.
 import collections
 
 from . import purchase_rule
-from sim.unit_conversions import KILOGRAMS_PER_TONNE
+from .material_units import tonnes_per_unit
 
 # Integration points across a purchase, so a large order is priced along the
 # whole price curve instead of at its first tonne.
 _PRICE_SLICES = 24
-_GRAMS_PER_TONNE = 1.0e6
 
-
-def tonnes_per_unit(material):
-    """Tonnes in one unit of a material key: the tree's gram keys are grams,
-    every other key is counted in thousands of units to the tonne."""
-    if material.endswith("_g") and not material.endswith("_kg"):
-        return 1.0 / _GRAMS_PER_TONNE
-    return 1.0 / KILOGRAMS_PER_TONNE
 
 
 class ProjectMaterialsMixin:
@@ -207,7 +199,7 @@ class ProjectMaterialsMixin:
             if tonnes <= 0 or not row["priced"]:
                 continue
             money = row["cost_of_deliverable"] * factor
-            market.settle_purchase(market.founder, self._material_tag(row["material"])[0], tonnes, money,
+            market.settle_purchase(market.acting,self._material_tag(row["material"])[0], tonnes, money,
                                    "materials bought for projects")
             paid += money
         return paid

@@ -7,7 +7,7 @@ temperature it needs pays the cheapest technique that reaches that temperature i
 prices from the finished solve so a node's revenue values the energy it buys, and the
 energy it sells, the way the solver charged the goods it makes.
 """
-from typing import Any, Callable, Dict, Mapping, Optional, Tuple
+from typing import Any, Callable, Dict, Iterable, Mapping, Optional, Tuple
 
 from sim.engine import solve_prices
 from sim.engine.solve_prices_core import CAPABILITY_CAP_FIELDS, capability_required_grades, recipe_cost_and_allocation
@@ -15,8 +15,8 @@ from sim.engine.identity_cache import IdentityCache
 
 ENERGY_CARRIERS = ("thermal_mj", "mechanical_mj", "electrical_mj")
 
-# {key: (production table, bands, own-cost function)}; `is` confirms a hit
-_CACHE: Dict[Tuple[Any, ...], Tuple[Any, Dict[Tuple[str, float], float], Callable]] = {}
+# {key: (production table, bands, own-cost function, unreachable grades)}; `is` confirms a hit
+_CACHE: Dict[Tuple[Any, ...], Tuple[Any, ...]] = {}
 
 
 class EnergyPrices:
@@ -28,10 +28,20 @@ class EnergyPrices:
     dearer incumbent's price on unlimited volume. It goes when demand for energy is modelled."""
 
     def __init__(self, pool: Mapping[str, float], bands: Mapping[Tuple[str, float], float],
-                 own_cost: Optional[Callable[[Mapping[str, Any]], Mapping[str, float]]] = None):
+                 own_cost: Optional[Callable[[Mapping[str, Any]], Mapping[str, float]]] = None,
+                 unreachable: Iterable[Tuple[str, float]] = ()):
         self.pool = dict(pool)
         self.bands = dict(bands)
         self.own_cost = own_cost
+        self.unreachable = frozenset(unreachable)
+
+    def can_run(self, entry: Mapping[str, Any]) -> bool:
+        """False when the entry states a grade of a carrier that no technique the society holds supplies:
+        a price needs a seller, and heat cannot be imported, so the line cannot run."""
+        for carrier, (_reached_field, needed_field, _floor) in CAPABILITY_CAP_FIELDS.items():
+            if entry.get(carrier) and (carrier, entry.get(needed_field)) in self.unreachable:
+                return False
+        return True
 
     def bought(self, carrier: str, entry: Mapping[str, Any]) -> float:
         """The price the entry pays: the band of its own stated requirement, else the pool price."""
@@ -67,6 +77,26 @@ def pool_only(goods: Mapping[str, float]) -> EnergyPrices:
     return EnergyPrices({carrier: goods[carrier] for carrier in ENERGY_CARRIERS if carrier in goods}, {})
 
 
+def grade_bands(entries: Mapping[str, Any], available: Mapping[str, Any], prices_in_labour_hours: Mapping[str, float],
+                wage_by_trade: Mapping[str, float], money_per_hour: float, interest_rate: float):
+    """(money per megajoule of each stated grade, the same in labour hours with its technique, the grades
+    nothing in `available` supplies). A grade no held technique reaches has no band: it is unavailable,
+    not priced at a technique the society does not hold."""
+    bands: Dict[Tuple[str, float], float] = {}
+    hour_bands: Dict[str, Dict[float, Tuple[float, str]]] = {}
+    unreachable = set()
+    for carrier, required_values in capability_required_grades(entries).items():
+        for required in required_values:
+            found = solve_prices.capability_price_for_requirement(
+                carrier, required, available, prices_in_labour_hours, wage_by_trade, interest_rate=interest_rate)
+            if found is None:
+                unreachable.add((carrier, required))
+                continue
+            bands[(carrier, required)] = found[0] * money_per_hour
+            hour_bands.setdefault(carrier, {})[required] = found
+    return bands, hour_bands, frozenset(unreachable)
+
+
 def graded(held_technology_ids, prices_json: Dict[str, Any], goods: Mapping[str, float],
            civilization_id: Optional[str] = None, interest_rate: Optional[float] = None,
            civilization: Optional[Mapping[str, Any]] = None) -> EnergyPrices:
@@ -82,29 +112,13 @@ def graded(held_technology_ids, prices_json: Dict[str, Any], goods: Mapping[str,
     cached = _CACHE.get(key)
     pool = {carrier: goods[carrier] for carrier in ENERGY_CARRIERS if carrier in goods}
     if cached is not None and cached[0] is entries:
-        return EnergyPrices(pool, cached[1], cached[2])
-    mature = price_solver.solved_prices(price_solver.all_gate_nodes(entries), prices_json,
-                                        civilization_id=civilization_id, interest_rate=interest_rate,
-                                        civilization=civilization)
+        return EnergyPrices(pool, cached[1], cached[2], cached[3])
     wage_by_trade = price_solver.solver_wage_ratios(entries, ratios)
     money_per_hour = prices_json["money_per_labour_hour"]
     hour_prices = {material: price / money_per_hour for material, price in goods.items()}
-    tables = []
-    for table in (solved, mature):
-        available, _unreached, _unclassified = solve_prices.techniques_available_to(entries, table.gate_nodes_held)
-        tables.append((table, available))
-    bands: Dict[Tuple[str, float], float] = {}
-    hour_bands: Dict[str, Dict[float, Tuple[float, str]]] = {}
-    for carrier, required_values in capability_required_grades(entries).items():
-        for required in required_values:
-            for table, available in tables:
-                found = solve_prices.capability_price_for_requirement(
-                    carrier, required, available, table.prices_in_labour_hours, wage_by_trade,
-                    interest_rate=table.interest_rate)
-                if found is not None:
-                    bands[(carrier, required)] = found[0] * money_per_hour
-                    hour_bands.setdefault(carrier, {})[required] = found
-                    break
+    available, _unreached, _unclassified = solve_prices.techniques_available_to(entries, solved.gate_nodes_held)
+    bands, hour_bands, unreachable = grade_bands(entries, available, solved.prices_in_labour_hours, wage_by_trade,
+                                                 money_per_hour, solved.interest_rate)
     # Keyed by address; the entry itself is kept and confirmed with `is`, so a recycled address cannot match.
     own = IdentityCache()
 
@@ -120,5 +134,5 @@ def graded(held_technology_ids, prices_json: Dict[str, Any], goods: Mapping[str,
         own.put(entry, cost)
         return cost
 
-    _CACHE[key] = (entries, bands, own_cost)
-    return EnergyPrices(pool, bands, own_cost)
+    _CACHE[key] = (entries, bands, own_cost, unreachable)
+    return EnergyPrices(pool, bands, own_cost, unreachable)

@@ -55,7 +55,7 @@ being `data/production/40_organics.json`'s own wheat_kg baseline - see
 REFERENCE_WHEAT_YIELD_KG_PER_HECTARE below), generated from climate classes
 by `tools/generate_geography_tiles.py`; a region's figures are sums over
 its tiles. Nothing here is tuned so a computed price matches
-`data/prices.json`'s book figure for `hectare_land`.
+a book figure for `hectare_land`.
 
 THE SAME UNIT `sim/world/agriculture.py` ALREADY USES, ON PURPOSE.
 `sim/world/agriculture.py`'s own `Land(hectares, quality=...)` already

@@ -78,7 +78,15 @@ class VenturesMixin:
     VENTURE_HANDS_PER_REVENUE = money_units.PricedInLabourHours("VENTURE_HANDS_PER_REVENUE_LABOUR_HOURS")
 
     def venture_hands(self, node_id):
-        """(scholars, craftsmen) of your own that running this ties up."""
+        """(scholars, craftsmen) of your own that running this ties up. Once the staff hold a year's
+        running of the technique, the concern runs without its founder: the scholars drop out."""
+        scholars, craftsmen = self.venture_hands_founder_staffed(node_id)
+        if scholars > 0.0 and self.concern_runs_without_founder(node_id):
+            return 0.0, craftsmen
+        return scholars, craftsmen
+
+    def venture_hands_founder_staffed(self, node_id):
+        """(scholars, craftsmen) a concern of this kind needs while its founder still runs it."""
         node = self.nodes[node_id]
         # Capability institutions (school, workshop) and net-loss concerns
         # don't tie up supervision staff (avoids circular dependency).
@@ -128,6 +136,8 @@ class VenturesMixin:
             trade, fte = self.venture_foreman(node_id)
             if trade:
                 used[trade] += fte * self.institution_units(node_id)
+            for garrison_trade, people in self.venture_garrison(node_id, self.institution_units(node_id)).items():
+                used[garrison_trade] += people
         return dict(used)
 
     def venture_foreman_free(self, trade, excluding=None):
@@ -232,6 +242,9 @@ class VenturesMixin:
             if node_id in self.SCALABLE_INSTITUTIONS and units and float(units) > 0:
                 return self._expand_institution(node_id, float(units), pay)
             return False, "you are already running that"
+        gate_refusal = self.running_gate_refusal(node_id)
+        if gate_refusal:
+            return False, gate_refusal
         scalable = node_id in self.SCALABLE_INSTITUTIONS
         fee, unit_count = self.opening_fee(node_id, units)
         refusal = self.staffing_open_refusal(node_id, unit_count)

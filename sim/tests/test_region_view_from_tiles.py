@@ -9,9 +9,11 @@ import json
 import os
 import unittest
 
+from sim.geography import api
 from sim.geography.api import load_geography
 
-from sim.world import deposits, land, mineral_shares
+from sim.geography.api import mineral_shares
+from sim.world import deposits, land
 from sim.geography import regions, tile_lookup
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -66,14 +68,14 @@ class RegionRecordsHoldNoLandNumbersTests(unittest.TestCase):
 
 class RegionViewTests(unittest.TestCase):
 
-    def test_view_adds_mineral_shares_to_every_label(self):
+    def test_view_is_the_label_plus_the_anchor_derived_from_its_tiles(self):
         geography = _geography()
         view = regions.region_records(geography)
         self.assertEqual(set(view), set(_real_regions(geography)))
-        shares = mineral_shares.regional_mineral_shares(geography)
         for region_id, record in view.items():
-            self.assertEqual(record["minerals"], shares[region_id])
+            self.assertNotIn("minerals", record)
             self.assertEqual(record["name"], geography["regions"][region_id]["name"])
+            self.assertEqual((record["lat"], record["lon"]), regions.region_anchor(geography, region_id))
 
     def test_region_of_tile_inverts_region_to_tiles(self):
         geography = _geography()
@@ -125,17 +127,16 @@ class DepositsArePlacedByPositionTests(unittest.TestCase):
                     (renamed[new_tile]["lat"], renamed[new_tile]["lon"]),
                     (original[old_tile]["lat"], original[old_tile]["lon"]), entry["name"])
 
-    def test_regional_totals_use_the_position_resolved_tile(self):
+    def test_shares_by_tile_use_the_position_resolved_tile(self):
         geography = _geography()
-        data = deposits.load_deposit_data()
+        rows = [dict(row) for row in api.deposit_records()]
         tiles = geography["land_tiles"]["tiles"]
         other_tile = next(tile_id for tile_id in tiles if tiles[tile_id]["country_majority"] == "China")
-        moved = copy.deepcopy(data)
-        moved["deposits"]["iron"][0]["lat"] = tiles[other_tile]["lat"]
-        moved["deposits"]["iron"][0]["lon"] = tiles[other_tile]["lon"]
-        base = mineral_shares.regional_mineral_shares(geography, data)
-        shifted = mineral_shares.regional_mineral_shares(geography, moved)
-        self.assertNotEqual(base, shifted)
+        moved = [dict(row) for row in rows]
+        first_iron = next(row for row in moved if row["resource"] == "iron" and "share_of_empire_output" in row)
+        first_iron["lat"], first_iron["lon"] = tiles[other_tile]["lat"], tiles[other_tile]["lon"]
+        self.assertNotEqual(mineral_shares.deposit_shares_by_tile(geography, rows),
+                            mineral_shares.deposit_shares_by_tile(geography, moved))
 
 
 if __name__ == "__main__":

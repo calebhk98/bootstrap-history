@@ -10,8 +10,9 @@ LAND_SAMPLING = ("Pixel centres falling on the tile's land (cell clipped to Natu
                  "weighted by cos(latitude); slivers with no pixel centre widen the land by up to a few pixels.")
 SHELF_RULE = ("Zone = the tile's cell plus everything within one cell side (distance in EPSG:6933) of the tile's "
               "land; the ocean part of the zone (Natural Earth bathymetry L_0) minus the part deeper than 200 m "
-              "(bathymetry K_200). Tiles whose cell has no sea of their own get 0. Zones of neighbouring tiles "
-              "overlap, so values are not additive.")
+              "(bathymetry_K_200) is shelf. The union of all zones' shelf is partitioned: each shelf point goes to "
+              "the tile whose land is nearest (Voronoi cells of points spaced along each tile's simplified "
+              "coast), so values add up to the physical shelf. Tiles whose cell has no sea of their own get 0.")
 
 LAYERS = {
     "mean_temperature_c": Layer(
@@ -63,7 +64,7 @@ LAYERS = {
         "Raster averaged to about 5 arc-minutes, then: " + LAND_SAMPLING + " Coverage ends at 60S and 84N.", "C", 3),
     "shelf_area_km2": Layer(
         True, "km2",
-        "Sea area shallower than 200 m near the tile.",
+        "Sea area shallower than 200 m nearer to this tile's land than to any other tile's.",
         SHELF_RULE, "C", 0),
     "ocean_productivity_gc_m2_yr": Layer(
         True, "gC/m2/yr",

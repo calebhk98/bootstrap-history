@@ -73,6 +73,7 @@ class YearInputs:
     routes: Dict[AreaId, List[Route]] = dataclasses.field(default_factory=dict)
     schools: Sequence[School] = ()
     enterable_trades: Optional[frozenset] = None        # None: every trade in `trades`
+    ask_floor_per_worker_year: Dict[AreaId, float] = dataclasses.field(default_factory=dict)  # the wage a worker needs to keep his household alive and working, less its own plot: the lowest an ask falls to
     value_of_life_years_of_income: float = 0.0          # prices a trade's fatality risk into its ask
 
 
@@ -87,6 +88,7 @@ class MarketState:
     trainees: Dict[AreaId, Dict[TradeId, List[list]]] = dataclasses.field(default_factory=dict)
     wages: Dict[AreaId, Dict[TradeId, float]] = dataclasses.field(default_factory=dict)
     hired_hours: Dict[AreaId, Dict[TradeId, Dict[str, float]]] = dataclasses.field(default_factory=dict)
+    asks: Dict[AreaId, Dict[TradeId, float]] = dataclasses.field(default_factory=dict)   # ask over the reservation wage (asks.py)
 
 
 @dataclasses.dataclass

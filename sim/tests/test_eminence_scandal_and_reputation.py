@@ -118,7 +118,7 @@ check("...and the page prints both, next to the eminence line that already did",
 
 # The "visibly rich" line is an amount of labour, so it follows the coin: the
 # same capital in labour hours is the same wealth term whatever the money is.
-from sim.constants import book_money_names as _book_money_names
+from sim.constants import REGISTRY as _REGISTRY
 _wealth_sims = {}
 for _civ_name in ("rome_100ad", "han_china_100ad"):
     _w = sim(civ=_civ_name)
@@ -142,6 +142,5 @@ check("the two civilisations' coins differ, so the test means something",
 check("the wealth term of the prominence hazard is the same at the same capital in labour hours",
       abs(_rome_fixed - _han_fixed) <= 1e-9 * max(_rome_fixed, _han_fixed, 1e-12)
       and _rome_fixed > 0.0, (_rome_fixed, _han_fixed))
-check("the visibly-rich threshold is no longer a book-denarii figure",
-      "EMINENCE_WEALTH_VISIBLE_THRESHOLD" not in _book_money_names(),
-      sorted(_book_money_names()))
+check("the visibly-rich threshold is declared in labour hours",
+      "labour hour" in _REGISTRY["EMINENCE_WEALTH_VISIBLE_THRESHOLD_LABOUR_HOURS"]["unit"])

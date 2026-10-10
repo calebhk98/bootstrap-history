@@ -72,11 +72,10 @@ def star_tiles(centre, leaves, radius_km, centre_latitude=40.0, centre_longitude
 
 
 def civ_tile_ids(geography, civ_name):
-    """TEST SCAFFOLDING: the civ's tiles through its home regions' tile lists."""
+    """The tiles the civ holds."""
     with open(os.path.join(ROOT, "data", "civilizations", civ_name + ".json"), encoding="utf-8") as handle:
         civ = json.load(handle)
-    mapping = geography["land_tiles"]["region_to_tiles"]
-    return sorted({tile for region in civ["home_regions"] for tile in mapping.get(region, [])})
+    return geography_api.tiles_held(civ)
 
 
 class GridTests(unittest.TestCase):

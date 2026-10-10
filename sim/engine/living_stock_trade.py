@@ -6,7 +6,7 @@ terms and the route's freight (`partner_quote_per_tonne`), unless its own policy
 (`GoodsMarket.settle_import`); the quote a player reads is built by the function the charge uses.
 """
 from .data import load_civ
-from .project_materials import tonnes_per_unit
+from .material_units import tonnes_per_unit
 
 
 class LivingStockTradeMixin:
@@ -58,7 +58,7 @@ class LivingStockTradeMixin:
     def settle_stock_purchase(self, quote):
         """Pay a quote through the goods market and receive the stock; False when the buyer cannot
         pay. The partner is paid in its own coin's metal, as every foreign payment is."""
-        buyer = self.goods_market.founder
+        buyer = self.goods_market.acting
         if not buyer.can_pay(quote["cost"]):
             return False
         self.goods_market.settle_import(

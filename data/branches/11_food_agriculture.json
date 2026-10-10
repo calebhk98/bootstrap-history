@@ -13,7 +13,6 @@
    "scribe": 80
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.05,
@@ -52,7 +51,6 @@
   "mat": {
    "parchment_sheet": 50
   },
-  "cap_hours": 2016.1879174129324,
   "up_hours": 0,
   "yrs": 5.0,
   "risk": 0.2,
@@ -81,8 +79,6 @@
    "artisan": 200
   },
   "mat": {},
-  "cap_hours": 1008.0939587064662,
-  "up_hours": 201.61879174129325,
   "yrs": 2.0,
   "risk": 0.15,
   "sus": 0,
@@ -107,7 +103,6 @@
    "scholar": 100
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.1,
@@ -139,7 +134,6 @@
   "mat": {
    "lime_kg": 2000
   },
-  "cap_hours": 1008.0939587064662,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.1,
@@ -172,7 +166,6 @@
   "mat": {
    "manure_kg": 5000
   },
-  "cap_hours": 1612.950333930346,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.05,
@@ -201,7 +194,6 @@
    "labourer": 150
   },
   "mat": {},
-  "cap_hours": 2016.1879174129324,
   "up_hours": 0,
   "yrs": 2.0,
   "risk": 0.2,
@@ -230,7 +222,6 @@
    "labourer": 200
   },
   "mat": {},
-  "cap_hours": 1008.0939587064662,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.15,
@@ -260,7 +251,6 @@
    "labourer": 100
   },
   "mat": {},
-  "cap_hours": 1008.0939587064662,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.1,
@@ -290,7 +280,6 @@
   "mat": {
    "timber_m3": 5
   },
-  "cap_hours": 4032.375834825865,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.2,
@@ -324,7 +313,6 @@
    "timber_m3": 8,
    "salt_kg": 50
   },
-  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.25,
@@ -358,7 +346,6 @@
    "timber_m3": 15,
    "brick_1000": 2
   },
-  "cap_hours": 8064.75166965173,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.1,
@@ -389,7 +376,6 @@
    "timber_m3": 3,
    "iron_bar_kg": 30
   },
-  "cap_hours": 8064.75166965173,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.15,
@@ -432,7 +418,6 @@
    "iron_bar_kg": 60.0,
    "timber_m3": 2.0
   },
-  "cap_hours": 9072.845628358196,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.1,
@@ -467,8 +452,6 @@
    "timber_m3": 1,
    "iron_bar_kg": 8
   },
-  "cap_hours": 3024.2818761193985,
-  "up_hours": 604.8563752238797,
   "yrs": 1.0,
   "risk": 0.1,
   "sus": 0,
@@ -497,13 +480,10 @@
    "timber_m3": 10,
    "iron_bar_kg": 50
   },
-  "cap_hours": 12097.127504477594,
-  "up_hours": 3024.2818761193985,
   "yrs": 1.0,
   "risk": 0.2,
   "sus": 0,
   "gov": 2,
-  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -528,13 +508,10 @@
    "timber_m3": 5,
    "iron_bar_kg": 25
   },
-  "cap_hours": 7056.657710945264,
-  "up_hours": 1612.950333930346,
   "yrs": 1.0,
   "risk": 0.15,
   "sus": 0,
   "gov": 1,
-  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -563,7 +540,6 @@
    "timber_m3": 8,
    "iron_bar_kg": 60
   },
-  "cap_hours": 16129.50333930346,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.2,
@@ -607,8 +583,6 @@
    "steel_noric_kg": 100,
    "iron_bar_kg": 150
   },
-  "cap_hours": 40323.75834825865,
-  "up_hours": 8064.75166965173,
   "yrs": 1.0,
   "risk": 0.3,
   "sus": 0,
@@ -633,7 +607,6 @@
    "labourer": 200
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.1,
@@ -669,7 +642,6 @@
    "sulfuric_acid_kg": 500,
    "lead_kg": 50
   },
-  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.2,
@@ -714,7 +686,6 @@
    "hydrogen_m3": 5000,
    "iron_ore_kg": 500
   },
-  "cap_hours": 201618.79174129324,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.3,
@@ -755,13 +726,10 @@
    "steel_noric_kg": 50.0,
    "timber_m3": 15.0
   },
-  "cap_hours": 20161.879174129324,
-  "up_hours": 4032.375834825865,
   "yrs": 1.0,
   "risk": 0.15,
   "sus": 0,
   "gov": 1,
-  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -793,13 +761,10 @@
    "artisan": 100
   },
   "mat": {},
-  "cap_hours": 4032.375834825865,
-  "up_hours": 1008.0939587064662,
   "yrs": 1.0,
   "risk": 0.1,
   "sus": 0,
   "gov": 0,
-  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -826,7 +791,6 @@
   "mat": {
    "glass_raw_kg": 50
   },
-  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.2,
@@ -853,13 +817,10 @@
    "artisan": 200
   },
   "mat": {},
-  "cap_hours": 2016.1879174129324,
-  "up_hours": 1008.0939587064662,
   "yrs": 1.0,
   "risk": 0.15,
   "sus": 0,
   "gov": 1,
-  "rev_hours": 1748.0349243970124,
   "sch": 0,
   "art": 1,
   "conf": "A",
@@ -882,13 +843,10 @@
   "mat": {
    "copper_kg": 30
   },
-  "cap_hours": 5040.469793532331,
-  "up_hours": 1612.950333930346,
   "yrs": 1.0,
   "risk": 0.2,
   "sus": 1,
   "gov": 1,
-  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 1,
   "conf": "A",
@@ -910,13 +868,10 @@
   "mat": {
    "wood_ash_kg": 50
   },
-  "cap_hours": 2016.1879174129324,
-  "up_hours": 604.8563752238797,
   "yrs": 0.5,
   "risk": 0.1,
   "sus": 0,
   "gov": 0,
-  "rev_hours": 2016.1879174129324,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -936,7 +891,6 @@
    "labourer": 300
   },
   "mat": {},
-  "cap_hours": 4032.375834825865,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.2,
@@ -965,13 +919,10 @@
    "labourer": 200
   },
   "mat": {},
-  "cap_hours": 2016.1879174129324,
-  "up_hours": 1612.950333930346,
   "yrs": 1.0,
   "risk": 0.15,
   "sus": 0,
   "gov": 0,
-  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -999,13 +950,10 @@
    "sulfuric_acid_kg": 200,
    "lime_kg": 100
   },
-  "cap_hours": 10080.939587064662,
-  "up_hours": 4032.375834825865,
   "yrs": 1.0,
   "risk": 0.2,
   "sus": 0,
   "gov": 1,
-  "rev_hours": 8064.75166965173,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1038,7 +986,6 @@
    "merchant": 100
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.1,
@@ -1067,7 +1014,6 @@
    "merchant": 100
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.1,
@@ -1092,7 +1038,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0,
   "risk": 1.0,
@@ -1113,7 +1058,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0,
   "risk": 1.0,
@@ -1134,7 +1078,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "yrs": 0,
   "risk": 1.0,
@@ -1164,13 +1107,10 @@
   "mat": {
    "glass_raw_kg": 500
   },
-  "cap_hours": 8064.75166965173,
-  "up_hours": 2016.1879174129324,
   "yrs": 1.0,
   "risk": 0.25,
   "sus": 0,
   "gov": 2,
-  "rev_hours": 6048.563752238797,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1209,13 +1149,10 @@
    "iron_sheet_kg": 200,
    "tin_kg": 50
   },
-  "cap_hours": 12097.127504477594,
-  "up_hours": 3024.2818761193985,
   "yrs": 1.0,
   "risk": 0.2,
   "sus": 0,
   "gov": 2,
-  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -1242,13 +1179,10 @@
   "mat": {
    "steel_noric_kg": 5
   },
-  "cap_hours": 1008.0939587064662,
-  "up_hours": 201.61879174129325,
   "yrs": 1.0,
   "risk": 0.05,
   "sus": 0,
   "gov": 0,
-  "rev_hours": 1008.0939587064662,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -1274,13 +1208,10 @@
   "mat": {
    "copper_kg": 30
   },
-  "cap_hours": 6048.563752238797,
-  "up_hours": 1612.950333930346,
   "yrs": 1.0,
   "risk": 0.15,
   "sus": 0,
   "gov": 1,
-  "rev_hours": 3024.2818761193985,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1300,13 +1231,10 @@
    "artisan": 100
   },
   "mat": {},
-  "cap_hours": 2016.1879174129324,
-  "up_hours": 604.8563752238797,
   "yrs": 1.0,
   "risk": 0.1,
   "sus": 0,
   "gov": 0,
-  "rev_hours": 2016.1879174129324,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1333,8 +1261,6 @@
    "timber_m3": 20,
    "brick_1000": 3
   },
-  "cap_hours": 12097.127504477594,
-  "up_hours": 1008.0939587064662,
   "yrs": 1.0,
   "risk": 0.1,
   "sus": 0,
@@ -1364,7 +1290,6 @@
   "mat": {
    "timber_m3": 5
   },
-  "cap_hours": 4032.375834825865,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.15,
@@ -1391,13 +1316,10 @@
    "labourer": 200
   },
   "mat": {},
-  "cap_hours": 6048.563752238797,
-  "up_hours": 2016.1879174129324,
   "yrs": 1.0,
   "risk": 0.25,
   "sus": 0,
   "gov": 0,
-  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1430,13 +1352,10 @@
    "mercury_kg": 30,
    "iron_bar_kg": 100
   },
-  "cap_hours": 30242.818761193987,
-  "up_hours": 6048.563752238797,
   "yrs": 1.0,
   "risk": 0.3,
   "sus": 0,
   "gov": 1,
-  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -1451,6 +1370,9 @@
    "fud_mechanical_refrigeration",
    "railway"
   ],
+  "requires_running": ["railway"],
+  "requires_ways": {"rail": 75},
+  "_internal": "[GATE: Operates over the railway works, and only while they are open. Needs track the actor has built: a line joining at least two held tiles is the least that can carry a service, and the figure is that single line measured the way geography counts a rail build.]",
   "kb": "75_agriculture_food.md",
   "ph": 200,
   "lab": {
@@ -1461,13 +1383,10 @@
    "steel_plate_kg": 500,
    "copper_kg": 100
   },
-  "cap_hours": 60485.63752238797,
-  "up_hours": 10080.939587064662,
   "yrs": 1.0,
   "risk": 0.2,
   "sus": 0,
   "gov": 2,
-  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -1492,13 +1411,10 @@
    "artisan": 100
   },
   "mat": {},
-  "cap_hours": 4032.375834825865,
-  "up_hours": 2016.1879174129324,
   "yrs": 1.0,
   "risk": 0.1,
   "sus": 0,
   "gov": 1,
-  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1525,13 +1441,10 @@
   "mat": {
    "copper_kg": 20
   },
-  "cap_hours": 6048.563752238797,
-  "up_hours": 2016.1879174129324,
   "yrs": 1.0,
   "risk": 0.15,
   "sus": 0,
   "gov": 0,
-  "rev_hours": 3024.2818761193985,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1556,13 +1469,10 @@
    "salt_kg": 500,
    "firewood_kg": 1000
   },
-  "cap_hours": 6048.563752238797,
-  "up_hours": 2016.1879174129324,
   "yrs": 1.0,
   "risk": 0.1,
   "sus": 0,
   "gov": 1,
-  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1588,13 +1498,10 @@
    "artisan": 200
   },
   "mat": {},
-  "cap_hours": 40323.75834825865,
-  "up_hours": 10080.939587064662,
   "yrs": 1.0,
   "risk": 0.3,
   "sus": 0,
   "gov": 1,
-  "rev_hours": 24194.255008955188,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -1617,13 +1524,10 @@
   "mat": {
    "timber_m3": 3
   },
-  "cap_hours": 4032.375834825865,
-  "up_hours": 1008.0939587064662,
   "yrs": 1.0,
   "risk": 0.1,
   "sus": 0,
   "gov": 0,
-  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "A",
@@ -1646,13 +1550,10 @@
   "mat": {
    "hydrogen_m3": 100
   },
-  "cap_hours": 8064.75166965173,
-  "up_hours": 3024.2818761193985,
   "yrs": 1.0,
   "risk": 0.2,
   "sus": 0,
   "gov": 0,
-  "rev_hours": 6048.563752238797,
   "sch": 1,
   "art": 0,
   "conf": "C",
@@ -1675,7 +1576,6 @@
    "scribe": 100
   },
   "mat": {},
-  "cap_hours": 10080.939587064662,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.3,
@@ -1705,7 +1605,6 @@
    "scribe": 200
   },
   "mat": {},
-  "cap_hours": 20161.879174129324,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.2,
@@ -1734,7 +1633,6 @@
   "mat": {
    "parchment_sheet": 200
   },
-  "cap_hours": 4032.375834825865,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.1,
@@ -1765,7 +1663,6 @@
    "chemist": 150
   },
   "mat": {},
-  "cap_hours": 4032.375834825865,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.15,
@@ -1791,13 +1688,10 @@
    "artisan": 150
   },
   "mat": {},
-  "cap_hours": 4032.375834825865,
-  "up_hours": 1612.950333930346,
   "yrs": 1.0,
   "risk": 0.15,
   "sus": 0,
   "gov": 0,
-  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "A",
@@ -1823,8 +1717,6 @@
    "brick_1000": 10,
    "timber_m3": 10
   },
-  "cap_hours": 20161.879174129324,
-  "up_hours": 2016.1879174129324,
   "yrs": 2.0,
   "risk": 0.1,
   "sus": 0,
@@ -1855,7 +1747,6 @@
    "labourer": 300
   },
   "mat": {},
-  "cap_hours": 10080.939587064662,
   "up_hours": 0,
   "yrs": 5.0,
   "risk": 0.2,
@@ -1885,7 +1776,6 @@
    "labourer": 250
   },
   "mat": {},
-  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "yrs": 4.0,
   "risk": 0.15,
@@ -1914,13 +1804,10 @@
    "artisan": 200
   },
   "mat": {},
-  "cap_hours": 4032.375834825865,
-  "up_hours": 1612.950333930346,
   "yrs": 1.0,
   "risk": 0.1,
   "sus": 0,
   "gov": 0,
-  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1940,13 +1827,10 @@
    "artisan": 150
   },
   "mat": {},
-  "cap_hours": 4032.375834825865,
-  "up_hours": 2016.1879174129324,
   "yrs": 1.0,
   "risk": 0.15,
   "sus": 0,
   "gov": 0,
-  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1968,13 +1852,10 @@
   "mat": {
    "wheat_kg": 50
   },
-  "cap_hours": 2016.1879174129324,
-  "up_hours": 604.8563752238797,
   "yrs": 1.0,
   "risk": 0.1,
   "sus": 0,
   "gov": 0,
-  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -1995,7 +1876,6 @@
    "labourer": 400
   },
   "mat": {},
-  "cap_hours": 4032.375834825865,
   "up_hours": 0,
   "yrs": 3.0,
   "risk": 0.2,

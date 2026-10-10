@@ -14,10 +14,12 @@ a passed (or overridden) legality test leads to.
 These are methods of Sim; they are a mixin only so that they can live in a
 file of their own. Behaviour is unchanged and verified byte-identical.
 """
-from . import purchase_rule
+from . import money_units, purchase_rule
 from .blockers import blocker_kind
 from .interest_groups import check_group_prohibition
 from .living_stock import check_unheld_stock
+from .projects_running_gates import check_running_gates
+from .material_availability import check_materials_have_a_seller
 from .data import win_condition_describe
 from sim.constants import declare
 from .projects_precaution import (spec as precaution_spec, extra_cost as precaution_extra_cost,
@@ -81,17 +83,17 @@ class StartingMixin:
             "as a serious sum is relative to this share of revenue, not a "
             "flat denarii figure, so a rich household is not bought off "
             "as cheaply as a poor one. Tuned scale, not measured.")
-    BRIBE_DENARII_PER_SCANDAL_POINT = declare(
-        "BRIBE_DENARII_PER_SCANDAL_POINT", 300.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii per point of household.scandal, at bribability=1",
-        source=None, confidence="D",
-        why="Genuinely a money amount: a bribe is handed over as coin and the sum is negotiated between the parties, not fixed by the labour of any good. "
-            "What it costs to erase one point of scandal outright. Scandal "
-            "itself has no independent source model for who spreads it or "
-            "how fast (the same gap STANDING_SCANDAL_PENALTY_PER_POINT in "
-            "economy.py notes), so this conversion rate is a placeholder "
-            "for that whole missing mechanism, not a measured price of "
-            "silence.")
+    BRIBE_LABOUR_HOURS_PER_SCANDAL_POINT = declare(
+        "BRIBE_LABOUR_HOURS_PER_SCANDAL_POINT", 6050.0, kind="temporary_heuristic",
+        unit="labour hours per point of household.scandal, at bribability=1", source=None, confidence="D",
+        why='What it costs to erase one point of scandal outright. Scandal itself '
+            'has no independent source model for who spreads it or how fast (the '
+            'same gap STANDING_SCANDAL_PENALTY_PER_POINT in economy.py notes), so '
+            'this conversion rate is a placeholder for that whole missing '
+            'mechanism, not a measured price of silence. An official accepts a '
+            'payment worth the work and risk he gives up, so the sum is the hours '
+            'of unskilled labour it buys.')
+    BRIBE_PER_SCANDAL_POINT = money_units.PricedInLabourHours("BRIBE_LABOUR_HOURS_PER_SCANDAL_POINT")
 
     def bribe(self, amount):
         """Pay your way out of trouble, deliberately, for a stated sum."""
@@ -143,7 +145,7 @@ class StartingMixin:
         # nothing for no additional benefit. What a man cannot be paid to
         # do more of, he cannot be paid more for.
         bribability = max(1e-9, self.value_weights["bribability"])
-        for_scandal = household.scandal * self.BRIBE_DENARII_PER_SCANDAL_POINT / bribability
+        for_scandal = household.scandal * self.BRIBE_PER_SCANDAL_POINT / bribability
         income = max(1.0, self.revenue())
         # spent/(income*BRIBE_INCOME_SHARE) * bribability = BRIBE_PROTECTION_CAP, solved for the carried total
         for_protection = max(0.0, (self.BRIBE_PROTECTION_CAP * income * self.BRIBE_INCOME_SHARE) / bribability
@@ -154,7 +156,7 @@ class StartingMixin:
             refused, amount = amount - useful, useful
         self.pay_edge(edges.EDGE_OFFICIALS, amount, "bribes")
         household.bribes_ytd = self.BRIBE_MEMORY_DECAY * household.bribes_ytd + amount
-        household.scandal = max(0.0, household.scandal - amount / self.BRIBE_DENARII_PER_SCANDAL_POINT * bribability)
+        household.scandal = max(0.0, household.scandal - amount / self.BRIBE_PER_SCANDAL_POINT * bribability)
         self.update_protection()
         # BOTH THINGS IT BUYS: a bribe against zero scandal still feeds
         # bribes_ytd into protection, which keeps an accusation from being
@@ -315,15 +317,17 @@ class StartingMixin:
             "int-to-float SAVE_FIELDS drift CLAUDE.md warns about "
             "elsewhere, for no benefit here. Tuned grace period, not "
             "measured.")
-    ARREARS_CHEAP_PROJECT_FLOOR = declare(
-        "ARREARS_CHEAP_PROJECT_FLOOR", 600.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii", source=None, confidence="D",
-        why="Genuinely a money amount: it is a nominal debt threshold, and a debt is a promise of a fixed sum of the coin it was contracted in, whatever that coin later buys. "
-            "Even deep in persistent arrears, a project costing less than "
-            "this is always 'cheap enough to need nobody's permission' - a "
-            "flat floor under ARREARS_CHEAP_PROJECT_SURPLUS_MULTIPLE's own "
-            "surplus-based figure so a household with zero surplus is not "
-            "locked out of every project whatever. Tuned, not measured.")
+    ARREARS_CHEAP_PROJECT_FLOOR_LABOUR_HOURS = declare(
+        "ARREARS_CHEAP_PROJECT_FLOOR_LABOUR_HOURS", 12100.0, kind="temporary_heuristic",
+        unit="labour hours", source=None, confidence="D",
+        why='Even deep in persistent arrears, a project costing less than this is '
+            "always 'cheap enough to need nobody's permission' - a flat floor under"
+            " ARREARS_CHEAP_PROJECT_SURPLUS_MULTIPLE's own surplus-based figure so "
+            'a household with zero surplus is not locked out of every project '
+            'whatever. Tuned, not measured. How deep a debt a household can carry '
+            'is the labour it would take to clear, so the floor is hours of work, '
+            'the same burden whatever the coin is worth.')
+    ARREARS_CHEAP_PROJECT_FLOOR = money_units.PricedInLabourHours("ARREARS_CHEAP_PROJECT_FLOOR_LABOUR_HOURS")
     ARREARS_CHEAP_PROJECT_SURPLUS_MULTIPLE = declare(
         "ARREARS_CHEAP_PROJECT_SURPLUS_MULTIPLE", 2.0, kind="temporary_heuristic",
         unit="years of true surplus", source=None, confidence="D",
@@ -335,15 +339,17 @@ class StartingMixin:
             "(see this method's own comment on the 11,637-revenue "
             "household this was measured against gross for). Tuned "
             "multiple, not derived.")
-    ARREARS_HARD_STOP_FLOOR = declare(
-        "ARREARS_HARD_STOP_FLOOR", 4000.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii", source=None, confidence="D",
-        why="Genuinely a money amount: it is a nominal debt threshold, and a debt is a promise of a fixed sum of the coin it was contracted in, whatever that coin later buys. "
-            "However cheap a project looks, new work stops outright once "
-            "the household is this far underwater - a flat floor under "
-            "ARREARS_HARD_STOP_REVENUE_MULTIPLE's revenue-based figure so "
-            "a household with negligible revenue is not exempted from the "
-            "hard stop entirely. Tuned, not measured.")
+    ARREARS_HARD_STOP_FLOOR_LABOUR_HOURS = declare(
+        "ARREARS_HARD_STOP_FLOOR_LABOUR_HOURS", 80600.0, kind="temporary_heuristic",
+        unit="labour hours", source=None, confidence="D",
+        why='However cheap a project looks, new work stops outright once the '
+            'household is this far underwater - a flat floor under '
+            "ARREARS_HARD_STOP_REVENUE_MULTIPLE's revenue-based figure so a "
+            'household with negligible revenue is not exempted from the hard stop '
+            'entirely. Tuned, not measured. How deep a debt a household can carry '
+            'is the labour it would take to clear, so the floor is hours of work, '
+            'the same burden whatever the coin is worth.')
+    ARREARS_HARD_STOP_FLOOR = money_units.PricedInLabourHours("ARREARS_HARD_STOP_FLOOR_LABOUR_HOURS")
     ARREARS_HARD_STOP_REVENUE_MULTIPLE = declare(
         "ARREARS_HARD_STOP_REVENUE_MULTIPLE", 2.0, kind="temporary_heuristic",
         unit="years of revenue", source=None, confidence="D",
@@ -845,8 +851,10 @@ class StartingMixin:
         _check_unobtainable,
         _check_foreign_only,
         _check_missing_prereqs,
+        check_running_gates,
         check_unheld_stock,
         _check_substitution,
+        check_materials_have_a_seller,
         _check_credit_frozen,
         _check_arrears,
         _check_people_exist,

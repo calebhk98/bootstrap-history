@@ -1,6 +1,5 @@
 """Complaints 330/331/345/376: a firm is founded by a member of a stratum that holds savings, with a
-fixed entry cost that rises with the operators crowding its market and a copy chance that depends on
-the founder's literacy; a firm that earns less than its plant would lend for leaves and its purse
+copy chance that depends on the founder's literacy; a firm that earns less than its plant would lend for leaves and its purse
 returns to its founder. Money between the founder and the firm is conserved."""
 
 QUICK_TOPIC = True
@@ -22,6 +21,9 @@ class EntryWorld(FakeWorld):
 
 	def plant_cost(self, node_id, actor, step):
 		return 1000.0 * step
+
+	def ramp(self, opened_year, node_id=None):
+		return min(1.0, (self.year - opened_year + 1) / 5.0)
 
 
 def make_world():
@@ -49,13 +51,11 @@ firm = registry.actors[founded[0]] if founded else None
 check("a stratum with savings founds a firm", firm is not None, founded)
 if firm is not None:
 	stratum = registry.actors["stratum:home:merchants"]
-	paid = firm.record.income.get("founding stake", 0.0)
-	check("the firm is funded from the stratum's purse", paid > 0.0 and stratum.money == 1.0e6 - paid, (paid, stratum.money))
-	check("the firm names its founder", firm.record.plan.get("founder") == stratum.actor_id, firm.record.plan)
-	premium = firm.record.outlays.get("edge:entry premium", 0.0)
-	check("money is conserved but for the entry premium that leaves the modelled actors",
-		abs(total_money(registry.actors.values()) - (before - premium)) < 1e-6,
-		(before, total_money(registry.actors.values()), premium))
+	paid = sum(registry.actors[firm_id].record.income.get("founding stake", 0.0) for firm_id in founded)
+	check("the firms are funded from the stratum's purse", paid > 0.0 and abs(stratum.money - (1.0e6 - paid)) < 1e-6, (paid, stratum.money))
+	check("the firm names its founder", firm.record.plan.get("backer") == stratum.actor_id, firm.record.plan)
+	check("founding conserves money", abs(total_money(registry.actors.values()) - before) < 1e-6,
+		(before, total_money(registry.actors.values())))
 
 # ---- no savings, no founder
 registry = make_registry(savings=0.0)
@@ -64,16 +64,12 @@ check("strata with no savings found no firm", registry.consider_entry(make_world
 # ---- no strata: the pooled capital rule stands, booked as an edge
 registry = make_registry()
 founded = registry.consider_entry(make_world())
-check("a world without strata falls back to the pooled capital", len(founded) == 1, founded)
+check("a world without strata falls back to the pooled capital", len(founded) >= 1, founded)
 if founded:
 	check("pooled capital is booked as an edge", registry.actors[founded[0]].record.income.get("edge:pooled capital", 0.0) > 0.0,
 		registry.actors[founded[0]].record.income)
 
-# ---- crowding raises what entry costs and bars entry in a crowded market
-check("a crowded market costs an entrant more to enter",
-	firm_entry.entry_premium(1000.0, 20) > firm_entry.entry_premium(1000.0, 2) > firm_entry.entry_premium(1000.0, 0) == 0.0)
-
-
+# ---- a crowded market bars entry
 def entrants_into(existing):
 	registry = make_registry(savings=1.0e9)
 	for number in range(existing):
@@ -81,7 +77,7 @@ def entrants_into(existing):
 	return len(registry.consider_entry(make_world()))
 
 
-check("an empty market draws an entrant and a crowded one does not", entrants_into(0) == 1 and entrants_into(300) == 0,
+check("an empty market draws an entrant and a crowded one does not", entrants_into(0) >= 1 and entrants_into(300) == 0,
 	(entrants_into(0), entrants_into(300)))
 
 # ---- literacy: an unlettered founder copies less surely
@@ -97,7 +93,7 @@ world.rate = 0.05
 registry = make_registry(savings=0.0)
 founder = registry.actors["stratum:home:merchants"]
 weak = registry.add("firm:9", ActorRecord(kind="firm", money=500.0, founded_year=0, concerns={"shop"},
-	opened_year={"shop": 0}, last_margin=10.0, plan={"founder": founder.actor_id}))
+	opened_year={"shop": 0}, last_margin=10.0, plan={"backer": founder.actor_id}))
 before = total_money(registry.actors.values())
 check("a thin margin on a costly plant counts as weak", firm_exit.earns_less_than_plant_would_lend_for(weak, world))
 weak.record.last_margin = 1.0e6

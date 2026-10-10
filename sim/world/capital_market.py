@@ -7,8 +7,6 @@ own arrears, less a discount for its own standing.
 """
 from sim.constants import declare
 
-FOUNDER_LOAN = "founder"  # the founder's id among the market's borrowers
-
 RATE_ELASTICITY = declare(
     "RATE_ELASTICITY", 0.5, kind="temporary_heuristic",
     unit="proportional change of the rate per proportional change of the balance", source=None,
@@ -41,15 +39,6 @@ def utilisation(demand: float, supply: float) -> float:
     """Funds demanded per unit of funds held."""
     return demand / supply if supply > 0.0 else float("inf")
 
-
-def rate_for_balance(starting_rate: float, current_utilisation: float, reference_utilisation: float) -> float:
-    """The market rate: the starting rate scaled by how the balance has moved from its starting value."""
-    if reference_utilisation <= 0.0 or current_utilisation <= 0.0:
-        return starting_rate * RATE_FLOOR_SHARE
-    if current_utilisation == float("inf"):
-        return starting_rate * RATE_CEILING_SHARE
-    scaled = (current_utilisation / reference_utilisation) ** RATE_ELASTICITY
-    return starting_rate * max(RATE_FLOOR_SHARE, min(RATE_CEILING_SHARE, scaled))
 
 
 def bounded_rate(starting_rate: float, rate: float) -> float:

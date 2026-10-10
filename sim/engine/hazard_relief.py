@@ -38,7 +38,7 @@ class HazardReliefMixin:
         entries = []
         for node, share, label in self.HAZARD_COUNTERS.get(kind, ()):
             adopted_nationally = 0.0
-            lapsed_node = node
+            lapsed_node, short_of, closed = node, None, False
             if node == "_own_gold":
                 strength = 1.0 if self.mine_capacity.get("gold", 0.0) > 0.0005 else 0.0
             elif node == "_own_silver":
@@ -49,15 +49,19 @@ class HazardReliefMixin:
                     needed_strength = 1.0 if needed in assume_running else self._counter_strength(needed)
                     if needed_strength < strength:
                         strength, lapsed_node = needed_strength, needed
+                closed = 0.0 < strength < 1.0
+                if strength > 0.0:
+                    supply, short_of = self.counter_supply_gap(node, kind, label)
+                    strength = min(strength, supply)
                 if beyond_national and strength > 0.0:
                     adopted_nationally = self.civ_diffusion(node)
-            closed = 0.0 < strength < 1.0
             strength *= 1.0 - adopted_nationally
-            if strength > 0.0:
+            if strength > 0.0 or short_of:
                 entries.append({
                     "node": None if node.startswith("_") else node, "label": label,
                     "factor": 1.0 - share * strength,
                     "lapsed_node": lapsed_node if closed else None,
+                    "short_of": short_of,
                     "partly_adopted_nationally": adopted_nationally > 0.0})
         if kind == "output_factor":
             war_relief, reason = self._military_war_relief()
@@ -76,6 +80,8 @@ class HazardReliefMixin:
 
     def _entry_words(self, entry):
         label = entry["label"]
+        if entry.get("short_of"):
+            label = "%s (lapsed: %s)" % (label, entry["short_of"])
         if entry.get("lapsed_node"):
             label = "%s (lapsed: %s is closed %s)" % (
                 label, self.nodes[entry["lapsed_node"]]["name"],
@@ -116,7 +122,7 @@ class HazardReliefMixin:
                     others *= other["factor"]
             removes = others - total
             row = {"node": entry["node"], "label": self._entry_words(entry),
-                   "status": "lapsed" if entry.get("lapsed_node") else "in force",
+                   "status": "lapsed" if entry.get("lapsed_node") or entry.get("short_of") else "in force",
                    "removes_share": round(removes, 4),
                    "points": round(removes * base, 4) if base is not None else None}
             if entry.get("lapsed_node"):

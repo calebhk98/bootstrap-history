@@ -2,23 +2,27 @@
 import copy
 import json
 import os
+import re
 from typing import Any, Dict, Iterable, List
 
+from sim.game_version import GAME_VERSION, parse_version, satisfies
 from sim.json_files import json_files
 
 from .node_defaults import fill_defaults
-from .mods_base import (ModError, ModManifest, check_not_removed, claim_fields, claim_removal,
+from .mods_base import (MANIFEST_KEYS, ModError, ModManifest, check_not_removed, claim_fields, claim_removal,
                         deep_merge, removed_by)
 from .mods_ids import check_declared_dependencies, check_mod_id, check_new_id
 from .mods_goals import apply_goal_entries
 from .mods_remove import (RECIPE, TECH, check_recipe_references, check_tree_references)
 
 
+_DEPENDENCY = re.compile(r"([a-z0-9_]+)\s*((?:>=|<=|==|>|<|=).*)?")
+
+
 def _manifest(path: str) -> ModManifest:
     with open(path, encoding="utf-8") as source:
         raw = json.load(source)
-    required = ("id", "name", "version", "dependencies", "conflicts")
-    missing = [name for name in required if name not in raw]
+    missing = [name for name in MANIFEST_KEYS if name not in raw]
     if missing:
         raise ModError("%s is missing manifest fields: %s" % (path, ", ".join(missing)))
     mod_id = raw["id"]
@@ -26,9 +30,44 @@ def _manifest(path: str) -> ModManifest:
     for key in ("dependencies", "conflicts"):
         if not isinstance(raw[key], list) or not all(isinstance(item, str) for item in raw[key]):
             raise ModError("%s field %s must be a list of mod ids" % (path, key))
-    return ModManifest(mod_id, str(raw["name"]), str(raw["version"]),
-                       list(raw["dependencies"]), list(raw["conflicts"]),
-                       os.path.dirname(path))
+    minimum = str(raw.get("min_game_version", ""))
+    if minimum:
+        try:
+            wanted = parse_version(minimum)
+        except ValueError as error:
+            raise ModError("%s min_game_version: %s" % (path, error))
+        if wanted > parse_version(GAME_VERSION):
+            raise ModError("mod %s needs game version %s or newer but this game is %s" %
+                           (mod_id, minimum, GAME_VERSION))
+    names, ranges = [], {}
+    for entry in raw["dependencies"]:
+        match = _DEPENDENCY.fullmatch(entry.strip())
+        if not match:
+            raise ModError("%s dependency %r must be a mod id, optionally followed by a version "
+                           "range such as >=1.2,<2" % (path, entry))
+        names.append(match.group(1))
+        if match.group(2):
+            ranges[match.group(1)] = match.group(2).strip()
+    code = raw.get("code", [])
+    if not isinstance(code, list) or not all(isinstance(item, str) for item in code):
+        raise ModError("%s field code must be a list of file names" % path)
+    if code and "code" not in (raw.get("permissions") or []):
+        raise ModError("%s lists code files but does not declare \"permissions\": [\"code\"]" % path)
+    return ModManifest(mod_id, str(raw["name"]), str(raw["version"]), names, list(raw["conflicts"]),
+                       os.path.dirname(path), minimum, ranges, list(code))
+
+
+def _check_dependency_versions(manifests: Dict[str, ModManifest]) -> None:
+    for manifest in manifests.values():
+        for dependency, version_range in sorted(manifest.dependency_ranges.items()):
+            installed = manifests[dependency].version
+            try:
+                met = satisfies(installed, version_range)
+            except ValueError as error:
+                raise ModError("mod %s requires %s %s but %s" % (manifest.id, dependency, version_range, error))
+            if not met:
+                raise ModError("mod %s requires %s %s but version %s is installed" %
+                               (manifest.id, dependency, version_range, installed))
 
 
 def get_ordered_mods(mods_dir: str) -> List[ModManifest]:
@@ -54,6 +93,7 @@ def get_ordered_mods(mods_dir: str) -> List[ModManifest]:
             raise ModError("mod %s conflicts with installed mods: %s" %
                            (manifest.id, ", ".join(conflicts)))
 
+    _check_dependency_versions(manifests)
     check_declared_dependencies(manifests.values())
 
     ordered: List[ModManifest] = []

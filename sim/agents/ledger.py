@@ -5,9 +5,25 @@ income and outlays by purpose, so its purse always equals its opening money
 plus income less outlays. `transfer` is the one way a payer's loss becomes a
 payee's gain, so money between actors is neither created nor destroyed.
 """
-from typing import Any, Mapping, Union
+import contextlib
+from typing import Any, Callable, Iterator, List, Mapping, Optional, Union
 
 Purpose = Union[str, Mapping[str, float]]
+
+# Called after each transfer as hook(payer, payee, amount, purpose) while an engine listens (`listening`), so it can
+# charge what moving the coin cost. It is switched off while it runs, so its own postings are not charged again.
+AFTER_TRANSFER: List[Optional[Callable[[Any, Any, float, Purpose], None]]] = [None]
+
+
+@contextlib.contextmanager
+def listening(hook: Callable[[Any, Any, float, Purpose], None]) -> Iterator[None]:
+	"""Let `hook` see every transfer made inside the block."""
+	before = AFTER_TRANSFER[0]
+	AFTER_TRANSFER[0] = hook
+	try:
+		yield
+	finally:
+		AFTER_TRANSFER[0] = before
 
 
 def transfer(payer: Any, payee: Any, amount: float, purpose: Purpose) -> None:
@@ -19,8 +35,27 @@ def transfer(payer: Any, payee: Any, amount: float, purpose: Purpose) -> None:
 	"""
 	if amount == 0:
 		return
-	payer.debit(amount, purpose)
-	payee.credit(amount, purpose)
+	purses = getattr(payer, "purses", None)
+	if purses is not None and getattr(payee, "purses", None) is purses:
+		# both keep accounts in the one book: a single posting, the payer drawing on its facility if short
+		purses.transfer(payer.account_id, payee.account_id, amount, purposes_label(purpose))
+		payer.note_outlay(purpose, amount)
+		payee.note_income(purpose, amount)
+	else:
+		payer.debit(amount, purpose)
+		payee.credit(amount, purpose)
+	hook = AFTER_TRANSFER[0]
+	if hook is not None:
+		AFTER_TRANSFER[0] = None
+		try:
+			hook(payer, payee, amount, purpose)
+		finally:
+			AFTER_TRANSFER[0] = hook
+
+
+def purposes_label(purpose: Purpose) -> str:
+	"""A posting's purpose as the book's one label."""
+	return purpose if isinstance(purpose, str) else "+".join(sorted(purpose))
 
 
 def settle(account: Any, other: Any, new_balance: float, purpose: Purpose) -> None:

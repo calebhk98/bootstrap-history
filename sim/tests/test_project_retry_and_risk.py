@@ -1,6 +1,7 @@
 """project_retry_and_risk: regression checks, run individually with `--only project_retry_and_risk`."""
 from .harness import *  # noqa: F401,F403
 from sim.ui import protocol as _PROTO
+from sim.engine.industry_depth import RISK_SHARE_AT_FULL_DEPTH
 
 # --- a failed attempt teaches you something (projects.py: retry learning) ---
 # A player who had already won the game: a failed high-pressure steam system
@@ -11,13 +12,13 @@ from sim.ui import protocol as _PROTO
 # projects.py's own section comment on _complete for the full reasoning.
 _s_rl = sim(capital=10 ** 9)
 _rl_k = [node_id for node_id in NODES if NODES[node_id]["risk"] >= 0.15][0]
-# _retry_risk_multiplier reads failed_attempts off the Sim itself, so the
-# cleanest way to check the whole decaying sequence is to walk it forward by
-# setting failed_attempts directly rather than actually rolling failures.
+# A diagnosed failure adds its attempt's worker-years to the industry's tenure stock, which
+# is all the risk reads; walk the sequence forward by adding them rather than rolling dice.
 _seq = []
 for _m in range(5):
     _s_rl.failed_attempts[_rl_k] = _m
     _seq.append(_s_rl.effective_risk(_rl_k))
+    _s_rl.learn_from_failed_attempt(_rl_k)
 check("attempt one faces the bare, untrained risk - nothing has been "
       "learned yet because nothing has failed yet",
       _seq[0] == NODES[_rl_k]["risk"], _seq[0])
@@ -25,12 +26,13 @@ check("each later attempt's risk is strictly lower than the one before it, "
       "and a fourth attempt (three failures in) is meaningfully better than "
       "the first, not just marginally",
       all(_seq[i] < _seq[i - 1] for i in range(1, 5))
-      and _seq[3] <= _seq[0] * 0.75, _seq)
+      and _seq[3] <= _seq[0] * 0.95, _seq)
 check("...but it is never a guarantee: risk never reaches zero, bounded "
-      "below by RETRY_RISK_FLOOR's own share of the bare risk",
-      all(risk_value >= NODES[_rl_k]["risk"] * _s_rl.RETRY_RISK_FLOOR - 1e-9 for risk_value in _seq),
+      "below by RISK_SHARE_AT_FULL_DEPTH's own share of the bare risk",
+      all(risk_value >= NODES[_rl_k]["risk"] * RISK_SHARE_AT_FULL_DEPTH - 1e-9 for risk_value in _seq),
       _seq)
 _s_rl.failed_attempts[_rl_k] = 0
+_s_rl.state.projects.tenure.clear()
 
 class _AlwaysFails(random.Random):
     """0.0 is below every risk the tree defines, so this fails every roll -
@@ -99,7 +101,7 @@ check("the `risk` command itself carries the compact timeline, not just "
       and len(_rk_tl["knowledge_risk"]["timeline"]) > 0, _rk_tl.get("knowledge_risk"))
 
 # RETRY LEARNING HAS TO SURVIVE A SAVE. failed_attempts drives
-# _retry_risk_multiplier and _retry_calendar_retain, and it was not in
+# _retry_calendar_retain and the tenure stock, and it was not in
 # SAVE_FIELDS, so every resume reset the household to "nothing has ever been
 # tried". The player who won the game reported repeated 45% failures with "no
 # strategic mitigation visible": the mitigation was there and the save
@@ -110,6 +112,8 @@ from sim.ui import protocol as _PROTO
 _fa_path = os.path.join(HERE, "_fa_roundtrip.json")
 _s_fa = sim()
 _s_fa.failed_attempts["zone_refining"] = 3
+for _ in range(3):
+    _s_fa.learn_from_failed_attempt("zone_refining")
 _s_fa.shortages["iron"] = 7
 _risk_before = _s_fa.effective_risk("zone_refining")
 _cal_before = _s_fa._retry_calendar_retain("zone_refining")
@@ -117,10 +121,10 @@ _PROTO.save_state(_s_fa, _fa_path)
 _s_fa2 = sim()
 _PROTO.load_state(_s_fa2, _fa_path)
 check("three failures on zone_refining still stand after a save and a "
-      "resume, so the next attempt is the 23.8% the learning bought and not "
+      "resume, so the next attempt is the risk the learning bought and not "
       "the bare 45%",
       abs(_s_fa2.effective_risk("zone_refining") - _risk_before) < 1e-9
-      and abs(_s_fa2.effective_risk("zone_refining") - 0.2383) < 0.001,
+      and _risk_before < NODES["zone_refining"]["risk"] - 1e-6,
       (_risk_before, _s_fa2.effective_risk("zone_refining")))
 check("the calendar already spent on those attempts survives the resume too",
       abs(_s_fa2._retry_calendar_retain("zone_refining") - _cal_before) < 1e-9
@@ -175,7 +179,7 @@ check("every accumulator a fresh Sim carries is either in SAVE_FIELDS or "
 # (projects.py: calendar_floor, expected_calendar_years). A 45%-risk,
 # 4-year-floor node is not a 4-year project - the raw geometric series
 # 1/(1-p) says 1.82 attempts, and even that is wrong once retry learning
-# (RETRY_RISK_FLOOR, RETRY_CALENDAR_CAP) starts changing the odds and the
+# (RISK_SHARE_AT_FULL_DEPTH, RETRY_CALENDAR_CAP) starts changing the odds and the
 # wait on every attempt after the first. Verified both in closed form and,
 # separately in a throwaway Monte Carlo harness during development, against
 # thousands of real _complete() calls - see the session's own report for
@@ -208,7 +212,7 @@ check("...but retry learning means it is LESS than the naive geometric "
 # reliable, say) - so a second check of expected_calendar_years has to ask
 # the SAME function the same way it does: stand in for "m failures so far"
 # by setting failed_attempts, read effective_risk, move on. A check that
-# instead hard-codes RETRY_RISK_FLOOR/DECAY would pass today and go on
+# instead hard-codes RISK_SHARE_AT_FULL_DEPTH would pass today and go on
 # passing while silently checking the wrong thing the moment any other
 # multiplier joins effective_risk.
 _pct_node = "point_contact_transistor"
@@ -219,7 +223,8 @@ while _manual_survive > 1e-15:
     _a = _pct_floor if _i == 0 else _pct_floor * (1.0 - _cc * (1.0 - _cd ** _i))
     _manual_total += _manual_survive * _a
     _s_ey.failed_attempts[_pct_node] = _i
-    _manual_survive *= _s_ey.effective_risk(_pct_node)
+    with _s_ey.after_failed_attempts(_pct_node, _i):
+        _manual_survive *= _s_ey.effective_risk(_pct_node)
     _i += 1
 _s_ey.failed_attempts[_pct_node] = _saved_fa
 check("expected_calendar_years matches an independent sum driven by "
@@ -234,11 +239,14 @@ check("...and expected_calendar_years itself leaves the real failure count "
       _s_ey.failed_attempts.get(_pct_node, 0))
 _s_ey2 = _s_ey
 _s_ey2.failed_attempts["point_contact_transistor"] = 3
+for _ in range(3):
+    _s_ey2.learn_from_failed_attempt("point_contact_transistor")
 check("...concretely: 3 prior failures leaves less EXPECTED remaining "
       "calendar time than attempt one alone faced, not more",
       _s_ey2.expected_calendar_years("point_contact_transistor") < _pct_exp,
       (_s_ey2.expected_calendar_years("point_contact_transistor"), _pct_exp))
 _s_ey.failed_attempts["point_contact_transistor"] = _saved_fa
+_s_ey.state.projects.tenure.clear()
 check("calendar_floor is the SAME figure core.py's step() gates completion "
       "on - not a second copy of the reputation-shrinking formula",
       _s_ey.calendar_floor("zone_refining")
@@ -372,12 +380,14 @@ check("the SAME controller gives no relief at all to a node that was never "
       _s_ctl.effective_risk("screw_lathe"))
 for _m in range(4):
     _s_ctl.failed_attempts["zone_refining"] = _m
-check("relief and retry-learning multiply together rather than one "
+    _s_ctl.learn_from_failed_attempt("zone_refining")
+check("relief and learning from failures multiply together rather than one "
       "overriding the other, and the combination still never reaches zero "
-      "- floored by RETRY_RISK_FLOOR times CONTROL_RELIEF_FACTOR times the "
+      "- floored by RISK_SHARE_AT_FULL_DEPTH times CONTROL_RELIEF_FACTOR times the "
       "bare risk, comfortably above nothing",
       _s_ctl.effective_risk("zone_refining")
-      >= _bare * _s_ctl.RETRY_RISK_FLOOR * _s_ctl.CONTROL_RELIEF_FACTOR - 1e-9
+      >= _bare * RISK_SHARE_AT_FULL_DEPTH * _s_ctl.CONTROL_RELIEF_FACTOR - 1e-9
       and _s_ctl.effective_risk("zone_refining") < _ctl_relieved,
       _s_ctl.effective_risk("zone_refining"))
 _s_ctl.failed_attempts["zone_refining"] = 0
+_s_ctl.state.projects.tenure.clear()

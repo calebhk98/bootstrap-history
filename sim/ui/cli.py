@@ -29,8 +29,8 @@ from collections import defaultdict
 
 from sim.engine.ui_port import load_production_catalog
 from sim.engine.ui_port import (
-    category_traits, tree_merge, validate_material_gating, validate_output_bounds, validate_copy_visibility, validate_production,
-    validate_unheld_gates)
+    category_traits, tree_merge, validate_material_gating, validate_node_money, node_revenue_census, validate_copy_visibility, validate_production,
+    validate_unheld_gates, validate_running_gates, validate_defence_stores)
 from sim.engine.ui_port import default_civilisation_id
 from sim.engine.ui_port import (
     ROOT, MODDIR, CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog,
@@ -43,7 +43,7 @@ import argparse, sys
 from sim.engine.ui_port import Sim
 from . import protocol as _protocol
 from sim.engine.ui_port import settings
-from . import cli_units_options, validate_map
+from . import cli_mods, cli_units_options, validate_map
 # civ_of_save/goal_of_save are the only names this file reads from
 # .protocol; `cmd_agent` and everything else that needs
 # _agent_available, _agent_dispatch, _agent_end_reason, _agent_help,
@@ -52,6 +52,7 @@ from . import cli_units_options, validate_map
 # imports its own copies of what it needs straight from .protocol.
 from .protocol import civ_of_save, goal_of_save
 from sim.constants import declare
+from sim.game_version import GAME_VERSION
 
 
 from sim.engine.ui_port import DetRNG, ensure_fixed_hash_seed, load_strategy, topo_stable
@@ -195,7 +196,7 @@ def _check_node_materials(node_id, node_record, goods, producible):
         if material_id in goods:
             continue
         if material_id in producible:
-            warns.append("%s: material %s has a production entry but no solved price (cost is a lower bound)" % (node_id, material_id))
+            warns.append("%s: material %s has a production entry but no seller in reach of the starting society, so it has no price and cannot be bought there (cost here is a lower bound)" % (node_id, material_id))
         else:
             errs.append("%s: unpriced material %s" % (node_id, material_id))
     return errs, warns
@@ -307,6 +308,11 @@ def _print_validate_summary(nodes, goal_rows, default_goal):
     print("edges            : %d" % sum(len(node_record["pre"]) for node_record in nodes.values()))
     print("total capital     : %s den across all %d nodes" % (f"{sum(node_record['_total_cost'] for node_record in nodes.values()):,.0f}", len(nodes)))
     print("total founder hrs : %s" % f"{sum(node_record['ph'] for node_record in nodes.values()):,}")
+    print("REVENUE (a node earns only from the output of the entries that name it in operated_by)")
+    print("\n".join(node_revenue_census.format_lines(node_revenue_census.basis_counts(nodes))))
+    print("UPKEEP AND CAPITAL BASIS")
+    print("\n".join(node_revenue_census.format_cost_lines("upkeep", node_revenue_census.cost_basis_counts(nodes, "_upkeep_basis"))))
+    print("\n".join(node_revenue_census.format_cost_lines("capital", node_revenue_census.cost_basis_counts(nodes, "_capital_basis"))))
     print()
     print("GOALS (%d selectable; 'goals' prints this table alone)" % len(goal_rows))
     print("%-34s %9s %10s  %s" % ("name", "closure", "floor(yr)", "node"))
@@ -383,14 +389,31 @@ def cmd_validate(args):
         producible.update((entry.get("outputs") or {}).keys())
     errs, warns = _validate_nodes(nodes, goods, wages, producible)
     errs += _validate_topo_order(nodes)
-    errs += validate_output_bounds.check_output_bounds(nodes, production)
+    errs += validate_node_money.check_node_money(nodes, production)
     errs += validate_copy_visibility.check_copy_visibility(nodes)
+    from sim.engine import copy_visibility_defaults
+    errs += validate_copy_visibility.check_category_table(copy_visibility_defaults.table())
+    warns += ["%s: no copy_visibility of its own and no entry for its category, so it keeps the count of trades and materials" % node_id
+              for node_id in copy_visibility_defaults.undeclared(nodes)]
     errs += _data_source_errors(nodes)
+    errs += cli_mods.mod_findings()
     errs += validate_map.map_problems()
     errs += category_traits.check_category_traits(nodes.values())
     errs += validate_material_gating.check_material_gating(nodes, validate_material_gating.load_gating(ROOT))
     from sim.engine.ui_port import civ_start_check
     errs += validate_unheld_gates.check_unheld_gates(nodes, civ_start_check.load_civilisations(ROOT), production)
+    from sim.engine import validate_event_causes
+    errs += validate_event_causes.check_event_causes(civ_start_check.load_civilisations(ROOT), set(nodes))
+    errs += validate_running_gates.check_running_gates(nodes)
+    from sim.engine import validate_action_results
+    from sim.geography.api import open_map
+    carriage_map = open_map()
+    errs += validate_action_results.check_risks(nodes)
+    errs += validate_action_results.check_action_results(
+        nodes, list(carriage_map.catalogue("route_modes").values()) + list(carriage_map.catalogue("sea_lanes").values()))
+    errs += validate_defence_stores.check_defence_stores(nodes, set(wages), producible)
+    from sim.engine import validate_disease_data
+    errs += validate_disease_data.check_disease_data()
     goal_errs, default_goal, goal_rows = _validate_goal_rows(tree, nodes)
     errs += goal_errs
 
@@ -438,8 +461,8 @@ def _validate_basket_supply(civ_start_check, civilisations, production):
     import json
     from sim.engine import civ_basket_check
     from sim.engine.need_data import load_needs
-    with open(os.path.join(ROOT, "data", "world", "foreign_economies.json"), encoding="utf-8") as handle:
-        economies = json.load(handle)["economies"]
+    from sim.engine.ui_port import foreign_economy_document
+    economies = foreign_economy_document()["economies"]
     errors, warnings = civ_basket_check.basket_supply_findings(
         civilisations, production, load_needs(ROOT, MODDIR)["goods"], economies)
     for message in warnings:
@@ -1356,6 +1379,7 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter)
     # NOT required: typing the bare command should open the menu rather than
     # print a usage error at somebody who has just arrived.
+    parser.add_argument("--version", action="version", version="%(prog)s " + GAME_VERSION)
     sub = parser.add_subparsers(dest="cmd", required=False)
     subparser = sub.add_parser("validate", help="check the tech tree for errors")
     subparser.add_argument("--deep", action="store_true",
@@ -1366,8 +1390,10 @@ def main():
                         "Takes real time (one Sim trial per cell); the structural "
                         "checks above run either way and are instant.")
     sub.add_parser("civs", help="list the playable civilisations")
+    subparser = sub.add_parser("mod-allow", help="allow an installed mod to run its Python code (full permissions; read the warning)")
+    subparser.add_argument("mod_id", help="the mod's id")
     subparser = sub.add_parser("economy-check", help="play a short game and print the agent economy's health: "
-                               "staple and metal price volatility, hired share, hunger, staple price over labour cost")
+                               "staple and metal price volatility, hired share, unskilled wage over its floor, hunger, staple price over labour cost")
     subparser.add_argument("--years", type=int, default=5, help="years to play per game (default 5)")
     subparser.add_argument("--seeds", default="1", help="comma-separated seeds (default 1)")
     subparser.add_argument("--civs", default="", help="comma-separated civilisation ids, or 'all' (default: the default one)")
@@ -1377,6 +1403,13 @@ def main():
                            "(default: the good backing the currency)")
     subparser.add_argument("--payback", action="store_true", help="also list nodes whose build cost is repaid "
                            "suspiciously fast by net earnings (a diagnostic; it changes nothing)")
+    subparser = sub.add_parser("baseline-ensemble", help="play several games of a civilisation with no player and store "
+                               "their distributions (population, wages, literacy, territory, technologies held by year) "
+                               "for the divergence screen to compare against; each game takes a long time")
+    subparser.add_argument("--civ", default="", help="civilisation id (default: the default one)")
+    subparser.add_argument("--seeds", type=int, default=20, help="how many games, seeds 1 to N (default 20)")
+    subparser.add_argument("--years", type=int, default=300, help="years to play per game (default 300)")
+    subparser.add_argument("--jobs", type=int, default=1, help="games to play at once (default 1)")
     sub.add_parser("goals", help="list the selectable goals and their critical-path floors")
     subparser = sub.add_parser("path", help="the critical path to a goal"); subparser.add_argument("goal", nargs="?")
     subparser = sub.add_parser("costs", help="the resource costs of every node"); subparser.add_argument("--top", type=int, default=20)
@@ -1548,6 +1581,9 @@ def main():
                                 "and start. This is what a bare invocation does.")
     subparser = sub.add_parser("play", help="play the game interactively from the keyboard")
     subparser.add_argument("--strategy", default="recommended")
+    subparser.add_argument("--seat", default=None,
+                   help="the seat this process plays (default: the first seat). A command can still name "
+                        "another with its own \"as\" field; see the 'seats' command")
     subparser.add_argument("--goal", default=None,
                    help="which goal to play toward. See 'goals' for the roster "
                         "of all goals; default is the "
@@ -1632,6 +1668,9 @@ def main():
     subparser.add_argument("--mortal", action="store_true",
                    help="turn the founder's mortality back on (default: immortal, "
                         "same meaning as on 'run'/'compare'/'play')")
+    subparser.add_argument("--seat", default=None,
+                   help="the seat this process plays (default: the first seat). A command can still name "
+                        "another with its own \"as\" field; see the 'seats' command")
     subparser.add_argument("--deterministic", action="store_true",
                    help="replace this session's rng with one whose random() always "
                         "returns 1.0 (DetRNG - same class 'run'/'compare'/'play' "
@@ -1662,7 +1701,9 @@ def main():
             "goals": cmd_goals,
             "run": cmd_run, "compare": cmd_compare, "play": cmd_play, "agent": cmd_agent,
             "sensitivity": cmd_sensitivity, "plan": cmd_plan,
-            "search": cmd_search, "economy-check": cmd_economy_check}[args.cmd](args)
+            "search": cmd_search, "economy-check": cmd_economy_check,
+            "mod-allow": cli_mods.cmd_mod_allow,
+            "baseline-ensemble": cmd_baseline_ensemble}[args.cmd](args)
 
 
 # ----------------------------------------------------------------------------
@@ -1680,3 +1721,4 @@ from .cli_interactive import cmd_civs, cmd_menu, cmd_play
 from .cli_agent import cmd_agent
 from .cli_analysis import cmd_plan, cmd_search, cmd_why
 from .cli_economy_check import cmd_economy_check
+from .cli_baseline import cmd_baseline_ensemble

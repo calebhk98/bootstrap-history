@@ -1,34 +1,18 @@
-"""A floor under every output of a joint batch, so a by-product nobody wants is not priced to zero."""
-from sim.constants import declare
-
-JOINT_BYPRODUCT_FLOOR_SHARE = declare(
-    "JOINT_BYPRODUCT_FLOOR_SHARE", 0.01,
-    kind="temporary_heuristic",
-    unit="fraction of the batch's standalone cost per kg",
-    source=None,
-    confidence="D",
-    why="A by-product in glut is cleared by demand to nothing, and the damped solve then decays its "
-        "price to a denormal that downstream costs cannot use. The floor stands in for the handling "
-        "and disposal cost a real by-product carries; it should come from a handling labour term "
-        "in the recipe data.")
+"""A lower bound under every output of a joint batch: minus what it costs to dispose of it."""
 
 
-def lift_to_floor(prices, outputs, kilograms_per_unit, total_cost):
-    """`prices` with every output at or above the floor, the batch still recovering `total_cost`.
+def bound_to_disposal_cost(prices, outputs, disposal_cost_by_material):
+    """`prices` with every output at or above minus its disposal cost, the batch still recovering its cost.
 
-    The lift is paid for by the outputs already above their floor, in proportion to their revenue."""
-    total_kilograms = sum(kilograms_per_unit[name] * outputs[name] for name in outputs)
-    if total_kilograms <= 0 or total_cost <= 0:
-        return prices
-    standalone_per_kg = total_cost / total_kilograms
-    floor = {name: JOINT_BYPRODUCT_FLOOR_SHARE * standalone_per_kg * kilograms_per_unit[name]
-             for name in outputs}
-    low = {name for name in outputs if prices[name] < floor[name]}
+    The lift is paid for by the outputs already above their bound, in proportion to their revenue."""
+    bound = {name: -disposal_cost_by_material.get(name, 0.0) for name in outputs}
+    low = {name for name in outputs if prices[name] < bound[name]}
     if not low:
         return prices
-    lifted = {name: floor[name] if name in low else prices[name] for name in outputs}
+    lifted = {name: bound[name] if name in low else prices[name] for name in outputs}
     excess = sum((lifted[name] - prices[name]) * outputs[name] for name in low)
-    payers = {name: prices[name] * outputs[name] for name in outputs if name not in low}
+    payers = {name: prices[name] * outputs[name] for name in outputs
+              if name not in low and prices[name] > 0.0}
     payer_revenue = sum(payers.values())
     if payer_revenue <= excess:
         return prices

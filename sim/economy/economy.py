@@ -5,13 +5,17 @@
 """
 import math
 from dataclasses import dataclass, field, replace
-from typing import Dict, Optional, Tuple
+from typing import Any, Dict, Mapping, Optional, Tuple
+
+from sim.world import capital_market
 
 from . import credit, credit_claims, currency, labour, land_market, lending, merchants_credit, producers, sites, state_budget, unit_cost
 from .credit_view import CreditView
 from .market_areas import AreaMap
+from .market_areas_follow import follow
 from .market_memory import YearView
-from .mint import mint_orders, settle_mint
+from .mint import mint_orders, settle_mint, staff as staff_mint
+from .mint_labour import close_year as close_mint_year, mint_agent
 from .money_audit import MoneyAudit, year_report
 from .entry_year import close_idle_producers, open_entrants, restake_owners
 from .households_own import (hours_for_own_plan, own_production, own_production_options, plot_hectares,
@@ -43,6 +47,7 @@ class YearOutcome:
     idle_hours: float = 0.0
     vacant_hours: float = 0.0
     hired_hours: float = 0.0
+    wage_floor_per_hour: float = 0.0               # the lowest a worker's ask could fall to (labour_ask_floor.py)
     extraction: Dict[Tuple[str, str], float] = field(default_factory=dict)   # runs worked per (recipe, tile) on a site
     conservation_residual: float = 0.0
     state_cash: float = 0.0
@@ -66,16 +71,27 @@ class Economy:
         if record is None:
             record, area_map, carriage = open_economy(setup)
         else:
-            carriage = setup.carriage_table()
-            area_map = AreaMap(setup.tiles, carriage,
-                               [(setup.specs[good], price) for good, price in sorted(setup.opening_prices.items())
-                                if good in setup.specs and price > 0.0],
-                               setup.opening_population_by_tile)
+            carriage = setup.carriage_table(record.ways)
+            area_map = setup.area_map(carriage)
         self.record = record
         self.area_map = area_map
         self.carriage = carriage
+        self.improvements: Dict[str, Dict[str, Any]] = dict(record.ways)   # the ways `carriage` and the areas were built with
         self._own_options = None
         self._own_hectares: Dict[str, float] = {}   # land households' own plots took this year, by tile
+
+    def set_improvements(self, improvements: Mapping[str, Mapping[str, Any]]) -> bool:
+        """Rebuild the carriage table over these built ways, partition the market areas again over it and
+        carry the markets' memory to the new areas; False when they are the ways it already has."""
+        if dict(improvements) == self.improvements:
+            return False
+        self.improvements = {key: dict(way) for key, way in improvements.items()}
+        self.record.ways = {key: dict(way) for key, way in self.improvements.items()}
+        self.carriage = self.setup.carriage_table(self.improvements)
+        area_map = self.setup.area_map(self.carriage)
+        follow(self.record, self.area_map, area_map)
+        self.area_map = area_map
+        return True
 
     def view(self) -> YearView:
         return CreditView(self.record.memory, self.record.book, self.area_map, self.setup.currency_id, labour_area,
@@ -89,7 +105,7 @@ class Economy:
         setup, record = self.setup, self.record
         self.__dict__.pop("_port_shares", None)
         record.book.start_year()
-        ledger = YearLedger()
+        ledger = YearLedger(import_accounts=frozenset(inputs.import_accounts), export_accounts=frozenset(inputs.export_accounts))
         self._follow_population(inputs)
         self._follow_yields(inputs)
         sites.apply_site_limits(record, setup, inputs.site_limits)
@@ -102,15 +118,17 @@ class Economy:
         for orders in inputs.engine_orders.values():
             labour_bids.extend(orders.labour_bids)
         state_budget.plan_year(setup, record, view, labour_bids)
+        staff_mint(setup, record, view, labour_bids)
         everyone = labour_offers(setup, record, view, outside_option_by_tile(setup, record, view))
         offers, kept = withhold_hours(everyone, self._shortfall_hours())
-        clear_labour(setup, record, labour_bids, offers, ledger, labour_context(setup, record, view, self.carriage, inputs),
-                     held_share_by_area(everyone, offers))
+        context = labour_context(setup, record, view, self.carriage, inputs, self._own_plot_options())
+        clear_labour(setup, record, labour_bids, offers, ledger, context, held_share_by_area(everyone, offers))
         self._grow_own(offers, ledger, inputs.harvest_factor, kept)
         order_book = {}
         funds = cohort_orders(setup, record, view, ledger, order_book)
         state_orders(setup, record, view, self.area_map, order_book, {})
-        mint_held = mint_orders(setup, record, self.area_map, order_book)
+        mint_held = mint_orders(setup, record, self.area_map, order_book,
+                                ledger.hours_hired.get(mint_agent(setup), {}))
         for agent, orders in sorted(inputs.engine_orders.items()):
             add_orders(order_book, orders)
         for plan in plans.values():
@@ -122,6 +140,7 @@ class Economy:
             plant_runs[producer_id] = plant_runs.get(producer_id, 0.0) + runs
         clear_goods(setup, record, view, self.area_map, order_book, plans, ledger)
         settle_mint(record, mint_held)
+        close_mint_year(setup, record)
         rent = land_market.settle_year(setup, record, view,
                                        {producer_id: plan.wanted_runs for producer_id, plan in plans.items()},
                                        self._own_hectares)
@@ -241,7 +260,8 @@ class Economy:
         debt = credit_claims.principal_by_borrower(record.loans)
         loans, rate, _unmet = credit.clear(requests, funds, money, record.memory.rates.get(money), debt,
                                            credit_claims.arrears_history(record.loans, record.remembered_defaults),
-                                           year=view.year)
+                                           year=view.year,
+                                           rate_ceiling=capital_market.RATE_CEILING_SHARE * setup.opening_rate)
         record.book.transfer_many(credit.disbursements(loans))
         record.loans.extend(loans)
         for loan in loans:
@@ -350,6 +370,7 @@ class Economy:
         return YearOutcome(year=record.memory.year, basket_price_level=level, prices=national_prices(record),
                            wages=mean_wages, rate=record.memory.rates.get(money, 0.0),
                            money_supply=record.book.money_supply(money), hunger_by_tile=hunger,
-                           output=dict(sorted(output.items())), idle_hours=idle, vacant_hours=vacant, hired_hours=hired, extraction=extraction,
+                           output=dict(sorted(output.items())), idle_hours=idle, vacant_hours=vacant, hired_hours=hired,
+                           wage_floor_per_hour=ledger.wage_floor_per_hour, extraction=extraction,
                            conservation_residual=check_money(record), money_audit=year_report(record),
                            state_cash=record.book.balance(setup.state_agent, money))

@@ -107,32 +107,35 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"ever_closed_for_staff": "projects",
 
 	# EconomyState
-	"mines": "economy",
-	"mine_pending": "economy",
-	"mine_ready": "economy",
-	"mine_cost_paid": "economy",
-	"mine_tranches": "economy",
-	"shortages": "economy",
-	"throttle": "economy",
-	"binding": "economy",
-	"forest_ha": "economy",
-	"nitre_bed_m2": "economy",
-	"market_pressure": "economy",
+	"mines": "holdings",
+	"mine_pending": "holdings",
+	"mine_ready": "holdings",
+	"mine_cost_paid": "holdings",
+	"mine_tranches": "holdings",
+	"deposits_found": "holdings",
+	"deposit_drawn": "holdings",
+	"prospected_person_days": "holdings",
+	"shortages": "holdings",
+	"throttle": "holdings",
+	"binding": "holdings",
+	"forest_ha": "holdings",
+	"nitre_bed_m2": "holdings",
+	"market_pressure": "holdings",
 	"output_factor": "economy",
 	"output_per_head": "economy",
 	"introduction_prices": "economy",
 	"money_real": "economy",
-	"_material_stock_ledger": "economy",
-	"farm_hectares": "economy",
-	"farm_stock_kg": "economy",
-	"farm_cleared_hectares": "economy",
-	"farm_last_shortfall_kg": "economy",
-	"farm_last_harvest_kg": "economy",
+	"_material_stock_ledger": "holdings",
+	"farm_hectares": "holdings",
+	"farm_stock_kg": "holdings",
+	"farm_cleared_hectares": "holdings",
+	"farm_last_shortfall_kg": "holdings",
+	"farm_last_harvest_kg": "holdings",
 	"foreign_trade_by_year": "economy",
-	"farm_hours_needed": "economy",
-	"farm_last_marginal_product": "economy",
+	"farm_hours_needed": "holdings",
+	"farm_last_marginal_product": "holdings",
 	"society_labour_hours": "economy",
-	"_dashboard_history": "economy",
+	"_dashboard_history": "holdings",
 
 	# GovernanceState
 	"inst_units": "governance",
@@ -151,13 +154,13 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 
 	# ScenarioState
 	"year": "scenario",
-	"goal_year": "scenario",
+	"goal_year": "seat_progress",
 	"_said_debasement": "scenario",
 	"_said_output": "scenario",
-	"_said_scandal": "scenario",
-	"_said_parallelism": "scenario",
-	"_said_command_index": "scenario",
-	"_said_explanations": "scenario",
+	"_said_scandal": "seat_progress",
+	"_said_parallelism": "seat_progress",
+	"_said_command_index": "seat_progress",
+	"_said_explanations": "seat_progress",
 
 	# PopulationState
 	"pop_children": "population",
@@ -271,6 +274,20 @@ class Household(Actor):
 	def money(self, value: float) -> None:
 		self.capital = value
 
+	@property
+	def purses(self) -> Any:  # type: ignore[override]
+		return self._state.household.ledger_purses
+
+	@property
+	def account_id(self) -> str:
+		return self._state.household.account
+
+	def note_income(self, purpose: Any, amount: float) -> None:
+		self._state.household.note_income(purpose, amount)
+
+	def note_outlay(self, purpose: Any, amount: float) -> None:
+		self._state.household.note_outlay(purpose, amount)
+
 	def credit(self, amount: float, purpose: Any) -> None:
 		self._state.household.credit(amount, purpose)
 
@@ -340,23 +357,23 @@ class Household(Actor):
 	def mines(self) -> Any:
 		if self._state.economy is None:
 			return []
-		return self._state.economy.mines
+		return self._state.holdings.mines
 
 	@mines.setter
 	def mines(self, value: Any) -> None:
 		if self._state.economy is not None:
-			self._state.economy.mines = value
+			self._state.holdings.mines = value
 
 	@property
 	def shortages(self) -> Any:
 		if self._state.economy is None:
 			return collections.Counter()
-		return self._state.economy.shortages
+		return self._state.holdings.shortages
 
 	@shortages.setter
 	def shortages(self, value: Any) -> None:
 		if self._state.economy is not None:
-			self._state.economy.shortages = value
+			self._state.holdings.shortages = value
 
 	@property
 	def failed_attempts(self) -> Any:

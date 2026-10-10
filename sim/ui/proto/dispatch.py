@@ -10,13 +10,14 @@ from sim.engine.ui_port import money_word
 from sim.engine.ui_port import fuzzy_estimates, units
 
 from .economy import _dashboard_snapshot
-from . import command_registry
+from . import command_registry, mod_commands
 from .command_registry import command
 from .compact import compact_state, compact_stuck, compact_why
 from .help import _agent_help
 from .nodes import NODE_NAME_NORM, _did_you_mean, _norm_name, _resolve_by_name
 from sim.ui.memory import load_state, save_state
 from .score import victory_report
+from .seat_address import run_as_seat
 from .state_waiting import _agent_end_reason
 from .state import _agent_state
 from .wave_summary import wave_summary
@@ -33,7 +34,7 @@ from .util import (_clean, _localise_money, _localise_words, _unsafe_path)
 
 def _trim_dashboard_history(sim, hist):
 	"""Trim dashboard history to the most recent N years if configured."""
-	years_kept = sim.state.scenario.dashboard_history_years
+	years_kept = sim.state.seat_progress.dashboard_history_years
 	if years_kept is not None and len(hist) > years_kept:
 		del hist[:-years_kept]
 
@@ -244,7 +245,9 @@ def _cmd_step(sim, nodes, cmd, ended):
         goal_was_startable = sim.goal in nodes and sim.can_start(sim.goal)
         population_before = sim.population.total
         programme_log.extend(programme_before_year(sim, nodes))
+        programme_log.extend(mod_commands.run_policies(sim, nodes, "year_start"))
         sim.step()
+        programme_log.extend(mod_commands.run_policies(sim, nodes, "year_end"))
         ran += 1
         population_change = sim.population.total / population_before - 1.0 if population_before > 0 else 0.0
         sim.state.population.population_change_last_year = round(population_change, 4)
@@ -393,6 +396,9 @@ command_registry.register_command(
     description="Replaces the current game with a saved one.",
     handler=_cmd_save)
 
+# Mod commands join the registry before the tables below are read from it.
+mod_commands.load_mod_commands()
+
 # Every command word and alias mapped to its handler, from the registry.
 _AGENT_DISPATCH_TABLE = command_registry.handlers()
 
@@ -415,7 +421,11 @@ def _add_compact_fields(command, out, sim=None, nodes=None):
 
 
 def _agent_dispatch(sim, nodes, cmd):
-    """Every reply, in the money of the place you are standing in."""
+    """Every reply, as the seat the command addresses (`as`, else the session's seat), in the money of the place you stand in."""
+    return run_as_seat(sim, cmd, lambda command: _agent_reply(sim, nodes, command))
+
+
+def _agent_reply(sim, nodes, cmd):
     _out = _agent_dispatch_inner(sim, nodes, cmd)
     if sim.fuzzy_estimates and isinstance(cmd, dict):
         _entry = command_registry.resolve(cmd.get("cmd") if isinstance(cmd.get("cmd"), str) else "")

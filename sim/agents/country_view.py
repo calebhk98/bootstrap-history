@@ -10,6 +10,7 @@ from typing import Any, Dict, Optional, Set
 from .protocols import World
 from .records import CountryProfile
 from .registry import register_world_scope
+from .stratum_year import FOOD_NEED
 from .tuning_country import ARMY_SHARE_OF_POPULATION, COUNTRY_OBSERVATION_RANGE_KM
 
 # members the shared world answers that the protocol does not name yet
@@ -91,21 +92,44 @@ class CountryWorld:
 		own_level = getattr(self.profile, field, 0.0)
 		return own_level / home_level if home_level > 0.0 and own_level > 0.0 else 1.0
 
-	def pay_per_person_year(self, trade: str) -> float:
-		"""The shared pay scaled by this country's wage level relative to the home country's.
+	def _own_economy(self) -> Any:
+		"""The economy's answers for this country when it is part of the economy, else None."""
+		lookup = getattr(self._shared, "country_economy", None)
+		return lookup(self.profile.country) if callable(lookup) else None
 
-		TEMPORARY HEURISTIC (CLAUDE.md 4.4): a wage computed outside the labour market, because a foreign
-		country has no labour market of its own yet (Complaint 407); its output below is scaled alike."""
-		return self._shared.pay_per_person_year(trade) * self._relative("wage_index")
+	def pay_per_person_year(self, trade: str) -> float:
+		"""What a person-year of a trade pays in this country's own labour markets when it is in the economy;
+		otherwise the shared pay scaled by this country's wage level relative to the home country's.
+
+		TEMPORARY HEURISTIC (CLAUDE.md 4.4), only for a country not yet in the economy: a wage computed outside
+		the labour market (Complaint 407); its output below is scaled alike."""
+		own = self._own_economy()
+		pay = None if own is None else own.pay_per_person_year(trade)
+		return pay if pay is not None else self._shared.pay_per_person_year(trade) * self._relative("wage_index")
 
 	def society_output(self) -> float:
-		"""The home society's output per head, scaled by this country's people and its wage level."""
+		"""What this country's producers make at its prices when it is in the economy; otherwise the home
+		society's output scaled by this country's people and its wage level (TEMPORARY HEURISTIC, as pay)."""
+		own = self._own_economy()
+		output = None if own is None else own.society_output()
+		if output is not None:
+			return output
 		return self._shared.society_output() * self._relative("population") * self._relative("wage_index")
 
 	def subsistence_cost_per_person_year(self) -> float:
+		"""The country's food floor from its own prices; else the home figure over its price level (TEMPORARY HEURISTIC)."""
+		own = self._own_economy()
+		floors = {} if own is None else own.need_floor_costs_per_person_year()
+		if floors.get(FOOD_NEED):
+			return floors[FOOD_NEED]
 		return self._shared.subsistence_cost_per_person_year() * self._relative("price_index")
 
 	def need_floor_costs_per_person_year(self) -> Dict[str, float]:
+		"""The country's floors from its own prices; else the home floors over its price level (TEMPORARY HEURISTIC)."""
+		own = self._own_economy()
+		floors = {} if own is None else own.need_floor_costs_per_person_year()
+		if floors:
+			return floors
 		level = self._relative("price_index")
 		return {need_id: cost * level for need_id, cost in self._shared.need_floor_costs_per_person_year().items()}
 

@@ -29,9 +29,10 @@ import functools
 from sim.constants import declare
 from . import money_units
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
-from sim.world import deposits as deposit_model
+from sim.world import deposits as deposit_model, mine_technique
 from sim.geography.api import mine_demand_goods, parameter_value, tile_facts, tiles_held, works_priced_from_deposits
 from . import purchase_rule
+from .mine_deposits import MineDepositsMixin, NO_DEPOSIT_TEXT
 from sim.agents.api import edges
 
 
@@ -53,7 +54,9 @@ def mine_catalog_hint_for(materials):
             % ", ".join(sorted(materials)))
 
 
-class MiningMixin:
+class MiningMixin(MineDepositsMixin):
+    mine_refusal = None   # why the last open_mine opened nothing, when a deposit was the reason
+
     @property
     def MINE_OPEX_MATERIALS(self):
         """Materials whose mine running cost comes from the deposits' physical works, from the map's catalogue."""
@@ -120,18 +123,31 @@ class MiningMixin:
             quantity_tonnes_per_year=1.0, note="")
         return [(seam, 1.0)]
 
+    def mine_works_effects(self):
+        """What the running mining techniques change in the physical works
+        (mine_technique.combine of every running node's `mine_works` spec)."""
+        kept = self._running_kept("mine_works_effects")
+        if "effects" not in kept:
+            kept["effects"] = mine_technique.combine(
+                spec for node_id, spec in self._effect_terms("mine_works")
+                if self.running(node_id))
+        return kept["effects"]
+
     def _mine_labour_hours_per_tonne(self, mat):
         """(build hours per tonne/year, running hours per tonne) of a typical
-        working of `mat`, output-weighted across its deposits."""
-        cached = self._MINE_PROFILE_CACHE.get(mat)
+        working of `mat`, output-weighted across its deposits, under the
+        running techniques' effects on the works."""
+        effects = self.mine_works_effects()
+        key = (mat, mine_technique.effects_key(effects))
+        cached = self._MINE_PROFILE_CACHE.get(key)
         if cached is None:
             pairs = self._mine_reference_deposits(mat)
-            build = sum(weight * deposit_model.build_cost_labour_hours_per_tonne_year(dep)
+            build = sum(weight * deposit_model.build_cost_labour_hours_per_tonne_year(dep, effects)
                         for dep, weight in pairs)
             running = sum(weight * KILOGRAMS_PER_TONNE
-                          * deposit_model.extraction_cost_labour_hours_per_kg(dep)
+                          * deposit_model.extraction_cost_labour_hours_per_kg(dep, effects)
                           for dep, weight in pairs)
-            cached = self._MINE_PROFILE_CACHE[mat] = (build, running)
+            cached = self._MINE_PROFILE_CACHE[key] = (build, running)
         return cached
 
     def _mine_capex_opex(self, mat):
@@ -191,10 +207,7 @@ class MiningMixin:
     # second geology signal, means a civ that
     # cannot buy much tin also cannot simply out-organise its way to
     # unlimited tin by sinking shafts instead -- the same ground is short
-    # either way. Measured: a Rome run's mineral_scale sits at roughly
-    # 1.0-1.2 for every metal but saltpetre (it controls most of its own
-    # ore-bearing provinces); Mexica sits at 0.10-0.17 for iron and coal
-    # (Mesoamerica genuinely worked neither) and 0.47 for copper (it did).
+    # either way. Measure it per civilisation with Geography.mineral_scale().
     STATE_CAPACITY_DEFAULT_FALLBACK = declare(
         "STATE_CAPACITY_DEFAULT_FALLBACK", 0.5, kind="initial_condition",
         unit="dimensionless state-capacity index (0-1 scale), fallback",
@@ -212,10 +225,8 @@ class MiningMixin:
         """The largest standing capacity of this material you could ever
         organise, in tonnes/yr: how big an enterprise your standing and
         state can run, times whether the ore is actually under your feet,
-        times what mining technology currently lets a working pull out of a
-        given deposit (mining_tech()'s own yield multiplier -- see its
-        comment for why a pump or a railway belongs on THIS side of the
-        ledger and not only on cost)."""
+        (what technology lets a working raise per shaft is in the works cost,
+        sim/world/deposits.py, not a multiple here)."""
         state_capacity = float(self.civ.get("state_capacity", self.STATE_CAPACITY_DEFAULT_FALLBACK))
         favour = self.effect_best("mine_ceiling")
         if favour is not None:
@@ -224,8 +235,7 @@ class MiningMixin:
             base = self.MINE_CEILING_BASE_STRANGER + self.MINE_CEILING_STATE_SCALE_STRANGER * state_capacity
         base *= 1.0 + min(self.REVENUE_SCALE_CAP_MULTIPLE, max(0.0, self.revenue()) / self.REVENUE_SCALE_DENARII)
         geo = self.geography.mineral_scale(mat)
-        yld, _cost = self.mining_tech(mat)
-        return base * geo * yld
+        return base * geo
 
     MINE_CEILING_BASE_IMPERIAL = declare(
         "MINE_CEILING_BASE_IMPERIAL", 20000.0, kind="temporary_heuristic",
@@ -301,8 +311,8 @@ class MiningMixin:
     # own comment on that history). This is intensity-years, not calendar
     # years, so it accrues faster the harder you lean on a given deposit
     # relative to what the ground can support -- and slower once technology
-    # (mining_tech(), below) raises that support, which is the whole of
-    # "make depletion something you can fight."
+    # (the works techniques, sim/world/mine_technique.py) raises that
+    # support, which is the whole of "make depletion something you can fight."
     DEPLETION_HALF_LIFE_YRS = declare(
         "DEPLETION_HALF_LIFE_YRS", 120.0, kind="temporary_heuristic",
         unit="intensity-years for yield to fall from 1.0 toward the floor",
@@ -403,7 +413,27 @@ class MiningMixin:
             mat = working["material"]
             if mat not in ceilings:
                 ceilings[mat] = max(1.0, self.mine_land_ceiling(mat))
+            self._draw_working(working)
             working["intensity_yrs"] = working.get("intensity_yrs", 0.0) + working["capacity"] / ceilings[mat]
+        self._close_worked_out()
+
+    def _draw_working(self, working):
+        """This year's yield of a working comes out of the deposit it names."""
+        if working.get("deposit"):
+            self.draw_deposit(working["deposit"], self.mine_yield_t_for(working))
+
+    def _close_worked_out(self):
+        """Workings whose deposit has nothing left close."""
+        holdings = self.state.holdings
+        kept = []
+        for working in holdings.mines or ():
+            deposit_id = working.get("deposit")
+            if deposit_id and self.deposit_remaining_tonnes(working["material"], deposit_id) <= 0.0:
+                self.state.household.log.append((self.state.scenario.year, "the %s workings at %s are worked out and close"
+                                                 % (working["material"], deposit_id)))
+            else:
+                kept.append(working)
+        holdings.mines = kept
 
     # ---- TECHNOLOGY: the pump, the railway and cheap steel fight back -----
     #
@@ -424,30 +454,6 @@ class MiningMixin:
     # railway are independent improvements, not alternatives.
     # Mechanical (water-wheel or animal) mine drainage - the first tier of the
     # pumping problem the class comment describes.
-    # The Newcomen atmospheric engine, built specifically to drain flooding coal
-    # and tin workings - a later, stronger tier on the same drainage problem as
-    # met_mine_pumping, compounding with it.
-    # Black-powder blasting breaks rock faster per man-hour; it does not put new
-    # ore in the ground, so cost only, no yield term.
-    # Dynamite blasting, a stronger version of the same black-powder effect; cost
-    # only, no yield term.
-    # Rotary drilling speeds face advance; cost only, no yield term, the same
-    # reasoning as blasting.
-    # A railway creates REACH, not extraction efficiency: ore too far from a
-    # market to be worth carting becomes worth lifting once a railway can move it
-    # - a yield (economically-reachable tonnage) effect, not a per-tonne cost
-    # effect, reused from goods_reach_factor()'s own self.running("railway")
-    # check.
-    # MINING_TECH: each technology's yield/cost multipliers are its node's `mining_tech` mechanic.
-    # The first step of cheap steel making low-grade ore worth digging - iron did
-    # not change how ore comes out of the ground, it changed whether digging it
-    # was worth doing at all (see the class comment above); for coal, the same
-    # entry represents a cheap-steel industry becoming a coking-coal customer
-    # large enough to justify the pit, drainage and rail spur a smaller demand
-    # would not.
-    # Bessemer/open-hearth bulk steel, the second and further step of the same
-    # effect as blast_furnace, further from ore than the last.
-
     def _running_kept(self, name):
         """A dict for derived values that depend only on which nodes are built, granted and
         operating (what `running` reads); it starts empty whenever that changes."""
@@ -459,59 +465,16 @@ class MiningMixin:
             kept = self.__dict__["_running_kept_tables"] = (projects, stamp, self.nodes, {})
         return kept[3].setdefault(name, {})
 
-    def mining_tech(self, mat):
-        """(yield_mult, cost_mult) technology has bought this material's
-        mining so far. yield_mult >= 1 raises what a working can pull out
-        of the same deposit; cost_mult <= 1 lowers what getting it out
-        costs. Capped/floored like every other compounding factor in this
-        file (MARKET_SHARE, goods_reach_factor): a mine at three times the
-        book yield is a real historical claim, thirty times is the
-        abolished unobtainable category with its sign flipped."""
-        kept = self._running_kept("mining_tech")
-        found = kept.get(mat)
-        if found is not None:
-            return found
-        yield_mult, cost_mult = 1.0, 1.0
-        for node_id, spec in self._effect_terms("mining_tech"):
-            if self.running(node_id) and mat in spec.get("materials", (mat,)):
-                yield_mult *= spec["yield"]
-                cost_mult *= spec["cost"]
-        found = kept[mat] = (min(yield_mult, self.MINING_TECH_YIELD_CEILING),
-                                max(self.MINING_TECH_COST_FLOOR, cost_mult))
-        return found
-
-    MINING_TECH_YIELD_CEILING = declare(
-        "MINING_TECH_YIELD_CEILING", 3.0, kind="temporary_heuristic",
-        unit="dimensionless multiple on extractable tonnage (maximum)",
-        source=None, confidence="D",
-        why="Cap on how far compounding every mining technology together "
-            "can raise a deposit's yield - a mine at three times book "
-            "yield is a real historical claim, per this method's own "
-            "docstring; the specific ceiling is a defensive bound against "
-            "the abolished 'unobtainable' category's mirror image, not a "
-            "derived limit.")
-    MINING_TECH_COST_FLOOR = declare(
-        "MINING_TECH_COST_FLOOR", 0.35, kind="temporary_heuristic",
-        unit="dimensionless multiple on cost per tonne/year (minimum)",
-        source=None, confidence="D",
-        why="Floor on how far compounding technology can cheapen mining - "
-            "technology helps, but extraction is never free. A defensive "
-            "bound, not a derived limit.")
-
     def mining_cost_scale(self, mat):
         """What sinking or running a tonne/yr of this material costs THIS
-        YEAR, relative to the derived capex and opex: technology (mining_tech's cost multiplier) against depletion
+        YEAR, relative to the derived capex and opex. The derived figures
+        already carry what the running techniques do to the works
+        (_mine_labour_hours_per_tonne), so this is depletion alone
         (mine_depletion_factor, inverted -- the same effort recovers less
         from a half-worked deposit, so it costs proportionally more per
-        tonne) pulling against each other. This is "deeper ones cost more"
-        made concrete, and technology is the only thing that pushes back.
-        Bounded to keep the tension a real decision rather than a runaway:
-        a fully depleted, untooled working costs at most 2x book (not
-        infinite), and full mining technology on a fresh deposit costs no
-        less than 0.4x (not free)."""
-        _year, cost = self.mining_tech(mat)
+        tonne). Bounded to keep it a real decision rather than a runaway."""
         return max(self.MINING_COST_SCALE_FLOOR,
-                   min(self.MINING_COST_SCALE_CEILING, cost / self.mine_depletion_factor(mat)))
+                   min(self.MINING_COST_SCALE_CEILING, 1.0 / self.mine_depletion_factor(mat)))
 
     def mining_cost_scale_for(self, working):
         """Same as mining_cost_scale(), but for what running THIS working
@@ -520,9 +483,8 @@ class MiningMixin:
         running than a fresh one of the same material, which the old
         material-level figure could not say because it had no idea which
         working was which."""
-        _year, cost = self.mining_tech(working["material"])
         return max(self.MINING_COST_SCALE_FLOOR,
-                   min(self.MINING_COST_SCALE_CEILING, cost / self.mine_depletion_factor_for(working)))
+                   min(self.MINING_COST_SCALE_CEILING, 1.0 / self.mine_depletion_factor_for(working)))
 
     MINING_COST_SCALE_FLOOR = declare(
         "MINING_COST_SCALE_FLOOR", 0.4, kind="temporary_heuristic",
@@ -547,9 +509,11 @@ class MiningMixin:
 
     def mine_yield_t_for(self, working):
         """Tonnes a year THIS working actually raises this year, after ITS
-        OWN depletion and current mining technology."""
-        yld, _cost = self.mining_tech(working["material"])
-        return working["capacity"] * self.mine_depletion_factor_for(working) * yld
+        OWN depletion."""
+        yield_t = working["capacity"] * self.mine_depletion_factor_for(working)
+        if working.get("deposit"):
+            yield_t = min(yield_t, self.deposit_remaining_tonnes(working["material"], working["deposit"]))
+        return yield_t
 
     def mine_operating_cost_for(self, working):
         """What THIS working costs to run this year, whether or not you use
@@ -581,24 +545,21 @@ class MiningMixin:
         sink = tonnes * cap * self.price_index * scale
         opex = self.mine_operating_cost_new(mat, tonnes)
         ceiling = self.mine_land_ceiling(mat)
-        economy = self.state.economy
+        holdings = self.state.holdings
         household = self.state.household
         room = max(0.0, ceiling - self.mine_capacity.get(mat, 0.0)
-                   - economy.mine_pending.get(mat, 0.0))
+                   - holdings.mine_pending.get(mat, 0.0))
         depl = self.mine_depletion_factor(mat)
+        deposit_room = self.mine_room_in_deposits(mat)
+        if deposit_room is not None:
+            room = min(room, deposit_room)
         note = ("The yearly cost is charged whether or not you use the "
                 "output, and goes on until you close it. Mothballing is "
                 "not free to reverse: the shaft floods and the crew "
                 "disperses, so reopening means sinking it again.")
         if scale > 1.05:
             note += (" This costs %.0f%% of the book price: the easy ore "
-                      "here is going, and nothing you have built yet cuts "
-                      "the cost of getting at what is left (mine pumping, "
-                      "blasting, or a railway would)." % (scale * 100))
-        elif scale < 0.95:
-            note += (" This costs %.0f%% of the book price: what you have "
-                      "built has made this cheaper to get out of the "
-                      "ground." % (scale * 100))
+                     "here is going." % (scale * 100))
         return {"material": mat,
                 "tonnes_per_year": round(tonnes, 3),
                 "to_sink_it": round(sink, 1),
@@ -611,6 +572,9 @@ class MiningMixin:
                 "afford_means": purchase_rule.afford_means(),
                 "the_ground_here_could_ever_support": round(ceiling, 1),
                 "room_left_before_geology_stops_you": round(room, 1),
+                "deposits_you_have_found": [
+                    {"id": row["id"], "tile": row["tile_id"], "room_t_per_year": round(row["room_tonnes_per_year"], 1),
+                     "left_t": round(row["remaining_tonnes"])} for row in self.found_deposits(mat)],
                 "current_yield_is_this_fraction_of_day_one": round(depl, 3),
                 "note": note}
 
@@ -625,30 +589,22 @@ class MiningMixin:
         sorted() to stay deterministic across hash seeds."""
         return sum(self.mine_yield_t_for(working) for working in self._workings_of(mat))
 
-    def _mine_depletion_note_from(self, depl, yld):
+    def _mine_depletion_note_from(self, depl):
         """Shared sentence-builder behind mine_depletion_note() (a
         material's average) and mine_depletion_note_for() (one working's
         own figures) - the same wording either way, just fed a different
         depletion fraction."""
-        if abs(depl - 1.0) < 0.01 and abs(yld - 1.0) < 0.01:
+        if abs(depl - 1.0) < 0.01:
             return None
-        bits = []
-        if depl < 0.999:
-            bits.append("the easy ore here is %d%% worked out, so the same "
-                        "shaft yields %d%% of its first-year tonnage"
-                        % (round((1.0 - depl) * 100), round(depl * 100)))
-        if yld > 1.001:
-            bits.append("technology you have built raises that back up "
-                        "%.1fx" % yld)
-        elif depl < 0.999:
-            bits.append("mine pumping, drilling or blasting would raise it "
-                        "back up")
-        return "; ".join(bits)
+        return ("the easy ore here is %d%% worked out, so the same shaft "
+                "yields %d%% of its first-year tonnage; techniques that cut "
+                "the labour of the works (drainage, hoisting, blasting, "
+                "haulage) lower what the ore costs, not how much a shaft yields"
+                % (round((1.0 - depl) * 100), round(depl * 100)))
 
     def mine_depletion_note(self, mat):
         """One sentence on why this material's workings, ON AVERAGE, yield
-        less than the tonnage sunk into them - for the same reason
-        goods_market_note() exists for a concern's revenue: a player whose
+        less than the tonnage sunk into them: a player whose
         coal yield has fallen over the decades must be able to find out why
         without guessing. None if there is nothing to explain (no workings,
         or a fresh one with no relevant technology). See
@@ -656,16 +612,13 @@ class MiningMixin:
         particular working rather than the material's blended average."""
         if not self._workings_of(mat):
             return None
-        yld, _cost = self.mining_tech(mat)
-        return self._mine_depletion_note_from(self.mine_depletion_factor(mat), yld)
+        return self._mine_depletion_note_from(self.mine_depletion_factor(mat))
 
     def mine_depletion_note_for(self, working):
         """mine_depletion_note(), for one working's OWN depletion rather
         than its material's average across every working of it - the
         figure the `mines` row for this specific working should explain."""
-        yld, _cost = self.mining_tech(working["material"])
-        return self._mine_depletion_note_from(
-            self.mine_depletion_factor_for(working), yld)
+        return self._mine_depletion_note_from(self.mine_depletion_factor_for(working))
 
     def close_mine(self, mat):
         """Shut your own workings down, on purpose.
@@ -688,20 +641,22 @@ class MiningMixin:
         # were actually costing, not a figure blended across every shaft of
         # this material as if they were all worked equally hard.
         saved = sum(self.mine_operating_cost_for(working) for working in workings)
-        economy = self.state.economy
+        holdings = self.state.holdings
         household = self.state.household
         scenario = self.state.scenario
-        economy.mines = [working for working in (economy.mines or [])
+        holdings.mines = [working for working in (holdings.mines or [])
                          if working.get("material") != mat]
-        economy.mine_tranches = [tranche for tranche in (economy.mine_tranches or [])
+        holdings.mine_tranches = [tranche for tranche in (holdings.mine_tranches or [])
                                  if tranche[0] != mat]
         household.log.append((scenario.year, "you close the %s workings" % mat))
         return True, ("the %s workings are closed. You stop paying %.0f a year. "
                       "What you spent sinking them is gone, and reopening means "
                       "sinking them again." % (mat, saved))
 
-    def open_mine(self, mat, t_per_yr, partial=True, order=""):
-        """Open your own workings.
+    def open_mine(self, mat, t_per_yr, partial=True, order="", deposit=None):
+        """Open your own workings, each naming a deposit you have found (`deposit` picks one; otherwise the
+        deposits with most room are worked first) and bounded by it. A material with no deposit data is
+        bounded by the ceiling alone. When none has room, nothing opens and `mine_refusal` says why.
 
         The Empire's ATTESTED output is not a hard ceiling: a founder who
         needs twenty thousand tonnes of coal a year must not be throttled by
@@ -715,6 +670,7 @@ class MiningMixin:
         What it is NOT is free or instant. You pay to sink it, you wait for it,
         and you pay every year to work it.
         """
+        self.mine_refusal = None
         if t_per_yr <= 0:
             return 0.0
         mat = self._normalize_material_name(mat)
@@ -735,11 +691,17 @@ class MiningMixin:
         # a province with no tin in it, at the same size as one with plenty.
         ceiling = self.mine_land_ceiling(mat)
         have_cap = self.mine_capacity
-        economy = self.state.economy
+        holdings = self.state.holdings
         household = self.state.household
         scenario = self.state.scenario
         t_per_yr = min(t_per_yr, max(0.0, ceiling - have_cap.get(mat, 0.0)
-                                          - economy.mine_pending.get(mat, 0.0)))
+                                          - holdings.mine_pending.get(mat, 0.0)))
+        deposit_room = self.mine_room_in_deposits(mat, deposit)
+        if deposit_room is not None:
+            if deposit_room <= 0.0:
+                self.mine_refusal = NO_DEPOSIT_TEXT % (mat, mat)
+                return 0.0
+            t_per_yr = min(t_per_yr, deposit_room)
         if t_per_yr <= 0:
             return 0.0
         # DEEPER ONES COST MORE. mining_cost_scale() is 1.0 on a fresh
@@ -776,43 +738,46 @@ class MiningMixin:
         # being folded into one number for the material - `cost` is carried
         # along so that working can say what it actually cost to sink, not
         # a figure recomputed later against a price_index that has since moved.
-        if economy.mine_tranches is None:
-            economy.mine_tranches = []
-        economy.mine_tranches.append([mat, t_per_yr, scenario.year + self.MINE_LEAD_YEARS, cost, order])
-        economy.mine_pending[mat] = economy.mine_pending.get(mat, 0.0) + t_per_yr
+        if holdings.mine_tranches is None:
+            holdings.mine_tranches = []
+        for deposit_id, tonnes in self.allocate_to_deposits(mat, t_per_yr, deposit):
+            holdings.mine_tranches.append([mat, tonnes, scenario.year + self.MINE_LEAD_YEARS,
+                                           cost * tonnes / t_per_yr, order, deposit_id])
+        holdings.mine_pending[mat] = holdings.mine_pending.get(mat, 0.0) + t_per_yr
         return t_per_yr
 
     def commission_mines(self):
         """Move finished tranches from pending into standing workings
-        (self.state.economy.mines), tranche by tranche. Each tranche becomes exactly one
+        (self.state.holdings.mines), tranche by tranche. Each tranche becomes exactly one
         working, commissioned in the year it actually came on stream (the
         tranche's own `ready` year, which is when its own depletion clock
         starts - see _advance_mine_depletion) - not merged into any other
         working of the same material, so a shaft opened in year 400 stays
         a distinct, unworn thing next to one opened three centuries before
         it."""
-        economy = self.state.economy
+        holdings = self.state.holdings
         scenario = self.state.scenario
-        if economy.mines is None:
-            economy.mines = []
+        if holdings.mines is None:
+            holdings.mines = []
         still = []
-        for tranche in (economy.mine_tranches or []):
+        for tranche in (holdings.mine_tranches or []):
             mat, amount, ready = tranche[0], tranche[1], tranche[2]
             # capex_paid: absent on a tranche written by a save from before
             # this field existed (see SAVE_FIELDS/load_state) - honestly
             # unknown, not fabricated, so 0.0 rather than a guess.
             capex_paid = tranche[3] if len(tranche) > 3 else 0.0
             order = tranche[4] if len(tranche) > 4 else ""
+            deposit_id = tranche[5] if len(tranche) > 5 else None
             if scenario.year >= ready:
-                economy.mines.append({"material": mat, "capacity": amount,
+                holdings.mines.append({"material": mat, "capacity": amount,
                                    "opened_year": ready, "capex_paid": capex_paid, "order": order,
-                                   "intensity_yrs": 0.0})
-                economy.mine_pending[mat] = max(0.0, economy.mine_pending.get(mat, 0.0) - amount)
-                if economy.mine_pending.get(mat, 0.0) <= 0:
-                    economy.mine_pending.pop(mat, None)
+                                   "intensity_yrs": 0.0, "deposit": deposit_id})
+                holdings.mine_pending[mat] = max(0.0, holdings.mine_pending.get(mat, 0.0) - amount)
+                if holdings.mine_pending.get(mat, 0.0) <= 0:
+                    holdings.mine_pending.pop(mat, None)
             else:
                 still.append(tranche)
-        economy.mine_tranches = still
+        holdings.mine_tranches = still
         # ONE YEAR OF DEPLETION: core.py's step() calls commission_mines()
         # exactly once a year (see its own comment, "materials: buy the
         # woodland... before the shortage bites"), so depletion rides that
@@ -841,7 +806,7 @@ class MiningMixin:
         survive keep their own real commissioning year and depletion clock
         instead of the newest or oldest being arbitrarily preferred."""
         household = self.state.household
-        economy = self.state.economy
+        holdings = self.state.holdings
         scenario = self.state.scenario
         order = sorted(self.mine_capacity, key=lambda material: -self._mine_opex(material))
         for material in order:
@@ -854,7 +819,7 @@ class MiningMixin:
                 working["capacity"] -= cut
                 if working["capacity"] >= 1.0:
                     kept.append(working)
-            economy.mines = [working for working in (economy.mines or [])
+            holdings.mines = [working for working in (holdings.mines or [])
                              if working.get("material") != material] + kept
             household.log.append((scenario.year, "MOTHBALLED half the %s workings; you could "
                                         "not pay to keep them running" % material))
@@ -962,10 +927,10 @@ class MiningMixin:
     def buy_forest(self, hectares):
         """Coppice woodland, bought outright. The cheapest thing in the tree that
         nobody thinks to buy, and the one that decides whether a furnace runs."""
-        economy = self.state.economy
+        holdings = self.state.holdings
         household = self.state.household
         scenario = self.state.scenario
-        room = max(0.0, self.forest_land_ceiling() - economy.forest_ha)
+        room = max(0.0, self.forest_land_ceiling() - holdings.forest_ha)
         if hectares > room:
             # SILENT TRUNCATION, not a refusal: open_mine's own ceiling does
             # the same (the tranche you get is the room there is, not zero),
@@ -983,5 +948,5 @@ class MiningMixin:
         if cost > 0 and not purchase_rule.can_pay(self, cost):
             return 0.0
         self.pay_edge(edges.EDGE_LANDOWNERS, cost, "forest bought")
-        economy.forest_ha += hectares
+        holdings.forest_ha += hectares
         return hectares

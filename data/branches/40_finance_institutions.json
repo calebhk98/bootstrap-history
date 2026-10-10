@@ -12,7 +12,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
@@ -38,8 +37,6 @@
    "scribe": 60.0
   },
   "mat": {},
-  "cap_hours": 30242.818761193987,
-  "up_hours": 1209.7127504477594,
   "build_yrs": 0.5,
   "adopt_yrs": 0,
   "risk": 0,
@@ -72,7 +69,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
@@ -98,7 +94,6 @@
    "scribe": 20.0
   },
   "mat": {},
-  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
@@ -131,7 +126,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
@@ -155,7 +149,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
@@ -179,7 +172,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
@@ -203,7 +195,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
@@ -227,7 +218,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
@@ -253,7 +243,6 @@
    "scribe": 200.0
   },
   "mat": {},
-  "cap_hours": 80647.5166965173,
   "up_hours": 0,
   "build_yrs": 1.0,
   "adopt_yrs": 0,
@@ -280,7 +269,6 @@
    "scribe": 40.0
   },
   "mat": {},
-  "cap_hours": 18145.691256716393,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 0,
@@ -312,7 +300,6 @@
   "mat": {
    "papyrus_sheet": 50
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.25,
   "adopt_yrs": 2,
@@ -344,7 +331,6 @@
   "mat": {
    "paper_kg": 100
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 3,
@@ -375,7 +361,6 @@
   "mat": {
    "paper_kg": 80
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.25,
   "adopt_yrs": 1,
@@ -406,7 +391,6 @@
   "mat": {
    "paper_kg": 30
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 1,
@@ -448,7 +432,6 @@
   "mat": {
    "parchment_sheet": 50
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.25,
   "adopt_yrs": 2,
@@ -479,7 +462,6 @@
   "mat": {
    "parchment_sheet": 30
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
@@ -510,7 +492,6 @@
   "mat": {
    "parchment_sheet": 20
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 1,
@@ -541,7 +522,6 @@
   "mat": {
    "parchment_sheet": 15
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 1,
@@ -572,7 +552,6 @@
   "mat": {
    "parchment_sheet": 20
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
@@ -605,12 +584,9 @@
    "parchment_sheet": 200,
    "lead_kg": 50
   },
-  "cap_hours": 40323.75834825865,
-  "up_hours": 4032.375834825865,
   "build_yrs": 1,
   "adopt_yrs": 2,
   "risk": 0.2,
-  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -635,7 +611,6 @@
    "scribe": 100
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 2,
@@ -667,12 +642,9 @@
   "mat": {
    "parchment_sheet": 150
   },
-  "cap_hours": 60485.63752238797,
-  "up_hours": 4032.375834825865,
   "build_yrs": 1.5,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -700,12 +672,9 @@
   "mat": {
    "parchment_sheet": 300
   },
-  "cap_hours": 100809.39587064662,
-  "up_hours": 10080.939587064662,
   "build_yrs": 2,
   "adopt_yrs": 3,
   "risk": 0.25,
-  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -730,7 +699,6 @@
    "scribe": 100
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
@@ -761,12 +729,9 @@
   "mat": {
    "parchment_sheet": 100
   },
-  "cap_hours": 40323.75834825865,
-  "up_hours": 2016.1879174129324,
   "build_yrs": 0.5,
   "adopt_yrs": 1,
   "risk": 0.15,
-  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -793,12 +758,9 @@
   "mat": {
    "parchment_sheet": 200
   },
-  "cap_hours": 161295.0333930346,
-  "up_hours": 8064.75166965173,
   "build_yrs": 2,
   "adopt_yrs": 2,
   "risk": 0.2,
-  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -824,12 +786,9 @@
   "mat": {
    "parchment_sheet": 100
   },
-  "cap_hours": 60485.63752238797,
-  "up_hours": 3024.2818761193985,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev_hours": 5040.469793532331,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -853,7 +812,6 @@
    "scribe": 100
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 3,
@@ -894,12 +852,9 @@
    "mat_gold": 1000,
    "silver_kg": 2000
   },
-  "cap_hours": 201618.79174129324,
-  "up_hours": 16129.50333930346,
   "build_yrs": 3,
   "adopt_yrs": 5,
   "risk": 0.3,
-  "rev_hours": 14113.315421890527,
   "sch": 1,
   "art": 2,
   "conf": "C",
@@ -932,12 +887,9 @@
    "paper_kg": 500,
    "mat_ink": 50
   },
-  "cap_hours": 100809.39587064662,
-  "up_hours": 6048.563752238797,
   "build_yrs": 1.5,
   "adopt_yrs": 3,
   "risk": 0.25,
-  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -960,7 +912,6 @@
    "merchant": 100
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
@@ -989,7 +940,6 @@
    "master": 50
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 2,
@@ -1035,12 +985,9 @@
   "mat": {
    "parchment_sheet": 200
   },
-  "cap_hours": 80647.5166965173,
-  "up_hours": 4032.375834825865,
   "build_yrs": 1,
   "adopt_yrs": 2,
   "risk": 0.25,
-  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -1076,12 +1023,9 @@
   "mat": {
    "parchment_sheet": 150
   },
-  "cap_hours": 60485.63752238797,
-  "up_hours": 3024.2818761193985,
   "build_yrs": 0.8,
   "adopt_yrs": 2,
   "risk": 0.2,
-  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1108,12 +1052,9 @@
   "mat": {
    "parchment_sheet": 150
   },
-  "cap_hours": 100809.39587064662,
-  "up_hours": 5040.469793532331,
   "build_yrs": 1.2,
   "adopt_yrs": 3,
   "risk": 0.3,
-  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -1146,7 +1087,6 @@
   "mat": {
    "paper_kg": 300
   },
-  "cap_hours": 40323.75834825865,
   "up_hours": 0,
   "build_yrs": 1.5,
   "adopt_yrs": 2,
@@ -1177,12 +1117,9 @@
   "mat": {
    "parchment_sheet": 100
   },
-  "cap_hours": 40323.75834825865,
-  "up_hours": 2016.1879174129324,
   "build_yrs": 0.5,
   "adopt_yrs": 1,
   "risk": 0.15,
-  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1208,7 +1145,6 @@
   "mat": {
    "parchment_sheet": 80
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
@@ -1239,12 +1175,9 @@
   "mat": {
    "parchment_sheet": 100
   },
-  "cap_hours": 40323.75834825865,
-  "up_hours": 2016.1879174129324,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev_hours": 5040.469793532331,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1270,12 +1203,9 @@
   "mat": {
    "parchment_sheet": 150
   },
-  "cap_hours": 60485.63752238797,
-  "up_hours": 4032.375834825865,
   "build_yrs": 1,
   "adopt_yrs": 3,
   "risk": 0.25,
-  "rev_hours": 8064.75166965173,
   "sch": 1,
   "art": 0,
   "conf": "C",
@@ -1301,12 +1231,9 @@
   "mat": {
    "parchment_sheet": 100
   },
-  "cap_hours": 40323.75834825865,
-  "up_hours": 2016.1879174129324,
   "build_yrs": 0.8,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev_hours": 5040.469793532331,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1327,12 +1254,9 @@
    "merchant": 100
   },
   "mat": {},
-  "cap_hours": 20161.879174129324,
-  "up_hours": 1008.0939587064662,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "risk": 0.1,
-  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1355,7 +1279,6 @@
    "scribe": 150
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
@@ -1384,7 +1307,6 @@
    "scribe": 100
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
@@ -1412,7 +1334,6 @@
    "scribe": 200
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
@@ -1443,7 +1364,6 @@
    "scribe": 100
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
@@ -1452,7 +1372,10 @@
   "sch": 1,
   "art": 1,
   "conf": "C",
-  "note": "A state-recognised registry grants a time-limited exclusive right in exchange for public disclosure. An inventor can petition immediately, but completion means recognition and enforcement by the state."
+  "note": "A state-recognised registry grants a time-limited exclusive right in exchange for public disclosure. An inventor can petition immediately, but completion means recognition and enforcement by the state.",
+  "mechanics": {
+   "patent_grant": true
+  }
  },
  {
   "id": "fin_patent_office",
@@ -1476,12 +1399,9 @@
   "mat": {
    "parchment_sheet": 500
   },
-  "cap_hours": 60485.63752238797,
-  "up_hours": 4032.375834825865,
   "build_yrs": 1.5,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev_hours": 2016.1879174129324,
   "sch": 1,
   "art": 1,
   "conf": "C",
@@ -1506,7 +1426,6 @@
    "scribe": 200
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
@@ -1535,7 +1454,6 @@
    "scribe": 100
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
@@ -1563,7 +1481,6 @@
    "merchant": 150
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
@@ -1593,7 +1510,6 @@
   "mat": {
    "parchment_sheet": 10
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 1,
@@ -1617,7 +1533,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
@@ -1650,12 +1565,9 @@
    "timber_m3": 500,
    "brick_1000": 50
   },
-  "cap_hours": 201618.79174129324,
-  "up_hours": 10080.939587064662,
   "build_yrs": 4,
   "adopt_yrs": 2,
   "risk": 0.2,
-  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -1693,7 +1605,6 @@
    "master": 100
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
@@ -1723,7 +1634,6 @@
    "merchant": 200
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
@@ -1753,7 +1663,6 @@
    "scribe": 50
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
@@ -1782,7 +1691,6 @@
    "scribe": 50
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 2,
@@ -1814,12 +1722,9 @@
   "mat": {
    "parchment_sheet": 100
   },
-  "cap_hours": 40323.75834825865,
-  "up_hours": 2016.1879174129324,
   "build_yrs": 1,
   "adopt_yrs": 1,
   "risk": 0.1,
-  "rev_hours": 3024.2818761193985,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1847,12 +1752,9 @@
   "mat": {
    "mat_bronze": 100
   },
-  "cap_hours": 20161.879174129324,
-  "up_hours": 1008.0939587064662,
   "build_yrs": 1,
   "adopt_yrs": 2,
   "risk": 0.1,
-  "rev_hours": 1008.0939587064662,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -1880,12 +1782,9 @@
   "mat": {
    "ceramic_kg": 50
   },
-  "cap_hours": 60485.63752238797,
-  "up_hours": 3024.2818761193985,
   "build_yrs": 1.2,
   "adopt_yrs": 1,
   "risk": 0.1,
-  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1921,12 +1820,9 @@
   "mat": {
    "parchment_sheet": 100
   },
-  "cap_hours": 60485.63752238797,
-  "up_hours": 2016.1879174129324,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
   "risk": 0.25,
-  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -1953,12 +1849,9 @@
   "mat": {
    "parchment_sheet": 200
   },
-  "cap_hours": 80647.5166965173,
-  "up_hours": 4032.375834825865,
   "build_yrs": 1.5,
   "adopt_yrs": 2,
   "risk": 0.2,
-  "rev_hours": 7056.657710945264,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -1981,7 +1874,6 @@
    "merchant": 150
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
@@ -2015,12 +1907,9 @@
    "paper_kg": 2000,
    "mat_ink": 200
   },
-  "cap_hours": 100809.39587064662,
-  "up_hours": 10080.939587064662,
   "build_yrs": 1.5,
   "adopt_yrs": 2,
   "risk": 0.2,
-  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 2,
   "conf": "B",
@@ -2050,12 +1939,9 @@
   "mat": {
    "paper_kg": 500
   },
-  "cap_hours": 40323.75834825865,
-  "up_hours": 4032.375834825865,
   "build_yrs": 0.8,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -2084,7 +1970,6 @@
   "mat": {
    "paper_kg": 100
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
@@ -2119,12 +2004,9 @@
   "mat": {
    "paper_kg": 500
   },
-  "cap_hours": 20161.879174129324,
-  "up_hours": 1008.0939587064662,
   "build_yrs": 1,
   "adopt_yrs": 1,
   "risk": 0.1,
-  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -2154,12 +2036,9 @@
   "mat": {
    "paper_kg": 800
   },
-  "cap_hours": 40323.75834825865,
-  "up_hours": 2016.1879174129324,
   "build_yrs": 1,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev_hours": 5040.469793532331,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -2191,12 +2070,9 @@
   "mat": {
    "timber_m3": 100
   },
-  "cap_hours": 100809.39587064662,
-  "up_hours": 6048.563752238797,
   "build_yrs": 2,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -2223,12 +2099,9 @@
   "mat": {
    "parchment_sheet": 100
   },
-  "cap_hours": 60485.63752238797,
-  "up_hours": 4032.375834825865,
   "build_yrs": 1.2,
   "adopt_yrs": 1,
   "risk": 0.1,
-  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2255,12 +2128,9 @@
   "mat": {
    "paper_kg": 200
   },
-  "cap_hours": 40323.75834825865,
-  "up_hours": 2016.1879174129324,
   "build_yrs": 0.8,
   "adopt_yrs": 1,
   "risk": 0.1,
-  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -2277,6 +2147,7 @@
   "pre": [
    "telegraph_electric"
   ],
+  "requires_running": ["telegraph_electric"],
   "traits": [
    "commerce",
    "information",
@@ -2292,19 +2163,16 @@
    "copper_kg": 200,
    "mat_wood": 500
   },
-  "cap_hours": 100809.39587064662,
-  "up_hours": 6048.563752238797,
   "build_yrs": 2,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 1,
   "conf": "B",
   "note": "Companies operate telegraph networks and sell message transmission by the word. Enables rapid long-distance communication of prices and news.",
   "gov": -1,
   "sus": 3,
-  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.] [GATE: Rides on the running telegraph network (lines, operators, cells); with the network shut it has nothing to carry.]"
  },
  {
   "id": "fin_news_agency",
@@ -2327,12 +2195,9 @@
   "mat": {
    "paper_kg": 300
   },
-  "cap_hours": 60485.63752238797,
-  "up_hours": 4032.375834825865,
   "build_yrs": 1.2,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -2363,12 +2228,9 @@
    "parchment_sheet": 300,
    "timber_m3": 200
   },
-  "cap_hours": 40323.75834825865,
-  "up_hours": 2016.1879174129324,
   "build_yrs": 1,
   "adopt_yrs": 1,
   "risk": 0.12,
-  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2398,12 +2260,9 @@
    "timber_m3": 50,
    "brick_1000": 1.0
   },
-  "cap_hours": 40323.75834825865,
-  "up_hours": 2016.1879174129324,
   "build_yrs": 1,
   "adopt_yrs": 1,
   "risk": 0.15,
-  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -2432,12 +2291,9 @@
    "timber_m3": 300,
    "brick_1000": 2.0
   },
-  "cap_hours": 161295.0333930346,
-  "up_hours": 8064.75166965173,
   "build_yrs": 3,
   "adopt_yrs": 1,
   "risk": 0.2,
-  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -2464,12 +2320,9 @@
    "paper_kg": 200,
    "mat_ink": 50
   },
-  "cap_hours": 20161.879174129324,
-  "up_hours": 1008.0939587064662,
   "build_yrs": 0.5,
   "adopt_yrs": 1,
   "risk": 0.1,
-  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -2480,7 +2333,9 @@
   "name": "Gambling house and gaming establishment",
   "cat": "luxury",
   "kind": "INSTITUTION",
-  "pre": [],
+  "pre": [
+   "fin_contract_law"
+  ],
   "traits": [
    "commerce",
    "luxury"
@@ -2494,16 +2349,21 @@
    "timber_m3": 30,
    "brick_1000": 0.5
   },
-  "cap_hours": 40323.75834825865,
-  "up_hours": 2016.1879174129324,
   "build_yrs": 0.8,
   "adopt_yrs": 1,
   "risk": 0.25,
-  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "Establishment where customers gamble, with the house taking a cut of all winnings. Highly profitable but attracts violence and is often banned or heavily taxed."
+  "note": "Establishment where customers gamble, with the house taking a cut of all winnings. Highly profitable but attracts violence and is often banned or heavily taxed. Officials who are paid to look away give a little cover, and the house draws the state's attention.",
+  "mechanics": {
+   "alarm_factor": {
+    "factor": 1.08
+   },
+   "protection": {
+    "flat": 0.01
+   }
+  }
  },
  {
   "id": "fin_lottery",
@@ -2511,7 +2371,8 @@
   "cat": "law",
   "kind": "INSTITUTION",
   "pre": [
-   "fin_government"
+   "fin_government",
+   "fin_contract_law"
   ],
   "traits": [
    "commerce"
@@ -2525,16 +2386,21 @@
   "mat": {
    "parchment_sheet": 200
   },
-  "cap_hours": 40323.75834825865,
-  "up_hours": 2016.1879174129324,
   "build_yrs": 1,
   "adopt_yrs": 2,
   "risk": 0.1,
-  "rev_hours": 16129.50333930346,
   "sch": 1,
   "art": 1,
   "conf": "B",
-  "note": "A government-authorised sale of numbered chances funds a declared public purpose, with published drawing and payout rules. Private lots and prize distributions are ancient; the reform is a recurring revenue-raising institution."
+  "note": "A government-authorised sale of numbered chances funds a declared public purpose, with published drawing and payout rules. Private lots and prize distributions are ancient; the reform is a recurring revenue-raising institution. A state that draws its revenue through the operator is slow to think ill of the operator.",
+  "mechanics": {
+   "alarm_factor": {
+    "factor": 0.97
+   },
+   "protection": {
+    "flat": 0.02
+   }
+  }
  },
  {
   "id": "fin_racecourse",
@@ -2559,12 +2425,9 @@
    "timber_m3": 100,
    "brick_1000": 1.0
   },
-  "cap_hours": 100809.39587064662,
-  "up_hours": 6048.563752238797,
   "build_yrs": 2,
   "adopt_yrs": 1,
   "risk": 0.18,
-  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -2592,12 +2455,9 @@
    "steel_plate_kg": 500,
    "copper_kg": 200
   },
-  "cap_hours": 60485.63752238797,
-  "up_hours": 4032.375834825865,
   "build_yrs": 2,
   "adopt_yrs": 1,
   "risk": 0.2,
-  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -2621,12 +2481,9 @@
    "merchant": 250
   },
   "mat": {},
-  "cap_hours": 60485.63752238797,
-  "up_hours": 4032.375834825865,
   "build_yrs": 1,
   "adopt_yrs": 2,
   "risk": 0.2,
-  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -2652,12 +2509,9 @@
    "timber_m3": 80,
    "cordage_kg": 100
   },
-  "cap_hours": 40323.75834825865,
-  "up_hours": 3024.2818761193985,
   "build_yrs": 1,
   "adopt_yrs": 1,
   "risk": 0.12,
-  "rev_hours": 5040.469793532331,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2685,12 +2539,9 @@
    "timber_m3": 200,
    "stone_blocks": 5000
   },
-  "cap_hours": 100809.39587064662,
-  "up_hours": 6048.563752238797,
   "build_yrs": 3,
   "adopt_yrs": 1,
   "risk": 0.15,
-  "rev_hours": 7056.657710945264,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -2721,12 +2572,9 @@
    "stone_blocks": 10000,
    "timber_m3": 500
   },
-  "cap_hours": 302428.18761193985,
-  "up_hours": 20161.879174129324,
   "build_yrs": 4,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 2,
   "conf": "B",
@@ -2757,12 +2605,9 @@
    "stone_blocks": 20000,
    "timber_m3": 800
   },
-  "cap_hours": 504046.9793532331,
-  "up_hours": 40323.75834825865,
   "build_yrs": 5,
   "adopt_yrs": 3,
   "risk": 0.2,
-  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -2780,6 +2625,8 @@
    "fin_canal_company",
    "railway"
   ],
+  "requires_running": ["railway"],
+  "requires_ways": {"rail": 75},
   "traits": [
    "commerce",
    "infrastructure"
@@ -2794,19 +2641,16 @@
    "steel_plate_kg": 5000,
    "timber_m3": 2000
   },
-  "cap_hours": 1008093.9587064662,
-  "up_hours": 60485.63752238797,
   "build_yrs": 6,
   "adopt_yrs": 5,
   "risk": 0.25,
-  "rev_hours": 40323.75834825865,
   "sch": 0,
   "art": 2,
   "conf": "C",
   "note": "Company operates railroad and charges passengers and freight shippers. Transforms inland transportation but requires massive capital investment and creates monopoly power.",
   "gov": 2,
   "sus": 1,
-  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.] [GATE: Operates over the railway works, and only while they are open. Needs track the actor has built: a line joining at least two held tiles is the least that can carry a service, and the figure is that single line measured the way geography counts a rail build.]"
  },
  {
   "id": "fin_tramway",
@@ -2830,12 +2674,9 @@
    "steel_plate_kg": 2000,
    "timber_m3": 500
   },
-  "cap_hours": 201618.79174129324,
-  "up_hours": 12097.127504477594,
   "build_yrs": 2,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -2865,12 +2706,9 @@
    "timber_m3": 100,
    "mat_leather": 50
   },
-  "cap_hours": 40323.75834825865,
-  "up_hours": 2016.1879174129324,
   "build_yrs": 1,
   "adopt_yrs": 1,
   "risk": 0.12,
-  "rev_hours": 5040.469793532331,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2896,12 +2734,9 @@
    "timber_m3": 300,
    "brick_1000": 3.0
   },
-  "cap_hours": 100809.39587064662,
-  "up_hours": 6048.563752238797,
   "build_yrs": 2,
   "adopt_yrs": 1,
   "risk": 0.15,
-  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -2926,12 +2761,9 @@
    "timber_m3": 200,
    "brick_1000": 2.0
   },
-  "cap_hours": 60485.63752238797,
-  "up_hours": 4032.375834825865,
   "build_yrs": 1.5,
   "adopt_yrs": 1,
   "risk": 0.12,
-  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2957,12 +2789,9 @@
    "timber_m3": 50,
    "brick_1000": 1.0
   },
-  "cap_hours": 40323.75834825865,
-  "up_hours": 3024.2818761193985,
   "build_yrs": 1,
   "adopt_yrs": 1,
   "risk": 0.12,
-  "rev_hours": 7056.657710945264,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2989,12 +2818,9 @@
    "timber_m3": 400,
    "brick_1000": 5.0
   },
-  "cap_hours": 302428.18761193985,
-  "up_hours": 20161.879174129324,
   "build_yrs": 3,
   "adopt_yrs": 2,
   "risk": 0.2,
-  "rev_hours": 20161.879174129324,
   "sch": 0,
   "art": 2,
   "conf": "B",
@@ -3023,12 +2849,9 @@
    "paper_kg": 1000,
    "mat_ink": 100
   },
-  "cap_hours": 100809.39587064662,
-  "up_hours": 6048.563752238797,
   "build_yrs": 1.5,
   "adopt_yrs": 2,
   "risk": 0.18,
-  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -3055,12 +2878,9 @@
    "timber_m3": 2000,
    "brick_1000": 20.0
   },
-  "cap_hours": 604856.3752238797,
-  "up_hours": 40323.75834825865,
   "build_yrs": 4,
   "adopt_yrs": 3,
   "risk": 0.2,
-  "rev_hours": 30242.818761193987,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -3104,12 +2924,9 @@
    "timber_m3": 50,
    "brick_1000": 0.5
   },
-  "cap_hours": 30242.818761193987,
-  "up_hours": 2016.1879174129324,
   "build_yrs": 0.8,
   "adopt_yrs": 1,
   "risk": 0.15,
-  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -3137,12 +2954,9 @@
    "timber_m3": 300,
    "brick_1000": 3.0
   },
-  "cap_hours": 161295.0333930346,
-  "up_hours": 10080.939587064662,
   "build_yrs": 2,
   "adopt_yrs": 1,
   "risk": 0.15,
-  "rev_hours": 14113.315421890527,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -3164,12 +2978,9 @@
    "merchant": 300
   },
   "mat": {},
-  "cap_hours": 201618.79174129324,
-  "up_hours": 20161.879174129324,
   "build_yrs": 3,
   "adopt_yrs": 1,
   "risk": 0.2,
-  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -3194,7 +3005,6 @@
    "master": 200
   },
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
@@ -3224,7 +3034,6 @@
   "mat": {
    "parchment_sheet": 30
   },
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
@@ -3256,12 +3065,9 @@
   "mat": {
    "parchment_sheet": 200
   },
-  "cap_hours": 20161.879174129324,
-  "up_hours": 1008.0939587064662,
   "build_yrs": 0.8,
   "adopt_yrs": 2,
   "risk": 0.1,
-  "rev_hours": 2016.1879174129324,
   "sch": 1,
   "art": 1,
   "conf": "B",
@@ -3289,12 +3095,9 @@
    "parchment_sheet": 500,
    "timber_m3": 200
   },
-  "cap_hours": 100809.39587064662,
-  "up_hours": 6048.563752238797,
   "build_yrs": 2,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -3332,12 +3135,9 @@
    "scribe": 100
   },
   "mat": {},
-  "cap_hours": 201618.79174129324,
-  "up_hours": 10080.939587064662,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
   "risk": 0.1,
-  "rev_hours": 2016.1879174129324,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -3365,12 +3165,9 @@
    "timber_m3": 300,
    "lead_kg": 100
   },
-  "cap_hours": 161295.0333930346,
-  "up_hours": 12097.127504477594,
   "build_yrs": 2,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 2,
   "conf": "B",
@@ -3399,12 +3196,9 @@
    "paper_kg": 800,
    "mat_ink": 100
   },
-  "cap_hours": 60485.63752238797,
-  "up_hours": 4032.375834825865,
   "build_yrs": 1.2,
   "adopt_yrs": 2,
   "risk": 0.1,
-  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -3432,12 +3226,9 @@
    "timber_m3": 400,
    "brick_1000": 4.0
   },
-  "cap_hours": 201618.79174129324,
-  "up_hours": 10080.939587064662,
   "build_yrs": 3,
   "adopt_yrs": 1,
   "risk": 0.12,
-  "rev_hours": 3024.2818761193985,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -3464,8 +3255,6 @@
   "mat": {
    "parchment_sheet": 1000
   },
-  "cap_hours": 40323.75834825865,
-  "up_hours": 2016.1879174129324,
   "build_yrs": 2,
   "adopt_yrs": 1,
   "risk": 0.15,
@@ -3497,12 +3286,9 @@
   "mat": {
    "paper_kg": 500
   },
-  "cap_hours": 60485.63752238797,
-  "up_hours": 4032.375834825865,
   "build_yrs": 2,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev_hours": 2016.1879174129324,
   "sch": 1,
   "art": 1,
   "conf": "B",
@@ -3521,7 +3307,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap_hours": 0,
   "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
@@ -3553,8 +3338,6 @@
   "mat": {
    "parchment_sheet": 500
   },
-  "cap_hours": 40323.75834825865,
-  "up_hours": 2016.1879174129324,
   "build_yrs": 1.5,
   "adopt_yrs": 2,
   "risk": 0.1,
@@ -3585,8 +3368,6 @@
   "mat": {
    "paper_kg": 800
   },
-  "cap_hours": 100809.39587064662,
-  "up_hours": 6048.563752238797,
   "build_yrs": 2,
   "adopt_yrs": 2,
   "risk": 0.1,

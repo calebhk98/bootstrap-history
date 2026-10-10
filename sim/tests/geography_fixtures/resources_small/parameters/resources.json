@@ -40,5 +40,8 @@
   {"id": "resources_stand_cover_when_forest_layer_missing", "value": 0.5, "unit": "fraction of tile area under the stand at full suitability", "kind": "heuristic",
    "source": "none; used only when the forest_fraction layer is missing", "conf": "D",
    "why": "Cover of a biotic stand on a tile with no measured forest layer, scaled by the envelope suitability."},
-  {"id": "resources_off_map_distance_km", "value": 600, "unit": "km", "kind": "heuristic", "source": "test", "conf": "D", "why": "As the base map."}
+  {"id": "resources_off_map_distance_km", "value": 600, "unit": "km", "kind": "heuristic", "source": "test", "conf": "D", "why": "As the base map."},
+  {"id": "resources_working_share_per_year", "value": 0.004, "unit": "share of a deposit's endowment worked a year", "kind": "heuristic",
+   "source": "none; the order of the repo's own Las Medulas and Laurion figures over their working lives (confidence C and D), not a fit", "conf": "D",
+   "why": "How fast a historic deposit is worked out, until output rates by deposit are sourced; sets the metal mined before a start year, from which opening stocks of durable goods are derived."}
  ]}

@@ -2,10 +2,11 @@
 
 A fishery row names the layer that gives its extent (shelf area, lake area, river length). Marine
 rows (with a trophic level) take a share of the shelf's primary production up the food chain
-(Pauly and Christensen); other rows give a sustainable yield per unit of extent. A row may name a
-parameter used as the extent when the layer has no value, only on tiles with a given field set.
+(Pauly and Christensen); other rows give a sustainable yield per unit of extent. The shelf layer is already
+partitioned between tiles (each shelf point belongs to the nearest tile's land), so extents add up. A row
+may name a parameter used as the extent when the layer has no value, only on tiles with a given field set.
 """
-from typing import List, Optional, Tuple
+from typing import List, Mapping, Optional, Tuple
 
 from sim.geography import content_rules, tile_layers
 from sim.geography.food_productivity import lookup, rows_of_mechanism
@@ -36,7 +37,8 @@ def _marine_tonnes(world_map: WorldMap, tile_id: str, row: dict, extent_km2: flo
             * parameter(world_map, row["access_parameter"]))
 
 
-def fishing_contributions(world_map: WorldMap, tile_id: str) -> List[Tuple[str, str, float]]:
+def fishing_contributions(world_map: WorldMap, tile_id: str,
+                          wild_stock: Optional[Mapping] = None) -> List[Tuple[str, str, float]]:
     reader = lookup(world_map, tile_id)
     result = []
     for row in rows_of_mechanism(world_map, "fishery"):

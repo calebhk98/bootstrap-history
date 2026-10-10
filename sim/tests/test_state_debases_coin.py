@@ -9,8 +9,7 @@ from sim.economy import currency
 
 
 def agent_game(civ):
-    game = S.Sim(NODES, ORDER, random.Random(1), events=True, manual=False, civ=S.load_civ(civ),
-                 cfg={"agent_economy": True})
+    game = S.Sim(NODES, ORDER, random.Random(1), events=True, manual=False, civ=S.load_civ(civ))
     game.goal, game.done_year = GOAL, {}
     return game
 

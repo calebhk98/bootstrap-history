@@ -1,5 +1,5 @@
 {
- "_internal": "`subsistence_from_climate` names the floor per person sim/world/climate_needs.py calculates for each tile from its climate. TRANSITIONAL: surplus_budget_share is a labelled heuristic weight per need (normalised over the needs that have a priced good). A good's effectiveness is per unit of its own production unit, in the need's unit. Mods add needs (ids namespaced by mod id) and add or extend goods; a production entry may also carry `satisfies` and `supply_per_year` for its dominant output. `supply_per_year` states a limited supply with no deposit model behind it, and floors the price at what that supply clears.",
+ "_internal": "`subsistence_from_climate` names the floor per person sim/world/climate_needs.py calculates for each tile from its climate. TRANSITIONAL: surplus_budget_share is a labelled heuristic weight per need (water's is small because its floor is most of what a household spends on it) (normalised over the needs that have a priced good). A good's effectiveness is per unit of its own production unit, in the need's unit. Mods add needs (ids namespaced by mod id) and add or extend goods; a production entry may also carry `satisfies` and `supply_per_year` for its dominant output. `supply_per_year` states a limited supply with no deposit model behind it, and floors the price at what that supply clears.",
  "needs": {
   "food": {
    "surplus_budget_share": 0.30,
@@ -42,6 +42,38 @@
    "satiation_per_capita_per_year": 0.002,
    "satiation_basis": "TRANSITIONAL heuristic: spices are bought for taste and to dress plain food, and a household's yearly use is grams, not a budget share; a couple of grams per head a year is an order of magnitude, not a measured figure. A model of taste, and of how far an elite's use exceeds the common people's, would replace it.",
    "effectiveness_basis": "flavouring strength per kg relative to black pepper; taken equal across the spices until a source gives them separately"
+  },
+  "water": {
+   "surplus_budget_share": 0.01,
+   "subsistence_per_capita_per_year": 7300.0,
+   "subsistence_basis": "20 litres a head a day, the basic-access service level of Howard and Bartram, Domestic Water Quantity, Service Level and Health (WHO, 2003): enough for drinking, cooking and basic hygiene; survival drinking alone is a few litres. One litre is one kilogram, so 20 * 365 = 7300 kg. The source was recalled, not re-opened; confidence C.",
+   "satiation_per_capita_per_year": 36500.0,
+   "satiation_basis": "TRANSITIONAL heuristic: 100 litres a head a day, the 'optimal access' level of the same WHO report, past which more water is waste, not use. Roman fountains ran at far higher flows; that is a flow, not a use per head.",
+   "unit": "kg of water at the point of use",
+   "effectiveness_basis": "mass of water delivered; every way of delivering it is equal"
+  },
+  "vessels": {
+   "surplus_budget_share": 0.02,
+   "held_stock_per_capita": 5.0,
+   "service_life_years": 4.0,
+   "stock_basis": "A household holds a few dozen vessels (cooking pots, storage jars, bowls, cups) of about a kilogram each, about 5 kg a head, and they break and are replaced within a few years: cooking pots last the least, storage jars the most. Ethnoarchaeological studies of household pottery (Deal, Household Pottery Disposal in the Maya Highlands, 1998, recalled and not re-opened) give the order of the stock and its use-life; confidence D. The floor is the stock over its life, as for any durable.",
+   "unit": "kg of vessel ware",
+   "effectiveness_basis": "mass of ware; fired clay and glass are taken equal until a source gives their use-lives separately"
+  },
+  "writing": {
+   "surplus_budget_share": 0.01,
+   "scales_with_civ_field": "literacy_general",
+   "unit": "written pages",
+   "floor_basis": "No floor: nobody dies or goes cold for want of writing, and a floor is bought whatever it costs, which would put writing into the wage a household must earn. Households spend a share of their surplus on it, and the share applies to the literate part of the population, which is the civilisation's literacy_general, so it grows as schooling spreads.",
+   "effectiveness_basis": "one written page of a letter or document"
+  },
+  "money": {
+   "surplus_budget_share": 0.005,
+   "held_stock_per_capita": 0.1,
+   "service_life_years": 67.0,
+   "stock_basis": "Silver coin in circulation in a large pre-industrial money economy is of the order of a tenth of a kilogram a head, and wear, loss and hoarding take about one and a half per cent of it a year (Duncan-Jones, Money and Government in the Roman Empire, 1994, recalled and not re-opened; confidence D). The mint's own striking and wear are modelled in sim/economy/mint.py; this entry is only so the labour package sees the engravers and furnacemen that coin replacement keeps at work, and households do not buy it.",
+   "unit": "kg of struck silver coin",
+   "effectiveness_basis": "mass of coin struck"
   },
   "warmth_and_light": {
    "subsistence_from_climate": "warmth_mj",
@@ -99,6 +131,15 @@
   "firewood_kg": {"satisfies": {"warmth_and_light": 15.0}},
   "charcoal_kg": {"satisfies": {"warmth_and_light": 29.0}},
   "coal_kg": {"satisfies": {"warmth_and_light": 27.0}},
-  "peat_kg": {"satisfies": {"warmth_and_light": 12.0}}
+  "peat_kg": {"satisfies": {"warmth_and_light": 12.0}},
+
+  "ceramic_kg": {"satisfies": {"vessels": 1.0}},
+  "glass_raw_kg": {"satisfies": {"vessels": 1.0}},
+
+  "struck_silver_coin_kg": {"satisfies": {"money": 1.0}, "bought_by_households": false},
+
+  "water_kg": {"satisfies": {"water": 1.0}},
+  "water_well_kg": {"satisfies": {"water": 1.0}},
+  "water_piped_kg": {"satisfies": {"water": 1.0}}
  }
 }

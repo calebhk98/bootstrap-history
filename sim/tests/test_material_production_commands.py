@@ -16,11 +16,11 @@ _sim_class = S.Sim
 # --- BREAK: `buy nitre`. Saltpetre is made, not mined, and there was no
 # command that made any: only step(), which took 5% of a MANUAL player's
 # capital every year they were short, silently.
-s_ni = sim(capital=book_money(100000.0))
+s_ni = sim(capital=hours_money(2020000))
 _laid = s_ni.build_nitre(20000)
 check("nitre beds can be laid by hand, and cost what the quote says",
       _laid == 20000 and abs(s_ni.capital
-                             - (book_money(100000.0) - 20000 * s_ni.NITRE_COST_PER_M2
+                             - (hours_money(2020000) - 20000 * s_ni.NITRE_COST_PER_M2
                                 * s_ni.price_index)) < 1e-6,
       (_laid, s_ni.capital))
 check("...and they actually supply saltpetre",

@@ -102,7 +102,7 @@ SOURCES = {
     "lake_area_km2": {"natural_earth_10m_lakes": _natural_earth(
         "1:10m lakes", VECTOR + "lake_area_km2", " (lakes)")},
     "shelf_area_km2": {"natural_earth_10m_bathymetry": _natural_earth(
-        "1:10m bathymetry L_0 and K_200", VECTOR + "shelf_area_km2", " (bathymetry_L_0, bathymetry_K_200)")},
+        "1:10m bathymetry L_0 and K_200", "sim.geography.layer_build.layers_shelf:shelf_area_km2", " (bathymetry_L_0, bathymetry_K_200)")},
     "is_port": {"natural_earth_ocean": _natural_earth(
         "1:10m ocean", "sim.geography.layer_build.sea_links:is_port", " (ocean)")},
     "sea_links": {"natural_earth_ocean": _natural_earth(

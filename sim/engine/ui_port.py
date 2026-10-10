@@ -4,7 +4,7 @@ delegates exactly. sim/ui/ imports nothing from sim.engine except this module.""
 from sim.engine import (  # noqa: F401
     automation_audit, cash_book, category_traits, cause_book, civ_start_check, fuzzy_estimates, path_search, planner,
     purchase_rule, settings, settings_table, shortage_conditions, topic_tags, tree_merge, units,
-    validate_material_gating, validate_output_bounds, validate_copy_visibility, validate_production, validate_unheld_gates)
+    validate_material_gating, validate_node_money, node_revenue_census, validate_copy_visibility, validate_production, validate_unheld_gates, validate_running_gates, validate_defence_stores)
 from sim.engine.blockers import BLOCKER_MEANING, RUNNING_CONSTRAINT_KIND  # noqa: F401
 from sim.engine.catalog import load_production_catalog  # noqa: F401
 from sim.engine.core import Sim  # noqa: F401
@@ -17,6 +17,11 @@ from sim.engine.data import (  # noqa: F401
     win_condition_describe)
 from sim.engine.default_civilisation import default_civilisation_id  # noqa: F401
 from sim.engine.fog import strip_self_play_advice  # noqa: F401
+from sim.engine.mod_code import COMMAND_REGISTRATIONS, code_report, run_mod_code  # noqa: F401
+from sim.engine.mod_code import allow as allow_mod_code  # noqa: F401
+from sim.engine.mods_constants import constant_overrides  # noqa: F401
+from sim.engine.ui_commands import load_command_specs  # noqa: F401
+from sim.engine.foreign_economy_data import foreign_economy_document  # noqa: F401
 from sim.engine.hazard_window import hazards_not_yet_past  # noqa: F401
 from sim.engine.identity_cache import IdentityCache  # noqa: F401
 from sim.engine.mods import get_ordered_mods  # noqa: F401
@@ -49,7 +54,8 @@ def set_interface_memory(sim, memory):
 # Engine reads: private methods and fields of the `Sim`, under public names.
 
 def material_prices(sim):
-    return sim._material_prices()
+    """Every material someone in reach sells, at the price households are asked."""
+    return sim.goods_market.household_prices()
 
 
 def commodity_ledger(sim):
@@ -159,7 +165,7 @@ def set_goal_closure(sim, closure_set):
 
 
 def goal_years(sim):
-    return dict(sim.state.scenario.goal_years)
+    return dict(sim.state.seat_progress.goal_years)
 
 
 def set_goal(sim, node_id):
@@ -210,9 +216,9 @@ def set_said_parallelism(sim, said):
     sim._said_parallelism = said
 
 
-def said_explanations(scenario):
-    return scenario._said_explanations
+def said_explanations(seat_progress):
+    return seat_progress._said_explanations
 
 
-def set_said_explanations(scenario, said):
-    scenario._said_explanations = said
+def set_said_explanations(seat_progress, said):
+    seat_progress._said_explanations = said

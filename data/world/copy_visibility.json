@@ -1,0 +1,985 @@
+{
+ "_note": "How much of a technique an onlooker can recover from the product or the working yard, by the node's category. A node's own copy_visibility and copy_visibility_reason in data/branches override its category. Each reason says what shows and what does not.",
+ "categories": {
+  "access": {
+   "copy_visibility": 0.6,
+   "reason": "Acquiring a site or planting stock is done in the open and who holds it shows; where the good sources are and how to keep the stock alive are not."
+  },
+  "accounting": {
+   "copy_visibility": 0.6,
+   "reason": "Ledgers and statements pass between partners and auditors, so their form is copied by looking; the judgement in keeping them stays with the keeper."
+  },
+  "agriculture": {
+   "copy_visibility": 0.7,
+   "reason": "Fields, rotations and tools lie in plain view of neighbours; the timing, soil judgement and seed quality that make them pay are not seen."
+  },
+  "air": {
+   "copy_visibility": 0.5,
+   "reason": "An aircraft or its fitting is seen in flight and on the ground; the aerodynamic proportions and the handling that make it fly are not recovered by watching."
+  },
+  "algebra": {
+   "copy_visibility": 0.3,
+   "reason": "A mathematical method lives in the heads of those who use it; an onlooker sees results and symbols but not the proofs and reasoning behind them."
+  },
+  "alloys": {
+   "copy_visibility": 0.2,
+   "reason": "The mix of metals and the melting practice leave no trace in the finished metal; a look shows colour and weight, not composition."
+  },
+  "analysis": {
+   "copy_visibility": 0.3,
+   "reason": "Analytical procedure is done behind laboratory doors; the numbers it yields are seen, the reagents, order and care that produce them are not."
+  },
+  "analytical_chemistry": {
+   "copy_visibility": 0.3,
+   "reason": "A separation or measurement is done in glassware whose inner working shows nothing; only the result is carried out of the laboratory."
+  },
+  "animal_traction": {
+   "copy_visibility": 0.9,
+   "reason": "Harness and fittings are worn in the open and every strap and joint can be seen and copied from the working animal."
+  },
+  "animals": {
+   "copy_visibility": 0.6,
+   "reason": "Housing and handling of stock are seen from the road; the breeding records, feed ratios and cures behind the yield are not."
+  },
+  "application": {
+   "copy_visibility": 0.6,
+   "reason": "A working appliance can be handled and its outline copied; the windings, materials and tolerances inside its casing are not seen."
+  },
+  "armour": {
+   "copy_visibility": 0.5,
+   "reason": "Plate and its shape can be examined on the wearer; the hardening and the steel that make it turn a shot show only in the failure."
+  },
+  "aviation": {
+   "copy_visibility": 0.5,
+   "reason": "A machine is seen in flight and on the ground; the wing section, balance and control feel that make it fly are not recovered by watching."
+  },
+  "banking": {
+   "copy_visibility": 0.5,
+   "reason": "A bank takes and pays in public, so its forms are copied; reserves, lending judgement and the trust that sustain it are hidden."
+  },
+  "benefaction": {
+   "copy_visibility": 0.8,
+   "reason": "A public work or endowment stands where all can see and use it; how it was financed, governed and kept up is not shown."
+  },
+  "bicycles": {
+   "copy_visibility": 0.8,
+   "reason": "Every part of a bicycle is exposed and can be measured and copied; only the quality of its tubing and bearings is not told by sight."
+  },
+  "binders": {
+   "copy_visibility": 0.3,
+   "reason": "Mortar, plaster and cement look alike once set; the source of the stone, the burning and the grinding that give them strength are not seen."
+  },
+  "bridges": {
+   "copy_visibility": 0.8,
+   "reason": "A bridge is wholly in view and its form can be measured; the loads it was calculated for and the soundness of its foundations are not."
+  },
+  "building_systems": {
+   "copy_visibility": 0.6,
+   "reason": "Rooms, stairs and visible fittings are plain to see; what lies in walls and floors, such as barriers, flues and pipes, is hidden."
+  },
+  "buildings": {
+   "copy_visibility": 0.85,
+   "reason": "A completed building is open to view and walk through and can be measured; the way it was set out and the quality of its core are not shown."
+  },
+  "calculation": {
+   "copy_visibility": 0.5,
+   "reason": "A calculating machine is seen in use and its keys and dials copied; the gearing and carry mechanism inside the case are not."
+  },
+  "capability": {
+   "copy_visibility": 0.2,
+   "reason": "A sustained capability such as a heat, a gas supply or a purity is the sum of many practices; the output shows that it was reached, not how."
+  },
+  "carriage_engineering": {
+   "copy_visibility": 0.85,
+   "reason": "Springs, axles, brakes and gearing of a carriage are exposed beneath it and can be measured and copied by looking."
+  },
+  "casting": {
+   "copy_visibility": 0.3,
+   "reason": "A casting shows its shape and surface; the mould material, the melt and the cooling that made it sound are hidden in the foundry."
+  },
+  "ceramics": {
+   "copy_visibility": 0.25,
+   "reason": "A fired body shows colour and form; the clay mix, glaze and firing schedule that produced it leave no clear trace."
+  },
+  "chemical": {
+   "copy_visibility": 0.3,
+   "reason": "The effect of a chemical weapon or protection is plain; how the agent is made, held and delivered is kept behind works walls."
+  },
+  "chemical_engineering": {
+   "copy_visibility": 0.2,
+   "reason": "A chemical works shows its vessels and pipes; the temperatures, pressures, flows and charges that make them yield are not visible."
+  },
+  "chemistry": {
+   "copy_visibility": 0.3,
+   "reason": "A chemical fact is learned by repeating a preparation; an onlooker sees the glassware and the product, not the quantities and the order of working."
+  },
+  "cinema": {
+   "copy_visibility": 0.5,
+   "reason": "A projector and a screen are seen at work; the film emulsion and the exact registration of frames are not recovered by watching."
+  },
+  "circuit_concept": {
+   "copy_visibility": 0.3,
+   "reason": "A circuit is hidden inside a box and works only when its values and layout are right; its diagram is not on view."
+  },
+  "cleaning": {
+   "copy_visibility": 0.8,
+   "reason": "A cleaning device or soap is used before the household and its working is evident; only the recipe of a compound may be hidden."
+  },
+  "colour": {
+   "copy_visibility": 0.3,
+   "reason": "A colour print shows its result; the separations, inks and registration that make the colours agree are done out of sight."
+  },
+  "comfort": {
+   "copy_visibility": 0.9,
+   "reason": "Furniture, glazing and fans stand in rooms where guests see them and every joint and part can be copied."
+  },
+  "commerce": {
+   "copy_visibility": 0.7,
+   "reason": "Commercial practice is carried out in open markets and its forms are seen and imitated; the knowledge of whom to trust is not."
+  },
+  "communications": {
+   "copy_visibility": 0.5,
+   "reason": "A field set or telephone is handled by many and its outside is copied; the circuit and the adjustment inside are not."
+  },
+  "component": {
+   "copy_visibility": 0.4,
+   "reason": "A component is seen from outside and its size and ratings read from its markings; its construction inside is not."
+  },
+  "composition": {
+   "copy_visibility": 0.5,
+   "reason": "A composing machine is seen working in the shop; its keyboard and matrices are copied less easily than its principle."
+  },
+  "computing": {
+   "copy_visibility": 0.3,
+   "reason": "A computing machine's behaviour is seen from its outputs; the logic, coding and arrangement that produce them are inside."
+  },
+  "connections": {
+   "copy_visibility": 0.9,
+   "reason": "Rivets, bolts, plates and welds are exposed on every structure and can be measured and copied by looking."
+  },
+  "consumer_goods": {
+   "copy_visibility": 0.6,
+   "reason": "A household article can be bought and taken apart, so its form is copied at once; its materials and the way it is made at scale are not."
+  },
+  "control": {
+   "copy_visibility": 0.7,
+   "reason": "A governor or regulator turns in plain sight and its linkage can be seen; the tuning that makes it stable is learned by trial."
+  },
+  "control_theory": {
+   "copy_visibility": 0.2,
+   "reason": "A stability criterion or a tuning law is mathematics; machines that obey it show nothing of the reasoning behind them."
+  },
+  "cooking": {
+   "copy_visibility": 0.8,
+   "reason": "A cooking vessel and its working are seen in the kitchen; only the fit of its closure and its safety valve need care to copy."
+  },
+  "cooling": {
+   "copy_visibility": 0.5,
+   "reason": "A cooling cabinet is seen in the home; the sealed refrigerant circuit and its charge are not."
+  },
+  "credit": {
+   "copy_visibility": 0.5,
+   "reason": "A bill or a cheque is a paper handed over and its form is copied; the standing of the names on it and the rules of acceptance are not."
+  },
+  "crops": {
+   "copy_visibility": 0.7,
+   "reason": "A crop is grown in open fields and its husbandry watched; the treatment after harvest, such as pressing, boiling and drying, is done indoors."
+  },
+  "cryptography": {
+   "copy_visibility": 0.1,
+   "reason": "A cipher is designed to show nothing; an onlooker sees only meaningless text, and the key and method stay with its users."
+  },
+  "cutting": {
+   "copy_visibility": 0.35,
+   "reason": "A cutting tool shows its edge and shape; the steel, its hardening and the temper that keep that edge are not seen."
+  },
+  "dairy": {
+   "copy_visibility": 0.5,
+   "reason": "Dairying is seen on the farm and in the shop; the cultures, temperatures and ageing that decide the product are not."
+  },
+  "data_handling": {
+   "copy_visibility": 0.5,
+   "reason": "A tabulator or register is seen working in an office and its keys copied; the mechanism that carries and records is inside."
+  },
+  "dentistry": {
+   "copy_visibility": 0.6,
+   "reason": "Dental work is done before the patient and the instruments are seen; the finer skill and the materials of fillings are not shown."
+  },
+  "diagnosis": {
+   "copy_visibility": 0.5,
+   "reason": "An examination is watched by the patient and attendants; the training that reads its signs is not conveyed by watching."
+  },
+  "diagnostics": {
+   "copy_visibility": 0.4,
+   "reason": "A diagnostic device is seen in use; its internal construction and the skill that interprets what it shows are not."
+  },
+  "economic": {
+   "copy_visibility": 0.7,
+   "reason": "A change in how land or a farm is held shows in the landscape and the accounts neighbours hear of; the legal manoeuvre behind it does not."
+  },
+  "electrical": {
+   "copy_visibility": 0.4,
+   "reason": "Wires, cells and lamps are seen; the materials, windings and insulation that make them efficient and safe are hidden in them."
+  },
+  "electrical_auxiliary": {
+   "copy_visibility": 0.5,
+   "reason": "A charging set or converter is seen with its connections; the way its parts are matched is learned only by building one."
+  },
+  "electrical_dist": {
+   "copy_visibility": 0.8,
+   "reason": "Insulators, fuses and breakers stand on poles and in panels in plain view and can be measured; their ratings are not told by sight."
+  },
+  "electrical_gen": {
+   "copy_visibility": 0.4,
+   "reason": "A generator is seen turning and its frame copied; the winding pattern and magnetic circuit inside decide its output and are not."
+  },
+  "electrical_storage": {
+   "copy_visibility": 0.3,
+   "reason": "A storage battery shows its case and terminals; the plates, the electrolyte and the forming that give it capacity are inside."
+  },
+  "electronics": {
+   "copy_visibility": 0.15,
+   "reason": "A device is a sealed part whose function shows only in a circuit; the purity, doping and patterning that make it work leave no trace."
+  },
+  "energy_storage": {
+   "copy_visibility": 0.8,
+   "reason": "A flywheel or a pumped store is a large visible structure whose layout is copied; the control and losses are not."
+  },
+  "envelope": {
+   "copy_visibility": 0.8,
+   "reason": "Walls, glass and roofs are on view from the street and can be measured; the fixing and the quality of the material are less so."
+  },
+  "environmental_chemistry": {
+   "copy_visibility": 0.3,
+   "reason": "A waste stream and its treatment are known to those who run the works; neighbours see the effect, not the process."
+  },
+  "equipment": {
+   "copy_visibility": 0.8,
+   "reason": "A crane, mixer or mill stands at the site and its parts can be seen and measured; the strength of its members is not."
+  },
+  "excavation": {
+   "copy_visibility": 0.9,
+   "reason": "Dredging and tunnelling are carried out in the open or at the face and the method is watched by crews and onlookers."
+  },
+  "expedition": {
+   "copy_visibility": 0.5,
+   "reason": "A voyage's arrival and cargo are known to all; the route, the timing and the sources of supply are kept by the crew."
+  },
+  "explosives": {
+   "copy_visibility": 0.15,
+   "reason": "The effect is plain to everyone; the proportions, purity and corning or nitration that make it safe and powerful cannot be seen in the product."
+  },
+  "fermentation": {
+   "copy_visibility": 0.3,
+   "reason": "A vat is seen bubbling and its product tasted; the culture, temperature and timing that steer it are not."
+  },
+  "fibres": {
+   "copy_visibility": 0.4,
+   "reason": "A fibre or cloth can be handled and identified; the preparing, retting and spinning that bring it to that state are mostly out of sight."
+  },
+  "field_machinery": {
+   "copy_visibility": 0.85,
+   "reason": "A farm machine works in open fields before neighbours and every part can be seen and measured; only the steel quality is hidden."
+  },
+  "finishes": {
+   "copy_visibility": 0.5,
+   "reason": "A finished floor or wall shows its pattern; the mix and the laying are done once and hidden under the surface."
+  },
+  "finishing": {
+   "copy_visibility": 0.3,
+   "reason": "A finished surface shows its look; the bath, the current or the coat and the cleaning that produced it leave no trace."
+  },
+  "fishing": {
+   "copy_visibility": 0.7,
+   "reason": "Fishing and whaling fleets work in view of harbours and their gear is seen; the grounds and the rendering of the catch are not."
+  },
+  "forming": {
+   "copy_visibility": 0.5,
+   "reason": "A formed part shows its shape; the dies, heats and pressures that made it are in the shop and not in the product."
+  },
+  "fortification": {
+   "copy_visibility": 0.9,
+   "reason": "A wall, ditch or bastion is open to every traveller and can be paced out and drawn."
+  },
+  "foundation": {
+   "copy_visibility": 0.5,
+   "reason": "A practice of conduct or standard-setting shows in how its holder behaves; the intent and the method behind it do not."
+  },
+  "foundations": {
+   "copy_visibility": 0.4,
+   "reason": "A foundation is buried once built; its method is seen only by those who watch the works."
+  },
+  "fuel_advanced": {
+   "copy_visibility": 0.15,
+   "reason": "A propellant system burns in sight and the flame and thrust show; the mixture, pumping and control that make it work are not."
+  },
+  "fuel_infrastructure": {
+   "copy_visibility": 0.9,
+   "reason": "A gas holder stands in the town and its construction is plain to see; only its sealing and pressure control are not."
+  },
+  "fuel_processing": {
+   "copy_visibility": 0.3,
+   "reason": "A gasifier or a refinery is seen from outside; the fractions, temperatures and flows inside are not."
+  },
+  "fuel_product": {
+   "copy_visibility": 0.3,
+   "reason": "The product, such as oil or spirit, is sold and burned in the open; the refining that makes it clean and consistent is not shown."
+  },
+  "fuel_production": {
+   "copy_visibility": 0.6,
+   "reason": "Charcoal burning, mining and coking are watched by neighbours; the control of the burn and the winning of the best seam are not."
+  },
+  "geometry": {
+   "copy_visibility": 0.35,
+   "reason": "A geometric construction can be redrawn from a drawing; the reasoning for why it holds is not seen."
+  },
+  "glass_optics": {
+   "copy_visibility": 0.25,
+   "reason": "A glass or a lens shows its clearness and shape; the batch, melting and annealing or grinding that make it are not seen."
+  },
+  "grid_operations": {
+   "copy_visibility": 0.2,
+   "reason": "A network's running practice such as frequency, load and power factor is kept in control rooms and shows only as steady supply."
+  },
+  "harbours": {
+   "copy_visibility": 0.9,
+   "reason": "A dock or harbour work is large and open to every sailor and can be measured and drawn."
+  },
+  "heat_treatment": {
+   "copy_visibility": 0.15,
+   "reason": "The heat that hardens or softens steel is read from its colour by the smith and leaves no trace in the finished piece."
+  },
+  "heating": {
+   "copy_visibility": 0.9,
+   "reason": "Hearths, stoves and under-floor flues are seen in the house and can be copied; their draught takes some adjusting."
+  },
+  "hydraulic_power": {
+   "copy_visibility": 0.7,
+   "reason": "Pipes, rams and accumulators are visible; the pressures and the packings that hold them are not."
+  },
+  "ic_auxiliary": {
+   "copy_visibility": 0.5,
+   "reason": "Valves, injectors and chargers are seen when an engine is opened; the timing and clearances that make them work are not."
+  },
+  "ic_prime": {
+   "copy_visibility": 0.4,
+   "reason": "An engine runs and is heard and seen; the cycle, the compression and the ignition timing are inside it."
+  },
+  "industrial_process": {
+   "copy_visibility": 0.15,
+   "reason": "A works is entered by few and a process there shows only its output; the reactions, catalysts and conditions are not visible."
+  },
+  "information": {
+   "copy_visibility": 0.6,
+   "reason": "A printed or copied text circulates and its form is copied; the press work and the sources behind it are not shown."
+  },
+  "infrastructure": {
+   "copy_visibility": 0.85,
+   "reason": "Aqueducts, drains and mains are public works that can be walked along and measured; the levelling and the jointing are less plain."
+  },
+  "ink": {
+   "copy_visibility": 0.3,
+   "reason": "Ink is seen on the page; the recipe and the grinding that give it body and blackness are kept by the maker."
+  },
+  "institution": {
+   "copy_visibility": 0.5,
+   "reason": "An institution is seen in its dealings and buildings; its internal rules, funding and the habits that keep it working are not."
+  },
+  "institutional": {
+   "copy_visibility": 0.6,
+   "reason": "A code or a plan is published or enforced in view of the town; the discretion applied in using it is not."
+  },
+  "institutions": {
+   "copy_visibility": 0.5,
+   "reason": "A hospital, school or court is seen from outside and its forms copied; the training and discipline within it are not."
+  },
+  "instruments": {
+   "copy_visibility": 0.5,
+   "reason": "An instrument can be seen in use and its form copied; the accuracy of its graduation and its materials are not."
+  },
+  "insurance": {
+   "copy_visibility": 0.5,
+   "reason": "A policy's form is passed to the insured and copied; the odds, the tables and the reserves behind it are kept by the insurer."
+  },
+  "intaglio": {
+   "copy_visibility": 0.5,
+   "reason": "A printed engraving shows its lines; the biting, the burin work and the inking that produced them are done in the studio."
+  },
+  "investment": {
+   "copy_visibility": 0.6,
+   "reason": "A bond, share or contract is an instrument of paper and its terms are read; the valuation behind its price is not."
+  },
+  "joining": {
+   "copy_visibility": 0.45,
+   "reason": "A joint shows its seam; the heat, filler, flux and preparation that made it hold are not seen afterwards."
+  },
+  "knitting": {
+   "copy_visibility": 0.8,
+   "reason": "A knitting frame is open to view and its needles and action can be seen and copied; only the setting of the needles needs skill."
+  },
+  "knowledge": {
+   "copy_visibility": 0.3,
+   "reason": "Understanding is held by those who have it; an onlooker sees the practice it supports but not the reasoning behind it."
+  },
+  "lab_technique": {
+   "copy_visibility": 0.3,
+   "reason": "A technique is carried out at the bench; the care, the order and the sense of when it has worked are not seen."
+  },
+  "laboratory": {
+   "copy_visibility": 0.25,
+   "reason": "A research apparatus is set up behind closed doors and its readings are seen by few; the design and the skill in using it are not."
+  },
+  "labour": {
+   "copy_visibility": 0.7,
+   "reason": "A contract, wage rule or indenture is a form used in the open and copied; the leverage that makes it hold is not."
+  },
+  "law": {
+   "copy_visibility": 0.7,
+   "reason": "A statute is written and read by anyone; how courts apply it and enforce it is learned only by watching many cases."
+  },
+  "leather": {
+   "copy_visibility": 0.35,
+   "reason": "Leather shows its surface and feel; the tanning liquor, time and dressing are done in the yard, out of the sight of buyers."
+  },
+  "leisure": {
+   "copy_visibility": 0.9,
+   "reason": "A game, toy or instrument is sold and handled openly and its form can be copied directly."
+  },
+  "lighting": {
+   "copy_visibility": 0.8,
+   "reason": "A candle, lamp or fitting is seen lit in every room and can be copied; only the wick, fuel and glass quality are less obvious."
+  },
+  "lithography": {
+   "copy_visibility": 0.3,
+   "reason": "A lithographic print shows its image; the stone or plate preparation and the inking are done in the studio."
+  },
+  "livestock": {
+   "copy_visibility": 0.3,
+   "reason": "A breed is seen in the fold; the selection over generations that produced it is not shown in any animal."
+  },
+  "located_material": {
+   "copy_visibility": 0.6,
+   "reason": "A crop or deposit is a known thing in a known place; how to find, grow or work it well is not shown."
+  },
+  "luxury": {
+   "copy_visibility": 0.8,
+   "reason": "A gaming house or similar establishment operates in public and its trade is evident; the management and the odds are not."
+  },
+  "machine": {
+   "copy_visibility": 0.45,
+   "reason": "A machine is seen running and its frame copied; the winding, the field and the clearances that give its performance are inside."
+  },
+  "machine_tools": {
+   "copy_visibility": 0.4,
+   "reason": "A machine tool is seen at work and its parts can be copied; the accuracy built into its ways and spindles, by scraping and fitting, is not."
+  },
+  "machines": {
+   "copy_visibility": 0.6,
+   "reason": "A machine stands in the shop and its form can be drawn; its precision, its materials and its adjustment are not told by its look."
+  },
+  "manufacturing": {
+   "copy_visibility": 0.4,
+   "reason": "A mill or works is seen from outside; the arrangement of its stages and the speeds and charges are kept within."
+  },
+  "marine": {
+   "copy_visibility": 0.7,
+   "reason": "Ships' hardware and rigging are seen at the quay and can be measured and copied; the handling and the strength of timbers are not."
+  },
+  "marking": {
+   "copy_visibility": 0.9,
+   "reason": "A seal or stamp is plain on every sealed thing and the die can be copied."
+  },
+  "material": {
+   "copy_visibility": 0.3,
+   "reason": "A material is seen as a lump or a sheet; the ore, the preparation, the purity and the process that produced it are not."
+  },
+  "materials": {
+   "copy_visibility": 0.35,
+   "reason": "A lining or a plate is seen in service; the alloy, the glaze and the manner of making it are not."
+  },
+  "mathematics": {
+   "copy_visibility": 0.3,
+   "reason": "A mathematical method is held in the mind and seen only in what is written; its proofs and uses are not conveyed by watching."
+  },
+  "measurement": {
+   "copy_visibility": 0.5,
+   "reason": "An instrument is seen in use and its form copied; the graduation, the calibration and the standards it is checked against are not."
+  },
+  "media": {
+   "copy_visibility": 0.8,
+   "reason": "An advertisement, directory or almanac is published for all to read and its form copied at once; the circulation and the revenue behind it are not."
+  },
+  "media_base": {
+   "copy_visibility": 0.4,
+   "reason": "A writing surface can be handled and compared; the preparing, curing and finishing that make it durable are done out of sight."
+  },
+  "medicine": {
+   "copy_visibility": 0.4,
+   "reason": "A hygienic rule or a clinical practice is seen applied; the theory that justifies it and the discipline that keeps it up are not."
+  },
+  "metallurgy": {
+   "copy_visibility": 0.2,
+   "reason": "A furnace is seen to smoke and the metal to run; the charge, the blast and the timing that give a sound result are not."
+  },
+  "metals": {
+   "copy_visibility": 0.2,
+   "reason": "A metal is seen as a bar or ingot; the ore, the reduction and the refining that produced it are done in the works, out of sight."
+  },
+  "method": {
+   "copy_visibility": 0.35,
+   "reason": "A method of enquiry is written about and its form copied; the discipline in practising it is not."
+  },
+  "metrology": {
+   "copy_visibility": 0.5,
+   "reason": "A gauge is seen and used, and its form copied; its accuracy and the reference it was set against are not."
+  },
+  "milestone": {
+   "copy_visibility": 0.5,
+   "reason": "A milestone is a state of society, not a technique; what shows is its result, which all can see, not how it was brought about."
+  },
+  "military": {
+   "copy_visibility": 0.5,
+   "reason": "A weapon or its use is seen in the field; the preparation, the training and the supply behind it are not."
+  },
+  "milling": {
+   "copy_visibility": 0.7,
+   "reason": "A mill grinds before the town and its stones and rolls are seen; the dressing, the speeds and the sifting are not."
+  },
+  "mineral_extraction": {
+   "copy_visibility": 0.25,
+   "reason": "The product, such as potash or phosphorus, is seen in sale; the extraction that yields it is done in the works."
+  },
+  "mining": {
+   "copy_visibility": 0.6,
+   "reason": "Pitheads, engines and spoil heaps are visible and miners talk; the underground working and the reading of the ground are not."
+  },
+  "money": {
+   "copy_visibility": 0.8,
+   "reason": "Coin and note are in every hand and their form and standard can be assayed and copied; the issuing policy is not."
+  },
+  "motor_subsystems": {
+   "copy_visibility": 0.45,
+   "reason": "Parts are seen when a vehicle is opened; their clearances, materials and timing are not told by sight."
+  },
+  "naval": {
+   "copy_visibility": 0.8,
+   "reason": "A warship lies in the harbour and its lines and armament are seen; its machinery, fire control and drill are not."
+  },
+  "navigation": {
+   "copy_visibility": 0.5,
+   "reason": "A chart, tables or an instrument can be copied; the skill in using them and the observations they rest on are not."
+  },
+  "notation": {
+   "copy_visibility": 0.8,
+   "reason": "A notation is learned at a glance wherever it is used and copied in a moment; why it was chosen is not needed."
+  },
+  "obstetrics": {
+   "copy_visibility": 0.4,
+   "reason": "A birth is attended by few; the practice is learned from those who attended and the instruments, not from watching."
+  },
+  "occupational_health": {
+   "copy_visibility": 0.6,
+   "reason": "A workplace rule or a ventilation fitting is seen; the evidence of harm that justified it is not."
+  },
+  "oils": {
+   "copy_visibility": 0.4,
+   "reason": "Oil is pressed and sold in view of the market; the refining, hardening and mixing that fit it for use are done out of sight."
+  },
+  "ophthalmology": {
+   "copy_visibility": 0.7,
+   "reason": "Spectacles are worn in the street and the lenses and frames can be copied; the testing that fits them is less seen."
+  },
+  "optics": {
+   "copy_visibility": 0.3,
+   "reason": "A lens, mirror or coating is seen in the finished instrument; the figuring, polishing and deposition are done in the workshop."
+  },
+  "organic_chemistry": {
+   "copy_visibility": 0.1,
+   "reason": "A synthesis is a series of reactions in glassware; the product shows nothing of the route, the reagents or the conditions."
+  },
+  "organic_reaction": {
+   "copy_visibility": 0.1,
+   "reason": "A reaction is carried out in a flask and shows only its product; the reagents, temperature and order of addition are not seen."
+  },
+  "organisation": {
+   "copy_visibility": 0.55,
+   "reason": "An organisation is seen in its dealings and its charter is read; the real division of power and the culture within are not."
+  },
+  "organization": {
+   "copy_visibility": 0.55,
+   "reason": "An apprentice system or toolroom is seen in the shop; how skill is transmitted and checked is learned only by taking part."
+  },
+  "paper": {
+   "copy_visibility": 0.4,
+   "reason": "A sheet shows its quality; the rags, the pulping, the sizing and the drying are done in the mill."
+  },
+  "personal": {
+   "copy_visibility": 0.8,
+   "reason": "A personal article is worn or sold and can be examined and copied; the recipe of a scent or cosmetic is not."
+  },
+  "pests": {
+   "copy_visibility": 0.4,
+   "reason": "A spray or a control is seen applied; its composition and the dose that works without harm are not."
+  },
+  "pharmaceutical": {
+   "copy_visibility": 0.15,
+   "reason": "A tablet or powder shows nothing of the synthesis, the purification or the dose that makes it effective."
+  },
+  "pharmacology": {
+   "copy_visibility": 0.3,
+   "reason": "A remedy is seen administered; its preparation, strength and the reading of its effect are held by the apothecary."
+  },
+  "photography": {
+   "copy_visibility": 0.2,
+   "reason": "A picture is seen; the plate or film, the chemistry and the exposure and development that made it are out of sight."
+  },
+  "physical_chemistry": {
+   "copy_visibility": 0.25,
+   "reason": "A law of equilibria or electrochemistry is learned from measurements and reasoning, not from watching a laboratory."
+  },
+  "physics": {
+   "copy_visibility": 0.3,
+   "reason": "A physical law is held in the mind; apparatus shows an effect but not the theory that explains it."
+  },
+  "plants": {
+   "copy_visibility": 0.7,
+   "reason": "Grafting, budding and pollinating are done in the garden in view; the choice of stock and the timing are less plain."
+  },
+  "plastics": {
+   "copy_visibility": 0.1,
+   "reason": "A moulded plastic shows its form; the monomers, the polymerisation and the curing are done in the works."
+  },
+  "polymer": {
+   "copy_visibility": 0.1,
+   "reason": "A polymer in use shows its feel and strength; the chemistry, the catalyst and the conditions that make it are not."
+  },
+  "power": {
+   "copy_visibility": 0.6,
+   "reason": "A prime mover or its drive is seen working and its general form copied; the proportions that make it efficient are not."
+  },
+  "power_station": {
+   "copy_visibility": 0.8,
+   "reason": "A station is a large structure that anyone can see and walk round; its operation and its controls are not."
+  },
+  "power_system": {
+   "copy_visibility": 0.5,
+   "reason": "Switchyards and lines are seen; the protection settings, the dispatch and the earthing practice are inside the control room."
+  },
+  "precision": {
+   "copy_visibility": 0.4,
+   "reason": "A precise piece is seen to run true; the tolerances, fits and fixtures that make it so are not shown by its look."
+  },
+  "preservation": {
+   "copy_visibility": 0.5,
+   "reason": "A sealed can or a salted store is handled by buyers; the heating, the sealing and the timing that keep it safe are not."
+  },
+  "press": {
+   "copy_visibility": 0.9,
+   "reason": "A press stands in the shop in view and its screw, bed and platen can be seen and copied."
+  },
+  "prime_alternative": {
+   "copy_visibility": 0.55,
+   "reason": "An alternative motor is seen working and its general form copied; the proportions that make it work are not."
+  },
+  "prime_experimental": {
+   "copy_visibility": 0.2,
+   "reason": "An experimental engine is seen to run and its thrust felt; the combustion, the materials and the control are inside it."
+  },
+  "printing": {
+   "copy_visibility": 0.7,
+   "reason": "A printing office works in view and its press, type and forme are seen; the type metal and the inking take practice."
+  },
+  "probability": {
+   "copy_visibility": 0.3,
+   "reason": "A probability rule is held in the mind and seen only in what it predicts; the argument for it is not."
+  },
+  "processes": {
+   "copy_visibility": 0.15,
+   "reason": "A smelting, converting or plating process is seen as heat and smoke; the charge, the blast and the control are not."
+  },
+  "processing": {
+   "copy_visibility": 0.45,
+   "reason": "The product of bottling or canning is sold and opened; the cleanliness, the heating and the timing that make it safe are done within."
+  },
+  "product": {
+   "copy_visibility": 0.2,
+   "reason": "A chemical product is sold in a jar; nothing in it shows its raw materials, its route or its purification."
+  },
+  "public_health": {
+   "copy_visibility": 0.7,
+   "reason": "A sewer, filter or clinic is seen and its form copied; the dose, the sampling and the discipline of keeping it working are not."
+  },
+  "publishing": {
+   "copy_visibility": 0.9,
+   "reason": "A newspaper is sold in every street and its form, columns and layout are plain to copy."
+  },
+  "radar": {
+   "copy_visibility": 0.15,
+   "reason": "A radar set shows a screen and an aerial; the oscillator, the waveguide and the timing that make it see are inside the case."
+  },
+  "radio": {
+   "copy_visibility": 0.35,
+   "reason": "An aerial and a receiver are seen; the tuned circuits and the valves that select a signal are inside and their values are not."
+  },
+  "rail": {
+   "copy_visibility": 0.8,
+   "reason": "Track, locomotives and signals are on open display and can be measured and copied; the metallurgy and operating practice are not."
+  },
+  "refining": {
+   "copy_visibility": 0.2,
+   "reason": "A refined metal is judged by assay; the electrolyte, the current and the control that gave its purity are not seen."
+  },
+  "refrigeration": {
+   "copy_visibility": 0.5,
+   "reason": "An ice house or a cold store is seen and its insulation copied; the handling and the economics of the chain are not."
+  },
+  "relief": {
+   "copy_visibility": 0.9,
+   "reason": "A carved block or a relief print shows exactly how it was cut and can be copied by looking."
+  },
+  "reproduction": {
+   "copy_visibility": 0.4,
+   "reason": "A plate is seen as a mould for printing; the casting and finishing that make it true are done in the foundry."
+  },
+  "roads_surfaces": {
+   "copy_visibility": 0.9,
+   "reason": "A road's camber, drains and surface are in view for all who travel it and can be copied."
+  },
+  "rope_cordage": {
+   "copy_visibility": 0.8,
+   "reason": "Strands and lay of a rope are visible, and the ropewalk works in the open; only the tension and tarring need care."
+  },
+  "safety": {
+   "copy_visibility": 0.9,
+   "reason": "A conductor or a rod is mounted on the roof in view and can be copied; its grounding is buried."
+  },
+  "sanitation": {
+   "copy_visibility": 0.85,
+   "reason": "Latrines, traps and piped baths are in the house and can be seen and copied; the pipework behind walls is not."
+  },
+  "scripting": {
+   "copy_visibility": 0.9,
+   "reason": "A scribe copies before onlookers and the script, the pen and the page are plain to see."
+  },
+  "security": {
+   "copy_visibility": 0.45,
+   "reason": "A lock and key are handled openly; the wards and the tumblers inside are made to resist being read."
+  },
+  "semiconductor": {
+   "copy_visibility": 0.1,
+   "reason": "A diode or crystal shows nothing of its refining, doping or contacts; its working is told only by a test circuit."
+  },
+  "serology": {
+   "copy_visibility": 0.2,
+   "reason": "A vaccination is seen given; the preparation, the attenuation and the dose that protect are not."
+  },
+  "sewing": {
+   "copy_visibility": 0.8,
+   "reason": "A sewing device is open to view and its needle, loop and feed can be seen and copied; only the timing of its parts needs care."
+  },
+  "ships": {
+   "copy_visibility": 0.8,
+   "reason": "A hull and its rig lie at the quay and can be measured and copied; the lines that give its sailing qualities are less plain."
+  },
+  "signalling": {
+   "copy_visibility": 0.6,
+   "reason": "A signal station, flag or lamp is seen working and the code learned by watching; the apparatus behind it is less plain."
+  },
+  "smelting": {
+   "copy_visibility": 0.35,
+   "reason": "A furnace is seen from outside; the charge, the draught and the tapping that give the iron or steel are not."
+  },
+  "social": {
+   "copy_visibility": 0.5,
+   "reason": "A status, patron or concession is known to the town; how it was gained and what it requires in return are not."
+  },
+  "soil": {
+   "copy_visibility": 0.7,
+   "reason": "A dressing is seen spread on the field and its effect on the crop seen; its source, its preparation and its dose are less plain."
+  },
+  "sound": {
+   "copy_visibility": 0.5,
+   "reason": "A recorder or player is seen working and its form copied; the cutting, the pickup and the amplification are inside."
+  },
+  "spectacle": {
+   "copy_visibility": 0.9,
+   "reason": "A theatre, race or sport is held before crowds and every feature of the show is seen and copied."
+  },
+  "spinning": {
+   "copy_visibility": 0.8,
+   "reason": "A spinning frame is open to view with its spindles and rollers; only the setting and speed need practice."
+  },
+  "steam_auxiliary": {
+   "copy_visibility": 0.6,
+   "reason": "Valves, condensers and gear are seen on the engine; their proportions and the timing of the valves are not."
+  },
+  "steam_boiler": {
+   "copy_visibility": 0.55,
+   "reason": "A boiler's shell and flues are seen from outside; the plate quality, the riveting and the water practice that keep it safe are not."
+  },
+  "steam_prime": {
+   "copy_visibility": 0.6,
+   "reason": "A steam engine is seen working and its beam, cylinder and crank copied; the proportions and valve gear that make it efficient are not."
+  },
+  "stone": {
+   "copy_visibility": 0.85,
+   "reason": "Quarrying and dressing are done in the open and the sawing, wedging and polishing are watched by anyone."
+  },
+  "storage": {
+   "copy_visibility": 0.4,
+   "reason": "A memory device shows its drum, core or tape; the recording, reading and timing that make it reliable are not."
+  },
+  "structural": {
+   "copy_visibility": 0.85,
+   "reason": "Beams, arches and trusses are in full view and can be measured and drawn; the loads they were designed for are not."
+  },
+  "structures": {
+   "copy_visibility": 0.85,
+   "reason": "A completed arch, dome or roof frame stands open to view and can be measured; the centring and the calculation are not."
+  },
+  "surface_treatment": {
+   "copy_visibility": 0.4,
+   "reason": "A coated sheet shows its finish; the bath, the cleaning and the heat that bonded the coat are not."
+  },
+  "surgery": {
+   "copy_visibility": 0.45,
+   "reason": "An operation is watched by those in the theatre; the anatomy, the anaesthesia and the judgement of when to cut are not conveyed."
+  },
+  "surveying": {
+   "copy_visibility": 0.6,
+   "reason": "A surveyor's instrument and chain are seen in the field and his stations marked; the reductions and the checks are done afterwards."
+  },
+  "tactics": {
+   "copy_visibility": 0.6,
+   "reason": "A manoeuvre or a method of fire is seen in the field; the drill and the data behind it are not."
+  },
+  "techniques": {
+   "copy_visibility": 0.5,
+   "reason": "Formwork, jacks and sprays are seen on the site; the sequence, the mix and the stressing are known to the crew."
+  },
+  "telegraphy": {
+   "copy_visibility": 0.6,
+   "reason": "Wires, keys and sounders are in public view; the relays, the batteries and the line balancing are not."
+  },
+  "telephone": {
+   "copy_visibility": 0.5,
+   "reason": "A handset and switchboard are used in public and their outside is copied; the transmitter and the exchange circuits are inside."
+  },
+  "telephony": {
+   "copy_visibility": 0.5,
+   "reason": "A telephone exchange and instrument are seen in use; the switching and the transmitter construction are inside."
+  },
+  "television": {
+   "copy_visibility": 0.2,
+   "reason": "A screen shows a picture; the camera tube, the scanning and the synchronisation are inside sealed cases."
+  },
+  "testing": {
+   "copy_visibility": 0.5,
+   "reason": "A testing machine is seen and its reading noted; the specimens, the speeds and the interpretation behind its figures are not."
+  },
+  "textile_production": {
+   "copy_visibility": 0.8,
+   "reason": "Carding, combing and drawing are done in open sheds, and the machinery can be seen and copied."
+  },
+  "textiles": {
+   "copy_visibility": 0.7,
+   "reason": "A textile machine or appliance is open to view and its parts can be seen and copied; the settings take practice."
+  },
+  "theory": {
+   "copy_visibility": 0.3,
+   "reason": "A theory of structures or materials is held in the mind of the engineer; the structures show its results, not its reasoning."
+  },
+  "therapeutics": {
+   "copy_visibility": 0.25,
+   "reason": "A remedy's effect is seen on the patient; its preparation, its strength and the reasons for the dose are held by the maker."
+  },
+  "thermodynamics": {
+   "copy_visibility": 0.3,
+   "reason": "A cycle is seen as a machine that works; the principle explaining why is not shown by its running."
+  },
+  "timekeeping": {
+   "copy_visibility": 0.55,
+   "reason": "A clock is seen and heard to keep time and its case opened; the escapement and the setting that keep it true are not."
+  },
+  "tooling": {
+   "copy_visibility": 0.7,
+   "reason": "A chuck, die or fixture is seen on the bench and its form copied; the fits and the hardening are not."
+  },
+  "tools": {
+   "copy_visibility": 0.9,
+   "reason": "A surveying tool such as a level or staff is in the open on the work and is copied from sight."
+  },
+  "transport": {
+   "copy_visibility": 0.85,
+   "reason": "A bridge or a vehicle is open to every traveller and its form is measured and copied; the strength of its members is not."
+  },
+  "type": {
+   "copy_visibility": 0.4,
+   "reason": "A cast letter shows its face; the punch, the matrix and the metal that give clean letters are made out of sight."
+  },
+  "undersea": {
+   "copy_visibility": 0.7,
+   "reason": "A bell or a suit is lowered before the crowd and the apparatus seen; the air supply and the pressure practice are not."
+  },
+  "urban": {
+   "copy_visibility": 0.9,
+   "reason": "Street lighting is on display to the whole town and its fittings are copied from the posts."
+  },
+  "vehicle_types": {
+   "copy_visibility": 0.85,
+   "reason": "A vehicle is driven in the open and its layout, track and body are seen and copied."
+  },
+  "vehicles": {
+   "copy_visibility": 0.85,
+   "reason": "An armoured or military vehicle is paraded and examined; its plate and engine are less easily copied."
+  },
+  "visual": {
+   "copy_visibility": 0.8,
+   "reason": "A mosaic, sculpture or play is shown to the public and its manner copied from the work; the workshop practice is not."
+  },
+  "warships": {
+   "copy_visibility": 0.5,
+   "reason": "A submarine is seen at the surface; its pressure hull, its ballast control and its propulsion are not shown."
+  },
+  "water": {
+   "copy_visibility": 0.85,
+   "reason": "A dam, aqueduct or siphon is open to view and can be walked along and measured; the levels and the jointing are less plain."
+  },
+  "water_chemistry": {
+   "copy_visibility": 0.4,
+   "reason": "Clear water shows nothing of what was added; the dose, the settling and the filtration that cleaned it are done at the works."
+  },
+  "water_infrastructure": {
+   "copy_visibility": 0.9,
+   "reason": "A penstock, flume or draft tube is in the open and its shape can be measured and copied."
+  },
+  "water_prime": {
+   "copy_visibility": 0.85,
+   "reason": "A wheel or turbine is seen turning in its race and its buckets and blades copied; the proportions and setting are less plain."
+  },
+  "weapons": {
+   "copy_visibility": 0.6,
+   "reason": "A weapon is seen in use and its outline copied; the steel, the powder and the boring or rifling that give its performance are not."
+  },
+  "weaving": {
+   "copy_visibility": 0.75,
+   "reason": "A loom is open to view and its heddles, shuttle and beam are seen and copied; the settings of the shed are not."
+  },
+  "wheels_running_gear": {
+   "copy_visibility": 0.85,
+   "reason": "Wheels, tyres and bearings are exposed on the vehicle and can be measured and copied; the grade of steel is not."
+  },
+  "wind_control": {
+   "copy_visibility": 0.9,
+   "reason": "A fantail turns on the roof in full view and its gearing can be seen and copied."
+  },
+  "wind_prime": {
+   "copy_visibility": 0.9,
+   "reason": "A windmill stands in the open and its sails, tower and gearing can be seen, measured and copied."
+  },
+  "writing": {
+   "copy_visibility": 0.8,
+   "reason": "A pen, pencil or paper is used before others and its make can be examined and copied; only the lead or ink recipe is not shown."
+  }
+ }
+}

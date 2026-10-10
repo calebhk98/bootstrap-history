@@ -430,10 +430,9 @@ check("...and the goal no longer requires an age of exploration to reach a "
       sorted(node_id for node_id in S.closure(NODES, GOAL) if node_id.startswith("exp_"))
       == ["exp_trade_route_extend"],
       sorted(node_id for node_id in S.closure(NODES, GOAL) if node_id.startswith("exp_")))
+GEO_MATS = [place["name"] for place in S.load_geography()["located_materials"]["platinum"]["places"]]
 check("the Colombian placers are still a route, just not the only one",
-      "americas_south" in (GEO_MATS := S.load_geography()
-                           ["located_materials"]["platinum"]["regions"])
-      and "siberia_urals" in GEO_MATS,
+      any("Colombia" in name for name in GEO_MATS) and any("Urals" in name for name in GEO_MATS),
       GEO_MATS)
 check("mat_bulk_steel (on the critical path) is gated on mat_manganese "
       "through exactly one req_any option, no real alternative offered",

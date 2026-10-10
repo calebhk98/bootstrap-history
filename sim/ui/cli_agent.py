@@ -59,6 +59,7 @@ def cmd_agent(args):
             events=not args.no_events,
             cfg=cfg, civ=load_civ(_civ_for_session(args)), bounty_set=set(), manual=True)
     sim.seed = seed
+    sim.session_seat = getattr(args, "seat", None)
     sim.goal = goal
     sim.done_year = {}
     sim.end_year = sim.cfg["start_year"] + args.horizon

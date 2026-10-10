@@ -26,7 +26,7 @@ change; read them from the node data (no command summarises them).
 * `group`: within a channel, only the first holder of a group counts.
 * `order`: sequence in which an effect channel is applied. It is stored only
   where floating-point results depend on it.
-* `book_money`: the amount is in book money and is scaled to the civilisation's
+* `labour_hours`: the amount is in labour hours and is priced in the civilisation's
   coin.
 * `tier`: for chains where only the best holder counts (`effect_best`).
 
@@ -48,8 +48,9 @@ change; read them from the node data (no command summarises them).
 | `institution_places` | people one unit supports (upkeep scaling) |
 | `labour_productivity` | `trade` and `bonus` for that trade's hour |
 | `schooling_flow` | schooling contribution; `required` makes it a precondition of all schooling |
-| `mining_tech` | `yield` and `cost` multipliers on mining, optionally limited to `materials` |
-| `hazard_counters` | list of `{kind, share, label, order}`: what harm the node counters |
+| `mine_works` | a physical term of the mine's works, read by `sim/world/mine_technique.py`: `drainage_lift_efficiency`, `gravity_drained_head_share`, `gravel_moved_multiple`, `drainage_engine` and `hoist_engine` (`{lift_power_watts, attendants, fuel_kg_per_tonne_metre}`), `blasting` (`{drilling_hours_per_tonne_rock: {soft, medium, hard}, charging_hours_per_tonne_rock}`), `drilling_rate_multiple`, `haulage_load_kilograms`; carries a `source`. Techniques that act on one term compete (the cheapest device or explosive is used) and never stack |
+| `hazard_counters` | list of `{kind, share, label, order}`: what harm the node counters. An entry may add `requires_running` (works that must be open), `magazine` (`{material: units}` held in the stock ledger for the counter to count in full; it counts for the share held) and `draws` (`{material: units}` spent from the ledger in each year a threat of its kind is live). The node's own `garrison` (see CONTRACT) is read the same way: the counter counts for the share of the garrison present |
+| `banks_output` | `material` and `per_labour_hour`: a running work puts that material into the stock ledger each year from its crew's hours (`sch` plus `art` people); the crew's inputs are bought inside the work's running costs (`sim/engine/defence_stores.py`) |
 | `staff_grant` | people granted once on completion when auto-hire is off |
 | `staff_advice` | `kind` (`scholars`/`artisans`), `advice` text shown when staff is short |
 
@@ -58,6 +59,7 @@ change; read them from the node data (no command summarises them).
 | Mechanic | Meaning |
 |---|---|
 | `capability` | a capability institution: `lost_benefit` text, `scalable` (`"literacy"` or `"population"` sets which ceiling bounds its units), `redundant_with` (ids whose operation makes a closed copy harmless) |
+| `patent_grant` | a state that knows the node grants term-limited exclusive rights to inventions (`sim/agents/patent.py`); without a node declaring it no patent is ever granted |
 | `state_credit` | holding it lets a state borrow against its revenue (`source`); without a holder a deficit cuts spending |
 | `disease_burden` | counts toward the society's disease burden (weights live in the civilisation tech effects) |
 | `founder_life_extension` | extends the founder's life while operating |

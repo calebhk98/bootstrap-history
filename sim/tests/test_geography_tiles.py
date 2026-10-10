@@ -33,7 +33,7 @@ _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(
     os.path.abspath(__file__))))
 sys.path.insert(0, os.path.join(_REPO_ROOT, "tools"))
 
-from sim.geography.api import load_geography  # noqa: E402
+from sim.geography.api import load_geography, tiles_held  # noqa: E402
 import generate_geography_tiles as tiles_module  # noqa: E402
 
 GEOGRAPHY_PATH = os.path.join(_REPO_ROOT, "data", "world", "geography", "tile_grid.json")
@@ -233,11 +233,8 @@ class RegionToTilesMappingTests(unittest.TestCase):
             rome = json.load(handle)
         with open(os.path.join(_REPO_ROOT, "data", "civilizations", "han_china_100ad.json")) as handle:
             han = json.load(handle)
-        region_to_tiles = self.land_tiles["region_to_tiles"]
-        rome_tile_count = sum(
-            len(region_to_tiles.get(region_id, [])) for region_id in rome["home_regions"])
-        han_tile_count = sum(
-            len(region_to_tiles.get(region_id, [])) for region_id in han["home_regions"])
+        rome_tile_count = len(tiles_held(rome))
+        han_tile_count = len(tiles_held(han))
         self.assertGreater(rome_tile_count, han_tile_count)
 
 

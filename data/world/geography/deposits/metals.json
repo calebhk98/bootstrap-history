@@ -111,7 +111,8 @@
    "status": "modern",
    "first_worked": 1915,
    "source": "Coordinate from Wikipedia. Production since 1915 plus remaining resource, order of magnitude from memory.",
-   "conf": "B"
+   "conf": "B",
+   "share_of_reference_output": 0.2
   },
   {
    "id": "antamina_copper",
@@ -159,7 +160,8 @@
    "status": "modern",
    "first_worked": 1964,
    "source": "Phalaborwa, South Africa; coordinate and contained copper from memory.",
-   "conf": "C"
+   "conf": "C",
+   "share_of_reference_output": 0.05
   },
   {
    "id": "tenke_fungurume_copper",
@@ -399,7 +401,8 @@
    "status": "historic",
    "first_worked": 1545,
    "source": "Coordinate from Wikipedia. Total silver 1545-1800s about 30,000-60,000 t; range supplied by project owner and consistent with memory.",
-   "conf": "B"
+   "conf": "B",
+   "share_of_reference_output": 0.4
   },
   {
    "id": "cannington_silver",
@@ -431,7 +434,8 @@
    "status": "modern",
    "first_worked": 1966,
    "source": "Coordinate from Wikipedia. Pilbara iron ore, identified ore resource of order fifty billion tonnes at mid-fifties percent iron, from memory. fortescue_iron removed: it is a company working the same province.",
-   "conf": "C"
+   "conf": "C",
+   "share_of_reference_output": 0.02
   },
   {
    "id": "carajas_iron",
@@ -493,7 +497,8 @@
    "status": "historic",
    "first_worked": 1931,
    "source": "Coordinate from memory; no defensible endowment figure, omitted.",
-   "conf": "C"
+   "conf": "C",
+   "share_of_reference_output": 0.05
   },
   {
    "id": "marcona_iron",
@@ -507,7 +512,8 @@
    "status": "modern",
    "first_worked": 1953,
    "source": "Coordinate from memory; no defensible endowment figure, omitted.",
-   "conf": "C"
+   "conf": "C",
+   "share_of_reference_output": 0.05
   },
   {
    "id": "norilsk_nickel",
@@ -619,7 +625,8 @@
    "status": "historic",
    "first_worked": 1880,
    "source": "Perak, Malaysia; tin metal produced, order of magnitude from memory; coordinate from memory. kinta_underground_tin removed as a duplicate of this district.",
-   "conf": "C"
+   "conf": "C",
+   "share_of_reference_output": 0.3
   },
   {
    "id": "bangka_tin",
