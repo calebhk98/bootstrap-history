@@ -90,6 +90,23 @@ class SpendingCutSmoothingTests(unittest.TestCase):
         self.assertGreater(spending(last_year_income=100000.0), 1.5 * spending())
 
 
+class SpendingRiseSmoothingTests(unittest.TestCase):
+    """A rise in spending is bounded by expected spending in a running economy, and not in a settling one."""
+
+    def bids(self, expected=60000.0, **orders_arguments):
+        view = View()
+        view.interest_rate = lambda currency: 0.12
+        household = cohort(expected_inflation=0.2, expected_spending=expected, expected_floor_cost=1.0)
+        return budget_total(households.goods_orders(household, view, 1e6, 40000.0, BASKET, SPECS, **orders_arguments))
+
+    def test_spending_rises_by_at_most_the_limit_over_expected_spending(self):
+        ceiling = (1.0 + households_orders.SPENDING_CUT_LIMIT) * 60000.0
+        self.assertLessEqual(self.bids(), ceiling * 1.001)
+
+    def test_a_settling_economy_lets_spending_rise_as_far_as_wealth_allows(self):
+        self.assertGreater(self.bids(expected=25000.0, smooth_rise=False), 1.5 * self.bids(expected=25000.0))
+
+
 class UnsoldGoodTests(unittest.TestCase):
     """A good with no seller has no price, so it draws no bid and its need's money goes to goods that have one."""
     SHELTER = households.make_basket({

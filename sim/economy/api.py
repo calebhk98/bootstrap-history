@@ -250,6 +250,7 @@ def economy_book(economy):
 def finish_spin_up(economy):
     """Closes the hidden spin-up years: the price level is rebased to one and the clock returns to zero."""
     rebase_basket_price_level(economy.setup, economy.record)
+    economy.record.settling = False
     economy.record.memory.year = 0
 
 

@@ -8,7 +8,8 @@
                   danger_by_trade)                          -> [LabourOffer]
     need_prices(basket, view, tile)                         -> priced needs, shareable across a tile's classes
     subsistence_cost_per_person(priced)                     -> money a year, for labour reservations
-    goods_orders(cohort, view, cash, income_this_year, basket, specs, priced=None) -> AgentOrders
+    goods_orders(cohort, view, cash, income_this_year, basket, specs, priced=None, smooth_rise=True)
+                                                            -> AgentOrders
     close_year(cohort, received_by_good, view, specs, basket, income_received, spent)
                                                             -> (Cohort, [GoodsMove])
 

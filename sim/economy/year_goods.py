@@ -47,7 +47,8 @@ def cohort_orders(setup, record, view, ledger: YearLedger, order_book: OrderBook
             priced = priced_by_tile[cohort.tile] = households.need_prices(setup.basket_for(cohort.tile), view, cohort.tile)
         income = ledger.wages_in.get(cohort.agent_id, 0.0) + record.property_income.get(cohort.agent_id, 0.0)
         orders = households.goods_orders(cohort, view, record.book.balance(cohort.agent_id, money), income,
-                                         setup.basket_for(cohort.tile), setup.specs, priced)
+                                         setup.basket_for(cohort.tile), setup.specs, priced,
+                                         smooth_rise=not record.settling)
         add_orders(order_book, _less_what_it_grew(orders, cohort, setup.basket_for(cohort.tile), ledger.grown_units.get(cohort.agent_id)))
         funds.extend(orders.funds_offers)
     return funds

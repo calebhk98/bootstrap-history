@@ -124,8 +124,10 @@ def _smoothed_flow_by_good(cohort: Cohort, priced: List[PricedNeed], basket: Bas
 
 def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year: float,
                  basket: Basket, specs: Mapping[GoodId, GoodSpec],
-                 priced: Optional[List[PricedNeed]] = None) -> AgentOrders:
-    """`priced` may be passed (from `need_prices`) to share the price work among a tile's classes."""
+                 priced: Optional[List[PricedNeed]] = None, smooth_rise: bool = True) -> AgentOrders:
+    """`priced` may be passed (from `need_prices`) to share the price work among a tile's classes.
+    `smooth_rise` False lifts the bound on a rise in spending: an economy finding its level from an opening
+    that holds more money than its households want to keep would otherwise approach it over years."""
     priced = need_prices(basket, view, cohort.tile) if priced is None else priced
     cash = max(0.0, cash)
     if not priced or cohort.people <= 0.0:
@@ -152,7 +154,8 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
     spending = max(0.0, min(cash, income_this_year + drawdown))
     if cohort.expected_spending > 0.0:
         # a rise in the savings target is saved over years, not at once; a windfall is spent over years too
-        spending = min(spending, max(income_this_year, (1.0 + SPENDING_CUT_LIMIT) * cohort.expected_spending))
+        if smooth_rise:
+            spending = min(spending, max(income_this_year, (1.0 + SPENDING_CUT_LIMIT) * cohort.expected_spending))
         spending = max(spending, min(cash, (1.0 - SPENDING_CUT_LIMIT) * cohort.expected_spending))
     floors, totals = need_units(priced, basket, cohort.people, spending - floor_cost)
     # the stock of a durable is sized on the expected flow: this year's flow scaled by expected over actual
