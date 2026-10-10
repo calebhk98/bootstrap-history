@@ -69,3 +69,6 @@ def held_share(held_tiles: Iterable[str], resource: str, geography: Dict[str, An
     held = set(held_tiles)
     return sum(share for tile_id, share in deposit_shares_by_tile(geography, rows).get(resource, {}).items()
                if tile_id in held)
+
+
+share_rows()    # declares each district's share, so the burndown sees them without a game

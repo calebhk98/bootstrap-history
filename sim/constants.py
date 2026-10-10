@@ -339,6 +339,7 @@ def _import_declaring_modules():
                    "sim.world.demography",
                    "sim.world.shared_constants",
                    "sim.geography.transport",
+                   "sim.geography.mineral_shares",
                    "sim.world.military_logistics",
                    "sim.world.deposits",
                    "sim.world.ore_dressing",
