@@ -25,15 +25,15 @@ class GoodsLevelTests(unittest.TestCase):
         record = record_with({"grain": 3.0, "salt": 8.0, "oil": 2.0, "stale": 900.0},
                              {"grain": 0, "salt": 1, "oil": 0, "stale": 40})
         opening = {"grain": 1.0, "salt": 2.0, "oil": 1.0, "stale": 1.0}
-        self.assertAlmostEqual(goods_level_over_opening(record, opening), 3.0)   # ratios 3, 4, 2
+        self.assertAlmostEqual(goods_level_over_opening(types.SimpleNamespace(record=record), opening), 3.0)   # ratios 3, 4, 2
 
     def test_no_good_traded_lately_gives_no_level(self):
         record = record_with({"grain": 3.0}, {"grain": 40})
-        self.assertIsNone(goods_level_over_opening(record, {"grain": 1.0}))
+        self.assertIsNone(goods_level_over_opening(types.SimpleNamespace(record=record), {"grain": 1.0}))
 
     def test_a_good_without_an_opening_price_is_left_out(self):
         record = record_with({"grain": 3.0, "new": 50.0}, {"grain": 0, "new": 0})
-        self.assertAlmostEqual(goods_level_over_opening(record, {"grain": 1.0}), 3.0)
+        self.assertAlmostEqual(goods_level_over_opening(types.SimpleNamespace(record=record), {"grain": 1.0}), 3.0)
 
 
 class CoinValueTests(unittest.TestCase):

@@ -120,7 +120,7 @@ class AgentEconomy:
         economy = self.economy()
         unit = economy.setup.coin_per_unit
         opening = {good: price / unit for good, price in self.stored["opening"]["prices"].items()}
-        return economy_api.goods_level_over_opening(economy.record, opening)
+        return economy_api.goods_level_over_opening(economy, opening)
 
     # ---- the year -----------------------------------------------------------------------------
     def run_year(self):
