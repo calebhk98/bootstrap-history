@@ -45,6 +45,9 @@ class HoldingsState:
 	# offers other actors have made the seat (plain dicts, as the exchange keeps them) and how many it has made
 	offers: List[Dict[str, Any]] = field(default_factory=list)
 	offer_serial: int = 0
+	# settlements the seat has founded on tiles beyond its country's own: tile, year founded, and the three age
+	# cohorts of the people there (sim/engine/colonies.py)
+	colonies: List[Dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass

@@ -15,7 +15,7 @@ class BudgetView:
 		return self._sim.population.total
 
 	def state_capacity(self) -> float:
-		return self._sim.state_capacity
+		return self._sim.state_authority()
 
 	def territory(self) -> Any:
 		"""Frontier, coast and road length of the tiles the state holds."""

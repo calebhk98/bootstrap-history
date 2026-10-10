@@ -6,7 +6,7 @@ Once the school, the patrons and the money exist, cash piles up faster than rese
 
 Every entry here is an ordinary node in `data/branches/56_benefactions.json`. Nothing sells anything: the return is what the work does through the game's normal channels (listed in `data/branches/MECHANICS.md`). Building costs labour and materials at the usual rates. Running costs come every year the doors are open, worked out from the people and consumables the work needs (each node's `_internal` field shows the working), and the effect stops when the money does. Every work marked repeatable can be founded again, dearer each time, up to what the population can fill. All sizes are heuristics: run `why <id>` for the current cost, upkeep and figures.
 
-Not yet covered: gambling houses and lotteries as licensed works, district clinics, settled colonies with land and people (only a trading post exists), and paying off a state's debt outright rather than subsidising it. `Complaints/190-late-game-uses-for-money.md` lists what each needs.
+Some works are paid once rather than kept up: paying off the state's debt, settling the claims of an interest group, a grant for disaster relief, and a charter for a colony. They have no running cost; what they do is done when they are finished, and the `pay` and `settle` commands do the same again later. Works repeated across the land (schools, clinics, lit streets) are rolled out with the `rollout` command until a chosen share of the people is reached. Gambling houses and lotteries are ordinary concerns that pay the state a share of their takings each year.
 
 ---
 
@@ -229,3 +229,73 @@ Not yet covered: gambling houses and lotteries as licensed works, district clini
 **Prerequisites.** `exp_colony_administration`, `fin_trading_post`.
 
 **Cost & labour.** Masons, carpenters and labourers to build; factor, clerks, labourers and provisions each year. ESTIMATED.
+
+### ben_state_debt_redemption - Redemption of the state's debt
+
+**What it is / why you want it.** The founder pays the whole of what the state owes in one sum, or as much as the founder's money covers. A state that owes less pays less interest and can borrow more cheaply, and it is slow to forget who cleared its books.
+
+**Why you would never guess this.** Paying more than the state owes does not clear anything further: the rest lies in the state's purse as a reserve for the state to spend as it likes. Walpole's sinking fund of the 1720s was raided for other uses until Pitt shielded it in 1786, so the honest cost of a repayment is that the state may borrow again as soon as it is free to.
+
+**Prerequisites.** `fin_public_debt`.
+
+**Cost & labour.** Clerks and bankers to find the holders and buy the bonds in; the sum itself, which is the state's debt on the day. ESTIMATED.
+
+### ben_political_settlement - Settlement of an interest group's claims
+
+**What it is / why you want it.** The founder pays what the state has undertaken to make good to the guilds, landholders or craftsmen who lost income to the founder's methods, so the state does not have to raise it from taxpayers. A body that is paid presses the state less and blames the founder less.
+
+**Why you would never guess this.** It settles the claims of today only. When the founder's methods hurt a new body, a new claim stands, and the pay command meets it.
+
+**Prerequisites.** `fin_government`, `fin_guild`.
+
+**Cost & labour.** Envoys and clerks; the claims themselves. ESTIMATED.
+
+### ben_disaster_relief_grant - Grant to the state for disaster relief
+
+**What it is / why you want it.** A large sum paid to the state after a flood, a fire or a failed harvest, to feed the homeless, clear what is unsafe and rebuild. The state spends it through its own officials on its dole and public works.
+
+**Why you would never guess this.** The grant eases the state's deficit; it does not feed anyone by itself. Grain handed out directly to the hungry is the work of the public granary, which the nation's people eat.
+
+**Prerequisites.** `fin_annona`, `fin_public_debt`.
+
+**Cost & labour.** Clerks; the sum itself. ESTIMATED.
+
+### ben_settlement_charter - Charter and outfit for a settlement
+
+**What it is / why you want it.** The right to found a settlement on a tile nobody holds that borders what the founder holds, or on a coast across the sea. Families go from home with ships, stores, tools and seed, and become a people of their own on that land.
+
+**Why you would never guess this.** The colonists leave the home country's working age, and the outfit is paid at the society's wage. The Cape settlement of 1652 began as a refreshment station of a company's employees; Jamestown lost most of its colonists in its first winters. A colony lives or dies by whether its own hands can work enough land to feed it.
+
+**Prerequisites.** `exp_colony_administration`.
+
+**Cost & labour.** Lawyers and merchants for the charter; a year's work for each settler at the wage of the day. ESTIMATED.
+
+### ben_district_clinics - District clinics
+
+**What it is / why you want it.** A clinic in each district where mothers and children are weighed, vaccinated and treated early. The nation's burden of disease falls by the share of its people the clinics reach.
+
+**Why you would never guess this.** One clinic does almost nothing for a nation. The burden falls in proportion to the share of the people within reach of an open clinic, which is why a rollout (many clinics until a chosen share is covered) is the work, not the first building.
+
+**Prerequisites.** `md2_child_clinic`, `md2_maternal_clinic`.
+
+**Cost & labour.** Masons and carpenters to build; a nurse, a physician and labourers on the payroll, soap and fuel each year. ESTIMATED.
+
+### ben_village_schools - Schools in every parish
+
+**What it is / why you want it.** A reading school in each parish for the children of ordinary families, paid for from an endowment of land. General literacy rises faster.
+
+**Why you would never guess this.** It does nothing for the lettered few, who are taught elsewhere. Each school serves only its own parish, so the work is the rollout, not the single school.
+
+**Prerequisites.** `school_founded`, `endowment_land`.
+
+**Cost & labour.** Teachers on the payroll, parchment each year. ESTIMATED.
+
+### ben_endowed_college - Endowed college for scholars
+
+**What it is / why you want it.** Lodgings, a hall and a library for young men of the propertied classes, kept by the rents of an endowment of land. It raises the literacy of the lettered class, which the learned trades and the state's offices draw on.
+
+**Why you would never guess this.** It does nothing for the reading of the common people; the schools in every parish do that.
+
+**Prerequisites.** `school_founded`, `endowment_land`.
+
+**Cost & labour.** Fellows and clerks on the payroll, parchment each year. ESTIMATED.

@@ -75,11 +75,27 @@
    "unit": "kg of struck silver coin",
    "effectiveness_basis": "mass of coin struck"
   },
-  "warmth_and_light": {
+  "warmth": {
    "subsistence_from_climate": "warmth_mj",
    "surplus_budget_share": 0.15,
    "unit": "megajoules of fuel heat",
    "effectiveness_basis": "heating value per kg"
+  },
+  "light": {
+   "surplus_budget_share": 0.03,
+   "unit": "kilolumen-hours",
+   "floor_basis": "No floor: nobody dies for want of light after dark, and a floor is bought whatever it costs. Households spend a share of their surplus on it. A tallow candle gives about one candela, about 12.6 lumens, so a thousand lumen-hours is about eighty candle-hours (recalled, not re-opened; confidence D).",
+   "satiation_per_capita_per_year": 150.0,
+   "satiation_basis": "TRANSITIONAL heuristic: about four lit evening hours a day at a few hundred lumens a household's room, shared among its people, is the order of what a household lights in a year before more light is waste; not a measured figure. A model of the hours people stay up and the rooms they light would replace it.",
+   "effectiveness_basis": "light given per unit of the good, in thousands of lumen-hours"
+  },
+  "amusement": {
+   "surplus_budget_share": 0.02,
+   "unit": "hours of play",
+   "floor_basis": "No floor: nobody dies for want of a game. Households spend a share of their surplus on it, where a table or a lottery is open to them.",
+   "satiation_per_capita_per_year": 200.0,
+   "satiation_basis": "TRANSITIONAL heuristic: about four hours of play a week for each person, past which a household's spending on stakes and tables turns to other things; not a measured figure. A model of leisure time would replace it.",
+   "effectiveness_basis": "one hour of play at a table, or one numbered chance, taken as equal"
   }
  },
  "goods": {
@@ -129,10 +145,10 @@
   "pepper_kg": {"satisfies": {"seasoning": 1.0}},
   "cassia_kg": {"satisfies": {"seasoning": 1.0}},
 
-  "firewood_kg": {"satisfies": {"warmth_and_light": 15.0}},
-  "charcoal_kg": {"satisfies": {"warmth_and_light": 29.0}},
-  "coal_kg": {"satisfies": {"warmth_and_light": 27.0}},
-  "peat_kg": {"satisfies": {"warmth_and_light": 12.0}},
+  "firewood_kg": {"satisfies": {"warmth": 15.0}},
+  "charcoal_kg": {"satisfies": {"warmth": 29.0}},
+  "coal_kg": {"satisfies": {"warmth": 27.0}},
+  "peat_kg": {"satisfies": {"warmth": 12.0}},
 
   "ceramic_kg": {"satisfies": {"vessels": 1.0}},
   "glass_raw_kg": {"satisfies": {"vessels": 1.0}},

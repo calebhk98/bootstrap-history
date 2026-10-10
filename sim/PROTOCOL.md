@@ -204,6 +204,24 @@ Two fixes, usable separately or together:
                                                     expires} or {ok:false, error}.
       {"cmd":"offers"}                             the offers made to this seat. {"cmd":"accept","offer":"<id>"}
                                                     and {"cmd":"decline","offer":"<id>"} answer one.
+      {"cmd":"pay","what":"debt"}                  pay the state once: all of its debt (or what your money
+                                                    covers), {"what":"claims"} what it has undertaken to
+                                                    make good to organised interest groups, or
+                                                    {"cmd":"pay","amount":N} a sum (past the debt it stays
+                                                    in the state's purse as a reserve). {ok, paid, message,
+                                                    capital, state_debt} or {ok:false, error}. Works that
+                                                    do this on finishing declare the node mechanic
+                                                    `transfer` (data/branches/MECHANICS.md).
+      {"cmd":"rollout"}                            the works that declare `coverage`, with units open, the
+                                                    share of the people served and the units that would
+                                                    serve everyone. {"cmd":"rollout","id":"<id>","share":S}
+                                                    opens or expands the work by the units that reach share
+                                                    S (0.5 or 50): {ok, message, covered, units}.
+      {"cmd":"settle"}                             the tiles settlers could reach, best land first, and the
+                                                    settlers and outfit cost. {"cmd":"settle","tile":"<id>"}
+                                                    founds a colony there: settlers leave the home working
+                                                    age, and the colony is a people of its own, fed by that
+                                                    tile. {"cmd":"colonies"} lists those held.
       {"cmd":"shares","do":"issue","share":S,"to":"<id>","price":P}
                                                    sell share S of your own equity; its holders draw
                                                     dividends from your margin each year.

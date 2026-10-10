@@ -128,7 +128,7 @@ check("242: a literacy effect names the old and new value",
       and "%.1f%%" % (_effect_before * 100) in _effect_text
       and "%.1f%%" % (_effect_after * 100) in _effect_text, _effect_text)
 _disease_node = next(node_id for node_id in _plain.DISEASE_BURDEN_TECH_IDS
-                     if node_id not in _plain.done)
+                     if node_id not in _plain.done and node_id not in _plain.coverage_nodes())
 _disease_sim = sim()
 _burden_before = _disease_sim._disease_burden()
 _disease_sim.done.add(_disease_node)
@@ -156,7 +156,7 @@ _corpus = _node_explain(_plain, NODES, "corpus_written").get("benefit") or {}
 check("245: the corpus says its hedge holds while shut and its standing needs it open",
       "hedge" in str(_corpus.get("permanent", "")).lower()
       and "tanding" in str(_corpus.get("while_open", "")), _corpus)
-_vaccination = next(iter(_plain.DISEASE_BURDEN_TECH_IDS))
+_vaccination = next(node_id for node_id in _plain.DISEASE_BURDEN_TECH_IDS if node_id not in _plain.coverage_nodes())
 _vaccination_benefit = _node_explain(_plain, NODES, _vaccination).get("benefit") or {}
 check("245: a knowledge node says its effect is permanent and needs no concern open",
       "permanent" in _vaccination_benefit

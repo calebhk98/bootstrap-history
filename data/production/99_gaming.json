@@ -1,0 +1,47 @@
+{
+ "_note": "Play for stakes: the amusement need (data/world/needs.json) is met by an hour at a table in a gambling house or by a numbered chance in a lottery, each a service that the house or the lottery's office staff turn out, so the takings of the concern are what households spend on it. Both concerns pay the state a share of those takings (mechanics.state_levy on the node). The sizes are estimates of the work, not re-opened sources, confidence D.",
+ "materials": {
+  "gaming_table_hour": {
+   "outputs": {
+    "gaming_table_hour": 1.0
+   },
+   "inputs": {
+    "light_tallow_candle": 0.002
+   },
+   "labour_hours": {
+    "merchant": 0.17,
+    "labourer": 0.05
+   },
+   "unit_dimension": "count",
+   "basis": "per player's hour at a gaming table",
+   "yield_basis": "A dealer runs a table of about six players, so about a sixth of an hour of the dealer's time for each player's hour; the door takes a labourer a twentieth of an hour for each. One candle of about a candela lights a table of six, so each player's hour uses about two lumen-hours of it, 0.002 of the thousand lumen-hours the light goods are counted in. The table size is an estimate, confidence D. The stakes themselves are not the price: they pass between the players and the house, and what the house is paid is for the table and the company, which is what this entry prices.",
+   "requires_node": "fin_gambling_house",
+   "operated_by": ["fin_gambling_house"],
+   "conf": "D",
+   "satisfies": {
+    "amusement": 1.0
+   }
+  },
+  "lottery_chance": {
+   "outputs": {
+    "lottery_chance": 1.0
+   },
+   "inputs": {
+    "parchment_sheet": 0.01
+   },
+   "labour_hours": {
+    "scribe": 0.05,
+    "merchant": 0.02
+   },
+   "unit_dimension": "count",
+   "basis": "per numbered chance sold in a public lottery",
+   "yield_basis": "A numbered ticket is a small slip, a hundredth of a parchment sheet. A scribe writes and registers it and a merchant sells and pays out, a few minutes each. The sizes are estimates, confidence D. A chance is worth about an hour of play, so it is counted as one unit of amusement.",
+   "requires_node": "fin_lottery",
+   "operated_by": ["fin_lottery"],
+   "conf": "D",
+   "satisfies": {
+    "amusement": 1.0
+   }
+  }
+ }
+}
