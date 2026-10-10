@@ -18,11 +18,12 @@ from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import trader_response
 from sim.geography.api import cargo_cost, freight_cost, provisions, sea_freight, tiles_held, train_carrier
 from sim.geography.api import route as route_over_tiles
-from sim.geography.api import dues_hours_per_tonne
+from sim.geography.api import cargo_loss_per_day, droving_carrier, dues_hours_per_tonne, modes_carrying, walking_cargo_modes
 from sim.geography.api import usable_modes as usable_route_modes
 from sim.geography.api import transport as freight_physics
 
 from . import action_results, foreign_route_choice
+from .domestic_haul import DomesticHaulMixin
 from .data import load_civ
 
 CARAVAN_STRING_SIZE = declare(
@@ -99,7 +100,7 @@ def _caravan_inputs():
         freight_physics.MULE, int(CARAVAN_STRING_SIZE))
 
 
-class ForeignRoutesMixin:
+class ForeignRoutesMixin(DomesticHaulMixin):
 
     def _train_carrier(self):
         """Geography's train as a freight carrier ({inputs, fuel_material, stock_material, stock_kg})."""
@@ -142,7 +143,10 @@ class ForeignRoutesMixin:
         stock_price = self._material_price_per_kg(train["stock_material"]) or 0.0
         river_boat = (_river_inputs(), freight_cost.CarrierPrices(freight_physics.BARGE.self_mass_kg * vehicle_wood,
                                                                    2.0 * ox_price), land_days, 0.0)
+        walking = {mode: (droving_carrier(mode, self.world_map)["inputs"], freight_cost.CarrierPrices(0.0), land_days, 0.0)
+                   for mode in walking_cargo_modes(self.world_map)}
         return {
+            **walking,
             "cart": (self._land_freight_physical_inputs(),
                      freight_cost.CarrierPrices(freight_physics.CART.self_mass_kg * vehicle_wood,
                                                 team * ox_price), land_days, 0.0),
@@ -159,34 +163,38 @@ class ForeignRoutesMixin:
             SEA_MODE: (hull_inputs, freight_cost.CarrierPrices(hull_kg * vehicle_wood),
                     sea_freight.SAILING_DAYS_PER_YEAR, sea_freight.hull_loss_per_thousand_km(crew))}
 
-    def _freight_mode_costs(self, imbalance=1.0, modes=None):
+    def _freight_mode_costs(self, imbalance=1.0, modes=None, cargo=None):
         """{mode: home money per tonne-km}: feed and crew, the carrier's capital at the market
         rate, hull losses, and the return leg (`imbalance` 0 when flows balance, 1 when the
         carrier comes back empty). The same function prices foreign legs and domestic hauls."""
         land_wage = self.labour.wage_per_hour(self.FREIGHT_DRIVER_WAGE_TRADE)
         sea_wage = self.labour.wage_per_hour(SEA_CREW_WAGE_TRADE)
         rate = self.market_rate()
+        walking = frozenset(walking_cargo_modes(self.world_map))
+        carrying = frozenset(modes_carrying(cargo, self.world_map)) if cargo else frozenset()
         return {mode: freight_cost.freight_money_per_tonne_km(
                     inputs, self._material_price_per_kg(self._carrier_feed_material(mode)) or 0.0, sea_wage if mode == SEA_MODE else land_wage, prices, rate,
-                    working_days, imbalance, loss)
+                    working_days, imbalance, loss, cargo_walks=mode in walking)
                 for mode, (inputs, prices, working_days, loss) in self._carrier_models().items()
-                if modes is None or mode in modes}
+                if (modes is None or mode in modes) and (cargo is None or mode in carrying)}
 
     def land_freight_money_per_tonne_km(self, imbalance=1.0):
         """Home money per tonne-km for a domestic cart haul: the foreign routes' freight function,
-        with the carrier's capital at the market rate and the empty return. A domestic haul of a
-        material has no flow ledger back, so by default (heuristic, `imbalance` 1) the cart returns
-        empty."""
+        with the carrier's capital at the market rate and the empty return (`imbalance` 1 by default;
+        a haul of a material takes it from the domestic flow ledger, `domestic_haul_money_per_tonne`)."""
         return self._freight_mode_costs(imbalance, ("cart",))["cart"]
 
     def domestic_cargo_cost_share(self, material, distance_km):
-        """The cargo's own cost over a domestic cart haul as a share of its price: interest at the
-        market rate while it travels, and what is lost to spoilage in that time. No merchant margin
-        (domestic carriers' margins are not modelled)."""
-        years = freight_cost.days_on_leg(distance_km, self._land_freight_physical_inputs()) / 365.0
+        """The cargo's own cost over a domestic haul as a share of its price: interest at the market
+        rate while it travels, and what is lost to spoilage in that time (and, for a herd on the
+        road, the daily loss the mode states). No merchant margin (domestic carriers' margins are
+        not modelled)."""
+        mode = self._domestic_haul_mode(self._cargo_class(material))
+        years = freight_cost.days_on_leg(distance_km, self._carrier_models()[mode][0]) / 365.0
         spoilage = cargo_cost.spoilage_share(cargo_cost.spoilage_rates().get(material, 0.0), years)
+        road = cargo_cost.daily_loss_share(cargo_loss_per_day(self.world_map).get(mode, 0.0), years * 365.0)
         return trader_response.cost_share_of_price(
-            0.0, cargo_cost.lost_share(spoilage), self.market_rate(), years)
+            0.0, cargo_cost.lost_share(spoilage, road), self.market_rate(), years)
 
     def _foreign_flow_imbalance(self, civilization_id):
         """How one-sided last year's trade with a partner was, from its book: 1 when nothing
@@ -204,17 +212,18 @@ class ForeignRoutesMixin:
         costs[SEA_MODE] = costs.get(SEA_MODE, 0.0) + sea_freight.PORT_HANDLING_HOURS_PER_TONNE * wage
         return costs
 
-    def _foreign_route(self, civilization, imbalance=None):
+    def _foreign_route(self, civilization, imbalance=None, cargo="goods"):
         """The cheapest `Route` from the foreign economy's home tiles to this society's, or None
         when no mode both can use joins them. `imbalance` is how one-sided the flows are
-        (last year's, by default)."""
+        (last year's, by default). `cargo` is the class of cargo carried ("goods", or "living_stock",
+        which walks overland and is shipped over water)."""
         civilization_record = civilization if isinstance(civilization, dict) else load_civ(civilization)
         foreign_techs = action_results.expand(self.nodes, frozenset(civilization_record.get("starting_techs") or ()))
         home_techs = self.held_and_running(include_starting=False)
         if imbalance is None:
             imbalance = self._foreign_flow_imbalance(civilization_record.get("id"))
         mode_costs = self._freight_mode_costs(imbalance)
-        modes = [mode for mode in usable_route_modes((home_techs, foreign_techs), self.world_map)
+        modes = [mode for mode in usable_route_modes((home_techs, foreign_techs), self.world_map, cargo)
                  if mode in mode_costs]
         origin_tiles, destination_tiles = tiles_held(civilization_record, self.world_map), tiles_held(self.civ, self.world_map)
         handling = self._freight_handling_costs()

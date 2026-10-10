@@ -12,7 +12,7 @@ is limited by the lift and by the capital merchants hold and can borrow.
 import math
 
 from sim.world import merchant_house, merchant_terms, trader_response
-from sim.geography.api import cargo_cost, sea_freight
+from sim.geography.api import cargo_cost, cargo_loss_per_day, sea_freight
 
 from sim.unit_conversions import CIVIL_DAYS_PER_YEAR
 from sim.agents.api import EDGE_SAVERS
@@ -96,11 +96,15 @@ class ForeignTradersMixin:
 
     def _route_cargo_loss_share(self, route):
         """Share of cargo lost on the route: the hull loss rate, for the crew the hull sails with, over
-        its sea legs."""
+        its sea legs, and the daily loss of a herd over its legs on the road."""
         if route is None:
             return 0.0
         sailed_km = sum(leg.distance_km for leg in route.legs if leg.mode == SEA_MODE)
-        return cargo_cost.sea_loss_share(sea_freight.hull_loss_per_thousand_km(self._sea_crew()), sailed_km)
+        daily = cargo_loss_per_day(self.world_map)
+        on_the_road = [cargo_cost.daily_loss_share(daily[leg.mode], leg.travel_days)
+                       for leg in route.legs if leg.mode in daily]
+        at_sea = cargo_cost.sea_loss_share(sea_freight.hull_loss_per_thousand_km(self._sea_crew()), sailed_km)
+        return cargo_cost.lost_share(at_sea, *on_the_road) if on_the_road else at_sea
 
     def _cargo_lost_share(self, route, material=None, civilization_id=None, destination_demand_tonnes=None):
         """Share of a cargo lost on a route: with hulls at sea, and to spoilage over the voyage

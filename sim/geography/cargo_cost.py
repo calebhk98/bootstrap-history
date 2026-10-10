@@ -46,6 +46,11 @@ def sea_loss_share(loss_per_thousand_km, sea_km):
     return min(MAX_LOST_SHARE, loss_per_thousand_km * max(0.0, sea_km) / 1000.0)
 
 
+def daily_loss_share(loss_per_day, days):
+    """Share of a cargo lost over some days on the road at a daily loss rate (a herd's strays and wasting)."""
+    return 1.0 - (1.0 - min(1.0, max(0.0, loss_per_day))) ** max(0.0, days)
+
+
 def lost_share(*shares):
     """Share lost when independent hazards each take their share in turn."""
     kept = 1.0

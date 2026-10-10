@@ -69,26 +69,31 @@ def loss_money_per_tonne_km(inputs, prices: CarrierPrices, loss_per_thousand_km:
 def freight_money_per_tonne_km(inputs, feed_price_per_kg: float, wage_per_hour: float,
                                prices: CarrierPrices, annual_rate: float,
                                working_days_per_year: float, imbalance: float = 1.0,
-                               loss_per_thousand_km: float = 0.0) -> float:
+                               loss_per_thousand_km: float = 0.0, cargo_walks: bool = False) -> float:
     """Money to move a tonne one km, the carrier's whole round trip charged to the loaded leg.
 
     Running and capital costs accrue over the round trip, so both scale with `return_leg_factor`.
-    Losses accrue only on the loaded leg's hazard, counted once per loaded tonne-km."""
-    running = (inputs.feed_kg_per_tonne_km * feed_price_per_kg
-               + inputs.driver_hours_per_tonne_km * wage_per_hour)
+    Losses accrue only on the loaded leg's hazard, counted once per loaded tonne-km. When the cargo
+    walks (`cargo_walks`: live animals driven to market), the feed is the cargo's own and is eaten on
+    the loaded leg only; only the drover's hours, and any carrier capital, make the return trip."""
+    feed = inputs.feed_kg_per_tonne_km * feed_price_per_kg
+    crew = inputs.driver_hours_per_tonne_km * wage_per_hour
     capital = capital_money_per_tonne_km(inputs, prices, annual_rate, working_days_per_year)
     losses = loss_money_per_tonne_km(inputs, prices, loss_per_thousand_km)
-    return (running + capital) * return_leg_factor(imbalance) + losses
+    returning = (crew + capital) if cargo_walks else (feed + crew + capital)
+    outbound_only = feed if cargo_walks else 0.0
+    return returning * return_leg_factor(imbalance) + outbound_only + losses
 
 
 def leg_money_per_tonne(money_per_tonne_km: float, inputs, distance_km: float,
-                        restock_days=None) -> float:
+                        restock_days=None, dues_per_tonne: float = 0.0) -> float:
     """Money to deliver a tonne over a leg: the rate over the distance, divided by the share of the
     carrier's lift left for cargo once the crew and animals' food and water are carried between
     restocking places (`restock_days` of travel apart; the whole leg when None). Infinite where a
-    stage is longer than the carrier can provision."""
+    stage is longer than the carrier can provision. `dues_per_tonne` (tolls, gate and port dues) is
+    charged once for the haul on the cargo that arrives, so it is not scaled by the carried food."""
     share = provisions.restocked_share(inputs, distance_km, restock_days)
-    return float("inf") if share <= 0.0 else money_per_tonne_km * distance_km / share
+    return float("inf") if share <= 0.0 else money_per_tonne_km * distance_km / share + dues_per_tonne
 
 
 def days_on_leg(distance_km: float, inputs) -> float:

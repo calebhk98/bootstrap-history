@@ -50,11 +50,14 @@ limit on gatherers (sim/labour/food_gathering.py) is applied by the caller, not 
 
 | Call | Answer |
 |---|---|
-| `usable_modes([nodes_of_party, ...])` | `[mode_id]` every party can use, from the tech nodes each holds. |
+| `usable_modes([nodes_of_party, ...], cargo="goods")` | `[mode_id]` that carry the class of cargo (`"goods"`, or `"living_stock"`: animals walk overland by the droving mode and ship over water) and that every party can use, from the tech nodes each holds. `modes_carrying(cargo)` lists them whatever they need. |
 | `route(origins, destinations, modes, improvements, mode_costs, handling_costs, held_nodes, fastest=False)` | `{legs: [{from, to, mode, km, days, cost_per_tonne}], km, days, cost_per_tonne, inputs: {labour_hours, feed_kg, fuel_kg}}`, or `null` when nothing joins them. The least-cost haul; with `fastest` the fewest-days one (how people travel, not goods). |
 | `route_costs(origins, modes, improvements, mode_costs, handling_costs, held_nodes)` | `{tile_id: cost_per_tonne}`: the least cost from any origin to every tile a haul reaches (origins cost 0), priced as `route` prices a haul. One search serves all destinations; the economy's market areas take their carriage costs from it. |
 | `reach(origins, modes, days_budget, improvements, held_nodes)` | `{tile_id: days}` within the budget. |
 | `dues_hours_per_tonne()` | `{mode_id: hours}` of tolls or port dues per tonne a haul pays when it changes to the mode (the mode's `dues_hours_per_tonne`, with `dues_source` and `dues_conf`). |
+| `cargo_loss_per_day()` | `{mode_id: share}` of the cargo a mode loses each day on the road (a herd's strays and wasting; labelled in the mode data). |
+| `walking_cargo_modes()` | `[mode_id]` where the cargo is the carrier (droving): no carrier capital, the cargo's feed eaten on the loaded leg only. `droving_carrier(mode_id)` gives `{inputs}`, its physical inputs per tonne-km. |
+| `flow_ledger` (module) | Plain-dict ledger `{origin: {destination: tonnes}}` of goods carried in a year: `record_flow`, `pair_imbalance`, `return_fill_share`, `overall_imbalance`. The economy keeps one and prices the carriers' return trips by it. |
 | `carriage_rates(mode_ids)` | `{mode_id: {crew_trade, crew_hours_per_tonne_km, handling_hours_per_tonne, edge_classes}}` on level ground for the modes that name a `crew_trade`, from the same physical rates the route search uses. |
 | `freight_links(modes)` | `[(tile_a, tile_b, mode, km)]` for edges these modes use with nothing built. |
 | `map_of_tiles({tile_id: {lat, lon, coastal, borders}})` | A map of just those tiles with the base map's modes, sea lanes and parameters, for a scenario or test that places its own tiles. |

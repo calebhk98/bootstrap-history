@@ -348,6 +348,8 @@ def _import_declaring_modules():
                    "sim.world.climate_needs",
                    "sim.geography.climate_temperatures",
                    "sim.economy.credit",
+                   "sim.economy.flow_rates",
+                   "sim.geography.droving",
                    "sim.economy.currency",
                    "sim.economy.foreign",
                    "sim.economy.goods_market",
