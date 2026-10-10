@@ -15,7 +15,8 @@ immune. Never store the size of an epidemic: it falls out of transmissibility, d
 | `case_fatality` | Share of those who finish the last stage who die |
 | `immunity` | `{permanent, duration_in_days}`; a finite duration returns people to susceptible |
 | `reproduction_number_range` | Sourced range; validate fails a file whose stages and transmissibility imply a number outside it |
-| `sources` | One entry per numeric field (`transmissibility_per_day`, `case_fatality`, `immunity`, `reproduction_number_range`, and `stage.<id>` for each stage): `{confidence, source}` |
+| `density_exponent` | Contact scales as the nation's person-weighted density (relative to a rural settlement) to this power: 0 is frequency dependent, 1 is mass action; sourced as a range only, so it carries an `unsourced` heuristic tag |
+| `sources` | One entry per numeric field (`transmissibility_per_day`, `case_fatality`, `immunity`, `reproduction_number_range`, `density_exponent`, and `stage.<id>` for each stage): `{confidence, source}` |
 
 Confidence tags follow the research report: `read` (figure seen in a source that was opened), `summary`
 (seen only in a search summary or second hand), `snippet`, `recalled` (standard literature, not re-checked),

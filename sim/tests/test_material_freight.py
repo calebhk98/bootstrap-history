@@ -102,16 +102,24 @@ _running_denarii_per_tonne_km = (_inputs.feed_kg_per_tonne_km * _feed_price
                                  + _inputs.driver_hours_per_tonne_km * _wage)
 check("a cart haul costs more than its feed and driver: the carrier's capital and empty return are in",
       _expected_denarii_per_tonne_km > _running_denarii_per_tonne_km, None)
-_expected_cost_per_kg = _expected_denarii_per_tonne_km * _mexica_coal_km / 1000.0
+_dues = s_mexica.domestic_haul_dues_per_tonne("cart")
+
+
+def _expected_cost_per_kg_over(distance_km):
+    """The cart rate over the distance, divided by the share of lift left after the carrier's food, plus the dues."""
+    return geography_api.freight_cost.leg_money_per_tonne(
+        _expected_denarii_per_tonne_km, _inputs, distance_km,
+        restock_days=geography_api.provisions.RESTOCK_INTERVAL_DAYS, dues_per_tonne=_dues) / 1000.0
+
+
 check("coal's freight cost per kilogram matches transport.py's own feed and "
-      "driver-hour figures times the real distance, exactly",
-      abs(s_mexica.material_freight_cost_per_kg("coal") - _expected_cost_per_kg) < 1e-9,
-      (s_mexica.material_freight_cost_per_kg("coal"), _expected_cost_per_kg))
-check("doubling the distance doubles the freight cost - transport.py's "
-      "per-tonne-km rate is constant, only distance multiplies it",
-      abs(2.0 * s_mexica.material_freight_cost_per_kg("coal")
-          - _expected_denarii_per_tonne_km * (2.0 * _mexica_coal_km) / 1000.0) < 1e-9,
-      s_mexica.material_freight_cost_per_kg("coal"))
+      "driver-hour figures over the real distance, with the mode's dues",
+      abs(s_mexica.material_freight_cost_per_kg("coal") - _expected_cost_per_kg_over(_mexica_coal_km)) < 1e-9,
+      (s_mexica.material_freight_cost_per_kg("coal"), _expected_cost_per_kg_over(_mexica_coal_km)))
+check("a domestic haul pays the cart's dues once, whatever the distance",
+      _dues > 0.0 and abs(s_mexica.domestic_haul_money_per_tonne("coal", 2.0 * _mexica_coal_km)
+                          - _expected_cost_per_kg_over(2.0 * _mexica_coal_km) * 1000.0) < 1e-6,
+      _dues)
 
 # =============================================================================
 # AN UNLOCATED MATERIAL IS LEFT ALONE, NEVER GUESSED AT (CLAUDE.md SS3.1).

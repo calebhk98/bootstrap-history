@@ -56,6 +56,22 @@
    "basis": "per written page of a letter, account or copied text on paper",
    "yield_basis": "A page takes one sheet of the writing surface and about a gram or two of ink (1.5 g a page is an estimate). A scribe in a book hand wrote a few pages a day, taken here as three hours a page (an estimate of the work rate, confidence D); document hands were quicker. Services that turn materials into what households use are recipes on the trades that do the work, as the laid walls are. A sheet of paper is about five grams.",
    "requires_node": "prn_hand_papermaking",
+   "capital": [
+    {
+     "good": "scribe's desk, ruling tools and ink-horn",
+     "build_materials": {
+      "timber_m3": 0.3,
+      "iron_bar_kg": 2.0
+     },
+     "build_labour_hours": {
+      "carpenter": 40.0
+     },
+     "service_life_years": 20,
+     "annual_output_at_basis": 700.0,
+     "capital_basis": "A scribe copies a page in the three hours the entry states, so one desk turns out about seven hundred pages in a working year; the desk and tools are a plank table, a stool and a few knives, and the item states them so the writing office is not treated as plant-free.",
+     "conf": "D"
+    }
+   ],
    "operated_by": ["prn_hand_papermaking"],
    "conf": "D",
    "satisfies": {

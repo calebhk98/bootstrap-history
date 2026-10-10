@@ -4,8 +4,11 @@ import dataclasses
 import math
 from typing import Dict, Tuple
 
-from . import (currency, households, inventory, merchants, metal_stock, ownership, producer_exit, producers, producers_close,
-               state_budget, taxes)
+from sim.geography.api import flow_ledger
+from sim.unit_conversions import KILOGRAMS_PER_TONNE
+
+from . import (currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit,
+               producers, producers_close, state_budget, taxes)
 from .households_cohort import renewed
 from .market_memory import market_key
 from .national_prices import national_prices
@@ -27,6 +30,7 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger) -> None:
         held = carriers.get(cohort.tile)
         if held is None or cohort.income_class < record.cohorts[held].income_class:
             carriers[cohort.tile] = cohort.agent_id
+    carried: dict = {}
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
         fills = ledger.buy_fills.get(merchant.agent_id, [])
         if not fills:
@@ -36,6 +40,10 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger) -> None:
                                   carrier_of=carriers.get)
         record.book.post(done.transfers, done.moves)
         ledger.note_postings(done.transfers, "wages")
+        for move in done.moves:
+            flow_ledger.record_flow(carried, move.tile, move.receiver_tile,
+                                    move.quantity * setup.specs[move.good].unit_mass_kg / KILOGRAMS_PER_TONNE)
+    record.carried = carried
 
 
 def foreign_agents(setup, record) -> set:
@@ -94,6 +102,7 @@ def wear_and_spoilage(setup, record) -> None:
 def close_agents(setup, record, view, ledger: YearLedger, area_map) -> None:
     money = setup.currency_id
     property_income: Dict[str, float] = {}
+    traded = {(result.good, result.area): result.quantity for result in ledger.clearings}
     for producer_id, producer in sorted(record.producers.items()):
         recipe = setup.recipes[producer.recipe_id]
         revenue = ledger.sales_in.get(producer_id, 0.0)
@@ -101,7 +110,8 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map) -> None:
         per_run = recipe.outputs[producers.main_output(recipe)]
         worked = ledger.output.get((producer_id, producers.main_output(recipe)), 0.0) / (
             per_run * producer.yield_factor or per_run)
-        closed = producers_close.close_year(producer, recipe, revenue, costs, view, worked)
+        price_share = expansion_price.price_share_of(ledger.bids_by_market, traded, area_map.area_of, producer.tile)
+        closed = producers_close.close_year(producer, recipe, revenue, costs, view, worked, price_share)
         if closed.exited:
             paid = producer_exit.exit_producer(record, producer_id, list(closed.transfers))
             for transfer in paid:

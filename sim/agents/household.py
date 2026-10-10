@@ -294,6 +294,21 @@ class Household(Actor):
 	def debit(self, amount: float, purpose: Any) -> None:
 		self._state.household.debit(amount, purpose)
 
+	def service_worth(self) -> float:
+		return float(self._state.household.service_offer)
+
+	def concealed_wealth(self) -> float:
+		return float(self._state.household.concealed)
+
+	def defiance(self) -> float:
+		return float(self._state.household.defiance)
+
+	def set_concealed_wealth(self, amount: float) -> None:
+		self._state.household.concealed = max(0.0, amount)
+
+	def set_defiance(self, level: float) -> None:
+		self._state.household.defiance = level
+
 	@property
 	def workforce(self) -> Any:
 		return self.employees

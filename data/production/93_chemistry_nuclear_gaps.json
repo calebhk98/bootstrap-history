@@ -26,9 +26,29 @@
    "mechanical_mj": 614.0,
    "unit_dimension": "mass",
    "basis": "per tonne of low-density polyethylene by high-pressure free-radical polymerisation",
-   "yield_basis": "MASS CONSERVATION. n C2H4 -> (C2H4)n is an addition polymerisation with no by-product, so one kg of ethylene gives one kg of polymer at complete conversion. Shaft work is the isothermal compression floor for taking the gas from atmospheric pressure to about 1000 atmospheres (the pressure the chm_polyethylene node states), W = R T ln(p_out / p_in) per mole at 300 K, 17.2 kJ per mole of 28.05 g, so 0.61 MJ per kg. The polymerisation itself is exothermic, so no process heat is drawn. Real per-pass conversion is well below complete and unconverted gas is recompressed, so the compression work is understated; initiator peroxide is not modelled (heuristic, conf C). Labour is left out.",
+   "yield_basis": "MASS CONSERVATION. n C2H4 -> (C2H4)n is an addition polymerisation with no by-product, so one kg of ethylene gives one kg of polymer at complete conversion. Shaft work is the isothermal compression floor for taking the gas from atmospheric pressure to about 1000 atmospheres (the pressure the chm_polyethylene node states), W = R T ln(p_out / p_in) per mole at 300 K, 17.2 kJ per mole of 28.05 g, so 0.61 MJ per kg. The polymerisation itself is exothermic, so no process heat is drawn. Real per-pass conversion is well below complete and unconverted gas is recompressed, so the compression work is understated; initiator peroxide is not modelled (heuristic, conf C). Labour is a reasoned estimate (conf C): a plant of this early size is run by about five hands across the shifts, some ten thousand hours for two hundred tonnes, fifty hours a tonne.",
    "conf": "C",
-   "requires_node": "chm_polyethylene"
+   "labour_hours": {"chemist": 20.0, "labourer": 30.0},
+   "capital": [
+    {
+     "good": "high-pressure autoclave reactor with intensifier compressor and separator",
+     "build_materials": {
+      "tool_steel_kg": 3000.0,
+      "iron_bar_kg": 10000.0
+     },
+     "build_labour_hours": {
+      "machinist": 3000.0,
+      "smith": 1500.0,
+      "electrician": 400.0
+     },
+     "service_life_years": 15,
+     "annual_output_at_basis": 200000.0,
+     "capital_basis": "The free-radical process runs at about a thousand atmospheres in a forged alloy-steel autoclave fed by an intensifier compressor; the first commercial plant at Northwich in 1939 made on the order of a hundred tonnes a year, and two hundred tonnes is taken for a plant of that generation. Vessel and compressor masses are reasoned order-of-magnitude figures.",
+     "conf": "D"
+    }
+   ],
+   "requires_node": "chm_polyethylene",
+   "operated_by": ["chm_polyethylene"]
   },
   "chlorine_kg": {
    "outputs": {
@@ -91,6 +111,25 @@
    "yield_basis": "EXTRACTED FROM A BY-PRODUCT. High-temperature coal tar carries on the order of one percent phenol by mass in its carbolic-oil fraction; recovery by fractionation, extraction into caustic soda and re-acidification is taken at 80 percent, giving 1 / (0.01 x 0.8) = 125 t of tar per tonne. The tar grade is an order-of-magnitude figure for tar from coking (conf C). Labour is borrowed from acetic_acid_kg's distillation line (the same fractionate-and-purify work), not derived. Caustic and acid reagents are not modelled.",
    "conf": "C",
    "requires_node": "chm_phenol",
+   "capital": [
+    {
+     "good": "coal-tar still, condenser and caustic wash tanks",
+     "build_materials": {
+      "iron_bar_kg": 5500.0,
+      "copper_kg": 400.0,
+      "brick_1000": 8.0
+     },
+     "build_labour_hours": {
+      "smith": 700.0,
+      "plumber": 150.0,
+      "mason": 120.0
+     },
+     "service_life_years": 15,
+     "annual_output_at_basis": 40000.0,
+     "capital_basis": "Phenol is recovered from the carbolic oil fraction of coal tar by fractional distillation and caustic washing; at the entry's hundred and twenty-five tonnes of tar to a tonne of phenol, a still taking five thousand tonnes of tar a year gives about forty tonnes. Iron still mass is an order-of-magnitude figure.",
+     "conf": "D"
+    }
+   ],
    "operated_by": ["chm_phenol"]
   },
   "adipic_acid_kg": {
@@ -186,6 +225,23 @@
    "yield_basis": "COMPOSITION. The classic textile fireproofing bath is borax and boric acid dissolved together, the mix commonly given as seven parts borax to three parts boric acid by mass. The blend conserves mass, so a tonne of blend is 700 kg of one and 300 kg of the other. The ratio is a recipe convention, not derived (conf C). Labour of mixing and the water of solution are not modelled.",
    "conf": "C",
    "requires_node": "soda_leblanc",
+   "capital": [
+    {
+     "good": "dry-blending floor with sieves and mixing trough",
+     "build_materials": {
+      "timber_m3": 3.0,
+      "iron_bar_kg": 100.0
+     },
+     "build_labour_hours": {
+      "carpenter": 60.0,
+      "smith": 20.0
+     },
+     "service_life_years": 15,
+     "annual_output_at_basis": 100000.0,
+     "capital_basis": "Dry borax and boric acid are ground, sieved and mixed on a floor with a trough; there is nothing hot or corrosive, so wood and a little iron serve for decades. Output is bounded by the floor and sieves, taken at the order of a hundred tonnes a year.",
+     "conf": "D"
+    }
+   ],
    "operated_by": ["soda_leblanc"]
   },
   "aluminium_soap_kg": {
@@ -217,9 +273,30 @@
    "temperature_needed_c": 180.0,
    "unit_dimension": "mass",
    "basis": "per tonne of distilled glycerol recovered from the spent lye of soap making",
-   "yield_basis": "STOICHIOMETRY OF SAPONIFICATION. Triglyceride + 3 NaOH -> 3 soap + glycerol (92.09 g/mol). A tallow saponification value near 195 mg KOH per g means 1.159 mmol of triglyceride per g, so 0.1067 kg of glycerol per kg of fat at complete reaction; 90 percent recovery from lye and vacuum distillation gives 1 / (0.1067 x 0.9) = 10.4 t of fat per tonne, with 3 mol of NaOH per mol of fat (40.0 g/mol), 1.448 t. Heat is the latent heat of vaporising glycerol in distillation, about 91 kJ per mole, 0.99 GJ per tonne, under vacuum near 180 C. LABELLED HEURISTIC: the soap that the same batch makes is not credited, so glycerol is overpriced by the fat it shares with soap; solvent recovery and labour are not modelled. Saponification value and recovery are conf C.",
+   "yield_basis": "STOICHIOMETRY OF SAPONIFICATION. Triglyceride + 3 NaOH -> 3 soap + glycerol (92.09 g/mol). A tallow saponification value near 195 mg KOH per g means 1.159 mmol of triglyceride per g, so 0.1067 kg of glycerol per kg of fat at complete reaction; 90 percent recovery from lye and vacuum distillation gives 1 / (0.1067 x 0.9) = 10.4 t of fat per tonne, with 3 mol of NaOH per mol of fat (40.0 g/mol), 1.448 t. Heat is the latent heat of vaporising glycerol in distillation, about 91 kJ per mole, 0.99 GJ per tonne, under vacuum near 180 C. LABELLED HEURISTIC: the soap that the same batch makes is not credited, so glycerol is overpriced by the fat it shares with soap (a joint entry with soap as a second output would leave this entry out of the solver's reach, which drops a co-product a nearer technique already makes). Labour is a reasoned estimate (conf C): boiling and graining the soap charge takes two hands about a hundred hours each, and recovering the glycerol from the lye (neutralising, evaporating, vacuum distilling) about eighty more, thirty of them a chemist's. Solvent recovery is not modelled. Saponification value and recovery are conf C.",
    "conf": "C",
-   "requires_node": "chm_glycerol"
+   "labour_hours": {"labourer": 250.0, "chemist": 30.0},
+   "capital": [
+    {
+     "good": "soap kettles, lye evaporators and vacuum still",
+     "build_materials": {
+      "iron_bar_kg": 3000.0,
+      "copper_kg": 1200.0,
+      "brick_1000": 4.0
+     },
+     "build_labour_hours": {
+      "smith": 600.0,
+      "plumber": 300.0,
+      "mason": 80.0
+     },
+     "service_life_years": 15,
+     "annual_output_at_basis": 50000.0,
+     "capital_basis": "A soap house boils ten-tonne charges in iron kettles, the spent lye is evaporated in pans and the crude glycerine redistilled under vacuum in a copper still; fifty tonnes of glycerol a year corresponds to some five hundred tonnes of fat, a middling soap works. Masses are order-of-magnitude figures.",
+     "conf": "D"
+    }
+   ],
+   "requires_node": "chm_glycerol",
+   "operated_by": ["chm_glycerol"]
   },
   "fulminate_kg": {
    "outputs": {
@@ -239,6 +316,25 @@
    "yield_basis": "STOICHIOMETRIC MINIMUM. Mercury fulminate is 284.63 g/mol containing one mercury (200.59 g) and two nitrogen atoms, taken from two molecules of nitric acid (2 x 63.01 g); the two carbon atoms are taken from one molecule of ethanol (46.07 g). Per kg: 0.705 kg mercury, 0.443 kg nitric acid, 0.162 kg ethanol. A real batch uses a large excess of acid and ethanol and recovers a fraction, so this understates cost (heuristic, conf C). Labour is copied from nitroglycerin_kg, the neighbouring hazardous batch synthesis.",
    "conf": "C",
    "requires_node": "chm_fulminate",
+   "capital": [
+    {
+     "good": "glass flasks, copper water-bath and fume flue",
+     "build_materials": {
+      "clay_kg": 300.0,
+      "copper_kg": 60.0,
+      "brick_1000": 1.0
+     },
+     "build_labour_hours": {
+      "potter": 40.0,
+      "smith": 40.0,
+      "mason": 30.0
+     },
+     "service_life_years": 10,
+     "annual_output_at_basis": 3000.0,
+     "capital_basis": "Mercury is dissolved in nitric acid and run into alcohol in small flasks over a water bath, in batches of hundreds of grams because the product is dangerous; the percussion-cap trade used a few tonnes a year. Masses are reasoned estimates.",
+     "conf": "D"
+    }
+   ],
    "operated_by": ["chm_fulminate"]
   },
   "uranium_ore_kg": {

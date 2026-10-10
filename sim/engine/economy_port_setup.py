@@ -91,7 +91,7 @@ def opening_values(sim):
     labour_trades = sorted({trade for entry_id in everyone_runs + ([mint_recipe] if mint_recipe else [])
                             for trade in (production[entry_id].get("labour_hours") or {})}
                            | {unskilled})
-    modes = sim._freight_mode_costs()
+    modes = sim._freight_mode_costs(cargo="goods")
     prices = dict(partner_prices)
     prices.update({good: price for good, price in sim.economy.material_prices().items() if price > 0.0})
     return {
@@ -105,6 +105,7 @@ def opening_values(sim):
         "unskilled_trade": unskilled,
         "rate": float(sim.economy.base_rate()),
         "carriage": dict(modes),
+        "carriage_balanced": sim._freight_mode_costs(0.0, cargo="goods"),
         "held_nodes": sorted(sim.held_and_running(include_starting=False)),
         "ways": {key: dict(way) for key, way in sorted(sim.state.economy.improvements.items())},
         "site_limits": [[limit.recipe_id, limit.tile, limit.capacity_runs_per_year, limit.yield_factor]
@@ -139,6 +140,7 @@ def in_units(opening):
     counted["prices"] = {good: _counted(price / unit) for good, price in opening["prices"].items()}
     counted["wages"] = {trade: _counted(wage / unit) for trade, wage in opening["wages"].items()}
     counted["carriage"] = {mode: _counted(rate / unit) for mode, rate in opening["carriage"].items()}
+    counted["carriage_balanced"] = {mode: _counted(rate / unit) for mode, rate in opening["carriage_balanced"].items()}
     return counted
 
 
@@ -193,7 +195,7 @@ def build_setup(sim, opening=None):
         civ_id=str(civ["id"]),
         currency=_counted_currency(civ, unit),
         state_agent="state:" + str(civ["id"]), tiles=tiles,
-        carriage_rates=dict(opening["carriage"]),
+        carriage_rates=dict(opening["carriage"]), carriage_rates_balanced=dict(opening["carriage_balanced"]),
         handling_rates={SEA_MODE: sea_freight.PORT_HANDLING_HOURS_PER_TONNE * wages.get(opening["unskilled_trade"], 0.0)},
         held_nodes=tuple(opening["held_nodes"]),
         specs=specs, recipes=recipes, mint_recipe=mint_recipe, basket=basket, trades=trades,

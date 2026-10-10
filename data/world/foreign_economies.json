@@ -12,7 +12,7 @@
     {
       "civilization": "han_china_100ad",
       "enabled": true,
-      "agent_economy": false,
+      "agent_economy": true,
       "from_year": -202,
       "until_year": 220,
       "source": "Han dynasty, 202 BC to AD 220 (Western and Eastern Han)."

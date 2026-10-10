@@ -60,8 +60,8 @@ def knowledge_loss_warning(sim):
             "cheapest_hedge": cheapest}
 
 
-def warning_lines(warning):
-    """The prominent text line for `state` and `path`."""
+def warning_lines(warning, money_label="denarii"):
+    """The prominent text line for `state` and `path`; `money_label` names the unit its costs are shown in."""
     if not warning:
         return []
     hedge = warning["cheapest_hedge"]
@@ -69,13 +69,13 @@ def warning_lines(warning):
             else "opens in %d year%s" % (warning["years_until"],
                                          "" if warning["years_until"] == 1 else "s"))
     return ["!! WARNING: %s sacking window %d-%d %s. Each sack is expected to cost you "
-            "%s of your %s technologies. Cheapest hedge: %s, %d step%s away, about %s "
-            "denarii; built, it would cut that to %s. 'risk' has the detail."
+            "%s of your %s technologies. Cheapest hedge: %s, %d step%s away, about %s"
+            "; built, it would cut that to %s. 'risk' has the detail."
             % (warning["name"], warning["years"][0], warning["years"][-1], when,
                _number(warning["expected_technologies_lost_per_sacking"]),
                _number(warning["technologies_at_risk"]), hedge["id"],
                hedge["steps_away"], "" if hedge["steps_away"] == 1 else "s",
-               _number(hedge["cost"]),
+               "%s %s" % (_number(hedge["cost"]), money_label),
                _number(hedge["expected_technologies_lost_per_sacking_once_built"]))]
 
 

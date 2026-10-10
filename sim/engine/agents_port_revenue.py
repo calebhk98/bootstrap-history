@@ -1,7 +1,8 @@
 """What a state asks the simulated world when it assesses revenue: its declared forms and the bases they read."""
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, FrozenSet, List, Optional, Tuple
 
-from sim.agents.api import revenue
+from sim.agents.api import observed_incomes, revenue
+from sim.geography.api import arable_hectares, tiles_held
 
 
 class RevenueView:
@@ -44,10 +45,26 @@ class RevenueView:
 		"""Money's worth of the coin this society holds, from its coin standard."""
 		return self._sim.economy.coin_stock_value()
 
+	def held_tiles(self) -> List[str]:
+		return tiles_held(self._sim.civ)
+
+	def arable_share(self, tiles: FrozenSet[str]) -> float:
+		"""The share of the arable land the state holds that lies on `tiles`."""
+		held = self.held_tiles()
+		total = sum(arable_hectares(tile) for tile in held)
+		return sum(arable_hectares(tile) for tile in held if tile in tiles) / total if total > 0.0 else 0.0
+
 	def land_rent_paid_by_tile(self) -> Dict[str, float]:
 		return self._sim.economy.agent_land_rent_paid_by_tile()
 
-	def land_rent_owners(self) -> List[Tuple[Any, float]]:
-		"""The agent economy keeps rent with its household cohorts, not with the strata, so no payer is named and
-		the tax is drawn from the edge (taxpayers outside the modelled actors)."""
-		return []
+	def land_rent_owners(self, tiles: Optional[FrozenSet[str]] = None) -> List[Tuple[Any, float]]:
+		"""(stratum, rent received) of the rent paid on `tiles` (all when none): the agent economy keeps rent with its
+		household cohorts by what each owns, and the strata are slices of the cohorts ranked by income, so each
+		stratum received the rent of its slice. Empty while the economy opens, when the tax is drawn from the edge."""
+		curve = self._sim.economy.agent_cohort_land_rents(tiles)  # type: ignore[attr-defined]
+		if not curve:
+			return []
+		home = [actor for actor in self._sim.actors.of_kind("stratum")  # type: ignore[attr-defined]
+				if actor.record.country is None and actor.record.exited_year is None]
+		received = observed_incomes(home, self, curve)
+		return [(stratum, received[stratum.record.stratum]) for stratum in home if received.get(stratum.record.stratum, 0.0) > 0.0]

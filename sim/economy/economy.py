@@ -17,6 +17,7 @@ from .market_memory import YearView
 from .mint import mint_orders, settle_mint, staff as staff_mint
 from .mint_labour import close_year as close_mint_year, mint_agent
 from .money_audit import MoneyAudit, year_report
+from .flow_rates import flow_imbalance
 from .entry_year import close_idle_producers, open_entrants, restake_owners
 from .households_own import (hours_for_own_plan, own_production, own_production_options, plot_hectares,
                              withhold_hours)
@@ -71,9 +72,10 @@ class Economy:
         if record is None:
             record, area_map, carriage = open_economy(setup)
         else:
-            carriage = setup.carriage_table(record.ways)
+            carriage = setup.carriage_table(record.ways, flow_imbalance(record))
             area_map = setup.area_map(carriage)
         self.record = record
+        self.imbalance = flow_imbalance(record)   # the return-trip emptiness `carriage` was built with
         self.area_map = area_map
         self.carriage = carriage
         self.improvements: Dict[str, Dict[str, Any]] = dict(record.ways)   # the ways `carriage` and the areas were built with
@@ -87,11 +89,25 @@ class Economy:
             return False
         self.improvements = {key: dict(way) for key, way in improvements.items()}
         self.record.ways = {key: dict(way) for key, way in self.improvements.items()}
-        self.carriage = self.setup.carriage_table(self.improvements)
+        return self._rebuild_carriage()
+
+    def _rebuild_carriage(self) -> bool:
+        """Carriage over the current ways and return trips, the market areas partitioned again over it, the
+        markets' memory carried to the new areas."""
+        self.carriage = self.setup.carriage_table(self.improvements, self.imbalance)
         area_map = self.setup.area_map(self.carriage)
         follow(self.record, self.area_map, area_map)
         self.area_map = area_map
         return True
+
+    def follow_flows(self) -> bool:
+        """Price the carriage by last year's flows: where the opposite flow fills more of the carriers'
+        return trips, a tonne costs less. False when the (stepped) emptiness of the returns is unchanged."""
+        imbalance = flow_imbalance(self.record)
+        if imbalance == self.imbalance:
+            return False
+        self.imbalance = imbalance
+        return self._rebuild_carriage()
 
     def view(self) -> YearView:
         return CreditView(self.record.memory, self.record.book, self.area_map, self.setup.currency_id, labour_area,
@@ -104,6 +120,7 @@ class Economy:
     def step(self, inputs: YearInputs) -> YearOutcome:
         setup, record = self.setup, self.record
         self.__dict__.pop("_port_shares", None)
+        self.follow_flows()
         record.book.start_year()
         ledger = YearLedger(import_accounts=frozenset(inputs.import_accounts), export_accounts=frozenset(inputs.export_accounts))
         self._follow_population(inputs)

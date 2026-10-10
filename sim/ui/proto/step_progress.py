@@ -16,17 +16,18 @@ def after_year(sim, summary):
 
 def commit_and_report(session, stream):
     """A callback that saves the game to `session` (when there is one) and prints one line per year to `stream`."""
-    from sim.ui.memory import save_state
+    from sim.engine.ui_port import money_text
+    from sim.ui.memory import save_session
 
     def commit(sim, summary):
         # a one-year step is saved once by the caller after the command
         if summary.get("years_asked", 1) < 2:
             return
         if session:
-            save_state(sim, session)
+            save_session(sim, session)
         try:
-            stream.write("  year %s: %s den, %d completed, %d closed, population %+.1f%%\n"
-                         % (summary["year"], format(summary["capital"], ",.0f"), summary["completed"],
+            stream.write("  year %s: %s, %d completed, %d closed, population %+.1f%%\n"
+                         % (summary["year"], money_text(summary["capital"], sim, grouped=True, short=True), summary["completed"],
                             summary["closed"], 100 * summary["population_change"]))
             stream.flush()
         except (OSError, ValueError):

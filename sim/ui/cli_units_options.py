@@ -1,9 +1,10 @@
 """The 'display units' entry of the options menus (Complaint 285).
 
 One preference per dimension, saved in the application config like the other
-options. Nothing chosen means every quantity is shown exactly as the game
-writes it. Commands still take the units their help names; this changes only
-what is shown.
+options. Nothing chosen means every quantity is shown in the civilisation's own
+units when its file names some, else exactly as the game writes it. Commands
+take the units their help names, or another unit of the same kind given as a
+`unit` (`buy farm 10 acre`).
 """
 from sim.engine.ui_port import settings, units
 from sim.engine.ui_port import summary_line
@@ -21,7 +22,8 @@ def edit_display_units(cfg, civ_id, ask_line):
     for dimension in registry["dimensions"]:
         options = units.available_units(registry, dimension, civ_id)
         print("   %s: now %s; choose from: %s"
-              % (dimension, chosen.get(dimension, "as the game writes it"), ", ".join(options)))
+              % (dimension, chosen.get(dimension) or units.CIV_DEFAULTS.get(dimension)
+                 or "as the game writes it", ", ".join(options)))
         answer = ask_line("   %s unit (blank to keep, 'default' to clear): " % dimension).strip()
         if not answer:
             continue

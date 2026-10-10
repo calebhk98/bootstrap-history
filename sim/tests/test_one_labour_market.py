@@ -89,6 +89,10 @@ WAGE_INTERNALS = {
     "wage_cost_factors", "labour_pay_scale", "press_labour",
 }
 OWNERS = {"labour_market_api.py", "labour_wages.py", "labour_wage_ledger.py", "state.py", "household.py"}
+# Modules that show or record the wage level (screens, the cause book, the labour port, the country profile
+# builder) without turning it into a wage: they may read it, never multiply by it.
+LEVEL_REPORTERS = ("sim/ui/", "engine/baseline_game.py", "engine/cause_book.py", "engine/labour_port.py",
+                   "engine/shock_year.py", "agents/cast.py")
 
 
 class WageArithmeticVisitor(ast.NodeVisitor):
@@ -99,12 +103,21 @@ class WageArithmeticVisitor(ast.NodeVisitor):
     def visit_Attribute(self, node):
         if node.attr in WAGE_INTERNALS:
             self.violations.append((self.filename, node.lineno, "uses " + node.attr))
+        if node.attr == "wage_index" and isinstance(node.ctx, ast.Load):
+            self.violations.append((self.filename, node.lineno, "reads wage_index"))
         self.generic_visit(node)
 
     def visit_BinOp(self, node):
         for operand in (node.left, node.right):
             if isinstance(operand, ast.Attribute) and operand.attr == "wage_index":
                 self.violations.append((self.filename, node.lineno, "multiplies by wage_index"))
+        self.generic_visit(node)
+
+    def visit_Call(self, node):
+        # a wage level passed by name (getattr(profile, "wage_index"), a helper keyed on it) is a read too
+        for argument in list(node.args) + [keyword.value for keyword in node.keywords]:
+            if isinstance(argument, ast.Constant) and argument.value == "wage_index":
+                self.violations.append((self.filename, node.lineno, "passes the name wage_index to a call"))
         self.generic_visit(node)
 
 
@@ -115,7 +128,9 @@ def wage_arithmetic_outside_the_market(source_by_name):
             continue
         visitor = WageArithmeticVisitor(name)
         visitor.visit(ast.parse(source, filename=name))
-        violations.extend(visitor.violations)
+        reports_only = any(marker in name.replace(os.sep, "/") for marker in LEVEL_REPORTERS)
+        violations.extend(entry for entry in visitor.violations
+                          if not (reports_only and entry[2].startswith(("reads", "passes"))))
     return violations
 
 
@@ -135,5 +150,10 @@ check("no module outside the labour market computes a wage",
       not found, "\n".join("%s:%d %s" % entry for entry in found[:15]))
 check("the structural scan catches a synthetic offender",
       len(wage_arithmetic_outside_the_market({"synthetic.py": "def f(sim, t):\n    return sim.labour_price_factor(t) * 2\n"})) == 1
-      and len(wage_arithmetic_outside_the_market({"synthetic.py": "def f(sim, t):\n    return t * sim.wage_index\n"})) == 1
+      and len(wage_arithmetic_outside_the_market({"synthetic.py": "def f(sim, t):\n    return t * sim.wage_index\n"})) == 2
       and not wage_arithmetic_outside_the_market({"labour_market_api.py": "def f(sim, t):\n    return sim.labour_price_factor(t)\n"}))
+check("the scan flags a wage level read or passed by name outside the owners, and lets a screen read it",
+      len(wage_arithmetic_outside_the_market({"synthetic.py": "def f(profile):\n    return profile.wage_index\n"})) == 1
+      and len(wage_arithmetic_outside_the_market({"synthetic.py": "def f(profile):\n    return getattr(profile, 'wage_index')\n"})) == 1
+      and not wage_arithmetic_outside_the_market({"sim/ui/screen.py": "def f(sim):\n    return sim.wage_index\n"})
+      and len(wage_arithmetic_outside_the_market({"sim/ui/screen.py": "def f(sim):\n    return 2 * sim.wage_index\n"})) == 1)

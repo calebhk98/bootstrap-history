@@ -1,6 +1,8 @@
 """Reading and writing a save file, and validating one before it is trusted."""
 
-import json, os, random
+import gzip, json, os, random
+
+from sim.game_version import GAME_VERSION
 
 from .data import WAGES
 from sim.engine.state import (
@@ -19,6 +21,7 @@ def save_state(sim, path):
 	sim.state._fog = sim.fog
 	sim.state._immortal = bool(sim.cfg.get("immortal", True))
 	sim.state._seed = getattr(sim, "seed", None)
+	sim.state._game_version = GAME_VERSION
 	try:
 		rng_state = sim.rng.getstate()
 		sim.state._rng = [rng_state[0], list(rng_state[1]), rng_state[2]]
@@ -43,12 +46,30 @@ def save_state(sim, path):
 	parent = os.path.dirname(absolute)
 	if parent and not os.path.isdir(parent):
 		os.makedirs(parent, exist_ok=True)
-	with open(tmp, "w") as handle:
-		handle.write(text)
+	with open(tmp, "wb") as handle:
+		handle.write(_encode(text, path))
 	os.replace(tmp, path)          # atomic: a crash mid-save cannot eat the game
 	_ON_DISK[absolute] = (text, _stamp(absolute))
 	return path
 
+
+def _encode(text, path):
+	"""The bytes to store: a path ending `.gz` is compressed, any other is plain text."""
+	data = text.encode("utf-8")
+	return gzip.compress(data, mtime=0) if path.endswith(GZIP_SUFFIX) else data
+
+
+def read_save_text(path):
+	"""The JSON text of a save, plain or compressed; a compressed file is recognised by its first bytes, not its name."""
+	with open(path, "rb") as handle:
+		data = handle.read()
+	if data[:2] == _GZIP_MAGIC:
+		data = gzip.decompress(data)
+	return data.decode("utf-8")
+
+
+GZIP_SUFFIX = ".gz"
+_GZIP_MAGIC = b"\x1f\x8b"
 
 # What this process last wrote or read for each save path, and the file's
 # size and modification time then; a save is skipped only while both agree.
@@ -263,8 +284,7 @@ def _validate_save(blob, sim):
 def civ_of_save(path):
     """Which civilisation a save file is from, or None if it will not say."""
     try:
-        with open(path) as handle:
-            return (json.load(handle) or {}).get("_civ")
+        return (json.loads(read_save_text(path)) or {}).get("_civ")
     except (OSError, ValueError, AttributeError):
         return None
 
@@ -272,8 +292,7 @@ def civ_of_save(path):
 def goal_of_save(path):
     """Which goal a save file was playing toward, or None if it will not say."""
     try:
-        with open(path) as handle:
-            return goal_of_blob(json.load(handle) or {})
+        return goal_of_blob(json.loads(read_save_text(path)) or {})
     except (OSError, ValueError, AttributeError):
         return None
 
@@ -282,8 +301,7 @@ def load_state(sim, path):
 	"""Read a save from `path` and apply it to `sim`, or raise ValueError with
 	a clear reason and leave `sim` completely untouched.
 	"""
-	with open(path) as f:
-		text = f.read()
+	text = read_save_text(path)
 	blob = json.loads(text)
 	_ON_DISK[os.path.abspath(path)] = (text, _stamp(os.path.abspath(path)))
 	bad = _validate_save(blob, sim)

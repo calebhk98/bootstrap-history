@@ -18,6 +18,8 @@ import tempfile
 from sim.engine.ui_port import TRADE_FAMILY, downstream_count
 from sim.engine.ui_port import purchase_budget
 from .nodes import _did_you_mean
+from .quantity_units import read_quantity
+from sim.engine.ui_port import money_text, plain_number
 from sim.ui.memory import load_state, save_state
 from .util import _flag
 from .rush_filters import parse_rush_filters, passes_rush_filters, rush_exposure
@@ -124,9 +126,9 @@ def _cmd_start(sim, nodes, cmd, ended):
                 "%s this society can supply (%d other active project%s "
                 "already drawing on it); this one competes for what is "
                 "left, it does not get %s to itself"
-                % (_trade, "{:,.0f}".format(_new_total), "{:,.0f}".format(_supply),
+                % (_trade, plain_number(_new_total), plain_number(_supply),
                    _competitors, "" if _competitors == 1 else "s",
-                   "{:,.0f}".format(_plan["desired"])))
+                   plain_number(_plan["desired"])))
     started, why = sim.start_project(node_id, precaution=bool(cmd.get("precaution")))
     if not started:
         return {"ok": False, "error": why}
@@ -352,8 +354,8 @@ def _cmd_stop(sim, nodes, cmd, ended):
 
 
 
-def _rush_caps(cmd):
-    """The fiscal caps on a rush as (caps, error). A cap is None when not given."""
+def _rush_caps(cmd, sim):
+    """The fiscal caps on a rush as (caps, error). A cap is None when not given; money caps may come with a `unit`."""
     caps = {}
     for key in ("max_total_cost", "max_annual_draw", "reserve_cash", "max_total_hours"):
         raw = cmd.get(key)
@@ -366,6 +368,10 @@ def _rush_caps(cmd):
             return None, "%s must be a number of currency" % key
         if value < 0 or value != value:
             return None, "%s cannot be negative" % key
+        if key != "max_total_hours":
+            value, unit_error = read_quantity({key: value, "unit": cmd.get("unit")}, key, None, "money", "civ_coin", sim)
+            if unit_error:
+                return None, unit_error
         caps[key] = value
     return caps, None
 
@@ -377,21 +383,21 @@ def _rush_cost_left(sim, node_id):
     return price - min(price, max(0.0, paid))
 
 
-def _rush_cap_refusal(caps, budget, cost, draw, cost_so_far, draw_so_far, hours=0.0, hours_so_far=0.0):
+def _rush_cap_refusal(sim, caps, budget, cost, draw, cost_so_far, draw_so_far, hours=0.0, hours_so_far=0.0):
     """Why the next project breaks a fiscal or founder-hour cap, or None when it fits."""
     if caps.get("max_total_hours") is not None and hours_so_far + hours > caps["max_total_hours"] + 1e-9:
         return ("not begun: needs %s founder hours, which would take this rush past "
-                "max_total_hours" % "{:,.0f}".format(hours))
+                "max_total_hours" % plain_number(hours))
     if caps["max_total_cost"] is not None and cost_so_far + cost > caps["max_total_cost"] + 1e-9:
         return ("not begun: costs %s, which would take this rush past "
-                "max_total_cost" % "{:,.0f}".format(cost))
+                "max_total_cost" % money_text(cost, sim, grouped=True))
     if caps["max_annual_draw"] is not None and draw_so_far + draw > caps["max_annual_draw"] + 1e-9:
         return ("not begun: draws %s a year, which would take this rush past "
-                "max_annual_draw" % "{:,.0f}".format(draw))
+                "max_annual_draw" % money_text(draw, sim, grouped=True))
     if caps["reserve_cash"] is not None:
         if cost_so_far + cost + caps["reserve_cash"] > budget + 1e-9:
             return ("not begun: costs %s, which would dip into the "
-                    "reserve_cash you asked to keep" % "{:,.0f}".format(cost))
+                    "reserve_cash you asked to keep" % money_text(cost, sim, grouped=True))
     return None
 
 
@@ -462,7 +468,7 @@ def _cmd_rush(sim, nodes, cmd, ended):
         return {"ok": False, "error": "limit must be a whole number"}
     if limit is not None and limit < 1:
         return {"ok": False, "error": "limit must be at least 1"}
-    caps, cap_error = _rush_caps(cmd)
+    caps, cap_error = _rush_caps(cmd, sim)
     if cap_error:
         return {"ok": False, "error": cap_error}
     filters, filter_error = parse_rush_filters(cmd, nodes)
@@ -520,7 +526,7 @@ def _cmd_rush(sim, nodes, cmd, ended):
             break
         cost_left = _rush_cost_left(sim, node_id)
         annual_draw = cost_left / max(1.0, nodes[node_id]["yrs"])
-        cap_reason = _rush_cap_refusal(caps, budget, cost_left, annual_draw,
+        cap_reason = _rush_cap_refusal(sim, caps, budget, cost_left, annual_draw,
                                        total_cost, total_draw, nodes[node_id]["ph"], _owed)
         if cap_reason:
             not_started.append({"id": node_id, "name": nodes[node_id]["name"],
@@ -533,8 +539,8 @@ def _cmd_rush(sim, nodes, cmd, ended):
                        "owe %s of your hours, and you have about %s a year. "
                        "Beginning more would not make them go faster, only "
                        "leave them all standing still"
-                       % (len(started), "{:,.0f}".format(_owed),
-                          "{:,.0f}".format(sim.labour.director_pool()))})
+                       % (len(started), plain_number(_owed),
+                          plain_number(sim.labour.director_pool()))})
             continue
         ok2, why = sim.start_project(node_id)
         if ok2:

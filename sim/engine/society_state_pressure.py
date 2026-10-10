@@ -20,10 +20,12 @@ import math
 
 from sim.constants import declare
 from sim.engine import money_units
+from sim.engine.units_prose import mass_text, money_text
+from sim.agents.api import demand_answer
 
 from sim.world import military_logistics
 
-from .state_demand import answer_state_demand
+from .state_demand import answer_confiscation, answer_state_demand, settle_household_year
 
 
 STATE_INTEREST_RELIGIOUS_ADJACENT_WEIGHT = declare(
@@ -824,20 +826,24 @@ class StatePressureMixin:
         times more noticeable than the first.
         """
         household = self.state.household
-        return self.visible_scale(self.labour.headcount(), household.capital, household.eminence)
+        return self.visible_scale(self.labour.headcount(), demand_answer.visible_wealth(household.capital, household.concealed),
+                                  household.eminence, household.defiance)
 
-    def visible_scale(self, headcount, wealth, eminence):
+    def visible_scale(self, headcount, wealth, eminence, defiance=0.0):
         """household_scale's rule for any taxpayer: what an observer can count
-        of its staff, its wealth and (for a person) its prominence."""
+        of its staff, its wealth and (for a person) its prominence, and a
+        surcharge for having defied the state (what is hidden is not counted
+        in `wealth`)."""
         head_s = min(1.0, math.sqrt(max(0.0, headcount)
                                     / self.HOUSEHOLD_HEADCOUNT_SATURATES_AT))
         wealth_s = min(1.0, max(0.0, wealth)
                        / (self.HOUSEHOLD_WEALTH_SATURATES_AT * self.labour.base_annual_wage("labourer")))
         danger = self.cfg["eminence_danger"]
         emin_s = min(1.0, max(0.0, eminence) / danger)
-        return (self.HOUSEHOLD_SCALE_HEADCOUNT_WEIGHT * head_s
-                + self.HOUSEHOLD_SCALE_WEALTH_WEIGHT * wealth_s
-                + self.HOUSEHOLD_SCALE_EMINENCE_WEIGHT * emin_s)
+        return min(1.0, self.HOUSEHOLD_SCALE_HEADCOUNT_WEIGHT * head_s
+                   + self.HOUSEHOLD_SCALE_WEALTH_WEIGHT * wealth_s
+                   + self.HOUSEHOLD_SCALE_EMINENCE_WEIGHT * emin_s
+                   + demand_answer.notice_surcharge(defiance))
 
     HOUSEHOLD_SCALE_HEADCOUNT_WEIGHT = declare(
         "HOUSEHOLD_SCALE_HEADCOUNT_WEIGHT", 0.45, kind="temporary_heuristic",
@@ -1195,10 +1201,10 @@ class StatePressureMixin:
             out["military_supply"] = ("%s may demand your output; refusing a "
                                       "state that can still fight is not free "
                                       "(equipping one soldier your way costs "
-                                      "it about %.1f kg of iron and "
+                                      "it about %s of iron and "
                                       "ammunition a year)"
                                       % (state_pressure_cfg.get("military_name", "the arsenal"),
-                                         burden_kg))
+                                         mass_text(burden_kg, self, digits=1, unit="kilogram")))
         if conf_p > 0:
             out["confiscation_chance_this_year"] = round(conf_p, 4)
             out["confiscation_reduced_by"] = conf_why
@@ -1229,6 +1235,7 @@ class StatePressureMixin:
         the full argument; this is only the yearly application of the four
         reports above.
         """
+        settle_household_year(self)
         notice = self.state_notice()
         rev = max(0.0, self.revenue())
         state_pressure_cfg = self.civ.get("state_pressure") or {}
@@ -1241,10 +1248,16 @@ class StatePressureMixin:
             answer = answer_state_demand(self, took - office_paid)
             if answer["penalty"] > 0.0:
                 self.state.household.log.append((year, "You refused the requisition and the state enforced it: "
-                                     "the demand and a penalty of %s on top" % "{:,.0f}".format(answer["penalty"])))
+                                     "the demand and a penalty of %s on top" % money_text(answer["penalty"], self, grouped=True)))
             elif answer["withheld"] > 0.5:
                 self.state.household.log.append((year, "You refused the requisition and the state did not "
-                                     "enforce it this year: %s withheld" % "{:,.0f}".format(answer["withheld"])))
+                                     "enforce it this year: %s withheld" % money_text(answer["withheld"], self, grouped=True)))
+            elif answer["negotiated"]:
+                self.state.household.log.append((year, "You negotiated the requisition and the state took your offer: "
+                                     "%s paid of %s asked%s" % (
+                                         money_text(answer["paid"], self, grouped=True), money_text(took - office_paid, self, grouped=True),
+                                         (", with %s of service" % money_text(answer["service"], self, grouped=True))
+                                         if answer["service"] > 0.5 else "")))
             took = office_paid + answer["paid"]
             self.pay_state(took, {"office": office_paid, "requisition": answer["paid"] - answer["penalty"],
                                   "penalty": answer["penalty"]})
@@ -1253,13 +1266,13 @@ class StatePressureMixin:
                 self.state.household._said_requisition = year
                 bits = ["%s takes %s this year" % (
                     state_pressure_cfg.get("requisition_name", "the state"),
-                    "{:,.0f}".format(req_share * rev))]
+                    money_text(req_share * rev, self, grouped=True))]
                 if req_why:
                     bits.append("; ".join(req_why))
                 if off_share > 0.0005 and off_name:
                     bits.append("%s costs %s more, and is not something you "
                                 "get to decline cheaply"
-                                % (off_name, "{:,.0f}".format(off_share * rev)))
+                                % (off_name, money_text(off_share * rev, self, grouped=True)))
                 self.state.household.log.append((year, "THE STATE HAS NOTICED YOU: " + "; ".join(bits)))
         elif notice > self.STATE_NOTICE_THRESHOLD * 0.7:
             # APPROACHING, NOT YET BITING. The same fairness standard as
@@ -1298,13 +1311,13 @@ class StatePressureMixin:
                 if self.state.household.demand_stance == "comply":
                     said = ("%s asks for your output: %s handed over in powder, iron or finished pieces. "
                             "Refusing a state that can still fight is not free, and this was the cheaper "
-                            "choice (the 'answer' command changes how you answer)" % (name, "{:,.0f}".format(take)))
+                            "choice (the 'answer' command changes how you answer)" % (name, money_text(take, self, grouped=True)))
                 elif answered["enforced"]:
                     said = ("%s asked for %s of your output, you refused and it enforced: %s taken with the penalty"
-                            % (name, "{:,.0f}".format(asked), "{:,.0f}".format(take)))
+                            % (name, money_text(asked, self, grouped=True), money_text(take, self, grouped=True)))
                 else:
                     said = ("%s asked for %s of your output, you refused and it could not enforce: nothing taken"
-                            % (name, "{:,.0f}".format(asked)))
+                            % (name, money_text(asked, self, grouped=True)))
                 self.state.household.log.append((year, said))
 
         probability, conf_why = self.confiscation_risk()
@@ -1324,16 +1337,21 @@ class StatePressureMixin:
                                     "Nothing you have built is holding it "
                                     "off yet")))
             if self.events and self.rng.random() < probability:
-                had = max(0.0, self.state.household.capital)
-                self.lose_capital(self.CONFISCATION_CAPITAL_LOSS, "confiscation by the state", taker=self.state_treasury())
-                lost = had - max(0.0, self.state.household.capital)
-                self.state.household.reputation = max(0.0, self.state.household.reputation - self.CONFISCATION_REPUTATION_LOSS)
+                # the state demands a share of the fortune it can see; the household answers like any demand
+                answer, demanded, lost = answer_confiscation(self, self.CONFISCATION_CAPITAL_LOSS, "confiscation by the state")
                 name = state_pressure_cfg.get("confiscation_name", "confiscation")
-                self.state.household.log.append((year, "%s: the state takes what it judges a "
-                                     "fortune too large to go on merely "
-                                     "taxing - %s gone"
-                                 % (name, "{:,.0f}".format(lost)
-                                    if lost > 0.5 else "nothing, because you "
-                                    "were holding none")))
+                if lost > 0.5:
+                    self.state.household.reputation = max(0.0, self.state.household.reputation - self.CONFISCATION_REPUTATION_LOSS)
+                    self.state.household.log.append((year, "%s: the state takes what it judges a "
+                                         "fortune too large to go on merely taxing - %s gone%s"
+                                     % (name, money_text(lost, self, grouped=True),
+                                        " (you negotiated it down from %s)" % money_text(demanded, self, grouped=True)
+                                        if answer["negotiated"] else "")))
+                elif answer["withheld"] > 0.5:
+                    self.state.household.log.append((year, "%s: the state demanded %s of your fortune, you refused "
+                                         "and it could not enforce: nothing taken" % (name, money_text(demanded, self, grouped=True))))
+                else:
+                    self.state.household.log.append((year, "%s: the state demands a fortune too large to go on merely "
+                                         "taxing, and finds nothing it can see to take" % name))
         else:
             self.state.household._said_confiscation_band = -1

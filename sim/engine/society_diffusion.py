@@ -130,8 +130,8 @@ class DiffusionMixin:
         FOR THE MARKET AGENT: a revenue formula that wants to spend this
         number honestly should reduce what THIS venture earns by up to this
         share while the wider economy is credited with the matching gain through
-        the goods' prices (real_output.py), which follow projects.done regardless
-        of this function, so the two are additive, not double-counting the same escape.
+        the goods' prices (real_output.py), which follow the techniques producers run
+        regardless of this function, so the two are additive, not double-counting the same escape.
         """
         projects = self.state.projects
         scenario = self.state.scenario

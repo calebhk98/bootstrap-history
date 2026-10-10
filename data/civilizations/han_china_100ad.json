@@ -2,6 +2,12 @@
   "_note_cost_multipliers": "Han China already has the blast furnace and cast iron, which the Roman west does not, and paper, which nobody else has. It arrives at the tree several rungs up in exactly the places Rome is weakest. Its handicap is a state that distrusts private commerce and a literati class that ranks merchants near the bottom.",
   "_note_debt_bondage": "Debt servitude was common and legally recognised in the Han, and it was ordinarily WORKED OFF rather than permanent: the sale of self or family into service for a term, redeemable.",
   "blurb": "Rome's exact contemporary and ahead of it in metallurgy, agriculture and bureaucracy. Cast iron for five centuries already, the seed drill, the moldboard plough, paper in the year 105, water-powered blast bellows in 31 AD.",
+  "cast": {
+    "actors": [
+      {"actor_id": "church:home", "kind": "church", "name": "the temples", "members": 6000, "stipend_trade": "scribe", "endowment_hectares": 20000, "tithe_rate": 0.0, "tithe_need": "food"},
+      {"actor_id": "academy:home", "kind": "academy", "name": "the scholars", "members": 5000, "stipend_trade": "scholar", "endowment_hectares": 0, "patronage_rate": 0.8}
+    ]
+  },
   "bondage_years": 12,
   "cost_multipliers": {
     "agriculture": 0.8,
@@ -20,6 +26,7 @@
     "long": "cash",
     "short": "cash"
   },
+  "display_units": {"area": "mu", "mass": "jin"},
   "briefing_absent": [
     {
       "claim": "Glass: the Han have almost none and the optical branch must be started from sand and a furnace",
@@ -603,9 +610,12 @@
   ],
   "opening_stock": {
     "ramie_stock_kg": 2000,
-    "silkworm_eggs_kg": 0.5
+    "silkworm_eggs_kg": 0.5,
+    "sugar_cane_sett_kg": 20000,
+    "tea_plant_stock_kg": 500
   },
-  "will_not_sell": [
+  "opening_stock_basis": "Initial conditions. Ramie and silkworm eggs: a stand of fibre ramie and the court's and householders' egg lots, estimated. Tea: tea was drunk and bought in Sichuan by 59 BC (Wang Bao's slave contract, the Tong Yue, names buying tea at Wuyang) and tea remains lay in the tomb of Emperor Jing at Hanyangling (published 2016, Lu and others, Scientific Reports); the mass of nursery stock is estimated. Sugar cane: grown in the south and in Sichuan, boiled to syrup (named in Han writing; the passage is not checked here); the mass is estimated. Confidence D for every quantity, which the data gives as what the state and its landowners hold, not as a count.",
+  "state_monopolies": [
     "silkworm_eggs_kg"
   ],
   "state_capacity": 0.9,
@@ -720,6 +730,10 @@
     }
   ],
   "_internal": {
+    "cast_actors": {
+      "source": "Initial conditions of a church and an academy, placeholders to be replaced by a count of the clergy and scholars and of the land and tithes that kept them. Only the starting sizes are set here; what each collects and whether its people are out of pocket later follow from the land market's rent, the sales of the goods tithed and the spread of schooling.",
+      "confidence": "D"
+    },
     "starting_interest_rate": {
       "source": "Shiji ch.129 puts a lending return near a fifth a year; Han memorials (Chao Cuo) describe peasant debt doubling within a year, so the spread is wide. Eastern Han specifics are thin.",
       "confidence": "C"

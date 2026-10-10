@@ -1,11 +1,11 @@
-"""A foreign country that is part of the economy answers pay, output and cost of living from its own markets;
-one that is not keeps the labelled estimate scaled from the home answers (stand-ins, no game)."""
+"""A foreign country answers pay, output and cost of living from its own markets and only from them; a country
+with no economy of its own, or one that cannot answer a figure, raises NoCountryEconomy (stand-ins, no game)."""
 
 QUICK_TOPIC = True
 
 from .harness import check
 
-from sim.agents.country_view import CountryWorld
+from sim.agents.country_view import CountryWorld, NoCountryEconomy
 from sim.agents.records import CountryProfile
 from sim.agents.stratum_year import FOOD_NEED
 
@@ -45,13 +45,16 @@ class Shared:
         return {FOOD_NEED: 40.0}
 
 
-class HomeState:
-    home_country = "alpha"
-    countries = {"alpha": CountryProfile(country="alpha", population=1_000_000, wage_index=1.0, price_index=1.0)}
-
-
 class Holder:
-    state = HomeState
+    pass
+
+
+def raises(call):
+    try:
+        call()
+    except NoCountryEconomy:
+        return True
+    return False
 
 
 beta = CountryProfile(country="beta", population=500_000, wage_index=0.5, price_index=2.0)
@@ -61,14 +64,13 @@ check("a country in the economy pays what its own labour markets pay, not the ho
 check("its output is what its own producers make", inside.society_output() == 9.0e6, None)
 check("its cost of living is its own floor, not the home figure over its price index",
       inside.subsistence_cost_per_person_year() == 77.0 and inside.need_floor_costs_per_person_year()["shelter"] == 11.0, None)
-check("a trade its markets have no wage for falls back to the labelled scaling",
-      inside.pay_per_person_year("scribe") == 100.0 * 0.5, inside.pay_per_person_year("scribe"))
+check("a trade its markets have no wage for raises rather than take the home pay",
+      raises(lambda: inside.pay_per_person_year("scribe")), None)
 
 outside = CountryWorld(Shared(None), beta, Holder())
-check("a country not in the economy keeps the estimate scaled from the home answers",
-      outside.pay_per_person_year("labourer") == 50.0
-      and outside.society_output() == 1.0e9 * 0.5 * 0.5
-      and outside.subsistence_cost_per_person_year() == 80.0, None)
+check("a country with no economy raises for pay, output and both cost figures",
+      raises(lambda: outside.pay_per_person_year("labourer")) and raises(outside.society_output)
+      and raises(outside.subsistence_cost_per_person_year) and raises(outside.need_floor_costs_per_person_year), None)
 
 
 class NoEconomy:
@@ -77,15 +79,8 @@ class NoEconomy:
     def pay_per_person_year(self, trade):
         return 10.0
 
-    def society_output(self):
-        return 1.0
 
-    def subsistence_cost_per_person_year(self):
-        return 1.0
-
-    def need_floor_costs_per_person_year(self):
-        return {}
-
-
-check("a shared world that cannot answer for countries leaves the estimate in place",
-      CountryWorld(NoEconomy(), beta, Holder()).pay_per_person_year("labourer") == 5.0, None)
+check("a shared world that cannot answer for countries raises, it does not answer with the home figure",
+      raises(lambda: CountryWorld(NoEconomy(), beta, Holder()).pay_per_person_year("labourer")), None)
+check("the error is a LookupError naming the country",
+      issubclass(NoCountryEconomy, LookupError) and "beta" in str(NoCountryEconomy("beta")), None)

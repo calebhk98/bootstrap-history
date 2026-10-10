@@ -18,6 +18,27 @@
    "yield_basis": "THE COST HERE IS A CALENDAR, AND THAT IS THE WHOLE POINT. A nitre bed is soil, manure and ash left to nitrifying bacteria for 12 to 24 months. No amount of money shortens it, which is why this single material gates the entire nitrogen branch of the tech tree and why the simulator already models nitre beds as a calendar floor rather than a purchase. The mass ratio is poor - a bed yields a low single-digit percentage of its charge as nitre - and the labour is turning and leaching over two years rather than skilled work. The alternatives are geographic rather than technical: mined deposits where they exist, or import from the Gangetic plain along a route Rome already sails. A society with neither, and no patience, does not get nitrogen chemistry at all. Numbers are order of magnitude; the two-year floor is the number that matters and it is well attested.",
    "conf": "C",
    "requires_node": "nitre_beds",
+   "capital": [
+    {
+     "good": "nitre-bed sheds and leaching vats",
+     "build_materials": {
+      "timber_m3": 42.0,
+      "stone_kg": 5000.0,
+      "iron_bar_kg": 600.0
+     },
+     "build_labour_hours": {
+      "carpenter": 250.0,
+      "labourer": 150.0,
+      "mason": 50.0
+     },
+     "service_life_years": 15,
+     "annual_output_at_basis": 20000.0,
+     "capital_basis": "Nitre plantations were sheds of beds of manure, earth and ash turned and wetted for a year or two, then leached in vats and the lye boiled in iron cauldrons. Capacity is the staff's: the five or so hands a bed-yard keeps at the entry's four hundred and twenty labour-hours a tonne, about twenty tonnes a year. Masses are order-of-magnitude figures.",
+     "conf": "D"
+    }
+   ],
+   "holding_years": 1.5,
+   "holding_basis": "A nitre bed is left to ripen for a year or two before it is leached, so the manure and ash it was built from are tied up for about that long.",
    "operated_by": ["nitre_beds"]
   },
   "nitric_acid_kg": {
@@ -37,6 +58,36 @@
    "yield_basis": "STOICHIOMETRIC, so the ratio follows from the molar masses rather than from an estimate: potassium nitrate is 101.1 g/mol and nitric acid 63.0, so a tonne of acid needs about 1.6 t of nitre at perfect conversion, and rather more in practice. Taken at 1.35 t here against a partial-conversion route that leaves a bisulphate rather than driving to completion. The economic point, and the only one the solver needs, is that nitric acid costs a nitre and a sulfuric acid - it inherits the two-year calendar of the first and the fuel of the second, which is why it stays expensive in any society that cannot do both. Cost structure only; this entry deliberately carries no process detail.",
    "conf": "C",
    "requires_node": "nitric_acid",
+   "capital": [
+    {
+     "good": "galley furnace for nitre retorts",
+     "build_materials": {
+      "brick_1000": 10.0,
+      "stone_kg": 5000.0
+     },
+     "build_labour_hours": {
+      "mason": 250.0,
+      "labourer": 150.0
+     },
+     "service_life_years": 15,
+     "annual_output_at_basis": 20000.0,
+     "capital_basis": "Nitre and oil of vitriol were heated in rows of retorts in a galley furnace and the vapour collected in cooled receivers; twenty retorts charged twice a week is some forty tonnes of nitre a year, thirty tonnes of acid at the entry's yield; half is taken as the stated capacity.",
+     "conf": "D"
+    },
+    {
+     "good": "stoneware retorts and receivers",
+     "build_materials": {
+      "clay_kg": 2500.0
+     },
+     "build_labour_hours": {
+      "potter": 250.0
+     },
+     "service_life_years": 0.5,
+     "annual_output_at_basis": 20000.0,
+     "capital_basis": "Acid and heat crack retorts after a few dozen firings.",
+     "conf": "D"
+    }
+   ],
    "operated_by": ["nitric_acid"]
   },
   "nitrocellulose_kg": {

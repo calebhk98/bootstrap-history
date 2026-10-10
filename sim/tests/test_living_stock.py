@@ -2,11 +2,12 @@
 
 Silkworm eggs are a material held at a place. A node that needs them (`holds`) opens by itself
 once they are held, however they were got: an opening holding, a purchase from a partner that
-offers them, or a grant. A country refusing to sell is that country's own `will_not_sell` data.
+offers them, or a grant. A country refusing to sell is that country's state deciding, from the monopolies its data starts it with.
 """
 from .harness import *  # noqa: F401,F403
 
 from sim.engine import foreign_economies as _foreign_module
+from sim.engine.agents_port_cast import seed_opening_cast
 from sim.engine.data import load_civ
 
 EGGS = "silkworm_eggs_kg"
@@ -57,10 +58,10 @@ han = sim(civ=PARTNER, capital=1e9)
 check("the partner opens holding eggs", han.stock_held(EGGS) > 0.0, han.stock_held(EGGS))
 check("so no node of its own is missing a stock",
       not han.stock_missing("tx2_sericulture") and not han.stock_missing("tx2_silk_fibre"), None)
-check("the partner lists eggs among what it will not sell",
-      EGGS in load_civ(PARTNER).get("will_not_sell", ()), load_civ(PARTNER).get("will_not_sell"))
+check("the partner's state starts with the eggs as a monopoly",
+      EGGS in load_civ(PARTNER).get("state_monopolies", ()), load_civ(PARTNER).get("state_monopolies"))
 
-# --- the partner's refusal is its own policy: the foreign trade refuses, the data decides.
+# --- the partner's refusal is its state's decision: its export policy holds the monopoly back.
 buyer = sim(civ=HOME, capital=1e9)
 check("a partner that refuses to sell eggs sells none",
       buyer.buy_stock_from_partner(EGGS, 0.1, PARTNER) == 0.0 and buyer.stock_held(EGGS) == 0.0,
@@ -69,9 +70,9 @@ check("...and says so", "will not sell" in (buyer.partner_refusal(PARTNER, EGGS)
       buyer.partner_refusal(PARTNER, EGGS))
 
 # --- a partner that offers them: the purchase is paid for and opens the node.
-_shipped_refused = _foreign_module.exports_refused
-_foreign_module.exports_refused = lambda civilization_id: frozenset()
 buyer = sim(civ=HOME, capital=1e9)
+seed_opening_cast(buyer)
+buyer.partner_government(PARTNER).record.state_monopolies.clear()
 buyer.state.projects.done.discard("sea_monsoon_route")
 buyer._done_changed()
 _cash_before = buyer.state.household.capital
@@ -84,7 +85,6 @@ check("the purchase opens the node with no other change",
       buyer.start_reason("tx2_silk_fibre"))
 check("a good the partner cannot make is not for sale",
       buyer.buy_stock_from_partner("hammer_forged_kg_nonexistent", 1.0, PARTNER) == 0.0, None)
-_foreign_module.exports_refused = _shipped_refused
 
 # --- stock survives a save and load within a build.
 from sim.engine.saveload import load_state, save_state

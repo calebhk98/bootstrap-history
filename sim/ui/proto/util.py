@@ -139,7 +139,7 @@ DISPLAY_WIDTH = 76
 DEFAULT_AVAILABLE_LIMIT = 30
 
 
-SAVE_SUFFIXES = (".json", ".save")
+SAVE_SUFFIXES = (".json", ".json.gz", ".save")
 
 # True while a person is typing at the keyboard (`play`): they own the machine,
 # so a typed save may go to any path. The JSON protocol keeps the sandbox.

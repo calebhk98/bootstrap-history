@@ -39,6 +39,11 @@ class HouseholdState:
 	protection: float = 0.0
 	# how the household answers the state's demands: "comply" or "refuse" (sim/agents/demand_answer.py)
 	demand_stance: str = "comply"
+	# money's worth of service offered the state when negotiating; wealth held out of its sight; and how far
+	# the state holds the household's refusals against it (0..1)
+	service_offer: float = 0.0
+	concealed: float = 0.0
+	defiance: float = 0.0
 	bribes_ytd: float = 0.0
 	slaves: int = 0
 	freedmen: int = 0
@@ -268,6 +273,9 @@ class EconomyState:
 	output_per_head: float = 1.0
 	# material -> its price in labour hours the first year households were offered it, which values it in real output
 	introduction_prices: Dict[str, float] = field(default_factory=dict)
+	# node -> the year some producer was first seen running it (technique_spread.py)
+	technique_first_run: Dict[str, int] = field(default_factory=dict)
+	technique_record_started: bool = False
 	money_real: float = 1.0
 	# commodity -> society capacity, stock and last price ratio (market_clearing.py)
 	market_book: Dict[str, Dict[str, float]] = field(default_factory=dict)
@@ -343,6 +351,14 @@ class PopulationState:
 
 
 @dataclass
+class DiseaseState:
+	"""Epidemics in the nation: who is susceptible, infected or immune, by pathogen and age band."""
+	records: Dict[str, Any] = field(default_factory=dict)   # pathogen id -> age band -> saved Patch (sim/disease)
+	introduced: Dict[str, List[int]] = field(default_factory=dict)   # pathogen id -> years it arrived
+	deaths: Dict[str, int] = field(default_factory=dict)   # pathogen id -> deaths so far
+
+
+@dataclass
 class SimulationState:
 	"""Root coordinator aggregating authoritative persistent subsystem states."""
 	# household, projects, founder, governance, holdings and seat_progress alias the acting seat's objects and are not saved (seats are)
@@ -357,6 +373,7 @@ class SimulationState:
 	acting_seat: str = "founder"
 	scenario: Optional[ScenarioState] = None
 	population: Optional[PopulationState] = None
+	disease: DiseaseState = field(default_factory=DiseaseState)
 	actors: Optional[ActorsState] = None
 	_civ: Optional[str] = None
 	_civ_live: Dict[str, Any] = field(default_factory=dict)
@@ -367,6 +384,7 @@ class SimulationState:
 	_immortal: bool = True
 	_rng: Optional[List[Any]] = None
 	_seed: Optional[Union[int, str]] = None
+	_game_version: Optional[str] = None  # which build wrote the save; shown to people, never checked on load
 	interface: Dict[str, Any] = field(default_factory=dict)  # the UI's own memory; the engine never reads it
 
 	def __post_init__(self) -> None:
@@ -405,6 +423,7 @@ ALL_STATE_CLASSES = (
 	SeatProgressState,
 	ScenarioState,
 	PopulationState,
+	DiseaseState,
 	ActorsState,
 )
 

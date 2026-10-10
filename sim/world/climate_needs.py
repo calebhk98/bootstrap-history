@@ -8,7 +8,7 @@ authored per civilisation: a tile's Koppen class and latitude give a sinusoidal 
 Warmth: heat the dwelling loses below the balance temperature, divided by how much of a hearth's fuel
 heat stays in the dwelling. The balance temperature is the outdoor temperature below which heating is
 needed; it is lower than the indoor setpoint because body and cooking heat already present supply the
-difference. Lighting is not modelled.
+difference. Light is its own need (`light` in data/world/needs.json), not part of this floor.
 Clothing: insulation (clo) in heat balance outdoors in the coldest month, ISO 7730 / Fanger:
 required total insulation = (skin temperature - air temperature) / dry heat loss per square metre;
 one clo is 0.155 square metre kelvin per watt; the air layer takes part of it.
@@ -45,7 +45,7 @@ HEARTH_FUEL_HEAT_SHARE_KEPT_IN_DWELLING = declare(
            "carries part away; open fireplaces with chimneys keep far less",
     confidence="D",
     why="Converts heat the dwelling needs into the fuel heat of data/world/needs.json "
-        "(warmth_and_light, 'megajoules of fuel heat', effectiveness being heating value per kg).")
+        "(warmth, 'megajoules of fuel heat', effectiveness being heating value per kg).")
 
 SKIN_TEMPERATURE_CELSIUS = declare(
     "SKIN_TEMPERATURE_CELSIUS", 33.0,

@@ -14,13 +14,20 @@ _EFFECT_WORDS = {
 
 
 def permanent_parts(node, effects):
+    mechanics = node.get("mechanics") or {}
+    # a work that serves a share of the people lowers the disease burden only for the share its open doors reach
+    serves_a_share = "coverage" in mechanics
     parts = []
-    for name, spec in (node.get("mechanics") or {}).items():
+    for name, spec in mechanics.items():
+        if name == "disease_burden" and serves_a_share:
+            continue
         if name in _HELD_MECHANICS:
             parts.append(_HELD_MECHANICS[name])
         elif isinstance(spec, dict) and spec.get("gate") == "has":
             parts.append(name.replace("_", " "))
     for field, delta in effects.items():
+        if field == "population" and serves_a_share:
+            continue
         if not field.startswith("_") and isinstance(delta, (int, float)):
             parts.append(_EFFECT_WORDS.get(field, field.replace("_", " ")))
     return list(dict.fromkeys(parts))

@@ -46,6 +46,7 @@ from .living_stock import LivingStockMixin
 from .coin_hoard import CoinHoardMixin
 from .theft_charge import TheftChargeMixin
 from .coin_carriage import CoinCarriageMixin
+from .living_stock_smuggling import LivingStockSmugglingMixin
 from .living_stock_trade import LivingStockTradeMixin
 from .living_stock_yearly import LivingStockYearlyMixin
 from .defence_stores import DefenceStoresMixin
@@ -62,6 +63,7 @@ from .incumbent_prices import IncumbentPricesMixin
 from .producer_costs import ProducerCostsMixin
 from .fog import FogMixin
 from .mechanics import MechanicsMixin
+from .disease_port import DiseasePortMixin
 from .geography_port import GeographyPortMixin
 from .labour_port import LabourPortMixin
 from .projects import ProjectsMixin
@@ -82,6 +84,7 @@ from .society_disclosure import DisclosureMixin
 from .founder_sales import FounderSalesMixin
 from .seat_dealings import SeatDealingsMixin
 from .interest_groups import InterestGroupsMixin
+from .benefactions import BenefactionsMixin
 from .core_properties import ForwardingPropertiesMixin
 from .goals import GoalsMixin
 from .core_step_phases import StepContext, StepPhasesMixin
@@ -237,10 +240,10 @@ FARM_WEATHER_POOLED_CELL_CAP = declare(
 YEARLY_RECORD_LIMIT = 300
 
 
-class Sim(RealPriceRatiosMixin, CoinRevaluationMixin, WageMarketRatiosMixin, MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IndustryDepthMixin, IndustryConcernMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, LabourPortMixin,
-          ProjectsMixin, SeatMixin, SeatRunMixin, SeatBuildsMixin, SeatSightMixin, ShockYearMixin, WaysMixin, WorksMixin, HeldWorksMixin, ActionLossMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, SeatDealingsMixin, InterestGroupsMixin, ForwardingPropertiesMixin, GoalsMixin,
+class Sim(RealPriceRatiosMixin, CoinRevaluationMixin, WageMarketRatiosMixin, MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IndustryDepthMixin, IndustryConcernMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, DiseasePortMixin, LabourPortMixin,
+          ProjectsMixin, SeatMixin, SeatRunMixin, SeatBuildsMixin, SeatSightMixin, ShockYearMixin, WaysMixin, WorksMixin, HeldWorksMixin, ActionLossMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, SeatDealingsMixin, InterestGroupsMixin, BenefactionsMixin, ForwardingPropertiesMixin, GoalsMixin,
           StepPhasesMixin, LivingStockMixin, CoinHoardMixin, CoinCarriageMixin, TheftChargeMixin,
-          LivingStockTradeMixin, LivingStockYearlyMixin, FoodSupplyMixin, DefenceStoresMixin, EconomyPortMixin, NodeRederiveMixin):
+          LivingStockTradeMixin, LivingStockSmugglingMixin, LivingStockYearlyMixin, FoodSupplyMixin, DefenceStoresMixin, EconomyPortMixin, NodeRederiveMixin):
     STATE_CAPACITY_DEFAULT = declare(
         "STATE_CAPACITY_DEFAULT", 0.7, kind="temporary_heuristic",
         unit="dimensionless (0..1)", source=None, confidence="D",
@@ -1506,15 +1509,18 @@ class Sim(RealPriceRatiosMixin, CoinRevaluationMixin, WageMarketRatiosMixin, Mec
         # or a future player-facing message can read THIS year's
         # nutrition_ratio without re-deriving it from the cohort counts by
         # hand a second time.
+        food_eaten_kcal_per_day = farm_year.food_available_kcal_per_day + self.relief_kcal_per_day()
+        epidemic_deaths = self.disease_year(food_eaten_kcal_per_day, year)
         self._last_demographic_step = self.population.step(
-            farm_year.food_available_kcal_per_day, jitter=False,
-            disease_burden=self._disease_burden())
+            food_eaten_kcal_per_day, jitter=False,
+            disease_burden=self._disease_burden(), epidemic_deaths=epidemic_deaths)
         flows = self._last_demographic_step
         record = self.state.population.yearly_record
         record.append({"year": year, "population": round(self.population.total, 1),
                        "births": round(flows.births), "deaths": round(flows.deaths),
                        "nutrition_ratio": round(flows.nutrition_ratio, 4)})
         del record[:-YEARLY_RECORD_LIMIT]
+        self.advance_colonies(year)
         self._refresh_demographic_indexes(year)
 
     def _disease_burden(self):
@@ -1545,8 +1551,8 @@ class Sim(RealPriceRatiosMixin, CoinRevaluationMixin, WageMarketRatiosMixin, Mec
         step` a burden outside the range it declares valid).
         """
         unlocked_weight = sum(
-            self._tech_effects[tech_id].get("population", 0.0)
-            for tech_id in self.DISEASE_BURDEN_TECH_IDS if self.has(tech_id))
+            self._tech_effects[tech_id].get("population", 0.0) * self.disease_burden_held(tech_id)
+            for tech_id in self.DISEASE_BURDEN_TECH_IDS)
         total_weight = sum(
             self._tech_effects[tech_id].get("population", 0.0)
             for tech_id in self.DISEASE_BURDEN_TECH_IDS)

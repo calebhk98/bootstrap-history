@@ -3,14 +3,14 @@
 The reserve it keeps against risk (a few years of the standing need) is supply on the loanable-funds market,
 so the state is a saver and is paid its share of the interest borrowers pay (`economy_interest_pool.py`). What a surplus
 leaves beyond that reserve first relieves the hunger its country's bodies of people report (paid to them, by
-`ledger.transfer`), then buys works: labourers hired at the going wage, which is demand on the labour
-market like every other line the state keeps up. Nothing is paid to nobody.
+`ledger.transfer`), then raises the works it wants and lacks: masons and others hired at the going wage, which is demand on the
+labour market like every other line the state keeps up. Nothing is paid to nobody, and what no work wants stays in the reserve.
 """
 from typing import Any, List
 
-from . import budget, ledger
+from . import budget, ledger, state_works
 from .edges import EDGE_BUILDERS
-from .tuning_spending import MAX_WORKS_SHARE_OF_WORKING_AGE, RESERVE_CEILING_YEARS_OF_NEED
+from .tuning_spending import MASONRY_PERSON_YEARS_PER_M2, MAX_STATE_SHARE_OF_TRADE, RESERVE_CEILING_YEARS_OF_NEED
 
 
 class SurplusMixin:
@@ -36,16 +36,22 @@ class SurplusMixin:
 		return total * covered
 
 	def build_works(self, lines: List[budget.Line], world: Any) -> None:
-		"""Reserve beyond what it holds against risk relieves its people's reported need, then hires labourers
-		for works, as many as what is left pays at the going wage and the labour market allows."""
+		"""Reserve beyond what it holds against risk relieves its people's reported need, restocks the granary
+		when grain is cheap, then raises the works it wants and lacks (`state_works.py`), as many as what is left
+		pays at the going wage and the trades allow. What no work wants stays in the reserve."""
 		excess = self.money - RESERVE_CEILING_YEARS_OF_NEED * sum(line.money for line in lines)  # type: ignore[attr-defined]
 		excess -= self.relieve_strata(excess, world)
-		wage = world.pay_per_person_year("labourer")
-		if excess <= 0.0 or wage <= 0.0:
-			return
-		people = min(excess / wage, MAX_WORKS_SHARE_OF_WORKING_AGE * world.national_people("labourer"))
-		if people <= 0.0:
-			return
-		works = budget.Line("works", "requisition", {"labourer": people}, people * wage)
-		ledger.transfer(self, world.edge(EDGE_BUILDERS), works.money, works.name)
-		self.employ_standing([works], 1.0, world)  # type: ignore[attr-defined]
+		excess -= self.restock_granary(excess, world)  # type: ignore[attr-defined]
+		for work, gap in state_works.gaps(world):
+			wage = world.pay_per_person_year(work.trade)
+			if excess <= 0.0 or wage <= 0.0:
+				continue
+			share_cap = MAX_STATE_SHARE_OF_TRADE * world.national_people(work.trade)
+			people = min(gap * MASONRY_PERSON_YEARS_PER_M2, excess / wage, share_cap)
+			if people <= 0.0:
+				continue
+			built = budget.Line("building " + work.name, "requisition", {work.trade: people}, people * wage)
+			ledger.transfer(self, world.edge(EDGE_BUILDERS), built.money, built.name)
+			state_works.held(world)[work.name] += people / MASONRY_PERSON_YEARS_PER_M2
+			self.employ_standing([built], 1.0, world)  # type: ignore[attr-defined]
+			excess -= built.money

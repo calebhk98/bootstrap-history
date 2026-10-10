@@ -45,6 +45,11 @@ def missing_chain(node_id: str, world: Any, actor: Any) -> Optional[List[str]]:
 	return chain if visit(node_id) else None
 
 
+def copy_years(node: Dict[str, Any]) -> int:
+	"""Calendar years an actor takes to copy one node: a share of the years the pioneer needed."""
+	return max(1, int(math.ceil(float(node.get("yrs") or 0.0) * COPY_TIME_SHARE)))
+
+
 def copy_plan(actor: Any, chain: List[str], world: Any) -> Dict[str, Any]:
 	"""Hours, money and calendar for copying every step of `chain`."""
 	hours: Dict[str, float] = {}
@@ -55,7 +60,7 @@ def copy_plan(actor: Any, chain: List[str], world: Any) -> Dict[str, Any]:
 		for trade, amount in (node.get("lab") or {}).items():
 			hours[trade] = hours.get(trade, 0.0) + amount * COPY_EFFORT_SHARE
 		pioneer_cost += world.copy_cost(step)
-		years = max(years, float(node.get("yrs") or 0.0))
+		years = max(years, float(copy_years(node)))
 	base_labour = sum(amount * world.labour_market.quote(trade, 0.0, actor) for trade, amount in hours.items())
 	premium = sum(amount * world.labour_market.quote(trade, 0.0, actor) * HIRING_PREMIUM
 				  for trade, amount in hours.items() if actor.workforce.get(trade, 0.0) <= 0)
@@ -65,7 +70,7 @@ def copy_plan(actor: Any, chain: List[str], world: Any) -> Dict[str, Any]:
 		"money": other_money + premium,
 		"labour_cost": base_labour,
 		"total": other_money + premium + base_labour,
-		"years": max(1, int(math.ceil(years * COPY_TIME_SHARE))),
+		"years": max(1, int(years)),
 	}
 
 

@@ -49,6 +49,11 @@ class ActorRecord:
 	# material -> tonnes the state took in kind last year, and tonnes it holds in store now
 	in_kind_received: Dict[str, float] = field(default_factory=dict)
 	stores: Dict[str, float] = field(default_factory=dict)
+	# a state's works in stock by name (m2 of masonry equivalent), the grain price it takes as normal, and whether
+	# a new ruler has acceded whose donative is still to be paid
+	works_stock: Dict[str, float] = field(default_factory=dict)
+	grain_price_reference: float = 0.0
+	accession_due: bool = False
 	# an interest group's kind (what hurt it), subject (the commodity or trade), what caused the
 	# hurt in words, people it speaks for, the income it lost (net of what the state made good),
 	# the share of the state's attention it commands, and what it asks of the state
@@ -65,10 +70,33 @@ class ActorRecord:
 	demands: List[str] = field(default_factory=list)
 	petitions: int = 0
 	last_logged_year: Optional[int] = None
+	# a technique an interest group asks the state to forbid (the one that took its members' jobs)
+	technique: str = ""
+	# a foundation (a church, an academy): hectares of endowed land, the share of the sales of the goods serving
+	# one need that it takes as tithe, the trade whose pay is its people's stipend, and the share of the
+	# stipends patrons cover while learning is scarce; its people are `members`
+	endowment_hectares: float = 0.0
+	tithe_rate: float = 0.0
+	tithe_need: str = ""
+	stipend_trade: str = ""
+	patronage_rate: float = 0.0
+	# a state's army: how loyal it is to its paymaster (0..1)
+	loyalty: float = 1.0
 	# what the treasury paid the founder as patron this year
 	patron_grant: float = 0.0
 	# how the actor answers the state's demands ("comply" or "refuse", sim/agents/demand_answer.py)
 	demand_stance: str = "comply"
+	# money's worth of service (work, goods at cost) the actor will offer the state when it negotiates; the
+	# wealth it holds out of the state's sight; and how far the state holds a refusal against it (0..1)
+	service_offer: float = 0.0
+	concealed: float = 0.0
+	defiance: float = 0.0
+	# a state's goods it will not sell abroad (its monopolies, set at the start by its country's data), and
+	# the parties it has shut its markets to: party id -> the first year they are open to them again
+	state_monopolies: Set[str] = field(default_factory=set)
+	closed_markets: Dict[str, int] = field(default_factory=dict)
+	# material -> units of the state's stock that smugglers have taken, which it can no longer sell
+	stock_taken: Dict[str, float] = field(default_factory=dict)
 	# ---- every actor: the country whose government it answers to and whose techniques it starts
 	# with (None = the home country), and who drives it ("ai", "human", "llm")
 	country: Optional[str] = None

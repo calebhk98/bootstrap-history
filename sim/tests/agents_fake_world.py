@@ -150,6 +150,9 @@ class FakeWorld:
 	def site_rent(self, node_id: str, capacity: float = 1.0, tile: Optional[str] = None) -> float:
 		return 0.0
 
+	def ramp(self, opened_year: int, node_id: Any = None) -> float:
+		return 1.0      # a concern here has always run at full size
+
 	def concern_takings(self, node_id: str, opened_year: int, rivals: float = 0.0, capacity: float = 1.0) -> float:
 		return capacity * float(self.nodes[node_id].get("rev", 0.0)) / (1.0 + rivals)
 
@@ -180,6 +183,18 @@ class FakeWorld:
 		return sorted(self.proven)
 
 	def market_key(self, node_id: str) -> str:
+		return node_id
+
+	def land_rent_paid_by_tile(self) -> Dict[str, float]:
+		return {}
+
+	def idle_hours_by_trade(self) -> Dict[str, Any]:
+		return {}
+
+	def displacing_technique(self, trade: str) -> Optional[str]:
+		return None
+
+	def technique_name(self, node_id: str) -> str:
 		return node_id
 
 	def sectors(self) -> Dict[str, Any]:

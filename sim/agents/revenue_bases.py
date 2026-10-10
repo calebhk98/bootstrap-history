@@ -6,7 +6,7 @@ people able to work, the goods that crossed the border, the coin held. Adding a 
 here and one line in `BASES`; no civilisation's id appears.
 """
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Tuple
+from typing import Any, Callable, Dict, FrozenSet, Optional, Tuple
 
 # The grain the harvest is counted in, as a material in the tree's own terms.
 HARVEST_MATERIAL = "wheat_kg"
@@ -20,8 +20,10 @@ class Base:
 	payers: Tuple[Tuple[Any, float], ...] = ()  # (actor, income) where the base is held by actors the state taxes
 
 
-def harvest(world: Any) -> Base:
-	tonnes = world.harvest_tonnes()
+def harvest(world: Any, tiles: Optional[FrozenSet[str]] = None) -> Base:
+	"""The grain harvested. On named tiles, their share of it: TEMPORARY HEURISTIC (CLAUDE.md 4.4), the harvest
+	is spread over the state's tiles by arable hectares, as no harvest is recorded by tile."""
+	tonnes = world.harvest_tonnes() * (1.0 if tiles is None else world.arable_share(tiles))
 	return Base(tonnes * world.material_price(HARVEST_MATERIAL), tonnes, HARVEST_MATERIAL)
 
 
@@ -60,18 +62,19 @@ def stratum_income(world: Any) -> Base:
 	return Base(sum(income for _stratum, income in payers), payers=payers)
 
 
-def land_rent(world: Any) -> Base:
-	"""Rent producers paid on the land they let last year, summed over the tiles; the owners who received it
-	are the payers where the world can name them."""
-	owners = tuple(world.land_rent_owners())
-	return Base(sum(world.land_rent_paid_by_tile().values()), payers=owners)
+def land_rent(world: Any, tiles: Optional[FrozenSet[str]] = None) -> Base:
+	"""Rent producers paid on the land they let last year, summed over the tiles (only `tiles` when given); the
+	owners who received it are the payers where the world can name them."""
+	paid = world.land_rent_paid_by_tile()
+	total = sum(rent for tile, rent in paid.items() if tiles is None or tile in tiles)
+	return Base(total, payers=tuple(world.land_rent_owners(tiles)) if total > 0.0 else ())
 
 
-def land_value(world: Any) -> Base:
+def land_value(world: Any, tiles: Optional[FrozenSet[str]] = None) -> Base:
 	"""What the land let is worth: the rent capitalised at the market rate of interest, so land is worth what
 	its rent would buy in the loan market. Nothing is taxable where there is no rate."""
 	rate = world.market_rate()
-	base = land_rent(world)
+	base = land_rent(world, tiles)
 	if rate <= 0.0:
 		return Base(0.0)
 	return Base(base.value / rate, payers=tuple((owner, rent / rate) for owner, rent in base.payers))
@@ -87,3 +90,6 @@ BASES: Dict[str, Callable[[Any], Base]] = {
 	"land_rent": land_rent,
 	"land_value": land_value,
 }
+
+# The bases that can be limited to named tiles (a form's `tiles` / `except_tiles`); the rest are national.
+TILE_BASES = frozenset({"harvest", "land_rent", "land_value"})

@@ -7,10 +7,10 @@ the state's capacity: the share of each liability the state's officials can asse
 reads the same 0..1 field as how far the state's writ runs). What is not collected is evaded, not owed.
 """
 from dataclasses import dataclass
-from typing import Dict, List, Mapping, Sequence, Tuple
+from typing import Dict, FrozenSet, List, Mapping, Optional, Sequence, Tuple
 
 from .taxes_bases import Base, YearFacts, measure
-from .types import AgentId, GoodId, GoodsMove, Transfer, is_edge
+from .types import AgentId, GoodId, GoodsMove, TileId, Transfer, is_edge
 
 __all__ = ["TaxForm", "Arrear", "Assessment", "YearFacts", "forms_from_civ_data", "assess"]
 
@@ -21,6 +21,11 @@ class TaxForm:
     basis: str
     rate: float
     paid_in: str = ""                # a good: the form is taken in kind; empty: paid in money
+    tiles: Optional[FrozenSet[TileId]] = None   # the tiles a form on the harvest is levied on; None: all
+    except_tiles: FrozenSet[TileId] = frozenset()   # tiles it is not levied on
+
+    def covers(self, tile: TileId) -> bool:
+        return (self.tiles is None or tile in self.tiles) and tile not in self.except_tiles
 
 
 @dataclass(frozen=True)
@@ -43,9 +48,16 @@ class Assessment:
     arrears: Tuple[Arrear, ...]
 
 
+# Bases the actor layer assesses on the purses of the actors it names (sim/agents/revenue_bases.py), not the economy.
+ACTOR_LAYER_BASES = frozenset({"stratum_income", "land_rent", "land_value"})
+
+
 def forms_from_civ_data(state_revenue: Sequence[Mapping]) -> Tuple[TaxForm, ...]:
-    return tuple(TaxForm(str(entry["form"]), str(entry["basis"]), float(entry["rate"]),
-                         str(entry.get("paid_in") or "")) for entry in state_revenue)
+    """The forms the economy assesses; a form on a base only the actor layer measures is left to it."""
+    return tuple(TaxForm(str(entry["form"]), str(entry["basis"]), float(entry["rate"]), str(entry.get("paid_in") or ""),
+                         None if entry.get("tiles") is None else frozenset(entry["tiles"]),
+                         frozenset(entry.get("except_tiles") or ()))
+                 for entry in state_revenue if entry["basis"] not in ACTOR_LAYER_BASES)
 
 
 def assess(forms: Sequence[TaxForm], facts: YearFacts, state_agent_id: AgentId, prices: Mapping[GoodId, float],

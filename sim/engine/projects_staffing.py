@@ -17,6 +17,7 @@ file of their own. Behaviour is unchanged and verified byte-identical.
 """
 from sim.constants import declare
 from . import cause_book, category_traits
+from .units_prose import money_text, per_year
 from sim.agents.api import edges
 
 
@@ -282,7 +283,7 @@ class StaffingMixin:
             # `ventures` and the ranking above use) - not just that it would
             # close, but whether closing it is worth reacting to.
             net = max(0.0, self.nodes[node_id]["rev"] - self.nodes[node_id]["up"])
-            cost = "{:,.0f}".format(net)
+            cost = per_year(money_text(net, self, grouped=True, short=True), short=True)
             # THE COMMAND THAT FIXES IT, named, not left for the player to
             # infer from "craftsmen"/"scholars" alone - hire is always
             # sayable (STAFF_SOURCES' own reasoning: the labour market is in
@@ -295,7 +296,7 @@ class StaffingMixin:
             one_loss_closes = room <= self.STAFFING_NO_SLACK_BAND + 1e-9
             if room <= 0.05:
                 headline = ("%s has no %s free this year and is next in "
-                            "line to close - that would cost %s den/yr in "
+                            "line to close - that would cost %s in "
                             "recurring income. %s"
                             % (name, word, cost, fix))
             elif one_loss_closes:
@@ -304,7 +305,7 @@ class StaffingMixin:
                 # death, one who leaves - closes this outright the same
                 # year, not "eventually" and not "if things get worse".
                 headline = ("%s has no spare %s: losing just one more "
-                            "closes it outright, costing %s den/yr in "
+                            "closes it outright, costing %s in "
                             "recurring income. %s"
                             % (name, word, cost, fix))
             else:
@@ -718,8 +719,8 @@ class StaffingMixin:
                 household.log.append((scenario_year,
                                  "%s would earn %s a year against %s of upkeep and "
                                  "is still shut: %s"
-                                 % (node_id, "{:,.0f}".format(self.nodes[node_id]["rev"]),
-                                    "{:,.0f}".format(self.nodes[node_id]["up"]),
+                                 % (node_id, money_text(self.nodes[node_id]["rev"], self, grouped=True),
+                                    money_text(self.nodes[node_id]["up"], self, grouped=True),
                                     why or "something is in the way")))
 
     def mothball_work(self, node_id):
@@ -787,15 +788,15 @@ class StaffingMixin:
         if self.nodes[node_id]["up"] > 0 or self.nodes[node_id]["rev"] > 0:
             _freed.append("you stop paying %s a year for it and stop earning "
                           "the %s a year it brought in"
-                          % ("{:,.0f}".format(self.venture_real_upkeep(node_id)),
-                             "{:,.0f}".format(earned)))
+                          % (money_text(self.venture_real_upkeep(node_id), self, grouped=True),
+                             money_text(earned, self, grouped=True)))
         if sch_held > 0.005 or art_held > 0.005:
             _freed.append("it frees %.2f scholars and %.2f craftsmen who were "
                           "tied up supervising it" % (sch_held, art_held))
         return True, ("%s shut down: %s. You still know how to do it; 'open %s' "
-                      "or 'restore %s' opens it again for %s denarii"
+                      "or 'restore %s' opens it again for %s"
                       % (node_id, "; ".join(_freed), node_id, node_id,
-                         "{:,.0f}".format(self.reopen_fee(node_id, self.reopen_units(node_id)))))
+                         money_text(self.reopen_fee(node_id, self.reopen_units(node_id)), self, grouped=True)))
 
     RESTORE_COST_MIN_UPKEEP_YEARS = declare(
         "RESTORE_COST_MIN_UPKEEP_YEARS", 2.0, kind="temporary_heuristic",
@@ -852,13 +853,13 @@ class StaffingMixin:
                                "ordinary opening price"
                                % (self.STAFF_CLOSURE_GRACE, _age))
         if fee > self.spending_power("buy"):
-            return False, ("bringing it back costs %s denarii%s, and between "
+            return False, ("bringing it back costs %s%s, and between "
                            "%s in cash and what anyone will advance against a "
                            "purchase you can raise %s"
-                           % ("{:,.0f}".format(fee),
+                           % (money_text(fee, self, grouped=True),
                               ("; " + _grace_note) if _grace_note else "",
-                              "{:,.0f}".format(household.capital),
-                              "{:,.0f}".format(self.spending_power("buy"))))
+                              money_text(household.capital, self, grouped=True),
+                              money_text(self.spending_power("buy"), self, grouped=True)))
         if any(prereq_id not in projects.done for prereq_id in node["pre"]):
             return False, ("you no longer have what it stands on: "
                            + ", ".join(prereq_id for prereq_id in node["pre"] if prereq_id not in projects.done))
@@ -873,7 +874,7 @@ class StaffingMixin:
         if self.is_venture(node_id):
             projects.operating.add(node_id)
             cause_book.record_concern(self, "opening", node_id, "restored")
-        return True, ("%s back in service for %s denarii%s"
-                      % (node_id, "{:,.0f}".format(fee),
+        return True, ("%s back in service for %s%s"
+                      % (node_id, money_text(fee, self, grouped=True),
                          (" (%s)" % _grace_note) if _grace_note else ""))
 

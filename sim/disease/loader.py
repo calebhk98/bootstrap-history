@@ -9,7 +9,7 @@ DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.
 # Report tags (Complaints/reports/epidemic-model-research.md section 3.2) plus the two this package adds.
 CONFIDENCE_TAGS = ("read", "summary", "snippet", "recalled", "disputed", "derived", "unsourced")
 _REQUIRED_KEYS = ("id", "name", "stages", "transmissibility_per_day", "case_fatality", "immunity",
-                  "reproduction_number_range", "sources")
+                  "reproduction_number_range", "density_exponent", "sources")
 
 
 def pathogen_ids(directory=None):
@@ -31,7 +31,7 @@ def _source_problems(plain):
     sources = plain.get("sources")
     if not isinstance(sources, dict):
         return ["sources must map each numeric field to a source and a confidence tag"]
-    needed = ["transmissibility_per_day", "case_fatality", "immunity", "reproduction_number_range"]
+    needed = ["transmissibility_per_day", "case_fatality", "immunity", "reproduction_number_range", "density_exponent"]
     needed += ["stage." + stage["id"] for stage in plain.get("stages") or [] if isinstance(stage, dict) and "id" in stage]
     problems = []
     for key in needed:
@@ -69,6 +69,8 @@ def pathogen_problems(plain):
     problems += _stage_problems(plain) + _source_problems(plain)
     if not 0.0 <= plain["case_fatality"] <= 1.0:
         problems.append("case_fatality must lie between 0 and 1")
+    if not isinstance(plain["density_exponent"], (int, float)) or not 0.0 <= plain["density_exponent"] <= 1.0:
+        problems.append("density_exponent must lie between 0 (frequency dependent) and 1 (mass action)")
     immunity = plain["immunity"]
     if not immunity.get("permanent") and not (immunity.get("duration_in_days") or 0) > 0:
         problems.append("immunity needs permanent true or a positive duration_in_days")

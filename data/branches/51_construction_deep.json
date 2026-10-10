@@ -1884,7 +1884,7 @@
   "sch": 0,
   "art": 3,
   "conf": "C",
-  "note": "Roof must support all overburden load plus live load above. Shallow tunnels this way. Deep tunnels need shield method."
+  "note": "Building a tunnel by digging an open trench, building the tunnel roof in it, and covering it over again. The roof must carry the whole weight of earth above plus any load from the surface, so it needs strong arches or beams, and a cofferdam to keep water out. It works only for shallow tunnels. Deep tunnels need the shield method, in which a protective frame advances with the digging."
  },
  {
   "id": "cn_tunnel_shield",
@@ -2261,7 +2261,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "Water seal is only 5-10cm. Siphoning or evaporation breaks it. Every fixture must have a trap or smell is unbearable."
+  "note": "A drain with a trap: a bend in the pipe that stays filled with water and so seals the pipe against sewer gas. The water seal is only a few centimetres deep, and siphoning (suction from rushing waste) or evaporation from an unused fixture can break it. Every fixture must have its own trap or the smell is unbearable. It needs a plumbing stack and pipes with a surveyed fall."
  },
  {
   "id": "cn_sewer_system",

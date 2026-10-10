@@ -32,6 +32,7 @@ from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import deposits as deposit_model, mine_technique
 from sim.geography.api import mine_demand_goods, parameter_value, tile_facts, tiles_held, works_priced_from_deposits
 from . import purchase_rule
+from .units_prose import area_text
 from .mine_deposits import MineDepositsMixin, NO_DEPOSIT_TEXT
 from sim.agents.api import edges
 
@@ -937,9 +938,9 @@ class MiningMixin(MineDepositsMixin):
             # and a log line, which the player DOES see, is the honest way
             # to say why the hectares bought were fewer than asked.
             household.log.append((scenario.year,
-                             "you can hold at most %.0f hectares of coppice here; "
-                             "bought %.0f, not %.0f" % (self.forest_land_ceiling(),
-                                                        room, hectares)))
+                             "you can hold at most %s of coppice here; "
+                             "bought %s, not %s" % (area_text(self.forest_land_ceiling(), self),
+                                                    area_text(room, self), area_text(hectares, self))))
             hectares = room
         if hectares <= 0:
             return 0.0

@@ -288,7 +288,7 @@ class FogMixin:
                    "sacks_a_site": bool(hazard.get("sack_chance")),
                    "sack_chance_per_year": hazard.get("sack_chance"),
                    "staff_loss": hazard.get("staff_loss"),
-                   "staff_loss_wave_chance_per_year": (0.32 if hazard.get("staff_loss")
+                   "staff_loss_wave_chance_per_year": (self.STAFF_LOSS_HAZARD_ANNUAL_CHANCE if hazard.get("staff_loss")
                                                         is not None else None),
                    "note": hazard.get("note")}
             # WHAT YOU CAN DO ABOUT IT: every hazard here is fightable, and

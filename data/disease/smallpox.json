@@ -29,6 +29,7 @@
   3.5,
   6.0
  ],
+ "density_exponent": 0.5,
  "sources": {
   "reproduction_number_range": {
    "confidence": "read",
@@ -53,6 +54,10 @@
   "stage.infectious": {
    "confidence": "recalled",
    "source": "CDC overview says contagious from fever onset, most from rash, until the last scab falls; the 21 day mean is recalled, not read"
+  },
+  "density_exponent": {
+   "confidence": "unsourced",
+   "source": "Heuristic inside the range Rader et al. 2020 (Nature Medicine, abstract read: crowded cities see longer epidemics with larger attack rates; scaling weaker than linear) supports; the report gives no exponent per route. Respiratory person-to-person contact sits mid-range; vary across the ensemble"
   }
  }
 }

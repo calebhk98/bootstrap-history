@@ -52,7 +52,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "Precision requires consistent wire diameter and tight winding; achromatic winding balances inductance."
+  "note": "A resistor made by winding a long length of resistive wire onto a former, so that it resists a known amount of current. Precision comes from wire of consistent diameter wound tightly; a non-inductive (achromatic) winding, with turns laid in opposing directions, cancels the magnetic effect of the coil. It needs copper wire insulated well and a screw-cutting lathe. It is hard to wind precisely and bulky for large values."
  },
  {
   "id": "el2_resistor_carbon",
@@ -93,7 +93,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Carbon content and binder ratio set resistance; tolerance broader than wirewound but adequate for most circuits."
+  "note": "A resistor made by mixing powdered carbon with a binder and shaping it into a rod. The amount of carbon and the ratio to binder set the resistance. Its tolerance is looser than a wirewound resistor, but it is good enough for most circuits and cheap to make in volume. It needs carbon black and a way to press and bake the rods, and its value drifts with heat and damp."
  },
  {
   "id": "el2_rheostat",
@@ -152,7 +152,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Current path through coil via moving contact; heating limits power; precision determines smoothness."
+  "note": "A variable resistor: current flows through a coil of resistive wire, and a sliding contact picks the point along it, so moving the contact changes the resistance. It needs insulated wire and a machined former. The heat of the current limits its power rating, and the fineness of the winding and the quality of the contact decide how smoothly the setting changes. It controls lamps, motor speed and field currents."
  },
  {
   "id": "el2_potentiometer",
@@ -311,7 +311,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "Oil impregnation lowers losses and increases voltage rating; absorbs water readily so must be sealed; cheap at scale."
+  "note": "A capacitor stores electric charge between two metal foils held apart by an insulating layer, here paper rolled up with the foils. Soaking the paper in oil lowers losses and raises the voltage it will withstand. Paper readily absorbs water, which ruins it, so the case must be sealed. It needs good paper and thin copper or tin foil. It is cheap in volume."
  },
  {
   "id": "el2_capacitor_electrolytic",
@@ -506,7 +506,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "Saturation nonlinearity used for current limiting; core loss scales with frequency; permeability much higher than air."
+  "note": "A coil of wire wound around an iron core. The iron makes the magnetic field much stronger than the same coil in air, so a small coil can resist changes in current strongly; a choke is such a coil used to block alternating current and let steady current pass. Iron saturates, meaning that past a certain current it adds no more field, and this is used to limit current. Core loss grows with frequency, so iron suits low frequencies."
  },
  {
   "id": "el2_inductor_ferrite_core",
@@ -547,7 +547,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "Ferrite a ceramic; does not conduct eddy currents like iron sheet; high frequency inductor and transformer cores."
+  "note": "A coil wound on a core of ferrite, a ceramic magnetic material, or of powdered iron grains bound in insulation. Unlike solid iron sheet, ferrite does not carry eddy currents (circling currents induced inside the metal that waste energy as heat), so it works at high frequency where iron would burn. It needs very pure oxides fired at high temperature. It serves high frequency inductors and transformer cores."
  },
  {
   "id": "el2_quartz_crystal",
@@ -639,7 +639,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "Arc damage and pitting of contacts with AC load; silvering extends life; must account for contact resistance in design.",
+  "note": "A switch moved by an electromagnet: current through a coil pulls an iron armature that closes or opens contacts in another circuit, so a weak signal can switch a strong one. Contacts spark when they break a current, and the arc pits them, worst with alternating load; silvering the contacts extends their life. The designer must allow for the resistance of the contacts.",
   "gov": 1,
   "sus": 8,
   "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
@@ -1168,7 +1168,7 @@
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "Loose coupling limits power transfer; useful for RF and signalling; avoids eddy loss but requires many turns."
+  "note": "A transformer with no iron core, two coils placed near each other in air so that a changing current in one induces voltage in the other. Because the coupling is loose, it transfers power poorly, but it avoids eddy losses in iron, so it is used for radio frequencies and signalling. It needs many turns of well insulated wire to work, and it is bulky for what it carries."
  },
  {
   "id": "el2_dynamo_shunt_wound",
@@ -1217,7 +1217,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "Self-exciting; voltage drops with load; external load variation affects output; inherently stable at constant speed."
+  "note": "A dynamo whose field winding is connected in parallel (shunt) across the output, so it excites itself from its own current. Its voltage falls as the load rises, and changes in the load alter its output, but at constant speed it is inherently stable and does not run away. It needs a dynamo with self-excitation and a machine shop that can fit the armature closely. It suits battery charging and lighting."
  },
  {
   "id": "el2_dynamo_series_wound",
@@ -1911,7 +1911,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Fault location critical; relay must see direction of fault current; current sharing unequal; network analysis complex.",
+  "note": "A power network wired in a closed loop, so that every substation can be fed from either direction and one broken cable does not cut the supply. It needs central generation, a primary substation and relays. The hard part is protection: relays must see which way fault current flows to isolate only the broken section, load sharing between the paths is unequal, and the network is complex to analyse.",
   "gov": 2,
   "sus": 3,
   "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.] [GATE: Operates only on a running grid: it draws mains power from it, so a shut or never-built grid leaves it dead. Knowledge of the technique stays in pre.]"
@@ -2016,7 +2016,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Arcing at tap change must be managed; some designs use reactor to limit current during transition.",
+  "note": "A switch on a transformer winding that changes the number of turns in use, and so adjusts the output voltage while the load is still connected. It needs a regulating substation, relays and an alternating current transformer. The hard part is that changing taps breaks a circuit, which causes arcing; designs manage this, for example with a reactor (a coil) that limits the current that circulates during the move.",
   "gov": 2,
   "sus": 3,
   "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
@@ -2477,7 +2477,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Accuracy requires coil geometry; temperature drift in springs significant; must measure true power, not volt-amperes.",
+  "note": "An instrument with a fixed coil and a movable coil, both carrying current, whose twisting force on each other is proportional to the product of voltage and current, so it reads true electrical power. It must measure real power rather than volt-amperes, which differ when current and voltage are out of step. Accuracy depends on coil geometry, and the springs that restore the pointer drift with temperature.",
   "gov": 1,
   "sus": 8,
   "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
@@ -2707,7 +2707,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "Calibrated against international standard; typical accuracy 0.01%; stored in constant-temperature enclosure."
+  "note": "A resistance standard: a coil of manganin, an alloy of copper, manganese and nickel whose resistance hardly changes with temperature. It is calibrated against the international standard so that all measurements agree, and kept in a constant-temperature enclosure so that heat does not shift its value. It needs accurate screw-cut winding and careful ageing of the wire. All other electrical measurements trace back to such coils."
  },
  {
   "id": "el2_potentiometer_method_measurement",
@@ -3131,7 +3131,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Dominant output tube 1930s onwards; low output impedance suitable for audio; good linearity with suppressor biasing.",
+  "note": "A vacuum tube with five electrodes: a heated cathode, three grids and an anode. The extra suppressor grid stops electrons knocked out of the anode from falling back, which removes the distortion of the tetrode. It gives high amplification with good linearity and a high output resistance; as an audio output tube it became dominant. It needs everything for the tetrode and a high vacuum.",
   "gov": 1,
   "sus": 8,
   "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
@@ -3234,7 +3234,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "Grid loses control once conduction starts; acts as high-current switch; used for AC control and phase shifting.",
+  "note": "A tube filled with low-pressure gas instead of vacuum. A small voltage on the grid fires it, and once the gas conducts, the grid loses control and the tube stays on until the current stops. It therefore works as a switch for large currents, used in alternating-current control and phase shifting. It needs a sealed envelope and a measured gas fill, and it wears as ions strike the cathode.",
   "gov": 1,
   "sus": 8,
   "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
@@ -3534,7 +3534,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "PTC types also possible; hysteresis in temperature response; good for bias and compensation networks in amplifiers.",
+  "note": "A resistor whose resistance changes strongly with temperature, made from fired metal oxides. Most types fall in resistance as they warm; PTC types rise instead. The response lags and shows hysteresis (it differs when heating and cooling). It needs analysed, pure oxides and firing. It is used to sense temperature, and in bias and compensation networks in amplifiers, whose gain would otherwise drift with heat.",
   "gov": 1,
   "sus": 8,
   "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
@@ -3965,7 +3965,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "Used in frequency meters and timers; ripple counter has propagation delay; synchronous counter uses common clock."
+  "note": "A chain of flip-flops (circuits that remember one binary digit) in which each stage changes state at half the rate of the one before, so the pulses are divided down by two at each stage and the stages' states spell out a binary count. It is used in frequency meters and timers. In a ripple counter each stage waits for the one before, which adds delay; a synchronous counter fixes this with a common clock."
  },
  {
   "id": "el2_mixer_frequency_translation",
@@ -4012,7 +4012,7 @@
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "Heterodyne conversion; intermediate frequency allows fixed narrowband amplification; mixer loss adds noise figure."
+  "note": "A circuit that combines an incoming signal with a locally made one so that the output contains their sum and difference frequencies, shifting the signal to a fixed intermediate frequency (heterodyne conversion). Then a fixed narrowband amplifier can serve any station tuned. It needs an oscillator and a nonlinear element such as a diode or tube. The mixer adds loss and noise."
  },
  {
   "id": "el2_detector_demodulation_envelope_product",
@@ -4107,7 +4107,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "S-curve characteristic; slope at center provides deviation sensitivity; FM less noise-prone than AM for same bandwidth."
+  "note": "A circuit that recovers the sound from a frequency modulated carrier, where the signal is carried as changes of frequency rather than strength. A tuned circuit turns frequency changes into voltage changes, giving an S-shaped response curve; the slope at the centre sets how sensitive it is to the deviation. It needs tuned circuits and diodes. For the same bandwidth FM is less affected by noise than AM."
  },
  {
   "id": "el2_modulator_amplitude_frequency_phase",
@@ -4153,7 +4153,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "AM needs linear amplification; FM needs frequency-stable oscillator; deviation ratio determines bandwidth."
+  "note": "A circuit that imprints a signal (voice or music) onto a high-frequency carrier by varying its strength, frequency or phase, so that it can be sent by radio. AM needs linear amplification; FM needs an oscillator whose frequency is stable and can be steered. The deviation ratio (how far the frequency swings relative to the sound) determines the bandwidth used. It needs a tube amplifier and an oscillator."
  },
  {
   "id": "el2_power_supply_rectification_filtering",
@@ -4401,7 +4401,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Cutoff frequency below which wave does not propagate; multiple modes possible; mode matching required at junctions."
+  "note": "A hollow metal pipe, usually rectangular, that carries microwaves along its inside instead of along a wire, with far lower loss at very high frequency. It has a cutoff frequency below which a wave will not travel at all, and different field patterns (modes) are possible. At each junction the modes must be matched or the wave reflects. It needs precisely machined smooth metal tubing."
  },
  {
   "id": "el2_antenna_patterns_radiation_efficiency",
@@ -5140,7 +5140,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "Output impedance high; frequency response relatively flat; robust and simple; bidirectional so can be speaker."
+  "note": "A microphone in which sound moves a light diaphragm attached to a coil sitting in a magnetic field, so the motion generates a small voltage. It is robust, simple and has a fairly flat frequency response. It works like a loudspeaker run backwards (and a speaker can serve as one). The output is weak, so it needs an amplifier, and a transformer to match impedance."
  },
  {
   "id": "el2_microphone_condenser_electrostatic",

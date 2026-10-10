@@ -79,8 +79,14 @@ check("the sea is still far cheaper than land per tonne-km",
 _market_rate = s.market_rate
 s.market_rate = lambda: 4.0 * _market_rate()
 dearer = s._freight_mode_costs(0.0)
-check("dearer money in this society raises every mode's freight",
-      all(dearer[mode] > balanced[mode] for mode in balanced), (balanced, dearer))
+_walking = set(geography_api.walking_cargo_modes())
+# a herd that walks has no carrier capital, so dearer money reaches it only through the prices of its feed and
+# the drovers' keep, which a cart pays too on top of its oxen and wagon
+_rise = {mode: dearer[mode] / balanced[mode] for mode in balanced if balanced[mode] > 0.0}
+check("dearer money in this society raises every mode's freight, a walking herd's less than a cart's",
+      all(dearer[mode] > balanced[mode] for mode in balanced if mode not in _walking)
+      and all(_rise[walk] < _rise["cart"] for walk in _walking if walk in _rise),
+      (balanced, dearer))
 s.market_rate = _market_rate
 route = s._foreign_route(PARTNER, 1.0)
 check("the route to the partner carries travel days, longer for more distance",

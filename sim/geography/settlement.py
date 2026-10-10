@@ -13,8 +13,10 @@ from typing import Dict, List, Optional, Tuple
 
 from sim.geography import queries, tile_holdings
 from sim.geography.distance import haversine_km
+from sim.unit_conversions import CIVIL_DAYS_PER_YEAR
 
 
+@functools.lru_cache(maxsize=2048)
 def _carrying_capacity(tile_id: str) -> float:
     return float(queries.food_potential(tile_id)["total_kcal_per_year"])
 
@@ -64,4 +66,36 @@ def distance_km(held_tiles: List[str], from_tile: str, to_tile: str) -> float:
     held = _capacities(tuple(held_tiles))
     if from_tile not in held or to_tile not in held:
         raise KeyError("tile not held: %s" % (from_tile if from_tile not in held else to_tile))
+    return haversine_km(*tile_holdings.tile_centre(from_tile), *tile_holdings.tile_centre(to_tile))
+
+
+def capacity_kcal_per_day(tile_id: str) -> float:
+    """The food energy a day a tile's land gives at a full stock: what a settlement there can live on at most."""
+    return _carrying_capacity(tile_id) / CIVIL_DAYS_PER_YEAR
+
+
+def worked_kcal_per_day(tile_id: str, hectares_worked: float) -> float:
+    """The food energy a day the people working `hectares_worked` of a tile bring in: the tile's full yield over its
+    whole land, in the share of that land they work."""
+    land_hectares = tile_holdings.tile_land(tile_id)["land_area_km2"] * tile_holdings.HECTARES_PER_KM2
+    if land_hectares <= 0.0:
+        return 0.0
+    return capacity_kcal_per_day(tile_id) * min(1.0, max(0.0, hectares_worked) / land_hectares)
+
+
+def candidate_tiles(held_tiles: List[str], claimed_tiles: List[str], by_sea: bool = False) -> List[str]:
+    """Tiles a settlement could be sent to, best land first (ties by id): tiles nobody holds that border a tile
+    already held or claimed, and, when the voyage is by sea, coastal tiles when a held or claimed tile is coastal."""
+    taken = set(held_tiles) | set(claimed_tiles)
+    world_map = tile_holdings._map(None)
+    reachable = {neighbour for tile_id in taken for neighbour in tile_holdings.neighbours(tile_id, world_map)}
+    if by_sea and any(world_map.tiles[tile_id].get("coastal") for tile_id in taken if tile_id in world_map.tiles):
+        reachable |= {tile_id for tile_id, tile in world_map.tiles.items() if tile.get("coastal")}
+    found = [tile_id for tile_id in reachable - taken
+             if tile_id in world_map.tiles and _carrying_capacity(tile_id) > 0.0]
+    return sorted(found, key=lambda tile_id: (-_carrying_capacity(tile_id), tile_id))
+
+
+def distance_between_tiles_km(from_tile: str, to_tile: str) -> float:
+    """Great-circle distance between two tiles' centres, held or not."""
     return haversine_km(*tile_holdings.tile_centre(from_tile), *tile_holdings.tile_centre(to_tile))

@@ -503,7 +503,7 @@
    "deposit_type": "native_silver_vein",
    "status": "historic",
    "conf": "B",
-   "source": "Cobalt-Gowganda district, Ontario, rich native silver found in 1903; native silver also occurs with Keweenaw copper."
+   "source": "Cobalt-Gowganda district, Ontario, rich native silver found in 1903; native silver also occurs with Keweenaw copper.", "working_unknown": "UNKNOWN (B): the source gives the discovery (1903) but no endowment was read, so neither a working date nor a size is stated here"
   },
   {
    "id": "burra_copper",

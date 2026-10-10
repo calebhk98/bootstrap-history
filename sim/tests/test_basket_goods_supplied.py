@@ -45,7 +45,7 @@ class BasketSupplyRule(unittest.TestCase):
         self.assertEqual(_unsupplied(civilisations, economies), ["soap"])
 
     def test_a_partner_that_refuses_to_sell_does_not_supply(self):
-        civilisations = {"home": _civ([]), "far": _civ(["lye"], will_not_sell=["soap"])}
+        civilisations = {"home": _civ([]), "far": _civ(["lye"], state_monopolies=["soap"])}
         self.assertEqual(_unsupplied(civilisations, [{"civilization": "far", "enabled": True}]), ["soap"])
 
     def test_an_undeclared_good_and_a_stale_entry_are_errors_and_unreviewed_warns(self):

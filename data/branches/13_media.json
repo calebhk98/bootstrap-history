@@ -202,7 +202,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Stone or bronze permanent image. Single work, not reproducible."
+  "note": "Carving stone or casting bronze into a lasting three-dimensional image of a person, god or event. A sculptor works from a model, removing stone with chisels or pouring metal into a mould. It needs a skilled artist, stone or bronze, and tools. Each work is a single piece and cannot be copied cheaply, so a message reaches only those who come to see it."
  },
  {
   "id": "prn_theatre_pantomime",
@@ -223,7 +223,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Live performance of narrative. Ephemeral, audience present, not reproducible."
+  "note": "A live performance of a story by actors, with words, dance or mime, before an audience gathered in one place. It needs a stage, performers who have learned their parts and a crowd able to attend. It reaches many people at once and can teach or persuade, but it vanishes when the show ends and cannot be repeated exactly or sent to another city."
  },
  {
   "id": "prn_woodblock_carving",
@@ -247,7 +247,7 @@
   "sch": 0,
   "art": 2,
   "conf": "A",
-  "note": "Hand-carved relief block prints many copies. First cheap reproducible image. Breaks scribe monopoly.",
+  "note": "Cutting a picture or text in relief on a block of wood, leaving the lines raised, then inking the raised surface and pressing paper or cloth onto it. One carved block prints many copies. It needs close-grained wood, sharp carving tools, ink and paper. It is the first cheap reproducible image and breaks the scribe's monopoly, but each page needs a new block and a block wears out.",
   "traits": [
    "status_threatening"
   ]
@@ -308,7 +308,7 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "Rag fibre beaten, suspended in water, scooped on mould. One sheet at a time. Variable thickness."
+  "note": "Making paper sheet by sheet: rag fibre is beaten into a pulp, mixed with water in a vat, and scooped up on a wire mesh frame (a mould) so that the water drains and a mat of fibre is left to be pressed and dried. It needs clean rags, water, a vat and moulds. It is slow, one sheet at a time, and the thickness varies from sheet to sheet."
  },
  {
   "id": "prn_pulp_stamper",
@@ -365,7 +365,7 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "Alum and gelatin seal fibre. Ink sits on surface instead of bleeding through. Required for printing."
+  "note": "Coating the surface of paper with a sizing of alum and gelatin so the fibres are sealed. Without it, paper is like blotting paper and ink soaks through and spreads. With it, the ink sits on the surface in a crisp line, which printing requires. It needs rag paper, alum (a mineral salt) and gelatin, made by boiling animal hides or bones. Too little size leaves ink bleeding; too much makes the sheet repel ink."
  },
  {
   "id": "prn_wire_mould_deckle",
@@ -428,7 +428,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Steam-driven endless wire belt. Pulp fed continuously. Thousands of tonnes per year. Displaces hand workers.",
+  "note": "A papermaking machine that makes a continuous sheet: watery pulp pours onto a moving endless belt of fine wire mesh, water drains through, and the damp web is pressed and dried on rollers. It needs steam power to drive the belt and rollers, and parts made to close tolerance so the web runs smoothly. It makes paper in enormous quantity and displaces hand workers, who may protest.",
   "traits": [
    "labour_saving"
   ]
@@ -459,7 +459,7 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "Wood fibres liberated by heat and alkali. Cheaper than rag pulp. Contains lignin, yellows and becomes brittle.",
+  "note": "Paper pulp made from timber instead of rag. The wood is treated with heat and chemicals (alkali) that free its fibres. It is far cheaper than rag pulp because wood is plentiful, but wood contains lignin, a substance that yellows and makes paper brittle over time. It needs a large supply of timber, a pressure vessel or boiling vat, and alkali. Bleaching and washing the pulp are the hard steps.",
   "traits": [
    "commerce"
   ]
@@ -516,7 +516,7 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "Hardened steel letter in relief, hand-struck into soft matrix. Repeated use creates identical matrices."
+  "note": "A letter cut in relief on the end of a hardened steel rod, in mirror image, used to strike an impression into a softer metal. The punch cutter files each letter by hand, so letters must be exact; once it is made, it can be struck again and again to give identical matrices. It needs hard steel, files, a hardening furnace and tolerance to a tenth of a millimetre."
  },
  {
   "id": "prn_type_matrix",
@@ -544,7 +544,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Soft brass struck by hardened punch. Cavity is negative of letter. Reusable mould for casting type."
+  "note": "A small block of soft brass into which a hardened punch has been struck, leaving a cavity that is the negative of a letter. It is the mould for casting type, so a single punch yields a matrix that can cast type indefinitely. It needs brass and a steel punch. The matrix must be struck square and to the right depth, or letters will not align."
  },
  {
   "id": "prn_hand_mould_adjustable",
@@ -573,7 +573,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Iron mould with adjustable sides, matrix fitted into bottom. One caster casts thousands of identical sorts per day.",
+  "note": "An iron mould whose sides slide to fit letters of different widths, with a matrix fitted into the bottom. Molten metal is poured in and shaken to fill the matrix cavity, producing a piece of type (a sort). One caster can make thousands of identical sorts per day. It needs a matrix and fine metalwork, because the mould must be uniform so all the letters stand to the same height.",
   "traits": [
    "labour_saving"
   ]
@@ -609,7 +609,7 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "Lead and tin melt at low temp. Antimony is key: it expands on cooling, forcing alloy into matrix cavity edge.",
+  "note": "An alloy of lead and tin with antimony added, used to cast type. Lead and tin melt at low temperature, easy to pour. Antimony is the key ingredient: it expands slightly as the alloy cools, forcing the metal into every corner of the matrix, and it hardens the type so it survives many impressions. It needs lead, tin, antimony and a crucible fire. A wrong mix gives soft or brittle type.",
   "traits": [
    "infrastructure"
   ],
@@ -668,7 +668,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Flat bed with screwed platen pressing it down. Requires oil ink and level surfaces. Gutenberg innovation.",
+  "note": "A press in which a flat bed holds the inked type and a flat plate (the platen) is screwed down on top of it, pressing the paper evenly against it. It needs oil-based ink, which clings to metal type, a screw made accurately, and level surfaces so the impression is even. This was Gutenberg's innovation, and it reproduces a page quickly. A worn screw or uneven bed leaves faint patches.",
   "traits": [
    "labour_saving"
   ]
@@ -844,7 +844,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Punched paper tape controls type casting. Each character cast individually. Slower than Linotype but flexible fonts.",
+  "note": "A machine that sets and casts type one character at a time, controlled by a punched paper tape. A keyboard punches the tape, and the tape then drives a caster that makes each letter from molten type metal and arranges the letters into lines. It needs electric power, type metal and a precisely made casting mechanism. It is slower than the Linotype, which casts whole lines, but it offers flexible fonts and easy correction of single letters.",
   "traits": [
    "labour_saving"
   ]
@@ -906,7 +906,7 @@
   "sch": 0,
   "art": 2,
   "conf": "A",
-  "note": "Wax ground on copper, needle drawn, acid bites. Tonal work without hand-cutting. Faster than engraving.",
+  "note": "Making a printing plate by coating a copper plate with wax, drawing through the wax with a needle to expose the metal, then dipping the plate in acid, which bites only where the metal is bare. The plate is then inked and printed. It needs copper, wax, nitric acid and an engraver's skill. It gives fine tonal work without cutting by hand and is faster than engraving. The depth of bite depends on how long the plate stays in the acid.",
   "traits": [
    "labour_saving"
   ]
@@ -967,7 +967,7 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "Image transfers to rubber roller, then paper. Multiple passes with less wear. Finer detail, longer plate life.",
+  "note": "A printing method in which the inked image is transferred from the plate to a rubber-covered roller and then onto the paper, instead of straight from the plate. The soft rubber presses into rough paper to print fine detail, and the plate is never struck against the paper, so it lasts longer. It needs lithography and steam power for the presses. The balance of ink and water on the plate must be kept steady.",
   "traits": [
    "labour_saving"
   ]
@@ -1022,7 +1022,7 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "Cyan, magenta, yellow, black separations photographed through filters. Overprinted recreate full colour.",
+  "note": "Printing full-colour pictures from four inks: cyan, magenta, yellow and black. The original is photographed through colour filters, giving a separate plate for each ink, and the plates are printed one over the other in registration (aligned exactly). It needs a halftone screen, which breaks tones into dots, filters, and careful plate alignment. If the plates are out of register the picture is blurred and fringed.",
   "traits": [
    "information"
   ]
@@ -1163,7 +1163,7 @@
   "sch": 0,
   "art": 1,
   "conf": "A",
-  "note": "The negative is the invention. Paper negative allows unlimited prints from one exposure. Cheaper than daguerreotype.",
+  "note": "A photographic process which makes a paper negative, from which any number of positive prints can be made. Paper is coated with silver salts, exposed in a camera, developed, and then used as a negative to print on other sensitised paper. The negative is the invention: one exposure yields unlimited prints. It is cheaper than the daguerreotype, which makes only one image, but the paper fibres blur the detail.",
   "traits": [
    "information"
   ]
@@ -1197,7 +1197,7 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "Glass substrate better than paper. Emulsion must stay wet or sensitivity drops. Field photographers carried dark tents.",
+  "note": "A photographic plate made by coating a glass sheet with collodion (nitrocellulose dissolved in ether and alcohol) containing silver salts. It gives sharper detail than paper negatives. The plate must be exposed and developed while still wet, because the coating loses its sensitivity as it dries. Field photographers therefore carried darkroom tents and chemicals with them. It needs good glass, nitrocellulose and silver halide.",
   "traits": [
    "information"
   ]
@@ -1278,7 +1278,7 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "Light projects negative through lens onto sensitised paper. Magnification variable. Enlargement unlocks full potential.",
+  "note": "An optical device that projects the image of a negative through a lens onto sensitised paper, so that a small negative is printed much larger. Moving the lens or paper changes the magnification. It needs roll film or plates, ground lenses and a lamp. Contact printing can only give prints the size of the negative, so enlargement frees the camera from being large and unlocks the full detail of a good negative.",
   "traits": [
    "information"
   ]
@@ -1335,7 +1335,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Candle or arc light projects painted glass slide through lens onto screen. Bright large image. Enables mass viewing.",
+  "note": "A projector that shines a candle or arc light through a painted glass slide and a lens onto a screen, giving a large bright image to a whole room. It needs ground and polished lenses, a bright light and hand-painted slides. It allows mass viewing, so a lecturer or showman can reach an audience. A weak light makes the image dim, and a hot lamp can crack a slide.",
   "traits": [
    "spectacle"
   ]
@@ -1397,7 +1397,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Rotating disc with opening blocks light during frame advance. Viewer sees each frame, not blur. Controls flicker.",
+  "note": "A rotating disc with an opening that blocks the light while a film frame is pulled into place and lets it through when the frame is still. The viewer therefore sees each frame sharply, not a smear of movement. It needs intermittent film movement, meaning the film moves in jerks, and a shutter timed with it. It also controls flicker: if the dark period or the frame rate is wrong, the picture flickers unpleasantly.",
   "traits": [
    "spectacle"
   ]
@@ -1429,7 +1429,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Arc lamp casts film frames through objective lens onto screen. Large bright image. Darkened theatre essential.",
+  "note": "A projector that throws the images of film frames, one after the other, through a lens onto a screen so that they appear to move. A bright arc lamp is the light source, the shutter hides film movement, and the film is pulled through frame by frame. It needs a darkened theatre, because the image is faint against ambient light. Hot lamps can ignite early film, which burns readily.",
   "traits": [
    "spectacle"
   ]
@@ -1462,7 +1462,7 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "Large glass-roofed stage with strong arc lighting. Actors repeat scenes for camera. Raw material for film assembly.",
+  "note": "A large stage, usually roofed with glass for daylight and with strong arc lighting, where actors repeat scenes for the camera. It is the place where raw film is made for later assembly. It needs sets, lights, a camera and actors, and a director to say what is wanted. Early film is so slow that a lot of light is required, so a studio is an expensive building that must be planned around light.",
   "traits": [
    "spectacle"
   ]
@@ -1518,7 +1518,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Sound vibrates needle, etches waxy cylinder. Replay moves needle over groove, vibrates diaphragm. Sound reproduction.",
+  "note": "A machine that records sound by having sound waves vibrate a diaphragm attached to a needle, which cuts a groove in a rotating wax-coated cylinder. To play it back, the needle runs along the groove and moves the diaphragm, which makes sound. It needs a steady motor, a precisely cut screw to move the needle along, and wax. The sound is thin and quiet, and the wax wears out after a few plays.",
   "traits": [
    "information",
    "spectacle"
@@ -1573,7 +1573,7 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "Coil in magnetic field vibrates diaphragm. Reverses microphone. Weak signal amplified for audible volume.",
+  "note": "A device that turns an electric signal back into sound: a coil attached to a cone sits in a magnetic field, and current in the coil makes the cone move to and fro, pushing the air. It works like a microphone in reverse. It needs an electromagnet or magnet, fine wire and a light diaphragm. The signal from a microphone is weak, so it must be amplified to be heard at a useful volume.",
   "traits": [
    "information"
   ]
@@ -1604,7 +1604,7 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "Microphone captures sound, valve amplifier drives cutting stylus. Bass and treble accessible. Audio fidelity leap.",
+  "note": "Recording sound through electric means: a microphone turns sound into a signal, a valve amplifier (a vacuum tube circuit) strengthens it, and that drives a cutting stylus that cuts the groove in a disc. It captures bass and treble that purely mechanical recording misses, so fidelity jumps. It needs the disc record, amplifier tubes and a microphone. Poor amplifier design distorts the recorded sound.",
   "traits": [
    "inexplicable",
    "infrastructure",
@@ -1659,7 +1659,7 @@
   "sch": 1,
   "art": 0,
   "conf": "B",
-  "note": "Sound broadcast live to distant unseen audiences. Electrical medium dissolves geography. State interest high."
+  "note": "Sending sound live from a transmitter to many receivers at once, so that anyone with a set can listen. It needs a radio transmitter, receivers sold or built in volume, and a programme to carry. Radio ignores geography, since a signal passes mountains and frontiers, so states take a strong interest in controlling who may broadcast. The costs of programmes must be met, often by the state or advertising."
  },
  {
   "id": "prn_library_archive",
@@ -1680,7 +1680,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Institutional preservation and organisation of texts. Enables distributed knowledge and cultural memory.",
+  "note": "A library is a building where texts are kept so that they outlive any one owner, and an archive keeps records. It needs shelves, a roof against fire and damp, guards against theft and literate people to look after it. It lets knowledge be shared between people and over generations. Fire is the greatest danger: Alexandria is the warning. Without a catalogue, though, a large collection is hard to use.",
   "traits": [
    "status_threatening"
   ]
@@ -1710,7 +1710,7 @@
   "sch": 1,
   "art": 0,
   "conf": "B",
-  "note": "Systematic ordering by subject, author, title. Index cards or catalogue. Turns collection into resource.",
+  "note": "Ordering a collection by subject, author and title, recorded in a catalogue (a list of cards or entries) so that a particular work can be found without searching the shelves. It needs a collection, literate cataloguers and a consistent scheme. A pile of scrolls becomes a searchable resource. The hard part is staying consistent as the collection grows, because a scheme that is changed midway leaves two systems.",
   "traits": [
    "status_threatening"
   ]
@@ -1740,7 +1740,7 @@
   "sch": 1,
   "art": 0,
   "conf": "B",
-  "note": "Complete list of every word and location. Enables rapid lookup and cross-reference. Transforms corpus to reference.",
+  "note": "A complete alphabetical list of the words in a text with the place each occurs, which allows a reader to look up any word or idea and find every passage on it. It needs a fixed text, patient literate clerks, and a way of locating a place, such as numbered pages or lines. It turns a corpus into a reference work. Compiling one by hand is very slow, and every revision of the text invalidates it.",
   "traits": [
    "status_threatening"
   ]
@@ -1768,7 +1768,7 @@
   "sch": 1,
   "art": 0,
   "conf": "B",
-  "note": "Legal monopoly on copying enforces author and publisher income. Printing enables profitable copying.",
+  "note": "A legal monopoly granted to an author or publisher over the right to copy a work, so that they earn income from sales. It barely makes sense before printing, since hand copying a scroll is so slow that unauthorised copies are little threat. Printing makes copying cheap, so a pirate can undersell the publisher. It needs courts and a government willing to enforce it, and movable type.",
   "traits": [
    "status_threatening"
   ]

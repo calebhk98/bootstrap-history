@@ -213,7 +213,7 @@
   "sch": 2,
   "art": 2,
   "conf": "C",
-  "note": "Graphite hardens in proportion to clay; German recipe ratios and kiln control took centuries to perfect."
+  "note": "A writing stick made of powdered graphite (a soft, black, greasy form of carbon) mixed with clay, shaped into a rod and fired in a kiln, then encased in wood. The more clay in the mix, the harder the lead and the paler the line. Getting the clay-to-graphite ratio and the kiln temperature right took centuries to perfect. It needs pure graphite and a kiln. Poor mixes crumble or smear."
  },
  {
   "id": "if_carbon_paper",
@@ -307,7 +307,7 @@
   "sch": 1,
   "art": 2,
   "conf": "C",
-  "note": "Carbon in heated linseed oil. Sticks to metal type. Water-based ink beads off metal, non-obvious blocker."
+  "note": "An oil-based ink for printing with metal type, made by boiling linseed oil and mixing in carbon black. It sticks to metal type and transfers cleanly to paper. The non-obvious blocker is that water-based writing ink beads off metal and will not coat the type. It needs a source of oil, a hot fire to heat it and soot or carbon. The thickness of the ink must be right, or it smears or fails to print."
  },
  {
   "id": "if_woodblock_printing",
@@ -557,7 +557,7 @@
   "sch": 3,
   "art": 2,
   "conf": "C",
-  "note": "Screw threads must be clean or they strip. Parallel guides prevent binding. Arm length trades speed for force."
+  "note": "A press in which a large screw forces a flat plate (platen) down onto the inked type and paper. A long arm turns the screw, and the arm length trades speed for force. The screw threads must be clean and well made or they strip, and parallel guides stop the platen from binding. It needs an accurate screw, wrought iron and good woodwork. Gutenberg's press was of this kind."
  },
  {
   "id": "if_iron_hand_press",
@@ -626,7 +626,7 @@
   "sch": 3,
   "art": 2,
   "conf": "C",
-  "note": "Rotating cylinder instead of platen. Type moves under rolling pressure. Faster, smoother. Steam power essential."
+  "note": "A printing press in which a rotating cylinder carries the paper across the flat bed of type, pressing it by rolling instead of with a flat plate. Pressure is applied along a line at a time, so a lighter machine can print a larger sheet, faster and smoothly. Steam power drives it, since it is too heavy for hands. It needs a cylinder-boring mill and parts made to fine tolerance."
  },
  {
   "id": "if_rotary_press",
@@ -661,7 +661,7 @@
   "sch": 4,
   "art": 2,
   "conf": "C",
-  "note": "Two cylinders, type wraps around curved plate. Continuous feed and output. Thousands of sheets per hour."
+  "note": "A press with two cylinders: type is cast onto a curved plate that wraps around one of them, and the paper feeds continuously between the cylinders from a roll. Printing and delivery never stop, so thousands of sheets per hour can be printed. It needs steam power, curved stereotype plates cast from the type, and a cylinder press as a base. Newspapers depend on it."
  },
  {
   "id": "if_stereotype",
@@ -766,7 +766,7 @@
   "sch": 4,
   "art": 2,
   "conf": "C",
-  "note": "Operator taps keyboard, matrices drop, spacing added, hot metal poured into mould. Complete line emerges cast solid."
+  "note": "A typesetting machine: the operator taps a keyboard, brass moulds (matrices) for each letter drop into a line, spaces are added to fill the line, and hot metal is poured into the moulds so that the whole line is cast as a single solid bar of type. Then the matrices are returned for reuse. It needs electric power, type metal and parts made to close tolerance. It is much faster than setting type by hand."
  },
  {
   "id": "if_lithography",
@@ -800,7 +800,7 @@
   "sch": 3,
   "art": 4,
   "conf": "C",
-  "note": "Greasy ink on stone, water-acidified alum applied. Water repels grease, grease rejects water. Non-obvious chemistry."
+  "note": "A printing method that works by chemistry, not relief: a design is drawn with greasy ink or crayon on a flat stone, and the stone is treated with acidified water containing alum. The wet stone repels the greasy printing ink, while the greasy design accepts it and rejects water. The chemistry is not obvious, and the stone must be kept damp while it is printed. It needs a flat polished limestone and alum."
  },
  {
   "id": "if_chromolithography",
@@ -832,7 +832,7 @@
   "sch": 3,
   "art": 5,
   "conf": "C",
-  "note": "Registration between plates must be accurate to fraction of millimetre. Hand-drawn art for each colour."
+  "note": "Colour printing from several lithographic stones, one for each colour, printed one over another. The registration, the alignment between the stones, must be accurate to a fraction of a millimetre, or the picture blurs. A hand-drawn artwork is needed for each colour. It needs lithography and synthetic dyes for brilliant inks. A great deal of skilled labour goes into one picture."
  },
  {
   "id": "if_offset_lithography",
@@ -929,7 +929,7 @@
   "sch": 3,
   "art": 2,
   "conf": "C",
-  "note": "Photo-resist captures halftone dots; acid etches between them. Height must be uniform.",
+  "note": "Making a metal relief printing plate from a photograph. The image is turned into dots by a halftone screen, light hardens a coating (a photo-resist) on a metal plate where it falls, and acid then eats the unprotected metal between the dots, leaving them raised to print. The height of the dots must be uniform. It needs silver halide photography and acid. Over-etching destroys the finest dots.",
   "req_any": [
    {
     "group": "zinc_metal_supply",
@@ -975,7 +975,7 @@
   "sch": 2,
   "art": 3,
   "conf": "C",
-  "note": "Keyed strike-through ribbon. QWERTY deliberately slows typist to prevent jams. Shift key accesses capitals."
+  "note": "A writing machine with a key for each letter that drives a metal type bar to strike through an inked ribbon onto paper. The QWERTY layout deliberately separates common letter pairs to slow the typist and keep neighbouring bars from jamming. A shift key reaches capitals. It needs steel parts, springs and levers made to interchangeable tolerance. A typist can produce a clean, uniform page."
  },
  {
   "id": "if_shift_key_mechanism",
@@ -1005,7 +1005,7 @@
   "sch": 1,
   "art": 2,
   "conf": "C",
-  "note": "Basket must move reliably without sticking. Spring return precise or next keystroke misses."
+  "note": "A mechanism that lets one key type two characters, such as a small and a capital letter. Pressing the shift key moves the basket of type bars (or the carriage) so that a different part of each type bar strikes the paper. The basket must move reliably without sticking, and the spring return must be precise, or the next keystroke misses. It needs the typewriter and tolerance machining."
  },
  {
   "id": "if_stencil_duplicator",
@@ -1038,7 +1038,7 @@
   "sch": 2,
   "art": 1,
   "conf": "C",
-  "note": "Screen must hold fabric taut. Register sprockets prevent misalignment. 200 copies max before wear."
+  "note": "A machine that copies a typed or drawn page: a stencil (a thin sheet coated with a waxy film, cut through by typing) is stretched on a screen, and ink is pressed through the cut parts onto paper. The screen must hold the fabric taut, and register sprockets keep the paper aligned. It wears out after about a few hundred copies. It needs a typewriter, a coating and hand power."
  },
  {
   "id": "if_mimeograph",
@@ -1072,7 +1072,7 @@
   "sch": 2,
   "art": 2,
   "conf": "C",
-  "note": "Rotating drum distributes ink evenly. Stencil wears faster but runs extend from 200 to 2000."
+  "note": "A duplicator in which a rotating drum distributes ink evenly through a stencil onto paper fed past it. It is a refined stencil duplicator, driven by hand or power. The stencil wears quickly, but a run can reach a few thousand copies. It needs the stencil duplicator and power. An uneven ink supply gives faint or smeared copies."
  },
  {
   "id": "if_bookbinding_case",
@@ -1105,7 +1105,7 @@
   "sch": 2,
   "art": 3,
   "conf": "C",
-  "note": "Sewing essential for durability; gluing alone fails in years. Raised bands protect sewing from shearing."
+  "note": "Case binding: the pages are sewn in groups (signatures) and the sewing is laced onto cords, then attached to hard boards that form the cover. Sewing is essential for durability, because gluing alone fails within years. Raised bands protect the sewing from shearing. It needs rag paper, leather, thread, glue and board. Weak sewing causes pages to come loose."
  },
  {
   "id": "if_camera_obscura_lens",
@@ -1195,7 +1195,7 @@
   "sch": 4,
   "art": 1,
   "conf": "C",
-  "note": "Light breaks silver halide to silver metal; unexposed must be removed without darkening image."
+  "note": "The chemistry behind photography: light breaks down silver halide (a compound of silver with chlorine, bromine or iodine) into specks of silver metal, which is visible once developed. The unexposed halide must be removed without darkening the image, or the whole picture goes dark. It needs silver, pure chemicals and quantitative analysis, and work in darkness."
  },
  {
   "id": "if_daguerreotype",
@@ -1262,7 +1262,7 @@
   "sch": 3,
   "art": 2,
   "conf": "C",
-  "note": "Negative allows unlimited prints. Paper texture shows in final. Toning with gold chloride prevents fading."
+  "note": "A paper negative made on paper sensitised with silver salts. The negative allows unlimited prints. The paper texture shows in the final image, which softens fine detail. Toning with gold chloride prevents fading. It needs silver halide sensitivity and rag paper. Prints made without proper fixing fade or darken in a few years."
  },
  {
   "id": "if_wet_collodion_plate",
@@ -1364,7 +1364,7 @@
   "sch": 3,
   "art": 2,
   "conf": "C",
-  "note": "Transparent backing allows frame spacing with sprocket holes. Rolls hold 20-120 frames. Enables amateur photography."
+  "note": "A strip of transparent celluloid (nitrocellulose plastic) coated with photographic emulsion and wound on a spool, with sprocket holes along the edges so frames can be spaced accurately. A roll holds many frames. It enabled amateur photography, since the photographer need not change plates after each shot. It needs a dry gelatin emulsion and fine tolerance machining. Celluloid is flammable."
  },
  {
   "id": "if_panchromatic_emulsion",
@@ -1395,7 +1395,7 @@
   "sch": 3,
   "art": 2,
   "conf": "C",
-  "note": "Orthochromatic sees only blue and green. Panchromatic needs red safelight, not yellow."
+  "note": "A photographic emulsion sensitive to all colours of light, including red. The older orthochromatic emulsion sees only blue and green, so red objects come out black. Panchromatic emulsion is sensitised with dyes. It must be handled under dark red or green safelight, not the yellow light that was safe before. It needs dry gelatin plates and synthetic dyes."
  },
  {
   "id": "if_autochrome_plate",
@@ -1426,7 +1426,7 @@
   "sch": 4,
   "art": 5,
   "conf": "C",
-  "note": "Viewing requires backlighting. Resolution is 100 lines per mm. Colours pastel. Only process before Kodachrome."
+  "note": "An early colour photograph process: a glass plate is covered with microscopic grains of starch dyed red, green and blue, and coated with emulsion, so that each grain acts as a tiny colour filter. The result is a transparency that must be viewed with light shining through it. The colours are pastel, and it needs long exposures. It was the only colour process before Kodachrome. It needs a dry gelatin emulsion plate."
  },
  {
   "id": "if_flash_powder",
@@ -1457,7 +1457,7 @@
   "sch": 2,
   "art": 1,
   "conf": "C",
-  "note": "Magnesium produces blue-white light nearer daylight than gas. Burns in fraction of second."
+  "note": "A mixture of magnesium powder and an oxidiser (a chemical that supplies oxygen) that burns in a very brief intense flash for photographing in dark rooms. Magnesium gives a blue-white light closer to daylight than gas lamps. It burns in a fraction of a second. It needs magnesium and corned gunpowder-type chemistry. The flash makes smoke and can burn the photographer, and it is dangerous to keep."
  },
  {
   "id": "if_flashbulb",
@@ -1491,7 +1491,7 @@
   "sch": 2,
   "art": 2,
   "conf": "C",
-  "note": "Oxygen must be pure and bulb sealed; any leak ruins it. One-use. Shutter speed rises to 1/500."
+  "note": "A sealed glass bulb filled with oxygen and containing fine metal foil or wire, ignited by electric current to give one bright flash. Because the flash is sealed in, it is safer and cleaner than flash powder. The oxygen must be pure and the bulb sealed; any leak ruins it. Each bulb is used once. It lets shutter speeds rise to a small fraction of a second. It needs a soda-lime glass and electricity."
  },
  {
   "id": "if_leaf_shutter",
@@ -1521,7 +1521,7 @@
   "sch": 2,
   "art": 2,
   "conf": "C",
-  "note": "Blades must open fully then close evenly. Timing via gears. Flash fires when open."
+  "note": "A camera shutter made of thin overlapping metal blades (leaves) in the lens that open fully and close evenly, timed through gears. It exposes the whole picture at once, so a flash can fire while the blades are open. It needs tolerance machining and accurate screws. If the blades do not open evenly the picture is unevenly exposed."
  },
  {
   "id": "if_focal_plane_shutter",
@@ -1551,7 +1551,7 @@
   "sch": 2,
   "art": 1,
   "conf": "C",
-  "note": "Slit width controls exposure. Fast speeds need very narrow slit. Above 1/500 require multiple slits."
+  "note": "A camera shutter that sits right in front of the film: a curtain with a slit travels across the film, and the width of the slit sets the exposure time. For fast speeds the slit must be very narrow, and for the fastest speeds multiple slits are required. It needs tolerance machining, light blind material and springs. Fast-moving subjects can be distorted because the slit exposes one part of the picture after another."
  },
  {
   "id": "if_cine_camera",
@@ -1583,7 +1583,7 @@
   "sch": 3,
   "art": 4,
   "conf": "C",
-  "note": "Intermittent sprocket movement must be reliable. Spring or motor drive. Motor gives steadier speed."
+  "note": "A movie camera: it takes a series of still photographs on roll film, each frame held still for a moment while the shutter is open and then pulled forward by a sprocket. The intermittent movement must be reliable. The drive is by spring or motor, and a motor gives steadier speed. It needs celluloid roll film and tolerance machining. Uneven speed makes the movement look jerky when projected."
  },
  {
   "id": "if_intermittent_film_movement",
@@ -1645,7 +1645,7 @@
   "sch": 3,
   "art": 3,
   "conf": "C",
-  "note": "Shutter blanks lens during pull-down to prevent flicker. Gate holds film flat. Heat dissipation critical."
+  "note": "A machine that shows movie film: a lamp and lens throw each frame onto a screen. A shutter blanks the light while the film is pulled down to the next frame, so the viewer does not see blur and no flicker appears. A gate holds the film flat. It needs celluloid roll film and ground lenses. Heat from the lamp can set the film on fire, so heat dissipation is critical."
  },
  {
   "id": "if_phonautograph",
@@ -1675,7 +1675,7 @@
   "sch": 3,
   "art": 2,
   "conf": "C",
-  "note": "Records sound into grooves but cannot play back. Stylus must be flexible but not break."
+  "note": "A device that records sound as a wavy line: a horn collects sound, which moves a diaphragm and a stylus that traces the vibrations onto a soot-blackened cylinder or paper. It records sound but cannot play it back. The stylus must be flexible but not break. It needs fine metalwork. It proved that sound can be written, and it led to recording that can be replayed."
  },
  {
   "id": "if_tin_foil_phonograph",
@@ -1706,7 +1706,7 @@
   "sch": 3,
   "art": 3,
   "conf": "C",
-  "note": "Indents rather than cuts; playback faint. Surface crinkles after 10-20 plays."
+  "note": "The first machine that could both record and play back sound. A stylus attached to a diaphragm indents a groove in a sheet of tin foil wrapped around a rotating cylinder; to replay, the stylus rides in the groove and moves the diaphragm. Playback is faint. The foil crinkles after a few plays and is quickly worn. It needs aluminium or tin foil and the phonautograph's design."
  },
  {
   "id": "if_wax_cylinder",
@@ -1737,7 +1737,7 @@
   "sch": 3,
   "art": 2,
   "conf": "C",
-  "note": "Wax gives 100+ plays. Cylinders can be shaved and recoated. Playback by needle vibration."
+  "note": "A recording cylinder made of wax, which a stylus cuts more cleanly than it indents foil. It sounds better and survives many plays. The surface can be shaved off and recoated, so a cylinder can be used again. Playback is by a needle riding in the groove and vibrating a diaphragm. It needs beeswax and a better stylus. Copies cannot be made easily; each is an original recording."
  },
  {
   "id": "if_disc_record",
@@ -1770,7 +1770,7 @@
   "sch": 3,
   "art": 3,
   "conf": "C",
-  "note": "Groove meanders side-to-side encoding amplitude. Shellac pressing from master. Playable from multiple copies."
+  "note": "A flat record with a spiral groove that wobbles from side to side, the wobble encoding the sound's loudness. Shellac discs are pressed from a master, so many copies can be made from one recording, which cylinders could not do. It needs shellac, a wax cylinder recording system and a press. The master must be made carefully, because every copy repeats its flaws."
  },
  {
   "id": "if_acoustic_horn_recording",
@@ -1800,7 +1800,7 @@
   "sch": 2,
   "art": 2,
   "conf": "C",
-  "note": "Horn gain is logarithmic. Frequency response lumpy; bass absent. Diaphragm compliance limits force."
+  "note": "Recording by gathering sound with a large horn that drives a diaphragm and cutting stylus directly, with no electricity. Horn gain is logarithmic, the frequency response is lumpy and bass is absent. The diaphragm's compliance (its give) limits the force it can apply to the stylus. It needs the disc record and fine metalwork. Performers must crowd round the horn."
  },
  {
   "id": "if_gramophone_motor",
@@ -1829,7 +1829,7 @@
   "sch": 2,
   "art": 2,
   "conf": "C",
-  "note": "Speed variation ruins pitch fidelity. Centrifugal governor adjusts throttle. Flywheel smooths ripple."
+  "note": "A spring motor with a governor that turns the record at a steady speed. Speed variation ruins the pitch, so a centrifugal governor (weights that fly outward as it speeds up) adjusts a brake or throttle to hold it constant, and a flywheel smooths the ripple. It needs a disc record and machine work. A worn spring or governor makes music wander in pitch."
  },
  {
   "id": "if_carbon_microphone",
@@ -1859,7 +1859,7 @@
   "sch": 2,
   "art": 1,
   "conf": "C",
-  "note": "Packing pressure critical; too loose and sensitivity drops. Short lifetime; packing settles."
+  "note": "A microphone that uses a small chamber of carbon granules between two plates. Sound moves a diaphragm, which squeezes the granules and changes the electrical resistance, so the current through them varies with the sound. The packing pressure is critical: if too loose, sensitivity falls. The lifetime is short, because the granules settle and pack. It needs a battery, carbon black and a diaphragm."
  },
  {
   "id": "if_moving_coil_loudspeaker",
@@ -1890,7 +1890,7 @@
   "sch": 2,
   "art": 2,
   "conf": "C",
-  "note": "Paper cone is resonant; large speakers smooth response. Impedance 4-16 ohms."
+  "note": "A loudspeaker in which a coil of wire attached to a paper cone sits in a magnetic field; the signal current makes the coil move, pushing the cone and the air. The paper cone has resonances, which colour the sound, and large speakers smooth out the response. Its impedance (resistance to alternating current) is low, so the amplifier must match it. It needs an electromagnet and rag paper."
  },
  {
   "id": "if_magnetic_tape",
@@ -1925,7 +1925,7 @@
   "sch": 3,
   "art": 1,
   "conf": "C",
-  "note": "Steel wire or tape magnetised by recording head. Erasable and reusable. Linear response superior to disc."
+  "note": "Recording on steel wire or tape coated with magnetic powder: a recording head magnetises it in a pattern matching the sound, and a playback head reads that pattern back. It can be erased and reused, and the response is more even than a disc. It needs electromagnets, paper or plastic for the tape, and electrical amplification. It makes editing possible."
  },
  {
   "id": "if_recording_bias",
@@ -1953,7 +1953,7 @@
   "sch": 2,
   "art": 1,
   "conf": "C",
-  "note": "Without bias, distortion is severe. Bias frequency above 20 kHz. Bias level is critical."
+  "note": "A high-frequency signal added to the audio signal in tape recording so the tape is magnetised in a linear way. Without bias, distortion is severe. The bias frequency lies above the range of hearing, and the bias level is critical: too little gives distortion and too much loses high notes. It needs a magnetic tape recorder and an oscillator."
  },
  {
   "id": "if_disc_cutting_lathe",
@@ -1985,7 +1985,7 @@
   "sch": 2,
   "art": 2,
   "conf": "C",
-  "note": "Spiral feed pitch must be precise. Speed must be constant or pitch wavers. Stylus wear compensated."
+  "note": "A lathe for cutting the master disc. A cutting stylus driven by the recorded signal moves across a rotating disc and the spiral feed pitch must be precise. The speed must be constant or the pitch wavers, and wear on the stylus is compensated for. It needs electric power and a screw-cutting lathe with a lead screw. Flaws in the master are copied into every disc."
  },
  {
   "id": "if_electric_telegraph",
@@ -2047,7 +2047,7 @@
   "sch": 2,
   "art": 2,
   "conf": "C",
-  "note": "Morse code uses short and long pulses. Sounder design affects learning; American style fast and bright."
+  "note": "The sender's key closes the telegraph circuit in short and long pulses (dots and dashes) which spell letters in Morse code; the receiver's sounder is an electromagnet that clicks as the current is switched, and operators learn to read the clicks by ear. Sounder design affects how easily operators learn; an American style is fast and bright. It needs an electric telegraph, a battery and a trained operator."
  },
  {
   "id": "if_telegraph_relay",
@@ -2077,7 +2077,7 @@
   "sch": 2,
   "art": 1,
   "conf": "C",
-  "note": "Allows unlimited range. Weak local battery switches strong line battery. Contacts burn if dirty."
+  "note": "A switch worked by an electromagnet on a long telegraph line: the weak current arriving from the far end moves an armature which switches a local battery, regenerating a strong signal to send on. Chained relays allow unlimited range. It needs an electromagnet and battery. Contacts burn if they are dirty, so they must be kept clean and adjusted."
  },
  {
   "id": "if_submarine_cable_gutta_percha",
@@ -2143,7 +2143,7 @@
   "sch": 3,
   "art": 1,
   "conf": "C",
-  "note": "Extends range from 100 to 1000+ km. Submerged repeaters hard to maintain."
+  "note": "A device on a long cable that receives a weak signal and boosts it so it can carry on. It extends the range of a submarine cable from a short run to a much longer one. It needs a telegraph relay and a submarine cable insulated with gutta percha. Submerged repeaters are very hard to maintain, because a fault means raising the cable from the sea bed."
  },
  {
   "id": "if_telephone_transmitter",
@@ -2173,7 +2173,7 @@
   "sch": 2,
   "art": 1,
   "conf": "C",
-  "note": "Louder than mouth against mouthpiece but prone to feedback. Requires constant voltage supply."
+  "note": "The part of a telephone that turns the speaker's voice into an electrical signal: a carbon microphone placed close to the mouth. It is louder than a simple mouthpiece, but is prone to feedback with a loud receiver. It needs a constant voltage supply, as a carbon microphone only works with current flowing. It needs a carbon microphone as a base."
  },
  {
   "id": "if_telephone_receiver",
@@ -2203,7 +2203,7 @@
   "sch": 2,
   "art": 1,
   "conf": "C",
-  "note": "Fidelity poor; only 300-3400 Hz pass. Impedance must match handset. Diaphragm vibration violent but small amplitude."
+  "note": "The part of a telephone that turns the electrical signal back into sound: an electromagnet pulls a thin iron diaphragm in step with the current, making it vibrate and sound. The fidelity is poor; only a narrow band of speech frequencies pass. Its impedance must match the line and handset. The movement of the diaphragm is small. It needs an electromagnet and a thin iron plate."
  },
  {
   "id": "if_telephone_exchange",
@@ -2235,7 +2235,7 @@
   "sch": 3,
   "art": 2,
   "conf": "C",
-  "note": "Operator hears both parties; must avoid feedback. Capacity limited to available operators."
+  "note": "A switchboard where operators connect telephone lines so any subscriber can reach any other. Without one every pair of telephones would need its own wire. An operator listens to the caller, plugs a cord into the right socket and rings the other. The operator can hear both parties and must avoid feedback. Capacity is limited by the number of operators. It needs a telegraph relay and a telephone transmitter."
  },
  {
   "id": "if_strowger_exchange",
@@ -2334,7 +2334,7 @@
   "sch": 3,
   "art": 2,
   "conf": "C",
-  "note": "Spark gap must erode uniformly; motor-driven rotation prevents pitting. Emission is damped wave."
+  "note": "An early radio transmitter: an electric spark jumps a gap and sets a tuned circuit (a coil and capacitor) ringing, and the circuit radiates radio waves. The emission is a damped wave, dying away after each spark, which is spread over a wide band. The spark gap erodes, and a motor-driven rotating gap keeps the wear even and prevents pitting. It needs a tuned circuit, a high voltage supply and an antenna."
  },
  {
   "id": "if_coherer",
@@ -2398,7 +2398,7 @@
   "sch": 2,
   "art": 2,
   "conf": "C",
-  "note": "Cat's whisker point must be pressed precisely. Temperamental but much more reliable than coherer."
+  "note": "A detector that picks the audio signal out of radio waves using a crystal, such as galena (lead sulfide), touched by a fine wire called a cat's whisker. The contact point conducts better in one direction, so it rectifies (cuts off half the wave). The whisker must be pressed precisely. It is temperamental to adjust, but much more reliable than the coherer, an earlier detector."
  },
  {
   "id": "if_tuned_circuit",
@@ -2457,7 +2457,7 @@
   "sch": 3,
   "art": 2,
   "conf": "C",
-  "note": "CW is narrower bandwidth than spark. Regenerative circuits required. Frequency drift is problem."
+  "note": "A radio transmitter producing a steady, unbroken wave, not the bursts of a spark transmitter. A continuous wave takes a narrower band of frequencies, so more stations fit together. It needs regenerative circuits (which feed output back to sustain oscillation) and tubes. Frequency drift is a problem, since the frequency changes with temperature and tuning. It is the basis of voice broadcasting."
  },
  {
   "id": "if_triode_oscillator",
@@ -2631,7 +2631,7 @@
   "sch": 1,
   "art": 1,
   "conf": "C",
-  "note": "Radiation resistance low; matching essential. Overhead antenna key; ground connection less important."
+  "note": "A radio antenna made of two equal rods or wires in a line, fed in the middle. It radiates and receives at the frequency for which its length is about half a wavelength. Its radiation resistance is low, so matching to the transmitter is essential. A high overhead antenna matters most; the ground connection is less important. It needs a tuned circuit and wire. A wrong length reduces range sharply."
  },
  {
   "id": "if_radio_direction_finding",
@@ -2661,7 +2661,7 @@
   "sch": 3,
   "art": 2,
   "conf": "C",
-  "note": "Null sharper than maximum; bearing error a few degrees. Two RDFs triangulate position."
+  "note": "Finding the direction of a radio transmitter by turning a loop or directional aerial until the signal fades to a null. A null is sharper than a maximum, so it is the better indicator. The bearing error is a few degrees. Two direction finders at different places draw lines that cross at the transmitter, so a position is triangulated. It needs a superheterodyne receiver."
  },
  {
   "id": "if_radar",
@@ -2771,7 +2771,7 @@
   "sch": 4,
   "art": 3,
   "conf": "C",
-  "note": "Disc must rotate precisely; flicker is problem at low frame rates. Extremely dim picture."
+  "note": "Television that scans a picture with a spinning perforated disc (a Nipkow disc), which breaks the image into lines. A light sensor such as a selenium cell measures each point, and a matching disc at the receiver rebuilds the picture. The disc must rotate precisely in step, flicker is a problem at low frame rates, and the picture is extremely dim. It needs a camera obscura lens and a selenium photovoltaic cell."
  },
  {
   "id": "if_iconoscope",
@@ -2803,7 +2803,7 @@
   "sch": 4,
   "art": 2,
   "conf": "C",
-  "note": "Mosaic target must have fine structure. Capacitive coupling to each cell critical."
+  "note": "An electronic television camera tube: a lens focuses the scene on a mosaic of tiny light-sensitive cells in a vacuum tube, which store charge, and an electron beam scans them one by one. The mosaic must have a fine structure, and the capacitive coupling to each cell is critical. It needs a cathode ray tube and a camera lens. It replaced mechanical scanning because it has no moving parts and is much brighter."
  },
  {
   "id": "if_video_scanning_standard",
@@ -2831,7 +2831,7 @@
   "sch": 3,
   "art": 1,
   "conf": "C",
-  "note": "Frame rate matched to power line frequency. Sync timing allows receiver lock. Adoption slow."
+  "note": "An agreed set of rules for how a television picture is scanned: the number of lines, the frame rate and the synchronisation pulses that let the receiver lock on to the sender. The frame rate is matched to the power line frequency to avoid hum bars. It needs an iconoscope camera and a cathode ray tube. Adoption is slow, because every sender and every receiver must follow the same standard."
  },
  {
   "id": "if_facsimile_transmission",
@@ -2862,7 +2862,7 @@
   "sch": 3,
   "art": 2,
   "conf": "C",
-  "note": "Sender and receiver synchronisation must be perfect. Scanning speed trades resolution for time."
+  "note": "Sending a picture or document over a wire or by radio by scanning it line by line, converting the brightness to an electrical signal and rebuilding it at the receiver. The sender and receiver must be in perfect synchronisation. Scanning speed trades resolution for time: a fine picture takes longer. It needs a selenium photovoltaic cell and amplitude modulation. Out of step, the picture is sheared."
  },
  {
   "id": "if_punched_card",
@@ -2892,7 +2892,7 @@
   "sch": 2,
   "art": 1,
   "conf": "C",
-  "note": "Card format is 80 columns, 12 rows; de facto standard. Holes read by mechanical sensing."
+  "note": "A stiff card with holes punched in set positions to record data, read by mechanical sensing: pins or brushes pass through the holes. The format of 80 columns by 12 rows became a de facto standard. It needs rag paper (stout card stock) and tools to punch holes precisely. Information is stored as holes that machines can sort, count and compare. Damp cards swell and jam."
  },
  {
   "id": "if_jacquard_chain",
@@ -2921,7 +2921,7 @@
   "sch": 3,
   "art": 2,
   "conf": "C",
-  "note": "Card-driven loom reduces pattern complexity. Thousands of cards weave complex fabrics. Precursor to computing."
+  "note": "A chain of punched cards fed through a loom, with each card controlling which warp threads are lifted for one row of the pattern. It reduces the work of weaving complex patterns, and thousands of cards weave complicated fabrics such as brocade. It needs the punched card. It is a precursor of computing, because it is a stored programme controlling a machine."
  },
  {
   "id": "if_hollerith_tabulator",
@@ -2953,7 +2953,7 @@
   "sch": 3,
   "art": 2,
   "conf": "C",
-  "note": "Uses reading brushes that sense hole positions. Census processing time falls from years to weeks."
+  "note": "A machine that reads punched cards and counts the data on them: reading brushes or pins sense the hole positions, and each hole closes an electric circuit that advances a dial counter. Census processing time fell from years to weeks. It needs punched cards and a card sorter, with electric contacts made carefully. Dirty contacts cause miscounts."
  },
  {
   "id": "if_card_sorter",
@@ -2985,7 +2985,7 @@
   "sch": 2,
   "art": 1,
   "conf": "C",
-  "note": "Solenoid plunger must be fast and strong. Cards must not jam. Sorting seconds per card."
+  "note": "A machine that sorts punched cards into bins according to the holes in a chosen column. A reading device senses the hole and a solenoid (an electromagnet with a plunger) moves a gate that sends the card to the right bin. The plunger must be fast and strong, and cards must not jam. It sorts at a rate of cards per second. It needs punched cards and electromagnets."
  },
  {
   "id": "if_keypunch",
@@ -3017,7 +3017,7 @@
   "sch": 2,
   "art": 2,
   "conf": "C",
-  "note": "Card held precisely during punch. Operator verifies key before strike. Jams common."
+  "note": "A machine with a keyboard that punches holes in cards: the operator presses a key and a punch makes the matching holes in the card held under it. The card must be held precisely during the punch, and the operator verifies the key before the strike. Jams are common. It needs a typewriter and punched cards, and the work needs a trained operator."
  },
  {
   "id": "if_adding_machine",
@@ -3048,7 +3048,7 @@
   "sch": 1,
   "art": 2,
   "conf": "C",
-  "note": "Carry mechanism critical; each decade must propagate carry. Addition only, not multiplication."
+  "note": "A mechanical calculator for adding columns of numbers. Digit wheels, one for each decade, turn as keys are pressed, and the carry mechanism passes a carry from each wheel to the next. The carry is critical: each decade must propagate carry. It adds only, and does not multiply. It needs gears cut to fine tolerance and a crank and linkage for power."
  },
  {
   "id": "if_comptometer",
@@ -3117,7 +3117,7 @@
   "sch": 2,
   "art": 3,
   "conf": "C",
-  "note": "Mechanical register prevents underring. Solenoid locks drawer. Counter records every transaction."
+  "note": "A machine that records each sale as it is made: an adding mechanism totals the amounts, a bell rings, the drawer opens, and a counter records every transaction on a roll. A mechanical register prevents the clerk from under-ringing (not recording a sale and pocketing the money). A solenoid locks the drawer. It needs the adding machine and electromagnets. It was meant to stop theft by staff."
  },
  {
   "id": "if_slide_rule",
@@ -3184,7 +3184,7 @@
   "sch": 2,
   "art": 1,
   "conf": "C",
-  "note": "3 by 5 inch card is standard. Filing order discipline essential. Improvement over bound ledgers."
+  "note": "A filing system of standard-sized cards, each holding a single entry, kept in drawers in order. The cards can be added, removed and reordered at any time, which is an improvement over bound ledgers, in which a new entry cannot be inserted. The standard card size is three by five inches. Discipline in keeping the filing order is essential. It needs rag paper and cabinets made to tolerance."
  },
  {
   "id": "if_dewey_classification",
@@ -3213,6 +3213,6 @@
   "sch": 3,
   "art": 1,
   "conf": "C",
-  "note": "System is hierarchical; all zeros are philosophy. Allows insertion without renumbering."
+  "note": "A scheme for classifying library books by subject number, written as decimals. It is hierarchical: the main classes are divided into divisions, and then into sections, and each digit narrows the subject. It allows new books to be inserted without renumbering the others. It needs an index card and filing system. Its categories reflect the knowledge of its time, so new fields fit awkwardly."
  }
 ]

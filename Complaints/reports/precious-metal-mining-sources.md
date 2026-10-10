@@ -187,3 +187,7 @@ Present in `ancient.json`: `las_medulas_alluvial` (placer), `dacia_vein_gold` (v
 5. Lewis, P.R. and Jones, G.D.B. 1970, Roman Gold-Mining in North-West Spain, JRS 60, 169-185, for Las Medulas volume and recovery.
 6. Cauuet and Tamas on Rosia Montana for the Roman grade and stope labour.
 7. Anguilano et al. 2010, ArcheoSciences 34, 269-276, to verify the jarosite grade and lead flux.
+
+## Addendum (Complaints/349 resolution)
+
+Willies 1997 (Rio Tinto, read), Kakavoyannis 2001 (Laurion ore, read) and the Perseus text of Strabo 3.2.10 were opened for the resolution pass; their figures and where each entered the data are in `silver-grades-and-processing-research.md`, section 9.

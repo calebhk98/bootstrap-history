@@ -2,7 +2,7 @@
 
 import sim.engine.ui_port as ui_port
 import math, re
-from sim.engine.ui_port import closure
+from sim.engine.ui_port import closure, money_text, plain_number
 
 
 def _agent_end_reason(sim):
@@ -182,18 +182,18 @@ def _waiting_on(sim, nodes, node_id, progress, bill):
             return ("the pace it can absorb money: at most %s a year goes into "
                     "this (%s still owed, about %.0f more year%s at that rate). "
                     "Money in hand cannot buy it down faster"
-                    % ("{:,.0f}".format(per_year), "{:,.0f}".format(bill),
+                    % (money_text(per_year, sim, grouped=True), money_text(bill, sim, grouped=True),
                        math.ceil(bill / per_year),
                        "" if math.ceil(bill / per_year) == 1 else "s"))
         if sim.spending_power("buy") <= 0.5:
             return ("money: fully blocked until funding is available; %s is "
                     "still owed and you cannot raise any of the next %s "
                     "instalment now"
-                    % ("{:,.0f}".format(bill), "{:,.0f}".format(per_year)))
+                    % (money_text(bill, sim, grouped=True), money_text(per_year, sim, grouped=True)))
         return ("money: unfunded now; will fund opportunistically as revenue "
                 "arrives this year: %s still owed and the next instalment of "
                 "%s is more than you can raise at this moment"
-                % ("{:,.0f}".format(bill), "{:,.0f}".format(per_year)))
+                % (money_text(bill, sim, grouped=True), money_text(per_year, sim, grouped=True)))
     if progress["ph_left"] <= 0:
         years_left = max(1, math.ceil(node["yrs"] - progress.get("yrs", 0.0) - 1e-9))
         return ("the calendar: the work and the money are done, and the least "
@@ -218,11 +218,11 @@ def _waiting_on(sim, nodes, node_id, progress, bill):
         return ("your hours: priority #%d of %d active projects sharing "
                 "this year's %s directed hours; 'portfolio' shows what "
                 "each one is getting and why"
-                % (_rank, _count, "{:,.0f}".format(_total or 0.0)))
+                % (_rank, _count, plain_number(_total or 0.0)))
     free_hours = max(0.0, sim.labour.director_pool() - sim.labour.director_hours_committed())
     return ("your hours: %s of your own hours of work are still to do, and "
             "you have %s uncommitted this year"
-            % ("{:,.0f}".format(progress["ph_left"]), "{:,.0f}".format(free_hours)))
+            % (plain_number(progress["ph_left"]), plain_number(free_hours)))
 
 
 def _goal_progress_count(sim, nodes):

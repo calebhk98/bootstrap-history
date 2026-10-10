@@ -14,8 +14,18 @@ BUY_TARGETS = {
     "material": (("stock",), "buy material <name> <tonnes>"),
     "mine": (("mines",), "buy mine <material> <tonnes_per_year>"),
     "living_stock": (("livestock", "breeding_stock"), "buy living_stock <material> <units> [<partner>]"),
+    "smuggled_stock": (("smuggle", "steal"), "buy smuggled_stock <material> <units> [<partner>]"),
     "slaves": (("people",), "buy slaves <n>"),
     "manumit": (("manumission", "free"), "buy manumit <n>"),
+}
+
+# canonical target -> (dimension, the unit the engine takes its quantity in); the player may type another unit of the dimension
+TARGET_QUANTITY = {
+    "forest": ("area", "hectare"),
+    "nitre": ("area", "square_metre"),
+    "farm": ("area", "hectare"),
+    "material": ("mass", "tonne"),
+    "mine": ("mass", "tonne"),
 }
 
 _CANONICAL_BY_SPELLING = {

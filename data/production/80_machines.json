@@ -42,6 +42,26 @@
    "basis": "per one complete Newcomen-type atmospheric steam engine: cast/wrought iron cylinder and piston, timber beam, boiler, masonry engine house",
    "yield_basis": "BUILD BILL, split out of data/production/70_energy.json's mechanical_mj_heat_engine_atmospheric per Complaints/39 (that entry keeps the POWER and THERMAL-EFFICIENCY facts that belong to running one, not building one). Heavy ironwork for the cylinder, piston and fittings; substantial timber for the rocking beam; a masonry house for the boiler and beam - an engine that was large and crude for its power output, exactly the historical character of the type, which is why it is the FUEL figure on the energy entry, not this build bill, that dominates why this technique never competes with a water wheel.",
    "requires_node": "steam_atmospheric",
+   "capital": [
+    {
+     "good": "engine works: boring mill, foundry shed and erecting shop",
+     "build_materials": {
+      "stone_kg": 80000.0,
+      "timber_m3": 60.0,
+      "iron_bar_kg": 4000.0
+     },
+     "build_labour_hours": {
+      "mason": 800.0,
+      "carpenter": 600.0,
+      "smith": 600.0,
+      "millwright": 400.0
+     },
+     "service_life_years": 30,
+     "annual_output_at_basis": 5.0,
+     "capital_basis": "Newcomen engines were built in ironworks with a boring mill for the cylinder, a foundry and an erecting shed; a works of that kind completed a handful of engines in a year. Building and tool masses are order-of-magnitude figures.",
+     "conf": "D"
+    }
+   ],
    "operated_by": ["steam_atmospheric"],
    "conf": "C"
   },
@@ -64,6 +84,26 @@
    "basis": "per one complete compound (multi-expansion) reciprocating steam engine: higher-pressure boiler, two or more cylinders, condenser, structural ironwork",
    "yield_basis": "BUILD BILL, split out of data/production/70_energy.json's mechanical_mj_heat_engine_compound per Complaints/39 (that entry keeps the POWER and THERMAL-EFFICIENCY facts that belong to running one, not building one). Copper appears for boiler tubes and condenser fittings that a low-pressure atmospheric engine did not need; the machinist hours (rather than mostly smith hours, unlike heat_engine_atmospheric_unit) reflect the tighter tolerances real expansive working requires - a substantially larger and more capable machine than a Newcomen, sized to the tens-of-kilowatts output the energy entry's own POWER figure states.",
    "requires_node": "en_compound_engine",
+   "capital": [
+    {
+     "good": "engine works: machine shop with lathes, planers and erecting bay",
+     "build_materials": {
+      "stone_kg": 100000.0,
+      "timber_m3": 50.0,
+      "iron_bar_kg": 12000.0
+     },
+     "build_labour_hours": {
+      "mason": 900.0,
+      "carpenter": 500.0,
+      "machinist": 900.0,
+      "millwright": 400.0
+     },
+     "service_life_years": 30,
+     "annual_output_at_basis": 4.0,
+     "capital_basis": "A compound engine is built in a machine shop with large lathes and planers and a crane bay; a shop completes a few engines of this size a year. Masses are order-of-magnitude figures.",
+     "conf": "D"
+    }
+   ],
    "operated_by": ["en_compound_engine"],
    "conf": "C"
   },
@@ -86,6 +126,26 @@
    "basis": "per one complete modern high-pressure reheat steam turbine set: boiler, turbine, condenser, generator foundation, structural steel",
    "yield_basis": "BUILD BILL, split out of data/production/70_energy.json's mechanical_mj_heat_engine_modern_steam per Complaints/39 (that entry keeps the POWER and THERMAL-EFFICIENCY facts that belong to running one, not building one). The much higher iron and copper figures than either other heat engine here reflect a turbine casing, condenser and generator that a reciprocating engine's build bill does not need, for a megawatt-class continuous machine (the energy entry's own POWER figure).",
    "requires_node": "en_steam_turbine_reaction",
+   "capital": [
+    {
+     "good": "turbine works: heavy machine shop, balancing pit and test bay",
+     "build_materials": {
+      "stone_kg": 300000.0,
+      "timber_m3": 80.0,
+      "iron_bar_kg": 40000.0
+     },
+     "build_labour_hours": {
+      "mason": 2500.0,
+      "carpenter": 800.0,
+      "machinist": 6000.0,
+      "millwright": 1000.0
+     },
+     "service_life_years": 30,
+     "annual_output_at_basis": 3.0,
+     "capital_basis": "A high-pressure turbine set needs a heavy machine shop with large lathes, a balancing pit and a test bay; such a works completes a few sets a year. Masses are order-of-magnitude figures.",
+     "conf": "D"
+    }
+   ],
    "operated_by": ["en_steam_turbine_reaction"],
    "conf": "C"
   },
@@ -106,6 +166,26 @@
    "basis": "per one complete dynamo (DC generator): laminated iron core and frame, copper armature and field windings, commutator, bearings",
    "yield_basis": "BUILD BILL, split out of data/production/70_energy.json's electrical_mj_dynamo per Complaints/39 (that entry keeps the CONVERSION-EFFICIENCY and sizing-to-a-typical-water-wheel facts that belong to running one, not building one). A dynamo of this class is a modest machine relative to the heat-engine entries above - an iron frame and core, copper windings, a commutator and bearings - not a structure, which is why its build bill is far smaller than any of the three heat engines'.",
    "requires_node": "dynamo",
+   "capital": [
+    {
+     "good": "electrical machine shop: winding room, lathes and test bench",
+     "build_materials": {
+      "stone_kg": 20000.0,
+      "timber_m3": 20.0,
+      "iron_bar_kg": 3000.0
+     },
+     "build_labour_hours": {
+      "mason": 300.0,
+      "carpenter": 200.0,
+      "machinist": 400.0,
+      "electrician": 300.0
+     },
+     "service_life_years": 25,
+     "annual_output_at_basis": 100.0,
+     "capital_basis": "Early dynamo makers worked in a machine shop with a winding room and a test bench; a small works completed on the order of a hundred machines a year. Masses are order-of-magnitude figures.",
+     "conf": "D"
+    }
+   ],
    "operated_by": ["dynamo"],
    "conf": "C"
   },
@@ -126,6 +206,26 @@
    "basis": "per one complete electric motor: laminated iron core and frame, copper armature and field windings, bearings - the same machine as dynamo_unit above, run in reverse",
    "yield_basis": "BUILD BILL, split out of data/production/70_energy.json's mechanical_mj_motor per Complaints/39 (that entry keeps the CONVERSION-EFFICIENCY facts that belong to running one, not building one). A DC motor and a DC dynamo are, to a first approximation, the same physical machine run with the current flowing the other way - a real engineering fact, not a modelling convenience - so this entry's build bill mirrors dynamo_unit's own, slightly lighter since a motor sized to deliver the same shaft power a dynamo there consumed needs a little less copper and iron.",
    "requires_node": "tl_motor_dc",
+   "capital": [
+    {
+     "good": "electrical machine shop: winding room, lathes and test bench",
+     "build_materials": {
+      "stone_kg": 8000.0,
+      "timber_m3": 8.0,
+      "iron_bar_kg": 1200.0
+     },
+     "build_labour_hours": {
+      "mason": 120.0,
+      "carpenter": 80.0,
+      "machinist": 160.0,
+      "electrician": 120.0
+     },
+     "service_life_years": 25,
+     "annual_output_at_basis": 60.0,
+     "capital_basis": "A motor is the dynamo's inverse and is built in the same kind of shop; being smaller, a small works finishes a hundred and fifty or so in a year. Masses are order-of-magnitude figures. The plant is taken at the size the node's own crew can run at the entry's labour hours, a smaller plant of the same kind, so the figures are scaled down from the full-size works.",
+     "conf": "D"
+    }
+   ],
    "operated_by": ["tl_motor_dc"],
    "conf": "C"
   },
@@ -146,6 +246,25 @@
    },
    "unit_dimension": "area",
    "requires_node": "silicon_path",
+   "capital": [
+    {
+     "good": "module line: wafer saws, diffusion furnaces and laminator",
+     "build_materials": {
+      "iron_bar_kg": 4600.0,
+      "stone_kg": 46000.0,
+      "copper_kg": 345.0
+     },
+     "build_labour_hours": {
+      "machinist": 4600.0,
+      "electrician": 2300.0,
+      "mason": 920.0
+     },
+     "service_life_years": 12,
+     "annual_output_at_basis": 15000.0,
+     "capital_basis": "A module line of about ten megawatts a year, at the order of a hundred and fifty watts per square metre, turns out some sixty-six thousand square metres a year. Equipment and building masses are reasoned order-of-magnitude figures. The plant is taken at the size the node's own crew can run at the entry's labour hours, a smaller plant of the same kind, so the figures are scaled down from the full-size works.",
+     "conf": "D"
+    }
+   ],
    "operated_by": ["silicon_path"],
    "basis": "per one square metre of installed photovoltaic module (crystalline-silicon solar panel): tempered-glass cover, aluminium frame, copper wiring and junction box, and the silicon photovoltaic cells themselves",
    "yield_basis": "BUILD BILL, split out of data/production/70_energy.json's electrical_mj_photovoltaic per Complaints/39 (that entry keeps the POWER and SERVICE-LIFE facts that belong to running one square metre, not building it). Glass cover, aluminium frame and copper wiring/junction box are real, modest per-square-metre quantities for a module of this class; the silicon figure (0.5 kg/m2) is a wafer-mass allowance including sawing losses, priced through the silicon_kg entry in 20_nonferrous.json. THE HONEST CAVEAT, carried over unchanged: silicon_kg's own yield_basis is explicit that it omits crystal growth, wafer sawing, cell doping/metallisation and module lamination - real, individually energy-intensive steps in making an actual photovoltaic cell - so this entry's resulting price is a LOWER BOUND by a margin this file cannot yet quantify, not a claim that a panel is already this cheap to build in full. Tag: GAP, not a heuristic, per CLAUDE.md 3.4. requires_node is the node that makes the solar-grade silicon the module is built from (silicon_kg carries the same gate): the tree has no node for the cell itself (nothing marks the step from understanding the photovoltaic effect to manufacturing a cell), and no one can build a module without that silicon, so the silicon's gate is the earliest a module can exist. data/production/70_energy.json's electrical_mj_photovoltaic carries the same gate. The module draws aluminium, which is smelted with electricity, so the cheaper electricity gets the cheaper its own source gets; the solver prices that loop to a fixed point (sim/tests/test_no_seller_no_price.py).",
@@ -168,6 +287,24 @@
   "basis": "per one two-wire low-voltage DC main of 800 m route, rated 100 kW at the lamp: copper conductors and the labour that sets its poles",
   "yield_basis": "BUILD BILL of the line plant in electrical_mj_main_two_wire. Current at the lamp is 100 kW over 110 V; the conductor section is that current over the design current density (1500 circular mils per ampere, 1.3157 A per mm2); copper mass is 2 conductors times section times 800 m times 8960 kg/m3. Two conductors, each of the full section. Pole setting: 20 poles (25 per km at a 130 ft span, Still, Overhead Electric Power Transmission, 1913, pp. 40-41) at 45 a day (40 to 50 a day by two linemen and a teamster, Standard Handbook Sec. 11 par. 167) is 0.444 crew-days of two linemen (electrician) and one teamster (labourer) at 8 hours a day (the day length is an assumption). LOWER BOUND ON THE PLANT: the conductor copper and the pole-setting labour are counted; the pole timber, crossarms, insulators and stringing labour are not, because no mass or hours table for them was read (the electricity market design report marks them needed). Meter, meter reading and station attendant hours are likewise not counted. ",
   "requires_node": "dynamo",
+  "capital": [
+   {
+    "good": "installer's wagon, cable drum gear and tools",
+    "build_materials": {
+     "timber_m3": 3.0,
+     "iron_bar_kg": 200.0,
+     "draught_animal_kg": 1000.0
+    },
+    "build_labour_hours": {
+     "carpenter": 80.0,
+     "smith": 60.0
+    },
+    "service_life_years": 10,
+    "annual_output_at_basis": 140.0,
+    "capital_basis": "A cable crew lays a main with a horse wagon, drum gear and hand tools; the entry states eleven hours of crew time a main and a crew works about fifteen hundred hours a year, so about a hundred and forty mains. Masses are reasoned estimates.",
+    "conf": "D"
+   }
+  ],
   "operated_by": ["dynamo"],
   "conf": "C"
  },
@@ -187,6 +324,24 @@
   "basis": "per one three-wire low-voltage DC main of 800 m route, rated 100 kW at the lamp: copper conductors and the labour that sets its poles",
   "yield_basis": "BUILD BILL of the line plant in electrical_mj_main_three_wire. Current at the lamp is 100 kW over 220 V; the conductor section is that current over the design current density (1500 circular mils per ampere, 1.3157 A per mm2); copper mass is 3 conductors times section times 800 m times 8960 kg/m3. Three conductors (two outers and a neutral of the outer section), each carrying half the current at twice the voltage, so each is half the two-wire section. Pole setting: 20 poles (25 per km at a 130 ft span, Still, Overhead Electric Power Transmission, 1913, pp. 40-41) at 45 a day (40 to 50 a day by two linemen and a teamster, Standard Handbook Sec. 11 par. 167) is 0.444 crew-days of two linemen (electrician) and one teamster (labourer) at 8 hours a day (the day length is an assumption). LOWER BOUND ON THE PLANT: the conductor copper and the pole-setting labour are counted; the pole timber, crossarms, insulators and stringing labour are not, because no mass or hours table for them was read (the electricity market design report marks them needed). Meter, meter reading and station attendant hours are likewise not counted. ",
   "requires_node": "el2_three_wire_distribution_system",
+  "capital": [
+   {
+    "good": "installer's wagon, cable drum gear and tools",
+    "build_materials": {
+     "timber_m3": 3.0,
+     "iron_bar_kg": 200.0,
+     "draught_animal_kg": 1000.0
+    },
+    "build_labour_hours": {
+     "carpenter": 80.0,
+     "smith": 60.0
+    },
+    "service_life_years": 10,
+    "annual_output_at_basis": 140.0,
+    "capital_basis": "The three-wire main is laid by the same crew and gear as the two-wire main, at the same crew time per main.",
+    "conf": "D"
+   }
+  ],
   "operated_by": ["el2_three_wire_distribution_system"],
   "conf": "C"
  }

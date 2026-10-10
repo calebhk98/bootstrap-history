@@ -21,6 +21,7 @@ from .living_stock import check_unheld_stock
 from .projects_running_gates import check_running_gates
 from .material_availability import check_materials_have_a_seller
 from .data import win_condition_describe
+from .units_prose import money_text
 from sim.constants import declare
 from .projects_precaution import (spec as precaution_spec, extra_cost as precaution_extra_cost,
                                   extra_hours as precaution_extra_hours)
@@ -102,7 +103,7 @@ class StartingMixin:
         if amount <= 0:
             return False, "amount must be greater than zero. Nothing was changed."
         if amount > household.capital:
-            return False, "you have %.0f denarii" % household.capital
+            return False, "you have %s" % money_text(household.capital, self)
         before = household.scandal
         prot_before = household.protection
         # DO NOT CHARGE FOR NOTHING: taking the money and then saying, in
@@ -130,11 +131,11 @@ class StartingMixin:
                     1e-9, self.value_weights["bribability"])
                 if already < 0.29:
                     return False, ("you have no scandal to answer, and %s "
-                                   "denarii is too little to buy any advocacy "
+                                   "is too little to buy any advocacy "
                                    "worth having. About %s would begin to move "
                                    "your protection. Nothing was changed."
-                                   % ("{:,.0f}".format(amount),
-                                      "{:,.0f}".format(max(1.0, _floor))))
+                                   % (money_text(amount, self, grouped=True),
+                                      money_text(max(1.0, _floor), self, grouped=True)))
                 return False, ("you have no scandal to answer and you are already "
                                "as protected as money can make you here, so this "
                                "would buy nothing. Nothing was changed.")
@@ -162,11 +163,11 @@ class StartingMixin:
         # bribes_ytd into protection, which keeps an accusation from being
         # made in the first place. Reporting only the half that did not
         # move would make a real effect look like money silently burned.
-        msg = "scandal %.2f -> %.2f for %.0f denarii" % (before, household.scandal, amount)
+        msg = "scandal %.2f -> %.2f for %s" % (before, household.scandal, money_text(amount, self))
         if refused > 0.5:
-            msg += ("; %s denarii of what you offered was not taken, because "
+            msg += ("; %s of what you offered was not taken, because "
                     "this is as far as money goes here - you kept it"
-                    % "{:,.0f}".format(refused))
+                    % money_text(refused, self, grouped=True))
         if household.protection > prot_before + 0.0005:
             msg += ("; advocacy and piety bought as well: protection %.2f -> %.2f"
                     % (prot_before, household.protection))
@@ -241,8 +242,8 @@ class StartingMixin:
         projects.bountied.add(node_id)
         # A public prize makes you conspicuous - and that is what `scandal`
         # and `eminence` measure; see core.py's note on scandal.
-        household.log.append((self.state.scenario.year, "posted a public bounty for %s (%s den)"
-                         % (node["name"], f"{price:,.0f}")))
+        household.log.append((self.state.scenario.year, "posted a public bounty for %s (%s)"
+                         % (node["name"], money_text(price, self, grouped=True, short=True))))
         return True
 
     PURCHASABLE_SUBSTITUTE_QUALITY_DISCOUNT = declare(
@@ -476,8 +477,8 @@ class StartingMixin:
                 return False, (("you built this once and let it go; you already "
                                'know how, so restoring it is cheaper than '
                                'starting over: {"cmd":"restore","id":"%s"} for '
-                               "about %.0f denarii"
-                               % (node_id, self.reopen_fee(node_id, self.reopen_units(node_id)))) if _why else None)
+                               "about %s"
+                               % (node_id, money_text(self.reopen_fee(node_id, self.reopen_units(node_id)), self))) if _why else None)
             return False, ("already done" if _why else None)
         return None
 
@@ -658,11 +659,11 @@ class StartingMixin:
                 and not cheap_enough
                 and household.capital < -max(self.ARREARS_HARD_STOP_FLOOR,
                                                    self.revenue() * self.ARREARS_HARD_STOP_REVENUE_MULTIPLE)):
-            return False, (("you have been in arrears %d years and are %.0f denarii down; "
+            return False, (("you have been in arrears %d years and are %s down; "
                            "nobody will fund a new undertaking of this size. Something "
                            "you can pay for out of this year's income is still allowed, "
                            "so is finishing or stopping what is running."
-                           % (insolvent_years, -household.capital))
+                           % (insolvent_years, money_text(-household.capital, self)))
                            if _why else None)
         return None
 
@@ -932,13 +933,13 @@ class StartingMixin:
         ceiling = max(0.0, self.state.household.capital) + self.credit_limit()
         # applies to the first project too
         if owed + price > ceiling:
-            return ("you already owe %s denarii on work in hand; this "
+            return ("you already owe %s on work in hand; this "
                     "would take it to %s, and between cash and your credit line "
                     "you can raise %s, so you are %s short. Finish or stop "
                     "something first, or earn or pay down that amount.%s"
-                    % ("{:,.0f}".format(owed), "{:,.0f}".format(owed + price),
-                       "{:,.0f}".format(ceiling),
-                       "{:,.0f}".format(owed + price - ceiling),
+                    % (money_text(owed, self, grouped=True), money_text(owed + price, self, grouped=True),
+                       money_text(ceiling, self, grouped=True),
+                       money_text(owed + price - ceiling, self, grouped=True),
                        purchase_rule.remedies_text(self)))
         return None
 
@@ -1006,9 +1007,9 @@ class StartingMixin:
             self._complete(node_id)
             return True, None
         if _already > 0.5:
-            household.log.append((scenario_year, "%s begun again; the %s denarii already "
+            household.log.append((scenario_year, "%s begun again; the %s already "
                                         "paid on it before comes off the bill"
-                             % (node_id, "{:,.0f}".format(_already))))
+                             % (node_id, money_text(_already, self, grouped=True))))
         # Director hours in step() 5 are handed out by priority in `order`.
         # A thing you just chose to work on should get first call on your own
         # hours, exactly as the old (cosmetic) reprioritisation implied it did.
@@ -1039,7 +1040,7 @@ class StartingMixin:
         kept = max(0.0, project_state.get("spent", 0.0))
         if kept > 0.5:
             _paid[node_id] = _paid.get(node_id, 0.0) + kept
-        return True, ("stopped. The %s denarii already paid stands to your "
+        return True, ("stopped. The %s already paid stands to your "
                       "credit and comes off the bill if you begin again; the "
-                      "hours are gone" % "{:,.0f}".format(kept)
+                      "hours are gone" % money_text(kept, self, grouped=True)
                       if kept > 0.5 else "stopped; nothing had been paid yet")

@@ -162,8 +162,8 @@ class SettlementMixin:
         if money > household.capital:
             return False, ("moving to %s takes about %d days and would cost %s in "
                            "wages while your household travels; you have %s."
-                           % (tile, math.ceil(days), "{:,.0f}".format(money),
-                              "{:,.0f}".format(household.capital)))
+                           % (tile, math.ceil(days), self._world.money_text(money, grouped=True),
+                              self._world.money_text(household.capital, grouped=True)))
         self._world.pay_edge(self._world.EDGE_WORKERS, money, "relocation")
         household.total_spend += money
         household.relocation_hours_this_year = (
@@ -180,5 +180,5 @@ class SettlementMixin:
                       "paid, %d hours of your year gone, local contracts "
                       "dropped and local standing mostly left behind. The town "
                       "there holds about %s people."
-                      % (tile, math.ceil(days), "{:,.0f}".format(money), round(hours),
-                         "{:,.0f}".format(self.home_town_population_estimate())))
+                      % (tile, math.ceil(days), self._world.money_text(money, grouped=True), round(hours),
+                         self._world.plain_number(self.home_town_population_estimate())))

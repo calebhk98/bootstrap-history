@@ -25,22 +25,36 @@ REACH = {"gated": 1, "solved": 2}
 
 class IncumbentPricesMixin:
 
+    def _banded_market_rate(self):
+        """The live market rate, banded: the rate the solver charges plants and stock. Asking the market for its
+        rate may itself need these prices, in which case the starting rate answers."""
+        starting = float(self.civ["starting_interest_rate"])
+        if getattr(self, "_reading_market_rate", False):
+            return starting
+        self._reading_market_rate = True
+        try:
+            return price_solver.band_interest_rate(self.market_rate(), starting)
+        finally:
+            self._reading_market_rate = False
+
     def _price_tables(self):
         """(labour-hour price of each good, provenance of each), for the incumbents' techniques plus the
         baseline for goods only a producer's own technique reaches."""
         projects = self.state.projects
         in_use = self.techniques_in_use()
         farmed = price_solver.band_farmed_hectares(self.farm_land.hectares)
+        rate = self._banded_market_rate()
         cached = getattr(self, "_price_tables_cache", None)
         if (cached is not None and cached[0] is projects.granted and cached[1] is in_use
-                and cached[3] == len(projects.granted) and cached[4] == farmed):
+                and cached[3] == len(projects.granted) and cached[4] == (farmed, rate)):
             return cached[2]
         granted = frozenset(projects.granted)
         from .data import calculated_goods_table
-        civ = dict(civilization_id=self.civ.get("id"), civilization=self.civ, farmed_hectares=farmed)
+        civ = dict(civilization_id=self.civ.get("id"), civilization=self.civ, farmed_hectares=farmed,
+                   interest_rate=rate)
         incumbent = getattr(self, "_incumbent_table_cache", None)
-        if incumbent is None or incumbent[0] != (granted, farmed):
-            incumbent = self._incumbent_table_cache = ((granted, farmed), *calculated_goods_table(granted, **civ))
+        if incumbent is None or incumbent[0] != (granted, farmed, rate):
+            incumbent = self._incumbent_table_cache = ((granted, farmed, rate), *calculated_goods_table(granted, **civ))
         hours, basis = dict(incumbent[1]), dict(incumbent[2])
         if in_use != granted:
             run_hours, run_basis = calculated_goods_table(in_use, **civ)
@@ -48,7 +62,7 @@ class IncumbentPricesMixin:
                 if REACH.get(source, -1) > REACH.get(basis.get(material), -1):
                     hours[material], basis[material] = run_hours[material], source
         tables = (hours, basis)
-        self._price_tables_cache = (projects.granted, in_use, tables, len(projects.granted), farmed)
+        self._price_tables_cache = (projects.granted, in_use, tables, len(projects.granted), (farmed, rate))
         return tables
 
     def _material_prices(self):

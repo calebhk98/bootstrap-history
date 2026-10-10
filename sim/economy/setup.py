@@ -38,7 +38,7 @@ class EconomySetup:
     currency: CurrencySpec
     state_agent: AgentId
     tiles: Dict[TileId, TileSpec]
-    carriage_rates: Dict[str, float]               # money per tonne-km by geography mode id, at the opening
+    carriage_rates: Dict[str, float]               # money per tonne-km by geography mode id, at the opening, carriers returning empty
     handling_rates: Dict[str, float]               # money per tonne per leg by mode, at the opening
     specs: Dict[GoodId, GoodSpec]
     recipes: Dict[str, Recipe]
@@ -56,6 +56,7 @@ class EconomySetup:
     capital_tile: TileId
     port_tile: TileId
     unskilled_trade: TradeId = "labourer"
+    carriage_rates_balanced: Dict[str, float] = field(default_factory=dict)   # likewise with the opposite flow filling every return; none: same
     hunger_need: str = "food"           # the basket need whose unmet floor counts as hunger
     yield_factor_by_recipe_tile: Dict[str, float] = field(default_factory=dict)
     land_per_run: Dict[str, float] = field(default_factory=dict)      # hectare-years of land a run takes
@@ -73,11 +74,23 @@ class EconomySetup:
     # country -> the recipes its producers can run (what its society's techniques allow); empty: every recipe anywhere
     recipes_by_country: Dict[str, Tuple[str, ...]] = field(default_factory=dict)
 
-    def carriage_table(self, improvements=None) -> CarriageTable:
+    def carriage_rates_at(self, imbalance: float = 1.0) -> Dict[str, float]:
+        """Money per tonne-km by mode when `imbalance` of the carriers' return trips find no opposite flow
+        (1: all return empty, the opening rates; 0: all return full). A carrier's cost is linear in the
+        empty share of its return, so the rate lies on the line between the two."""
+        if not self.carriage_rates_balanced:
+            return dict(self.carriage_rates)
+        share = max(0.0, min(1.0, imbalance))
+        return {mode: self.carriage_rates_balanced.get(mode, rate)
+                + share * (rate - self.carriage_rates_balanced.get(mode, rate))
+                for mode, rate in self.carriage_rates.items()}
+
+    def carriage_table(self, improvements=None, imbalance: float = 1.0) -> CarriageTable:
         """What it costs to move a tonne between this setup's tiles, over geography's route graph, with the
-        built ways (this setup's own when none are given)."""
+        built ways (this setup's own when none are given) and the return trips `imbalance` leaves empty."""
         ways = self.improvements if improvements is None else improvements
-        return carriage_table(self.tiles, self.carriage_rates, self.handling_rates, self.held_nodes, self.world_map, ways)
+        return carriage_table(self.tiles, self.carriage_rates_at(imbalance), self.handling_rates, self.held_nodes,
+                              self.world_map, ways)
 
     def area_map(self, carriage: Optional[CarriageTable] = None) -> AreaMap:
         """Market areas over this setup's tiles at its opening prices and people, partitioned by `carriage`

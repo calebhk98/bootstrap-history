@@ -7,7 +7,7 @@ second scenario may supply another. Nothing here is imported at run time; it nam
 actors call, so a change to what an actor asks shows up as a change to this file.
 """
 import random
-from typing import Any, Dict, List, Optional, Protocol, Set, Tuple
+from typing import Any, Dict, FrozenSet, List, Optional, Protocol, Set, Tuple
 
 from .revenue import Assessment
 from .sector import Sector
@@ -113,8 +113,17 @@ class World(Protocol):
 		"""Rent producers paid last year on each tile where land was let, in coin; empty without an agent economy."""
 		...
 
-	def land_rent_owners(self) -> List[Tuple[Any, float]]:
-		"""(actor, rent received) where the world can say which actors the rent went to; empty where it cannot."""
+	def land_rent_owners(self, tiles: Optional[FrozenSet[str]] = None) -> List[Tuple[Any, float]]:
+		"""(actor, rent received) of the rent paid on `tiles` (all when none), where the world can say which actors
+		the rent went to; empty where it cannot."""
+		...
+
+	def held_tiles(self) -> List[str]:
+		"""The tiles the state holds."""
+		...
+
+	def arable_share(self, tiles: FrozenSet[str]) -> float:
+		"""The share of the arable land the state holds that lies on `tiles`."""
 		...
 
 	# ---- Who is hurt, and what an interest group can see
@@ -123,6 +132,26 @@ class World(Protocol):
 		...
 
 	def squeezed_employers(self) -> List[Sector]:
+		...
+
+	def idle_hours_by_trade(self) -> Dict[str, Tuple[float, float]]:
+		"""(hours offered and not hired, hours offered) of each trade in the labour core's last clearing; empty without an agent economy."""
+		...
+
+	def displacing_technique(self, trade: str) -> Optional[str]:
+		"""The running technique that most recently began doing its category's work with fewer hands of `trade`, or None."""
+		...
+
+	def technique_name(self, node_id: str) -> str:
+		"""A technique as the player reads it."""
+		...
+
+	def land_rent_per_hectare(self) -> float:
+		"""Mean rent per hectare-year the land market let land at last year, in coin; zero without an agent economy."""
+		...
+
+	def tithable_sales_value(self, need_id: str) -> float:
+		"""Money's worth of what the society's producers sold this year of the goods that serve one need."""
 		...
 
 	def sectors(self) -> Dict[str, Sector]:
@@ -142,6 +171,14 @@ class World(Protocol):
 
 	def lodge_blame(self, amount: float, text: str, year_gap: int, group_record: Any) -> None:
 		"""A group's petition puts blame on the founder; the log says who and why, once in a while."""
+		...
+
+	def money_text(self, amount: float, grouped: bool = False, short: bool = False) -> str:
+		"""A sum of money as the player's chosen unit writes it, for a line the founder reads."""
+		...
+
+	def plain_number(self, value: float) -> str:
+		"""A count or number of people for a line the founder reads."""
 		...
 
 	def say(self, text: str) -> None:
@@ -415,7 +452,7 @@ class World(Protocol):
 
 	def country_economy(self, country: str) -> Any:
 		"""The economy's own answers for a country that is part of it (pay_per_person_year, society_output,
-		need_floor_costs_per_person_year), or None when the country is not, so the caller keeps its estimate."""
+		need_floor_costs_per_person_year), or None when the country is not (a country view then raises NoCountryEconomy)."""
 		...
 
 	def need_floor_costs_per_person_year(self) -> Dict[str, float]:

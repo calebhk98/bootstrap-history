@@ -2,6 +2,7 @@
 from sim.agents.api import CommandRejected, exchange_sale
 
 from .agents_port import SimWorld
+from .units_prose import area_text
 from sim.agents.api import edges
 
 
@@ -38,7 +39,8 @@ class FounderSalesMixin:
         if hectares <= 0.0:
             return {"ok": False, "error": "hectares must be greater than zero"}
         if hectares > owned + 1e-9:
-            return {"ok": False, "error": "you own %.1f hectares of farmland, not %.1f" % (owned, hectares)}
+            return {"ok": False, "error": "you own %s of farmland, not %s" % (area_text(owned, self, digits=1),
+                                                                       area_text(hectares, self, digits=1))}
         price = hectares * self.farm_price_per_hectare()
         holdings.farm_hectares = owned - hectares
         self.receive_from_edge(edges.EDGE_LANDOWNERS, price, "farmland sold")

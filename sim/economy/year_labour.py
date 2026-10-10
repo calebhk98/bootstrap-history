@@ -117,10 +117,12 @@ def clear_labour(setup, record, bids: Sequence[LabourBid], offers: Sequence[Labo
     for offer in offers:
         by_market.setdefault((offer.trade, offer.area), []).append(offer)
     record.hours_hired = {}
+    record.hours_idle = {}
     for clearing in sorted(report.clearings, key=lambda each: (each.trade, each.area)):
         result = _result(clearing, setup.currency_id, by_market.get((clearing.trade, clearing.area), ()))
         done = settlement.settle_labour(record.book, result)
         ledger.note_postings(done.postings, "wages")
         ledger.note_labour(result, done.postings)
         record.hours_hired[market_key(clearing.trade, clearing.area)] = clearing.hours_hired
+        record.hours_idle[market_key(clearing.trade, clearing.area)] = clearing.idle_hours
     mirror_wages(record.memory.wages, record.workforce)

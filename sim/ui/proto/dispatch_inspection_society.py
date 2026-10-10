@@ -34,22 +34,26 @@ def _cmd_groups(sim, nodes, cmd, ended):
 
 
 @command("answer", shape="word", group="society", aliases=("answer_demand", "stance"),
-         summary="comply with or refuse the state's requisitions",
-         usage=["answer", "answer comply", "answer refuse", '{"cmd":"answer","what":"refuse"}'],
-         options={"comply": "meet every requisition and supply levy (the default)",
-                  "refuse": "withhold them; the state takes the demand and a penalty if it can enforce, else nothing"},
-         description="How you answer what the state demands of you (the requisition and the supply levy; "
-                     "the office it presses on you is not a demand you can decline cheaply). A refusal "
-                     "is a gamble the state's capacity and your standing decide, and the reply gives the "
-                     "odds. Negotiating (standing already bargains the rate down) and concealing "
-                     "are not built yet. Bare 'answer' shows your current stance.")
+         summary="comply, refuse, negotiate or conceal when the state demands",
+         usage=["answer", "answer comply", "answer refuse", "answer negotiate", "answer conceal",
+                '{"cmd":"answer","what":"negotiate","service":50000}'],
+         options={"comply": "meet every requisition, supply levy and confiscation in full (the default)",
+                  "refuse": "withhold them; the state takes the demand and a penalty if it can enforce, else nothing, and marks you defiant",
+                  "negotiate": "offer a smaller sum (and, with 'service', work to make up part); the state takes it or insists on the whole",
+                  "conceal": "hold part of your wealth where the state cannot count it, so it assesses you as smaller; costs a share a year and is seized if found"},
+         description="How you answer what the state demands of you (the requisition, the supply levy and a "
+                     "confiscation; the office it presses on you is not a demand you can decline cheaply). A refusal "
+                     "is a gamble the state's capacity and your standing decide, raises the state's notice of you "
+                     "and puts blame on you; the reply gives the odds. Negotiating offers a smaller sum, with "
+                     "'service' (money's worth of work) to improve the odds. Concealing lowers the wealth the state "
+                     "can see. Bare 'answer' shows your current stance.")
 def _cmd_answer(sim, nodes, cmd, ended):
     what = cmd.get("what") or cmd.get("id")
     if what is None:
         return {"ok": True, "stance": sim.state.household.demand_stance}
     try:
-        note = set_household_stance(sim, str(what).strip().lower())
-    except ValueError as reason:
+        note = set_household_stance(sim, str(what).strip().lower(), float(cmd.get("service") or 0.0))
+    except (TypeError, ValueError) as reason:
         return {"ok": False, "error": str(reason)}
     return {"ok": True, "stance": sim.state.household.demand_stance, "note": note}
 

@@ -8,11 +8,24 @@ from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, RecordedActo
 from sim.agents import registry as registry_module
 from sim.agents import country_view, government_foreign  # noqa: F401  (they register themselves)
 from sim.agents.cast import cast_from_civilisations, profile_from_civilisation, seed_cast
-from sim.agents.country_view import CountryWorld
+from sim.agents.country_view import CountryWorld, NoCountryEconomy
 from sim.agents.protocols import World
 from sim.engine.state import deserialize_state, serialize_state
 
 from .agents_fake_world import FakeWorld, make_node, total_money
+
+
+class CountryAnswers:
+	"""What the economy answers for a foreign country: its own pay, output and need floors."""
+
+	def pay_per_person_year(self, trade):
+		return {"labourer": 50.0, "soldier": 60.0, "scribe": 75.0}[trade]
+
+	def society_output(self):
+		return 1.0e6
+
+	def need_floor_costs_per_person_year(self):
+		return {"food": 20.0}
 
 
 class ScenarioWorld(FakeWorld):
@@ -26,6 +39,9 @@ class ScenarioWorld(FakeWorld):
 
 	def pay_per_person_year(self, trade):
 		return self.pay[trade]
+
+	def country_economy(self, country):
+		return CountryAnswers() if country in ("beta", "gamma") else None
 
 	def state_weights(self):
 		return dict(self.weights)
@@ -132,9 +148,14 @@ check("a home actor's baseline tree is the shared world's", home_actor.knows("sh
 check("a country answers for its own people and state",
 	  beta_world.population_total() == 500_000 and beta_world.state_capacity() == 0.5
 	  and beta_world.urban_population() == 0.0 and beta_world.tax_share() == 0.2)
-check("a country's wages are scaled by its wage level against the home country's",
-	  beta_world.pay_per_person_year("labourer") == 50.0
-	  and CountryWorld(world, profiles["alpha"], registry).pay_per_person_year("labourer") == 100.0)
+check("a country's wages are what its own labour markets pay, not the home pay scaled",
+	  beta_world.pay_per_person_year("labourer") == 50.0 and world.pay_per_person_year("labourer") == 100.0)
+try:
+	CountryWorld(world, profiles["alpha"], registry).pay_per_person_year("labourer")
+	raised = False
+except NoCountryEconomy:
+	raised = True
+check("a country with no economy of its own raises instead of answering with a home figure", raised)
 home_view = CountryWorld(world, profiles["alpha"], registry)
 check("a country with declared values weighs inventions by them",
 	  home_view.state_weights()["military"] == 0.9 and beta_world.state_weights() == {"military": 1.0})
@@ -205,21 +226,15 @@ class PricedWorld(ScenarioWorld):
 	def society_output(self):
 		return 1.0e9
 
-	def subsistence_cost_per_person_year(self):
-		return 100.0
-
 	def need_floor_costs_per_person_year(self):
 		return {"food": 100.0, "shelter": 10.0}
 
 
 priced = PricedWorld()
-home_profile = registry.state.countries[registry.state.home_country]
 beta_profile = registry.state.countries["beta"]
 beta_view = CountryWorld(priced, beta_profile, registry)
-expected_output = 1.0e9 * (beta_profile.population / home_profile.population) * (beta_profile.wage_index / home_profile.wage_index)
-check("a foreign country's output is the home output per head at its own people and wage level",
-	  abs(beta_view.society_output() - expected_output) < 1e-3 * expected_output, (beta_view.society_output(), expected_output))
-check("a foreign country's food costs its own price level",
-	  abs(beta_view.subsistence_cost_per_person_year()
-		  - 100.0 * (beta_profile.price_index / home_profile.price_index if home_profile.price_index > 0 and beta_profile.price_index > 0 else 1.0)) < 1e-9)
+check("a foreign country's output is what its own producers make, not the home output scaled",
+	  beta_view.society_output() == 1.0e6, beta_view.society_output())
+check("a foreign country's food costs its own floor, not the home one",
+	  beta_view.subsistence_cost_per_person_year() == 20.0 and beta_view.need_floor_costs_per_person_year() == {"food": 20.0})
 check("a country's techniques are read once and kept", beta_view.baseline_knowledge() is beta_view.baseline_knowledge())

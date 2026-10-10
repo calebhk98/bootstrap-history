@@ -6,6 +6,7 @@ import os
 from sim.world import stock_dynamics
 
 from .data import ROOT
+from .living_stock_growth import GROWS_ON_ARABLE, GROWS_ON_PASTURE, LivingStockGrowthMixin, kilograms_per_unit
 from .material_units import tonnes_per_unit
 
 LIVING_STOCK_PATH = os.path.join(ROOT, "data", "world", "living_stock.json")
@@ -18,17 +19,34 @@ def stock_rates():
         return json.load(handle)["materials"]
 
 
-class LivingStockYearlyMixin:
+class LivingStockYearlyMixin(LivingStockGrowthMixin):
 
     def step_living_stock(self):
-        """Breed and lose each held stock for a year. Expected values, no dice, so a save and load
-        cannot change a herd."""
-        for material, rates in sorted(stock_rates().items()):
+        """Breed and lose each held stock for a year. Expected values, no dice, so a save and load cannot
+        change a herd. Growth is held to the pasture or nursery land at the stock's place and is paid for in
+        labour; loss needs neither."""
+        rates_by_material = stock_rates()
+        place = self.stock_place()
+        pastured = [material for material, rates in sorted(rates_by_material.items())
+                    if rates.get("grows_on") == GROWS_ON_PASTURE]
+        pasture_room = self.pasture_room_kg(place, pastured)
+        for material, rates in sorted(rates_by_material.items()):
             held = self.stock_held(material)
             if held <= 0.0:
                 continue
+            room = None
+            if rates.get("grows_on") == GROWS_ON_PASTURE and pasture_room is not None:
+                room = pasture_room / kilograms_per_unit(material)
+            elif rates.get("grows_on") == GROWS_ON_ARABLE:
+                room = self.nursery_room_units(material, place)
+            grown = stock_dynamics.next_units(
+                held, rates["natural_increase"], 0.0, rates["breeding_minimum_units"], room) - held
+            if grown > 0.0:
+                grown *= self.pay_growth_labour(material, grown)
             after = stock_dynamics.next_units(
-                held, rates["natural_increase"], rates["annual_loss"], rates["breeding_minimum_units"])
+                held, rates["natural_increase"], rates["annual_loss"], rates["breeding_minimum_units"], grown)
+            if rates.get("grows_on") == GROWS_ON_PASTURE and pasture_room is not None:
+                pasture_room = max(0.0, pasture_room - grown * kilograms_per_unit(material))
             self.change_stock(material, after - held)
 
     def held_living_stock(self):

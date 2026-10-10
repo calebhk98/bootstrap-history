@@ -2,8 +2,8 @@
 
 A node gates production entries (`node_output`); the concern running it has a staff and a plant. Its
 lines of product are the sets of outputs those entries make. For each line the concern runs the best
-entry among those some producer runs (the node's own, or a running node's that makes the same outputs; see
-techniques_in_use.py), so a technique that cuts an entry's labour or plant per unit raises what the same
+entry among those held (the node's own, or a node a producer has run long enough to be copied that makes the
+same outputs; see technique_spread.py), so a technique that cuts an entry's labour or plant per unit raises what the same
 staff turn out once it is run, and a technique nobody runs changes nothing.
 
 Two ratios against the opening, both from baskets worked out in labour hours:
@@ -93,14 +93,15 @@ class ConcernVolumeMixin:
         if node.get("_revenue_basis") != "output":
             return 1.0, 1.0, None
 
+        held = self.techniques_spread()
+
         def work_out():
             from . import prices as price_solver
             granted = frozenset(self.state.projects.granted)
-            held = self.techniques_in_use()
             prices = self._done_memo("concern_opening_prices", granted,
                                      lambda: self._concern_prices_in_hours(granted))
             return ratios(node, price_solver.default_production_entries(), (granted, prices), (held, prices))
-        return self._done_memo("concern_ratios", node_id, work_out)
+        return self._done_memo("concern_ratios", (node_id, held), work_out)
 
     def concern_volume_ratio(self, node_id):
         """What the concern turns out now over what it turned out at the opening, from the same staff."""

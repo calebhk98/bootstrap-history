@@ -14,6 +14,9 @@ Prices of both sides are compared in home money: a foreign price in its own
 coin is worth the coin's metal at the home price of that metal.
 """
 import functools
+from types import SimpleNamespace
+
+from sim.agents.api import GOVERNMENT_PREFIX, exports_allowed
 
 from .data import calculated_goods_prices, goods_provenance, load_civ, starting_schedule
 from .foreign_economy_data import foreign_economy_document
@@ -34,13 +37,6 @@ def foreign_economy_records():
 def not_traded_materials():
     """Materials that cannot cross a border, from the data file."""
     return frozenset(foreign_economy_document()["not_traded_materials"])
-
-
-@functools.lru_cache(maxsize=None)
-def exports_refused(civilization_id):
-    """Materials this partner will not sell abroad: its own `will_not_sell` data. A transitional
-    field; a state actor's export policy would replace it."""
-    return frozenset(load_civ(civilization_id).get("will_not_sell") or ())
 
 
 @functools.lru_cache(maxsize=None)
@@ -86,13 +82,29 @@ class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPay
         inside = set(self.partners_in_agent_economy())
         return [partner for partner in self.partner_countries() if partner not in inside]
 
+    def partner_government(self, civilization_id):
+        """The actor that is the partner country's state, or None before the roster is seeded."""
+        return self.actors.get(GOVERNMENT_PREFIX + civilization_id)
+
     def partner_refusal(self, civilization_id, material):
-        """Why the partner will not sell the material, else None."""
+        """Why the partner will not sell the material, else None. The partner's state decides: it has shut
+        its markets to the buyer, or its export policy holds the good back. Before the roster is seeded the
+        same policy answers from the country's data, which is the state's starting condition."""
         gate = self.partner_gate_refusal(civilization_id)
         if gate:
             return gate
-        if material in exports_refused(civilization_id):
-            return "%s will not sell %s" % (load_civ(civilization_id).get("name", civilization_id), material)
+        civilization = load_civ(civilization_id)
+        name = civilization.get("name", civilization_id)
+        government = self.partner_government(civilization_id)
+        if government is None:
+            government = SimpleNamespace(record=SimpleNamespace(
+                state_monopolies=set(civilization.get("state_monopolies") or ())), decision_policy=None)
+        else:
+            reopens = government.markets_closed_until(self.goods_market.acting_party_id, self.state.scenario.year)
+            if reopens:
+                return "%s has shut its markets to you until %d" % (name, reopens)
+        if material not in exports_allowed(government, [material]):
+            return "%s will not sell %s" % (name, material)
         return None
 
     def _foreign_economy_facts(self, civilization_id):

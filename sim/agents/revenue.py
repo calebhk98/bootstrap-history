@@ -4,11 +4,13 @@
 
 A form is paid in coin, or in kind when it names the good (`paid_in`): a share of the harvest is taken as
 grain, which goes to the state's stores and is used or sold through the goods market (government.py).
+A form on land may be limited to the provinces it is levied in (`tiles`, or `except_tiles` of those held), so
+one state can take a share of the crop in some and a share of assessed property in others.
 """
 from dataclasses import dataclass
-from typing import Any, List, Tuple
+from typing import Any, FrozenSet, List, Optional, Tuple
 
-from .revenue_bases import BASES
+from .revenue_bases import BASES, TILE_BASES
 
 
 @dataclass(frozen=True)
@@ -27,11 +29,24 @@ class Assessment:
 		return bool(self.material)
 
 
+def form_tiles(declared: Any, world: Any) -> Optional[FrozenSet[str]]:
+	"""The tiles a form is levied on: those it lists, else those held, less any it excepts; None for a form
+	on the whole state."""
+	listed, excepted = declared.get("tiles"), declared.get("except_tiles")
+	if listed is None and excepted is None:
+		return None
+	if declared["basis"] not in TILE_BASES:
+		raise ValueError("form %r names tiles but its basis %r is national" % (declared["form"], declared["basis"]))
+	chosen = set(listed) if listed is not None else set(world.held_tiles())
+	return frozenset(chosen - set(excepted or ()))
+
+
 def assess(world: Any) -> List[Assessment]:
 	"""Every declared form assessed on this year's base, in the order the civilisation lists them."""
 	assessments = []
 	for declared in world.revenue_forms():
-		base = BASES[declared["basis"]](world)
+		tiles = form_tiles(declared, world)
+		base = BASES[declared["basis"]](world) if tiles is None else BASES[declared["basis"]](world, tiles)
 		rate = float(declared["rate"])
 		material = declared.get("paid_in", "")
 		if material and material != base.material:

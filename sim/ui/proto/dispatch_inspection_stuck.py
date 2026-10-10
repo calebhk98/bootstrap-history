@@ -2,6 +2,7 @@
 
 from .command_registry import command
 from .route_blockers import route_blockers
+from sim.engine.ui_port import money_text
 from .saving_plan import saving_reason
 from sim.engine.ui_port import closure
 from .state_waiting import _waiting_on
@@ -138,18 +139,18 @@ def _stuck_shut_ventures(sim, nodes):
                        "would earn %s a year against %s of "
                        "upkeep: 'open %s'"
                        % (len(_shut), _best,
-                          "{:,.0f}".format(sim.venture_real_earnings(_best)),
-                          "{:,.0f}".format(sim.venture_real_upkeep(_best)),
+                          money_text(sim.venture_real_earnings(_best), sim, grouped=True),
+                          money_text(sim.venture_real_upkeep(_best), sim, grouped=True),
                           _best)}
     _best = max(_shut, key=lambda k: sim.venture_real_earnings(k) - sim.venture_real_upkeep(k))
     _staff_refusal = sim.staffing_open_refusal(_best, sim.opening_fee(_best)[1], with_advice=False)
     if _staff_refusal:
         _why = _staff_refusal.rstrip(".")
     else:
-        _why = ("opening it costs %s denarii, and between cash "
+        _why = ("opening it costs %s, and between cash "
                 "and what anyone will advance you can raise %s"
-                % ("{:,.0f}".format(_capex_now(_best)),
-                   "{:,.0f}".format(sim.spending_power("buy"))))
+                % (money_text(_capex_now(_best), sim, grouped=True),
+                   money_text(sim.spending_power("buy"), sim, grouped=True)))
     return {"what": "things you built and cannot open yet", "kind": "closed",
             "why": "%d finished concern(s) are shut and "
                    "earning nothing, and none of them can "
@@ -159,8 +160,8 @@ def _stuck_shut_ventures(sim, nodes):
                    "close something to free the hands, "
                    "or raise the money, and try again"
                    % (len(_shut), _best,
-                      "{:,.0f}".format(sim.venture_real_earnings(_best)),
-                      "{:,.0f}".format(sim.venture_real_upkeep(_best)),
+                      money_text(sim.venture_real_earnings(_best), sim, grouped=True),
+                      money_text(sim.venture_real_upkeep(_best), sim, grouped=True),
                       _why)}
 
 
@@ -176,9 +177,9 @@ def _stuck_nothing_or_money(sim, _startable, _afford):
                        "them costs %s, against the %s you could "
                        "raise"
                        % (len(_startable),
-                          "{:,.0f}".format(min(sim.project_cost(node_id)
-                                               for node_id in _startable)),
-                          "{:,.0f}".format(sim.spending_power("start")))}
+                          money_text(min(sim.project_cost(node_id)
+                                               for node_id in _startable), sim, grouped=True),
+                          money_text(sim.spending_power("start"), sim, grouped=True))}
     return None
 
 
@@ -205,10 +206,10 @@ def _stuck_arrears(sim):
         return {"what": "arrears", "kind": "money",
                 "why": "you owe %s of the %s anyone will advance "
                        "you, and the interest is %s a year"
-                       % ("{:,.0f}".format(-sim.capital),
-                          "{:,.0f}".format(sim.credit_limit()),
-                          "{:,.0f}".format(-sim.capital
-                                           * sim.debt_interest_rate()))}
+                       % (money_text(-sim.capital, sim, grouped=True),
+                          money_text(sim.credit_limit(), sim, grouped=True),
+                          money_text(-sim.capital
+                                           * sim.debt_interest_rate(), sim, grouped=True))}
     return None
 
 

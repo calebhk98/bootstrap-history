@@ -170,7 +170,7 @@
   "sch": 4,
   "art": 20,
   "conf": "B",
-  "note": "No chemical flame reaches here. Calcium carbide, ferroalloys, tungsten, artificial graphite, synthetic corundum.",
+  "note": "Temperatures above any fuel flame, reached by passing a heavy electric current through a gap (an arc) or through a resistant conductor so that it glows. It needs a large steady supply of electric power and electrodes that survive the heat. No chemical flame reaches this hot, so it is the only route to calcium carbide, ferroalloys, tungsten, artificial graphite and synthetic corundum (a hard crystalline aluminium oxide).",
   "mechanics": {
    "diagnosis_instrument": {
     "instrument": "opt_pyrometer_radiation",
@@ -226,7 +226,7 @@
   "sch": 0,
   "art": 2,
   "conf": "B",
-  "note": "Needs a reference plane to scrape against and a gauge to check with. Clock wheels, lock work, decent screw threads.",
+  "note": "The ability to make and check parts to a tenth of a millimetre by hand tools. It works by scraping and filing a surface against a reference plane, then checking it with a gauge, so the part is only as good as the reference. Without a true reference plane and a gauge the founder cannot tell good work from bad. It opens clock wheels, lock work and screw threads that actually fit.",
   "mechanics": {
    "diagnosis_instrument": {
     "instrument": "micrometer_gauges",
@@ -316,7 +316,7 @@
   "sch": 6,
   "art": 10,
   "conf": "B",
-  "note": "Measured in wavelengths of light. Optical surfaces, diffraction gratings, semiconductor lithography much later.",
+  "note": "Making and checking surfaces to a fraction of the wavelength of light. Flatness and spacing are read from interference fringes, the light and dark bands produced when two reflected light beams meet, so the measuring tool is light itself. It needs the finest lapped optical flats and a way to count fringes. It underlies precision optical surfaces, diffraction gratings and, much later, semiconductor lithography.",
   "mechanics": {
    "diagnosis_instrument": {
     "instrument": "opt_michelson_interferometer",
@@ -417,7 +417,7 @@
   "sch": 5,
   "art": 8,
   "conf": "B",
-  "note": "Needs a motor for the backing pump. Vacuum tubes, X-ray tubes, evaporated coatings.",
+  "note": "A vacuum a thousand times better than a mercury drop pump gives, reached with a diffusion pump (a fast jet of hot vapour that sweeps stray gas out) and getters (chemicals that absorb the last gas). The diffusion pump cannot start against open air, so a motor-driven backing pump is needed to rough the chamber first. Joints must be machined tight enough not to leak. It makes vacuum tubes, X-ray tubes and evaporated coatings possible.",
   "mechanics": {
    "diagnosis_instrument": {
     "instrument": "in2_mcleod_vacuum_gauge",
@@ -453,7 +453,7 @@
   "sch": 10,
   "art": 12,
   "conf": "B",
-  "note": "Metal gaskets, bakeout, ion pumps. Surface science and semiconductor processing.",
+  "note": "A vacuum so empty that a surface stays clean for hours. Rubber and grease seals give off gas, so the system is built of metal with crushable metal gaskets and is baked hot to drive trapped gas out of its walls, then pumped by ion pumps (which bury gas molecules in a metal surface). It needs stainless steel and very fine machining. It opens surface science and semiconductor processing.",
   "mechanics": {
    "precaution": {
     "kind": "redundant_team"
@@ -513,7 +513,7 @@
   "sch": 3,
   "art": 5,
   "conf": "B",
-  "note": "You cannot claim a purity you cannot measure, so this rung is gated on quantitative analysis as much as on process.",
+  "note": "Chemically pure material, with no more than one part in ten thousand of impurity. It is reached by electrorefining (using electric current to move only the wanted metal from an impure bar onto a clean plate) and fractional crystallisation (repeated partial freezing, where impurities stay in the liquid). You cannot claim a purity you cannot measure, so this rung is gated on quantitative analysis as much as on process.",
   "mechanics": {
    "diagnosis_instrument": {
     "instrument": "met_spectroscopic_assay",
@@ -683,7 +683,7 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "Power where there is no river. Until you need that, water is cheaper and needs a far shorter prerequisite chain.",
+  "note": "Mechanical power from a steam engine that can be set up anywhere fuel and water can be carried, with no need for a river. It needs boilers strong enough to hold high pressure without bursting, which is the hard part. Until a site has no usable stream, water power is cheaper and needs a far shorter prerequisite chain, so the founder should go to steam only when location forces it.",
   "traits": [
    "infrastructure"
   ],
@@ -716,7 +716,7 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "One dynamo on the millpond shaft you already built. Enough for arc lights, electroplating, a laboratory.",
+  "note": "A local supply of electricity, produced by turning a dynamo (a machine that makes current by spinning wire coils in a magnetic field) with a water wheel. One dynamo on the millpond shaft you already built is enough to power arc lights, electroplating and a laboratory. It is limited by what the one shaft can turn and by wires that must be made and insulated, and it serves only buildings near the mill.",
   "traits": [
    "inexplicable",
    "infrastructure"
@@ -786,7 +786,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Master bars in bronze, in triplicate, in three cities. Without this nothing you write down survives you."
+  "note": "A length standard that anyone can reproduce and that outlives its maker. The founder has master bars cast in bronze, in triplicate, and keeps them in three cities so that a loss or a forgery in one place can be checked against the others. Without this nothing you write down survives you, because every measurement in a recipe is a length that someone else must be able to match."
  },
  {
   "id": "cap_measure_mass_mg",
@@ -808,7 +808,7 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "Agate knife edges. The instrument that turns alchemy into chemistry."
+  "note": "Weighing to a thousandth of a gram. The balance has hard agate knife edges that carry the beam with almost no friction, and it sits in a closed case against draughts. It needs an analytical balance and carefully calibrated weights. It is the instrument that turns alchemy into chemistry, because it lets the founder show that matter is conserved in a reaction."
  },
  {
   "id": "cap_measure_temp",
@@ -875,7 +875,7 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "Navigation, physics, and later every electrical measurement."
+  "note": "Keeping time to the second using a pendulum clock. A pendulum swings at a rate fixed by its length, so a clock regulated by one stays steady day after day, unlike water clocks and sundials. It needs a clock mechanism that gives the pendulum a small push each swing. It matters for navigation and physics, and later for every electrical measurement."
  },
  {
   "id": "cap_measure_time_ms",
@@ -898,7 +898,7 @@
   "sch": 0,
   "art": 4,
   "conf": "B",
-  "note": "Ballistics, engine indicating, telegraphy."
+  "note": "Timing events to a thousandth of a second. A chronograph records short intervals mechanically, and a tuning fork supplies a steady vibration to count against, so the interval is read as a number of vibrations. It needs the second-accurate clock to calibrate against and parts made to fine tolerance. It serves ballistics, engine indicating (recording pressure through a stroke) and telegraphy."
  },
  {
   "id": "cap_measure_elec",
@@ -943,7 +943,7 @@
   "sch": 6,
   "art": 6,
   "conf": "B",
-  "note": "Length measured against a physical constant instead of a bar of metal."
+  "note": "Measuring length against the wavelength of light, a physical constant, instead of against a bar of metal. Two beams of light from the same source are split and rejoined, and the pattern of bright and dark bands shows how far one path is longer than the other. It needs a spectroscope to know which light is used and optical flats to judge flatness. A bar can warp or be lost; a wavelength cannot."
  },
  {
   "id": "cap_gas_o2h2",

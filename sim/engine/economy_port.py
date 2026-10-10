@@ -97,6 +97,11 @@ class EconomyPort:
         agent = self._answering_agent()
         return {} if agent is None else agent.land_rent_paid_by_tile()
 
+    def agent_idle_hours_by_trade(self):
+        """(hours offered and not hired, hours offered) of each trade last year; empty while the economy opens."""
+        agent = self._answering_agent()
+        return {} if agent is None else agent.idle_hours_by_trade()
+
     def agent_people_by_trade(self):
         """Working people by trade in the agent economy's labour core; None while it opens or has not yet
         opened (opening it is the wage quotes' business, and slow)."""
@@ -141,6 +146,11 @@ class EconomyPort:
         if agent is None:
             return None
         return agent.cohort_incomes()
+
+    def agent_cohort_land_rents(self, tiles=None):
+        """[(people, rent received in coin)] in the order of `agent_cohort_incomes`, or None while the economy opens."""
+        agent = self._answering_agent()
+        return None if agent is None else agent.cohort_land_rents(tiles)
 
     def note_actor_sale(self, seller, material, tonnes, from_concerns):
         """An actor's tonnes of a material for the agent economy's market this year."""

@@ -29,6 +29,7 @@
   1.5,
   2.7
  ],
+ "density_exponent": 0.5,
  "sources": {
   "reproduction_number_range": {
    "confidence": "disputed",
@@ -53,6 +54,10 @@
   "stage.infectious": {
    "confidence": "read",
    "source": "Mills et al. 2004 (PMC7095078): assumed mean infectious period 4.1 days; shape 2 is a derived choice"
+  },
+  "density_exponent": {
+   "confidence": "unsourced",
+   "source": "Heuristic inside the range Rader et al. 2020 (Nature Medicine, abstract read: crowded cities see longer epidemics with larger attack rates; scaling weaker than linear) supports; the report gives no exponent per route. Respiratory person-to-person contact sits mid-range; vary across the ensemble"
   }
  }
 }

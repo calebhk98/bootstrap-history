@@ -108,11 +108,19 @@ class AgentEconomy:
         """The record after the hidden years; the same opening always gives the same one, so it is cached
         on disk with the price solver's results (keyed on the data files and the source)."""
         self._economy = economy_api.blank_economy(setup)
+        self._economy.record.settling = True
         self._spin_up()
         return economy_api.export_record(self._economy, (PURSE_CURRENCY,))
 
     def cohort_incomes(self):
-        return economy_api.cohort_incomes(self.economy())
+        """(people, yearly income in coin) of the household cohorts, poorest per head first."""
+        coin = self._economy.setup.coin_per_unit
+        return [(people, income * coin) for people, income in economy_api.cohort_incomes(self.economy())]
+
+    def cohort_land_rents(self, tiles=None):
+        """(people, rent received last year in coin) in the order of `cohort_incomes`; only rent paid on `tiles` when given."""
+        coin = self._economy.setup.coin_per_unit
+        return [(people, rent * coin) for people, rent in economy_api.cohort_land_rents(self.economy(), tiles)]
 
     def goods_level_over_opening(self):
         """How dear the economy's goods are against the opening's solver prices (both counted in the economy's
@@ -256,7 +264,7 @@ class AgentEconomy:
         from .prices import default_production_entries
         from .producer_costs import entry_keys_held_for
         recipes = self._economy.setup.recipes
-        keys = entry_keys_held_for(node_id, default_production_entries(), self._sim.techniques_in_use())
+        keys = entry_keys_held_for(node_id, default_production_entries(), self._sim.techniques_spread())
         best = None
         for key in sorted(keys):
             recipe = recipes.get(key)
@@ -544,6 +552,10 @@ class AgentEconomy:
     def land_rent_at_tile(self, tile):
         """Rent per hectare-year on one tile in coin (the mean where none was let there)."""
         return economy_api.land_rent_at_tile(self.economy(), tile) * self._economy.setup.coin_per_unit
+
+    def idle_hours_by_trade(self):
+        """(hours offered and not hired, hours offered) of each trade in the home labour markets last year."""
+        return economy_api.idle_hours_by_trade(self.economy())
 
     def land_rent_paid_by_tile(self):
         """Rent producers paid on each tile where land was let last year, in coin."""

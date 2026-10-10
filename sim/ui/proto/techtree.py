@@ -4,7 +4,7 @@ import sim.engine.ui_port as ui_port
 import hashlib
 
 from sim.engine.ui_port import closure, critical_path, downstream_count, is_downstream
-from sim.engine.ui_port import strip_self_play_advice
+from sim.engine.ui_port import mass_rate_text, strip_self_play_advice
 
 from . import available_economics, tree_filters
 from .nodes import _downstream_of, _unlocked_by
@@ -842,7 +842,7 @@ def _rests_band(node):
             "nothing else; this is worth having for itself")
 
 
-def _material_row(row):
+def _material_row(row, sim):
     """One `why` line per material: needed, held, missing, and the market
     cost of the missing part."""
     return {"material": row["material"],
@@ -856,9 +856,9 @@ def _material_row(row):
             **({"years_of_supply_it_takes": round(row["years_of_supply_it_takes"], 1)}
                if row["years_of_supply_it_takes"] else {}),
             "own_supply_tonnes_per_year": round(row["own_supply_tonnes_per_year"], 3),
-            **({"scarcity_note": "your own output of %.0f t a year of %s counts as supply against the demand "
+            **({"scarcity_note": "your own output of %s of %s counts as supply against the demand "
                                  "on it, which lowers the premium on anything you still buy"
-                                 % (row["own_supply_tonnes_per_year"], row["material"])}
+                                 % (mass_rate_text(row["own_supply_tonnes_per_year"], sim, short=False), row["material"])}
                if row["own_supply_tonnes_per_year"] > 0 else {}),
             **({} if row["priced"] else {"note": "cannot be bought: no one in reach makes or sells it, so the project cannot start on it "
                                       "and its cost here leaves it out"})}
@@ -897,7 +897,7 @@ def _explain_identity(sim, nodes, node_id, node):
         # question.
         "hired_labour": node["lab"],
         "materials": node["mat"],
-        "material_rows": [_material_row(row) for row in sim.project_material_bill(node_id)["rows"]],
+        "material_rows": [_material_row(row, sim) for row in sim.project_material_bill(node_id)["rows"]],
     }
 
 

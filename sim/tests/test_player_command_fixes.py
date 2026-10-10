@@ -38,7 +38,8 @@ quotable = {"forest": "quote forest 10", "nitre": "quote nitre 100", "farm": "qu
             "housing": "quote housing 5", "school": "quote school smith 2",
             "material": "quote material iron 10", "mine": "quote mine coal 100",
             "slaves": "quote slaves 2", "manumit": "quote manumit 1",
-            "living_stock": "quote living_stock ramie_stock_kg 100"}
+            "living_stock": "quote living_stock ramie_stock_kg 100",
+            "smuggled_stock": "quote smuggled_stock silkworm_eggs_kg 0.1"}
 check("the quote test names every buy target", set(quotable) == set(buy_targets.target_names()))
 for target, text in quotable.items():
     # stock is only for sale by a partner economy, so it is quoted from Rome (which buys from Han China)

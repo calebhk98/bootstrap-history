@@ -2801,7 +2801,7 @@
     },
     "mat": {},
     "name": "Coordinate geometry and trigonometric tables",
-    "note": "Hipparchus and Ptolemy already have chord tables, so this lands on prepared ground.",
+    "note": "Describing any point by two signed distances from perpendicular reference lines, so a curve becomes the set of points that satisfy an equation, plus tables that turn an angle directly into a ratio of sides. It needs symbolic algebra. The hard step is the idea that an equation can be a shape. Roman surveyors already lay out grids with perpendicular baselines and Hipparchus and Ptolemy already have chord tables, so teach from those.",
     "ph": 350.0,
     "pre": [
       "algebra_symbolic"
@@ -2842,7 +2842,12 @@
           "label": "knowing what is actually killing them",
           "order": 2
         }
-      ]
+      ],
+      "disease_effects": {
+        "acts_on": "case_fatality",
+        "factor": 0.75,
+        "label": "knowing what is actually killing them"
+      }
     },
     "name": "Germ theory of disease",
     "note": "The bead microscope makes this demonstrable rather than assertable, which is the whole difference. Galen's humoral theory is the obstacle and it is defended by the entire medical profession.",
@@ -4227,7 +4232,7 @@
     "lab": {},
     "mat": {},
     "name": "Mineral concessions and access to imperial mines",
-    "note": "Mercury (Almaden) and much else is an imperial monopoly. Halves the cost of all ore and metal inputs thereafter.",
+    "note": "Legal permission to work or buy from mines the emperor controls. Mercury, which is needed to extract gold and silver, and much else is an imperial monopoly, so without a concession those inputs are closed to a private founder or reach them only through middlemen. It needs patronage at court. Holding a concession lowers the cost of all ore and metal inputs thereafter, but it can be withdrawn.",
     "ph": 400.0,
     "pre": [
       "patron_imperial"
@@ -4707,7 +4712,7 @@
       }
     },
     "name": "Senatorial patronage",
-    "note": "Bought with a cure, a profit, or a public benefaction in their name. Pliny the Younger's circle is the target type.",
+    "note": "Protection from a senator, which reaches above the province. A governor can end the founder, but a governor who knows a senator is watching will not. It cannot be bought with money, since senators have money; it is bought with a cure, a profit, or a public benefaction in their name. Pliny the Younger's circle is the target type. Approach through his freedmen and procurator, never directly.",
     "ph": 600.0,
     "pre": [
       "school_founded"
@@ -4838,7 +4843,12 @@
           "label": "a plan made before the plague",
           "order": 11
         }
-      ]
+      ],
+      "disease_effects": {
+        "acts_on": "transmission",
+        "factor": 0.65,
+        "label": "a plan made before the plague"
+      }
     },
     "name": "Quarantine, clean water, sanitation and variolation programme",
     "note": "You know the Antonine Plague arrives in 165 AD. This node is what decides whether your institute survives it. Highest expected-value defensive investment in the game. It is also the thing most likely to be called sorcery, so do it under a patron and in public.",
@@ -5395,7 +5405,12 @@
           "label": "boiled water, handwashing, clean wounds",
           "order": 0
         }
-      ]
+      ],
+      "disease_effects": {
+        "acts_on": "case_fatality",
+        "factor": 0.7,
+        "label": "boiled water, handwashing, clean wounds"
+      }
     },
     "name": "Boiled water, handwashing, wound irrigation, quarantine",
     "note": "Costs an argument, not a coin. Saves more lives than every machine in this document combined, wherever it is adopted. Sell it to the army first: an army already has field hospitals and an officer class that measures results (Rome's valetudinaria is the model).",
@@ -5895,7 +5910,12 @@
           "label": "hard soap, in quantity",
           "order": 9
         }
-      ]
+      ],
+      "disease_effects": {
+        "acts_on": "transmission",
+        "factor": 0.9,
+        "label": "hard soap, in quantity"
+      }
     },
     "name": "Hard soap from oil and causticised lye",
     "note": "Soap as a cleanser is missing from some ancient economies and already known in others (notably attested among Gallic and Germanic peoples, per Pliny). This word is already in the vocabulary wherever it applies; do not redefine it. It is included here to prevent anachronism where soap does not yet exist for you.",

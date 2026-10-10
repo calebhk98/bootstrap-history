@@ -1,6 +1,8 @@
 """The successor objective `state` shows: deputies, their hours, and whether
 they are enough to carry the work without the founder."""
 
+from sim.engine.ui_port import plain_number
+
 
 def succession_block(sim):
     """Deputy count, yearly hours, the threshold, and a named objective."""
@@ -16,7 +18,7 @@ def succession_block(sim):
     if carry:
         block["objective"] = ("train a successor: met. Your deputies carry the work "
                               "(%s hours a year) if you are lost."
-                              % "{:,.0f}".format(sim.deputy_hours()))
+                              % plain_number(sim.deputy_hours()))
         return block
     sources = sorted(sim.nodes[node_id]["name"]
                      for node_id, _scholars, _artisans, directors, _scales, _running
@@ -30,5 +32,5 @@ def succession_block(sim):
                           "needed to carry the work without you (they work %s hours a "
                           "year now, which still counts as work). %s."
                           % (deputies, max(0.0, needed - deputies),
-                             "{:,.0f}".format(sim.deputy_hours()), where))
+                             plain_number(sim.deputy_hours()), where))
     return block

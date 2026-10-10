@@ -204,6 +204,24 @@ Two fixes, usable separately or together:
                                                     expires} or {ok:false, error}.
       {"cmd":"offers"}                             the offers made to this seat. {"cmd":"accept","offer":"<id>"}
                                                     and {"cmd":"decline","offer":"<id>"} answer one.
+      {"cmd":"pay","what":"debt"}                  pay the state once: all of its debt (or what your money
+                                                    covers), {"what":"claims"} what it has undertaken to
+                                                    make good to organised interest groups, or
+                                                    {"cmd":"pay","amount":N} a sum (past the debt it stays
+                                                    in the state's purse as a reserve). {ok, paid, message,
+                                                    capital, state_debt} or {ok:false, error}. Works that
+                                                    do this on finishing declare the node mechanic
+                                                    `transfer` (data/branches/MECHANICS.md).
+      {"cmd":"rollout"}                            the works that declare `coverage`, with units open, the
+                                                    share of the people served and the units that would
+                                                    serve everyone. {"cmd":"rollout","id":"<id>","share":S}
+                                                    opens or expands the work by the units that reach share
+                                                    S (0.5 or 50): {ok, message, covered, units}.
+      {"cmd":"settle"}                             the tiles settlers could reach, best land first, and the
+                                                    settlers and outfit cost. {"cmd":"settle","tile":"<id>"}
+                                                    founds a colony there: settlers leave the home working
+                                                    age, and the colony is a people of its own, fed by that
+                                                    tile. {"cmd":"colonies"} lists those held.
       {"cmd":"shares","do":"issue","share":S,"to":"<id>","price":P}
                                                    sell share S of your own equity; its holders draw
                                                     dividends from your margin each year.
@@ -243,6 +261,14 @@ Two fixes, usable separately or together:
       {"cmd":"buy","what":"mine","material":"iron","n":500}   sink a mine
       {"cmd":"buy","what":"slaves","n":4}          the economic actions the optimizer
       {"cmd":"buy","what":"manumit","n":4}         could take, exposed to the player
+      {"cmd":"buy","what":"living_stock","material":"ramie_stock_kg","n":100,"partner":"han_china_100ad"}
+                                                    stock bought from a partner that sells it
+      {"cmd":"buy","what":"smuggled_stock","material":"silkworm_eggs_kg","n":0.1}
+                                                    stock taken from a partner that will not sell it:
+                                                    the carrying is paid either way, the partner's state
+                                                    may catch it (`caught`), seize the stock and shut its
+                                                    markets to you for years; `quote` first gives the
+                                                    cost and `chance_caught`
       {"cmd":"policy","set":{"auto_hire":"replace"}}   auto_hire takes true, false or "replace":
                                                     replace-only hires back only the people lost
                                                     that year and never grows the staff; its audit
@@ -480,21 +506,41 @@ Two fixes, usable separately or together:
       `interest_groups` (names and causes) while any group is organised. Groups are actors of
       kind `interest_group` in the actor registry (ActorRecord fields `group_kind`, `subject`,
       `cause`, `members`, `lost_income`, `grievance`, `strength`, `claim`, `demands`).
-      Other kinds are measured from the bodies of people and the firms: `displaced_workers` (a
-      stratum whose trade's pay fell below what it had come to expect), `landholders` (a propertied
-      stratum whose property income fell), `firm_owners` (firms whose profit fell below what their
-      owners expected) and `falling_incomes` (the part of a stratum's fall in welfare those do not
-      explain). Only `displaced_producers` can obtain a prohibition; the rest are made good from the
-      state's purse as far as its capacity lets it.
+      Other kinds are measured from the bodies of people, the firms and the state's own books:
+      `displaced_workers` (a stratum whose trade's pay fell below what it had come to expect),
+      `jobless_workers` (a stratum whose trade's hours the labour core's clearing left unhired by
+      more than it expected; `technique` names the running technique that did the work with fewer
+      hands), `landholders` (a propertied stratum whose share of the land market's rent fell; the
+      share of the society's output where no land was let), `firm_owners` (firms whose profit fell
+      below what their owners expected), `clergy` and `scholars` (a church or an academy, actors
+      founded by a civilisation's `cast.actors`, whose collections fell: the rent of its
+      endowment, a tithe on the sales of the goods that serve one need, patronage that falls as
+      schooling spreads), `office_holders` (salaries paid on the state's administration and court
+      lines and the fees on its revenue fell below what they expected), `soldiers` (the army's
+      budget line is in arrears; an army without its pay loses loyalty and, below the mutiny line,
+      deserts and takes its arrears from the treasury, logged as MUTINY) and `falling_incomes` (the
+      part of a stratum's fall in welfare those do not explain). `displaced_producers` and
+      `jobless_workers` can obtain a prohibition: producers against the techniques that make their
+      commodity, a substitute for it (goods that serve the same household need), their goods
+      category or the line it refines; jobless workers against `technique` and any technique that
+      makes what it makes or a substitute for it. The rest are made good from the state's purse as
+      far as its capacity lets it.
 
       ANSWERING THE STATE'S DEMANDS (Complaint 110). `answer` (aliases `answer_demand`, `stance`) with
-      `{"cmd":"answer","what":"comply"|"refuse"}` sets how you meet the requisition and the supply
-      levy the state assesses (the office it presses on you is not declinable); bare `answer` shows
-      the stance. The reply's `note` gives the odds: a refusal is enforced with a chance set by the
-      state's capacity, turned aside in part by your protection; if enforced the state takes the
-      demand and a penalty in proportion to its capacity, otherwise nothing. The log names each
-      refusal and its outcome. Any other actor answers the same way through the player command
-      `{"command":"answer_demand","stance":"refuse"}` (ActorRecord field `demand_stance`).
+      `{"cmd":"answer","what":"comply"|"refuse"|"negotiate"|"conceal"}` sets how you meet the
+      requisition and the supply levy the state assesses and a confiscation it demands (the office it
+      presses on you is not declinable); bare `answer` shows the stance. The reply's `note` gives the
+      odds. Refusing: enforced with a chance set by the state's capacity, turned aside in part by your
+      protection; if enforced the state takes the demand and a penalty in proportion to its capacity,
+      otherwise nothing; either way the state marks you defiant (it assesses you as more visible, fading
+      over the years) and the blame lands on you. Negotiating (with optional `"service": <money's worth
+      of work>`): you offer a smaller sum, the state takes it with a chance that falls with its capacity
+      and rises with the share offered, else insists on the whole. Concealing: part of your wealth is
+      held where the state cannot count it (its visible scale, and so the confiscation it can demand,
+      shrink), costs a share a year, and is taken with a penalty if the state finds it. The log names each
+      outcome. Any other actor answers the same way through the player command
+      `{"command":"answer_demand","stance":"negotiate","service":0}` (ActorRecord fields `demand_stance`,
+      `service_offer`, `concealed`, `defiance`).
 
       MACHINE-READABLE MODES. 'state json', 'portfolio json' and 'risk json'
       (typed, inside `play`) print the raw reply - the exact line a script
@@ -515,7 +561,21 @@ quantity of that dimension in any reply gains a sibling field
 original field is unchanged and still in its documented unit (`*_hectares` in
 hectares, `*_tonnes` in tonnes, `*_kg` in kilograms, money fields in the
 civilisation's coin). With nothing chosen no `_display` field appears and replies
-are byte-identical to before. Commands take the units their help names.
+are byte-identical to before. A civilisation's own file may name `display_units`
+(`{"area": "iugerum", "mass": "libra"}`); the front end for people uses them for
+any dimension the player has not chosen, and `agent --pretty` does too (JSON
+replies for scripts do not).
+
+Commands take the units their help names (`buy farm` hectares, `buy mine`
+tonnes a year, `buy nitre` square metres, `sell`/`quote material` tonnes,
+`bribe` and the `rush` caps in the civilisation's coin). Any of them also
+takes a `unit`: `{"cmd":"buy","what":"farm","n":10,"unit":"acre"}`, the text
+form `buy farm 10 acre`, or `"n": "10 acre"`. The unit is any registry unit of
+that quantity's dimension (id, name, plural or symbol; a civilisation's own unit
+only in its civilisation), or `shown` for the unit the player displays. The
+engine converts through the registry; without a `unit` the quantity is the
+named native unit, so a script never depends on a display choice. A unit of the
+wrong kind is refused with the units that would do.
 
 Which fields are quantities is data: `field_rules` in `data/world/units.json`
 (a regular expression on the field name, the dimension, the native unit).
@@ -524,7 +584,11 @@ Units, their symbols and conversions are data in the same file; a mod adds
 (registry, one `format_<dimension>` per dimension, `add_display`),
 `sim/ui/units_text.py` (text screens), `sim/ui/cli_units_options.py` (the
 options entry). Text screens show the chosen unit's value and symbol.
-Compound units (price per tonne, yield per hectare) are not converted yet.
+Compound units (price per tonne, price per hectare) follow both choices. Quantities written inside
+sentences by the engine go through `sim/engine/units_prose.py`
+(`mass_text`, `area_text`, `money_text`, `temperature_text`);
+`sim/tests/test_complaint_285_no_hand_units.py` fails on a sentence that
+formats one by hand.
 
 
 LOANABLE-FUNDS MARKET (Complaint 106)

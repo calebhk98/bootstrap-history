@@ -81,7 +81,16 @@ python3 sim/simulator.py play --civ rome_100ad --session mygame.json    # start 
 echo "step 5" | python3 sim/simulator.py play --session mygame.json     # carry on from it
 ```
 
-Inside a game, `save <file>` and `load <file>` do the same by hand. A typed `save` says the full path it wrote; that snapshot is separate from the live game file, and resuming it starts a new live file rather than overwriting it. To move a save to another machine or container, copy the file (and the `.meta.json` beside it) and run `play --session <the copy>`. The
+Inside a game, `save <file>` and `load <file>` do the same by hand. A typed `save` says the full path it wrote; that snapshot is separate from the live game file, and resuming it starts a new live file rather than overwriting it. To move a save to another machine or container (export, then import), copy the save file, and the `.meta.json` beside it if you want its settings, to the new place and run `play --session <the copy>`. Both sides need the same version of the game: a save belongs to the build that wrote it. The build is recorded inside the save and in the summary beside it for you to read; the game never uses it to load an older save.
+
+Beside a `--session FILE` the game also keeps:
+
+- `FILE.summary.txt`: a few plain lines (civilisation, year, goal, money, the build that wrote it) for when you cannot open the save itself.
+- `FILE.backups/`: a copy of the save from the first write of each game year, with only the newest few kept. If the live file is damaged, or you want to step back, copy `FILE.backups/year_<year>.json` out and run `play --session <the copy>`; playing writes to the file you name.
+
+A session name ending in `.json.gz` is written compressed, which makes it much smaller. Any save, compressed or not, loads with the same commands.
+
+The game also writes a `.cache/` folder in the checkout it runs from (or in the folder `ROME_CACHE_DIR` names). It holds results the game can recompute, such as solved prices, and is not part of a save. It is safe to delete; the next run is then slower once. The
 menu's "Load a saved game" lists saves in your save folder. Set the folder
 with the `ROME_SAVE_DIR` environment variable or from the menu's Options;
 otherwise it is `.rome-saves` in your home directory. A save belongs to the

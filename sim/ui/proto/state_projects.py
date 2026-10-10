@@ -1,5 +1,6 @@
 """State-reply builders for active projects, money, operations, spending and training hours."""
 
+from sim.engine.ui_port import plain_number
 from .state_waiting import _agent_end_reason, _waiting_on, _worth_knowing_early
 from .state_shut_staffing import shut_for_want_of_staff
 
@@ -257,7 +258,7 @@ def _agent_state_training_and_hours(sim, active, full):
              "exclusive research time - start something else alongside "
              "it while it runs. 'available' or 'stuck' says what you "
              "could begin today; 'idle' splits the hours and names the delay."
-             % "{:,.0f}".format(max(0.0, sim.labour.director_pool()
+             % plain_number(max(0.0, sim.labour.director_pool()
                                     - sim.labour.director_hours_committed())))
             if (active
                 and all(value["founder_hours_left"] <= 0 for value in active.values())
@@ -270,7 +271,7 @@ def _agent_state_training_and_hours(sim, active, full):
             else ("%s founder-hours this year are going into nothing at all: "
                   "you have no work in hand. Hours do not carry to next year. "
                   "'available' or 'stuck' says what you could begin today; 'idle' splits the hours and names the delay."
-                  % "{:,.0f}".format(max(0.0, sim.labour.director_pool()
+                  % plain_number(max(0.0, sim.labour.director_pool()
                                          - sim.labour.director_hours_committed()))
                   if (not active
                       and max(0.0, sim.labour.director_pool()

@@ -9,7 +9,7 @@ import dataclasses
 import math
 from typing import Dict, List, Tuple
 
-from . import (goods_market, households, market_curves, merchants, producers, seller_offers, settlement,
+from . import (goods_market, households, market_curves, merchants, producers, seller_cash, seller_offers, settlement,
                state_budget, state_store, taxes)
 from .market_memory import market_key
 from .market_memory_asks import (memory_reference_volume, note_bids, note_offers, price_after_no_bids,
@@ -47,7 +47,8 @@ def cohort_orders(setup, record, view, ledger: YearLedger, order_book: OrderBook
             priced = priced_by_tile[cohort.tile] = households.need_prices(setup.basket_for(cohort.tile), view, cohort.tile)
         income = ledger.wages_in.get(cohort.agent_id, 0.0) + record.property_income.get(cohort.agent_id, 0.0)
         orders = households.goods_orders(cohort, view, record.book.balance(cohort.agent_id, money), income,
-                                         setup.basket_for(cohort.tile), setup.specs, priced)
+                                         setup.basket_for(cohort.tile), setup.specs, priced,
+                                         smooth_rise=not record.settling)
         add_orders(order_book, _less_what_it_grew(orders, cohort, setup.basket_for(cohort.tile), ledger.grown_units.get(cohort.agent_id)))
         funds.extend(orders.funds_offers)
     return funds
@@ -226,7 +227,7 @@ def _produce_and_offer(setup, record, view, producer_id, plan, in_kind, order_bo
     stock = {good: book.stock(producer_id, good, producer.tile) for good in recipe.outputs}
     money = setup.currency_id
     cash = book.balance(producer_id, money)
-    shortfall = max(0.0, producer.cash_target - cash)
+    shortfall = seller_cash.shortfall_to_raise(producer.cash_target, cash, ledger.running_costs(producer_id))
     keep = {good: recipe.inputs.get(good, 0.0) * producer.capacity_runs for good in recipe.outputs}
     offers = producers.offers(producer, recipe, view, stock, shortfall, view.interest_rate(money), setup.specs, keep)
     add_orders(order_book, AgentOrders(offers=tuple(offers)))

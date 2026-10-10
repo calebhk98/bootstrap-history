@@ -68,9 +68,89 @@ RESERVE_CEILING_YEARS_OF_NEED = declare(
 	why="The reserve a state holds against risk (a lean year, a war); what a surplus leaves beyond it "
 		"buys works. Stands in for a treasury's own judgement of how much risk it carries; without a "
 		"bound a state in surplus hoards for ever and no later shortfall is ever felt.")
-MAX_WORKS_SHARE_OF_WORKING_AGE = declare(
-	"MAX_WORKS_SHARE_OF_WORKING_AGE", 0.1, kind="temporary_heuristic",
-	unit="share of the working-age population", source=None, confidence="D",
-	why="The most of the nation's labour a state can set to building works in a year; beyond it the "
-		"state cannot hire. Stands in for a model of how a state competes with private employers; any "
-		"surplus beyond what that labour costs stays in the reserve.")
+
+# ---- works the state raises and keeps, each a stock with a driver -----------------------------------------
+FORTIFIED_SHARE_OF_FRONTIER_PER_UNIT_THREAT = declare(
+	"FORTIFIED_SHARE_OF_FRONTIER_PER_UNIT_THREAT", 5.0, kind="temporary_heuristic",
+	unit="share of the frontier walled per unit of yearly sack probability", source=None, confidence="D",
+	why="How much of the land frontier the state walls or fortifies while its civilisation's hazards threaten "
+		"a sack (none without a threat). Stands in for a model of which crossings an enemy can use.")
+WALL_MASONRY_EQUIVALENT_M2_PER_M = declare(
+	"WALL_MASONRY_EQUIVALENT_M2_PER_M", 30.0, kind="temporary_heuristic",
+	unit="m2 of public building per metre of wall", source=None, confidence="D",
+	why="Masonry of a wall with towers and ditch, counted as the floor area of public building that takes the "
+		"same mason's labour (MASONRY_PERSON_YEARS_PER_M2). Stands in for a wall's section and volume.")
+WATER_MASONRY_EQUIVALENT_M2_PER_URBAN_PERSON = declare(
+	"WATER_MASONRY_EQUIVALENT_M2_PER_URBAN_PERSON", 1.0, kind="temporary_heuristic",
+	unit="m2 of public building per town dweller", source=None, confidence="D",
+	why="Aqueduct, conduit, cistern and drain masonry per town dweller, counted as the floor area of public "
+		"building that takes the same labour. Stands in for water works held as tile state.")
+CAPITAL_MASONRY_M2_PER_URBAN_PERSON_PER_SPECTACLE_WEIGHT = declare(
+	"CAPITAL_MASONRY_M2_PER_URBAN_PERSON_PER_SPECTACLE_WEIGHT", 5.0, kind="temporary_heuristic",
+	unit="m2 per town dweller per unit of the state's weight on spectacle", source=None, confidence="D",
+	why="Temples and monuments of the capital beyond ordinary public building, wanted in proportion to how much "
+		"the state values spectacle; it builds toward them only from a surplus.")
+GRANARY_RESERVE_YEARS_OF_URBAN_FOOD = declare(
+	"GRANARY_RESERVE_YEARS_OF_URBAN_FOOD", 0.5, kind="temporary_heuristic",
+	unit="years of the town dwellers' subsistence grain", source=None, confidence="D",
+	why="Grain the state holds against a bad harvest, bought when the price is low. Stands in for a state's own "
+		"reserve policy.")
+GRANARY_LOSS_SHARE_PER_YEAR = declare(
+	"GRANARY_LOSS_SHARE_PER_YEAR", 0.05, kind="temporary_heuristic",
+	unit="share of the grain held, a year", source=None, confidence="D",
+	why="Grain lost to damp, vermin and rot in store; stands in for the spoilage of grain by storage method.")
+GRANARY_PRICE_MEMORY = declare(
+	"GRANARY_PRICE_MEMORY", 0.2, kind="temporary_heuristic",
+	unit="share of the gap to the quote closed each year", source=None, confidence="D",
+	why="How fast the state's idea of a normal grain price follows the market's quote; it buys below that price "
+		"and releases above it.")
+GRANARY_RELEASE_PRICE_PREMIUM = declare(
+	"GRANARY_RELEASE_PRICE_PREMIUM", 0.25, kind="temporary_heuristic",
+	unit="share above the normal price", source=None, confidence="D",
+	why="How dear grain must be before the state releases its reserve into the market.")
+GRANARY_RELEASE_SHARE = declare(
+	"GRANARY_RELEASE_SHARE", 0.25, kind="temporary_heuristic",
+	unit="share of the reserve a year", source=None, confidence="D",
+	why="Share of the grain reserve put on the market in a year when grain is dear.")
+FARM_TAX_BASE_PER_COLLECTOR_WAGE_YEAR = declare(
+	"FARM_TAX_BASE_PER_COLLECTOR_WAGE_YEAR", 200.0, kind="temporary_heuristic",
+	unit="wage-years of base per collector-year, a form on the harvest", source=None, confidence="D",
+	why="Money's worth of harvest, counted in years of an unskilled wage, one assessor and tithe-gatherer handles "
+		"in a year. Stands in for a count of farms and threshing floors.")
+POLL_TAX_BASE_PER_COLLECTOR_WAGE_YEAR = declare(
+	"POLL_TAX_BASE_PER_COLLECTOR_WAGE_YEAR", 400.0, kind="temporary_heuristic",
+	unit="wage-years of base per collector-year, a form on people", source=None, confidence="D",
+	why="People a census-taker and collector can list and collect from in a year. Stands in for a register.")
+CUSTOMS_BASE_PER_COLLECTOR_WAGE_YEAR = declare(
+	"CUSTOMS_BASE_PER_COLLECTOR_WAGE_YEAR", 2000.0, kind="temporary_heuristic",
+	unit="wage-years of base per collector-year, a form on trade", source=None, confidence="D",
+	why="Trade, counted in wage-years, one customs man handles in a year; a post taxes many cargoes. Stands in "
+		"for a count of crossings.")
+PROPERTY_TAX_BASE_PER_COLLECTOR_WAGE_YEAR = declare(
+	"PROPERTY_TAX_BASE_PER_COLLECTOR_WAGE_YEAR", 600.0, kind="temporary_heuristic",
+	unit="wage-years of base per collector-year, a form on land, income or coin", source=None, confidence="D",
+	why="Assessed property, rent or income, counted in wage-years, one assessor values and collects in a year. "
+		"Stands in for a register of holdings.")
+CAMPAIGN_SHARE_OF_ARMY_PER_UNIT_THREAT = declare(
+	"CAMPAIGN_SHARE_OF_ARMY_PER_UNIT_THREAT", 4.0, kind="temporary_heuristic",
+	unit="share of the army marching per unit of yearly sack probability", source=None, confidence="D",
+	why="How much of the standing force takes the field against a threat (none without one). Stands in for a "
+		"model of armies that move on the map and meet an enemy.")
+MARCH_KM_PER_DAY = declare(
+	"MARCH_KM_PER_DAY", 20.0, kind="temporary_heuristic",
+	unit="km per day", source=None, confidence="C",
+	why="Pace of a column on the march with its baggage; stands in for the carriage and terrain between tiles.")
+SOLDIER_GRAIN_KG_PER_DAY = declare(
+	"SOLDIER_GRAIN_KG_PER_DAY", 1.15, kind="temporary_heuristic",
+	unit="kg of wheat per soldier per day", source="Polybius 6.39: about two-thirds of an Attic medimnus of wheat a month", confidence="C",
+	why="Ration a legionary was issued; the grain a campaign must carry or buy for each marching soldier.")
+ACCESSION_PROBABILITY_PER_YEAR = declare(
+	"ACCESSION_PROBABILITY_PER_YEAR", 0.07, kind="temporary_heuristic",
+	unit="per year", source=None, confidence="D",
+	why="Chance in a year that the ruler dies or is replaced, so a new one accedes. Stands in for a model of "
+		"rulers' lives and of succession.")
+DONATIVE_SHARE_OF_ANNUAL_PAY = declare(
+	"DONATIVE_SHARE_OF_ANNUAL_PAY", 1.0, kind="temporary_heuristic",
+	unit="years of a soldier's pay per soldier", source=None, confidence="D",
+	why="Gift a new ruler pays each soldier to secure the army's loyalty. Stands in for a model of the army's "
+		"price for its allegiance.")

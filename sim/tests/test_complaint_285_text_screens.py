@@ -3,8 +3,9 @@
 A short game is played (land bought, years stepped), non-default units are
 chosen for every dimension, and every read-only text screen is rendered. A
 screen fails when it still prints a native unit label (tonne, hectare, den),
-and a reply fails when a numeric field that reads like a quantity has no field
-rule (so no converted sibling could exist for it).
+and a reply fails when a numeric field that reads like a quantity (the registry's `quantity_words`)
+has no field rule (so no converted sibling could exist for it). test_complaint_285_no_hand_units makes the same
+check on every reply key in the source, without a game.
 """
 from .harness import *
 import re as _re
@@ -24,14 +25,6 @@ CHOICES = {"mass": "pound", "area": "acre", "money": "labour_hour", "temperature
 # A native unit label printed as a word, as a symbol, or as the per-mass price header.
 NATIVE_LABEL = _re.compile(
     r"\btonnes?\b|\bkg\b|\bt/yr\b|/T\b|\bhectares?\b|\bha\b|/ha\b|\bm2\b|\bden\b|denarii|\bcelsius\b|\biugera\b")
-# Numeric reply fields that read like a quantity of money, mass or area.
-QUANTITY_KEY = _re.compile(
-    r"(^|_)(tonnes?|kg|hectares?|ha|den|price|cost|costs|wage|wages|revenue|debt|cash|capital|"
-    r"interest|bill|income|net|earns|spend)($|_)")
-# Fields whose name matches but that are counts, ratios, indices or rates.
-NOT_A_QUANTITY = _re.compile(
-    r"(index|ratio|rate|chance|share|fraction|count|number|price_over_long_run_cost|food_cost_factor|startable_at_no_cash_cost|"
-    r"founder_hours|wage_work|in_bondage_for_debt)")
 
 game = sim(capital=5_000_000.0)
 game.end_year = game.cfg["start_year"] + game.cfg["horizon_years"]
@@ -44,18 +37,18 @@ registry = U.registry()
 unruled = {}
 
 
-def _unruled_keys(node, screen):
+def _unruled_keys(node, screen, parent=None):
     if isinstance(node, dict):
         for key, value in node.items():
             if isinstance(value, (dict, list)):
-                _unruled_keys(value, screen)
+                _unruled_keys(value, screen, key)
             elif (isinstance(value, (int, float)) and not isinstance(value, bool)
-                  and not key.endswith("_display") and QUANTITY_KEY.search(key)
-                  and not NOT_A_QUANTITY.search(key) and not U.field_rule(registry, key)):
+                  and not key.endswith("_display") and U.looks_like_quantity(registry, key)
+                  and not U.field_rule(registry, key, parent)):
                 unruled.setdefault(key, screen)
     elif isinstance(node, list):
         for item in node:
-            _unruled_keys(item, screen)
+            _unruled_keys(item, screen, parent)
 
 
 U.set_preferences(CHOICES)

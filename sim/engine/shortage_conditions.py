@@ -47,10 +47,10 @@ def condition_rows(sim):
     return [row]
 
 
-def condition_line(row):
-    """One readable line for a standing condition."""
+def condition_line(row, mass_rate_label="t/year"):
+    """One readable line for a standing condition; a text screen passes the label of the unit it shows the deficit in."""
     parts = ["%s CONSTRAINED: work at %d%% of plan" % (row["material"].upper(), round(100 * row["throughput"]))]
     if row.get("deficit_tonnes_per_year"):
-        parts.append("short %s t/year" % "{:,.1f}".format(row["deficit_tonnes_per_year"]))
+        parts.append("short %s %s" % ("{:,.1f}".format(row["deficit_tonnes_per_year"]), mass_rate_label))
     parts.append("year %d, %s" % (row["years"], row["trend"]))
     return ", ".join(parts)

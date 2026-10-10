@@ -41,10 +41,13 @@ class EconomyRecord:
     land_rent: Dict[TileId, float] = field(default_factory=dict)         # rent per hectare producers paid, by tile
     margin_years: Dict[str, int] = field(default_factory=dict)           # market_key -> years in a row the expected price stood above the entry price
     hours_hired: Dict[str, float] = field(default_factory=dict)          # labour market_key -> hours hired last year
+    hours_idle: Dict[str, float] = field(default_factory=dict)           # labour market_key -> hours offered and not hired last year
     funds_offered: float = 0.0                                           # savings on offer at the last lending, home currency
     lent_by_borrower: Dict[AgentId, float] = field(default_factory=dict)  # what each borrower was lent at the last lending
     curves: Dict[str, Any] = field(default_factory=dict)                 # market_key -> the book of the last clearing at the port (market_curves.py)
     ways: Dict[str, Dict[str, Any]] = field(default_factory=dict)        # the built ways the market areas are partitioned for
+    settling: bool = False                                               # in the hidden spin-up: households' spending rises as far as their wealth allows
+    carried: Dict[str, Dict[str, float]] = field(default_factory=dict)   # tonnes the merchants carried last year: origin tile -> destination tile (sim.geography.flow_ledger)
 
     def to_record(self, skip_currencies=()) -> Dict[str, Any]:
         """The record as plain data; money in `skip_currencies` (another owner's currency in the shared book) is left out."""
@@ -70,10 +73,12 @@ class EconomyRecord:
             "land_rent": self.land_rent,
             "margin_years": self.margin_years,
             "hours_hired": self.hours_hired,
+            "hours_idle": self.hours_idle,
             "funds_offered": self.funds_offered,
             "lent_by_borrower": self.lent_by_borrower,
             "curves": self.curves,
             "ways": {key: dict(built) for key, built in sorted(self.ways.items())},
+            "carried": {key: dict(row) for key, row in sorted(self.carried.items())},
         }
 
     @classmethod
@@ -100,10 +105,12 @@ class EconomyRecord:
             land_rent=dict(record["land_rent"]),
             margin_years=dict(record["margin_years"]),
             hours_hired=dict(record["hours_hired"]),
+            hours_idle=dict(record["hours_idle"]),
             funds_offered=record["funds_offered"],
             lent_by_borrower=dict(record["lent_by_borrower"]),
             curves=dict(record["curves"]),
             ways={key: dict(built) for key, built in record["ways"].items()},
+            carried={key: dict(row) for key, row in record["carried"].items()},
         )
 
 

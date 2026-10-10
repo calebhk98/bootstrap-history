@@ -7,7 +7,7 @@ save, load and fork carries it. The schema inside belongs to the UI.
 import copy
 
 from sim.engine.ui_port import (
-    interface_memory, load_state, save_state, set_interface_memory, settings)  # noqa: F401
+    interface_memory, load_state, save_session, save_state, set_interface_memory, settings)  # noqa: F401
 
 
 def remembered(sim, topic):

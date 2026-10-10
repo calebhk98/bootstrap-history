@@ -66,10 +66,21 @@ WATER_LIFTED_TONNES_PER_TONNE_ORE_BY_DEPTH = declare(
     {"surface": 0.0, "shallow_vein": 0.5, "deep_vein": 3.0},
     kind="temporary_heuristic",
     unit="tonnes of water lifted from the sump per tonne of ore raised",
-    source="Diodorus 5.37 (Spanish mines meet 'flowing subterranean "
-           "rivers', drawn off by Archimedean screws in successive lifts) "
-           "and Pliny NH 33.97 (bailers standing night and day at Baebelo) "
-           "give the direction; no inflow rate was found in a source opened.",
+    source="No inflow rate per tonne of ore exists in a source opened "
+           "(Complaints/349 searched: Willies 1997 on Rio Tinto, read in "
+           "full; Bettenay 2022, Kakavoyannis 2001, Morin-Hamon 2023, read; "
+           "Agricola searched; Domergue, Davies, Healy not openable). Direction: Diodorus 5.37 (Spanish mines meet "
+           "'flowing subterranean rivers', drawn off by Archimedean screws "
+           "in successive lifts), Pliny NH 33.97 (bailers night and day at "
+           "Baebelo). Willies 1997: a Rio Tinto wheel lifts about 86 litres "
+           "a minute, a battery of eight pairs lifting 29 m removes about 250 "
+           "tonnes of water a day with 48 to 64 men; the district's 4 to 5 "
+           "million tonnes of ore (from about 6 million tonnes of slag) over "
+           "a working life of one to a few centuries is some 150 to 600 "
+           "tonnes of ore a day, so a single battery is 0.4 to 1.7 tonnes of "
+           "water per tonne of ore, and a deep mine of several batteries "
+           "several times that. Best-supported range 0.4 to about 7; the "
+           "shallow and deep values sit inside it and are kept.",
     confidence="D",
     why="Drainage is the largest uncertain term of a deep mine; the lift "
         "work per tonne of water is physical, the inflow is a guess. "
@@ -113,6 +124,33 @@ VENTILATION_OPENINGS_PER_WORKING_SHAFT = declare(
     source="Bettenay 2022: vertical shafts to ventilate faces and dissipate "
            "fire-setting fumes. Natural draught needs two openings.",
     confidence="C", why="Charged as a second shaft without hoist or sump.")
+
+
+LAMP_FLAME_POWER_WATTS = declare(
+    "LAMP_FLAME_POWER_WATTS", 60.0, kind="temporary_heuristic",
+    unit="watts of heat from one miner's oil lamp flame",
+    source="No measured oil consumption of a Roman or Greek lamp was found "
+           "(Complaints/349 searched the EXARC lamp experiment, the "
+           "Amsterdam Mithraeum lamp experiment and replica-lamp makers: "
+           "none gives a rate). Small wick flames burn in the tens of "
+           "watts; range 40 to 80.",
+    confidence="D",
+    why="Lighting is a surface-and-underground cost the hours do not carry; "
+        "lamp_oil_kilograms_per_labourer_hour turns it into oil.")
+
+OLIVE_OIL_ENERGY_MEGAJOULES_PER_KILOGRAM = declare(
+    "OLIVE_OIL_ENERGY_MEGAJOULES_PER_KILOGRAM", 37.0, kind="physical_constant",
+    unit="megajoules per kilogram", source="Heat of combustion of vegetable "
+    "oil, handbook value.", confidence="A", why="Turns lamp power into oil.")
+
+
+def lamp_oil_kilograms_per_labourer_hour():
+    """Olive oil one lamp burns in an hour underground. At the oil's price
+    this is under one percent of the hours of a silver deposit's ore, which
+    is why no recipe carries it as an input (the ore recipes carry no
+    inputs; measure with the solver's olive_oil_kg price)."""
+    return (LAMP_FLAME_POWER_WATTS * 3600.0 / 1.0e6
+            / OLIVE_OIL_ENERGY_MEGAJOULES_PER_KILOGRAM)
 
 
 def rock_broken_tonnes_per_tonne_ore(depth_class):

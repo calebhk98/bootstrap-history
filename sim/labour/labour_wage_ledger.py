@@ -40,11 +40,12 @@ class WageLedgerMixin:
         """One log line saying what the sale earned and what it cost."""
         self._world.state.household.log.append((
             self._world.state.scenario.year,
-            "wage work: sold %s hours as a %s for %s den; your practice will "
+            "wage work: sold %s hours as a %s for %s; your practice will "
             "earn %s less this year, so the net is %s"
-            % ("{:,.0f}".format(hours), trade, "{:,.0f}".format(pay),
-               "{:,.0f}".format(displaced),
-               "{:+,.0f}".format(round(pay) - round(displaced)))))
+            % (self._world.plain_number(hours), trade, self._world.money_text(pay, grouped=True, short=True),
+               self._world.money_text(displaced, grouped=True, short=True),
+               ("+" if round(pay) >= round(displaced) else "-")
+               + self._world.money_text(abs(round(pay) - round(displaced)), grouped=True, short=True))))
 
     def work_for_wages_dry_run(self, trade, hours):
         """(pay, message, practice income given up) for work_for_wages, with

@@ -108,7 +108,7 @@ from sim.engine.state_demand import answer_state_demand, set_household_stance
 
 
 def founder_game(capacity=0.9, protection=0.0, seed=1):
-	return SimpleNamespace(state=SimpleNamespace(household=SimpleNamespace(demand_stance="comply", protection=protection)),
+	return SimpleNamespace(state=SimpleNamespace(household=SimpleNamespace(demand_stance="comply", protection=protection, service_offer=0.0, concealed=0.0, defiance=0.0, scandal=0.0)),
 	                       state_capacity=capacity, rng=random.Random(seed))
 
 

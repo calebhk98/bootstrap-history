@@ -28,11 +28,33 @@ def checked_mode_ids(world_map: WorldMap, mode_ids: Iterable[str]) -> FrozenSet[
     return chosen
 
 
-def usable_modes(world_map: WorldMap, known_nodes_per_party: Iterable[Iterable[str]]) -> FrozenSet[str]:
-    """Modes whose required nodes every party holds (a mode with no requirement is always usable)."""
+CARGO_CLASSES = ("goods", "living_stock")
+
+
+def carries(mode: Dict[str, Any], cargo: str) -> bool:
+    """Whether a mode takes this class of cargo (a mode that names none takes every class)."""
+    return cargo in (mode.get("carries") or CARGO_CLASSES)
+
+
+def usable_modes(world_map: WorldMap, known_nodes_per_party: Iterable[Iterable[str]],
+                 cargo: str = "goods") -> FrozenSet[str]:
+    """Modes that carry `cargo` and whose required nodes every party holds (a mode with no requirement is
+    always usable)."""
     parties = [frozenset(nodes) for nodes in known_nodes_per_party]
     return frozenset(mode_id for mode_id, mode in modes(world_map).items()
-                     if all(frozenset(mode.get("requires_nodes") or ()) <= held for held in parties))
+                     if carries(mode, cargo)
+                     and all(frozenset(mode.get("requires_nodes") or ()) <= held for held in parties))
+
+
+def walking_cargo_modes(world_map: WorldMap) -> FrozenSet[str]:
+    """Modes where the cargo is the carrier (a herd driven to market)."""
+    return frozenset(mode_id for mode_id, mode in modes(world_map).items() if mode.get("cargo_walks"))
+
+
+def cargo_loss_per_day(world_map: WorldMap) -> Dict[str, float]:
+    """{mode_id: share of the cargo lost each day on the road} for the modes that state one."""
+    return {mode_id: float(mode["cargo_loss_per_day"]) for mode_id, mode in sorted(modes(world_map).items())
+            if mode.get("cargo_loss_per_day")}
 
 
 def improvement_nodes(world_map: WorldMap) -> Dict[str, str]:
@@ -63,4 +85,5 @@ def invalid_entries(world_map: WorldMap) -> List[str]:
     return [mode_id for mode_id, mode in sorted(modes(world_map).items())
             if not mode.get("model") or not mode.get("edge_classes")
             or any(edge_class not in EDGE_CLASSES for edge_class in mode["edge_classes"])
-            or not mode.get("source") or not mode.get("why")]
+            or not mode.get("source") or not mode.get("why")
+            or any(cargo not in CARGO_CLASSES for cargo in mode.get("carries") or ())]

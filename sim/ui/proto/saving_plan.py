@@ -4,7 +4,7 @@ One function builds the plan; the `saving` reply and the `stuck` row both read i
 """
 
 import math
-from sim.engine.ui_port import money_word
+from sim.engine.ui_port import money_text, tagged
 
 
 def saving_plan(sim):
@@ -22,8 +22,9 @@ def saving_plan(sim):
         year_affordable = sim.year + int(math.ceil((target - cash) / income))
     else:
         year_affordable = None
-    return {"id": node_id, "target": round(target, 1), "cash": round(cash, 1),
-            "net_income_per_year": round(income, 1), "year_affordable": year_affordable}
+    return tagged({"id": node_id, "target": round(target, 1), "cash": round(cash, 1),
+                   "net_income_per_year": round(income, 1), "year_affordable": year_affordable},
+                  target="money:civ_coin")
 
 
 def saving_reason(sim):
@@ -33,10 +34,10 @@ def saving_reason(sim):
         return None
     when = ("it is in hand now" if plan["year_affordable"] == sim.year
             else "at the current net income of %s a year that is %s"
-                 % ("{:,.0f}".format(plan["net_income_per_year"]),
+                 % (money_text(plan["net_income_per_year"], sim, grouped=True),
                     "the year %d" % plan["year_affordable"] if plan["year_affordable"] is not None
                     else "never: income does not cover your costs"))
     return {"what": "saving for %s" % plan["id"], "kind": "saving",
-            "why": "you are putting money by on purpose: %s %s target, %s in hand; %s"
-                   % ("{:,.0f}".format(plan["target"]), money_word(sim.civ),
-                      "{:,.0f}".format(plan["cash"]), when)}
+            "why": "you are putting money by on purpose: %s target, %s in hand; %s"
+                   % (money_text(plan["target"], sim, grouped=True),
+                      money_text(plan["cash"], sim, grouped=True), when)}

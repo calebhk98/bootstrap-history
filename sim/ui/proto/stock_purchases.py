@@ -3,7 +3,7 @@
 The quote and the charge are one figure, `Sim.stock_purchase_quote`; a partner that will not sell
 refuses with its reason in both.
 """
-from sim.engine.ui_port import purchase_rule
+from sim.engine.ui_port import money_text, purchase_rule
 
 
 def _stock_request(sim, cmd, quantity):
@@ -38,9 +38,53 @@ def buy_living_stock(sim, cmd, quantity):
         return error
     before = sim.capital
     if not sim.settle_stock_purchase(quote):
-        return {"ok": False, "error": "cannot pay %.1f for %s of %s; you could raise %.1f. Nothing was "
-                "changed." % (quote["cost"], quote["units"], quote["material"],
-                              purchase_rule.purchase_budget(sim))}
+        return {"ok": False, "error": "cannot pay %s for %s of %s; you could raise %s. Nothing was "
+                "changed." % (money_text(quote["cost"], sim, digits=1), quote["units"], quote["material"],
+                              money_text(purchase_rule.purchase_budget(sim), sim, digits=1))}
     return {"ok": True, "material": quote["material"], "bought_units": quote["units"],
             "partner": quote["partner"], "paid": round(before - sim.capital, 1),
             "held_now": round(sim.stock_held(quote["material"]), 3), "capital": round(sim.capital, 1)}
+
+
+def _smuggle_request(sim, cmd, quantity):
+    """(terms, None) for a smuggling attempt, or (None, error reply)."""
+    material = str(cmd.get("material") or "").strip().lower()
+    if not material:
+        return None, {"ok": False, "error": "say which stock, e.g. buy smuggled_stock silkworm_eggs_kg 0.1"}
+    partner = str(cmd.get("partner") or "").strip().lower() or None
+    terms = sim.stock_smuggle_quote(material, quantity, partner)
+    if not terms["ok"]:
+        return None, {"ok": False, "error": terms["error"] + ". Nothing was changed."}
+    return terms, None
+
+
+def quote_smuggled_stock(sim, cmd, quantity):
+    terms, error = _smuggle_request(sim, cmd, quantity)
+    if error:
+        return error
+    return {"ok": True, "what": "smuggled_stock", "material": terms["material"], "units": terms["units"],
+            "partner": terms["partner"], "to_buy_it": round(terms["cost"], 1),
+            "chance_caught": round(terms["chance_caught"], 3),
+            "arrives_units": round(terms["arrives_units"], 6),
+            "you_have": round(sim.capital, 1),
+            "note": "Taking stock from a partner that will not sell it. You pay the carrying whatever happens. "
+                    "If the partner's state catches you the stock is seized, it shuts its markets to you for "
+                    "years and your scandal rises; if not, the stock arrives less what the route loses."}
+
+
+def buy_smuggled_stock(sim, cmd, quantity):
+    terms, error = _smuggle_request(sim, cmd, quantity)
+    if error:
+        return error
+    before = sim.capital
+    outcome = sim.settle_stock_smuggle(terms)
+    if not outcome:
+        return {"ok": False, "error": "cannot pay %s to carry %s of %s. Nothing was changed."
+                % (money_text(terms["cost"], sim, digits=1), terms["units"], terms["material"])}
+    reply = {"ok": True, "material": terms["material"], "partner": terms["partner"], "caught": outcome["caught"],
+             "delivered_units": round(outcome["delivered_units"], 6), "paid": round(before - sim.capital, 1),
+             "held_now": round(sim.stock_held(terms["material"]), 3), "capital": round(sim.capital, 1)}
+    if outcome["caught"]:
+        reply["note"] = ("Caught: the stock was seized, %s has shut its markets to you until year %d, and your "
+                         "scandal rose." % (terms["partner"], outcome["closed_until"] or 0))
+    return reply

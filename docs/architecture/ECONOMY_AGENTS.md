@@ -130,6 +130,11 @@ rest and its goods go to its owner, and what the cash could not repay is the len
 idle hands are let go instead of flooding back on a price spike; a producer whose capacity has
 dwindled to nothing, with no plant coming and no debt, closes (`entry.producers_to_close`).
 
+**Growing is judged at the price growth leaves.** A producer with plant asks a loan to expand only if the new
+capacity still earns more than the live rate at the price expected once its own output is on the market, read off
+the buyers' schedules of the year's book (`expansion_price.py`); a newcomer drawn by a margin is sized by the gap
+at its entry price (`entry_margin.py`), which keeps the price after its additions at or above that price.
+
 **Prices that have not traded are not market prices.** Each market remembers how long ago it cleared;
 the price index counts only goods traded recently, and the game shows an untraded good at its cost
 of making at live prices, or flags it stale (`notional.py`). A

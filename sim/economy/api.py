@@ -36,8 +36,8 @@ __all__ = [
     "traded_volumes", "opening_quantities", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
     "credit_room", "economy_from_record", "blank_economy", "export_record", "economy_book", "finish_spin_up", "shown_prices_of",
-    "settle_agent_takings", "move_goods", "post_transfers", "cohort_incomes", "land_rent_per_hectare",
-    "land_rent_paid_by_tile", "land_rent_at_tile", "country_figures",
+    "settle_agent_takings", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
+    "land_rent_paid_by_tile", "land_rent_at_tile", "country_figures", "idle_hours_by_trade",
 ]
 
 _KEY_SEPARATOR = "|"
@@ -95,6 +95,12 @@ def land_rent_paid_by_tile(economy):
     return land_rents.rent_paid_by_tile(economy.setup, economy.record)
 
 
+def idle_hours_by_trade(economy, country=None):
+    """(hours offered and not hired, hours offered) of each trade in the labour markets of `country` (the home
+    country's when the economy holds several) in the last clearing: the jobs the labour core did not find."""
+    return country_figures.idle_hours_by_trade(economy, country_figures.home_when_shared(economy, country))
+
+
 def wages_by_trade_weighted(economy, country=None):
     """Last year's wage per hour of each trade: the remembered wage of each of its labour markets weighted
     by the hours hired there last year. A trade that hired nowhere falls back to the unweighted mean of
@@ -146,14 +152,26 @@ def external_trade_volume(economy):
     return economy.record.book.edge_volume(EDGE_EXTERNAL, economy.setup.currency_id)
 
 
+def _ranked_cohorts(economy, country=None):
+    """The home country's household cohorts, poorest per head first (ties by people, then id)."""
+    scope = country_figures.home_when_shared(economy, country)
+    tiles = country_figures.country_tiles(economy, scope)
+    cohorts = [cohort for cohort in economy.record.cohorts.values() if cohort.people > 0.0 and cohort.tile in tiles]
+    return sorted(cohorts, key=lambda cohort: (cohort.last_year_income / cohort.people, cohort.people, cohort.agent_id))
+
+
 def cohort_incomes(economy, country=None):
     """(people, last year's money income) of every household cohort, poorest per head first: the economy's
     own answer to what its bodies of people earn. Of `country` (the home country when the economy holds several)."""
-    scope = country_figures.home_when_shared(economy, country)
-    tiles = country_figures.country_tiles(economy, scope)
-    rows = [(cohort.people, cohort.last_year_income) for cohort in economy.record.cohorts.values()
-            if cohort.people > 0.0 and cohort.tile in tiles]
-    return sorted(rows, key=lambda row: (row[1] / row[0], row[0]))
+    return [(cohort.people, cohort.last_year_income) for cohort in _ranked_cohorts(economy, country)]
+
+
+def cohort_land_rents(economy, tiles=None, country=None):
+    """(people, rent received last year) of every household cohort in the order of `cohort_incomes`, in the
+    economy's units: the rent paid on each tile (only those in `tiles` when given) goes to the tile's cohorts
+    by what each owns (`land_rents.rent_received_by_cohort`)."""
+    received = land_rents.rent_received_by_cohort(economy.setup, economy.record, tiles)
+    return [(cohort.people, received.get(cohort.agent_id, 0.0)) for cohort in _ranked_cohorts(economy, country)]
 
 
 def price_response(economy, good, landed_units, taken_units):
@@ -232,6 +250,7 @@ def economy_book(economy):
 def finish_spin_up(economy):
     """Closes the hidden spin-up years: the price level is rebased to one and the clock returns to zero."""
     rebase_basket_price_level(economy.setup, economy.record)
+    economy.record.settling = False
     economy.record.memory.year = 0
 
 

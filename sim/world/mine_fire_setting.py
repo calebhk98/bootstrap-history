@@ -40,17 +40,30 @@ WOOD_DELIVERED_TONNES_PER_WORKER_DAY = declare(
     confidence="C",
     why="Turns the wood a fire-set needs into labour.")
 
-# Share of the rock a hardness class breaks by fire-setting. Hard rock:
-# Bettenay and the hard class's own source (Rio Tinto, Dacian quartz) say
-# fire-setting was the way in. Softer rock is broken with hammer and wedge;
-# the share for medium rock is unsourced and left at none rather than guessed.
+# Share of the rock a hardness class breaks by fire-setting. Fire-setting is
+# the way into rock that resists iron tools; medium rock is cut with them.
 FIRE_SET_SHARE_OF_ROCK_BY_HARDNESS = declare(
     "FIRE_SET_SHARE_OF_ROCK_BY_HARDNESS", {"soft": 0.0, "medium": 0.0, "hard": 1.0},
-    kind="temporary_heuristic",
+    kind="engineering_estimate",
     unit="fraction of the rock tonnage broken by fire-setting",
-    source=None, confidence="D",
-    why="Only hard rock is charged wood until a source gives the share for "
-        "ordinary vein rock (Complaints/342).")
+    source="Medium rock none, hard rock all (Complaints/344, 349). Agricola, "
+           "De re metallica Book V (Hoover, read): veins and walls 'tractable "
+           "to iron tools' are cut with them and only 'the hardest kind of "
+           "metal-bearing vein, which in a measure resists iron tools' is "
+           "broken with fires. Willies 1997 (Peak District Mines Historical "
+           "Society Bulletin 13(3), read) on Rio Tinto: 'Firesetting was used "
+           "where space was sufficient and the rock was hard.' Ardaillon 1897 "
+           "in Bettenay 2022 Table 2: 145 kg of Laurion limestone per miner "
+           "per day by iron tools alone. Against it: Bettenay (after "
+           "Tereygeol) has fire-setting the main technique at Melle, a "
+           "carbonate-hosted deposit, so the share for medium rock lies "
+           "between none and all; none is the figure the two Classical and "
+           "Renaissance sources support, and the 0.6 tonne of rock per tonne "
+           "of wood of fire-setting is charged on hard rock only.",
+    confidence="C",
+    why="Decides whether ordinary vein rock is charged wood for "
+        "fire-setting on top of tool breaking; charging both would break "
+        "the same rock twice.")
 
 
 def fire_setting_labour_hours_per_tonne_rock(hardness_class):

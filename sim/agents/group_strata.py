@@ -1,9 +1,11 @@
 """Bodies of people (strata) as interest groups: those whose incomes have fallen from what they came to expect."""
 from typing import Any, List
 
+from .group_jobs import jobless_sectors, remember_idle
+from .group_rent import grievance_parts
 from .group_tuning import STRATUM_GRIEVANCE_THRESHOLD, STRATUM_WELFARE_MEMORY_RATE
 from .sector import Sector
-from .stratum_year import WAGES, income_parts
+from .stratum_year import WAGES
 from .tuning_strata import STRATUM_WORKING_SHARE
 
 FALLING_INCOMES = "falling_incomes"
@@ -17,9 +19,18 @@ def organisable(stratum: Any) -> bool:
 	return record.country is None and record.members > 0.0 and not stratum.is_bonded()
 
 
+def property_holders(strata: List[Any]) -> List[Any]:
+	"""The free strata that hold property, among whom the land market's rent is shared."""
+	return [stratum for stratum in strata if organisable(stratum) and float(stratum.record.plan.get("property_share") or 0.0) > 0.0]
+
+
 def remember_welfare(strata: List[Any], world: Any = None) -> None:
 	"""Each year a stratum's expectation moves toward the welfare it has, and with a `world` toward each
-	income (wages, property) it earns."""
+	income (wages, property: the land market's rent where land was let) it earns and the share of its trade's
+	hours it expects to go unhired."""
+	holders = property_holders(strata)
+	if world is not None:
+		remember_idle([stratum for stratum in strata if organisable(stratum)], world)
 	for stratum in strata:
 		record = stratum.record
 		if not organisable(stratum):
@@ -30,18 +41,18 @@ def remember_welfare(strata: List[Any], world: Any = None) -> None:
 			record.welfare_reference += STRATUM_WELFARE_MEMORY_RATE * (record.welfare - record.welfare_reference)
 		if world is None:
 			continue
-		for component, income in income_parts(stratum, world).items():
+		for component, income in grievance_parts(stratum, holders, world).items():
 			reference = record.income_reference.get(component, 0.0)
 			record.income_reference[component] = (
 				income if reference <= 0.0 else reference + STRATUM_WELFARE_MEMORY_RATE * (income - reference))
 
 
-def _fallen_incomes(stratum: Any, world: Any) -> List[Sector]:
+def _fallen_incomes(stratum: Any, holders: List[Any], world: Any) -> List[Sector]:
 	"""One sector for each income of the stratum (its wages, its property) that has fallen below what it
-	expected: workers when their trade's pay fell, landholders when rents fell."""
+	expected: workers when their trade's pay fell, landholders when the rent of the land they let fell."""
 	record = stratum.record
 	sectors = []
-	for component, income in sorted(income_parts(stratum, world).items()):
+	for component, income in sorted(grievance_parts(stratum, holders, world).items()):
 		reference = record.income_reference.get(component, 0.0)
 		fall = reference - income
 		if reference <= 0.0 or fall < STRATUM_GRIEVANCE_THRESHOLD * reference:
@@ -63,16 +74,18 @@ def _fallen_incomes(stratum: Any, world: Any) -> List[Sector]:
 
 
 def stratum_sectors(strata: List[Any], world: Any) -> List[Sector]:
-	"""The sectors of the strata whose incomes are below what they expect: workers whose trade's pay fell and
-	landholders whose property income fell, each by the fall measured; and, for the part of a stratum's
-	fall in welfare those do not explain, one sector of falling incomes. The people are its own."""
+	"""The sectors of the strata whose incomes are below what they expect: workers whose trade's pay fell,
+	workers whose jobs went (hours left unhired, with the technique that displaced them) and landholders whose
+	rents fell, each by the fall measured; and, for the part of a stratum's fall in welfare those do not
+	explain, one sector of falling incomes. The people are its own."""
 	sectors = []
 	food_cost = world.subsistence_cost_per_person_year()
+	holders = property_holders(strata)
 	for stratum in strata:
 		record = stratum.record
 		if not organisable(stratum):
 			continue
-		named = _fallen_incomes(stratum, world)
+		named = _fallen_incomes(stratum, holders, world) + jobless_sectors([stratum], world)
 		sectors.extend(named)
 		if record.welfare_reference <= 0.0:
 			continue

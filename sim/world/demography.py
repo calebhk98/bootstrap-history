@@ -72,6 +72,7 @@ tech tree, and takes disease burden only as a plain float handed to it.
 import collections
 import math
 import random
+from typing import Mapping, Optional
 
 from sim.constants import declare
 
@@ -918,6 +919,12 @@ StepFlows = collections.namedtuple(
      "deaths_elderly"])
 
 
+def nutrition_mortality_multiplier(nutrition_ratio: float, vulnerability: float) -> float:
+    """The factor food shortage puts on a band's mortality (1.0 when need is met); the public name of the
+    function Population.step uses, for models that scale another death rate by the same food shortage."""
+    return _excess_mortality_multiplier(nutrition_ratio, vulnerability)
+
+
 class Population(object):
     """Three age cohorts and the machinery that ages them by one year.
 
@@ -1002,7 +1009,8 @@ class Population(object):
 
     def step(self, food_available_calories_per_day: float, immigration: float = 0.0,
              emigration: float = 0.0, jitter: bool = False,
-             disease_burden: float = PRE_INDUSTRIAL_DISEASE_BURDEN) -> "StepFlows":
+             disease_burden: float = PRE_INDUSTRIAL_DISEASE_BURDEN,
+             epidemic_deaths: Optional[Mapping[str, float]] = None) -> "StepFlows":
         """Advance by one year. Mutates this Population in place and returns
         the flows that moved it, for the caller (a test, or eventually an
         engine) to check the accounting against.
@@ -1077,6 +1085,12 @@ class Population(object):
             * _disease_mortality_multiplier(
                 disease_burden, DISEASE_MORTALITY_FLOOR_MULTIPLIER_ELDERLY)
             * _excess_mortality_multiplier(ratio, STARVATION_VULNERABILITY_ELDERLY))
+
+        # Deaths an epidemic model already counted (sim/disease), by band; never more than the band's survivors.
+        epidemic = epidemic_deaths or {}
+        deaths_children += min(self.children - deaths_children, epidemic.get("children", 0.0))
+        deaths_working_age += min(self.working_age - deaths_working_age, epidemic.get("working_age", 0.0))
+        deaths_elderly += min(self.elderly - deaths_elderly, epidemic.get("elderly", 0.0))
 
         births = (self.working_age * FEMALE_SHARE_OF_WORKING_AGE_POPULATION
                   * ANNUAL_FERTILITY_RATE_PER_WOMAN

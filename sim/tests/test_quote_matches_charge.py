@@ -33,6 +33,9 @@ _ROWS = [
      "buy", {"what": "mine", "material": "coal", "n": 50}, "to_sink_it"),
     ("living stock", {"what": "living_stock", "material": "ramie_stock_kg", "n": 100},
      "buy", {"what": "living_stock", "material": "ramie_stock_kg", "n": 100}, "to_buy_it"),
+    # the carrying is paid whether or not the partner's state catches the smuggler; the catch is a separate draw
+    ("smuggled stock", {"what": "smuggled_stock", "material": "silkworm_eggs_kg", "n": 0.1},
+     "buy", {"what": "smuggled_stock", "material": "silkworm_eggs_kg", "n": 0.1}, "to_buy_it"),
     ("slaves", {"what": "slaves", "n": 3}, "buy", {"what": "slaves", "n": 3}, "to_buy_them"),
     ("hire", {"what": "hire", "trade": "smith", "n": 1},
      "hire", {"trade": "smith", "n": 1}, "paid_now"),
@@ -177,3 +180,13 @@ check("living stock: the ledger shows exactly what was quoted",
       _stock_reply.get("ok") and abs(_ledger_outflow(_stocked, "stock bought abroad")
                                      - _stock_quote["to_buy_it"]) <= 0.051,
       (_ledger_outflow(_stocked, "stock bought abroad"), _stock_quote.get("to_buy_it")))
+
+# Smuggled stock: the carrying is charged whether or not the taker is caught, and it is the quoted cost.
+_smuggle_args = {"what": "smuggled_stock", "material": "silkworm_eggs_kg", "n": 0.1}
+_smuggler = _ledger_game()
+_smuggle_quote = S._agent_dispatch(_smuggler, NODES, dict(_smuggle_args, cmd="quote"))
+_smuggle_reply = S._agent_dispatch(_smuggler, NODES, dict(_smuggle_args, cmd="buy"))
+check("smuggled stock: the ledger shows exactly what was quoted, caught or not",
+      _smuggle_reply.get("ok") and abs(_ledger_outflow(_smuggler, "stock smuggled")
+                                       - _smuggle_quote["to_buy_it"]) <= 0.051,
+      (_ledger_outflow(_smuggler, "stock smuggled"), _smuggle_quote.get("to_buy_it")))

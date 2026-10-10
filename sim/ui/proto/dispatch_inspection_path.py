@@ -1,6 +1,7 @@
 """The path and materials commands."""
 
 from .route_blockers import route_blockers
+from sim.engine.ui_port import money_text
 from .command_registry import command
 from .guidance import LEVERAGE_NOTE, leverage_points
 from sim.engine.ui_port import knowledge_loss_warning
@@ -98,7 +99,7 @@ def _cmd_path(sim, nodes, cmd, ended):
                 "can afford several of them at once. Pick one, or a few, "
                 "not all of them - and see what pays before spending "
                 "the rest."
-                % ("{:,.0f}".format(_combined), "{:,.0f}".format(_raise)))
+                % (money_text(_combined, sim, grouped=True), money_text(_raise, sim, grouped=True)))
     # A ROUTE THAT DOES NOT SAY "RESTORE" IS A ROUTE YOU CANNOT FOLLOW: a
     # node you know but have SHUT does not appear above (it is done, so it
     # is not remaining, and nothing downstream is blocked by it), yet

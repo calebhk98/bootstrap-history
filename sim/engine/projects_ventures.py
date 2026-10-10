@@ -19,6 +19,7 @@ import collections
 
 from sim.constants import declare
 from . import cause_book, money_units
+from .units_prose import money_text
 from sim.agents.api import edges
 
 
@@ -257,12 +258,12 @@ class VenturesMixin:
         if pay:
             if fee > self.spending_power("open"):
                 # Report the same spending power the test checked.
-                return False, ("opening it costs %s denarii in stock and premises, "
+                return False, ("opening it costs %s in stock and premises, "
                                "and between %s in cash and what anyone will "
                                "advance against a purchase you can raise %s"
-                               % ("{:,.0f}".format(fee),
-                                  "{:,.0f}".format(household.capital),
-                                  "{:,.0f}".format(self.spending_power("buy"))))
+                               % (money_text(fee, self, grouped=True),
+                                  money_text(household.capital, self, grouped=True),
+                                  money_text(self.spending_power("buy"), self, grouped=True)))
             self.pay_edge(edges.EDGE_BUILDERS, fee, "opening a venture")
         projects.operating.add(node_id)
         projects.mothballed.discard(node_id)
@@ -291,13 +292,13 @@ class VenturesMixin:
             " !! this costs more than it earns (%s a year net), even once "
             "it is fully ramped up - that may be the right call for what it "
             "unlocks, but check 'why %s' if it is not what you meant."
-            % ("{:,.0f}".format(up_now - rev_now), node_id)
+            % (money_text(up_now - rev_now, self, grouped=True), node_id)
             if up_now > rev_now and node_id not in self.CAPABILITY_INSTITUTIONS
             else "")
         return True, ("%s open%s: it earns %s a year and costs %s a year to "
                       "run.%s%s"
                       % (node_id, "" if unit_count == 1.0 else " at %.2f of a full founding" % unit_count,
-                         "{:,.0f}".format(rev_now), "{:,.0f}".format(up_now),
+                         money_text(rev_now, self, grouped=True), money_text(up_now, self, grouped=True),
                          _ramp_note, _loss_note))
 
     # Expansion: reusing "open" with units field keeps protocol backward-compatible.
@@ -326,12 +327,12 @@ class VenturesMixin:
         fee = self.institution_unit_cost(node_id, have, add_units)
         if pay:
             if fee > self.spending_power("buy"):
-                return False, ("expanding %s by %.2f units costs %s denarii, and "
+                return False, ("expanding %s by %.2f units costs %s, and "
                                "between %s in cash and what anyone will advance "
                                "against a purchase you can raise %s"
-                               % (node_id, add_units, "{:,.0f}".format(fee),
-                                  "{:,.0f}".format(self.state.household.capital),
-                                  "{:,.0f}".format(self.spending_power("buy"))))
+                               % (node_id, add_units, money_text(fee, self, grouped=True),
+                                  money_text(self.state.household.capital, self, grouped=True),
+                                  money_text(self.spending_power("buy"), self, grouped=True)))
             self.pay_edge(edges.EDGE_BUILDERS, fee, "expanding a venture")
         governance = self.state.governance
         inst_units = getattr(governance, "inst_units", None)
@@ -340,10 +341,10 @@ class VenturesMixin:
         inst_units[node_id] = have + add_units
         self.household.bump_institution_units_version()
         rev_now, up_now = node["rev"] * inst_units[node_id], node["up"] * inst_units[node_id]
-        return True, ("%s expanded from %.2f to %.2f units for %s denarii: it "
+        return True, ("%s expanded from %.2f to %.2f units for %s: it "
                       "now earns about %s a year and costs about %s to run"
-                      % (node_id, have, inst_units[node_id], "{:,.0f}".format(fee),
-                         "{:,.0f}".format(rev_now), "{:,.0f}".format(up_now)))
+                      % (node_id, have, inst_units[node_id], money_text(fee, self, grouped=True),
+                         money_text(rev_now, self, grouped=True), money_text(up_now, self, grouped=True)))
 
     def close_venture(self, node_id):
         """Stop running it. You keep the knowledge; you stop paying for it and
@@ -354,5 +355,5 @@ class VenturesMixin:
         self.close_work(node_id, self.CLOSED_BY_CHOICE)
         node = self.nodes[node_id]
         return True, ("%s closed: you stop paying %s a year and stop earning %s"
-                      % (node_id, "{:,.0f}".format(node["up"]), "{:,.0f}".format(node["rev"])))
+                      % (node_id, money_text(node["up"], self, grouped=True), money_text(node["rev"], self, grouped=True)))
 

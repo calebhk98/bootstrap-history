@@ -42,7 +42,7 @@ import argparse, sys
 
 from sim.engine.ui_port import Sim
 from . import protocol as _protocol
-from sim.engine.ui_port import settings
+from sim.engine.ui_port import settings, units
 from . import cli_mods, cli_units_options, validate_map
 # civ_of_save/goal_of_save are the only names this file reads from
 # .protocol; `cmd_agent` and everything else that needs
@@ -402,9 +402,14 @@ def cmd_validate(args):
     errs += validate_material_gating.check_material_gating(nodes, validate_material_gating.load_gating(ROOT))
     from sim.engine.ui_port import civ_start_check
     errs += validate_unheld_gates.check_unheld_gates(nodes, civ_start_check.load_civilisations(ROOT), production)
+    errs += [problem for civ_id, civ in civ_start_check.load_civilisations(ROOT).items()
+             for problem in units.check_civ_units(units.registry(), civ_id, civ)]
     from sim.engine import validate_event_causes
     errs += validate_event_causes.check_event_causes(civ_start_check.load_civilisations(ROOT), set(nodes))
     errs += validate_running_gates.check_running_gates(nodes)
+    from sim.engine import validate_note_quality
+    print("\n".join(validate_note_quality.report_lines(nodes)))
+    errs += validate_note_quality.check_note_quality(nodes)
     from sim.engine import validate_action_results
     from sim.geography.api import open_map
     carriage_map = open_map()
@@ -413,7 +418,7 @@ def cmd_validate(args):
         nodes, list(carriage_map.catalogue("route_modes").values()) + list(carriage_map.catalogue("sea_lanes").values()))
     errs += validate_defence_stores.check_defence_stores(nodes, set(wages), producible)
     from sim.engine import validate_disease_data
-    errs += validate_disease_data.check_disease_data()
+    errs += validate_disease_data.check_disease_data(nodes, civ_start_check.load_civilisations(ROOT))
     goal_errs, default_goal, goal_rows = _validate_goal_rows(tree, nodes)
     errs += goal_errs
 

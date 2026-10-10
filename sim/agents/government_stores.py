@@ -48,7 +48,8 @@ class StoresMixin:
 				if paid > 0.0:
 					ledger.transfer(payer, self, paid, "taxation")
 					taken[assessed.form] += paid
-				touched[payer.actor_id] = payer
+				if assessed.basis == "stratum_income":  # only earned income is assessed once; rent is a different base
+					touched[payer.actor_id] = payer
 		for actor_id, payer in touched.items():
 			self.record.income_assessed[actor_id] = earned_income(payer)  # type: ignore[attr-defined]
 		return {form: money for form, money in taken.items() if any(a.form == form and a.payers for a in assessments)}

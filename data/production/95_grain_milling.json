@@ -1,0 +1,38 @@
+{
+ "_note": "Milling of the staple grains into flour, which households eat. Each recipe takes one grain and the shaft work to grind it; the grain itself is grown (wheat_kg, millet_kg, maize_kg). Maize is ground on a metate in practice; the shaft work and yield are the same order, so one recipe shape serves all three.",
+ "materials": {
+  "flour_kg": {
+   "outputs": {"flour_kg": 1000.0},
+   "inputs": {"wheat_kg": 1040.0},
+   "labour_hours": {"labourer": 5.0},
+   "mechanical_mj": 100.0,
+   "unit_dimension": "mass",
+   "basis": "per 1000 kg of whole-meal flour ground between stones, from wheat",
+   "yield_basis": "MILLED. Stones crack and grind the whole grain and nothing is sifted out: the few percent that leaves as moisture and dust is the difference between grain in and flour out (1040 in, 1000 out, conf C). Shaft work: grinding grain between stones takes on the order of a tenth of a megajoule per kilogram (author's estimate from the output of a hand quern at the 75 W a person sustains, about a kilogram an hour, and of water mills, a kilogram per few tens of kilojoules at the wheel; not checked against a primary source offline, conf C). The shaft work is priced through the energy market, so whoever supplies it (people at a quern or treadmill, or a water wheel and the millwrights who build and tend it) is paid there. Labour here is only feeding the hopper, dressing the stones and sacking, a few hours a tonne (conf D). Millstone wear is not charged.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "flour_kg_millet": {
+   "outputs": {"flour_kg": 1000.0},
+   "inputs": {"millet_kg": 1040.0},
+   "labour_hours": {"labourer": 5.0},
+   "mechanical_mj": 100.0,
+   "unit_dimension": "mass",
+   "basis": "per 1000 kg of whole-meal flour ground between stones, from millet",
+   "yield_basis": "MILLED, as flour_kg from wheat: millet is a small hard grain, ground whole; the same mass loss and shaft work are taken (conf C, author's estimate; no separate figure found offline). Labour feeds the hopper and sacks the flour (conf D).",
+   "conf": "C",
+   "requires_node": null
+  },
+  "flour_kg_maize": {
+   "outputs": {"flour_kg": 1000.0},
+   "inputs": {"maize_kg": 1040.0},
+   "labour_hours": {"labourer": 5.0},
+   "mechanical_mj": 100.0,
+   "unit_dimension": "mass",
+   "basis": "per 1000 kg of whole-meal flour ground between stones, from maize",
+   "yield_basis": "MILLED, as flour_kg from wheat: dry maize is ground whole (on a metate in the Americas, a stone mill elsewhere); the same mass loss and shaft work are taken (conf C, author's estimate; no separate figure found offline). Labour feeds the stone and sacks the flour (conf D).",
+   "conf": "C",
+   "requires_node": "fud_maize"
+  }
+ }
+}

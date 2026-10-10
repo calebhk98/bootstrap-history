@@ -157,7 +157,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Legal framework for enforcing voluntary agreements. Necessary foundation for all complex commerce."
+  "note": "A body of rules that says what a promise means and how a court will enforce it, so that two parties can trade on an agreement made now for delivery or payment later. Without it complex commerce stalls, because anyone can walk away from a deal. It needs courts that people trust, judges, and written or witnessed forms. The founder has to see that agreements are honoured, or no one will deal with him."
  },
  {
   "id": "fin_tax_farming",
@@ -251,7 +251,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "State purchase and distribution of grain. Requires contracts with producers, shipping, storage, and accounting.",
+  "note": "The state buying grain and handing it out or selling it to citizens, as a way to feed a city and keep it quiet. It needs contracts with producers, ships, storehouses that keep the grain dry and free of vermin, and accountants to track it. The work is hard because failure means hunger and riot. A founder can supply, ship or store grain for it.",
   "yrs": 1.0
  },
  {
@@ -1518,7 +1518,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Written agreement specifying duties, term, and compensation. Protects both employer and employee and reduces disputes."
+  "note": "A written agreement that fixes the duties of a worker, how long they are hired, and what they are paid. It protects both sides, reduces disputes over what was promised, and lets an employer plan a team over months. It needs contract law behind it so the terms can be enforced, and literate people to write it down. Without it, workers can leave at any time and employers can underpay."
  },
  {
   "id": "fin_wage",
@@ -1541,7 +1541,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Regular payment for labour, in coin or in kind, wherever a cash or barter economy already exists."
+  "note": "Regular payment for labour, in coin or in kind (for example grain or cloth), so that people work for an employer rather than for themselves. It is possible wherever a cash or barter economy already exists, because the worker must be able to spend the pay. Paying on time is hard: if the employer cannot pay, workers leave. The founder needs a reliable store of coin or goods."
  },
  {
   "id": "fin_company_town",
@@ -2353,15 +2353,18 @@
   "adopt_yrs": 1,
   "risk": 0.25,
   "sch": 0,
-  "art": 0,
+  "art": 3,
   "conf": "B",
-  "note": "Establishment where customers gamble, with the house taking a cut of all winnings. Highly profitable but attracts violence and is often banned or heavily taxed. Officials who are paid to look away give a little cover, and the house draws the state's attention.",
+  "note": "Establishment where customers gamble, with the house taking a cut of all winnings. Highly profitable but attracts violence and is often banned or heavily taxed. Officials who are paid to look away give a little cover, and the house draws the state's attention. The state takes a share of the takings each year as the price of letting it stand.",
   "mechanics": {
    "alarm_factor": {
     "factor": 1.08
    },
    "protection": {
     "flat": 0.01
+   },
+   "state_levy": {
+    "share": 0.1
    }
   }
  },
@@ -2392,13 +2395,17 @@
   "sch": 1,
   "art": 1,
   "conf": "B",
-  "note": "A government-authorised sale of numbered chances funds a declared public purpose, with published drawing and payout rules. Private lots and prize distributions are ancient; the reform is a recurring revenue-raising institution. A state that draws its revenue through the operator is slow to think ill of the operator.",
+  "note": "A government-authorised sale of numbered chances funds a declared public purpose, with published drawing and payout rules. Private lots and prize distributions are ancient; the reform is a recurring revenue-raising institution. A state that draws its revenue through the operator is slow to think ill of the operator, and it takes a large share of the takings each year.",
+  "unheld_reason": "state lotteries for public revenue belong to the early modern states, the English one from 1694; no starting society of the game ran one",
   "mechanics": {
    "alarm_factor": {
     "factor": 0.97
    },
    "protection": {
     "flat": 0.02
+   },
+   "state_levy": {
+    "share": 0.3
    }
   }
  },

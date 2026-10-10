@@ -232,8 +232,11 @@ class PopulationMixin:
         confidence="D",
         why="Floor share for a trade no available recipe puts need on (a "
             "specialist whose work is not in the household-demand graph yet): "
-            "a few people always practise it. An order-of-magnitude "
-            "placeholder until every trade's work is in the recipe graph.")
+            "a few people always practise it. Also lifts a trade whose "
+            "derived share is smaller than one person in the town (a "
+            "millwright's tending of the wheels a mill's shaft work needs). "
+            "An order-of-magnitude placeholder; the trades it sizes are "
+            "listed by the command in Complaints/closed/434.")
     UNSKILLED_POOL_TOWN_SHARE = declare(
         "UNSKILLED_POOL_TOWN_SHARE", 0.05, kind="temporary_heuristic",
         unit="fraction of the town's working people", source=None,
@@ -517,5 +520,5 @@ class PopulationMixin:
                 "specialist does not practise in every town and the ones who "
                 "do are not all for hire. The common crafts are the ones "
                 "sized straight off a town's own population."
-                % "{:,.0f}".format(pop)),
+                % self._world.plain_number(pop)),
         }

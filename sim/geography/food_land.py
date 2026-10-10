@@ -31,3 +31,12 @@ def cleared_forest_fraction(world_map: WorldMap, tile_id: str) -> float:
 def grazable_fraction(world_map: WorldMap, tile_id: str) -> float:
     """Share of open land that is gentle enough for livestock to use."""
     return _slope_factor(world_map, tile_id, "food_pasture_ruggedness_envelope")
+
+
+HECTARES_PER_SQUARE_KM = 100.0
+
+
+def arable_hectares(world_map: WorldMap, tile_id: str) -> float:
+    """Hectares of the tile that can be ploughed."""
+    return (tile_layers.number(world_map, tile_id, "land_area_km2", 0.0) * HECTARES_PER_SQUARE_KM
+            * arable_fraction(world_map, tile_id))

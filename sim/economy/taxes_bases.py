@@ -47,8 +47,9 @@ def harvest(form, facts: YearFacts, prices: Mapping[GoodId, float]) -> Dict[Agen
     price = prices.get(form.paid_in, 0.0)
     bases = {}
     for (producer, good), quantity in sorted(facts.output.items()):
-        if good == form.paid_in and quantity > 0.0:
-            bases[producer] = Base(quantity * price, quantity, good, facts.producer_tile.get(producer, ""))
+        tile = facts.producer_tile.get(producer, "")
+        if good == form.paid_in and quantity > 0.0 and form.covers(tile):
+            bases[producer] = Base(quantity * price, quantity, good, tile)
     return bases
 
 

@@ -1,0 +1,50 @@
+# State revenue is a fitted share of labour value, several times what the modelled budget spends
+
+**Status:** closed - revenue is the declared forms assessed on modelled bases, in coin or in kind (test state_revenue_forms); a form can fall on the strata's earned income, on land rent or on land's capital value, and the land forms are drawn from the strata that received the rent (test state_land_revenue); Rome splits its land tax by province; the surplus buys named works and the budget names the lines it lacked (test state_works). See "Closed (2026-10)" below.
+
+`SimWorld.state_revenue` is the working people not under arms, at the unskilled wage, times the economy's output factor, times `starting_tax_share` times state capacity. With the standing lines of 300 built (army, officials, roads, public buildings, court, dole, navy), a healthy Rome spends about a third of that and Han about a sixth, so neither goes short until a plague, a collapse of output or a threat-driven army takes the revenue below need. No committed command prints revenue beside need by line over a run; it was measured with a series script that no longer exists, and the scratch driver described under Update (strata) below is the way to measure it now.
+
+Two ways to close it, and the second is the honest one. Spending that the budget does not name (campaigns beyond the standing force, building beyond upkeep, gifts to the army, tax collection itself) has no line of its own: a reserve above `RESERVE_CEILING_YEARS_OF_NEED` now hires public works and is lent through the capital market (`government_surplus.py`, 327, 307); each unnamed purpose still wants a physical basis. Revenue itself is a share of labour value at one wage, not of a taxable surplus (rent, trade, the harvest after subsistence); it should follow what can be collected.
+
+All the new line sizes (`tuning_spending.py`) are labelled heuristics, so the ratios above move with them; do not treat the ratios as findings about Rome or Han.
+
+Related: 287, 314.
+
+Owner decision (2026-10-02): should be fixed from actual values: a state can have several revenue forms (land, wealth, trade on imports and exports, people), often paid in kind (a share of food), not only coin.
+
+Built (owner decision 2026-10-02): each civilisation declares `state_revenue` forms (basis, rate, optional `paid_in`, source) in its file; `sim/agents/revenue.py` assesses them on bases in `revenue_bases.py` (harvest, adult labour years, imports, exports, coin stock); in-kind revenue enters the state's stores and is used by its lines or sold through the goods market (`government_stores.py`). `starting_tax_share` no longer sets state revenue. Open: most rates are labelled placeholders (confidence D in the data); the surplus against the named lines persists (scratch driver below); the grain valuation follows the goods market's spot quote, which swings in some runs, so land tax in coin's worth swings with it.
+
+Update (strata): `basis: "stratum_income"` (`revenue_bases.py`) is the earned income (`edge:` purposes of `record.income`) of the home country's strata since the state last assessed it, optionally limited to named strata (`from_strata`). It is collected from the payers' purses by `ledger.transfer` (never more than a purse holds), so the money is the strata's loss and the state's gain, not created at the edge. The world answers `country_strata()` (`sim/engine/agents_port_budget.py`). To use it a civilisation's `state_revenue` adds a form such as `{"form": "income_tax", "basis": "stratum_income", "from_strata": ["rich"], "rate": <rate>}` with a sourced rate (a property tax on the rich stratum stands in for rent). Measured with a scratch driver (a Rome start, `agent_economy` off, `game.advance_actors(year)` six years, the home government's `record.income` and `record.outlays` differenced each year): before, year 1 revenue 5.4e9 against spending 2.2e9 (surplus 3.2e9), year 2 surplus 1.3e9, then works (the unnamed sink, capped at a tenth of the working age) took the rest, 3.2e9 of 5.5e9 spent from year 3 and the surplus fell to nil; after: the same first two years, then relief to the poor stratum (0.5e9 in alternate years, its reported unmet food and housing) and works; with a form `{basis: stratum_income, rate: 0.01}` added to the civilisation's forms, revenue rises from 5.5e9 to 6.9e9 from year 3 (the strata earn about 4e11 a year at home), collected from the strata's purses by `ledger.transfer`.
+
+## Folded in
+
+Overlapping issues closed into this one; each closed file keeps its full text.
+
+- 286 (`closed/286-state-budget-models-only-army-and-officials.md`): the state budget names only army and officials; surplus should be spent on named lines with a stock of works (roads, aqueducts) and their upkeep.
+- 105 (`closed/105-add-a-state-fiscal-budget-model.md`): state fiscal budget: the remaining pieces are 286 (above) and the revenue forms in this issue.
+
+## Update (land bases, 2026-10)
+
+`land_rent` and `land_value` (`revenue_bases.py`) read `economy.api.land_rent_paid_by_tile` (`sim/economy/land_rents.py`): each tile's rent per hectare times the hectare-years its producers worked last year, in coin. `land_value` divides by `market_rate()` and is nil without a rate. Not every civilisation had a land tax beyond the harvest forms it already declares: Han, Mexica and Norse take theirs from the harvest, England in 1300 had customs and a movables subsidy but no standing land tax, so only Rome gained a form. No stratum-income form was added because no source names a rate. The Rome form is measured only on fixtures (a whole game was not built); its yield in a played start is unmeasured.
+
+## Closed (2026-10)
+
+**Rent from named owners.** The agent economy keeps rent with household cohorts, each owning a share of its tile's rent (`economy/land_rents.py: rent_received_by_cohort`, `economy.api.cohort_land_rents`, in the order of `cohort_incomes`). The strata are slices of the cohorts ranked by income (`strata_observed.py`), so each stratum received the rent of its slice and `land_rent_owners()` returns those strata; the tax is taken from their purses by `ledger.transfer`. Before the economy opens the tax is drawn from the edge as before. The port now converts cohort incomes to coin (they were counted in the economy's unit). A rent form no longer marks a stratum's income as assessed, so it does not hide that income from a `stratum_income` form.
+
+**Rome by province.** A form on `harvest`, `land_rent` or `land_value` may name `tiles` or `except_tiles` (`revenue.form_tiles`; the economy's own tax layer honours the same fields on the harvest, `economy/taxes.py`, and leaves the actor-layer bases to the actors). Rome levies its tithe on every tile but Syria's and a one per cent tribute on assessed property (land's capital value stands in) on Syria's, so no land is taxed twice (sources in `data/civilizations/rome_100ad.json`: Cicero Verrines 2.3 for the tithe, Appian Syrian Wars 50 for the property tribute). The harvest of a subset of tiles is the state's harvest times their share of its arable land (a labelled heuristic: no harvest is recorded by tile).
+
+**Stratum-income form.** Correct as it stands, with no civilisation declaring one. A search for a sourced rate found none on earned income: the Han *suan* is a poll charge per person (traders and slaves double) and a general property tax is argued not to have existed throughout the Han; Rome's citizen *tributum* was on assessed property and Italy was exempt by 100 AD; the English lay subsidy is on movables (already a `coin_stock` form). The basis exists (test state_strata_fiscal) for a civilisation whose source gives a rate on income.
+
+**Lines the budget lacked.** The surplus no longer hires unnamed works. Each line has a stock or driver from existing state (rates are labelled heuristics in `tuning_spending.py`):
+
+- Fortifications (`state_works.py`): masonry along the share of the land frontier a sack threatens, from `territory().frontier_km` and the declared hazards; upkeep is a masons' line, unpaid upkeep decays the stock.
+- Water works: masonry per town dweller, same stock and upkeep. They are held on the government record (`works_stock`), not per tile, because the map has no per-tile works layer; the driver is the towns, which is what the state keeps up.
+- Capital buildings and temples: wanted in proportion to the state's weight on spectacle, raised only from a surplus (nothing stands at the opening).
+- Granaries (`government_granary.py`): a reserve target in years of the towns' subsistence grain held in the state's stores, spoilage, sale of the excess, release when the quote is far above a remembered normal price, restocking when it is below. The restock bid is taken as filled, because the market does not report what a state's bid bought.
+- Tax collection (`budget_works.py`): collectors for each revenue form from the base it raises, with a labelled capacity per kind of base (harvest, people, trade, property).
+- Campaigns: the army does not move on the map and nothing here moves it. The smallest general version is a supply line: grain for the share of the army the threat sends out, over a march to the frontier and back at a marching pace, the distance being the radius of a region with the frontier's length. It prices what a campaign costs from threat and distance; it does not model battles or armies meeting.
+- Donatives: ruler accession is a yearly chance on the government record; the next budget then carries a donative line of a share of a year's pay per soldier, and clears it.
+
+A surplus relieves reported hunger, restocks the granary, then raises the works the state lacks, each as a named purchase (`building <work>`); what no work wants stays in the treasury, which is offered on the loanable market (327, 307).
+
+Tests: state_land_revenue, state_works, economy_taxes. Not run here: state_spending and state_surplus build whole games and could not complete in the time allowed; their expectations were edited to the new line names.

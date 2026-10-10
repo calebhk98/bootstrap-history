@@ -2,7 +2,7 @@
 runs, what running it costs and what shutting it loses, read from the node's
 mechanics and the engine's own lost-benefit table."""
 import sim.engine.ui_port as ui_port
-from sim.engine.ui_port import permanent_parts
+from sim.engine.ui_port import money_text, permanent_parts
 
 
 def benefit_block(sim, node_id):
@@ -23,7 +23,7 @@ def benefit_block(sim, node_id):
         block["while_open"] = lost_benefit or "only what its revenue brings"
         block["cost_of_opening"] = (
             "%s a year upkeep, with %.1f scholars and %.1f craftsmen to supervise"
-            % ("{:,.0f}".format(upkeep), scholars, craftsmen))
+            % (money_text(upkeep, sim, grouped=True), scholars, craftsmen))
         block["if_shut"] = ("upkeep stops and so does: %s%s"
                             % (lost_benefit or "its revenue",
                                "; still kept: " + "; ".join(permanent) if permanent else ""))

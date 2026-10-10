@@ -6,9 +6,10 @@ the nodes any firm's concerns run. It decides which entries a concern may run (c
 baseline for a good no incumbent makes (incumbent_prices.py); it does not set a price: each producer offers at
 the cost of its own entry (producer_costs.py) and the market clears the offers.
 
-TEMPORARY HEURISTIC (CLAUDE.md 4.4): a technique counts for every concern in the line of business as soon as
-one producer runs it (copying inside a line of business is instant); a producer-by-producer set would replace it.
+A concern in the same line of business as a producer reaches the producer's technique only after the copying
+time (technique_spread.py), so a new technique shows first in its adopter's volume and later in the others'.
 """
+from . import technique_spread
 
 
 class TechniquesInUseMixin:
@@ -41,3 +42,13 @@ class TechniquesInUseMixin:
             in_use = cached[1]      # the same set stays the same object, so what is keyed on it holds
         self._techniques_in_use_cache = (epoch, in_use, projects.done, projects.operating)
         return in_use
+
+    def techniques_spread(self):
+        """The techniques in use that concerns in the same line of business have had time to copy."""
+        in_use = self.techniques_in_use()
+        year = self.state.scenario.year
+        economy = self.state.economy
+        first_run = economy.technique_first_run
+        technique_spread.note_first_run(first_run, in_use, year, not economy.technique_record_started)
+        economy.technique_record_started = True
+        return technique_spread.spread_techniques(in_use, self.state.projects.granted, first_run, self.nodes, year)

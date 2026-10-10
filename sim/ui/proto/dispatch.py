@@ -6,7 +6,7 @@ import os
 import pkgutil
 import re
 
-from sim.engine.ui_port import money_word
+from sim.engine.ui_port import money_word, plain_number
 from sim.engine.ui_port import fuzzy_estimates, units
 
 from .economy import _dashboard_snapshot
@@ -183,7 +183,7 @@ def _cmd_step(sim, nodes, cmd, ended):
                     "year's slack exactly as idle as it is right now, "
                     "%d more times over, unless you start something "
                     "first. Running projects wait on: %s. Proceeding anyway."
-                    % (years, "{:,.0f}".format(
+                    % (years, plain_number(
                            _pre_state.get("founder_hours_available") or 0.0),
                        nodes[_could_start]["name"], years, years,
                        delay_phrase(delay_kinds(sim, nodes))))
