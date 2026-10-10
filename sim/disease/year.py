@@ -11,8 +11,7 @@ from typing import Dict, List
 from . import network
 from .step import advance_groups, wane_idle
 from .types import Patch
-
-DAYS_PER_YEAR = 365.0
+from sim.unit_conversions import CIVIL_DAYS_PER_YEAR as DAYS_PER_YEAR
 
 
 @dataclass
