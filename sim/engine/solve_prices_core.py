@@ -973,10 +973,14 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
     if energy_cost_hours is None:
         return None
 
+    # Stock carried: the inputs are paid for `holding_years` before the output sells (ripening, curing,
+    # a year in the pits), each year costing the market rate on what was laid out.
+    inventory_cost_hours = material_cost_hours * interest_rate * float(entry.get("holding_years") or 0.0)
+
     # The credit for taking a waste pays for the process, but cannot make its product cost less than nothing.
     total_process_cost_hours = max(
         0.0, material_cost_hours + labour_cost_hours + rent_hours + land_cost_hours
-        + capital_cost_hours * batch_output_quantity + energy_cost_hours)
+        + capital_cost_hours * batch_output_quantity + energy_cost_hours + inventory_cost_hours)
 
     output_prices = _allocate_output_prices(
         outputs, current_prices, total_process_cost_hours,

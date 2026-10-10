@@ -177,6 +177,7 @@ from sim.engine.validate_production import load_production             # noqa: E
 from sim.labour.api import wages                                     # noqa: E402
 from sim.labour.api import wage_provider                # noqa: E402
 from sim.engine import solve_cache                              # noqa: E402
+from sim.constants import declare                                # noqa: E402
 from sim.geography.api import tiles_held                    # noqa: E402
 
 
@@ -343,6 +344,20 @@ def territory_fingerprint(civilization: Optional[Mapping[str, Any]]) -> Optional
 
 # Cleared area changes every year by a little; solves are keyed on bands of this relative width.
 FARMED_AREA_BAND_RATIO = 1.05
+
+# The market rate moves with every round of lending; a solve is keyed on the band holding it, so the
+# capital charge is re-solved only when the rate has moved a band.
+INTEREST_RATE_BAND = declare(
+    "INTEREST_RATE_BAND", 0.01, kind="temporary_heuristic", unit="yearly interest rate (a share, not percent)",
+    source=None, confidence="D",
+    why="Width of the band the live market rate is rounded to before the solver charges plant and "
+        "stock; stands in for re-solving at every move of the rate, which the solve's cost forbids.")
+
+
+def band_interest_rate(rate: float, starting_rate: float) -> float:
+    """The live market rate rounded to a band measured from the starting rate (so the starting rate is its own band)."""
+    steps = round((rate - starting_rate) / INTEREST_RATE_BAND)
+    return max(0.0, starting_rate + steps * INTEREST_RATE_BAND)
 
 
 def band_farmed_hectares(farmed_hectares: Optional[float]) -> Optional[float]:

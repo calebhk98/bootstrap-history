@@ -377,6 +377,20 @@ def check_yield_basis(where, entry):
     return problems
 
 
+def check_holding(where, entry):
+    """holding_years, when given, is a non-negative number of years and says why in holding_basis."""
+    problems = []
+    if "holding_years" not in entry:
+        return problems
+    years = entry["holding_years"]
+    if not isinstance(years, (int, float)) or years < 0:
+        problems.append("%s: holding_years must be a non-negative number of years, not %r" % (where, years))
+    if len((entry.get("holding_basis") or "").strip()) < 50:
+        problems.append("%s: holding_years needs a holding_basis (at least 50 characters) saying what keeps the "
+                        "stock tied up" % where)
+    return problems
+
+
 def check_conf(where, entry):
     """conf is one of the four defined grades."""
     problems = []
@@ -471,6 +485,7 @@ def check(entries, known_materials, known_trades, known_nodes=None):
         problems.extend(check_operated_by(where, entry, known_nodes))
         problems.extend(check_capital(where, entry, known_materials, known_trades))
         problems.extend(check_yield_basis(where, entry))
+        problems.extend(check_holding(where, entry))
         problems.extend(check_conf(where, entry))
         problems.extend(check_self_referential_input(where, entry))
         problems.extend(check_mass_conservation(where, entry))
