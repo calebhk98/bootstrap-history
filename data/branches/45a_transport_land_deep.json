@@ -484,7 +484,7 @@
   "sch": 20,
   "art": 2,
   "conf": "A",
-  "note": "Defines edge; prevents water and debris escaping onto pavements. Protects pedestrians and controls vehicle paths."
+  "note": "A raised edge of stone along the side of a road, with a channel (gutter) beside it. It marks where the roadway ends, keeps water and debris from spilling onto the pavement, carries rain to the drains, and protects pedestrians by keeping wheels away from them. It needs cut stone or cast blocks laid to a consistent line and level. Poor levelling leaves water standing in the gutter."
  },
  {
   "id": "tl_level_crossing",
@@ -914,7 +914,7 @@
   "sch": 0,
   "art": 3,
   "conf": "B",
-  "note": "Low-friction pivot lets trailer turn independently; no stress on kingpin. Enables articulated rigs and half-tracks.",
+  "note": "A circular plate on the towing vehicle on which the front of a trailer rests and pivots, so the trailer can turn independently of the tractor. The load is carried by the plate, not by the kingpin (the pin that locates the trailer), so the pin takes no bending stress. It needs wrought iron, a smooth bearing surface and ball bearings. It enables articulated rigs and half-tracks. It must be kept greased.",
   "req_any": [
    {
     "group": "structural_wrought",
@@ -1099,7 +1099,7 @@
   "sch": 0,
   "art": 4,
   "conf": "B",
-  "note": "Disk cools by convection; no fade even in continuous braking. Linear force; no self-energizing issues. Modern standard.",
+  "note": "A brake in which pads are squeezed against both sides of a spinning disc fixed to the wheel. The disc is open to the air and cools by convection, so the brake keeps working in long, continuous braking without fading (losing grip as it heats). The force is linear and there is no self-energising effect that makes drum brakes grab. It needs a flat, hard disc made to fine tolerance in good steel and a hydraulic or mechanical actuator.",
   "req_any": [
    {
     "group": "structural_steel",
@@ -1179,7 +1179,7 @@
   "sch": 0,
   "art": 2,
   "conf": "A",
-  "note": "Ratchet lets driver hold vehicle on slope; release is manual. Simple and reliable. Works at parking.",
+  "note": "A lever and cable that locks a brake, with a ratchet that holds it applied so a vehicle stays put on a slope. The driver releases it by hand. It is a simple and reliable device, and it works when the vehicle is parked, where a foot brake cannot be held on. It needs wrought iron for the lever and a cable or rod, and the cable stretches over time and must be adjusted.",
   "req_any": [
    {
     "group": "structural_wrought",
@@ -1293,7 +1293,7 @@
   "sch": 0,
   "art": 2,
   "conf": "A",
-  "note": "Used for steering and rear trailer axles; no power transmission. Simpler than live axle.",
+  "note": "An axle that carries weight and lets the wheels turn but does not transmit power; the wheels are not driven by it. It is used for steering axles and rear trailer axles. It is simpler to make than a driven (live) axle, since it needs no differential or drive shafts. It needs wrought iron, bearings on which the wheels run and a smooth, strong forged beam.",
   "req_any": [
    {
     "group": "structural_wrought",
@@ -1716,7 +1716,7 @@
   "sch": 0,
   "art": 3,
   "conf": "B",
-  "note": "Cable or linkage to accelerator pedal; spring returns to idle. Mixture enrichment for cold start."
+  "note": "A valve in the engine intake that controls how much air-fuel mixture reaches the cylinders and thus how much power the engine makes. A cable or linkage connects it to the accelerator pedal, and a spring returns it to idle when the pedal is released. An enrichment setting gives a richer mixture for cold starting. It needs a carburettor, which atomises fuel into the air. Sticking linkage is dangerous."
  },
  {
   "id": "tl_magneto_ignition",
@@ -1746,7 +1746,7 @@
   "sch": 0,
   "art": 4,
   "conf": "B",
-  "note": "Magneto generates its own power from engine rotation; no battery. Timing must advance with rpm for full power."
+  "note": "A device that makes the spark for the engine without a battery: a magnet and coil armature driven by the engine itself generate the current, and a break contact triggers the high-voltage spark at the right moment. The timing must advance with the engine speed for full power, because the mixture needs more time to burn when the engine turns faster. It needs fine metalwork, wire and timing set by a chronograph."
  },
  {
   "id": "tl_coil_ignition",
@@ -1982,7 +1982,7 @@
   "sch": 0,
   "art": 3,
   "conf": "B",
-  "note": "Impeller blades fling water outward; centrifugal force creates pressure head. Thermostat bypass allows fast warm-up.",
+  "note": "A centrifugal pump that circulates cooling water around an engine. A spinning impeller (a wheel with blades) flings water outward, and the centrifugal force makes pressure that drives the flow. A thermostat bypass lets water circulate inside the engine only, so that it warms up fast. It needs precision casting of cast iron and a close-fitting shaft seal. A leaking seal or a failed pump overheats the engine.",
   "req_any": [
    {
     "group": "structural_casting",
@@ -2372,7 +2372,7 @@
   "sch": 0,
   "art": 2,
   "conf": "A",
-  "note": "Prevents sand and dirt from scoring cylinders; must be cleaned frequently. Clogged filter reduces power."
+  "note": "A filter in the engine's air intake that traps sand and dirt before they enter the cylinders, where they would score (scratch) the walls and wear the engine out. It must be cleaned frequently; a clogged filter chokes the engine and reduces power. It needs only a screen, oiled cloth or paper. Where roads are dusty it matters most, and neglecting it ruins an engine surprisingly quickly."
  },
  {
   "id": "tl_muffler",
@@ -2402,7 +2402,7 @@
   "sch": 0,
   "art": 2,
   "conf": "B",
-  "note": "Expansion and baffle design attenuate pulsations; silencing is incomplete. Backpressure aids low-end torque.",
+  "note": "A silencer on the exhaust pipe. The exhaust gas leaves in violent pulses, and the muffler uses an expansion chamber and baffles (plates that force the gas to change direction) to damp them. Silencing is incomplete. Some backpressure helps low-speed torque, but too much costs power. It needs cast iron or sheet iron, joined by hot riveting, and it rusts quickly from the hot, wet exhaust.",
   "req_any": [
    {
     "group": "structural_casting",
@@ -2503,7 +2503,7 @@
   "sch": 0,
   "art": 2,
   "conf": "B",
-  "note": "Flashing relay opens and closes circuit; amber lens is standard. Arm-based indicators fold down when turn is complete."
+  "note": "A signal lamp that shows other road users which way a vehicle will turn. A flashing relay opens and closes the circuit so the light blinks, and the lens is amber by standard; older arm-based indicators fold down when the turn is complete. It needs a local electrical supply and a relay or switch. Its use depends on drivers following a common signal code."
  },
  {
   "id": "tl_omnibus",
@@ -3512,7 +3512,7 @@
   "sch": 0,
   "art": 3,
   "conf": "B",
-  "note": "Roller followers reduce friction compared to flat or spherical; hardness prevents wear under high Hertzian stress.",
+  "note": "The part that rides on a cam (a lobe on a shaft) and transmits its motion to a valve through a tappet. A roller follower lowers friction compared with flat or rounded followers. The surfaces must be hardened because the contact pressure is very high (Hertzian stress, the concentrated stress where two curved surfaces touch) and they would otherwise wear fast. It needs bulk steel, heat treatment and precise grinding.",
   "req_any": [
    {
     "group": "structural_steel",
@@ -3654,6 +3654,6 @@
   "sch": 0,
   "art": 1,
   "conf": "A",
-  "note": "Prevents carburettor flooding when pump is idle; ball check or spring-loaded disc. Simple and reliable."
+  "note": "A one-way valve in the fuel line that prevents fuel from running into the carburettor, and flooding it, when the fuel pump is idle. It is a ball check, or a spring-loaded disc, that opens under pump pressure and closes when pressure stops. It is simple and reliable. It needs a mechanical fuel pump and a small precisely machined seat. A dirty seat makes it leak."
  }
 ]
