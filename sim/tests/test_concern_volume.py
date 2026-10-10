@@ -8,6 +8,7 @@ sim = unopened_sim   # legacy: pins concern takings through the engine's yearly 
 
 import copy
 
+from sim.agents.api import imitation
 from sim.engine import node_output
 from sim.engine import prices as price_solver
 from sim.engine.agents_port import SimWorld
@@ -73,6 +74,9 @@ try:
     check("a technique held but run by no producer changes neither volume nor any price",
           game.concern_volume_ratio(node_id) == 1.0 and game._material_prices() == twin._material_prices())
     run(game, unused)
+    check("a technique one producer has just begun to run is not yet copied by the concern",
+          game.concern_volume_ratio(node_id) == 1.0)
+    game.state.scenario.year += imitation.copy_years(NODES[unused]) + 1
     check("an entry whose labour per unit halves lets the same staff turn out more",
           game.concern_volume_ratio(node_id) > 1.5, game.concern_volume_ratio(node_id))
     check("...with the staff unchanged", game.nodes[node_id]["sch"] == twin.nodes[node_id]["sch"]
