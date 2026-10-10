@@ -221,9 +221,28 @@
    },
    "unit_dimension": "mass",
    "basis": "per tonne of phosphoric acid (H3PO4 content) from bone ash digested in sulfuric acid",
-   "yield_basis": "STOICHIOMETRY. Ca3(PO4)2 + 3 H2SO4 -> 2 H3PO4 + 3 CaSO4, so per kg of H3PO4 310.18/(2*97.99) kg of tricalcium phosphate and 3*98.08/(2*97.99) kg of sulfuric acid (taken as 100% acid). Bone ash is taken as about 75% tricalcium phosphate, a rough composition, so its mass is that stoichiometric figure divided by 0.75. The gypsum by-product is not credited and filtration labour is not modelled, a heuristic gap, conf C.",
+   "yield_basis": "STOICHIOMETRY. Ca3(PO4)2 + 3 H2SO4 -> 2 H3PO4 + 3 CaSO4, so per kg of H3PO4 310.18/(2*97.99) kg of tricalcium phosphate and 3*98.08/(2*97.99) kg of sulfuric acid (taken as 100% acid). Bone ash is taken as about 75% tricalcium phosphate, a rough composition, so its mass is that stoichiometric figure divided by 0.75. The gypsum by-product is not credited. Labour is a reasoned estimate (conf C): charging bone ash and acid to the digester, settling, decanting and boiling the liquor down comes to about eighty hours a tonne, twenty of them a chemist's.",
    "conf": "C",
-   "requires_node": "chm_superphosphate"
+   "labour_hours": {"chemist": 20.0, "labourer": 60.0},
+   "capital": [
+    {
+     "good": "lead-lined digesting vats and evaporating pans",
+     "build_materials": {
+      "lead_kg": 2500.0,
+      "timber_m3": 20.0
+     },
+     "build_labour_hours": {
+      "plumber": 400.0,
+      "carpenter": 150.0
+     },
+     "service_life_years": 10,
+     "annual_output_at_basis": 100000.0,
+     "capital_basis": "Bone ash is digested in dilute sulphuric acid in wooden vats lined with lead, which resists the acid; the liquor is run off the gypsum and boiled down in lead pans. A works of this size makes about a hundred tonnes of acid a year. Masses are order-of-magnitude figures.",
+     "conf": "D"
+    }
+   ],
+   "requires_node": "chm_superphosphate",
+   "operated_by": ["chm_superphosphate"]
   },
   "caustic_soda_kg": {
    "outputs": {
@@ -236,9 +255,30 @@
    },
    "unit_dimension": "mass",
    "basis": "per tonne of sodium hydroxide (NaOH content) from causticising soda ash with lime",
-   "yield_basis": "STOICHIOMETRY. Na2CO3 + CaO + H2O -> 2 NaOH + CaCO3, so per kg of NaOH 105.99/80.00 kg of sodium carbonate, 56.08/80.00 kg of quicklime and 18.02/80.00 kg of water, assuming complete conversion. Evaporating the lye to solid, and labour, are not modelled, a heuristic gap, conf C.",
+   "yield_basis": "STOICHIOMETRY. Na2CO3 + CaO + H2O -> 2 NaOH + CaCO3, so per kg of NaOH 105.99/80.00 kg of sodium carbonate, 56.08/80.00 kg of quicklime and 18.02/80.00 kg of water, assuming complete conversion. Labour is taken from the neighbouring Leblanc soda entry (soda_leblanc: 150 labourer and 60 furnaceman hours a tonne of soda ash): causticising is its leaching, settling and boiling down without the black-ash roasting, about two fifths of it, so 60 labourer and 30 furnaceman hours; conf C.",
    "conf": "C",
-   "requires_node": "chm_caustic_soda"
+   "labour_hours": {"labourer": 60.0, "furnaceman": 30.0},
+   "capital": [
+    {
+     "good": "causticising tanks and iron evaporating pans",
+     "build_materials": {
+      "iron_bar_kg": 3000.0,
+      "timber_m3": 10.0,
+      "brick_1000": 5.0
+     },
+     "build_labour_hours": {
+      "smith": 200.0,
+      "carpenter": 60.0,
+      "mason": 60.0
+     },
+     "service_life_years": 10,
+     "annual_output_at_basis": 100000.0,
+     "capital_basis": "Soda ash is boiled with slaked lime in iron or timber tanks, the lye settled and drawn off, and boiled down in cast-iron pans, which corrode within years; a works of this size makes about a hundred tonnes of caustic a year, a reasoned figure for an early soap-maker's supplier. Masses are order-of-magnitude figures.",
+     "conf": "D"
+    }
+   ],
+   "requires_node": "chm_caustic_soda",
+   "operated_by": ["chm_caustic_soda"]
   },
   "gunpowder_kg": {
    "outputs": {
@@ -251,9 +291,30 @@
    },
    "unit_dimension": "mass",
    "basis": "per tonne of black powder (75% saltpetre, 15% charcoal, 10% sulfur by mass)",
-   "yield_basis": "COMPOSITION. Black powder is the classical 75/15/10 mixture of saltpetre, charcoal and sulfur by mass; mixing and corning is a physical blend with no reaction and no mass loss. Labour is not modelled, a heuristic gap, conf B on the ratio.",
+   "yield_basis": "COMPOSITION. Black powder is the classical 75/15/10 mixture of saltpetre, charcoal and sulfur by mass; mixing and corning is a physical blend with no reaction and no mass loss. Labour is a reasoned estimate (conf C): an edge-runner mill takes a charge of some fifty kilograms for a few hours with two hands, and corning, glazing, drying and dusting add about as much again, so about a hundred hours a tonne.",
    "conf": "B",
-   "requires_node": "gunpowder"
+   "labour_hours": {"labourer": 70.0, "artisan": 30.0},
+   "capital": [
+    {
+     "good": "water-driven powder mill: edge-runner stones, incorporating house and drying stove",
+     "build_materials": {
+      "stone_kg": 12000.0,
+      "timber_m3": 30.0,
+      "iron_bar_kg": 600.0
+     },
+     "build_labour_hours": {
+      "mason": 300.0,
+      "millwright": 400.0,
+      "carpenter": 200.0
+     },
+     "service_life_years": 25,
+     "annual_output_at_basis": 60000.0,
+     "capital_basis": "One mill house with a pair of edge-runners incorporates about two hundred kilograms of powder a day, so on the order of sixty tonnes in a working year; the mill is built light of timber so an explosion does little harm and is rebuilt or repaired through the decades. Masses are order-of-magnitude figures.",
+     "conf": "D"
+    }
+   ],
+   "requires_node": "gunpowder",
+   "operated_by": ["gunpowder"]
   },
   "borax_kg": {
    "outputs": {

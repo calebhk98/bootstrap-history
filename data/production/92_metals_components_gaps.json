@@ -361,12 +361,32 @@
     "tin_kg": 250.0,
     "mercury_kg": 750.0
    },
-   "labour_hours": {},
+   "labour_hours": {"artisan": 1500.0},
    "unit_dimension": "mass",
    "basis": "per tonne of tin-mercury amalgam laid on plate glass as a mirror backing",
-   "yield_basis": "COMPOSITION, ASSUMED. The backing is tin foil wetted with mercury; excess mercury is drained and reused, so the layer that stays is a solid amalgam. Its split of 25% tin to 75% mercury by mass is an assumption (no measured source), conf C; the physical statement is that only tin and mercury enter and both are kept in the product. Amalgam is mixed cold, so no heat is listed, and the coating crew is inside the consuming node's own labour.",
+   "yield_basis": "COMPOSITION, ASSUMED. The backing is tin foil wetted with mercury; excess mercury is drained and reused, so the layer that stays is a solid amalgam. Its split of 25% tin to 75% mercury by mass is an assumption (no measured source), conf C; the physical statement is that only tin and mercury enter and both are kept in the product. Amalgam is mixed cold, so no heat is listed, and the coating crew's hours are stated here: a square metre of glass takes about a kilogram of amalgam and some one and a half hours of laying foil, pouring mercury and weighting, so about fifteen hundred hours a tonne (reasoned, conf C).",
    "conf": "C",
-   "requires_node": "mirror_amalgam"
+   "capital": [
+    {
+     "good": "silvering room: stone-slab tables with raised edges, tilting frames and weights",
+     "build_materials": {
+      "stone_kg": 12000.0,
+      "timber_m3": 4.0,
+      "iron_bar_kg": 400.0
+     },
+     "build_labour_hours": {
+      "mason": 150.0,
+      "carpenter": 100.0,
+      "smith": 60.0
+     },
+     "service_life_years": 40,
+     "annual_output_at_basis": 600.0,
+     "capital_basis": "Foil is laid on a flat slab with a raised rim, wetted with mercury, the glass slid over it and weighted, and the plate tilted to drain for days; four slabs, each taking a few square metres a week, come to about six hundred square metres a year, about six hundred kilograms of amalgam. Stone slabs last generations. Masses are order-of-magnitude figures.",
+     "conf": "D"
+    }
+   ],
+   "requires_node": "mirror_amalgam",
+   "operated_by": ["mirror_amalgam"]
   },
   "magnesium_fluoride_kg": {
    "outputs": {

@@ -26,9 +26,29 @@
    "mechanical_mj": 614.0,
    "unit_dimension": "mass",
    "basis": "per tonne of low-density polyethylene by high-pressure free-radical polymerisation",
-   "yield_basis": "MASS CONSERVATION. n C2H4 -> (C2H4)n is an addition polymerisation with no by-product, so one kg of ethylene gives one kg of polymer at complete conversion. Shaft work is the isothermal compression floor for taking the gas from atmospheric pressure to about 1000 atmospheres (the pressure the chm_polyethylene node states), W = R T ln(p_out / p_in) per mole at 300 K, 17.2 kJ per mole of 28.05 g, so 0.61 MJ per kg. The polymerisation itself is exothermic, so no process heat is drawn. Real per-pass conversion is well below complete and unconverted gas is recompressed, so the compression work is understated; initiator peroxide is not modelled (heuristic, conf C). Labour is left out.",
+   "yield_basis": "MASS CONSERVATION. n C2H4 -> (C2H4)n is an addition polymerisation with no by-product, so one kg of ethylene gives one kg of polymer at complete conversion. Shaft work is the isothermal compression floor for taking the gas from atmospheric pressure to about 1000 atmospheres (the pressure the chm_polyethylene node states), W = R T ln(p_out / p_in) per mole at 300 K, 17.2 kJ per mole of 28.05 g, so 0.61 MJ per kg. The polymerisation itself is exothermic, so no process heat is drawn. Real per-pass conversion is well below complete and unconverted gas is recompressed, so the compression work is understated; initiator peroxide is not modelled (heuristic, conf C). Labour is a reasoned estimate (conf C): a plant of this early size is run by about five hands across the shifts, some ten thousand hours for two hundred tonnes, fifty hours a tonne.",
    "conf": "C",
-   "requires_node": "chm_polyethylene"
+   "labour_hours": {"chemist": 20.0, "labourer": 30.0},
+   "capital": [
+    {
+     "good": "high-pressure autoclave reactor with intensifier compressor and separator",
+     "build_materials": {
+      "tool_steel_kg": 3000.0,
+      "iron_bar_kg": 10000.0
+     },
+     "build_labour_hours": {
+      "machinist": 3000.0,
+      "smith": 1500.0,
+      "electrician": 400.0
+     },
+     "service_life_years": 15,
+     "annual_output_at_basis": 200000.0,
+     "capital_basis": "The free-radical process runs at about a thousand atmospheres in a forged alloy-steel autoclave fed by an intensifier compressor; the first commercial plant at Northwich in 1939 made on the order of a hundred tonnes a year, and two hundred tonnes is taken for a plant of that generation. Vessel and compressor masses are reasoned order-of-magnitude figures.",
+     "conf": "D"
+    }
+   ],
+   "requires_node": "chm_polyethylene",
+   "operated_by": ["chm_polyethylene"]
   },
   "chlorine_kg": {
    "outputs": {
@@ -253,9 +273,30 @@
    "temperature_needed_c": 180.0,
    "unit_dimension": "mass",
    "basis": "per tonne of distilled glycerol recovered from the spent lye of soap making",
-   "yield_basis": "STOICHIOMETRY OF SAPONIFICATION. Triglyceride + 3 NaOH -> 3 soap + glycerol (92.09 g/mol). A tallow saponification value near 195 mg KOH per g means 1.159 mmol of triglyceride per g, so 0.1067 kg of glycerol per kg of fat at complete reaction; 90 percent recovery from lye and vacuum distillation gives 1 / (0.1067 x 0.9) = 10.4 t of fat per tonne, with 3 mol of NaOH per mol of fat (40.0 g/mol), 1.448 t. Heat is the latent heat of vaporising glycerol in distillation, about 91 kJ per mole, 0.99 GJ per tonne, under vacuum near 180 C. LABELLED HEURISTIC: the soap that the same batch makes is not credited, so glycerol is overpriced by the fat it shares with soap; solvent recovery and labour are not modelled. Saponification value and recovery are conf C.",
+   "yield_basis": "STOICHIOMETRY OF SAPONIFICATION. Triglyceride + 3 NaOH -> 3 soap + glycerol (92.09 g/mol). A tallow saponification value near 195 mg KOH per g means 1.159 mmol of triglyceride per g, so 0.1067 kg of glycerol per kg of fat at complete reaction; 90 percent recovery from lye and vacuum distillation gives 1 / (0.1067 x 0.9) = 10.4 t of fat per tonne, with 3 mol of NaOH per mol of fat (40.0 g/mol), 1.448 t. Heat is the latent heat of vaporising glycerol in distillation, about 91 kJ per mole, 0.99 GJ per tonne, under vacuum near 180 C. LABELLED HEURISTIC: the soap that the same batch makes is not credited, so glycerol is overpriced by the fat it shares with soap (a joint entry with soap as a second output would leave this entry out of the solver's reach, which drops a co-product a nearer technique already makes). Labour is a reasoned estimate (conf C): boiling and graining the soap charge takes two hands about a hundred hours each, and recovering the glycerol from the lye (neutralising, evaporating, vacuum distilling) about eighty more, thirty of them a chemist's. Solvent recovery is not modelled. Saponification value and recovery are conf C.",
    "conf": "C",
-   "requires_node": "chm_glycerol"
+   "labour_hours": {"labourer": 250.0, "chemist": 30.0},
+   "capital": [
+    {
+     "good": "soap kettles, lye evaporators and vacuum still",
+     "build_materials": {
+      "iron_bar_kg": 3000.0,
+      "copper_kg": 1200.0,
+      "brick_1000": 4.0
+     },
+     "build_labour_hours": {
+      "smith": 600.0,
+      "plumber": 300.0,
+      "mason": 80.0
+     },
+     "service_life_years": 15,
+     "annual_output_at_basis": 50000.0,
+     "capital_basis": "A soap house boils ten-tonne charges in iron kettles, the spent lye is evaporated in pans and the crude glycerine redistilled under vacuum in a copper still; fifty tonnes of glycerol a year corresponds to some five hundred tonnes of fat, a middling soap works. Masses are order-of-magnitude figures.",
+     "conf": "D"
+    }
+   ],
+   "requires_node": "chm_glycerol",
+   "operated_by": ["chm_glycerol"]
   },
   "fulminate_kg": {
    "outputs": {
