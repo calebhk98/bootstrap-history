@@ -2209,7 +2209,7 @@
   "sch": 1,
   "art": 3,
   "conf": "B",
-  "note": "The discipline of rearing and release timing, and the risk that introduced enemies become pests themselves"
+  "note": "Controlling a pest by releasing its natural enemy, such as a predator insect or a parasite, instead of spraying poison. The enemies must be reared in numbers and released at the right time in the pest's cycle. The risk is that introduced enemies become pests themselves, attacking harmless species. It needs controlled experiment and observation. Done well, it works without chemicals."
  },
  {
   "id": "ag2_resistant_variety",
@@ -2239,7 +2239,7 @@
   "sch": 1,
   "art": 3,
   "conf": "B",
-  "note": "The test crosses that confirm resistance is stable, and resistance-breaking mutant pests that emerge within years"
+  "note": "A crop variety bred to withstand a particular disease or pest. Test crosses confirm that the resistance is stable and passes to offspring. Resistance-breaking mutant pests can emerge within a few years, so breeders must keep finding new resistance. It needs record-keeping and breeding selection. A resistant variety saves spraying, but is not permanent."
  },
  {
   "id": "ag2_herd_book",
@@ -2269,7 +2269,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Progeny performance, not body scores, is what a herd book records to identify prepotent sires"
+  "note": "A written register of animals and their parentage, recording how their offspring perform. It records progeny performance, not just body scores, to identify prepotent sires (males that reliably pass on good qualities). It needs record-keeping and breeding selection, and honest breeders. A herd book can be falsified, and a fashion for show points can mislead selection."
  },
  {
   "id": "ag2_progeny_testing",
@@ -2296,7 +2296,7 @@
   "sch": 1,
   "art": 2,
   "conf": "C",
-  "note": "A bull can appear muscular but produce weak calves; progeny testing separates appearance from breeding value"
+  "note": "Judging a breeding animal by how its offspring turn out, not by how it looks. A bull can look muscular but produce weak calves, and testing separates appearance from breeding value. It needs a herd book that records parentage and results, and several offspring per sire. It takes years, since the offspring must grow up and be measured."
  },
  {
   "id": "ag2_milking_machine",
@@ -2339,7 +2339,7 @@
   "sch": 1,
   "art": 3,
   "conf": "B",
-  "note": "The pulsation cycle that prevents sphincter closure, and rubber teat cups that don't lacerate"
+  "note": "A machine that milks cows using vacuum. A pulsation cycle alternately applies and releases suction, which prevents the teat sphincter (the muscle at the teat's tip) from closing and the teat from being damaged, and soft rubber teat cups avoid lacerating. It needs a vacuum pump, a crank mechanism and vulcanised rubber. A dirty machine spreads udder infection, and cleaning it is a constant job."
  },
  {
   "id": "ag2_cream_separator",
@@ -2376,7 +2376,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Bowl speed critical - too slow leaves cream in skim, too fast shatters fat globules into foam"
+  "note": "A machine that spins milk in a fast-turning bowl so that heavier skim milk is flung outward and the lighter cream stays near the centre, where it is drawn off. The bowl speed is critical: too slow leaves cream in the skim, too fast shatters fat globules into foam. It needs a precisely balanced bowl and gears. It is far faster than letting cream rise."
  },
  {
   "id": "ag2_artificial_insemination",
@@ -2406,7 +2406,7 @@
   "sch": 1,
   "art": 3,
   "conf": "B",
-  "note": "Timing ovulation by oestrus observation and the catheter technique that reaches the cervix without trauma"
+  "note": "Putting semen from a chosen bull into a cow by hand instead of letting a bull mate. The farmer must time the ovulation by observing oestrus (heat), and use a catheter technique that reaches the cervix without injury. It needs progeny testing to choose the best bull and an understanding of germ theory for cleanliness. One bull can sire very many calves."
  },
  {
   "id": "ag2_silage_silo",
@@ -2435,7 +2435,7 @@
   "sch": 1,
   "art": 2,
   "conf": "C",
-  "note": "Lactobacillus fermentation that produces lactic acid; pH drop halts spoilage at 3.8-4.0 in 3-6 weeks",
+  "note": "Preserving green fodder by packing it into a tight silo, where lactobacillus bacteria ferment it to lactic acid. As the acidity rises, the pH falls to a level that halts spoilage within a few weeks. The silo must be airtight and the crop packed well, or mould grows. It needs a tower or pit and cut fodder. It gives green winter feed for stock.",
   "mechanics": {
    "hazard_counters": [
     {
@@ -2475,7 +2475,7 @@
   "sch": 1,
   "art": 2,
   "conf": "C",
-  "note": "The Wolff-Lehmann standard that calculates feed units by proximate analysis, not arbitrary eye assessment"
+  "note": "Feeding animals a measured mix of feeds that supplies the right amounts of protein, carbohydrate and fat, found by proximate analysis (chemical measurement of the crude nutrients in feed) instead of by arbitrary judgement by eye. The Wolff-Lehmann standards give the needs. It needs gravimetric and volumetric analysis. Better rations raise milk and meat yields for the same feed."
  },
  {
   "id": "ag2_veterinary_vaccination",
@@ -2505,7 +2505,7 @@
   "sch": 1,
   "art": 2,
   "conf": "C",
-  "note": "Rinderpest vaccine and foot-and-mouth challenge - which diseases are vaccinated determines flock health risk"
+  "note": "Vaccinating livestock against infectious diseases, such as rinderpest, an epidemic cattle disease. Which diseases can be vaccinated against determines the health risk of the herd; diseases such as foot-and-mouth remain a challenge because the vaccine is hard to make. It needs germ theory of disease and a laboratory. A vaccinated herd can still spread infection if neighbours are unprotected."
  },
  {
   "id": "ag2_tuberculin_test",
@@ -2565,7 +2565,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "Temperature, immersion duration, and replenishment frequency that kill parasites without poisoning wool"
+  "note": "A bath of insecticide and parasiticide through which sheep are driven or dipped to kill ticks, lice and mites. Temperature, how long the sheep are immersed, and how often the bath is replenished decide whether the parasites die without poisoning the wool or the animals. It needs nicotine or similar poisons. A weak bath fails, and a strong one poisons the sheep."
  },
  {
   "id": "ag2_battery_poultry",
@@ -2596,7 +2596,7 @@
   "sch": 1,
   "art": 2,
   "conf": "B",
-  "note": "Birds never see soil or natural light; welfare costs are paid years later in disease epidemic risk"
+  "note": "Keeping hens in small cages in rows indoors, fed by a balanced ration, to produce eggs or meat intensively. Birds never see soil or natural light, and welfare costs are paid years later in the risk of disease epidemics in crowded sheds. It needs a balanced ration and sheds. Disease can sweep through an entire shed, and the costs of poor ventilation are high."
  },
  {
   "id": "ag2_roller_mill",
@@ -2663,7 +2663,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Tapers in the air chamber that separate by density without leaving flour dust in the exhaust"
+  "note": "A machine in a roller mill that sorts the coarse particles of milled wheat (middlings) by blowing air up through sieves, so that bran specks are separated from pure flour-making particles by their density. The tapers in the air chamber separate them without leaving flour dust in the exhaust. It needs a roller mill for grain. It lets millers make white flour."
  },
  {
   "id": "ag2_white_flour_loss",
@@ -2693,7 +2693,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "The discovery correlating white bread dominance with beriberi and pellagra epidemics in refined-grain populations"
+  "note": "The finding that refining flour removes vitamins. The discovery correlated the dominance of white bread with epidemics of beriberi and pellagra (diseases from a lack of vitamin B1 and niacin) in populations living on refined grain. It needs the purifier that makes white flour and the habit of epidemiology. White flour keeps well and looks clean, so people prefer it, and restoring the lost nutrients is the remedy."
  },
  {
   "id": "ag2_yeast_culture",
@@ -2723,7 +2723,7 @@
   "sch": 1,
   "art": 2,
   "conf": "C",
-  "note": "Pure culture ferments faster, cleaner flavour, lower acetobacter infection rate, consistent results"
+  "note": "Growing yeast in a pure culture, a single strain isolated and propagated, instead of relying on whatever yeast falls into the vat. A pure culture ferments faster, gives a cleaner flavour, has a lower rate of infection by acetobacter (the bacteria that make vinegar) and gives consistent results. It needs a microscope to see the cells and sterile technique. Contamination ruins a culture."
  },
  {
   "id": "ag2_malting",
@@ -2748,7 +2748,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "Enzyme activation by moisture and temperature, then kiln-drying to halt germination at the right time"
+  "note": "Soaking grain, usually barley, in water, letting it germinate, then drying it in a kiln to stop the sprouting at the right time. Moisture and warmth activate the enzymes that later turn starch into sugar. The kiln fixes the colour and flavour. It needs barley, a malting floor and a kiln. Too long a germination wastes starch; too short leaves enzymes weak."
  },
  {
   "id": "ag2_mashing",
@@ -2775,7 +2775,7 @@
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "Temperature holds and rests that allow amylase and protease to complete hydrolysis without denaturing"
+  "note": "Steeping crushed malt in hot water so that its enzymes (amylase, which breaks starch into sugar, and protease, which breaks proteins) convert starch to fermentable sugar. Temperature holds and rests let the hydrolysis (splitting with water) finish without denaturing (destroying) the enzymes. It needs malting and a thermometer. Too hot kills the enzymes, and the result is unfermentable."
  },
  {
   "id": "ag2_hopping",
@@ -2806,7 +2806,7 @@
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "Alpha acid isomerisation by boil time, late additions for aroma - extraction curves that changed brewing"
+  "note": "Boiling hops in the sweet liquid (wort) before fermentation. The bitter acids in hops (alpha acids) change form with boiling time, and bitterness depends on how long they boil; hops added late give aroma. The extraction curves changed brewing. Hops also preserve the beer. It needs malting, hops and a kettle. Overboiling drives off the aroma."
  },
  {
   "id": "ag2_fermentation_control",
@@ -2835,7 +2835,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Acetobacter infection control by nitrogen blanking and acid production, removing risk of vinegar accident"
+  "note": "Managing fermentation so that yeast does its job and spoilage organisms do not. Controlling infection by acetobacter, the bacteria that turn alcohol to vinegar, by excluding air and by acid production, removes the risk of a vinegar accident. It needs pure yeast culture and a reliable thermometer. Temperature control is the essential tool."
  },
  {
   "id": "ag2_hydrometer",
@@ -2862,7 +2862,7 @@
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "The alcohol yield calculation from gravity drop and the fermentation stop point you can read precisely"
+  "note": "A weighted glass float that sinks to a depth showing the density (specific gravity) of a liquid. It allows the brewer to calculate the alcohol yield from the drop in gravity during fermentation, and to know precisely when fermentation has stopped. It needs glass blowing and a scale calibrated against standard liquids. Reading is done at a set temperature."
  },
  {
   "id": "ag2_pot_still",
@@ -2892,7 +2892,7 @@
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "Copper construction prevents sulphide buildup; distiller skill is in heads-hearts-tails cut timing"
+  "note": "A still made of a boiler pot, a head and a condenser, for distilling alcohol from a fermented liquid. Copper construction prevents a build-up of sulphur compounds that spoil the flavour. The distiller's skill is in the timing of the cut between heads (the first, harsh vapours), hearts (the good spirit) and tails (the last, oily vapours). It needs a worm condenser. Cutting wrongly gives harsh or foul spirit."
  },
  {
   "id": "ag2_column_still",
@@ -2933,7 +2933,7 @@
   "sch": 1,
   "art": 3,
   "conf": "B",
-  "note": "Rectifying columns that eliminate headache-causing congeners, producing neutral spirits from any fermented base"
+  "note": "A tall still containing plates inside a column, so that the vapour is condensed and re-evaporated many times (rectified), giving a purer and stronger spirit in a continuous run. It removes congeners, the impurities that cause headaches, and makes neutral spirits from any fermented base. It needs a pot still and a steam engine for continuous running. The spirit has little character of its own."
  },
  {
   "id": "ag2_cheese_families",
@@ -2958,7 +2958,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Hard cheeses start with cut curd cooked high, soft with whole milk curdled low - technique differences are vast"
+  "note": "Different kinds of cheese come from differences in handling the curd. Hard cheeses start with the curd cut small and cooked at high temperature to expel whey, and are pressed and aged; soft cheeses start with whole milk curdled at low temperature, with large curds, and are ripened quickly. The technique differences are vast. It needs milk, rennet (a curdling enzyme from calf stomach), salt and a cool cellar."
  },
  {
   "id": "ag2_butter",
@@ -2983,7 +2983,7 @@
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "The inversion of emulsion where fat phase becomes continuous and buttermilk phase separates out"
+  "note": "Butter is made by churning cream until the emulsion inverts: the fat globules clump and the fat becomes the continuous phase, while the watery buttermilk separates out. It needs cream from a cream separator, or by letting it rise, and a churn. Cream at the wrong temperature will not churn properly. Buttermilk left in the butter makes it spoil quickly."
  },
  {
   "id": "ag2_condensed_milk",
@@ -3014,7 +3014,7 @@
   "sch": 1,
   "art": 2,
   "conf": "C",
-  "note": "Vacuum boiling at low temperature prevents caramelisation; sugar saturation prevents crystallisation"
+  "note": "Milk with most of its water boiled off and sugar added, preserved without refrigeration. Boiling it under a vacuum lowers the boiling point, which prevents caramelisation (browning of the sugar); the sugar concentration prevents spoilage and must be controlled so it does not crystallise. It needs a vacuum pan and pasteurisation. It is a shelf-stable food."
  },
  {
   "id": "ag2_evaporated_milk",
@@ -3042,7 +3042,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "The homogenisation that prevents cream separation during long shelf life and the heat-shock that stabilises casein"
+  "note": "Milk concentrated by removing about half its water in a vacuum pan, then sealed in cans and sterilised, with no sugar added. Homogenisation (forcing the milk through a fine nozzle to break up the fat globules) prevents the cream from separating during long shelf life, and the heat-shock stabilises the casein (milk protein) so it does not curdle. It needs a vacuum pan and a retort."
  },
  {
   "id": "ag2_oil_pressing",
@@ -3069,7 +3069,7 @@
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "Cold press preserves flavour but hot press from preheated seeds extracts more oil at cost of quality"
+  "note": "Squeezing oil out of seeds or fruit with a press. A cold press preserves flavour, but pressing seeds that have been preheated gets more oil out at the cost of quality. It needs seeds, crushing mills, presses and filters. The oil cake left over is useful animal feed. The oil goes rancid if not stored away from air and light."
  },
  {
   "id": "ag2_fat_hydrogenation",
@@ -3103,7 +3103,7 @@
   "sch": 1,
   "art": 2,
   "conf": "B",
-  "note": "Temperature control to avoid polymerisation; partial hydrogenation creates trans-fats unknowingly"
+  "note": "Treating liquid vegetable oils with hydrogen gas over a nickel catalyst to make them solid fats. The temperature must be controlled to avoid polymerisation (unwanted linking of molecules). Partial hydrogenation also creates trans-fats, whose harm was not known at the time. It needs catalytic hydrogenation and nickel. It gives cheap, long-lasting fat for baking and spreads."
  },
  {
   "id": "ag2_sugar_refining",
@@ -3130,7 +3130,7 @@
   "sch": 1,
   "art": 2,
   "conf": "C",
-  "note": "Multiple crystallisations from A, B, C molasses requiring skill in grain size and temperature management"
+  "note": "Refining raw cane and beet sugar to white crystals. Sugar is dissolved, cleaned and boiled and crystallised several times, giving first, second and third crops of crystals (A, B and C) and leaving molasses. It requires skill in controlling grain size and temperature. It needs the vacuum pan. Overheated syrup darkens and wastes sugar."
  },
  {
   "id": "ag2_vacuum_pan",
@@ -3162,7 +3162,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Vacuum reduces boiling point; precise temperature and duration that makes small crystals without burning sugar"
+  "note": "A closed boiling vessel from which air is pumped out, so syrup boils at a lower temperature. Lower temperature means the sugar does not burn or darken. Precise temperature and duration make small crystals of the right size. It needs a steam engine with a separate condenser and a thermometer with fixed points. It transformed sugar refining and also serves milk concentration."
  },
  {
   "id": "ag2_centrifugal_sugar",
@@ -3191,7 +3191,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "Vibration that prevents sugar from caking against the screen and the automated discharge timer"
+  "note": "A machine that spins crystallised sugar in a perforated drum so the syrup is flung out through the screen and clean crystals are left. Vibration prevents sugar from caking against the screen, and an automated timer discharges the batch. It needs sugar cultivation and a drive. An out-of-balance drum shakes itself and the building apart."
  },
  {
   "id": "ag2_canning",
@@ -3219,7 +3219,7 @@
   "sch": 1,
   "art": 2,
   "conf": "C",
-  "note": "Botulism toxin prevention by adequate temperature and time, plus the headspace air displacement"
+  "note": "Preserving food by sealing it in a can and heating it hot enough, for long enough, to kill the bacteria that cause spoilage, including those that make botulism toxin. The headspace air is displaced before sealing. It needs the retort (a pressure cooker for cans). Inadequate heating can leave food that looks fine but is deadly."
  },
  {
   "id": "ag2_retort",
@@ -3250,7 +3250,7 @@
   "sch": 1,
   "art": 2,
   "conf": "C",
-  "note": "Temperature logging to confirm adequate heat penetration to the can centre, pressure gauge accuracy"
+  "note": "A large pressure vessel in which sealed cans are heated with steam above the boiling point of water. Temperature logging confirms that enough heat penetrates to the centre of the can, and the pressure gauge must be accurate. It needs high pressure steam and a strong boiler. A retort that is not hot enough lets bacterial spores survive."
  },
  {
   "id": "ag2_double_seam_can",
@@ -3281,7 +3281,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "The pressure-sealing geometry and tool wear that prevents leakage during handling and retort pressure"
+  "note": "A can whose lid is joined to the body by a double seam: the two edges are folded together and rolled, making an airtight joint. The pressure-sealing geometry, and checking for tool wear, prevent leakage during handling and retort pressure. It needs tin plate and seaming machinery made to fine tolerance. A leaking seam lets in bacteria."
  },
  {
   "id": "ag2_bottling",
@@ -3309,7 +3309,7 @@
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "Bottle standardisation and cork sealing that prevents oxidation and breakage"
+  "note": "Filling drink into glass bottles and sealing with cork to keep it from oxidising and spoiling. Standard bottles and corks matter so that they fit and seal and do not break in handling. It needs clear soda-lime glass made to specification. A poor cork or a cracked bottle spoils the contents."
  },
  {
   "id": "ag2_crown_cork",
@@ -3338,7 +3338,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "Crimped tin cap with cork liner, seals carbonated beverages, bottling machine applies caps, invented 1891"
+  "note": "A crimped tin cap with a cork liner that seals carbonated drinks in a bottle. A machine applies the caps to bottles. It needs tin plate and a bottling machine. It holds back gas pressure better than a plain cork, and is cheap enough to throw away. A poorly crimped cap leaks and the drink goes flat."
  },
  {
   "id": "ag2_pasteurisation",
@@ -3399,7 +3399,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "Sawing, stacking with sawdust insulation, transport timing that prevents melt before delivery"
+  "note": "Trading in natural ice cut from frozen lakes and rivers. The ice is sawn into blocks, stacked in insulated stores with sawdust, and shipped; the transport timing prevents it from melting before delivery. It needs ice harvesting from frozen water and cold-climate stores. It keeps food cold in hot places, but supply depends on winter."
  },
  {
   "id": "ag2_cold_store",
@@ -3444,7 +3444,7 @@
   "sch": 1,
   "art": 2,
   "conf": "C",
-  "note": "Insulation thickness, air circulation path, and humidity control that prevents condensation and drip"
+  "note": "A building where food is kept cold, using artificial ice or mechanical refrigeration. Insulation thickness, the path of air circulation and humidity control prevent condensation and dripping, which would spoil the stored goods. It needs artificial refrigeration and insulating materials. Opening doors constantly lets heat in."
  },
  {
   "id": "ag2_refrigerated_ship",
@@ -3487,7 +3487,7 @@
   "sch": 2,
   "art": 3,
   "conf": "B",
-  "note": "Engine-driven compressor that maintains holds at -15C during weeks at sea; odour and cross-contamination problems"
+  "note": "A ship with a refrigerated hold, in which an engine-driven compressor maintains a freezing temperature during weeks at sea. It allows meat and fruit to be exported across oceans. It needs a cold store and a steam engine. Odour and cross-contamination between cargoes are problems, and a breakdown spoils the whole load."
  },
  {
   "id": "ag2_nitrite_curing",
@@ -3514,7 +3514,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Nitrous acid formation and its bacteriostatic action; N-nitrosamine formation during storage is carcinogenic"
+  "note": "Curing meat with nitrite salts. Nitrite produces nitrous acid, which stops bacteria from growing (bacteriostatic) and gives cured meats their pink colour. It needs saltpetre or nitrite salts and cold storage. During storage, nitrosamines, which cause cancer, can form, so the amount must be controlled."
  },
  {
   "id": "ag2_food_laboratory",
@@ -3543,7 +3543,7 @@
   "sch": 1,
   "art": 2,
   "conf": "C",
-  "note": "Gravimetric fat and protein, acidimetry for pH, microscopy for moulds - methods that define food standards"
+  "note": "A laboratory that tests food: gravimetric (by weighing) determination of fat and protein, acidimetry (titration) for acidity, and microscopy for moulds. These methods define food standards. It needs gravimetric and volumetric analysis, a microscope and trained analysts. The results are only as good as the sampling."
  },
  {
   "id": "ag2_adulteration_law",
@@ -3573,6 +3573,6 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "The Pure Food Act that created food inspection; enforcement scale determines whether regulation reduces fraud"
+  "note": "A law, such as the Pure Food Act, that created food inspection and penalties for adulterating or mislabelling food. The scale of enforcement determines whether regulation reduces fraud: a law without inspectors changes nothing. It needs a food laboratory for tests and inspectors who are paid and independent. Sellers resist, since cheating is profitable."
  }
 ]
