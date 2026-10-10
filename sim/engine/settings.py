@@ -93,7 +93,7 @@ import shutil
 import time
 from typing import Any, cast, Dict, List, NotRequired, Optional, TypedDict
 
-from sim.engine.saveload import acting_seat_of
+from sim.engine.saveload import acting_seat_of, read_save_text
 from sim.default_civilisation import PREFERRED_DEFAULT_CIVILISATION
 
 
@@ -519,7 +519,7 @@ def list_saves(save_dir: str) -> List[SaveSummary]:
     except OSError:
         return rows
     for filename in sorted(names):
-        if not filename.endswith(".json") or filename.endswith(".meta.json"):
+        if not filename.endswith((".json", ".json.gz")) or filename.endswith(".meta.json"):
             continue
         path = os.path.join(save_dir, filename)
         try:
@@ -535,8 +535,7 @@ def list_saves(save_dir: str) -> List[SaveSummary]:
         row: SaveSummary = {"path": path, "filename": filename, "mtime": file_stat.st_mtime,
                "readable": False}
         try:
-            with open(path) as handle:
-                blob = json.load(handle)
+            blob = json.loads(read_save_text(path))
             if not isinstance(blob, dict) or "_civ" not in blob:
                 continue
             scenario = blob.get("scenario") or {}

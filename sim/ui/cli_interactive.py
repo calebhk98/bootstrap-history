@@ -43,6 +43,7 @@ from . import protocol as _protocol
 from sim.engine.ui_port import settings
 from . import cli_options, cli_units_options, replay
 from sim.engine.ui_port import normal_seed, valid_seed_text
+from sim.ui.memory import save_session
 from sim.ui.proto import step_progress
 from sim.ui.proto import util as proto_util
 from .protocol import (_agent_dispatch, _agent_end_reason, final_report,
@@ -304,7 +305,7 @@ def _play_resolve_session(args, sim, session):
         # civilisation's fresh game. The same promise holds for a checkpoint's
         # forked session file: it has been named out loud below, so it has to
         # be real from that moment on.
-        save_state(sim, session)
+        save_session(sim, session)
     if checkpoint_source:
         print("Resumed the checkpoint at %s: %d AD. A checkpoint stays "
               "exactly as it is - nothing you do now writes back into it. "
@@ -526,7 +527,7 @@ def _play_run_one_command(sim, nodes, cmd, session):
     # whose own help promises "progress is written to this file after every
     # command... close the terminal, anything".
     if session:
-        save_state(sim, session)
+        save_session(sim, session)
     try:
         # 'state json' / 'portfolio json' / 'risk json': the raw reply,
         # one line, instead of the rendered screen. Every player of this
@@ -792,7 +793,7 @@ def _ingame_options(sim, session):
                 print("   -- unchanged.")
                 continue
             newp = os.path.expanduser(raw3)
-            if not newp.lower().endswith(".json"):
+            if not newp.lower().endswith((".json", ".json.gz")):
                 newp += ".json"
             if os.path.abspath(newp) == os.path.abspath(session):
                 print("   -- that is where it already is.")
