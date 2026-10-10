@@ -5,14 +5,16 @@
    "outputs": {
     "gaming_table_hour": 1.0
    },
-   "inputs": {},
+   "inputs": {
+    "light_tallow_candle": 0.002
+   },
    "labour_hours": {
     "merchant": 0.17,
     "labourer": 0.05
    },
    "unit_dimension": "count",
    "basis": "per player's hour at a gaming table",
-   "yield_basis": "A dealer runs a table of about six players, so about a sixth of an hour of the dealer's time for each player's hour; the door and the lights take a labourer a twentieth of an hour for each. The table size is an estimate, confidence D. The stakes themselves are not the price: they pass between the players and the house, and what the house is paid is for the table and the company, which is what this entry prices.",
+   "yield_basis": "A dealer runs a table of about six players, so about a sixth of an hour of the dealer's time for each player's hour; the door takes a labourer a twentieth of an hour for each. One candle of about a candela lights a table of six, so each player's hour uses about two lumen-hours of it, 0.002 of the thousand lumen-hours the light goods are counted in. The table size is an estimate, confidence D. The stakes themselves are not the price: they pass between the players and the house, and what the house is paid is for the table and the company, which is what this entry prices.",
    "requires_node": "fin_gambling_house",
    "operated_by": ["fin_gambling_house"],
    "conf": "D",

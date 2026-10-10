@@ -2396,6 +2396,7 @@
   "art": 1,
   "conf": "B",
   "note": "A government-authorised sale of numbered chances funds a declared public purpose, with published drawing and payout rules. Private lots and prize distributions are ancient; the reform is a recurring revenue-raising institution. A state that draws its revenue through the operator is slow to think ill of the operator, and it takes a large share of the takings each year.",
+  "unheld_reason": "state lotteries for public revenue belong to the early modern states, the English one from 1694; no starting society of the game ran one",
   "mechanics": {
    "alarm_factor": {
     "factor": 0.97
