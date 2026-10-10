@@ -9,7 +9,7 @@ inventions it values through its country's scoped world, so distance and its own
 """
 from typing import Any, Dict
 
-from . import budget, ledger
+from . import budget, ledger, policy
 from .base import RecordedActor
 from .registry import register_actor_kind
 from .tuning import GOVERNMENT_WORTH_SHARE_PER_GAIN
@@ -81,6 +81,22 @@ class ForeignGovernment(RecordedActor):
 		self.pay_standing_need(world)
 		self.act(world)
 		self.workforce.clear()   # copying staff are the country's own people, not the founder's labour pool
+
+
+	# ---- what it will sell abroad, and to whom --------------------------------------------------
+	def exports_allowed(self, materials: Any) -> list:
+		"""The materials, sorted, this state will sell abroad: its own policy answers the export decision."""
+		return policy.exports_allowed(self, materials)
+
+	def close_markets_to(self, party_id: str, until_year: int) -> None:
+		"""Refuse every sale to a party (caught smuggling, say) until the year; a longer closure stands."""
+		closed = self.record.closed_markets
+		closed[party_id] = max(int(until_year), closed.get(party_id, 0))
+
+	def markets_closed_until(self, party_id: str, year: int) -> int:
+		"""The first year the party may buy here again, or 0 when its markets are open to it in `year`."""
+		until = self.record.closed_markets.get(party_id, 0)
+		return until if until > year else 0
 
 
 register_actor_kind("foreign_government", ForeignGovernment)

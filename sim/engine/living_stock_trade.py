@@ -12,10 +12,11 @@ from .material_units import tonnes_per_unit
 class LivingStockTradeMixin:
 
     def _partner_holding(self, civilization_id, material):
-        """Units of the material the partner held at its date (its `opening_stock`). TRANSITIONAL
-        HEURISTIC: the partner's stock is not simulated, so what it can sell is what it started
-        with, not what it still has; a partner's own ledger would replace this."""
-        return float((load_civ(civilization_id).get("opening_stock") or {}).get(material, 0.0))
+        """Units of the material the partner held at its date (its `opening_stock`), less what smugglers
+        have since taken. TRANSITIONAL HEURISTIC: the partner's stock is not simulated, so what it can sell
+        is what it started with, not what it still has; a partner's own ledger would replace this."""
+        started = float((load_civ(civilization_id).get("opening_stock") or {}).get(material, 0.0))
+        return max(0.0, started - self._partner_taken(civilization_id, material))
 
     def stock_purchase_quote(self, material, units, partner=None):
         """What buying `units` of a stock material costs, from the named partner or the cheapest that

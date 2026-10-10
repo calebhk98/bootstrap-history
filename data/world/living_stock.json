@@ -1,20 +1,22 @@
 {
   "_doc": {
     "purpose": "How held living stock changes each year (sim/world/stock_dynamics.py, sim/engine/living_stock_yearly.py). A material listed here is multiplied by its natural increase when the holding is at least its breeding minimum, and lowered by its annual loss; both are fractions of the holding, applied as expected values (no dice).",
-    "fields": "natural_increase: fraction of the holding added in a year by breeding or propagation. annual_loss: fraction lost in a year to death, spoilage or failed sets. breeding_minimum_units: smallest holding that can breed (a breeding group, a viable planting), in the material's unit; below it nothing is added. basis: how the rates were reached. source: author or body, title and year of what the figures came from. confidence: A, B or C, the grade of that source (A a handbook or measured, C a web summary or estimate).",
-    "status": "Every rate here is a TEMPORARY HEURISTIC: a stated order-of-magnitude estimate from the reasoning in its basis, not checked against a source. Replace with a herd model (feed, pasture, age classes) when one exists; the increase is not limited by feed or land."
+    "fields": "natural_increase: fraction of the holding added in a year by breeding or propagation. annual_loss: fraction lost in a year to death, spoilage or failed sets. breeding_minimum_units: smallest holding that can breed (a breeding group, a viable planting), in the material's unit; below it nothing is added. basis: how the rates were reached. source: author or body, title and year of what the figures came from. confidence: A, B or C, the grade of that source (A a handbook or measured, C a web summary or estimate). grows_on: what limits the holding's yearly gain: pasture (the grass of the stock's place, sim/geography/food_pasture.py, and the live weight already grazing there) or arable (the arable land of the place at the output per hectare of the stock's production entry); absent means unlimited. The labour of any gain is the labour of that production entry, bought at the going wage; a purse that cannot pay buys less gain.",
+    "status": "Every rate here is a TEMPORARY HEURISTIC unless the row carries a source: a stated order-of-magnitude estimate from the reasoning in its basis. The gain of a row with grows_on is limited by the pasture or arable land of the place and paid in labour; a row without it is not."
   },
   "materials": {
     "draught_animal_kg": {
       "natural_increase": 0.2,
       "annual_loss": 0.05,
       "breeding_minimum_units": 1200,
+      "grows_on": "pasture",
       "basis": "TEMPORARY HEURISTIC, live weight of working cattle and horses. About half a herd is breeding females and a female calves or foals in about six years in ten, so 0.3 young per head per year; about a third of the young die or are culled before work age, leaving about 0.2. Adult mortality of a few percent a year (disease, accident, murrain) is taken as 0.05. A breeding group is a male and three females, about four animals of about 300 kg live weight, so 1200 kg. Estimates, not checked against a source."
     },
     "ramie_stock_kg": {
       "natural_increase": 0.3,
       "annual_loss": 0.1,
       "breeding_minimum_units": 5,
+      "grows_on": "arable",
       "basis": "TEMPORARY HEURISTIC, rhizome cuttings. Ramie spreads by rhizome and is propagated by dividing it; a stand can be divided into several times its planting weight in a year, but cuttings are held as stock here and not planted out, so only a modest 0.3 is taken for the part divided and replanted in a nursery. Rot and failed sets lose about a tenth of stored cuttings a year. A viable nursery is taken as a few kilograms of cuttings. Estimates, not checked against a source."
     },
     "silkworm_eggs_kg": {
@@ -27,12 +29,14 @@
       "natural_increase": 0.3,
       "annual_loss": 0.08,
       "breeding_minimum_units": 150,
+      "grows_on": "pasture",
       "basis": "TEMPORARY HEURISTIC, live weight of fine-undercoat goats. Does kid about once a year with some twins, about one kid per doe and about half the flock are does, so 0.5 kids per head; about a third of kids die before their first winter, leaving about 0.3. Adult mortality is taken as 0.08. A breeding flock is a buck and four does, about five animals of about 30 kg, so 150 kg. Estimates, not checked against a source."
     },
     "angora_goat_kg": {
       "natural_increase": 0.3,
       "annual_loss": 0.08,
       "breeding_minimum_units": 150,
+      "grows_on": "pasture",
       "basis": "TEMPORARY HEURISTIC, live weight of Angora goats. The same reasoning and numbers as cashmere_goat_kg: about one kid per doe, half the flock does, a third of kids lost, adult mortality 0.08, a breeding flock of five animals of about 30 kg. Estimates, not checked against a source."
     },
     "jute_seed_kg": {
@@ -45,18 +49,21 @@
       "natural_increase": 0.3,
       "annual_loss": 0.1,
       "breeding_minimum_units": 2,
+      "grows_on": "arable",
       "basis": "TEMPORARY HEURISTIC, hop rhizome cuttings. The hop is a perennial that is propagated by cuttings from the rootstock; a nursery of cuttings multiplies by about a third a year when divided and replanted. About a tenth of held cuttings dry out or rot. A viable planting is taken as a couple of kilograms of cuttings. Estimates, not checked against a source."
     },
     "pyrethrum_stock_kg": {
       "natural_increase": 0.3,
       "annual_loss": 0.1,
       "breeding_minimum_units": 2,
+      "grows_on": "arable",
       "basis": "TEMPORARY HEURISTIC, pyrethrum planting stock (crowns and seed). The perennial is propagated by dividing crowns; the same modest 0.3 increase and 0.1 loss as hop_rhizome_kg, with a viable planting of a couple of kilograms. Estimates, not checked against a source."
     },
     "dairy_cattle_kg": {
       "natural_increase": 0.23,
       "annual_loss": 0.063,
       "breeding_minimum_units": 1000,
+      "grows_on": "pasture",
       "source": "FAO, 'Production parameters of ruminants in traditional systems' (chapter 5 of the FAO review of ruminant production in sub-Saharan Africa; fao.org/4/Y4176E/y4176e08.htm; undated, 1990s): calving rate 58.7 percent, calf mortality 21.7 percent, adult cow mortality 6.3 percent, age at first calving about 48 months, milk offtake about 250 kg per lactation.",
       "confidence": "B",
       "basis": "Live weight of milk cattle. Half a herd is breeding cows, calving 0.587 a year, and 21.7 percent of calves die, so 0.5 x 0.587 x (1 - 0.217) per head. Loss is the sourced adult mortality. The first calf comes after about four years, so the rate is a steady-state herd figure and a freshly founded herd breeds slower (not modelled). Yield: about 250 kg of milk offtake per cow per lactation in the same systems. The breeding minimum, a bull and three cows, is a TEMPORARY HEURISTIC; the animal weight behind it is not sourced."
@@ -65,33 +72,46 @@
       "natural_increase": 1.0,
       "annual_loss": 0.2,
       "breeding_minimum_units": 5,
+      "grows_on": "arable",
       "source": "Tamil Nadu Agricultural University, Agritech Portal, 'Horticulture: Spice Crops: Pepper' (agritech.tnau.ac.in/horticulture/horti_spice crops_pepper.html; undated): about 60 cuttings per mother vine per year by the serpentine method, 80 to 85 percent rooting by the trench method, first bearing in the third or fourth year, 2 to 3 kg of dry pepper per vine per year.",
       "confidence": "C",
-      "basis": "Kilograms of rooted vine cuttings and young vines. Sourced ceiling: 60 cuttings per mother vine at 80 percent rooting, so tens of rooted vines per mother a year; loss is the failed set share, 1 - 0.8. The increase is capped at a doubling a year: the sourced propagation ceiling is far higher, but a held lot is stock, not a planting, and the limit by land and labour is not modelled (TEMPORARY HEURISTIC cap). Years to first yield: three to four. Yield per vine: 2 to 3 kg of dry pepper. A viable planting of a few kilograms is a TEMPORARY HEURISTIC."
+      "basis": "Kilograms of rooted vine cuttings and young vines. Sourced ceiling: 60 cuttings per mother vine at 80 percent rooting, so tens of rooted vines per mother a year; loss is the failed set share, 1 - 0.8. The increase is still capped at a doubling a year, a TEMPORARY HEURISTIC, although the yearly growth is now held by the stock's arable land and its labour is bought (sim/engine/living_stock_growth.py): the sourced propagation figures are counts of cuttings or seeds per plant, and no source was found for what a cutting weighs against its mother plant, so a count cannot be turned into a ratio of kilograms; the cap stands for that mass ratio until one is sourced. Years to first yield: three to four. Yield per vine: 2 to 3 kg of dry pepper. A viable planting of a few kilograms is a TEMPORARY HEURISTIC."
     },
     "tea_plant_stock_kg": {
       "natural_increase": 1.0,
       "annual_loss": 0.1,
       "breeding_minimum_units": 5,
+      "grows_on": "arable",
       "source": "Clonal propagation of tea (Krishi Vigyan Kendra Mokokchung leaflet; kvkmokokchung.in; undated, as summarised by search): 50 to 300 healthy cuttings per mother bush per year; University of Hawaii CTAHR, 'In-Tray Procedure for Rooting Tea Cuttings' (SCM-35): cutting survival 97 percent in one year and 86 percent in another; tea-industry yield classes of 2000 to 4000 kg of made tea per hectare.",
       "confidence": "C",
-      "basis": "Kilograms of rooted tea cuttings. Sourced ceiling: 50 to 300 cuttings per mother bush a year; loss is the failed share, about 1 - 0.9 from the 86 to 97 percent survival. The increase is capped at a doubling a year: the sourced propagation ceiling is far higher, but a held lot is stock, not a planting, and the limit by land and labour is not modelled (TEMPORARY HEURISTIC cap). Mother bushes are usable after five to six years; first plucking about three to four years after planting out. Yield: 2000 to 4000 kg of made tea per hectare in established fields. The tea-industry yield classes are from a web summary and were not checked in the primary text."
+      "basis": "Kilograms of rooted tea cuttings. Sourced ceiling: 50 to 300 cuttings per mother bush a year; loss is the failed share, about 1 - 0.9 from the 86 to 97 percent survival. The increase is still capped at a doubling a year, a TEMPORARY HEURISTIC, although the yearly growth is now held by the stock's arable land and its labour is bought (sim/engine/living_stock_growth.py): the sourced propagation figures are counts of cuttings or seeds per plant, and no source was found for what a cutting weighs against its mother plant, so a count cannot be turned into a ratio of kilograms; the cap stands for that mass ratio until one is sourced. Mother bushes are usable after five to six years; first plucking about three to four years after planting out. Yield: 2000 to 4000 kg of made tea per hectare in established fields. The tea-industry yield classes are from a web summary and were not checked in the primary text."
     },
     "coffee_seedling_kg": {
       "natural_increase": 1.0,
       "annual_loss": 0.25,
       "breeding_minimum_units": 5,
+      "grows_on": "arable",
       "source": "Agriculture Institute, 'Coffee Propagation Methods: Seed and Vegetative Techniques' (agriculture.institute; undated): nursery loss of 20 to 30 percent to damping-off, temperature and moisture, 6 to 9 months in the nursery, first yield 3 to 4 years from seed; smallholder green-bean yields of 500 to 1000 kg per hectare per year (a coffee-sustainability review, Expl Agric 2005, vol 41, pp 449-473, as summarised by search).",
       "confidence": "C",
-      "basis": "Kilograms of coffee seedlings. Loss is the midpoint of the 20 to 30 percent nursery loss, rounded up for field setting. Coffee is raised from seed, a tree bears many seeds, so the propagation ceiling is far above a doubling. The increase is capped at a doubling a year: the sourced propagation ceiling is far higher, but a held lot is stock, not a planting, and the limit by land and labour is not modelled (TEMPORARY HEURISTIC cap). Years to first yield: three to four. Yield: about 2 to 4 kg of cherry per mature tree, 400 to 800 g of green coffee. Web-summary sources, not handbooks; grade C."
+      "basis": "Kilograms of coffee seedlings. Loss is the midpoint of the 20 to 30 percent nursery loss, rounded up for field setting. Coffee is raised from seed, a tree bears many seeds, so the propagation ceiling is far above a doubling. The increase is still capped at a doubling a year, a TEMPORARY HEURISTIC, although the yearly growth is now held by the stock's arable land and its labour is bought (sim/engine/living_stock_growth.py): the sourced propagation figures are counts of cuttings or seeds per plant, and no source was found for what a cutting weighs against its mother plant, so a count cannot be turned into a ratio of kilograms; the cap stands for that mass ratio until one is sourced. Years to first yield: three to four. Yield: about 2 to 4 kg of cherry per mature tree, 400 to 800 g of green coffee. Web-summary sources, not handbooks; grade C."
     },
     "sugar_cane_sett_kg": {
-      "natural_increase": 1.0,
+      "natural_increase": 10.0,
       "annual_loss": 0.3,
       "breeding_minimum_units": 500,
+      "grows_on": "arable",
       "source": "Cane Advisory Services (caneadvisory.ac.in, 'Seed Rate'; undated): 42,000 to 45,000 three-bud setts, 50 to 60 quintals, plant a hectare; a sugarcane planting-techniques review reports a conventional multiplication of about 11 to 12 against 100 to 150 from tissue culture; two-bud setts germinate about 65 to 70 percent (sugarcane agronomy lab manual, mcconline.org.in).",
       "confidence": "C",
-      "basis": "Kilograms of seed cane (setts). Sourced ceiling: a seed nursery hectare plants about 11 to 12 hectares, so the sourced rate is around ten and a half times in a year; loss is the failed share, 1 - 0.7 from germination of about 65 to 70 percent. The increase is capped at a doubling a year: the sourced propagation ceiling is far higher, but a held lot is stock, not a planting, and the limit by land and labour is not modelled (TEMPORARY HEURISTIC cap). Seed cane per hectare planted: 5000 to 6000 kg. Years to first yield: about one year (a plant cane crop). A planting is not a source of seed after the ratoon crop, which carries disease."
+      "basis": "Kilograms of seed cane (setts). Sourced multiplication: a seed nursery hectare plants about 11 to 12 hectares by conventional multiplication, the same planting rate per hectare in each, so a lot of setts multiplies about eleven-fold in a year (an increase of 10); loss is the failed share, 1 - 0.7 from germination of about 65 to 70 percent. The increase is not capped: the yearly growth is held by the arable land of the stock's place at the nursery output per hectare of the production entry, and its labour is bought at the going wage (sim/engine/living_stock_growth.py). Seed cane per hectare planted: 5000 to 6000 kg. Years to first yield: about one year (a plant cane crop). A planting is not a source of seed after the ratoon crop, which carries disease."
+    },
+    "rubber_planting_stock_kg": {
+      "natural_increase": 1.0,
+      "annual_loss": 0.2,
+      "breeding_minimum_units": 5,
+      "grows_on": "arable",
+      "source": "Warren Dean, 'Brazil and the Struggle for Rubber' (Cambridge University Press, 1987) for the 1876 transfer of Hevea seed from the Amazon to Kew and then to Ceylon and Singapore; Sethuraj and Mathew (eds), 'Natural Rubber: Biology, Cultivation and Technology' (Elsevier, 1992) for nursery, budding and tapping practice. Both are named from memory and were not opened in this session; no figure below was checked against their text.",
+      "confidence": "D",
+      "basis": "Kilograms of budded stumps and seedlings of the rubber tree. TEMPORARY HEURISTIC, unsourced figures: a budded-stump nursery is taken to double its stock a year (a budwood garden of selected clones gives buds for several stumps each, but what a stump weighs against its mother tree is not known to me, so the doubling stands for that ratio until it is sourced), and about a fifth of stumps are lost in lifting, transport and the first season in the field. A viable planting is taken as a few kilograms. The yearly gain is held by the arable land of the stock's place and its labour is bought (sim/engine/living_stock_growth.py). Years to first tapping: about six to seven for a stump planted out (docs/knowledge/76_farming_food_deep.md, ag2_rubber_plantation, confidence C)."
     },
     "potato_seed_tuber_kg": {
       "natural_increase": 0.0,

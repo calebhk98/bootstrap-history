@@ -603,9 +603,12 @@
   ],
   "opening_stock": {
     "ramie_stock_kg": 2000,
-    "silkworm_eggs_kg": 0.5
+    "silkworm_eggs_kg": 0.5,
+    "sugar_cane_sett_kg": 20000,
+    "tea_plant_stock_kg": 500
   },
-  "will_not_sell": [
+  "opening_stock_basis": "Initial conditions. Ramie and silkworm eggs: a stand of fibre ramie and the court's and householders' egg lots, estimated. Tea: tea was drunk and bought in Sichuan by 59 BC (Wang Bao's slave contract, the Tong Yue, names buying tea at Wuyang) and tea remains lay in the tomb of Emperor Jing at Hanyangling (published 2016, Lu and others, Scientific Reports); the mass of nursery stock is estimated. Sugar cane: grown in the south and in Sichuan, boiled to syrup (named in Han writing; the passage is not checked here); the mass is estimated. Confidence D for every quantity, which the data gives as what the state and its landowners hold, not as a count.",
+  "state_monopolies": [
     "silkworm_eggs_kg"
   ],
   "state_capacity": 0.9,

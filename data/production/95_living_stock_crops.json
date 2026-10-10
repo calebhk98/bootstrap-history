@@ -65,6 +65,22 @@
    "conf": "C",
    "requires_node": "ag2_coffee_voyage"
   },
+  "rubber_planting_stock_kg": {
+   "outputs": {
+    "rubber_planting_stock_kg": 4000.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 800.0
+   },
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "arable land",
+   "unit_dimension": "mass",
+   "basis": "per hectare of rubber nursery per year, output as kg of budded stumps and seedlings ready for the field",
+   "yield_basis": "GROWN. Rootstock seedlings are raised in a nursery, a bud from a selected clone is grafted on, and the stump is lifted and planted out as a bare-root budded stump (docs/knowledge/76_farming_food_deep.md, ag2_rubber_plantation). The kilograms per nursery hectare and the labour here are order-of-magnitude estimates, not checked against a source. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. Conf D. Made only where the crop is already grown, so the stock cannot be had without a society that holds it.",
+   "conf": "D",
+   "requires_node": "ag2_rubber_plantation"
+  },
   "dairy_cattle_kg": {
    "outputs": {
     "dairy_cattle_kg": 100.0
@@ -128,6 +144,44 @@
    "yield_basis": "GROWN. A cacao grove with pods kept for planting. YIELD (read): rustic smallholdings with limited management and no fertiliser yield 200 to 400 kg of beans per hectare, taken as the midpoint 300 (Daymond, Giraldo Mendez, Hadley and Bastide, 'A Global Review of Cocoa Farming Systems', University of Reading for ICCO, farming-system table and the Ghana rustic-smallholding section, https://www.icco.org/wp-content/uploads/Global-Review-of-Cocoa-Farming-Systems_Final.pdf; yields are commercial dry fermented beans, and the fresh-bean mass a seed lot would weigh is not sourced, TEMPORARY HEURISTIC). BEARING (read): trees become productive after two to four years, reach maximal yield after about eight, and stay productive to about 25 years (same review, section 2.4, p. 15 of the PDF). LABOUR (read): cocoa is estimated to need 39 working days per hectare per year in Ecuador (Salazar et al. 2018, cited in the same review, p. 58 of the PDF); at 8 hours per working day, an unsourced assumption, about 310 labourer-hours. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. The nursery is not added. Made only where the crop is already grown. Conf C.",
    "conf": "C",
    "requires_node": "fud_cacao"
+  },
+  "tea_plant_stock_native_kg": {
+   "outputs": {
+    "tea_plant_stock_kg": 1500.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 600.0
+   },
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "arable land",
+   "unit_dimension": "mass",
+   "basis": "per hectare of tea mother bushes per year, output as kg of rooted cuttings, raised by a society that already grows the crop",
+   "yield_basis": "GROWN where the crop is already grown. The same nursery as tea_plant_stock_kg, without the gate on the node that brings the stock home: a society whose territory has the humid subtropical climate the crop is grown in (grown_in_climate_classes, as cassia_kg) makes it from the start, so a partner there can sell it. Its figures are the base entry's. Conf C.",
+   "conf": "C",
+   "requires_node": null,
+   "grown_in_climate_classes": [
+    "Cwa"
+   ]
+  },
+  "sugar_cane_sett_native_kg": {
+   "outputs": {
+    "sugar_cane_sett_kg": 60000.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 800.0
+   },
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "arable land",
+   "unit_dimension": "mass",
+   "basis": "per hectare of seed-cane nursery per year, output as kg of setts for planting out, raised by a society that already grows the crop",
+   "yield_basis": "GROWN where the crop is already grown. The same nursery as sugar_cane_sett_kg, without the gate on the node that brings the stock home: a society whose territory has the humid subtropical climate the crop is grown in (grown_in_climate_classes, as cassia_kg) makes it from the start, so a partner there can sell it. Its figures are the base entry's. Conf C.",
+   "conf": "C",
+   "requires_node": null,
+   "grown_in_climate_classes": [
+    "Cwa"
+   ]
   }
  }
 }

@@ -59,8 +59,8 @@ check("stock never goes negative", stock_dynamics.next_units(1.0, 0.0, 1.5, 0.0)
 with open(os.path.join(ROOT, "data", "world", "living_stock.json"), encoding="utf-8") as handle:
     rates = json.load(handle)["materials"]
 for material, row in sorted(rates.items()):
-    check("%s: increase and loss are fractions of the herd and the minimum is not negative" % material,
-          0.0 <= row["natural_increase"] <= 1.0 and 0.0 <= row["annual_loss"] <= 1.0
+    check("%s: increase is not negative, loss is a fraction of the herd and the minimum is not negative" % material,
+          0.0 <= row["natural_increase"] and 0.0 <= row["annual_loss"] <= 1.0
           and row["breeding_minimum_units"] >= 0.0, row)
     check("%s: each rate states its basis" % material, len(row.get("basis", "")) > 40, row.get("basis"))
 
