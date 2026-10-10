@@ -97,6 +97,11 @@ class EconomyPort:
         agent = self._answering_agent()
         return {} if agent is None else agent.land_rent_paid_by_tile()
 
+    def agent_idle_hours_by_trade(self):
+        """(hours offered and not hired, hours offered) of each trade last year; empty while the economy opens."""
+        agent = self._answering_agent()
+        return {} if agent is None else agent.idle_hours_by_trade()
+
     def agent_people_by_trade(self):
         """Working people by trade in the agent economy's labour core; None while it opens or has not yet
         opened (opening it is the wage quotes' business, and slow)."""

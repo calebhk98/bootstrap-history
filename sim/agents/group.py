@@ -15,7 +15,12 @@ from .edges import EDGE_STATE_SPENDING
 from .group_tuning import (GRIEVANCE_RETENTION, GROUP_BAN_PULL, GROUP_CLAIM_CEILING_SHARE, GROUP_DISBANDING_SHARE,
 						   GROUP_LOG_INTERVAL_YEARS, GROUP_ORGANISING_WEIGHT, GROUP_PULL_SCALE,
 						   SCANDAL_PER_PETITION)
+from .group_jobs import JOBLESS_WORKERS
 from .sector import CONCESSION_PREFIX, Sector, sector_key
+
+# the kinds of group that can obtain a prohibition: producers of a commodity (against the techniques that make
+# it or a substitute) and workers out of a job (against the technique that did their work with fewer hands)
+BANNING_KINDS = ("displaced_producers", JOBLESS_WORKERS)
 
 # however well protected, public blame never falls below this share of what it would be
 BLAME_PROTECTION_FLOOR = 0.15
@@ -34,7 +39,7 @@ def state_response(pull: float, capacity: float, in_deficit: bool, kind: str,
 	(and raises the money from the taxpayers it sees) rather than forbids."""
 	reach = pull * capacity
 	return {"claim": min(reach * lost_income, GROUP_CLAIM_CEILING_SHARE * territory_revenue),
-			"ban": kind == "displaced_producers" and reach >= GROUP_BAN_PULL and not in_deficit,
+			"ban": kind in BANNING_KINDS and reach >= GROUP_BAN_PULL and not in_deficit,
 			"blame": SCANDAL_PER_PETITION * reach}
 
 
@@ -74,6 +79,7 @@ class InterestGroup(RecordedActor):
 		gross = max(fresh, (record.lost_income + record.received_last_year) * GRIEVANCE_RETENTION)
 		if sector is not None:
 			record.cause, record.members, record.blame_share = sector.cause, sector.members, sector.blame_share
+			record.technique = sector.technique
 			record.grievance = gross / sector.income_base if sector.income_base > 0 else 0.0
 		revenue = world.scope_revenue(1.0 if sector is None else sector.scope)
 		# what the state paid it, averaged with last year's so a payment does not swing the next year's pull
@@ -92,7 +98,8 @@ class InterestGroup(RecordedActor):
 		response = state_response(record.strength, world.state_capacity(), world.state_in_deficit(),
 								  record.group_kind, record.lost_income, revenue)
 		record.claim = response["claim"]
-		record.demands = ["ban the techniques that make " + record.subject] if response["ban"] else []
+		record.demands = ([("ban the technique that does their work with fewer hands" if record.technique
+							else "ban the techniques that make " + record.subject)] if response["ban"] else [])
 		blame = blame_after_protection(response["blame"], world.founder_protection(), record.blame_share)
 		if blame > 0.0:
 			record.petitions += 1
@@ -112,4 +119,4 @@ class InterestGroup(RecordedActor):
 	def founded_by(cls, sector: Sector) -> Dict[str, Any]:
 		"""The record fields of a group founded on this sector."""
 		return {"kind": "interest_group", "name": sector.name, "group_kind": sector.kind,
-				"subject": sector.subject, "cause": sector.cause, "members": sector.members}
+				"subject": sector.subject, "cause": sector.cause, "members": sector.members, "technique": sector.technique}

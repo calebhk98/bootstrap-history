@@ -37,7 +37,7 @@ __all__ = [
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
     "credit_room", "economy_from_record", "blank_economy", "export_record", "economy_book", "finish_spin_up", "shown_prices_of",
     "settle_agent_takings", "move_goods", "post_transfers", "cohort_incomes", "land_rent_per_hectare",
-    "land_rent_paid_by_tile", "land_rent_at_tile", "country_figures",
+    "land_rent_paid_by_tile", "land_rent_at_tile", "country_figures", "idle_hours_by_trade",
 ]
 
 _KEY_SEPARATOR = "|"
@@ -93,6 +93,12 @@ def land_rent_at_tile(economy, tile):
 def land_rent_paid_by_tile(economy):
     """Rent producers paid on each tile where land was let last year, in the economy's units."""
     return land_rents.rent_paid_by_tile(economy.setup, economy.record)
+
+
+def idle_hours_by_trade(economy, country=None):
+    """(hours offered and not hired, hours offered) of each trade in the labour markets of `country` (the home
+    country's when the economy holds several) in the last clearing: the jobs the labour core did not find."""
+    return country_figures.idle_hours_by_trade(economy, country_figures.home_when_shared(economy, country))
 
 
 def wages_by_trade_weighted(economy, country=None):

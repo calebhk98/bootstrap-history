@@ -5,6 +5,7 @@ Methods of Sim. The groups themselves are actors (`sim/agents/group.py`); this i
 reading side, plus the one prohibition check the start gate calls.
 """
 from sim.agents.api import Sector, supply
+from . import need_substitutes
 from .blockers import blocker_kind
 from .units_prose import money_text
 
@@ -27,7 +28,7 @@ class InterestGroupsMixin:
                          "grievance_share": round(record.grievance, 3),
                          "pull_on_the_state": round(record.strength, 3),
                          "state_undertakes_to_make_good": round(record.claim),
-                         "demands": list(record.demands), "petitions": record.petitions,
+                         "demands": list(record.demands), "technique": record.technique, "petitions": record.petitions,
                          "organised_since": record.founded_year})
         return rows
 
@@ -64,23 +65,50 @@ class InterestGroupsMixin:
                                % (money_text(record.claim, self, grouped=True), record.name, record.cause))
         return reasons
 
+    def _technique_bans(self):
+        """technique -> (name of the group, its pull) for the groups whose demand is to forbid one technique."""
+        bans = {}
+        for group in self.actors.of_kind("interest_group"):
+            record = group.record
+            if record.exited_year is None and record.demands and record.technique:
+                bans[record.technique] = (record.name, record.strength)
+        return bans
+
+    def _banned_materials(self, technique):
+        """The materials a forbidden technique makes and their substitutes (goods that serve the same needs):
+        a technique that makes any of them does the forbidden technique's work another way."""
+        cache = self.__dict__.setdefault("_banned_materials_cache", {})
+        if technique not in cache:
+            made = set(supply.materials_made_by(technique))
+            cache[technique] = made.union(*(need_substitutes.substitutes_of(material) for material in made))
+        return cache[technique]
+
     def group_prohibition_of(self, node_id):
         """(group name, subject, group pull) for the interest group whose demand has the state forbid
-        starting this node, or None. The node is reached through what it makes, its own goods category
-        and the line of techniques it refines (see `Sector.reached_by`). A node the state itself values
-        is not forbidden."""
+        starting this node, or None. A group of producers is met by the node reached through what it makes
+        or what substitutes for it, its own goods category and the line of techniques it refines (see
+        `Sector.reached_by`); a group of workers out of a job is met by the technique that did their work
+        with fewer hands and by any technique that makes what it makes or a substitute for it. A node the
+        state itself values is not forbidden."""
         state = self.state.actors
         if state is None or not state.records:
             return None
         banned = self.actors.prohibitions()
-        if not banned or self.state_interest(self.nodes[node_id]) > 0.0:
+        by_technique = self._technique_bans()
+        if (not banned and not by_technique) or self.state_interest(self.nodes[node_id]) > 0.0:
             return None
         reached = Sector.reached_by(node_id, self.nodes, supply.materials_made_by,
-                                    lambda material: self._material_tag(material)[0])
+                                    lambda material: self._material_tag(material)[0],
+                                    need_substitutes.substitutes_of)
         for subject in sorted(reached & set(banned)):
             strength = max((group.record.strength for group in self.actors.of_kind("interest_group")
-                            if group.record.subject == subject and group.record.demands), default=0.0)
+                            if group.record.subject == subject and group.record.demands and not group.record.technique),
+                           default=0.0)
             return banned[subject], subject, strength
+        made = set(supply.materials_made_by(node_id))
+        for technique, (name, strength) in sorted(by_technique.items()):
+            if node_id == technique or made & self._banned_materials(technique):
+                return name, self.nodes[technique].get("name", technique), strength
         return None
 
 

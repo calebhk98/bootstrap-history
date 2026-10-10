@@ -415,7 +415,7 @@ class ActorRegistry:
 		make it the state is meeting this year."""
 		if self._bans is None:
 			self._bans = {group.record.subject: group.record.name for group in self.of_kind("interest_group")
-						  if group.record.exited_year is None and group.record.demands}
+						  if group.record.exited_year is None and group.record.demands and not group.record.technique}
 		return self._bans
 
 
