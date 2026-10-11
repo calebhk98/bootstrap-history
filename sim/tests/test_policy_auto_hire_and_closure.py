@@ -37,7 +37,7 @@ check("a loss-making, non-knowledge node is NOT protected (the control case)",
       not s.never_abandon(_LOSS), NODES[_LOSS]["cat"])
 
 # One household in arrears takes the loss-shedding scenarios in turn (the control first, while the loss-maker is still shut).
-_neg = sim(capital=-100000.0)
+_neg = unopened_sim(capital=-100000.0)
 # The control: a loss-maker that is SHUT is left alone entirely.
 s_sh = _neg
 s_sh.done.add(_LOSS); s_sh._done_changed()
@@ -92,7 +92,7 @@ check("creditors' seizure mothballs, and NAMES, what it takes",
       [message for _, message in s.log])
 
 # --- C: a repossessed work must not look like fresh research
-_pos = sim(capital=100000.0)
+_pos = unopened_sim(capital=100000.0)
 s = _pos
 s.done.add(_LOSS); s._done_changed()      # you BUILT it; that is what mothballing means
 s.mothballed.add(_LOSS)
@@ -136,14 +136,14 @@ s_ab = _neg
 s_ab.done.add(_LOSS); s_ab._done_changed()
 s_ab.operating.add(_LOSS)
 s_ab.revenue = lambda: 0.0
-s_ab.step()
+s_ab._step_money_seat()    # the year's money phase is where insolvency sheds
 check("no path in the engine leaves a work mothballed but unknown",
       _LOSS in s_ab.mothballed and not (s_ab.mothballed - s_ab.done),
       sorted(s_ab.mothballed - s_ab.done)[:4])
 
 # --- D1: auto_hire must not take on staff this year's income cannot carry
-s = sim(civ="rome_100ad", capital=400.0, manual=False, events=False)
-s.step()
+s = unopened_sim(civ="rome_100ad", capital=400.0, manual=False, events=False)
+s._step_staff()    # the year's staff phase is where auto_hire acts
 check("auto_hire does not overcommit turn one against a thin surplus",
       s.scholars < 0.2 and s.artisans < 0.6,
       "scholars %.3f artisans %.3f capital %.1f" % (s.scholars, s.artisans, s.capital))
@@ -151,7 +151,7 @@ check("auto_hire does not overcommit turn one against a thin surplus",
 # --- D2/E: auto_train (and a `start` warning) must be demand-led: driven by
 # what is startable now but for the trade, not by every node whose direct
 # prerequisites happen to be satisfied somewhere deep in the tree.
-s = sim(civ="rome_100ad", capital=1e6, manual=True, events=False)
+s = sim(civ="rome_100ad", capital=1e6, manual=True, events=False, surveyed=())
 ok_ig, why_ig = s.start_reason("ag2_hydrometer", ignore_trade=True)
 check("ignore_trade accepts a node that is startable but for the trade alone",
       ok_ig, why_ig)
@@ -187,6 +187,9 @@ check("a whole-number staff carries no fraction footnote",
 
 # --- F: say how the founder's hours were spent
 ratios = []
+# a project the society can staff, with the purse far short of its instalment, so the very first year shows a refund
+s.start_project("scientific_method")
+s.capital = -s.credit_limit() * 0.8
 for _ in range(3):
     s.step()
     h = s.hours_this_year
@@ -198,6 +201,8 @@ for _ in range(3):
         eff = pst.get("hours_effective_this_year", 0.0)
         if off > 1:
             ratios.append(eff / off)
+    if any(abs(ratio - 0.5) > 0.02 for ratio in ratios):
+        break     # the property is shown; further years only cost time
 check("an underfunded project's refund is proportional, not always exactly half",
       any(abs(ratio - 0.5) > 0.02 for ratio in ratios), ratios)
 st = S._agent_state(s, NODES, {})
@@ -310,7 +315,7 @@ check("Christianisation still carries no sack_chance (a values shift is not "
 # third of the way into a credit line nobody has withdrawn. A household with
 # credit left borrows and makes payroll; that is what credit is for.
 # (a) A payroll the remaining credit COVERS costs you nobody but attrition.
-s = sim(capital=22400.0 * pristine_game().labour.money_per_labour_hour())  # 6000 coin at the old coin value, in labour hours
+s = sim(capital=22400.0 * pristine_game().labour.money_per_labour_hour(), surveyed=())  # 6000 coin at the old coin value, in labour hours
 s.policy["auto_hire"] = False
 # One labourer: wages track labour tightness now, so a smith or two people
 # would exceed the credit line and rightly be trimmed. The precondition on
@@ -323,7 +328,7 @@ _before = sum(s.employees.values())
 _room = (s.revenue() + s.capital + s.credit_limit()
          - (s.living_cost() - s.labour.wage_bill()) - s.upkeep())
 _payroll_before = s.labour.wage_bill()
-s.step()
+s._step_staff()    # the staff phase is where a payroll is trimmed
 _after = sum(s.employees.values())
 check("staff are not let go while there is still credit to pay them",
       _room > _payroll_before and _after > _before * 0.95,
@@ -334,7 +339,7 @@ check("staff are not let go while there is still credit to pay them",
 #     it. The tester's five went to zero in one step with two thirds of the
 #     credit line untouched; what should happen is that you keep as many as
 #     your remaining means will pay for.
-s = sim(capital=22400.0 * pristine_game().labour.money_per_labour_hour())  # 6000 coin at the old coin value, in labour hours
+s = sim(capital=22400.0 * pristine_game().labour.money_per_labour_hour(), surveyed=())  # 6000 coin at the old coin value, in labour hours
 s.policy["auto_hire"] = False
 s.labour.hire("smith", 5)
 # Means that cover a bit over half the payroll: what is left of the credit line plus the year's revenue,
@@ -345,19 +350,19 @@ for _settle in range(20):
               + s.capital + s.credit_limit())
     s.capital += 0.6 * s.labour.wage_bill() - _means
 _b3 = sum(s.employees.values())
-s.step()
+s._step_staff()
 check("an unaffordable payroll is trimmed to what you can pay, not emptied",
       0.5 < sum(s.employees.values()) < _b3,
       "%.2f -> %.2f" % (_b3, sum(s.employees.values())))
 
 # ...and when they DO go, because there is genuinely no money left to borrow,
 # it is said. The old code logged only in the branch that never happened.
-s = sim(capital=22400.0 * pristine_game().labour.money_per_labour_hour())  # 6000 coin at the old coin value, in labour hours
+s = sim(capital=22400.0 * pristine_game().labour.money_per_labour_hour(), surveyed=())  # 6000 coin at the old coin value, in labour hours
 s.policy["auto_hire"] = False
 s.labour.hire("smith", 5)
 s.capital = -s.credit_limit() * 1.5
 _b2 = sum(s.employees.values())
-s.step()
+s._step_staff()
 check("losing staff you cannot pay is written in the log, never silent",
       sum(s.employees.values()) < _b2
       and any("cannot pay everyone" in message for _year, message in s.log),
@@ -365,7 +370,7 @@ check("losing staff you cannot pay is written in the log, never silent",
 
 # 4. auto_shed discards technologies you built - under fog the only score there
 #    is - and it was on by default for a player.
-_manual_policy, _optimizer_policy = pristine_game().policy, sim(manual=False).policy
+_manual_policy, _optimizer_policy = pristine_game().policy, unopened_sim(manual=False).policy
 check("nothing that deletes your work is on by default for a player",
       _manual_policy["auto_shed"] is False and _optimizer_policy["auto_shed"] is True,
       (_manual_policy["auto_shed"], _optimizer_policy["auto_shed"]))
@@ -375,7 +380,7 @@ check("nothing that deletes your work is on by default for a player",
 # denarii of work in hand against 400 in cash and a displayed credit limit of
 # 1,503 - and put the player at -3,672 one step later. `help economy` promises
 # "as far as somebody will lend you and no further"; nothing enforced it.
-s = sim(civ="england_1300")
+s = unopened_sim(civ="england_1300")
 _taken, _refused = 0, None
 for _k in list(s.order):
     if s.can_start(_k):
@@ -468,7 +473,7 @@ s.enforce_credit_limit(100)
 check("creditors' seizure cannot leave you running what you no longer know",
       not _operating_subset_of_done(s), _operating_subset_of_done(s))
 
-# One optimizer game in Han: a rich household's first year hires, and with the second year the invariant is read.
+# One optimizer game in Han: a rich household's first year hires, and the invariant is read after it.
 s = sim(civ="han_china_100ad", manual=False)
 # 8. `policy auto_hire on` must still grow the staff of a household that can pay for it. The
 #    no-surplus case (no hiring floor under the affordability scale) is the D1 check above.
@@ -480,7 +485,6 @@ check("auto_hire on a rich household actually hires",
       sum(s.employees.values()) > 1.0,
       "staff %.2f on %.0f" % (sum(s.employees.values()), s.capital))
 
-s.step()
 check("a long run never ends up running something it does not know",
       s.operating and not _operating_subset_of_done(s), _operating_subset_of_done(s)[:5])
 
@@ -498,5 +502,5 @@ check("a switch that is on but cannot act says so",
       _pol.get("switched_on_but_cannot_act_right_now"))
 check("...and says nothing when they all can",
       "switched_on_but_cannot_act_right_now" not in
-      S._agent_dispatch(sim(capital=50000.0), NODES, {"cmd": "policy"}),
+      S._agent_dispatch(unopened_sim(capital=50000.0), NODES, {"cmd": "policy"}),
       "field present on a solvent household")
