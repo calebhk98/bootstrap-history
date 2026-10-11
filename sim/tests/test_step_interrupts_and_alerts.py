@@ -5,15 +5,30 @@ from sim.ui.proto import step_progress
 from sim.ui.proto.step_alerts import step_alerts, alert_lines
 from sim.ui.proto import render_screen_state as _render_state, render_screen_step as _render_big
 
-def playable():
-    live_sim = sim()
+def playable(build=sim):
+    live_sim = build()
     live_sim.end_year = live_sim.cfg["start_year"] + 50
+    return live_sim
+
+
+def without_economy(live_sim):
+    """Make this game's yearly step only the year's project work and the calendar: the checks that use it are about
+    the step command's per-year hook, progress lines and save, not about what a year of the economy does."""
+    seat = live_sim.playing_seats()[0]
+
+    def one_year():
+        with live_sim.act_as(seat):
+            live_sim.begin_seat_year()
+            live_sim.begin_world_year()
+            live_sim._run_seat_work()
+        live_sim.state.scenario.year += 1
+    live_sim.step = one_year
     return live_sim
 
 
 scratch = tempfile.mkdtemp()
 save_path = os.path.join(scratch, "game.json")
-interrupted_sim = playable()
+interrupted_sim = without_economy(playable(unopened_sim))
 start_year = interrupted_sim.year
 seen_years = []
 
@@ -35,7 +50,7 @@ finally:
     step_progress.set_after_year(None)
 check("the hook runs once per simulated year and an interrupt escapes", interrupted
       and seen_years == [start_year + 1, start_year + 2], seen_years)
-reloaded = sim()
+reloaded = unopened_sim()
 load_state(reloaded, save_path)
 check("an interrupted multi-year step keeps the completed years on disk",
       reloaded.year == start_year + 2, (reloaded.year, start_year))
@@ -73,8 +88,11 @@ shutil.rmtree(scratch, ignore_errors=True)
 import io
 progress_stream = io.StringIO()
 step_progress.set_after_year(step_progress.commit_and_report(None, progress_stream))
-walked = playable()
+walked = collapse
+walked.state.population.population_change_last_year = 0.0
+without_economy(walked)
 _agent_dispatch(walked, NODES, {"cmd": "step", "years": 2})
+del walked.step
 single_stream = io.StringIO()
 step_progress.set_after_year(step_progress.commit_and_report(None, single_stream))
 quiet = _agent_dispatch(walked, NODES, {"cmd": "step", "years": 1})

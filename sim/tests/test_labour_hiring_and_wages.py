@@ -9,6 +9,20 @@ def _ask(household, command, **arguments):
     return S._agent_dispatch(household, NODES, dict(cmd=command, **arguments))
 
 
+def _play_year(game):
+    """One year of apprenticeships, staff, money and project work and the calendar, without the market closing
+    around it (the checks that use it are about who is on the books and what is taught)."""
+    seat = game.playing_seats()[0]
+    with game.act_as(seat):
+        game.begin_seat_year()
+        game.begin_world_year()
+        game._step_apprenticeships()
+        game._step_staff()
+        game._step_money_seat()
+        game._run_seat_work()
+    game.state.scenario.year += 1
+
+
 # One game serves the practice, training, hiring, commissioning and death checks.
 household = sim(capital=5000000.0)
 
@@ -106,7 +120,7 @@ check("...and it is the real forecast: hiring one for real lands on the number q
 household_training = sim(capital=100000.0)
 _trained, _train_message = household_training.labour.train("machinist", 2, None)
 for _ in range(3):
-    household_training.step()
+    _play_year(household_training)
 check("trained apprentices are really on the books, unprompted, by the year named",
       _trained and household_training.employees.get("machinist", 0.0) >= 1.999,
       (_train_message, household_training.employees.get("machinist")))
@@ -128,7 +142,7 @@ check("a trade taught and then lost counts as gone, not as available",
 for _ in range(6):
     if "air_artificial_horizon" not in household_lost.active:
         household_lost.initialize_project("air_artificial_horizon")
-    household_lost.step()
+    _play_year(household_lost)
     if household_lost.labour.market_supply("machinist") > 0 or household_lost.labour._trade_headcount_pending("machinist") > 0:
         break
 check("...and the engine teaches it again rather than skipping every node that needs it",

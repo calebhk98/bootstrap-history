@@ -76,7 +76,17 @@ def _word_game_digest(seed):
                  civ=S.load_civ("rome_100ad"))
     game.goal, game.done_year = GOAL, {}
     game.end_year = game.cfg["start_year"] + game.cfg["horizon_years"]
-    game.step()
+    seat = game.playing_seats()[0]
+    with game.act_as(seat):    # the year's dice (the society's year, the hazards), without the market closing
+        game.begin_seat_year()
+        game.begin_world_year()
+        game._step_staff()
+        game._step_money_seat()
+        game._step_money_world()
+        game._step_dated_shocks([seat])
+        game._run_seat_work()
+        game._random_events(game.state.scenario.year, [seat])
+    game.state.scenario.year += 1
     return perf_fingerprint.digest(perf_fingerprint.state_of(game))
 
 
@@ -105,7 +115,7 @@ _out = _run(["play", "--civ", "rome_100ad", "--seed", "hello", "--session", _liv
 check("--seed takes a word and prints it back", "hello" in _out, _out[:300])
 check("208: a typed relative save says the full path it landed at", _snapshot in _out, _out[-700:])
 _snapshot_before = open(_snapshot).read()
-_resume = _run(["play", "--session", _snapshot], "step 1\nquit\n", _env_export, _workdir).stdout
+_resume = _run(["play", "--session", _snapshot], "start scientific_method\nquit\n", _env_export, _workdir).stdout
 check("208: resuming a manually saved file does not overwrite it",
       "stays exactly as it is" in _resume and open(_snapshot).read() == _snapshot_before,
       _resume[-500:])

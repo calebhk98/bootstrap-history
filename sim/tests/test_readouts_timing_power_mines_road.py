@@ -17,8 +17,14 @@ def stepped_completion(reputation):
 	try:
 		quoted = test_sim.earliest_completion_years(SLOW_NODE)
 		test_sim.start_project(SLOW_NODE)
+		seat = test_sim.playing_seats()[0]
 		for steps in range(1, 40):
-			test_sim.step()
+			# The year's project work and the calendar, without the economy around it (money is not the limit here).
+			with test_sim.act_as(seat):
+				test_sim.begin_seat_year()
+				test_sim.begin_world_year()
+				test_sim._run_seat_work()
+			test_sim.state.scenario.year += 1
 			if SLOW_NODE in test_sim.done:
 				return quoted, steps
 	finally:
