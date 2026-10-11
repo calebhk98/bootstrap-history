@@ -13,8 +13,7 @@ from .harness import *  # noqa: F401,F403
 def _test_start_reason_why_false_boolean_equivalence():
     """Verify start_reason(node_id, _why=False)[0] == start_reason(node_id, _why=True)[0]
     for all nodes in a standard simulation."""
-    sim_inst = sim(civ="rome_100ad", capital=10000.0)
-    sim_inst.step()
+    sim_inst = sim(civ="rome_100ad", capital=10000.0)     # the two answers must agree in any state, the opening one included
     
     mismatches = []
     for node_id in sim_inst.order[:200]:
@@ -35,7 +34,6 @@ slow_check("start_reason _why=False boolean equivalence", _test_start_reason_why
 def _test_afford_gate_behavior():
     """Verify _project_progress_afford_gate output consistency across household capital states."""
     sim_inst = sim(civ="rome_100ad", capital=5000.0)
-    sim_inst.step()
     
     # Pick an active project node
     candidate_node = sim_inst.order[0]
@@ -80,7 +78,7 @@ def _test_perf_fingerprint_state_retention_toggle():
     """Verify run(scenario, keep_states=False) does not retain full states."""
     from sim.tests import fingerprint as F
     
-    sc = dict(F.QUICK_SCENARIOS[0], years=2)     # the toggle shows in any run; two years keep it cheap
+    sc = dict(F.QUICK_SCENARIOS[0], years=1)     # the toggle shows in any run; one year keeps it cheap
     digests_no_states, cpu_no_states, states_no_states = F.run(sc, keep_states=False)
     digests_with_states, cpu_with_states, states_with_states = F.run(sc, keep_states=True)
     

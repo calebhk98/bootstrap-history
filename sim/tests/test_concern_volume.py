@@ -177,10 +177,10 @@ complete(game, GATE)
 run(game, HEAT)
 run(game, GATE)
 check("once it is priced, households want it", game.household_new_goods_units().get(NEW_GOOD, 0.0) > 0.0)
-close_years(game, 2)
+close_years(game, 1)       # the first close values the new good and the market can sell it
 check("...it is valued at its introduction price", game.state.economy.introduction_prices.get(NEW_GOOD, 0.0) > 0.0)
 twin = sim(civ="rome_100ad", capital=1e9)
-close_years(twin, 2)
+close_years(twin, 1)
 lines = {material: (quantity, price) for material, quantity, price in game.real_output_lines()}
 check("...and counts in real output once the market sells it, at that price, and not before",
       lines.get(NEW_GOOD, (0.0, 0.0))[0] > 0.0
