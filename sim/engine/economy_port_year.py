@@ -45,6 +45,23 @@ SPIN_UP_TRIMMED_YEARS = declare(
         "reference too high in some civilisations; found by trying lengths against the opening-workforce tests). "
         "A model of hiring and training would derive it per trade.")
 SPIN_UP_WATCHED_GOODS = 12
+# `<first-stage years>,<trimmed years>` in this variable shortens the spin-up (the test suite sets it); the years
+# then enter the cache key, so a full game never reads a shortened record.
+SPIN_UP_YEARS_ENV = "ROME_SPIN_UP_YEARS"
+
+
+def spin_up_years():
+    """(most first-stage years, trimmed years): SPIN_UP_YEARS_ENV when set, else the declared bounds."""
+    named = os.environ.get(SPIN_UP_YEARS_ENV)
+    if named:
+        first, trimmed = (int(part) for part in named.split(","))
+        return first, trimmed
+    return int(SPIN_UP_MAXIMUM_YEARS), int(SPIN_UP_TRIMMED_YEARS)
+
+
+def _spin_up_cache_key(setup):
+    years = spin_up_years()
+    return spin_up_key(setup, None if years == (int(SPIN_UP_MAXIMUM_YEARS), int(SPIN_UP_TRIMMED_YEARS)) else years)
 FOREIGN_TRADE_SHARE = declare(
     "FOREIGN_TRADE_SHARE", 0.1, kind="temporary_heuristic",
     unit="share of the home market a good's imports or exports can reach in a year", source=None, confidence="D",
@@ -89,7 +106,7 @@ class AgentEconomy:
                 opening = opening_values(self._sim)
                 setup = build_setup(self._sim, opening)
                 record = solve_cache.cached_json(
-                    spin_up_key(setup),
+                    _spin_up_cache_key(setup),
                     lambda: self._spun_up(setup), cache_dir=SPIN_UP_CACHE_DIRECTORY)
                 self._economy = economy_api.economy_from_record(setup, record)
                 self.stored["opening"] = opening
@@ -413,7 +430,7 @@ class AgentEconomy:
     def _settle(economy, inputs, watched):
         """Hidden years until the price level, the rate and the main prices move less than the tolerance a year."""
         before = None
-        for _year in range(int(SPIN_UP_MAXIMUM_YEARS)):
+        for _year in range(spin_up_years()[0]):
             outcome = economy.step(inputs)
             now = ([outcome.basket_price_level, economy_api.interest_rate(economy) or 0.0]
                    + [outcome.prices.get(good, 0.0) for good in watched])
@@ -426,7 +443,7 @@ class AgentEconomy:
     def _settle_trimmed(economy, inputs):
         """The few further years, from the state the first stage left, in which the trimmed trades' wages and
         entry settle."""
-        for _year in range(int(SPIN_UP_TRIMMED_YEARS)):
+        for _year in range(spin_up_years()[1]):
             economy.step(inputs)
 
     def _save(self):

@@ -2,15 +2,13 @@
 technology that rescues it, surplus farm labour, and unfarmable ground on the
 clearing ladder. Each is pinned as a property (direction and bounds), never an
 exact number."""
-import contextlib
 import copy
 import math
-import tempfile
 import unittest
 from unittest import mock
 
 from .harness import *  # noqa: F401,F403
-from sim.engine import core, economy_port_year, invariants
+from sim.engine import core, invariants
 from sim.labour import labour_allocation
 from sim.geography.api import tiles_held
 from sim.world import agriculture, land
@@ -38,21 +36,9 @@ def _geography_with_fertility(civ_id, fertility_of_tile):
     return geography
 
 
-@contextlib.contextmanager
-def _short_spin_up():
-    """The hidden pre-game years cut to a few, run fresh and cached nowhere: on ground that cannot feed
-    anyone the economy never settles, so the full spin-up runs to its bound at a cost of many minutes,
-    and what these tests read is the game after the build, not the settled opening."""
-    with tempfile.TemporaryDirectory() as cache_directory, \
-            mock.patch.object(economy_port_year, "SPIN_UP_CACHE_DIRECTORY", cache_directory), \
-            mock.patch.object(economy_port_year, "SPIN_UP_MAXIMUM_YEARS", 2), \
-            mock.patch.object(economy_port_year, "SPIN_UP_TRIMMED_YEARS", 1):
-        yield
-
-
 def _sim_on(fertility_of_tile, civ_id=CIV_ID):
     geography = _geography_with_fertility(civ_id, fertility_of_tile)
-    with _short_spin_up(), mock.patch.object(
+    with mock.patch.object(
             core, "load_geography", lambda world_map=None: copy.deepcopy(geography)):
         return sim(civ_id, events=False)
 
@@ -177,7 +163,7 @@ class BarrenLandTests(unittest.TestCase):
         geography = _geography_with_fertility(CIV_ID, _uniform(1.0))
         for tile_id in geography["land_tiles"]["tiles"]:
             geography["land_tiles"]["tiles"][tile_id]["arable_fraction"] = 0.0
-        with _short_spin_up(), mock.patch.object(
+        with mock.patch.object(
                 core, "load_geography", lambda world_map=None: copy.deepcopy(geography)):
             test_sim = sim(CIV_ID, events=False)
         history = _run(test_sim, 60, until=lambda rows: len(rows) > 5 and rows[-1][0] < rows[5][0] * 0.5)
