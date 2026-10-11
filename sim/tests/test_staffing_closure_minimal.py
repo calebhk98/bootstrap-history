@@ -15,7 +15,7 @@ def concerns_with_foreman(test_sim, trade, count):
 
 
 def crowded_sim(smith_concerns, other_concerns):
-	test_sim = sim(capital=10_000_000.0)
+	test_sim = unopened_sim(capital=10_000_000.0)
 	for node_id in smith_concerns + other_concerns:
 		test_sim.done.update(NODES[node_id]["pre"])
 	test_sim._done_changed()
@@ -29,7 +29,7 @@ def crowded_sim(smith_concerns, other_concerns):
 	return test_sim
 
 
-probe = sim()
+probe = unopened_sim()
 smiths = concerns_with_foreman(probe, "smith", 6)
 others = concerns_with_foreman(probe, "carpenter", 3) + concerns_with_foreman(probe, "machinist", 3)
 

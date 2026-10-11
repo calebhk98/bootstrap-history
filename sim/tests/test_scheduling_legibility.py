@@ -27,10 +27,11 @@ from sim.ui.protocol import _agent_portfolio as _APORT
 # full 150 hours against the WHOLE 2,000-hour pool; sc2_institution_
 # curriculum is priority #2, offered its 120 against what was left AFTER
 # the first one's share, 1,850.
-_s_alloc = sim(civ="rome_100ad", capital=5_000_000.0)
+_s_alloc = sim(civ="rome_100ad", capital=5_000_000.0, surveyed=())
 _s_alloc.done.update({"school_founded", "fin_university",
                       "sc2_institution_examination"})
 _s_alloc._done_changed()
+_s_alloc.end_year = _s_alloc.cfg["start_year"] + _s_alloc.cfg["horizon_years"]
 _s_alloc.start_project("sc2_institution_curriculum")
 _s_alloc.start_project("sc2_institution_doctorate")
 _s_alloc.step()
@@ -84,7 +85,7 @@ check("the same equality survives a real json.dumps/json.loads round trip",
 # were all competing for the same 3,000 annual trade-hours." Six chemist-
 # using projects, one shared trade, supply pinned to 1,500 - well under
 # what six projects each wanting hundreds of hours would want at once.
-_s_dem = sim(civ="rome_100ad", capital=5_000_000.0)
+_s_dem = unopened_sim(civ="rome_100ad", capital=5_000_000.0)
 _dem_targets = sorted(node_id for node_id in NODES
                       if (NODES[node_id].get("lab") or {}).get("chemist"))[:6]
 for _k in _dem_targets:
@@ -134,7 +135,7 @@ check("`portfolio`'s own trade-demand table reads the identical numbers, "
 # supply; starting a second that alone would fit (100 <= 150) but not
 # alongside the first (80 + 100 > 150) must say so AT the moment of
 # commitment, not merely let it start silently and crawl.
-_s_over = sim(civ="rome_100ad", capital=5_000_000.0)
+_s_over = unopened_sim(civ="rome_100ad", capital=5_000_000.0)
 _s_over.trades_created.add("chemist")
 _s_over.employees["chemist"] = 20.0
 _s_over.labour._resync_pools()
@@ -165,7 +166,7 @@ check("...and it does not block the start - overcommitting is still the "
 # staffing shortage and a trade your OWN other work has booked used to
 # share one label and one remedy-less sentence.
 from sim.ui.protocol import _portfolio_constraint as _PCON
-_s_staff = sim(civ="rome_100ad", capital=1e9)
+_s_staff = unopened_sim(civ="rome_100ad", capital=1e9)
 _staff_k = next(node_id for node_id in NODES if (NODES[node_id].get("lab") or {}).get("chemist"))
 _n_staff = NODES[_staff_k]
 _s_staff.active[_staff_k] = dict(ph_left=float(_n_staff["ph"]), yrs=0.0,
@@ -208,7 +209,7 @@ check("a trade your OWN other active work has already booked - the society "
       _w_book.startswith("trade hours already booked") and _PCON(_w_book) == "trade_hours"
       and _w_book != _w_staff, _w_book)
 
-_s_mat = sim(civ="rome_100ad", capital=1e9)
+_s_mat = sim(civ="rome_100ad", capital=1e9, surveyed=())
 _s_mat.active["gunpowder"] = dict(
     ph_left=float(NODES["gunpowder"]["ph"]), yrs=0.0, spent=0.0,
     cost_left=_s_mat.project_cost("gunpowder"), lab_left=dict(NODES["gunpowder"]["lab"]))
@@ -242,14 +243,8 @@ check("'your hours', enriched with the allocator's own rank/pool figures "
 # it does not partly bank, it does not bank at all, which is exactly the
 # player's own assumption, so the warning below says so plainly rather than
 # hedging on a partial-banking case that does not exist.
-_s_idle = sim(civ="rome_100ad", capital=5_000_000.0)
-_s_idle.done.update({"school_founded", "fin_university",
-                     "sc2_institution_examination"})
-_s_idle._done_changed()
-_s_idle.end_year = _s_idle.cfg["start_year"] + _s_idle.cfg["horizon_years"]
-_s_idle.start_project("sc2_institution_curriculum")
-_s_idle.start_project("sc2_institution_doctorate")
-_s_idle.step()
+# The same two-project game as section 1, already stepped one year there.
+_s_idle = _s_alloc
 # The warning is computed before any year runs, so the single-year reply is read with the step itself
 # turned off; the guard shows the idle-hours condition the warning keys on is live, or "no warning"
 # would hold for the wrong reason.
@@ -266,6 +261,29 @@ check("a single-year step never carries this warning - it exists only to "
       "more than once unnoticed",
       _resp_1yr.get("multi_year_hours_warning") is None, _resp_1yr)
 _year_before_multi_step = _s_idle.year
+# The warning can be turned off by the machine-wide setting; the years still run.
+import json as _json
+import os as _os
+import tempfile as _tempfile
+_warning_config_path = _os.path.join(_tempfile.mkdtemp(), "cfg.json")
+_previous_config_env = _os.environ.get("ROME_SIM_CONFIG")
+_os.environ["ROME_SIM_CONFIG"] = _warning_config_path
+try:
+    _json.dump({"multi_year_step_warning": False}, open(_warning_config_path, "w"))
+    # the idle-hours game again, with the warning off; years are counted rather than played
+    _quiet_years_run = []
+    _s_idle.step = lambda: _quiet_years_run.append(1)
+    _resp_quiet = S._agent_dispatch(_s_idle, NODES, {"cmd": "step", "years": 2})
+    check("with multi_year_step_warning off, a multi-year step that would warn does not, and still runs",
+          _resp_quiet.get("ok") is True and not _resp_quiet.get("multi_year_hours_warning")
+          and len(_quiet_years_run) == 2,
+          _resp_quiet.get("multi_year_hours_warning"))
+finally:
+    _s_idle.step = _real_step
+    if _previous_config_env is None:
+        _os.environ.pop("ROME_SIM_CONFIG", None)
+    else:
+        _os.environ["ROME_SIM_CONFIG"] = _previous_config_env
 # CAPTURED BEFORE THE STEP RUNS. Once step(years=5) executes it changes the
 # pool this year's idle-hours figure was about; the warning has to be
 # checked against what the pool was BEFORE any of the five years ran.
@@ -285,28 +303,3 @@ check("...names the actual number of hours at stake, read from the same "
 check("it warns and proceeds - the years still actually run",
       _resp_idle.get("ok") is True and _resp_idle["year"] > _year_before_multi_step,
       _resp_idle.get("year"))
-# The warning can be turned off by the machine-wide setting; the years still run.
-import json as _json
-import os as _os
-import tempfile as _tempfile
-_warning_config_path = _os.path.join(_tempfile.mkdtemp(), "cfg.json")
-_previous_config_env = _os.environ.get("ROME_SIM_CONFIG")
-_os.environ["ROME_SIM_CONFIG"] = _warning_config_path
-try:
-    _json.dump({"multi_year_step_warning": False}, open(_warning_config_path, "w"))
-    _s_quiet = sim(civ="rome_100ad", capital=5_000_000.0)
-    _s_quiet.done.update({"school_founded", "fin_university", "sc2_institution_examination"})
-    _s_quiet._done_changed()
-    _s_quiet.end_year = _s_quiet.cfg["start_year"] + _s_quiet.cfg["horizon_years"]
-    _s_quiet.start_project("sc2_institution_curriculum")
-    _s_quiet.start_project("sc2_institution_doctorate")
-    _s_quiet.step()
-    _resp_quiet = S._agent_dispatch(_s_quiet, NODES, {"cmd": "step", "years": 5})
-    check("with multi_year_step_warning off, a multi-year step that would warn does not, and still runs",
-          _resp_quiet.get("ok") is True and not _resp_quiet.get("multi_year_hours_warning"),
-          _resp_quiet.get("multi_year_hours_warning"))
-finally:
-    if _previous_config_env is None:
-        _os.environ.pop("ROME_SIM_CONFIG", None)
-    else:
-        _os.environ["ROME_SIM_CONFIG"] = _previous_config_env
