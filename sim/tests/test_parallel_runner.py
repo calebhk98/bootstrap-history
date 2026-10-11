@@ -5,6 +5,7 @@ import tempfile
 
 from .harness import *
 
+# The topics run here are quick ones, so a parallel run builds no game up front and the cost is the runner's own.
 # A throwaway checkout whose sim/ and sim/tests/ are symlink farms, so extra
 # fake topics can sit beside real ones without touching this checkout.
 _alias_root = tempfile.mkdtemp(prefix="parallel_runner_")
@@ -18,10 +19,16 @@ def _link_entries(source_dir, target_dir, skip=()):
         os.symlink(os.path.join(source_dir, entry), os.path.join(target_dir, entry))
 
 
+# The child runs share this checkout's caches (a worktree keeps them in its main checkout, where the
+# throwaway checkout cannot find them by itself), so they start warm.
+from sim import cache_root as _cache_root
+_child_env = dict(os.environ, **{_cache_root.CACHE_DIRECTORY_ENV: _cache_root.cache_root()})
+
+
 def _run_suite(*args):
     completed = subprocess.run(
         [sys.executable, os.path.join(_alias_root, "sim", "tests", "__main__.py")] + list(args),
-        capture_output=True, text=True, timeout=600, cwd=_alias_root)
+        capture_output=True, text=True, timeout=600, cwd=_alias_root, env=_child_env)
     return completed
 
 
@@ -34,8 +41,7 @@ def _without_timing(text):
 
 
 try:
-    # .cache is shared so the child runs reuse this checkout's solved prices instead of starting cold.
-    for entry in ("data", "docs", "mods", "playtest", "Complaints", ".cache"):
+    for entry in ("data", "docs", "mods", "playtest", "Complaints"):
         if os.path.exists(os.path.join(ROOT, entry)):
             os.symlink(os.path.join(ROOT, entry), os.path.join(_alias_root, entry))
     _link_entries(os.path.join(ROOT, "sim"), os.path.join(_alias_root, "sim"), skip=("tests",))
@@ -44,12 +50,13 @@ try:
     _fake_dir = os.path.join(_alias_root, "sim", "tests")
     with open(os.path.join(_fake_dir, "test_zz_fake_fail.py"), "w") as handle:
         handle.write("from .harness import *\n"
+                     "QUICK_TOPIC = True\n"
                      "check('fake topic passing check', True)\n"
                      "check('fake topic failing check', False, 'because')\n")
     with open(os.path.join(_fake_dir, "test_zz_fake_crash.py"), "w") as handle:
-        handle.write("raise RuntimeError('boom at import')\n")
+        handle.write("QUICK_TOPIC = True\nraise RuntimeError('boom at import')\n")
 
-    _topics = "parallelism_note,mod_namespaces,mod_overrides"
+    _topics = "agents_coinage,actor_borrowing,mod_overrides"
     _sequential = _run_suite("--only", _topics, "--jobs", "1")
     _parallel = _run_suite("--only", _topics, "--jobs", "4")
     check("parallel run of a topic set prints the same content and order as --jobs 1",
@@ -60,8 +67,8 @@ try:
           _sequential.returncode == 0 and _parallel.returncode == 0,
           (_sequential.returncode, _parallel.returncode, _sequential.stdout[-500:], _sequential.stderr[-500:]))
 
-    _failing = _run_suite("--only", "mod_namespaces,zz_fake_fail,mod_overrides", "--jobs", "4")
-    _failing_sequential = _run_suite("--only", "mod_namespaces,zz_fake_fail,mod_overrides",
+    _failing = _run_suite("--only", "actor_borrowing,zz_fake_fail,mod_overrides", "--jobs", "4")
+    _failing_sequential = _run_suite("--only", "actor_borrowing,zz_fake_fail,mod_overrides",
                                      "--jobs", "1")
     check("a failing check in one parallel topic is reported by name, in order, with exit 1",
           _failing.returncode == 1
@@ -69,7 +76,7 @@ try:
           and _without_timing(_failing.stdout) == _without_timing(_failing_sequential.stdout),
           (_failing.returncode, _failing.stdout[-400:]))
 
-    _crashing = _run_suite("--only", "parallelism_note,zz_fake_crash", "--jobs", "4")
+    _crashing = _run_suite("--only", "agents_coinage,zz_fake_crash", "--jobs", "4")
     check("a topic that crashes on import is reported as a failure naming it, exit 1",
           _crashing.returncode == 1 and "zz_fake_crash: worker crashed" in _crashing.stdout
           and "boom at import" in _crashing.stdout,
