@@ -8,7 +8,7 @@ from sim.ui import protocol as _PROTO
 # back once restaffed. What was still missing: seeing it coming. "Power grid
 # supervision is within 5 craftsmen of closure" - a warning, not a third
 # automation; nothing here hires, teaches or stops anything on its own.
-_s_sw = sim(civ="rome_100ad")
+_s_sw = unopened_sim(civ="rome_100ad")
 _sw_cands = [node_id for node_id in NODES if NODES[node_id].get("rev", 0) > 0][:30]
 _s_sw.done.update(_sw_cands)
 _s_sw._done_changed()
@@ -127,11 +127,13 @@ _s_rr = _s_sw   # already holds many open concerns
 _s_rr.capital = 400000.0
 _s_rr.end_year = _s_rr.cfg["start_year"] + _s_rr.cfg["horizon_years"]
 _rr_started = 0
+_rr_started_keys = []
 for _k in ORDER:
     if _rr_started >= 6:
         break
     if _s_rr.start_reason(_k)[0]:
         _s_rr.start_project(_k)
+        _rr_started_keys.append(_k)
         _rr_started += 1
 # one craftsman from closing something, which is the state that broke it
 _rr_sch_used, _rr_art_used = _s_rr.venture_staff_used()
@@ -167,7 +169,14 @@ check("every command's readable view renders on a household with projects "
 # AND THE ONE THAT ACTUALLY BROKE, through the renderer rather than the engine
 # method, on a state where the warning is live.
 _rr_state = S._agent_dispatch(_s_rr, NODES, {"cmd": "state"})
-_rr_step = _PROTO.render_pretty("step", S._agent_dispatch(_s_rr, NODES,
+# stepping needs an opened economy: rebuild the same household on one
+_s_rr_open = run_it(sim(civ="rome_100ad"), *_s_rr.operating)
+_s_rr_open.artisans, _s_rr_open.scholars = _s_rr.artisans, _s_rr.scholars
+_s_rr_open.capital, _s_rr_open.end_year = _s_rr.capital, _s_rr.end_year
+for _k in _rr_started_keys:
+    if _s_rr_open.start_reason(_k)[0]:
+        _s_rr_open.start_project(_k)
+_rr_step = _PROTO.render_pretty("step", S._agent_dispatch(_s_rr_open, NODES,
                                                           {"cmd": "step", "years": 1}))
 check("...including `step`, the other command the report named",
       "could not render a readable view" not in (_rr_step or ""), _rr_step[:200])

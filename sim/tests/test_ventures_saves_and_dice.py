@@ -12,8 +12,7 @@ def _rel(name):
     return "%s/%s" % (_LOADTEST_DIR, name)
 
 
-_load_game = with_end_year(sim())
-ask_agent(_load_game, cmd="step", years=1)
+_load_game = with_end_year(unopened_sim())
 _good = ask_agent(_load_game, cmd="save", file=_rel("sess.json"))
 check("a legitimate save from this game loads cleanly",
       ask_agent(_load_game, cmd="load", file=_rel("sess.json")).get("ok") is True, _good)
@@ -60,7 +59,7 @@ check("that refusal leaves the running game untouched too",
 
 # One default Rome game takes the mutating commands below in an order that lets each see an untouched purse and
 # untouched founder hours: the refused mine and the project start first, then training, then the hours sold.
-_base = sim()
+_base = unopened_sim()
 
 # 6. `buy mine` spent every denarius you had and handed back a fraction of the
 #    mine you asked for, without asking. A command you typed is not a standing
@@ -88,11 +87,11 @@ check("starting something says what bill you have just taken on",
 #    that gate chemistry, precision and electricity wrote a name the next load
 #    refused as a missing technology. It cost that tester two runs and, by their
 #    own measurement, 1,230 technologies.
-_tr_game = sim()
+_tr_game = unopened_sim()
 ask_agent(_tr_game, cmd="train", trade="optician", n=1)
 _tr_path = os.path.join(ROOT, _rel("trained.json"))
 S.save_state(_tr_game, _tr_path)
-_tr_loaded = sim()
+_tr_loaded = unopened_sim()
 try:
     S.load_state(_tr_loaded, _tr_path)
     _tr_error = None
@@ -143,7 +142,7 @@ check("state and money do not label the same money two different ways",
 # Wages now track labour tightness and can exceed an ordinary practice, so
 # the practice is scaled up until a year of day labour genuinely is a loss.
 _PRACTICE_BOOM = 5.0
-s = sim()
+s = unopened_sim()
 s.output_factor = _PRACTICE_BOOM
 _rev_before = s.revenue()
 _earned, _note = s.labour.work_for_wages("labourer", s.labour.director_pool())
@@ -156,7 +155,7 @@ check("hours sold as a labourer are not also spent practising medicine",
 # It is, for a physician; the defect was that nothing said so.
 check("selling your hours at a loss says so, and still happens",
       _note and "cost you" in _note, _note)
-s2 = sim()
+s2 = unopened_sim()
 s2.output_factor = _PRACTICE_BOOM
 s2.labour.work_for_wages("labourer", s2.labour.director_pool() * 0.5)
 check("selling half your hours costs you half the practice, not all of it",
@@ -173,7 +172,7 @@ check("selling half your hours costs you half the practice, not all of it",
 # Hire somebody first: a concern needs a pair of your hands to run it, which
 # is the whole point of the staffing floor. Nobody runs a pawnshop alone from
 # nowhere.
-_v_game = sim(capital=2.0e6)
+_v_game = unopened_sim(capital=2.0e6)
 ask_agent(_v_game, cmd="hire", trade="artisan", n=2)
 _v_game.done.add("fin_restaurant")
 _v_game._done_changed()
@@ -188,7 +187,7 @@ check("opening the doors is what pays you",
       and (_after.get("where_the_money_comes_from") or {}).get("fin_restaurant"),
       _after.get("where_the_money_comes_from"))
 
-s2 = sim(capital=200000.0)
+s2 = unopened_sim(capital=200000.0)
 s2.labour.hire("artisan", 2)
 s2.done.add("fin_restaurant")
 s2._done_changed()
@@ -200,7 +199,7 @@ check("opening a concern costs stock and premises, not nothing",
       % (_cap0 - s2.capital, NODES["fin_restaurant"]["up"]))
 
 # Shutting it stops both sides and keeps the knowledge.
-s4 = sim(capital=200000.0)
+s4 = unopened_sim(capital=200000.0)
 s4.labour.hire("artisan", 2)
 s4.done.add("fin_restaurant"); s4._done_changed()
 s4.open_venture("fin_restaurant")
@@ -212,7 +211,7 @@ check("closing a concern stops what it earned and what it cost, both",
       "rev %.0f->%.0f up %.0f->%.0f, still known %s"
       % (_rev_on, s4.revenue(), _up_on, s4.upkeep(), "fin_restaurant" in s4.done))
 
-_manual_policy, _optimizer_policy = pristine_game().policy, sim(manual=False).policy
+_manual_policy, _optimizer_policy = pristine_game().policy, unopened_sim(manual=False).policy
 check("opening things for you is on for the optimizer and off for a player",
       _manual_policy["auto_open"] is False and _optimizer_policy["auto_open"] is True,
       (_manual_policy["auto_open"], _optimizer_policy["auto_open"]))
@@ -246,7 +245,7 @@ for _civ in ("han_china_100ad", "norse_900ad", "mexica_1500", "england_1300"):
 # The gate read self.artisans alone, so work you had already paid an outside
 # shop to do did not count - and the refusal's own advice was to go and
 # commission it.
-s = sim(civ="norse_900ad", capital=100000.0)
+s = unopened_sim(civ="norse_900ad", capital=100000.0)
 # Prerequisites are tested before staff, so satisfy them: the point of this
 # check is the staff gate, not the ladder above it.
 for _p in NODES["workshop_first"]["pre"]:
@@ -281,11 +280,11 @@ check("the game does not deny that your own practice is yours",
 #    per process oscillated 100%/60%/100%/60% for ever, burning hours and
 #    money and never finishing. Reproduced 5 times out of 5. It also silently
 #    re-drew every hazard and event a returning player would meet.
-_dice_game = _dh_game = sim(civ="han_china_100ad", capital=2.0e6)
+_dice_game = _dh_game = unopened_sim(civ="han_china_100ad", capital=2.0e6)
 _dice_game.rng.random()
 _dice_path = os.path.join(ROOT, _rel("dice.json"))
 S.save_state(_dice_game, _dice_path)
-_dice_resumed = sim(civ="han_china_100ad")
+_dice_resumed = unopened_sim(civ="han_china_100ad")
 S.load_state(_dice_resumed, _dice_path)
 check("a resumed game carries on the same dice, so a project at its threshold does not re-roll on every resume",
       [_dice_game.rng.random() for _ in range(5)] == [_dice_resumed.rng.random() for _ in range(5)])
@@ -410,7 +409,7 @@ check("the founder is one of the craftsmen as well as one of the scholars",
       s.labour.craft_hands_available() >= 1.0 and s.labour.effective_scholars() >= 1.0,
       "%.1f hands, %.1f scholars, with nobody hired"
       % (s.labour.craft_hands_available(), s.labour.effective_scholars()))
-s2 = sim(civ="norse_900ad")
+s2 = unopened_sim(civ="norse_900ad")
 for _p in NODES["workshop_first"]["pre"]:
     s2.done.add(_p)
 s2._done_changed()
@@ -435,7 +434,7 @@ s_gr._done_changed()
 s_gr.operating.add("school_founded")
 s_gr.labour._grant_staff(scholars=4)
 _after_grant = s_gr.scholars
-s_gr.step()
+s_gr._step_staff()    # the staff phase is where the pools are resynced every year
 check("founding the school still leaves you its scholars a year later",
       s_gr.scholars >= _after_grant - 1e-6,
       (_after_grant, s_gr.scholars))
@@ -464,7 +463,7 @@ check("the quoted price of a forest is the price you are charged",
 
 # 2. "Told to my face I could take 6 more people, I took 7 with a different
 #    verb." buy went round the feed/house/oversee cap that hire enforces.
-s = sim(capital=1000000.0)
+s = unopened_sim(capital=1000000.0)
 _room = s.labour.household_room()
 _ok_over = s.labour.buy_slaves(int(_room) + 5)
 check("buying people obeys the same household cap as hiring them",

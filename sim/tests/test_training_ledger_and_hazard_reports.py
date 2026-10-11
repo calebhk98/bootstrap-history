@@ -16,7 +16,7 @@ from sim.ui.proto.render_typed import render_pretty as _render_pretty
 #    of your hours spent". Here: 612.5 against 500 before the fix.
 s = starved_game(9e5)
 _before_left = s.active["identity_cover"]["ph_left"]
-s.step()
+s._run_seat_work()    # the year's project work, without the economy around it
 _st = s.active.get("identity_cover") or {}
 check("a project can never be given back more hours than it has spent",
       _st.get("ph_left", 0) <= NODES["identity_cover"]["ph"] + 1e-6,
@@ -32,15 +32,13 @@ check("an underfunded project says why it is underfunded",
 #    completion needs the bill under half a denarius. The tester watched one sit
 #    at "71% done" for twenty-five years. Sixty years and 15.9 denarii still
 #    owed, before the fix.
-s = starved_game(60.0, supply=0.001, arrears=0.0, capital=500000.0)
+# The bill is below one year's instalment, so a year that pays its instalment clears it.
+s = starved_game(1.0, supply=0.001, arrears=0.0, capital=500000.0)
 s.active["identity_cover"]["ph_left"] = 0.0
-for _i in range(12):
-    s.step()
-    if "identity_cover" not in s.active:
-        break
+s._run_seat_work()
 check("a small remaining bill is actually paid off, not approached for ever",
       "identity_cover" not in s.active,
-      "%.4f den still owed after 12 years"
+      "%.4f den still owed after a year"
       % (s.active.get("identity_cover", {}).get("cost_left", 0.0)))
 
 # --- the Mexica play tester: advice you cannot act on is not advice ----------
@@ -52,7 +50,7 @@ check("a small remaining bill is actually paid off, not approached for ever",
 # is checking even has anything to say. The three checks that share that setup
 # move together, since re-running it for each would cost three times as much.
 def _hazard_advice_names_hedges():
-    hazard_sim = sim(civ="mexica_1500", manual=False)
+    hazard_sim = unopened_sim(civ="mexica_1500", manual=False)
     hazard_sim.fog = True
     hazard_sim.revealed = set()
     counters = {node_id for node_id, _s2, _hazard_label in hazard_sim.HAZARD_COUNTERS["staff_loss"]}
@@ -83,13 +81,26 @@ slow_check("a hazard names things in front of you that hedge against it, "
 # 5. Losing a finished work was silent. A tester lost fourteen inside one
 #    `step 12`, corpus_written and school_founded among them, with every
 #    arrival named and no departure named.
-s = sim(capital=-50000.0, manual=False)
-s.done.add("fin_restaurant")
-s.done.add("civ_road_paved")
-s._done_changed()
-_lost_before = set(s.done)
-with_end_year(s)
-_ls = [ask_agent(s, cmd="start", id="hom_eraser_breadcrumb"), ask_agent(s, cmd="step", years=1)]
+# One game serves the reply, eminence, training-lag and ledger checks below: each reads
+# the same two years instead of playing its own.
+_shared = sim(capital=500000.0, surveyed=())
+run_it(_shared, "workshop_first", "freedman_staff")
+_shared.done.add("fin_restaurant")
+_shared.done.add("civ_road_paved")
+_shared._done_changed()
+_shared.labour.TRAINING_YEARS = 0.0   # the rows mature in the first step, where the old resync threw them away
+_shared.labour.buy_slaves(12)
+_at_purchase = _shared.artisans
+_shared.eminence = _shared.cfg["eminence_danger"] * 0.9
+with_end_year(_shared)
+_ls = [ask_agent(_shared, cmd="start", id="hom_eraser_breadcrumb"), ask_agent(_shared, cmd="step", years=1)]
+_conspicuous_logged = any("BECOMING CONSPICUOUS" in message for _year, message in _shared.log)
+_conspicuous_tail = [message for _year, message in _shared.log][-2:]
+_trained = _shared.artisans
+_src = _shared.revenue_sources()
+_revenue_total = _shared.revenue()
+_shared.labour.manumit(12)
+_shared.labour._resync_pools()
 check("a step reports what left as well as what arrived",
       "lost" in _ls[-1], sorted(_ls[-1])[:12])
 
@@ -105,7 +116,7 @@ check("no dead field is reported every turn as though it were a mechanic",
 # player six hundred, which made the deepest hole in the game the safest place
 # to stand. Caught live twice in the notes: a Mexica sack -251 -> -100.5, an
 # England thatch fire -629.2 -> -569.4.
-s = sim()
+s = unopened_sim()
 s.capital = -1000.0
 _gave = s.lose_capital(0.60)
 check("a catastrophe never pays off a debt",
@@ -152,7 +163,7 @@ check("everything the goal needs is near the front, not spread over the tree",
 # ...and the fix must NOT be to close the grant over its prerequisites, which
 # would hand Tenochtitlan sextants and cementation steel for nothing, because
 # maize hangs off "cross the Atlantic and found a trading post".
-_mx = sim(civ="mexica_1500")
+_mx = unopened_sim(civ="mexica_1500")
 check("a society is not granted the route another society would take to it",
       "cementation_steel" not in _mx.done and "clock_pendulum" not in _mx.done
       and "fud_maize" in _mx.done,
@@ -162,7 +173,7 @@ check("a society is not granted the route another society would take to it",
 # A hazard should report the harm it did to YOU, not the harm it would have
 # done to somebody with something to lose: a tester with no staff and no money
 # read "staff -45%, and 0 pence gone" three years running.
-s = sim(civ="england_1300")
+s = unopened_sim(civ="england_1300")
 s.scholars = s.artisans = 0.0
 s.employees = {}
 s.capital = 0.0
@@ -177,7 +188,7 @@ check("a hazard that took nothing from you says so",
 # 2. Failure risk fired correctly and announced nothing, so a tester watched
 #    about 113 builds, expected nine failures and found no occurrence of
 #    "fail", "abandon" or "lost" anywhere, and concluded the mechanic was dead.
-s = sim(capital=5000000.0)
+s = unopened_sim(capital=5000000.0)
 _risky = [node_id for node_id in NODES if NODES[node_id]["risk"] >= 0.15][:1][0]
 _fails = 0
 for _i in range(120):
@@ -199,27 +210,18 @@ check("a failed attempt is announced, not silently absorbed",
 #    matured, step() added its capacity to self.artisans, which _resync_pools
 #    then recomputed from scratch and threw away. A tester watched their
 #    craftsmen fall from 35 to 3.8 at the moment the training finished.
-s = sim(capital=500000.0)
-run_it(s, "workshop_first", "freedman_staff")
-s.labour.buy_slaves(12)
-_at_purchase = s.artisans
-for _ in range(4):
-    s.step()
-_trained = s.artisans
-s.labour.manumit(12)
-s.labour._resync_pools()
 check("people you buy are worth nothing until they have learned the work",
       _at_purchase < 0.5, "%.2f craftsmen the day 12 were bought" % _at_purchase)
 check("...and are worth something once they have, and do not vanish",
       _trained > 7.0, "%.2f craftsmen after the training lag" % _trained)
 check("freeing them is worth more than holding them, as the model claims",
-      s.artisans > _trained * 1.3,
-      "%.2f held -> %.2f freed" % (_trained, s.artisans))
+      _shared.artisans > _trained * 1.3,
+      "%.2f held -> %.2f freed" % (_trained, _shared.artisans))
 
 # 2. arithmetic_positional wants 2,500 scribe-hours a year against a national
 #    ceiling of 1,321, and sat at "81% spent" from 1309 to about 1440. The
 #    engine knows this at start time.
-_s_imp = sim(civ="england_1300")
+_s_imp = unopened_sim(civ="england_1300")
 for _p in NODES["arithmetic_positional"]["pre"]:
     _s_imp.done.add(_p)
 _s_imp._done_changed()
@@ -237,7 +239,7 @@ check("starting work this society cannot staff says so at the time",
 # commit's own message said could not happen again ("the statement and the
 # arithmetic cannot disagree"). Reproduced directly: commission 500 scribe-
 # hours (the project is still short), then start logarithms.
-s_lie = sim(capital=10000000.0)
+s_lie = unopened_sim(capital=10000000.0)
 for _p in NODES["logarithms"]["pre"]:
     s_lie.done.add(_p)
 s_lie._done_changed()
@@ -255,12 +257,8 @@ check("the ceiling `start` quotes for a short trade is the one `stuck` quotes a 
       (_but, _stuck_why))
 
 # 3. The stat that ends the run had no warning and no help topic.
-s = sim(capital=400.0)
-s.eminence = s.cfg["eminence_danger"] * 0.9
-s.step()
 check("becoming conspicuous is said out loud before it kills you",
-      any("BECOMING CONSPICUOUS" in message for _year, message in s.log),
-      [message for _year, message in s.log][-2:])
+      _conspicuous_logged, _conspicuous_tail)
 _he = [ask_agent(pristine_game(), cmd="help", topic="eminence")]
 check("...and there is a help topic for it",
       "eminence" in json.dumps(_he[0]).lower() and "no such topic" not in json.dumps(_he[0]),
@@ -273,15 +271,12 @@ check("...and there is a help topic for it",
 # that caps the whole figure were all invisible.
 # One year in, the game already has running earners and a market saturation gap to absorb; a
 # longer run only costs time.
-s = sim(civ="rome_100ad", manual=False)
-s.step()
-_src = s.revenue_sources()
 check("the ledger's parts add up to the revenue it states, saturation gap included",
-      "_what_the_market_will_not_absorb" in _src and abs(sum(_src.values()) - s.revenue()) < 1.0,
-      "rows %.1f against revenue %.1f" % (sum(_src.values()), s.revenue()))
+      "_what_the_market_will_not_absorb" in _src and abs(sum(_src.values()) - _revenue_total) < 1.0,
+      "rows %.1f against revenue %.1f" % (sum(_src.values()), _revenue_total))
 
 # A taught trade still read "does not exist yet" alongside "exists here: True".
-_tn_game = sim(capital=2.0e6)
+_tn_game = unopened_sim(capital=2.0e6)
 _tn = [ask_agent(_tn_game, cmd="train", trade="machinist", n=2), ask_agent(_tn_game, cmd="labour", trade="machinist")]
 _row = (_tn[1].get("trade") or {})
 check("a trade you taught does not still say it does not exist",
@@ -297,7 +292,7 @@ check("a trade you taught does not still say it does not exist",
 # check and then fails it.
 _bad_math = []
 for _civ_m in ("england_1300", "rome_100ad", "norse_900ad"):
-    _sm = sim(civ=_civ_m)
+    _sm = unopened_sim(civ=_civ_m)
     for _k in ("clock_pendulum", "hot_air_balloon", "blast_furnace", "lens_grinding"):
         if _k not in NODES:
             continue
@@ -317,7 +312,7 @@ check("every cost breakdown multiplies out to the total it states",
 #    printed two lines below it on the same screen. They read "+9.5 a year"
 #    while capital fell 105, then 117, accelerating - a household in a debt
 #    spiral being told it was recovering.
-s = sim(civ="rome_100ad")
+s = sim(civ="rome_100ad", surveyed=())
 s.capital = -3000.0
 _m = S._agent_dispatch(s, NODES, {"cmd": "money"})
 check("the net counts interest on arrears, which is a cost like any other",
@@ -329,7 +324,7 @@ check("the net counts interest on arrears, which is a cost like any other",
 #    and cut their people nearly in half, and printed only those five words -
 #    against a player who owned no sites. The plague family had already been
 #    taught to report the harm it actually did; this one had not.
-s = sim(civ="mexica_1500", capital=50000.0)
+s = unopened_sim(civ="mexica_1500", capital=50000.0)
 s.year = 1519
 _dice_before_sacks = s.rng.getstate()
 for _ in range(6):
@@ -353,7 +348,7 @@ check("...and says so plainly when it took nothing",
 
 # 6. `bribe` sells protection, protection decides whether strange work reads as
 #    learning or as sorcery, and it appeared on no screen and in no help topic.
-_pr_game = sim(capital=2.0e6)
+_pr_game = unopened_sim(capital=2.0e6)
 _standing_before = _render_pretty("state", ask_agent(_pr_game, cmd="state", full=True))
 ask_agent(_pr_game, cmd="bribe", amount=700)
 _standing_after = _render_pretty("state", ask_agent(_pr_game, cmd="state", full=True))
