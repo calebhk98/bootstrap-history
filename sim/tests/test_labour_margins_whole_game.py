@@ -3,15 +3,17 @@ floor, and price over labour cost, as `simulator.py economy-check` prints them (
 figures so a run can be compared before and after a change; asserts only what must hold whatever the
 numbers are. Run with `python3 -m sim.tests --slow --only labour_margins_whole_game`."""
 
+import functools
 import math
 import random
 import unittest
 
+from . import harness  # noqa: F401  (sets the short spin-up the suite's games open on)
 from sim.engine.ui_port import Sim, load, load_civ
 from sim.ui.cli_economy_check import FIGURE_LABELS
 
-# The wage settles to its floor only after the opening years, so the Rome game runs long enough for that.
-YEARS = 12
+# One year already shows every figure read below; measure with `simulator.py economy-check` for a longer run.
+YEARS = 1
 
 
 def play(civ_id, seed=1, years=YEARS):
@@ -23,10 +25,16 @@ def play(civ_id, seed=1, years=YEARS):
     return game
 
 
+@functools.lru_cache(maxsize=None)
+def played(civ_id, years):
+    """One game per request: the runner calls setUpClass again for every test method."""
+    return play(civ_id, years=years)
+
+
 class WholeGameFigures(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.rome = play("rome_100ad")
+        cls.rome = played("rome_100ad", YEARS)
         cls.report = cls.rome.economy.health()
         for key, meaning in FIGURE_LABELS:
             print("rome_100ad %-20s %s  %s" % (key, cls.report["figures"].get(key), meaning))
@@ -52,8 +60,8 @@ class WholeGameFigures(unittest.TestCase):
         self.assertIn("draught_animal_kg", recipes["wheat_kg"].plant_goods)
 
     def test_a_society_without_draught_animals_grows_wheat_and_its_other_crops_by_hand(self):
-        # one year builds the economy, which fixes the recipes
-        recipes = play("mexica_1500", years=1).economy.agent.economy().setup.recipes
+        # opening the game builds the economy, which fixes the recipes
+        recipes = played("mexica_1500", 0).economy.agent.economy().setup.recipes
         self.assertNotIn("wheat_kg", recipes)
         self.assertIn("wheat_hoe_kg", recipes)
         for recipe in recipes.values():

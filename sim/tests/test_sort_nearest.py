@@ -70,9 +70,16 @@ check("...and says why it stopped rather than silently starting fewer",
 check("'values' and 'rush' are in the list every unknown-command refusal advertises",
       "values" in S.KNOWN_COMMANDS and "rush" in S.KNOWN_COMMANDS, S.KNOWN_COMMANDS)
 
+def without_market(game):
+    """The checks below read the founder's own year (death, staff attrition), which the year's market close does not
+    feed, and that close is nearly all of a step's cost; leave it out of the games that only step through it."""
+    game._step_market = lambda: None
+    return game
+
+
 # The founder's death is legible: its own field with a numeric age, the step stops there, the age
 # survives a save and load, and the log says what it means for the run.
-mortal = sim(capital=1_000_000.0, events=True)
+mortal = without_market(sim(capital=1_000_000.0, events=True))
 mortal.cfg["immortal"] = False
 mortal.life_left = 1.0
 mortal.end_year = mortal.cfg["start_year"] + 200
@@ -88,8 +95,7 @@ check("...and the step stopped there instead of running the requested years past
       step_reply["year"] < mortal.cfg["start_year"] + 150, step_reply["year"])
 session_path = os.path.join(ROOT, _rel("founder_death.json"))
 S.save_state(mortal, session_path)
-reloaded = S.Sim(NODES, ORDER, random.Random(1), events=False, manual=True, civ=S.load_civ("rome_100ad"))
-reloaded.goal, reloaded.done_year = GOAL, {}
+reloaded = unopened_sim()
 S.load_state(reloaded, session_path)
 reloaded_state = S._agent_dispatch(reloaded, NODES, {"cmd": "state"})
 check("the founder's age at death survives a save and a fresh process loading it back",
@@ -106,7 +112,7 @@ check("...and the programme dissolving is counted down where a player sees it",
       [message for _, message in mortal.log if "DISSOLVING" in message][:1])
 
 # Losing people to death and better offers is announced, not silent.
-attrition = sim(capital=10_000_000.0, events=False)
+attrition = without_market(sim(capital=10_000_000.0, events=False))
 run_it(attrition, "workshop_first", "school_founded", "freedman_staff")
 attrition.labour.hire("scholar", 8)
 for _ in range(12):
