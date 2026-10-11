@@ -70,9 +70,24 @@ check("the founder's concern output is offered without the old price table, at a
       founder_offers and all(0.0 <= offer.reservation_price < float("inf") for offer in founder_offers),
       founder_offers[:2])
 
-unbroken = agent_game("rome_100ad")
+for civ in ("han_china_100ad", "norse_900ad"):
+    game = agent_game(civ)
+    game.step()
+    book = game.economy.agent.economy().record.book
+    check("%s plays a year on the agent economy with money conserved" % civ,
+          book.check_conservation(1e-9).ok)
+
+# One owner for credit: the founder's room and the rate both come from the agent economy's market.
+credit_game = rome
+agent_market = credit_game.economy.agent.economy()
+check("on the agent economy the credit room is the agent market's, as the rate is",
+      credit_game.market_credit_room(credit_game.state.acting_seat) == economy_api.credit_room(agent_market, credit_game.state.acting_seat)
+      and credit_game.market_rate() == economy_api.interest_rate(agent_market),
+      (credit_game.market_credit_room(credit_game.state.acting_seat), economy_api.credit_room(agent_market, credit_game.state.acting_seat)))
+
+# The opening Rome game, already two years in, is the one saved and resumed.
+unbroken = rome
 save_path = os.path.join(tempfile.mkdtemp(), "agent_save.json")
-unbroken.step()
 save_state(unbroken, save_path)
 resumed = agent_game("rome_100ad")
 load_state(resumed, save_path)
@@ -82,20 +97,3 @@ check("a saved game on the agent economy resumes the same economy",
       unbroken.state.economy.agent_economy == resumed.state.economy.agent_economy)
 check("and the same game state", perf_fingerprint.digest(perf_fingerprint.state_of(unbroken))
       == perf_fingerprint.digest(perf_fingerprint.state_of(resumed)))
-
-for civ in ("han_china_100ad", "norse_900ad"):
-    game = agent_game(civ)
-    game.step()
-    book = game.economy.agent.economy().record.book
-    check("%s plays a year on the agent economy with money conserved" % civ,
-          book.check_conservation(1e-9).ok)
-
-# One owner for credit: the founder's room and the rate both come from the agent economy's market.
-credit_game = agent_game("rome_100ad")
-for _year in range(2):
-    credit_game.step()
-agent_market = credit_game.economy.agent.economy()
-check("on the agent economy the credit room is the agent market's, as the rate is",
-      credit_game.market_credit_room(credit_game.state.acting_seat) == economy_api.credit_room(agent_market, credit_game.state.acting_seat)
-      and credit_game.market_rate() == economy_api.interest_rate(agent_market),
-      (credit_game.market_credit_room(credit_game.state.acting_seat), economy_api.credit_room(agent_market, credit_game.state.acting_seat)))

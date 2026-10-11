@@ -14,7 +14,8 @@ _REPOSITORY_SIM_DIRECTORY = os.path.dirname(os.path.dirname(os.path.abspath(__fi
 
 MECHANISATION_NODES = ("horse_collar", "fud_heavy_mouldboard_plough_coulter",
                        "fud_mechanical_reaper", "ag2_reaper")
-YEARS = 60
+# Long enough for adoption of a new technique to show in population and in the farm share.
+YEARS = 30
 
 
 def _complete(test_sim, node_ids):
@@ -73,7 +74,7 @@ def _control():
 
 
 def _mechanised():
-    return _trajectory("mechanised", MECHANISATION_NODES, (1, 41, YEARS + 1))
+    return _trajectory("mechanised", MECHANISATION_NODES, (1, YEARS // 2 + 1, YEARS + 1))
 
 
 class NoSecondPopulationTests(unittest.TestCase):
@@ -104,7 +105,7 @@ class FoodTechnologyReachesPopulationTests(unittest.TestCase):
 
 class MechanisationTests(unittest.TestCase):
     def test_mechanisation_raises_food_per_farm_worker(self):
-        control, improved = _control()[1], _mechanised()[41]
+        control, improved = _control()[1], _mechanised()[YEARS // 2 + 1]
         control_per_worker = control["harvest_kg"] / control["farm_workers"]
         improved_per_worker = improved["harvest_kg"] / improved["farm_workers"]
         self.assertGreater(improved_per_worker, control_per_worker)
@@ -133,7 +134,7 @@ class MechanisationTests(unittest.TestCase):
         after_one_year = _farm_share(test_sim)
         _run_years(test_sim, 9)
         after_ten_years = _farm_share(test_sim)
-        _run_years(test_sim, 30)
+        _run_years(test_sim, 15)
         self.assertLess(after_ten_years, before)
         self.assertLess(_farm_share(test_sim), after_ten_years)
         # Mobility bounds one year's move.

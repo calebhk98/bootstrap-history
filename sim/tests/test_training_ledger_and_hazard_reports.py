@@ -15,6 +15,7 @@ from sim.ui.proto.render_typed import render_pretty as _render_pretty
 #    hours left against a 450-hour total, which the display read out as "-67%
 #    of your hours spent". Here: 612.5 against 500 before the fix.
 s = starved_game(9e5)
+_before_left = s.active["identity_cover"]["ph_left"]
 s.step()
 _st = s.active.get("identity_cover") or {}
 check("a project can never be given back more hours than it has spent",
@@ -119,10 +120,8 @@ check("a catastrophe still takes its share of what you actually have",
 # OFFERED, which may exceed what the project had left. The refunds are capped at
 # spent_hours; this line was not, so a project reported 387.2 effective hours a
 # year for four years while founder_hours_left never moved.
-s = starved_game(9e5)
-_before_left = s.active["identity_cover"]["ph_left"]
-s.step()
-_st3 = s.active.get("identity_cover") or {}
+# (the same starved year as check 1 above, read for a second property)
+_st3 = _st
 check("hours reported as effective are hours that actually came off the work",
       _st3.get("hours_effective_this_year", 0)
       <= _before_left - _st3.get("ph_left", 0) + 1e-6,

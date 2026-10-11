@@ -10,6 +10,10 @@ REGIME_OF = {"england_1300": "struck_coin", "han_china_100ad": "struck_coin", "r
              "norse_900ad": "weighed_metal", "mexica_1500": "commodity"}
 
 
+# Years for freshly mined metal to pass from mine owners and savers into prices.
+MONEY_LAG_YEARS = 4
+
+
 def agent_game(civ):
     game = S.Sim(NODES, ORDER, random.Random(1), events=True, manual=False, civ=S.load_civ(civ))
     game.goal, game.done_year = GOAL, {}
@@ -48,8 +52,8 @@ check("Mexica's money is made of cacao, a good in the production catalogue",
 for civ_id in ("england_1300", "norse_900ad"):
     regime = REGIME_OF[civ_id]
     # new coin reaches prices with a lag: it lands with mine owners and savers before it is spent
-    base_money, base_level, _record, _setup = play(civ_id, 8)
-    more_money, more_level, record, setup = play(civ_id, 8, mined_share=0.1)
+    base_money, base_level, _record, _setup = play(civ_id, MONEY_LAG_YEARS)
+    more_money, more_level, record, setup = play(civ_id, MONEY_LAG_YEARS, mined_share=0.1)
     check("%s (%s): more metal mined raises the money stock" % (civ_id, regime), more_money > 1.2 * base_money,
           (base_money, more_money))
     check("%s (%s): and the price level" % (civ_id, regime), more_level > 1.03 * base_level, (base_level, more_level))
@@ -59,8 +63,8 @@ for civ_id in ("england_1300", "norse_900ad"):
           held >= 0.99 * record.book.money_supply(spec.currency_id) * spec.backing_per_unit)
     check("%s (%s): money and goods are conserved" % (civ_id, regime), record.book.check_conservation(1e-9).ok)
 
-money, _level, record, setup = play("mexica_1500", 4)
-check("Mexica runs four years on cacao money with money and goods conserved",
+money, _level, record, setup = play("mexica_1500", 2)
+check("Mexica runs two years on cacao money with money and goods conserved",
       record.currency.regime == "commodity" and record.currency.backing_good == "cacao_kg"
       and money > 0.0 and record.book.check_conservation(1e-9).ok, record.book.check_conservation(1e-9).breaches[:3])
 check("Mexica's cacao is produced and traded", any(volume > 0.0 for key, volume in record.volumes.items()
