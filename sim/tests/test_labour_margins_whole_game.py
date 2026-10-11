@@ -10,14 +10,15 @@ import unittest
 from sim.engine.ui_port import Sim, load, load_civ
 from sim.ui.cli_economy_check import FIGURE_LABELS
 
+# The wage settles to its floor only after the opening years, so the Rome game runs long enough for that.
 YEARS = 12
 
 
-def play(civ_id, seed=1):
+def play(civ_id, seed=1, years=YEARS):
     _tree, _prices, nodes, _wages, _goods = load()
     game = Sim(nodes, [], random.Random(seed), events=False, manual=True, civ=load_civ(civ_id))
     game.done_year = {}
-    for _year in range(YEARS):
+    for _year in range(years):
         game.step()
     return game
 
@@ -51,7 +52,8 @@ class WholeGameFigures(unittest.TestCase):
         self.assertIn("draught_animal_kg", recipes["wheat_kg"].plant_goods)
 
     def test_a_society_without_draught_animals_grows_wheat_and_its_other_crops_by_hand(self):
-        recipes = play("mexica_1500").economy.agent.economy().setup.recipes
+        # one year builds the economy, which fixes the recipes
+        recipes = play("mexica_1500", years=1).economy.agent.economy().setup.recipes
         self.assertNotIn("wheat_kg", recipes)
         self.assertIn("wheat_hoe_kg", recipes)
         for recipe in recipes.values():
