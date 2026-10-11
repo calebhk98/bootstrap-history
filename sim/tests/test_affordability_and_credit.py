@@ -5,6 +5,7 @@ A few games are built once and reused; checks that only read a figure reset the 
 overrides they installed (credit_limit, spending_power, project_cost) before the next check.
 """
 from .harness import *  # noqa: F401,F403
+from .agent_command_helpers import pristine_game
 
 
 def reset_overrides(game, *names):
@@ -321,7 +322,7 @@ check("...and says plainly when there was nothing left to take",
       insolvent.log[-1:])
 
 # --- a household deep in arrears does not commit to new work.
-bleeding = sim(capital=-74600.0 * sim().labour.money_per_labour_hour(), manual=False)
+bleeding = sim(capital=-74600.0 * pristine_game().labour.money_per_labour_hour(), manual=False)
 bleeding.insolvent_years = 20
 active_before = len(bleeding.active)
 bleeding.step()
@@ -341,7 +342,7 @@ check("...and does not take your whole reputation with it",
       replies[-1].get("reputation", 0) > 1.0, replies[-1].get("reputation"))
 
 # --- a project part-paid when credit is withdrawn keeps what was paid.
-stopped = sim(capital=round(0.3 * sim().project_cost("identity_cover")))
+stopped = sim(capital=round(0.3 * pristine_game().project_cost("identity_cover")))
 stopped.start_project("identity_cover")
 for _ in range(2):
     stopped.step()
@@ -363,7 +364,7 @@ check("...and the credit is spent once, not every time",
       "identity_cover" not in stopped.paid_towards, stopped.paid_towards)
 
 # --- a household past its credit line keeps no door fee to spend: opening a shut concern waits.
-past_line = sim(capital=-1.0)
+past_line = opener
 past_line.done.add(quick_payback)
 past_line._done_changed()
 past_line.state.household.capital = -3.0 * past_line.credit_limit()
