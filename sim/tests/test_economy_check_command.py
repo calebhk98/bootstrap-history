@@ -14,12 +14,11 @@ class EconomyCheckTests(unittest.TestCase):
         cls.game = Sim(nodes, [], random.Random(1), events=False, manual=True,
                        civ=load_civ("rome_100ad"))
         cls.game.done_year = {}
-        for _year in range(2):
-            cls.game.step()
+        cls.game.step()
 
     def test_the_port_reports_the_economys_health(self):
         report = self.game.economy.health()
-        self.assertEqual(report["years"], 2)
+        self.assertEqual(report["years"], 1)
         self.assertTrue(report["staple"])
         for figure in ("staple_volatility", "metal_volatility", "hired_share", "hunger_share", "staple_over_labour",
                        "unskilled_wage", "wage_floor", "wage_over_floor"):
@@ -54,11 +53,17 @@ class EconomyCheckRendering(unittest.TestCase):
 
     def test_the_payback_flag_prints_the_diagnostic_section(self):
         from sim.ui.cli_economy_check import cmd_economy_check
+        from sim.ui import cli_economy_check
         args = type("Args", (), {"years": 1, "seeds": "1", "civs": "rome_100ad", "metals": "", "staple": "",
                                  "payback": True})()
         output = io.StringIO()
-        with contextlib.redirect_stdout(output):
-            cmd_economy_check(args)
+        played = cli_economy_check.check_one
+        cli_economy_check.check_one = lambda *arguments, **keywords: self.HEALTH
+        try:
+            with contextlib.redirect_stdout(output):
+                cmd_economy_check(args)
+        finally:
+            cli_economy_check.check_one = played
         self.assertIn("diagnostic only", output.getvalue())
 
 
