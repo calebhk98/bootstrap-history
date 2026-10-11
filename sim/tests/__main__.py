@@ -97,35 +97,55 @@ def _run_topic(slug, harness):
     if not cases.countTestCases():
         return
 
+    # One suite per class, so setUpClass runs once for the class rather than once per test (a class fixture
+    # often builds a game); each test is still recorded as its own check, in order.
+    outcomes = _CaseOutcomes()
+    for test_class in own_classes:
+        unittest.TestSuite(loader.loadTestsFromTestCase(test_class)).run(outcomes)
     for case in _flatten(cases):
-        result = unittest.TestResult()
-        # WRAPPED IN A ONE-CASE SUITE, NOT `case.run(result)` DIRECTLY.
-        # Running a TestCase instance straight bypasses setUpClass and
-        # tearDownClass entirely - those are invoked by the SUITE, not by
-        # the case - so a module using the ordinary unittest idiom
-        #
-        #     @classmethod
-        #     def setUpClass(cls): cls.data = load()
-        #
-        # came back with AttributeError on every single test here, while
-        # passing perfectly under `python3 -m unittest`. That combination is
-        # the worst kind of trap: an author verifies with the standard tool,
-        # sees green, and only this runner disagrees. It cost one agent a
-        # whole test module before it was noticed, and three modules in this
-        # directory already use the idiom.
-        #
-        # TestSuite.run does the class fixture handling, so a one-case suite
-        # gets it right. The cost is that setUpClass runs once per test
-        # rather than once per class, which is correct-but-slower; every
-        # current user of it loads a JSON file, so it does not matter. If a
-        # module ever needs a genuinely expensive class fixture, group by
-        # class here instead of paying it per test.
-        unittest.TestSuite([case]).run(result)
-        problems = result.errors + result.failures
+        problem = outcomes.problems.get(case.id(), outcomes.class_problems.get(type(case).__name__))
+        harness._LAST_AT = time.time() - outcomes.seconds.get(case.id(), 0.0)    # check() times the gap before it
         harness.check(
             "%s: %s" % (slug, case.id().rsplit(".", 1)[-1].replace("_", " ")),
-            not problems,
-            problems[0][1].strip().splitlines()[-1] if problems else "")
+            problem is None,
+            problem.strip().splitlines()[-1] if problem else "")
+
+
+class _CaseOutcomes(unittest.TestResult):
+    """Each test's error or failure text by test id, and a class fixture's failure by class name (its tests
+    did not run)."""
+
+    def __init__(self):
+        super().__init__()
+        self.problems, self.class_problems, self.seconds, self._started = {}, {}, {}, 0.0
+
+    def startTest(self, test):
+        super().startTest(test)
+        self._started = time.time()
+
+    def stopTest(self, test):
+        super().stopTest(test)
+        self.seconds[test.id()] = time.time() - self._started
+
+    def _record(self, test, error):
+        text = self._exc_info_to_string(error, test)
+        if isinstance(test, unittest.TestCase):
+            self.problems.setdefault(test.id(), text)
+        else:       # a setUpClass/tearDownClass failure arrives as a placeholder naming "setUpClass (module.Class)"
+            self.class_problems.setdefault(str(test).rsplit(".", 1)[-1].rstrip(")"), text)
+
+    def addError(self, test, err):
+        super().addError(test, err)
+        self._record(test, err)
+
+    def addFailure(self, test, err):
+        super().addFailure(test, err)
+        self._record(test, err)
+
+    def addSubTest(self, test, subtest, err):
+        super().addSubTest(test, subtest, err)
+        if err is not None:
+            self._record(test, err)
 
 
 def _flatten(suite):
