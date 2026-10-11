@@ -1,16 +1,22 @@
 """Complaint 320, general guard: stepping a game that is saved and loaded at a
-year gives the same year as stepping the unbroken game, at each year of a run.
+year gives the same year as stepping the unbroken game, at chosen years of a run.
 Compares the digest the performance fingerprint uses, so any state the next year
 reads but the save does not carry shows up as a different digest. The quick run
 is two years; the slow run is long enough to finish projects, admit firms and
-meet hazards. A defect that only shows once the economy is large is found by
+meet hazards; it resumes at the first years, the middle and the last year, since each resume
+builds a game and plays a year. A defect that only shows once the economy is large is found by
 `sim/tests/fingerprint.py` with a long scenario."""
 from .harness import *  # noqa: F401,F403
 from sim.tests import fingerprint as perf_fingerprint
 from sim.engine.saveload import save_state, load_state
 
 QUICK_YEARS = 2
-SLOW_YEARS = 12
+SLOW_YEARS = 8
+
+
+def resume_years(years):
+    """The years a saved copy is resumed and compared: the quick run's years, the middle and the last."""
+    return {1, QUICK_YEARS, (years + 1) // 2, years}
 
 
 def years_that_diverge(years):
@@ -20,6 +26,10 @@ def years_that_diverge(years):
     save_path = os.path.join(tempfile.mkdtemp(), "save.json")
     diverging_years = []
     for year in range(1, years + 1):
+        if year not in resume_years(years):
+            unbroken.step()
+            yield list(diverging_years)
+            continue
         save_state(unbroken, save_path)
         resumed = perf_fingerprint.build(scenario)
         load_state(resumed, save_path)

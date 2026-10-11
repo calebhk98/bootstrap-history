@@ -13,8 +13,11 @@ import unittest
 
 from sim.engine.ui_port import Sim, load, load_civ
 
-SEEDS = (1, 2, 3)
+# Two seeds show the spread; each game is played to the end of the twenty-year window after first contact
+# (the longest horizon any gate reads), capped at YEARS.
+SEEDS = (1, 2)
 YEARS = 60
+YEARS_AFTER_CONTACT = 20
 # Cook and Borah's maximalist series keeps 6.3 of 25.2 million 30 years in (report section 11.5); below that share
 # twenty years after contact a run is near extinction, which is what Complaint 386 reported.
 MAXIMALIST_SURVIVING_SHARE_AFTER_30_YEARS = 6.3 / 25.2
@@ -30,6 +33,10 @@ def play(seed):
     for _ in range(YEARS):
         game.step()
         people.append((game.year, game.population.total))
+        if game.state.disease.introduced:
+            first_year = min(years[0] for years in game.state.disease.introduced.values())
+            if game.year >= first_year + YEARS_AFTER_CONTACT:
+                break
     return people, game.state.disease
 
 

@@ -193,12 +193,16 @@ check("building a remedy lifts the handicap", cost_factor_after < cost_factor_be
 # Rome carries no debt bondage, so a deep debt ends in a written-off settlement.
 insolvent = sim(civ="rome_100ad", capital=1000000.0)
 insolvent.start_project("identity_cover")
-for _ in range(4):
+for _ in range(4):  # until the persona is built
     insolvent.step()
+    if "identity_cover" in insolvent.done:
+        break
 persona_built = "identity_cover" in insolvent.done
 insolvent.capital = -2.0 * insolvent.credit_limit()
-for _ in range(2):
+for _ in range(2):  # until the settlement is logged
     insolvent.step()
+    if any("INSOLVENCY SETTLED" in text for _, text in insolvent.state.household.log):
+        break
 settled = [text for _, text in insolvent.state.household.log if "INSOLVENCY SETTLED" in text]
 check("an insolvency settlement never abandons a persona or institution",
       persona_built and settled and "identity_cover" in insolvent.done,

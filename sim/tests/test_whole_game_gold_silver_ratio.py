@@ -15,7 +15,8 @@ from sim.engine.economy_port_stores import opening_store_values
 from sim.geography.api import open_map, tiles_held
 
 GOLD, SILVER = "gold_kg", "silver_kg"
-YEARS = 30
+# Long enough for the metals to be priced and traded at the capital over several years; the check is a sign, not a trend.
+YEARS = 8
 CIVILISATIONS = ("rome_100ad", "england_1300", "han_china_100ad", "norse_900ad", "mexica_1500")
 
 

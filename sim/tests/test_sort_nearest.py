@@ -96,7 +96,7 @@ check("the founder's age at death survives a save and a fresh process loading it
       reloaded_state.get("founder_died_aged") == step_reply.get("founder_died_aged")
       and reloaded_state.get("founder_died_aged") is not None,
       (reloaded_state.get("founder_died_aged"), step_reply.get("founder_died_aged")))
-for _ in range(2):
+for _ in range(2):  # the countdown is logged in the second year after the death
     mortal.step()
 check("the founder's death says what it means for the run, not only that it happened",
       any("THE FOUNDER DIES" in message and "no deputy" in message for _, message in mortal.log),
