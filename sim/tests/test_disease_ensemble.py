@@ -1,16 +1,19 @@
 """Whole Mexica games on the agent economy, checked against the validation envelope of
 Complaints/reports/epidemic-model-research.md section 11.5 (Complaint 386's evidence command).
 
-SLOW: each game builds the whole agent economy (over ten minutes cold) and plays decades. Left out of the quick
-tier; run with `python3 -m sim.tests --slow --only disease_ensemble`. It was written alongside the wiring but not
-run there; the fast stand-in for the same gates is test_disease_century.py. Prints the people per year of each
+SLOW: each game builds the whole agent economy and plays decades. Left out of the quick tier; run with
+`python3 -m sim.tests --slow --only disease_ensemble`. Population and disease come from the engine's own
+farming and demography step, not from the year's market close, so the close (nearly all of a step's cost) is
+left out of the years played; the fast stand-in for the same gates is test_disease_century.py. Prints the people per year of each
 seed so a run can be compared before and after a change. The gates are ranges for a distribution, not targets."""
 
 QUICK_TOPIC = False
 
+import functools
 import random
 import unittest
 
+from . import harness  # noqa: F401  (sets the short spin-up the suite's games open on)
 from sim.engine.ui_port import Sim, load, load_civ
 
 # Two seeds show the spread; each game is played to the end of the twenty-year window after first contact
@@ -24,11 +27,14 @@ MAXIMALIST_SURVIVING_SHARE_AFTER_30_YEARS = 6.3 / 25.2
 PUBLISHED_DECLINE_HIGHEST = 0.96
 
 
+@functools.lru_cache(maxsize=None)
 def play(seed):
-    """[(year, people)] for a Mexica game with the agent economy, and the saved disease state."""
+    """[(year, people)] for a Mexica game with the agent economy, and the saved disease state. Cached: the runner
+    calls setUpClass again for every test method."""
     _tree, _prices, nodes, _wages, _goods = load()
     game = Sim(nodes, [], random.Random(seed), events=False, manual=True, civ=load_civ("mexica_1500"),
                cfg={"agent_economy": True})
+    game._step_market = lambda: None
     people = []
     for _ in range(YEARS):
         game.step()
