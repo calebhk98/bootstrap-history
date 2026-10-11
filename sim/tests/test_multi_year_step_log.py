@@ -13,7 +13,18 @@ def _log_rows(test_sim):
 
 
 def _game():
-    test_sim = sim(events=True)
+    test_sim = sim(events=True, surveyed=())
+    # The market clearing is most of a step's cost: it runs for the first year only, and the second year's log
+    # entries (interest groups petitioning) read the state that first clearing left.
+    clear_market = test_sim._step_market
+    market_years = []
+
+    def clear_market_once():
+        if not market_years:
+            market_years.append(test_sim.year)
+            clear_market()
+
+    test_sim._step_market = clear_market_once
     test_sim.end_year = test_sim.cfg["start_year"] + 200
     for node_id in ("tx2_bleaching_sun", "tx2_count_standard", "clock_mechanical_escapement"):
         test_sim.start_project(node_id)

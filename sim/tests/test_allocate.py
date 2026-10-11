@@ -26,7 +26,7 @@ for _k in (_kA, _kB):
     s.active[_k] = dict(ph_left=float(_n["ph"]), yrs=0.0, spent=0.0,
                         cost_left=0.0, lab_left=_zero_lab(_n))
 s.hour_allocations[_kB] = 500.0
-s.step()
+s._run_seat_work()
 check("a standing allocation gets its project the hours it asked for, even "
       "though an undirected project ranks ahead of it in `order`",
       s.active[_kB]["hours_offered_this_year"] == 500.0,
@@ -57,7 +57,7 @@ s.active[_kD] = dict(ph_left=float(_nD["ph"]), yrs=0.0, spent=0.0,
                      cost_left=0.0, lab_left=_zero_lab(_nD))
 s.hour_allocations[_kC] = 1400.0
 _before = len(s.log)
-s.step()
+s._run_seat_work()
 _pace_cap = max(30.0, _nC["ph"] / max(_nC["yrs"], 1.0))
 check("a directive bigger than a project's own calendar-floor pace only "
       "offers it that pace, not the whole directive",
@@ -89,7 +89,7 @@ s.active[_kF] = dict(ph_left=float(_nF["ph"]), yrs=0.0, spent=0.0,
 s.hour_allocations[_kE] = 1400.0
 s.hour_allocations[_kF] = 1000.0
 _before = len(s.log)
-s.step()
+s._run_seat_work()
 check("the first of two over-committed standing orders gets its directive "
       "in full",
       s.active[_kE]["hours_offered_this_year"] == 1400.0,
@@ -110,7 +110,7 @@ for _k in _order3:
     _n = NODES[_k]
     s.active[_k] = dict(ph_left=float(_n["ph"]), yrs=0.0, spent=0.0,
                         cost_left=0.0, lab_left=_zero_lab(_n))
-s.step()
+s._run_seat_work()
 check("with nothing ever directed, hours still go out strictly by `order` "
       "rank, exactly as before `allocate` existed",
       [s.active[node_id]["pool_rank_this_year"] for node_id in _order3] == [1, 2, 3],
@@ -118,7 +118,7 @@ check("with nothing ever directed, hours still go out strictly by `order` "
 
 # --- `allocate` itself: refuses a project that is not active yet, refuses
 # an id that does not exist, sets, reports back, and clears.
-s = sim(capital=1e7)
+s = unopened_sim(capital=1e7)
 _r = S._agent_dispatch(s, NODES, {"cmd": "allocate", "id": "academy_network",
                                   "hours": 300})
 check("allocate refuses a directive on a project that has not been "
@@ -157,7 +157,7 @@ s.hour_allocations["work"] = 77.0
 s.work_trade = "scribe"
 _save_path = os.path.join(tempfile.gettempdir(), "rome_allocate_save_test.json")
 _protocol.save_state(s, _save_path)
-s2 = sim(capital=1e7)
+s2 = unopened_sim(capital=1e7)
 _protocol.load_state(s2, _save_path)
 os.remove(_save_path)
 check("a standing project directive survives a save and a load",

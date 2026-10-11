@@ -19,7 +19,14 @@ screen = render_step({"ok": True, "completed": [], "events": [], "automation": r
 check("the step screen shows the automation line and the programme block",
       "AUTOMATION:" in screen and "PROGRAMME:" in screen and "paused" in screen, screen[-400:])
 
-game = sim()
+def _game():
+    """A game whose year skips the market clearing (most of a step's cost): these checks read the step reply, not prices."""
+    test_sim = sim(surveyed=())
+    test_sim._step_market = lambda: None
+    return test_sim
+
+
+game = _game()
 game.end_year = game.cfg["start_year"] + 50
 game.state.household.automation_audit.append(
     {"year": game.year, "policy": "auto_hire", "action": "hire", "what": "probe", "reason": "probe", "cost": 0})
@@ -34,7 +41,7 @@ check("an older year's row is not repeated in the next step",
 from sim.ui.proto.render_screen_state_views import render_view
 from sim.ui.proto.render_screen_step import FULL_STATE_POINTER
 
-step_game = sim()
+step_game = _game()
 step_game.end_year = step_game.cfg["start_year"] + 50
 step_reply = _agent_dispatch(step_game, NODES, {"cmd": "step", "years": 2})
 step_text = render_step(step_reply)

@@ -95,7 +95,7 @@ def _ledger_outflow(game, *causes):
 
 
 def _ledger_game():
-    game = _fresh()
+    game = sim(capital=_CAPITAL, surveyed=())
     game.end_year = game.cfg["start_year"] + game.cfg["horizon_years"]
     game.LIVING_COST_STATUS_PER_CAPITAL = 0.0   # status spending follows cash, which a charge changes
     return game
@@ -135,7 +135,7 @@ def _run_project(node_id):
     for _year in range(8):
         if node_id in game.done:
             break
-        S._agent_dispatch(game, NODES, {"cmd": "step", "years": 1})
+        game._run_seat_work()   # the year's project payments and materials; the ledger bill is all this reads
     return game, quoted, reply
 
 
@@ -172,7 +172,7 @@ _hired, _twin = _ledger_game(), _ledger_game()
 _hire_quote = S._agent_dispatch(_hired, NODES, {"cmd": "quote", "what": "hire", "trade": "smith", "n": 1})
 S._agent_dispatch(_hired, NODES, {"cmd": "hire", "trade": "smith", "n": 1})
 for _game in (_hired, _twin):
-    S._agent_dispatch(_game, NODES, {"cmd": "step", "years": 1})
+    _game._step_money_seat()   # the year's wages and living costs, which is where the hire's charge lands
 _hire_charged = (_ledger_outflow(_hired, "hiring fee and first year's wages")
                  + _ledger_outflow(_hired, "living costs") - _ledger_outflow(_twin, "living costs"))
 check("hire wage: the first year's charge through the ledger is the quoted yearly wage",
