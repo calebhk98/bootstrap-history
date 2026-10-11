@@ -18,7 +18,8 @@ mine_sim = _mine_fixture()
 yearly_yield = None
 years_producing = 0
 for _ in range(5):
-    mine_sim.step()
+    mine_sim.state.scenario.year += 1   # the year's materials phase, without the rest of the year
+    mine_sim._step_materials()
     if mine_sim.mine_capacity.get(_KEY):
         years_producing += 1
         yearly_yield = sum(mine_sim.mine_yield_t_for(working) for working in mine_sim._workings_of(_KEY))
