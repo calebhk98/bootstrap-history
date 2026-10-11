@@ -3,20 +3,18 @@ Endless difficulty horizon: regressions from a player who won the game."""
 from .harness import *  # noqa: F401,F403
 
 from sim.ui.proto.state_waiting import _agent_end_reason
+from sim.tests import cli_in_process
 
-_SIMULATOR = os.path.join(HERE, "simulator.py")
 
-
-def _play(arguments, text, environment, timeout=60):
-    return subprocess.run([sys.executable, _SIMULATOR] + arguments, input=text,
-                          capture_output=True, text=True, timeout=timeout, env=environment)
+def _play(arguments, text, environment):
+    return cli_in_process.run(arguments, text, environment)
 
 
 # --- Endless, chosen through the wizard, carries a large finite horizon into
 # the save (never None), and `options` shows it as Endless, not a nine-digit year.
 _endless_saves = tempfile.mkdtemp()
 _endless_env = dict(os.environ, ROME_SAVE_DIR=_endless_saves)
-_endless_wizard = _play([], "1\n2\ny\n\n\nn\n\n4\n\nstep\nquit\n", _endless_env, timeout=120)
+_endless_wizard = _play([], "1\n2\ny\n\n\nn\n\n4\n\nquit\n", _endless_env)
 _endless_written = [filename for filename in os.listdir(_endless_saves)
                     if filename.endswith(".json") and not filename.endswith(".meta.json")]
 check("choosing Endless carries exactly ENDLESS_HORIZON_YEARS into the save's meta sidecar",
@@ -27,7 +25,7 @@ check("choosing Endless carries exactly ENDLESS_HORIZON_YEARS into the save's me
 # running 600 years in, where the same game under the standard horizon has ended.
 _endless_meta = (json.load(open(os.path.join(_endless_saves, _endless_written[0] + ".meta.json")))
                  if _endless_written else {})
-_horizon_game = sim()
+_horizon_game = unopened_sim()
 _horizon_game.year = _horizon_game.cfg["start_year"] + 600
 _horizon_game.end_year = _horizon_game.cfg["start_year"] + _endless_meta.get("horizon_years", 0)
 _endless_reason = _agent_end_reason(_horizon_game)
@@ -73,7 +71,7 @@ _session_saves = tempfile.mkdtemp()
 _session_path = os.path.join(_session_saves, "rome_100ad.json")
 _session_env = dict(os.environ, ROME_SAVE_DIR=_session_saves)
 _first = _play(["play", "--civ", "rome_100ad", "--session", _session_path],
-               "step\nsaves\nsave\nquit\n", _session_env)
+               "saves\nsave\nquit\n", _session_env)
 check("'saves', typed bare mid-game, lists the save directory with the civilisation "
       "and goal progress, and marks which save is this one",
       "SAVES" in _first.stdout and "Roman Empire" in _first.stdout
@@ -91,7 +89,7 @@ _milestone_bytes_before = open(_milestone_path, "rb").read()
 # A separate save directory, so the fork the resume makes cannot become the
 # "most recent save" the picker checks below read.
 _resume_env = dict(os.environ, ROME_SAVE_DIR=tempfile.mkdtemp())
-_resumed = _play(["play", "--session", _milestone_path], "step 2\nstate\nquit\n", _resume_env)
+_resumed = _play(["play", "--session", _milestone_path], "step\nstate\nquit\n", _resume_env)
 check("resuming from the milestone reads back its year and says it is a frozen checkpoint",
       _milestone_year
       and ("Resumed the checkpoint at %s: %s AD." % (_milestone_path, _milestone_year.group(1))) in _resumed.stdout

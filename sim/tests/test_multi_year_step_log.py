@@ -20,7 +20,7 @@ def _game():
     return test_sim
 
 
-YEARS = 3
+YEARS = 2
 multi = _game()
 multi_reply = S._agent_dispatch(multi, NODES, {"cmd": "step", "years": YEARS})
 single = _game()

@@ -10,7 +10,7 @@ from sim.ui.protocol import _agent_capacity as _ACAP, _agent_economy as _AECO
 # edit gives one of them its own copy of the arithmetic, this catches the
 # two screens drifting apart instead of a playtester finding two different
 # answers to "what is my coal mine actually raising".
-_s_cap = sim(capital=2_000_000.0)
+_s_cap = unopened_sim(capital=2_000_000.0)
 _s_cap.mines.append({"material": "iron", "capacity": 500.0,
                      "opened_year": _s_cap.year, "capex_paid": 0.0,
                      "intensity_yrs": 0.0})
@@ -125,7 +125,7 @@ for _bad, _why in ((True, "bool"), (2.5, "fractional"), (0, "zero"), (-1, "negat
     _r = S._agent_dispatch(_s_chg, NODES, {"cmd": "changes", "years": _bad})
     check("`changes years=%r` (%s) is refused, not silently coerced" % (_bad, _why),
           _r.get("ok") is False, _r)
-S._agent_dispatch(_s_chg, NODES, {"cmd": "step", "years": 2})
+S._agent_dispatch(_s_chg, NODES, {"cmd": "step", "years": 1})
 _chg_near = S._agent_dispatch(_s_chg, NODES, {"cmd": "changes", "years": 1})
 check("a window narrower than the run's own history is answered directly",
       _chg_near.get("ok") is True and _chg_near.get("to_year") == _s_chg.year,

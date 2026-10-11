@@ -34,9 +34,9 @@ for _cf in sorted(os.listdir(os.path.join(ROOT, "data/civilizations"))):
               all(x in NODES for x in (_ent.get("ids") or [])),
               [x for x in (_ent.get("ids") or []) if x not in NODES])
 
-# One game per civilisation serves the flavour-text, price-level, turn-one and gate checks.
+# One unopened game per civilisation serves the flavour-text, price-level and gate checks (data and engine tables only).
 _CIVS = ("rome_100ad", "han_china_100ad", "norse_900ad", "mexica_1500", "england_1300")
-_games = {_cid: sim(civ=_cid) for _cid in _CIVS}
+_games = {_cid: unopened_sim(civ=_cid) for _cid in _CIVS}
 
 # --- BREAK: Han China was told it writes its corpus "in plain quantitative
 # Greek and Latin" and seeks "Senatorial patronage".
@@ -71,7 +71,8 @@ check("...and the cheapest really is the cheapest",
 # --- BREAK: grant_ambient ran BEFORE the civ's named starting_techs were added,
 # so a free completion was credited on the first `step`. Nothing free may arrive
 # after the game begins.
-for _cid, _s in _games.items():
+for _cid in _CIVS:
+    _s = sim(civ=_cid)      # stepping needs the opened economy
     _before_ga = set(_s.done)
     _s.step()
     check("%s hands you nothing free on turn one" % _cid,
