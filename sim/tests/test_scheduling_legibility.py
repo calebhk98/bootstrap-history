@@ -34,7 +34,7 @@ _s_alloc._done_changed()
 _s_alloc.end_year = _s_alloc.cfg["start_year"] + _s_alloc.cfg["horizon_years"]
 _s_alloc.start_project("sc2_institution_curriculum")
 _s_alloc.start_project("sc2_institution_doctorate")
-_s_alloc.step()
+_s_alloc._run_seat_work()    # the year's project work (start, materials, progress) without the economy around it
 _st_doc = _s_alloc.active["sc2_institution_doctorate"]
 _st_cur = _s_alloc.active["sc2_institution_curriculum"]
 check("the allocator stores WHY a project got its share: pool total, this "
@@ -243,7 +243,7 @@ check("'your hours', enriched with the allocator's own rank/pool figures "
 # it does not partly bank, it does not bank at all, which is exactly the
 # player's own assumption, so the warning below says so plainly rather than
 # hedging on a partial-banking case that does not exist.
-# The same two-project game as section 1, already stepped one year there.
+# The same two-project game as section 1, whose project work has already run once there.
 _s_idle = _s_alloc
 # The warning is computed before any year runs, so the single-year reply is read with the step itself
 # turned off; the guard shows the idle-hours condition the warning keys on is live, or "no warning"

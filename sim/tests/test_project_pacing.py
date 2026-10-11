@@ -49,7 +49,7 @@ check("a project needing more of a trade than exists is startable",
 _dl_ph_left = [s_dl.active["logarithms"]["ph_left"]]
 _dl_scribe_left = [s_dl.active["logarithms"]["lab_left"]["scribe"]]
 for _dl_year in range(1):
-    s_dl.step()
+    s_dl._run_seat_work()    # the year's project work, without the economy around it
     if _dl_year == 0:
         check("a project that cannot go on says so the first year, not the fourth",
               any(_need_eng in message and "before it is abandoned" in message for _, message in s_dl.log),

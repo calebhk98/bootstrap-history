@@ -16,7 +16,7 @@ from sim.ui.proto.render_typed import render_pretty as _render_pretty
 #    of your hours spent". Here: 612.5 against 500 before the fix.
 s = starved_game(9e5)
 _before_left = s.active["identity_cover"]["ph_left"]
-s.step()
+s._run_seat_work()    # the year's project work, without the economy around it
 _st = s.active.get("identity_cover") or {}
 check("a project can never be given back more hours than it has spent",
       _st.get("ph_left", 0) <= NODES["identity_cover"]["ph"] + 1e-6,
@@ -35,13 +35,10 @@ check("an underfunded project says why it is underfunded",
 # The bill is below one year's instalment, so a year that pays its instalment clears it.
 s = starved_game(1.0, supply=0.001, arrears=0.0, capital=500000.0)
 s.active["identity_cover"]["ph_left"] = 0.0
-for _i in range(1):
-    s.step()
-    if "identity_cover" not in s.active:
-        break
+s._run_seat_work()
 check("a small remaining bill is actually paid off, not approached for ever",
       "identity_cover" not in s.active,
-      "%.4f den still owed after 1 year"
+      "%.4f den still owed after a year"
       % (s.active.get("identity_cover", {}).get("cost_left", 0.0)))
 
 # --- the Mexica play tester: advice you cannot act on is not advice ----------
