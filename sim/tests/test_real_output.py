@@ -14,6 +14,7 @@ from sim.engine import prices as price_solver
 from sim.engine.data import calculated_goods_prices
 
 GOOD = "fat_kg"
+YEARS_CLOSED = 1   # the market is one agent-economy year to close, so the fewest years that show each property
 
 
 def plain_node(game):
@@ -45,8 +46,8 @@ def close_years(game, years):
 control, twin = sim(civ="rome_100ad", capital=1e9), sim(civ="rome_100ad", capital=1e9)
 plain = plain_node(control)
 complete(control, plain)
-close_years(control, 5)
-close_years(twin, 5)
+close_years(control, YEARS_CLOSED)
+close_years(twin, YEARS_CLOSED)
 check("a technology that improves no production entry leaves the goods' prices alone",
       dict(control.goods_market.household_prices()) == dict(twin.goods_market.household_prices()))
 check("...and does not raise real output",
@@ -66,7 +67,7 @@ patched[GOOD + "_with_the_technique"] = improved
 price_solver.reset_caches_for_tests()
 price_solver._DEFAULT_PRODUCTION_ENTRIES = patched
 try:
-    game, twin = sim(civ="rome_100ad", capital=1e9), sim(civ="rome_100ad", capital=1e9)
+    game = sim(civ="rome_100ad", capital=1e9)   # the twin above (nothing completed, same years closed) is its baseline
     price_before = game.goods_market.household_prices()[GOOD]
     other_before = {material: price for material, price in game.goods_market.household_prices().items()
                     if material in ("iron", "wheat_kg", "brick_1000")}
@@ -89,8 +90,7 @@ try:
     check("...and no good that does not use it changes price",
           all(game.goods_market.household_prices()[material] == price
               for material, price in other_before.items()), other_before)
-    close_years(game, 6)
-    close_years(twin, 6)
+    close_years(game, YEARS_CLOSED)
     sold_after = game.state.economy.market_book[GOOD]["traded_tonnes"]
     check("...and the market clears a larger quantity of it than the same society without it",
           sold_after > 1.05 * twin.state.economy.market_book[GOOD]["traded_tonnes"],
