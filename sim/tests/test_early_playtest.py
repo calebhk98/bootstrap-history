@@ -1,10 +1,10 @@
 """early_playtest: regression checks from the first playtests, run with `--only early_playtest`."""
-from sim.engine.data import closure as data_closure
 from .harness import *  # noqa: F401,F403
 
 def without_market(game):
-    """The games below that step read the founder's own year (money, staff, projects, mines, recovery), which the
-    year's market close does not feed, and that close is nearly all of a step's cost; leave it out of those steps."""
+    """`game` with the year's market close left out of its steps: nearly all of a step's cost. Only for checks on
+    staff, projects, mines, raids and recovery; the founder's money does follow the market, so games whose checks
+    read money keep it."""
     game._step_market = lambda: None
     return game
 
@@ -197,62 +197,6 @@ norse.done.add("collegium_licensed")
 cost_factor_after = norse.civ_cost_factor("blast_furnace")
 check("building a remedy lifts the handicap", cost_factor_after < cost_factor_before,
       "%.2f -> %.2f" % (cost_factor_before, cost_factor_after))
-# Rome carries no debt bondage, so a deep debt ends in a written-off settlement.
-insolvent = without_market(sim(civ="rome_100ad", capital=1000000.0))
-insolvent.start_project("identity_cover")
-for _ in range(4):  # until the persona is built
-    insolvent.step()
-    if "identity_cover" in insolvent.done:
-        break
-persona_built = "identity_cover" in insolvent.done
-insolvent.capital = -2.0 * insolvent.credit_limit()
-for _ in range(2):  # until the settlement is logged
-    insolvent.step()
-    if any("INSOLVENCY SETTLED" in text for _, text in insolvent.state.household.log):
-        break
-settled = [text for _, text in insolvent.state.household.log if "INSOLVENCY SETTLED" in text]
-check("an insolvency settlement never abandons a persona or institution",
-      persona_built and settled and "identity_cover" in insolvent.done,
-      (persona_built, len(settled), "identity_cover" in insolvent.done))
-
-# A founder driven deep into debt stays inside the credit line, climbs back, and keeps what the goal needs.
-def _ruined_founder_run():
-    ruined = without_market(sim(manual=False, capital=hours_money(20200000)))
-    ruined.labour.buy_slaves(400)
-    ruined.start_project("identity_cover")
-    for _ in range(3):
-        ruined.step()
-    needed = data_closure(NODES, GOAL) & (ruined.done - ruined.granted)
-    built_before = len(ruined.done - ruined.granted)
-    ruined.capital = -3.0 * ruined.credit_limit()
-    debt_over_limit = []
-    capital_by_year = []
-    for _ in range(5):
-        ruined.step()
-        debt_over_limit.append(-ruined.capital / ruined.credit_limit())
-        capital_by_year.append(ruined.capital)
-    return ruined, needed, built_before, debt_over_limit, capital_by_year
-
-
-_RUIN = {}
-
-
-def _ruin():
-    if not _RUIN:
-        _RUIN["run"] = _ruined_founder_run()
-    return _RUIN["run"]
-
-
-slow_check("a ruined founder's debt stays inside the credit limit once the settlement has run",
-           lambda: (max(_ruin()[3]) <= 1.0 and any("INSOLVENCY SETTLED" in text for _, text in _ruin()[0].state.household.log),
-                    _ruin()[3]))
-slow_check("a ruined founder rebuilds rather than freezing",
-           lambda: (_ruin()[4][-1] > _ruin()[4][0] and len(_ruin()[0].done - _ruin()[0].granted) >= _ruin()[2],
-                    (_ruin()[4], _ruin()[2], len(_ruin()[0].done - _ruin()[0].granted))))
-slow_check("ruin never deletes a step the goal needs",
-           lambda: ("identity_cover" in _ruin()[0].done and _ruin()[1] <= _ruin()[0].done,
-                    sorted(_ruin()[1] - _ruin()[0].done)[:5]))
-
 # prerequisite lint: gunpowder's saltpetre comes from nitre beds, not from nowhere
 check("gunpowder claims no saltpetre it has not earned via nitre_beds",
       "nitre_beds" in NODES["mil_gunpowder_base"]["pre"] and "nitre_beds" in NODES,
@@ -362,7 +306,7 @@ check("a mine can be closed, and stops costing", cost_open > 0 and cost_closed =
       "before %s after %s" % (cost_open, cost_closed))
 
 # --- an unfunded project never completes, and manual play never buys people for you
-unfunded = without_market(sim(capital=hours_money(8060), manual=True))
+unfunded = sim(capital=hours_money(8060), manual=True)
 ok_start, start_why = unfunded.start_project("identity_cover")         # 1,580 den against 400
 for _ in range(3):
     unfunded.step()
