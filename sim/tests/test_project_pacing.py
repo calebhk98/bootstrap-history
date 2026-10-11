@@ -13,7 +13,7 @@ from .harness import *  # noqa: F401,F403
 # node's calendar floor - so a ten-year work absorbs a tenth a year however
 # rich you are, and nothing anywhere said there was a pace at all.
 from sim.ui.protocol import _waiting_on as _WO
-s_pace = sim(capital=50000000.0)
+s_pace = unopened_sim(capital=50000000.0)
 _slow = "academy_network"
 s_pace.active[_slow] = dict(ph_left=0.0, yrs=1.0, spent=0.0,
                             cost_left=s_pace.project_cost(_slow))
@@ -21,7 +21,7 @@ _msg_rich = _WO(s_pace, NODES, _slow, s_pace.active[_slow],
                 s_pace.active[_slow]["cost_left"])
 check("a rich player is told the pace, not that they are short of money",
       "pace" in _msg_rich and "a year" in _msg_rich, _msg_rich)
-s_broke = sim(capital=1.0)
+s_broke = unopened_sim(capital=1.0)
 s_broke.credit_limit = lambda: 0.0
 s_broke.active[_slow] = dict(ph_left=0.0, yrs=1.0, spent=0.0,
                              cost_left=s_broke.project_cost(_slow))
@@ -32,28 +32,12 @@ check("...and a player who really cannot raise the instalment is told that",
 
 # --- BREAK: six projects wiped in one year. The countdown to abandonment ran
 # silently for three years and then took everything spent.
-s_hl = sim(capital=500000.0)
+# One game serves the abandonment warning and the crawl: the cold store (no engineer anywhere) and
+# logarithms (more scribe-hours wanted than the society can field) are stepped together.
+s_dl = sim(capital=20000000.0, surveyed=())
 _need_eng = "ag2_cold_store"
-s_hl.active[_need_eng] = dict(ph_left=float(NODES[_need_eng]["ph"]), yrs=0.0,
-                              spent=0.0, cost_left=s_hl.project_cost(_need_eng))
-s_hl.step()
-check("a project that cannot go on says so the first year, not the fourth",
-      any(_need_eng in message and "before it is abandoned" in message for _, message in s_hl.log),
-      [message for _, message in s_hl.log][:2])
-_st_all = S._agent_state(s_hl, NODES)
-_st_hl = _st_all["active"][_need_eng]
-check("...and state carries the countdown and the trade that would save it",
-      _st_hl.get("will_be_abandoned_in_years") == 3
-      and "engineer" in (_st_hl.get("because_nobody_here_can") or []),
-      _st_hl)
-# --- BREAK: a permanent deadlock. `logarithms` wants 10,000 scribe-hours a
-# year where the society can field 8,750, so the throttle gives back a
-# fraction of the work every year - and with no floor under the refund it gave
-# back ALL of it. Founder-hours sat at exactly 5.0 for ever, the bill paid,
-# the calendar long past, holding the whole scribe pool and freezing eight
-# projects behind it - one of them scientific_method, a 230-denarius node
-# startable in year 100 and still unbuilt at the horizon.
-s_dl = sim(capital=20000000.0)
+s_dl.active[_need_eng] = dict(ph_left=float(NODES[_need_eng]["ph"]), yrs=0.0,
+                              spent=0.0, cost_left=s_dl.project_cost(_need_eng))
 for _p in NODES["logarithms"]["pre"]:
     s_dl.done.add(_p)
 s_dl.scholars = s_dl.artisans = 50.0
@@ -64,21 +48,36 @@ check("a project needing more of a trade than exists is startable",
       s_dl.start_project("logarithms")[0], s_dl.start_reason("logarithms"))
 _dl_ph_left = [s_dl.active["logarithms"]["ph_left"]]
 _dl_scribe_left = [s_dl.active["logarithms"]["lab_left"]["scribe"]]
-for _ in range(3):
-    s_dl.step()
+for _dl_year in range(1):
+    s_dl._run_seat_work()    # the year's project work, without the economy around it
+    if _dl_year == 0:
+        check("a project that cannot go on says so the first year, not the fourth",
+              any(_need_eng in message and "before it is abandoned" in message for _, message in s_dl.log),
+              [message for _, message in s_dl.log][:2])
+        _st_hl = S._agent_state(s_dl, NODES)["active"][_need_eng]
+        check("...and state carries the countdown and the trade that would save it",
+              _st_hl.get("will_be_abandoned_in_years") == 3
+              and "engineer" in (_st_hl.get("because_nobody_here_can") or []),
+              _st_hl)
     if "logarithms" not in s_dl.active:
         break
     _dl_ph_left.append(s_dl.active["logarithms"]["ph_left"])
     _dl_scribe_left.append(s_dl.active["logarithms"]["lab_left"]["scribe"])
 check("...and every year of the crawl really works down the hours and the scribe labour left",
-      len(_dl_ph_left) == 4
+      len(_dl_ph_left) == 2
       and all(later < earlier for earlier, later in zip(_dl_ph_left, _dl_ph_left[1:]))
       and all(later < earlier for earlier, later in zip(_dl_scribe_left, _dl_scribe_left[1:])),
       (_dl_ph_left, _dl_scribe_left))
 
 
 def _logarithms_finishes_slowly():
-    for _ in range(60):
+    # The freeze was the end of the crawl, where the hours left are fewer than a year wants: put the
+    # project at that tail, with a few hours, a little scribe labour and a small bill left, and the
+    # calendar past its floor as the long crawl would have left it.
+    s_dl.state.scenario.year = 101 + int(NODES["logarithms"]["yrs"])
+    s_dl.active["logarithms"].update(ph_left=5.0, cost_left=5.0, yrs=float(NODES["logarithms"]["yrs"]))
+    s_dl.active["logarithms"]["lab_left"]["scribe"] = 50.0
+    for _ in range(2):
         if "logarithms" not in s_dl.active:
             break
         s_dl.step()
@@ -94,7 +93,8 @@ slow_check("...and it finishes, slowly, longer than its calendar floor, instead 
 # abandoned enterprise" - so when the creditors were about to take everything,
 # stopping something yourself cost exactly as much as letting them, and `stop`
 # was never the right move. The site does not un-dig itself either way.
-s_sp = sim(capital=round(0.3 * sim().project_cost("identity_cover")))   # part-payable at any wage scale
+s_sp2 = sim(surveyed=())   # prices the project here, then serves the nearly-paid check below
+s_sp = sim(capital=round(0.3 * s_sp2.project_cost("identity_cover")), surveyed=())   # part-payable at any wage scale
 s_sp.start_project("identity_cover")
 s_sp.step()
 _spent_sp = s_sp.active["identity_cover"]["spent"]
@@ -115,7 +115,6 @@ check("...but the hours really are gone: that was your year",
       s_sp.active["identity_cover"]["ph_left"])
 # And the affordability gate has to test the REMAINDER, or a nearly-paid-for
 # project is refused for a bill it no longer owes.
-s_sp2 = sim()
 s_sp2.paid_towards = {"identity_cover": s_sp2.project_cost("identity_cover") - 5.0}
 check("...and a nearly-paid project is not refused for its gross price",
       s_sp2.start_project("identity_cover")[0],
@@ -128,7 +127,7 @@ check("...and a nearly-paid project is not refused for its gross price",
 # planning against a number the engine would never actually charge; the
 # real, discounted figure showed up only inside a `start` refusal or its
 # success line, after the fact.
-s_wp = sim(capital=1000.0)
+s_wp = sim(capital=1000.0, surveyed=())
 _wp_k = next(node_id for node_id in s_wp.order if s_wp.can_start(node_id) and NODES[node_id]["ph"] > 0)
 s_wp.start_project(_wp_k)
 s_wp.active[_wp_k]["spent"] = 500.0
@@ -148,7 +147,7 @@ check("...and it matches what `start` would actually bill, not a second "
                               )["the_bill_you_have_taken_on"]) < 0.5,
       (_wp_out["cost"]["what_start_would_actually_charge"],))
 # And the ordinary case - nothing sunk into this node - gets no such field.
-s_wp2 = sim(capital=1000.0)
+s_wp2 = sim(capital=1000.0, surveyed=())
 _wp2_k = next(node_id for node_id in s_wp2.order if s_wp2.can_start(node_id))
 _wp2_out = S._agent_dispatch(s_wp2, NODES, {"cmd": "why", "id": _wp2_k})
 check("...while a project with nothing sunk into it gets no discount "
@@ -161,7 +160,7 @@ check("...while a project with nothing sunk into it gets no discount "
 # your hours" for turns running because they kept selling all 2,000 hours a
 # year, and asked for a warning, not a block - this is a legitimate way to
 # raise cash.
-_s_wk = sim(capital=500000.0)
+_s_wk = unopened_sim(capital=500000.0)
 _wk_id = next(node_id for node_id in NODES
               if NODES[node_id]["ph"] > 300 and NODES[node_id]["yrs"] >= 1)
 _wk_n = NODES[_wk_id]
@@ -173,13 +172,13 @@ check("selling every founder-hour is still allowed - this is not a block",
 check("...but it warns, naming the project and the hours it still wants",
       _wk_err and _wk_id in _wk_err and "hours" in _wk_err, _wk_err)
 # The same sale with no active project at all draws no such warning.
-_s_wk2 = sim(capital=500000.0)
+_s_wk2 = unopened_sim(capital=500000.0)
 _wk2_pay, _wk2_err = _s_wk2.labour.work_for_wages("scholar", 2000)
 check("...and says nothing about starving work when nothing is active",
       "for the rest of the year" not in (_wk2_err or ""), _wk2_err)
 # Selling only a few hours, leaving plenty for a SMALL-paced project, warns
 # of nothing - this must not fire just because something, anything, is active.
-_s_wk3 = sim(capital=500000.0)
+_s_wk3 = unopened_sim(capital=500000.0)
 _wk3_id = "sc2_notation_decimal_fraction"
 _wk3_n = NODES[_wk3_id]
 check("the small-paced project used for this test really is small-paced "
@@ -196,7 +195,7 @@ check("...and selling only a few idle hours does not warn either",
 # calendar floor was all that was left. Reproduced against the live
 # _waiting_on (protocol.py): with founder-hours exhausted and nothing owed,
 # it must name the calendar, not the founder's hours.
-_s_cal = sim()
+_s_cal = unopened_sim()
 _cal_id = next(node_id for node_id in NODES if NODES[node_id]["yrs"] >= 2)
 _cal_st = dict(ph_left=0.0, yrs=0.5, spent=100.0, cost_left=0.0)
 _s_cal.active[_cal_id] = _cal_st
@@ -216,7 +215,7 @@ check("a project with 100% of its hours spent and 0 still owed reports "
 # reading lab_left, so the two disagreed. Once a project has drawn
 # everything it will ever draw from a trade, losing that trade from the
 # market must not be able to kill the project.
-_s_eng = sim(capital=500000.0)
+_s_eng = sim(capital=500000.0, surveyed=())
 _eng_id = "ag2_cold_store"
 check("ag2_cold_store really does need engineer hours, so this test means "
       "something", NODES[_eng_id]["lab"].get("engineer", 0) > 0, NODES[_eng_id]["lab"])
@@ -235,7 +234,7 @@ check("a project that has already drawn everything it needed from a trade "
       _s_eng.log[_eng_log_before:])
 # The other half: a project that genuinely still owes a trade something is
 # still correctly caught and warned before it is abandoned.
-_s_eng2 = sim(capital=500000.0)
+_s_eng2 = sim(capital=500000.0, surveyed=())
 _s_eng2.active[_eng_id] = dict(ph_left=50.0, yrs=0.0, spent=0.0, cost_left=100.0,
                                lab_left={"engineer": 200.0})
 _eng2_log_before = len(_s_eng2.log)
@@ -264,7 +263,7 @@ check("...and `why`/`state` already named the real, still-owed shortfall "
 # other active work - _waiting_on used to report only the first and drop
 # the second entirely, so a player deciding whether to fire someone could
 # not see everything that decision would still leave broken.
-_s_multi = sim(capital=500000.0)
+_s_multi = unopened_sim(capital=500000.0)
 _multi_id = next(node_id for node_id in NODES
                  if len(NODES[node_id].get("lab") or {}) >= 2 and NODES[node_id]["yrs"] >= 1)
 _multi_trades = sorted((NODES[_multi_id]["lab"] or {}).keys())
@@ -304,7 +303,7 @@ check("...and still leads with 'nobody to do the work', so 'portfolio' "
 # throttle 0.5 gives 50 hours the old way and 100 the new. A busy year with
 # the founder stretched thin is exactly when a material shortage should bite,
 # and it silently stopped biting. Nothing in this suite caught it, so:
-_s_th = sim()
+_s_th = unopened_sim()
 _th_k = next(_node_id for _node_id in ORDER if _s_th.start_reason(_node_id)[0])
 _s_th.start_project(_th_k)
 _s_th.throttle = 0.5

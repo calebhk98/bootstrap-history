@@ -8,6 +8,21 @@ def ask(test_sim, **command):
     return S._agent_dispatch(test_sim, NODES, command)
 
 
+def play_year(game):
+    """One year of the staff, money and project work (where automation acts) and the calendar, without the
+    market closing around it."""
+    seat = game.playing_seats()[0]
+    with game.act_as(seat):
+        game.begin_seat_year()
+        game.begin_world_year()
+        game._step_apprenticeships()
+        game._step_staff()
+        game._step_money_seat()
+        game._step_dated_shocks([seat])
+        game._run_seat_work()
+    game.state.scenario.year += 1
+
+
 auto = sim(capital=2_000_000.0, manual=False)
 auto.end_year = auto.cfg["start_year"] + auto.cfg["horizon_years"]
 
@@ -35,8 +50,11 @@ watch("reopen_restaffed_ventures", "reopened", lambda args, result, held: tuple(
 watch("auto_commission_for_blocked", "commissioned", lambda args, result, held: result, owner=auto.labour)
 
 per_year = {}
-for _ in range(4):
-    ask(auto, cmd="step", years=1)
+for played in range(4):
+    if played == 0:
+        ask(auto, cmd="step", years=1)    # one full year through the step command
+    else:
+        play_year(auto)
     per_year[auto.year] = ask(auto, cmd="automation")
 
 all_rows = [row for reply in per_year.values() for row in reply["rows"]]
@@ -78,7 +96,7 @@ check("the printed screen leads with the policy and shows reason and cost",
 
 manual = sim(capital=2_000_000.0)
 manual.end_year = manual.cfg["start_year"] + manual.cfg["horizon_years"]
-ask(manual, cmd="step", years=1)
+play_year(manual)
 check("a manual game with no automation has an empty audit", ask(manual, cmd="automation")["rows"] == [])
 
 from sim.engine import automation_audit

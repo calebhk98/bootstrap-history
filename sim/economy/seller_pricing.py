@@ -16,7 +16,7 @@ from sim.constants import declare
 
 from . import goods_market
 from .accounts import ROUNDING_SHARE
-from .types import Bid, Offer
+from .types import Bid, Offer, is_edge
 
 SEARCH_POINTS = declare(
     "SEARCH_POINTS", 48, kind="temporary_heuristic", unit="reservation prices tried per seller per market",
@@ -79,19 +79,21 @@ def _candidates(rivals: Sequence[Offer], last_price: Optional[float], unit_value
 
 def best_reservation(bids: Sequence[Bid], rivals: Sequence[Offer], offer: Offer, unit_value: float,
                      last_price: Optional[float], ceiling: float = math.inf, floor: float = 0.0,
-                     current: Optional[float] = None) -> Optional[float]:
+                     current: Optional[float] = None, buyers: Optional[goods_market.Buyers] = None) -> Optional[float]:
     """The reservation, between `floor` and `ceiling`, that maximises the seller's profit against the book, or
     None when the seller does not move the price or nothing beats keeping `current` (the price-taking ask;
-    the ceiling when not given). A choice above the ask withholds units, which stay unsold."""
-    without = _clear(bids, rivals, offer, None, last_price)
-    cleared = {0.0: _clear(bids, rivals, offer, 0.0, last_price)}    # each reservation is cleared once
-    if not _price_moved(without, cleared[0.0]):
+    the ceiling when not given). A choice above the ask withholds units, which stay unsold. `buyers` is
+    `goods_market.Buyers(bids, last_price)` when the caller searches for several sellers in one market."""
+    clear_at = _book_clearing(bids, rivals, offer, last_price, buyers)
+    without_price = clear_at(None)[1]
+    cleared = {0.0: clear_at(0.0)}    # each reservation is cleared once
+    if not _prices_differ(without_price, cleared[0.0][1]):
         return None
 
     def profit(reservation: float) -> float:
         if reservation not in cleared:
-            cleared[reservation] = _clear(bids, rivals, offer, reservation, last_price)
-        sold, price = _sold_and_price(cleared[reservation], offer.seller)
+            cleared[reservation] = clear_at(reservation)
+        sold, price = cleared[reservation]
         return (price - unit_value) * sold
 
     if current is None:
@@ -105,3 +107,25 @@ def best_reservation(bids: Sequence[Bid], rivals: Sequence[Offer], offer: Offer,
         if candidate_profit > best_profit + ROUNDING_SHARE * max(abs(best_profit), 1e-300):
             best, best_profit = reservation, candidate_profit
     return best
+
+
+def _prices_differ(without: float, with_it: float) -> bool:
+    return abs(with_it - without) > ROUNDING_SHARE * max(abs(with_it), abs(without))
+
+
+def _book_clearing(bids: Sequence[Bid], rivals: Sequence[Offer], offer: Offer, last_price: Optional[float],
+                   buyers: Optional[goods_market.Buyers] = None):
+    """reservation (None: no offer) -> (what the seller sells, clearing price), the same figures `_clear` gives;
+    the buyers and the rivals are sorted once for every reservation tried."""
+    if is_edge(offer.seller):
+        return lambda reservation: _sold_and_price(_clear(bids, rivals, offer, reservation, last_price), offer.seller)
+    if buyers is None:
+        buyers = goods_market.Buyers(bids, last_price)
+    ordered = goods_market.in_clearing_order(rivals)
+
+    def clear_at(reservation):
+        offers = ordered if reservation is None else goods_market.with_offer(
+            ordered, replace(offer, reservation_price=reservation))
+        price, sold = goods_market.price_and_sold(buyers, offers, offer.seller)
+        return sold, price
+    return clear_at

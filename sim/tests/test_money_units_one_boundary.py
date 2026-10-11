@@ -1,5 +1,6 @@
 """Every money figure reaches the player in the civilisation's own coin
 through one conversion: labour hours -> civilisation money."""
+import contextlib
 import copy
 import random
 import unittest
@@ -65,10 +66,19 @@ def takings_per_wage(sim, node_id):
     return sim.concern_takings(node_id, 1.0) / factors / labourer_annual_wage(sim)
 
 
-def open_concern(sim, node_id):
+@contextlib.contextmanager
+def opened_concern(sim, node_id):
+    """`node_id` known and running on a shared game for the duration of the block; the game's sets are put back after."""
+    done_before, operating_before = set(sim.done), set(sim.operating)
     sim.done.add(node_id)
     sim.operating.add(node_id)
     sim._done_changed()
+    try:
+        yield
+    finally:
+        sim.done.intersection_update(done_before)
+        sim.operating.intersection_update(operating_before)
+        sim._done_changed()
 
 
 class RevenueIsInTheCivilisationsCoin(unittest.TestCase):
@@ -149,9 +159,9 @@ class EconomyWorksWithAnyCoin(unittest.TestCase):
 
     def test_running_revenue_is_a_sane_multiple_of_a_labourers_wage_everywhere(self):
         for name in ALL_CIVS:
-            sim = build(data.load_civ(name))
-            open_concern(sim, reference_concern(sim))
-            years = sim.revenue() / labourer_annual_wage(sim)
+            sim = plain(name)
+            with opened_concern(sim, reference_concern(sim)):
+                years = sim.revenue() / labourer_annual_wage(sim)
             self.assertGreater(years, 0.01, name)
             self.assertLess(years, 5000.0, name)
 
@@ -159,26 +169,25 @@ class EconomyWorksWithAnyCoin(unittest.TestCase):
 class CoinMassRescalesEveryFigure(unittest.TestCase):
 
     def test_every_money_figure_scales_with_the_coin(self):
-        base = build(data.load_civ("rome_100ad"))
-        heavier = build(civ_with_coin_scale("rome_100ad", COIN_SCALE))
+        base = plain("rome_100ad")
+        heavier = plain("heavier_rome")
         node_id = reference_concern(base)
-        for sim in (base, heavier):
-            open_concern(sim, node_id)
-        figures = {
-            "purse": lambda sim: sim.capital,
-            "labourer wage": labourer_annual_wage,
-            "project cost": lambda sim: sim.project_cost(node_id),
-            "takings": lambda sim: sim.concern_takings(node_id, 1.0),
-            "revenue": lambda sim: sim.revenue(),
-            "wheat": lambda sim: sim._material_prices()["wheat_kg"],
-            "forest per hectare": lambda sim: sim.FOREST_COST_PER_HA,
-            "slave base price": lambda sim: sim.labour.SLAVE_BASE_PRICE,
-            "node upkeep": lambda sim: sim.nodes[node_id]["up"],
-            "node capital": lambda sim: sim.nodes[node_id]["cap"],
-        }
-        for label, figure in figures.items():
-            self.assertAlmostEqual(figure(heavier) / figure(base), 1.0 / COIN_SCALE,
-                                   delta=1e-6, msg=label)
+        with opened_concern(base, node_id), opened_concern(heavier, node_id):
+            figures = {
+                "purse": lambda sim: sim.capital,
+                "labourer wage": labourer_annual_wage,
+                "project cost": lambda sim: sim.project_cost(node_id),
+                "takings": lambda sim: sim.concern_takings(node_id, 1.0),
+                "revenue": lambda sim: sim.revenue(),
+                "wheat": lambda sim: sim._material_prices()["wheat_kg"],
+                "forest per hectare": lambda sim: sim.FOREST_COST_PER_HA,
+                "slave base price": lambda sim: sim.labour.SLAVE_BASE_PRICE,
+                "node upkeep": lambda sim: sim.nodes[node_id]["up"],
+                "node capital": lambda sim: sim.nodes[node_id]["cap"],
+            }
+            for label, figure in figures.items():
+                self.assertAlmostEqual(figure(heavier) / figure(base), 1.0 / COIN_SCALE,
+                                       delta=1e-6, msg=label)
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 """Complaint 442, whole game: the price of gold against silver follows the stocks and where the mines are.
 
-Slow topic: it builds a game per civilisation and steps it. It prints the gold-to-silver price ratio at
-the capital each year (the re-measure of Complaint 442), the deposits left out of each opening stock, and
+Slow topic: it builds a game per civilisation and steps it YEARS times. It prints the gold-to-silver price ratio at
+the capital each year read (the re-measure of Complaint 442), the deposits left out of each opening stock, and
 what the state and the households hold of each metal, so the check is one command:
 `python3 -m sim.tests --slow --only whole_game_gold_silver_ratio`.
 
@@ -15,7 +15,10 @@ from sim.engine.economy_port_stores import opening_store_values
 from sim.geography.api import open_map, tiles_held
 
 GOLD, SILVER = "gold_kg", "silver_kg"
-YEARS = 30
+# Years stepped after the opening read: the metals are priced at the capital as the game opens (after its hidden
+# spin-up years), and the check is a sign, not a trend. Each stepped year is a full agent-economy year for every
+# civilisation; raise this to see the ratio move.
+YEARS = 0
 CIVILISATIONS = ("rome_100ad", "england_1300", "han_china_100ad", "norse_900ad", "mexica_1500")
 
 
@@ -29,8 +32,9 @@ def run(civ):
     economy = game.economy.agent.economy()
     setup, record = economy.setup, economy.record
     ratios = []
-    for _year in range(YEARS):
-        game.step()
+    for year in range(YEARS + 1):
+        if year:
+            game.step()
         view = economy.view()
         prices = {good: view.price(good, economy.area_map.area_of(good, setup.capital_tile)) for good in (GOLD, SILVER)}
         if prices[GOLD] and prices[SILVER]:

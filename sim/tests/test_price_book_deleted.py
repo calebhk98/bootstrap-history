@@ -5,8 +5,6 @@ defaults, a gated material is priced as if the technology were held (labelled
 transitional), and nothing in the engine opens a price file.
 """
 
-QUICK_TOPIC = True
-
 import os
 import unittest
 

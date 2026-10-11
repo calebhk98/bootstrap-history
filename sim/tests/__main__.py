@@ -10,6 +10,11 @@ A topic belongs in the quick tier when it runs in well under a second inside an 
 started process: it tests functions or small fixtures, not a whole game over years. New topics
 start outside it, so the quick run stays quick by default.
 
+`--topic-seconds N` (default TOPIC_SECONDS) fails any topic, or quick batch, still running after N seconds and
+stops it with its subprocesses, so a run always ends and names what is too slow. Before the first topic, one
+game of every civilisation is built, so spin-ups are on disk and no topic pays for one. Only the forked
+parallel run enforces the limit.
+
 `--timing` adds a per-topic table to the summary: wall seconds, share of the run, and how many
 checks each topic bought. It changes nothing about which checks run.
 
@@ -92,35 +97,55 @@ def _run_topic(slug, harness):
     if not cases.countTestCases():
         return
 
+    # One suite per class, so setUpClass runs once for the class rather than once per test (a class fixture
+    # often builds a game); each test is still recorded as its own check, in order.
+    outcomes = _CaseOutcomes()
+    for test_class in own_classes:
+        unittest.TestSuite(loader.loadTestsFromTestCase(test_class)).run(outcomes)
     for case in _flatten(cases):
-        result = unittest.TestResult()
-        # WRAPPED IN A ONE-CASE SUITE, NOT `case.run(result)` DIRECTLY.
-        # Running a TestCase instance straight bypasses setUpClass and
-        # tearDownClass entirely - those are invoked by the SUITE, not by
-        # the case - so a module using the ordinary unittest idiom
-        #
-        #     @classmethod
-        #     def setUpClass(cls): cls.data = load()
-        #
-        # came back with AttributeError on every single test here, while
-        # passing perfectly under `python3 -m unittest`. That combination is
-        # the worst kind of trap: an author verifies with the standard tool,
-        # sees green, and only this runner disagrees. It cost one agent a
-        # whole test module before it was noticed, and three modules in this
-        # directory already use the idiom.
-        #
-        # TestSuite.run does the class fixture handling, so a one-case suite
-        # gets it right. The cost is that setUpClass runs once per test
-        # rather than once per class, which is correct-but-slower; every
-        # current user of it loads a JSON file, so it does not matter. If a
-        # module ever needs a genuinely expensive class fixture, group by
-        # class here instead of paying it per test.
-        unittest.TestSuite([case]).run(result)
-        problems = result.errors + result.failures
+        problem = outcomes.problems.get(case.id(), outcomes.class_problems.get(type(case).__name__))
+        harness._LAST_AT = time.time() - outcomes.seconds.get(case.id(), 0.0)    # check() times the gap before it
         harness.check(
             "%s: %s" % (slug, case.id().rsplit(".", 1)[-1].replace("_", " ")),
-            not problems,
-            problems[0][1].strip().splitlines()[-1] if problems else "")
+            problem is None,
+            problem.strip().splitlines()[-1] if problem else "")
+
+
+class _CaseOutcomes(unittest.TestResult):
+    """Each test's error or failure text by test id, and a class fixture's failure by class name (its tests
+    did not run)."""
+
+    def __init__(self):
+        super().__init__()
+        self.problems, self.class_problems, self.seconds, self._started = {}, {}, {}, 0.0
+
+    def startTest(self, test):
+        super().startTest(test)
+        self._started = time.time()
+
+    def stopTest(self, test):
+        super().stopTest(test)
+        self.seconds[test.id()] = time.time() - self._started
+
+    def _record(self, test, error):
+        text = self._exc_info_to_string(error, test)
+        if isinstance(test, unittest.TestCase):
+            self.problems.setdefault(test.id(), text)
+        else:       # a setUpClass/tearDownClass failure arrives as a placeholder naming "setUpClass (module.Class)"
+            self.class_problems.setdefault(str(test).rsplit(".", 1)[-1].rstrip(")"), text)
+
+    def addError(self, test, err):
+        super().addError(test, err)
+        self._record(test, err)
+
+    def addFailure(self, test, err):
+        super().addFailure(test, err)
+        self._record(test, err)
+
+    def addSubTest(self, test, subtest, err):
+        super().addSubTest(test, subtest, err)
+        if err is not None:
+            self._record(test, err)
 
 
 def _flatten(suite):
@@ -158,6 +183,10 @@ def _print_topic_timing(topic_costs):
           % (measured_total, 100.0,
              sum(count for _, _, count in topic_costs), len(topic_costs)))
 
+
+# A topic that takes longer than this fails: a suite nobody waits for tests nothing. --topic-seconds sets it.
+TOPIC_SECONDS = 120.0
+TIMED_OUT = "timed out"
 
 _TIMES_FILE = os.path.join(cache_root.cache_root(), "test_topic_seconds.json")
 
@@ -240,14 +269,17 @@ def _quick_batches(slugs, seconds_before, count):
     """Quick topics shared out over `count` workers, longest first onto the least loaded."""
     batches = [[] for _ in range(max(1, min(count, len(slugs))))]
     loads = [0.0] * len(batches)
-    for slug in sorted(slugs, key=lambda slug: -seconds_before.get(slug, 0.0)):
+    # A topic with no remembered time counts as a typical one, so a first run still spreads the work.
+    known = sorted(seconds_before[slug] for slug in slugs if slug in seconds_before)
+    unknown_guess = max(known[len(known) // 2] if known else 0.0, 0.01)
+    for slug in sorted(slugs, key=lambda slug: -seconds_before.get(slug, unknown_guess)):
         lightest = loads.index(min(loads))
         batches[lightest].append(slug)
-        loads[lightest] += seconds_before.get(slug, 0.0)
+        loads[lightest] += seconds_before.get(slug, unknown_guess)
     return [batch for batch in batches if batch]
 
 
-def _report_progress(slugs, results, progress):
+def _report_progress(slugs, results, progress, missing="crashed"):
     """One stderr line per finished topic as it finishes, and its time remembered at once, so a
     long run shows where it is and an interrupted one still leaves its timings."""
     with progress["lock"]:
@@ -255,7 +287,7 @@ def _report_progress(slugs, results, progress):
             progress["done"] += 1
             result = results.get(slug)
             if result is None:
-                state = "crashed"
+                state = missing
             else:
                 state = "%.1fs%s" % (result["seconds"],
                                      " FAIL" if result["failures"] or result["crash"] else "")
@@ -276,6 +308,7 @@ def _fork_topics(slugs, harness, result_dir, held_slots=()):
     if pid:
         return pid, result_path, error_path
     status = 1
+    os.setpgid(0, 0)            # its own process group, so a topic stopped for time takes its subprocesses with it
     for slot in held_slots:     # the parent holds the slots; a copy here would keep them past their worker
         machine_slots.release(slot)
     os.environ[machine_slots.INSIDE_SLOT_ENV] = "1"
@@ -298,14 +331,58 @@ def _fork_topics(slugs, harness, result_dir, held_slots=()):
         os._exit(status)
 
 
-def _run_topics_forked(run_now, harness, jobs):
+def _warm_starts(harness, jobs):
+    """Build one game of every civilisation, `jobs` at a time in forked children, so each start's spin-up is
+    on disk before any topic's time limit runs; then warm this process with the default game."""
+    starts = sorted(name[:-len(".json")] for name in os.listdir(os.path.join(_REPO_ROOT, "data", "civilizations"))
+                    if name.endswith(".json") and not name.startswith("_"))
+    running = set()
+    for civ in starts:
+        if len(running) >= jobs:
+            running.discard(os.wait()[0])
+        pid = os.fork()
+        if pid == 0:
+            status = 0
+            try:
+                harness.sim(civ=civ)
+            except BaseException:
+                traceback.print_exc()
+                status = 1
+            os._exit(status)
+        running.add(pid)
+    while running:
+        running.discard(os.wait()[0])
+    harness.sim()
+
+
+def _wait_for_a_worker(running, topic_seconds):
+    """(pid, wait status, stopped for time) of the next worker to finish; a worker past its time is killed
+    with its process group."""
+    while True:
+        pid, wait_status = os.waitpid(-1, os.WNOHANG)
+        if pid:
+            return pid, wait_status, pid in running and running[pid][5]
+        now = time.time()
+        for worker, entry in running.items():
+            if not entry[5] and now - entry[4] > topic_seconds:
+                running[worker] = entry[:5] + (True,)
+                try:
+                    os.killpg(worker, 9)
+                except OSError:
+                    pass
+        time.sleep(0.05)
+
+
+def _run_topics_forked(run_now, harness, jobs, topic_seconds):
     """Run topics in children forked from this process, `jobs` at a time: each other topic in a
-    child of its own, the quick ones shared out over a few."""
-    harness.sim()       # warm what every game build shares before the first fork
+    child of its own, the quick ones shared out over a few. A child still running after `topic_seconds` is
+    stopped and its unfinished topics fail."""
+    quick = set(harness.QUICK_TOPICS)
+    if any(slug not in quick for slug in run_now):
+        _warm_starts(harness, jobs)     # quick topics build no game
     seconds_before = _load_topic_seconds()
     known = sorted(seconds_before.values())
     unknown_guess = known[len(known) // 2] if known else 0.0
-    quick = set(harness.QUICK_TOPICS)
     pending = [[slug] for slug in run_now if slug not in quick]
     pending += _quick_batches([slug for slug in run_now if slug in quick], seconds_before, jobs)
     pending.sort(key=lambda slugs: -sum(seconds_before.get(slug, unknown_guess) for slug in slugs))
@@ -321,11 +398,11 @@ def _run_topics_forked(run_now, harness, jobs):
                 slugs = pending.pop(0)
                 pid, result_path, error_path = _fork_topics(
                     slugs, harness, result_dir, [entry[3] for entry in running.values()])
-                running[pid] = (slugs, result_path, error_path, slot)
-            pid, wait_status = os.wait()
+                running[pid] = (slugs, result_path, error_path, slot, time.time(), False)
+            pid, wait_status, stopped = _wait_for_a_worker(running, topic_seconds)
             if pid not in running:
                 continue
-            slugs, result_path, error_path, slot = running.pop(pid)
+            slugs, result_path, error_path, slot, started_at, _ = running.pop(pid)
             machine_slots.release(slot)
             results = {}
             try:
@@ -338,9 +415,14 @@ def _run_topics_forked(run_now, harness, jobs):
                     error_text = handle.read()
             except OSError:
                 error_text = ""
+            if stopped:
+                error_text = TIMED_OUT + " after %.0fs (--topic-seconds %g)" % (time.time() - started_at, topic_seconds)
+                for slug in slugs:
+                    if slug not in results:     # remembered as slow, so the next run starts it first
+                        _save_topic_seconds([(slug, time.time() - started_at, 0)])
             completed = subprocess.CompletedProcess(slugs, os.waitstatus_to_exitcode(wait_status),
                                                     "", error_text)
-            _report_progress(slugs, results, progress)
+            _report_progress(slugs, results, progress, TIMED_OUT if stopped else "crashed")
             for slug in slugs:
                 outcomes[slug] = (completed, results.get(slug))
     return _merge_outcomes(run_now, outcomes, harness)
@@ -387,7 +469,8 @@ def _merge_outcomes(run_now, outcomes, harness):
     for slug in run_now:
         completed, result = outcomes[slug]
         if result is None:
-            message = "%s: worker crashed (exit %s)" % (slug, completed.returncode)
+            message = ("%s: %s" % (slug, TIMED_OUT) if completed.stderr.startswith(TIMED_OUT)
+                       else "%s: worker crashed (exit %s)" % (slug, completed.returncode))
             print("  %-58s FAIL %s" % (message, completed.stderr.strip()[-400:]))
             harness.CHECKS_RUN.append((message, 0.0))
             harness.FAILURES.append(message)
@@ -407,6 +490,15 @@ def _merge_outcomes(run_now, outcomes, harness):
         topic_costs.append((slug, result["seconds"], len(result["checks"])))
     _save_topic_seconds(topic_costs)
     return topic_costs
+
+
+def _parse_topic_seconds(argv):
+    for i, arg in enumerate(argv):
+        if arg == "--topic-seconds" and i + 1 < len(argv):
+            return float(argv[i + 1])
+        if arg.startswith("--topic-seconds="):
+            return float(arg.split("=", 1)[1])
+    return TOPIC_SECONDS
 
 
 def _parse_only(argv):
@@ -462,7 +554,7 @@ def main(argv=None):
     topic_costs = []
     if harness.JOBS > 1 and len(run_now) > 1 and hasattr(os, "fork"):
         topic_costs = _run_topics_forked(
-            [slug for slug in TOPICS if slug in run_now], harness, harness.JOBS)
+            [slug for slug in TOPICS if slug in run_now], harness, harness.JOBS, _parse_topic_seconds(argv))
     elif harness.JOBS > 1 and len(run_now) > 1:
         topic_costs = _run_topics_parallel(
             [slug for slug in TOPICS if slug in run_now], harness, harness.JOBS)

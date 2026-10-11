@@ -13,7 +13,7 @@ from .harness import *  # noqa: F401,F403
 
 # --- committed_spend() is the exact sum `money` already printed, not a
 # second total that could drift from it.
-s = sim(capital=400.0)
+s = sim(capital=400.0, surveyed=())
 _front_page_game = s
 S._agent_dispatch(s, NODES, {"cmd": "start", "id": "scientific_method"})
 S._agent_dispatch(s, NODES, {"cmd": "start", "id": "units_standards"})
@@ -45,7 +45,7 @@ check("money also states the real financing ceiling, the same number "
 # that a household whose (funding_capacity() - committed_spend()) clears
 # that number gets a new project and one whose does not, does not, with
 # nothing else about the household different between the two runs.
-def _start_room(funding_capacity, committed_spend, project_cost=9000.0):
+def _start_room(funding_capacity, committed_spend, project_cost=9000.0, whole_year=False):
     """A fresh un-manual household with funding_capacity(), committed_
     spend() and project_cost() all pinned to controlled numbers, stepped
     once. Pinning project_cost() to one number for every candidate removes
@@ -54,15 +54,16 @@ def _start_room(funding_capacity, committed_spend, project_cost=9000.0):
     any room) - with every candidate priced identically, whether ANYTHING
     starts is governed purely by whether the pinned room clears the pinned
     price."""
-    household = sim(capital=1e7, manual=False)
+    household = sim(capital=1e7, manual=False, surveyed=())
     household.project_cost = lambda node_id: project_cost
     household.funding_capacity = lambda: funding_capacity
     household.committed_spend = lambda: committed_spend
-    household.step()
+    # the project-start phase alone, unless the whole year is the thing being checked
+    household.step() if whole_year else household._step_start_projects()
     return household
 
 
-_room_clears = _start_room(funding_capacity=10000.0, committed_spend=0.0)
+_room_clears = _start_room(funding_capacity=10000.0, committed_spend=0.0, whole_year=True)
 check("a household whose funding_capacity() - committed_spend() clears "
       "every candidate's (pinned) project_cost() starts new work this year",
       len(_room_clears.active) > 0, list(_room_clears.active))
@@ -83,11 +84,11 @@ check("...and a household with huge funding_capacity() but committed_spend() "
 # covers the second alone only just short. on_credit prices the second start
 # alone; the aggregate warning must also count the first's unpaid cost, which
 # draws on the same purse in the same year.
-_probe = sim()
+_probe = sim(surveyed=())
 _sci_cost = _probe.project_cost("scientific_method")
 _units_cost = _probe.project_cost("units_standards")
 _purse = round(_units_cost) - 44.0     # just short of the second project alone
-s = sim(capital=_purse)
+s = sim(capital=_purse, surveyed=())
 r_sci = S._agent_dispatch(s, NODES, {"cmd": "start", "id": "scientific_method"})
 check("set-up: scientific_method alone needed no warning on a purse just short of units_standards",
       r_sci["ok"] and "total_committed_across_active_work" not in r_sci, r_sci)
@@ -118,8 +119,8 @@ check("...and the credit this combination is likely to draw is bigger than "
 # --- NO WARNING for a single project, however large: the aggregate question
 # only makes sense once more than one thing is drawing on the same purse,
 # and on_credit above already answers the single-project case on its own.
-_single_cost = sim().project_cost("arithmetic_positional")
-s = sim(capital=round(_single_cost * 0.8))
+_single_cost = _probe.project_cost("arithmetic_positional")
+s = sim(capital=round(_single_cost * 0.8), surveyed=())
 s.done.add("sc2_notation_positional")
 s._done_changed()
 r_one = S._agent_dispatch(s, NODES, {"cmd": "start", "id": "arithmetic_positional"})
@@ -129,7 +130,7 @@ check("a single active project never gets the aggregate warning - on_credit "
 
 # --- NO WARNING when there is genuinely room: a rich founder starting the
 # same two foundations is not walking into anything.
-s = sim(capital=1e6)
+s = sim(capital=1e6, surveyed=())
 S._agent_dispatch(s, NODES, {"cmd": "start", "id": "scientific_method"})
 r_rich = S._agent_dispatch(s, NODES, {"cmd": "start", "id": "units_standards"})
 check("plenty of cash on hand: no aggregate warning even with two things "

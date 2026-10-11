@@ -30,14 +30,18 @@ WEALTH = {"form": "wealth_tax", "basis": "coin_stock", "rate": 0.01}
 
 # ---- every civilisation declares its forms, each with a rate, a basis and a source ----------------
 for civ_id in ("rome_100ad", "han_china_100ad", "norse_900ad", "mexica_1500", "england_1300"):
-    forms = sim(civ=civ_id).civ.get("state_revenue")
+    built = sim(civ=civ_id)
+    if civ_id == "rome_100ad":
+        rome = built   # shared by the read-only and sequential checks below
+    forms = built.civ.get("state_revenue")
     check("%s declares the forms its state raises revenue by" % civ_id, bool(forms), forms)
     check("%s's forms each name a basis the engine models, a rate and where the rate comes from" % civ_id,
           all(form["basis"] in revenue.BASES and form["rate"] > 0.0 and form.get("_internal", {}).get("source")
               for form in forms or []), forms)
 
 # ---- revenue is the sum of the forms assessed on their bases --------------------------------------
-game = sim()
+game = rome
+opening_trade = copy.deepcopy(game.state.economy.foreign_trade_by_year)
 game.state.holdings.farm_last_harvest_kg = HARVEST_KG
 year = game.state.scenario.year
 game.state.economy.foreign_trade_by_year = {str(year - 1): {"in": 6.0e9, "out": 2.0e9}}
@@ -63,24 +67,23 @@ check("the state's revenue is the sum of the forms",
       (world.state_revenue(), sum(expected.values())))
 
 # ---- nothing declared, nothing raised; the old fitted share no longer sets it ----------------------
-none = declared(sim(), [])
+none = declared(game, [])
 check("a state that declares no form raises no revenue", none.state_revenue() == 0.0, none.state_revenue())
-fitted = sim()
+fitted = game
 before = declared(fitted, [POLL]).state_revenue()
 fitted.civ["starting_tax_share"] = 0.9
 check("the civilisation's fitted tax share does not set the state's revenue",
       abs(SimWorld(fitted).state_revenue() - before) < 1e-9 * before, (SimWorld(fitted).state_revenue(), before))
-bigger = sim()
-bigger.state.holdings.farm_last_harvest_kg = 2.0 * HARVEST_KG
-smaller = sim()
-smaller.state.holdings.farm_last_harvest_kg = HARVEST_KG
-check("a larger harvest yields a larger land tax",
-      declared(bigger, [LAND]).state_revenue() > 1.9 * declared(smaller, [LAND]).state_revenue())
-quiet = sim()
-busy = sim()
-busy.state.economy.foreign_trade_by_year = {str(busy.state.scenario.year - 1): {"in": 6.0e9, "out": 2.0e9}}
+game.state.holdings.farm_last_harvest_kg = 2.0 * HARVEST_KG
+revenue_of_bigger = declared(game, [LAND]).state_revenue()
+game.state.holdings.farm_last_harvest_kg = HARVEST_KG
+revenue_of_smaller = declared(game, [LAND]).state_revenue()
+check("a larger harvest yields a larger land tax", revenue_of_bigger > 1.9 * revenue_of_smaller)
+game.state.economy.foreign_trade_by_year = opening_trade
+quiet_revenue = declared(game, [IMPORTS, EXPORTS]).state_revenue()
+game.state.economy.foreign_trade_by_year = {str(game.state.scenario.year - 1): {"in": 6.0e9, "out": 2.0e9}}
 check("trade duties follow the trade that crossed the border",
-      declared(quiet, [IMPORTS, EXPORTS]).state_revenue() == 0.0 < declared(busy, [IMPORTS, EXPORTS]).state_revenue())
+      quiet_revenue == 0.0 < declared(game, [IMPORTS, EXPORTS]).state_revenue())
 
 # ---- in-kind revenue arrives as goods and goes through the goods market ---------------------------
 kind = sim()

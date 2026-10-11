@@ -45,8 +45,10 @@ def setup_digest(setup):
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
-def spin_up_key(setup):
+def spin_up_key(setup, years=None):
     """The cache key of the spun-up record for `setup`: its digest, with the data files and the source
-    the spin-up can run."""
-    return solve_cache.solve_key({"agent_economy_spin_up": setup_digest(setup)},
-                                 source_modules=SPIN_UP_SOURCE_MODULES)
+    the spin-up can run, and the spin-up's years when they are not the declared ones."""
+    inputs = {"agent_economy_spin_up": setup_digest(setup)}
+    if years is not None:
+        inputs["years"] = list(years)
+    return solve_cache.solve_key(inputs, source_modules=SPIN_UP_SOURCE_MODULES)

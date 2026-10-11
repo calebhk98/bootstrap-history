@@ -228,28 +228,38 @@ class DivergenceTests(unittest.TestCase):
         self.assertEqual(reply["population"]["now"], round(sim.population.total))
 
     def test_a_built_technology_is_listed(self):
-        sim = _fresh_sim()
+        sim = _shared_sim()
         candidate = next(node_id for node_id in sorted(_NODES)
                          if node_id not in sim.done)
         sim.done.add(candidate)
         sim._done_changed()
-        reply = _ask(sim, "divergence")
+        try:
+            reply = _ask(sim, "divergence")
+        finally:
+            sim.done.discard(candidate)
+            sim._done_changed()
         self.assertIn(candidate, [row["id"] for row in reply["technologies_you_built"]])
 
     def test_literacy_and_indices_against_the_start(self):
-        sim = _fresh_sim()
+        sim = _shared_sim()
         start_literacy = float(sim.civ["literacy_general"])
         sim.civ["literacy_general"] = start_literacy + 0.1
-        reply = _ask(sim, "divergence")
+        try:
+            reply = _ask(sim, "divergence")
+        finally:
+            sim.civ["literacy_general"] = start_literacy
         self.assertEqual(reply["literacy_general"]["start"], round(start_literacy, 4))
         self.assertEqual(reply["literacy_general"]["now"], round(start_literacy + 0.1, 4))
         self.assertEqual(reply["wage_index"]["now"], round(sim.wage_index, 4))
         self.assertEqual(reply["price_index"]["now"], round(sim.price_index, 4))
 
     def test_dated_events_are_sorted_by_status(self):
-        sim = _fresh_sim("rome_100ad")
+        sim = _shared_sim("rome_100ad")
         sim.year += 200
-        reply = _ask(sim, "divergence")
+        try:
+            reply = _ask(sim, "divergence")
+        finally:
+            sim.year -= 200
         statuses = {row["status"] for row in reply["dated_events"]}
         self.assertIn("happened", statuses)
         self.assertTrue(statuses <= {"happened", "under way", "upcoming",

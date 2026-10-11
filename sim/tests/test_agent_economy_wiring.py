@@ -25,18 +25,18 @@ check("after the hidden spin-up households expect stable prices, so the rebased 
 default = sim()
 check("a game that says nothing runs on the agent economy", default.economy.agent is not None)
 
-prices, wages = [], []
-for _year in range(2):
-    rome.step()
-    prices.append(rome.economy.material_price("wheat_kg"))
-    wages.append(rome.economy.labour.quote("labourer"))
+# the opening price, then the price after the first year
+prices, wages = [rome.economy.material_price("wheat_kg")], []
+rome.step()
+prices.append(rome.economy.material_price("wheat_kg"))
+wages.append(rome.economy.labour.quote("labourer"))
 old_wheat = rome._material_prices()["wheat_kg"]
-check("wheat is priced by the agent economy, not at the engine's own cost", abs(prices[0] / old_wheat - 1.0) > 1e-6,
-      "agent %r engine %r" % (prices[0], old_wheat))
+check("wheat is priced by the agent economy, not at the engine's own cost", abs(prices[-1] / old_wheat - 1.0) > 1e-6,
+      "agent %r engine %r" % (prices[-1], old_wheat))
 check("the wheat price moves from year to year", len({round(price, 9) for price in prices}) > 1, prices)
 opening_wage = rome.state.economy.agent_economy["opening"]["wages"]["labourer"]
-check("the labourer's wage comes from the agent economy's labour market", abs(wages[0] / opening_wage - 1.0) > 1e-6,
-      (wages[0], opening_wage))
+check("the labourer's wage comes from the agent economy's labour market", abs(wages[-1] / opening_wage - 1.0) > 1e-6,
+      (wages[-1], opening_wage))
 
 economy = rome.economy.agent.economy()
 report = economy.record.book.check_conservation(1e-9)
@@ -70,11 +70,27 @@ check("the founder's concern output is offered without the old price table, at a
       founder_offers and all(0.0 <= offer.reservation_price < float("inf") for offer in founder_offers),
       founder_offers[:2])
 
-unbroken = agent_game("rome_100ad")
+played = {}
+for civ in ("han_china_100ad", "norse_900ad"):
+    game = played[civ] = agent_game(civ)
+    game.step()
+    book = game.economy.agent.economy().record.book
+    check("%s plays a year on the agent economy with money conserved" % civ,
+          book.check_conservation(1e-9).ok)
+
+# One owner for credit: the founder's room and the rate both come from the agent economy's market.
+credit_game = rome
+agent_market = credit_game.economy.agent.economy()
+check("on the agent economy the credit room is the agent market's, as the rate is",
+      credit_game.market_credit_room(credit_game.state.acting_seat) == economy_api.credit_room(agent_market, credit_game.state.acting_seat)
+      and credit_game.market_rate() == economy_api.interest_rate(agent_market),
+      (credit_game.market_credit_room(credit_game.state.acting_seat), economy_api.credit_room(agent_market, credit_game.state.acting_seat)))
+
+# The Norse game, already a year in, is the one saved and resumed (the smallest whole game to step twice).
+unbroken = played["norse_900ad"]
 save_path = os.path.join(tempfile.mkdtemp(), "agent_save.json")
-unbroken.step()
 save_state(unbroken, save_path)
-resumed = agent_game("rome_100ad")
+resumed = agent_game("norse_900ad")
 load_state(resumed, save_path)
 unbroken.step()
 resumed.step()
@@ -82,20 +98,3 @@ check("a saved game on the agent economy resumes the same economy",
       unbroken.state.economy.agent_economy == resumed.state.economy.agent_economy)
 check("and the same game state", perf_fingerprint.digest(perf_fingerprint.state_of(unbroken))
       == perf_fingerprint.digest(perf_fingerprint.state_of(resumed)))
-
-for civ in ("han_china_100ad", "norse_900ad"):
-    game = agent_game(civ)
-    game.step()
-    book = game.economy.agent.economy().record.book
-    check("%s plays a year on the agent economy with money conserved" % civ,
-          book.check_conservation(1e-9).ok)
-
-# One owner for credit: the founder's room and the rate both come from the agent economy's market.
-credit_game = agent_game("rome_100ad")
-for _year in range(2):
-    credit_game.step()
-agent_market = credit_game.economy.agent.economy()
-check("on the agent economy the credit room is the agent market's, as the rate is",
-      credit_game.market_credit_room(credit_game.state.acting_seat) == economy_api.credit_room(agent_market, credit_game.state.acting_seat)
-      and credit_game.market_rate() == economy_api.interest_rate(agent_market),
-      (credit_game.market_credit_room(credit_game.state.acting_seat), economy_api.credit_room(agent_market, credit_game.state.acting_seat)))

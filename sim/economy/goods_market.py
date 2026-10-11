@@ -14,6 +14,7 @@ Choices:
     floor unmet. With no demand nothing sells; the price is the last price if some seller would sell
     at it, else the lowest reservation.
 """
+import bisect
 import math
 from itertools import groupby
 from operator import attrgetter, itemgetter
@@ -75,44 +76,38 @@ def _price_scale(bids: Sequence[Bid], last_price: Optional[float]) -> float:
     return last_price if last_price and last_price > 0.0 else 1.0
 
 
+class Buyers:
+    """One market's bids in clearing order with their demand schedule, built once for any number of clears."""
+
+    def __init__(self, bids: Sequence[Bid], last_price: Optional[float]):
+        self.bids = sorted(bids, key=_BID_ORDER)
+        self.schedule = DemandSchedule(self.bids)
+        self.minimum_price = MINIMUM_PRICE_SHARE_OF_REFERENCE * _price_scale(self.bids, last_price)
+        self.last_price = last_price
+
+
+def in_clearing_order(offers: Sequence[Offer]) -> List[Offer]:
+    """The offers a market clears, cheapest reservation first."""
+    return sorted((offer for offer in offers if offer.quantity > 0.0), key=_OFFER_ORDER)
+
+
+def with_offer(ordered: List[Offer], offer: Offer) -> List[Offer]:
+    """`ordered` (in clearing order) with one more offer put in its place, as `in_clearing_order` would."""
+    if offer.quantity <= 0.0:
+        return ordered
+    result = list(ordered)
+    bisect.insort(result, offer, key=_OFFER_ORDER)
+    return result
+
+
 def clear(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: AreaId,
           currency: CurrencyId, last_price: Optional[float]) -> ClearingResult:
     """Clear one market for one year. Deterministic whatever the order of `bids` and `offers`."""
-    bids = sorted(bids, key=_BID_ORDER)
-    offers = sorted((offer for offer in offers if offer.quantity > 0.0), key=_OFFER_ORDER)
-    held_price = last_price if last_price is not None else 0.0
-    if not offers:
-        return _empty(good, area, currency, held_price, bids)
-
-    minimum_price = MINIMUM_PRICE_SHARE_OF_REFERENCE * _price_scale(bids, last_price)
-    effective = [max(offer.reservation_price, minimum_price) for offer in offers]
-    schedule = DemandSchedule(bids)
-
-    demand_at_first = schedule.total_at(effective[0])
-    if math.fsum(offer.quantity for offer in offers) <= ROUNDING_SHARE * demand_at_first:
-        # what is on offer is float residue left in a stock, not supply: clearing it would print a price
-        # set by nothing a seller meant to sell
-        return _empty(good, area, currency, held_price, bids)
-    if demand_at_first <= 0.0:
-        lowest = effective[0]
-        price = held_price if last_price is not None and lowest <= last_price else lowest
-        supply = math.fsum(offer.quantity for offer, reservation in zip(offers, effective)
-                           if reservation <= max(price, minimum_price))
+    buyers = Buyers(bids, last_price)
+    bids = buyers.bids
+    price, eligible, supply, wants = _crossing(buyers, in_clearing_order(offers))
+    if eligible is None:
         return _empty(good, area, currency, price, bids, supply)
-
-    levels, running = [], 0.0
-    for reservation, group in groupby(zip(effective, offers), key=_FIRST):
-        running += math.fsum(offer.quantity for _, offer in group)
-        levels.append((reservation, running))
-    price = solve_price(levels, schedule.total_at, demand_at_first,
-                        schedule.uncapped_at if schedule.distinct_schedules() * CHEAP_PASSES_PER_BID <= len(bids) else None)
-    if schedule.price_capped:
-        price = _at_a_ceiling(price, schedule, levels, effective[0])
-
-    eligible = [(reservation, offer) for reservation, offer in zip(effective, offers)
-                if reservation <= price]
-    supply = math.fsum(offer.quantity for _, offer in eligible)
-    wants = schedule.each_at(price)
     wanted = math.fsum(wants)
     served = _ration(bids, wants, min(wanted, supply))
     traded = math.fsum(served)
@@ -126,6 +121,70 @@ def clear(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: Area
     return ClearingResult(good, area, currency, price, traded, wanted, supply, unmet, tuple(fills))
 
 
+def price_and_sold(buyers: Buyers, ordered: List[Offer], seller: str) -> Tuple[float, float]:
+    """The clearing price and what a seller that is not a book edge sells, as `clear` gives them, without
+    building fills. `ordered` is in clearing order (`in_clearing_order`, `with_offer`)."""
+    price, eligible, supply, wants = _crossing(buyers, ordered)
+    if eligible is None:
+        return price, 0.0
+    served = _ration(buyers.bids, wants, min(math.fsum(wants), supply))
+    # `_fill_sellers` for this seller's offers alone
+    remaining, sold = math.fsum(served), []
+    for _reservation, group in groupby(eligible, key=_FIRST):
+        offers = [offer for _, offer in group]
+        total = math.fsum(offer.quantity for offer in offers)
+        own = [offer.quantity for offer in offers if offer.seller == seller]
+        if remaining >= total:
+            sold.extend(own)
+            remaining -= total
+        else:
+            share = remaining / total if total > 0.0 else 0.0
+            sold.extend(quantity * share for quantity in own)
+            remaining = 0.0
+    return price, math.fsum(quantity for quantity in sold if quantity > 0.0)
+
+
+def _crossing(buyers: Buyers, offers: List[Offer]):
+    """(price, offers eligible at it, supply, each buyer's want at it) where `offers` (in clearing order) meet
+    the buyers; the eligible offers and wants are None when nothing trades, and supply is then what would
+    sell at the price."""
+    last_price = buyers.last_price
+    held_price = last_price if last_price is not None else 0.0
+    if not offers:
+        return held_price, None, 0.0, None
+
+    minimum_price = buyers.minimum_price
+    effective = [max(offer.reservation_price, minimum_price) for offer in offers]
+    schedule = buyers.schedule
+
+    demand_at_first = schedule.total_at(effective[0])
+    if math.fsum(offer.quantity for offer in offers) <= ROUNDING_SHARE * demand_at_first:
+        # what is on offer is float residue left in a stock, not supply: clearing it would print a price
+        # set by nothing a seller meant to sell
+        return held_price, None, 0.0, None
+    if demand_at_first <= 0.0:
+        lowest = effective[0]
+        price = held_price if last_price is not None and lowest <= last_price else lowest
+        supply = math.fsum(offer.quantity for offer, reservation in zip(offers, effective)
+                           if reservation <= max(price, minimum_price))
+        return price, None, supply, None
+
+    levels, running = [], 0.0
+    for reservation, group in groupby(zip(effective, offers), key=_FIRST):
+        running += math.fsum(offer.quantity for _, offer in group)
+        levels.append((reservation, running))
+    price = solve_price(levels, schedule.total_at, demand_at_first,
+                        schedule.uncapped_at if schedule.distinct_schedules() * CHEAP_PASSES_PER_BID <= len(buyers.bids)
+                        else None)
+    if schedule.price_capped:
+        price = _at_a_ceiling(price, schedule, levels, effective[0])
+
+    eligible = [(reservation, offer) for reservation, offer in zip(effective, offers)
+                if reservation <= price]
+    supply = math.fsum(offer.quantity for _, offer in eligible)
+    return price, eligible, supply, schedule.each_at(price)
+
+
 def _at_a_ceiling(price: float, schedule, levels, lowest: float) -> float:
     """Where demand falls off a buyer's ceiling, the crossing can sit just above it with nothing
     wanted: then the market clears at that ceiling, with buyers rationed to the supply there. A ceiling
@@ -133,20 +192,22 @@ def _at_a_ceiling(price: float, schedule, levels, lowest: float) -> float:
     buyers left would bid on past it to the next seller's step, where the crossing already is."""
     if schedule.total_at(price) >= _supply_at(levels, price):
         return price
-    for ceiling in sorted({maximum for maximum in schedule.maximums if maximum < math.inf}, reverse=True):
+    for ceiling in schedule.ceilings_descending():
+        if not lowest <= ceiling <= price:
+            if ceiling < lowest:
+                break
+            continue
         supply = _supply_at(levels, ceiling)
-        if (lowest <= ceiling <= price and schedule.total_at(ceiling) >= supply
+        if (schedule.total_at(ceiling) >= supply
                 and schedule.total_at(ceiling * (1.0 + ROUNDING_SHARE)) <= supply * (1.0 + ROUNDING_SHARE)):
             return ceiling
     return price
 
 
 def _supply_at(levels, price: float) -> float:
-    supply = 0.0
-    for reservation, running in levels:
-        if reservation <= price:
-            supply = running
-    return supply
+    """Cumulative supply of the last level at or below `price` (levels ascend by reservation)."""
+    count = bisect.bisect_right(levels, price, key=_FIRST)
+    return levels[count - 1][1] if count else 0.0
 
 
 def _ration_buyers(bids: Sequence[Bid], price: float, available: float) -> List[Tuple[Bid, float]]:

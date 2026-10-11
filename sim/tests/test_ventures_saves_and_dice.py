@@ -12,8 +12,7 @@ def _rel(name):
     return "%s/%s" % (_LOADTEST_DIR, name)
 
 
-_load_game = with_end_year(sim())
-ask_agent(_load_game, cmd="step", years=1)
+_load_game = with_end_year(unopened_sim())
 _good = ask_agent(_load_game, cmd="save", file=_rel("sess.json"))
 check("a legitimate save from this game loads cleanly",
       ask_agent(_load_game, cmd="load", file=_rel("sess.json")).get("ok") is True, _good)
@@ -37,7 +36,7 @@ for _i, (_label, _content) in enumerate(_bad_saves.items()):
           (_before.get("year"), _after.get("year")))
 
 # a save for a civilisation other than the one currently running
-ask_agent(sim(civ="norse_900ad"), cmd="save", file=_rel("norse.json"))
+ask_agent(pristine_game("norse_900ad"), cmd="save", file=_rel("norse.json"))
 _r2 = ask_agent(_load_game, cmd="load", file=_rel("norse.json"))
 check("load refuses a save from a different civilisation",
       _r2.get("ok") is False and "civilisation" in _r2.get("error", ""), _r2)
@@ -58,9 +57,52 @@ check("that refusal leaves the running game untouched too",
 # Every one of these was reproduced from the tester's own transcript before it
 # was fixed; each check is the tester's repro, kept.
 
+# One default Rome game takes the mutating commands below in an order that lets each see an untouched purse and
+# untouched founder hours: the refused mine and the project start first, then training, then the hours sold.
+_base = unopened_sim()
+
+# 6. `buy mine` spent every denarius you had and handed back a fraction of the
+#    mine you asked for, without asking. A command you typed is not a standing
+#    order to spend everything.
+_mn_game = _base
+_mn = [ask_agent(_mn_game, cmd="buy", what="mine", material="copper", n=500), ask_agent(_mn_game, cmd="state")]
+check("a mine you cannot pay for is refused, not part-bought with all your money",
+      _mn[0].get("ok") is False and "Nothing was changed" in (_mn[0].get("error") or "")
+      and _mn[1]["capital"] > 300,
+      (_mn[0].get("error", "")[:80], _mn[1].get("capital")))
+
+# 6. A quote read years ago is not what you pay: project_cost moves with
+#    prices, the coinage and materials. The bill IS fixed when you start, and
+#    nothing said what it was fixed at.
+_q1_game = _base
+_q1 = [ask_agent(_q1_game, cmd="why", id="hom_eraser_breadcrumb"), ask_agent(_q1_game, cmd="start", id="hom_eraser_breadcrumb")]
+check("starting something says what bill you have just taken on",
+      _q1[1].get("the_bill_you_have_taken_on") is not None
+      and _q1[0]["cost"].get("as_of_year"),
+      (_q1[1].get("the_bill_you_have_taken_on"), _q1[0]["cost"].get("as_of_year")))
+
+# --- the England normal-play tester -------------------------------------------
+# 1. `train optician 1` destroyed the save. trades_created holds TRADE names and
+#    was validated against the tech tree, so teaching any of the five trades
+#    that gate chemistry, precision and electricity wrote a name the next load
+#    refused as a missing technology. It cost that tester two runs and, by their
+#    own measurement, 1,230 technologies.
+_tr_game = unopened_sim()
+ask_agent(_tr_game, cmd="train", trade="optician", n=1)
+_tr_path = os.path.join(ROOT, _rel("trained.json"))
+S.save_state(_tr_game, _tr_path)
+_tr_loaded = unopened_sim()
+try:
+    S.load_state(_tr_loaded, _tr_path)
+    _tr_error = None
+except Exception as error:
+    _tr_error = repr(error)
+check("teaching a trade does not destroy the save",
+      _tr_error is None and "optician" in _tr_loaded.trades_created, _tr_error)
+
 # 1. `work` earned wages as a chemist in a society whose `hire` and `labour`
 #    both said chemists do not exist there.
-_wk_game = sim()
+_wk_game = _base
 _wk = [ask_agent(_wk_game, cmd="hire", trade="chemist", n=1), ask_agent(_wk_game, cmd="work", trade="chemist", hours=10),
        ask_agent(_wk_game, cmd="work", trade="scribe", hours=10)]
 check("you cannot be paid for a trade this society does not have",
@@ -68,9 +110,23 @@ check("you cannot be paid for a trade this society does not have",
       and _wk[2].get("ok") is True,
       [result.get("ok") for result in _wk])
 
+# 3. state and the prompt both said 2,400 founder-hours free after 2,300 of
+#    them had been sold, and then refused one more hour for having none.
+# Derived from the pool, not a literal: this check hardcoded 2,300 hours and
+# started failing the moment the founder's year came down to 2,000, because
+# `work` correctly refused to sell hours that no longer existed.
+_pool = _base.labour.director_pool()
+_sell = _pool - 100
+_st2_game = _base
+_st2 = [ask_agent(_st2_game, cmd="work", trade="scholar", hours=_sell), ask_agent(_st2_game, cmd="state")]
+check("hours already sold for wages are not still reported as free",
+      _st2[0].get("ok") is True and _st2[1]["founder_hours_available"] < 200,
+      "%r free after selling %g of %g" % (_st2[1].get("founder_hours_available"),
+                                          _sell, _pool))
+
 # 3. state.living_cost was living_and_appearances PLUS the whole payroll, while
 #    `money` reported the two separately, to the decimal.
-_lc_game = sim()
+_lc_game = _base
 ask_agent(_lc_game, cmd="hire", trade="smith", n=3)
 _st, _mo = ask_agent(_lc_game, cmd="state"), ask_agent(_lc_game, cmd="money")
 _costs = (_mo.get("what_it_costs_you") or {})
@@ -80,27 +136,13 @@ check("state and money do not label the same money two different ways",
       "state %r / money %r" % ({field_name: _st.get(field_name) for field_name in ("living_cost", "wage_bill")},
                                {field_name: _costs.get(field_name) for field_name in ("living_and_appearances", "wages")}))
 
-# 3. state and the prompt both said 2,400 founder-hours free after 2,300 of
-#    them had been sold, and then refused one more hour for having none.
-# Derived from the pool, not a literal: this check hardcoded 2,300 hours and
-# started failing the moment the founder's year came down to 2,000, because
-# `work` correctly refused to sell hours that no longer existed.
-_pool = sim().labour.director_pool()
-_sell = _pool - 100
-_st2_game = sim()
-_st2 = [ask_agent(_st2_game, cmd="work", trade="scholar", hours=_sell), ask_agent(_st2_game, cmd="state")]
-check("hours already sold for wages are not still reported as free",
-      _st2[0].get("ok") is True and _st2[1]["founder_hours_available"] < 200,
-      "%r free after selling %g of %g" % (_st2[1].get("founder_hours_available"),
-                                          _sell, _pool))
-
 # 5. You could sell every one of your 2,400 hours as a labourer and still
 #    collect the full fee from a surgery you were demonstrably not in. The
 #    practice is your own two hands; that was the same hours sold twice.
 # Wages now track labour tightness and can exceed an ordinary practice, so
 # the practice is scaled up until a year of day labour genuinely is a loss.
 _PRACTICE_BOOM = 5.0
-s = sim()
+s = unopened_sim()
 s.output_factor = _PRACTICE_BOOM
 _rev_before = s.revenue()
 _earned, _note = s.labour.work_for_wages("labourer", s.labour.director_pool())
@@ -113,51 +155,12 @@ check("hours sold as a labourer are not also spent practising medicine",
 # It is, for a physician; the defect was that nothing said so.
 check("selling your hours at a loss says so, and still happens",
       _note and "cost you" in _note, _note)
-s2 = sim()
+s2 = unopened_sim()
 s2.output_factor = _PRACTICE_BOOM
 s2.labour.work_for_wages("labourer", s2.labour.director_pool() * 0.5)
 check("selling half your hours costs you half the practice, not all of it",
       abs(s2.revenue() - _rev_before * 0.5) < _rev_before * 0.06,
       "%.1f against half of %.1f" % (s2.revenue(), _rev_before))
-
-# 6. `buy mine` spent every denarius you had and handed back a fraction of the
-#    mine you asked for, without asking. A command you typed is not a standing
-#    order to spend everything.
-_mn_game = sim()
-_mn = [ask_agent(_mn_game, cmd="buy", what="mine", material="copper", n=500), ask_agent(_mn_game, cmd="state")]
-check("a mine you cannot pay for is refused, not part-bought with all your money",
-      _mn[0].get("ok") is False and "Nothing was changed" in (_mn[0].get("error") or "")
-      and _mn[1]["capital"] > 300,
-      (_mn[0].get("error", "")[:80], _mn[1].get("capital")))
-
-# --- the England normal-play tester -------------------------------------------
-# 1. `train optician 1` destroyed the save. trades_created holds TRADE names and
-#    was validated against the tech tree, so teaching any of the five trades
-#    that gate chemistry, precision and electricity wrote a name the next load
-#    refused as a missing technology. It cost that tester two runs and, by their
-#    own measurement, 1,230 technologies.
-_tr_game = sim()
-ask_agent(_tr_game, cmd="train", trade="optician", n=1)
-_tr_path = os.path.join(ROOT, _rel("trained.json"))
-S.save_state(_tr_game, _tr_path)
-_tr_loaded = sim()
-try:
-    S.load_state(_tr_loaded, _tr_path)
-    _tr_error = None
-except Exception as error:
-    _tr_error = repr(error)
-check("teaching a trade does not destroy the save",
-      _tr_error is None and "optician" in _tr_loaded.trades_created, _tr_error)
-
-# 6. A quote read years ago is not what you pay: project_cost moves with
-#    prices, the coinage and materials. The bill IS fixed when you start, and
-#    nothing said what it was fixed at.
-_q1_game = sim()
-_q1 = [ask_agent(_q1_game, cmd="why", id="hom_eraser_breadcrumb"), ask_agent(_q1_game, cmd="start", id="hom_eraser_breadcrumb")]
-check("starting something says what bill you have just taken on",
-      _q1[1].get("the_bill_you_have_taken_on") is not None
-      and _q1[0]["cost"].get("as_of_year"),
-      (_q1[1].get("the_bill_you_have_taken_on"), _q1[0]["cost"].get("as_of_year")))
 
 # --- knowing how, and actually running it ------------------------------------
 # The user, on the deepest thing anyone said about this model: "you research
@@ -169,7 +172,7 @@ check("starting something says what bill you have just taken on",
 # Hire somebody first: a concern needs a pair of your hands to run it, which
 # is the whole point of the staffing floor. Nobody runs a pawnshop alone from
 # nowhere.
-_v_game = sim(capital=2.0e6)
+_v_game = unopened_sim(capital=2.0e6)
 ask_agent(_v_game, cmd="hire", trade="artisan", n=2)
 _v_game.done.add("fin_restaurant")
 _v_game._done_changed()
@@ -184,7 +187,7 @@ check("opening the doors is what pays you",
       and (_after.get("where_the_money_comes_from") or {}).get("fin_restaurant"),
       _after.get("where_the_money_comes_from"))
 
-s2 = sim(capital=200000.0)
+s2 = unopened_sim(capital=200000.0)
 s2.labour.hire("artisan", 2)
 s2.done.add("fin_restaurant")
 s2._done_changed()
@@ -195,21 +198,8 @@ check("opening a concern costs stock and premises, not nothing",
       "%.0f to open against %.0f a year of running cost"
       % (_cap0 - s2.capital, NODES["fin_restaurant"]["up"]))
 
-# You cannot run fifty businesses with three people.
-s3 = sim(capital=1000000.0)
-# BIG ENOUGH THAT ONE PERSON CANNOT RUN IT. The founder counts as a pair of
-# hands now, so a small shop is exactly what they CAN open alone; the staffing
-# rule is about scale, and this check has to test scale.
-_heavy = [node_id for node_id in NODES if NODES[node_id]["rev"] >= hours_money(121000)][:1]
-if _heavy:
-    s3.done.add(_heavy[0]); s3._done_changed()
-    s3.artisans = 0.0
-    _okh, _whyh = s3.open_venture(_heavy[0])
-    check("a concern nobody is free to run cannot be opened",
-          _okh is False and "nobody free" in (_whyh or ""), _whyh)
-
 # Shutting it stops both sides and keeps the knowledge.
-s4 = sim(capital=200000.0)
+s4 = unopened_sim(capital=200000.0)
 s4.labour.hire("artisan", 2)
 s4.done.add("fin_restaurant"); s4._done_changed()
 s4.open_venture("fin_restaurant")
@@ -221,7 +211,7 @@ check("closing a concern stops what it earned and what it cost, both",
       "rev %.0f->%.0f up %.0f->%.0f, still known %s"
       % (_rev_on, s4.revenue(), _up_on, s4.upkeep(), "fin_restaurant" in s4.done))
 
-_manual_policy, _optimizer_policy = sim(manual=True).policy, sim(manual=False).policy
+_manual_policy, _optimizer_policy = pristine_game().policy, unopened_sim(manual=False).policy
 check("opening things for you is on for the optimizer and off for a player",
       _manual_policy["auto_open"] is False and _optimizer_policy["auto_open"] is True,
       (_manual_policy["auto_open"], _optimizer_policy["auto_open"]))
@@ -239,7 +229,7 @@ check("what you are running survives a save and reload",
 _ROMAN = ("_roman", "_rome", "annona", "insula", "societas", "collegium",
           "argentarii", "latifundi", "cursus", "pharos")
 for _civ in ("han_china_100ad", "norse_900ad", "mexica_1500", "england_1300"):
-    _sc = sim(civ=_civ)
+    _sc = pristine_game(_civ)
     _bad = sorted(granted_name for granted_name in _sc.granted if any(roman_marker in granted_name for roman_marker in _ROMAN))
     check("%s is not handed Roman institutions for nothing" % _civ,
           not _bad, _bad)
@@ -255,7 +245,7 @@ for _civ in ("han_china_100ad", "norse_900ad", "mexica_1500", "england_1300"):
 # The gate read self.artisans alone, so work you had already paid an outside
 # shop to do did not count - and the refusal's own advice was to go and
 # commission it.
-s = sim(civ="norse_900ad", capital=100000.0)
+s = unopened_sim(civ="norse_900ad", capital=100000.0)
 # Prerequisites are tested before staff, so satisfy them: the point of this
 # check is the staff gate, not the ladder above it.
 for _p in NODES["workshop_first"]["pre"]:
@@ -275,7 +265,7 @@ check("commission can unblock the gate whose own advice is to commission",
 # open/ventures are how technology turns into income and were missing from the
 # command list; `open` on the founder's own practice denied it was theirs while
 # `money` itemised it as their largest source of income.
-_hc_game = sim(civ="han_china_100ad")
+_hc_game = pristine_game("han_china_100ad")
 _hc = [ask_agent(_hc_game, cmd="help", topic="commands"), ask_agent(_hc_game, cmd="open", id="med_cataract_couching")]
 check("every way of turning knowledge into income is in the command list",
       all(command in json.dumps(_hc[0]) for command in ("open", "ventures")),
@@ -290,18 +280,18 @@ check("the game does not deny that your own practice is yours",
 #    per process oscillated 100%/60%/100%/60% for ever, burning hours and
 #    money and never finishing. Reproduced 5 times out of 5. It also silently
 #    re-drew every hazard and event a returning player would meet.
-_dice_game = sim(civ="han_china_100ad")
+_dice_game = unopened_sim(civ="han_china_100ad", capital=2.0e6)
 _dice_game.rng.random()
 _dice_path = os.path.join(ROOT, _rel("dice.json"))
 S.save_state(_dice_game, _dice_path)
-_dice_resumed = sim(civ="han_china_100ad")
+_dice_resumed = unopened_sim(civ="han_china_100ad")
 S.load_state(_dice_resumed, _dice_path)
 check("a resumed game carries on the same dice, so a project at its threshold does not re-roll on every resume",
       [_dice_game.rng.random() for _ in range(5)] == [_dice_resumed.rng.random() for _ in range(5)])
 
 # 2. Founder hours could be spent twice: `train` wrote its own counter and
 #    `work` read only the wage one, so 3,800 hours went into a 2,000-hour year.
-_dh_game = sim(civ="han_china_100ad", capital=2.0e6)
+_dh_game = sim(civ="han_china_100ad", capital=2.0e6, surveyed=())     # wage work reads the opened economy
 _dh = [ask_agent(_dh_game, cmd="train", trade="machinist", n=2), ask_agent(_dh_game, cmd="train", trade="chemist", n=2),
        ask_agent(_dh_game, cmd="state"), ask_agent(_dh_game, cmd="work", trade="smith", hours=2000)]
 check("hours spent teaching are not still available to sell",
@@ -310,7 +300,7 @@ check("hours spent teaching are not still available to sell",
                                      _dh[3].get("ok")))
 
 # 3. A bribe that buys nothing said so and charged 5,000 anyway.
-_bb_game = sim(capital=2.0e6)
+_bb_game = _v_game
 _bb = [ask_agent(_bb_game, cmd="bribe", amount=5000), ask_agent(_bb_game, cmd="bribe", amount=5000), ask_agent(_bb_game, cmd="state")]
 check("a bribe that would buy nothing is refused, not charged",
       _bb[1].get("ok") is False and "Nothing was changed" in (_bb[1].get("error") or ""),
@@ -391,7 +381,8 @@ check("...and you can still build the balloon without one",
 #    opened eleven concerns in one turn, fired all six people and watched net
 #    income RISE - seventeen concerns running against "EMPLOY: 0 people", and
 #    the same loom still paying 435 a year in 1800 through the Black Death.
-s = sim(civ="england_1300", capital=hours_money(10100000, "england_1300"))
+s = _no  # the persona-less England game, no longer needed untouched
+s.capital = hours_money(10100000, "england_1300")
 s.labour.hire("artisan", 6)
 _big = [node_id for node_id in NODES if hours_money(40300) <= NODES[node_id]["rev"] <= hours_money(181000)][:4]
 for _k in _big:
@@ -414,12 +405,12 @@ check("...and the game says which ones closed and why",
 # person who knows how every one of these things is made. workshop_first wants
 # two craftsmen, so a Norse run that could field one could never build the
 # place craftsmen work.
-s = sim(civ="norse_900ad")
+s = pristine_game("norse_900ad")
 check("the founder is one of the craftsmen as well as one of the scholars",
       s.labour.craft_hands_available() >= 1.0 and s.labour.effective_scholars() >= 1.0,
       "%.1f hands, %.1f scholars, with nobody hired"
       % (s.labour.craft_hands_available(), s.labour.effective_scholars()))
-s2 = sim(civ="norse_900ad")
+s2 = unopened_sim(civ="norse_900ad")
 for _p in NODES["workshop_first"]["pre"]:
     s2.done.add(_p)
 s2._done_changed()
@@ -438,13 +429,13 @@ check("...so one hired hand is enough to raise your first workshop",
 # later naming the same scholar shortfall the school was built to answer,
 # with nothing saying why. Fixed by giving the grant its own durable record
 # (_grant_staff) that _resync_pools adds back rather than discards.
-s_gr = sim(capital=10000000.0, manual=True)
+s_gr = _v_game
 s_gr.done.add("school_founded")
 s_gr._done_changed()
 s_gr.operating.add("school_founded")
 s_gr.labour._grant_staff(scholars=4)
 _after_grant = s_gr.scholars
-s_gr.step()
+s_gr._step_staff()    # the staff phase is where the pools are resynced every year
 check("founding the school still leaves you its scholars a year later",
       s_gr.scholars >= _after_grant - 1e-6,
       (_after_grant, s_gr.scholars))
@@ -455,7 +446,7 @@ check("...and a project that needed exactly what it granted can now start",
 # `quote` existed because a tester went from 38,151 denarii to zero on one
 # unpriced mine command. A break tester then spent 27,500 - 68% of capital -
 # on `buy forest 100`, with no price shown and no way to ask for one.
-_qf_game = sim(capital=2.0e6)
+_qf_game = _v_game
 _qf = [ask_agent(_qf_game, cmd="quote", what="forest", n=100), ask_agent(_qf_game, cmd="quote", what="slaves", n=5)]
 check("you can ask the price of a forest before you buy one",
       _qf[0].get("ok") is True and _qf[0].get("to_buy_it", 0) > 0,
@@ -463,7 +454,7 @@ check("you can ask the price of a forest before you buy one",
 check("...and of people",
       _qf[1].get("ok") is True and _qf[1].get("to_buy_them", 0) > 0,
       _qf[1].get("error") or _qf[1].get("to_buy_them"))
-s = sim(capital=hours_money(2020000))
+s = _v_game
 _before_f = s.capital
 _quoted = _qf[0]["to_buy_it"]
 s.buy_forest(100)
@@ -473,7 +464,7 @@ check("the quoted price of a forest is the price you are charged",
 
 # 2. "Told to my face I could take 6 more people, I took 7 with a different
 #    verb." buy went round the feed/house/oversee cap that hire enforces.
-s = sim(capital=1000000.0)
+s = unopened_sim(capital=1000000.0)
 _room = s.labour.household_room()
 _ok_over = s.labour.buy_slaves(int(_room) + 5)
 check("buying people obeys the same household cap as hiring them",
@@ -481,3 +472,16 @@ check("buying people obeys the same household cap as hiring them",
       "room %.2f, bought %s" % (_room, _ok_over))
 check("...and buying within it still works",
       s.labour.buy_slaves(max(1, int(_room) - 1)) > 0, "room %.2f" % _room)
+
+# You cannot run fifty businesses with three people.
+s3 = s
+# BIG ENOUGH THAT ONE PERSON CANNOT RUN IT. The founder counts as a pair of
+# hands now, so a small shop is exactly what they CAN open alone; the staffing
+# rule is about scale, and this check has to test scale.
+_heavy = [node_id for node_id in NODES if NODES[node_id]["rev"] >= hours_money(121000)][:1]
+if _heavy:
+    s3.done.add(_heavy[0]); s3._done_changed()
+    s3.artisans = 0.0
+    _okh, _whyh = s3.open_venture(_heavy[0])
+    check("a concern nobody is free to run cannot be opened",
+          _okh is False and "nobody free" in (_whyh or ""), _whyh)

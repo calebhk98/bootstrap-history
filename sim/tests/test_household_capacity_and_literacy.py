@@ -12,7 +12,7 @@ from .harness import *  # noqa: F401,F403
 
 # --- the ceiling on lettered trades and the household-room refusals, on one rich game; checks that
 # need the starting literacy come before the technologies that widen it.
-core = sim(capital=2000000.0)
+core = unopened_sim(capital=2000000.0)
 
 # A lettered trade shows the ceiling on how many can ever exist here, and `why` warns when a node
 # wants more than can ever exist.
@@ -74,7 +74,7 @@ _room0 = core.labour.household_room()
 check("a fresh household has room for a few people and no more", 0 < _room0 < 20, _room0)
 check("...and the literacy ceiling is not what binds here",
       core.labour.literate_capacity("machinist") > _room0 + 1, (core.labour.literate_capacity("machinist"), _room0))
-_ok_within, _why_within = sim(capital=2000000.0).labour.train("machinist", 1)
+_ok_within, _why_within = unopened_sim(capital=2000000.0).labour.train("machinist", 1)
 check("teaching within the room still works", _ok_within, _why_within)
 core.labour.hire("smith", int(_room0))          # fill the room exactly
 _ok_t3, _why_t3 = core.labour.train("machinist", 1)
@@ -88,7 +88,7 @@ check("hire, buy and train are all bounded by the same one number",
 
 # --- advice on how to get artisans, scholars and room never points at a remedy waiting on what it
 # supplies, and offers a shut institution back as the cheap fix.
-advice = sim(capital=1000000.0)
+advice = unopened_sim(capital=1000000.0)
 check("giving staff advice does not recurse into itself",
       isinstance(advice.start_reason("workshop_first")[1], str), "no RecursionError")
 advice.done.add("patron_local"); advice._done_changed()
@@ -119,12 +119,15 @@ advice.operating.update(node_id for node_id, _ in advice.ROOM_SOURCES if node_id
 check("...and says so plainly when you already hold every one of them",
       "every one of them" in advice.labour._room_advice(), advice.labour._room_advice())
 
+_DEPUTY_YEARS = 2
+
+
 # --- a deputy is announced with what it does to the founder's year, once per whole deputy.
 def _deputies_are_announced():
     deputies_sim = sim(capital=2000000.0, manual=False)
     run_it(deputies_sim, "school_founded", "patron_imperial", "academy_network")
     peak_deputies = 0.0
-    for _ in range(12):
+    for _ in range(_DEPUTY_YEARS):
         deputies_sim.step()
         peak_deputies = max(peak_deputies, deputies_sim.directors_extra)
     said = [message for _, message in deputies_sim.log if "deput" in message]

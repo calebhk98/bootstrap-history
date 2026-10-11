@@ -14,7 +14,7 @@ again by the producer's own rule.
 import dataclasses
 from typing import List, Optional, Sequence
 
-from . import entry_trial, market_curves, seller_pricing
+from . import entry_trial, goods_market, market_curves, seller_pricing
 from .producers import UNSOLD_ASK_MARKDOWN_SHARE, expected_output_prices, live_input_prices, live_wages
 from .types import EDGE_EXTERNAL, Bid, Offer
 
@@ -47,6 +47,7 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
         return offers
     good = offers[0].good
     book = merged_bids(bids, good)
+    buyers = goods_market.Buyers(book, last_price)
     for index in sorted(range(len(offers)), key=lambda each: (offers[each].seller, offers[each].tile)):
         offer = offers[index]
         value = unit_value(setup, record, view, offer)
@@ -57,7 +58,7 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
         step = UNSOLD_ASK_MARKDOWN_SHARE * (ask if ask > 0.0 else max(last_price or 0.0, 0.0))
         choice = seller_pricing.best_reservation(
             book, rivals, offer, value, last_price, ceiling=ask + step,
-            floor=ask * (1.0 - UNSOLD_ASK_MARKDOWN_SHARE), current=ask)
+            floor=ask * (1.0 - UNSOLD_ASK_MARKDOWN_SHARE), current=ask, buyers=buyers)
         if choice is not None:
             offers[index] = dataclasses.replace(offer, reservation_price=choice)
     return offers

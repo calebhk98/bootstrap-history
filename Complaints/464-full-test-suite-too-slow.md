@@ -1,15 +1,25 @@
 # The full test suite takes far longer than fifteen minutes
 
-**Status:** partly - the full suite is now inside the target; the items below would cut it further
+**Status:** partly - quick tier inside two minutes and the full suite inside thirty on four cores; two topics still time out
 
 The quick tier (`python3 -m sim.tests`) runs only topics marked `QUICK_TOPIC = True`, a few to
 a process, and stays fast after engine edits. The full suite (`python3 -m sim.tests --slow
 --timing`) prints each topic as it finishes and a per-topic table at the end; the slowest
 topics in that table are where the next cut belongs.
 
+## Where it stands
+
+`python3 -m sim.tests` (quick tier) and `python3 -m sim.tests --slow --timing` (full suite) print their wall
+time per topic; the runner stops and fails any topic still running after `--topic-seconds` (default in
+`sim/tests/__main__.py`), so a run always ends and names what is too slow. Suite games open on a short
+spin-up (`ROME_SPIN_UP_YEARS`, set in `sim/tests/harness.py`), cached apart from full games, and the runner
+builds one game of every civilisation before the first topic. Two topics still time out:
+`arrears_hours` (a price solve that stalls, 474) and `insolvency_whole_game` (a ruined founder needs several
+full market years to show recovery; whether it stays in the full suite is an owner decision).
+
 ## What would cut it further
 
-1. **Any engine edit re-runs the agent-economy spin-up.** Its key
+1. **Any engine edit re-runs the agent-economy spin-up** (now a short one in the suite). Its key
    (`economy_port_year.py`, `.cache/agent_economy`) hashes every `.py` under `sim/`, because
    the spin-up reads a setup built from the whole `Sim`, and only the opening values and the
    civilisation are in the key. Put the setup itself (or its digest) in the key and scope the
@@ -27,7 +37,10 @@ topics in that table are where the next cut belongs.
    checks onto the existing small fixtures (`economy_fixture`, `agents_fake_world`,
    `geography_fixtures`), assert after one year where one is enough, and mark the topics that
    become fast `QUICK_TOPIC = True`.
-4. **Copying a built game is not possible.** `copy.deepcopy` of a `Sim` fails on a module
+4. **Each simulated year is a full agent-economy year.** A topic that steps a game pays for its market close
+   every year; most whole-game topics now step the fewest years their checks need, share stepped games, or run
+   one phase of the year where the check is about that phase. Cutting the economy year itself cuts all of them.
+5. **Copying a built game is not possible.** `copy.deepcopy` of a `Sim` fails on a module
    reference, so tests cannot build one game and hand out copies. Construction itself has
    per-map work that could be memoised per process (`market_areas.carriage_unit`, the tile
    deep-copy in `geography/loading.py`, region and weather tables).

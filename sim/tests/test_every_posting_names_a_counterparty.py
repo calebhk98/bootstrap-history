@@ -50,21 +50,17 @@ def ask(game, **command):
     return S._agent_dispatch(game, NODES, command)
 
 
-for label, capital in (("a rich household", 300_000.0), ("a poor household", 2_000.0)):
+# the people's purses receive wages and the state's pay only from the second year, so the rich game plays two
+for label, capital, years in (("a rich household", 300_000.0, 2), ("a poor household", 2_000.0, 1)):
     game = sim(capital=capital, manual=False, events=True)
     game.end_year = game.cfg["start_year"] + game.cfg["horizon_years"]
+    if capital > 100_000.0:
+        rich_game = game
     opening = purses(game) + edges(game)
-    years = 0
-    for _year in range(6):
+    for _year in range(years):
         ask(game, cmd="step", years=1)
-        years += 1
-        total = purses(game) + edges(game)
-        if abs(total - opening) > 1e-6 * max(1.0, abs(opening)):
-            break
-        if not game.state.founder.founder_alive:
-            break
     total = purses(game) + edges(game)
-    check("%s: all purses and all named edges together stay what they were over %d years" % (label, years),
+    check("%s: all purses and all named edges together stay what they were over %d year(s)" % (label, years),
           abs(total - opening) <= 1e-6 * max(1.0, abs(opening)), (opening, total))
     crossed = game.state.actors.purses.book.edge_agents()
     check("%s: money moved through named edges" % label, bool(crossed), crossed)
@@ -84,11 +80,8 @@ check("a payer's loss is the edge's gain", payer.money == 7.0 and state.edge("ed
 check("an edge keeps the volume that crossed it", state.edge("edge:test").volume() == 5.0, state.edge("edge:test").volume())
 
 # step 2: wages and the state's pay land in the people's purses
-people = sim(manual=False, events=False)
-people.end_year = people.cfg["start_year"] + people.cfg["horizon_years"]
-for _year in range(4):
-    ask(people, cmd="step", years=1)
-strata = [record for record in people.state.actors.records.values() if record.stratum and record.country is None]
+# the rich household's game, already stepped, is the one read
+strata = [record for record in rich_game.state.actors.records.values() if record.stratum and record.country is None]
 received = {label for record in strata for label in record.income if label != "edge:economy"}
 check("the home country has strata", bool(strata), len(strata))
 check("the founder's payroll and the state's pay reach the people's purses",

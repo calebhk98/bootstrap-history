@@ -64,20 +64,29 @@ check("the army's iron comes from military logistics: tonnes follow the soldiers
 check("administration is paid officials, who are scribes",
       lines["administration"].labour.get("scribe", 0.0) > 0.0 and not lines["administration"].materials,
       lines["administration"])
-bigger, _t = budget_sim()
-for cohort in ("children", "working_age", "elderly"):
-    setattr(bigger.population, cohort, getattr(bigger.population, cohort) * 2.0)
+# the opening game is read and then changed one thing at a time, each put back, before it runs its first year below
+opening_population = {cohort: getattr(game.population, cohort) for cohort in ("children", "working_age", "elderly")}
+for cohort, people in opening_population.items():
+    setattr(game.population, cohort, people * 2.0)
 check("a larger population keeps more officials; the garrison follows the frontier, not the head count",
-      budget.standing_lines(SimWorld(bigger))[1].labour["scribe"] > lines["administration"].labour["scribe"]
-      and abs(budget.standing_lines(SimWorld(bigger))[0].labour["soldier"] - soldiers) < 1e-6 * soldiers, soldiers)
-unarmed, _t = budget_sim(army=0.0)
+      budget.standing_lines(SimWorld(game))[1].labour["scribe"] > lines["administration"].labour["scribe"]
+      and abs(budget.standing_lines(SimWorld(game))[0].labour["soldier"] - soldiers) < 1e-6 * soldiers, soldiers)
+for cohort, people in opening_population.items():
+    setattr(game.population, cohort, people)
+opening_army = game.civ["standing_army"]
+game.civ["standing_army"] = 0.0
 check("a civilisation that opens with no standing force has no army line",
-      "army" not in {line.name for line in budget.standing_lines(SimWorld(unarmed))})
+      "army" not in {line.name for line in budget.standing_lines(SimWorld(game))})
+game.civ["standing_army"] = opening_army
 
 # ---- revenue is the economy's yield, spending is the standing need ----------------------------
-game, treasury = budget_sim()
+# (this one year also serves the labour-pool and goods-market sections below, which read the same year's result)
 revenue = SimWorld(game).state_revenue()
 need = sum(line.money for line in budget.standing_lines(SimWorld(game)))
+soldiers_free_before = game.labour.market_supply("soldier")
+scribes_before = game.actor_staff_fte("scribe")
+iron_demand_before_buying = game.actor_demand("iron")
+quoted_before = game.market_price_ratio("iron_bar_kg")
 one_year(game)
 income, outlays = treasury.record.income, treasury.record.outlays
 check("the state's revenue is booked as income from taxation, less what it took in kind",
@@ -117,10 +126,6 @@ check("a reserve big enough finances the whole deficit and leaves nothing unfund
       and treasury_rich.money < 10.0 * need, (treasury_rich.money, treasury_rich.record.unfunded))
 
 # ---- spending reaches the labour pool --------------------------------------------------------
-game, treasury = budget_sim()
-soldiers_free_before = game.labour.market_supply("soldier")
-scribes_before = game.actor_staff_fte("scribe")
-one_year(game)
 check("the army's and the officials' staff are held in the government's workforce",
       treasury.workforce.get("soldier", 0.0) > 0.0 and treasury.workforce.get("scribe", 0.0) > 0.0,
       treasury.workforce)
@@ -144,10 +149,7 @@ check("a state that cut its spending employs correspondingly fewer people",
       unfunded_treasury.workforce)
 
 # ---- spending reaches the goods market -------------------------------------------------------
-game, treasury = budget_sim()
-check("before the state buys anything it adds no demand", game.actor_demand("iron") == 0.0)
-quoted_before = game.market_price_ratio("iron_bar_kg")
-one_year(game)
+check("before the state buys anything it adds no demand", iron_demand_before_buying == 0.0)
 tonnes = game.actor_demand("iron")
 check("the state's iron purchases are demand in the commodity's market", tonnes > 0.0, tonnes)
 check("the demand is what the army's equipment needs, funded",
@@ -248,7 +250,7 @@ before = copy.deepcopy(needy.state.actors.records)
 with tempfile.TemporaryDirectory() as folder:
     path = os.path.join(folder, "save.json")
     save_state(needy, path)
-    revived = sim()
+    revived = below   # any game takes a load: the save replaces its state
     load_state(revived, path)
 check("need, unfunded need, demand and levy rates round-trip through save and load",
       revived.state.actors.records == before

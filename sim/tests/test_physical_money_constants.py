@@ -29,10 +29,12 @@ PHYSICAL_COSTS = {
 }
 
 
-def build(civ_name):
+def build(civ_name, opened=False):
     from sim.tests import harness
-    sim = Sim(harness.NODES, harness.ORDER, random.Random(1), events=False,
-              manual=True, civ=data.load_civ(civ_name))
+    def make():
+        return Sim(harness.NODES, harness.ORDER, random.Random(1), events=False,
+                   manual=True, civ=data.load_civ(civ_name))
+    sim = make() if opened else harness.build_unopened(make)
     sim.goal, sim.done_year = harness.GOAL, {}
     return sim
 
@@ -57,7 +59,7 @@ class PhysicalConstantsAreInHours(unittest.TestCase):
         self.assertFalse([name for name in REGISTRY if name.startswith("MINE_OPEX_PER_T_")])
 
     def test_mining_opex_is_the_deposits_extraction_labour_at_the_miner_wage(self):
-        sim = build("rome_100ad")
+        sim = build("rome_100ad", opened=True)
         for metal in ("lead", "silver", "copper"):
             hours = sum(weight * KILOGRAMS_PER_TONNE
                         * deposits.extraction_cost_labour_hours_per_kg(deposit)

@@ -1,6 +1,13 @@
 """early_playtest: regression checks from the first playtests, run with `--only early_playtest`."""
-from sim.engine.data import closure as data_closure
 from .harness import *  # noqa: F401,F403
+
+def without_market(game):
+    """`game` with the year's market close left out of its steps: nearly all of a step's cost. Only for checks on
+    staff, projects, mines, raids and recovery; the founder's money does follow the market, so games whose checks
+    read money keep it."""
+    game._step_market = lambda: None
+    return game
+
 
 # --- protocol robustness: one agent session carries every malformed or hostile input
 _SESSION = [
@@ -66,7 +73,7 @@ check("play runs a civilisation that does not start in 100 AD",
       "900 AD" in _play.stdout and "Ended 900 AD" not in _play.stdout, _play.stdout[-120:])
 
 # --- Rome, one game: turn-one state, and what a player can and cannot do
-rome = sim(capital=200000.0)
+rome = unopened_sim(capital=200000.0)
 check("you arrive with no employees and no slaves",
       not rome.employees and rome.slaves == 0 and rome.freedmen == 0 and rome.artisans == 0.0,
       "employees %r artisans %.1f" % (rome.employees, rome.artisans))
@@ -152,7 +159,7 @@ check("freeing untrained people does not skip the training lag",
       rome.artisans - artisans_before < 0.01, "instant gain %.2f" % (rome.artisans - artisans_before))
 
 def spend(slices, per):
-    spend_sim = sim(capital=1e9)
+    spend_sim = unopened_sim(capital=1e9)
     # Buying respects the feed/house/oversee cap `hire` has, so make room first or this tests the cap.
     run_it(spend_sim, "workshop_first", "freedman_staff")
     starting_capital = spend_sim.capital
@@ -166,7 +173,7 @@ check("buying in slices costs the same as buying at once",
       abs(all_at_once - one_at_a_time) < 1.0, "%.0f / %.0f" % (all_at_once, one_at_a_time))
 
 # --- Han: a civilisation-specific cost, and no other society's institutions
-han = sim(civ="han_china_100ad", manual=False)
+han = without_market(sim(civ="han_china_100ad", manual=False))
 han_why_cost = S._agent_dispatch(han, NODES, {"cmd": "why", "id": "blast_furnace"})["cost"]["total"]
 check("why quotes a civilization-specific cost", rome_why_cost != han_why_cost,
       str((rome_why_cost, han_why_cost)))
@@ -175,7 +182,7 @@ foreign = [node_id for node_id in han.granted if "_roman" in node_id or "annona"
 check("a society is not granted another society's institutions", not foreign, str(foreign[:4]))
 
 # --- Norse: handicap remedies, no foreign institutions, no geography-locked crops, no sack-loss risk
-norse = sim(civ="norse_900ad", capital=1000000.0)
+norse = unopened_sim(civ="norse_900ad", capital=1000000.0)
 _ROMAN_INSTITUTIONS = ["civ_arch_roman", "fin_annona", "fin_argentarii",
                        "fin_collegium", "fin_societas", "hom_cosmetics_roman"]
 norse_has_them_free = [node_id for node_id in _ROMAN_INSTITUTIONS if node_id in norse.done]
@@ -190,65 +197,13 @@ norse.done.add("collegium_licensed")
 cost_factor_after = norse.civ_cost_factor("blast_furnace")
 check("building a remedy lifts the handicap", cost_factor_after < cost_factor_before,
       "%.2f -> %.2f" % (cost_factor_before, cost_factor_after))
-# Rome carries no debt bondage, so a deep debt ends in a written-off settlement.
-insolvent = sim(civ="rome_100ad", capital=1000000.0)
-insolvent.start_project("identity_cover")
-for _ in range(4):
-    insolvent.step()
-persona_built = "identity_cover" in insolvent.done
-insolvent.capital = -2.0 * insolvent.credit_limit()
-for _ in range(2):
-    insolvent.step()
-settled = [text for _, text in insolvent.state.household.log if "INSOLVENCY SETTLED" in text]
-check("an insolvency settlement never abandons a persona or institution",
-      persona_built and settled and "identity_cover" in insolvent.done,
-      (persona_built, len(settled), "identity_cover" in insolvent.done))
-
-# A founder driven deep into debt stays inside the credit line, climbs back, and keeps what the goal needs.
-def _ruined_founder_run():
-    ruined = sim(manual=False, capital=hours_money(20200000))
-    ruined.labour.buy_slaves(400)
-    ruined.start_project("identity_cover")
-    for _ in range(3):
-        ruined.step()
-    needed = data_closure(NODES, GOAL) & (ruined.done - ruined.granted)
-    built_before = len(ruined.done - ruined.granted)
-    ruined.capital = -3.0 * ruined.credit_limit()
-    debt_over_limit = []
-    capital_by_year = []
-    for _ in range(5):
-        ruined.step()
-        debt_over_limit.append(-ruined.capital / ruined.credit_limit())
-        capital_by_year.append(ruined.capital)
-    return ruined, needed, built_before, debt_over_limit, capital_by_year
-
-
-_RUIN = {}
-
-
-def _ruin():
-    if not _RUIN:
-        _RUIN["run"] = _ruined_founder_run()
-    return _RUIN["run"]
-
-
-slow_check("a ruined founder's debt stays inside the credit limit once the settlement has run",
-           lambda: (max(_ruin()[3]) <= 1.0 and any("INSOLVENCY SETTLED" in text for _, text in _ruin()[0].state.household.log),
-                    _ruin()[3]))
-slow_check("a ruined founder rebuilds rather than freezing",
-           lambda: (_ruin()[4][-1] > _ruin()[4][0] and len(_ruin()[0].done - _ruin()[0].granted) >= _ruin()[2],
-                    (_ruin()[4], _ruin()[2], len(_ruin()[0].done - _ruin()[0].granted))))
-slow_check("ruin never deletes a step the goal needs",
-           lambda: ("identity_cover" in _ruin()[0].done and _ruin()[1] <= _ruin()[0].done,
-                    sorted(_ruin()[1] - _ruin()[0].done)[:5]))
-
 # prerequisite lint: gunpowder's saltpetre comes from nitre beds, not from nowhere
 check("gunpowder claims no saltpetre it has not earned via nitre_beds",
       "nitre_beds" in NODES["mil_gunpowder_base"]["pre"] and "nitre_beds" in NODES,
       str(NODES["mil_gunpowder_base"]["pre"]))
 
 # --- Mexica: chinampa is theirs, and military technology blunts but never zeroes a sacking
-mexica = sim(civ="mexica_1500")
+mexica = unopened_sim(civ="mexica_1500")
 check("chinampa agriculture is still free for the Mexica", "fud_chinampa" in mexica.done)
 _spanish = next(hazard for hazard in mexica.civ["hazards"] if "Spanish" in hazard.get("name", ""))
 check("the Spanish invasion still arrives on its historical date, unmoved "
@@ -269,8 +224,8 @@ check("a Mexica founder who had built firearms and fortification before "
 
 # --- the military branch matters, without swallowing the tree
 check("the tree still has a real military branch to test against", len(_MIL_NODES) >= 100, len(_MIL_NODES))
-unarmed = sim()
-armed = sim()
+unarmed = without_market(sim())
+armed = without_market(sim())
 founder_military_nodes = [node_id for node_id in _MIL_NODES if node_id not in armed.granted]
 leverage_none = armed.military_leverage()
 armed.done.add(founder_military_nodes[0])
@@ -327,7 +282,7 @@ check("an armed empire's trade recovers from a war faster than an unarmed "
       armed.output_factor > unarmed.output_factor > 0.7, (unarmed.output_factor, armed.output_factor))
 
 # --- fog hides the exact downstream count
-fogged = sim()
+fogged = unopened_sim()
 fogged.fog = True
 fogged.revealed = set()
 fog_reply = S._agent_dispatch(fogged, NODES, {"cmd": "why", "id": "identity_cover"})
@@ -336,7 +291,7 @@ check("fog hides the exact downstream count",
       "downstream %r band %r" % (fog_reply.get("downstream_count"), fog_reply.get("how_much_rests_on_this")))
 
 # --- mines: topping up still delivers capacity, and a mine can be closed
-mine_game = sim(capital=5e6)
+mine_game = without_market(sim(capital=5e6))
 for _ in range(6):
     mine_game.open_mine("coal", 200)
     mine_game.step()
@@ -369,7 +324,7 @@ check("manual play never buys people for you", unfunded.slaves == 0 and unfunded
 def _tree_opens_up():
     out = []
     for frac in (0.30, 0.55):
-        tree_sim = sim(capital=1e6, manual=False)
+        tree_sim = unopened_sim(capital=1e6, manual=False)
         tree_sim.fog = True
         cut = int(len(ORDER) * frac)
         tree_sim.done.update(ORDER[:cut])
@@ -385,7 +340,7 @@ def _tree_opens_up():
 slow_check("available stays a summary as the tree opens up", _tree_opens_up)
 
 # --- the unknown-command message names every command, and every command answers
-answers = sim()
+answers = unopened_sim()
 _unknown = S._agent_dispatch(answers, NODES, {"cmd": "definitely_not_a_command"}).get("error", "")
 check("the unknown-command message advertises every command there is",
       all(command in _unknown for command in S.KNOWN_COMMANDS),

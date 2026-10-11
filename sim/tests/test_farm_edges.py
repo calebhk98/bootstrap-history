@@ -38,7 +38,8 @@ def _geography_with_fertility(civ_id, fertility_of_tile):
 
 def _sim_on(fertility_of_tile, civ_id=CIV_ID):
     geography = _geography_with_fertility(civ_id, fertility_of_tile)
-    with mock.patch.object(core, "load_geography", lambda world_map=None: copy.deepcopy(geography)):
+    with mock.patch.object(
+            core, "load_geography", lambda world_map=None: copy.deepcopy(geography)):
         return sim(civ_id, events=False)
 
 
@@ -51,8 +52,9 @@ def _farm_share(test_sim):
     return hours[FARM_TRADE] / sum(hours.values())
 
 
-def _run(test_sim, years, first_year=101):
-    """[(population, farm share, nutrition ratio, granary kg)] per year."""
+def _run(test_sim, years, first_year=101, until=None):
+    """[(population, farm share, nutrition ratio, granary kg)] per year, at most
+    `years` of them; stops early once `until(history)` is true."""
     history = []
     for year in range(first_year, first_year + years):
         test_sim._demographic_recovery(year)
@@ -60,6 +62,8 @@ def _run(test_sim, years, first_year=101):
                         test_sim._last_demographic_step.nutrition_ratio,
                         test_sim.farm_stock_kg))
         invariants.check_simulation_invariants(test_sim.state)
+        if until is not None and until(history):
+            break
     return history
 
 
@@ -79,10 +83,22 @@ def _food_ratio_with_everyone_farming(test_sim, fertility):
     return (year.gross_harvest_kg - year.seed_sown_kg) / year.food_demand_kg
 
 
+_SHARED = {}   # one read-only game and the answers computed from it, built on first use
+
+
+def _read_only_game():
+    """A game nothing runs or changes: tests that only read its opening figures share it."""
+    if "game" not in _SHARED:
+        _SHARED["game"] = sim(CIV_ID, events=False)
+    return _SHARED["game"]
+
+
 def _fertility_for_food_ratio(target_ratio):
     """Fertility at which everyone farming just yields `target_ratio` of the
     food the whole population needs (bisection on a monotone relation)."""
-    probe = sim(CIV_ID, events=False)
+    if target_ratio in _SHARED:
+        return _SHARED[target_ratio]
+    probe = _read_only_game()
     low, high = 0.05, 3.0
     for _ in range(50):
         middle = (low + high) / 2.0
@@ -90,7 +106,20 @@ def _fertility_for_food_ratio(target_ratio):
             low = middle
         else:
             high = middle
+    _SHARED[target_ratio] = high
     return high
+
+
+def _undisturbed_run(years):
+    """(history of the first `years` years, farm share at the end of the run) of an ordinary game left alone
+    for `years` years; the run is made once and its early rows serve every test that reads a shorter one."""
+    if "undisturbed" not in _SHARED:
+        game = sim(CIV_ID, events=False)
+        history = _run(game, years)
+        _SHARED["undisturbed"] = (history, _farm_share(game), years)
+    history, final_share, run_years = _SHARED["undisturbed"]
+    assert run_years == years
+    return history, final_share
 
 
 def _ample_land_sim(fertility):
@@ -108,7 +137,11 @@ def _ample_land_sim(fertility):
 class BarrenLandTests(unittest.TestCase):
     def _check_dies_out_cleanly(self, fertility):
         test_sim = _sim_on(_uniform(fertility))
-        history = _run(test_sim, 100)
+        # The checks read year 50, so the run must pass it; it stops once the die-out holds.
+        def died_out(rows):
+            return (len(rows) > 51 and rows[-1][0] < rows[9][0] * 0.2
+                    and rows[-1][0] < rows[50][0] and rows[-1][2] < 1.0)
+        history = _run(test_sim, 100, until=died_out)
         populations = [row[0] for row in history]
         for population, share, nutrition, stock in history:
             self.assertTrue(all(math.isfinite(value)
@@ -130,9 +163,10 @@ class BarrenLandTests(unittest.TestCase):
         geography = _geography_with_fertility(CIV_ID, _uniform(1.0))
         for tile_id in geography["land_tiles"]["tiles"]:
             geography["land_tiles"]["tiles"][tile_id]["arable_fraction"] = 0.0
-        with mock.patch.object(core, "load_geography", lambda world_map=None: copy.deepcopy(geography)):
+        with mock.patch.object(
+                core, "load_geography", lambda world_map=None: copy.deepcopy(geography)):
             test_sim = sim(CIV_ID, events=False)
-        history = _run(test_sim, 60)
+        history = _run(test_sim, 60, until=lambda rows: len(rows) > 5 and rows[-1][0] < rows[5][0] * 0.5)
         self.assertLess(history[-1][0], history[5][0] * 0.5)
         self.assertGreaterEqual(min(row[3] for row in history), 0.0)
 
@@ -145,11 +179,15 @@ class SubSubsistenceLandTests(unittest.TestCase):
         self.fertility = _fertility_for_food_ratio(0.95)
 
     def test_the_construction_is_below_subsistence(self):
-        probe = sim(CIV_ID, events=False)
+        probe = _read_only_game()
         self.assertLess(_food_ratio_with_everyone_farming(probe, self.fertility), 1.0)
 
     def test_population_declines_and_everyone_ends_up_farming(self):
-        history = _run(_ample_land_sim(self.fertility), 100)
+        # The checks read year 80, so the run must pass it; it stops once the decline holds.
+        def declined(rows):
+            return (len(rows) > 80 and rows[-1][0] < rows[10][0] * 0.8
+                    and rows[80][0] < rows[30][0] and rows[-1][1] > 0.9)
+        history = _run(_ample_land_sim(self.fertility), 100, until=declined)
         populations = [row[0] for row in history]
         self.assertLess(populations[-1], populations[10] * 0.8)
         self.assertLess(populations[80], populations[30])
@@ -158,7 +196,8 @@ class SubSubsistenceLandTests(unittest.TestCase):
 
     def test_the_same_land_just_above_subsistence_holds_its_people(self):
         fertility = _fertility_for_food_ratio(1.05)
-        history = _run(_ample_land_sim(fertility), 100)
+        # Long enough for a decline on this land to show (the sub-subsistence test above declines well within it).
+        history = _run(_ample_land_sim(fertility), 50)
         self.assertGreater(history[-1][0], history[10][0] * 0.9)
 
 
@@ -172,7 +211,10 @@ class TechnologyRescueTests(unittest.TestCase):
         doubled = base._replace(toolkit=base.toolkit._replace(
             reaping_rate_multiplier=base.toolkit.reaping_rate_multiplier * 2.0))
         test_sim.labour._farming_technique = lambda: doubled
-        recovery = _run(test_sim, 60, first_year=141)
+        def recovered(rows):
+            return (max(row[0] for row in rows) > trough * 1.05 and rows[-1][0] > trough
+                    and rows[-1][1] < 1.0 and rows[-1][2] > 0.99)
+        recovery = _run(test_sim, 60, first_year=141, until=recovered)
         populations = [row[0] for row in recovery]
         self.assertGreater(max(populations), trough * 1.05)
         self.assertGreater(populations[-1], trough)
@@ -180,24 +222,37 @@ class TechnologyRescueTests(unittest.TestCase):
         self.assertGreater(recovery[-1][2], 0.99)
 
 
-class FarmLabourOversupplyTests(unittest.TestCase):
-    def _oversupplied(self, farm_share):
+_SETTLE_YEARS_AFTER_WARM_UP = 40   # long enough for a 90% farm share to ease back to the right-sized share
+
+
+def _oversupplied_shares():
+    """Farm share per year (first row: just after the oversupply is imposed) of a game whose farm
+    share is forced to 90% after warm-up, run at least 30 years and until it is within 0.05 of an
+    undisturbed game's share in the same year; one run serves every test that reads it."""
+    if "oversupplied" not in _SHARED:
+        reference = _undisturbed_run(WARM_UP_YEARS + _SETTLE_YEARS_AFTER_WARM_UP)[0]
         test_sim = sim(CIV_ID, events=False)
         _run(test_sim, WARM_UP_YEARS)
         hours = test_sim.state.economy.society_labour_hours
         total = sum(hours.values())
         others = total - hours[FARM_TRADE]
         for trade in hours:
-            hours[trade] = (farm_share * total if trade == FARM_TRADE
-                            else hours[trade] * (1.0 - farm_share) * total / others)
-        return test_sim
-
-    def test_workers_leave_the_farm_within_the_mobility_ceiling(self):
-        test_sim = self._oversupplied(0.9)
+            hours[trade] = (0.9 * total if trade == FARM_TRADE
+                            else hours[trade] * 0.1 * total / others)
         shares = [_farm_share(test_sim)]
-        for year in range(WARM_UP_YEARS + 101, WARM_UP_YEARS + 131):
-            test_sim._demographic_recovery(year)
+        for step in range(_SETTLE_YEARS_AFTER_WARM_UP):
+            test_sim._demographic_recovery(WARM_UP_YEARS + 101 + step)
             shares.append(_farm_share(test_sim))
+            reference_share = reference[WARM_UP_YEARS + step][1]
+            if len(shares) > 30 and abs(shares[-1] - reference_share) <= 0.03:   # inside the 0.05 the test asserts
+                break
+        _SHARED["oversupplied"] = (shares, reference_share)
+    return _SHARED["oversupplied"]
+
+
+class FarmLabourOversupplyTests(unittest.TestCase):
+    def test_workers_leave_the_farm_within_the_mobility_ceiling(self):
+        shares = _oversupplied_shares()[0][:31]
         ceiling = labour_market.OCCUPATIONAL_MOBILITY_RATE_CEILING_PER_YEAR
         settled_share = shares[-1]
         for before, after in zip(shares, shares[1:]):
@@ -207,11 +262,8 @@ class FarmLabourOversupplyTests(unittest.TestCase):
         self.assertLess(shares[10], shares[0] - 0.2)
 
     def test_the_farm_settles_at_the_share_a_right_sized_farm_has(self):
-        settled = self._oversupplied(0.9)
-        _run(settled, 60, first_year=WARM_UP_YEARS + 101)
-        reference = sim(CIV_ID, events=False)
-        _run(reference, WARM_UP_YEARS + 60)
-        self.assertAlmostEqual(_farm_share(settled), _farm_share(reference), delta=0.05)
+        shares, reference_share = _oversupplied_shares()
+        self.assertAlmostEqual(shares[-1], reference_share, delta=0.05)
 
 
 class ClearingLadderTests(unittest.TestCase):
@@ -234,7 +286,7 @@ class ClearingLadderTests(unittest.TestCase):
     def test_clearing_never_brings_worthless_ground_in(self):
         test_sim = _sim_on(lambda rank, count: 0.0 if rank >= count // 2 else 0.5)
         farmable = sum(hectares for _f, hectares in test_sim._farm_ladder)
-        _run(test_sim, 80)
+        _run(test_sim, 40)
         self.assertLessEqual(test_sim.farm_land.hectares, farmable + 1e-6)
         self.assertGreater(test_sim.farm_land.quality, 0.0)
 
@@ -288,7 +340,7 @@ class NetMarginalProductTests(unittest.TestCase):
 
     def test_ordinary_land_is_farmed_as_before(self):
         # Reference values recorded from the gross-product allocator.
-        history = _run(sim(CIV_ID, events=False), 30)
+        history = _undisturbed_run(WARM_UP_YEARS + _SETTLE_YEARS_AFTER_WARM_UP)[0]
         for year_index, population, farm_share in (
                 (9, 63794202.8, 0.36154), (19, 64504643.0, 0.37042),
                 (29, 65121381.1, 0.3665)):

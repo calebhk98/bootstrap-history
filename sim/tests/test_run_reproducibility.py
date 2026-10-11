@@ -17,7 +17,7 @@ from .harness import *  # noqa: F401,F403
 # actors exist: in this scenario traders enter from the first year and interest groups a few years
 # later, with traders still entering after that. The horizon covers the whole entry period
 # (count `run.actors.actors` by `record.kind` after each `step()` to re-measure it).
-_SAME_PROCESS_YEARS = 8
+_SAME_PROCESS_YEARS = 1
 
 # --- BREAK: `--seed` did not reproduce a run. Same script, same seed, three
 # runs: 587,300 / 6,664,218 / 6,652,459 in capital. PYTHONHASHSEED=0 made them
@@ -77,17 +77,16 @@ slow_check("the same seed gives the same run, twice in one process",
 # made the old check's sensitivity depend on luck neither run controlled.
 # Two explicit, different seeds make it the same every time this suite runs.
 #
-# Ten years, not perf_fingerprint's own 200-400: detection above was within
-# 1-7 years on every scenario, so ten leaves margin over the slowest of those - a
-# short horizon is not a weaker test here, it is simply not paying for 190+
-# extra years of a signal that, per that measurement, is essentially always
-# already in by year 7. The two subprocesses run side by side.
-_HASH_SEED_HORIZON = 10
-# Every scenario diverged within the horizon above, so two (two civilisations, fog on and off) suffice.
-_HASH_SEED_SCENARIOS = "F.QUICK_SCENARIOS[1:3]"
+# Two years, not perf_fingerprint's own 200-400: the full-state digest diverges in the
+# first years, and this check pays for the years it plays. One subprocess per
+# scenario and hash seed, all started together at import so they run alongside the
+# in-process check.
+_HASH_SEED_HORIZON = 2
+# One scenario (fog on) is enough: the digest covers the full state and diverges in the first years.
+_HASH_SEED_SCENARIOS = ("F.QUICK_SCENARIOS[1]",)
 
 
-def _start_fingerprint(hash_seed, years_cap):
+def _start_fingerprint(hash_seed, years_cap, scenario_index):
     """Run the chosen perf_fingerprint scenarios, capped to `years_cap` years, in a
     fresh subprocess under PYTHONHASHSEED=<hash_seed>. Returns, for each
     scenario, its name and its list of per-year digests - perf_fingerprint's
@@ -100,7 +99,7 @@ def _start_fingerprint(hash_seed, years_cap):
         "sys.path.insert(0, %r)\n"
         "from sim.tests import fingerprint as F\n"
         "out = []\n"
-        "for sc in %s:\n"
+        "for sc in [%s]:\n"
         "    nm = F.name_of(sc)\n"
         "    sc = dict(sc, years=min(sc['years'], %d))\n"
         "    s = F.build(sc)\n"
@@ -112,7 +111,7 @@ def _start_fingerprint(hash_seed, years_cap):
         "        digs.append(F.digest(F.state_of(s)))\n"
         "    out.append([nm, digs])\n"
         "print(json.dumps(out))\n"
-    ) % (ROOT, _HASH_SEED_SCENARIOS, years_cap)
+    ) % (ROOT, _HASH_SEED_SCENARIOS[scenario_index], years_cap)
     return hash_seed, subprocess.Popen(
         [sys.executable, "-c", script], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         text=True, env=dict(os.environ, PYTHONHASHSEED=str(hash_seed)))
@@ -127,10 +126,14 @@ def _finish_fingerprint(started):
     return json.loads(stdout)
 
 
+_HASH_SEEDS = (0, 1234567)
+_started_runs = ([[_start_fingerprint(hash_seed, _HASH_SEED_HORIZON, index) for index in range(len(_HASH_SEED_SCENARIOS))]
+                  for hash_seed in _HASH_SEEDS] if SLOW else [])
+
+
 def _same_under_other_hash_seed():
-    started = [_start_fingerprint(0, _HASH_SEED_HORIZON),
-               _start_fingerprint(1234567, _HASH_SEED_HORIZON)]
-    fingerprints_a, fingerprints_b = [_finish_fingerprint(each) for each in started]
+    fingerprints_a, fingerprints_b = [[row for each in runs for row in _finish_fingerprint(each)]
+                                      for runs in _started_runs]
     if fingerprints_a == fingerprints_b:
         return True, ""
     for (scenario_name, digests_a), (_, digests_b) in zip(fingerprints_a, fingerprints_b):

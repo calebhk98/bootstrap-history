@@ -17,6 +17,12 @@ def _lost_foreman_sim():
     return test_sim
 
 
+def _staff_and_money(test_sim):
+    """The year's staff phase (attrition, the keep-staffed hire) and money phase (the closure rule)."""
+    test_sim._step_staff()
+    test_sim._step_money_seat()
+
+
 def _dispatch(test_sim, line):
     cmd, refusal = parse_typed(line)
     check("typed %r parses" % line, cmd is not None, refusal)
@@ -25,7 +31,7 @@ def _dispatch(test_sim, line):
 
 # Baseline: without the flag the closure rule shuts the unsupervised concern.
 control = _lost_foreman_sim()
-control.step()
+_staff_and_money(control)
 check("unflagged concern closes when its foreman is gone",
       CONCERN not in control.operating, control.employees)
 
@@ -44,7 +50,7 @@ refused = _dispatch(flagged, "keep no_such_concern staffed")
 check("an unknown id is refused", refused.get("ok") is False, refused)
 
 # The yearly step hires what the flagged concern needs before the closure rule.
-flagged.step()
+_staff_and_money(flagged)
 check("flagged concern stays open through the loss of its foreman",
       CONCERN in flagged.operating, dict(flagged.employees))
 check("...because a glassblower was hired",
@@ -66,13 +72,13 @@ check("keep <id> off clears the flag",
       off.get("ok") is True and CONCERN not in getattr(flagged.state.projects, "keep_staffed", set()), off)
 flagged.employees.pop("glassblower", None)
 flagged.labour._resync_pools()
-flagged.step()
+_staff_and_money(flagged)
 check("once off, the concern closes again", CONCERN not in flagged.operating)
 
 # Within cash: a flagged concern is not hired for when the household is broke.
 poor = _lost_foreman_sim()
 poor.state.household.capital = -poor.credit_limit()  # in arrears to the limit: nothing left to spend
 _dispatch(poor, "keep %s staffed" % CONCERN)
-poor.step()
+_staff_and_money(poor)
 check("no cash, no hire: the rule does not conjure people",
       poor.employees.get("glassblower", 0.0) < 0.5, dict(poor.employees))

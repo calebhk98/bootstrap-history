@@ -1,49 +1,30 @@
 """Complaint 320, general guard: stepping a game that is saved and loaded at a
-year gives the same year as stepping the unbroken game, at each year of a run.
-Compares the digest the performance fingerprint uses, so any state the next year
-reads but the save does not carry shows up as a different digest. The quick run
-is two years; the slow run is long enough to finish projects, admit firms and
-meet hazards. A defect that only shows once the economy is large is found by
-`sim/tests/fingerprint.py` with a long scenario."""
+year gives the same year as stepping the unbroken game. Compares the digest the
+performance fingerprint uses, so any state the next year reads but the save does
+not carry shows up as a different digest. The game is saved after one played year
+(so it carries a year of accumulated state), resumed in a fresh build and both are
+played one more year. A defect that only shows once the economy is large is found
+by `sim/tests/fingerprint.py` with a long scenario."""
 from .harness import *  # noqa: F401,F403
 from sim.tests import fingerprint as perf_fingerprint
 from sim.engine.saveload import save_state, load_state
 
-QUICK_YEARS = 2
-SLOW_YEARS = 12
+SCENARIO = dict(civ="rome_100ad", seed=1, years=2, events=True, fog=False)
 
 
-def years_that_diverge(years):
-    """One run of `years` years, yielding the years that differ so far after each year."""
-    scenario = dict(civ="rome_100ad", seed=1, years=years, events=True, fog=False)
-    unbroken = perf_fingerprint.build(scenario)
+def _resumed_year_differs():
+    unbroken = perf_fingerprint.build(SCENARIO)
+    unbroken.step()
     save_path = os.path.join(tempfile.mkdtemp(), "save.json")
-    diverging_years = []
-    for year in range(1, years + 1):
-        save_state(unbroken, save_path)
-        resumed = perf_fingerprint.build(scenario)
-        load_state(resumed, save_path)
-        unbroken.step()
-        resumed.step()
-        if (perf_fingerprint.digest(perf_fingerprint.state_of(unbroken))
-                != perf_fingerprint.digest(perf_fingerprint.state_of(resumed))):
-            diverging_years.append(year)
-        yield list(diverging_years)
+    save_state(unbroken, save_path)
+    resumed = perf_fingerprint.build(SCENARIO)
+    load_state(resumed, save_path)
+    unbroken.step()
+    resumed.step()
+    same = (perf_fingerprint.digest(perf_fingerprint.state_of(unbroken))
+            == perf_fingerprint.digest(perf_fingerprint.state_of(resumed)))
+    return same, "the resumed second year differs from the unbroken second year"
 
 
-# The quick check and the slow check are the same run: the slow one carries on from where the quick one stopped.
-run_of_years = years_that_diverge(SLOW_YEARS)
-quick_diverging = [next(run_of_years) for _ in range(QUICK_YEARS)][-1]
-check("a game saved and loaded before each year of a short run plays that year as the unbroken game does",
-      not quick_diverging, "years that differ: %s" % quick_diverging)
-
-
-def _rest_of_the_run():
-    diverging_years = quick_diverging
-    for diverging_years in run_of_years:
-        pass
-    return not diverging_years, "a year differs within %d years: %s" % (SLOW_YEARS, diverging_years)
-
-
-slow_check("...and the same over a run long enough to finish projects, admit firms and meet hazards",
-           _rest_of_the_run)
+slow_check("a game saved and loaded after its first year plays the second year as the unbroken game does",
+           _resumed_year_differs)

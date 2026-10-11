@@ -8,13 +8,15 @@ import unittest
 from sim.engine import data
 from sim.engine.projects_completion import goal_movement
 from sim.engine.ui_port import Sim, load, load_civ
+from sim.tests.harness import build_unopened
 
 _TREE, _PRICES, _NODES, _WAGES, _GOODS = load()
 LITERACY_GOAL = "goal_literacy_common"
 
 
 def _fresh_sim(goal=None):
-    sim = Sim(_NODES, [], random.Random(1), events=False, manual=True, civ=load_civ("rome_100ad"))
+    sim = build_unopened(lambda: Sim(_NODES, [], random.Random(1), events=False, manual=True,
+                                     civ=load_civ("rome_100ad")))
     sim.done_year = {}
     if goal:
         sim.goal = goal

@@ -32,8 +32,6 @@ useful synthetic analogue: land.py reads real geography.
 Engine price solving includes the per-civilisation rent tables.
 """
 
-QUICK_TOPIC = True
-
 import json
 import os
 import unittest
