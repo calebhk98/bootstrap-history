@@ -129,8 +129,9 @@ def _root_above(demand, low: float, excess_low: float, guess: Optional[float], s
 
 def _root(demand, low: float, excess_low: float, high: float, excess_high: float, supply: float) -> float:
     """Root of demand minus supply between low (positive excess) and high (negative excess)."""
+    exp = math.exp
     log_low, log_high = math.log(low), math.log(high)
-    scale = max(abs(supply), 1e-300)
+    tolerance = RELATIVE_RESIDUAL_TOLERANCE * max(abs(supply), 1e-300)
     side = 0
     previous = None
     for _ in range(ROOT_STEPS):
@@ -139,7 +140,7 @@ def _root(demand, low: float, excess_low: float, high: float, excess_high: float
         point = (log_low * excess_high - log_high * excess_low) / (excess_high - excess_low)
         if not log_low < point < log_high:
             point = 0.5 * (log_low + log_high)
-        excess = demand(math.exp(point)) - supply
+        excess = demand(exp(point)) - supply
         if excess > 0.0:
             log_low, excess_low = point, excess
             if side > 0:
@@ -150,9 +151,9 @@ def _root(demand, low: float, excess_low: float, high: float, excess_high: float
             if side < 0:
                 excess_low *= 0.5
             side = -1
-        if abs(excess) <= RELATIVE_RESIDUAL_TOLERANCE * scale:
-            return math.exp(point)
+        if abs(excess) <= tolerance:
+            return exp(point)
         if previous is not None and abs(point - previous) < LOG_PRICE_TOLERANCE:
-            return math.exp(point)
+            return exp(point)
         previous = point
-    return math.exp(log_high)
+    return exp(log_high)

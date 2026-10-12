@@ -1,13 +1,15 @@
 """A market's demand as one evaluator: the buyers' schedules summed, with one power call per distinct
 (reference price, elasticity) pair instead of one per buyer. Rows keep the order of the bids given."""
 import math
-from operator import attrgetter
+from bisect import bisect_right
+from operator import attrgetter, itemgetter
 from typing import List, Optional, Sequence
 
 from .types import Bid
 
 _SCHEDULE_FIELDS = attrgetter("floor_quantity", "flexible_quantity", "reference_price", "elasticity", "budget",
                               "maximum_price")
+_MAXIMUM = itemgetter(3)
 _CONSTANT = (1.0, 0.0)    # the schedule of a buyer whose want does not move with price
 
 
@@ -18,8 +20,8 @@ class DemandSchedule:
         group_of: dict = {}
         self.group_terms: List[tuple] = []
         self.group_rows: List[list] = []
+        self.capped_group_rows: List[list] = []    # per group: (floor, flexible, budget, maximum), highest maximum first
         self.rows: List[tuple] = []
-        self.group_sums: List[tuple] = []
         self.maximums: List[float] = []      # each bid's maximum price, in the order of the bids
         for floor, flexible, reference, elasticity, budget, maximum in map(_SCHEDULE_FIELDS, bids):
             self.maximums.append(maximum)
@@ -34,13 +36,21 @@ class DemandSchedule:
                 group = group_of[key] = len(self.group_terms)
                 self.group_terms.append(key)
                 self.group_rows.append([])
+                self.capped_group_rows.append([])
             row = (floor, flexible, budget, group)
             self.rows.append(row)
             if budget > 0.0:
                 self.group_rows[group].append(row)
+                self.capped_group_rows[group].append((floor, flexible, budget, maximum))
 
         self.price_capped = any(maximum < math.inf for maximum in self.maximums)
+        for rows in self.capped_group_rows:
+            rows.sort(key=_MAXIMUM, reverse=True)
+        self._negated_terms = [(reference, -elasticity) for reference, elasticity in self.group_terms]
+        self._packed = [(reference, negated, [row[:3] for row in rows], [-row[3] for row in rows])
+                        for (reference, negated), rows in zip(self._negated_terms, self.capped_group_rows)]
         self._totals: dict = {}              # total_at by price: a market is cleared at the same prices many times
+        self._uncapped_terms: Optional[List[tuple]] = None
         self._ceilings: Optional[List[float]] = None
         self.solutions: dict = {}            # solve_price's memo: books against this demand share it
 
@@ -49,17 +59,27 @@ class DemandSchedule:
 
     def uncapped_at(self, price: float) -> float:
         """Demand ignoring budgets: never below `total_at`, and one step per distinct schedule."""
-        if not self.group_sums:
-            self.group_sums = [(math.fsum(row[0] for row in rows), math.fsum(row[1] for row in rows))
-                               for rows in self.group_rows]
-        return sum([floors + flexibles * factor for factor, (floors, flexibles)
-                    in zip(self._flexible_factors(price), self.group_sums)])
+        terms = self._uncapped_terms
+        if terms is None:
+            terms = self._uncapped_terms = [
+                (reference, negated, math.fsum(row[0] for row in rows), math.fsum(row[1] for row in rows))
+                for (reference, negated), rows in zip(self._negated_terms, self.group_rows)]
+        try:
+            return sum([floors + flexibles * ((price / reference) ** negated)
+                        for reference, negated, floors, flexibles in terms])
+        except OverflowError:
+            return sum([floors + flexibles * factor for factor, (_reference, _negated, floors, flexibles)
+                        in zip(self._flexible_factors(price), terms)])
 
     def _flexible_factors(self, price: float) -> List[float]:
+        try:
+            return [(price / reference) ** negated for reference, negated in self._negated_terms]
+        except OverflowError:
+            pass
         factors = []
-        for reference, elasticity in self.group_terms:
+        for reference, negated in self._negated_terms:
             try:
-                factors.append((price / reference) ** -elasticity)
+                factors.append((price / reference) ** negated)
             except OverflowError:
                 factors.append(math.inf)
         return factors
@@ -79,11 +99,32 @@ class DemandSchedule:
 
     def _total_at(self, price: float) -> float:
         if self.price_capped:
-            return math.fsum(self.each_at(price))
+            return self._capped_total_at(price)
         total = 0.0
         for factor, rows in zip(self._flexible_factors(price), self.group_rows):
             total += sum([min(floor + flexible * factor, budget / price) for floor, flexible, budget, _group in rows])
         return total
+
+    def _capped_total_at(self, price: float) -> float:
+        """`fsum(each_at(price))` without the buyers priced out (they add exactly zero); fsum is exact, so row order is free."""
+        wanted: List[float] = []
+        try:
+            for reference, negated, rows, keys in self._packed:
+                factor = (price / reference) ** negated
+                count = bisect_right(keys, -price)
+                if count:
+                    wanted += [(cap if (cap := budget / price) < (want := floor + flexible * factor) else want)
+                               for floor, flexible, budget in (rows if count == len(rows) else rows[:count])]
+        except OverflowError:
+            return self._capped_total_overflowing(price)
+        return math.fsum(wanted)
+
+    def _capped_total_overflowing(self, price: float) -> float:
+        wanted: List[float] = []
+        for factor, (_reference, _negated, rows, keys) in zip(self._flexible_factors(price), self._packed):
+            count = bisect_right(keys, -price)
+            wanted += [min(floor + flexible * factor, budget / price) for floor, flexible, budget in rows[:count]]
+        return math.fsum(wanted)
 
     def each_at(self, price: float) -> List[float]:
         """Each bid's quantity at a positive price, in the order of the bids."""
