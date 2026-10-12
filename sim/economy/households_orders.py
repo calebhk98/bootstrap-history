@@ -211,7 +211,7 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
     if weights:
         # stock kept in use serves the needs and is not savings, so the store sees only the rest
         stock_flow_by_good = {good: max(flow_by_good.get(good, 0.0) * scale, smoothed_flow.get(good, 0.0))
-                              for good in set(flow_by_good) | set(smoothed_flow)}
+                              for good in sorted(set(flow_by_good) | set(smoothed_flow))}
         in_use = durable_stock.in_use_stock(stock_flow_by_good, specs, 1.0, households_store.STORE_REBALANCE_BAND)
         held = {good: max(0.0, quantity - in_use.get(good, 0.0)) for good, quantity in held.items()}
         real_rate = view.interest_rate(area_currency) - cohort.expected_inflation

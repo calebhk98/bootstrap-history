@@ -22,7 +22,7 @@ def apply_satiation(need_units: Dict[str, float], price_index: Mapping[str, floa
         if not newly:
             return
         freed = 0.0
-        for need_id in newly:
+        for need_id in sorted(newly):
             limit = needs[need_id][SATIATION_FIELD] * population
             freed += (need_units[need_id] - limit) * price_index[need_id]
             need_units[need_id] = limit
