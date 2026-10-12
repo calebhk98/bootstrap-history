@@ -5,10 +5,14 @@ those changes made an unbroken game read a different pool from the one a reloade
 from .harness import *  # noqa: F401,F403
 from sim.tests import fingerprint as perf_fingerprint
 
-game = perf_fingerprint.build(dict(civ="rome_100ad", seed=1, years=3, events=True, fog=False))
+YEARS = 6   # interest groups form from the third year on, and their staff is what the recount must see
+game = perf_fingerprint.build(dict(civ="rome_100ad", seed=1, years=YEARS, events=True, fog=False))
+# Actors enter and act in the money phase; the year's market close (nearly all of a step) does not change who
+# employs whom, so it is left out.
+game._step_market = lambda: None
 actors_at_start = len(game.actors.actors)
 stale = []
-for year in range(1, 4):
+for year in range(1, YEARS + 1):
     game.step()
     registry = game.actors
     for trade in sorted({trade for actor in registry.actors.values() for trade in actor.record.workforce}):

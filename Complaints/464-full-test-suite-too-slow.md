@@ -1,6 +1,6 @@
 # The full test suite takes far longer than fifteen minutes
 
-**Status:** partly - quick tier inside two minutes and the full suite inside thirty on four cores; two topics still time out
+**Status:** partly - quick tier inside two minutes and the full suite inside thirty on four cores; one topic still times out
 
 The quick tier (`python3 -m sim.tests`) runs only topics marked `QUICK_TOPIC = True`, a few to
 a process, and stays fast after engine edits. The full suite (`python3 -m sim.tests --slow
@@ -13,9 +13,8 @@ topics in that table are where the next cut belongs.
 time per topic; the runner stops and fails any topic still running after `--topic-seconds` (default in
 `sim/tests/__main__.py`), so a run always ends and names what is too slow. Suite games open on a short
 spin-up (`ROME_SPIN_UP_YEARS`, set in `sim/tests/harness.py`), cached apart from full games, and the runner
-builds one game of every civilisation before the first topic. Two topics still time out:
-`arrears_hours` (a price solve that stalls, 474) and `insolvency_whole_game` (a ruined founder needs several
-full market years to show recovery; whether it stays in the full suite is an owner decision).
+builds one game of every civilisation before the first topic. One topic still times out: `arrears_hours` (a price solve that stalls, 474). `insolvency_whole_game` leaves the market close out of
+the years that do not read it and plays a few full market years after the ruin, which is enough to show the founder's money turn round.
 
 ## What would cut it further
 

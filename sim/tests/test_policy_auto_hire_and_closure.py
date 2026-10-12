@@ -190,6 +190,7 @@ ratios = []
 # a project the society can staff, with the purse far short of its instalment, so the very first year shows a refund
 s.start_project("scientific_method")
 s.capital = -s.credit_limit() * 0.8
+s._step_market = lambda: None   # the hours and the refund come from the work phases; the market close adds nothing to them
 for _ in range(3):
     s.step()
     h = s.hours_this_year
@@ -416,9 +417,7 @@ check("you cannot commit to more work than cash and credit could ever cover",
 # upkeep under the audit, so it is named directly rather than found.
 s.capital = 50000.0
 _free = ["md2_sand_filtration"]
-s.done.add(_free[0])
-s.done.update(NODES[_free[0]]["pre"])  # restore_work refuses while a prerequisite is unmet
-s._done_changed()
+run_it(s, _free[0], *NODES[_free[0]]["pre"])  # the work runs, and restore_work refuses while a prerequisite is shut
 s.mothball_work(_free[0])
 _cap = s.capital
 s.restore_work(_free[0])
@@ -436,7 +435,7 @@ check("shutting a work down and reopening it is never free",
 s = _norse
 s.capital = 40000.0
 s.labour.hire("smith", 3)
-_loser = [node_id for node_id in NODES if NODES[node_id]["up"] > NODES[node_id]["rev"] > 0][:1]
+_loser = [node_id for node_id in NODES if NODES[node_id]["up"] - NODES[node_id]["rev"] > 1e-6 and NODES[node_id]["rev"] > 0][:1]
 if _loser:
     s.done.add(_loser[0]); s._done_changed(); s.open_venture(_loser[0])
 s.capital = -900.0
@@ -448,9 +447,8 @@ check("a run that has effectively stopped says so, and says what would restart i
       # not say which job to take can be followed into a loss.
       and any(reason.startswith("work as a ") for reason in _diag["what_would_change_it"]),
       _diag)
-check("a solvent run is not told it is stuck",
-      pristine_game("norse_900ad").stall_diagnosis() is None,
-      pristine_game("norse_900ad").stall_diagnosis())
+_solvent_diagnosis = pristine_game("norse_900ad").stall_diagnosis()
+check("a solvent run is not told it is stuck", _solvent_diagnosis is None, _solvent_diagnosis)
 
 # --- the invariant behind a whole class of contradiction ---------------------
 # A weird-play tester reached, in seven years from a fresh start, a node that
@@ -480,6 +478,8 @@ s = sim(civ="han_china_100ad", manual=False)
 # Han's coin is small, so a fixed purse is a fraction of a labourer-year.
 s.capital = 1000 * s.labour.market.quote_annual("labourer")
 s.policy["auto_hire"] = True
+run_it(s, _LOSS, *NODES[_LOSS]["pre"])   # a household with something running, so the invariant read below is not vacuous
+s._step_market = lambda: None            # hiring and shedding act in the staff and money phases, not in the market close
 s.step()
 check("auto_hire on a rich household actually hires",
       sum(s.employees.values()) > 1.0,
