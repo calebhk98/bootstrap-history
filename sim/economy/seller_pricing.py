@@ -14,7 +14,7 @@ from typing import List, Optional, Sequence, Tuple
 
 from sim.constants import declare
 
-from . import goods_market
+from . import goods_market, seller_book
 from .accounts import ROUNDING_SHARE
 from .types import Bid, Offer, is_edge
 
@@ -121,11 +121,5 @@ def _book_clearing(bids: Sequence[Bid], rivals: Sequence[Offer], offer: Offer, l
         return lambda reservation: _sold_and_price(_clear(bids, rivals, offer, reservation, last_price), offer.seller)
     if buyers is None:
         buyers = goods_market.Buyers(bids, last_price)
-    ordered = goods_market.in_clearing_order(rivals)
-
-    def clear_at(reservation):
-        offers = ordered if reservation is None else goods_market.with_offer(
-            ordered, replace(offer, reservation_price=reservation))
-        price, sold = goods_market.price_and_sold(buyers, offers, offer.seller)
-        return sold, price
-    return clear_at
+    book = seller_book.SellerBook(buyers, goods_market.in_clearing_order(rivals), offer)
+    return book.sold_and_price

@@ -84,6 +84,21 @@ class Buyers:
         self.schedule = DemandSchedule(self.bids)
         self.minimum_price = MINIMUM_PRICE_SHARE_OF_REFERENCE * _price_scale(self.bids, last_price)
         self.last_price = last_price
+        self._wants: dict = {}     # price -> (each buyer's want, their total)
+        self._traded: dict = {}    # (price, quantity available) -> what the buyers are served in all
+
+    def traded_at(self, price: float, supply: float) -> float:
+        """The total the buyers are served at a price when `supply` is on offer there."""
+        wants = self._wants.get(price)
+        if wants is None:
+            each = self.schedule.each_at(price)
+            wants = self._wants[price] = (each, math.fsum(each))
+        available = min(wants[1], supply)
+        key = (price, available)
+        traded = self._traded.get(key)
+        if traded is None:
+            traded = self._traded[key] = math.fsum(_ration(self.bids, wants[0], available))
+        return traded
 
 
 def in_clearing_order(offers: Sequence[Offer]) -> List[Offer]:
@@ -124,12 +139,11 @@ def clear(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: Area
 def price_and_sold(buyers: Buyers, ordered: List[Offer], seller: str) -> Tuple[float, float]:
     """The clearing price and what a seller that is not a book edge sells, as `clear` gives them, without
     building fills. `ordered` is in clearing order (`in_clearing_order`, `with_offer`)."""
-    price, eligible, supply, wants = _crossing(buyers, ordered)
+    price, eligible, supply, _wants = _crossing(buyers, ordered, with_wants=False)
     if eligible is None:
         return price, 0.0
-    served = _ration(buyers.bids, wants, min(math.fsum(wants), supply))
     # `_fill_sellers` for this seller's offers alone
-    remaining, sold = math.fsum(served), []
+    remaining, sold = buyers.traded_at(price, supply), []
     for _reservation, group in groupby(eligible, key=_FIRST):
         offers = [offer for _, offer in group]
         total = math.fsum(offer.quantity for offer in offers)
@@ -144,10 +158,10 @@ def price_and_sold(buyers: Buyers, ordered: List[Offer], seller: str) -> Tuple[f
     return price, math.fsum(quantity for quantity in sold if quantity > 0.0)
 
 
-def _crossing(buyers: Buyers, offers: List[Offer]):
+def _crossing(buyers: Buyers, offers: List[Offer], with_wants: bool = True):
     """(price, offers eligible at it, supply, each buyer's want at it) where `offers` (in clearing order) meet
     the buyers; the eligible offers and wants are None when nothing trades, and supply is then what would
-    sell at the price."""
+    sell at the price. Without `with_wants` the wants are left out (None)."""
     last_price = buyers.last_price
     held_price = last_price if last_price is not None else 0.0
     if not offers:
@@ -175,17 +189,17 @@ def _crossing(buyers: Buyers, offers: List[Offer]):
         levels.append((reservation, running))
     price = solve_price(levels, schedule.total_at, demand_at_first,
                         schedule.uncapped_at if schedule.distinct_schedules() * CHEAP_PASSES_PER_BID <= len(buyers.bids)
-                        else None)
+                        else None, schedule.solutions)
     if schedule.price_capped:
-        price = _at_a_ceiling(price, schedule, levels, effective[0])
+        price = at_a_ceiling(price, schedule, levels, effective[0])
 
     eligible = [(reservation, offer) for reservation, offer in zip(effective, offers)
                 if reservation <= price]
     supply = math.fsum(offer.quantity for _, offer in eligible)
-    return price, eligible, supply, schedule.each_at(price)
+    return price, eligible, supply, schedule.each_at(price) if with_wants else None
 
 
-def _at_a_ceiling(price: float, schedule, levels, lowest: float) -> float:
+def at_a_ceiling(price: float, schedule, levels, lowest: float) -> float:
     """Where demand falls off a buyer's ceiling, the crossing can sit just above it with nothing
     wanted: then the market clears at that ceiling, with buyers rationed to the supply there. A ceiling
     only clears the market if what is still wanted just above it fits in the supply at it; otherwise the
