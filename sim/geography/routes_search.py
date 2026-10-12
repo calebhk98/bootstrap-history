@@ -66,6 +66,54 @@ def _tree(compiled: routes_compile.Compiled, origins: frozenset, by_days: bool):
     return compiled.trees[key]
 
 
+def _cost_adjacency(compiled: routes_compile.Compiled):
+    """Per state, (state reached, cost added) over its links and the changes of mode on its tile."""
+    adjacency = compiled.trees.get("adjacency")
+    if adjacency is None:
+        count = len(compiled.mode_ids)
+        adjacency = []
+        for state, state_links in enumerate(compiled.links):
+            tile, position = divmod(state, count)
+            steps = [(link[0], link[1]) for link in state_links]
+            steps.extend((tile * count + other, compiled.handling[other][0])
+                         for other in compiled.modes_at[tile] if other != position)
+            adjacency.append(tuple(steps))
+        compiled.trees["adjacency"] = adjacency
+    return adjacency
+
+
+def _cost_tree(compiled: routes_compile.Compiled, origins: frozenset) -> list:
+    """The least cost to every state: the same values `_tree` finds by cost (a path's cost is summed in
+    order from the origin whatever the search order), without the days and routes."""
+    key = (origins, "cost")
+    cached = compiled.trees.get(key)
+    if cached is not None:
+        return cached
+    adjacency = _cost_adjacency(compiled)
+    count = len(compiled.mode_ids)
+    cost = [INFINITY] * len(adjacency)
+    queue = []
+    for tile_id in sorted(origins):
+        tile = compiled.tile_index[tile_id]
+        for position in compiled.modes_at[tile]:
+            state = tile * count + position
+            cost[state] = compiled.handling[position][0]
+            queue.append((cost[state], state))
+    heapq.heapify(queue)
+    pop, push = heapq.heappop, heapq.heappush
+    while queue:
+        here_cost, state = pop(queue)
+        if here_cost > cost[state]:
+            continue
+        for to_state, step_cost in adjacency[state]:
+            new_cost = here_cost + step_cost
+            if new_cost < cost[to_state]:
+                cost[to_state] = new_cost
+                push(queue, (new_cost, to_state))
+    compiled.trees[key] = cost
+    return cost
+
+
 def _best_state(compiled, tree, tile_ids, by_days):
     cost, days, _previous = tree
     count = len(compiled.mode_ids)
@@ -149,7 +197,7 @@ def costs_from(world_map: WorldMap, origin_tiles: Iterable[str], modes: Iterable
     origins = _origin_indexes(world_map, origin_tiles)
     compiled = routes_compile.compiled_for(world_map, routes_modes.checked_mode_ids(world_map, modes),
                                            improvements, mode_costs, handling_costs, held_nodes)
-    cost, _days, _previous = _tree(compiled, origins, False)
+    cost = _cost_tree(compiled, origins)
     count = len(compiled.mode_ids)
     result: Dict[str, float] = {}
     for tile_id, tile in compiled.tile_index.items():
