@@ -8,6 +8,8 @@ sum does not depend on order), so the results are the same bit for bit.
 """
 import bisect
 import math
+from itertools import accumulate
+from operator import ge, sub
 from operator import attrgetter
 from typing import List, Optional, Tuple
 
@@ -16,6 +18,7 @@ from .goods_market import CHEAP_PASSES_PER_BID, Buyers, at_a_ceiling
 from .goods_market_solve import solve_price
 from .types import Offer
 
+UNSOLD_MARGIN = 1.0 + 1e-6    # how far above the rivals' crossing an offer must lie to be certain of selling nothing
 _QUANTITY = attrgetter("quantity")
 
 
@@ -45,9 +48,40 @@ class SellerBook:
                 self.group_own[-1].append(rival.quantity)
         self.group_totals = [math.fsum(members) for members in self.group_members]
         self.group_start.append(len(self.quantities))
+        self._rivals_own = any(self.group_own)    # whether the seller has other offers in the book
+        self._unsold_above: Optional[float] = None    # see `sells_nothing`
+        self._solved = {}    # effective reservation (None: no offer) -> (sold, price); trials below the minimum price coincide
 
     def sold_and_price(self, reservation: Optional[float]) -> Tuple[float, float]:
         """(what the seller sells, clearing price) with its offer at `reservation`; None: no offer."""
+        if reservation is not None and self.own_quantity > 0.0:
+            reservation = max(reservation, self.minimum_price)
+        else:
+            reservation = None
+        solved = self._solved.get(reservation)
+        if solved is None:
+            solved = self._solved[reservation] = self._solve(reservation)
+        return solved
+
+    def sells_nothing(self, reservation: float) -> bool:
+        """True when an offer at `reservation` provably sells nothing: it lies above a price at which the
+        buyers already want no more than the rivals offer below it, so the crossing is under it. The
+        price it would set is not worked out, so use this only where an unsold offer's price does not matter."""
+        if self._unsold_above is None:
+            self._unsold_above = self._unsold_threshold()
+        return max(reservation, self.minimum_price) > self._unsold_above and self.own_quantity > 0.0
+
+    def _unsold_threshold(self) -> float:
+        if not self.reservations or self._rivals_own:    # the seller's other offers may sell
+            return math.inf
+        price = self.sold_and_price(None)[1] * UNSOLD_MARGIN
+        if not 0.0 < price < math.inf:
+            return math.inf
+        below = bisect.bisect_right(self.reservations, price)
+        supply = list(accumulate(self.group_totals))[below - 1] if below else 0.0
+        return price if self.buyers.schedule.total_at(price) <= supply else math.inf
+
+    def _solve(self, reservation: Optional[float]) -> Tuple[float, float]:
         buyers = self.buyers
         last_price = buyers.last_price
         held_price = last_price if last_price is not None else 0.0
@@ -78,10 +112,7 @@ class SellerBook:
         if demand_at_first <= 0.0:
             return 0.0, held_price if last_price is not None and lowest <= last_price else lowest
 
-        levels, running = [], 0.0
-        for level, total in zip(reservations, totals):
-            running += total
-            levels.append((level, running))
+        levels = list(zip(reservations, accumulate(totals)))
         price = solve_price(levels, schedule.total_at, demand_at_first,
                             schedule.uncapped_at if schedule.distinct_schedules() * CHEAP_PASSES_PER_BID
                             <= len(buyers.bids) else None, schedule.solutions)
@@ -95,6 +126,18 @@ class SellerBook:
             eligible_quantities.append(quantity)
         supply = math.fsum(eligible_quantities)
         remaining = buyers.traded_at(price, supply)
+        if not self._rivals_own and has_own:
+            # only the seller's own offer can sell: it is filled after every group below it, in order
+            if effective > price:
+                return 0.0, price
+            below = totals[:group]
+            running = list(accumulate(below, sub, initial=remaining))
+            if not all(map(ge, running, below)):
+                return 0.0, price
+            remaining = running[group]
+            total = totals[group]
+            sold_own = quantity if remaining >= total else quantity * (remaining / total if total > 0.0 else 0.0)
+            return (sold_own if sold_own > 0.0 else 0.0), price
         sold: List[float] = []
         for total, quantities in zip(totals[:eligible_groups], own):
             if remaining >= total:

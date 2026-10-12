@@ -84,7 +84,7 @@ def best_reservation(bids: Sequence[Bid], rivals: Sequence[Offer], offer: Offer,
     None when the seller does not move the price or nothing beats keeping `current` (the price-taking ask;
     the ceiling when not given). A choice above the ask withholds units, which stay unsold. `buyers` is
     `goods_market.Buyers(bids, last_price)` when the caller searches for several sellers in one market."""
-    clear_at = _book_clearing(bids, rivals, offer, last_price, buyers)
+    clear_at, book = _book_clearing(bids, rivals, offer, last_price, buyers)
     without_price = clear_at(None)[1]
     cleared = {0.0: clear_at(0.0)}    # each reservation is cleared once
     if not _prices_differ(without_price, cleared[0.0][1]):
@@ -92,7 +92,9 @@ def best_reservation(bids: Sequence[Bid], rivals: Sequence[Offer], offer: Offer,
 
     def profit(reservation: float) -> float:
         if reservation not in cleared:
-            cleared[reservation] = clear_at(reservation)
+            # an offer that sells nothing earns nothing whatever price it would set
+            cleared[reservation] = (0.0, without_price) if book is not None and book.sells_nothing(reservation) \
+                else clear_at(reservation)
         sold, price = cleared[reservation]
         return (price - unit_value) * sold
 
@@ -115,11 +117,12 @@ def _prices_differ(without: float, with_it: float) -> bool:
 
 def _book_clearing(bids: Sequence[Bid], rivals: Sequence[Offer], offer: Offer, last_price: Optional[float],
                    buyers: Optional[goods_market.Buyers] = None):
-    """reservation (None: no offer) -> (what the seller sells, clearing price), the same figures `_clear` gives;
-    the buyers and the rivals are sorted once for every reservation tried."""
+    """(reservation (None: no offer) -> (what the seller sells, clearing price), the same figures `_clear` gives;
+    the seller's book, None for an edge seller). The buyers and the rivals are sorted once for every reservation tried."""
     if is_edge(offer.seller):
-        return lambda reservation: _sold_and_price(_clear(bids, rivals, offer, reservation, last_price), offer.seller)
+        return (lambda reservation: _sold_and_price(_clear(bids, rivals, offer, reservation, last_price),
+                                                    offer.seller)), None
     if buyers is None:
         buyers = goods_market.Buyers(bids, last_price)
     book = seller_book.SellerBook(buyers, goods_market.in_clearing_order(rivals), offer)
-    return book.sold_and_price
+    return book.sold_and_price, book
