@@ -172,44 +172,46 @@ check("selling half your hours costs you half the practice, not all of it",
 # Hire somebody first: a concern needs a pair of your hands to run it, which
 # is the whole point of the staffing floor. Nobody runs a pawnshop alone from
 # nowhere.
+# a node earns only from its output: a small mill whose takings come from what it makes
+EARNING_CONCERN = "en_undershot_wheel"
 _v_game = unopened_sim(capital=2.0e6)
 ask_agent(_v_game, cmd="hire", trade="artisan", n=2)
-_v_game.done.add("fin_restaurant")
+_v_game.done.add(EARNING_CONCERN)
 _v_game._done_changed()
 _before = ask_agent(_v_game, cmd="money")
-_open = ask_agent(_v_game, cmd="open", id="fin_restaurant")
+_open = ask_agent(_v_game, cmd="open", id=EARNING_CONCERN)
 _after = ask_agent(_v_game, cmd="money")
 check("working out how to do something does not by itself pay you",
-      "fin_restaurant" not in (_before.get("where_the_money_comes_from") or {}),
+      EARNING_CONCERN not in (_before.get("where_the_money_comes_from") or {}),
       _before.get("where_the_money_comes_from"))
 check("opening the doors is what pays you",
       _open.get("ok") is True
-      and (_after.get("where_the_money_comes_from") or {}).get("fin_restaurant"),
+      and (_after.get("where_the_money_comes_from") or {}).get(EARNING_CONCERN),
       _after.get("where_the_money_comes_from"))
 
 s2 = unopened_sim(capital=200000.0)
 s2.labour.hire("artisan", 2)
-s2.done.add("fin_restaurant")
+s2.done.add(EARNING_CONCERN)
 s2._done_changed()
 _cap0 = s2.capital
-s2.open_venture("fin_restaurant")
+s2.open_venture(EARNING_CONCERN)
 check("opening a concern costs stock and premises, not nothing",
-      _cap0 - s2.capital >= NODES["fin_restaurant"]["up"],
+      _cap0 - s2.capital >= NODES[EARNING_CONCERN]["up"],
       "%.0f to open against %.0f a year of running cost"
-      % (_cap0 - s2.capital, NODES["fin_restaurant"]["up"]))
+      % (_cap0 - s2.capital, NODES[EARNING_CONCERN]["up"]))
 
 # Shutting it stops both sides and keeps the knowledge.
 s4 = unopened_sim(capital=200000.0)
 s4.labour.hire("artisan", 2)
-s4.done.add("fin_restaurant"); s4._done_changed()
-s4.open_venture("fin_restaurant")
+s4.done.add(EARNING_CONCERN); s4._done_changed()
+s4.open_venture(EARNING_CONCERN)
 _rev_on, _up_on = s4.revenue(), s4.upkeep()
-s4.mothball_work("fin_restaurant")
+s4.mothball_work(EARNING_CONCERN)
 check("closing a concern stops what it earned and what it cost, both",
       s4.revenue() < _rev_on and s4.upkeep() < _up_on
-      and "fin_restaurant" in s4.done,
+      and EARNING_CONCERN in s4.done,
       "rev %.0f->%.0f up %.0f->%.0f, still known %s"
-      % (_rev_on, s4.revenue(), _up_on, s4.upkeep(), "fin_restaurant" in s4.done))
+      % (_rev_on, s4.revenue(), _up_on, s4.upkeep(), EARNING_CONCERN in s4.done))
 
 _manual_policy, _optimizer_policy = pristine_game().policy, unopened_sim(manual=False).policy
 check("opening things for you is on for the optimizer and off for a player",

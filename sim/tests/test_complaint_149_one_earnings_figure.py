@@ -51,7 +51,7 @@ fresh = sim(capital=1_000_000)
 fresh.price_index = 1.7
 fresh.output_factor = 0.9
 listed = _run(fresh, "available sort earns reverse limit 5")["available"]
-candidate = next(row for row in listed if NODES[row["id"]]["rev"] > 0)
+candidate = next(row for row in listed if row["earns_per_year"] > 0)
 candidate_id = candidate["id"]
 check("available earns/costs match the same methods",
       _close(candidate["earns_per_year"], fresh.venture_real_earnings(candidate_id))

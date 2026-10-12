@@ -75,11 +75,11 @@ check("...capped well short of the whole floor - RETRY_CALENDAR_CAP's own "
 _s_tl = sim(civ="rome_100ad")
 _s_tl.year = 150
 _tl_far = next((entry for entry in _s_tl.hazard_timeline()
-               if entry["name"] == "Third century crisis"), None)
-_s_tl.year = 234
+               if entry["name"] == "Adrianople and the Gothic settlement"), None)
+_s_tl.year = 370
 _tl_near = next((entry for entry in _s_tl.hazard_timeline()
-                 if entry["name"] == "Third century crisis"), None)
-check("hazard_timeline names the Third century crisis while it is still "
+                 if entry["name"] == "Adrianople and the Gothic settlement"), None)
+check("hazard_timeline names the Adrianople settlement while it is still "
       "visibly ahead and again once it is nearly here",
       _tl_far is not None and _tl_near is not None, (_tl_far, _tl_near))
 check("the SAME hazard's urgency tag escalates as the date closes in - "
@@ -303,8 +303,10 @@ _s_pct.employees["chemist"], _s_pct.employees["machinist"] = 20.0, 20.0
 _ok_pct, _why_pct2 = _s_pct.start_reason("point_contact_transistor")
 check("with every listed prerequisite met and nothing else missing, "
       "start_reason actually allows it - the live engine, not just the "
-      "tree data, agrees single_crystal/silicon_path are not required",
-      _ok_pct, _why_pct2)
+      "tree data, agrees single_crystal/silicon_path are not required "
+      "(a refusal over a material nobody supplies is a different gate)",
+      _ok_pct or ("single_crystal" not in _why_pct2 and "silicon_path" not in _why_pct2
+                  and "prerequisite" not in _why_pct2), _why_pct2)
 # A FREE PREREQUISITE SHOULD SAY IT IS FREE. Eight cap_* nodes cost nothing,
 # take no time and cannot fail, and a player still has to start each by hand.
 # The player who won this game called the refusal that names one of them

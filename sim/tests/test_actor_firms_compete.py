@@ -58,7 +58,7 @@ def next_year(game):
     game.advance_actors(game.state.scenario.year)
 
 
-HOURS = S.Sim.HOURS_PER_PERSON_YEAR
+from sim.unit_conversions import HOURS_PER_PERSON_YEAR as HOURS
 
 # ---- labour: a firm's staff come out of the pool the founder hires from ------------------
 game = actor_sim([])

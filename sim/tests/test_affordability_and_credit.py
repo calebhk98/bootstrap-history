@@ -40,9 +40,13 @@ check("auto_open says why the best concern is still shut",
 
 # A completed, earning concern that pays for its door within months opens even deep in arrears;
 # a slow one and an institution do not.
-quick_payback, slow_payback = "hom_button", "fin_stamp"
-for node_id in (quick_payback, slow_payback):
-    assert NODES[node_id]["rev"] > NODES[node_id]["up"], node_id
+# (the nodes that earn from their output; the payback is the engine's own: capex over net earnings)
+paybacks = {node_id: opener.venture_capex(node_id) / (node["rev"] - node["up"])
+            for node_id, node in opener.nodes.items()
+            if node["rev"] > node["up"] and opener.is_venture(node_id)}
+quick_payback = min(paybacks, key=lambda node_id: (paybacks[node_id], node_id))
+slow_payback = max(paybacks, key=lambda node_id: (paybacks[node_id], node_id))
+assert paybacks[quick_payback] < opener.AUTO_OPEN_PAYBACK_LIMIT_YEARS < paybacks[slow_payback], paybacks
 deep = sim(capital=-50000.0)
 deep.done.add(quick_payback)
 deep._done_changed()

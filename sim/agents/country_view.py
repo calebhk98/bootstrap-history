@@ -7,6 +7,7 @@ Every other member of the shared world passes straight through, by explicit forw
 import inspect
 from typing import Any, Dict, Optional, Set
 
+from .no_country_economy import NoCountryEconomy
 from .protocols import World
 from .records import CountryProfile
 from .registry import register_world_scope
@@ -17,14 +18,6 @@ from .tuning_country import ARMY_SHARE_OF_POPULATION, COUNTRY_OBSERVATION_RANGE_
 EXTRA_FORWARDED: tuple = ()
 # the word a civilisation's values use for a weight, as in `w_military`
 WEIGHT_PREFIX = "w_"
-
-
-class NoCountryEconomy(LookupError):
-	"""A figure was asked of a country that has no part of the economy (or whose markets cannot answer yet).
-	Every declared foreign economy is in the agent economy; there is no home answer to stand in for it."""
-
-	def __init__(self, country: str, figure: str = "economy") -> None:
-		super().__init__("country %r has no %s of its own in the agent economy" % (country, figure))
 
 
 class _NoGovernment:

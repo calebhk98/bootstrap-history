@@ -10,7 +10,7 @@ from sim.ui.proto.render_screen_state import _state_completed_head_lines
 from sim.ui.proto.render_screen_state_blocks import _state_founder
 
 _STAFF_PARAGRAPH = "not the crew that"
-_PRACTICE_PARAGRAPH = "rented room"
+_PRACTICE_PARAGRAPH = "because you cannot be in two places"
 
 
 def _render(command_name, response):

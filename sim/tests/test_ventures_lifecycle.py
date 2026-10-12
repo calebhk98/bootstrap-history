@@ -23,9 +23,11 @@ _pair = [node_id for node_id in NODES
          if NODES[node_id]["rev"] > 0 and NODES[node_id]["up"] >= 0 and not NODES[node_id]["pre"]]
 s_cl.done.update(NODES)                 # know everything, so `open` is free
 s_cl.operating = set()
-_rich = max(NODES, key=lambda node_id: NODES[node_id]["rev"] - NODES[node_id]["up"])
-_poor = min((node_id for node_id in NODES if NODES[node_id]["rev"] > 0),
-            key=lambda node_id: NODES[node_id]["rev"] - NODES[node_id]["up"])
+# only a concern that ties up more hands than the closure slack can be closed for want of staff
+_holders = [node_id for node_id in NODES if NODES[node_id]["rev"] > 0 and s_cl.is_venture(node_id)
+            and sum(s_cl.venture_hands(node_id)) > s_cl.STAFFING_CLOSURE_SLACK]
+_rich = max(_holders, key=lambda node_id: NODES[node_id]["rev"] - NODES[node_id]["up"])
+_poor = min(_holders, key=lambda node_id: NODES[node_id]["rev"] - NODES[node_id]["up"])
 s_cl.operating.update([_rich, _poor])
 s_cl.scholars = s_cl.artisans = 0
 s_cl.founder_alive = False              # nobody at all: it must close both,
@@ -47,7 +49,9 @@ check("...and what it closed is still KNOWN, only stopped",
 s_ch = sim(capital=500000.0)
 s_ch.done.update(NODES); s_ch._done_changed()
 s_ch.artisans = s_ch.scholars = 5.0
-_v = next(node_id for node_id in NODES if s_ch.is_venture(node_id) and NODES[node_id]["rev"] > 500)
+# a concern that earns, costs something to open and ties up more hands than the closure slack
+_v = max((node_id for node_id in sorted(NODES) if s_ch.is_venture(node_id) and NODES[node_id]["rev"] > 500
+          and sum(s_ch.venture_hands(node_id)) > s_ch.STAFFING_CLOSURE_SLACK), key=s_ch.venture_capex)
 s_ch.open_venture(_v)
 _full = s_ch.venture_capex(_v)
 s_ch.artisans = s_ch.scholars = 0.0
@@ -90,7 +94,7 @@ check("a concern you shut on purpose still costs the full price to reopen",
 # --- BREAK: twenty concerns, twenty-five years, income flat, because nothing
 # said on the main screen what leaving them shut was costing.
 s_sh = sim(capital=50000.0)
-for _k in list(NODES)[:200]:
+for _k in [node_id for node_id in NODES if s_sh.is_venture(node_id) and NODES[node_id]["rev"] > 0]:
     s_sh.done.add(_k)
 s_sh._done_changed()
 _plain = sim()
@@ -211,8 +215,8 @@ check("...and reopening a shop the town already knows does not start it over",
 s_rs = sim(capital=500000.0)
 s_rs.done.update(NODES); s_rs._done_changed()
 s_rs.artisans = s_rs.scholars = 5.0
-_vv = next(node_id for node_id in sorted(NODES)
-           if s_rs.is_venture(node_id) and NODES[node_id]["rev"] > 500)
+_vv = max((node_id for node_id in sorted(NODES) if s_rs.is_venture(node_id) and NODES[node_id]["rev"] > 500
+           and sum(s_rs.venture_hands(node_id)) > s_rs.STAFFING_CLOSURE_SLACK), key=s_rs.project_cost)
 s_rs.open_venture(_vv)
 _fullfee = max(s_rs.project_cost(_vv) * 0.3, NODES[_vv]["up"] * 2.0)
 s_rs.artisans = s_rs.scholars = 0.0
@@ -236,7 +240,7 @@ s_hy.done.update(NODES); s_hy._done_changed()
 s_hy.artisans = s_hy.scholars = 6.0
 _vh = max((node_id for node_id in sorted(NODES)
            if s_hy.is_venture(node_id) and NODES[node_id]["rev"] > 500
-           and 1.6 <= s_hy.venture_hands(node_id)[1] <= 5.0
+           and s_hy.STAFFING_CLOSURE_SLACK < s_hy.venture_hands(node_id)[1] <= 5.0
            and s_hy.venture_hands(node_id)[0] <= 5.0),
           key=lambda k: s_hy.venture_hands(k)[1])
 _ok_hy, _ = s_hy.open_venture(_vh)

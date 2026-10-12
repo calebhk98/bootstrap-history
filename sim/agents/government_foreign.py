@@ -11,7 +11,6 @@ from typing import Any, Dict
 
 from . import budget, ledger, policy
 from .base import RecordedActor
-from .country_view import NoCountryEconomy
 from .registry import register_actor_kind
 from .tuning import GOVERNMENT_WORTH_SHARE_PER_GAIN
 from .tuning_country import EARNER_SHARE_OF_POPULATION, RESERVE_YEARS_OF_NEED
@@ -75,10 +74,7 @@ class ForeignGovernment(RecordedActor):
 	def advance(self, world: Any) -> None:
 		"""One year: take the revenue, pay the standing need, then copy what is worth copying. Its staff
 		are not drawn from the founder's labour pool."""
-		try:
-			taken = self.revenue(world)
-		except NoCountryEconomy:
-			return   # its country's economy is not answering yet (the agent economy is still opening)
+		taken = self.revenue(world)
 		if taken > 0.0:
 			ledger.transfer(world.edge(REVENUE_EDGE), self, taken, REVENUE_EDGE)
 		self.record.revenue_by_form = {"taxpayers": taken}
