@@ -33,7 +33,10 @@ DETERMINISM_YEARS = 20
 
 
 def _market_free_rome():
-    return unopened_sim(civ="rome_100ad", events=False)
+    """A game whose steps leave out the year's market close: weather, farming and people do not read it."""
+    game = _rome_sim()
+    game._step_market = lambda: None
+    return game
 
 
 
