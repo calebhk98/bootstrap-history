@@ -94,14 +94,21 @@ def store_holding(cohort, view, specs: Mapping[GoodId, GoodSpec], priced) -> Tup
     if not math.isfinite(staple):
         return {}, {}, {}
     prices, usual_prices = {}, {}
-    for good in specs:
-        area = view.area_of(good, cohort.tile)
-        price = view.price(good, area)
-        if price:
-            prices[good] = price
-            usual = getattr(view, "usual_price", None)      # a view that keeps no price memory has none
-            if usual is not None and usual(good, area):
-                usual_prices[good] = usual(good, area)
+    if hasattr(view, "price_rows"):
+        for good, price, usual in view.price_rows(specs, cohort.tile):
+            if price:
+                prices[good] = price
+                if usual:
+                    usual_prices[good] = usual
+    else:
+        for good in specs:
+            area = view.area_of(good, cohort.tile)
+            price = view.price(good, area)
+            if price:
+                prices[good] = price
+                usual = getattr(view, "usual_price", None)      # a view that keeps no price memory has none
+                if usual is not None and usual(good, area):
+                    usual_prices[good] = usual(good, area)
     weights = store_candidates(specs, prices, staple, usual_prices, service_values_per_year(priced, specs))
     return (weights, {good: prices[good] for good in weights},
             {good: view.stock(cohort.agent_id, good, cohort.tile) for good in weights})
