@@ -45,10 +45,18 @@ def setup_digest(setup):
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
+def _counted_in_units(setup):
+    """The setup with the coin set aside: the economy counts money in its own unit and never reads the coin
+    (only the port converts to it), so games that differ only in their coin share a spin-up."""
+    if dataclasses.is_dataclass(setup) and any(field.name == "coin_per_unit" for field in dataclasses.fields(setup)):
+        return dataclasses.replace(setup, coin_per_unit=1.0)
+    return setup
+
+
 def spin_up_key(setup, years=None):
     """The cache key of the spun-up record for `setup`: its digest, with the data files and the source
     the spin-up can run, and the spin-up's years when they are not the declared ones."""
-    inputs = {"agent_economy_spin_up": setup_digest(setup)}
+    inputs = {"agent_economy_spin_up": setup_digest(_counted_in_units(setup))}
     if years is not None:
         inputs["years"] = list(years)
     return solve_cache.solve_key(inputs, source_modules=SPIN_UP_SOURCE_MODULES)

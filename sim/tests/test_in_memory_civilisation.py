@@ -44,7 +44,10 @@ class InMemoryCivilisation(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.variant = _variant(keep_file_id=True)
-        cls.variant_sim = S.Sim(NODES, ORDER, random.Random(1), events=False, manual=False, civ=cls.variant)
+        # unopened: the checks read the engine's own prices and the divergence screen's data, and an opened variant
+        # would spin up an economy of its own
+        cls.variant_sim = build_unopened(
+            lambda: S.Sim(NODES, ORDER, random.Random(1), events=False, manual=False, civ=cls.variant))
 
     def test_variant_with_a_files_id_is_priced_as_itself(self):
         variant, sim = self.variant, self.variant_sim

@@ -15,6 +15,10 @@ time per topic; the runner stops and fails any topic still running after `--topi
 spin-up (`ROME_SPIN_UP_YEARS`, set in `sim/tests/harness.py`), cached apart from full games, and the runner
 builds one game of every civilisation before the first topic. One topic still times out: `arrears_hours` (a price solve that stalls, 474). `insolvency_whole_game` leaves the market close out of
 the years that do not read it and plays a few full market years after the ruin, which is enough to show the founder's money turn round.
+No topic computes a spin-up of its own that a variant of a default game could share: the spin-up key leaves the
+coin out (`economy_port_key.py`), variants that only vary a rate or read the farm or prices are built unopened,
+and the money-regime runs are one topic per civilisation so the runner can place them side by side. The one
+setup that still needs its own spin-up is the in-memory civilisation's run of every screen.
 
 ## What would cut it further
 

@@ -3,6 +3,7 @@ follow the price its goods clear at, wider adoption lowers that price, household
 output per head, and a good offered after the opening becomes demand when a need it serves exists."""
 from .harness import *  # noqa: F401,F403
 
+opened_sim = sim    # the default game of the suite, its economy open on the cached spin-up
 sim = unopened_sim   # legacy: pins concern takings through the engine's yearly material market
 
 
@@ -73,10 +74,12 @@ unused = next(candidate for candidate in sorted(NODES) if candidate not in
 improved["requires_node"] = unused
 improved["operated_by"] = []       # only the node that gates it brings it in; a copy would be run by the original's operators
 patched["_improved_" + node_id] = improved
+# the games open on the catalogue as it stands (one economy for all of them, cached); the patched entry is added
+# to the catalogue afterwards, and the concern's volume and the entry's cost are read from it at the time
+game, twin = sim(civ="rome_100ad", capital=1e9), sim(civ="rome_100ad", capital=1e9)
 price_solver.reset_caches_for_tests()
 price_solver._DEFAULT_PRODUCTION_ENTRIES = patched
 try:
-    game, twin = sim(civ="rome_100ad", capital=1e9), sim(civ="rome_100ad", capital=1e9)
     for veteran in (game, twin):
         veteran.add_industry_years(node_id, 1.0e6)    # a settled concern: its takings follow its volume, not a new plant's learning
     check("a concern's volume is its opening's before the technique is held",
@@ -122,6 +125,7 @@ check("more operators selling a good lower the price it clears at", price_after 
 original = price_solver.default_production_entries()
 patched = dict(original)
 probe = sim(civ="rome_100ad", capital=1e9)
+game = sim(civ="rome_100ad", capital=1e9)
 cheap_material, source_key = next(
     (material, key) for key, candidate in sorted(original.items()) for material in sorted(candidate.get("outputs") or {})
     if candidate.get("labour_hours") and probe._material_tag(material)[0] == material
@@ -134,7 +138,6 @@ patched["_cheaper_good"] = cheaper_entry
 price_solver.reset_caches_for_tests()
 price_solver._DEFAULT_PRODUCTION_ENTRIES = patched
 try:
-    game = sim(civ="rome_100ad", capital=1e9)
     check("household real income is the opening's before any technique",
           abs(game.household_real_income_ratio() - 1.0) < 1e-9, game.household_real_income_ratio())
     demand_before = game.household_demand_ratio(cheap_material)
@@ -169,7 +172,7 @@ finally:
 GATE = "cn_portland_cement"
 HEAT = "cap_heat_3000"      # the clinker needs a heat only this reaches
 NEW_GOOD = "cement_portland_kg"
-game = sim(civ="rome_100ad", capital=1e9)
+game = opened_sim(civ="rome_100ad", capital=1e9)   # opened first, so the good is offered after the opening
 check("a good nothing offers at the opening draws no household demand",
       NEW_GOOD not in game.household_new_goods_units() and NEW_GOOD not in game.base_basket()["units"])
 complete(game, HEAT)
@@ -179,7 +182,7 @@ run(game, GATE)
 check("once it is priced, households want it", game.household_new_goods_units().get(NEW_GOOD, 0.0) > 0.0)
 close_years(game, 1)       # the first close values the new good and the market can sell it
 check("...it is valued at its introduction price", game.state.economy.introduction_prices.get(NEW_GOOD, 0.0) > 0.0)
-twin = sim(civ="rome_100ad", capital=1e9)
+twin = opened_sim(civ="rome_100ad", capital=1e9)
 close_years(twin, 1)
 lines = {material: (quantity, price) for material, quantity, price in game.real_output_lines()}
 check("...and counts in real output once the market sells it, at that price, and not before",
