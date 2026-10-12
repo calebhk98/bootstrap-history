@@ -35,14 +35,14 @@ def solve_price(levels: Levels, demand: Callable[[float], float], demand_at_firs
     if uncapped is not None:
         passing = _first_level_met(levels, uncapped)
         if passing - failing > 1:
-            _probe(demand, levels, known, passing - 1)
+            known[passing - 1] = demand(levels[passing - 1][0])
             if known[passing - 1] <= levels[passing - 1][1]:
                 passing -= 1
             else:
                 failing = passing - 1
     while passing - failing > 1:
         middle = (failing + passing) // 2
-        _probe(demand, levels, known, middle)
+        known[middle] = demand(levels[middle][0])
         if known[middle] <= levels[middle][1]:
             passing = middle
         else:
@@ -75,10 +75,6 @@ def _refine(demand, uncapped, low: float, demand_low: float, ceiling: Optional[f
             return ceiling
         return _root(demand, low, excess_low, ceiling, excess, supply)
     return _root_above(demand, low, excess_low, guess, supply)
-
-
-def _probe(demand, levels: Levels, known: Dict[int, float], index: int) -> None:
-    known[index] = demand(levels[index][0])
 
 
 def _first_level_met(levels: Levels, uncapped) -> int:
