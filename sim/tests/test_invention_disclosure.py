@@ -21,8 +21,9 @@ def make_node(node_id, lab=None, traits=("commerce",), revenue=5000.0, upkeep=10
     node = copy.deepcopy(NODES[_TEMPLATE_ID])
     node.update(id=node_id, name=node_id, traits=list(traits), pre=[], lab=lab or {"labourer": 100.0},
                 mat={}, rev=revenue, up=upkeep, yrs=years, risk=0.0, ph=0.0,
-                dev_years=None, dev_people=None)
+                dev_years=None, dev_people=None, cap=0.0, art=0.2, sch=0.0)
     node.pop("gains", None)
+    node.pop("copy_visibility", None)   # difficulty falls back to the trades and materials it needs
     return node
 
 
@@ -30,8 +31,8 @@ def actor_sim(extra_nodes):
     nodes = copy.deepcopy(NODES)
     for node in extra_nodes:
         nodes[node["id"]] = node
-    game = S.Sim(nodes, list(ORDER), random.Random(1), events=False, manual=True,
-                 civ=S.load_civ("rome_100ad"))
+    game = build_unopened(lambda: S.Sim(nodes, list(ORDER), random.Random(1), events=False, manual=True,
+                                        civ=S.load_civ("rome_100ad")))
     game.goal, game.done_year = GOAL, {}
     return game
 

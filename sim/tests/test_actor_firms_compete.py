@@ -18,7 +18,7 @@ def make_node(node_id, category=None, revenue=5000.0, upkeep=100.0, hours=100.0,
     node = copy.deepcopy(NODES[_TEMPLATE_ID])
     node.update(id=node_id, name=node_id, traits=["commerce"], pre=[], lab=lab or {"labourer": hours},
                 mat={}, rev=revenue, up=upkeep, yrs=years, risk=0.0, ph=0.0,
-                dev_years=None, dev_people=None)
+                dev_years=None, dev_people=None, sch=0.0)
     node.pop("gains", None)
     if category:
         node["cat"] = category
