@@ -284,17 +284,7 @@ check("the gating rule flags a consumer with no producer and accepts a declared 
 # --- Staffing: one game for `why`'s supervision figure, the staffing closure, the
 # automatic reopen, and the price `restore` quotes inside and after the grace window.
 s_staff = sim(capital=1_000_000.0)
-_SUPERVISED = None
-for _candidate_id in sorted(NODES):
-    _candidate = NODES[_candidate_id]
-    if _candidate["rev"] > 0 and _candidate["sch"] == 0 and _candidate["art"] > 0 and not (_candidate.get("lab") or {}).get("artisan"):
-        _scholars, _craftsmen = s_staff.venture_hands(_candidate_id)
-        if (_scholars == 0
-                and max(_candidate["art"], s_staff.FOUNDER_IS_WORTH + s_staff.STAFFING_CLOSURE_SLACK) < _craftsmen <= 5.5
-                and s_staff.venture_foreman(_candidate_id)[0] is None):
-            _SUPERVISED = _candidate_id
-            break
-assert _SUPERVISED, "no concern needs craftsmen to supervise"
+_SUPERVISED = concern_needing_craftsmen_to_supervise()
 
 # `why` quoted the BUILD crew as the staff requirement, while `open` enforces
 # ongoing SUPERVISION (venture_hands). `why` must show both, from the same function.

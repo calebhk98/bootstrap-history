@@ -11,7 +11,7 @@ import random
 from sim.engine.state import ActorRecord  # noqa: F401
 
 _TEMPLATE_ID = next(node_id for node_id, node in NODES.items()
-                    if node["rev"] > 0 and not node["pre"] and node["cap"] >= 0)
+                    if not node["pre"] and node["cap"] >= 0)
 
 
 def make_node(node_id, category, revenue, upkeep, hours):
@@ -27,10 +27,10 @@ def actor_sim(extra_nodes):
 	nodes = copy.deepcopy(NODES)
 	for node in extra_nodes:
 		nodes[node["id"]] = node
-	game = S.Sim(nodes, list(ORDER), random.Random(1), events=False, manual=True,
-	             civ=S.load_civ("rome_100ad"))
+	game = build_unopened(lambda: S.Sim(nodes, list(ORDER), random.Random(1), events=False, manual=True,
+	             civ=S.load_civ("rome_100ad")))
 	game.goal, game.done_year = GOAL, {}
-	return game
+	return ready_for_entry(game)
 
 
 def founder_runs(game, node_id, opened_ago):

@@ -1,5 +1,6 @@
 """Complaints 170, 175, 145, 158: ventures paging, path blockers, foreman and net/payback on available."""
 from .harness import *
+from sim.engine.data import closure as _closure
 from sim.ui.proto.render_screen_available import render_available
 from sim.ui.proto.render_screens_economy import render_ventures
 from sim.ui.proto.render_screens_status import render_path
@@ -64,11 +65,17 @@ check("the path screen prints the blocker line",
 
 # --- 149 and 162: available rows carry foreman, net and payback
 rows_sim = sim(capital=1_000_000.0)
-listing = S._agent_dispatch(rows_sim, NODES, {"cmd": "available", "all": True, "limit": 400})
+# a concern that earns from its output and needs a specialist foreman, with everything it rests on known
+_FOREMAN_NODE = "mirror_amalgam"
+rows_sim.done.update(_closure(NODES, _FOREMAN_NODE) - {_FOREMAN_NODE})
+rows_sim.artisans = rows_sim.scholars = 20.0
+rows_sim._done_changed()
+listing = S._agent_dispatch(rows_sim, NODES, {"cmd": "available", "all": True, "limit": 5000})
 by_id = {row["id"]: row for row in listing["available"]}
-loom = by_id.get("tex_horizontal_loom")
-check("set-up: the loom is on the list", loom is not None)
-trade, fte = rows_sim.venture_foreman("tex_horizontal_loom")
+loom = next((row for row in listing["available"] if row.get("specialist_foreman")
+             and row["net_per_year"] > 0 and row.get("payback_years") is not None), None)
+check("set-up: a concern that needs a specialist foreman and earns is on the list", loom is not None)
+trade, fte = rows_sim.venture_foreman(loom["id"])
 check("available rows name the specialist foreman as `why` and `open` do",
       loom["specialist_foreman"] == {"trade": trade, "fte": round(fte, 2)} and trade, loom)
 plain = next(row for row in listing["available"]
@@ -107,10 +114,10 @@ header_line = next(line for line in text.splitlines() if line.startswith("ID"))
 check("the table has NET/YR, PAYBACK and FOREMAN columns",
       all(word in header_line for word in ("NET/YR", "PAYB", "FOREMAN")), header_line)
 loom_line = next((line for line in render_available(listing).splitlines()
-                  if line.startswith("tex_horizontal_loom")), "")
+                  if line.startswith(loom["id"])), "")
 check("a foreman row prints the trade", trade[:7] in loom_line, loom_line)
 check("the table stays within a sane width", len(header_line) <= 140, len(header_line))
-path_rows = S._agent_dispatch(rows_sim, NODES, {"cmd": "path", "id": "tex_horizontal_loom"})
+path_rows = S._agent_dispatch(rows_sim, NODES, {"cmd": "path", "id": loom["id"]})
 path_header = next(line for line in render_path(path_rows).splitlines() if line.startswith("ID"))
 check("path's table header matches available's", path_header.split() == header_line.split(),
       (path_header, header_line))

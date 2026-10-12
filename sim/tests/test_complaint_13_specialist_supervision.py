@@ -38,17 +38,17 @@ check("the rendered ventures screen names the specialist foreman",
 
 # One specialist has a bounded span of control: four quarter-FTE concerns, not
 # an unlimited industrial portfolio.
-s = prepared("fud_distillation_spirits")
-s.employees["chemist"] = 1
-for node_id in ("fud_distillation_spirits",):
-    s.operating.add(node_id)
-trade, fte = s.venture_foreman("fud_distillation_spirits")
-check("distillation retains its chemist as an operating foreman",
-      trade == "chemist" and fte == 0.25, (trade, fte))
+SPIRITS = "distillation_alcohol"
+s = prepared(SPIRITS)
+trade, fte = s.venture_foreman(SPIRITS)
+s.employees[trade] = 1
+s.operating.add(SPIRITS)
+check("distillation retains its specialist as an operating foreman",
+      trade == "smith" and fte == 0.25, (trade, fte))
 
 # Losing the skilled supervisor closes the concern just as losing its generic
 # keeper does; the requirement is ongoing, not merely an opening toll.
-s.employees["chemist"] = 0
+s.employees[trade] = 0
 closed = s.close_unstaffed_ventures(s.year)
 check("a concern closes when its required specialist foreman is lost",
-      "fud_distillation_spirits" in closed, closed)
+      SPIRITS in closed, closed)

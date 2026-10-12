@@ -40,9 +40,15 @@ check("auto_open says why the best concern is still shut",
 
 # A completed, earning concern that pays for its door within months opens even deep in arrears;
 # a slow one and an institution do not.
-quick_payback, slow_payback = "hom_button", "fin_stamp"
-for node_id in (quick_payback, slow_payback):
-    assert NODES[node_id]["rev"] > NODES[node_id]["up"], node_id
+# (the nodes that earn from their output; the payback is the engine's own: capex over net earnings)
+paybacks = {node_id: opener.venture_capex(node_id) / (node["rev"] - node["up"])
+            for node_id, node in opener.nodes.items()
+            if node["rev"] > node["up"] and opener.is_venture(node_id)
+            and sum(opener.venture_hands(node_id)) <= opener.FOUNDER_IS_WORTH   # staffed by the founder alone
+            and opener.venture_foreman(node_id)[0] is None}
+quick_payback = min(paybacks, key=lambda node_id: (paybacks[node_id], node_id))
+slow_payback = max(paybacks, key=lambda node_id: (paybacks[node_id], node_id))
+assert paybacks[quick_payback] < opener.AUTO_OPEN_PAYBACK_LIMIT_YEARS < paybacks[slow_payback], paybacks
 deep = sim(capital=-50000.0)
 deep.done.add(quick_payback)
 deep._done_changed()
@@ -342,26 +348,30 @@ check("...and does not take your whole reputation with it",
       replies[-1].get("reputation", 0) > 1.0, replies[-1].get("reputation"))
 
 # --- a project part-paid when credit is withdrawn keeps what was paid.
-stopped = sim(capital=round(0.3 * pristine_game().project_cost("identity_cover")))
-stopped.start_project("identity_cover")
+_pristine = pristine_game()
+# the dearest project startable now whose calendar floor outlasts a step
+PACED = max((node_id for node_id in NODES if NODES[node_id]["yrs"] >= 2.0 and _pristine.start_reason(node_id)[0]),
+            key=lambda node_id: (_pristine.project_cost(node_id), node_id))
+stopped = sim(capital=round(0.3 * _pristine.project_cost(PACED)))
+stopped.start_project(PACED)
 for _ in range(2):
     stopped.step()
-spent = stopped.active["identity_cover"]["spent"]
+spent = stopped.active[PACED]["spent"]
 check("a project part-paid for has really been part-paid for", spent > 100, spent)
 stopped.credit_limit = lambda: 0.0
 stopped.enforce_credit_limit(stopped.year)
 check("the creditors stopping your work does not burn what you paid",
-      abs(stopped.paid_towards.get("identity_cover", 0.0) - spent) < 0.5, stopped.paid_towards)
+      abs(stopped.paid_towards.get(PACED, 0.0) - spent) < 0.5, stopped.paid_towards)
 check("...and the event says so, and names what it stopped",
-      any("identity_cover" in message and "stands to your credit" in message for _, message in stopped.log),
+      any(PACED in message and "stands to your credit" in message for _, message in stopped.log),
       [message for _, message in stopped.log if "CREDIT EXHAUSTED" in message][:1])
 stopped.capital, stopped.credit_frozen_until = 50000.0, 0
-stopped.start_project("identity_cover")
+stopped.start_project(PACED)
 check("...and beginning again takes it off the bill",
-      abs(stopped.active["identity_cover"]["cost_left"] - (stopped.project_cost("identity_cover") - spent)) < 0.5,
-      (stopped.active["identity_cover"]["cost_left"], stopped.project_cost("identity_cover")))
+      abs(stopped.active[PACED]["cost_left"] - (stopped.project_cost(PACED) - spent)) < 0.5,
+      (stopped.active[PACED]["cost_left"], stopped.project_cost(PACED)))
 check("...and the credit is spent once, not every time",
-      "identity_cover" not in stopped.paid_towards, stopped.paid_towards)
+      PACED not in stopped.paid_towards, stopped.paid_towards)
 
 # --- a household past its credit line keeps no door fee to spend: opening a shut concern waits.
 past_line = opener

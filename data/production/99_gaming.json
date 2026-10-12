@@ -16,11 +16,31 @@
    "basis": "per player's hour at a gaming table",
    "yield_basis": "A dealer runs a table of about six players, so about a sixth of an hour of the dealer's time for each player's hour; the door takes a labourer a twentieth of an hour for each. One candle of about a candela lights a table of six, so each player's hour uses about two lumen-hours of it, 0.002 of the thousand lumen-hours the light goods are counted in. The table size is an estimate, confidence D. The stakes themselves are not the price: they pass between the players and the house, and what the house is paid is for the table and the company, which is what this entry prices.",
    "requires_node": "fin_gambling_house",
-   "operated_by": ["fin_gambling_house"],
+   "operated_by": [
+    "fin_gambling_house"
+   ],
    "conf": "D",
    "satisfies": {
     "amusement": 1.0
-   }
+   },
+   "capital": [
+    {
+     "good": "gaming hall with its tables, stone walls and timber roof",
+     "build_materials": {
+      "stone_kg": 60000.0,
+      "wood_kg": 8000.0
+     },
+     "build_labour_hours": {
+      "mason": 600.0,
+      "carpenter": 300.0,
+      "labourer": 400.0
+     },
+     "service_life_years": 40,
+     "annual_output_at_basis": 150000.0,
+     "capital_basis": "A hall for about ten tables of six players, walled in stone with a timber roof and table furniture. The quantities are an order-of-magnitude estimate of a hall that size, not a survey of one. Life is that of masonry walls with a re-timbered roof. Capacity is ten tables of six players for a few thousand open hours a year. Confidence D.",
+     "conf": "D"
+    }
+   ]
   },
   "lottery_chance": {
    "outputs": {
@@ -37,11 +57,31 @@
    "basis": "per numbered chance sold in a public lottery",
    "yield_basis": "A numbered ticket is a small slip, a hundredth of a parchment sheet. A scribe writes and registers it and a merchant sells and pays out, a few minutes each. The sizes are estimates, confidence D. A chance is worth about an hour of play, so it is counted as one unit of amusement.",
    "requires_node": "fin_lottery",
-   "operated_by": ["fin_lottery"],
+   "operated_by": [
+    "fin_lottery"
+   ],
    "conf": "D",
    "satisfies": {
     "amusement": 1.0
-   }
+   },
+   "capital": [
+    {
+     "good": "lottery office, timber counter and strongroom",
+     "build_materials": {
+      "wood_kg": 3000.0,
+      "stone_kg": 15000.0
+     },
+     "build_labour_hours": {
+      "carpenter": 150.0,
+      "mason": 200.0,
+      "labourer": 100.0
+     },
+     "service_life_years": 30,
+     "annual_output_at_basis": 200000.0,
+     "capital_basis": "A small office with a counter for selling and registering numbered slips and a stone strongroom for the stakes. The quantities are an order-of-magnitude estimate, not a survey. Life is that of a timber-framed office with a stone room. Capacity is the numbered chances a few clerks can sell and register in a year. Confidence D.",
+     "conf": "D"
+    }
+   ]
   }
  }
 }

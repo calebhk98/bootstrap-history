@@ -11,6 +11,7 @@ from .entry_round import NicheEntry
 from .firm import Firm
 from .government import Government
 from .group import InterestGroup
+from .no_country_economy import NoCountryEconomy
 from .policy import make_policy
 from .tuning import ENTREPRENEURIAL_CAPITAL_SHARE
 
@@ -343,8 +344,11 @@ class ActorRegistry:
 			# the tally is a count of everyone's staff as of the acting actor's staff in `_staff_basis`
 			self._acting, self._staff_basis = actor, dict(actor.workforce)
 			seen = self.world_for(actor, world)
-			actor.advance(seen)
-			actor.sell_output(seen)
+			try:
+				actor.advance(seen)
+				actor.sell_output(seen)
+			except NoCountryEconomy:
+				continue   # a partner country's economy is not answering yet (the agent economy is still opening)
 			# it stays when the acting actor's staff is what the count saw; the first actor of a
 			# year always recounts, since anything between years is unseen
 			if first:

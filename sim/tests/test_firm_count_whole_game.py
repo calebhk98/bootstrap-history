@@ -11,7 +11,7 @@ import random
 from sim.engine.agents_port import SimWorld
 
 _TEMPLATE_ID = next(node_id for node_id, node in NODES.items()
-                    if node["rev"] > 0 and not node["pre"] and node["cap"] >= 0)
+                    if not node["pre"] and node["cap"] >= 0)
 CATEGORY = sorted(S.Sim.GOODS_CATEGORIES)[0]
 
 
@@ -30,6 +30,7 @@ def new_game(revenue):
 	             civ=S.load_civ("rome_100ad")))
 	game.goal, game.done_year = GOAL, {}
 	game.market_rate = lambda: 0.12
+	ready_for_entry(game)
 	year = game.state.scenario.year
 	game.state.projects.done.add("zz_count")
 	game.state.projects.done_year["zz_count"] = year - 10

@@ -9,34 +9,34 @@ from .harness import _LOADTEST_DIR
 from .agent_command_helpers import ask_agent, with_end_year
 
 AQUEDUCT, PUMPING, TOWER, TREATMENT = "civ_aqueduct_roman", "civ_pumping_station", "civ_water_tower", "civ_water_treatment"
-CHAIN = (PUMPING, TOWER, TREATMENT)
+CHAIN = (TOWER,)   # the aqueduct is held by the society at the opening, so the pumping station is the gate that can close
 VOYAGE = "exp_atlantic_crossing"
-HARBOUR, BUOY = "sea_harbours_pozzolana", "sea_buoy"
+HARBOUR, BUOY = "civ_harbour_dock", "sea_drydock"
 
 # --- a chain of works: each needs the one before it running.
 game = with_end_year(sim())
-run_it(game, AQUEDUCT, *CHAIN)
-check("with the aqueduct open, the works that need it are running",
-      all(game.running(work) for work in (AQUEDUCT,) + CHAIN), [game.running(work) for work in CHAIN])
+run_it(game, PUMPING, *CHAIN)
+check("with the pumping station open, the work that needs it is running",
+      all(game.running(work) for work in (PUMPING,) + CHAIN), [game.running(work) for work in CHAIN])
 
-game.close_work(AQUEDUCT, "closed_by_the_player")
-check("shutting the aqueduct shuts the pumping station, the tower on it and the treatment works",
+game.close_work(PUMPING, "closed_by_the_player")
+check("shutting the pumping station shuts the tower on it",
       all(game.closure_of(work) and game.closure_of(work)["reason"] == game.CLOSED_GATE_LAPSED for work in CHAIN),
       {work: game.closure_of(work) for work in CHAIN})
-check("...and none of them is running", not any(game.running(work) for work in CHAIN), None)
-check("...so the geography no longer counts the shut aqueduct among the technologies held",
-      AQUEDUCT not in game.held_and_running(), None)
+check("...and it is not running", not any(game.running(work) for work in CHAIN), None)
+check("...so the geography no longer counts the shut pumping station among the technologies held",
+      PUMPING not in game.held_and_running(), None)
 
 ask_agent(game, cmd="step", years=2)
-check("two years on, the dependents are still shut while the aqueduct is",
+check("two years on, the tower is still shut while the pumping station is",
       not any(game.running(work) for work in CHAIN), [game.running(work) for work in CHAIN])
 check("...and the log says why", any("has stopped" in line for _year, line in game.state.household.log), None)
 
-reopened, message = game.open_venture(AQUEDUCT)
-check("the aqueduct can be reopened", reopened or "cash" in message or "afford" in message, message)
+reopened, message = game.open_venture(PUMPING)
+check("the pumping station can be reopened", reopened or "cash" in message or "afford" in message, message)
 if reopened:
-    again, why = game.open_venture(PUMPING)
-    check("with the aqueduct back, the pumping station can be opened again", again, why)
+    again, why = game.open_venture(TOWER)
+    check("with the pumping station back, the tower can be opened again", again, why)
 
 # --- a harbour and its buoy.
 harbour_game = with_end_year(sim())

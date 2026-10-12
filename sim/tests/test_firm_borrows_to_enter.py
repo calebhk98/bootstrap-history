@@ -12,7 +12,7 @@ import copy
 import random
 
 _TEMPLATE_ID = next(node_id for node_id, node in NODES.items()
-                    if node["rev"] > 0 and not node["pre"] and node["cap"] >= 0)
+                    if not node["pre"] and node["cap"] >= 0)
 
 
 def make_node(node_id, category, revenue, upkeep, hours):
@@ -27,8 +27,8 @@ def make_node(node_id, category, revenue, upkeep, hours):
 def actor_sim(rate):
 	nodes = copy.deepcopy(NODES)
 	nodes["zz_borrow"] = make_node("zz_borrow", sorted(S.Sim.GOODS_CATEGORIES)[0], 2.0e5, 5000.0, 50.0)
-	game = S.Sim(nodes, list(ORDER), random.Random(1), events=False, manual=True,
-	             civ=S.load_civ("rome_100ad"))
+	game = build_unopened(lambda: S.Sim(nodes, list(ORDER), random.Random(1), events=False, manual=True,
+	             civ=S.load_civ("rome_100ad")))
 	game.goal, game.done_year = GOAL, {}
 	game.market_rate = lambda: rate
 	year = game.state.scenario.year

@@ -10,7 +10,7 @@ from sim.engine.agents_port import SimWorld
 from sim.engine.state import ActorRecord
 
 _TEMPLATE_ID = next(node_id for node_id, node in NODES.items()
-                    if node["rev"] > 0 and not node["pre"] and node["cap"] >= 0)
+                    if not node["pre"] and node["cap"] >= 0)
 
 
 def make_node(node_id, category=None, revenue=5000.0, upkeep=100.0, hours=100.0, years=1.0,
@@ -18,7 +18,7 @@ def make_node(node_id, category=None, revenue=5000.0, upkeep=100.0, hours=100.0,
     node = copy.deepcopy(NODES[_TEMPLATE_ID])
     node.update(id=node_id, name=node_id, traits=["commerce"], pre=[], lab=lab or {"labourer": hours},
                 mat={}, rev=revenue, up=upkeep, yrs=years, risk=0.0, ph=0.0,
-                dev_years=None, dev_people=None)
+                dev_years=None, dev_people=None, sch=0.0)
     node.pop("gains", None)
     if category:
         node["cat"] = category
@@ -58,7 +58,7 @@ def next_year(game):
     game.advance_actors(game.state.scenario.year)
 
 
-HOURS = S.Sim.HOURS_PER_PERSON_YEAR
+from sim.unit_conversions import HOURS_PER_PERSON_YEAR as HOURS
 
 # ---- labour: a firm's staff come out of the pool the founder hires from ------------------
 game = actor_sim([])
