@@ -339,10 +339,11 @@ class NetMarginalProductTests(unittest.TestCase):
                            freed(self.seed_per_hour * 5.0 * agriculture.LABOUR_OUTPUT_ELASTICITY))
 
     def test_ordinary_land_is_farmed_as_before(self):
-        # Reference values recorded from the gross-product allocator.
+        # Reference values recorded from the net-product allocator on the suite's short spin-up
+        # (the first ones came from the gross-product allocator; the share bands still hold at those).
         history = _undisturbed_run(WARM_UP_YEARS + _SETTLE_YEARS_AFTER_WARM_UP)[0]
         for year_index, population, farm_share in (
-                (9, 63794202.8, 0.36154), (19, 64504643.0, 0.37042),
-                (29, 65121381.1, 0.3665)):
+                (9, 65319679.3, 0.36155), (19, 65908281.9, 0.37042),
+                (29, 66486685.5, 0.3665)):
             self.assertAlmostEqual(history[year_index][0] / population, 1.0, delta=0.01)
             self.assertAlmostEqual(history[year_index][1], farm_share, delta=0.01)
