@@ -34,7 +34,8 @@ from sim.engine.run_setup import DetRNG, ensure_fixed_hash_seed, load_strategy, 
 from sim.engine.saveload import (  # noqa: F401
     _SET_FIELDS_OF_NODE_IDS as SET_FIELDS_OF_NODE_IDS,
     _SET_FIELDS_OF_TRADE_NAMES as SET_FIELDS_OF_TRADE_NAMES, _validate_save as validate_save,
-    civ_of_save, goal_of_save, load_state, REQUIRED_SAVE_FIELDS, SAVE_FIELDS, save_state)
+    civ_of_save, EconomyNotOpened, goal_of_save, load_state, REQUIRED_SAVE_FIELDS, SAVE_FIELDS, save_state)
+from sim.engine.nodes_price_note import note_path  # noqa: F401
 from sim.engine.save_companions import save_session  # noqa: F401
 from sim.engine.settings_table import normal_seed, valid_seed_text  # noqa: F401
 from sim.engine.shortage_conditions import condition_line  # noqa: F401

@@ -281,7 +281,7 @@ class Sim(RealPriceRatiosMixin, CoinRevaluationMixin, WageMarketRatiosMixin, Mec
     # provided by MechanicsMixin; food techs in _TECH_EFFECTS.json do not declare it.
 
     def __init__(self, nodes, order, rng, events=True, cfg=None, verbose=False,
-                 bounty_set=None, civ=None, manual=False, debug=None):
+                 bounty_set=None, civ=None, manual=False, debug=None, defer_economy=False):
         self.nodes = nodes
         # PRECOMPUTED ONCE: which node ids carry a `win_condition` at all,
         # sorted for the same reproducibility reason _check_win_conditions
@@ -575,9 +575,12 @@ class Sim(RealPriceRatiosMixin, CoinRevaluationMixin, WageMarketRatiosMixin, Mec
         self._reconnect_state_hooks()
         # opened now, not by the first question a screen or a cost asks: while it opens the engine's
         # own figures answer, and nothing computed from them may stay cached afterwards
-        self.economy.open_agent()
-        self._done_changed()
-        self.join_cast_seats()
+        # a game about to load a save leaves it: the save holds the seats and the economy's record
+        self._economy_deferred = bool(defer_economy)
+        if not defer_economy:
+            self.economy.open_agent()
+            self._done_changed()
+            self.join_cast_seats()
 
     def _reconnect_state_hooks(self):
         """Reconnect transient cache state, version counters, and invalidating wrappers after save/load."""

@@ -27,8 +27,19 @@ def reprice_opening_money(sim, before):
     sim._operating_changed()
 
 
-def priced_nodes(sim, nodes, schedule):
-    """The tree with its money fields at the money an hour of work is worth now; `schedule` is the opening's
-    wage schedule, whose wages and money per labour hour are replaced by now's."""
-    schedule.money_per_labour_hour = sim.labour.money_per_labour_hour()
+def priced_nodes(sim, nodes, schedule, money_per_labour_hour=None):
+    """The tree with its money fields at the money an hour of work is worth now (or at the figure given);
+    `schedule` is the opening's wage schedule, whose wages and money per labour hour are replaced by it."""
+    schedule.money_per_labour_hour = (sim.labour.money_per_labour_hour() if money_per_labour_hour is None
+                                      else money_per_labour_hour)
+    sim.nodes_money_per_labour_hour = schedule.money_per_labour_hour
     return money_units.rebased_nodes(nodes, schedule.wages_per_hour(), schedule.money_per_labour_hour)
+
+
+def restore_priced_nodes(sim, figure):
+    """After a save is loaded into a game built without opening its economy: count the tree's money fields
+    at the figure the saved game had them at (what the opening priced them at, unless a later change of the
+    society's techs re-priced them)."""
+    sim.nodes = priced_nodes(sim, sim.nodes, build_schedule(TRADE_REGISTRY, sim.start_civ), figure)
+    sim._done_changed()
+    sim._operating_changed()

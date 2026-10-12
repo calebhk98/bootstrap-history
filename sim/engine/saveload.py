@@ -12,6 +12,10 @@ from sim.engine.state import (
 )
 
 
+class EconomyNotOpened(ValueError):
+	"""The game was built without opening its economy and the save cannot stand in for it; build it the long way."""
+
+
 def save_state(sim, path):
 	"""Write the whole game to a file using automatic state serialization from live sim.state."""
 	sim.state._civ = sim.civ.get("id")
@@ -40,7 +44,9 @@ def save_state(sim, path):
 					  separators=(",", ":"))
 	absolute = os.path.abspath(path)
 	# a command that changed nothing leaves the file as it is
+	from .nodes_price_note import write_note
 	if _ON_DISK.get(absolute) == (text, _stamp(absolute)):
+		write_note(sim, path)
 		return path
 	tmp = path + ".tmp"
 	parent = os.path.dirname(absolute)
@@ -50,6 +56,7 @@ def save_state(sim, path):
 		handle.write(_encode(text, path))
 	os.replace(tmp, path)          # atomic: a crash mid-save cannot eat the game
 	_ON_DISK[absolute] = (text, _stamp(absolute))
+	write_note(sim, path)
 	return path
 
 
@@ -281,10 +288,29 @@ def _validate_save(blob, sim):
 	return None
 
 
+# The save last read for a question about it (its civilisation, its goal), so the load that follows
+# parses nothing again: path -> (file stamp, text, parsed blob). Taken out by the load.
+_PARSED = {}
+
+
+def _parsed_save(path):
+    """(text, blob) of a save, parsed once while the file stays as it is."""
+    absolute = os.path.abspath(path)
+    stamp = _stamp(absolute)
+    held = _PARSED.get(absolute)
+    if held is not None and held[0] == stamp and stamp is not None:
+        return held[1], held[2]
+    text = read_save_text(path)
+    blob = json.loads(text)
+    _PARSED.clear()
+    _PARSED[absolute] = (stamp, text, blob)
+    return text, blob
+
+
 def civ_of_save(path):
     """Which civilisation a save file is from, or None if it will not say."""
     try:
-        return (json.loads(read_save_text(path)) or {}).get("_civ")
+        return (_parsed_save(path)[1] or {}).get("_civ")
     except (OSError, ValueError, AttributeError):
         return None
 
@@ -292,7 +318,7 @@ def civ_of_save(path):
 def goal_of_save(path):
     """Which goal a save file was playing toward, or None if it will not say."""
     try:
-        return goal_of_blob(json.loads(read_save_text(path)) or {})
+        return goal_of_blob(_parsed_save(path)[1] or {})
     except (OSError, ValueError, AttributeError):
         return None
 
@@ -301,8 +327,8 @@ def load_state(sim, path):
 	"""Read a save from `path` and apply it to `sim`, or raise ValueError with
 	a clear reason and leave `sim` completely untouched.
 	"""
-	text = read_save_text(path)
-	blob = json.loads(text)
+	text, blob = _parsed_save(path)
+	_PARSED.clear()
 	_ON_DISK[os.path.abspath(path)] = (text, _stamp(os.path.abspath(path)))
 	bad = _validate_save(blob, sim)
 	if bad:
@@ -343,5 +369,13 @@ def load_state(sim, path):
 		sim.value_weights.update(state._weights)
 	if state._civ_live and "state_capacity" in state._civ_live:
 		sim.state_capacity = float(state._civ_live["state_capacity"])
+	if getattr(sim, "_economy_deferred", False):
+		from .nodes_price_note import noted_figure
+		figure = noted_figure(path, state) if state.economy.money_from_economy else None
+		if figure is None:
+			raise EconomyNotOpened("a game built to load a save without opening its economy has no note of its tree's pricing")
+		from .opening_money import restore_priced_nodes
+		sim._economy_deferred = False
+		restore_priced_nodes(sim, figure)
 	sim.refresh_derived_nodes()
 	return sim

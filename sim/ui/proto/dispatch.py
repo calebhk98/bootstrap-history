@@ -274,6 +274,7 @@ def _cmd_step(sim, nodes, cmd, ended):
         step_progress.after_year(sim, {"year": sim.year, "capital": _snap["capital"],
                                        "completed": len(_snap["completed"]),
                                        "closed": len(_snap["concerns_closed"]), "years_asked": years,
+                                       "last_asked_year": ran == years,
                                        "population_change": population_change})
         # sorted(), because this is a set difference and a set of strings
         # iterates in an order that depends on PYTHONHASHSEED. Two runs of

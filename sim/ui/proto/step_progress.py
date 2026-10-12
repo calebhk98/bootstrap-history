@@ -23,7 +23,8 @@ def commit_and_report(session, stream):
         # a one-year step is saved once by the caller after the command
         if summary.get("years_asked", 1) < 2:
             return
-        if session:
+        # the last year asked for is saved by the caller right after the command
+        if session and not summary.get("last_asked_year"):
             save_session(sim, session)
         try:
             stream.write("  year %s: %s, %d completed, %d closed, population %+.1f%%\n"

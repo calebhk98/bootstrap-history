@@ -38,7 +38,7 @@ from sim.engine.ui_port import (
     CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog, selectable_goals,
     load, load_civ, load_geography, money_short, money_unit_note, STARTING_KITS,
     win_condition_describe)
-from sim.engine.ui_port import Sim
+from sim.engine.ui_port import EconomyNotOpened, Sim, note_path
 from . import protocol as _protocol
 from sim.engine.ui_port import settings
 from sim.engine.ui_port import money_text, units
@@ -159,15 +159,26 @@ def _play_init(args):
     integer 1 if the sitting cannot start at all - cmd_play returns that
     straight through.
     """
-    sim, nodes, session, app_cfg, kit, horizon = _play_build_sim(args)
+    sim, nodes, session, app_cfg, kit, horizon = _play_build_sim(args, defer_economy=_resuming_with_note(args))
     result = _play_resolve_session(args, sim, session)
+    if result is None:
+        # the save could not stand in for the economy's opening; build the game the long way
+        sim, nodes, session, app_cfg, kit, horizon = _play_build_sim(args)
+        result = _play_resolve_session(args, sim, session)
     if result == 1:
         return 1
     session, fresh = result
     return sim, nodes, session, app_cfg, fresh, kit
 
 
-def _play_build_sim(args):
+def _resuming_with_note(args):
+    """Whether the sitting resumes a save whose pricing note sits beside it, so the Sim need not open its own economy."""
+    session = getattr(args, "session", None)
+    return bool(session and not _is_claimed_slot(session) and os.path.exists(session)
+                and os.path.exists(note_path(session)))
+
+
+def _play_build_sim(args, defer_economy=False):
     """Build the Sim this sitting will play: apply the application's
     display/welcome preferences, load the tree, and construct the Sim from
     --strategy/--seed/--kit/--mortal/--fog. Returns
@@ -206,7 +217,7 @@ def _play_build_sim(args):
     sim = Sim(nodes, order,
             DetRNG(seed) if deterministic else random.Random(seed),
             events=bool(app_cfg.get("default_events", True)), bounty_set=set(),
-            manual=True, civ=load_civ(_civ_for_session(args)), cfg=cfg)
+            manual=True, civ=load_civ(_civ_for_session(args)), cfg=cfg, defer_economy=defer_economy)
     sim.seed = seed
     sim.session_seat = getattr(args, "seat", None)
     sim.goal = goal
@@ -287,6 +298,8 @@ def _play_resolve_session(args, sim, session):
     if not fresh:
         try:
             load_state(sim, session)
+        except EconomyNotOpened:
+            return None
         except Exception as error:
             print("could not read the save file %r: %s" % (session, error))
             return 1
