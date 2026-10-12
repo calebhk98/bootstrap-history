@@ -42,7 +42,6 @@ def _training_share(inputs: YearInputs, source: str, target: str) -> float:
 
 
 def switch_trades(state: MarketState, inputs: YearInputs, clearings: Mapping, report: YearReport) -> None:
-    abilities = aptitude.band_abilities()
     allowed = inputs.enterable_trades
     destinations = sorted(trade for trade in inputs.trades if allowed is None or trade in allowed)
     for area in sorted(state.workers):
@@ -63,20 +62,24 @@ def switch_trades(state: MarketState, inputs: YearInputs, clearings: Mapping, re
                                 aptitude.completion_by_band(inputs.trades[trade].difficulty))
                             for trade in destinations}
             moves = _planned_moves(state, inputs, area, sources, destinations, income, later_income, vacancies,
-                                   abilities, subsistence)
+                                   subsistence)
             _carry_out(state, inputs, report, area, moves)
 
 
 def _planned_moves(state, inputs, area, sources, destinations, income, later_income, vacancies,
-                   abilities, subsistence) -> List[Move]:
+                   subsistence) -> List[Move]:
     rate = inputs.discount_rate
     remaining = inputs.career_years * REMAINING_CAREER_SHARE
     moves: List[Move] = []
+    chances: Dict[str, List[float]] = {}
     for source in sources:
         targets = [trade for trade in destinations if trade != source
                    and (later_income[trade] > income[source] or trade in vacancies)]
         if not targets:
             continue
+        for trade in targets:
+            if trade not in chances:
+                chances[trade] = aptitude.completion_by_band(inputs.trades[trade].difficulty)
         gain: Dict[str, float] = {}
         lost: Dict[str, float] = {}
         for trade in targets:
@@ -89,10 +92,11 @@ def _planned_moves(state, inputs, area, sources, destinations, income, later_inc
                 continue
             scores = {"": 0.0}   # staying; trade ids are never empty
             for trade in targets:
-                chance = aptitude.completion_chance(abilities[band], inputs.trades[trade].difficulty)
-                score = (chance * gain[trade] - lost[trade]) / subsistence
+                score = (chances[trade][band] * gain[trade] - lost[trade]) / subsistence
                 if score > 0.0:   # a move worth less than staying is not considered at all
                     scores[trade] = score
+            if len(scores) == 1:
+                continue
             shares = expectations.logit_shares(scores, SWITCHING_TASTE_SCALE)
             for trade in scores:
                 if trade:

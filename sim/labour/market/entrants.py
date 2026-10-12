@@ -70,6 +70,7 @@ def _place_round(state: MarketState, inputs: YearInputs, clearings: Mapping, are
     waiting = aptitude.split_evenly(people)
     entered: Dict[str, float] = {}
     open_trades = candidates
+    places: Dict[str, float] = {}   # open places by trade; only a trade that took people changes
     for _attempt in range(len(candidates)):
         if aptitude.band_total(waiting) <= 0.0 or not open_trades:
             break
@@ -80,10 +81,13 @@ def _place_round(state: MarketState, inputs: YearInputs, clearings: Mapping, are
             if aptitude.band_total(bands) <= 0.0:
                 continue
             refused = training.enrol(state, inputs, area, trade, bands)
+            places.pop(trade, None)
             entered[trade] = entered.get(trade, 0.0) + aptitude.band_total(bands) - aptitude.band_total(refused)
             aptitude.add_bands(waiting, refused)
-        open_trades = [trade for trade in open_trades
-                       if training.open_places(state, inputs, area, trade) > OPEN_PLACES_TOLERANCE]
+        for trade in open_trades:
+            if trade not in places:
+                places[trade] = training.open_places(state, inputs, area, trade)
+        open_trades = [trade for trade in open_trades if places[trade] > OPEN_PLACES_TOLERANCE]
     leftover = aptitude.band_total(waiting)
     if leftover > 0.0:
         aptitude.add_bands(aptitude.bands_of(state.workers.setdefault(area, {}), fallback), waiting)
@@ -96,17 +100,15 @@ def _band_values(inputs: YearInputs, abilities: List[float], candidates: List[st
                  income: Mapping[str, float], fallback: str) -> List[Dict[str, float]]:
     rate = inputs.discount_rate
     career = inputs.career_years
-    values: List[Dict[str, float]] = []
-    for ability in abilities:
-        by_trade: Dict[str, float] = {}
-        for trade in candidates:
-            spec = inputs.trades[trade]
-            chance = aptitude.completion_chance(ability, spec.difficulty)
-            start = spec.training_years
-            by_trade[trade] = (
-                chance * expectations.present_value(income[trade], rate, start, career)
-                + (1.0 - chance) * expectations.present_value(income[fallback], rate, start, career))
-        values.append(by_trade)
+    values: List[Dict[str, float]] = [{} for _ability in abilities]
+    for trade in candidates:
+        spec = inputs.trades[trade]
+        start = spec.training_years
+        chances = aptitude.completion_by_band(spec.difficulty)
+        success = expectations.present_value(income[trade], rate, start, career)
+        failure = expectations.present_value(income[fallback], rate, start, career)
+        for by_trade, chance in zip(values, chances):
+            by_trade[trade] = chance * success + (1.0 - chance) * failure
     return values
 
 

@@ -80,8 +80,14 @@ def completion_chance(ability: float, difficulty: float, bonus: float = 0.0) -> 
     return 1.0 / (1.0 + math.exp(exponent))
 
 
+@functools.lru_cache(maxsize=4096)
+def _completion_by_band(difficulty: float, bonus: float, count: int, spread: float) -> tuple:
+    return tuple(completion_chance(ability, difficulty, bonus) for ability in _bands(count))
+
+
 def completion_by_band(difficulty: float, bonus: float = 0.0) -> List[float]:
-    return [completion_chance(ability, difficulty, bonus) for ability in band_abilities()]
+    """Each band's chance of finishing a training (memoised per difficulty, bonus and the band settings)."""
+    return list(_completion_by_band(difficulty, bonus, band_count(), COMPLETION_SPREAD))
 
 
 def add_bands(into: List[float], extra: Sequence[float], scale: float = 1.0) -> None:
@@ -89,8 +95,7 @@ def add_bands(into: List[float], extra: Sequence[float], scale: float = 1.0) -> 
         into[index] += value * scale
 
 
-def band_total(bands: Sequence[float]) -> float:
-    return math.fsum(bands)
+band_total = math.fsum   # exact sum of one band list
 
 
 def bands_of(mapping: Mapping, key) -> List[float]:
