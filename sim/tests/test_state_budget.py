@@ -23,7 +23,13 @@ def budget_sim(civ="rome_100ad", army=None, purse=None):
     game = sim(civ=civ)
     game.market_credit_room = lambda actor_id: 0.0
     # revenue in coin only, so a deficit is measured against money (in-kind revenue: test_state_revenue_forms)
-    game.civ["state_revenue"] = [form for form in game.civ["state_revenue"] if "paid_in" not in form]
+    game.civ["state_revenue"] = [{key: value for key, value in form.items() if key != "paid_in"}
+                                 for form in game.civ["state_revenue"]]
+    # the goods the state buys are bid for in the agent economy's book and paid when the year clears, not booked as outlays
+    game.bids = []   # (buyer, commodity, tonnes, money)
+    real_note_purchase = game.economy.note_actor_purchase
+    game.economy.note_actor_purchase = lambda buyer, commodity, tonnes, budget_money: (
+        game.bids.append((buyer, commodity, tonnes, budget_money)), real_note_purchase(buyer, commodity, tonnes, budget_money))[1]
     if army is not None:
         game.civ["standing_army"] = army
     treasury = game.state_treasury()
@@ -85,16 +91,16 @@ revenue = SimWorld(game).state_revenue()
 need = sum(line.money for line in budget.standing_lines(SimWorld(game)))
 soldiers_free_before = game.labour.market_supply("soldier")
 scribes_before = game.actor_staff_fte("scribe")
-iron_demand_before_buying = game.actor_demand("iron")
-quoted_before = game.market_price_ratio("iron_bar_kg")
+iron_demand_before_buying = sum(1 for bid in game.bids if bid[1] == "iron")
 one_year(game)
 income, outlays = treasury.record.income, treasury.record.outlays
 check("the state's revenue is booked as income from taxation, less what it took in kind",
       abs(income.get("taxation", 0.0) + sum(treasury.record.revenue_in_kind.values()) - revenue) < 1e-6 * revenue,
       (income, treasury.record.revenue_in_kind, revenue))
-check("the state spends its standing need, by purpose",
+bid_money = sum(money for buyer, _commodity, _tonnes, money in game.bids if buyer == treasury.actor_id)
+check("the state spends its standing need, by purpose: outlays now, and bids for the goods it buys",
       outlays.get("army", 0.0) > 0.0 and outlays.get("administration", 0.0) > 0.0
-      and abs(sum(outlays.values()) - need) < 0.02 * need, (outlays, need))
+      and abs(sum(outlays.values()) + bid_money - need) < 0.02 * need, (outlays, bid_money, need))
 check("a state in surplus keeps the difference as reserve and the ledger balances",
       abs(treasury.money - (sum(income.values()) - sum(outlays.values()))) < 1e-6 * revenue
       and treasury.money > 0.0, (treasury.money, income, outlays))
@@ -102,22 +108,28 @@ check("a state that paid all it needs records no unfunded need",
       not any(treasury.record.unfunded.values()), treasury.record.unfunded)
 
 # ---- a deficit is financed from the reserve first, then spending is cut ----------------------
-heavy, treasury = budget_sim(army=1.0e8)  # a force the revenue cannot carry
+heavy, heavy_treasury = budget_sim(army=1.0e8)  # a force the revenue cannot carry
 revenue = SimWorld(heavy).state_revenue()
-need = sum(line.money for line in budget.standing_lines(SimWorld(heavy)))
+heavy_lines = budget.standing_lines(SimWorld(heavy))
+need = sum(line.money for line in heavy_lines)
 check("the heavy army is a real deficit", need > 2.0 * revenue, (need, revenue))
 reserve = 0.4 * (need - revenue)
-treasury.money = reserve
+heavy_treasury.money = reserve
 one_year(heavy)
-check("a reserve that covers part of the deficit is spent down to nothing, not below",
-      abs(treasury.money) < 1e-6 * need, treasury.money)
-spent = sum(treasury.record.outlays.values())
-check("spending is cut to what revenue and reserve afford",
+heavy_bids = sum(money for buyer, _commodity, _tonnes, money in heavy.bids if buyer == heavy_treasury.actor_id)
+heavy_outlays = heavy_treasury.record.outlays
+on_lines = sum(heavy_outlays.get(line.name, 0.0) for line in heavy_lines)
+off_lines = sum(heavy_outlays.values()) - on_lines   # lending, theft and the guards of coin are not the lines it keeps up
+check("a reserve that covers part of the deficit is all committed: the purse keeps only the bids not yet paid, "
+      "less what left outside the lines",
+      abs(heavy_treasury.money - heavy_bids + off_lines) < 1e-6 * need, (heavy_treasury.money, heavy_bids, off_lines))
+spent = on_lines + heavy_bids
+check("spending on the lines is cut to what revenue and reserve afford",
       abs(spent - (revenue + reserve)) < 1e-6 * need, (spent, revenue, reserve))
 check("the cut is recorded as unfunded need, by line",
-      abs(sum(treasury.record.unfunded.values()) - (need - spent)) < 1e-6 * need
-      and all(amount > 0.0 for amount in treasury.record.unfunded.values()),
-      treasury.record.unfunded)
+      abs(sum(heavy_treasury.record.unfunded.values()) - (need - spent)) < 1e-6 * need
+      and all(amount > 0.0 for amount in heavy_treasury.record.unfunded.values()),
+      heavy_treasury.record.unfunded)
 rich, treasury_rich = budget_sim(army=1.0e8)
 treasury_rich.money = 10.0 * need
 one_year(rich)
@@ -149,17 +161,18 @@ check("a state that cut its spending employs correspondingly fewer people",
       unfunded_treasury.workforce)
 
 # ---- spending reaches the goods market -------------------------------------------------------
-check("before the state buys anything it adds no demand", iron_demand_before_buying == 0.0)
-tonnes = game.actor_demand("iron")
-check("the state's iron purchases are demand in the commodity's market", tonnes > 0.0, tonnes)
+check("before the state buys anything it bids for nothing", iron_demand_before_buying == 0.0)
+tonnes = sum(bid_tonnes for buyer, commodity, bid_tonnes, _money in game.bids
+             if buyer == treasury.actor_id and commodity == "iron")
+check("the state's iron purchases are bids in the agent economy's book", tonnes > 0.0, tonnes)
 check("the demand is what the army's equipment needs, funded",
       abs(tonnes - sum(budget.standing_lines(SimWorld(game))[0].materials.values())) < 1e-6 * tonnes, tonnes)
-state = game.market_state("iron_bar_kg")
-check("the market report shows the state's demand", state["actor_demand_tonnes"] == tonnes, state)
 huge, huge_treasury = budget_sim(army=3.0e8, purse=1.0e18)
 one_year(huge)
-check("a state buying a great deal of iron raises its price",
-      huge.market_price_ratio("iron_bar_kg") > quoted_before, (huge.market_price_ratio("iron_bar_kg"), quoted_before))
+huge_tonnes = sum(bid_tonnes for buyer, commodity, bid_tonnes, _money in huge.bids
+                  if buyer == huge_treasury.actor_id and commodity == "iron")
+check("a state with a great army bids for a great deal more iron (the price it raises is the economy's, "
+      "test_economy_agent_state.py)", huge_tonnes > 10.0 * tonnes, (huge_tonnes, tonnes))
 
 # ---- the levy follows the state's need -------------------------------------------------------
 INCOME = 1.0e6

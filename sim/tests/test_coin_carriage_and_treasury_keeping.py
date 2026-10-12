@@ -12,13 +12,14 @@ PARTNER = "han_china_100ad"
 COIN = load_civ(PARTNER)["coin_standard"]
 
 
-def settled(carriage_per_tonne, flow_tonnes):
-    """(partner coin units after one settlement, the ledger) with coin carriage at the stated money a tonne."""
+def settled(carriage_share, flow_tonnes):
+    """(partner coin units after one settlement, the ledger, units owed) with coin carriage, a money a tonne of coin,
+    that takes the stated share of the coin's own value."""
     game = sim(civ="rome_100ad", capital=1e9)
     game.foreign_economies = lambda: [PARTNER]
-    game._coin_carriage_money_per_tonne = lambda civilization_id: carriage_per_tonne
     per_coin = COIN["kg_per_unit"] * game._material_prices()[COIN["material"]]
     value = 0.05 * game.home_coin_stock_units() * per_coin
+    game._coin_carriage_money_per_tonne = lambda civilization_id: carriage_share * per_coin * 1000.0 / COIN["kg_per_unit"]
     before = game._foreign_ledger(PARTNER)["partner_coin_units"]
     game._settle_flow(PARTNER, flow_tonnes, value, per_coin)
     ledger = game._foreign_ledger(PARTNER)
@@ -26,31 +27,32 @@ def settled(carriage_per_tonne, flow_tonnes):
 
 
 free_received, free_ledger, owed_units = settled(0.0, 5.0)
-dear_received, dear_ledger, _owed = settled(2000.0, 5.0)
+dear_received, dear_ledger, _owed = settled(0.2, 5.0)
 check("with free carriage the partner receives the whole payment", abs(free_received - owed_units) < 1e-6 * owed_units,
       (free_received, owed_units))
 check("coin carried over a route pays carriage by its mass, so the partner receives less",
       0.0 < dear_received < free_received, (dear_received, free_received))
 check("the carriage paid is recorded in coin units", dear_ledger["coin_carriage_units"] > 0.0
       and abs(dear_ledger["coin_carriage_units"] - (free_received - dear_received)) < 1e-6 * owed_units, dear_ledger)
-dearer_received, _ledger, _owed = settled(4000.0, 5.0)
+dearer_received, _ledger, _owed = settled(0.4, 5.0)
 check("dearer carriage takes more of the coin", free_received - dearer_received > 1.9 * (free_received - dear_received),
       (dearer_received, dear_received))
 
 
-def coin_total_change(carriage_per_tonne, flow_tonnes):
+def coin_total_change(carriage_share, flow_tonnes):
     """(change in payer + receiver + carriers' coin in home money, carriage booked) over one settlement."""
     game = sim(civ="rome_100ad", capital=1e9)
     game.foreign_economies = lambda: [PARTNER]
-    game._coin_carriage_money_per_tonne = lambda civilization_id: carriage_per_tonne
     per_coin = COIN["kg_per_unit"] * game._material_prices()[COIN["material"]]
-    game._settle_flow(PARTNER, flow_tonnes, 0.05 * game.home_coin_stock_units() * per_coin, per_coin)
+    value = 0.05 * game.home_coin_stock_units() * per_coin
+    game._coin_carriage_money_per_tonne = lambda civilization_id: carriage_share * per_coin * 1000.0 / COIN["kg_per_unit"]
+    game._settle_flow(PARTNER, flow_tonnes, value, per_coin)
     ledger = game._foreign_ledger(PARTNER)
     return ledger["home_coin_units"] + ledger["partner_coin_units"] * per_coin, ledger["coin_carriage_units"]
 
 
 for direction, flow in (("an import", 5.0), ("an export", -5.0)):
-    total, carriage = coin_total_change(2000.0, flow)
+    total, carriage = coin_total_change(0.2, flow)
     check("carriers are paid, so %s settlement leaves the total coin unchanged" % direction,
           carriage > 0.0 and abs(total) <= 1e-9 * carriage * COIN["kg_per_unit"] * 1e6, (total, carriage))
 

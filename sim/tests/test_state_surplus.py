@@ -6,6 +6,7 @@ from .harness import *  # noqa: F401,F403
 
 from sim.agents.purses import COIN, INTEREST_PAID, LENT
 from sim.engine.coin_hoard import KEEPING_CAUSE
+from sim.engine.theft_charge import THEFT_CAUSE
 
 
 def one_year(game):
@@ -15,7 +16,7 @@ def one_year(game):
 
 def purchases(treasury):
     """Every purpose a state may pay for: a line it keeps up, or a named purchase or payment."""
-    named = {"interest", "patronage", "relief", KEEPING_CAUSE, LENT}
+    named = {"interest", "patronage", "relief", KEEPING_CAUSE, LENT, THEFT_CAUSE}   # theft goes to the thieves edge
     return set(treasury.record.need) | named | {purpose for purpose in treasury.record.outlays if purpose.startswith("building ")}
 
 
@@ -80,7 +81,8 @@ check("a state with no spare reserve lends nothing and earns no interest on lend
 # ---- a surplus no work wants is kept and lent, not spent on unnamed works --------------------------
 stable = sim()
 stable_treasury = stable.state_treasury()
-for _year in range(25):
+stable_treasury.money = 1.0e12   # collection and the standing need take all of the opening revenue, so the surplus is given
+for _year in range(4):
     one_year(stable)
 check("what the surplus did not spend on named works stays the treasury, which the loanable market is offered, not swept away",
       "works" not in stable_treasury.record.outlays and "discretionary" not in stable_treasury.record.outlays

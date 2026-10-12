@@ -148,8 +148,8 @@ class ColdWarmTests(unittest.TestCase):
 
     def test_cold_equals_warm_and_warm_skips_solver(self):
         cold = self._solve()
-        cold_calls = self.solver_calls
-        self.assertEqual(cold_calls, 1)
+        cold_calls = self.solver_calls   # one solve may run the solver more than once (the clearing search re-solves)
+        self.assertGreaterEqual(cold_calls, 1)
         warm = self._solve()
         self.assertEqual(self.solver_calls, cold_calls)
         for field in ("prices_in_labour_hours", "resolvable_materials",
@@ -159,10 +159,11 @@ class ColdWarmTests(unittest.TestCase):
 
     def test_deleted_cache_gives_same_result(self):
         first = self._solve()
+        calls_for_one_solve = self.solver_calls
         shutil.rmtree(self.directory)
         second = self._solve()
         self.assertEqual(first.prices_in_labour_hours, second.prices_in_labour_hours)
-        self.assertEqual(self.solver_calls, 2)
+        self.assertEqual(self.solver_calls, 2 * calls_for_one_solve)
 
     def test_unwritable_cache_is_not_required(self):
         solve_cache.DEFAULT_CACHE_DIRECTORY = os.path.join(self.directory, "file", "sub")

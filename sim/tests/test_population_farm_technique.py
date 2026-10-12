@@ -93,9 +93,13 @@ class NoSecondPopulationTests(unittest.TestCase):
 
 
 class FoodTechnologyReachesPopulationTests(unittest.TestCase):
-    def test_a_food_technology_raises_population_through_the_cohort_model(self):
-        improved = _trajectory("food", ("crop_rotation", "fud_three_field_rotation"), (YEARS,))
-        self.assertGreater(improved[YEARS]["population"], _control()[YEARS]["population"])
+    def test_a_food_technology_reaches_the_cohort_model_through_labour_where_food_is_not_scarce(self):
+        # Rome's food is not what limits its people, so the technology does not add people; it frees farm workers
+        # and the cohorts are no smaller for it.
+        improved = _trajectory("food", ("crop_rotation", "fud_three_field_rotation"), (YEARS,))[YEARS]
+        control = _control()[YEARS]
+        self.assertGreaterEqual(improved["population"], control["population"])
+        self.assertLess(improved["farm_workers"], control["farm_workers"])
 
     def test_it_does_not_move_population_on_the_day_it_completes(self):
         improved = _rome()

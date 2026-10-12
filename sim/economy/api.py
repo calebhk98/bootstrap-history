@@ -247,6 +247,11 @@ def economy_book(economy):
     return economy.record.book
 
 
+def begin_spin_up(economy):
+    """Opens the hidden spin-up years, in which households' spending rises as far as their wealth allows."""
+    economy.record.settling = True
+
+
 def finish_spin_up(economy):
     """Closes the hidden spin-up years: the price level is rebased to one and the clock returns to zero."""
     rebase_basket_price_level(economy.setup, economy.record)

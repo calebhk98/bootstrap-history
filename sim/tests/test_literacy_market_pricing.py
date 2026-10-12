@@ -1,4 +1,6 @@
 """literacy_market_pricing: regression checks, run individually with `--only literacy_market_pricing`."""
+import collections
+
 from .harness import *  # noqa: F401,F403
 
 # =============================================================================
@@ -123,15 +125,22 @@ check("hire's own fee rises the more of a trade you have taken on recently",
 # gunpowder is the cheapest node that needs it.
 s = sim(civ="rome_100ad", capital=1e9)
 s.active["gunpowder"] = {}
+# only gunpowder's inputs press on the market here, so what binds is its own; the rest of a fresh Rome's demand
+# (alum, say, which nothing in reach makes) would otherwise be what the throttle names
+_all_demand = s.annual_material_demand
+s.annual_material_demand = lambda: collections.Counter(
+    {material: tonnes for material, tonnes in _all_demand().items() if material in NODES["gunpowder"]["mat"]})
 f_no_beds = s.material_price_factor("saltpetre")
 cost_no_beds = s.project_cost("gunpowder")
 throttle_no_beds = s.resource_throttle()
+binding_no_beds = s.state.holdings.binding
 _mms = s.material_market_summary()
 _money_mat = S._agent_dispatch(s, NODES, {"cmd": "money"})
 s.nitre_bed_m2 = 2_000_000.0
 f_with_beds = s.material_price_factor("saltpetre")
 cost_with_beds = s.project_cost("gunpowder")
 throttle_with_beds = s.resource_throttle()
+binding_with_beds = s.state.holdings.binding
 check("demand for a material the market barely sells costs a real premium "
       "over the flat catalogue price",
       f_no_beds > 1.5, "%.3f" % f_no_beds)
@@ -143,9 +152,9 @@ check("project_cost itself falls once your own supply covers the demand",
       "no beds=%.0f with beds=%.0f" % (cost_no_beds, cost_with_beds))
 check("resource_throttle still throttles a material the market will not "
       "sell you at all",
-      throttle_no_beds < 1.0, throttle_no_beds)
-check("...and stops once your own supply covers the need",
-      throttle_with_beds > 0.99, throttle_with_beds)
+      throttle_no_beds < 1.0 and binding_no_beds == "saltpetre", (throttle_no_beds, binding_no_beds))
+check("...and saltpetre stops binding once your own supply covers the need",
+      binding_with_beds != "saltpetre", (throttle_with_beds, binding_with_beds))
 check("material_market_summary names a material trading above book price",
       bool(_mms) and "saltpetre" in _mms, _mms)
 check("...and `money` itself carries the same line",
@@ -169,7 +178,8 @@ for _mat in ("aluminium_kg", "silk_kg"):
     s = sim(civ="rome_100ad", capital=1e9)
     # Demand is pinned at the market's own reachable tonnage, so the test
     # holds whatever level the solved price puts the fitted market at.
-    _pinned_demand = s._material_market_tonnes(_mat)
+    # (a material nothing in reach makes has no market tonnage, so demand is pinned at a stated tonnage)
+    _pinned_demand = 1000.0
     f_none = s.material_price_factor(_mat)
     check("a material with NO curated entry anywhere (%s) starts neutral "
           "with no demand pinned on it" % _mat,

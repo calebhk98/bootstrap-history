@@ -87,15 +87,23 @@ check("a recorded actor's purse is its opening money plus income less outlays",
       ledger_balances(treasury) and ledger_balances(firm, 500.0))
 
 # ---- the yearly life of the actors goes through the ledger -------------------------
-mill = make_node("test_treasury_mill", traits=["commerce"], revenue=5000.0, upkeep=100.0,
-                 hours=100.0, years=1.0)
+mill_id = "test_treasury_mill"
+mill = make_node(mill_id, traits=["commerce"], revenue=5000.0, upkeep=100.0, hours=100.0, years=1.0)
 game = actor_sim([mill])
+# a node earns only from output, which the game derives at its start; this fixture states the takings and upkeep it
+# wants booked, in hours, so they survive the repricing when the economy opens
+hour = game.labour.money_per_labour_hour()
+game.nodes[mill_id].update(rev=5000.0, up=100.0, rev_hours=5000.0 / hour, up_hours=100.0 / hour)
 year = game.state.scenario.year
-game.state.projects.done.add("test_treasury_mill")
-game.state.projects.done_year["test_treasury_mill"] = year - 6
-game.state.projects.operating.add("test_treasury_mill")
-game.state.projects.opened_year["test_treasury_mill"] = year - 6
+game.state.projects.done.add(mill_id)
+game.state.projects.done_year[mill_id] = year - 6
+game.state.projects.operating.add(mill_id)
+game.state.projects.opened_year[mill_id] = year - 6
 game._done_changed()
+# a country is placed at its central tile, far from the founder, so no entrant sees the mill from there: the firm that
+# runs it is put in directly (entry is tested in test_firm_entry_market.py)
+game.actors.add("firm:ledger_mill", ActorRecord(kind="firm", name="ledger mill", target=mill_id, money=1.0e6,
+                                                last_margin=1000.0, founded_year=year - 1))
 for _ in range(6):
     game.state.scenario.year += 1
     game.advance_actors(game.state.scenario.year)
@@ -103,7 +111,7 @@ treasury = government_of(game)
 firms = game.actors.of_kind("firm")
 check("the state's yearly revenue is booked as income from taxation",
       treasury.record.income.get("taxation", 0.0) > 0.0, treasury.record.income)
-check("a firm was founded and ran, so its books have takings and upkeep",
+check("a firm that ran the mill has takings and upkeep in its books",
       bool(firms) and firms[0].record.income.get("takings", 0.0) > 0.0
       and firms[0].record.outlays.get("upkeep", 0.0) > 0.0,
       [(f.actor_id, f.record.income, f.record.outlays) for f in firms])
@@ -112,7 +120,7 @@ check("every actor's copying spend is an outlay, so no money moves off the books
           if actor.works or actor.knowledge),
       [(a.actor_id, a.record.outlays) for a in [treasury] + firms])
 check("across the years each actor's purse equals its ledger",
-      ledger_balances(treasury) and all(ledger_balances(f) for f in firms),
+      ledger_balances(treasury) and all(ledger_balances(f, 1.0e6) for f in firms),
       [(a.actor_id, a.money, sum(a.record.income.values()), sum(a.record.outlays.values()))
        for a in [treasury] + firms])
 

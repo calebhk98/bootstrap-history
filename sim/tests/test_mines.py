@@ -127,10 +127,11 @@ check("even fully depleted with every relevant technology built, a tonne "
 s_bound2 = sim(capital=1.0)
 s_bound2.mines.append({"material": "coal", "capacity": 1.0, "opened_year": 1,
                        "capex_paid": 0.0, "intensity_yrs": 1e9})
-check("fully depleted with NO relevant technology, cost is higher, not "
+# the scale is depletion alone; what the techniques do to the works is in the running cost itself
+check("fully depleted with NO relevant technology, the running cost is higher, not "
       "lower, than the technology-equipped case above",
-      s_bound2.mining_cost_scale("coal") > s_bound.mining_cost_scale("coal"),
-      (s_bound2.mining_cost_scale("coal"), s_bound.mining_cost_scale("coal")))
+      s_bound2.mine_operating_cost_for(s_bound2.mines[0]) > s_bound.mine_operating_cost_for(s_bound.mines[0]),
+      (s_bound2.mine_operating_cost_for(s_bound2.mines[0]), s_bound.mine_operating_cost_for(s_bound.mines[0])))
 
 # --- THE PLAYER MUST SEE IT: mine_quote() names the land ceiling, current
 # yield fraction and why cost differs from book, before any capital moves.

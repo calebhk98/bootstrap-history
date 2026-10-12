@@ -6,6 +6,9 @@ from .harness import *  # noqa: F401,F403
 
 from sim.engine.agents_port import SimWorld
 from sim.agents import budget
+from sim.agents.purses import LENT
+from sim.engine.coin_hoard import KEEPING_CAUSE
+from sim.engine.theft_charge import THEFT_CAUSE
 from sim.geography import api as geography_api, territory
 
 
@@ -133,7 +136,8 @@ one_year(hoard)
 check("reserve beyond what the state holds against risk buys named works it lacks, never an outlay that pays no one",
       "works" not in hoard_treasury.record.outlays and "discretionary" not in hoard_treasury.record.outlays
       and all(purpose in hoard_treasury.record.need or purpose.startswith("building ") or purpose in
-              {"interest", "patronage", "relief", "lent", "keeping"} for purpose in hoard_treasury.record.outlays),
+              {"interest", "patronage", "relief", LENT, KEEPING_CAUSE, THEFT_CAUSE}   # theft goes to the thieves edge
+              for purpose in hoard_treasury.record.outlays),
       hoard_treasury.record.outlays)
 check("the purse still equals income less outlays after the works",
       abs(hoard_treasury.money - (1.0e18 + sum(hoard_treasury.record.income.values())

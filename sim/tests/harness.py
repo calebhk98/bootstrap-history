@@ -205,6 +205,10 @@ def build_unopened(factory):
     with mock.patch.object(EconomyPort, "open_agent", lambda self: None):
         game = factory()
     game.economy._opening = True
+    # a partner that lives only in the agent economy has no figures while it is unopened
+    inside = set(game.partners_in_agent_economy())
+    every_partner = game.partner_countries
+    game.partner_countries = lambda: [partner for partner in every_partner() if partner not in inside]
     return game
 
 

@@ -47,7 +47,8 @@
    "deposit_type": "carbonate_hosted_galena",
    "status": "historic",
    "conf": "C",
-   "source": "Sala silver mine, Vastmanland, Sweden's chief silver producer from the late Middle Ages; the same working as the lead entry, listed once per metal."
+   "source": "Sala silver mine, Vastmanland, Sweden's chief silver producer from the late Middle Ages; the same working as the lead entry, listed once per metal.",
+   "working_unknown": "UNKNOWN (D): this entry's source note gives the place and a share of reference output, not a working date or a total endowment. Not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores."
   },
   {
    "id": "magan_copper_oman",
@@ -71,7 +72,8 @@
    "deposit_type": "volcanogenic_massive_sulphide",
    "status": "historic",
    "conf": "C",
-   "source": "Mahd adh Dhahab ('Cradle of Gold'), Hejaz, an ancient gold, silver and copper working; Luce, O'Neil and Rye, Mahd adh Dhahab: Precambrian epithermal gold deposit in Saudi Arabia, US Geological Survey Open-File Report 78-388 (1978), https://pubs.usgs.gov/publication/ofr78388. Silver is a minor product."
+   "source": "Mahd adh Dhahab ('Cradle of Gold'), Hejaz, an ancient gold, silver and copper working; Luce, O'Neil and Rye, Mahd adh Dhahab: Precambrian epithermal gold deposit in Saudi Arabia, US Geological Survey Open-File Report 78-388 (1978), https://pubs.usgs.gov/publication/ofr78388. Silver is a minor product.",
+   "working_unknown": "UNKNOWN (D): this entry's source note gives the place and a share of reference output, not a working date or a total endowment. Not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores."
   },
   {
    "id": "wadi_sawawin_iron",
@@ -143,7 +145,8 @@
    "deposit_type": "carbonate_hosted_galena",
    "status": "historic",
    "conf": "C",
-   "source": "Zawar, Rajasthan: silver from the argentiferous galena, as the lead entry; Craddock and Hegde, Early Indian Metallurgy. Silver recovery here is not independently re-checked."
+   "source": "Zawar, Rajasthan: silver from the argentiferous galena, as the lead entry; Craddock and Hegde, Early Indian Metallurgy. Silver recovery here is not independently re-checked.",
+   "working_unknown": "UNKNOWN (D): this entry's source note gives the place and a share of reference output, not a working date or a total endowment. Not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores."
   },
   {
    "id": "chadormalu_iron",
@@ -203,7 +206,8 @@
    "deposit_type": "carbonate_hosted_galena",
    "status": "historic",
    "conf": "C",
-   "source": "Karamazar range (Kan-i-Mansur): silver mines of the Samanid period, as the lead entry; Transoxianan silver feeding Samanid dirhams is argued in the Journal of Historical Research (jhr.usb.ac.ir/article_9357). Position approximate."
+   "source": "Karamazar range (Kan-i-Mansur): silver mines of the Samanid period, as the lead entry; Transoxianan silver feeding Samanid dirhams is argued in the Journal of Historical Research (jhr.usb.ac.ir/article_9357). Position approximate.",
+   "working_unknown": "UNKNOWN (D): this entry's source note gives the place and a share of reference output, not a working date or a total endowment. Not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores."
   },
   {
    "id": "wuan_iron",
@@ -263,7 +267,8 @@
    "deposit_type": "carbonate_hosted_galena",
    "status": "historic",
    "conf": "C",
-   "source": "Huize and the Yunnan silver mines: Yunnan was the most productive silver region from the Yuan onward, Ming records name about twenty mines and Qing records about two hundred, and the Jinniu mines at Huize were productive from the late 1780s (Heidelberg Sinology mining project, https://www.zo.uni-heidelberg.de/sinologie/research/epm/12_jinniu_huize.html). Von Glahn, Fountain of Fortune (1996), covers the Ming-Qing silver economy but was not found to treat Huize."
+   "source": "Huize and the Yunnan silver mines: Yunnan was the most productive silver region from the Yuan onward, Ming records name about twenty mines and Qing records about two hundred, and the Jinniu mines at Huize were productive from the late 1780s (Heidelberg Sinology mining project, https://www.zo.uni-heidelberg.de/sinologie/research/epm/12_jinniu_huize.html). Von Glahn, Fountain of Fortune (1996), covers the Ming-Qing silver economy but was not found to treat Huize.",
+   "working_unknown": "UNKNOWN (D): this entry's source note gives the place and a share of reference output, not a working date or a total endowment. Not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores."
   },
   {
    "id": "taruga_iron",
@@ -323,7 +328,8 @@
    "deposit_type": "sediment_hosted_copper",
    "status": "modern",
    "conf": "D",
-   "source": "Silver won as a minor by-product of the Central African Copperbelt; no ancient silver mining is attested in the region. The share stands for the region's small silver output."
+   "source": "Silver won as a minor by-product of the Central African Copperbelt; no ancient silver mining is attested in the region. The share stands for the region's small silver output.",
+   "working_unknown": "UNKNOWN (D): this entry's source note gives the place and a share of reference output, not a working date or a total endowment. Not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores."
   },
   {
    "id": "nizhny_tagil_iron",
@@ -371,7 +377,8 @@
    "deposit_type": "volcanogenic_massive_sulphide",
    "status": "historic",
    "conf": "C",
-   "source": "Zmeinogorsk Altai silver, the same ore as the lead entry; first Altai silver was presented in 1744 and the works passed to the Crown for it."
+   "source": "Zmeinogorsk Altai silver, the same ore as the lead entry; first Altai silver was presented in 1744 and the works passed to the Crown for it.",
+   "working_unknown": "UNKNOWN (D): this entry's source note gives the place and a share of reference output, not a working date or a total endowment. Not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores."
   },
   {
    "id": "durango_iron",
@@ -431,7 +438,8 @@
    "deposit_type": "epithermal_vein",
    "status": "historic",
    "conf": "B",
-   "source": "Taxco, Guerrero, early Spanish silver mines of the 1530s (Encyclopedia.com, Taxco; Wikipedia, Taxco gives about 1532) and part of the Mexican silver belt with Zacatecas; Bakewell, Silver Mining and Society in Colonial Mexico: Zacatecas 1546-1700 (Cambridge University Press, 1971) covers Zacatecas, not Taxco."
+   "source": "Taxco, Guerrero, early Spanish silver mines of the 1530s (Encyclopedia.com, Taxco; Wikipedia, Taxco gives about 1532) and part of the Mexican silver belt with Zacatecas; Bakewell, Silver Mining and Society in Colonial Mexico: Zacatecas 1546-1700 (Cambridge University Press, 1971) covers Zacatecas, not Taxco.",
+   "working_unknown": "UNKNOWN (D): this entry's source note gives the place and a share of reference output, not a working date or a total endowment. Not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores. The source dates the early Spanish mines to about the 1530s but gives no size, so no date is entered either."
   },
   {
    "id": "oruro_tin",

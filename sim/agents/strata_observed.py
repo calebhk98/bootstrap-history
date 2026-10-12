@@ -10,6 +10,9 @@ from typing import Any, Dict, List, Sequence, Tuple
 
 from . import stratum_year
 
+# decimals of a per-head figure that count in ranking, so floating-point noise cannot reorder equal strata
+RANK_PRECISION_DIGITS = 6
+
 
 def slice_income(curve: Sequence[Tuple[float, float]], first_person: float, last_person: float) -> float:
 	"""The money earned by the people from the `first_person`-th to the `last_person`-th along the curve of
@@ -29,7 +32,7 @@ def rank_key(stratum: Any, world: Any) -> float:
 	if members <= 0.0:
 		return 0.0
 	earning = stratum_year.bonded_product(stratum, world) if stratum.is_bonded() else stratum_year.own_income(stratum, world)
-	return earning / members
+	return round(earning / members, RANK_PRECISION_DIGITS)   # strata earning the same per head tie, and the name orders them
 
 
 def observed_incomes(strata: List[Any], world: Any, curve: Sequence[Tuple[float, float]]) -> Dict[str, float]:
