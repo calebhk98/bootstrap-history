@@ -506,14 +506,23 @@ def household_quantity_demanded_per_capita(
     committed_per_capita = sum(
         prices[basket_good.name] * basket_good.subsistence_quantity_per_capita_per_year
         for basket_good in basket)
+    return household_quantity_demanded_given_committed(
+        good, prices[good.name], income_per_capita, committed_per_capita)
+
+
+def household_quantity_demanded_given_committed(
+        good: "Good", price: float, income_per_capita: float, committed_per_capita: float) -> float:
+    """`household_quantity_demanded_per_capita` for a caller that already holds the basket's committed
+    expenditure (the summed price times subsistence quantity of every basket good), so a loop over
+    goods does not re-sum it for each one."""
     surplus_per_capita = income_per_capita - committed_per_capita
     if surplus_per_capita < 0.0:
         if committed_per_capita <= 0.0:
             return 0.0
         return _below_subsistence_quantity_demanded_per_capita(
-            good, prices[good.name], income_per_capita, committed_per_capita)
+            good, price, income_per_capita, committed_per_capita)
     return (good.subsistence_quantity_per_capita_per_year
-            + (good.marginal_budget_share / prices[good.name]) * surplus_per_capita)
+            + (good.marginal_budget_share / price) * surplus_per_capita)
 
 
 def _below_subsistence_quantity_demanded_per_capita(
