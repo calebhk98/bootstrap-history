@@ -3,11 +3,10 @@
 An area is a tile's labour area key (`labour_area`). Everything the core needs to know about a trade
 comes from the setup's trade registry; the unskilled trade is the work anyone can take up at once.
 """
-import copy
 import math
 from typing import Dict, Iterable, Mapping, Tuple
 
-from sim.labour.api import MarketState, TradeSpec, opening_labour_market, trade_specs
+from sim.labour.api import MarketState, copy_market_state, TradeSpec, opening_labour_market, trade_specs
 
 from . import mint, mint_labour
 from .market_memory import market_key
@@ -80,7 +79,7 @@ def mirror_wages(wages: Dict[str, float], state: MarketState) -> None:
 def hold_back(state: MarketState, share_by_area: Mapping[str, float]) -> Tuple[MarketState, Dict[str, Dict[str, list]]]:
     """The state the market sees when households keep hours back for their own plots: each area's
     workers cut by the share held (the same share of every trade and band), and the people held."""
-    seen = copy.deepcopy(state)
+    seen = copy_market_state(state)
     held: Dict[str, Dict[str, list]] = {}
     for area, share in share_by_area.items():
         if share <= 0.0:

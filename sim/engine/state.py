@@ -443,9 +443,19 @@ def get_save_fields() -> Tuple[str, ...]:
 SAVE_FIELDS = get_save_fields()
 
 
+_PLAIN_SCALARS = frozenset((int, float, str, bool))
+
+
 def serialize_state(obj: Any) -> Any:
 	"""Recursively serialize authoritative simulation state to JSON-compatible data."""
-	if obj is None or isinstance(obj, (int, float, str, bool)):
+	kind = type(obj)
+	if obj is None or kind in _PLAIN_SCALARS:
+		return obj
+	if kind is dict:   # the plain containers need none of the checks below
+		return {str(k): serialize_state(v) for k, v in obj.items() if not str(k).startswith("_on_change")}
+	if kind is list or kind is tuple:
+		return [serialize_state(x) for x in obj]
+	if isinstance(obj, (int, float, str, bool)):
 		return obj
 	if hasattr(obj, "to_canon_dict"):
 		return serialize_state(obj.to_canon_dict())
@@ -460,7 +470,6 @@ def serialize_state(obj: Any) -> Any:
 	from sim.engine.economy import _InvalidatingSet
 	if isinstance(obj, (set, _InvalidatingSet)):
 		return {"__set__": sorted(serialize_state(x) for x in obj)}
-	import collections
 	if isinstance(obj, (dict, _InvalidatingDict, collections.defaultdict, collections.Counter)):
 		return {str(k): serialize_state(v) for k, v in obj.items() if not str(k).startswith("_on_change")}
 	if isinstance(obj, (list, tuple)):
