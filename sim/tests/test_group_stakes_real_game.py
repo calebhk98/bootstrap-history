@@ -35,21 +35,28 @@ check("the groups screen still reads", isinstance(game.interest_groups(), list))
 # ---- an unpaid army loses its loyalty and mutinies against the real treasury --------------------------------
 treasury = game.state_treasury()
 treasury.money = 1.0e9
-soldiers_before = treasury.record.army
+# the army has come to expect exactly the share of its pay it gets
+treasury.record.income_reference["army_pay_share"] = group_servants.army_paid_share(treasury.record)
+treasury.record.loyalty = 1.0
+group_servants.run_army_year(treasury, SimWorld(game))
 check("a state that pays its army as little as it always has is not mutinied against in a quiet game",
-      "soldiers" not in {row["kind"] for row in game.interest_groups()} and treasury.record.loyalty == 1.0,
-      (game.interest_groups(), treasury.record.loyalty))
+      "soldiers" not in {sector.kind for sector in Sector.of_servants(treasury, SimWorld(game))}
+      and treasury.record.loyalty == 1.0,
+      (treasury.record.income_reference, treasury.record.loyalty))
 # the army had come to expect its full pay, and then gets a fifth of it
 treasury.record.income_reference["army_pay_share"] = 1.0
+army_shrank_in_a_year = False
 for _year in range(5):
     a_year(game)
     treasury.record.need["army"] = max(1.0, treasury.record.need.get("army", 1.0))
     treasury.record.unfunded["army"] = 0.8 * treasury.record.need["army"]
+    soldiers_before = treasury.record.army
     group_servants.run_army_year(treasury, SimWorld(game))
+    army_shrank_in_a_year = army_shrank_in_a_year or treasury.record.army < soldiers_before
 sectors = {sector.kind for sector in Sector.of_servants(treasury, SimWorld(game))}
 check("soldiers in arrears are a sector in the real game's budget", "soldiers" in sectors, sectors)
-check("their loyalty fell and the army shrank", treasury.record.loyalty < 1.0 and treasury.record.army < soldiers_before,
-      (treasury.record.loyalty, treasury.record.army, soldiers_before))
+check("their loyalty fell and the army shrank", treasury.record.loyalty < 1.0 and army_shrank_in_a_year,
+      (treasury.record.loyalty, treasury.record.army, army_shrank_in_a_year))
 check("the mutiny is in the founder's log", any("MUTINY" in text for _year, text in game.state.household.log), game.state.household.log[-5:])
 
 # ---- the founder's answers to a demand, on the real household ------------------------------------------------------

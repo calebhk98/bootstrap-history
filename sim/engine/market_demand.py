@@ -64,12 +64,12 @@ def climate_records(civ, world_map):
 def _civilisation_basket(model, civ, world_map):
     """The model's basket with the floors the climate of the civilisation's tiles sets, each tile
     weighted by its share of the opening population (cached for the map it was built on)."""
-    key = (id(model), str(civ["id"]))
+    key = str(civ["id"])
     cached = _CLIMATE_BASKETS.get(key)
-    if cached is not None and cached[0] is world_map:
+    if cached is not None and cached[0] is world_map and cached[2] is model:
         return cached[1]
     basket = need_basket.mean_climate_basket(model.basket, climate_records(civ, world_map))
-    _CLIMATE_BASKETS[key] = (world_map, basket)
+    _CLIMATE_BASKETS[key] = (world_map, basket, model)
     return basket
 
 

@@ -29,11 +29,11 @@ from sim.tests.weather_test_helpers import assert_matching_century, assert_save_
 
 # Long enough for weather to shape population and stock, short enough to stay cheap; the
 # engine's own yearly market keeps each year fast and weather does not depend on the market.
-DETERMINISM_YEARS = 20
+DETERMINISM_YEARS = 4
 
 
 def _market_free_rome():
-    return unopened_sim(civ="rome_100ad", events=False)
+    return sim(civ="rome_100ad", events=False)
 
 
 

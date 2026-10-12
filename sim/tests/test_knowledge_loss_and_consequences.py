@@ -103,8 +103,9 @@ check("241: a failed engineering node names its apparatus and materials",
       and sorted(NODES[_engineering]["mat"])[0].split("_")[0] in _engineering_line,
       _engineering_line)
 _active_sim = sim(capital=1e10)
-_active_sim.failed_attempts[_engineering] = 2
 _active_sim.initialize_project(_engineering)
+for _attempt in range(2):
+    _active_sim.learn_from_failed_attempt(_engineering)
 _portfolio = _agent_portfolio(_active_sim, NODES)["projects"][0]
 check("241: portfolio shows the live risk, labelled, beside the first-attempt risk",
       abs(_portfolio["chance_of_failure"] - _active_sim.effective_risk(_engineering)) < 1e-9

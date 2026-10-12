@@ -31,7 +31,7 @@ game.mothball_work(node_id)
 closed = [row for row in cause_book.rows(game) if row["kind"] == "closure" and row["subject"] == node_id]
 check("a closure by choice records its cause and what it stops earning",
       len(closed) == 1 and closed[0]["cause"] == game.CLOSED_BY_CHOICE
-      and closed[0]["revenue"] == NODES[node_id]["rev"], closed)
+      and closed[0]["revenue"] == game.nodes[node_id]["rev"], closed)
 
 game.close_work(node_id, game.CLOSED_FOR_STAFF)
 check("a staffing closure is a separate row with its own cause",

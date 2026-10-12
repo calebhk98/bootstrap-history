@@ -70,10 +70,14 @@ check("...and, with abundant cash against a 20-year calendar floor, names "
 # is repeated and what it adds up to.
 _s_haz = sim(civ="rome_100ad")
 _s_haz.events = True
-_s_haz.year = 240          # inside Rome's Third Century Crisis, 235-284
+# the first window that sacks a site as `risk` reports it (a hazard whose causes do not hold is weakened to nothing)
+_s_haz.year = 100
+_sacking_window = next((hazard for hazard in (_s_haz.knowledge_risk().get("known_hazards_ahead") or [])
+                        if hazard.get("sacks_a_site")), None)
+_s_haz.year = _sacking_window["years"][0] + 5 if _sacking_window else 240   # inside that window
 _rk = S._agent_dispatch(_s_haz, NODES, {"cmd": "risk"})
 _crisis = next((hazard for hazard in (_rk.get("knowledge_risk") or {}).get(
-    "known_hazards_ahead") or [] if "Third century" in hazard.get("name", "")), None)
+    "known_hazards_ahead") or [] if hazard.get("sacks_a_site")), None)
 check("a real dated, multi-year sacking hazard exists to check against",
       _crisis is not None, [hazard.get("name") for hazard in
       (_rk.get("knowledge_risk") or {}).get("known_hazards_ahead") or []])

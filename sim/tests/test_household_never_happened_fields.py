@@ -22,7 +22,7 @@ EVENT_VALUES = {
 
 def _owner(sim_obj, name):
     state = sim_obj.state
-    return state.household if name in HOUSEHOLD_OWNED else state.scenario
+    return state.household if name in HOUSEHOLD_OWNED else state.seat_progress
 
 
 def _round_trip(sim_obj, filename):

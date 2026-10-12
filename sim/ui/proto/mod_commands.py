@@ -18,7 +18,7 @@ MOD_COMMANDS = {}  # name -> kind, for commands mods registered
 POLICIES = []     # (name, spec) of data policies
 _OPERATORS = {">=": operator.ge, "<=": operator.le, ">": operator.gt, "<": operator.lt,
               "==": operator.eq, "!=": operator.ne}
-_REGISTERED_CODE = set()
+_REGISTERED_CODE = ui_port.IdentityCache()  # registrations already installed
 _BACKUP = {}      # shipped command entries a mod changed or removed, as they were
 _LOADED = []      # the mods directory already loaded
 
@@ -145,11 +145,11 @@ def load_mod_commands(mods_dir=None):
         return
     ui_port.run_mod_code(mods_dir)
     for registration in ui_port.COMMAND_REGISTRATIONS:
-        if id(registration) in _REGISTERED_CODE:
+        if _REGISTERED_CODE.get(registration):
             continue
         mod_id, name, fields, handler = registration
         _register(mod_id, name, dict(fields, aliases=list(fields.get("aliases", ()))), handler, "code")
-        _REGISTERED_CODE.add(id(registration))
+        _REGISTERED_CODE.put(registration, True)
     for found in ui_port.load_command_specs(mods_dir=mods_dir):
         spec = found.spec
         if spec.get("override") is True or spec.get("remove") is True:
