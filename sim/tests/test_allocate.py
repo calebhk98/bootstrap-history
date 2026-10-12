@@ -21,6 +21,7 @@ def _zero_lab(node):
 s = sim(capital=1e7)
 _kA, _kB = "academy_network", "corpus_written"
 s.order = [_kA, _kB]
+s.project_resource_throttle = lambda node_id: 1.0   # the order of hours is under test, not what the market has in stock
 for _k in (_kA, _kB):
     _n = NODES[_k]
     s.active[_k] = dict(ph_left=float(_n["ph"]), yrs=0.0, spent=0.0,
@@ -49,6 +50,7 @@ check("`portfolio`/`state` read the standing order back from the exact "
 s = sim(capital=1e7)
 _kC, _kD = "school_founded", "academy_network"
 s.order = [_kC, _kD]
+s.project_resource_throttle = lambda node_id: 1.0   # the order of hours is under test, not what the market has in stock
 _nC, _nD = NODES[_kC], NODES[_kD]
 # almost done: its own pace this year is small whatever the pool can spare.
 s.active[_kC] = dict(ph_left=30.0, yrs=0.0, spent=0.0, cost_left=0.0,
@@ -81,6 +83,7 @@ check("...and the player is told BY NAME that the directive could not be "
 s = sim(capital=1e7)
 _kE, _kF = "academy_network", "corpus_written"
 s.order = [_kE, _kF]
+s.project_resource_throttle = lambda node_id: 1.0   # the order of hours is under test, not what the market has in stock
 _nE, _nF = NODES[_kE], NODES[_kF]
 s.active[_kE] = dict(ph_left=float(_nE["ph"]), yrs=0.0, spent=0.0,
                      cost_left=0.0, lab_left=_zero_lab(_nE))
@@ -106,6 +109,7 @@ check("...and the second gets only what the pool had left, named as the "
 s = sim(capital=1e7)
 _order3 = ["academy_network", "corpus_written", "school_founded"]
 s.order = list(_order3)
+s.project_resource_throttle = lambda node_id: 1.0   # the order of hours is under test, not what the market has in stock
 for _k in _order3:
     _n = NODES[_k]
     s.active[_k] = dict(ph_left=float(_n["ph"]), yrs=0.0, spent=0.0,

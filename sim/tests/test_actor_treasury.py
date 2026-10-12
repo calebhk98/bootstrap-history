@@ -87,14 +87,14 @@ check("a recorded actor's purse is its opening money plus income less outlays",
       ledger_balances(treasury) and ledger_balances(firm, 500.0))
 
 # ---- the yearly life of the actors goes through the ledger -------------------------
-mill = make_node("test_treasury_mill", traits=["commerce"], revenue=5000.0, upkeep=100.0,
-                 hours=100.0, years=1.0)
-game = actor_sim([mill])
+# a node earns only from the output it makes, so the firm runs a real concern that sells what it makes
+mill_id = _TEMPLATE_ID
+game = actor_sim([])
 year = game.state.scenario.year
-game.state.projects.done.add("test_treasury_mill")
-game.state.projects.done_year["test_treasury_mill"] = year - 6
-game.state.projects.operating.add("test_treasury_mill")
-game.state.projects.opened_year["test_treasury_mill"] = year - 6
+game.state.projects.done.add(mill_id)
+game.state.projects.done_year[mill_id] = year - 6
+game.state.projects.operating.add(mill_id)
+game.state.projects.opened_year[mill_id] = year - 6
 game._done_changed()
 for _ in range(6):
     game.state.scenario.year += 1
