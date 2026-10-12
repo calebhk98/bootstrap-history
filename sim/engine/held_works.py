@@ -13,11 +13,10 @@ class HeldWorksMixin:
         """The ids and result tokens held now: completed and granted nodes that are in service, the
         civilisation's starting ones when `include_starting`, and what the held actions return."""
         projects = self.state.projects
-        key = (self.household.done_version, self.household.operating_version, id(self.nodes),
-               self.built_ways_stamp())
+        key = (self.household.done_version, self.household.operating_version, self.built_ways_stamp())
         cache = self.__dict__.setdefault("_held_running_cache", {})
         cached = cache.get(include_starting)
-        if cached is not None and cached[0] == key:
+        if cached is not None and cached[0] == key and cached[2] is self.nodes:
             return cached[1]
         held = set(projects.done) | set(projects.granted)
         held = {node_id for node_id in held
@@ -25,7 +24,7 @@ class HeldWorksMixin:
         if include_starting:
             held |= set(self.civ.get("starting_techs") or ())
         held = action_results.expand(self.nodes, held)  # a frozenset
-        cache[include_starting] = (key, held)
+        cache[include_starting] = (key, held, self.nodes)
         return held
 
     def built_ways_stamp(self):
