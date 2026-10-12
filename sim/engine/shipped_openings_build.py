@@ -1,35 +1,39 @@
-"""Writes the shipped openings (shipped_openings.py): one full spin-up per civilisation, under its cache key."""
+"""Writes the shipped openings (shipped_openings.py): every cache entry one civilisation's opening uses."""
+import json
 import os
 import random
+from typing import List, Tuple
 
 from . import shipped_openings, solve_cache
 from .core import Sim
 from .data import load, load_civ
-from .economy_port_year import SPIN_UP_CACHE_DIRECTORY, SPIN_UP_YEARS_ENV
+from .economy_port_year import SPIN_UP_YEARS_ENV
 
 
-def build(civ_id: str) -> str:
-    """Open a game of `civ_id` (running the spin-up unless the disk cache holds it) and ship its record;
-    returns the key. The opening does not depend on the seed, kit or player, so one game stands for all."""
+def build(civ_id: str) -> List[Tuple[str, str]]:
+    """Open a game of `civ_id` (computing what the disk cache lacks) and ship each cache entry it used;
+    returns their (namespace, key). The opening does not depend on the seed, kit or player, so one game
+    stands for all."""
     if os.environ.get(SPIN_UP_YEARS_ENV):
         raise SystemExit("%s shortens the spin-up; a shipped opening must be the full one" % SPIN_UP_YEARS_ENV)
     _tree, _prices, nodes, _wages, _goods = load()
-    game = Sim(nodes, [], random.Random(1), events=False, manual=True, civ=load_civ(civ_id))
-    key = game.economy.agent.opening_cache_key()
-    record = solve_cache.cached_json(key, _missing(key), cache_dir=SPIN_UP_CACHE_DIRECTORY)
-    shipped_openings.write(key, record)
-    return key
+    with solve_cache.recording() as touched:
+        Sim(nodes, [], random.Random(1), events=False, manual=True, civ=load_civ(civ_id))
+    shipped = []
+    for directory, key in dict.fromkeys(touched):
+        try:
+            with open(os.path.join(directory, key + ".json"), encoding="utf-8") as handle:
+                value = json.load(handle)
+        except (OSError, ValueError):
+            continue    # an entry the disk cache could not keep is computed by the player
+        shipped_openings.write(os.path.basename(directory), key, value)
+        shipped.append((os.path.basename(directory), key))
+    return shipped
 
 
-def prune(kept_keys) -> list:
-    """Remove shipped records whose keys are not in `kept_keys`; returns the keys removed."""
-    removed = [key for key in shipped_openings.shipped_keys() if key not in set(kept_keys)]
-    for key in removed:
-        os.remove(shipped_openings.path_of(key))
+def prune(kept: List[Tuple[str, str]]) -> List[Tuple[str, str]]:
+    """Remove shipped entries not in `kept`; returns those removed."""
+    removed = [entry for entry in shipped_openings.shipped_entries() if entry not in set(kept)]
+    for namespace, key in removed:
+        os.remove(shipped_openings.path_of(namespace, key))
     return removed
-
-
-def _missing(key):
-    def compute():
-        raise RuntimeError("the opening's spin-up record %s is not in the disk cache after opening" % key)
-    return compute

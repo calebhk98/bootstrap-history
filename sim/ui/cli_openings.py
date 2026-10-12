@@ -1,4 +1,5 @@
-"""`openings`: run each civilisation's full spin-up and ship the result (sim/engine/shipped_openings.py)."""
+"""`openings`: open a game of each civilisation and ship the cache entries its opening used
+(sim/engine/shipped_openings.py)."""
 import time
 
 from sim.engine import shipped_openings_build
@@ -7,13 +8,13 @@ from sim.engine.ui_port import civilization_ids
 
 def cmd_openings(args):
     civs = [part.strip() for part in (args.civs or "").split(",") if part.strip()] or civilization_ids()
-    keys = []
+    kept = []
     for civ_id in civs:
         started = time.time()
-        key = shipped_openings_build.build(civ_id)
-        keys.append(key)
-        print("%s: shipped %s (%.0fs)" % (civ_id, key, time.time() - started), flush=True)
+        entries = shipped_openings_build.build(civ_id)
+        kept.extend(entries)
+        print("%s: shipped %d cache entries (%.0fs)" % (civ_id, len(entries), time.time() - started), flush=True)
     if args.prune:
-        for key in shipped_openings_build.prune(keys):
-            print("removed stale %s" % key)
+        for namespace, key in shipped_openings_build.prune(kept):
+            print("removed stale %s/%s" % (namespace, key))
     return 0

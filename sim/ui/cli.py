@@ -1418,7 +1418,7 @@ def main():
     subparser = sub.add_parser("openings", help="run the full hidden spin-up of each civilisation and ship the opening "
                                "in openings/, so a player's new game skips it; slow (minutes per civilisation)")
     subparser.add_argument("--civs", default="", help="comma-separated civilisation ids (default: all)")
-    subparser.add_argument("--prune", action="store_true", help="also remove shipped openings no named civilisation uses")
+    subparser.add_argument("--prune", action="store_true", help="also remove shipped entries the named civilisations did not use")
     sub.add_parser("goals", help="list the selectable goals and their critical-path floors")
     subparser = sub.add_parser("path", help="the critical path to a goal"); subparser.add_argument("goal", nargs="?")
     subparser = sub.add_parser("costs", help="the resource costs of every node"); subparser.add_argument("--top", type=int, default=20)

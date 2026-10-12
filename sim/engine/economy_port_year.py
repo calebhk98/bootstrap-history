@@ -17,7 +17,7 @@ from sim.economy.api import (EDGE_EXTERNAL, EDGE_LEGACY, AgentOrders, Economy, G
                              YearInputs, expected_output_prices, external_orders, live_input_prices, live_wages,
                              trade_premium, variable_cost_per_run)
 
-from . import economy_port_actors, economy_port_cargo, economy_port_sites, material_capacity, shipped_openings, solve_cache
+from . import economy_port_actors, economy_port_cargo, economy_port_sites, material_capacity, solve_cache
 from .data import load_civ
 from .economy_port_key import spin_up_key
 from .economy_port_setup import build_setup, opening_values
@@ -108,9 +108,9 @@ class AgentEconomy:
             else:
                 opening = opening_values(self._sim)
                 setup = build_setup(self._sim, opening)
-                key = _spin_up_cache_key(setup)
                 record = solve_cache.cached_json(
-                    key, lambda: self._shipped_or_spun_up(key, setup), cache_dir=SPIN_UP_CACHE_DIRECTORY)
+                    _spin_up_cache_key(setup),
+                    lambda: self._spun_up(setup), cache_dir=SPIN_UP_CACHE_DIRECTORY)
                 self._economy = economy_api.economy_from_record(setup, record)
                 self.stored["opening"] = opening
                 self._save()
@@ -124,17 +124,6 @@ class AgentEconomy:
         self._floor_costs = {}
         if self._economy is not None:
             economy_api.set_improvements(self._economy, self._sim.state.economy.improvements)
-
-    def opening_cache_key(self):
-        """The cache key of this game's spun-up opening; None before the economy has opened."""
-        if "opening" not in self.stored:
-            return None
-        return _spin_up_cache_key(build_setup(self._sim, self.stored["opening"]))
-
-    def _shipped_or_spun_up(self, key, setup):
-        """The record shipped with the checkout for this opening, or the spin-up's own when none is."""
-        shipped = shipped_openings.read(key)
-        return shipped if shipped is not None else self._spun_up(setup)
 
     def _spun_up(self, setup):
         """The record after the hidden years; the same opening always gives the same one, so it is cached
