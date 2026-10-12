@@ -296,9 +296,14 @@ check("`why`'s supervision figure is computed by the same function `open` "
       abs(_why_open["scholars"] - round(_expect_sch, 2)) < 0.01
       and abs(_why_open["artisans"] - round(_expect_art, 2)) < 0.01,
       "why said %s, venture_hands says %.2f/%.2f" % (_why_open, _expect_sch, _expect_art))
+# the concern that fits the six hired craftsmen has a small crew, so the comparison uses one whose
+# supervision does outgrow its build crew (a big earner)
+_EXCEEDING = next(node_id for node_id in sorted(NODES)
+                  if s_staff.is_venture(node_id) and s_staff.venture_hands(node_id)[1] > NODES[node_id]["art"])
+_why_big = S._agent_dispatch(s_staff, NODES, {"cmd": "why", "id": _EXCEEDING})
 check("the supervision figure can genuinely exceed the build crew shown as staff_needed",
-      _why_open["artisans"] > _why["staff_needed"]["artisans"],
-      "staff_needed %s, staff_to_keep_it_open %s" % (_why["staff_needed"], _why_open))
+      _why_big["staff_to_keep_it_open"]["artisans"] > _why_big["staff_needed"]["artisans"],
+      "staff_needed %s, staff_to_keep_it_open %s" % (_why_big["staff_needed"], _why_big["staff_to_keep_it_open"]))
 _pure = S._agent_dispatch(s_staff, NODES, {"cmd": "why", "id": "ag2_adulteration_law"})
 check("a pure-knowledge node (no revenue, no upkeep) carries no "
       "staff_to_keep_it_open - there is no concern to supervise",
@@ -395,14 +400,15 @@ check("`money`'s net_per_year is insulated from the same one-year swing, matchin
 
 # stall_diagnosis's own net must be computed the same standing way: reproduce the
 # swing test against it on a household that is actually stalled.
-s_money = sim(capital=-4000.0)
+s_money = sim(capital=-40000.0)     # deep enough that the interest outruns the income
 s_money.insolvent_years = 20
 s_money.wage_hours_this_year = 0
 _diag_before = s_money.stall_diagnosis()
+_stalled_capital = s_money.capital
 check("set-up: this household really is stalled, so stall_diagnosis returns a real diagnosis to compare",
       bool(_diag_before), _diag_before)
 s_money.labour.work_for_wages("scholar", 1500)
-s_money.capital = -4000.0
+s_money.capital = _stalled_capital
 _diag_after = s_money.stall_diagnosis()
 check("stall_diagnosis's own net is insulated from a one-year wage sale the same way net_per_year is",
       _diag_after and _diag_before and _diag_after["you_are_stuck"] == _diag_before["you_are_stuck"],
