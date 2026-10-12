@@ -1,6 +1,6 @@
 # The full test suite takes far longer than fifteen minutes
 
-**Status:** partly - quick tier inside two minutes and the full suite inside thirty on four cores; one topic still times out
+**Status:** partly - a cold full suite runs inside thirty minutes on four cores; three topics still time out cold
 
 The quick tier (`python3 -m sim.tests`) runs only topics marked `QUICK_TOPIC = True`, a few to
 a process, and stays fast after engine edits. The full suite (`python3 -m sim.tests --slow
@@ -19,6 +19,15 @@ No topic computes a spin-up of its own that a variant of a default game could sh
 coin out (`economy_port_key.py`), variants that only vary a rate or read the farm or prices are built unopened,
 and the money-regime runs are one topic per civilisation so the runner can place them side by side. The one
 setup that still needs its own spin-up is the in-memory civilisation's run of every screen.
+
+A cold run is the one that matters: any engine edit invalidates the price solves and spin-ups. Measure it with an
+empty cache directory that keeps only the runner's remembered topic times:
+`mkdir /tmp/cold && cp .cache/test_topic_seconds.json /tmp/cold/ && ROME_CACHE_DIR=/tmp/cold python3 -m sim.tests --slow --timing`.
+On a cold run most of the cache work is price solves (one per distinct held gate set, civilisation, wage
+ratios, rate and territory), then spin-ups. Topics that still time out cold: `arrears_hours` (474),
+`ventures_lifecycle` and `economy_money_regimes_norse` (both pay their own cold price solves or spin-ups inside the limit).
+The time limit runs per topic, also inside a batch of quick topics, so one slow topic no longer fails the
+quick topics batched with it.
 
 ## What would cut it further
 
