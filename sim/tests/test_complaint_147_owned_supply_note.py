@@ -14,7 +14,8 @@ def _row(game):
 
 class OwnedSupplyNoteTests(unittest.TestCase):
     def test_no_note_without_owned_supply(self):
-        shown = _material_row(_row(sim(capital=5e7)))
+        game = sim(capital=5e7)
+        shown = _material_row(_row(game), game)
         self.assertEqual(shown["own_supply_tonnes_per_year"], 0)
         self.assertNotIn("scarcity_note", shown)
 
@@ -23,7 +24,7 @@ class OwnedSupplyNoteTests(unittest.TestCase):
         owner.state.holdings.forest_ha += 500
         before, after = _row(bare), _row(owner)
         self.assertLess(after["price_per_tonne"], before["price_per_tonne"])
-        shown = _material_row(after)
+        shown = _material_row(after, owner)
         self.assertGreater(shown["own_supply_tonnes_per_year"], 0)
         self.assertIn("own", shown["scarcity_note"])
         self.assertIn(_MATERIAL, shown["scarcity_note"])

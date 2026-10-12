@@ -29,9 +29,8 @@ def _credit_lines(text):
     return kept
 
 
-# enough cash for the first start only, so the second and third both draw on credit: what the first
-# start pays at once plus what it still owes afterwards, read off a household with cash to spare.
-# The later two cost more than the first, so what is left after it covers neither.
+# enough cash for the first start only: what the first start pays at once, read off a household with
+# cash to spare, plus a little. What is left after it covers neither later bill, so both draw on credit.
 FIRST_START = "tr_lateen_sail"
 
 
@@ -39,7 +38,7 @@ def cash_for_one_start():
     rich = sim(capital=1.0e9)
     _run(rich, "start " + FIRST_START)
     paid_at_once = 1.0e9 - rich.capital
-    return paid_at_once + rich.state.projects.active[FIRST_START]["cost_left"] + 1.0
+    return paid_at_once + 1.0
 
 
 CASH_FOR_ONE_START = cash_for_one_start()
