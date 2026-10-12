@@ -245,14 +245,23 @@ def concern_needing_craftsmen_to_supervise():
     raise AssertionError("no concern needs craftsmen to supervise")
 
 
-def ready_for_entry(game, money=1.0e8):
+def ready_for_entry(game, money=None):
     """Ready a game for firm entry: the home strata hold savings (a game whose agent economy has not run has
     empty purses, and a firm is founded from a stratum's savings) and the home government sits where the
-    founder works, so a founder's concern is in an entrant's sight. The strata and the government exist
-    once the actors have had a first year (`game.advance_actors`). Returns the game."""
-    for stratum in game.actors.of_kind("stratum"):
-        if stratum.record.country is None and not stratum.is_bonded():
-            stratum.money = money
+    founder works, so a founder's concern is in an entrant's sight. The opening cast (strata and governments)
+    is seeded first when it has not been. `money` is the savings of each free home stratum; by default the
+    entrepreneurial share of a year's output between them. Returns the game."""
+    if not game.actors.state.home_country:
+        from sim.engine.agents_port_cast import seed_opening_cast
+        seed_opening_cast(game)
+    free = [stratum for stratum in game.actors.of_kind("stratum")
+            if stratum.record.country is None and not stratum.is_bonded()]
+    if money is None:
+        from sim.agents.tuning import ENTREPRENEURIAL_CAPITAL_SHARE
+        from sim.engine.agents_port import SimWorld
+        money = SimWorld(game).society_output() * ENTREPRENEURIAL_CAPITAL_SHARE / max(1, len(free))
+    for stratum in free:
+        stratum.money = money
     home = game.actors.actors.get("government:" + (game.actors.state.home_country or ""))
     if home is not None:
         home.record.location = game.seat_place(game.state.acting_seat)

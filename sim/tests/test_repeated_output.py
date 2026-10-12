@@ -57,14 +57,14 @@ second_money = _render("money", _dispatch(game, cmd="money"))
 ventures_after = _render("ventures", _dispatch(game, cmd="ventures"))
 forced_money = _render("money", _dispatch(game, cmd="money", full=True))
 check("first `money` explains the practice",
-      _PRACTICE_PARAGRAPH in first_money, first_money)
+      _PRACTICE_PARAGRAPH in " ".join(first_money.split()), first_money)
 check("second `money` keeps the practice line but not the paragraph",
-      _PRACTICE_PARAGRAPH not in second_money and "YOUR PRACTICE" in second_money,
+      _PRACTICE_PARAGRAPH not in " ".join(second_money.split()) and "YOUR PRACTICE" in second_money,
       second_money)
 check("`ventures` after `money` does not repeat it either",
-      _PRACTICE_PARAGRAPH not in ventures_after and "YOUR PRACTICE" in ventures_after,
+      _PRACTICE_PARAGRAPH not in " ".join(ventures_after.split()) and "YOUR PRACTICE" in ventures_after,
       ventures_after)
-check("`money full` repeats it", _PRACTICE_PARAGRAPH in forced_money, forced_money)
+check("`money full` repeats it", _PRACTICE_PARAGRAPH in " ".join(forced_money.split()), forced_money)
 
 # --- (c) a completion is printed once.
 shed_name = NODES["tx2_shed"]["name"]

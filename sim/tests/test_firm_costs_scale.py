@@ -30,7 +30,7 @@ def actor_sim(extra_nodes):
 	game = build_unopened(lambda: S.Sim(nodes, list(ORDER), random.Random(1), events=False, manual=True,
 	             civ=S.load_civ("rome_100ad")))
 	game.goal, game.done_year = GOAL, {}
-	return game
+	return ready_for_entry(game)
 
 
 def founder_runs(game, node_id, opened_ago):

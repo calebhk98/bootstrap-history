@@ -64,7 +64,7 @@ check("the path screen prints the blocker line",
 
 # --- 149 and 162: available rows carry foreman, net and payback
 rows_sim = sim(capital=1_000_000.0)
-listing = S._agent_dispatch(rows_sim, NODES, {"cmd": "available", "all": True, "limit": 400})
+listing = S._agent_dispatch(rows_sim, NODES, {"cmd": "available", "all": True, "limit": 5000})
 by_id = {row["id"]: row for row in listing["available"]}
 loom = next((row for row in listing["available"] if row.get("specialist_foreman")
              and row["net_per_year"] > 0 and row.get("payback_years") is not None), None)

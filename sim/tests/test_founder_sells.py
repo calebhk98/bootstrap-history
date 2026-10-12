@@ -20,7 +20,8 @@ _TEMPLATE_ID = next(node_id for node_id, node in NODES.items()
 def make_node(node_id):
     node = copy.deepcopy(NODES[_TEMPLATE_ID])
     node.update(id=node_id, name=node_id, traits=["commerce"], pre=[], lab={"labourer": 100.0},
-                mat={}, rev=5000.0, up=100.0, yrs=1.0, risk=0.0, ph=0.0, dev_years=None, dev_people=None)
+                mat={}, rev=5000.0, up=100.0, yrs=1.0, risk=0.0, ph=0.0, dev_years=None, dev_people=None,
+                cap=0.0, art=0.2, sch=0.0)
     node.pop("gains", None)
     return node
 
@@ -32,7 +33,8 @@ def actor_sim(extra_nodes):
     nodes = copy.deepcopy(NODES)
     for node in extra_nodes:
         nodes[node["id"]] = node
-    game = S.Sim(nodes, list(ORDER), random.Random(1), events=False, manual=True, civ=S.load_civ("rome_100ad"))
+    game = build_unopened(lambda: S.Sim(nodes, list(ORDER), random.Random(1), events=False, manual=True,
+                                        civ=S.load_civ("rome_100ad")))
     game.goal, game.done_year = GOAL, {}
     return game
 

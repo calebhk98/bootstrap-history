@@ -53,7 +53,7 @@ check("no summary when nothing has closed", sim(capital=1e6).staffing_closure_su
 
 # --- 219: stuck recommends only what open accepts
 recommend_sim = sim(capital=1e7)
-for node_id in ("tex_spinning_wheel",):
+for node_id in ("en_undershot_wheel", "mirror_amalgam"):
 	recommend_sim.done.update(NODES[node_id]["pre"])
 	recommend_sim.done.add(node_id)
 recommend_sim._done_changed()
@@ -64,7 +64,7 @@ check("set-up: stuck makes an open recommendation", recommended, stuck_text)
 for node_id in recommended:
 	check("stuck recommends %s only if open would accept it" % node_id,
 	      recommend_sim.open_venture(node_id, pay=False)[0], recommend_sim.open_venture(node_id, pay=False))
-foreman_node = "tex_spinning_wheel"
+foreman_node = "mirror_amalgam"
 foreman_trade, _fte = recommend_sim.venture_foreman(foreman_node)
 check("one function states the staffing refusal open applies",
       recommend_sim.staffing_open_refusal(foreman_node) == recommend_sim.open_venture(foreman_node)[1],

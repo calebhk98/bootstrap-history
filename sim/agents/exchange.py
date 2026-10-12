@@ -76,7 +76,7 @@ def clean_side(side: Any) -> Dict[str, Any]:
 
 def holds_problem(holder: Any, side: Dict[str, Any], world: Any) -> str:
 	"""Why `holder` cannot hand over `side` now, or an empty string."""
-	if side.get("money", 0.0) > holder.money:
+	if side.get("money", 0.0) > max(0.0, holder.money):   # a holder in debt can still give what is not money
 		return "has not enough money"
 	for material, tonnes in sorted(side.get("stores", {}).items()):
 		if tonnes > holder.record.stores.get(material, 0.0):

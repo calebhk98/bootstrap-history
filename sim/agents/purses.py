@@ -65,8 +65,8 @@ class Purses:
     # ---- postings ---------------------------------------------------------------------------
     def transfer(self, payer: str, payee: str, amount: float, purpose: str) -> None:
         """Move `amount`; a payer short of it draws the rest on its facility first, and a payee in debt repays."""
-        if not amount > 0.0:
-            return
+        if not amount > DEBT_FLOOR:
+            return   # rounding residue: the books carry noise larger than this
         if not is_edge(payer):
             shortfall = amount - self.purse(payer)
             if shortfall > 0.0:

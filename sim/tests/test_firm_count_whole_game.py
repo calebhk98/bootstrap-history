@@ -30,6 +30,7 @@ def new_game(revenue):
 	             civ=S.load_civ("rome_100ad")))
 	game.goal, game.done_year = GOAL, {}
 	game.market_rate = lambda: 0.12
+	ready_for_entry(game)
 	year = game.state.scenario.year
 	game.state.projects.done.add("zz_count")
 	game.state.projects.done_year["zz_count"] = year - 10

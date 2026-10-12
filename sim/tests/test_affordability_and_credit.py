@@ -43,7 +43,9 @@ check("auto_open says why the best concern is still shut",
 # (the nodes that earn from their output; the payback is the engine's own: capex over net earnings)
 paybacks = {node_id: opener.venture_capex(node_id) / (node["rev"] - node["up"])
             for node_id, node in opener.nodes.items()
-            if node["rev"] > node["up"] and opener.is_venture(node_id)}
+            if node["rev"] > node["up"] and opener.is_venture(node_id)
+            and sum(opener.venture_hands(node_id)) <= opener.FOUNDER_IS_WORTH   # staffed by the founder alone
+            and opener.venture_foreman(node_id)[0] is None}
 quick_payback = min(paybacks, key=lambda node_id: (paybacks[node_id], node_id))
 slow_payback = max(paybacks, key=lambda node_id: (paybacks[node_id], node_id))
 assert paybacks[quick_payback] < opener.AUTO_OPEN_PAYBACK_LIMIT_YEARS < paybacks[slow_payback], paybacks

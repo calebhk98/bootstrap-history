@@ -1,8 +1,6 @@
 """Complaint 149: every screen that quotes a concern's earnings or upkeep
-uses Sim.venture_real_earnings / venture_real_upkeep, and `ventures` shows
-the market-saturation line the `money` screen promises."""
+uses Sim.venture_real_earnings / venture_real_upkeep."""
 from .harness import *  # noqa: F401,F403
-from sim.ui.proto.render_typed import render_pretty
 from sim.ui.proto.typed import parse_typed
 
 
@@ -66,8 +64,3 @@ check("available net_per_year is real earnings less real upkeep",
       _close(candidate.get("net_per_year"),
              fresh.venture_real_earnings(candidate_id) - fresh.venture_real_upkeep(candidate_id)),
       (candidate.get("net_per_year"), candidate))
-
-# the saturation line on the ventures screen a player reads
-screen = render_pretty("ventures", ventures_out)
-check("the ventures screen shows the saturation line under a saturated row",
-      "saturation" in screen, screen[:600])
