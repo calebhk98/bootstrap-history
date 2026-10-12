@@ -44,7 +44,7 @@ def world(experience=None, founding_staff=2.0, concerns=None, seeded=True, grant
     stub.after_failed_attempts = lambda node_id, count: Depth.after_failed_attempts(stub, node_id, count)
     stub.fade_industry_tenure = lambda: Depth.fade_industry_tenure(stub)
     stub.opening_worker_years_by_node = lambda: dict(opening or {})
-    stub.is_venture = lambda node_id: True
+    stub.is_concern_node = lambda node_id: True
     stub.seed_opening_industry_experience = lambda: Depth.seed_opening_industry_experience(stub)
     stub.nodes_with_mechanic = lambda name: []
     stub.mechanic = lambda node_id, name: None
