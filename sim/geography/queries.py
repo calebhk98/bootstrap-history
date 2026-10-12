@@ -160,10 +160,12 @@ def route(origin_tiles: Iterable[str], destination_tiles: Iterable[str], modes: 
 def route_costs(origin_tiles: Iterable[str], modes: Iterable[str],
                 improvements: Optional[Mapping[str, Mapping[str, Any]]] = None,
                 mode_costs: Optional[Mapping[str, float]] = None, handling_costs: Optional[Mapping[str, float]] = None,
-                held_nodes: Optional[Iterable[str]] = None, world_map: Optional[WorldMap] = None) -> Dict[str, float]:
-    """{tile: least cost per tonne} from any origin tile to every tile a haul reaches, as `route` prices it."""
+                held_nodes: Optional[Iterable[str]] = None, world_map: Optional[WorldMap] = None,
+                within: Optional[Iterable[str]] = None) -> Dict[str, float]:
+    """{tile: least cost per tonne} from any origin tile to every tile a haul reaches, as `route` prices it.
+    With `within` only those tiles are answered, which lets the search stop early."""
     return routes_search.costs_from(_map(world_map), origin_tiles, modes, improvements,
-                                    mode_costs, handling_costs, held_nodes)
+                                    mode_costs, handling_costs, held_nodes, within)
 
 
 def map_of_tiles(tile_records: Mapping[str, Mapping[str, Any]], world_map: Optional[WorldMap] = None) -> WorldMap:

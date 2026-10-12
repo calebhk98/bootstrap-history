@@ -80,7 +80,7 @@ class CarriageTable:
             everywhere = route_costs(
                 [source], sorted(self._rates), mode_costs=self._rates, handling_costs=self._handling,
                 held_nodes=self._held_nodes, world_map=self._world_map,
-                improvements=self._improvements)
+                improvements=self._improvements, within=self._tile_set)
             cached = {tile_id: cost for tile_id, cost in everywhere.items() if tile_id in self._tile_set}
             self._from_source[source] = cached
         return cached

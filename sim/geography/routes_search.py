@@ -82,10 +82,11 @@ def _cost_adjacency(compiled: routes_compile.Compiled):
     return adjacency
 
 
-def _cost_tree(compiled: routes_compile.Compiled, origins: frozenset) -> list:
+def _cost_tree(compiled: routes_compile.Compiled, origins: frozenset, within: Optional[frozenset] = None) -> list:
     """The least cost to every state: the same values `_tree` finds by cost (a path's cost is summed in
-    order from the origin whatever the search order), without the days and routes."""
-    key = (origins, "cost")
+    order from the origin whatever the search order), without the days and routes. With `within` (tile ids)
+    the search stops once those tiles are settled: their costs are final, other states' are not."""
+    key = (origins, "cost", within)
     cached = compiled.trees.get(key)
     if cached is not None:
         return cached
@@ -101,10 +102,16 @@ def _cost_tree(compiled: routes_compile.Compiled, origins: frozenset) -> list:
             queue.append((cost[state], state))
     heapq.heapify(queue)
     pop, push = heapq.heappop, heapq.heappush
+    unsettled = None if within is None else {compiled.tile_index[tile_id] for tile_id in within
+                                             if tile_id in compiled.tile_index}
     while queue:
         here_cost, state = pop(queue)
         if here_cost > cost[state]:
             continue
+        if unsettled:
+            unsettled.discard(state // count)
+            if not unsettled:
+                break
         for to_state, step_cost in adjacency[state]:
             new_cost = here_cost + step_cost
             if new_cost < cost[to_state]:
@@ -191,20 +198,25 @@ def costs_from(world_map: WorldMap, origin_tiles: Iterable[str], modes: Iterable
                improvements: Optional[Mapping[str, Mapping[str, Any]]] = None,
                mode_costs: Optional[Mapping[str, float]] = None,
                handling_costs: Optional[Mapping[str, float]] = None,
-               held_nodes: Optional[Iterable[str]] = None) -> Dict[str, float]:
+               held_nodes: Optional[Iterable[str]] = None,
+               within: Optional[Iterable[str]] = None) -> Dict[str, float]:
     """{tile: least cost per tonne from any origin tile} for every tile a haul reaches (origins cost 0).
-    One search serves every destination; the tree is kept like `route`'s."""
+    One search serves every destination; the tree is kept like `route`'s. With `within` only those tiles
+    are answered, and the search stops when they are settled."""
     origins = _origin_indexes(world_map, origin_tiles)
     compiled = routes_compile.compiled_for(world_map, routes_modes.checked_mode_ids(world_map, modes),
                                            improvements, mode_costs, handling_costs, held_nodes)
-    cost = _cost_tree(compiled, origins)
+    only = None if within is None else frozenset(within)
+    cost = _cost_tree(compiled, origins, only)
     count = len(compiled.mode_ids)
     result: Dict[str, float] = {}
     for tile_id, tile in compiled.tile_index.items():
+        if only is not None and tile_id not in only:
+            continue
         cheapest = min(cost[tile * count:(tile + 1) * count], default=INFINITY)
         if cheapest < INFINITY:
             result[tile_id] = cheapest
-    result.update({tile_id: 0.0 for tile_id in origins})
+    result.update({tile_id: 0.0 for tile_id in origins if only is None or tile_id in only})
     return result
 
 

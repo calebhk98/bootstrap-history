@@ -71,7 +71,8 @@ def carriage_unit(tile_ids: Tuple[TileId, ...], carriage: CarriageTable) -> floa
     yardstick goods' values are bucketed against, so a change of coin moves no good between buckets."""
     nearest = []
     for tile in tile_ids:
-        costs = [carriage.cost_per_tonne(tile, other) for other in tile_ids if other != tile]
+        from_tile = carriage.costs_from(tile)
+        costs = [from_tile.get(other, math.inf) for other in tile_ids if other != tile]
         finite = [cost for cost in costs if math.isfinite(cost) and cost > 0.0]
         if finite:
             nearest.append(min(finite))
