@@ -292,7 +292,12 @@ def _nitre_laid(capital):
     household.nitre_bed_m2 = 0.0
     household.binding = "saltpetre"
     before = household.nitre_bed_m2
-    household.step()
+
+    def throttle():   # saltpetre is what binds, whatever else a fresh game's demand presses on
+        household.binding = "saltpetre"
+        return 0.5
+    household.resource_throttle = throttle
+    household._step_materials()
     return household.nitre_bed_m2 - before, household
 
 _nitre_rich, _nitre_game = _nitre_laid(5_000_000.0)
@@ -361,7 +366,7 @@ check("a bare subject is still a subject, not mistaken for a flag",
 # household has, silently, at up to twelve per cent. Borrowing to build is a
 # real move and stays allowed; not being told was the bug.
 _cr = sim(civ="england_1300")
-_cr.capital = 30000.0           # short of the project's bill, within the credit line
+_cr.capital = 0.5 * _cr.project_cost("identity_cover")   # short of the project's bill, within the credit line
 _cr_out = S._agent_dispatch(_cr, NODES, {"cmd": "start", "id": "identity_cover"})
 check("starting a project you cannot cover in cash says you would be "
       "borrowing, what it costs a year, and how much room is left",
