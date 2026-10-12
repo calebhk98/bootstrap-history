@@ -33,7 +33,7 @@ DETERMINISM_YEARS = 20
 
 
 def _market_free_rome():
-    return unopened_sim(civ="rome_100ad", events=False)
+    return sim(civ="rome_100ad", events=False)
 
 
 
