@@ -61,8 +61,10 @@ class WageFloorFollowsSolvedFoodTests(unittest.TestCase):
     def test_a_floor_above_the_market_wage_lifts_the_labourer_wage(self):
         civ = data.load_civ("rome_100ad")
         entries = _entries()
-        entries["wheat_kg"]["land_hectare_years"] *= 400.0
-        schedule = _schedule(civ, entries)
+        for entry in entries.values():   # every route to wheat, or the cheaper one (the hoe) sets the price
+            if "wheat_kg" in entry["outputs"]:
+                entry["land_hectare_years"] *= 400.0
+        schedule =_schedule(civ, entries)
         self.assertGreater(schedule.subsistence_hours_per_hour, 1.0)
         self.assertAlmostEqual(schedule.wage_per_hour("labourer"), schedule.floor_per_hour)
 
@@ -183,8 +185,10 @@ class OpeningCapitalTests(unittest.TestCase):
         import random
         from sim.tests import harness
         from sim.engine.core import Sim
-        return Sim(harness.NODES, harness.ORDER, random.Random(1), events=False, manual=True,
-                   civ=data.load_civ(civ_name), cfg={"start_kit": kit})
+        # unopened: the claim is the opening purse against the opening wage quote, neither of which needs the agent economy
+        return harness.build_unopened(lambda: Sim(
+            harness.NODES, harness.ORDER, random.Random(1), events=False, manual=True,
+            civ=data.load_civ(civ_name), cfg={"start_kit": kit}))
 
     def test_a_kit_is_labourer_years_of_the_opening_wage(self):
         civ = data.load_civ("rome_100ad")
