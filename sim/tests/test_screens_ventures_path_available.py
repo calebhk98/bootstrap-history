@@ -68,6 +68,7 @@ rows_sim = sim(capital=1_000_000.0)
 # a concern that earns from its output and needs a specialist foreman, with everything it rests on known
 _FOREMAN_NODE = "mirror_amalgam"
 rows_sim.done.update(_closure(NODES, _FOREMAN_NODE) - {_FOREMAN_NODE})
+rows_sim.artisans = rows_sim.scholars = 20.0
 rows_sim._done_changed()
 listing = S._agent_dispatch(rows_sim, NODES, {"cmd": "available", "all": True, "limit": 5000})
 by_id = {row["id"]: row for row in listing["available"]}

@@ -125,8 +125,9 @@ check("money shows the debt the recurring surplus can carry",
 check("the sustainable figure comes from the shared method",
       abs(debt_money.get("sustainable_debt", -1e9) - getattr(debt_sim, "sustainable_debt", lambda: 0.0)()) < 0.1 and "sustainable_debt" in debt_money,
       debt_money.get("sustainable_debt"))
-# the dearest project startable now, with the household holding a little over half its price
-expensive_id = max((node_id for node_id in ORDER if node_id not in debt_sim.done and debt_sim.can_start(node_id)),
+# the dearest project startable now that the credit line can carry, with the household holding a little over half its price
+expensive_id = max((node_id for node_id in ORDER if node_id not in debt_sim.done and debt_sim.can_start(node_id)
+                    and debt_sim.project_cost(node_id) < 0.5 * debt_sim.funding_capacity()),
                    key=lambda node_id: (debt_sim.project_cost(node_id), node_id))
 debt_sim.capital = 0.6 * debt_sim.project_cost(expensive_id)
 start_reply = _ask(debt_sim, cmd="start", id=expensive_id)

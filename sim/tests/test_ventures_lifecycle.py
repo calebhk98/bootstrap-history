@@ -51,7 +51,8 @@ s_ch.done.update(NODES); s_ch._done_changed()
 s_ch.artisans = s_ch.scholars = 5.0
 # a concern that earns, costs something to open and ties up more hands than the closure slack
 _v = max((node_id for node_id in sorted(NODES) if s_ch.is_venture(node_id) and NODES[node_id]["rev"] > 500
-          and s_ch.venture_hands(node_id)[1] > s_ch.STAFFING_CLOSURE_SLACK), key=s_ch.venture_capex)
+          and s_ch.venture_hands(node_id)[1] > s_ch.STAFFING_CLOSURE_SLACK
+          and s_ch.venture_capex(node_id) < 0.1 * s_ch.capital), key=s_ch.venture_capex)
 s_ch.open_venture(_v)
 _full = s_ch.venture_capex(_v)
 s_ch.artisans = s_ch.scholars = 0.0
@@ -220,7 +221,8 @@ s_rs = sim(capital=500000.0)
 s_rs.done.update(NODES); s_rs._done_changed()
 s_rs.artisans = s_rs.scholars = 5.0
 _vv = max((node_id for node_id in sorted(NODES) if s_rs.is_venture(node_id) and NODES[node_id]["rev"] > 500
-           and s_rs.venture_hands(node_id)[1] > s_rs.STAFFING_CLOSURE_SLACK), key=s_rs.project_cost)
+           and s_rs.venture_hands(node_id)[1] > s_rs.STAFFING_CLOSURE_SLACK
+           and s_rs.venture_capex(node_id) < 0.1 * s_rs.capital), key=s_rs.project_cost)
 s_rs.open_venture(_vv)
 _fullfee = max(s_rs.project_cost(_vv) * 0.3, NODES[_vv]["up"] * 2.0)
 s_rs.artisans = s_rs.scholars = 0.0

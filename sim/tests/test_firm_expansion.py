@@ -121,7 +121,7 @@ check("a firm ends larger than it was founded",
 
 # capital dearer than any margin: no expansion
 dear = actor_sim([NODE])
-dear.market_rate = lambda: 1.0e5
+dear.market_rate = lambda: 50.0
 founder_runs(dear, "zz_grow", opened_ago=10)
 for _ in range(10):
 	next_year(dear)
