@@ -20,7 +20,6 @@ class DemandSchedule:
         group_of: dict = {}
         self.group_terms: List[tuple] = []
         self.group_rows: List[list] = []
-        self.capped_group_rows: List[list] = []    # per group: (floor, flexible, budget, maximum), highest maximum first
         self.rows: List[tuple] = []
         self.maximums: List[float] = []      # each bid's maximum price, in the order of the bids
         for floor, flexible, reference, elasticity, budget, maximum in map(_SCHEDULE_FIELDS, bids):
@@ -36,19 +35,14 @@ class DemandSchedule:
                 group = group_of[key] = len(self.group_terms)
                 self.group_terms.append(key)
                 self.group_rows.append([])
-                self.capped_group_rows.append([])
             row = (floor, flexible, budget, group)
             self.rows.append(row)
             if budget > 0.0:
                 self.group_rows[group].append(row)
-                self.capped_group_rows[group].append((floor, flexible, budget, maximum))
 
         self.price_capped = any(maximum < math.inf for maximum in self.maximums)
-        for rows in self.capped_group_rows:
-            rows.sort(key=_MAXIMUM, reverse=True)
         self._negated_terms = [(reference, -elasticity) for reference, elasticity in self.group_terms]
-        self._packed = [(reference, negated, [row[:3] for row in rows], [-row[3] for row in rows])
-                        for (reference, negated), rows in zip(self._negated_terms, self.capped_group_rows)]
+        self._packed: Optional[List[tuple]] = None
         self._totals: dict = {}              # total_at by price: a market is cleared at the same prices many times
         self._uncapped_terms: Optional[List[tuple]] = None
         self._ceilings: Optional[List[float]] = None
@@ -94,12 +88,10 @@ class DemandSchedule:
         """Total quantity wanted at a positive price."""
         total = self._totals.get(price)
         if total is None:
-            total = self._totals[price] = self._total_at(price)
+            total = self._totals[price] = self._capped_total_at(price) if self.price_capped else self._total_at(price)
         return total
 
     def _total_at(self, price: float) -> float:
-        if self.price_capped:
-            return self._capped_total_at(price)
         total = 0.0
         for factor, rows in zip(self._flexible_factors(price), self.group_rows):
             total += sum([min(floor + flexible * factor, budget / price) for floor, flexible, budget, _group in rows])
@@ -107,9 +99,12 @@ class DemandSchedule:
 
     def _capped_total_at(self, price: float) -> float:
         """`fsum(each_at(price))` without the buyers priced out (they add exactly zero); fsum is exact, so row order is free."""
+        packed = self._packed
+        if packed is None:
+            packed = self._packed = self._pack()
         wanted: List[float] = []
         try:
-            for reference, negated, rows, keys in self._packed:
+            for reference, negated, rows, keys in packed:
                 factor = (price / reference) ** negated
                 count = bisect_right(keys, -price)
                 if count:
@@ -119,9 +114,22 @@ class DemandSchedule:
             return self._capped_total_overflowing(price)
         return math.fsum(wanted)
 
+    def _pack(self) -> List[tuple]:
+        """Per group: its terms, its (floor, flexible, budget) rows with the dearest ceiling first, and the
+        negated ceilings in the same order (ascending, for bisection)."""
+        by_group: List[list] = [[] for _ in self.group_terms]
+        for (floor, flexible, budget, group), maximum in zip(self.rows, self.maximums):
+            if budget > 0.0:
+                by_group[group].append((floor, flexible, budget, maximum))
+        packed = []
+        for (reference, negated), rows in zip(self._negated_terms, by_group):
+            rows.sort(key=_MAXIMUM, reverse=True)
+            packed.append((reference, negated, [row[:3] for row in rows], [-row[3] for row in rows]))
+        return packed
+
     def _capped_total_overflowing(self, price: float) -> float:
         wanted: List[float] = []
-        for factor, (_reference, _negated, rows, keys) in zip(self._flexible_factors(price), self._packed):
+        for factor, (_reference, _negated, rows, keys) in zip(self._flexible_factors(price), self._pack()):
             count = bisect_right(keys, -price)
             wanted += [min(floor + flexible * factor, budget / price) for floor, flexible, budget in rows[:count]]
         return math.fsum(wanted)
