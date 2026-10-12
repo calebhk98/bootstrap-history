@@ -74,7 +74,7 @@ check("a shut concern that needs a foreman is never recommended while no foreman
 
 # --- 205: a project starved of directed hours is told the command that reserves them
 starve_sim = sim(capital=1e7)
-first_id, second_id = "academy_network", "corpus_written"
+first_id, second_id = "academy_network", "school_founded"   # no scarce material limits their pace
 starve_sim.order = [first_id, second_id]
 for node_id in (first_id, second_id):
 	node = NODES[node_id]

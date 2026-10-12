@@ -1,5 +1,6 @@
 """Complaints 170, 175, 145, 158: ventures paging, path blockers, foreman and net/payback on available."""
 from .harness import *
+from sim.engine.data import closure as _closure
 from sim.ui.proto.render_screen_available import render_available
 from sim.ui.proto.render_screens_economy import render_ventures
 from sim.ui.proto.render_screens_status import render_path
@@ -64,6 +65,10 @@ check("the path screen prints the blocker line",
 
 # --- 149 and 162: available rows carry foreman, net and payback
 rows_sim = sim(capital=1_000_000.0)
+# a concern that earns from its output and needs a specialist foreman, with everything it rests on known
+_FOREMAN_NODE = "mirror_amalgam"
+rows_sim.done.update(_closure(NODES, _FOREMAN_NODE) - {_FOREMAN_NODE})
+rows_sim._done_changed()
 listing = S._agent_dispatch(rows_sim, NODES, {"cmd": "available", "all": True, "limit": 5000})
 by_id = {row["id"]: row for row in listing["available"]}
 loom = next((row for row in listing["available"] if row.get("specialist_foreman")

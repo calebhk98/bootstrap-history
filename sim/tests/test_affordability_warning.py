@@ -87,7 +87,12 @@ check("...and a household with huge funding_capacity() but committed_spend() "
 _probe = sim(surveyed=())
 _sci_cost = _probe.project_cost("scientific_method")
 _units_cost = _probe.project_cost("units_standards")
-_purse = round(_units_cost) - 44.0     # just short of the second project alone
+# what starting the first takes from the purse at once (its materials), so the purse that is left when the
+# second is started is the one just short of it
+_paid_probe = sim(capital=1e6, surveyed=())
+_paid_before = _paid_probe.capital
+S._agent_dispatch(_paid_probe, NODES, {"cmd": "start", "id": "scientific_method"})
+_purse = round(_units_cost) - 44.0 + (_paid_before - _paid_probe.capital)     # just short of the second project alone
 s = sim(capital=_purse, surveyed=())
 r_sci = S._agent_dispatch(s, NODES, {"cmd": "start", "id": "scientific_method"})
 check("set-up: scientific_method alone needed no warning on a purse just short of units_standards",

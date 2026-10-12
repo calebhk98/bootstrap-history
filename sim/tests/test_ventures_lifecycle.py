@@ -23,9 +23,9 @@ _pair = [node_id for node_id in NODES
          if NODES[node_id]["rev"] > 0 and NODES[node_id]["up"] >= 0 and not NODES[node_id]["pre"]]
 s_cl.done.update(NODES)                 # know everything, so `open` is free
 s_cl.operating = set()
-# only a concern that ties up more hands than the closure slack can be closed for want of staff
+# only a concern that ties up more craftsmen than the closure slack can be closed for want of staff
 _holders = [node_id for node_id in NODES if NODES[node_id]["rev"] > 0 and s_cl.is_venture(node_id)
-            and sum(s_cl.venture_hands(node_id)) > s_cl.STAFFING_CLOSURE_SLACK]
+            and s_cl.venture_hands(node_id)[1] > s_cl.STAFFING_CLOSURE_SLACK]
 _rich = max(_holders, key=lambda node_id: NODES[node_id]["rev"] - NODES[node_id]["up"])
 _poor = min(_holders, key=lambda node_id: NODES[node_id]["rev"] - NODES[node_id]["up"])
 s_cl.operating.update([_rich, _poor])
@@ -51,7 +51,7 @@ s_ch.done.update(NODES); s_ch._done_changed()
 s_ch.artisans = s_ch.scholars = 5.0
 # a concern that earns, costs something to open and ties up more hands than the closure slack
 _v = max((node_id for node_id in sorted(NODES) if s_ch.is_venture(node_id) and NODES[node_id]["rev"] > 500
-          and sum(s_ch.venture_hands(node_id)) > s_ch.STAFFING_CLOSURE_SLACK), key=s_ch.venture_capex)
+          and s_ch.venture_hands(node_id)[1] > s_ch.STAFFING_CLOSURE_SLACK), key=s_ch.venture_capex)
 s_ch.open_venture(_v)
 _full = s_ch.venture_capex(_v)
 s_ch.artisans = s_ch.scholars = 0.0
@@ -116,20 +116,24 @@ check("...and a player running everything is not nagged about it",
 # and economy.py) silently went to zero, and nothing on any screen said so
 # until this.
 s_cg = sim(capital=50000.0)
-s_cg.done.add("patron_imperial")
+# a capability institution that costs something to keep open (one that costs nothing never closes)
+_patron = next(node_id for node_id in sorted(s_cg.NOT_OPERATING_BENEFIT)
+               if node_id not in ("corpus_dispersed", "fin_university") and s_cg.is_venture(node_id)
+               and not s_cg.mechanic(node_id, "capability").get("redundant_with"))
+s_cg.done.add(_patron)
 s_cg.done.add("corpus_dispersed")
 s_cg._done_changed()
 _cg_gaps = s_cg.capability_gaps()
 check("a capability institution that is done but not operating is named, "
       "by id, with the specific benefit it is not collecting right now",
-      {gap["id"] for gap in _cg_gaps} == {"patron_imperial", "corpus_dispersed"},
+      {gap["id"] for gap in _cg_gaps} == {_patron, "corpus_dispersed"},
       _cg_gaps)
 check("...and closes the moment the doors reopen - this is a LIVE check of "
       "running(), not a one-time note",
-      (s_cg.operating.add("patron_imperial"),
+      (s_cg.operating.add(_patron),
        {gap["id"] for gap in s_cg.capability_gaps()})[1] == {"corpus_dispersed"},
       s_cg.capability_gaps())
-s_cg.operating.discard("patron_imperial")
+s_cg.operating.discard(_patron)
 check("plague_preparedness is not in the capability warning table: its "
       "protection is read through running() by hazard_relief, not paid as a "
       "capability benefit",
@@ -140,7 +144,7 @@ check("`state` - the screen a player rereads every year - carries this "
       "warning too, not only a command nobody runs unprompted",
       _st_cg.get("critical_capabilities_not_operating") is not None
       and {gap["id"] for gap in _st_cg["critical_capabilities_not_operating"]}
-          == {"corpus_dispersed", "patron_imperial"},
+          == {"corpus_dispersed", _patron},
       _st_cg.get("critical_capabilities_not_operating"))
 check("...and says nothing when every completed capability is open",
       S._agent_state(_plain, NODES).get(
@@ -151,7 +155,7 @@ check("`risk` - the screen whose whole job is telling you what protects "
       "you - carries the same warning, independent of `state`",
       _risk_cg.get("critical_capabilities_not_operating") is not None
       and {gap["id"] for gap in _risk_cg["critical_capabilities_not_operating"]}
-          == {"corpus_dispersed", "patron_imperial"},
+          == {"corpus_dispersed", _patron},
       _risk_cg.get("critical_capabilities_not_operating"))
 check("the id named is never hidden under fog - a player has always "
       "already discovered anything in their own `done`",
@@ -216,7 +220,7 @@ s_rs = sim(capital=500000.0)
 s_rs.done.update(NODES); s_rs._done_changed()
 s_rs.artisans = s_rs.scholars = 5.0
 _vv = max((node_id for node_id in sorted(NODES) if s_rs.is_venture(node_id) and NODES[node_id]["rev"] > 500
-           and sum(s_rs.venture_hands(node_id)) > s_rs.STAFFING_CLOSURE_SLACK), key=s_rs.project_cost)
+           and s_rs.venture_hands(node_id)[1] > s_rs.STAFFING_CLOSURE_SLACK), key=s_rs.project_cost)
 s_rs.open_venture(_vv)
 _fullfee = max(s_rs.project_cost(_vv) * 0.3, NODES[_vv]["up"] * 2.0)
 s_rs.artisans = s_rs.scholars = 0.0

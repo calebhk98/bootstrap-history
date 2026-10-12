@@ -293,7 +293,7 @@ check("a resumed game carries on the same dice, so a project at its threshold do
 
 # 2. Founder hours could be spent twice: `train` wrote its own counter and
 #    `work` read only the wage one, so 3,800 hours went into a 2,000-hour year.
-_dh_game = sim(civ="han_china_100ad", capital=2.0e6, surveyed=())     # wage work reads the opened economy
+_dh_game = sim(civ="han_china_100ad", capital=2.0e7, surveyed=())     # wage work reads the opened economy
 _dh = [ask_agent(_dh_game, cmd="train", trade="machinist", n=2), ask_agent(_dh_game, cmd="train", trade="chemist", n=2),
        ask_agent(_dh_game, cmd="state"), ask_agent(_dh_game, cmd="work", trade="smith", hours=2000)]
 check("hours spent teaching are not still available to sell",
