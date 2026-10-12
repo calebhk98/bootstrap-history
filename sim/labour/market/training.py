@@ -36,7 +36,12 @@ def _school_places(inputs: YearInputs, area: str, trade: str) -> Tuple[float, fl
 
 
 def enrolled(state: MarketState, area: str, trade: str) -> float:
-    return math.fsum(aptitude.band_total(cohort[1]) for cohort in state.trainees.get(area, {}).get(trade, []))
+    return math.fsum([math.fsum(cohort[1]) for cohort in state.trainees.get(area, {}).get(trade, ())])
+
+
+def _incumbents(state: MarketState, area: str, trade: str) -> float:
+    bands = state.workers.get(area, {}).get(trade)
+    return math.fsum(bands) if bands is not None else 0.0
 
 
 def open_places(state: MarketState, inputs: YearInputs, area: str, trade: str) -> float:
@@ -44,9 +49,8 @@ def open_places(state: MarketState, inputs: YearInputs, area: str, trade: str) -
     spec = inputs.trades[trade]
     if spec.training_years <= 0.0:
         return math.inf
-    incumbents = aptitude.band_total(state.workers.get(area, {}).get(trade, aptitude.empty_bands()))
-    seats, _bonus = _school_places(inputs, area, trade)
-    return max(0.0, incumbents * APPRENTICES_PER_MASTER + seats - enrolled(state, area, trade))
+    seats = _school_places(inputs, area, trade)[0] if inputs.schools else 0.0
+    return max(0.0, _incumbents(state, area, trade) * APPRENTICES_PER_MASTER + seats - enrolled(state, area, trade))
 
 
 def enrol(state: MarketState, inputs: YearInputs, area: str, trade: str,
@@ -65,7 +69,7 @@ def enrol(state: MarketState, inputs: YearInputs, area: str, trade: str,
     if admitted_share <= 0.0:
         return list(bands)
     seats, school_bonus = _school_places(inputs, area, trade)
-    capacity = seats + aptitude.band_total(state.workers.get(area, {}).get(trade, aptitude.empty_bands())) * APPRENTICES_PER_MASTER
+    capacity = seats + _incumbents(state, area, trade) * APPRENTICES_PER_MASTER
     bonus = school_bonus * (seats / capacity) if capacity > 0.0 else 0.0
     admitted = [value * admitted_share for value in bands]
     state.trainees.setdefault(area, {}).setdefault(trade, []).append([years, admitted, bonus])
