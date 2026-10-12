@@ -7,7 +7,6 @@ import math
 from typing import Any, Dict
 
 from . import ledger
-from .no_country_economy import NoCountryEconomy
 from .edges import EDGE_ECONOMY
 from .tuning_strata import (BIRTH_RATE, BIRTH_WELFARE_RESPONSE, BONDAGE_EXIT_RATE, BONDED_BIRTH_SHARE,
 							DEATH_RATE, EDUCATION_EFFORT_SCALE, FALL_WELFARE, FAMINE_DEATH_RATE,
@@ -181,10 +180,7 @@ def settle_keep(registry: Any, world: Any) -> None:
 		if actor.record.labour_product > 0.0:
 			ledger.transfer(registry.state.edge(EDGE_ECONOMY), owner, actor.record.labour_product, EDGE_ECONOMY)
 			actor.record.labour_product = 0.0
-		try:
-			cost = actor.record.members * registry.world_for(actor, world).subsistence_cost_per_person_year()
-		except NoCountryEconomy:
-			continue   # its country's economy is not answering yet: the keep waits
+		cost = actor.record.members * registry.world_for(actor, world).subsistence_cost_per_person_year()
 		ledger.transfer(owner, actor, cost, "keep of bonded")
 		actor.record.allowance += cost
 
