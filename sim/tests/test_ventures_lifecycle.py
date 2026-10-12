@@ -12,7 +12,22 @@ Venture lifecycle checks, grouped by theme.
 """
 from .harness import *  # noqa: F401,F403
 from sim.engine import category_traits
+from sim.engine.units_prose import money_text
 
+
+# Concerns that earn, tie up more craftsmen than the closure slack and need no foreman, and that a
+# funded, staffed game can really open (a concern whose gate work is shut refuses, so is no use here).
+_probe = sim(capital=500000.0)
+_probe.done.update(NODES); _probe._done_changed()
+_probe.artisans = _probe.scholars = 5.0
+OPENABLE = []
+for _id in sorted(NODES):
+    if (_probe.is_venture(_id) and NODES[_id]["rev"] > 500
+            and _probe.venture_hands(_id)[1] > _probe.STAFFING_CLOSURE_SLACK
+            and _probe.venture_foreman(_id)[0] is None and _probe.venture_capex(_id) < 0.1 * _probe.capital
+            and _probe.open_venture(_id)[0]):
+        _probe.close_venture(_id)
+        OPENABLE.append(_id)
 
 # --- BREAK: when the staff ran short, the closer picked the concern that
 # needed the MOST hands, which is very nearly the same as picking the most
@@ -50,9 +65,7 @@ s_ch = sim(capital=500000.0)
 s_ch.done.update(NODES); s_ch._done_changed()
 s_ch.artisans = s_ch.scholars = 5.0
 # a concern that earns, costs something to open and ties up more hands than the closure slack
-_v = max((node_id for node_id in sorted(NODES) if s_ch.is_venture(node_id) and NODES[node_id]["rev"] > 500
-          and s_ch.venture_hands(node_id)[1] > s_ch.STAFFING_CLOSURE_SLACK and s_ch.venture_foreman(node_id)[0] is None
-          and s_ch.venture_capex(node_id) < 0.1 * s_ch.capital), key=s_ch.venture_capex)
+_v = max(OPENABLE, key=s_ch.venture_capex)
 s_ch.open_venture(_v)
 _full = s_ch.venture_capex(_v)
 s_ch.artisans = s_ch.scholars = 0.0
@@ -193,9 +206,8 @@ check("there is a command that lists the mines you own and their cost",
 # opened, because the ramp read the year you worked it OUT. Delaying `open`
 # was strictly better than opening promptly.
 s_rp = sim(capital=500000.0)
-_vr = next(node_id for node_id in sorted(NODES)
-           if s_rp.is_venture(node_id) and NODES[node_id]["rev"] > 500 and not NODES[node_id]["pre"])
-s_rp.done.add(_vr); s_rp.done_year[_vr] = 100; s_rp._done_changed()
+_vr = OPENABLE[0]
+s_rp.done.update(NODES); s_rp.done_year[_vr] = 100; s_rp._done_changed()
 s_rp.artisans = s_rp.scholars = 20.0
 s_rp.year = 130
 s_rp.open_venture(_vr)
@@ -220,9 +232,7 @@ check("...and reopening a shop the town already knows does not start it over",
 s_rs = sim(capital=500000.0)
 s_rs.done.update(NODES); s_rs._done_changed()
 s_rs.artisans = s_rs.scholars = 5.0
-_vv = max((node_id for node_id in sorted(NODES) if s_rs.is_venture(node_id) and NODES[node_id]["rev"] > 500
-           and s_rs.venture_hands(node_id)[1] > s_rs.STAFFING_CLOSURE_SLACK and s_rs.venture_foreman(node_id)[0] is None
-           and s_rs.venture_capex(node_id) < 0.1 * s_rs.capital), key=s_rs.project_cost)
+_vv = max(OPENABLE, key=s_rs.project_cost)
 s_rs.open_venture(_vv)
 _fullfee = max(s_rs.project_cost(_vv) * 0.3, NODES[_vv]["up"] * 2.0)
 s_rs.artisans = s_rs.scholars = 0.0
@@ -275,8 +285,10 @@ s_misc = sim(capital=1_000_000.0)
 # there was "nothing to save". The resource actually short was staff time,
 # not money, and mothball asked about money alone.
 _s_mb = s_misc
-_mb_id = next(node_id for node_id, node in NODES.items()
-              if node.get("up", 0) <= 0 and node.get("rev", 0) > 0 and _s_mb.is_venture(node_id))
+# every concern in the data now keeps up a share of its build bill, so the staff-time-only case is made
+# by zeroing the money upkeep on this game's own copy of an openable concern
+_mb_id = OPENABLE[0]
+_s_mb.nodes[_mb_id]["up"] = 0.0
 _s_mb.done.add(_mb_id); _s_mb._done_changed()
 _s_mb.operating.add(_mb_id)
 _mb_sch, _mb_art = _s_mb.venture_hands(_mb_id)
@@ -309,9 +321,10 @@ check("...but a thing with genuinely nothing to save (no money, no staff "
 # the one moment a player could still back out - opening itself - for any
 # ordinary venture where upkeep exceeds revenue even fully ramped up.
 s_ln = s_misc
-_ln_k = next((node_id for node_id, node in NODES.items()
-             if node.get("up", 0) > node.get("rev", 0) > 0
-             and node_id not in s_ln.CAPABILITY_INSTITUTIONS), None)
+# the loss is judged on what the concern really earns and costs, as the opening message is
+_ln_k = next((node_id for node_id in OPENABLE
+              if s_ln.venture_real_upkeep(node_id) > s_ln.venture_real_earnings(node_id, fully_ramped=True)
+              and node_id not in s_ln.CAPABILITY_INSTITUTIONS), None)
 check("a real, non-capability net-loss-making node exists in the tree to "
       "test against",
       _ln_k is not None, _ln_k)
@@ -323,8 +336,8 @@ if _ln_k:
           "fully ramped, is flagged right there in the success message - "
           "not left for the reader to subtract two numbers themselves",
           _ln_ok and "costs more than it earns" in _ln_msg
-          and "{:,.0f}".format(NODES[_ln_k]["up"] - NODES[_ln_k]["rev"])
-          in _ln_msg,
+          and money_text(s_ln.venture_real_upkeep(_ln_k) - s_ln.venture_real_earnings(_ln_k, fully_ramped=True),
+                         s_ln, grouped=True) in _ln_msg,
           _ln_msg)
 # A capability institution (a school, a workshop, a patron...) losing money
 # is the INTENDED shape of the trade, never flagged as a mistake here.
