@@ -370,8 +370,8 @@ def load_state(sim, path):
 		figure = state.economy.nodes_money_per_labour_hour if state.economy.money_from_economy else None
 		if figure is None:
 			raise EconomyNotOpened("a game built to load a save without opening its economy needs the save's tree pricing")
-		from .opening_money import restore_priced_nodes
+		from .opening_money import reprice_tree
 		sim._economy_deferred = False
-		restore_priced_nodes(sim, figure)
+		reprice_tree(sim, figure)
 	sim.refresh_derived_nodes()
 	return sim
