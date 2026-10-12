@@ -11,6 +11,8 @@ from sim.engine.agents_port import SimWorld
 from sim.engine.market_demand import household_demand_by_material
 from sim.engine.state import ActorRecord
 from sim.engine.material_units import tonnes_per_unit
+from sim.engine import foreign_economies as foreign_module
+from unittest import mock
 
 MATERIAL = "iron"
 
@@ -80,9 +82,13 @@ check("...and no firm means no such sale",
 check("...so the firm's output, offered at what it costs the firm, does not raise the price the market posts",
       furnace_game.market_price_ratio(FURNACE_MATERIAL) <= no_firm.market_price_ratio(FURNACE_MATERIAL) + 1e-6,
       (furnace_game.market_price_ratio(FURNACE_MATERIAL), no_firm.market_price_ratio(FURNACE_MATERIAL)))
-check("...and the market sells at least as much of it",
-      furnace_game._market_outcome(furnace_game._material_tag(FURNACE_MATERIAL)[0])[1].quantity_traded_tonnes
-      >= no_firm._market_outcome(no_firm._material_tag(FURNACE_MATERIAL)[0])[1].quantity_traded_tonnes * (1.0 - 1e-6))
+furnace_game._step_market()
+no_firm._step_market()
+furnace_book = furnace_game.state.economy.market_book.get(furnace_game._material_tag(FURNACE_MATERIAL)[0], {})
+no_firm_book = no_firm.state.economy.market_book.get(no_firm._material_tag(FURNACE_MATERIAL)[0], {})
+check("...and once the year has cleared the market has sold at least as much of it",
+      furnace_book.get("traded_tonnes", 0.0) >= no_firm_book.get("traded_tonnes", 0.0) * (1.0 - 1e-6),
+      (furnace_book.get("traded_tonnes"), no_firm_book.get("traded_tonnes")))
 furnace_world = SimWorld(furnace_game)
 furnace_node = furnace_game.nodes["blast_furnace"]
 check("the furnace is not a goods-category concern, so its takings carry only the output market factor",
@@ -109,15 +115,24 @@ check("and the need it served draws no spending on it", wanted.get("pepper_kg", 
 check("a commodity nobody offers has no market book entry", rome.market_state("pepper_kg") is None)
 check("a good the home makes keeps its price", "wheat_kg" in prices or "fabric_kg" in prices)
 
-check("a partner offers cassia", market.offered_by("cassia_kg") == "han_china_100ad", market.offered_by("cassia_kg"))
-check("...so cassia is an import, quoted at the landed price",
-      rome.material_price_basis("cassia_kg") == "imported" and market.can_be_bought("cassia_kg")
-      and rome.material_trade_quote("cassia_kg") is not None, rome.material_price_basis("cassia_kg"))
-facts = rome._foreign_economy_facts("han_china_100ad")
-route = rome._foreign_route(S.load_civ("han_china_100ad"))
-landed = (facts["prices_in_home_money"]["cassia_kg"] * market.partner_price_level("han_china_100ad")
-          * (1.0 + market.merchants_cost_share(route, None, "han_china_100ad"))
-          + (route.cost_per_tonne + rome._agent_cost_per_tonne("han_china_100ad", route))
-          * tonnes_per_unit("cassia_kg"))
-check("...and households pay what it costs the partner plus freight plus merchants' terms",
-      abs(prices["cassia_kg"] - landed) < 1e-9 * landed, (prices["cassia_kg"], landed))
+# a partner outside the agent economy trades by the partner book, which is what quotes an import; the shipped Han is
+# inside it, so for this section it is put outside (and the game is not played)
+_records = foreign_module.foreign_economy_records()
+with mock.patch.object(foreign_module, "foreign_economy_records", lambda: tuple(
+        dict(record, agent_economy=False) if record["civilization"] == "han_china_100ad" else record
+        for record in _records)):
+    rome = unopened_sim(civ="rome_100ad", capital=1e9)
+    market = rome.goods_market
+    prices = market.household_prices()
+    check("a partner offers cassia", market.offered_by("cassia_kg") == "han_china_100ad", market.offered_by("cassia_kg"))
+    check("...so cassia is an import, quoted at the landed price",
+          rome.material_price_basis("cassia_kg") == "imported" and market.can_be_bought("cassia_kg")
+          and rome.material_trade_quote("cassia_kg") is not None, rome.material_price_basis("cassia_kg"))
+    facts = rome._foreign_economy_facts("han_china_100ad")
+    route = rome._foreign_route(S.load_civ("han_china_100ad"))
+    landed = (facts["prices_in_home_money"]["cassia_kg"] * market.partner_price_level("han_china_100ad")
+              * (1.0 + market.merchants_cost_share(route, None, "han_china_100ad"))
+              + (route.cost_per_tonne + rome._agent_cost_per_tonne("han_china_100ad", route))
+              * tonnes_per_unit("cassia_kg"))
+    check("...and households pay what it costs the partner plus freight plus merchants' terms",
+          abs(prices["cassia_kg"] - landed) < 1e-9 * landed, (prices["cassia_kg"], landed))
