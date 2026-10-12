@@ -100,6 +100,10 @@ game.state.projects.done_year[mill_id] = year - 6
 game.state.projects.operating.add(mill_id)
 game.state.projects.opened_year[mill_id] = year - 6
 game._done_changed()
+# a country is placed at its central tile, far from the founder, so no entrant sees the mill from there: the firm that
+# runs it is put in directly (entry is tested in test_firm_entry_market.py)
+game.actors.add("firm:ledger_mill", ActorRecord(kind="firm", name="ledger mill", target=mill_id, money=1.0e6,
+                                                last_margin=1000.0, founded_year=year - 1))
 for _ in range(6):
     game.state.scenario.year += 1
     game.advance_actors(game.state.scenario.year)
@@ -107,7 +111,7 @@ treasury = government_of(game)
 firms = game.actors.of_kind("firm")
 check("the state's yearly revenue is booked as income from taxation",
       treasury.record.income.get("taxation", 0.0) > 0.0, treasury.record.income)
-check("a firm was founded and ran, so its books have takings and upkeep",
+check("a firm that ran the mill has takings and upkeep in its books",
       bool(firms) and firms[0].record.income.get("takings", 0.0) > 0.0
       and firms[0].record.outlays.get("upkeep", 0.0) > 0.0,
       [(f.actor_id, f.record.income, f.record.outlays) for f in firms])
@@ -116,7 +120,7 @@ check("every actor's copying spend is an outlay, so no money moves off the books
           if actor.works or actor.knowledge),
       [(a.actor_id, a.record.outlays) for a in [treasury] + firms])
 check("across the years each actor's purse equals its ledger",
-      ledger_balances(treasury) and all(ledger_balances(f) for f in firms),
+      ledger_balances(treasury) and all(ledger_balances(f, 1.0e6) for f in firms),
       [(a.actor_id, a.money, sum(a.record.income.values()), sum(a.record.outlays.values()))
        for a in [treasury] + firms])
 
