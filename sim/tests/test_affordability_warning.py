@@ -88,7 +88,8 @@ _probe = sim(surveyed=())
 _sci_cost = _probe.project_cost("scientific_method")
 _units_cost = _probe.project_cost("units_standards")
 _purse = round(_units_cost) - 44.0     # just short of the second project alone
-s = sim(capital=_purse, surveyed=())
+s = sim(surveyed=())
+s.capital = _purse      # in the game's own money, the unit project_cost is quoted in
 r_sci = S._agent_dispatch(s, NODES, {"cmd": "start", "id": "scientific_method"})
 check("set-up: scientific_method alone needed no warning on a purse just short of units_standards",
       r_sci["ok"] and "total_committed_across_active_work" not in r_sci, r_sci)
@@ -120,7 +121,8 @@ check("...and the credit this combination is likely to draw is bigger than "
 # only makes sense once more than one thing is drawing on the same purse,
 # and on_credit above already answers the single-project case on its own.
 _single_cost = _probe.project_cost("arithmetic_positional")
-s = sim(capital=round(_single_cost * 0.8), surveyed=())
+s = sim(surveyed=())
+s.capital = round(_single_cost * 0.8)
 s.done.add("sc2_notation_positional")
 s._done_changed()
 r_one = S._agent_dispatch(s, NODES, {"cmd": "start", "id": "arithmetic_positional"})

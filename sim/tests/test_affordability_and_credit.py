@@ -46,19 +46,36 @@ paybacks = {node_id: opener.venture_capex(node_id) / (node["rev"] - node["up"])
             if node["rev"] > node["up"] and opener.is_venture(node_id)
             and sum(opener.venture_hands(node_id)) <= opener.FOUNDER_IS_WORTH   # staffed by the founder alone
             and opener.venture_foreman(node_id)[0] is None}
-quick_payback = min(paybacks, key=lambda node_id: (paybacks[node_id], node_id))
+# deep in arrears is past half the credit line but still inside it, so a door fee can still be raised
+def into_arrears(game):
+    game.capital = -0.6 * game.credit_limit()
+
+
+# the quickest one that opens with nothing else known (one whose gate work is shut refuses, whatever its payback)
+_probe = sim()
+quick_payback = None
+for node_id in sorted(paybacks, key=lambda node_id: (paybacks[node_id], node_id)):
+    _probe.done.add(node_id)
+    _probe._done_changed()
+    into_arrears(_probe)
+    if _probe.open_venture(node_id)[0]:
+        quick_payback = node_id
+        break
+    _probe.done.discard(node_id)
+    _probe._done_changed()
 slow_payback = max(paybacks, key=lambda node_id: (paybacks[node_id], node_id))
 assert paybacks[quick_payback] < opener.AUTO_OPEN_PAYBACK_LIMIT_YEARS < paybacks[slow_payback], paybacks
-deep = sim(capital=-50000.0)
+deep = sim()
 deep.done.add(quick_payback)
 deep._done_changed()
+into_arrears(deep)
 check("the household in this check really is deep in arrears (over half its credit line)",
       deep.capital < 0 and -deep.capital > deep.credit_limit() * 0.5, (deep.capital, deep.credit_limit()))
 check("a completed concern that pays for its own door within months opens even while deep in arrears",
       quick_payback in deep.auto_open_ventures(), quick_payback)
-deep.capital = -50000.0
 deep.done.add(slow_payback)
 deep._done_changed()
+into_arrears(deep)
 deep.log.clear()
 opened_slow = deep.auto_open_ventures()
 check("a completed concern that would take years to pay for its own door stays shut while deep in arrears",
@@ -145,12 +162,12 @@ check("the arrears banner quotes the same loss the ledger does",
 check("...and names the part of it that is interest on the arrears themselves",
       any("interest on the arrears" in reason for reason in diagnosis["what_would_change_it"]),
       diagnosis["what_would_change_it"])
-wage_game = sim(civ="norse_900ad", capital=-4000.0)  # a civilisation whose own practice pays less than wage work
+wage_game = sim(civ="norse_900ad", capital=-40000.0)  # own practice pays less than wage work, and the debt is deep enough that its interest outruns it
 wage_game.insolvent_years = 20
 wage_advice = [reason for reason in (wage_game.stall_diagnosis() or {}).get("what_would_change_it", [])
                if reason.startswith("work as a ")]
 # The advice's quote is what work_for_wages pays for the trade and hours it names.
-quote_match = re.match(r"work as a (\w+): (\d+) of your own hours .* bring in about ([\d,]+) against the ([\d,]+) of practice",
+quote_match = re.match(r"work as a (\w+): (\d+) of your own hours .* bring in about ([\d,]+)(?: in \w+)? against the ([\d,]+)(?: in \w+)? of practice",
                        wage_advice[0]) if wage_advice else None
 check("a stalled household in debt is offered wage work, with trade, hours and earning",
       quote_match, wage_advice)
@@ -349,11 +366,14 @@ check("...and does not take your whole reputation with it",
 
 # --- a project part-paid when credit is withdrawn keeps what was paid.
 _pristine = pristine_game()
-# the dearest project startable now whose calendar floor outlasts a step
-PACED = max((node_id for node_id in NODES if NODES[node_id]["yrs"] >= 2.0 and _pristine.start_reason(node_id)[0]),
-            key=lambda node_id: (_pristine.project_cost(node_id), node_id))
-stopped = sim(capital=round(0.3 * _pristine.project_cost(PACED)))
-stopped.start_project(PACED)
+# the dearest project whose calendar floor outlasts a step and that 30% of its bill, in cash, can start
+stopped = sim()
+_candidates = sorted(((_pristine.project_cost(node_id), node_id) for node_id in NODES
+                      if NODES[node_id]["yrs"] >= 2.0 and _pristine.start_reason(node_id)[0]), reverse=True)
+for _cost, PACED in _candidates:
+    stopped.capital = round(0.3 * _cost)
+    if stopped.start_project(PACED)[0]:     # a refusal changes nothing
+        break
 for _ in range(2):
     stopped.step()
 spent = stopped.active[PACED]["spent"]

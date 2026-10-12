@@ -131,17 +131,19 @@ check("...and a nearly-paid project is not refused for its gross price",
 # real, discounted figure showed up only inside a `start` refusal or its
 # success line, after the fact.
 s_wp = sim(capital=1000.0, surveyed=())
-_wp_k = next(node_id for node_id in s_wp.order if s_wp.can_start(node_id) and NODES[node_id]["ph"] > 0)
+_wp_k = next(node_id for node_id in s_wp.order if s_wp.can_start(node_id) and NODES[node_id]["ph"] > 0
+             and 0 < s_wp.project_cost(node_id) <= s_wp.capital)
+_wp_sunk = float(round(0.5 * s_wp.project_cost(_wp_k)))   # half the bill is already paid in
 s_wp.start_project(_wp_k)
-s_wp.active[_wp_k]["spent"] = 500.0
+s_wp.active[_wp_k]["spent"] = _wp_sunk
 s_wp.stop_project(_wp_k)
 _wp_out = S._agent_dispatch(s_wp, NODES, {"cmd": "why", "id": _wp_k})
 check("`why` on a halted, partly-paid project shows both the gross total "
       "and what 'start' would actually charge, with the sunk amount "
       "accounting for the difference",
-      _wp_out["cost"].get("already_paid_towards_this") == 500.0
+      _wp_out["cost"].get("already_paid_towards_this") == _wp_sunk
       and abs(_wp_out["cost"]["what_start_would_actually_charge"]
-              - (_wp_out["cost"]["total"] - 500.0)) < 0.5,
+              - (_wp_out["cost"]["total"] - _wp_sunk)) < 0.5,
       _wp_out["cost"])
 check("...and it matches what `start` would actually bill, not a second "
       "estimate of it",

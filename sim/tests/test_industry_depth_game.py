@@ -8,7 +8,7 @@ from sim.labour.api import tenure_held
 from sim.ui import protocol as _PROTO
 
 _game = sim()
-_ventures = [node_id for node_id in sorted(_game.state.projects.granted) if _game.is_venture(node_id)]
+_ventures = [node_id for node_id in sorted(_game.state.projects.granted) if _game.is_concern_node(node_id)]
 check("set-up: the society runs some techniques at the opening", bool(_ventures), _ventures)
 
 _node = _ventures[0]

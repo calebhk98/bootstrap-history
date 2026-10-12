@@ -22,10 +22,12 @@ class CapabilityMixin:
     def is_venture(self, node_id):
         """Is this something you could run as a going concern, as opposed to a
         piece of knowledge that simply changes what you can do?"""
+        return node_id not in self.state.projects.granted and self.is_concern_node(node_id)
+
+    def is_concern_node(self, node_id):
+        """Does the tree describe a going concern here (it earns or costs to keep up), whoever holds it?"""
         node = self.nodes.get(node_id)
-        if node is None or node_id in self.state.projects.granted:
-            return False
-        return node["rev"] > 0 or node["up"] > 0
+        return node is not None and (node["rev"] > 0 or node["up"] > 0)
 
 
     # ---- DONE VERSUS OPERATING, MADE LOUD --------------------------------
