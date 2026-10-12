@@ -65,13 +65,15 @@ s_ry.year += 3
 _w_old = S._agent_dispatch(s_ry, NODES, {"cmd": "why", "id": _k_fe})
 check("...and becomes the exact figure after you have actually run it a "
       "few years",
-      _w_old["revenue"] == s_ry.nodes[_k_fe]["rev"], _w_old["revenue"])
+      not isinstance(_w_old["revenue"], list)
+      and _w_old["revenue"] == round(s_ry.venture_real_earnings(_k_fe), 1), _w_old["revenue"])
 
 # FOG OFF: the exact figure, as before.
 s_nf = _plain
 _w_nf = S._agent_dispatch(s_nf, NODES, {"cmd": "why", "id": _k_fe})
 check("with fog off, EARNS/YR is still the exact figure",
-      _w_nf["revenue"] == s_nf.nodes[_k_fe]["rev"], _w_nf["revenue"])
+      not isinstance(_w_nf["revenue"], list)
+      and _w_nf["revenue"] == round(s_nf.venture_real_earnings(_k_fe), 1), _w_nf["revenue"])
 
 
 # --- JOB 2: the game must not tell you which branch matters most. A

@@ -105,7 +105,7 @@ check("the first military-branch node is already enough to be asked for, "
       "and the notice now names a physical figure, not just a warning "
       "sentence",
       _one_mil.military_demand_eligible() and "military_supply" in _notice
-      and "kg" in _notice["military_supply"],
+      and ("kilogram" in _notice["military_supply"] or "kg" in _notice["military_supply"]),
       _notice.get("military_supply"))
 
 _expected_one_kg = _one_mil.military_equipment_burden_kg_per_soldier_per_year()
