@@ -1003,7 +1003,9 @@ def _explain_revenue(sim, nodes, node_id, node):
         # WHAT IT PAYS YOU: for a skill in your own practice, the practice's one income (your own
         # hours worked as a tradesman, shared by every skill you practise), not a figure of its own.
         "but_it_pays_YOU": (
-            round(sim.practice_income(), 1) if node_id in ui_port.practice_set(sim) else None),
+            # the ledger's own row, which carries the market ceiling's share, so the two screens agree
+            sim.revenue_sources().get("_your_own_practice", round(sim.practice_income(), 1))
+            if node_id in ui_port.practice_set(sim) else None),
         "because": ("this is your own practice, not a concern: it pays your own hours at the going wage "
                     "of a %s, once for all the skills you practise, and selling your hours for wages "
                     "takes them out of it" % sim.practice_trade()
