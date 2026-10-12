@@ -355,16 +355,30 @@ def _warm_starts(harness, jobs):
     harness.sim()
 
 
+def _current_topic_started(worker_started_at, result_path):
+    """When the topic a worker is running began: the worker rewrites its result file after each topic."""
+    try:
+        return max(worker_started_at, os.path.getmtime(result_path))
+    except OSError:
+        return worker_started_at
+
+
+def _split_stopped_batch(slugs, results):
+    """(the topic a stopped worker was running, the topics after it that never started)."""
+    unfinished = [slug for slug in slugs if slug not in results]
+    return unfinished[0], unfinished[1:]
+
+
 def _wait_for_a_worker(running, topic_seconds):
-    """(pid, wait status, stopped for time) of the next worker to finish; a worker past its time is killed
-    with its process group."""
+    """(pid, wait status, stopped for time) of the next worker to finish; a worker whose current topic is
+    past its time is killed with its process group."""
     while True:
         pid, wait_status = os.waitpid(-1, os.WNOHANG)
         if pid:
             return pid, wait_status, pid in running and running[pid][5]
         now = time.time()
         for worker, entry in running.items():
-            if not entry[5] and now - entry[4] > topic_seconds:
+            if not entry[5] and now - _current_topic_started(entry[4], entry[1]) > topic_seconds:
                 running[worker] = entry[:5] + (True,)
                 try:
                     os.killpg(worker, 9)
@@ -416,10 +430,14 @@ def _run_topics_forked(run_now, harness, jobs, topic_seconds):
             except OSError:
                 error_text = ""
             if stopped:
-                error_text = TIMED_OUT + " after %.0fs (--topic-seconds %g)" % (time.time() - started_at, topic_seconds)
-                for slug in slugs:
-                    if slug not in results:     # remembered as slow, so the next run starts it first
-                        _save_topic_seconds([(slug, time.time() - started_at, 0)])
+                topic_started = _current_topic_started(started_at, result_path)
+                error_text = TIMED_OUT + " after %.0fs (--topic-seconds %g)" % (time.time() - topic_started, topic_seconds)
+                stopped_slug, never_started = _split_stopped_batch(slugs, results)
+                # Remembered as slow, so the next run starts it first; the topics behind it run in a worker of their own.
+                _save_topic_seconds([(stopped_slug, time.time() - topic_started, 0)])
+                if never_started:
+                    pending.insert(0, never_started)
+                    slugs = [slug for slug in slugs if slug not in never_started]
             completed = subprocess.CompletedProcess(slugs, os.waitstatus_to_exitcode(wait_status),
                                                     "", error_text)
             _report_progress(slugs, results, progress, TIMED_OUT if stopped else "crashed")
