@@ -80,7 +80,7 @@ for _scratch in (_LOADTEST_DIR, _PLAY_DIR):
 # to quote the old name to explain it.
 _PATHY_ROME = re.compile(
     r"""["']rome/                # "rome/sim/..." - a path with the old prefix
-      | ["']rome["']\s*,         # os.path.join(ROOT, "rome", ...) - a component
+      | join\([^)]*["']rome["']\s*[,)]   # os.path.join(ROOT, "rome", ...) - a component
       | ^\s*(?:from|import)\s+rome\b   # the rome.sim.tests package import
     """, re.VERBOSE)
 

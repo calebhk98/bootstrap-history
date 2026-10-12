@@ -15,13 +15,13 @@ def _big(rep=98.0, eminence=39.0, year=250, cap=5000000.0):
     return big_sim
 
 _em = _big()
-_rep0, _em0 = _em.reputation, _em.eminence
+_rep0, _em0, _cash0 = _em.reputation, _em.eminence, _em.capital
 _ok_w, _why_w = _em.withdraw_from_public_life()
 check("there is a command that lowers prominence the year you use it",
       _ok_w and _em.eminence < _em0 * 0.6, (_em0, _em.eminence))
 check("...and its price is reputation, not money",
-      _em.reputation < _rep0 - 5 and abs(_em.capital - 5000000.0) < 1e-6,
-      (_rep0, _em.reputation, _em.capital))
+      _em.reputation < _rep0 - 5 and abs(_em.capital - _cash0) < 1e-6,
+      (_rep0, _em.reputation, _em.capital, _cash0))
 check("...but never below what the work you built is worth on its own",
       _em.reputation >= _em.standing_floor() - 1e-6,
       (_em.reputation, _em.standing_floor()))
