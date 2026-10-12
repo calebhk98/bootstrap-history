@@ -23,6 +23,7 @@ class _Setup:
     working_hours_per_year: float = 2400.0
     prices: Dict[str, float] = dataclasses.field(default_factory=lambda: {"wheat": 1.0})
     world_map: Any = dataclasses.field(default_factory=lambda: {"tiles": [1, 2]})
+    coin_per_unit: float = 1.0
 
 
 def _write(root, relative, text):
@@ -39,6 +40,18 @@ class SetupDigestTests(unittest.TestCase):
         for change in ({"civ_id": "china_100ad"}, {"working_hours_per_year": 2500.0},
                        {"prices": {"wheat": 1.1}}, {"world_map": {"tiles": [1, 3]}}):
             self.assertNotEqual(base, economy_port_key.setup_digest(_Setup(**change)), change)
+
+
+class CoinTests(unittest.TestCase):
+    """The economy counts money in its own unit and the port converts to coin, so games that differ only in
+    their coin share one spin-up."""
+
+    def test_the_coin_does_not_change_the_spin_up_key(self):
+        self.assertEqual(economy_port_key.spin_up_key(_Setup()), economy_port_key.spin_up_key(_Setup(coin_per_unit=0.4)))
+
+    def test_the_coin_does_not_change_the_key_of_shortened_years_either(self):
+        self.assertEqual(economy_port_key.spin_up_key(_Setup(), (3, 2)),
+                         economy_port_key.spin_up_key(_Setup(coin_per_unit=0.4), (3, 2)))
 
 
 class _Map:
