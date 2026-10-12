@@ -284,7 +284,8 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
         by sorting; these were missed because nothing here touches the RNG, and
         the arithmetic looked innocent.
 
-        `self.order` is a list, and a list is a list.
+        The tree's own order is used, not the strategy's `order`, so the sums do not depend on which
+        strategy or goal the game was started with.
         """
         # CACHED, because this is O(nodes) and revenue() calls it. Uncached it
         # was 2.2 seconds of a 3.5 second `can_start` once something else began
@@ -295,7 +296,7 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
         # and the contents different.
         seq = getattr(self.household, "_done_seq", None)
         if seq is None:
-            seq = self.household._done_seq = [node_id for node_id in self.order if node_id in self.state.projects.done]
+            seq = self.household._done_seq = [node_id for node_id in self.nodes if node_id in self.state.projects.done]
         return seq
 
     # Named so that `quote forest` and the
