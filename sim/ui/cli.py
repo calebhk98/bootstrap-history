@@ -1415,6 +1415,10 @@ def main():
     subparser.add_argument("--seeds", type=int, default=20, help="how many games, seeds 1 to N (default 20)")
     subparser.add_argument("--years", type=int, default=300, help="years to play per game (default 300)")
     subparser.add_argument("--jobs", type=int, default=1, help="games to play at once (default 1)")
+    subparser = sub.add_parser("openings", help="run the full hidden spin-up of each civilisation and ship the opening "
+                               "in openings/, so a player's new game skips it; slow (minutes per civilisation)")
+    subparser.add_argument("--civs", default="", help="comma-separated civilisation ids (default: all)")
+    subparser.add_argument("--prune", action="store_true", help="also remove shipped openings no named civilisation uses")
     sub.add_parser("goals", help="list the selectable goals and their critical-path floors")
     subparser = sub.add_parser("path", help="the critical path to a goal"); subparser.add_argument("goal", nargs="?")
     subparser = sub.add_parser("costs", help="the resource costs of every node"); subparser.add_argument("--top", type=int, default=20)
@@ -1708,7 +1712,7 @@ def main():
             "sensitivity": cmd_sensitivity, "plan": cmd_plan,
             "search": cmd_search, "economy-check": cmd_economy_check,
             "mod-allow": cli_mods.cmd_mod_allow,
-            "baseline-ensemble": cmd_baseline_ensemble}[args.cmd](args)
+            "baseline-ensemble": cmd_baseline_ensemble, "openings": cmd_openings}[args.cmd](args)
 
 
 # ----------------------------------------------------------------------------
@@ -1727,3 +1731,4 @@ from .cli_agent import cmd_agent
 from .cli_analysis import cmd_plan, cmd_search, cmd_why
 from .cli_economy_check import cmd_economy_check
 from .cli_baseline import cmd_baseline_ensemble
+from .cli_openings import cmd_openings
