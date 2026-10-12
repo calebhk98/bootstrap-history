@@ -11,6 +11,12 @@ from sim.agents.trader import depth_room
 from sim.agents.trader_routes import paying_tonnes, price_answers, route_terms
 from sim.agents.tuning_trader import TRADER_DEPTH_SHARE, TRADER_RISK_SHARE
 from sim.engine.agents_port import SimWorld
+from sim.engine import foreign_economies as foreign_module
+
+# the partner book is how a partner outside the agent economy trades, so the shipped Han (now inside it) is put outside
+_RECORDS = foreign_module.foreign_economy_records()
+foreign_module.foreign_economy_records = lambda: tuple(
+    dict(record, agent_economy=False) if record["civilization"] == "han_china_100ad" else record for record in _RECORDS)
 
 PARTNER = "han_china_100ad"
 TRADER = "trader:test"

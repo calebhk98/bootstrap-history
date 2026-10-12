@@ -87,9 +87,13 @@ check("a recorded actor's purse is its opening money plus income less outlays",
       ledger_balances(treasury) and ledger_balances(firm, 500.0))
 
 # ---- the yearly life of the actors goes through the ledger -------------------------
-# a node earns only from the output it makes, so the firm runs a real concern that sells what it makes
-mill_id = _TEMPLATE_ID
-game = actor_sim([])
+mill_id = "test_treasury_mill"
+mill = make_node(mill_id, traits=["commerce"], revenue=5000.0, upkeep=100.0, hours=100.0, years=1.0)
+game = actor_sim([mill])
+# a node earns only from output, which the game derives at its start; this fixture states the takings and upkeep it
+# wants booked, in hours, so they survive the repricing when the economy opens
+hour = game.labour.money_per_labour_hour()
+game.nodes[mill_id].update(rev=5000.0, up=100.0, rev_hours=5000.0 / hour, up_hours=100.0 / hour)
 year = game.state.scenario.year
 game.state.projects.done.add(mill_id)
 game.state.projects.done_year[mill_id] = year - 6

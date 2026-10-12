@@ -2,15 +2,18 @@
 hired there, so a market where nobody is hired does not set the national figure."""
 from .harness import *  # noqa: F401,F403
 from sim.economy import api
+from sim.economy.setup import labour_area
 
 game = sim()
 agent = game.economy.agent
 economy = agent.economy()
 record = economy.record
 trade = "weighted_wage_probe_trade"
-record.memory.wages[trade + "|work@busy_tile"] = 10.0
-record.memory.wages[trade + "|work@empty_tile"] = 1000.0
-record.hours_hired[trade + "|work@busy_tile"] = 100.0
+busy_tile, empty_tile = sorted(economy.setup.tiles_of(economy.setup.civ_id))[:2]   # two labour markets of the home country
+busy_market, empty_market = trade + "|" + labour_area(busy_tile), trade + "|" + labour_area(empty_tile)
+record.memory.wages[busy_market] = 10.0
+record.memory.wages[empty_market] = 1000.0
+record.hours_hired[busy_market] = 100.0
 agent._answers = None
 coin = economy.setup.coin_per_unit
 quoted = agent.answers()[1][trade]
