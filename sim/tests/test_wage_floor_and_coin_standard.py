@@ -185,8 +185,10 @@ class OpeningCapitalTests(unittest.TestCase):
         import random
         from sim.tests import harness
         from sim.engine.core import Sim
-        return Sim(harness.NODES, harness.ORDER, random.Random(1), events=False, manual=True,
-                   civ=data.load_civ(civ_name), cfg={"start_kit": kit})
+        # unopened: the claim is the opening purse against the opening wage quote, neither of which needs the agent economy
+        return harness.build_unopened(lambda: Sim(
+            harness.NODES, harness.ORDER, random.Random(1), events=False, manual=True,
+            civ=data.load_civ(civ_name), cfg={"start_kit": kit}))
 
     def test_a_kit_is_labourer_years_of_the_opening_wage(self):
         civ = data.load_civ("rome_100ad")
