@@ -10,7 +10,7 @@ import collections
 import math
 from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
-from sim.world import demand, need_basket
+from sim.world import demand, need_basket, need_trial_fast
 from sim.world.need_basket import PricedNeed
 
 
@@ -109,12 +109,20 @@ class SingleMaterialTrial:
         self._weight_of_material = weight_of_material or {}
         self._exponent = 1.0 - model.basket.substitution
         self._layouts: Dict[Tuple[bool, ...], _TrialLayout] = {}
-        self._slots: List = []        # per basket need: a PricedNeed, None (unpriced), or the spec to reprice
-        for spec in model.basket.needs:
-            if any(good == material for good, _effect in spec.goods):
-                self._slots.append(spec)
-            else:
-                self._slots.append(need_basket.priced_need(spec, self._exponent, prices.get, False))
+        self._fast = None             # built on the first weighted_final call
+        self._built_slots: Optional[List] = None
+
+    @property
+    def _slots(self) -> List:
+        """Per basket need: a PricedNeed, None (unpriced), or the spec to reprice."""
+        if self._built_slots is None:
+            self._built_slots = []
+            for spec in self.model.basket.needs:
+                if any(good == self.material for good, _effect in spec.goods):
+                    self._built_slots.append(spec)
+                else:
+                    self._built_slots.append(need_basket.priced_need(spec, self._exponent, self.prices.get, False))
+        return self._built_slots
 
     def _priced(self, price: float):
         """(the priced needs, which of the repriced needs are priced)."""
@@ -134,6 +142,13 @@ class SingleMaterialTrial:
                 priced.append(slot)
         return priced, tuple(present)
 
+    def _build_fast(self):
+        """The precomputed evaluator of `need_trial_fast`, or False where the general path must be used."""
+        if self.model.satiate:
+            return False
+        fast = need_trial_fast.FastWeighted(self)
+        return fast if fast.ok else False
+
     def final_demand(self, price: float) -> Dict[str, float]:
         """Final demand with the material at `price`."""
         return quantities_from_priced(self.model, self._priced(price)[0])
@@ -142,6 +157,10 @@ class SingleMaterialTrial:
         """(units of the material households want, sum over materials of weight times units households want)
         with the material at `price`, summed in the order `final_demand` lists the materials. The weights
         are those given at construction."""
+        if self._fast is None:
+            self._fast = self._build_fast()
+        if self._fast and price > 0.0:
+            return self._fast(price)
         priced, present = self._priced(price)
         if not priced:
             return 0.0, 0

@@ -131,11 +131,6 @@ class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPay
                               in _foreign_prices_in_own_coin(civilization_id).items()}
         route = self._foreign_route(civilization)
         facts = {"solved_materials": _foreign_solved_materials(civilization_id),
-                 "home_solved_materials": frozenset(
-                     material for material, source in goods_provenance(
-                         frozenset(self.state.projects.done),
-                         civilization_id=self.civ.get("id"),
-                         civilization=self.civ).items() if source == "solved"),
                  "population": float(civilization.get("population") or 0.0),
                  "prices_in_home_money": foreign_prices,
                  "route": route,
