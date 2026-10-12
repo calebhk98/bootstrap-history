@@ -125,7 +125,7 @@ class AgentEconomy:
         """The record after the hidden years; the same opening always gives the same one, so it is cached
         on disk with the price solver's results (keyed on the data files and the source)."""
         self._economy = economy_api.blank_economy(setup)
-        self._economy.record.settling = True
+        economy_api.begin_spin_up(self._economy)
         self._spin_up()
         return economy_api.export_record(self._economy, (PURSE_CURRENCY,))
 
