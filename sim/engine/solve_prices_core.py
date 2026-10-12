@@ -1190,90 +1190,24 @@ def land_rent_hours_per_hectare(production_entries, wage_by_trade,
     return {"hectare_land": rent_hours}
 
 
-def _capability_band_prices_this_round(required_grades_by_carrier, production_entries,
-                                       prices, wage_by_trade, rent_hours_per_kg_by_material,
-                                       interest_rate=0.0):
-    # PER-CONSUMER GRADING: re-solved every round, from THIS round's
-    # own (pre-update) `prices`, exactly like every candidate recipe
-    # below is costed against those same prices (Jacobi - see this
-    # function's own docstring on why every material updates from the
-    # same round's starting point).
-    return {
-        carrier: {
-            required_value: capability_price_for_requirement(
-                carrier, required_value, production_entries, prices,
-                wage_by_trade,
-                rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
-                interest_rate=interest_rate)
-            for required_value in required_values
-        }
-        for carrier, required_values in required_grades_by_carrier.items()
-    }
-
-
-def _solve_round_candidates(production_entries, recipe_ids_in_order, resolvable_materials,
-                            prices, wage_by_trade, rent_hours_per_kg_by_material,
-                            band_price_by_carrier, floor_by_carrier,
-                            demand_anchor_price_by_material=None, interest_rate=0.0, disposal=None):
-    def cost(recipe_id, entry, anchors):
-        return recipe_cost_and_allocation(
-            recipe_id, entry, prices, wage_by_trade,
-            rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
-            capability_band_price_by_carrier=band_price_by_carrier,
-            demand_anchor_price_by_material=anchors, interest_rate=interest_rate, disposal=disposal)
-
-    runnable = [
-        recipe_id for recipe_id in recipe_ids_in_order
-        if (production_entries[recipe_id].get("outputs") or {})
-        and all(material in resolvable_materials
-                for material in production_entries[recipe_id]["outputs"])]
-    result_by_recipe = {}
-    # Sole-output recipes first: no anchor touches their price, so their
-    # cheapest price per material is a safe cap on the anchors joint recipes use.
-    direct_price_by_material = {}
-    for recipe_id in runnable:
-        entry = production_entries[recipe_id]
-        if len(entry["outputs"]) != 1:
-            continue
-        result = cost(recipe_id, entry, demand_anchor_price_by_material)
-        result_by_recipe[recipe_id] = result
-        if result is None:
-            continue
-        for material, price in result[1].items():
-            if _meets_capability_floor(material, entry, floor_by_carrier):
-                direct_price_by_material[material] = min(
-                    price, direct_price_by_material.get(material, price))
-    capped_anchors = cap_anchors(demand_anchor_price_by_material, direct_price_by_material)
-    for recipe_id in runnable:
-        if recipe_id not in result_by_recipe:
-            result_by_recipe[recipe_id] = cost(
-                recipe_id, production_entries[recipe_id], capped_anchors)
-
-    candidates_by_material = collections.defaultdict(list)
-    for recipe_id in runnable:
-        result = result_by_recipe[recipe_id]
-        if result is None:
-            continue
-        for material, price in result[1].items():
-            if _meets_capability_floor(material, production_entries[recipe_id], floor_by_carrier):
-                candidates_by_material[material].append((price, recipe_id))
-    return candidates_by_material
-
-
 def _solve_round_update_prices(resolvable_materials, prices, candidates_by_material,
                                damping, chosen_recipe_by_material,
                                production_entries=None, scarcity_floor=None, disposal_floor=None):
     new_prices = {}
     max_relative_change = 0.0
+    disposal_costs_floor = disposal_floor or {}
     for material in resolvable_materials:
         candidates = candidates_by_material.get(material)
         if not candidates:
             new_prices[material] = prices[material]
             continue
         # A candidate cannot go below minus the material's disposal cost; bound before choosing.
-        lowest = (disposal_floor or {}).get(material, -math.inf)
-        best_price, best_recipe = min(
-            ((max(price, lowest), recipe) for price, recipe in candidates), key=lambda pair: pair[0])
+        lowest = disposal_costs_floor.get(material, -math.inf)
+        best_price, best_recipe = None, None
+        for price, recipe in candidates:
+            bounded_price = max(price, lowest)
+            if best_price is None or bounded_price < best_price:
+                best_price, best_recipe = bounded_price, recipe
         chosen_recipe_by_material[material] = best_recipe
         # A sole-output good cannot recover a scarcity rent through a joint split,
         # so its price is held at or above what its limited supply clears at.
@@ -1340,11 +1274,16 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
     final_residual = float("inf")
     iterations_run = 0
     joint_materials = disposal_cost.joint_output_materials(production_entries)
+    from sim.engine import solve_prices_round  # imports this module, so only once it is loaded
+    plans = solve_prices_round.build_plans(
+        production_entries, recipe_ids_in_order, resolvable_materials, wage_by_trade,
+        rent_hours_per_kg_by_material or {}, interest_rate, floor_by_carrier)
+    suppliers_by_carrier = solve_prices_round.band_suppliers(required_grades_by_carrier, production_entries)
     for iteration in range(1, max_iterations + 1):
         iterations_run = iteration
 
-        band_price_by_carrier = _capability_band_prices_this_round(
-            required_grades_by_carrier, production_entries, prices, wage_by_trade,
+        band_price_by_carrier = solve_prices_round.band_prices(
+            required_grades_by_carrier, suppliers_by_carrier, prices, wage_by_trade,
             rent_hours_per_kg_by_material, interest_rate)
 
         # What waste costs to dispose of this round, and which joint outputs the demand search found in glut.
@@ -1354,13 +1293,10 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
         disposal = Disposal(disposal_costs, frozenset(
             glut_source(reference_prices_for_demand(prices), disposal_costs) if glut_source else ()))
 
-        candidates_by_material = _solve_round_candidates(
-            production_entries, recipe_ids_in_order, resolvable_materials, prices,
-            wage_by_trade, rent_hours_per_kg_by_material, band_price_by_carrier,
-            floor_by_carrier,
-            demand_anchor_price_by_material=(
-                demand_anchors.prices(reference_prices_for_demand(prices)) if demand_anchors else None),
-            interest_rate=interest_rate, disposal=disposal)
+        candidates_by_material = solve_prices_round.round_candidates(
+            plans, prices, wage_by_trade, band_price_by_carrier,
+            demand_anchors.prices(reference_prices_for_demand(prices)) if demand_anchors else None,
+            interest_rate, disposal)
 
         floor_source = getattr(demand_anchors, "scarcity_floor_prices", None)
         prices, final_residual = _solve_round_update_prices(
