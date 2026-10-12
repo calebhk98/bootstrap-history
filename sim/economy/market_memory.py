@@ -101,6 +101,15 @@ class YearView:
         self._currency = currency
         self._labour_area_of = labour_area_of
         self._goods = set(area_map.goods())
+        self._keys_of_good: Dict[str, tuple] = {}
+
+    def prices_across(self, good: GoodId, areas) -> list:
+        """`price(good, area.area_id)` for each of `areas` (the good's areas), in order."""
+        keys = self._keys_of_good.get(good)
+        if keys is None or keys[0] is not areas:
+            keys = self._keys_of_good[good] = (areas, [good + KEY_SEPARATOR + area.area_id for area in areas])
+        prices = self._memory.prices
+        return [prices.get(key) for key in keys[1]]
 
     def price(self, good: GoodId, area: AreaId) -> Optional[float]:
         return self._memory.prices.get(good + KEY_SEPARATOR + area)

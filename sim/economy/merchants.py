@@ -150,15 +150,19 @@ def _candidate_routes(merchant, view, carriage, area_map, held_stock, specs, int
     A good's rows are shared with any caller that sees the same prices at the same rate."""
     rows = []
     expected_prices = merchant.expected_prices
+    prices_across = getattr(view, "prices_across", None)
     for good in sorted(set(specs) & set(area_map.goods())):
         areas = area_map.areas(good)
         if len(areas) < 2:
             continue
         spec = specs[good]
+        seen = prices_across(good, areas) if prices_across else None
         prices = {}
-        for area in areas:
+        for index, area in enumerate(areas):
             price = expected_prices.get((good, area.area_id))
-            prices[area.area_id] = price if price is not None else view.price(good, area.area_id)
+            if price is None:
+                price = seen[index] if seen is not None else view.price(good, area.area_id)
+            prices[area.area_id] = price
         rows.extend(merchants_route_memo.routes_for_good(
             carriage, good, areas, spec, tuple(prices[area.area_id] for area in areas), interest_rate,
             lambda: _good_routes(good, spec, areas, prices, carriage, interest_rate)))
