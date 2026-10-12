@@ -1,5 +1,5 @@
 """Whole years of the labour core on invented trades and places: demand pulls people into a trade, a
-hard trade keeps a premium an easy one with the same training loses, an employer paying over the market
+hard trade stays thinly held where an easy one with the same training fills, an employer paying over the market
 staffs first, a school seeds a trade nobody practised, workers follow pay between places, and nobody is
 created or lost on the way."""
 
@@ -87,7 +87,7 @@ class DemandTests(unittest.TestCase):
 
 
 class AptitudeTests(unittest.TestCase):
-    def test_a_hard_trade_keeps_a_premium_an_easy_one_with_equal_training_loses(self):
+    def test_a_hard_trade_stays_thin_where_an_easy_one_with_equal_training_fills(self):
         state = records.MarketState(workers={"vale": town(digger=2000, healer=30, plainhand=30)})
         year_inputs = inputs([bid("farm", "digger", "vale", 2000), bid("temple", "healer", "vale", 100, 20.0),
                               bid("office", "plainhand", "vale", 100, 20.0)], entrants=60.0, attrition=0.025)
@@ -97,7 +97,10 @@ class AptitudeTests(unittest.TestCase):
             state, report = year.run_year(state, year_inputs)
             healer_wages.append(report.clearing("healer", "vale").wage)
             plainhand_wages.append(report.clearing("plainhand", "vale").wage)
-        self.assertGreater(sum(healer_wages), 1.2 * sum(plainhand_wages))
+        # both trades are held at the same substitution bound (the unskilled wage times the training premium), so
+        # a hard trade pays no less, and what aptitude changes is how many can take it up
+        self.assertGreaterEqual(sum(healer_wages), sum(plainhand_wages) - 1e-9)
+        self.assertLess(workers(state, "vale", "healer"), 0.5 * workers(state, "vale", "plainhand"))
         healers = state.workers["vale"]["healer"]
         self.assertGreater(healers[-1], healers[0])
 

@@ -14,11 +14,12 @@ with slack.
 Nothing here knows about any civilisation or actor: a `WageSchedule` is built
 from plain numbers, so any actor that owns a workforce can own one.
 """
-import math
 from typing import Any, Dict, Iterable, Mapping, Optional
 
 from sim.constants import declare
 from sim.unit_conversions import HOURS_PER_PERSON_YEAR
+
+from .market import premium as market_premium
 
 
 CAREER_YEARS = declare(
@@ -70,19 +71,8 @@ MAX_TIGHTNESS_FACTOR = declare(
 
 def training_premium(training_years: float, discount_rate: float,
                      career_years: float = CAREER_YEARS) -> float:
-    """Wage multiple that leaves a trainee indifferent to skipping training.
-
-    An unskilled worker earns the unit wage for the whole career. A trainee
-    earns nothing for `training_years`, then the premium for the rest, with
-    both streams discounted continuously. Zero training gives exactly 1.
-    """
-    training_years = min(max(0.0, training_years), career_years * 0.9)
-    if training_years == 0.0:
-        return 1.0
-    discounted_career = 1.0 - math.exp(-discount_rate * career_years)
-    discounted_after_training = (math.exp(-discount_rate * training_years)
-                                 - math.exp(-discount_rate * career_years))
-    return discounted_career / discounted_after_training
+    """Wage multiple that leaves a trainee indifferent to skipping training (market/premium.py)."""
+    return market_premium.training_premium(training_years, discount_rate, career_years)
 
 
 def subsistence_wage_per_hour(food_kg_per_person_year: float,
