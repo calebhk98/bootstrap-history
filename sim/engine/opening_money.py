@@ -32,7 +32,7 @@ def priced_nodes(sim, nodes, schedule, money_per_labour_hour=None):
     `schedule` is the opening's wage schedule, whose wages and money per labour hour are replaced by it."""
     schedule.money_per_labour_hour = (sim.labour.money_per_labour_hour() if money_per_labour_hour is None
                                       else money_per_labour_hour)
-    sim.nodes_money_per_labour_hour = schedule.money_per_labour_hour
+    sim.state.economy.nodes_money_per_labour_hour = schedule.money_per_labour_hour
     return money_units.rebased_nodes(nodes, schedule.wages_per_hour(), schedule.money_per_labour_hour)
 
 

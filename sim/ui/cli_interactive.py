@@ -38,7 +38,7 @@ from sim.engine.ui_port import (
     CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog, selectable_goals,
     load, load_civ, load_geography, money_short, money_unit_note, STARTING_KITS,
     win_condition_describe)
-from sim.engine.ui_port import EconomyNotOpened, Sim, note_path
+from sim.engine.ui_port import EconomyNotOpened, Sim
 from . import protocol as _protocol
 from sim.engine.ui_port import settings
 from sim.engine.ui_port import money_text, units
@@ -159,7 +159,7 @@ def _play_init(args):
     integer 1 if the sitting cannot start at all - cmd_play returns that
     straight through.
     """
-    sim, nodes, session, app_cfg, kit, horizon = _play_build_sim(args, defer_economy=_resuming_with_note(args))
+    sim, nodes, session, app_cfg, kit, horizon = _play_build_sim(args, defer_economy=_resuming_a_save(args))
     result = _play_resolve_session(args, sim, session)
     if result is None:
         # the save could not stand in for the economy's opening; build the game the long way
@@ -171,11 +171,10 @@ def _play_init(args):
     return sim, nodes, session, app_cfg, fresh, kit
 
 
-def _resuming_with_note(args):
-    """Whether the sitting resumes a save whose pricing note sits beside it, so the Sim need not open its own economy."""
+def _resuming_a_save(args):
+    """Whether the sitting resumes a save, so the Sim need not open its own economy (the save holds it)."""
     session = getattr(args, "session", None)
-    return bool(session and not _is_claimed_slot(session) and os.path.exists(session)
-                and os.path.exists(note_path(session)))
+    return bool(session and not _is_claimed_slot(session) and os.path.exists(session))
 
 
 def _play_build_sim(args, defer_economy=False):

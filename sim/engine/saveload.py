@@ -44,9 +44,7 @@ def save_state(sim, path):
 					  separators=(",", ":"))
 	absolute = os.path.abspath(path)
 	# a command that changed nothing leaves the file as it is
-	from .nodes_price_note import write_note
 	if _ON_DISK.get(absolute) == (text, _stamp(absolute)):
-		write_note(sim, path)
 		return path
 	tmp = path + ".tmp"
 	parent = os.path.dirname(absolute)
@@ -56,7 +54,6 @@ def save_state(sim, path):
 		handle.write(_encode(text, path))
 	os.replace(tmp, path)          # atomic: a crash mid-save cannot eat the game
 	_ON_DISK[absolute] = (text, _stamp(absolute))
-	write_note(sim, path)
 	return path
 
 
@@ -370,10 +367,9 @@ def load_state(sim, path):
 	if state._civ_live and "state_capacity" in state._civ_live:
 		sim.state_capacity = float(state._civ_live["state_capacity"])
 	if getattr(sim, "_economy_deferred", False):
-		from .nodes_price_note import noted_figure
-		figure = noted_figure(path, state) if state.economy.money_from_economy else None
+		figure = state.economy.nodes_money_per_labour_hour if state.economy.money_from_economy else None
 		if figure is None:
-			raise EconomyNotOpened("a game built to load a save without opening its economy has no note of its tree's pricing")
+			raise EconomyNotOpened("a game built to load a save without opening its economy needs the save's tree pricing")
 		from .opening_money import restore_priced_nodes
 		sim._economy_deferred = False
 		restore_priced_nodes(sim, figure)

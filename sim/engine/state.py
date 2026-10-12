@@ -304,6 +304,8 @@ class EconomyState:
 	# whether the money an hour of work is worth is the agent economy's unskilled wage (set when the economy
 	# first opens and the opening's money is repriced to it)
 	money_from_economy: bool = False
+	# the money an hour of work was worth when the tree's money fields were last counted (opening_money.py)
+	nodes_money_per_labour_hour: Optional[float] = None
 
 
 @dataclass
