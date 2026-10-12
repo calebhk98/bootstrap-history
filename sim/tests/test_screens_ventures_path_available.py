@@ -65,16 +65,25 @@ check("the path screen prints the blocker line",
 
 # --- 149 and 162: available rows carry foreman, net and payback
 rows_sim = sim(capital=1_000_000.0)
-# a concern that earns from its output and needs a specialist foreman, with everything it rests on known
+# a concern that earns from its output and needs a specialist foreman, and one that pays its way, each
+# with everything it rests on known
 _FOREMAN_NODE = "mirror_amalgam"
-rows_sim.done.update(_closure(NODES, _FOREMAN_NODE) - {_FOREMAN_NODE})
+_EARNER = min((node_id for node_id in sorted(NODES)
+               if rows_sim.is_venture(node_id) and rows_sim.venture_foreman(node_id)[0] is None
+               and rows_sim.concern_takings(node_id, 1.0) > 0
+               and rows_sim.venture_real_earnings(node_id, fully_ramped=True) > rows_sim.venture_real_upkeep(node_id)),
+               key=lambda node_id: len(_closure(NODES, node_id)))
+rows_sim.done.update((_closure(NODES, _FOREMAN_NODE) - {_FOREMAN_NODE}) | (_closure(NODES, _EARNER) - {_EARNER}))
 rows_sim.artisans = rows_sim.scholars = 20.0
 rows_sim._done_changed()
 listing = S._agent_dispatch(rows_sim, NODES, {"cmd": "available", "all": True, "limit": 5000})
 by_id = {row["id"]: row for row in listing["available"]}
-loom = next((row for row in listing["available"] if row.get("specialist_foreman")
-             and row["net_per_year"] > 0 and row.get("payback_years") is not None), None)
-check("set-up: a concern that needs a specialist foreman and earns is on the list", loom is not None)
+loom = next((row for row in listing["available"] if row.get("specialist_foreman")), None)
+check("set-up: a concern that needs a specialist foreman and earns is on the list",
+      loom is not None and loom["earns_per_year"] > 0)
+earner = by_id.get(_EARNER)
+check("set-up: a concern that pays its way, with a payback, is on the list",
+      earner is not None and earner["net_per_year"] > 0 and earner.get("payback_years") is not None, earner)
 trade, fte = rows_sim.venture_foreman(loom["id"])
 check("available rows name the specialist foreman as `why` and `open` do",
       loom["specialist_foreman"] == {"trade": trade, "fte": round(fte, 2)} and trade, loom)
@@ -83,13 +92,13 @@ plain = next(row for row in listing["available"]
 check("a row with no specialist foreman omits the field",
       "specialist_foreman" not in plain, plain["id"])
 check("net per year is earnings minus upkeep",
-      abs(loom["net_per_year"] - (loom["earns_per_year"] - loom["costs_per_year_after"])) < 0.11, loom)
+      abs(earner["net_per_year"] - (earner["earns_per_year"] - earner["costs_per_year_after"])) < 0.11, earner)
 ramp_years = rows_sim.cfg["revenue_ramp_years"]
-flat_years = loom["cost"] / loom["net_per_year"]
+flat_years = earner["cost"] / earner["net_per_year"]
 check("payback is slower than cost/net because revenue ramps up",
-      loom["payback_years"] is not None and loom["payback_years"] > flat_years, (loom["payback_years"], flat_years))
+      earner["payback_years"] is not None and earner["payback_years"] > flat_years, (earner["payback_years"], flat_years))
 check("payback is no worse than the flat figure plus the ramp's whole shortfall",
-      loom["payback_years"] < flat_years + ramp_years, loom["payback_years"])
+      earner["payback_years"] < flat_years + ramp_years, earner["payback_years"])
 loser = next(row for row in listing["available"]
              if row["earns_per_year"] > 0 and row["net_per_year"] < 0)
 check("a loss-maker has no payback", "payback_years" not in loser, loser)
