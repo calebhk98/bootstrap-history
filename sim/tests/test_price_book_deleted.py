@@ -8,7 +8,7 @@ transitional), and nothing in the engine opens a price file.
 import os
 import unittest
 
-from sim.engine import data, prices as engine_prices
+from sim.engine import data, disposal_cost, prices as engine_prices
 
 BASE_CIVS = ["rome_100ad", "mexica_1500"]
 
@@ -19,12 +19,17 @@ class PriceBookIsGone(unittest.TestCase):
         self.assertFalse(os.path.exists(os.path.join(data.ROOT, "data", "prices.json")))
         self.assertFalse(hasattr(data, "PRICES"))
 
-    def test_default_load_prices_every_required_material(self):
+    def test_default_load_prices_every_required_material_a_technique_can_deliver(self):
         _tree, _document, nodes, _wages, goods = data.load()
         required = {material for node in nodes.values() for material in (node.get("mat") or {})}
-        self.assertEqual(sorted(required - set(goods)), [])
-        self.assertTrue(all(price > 0.0 for material, price in goods.items()
-                            if material in required), "a required material is free")
+        # a material whose every technique needs a heat the society cannot reach has no price; it must still be one
+        # the production data makes, not a misspelt name
+        made = {material for entry in engine_prices._default_production_entries().values() for material in entry["outputs"]}
+        self.assertEqual(sorted(required - set(goods) - made), [])
+        wastes = set(disposal_cost.joint_output_materials(engine_prices._default_production_entries()))
+        self.assertEqual(sorted(material for material, price in goods.items()
+                                if material in required and price <= 0.0 and material not in wastes), [],
+                         "a required material is free")
 
     def test_load_returns_the_wage_document_not_a_price_book(self):
         _tree, document, _nodes, wages, _goods = data.load()
@@ -36,7 +41,10 @@ class PriceBookIsGone(unittest.TestCase):
             [], data.starting_schedule().document())
         self.assertGreater(len(goods), 100)
         self.assertTrue(set(provenance.values()) <= {"solved", "gated"})
-        self.assertTrue(all(price > 0.0 for price in goods.values()))
+        # a glutted by-product of a joint process prices at minus its disposal cost; every other good is dear
+        wastes = set(disposal_cost.joint_output_materials(engine_prices._default_production_entries()))
+        self.assertEqual(sorted(material for material, price in goods.items()
+                                if price <= 0.0 and material not in wastes), [])
 
     def test_gated_material_is_priced_as_if_the_technology_were_held(self):
         for civilization in BASE_CIVS:

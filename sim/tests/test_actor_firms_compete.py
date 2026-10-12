@@ -10,7 +10,7 @@ from sim.engine.agents_port import SimWorld
 from sim.engine.state import ActorRecord
 
 _TEMPLATE_ID = next(node_id for node_id, node in NODES.items()
-                    if node["rev"] > 0 and not node["pre"] and node["cap"] >= 0)
+                    if not node["pre"] and node["cap"] >= 0)
 
 
 def make_node(node_id, category=None, revenue=5000.0, upkeep=100.0, hours=100.0, years=1.0,
@@ -18,7 +18,7 @@ def make_node(node_id, category=None, revenue=5000.0, upkeep=100.0, hours=100.0,
     node = copy.deepcopy(NODES[_TEMPLATE_ID])
     node.update(id=node_id, name=node_id, traits=["commerce"], pre=[], lab=lab or {"labourer": hours},
                 mat={}, rev=revenue, up=upkeep, yrs=years, risk=0.0, ph=0.0,
-                dev_years=None, dev_people=None)
+                dev_years=None, dev_people=None, sch=0.0)
     node.pop("gains", None)
     if category:
         node["cat"] = category
@@ -58,7 +58,7 @@ def next_year(game):
     game.advance_actors(game.state.scenario.year)
 
 
-HOURS = S.Sim.HOURS_PER_PERSON_YEAR
+from sim.unit_conversions import HOURS_PER_PERSON_YEAR as HOURS
 
 # ---- labour: a firm's staff come out of the pool the founder hires from ------------------
 game = actor_sim([])
@@ -173,29 +173,30 @@ check("the tree has a producer that declares physical output",
       NODES[furnace_node].get("annual_output_t", 0) > 0)
 game = actor_sim([])
 firm_world = SimWorld(game)
-check("with no actors operating, nothing is supplied by actors", game.actor_supply("pig_iron_kg") == 0.0)
+check("with no actors operating, nothing is supplied by actors", noted_sale_tonnes(game, "pig_iron_kg") == 0.0)
 one = game.actors.add("firm:iron1", ActorRecord(kind="firm", money=1.0e6))
 one.concerns.add(furnace_node)
 one.record.opened_year[furnace_node] = game.state.scenario.year - 10
 one.sell_output(firm_world)
-supply_one = game.actor_supply("pig_iron_kg")
-check("a firm running a furnace sells the material the furnace makes into the market", supply_one > 0.0, supply_one)
+supply_one = noted_sale_tonnes(game, "pig_iron_kg")
+check("a firm running a furnace notes the material the furnace makes for the year's market (it enters the book as an order when the year clears)",
+      supply_one > 0.0, supply_one)
 two = game.actors.add("firm:iron2", ActorRecord(kind="firm", money=1.0e6))
 two.concerns.add(furnace_node)
 two.record.opened_year[furnace_node] = game.state.scenario.year - 10
 two.sell_output(firm_world)
-check("actor supply sums every actor's output", abs(game.actor_supply("pig_iron_kg") - 2.0 * supply_one) < 1e-9,
-      (game.actor_supply("pig_iron_kg"), supply_one))
+check("noted supply sums every actor's output", abs(noted_sale_tonnes(game, "pig_iron_kg") - 2.0 * supply_one) < 1e-9,
+      (noted_sale_tonnes(game, "pig_iron_kg"), supply_one))
 one.concerns.clear()
 two.concerns.clear()
 check("a firm's output stands in the book into the next year until it deals again",
       game.state.scenario.__setattr__("year", game.state.scenario.year + 1) is None
-      and abs(game.actor_supply("pig_iron_kg") - 2.0 * supply_one) < 1e-9)
+      and abs(noted_sale_tonnes(game, "pig_iron_kg") - 2.0 * supply_one) < 1e-9)
 for closed in (one, two):
     firm_world.market_forget(closed.actor_id)
     closed.sell_output(firm_world)
-check("a closed concern stops supplying", game.actor_supply("pig_iron_kg") == 0.0)
-check("a material nobody makes has no actor supply", game.actor_supply("no_such_material_kg") == 0.0)
+check("a closed concern stops supplying", noted_sale_tonnes(game, "pig_iron_kg") == 0.0)
+check("a material nobody makes has no noted supply", noted_sale_tonnes(game, "no_such_material_kg") == 0.0)
 
 loom = make_node("test_loom", category="textiles", revenue=8000.0)
 game = actor_sim([loom])

@@ -91,12 +91,8 @@ for _node_id in list(NODES)[:400]:
     household_sack.done.add(_node_id)
 household_sack.done.add("corpus_dispersed")
 household_sack._done_changed()
-household_sack.rng = random.Random(11)
-for _year in range(150, 320):
-    household_sack.year = _year
-    household_sack._shocks(_year)
-    if getattr(household_sack, "forgotten", None):
-        break
+_force_sack(household_sack)
+household_sack._shocks(household_sack.year)
 check("a sacking names the technologies it destroyed",
       any("KNOWLEDGE LOST" in message and "_" in message.split("forgotten")[-1]
           for _, message in household_sack.log),

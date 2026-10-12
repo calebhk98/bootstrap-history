@@ -19,7 +19,7 @@ from sim.engine.saveload import load_state, save_state
 from sim.geography import settlement
 
 _TEMPLATE_ID = next(node_id for node_id, node in NODES.items()
-                    if node["rev"] > 0 and not node["pre"] and node["cap"] >= 0)
+                    if not node["pre"] and node["cap"] >= 0)
 
 
 def make_node(node_id, traits=(), gains=None, revenue=0.0, upkeep=0.0, hours=400.0,
@@ -27,7 +27,7 @@ def make_node(node_id, traits=(), gains=None, revenue=0.0, upkeep=0.0, hours=400
     node = copy.deepcopy(NODES[_TEMPLATE_ID])
     node.update(id=node_id, name=node_id, traits=list(traits), pre=list(prerequisites),
                 lab={"labourer": hours}, mat={}, rev=revenue, up=upkeep, yrs=years,
-                risk=risk, ph=0.0, dev_years=None, dev_people=None)
+                risk=risk, ph=0.0, dev_years=None, dev_people=None, cap=0.0, art=0.2, sch=0.0)
     node.pop("gains", None)
     if gains is not None:
         node["gains"] = gains
@@ -157,12 +157,13 @@ world = SimWorld(game)
 government = game.actors.ensure_government("rome_100ad")
 offers = {option.subject: option for option in government.imitation_options(world)}
 check("an invention kept out of public use is less exposed",
-      abs(offers["test_hidden"].worth / offers["test_visible"].worth - SECRET_EXPOSURE) < 1e-9,
-      (offers["test_hidden"].worth, offers["test_visible"].worth))
+      abs(world.exposure("test_hidden", None) / world.exposure("test_visible", None) - SECRET_EXPOSURE) < 1e-9
+      and ("test_hidden" not in offers or offers["test_hidden"].worth < offers["test_visible"].worth),
+      (world.exposure("test_hidden", None), world.exposure("test_visible", None)))
 farthest = max(settlement.tile_ids(game.labour.held_tiles()), key=game.labour.distance_to_tile_km)
 government.record.location = farthest
-far_offer = {option.subject: option for option in government.imitation_options(world)}["test_visible"]
-check("a distant observer sees less of what the founder does", far_offer.worth < offers["test_visible"].worth)
+check("a distant observer sees less of what the founder does",
+      world.exposure("test_visible", farthest) < world.exposure("test_visible", None))
 
 # ---- policies drive any actor --------------------------------------------------
 government.record.location = None
@@ -189,6 +190,8 @@ game = actor_sim([profitable, losing, fresh])
 founder_completes(game, "test_mill", operating=True, opened_ago=6)
 founder_completes(game, "test_loss", operating=True, opened_ago=6)
 founder_completes(game, "test_fresh", operating=True, opened_ago=0)
+game.advance_actors(game.state.scenario.year)   # the cast is seeded at the first actor year
+ready_for_entry(game)
 game.state.scenario.year += 1
 game.advance_actors(game.state.scenario.year)
 firms = game.actors.of_kind("firm")

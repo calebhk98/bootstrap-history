@@ -11,16 +11,22 @@ def _with_built_technologies(test_sim):
     return test_sim
 
 
+# the first window that sacks a site as `risk` reports it (a hazard whose stated causes do not hold is
+# weakened to nothing); the years below are offsets from its start
+_probe = _with_built_technologies(sim(civ="rome_100ad"))
+_probe.year = 100
+WINDOW_START = next(row["years"][0] for row in _probe.knowledge_risk()["known_hazards_ahead"] if row["sacks_a_site"])
+
 _far = _with_built_technologies(sim(civ="rome_100ad"))
-_far.year = 100
+_far.year = WINDOW_START - 135
 check("no escalated warning while the sacking window is decades away",
       knowledge_loss_warning(_far) is None, knowledge_loss_warning(_far))
 
 _near = _with_built_technologies(sim(civ="rome_100ad"))
-_near.year = 210
+_near.year = WINDOW_START - 25
 _warning = knowledge_loss_warning(_near)
 check("within thirty years of a sacking window the warning exists and names the window",
-      _warning is not None and _warning["years"][0] == 235
+      _warning is not None and _warning["years"][0] == WINDOW_START
       and _warning["years_until"] == 25, _warning)
 _risk = _near.knowledge_risk()
 check("it quotes risk's own expected loss per sacking",
@@ -34,14 +40,14 @@ check("the hedge's steps are the unbuilt nodes in its closure",
       _hedge["steps_away"] == len(closure(NODES, _hedge["id"]) - _near.done), _hedge)
 
 _now = _with_built_technologies(sim(civ="rome_100ad"))
-_now.year = 240
+_now.year = WINDOW_START + 5
 _warning_now = knowledge_loss_warning(_now)
 check("a window running now is flagged as in progress",
       _warning_now and _warning_now["in_progress"] and _warning_now["years_until"] == 0,
       _warning_now)
 
 _hedged = _with_built_technologies(sim(civ="rome_100ad"))
-_hedged.year = 210
+_hedged.year = WINDOW_START - 25
 _hedged.done.update(closure(NODES, "corpus_dispersed"))
 _hedged._done_changed()
 check("fully hedged: no cheaper hedge to name, no warning",
@@ -52,16 +58,16 @@ check("state carries the warning", _state.get("knowledge_loss_warning") == _warn
       _state.get("knowledge_loss_warning"))
 _state_text = _render_pretty("state", _state)
 check("state text has a prominent warning line naming the window and the hedge",
-      "WARNING" in _state_text and "235" in _state_text and _hedge["id"] in _state_text,
+      "WARNING" in _state_text and str(WINDOW_START) in _state_text and _hedge["id"] in _state_text,
       _state_text[-900:])
 _path = S._agent_dispatch(_near, NODES, {"cmd": "path", "id": GOAL})
 check("path carries the warning and prints it",
       _path.get("knowledge_loss_warning") == _warning
-      and "WARNING" in _render_pretty("path", _path) and "235" in _render_pretty("path", _path),
+      and "WARNING" in _render_pretty("path", _path) and str(WINDOW_START) in _render_pretty("path", _path),
       _path.get("knowledge_loss_warning"))
 _far_state = S._agent_dispatch(_far, NODES, {"cmd": "state"})
 _unbuilt = sim(civ="rome_100ad")
-_unbuilt.year = 210
+_unbuilt.year = WINDOW_START - 25
 check("nothing built by you means nothing to lose, so no warning",
       knowledge_loss_warning(_unbuilt) is None, knowledge_loss_warning(_unbuilt))
 check("far from any window, state has no warning field",

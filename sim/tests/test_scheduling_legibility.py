@@ -1,5 +1,6 @@
 """scheduling_legibility: regression checks, run individually with `--only scheduling_legibility`."""
 from .harness import *  # noqa: F401,F403
+from unittest import mock
 from sim.ui import protocol as _PROTO
 
 # =============================================================================
@@ -213,13 +214,17 @@ _s_mat = sim(civ="rome_100ad", capital=1e9, surveyed=())
 _s_mat.active["gunpowder"] = dict(
     ph_left=float(NODES["gunpowder"]["ph"]), yrs=0.0, spent=0.0,
     cost_left=_s_mat.project_cost("gunpowder"), lab_left=dict(NODES["gunpowder"]["lab"]))
-_w_mat = _WO(_s_mat, NODES, "gunpowder", _s_mat.active["gunpowder"],
-            _s_mat.active["gunpowder"]["cost_left"])
+# the economy-wide shortage is set directly: the pool one of the project's own inputs belongs to runs short
+_pool = _s_mat._material_tag(sorted(NODES["gunpowder"]["mat"])[0])[0]
+_s_mat.state.holdings.binding = _pool
+with mock.patch.object(type(_s_mat), "resource_throttle", lambda self: 0.5):
+    _w_mat = _WO(_s_mat, NODES, "gunpowder", _s_mat.active["gunpowder"],
+                _s_mat.active["gunpowder"]["cost_left"])
 check("a project short of nothing - staff, money, calendar - can still be "
-      "waiting on MATERIALS: one economy-wide shortage (here, saltpetre for "
-      "gunpowder) scales every project's hours down by the same factor, and "
+      "waiting on MATERIALS: one economy-wide shortage (here, the pool one input of "
+      "gunpowder belongs to) scales every project's hours down by the same factor, and "
       "that is now a fifth, distinct, named reason",
-      _w_mat.startswith("materials:") and "saltpetre" in _w_mat
+      _w_mat.startswith("materials:") and _pool in _w_mat
       and _PCON(_w_mat) == "materials", _w_mat)
 check("calendar and money, the two the player already called clear, are "
       "untouched by any of this",

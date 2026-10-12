@@ -17,7 +17,7 @@ import sys
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set
 
 from sim.constants import declare
-from sim.world import demand, need_basket
+from sim.world import demand, need_basket, need_final_demand
 from sim.world.need_basket import NEED_SUBSTITUTION_ELASTICITY, goods_attributes
 
 def load_needs(root: str) -> Dict[str, Any]:
@@ -249,40 +249,8 @@ class NeedDemandModel:
         """{material: units households want per year} at `prices`: floors, price index and the
         surplus split come from the need-basket kernel; below the committed cost of every floor the
         protected-floor rule of sim/world/demand.py applies per income bin."""
-        priced = need_basket.need_prices(self.basket, prices.get)
-        if not priced:
-            return {}
-        weight_total = sum(need.spec.budget_weight for need in priced)
-        price_index = {need.spec.need_id: need.price_index for need in priced}
-        goods = tuple(demand.Good(need.spec.need_id, need.spec.subsistence_per_person,
-                                  need.spec.budget_weight / weight_total) for need in priced)
-        need_units = {need.spec.need_id: 0.0 for need in priced}
-        committed = need_basket.subsistence_cost_per_person(priced)
-        covered_population = 0.0
-        covered_surplus = 0.0
-        for income_bin in self.bins:
-            surplus = income_bin.income_per_capita_per_year - committed
-            if surplus >= 0.0:
-                covered_population += income_bin.population
-                covered_surplus += income_bin.population * surplus
-                continue
-            for good in goods:
-                need_units[good.name] += (
-                    income_bin.population * demand.household_quantity_demanded_per_capita(
-                        good, price_index, income_bin.income_per_capita_per_year, goods))
-        _floors, covered_units = need_basket.need_units(
-            priced, self.basket, covered_population, covered_surplus, satiate=False)
-        for need_id, units in covered_units.items():
-            need_units[need_id] += units
-        if self.satiate:
-            need_basket.limit_satiation(need_units, priced, self.basket,
-                                        sum(income_bin.population for income_bin in self.bins))
-        quantities: Dict[str, float] = collections.defaultdict(float)
-        for need in priced:
-            spending = need.price_index * need_units[need.spec.need_id]
-            for material, price, _effect, share in need.goods:
-                quantities[material] += spending * share / price
-        return dict(quantities)
+        return need_final_demand.quantities_from_priced(
+            self, need_basket.need_prices(self.basket, prices.get))
 
     def _demand_from(self, sources: Mapping[str, float]) -> Dict[str, float]:
         """Total demand once every source's inputs are demanded through the recipes."""
@@ -403,14 +371,12 @@ class NeedDemandModel:
         technology_weighted = sum(weights.get(source, 0.0) * quantity
                                   for source, quantity in self.technology_demand.items())
 
+        trial_demand = need_final_demand.SingleMaterialTrial(self, prices, material, weights)
+
         def excess_demand(price: float) -> float:
             price = max(price, sys.float_info.min)
-            trial = dict(prices)
-            trial[material] = price
-            final = self.final_demand(trial)
-            own_final = final.get(material, 0.0)
-            total = technology_weighted + sum(
-                weights.get(source, 0.0) * quantity for source, quantity in final.items())
+            own_final, weighted = trial_demand.weighted_final(price)
+            total = technology_weighted + weighted
             derived = total - own_final
             elastic_derived = derived * (price / current) ** (-self.derived_elasticity)
             return own_final + elastic_derived - supply

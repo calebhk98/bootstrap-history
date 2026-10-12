@@ -292,18 +292,22 @@ def _nitre_laid(capital):
     household.nitre_bed_m2 = 0.0
     household.binding = "saltpetre"
     before = household.nitre_bed_m2
-    household.step()
-    return household.nitre_bed_m2 - before
 
-from sim.engine.money_units import BOOK_LABOURER_WAGE_DENARII_PER_HOUR
-_nitre_cost_per_m2 = S.Sim.NITRE_LABOUR_HOURS_PER_M2 * BOOK_LABOURER_WAGE_DENARII_PER_HOUR
-_nitre_rich = _nitre_laid(5_000_000.0)
-_nitre_poor = _nitre_laid(3_000.0)
-check("the nitre purchase is held to a flat two thousand denarii a year "
+    def throttle():   # saltpetre is what binds, whatever else a fresh game's demand presses on
+        household.binding = "saltpetre"
+        return 0.5
+    household.resource_throttle = throttle
+    household._step_materials()
+    return household.nitre_bed_m2 - before, household
+
+_nitre_rich, _nitre_game = _nitre_laid(5_000_000.0)
+_nitre_poor, _ = _nitre_laid(3_000.0)
+_nitre_cost_per_m2 = _nitre_game.NITRE_COST_PER_M2
+check("the nitre purchase is held to a flat yearly ceiling "
       "however rich the household - sizing it to the shortfall instead, "
       "the way the mine branch beside it does, measured worse on every "
       "count and is recorded in core.py as a road not to walk again",
-      _nitre_rich <= 2000.0 / _nitre_cost_per_m2 + 1e-6, _nitre_rich)
+      0.0 < _nitre_rich <= _nitre_game.NITRE_BED_SPEND_CEILING / _nitre_cost_per_m2 + 1e-6, _nitre_rich)
 check("...and a poor household is held to a twentieth of its capital",
       _nitre_poor <= 3_000.0 * 0.05 / _nitre_cost_per_m2 + 1e-6, _nitre_poor)
 # --- DEVELOPER MARKERS IN PLAYER PROSE, THE SECOND TIME. A strip pass removed
@@ -362,7 +366,7 @@ check("a bare subject is still a subject, not mistaken for a flag",
 # household has, silently, at up to twelve per cent. Borrowing to build is a
 # real move and stays allowed; not being told was the bug.
 _cr = sim(civ="england_1300")
-_cr.capital = 30000.0           # short of the project's bill, within the credit line
+_cr.capital = 0.5 * _cr.project_cost("identity_cover")   # short of the project's bill, within the credit line
 _cr_out = S._agent_dispatch(_cr, NODES, {"cmd": "start", "id": "identity_cover"})
 check("starting a project you cannot cover in cash says you would be "
       "borrowing, what it costs a year, and how much room is left",

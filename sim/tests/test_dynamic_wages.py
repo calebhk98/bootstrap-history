@@ -4,6 +4,7 @@ from .harness import *
 sim = unopened_sim   # legacy: pins the engine's wage table and loanable-funds rate; the agent economy sets both in sim/economy
 
 from sim.engine.data import ANNUAL_WAGE
+from sim.labour import wage_provider
 
 
 s = sim()
@@ -33,7 +34,9 @@ check("neutral starting conditions preserve the calibrated wage table",
       (s.labour.market.quote_annual("smith"), _expected))
 
 baseline = s.labour.market.quote_annual("smith")
-s.essential_price_ratio = lambda: 0.60
+_real_ratio = s.last_market_price_ratio
+_staple = wage_provider.staple_material(s.civ)
+s.last_market_price_ratio = lambda material: 0.60 if material == _staple else _real_ratio(material)   # the staple's market has fallen
 check("cheaper staple food lowers the wage required to live",
       s.labour.market.quote_annual("smith") < baseline * 0.85,
       (baseline, s.labour.market.quote_annual("smith")))

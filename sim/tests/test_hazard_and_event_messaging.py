@@ -46,7 +46,7 @@ _years = [y for y, message in s_pd.log if "patron dies" in message]
 check("...and the gap between them is at least the 25 years it promises",
       all(later_year - earlier_year > 25 for earlier_year, later_year in zip(_years, _years[1:])), _years)
 check("a patron's death names what it cost you",
-      not _years or any("courting cost" in message and "protection falls" in message
+      not _years or any(("courts his heir" in message or "No money was spent" in message) and "protection falls" in message
                         for _, message in s_pd.log if "patron dies" in message),
       [message for _, message in s_pd.log if "patron dies" in message][:1])
 

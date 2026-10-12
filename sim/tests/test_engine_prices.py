@@ -225,7 +225,10 @@ class EngineDefaultIsSolvedTests(unittest.TestCase):
             self.assertAlmostEqual(goods[material], price, msg=material)
         self.assertAlmostEqual(document["money_per_labour_hour"], rate)
         required = {material for node in nodes.values() for material in node["mat"]}
-        self.assertTrue(required <= set(goods))
+        # a material whose every technique needs a heat the society cannot reach has no price (it cannot be bought),
+        # but it must be one the production data makes, not a misspelt name
+        made = {material for entry in engine_prices._default_production_entries().values() for material in entry["outputs"]}
+        self.assertEqual(sorted(required - set(goods) - made), [])
 
 
 class RealDataIntegrationTests(unittest.TestCase):

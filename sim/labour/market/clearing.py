@@ -3,9 +3,9 @@ import math
 from typing import Dict, List, Optional, Sequence, Set, Tuple
 
 from sim.constants import declare
-from sim.labour import wages
 
 from . import asks
+from .premium import training_premium
 from .trades import fallback_trade
 from .records import Bid, Clearing, MarketState, YearInputs
 
@@ -58,14 +58,14 @@ def unskilled_option(state: MarketState, inputs: YearInputs, area: str, trade: s
 def trained_substitute_wage(state: MarketState, inputs: YearInputs, area: str, trade: str) -> float:
     """The most an hour of a trade can command where hands are few: what it takes to train a substitute. A
     person who trains goes the trade's training years unpaid, so the trade pays the unskilled wage times the
-    training premium (wages.training_premium: the multiple that leaves a trainee indifferent) and the risk
+    training premium (premium.training_premium: the multiple that leaves a trainee indifferent) and the risk
     of the work priced as in the reservation wage. Unlimited for the unskilled trade itself."""
     spec = inputs.trades[trade]
     fallback = fallback_trade(inputs.trades)
     if trade == fallback or spec.training_years <= 0.0:
         return math.inf
     unskilled = max(state.wages.get(area, {}).get(fallback) or 0.0, reservation_wage(inputs, area, 0.0))
-    premium = wages.training_premium(spec.training_years, inputs.discount_rate, inputs.career_years)
+    premium = training_premium(spec.training_years, inputs.discount_rate, inputs.career_years)
     return unskilled * premium * (1.0 + spec.fatality_risk_per_year * inputs.value_of_life_years_of_income)
 
 

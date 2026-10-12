@@ -31,10 +31,14 @@ _PLAIN_GAMES = {}
 
 
 def plain(name):
-    """One shared, never-mutated game per civilisation (or per coin-scaled Rome)."""
+    """One shared, never-mutated game per civilisation (or per coin-scaled Rome). The coin-scaled Rome shares
+    Rome's cached spin-up (the economy counts money in its own unit); the mod civilisation, which no suite start
+    warms, is built with its economy unopened and answered by the engine's own figures."""
     if name not in _PLAIN_GAMES:
         if name == "heavier_rome":
             _PLAIN_GAMES[name] = build(civ_with_coin_scale("rome_100ad", COIN_SCALE))
+        elif name == MOD_CIV:
+            _PLAIN_GAMES[name] = _harness().build_unopened(lambda: build(data.load_civ(name)))
         else:
             _PLAIN_GAMES[name] = build(data.load_civ(name))
     return _PLAIN_GAMES[name]
@@ -46,13 +50,17 @@ def civ_with_coin_scale(name, scale):
     return civ
 
 
-def reference_concern(sim):
-    """A revenue-earning node picked by a rule, not by name: the cheapest to
-    build among those that earn more than they cost to keep."""
+def reference_concern(*games):
+    """A revenue-earning node picked by a rule, not by name: the cheapest to build (in the first game) among those
+    that take more than they cost to keep in every game given."""
+    first = games[0]
     candidates = sorted(
-        (node["_total_cost"], node_id) for node_id, node in sim.nodes.items()
+        (node["_total_cost"], node_id) for node_id, node in first.nodes.items()
         if node["rev"] > node["up"] > 0 and node["_total_cost"] > 0)
-    return candidates[0][1]
+    for _cost, node_id in candidates:
+        if all(game.concern_takings(node_id, 1.0) > game.nodes[node_id]["up"] * game.price_index for game in games):
+            return node_id
+    raise AssertionError("no revenue-earning node pays its keep in every game")
 
 
 def labourer_annual_wage(sim):
@@ -83,18 +91,20 @@ def opened_concern(sim, node_id):
 
 class RevenueIsInTheCivilisationsCoin(unittest.TestCase):
 
-    def test_node_revenue_in_labour_hours_is_the_same_in_every_civilisation(self):
-        sims = {name: plain(name) for name in ALL_CIVS}
-        node_id = reference_concern(sims["rome_100ad"])
+    def test_node_revenue_in_labour_hours_ignores_the_coin(self):
+        # A node's revenue is its output at the civilisation's own prices, so civilisations differ in hours (land
+        # rent, wage ratios); the same civilisation with a heavier coin does not.
+        sims = {name: plain(name) for name in ALL_CIVS + ["heavier_rome"]}
+        node_id = reference_concern(*sims.values())
         hours = {name: sim.nodes[node_id]["rev"] / sim.labour.wage_schedule().money_per_labour_hour
                  for name, sim in sims.items()}
+        self.assertAlmostEqual(hours["heavier_rome"], hours["rome_100ad"], delta=hours["rome_100ad"] * 1e-9)
         for name, value in hours.items():
-            self.assertAlmostEqual(value, hours["rome_100ad"],
-                                   delta=hours["rome_100ad"] * 1e-9, msg=name)
+            self.assertGreater(value, 0.0, name)
 
     def test_revenue_to_wage_ratio_stays_near_romes_in_every_civilisation(self):
         rome = plain("rome_100ad")
-        node_id = reference_concern(rome)
+        node_id = reference_concern(*[plain(name) for name in ALL_CIVS])
         rome_ratio = takings_per_wage(rome, node_id)
         for name in ALL_CIVS:
             ratio = takings_per_wage(plain(name), node_id)
@@ -135,7 +145,7 @@ class EconomyWorksWithAnyCoin(unittest.TestCase):
     def test_han_can_afford_and_earn_from_a_basic_concern(self):
         han = plain("han_china_100ad")
         rome = plain("rome_100ad")
-        node_id = reference_concern(han)
+        node_id = reference_concern(han, rome)
 
         def payback(sim):
             net = sim.concern_takings(node_id, 1.0) - sim.nodes[node_id]["up"] * sim.price_index
@@ -171,7 +181,7 @@ class CoinMassRescalesEveryFigure(unittest.TestCase):
     def test_every_money_figure_scales_with_the_coin(self):
         base = plain("rome_100ad")
         heavier = plain("heavier_rome")
-        node_id = reference_concern(base)
+        node_id = reference_concern(base, heavier)
         with opened_concern(base, node_id), opened_concern(heavier, node_id):
             figures = {
                 "purse": lambda sim: sim.capital,

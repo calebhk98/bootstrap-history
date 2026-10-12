@@ -124,7 +124,7 @@ _DEPUTY_YEARS = 2
 
 # --- a deputy is announced with what it does to the founder's year, once per whole deputy.
 def _deputies_are_announced():
-    deputies_sim = sim(capital=2000000.0, manual=False)
+    deputies_sim = sim(capital=20000000.0, manual=False)   # the opening purse is re-expressed in the game money unit, so this buys what the old figure did
     run_it(deputies_sim, "school_founded", "patron_imperial", "academy_network")
     peak_deputies = 0.0
     for _ in range(_DEPUTY_YEARS):

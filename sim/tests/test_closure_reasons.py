@@ -116,12 +116,13 @@ check("a closure's reason and year survive save and load",
 # --- loss-making shedding from economy_credit.shed_loss_makers (easier to test)
 # shed_loss_makers sheds loss-makers when capital < 0
 s_auto_shed = sim(capital=hours_money(202000), manual=False)  # Start with money to open
-_loss_id = "academy_network"  # loss-making institution: rev=0, up=9000
+_loss_id = "academy_network"  # loss-making institution: earns nothing, costs upkeep
 s_auto_shed.done.update(NODES[_loss_id]["pre"])
 s_auto_shed.done.add(_loss_id)
 s_auto_shed._done_changed()
 s_auto_shed.open_venture(_loss_id)  # Now it's in operating
 s_auto_shed.state.household.capital = -hours_money(101000)  # Make household insolvent
+s_auto_shed.revenue = lambda: 0.0   # nothing coming in, so the works are what bleeds
 s_auto_shed.shed_loss_makers(s_auto_shed.state.scenario.year)
 check("shed_loss_makers closes loss-making works with loss_making reason",
       _loss_id in s_auto_shed.mothballed and (s_auto_shed.closure_of(_loss_id) or {}).get("reason") == "loss_making",
@@ -130,7 +131,7 @@ check("shed_loss_makers closes loss-making works with loss_making reason",
 # --- creditor seizure from economy_credit.enforce_credit_limit
 # Need a loss-making node to be seized
 s_seiz = sim(capital=hours_money(202000))
-_seiz_id = "academy_network"  # loss-making institution: rev=0, up=9000
+_seiz_id = "academy_network"  # loss-making institution: earns nothing, costs upkeep
 s_seiz.done.update(NODES[_seiz_id]["pre"])
 s_seiz.done.add(_seiz_id)
 s_seiz._done_changed()

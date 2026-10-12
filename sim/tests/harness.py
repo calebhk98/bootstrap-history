@@ -205,6 +205,10 @@ def build_unopened(factory):
     with mock.patch.object(EconomyPort, "open_agent", lambda self: None):
         game = factory()
     game.economy._opening = True
+    # a partner that lives only in the agent economy has no figures while it is unopened
+    inside = set(game.partners_in_agent_economy())
+    every_partner = game.partner_countries
+    game.partner_countries = lambda: [partner for partner in every_partner() if partner not in inside]
     return game
 
 
@@ -230,16 +234,49 @@ def found_deposits_of(game, material):
 
 
 def concern_needing_craftsmen_to_supervise():
-    """A concern that earns, needs no scholars, and holds more craftsmen than the founder
-    and the closure slack can cover alone (more than its build crew shown as staff_needed), so losing every hired craftsman shuts it."""
+    """A concern the founder's own scholar can cover, that needs more craftsmen than the founder and
+    the closure slack can cover alone (and no more than the six hired in the fixtures), so losing every
+    hired craftsman shuts it."""
     probe = sim()
+    cover = probe.FOUNDER_IS_WORTH + probe.STAFFING_CLOSURE_SLACK
     for candidate_id in sorted(NODES):
         node = NODES[candidate_id]
-        if node["rev"] > 0 and node["sch"] == 0 and node["art"] > 0 and not (node.get("lab") or {}).get("artisan"):
+        if probe.is_venture(candidate_id) and node["art"] > 0 and not (node.get("lab") or {}).get("artisan"):
             scholars, craftsmen = probe.venture_hands(candidate_id)
-            if scholars == 0 and max(node["art"], probe.FOUNDER_IS_WORTH + probe.STAFFING_CLOSURE_SLACK) < craftsmen <= 5.5 and probe.venture_foreman(candidate_id)[0] is None:
+            if (scholars <= probe.labour.effective_scholars() and cover < craftsmen <= 5.5
+                    and probe.venture_foreman(candidate_id)[0] is None):
                 return candidate_id
     raise AssertionError("no concern needs craftsmen to supervise")
+
+
+def ready_for_entry(game, money=None):
+    """Ready a game for firm entry: the home strata hold savings (a game whose agent economy has not run has
+    empty purses, and a firm is founded from a stratum's savings) and the home government sits where the
+    founder works, so a founder's concern is in an entrant's sight. The opening cast (strata and governments)
+    is seeded first when it has not been. `money` is the savings of each free home stratum; by default the
+    entrepreneurial share of a year's output between them. Returns the game."""
+    if not game.actors.state.home_country:
+        from sim.engine.agents_port_cast import seed_opening_cast
+        seed_opening_cast(game)
+    free = [stratum for stratum in game.actors.of_kind("stratum")
+            if stratum.record.country is None and not stratum.is_bonded()]
+    if money is None:
+        from sim.agents.tuning import ENTREPRENEURIAL_CAPITAL_SHARE
+        from sim.engine.agents_port import SimWorld
+        money = SimWorld(game).society_output() * ENTREPRENEURIAL_CAPITAL_SHARE / max(1, len(free))
+    for stratum in free:
+        stratum.money = money
+    home = game.actors.actors.get("government:" + (game.actors.state.home_country or ""))
+    if home is not None:
+        home.record.location = game.seat_place(game.state.acting_seat)
+    return game
+
+
+def noted_sale_tonnes(game, material, seller=None):
+    """Tonnes of `material` the actors (or just `seller`) have noted for the year's market: a sale enters the agent
+    economy's book as an order when the year clears, so until then this is where it stands."""
+    return sum(sale["tonnes"] for sale in game.economy.agent.stored.get("sales", [])
+               if sale["material"] == material and (seller is None or sale["seller"] == seller))
 
 
 def state_seeking(game, requisition=0.16, office=0.06):
@@ -418,14 +455,15 @@ def nutrition_ratios_over_years(test_sim, years):
 # distinct textiles-category venture nodes, all opened the same year, aged
 # the same number of years.
 def _mk_loom_sim(n_looms, age_years):
-    """n_looms real, distinct textiles-category venture nodes, all opened
+    """n_looms real, distinct output-earning venture nodes, all opened
     the same year, aged the same number of years. Uses real tree nodes
     (not synthetic ones), the same way the rest of this file does."""
-    candidates = sorted(node_id for node_id, node in NODES.items()
-                  if node.get("cat") == "textiles" and node.get("rev"))
-    assert len(candidates) >= n_looms, "not enough textiles venture nodes in the tree"
-    chosen = candidates[:n_looms]
     loom_sim = sim(civ="rome_100ad", capital=5_000_000.0)
+    # a node earns only from its output, so the chosen concerns are those that take money from it
+    candidates = sorted(node_id for node_id in NODES
+                        if loom_sim.is_venture(node_id) and loom_sim.concern_takings(node_id, 1.0) > 0)
+    assert len(candidates) >= n_looms, "not enough output-earning venture nodes in the tree"
+    chosen = candidates[:n_looms]
     loom_sim.artisans = loom_sim.scholars = 100.0 * n_looms
     # These fixtures exercise goods-market arithmetic, not labour scarcity.
     # Supply every qualified trade so each selected historical concern can

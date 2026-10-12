@@ -43,6 +43,7 @@ class ReachFromTilesTests(unittest.TestCase):
         sim = _fresh_sim("mexica_1500")
         before = _total_reach(sim)
         sim.state.projects.granted.update({"sea_square_sail", "lnd_two_wheel_cart", "lnd_mule_transport"})
+        sim._done_changed()
         self.assertLess(_total_reach(sim), before)
 
     def test_a_region_no_route_joins_is_the_farthest_level(self):

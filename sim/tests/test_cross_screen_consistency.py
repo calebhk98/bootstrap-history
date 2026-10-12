@@ -56,6 +56,7 @@ check("a trade you employ is still listed as one you could hire",
 # these was a subtraction a break tester did on figures printed together.
 _game_b = sim(capital=5.0e7)
 _game_b.end_year = _game_b.cfg["start_year"] + _game_b.cfg["horizon_years"]
+_game_b._step_market = lambda: None   # these figures are read off one ledger; the market close adds none of them
 _ask(_game_b, cmd="hire", trade="smith", n=2)
 _lab = _ask(_game_b, cmd="labour")
 _wk = _ask(_game_b, cmd="work", trade="scribe", hours=500)
@@ -114,8 +115,8 @@ _opened = 0
 for _k in sorted(NODES):
     if s_vv.is_venture(_k) and _opened < 3 and s_vv.open_venture(_k)[0]:
         _opened += 1
-for _ in range(1):
-    s_vv.step()
+s_vv._step_market = lambda: None   # both screens price a concern from the same ledger formulas, with or without the close
+s_vv.step()
 _vr = S._agent_dispatch(s_vv, NODES, {"cmd": "ventures"})
 _led = s_vv.revenue_sources()
 check("ventures quotes the same earnings the ledger credits",

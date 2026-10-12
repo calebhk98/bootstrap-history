@@ -29,24 +29,34 @@ def _credit_lines(text):
     return kept
 
 
-# enough cash for the first start only, so the second and third both draw on credit: what the first
-# start pays at once plus what it still owes afterwards, read off a household with cash to spare.
-# The later two cost more than the first, so what is left after it covers neither.
+# enough cash for the first start only: what it pays at once plus its bill, read off a household with
+# cash to spare. What is left after it is less than either later bill, so both draw on credit.
 FIRST_START = "tr_lateen_sail"
+SECOND_START = "cn_damp_proof_course"
+THIRD_START = "units_standards"
 
 
 def cash_for_one_start():
     rich = sim(capital=1.0e9)
-    _run(rich, "start " + FIRST_START)
-    paid_at_once = 1.0e9 - rich.capital
-    return paid_at_once + rich.state.projects.active[FIRST_START]["cost_left"] + 1.0
+    before = rich.capital
+    reply = _run(rich, "start " + FIRST_START)
+    return before - rich.capital + reply["the_bill_you_have_taken_on"] + 1.0
 
 
 CASH_FOR_ONE_START = cash_for_one_start()
-borrower = sim(capital=CASH_FOR_ONE_START)
-first = _run(borrower, "start tr_lateen_sail")
-second = _run(borrower, "start units_standards")
-third = _run(borrower, "start cn_damp_proof_course")
+
+
+def poor_household():
+    """A fresh game whose cash is set to cover the first start and nothing after it."""
+    household = sim(capital=1.0e6)
+    household.state.household.capital = CASH_FOR_ONE_START
+    return household
+
+
+borrower = poor_household()
+first = _run(borrower, "start " + FIRST_START)
+second = _run(borrower, "start " + SECOND_START)
+third = _run(borrower, "start " + THIRD_START)
 check("set-up: the second and third starts draw on credit",
       all(reply.get("ok") and "on_credit" in reply for reply in (second, third)), (second, third))
 
@@ -63,17 +73,17 @@ check("...and prints only a one-line summary of the block on screen",
       len(_credit_lines(third_text)) <= 1 and "past that limit" not in third_text
       and "borrow" in third_text, third_text)
 
-forced = sim(capital=CASH_FOR_ONE_START)
-_run(forced, "start tr_lateen_sail")
-_run(forced, "start units_standards")
-again = S._agent_dispatch(forced, NODES, {"cmd": "start", "id": "cn_damp_proof_course", "full": True})
+forced = poor_household()
+_run(forced, "start " + FIRST_START)
+_run(forced, "start " + SECOND_START)
+again = S._agent_dispatch(forced, NODES, {"cmd": "start", "id": THIRD_START, "full": True})
 check("'full' asks for the whole block again",
       again.get("ok") and "what_happens_there" in again.get("on_credit", {}), again)
 
-next_year = sim(capital=CASH_FOR_ONE_START)
-_run(next_year, "start tr_lateen_sail")
-_run(next_year, "start units_standards")
+next_year = poor_household()
+_run(next_year, "start " + FIRST_START)
+_run(next_year, "start " + SECOND_START)
 next_year.year += 1
-later = _run(next_year, "start cn_damp_proof_course")
+later = _run(next_year, "start " + THIRD_START)
 check("a new year shows the full block again",
       later.get("ok") and "what_happens_there" in later.get("on_credit", {}), later)

@@ -133,20 +133,29 @@ def need_prices(basket: Basket, price_of: Callable[[str], Optional[float]]) -> L
     exponent = 1.0 - basket.substitution
     priced = []
     for spec in basket.needs:
-        rows = []
-        for good, effect in spec.goods:
-            price = price_of(good)
-            if price is not None and price > 0.0 and effect > 0.0:
-                rows.append((good, price, effect, (price / effect) ** exponent))
-        if not rows:
-            continue
-        power = math.fsum(row[3] for row in rows)
-        shares = [(good, price, effect, weight / power) for good, price, effect, weight in rows]
-        # need units add up one for one (a calorie is a calorie): a unit costs what the chosen mix pays
-        # per unit, between the cheapest and dearest good; substitution shapes only the mix
-        units_per_money = math.fsum(share * effect / price for _good, price, effect, share in shares)
-        priced.append(PricedNeed(spec, 1.0 / units_per_money, tuple(shares), price_ceilings(shares)))
+        need = priced_need(spec, exponent, price_of)
+        if need is not None:
+            priced.append(need)
     return priced
+
+
+def priced_need(spec: NeedSpec, exponent: float, price_of: Callable[[str], Optional[float]],
+                with_ceilings: bool = True) -> Optional[PricedNeed]:
+    """One need priced, or None when none of its goods has a price. `exponent` is one minus the
+    substitution elasticity; a caller that never reads `ceilings` can leave them out."""
+    rows = []
+    for good, effect in spec.goods:
+        price = price_of(good)
+        if price is not None and price > 0.0 and effect > 0.0:
+            rows.append((good, price, effect, (price / effect) ** exponent))
+    if not rows:
+        return None
+    power = math.fsum(row[3] for row in rows)
+    shares = [(good, price, effect, weight / power) for good, price, effect, weight in rows]
+    # need units add up one for one (a calorie is a calorie): a unit costs what the chosen mix pays
+    # per unit, between the cheapest and dearest good; substitution shapes only the mix
+    units_per_money = math.fsum(share * effect / price for _good, price, effect, share in shares)
+    return PricedNeed(spec, 1.0 / units_per_money, tuple(shares), price_ceilings(shares) if with_ceilings else ())
 
 
 def price_ceilings(shares) -> Tuple[float, ...]:
@@ -167,11 +176,13 @@ def subsistence_cost_per_person(priced: Sequence[PricedNeed]) -> float:
 
 
 def need_units(priced: Sequence[PricedNeed], basket: Basket, people: float, surplus: float,
-               satiate: bool = True):
+               satiate: bool = True, weight_total: Optional[float] = None):
     """(floor units, total units) per need id: floors plus weighted surplus, limited by satiation
-    (unless `satiate` is off, for a caller that limits the sum over several groups itself)."""
+    (unless `satiate` is off, for a caller that limits the sum over several groups itself).
+    `weight_total` is the exact sum of the needs' budget weights, for a caller that already holds it."""
     floors = {need.spec.need_id: need.spec.subsistence_per_person * people for need in priced}
-    weight_total = math.fsum(need.spec.budget_weight for need in priced)
+    if weight_total is None:
+        weight_total = math.fsum(need.spec.budget_weight for need in priced)
     totals = dict(floors)
     if surplus > 0.0 and weight_total > 0.0:
         for need in priced:

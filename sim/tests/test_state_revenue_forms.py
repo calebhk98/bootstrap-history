@@ -8,6 +8,7 @@ sim = unopened_sim   # legacy: pins surplus grain sold into the engine's goods m
 
 from sim.engine.agents_port import SimWorld
 from sim.agents import budget_lines, revenue
+from sim.agents.tuning_spending import GRANARY_LOSS_SHARE_PER_YEAR
 
 HARVEST_KG = 4.0e9
 
@@ -92,6 +93,12 @@ treasury = kind.state_treasury()
 treasury.money = 0.0
 declared(kind, [LAND])
 tithe = 0.1 * HARVEST_KG / 1000.0
+granary_target = 0.5 * tithe   # a reserve smaller than the harvest, so some grain is above it
+treasury.granary_target = lambda world: granary_target
+offered = []   # (seller, material, tonnes) the state puts to the agent economy's book
+real_note_sale = kind.economy.note_actor_sale
+kind.economy.note_actor_sale = lambda seller, material, tonnes, from_concerns: (
+    offered.append((seller, material, tonnes)), real_note_sale(seller, material, tonnes, from_concerns))[1]
 one_year(kind)
 check("a share of the harvest taken in kind is recorded as goods received, in tonnes",
       abs(treasury.record.in_kind_received.get("wheat_kg", 0.0) - tithe) < 1e-6 * tithe,
@@ -102,14 +109,15 @@ check("the revenue by form is recorded in money's worth, for the audit",
       treasury.record.revenue_by_form.get("land_tax", 0.0) > 0.0, treasury.record.revenue_by_form)
 commodity = SimWorld(kind).commodity_of("wheat_kg")
 dole = budget_lines.dole_line(SimWorld(kind))[0].materials[commodity]
-sold = kind._market_flows()["sold"].get(commodity, {}).get(treasury.actor_id, 0.0)
+sold = sum(tonnes for seller, material, tonnes in offered if seller == treasury.actor_id and material == "wheat_kg")
 bought = kind._market_flows()["bought"].get(commodity, {}).get(treasury.actor_id, 0.0)
 check("grain the dole needs comes out of the stores, so the state buys none of it", bought == 0.0, (bought, dole))
-check("grain beyond what its lines use is sold into the goods market",
-      sold > 0.0 and abs(sold + dole + treasury.record.stores.get("wheat_kg", 0.0) - tithe) < 1e-6 * tithe,
-      (sold, dole, treasury.record.stores, tithe))
-check("the sale is paid into the purse at the market's price",
-      treasury.record.income.get("sale of stores", 0.0) > 0.0, treasury.record.income)
+held_before_sale = (tithe - dole) * (1.0 - GRANARY_LOSS_SHARE_PER_YEAR)
+check("grain above the granary's target is sold into the goods market and the target is kept",
+      sold > 0.0 and abs(sold - (held_before_sale - granary_target)) < 1e-6 * tithe
+      and 0.0 < treasury.record.stores.get("wheat_kg", 0.0) <= granary_target,
+      (sold, dole, treasury.record.stores, tithe, granary_target))
+# the proceeds reach the purse when the agent economy's year clears the book (test_economy_agent_state.py)
 check("the purse still equals income less outlays",
       abs(treasury.money - (sum(treasury.record.income.values()) - sum(treasury.record.outlays.values())))
       < 1e-6 * abs(treasury.record.income.get("sale of stores", 1.0)), treasury.money)

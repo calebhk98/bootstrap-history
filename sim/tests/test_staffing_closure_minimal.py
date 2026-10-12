@@ -3,15 +3,31 @@ and never a concern that `open` would accept with the same staff."""
 from .harness import *  # noqa: F401,F403
 
 
-def concerns_with_foreman(test_sim, trade, count):
-	# Cheapest-to-hold concerns whose supervision needs a foreman of this trade.
+def concerns_with_foreman(test_sim, trade, count, give_earnings=False):
+	# Cheapest-to-hold concerns whose supervision needs a foreman of this trade. A node earns only from its
+	# production output, so few carry an earning; the smith concerns are given a distinct one for this set-up
+	# (undone at the end of the file) so that the supervision rule is what the checks exercise.
 	if not hasattr(concerns_with_foreman, "foremen"):
-		concerns_with_foreman.foremen = {
-			node_id: test_sim.venture_foreman(node_id)[0] for node_id in sorted(NODES)
-			if test_sim.is_venture(node_id) and NODES[node_id]["rev"] > NODES[node_id]["up"]
-			and node_id not in test_sim.CAPABILITY_INSTITUTIONS}
-	found = [node_id for node_id, foreman in concerns_with_foreman.foremen.items() if foreman == trade]
-	return found[:count]
+		concerns_with_foreman.foremen = {}
+		for node_id in sorted(NODES):
+			node = NODES[node_id]
+			if not test_sim.is_venture(node_id) or node_id in test_sim.CAPABILITY_INSTITUTIONS:
+				continue
+			lab = node.get("lab") or {}
+			skilled = [(hours, skill) for skill, hours in lab.items()
+				if skill not in ("artisan", "labourer", "slave") and hours > 0]
+			if lab.get("artisan", 0) > 0 and skilled:
+				concerns_with_foreman.foremen[node_id] = max(skilled)[1]
+	found = [node_id for node_id, foreman in concerns_with_foreman.foremen.items() if foreman == trade
+		and (give_earnings or NODES[node_id]["rev"] > NODES[node_id]["up"])][:count]
+	for rank, node_id in enumerate(found if give_earnings else []):
+		if NODES[node_id]["rev"] <= NODES[node_id]["up"]:
+			_given_earnings.setdefault(node_id, NODES[node_id]["rev"])
+			NODES[node_id]["rev"] = NODES[node_id]["up"] * (1.5 + 0.1 * rank)
+	return found
+
+
+_given_earnings = {}
 
 
 def crowded_sim(smith_concerns, other_concerns):
@@ -30,7 +46,7 @@ def crowded_sim(smith_concerns, other_concerns):
 
 
 probe = unopened_sim()
-smiths = concerns_with_foreman(probe, "smith", 6)
+smiths = concerns_with_foreman(probe, "smith", 6, give_earnings=True)
 others = concerns_with_foreman(probe, "carpenter", 3) + concerns_with_foreman(probe, "machinist", 3)
 
 # --- losing part of the smiths closes only smith concerns, only as many as needed
@@ -131,3 +147,6 @@ priced.open_venture(node_id)
 open_paid = before_capital - priced.capital
 check("open and restore charge the same after a mothball", abs(restore_paid - open_paid) < 0.01, (restore_paid, open_paid))
 check("the mothball reply states that price", stated == round(open_paid), (priced_message, open_paid))
+
+for _node_id, _original_earning in _given_earnings.items():
+	NODES[_node_id]["rev"] = _original_earning

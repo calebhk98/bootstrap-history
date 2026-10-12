@@ -42,6 +42,7 @@ class DemandSchedule:
         self.price_capped = any(maximum < math.inf for maximum in self.maximums)
         self._totals: dict = {}              # total_at by price: a market is cleared at the same prices many times
         self._ceilings: Optional[List[float]] = None
+        self.solutions: dict = {}            # solve_price's memo: books against this demand share it
 
     def distinct_schedules(self) -> int:
         return len(self.group_terms)

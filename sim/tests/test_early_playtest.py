@@ -216,6 +216,9 @@ _MIL_NODES = sorted(node_id for node_id in NODES if "military" in (NODES[node_id
 sack_bare, _ = mexica.hazard_relief("sack_chance")
 for node_id in _MIL_NODES:
     mexica.done.add(node_id)
+# a fortification counts for the garrison present: employ every trade the built works claim
+for garrison_trade, garrison_people in mexica.garrison_claims().items():
+    mexica.state.household.employees[garrison_trade] = garrison_people
 sack_armed, sack_why = mexica.hazard_relief("sack_chance")
 check("a Mexica founder who had built firearms and fortification before "
       "the Spanish arrived would face a real, non-zero chance of a "
@@ -306,14 +309,19 @@ check("a mine can be closed, and stops costing", cost_open > 0 and cost_closed =
       "before %s after %s" % (cost_open, cost_closed))
 
 # --- an unfunded project never completes, and manual play never buys people for you
-unfunded = sim(capital=hours_money(8060), manual=True)
-ok_start, start_why = unfunded.start_project("identity_cover")         # 1,580 den against 400
+# (the lender advances part of a credit line against a purchase, so "unfunded" is a project dearer than cash
+# plus that share; the game refuses to start it)
+unfunded = without_market(sim(capital=hours_money(8060), manual=True))
+too_dear = max((node_id for node_id in ORDER if unfunded.start_reason(node_id)[0]),
+               key=lambda node_id: S._agent_dispatch(unfunded, NODES, {"cmd": "why", "id": node_id})["cost"]["total"])
+ok_start, start_why = unfunded.start_project(too_dear)
 for _ in range(3):
     unfunded.step()
-paid = unfunded.active.get("identity_cover", {}).get("spent", 0.0)
+paid = unfunded.active.get(too_dear, None)
+paid = paid.spent if paid else 0.0
 check("an unfunded project never completes",
-      ok_start and "identity_cover" not in unfunded.done,
-      "started=%s (%s) done=%s paid=%.0f" % (ok_start, start_why, "identity_cover" in unfunded.done, paid))
+      not ok_start and "afford" in str(start_why) and too_dear not in unfunded.done and paid == 0.0,
+      "started=%s (%s) done=%s paid=%.0f" % (ok_start, start_why, too_dear in unfunded.done, paid))
 check("manual play never buys people for you", unfunded.slaves == 0 and unfunded.freedmen == 0,
       "slaves %d freedmen %d" % (unfunded.slaves, unfunded.freedmen))
 

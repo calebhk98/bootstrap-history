@@ -25,7 +25,7 @@ from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from sim.constants import declare
 
-from . import inventory
+from . import inventory, merchants_route_memo
 from .accounts import DeliveredMove
 from .households_orders import BUDGET_SAFETY_SHARE
 from .market_areas import AreaMap
@@ -146,9 +146,9 @@ def _holding_offers(merchant, view, area_map, held_stock, specs, interest_rate) 
 
 def _candidate_routes(merchant, view, carriage, area_map, held_stock, specs, interest_rate):
     """Rows (rank, good, source, destination, price here, outlay per unit, most it pays), one per
-    profitable (good, source area) at its best destination, best net gap per unit of outlay first."""
+    profitable (good, source area) at its best destination, best net gap per unit of outlay first.
+    A good's rows are shared with any caller that sees the same prices at the same rate."""
     rows = []
-    interest = max(0.0, interest_rate)
     expected_prices = merchant.expected_prices
     for good in sorted(set(specs) & set(area_map.goods())):
         areas = area_map.areas(good)
@@ -159,46 +159,56 @@ def _candidate_routes(merchant, view, carriage, area_map, held_stock, specs, int
         for area in areas:
             price = expected_prices.get((good, area.area_id))
             prices[area.area_id] = price if price is not None else view.price(good, area.area_id)
-        spoilage = min(1.0, max(0.0, spec.spoilage_per_year))
-        keep = 1.0 - spoilage
-        unit_mass = spec.unit_mass_kg
-        # (price there, price there kept after spoilage, its spoilage cost, anchor tile, area id, area), dearest first
-        dearest_first = [(prices[area.area_id], prices[area.area_id] * keep, prices[area.area_id] * spoilage,
-                          area.anchor_tile, area.area_id, area)
-                         for area in sorted((area for area in areas if prices[area.area_id]),
-                                            key=lambda area: (-prices[area.area_id], area.area_id))]
-        for source in areas:
-            price_here = prices[source.area_id]
-            if not price_here or price_here <= 0.0:
-                continue
-            best = None
-            best_net = None
-            floor_cost = price_here * (1.0 + interest + MERCHANT_MARGIN_SHARE)
-            interest_here = price_here * interest              # the terms of gap_cost_per_unit, hoisted
-            margin_here = MERCHANT_MARGIN_SHARE * price_here
-            cost_to = carriage.costs_from(source.anchor_tile)
-            for price_there, kept_there, spoilage_there, anchor_tile, area_id, destination in dearest_first:
-                # carriage only adds cost, so no cheaper destination can beat this bound
-                bound = kept_there - floor_cost
-                if bound <= 0.0 or (best_net is not None and bound <= best_net):
-                    break
-                if area_id == source.area_id:
-                    continue
-                per_tonne = cost_to.get(anchor_tile, math.inf)
-                if per_tonne == math.inf:
-                    continue
-                net = price_there - price_here - (per_tonne * unit_mass / KILOGRAMS_PER_TONNE
-                                                  + interest_here + spoilage_there + margin_here)
-                if net > 0.0 and (best_net is None or net > best_net):
-                    best, best_net = (destination, per_tonne), net
-            if best is None:
-                continue
-            destination, per_tonne = best
-            carriage_per_unit = per_tonne * unit_mass / KILOGRAMS_PER_TONNE
-            outlay = price_here + carriage_per_unit
-            rows.append((-best_net / outlay, good, source, destination, price_here, outlay,
-                         _break_even_price(spec, prices[destination.area_id], carriage_per_unit, interest_rate)))
+        rows.extend(merchants_route_memo.routes_for_good(
+            carriage, good, areas, spec, tuple(prices[area.area_id] for area in areas), interest_rate,
+            lambda: _good_routes(good, spec, areas, prices, carriage, interest_rate)))
     return sorted(rows, key=lambda row: (row[0], row[1], row[2].area_id))
+
+
+def _good_routes(good, spec, areas, prices, carriage, interest_rate) -> list:
+    """The unsorted rows of `_candidate_routes` for one good, given its price in each area."""
+    rows = []
+    interest = max(0.0, interest_rate)
+    spoilage = min(1.0, max(0.0, spec.spoilage_per_year))
+    keep = 1.0 - spoilage
+    unit_mass = spec.unit_mass_kg
+    # (price there, price there kept after spoilage, its spoilage cost, anchor tile, area id, area), dearest first
+    dearest_first = [(prices[area.area_id], prices[area.area_id] * keep, prices[area.area_id] * spoilage,
+                      area.anchor_tile, area.area_id, area)
+                     for area in sorted((area for area in areas if prices[area.area_id]),
+                                        key=lambda area: (-prices[area.area_id], area.area_id))]
+    for source in areas:
+        price_here = prices[source.area_id]
+        if not price_here or price_here <= 0.0:
+            continue
+        best = None
+        best_net = None
+        floor_cost = price_here * (1.0 + interest + MERCHANT_MARGIN_SHARE)
+        interest_here = price_here * interest              # the terms of gap_cost_per_unit, hoisted
+        margin_here = MERCHANT_MARGIN_SHARE * price_here
+        cost_to = carriage.costs_from(source.anchor_tile)
+        for price_there, kept_there, spoilage_there, anchor_tile, area_id, destination in dearest_first:
+            # carriage only adds cost, so no cheaper destination can beat this bound
+            bound = kept_there - floor_cost
+            if bound <= 0.0 or (best_net is not None and bound <= best_net):
+                break
+            if area_id == source.area_id:
+                continue
+            per_tonne = cost_to.get(anchor_tile, math.inf)
+            if per_tonne == math.inf:
+                continue
+            net = price_there - price_here - (per_tonne * unit_mass / KILOGRAMS_PER_TONNE
+                                              + interest_here + spoilage_there + margin_here)
+            if net > 0.0 and (best_net is None or net > best_net):
+                best, best_net = (destination, per_tonne), net
+        if best is None:
+            continue
+        destination, per_tonne = best
+        carriage_per_unit = per_tonne * unit_mass / KILOGRAMS_PER_TONNE
+        outlay = price_here + carriage_per_unit
+        rows.append((-best_net / outlay, good, source, destination, price_here, outlay,
+                     _break_even_price(spec, prices[destination.area_id], carriage_per_unit, interest_rate)))
+    return rows
 
 
 def _break_even_price(spec: GoodSpec, price_there: float, carriage_per_unit: float, interest_rate: float) -> float:

@@ -47,6 +47,7 @@ check("an unknown seat is refused and nothing changes", refused and game.state.h
 # save: the aliased root fields are not written; seats are, and a load rebinds the aliases
 other = sim(civ="rome_100ad", capital=1000.0)
 other.goal = "point_contact_transistor"
+saved_capital = other.household.capital
 with tempfile.TemporaryDirectory() as folder:
     path = os.path.join(folder, "save.json")
     save_state(other, path)
@@ -62,4 +63,4 @@ with tempfile.TemporaryDirectory() as folder:
     check("a load rebinds the aliases to the loaded seat",
           other.state.household is seat.household and other.state.projects is seat.projects and other.state.founder is seat.founder, None)
     check("a load restores the household, goal and facade",
-          other.household.capital == 1000.0 and other.goal == "point_contact_transistor" and other.state.household is other.household._state.household, other.household.capital)
+          other.household.capital == saved_capital and other.goal == "point_contact_transistor" and other.state.household is other.household._state.household, other.household.capital)

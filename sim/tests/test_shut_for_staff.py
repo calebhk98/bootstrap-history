@@ -5,7 +5,7 @@ from sim.ui.proto.render_screen_state_blocks import _state_concerns
 
 # Complaint 87: state names the missing specialist behind each shut concern.
 
-_concern = "camera_obscura"   # needs a carpenter foreman to run
+_concern = "mirror_amalgam"   # earns from its output and needs a glassblower foreman to run
 foreman_trade, foreman_share = None, 0.0
 
 test_sim = sim(capital=1e6)

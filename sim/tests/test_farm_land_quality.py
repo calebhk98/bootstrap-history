@@ -67,7 +67,8 @@ class FarmLandQualityTests(unittest.TestCase):
         civ["id"] = "mod_single_region"
         civ.pop("home_tiles", None)
         civ["home_regions"] = ["scandinavia"]
-        test_sim = S.Sim(NODES, ORDER, random.Random(1), events=False, manual=True, civ=civ)
+        test_sim = build_unopened(
+            lambda: S.Sim(NODES, ORDER, random.Random(1), events=False, manual=True, civ=civ))   # the farm is sized before the economy opens
         self.assertAlmostEqual(
             test_sim.farm_land.quality,
             _expected_quality(tiles_of_regions(["scandinavia"]), test_sim.farm_land.hectares))
@@ -76,7 +77,7 @@ class FarmLandQualityTests(unittest.TestCase):
         civ = copy.deepcopy(S.load_civ("rome_100ad"))
         civ.pop("home_tiles", None)
         civ["home_regions"] = ["no_such_region_anywhere"]
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ValueError):     # no tiles to farm, so no territory for the economy
             S.Sim(NODES, ORDER, random.Random(1), events=False, manual=True, civ=civ)
 
     def test_farm_output_responds_to_quality(self):

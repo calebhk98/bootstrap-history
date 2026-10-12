@@ -8,7 +8,7 @@ import random
 import unittest
 from dataclasses import replace
 
-from sim.economy import goods_market, seller_pricing
+from sim.economy import goods_market, seller_book, seller_pricing
 from sim.economy.types import Bid, Offer
 
 GOOD, AREA = "cloth", "area"
@@ -51,6 +51,26 @@ class ShortcutMatchesFullClear(unittest.TestCase):
                     ordered, replace(offer, reservation_price=reservation))
                 self.assertEqual(goods_market.price_and_sold(buyers, offers, SELLER),
                                  by_full_clear(bids, rivals, offer, reservation, last_price), (seed, reservation))
+
+    def test_seller_book_equals_price_and_sold_for_every_reservation(self):
+        for seed in range(300):
+            bids, rivals, offer, last_price = random_market(seed)
+            buyers = goods_market.Buyers(bids, last_price)
+            ordered = goods_market.in_clearing_order(rivals)
+            book = seller_book.SellerBook(buyers, ordered, offer)
+            asks = sorted({rival.reservation_price for rival in rivals})
+            for reservation in (None, 0.0, -1.0, 1e-9, 0.4, 1.0, 1.7, 5.0, *asks, *(ask * 0.999 for ask in asks)):
+                offers = ordered if reservation is None else goods_market.with_offer(
+                    ordered, replace(offer, reservation_price=reservation))
+                price, sold = goods_market.price_and_sold(buyers, offers, SELLER)
+                self.assertEqual(book.sold_and_price(reservation), (sold, price), (seed, reservation))
+
+    def test_seller_book_with_no_quantity_is_the_rivals_alone(self):
+        bids, rivals, offer, last_price = random_market(3)
+        buyers = goods_market.Buyers(bids, last_price)
+        ordered = goods_market.in_clearing_order(rivals)
+        book = seller_book.SellerBook(buyers, ordered, replace(offer, quantity=0.0))
+        self.assertEqual(book.sold_and_price(1.0), book.sold_and_price(None))
 
     def test_best_reservation_equals_the_search_by_full_clears(self):
         for seed in range(150):

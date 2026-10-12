@@ -192,7 +192,7 @@ check("...and it is the sum of what each of those nodes would actually cost",
 
 # --- BREAK: `bribe 1` refused at 0% protection as "already as protected as
 # money can make you".
-_rb = _ask(_game, cmd="bribe", amount=1)
+_rb = _ask(sim(), cmd="bribe", amount=1)
 check("a bribe too small to matter says so, not that you are already covered",
       "too little" in (_rb.get("error") or ""), _rb.get("error"))
 
@@ -251,8 +251,7 @@ check("...and names the cheapest thing you could actually begin",
       _rs[0].get("and_the_cheapest_thing_you_could_start_now"))
 _s_red = sim(capital=round(0.3 * _game.project_cost("identity_cover")))   # thin purse at any wage scale
 _s_red.start_project("identity_cover")
-for _ in range(1):
-    _s_red.step()
+_s_red.state.household.capital = -100.0   # in the red with the work still in hand
 _rs2 = [S._agent_dispatch(_s_red, NODES, {"cmd": "stuck"})]
 _held = _rs2[-1]["what_is_holding_you_up"]
 check("...and once you are committed and in the red it names both",
@@ -270,25 +269,29 @@ check("...and `state` advertises it every turn",
 # concern by revenue minus upkeep alone and told the player to 'open' it,
 # without ever checking whether open_venture would actually agree - measured
 # directly against the dice-free Rome credit/named-trade trap (PATH_SEARCH.md):
-# at year 700, free_art sits at 0.00 and `stuck` was recommending 'open
-# lens_grinding', which needs 2.13 craftsmen to supervise and refuses outright.
-# lens_grinding needs more craftsmen to supervise (2.13) than a fresh
-# household has free even before anything else competes for them (founder
-# alone is worth 1.0), so this is reproducible with nothing but a closed
-# prerequisite chain, no multi-century run required.
+# at year 700, free_art sits at 0.00 and `stuck` was recommending an 'open' that
+# needs more supervising craftsmen than are free and refuses outright. A concern
+# needing more than a fresh household has free reproduces it with nothing but a
+# closed prerequisite chain, no multi-century run required.
 s_shut = sim(capital=10_000_000.0)
-for _p in S.closure(NODES, "lens_grinding"):
+_free_hands = s_shut.venture_staff_free()[1]
+# the concern with the smallest chain behind it that is profitable but needs more supervising craftsmen than are free
+SHUT_ID = min((node_id for node_id, node in s_shut.nodes.items()
+               if node["rev"] > node["up"] and s_shut.is_venture(node_id)
+               and s_shut.venture_hands(node_id)[1] > _free_hands + 0.5),
+              key=lambda node_id: (len(S.closure(NODES, node_id)), node_id))
+for _p in S.closure(NODES, SHUT_ID):
     s_shut.done.add(_p)
-s_shut.done.add("lens_grinding")
+s_shut.done.add(SHUT_ID)
 s_shut._done_changed()
-check("lens_grinding is done, not operating, and genuinely profitable - the "
+check("the shut concern is done, not operating, and genuinely profitable - the "
       "exact shape 'stuck' looks for",
-      s_shut.is_venture("lens_grinding")
-      and "lens_grinding" not in s_shut.operating
-      and NODES["lens_grinding"]["rev"] > NODES["lens_grinding"]["up"],
-      (s_shut.is_venture("lens_grinding"), "lens_grinding" in s_shut.operating))
+      s_shut.is_venture(SHUT_ID)
+      and SHUT_ID not in s_shut.operating
+      and s_shut.nodes[SHUT_ID]["rev"] > s_shut.nodes[SHUT_ID]["up"],
+      (s_shut.is_venture(SHUT_ID), SHUT_ID in s_shut.operating))
 _sch_free_sg, _art_free_sg = s_shut.venture_staff_free()
-_need_sch_sg, _need_art_sg = s_shut.venture_hands("lens_grinding")
+_need_sch_sg, _need_art_sg = s_shut.venture_hands(SHUT_ID)
 check("...and a fresh household genuinely cannot supervise it yet",
       _need_art_sg > _art_free_sg + 0.01,
       (_need_art_sg, _art_free_sg))
@@ -300,7 +303,7 @@ _shut_reason = next((reason for reason in _stuck_shut["what_is_holding_you_up"]
 check("`stuck` never tells a player to 'open' something open_venture will "
       "actually refuse",
       _shut_reason is not None
-      and "'open lens_grinding'" not in _shut_reason.get("why", ""),
+      and "'open %s'" % SHUT_ID not in _shut_reason.get("why", ""),
       _shut_reason)
 check("...and instead says the true reason (craftsmen, here) it cannot be "
       "opened, so a player knows what to fix rather than spending a turn on "
@@ -312,7 +315,7 @@ check("...and instead says the true reason (craftsmen, here) it cannot be "
 # open the thing - the fix narrows the claim, it does not silence it.
 s_can = s_shut   # the same household, now with hands to spare
 s_can.artisans = 10.0
-s_can.employees[s_can.venture_foreman("lens_grinding")[0] or "artisan"] = 4.0
+s_can.employees[s_can.venture_foreman(SHUT_ID)[0] or "artisan"] = 4.0
 _stuck_can = S._agent_dispatch(s_can, NODES, {"cmd": "stuck"})
 _can_reason = next((reason for reason in _stuck_can["what_is_holding_you_up"]
                    if isinstance(reason, dict)
@@ -320,7 +323,7 @@ _can_reason = next((reason for reason in _stuck_can["what_is_holding_you_up"]
                   None)
 check("...and once there really are enough hands free, `stuck` goes back to "
       "naming the concrete 'open X' command",
-      _can_reason is not None and "'open lens_grinding'" in _can_reason.get("why", ""),
+      _can_reason is not None and "'open %s'" % SHUT_ID in _can_reason.get("why", ""),
       _can_reason)
 
 # --- BREAK: "MOST RESTS ON THESE" heads its list with items at 230 to 1,580

@@ -6,7 +6,7 @@ from sim.engine.critical_path_remaining import remaining_critical_path_years
 from sim.engine.data import closure, critical_path
 
 game = sim()
-foreman_node = "tex_horizontal_loom"
+foreman_node = next(node_id for node_id in sorted(NODES) if game.venture_foreman(node_id)[0] is not None)
 trade, share = game.venture_foreman(foreman_node)
 why_out = S._agent_dispatch(game, NODES, {"cmd": "why", "id": foreman_node})
 text = render_pretty("why", why_out)

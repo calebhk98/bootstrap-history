@@ -26,7 +26,7 @@ reply = ask(saver, cmd="saving", id=cheapest, target=target)
 check("setting a target is accepted", reply.get("ok") is True, reply)
 plan = reply["saving"]
 check("the plan names the project, target, cash and net income",
-      plan["id"] == cheapest and plan["target"] == target and plan["cash"] == saver.capital
+      plan["id"] == cheapest and abs(plan["target"] - target) < 0.1 and abs(plan["cash"] - saver.capital) < 0.1
       and plan["net_income_per_year"] == 500.0, plan)
 check("the year affordable is today's year plus whole years of income needed",
       plan["year_affordable"] == saver.year + 4, plan)

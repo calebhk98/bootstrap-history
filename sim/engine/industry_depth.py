@@ -120,7 +120,7 @@ class IndustryDepthMixin:
         opening = self.opening_worker_years_by_node() or {}
         fade = self.tenure_leavers_share() or 1.0
         for node_id in sorted(projects.granted):
-            if self.is_venture(node_id):
+            if self.is_concern_node(node_id):
                 rate = opening.get(node_id, self.founding_worker_years(node_id))
                 projects.industry_opening_rate[node_id] = rate
                 self.add_industry_years(node_id, rate / fade)
@@ -170,7 +170,7 @@ class IndustryDepthMixin:
         years = {}
         projects = self.state.projects
         for node_id in sorted(projects.granted | projects.operating):
-            if self.is_venture(node_id):
+            if self.is_concern_node(node_id):
                 held_by_society = projects.industry_opening_rate.get(node_id) if node_id in projects.granted else None
                 years[node_id] = years.get(node_id, 0.0) + (
                     self.founding_worker_years(node_id) if held_by_society is None else held_by_society)

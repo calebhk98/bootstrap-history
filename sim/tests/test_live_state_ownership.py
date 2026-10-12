@@ -191,6 +191,8 @@ def _test_household_mutation_methods():
 	"""
 	s = sim(civ="rome_100ad", capital=1000.0)
 	household = s.state.household
+	household.capital = 1000.0  # the opening outfit has already spent part of the starting purse
+	household.total_spend = 0.0
 
 	# 1. cost_capital decreases capital and increments total_spend
 	household.cost_capital(250.0)

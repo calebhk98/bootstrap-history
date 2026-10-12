@@ -50,7 +50,8 @@ asked_maps = {}
 
 def _spy(name, real):
     def spy(*args, **kwargs):
-        positional = args[-1] if name in ("modes", "tiles_held") and len(args) > 1 else None
+        positional = args[1] if name == "modes" and len(args) > 1 else (
+            args[-1] if name == "tiles_held" and len(args) > 1 else None)   # usable_route_modes(techs, world_map, cargo)
         asked_maps.setdefault(name, []).append(kwargs.get("world_map", positional))
         return real(*args, **kwargs)
     return spy

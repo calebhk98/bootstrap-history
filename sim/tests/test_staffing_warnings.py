@@ -81,7 +81,7 @@ check("no slack at all: the warning says losing just one more closes it, "
 check("...and names what that closure would actually cost in recurring "
       "income, not just that it would happen",
       _sw_warn3 and _sw_warn3[0]["recurring_income_at_risk"] > 0
-      and "den/yr" in _sw_warn3[0]["headline"], _sw_warn3)
+      and "den/year" in _sw_warn3[0]["headline"], _sw_warn3)
 check("...and names the command that fixes it - a real {\"cmd\":\"hire\"} "
       "example with a real trade, not just the generic 'craftsmen'/"
       "'scholars' word",

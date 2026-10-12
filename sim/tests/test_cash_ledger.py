@@ -11,7 +11,8 @@ from .source_dirs import SIM_DIR, engine_side_dirs
 
 # The only places allowed to write the purse itself: the ledger's own methods and the opening balance.
 PURSE_WRITERS = {os.path.join("engine", "state.py"), os.path.join("engine", "core_properties.py"),
-                 os.path.join("agents", "household.py")}
+                 os.path.join("agents", "household.py"),
+                 os.path.join("engine", "opening_money.py")}   # reprices the opening purses to the economy's money per hour: a unit change, not a transfer
 DIRECT_WRITE = re.compile(r"\.capital\s*[-+*/]?=(?!=)")
 
 

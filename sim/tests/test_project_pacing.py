@@ -94,31 +94,34 @@ slow_check("...and it finishes, slowly, longer than its calendar floor, instead 
 # stopping something yourself cost exactly as much as letting them, and `stop`
 # was never the right move. The site does not un-dig itself either way.
 s_sp2 = sim(surveyed=())   # prices the project here, then serves the nearly-paid check below
-s_sp = sim(capital=round(0.3 * s_sp2.project_cost("identity_cover")), surveyed=())   # part-payable at any wage scale
-s_sp.start_project("identity_cover")
+# a project startable now whose calendar floor outlasts one step, so it is still in hand after it
+PACED = min((node_id for node_id in NODES if NODES[node_id]["yrs"] >= 2.0 and s_sp2.start_reason(node_id)[0]),
+            key=lambda node_id: (s_sp2.project_cost(node_id), node_id))
+s_sp = sim(capital=round(0.3 * s_sp2.project_cost(PACED)), surveyed=())   # part-payable at any wage scale
+s_sp.start_project(PACED)
 s_sp.step()
-_spent_sp = s_sp.active["identity_cover"]["spent"]
-_ok_sp, _why_sp = s_sp.stop_project("identity_cover")
+_spent_sp = s_sp.active[PACED]["spent"]
+_ok_sp, _why_sp = s_sp.stop_project(PACED)
 check("stopping a project keeps the money already paid",
-      _ok_sp and abs(s_sp.paid_towards.get("identity_cover", 0.0)
+      _ok_sp and abs(s_sp.paid_towards.get(PACED, 0.0)
                      - _spent_sp) < 0.5,
       (s_sp.paid_towards, _spent_sp))
 s_sp.capital = 50000.0
-s_sp.start_project("identity_cover")
+s_sp.start_project(PACED)
 check("...and beginning again bills only the remainder",
-      abs(s_sp.active["identity_cover"]["cost_left"]
-          - (s_sp.project_cost("identity_cover") - _spent_sp)) < 0.5,
-      s_sp.active["identity_cover"]["cost_left"])
+      abs(s_sp.active[PACED]["cost_left"]
+          - (s_sp.project_cost(PACED) - _spent_sp)) < 0.5,
+      s_sp.active[PACED]["cost_left"])
 check("...but the hours really are gone: that was your year",
-      abs(s_sp.active["identity_cover"]["ph_left"]
-          - NODES["identity_cover"]["ph"]) < 1e-6,
-      s_sp.active["identity_cover"]["ph_left"])
+      abs(s_sp.active[PACED]["ph_left"]
+          - NODES[PACED]["ph"]) < 1e-6,
+      s_sp.active[PACED]["ph_left"])
 # And the affordability gate has to test the REMAINDER, or a nearly-paid-for
 # project is refused for a bill it no longer owes.
-s_sp2.paid_towards = {"identity_cover": s_sp2.project_cost("identity_cover") - 5.0}
+s_sp2.paid_towards = {PACED: s_sp2.project_cost(PACED) - 5.0}
 check("...and a nearly-paid project is not refused for its gross price",
-      s_sp2.start_project("identity_cover")[0],
-      s_sp2.start_reason("identity_cover"))
+      s_sp2.start_project(PACED)[0],
+      s_sp2.start_reason(PACED))
 
 # --- BREAK: `start` discounts a halted project's remaining bill by what was
 # already sunk into it (see _paid_now above) - but `why` kept quoting the
@@ -128,17 +131,19 @@ check("...and a nearly-paid project is not refused for its gross price",
 # real, discounted figure showed up only inside a `start` refusal or its
 # success line, after the fact.
 s_wp = sim(capital=1000.0, surveyed=())
-_wp_k = next(node_id for node_id in s_wp.order if s_wp.can_start(node_id) and NODES[node_id]["ph"] > 0)
+_wp_k = next(node_id for node_id in s_wp.order if s_wp.can_start(node_id) and NODES[node_id]["ph"] > 0
+             and 0 < s_wp.project_cost(node_id) <= s_wp.capital)
+_wp_sunk = float(round(0.5 * s_wp.project_cost(_wp_k)))   # half the bill is already paid in
 s_wp.start_project(_wp_k)
-s_wp.active[_wp_k]["spent"] = 500.0
+s_wp.active[_wp_k]["spent"] = _wp_sunk
 s_wp.stop_project(_wp_k)
 _wp_out = S._agent_dispatch(s_wp, NODES, {"cmd": "why", "id": _wp_k})
 check("`why` on a halted, partly-paid project shows both the gross total "
       "and what 'start' would actually charge, with the sunk amount "
       "accounting for the difference",
-      _wp_out["cost"].get("already_paid_towards_this") == 500.0
+      _wp_out["cost"].get("already_paid_towards_this") == _wp_sunk
       and abs(_wp_out["cost"]["what_start_would_actually_charge"]
-              - (_wp_out["cost"]["total"] - 500.0)) < 0.5,
+              - (_wp_out["cost"]["total"] - _wp_sunk)) < 0.5,
       _wp_out["cost"])
 check("...and it matches what `start` would actually bill, not a second "
       "estimate of it",

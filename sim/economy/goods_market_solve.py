@@ -23,9 +23,10 @@ Levels = List[Tuple[float, float]]
 
 
 def solve_price(levels: Levels, demand: Callable[[float], float], demand_at_first: float,
-                uncapped: Optional[Callable[[float], float]] = None) -> float:
+                uncapped: Optional[Callable[[float], float]] = None, memo: Optional[dict] = None) -> float:
     """Price where demand meets the step supply. levels are ascending and positive; demand_at_first is
-    demand at the first reservation, already known to the caller."""
+    demand at the first reservation, already known to the caller. `memo` (a dict that belongs to one demand
+    schedule) keeps the last stage's answers for other books against the same demand."""
     if demand_at_first <= levels[0][1]:
         return levels[0][0]
     known: Dict[int, float] = {0: demand_at_first}
@@ -47,12 +48,26 @@ def solve_price(levels: Levels, demand: Callable[[float], float], demand_at_firs
         else:
             failing = middle
     supply = levels[failing][1]
-    low, excess_low = levels[failing][0], known[failing] - supply
     ceiling = levels[passing][0] if passing < count else None
-    if passing in known:
-        if known[passing] >= supply:
+    # from here the answer depends only on these, so a demand schedule solving many nearby books remembers it
+    key = (levels[failing][0], known[failing], ceiling, known.get(passing), supply, uncapped is not None)
+    if memo is None:
+        return _refine(demand, uncapped, *key[:5])
+    price = memo.get(key)
+    if price is None:
+        price = memo[key] = _refine(demand, uncapped, *key[:5])
+    return price
+
+
+def _refine(demand, uncapped, low: float, demand_low: float, ceiling: Optional[float],
+            demand_at_ceiling: Optional[float], supply: float) -> float:
+    """The price in the gap above the level at `low` (where demand is `demand_low`) and below `ceiling`
+    (None: no level above; `demand_at_ceiling` is None when demand there has not been taken)."""
+    excess_low = demand_low - supply
+    if demand_at_ceiling is not None:
+        if demand_at_ceiling >= supply:
             return ceiling
-        return _root(demand, low, excess_low, ceiling, known[passing] - supply, supply)
+        return _root(demand, low, excess_low, ceiling, demand_at_ceiling - supply, supply)
     guess = _uncapped_root(uncapped, low, supply, ceiling) if uncapped is not None else None
     if ceiling is not None and (guess is None or guess >= ceiling):
         excess = demand(ceiling) - supply

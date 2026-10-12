@@ -87,7 +87,8 @@ class ModAddsCategory(unittest.TestCase):
 class FogUsesTraits(unittest.TestCase):
     def test_protected_category(self):
         stub = SimpleNamespace(nodes={"a": {"cat": "physics"}, "b": {"cat": "rail"}},
-                               on_road_to_goal=lambda node_id: False)
+                               on_road_to_goal=lambda node_id: False,
+                               relied_on_running=lambda node_id: False)
         self.assertTrue(FogMixin.never_abandon(stub, "a"))
         self.assertFalse(FogMixin.never_abandon(stub, "b"))
 

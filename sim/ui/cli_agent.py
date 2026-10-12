@@ -68,8 +68,6 @@ def cmd_agent(args):
     sim.fuzzy_estimates = bool(getattr(args, "fuzzy_estimates", False))
     sim.revealed = set()
     pretty = bool(getattr(args, "pretty", False))
-    if pretty:
-        units.set_civ_defaults(sim.civ)
 
     session = getattr(args, "session", None)
     checkpoint_source = None
@@ -122,7 +120,12 @@ def cmd_agent(args):
         sys.stdout.write(json.dumps(obj) + "\n")
         sys.stdout.flush()
         if pretty:
-            sys.stderr.write(render_pretty(command_name, obj) + "\n\n")
+            # the civilisation's display units shape the readable view only, never the JSON reply
+            units.set_civ_defaults(sim.civ)
+            try:
+                sys.stderr.write(render_pretty(command_name, obj) + "\n\n")
+            finally:
+                units.set_civ_defaults(None)
             sys.stderr.flush()
 
     # A player who has been told nothing but the path to this file must still be
