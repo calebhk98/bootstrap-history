@@ -6,7 +6,7 @@ from .harness import *  # noqa: F401,F403
 
 from sim.agents import stratum_year
 from sim.agents.api import observed_incomes
-from sim.agents.strata_observed import slice_income
+from sim.agents.strata_observed import rank_key as stratum_rank, slice_income
 from sim.engine.agents_port import SimWorld
 
 
@@ -67,11 +67,22 @@ for actor in sorted(strata, key=lambda actor: actor.record.stratum):
     print("  %-10s members %10.0f  cohorts %14.0f  bridge %14.0f" % (
         actor.record.stratum, actor.record.members, incomes[actor.record.stratum], bridge))
 
+# strata earning the same per head are ordered by name, whatever their headcounts do to the rounding
+by_name = {actor.record.stratum: actor for actor in strata}
+check("strata that earn the same per head tie in rank, so the name orders them and not float noise",
+      stratum_rank(by_name["slaves"], world) == stratum_rank(by_name["labourers"], world),
+      (stratum_rank(by_name["slaves"], world), stratum_rank(by_name["labourers"], world)))
+
 # ---- the books after a year: income is the mapped cohort income ------------------------------
 before = {actor.actor_id: actor.record.income.get("edge:economy", 0.0) for actor in home(on)}
 expected = observed_incomes(home(on), SimWorld(on), on.economy.agent_cohort_incomes())
 on.state.scenario.year += 1
 on.advance_actors(on.state.scenario.year)
+bonded_product_of_keeper = {}   # keeper stratum -> the mapped income of the bonded it holds, which is its to be credited
+for actor in home(on):
+    if actor.is_bonded():
+        owner_name = actor.record.plan["owner"]
+        bonded_product_of_keeper[owner_name] = bonded_product_of_keeper.get(owner_name, 0.0) + expected[actor.record.stratum]
 for actor in home(on):
     credited = actor.record.income.get("edge:economy", 0.0) - before[actor.actor_id]
     if actor.is_bonded():
@@ -79,9 +90,9 @@ for actor in home(on):
         keeper = on.actors.actors[actor.neighbour_id(actor.record.plan["owner"])]
         check("the bonded stratum keeps a labour product for its keeper to be credited", keeper.record.income.get("edge:economy", 0.0) > 0.0)
         continue
-    check("%s is credited about its mapped cohort income" % actor.record.stratum,
-          credited > 0.0 and abs(credited - expected[actor.record.stratum]) <= 0.25 * expected[actor.record.stratum],
-          (credited, expected[actor.record.stratum]))
+    mapped = expected[actor.record.stratum] + bonded_product_of_keeper.get(actor.record.stratum, 0.0)
+    check("%s is credited about its mapped cohort income, with the product of the bonded it keeps" % actor.record.stratum,
+          credited > 0.0 and abs(credited - mapped) <= 0.25 * mapped, (credited, mapped))
 
 
 def edge_net(actors):
