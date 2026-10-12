@@ -53,6 +53,17 @@ class SingleMaterialTrialTest(unittest.TestCase):
             for material in PRICES:
                 self.assert_trial_equals_whole(mean_income, material)
 
+    def test_unpriced_goods_and_repeated_prices_match_the_whole_evaluation(self):
+        bins = demand.income_bins(1_000_000.0, 300.0)
+        model = need_demand.NeedDemandModel(NEEDS, PRODUCTION, bins)
+        prices = {"wheat_kg": 0.3, "bronze_kg": 5.0}
+        weights = {"wheat_kg": 1.0, "bronze_kg": 0.5}
+        for material in ("wheat_kg", "bronze_kg", "iron_kg"):
+            trial = need_final_demand.SingleMaterialTrial(model, prices, material, weights)
+            for price in TRIAL_PRICES + TRIAL_PRICES[::-1]:
+                self.assertEqual(trial.weighted_final(price),
+                                 whole_evaluation(model, prices, material, price, weights))
+
     def test_a_material_no_need_lists_changes_nothing(self):
         bins = demand.income_bins(1_000_000.0, 300.0)
         model = need_demand.NeedDemandModel(NEEDS, PRODUCTION, bins)
