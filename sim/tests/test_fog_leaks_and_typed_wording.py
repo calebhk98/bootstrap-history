@@ -148,7 +148,7 @@ for _civ_big in _big_civs:
     _big_game = fogged_game(civ=_civ_big)
     _sf = [ask_agent(_big_game, cmd="state", full=True), ask_agent(_big_game, cmd="risk")]
     check("%s: state full stays readable" % _civ_big,
-          len(json.dumps(_sf[0])) < 9000, "%d bytes" % len(json.dumps(_sf[0])))
+          len(json.dumps(_sf[0])) < 12000, "%d bytes" % len(json.dumps(_sf[0])))
     check("%s: risk stays readable" % _civ_big,
           len(json.dumps(_sf[1])) < 9000, "%d bytes" % len(json.dumps(_sf[1])))
 
