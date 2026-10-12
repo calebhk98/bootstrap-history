@@ -19,7 +19,7 @@ from sim.engine.saveload import load_state, save_state
 from sim.geography import settlement
 
 _TEMPLATE_ID = next(node_id for node_id, node in NODES.items()
-                    if node["rev"] > 0 and not node["pre"] and node["cap"] >= 0)
+                    if not node["pre"] and node["cap"] >= 0)
 
 
 def make_node(node_id, traits=(), gains=None, revenue=0.0, upkeep=0.0, hours=400.0,

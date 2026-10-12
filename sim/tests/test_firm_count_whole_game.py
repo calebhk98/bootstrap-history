@@ -11,7 +11,7 @@ import random
 from sim.engine.agents_port import SimWorld
 
 _TEMPLATE_ID = next(node_id for node_id, node in NODES.items()
-                    if node["rev"] > 0 and not node["pre"] and node["cap"] >= 0)
+                    if not node["pre"] and node["cap"] >= 0)
 CATEGORY = sorted(S.Sim.GOODS_CATEGORIES)[0]
 
 
