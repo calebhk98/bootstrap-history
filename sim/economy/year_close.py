@@ -131,10 +131,12 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map) -> None:
             record.expansion_runs[producer_id] = closed.expansion_runs
         record.producers[producer_id] = _with_sales(closed.producer, recipe, ledger)
     prices, volumes = learned_prices(ledger.clearings, record.memory)
+    ordered = (sorted(prices.items()), sorted(volumes.items()))
+    interest_rate = view.interest_rate(money)
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
         transfers = merchants.close_year(merchant, prices, volumes, record.book.balance(merchant.agent_id, money),
                                          _held_stock(record.book, merchant.agent_id), area_map.area_of, money,
-                                         view.interest_rate(money))
+                                         interest_rate, ordered)
         paid = ownership.spread(record, transfers)
         record.book.transfer_many(paid)
         for transfer in paid:

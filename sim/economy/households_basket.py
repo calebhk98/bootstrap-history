@@ -17,9 +17,9 @@ __all__ = ["Basket", "NeedSpec", "PricedNeed", "make_basket", "need_prices", "ne
            "satiation_limit", "subsistence_cost_per_person"]
 
 
-# basket id -> (basket, goods it names, priced needs by the tuple of those goods' prices); a few baskets exist
+# basket id -> (basket, goods it names, priced needs by the tuple of those goods' prices); about one basket per tile
 _priced_by_basket: Dict[int, tuple] = {}
-MAX_BASKETS_KEPT = 64
+MAX_BASKETS_KEPT = 4096
 
 
 def need_prices(basket: Basket, view: MarketView, tile: TileId) -> List[PricedNeed]:

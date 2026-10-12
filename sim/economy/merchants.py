@@ -149,23 +149,27 @@ def _candidate_routes(merchant, view, carriage, area_map, held_stock, specs, int
     profitable (good, source area) at its best destination, best net gap per unit of outlay first.
     A good's rows are shared with any caller that sees the same prices at the same rate."""
     rows = []
-    expected_prices = merchant.expected_prices
     prices_across = getattr(view, "prices_across", None)
+    expected_by_good: dict = {}
+    for (good, area_id), price in merchant.expected_prices.items():
+        if price is not None:
+            expected_by_good.setdefault(good, {})[area_id] = price
     for good in sorted(set(specs) & set(area_map.goods())):
         areas = area_map.areas(good)
         if len(areas) < 2:
             continue
         spec = specs[good]
-        seen = prices_across(good, areas) if prices_across else None
-        prices = {}
-        for index, area in enumerate(areas):
-            price = expected_prices.get((good, area.area_id))
-            if price is None:
-                price = seen[index] if seen is not None else view.price(good, area.area_id)
-            prices[area.area_id] = price
+        if prices_across is None:
+            seen = [view.price(good, area.area_id) for area in areas]
+        else:
+            seen = prices_across(good, areas)
+        expected = expected_by_good.get(good)
+        if expected is not None:      # an expectation stands in for last year's price where the merchant has one
+            seen = [expected.get(area.area_id, price) for area, price in zip(areas, seen)]
         rows.extend(merchants_route_memo.routes_for_good(
-            carriage, good, areas, spec, tuple(prices[area.area_id] for area in areas), interest_rate,
-            lambda: _good_routes(good, spec, areas, prices, carriage, interest_rate)))
+            carriage, good, areas, spec, tuple(seen), interest_rate,
+            lambda: _good_routes(good, spec, areas, {area.area_id: price for area, price in zip(areas, seen)},
+                                 carriage, interest_rate)))
     return sorted(rows, key=lambda row: (row[0], row[1], row[2].area_id))
 
 
@@ -264,13 +268,16 @@ def close_year(merchant: Merchant, prices: Mapping[Tuple[GoodId, AreaId], float]
                volumes: Mapping[Tuple[GoodId, AreaId], float], cash: float,
                held_stock: Mapping[Tuple[GoodId, TileId], float],
                area_of: Callable[[GoodId, TileId], AreaId], currency: CurrencyId,
-               interest_rate: float) -> Tuple[Transfer, ...]:
+               interest_rate: float, ordered: Optional[Tuple[Sequence, Sequence]] = None) -> Tuple[Transfer, ...]:
     """Update expectations from this year's clearing prices and volumes (by (good, area)), then settle
     the year's profit (wealth, cash plus stock at expected prices, above the capital base). While
     trading earns more on its capital than the interest rate, the owner takes a share and the rest
-    becomes capital; otherwise the owner takes all of it. A loss shrinks the capital."""
-    for expectation, observed in ((merchant.expected_prices, prices), (merchant.expected_volumes, volumes)):
-        for key, value in sorted(observed.items()):
+    becomes capital; otherwise the owner takes all of it. A loss shrinks the capital. `ordered` is the
+    sorted items of `prices` and of `volumes`, for a caller closing many merchants on the same year."""
+    if ordered is None:
+        ordered = (sorted(prices.items()), sorted(volumes.items()))
+    for expectation, observed in ((merchant.expected_prices, ordered[0]), (merchant.expected_volumes, ordered[1])):
+        for key, value in observed:
             old = expectation.get(key)
             expectation[key] = value if old is None else old + MERCHANT_EXPECTATION_SPEED * (value - old)
     stock_value = math.fsum(quantity * merchant.expected_prices.get((good, area_of(good, tile)), 0.0)
