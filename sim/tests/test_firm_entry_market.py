@@ -7,6 +7,7 @@ from sim.engine.agents_port import SimWorld
 
 import copy
 import random
+from unittest import mock
 
 from sim.engine.state import ActorRecord  # noqa: F401
 
@@ -52,13 +53,16 @@ NODE = make_node("zz_entry", CATEGORY, revenue=2.0e5, upkeep=5000.0, hours=50.0)
 
 
 def run_entry(years, rate_scale=1.0):
+	"""A game played `years`; capital costs the entrants `rate_scale` times the usual rate (their own cost of
+	capital: re-solving every price at another rate is the price solver's work, not under test)."""
 	game = actor_sim([NODE])
-	game.market_rate = lambda: 1000.0 * 0.12 if rate_scale > 1.0 else 0.12
+	game.market_rate = lambda: 0.12
 	founder_runs(game, "zz_entry", opened_ago=10)
 	counts = []
-	for _ in range(years):
-		next_year(game)
-		counts.append(len(game.actors.active_firms()))
+	with mock.patch.object(SimWorld, "market_rate", lambda self: rate_scale * 0.12):
+		for _ in range(years):
+			next_year(game)
+			counts.append(len(game.actors.active_firms()))
 	return game, counts
 
 

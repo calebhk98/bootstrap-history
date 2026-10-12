@@ -23,7 +23,7 @@ def make_node(revenue):
 	return node
 
 
-def new_game(revenue):
+def new_game(revenue, hands=None):
 	nodes = copy.deepcopy(NODES)
 	nodes["zz_count"] = make_node(revenue)
 	game = build_unopened(lambda: S.Sim(nodes, list(ORDER), random.Random(1), events=False, manual=True,
@@ -37,6 +37,8 @@ def new_game(revenue):
 	game.state.projects.operating.add("zz_count")
 	game.state.projects.opened_year["zz_count"] = year - 10
 	game._done_changed()
+	if hands is not None:
+		game.venture_hands = lambda node_id: hands
 	return game
 
 
@@ -45,8 +47,8 @@ def next_year(game):
 	game.advance_actors(game.state.scenario.year)
 
 
-def firms_after(revenue, years):
-	game = new_game(revenue)
+def firms_after(revenue, years, hands=None):
+	game = new_game(revenue, hands)
 	counts = []
 	for _ in range(years):
 		next_year(game)
@@ -54,8 +56,12 @@ def firms_after(revenue, years):
 	return game, counts
 
 
-small_game, small_counts = firms_after(2.0e5, 30)
-big_game, big_counts = firms_after(2.0e6, 30)
+small_game, small_counts = firms_after(2.0e5, 20)
+# a concern's staff is derived from the output it serves, so a firm in a bigger market is itself bigger and the
+# count does not follow the market; the bigger market is given the same hands per firm, holding fixed what a firm
+# carries so the count is about the market's size
+SMALL_HANDS = small_game.venture_hands("zz_count")
+big_game, big_counts = firms_after(4.0e5, 20, hands=SMALL_HANDS)
 world = SimWorld(big_game)
 
 check("while the economy opens a concern still pays rent, at the engine's land price",

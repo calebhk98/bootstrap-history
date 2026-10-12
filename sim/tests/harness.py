@@ -272,6 +272,13 @@ def ready_for_entry(game, money=None):
     return game
 
 
+def noted_sale_tonnes(game, material, seller=None):
+    """Tonnes of `material` the actors (or just `seller`) have noted for the year's market: a sale enters the agent
+    economy's book as an order when the year clears, so until then this is where it stands."""
+    return sum(sale["tonnes"] for sale in game.economy.agent.stored.get("sales", [])
+               if sale["material"] == material and (seller is None or sale["seller"] == seller))
+
+
 def state_seeking(game, requisition=0.16, office=0.06):
     """Put the state in need: the rates it takes at full notice from the income it can see, as a
     year's shortfall would leave them. Returns the game."""

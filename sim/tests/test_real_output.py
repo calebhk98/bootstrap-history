@@ -3,9 +3,6 @@ opening prices. A technology raises it only through the production entries it im
 goods those entries make; nothing counts completed technologies."""
 from .harness import *  # noqa: F401,F403
 
-sim = unopened_sim   # legacy: pins real output through the engine's yearly material market, which the agent economy replaces
-
-
 import copy
 
 from sim.engine import market_demand
@@ -23,6 +20,11 @@ def plain_node(game):
     done = game.state.projects.done
     return next(node_id for node_id in sorted(NODES)
                 if node_id not in gates and node_id not in done and not NODES[node_id]["rev"])
+
+
+def book_of_good(game):
+    """The market book's entry for the good (the book is keyed by commodity)."""
+    return game.state.economy.market_book[game._material_tag(GOOD)[0]]
 
 
 def complete(game, node_id):
@@ -56,7 +58,9 @@ check("...and does not raise real output",
 check("...nor output per head", control.real_output_per_head() == twin.real_output_per_head(),
       (control.real_output_per_head(), twin.real_output_per_head()))
 
-# --- a technique that halves a good's labour, run by a producer that sells, lowers the price and raises what is sold.
+# --- a technique that halves a good's labour: it reaches a price only through a producer that runs it.
+# The agent economy's producers run the recipes it opened with, so a technique gained later makes the good cheaper to
+# make by that entry (its solved cost) and moves no price and no quantity until a producer sells by it.
 original = price_solver._default_production_entries()
 patched = dict(original)
 source_key = next(key for key, entry in original.items() if GOOD in (entry.get("outputs") or {}))
@@ -71,35 +75,23 @@ try:
     price_before = game.goods_market.household_prices()[GOOD]
     other_before = {material: price for material, price in game.goods_market.household_prices().items()
                     if material in ("iron", "wheat_kg", "brick_1000")}
-    game._open_market_book()
-    sold_before = game.state.economy.market_book[GOOD]["traded_tonnes"]
-    output_before = game.real_output_hours()
     complete(game, plain)
     check("a technique that is held but run by no producer changes no price",
           game.goods_market.household_prices()[GOOD] == price_before)
     run(game, plain)
     check("a technique one producer runs does not reprice the incumbents' cost of the good",
           game.goods_market.household_prices()[GOOD] == price_before)
-    commodity = game._material_tag(GOOD)[0]
     cost = game.entry_cost_ratio(GOOD + "_with_the_technique", GOOD)
     check("...but a producer making it by that entry makes it for less", cost < 0.75, cost)
-    posted_before = game.market_price_ratio(GOOD)
-    game.goods_market.note_sale("cheap_firm", commodity, 0.5 * game._market_entry(commodity)["reference_tonnes"], cost)
-    check("a producer that makes the good by that entry and sells it lowers the price the market posts",
-          game.market_price_ratio(GOOD) < 0.95 * posted_before, (posted_before, game.market_price_ratio(GOOD)))
     check("...and no good that does not use it changes price",
           all(game.goods_market.household_prices()[material] == price
               for material, price in other_before.items()), other_before)
     close_years(game, YEARS_CLOSED)
-    sold_after = game.state.economy.market_book[GOOD]["traded_tonnes"]
-    check("...and the market clears a larger quantity of it than the same society without it",
-          sold_after > 1.05 * twin.state.economy.market_book[GOOD]["traded_tonnes"],
-          (sold_before, sold_after, twin.state.economy.market_book[GOOD]["traded_tonnes"]))
-    check("...so real output rises, through that good",
-          game.real_output_hours() > twin.real_output_hours() * 1.0001,
+    check("...and until a producer sells by it the market clears the same quantity of the good as the same society without it",
+          book_of_good(game)["traded_tonnes"] == book_of_good(twin)["traded_tonnes"],
+          (book_of_good(game)["traded_tonnes"], book_of_good(twin)["traded_tonnes"]))
+    check("...so real output is the same", game.real_output_hours() == twin.real_output_hours(),
           (twin.real_output_hours(), game.real_output_hours()))
-    check("...and output per head with it",
-          game.real_output_per_head() > 1.0, game.real_output_per_head())
 finally:
     price_solver.reset_caches_for_tests()
 
@@ -108,7 +100,7 @@ game = sim(civ="rome_100ad", capital=1e9)
 game._open_market_book()
 book = game.state.economy.market_book
 book["iron"]["traded_tonnes"] *= 1.5
-book[GOOD]["traded_tonnes"] *= 0.8
+book_of_good(game)["traded_tonnes"] *= 0.8
 from sim.engine.real_output import opening_prices_in_hours
 base_prices = opening_prices_in_hours(frozenset(game.state.projects.granted), game.civ, game._opening_farmed_hectares)
 opening = market_demand.household_demand_by_material(

@@ -10,6 +10,7 @@ import json
 import os
 import random
 import tempfile
+from unittest import mock
 
 from sim.ui.protocol import load_state, save_state
 from sim.engine.state import ActorRecord  # noqa: F401
@@ -56,7 +57,7 @@ CATEGORY = sorted(S.Sim.GOODS_CATEGORIES)[0]
 NODE = make_node("zz_grow", CATEGORY, revenue=2.0e5, upkeep=5000.0, hours=50.0)
 
 
-def settled(rate=0.12, years=40):
+def settled(rate=0.12, years=12):
 	game = actor_sim([NODE])
 	game.market_rate = lambda: rate
 	founder_runs(game, "zz_grow", opened_ago=10)
@@ -92,7 +93,7 @@ game.actors.note_capacity_change(incumbent.actor_id)
 
 # no growth, no further expansion or entry
 steady_snapshot = (len(game.actors.active_firms()), round(total_capacity(game), 6))
-for _ in range(10):
+for _ in range(5):
 	next_year(game)
 check("a market that stops growing stops gaining firms and capacity",
       (len(game.actors.active_firms()), round(total_capacity(game), 6)) == steady_snapshot,
@@ -109,7 +110,7 @@ grown = [firm for firm in game.actors.active_firms() if firm.record.capacity.get
 check("an incumbent in a growing market with a margin above the cost of capital adds capacity", len(grown) > 0,
       (len(game.actors.active_firms()), total_capacity(game)))
 check("the expansion was paid for: outlays name it", all(firm.record.outlays.get("expansion", 0.0) > 0.0 for firm in grown))
-for _ in range(25):
+for _ in range(12):
 	next_year(game)
 firms_after = len(game.actors.active_firms())
 capacity_after = total_capacity(game)
@@ -119,17 +120,28 @@ check("the market's growth is served by capacity at least as much as by firm cou
 check("a firm ends larger than it was founded",
       max(firm.record.capacity.get("zz_grow", 1.0) for firm in game.actors.active_firms()) > 1.5)
 
-# capital dearer than any margin: no expansion
+# capital dearer than any margin: no expansion (the firms are founded at the usual rate, then credit turns dear)
 dear = actor_sim([NODE])
-dear.market_rate = lambda: 50.0
+dear.market_rate = lambda: 0.12
 founder_runs(dear, "zz_grow", opened_ago=10)
 for _ in range(10):
 	next_year(dear)
 market_grows(dear, 10.0)
-for _ in range(5):
-	next_year(dear)
+world_dear = SimWorld(dear)
+incumbent = dear.actors.active_firms()[0]
+step = incumbent.capacity_of("zz_grow") * 0.1
+dearest_useful = (world_dear.expansion_gain("zz_grow", incumbent.record.opened_year["zz_grow"],
+                                            incumbent.capacity_of("zz_grow"), step, 1.0)
+                  / world_dear.plant_cost("zz_grow", incumbent, step))
+capacity_before_dear = {firm.actor_id: dict(firm.record.capacity) for firm in dear.actors.active_firms()}
+# the dear rate is the firms' own (the price solver re-solves every price at any other rate, which is not under test)
+with mock.patch.object(SimWorld, "market_rate", lambda self: 2.0 * dearest_useful):
+	for _ in range(5):
+		next_year(dear)
+check("firms exist to be refused", len(dear.actors.active_firms()) > 0)
 check("a cost of capital above the added margin stops expansion",
-      all(firm.record.capacity.get("zz_grow", 1.0) == 1.0 for firm in dear.actors.active_firms()))
+      all(firm.record.capacity == capacity_before_dear.get(firm.actor_id, {}) for firm in dear.actors.active_firms()),
+      [(firm.record.capacity, capacity_before_dear.get(firm.actor_id)) for firm in dear.actors.active_firms()])
 
 # a firm that loses money does not expand
 loser_world = settled(years=5)

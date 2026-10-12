@@ -19,6 +19,15 @@ from sim.economy import api as economy_api
 from sim.economy.types import Bid, Offer
 from sim.engine.agents_port import SimWorld
 from sim.engine.material_units import tonnes_per_unit
+from sim.engine import foreign_economies as foreign_module
+
+# the partner book is how a partner outside the agent economy trades, so the shipped Han (now inside it) is put outside
+_RECORDS = foreign_module.foreign_economy_records()
+foreign_module.foreign_economy_records = lambda: tuple(
+    dict(record, agent_economy=False) if record["civilization"] == "han_china_100ad" else record for record in _RECORDS)
+# ...and, having no economy of its own to answer for its people, it has no cast of its own in the years played here
+from sim.engine import agents_port_cast
+agents_port_cast.opening_cast = lambda sim: agents_port_cast.cast_from_civilisations(sim.civ, [])
 
 PARTNER = "han_china_100ad"
 TRADER = "trader:test"
@@ -28,6 +37,22 @@ def agent_game():
     game = S.Sim(NODES, ORDER, random.Random(1), events=True, manual=False, civ=S.load_civ("rome_100ad"))
     game.goal, game.done_year = GOAL, {}
     return game
+
+
+_settle_flow = S.Sim._settle_flow
+
+
+def _recording_settle_flow(self, civilization_id, flow_tonnes, value, home_money_per_partner_coin):
+    """Settle as the engine does and note what the partner's ledger gained or lost, at the rate of the posting."""
+    ledger = self._foreign_ledger(civilization_id, create=True)
+    before = (ledger["home_coin_units"], ledger["partner_coin_units"])
+    _settle_flow(self, civilization_id, flow_tonnes, value, home_money_per_partner_coin)
+    postings = self.__dict__.setdefault("_test_postings", [])
+    postings.append((ledger["home_coin_units"] - before[0], ledger["partner_coin_units"] - before[1],
+                     home_money_per_partner_coin, abs(ledger["home_coin_units"] - before[0])))
+
+
+S.Sim._settle_flow = _recording_settle_flow
 
 
 # --- (a) the quote is the market's own clearing: a summarised book re-cleared with the extra order.
@@ -81,17 +106,16 @@ check("the books survive the record's round trip", record["curves"] == json.load
 
 # --- (d) a year with trader cargo settles the partner's side once, in the foreign coin ledger.
 def coin_imbalance(played):
-    """What the home and partner coin ledgers together gained or lost in a year: each coin paid out is one received, so
-    it is zero when the year's foreign money is posted once."""
-    ledger = played._foreign_ledger(PARTNER)
-    standard = S.load_civ(PARTNER)["coin_standard"]
-    per_coin = standard["kg_per_unit"] * played._coin_metal_price(standard["material"])
-    return ledger["home_coin_units"] + per_coin * ledger["partner_coin_units"], abs(ledger["home_coin_units"]) + 1e-9
+    """What the home and partner coin ledgers together gained or lost in a year, each posting valued at its own
+    rate (the coin metal's price moves as the year closes): each coin paid out is one received, so it is zero
+    when the year's foreign money is posted once. Returns (imbalance, scale)."""
+    postings = played.__dict__.get("_test_postings", [])
+    return (sum(home + rate * partner for home, partner, rate, _paid in postings),
+            sum(paid for _home, _partner, _rate, paid in postings) + 1e-9)
 
 
-with_cargo, without = game, agent_game()
-without.step()
-without.step()
+with_cargo = game
+imbalance_without_cargo = coin_imbalance(with_cargo)   # the two years played so far carried no trader cargo
 world = SimWorld(with_cargo)
 home = world._home_place()
 priced = [m for m in world.trade_materials()
@@ -111,7 +135,6 @@ check("the cargo adds no order to the economy's external orders",
       all(bid.flexible_quantity > 0.0 for bid in orders.bids) and all(offer.reservation_price > 0.0 for offer in orders.offers), None)
 settled_before = dict(with_cargo._foreign_ledger(PARTNER))
 with_cargo.step()
-without.step()
 check("money and goods are conserved in the economy's book with the cargo's year",
       with_cargo.economy.agent.economy().record.book.check_conservation(1e-9).ok, None)
 check("the cargo's legs are settled when the year closes", not with_cargo.cargo_legs(), with_cargo.cargo_legs())
@@ -120,10 +143,9 @@ extra_out = with_cargo._foreign_ledger(PARTNER)["goods_out_value"] - settled_bef
 check("the partner is paid in coin for the cargo brought home, at the booked price at least",
       extra_in >= paid_in * (1.0 - 1e-6), (extra_in, paid_in))
 check("the partner pays in coin for the cargo taken from home that the home market sold", extra_out > 0.0, extra_out)
-for label, played in (("with", with_cargo), ("without", without)):
-    imbalance, scale = coin_imbalance(played)
+for label, (imbalance, scale) in (("with", coin_imbalance(with_cargo)), ("without", imbalance_without_cargo)):
     check("coin paid between home and the partner is posted once in a year %s trader cargo" % label,
-          abs(imbalance) < 1e-6 * scale, (imbalance, scale))
+          scale > 1.0 and abs(imbalance) < 1e-6 * scale, (imbalance, scale))
 check("the traders' home tally is cleared when the year closes", not with_cargo.state.economy.home_actor_trade, None)
 
 # --- (e) home-bound cargo sized by the price settles over the years, with no sign flips.
@@ -167,7 +189,7 @@ def home_run(played):
     return backs, marginal
 
 
-backs, marginal = home_run(without)
+backs, marginal = home_run(with_cargo)
 check("cargo bound for home never flips sign once the partner's book has opened (the year after the first)",
       all(back > 0.0 for back in backs[1:]), backs)
 check("home-bound cargo stays finite", all(math.isfinite(back) for back in backs), backs)
