@@ -525,6 +525,20 @@ def household_quantity_demanded_given_committed(
             + (good.marginal_budget_share / price) * surplus_per_capita)
 
 
+def household_spending_split(income_per_capita: float, committed_per_capita: float):
+    """(floor_scale, flexible_spending) for one income: a good's quantity is its subsistence quantity times
+    the first plus its marginal budget share over its price times the second. Above the subsistence line the
+    floor is bought whole (scale one) and the surplus is flexible; below it the protected share of income
+    buys a scaled floor (`_below_subsistence_quantity_demanded_per_capita`); a basket that commits nothing
+    buys nothing."""
+    surplus_per_capita = income_per_capita - committed_per_capita
+    if surplus_per_capita < 0.0:
+        if committed_per_capita <= 0.0:
+            return 0.0, 0.0
+        return _below_subsistence_split(income_per_capita, committed_per_capita)
+    return 1.0, surplus_per_capita
+
+
 def _below_subsistence_quantity_demanded_per_capita(
         good: "Good", price: float, income_per_capita: float,
         committed_per_capita: float) -> float:
@@ -587,15 +601,22 @@ def _below_subsistence_quantity_demanded_per_capita(
     more, exactly like the formula above the line - see
     sim/tests/test_demand_at_scale.py for the direct check.
     """
+    floor_purchase_scale, flexible_spending_per_capita = _below_subsistence_split(
+        income_per_capita, committed_per_capita)
+    return (good.subsistence_quantity_per_capita_per_year * floor_purchase_scale
+            + (good.marginal_budget_share / price) * flexible_spending_per_capita)
+
+
+def _below_subsistence_split(income_per_capita: float, committed_per_capita: float):
+    """(floor_purchase_scale, flexible_spending_per_capita) of a household below the subsistence line, as
+    `_below_subsistence_quantity_demanded_per_capita` describes."""
     income_as_share_of_committed_floor = income_per_capita / committed_per_capita
     shortfall_as_share_of_committed_floor = 1.0 - income_as_share_of_committed_floor
     flexible_spending_per_capita = (
         FLOOR_TRADEABLE_SHARE * shortfall_as_share_of_committed_floor
         * income_per_capita)
     protected_spending_per_capita = income_per_capita - flexible_spending_per_capita
-    floor_purchase_scale = protected_spending_per_capita / committed_per_capita
-    return (good.subsistence_quantity_per_capita_per_year * floor_purchase_scale
-            + (good.marginal_budget_share / price) * flexible_spending_per_capita)
+    return protected_spending_per_capita / committed_per_capita, flexible_spending_per_capita
 
 
 def aggregate_household_demand(

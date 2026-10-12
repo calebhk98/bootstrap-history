@@ -371,14 +371,12 @@ class NeedDemandModel:
         technology_weighted = sum(weights.get(source, 0.0) * quantity
                                   for source, quantity in self.technology_demand.items())
 
-        trial_demand = need_final_demand.SingleMaterialTrial(self, prices, material)
+        trial_demand = need_final_demand.SingleMaterialTrial(self, prices, material, weights)
 
         def excess_demand(price: float) -> float:
             price = max(price, sys.float_info.min)
-            final = trial_demand.final_demand(price)
-            own_final = final.get(material, 0.0)
-            total = technology_weighted + sum(
-                weights.get(source, 0.0) * quantity for source, quantity in final.items())
+            own_final, weighted = trial_demand.weighted_final(price)
+            total = technology_weighted + weighted
             derived = total - own_final
             elastic_derived = derived * (price / current) ** (-self.derived_elasticity)
             return own_final + elastic_derived - supply
