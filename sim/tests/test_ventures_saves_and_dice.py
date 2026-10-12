@@ -393,6 +393,7 @@ s._done_changed()
 _opened = [node_id for node_id in _big if s.open_venture(node_id)[0]]
 _rev_staffed = s.revenue()
 s.labour.fire("artisan", 6)
+s._step_market = lambda: None     # the closure acts in the staff phase; the market close adds nothing to it
 s.step()
 check("a concern nobody is left to watch stops trading",
       _opened and not s.operating and s.revenue() < _rev_staffed * 0.2,
