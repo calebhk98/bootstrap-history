@@ -48,7 +48,7 @@ def setup_digest(setup):
 def _counted_in_units(setup):
     """The setup with the coin set aside: the economy counts money in its own unit and never reads the coin
     (only the port converts to it), so games that differ only in their coin share a spin-up."""
-    if any(field.name == "coin_per_unit" for field in dataclasses.fields(setup)):
+    if dataclasses.is_dataclass(setup) and any(field.name == "coin_per_unit" for field in dataclasses.fields(setup)):
         return dataclasses.replace(setup, coin_per_unit=1.0)
     return setup
 
