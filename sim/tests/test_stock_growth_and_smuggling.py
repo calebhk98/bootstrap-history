@@ -92,6 +92,9 @@ class Game(LivingStockMixin, LivingStockTradeMixin, LivingStockSmugglingMixin, L
     def foreign_economies(self):
         return [PARTNER]
 
+    def partner_countries(self):
+        return [PARTNER]
+
     def partner_gate_refusal(self, civilization_id):
         return None
 

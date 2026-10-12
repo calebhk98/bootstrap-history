@@ -95,11 +95,15 @@ for actor in home(on):
           credited > 0.0 and abs(credited - mapped) <= 0.25 * mapped, (credited, mapped))
 
 
+# money that passes between strata (people moving with their savings, the keep of the bonded) is not money crossing
+# the strata's edge; everything else (the economy, the state's pay and relief, interest) is
+BETWEEN_STRATA = ("migration", "keep of bonded")
+
+
 def edge_net(actors):
-    """Money in less money out across the edge of the strata, counting the state's relief and the interest the savers
-    pass on as coming in, and the interest the strata owe as going out."""
-    return sum(sum(v for k, v in a.record.income.items() if k.startswith("edge:") or k in ("relief", "interest_on_lending"))
-               - sum(v for k, v in a.record.outlays.items() if k.startswith("edge:") or k == "interest") for a in actors)
+    """Money in less money out across the edge of the strata: every income and outlay that is not a move between strata."""
+    return sum(sum(v for k, v in a.record.income.items() if k not in BETWEEN_STRATA)
+               - sum(v for k, v in a.record.outlays.items() if k not in BETWEEN_STRATA) for a in actors)
 
 
 all_strata = on.actors.of_kind("stratum")

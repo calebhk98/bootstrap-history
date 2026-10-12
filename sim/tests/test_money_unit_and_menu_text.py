@@ -30,7 +30,7 @@ _out_207 = _run(["play", "--civ", "england_1300", "--kit", "poor_scholar",
                  os.path.join(_saves_207, "test.json")],
                 "quit\n", _env_207).stdout
 check("207: start text says the wage behind the money comes from the game's labour market",
-      "labour market" in _out_207 and "price records" in _out_207, _out_207[:1500])
+      "labour market" in " ".join(_out_207.split()) and "price records" in " ".join(_out_207.split()), _out_207[:1500])
 check("207: start text does not claim the money is detached from the civilisation's coin",
       "not to any historical coin" not in _out_207, _out_207[:1500])
 _help_207 = _run(["play", "--civ", "england_1300", "--seed", "1", "--session",

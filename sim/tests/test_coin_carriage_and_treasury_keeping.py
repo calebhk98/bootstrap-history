@@ -13,13 +13,13 @@ COIN = load_civ(PARTNER)["coin_standard"]
 
 
 def settled(carriage_share, flow_tonnes):
-    """(partner coin units after one settlement, the ledger, units owed) with coin carriage that takes the stated share
-    of the payment."""
+    """(partner coin units after one settlement, the ledger, units owed) with coin carriage, a money a tonne of coin,
+    that takes the stated share of the coin's own value."""
     game = sim(civ="rome_100ad", capital=1e9)
     game.foreign_economies = lambda: [PARTNER]
     per_coin = COIN["kg_per_unit"] * game._material_prices()[COIN["material"]]
     value = 0.05 * game.home_coin_stock_units() * per_coin
-    game._coin_carriage_money_per_tonne = lambda civilization_id: carriage_share * value / flow_tonnes
+    game._coin_carriage_money_per_tonne = lambda civilization_id: carriage_share * per_coin * 1000.0 / COIN["kg_per_unit"]
     before = game._foreign_ledger(PARTNER)["partner_coin_units"]
     game._settle_flow(PARTNER, flow_tonnes, value, per_coin)
     ledger = game._foreign_ledger(PARTNER)
@@ -45,7 +45,7 @@ def coin_total_change(carriage_share, flow_tonnes):
     game.foreign_economies = lambda: [PARTNER]
     per_coin = COIN["kg_per_unit"] * game._material_prices()[COIN["material"]]
     value = 0.05 * game.home_coin_stock_units() * per_coin
-    game._coin_carriage_money_per_tonne = lambda civilization_id: carriage_share * value / abs(flow_tonnes)
+    game._coin_carriage_money_per_tonne = lambda civilization_id: carriage_share * per_coin * 1000.0 / COIN["kg_per_unit"]
     game._settle_flow(PARTNER, flow_tonnes, value, per_coin)
     ledger = game._foreign_ledger(PARTNER)
     return ledger["home_coin_units"] + ledger["partner_coin_units"] * per_coin, ledger["coin_carriage_units"]

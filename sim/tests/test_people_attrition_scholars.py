@@ -293,17 +293,16 @@ def _nitre_laid(capital):
     household.binding = "saltpetre"
     before = household.nitre_bed_m2
     household.step()
-    return household.nitre_bed_m2 - before
+    return household.nitre_bed_m2 - before, household
 
-from sim.engine.money_units import BOOK_LABOURER_WAGE_DENARII_PER_HOUR
-_nitre_cost_per_m2 = S.Sim.NITRE_LABOUR_HOURS_PER_M2 * BOOK_LABOURER_WAGE_DENARII_PER_HOUR
-_nitre_rich = _nitre_laid(5_000_000.0)
-_nitre_poor = _nitre_laid(3_000.0)
-check("the nitre purchase is held to a flat two thousand denarii a year "
+_nitre_rich, _nitre_game = _nitre_laid(5_000_000.0)
+_nitre_poor, _ = _nitre_laid(3_000.0)
+_nitre_cost_per_m2 = _nitre_game.NITRE_COST_PER_M2
+check("the nitre purchase is held to a flat yearly ceiling "
       "however rich the household - sizing it to the shortfall instead, "
       "the way the mine branch beside it does, measured worse on every "
       "count and is recorded in core.py as a road not to walk again",
-      _nitre_rich <= 2000.0 / _nitre_cost_per_m2 + 1e-6, _nitre_rich)
+      0.0 < _nitre_rich <= _nitre_game.NITRE_BED_SPEND_CEILING / _nitre_cost_per_m2 + 1e-6, _nitre_rich)
 check("...and a poor household is held to a twentieth of its capital",
       _nitre_poor <= 3_000.0 * 0.05 / _nitre_cost_per_m2 + 1e-6, _nitre_poor)
 # --- DEVELOPER MARKERS IN PLAYER PROSE, THE SECOND TIME. A strip pass removed
