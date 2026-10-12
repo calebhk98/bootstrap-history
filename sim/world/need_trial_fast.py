@@ -37,6 +37,7 @@ class _Repriced:
                 self.weights.append((price / effect) ** exponent)
                 self.effects.append(effect)
         self.exponent = exponent
+        self.slots: Tuple[int, ...] = ()
 
     def price(self, material_price: float) -> Tuple[float, List[float]]:
         """(price index, spending shares in goods order) with the material at `material_price`."""
@@ -70,10 +71,9 @@ class FastWeighted:
         self.indexes = layout.indexes
         self.count = len(goods)
         self.price_indexes = [need.price_index for need in priced_reference]
-        self.share_rows: List[Optional[List[float]]] = [[good[3] for good in need.goods]
-                                                        for need in priced_reference]
-        self.good_prices: List[List[float]] = [[good[1] for good in need.goods]
-                                               for need in priced_reference]
+        self.rows: List[List[Tuple[int, float, float]]] = [
+            [(slot, good[1], good[3]) for slot, good in zip(slots, need.goods)]
+            for slots, need in zip(self.indexes, priced_reference)]
         # the priced positions that list the material, in the order of the priced list
         self.repriced: List[_Repriced] = []
         position = 0
@@ -82,6 +82,7 @@ class FastWeighted:
             if isinstance(slot, NeedSpec):
                 candidate = _Repriced(position, slot, trial._exponent, base_get, trial.material)
                 if candidate.material_slot >= 0:
+                    candidate.slots = self.indexes[position]
                     self.repriced.append(candidate)
                 if candidate.effects:
                     position += 1
@@ -92,43 +93,42 @@ class FastWeighted:
 
     def __call__(self, material_price: float):
         price_indexes = self.price_indexes
-        share_rows = self.share_rows
-        good_prices = self.good_prices
+        rows = self.rows
         for repriced in self.repriced:
             position = repriced.position
-            price_indexes[position], share_rows[position] = repriced.price(material_price)
-            good_prices[position] = repriced.prices
+            price_indexes[position], shares = repriced.price(material_price)
+            rows[position] = list(zip(repriced.slots, repriced.prices, shares))
         subsistence = self.subsistence
         floor_costs = [price_index * floor for price_index, floor in zip(price_indexes, subsistence)]
         committed = math.fsum(floor_costs)
-        committed_per_capita = sum(floor_costs)
-        count = self.count
-        units = [0.0] * count
         covered_population = 0.0
         covered_surplus = 0.0
-        marginal = self.marginal
+        units = None
         for income, population in self.bins:
             surplus = income - committed
             if surplus >= 0.0:
                 covered_population += population
                 covered_surplus += population * surplus
                 continue
+            if units is None:
+                units = [0.0] * self.count
+                committed_per_capita = sum(floor_costs)
             floor_scale, flexible_spending = demand.household_spending_split(income, committed_per_capita)
-            for index in range(count):
+            for index, marginal in enumerate(self.marginal):
                 units[index] += population * (subsistence[index] * floor_scale
-                                              + (marginal[index] / price_indexes[index]) * flexible_spending)
-        budget_weights = self.budget_weights
+                                              + (marginal / price_indexes[index]) * flexible_spending)
         weight_total = self.weight_total
-        spread = covered_surplus > 0.0 and weight_total > 0.0
+        if covered_surplus > 0.0 and weight_total > 0.0:
+            totals = [floor * covered_population + covered_surplus * budget_weight / weight_total / price_index
+                      for floor, budget_weight, price_index in zip(subsistence, self.budget_weights, price_indexes)]
+        else:
+            totals = [floor * covered_population for floor in subsistence]
+        if units is not None:
+            totals = [below + covered for below, covered in zip(units, totals)]
         quantity = [0.0] * len(self.weights)
-        for index in range(count):
-            total = subsistence[index] * covered_population
-            if spread:
-                total += covered_surplus * budget_weights[index] / weight_total / price_indexes[index]
-            units[index] += total
-        for index in range(count):
-            spending = price_indexes[index] * units[index]
-            for slot, good_price, share in zip(self.indexes[index], good_prices[index], share_rows[index]):
+        for price_index, total, need_rows in zip(price_indexes, totals, rows):
+            spending = price_index * total
+            for slot, good_price, share in need_rows:
                 quantity[slot] += spending * share / good_price
         own = self.own_index
         return (0.0 if own is None else quantity[own]), sum(
