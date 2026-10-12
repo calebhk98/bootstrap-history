@@ -9,7 +9,7 @@ REGIME_OF = {"england_1300": "struck_coin", "han_china_100ad": "struck_coin", "r
 
 # Years for freshly mined metal to pass from mine owners and savers into prices: the fewest each civilisation's
 # price level needs to rise clear of its unmined twin.
-MONEY_LAG_YEARS = {"england_1300": 3, "norse_900ad": 4}
+MONEY_LAG_YEARS = {"england_1300": 3, "norse_900ad": 5}
 
 
 def agent_game(civ):
