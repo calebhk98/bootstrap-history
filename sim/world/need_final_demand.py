@@ -110,12 +110,19 @@ class SingleMaterialTrial:
         self._exponent = 1.0 - model.basket.substitution
         self._layouts: Dict[Tuple[bool, ...], _TrialLayout] = {}
         self._fast = None             # built on the first weighted_final call
-        self._slots: List = []        # per basket need: a PricedNeed, None (unpriced), or the spec to reprice
-        for spec in model.basket.needs:
-            if any(good == material for good, _effect in spec.goods):
-                self._slots.append(spec)
-            else:
-                self._slots.append(need_basket.priced_need(spec, self._exponent, prices.get, False))
+        self._built_slots: Optional[List] = None
+
+    @property
+    def _slots(self) -> List:
+        """Per basket need: a PricedNeed, None (unpriced), or the spec to reprice."""
+        if self._built_slots is None:
+            self._built_slots = []
+            for spec in self.model.basket.needs:
+                if any(good == self.material for good, _effect in spec.goods):
+                    self._built_slots.append(spec)
+                else:
+                    self._built_slots.append(need_basket.priced_need(spec, self._exponent, self.prices.get, False))
+        return self._built_slots
 
     def _priced(self, price: float):
         """(the priced needs, which of the repriced needs are priced)."""
@@ -139,13 +146,8 @@ class SingleMaterialTrial:
         """The precomputed evaluator of `need_trial_fast`, or False where the general path must be used."""
         if self.model.satiate:
             return False
-        priced, present = self._priced(1.0)
-        if not priced:
-            return False
-        layout = self._layouts.get(present)
-        if layout is None:
-            layout = self._layouts[present] = _TrialLayout(priced, self._weight_of_material)
-        return need_trial_fast.FastWeighted(self, layout, priced)
+        fast = need_trial_fast.FastWeighted(self)
+        return fast if fast.ok else False
 
     def final_demand(self, price: float) -> Dict[str, float]:
         """Final demand with the material at `price`."""

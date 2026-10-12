@@ -7,10 +7,9 @@ then does the same arithmetic, operation for operation and in the same order, as
 to it bit for bit.
 """
 import math
-from typing import List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 from sim.world import demand
-from sim.world.need_basket import NeedSpec
 
 
 class _Repriced:
@@ -18,6 +17,7 @@ class _Repriced:
 
     def __init__(self, position: int, spec, exponent: float, base_get, material: str):
         self.position = position
+        self.names: List[str] = []
         self.effects: List[float] = []
         self.prices: List[float] = []
         self.weights: List[float] = []
@@ -27,17 +27,27 @@ class _Repriced:
                 if not effect > 0.0:
                     continue
                 self.material_slot = len(self.effects)
+                self.names.append(good)
                 self.prices.append(1.0)
                 self.weights.append(0.0)
                 self.effects.append(effect)
                 continue
             price = base_get(good)
             if price is not None and price > 0.0 and effect > 0.0:
+                self.names.append(good)
                 self.prices.append(price)
                 self.weights.append((price / effect) ** exponent)
                 self.effects.append(effect)
         self.exponent = exponent
         self.slots: Tuple[int, ...] = ()
+
+    def price_without_material(self) -> Tuple[float, List[float]]:
+        """(price index, shares) of a need whose listing of the material gives it no effect."""
+        power = math.fsum(self.weights)
+        shares = [weight / power for weight in self.weights]
+        units_per_money = math.fsum([share * effect / price for share, effect, price
+                                     in zip(shares, self.effects, self.prices)])
+        return 1.0 / units_per_money, shares
 
     def price(self, material_price: float) -> Tuple[float, List[float]]:
         """(price index, spending shares in goods order) with the material at `material_price`."""
@@ -54,42 +64,80 @@ class _Repriced:
         return 1.0 / units_per_money, shares
 
 
-class FastWeighted:
-    """Built from a `SingleMaterialTrial` (and its `_TrialLayout` of a reference pricing)."""
+def _constant_need(spec, exponent: float, base_get):
+    """(goods, prices, price index, spending shares) of a need that does not list the trial material,
+    as `need_basket.priced_need` computes them; None when no good of it has a price."""
+    goods: List[str] = []
+    effects: List[float] = []
+    prices: List[float] = []
+    weights: List[float] = []
+    for good, effect in spec.goods:
+        price = base_get(good)
+        if price is not None and price > 0.0 and effect > 0.0:
+            goods.append(good)
+            effects.append(effect)
+            prices.append(price)
+            weights.append((price / effect) ** exponent)
+    if not goods:
+        return None
+    power = math.fsum(weights)
+    shares = [weight / power for weight in weights]
+    units_per_money = math.fsum([share * effect / price for share, effect, price in zip(shares, effects, prices)])
+    return goods, prices, 1.0 / units_per_money, shares
 
-    def __init__(self, trial, layout, priced_reference):
+
+class FastWeighted:
+    """Built from a `SingleMaterialTrial`: lays out the priced needs the way `_TrialLayout` and
+    `_Layout` do (the needs that have a priced good, the materials in the order demand first meets them,
+    budget shares among the priced needs)."""
+
+    def __init__(self, trial):
         model = trial.model
-        self.model = model
-        self.layout = layout
+        exponent = trial._exponent
+        base_get = trial.prices.get
+        material = trial.material
+        specs = []
+        names: List[List[str]] = []
+        self.price_indexes: List[float] = []
+        self.rows: List[List[Tuple[int, float, float]]] = []
+        pending = []                       # (position, rows builder input) for the later slot numbers
+        self.repriced: List[_Repriced] = []
+        for spec in model.basket.needs:
+            if any(good == material for good, _effect in spec.goods):
+                candidate = _Repriced(len(specs), spec, exponent, base_get, material)
+                if not candidate.effects:
+                    continue
+                if candidate.material_slot >= 0:
+                    self.repriced.append(candidate)
+                goods = candidate.names
+                prices, price_index, shares = candidate.prices, 1.0, [0.0] * len(goods)
+                if candidate.material_slot < 0:
+                    price_index, shares = candidate.price_without_material()
+            else:
+                found = _constant_need(spec, exponent, base_get)
+                if found is None:
+                    continue
+                goods, prices, price_index, shares = found
+            specs.append(spec)
+            names.append(goods)
+            self.price_indexes.append(price_index)
+            pending.append((prices, shares))
+        self.count = len(specs)
+        order: Dict[str, int] = {}
+        indexes = tuple(tuple(order.setdefault(good, len(order)) for good in goods) for goods in names)
+        for repriced in self.repriced:
+            repriced.slots = indexes[repriced.position]
+        self.rows = [list(zip(slots, prices, shares)) for slots, (prices, shares) in zip(indexes, pending)]
+        self.ok = self.count > 0
+        weight_total = sum(spec.budget_weight for spec in specs)
+        self.subsistence = [spec.subsistence_per_person for spec in specs]
+        self.budget_weights = [spec.budget_weight for spec in specs]
+        self.marginal = [spec.budget_weight / weight_total for spec in specs]
+        self.weight_total = math.fsum(spec.budget_weight for spec in specs)
         self.bins = [(income_bin.income_per_capita_per_year, income_bin.population)
                      for income_bin in model.bins]
-        goods = layout.goods
-        self.subsistence = [good.subsistence_quantity_per_capita_per_year for good in goods]
-        self.marginal = [good.marginal_budget_share for good in goods]
-        self.budget_weights = [need.spec.budget_weight for need in priced_reference]
-        self.weight_total = layout.budget_weight_total
-        self.indexes = layout.indexes
-        self.count = len(goods)
-        self.price_indexes = [need.price_index for need in priced_reference]
-        self.rows: List[List[Tuple[int, float, float]]] = [
-            [(slot, good[1], good[3]) for slot, good in zip(slots, need.goods)]
-            for slots, need in zip(self.indexes, priced_reference)]
-        # the priced positions that list the material, in the order of the priced list
-        self.repriced: List[_Repriced] = []
-        position = 0
-        base_get = trial.prices.get
-        for slot in trial._slots:
-            if isinstance(slot, NeedSpec):
-                candidate = _Repriced(position, slot, trial._exponent, base_get, trial.material)
-                if candidate.material_slot >= 0:
-                    candidate.slots = self.indexes[position]
-                    self.repriced.append(candidate)
-                if candidate.effects:
-                    position += 1
-            elif slot is not None:
-                position += 1
-        self.own_index = layout.order.get(trial.material)
-        self.weights = layout.weights
+        self.own_index = order.get(material)
+        self.weights = [trial._weight_of_material.get(good, 0.0) for good in order]
 
     def __call__(self, material_price: float):
         price_indexes = self.price_indexes
