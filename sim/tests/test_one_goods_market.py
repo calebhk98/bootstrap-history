@@ -72,13 +72,11 @@ firm.knowledge.add("blast_furnace")
 firm.record.opened_year["blast_furnace"] = year - 10
 furnace_game.advance_actors(year)
 no_firm.advance_actors(year)
-sold_by_firm = furnace_game.goods_market.sold_tonnes(furnace_game._material_tag(FURNACE_MATERIAL)[0], "firm:iron1")
-check("a firm running a furnace puts the pig iron it makes into the book as its sale",
+sold_by_firm = noted_sale_tonnes(furnace_game, FURNACE_MATERIAL, "firm:iron1")
+check("a firm running a furnace notes the pig iron it makes as its sale for the year's market",
       sold_by_firm > 0.0, sold_by_firm)
-check("...and the market counts it as the actors' supply",
-      furnace_game.market_state(FURNACE_MATERIAL)["actor_supply_tonnes"] > 0.0
-      and abs(furnace_game.actor_supply(FURNACE_MATERIAL) - sold_by_firm) < 1e-9,
-      (furnace_game.market_state(FURNACE_MATERIAL)["actor_supply_tonnes"], sold_by_firm))
+check("...and no firm means no such sale",
+      noted_sale_tonnes(no_firm, FURNACE_MATERIAL) == 0.0, noted_sale_tonnes(no_firm, FURNACE_MATERIAL))
 check("...so the firm's output, offered at what it costs the firm, does not raise the price the market posts",
       furnace_game.market_price_ratio(FURNACE_MATERIAL) <= no_firm.market_price_ratio(FURNACE_MATERIAL) + 1e-6,
       (furnace_game.market_price_ratio(FURNACE_MATERIAL), no_firm.market_price_ratio(FURNACE_MATERIAL)))
