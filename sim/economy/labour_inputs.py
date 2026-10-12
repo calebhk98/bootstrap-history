@@ -37,10 +37,12 @@ def routes_by_area(setup, carriage) -> Dict[str, List[Route]]:
     return routes
 
 
-def labour_context(setup, record, view, carriage, inputs, own_plot_options=None) -> CoreInputs:
+def labour_context(setup, record, view, carriage, inputs, own_plot_options=None, outside=None) -> CoreInputs:
     """The core's inputs for the year without trades or bids (the clearing adds them). `own_plot_options`
-    (households_own.own_production_options) sets how low a worker's ask can fall: the household's costs less what the plot gives."""
-    outside = outside_option_by_tile(setup, record, view)
+    (households_own.own_production_options) sets how low a worker's ask can fall: the household's costs less what the plot gives.
+    `outside` is `outside_option_by_tile` when the caller already has it for this record and view."""
+    if outside is None:
+        outside = outside_option_by_tile(setup, record, view)
     plot = ask_floor_by_tile(setup, record, view, own_plot_options or {})
     areas = [labour_area(tile) for tile in sorted(setup.tiles)]
     return CoreInputs(

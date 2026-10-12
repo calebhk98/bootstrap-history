@@ -136,9 +136,10 @@ class Economy:
             labour_bids.extend(orders.labour_bids)
         state_budget.plan_year(setup, record, view, labour_bids)
         staff_mint(setup, record, view, labour_bids)
-        everyone = labour_offers(setup, record, view, outside_option_by_tile(setup, record, view))
+        outside_option = outside_option_by_tile(setup, record, view)
+        everyone = labour_offers(setup, record, view, outside_option)
         offers, kept = withhold_hours(everyone, self._shortfall_hours())
-        context = labour_context(setup, record, view, self.carriage, inputs, self._own_plot_options())
+        context = labour_context(setup, record, view, self.carriage, inputs, self._own_plot_options(), outside_option)
         clear_labour(setup, record, labour_bids, offers, ledger, context, held_share_by_area(everyone, offers))
         self._grow_own(offers, ledger, inputs.harvest_factor, kept)
         order_book = {}
