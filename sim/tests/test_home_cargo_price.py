@@ -114,9 +114,8 @@ def coin_imbalance(played):
             sum(paid for _home, _partner, _rate, paid in postings) + 1e-9)
 
 
-with_cargo, without = game, agent_game()
-without.step()
-without.step()
+with_cargo = game
+imbalance_without_cargo = coin_imbalance(with_cargo)   # the two years played so far carried no trader cargo
 world = SimWorld(with_cargo)
 home = world._home_place()
 priced = [m for m in world.trade_materials()
@@ -144,8 +143,7 @@ extra_out = with_cargo._foreign_ledger(PARTNER)["goods_out_value"] - settled_bef
 check("the partner is paid in coin for the cargo brought home, at the booked price at least",
       extra_in >= paid_in * (1.0 - 1e-6), (extra_in, paid_in))
 check("the partner pays in coin for the cargo taken from home that the home market sold", extra_out > 0.0, extra_out)
-for label, played in (("with", with_cargo), ("without", without)):
-    imbalance, scale = coin_imbalance(played)
+for label, (imbalance, scale) in (("with", coin_imbalance(with_cargo)), ("without", imbalance_without_cargo)):
     check("coin paid between home and the partner is posted once in a year %s trader cargo" % label,
           scale > 1.0 and abs(imbalance) < 1e-6 * scale, (imbalance, scale))
 check("the traders' home tally is cleared when the year closes", not with_cargo.state.economy.home_actor_trade, None)
@@ -191,7 +189,7 @@ def home_run(played):
     return backs, marginal
 
 
-backs, marginal = home_run(without)
+backs, marginal = home_run(with_cargo)
 check("cargo bound for home never flips sign once the partner's book has opened (the year after the first)",
       all(back > 0.0 for back in backs[1:]), backs)
 check("home-bound cargo stays finite", all(math.isfinite(back) for back in backs), backs)
