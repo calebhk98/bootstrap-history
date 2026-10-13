@@ -52,6 +52,7 @@ class SellerBook:
         self.seller_has_other_offers = self._rivals_own
         self._unsold_above: Optional[float] = None    # see `sells_nothing`
         self._cumulative: Optional[List[float]] = None
+        self._levels: Optional[List[Tuple[float, float]]] = None
         self._solved = {}    # effective reservation (None: no offer) -> (sold, price); trials below the minimum price coincide
 
     def sold_and_price(self, reservation: Optional[float]) -> Tuple[float, float]:
@@ -108,7 +109,46 @@ class SellerBook:
         supply = self._cumulative_supply()[below - 1] if below else 0.0
         return price if self.buyers.schedule.total_at(price) <= supply else math.inf
 
+    def _solve_alone(self, effective: float) -> Tuple[float, float]:
+        """`_solve` for an offer at `effective` when no other offer of the seller is in the book: its sales
+        follow from the supply below it and the buyers' total at the crossing, without ordering the offers."""
+        buyers, schedule, quantity = self.buyers, self.buyers.schedule, self.own_quantity
+        reservations, cumulative = self.reservations, self._cumulative_supply()
+        group = bisect.bisect_left(reservations, effective)
+        merged = group < len(reservations) and reservations[group] == effective
+        below_supply = cumulative[group - 1] if group else 0.0
+        group_total = math.fsum([*self.group_members[group], quantity]) if merged else quantity
+        lowest = effective if group == 0 else reservations[0]
+        demand_at_first = schedule.total_at(lowest)
+        if (cumulative[-1] if cumulative else 0.0) + quantity <= ROUNDING_SHARE * demand_at_first:
+            return 0.0, buyers.last_price if buyers.last_price is not None else 0.0
+        if demand_at_first <= 0.0:
+            last_price = buyers.last_price
+            return 0.0, last_price if last_price is not None and lowest <= last_price else lowest
+        if self._levels is None:
+            self._levels = list(zip(reservations, cumulative))
+        base = self._levels
+        levels = base[:group]
+        levels.append((effective, below_supply + group_total))
+        levels.extend([(each, running + quantity) for each, running in base[group + merged:]])
+        price = solve_price(levels, schedule.total_at, demand_at_first,
+                            schedule.uncapped_at if schedule.distinct_schedules() * CHEAP_PASSES_PER_BID
+                            <= len(buyers.bids) else None, schedule.solutions, schedule.ceilings_ascending())
+        if schedule.price_capped:
+            price = at_a_ceiling(price, schedule, levels, lowest)
+        if effective > price:
+            return 0.0, price
+        eligible = bisect.bisect_right(reservations, price)
+        remaining = min(schedule.total_at(price), (cumulative[eligible - 1] if eligible else 0.0) + quantity)
+        if remaining < below_supply:
+            return 0.0, price
+        remaining -= below_supply
+        sold = quantity if remaining >= group_total else quantity * (remaining / group_total if group_total > 0.0 else 0.0)
+        return (sold if sold > 0.0 else 0.0), price
+
     def _solve(self, reservation: Optional[float]) -> Tuple[float, float]:
+        if reservation is not None and self.own_quantity > 0.0 and not self._rivals_own:
+            return self._solve_alone(max(reservation, self.minimum_price))
         buyers = self.buyers
         last_price = buyers.last_price
         held_price = last_price if last_price is not None else 0.0
