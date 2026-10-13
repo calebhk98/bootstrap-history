@@ -50,8 +50,10 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
     buyers = goods_market.Buyers(book, last_price)
     for index in sorted(range(len(offers)), key=lambda each: (offers[each].seller, offers[each].tile)):
         offer = offers[index]
+        if offer.quantity <= 0.0:
+            continue
         value = unit_value(setup, record, view, offer)
-        if value is None or offer.quantity <= 0.0:
+        if value is None:
             continue
         rivals = offers[:index] + offers[index + 1:]
         ask = max(offer.reservation_price, 0.0)
