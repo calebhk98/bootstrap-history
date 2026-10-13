@@ -2,9 +2,11 @@
 reservation the seller tries, without redoing the rivals' side every time.
 
 The rivals are sorted, grouped by the price they sell from, and summed once. A trial then adds the seller's
-own offer to that book (into an existing group or a new one), solves the crossing, and reads off what the
-seller sells. Every sum is the `math.fsum` of the same quantities `price_and_sold` sums (an exactly rounded
-sum does not depend on order), so the results are the same bit for bit.
+own offer to that book (into an existing group or a new one), finds the crossing, and reads off what the
+seller sells. A seller with other offers in the book is solved trial by trial with the same sums
+`price_and_sold` takes (an exactly rounded sum does not depend on order), so the results are the same bit
+for bit. A seller whose only offer is the one tried has its crossing placed between two crossings solved once
+(`_solve_alone`); its figures agree with `price_and_sold` to rounding.
 """
 import bisect
 import math
