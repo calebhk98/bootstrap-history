@@ -8,8 +8,8 @@ sum does not depend on order), so the results are the same bit for bit.
 """
 import bisect
 import math
+from collections import Counter
 from itertools import accumulate
-from operator import ge, sub
 from operator import attrgetter
 from typing import List, Optional, Tuple
 
@@ -20,6 +20,8 @@ from .types import Offer
 
 UNSOLD_MARGIN = 1.0 + 1e-6    # how far above the rivals' crossing an offer must lie to be certain of selling nothing
 _QUANTITY = attrgetter("quantity")
+_RESERVATION = attrgetter("reservation_price")
+_SELLER = attrgetter("seller")
 
 
 class SellerBook:
@@ -31,24 +33,20 @@ class SellerBook:
         self.own_quantity = offer.quantity
         minimum_price = buyers.minimum_price
         self.minimum_price = minimum_price
-        self.quantities = list(map(_QUANTITY, rivals_in_clearing_order))
-        self.reservations: List[float] = []      # one per group of rivals selling from the same price
-        self.group_members: List[List[float]] = []
-        self.group_own: List[List[float]] = []   # the quantities in each group that belong to the seller
-        self.group_start: List[int] = []         # index in `quantities` of each group's first offer
-        for index, rival in enumerate(rivals_in_clearing_order):
-            reservation = max(rival.reservation_price, minimum_price)
-            if not self.reservations or self.reservations[-1] != reservation:
-                self.reservations.append(reservation)
-                self.group_members.append([])
-                self.group_own.append([])
-                self.group_start.append(index)
-            self.group_members[-1].append(rival.quantity)
-            if rival.seller == self.seller:
-                self.group_own[-1].append(rival.quantity)
-        self.group_totals = [math.fsum(members) for members in self.group_members]
-        self.group_start.append(len(self.quantities))
-        self._rivals_own = any(self.group_own)    # whether the seller has other offers in the book
+        quantities = self.quantities = list(map(_QUANTITY, rivals_in_clearing_order))
+        # the rivals are in clearing order, so those sharing a reservation are neighbours
+        sizes = Counter([max(price, minimum_price) for price in map(_RESERVATION, rivals_in_clearing_order)])
+        self.reservations: List[float] = list(sizes)      # one per group of rivals selling from the same price
+        self.group_start: List[int] = list(accumulate(sizes.values(), initial=0))    # index in `quantities` of each group's first offer
+        starts = self.group_start
+        self.group_totals = quantities[:] if len(sizes) == len(quantities) else [
+            math.fsum(quantities[first:end]) for first, end in zip(starts, starts[1:])]
+        sellers = list(map(_SELLER, rivals_in_clearing_order))
+        self._rivals_own = self.seller in sellers    # whether the seller has other offers in the book
+        # the quantities in each group that belong to the seller
+        self.group_own: List[List[float]] = [
+            [quantity for quantity, name in zip(quantities[first:end], sellers[first:end]) if name == self.seller]
+            for first, end in zip(starts, starts[1:])] if self._rivals_own else []
         self.seller_has_other_offers = self._rivals_own
         self._unsold_above: Optional[float] = None    # see `sells_nothing`
         self._cumulative: Optional[List[float]] = None
@@ -94,6 +92,9 @@ class SellerBook:
         below = bisect.bisect_left(self.reservations, lowered)
         return schedule.total_at(lowered) < (cumulative[below - 1] if below else 0.0) + self.own_quantity
 
+    def _members(self, group: int) -> List[float]:
+        return self.quantities[self.group_start[group]:self.group_start[group + 1]]
+
     def _cumulative_supply(self) -> List[float]:
         if self._cumulative is None:
             self._cumulative = list(accumulate(self.group_totals))
@@ -117,7 +118,7 @@ class SellerBook:
         group = bisect.bisect_left(reservations, effective)
         merged = group < len(reservations) and reservations[group] == effective
         below_supply = cumulative[group - 1] if group else 0.0
-        group_total = math.fsum([*self.group_members[group], quantity]) if merged else quantity
+        group_total = math.fsum([*self._members(group), quantity]) if merged else quantity
         lowest = effective if group == 0 else reservations[0]
         demand_at_first = schedule.total_at(lowest)
         if (cumulative[-1] if cumulative else 0.0) + quantity <= ROUNDING_SHARE * demand_at_first:
@@ -161,7 +162,7 @@ class SellerBook:
             effective = max(reservation, self.minimum_price)
             group = bisect.bisect_left(reservations, effective)
             if group < len(reservations) and reservations[group] == effective:
-                totals = totals[:group] + [math.fsum([*self.group_members[group], quantity])] + totals[group + 1:]
+                totals = totals[:group] + [math.fsum([*self._members(group), quantity])] + totals[group + 1:]
                 own = own[:group] + [[*own[group], quantity]] + own[group + 1:]
             else:
                 reservations = reservations[:group] + [effective] + reservations[group:]
@@ -186,6 +187,8 @@ class SellerBook:
         if schedule.price_capped:
             price = at_a_ceiling(price, schedule, levels, lowest)
 
+        if not self._rivals_own:    # no offer of the seller's own is in the book
+            return 0.0, price
         eligible_groups = bisect.bisect_right(reservations, price)
         eligible_rivals = self.group_start[bisect.bisect_right(self.reservations, price)]
         eligible_quantities = self.quantities[:eligible_rivals]
@@ -193,18 +196,6 @@ class SellerBook:
             eligible_quantities.append(quantity)
         supply = math.fsum(eligible_quantities)
         remaining = buyers.traded_at(price, supply)
-        if not self._rivals_own and has_own:
-            # only the seller's own offer can sell: it is filled after every group below it, in order
-            if effective > price:
-                return 0.0, price
-            below = totals[:group]
-            running = list(accumulate(below, sub, initial=remaining))
-            if not all(map(ge, running, below)):
-                return 0.0, price
-            remaining = running[group]
-            total = totals[group]
-            sold_own = quantity if remaining >= total else quantity * (remaining / total if total > 0.0 else 0.0)
-            return (sold_own if sold_own > 0.0 else 0.0), price
         sold: List[float] = []
         for total, quantities in zip(totals[:eligible_groups], own):
             if remaining >= total:
