@@ -33,6 +33,7 @@ from .year_close import (check_money, close_agents, dispatch_merchants, money_ta
 from .year_goods import add_orders, clear_goods, cohort_orders, merchant_orders, state_orders
 from .year_labour import clear_labour, held_share_by_area, labour_offers, outside_option_by_tile
 from .year_ledger import YearLedger
+from .collection_paused import collection_paused
 from .replaced import replaced
 
 
@@ -119,6 +120,10 @@ class Economy:
         self.record.currency = currency.debase_by_cut(self.record.currency, cut_share, restrike_share)
 
     def step(self, inputs: YearInputs) -> YearOutcome:
+        with collection_paused():
+            return self._run_year(inputs)
+
+    def _run_year(self, inputs: YearInputs) -> YearOutcome:
         setup, record = self.setup, self.record
         self.__dict__.pop("_port_shares", None)
         self.follow_flows()

@@ -322,6 +322,8 @@ def shortfall_at_working_scale(producer: Producer, recipe: Recipe, view: MarketV
     pressed to sell stock at any price for want of working capital it has no use for."""
     if producer.capacity_runs <= 0.0:
         return cash_shortfall
+    if not cash_shortfall > 0.0:
+        return 0.0          # nothing is lacking, so there is no shortfall to shrink
     scale = next_years_runs_ceiling(producer) * share_that_pays(producer, recipe, view)
     unused_share = 1.0 - scale / producer.capacity_runs
     return max(0.0, cash_shortfall - unused_share * producer.cash_target)
