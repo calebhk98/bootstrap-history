@@ -17,7 +17,7 @@ class RecipePlan:
     """The round-independent part of costing one recipe."""
     __slots__ = ("recipe_id", "entry", "inputs", "outputs", "single_output", "single_quantity",
                  "batch_output_quantity", "labour_cost_hours", "rent_hours", "land_hectare_years",
-                 "capital", "energy", "holding_years", "disposal_value_hours", "output_meets_floor")
+                 "capital_goods", "energy", "holding_years", "disposal_value_hours", "output_meets_floor")
 
     def __init__(self, recipe_id, entry, wage_by_trade, rent_by_kg, interest_rate, floor_by_carrier):
         self.recipe_id = recipe_id
@@ -31,7 +31,7 @@ class RecipePlan:
         self.labour_cost_hours = core._labour_cost_hours(entry.get("labour_hours") or {}, wage_by_trade)
         self.rent_hours = core._extraction_rent_cost_hours(outputs, rent_by_kg)
         self.land_hectare_years = entry.get("land_hectare_years") or 0.0
-        self.capital = tuple(
+        self.capital_goods = tuple(
             (tuple((capital_good.get("build_materials") or {}).items()),
              tuple(hours * wage_by_trade[trade]
                    for trade, hours in (capital_good.get("build_labour_hours") or {}).items()),
@@ -68,7 +68,7 @@ def plan_cost(plan, prices, wage_by_trade, band_price_by_carrier, anchors, inter
         land_cost_hours = 0.0
 
     capital_cost_hours = 0.0
-    for build_materials, build_labour_costs, yearly_share, annual_output in plan.capital:
+    for build_materials, build_labour_costs, yearly_share, annual_output in plan.capital_goods:
         build_cost_hours = 0.0
         for build_material, quantity_per_build in build_materials:
             build_material_price = prices.get(build_material)

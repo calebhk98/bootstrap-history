@@ -189,7 +189,7 @@ def _crossing(buyers: Buyers, offers: List[Offer], with_wants: bool = True):
         levels.append((reservation, running))
     price = solve_price(levels, schedule.total_at, demand_at_first,
                         schedule.uncapped_at if schedule.distinct_schedules() * CHEAP_PASSES_PER_BID <= len(buyers.bids)
-                        else None, schedule.solutions, schedule.ceilings_ascending())
+                        else None, schedule.solutions)
     if schedule.price_capped:
         price = at_a_ceiling(price, schedule, levels, effective[0])
 

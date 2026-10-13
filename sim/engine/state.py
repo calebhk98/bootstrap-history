@@ -450,19 +450,19 @@ _PLAIN_SCALARS = frozenset((int, float, str, bool))
 
 
 # Containers already plain JSON (string keys, scalars, lists, dicts) that serialize_state hands back
-# untouched, so the encoder meets them directly; keyed by id() and held only while a save runs.
-_VERBATIM_IDS = set()
+# untouched, so the encoder meets them directly; held only while a save runs.
+_VERBATIM = []
 
 
 @contextlib.contextmanager
 def verbatim(*containers):
 	"""Within the block serialize_state returns these (already plain JSON) containers as they are."""
-	ids = [id(container) for container in containers if container is not None]
-	_VERBATIM_IDS.update(ids)
+	held = [container for container in containers if container is not None]
+	_VERBATIM.extend(held)
 	try:
 		yield
 	finally:
-		_VERBATIM_IDS.difference_update(ids)
+		del _VERBATIM[len(_VERBATIM) - len(held):]
 
 
 def serialize_state(obj: Any) -> Any:
@@ -471,7 +471,7 @@ def serialize_state(obj: Any) -> Any:
 	if obj is None or kind in _PLAIN_SCALARS:
 		return obj
 	if kind is dict:   # the plain containers need none of the checks below
-		if _VERBATIM_IDS and id(obj) in _VERBATIM_IDS:
+		if _VERBATIM and any(obj is held for held in _VERBATIM):
 			return obj
 		return {str(k): serialize_state(v) for k, v in obj.items() if not str(k).startswith("_on_change")}
 	if kind is list or kind is tuple:

@@ -467,7 +467,7 @@ class AgentEconomy:
         """Last year's goods carried between the economy's tiles, {origin: {destination: tonnes}}; empty until
         the economy has run a year."""
         if self._economy is not None and self._built_from is self.stored:
-            return {key: dict(row) for key, row in sorted(self._economy.record.carried.items())}
+            return economy_api.carried_last_year(self._economy)
         return (self.stored.get("record") or {}).get("carried") or {}
 
     # ---- what the seams read ------------------------------------------------------------------
@@ -525,7 +525,7 @@ class AgentEconomy:
             return 0.0
         economy = self.economy()
         units = self._capacity_cache.units_by_material(
-            economy, economy.record.producers.values(), lambda: economy_api.producers_of(economy).values(),
+            economy, economy_api.all_producers(economy), lambda: economy_api.producers_of(economy).values(),
             economy.setup.recipes)
         return units.get(material, 0.0) * tonnes_per_unit(material)
 

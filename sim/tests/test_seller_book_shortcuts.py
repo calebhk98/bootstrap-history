@@ -1,6 +1,6 @@
 """Two shortcuts in goods clearing give the answers of the plain search to within rounding: a seller whose only
-offer is the one priced (sales read from the supply below it), and a crossing that sits on a buyer's price
-ceiling (found by bisecting the ceilings instead of the whole price range)."""
+offer is the one priced (sales read from the supply below it), and whether an offer moves the price, read off
+one demand evaluation instead of a second solve."""
 
 QUICK_TOPIC = True
 
@@ -9,7 +9,7 @@ import random
 import unittest
 from dataclasses import replace
 
-from sim.economy import goods_market, goods_market_solve, seller_book
+from sim.economy import goods_market, seller_book
 from sim.economy.types import Bid, Offer
 
 from .test_seller_pricing_probe import AREA, GOOD, SELLER, random_market
@@ -56,31 +56,6 @@ class SoleOfferBook(unittest.TestCase):
             self.assertEqual(read, gap > goods_market.ROUNDING_SHARE, seed)
         self.assertGreater(checked, 50)
 
-
-class CrossingOnACeiling(unittest.TestCase):
-    def test_bisecting_the_ceilings_finds_the_price_the_plain_search_does(self):
-        jumps_used = 0
-        for seed in range(300):
-            bids, rivals, _offer, last_price = random_market(seed)
-            buyers = goods_market.Buyers(bids, last_price)
-            ordered = goods_market.in_clearing_order(rivals)
-            if not ordered:
-                continue
-            schedule = buyers.schedule
-            levels, running = [], 0.0
-            for rival in ordered:
-                running += rival.quantity
-                levels.append((max(rival.reservation_price, buyers.minimum_price), running))
-            levels = sorted(levels)
-            demand_at_first = schedule.total_at(levels[0][0])
-            if demand_at_first <= 0.0:
-                continue
-            plain = goods_market_solve.solve_price(levels, schedule.total_at, demand_at_first)
-            with_jumps = goods_market_solve.solve_price(levels, schedule.total_at, demand_at_first,
-                                                        jumps=schedule.ceilings_ascending())
-            jumps_used += bool(schedule.ceilings_ascending())
-            self.assertAlmostEqual(with_jumps, plain, delta=1e-8 * plain, msg=seed)
-        self.assertGreater(jumps_used, 50)
 
 
 if __name__ == "__main__":

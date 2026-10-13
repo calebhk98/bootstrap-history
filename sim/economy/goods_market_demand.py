@@ -46,7 +46,6 @@ class DemandSchedule:
         self._totals: dict = {}              # total_at by price: a market is cleared at the same prices many times
         self._uncapped_terms: Optional[List[tuple]] = None
         self._ceilings: Optional[List[float]] = None
-        self._ceilings_ascending: Optional[List[float]] = None
         self.solutions: dict = {}            # solve_price's memo: books against this demand share it
 
     def distinct_schedules(self) -> int:
@@ -84,12 +83,6 @@ class DemandSchedule:
         if self._ceilings is None:
             self._ceilings = sorted({maximum for maximum in self.maximums if maximum < math.inf}, reverse=True)
         return self._ceilings
-
-    def ceilings_ascending(self) -> List[float]:
-        """The buyers' finite maximum prices, distinct, cheapest first."""
-        if self._ceilings_ascending is None:
-            self._ceilings_ascending = self.ceilings_descending()[::-1]
-        return self._ceilings_ascending
 
     def total_at(self, price: float) -> float:
         """Total quantity wanted at a positive price."""

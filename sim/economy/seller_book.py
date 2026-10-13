@@ -165,7 +165,7 @@ class SellerBook:
         levels.extend([(each, running + quantity) for each, running in base[group + merged:]])
         price = solve_price(levels, schedule.total_at, demand_at_first,
                             schedule.uncapped_at if schedule.distinct_schedules() * CHEAP_PASSES_PER_BID
-                            <= len(buyers.bids) else None, schedule.solutions, schedule.ceilings_ascending())
+                            <= len(buyers.bids) else None, schedule.solutions)
         if schedule.price_capped:
             price = at_a_ceiling(price, schedule, levels, lowest)
         return self._sold_alone(effective, price)
@@ -224,7 +224,7 @@ class SellerBook:
         levels = list(zip(reservations, accumulate(totals)))
         price = solve_price(levels, schedule.total_at, demand_at_first,
                             schedule.uncapped_at if schedule.distinct_schedules() * CHEAP_PASSES_PER_BID
-                            <= len(buyers.bids) else None, schedule.solutions, schedule.ceilings_ascending())
+                            <= len(buyers.bids) else None, schedule.solutions)
         if schedule.price_capped:
             price = at_a_ceiling(price, schedule, levels, lowest)
 

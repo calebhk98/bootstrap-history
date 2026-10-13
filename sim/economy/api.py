@@ -132,6 +132,16 @@ def credit_room(economy, borrower_id):
     return capital_market.headroom(capital_market.lendable_capacity(record.funds_offered), others)
 
 
+def all_producers(economy):
+    """Every producer in the economy, as a live view (cheap: no copy), in the record's order."""
+    return economy.record.producers.values()
+
+
+def carried_last_year(economy):
+    """Tonnes the merchants carried last year, origin tile -> destination tile, as a sorted copy."""
+    return {key: dict(row) for key, row in sorted(economy.record.carried.items())}
+
+
 def producers_of(economy, country=None):
     """The producers by agent id: those working on `country`'s tiles (the home country's when the economy
     holds several and none is named)."""

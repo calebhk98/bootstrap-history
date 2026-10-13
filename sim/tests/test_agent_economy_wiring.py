@@ -94,6 +94,9 @@ resumed = agent_game("norse_900ad")
 load_state(resumed, save_path)
 unbroken.step()
 resumed.step()
+# the stored record is exported when a game is saved, so both are brought up to their live economies first
+unbroken.economy.flush_record()
+resumed.economy.flush_record()
 check("a saved game on the agent economy resumes the same economy",
       unbroken.state.economy.agent_economy == resumed.state.economy.agent_economy)
 check("and the same game state", perf_fingerprint.digest(perf_fingerprint.state_of(unbroken))
