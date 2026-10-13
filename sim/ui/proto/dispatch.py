@@ -20,6 +20,7 @@ from .score import victory_report
 from .seat_address import run_as_seat
 from .state_waiting import _agent_end_reason
 from .state import _agent_state
+from .state_projects import _agent_state_active_projects, _agent_state_training_and_hours
 from .wave_summary import wave_summary
 from . import step_progress
 from .guidance import delay_kinds, delay_phrase
@@ -151,7 +152,7 @@ def _cmd_step(sim, nodes, cmd, ended):
     multi_year_hours_warning = None
     lone_dependencies = sim.labour.sole_supervisors() if years > 1 else []
     if years > 1 and ui_port.settings.load_config().get("multi_year_step_warning", True):
-        _pre_state = _agent_state(sim, nodes)
+        _pre_state = _agent_state_training_and_hours(sim, _agent_state_active_projects(sim, nodes), False)
         _idle_note = _pre_state.get("free_hours_going_unused")
         if _idle_note:
             # A STARTABLE PROJECT HAS TO EXIST, or the warning would be

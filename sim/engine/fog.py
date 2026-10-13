@@ -250,7 +250,7 @@ class FogMixin:
         # thirty entries in a list, is most of the reply.
         return note if len(note) <= 110 else note[:107].rstrip(" ,;") + "..."
 
-    def knowledge_risk(self) -> Dict[str, Any]:
+    def knowledge_risk(self, advice: bool = True, chronology: bool = True) -> Dict[str, Any]:
         """How exposed your finished work is to being forgotten, and to what.
 
         The technical dependency graph `path` shows is not the whole
@@ -261,7 +261,8 @@ class FogMixin:
         only to the mitigation and not to anything the player sees while
         deciding, is a tool that misleads by omission. So the numbers
         behind the dice are readable here while there is still time to act
-        on them.
+        on them. `advice=False` leaves out each hazard's `what_you_can_do`
+        and `chronology=False` the timeline (both costly) for callers that only read the other fields.
         """
         # Uses has() not running(): books exist even if institution closed.
         chance, frac, hedge = self.corpus_hedge()
@@ -295,11 +296,12 @@ class FogMixin:
             # this has to say so, or a hazard arriving on the year it was
             # forecast reads as weather rather than something the player
             # could have acted on.
-            row["what_you_can_do"] = {}
-            for kind in ("staff_loss", "sack_chance", "output_factor", "real_erosion"):
-                if kind in hazard or (kind == "sack_chance" and hazard.get("sack_chance")):
-                    row["what_you_can_do"][kind] = self.hazard_advice(kind, hazard)
-            add_timing_to_steps(row["what_you_can_do"], scenario.year, year_start, in_progress)
+            if advice:
+                row["what_you_can_do"] = {}
+                for kind in ("staff_loss", "sack_chance", "output_factor", "real_erosion"):
+                    if kind in hazard or (kind == "sack_chance" and hazard.get("sack_chance")):
+                        row["what_you_can_do"][kind] = self.hazard_advice(kind, hazard)
+                add_timing_to_steps(row["what_you_can_do"], scenario.year, year_start, in_progress)
             if causes["checked"]:
                 row["causes_hold_now"] = not causes["failed"]
                 row["causes"] = [{key: cause[key] for key in ("quantity", "node", "op", "threshold", "value", "holds", "why")}
@@ -343,7 +345,7 @@ class FogMixin:
                              "sacks_a_site": row.get("sacks_a_site", False)}
                             for row in _compact]
         # Civs with no sack hazards: no loss risk to report. Get chronological timeline.
-        timeline = self.hazard_timeline()
+        timeline = self.hazard_timeline() if chronology else None
         can_be_sacked = any(entry.get("sacks_a_site") for entry in upcoming)
         if not can_be_sacked:
             return {

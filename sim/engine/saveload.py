@@ -8,6 +8,7 @@ from .data import WAGES
 from sim.engine.state import (
     SAVE_FIELDS,  # noqa: F401 - compatibility export used by protocol.py
     serialize_state,
+    verbatim,
     deserialize_state,
 )
 
@@ -41,8 +42,10 @@ def save_state(sim, path):
 	sim.state.holdings.material_demand_at_last_throttle = None if held_demand is None else dict(held_demand)
 
 	# dumps (not dump, not indent) so the C encoder does the work
-	text = json.dumps(serialize_state(sim.state), default=str,
-					  separators=(",", ":"))
+	# the agent economy's record is most of the file and already plain JSON: the encoder takes it as it is
+	with verbatim(sim.state.economy.agent_economy.get("record")):
+		text = json.dumps(serialize_state(sim.state), default=str,
+						  separators=(",", ":"))
 	absolute = os.path.abspath(path)
 	# a command that changed nothing leaves the file as it is
 	if _ON_DISK.get(absolute) == (text, _stamp(absolute)):
