@@ -150,7 +150,7 @@
      "conf": "C"
     }
    ],
-   "operated_by": ["coal_coke"]
+   "operated_by": ["coal_coke", "pwr_coking"]
   },
   "graphite_kg": {
    "outputs": {

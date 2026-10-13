@@ -390,6 +390,8 @@ def cmd_validate(args):
     errs, warns = _validate_nodes(nodes, goods, wages, producible)
     errs += _validate_topo_order(nodes)
     errs += validate_node_money.check_node_money(nodes, production)
+    from sim.engine import validate_unlinked_producers
+    print("\n".join(validate_unlinked_producers.report_lines(nodes, production)))
     errs += validate_copy_visibility.check_copy_visibility(nodes)
     from sim.engine import copy_visibility_defaults
     errs += validate_copy_visibility.check_category_table(copy_visibility_defaults.table())

@@ -1,6 +1,6 @@
 # Built concerns make nothing, because the recipe names a twin node
 
-**Status:** open
+**Status:** partly - lead_metallurgy, mt2_zinc_by_retort and pwr_coking now operate the lead, zinc and coke entries; the rest below needs recipes
 
 Almost every concern that costs money to run earns nothing. Count them with:
 
@@ -29,3 +29,22 @@ selling it, so the opening runs on one lever.
 What it would take: a `validate` check listing nodes that carry upkeep, gate no production entry and
 belong to a category that makes goods. Then either link each to its entry (`operated_by` already allows
 several operators per entry) or merge the twin nodes. Add a test that the twins above earn when opened.
+
+## Update
+
+Measure with `python3 -m sim.engine.validate_unlinked_producers` (also printed by `simulator.py validate`):
+it counts nodes with upkeep that gate or operate no production entry, by category and kind. Most of the
+tree is in that list; the large majority are staffed engineering nodes, and many make no good at all.
+
+Linked (an existing entry already made exactly their good; they were added to its `operated_by`):
+`lead_metallurgy` on `lead_kg`, `mt2_zinc_by_retort` on `zinc_kg`, `pwr_coking` on `carbon_kg` (the coke
+entry). Regression test: `sim/tests/test_twin_nodes_earn.py`.
+
+Double counting: `node_output` bounds each node by its own staff hours and its own plant, so two operators
+of one entry are two separate concerns, each with its own crew and furnace; one set of staff never earns
+twice. Both still sell into the same market, which the market factor on `concern_revenue` limits.
+
+Remaining: `gp_carbon_brushes`, `lens_grinding` and `mt2_sintering_process` have no production entry for a
+good they make (no brush, lens or sintered-ore good exists), so they cannot be linked. They, and the other
+product-making nodes in the measurement, need a recipe for their good and a demand side. That is the
+remaining work; the measurement lists the nodes.
