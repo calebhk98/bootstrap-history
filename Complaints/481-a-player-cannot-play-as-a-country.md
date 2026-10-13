@@ -32,5 +32,7 @@ piece of this one.
 What it would take: a `country` seat kind whose holder is a government actor; protocol commands that set
 that government's policy levers (revenue forms and rates, budget lines, army and navy targets, works,
 subsidies and mandates); the home `Government` model made country-scoped so any country can be one
-(482); a seat handover command; and a phase hook in `run_year` that mods can use. Review that led here:
+(482); a seat handover command; and the mod hooks in Complaints 494 to 496 (a phase registry for the year, declared per-tile and
+per-actor stores, and stable effect operations), with the systems in 482 to 493 built on those hooks so
+that a mod could have written them. Review that led here:
 `Complaints/reports/alt-history-requirements-review.md`.
