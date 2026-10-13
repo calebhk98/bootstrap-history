@@ -49,6 +49,7 @@ class SellerBook:
         self.group_totals = [math.fsum(members) for members in self.group_members]
         self.group_start.append(len(self.quantities))
         self._rivals_own = any(self.group_own)    # whether the seller has other offers in the book
+        self.seller_has_other_offers = self._rivals_own
         self._unsold_above: Optional[float] = None    # see `sells_nothing`
         self._solved = {}    # effective reservation (None: no offer) -> (sold, price); trials below the minimum price coincide
 

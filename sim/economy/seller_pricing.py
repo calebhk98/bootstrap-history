@@ -14,7 +14,7 @@ from typing import List, Optional, Sequence, Tuple
 
 from sim.constants import declare
 
-from . import goods_market, seller_book
+from . import goods_market, seller_book, seller_search
 from .accounts import ROUNDING_SHARE
 from .types import Bid, Offer, is_edge
 
@@ -102,13 +102,26 @@ def best_reservation(bids: Sequence[Bid], rivals: Sequence[Offer], offer: Offer,
         current = ceiling if math.isfinite(ceiling) else 0.0
     best, best_profit = None, profit(current)
     bounds = [bound for bound in (floor, ceiling) if math.isfinite(bound)]
-    for reservation in sorted({*bounds, *_candidates(rivals, last_price, unit_value)}):
-        if reservation > ceiling or reservation < floor or reservation == current:
+    points = [reservation for reservation in sorted({*bounds, current, *_candidates(rivals, last_price, unit_value)})
+              if floor <= reservation <= ceiling]
+    if book is not None and not book.seller_has_other_offers and len(points) > len(bounds) + 2:
+        # the seller's sales fall and the price rises with its reservation: skip stretches that cannot win
+        points = seller_search.evaluated_points(
+            points, sorted({points[0], points[-1], *({current} & set(points))}),
+            lambda reservation: _outcome(reservation, cleared, book, clear_at, without_price), unit_value)
+    for reservation in points:
+        if reservation == current:
             continue
         candidate_profit = profit(reservation)
         if candidate_profit > best_profit + ROUNDING_SHARE * max(abs(best_profit), 1e-300):
             best, best_profit = reservation, candidate_profit
     return best
+
+
+def _outcome(reservation: float, cleared: dict, book, clear_at, without_price: float) -> Tuple[float, float]:
+    if reservation not in cleared:
+        cleared[reservation] = (0.0, without_price) if book.sells_nothing(reservation) else clear_at(reservation)
+    return cleared[reservation]
 
 
 def _prices_differ(without: float, with_it: float) -> bool:
