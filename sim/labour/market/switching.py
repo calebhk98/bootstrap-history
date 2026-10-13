@@ -45,9 +45,9 @@ def _training_share(inputs: YearInputs, source: str, target: str) -> float:
 NEGLIGIBLE_MOVE_SHARE = declare(
     "NEGLIGIBLE_MOVE_SHARE", 1e-3, kind="temporary_heuristic", unit="share of the workers weighing a switch",
     source=None, confidence="D",
-    why="A destination that fewer than this share of the workers weighing a switch would pick is left out "
-        "(they stay); every destination has some logit weight, and training a speck for each costs a cohort "
-        "record apiece. Not fitted.")
+    why="A destination that fewer than this share of the workers weighing a switch would pick is not trained "
+        "for; its few go to the destination most of them pick. Every destination has some logit weight, and "
+        "training a few for each costs a cohort record apiece. Not fitted.")
 
 PLAN_REUSE_TOLERANCE = declare(
     "PLAN_REUSE_TOLERANCE", 0.01, kind="temporary_heuristic",
@@ -119,9 +119,11 @@ def _odds(inputs, state, area, source, destinations, income, later_income, vacan
         scale = SWITCHING_TASTE_SCALE
         weights = [exp((score - top) / scale) for score in scores]
         total = math.fsum(weights + [exp((0.0 - top) / scale)])   # the last is staying
-        chosen = [(targets[index], weight / total) for index, weight in zip(picked, weights)
-                  if weight >= total * NEGLIGIBLE_MOVE_SHARE]
-        bands.append(chosen or None)
+        cutoff = total * NEGLIGIBLE_MOVE_SHARE
+        leader = weights.index(max(weights))
+        shares = [weight / total if weight >= cutoff else 0.0 for weight in weights]
+        shares[leader] += math.fsum(weight for weight in weights if weight < cutoff) / total
+        bands.append([(targets[index], share) for index, share in zip(picked, shares) if share > 0.0])
     return targets, bands
 
 
