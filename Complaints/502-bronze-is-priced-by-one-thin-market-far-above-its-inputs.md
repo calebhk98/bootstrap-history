@@ -1,6 +1,6 @@
 # Bronze is priced by one thin market, far above its inputs, and tin is cheaper than copper
 
-**Status:** open
+**Status:** partly (a good that trades a sliver of its opening demand now shows near its making cost; buyer ceilings, ask caps and tin deposits are open)
 
 On the `market` screen of a Rome game (`play --civ rome_100ad --kit merchant --seed real25`), bronze sells
 for about ninety times what its recipe's inputs cost. The recipe (`bronze_kg` in
@@ -43,3 +43,13 @@ What it would take:
 - Cassiterite should draw on a limited deposit stock, so tin's scarcity comes from geography.
 - A regression test that bronze's shown price stays within a bounded multiple of its recipe cost in an aged
   Rome game.
+
+## Update
+
+`notional.thin_market_prices` (in `shown_prices`, so the market screen and the engine's price ratio for
+material purchases both see it) blends a recently traded good's price toward its making cost by how far its
+total traded volume falls short of `THIN_MARKET_SHARE_OF_OPENING_DEMAND` times the opening quantity. Goods
+the opening did not want, or nobody can make, are unchanged. Regression tests:
+`sim/tests/test_economy_thin_market_price.py`. Still open: the budget bidders' missing ceiling or
+substitution, holding an unsold seller's ask near cost times a markup, cassiterite's deposit stock, and the
+aged-Rome-game bound on bronze's shown price (not yet measured).
