@@ -27,6 +27,7 @@ _DATA_DIRECTORIES = (("data", "production"),)
 _DATA_FILES = (("data", "world", "trades.json"), ("data", "world", "trade_families.json"))
 
 _text_by_digest: Dict[str, str] = {}
+_digest_memo: Dict[str, tuple] = {}    # branch directory -> (stat stamp of the inputs, their digest)
 
 
 def _branch_directory() -> str:
@@ -44,10 +45,29 @@ def _input_paths(branch_directory: str) -> Iterator[str]:
         yield os.path.join(ROOT, *parts)
 
 
+def _stamp(paths) -> tuple:
+    """(path, size, modification time) of each input: an unchanged stamp means the content was not rewritten."""
+    stamp = []
+    for path in paths:
+        try:
+            status = os.stat(path)
+        except OSError:
+            continue
+        stamp.append((path, status.st_size, status.st_mtime_ns))
+    return tuple(stamp)
+
+
 def input_digest(branch_directory: Optional[str] = None) -> str:
-    """Digest of every file the build reads; any edit to one gives a new digest."""
+    """Digest of every file the build reads; any edit to one gives a new digest. Kept for the process while
+    no input's size or modification time has changed, so a later call reads no file."""
+    directory = branch_directory or _branch_directory()
+    paths = list(_input_paths(directory))
+    stamp = _stamp(paths)
+    remembered = _digest_memo.get(directory)
+    if remembered is not None and remembered[0] == stamp:
+        return remembered[1]
     digest = hashlib.sha256()
-    for path in _input_paths(branch_directory or _branch_directory()):
+    for path in paths:
         try:
             with open(path, "rb") as handle:
                 content = handle.read()
@@ -55,6 +75,7 @@ def input_digest(branch_directory: Optional[str] = None) -> str:
             continue
         digest.update(os.path.basename(path).encode("utf-8"))
         digest.update(hashlib.sha256(content).digest())
+    _digest_memo[directory] = (stamp, digest.hexdigest())
     return digest.hexdigest()
 
 

@@ -3,15 +3,13 @@
 import re
 from collections import defaultdict
 
-from sim.engine.ui_port import load
+from sim.engine.ui_port import node_names
 from sim.engine.ui_port import IdentityCache
 
 # The real ids, and a case-folded index onto them. Built once: parse_typed has
-# no Sim to ask and runs on every line a player types. One load(), not two -
-# it re-reads both tree files from disk and re-derives every node's cost, and
-# this file already pays that once per process for NODE_IDS; NODE_NAME_NORM
-# below reuses the same dict rather than paying it again.
-_NODES_ONCE = load()[2]
+# no Sim to ask and runs on every line a player types. The names need only the merged
+# tree, not every node's derived cost; NODE_NAME_NORM below reuses the same dict.
+_NODES_ONCE = node_names()
 NODE_IDS = frozenset(_NODES_ONCE)
 NODE_IDS_LOWER = {node_id.lower(): node_id for node_id in NODE_IDS}
 
