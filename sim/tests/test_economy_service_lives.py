@@ -90,7 +90,7 @@ class ServiceLifeTests(unittest.TestCase):
         rows = years_of(durable_setup(), 13, SPIN_UP_YEARS)
         for year in range(1, 13):
             bought = rows[year][0] - rows[year - 1][0] + rows[year][1]
-            self.assertGreaterEqual(bought, 0.0)
+            self.assertGreaterEqual(bought, -1e-9 * rows[year][1])   # float slack: a level stock buys exactly the wear
             self.assertLess(bought, 2.0 * rows[year][1], "year %d buys the stock again" % year)
 
     def test_settled_holdings_move_by_less_than_one_years_wear(self):
@@ -98,7 +98,7 @@ class ServiceLifeTests(unittest.TestCase):
         # a lumpy year of income can account for; it is neither sold out nor refilled in a year
         rows = years_of(durable_setup(), 13, SPIN_UP_YEARS)
         for year in range(1, 13):
-            self.assertLess(abs(rows[year][0] - rows[year - 1][0]), rows[year][1], "the stock jumps in year %d" % year)
+            self.assertLess(abs(rows[year][0] - rows[year - 1][0]), rows[year][1] * (1.0 + 1e-9), "the stock jumps in year %d" % year)
 
 
 class BadYearTests(unittest.TestCase):

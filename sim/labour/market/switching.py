@@ -3,6 +3,7 @@
 A switcher becomes a trainee of the new trade (shorter within a skill family) through the same places
 as entrants; those not admitted stay in their old trade. The fallback trade takes people straight in.
 """
+import math
 from typing import Dict, List, Mapping, Tuple
 
 from sim.constants import declare
@@ -110,18 +111,34 @@ def _planned_moves(state, inputs, area, sources, destinations, income, later_inc
 
 def _carry_out(state: MarketState, inputs: YearInputs, report: YearReport, area: str,
                moves: List[Move]) -> None:
+    """Take the switchers out of their trades and into training. Sources moving to one target on the
+    same training length apply together, and the target's places are shared out between them in
+    proportion to the people each sends (band by band)."""
     workers = state.workers[area]
     net: Dict[str, float] = {}
+    groups: Dict[Tuple[str, float], List[Tuple[str, List[float]]]] = {}
     for source, target, bands in sorted(moves, key=lambda move: (move[1], move[0])):
         source_bands = workers[source]
         taken = [min(value, have) for value, have in zip(bands, source_bands)]
         for index, value in enumerate(taken):
             source_bands[index] -= value
-        refused = training.enrol(state, inputs, area, target, taken, _training_share(inputs, source, target))
-        aptitude.add_bands(source_bands, refused)
-        moved = aptitude.band_total(taken) - aptitude.band_total(refused)
-        net[target] = net.get(target, 0.0) + moved
-        net[source] = net.get(source, 0.0) - moved
+        groups.setdefault((target, _training_share(inputs, source, target)), []).append((source, taken))
+    for (target, share), senders in groups.items():
+        if len(senders) == 1:
+            combined = senders[0][1]
+        else:
+            combined = [math.fsum(column) for column in zip(*[taken for _source, taken in senders])]
+        refused = training.enrol(state, inputs, area, target, combined, share)
+        for source, taken in senders:
+            if len(senders) == 1:
+                returned = refused
+            else:
+                returned = [back * mine / total if total > 0.0 else 0.0
+                            for back, mine, total in zip(refused, taken, combined)]
+            aptitude.add_bands(workers[source], returned)
+            moved = aptitude.band_total(taken) - aptitude.band_total(returned)
+            net[target] = net.get(target, 0.0) + moved
+            net[source] = net.get(source, 0.0) - moved
     if net:
         record = report.switched.setdefault(area, {})
         for trade, change in net.items():
