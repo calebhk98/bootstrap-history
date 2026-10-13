@@ -51,6 +51,7 @@ class SellerBook:
         self._rivals_own = any(self.group_own)    # whether the seller has other offers in the book
         self.seller_has_other_offers = self._rivals_own
         self._unsold_above: Optional[float] = None    # see `sells_nothing`
+        self._cumulative: Optional[List[float]] = None
         self._solved = {}    # effective reservation (None: no offer) -> (sold, price); trials below the minimum price coincide
 
     def sold_and_price(self, reservation: Optional[float]) -> Tuple[float, float]:
@@ -72,6 +73,31 @@ class SellerBook:
             self._unsold_above = self._unsold_threshold()
         return max(reservation, self.minimum_price) > self._unsold_above and self.own_quantity > 0.0
 
+    def moves_the_price(self, without_price: float) -> Optional[bool]:
+        """Whether the whole offer at the lowest ask lowers the clearing price by more than the rounding share
+        from `without_price` (the rivals' crossing), read off one demand evaluation just under it instead of a
+        second solve: the crossing stays above that price exactly when demand there still exceeds what the
+        rivals offer below it plus the seller's quantity. None where that reading does not apply (a market with
+        no rivals, or supply so small the clearing treats it as residue)."""
+        schedule = self.buyers.schedule
+        if (self.own_quantity <= 0.0 or not self.reservations
+                or not 0.0 < without_price < math.inf):
+            return None
+        cumulative = self._cumulative_supply()
+        floor_demand = schedule.total_at(min(self.reservations[0], self.minimum_price))
+        if floor_demand <= 0.0 or cumulative[-1] <= 2.0 * ROUNDING_SHARE * floor_demand:
+            return None
+        lowered = without_price * (1.0 - ROUNDING_SHARE)
+        if lowered <= self.minimum_price:    # nothing clears under the lowest price the market considers
+            return False
+        below = bisect.bisect_left(self.reservations, lowered)
+        return schedule.total_at(lowered) < (cumulative[below - 1] if below else 0.0) + self.own_quantity
+
+    def _cumulative_supply(self) -> List[float]:
+        if self._cumulative is None:
+            self._cumulative = list(accumulate(self.group_totals))
+        return self._cumulative
+
     def _unsold_threshold(self) -> float:
         if not self.reservations or self._rivals_own:    # the seller's other offers may sell
             return math.inf
@@ -79,7 +105,7 @@ class SellerBook:
         if not 0.0 < price < math.inf:
             return math.inf
         below = bisect.bisect_right(self.reservations, price)
-        supply = list(accumulate(self.group_totals))[below - 1] if below else 0.0
+        supply = self._cumulative_supply()[below - 1] if below else 0.0
         return price if self.buyers.schedule.total_at(price) <= supply else math.inf
 
     def _solve(self, reservation: Optional[float]) -> Tuple[float, float]:
@@ -116,7 +142,7 @@ class SellerBook:
         levels = list(zip(reservations, accumulate(totals)))
         price = solve_price(levels, schedule.total_at, demand_at_first,
                             schedule.uncapped_at if schedule.distinct_schedules() * CHEAP_PASSES_PER_BID
-                            <= len(buyers.bids) else None, schedule.solutions)
+                            <= len(buyers.bids) else None, schedule.solutions, schedule.ceilings_ascending())
         if schedule.price_capped:
             price = at_a_ceiling(price, schedule, levels, lowest)
 

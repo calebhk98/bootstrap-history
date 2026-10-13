@@ -86,8 +86,12 @@ def best_reservation(bids: Sequence[Bid], rivals: Sequence[Offer], offer: Offer,
     `goods_market.Buyers(bids, last_price)` when the caller searches for several sellers in one market."""
     clear_at, book = _book_clearing(bids, rivals, offer, last_price, buyers)
     without_price = clear_at(None)[1]
-    cleared = {0.0: clear_at(0.0)}    # each reservation is cleared once
-    if not _prices_differ(without_price, cleared[0.0][1]):
+    cleared = {}    # each reservation is cleared once
+    moves = book.moves_the_price(without_price) if book is not None else None
+    if moves is None:
+        cleared[0.0] = clear_at(0.0)
+        moves = _prices_differ(without_price, cleared[0.0][1])
+    if not moves:
         return None
 
     def profit(reservation: float) -> float:
