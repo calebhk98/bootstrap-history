@@ -1,6 +1,6 @@
 # A trade nobody hires keeps its seed wage, so scribes cost many times a scholar
 
-**Status:** open
+**Status:** closed - a trade that hired no hours is priced as unskilled wage times its training premium
 
 On the `market` screen of a Rome game (`play --civ rome_100ad --kit merchant --seed real25`), a scribe's
 year costs dozens of times a scholar's, and dozens of times a labourer's. Scribes were rarer than labourers,
@@ -29,3 +29,10 @@ What it would take:
 - Separately, find out why cleared wages drift far below the opening scale (473).
 - A regression test that every trade's wage on an aged Rome game stays within a bounded multiple of the
   unskilled wage.
+
+## Resolution
+
+`wages_by_trade_weighted` (`sim/economy/api.py`) now leaves out any trade that hired no hours in the scope
+asked about, except the unskilled trade, so `wage_per_hour` prices it as the unskilled wage plus its training
+premium. Regression tests: `sim/tests/test_unhired_trade_wage.py`. The cause of cleared wages drifting below
+the opening scale (473) and the aged-game bound test are not part of this fix.
