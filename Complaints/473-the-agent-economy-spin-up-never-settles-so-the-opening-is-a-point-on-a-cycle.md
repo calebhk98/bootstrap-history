@@ -44,3 +44,14 @@ than overshoots; coin lost to wear replaced (new metal reaching the mint when co
 supply does not drain; then a spin-up that runs until its tolerance is met, or records plainly when it is not.
 
 Related: 470 (closed), 472 (closed), 464.
+
+## Playtest evidence (Rome, `play --civ rome_100ad --kit merchant --seed real25`)
+
+The cycle reaches the player. Over the first two decades the `money` screen's market rate moved from single
+digits to the ceiling `bounded_rate` sets (four times the civilisation's `starting_interest_rate`,
+`sim/world/capital_market.py`), and stayed there for several years. Over the same years "funds lenders hold"
+fell to about a quarter of its year-104 figure. Funds lenders hold is built mostly from `household_saving()`
+(`sim/engine/economy_capital_market.py`), so household saving collapsed. The founder's borrowing is far too
+small to move it. A founder who had borrowed at a normal rate to hire staff paid well over half the debt in
+interest each year and went insolvent. Wages (and with them the workshop's revenue, which is a markup on
+wages) fell through the same years. Reproduce by stepping a year at a time and reading `money`.
