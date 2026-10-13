@@ -106,10 +106,11 @@ def orders(merchant: Merchant, view: MarketView, carriage: CarriageTable, area_m
     own = RouteShares()
     merchant.routes = {}
     candidates = _candidate_routes(merchant, view, carriage, area_map, held_stock, specs, interest_rate)
+    held_index = held_by_good(held_stock)
     # stock already held where a route out pays is carried along it, not sold where it sits
     for _rank, good, source, destination, *_rest in candidates:
-        for (held_good, tile), quantity in sorted(held_stock.items()):
-            if held_good == good and quantity > 0.0 and tile in source.tiles and tile != destination.anchor_tile:
+        for tile, quantity in sorted(held_index.get(good, ())):
+            if quantity > 0.0 and tile in source.tiles and tile != destination.anchor_tile:
                 merchant.routes[(good, tile)] = (destination.anchor_tile, destination.area_id)
     offers = [offer for offer in _holding_offers(merchant, view, area_map, held_stock, specs, interest_rate)
               if (offer.good, offer.tile) not in merchant.routes]
@@ -118,7 +119,7 @@ def orders(merchant: Merchant, view: MarketView, carriage: CarriageTable, area_m
     for _rank, good, source, destination, price_here, outlay, ceiling in candidates:
         if remaining <= 0.0:
             break
-        quantity = min(remaining / outlay, shared_room(merchant, good, source, destination, held_stock, own, shares))
+        quantity = min(remaining / outlay, shared_room(merchant, good, source, destination, held_stock, own, shares, held_index))
         if quantity <= 0.0:
             continue
         own.commit(good, source.area_id, destination.area_id, quantity)
@@ -148,7 +149,7 @@ def _candidate_routes(merchant, view, carriage, area_map, held_stock, specs, int
     """Rows (rank, good, source, destination, price here, outlay per unit, most it pays), one per
     profitable (good, source area) at its best destination, best net gap per unit of outlay first.
     A good's rows are shared with any caller that sees the same prices at the same rate."""
-    rows = []
+    parts = []
     prices_across = getattr(view, "prices_across", None)
     expected_by_good: dict = {}
     for (good, area_id), price in merchant.expected_prices.items():
@@ -166,11 +167,12 @@ def _candidate_routes(merchant, view, carriage, area_map, held_stock, specs, int
         expected = expected_by_good.get(good)
         if expected is not None:      # an expectation stands in for last year's price where the merchant has one
             seen = [expected.get(area.area_id, price) for area, price in zip(areas, seen)]
-        rows.extend(merchants_route_memo.routes_for_good(
+        parts.append(merchants_route_memo.routes_for_good(
             carriage, good, areas, spec, tuple(seen), interest_rate,
             lambda: _good_routes(good, spec, areas, {area.area_id: price for area, price in zip(areas, seen)},
                                  carriage, interest_rate)))
-    return sorted(rows, key=lambda row: (row[0], row[1], row[2].area_id))
+    return merchants_route_memo.sorted_rows(
+        carriage, parts, lambda rows: sorted(rows, key=lambda row: (row[0], row[1], row[2].area_id)))
 
 
 def _good_routes(good, spec, areas, prices, carriage, interest_rate) -> list:
@@ -226,11 +228,22 @@ def _break_even_price(spec: GoodSpec, price_there: float, carriage_per_unit: flo
     return max(0.0, kept) / (1.0 + max(0.0, interest_rate) + MERCHANT_MARGIN_SHARE)
 
 
-def shared_room(merchant, good, source, destination, held_stock, own: RouteShares, group: RouteShares) -> float:
+def held_by_good(held_stock) -> Dict[GoodId, List[Tuple[TileId, float]]]:
+    """Held stock as {good: [(tile, quantity)]}, in the stock's own order."""
+    index: Dict[GoodId, List[Tuple[TileId, float]]] = {}
+    for (good, tile), quantity in held_stock.items():
+        index.setdefault(good, []).append((tile, quantity))
+    return index
+
+
+def shared_room(merchant, good, source, destination, held_stock, own: RouteShares, group: RouteShares,
+                held_index=None) -> float:
     """Units this merchant may still bid for into a destination: its share of the expected volume less
-    what it holds there and has bid for already, and merchants' share of it less what they have bid."""
-    held = sum(quantity for (held_good, tile), quantity in held_stock.items()
-               if held_good == good and tile in destination.tiles)
+    what it holds there and has bid for already, and merchants' share of it less what they have bid.
+    `held_index` is `held_by_good(held_stock)` when the caller asks many times."""
+    if held_index is None:
+        held_index = held_by_good(held_stock)
+    held = sum(quantity for tile, quantity in held_index.get(good, ()) if tile in destination.tiles)
     return room_left(merchant.expected_volumes, good, source.area_id, destination.area_id, MERCHANT_MARKET_SHARE,
                      own, group, held)
 

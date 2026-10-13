@@ -88,21 +88,35 @@ def staple_price_per_kg(priced, specs: Mapping[GoodId, GoodSpec]) -> float:
     return cheapest
 
 
-def store_holding(cohort, view, specs: Mapping[GoodId, GoodSpec], priced) -> Tuple[Dict[GoodId, float], Dict[GoodId, float], Dict[GoodId, float]]:
-    """(weights, last prices, quantities held) of the store goods at this cohort's tile; empty if none."""
+def store_holding(cohort, view, specs: Mapping[GoodId, GoodSpec], priced,
+                  shared: Optional[dict] = None) -> Tuple[Dict[GoodId, float], Dict[GoodId, float], Dict[GoodId, float]]:
+    """(weights, last prices, quantities held) of the store goods at this cohort's tile; empty if none.
+    `shared` (empty to begin with) keeps the weights and prices of each tile for cohorts that see the same
+    market and the same priced needs there."""
+    found = shared.get(cohort.tile) if shared is not None else None
+    if found is None:
+        found = _store_weights(cohort.tile, view, specs, priced)
+        if shared is not None:
+            shared[cohort.tile] = found
+    weights, prices = found
+    return weights, prices, {good: view.stock(cohort.agent_id, good, cohort.tile) for good in weights}
+
+
+def _store_weights(tile, view, specs: Mapping[GoodId, GoodSpec], priced) -> Tuple[Dict[GoodId, float], Dict[GoodId, float]]:
+    """(weights, last prices) of the store goods at a tile."""
     staple = staple_price_per_kg(priced, specs)
     if not math.isfinite(staple):
-        return {}, {}, {}
+        return {}, {}
     prices, usual_prices = {}, {}
     if hasattr(view, "price_rows"):
-        for good, price, usual in view.price_rows(specs, cohort.tile):
+        for good, price, usual in view.price_rows(specs, tile):
             if price:
                 prices[good] = price
                 if usual:
                     usual_prices[good] = usual
     else:
         for good in specs:
-            area = view.area_of(good, cohort.tile)
+            area = view.area_of(good, tile)
             price = view.price(good, area)
             if price:
                 prices[good] = price
@@ -110,8 +124,7 @@ def store_holding(cohort, view, specs: Mapping[GoodId, GoodSpec], priced) -> Tup
                 if usual is not None and usual(good, area):
                     usual_prices[good] = usual(good, area)
     weights = store_candidates(specs, prices, staple, usual_prices, service_values_per_year(priced, specs))
-    return (weights, {good: prices[good] for good in weights},
-            {good: view.stock(cohort.agent_id, good, cohort.tile) for good in weights})
+    return weights, {good: prices[good] for good in weights}
 
 
 def store_bids(cohort, view, specs, basket, weights, prices, held, wealth_above_buffer: float,

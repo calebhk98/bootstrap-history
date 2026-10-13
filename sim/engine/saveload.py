@@ -18,6 +18,7 @@ class EconomyNotOpened(ValueError):
 
 def save_state(sim, path):
 	"""Write the whole game to a file using automatic state serialization from live sim.state."""
+	sim.economy.flush_record()
 	sim.state._civ = sim.civ.get("id")
 	sim.state._goal = sim.goal
 	sim.state._civ_live = {attr: sim.civ.get(attr) for attr in ("literacy_general", "literacy_elite", "state_capacity")}

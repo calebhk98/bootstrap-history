@@ -176,6 +176,11 @@ class EconomyPort:
         self.open_agent()
         self.agent.run_year()
 
+    def flush_record(self):
+        """Bring the saved copy of the agent economy up to date; the game's save calls this."""
+        if self._agent is not None:
+            self._agent.flush_record()
+
     def health(self, metals=(), staple=None):
         """The agent economy's health figures over the years this game has played (economy_port_health.py);
         None while the economy opens."""

@@ -79,7 +79,7 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
     cash = max(0.0, view.cash(producer.agent_id, currency))
     inputs = live_input_prices(producer, recipe, view)
     wages = live_wages(producer, recipe, view)
-    expectations = next_expectations(producer, recipe, view)
+    expectations = next_expectations(producer, recipe, view, inputs, wages)
     worked = producer.capacity_runs if worked_runs is None else min(max(0.0, worked_runs), producer.capacity_runs)
     charge = unit_cost.capital_charge_per_run(recipe, inputs, wages, rate) * worked
     loss = worked <= 0.0 or revenue < costs + (charge if math.isfinite(charge) else 0.0)
@@ -146,6 +146,8 @@ def _expansion(producer, recipe, view, currency, rate, wear, inputs, wages, pric
     runs = EXPANSION_SHARE_PER_YEAR * producer.capacity_runs
     prices = expected_output_prices(producer, recipe, view) or {}
     if price_share_after is not None:
+        if unit_cost.return_on_capital(recipe, prices, inputs, wages) <= rate:
+            return None, 0.0        # the price can only fall with the addition, so the return cannot beat the rate
         prices = {good: price * price_share_after(good, runs * recipe.outputs[good] * producer.yield_factor)
                   for good, price in prices.items()}
     yearly_return = unit_cost.return_on_capital(recipe, prices, inputs, wages)

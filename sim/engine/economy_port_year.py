@@ -90,6 +90,7 @@ class AgentEconomy:
         self._floor_costs_of = None      # the economy object they were read from
         self.outcomes = collections.deque(maxlen=OUTCOMES_KEPT)   # recent yearly outcomes, for health figures; not saved
         self._built_from = None          # the stored dict the live economy belongs to; a load replaces it
+        self._record_stale = False       # the live economy has moved on since `stored["record"]` was exported
 
     @property
     def stored(self):
@@ -176,7 +177,7 @@ class AgentEconomy:
         self._answers = None
         self._country_answers = {}
         self._floor_costs = {}
-        self._save()
+        self._record_stale = True        # exported when the game is saved (flush_record)
         return outcome
 
     # ---- firms', states' and traders' sales and purchases (economy_port_actors.py) ------------------
@@ -455,6 +456,19 @@ class AgentEconomy:
 
     def _save(self):
         self.stored["record"] = economy_api.export_record(self._economy, (PURSE_CURRENCY,))
+        self._record_stale = False
+
+    def flush_record(self):
+        """Bring the stored record up to the live economy; the game's save calls this, so a year does not pay for it."""
+        if self._record_stale and self._economy is not None and self._built_from is self.stored:
+            self._save()
+
+    def carried_last_year(self):
+        """Last year's goods carried between the economy's tiles, {origin: {destination: tonnes}}; empty until
+        the economy has run a year."""
+        if self._economy is not None and self._built_from is self.stored:
+            return {key: dict(row) for key, row in sorted(self._economy.record.carried.items())}
+        return (self.stored.get("record") or {}).get("carried") or {}
 
     # ---- what the seams read ------------------------------------------------------------------
     def answers(self, country=None):

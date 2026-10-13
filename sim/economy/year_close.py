@@ -104,6 +104,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map) -> None:
     property_income: Dict[str, float] = {}
     traded = {(result.good, result.area): result.quantity for result in ledger.clearings}
     prepared_buyers: Dict = {}
+    cohorts_by_tile: Dict = {}           # the tiles' cohorts, unchanged until the households close below
     for producer_id, producer in sorted(record.producers.items()):
         recipe = setup.recipes[producer.recipe_id]
         revenue = ledger.sales_in.get(producer_id, 0.0)
@@ -119,7 +120,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map) -> None:
             for transfer in paid:
                 property_income[transfer.payee] = property_income.get(transfer.payee, 0.0) + transfer.amount
             continue
-        paid = ownership.spread(record, closed.transfers)
+        paid = ownership.spread(record, closed.transfers, cohorts_by_tile)
         record.book.transfer_many(paid)
         worn = producer.capacity_runs - closed.producer.capacity_runs
         if worn > 0.0 and recipe.plant_life_years > 0.0 and revenue > costs:
@@ -137,7 +138,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map) -> None:
         transfers = merchants.close_year(merchant, prices, volumes, record.book.balance(merchant.agent_id, money),
                                          _held_stock(record.book, merchant.agent_id), area_map.area_of, money,
                                          interest_rate, ordered)
-        paid = ownership.spread(record, transfers)
+        paid = ownership.spread(record, transfers, cohorts_by_tile)
         record.book.transfer_many(paid)
         for transfer in paid:
             property_income[transfer.payee] = property_income.get(transfer.payee, 0.0) + transfer.amount

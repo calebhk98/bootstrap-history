@@ -40,6 +40,7 @@ def cohort_orders(setup, record, view, ledger: YearLedger, order_book: OrderBook
     """Households' bids for the year; returns their savings offers for the credit market."""
     funds = []
     priced_by_tile = {}
+    store_by_tile = {}
     money = setup.currency_id
     for cohort in sorted(record.cohorts.values(), key=lambda each: each.agent_id):
         priced = priced_by_tile.get(cohort.tile)
@@ -48,7 +49,7 @@ def cohort_orders(setup, record, view, ledger: YearLedger, order_book: OrderBook
         income = ledger.wages_in.get(cohort.agent_id, 0.0) + record.property_income.get(cohort.agent_id, 0.0)
         orders = households.goods_orders(cohort, view, record.book.balance(cohort.agent_id, money), income,
                                          setup.basket_for(cohort.tile), setup.specs, priced,
-                                         smooth_rise=not record.settling)
+                                         smooth_rise=not record.settling, shared_store=store_by_tile)
         add_orders(order_book, _less_what_it_grew(orders, cohort, setup.basket_for(cohort.tile), ledger.grown_units.get(cohort.agent_id)))
         funds.extend(orders.funds_offers)
     return funds

@@ -38,8 +38,9 @@ def credit_request(merchant, view, carriage, area_map, cash: float, held_stock, 
     remaining = max(0.0, cash)
     wanted, gain = 0.0, 0.0
     own, group = merchants.RouteShares(), merchants.RouteShares()
+    held_index = merchants.held_by_good(held_stock)
     for rank, good, source, destination, _price_here, outlay, _ceiling in candidates:
-        room = merchants.shared_room(merchant, good, source, destination, held_stock, own, group)
+        room = merchants.shared_room(merchant, good, source, destination, held_stock, own, group, held_index)
         paid_by_cash = min(remaining / outlay, room) if outlay > 0.0 else room
         remaining -= paid_by_cash * outlay
         extra = (room - paid_by_cash) * outlay

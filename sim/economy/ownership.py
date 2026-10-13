@@ -21,17 +21,22 @@ def owner_cohort(record, tile: TileId) -> Optional[AgentId]:
     return None if income_class is None else cohort_id(tile, income_class)
 
 
-def spread(record, payments: Sequence[Transfer]) -> List[Transfer]:
+def spread(record, payments: Sequence[Transfer], by_tile: Optional[Dict[TileId, list]] = None) -> List[Transfer]:
     """Dividends and rents paid to a cohort become payments to every cohort of its tile, each by its
-    ownership share; other payments pass through unchanged."""
+    ownership share; other payments pass through unchanged. `by_tile` (empty to begin with) keeps each
+    tile's cohorts across calls while the cohorts do not change."""
     result: List[Transfer] = []
     for payment in payments:
         owner = record.cohorts.get(payment.payee)
         if owner is None or payment.purpose not in SPREAD_PURPOSES:
             result.append(payment)
             continue
-        tile_cohorts = sorted((cohort for cohort in record.cohorts.values() if cohort.tile == owner.tile),
-                              key=lambda cohort: cohort.agent_id)
+        tile_cohorts = by_tile.get(owner.tile) if by_tile is not None else None
+        if tile_cohorts is None:
+            tile_cohorts = sorted((cohort for cohort in record.cohorts.values() if cohort.tile == owner.tile),
+                                  key=lambda cohort: cohort.agent_id)
+            if by_tile is not None:
+                by_tile[owner.tile] = tile_cohorts
         shares: Dict[AgentId, float] = distribute_property_income(tile_cohorts, payment.amount)
         paid = [Transfer(payment.payer, agent, payment.currency, amount, payment.purpose)
                 for agent, amount in shares.items() if amount > 0.0]
