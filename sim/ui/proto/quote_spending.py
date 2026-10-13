@@ -129,11 +129,13 @@ def _quote_open(sim, nodes, cmd):
     if node_id in sim.operating:
         return {"ok": False, "error": "you are already running that"}
     fee, units = sim.opening_fee(node_id, cmd.get("units"))
+    upkeep = sim.venture_upkeep_quote(node_id, units)
     reply = {"ok": True, "what": "open", "id": node_id, "paid_now": round(fee, 1),
              "size": units,
              "earns_a_year_when_ramped": round(
                  sim.venture_real_earnings(node_id, units, fully_ramped=True), 1),
-             "costs_a_year_to_run": round(sim.venture_real_upkeep(node_id, units), 1),
+             "costs_a_year_to_run": round(upkeep["now"], 1),
+             "costs_a_year_at_full_staffing": round(upkeep["at_full_staffing"], 1),
              "you_have": round(sim.capital, 1),
              "can_afford": fee <= sim.spending_power("open")}
     shortfall = sim.opening_shortfall(node_id)
