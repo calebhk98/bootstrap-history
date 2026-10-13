@@ -18,7 +18,7 @@ from sim.constants import declare
 from . import unit_cost
 from .entry import EntryPlan, UnmetDemand
 from .entry_sizing import ENTRY_SHARE_OF_UNTRADED_DEMAND
-from .producers import Producer, live_input_prices, live_wages
+from .producers import Producer, live_input_prices_at, live_wages_at
 from .types import AreaId, Bid, GoodId, Recipe
 
 ENTRY_PRICE_MARGIN_SHARE = declare(
@@ -127,12 +127,11 @@ def recipes_by_cost(setup, record, view, good, tile, recipe_ids) -> List[Tuple[s
     ranked = []
     for recipe_id in recipe_ids:
         recipe = setup.recipes[recipe_id]
-        probe = Producer("probe", "probe", recipe_id, tile, 1.0)
         outputs = {each: view.price(each, view.area_of(each, tile)) for each in recipe.outputs}
         outputs = {each: price for each, price in outputs.items() if price is not None}
         rent = record.land_rent.get(tile, 0.0) * setup.land_per_run.get(recipe_id, 0.0)
-        cost = full_cost_per_unit(recipe, good, outputs, live_input_prices(probe, recipe, view),
-                                  live_wages(probe, recipe, view), rate, rent)
+        cost = full_cost_per_unit(recipe, good, outputs, live_input_prices_at(tile, recipe, view),
+                                  live_wages_at(tile, recipe, view), rate, rent)
         if math.isfinite(cost) and cost > 0.0:
             ranked.append((recipe_id, cost))
     return sorted(ranked, key=lambda item: (item[1], item[0]))

@@ -13,7 +13,7 @@ from . import wage_provider, wages
 from .market.clearing import clear_all as clear_labour_markets
 from .market.opening import opening_state as opening_labour_market
 from .market.records import (Bid, Clearing, MarketState, Route, School, TradeSpec, YearInputs, YearReport,
-                             from_plain as market_state_from_plain, people_in, to_plain as market_state_to_plain)
+                             copy_state as copy_market_state, from_plain as market_state_from_plain, people_in, to_plain as market_state_to_plain)
 from .market.trades import fallback_trade, trade_specs
 from .market.year import run_year as run_labour_year
 from .labour_market import production_data
@@ -29,7 +29,7 @@ __all__ = [
     # the labour-market core (sim/labour/market/DESIGN.md): plain records in, plain records out
     "run_labour_year", "clear_labour_markets", "opening_labour_market", "trade_specs", "fallback_trade", "people_in",
     "Bid", "Clearing", "MarketState", "Route", "School", "TradeSpec", "YearInputs", "YearReport",
-    "market_state_to_plain", "market_state_from_plain",
+    "market_state_to_plain", "market_state_from_plain", "copy_market_state",
 ]
 
 

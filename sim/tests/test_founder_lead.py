@@ -40,7 +40,7 @@ class Rederivation(unittest.TestCase):
         seen = []
         projects = types.SimpleNamespace(done={"fire", "steam"}, granted={"fire"})
         fake = types.SimpleNamespace(
-            state=types.SimpleNamespace(projects=projects), nodes={}, start_civ={"id": "x"}, _derived_gate_set=frozenset(),
+            state=types.SimpleNamespace(projects=projects, economy=types.SimpleNamespace()), nodes={}, start_civ={"id": "x"}, _derived_gate_set=frozenset(),
             labour=types.SimpleNamespace(money_per_labour_hour=lambda: 1.0),
             _society_held_techs=lambda: frozenset({"fire"}),
             _done_changed=lambda: None, _operating_changed=lambda: None)

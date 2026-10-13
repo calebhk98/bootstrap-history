@@ -7,7 +7,7 @@ credit_claims counts in its wealth, is lost and the borrower's debt is gone. A l
 wealth spends and lends less, and may itself fall behind on what it owes, so a cascade follows from
 ordinary rules; credit_claims also keeps the defaulter's record for the next premium.
 """
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 import math
 from typing import List, Mapping, Optional, Sequence, Tuple
 
@@ -15,6 +15,7 @@ from sim.constants import declare
 
 from .labour import Entry, allocate_in_order, clearing_point, sticky_move
 from .types import AgentId, CurrencyId, FundsOffer, Loan, LoanRequest, Transfer
+from .replaced import replaced
 
 RATE_ADJUSTMENT_SHARE_PER_YEAR = declare(
     "RATE_ADJUSTMENT_SHARE_PER_YEAR", 0.3, kind="temporary_heuristic",
@@ -122,7 +123,7 @@ def clear(requests: Sequence[LoanRequest], offers: Sequence[FundsOffer], currenc
     for index, request in enumerate(requests):
         left = request.amount - granted.get(index, 0.0)
         if left > 1e-9:
-            unmet.append(replace(request, amount=left))
+            unmet.append(replaced(request, amount=left))
     return loans, base_rate, unmet
 
 
@@ -160,6 +161,6 @@ def service(loans: Sequence[Loan], cash_by_borrower: Mapping[AgentId, float], ye
             continue
         if principal <= 1e-12 and arrears <= 1e-12:
             continue
-        updated.append(replace(loan, principal=principal, arrears=arrears,
+        updated.append(replaced(loan, principal=principal, arrears=arrears,
                                years_left=max(0.0, loan.years_left - 1.0)))
     return transfers, updated, defaults

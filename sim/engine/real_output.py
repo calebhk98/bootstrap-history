@@ -62,11 +62,12 @@ class RealOutputMixin:
             return None
         return entry.get("traded_tonnes", entry["reference_tonnes"]) / entry["reference_tonnes"]
 
-    def real_output_lines(self):
+    def real_output_lines(self, ratios=None):
         """[(material, units a year sold now, opening price in labour hours)] for every good in the
-        opening basket whose commodity has a market."""
+        opening basket whose commodity has a market. `ratios` is a {commodity: traded ratio} the caller
+        shares between its reads within one moment."""
         basket = self.base_basket()
-        ratios = {}
+        ratios = {} if ratios is None else ratios
         lines = []
         for material, units in basket["units"].items():
             commodity = basket["commodity"][material]
@@ -81,15 +82,22 @@ class RealOutputMixin:
                 lines.append((material, units * entry.get("cleared_share", 1.0), introduced[material]))
         return lines
 
-    def real_output_hours(self):
+    def real_output_hours(self, ratios=None):
         """Quantities sold this year at the opening prices, in labour hours."""
-        return sum(quantity * price for _material, quantity, price in self.real_output_lines())
+        return sum(quantity * price for _material, quantity, price in self.real_output_lines(ratios))
 
-    def opening_output_hours(self):
+    def opening_output_hours(self, ratios=None):
         """The same sum at the opening's own quantities."""
         basket = self.base_basket()
-        return sum(units * basket["prices"][material] for material, units in basket["units"].items()
-                   if self.traded_ratio(basket["commodity"][material]) is not None)
+        ratios = {} if ratios is None else ratios
+        total = 0.0
+        for material, units in basket["units"].items():
+            commodity = basket["commodity"][material]
+            if commodity not in ratios:
+                ratios[commodity] = self.traded_ratio(commodity)
+            if ratios[commodity] is not None:
+                total += units * basket["prices"][material]
+        return total
 
     def real_output_per_head(self):
         """Real output per person over the opening's, as last year's market closed it; one at the opening."""
@@ -101,7 +109,8 @@ class RealOutputMixin:
         prices = self.goods_market.household_prices()
         for material in self.household_new_goods_units():
             self.state.economy.introduction_prices.setdefault(material, prices[material] / per_hour)
-        opening = self.opening_output_hours()
+        ratios = {}
+        opening = self.opening_output_hours(ratios)
         people = float(self.population.total) / self._opening_population()
         if opening > 0.0 and people > 0.0:
-            self.state.economy.output_per_head = self.real_output_hours() / opening / people
+            self.state.economy.output_per_head = self.real_output_hours(ratios) / opening / people

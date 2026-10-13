@@ -5,11 +5,12 @@ last set, and buyers who plan from that price find their runs do not pay and nev
 mark their asks down on unsold stock (producers.py), so the lowest ask is the one thing such a
 market shows; the memory follows it part of the way down.
 """
+import math
 from typing import Optional, Sequence
 
 from sim.constants import declare
 
-from .goods_market_demand import DemandSchedule
+from .goods_market import quantity_at
 from .types import EDGE_EXTERNAL, Bid, Offer
 
 NO_BID_MEMORY_SHARE = declare(
@@ -97,7 +98,6 @@ def wanted_at(bids: Sequence[Bid], price: Optional[float]) -> float:
     """What the market's own buyers would have taken at a price (budgets and ceilings applied); zero
     without a price. A foreign partner's order is sized by the partner, not by what the market usually
     trades, so it does not count: left in, it makes any home trade a sliver and freezes the memory."""
-    bids = [bid for bid in bids if bid.buyer != EDGE_EXTERNAL]
-    if not price or price <= 0.0 or not bids:
+    if not price or price <= 0.0:
         return 0.0
-    return DemandSchedule(sorted(bids, key=lambda bid: (bid.priority, bid.buyer, bid.tile))).total_at(price)
+    return math.fsum([quantity_at(bid, price) for bid in bids if bid.buyer != EDGE_EXTERNAL])

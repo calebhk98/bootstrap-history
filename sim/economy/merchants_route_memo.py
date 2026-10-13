@@ -30,3 +30,24 @@ def routes_for_good(carriage, good, areas, spec, prices: tuple, interest_rate: f
     slots.append((areas, spec, prices, interest_rate, rows))
     del slots[:-SLOTS_PER_GOOD]
     return rows
+
+
+_sorted_memos: "weakref.WeakKeyDictionary" = weakref.WeakKeyDictionary()
+
+
+def sorted_rows(carriage, parts: List[List], order: Callable[[List], List]) -> List:
+    """`order(all the rows of parts)`, reused when the last question for this carriage table was made of the very
+    same per-good row lists (as merchants with the same expectations ask). The result is shared between callers,
+    who must not change it."""
+    try:
+        last = _sorted_memos.get(carriage)
+    except TypeError:
+        last = None
+    if last is not None and len(last[0]) == len(parts) and all(old is new for old, new in zip(last[0], parts)):
+        return last[1]
+    rows = order([row for part in parts for row in part])
+    try:
+        _sorted_memos[carriage] = (parts, rows)
+    except TypeError:
+        pass
+    return rows

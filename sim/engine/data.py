@@ -296,6 +296,13 @@ def has_luck_component(node: JSONDict) -> bool:
     return node.get("kind") != "SCIENCE" or bool(node.get("mat")) or bool(node.get("lab"))
 
 
+def node_names() -> Dict[str, JSONDict]:
+    """{node id: {"name": name}} of the tree with the mods applied: what typed input needs to resolve a
+    technology, without pricing every node."""
+    tree = load_mod_tree(load_base_tree(), get_ordered_mods(MODDIR), copy_base=False)
+    return {node["id"]: {"name": node["name"]} for node in tree["nodes"]}
+
+
 def load(held_technology_ids: Optional[Iterable[str]] = None,
          civilization_id: Optional[str] = None
          ) -> Tuple[JSONDict, JSONDict, Nodes, Dict[str, float], Dict[str, float]]:

@@ -5,6 +5,7 @@ state owner defined in this module. Transient caches, version counters, derived
 values, and invalidation plumbing remain non-persistent implementation details.
 """
 import collections
+import contextlib
 import dataclasses
 from dataclasses import dataclass, field
 from typing import (
@@ -304,6 +305,8 @@ class EconomyState:
 	# whether the money an hour of work is worth is the agent economy's unskilled wage (set when the economy
 	# first opens and the opening's money is repriced to it)
 	money_from_economy: bool = False
+	# the money an hour of work was worth when the tree's money fields were last counted (opening_money.py)
+	nodes_money_per_labour_hour: Optional[float] = None
 
 
 @dataclass
@@ -443,9 +446,37 @@ def get_save_fields() -> Tuple[str, ...]:
 SAVE_FIELDS = get_save_fields()
 
 
+_PLAIN_SCALARS = frozenset((int, float, str, bool))
+
+
+# Containers already plain JSON (string keys, scalars, lists, dicts) that serialize_state hands back
+# untouched, so the encoder meets them directly; held only while a save runs.
+_VERBATIM = []
+
+
+@contextlib.contextmanager
+def verbatim(*containers):
+	"""Within the block serialize_state returns these (already plain JSON) containers as they are."""
+	held = [container for container in containers if container is not None]
+	_VERBATIM.extend(held)
+	try:
+		yield
+	finally:
+		del _VERBATIM[len(_VERBATIM) - len(held):]
+
+
 def serialize_state(obj: Any) -> Any:
 	"""Recursively serialize authoritative simulation state to JSON-compatible data."""
-	if obj is None or isinstance(obj, (int, float, str, bool)):
+	kind = type(obj)
+	if obj is None or kind in _PLAIN_SCALARS:
+		return obj
+	if kind is dict:   # the plain containers need none of the checks below
+		if _VERBATIM and any(obj is held for held in _VERBATIM):
+			return obj
+		return {str(k): serialize_state(v) for k, v in obj.items() if not str(k).startswith("_on_change")}
+	if kind is list or kind is tuple:
+		return [serialize_state(x) for x in obj]
+	if isinstance(obj, (int, float, str, bool)):
 		return obj
 	if hasattr(obj, "to_canon_dict"):
 		return serialize_state(obj.to_canon_dict())
@@ -460,7 +491,6 @@ def serialize_state(obj: Any) -> Any:
 	from sim.engine.economy import _InvalidatingSet
 	if isinstance(obj, (set, _InvalidatingSet)):
 		return {"__set__": sorted(serialize_state(x) for x in obj)}
-	import collections
 	if isinstance(obj, (dict, _InvalidatingDict, collections.defaultdict, collections.Counter)):
 		return {str(k): serialize_state(v) for k, v in obj.items() if not str(k).startswith("_on_change")}
 	if isinstance(obj, (list, tuple)):

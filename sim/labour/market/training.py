@@ -36,7 +36,34 @@ def _school_places(inputs: YearInputs, area: str, trade: str) -> Tuple[float, fl
 
 
 def enrolled(state: MarketState, area: str, trade: str) -> float:
-    return math.fsum(aptitude.band_total(cohort[1]) for cohort in state.trainees.get(area, {}).get(trade, []))
+    """Trainees already in this trade here. Inside a year (`start_enrolment_cache`) the total is kept
+    and grown as cohorts are added, instead of summed over every cohort on each call."""
+    cache = getattr(state, "enrolled_cache", None)
+    if cache is not None and (area, trade) in cache:
+        return cache[(area, trade)]
+    total = math.fsum([math.fsum(cohort[1]) for cohort in state.trainees.get(area, {}).get(trade, ())])
+    if cache is not None:
+        cache[(area, trade)] = total
+    return total
+
+
+def start_enrolment_cache(state: MarketState) -> None:
+    """Begin keeping enrolment totals (drop them with `drop_enrolment_cache` when cohorts change otherwise)."""
+    state.enrolled_cache = {}
+
+
+def stop_enrolment_cache(state: MarketState) -> None:
+    state.__dict__.pop("enrolled_cache", None)
+
+
+def drop_enrolment_cache(state: MarketState) -> None:
+    if getattr(state, "enrolled_cache", None) is not None:
+        state.enrolled_cache = {}
+
+
+def _incumbents(state: MarketState, area: str, trade: str) -> float:
+    bands = state.workers.get(area, {}).get(trade)
+    return math.fsum(bands) if bands is not None else 0.0
 
 
 def open_places(state: MarketState, inputs: YearInputs, area: str, trade: str) -> float:
@@ -44,9 +71,8 @@ def open_places(state: MarketState, inputs: YearInputs, area: str, trade: str) -
     spec = inputs.trades[trade]
     if spec.training_years <= 0.0:
         return math.inf
-    incumbents = aptitude.band_total(state.workers.get(area, {}).get(trade, aptitude.empty_bands()))
-    seats, _bonus = _school_places(inputs, area, trade)
-    return max(0.0, incumbents * APPRENTICES_PER_MASTER + seats - enrolled(state, area, trade))
+    seats = _school_places(inputs, area, trade)[0] if inputs.schools else 0.0
+    return max(0.0, _incumbents(state, area, trade) * APPRENTICES_PER_MASTER + seats - enrolled(state, area, trade))
 
 
 def enrol(state: MarketState, inputs: YearInputs, area: str, trade: str,
@@ -61,19 +87,35 @@ def enrol(state: MarketState, inputs: YearInputs, area: str, trade: str,
     if years <= 0.0:
         aptitude.add_bands(aptitude.bands_of(state.workers.setdefault(area, {}), trade), bands)
         return aptitude.empty_bands()
-    admitted_share = min(1.0, open_places(state, inputs, area, trade) / wanting)
+    seats, school_bonus = _school_places(inputs, area, trade) if inputs.schools else (0.0, 0.0)
+    capacity = seats + _incumbents(state, area, trade) * APPRENTICES_PER_MASTER
+    already = enrolled(state, area, trade)
+    admitted_share = min(1.0, max(0.0, capacity - already) / wanting)
     if admitted_share <= 0.0:
         return list(bands)
-    seats, school_bonus = _school_places(inputs, area, trade)
-    capacity = seats + aptitude.band_total(state.workers.get(area, {}).get(trade, aptitude.empty_bands())) * APPRENTICES_PER_MASTER
     bonus = school_bonus * (seats / capacity) if capacity > 0.0 else 0.0
-    admitted = [value * admitted_share for value in bands]
-    state.trainees.setdefault(area, {}).setdefault(trade, []).append([years, admitted, bonus])
-    return [value - taken for value, taken in zip(bands, admitted)]
+    if admitted_share >= 1.0:
+        admitted = list(bands)
+        refused = aptitude.empty_bands()
+        total_admitted = wanting
+    else:
+        admitted = [value * admitted_share for value in bands]
+        refused = [value - taken for value, taken in zip(bands, admitted)]
+        total_admitted = math.fsum(admitted)
+    cohorts = state.trainees.setdefault(area, {}).setdefault(trade, [])
+    if cohorts and cohorts[-1][0] == years and cohorts[-1][2] == bonus:
+        aptitude.add_bands(cohorts[-1][1], admitted)   # same finish date and teaching: one cohort
+    else:
+        cohorts.append([years, admitted, bonus])
+    cache = getattr(state, "enrolled_cache", None)
+    if cache is not None:
+        cache[(area, trade)] = already + total_admitted
+    return refused
 
 
 def advance(state: MarketState, inputs: YearInputs, report: YearReport) -> None:
     """Every cohort ages a year; finished cohorts graduate or fall back."""
+    drop_enrolment_cache(state)
     fallback = fallback_trade(inputs.trades)
     for area in sorted(state.trainees):
         by_trade = state.trainees[area]
@@ -104,6 +146,7 @@ def advance(state: MarketState, inputs: YearInputs, report: YearReport) -> None:
 
 def apply_attrition(state: MarketState, inputs: YearInputs, report: YearReport) -> None:
     """Deaths and retirement take the same share of every worker and trainee in an area."""
+    drop_enrolment_cache(state)
     for area, share in sorted(inputs.attrition_share.items()):
         keep = 1.0 - min(1.0, max(0.0, share))
         before = 0.0

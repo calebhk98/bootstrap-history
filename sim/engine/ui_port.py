@@ -11,7 +11,7 @@ from sim.engine.core import Sim  # noqa: F401
 from sim.engine.critical_path_remaining import active_years_left, remaining_critical_path_years  # noqa: F401
 from sim.engine.data import (  # noqa: F401
     CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, downstream_count, goal_catalog,
-    hard_pre, is_downstream, KNOWLEDGE_DIR, load, load_civ, load_geography, MODDIR, money_short,
+    hard_pre, is_downstream, KNOWLEDGE_DIR, load, load_civ, node_names, load_geography, MODDIR, money_short,
     money_unit_note, money_word, resolve_goal, ROOT, selectable_goals, STARTING_KITS, STRATS,
     topo_order, trade_family, TRADE_FAMILY, TRADE_NOTES, TRADES_ABSENT, WAGES,
     win_condition_describe)
@@ -34,7 +34,7 @@ from sim.engine.run_setup import DetRNG, ensure_fixed_hash_seed, load_strategy, 
 from sim.engine.saveload import (  # noqa: F401
     _SET_FIELDS_OF_NODE_IDS as SET_FIELDS_OF_NODE_IDS,
     _SET_FIELDS_OF_TRADE_NAMES as SET_FIELDS_OF_TRADE_NAMES, _validate_save as validate_save,
-    civ_of_save, goal_of_save, load_state, REQUIRED_SAVE_FIELDS, SAVE_FIELDS, save_state)
+    civ_of_save, EconomyNotOpened, goal_of_save, load_state, REQUIRED_SAVE_FIELDS, SAVE_FIELDS, save_state)
 from sim.engine.save_companions import save_session  # noqa: F401
 from sim.engine.settings_table import normal_seed, valid_seed_text  # noqa: F401
 from sim.engine.shortage_conditions import condition_line  # noqa: F401

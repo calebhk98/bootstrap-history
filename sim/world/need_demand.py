@@ -298,24 +298,30 @@ class NeedDemandModel:
             self._influence_cache[target] = weights
         return self._influence_cache[target]
 
-    def demand_for(self, material: str, prices: Mapping[str, float]) -> float:
-        """Total demand for one material without sweeping the whole graph."""
+    def demand_for(self, material: str, prices: Mapping[str, float],
+                   sources: Optional[Mapping[str, float]] = None) -> float:
+        """Total demand for one material without sweeping the whole graph. `sources` is
+        `_sources(prices)` when the caller already holds it."""
         weights = self._influence(material)
-        return sum(weights.get(source, 0.0) * quantity
-                   for source, quantity in self._sources(prices).items())
+        if sources is None:
+            sources = self._sources(prices)
+        return sum(weights.get(source, 0.0) * quantity for source, quantity in sources.items())
 
     def byproduct_supply(self, prices: Mapping[str, float]) -> Dict[str, float]:
         """{material: units per year} a joint by-product is made in, fixed by
         how much of its recipe's dominant output is being made to meet demand."""
         # TEMPORARY HEURISTIC: the dominant output is made to exactly meet its demand.
         supply: Dict[str, float] = collections.defaultdict(float)
+        sources = None
         for recipe_key in sorted(self.production):
             entry = self.production[recipe_key]
             outputs = entry.get("outputs") or {}
             if len(outputs) < 2:
                 continue
             dominant = demand._dominant_output_key(entry)
-            batches = self.demand_for(dominant, prices) / outputs[dominant]
+            if sources is None:
+                sources = self._sources(prices)
+            batches = self.demand_for(dominant, prices, sources) / outputs[dominant]
             for material, quantity in outputs.items():
                 if material != dominant:
                     supply[material] += batches * quantity
@@ -341,11 +347,15 @@ class NeedDemandModel:
                        if wanted & set(goods)}
         rivals = {material for need_id in rival_needs for material in self._need_goods[need_id]}
         targets = []
+        sources = None
         for material in sorted(supply_by_material):
             current = prices.get(material)
             if (material in wanted or material in rivals) and supply_by_material[material] \
-                    and current and current > 0.0 and self.demand_for(material, prices) > 0.0:
-                targets.append(material)
+                    and current and current > 0.0:
+                if sources is None:
+                    sources = self._sources(prices)
+                if self.demand_for(material, prices, sources) > 0.0:
+                    targets.append(material)
         # Supply-limited goods compete inside a need at their clearing prices,
         # not their costs, so each is re-cleared against the others' latest.
         working = dict(prices)
@@ -373,8 +383,16 @@ class NeedDemandModel:
 
         trial_demand = need_final_demand.SingleMaterialTrial(self, prices, material, weights)
 
+        evaluated: Dict[float, float] = {}
+
         def excess_demand(price: float) -> float:
             price = max(price, sys.float_info.min)
+            known = evaluated.get(price)
+            if known is None:
+                known = evaluated[price] = excess_demand_at(price)
+            return known
+
+        def excess_demand_at(price: float) -> float:
             own_final, weighted = trial_demand.weighted_final(price)
             total = technology_weighted + weighted
             derived = total - own_final

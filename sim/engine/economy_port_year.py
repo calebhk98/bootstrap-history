@@ -85,8 +85,12 @@ class AgentEconomy:
         self._answers = None
         self._country_answers = {}
         self._stale = set()
+        self._capacity_cache = material_capacity.ProducerCapacityCache()
+        self._floor_costs = {}           # need floors by country scope, valid until the economy next changes
+        self._floor_costs_of = None      # the economy object they were read from
         self.outcomes = collections.deque(maxlen=OUTCOMES_KEPT)   # recent yearly outcomes, for health figures; not saved
         self._built_from = None          # the stored dict the live economy belongs to; a load replaces it
+        self._record_stale = False       # the live economy has moved on since `stored["record"]` was exported
 
     @property
     def stored(self):
@@ -118,6 +122,7 @@ class AgentEconomy:
 
     def sync_ways(self):
         """Give the live economy the ways the game has built so far; its hauls are priced over them from now on."""
+        self._floor_costs = {}
         if self._economy is not None:
             economy_api.set_improvements(self._economy, self._sim.state.economy.improvements)
 
@@ -162,6 +167,7 @@ class AgentEconomy:
         self._strike_state_coin(economy)
         sales, purchases = self._actor_trade_orders(orders)
         outcome = economy.step(self._inputs(orders, economy_port_cargo.border_accounts(economy, legs)))
+        self._floor_costs = {}
         economy_port_sites.deplete(self._sim, outcome.extraction, self._recipe_outputs())
         self.outcomes.append(outcome)
         self._settle_actor_trade(sales, purchases)
@@ -170,7 +176,8 @@ class AgentEconomy:
         self._settle_foreign_coin()
         self._answers = None
         self._country_answers = {}
-        self._save()
+        self._floor_costs = {}
+        self._record_stale = True        # exported when the game is saved (flush_record)
         return outcome
 
     # ---- firms', states' and traders' sales and purchases (economy_port_actors.py) ------------------
@@ -235,6 +242,7 @@ class AgentEconomy:
     def _strike_state_coin(self, economy):
         """The cut the home state decided on this year lowers the metal in the coin it issues."""
         cut = self._sim.state_treasury().record.coin_cut_share
+        self._floor_costs = {}
         economy.strike_lighter_coin(cut, COIN_RESTRIKE_SHARE_PER_YEAR)
 
     # ---- each seat's concerns sell in the same market ----------------------------------------
@@ -448,6 +456,19 @@ class AgentEconomy:
 
     def _save(self):
         self.stored["record"] = economy_api.export_record(self._economy, (PURSE_CURRENCY,))
+        self._record_stale = False
+
+    def flush_record(self):
+        """Bring the stored record up to the live economy; the game's save calls this, so a year does not pay for it."""
+        if self._record_stale and self._economy is not None and self._built_from is self.stored:
+            self._save()
+
+    def carried_last_year(self):
+        """Last year's goods carried between the economy's tiles, {origin: {destination: tonnes}}; empty until
+        the economy has run a year."""
+        if self._economy is not None and self._built_from is self.stored:
+            return economy_api.carried_last_year(self._economy)
+        return (self.stored.get("record") or {}).get("carried") or {}
 
     # ---- what the seams read ------------------------------------------------------------------
     def answers(self, country=None):
@@ -503,8 +524,10 @@ class AgentEconomy:
         if not self.opened():
             return 0.0
         economy = self.economy()
-        return material_capacity.producer_capacity_tonnes(
-            economy_api.producers_of(economy).values(), economy.setup.recipes, material, tonnes_per_unit(material))
+        units = self._capacity_cache.units_by_material(
+            economy, economy_api.all_producers(economy), lambda: economy_api.producers_of(economy).values(),
+            economy.setup.recipes)
+        return units.get(material, 0.0) * tonnes_per_unit(material)
 
     def worker_years_by_recipe(self):
         """Worker-years a year the economy's producers can put into each recipe at full capacity."""
@@ -563,8 +586,12 @@ class AgentEconomy:
         people there), in coin; empty before any tile holds people."""
         economy = self.economy()
         scope = economy_api.country_figures.home_when_shared(economy, country)
-        costs = economy_api.country_figures.need_floor_costs_per_person_year(economy, scope)
-        return {need: cost * economy.setup.coin_per_unit for need, cost in costs.items()}
+        if economy is not self._floor_costs_of:
+            self._floor_costs, self._floor_costs_of = {}, economy
+        if scope not in self._floor_costs:
+            costs = economy_api.country_figures.need_floor_costs_per_person_year(economy, scope)
+            self._floor_costs[scope] = {need: cost * economy.setup.coin_per_unit for need, cost in costs.items()}
+        return dict(self._floor_costs[scope])
 
     def land_rent_at_tile(self, tile):
         """Rent per hectare-year on one tile in coin (the mean where none was let there)."""

@@ -151,7 +151,7 @@ def _agent_state_progress(sim, active):
     }
 
 
-def _agent_state_risk_and_pressure(sim):
+def _agent_state_risk_and_pressure(sim, full=True):
     """The court's jealousy and the treasury's attention, credit and
     debt, the knowledge-loss risk, the scandal clock, and the physical
     resource figures (throttle, forest, mines, unfree labour).
@@ -182,7 +182,7 @@ def _agent_state_risk_and_pressure(sim):
         # embedding the lot here would balloon a `state full` reply to tens
         # of thousands of bytes. The numbers stay; the prose lives in
         # `risk`, which is the command you type when you want it.
-        "knowledge_risk": _risk_without_the_essays(sim.knowledge_risk()),
+        "knowledge_risk": _risk_without_the_essays(sim.knowledge_risk(advice=False, chronology=full)),
         # THE OTHER HAZARD THAT ENDS THE RUN, on the same screen as the one that
         # already explains itself. See step() 6.
         "scandal_danger": sim.cfg["suspicion_danger"],
@@ -307,7 +307,7 @@ def _agent_state(sim, nodes, cmd=None):
     out.update(_agent_state_founder(sim))
     out.update(_agent_state_standing(sim))
     out.update(_agent_state_progress(sim, active))
-    out.update(_agent_state_risk_and_pressure(sim))
+    out.update(_agent_state_risk_and_pressure(sim, full))
     out.update(_agent_state_goal(sim, nodes, end_reason))
     warning = knowledge_loss_warning(sim)
     if warning:

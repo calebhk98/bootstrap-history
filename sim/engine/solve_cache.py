@@ -5,17 +5,18 @@ catalogue in memory, the held gate nodes, the civilisation, the wage
 ratios, the trade wage table, and the content of every file under `data/`
 and `mods/` plus the source the solver can import. Any change to an input gives a new
 key, so a stale entry is never read. The cache is optional: a missing or
-unreadable entry is a miss, and a failed write is ignored.
+unreadable entry is a miss, and a failed write is ignored. A miss first looks for
+an entry shipped with the checkout (shipped_openings.py) before computing.
 """
 import contextlib
 import hashlib
 import json
 import os
 import tempfile
-from typing import Any, Callable, Dict, Iterator, Optional, Tuple
+from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 
 from sim import cache_root
-from sim.engine import source_closure
+from sim.engine import shipped_openings, source_closure
 
 try:
     import fcntl
@@ -28,6 +29,7 @@ _DIGEST_LENGTH = 32
 _DATA_SUFFIXES = (".json", ".md", ".txt", ".csv")
 
 _environment_digests: Dict[Optional[Tuple[str, ...]], str] = {}
+_recordings: List[List[Tuple[str, str]]] = []    # open `recording()` blocks: (cache directory, key) of each entry used
 
 
 def _digest_tree(digest: Any, top: str, suffixes: tuple, skip_directories: tuple = ()) -> None:
@@ -83,6 +85,8 @@ def cached_json(key: str, compute: Callable[[], Any],
     A miss holds a per-key lock while it computes, so processes missing the same key at once
     (parallel test workers on a cold cache) wait for one computation and read its result."""
     directory = cache_dir or DEFAULT_CACHE_DIRECTORY
+    for touched in _recordings:
+        touched.append((directory, key))
     path = os.path.join(directory, key + ".json")
     stored = _read(path)
     if stored is not None:
@@ -91,7 +95,8 @@ def cached_json(key: str, compute: Callable[[], Any],
         stored = _read(path)
         if stored is not None:
             return stored
-        text = json.dumps(compute())
+        shipped = shipped_openings.read(os.path.basename(directory), key)
+        text = json.dumps(compute() if shipped is None else shipped)
         try:
             handle_fd, temporary = tempfile.mkstemp(dir=directory, suffix=".tmp")
             with os.fdopen(handle_fd, "w", encoding="utf-8") as handle:
@@ -101,6 +106,17 @@ def cached_json(key: str, compute: Callable[[], Any],
             pass
     # Cold and warm calls both return the parsed text, so they are identical.
     return json.loads(text)
+
+
+@contextlib.contextmanager
+def recording() -> Iterator[List[Tuple[str, str]]]:
+    """Within the block, the (cache directory, key) of every entry `cached_json` is asked for, in order."""
+    touched: List[Tuple[str, str]] = []
+    _recordings.append(touched)
+    try:
+        yield touched
+    finally:
+        _recordings.remove(touched)
 
 
 def _read(path: str) -> Any:

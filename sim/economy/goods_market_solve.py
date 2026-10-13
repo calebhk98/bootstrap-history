@@ -35,14 +35,14 @@ def solve_price(levels: Levels, demand: Callable[[float], float], demand_at_firs
     if uncapped is not None:
         passing = _first_level_met(levels, uncapped)
         if passing - failing > 1:
-            _probe(demand, levels, known, passing - 1)
+            known[passing - 1] = demand(levels[passing - 1][0])
             if known[passing - 1] <= levels[passing - 1][1]:
                 passing -= 1
             else:
                 failing = passing - 1
     while passing - failing > 1:
         middle = (failing + passing) // 2
-        _probe(demand, levels, known, middle)
+        known[middle] = demand(levels[middle][0])
         if known[middle] <= levels[middle][1]:
             passing = middle
         else:
@@ -75,10 +75,6 @@ def _refine(demand, uncapped, low: float, demand_low: float, ceiling: Optional[f
             return ceiling
         return _root(demand, low, excess_low, ceiling, excess, supply)
     return _root_above(demand, low, excess_low, guess, supply)
-
-
-def _probe(demand, levels: Levels, known: Dict[int, float], index: int) -> None:
-    known[index] = demand(levels[index][0])
 
 
 def _first_level_met(levels: Levels, uncapped) -> int:
@@ -129,17 +125,21 @@ def _root_above(demand, low: float, excess_low: float, guess: Optional[float], s
 
 def _root(demand, low: float, excess_low: float, high: float, excess_high: float, supply: float) -> float:
     """Root of demand minus supply between low (positive excess) and high (negative excess)."""
+    exp = math.exp
     log_low, log_high = math.log(low), math.log(high)
-    scale = max(abs(supply), 1e-300)
+    tolerance = RELATIVE_RESIDUAL_TOLERANCE * max(abs(supply), 1e-300)
     side = 0
     previous = None
     for _ in range(ROOT_STEPS):
         if log_high - log_low < LOG_PRICE_TOLERANCE:
             break
-        point = (log_low * excess_high - log_high * excess_low) / (excess_high - excess_low)
+        if excess_high == excess_low:    # both ends at the same excess: the secant has no slope
+            point = 0.5 * (log_low + log_high)
+        else:
+            point = (log_low * excess_high - log_high * excess_low) / (excess_high - excess_low)
         if not log_low < point < log_high:
             point = 0.5 * (log_low + log_high)
-        excess = demand(math.exp(point)) - supply
+        excess = demand(exp(point)) - supply
         if excess > 0.0:
             log_low, excess_low = point, excess
             if side > 0:
@@ -150,9 +150,9 @@ def _root(demand, low: float, excess_low: float, high: float, excess_high: float
             if side < 0:
                 excess_low *= 0.5
             side = -1
-        if abs(excess) <= RELATIVE_RESIDUAL_TOLERANCE * scale:
-            return math.exp(point)
+        if abs(excess) <= tolerance:
+            return exp(point)
         if previous is not None and abs(point - previous) < LOG_PRICE_TOLERANCE:
-            return math.exp(point)
+            return exp(point)
         previous = point
-    return math.exp(log_high)
+    return exp(log_high)

@@ -5,10 +5,10 @@ finer map, a fantasy map, another language) can answer the same calls. `sim/geog
 describes each answer's shape. Every call takes an optional `world_map` from `open_map`; without
 one it uses the base map.
 """
-import copy
 import math
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
+from sim.geography.json_copy import copied
 from sim.geography import (droving, food_capacity, food_land, food_pasture, food_wild_harvest, map_source, mechanisms, parameters, resource_links, resources_biotic, rail_freight,
                            resources_catalogue, resources_endowment, resources_mined, resources_prospecting, resources_sites,
                            resources_summary, routes_carriage, routes_graph, routes_modes, routes_search, tile_holdings, tile_layers,
@@ -160,10 +160,12 @@ def route(origin_tiles: Iterable[str], destination_tiles: Iterable[str], modes: 
 def route_costs(origin_tiles: Iterable[str], modes: Iterable[str],
                 improvements: Optional[Mapping[str, Mapping[str, Any]]] = None,
                 mode_costs: Optional[Mapping[str, float]] = None, handling_costs: Optional[Mapping[str, float]] = None,
-                held_nodes: Optional[Iterable[str]] = None, world_map: Optional[WorldMap] = None) -> Dict[str, float]:
-    """{tile: least cost per tonne} from any origin tile to every tile a haul reaches, as `route` prices it."""
+                held_nodes: Optional[Iterable[str]] = None, world_map: Optional[WorldMap] = None,
+                within: Optional[Iterable[str]] = None) -> Dict[str, float]:
+    """{tile: least cost per tonne} from any origin tile to every tile a haul reaches, as `route` prices it.
+    With `within` only those tiles are answered, which lets the search stop early."""
     return routes_search.costs_from(_map(world_map), origin_tiles, modes, improvements,
-                                    mode_costs, handling_costs, held_nodes)
+                                    mode_costs, handling_costs, held_nodes, within)
 
 
 def map_of_tiles(tile_records: Mapping[str, Mapping[str, Any]], world_map: Optional[WorldMap] = None) -> WorldMap:
@@ -243,9 +245,9 @@ def deposit_records(resource_id: Optional[str] = None, world_map: Optional[World
 
     Sorted by the row's `order` field (rows without one after those with one), then by id.
     """
-    rows = [copy.deepcopy(row) for row in _map(world_map).catalogue("deposits").values()
+    rows = [row for row in _map(world_map).catalogue("deposits").values()
             if resource_id is None or row.get("resource") == resource_id]
-    return sorted(rows, key=lambda row: (row.get("order", math.inf), row["id"]))
+    return [copied(row) for row in sorted(rows, key=lambda row: (row.get("order", math.inf), row["id"]))]
 
 
 def ore_goods(world_map: Optional[WorldMap] = None) -> Dict[str, Dict[str, Tuple[str, ...]]]:

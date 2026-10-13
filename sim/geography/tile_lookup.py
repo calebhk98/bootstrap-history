@@ -19,6 +19,18 @@ def _unit_vector(latitude: float, longitude: float) -> Tuple[float, float, float
             math.sin(latitude_radians))
 
 
+_centres: list = []    # [tiles, size, sorted (tile id, unit vector) pairs] of the last tile set looked up
+
+
+def _tile_centres(tiles: Dict[str, Dict[str, Any]]):
+    """(tile id, unit vector of its centre) in id order, kept while the same tile set is asked again."""
+    if _centres and _centres[0] is tiles and _centres[1] == len(tiles):
+        return _centres[2]
+    centres = [(tile_id, _unit_vector(tiles[tile_id]["lat"], tiles[tile_id]["lon"])) for tile_id in sorted(tiles)]
+    _centres[:] = [tiles, len(tiles), centres]
+    return centres
+
+
 def nearest_tile_id(tiles: Dict[str, Dict[str, Any]], latitude: float,
                     longitude: float) -> Optional[str]:
     """Id of the tile whose centre is nearest the position on the sphere
@@ -26,9 +38,7 @@ def nearest_tile_id(tiles: Dict[str, Dict[str, Any]], latitude: float,
     target_x, target_y, target_z = _unit_vector(latitude, longitude)
     best_id = None
     best_alignment = -2.0
-    for tile_id in sorted(tiles):
-        tile = tiles[tile_id]
-        tile_x, tile_y, tile_z = _unit_vector(tile["lat"], tile["lon"])
+    for tile_id, (tile_x, tile_y, tile_z) in _tile_centres(tiles):
         alignment = tile_x * target_x + tile_y * target_y + tile_z * target_z
         if alignment > best_alignment:
             best_id, best_alignment = tile_id, alignment

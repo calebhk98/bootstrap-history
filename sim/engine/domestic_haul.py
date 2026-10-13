@@ -21,8 +21,7 @@ class DomesticHaulMixin:
     def _domestic_flow_ledger(self):
         """Last year's goods carried between the economy's tiles, {origin: {destination: tonnes}}; empty
         until the economy has run a year."""
-        record = self.state.economy.agent_economy.get("record") or {}
-        return record.get("carried") or {}
+        return self.economy.agent.carried_last_year()
 
     def _domestic_flow_imbalance(self):
         """How one-sided last year's domestic carriage was (1 when nothing is recorded: carts return empty)."""

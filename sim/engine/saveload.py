@@ -8,12 +8,18 @@ from .data import WAGES
 from sim.engine.state import (
     SAVE_FIELDS,  # noqa: F401 - compatibility export used by protocol.py
     serialize_state,
+    verbatim,
     deserialize_state,
 )
 
 
+class EconomyNotOpened(ValueError):
+	"""The game was built without opening its economy and the save cannot stand in for it; build it the long way."""
+
+
 def save_state(sim, path):
 	"""Write the whole game to a file using automatic state serialization from live sim.state."""
+	sim.economy.flush_record()
 	sim.state._civ = sim.civ.get("id")
 	sim.state._goal = sim.goal
 	sim.state._civ_live = {attr: sim.civ.get(attr) for attr in ("literacy_general", "literacy_elite", "state_capacity")}
@@ -36,8 +42,10 @@ def save_state(sim, path):
 	sim.state.holdings.material_demand_at_last_throttle = None if held_demand is None else dict(held_demand)
 
 	# dumps (not dump, not indent) so the C encoder does the work
-	text = json.dumps(serialize_state(sim.state), default=str,
-					  separators=(",", ":"))
+	# the agent economy's record is most of the file and already plain JSON: the encoder takes it as it is
+	with verbatim(sim.state.economy.agent_economy.get("record")):
+		text = json.dumps(serialize_state(sim.state), default=str,
+						  separators=(",", ":"))
 	absolute = os.path.abspath(path)
 	# a command that changed nothing leaves the file as it is
 	if _ON_DISK.get(absolute) == (text, _stamp(absolute)):
@@ -281,10 +289,29 @@ def _validate_save(blob, sim):
 	return None
 
 
+# The save last read for a question about it (its civilisation, its goal), so the load that follows
+# parses nothing again: path -> (file stamp, text, parsed blob). Taken out by the load.
+_PARSED = {}
+
+
+def _parsed_save(path):
+    """(text, blob) of a save, parsed once while the file stays as it is."""
+    absolute = os.path.abspath(path)
+    stamp = _stamp(absolute)
+    held = _PARSED.get(absolute)
+    if held is not None and held[0] == stamp and stamp is not None:
+        return held[1], held[2]
+    text = read_save_text(path)
+    blob = json.loads(text)
+    _PARSED.clear()
+    _PARSED[absolute] = (stamp, text, blob)
+    return text, blob
+
+
 def civ_of_save(path):
     """Which civilisation a save file is from, or None if it will not say."""
     try:
-        return (json.loads(read_save_text(path)) or {}).get("_civ")
+        return (_parsed_save(path)[1] or {}).get("_civ")
     except (OSError, ValueError, AttributeError):
         return None
 
@@ -292,7 +319,7 @@ def civ_of_save(path):
 def goal_of_save(path):
     """Which goal a save file was playing toward, or None if it will not say."""
     try:
-        return goal_of_blob(json.loads(read_save_text(path)) or {})
+        return goal_of_blob(_parsed_save(path)[1] or {})
     except (OSError, ValueError, AttributeError):
         return None
 
@@ -301,8 +328,8 @@ def load_state(sim, path):
 	"""Read a save from `path` and apply it to `sim`, or raise ValueError with
 	a clear reason and leave `sim` completely untouched.
 	"""
-	text = read_save_text(path)
-	blob = json.loads(text)
+	text, blob = _parsed_save(path)
+	_PARSED.clear()
 	_ON_DISK[os.path.abspath(path)] = (text, _stamp(os.path.abspath(path)))
 	bad = _validate_save(blob, sim)
 	if bad:
@@ -343,5 +370,12 @@ def load_state(sim, path):
 		sim.value_weights.update(state._weights)
 	if state._civ_live and "state_capacity" in state._civ_live:
 		sim.state_capacity = float(state._civ_live["state_capacity"])
+	if getattr(sim, "_economy_deferred", False):
+		figure = state.economy.nodes_money_per_labour_hour if state.economy.money_from_economy else None
+		if figure is None:
+			raise EconomyNotOpened("a game built to load a save without opening its economy needs the save's tree pricing")
+		from .opening_money import reprice_tree
+		sim._economy_deferred = False
+		reprice_tree(sim, figure)
 	sim.refresh_derived_nodes()
 	return sim

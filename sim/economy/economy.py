@@ -4,7 +4,7 @@
 `step(inputs)` runs a year and returns what the engine reads back.
 """
 import math
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
 from typing import Any, Dict, Mapping, Optional, Tuple
 
 from sim.world import capital_market
@@ -33,6 +33,8 @@ from .year_close import (check_money, close_agents, dispatch_merchants, money_ta
 from .year_goods import add_orders, clear_goods, cohort_orders, merchant_orders, state_orders
 from .year_labour import clear_labour, held_share_by_area, labour_offers, outside_option_by_tile
 from .year_ledger import YearLedger
+from .collection_paused import collection_paused
+from .replaced import replaced
 
 
 @dataclass
@@ -118,6 +120,10 @@ class Economy:
         self.record.currency = currency.debase_by_cut(self.record.currency, cut_share, restrike_share)
 
     def step(self, inputs: YearInputs) -> YearOutcome:
+        with collection_paused():
+            return self._run_year(inputs)
+
+    def _run_year(self, inputs: YearInputs) -> YearOutcome:
         setup, record = self.setup, self.record
         self.__dict__.pop("_port_shares", None)
         self.follow_flows()
@@ -136,9 +142,10 @@ class Economy:
             labour_bids.extend(orders.labour_bids)
         state_budget.plan_year(setup, record, view, labour_bids)
         staff_mint(setup, record, view, labour_bids)
-        everyone = labour_offers(setup, record, view, outside_option_by_tile(setup, record, view))
+        outside_option = outside_option_by_tile(setup, record, view)
+        everyone = labour_offers(setup, record, view, outside_option)
         offers, kept = withhold_hours(everyone, self._shortfall_hours())
-        context = labour_context(setup, record, view, self.carriage, inputs, self._own_plot_options())
+        context = labour_context(setup, record, view, self.carriage, inputs, self._own_plot_options(), outside_option)
         clear_labour(setup, record, labour_bids, offers, ledger, context, held_share_by_area(everyone, offers))
         self._grow_own(offers, ledger, inputs.harvest_factor, kept)
         order_book = {}
@@ -197,7 +204,7 @@ class Economy:
             if before <= 0.0 or after == before:
                 continue
             scale = after / before
-            record.cohorts[cohort_id] = replace(cohort, people=cohort.people * scale,
+            record.cohorts[cohort_id] = replaced(cohort, people=cohort.people * scale,
                                                   working_people=cohort.working_people * scale)
         for tile, before in people_now.items():
             after = inputs.population_by_tile.get(tile, before)
@@ -208,7 +215,7 @@ class Economy:
         for producer_id, factor in inputs.yield_factor_by_producer.items():
             producer = self.record.producers.get(producer_id)
             if producer is not None and producer.yield_factor != factor:
-                self.record.producers[producer_id] = replace(producer, yield_factor=factor)
+                self.record.producers[producer_id] = replaced(producer, yield_factor=factor)
 
     def _own_plot_options(self):
         if self._own_options is None:

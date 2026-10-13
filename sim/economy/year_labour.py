@@ -50,11 +50,14 @@ def labour_offers(setup, record, view, subsistence_by_tile) -> List[LabourOffer]
     working_by_tile: Dict[str, float] = {}
     for cohort in record.cohorts.values():
         working_by_tile[cohort.tile] = working_by_tile.get(cohort.tile, 0.0) + cohort.working_people
+    people_by_area: Dict[str, Dict[str, float]] = {}
     for cohort in sorted(record.cohorts.values(), key=lambda each: each.agent_id):
         tile_working = working_by_tile.get(cohort.tile, 0.0)
         share = cohort.working_people / tile_working if tile_working > 0.0 else 0.0
         area = labour_area(cohort.tile)
-        workers = {trade: count * share for trade, count in people_by_trade(record.workforce, area).items()}
+        if area not in people_by_area:
+            people_by_area[area] = people_by_trade(record.workforce, area)
+        workers = {trade: count * share for trade, count in people_by_area[area].items()}
         offers.extend(households.labour_offers(cohort, workers, view, subsistence_by_tile.get(cohort.tile, 0.0),
                                                setup.working_hours_per_year, danger))
     return offers
@@ -111,7 +114,7 @@ def clear_labour(setup, record, bids: Sequence[LabourBid], offers: Sequence[Labo
     inputs = dataclasses.replace(context, trades=core_trades(setup, {bid.trade for bid in core_bids}),
                                  bids=core_bids)
     seen, held = hold_back(record.workforce, held_share or {})
-    record.workforce, report = run_labour_year(seen, inputs)
+    record.workforce, report = run_labour_year(seen, inputs, owned=True)
     give_back(record.workforce, held)
     by_market: Dict[Tuple[str, str], List[LabourOffer]] = {}
     for offer in offers:

@@ -141,6 +141,27 @@ class YearReport:
         return None
 
 
+_LEAF_TYPES = (float, int, str, bool, type(None))
+
+
+def _plain_copy(value):
+    """A copy of nested dicts, lists and tuples of numbers and strings, as `copy.deepcopy` makes it."""
+    kind = type(value)
+    if kind is dict:
+        return {key: _plain_copy(item) for key, item in value.items()}
+    if kind is list:
+        return [item if type(item) in _LEAF_TYPES else _plain_copy(item) for item in value]
+    if kind is tuple:
+        return tuple(_plain_copy(item) for item in value)
+    return value
+
+
+def copy_state(state: MarketState) -> MarketState:
+    """An independent copy of the state."""
+    return MarketState(**{field.name: _plain_copy(getattr(state, field.name))
+                          for field in dataclasses.fields(MarketState)})
+
+
 def to_plain(state: MarketState) -> dict:
     return dataclasses.asdict(state)
 

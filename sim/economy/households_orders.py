@@ -124,10 +124,12 @@ def _smoothed_flow_by_good(cohort: Cohort, priced: List[PricedNeed], basket: Bas
 
 def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year: float,
                  basket: Basket, specs: Mapping[GoodId, GoodSpec],
-                 priced: Optional[List[PricedNeed]] = None, smooth_rise: bool = True) -> AgentOrders:
+                 priced: Optional[List[PricedNeed]] = None, smooth_rise: bool = True,
+                 shared_store: Optional[dict] = None) -> AgentOrders:
     """`priced` may be passed (from `need_prices`) to share the price work among a tile's classes.
     `smooth_rise` False lifts the bound on a rise in spending: an economy finding its level from an opening
-    that holds more money than its households want to keep would otherwise approach it over years."""
+    that holds more money than its households want to keep would otherwise approach it over years.
+    `shared_store` (empty to begin with) lets the cohorts of one pass share each tile's store prices."""
     priced = need_prices(basket, view, cohort.tile) if priced is None else priced
     cash = max(0.0, cash)
     if not priced or cohort.people <= 0.0:
@@ -143,7 +145,7 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
     # it spends down only wealth above its cash buffer and the savings it wants to keep
     claims = claims_of(view, cohort.agent_id, area_currency)
     from . import households_store            # imported here: that module needs this one's constants
-    weights, store_prices, held = households_store.store_holding(cohort, view, specs, priced)
+    weights, store_prices, held = households_store.store_holding(cohort, view, specs, priced, shared_store)
     store_value = math.fsum(held[good] * store_prices[good] for good in weights)
     keep = target + savings_target(income_this_year - floor_cost, view.interest_rate(area_currency),
                                    cohort.expected_inflation)

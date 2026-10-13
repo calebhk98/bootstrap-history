@@ -1,6 +1,5 @@
 """The year's end: carriage, money taxes, the mint, every agent's close, spoilage, and what the
 markets remember for next year."""
-import dataclasses
 import math
 from typing import Dict, Tuple
 
@@ -18,6 +17,7 @@ from .taxes_bases import YearFacts
 from .types import is_edge
 from .year_goods import _held_stock
 from .year_ledger import YearLedger
+from .replaced import replaced
 
 
 def dispatch_merchants(setup, record, carriage, ledger: YearLedger) -> None:
@@ -103,6 +103,8 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map) -> None:
     money = setup.currency_id
     property_income: Dict[str, float] = {}
     traded = {(result.good, result.area): result.quantity for result in ledger.clearings}
+    prepared_buyers: Dict = {}
+    cohorts_by_tile: Dict = {}           # the tiles' cohorts, unchanged until the households close below
     for producer_id, producer in sorted(record.producers.items()):
         recipe = setup.recipes[producer.recipe_id]
         revenue = ledger.sales_in.get(producer_id, 0.0)
@@ -110,14 +112,15 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map) -> None:
         per_run = recipe.outputs[producers.main_output(recipe)]
         worked = ledger.output.get((producer_id, producers.main_output(recipe)), 0.0) / (
             per_run * producer.yield_factor or per_run)
-        price_share = expansion_price.price_share_of(ledger.bids_by_market, traded, area_map.area_of, producer.tile)
+        price_share = expansion_price.price_share_of(ledger.bids_by_market, traded, area_map.area_of, producer.tile,
+                                                   prepared_buyers)
         closed = producers_close.close_year(producer, recipe, revenue, costs, view, worked, price_share)
         if closed.exited:
             paid = producer_exit.exit_producer(record, producer_id, list(closed.transfers))
             for transfer in paid:
                 property_income[transfer.payee] = property_income.get(transfer.payee, 0.0) + transfer.amount
             continue
-        paid = ownership.spread(record, closed.transfers)
+        paid = ownership.spread(record, closed.transfers, cohorts_by_tile)
         record.book.transfer_many(paid)
         worn = producer.capacity_runs - closed.producer.capacity_runs
         if worn > 0.0 and recipe.plant_life_years > 0.0 and revenue > costs:
@@ -129,11 +132,13 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map) -> None:
             record.expansion_runs[producer_id] = closed.expansion_runs
         record.producers[producer_id] = _with_sales(closed.producer, recipe, ledger)
     prices, volumes = learned_prices(ledger.clearings, record.memory)
+    ordered = (sorted(prices.items()), sorted(volumes.items()))
+    interest_rate = view.interest_rate(money)
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
         transfers = merchants.close_year(merchant, prices, volumes, record.book.balance(merchant.agent_id, money),
                                          _held_stock(record.book, merchant.agent_id), area_map.area_of, money,
-                                         view.interest_rate(money))
-        paid = ownership.spread(record, transfers)
+                                         interest_rate, ordered)
+        paid = ownership.spread(record, transfers, cohorts_by_tile)
         record.book.transfer_many(paid)
         for transfer in paid:
             property_income[transfer.payee] = property_income.get(transfer.payee, 0.0) + transfer.amount
@@ -165,7 +170,7 @@ def held_only(moves, book):
     """The moves with each giver's quantity cut to what it holds: settlement can deliver a rounding hair
     less than a fill, and an agent consumes what it has, not what its fills say."""
     return [move if is_edge(move.giver) else
-            dataclasses.replace(move, quantity=min(move.quantity, max(0.0, book.stock(move.giver, move.good, move.tile))))
+            replaced(move, quantity=min(move.quantity, max(0.0, book.stock(move.giver, move.good, move.tile))))
             for move in moves]
 
 
@@ -176,9 +181,9 @@ def _with_sales(producer, recipe, ledger: YearLedger):
     sold = ledger.sold.get((producer.agent_id, good), 0.0) / per_run
     worked = ledger.output.get((producer.agent_id, good), 0.0) / (per_run * producer.yield_factor or per_run)
     if producer.expected_sales <= 0.0:
-        return dataclasses.replace(producer, expected_sales=sold, last_runs=worked)
+        return replaced(producer, expected_sales=sold, last_runs=worked)
     share = producers.EXPECTATION_ADJUSTMENT_SHARE
-    return dataclasses.replace(producer, expected_sales=producer.expected_sales + share * (sold - producer.expected_sales),
+    return replaced(producer, expected_sales=producer.expected_sales + share * (sold - producer.expected_sales),
                                last_runs=worked)
 
 

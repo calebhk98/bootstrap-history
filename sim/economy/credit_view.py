@@ -15,10 +15,19 @@ class CreditView(YearView):
     def __init__(self, *arguments, loans: Callable[[], Sequence[Loan]] = lambda: (), **keywords) -> None:
         super().__init__(*arguments, **keywords)
         self._loans = loans
+        self._claims_seen = None          # (loan list, its length, its last loan) the claims below were summed over
+        self._claims: dict = {}           # currency -> claims_by_lender over those loans
 
     def claims(self, agent: AgentId, currency: CurrencyId) -> float:
         """What the agent expects to collect on loans it has made."""
-        return claims_by_lender((loan for loan in self._loans() if loan.lender == agent), currency).get(agent, 0.0)
+        loans = self._loans()
+        seen = self._claims_seen
+        last = loans[-1] if loans else None
+        if seen is None or seen[0] is not loans or seen[1] != len(loans) or seen[2] is not last:
+            self._claims_seen, self._claims = (loans, len(loans), last), {}
+        if currency not in self._claims:
+            self._claims[currency] = claims_by_lender(loans, currency)
+        return self._claims[currency].get(agent, 0.0)
 
 
 def claims_of(view, agent: AgentId, currency: CurrencyId) -> float:

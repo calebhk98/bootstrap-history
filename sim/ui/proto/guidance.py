@@ -8,7 +8,7 @@ import math
 
 from .portfolio_bottlenecks import blocker_kind_of
 from .economy import _portfolio_constraint
-from .state import _agent_state
+from .state_projects import _agent_state_active_projects
 
 LEVERAGE_NOTE = ("A broad approach can make a hard goal cheaper, faster and more robust than "
                  "walking its prerequisite chain alone; these are the levers that work for any "
@@ -17,7 +17,7 @@ LEVERAGE_NOTE = ("A broad approach can make a hard goal cheaper, faster and more
 
 def leverage_points(sim):
     """The system levers behind every goal, each with the engine's own figures."""
-    risk = sim.knowledge_risk()
+    risk = sim.knowledge_risk(advice=False, chronology=False)
     return [
         {"lever": "literacy", "why_it_matters": "more people who can read and be taught makes research and trades faster",
          "figures": {"literacy_general": round(float(sim.civ.get("literacy_general", 0.0)), 3),
@@ -44,7 +44,7 @@ def leverage_points(sim):
 def delay_kinds(sim, nodes):
     """Active project ids grouped by the shared blocker kind each waits on."""
     kinds = {}
-    for node_id, entry in sorted((_agent_state(sim, nodes).get("active") or {}).items()):
+    for node_id, entry in sorted(_agent_state_active_projects(sim, nodes).items()):
         kind = blocker_kind_of(_portfolio_constraint(entry.get("waiting_on")))
         kinds.setdefault(kind, []).append(node_id)
     return kinds
