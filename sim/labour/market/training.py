@@ -87,19 +87,30 @@ def enrol(state: MarketState, inputs: YearInputs, area: str, trade: str,
     if years <= 0.0:
         aptitude.add_bands(aptitude.bands_of(state.workers.setdefault(area, {}), trade), bands)
         return aptitude.empty_bands()
-    admitted_share = min(1.0, open_places(state, inputs, area, trade) / wanting)
+    seats, school_bonus = _school_places(inputs, area, trade) if inputs.schools else (0.0, 0.0)
+    capacity = seats + _incumbents(state, area, trade) * APPRENTICES_PER_MASTER
+    already = enrolled(state, area, trade)
+    admitted_share = min(1.0, max(0.0, capacity - already) / wanting)
     if admitted_share <= 0.0:
         return list(bands)
-    seats, school_bonus = _school_places(inputs, area, trade)
-    capacity = seats + _incumbents(state, area, trade) * APPRENTICES_PER_MASTER
     bonus = school_bonus * (seats / capacity) if capacity > 0.0 else 0.0
-    admitted = [value * admitted_share for value in bands]
-    already = enrolled(state, area, trade)
-    state.trainees.setdefault(area, {}).setdefault(trade, []).append([years, admitted, bonus])
+    if admitted_share >= 1.0:
+        admitted = list(bands)
+        refused = aptitude.empty_bands()
+        total_admitted = wanting
+    else:
+        admitted = [value * admitted_share for value in bands]
+        refused = [value - taken for value, taken in zip(bands, admitted)]
+        total_admitted = math.fsum(admitted)
+    cohorts = state.trainees.setdefault(area, {}).setdefault(trade, [])
+    if cohorts and cohorts[-1][0] == years and cohorts[-1][2] == bonus:
+        aptitude.add_bands(cohorts[-1][1], admitted)   # same finish date and teaching: one cohort
+    else:
+        cohorts.append([years, admitted, bonus])
     cache = getattr(state, "enrolled_cache", None)
     if cache is not None:
-        cache[(area, trade)] = already + math.fsum(admitted)
-    return [value - taken for value, taken in zip(bands, admitted)]
+        cache[(area, trade)] = already + total_admitted
+    return refused
 
 
 def advance(state: MarketState, inputs: YearInputs, report: YearReport) -> None:
