@@ -17,7 +17,7 @@ capacity carry the site, so a deposit's rent shows up as profit. Nothing here na
 View lookups: goods by `view.area_of(good, tile)`, labour by `view.area_of(trade, tile)`.
 """
 import math
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
 from typing import Dict, List, Mapping, Optional, Tuple
 
 from sim.constants import declare
@@ -26,6 +26,7 @@ from . import ask_raise, inventory, unit_cost
 from .protocols import MarketView
 from .types import (AgentId, Bid, EDGE_CONSUMPTION, EDGE_PRODUCTION, GoodId, GoodSpec, GoodsMove, LabourBid,
                     Offer, Recipe, TileId)
+from .replaced import replaced
 
 EXPECTATION_ADJUSTMENT_SHARE = declare(
     "EXPECTATION_ADJUSTMENT_SHARE", 0.5, kind="temporary_heuristic",
@@ -239,7 +240,7 @@ def _break_even_scale(producer, recipe, view, prices, live_inputs=None, wages=No
                             recipe, prices)
     wages = live_wages(producer, recipe, view) if wages is None else wages
     revenue = unit_cost.revenue_per_run(recipe, prices) * producer.yield_factor
-    rate = view.interest_rate(view.currency_of(view.area_of(sorted(recipe.outputs)[0], producer.tile)))
+    rate = view.interest_rate(view.currency_of(view.area_of(min(recipe.outputs), producer.tile)))
     cost = unit_cost.variable_cost_per_run(recipe, inputs, wages, producer.land_rent_per_run) + unit_cost.capital_charge_per_run(
         recipe, inputs, wages, rate)
     if not (revenue > 0.0 and math.isfinite(cost) and cost > 0.0):
@@ -252,8 +253,8 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
     expected revenue, after the yield, does not cover its variable cost at expected input prices and
     live wages."""
     outputs = expected_output_prices(producer, recipe, view)
-    inputs = expected_input_prices(producer, recipe, view)
     market_inputs = live_input_prices(producer, recipe, view)
+    inputs = expected_input_prices(producer, recipe, view, market_inputs)
     wages = live_wages(producer, recipe, view)
     revenue = unit_cost.revenue_per_run(recipe, outputs) * producer.yield_factor
     input_cost = unit_cost.input_cost_per_run(recipe, inputs)
@@ -321,6 +322,8 @@ def shortfall_at_working_scale(producer: Producer, recipe: Recipe, view: MarketV
     pressed to sell stock at any price for want of working capital it has no use for."""
     if producer.capacity_runs <= 0.0:
         return cash_shortfall
+    if not cash_shortfall > 0.0:
+        return 0.0          # nothing is lacking, so there is no shortfall to shrink
     scale = next_years_runs_ceiling(producer) * share_that_pays(producer, recipe, view)
     unused_share = 1.0 - scale / producer.capacity_runs
     return max(0.0, cash_shortfall - unused_share * producer.cash_target)
@@ -358,8 +361,16 @@ def working_cost_ratio(revenue_per_run: float, variable_cost_per_run: float) -> 
     return _normal_below(score - COST_SPREAD_WITHIN_PRODUCER) / working
 
 
+_main_output_of_recipe: Dict[int, tuple] = {}      # id of a recipe -> (recipe, its main output)
+
+
 def main_output(recipe: Recipe) -> GoodId:
-    return max(sorted(recipe.outputs), key=lambda good: recipe.outputs[good])
+    """The output a run makes most of (the first by name among ties); worked out once per recipe."""
+    kept = _main_output_of_recipe.get(id(recipe))
+    if kept is None or kept[0] is not recipe:
+        kept = _main_output_of_recipe[id(recipe)] = (
+            recipe, max(sorted(recipe.outputs), key=lambda good: recipe.outputs[good]))
+    return kept[1]
 
 
 def runs_for_stock(producer: Producer, recipe: Recipe, view: MarketView) -> float:
@@ -464,4 +475,4 @@ def offers(producer: Producer, recipe: Recipe, view: MarketView, stock_by_good: 
 
 
 def with_capacity(producer: Producer, capacity_runs: float) -> Producer:
-    return replace(producer, capacity_runs=max(0.0, capacity_runs))
+    return replaced(producer, capacity_runs=max(0.0, capacity_runs))

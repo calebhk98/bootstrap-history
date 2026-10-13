@@ -14,7 +14,6 @@ Pure functions: `clear_land` and `rent_postings`. `settle_year` applies them to 
 Households pay no rent on the plots they work (they own them); producers pay the tile's owner cohort,
 and `ownership.spread` shares it among the tile's cohorts.
 """
-import dataclasses
 import math
 from dataclasses import dataclass
 from typing import Dict, List, Mapping, Optional, Sequence
@@ -25,6 +24,7 @@ from . import ownership, unit_cost
 from .land_lease import LAND_RENT_ADJUSTMENT_SHARE, posted_rents  # noqa: F401
 from .producers import expected_output_prices, live_input_prices, live_wages
 from .types import AgentId, CurrencyId, TileId, Transfer
+from .replaced import replaced
 
 LAND_BAND_AREA_SHARES = declare(
     "LAND_BAND_AREA_SHARES", (0.2, 0.3, 0.3, 0.2), kind="temporary_heuristic",
@@ -185,7 +185,7 @@ def settle_year(setup, record, view, wanted_runs: Mapping[AgentId, float],
     demands = demands_of(setup, record, view, wanted_runs)
     arable = {tile_id: arable_hectares(tile) for tile_id, tile in setup.tiles.items()}
     cleared = clear_land(arable, demands, own_plot_hectares)
-    result = dataclasses.replace(cleared, rent_per_hectare_by_tile=posted_rents(record.land_rent,
+    result = replaced(cleared, rent_per_hectare_by_tile=posted_rents(record.land_rent,
                                                                               cleared.rent_per_hectare_by_tile))
     record.land_rent = dict(result.rent_per_hectare_by_tile)
     for producer_id, producer in list(record.producers.items()):
@@ -194,7 +194,7 @@ def settle_year(setup, record, view, wanted_runs: Mapping[AgentId, float],
             continue
         asked = next((demand.hectares for demand in demands if demand.agent_id == producer_id), 0.0)
         granted = result.granted_hectares.get(producer_id, asked)
-        record.producers[producer_id] = dataclasses.replace(
+        record.producers[producer_id] = replaced(
             producer, land_rent_per_run=result.rent_per_hectare_by_tile.get(producer.tile, 0.0) * land_per_run,
             land_run_cap=granted / land_per_run if granted < asked - 1e-9 else -1.0)
     money = setup.currency_id

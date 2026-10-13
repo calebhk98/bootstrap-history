@@ -4,7 +4,6 @@ capacity), which stakes part of its cash as working cash; one with plant to buil
 asks the credit market for it, and its capacity grows as the plant goods arrive. Owners also put working
 cash back into paying producers that ran out of it."""
 import math
-from dataclasses import replace
 from typing import Dict, Tuple
 
 from . import location, ownership, sites, unit_cost
@@ -17,6 +16,7 @@ from .producers_close import working_capital_target
 from .market_memory import market_key
 from .setup import recipe_tile_key
 from .types import GoodsMove, LoanRequest, Transfer
+from .replaced import replaced
 
 
 def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str, str], float],
@@ -62,7 +62,7 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
         elif producer_id in record.expansion_runs:
             continue                                    # plant it already asked for is still to come
         if not builds_plant:
-            producer = replace(producer, capacity_runs=producer.capacity_runs + plan.runs)
+            producer = replaced(producer, capacity_runs=producer.capacity_runs + plan.runs)
         record.producers[producer_id] = producer
         started += 1
         inputs, wages = live_input_prices(producer, recipe, view), live_wages(producer, recipe, view)

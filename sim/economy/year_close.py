@@ -1,6 +1,5 @@
 """The year's end: carriage, money taxes, the mint, every agent's close, spoilage, and what the
 markets remember for next year."""
-import dataclasses
 import math
 from typing import Dict, Tuple
 
@@ -18,6 +17,7 @@ from .taxes_bases import YearFacts
 from .types import is_edge
 from .year_goods import _held_stock
 from .year_ledger import YearLedger
+from .replaced import replaced
 
 
 def dispatch_merchants(setup, record, carriage, ledger: YearLedger) -> None:
@@ -170,7 +170,7 @@ def held_only(moves, book):
     """The moves with each giver's quantity cut to what it holds: settlement can deliver a rounding hair
     less than a fill, and an agent consumes what it has, not what its fills say."""
     return [move if is_edge(move.giver) else
-            dataclasses.replace(move, quantity=min(move.quantity, max(0.0, book.stock(move.giver, move.good, move.tile))))
+            replaced(move, quantity=min(move.quantity, max(0.0, book.stock(move.giver, move.good, move.tile))))
             for move in moves]
 
 
@@ -181,9 +181,9 @@ def _with_sales(producer, recipe, ledger: YearLedger):
     sold = ledger.sold.get((producer.agent_id, good), 0.0) / per_run
     worked = ledger.output.get((producer.agent_id, good), 0.0) / (per_run * producer.yield_factor or per_run)
     if producer.expected_sales <= 0.0:
-        return dataclasses.replace(producer, expected_sales=sold, last_runs=worked)
+        return replaced(producer, expected_sales=sold, last_runs=worked)
     share = producers.EXPECTATION_ADJUSTMENT_SHARE
-    return dataclasses.replace(producer, expected_sales=producer.expected_sales + share * (sold - producer.expected_sales),
+    return replaced(producer, expected_sales=producer.expected_sales + share * (sold - producer.expected_sales),
                                last_runs=worked)
 
 

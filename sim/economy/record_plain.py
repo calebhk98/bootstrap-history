@@ -17,12 +17,16 @@ def plain(value: Any) -> Any:
     if kind is dict:
         return {key: (item if type(item) in LEAVES else plain(item)) for key, item in value.items()}
     if kind is list:
-        return [plain(item) for item in value]
+        return [item if type(item) in LEAVES else plain(item) for item in value]
     if kind is tuple:
-        return tuple(plain(item) for item in value)
-    if dataclasses.is_dataclass(value) and not isinstance(value, type):
-        names = _FIELD_NAMES.get(kind)
-        if names is None:
-            names = _FIELD_NAMES[kind] = tuple(field.name for field in dataclasses.fields(value))
-        return {name: plain(getattr(value, name)) for name in names}
+        return tuple([item if type(item) in LEAVES else plain(item) for item in value])
+    names = _FIELD_NAMES.get(kind)
+    if names is None and dataclasses.is_dataclass(value) and not isinstance(value, type):
+        names = _FIELD_NAMES[kind] = tuple(field.name for field in dataclasses.fields(value))
+    if names is not None:
+        fields = {}
+        for name in names:
+            item = getattr(value, name)
+            fields[name] = item if type(item) in LEAVES else plain(item)
+        return fields
     return copy.deepcopy(value)

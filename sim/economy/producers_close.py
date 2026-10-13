@@ -9,7 +9,7 @@
     rate, best first, at most a declared number a year. Owners and sites come from the caller.
 """
 import math
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from typing import Callable, Collection, List, Mapping, Optional, Sequence, Tuple
 
 from sim.constants import declare
@@ -19,6 +19,7 @@ from .producers import (OUTPUT_CHANGE_SHARE_PER_YEAR, Producer, expected_output_
                         live_wages, next_expectations, share_working)
 from .protocols import MarketView
 from .types import AgentId, GoodId, LoanRequest, Recipe, TileId, Transfer
+from .replaced import replaced
 
 LOSS_YEARS_BEFORE_EXIT = declare(
     "LOSS_YEARS_BEFORE_EXIT", 3, kind="temporary_heuristic", unit="consecutive years",
@@ -73,7 +74,7 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
     sunk, so the year's capital charge falls only on the capacity worked. `price_share_after(good, added)` is
     the share of a good's price that remains when the producer adds that much output a year (expansion_price.py);
     without it the producer expects the price it sees."""
-    first_output = sorted(recipe.outputs)[0]
+    first_output = min(recipe.outputs)
     currency = view.currency_of(view.area_of(first_output, producer.tile))
     rate = view.interest_rate(currency)
     cash = max(0.0, view.cash(producer.agent_id, currency))
@@ -91,7 +92,7 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
     shedding = losses >= LOSS_YEARS_BEFORE_EXIT and margin <= 0.0
     if shedding and paying < CLOSED_CAPACITY_SHARE:
         payout = _dividend(producer, currency, cash)
-        gone = replace(producer, capacity_runs=0.0, years_of_loss=losses, expected_prices=expectations,
+        gone = replaced(producer, capacity_runs=0.0, years_of_loss=losses, expected_prices=expectations,
                        cash_target=0.0)
         return YearClose(gone, payout, exited=True)
     if has_plant:
@@ -110,7 +111,7 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
     target = working_capital_target(recipe, capacity, inputs, wages)
     request, rebuilt = _expansion(producer, recipe, view, currency, rate, wear, inputs, wages,
                                   price_share_after)
-    survivor = replace(producer, capacity_runs=capacity, years_of_loss=losses,
+    survivor = replaced(producer, capacity_runs=capacity, years_of_loss=losses,
                        expected_prices=expectations, cash_target=target)
     surplus = max(0.0, cash - target)
     return YearClose(survivor, _dividend(producer, currency, surplus), request, rebuilt)
