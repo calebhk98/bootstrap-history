@@ -35,10 +35,12 @@ class MineDepositsMixin:
 
     def _modelled_sizes(self, resource_id):
         """{deposit id: tonnes} from the older deposit model's yearly output over a working life, for a metal."""
-        if resource_id not in deposit_model.metals(self.world_map):
-            return {}
-        return {deposit.name: deposit.quantity_tonnes_per_year * deposit_model.DEPOSIT_ASSUMED_WORKING_LIFE_YEARS
+        sizes = self.__dict__.setdefault("_modelled_sizes_cache", {})
+        if resource_id not in sizes:
+            sizes[resource_id] = {} if resource_id not in deposit_model.metals(self.world_map) else {
+                deposit.name: deposit.quantity_tonnes_per_year * deposit_model.DEPOSIT_ASSUMED_WORKING_LIFE_YEARS
                 for deposit in deposit_model.load_deposits(resource_id)}
+        return sizes[resource_id]
 
     def _worked_before_start(self, resource_id, tiles):
         """{deposit id: share of its endowment worked out before the game began}."""
@@ -52,8 +54,9 @@ class MineDepositsMixin:
         holdings = self.state.holdings
         tiles = tuple(geography.tiles_held(self.civ, self.world_map))
         found = holdings.deposits_found
-        key = (resource_id, tiles, self.state.scenario.year, len(found))
-        cached = self.__dict__.get("_deposit_base_cache")
+        key = (tiles, self.state.scenario.year, len(found))
+        store = self.__dict__.setdefault("_deposit_base_cache", {})
+        cached = store.get(resource_id)
         if cached is None or cached[0] != key:
             modelled = self._modelled_sizes(resource_id)
             before = self._worked_before_start(resource_id, tiles)
@@ -62,7 +65,7 @@ class MineDepositsMixin:
                 size = row["size_tonnes"] if row["size_tonnes"] is not None else modelled.get(row["id"])
                 if size is not None:
                     rows.append((row, size, before.get(row["id"], 0.0)))
-            cached = self.__dict__["_deposit_base_cache"] = (key, rows)
+            cached = store[resource_id] = (key, rows)
         return cached[1]
 
     def found_deposits(self, mat):

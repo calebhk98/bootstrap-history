@@ -188,8 +188,12 @@ class MarketClearingMixin:
     def _open_market_book(self):
         """An entry for every commodity the price table names, so each one's
         capacity follows its price from the first year."""
+        opened = set()
         for material in sorted(self._material_prices()):
-            self._market_entry(self._material_tag(material)[0])
+            commodity = self._material_tag(material)[0]
+            if commodity not in opened:     # several materials share a commodity; one look each
+                opened.add(commodity)
+                self._market_entry(commodity)
 
     def _step_market(self):
         """Close the year: the agent economy's year runs, then the partners' books close on what crossed."""
