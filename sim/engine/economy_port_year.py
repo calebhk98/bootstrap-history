@@ -610,6 +610,7 @@ class AgentEconomy:
         return self.answers()[2]
 
     def credit_room(self, borrower_id):
-        """What the credit market will still advance one borrower; None before lenders have met."""
+        """What the credit market will still advance one borrower, in coin; None before lenders have met."""
         self.answers()
-        return economy_api.credit_room(self._economy, borrower_id)
+        room = economy_api.credit_room(self._economy, borrower_id)
+        return None if room is None else room * self._economy.setup.coin_per_unit
