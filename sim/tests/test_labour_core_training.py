@@ -119,5 +119,18 @@ class TrainingTests(unittest.TestCase):
         self.assertEqual(records.from_plain(records.to_plain(state)), state)
 
 
+class EnrolmentCacheTests(unittest.TestCase):
+    def test_a_kept_total_agrees_with_summing_the_cohorts(self):
+        state = records.MarketState(workers={"vale": {"carver": [4.0] * 5}})
+        specs = inputs()
+        training.start_enrolment_cache(state)
+        training.enrol(state, specs, "vale", "carver", [0.2] * 5)
+        training.enrol(state, specs, "vale", "carver", [0.2] * 5)
+        kept = training.enrolled(state, "vale", "carver")
+        training.stop_enrolment_cache(state)
+        self.assertAlmostEqual(kept, training.enrolled(state, "vale", "carver"))
+        self.assertAlmostEqual(kept, 2.0)
+
+
 if __name__ == "__main__":
     unittest.main()

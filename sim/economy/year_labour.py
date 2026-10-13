@@ -114,7 +114,7 @@ def clear_labour(setup, record, bids: Sequence[LabourBid], offers: Sequence[Labo
     inputs = dataclasses.replace(context, trades=core_trades(setup, {bid.trade for bid in core_bids}),
                                  bids=core_bids)
     seen, held = hold_back(record.workforce, held_share or {})
-    record.workforce, report = run_labour_year(seen, inputs)
+    record.workforce, report = run_labour_year(seen, inputs, owned=True)
     give_back(record.workforce, held)
     by_market: Dict[Tuple[str, str], List[LabourOffer]] = {}
     for offer in offers:
