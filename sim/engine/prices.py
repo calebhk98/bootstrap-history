@@ -372,14 +372,25 @@ def _held(civilization: Optional[Mapping[str, Any]]) -> Optional[Dict[str, Any]]
     return None if civilization is None else {civilization["id"]: civilization}
 
 
+# The engine's solves stop at this largest relative price change per round, far looser than the solver's own
+# tolerance (tighter than any price the game shows or any decision it takes).
+ENGINE_SOLVE_TOLERANCE = declare(
+    "ENGINE_SOLVE_TOLERANCE", 1e-5, kind="temporary_heuristic", unit="largest relative price change in a round",
+    source=None, confidence="D",
+    why="Stops the in-game price solve once prices settle to the precision play can see; the solver's "
+        "own tolerance runs many more rounds for digits nothing reads.")
+
+
 def _solve_to_json(production_entries: ProductionEntries,
                    gate_nodes_held: FrozenSet[str], civilization_id: str,
                    document_ratios: Dict[str, float],
                    admitted_entry_keys: FrozenSet[str] = frozenset(),
                    interest_rate: float = 0.0,
                    civilization: Optional[Mapping[str, Any]] = None,
-                   farmed_hectares: Optional[float] = None) -> Dict[str, Any]:
-    """Run the solver for one held-gate set; the result is JSON-able."""
+                   farmed_hectares: Optional[float] = None,
+                   in_game: bool = False, initial_prices: Optional[Dict[str, float]] = None) -> Dict[str, Any]:
+    """Run the solver for one held-gate set; the result is JSON-able. `in_game` starts from `initial_prices`
+    (when given) and stops at ENGINE_SOLVE_TOLERANCE; otherwise the solve is cold and exact."""
     # `gate_nodes_held` is exactly the right thing to hand
     # `techniques_available_to` as `reached_nodes`: every `requires_node` it
     # will ever check membership for is, by `all_gate_nodes`'s own
@@ -413,13 +424,14 @@ def _solve_to_json(production_entries: ProductionEntries,
         rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
         demand_anchors=joint_allocation.build_demand_anchors(civilization_id, civilization=civilization),
         interest_rate=interest_rate,
-        dump_minimum_distance_kilometres=waste_dump_minimum_distance(civilization))
+        dump_minimum_distance_kilometres=waste_dump_minimum_distance(civilization),
+        **({"initial_prices": initial_prices, "tolerance": ENGINE_SOLVE_TOLERANCE} if in_game else {}))
 
     return {
         "prices_in_labour_hours": prices_in_labour_hours,
         "resolvable_materials": sorted(resolvable_materials),
         "chosen_recipe_by_material": chosen_recipe_by_material,
-        "converged": residual < solve_prices.CONVERGENCE_TOLERANCE,
+        "converged": residual < (ENGINE_SOLVE_TOLERANCE if in_game else solve_prices.CONVERGENCE_TOLERANCE),
         "iterations_run": iterations_run,
     }
 
@@ -468,9 +480,12 @@ def solved_prices(held_technology_ids: Iterable[str],
         if interest_rate is None:
             interest_rate = float(civilization["starting_interest_rate"])
     civilization_id = civilization_id or solve_prices.DEFAULT_LAND_CIVILIZATION
+    starting_rate = (float(civilization["starting_interest_rate"]) if civilization is not None
+                     else solve_prices.load_starting_interest_rate(civilization_id))
     if interest_rate is None:
-        interest_rate = solve_prices.load_starting_interest_rate(civilization_id)
+        interest_rate = starting_rate
     territory = territory_fingerprint(civilization)
+    farmed_area = farmed_hectares
     farmed_hectares = band_farmed_hectares(farmed_hectares)
 
     gate_nodes_held = frozenset(all_gate_nodes(production_entries)
@@ -485,10 +500,19 @@ def solved_prices(held_technology_ids: Iterable[str],
     if cached is not None and cached[0] is production_entries:
         return cached[1]
 
+    in_game = production_entries is _DEFAULT_PRODUCTION_ENTRIES
+
     def compute() -> Dict[str, Any]:
+        # A solve at another rate starts from the same solve at the starting rate (itself started cold), so
+        # its result depends on its own inputs only, never on which solves ran before it.
+        initial = None
+        if in_game and interest_rate != starting_rate:
+            initial = solved_prices(held_technology_ids, prices_json, production_entries, civilization_id,
+                                    admitted_entry_keys, starting_rate, civilization,
+                                    farmed_area).prices_in_labour_hours
         return _solve_to_json(production_entries, gate_nodes_held,
                               civilization_id, document_ratios, admitted_entry_keys, interest_rate,
-                              civilization, farmed_hectares)
+                              civilization, farmed_hectares, in_game, initial)
     if production_entries is _DEFAULT_PRODUCTION_ENTRIES:
         # Only the committed catalogue is persisted; synthetic catalogues are not.
         try:

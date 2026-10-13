@@ -1224,7 +1224,8 @@ def _solve_round_update_prices(resolvable_materials, prices, candidates_by_mater
 def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
          damping=DAMPING_FACTOR, max_iterations=MAXIMUM_ITERATIONS,
          tolerance=CONVERGENCE_TOLERANCE, rent_hours_per_kg_by_material=None,
-         demand_anchors=None, interest_rate=0.0, dump_minimum_distance_kilometres=0.0):
+         demand_anchors=None, interest_rate=0.0, dump_minimum_distance_kilometres=0.0,
+         initial_prices=None):
     """Damped Jacobi fixed-point iteration over every resolvable material.
 
     Every material updates from the SAME round's starting prices (Jacobi,
@@ -1265,7 +1266,9 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
     consumer's own higher requirement (see TEMPERATURE for why that used
     to be a bug).
     """
-    prices = {material: INITIAL_PRICE_GUESS_HOURS for material in resolvable_materials}
+    # A caller may start the iteration from the prices of a nearby solve; a material it lacks starts at the guess.
+    start = initial_prices or {}
+    prices = {material: start.get(material, INITIAL_PRICE_GUESS_HOURS) for material in resolvable_materials}
     chosen_recipe_by_material = {}
     recipe_ids_in_order = sorted(production_entries)  # stable order; see above
     floor_by_carrier = capability_floor_by_carrier(production_entries)
