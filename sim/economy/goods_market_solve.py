@@ -165,7 +165,7 @@ def _root(demand, low: float, excess_low: float, high: float, excess_high: float
             # a secant stalled against a jump in demand would crawl: bisect when the bracket has not halved in two steps
             bisect_now = step > 0 and width > 0.5 * checkpoint_width
             checkpoint_width = width
-        if bisect_now and step % 2 == 0:
+        if (bisect_now and step % 2 == 0) or excess_high == excess_low:
             point = 0.5 * (log_low + log_high)
         else:
             point = (log_low * excess_high - log_high * excess_low) / (excess_high - excess_low)
