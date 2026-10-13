@@ -32,7 +32,7 @@ from `_save_listing` over there, so keeping it here would have made the
 save/load module import back from this one.
 """
 import sim.engine.ui_port as ui_port
-import json, os, random, re, sys, time
+import gc, json, os, random, re, sys, time
 
 from sim.engine.ui_port import (
     CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog, selectable_goals,
@@ -92,6 +92,8 @@ def cmd_play(args):
     if result == 1:
         return 1
     sim, nodes, session, app_cfg, fresh, kit = result
+    # the loaded game lives for the whole command: the cyclic collector stops rescanning it
+    gc.freeze()
     # THE WELCOME AND TUTORIAL TEXT IS A PREFERENCE NOW (Options: "show the
     # welcome message and tutorial on new games"). A player on their fifth
     # new game does not need the five starter verbs explained again every
