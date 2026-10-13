@@ -71,7 +71,7 @@ class UnsoldAskTests(unittest.TestCase):
         view = frozen_market(stock=500.0)
         reservations = []
         for _year in range(8):
-            producer = producers.replace(producer, expected_prices=producers.next_expectations(producer, FARM, view))
+            producer = producers.replaced(producer, expected_prices=producers.next_expectations(producer, FARM, view))
             offer, = producers.offers(producer, FARM, view, {"grain": 500.0}, 0.0, 0.05, {"grain": GoodSpec("grain", 1.0, 0.0, 0.0, "food")})
             reservations.append(offer.reservation_price)
         self.assertTrue(all(later < earlier for earlier, later in zip(reservations, reservations[1:])))

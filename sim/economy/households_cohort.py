@@ -6,7 +6,6 @@ it earns (wages for the hours its workers sell) and owns (a share of the tile's 
 
 Functions here: `cohorts_for_tile`, `distribute_property_income`, `labour_offers`.
 """
-import dataclasses
 from dataclasses import dataclass, field
 from typing import Dict, List, Mapping, Optional
 
@@ -16,6 +15,7 @@ from sim.world import demand
 from . import labour
 from .protocols import MarketView
 from .types import AgentId, LabourOffer, TileId, TradeId
+from .replaced import replaced
 
 DEFAULT_INCOME_CLASS_COUNT = declare(
     "DEFAULT_INCOME_CLASS_COUNT", 3, kind="temporary_heuristic",
@@ -104,4 +104,4 @@ def labour_offers(cohort: Cohort, workers_by_trade: Mapping[TradeId, float], vie
 
 
 def renewed(cohort: Cohort, **changes) -> Cohort:
-    return dataclasses.replace(cohort, **changes)
+    return replaced(cohort, **changes)

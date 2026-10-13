@@ -4,7 +4,7 @@
 `step(inputs)` runs a year and returns what the engine reads back.
 """
 import math
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
 from typing import Any, Dict, Mapping, Optional, Tuple
 
 from sim.world import capital_market
@@ -33,6 +33,7 @@ from .year_close import (check_money, close_agents, dispatch_merchants, money_ta
 from .year_goods import add_orders, clear_goods, cohort_orders, merchant_orders, state_orders
 from .year_labour import clear_labour, held_share_by_area, labour_offers, outside_option_by_tile
 from .year_ledger import YearLedger
+from .replaced import replaced
 
 
 @dataclass
@@ -198,7 +199,7 @@ class Economy:
             if before <= 0.0 or after == before:
                 continue
             scale = after / before
-            record.cohorts[cohort_id] = replace(cohort, people=cohort.people * scale,
+            record.cohorts[cohort_id] = replaced(cohort, people=cohort.people * scale,
                                                   working_people=cohort.working_people * scale)
         for tile, before in people_now.items():
             after = inputs.population_by_tile.get(tile, before)
@@ -209,7 +210,7 @@ class Economy:
         for producer_id, factor in inputs.yield_factor_by_producer.items():
             producer = self.record.producers.get(producer_id)
             if producer is not None and producer.yield_factor != factor:
-                self.record.producers[producer_id] = replace(producer, yield_factor=factor)
+                self.record.producers[producer_id] = replaced(producer, yield_factor=factor)
 
     def _own_plot_options(self):
         if self._own_options is None:

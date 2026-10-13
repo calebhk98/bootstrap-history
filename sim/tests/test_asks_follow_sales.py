@@ -114,7 +114,7 @@ class SellersOfGoodsAskFollowSales(unittest.TestCase):
         view = View({"grain": 0.7, "seed": 1.0}, {"hand": 1.0}, stock=0.0)
         path = []
         for _ in range(4):
-            producer = producers.replace(producer, expected_prices=producers.next_expectations(producer, FARM, view))
+            producer = producers.replaced(producer, expected_prices=producers.next_expectations(producer, FARM, view))
             path.append(producer.expected_prices["grain"])
         self.assertTrue(all(later > earlier for earlier, later in zip(path, path[1:])), path)
 
