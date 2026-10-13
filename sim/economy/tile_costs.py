@@ -11,8 +11,9 @@ Standalone: `sim.geography.api` and `sim.economy.types` only.
 import math
 from typing import Dict, Iterable, Mapping, Optional
 
+from sim.economy import carriage_cache
 from sim.economy.types import TileId, TileSpec
-from sim.geography.api import layer_value, map_of_tiles, route_costs, tile_facts
+from sim.geography.api import layer_value, map_of_tiles, open_map, route_costs, tile_facts
 
 
 def tiles_from_geography(geography: dict, tile_ids: Iterable[TileId]) -> Dict[TileId, TileSpec]:
@@ -72,26 +73,46 @@ class CarriageTable:
         self._world_map = world_map
         self._improvements = dict(improvements or {})
         self._from_source: Dict[TileId, Dict[TileId, float]] = {}
+        self._warmed = False    # whether the whole table has been filled (or fetched) already
 
     def costs_from(self, source: TileId) -> Dict[TileId, float]:
         """Cheapest cost to every given tile reachable from `source` (unreachable tiles are absent)."""
         cached = self._from_source.get(source)
+        if cached is None and not self._warmed:
+            self.warm(remember=True)
+            cached = self._from_source.get(source)
         if cached is None:
-            everywhere = route_costs(
-                [source], sorted(self._rates), mode_costs=self._rates, handling_costs=self._handling,
-                held_nodes=self._held_nodes, world_map=self._world_map,
-                improvements=self._improvements, within=self._tile_set)
-            cached = {tile_id: cost for tile_id, cost in everywhere.items() if tile_id in self._tile_set}
+            cached = self._search(source)
             self._from_source[source] = cached
         return cached
+
+    def _search(self, source: TileId) -> Dict[TileId, float]:
+        everywhere = route_costs(
+            [source], sorted(self._rates), mode_costs=self._rates, handling_costs=self._handling,
+            held_nodes=self._held_nodes, world_map=self._world_map,
+            improvements=self._improvements, within=self._tile_set)
+        return {tile_id: cost for tile_id, cost in everywhere.items() if tile_id in self._tile_set}
 
     def cost_per_tonne(self, from_tile: TileId, to_tile: TileId) -> float:
         """Money per tonne by the cheapest path; infinite when no path exists."""
         return self.costs_from(from_tile).get(to_tile, math.inf)
 
-    def warm(self) -> None:
+    def warm(self, remember: bool = False) -> None:
+        """Fill every source. With `remember` the whole table is read from disk when an earlier process
+        searched the same inputs, and stored there after a search."""
+        self._warmed = True
+        if remember:
+            key = carriage_cache.table_key(self._world_map if self._world_map is not None else open_map(), {
+                "tiles": self.tile_ids, "rates": self._rates, "handling": self._handling,
+                "held": self._held_nodes, "ways": self._improvements})
+            table = carriage_cache.read(key)
+            if table is not None and set(table) == self._tile_set:
+                self._from_source.update(table)
+                return
         for tile_id in self.tile_ids:
             self.costs_from(tile_id)
+        if remember:
+            carriage_cache.write(key, self._from_source)
 
 
 def carriage_table(tiles: Mapping[TileId, TileSpec], money_per_tonne_km_by_mode: Mapping[str, float],

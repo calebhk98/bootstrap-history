@@ -96,6 +96,7 @@ class EconomySetup:
         """Market areas over this setup's tiles at its opening prices and people, partitioned by `carriage`
         (this setup's own carriage table when none is given)."""
         carriage = self.carriage_table() if carriage is None else carriage
+        carriage.warm(remember=True)
         return AreaMap(self.tiles, carriage, [(self.specs[good], price) for good, price in
                                               sorted(self.opening_prices.items())
                                               if good in self.specs and price > 0.0],

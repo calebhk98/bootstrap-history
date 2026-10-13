@@ -1,8 +1,8 @@
 """The geography dict (regions, located materials, reach levels, the land-tile grid), assembled from the map folder."""
-import copy
 from typing import Any, Dict, Optional
 
 from sim.geography import map_source
+from sim.geography.json_copy import copied
 
 ROOT = map_source.ROOT
 TILE_GRID_PROPERTIES = ("generation_rule_summary", "tile_count", "target_tile_area_km2", "unmapped_tile_count")
@@ -10,7 +10,7 @@ TILE_GRID_PROPERTIES = ("generation_rule_summary", "tile_count", "target_tile_ar
 
 def _catalogue(world_map: map_source.WorldMap, name: str) -> Dict[str, Dict[str, Any]]:
     """One catalogue as {entry_id: record}, the entry id left out of the record."""
-    return {entry_id: {key: value for key, value in copy.deepcopy(entry).items() if key != "id"}
+    return {entry_id: {key: value for key, value in copied(entry).items() if key != "id"}
             for entry_id, entry in world_map.catalogue(name).items()}
 
 
@@ -31,7 +31,7 @@ def load_geography(world_map: Optional[map_source.WorldMap] = None) -> Dict[str,
     edit it. Reach is computed per civilisation by `Geography`; this just hands back the raw data.
     """
     world_map = world_map if world_map is not None else map_source.load_map()
-    tiles = {tile_id: {key: value for key, value in copy.deepcopy(record).items() if key != "id"}
+    tiles = {tile_id: {key: value for key, value in copied(record).items() if key != "id"}
              for tile_id, record in world_map.tiles.items()}
     properties = dict(world_map.properties, tile_count=len(tiles))
     land_tiles = {key: properties[key] for key in TILE_GRID_PROPERTIES[:3] if key in properties}

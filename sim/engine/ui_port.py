@@ -11,7 +11,7 @@ from sim.engine.core import Sim  # noqa: F401
 from sim.engine.critical_path_remaining import active_years_left, remaining_critical_path_years  # noqa: F401
 from sim.engine.data import (  # noqa: F401
     CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, downstream_count, goal_catalog,
-    hard_pre, is_downstream, KNOWLEDGE_DIR, load, load_civ, load_geography, MODDIR, money_short,
+    hard_pre, is_downstream, KNOWLEDGE_DIR, load, load_civ, node_names, load_geography, MODDIR, money_short,
     money_unit_note, money_word, resolve_goal, ROOT, selectable_goals, STARTING_KITS, STRATS,
     topo_order, trade_family, TRADE_FAMILY, TRADE_NOTES, TRADES_ABSENT, WAGES,
     win_condition_describe)
