@@ -1,6 +1,6 @@
 # Temporary heuristics grow faster than they are retired
 
-**Status:** open
+**Status:** closed
 
 `python3 sim/constants.py --burndown` reports most declared numbers as temporary heuristics, and the count
 rises from week to week (compare `git grep -c temporary_heuristic <commit> -- 'sim/*.py' ':!sim/tests'`
@@ -12,3 +12,8 @@ cannot see (507, 508). CLAUDE.md 4.4 allows labelled shortcuts; it does not make
 What it would take: a rule that a change adding a `temporary_heuristic` names, in the declaration's `why`,
 the mechanism or complaint that will retire it; each pull request states the burndown count before and
 after; and a test that fails when a heuristic's `why` names no retirement path.
+
+Resolution: `declare` takes `retire`; `sim/constants_retirement.py` holds the rule; the names that predate it are
+in `data/review/heuristic_baseline.txt` (sorted, one per line); `sim/tests/test_constants_retirement.py` (quick tier)
+fails a promise outside the baseline with no `retire`. `--burndown` prints how many name a retirement,
+`--compare <ref>` prints the count at another commit and the difference, `--prune-baseline` drops retired names.
