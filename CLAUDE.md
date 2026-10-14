@@ -119,6 +119,7 @@ maintenance. Dragons are agents with calorie needs. None get a bespoke branch.
 **4.4 Label every heuristic you cannot yet derive.** Transitional shortcuts
 are allowed while the deeper mechanism does not exist; unlabelled ones are
 not. Tag them so the migration queue is measurable.
+A new temporary heuristic names its retirement (a complaint or mechanism) in `retire`; a test enforces it.
 
 **4.5 Prices are calculated, not looked up.** There is no price table (the
 old `data/prices.json` is deleted); do not add one back. A production yield is
@@ -225,4 +226,5 @@ python3 -m sim.tests                       # quick tier (topics with QUICK_TOPIC
 python3 -m sim.tests --slow                # full suite: every topic and slow check (--jobs 1 sequential, --list, --only a,b)
 python3 -m sim.tests.fingerprint record before.json   # then `check before.json` to prove behaviour unchanged
 python3 sim/constants.py --burndown        # declared numbers and temporary heuristics still to derive
+python3 sim/constants.py --compare origin/main   # heuristic count before/after: state it in the PR
 ```

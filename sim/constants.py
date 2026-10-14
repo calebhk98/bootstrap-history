@@ -4,6 +4,8 @@
     python3 sim/constants.py              what is declared, grouped by provenance
     python3 sim/constants.py --burndown   how much is still a temporary heuristic
     python3 sim/constants.py --kind biological_parameter
+    python3 sim/constants.py --compare <git ref>    heuristic count there against here (for a PR)
+    python3 sim/constants.py --record-baseline      retirement rule: see sim/constants_retirement.py
 
 THE PROBLEM THIS SOLVES. There are 98 named constants and 1,367 inline numeric
 literals across 29 files in this project. Nobody can see a pattern in that. If
@@ -183,7 +185,7 @@ KINDS = (
 CONFIDENCES = ("A", "B", "C", "D")
 
 
-def declare(name, value, kind, unit, why, source=None, confidence="C"):
+def declare(name, value, kind, unit, why, source=None, confidence="C", retire=None):
     """Record a number's provenance and hand back the plain number.
 
     `name` is passed explicitly and looks redundant next to the assignment it
@@ -191,6 +193,10 @@ def declare(name, value, kind, unit, why, source=None, confidence="C"):
     every declared name matches the module attribute it is actually assigned
     to, so the registry cannot quietly drift out of step with the code. A
     registry that disagrees with the source is worse than no registry.
+
+    `retire` (a complaint number or the named mechanism that will replace the
+    number) is required of a new temporary_heuristic or hardcoded_outcome by
+    sim/tests/test_constants_retirement.py; names in the baseline predate it.
     """
     if kind not in KINDS:
         raise ValueError("%s: kind must be one of %s, not %r"
@@ -212,7 +218,8 @@ def declare(name, value, kind, unit, why, source=None, confidence="C"):
     REGISTRY[name] = {
         "name": name, "value": value, "kind": kind, "unit": unit,
         "source": source, "confidence": confidence, "why": why.strip(),
-        "declared_in": _caller_module(), "overridden_by": overridden_by
+        "declared_in": _caller_module(), "overridden_by": overridden_by,
+        "retire": (retire or "").strip() or None
     }
     return value
 
@@ -381,10 +388,32 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--burndown", action="store_true")
     parser.add_argument("--kind", choices=KINDS)
+    parser.add_argument("--compare", metavar="GIT_REF",
+                        help="print the temporary heuristic count at GIT_REF and the difference")
+    parser.add_argument("--record-baseline", action="store_true",
+                        help="rewrite the baseline of promises that predate the retirement rule")
+    parser.add_argument("--prune-baseline", action="store_true",
+                        help="drop baseline names that are no longer declared")
     arguments = parser.parse_args(argv)
 
     _import_declaring_modules()
     _adopt_the_canonical_registry()
+
+    from sim import constants_retirement as retirement
+    if arguments.record_baseline:
+        names = retirement.promise_names(REGISTRY)
+        retirement.write_baseline(names)
+        print("recorded %d names in %s" % (len(names), retirement.BASELINE_PATH))
+        return 0
+    if arguments.prune_baseline:
+        baseline = retirement.read_baseline()
+        stale = retirement.stale_baseline(REGISTRY, baseline)
+        retirement.write_baseline(name for name in baseline if name not in stale)
+        print("pruned %d names: %s" % (len(stale), ", ".join(stale) or "none"))
+        return 0
+    if arguments.compare:
+        retirement.compare(arguments.compare, _REPOSITORY_ROOT, retirement.counts(REGISTRY))
+        return 0
 
     if arguments.burndown:
         result = burndown()
@@ -397,6 +426,8 @@ def main(argv=None):
         print("%d numbers declared, %d are temporary heuristics (%.1f%%)"
               % (result["declared"], result["temporary_heuristics"],
                  100.0 * result["share"]))
+        print("%d of the temporary heuristics name a retirement (`retire`)"
+              % retirement.counts(REGISTRY)["with_retire"])
         print("%d map parameters are heuristics (data/world/geography/parameters): %s"
               % (len(result["map_heuristics"]), ", ".join(result["map_heuristics"]) or "none"))
         print()
