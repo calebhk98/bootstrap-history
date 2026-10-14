@@ -110,3 +110,13 @@ def unstated_upkeep_hours(node: Mapping, build_bill_hours: float) -> float:
     """Upkeep of a node that states none and runs no entries: the upkeep of what it cost to build (its
     labour, materials and tooling), by kind of node."""
     return maintenance_hours(node, build_bill_hours)
+
+
+def non_labour_share(node: Mapping) -> float:
+    """The share of the node's upkeep that is not its crew's pay (plant wear and the like). A derived upkeep states its
+    staff and plant parts; a staff-priced upkeep (a science's places) is all crew; an authored or defaulted figure states
+    no split, so all of it stays (a gap until those figures are derived)."""
+    parts = node.get("_upkeep_hours_parts")
+    if parts is not None and parts["staff"] + parts["plant"] > 0.0:
+        return parts["plant"] / (parts["staff"] + parts["plant"])
+    return 0.0 if node.get("_upkeep_basis") == "staff" else 1.0

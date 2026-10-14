@@ -359,6 +359,8 @@ players keep working, the id is a product.
 4. Each business has a manager seat, filled by the owner's own hours or by hiring.
 5. A business gets its own purse and limited liability, after this plan's stages (it depends on Complaint 106's
    capital markets).
-6. A firm paying both node upkeep (which includes crew pay) and crew wages is not intended; it is measured and fixed
-   ahead of stage 3c on branch `514-stage-0-business-wall`.
+6. A firm paying both node upkeep (which includes crew pay) and crew wages is not intended. Fixed on the agents path
+   (`test_firm_crew_paid_once.py`: `economy_port.concern_upkeep` excludes the staff part of a derived upkeep,
+   `node_upkeep.non_labour_share`). Still double on the founder's path (`economy_production.institution_upkeep` plus
+   the payroll in `living_cost`). Authored, programme and defaulted upkeep state no staff split and are charged whole.
 7. `auto_open_ventures` stays, as a policy any owner can switch on.

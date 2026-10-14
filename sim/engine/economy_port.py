@@ -7,7 +7,7 @@ change without them knowing. This is the only engine module that may import `sim
 (sim/tests/test_economy_imports.py); the agent economy answers, and the engine's own opening figures answer
 while it opens.
 """
-from . import opening_money
+from . import node_upkeep, opening_money
 
 
 class EconomyPort:
@@ -309,8 +309,10 @@ class EconomyPort:
         return sim.concern_takings(node_id, 1.0) * sim.node_output_market_factor(sim.nodes[node_id])
 
     def concern_upkeep(self, node_id, capacity=1.0):
-        """Yearly upkeep of a concern at a given capacity."""
-        return self._sim.nodes[node_id]["up"] * self.cost_scale() * capacity
+        """Yearly upkeep of a concern at a given capacity, without its crew's pay: an actor that runs a concern
+        hires the crew through the labour market and pays wages there."""
+        node = self._sim.nodes[node_id]
+        return node["up"] * node_upkeep.non_labour_share(node) * self.cost_scale() * capacity
 
     def project_cost(self, node_id):
         """What a project costs to carry out now."""
