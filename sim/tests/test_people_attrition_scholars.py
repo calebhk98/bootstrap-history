@@ -1,5 +1,6 @@
 """people_attrition_scholars: regression checks, run individually with `--only people_attrition_scholars`."""
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of
 
 # =============================================================================
 # PEOPLE ARE WHOLE. The user's objection, and it was right: "how can you have
@@ -63,10 +64,10 @@ check("the refusal names the household's market reach, not literacy alone",
       not ok2 and "reach" in why2 and "literacy" in why2, why2)
 ok_frac_h, why_frac_h = s.labour.hire("smith", 2.5)
 check("hire refuses a fractional number of people",
-      not ok_frac_h and "whole" in why_frac_h, why_frac_h)
+      not ok_frac_h and cause_of(why_frac_h) == "count_not_whole", why_frac_h)
 ok_frac_t, why_frac_t = s.labour.train("machinist", 1.5)
 check("...and so does train",
-      not ok_frac_t and "whole" in why_frac_t, why_frac_t)
+      not ok_frac_t and cause_of(why_frac_t) == "count_not_whole", why_frac_t)
 ok_whole_h, _ = s.labour.hire("smith", 2)
 check("...but a whole number still goes through, and lands exactly that many",
       ok_whole_h and s.employees.get("smith") == 2.0, s.employees.get("smith"))

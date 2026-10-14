@@ -8,6 +8,7 @@ test-file reorganisation note. Checks moved verbatim; each one's own comment
 explains the break it guards.
 """
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of
 
 
 # --- the ceiling on lettered trades and the household-room refusals, on one rich game; checks that
@@ -45,7 +46,7 @@ check("every taught trade is bounded by literacy, electrician included",
       sorted(set(S.TRADES_ABSENT) - set(core.labour.LITERATE_TRADES)))
 _ok_el, _why_el = core.labour.train("electrician", 20)
 check("...so twenty electricians cannot be taught into a society of twelve",
-      not _ok_el and "literacy" in str(_why_el), _why_el)
+      not _ok_el and cause_of(_why_el) == "literacy_wall", _why_el)
 
 # The household-room refusal names what raises the room, not what buys people.
 _ok_rm, _why_rm = core.labour.hire("smith", 20)
@@ -79,8 +80,8 @@ check("teaching within the room still works", _ok_within, _why_within)
 core.labour.hire("smith", int(_room0))          # fill the room exactly
 _ok_t3, _why_t3 = core.labour.train("machinist", 1)
 check("teaching past what you can feed and house is refused",
-      not _ok_t3 and "feed, house and oversee" in _why_t3, _why_t3)
-check("...and it says there is no room for even one", "no room for even one" in _why_t3, _why_t3)
+      not _ok_t3 and cause_of(_why_t3) == "household_room", _why_t3)
+check("...and it says there is no room for even one", core.labour.household_room() < 1.0, core.labour.household_room())
 check("...and what makes room, which is not what buys people", "built" in _why_t3, _why_t3)
 check("hire, buy and train are all bounded by the same one number",
       core.labour.hire("smith", 1)[0] is False and core.labour.train("machinist", 1)[0] is False

@@ -19,6 +19,7 @@ worth, without hiring anyone new.
 import math
 
 from sim.constants import declare
+from sim.refusal import Refusal
 from . import trade_data
 
 
@@ -178,7 +179,7 @@ class TrainingMixin:
         money. A wage or fee is spent outright, so it draws on the purchase
         budget; purchase_rule states that rule, the budget and the shortfall,
         the same text `start` and `buy` give."""
-        return self._world.refusal_text(what, fee)
+        return Refusal("cash_short", self._world.refusal_text(what, fee))
 
     def hire_fee(self, trade, count):
         """Paid the moment people are taken on: a finder's fee that is also
@@ -197,14 +198,14 @@ class TrainingMixin:
         returned may be below the request; `pay_premium` is the fraction paid over the market."""
         trade = str(trade or "").strip().lower()
         if trade not in self._world.wages:
-            return None, None, ("no such trade: %s. Trades: %s"
-                           % (trade, ", ".join(sorted(self._world.wages))))
+            return None, None, Refusal("no_such_trade", "no such trade: %s. Trades: %s"
+                                       % (trade, ", ".join(sorted(self._world.wages))))
         if isinstance(count, str) or isinstance(count, bool):
             # `buy` and `start` both type-check and `hire` did not, so "5"
             # walked straight in where 5 was meant.
-            return None, None, "n must be a number, not %r" % (count,)
+            return None, None, Refusal("count_not_a_number", "n must be a number, not %r" % (count,))
         if count <= 0:
-            return None, None, "n must be greater than zero. Nothing was changed."
+            return None, None, Refusal("count_not_positive", "n must be greater than zero. Nothing was changed.")
         # PEOPLE ARE WHOLE: a household can want a third of another artisan's
         # worth of work, and it can buy that in hours (`commission`); it
         # cannot put a third of a person on the payroll, or a roster could
@@ -213,22 +214,22 @@ class TrainingMixin:
         # step() for the matching constraint on attrition, going the other
         # way.
         if abs(count - round(count)) > 1e-6:
-            return None, None, ("you hire whole people, not %g of one. Hire %d or %d."
-                           % (count, math.floor(count), math.ceil(count)))
+            return None, None, Refusal("count_not_whole", "you hire whole people, not %g of one. Hire %d or %d."
+                                       % (count, math.floor(count), math.ceil(count)))
         count = float(round(count))
         if not self.trade_available(trade):
-            return None, None, ("there are no %ss to hire in this society at any price: %s "
-                           'Teach one: {"cmd":"train","trade":"%s","n":1}'
-                           % (trade, self._world.trade_notes.get(trade, ""), trade))
+            return None, None, Refusal("trade_absent", "there are no %ss to hire in this society at any price: %s "
+                                       'Teach one: {"cmd":"train","trade":"%s","n":1}'
+                                       % (trade, self._world.trade_notes.get(trade, ""), trade))
         if trade not in self._world.trades_absent:
             exist = self.people_who_exist(trade)
             on_books = self._world.state.household.employees.get(trade, 0.0)
             rivals = self._world.actor_staff_fte(trade)
             if on_books + rivals + count > exist + 1e-6:
-                return None, None, ("only about %.1f %ss exist in this country and you "
-                               "already employ %.1f%s: there is nobody left to hire."
-                               % (exist, trade, on_books,
-                                  " (firms and the state employ %.1f more)" % rivals if rivals > 0 else ""))
+                return None, None, Refusal("nobody_left", "only about %.1f %ss exist in this country and you "
+                                           "already employ %.1f%s: there is nobody left to hire."
+                                           % (exist, trade, on_books,
+                                              " (firms and the state employ %.1f more)" % rivals if rivals > 0 else ""))
         # LITERACY IS A WALL, NOT A COST. Money buys the finder's fee below;
         # it cannot buy people who do not exist. See FINDINGS_ROUND2 section
         # Q and literate_capacity()'s docstring.
@@ -265,7 +266,7 @@ class TrainingMixin:
                          "pushed the going rate up %d%%; the population "
                          "command shows how big that reach actually is."
                          % (trade, round((_lpf_now - 1.0) * 100)))
-            return None, None, _msg
+            return None, None, Refusal("cash_short", _msg)
         room = self.household_room()
         if count > room:
             # TRUNCATED, NOT ROUNDED, and it says what a whole number of people
@@ -276,12 +277,12 @@ class TrainingMixin:
             # rounded in the direction that overstates it.
             room = max(0.0, room)
             whole = int(room)
-            return None, None, ("you can supervise, house and teach %.2f more people, "
-                           "not %g%s. %s"
-                           % (math.floor(room * 100) / 100.0, count,
-                              " - %d is the most whole people you can take" % whole
-                              if whole else " - you have no room for even one",
-                              self._room_advice()))
+            return None, None, Refusal("household_room", "you can supervise, house and teach %.2f more people, "
+                                       "not %g%s. %s"
+                                       % (math.floor(room * 100) / 100.0, count,
+                                          " - %d is the most whole people you can take" % whole
+                                          if whole else " - you have no room for even one",
+                                          self._room_advice()))
         return count, fee, None
 
     def hire(self, trade, count, pay_premium=0.0):
@@ -403,20 +404,20 @@ class TrainingMixin:
         the source trade, the founder hours and the keep paid now."""
         trade = str(trade or "").strip().lower()
         if trade not in self._world.wages:
-            return None, "no such trade: %s" % trade
+            return None, Refusal("no_such_trade", "no such trade: %s" % trade)
         if count <= 0:
-            return None, "n must be greater than zero. Nothing was changed."
+            return None, Refusal("count_not_positive", "n must be greater than zero. Nothing was changed.")
         # PEOPLE ARE WHOLE. See the identical check in hire() for why: a
         # taught trade is still a roster of actual people, not a quantity of
         # training-hours, and "0.03 engineers" was exactly as false whichever
         # verb put it there.
         if abs(count - round(count)) > 1e-6:
-            return None, ("you teach whole people, not %g of one. Teach %d or %d."
-                           % (count, math.floor(count), math.ceil(count)))
+            return None, Refusal("count_not_whole", "you teach whole people, not %g of one. Teach %d or %d."
+                                 % (count, math.floor(count), math.ceil(count)))
         count = float(round(count))
         frm = (frm or trade_data.taught_from(trade_data.registry_of(self._world), trade)).strip().lower()
         if frm in self._world.trades_absent and frm not in self._world.state.household.trades_created:
-            return None, "you cannot teach from %ss; there are none" % frm
+            return None, Refusal("source_trade_absent", "you cannot teach from %ss; there are none" % frm)
         # LITERACY BOUNDS TEACHING TOO, and this is where it bites hardest:
         # engineer, chemist, machinist and optician can ONLY be had this way
         # (trade_available refuses to hire them at all), so without this check
@@ -432,8 +433,8 @@ class TrainingMixin:
         hours = self.TEACHING_HOURS_PER_PERSON * count            # your hours, teaching, per person
         pool = self.director_pool() - self.director_hours_committed()
         if hours > pool:
-            return None, ("teaching %g %ss takes %.0f of your own hours and you have "
-                           "%.0f uncommitted this year" % (count, trade, hours, max(0.0, pool)))
+            return None, Refusal("founder_hours_short", "teaching %g %ss takes %.0f of your own hours and you have "
+                                 "%.0f uncommitted this year" % (count, trade, hours, max(0.0, pool)))
         # THE SAME ROOM `hire` AND `buy` SHARE: household_room exists so all
         # three verbs agree on the same ceiling. `train` must check it too,
         # or a household could teach its way past its actual capacity to
@@ -443,12 +444,12 @@ class TrainingMixin:
         room = self.household_room()
         if count > room:
             whole = int(max(0.0, room))
-            return None, ("you can feed, house and oversee %.2f more people, "
-                           "and teaching %g would make %g. %s %s"
-                           % (math.floor(max(0.0, room) * 100) / 100.0, count, count,
-                              "Teach %d instead." % whole if whole >= 1
-                              else "There is no room for even one.",
-                              self._room_advice()))
+            return None, Refusal("household_room", "you can feed, house and oversee %.2f more people, "
+                                 "and teaching %g would make %g. %s %s"
+                                 % (math.floor(max(0.0, room) * 100) / 100.0, count, count,
+                                    "Teach %d instead." % whole if whole >= 1
+                                    else "There is no room for even one.",
+                                    self._room_advice()))
         # Teaching pulls the SOURCE trade's people off their own bench for the
         # duration, which is exactly what market_pressure prices for buying
         # slaves and labour market price_factor now prices for hiring: the more of

@@ -25,6 +25,7 @@ onto a whole person without biasing which way growth heads.
 import math
 
 from sim.constants import declare
+from sim.refusal import Refusal
 from . import legacy_trade_defaults, trade_data
 from .wage_provider import reference_civilisation
 
@@ -341,15 +342,15 @@ class CapacityMixin:
             "Printing, paper, schools and academies widen the pool - they "
             "raise how many people here can read, and this ceiling rises "
             "with it.")
-        return ("this household's reach into the labour market for %ss "
-                "will not stretch past %.1f in total, hired and taught "
-                "together - not \"this society's literacy\" alone, which "
-                "only narrows an already-limited reach further - and you "
-                "have %.1f already (hired and still being taught). %s %s"
-                % (trade, cap, have,
-                   ("%d more is the most you can take right now." % _whole)
-                   if _whole >= 1 else "There is no room for even one more.",
-                   lever))
+        return Refusal("literacy_wall", "this household's reach into the labour market for %ss "
+                       "will not stretch past %.1f in total, hired and taught "
+                       "together - not \"this society's literacy\" alone, which "
+                       "only narrows an already-limited reach further - and you "
+                       "have %.1f already (hired and still being taught). %s %s"
+                       % (trade, cap, have,
+                          ("%d more is the most you can take right now." % _whole)
+                          if _whole >= 1 else "There is no room for even one more.",
+                          lever))
 
     def _trade_headcount_pending(self, trade):
         """People already on the books in this trade, plus people already

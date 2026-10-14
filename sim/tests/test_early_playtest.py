@@ -1,5 +1,6 @@
 """early_playtest: regression checks from the first playtests, run with `--only early_playtest`."""
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of
 
 def without_market(game):
     """`game` with the year's market close left out of its steps: nearly all of a step's cost. Only for checks on
@@ -88,7 +89,7 @@ check("no anachronistic weapon or doctrine is startable turn one",
 
 ok_hire, hire_error = rome.labour.hire("engineer", 1)
 check("a trade this society does not have cannot be hired",
-      not ok_hire and "no engineer" in (hire_error or "").lower(),
+      not ok_hire and cause_of(hire_error) == "trade_absent",
       "hire engineer -> %s / %s" % (ok_hire, hire_error))
 rome.capital = 20000.0
 ok_train, _ = rome.labour.train("machinist", 2)

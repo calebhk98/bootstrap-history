@@ -18,6 +18,7 @@ from .nodes import NODE_NAME_NORM, _did_you_mean, _norm_name, _resolve_by_name
 from sim.ui.memory import load_state, save_state
 from .score import victory_report
 from .why_material import material_story
+from .refusal_cause import add_cause
 from .seat_address import run_as_seat
 from .state_waiting import _agent_end_reason
 from .state import _agent_state
@@ -429,7 +430,7 @@ def _agent_dispatch(sim, nodes, cmd):
 
 
 def _agent_reply(sim, nodes, cmd):
-    _out = _agent_dispatch_inner(sim, nodes, cmd)
+    _out = add_cause(_agent_dispatch_inner(sim, nodes, cmd))
     if sim.fuzzy_estimates and isinstance(cmd, dict):
         _entry = command_registry.resolve(cmd.get("cmd") if isinstance(cmd.get("cmd"), str) else "")
         _out = fuzzy_estimates.fuzz_reply(sim, _entry["name"] if _entry else None, cmd, _out)
