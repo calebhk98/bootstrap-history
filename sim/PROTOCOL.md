@@ -129,7 +129,10 @@ Two fixes, usable separately or together:
       {"cmd":"programme","action":                   risk shows) and pause_shortage (share of
         "pause"|"resume"|"clear"}                    planned work lost) pause it; the step reply's
                                                     "programme" rows say why in
-                                                    did_nothing_because. It stays paused until
+                                                    did_nothing_because (text) and
+                                                    did_nothing_kind (a stable code; plus
+                                                    did_nothing_material for a shortage).
+                                                    It stays paused until
                                                     resume, or resumes itself with auto_resume.
       {"cmd":"exclude","what":"freedman_staff"}    never let rush, rush preview, auto_open or
       {"cmd":"exclude","what":"trait:buys_people"}  auto_commission begin this id; also

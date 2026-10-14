@@ -62,7 +62,7 @@ check("programme starts stay within its yearly draw cap",
 _run(game, cmd="programme", action="pause")
 _active_before = set(game.active)
 _rows = programme_before_year(game, NODES)
-check("paused programme says it did nothing", _rows and _rows[0].get("did_nothing_because") == "paused by the player", _rows)
+check("paused programme says it did nothing", _rows and _rows[0].get("did_nothing_kind") == "paused_by_player", _rows)
 check("paused programme starts nothing", set(game.active) == _active_before, _rows)
 check("paused programme committed nothing", _rows[0]["started"] == [], _rows)
 
@@ -70,7 +70,7 @@ check("paused programme committed nothing", _rows[0]["started"] == [], _rows)
 _run(game, cmd="programme", action="resume")
 game.capital = -10.0
 _rows = programme_before_year(game, NODES)
-check("programme does nothing in debt", "debt" in str(_rows[0].get("did_nothing_because")), _rows)
+check("programme does nothing in debt", _rows[0].get("did_nothing_kind") == "in_debt", _rows)
 
 # Pause logic is read through the per-year hook directly; the one step above proves the dispatcher calls it.
 # --- pause conditions the player sets: debt, war risk, shortage; each is reported and can auto-resume
@@ -80,41 +80,43 @@ _set = _run(game, cmd="programme", action="set", target=GOAL, max_annual_draw=40
 check("programme set takes a debt pause threshold", _set.get("ok") and "pause_debt" in _set["programme"]["pauses"], _set)
 game.capital = -900.0
 _rows = programme_before_year(game, NODES) or [{}]
-check("debt over the threshold pauses and says why", "debt over" in str(_rows[0].get("did_nothing_because")), _rows)
+check("debt over the threshold pauses and says why", _rows[0].get("did_nothing_kind") == "debt_over_limit"
+      and _rows[0].get("did_nothing_because"), _rows)
 
 _run(game, cmd="programme", action="set", target=GOAL, limit=50, pause_war_risk=0.05)
 game.capital = 20000.0
 game.civ["hazards"] = [{"name": "Raiders", "years": [game.year - 1, game.year + 30], "sack_chance": 0.4}]
 _rows = programme_before_year(game, NODES) or [{}]
-check("war risk over the threshold pauses and says why", "war risk" in str(_rows[0].get("did_nothing_because")), _rows)
+check("war risk over the threshold pauses and says why", _rows[0].get("did_nothing_kind") == "war_risk_over_limit"
+      and _rows[0].get("did_nothing_because"), _rows)
 check("a pause that is not auto-resume stays paused after the risk ends",
       _run(game, cmd="programme")["programme"]["paused"], _run(game, cmd="programme"))
 game.civ["hazards"] = []
 _rows = programme_before_year(game, NODES) or [{}]
-check("without auto_resume it waits for the player", "war risk" in str(_rows[0].get("did_nothing_because")), _rows)
+check("without auto_resume it waits for the player", _rows[0].get("did_nothing_kind") == "war_risk_over_limit", _rows)
 _run(game, cmd="programme", action="resume")
 _rows = programme_before_year(game, NODES) or [{}]
-check("resume works once the risk is gone", "war risk" not in str(_rows[0].get("did_nothing_because")), _rows)
+check("resume works once the risk is gone", _rows[0].get("did_nothing_kind") != "war_risk_over_limit", _rows)
 
 _run(game, cmd="programme", action="set", target=GOAL, limit=50, pause_war_risk=0.05, auto_resume=True)
 game.civ["hazards"] = [{"name": "Raiders", "years": [game.year, game.year + 30], "sack_chance": 0.4}]
 _rows = programme_before_year(game, NODES) or [{}]
-check("auto_resume programme pauses on war risk", "war risk" in str(_rows[0].get("did_nothing_because")), _rows)
+check("auto_resume programme pauses on war risk", _rows[0].get("did_nothing_kind") == "war_risk_over_limit", _rows)
 game.civ["hazards"] = []
 _rows = programme_before_year(game, NODES) or [{}]
 check("auto_resume programme resumes when the risk clears",
-      "war risk" not in str(_rows[0].get("did_nothing_because")) and not _run(game, cmd="programme")["programme"]["paused"], _rows)
+      _rows[0].get("did_nothing_kind") != "war_risk_over_limit" and not _run(game, cmd="programme")["programme"]["paused"], _rows)
 
 _run(game, cmd="programme", action="set", target=GOAL, limit=50, pause_shortage=0.2, auto_resume=True)
 game.state.holdings.shortage_condition = {"material": "iron", "since": game.year, "reported": 0.5,
                                          "previous": 0.5, "latest": 0.5}
 _rows = programme_before_year(game, NODES) or [{}]
 check("a shortage past the threshold pauses and names the material",
-      "iron" in str(_rows[0].get("did_nothing_because")) and "shortage" in str(_rows[0].get("did_nothing_because")), _rows)
+      _rows[0].get("did_nothing_kind") == "shortage_over_limit" and _rows[0].get("did_nothing_material") == "iron", _rows)
 game.state.holdings.shortage_condition = None
 _rows = programme_before_year(game, NODES) or [{}]
 check("auto_resume programme resumes when the shortage clears",
-      "shortage" not in str(_rows[0].get("did_nothing_because")), _rows)
+      _rows[0].get("did_nothing_kind") != "shortage_over_limit", _rows)
 check("pause settings reject a negative number",
       not _run(game, cmd="programme", action="set", target=GOAL, pause_debt=-1)["ok"])
 from sim.ui.proto.parse_pursue import _split  # noqa: E402
@@ -140,4 +142,4 @@ check("programme show reports hours committed and the cap",
       "max_total_hours" in _shown["caps"] and "hours_committed_so_far" in _shown, _shown)
 _run(capped_game, cmd="programme", action="set", target=GOAL, limit=50, max_total_hours=0.5)
 _row = programme_before_year(capped_game, NODES)[0]
-check("a spent hour cap stops starting", _row.get("started") == [] and "hour" in str(_row.get("did_nothing_because")), _row)
+check("a spent hour cap stops starting", _row.get("started") == [] and _row.get("did_nothing_kind") in ("hour_cap_total", "hour_cap_this_year"), _row)
