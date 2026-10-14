@@ -26,9 +26,14 @@ class OpeningStoreValueTests(unittest.TestCase):
         self.assertTrue(stores["silver_kg"]["workings"])
 
     def test_a_country_with_no_deposit_of_a_metal_says_so_and_has_no_workings(self):
-        stores = stores_of("han_china_100ad.json")
+        stores = stores_of("norse_900ad.json")
         self.assertEqual(stores["gold_kg"]["workings"], [])
         self.assertIn("no known deposit", stores["gold_kg"]["gap"])
+
+    def test_a_deposit_of_unknown_working_gives_no_workings_and_says_why(self):
+        stores = stores_of("han_china_100ad.json")
+        self.assertEqual(stores["gold_kg"]["workings"], [])
+        self.assertIn("no working date", stores["gold_kg"]["gap"])
 
     def test_a_resource_counted_in_tonnes_is_not_read_as_kilograms(self):
         for civ_file in ("rome_100ad.json", "england_1300.json"):

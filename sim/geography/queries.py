@@ -11,7 +11,7 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 from sim.geography.json_copy import copied
 from sim.geography import (droving, food_capacity, food_land, food_pasture, food_wild_harvest, map_source, mechanisms, parameters, resource_links, resources_biotic, rail_freight,
                            resources_catalogue, resources_endowment, resources_mined, resources_prospecting, resources_sites,
-                           resources_summary, routes_carriage, routes_graph, routes_modes, routes_search, tile_holdings, tile_layers,
+                           reach_bands, resources_summary, routes_carriage, routes_graph, routes_modes, routes_search, tile_holdings, tile_layers,
                            ways_build, ways_works)
 
 WorldMap = map_source.WorldMap
@@ -180,6 +180,12 @@ def reach(origin_tiles: Iterable[str], modes: Iterable[str], days_budget: float,
     """{tile: fewest days} within a travel-time budget."""
     return routes_search.reach(_map(world_map), origin_tiles, modes, days_budget, improvements,
                                held_nodes=held_nodes)
+
+
+def tile_reach_levels(held_tiles: Iterable[str], held_nodes: Iterable[str], world_map: Optional[WorldMap] = None) -> Dict[str, int]:
+    """{tile_id: reach level} for every tile of the map, from the tiles held, over the modes the nodes held
+    open: 0 for a held tile, the map's farthest level where no route joins."""
+    return reach_bands.tile_levels(_map(world_map), held_tiles, held_nodes)
 
 
 def freight_links(mode_ids: Iterable[str], world_map: Optional[WorldMap] = None) -> List[Tuple[str, str, str, float]]:
