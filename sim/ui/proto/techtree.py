@@ -11,6 +11,7 @@ from .nodes import _downstream_of, _unlocked_by
 from .state_waiting import _waiting_on
 from .why_benefit import benefit_block
 from .ventures import _VENTURE_SUPERVISION_NOTE
+from .material_dimension import NEVER_PRODUCED_YEARS, own_unit_quantities
 # DEFAULT_AVAILABLE_LIMIT is NOT imported here: cli.py patches
 # ui.protocol.DEFAULT_AVAILABLE_LIMIT directly at runtime, so
 # _agent_available reads it through the protocol module itself, live -
@@ -218,7 +219,9 @@ def _brief(sim, nodes, node_id, fog):
                 "failure_costs_hours": round(node["ph"] * 0.4, 1) if node["risk"] else 0.0,
                 "earns_per_year": (_est if _est is not None
                                    else round(sim.venture_real_earnings(node_id), 1)),
-                "costs_per_year_after": round(sim.venture_real_upkeep(node_id), 1),
+                "costs_per_year_after": round(sim.venture_upkeep_quote(node_id)["now"], 1),
+                "costs_per_year_at_full_staffing": round(
+                    sim.venture_upkeep_quote(node_id)["at_full_staffing"], 1),
                 "how_much_rests_on_this": rests,
                 **_staff_fields(sim, node)}
     return {"id": node_id, "name": node["name"], "cat": node["cat"],
@@ -229,7 +232,9 @@ def _brief(sim, nodes, node_id, fog):
             "risk": sim.effective_risk(node_id),
             "pay_to_lower_the_risk": sim.precaution_quote(node_id),
             "earns_per_year": round(sim.venture_real_earnings(node_id), 1),
-            "costs_per_year_after": round(sim.venture_real_upkeep(node_id), 1),
+            "costs_per_year_after": round(sim.venture_upkeep_quote(node_id)["now"], 1),
+            "costs_per_year_at_full_staffing": round(
+                sim.venture_upkeep_quote(node_id)["at_full_staffing"], 1),
             **available_economics.row_fields(sim, node_id, node),
             # _downstream_of, NOT downstream_count. The cached bitmask index
             # in data.py follows hard prerequisites only, and it must: adding
@@ -854,7 +859,12 @@ def _material_row(row, sim):
             "price_per_tonne": round(row["price_per_tonne"], 2),
             "cost_of_missing": round(row["cost_of_missing"], 1),
             **({"years_of_supply_it_takes": round(row["years_of_supply_it_takes"], 1)}
-               if row["years_of_supply_it_takes"] else {}),
+               if row["years_of_supply_it_takes"] and row["years_of_supply_it_takes"] < NEVER_PRODUCED_YEARS else {}),
+            **({"not_produced": True}
+               if (row["years_of_supply_it_takes"] or 0.0) >= NEVER_PRODUCED_YEARS else {}),
+            **({"own_unit": own_unit}
+               if (own_unit := own_unit_quantities(row["material"], row["needed_tonnes"], row["held_tonnes"],
+                                                   row["missing_tonnes"])) else {}),
             "own_supply_tonnes_per_year": round(row["own_supply_tonnes_per_year"], 3),
             **({"scarcity_note": "your own output of %s of %s counts as supply against the demand "
                                  "on it, which lowers the premium on anything you still buy"
@@ -990,7 +1000,8 @@ def _explain_revenue(sim, nodes, node_id, node):
         # is the whole of the user's original question - "shouldn't the
         # payback be something you don't know until after research?" So
         # revenue alone is fogged; see _fog_revenue_estimate.
-        "upkeep": sim.venture_real_upkeep(node_id),
+        "upkeep": sim.venture_upkeep_quote(node_id)["now"],
+        "upkeep_at_full_staffing": sim.venture_upkeep_quote(node_id)["at_full_staffing"],
         "revenue": (sim.venture_real_earnings(node_id) if (not sim.fog
                                  or _revenue_known_exactly(sim, node_id))
                    else (_fog_revenue_estimate(sim, node_id) or 0.0)),

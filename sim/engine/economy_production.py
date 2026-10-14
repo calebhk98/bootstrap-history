@@ -674,8 +674,11 @@ class ProductionMixin:
             "per-head cost), which this file does not have; 20% is a "
             "round, plausible fixed share, not derived from one.")
 
-    def institution_upkeep(self, node_id):
+    def institution_upkeep(self, node_id, units=None, fully_staffed=False):
         """What this concern actually costs to keep open THIS year.
+
+        `units` prices a stated size of a scalable institution instead of what is open;
+        `fully_staffed` skips the occupancy scaling (every place filled).
 
         For almost everything, its upkeep. For an establishment whose purpose is
         to support PEOPLE - a school, an academy, a workshop, a licensed
@@ -708,8 +711,10 @@ class ProductionMixin:
         # operating.
         _units = (self.institution_units(node_id) if node_id in self.state.projects.operating else 1.0) \
             if node_id in self.SCALABLE_INSTITUTIONS else 1.0
+        if units is not None and node_id in self.SCALABLE_INSTITUTIONS:
+            _units = float(units)
         upkeep_amount = node["up"] * _units
-        if (node_id not in self.CAPABILITY_INSTITUTIONS or upkeep_amount <= 0
+        if (fully_staffed or node_id not in self.CAPABILITY_INSTITUTIONS or upkeep_amount <= 0
                 or self.mechanic(node_id, "upkeep_full")):
             return upkeep_amount
         places = self.institution_places(node_id) * _units

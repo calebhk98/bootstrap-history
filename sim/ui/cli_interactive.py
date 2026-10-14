@@ -881,7 +881,7 @@ def cmd_civs(args):
         civ_filename = civilization_id + ".json"
         civ_data = load_civ(civilization_id)
         value = civ_data["values"]
-        print("%-16s %s, %s" % (civ_data["id"], civ_data["name"], civ_data["year"]))
+        print("%-16s %s" % (civ_data["id"], _civ_title(civ_data)))
         print("   %s" % civ_data.get("blurb", ""))
         homes = [region_names.get(region_id, region_id) for region_id in regions_of_tiles(tiles_held(civ_data))]
         print("   home ground: %s" % (", ".join(homes) if homes else "(none set)"))
@@ -1032,6 +1032,14 @@ def _new_game(civs, cfg, known_routes=None):
 
 
 
+def _civ_title(civ_record):
+    """A civilisation's name with its start year as AD or BC, unless the name already says it."""
+    name = civ_record.get("name", civ_record.get("id", "?"))
+    year = civ_record.get("year", 0)
+    label = "%d %s" % (abs(year), "BC" if year < 0 else "AD")
+    return name if label in name else "%s, %s" % (name, label)
+
+
 def _new_game_pick_civ(civs, cfg):
     """The wizard's first question: which civilisation, and so which year,
     to start in. Returns the chosen civ record, or None if the player
@@ -1042,7 +1050,7 @@ def _new_game_pick_civ(civs, cfg):
     print("-" * 78)
     for i, civ_record in enumerate(civs, 1):
         print()
-        print("   %d) %s, %d" % (i, civ_record.get("name", civ_record["id"]), civ_record.get("year", 0)))
+        print("   %d) %s" % (i, _civ_title(civ_record)))
         print(_wrap(civ_record.get("blurb", ""), indent="      "))
         print("      %s people   state capacity %.2f   prices %.2fx the default scenario"
               % (f"{civ_record.get('population', 0):,}", civ_record.get("state_capacity", 0),

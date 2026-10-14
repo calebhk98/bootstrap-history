@@ -23,6 +23,13 @@ RECENT_TRADE_YEARS = declare(
         "markets cleared within this many years. A thin market trades in alternate years, so one year "
         "would drop it too eagerly; how long a gap makes a price stale has no measured basis.")
 
+THIN_MARKET_SHARE_OF_OPENING_DEMAND = declare(
+    "THIN_MARKET_SHARE_OF_OPENING_DEMAND", 0.1, kind="temporary_heuristic",
+    unit="share of the opening's yearly quantity of a good", source=None, confidence="D",
+    why="A good whose markets together trade less than this share of what the opening economy wanted of it "
+        "has no national market: its price is shown blended toward what it costs to make, by how much of "
+        "that share it trades. Where the line sits has no measured basis.")
+
 
 def recently_traded_goods(memory: MarketMemory) -> Set[str]:
     """Goods with a market that cleared within RECENT_TRADE_YEARS."""
@@ -100,5 +107,34 @@ def shown_prices(setup, record, market=None) -> Tuple[Dict[str, float], Set[str]
     price. Both kinds are listed as stale: not a price a market has set lately."""
     prices = dict(national_prices(record) if market is None else market)
     stale = set(prices) - recently_traded_goods(record.memory)
+    prices.update(thin_market_prices(setup, record, prices))
     prices.update(notional_prices(setup, record, prices))
     return prices, stale
+
+
+def thin_market_prices(setup, record, market) -> Dict[str, float]:
+    """The price of each recently traded good that the opening economy wanted in bulk but whose markets
+    together trade only a sliver of it: the market price blended toward the cost of making it, in the
+    share the trade falls short of THIN_MARKET_SHARE_OF_OPENING_DEMAND. A good nobody can make, or the
+    opening did not want, keeps its market price."""
+    memory = record.memory
+    traded: Dict[str, float] = {}
+    for key, volume in (memory.volume_weights or record.volumes).items():
+        good = key.split(KEY_SEPARATOR, 1)[0]
+        traded[good] = traded.get(good, 0.0) + volume
+    recent = recently_traded_goods(memory)
+    wages = mean_wages(memory)
+    rate = memory.rates.get(setup.currency_id, 0.0)
+    live = dict(market)
+    blended: Dict[str, float] = {}
+    for good in input_depth_order(setup.recipes):
+        wanted = record.opening_basket.get(good, 0.0)
+        if good not in recent or wanted <= 0.0:
+            continue
+        depth = min(1.0, traded.get(good, 0.0) / (THIN_MARKET_SHARE_OF_OPENING_DEMAND * wanted))
+        if depth >= 1.0:
+            continue
+        cost = cheapest_cost(setup, good, live, wages, rate)
+        if cost is not None:
+            blended[good] = live[good] = depth * live[good] + (1.0 - depth) * cost
+    return blended

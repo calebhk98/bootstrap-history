@@ -27,7 +27,7 @@ def _cmd_path(sim, nodes, cmd, ended):
                          "not been, whether or not you have built this "
                          "particular thing already. Use 'available' to see "
                          "what you could begin now."}
-    node_id = cmd.get("id")
+    node_id = cmd.get("id") or sim.goal    # a bare `path` is the route to the goal
     if node_id not in nodes:
         return {"ok": False, "error": "unknown node id %r" % node_id}
     need = closure(nodes, node_id)

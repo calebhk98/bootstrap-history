@@ -386,7 +386,7 @@ def _cmd_step(sim, nodes, cmd, ended):
          usage=["quit"], options={},
          description="Ends the session.")
 def _cmd_quit(sim, nodes, cmd, ended):
-    return {"ok": True, "bye": True}
+    return {"ok": True, "bye": True, "message": "Goodbye."}
 
 
 

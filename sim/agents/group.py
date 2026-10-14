@@ -9,6 +9,8 @@ founder either way. Nothing here names a trade, a commodity or a civilisation.
 import math
 from typing import Any, Dict, List
 
+from sim.constants import declare
+
 from . import ledger
 from .base import RecordedActor
 from .edges import EDGE_STATE_SPENDING
@@ -24,6 +26,12 @@ BANNING_KINDS = ("displaced_producers", JOBLESS_WORKERS)
 
 # however well protected, public blame never falls below this share of what it would be
 BLAME_PROTECTION_FLOOR = 0.15
+
+BLAME_MATERIAL_SHARE = declare(
+	"BLAME_MATERIAL_SHARE", 0.25, kind="temporary_heuristic",
+	unit="share of the cause", source=None, confidence="D",
+	why="The founder's share of a loss below which a petition's log line does not say the blame lands on "
+		"the founder: the cause is mostly somebody else's and naming the founder would mislead.")
 
 
 def pull_of(lost_income: float, territory_revenue: float) -> float:
@@ -44,7 +52,7 @@ def state_response(pull: float, capacity: float, in_deficit: bool, kind: str,
 
 
 def blame_after_protection(blame: float, protection: float, blame_share: float) -> float:
-	"""The blame that lands on the founder: his share of the loss, less what his protection turns aside."""
+	"""The blame that lands on the founder: their share of the loss, less what their protection turns aside."""
 	return blame * blame_share * max(BLAME_PROTECTION_FLOOR, 1.0 - protection)
 
 
@@ -111,9 +119,16 @@ class InterestGroup(RecordedActor):
 		asks = ["to be made good (%s a year)" % world.money_text(record.claim, grouped=True)] if record.claim > 0.5 else []
 		asks.extend(record.demands)
 		return ("INTEREST GROUP %s petitions the state: about %s people out of pocket %s a year because %s; "
-				"they ask %s. The blame lands on you"
+				"they ask %s%s"
 				% (record.name, world.plain_number(record.members), world.money_text(record.lost_income, grouped=True),
-				   record.cause, " and ".join(asks) if asks else "to be heard"))
+				   record.cause, " and ".join(asks) if asks else "to be heard", self.blame_words(record.blame_share)))
+
+	@staticmethod
+	def blame_words(blame_share: float) -> str:
+		"""The closing clause of a petition: that the blame lands on the founder, and how much of the cause is theirs."""
+		if blame_share < BLAME_MATERIAL_SHARE:
+			return ""
+		return ". The blame lands on you (about %d%% of the cause is yours)" % round(100.0 * blame_share)
 
 	@classmethod
 	def founded_by(cls, sector: Sector) -> Dict[str, Any]:

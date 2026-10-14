@@ -103,17 +103,23 @@ def idle_hours_by_trade(economy, country=None):
 
 def wages_by_trade_weighted(economy, country=None):
     """Last year's wage per hour of each trade: the remembered wage of each of its labour markets weighted
-    by the hours hired there last year. A trade that hired nowhere falls back to the unweighted mean of
-    its remembered wages. Of `country`'s markets (the home country's when the economy holds several)."""
+    by the hours hired there last year. A trade that hired no hours is left out (its remembered wages are
+    opening seeds, not clearings), except the unskilled trade, whose wage prices the rest. Of `country`'s
+    markets (the home country's when the economy holds several)."""
     scope = country_figures.home_when_shared(economy, country)
     if scope is not None:
-        return country_figures.wages_per_hour(economy, scope)
-    rows = {}
-    for key, wage in economy.record.memory.wages.items():
-        rows.setdefault(key.split(_KEY_SEPARATOR, 1)[0], []).append((wage, economy.record.hours_hired.get(key, 0.0)))
-    return {trade: (sum(wage * hours for wage, hours in pairs) / sum(hours for _wage, hours in pairs)
-                    if sum(hours for _wage, hours in pairs) > 0.0 else sum(wage for wage, _hours in pairs) / len(pairs))
-            for trade, pairs in rows.items()}
+        wages = country_figures.wages_per_hour(economy, scope)
+    else:
+        rows = {}
+        for key, wage in economy.record.memory.wages.items():
+            rows.setdefault(key.split(_KEY_SEPARATOR, 1)[0], []).append((wage, economy.record.hours_hired.get(key, 0.0)))
+        wages = {trade: (sum(wage * hours for wage, hours in pairs) / sum(hours for _wage, hours in pairs)
+                         if sum(hours for _wage, hours in pairs) > 0.0 else sum(wage for wage, _hours in pairs) / len(pairs))
+                 for trade, pairs in rows.items()}
+    idle_and_offered = country_figures.idle_hours_by_trade(economy, scope)
+    unskilled = economy.setup.unskilled_trade
+    return {trade: wage for trade, wage in wages.items()
+            if trade == unskilled or idle_and_offered.get(trade, (0.0, 0.0))[1] > idle_and_offered.get(trade, (0.0, 0.0))[0]}
 
 
 def interest_rate(economy):

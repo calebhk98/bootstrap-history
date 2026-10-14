@@ -31,7 +31,9 @@ When spawning subagents with the `Agent` tool:
   needs no history rewrite.
 - **Parallel agents that edit code** run in separate worktrees and should be
   given tasks that touch different files. Say in each prompt which files the
-  other agents own.
+  other agents own. Check that each worktree starts from the current
+  `origin/main` (a stale local `main` makes them start far behind). Ask for a
+  fingerprint only under the rule in section 6.
 - Only the orchestrating session may run on a large model. It reads, decides,
   writes the hard parts and merges.
 
@@ -201,6 +203,11 @@ Tooling: `python3 -m pylint sim/ | grep C0103` (worklist). Plan:
 - **Green tests do not mean unchanged behaviour.** The suite asserts on
   outputs and messages. `python3 -m sim.tests.fingerprint` checks the
   simulation itself (it does not cover the protocol layer).
+- **Use the fingerprint only when behaviour must not change**: refactors,
+  architecture moves, speed-ups. A bug fix or gameplay change is meant to
+  change the simulation, so its fingerprint tells you nothing; rely on its
+  regression test. When several subagents start from one commit, record the
+  baseline once before spawning them and give them its path.
 - **The tree is built, not committed.** `data/tech_tree.json` is generated from
   `data/branches/` at load (`sim/engine/tree_merge.py`) and is not in git.
   `simulator.py validate` reports a merge that would lose branch data.
