@@ -200,6 +200,13 @@ class EconomyPort:
         from .economy_port_health import health_report
         return health_report(agent, metals, staple)
 
+    def spin_up_result(self):
+        """How the opening's hidden first stage ended: {"settled": whether it met SPIN_UP_TOLERANCE, "years", "gap"};
+        empty while the economy opens or when no spin-up ran. A game that opened unsettled opened wherever the
+        cycle stood."""
+        agent = self.agent
+        return {} if agent is None else agent.spin_up_result()
+
     def open_agent(self):
         """Open the agent economy (with its hidden spin-up) on the engine's own opening figures, then count
         the game's money at the economy's wage."""

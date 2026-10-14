@@ -99,6 +99,10 @@ class AgentEconomy:
     def stored(self):
         return self._sim.state.economy.agent_economy
 
+    def spin_up_result(self):
+        """The saved opening's first-stage result (see `_settle`); empty before the opening is saved."""
+        return dict((self.stored.get("record") or {}).get("spin_up_result") or {})
+
     def opened(self) -> bool:
         return self._economy is not None or "record" in self.stored
 
@@ -483,23 +487,33 @@ class AgentEconomy:
         watched = sorted(basket, key=lambda good: -basket[good] * prices.get(good, 0.0))[:SPIN_UP_WATCHED_GOODS]
         inputs = YearInputs(year=0, population_by_tile={}, working_age_share=economy.setup.working_share,
                             yield_factor_by_producer={}, engine_orders={})
-        self._settle(economy, inputs, watched)
+        result = self._settle(economy, inputs, watched)
         economy_api.trim_workforce_to_expected_hours(economy)
         self._settle_trimmed(economy, inputs)
         economy_api.finish_spin_up(economy)
+        economy_api.note_spin_up_result(economy, result)
 
     @staticmethod
     def _settle(economy, inputs, watched):
-        """Hidden years until the price level, the rate and the main prices move less than the tolerance a year."""
+        """Hidden years until the price level, the rate and the main prices move less than the tolerance a year.
+        Returns {"settled": whether the tolerance was met, "years": years run, "gap": the largest relative
+        change in the last year measured (none measured: infinity is not stored, so one)}."""
         before = None
+        gap = 1.0
+        years = 0
+        settled = False
         for _year in range(spin_up_years()[0]):
             outcome = economy.step(inputs)
+            years += 1
             now = ([outcome.basket_price_level, economy_api.interest_rate(economy) or 0.0]
                    + [outcome.prices.get(good, 0.0) for good in watched])
-            if before is not None and max(
-                    abs(new / old - 1.0) for new, old in zip(now, before) if old > 0.0) < SPIN_UP_TOLERANCE:
-                break
+            if before is not None:
+                gap = max(abs(new / old - 1.0) for new, old in zip(now, before) if old > 0.0)
+                if gap < SPIN_UP_TOLERANCE:
+                    settled = True
+                    break
             before = now
+        return {"settled": settled, "years": years, "gap": gap}
 
     @staticmethod
     def _settle_trimmed(economy, inputs):
