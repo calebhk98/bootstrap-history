@@ -147,7 +147,7 @@ working = toilers.members * STRATUM_WORKING_SHARE
 check("the people out of work are the rise in the unhired share of the working people",
       abs(jobless.members - 0.3 * working) < 1e-6 * working, (jobless.members, working))
 check("their loss is the pay of those jobs", abs(jobless.lost_income - 0.3 * working * 150.0) < 1e-6 * working * 150.0, jobless.lost_income)
-check("the sector names the technique that displaced them", jobless.technique == "water_mill" and "the water_mill" in jobless.cause, jobless.cause)
+check("the sector names the technique that displaced them", jobless.technique == "water_mill", jobless.cause)
 world.technique = None
 check("with no technique to name, the loss is still theirs",
       by_key(Sector.of_strata(strata, world))[(JOBLESS_WORKERS, "toilers")].technique == "")
@@ -191,7 +191,7 @@ check("when a technique takes the goods off the tithed market the clergy form a 
       len(sectors) == 1 and sectors[0].kind == "clergy" and sectors[0].subject == "church:home", sectors)
 check("their loss is the tithe that fell away and their number the clergy it kept",
       abs(sectors[0].lost_income - 60.0) < 1e-9 and sectors[0].members == 100.0, (sectors[0].lost_income, sectors[0].members))
-check("the grievance names the source", "tithes" in sectors[0].cause and "60%" in sectors[0].cause, sectors[0].cause)
+check("the grievance names the source", round(100 * sectors[0].facts["fall_shares"]["tithes"]) == 60, sectors[0].cause)
 for _year in range(60):
     Sector.remember_foundations([church])
 check("clergy forget a fall that lasts", Sector.of_foundations([church]) == [])
@@ -223,8 +223,8 @@ world.revenue = 5000.0
 found = by_key(Sector.of_servants(government, world))
 check("office-holders whose salaries go unpaid and whose fees fall form a group",
       ("office_holders", "administration") in found, list(found))
-check("the grievance names the salaries and the fees", "salaries" in found[("office_holders", "administration")].cause
-      and "fees" in found[("office_holders", "administration")].cause, found[("office_holders", "administration")].cause)
+check("the grievance names the salaries and the fees", {"salaries", "fees"} <= set(found[("office_holders", "administration")].forms),
+      found[("office_holders", "administration")].forms)
 check("soldiers whose line goes half unpaid, against full pay, form a group whose loss is the arrears",
       abs(found[("soldiers", "army")].lost_income - 90000.0) < 1e-9 and abs(found[("soldiers", "army")].members - 500.0) < 1e-9,
       (found[("soldiers", "army")].lost_income, found[("soldiers", "army")].members))

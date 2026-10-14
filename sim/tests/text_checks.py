@@ -169,7 +169,11 @@ def scan_topic(topic):
     """[(line, check_name, basis, condition)] for the text-matching checks of one topic; basis is None for behaviour."""
     path = os.path.join(TESTS_DIR, "test_%s.py" % topic)
     with open(path, encoding="utf-8") as handle:
-        text = handle.read()
+        return scan_source(handle.read(), topic, path)
+
+
+def scan_source(text, topic, path="<source>"):
+    """The same list for a test file's source text."""
     tree = ast.parse(text, filename=path)
     docstring = ast.get_docstring(tree) or ""
     names = _textual_names(tree, text) - {"_reply", "reply"}
@@ -196,11 +200,17 @@ def scan_topic(topic):
     return found
 
 
-def report(show_presentation=False, show_conditions=False):
+def classify():
+    """(behaviour rows, presentation rows) over every topic; a row is (topic, line, check name, basis, condition)."""
     behaviour, presentation = [], []
     for topic in discover_topics():
         for line, check_name, basis, condition in scan_topic(topic):
             (behaviour if basis is None else presentation).append((topic, line, check_name, basis, condition))
+    return behaviour, presentation
+
+
+def report(show_presentation=False, show_conditions=False):
+    behaviour, presentation = classify()
     for rows in (presentation if show_presentation else [], behaviour):
         for topic, line, check_name, basis, condition in rows:
             print("%-22s %s:%d  %s" % ("presentation[%s]" % basis if basis else "behaviour", topic, line, check_name))

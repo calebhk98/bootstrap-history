@@ -194,7 +194,7 @@ check("the partner holds tea stock and cane setts at its date, as data",
       load_civ(PARTNER)["opening_stock"].get(TEA, 0) > 0 and load_civ(PARTNER)["opening_stock"].get(SUGAR, 0) > 0)
 quote = buyer.stock_smuggle_quote(TEA, 1.0, PARTNER)
 check("a partner that sells is not robbed: the quote says to buy",
-      not quote["ok"] and "buy it" in quote["error"], quote)
+      not quote["ok"] and quote["cause"] == "partner_sells", quote)
 
 # ---- smuggling what it will not sell ----------------------------------------------------------------
 terms = buyer.stock_smuggle_quote(EGGS, 0.1, PARTNER)

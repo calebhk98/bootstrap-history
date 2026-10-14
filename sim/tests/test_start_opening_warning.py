@@ -12,7 +12,7 @@ short_sim.venture_staff_free = lambda: (0.0, 0.0)
 short_sim.venture_hands = lambda node_id: (5.0, 5.0)
 short_reply = S._agent_dispatch(short_sim, NODES, {"cmd": "start", "id": "school_founded"})
 check("a concern started with insufficient staff says so in the warning",
-      "could not open it" in short_reply.get("today_you_could_not_open_this_when_it_is_done", ""),
+      bool(short_reply.get("today_you_could_not_open_this_when_it_is_done")),
       short_reply.get("today_you_could_not_open_this_when_it_is_done"))
 
 # Concern with sufficient free staff.

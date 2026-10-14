@@ -95,7 +95,7 @@ household_sack._done_changed()
 _force_sack(household_sack)
 household_sack._shocks(household_sack.year)
 check("a sacking names the technologies it destroyed",
-      any("KNOWLEDGE LOST" in message and "_" in message.split("forgotten")[-1]
+      any(cause_of(message) == "knowledge_lost" and facts_of(message)["forgotten"]
           for _, message in household_sack.log),
       [message for _, message in household_sack.log if "KNOWLEDGE LOST" in message][:1])
 _risk_after = household_sack.knowledge_risk()

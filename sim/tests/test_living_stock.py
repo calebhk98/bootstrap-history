@@ -5,6 +5,7 @@ once they are held, however they were got: an opening holding, a purchase from a
 offers them, or a grant. A country refusing to sell is that country's state deciding, from the monopolies its data starts it with.
 """
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of
 
 from sim.engine import foreign_economies as _foreign_module
 from sim.engine.agents_port_cast import seed_opening_cast
@@ -67,7 +68,7 @@ buyer = sim(civ=HOME, capital=1e9)
 check("a partner that refuses to sell eggs sells none",
       buyer.buy_stock_from_partner(EGGS, 0.1, PARTNER) == 0.0 and buyer.stock_held(EGGS) == 0.0,
       buyer.stock_held(EGGS))
-check("...and says so", "will not sell" in (buyer.partner_refusal(PARTNER, EGGS) or ""),
+check("...and says so", cause_of(buyer.partner_refusal(PARTNER, EGGS)) == "partner_export_held_back",
       buyer.partner_refusal(PARTNER, EGGS))
 
 # --- a partner that offers them: the purchase is paid for and opens the node.

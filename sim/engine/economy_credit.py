@@ -615,7 +615,8 @@ class CreditMixin:
                     "with every settlement, not just the first"
                     % (_frozen_before, household.credit_frozen_until))
                    if _moved else ""),
-                reputation_hit=_rep_hit, credit_frozen_until=household.credit_frozen_until)))
+                reputation_hit=_rep_hit, credit_frozen_until=household.credit_frozen_until,
+                freeze_moved=bool(_moved), frozen_before=_frozen_before)))
 
     def stall_diagnosis(self):
         """None if the run is going somewhere; otherwise what is wrong and what

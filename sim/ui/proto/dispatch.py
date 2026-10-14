@@ -157,6 +157,7 @@ def _cmd_step(sim, nodes, cmd, ended):
     # warning and that field can never disagree about what "idle" means.
     # Non-blocking: it says so and proceeds, it does not refuse the step.
     multi_year_hours_warning = None
+    multi_year_hours_waiting_on = None
     lone_dependencies = sim.labour.sole_supervisors() if years > 1 else []
     if years > 1 and ui_port.settings.load_config().get("multi_year_step_warning", True):
         _pre_state = _agent_state_training_and_hours(sim, _agent_state_active_projects(sim, nodes), False)
@@ -195,6 +196,7 @@ def _cmd_step(sim, nodes, cmd, ended):
                            _pre_state.get("founder_hours_available") or 0.0),
                        nodes[_could_start]["name"], years, years,
                        delay_phrase(delay_kinds(sim, nodes))))
+                multi_year_hours_waiting_on = delay_kinds(sim, nodes)
     # LOST, not only completed: a game whose only score is what you have
     # built has to report subtraction at least as loudly as addition, so
     # anything that drops out of `done` during a multi-year step has to be
@@ -386,6 +388,7 @@ def _cmd_step(sim, nodes, cmd, ended):
         out["stopped_kind"] = stopped_kind
     if multi_year_hours_warning:
         out["multi_year_hours_warning"] = multi_year_hours_warning
+        out["multi_year_hours_waiting_on"] = multi_year_hours_waiting_on
     out.update(_agent_state(sim, nodes))
     out["state_view"] = "short"
     return out

@@ -877,7 +877,8 @@ class StaffingMixin:
         if self.is_venture(node_id):
             projects.operating.add(node_id)
             cause_book.record_concern(self, "opening", node_id, "restored")
-        return True, ("%s back in service for %s%s"
-                      % (node_id, money_text(fee, self, grouped=True),
-                         (" (%s)" % _grace_note) if _grace_note else ""))
+        return True, LogLine("restored", "%s back in service for %s%s"
+                             % (node_id, money_text(fee, self, grouped=True),
+                                (" (%s)" % _grace_note) if _grace_note else ""),
+                             work=node_id, fee=fee, closure_age=_age, discounted=bool(_in_grace))
 

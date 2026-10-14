@@ -27,6 +27,7 @@ grouping evidence.
 import functools
 
 from sim.constants import declare
+from sim.refusal import Refusal
 from . import money_units
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import deposits as deposit_model, mine_technique
@@ -700,7 +701,7 @@ class MiningMixin(MineDepositsMixin):
         deposit_room = self.mine_room_in_deposits(mat, deposit)
         if deposit_room is not None:
             if deposit_room <= 0.0:
-                self.mine_refusal = NO_DEPOSIT_TEXT % (mat, mat)
+                self.mine_refusal = Refusal("no_deposit_found", NO_DEPOSIT_TEXT % (mat, mat), material=mat)
                 return 0.0
             t_per_yr = min(t_per_yr, deposit_room)
         if t_per_yr <= 0:

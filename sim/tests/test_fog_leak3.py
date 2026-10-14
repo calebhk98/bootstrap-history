@@ -88,7 +88,7 @@ if _bls_target:
           _bls_out.get("error"))
     check("...and the refusal actually explains why it is not eligible "
           "(tier/category), the real reason, rather than a generic one",
-          "not bounty-eligible" in (_bls_out.get("error") or ""),
+          _bls_out.get("cause") == "not_bounty_eligible",
           _bls_out.get("error"))
 
 

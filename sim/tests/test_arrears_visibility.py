@@ -71,7 +71,7 @@ check("set-up: the project is really underfunded by arrears, not by "
 _arb_why = S._agent_dispatch(s, NODES, {"cmd": "why", "id": _arb_k})
 check("BUG AS FILED: `why` on the stalled project still names only "
       "'your hours' - the misleading half a player actually reads",
-      str(_arb_why.get("waiting_on")).startswith("your hours"), _arb_why.get("waiting_on"))
+      _arb_why.get("waiting_on_kind") == "founder_hours", _arb_why.get("waiting_on"))
 check("THE FIX: `why`'s JSON reply also now carries why_underfunded, the "
       "real cause, not just the misleading waiting_on string",
       bool(_arb_why.get("why_underfunded"))

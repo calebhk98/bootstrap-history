@@ -112,7 +112,7 @@ starting_capital = fresh.capital
 fresh.capital = -fresh.credit_limit() * 0.75
 fresh.warn_near_the_limit(105)
 check("the credit limit warns you BEFORE you cross it",
-      any("CLOSE TO THE LIMIT" in message for _, message in fresh.log), [message for _, message in fresh.log])
+      any(cause_of(message) == "credit_near_limit" for _, message in fresh.log), [message for _, message in fresh.log])
 check("...and names what you could still do about it",
       any("stop" in message and "mothball" in message for _, message in fresh.log), [message for _, message in fresh.log][:1])
 log_length = len(fresh.log)
@@ -350,7 +350,8 @@ insolvent.capital = -99999.0
 insolvent.insolvent_years = 30
 insolvent.enforce_credit_limit(200)
 check("...and says plainly when there was nothing left to take",
-      "already at nothing" in [message for _, message in insolvent.log if "INSOLVENCY" in message][-1],
+      [facts_of(message)["reputation_hit"] for _, message in insolvent.log
+       if cause_of(message) == "insolvency_settled"][-1] == 0.0,
       insolvent.log[-1:])
 
 # --- a household deep in arrears does not commit to new work.

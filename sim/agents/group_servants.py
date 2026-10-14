@@ -87,7 +87,9 @@ def servant_sectors(government: Any, world: Any) -> List[Sector]:
 			words += " (%s of the state's pay unpaid)" % world.money_text(unpaid, grouped=True)
 		sectors.append(Sector(OFFICE_HOLDERS, "administration", "the state's office-holders",
 							  "what they take from the state has fallen: " + words,
-							  sum(falls.values()), expected, budget.officials_kept(world), 1.0))
+							  sum(falls.values()), expected, budget.officials_kept(world), 1.0,
+							  forms=tuple(sorted(falls)),
+							  facts={"fall_shares": {line: fall / record.income_reference[line] for line, fall in falls.items()}}))
 	fall = army_fall(record)
 	due = record.need.get(ARMY_LINE, 0.0)
 	if fall >= STRATUM_GRIEVANCE_THRESHOLD:
