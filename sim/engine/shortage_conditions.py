@@ -7,6 +7,20 @@ MATERIAL_THROUGHPUT_CHANGE = 0.10
 STEADY_BAND = 0.02
 
 
+def material_words(material):
+    """A material key in player words: "alum_kg" is "alum", "saltpetre" stays as it is."""
+    words = str(material)
+    for suffix in ("_kg", "_g", "_t"):
+        words = words.removesuffix(suffix)
+    return words.replace("_", " ")
+
+
+def slowed_projects(sim):
+    """The active projects the standing shortage actually slows, in id order; none when nothing running draws it."""
+    return [node_id for node_id in sorted(sim.state.projects.active_keys_sorted())
+            if sim.project_resource_throttle(node_id) < 1.0]
+
+
 def note_shortage(sim, material, throughput):
     """Record this year's shortage; True when it deserves a fresh event.
 
@@ -49,7 +63,7 @@ def condition_rows(sim):
 
 def condition_line(row, mass_rate_label="t/year"):
     """One readable line for a standing condition; a text screen passes the label of the unit it shows the deficit in."""
-    parts = ["%s CONSTRAINED: work at %d%% of plan" % (row["material"].upper(), round(100 * row["throughput"]))]
+    parts = ["%s CONSTRAINED: work at %d%% of plan" % (material_words(row["material"]).upper(), round(100 * row["throughput"]))]
     if row.get("deficit_tonnes_per_year"):
         parts.append("short %s %s" % ("{:,.1f}".format(row["deficit_tonnes_per_year"]), mass_rate_label))
     parts.append("year %d, %s" % (row["years"], row["trend"]))

@@ -6,6 +6,7 @@ from .dispatch_figures import figure_reply
 from sim.engine.ui_port import active_years_left, remaining_critical_path_years
 from .explain_once import already_explained
 from .nodes import _did_you_mean
+from .why_material import material_story
 from .notes_store import notes_for
 from .score import final_report, score_report
 from .score_change import attach_change_since_last_score
@@ -121,6 +122,9 @@ def _cmd_why(sim, nodes, cmd, ended):
                 if node_id is None else
                 "id must be a name in quotes, not %s" % type(node_id).__name__}
     if node_id not in nodes:
+        story = material_story(sim, node_id)
+        if story is not None:
+            return story
         # Only blame the fog when there IS any: with fog off, the error must
         # not claim fog is limiting the suggestions, in a game started with
         # the whole tree visible.

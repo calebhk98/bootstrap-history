@@ -301,14 +301,17 @@ class ProjectStartPhaseMixin:
                                      "for %s (auto_mine)"
                                  % (area_text(spend / self.NITRE_COST_PER_M2, self, unit="square_metre"),
                                     money_text(spend, self))))
-        if thr < 0.6 and self.state.holdings.binding:
+        slowed = shortage_conditions.slowed_projects(self) if thr < 0.6 and self.state.holdings.binding else []
+        if slowed:
             # SAY WHAT TO DO ABOUT IT: a bare "SHORT OF SALTPETRE: work at
             # 5% of plan" with no remedy attached reads as the game being
             # stuck rather than as something actionable.
             # One standing condition; the full message only when it is new or has moved materially.
+            # Only said while a running project draws the material: a shortage nothing running needs slows nothing.
             if shortage_conditions.note_shortage(self, self.state.holdings.binding, thr):
-                self.state.household.log.append((self.state.scenario.year, "SHORT OF %s: work running at %d%% of plan. %s"
-                                 % (self.state.holdings.binding.upper(), thr * 100,
-                                    self.shortage_remedy(self.state.holdings.binding))))
+                names = ", ".join(self.nodes[node_id]["name"] for node_id in slowed[:3])
+                self.state.household.log.append((self.state.scenario.year, "SHORT OF %s: %s running at %d%% of plan. %s"
+                                 % (shortage_conditions.material_words(self.state.holdings.binding).upper(), names,
+                                    thr * 100, self.shortage_remedy(self.state.holdings.binding))))
         else:
             shortage_conditions.clear_shortage(self)
