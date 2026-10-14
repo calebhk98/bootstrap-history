@@ -292,19 +292,14 @@ class WiringDoesNotBreakTheSolveTests(unittest.TestCase):
         # - once with land wired in, once with every land_hectare_years
         # stripped out - and compares every resolvable material's price.
         #
-        # EXCEPT for minor joint byproducts with no independent price
-        # anchor (see JOINT BYPRODUCTS WITHOUT A DEMAND ANCHOR in the
-        # module docstring and `minor_joint_byproducts_are_unanchored`) -
-        # germanium_g and indium_g today, both mass-split artifacts of
-        # zinc_electrolytic_kg's own value-share allocation rather than
-        # independently derived prices. Their number is free to move,
-        # including downward, when the REST of the economy shifts around
-        # them even though their own recipe is untouched - that is what
-        # "not a derived number" means, not a bug this task introduced.
-        # Checked in BOTH directions (with-land and without-land) so a
-        # material is excluded only when the mechanism itself says its
-        # price carries no independent meaning, never merely because it
-        # happens to have moved.
+        # EXCEPT for minor joint byproducts split by mass (see JOINT BYPRODUCTS WITH NO REFERENCE PRICE in
+        # the solve_prices module docstring and `minor_joint_byproducts_split_by_mass`) - germanium_g and
+        # indium_g today, both mass-split artifacts of zinc_electrolytic_kg's allocation rather than
+        # independently derived prices. Their number is free to move, including downward, when the REST
+        # of the economy shifts around them even though their own recipe is untouched - that is what
+        # "not a derived number" means. Checked in BOTH directions (with-land and without-land) so a
+        # material is excluded only when the mechanism itself says its price carries no independent
+        # meaning, never merely because it happens to have moved.
         production_entries, _duplicates = solve_prices.load_production()
         stripped_entries = {
             recipe_id: {key: value for key, value in entry.items()
@@ -324,7 +319,7 @@ class WiringDoesNotBreakTheSolveTests(unittest.TestCase):
         prices_with_land, _iters, _residual, chosen_with_land = solve_prices.solve(
             production_entries, producers_of, resolvable_with_land, wage_by_trade,
             rent_hours_per_kg_by_material=rent)
-        unanchored_with_land = solve_prices.minor_joint_byproducts_are_unanchored(
+        by_mass_with_land = solve_prices.minor_joint_byproducts_split_by_mass(
             production_entries, chosen_with_land, prices_with_land, wage_by_trade,
             rent_hours_per_kg_by_material=rent)
 
@@ -339,12 +334,12 @@ class WiringDoesNotBreakTheSolveTests(unittest.TestCase):
         prices_without_land, _iters2, _residual2, chosen_without_land = solve_prices.solve(
             stripped_entries, producers_of_stripped, resolvable_without_land,
             wage_by_trade, rent_hours_per_kg_by_material=rent_stripped)
-        unanchored_without_land = solve_prices.minor_joint_byproducts_are_unanchored(
+        by_mass_without_land = solve_prices.minor_joint_byproducts_split_by_mass(
             stripped_entries, chosen_without_land, prices_without_land, wage_by_trade,
             rent_hours_per_kg_by_material=rent_stripped)
 
-        unanchored = set(unanchored_with_land) | set(unanchored_without_land)
-        common = (resolvable_with_land & resolvable_without_land) - unanchored
+        by_mass = set(by_mass_with_land) | set(by_mass_without_land)
+        common = (resolvable_with_land & resolvable_without_land) - by_mass
         lowered = {material: (prices_without_land[material], prices_with_land[material])
                   for material in common
                   # a whisker of float slack for the damped iteration's own

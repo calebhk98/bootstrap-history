@@ -41,7 +41,7 @@ class PriceBookIsGone(unittest.TestCase):
             [], data.starting_schedule().document())
         self.assertGreater(len(goods), 100)
         self.assertTrue(set(provenance.values()) <= {"solved", "gated"})
-        # a glutted by-product of a joint process prices at minus its disposal cost; every other good is dear
+        # a waste by-product of a joint process may price at nothing or below; every other good is dear
         wastes = set(disposal_cost.joint_output_materials(engine_prices._default_production_entries()))
         self.assertEqual(sorted(material for material, price in goods.items()
                                 if price <= 0.0 and material not in wastes), [])

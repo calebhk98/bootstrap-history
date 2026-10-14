@@ -1,12 +1,12 @@
-"""Complaints/309: a glutted waste by-product prices at minus its disposal cost, and the batch is still recovered."""
+"""Complaints/309: a waste nobody will take (the caller values it below zero) prices at minus its disposal cost, and the batch is still recovered."""
 
 QUICK_TOPIC = True
 
 import math
 import unittest
 
-from sim.engine import disposal_cost, joint_allocation, joint_floor, solve_prices, solve_prices_core
-from sim.world import demand, need_demand
+from sim.engine import disposal_cost, joint_allocation, solve_prices, solve_prices_core
+from sim.world import demand
 
 OUTPUTS = {"tar_kg": 1000.0, "charcoal_kg": 2500.0}
 BATCH_COST = 760.0
@@ -14,84 +14,42 @@ TAR_DISPOSAL_COST_PER_UNIT = 0.005
 TAR = frozenset({"tar_kg"})
 
 
-def allocate(tar_anchor, tar_disposal_cost, glutted=TAR):
+def allocate(tar_reference, tar_disposal_cost):
     return joint_allocation.allocate_joint_cost(
-        OUTPUTS, {}, BATCH_COST, {"tar_kg": tar_anchor, "charcoal_kg": 4.0},
-        disposal_cost_by_material={"tar_kg": tar_disposal_cost}, glutted_materials=glutted)
+        OUTPUTS, BATCH_COST, {"tar_kg": tar_reference, "charcoal_kg": 4.0},
+        disposal_cost_by_material={"tar_kg": tar_disposal_cost})
 
 
-class GlutPriceTests(unittest.TestCase):
+class WastePriceTests(unittest.TestCase):
 
-    def test_a_glutted_byproduct_prices_at_minus_its_disposal_cost(self):
-        prices = allocate(1e-9, TAR_DISPOSAL_COST_PER_UNIT)
+    def test_a_waste_the_caller_values_below_zero_prices_at_minus_its_disposal_cost(self):
+        prices = allocate(-1.0, TAR_DISPOSAL_COST_PER_UNIT)
         self.assertAlmostEqual(prices["tar_kg"], -TAR_DISPOSAL_COST_PER_UNIT)
 
-    def test_a_low_anchor_is_not_a_glut_unless_the_clearing_search_says_so(self):
-        prices = allocate(1e-9, TAR_DISPOSAL_COST_PER_UNIT, glutted=frozenset())
-        self.assertGreaterEqual(prices["tar_kg"], 0.0)
+    def test_a_waste_valued_between_zero_and_minus_its_disposal_cost_prices_at_the_value(self):
+        prices = allocate(-0.001, TAR_DISPOSAL_COST_PER_UNIT)
+        self.assertAlmostEqual(prices["tar_kg"], -0.001)
 
     def test_the_batch_is_recovered_and_the_main_product_pays_the_disposal(self):
-        prices = allocate(1e-9, TAR_DISPOSAL_COST_PER_UNIT)
-        free = allocate(1e-9, 0.0)
+        prices = allocate(-1.0, TAR_DISPOSAL_COST_PER_UNIT)
+        free = allocate(-1.0, 0.0)
         recovered = sum(prices[name] * quantity for name, quantity in OUTPUTS.items())
         self.assertAlmostEqual(recovered, BATCH_COST)
         self.assertGreater(prices["charcoal_kg"], free["charcoal_kg"])
 
-    def test_a_byproduct_with_demand_above_its_disposal_cost_keeps_a_positive_price(self):
-        prices = allocate(0.5, TAR_DISPOSAL_COST_PER_UNIT, glutted=frozenset())
+    def test_a_by_product_valued_above_zero_keeps_a_positive_price(self):
+        prices = allocate(0.5, TAR_DISPOSAL_COST_PER_UNIT)
         self.assertGreater(prices["tar_kg"], 0.0)
 
-    def test_an_unanchored_output_is_never_priced_below_zero(self):
+    def test_an_output_with_no_reference_is_never_priced_below_zero(self):
         prices = joint_allocation.allocate_joint_cost(
-            OUTPUTS, {}, BATCH_COST, {}, disposal_cost_by_material={"tar_kg": TAR_DISPOSAL_COST_PER_UNIT})
+            OUTPUTS, BATCH_COST, disposal_cost_by_material={"tar_kg": TAR_DISPOSAL_COST_PER_UNIT})
         self.assertGreaterEqual(prices["tar_kg"], 0.0)
 
     def test_a_negative_reference_value_does_not_corrupt_the_split(self):
         shares = joint_allocation._split_by_value(OUTPUTS, {"tar_kg": -3.0, "charcoal_kg": 4.0}, BATCH_COST)
         self.assertTrue(all(price >= 0.0 for price in shares.values()))
         self.assertAlmostEqual(sum(shares[name] * OUTPUTS[name] for name in OUTPUTS), BATCH_COST)
-
-    def test_the_bound_lifts_a_price_below_it_and_charges_the_others(self):
-        prices = {"tar_kg": -1.0, "charcoal_kg": 0.5}
-        lifted = joint_floor.bound_to_disposal_cost(prices, OUTPUTS, {"tar_kg": 0.002})
-        self.assertAlmostEqual(lifted["tar_kg"], -0.002)
-        self.assertAlmostEqual(
-            sum(lifted[name] * OUTPUTS[name] for name in OUTPUTS),
-            sum(prices[name] * OUTPUTS[name] for name in OUTPUTS))
-
-
-GEM_NEEDS = {"needs": {"ornament": {"surplus_budget_share": 1.0}},
-             "goods": {"gem_kg": {"satisfies": {"ornament": 1.0}}}}
-GEM_SMELT = {"outputs": {"metal_kg": 10.0, "gem_kg": 1.0}, "inputs": {}, "labour_hours": {"labourer": 5.0}}
-
-
-class ClearingSearchGlutTests(unittest.TestCase):
-    """A glut is the clearing search finding supply above demand at every price it tries."""
-
-    def anchors(self, supply_kg, table_supply=()):
-        model = need_demand.NeedDemandModel(
-            GEM_NEEDS, {"smelt": GEM_SMELT}, demand.income_bins(1_000_000.0, 500.0))
-        return need_demand.NeedDemandAnchors(model, {"gem_kg": supply_kg}, table_supply)
-
-    def test_supply_beyond_demand_at_every_price_is_a_glut(self):
-        self.assertEqual(self.anchors(1e30).glutted_materials({"gem_kg": 1.0}), {"gem_kg"})
-
-    def test_scarce_supply_is_not_a_glut(self):
-        self.assertEqual(self.anchors(10.0).glutted_materials({"gem_kg": 1.0}), set())
-
-    def test_a_market_clearing_below_the_disposal_cost_is_a_glut(self):
-        anchors = self.anchors(10.0)
-        clearing = anchors.prices({"gem_kg": 1.0})["gem_kg"]
-        self.assertEqual(anchors.glutted_materials({"gem_kg": 1.0}, {"gem_kg": clearing * 10.0}), {"gem_kg"})
-        self.assertEqual(anchors.glutted_materials({"gem_kg": 1.0}, {"gem_kg": clearing / 10.0}), set())
-
-    def test_a_decayed_price_does_not_hide_a_market_that_clears_above_the_disposal_cost(self):
-        anchors = self.anchors(10.0)
-        clearing = anchors.prices({"gem_kg": 1.0})["gem_kg"]
-        self.assertEqual(anchors.glutted_materials({"gem_kg": clearing * 1e-12}, {"gem_kg": clearing / 10.0}), set())
-
-    def test_a_table_supplied_good_is_never_reported_as_glut(self):
-        self.assertEqual(self.anchors(1e30, ("gem_kg",)).glutted_materials({"gem_kg": 1.0}), set())
 
 
 class DisposalCostTests(unittest.TestCase):
@@ -207,21 +165,11 @@ def disposal_cost_entry_keys():
             "waste_haulage_by_cart", "dump_ground_m2"}
 
 
-class GluttedDemand:
-    glutted = frozenset({"tar_kg"})
-
-    def prices(self, _prices):
-        return {"tar_kg": 1e-12, "charcoal_kg": 2.0}
-
-    def glutted_materials(self, _prices, _disposal_costs=None):
-        return self.glutted
-
-
 KILN = {"kiln": {"outputs": {"tar_kg": 1000.0, "charcoal_kg": 2500.0}, "inputs": {},
                  "labour_hours": {"labourer": 100.0}}}
 
 
-def solve_kiln(sink=True, rule=0.0, gate=None, demand_anchors=None):
+def solve_kiln(sink=True, rule=0.0, gate=None, tar_reference=-1.0):
     entries = dict(KILN)
     if sink:
         entries.update({key: value for key, value in real_sink_entries().items()
@@ -232,12 +180,13 @@ def solve_kiln(sink=True, rule=0.0, gate=None, demand_anchors=None):
     prices, _i, _r, chosen = solve_prices.solve(
         entries, producers, resolvable, {"labourer": 1.0},
         rent_hours_per_kg_by_material={"hectare_land": 40.0}, interest_rate=0.05,
-        demand_anchors=demand_anchors or GluttedDemand(), dump_minimum_distance_kilometres=rule)
+        reference_price_by_material=None if tar_reference is None else {"tar_kg": tar_reference},
+        dump_minimum_distance_kilometres=rule)
     return prices, resolvable, chosen
 
 
 class SinkRecipeSolveTests(unittest.TestCase):
-    """The disposal sink is data, priced by the cost routine; the glut sets the price at minus its cost."""
+    """The disposal sink is data, priced by the cost routine; a waste valued below zero prices at minus its cost."""
 
     def test_the_sink_services_are_reachable_ordinary_materials(self):
         _prices, resolvable, chosen = solve_kiln()
@@ -252,7 +201,7 @@ class SinkRecipeSolveTests(unittest.TestCase):
         self.assertEqual(chosen_foot["waste_haulage_tkm"], "waste_haulage_on_foot")
         self.assertLess(both["waste_haulage_tkm"], foot_only["waste_haulage_tkm"])
 
-    def test_a_solved_glut_prices_at_minus_the_disposal_cost_and_the_batch_is_recovered(self):
+    def test_a_solved_waste_prices_at_minus_the_disposal_cost_and_the_batch_is_recovered(self):
         prices, _r, _c = solve_kiln()
         expected = disposal_cost.disposal_cost_by_material(["tar_kg"], prices, 0.05)["tar_kg"]
         self.assertGreater(expected, 0.0)
@@ -266,16 +215,16 @@ class SinkRecipeSolveTests(unittest.TestCase):
         self.assertLess(ruled["tar_kg"], free["tar_kg"])
         self.assertGreater(ruled["charcoal_kg"], free["charcoal_kg"])
 
-    def test_with_no_sink_in_the_solve_a_glut_is_free_to_dump(self):
+    def test_with_no_sink_in_the_solve_a_waste_is_free_to_dump(self):
         prices, _r, _c = solve_kiln(sink=False)
         self.assertAlmostEqual(prices["tar_kg"], 0.0, places=9)
         self.assertAlmostEqual(prices["charcoal_kg"] * 2500.0, 100.0, places=4)
 
-    def test_the_search_not_a_share_of_the_cost_decides_a_glut(self):
-        class NoGlut(GluttedDemand):
-            glutted = frozenset()
-        prices, _r, _c = solve_kiln(demand_anchors=NoGlut())
-        self.assertGreaterEqual(prices["tar_kg"], 0.0)
+    def test_with_no_reference_the_waste_is_priced_by_mass_and_the_rule_reaches_no_price(self):
+        free, _r, _c = solve_kiln(tar_reference=None, rule=0.0)
+        ruled, _r2, _c2 = solve_kiln(tar_reference=None, rule=50.0)
+        self.assertGreaterEqual(free["tar_kg"], 0.0)
+        self.assertAlmostEqual(ruled["tar_kg"], free["tar_kg"])
 
     def test_the_solved_prices_stay_finite(self):
         prices, _r, _c = solve_kiln()
@@ -289,9 +238,9 @@ class WasteConsumerTests(unittest.TestCase):
 
     def cost(self, slag_price, slag_disposal_cost, labour=5.0):
         entry = dict(self.ENTRY, labour_hours={"labourer": labour})
-        disposal = solve_prices_core.Disposal(costs={"slag_kg": slag_disposal_cost})
         total, prices = solve_prices_core.recipe_cost_and_allocation(
-            "cement", entry, {"slag_kg": slag_price}, {"labourer": 1.0}, disposal=disposal)
+            "cement", entry, {"slag_kg": slag_price}, {"labourer": 1.0},
+            disposal_costs={"slag_kg": slag_disposal_cost})
         return total, prices["cement_kg"]
 
     def test_the_credit_is_the_avoided_disposal_cost(self):
