@@ -66,9 +66,8 @@ check("a mine can be priced before it is bought",
       and reply["quote_mine"].get("every_year_it_stands", 0) > 0, str(reply["quote_mine"])[:90])
 
 # --- play must run a civilisation that does not start in 100 AD (its loop used to end at 100 + horizon)
-_play = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"), "play", "--manual",
-                        "--civ", "norse_900ad"],
-                       input="n\nq\n", capture_output=True, text=True, timeout=120, cwd=ROOT)
+from . import cli_in_process
+_play = cli_in_process.run(["play", "--manual", "--civ", "norse_900ad"], "n\nq\n", cwd=ROOT)
 check("play runs a civilisation that does not start in 100 AD",
       "900 AD" in _play.stdout and "Ended 900 AD" not in _play.stdout, _play.stdout[-120:])
 
