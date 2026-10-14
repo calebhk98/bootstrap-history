@@ -88,7 +88,9 @@ game.civ["standing_army"] = opening_army
 # ---- revenue is the economy's yield, spending is the standing need ----------------------------
 # (this one year also serves the labour-pool and goods-market sections below, which read the same year's result)
 revenue = SimWorld(game).state_revenue()
-need = sum(line.money for line in budget.standing_lines(SimWorld(game)))
+standing = budget.standing_lines(SimWorld(game))
+need = sum(line.money for line in standing)
+standing_purposes = {line.name for line in standing}
 soldiers_free_before = game.labour.market_supply("soldier")
 scribes_before = game.actor_staff_fte("scribe")
 iron_demand_before_buying = sum(1 for bid in game.bids if bid[1] == "iron")
@@ -100,7 +102,9 @@ check("the state's revenue is booked as income from taxation, less what it took 
 bid_money = sum(money for buyer, _commodity, _tonnes, money in game.bids if buyer == treasury.actor_id)
 check("the state spends its standing need, by purpose: outlays now, and bids for the goods it buys",
       outlays.get("army", 0.0) > 0.0 and outlays.get("administration", 0.0) > 0.0
-      and abs(sum(outlays.values()) + bid_money - need) < 0.02 * need, (outlays, bid_money, need))
+      # a surplus also raises named works (building ...), and thieves and coin guards take their cut: none is a standing need
+      and abs(sum(money for purpose, money in outlays.items() if purpose in standing_purposes) + bid_money - need) < 0.02 * need,
+      (outlays, bid_money, need))
 check("a state in surplus keeps the difference as reserve and the ledger balances",
       abs(treasury.money - (sum(income.values()) - sum(outlays.values()))) < 1e-6 * revenue
       and treasury.money > 0.0, (treasury.money, income, outlays))
