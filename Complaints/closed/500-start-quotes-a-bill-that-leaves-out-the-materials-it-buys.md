@@ -1,6 +1,6 @@
 # `start` quotes a bill that leaves out the materials it buys
 
-**Status:** open
+**Status:** closed - start now reports the whole bill, split into materials paid now and instalments still owed
 
 `start <id>` prints "the bill you have taken on", and players read it as the price. It is only the
 instalments still to pay. The materials the market can deliver that year are bought at start and do not
@@ -23,3 +23,10 @@ materials cannot be bought now. Only the report is wrong.
 What it would take: return the materials bought from `settle_project_materials`. Then have `start` print
 the total (`project_cost_now`), split into materials paid now and instalments still owed, and base the
 `on_credit` forecast on both. Add a protocol test that the printed parts sum to the `why` total.
+
+## Resolution
+
+`start` now prints the whole bill (`the_bill_you_have_taken_on`) with `of_which_materials_paid_now` and
+`of_which_instalments_still_owed`. `settle_project_materials` returns both parts and the project record keeps
+the materials paid. The `on_credit` forecast states the instalments and the materials already paid from cash.
+Regression: `sim/tests/test_start_and_upkeep_quotes.py`.

@@ -145,11 +145,13 @@ class ProjectMaterialsMixin:
 
     def settle_project_materials(self, node_id):
         """Buy the materials the market can deliver now (when the money can
-        be raised) and return what is left to pay in instalments."""
+        be raised) and return (what is left to pay in instalments, the
+        materials money paid now)."""
         full = self.project_cost_now(node_id)
         if self._up_front_materials_money(node_id) <= 0:
-            return full
-        return full - self.buy_project_materials(node_id)
+            return full, 0.0
+        paid_now = self.buy_project_materials(node_id)
+        return full - paid_now, paid_now
 
     def failure_bill(self, node_id):
         """The money bill the player bears for this project: the frozen bill

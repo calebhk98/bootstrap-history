@@ -40,7 +40,7 @@ class StartingMixin:
         own_output_claim = None
         if cost_left is None:
             own_output_claim = self.project_own_output_claim(node_id)
-            bill = self.settle_project_materials(node_id)
+            bill, _materials_paid_now = self.settle_project_materials(node_id)
             cost_left = bill
         rebuild_factor = self.rebuild_work_factor(node_id)
         record = dict(
@@ -967,7 +967,7 @@ class StartingMixin:
         scenario_year = self.state.scenario.year
         # Materials due now are bought (and banked as stock) first; what
         # is left is the bill paid in instalments.
-        bill = self.settle_project_materials(node_id)
+        bill, materials_paid_now = self.settle_project_materials(node_id)
         if precaution:
             bill += precaution_extra_cost(self, node_id, bill)
         price = bill
@@ -993,6 +993,7 @@ class StartingMixin:
         # nearly done too. Setting the real total here, before any of that
         # runs, is what fixed it.
         self.initialize_project(node_id, spent=_already, cost_left=price, bill=bill)
+        self.materials_paid_at_last_start = materials_paid_now
         if precaution:
             record = projects.active[node_id]
             record["precaution"] = True

@@ -280,7 +280,8 @@ class VenturesMixin:
             _oy = projects.opened_year = {}
         _oy.setdefault(node_id, scenario.year)
         rev_now = self.venture_real_earnings(node_id, unit_count, fully_ramped=True)
-        up_now = self.venture_real_upkeep(node_id, unit_count)
+        upkeep = self.venture_upkeep_quote(node_id, unit_count)
+        up_now = upkeep["now"]
         # A reopened concern keeps its original start, so it only mentions a ramp it is still climbing.
         still_ramping = self.venture_ramp(node_id) < 1.0
         _ramp_note = (
@@ -295,11 +296,16 @@ class VenturesMixin:
             % (money_text(up_now - rev_now, self, grouped=True), node_id)
             if up_now > rev_now and node_id not in self.CAPABILITY_INSTITUTIONS
             else "")
+        _staffing_note = (" (%s once fully staffed)"
+                          % money_text(upkeep["at_full_staffing"], self, grouped=True)
+                          if upkeep["at_full_staffing"] > up_now + 0.5 else "")
+        _charge_note = (" The opening charge was %s, for stock and premises."
+                        % money_text(fee, self, grouped=True) if pay else "")
         return True, ("%s open%s: it earns %s a year and costs %s a year to "
-                      "run.%s%s"
+                      "run at today's staffing%s.%s%s%s"
                       % (node_id, "" if unit_count == 1.0 else " at %.2f of a full founding" % unit_count,
                          money_text(rev_now, self, grouped=True), money_text(up_now, self, grouped=True),
-                         _ramp_note, _loss_note))
+                         _staffing_note, _charge_note, _ramp_note, _loss_note))
 
     # Expansion: reusing "open" with units field keeps protocol backward-compatible.
     def _expand_institution(self, node_id, add_units, pay=True):

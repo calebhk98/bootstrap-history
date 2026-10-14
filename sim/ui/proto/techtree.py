@@ -219,7 +219,9 @@ def _brief(sim, nodes, node_id, fog):
                 "failure_costs_hours": round(node["ph"] * 0.4, 1) if node["risk"] else 0.0,
                 "earns_per_year": (_est if _est is not None
                                    else round(sim.venture_real_earnings(node_id), 1)),
-                "costs_per_year_after": round(sim.venture_real_upkeep(node_id), 1),
+                "costs_per_year_after": round(sim.venture_upkeep_quote(node_id)["now"], 1),
+                "costs_per_year_at_full_staffing": round(
+                    sim.venture_upkeep_quote(node_id)["at_full_staffing"], 1),
                 "how_much_rests_on_this": rests,
                 **_staff_fields(sim, node)}
     return {"id": node_id, "name": node["name"], "cat": node["cat"],
@@ -230,7 +232,9 @@ def _brief(sim, nodes, node_id, fog):
             "risk": sim.effective_risk(node_id),
             "pay_to_lower_the_risk": sim.precaution_quote(node_id),
             "earns_per_year": round(sim.venture_real_earnings(node_id), 1),
-            "costs_per_year_after": round(sim.venture_real_upkeep(node_id), 1),
+            "costs_per_year_after": round(sim.venture_upkeep_quote(node_id)["now"], 1),
+            "costs_per_year_at_full_staffing": round(
+                sim.venture_upkeep_quote(node_id)["at_full_staffing"], 1),
             **available_economics.row_fields(sim, node_id, node),
             # _downstream_of, NOT downstream_count. The cached bitmask index
             # in data.py follows hard prerequisites only, and it must: adding
@@ -996,7 +1000,8 @@ def _explain_revenue(sim, nodes, node_id, node):
         # is the whole of the user's original question - "shouldn't the
         # payback be something you don't know until after research?" So
         # revenue alone is fogged; see _fog_revenue_estimate.
-        "upkeep": sim.venture_real_upkeep(node_id),
+        "upkeep": sim.venture_upkeep_quote(node_id)["now"],
+        "upkeep_at_full_staffing": sim.venture_upkeep_quote(node_id)["at_full_staffing"],
         "revenue": (sim.venture_real_earnings(node_id) if (not sim.fog
                                  or _revenue_known_exactly(sim, node_id))
                    else (_fog_revenue_estimate(sim, node_id) or 0.0)),

@@ -144,7 +144,10 @@ def _cmd_start(sim, nodes, cmd, ended):
     # the coinage, material scarcity and what has been built since, so an
     # earlier `why` figure is only a snapshot. The bill IS fixed at the
     # moment you start; this must state plainly what it was fixed AT.
-    bill = round(sim.active.get(node_id, {}).get("cost_left", sim.project_cost(node_id)), 1)
+    record = sim.active.get(node_id, {})
+    instalments = round(record.get("cost_left", sim.project_cost(node_id)), 1)
+    materials_paid_now = round(getattr(sim, "materials_paid_at_last_start", 0.0), 1)
+    bill = round(instalments + materials_paid_now, 1)
     _warn_staff = ("started, but this society cannot supply the labour it "
                    "wants and it will crawl until you can: %s"
                    % "; ".join(_impossible)) if _impossible else None
@@ -161,6 +164,8 @@ def _cmd_start(sim, nodes, cmd, ended):
            "expected_calendar_years_with_retries": round(
                sim.expected_calendar_years(node_id), 2),
            "the_bill_you_have_taken_on": bill,
+           "of_which_materials_paid_now": materials_paid_now,
+           "of_which_instalments_still_owed": instalments,
            "note": "The price is fixed at start (explained earlier; `full` shows it again)."
            if already_explained(sim, "start_price_fixed", cmd) else
            "This is the price as of today, and it is now fixed for "
@@ -236,7 +241,8 @@ def _cmd_start(sim, nodes, cmd, ended):
     # completion on today's cash, never what already has, or this screen
     # would contradict `money`'s own "(none used)" reading of the same
     # moment.
-    _gap = bill - max(0.0, sim.capital)
+    # Cash already has the materials paid at start taken out, so the gap is the instalments against it.
+    _gap = instalments - max(0.0, sim.capital)
     if _gap > 0:
         _lim = sim.credit_limit()
         _after = -(min(0.0, sim.capital) - _gap)
@@ -246,6 +252,8 @@ def _cmd_start(sim, nodes, cmd, ended):
                 "draws down at step resolution, if cash runs short paying "
                 "this year's share. These figures are what happens if it "
                 "does, on today's numbers."),
+            "instalments_still_owed": instalments,
+            "materials_already_paid_from_cash": materials_paid_now,
             "you_would_borrow": round(_gap, 1),
             "interest_rate_percent": round(sim.debt_interest_rate() * 100, 1),
             "estimated_annual_interest": round(
@@ -719,7 +727,9 @@ def _cmd_ventures(sim, nodes, cmd, ended):
         _foreman_trade, _foreman_fte = sim.venture_foreman(node_id)
         row = {"id": node_id, "name": node["name"],
                 "earns_a_year": round(sim.venture_real_earnings(node_id), 1),
-                "costs_a_year": round(sim.venture_real_upkeep(node_id), 1),
+                "costs_a_year": round(sim.venture_upkeep_quote(node_id)["now"], 1),
+                "costs_a_year_at_full_staffing": round(
+                    sim.venture_upkeep_quote(node_id)["at_full_staffing"], 1),
                 "needs": {"scholars": round(_sup_s, 2),
                           "craftsmen": round(_sup_a, 2)},
                 "specialist_foreman": (

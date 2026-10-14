@@ -15,14 +15,18 @@ class VentureQuotesMixin:
         market = self.node_output_market_factor(self.nodes[node_id]) if running else 1.0
         return self.concern_takings(node_id, ramp) * units * market
 
-    def venture_real_upkeep(self, node_id, units=None):
-        """Yearly running cost at the current price level: the figure every
-        screen quotes and the ledger charges (`upkeep`). `units` prices a
-        stated number of units of the concern instead of what is open now."""
+    def venture_upkeep_quote(self, node_id, units=None):
+        """Yearly running cost at the current price level, the one source every
+        screen quotes: `now` at today's staffing (what the ledger charges) and
+        `at_full_staffing` with every place filled. The two are equal for an
+        ordinary concern. `units` prices a stated size of a scalable institution."""
         scale = self.price_index
-        if units is None:
-            return self.institution_upkeep(node_id) * scale
-        return self.nodes[node_id]["up"] * units * scale
+        return {"now": self.institution_upkeep(node_id, units) * scale,
+                "at_full_staffing": self.institution_upkeep(node_id, units, fully_staffed=True) * scale}
+
+    def venture_real_upkeep(self, node_id, units=None):
+        """Yearly running cost at today's staffing: the figure the ledger charges (`upkeep`)."""
+        return self.venture_upkeep_quote(node_id, units)["now"]
 
     def reopen_units(self, node_id):
         """How much of a scalable institution a reopening restores (one, for anything else)."""
