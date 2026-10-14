@@ -65,8 +65,16 @@ def _rendered_names(tree, text):
     return names
 
 
+def _reads_source(node, text):
+    """True for a search of program source or a file, which tests code and data, not a reply."""
+    source = _source(node, text)
+    return bool(re.search(r"source|\.read\(\)|getsource", source))
+
+
 def _is_textual(node, text, names):
     source = _source(node, text)
+    if _reads_source(node, text):
+        return False
     if any(isinstance(inner, ast.Name) and TEXT_WORDS & set(inner.id.lower().strip("_").split("_"))
            for inner in ast.walk(node)):
         return True
@@ -84,7 +92,8 @@ def _reads_text(condition, text, names):
                     left_is_string = isinstance(node.left, ast.Constant) and isinstance(node.left.value, str)
                     if left_is_string and _is_textual(right, text, names):
                         return True
-                    if left_is_string and not re.fullmatch(r"[a-z_0-9]+", node.left.value):
+                    if left_is_string and re.search(r"\s", node.left.value.strip()) \
+                            and not _reads_source(right, text):
                         return True
         elif isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
             if node.func.attr in ("startswith", "endswith", "count", "search", "match", "findall", "find"):
@@ -96,7 +105,7 @@ def _reads_text(condition, text, names):
 
 
 def scan_topic(topic):
-    """(is_presentation_topic, [(line, check_name, is_presentation_check)]) for one topic."""
+    """(is_presentation_topic, [(line, check_name, is_presentation_check, condition)]) for one topic."""
     path = os.path.join(TESTS_DIR, "test_%s.py" % topic)
     with open(path, encoding="utf-8") as handle:
         text = handle.read()
@@ -119,22 +128,23 @@ def scan_topic(topic):
         condition_source = _source(node.args[1], text)
         from_renderer = bool(re.search(r"\brender\w*\(", condition_source)) or any(
             isinstance(inner, ast.Name) and inner.id in rendered for inner in ast.walk(node.args[1]))
-        found.append((node.lineno, check_name, from_renderer or bool(PRESENTATION.search(check_name))))
+        found.append((node.lineno, check_name, from_renderer or bool(PRESENTATION.search(check_name)),
+                      " ".join(condition_source.split())))
     return topic_is_presentation, found
 
 
-def report(show_presentation=False):
+def report(show_presentation=False, show_conditions=False):
     behaviour, presentation = [], []
     for topic in discover_topics():
         topic_is_presentation, found = scan_topic(topic)
-        for line, check_name, check_is_presentation in found:
-            row = (topic, line, check_name)
+        for line, check_name, check_is_presentation, condition in found:
+            row = (topic, line, check_name, condition)
             (presentation if topic_is_presentation or check_is_presentation else behaviour).append(row)
-    if show_presentation:
-        for topic, line, check_name in presentation:
-            print("presentation  %s:%d  %s" % (topic, line, check_name))
-    for topic, line, check_name in behaviour:
-        print("behaviour     %s:%d  %s" % (topic, line, check_name))
+    for label, rows in (("presentation", presentation if show_presentation else []), ("behaviour", behaviour)):
+        for topic, line, check_name, condition in rows:
+            print("%-12s  %s:%d  %s" % (label, topic, line, check_name))
+            if show_conditions:
+                print("      " + condition[:240])
     topics = sorted({row[0] for row in behaviour})
     print("\nbehaviour checks reading text: %d in %d topics" % (len(behaviour), len(topics)))
     print("presentation checks reading text: %d" % len(presentation))

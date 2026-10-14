@@ -98,7 +98,7 @@ s.done.add(_LOSS); s._done_changed()      # you BUILT it; that is what mothballi
 s.mothballed.add(_LOSS)
 ok, why = s.start_reason(_LOSS)
 check("a mothballed work refuses to be started as if it were new research",
-      not ok and "restore" in why, why)
+      not ok and s.start_blockers(_LOSS)[0]["cause"] == "mothballed", s.start_blockers(_LOSS))
 avail = S._agent_available(s, NODES, {"all": True})
 check("a mothballed work does not appear in available looking like new research",
       not any(entry["id"] == _LOSS for entry in avail["available"]), avail["count"])
@@ -156,12 +156,15 @@ ok_ig, why_ig = s.start_reason("ag2_hydrometer", ignore_trade=True)
 check("ignore_trade accepts a node that is startable but for the trade alone",
       ok_ig, why_ig)
 ok_norm, why_norm = s.start_reason("ag2_hydrometer")
+_blocker_norm = s.start_blockers("ag2_hydrometer")[0]
 check("without ignore_trade the same node is refused specifically for the trade",
-      not ok_norm and "optician" in why_norm, why_norm)
+      not ok_norm and _blocker_norm["cause"] == "absent_trades"
+      and "optician" in [trade for trade in NODES["ag2_hydrometer"]["lab"] if not s.labour.trade_available(trade)],
+      _blocker_norm)
 s.done.update(NODES["ag2_cold_store"]["pre"])  # prerequisites held, so only staffing can refuse
 ok_staff, why_staff = s.start_reason("ag2_cold_store", ignore_trade=True)
 check("ignore_trade still refuses a node blocked by missing STAFF, not just the trade",
-      not ok_staff and "craftsmen" in why_staff, why_staff)
+      not ok_staff and s.start_blockers("ag2_cold_store")[0]["cause"] == "craft_staff", why_staff)
 
 node = "ag2_cold_store"
 for p in NODES[node]["pre"]:
@@ -169,7 +172,8 @@ for p in NODES[node]["pre"]:
 s.artisans, s.scholars = 10.0, 10.0
 r0 = S._agent_dispatch(s, NODES, {"cmd": "start", "id": node})
 check("start refuses outright when a needed trade has never been taught",
-      not r0["ok"] and "engineer" in r0.get("error", ""), r0)
+      not r0["ok"] and r0.get("blocked_cause") == "absent_trades"
+      and "engineer" in [trade for trade in NODES[node]["lab"] if not s.labour.trade_available(trade)], r0)
 s.labour.train("engineer", 2)          # training begun; nobody is ready for two years
 r1 = S._agent_dispatch(s, NODES, {"cmd": "start", "id": node})
 check("start accepts work nobody can do yet only WITH a warning naming the trade",

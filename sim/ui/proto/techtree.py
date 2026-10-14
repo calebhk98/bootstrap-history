@@ -1406,7 +1406,7 @@ def _blocker_fields(sim, node_id, started):
     """The kind-classified blockers: the same list the `start` gate reads."""
     if started:
         return {"blocked_kind": None, "blockers": []}
-    blockers = [{"kind": blocker["kind"], "text": sim.fog_scrub(blocker["text"]), "ids": blocker["ids"]}
+    blockers = [{"kind": blocker["kind"], "cause": blocker["cause"], "text": sim.fog_scrub(blocker["text"]), "ids": blocker["ids"]}
                 for blocker in sim.start_blockers(node_id)]
     return {"blocked_kind": blockers[0]["kind"] if blockers else None, "blockers": blockers}
 

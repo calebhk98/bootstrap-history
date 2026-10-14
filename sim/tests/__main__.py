@@ -539,7 +539,7 @@ def main(argv=None):
 
     if "--text-checks" in argv:
         from sim.tests import text_checks
-        return 1 if text_checks.report("--all" in argv) else 0
+        return 1 if text_checks.report("--all" in argv, "--conditions" in argv) else 0
 
     if "--worker" in argv:
         position = argv.index("--worker")

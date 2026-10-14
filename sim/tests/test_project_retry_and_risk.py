@@ -305,8 +305,9 @@ check("with every listed prerequisite met and nothing else missing, "
       "start_reason actually allows it - the live engine, not just the "
       "tree data, agrees single_crystal/silicon_path are not required "
       "(a refusal over a material nobody supplies is a different gate)",
-      _ok_pct or ("single_crystal" not in _why_pct2 and "silicon_path" not in _why_pct2
-                  and "prerequisite" not in _why_pct2), _why_pct2)
+      _ok_pct or all(blocker["cause"] != "missing_prereqs"
+                     and not {"single_crystal", "silicon_path"} & set(blocker["ids"])
+                     for blocker in _s_pct.start_blockers("point_contact_transistor")), _why_pct2)
 # A FREE PREREQUISITE SHOULD SAY IT IS FREE. Eight cap_* nodes cost nothing,
 # take no time and cannot fail, and a player still has to start each by hand.
 # The player who won this game called the refusal that names one of them

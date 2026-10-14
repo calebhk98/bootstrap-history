@@ -320,7 +320,7 @@ for _ in range(3):
 paid = unfunded.active.get(too_dear, None)
 paid = paid.spent if paid else 0.0
 check("an unfunded project never completes",
-      not ok_start and "afford" in str(start_why) and too_dear not in unfunded.done and paid == 0.0,
+      not ok_start and unfunded.start_blockers(too_dear)[0]["kind"] == "money" and too_dear not in unfunded.done and paid == 0.0,
       "started=%s (%s) done=%s paid=%.0f" % (ok_start, start_why, too_dear in unfunded.done, paid))
 check("manual play never buys people for you", unfunded.slaves == 0 and unfunded.freedmen == 0,
       "slaves %d freedmen %d" % (unfunded.slaves, unfunded.freedmen))

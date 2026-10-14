@@ -52,9 +52,12 @@ check("the dice use the lowered chance once it is bought",
 check("the quote after starting agrees with the lowered chance",
       abs(_bought.effective_risk(NODE_ID) - _quote["chance_of_failure_with"]) < 1e-12)
 
-_refused_ok, _refused_why = _fresh().start_project(UNOFFERED, precaution=True)
+_refused_game = _fresh()
+_refused_ok, _refused_why = _refused_game.start_project(UNOFFERED, precaution=True)
+_refused_reply = S._agent_dispatch(_refused_game, NODES, {"cmd": "start", "id": UNOFFERED, "precaution": True})
 check("buying a precaution a node does not offer is refused, and nothing starts",
-      not _refused_ok and "offers no" in _refused_why, _refused_why)
+      not _refused_ok and not _refused_reply["ok"] and UNOFFERED not in _refused_game.active
+      and _refused_game.precaution_quote(UNOFFERED) is None, _refused_why)
 
 check("every declared precaution names a known kind and overrides figures only with a source",
       all(node["mechanics"]["precaution"]["kind"] in KINDS

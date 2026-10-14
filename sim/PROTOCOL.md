@@ -84,8 +84,9 @@ Two fixes, usable separately or together:
                                                     cost, staff, risk, chain, what it
                                                     unlocks, why it is or isn't startable.
                                                     A blocked node carries blocked_kind and
-                                                    blockers, a list of {kind, text, ids}
-                                                    (kinds: knowledge, power, supply,
+                                                    blockers, a list of {kind, cause, text, ids}
+                                                    (cause names the refusing check, e.g.
+                                                    absent_trades, craft_staff; kinds: knowledge, power, supply,
                                                     specialists, money, politics, closed);
                                                     the start refusal is the first entry.
                                                     standing_effect gives the reputation and
@@ -112,7 +113,9 @@ Two fixes, usable separately or together:
                                                     (pay_to_lower_the_risk), for a lower chance
                                                     of failing
       {"cmd":"start","id":"zinc_metal"}            begin a project (error explains
-                                                    exactly what is missing if you can't;
+                                                    exactly what is missing if you can't,
+                                                    and blocked_kind / blocked_cause give
+                                                    the first blocker as codes;
                                                     if it would oversubscribe a hired
                                                     trade your other active work already
                                                     draws on, says so right here, in
