@@ -97,6 +97,10 @@ class Purses:
         elif difference < 0.0:
             self.transfer(account, EDGE_OUTSIDE, -difference, purpose)
 
+    def repay_from_purse(self, borrower: str) -> None:
+        """The borrower pays its lenders what its purse holds, as a normal repayment (pro rata to what each lent)."""
+        self._repay(borrower)
+
     def write_off(self, borrower: str) -> Dict[str, float]:
         """The borrower closes owing: the claims against it are dropped and each lender bears its loss (the cash
         it lent was booked as an outlay when it left and no repayment follows); the principal each lost."""

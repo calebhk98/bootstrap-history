@@ -29,9 +29,11 @@ def interest_outruns_margin(firm: Any, interest: float, world: Any) -> bool:
 
 
 def close_firm(firm: Any, world: Any) -> None:
-	"""Stop running every concern; what is left in the purse goes back to the founder who put it up."""
+	"""Stop running every concern. Creditors come first: the purse repays the claims against the firm, what is
+left goes back to the founder who put it up, and any debt still unpaid is written off."""
 	founder = firm.find_actor(firm.record.plan.get("backer", "")) if firm.find_actor is not None else None
-	if founder is not None and firm.money > 0.0:
+	firm.purses.repay_from_purse(firm.account_id)
+	if founder is not None and firm.money > 0.0:  # money is net of debt, so this is only cash left after every claim
 		ledger.transfer(firm, founder, firm.money, "founding stake returned")
 	if founder is not None and "founder_household" in firm.record.plan:
 		household_wealth.release(founder, int(firm.record.plan["founder_household"]), float(firm.record.plan.get("stake", 0.0)))
