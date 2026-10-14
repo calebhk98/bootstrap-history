@@ -154,6 +154,8 @@ class ActorRecord:
 
 	# ---- firm entry and exit: consecutive years a firm earned less than its plant would lend for
 	weak_years: int = 0
+	# consecutive years the interest on a firm's debt outran its margin
+	insolvent_years: int = 0
 
 	# ---- an interest group of strata: the share of its loss the founder is blamed for; and a stratum's
 	# remembered welfare (what it has come to expect)
