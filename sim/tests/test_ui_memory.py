@@ -21,6 +21,7 @@ with tempfile.TemporaryDirectory() as folder:
 
     later = sim()
     memory.load_state(later, first)
+    # not text: a stored note round-trips
     check("loading restores the memory into a fresh game",
           memory.remembered(later, "notes").get("1", {}).get("text") == "aqueduct for the mill town")
 

@@ -60,6 +60,7 @@ check("the named form for elite literacy answers with its own rows",
       _ask(what="literacy_elite")["metric"] == "literacy_elite")
 if _other_metric:
     relief = _ask(what="epidemic_relief")
+    # presentation: the label of an anatomy row
     check("epidemic relief lists its total", relief.get("ok") and relief["rows"][-1]["label"] == "total relief", relief)
 check("an unknown metric is refused with a pointer to the list",
       _ask(what="no_such_metric")["ok"] is False)

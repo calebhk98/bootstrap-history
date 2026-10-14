@@ -29,7 +29,7 @@ check("sort earns reverse puts the biggest earner first",
       >= _run(rich, "available sort earns limit 5")["available"][0]["earns_per_year"])
 refused = _run(rich, "available sort bogus limit 5")
 check("an unknown sort key is refused, naming the valid ones",
-      not refused["ok"] and "earns" in refused["error"], refused)
+      not refused["ok"] and refused.get("cause") == "unknown_sort_key" and "earns" in refused.get("choices", ()), refused)
 
 # --- 147: quote covers every buy target
 for target in buy_targets.target_names():

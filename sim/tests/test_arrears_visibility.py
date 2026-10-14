@@ -1,5 +1,6 @@
 """A project underfunded by arrears says so: in the log and on `why`, `stuck` and `portfolio`."""
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of, facts_of
 
 s_arrears = s = sim(capital=1000.0)
 _af_k = next(node_id for node_id in NODES
@@ -23,13 +24,14 @@ _new_lines = [message for _, message in s.log[_before_log:]]
 check("the year it happens, the log SAYS founder-hours were wasted to "
       "arrears, by name - not only on a project screen a player has to "
       "think to check",
-      any("founder-hours meant for" in message and _af_k in message
+      any(cause_of(message) == "arrears_hours_lost" and _af_k in facts_of(message)["projects"]
           for message in _new_lines),
       _new_lines)
+# presentation: the failure marker is a wording convention
 check("...and it is recognisable as bad news by the same marker every "
       "other arrears line already uses ('log failures' finds it)",
       any(_PROTO._is_failure_line(message) for message in _new_lines
-          if "founder-hours meant for" in message),
+          if cause_of(message) == "arrears_hours_lost"),
       _new_lines)
 
 # --- and a project that is merely calendar-waiting, fully paid, gets no
@@ -48,7 +50,7 @@ _before_log2 = len(s.log)
 s.step()
 check("a fully-paid project waiting only on the calendar never triggers "
       "the wasted-hours line - there is nothing left for arrears to waste",
-      not any("founder-hours meant for" in message
+      not any(cause_of(message) == "arrears_hours_lost"
               for _, message in s.log[_before_log2:]),
       [message for _, message in s.log[_before_log2:]])
 

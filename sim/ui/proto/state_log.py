@@ -1,5 +1,6 @@
 """The event log reply: failure markers, filters, paging and _agent_log."""
 from .notes_store import NoteLine, note_log_rows
+from .refusal_cause import event_codes
 
 
 
@@ -150,7 +151,7 @@ def _agent_log_page(sim, rows, order, offset, limit):
     total = len(rows)
     ordered = list(reversed(rows)) if order == "newest" else rows
     page = ordered[offset:offset + limit]
-    entries = [{"year": year, "what": _log_scrub(sim, msg)} for _idx, (year, msg) in page]
+    entries = [{"year": year, "what": _log_scrub(sim, msg), **event_codes(msg)} for _idx, (year, msg) in page]
     return total, entries
 
 

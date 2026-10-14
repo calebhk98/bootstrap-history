@@ -67,7 +67,7 @@ frozen.household.credit_frozen_until = frozen.year + 3
 frozen.capital = cheap_cost * 0.5
 started, why_not = frozen.start_project(cheap_id)
 check("during a credit freeze, a start needing credit is still refused",
-      not started and "nobody here will fund" in (why_not or ""), why_not)
+      not started and frozen.start_blockers(cheap_id)[0]["cause"] == "credit_frozen", why_not)
 
 frozen.capital = cheap_cost * 1.5
 frozen.active[cheap_id] = dict(ph_left=1.0, yrs=0.0, spent=0.0, cost_left=cheap_cost, lab_left={})

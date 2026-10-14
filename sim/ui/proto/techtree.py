@@ -1,7 +1,7 @@
 """The tech tree itself, viewed through the protocol: why/available and node-explain, and the subject grouping they share."""
 
 import sim.engine.ui_port as ui_port
-from sim.refusal import cause_of
+from sim.refusal import Refusal, cause_of
 import hashlib
 
 from sim.engine.ui_port import closure, critical_path, downstream_count, is_downstream
@@ -768,8 +768,8 @@ def _agent_available(sim, nodes, cmd=None):
      _sort_fn, reverse, heard_offset) = _available_params(cmd)
     if sort_by and _sort_fn is None:
         return {"ok": False,
-                "error": "cannot sort by %r; sort by one of: %s. Nothing was changed."
-                         % (sort_by, ", ".join(_SORT_KEY_NAMES))}
+                "error": Refusal("unknown_sort_key", "cannot sort by %r; sort by one of: %s. Nothing was changed."
+                                 % (sort_by, ", ".join(_SORT_KEY_NAMES)), choices=_SORT_KEY_NAMES)}
 
     state, filter_error = tree_filters.parse_state(cmd)
     tag, category, topic_error = tree_filters.parse_topic(cmd, nodes)

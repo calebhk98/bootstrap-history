@@ -1,14 +1,21 @@
-"""Lists the checks that match on reply or screen text, split into presentation and behaviour.
+"""Lists the checks that match on reply or screen text, split into presentation and behaviour (Complaint 515).
 
-`python3 -m sim.tests --text-checks` prints one line per text-matching check of a behaviour topic, then
-the counts. `--text-checks --all` also lists the presentation ones. Complaint 515's rule: a test of model
-behaviour asserts on structured values (the engine's numbers, the JSON reply's fields); only a test whose
-subject is presentation (units, wording, rounding, layout) asserts on text. This reads the syntax tree and
-runs nothing, so it is a heuristic; a miss shows up as a behaviour line that is really a key check, or a
-check that reads text through a helper this does not recognise.
+`python3 -m sim.tests --text-checks` prints one line per text-matching check that is not presentation, then the
+counts; the complaint closes when that list is empty. `--all` also lists the presentation ones with the basis
+for calling them presentation, and `--conditions` prints each check's condition under its line.
 
-A check "reads text" when its condition tests a string against a name or expression that holds text:
-a reply's `text`, a rendered screen, captured output, a message list joined to a string.
+The rule (owner): a test of model behaviour asserts on structured values (the engine's numbers, the JSON
+reply's fields, a refusal's `cause`, a log line's `kind` and `facts`; see sim/refusal.py); only a test whose
+subject is presentation (units, wording, rounding, layout) asserts on text.
+
+This reads the syntax tree and runs nothing, so it is a heuristic. A check "reads text" when its condition
+tests a phrase, or a string against a name or expression that holds text (a reply's `error` or `note`, a
+rendered screen, captured output, a log message), or compares a field to a multi-word string. The basis for
+presentation is, in order: a `# presentation: <reason>` comment on the check's line or the line above; the
+check reading the output of a `render*` call; the topic's name or first docstring paragraph; words in the
+check's own name. A `# not text: <reason>` comment says the heuristic misread a stored value or an enumerated
+field as wording; the checker then skips the check. The name and topic words are a guess to be audited with
+`--all`; a check that reads text through a helper this does not recognise is not counted at all.
 """
 import ast
 import os
@@ -29,6 +36,8 @@ TEXT_WORDS = {"text", "line", "lines", "said", "reason", "cause", "error", "advi
 
 # A check whose subject is presentation says so on its own line or the line above, with the reason.
 PRESENTATION_MARK = "# presentation:"
+# A check the heuristic reads as text although it compares a stored value or an enumerated field; the reason follows.
+NOT_TEXT_MARK = "# not text:"
 
 # Topic or check names whose subject is presentation (units, wording, rounding, layout).
 PRESENTATION = re.compile(
@@ -37,6 +46,15 @@ PRESENTATION = re.compile(
     r"readout|\bsays?\b|\bnames\b|\bmention|banner|headline|abbrev|plural|spell|\bshows?\b|"
     r"\bread(s|ing)? (as|back)\b|\bwords?\b|\bpointer\b|footer|\bhelp\b|\bexplains?\b|\bcarries\b|"
     r"wording|\blists?\b the|\bwarns?\b|\bstates\b|\bleads\b|\bfirst lines?\b",
+    re.I)
+
+
+# Topic names or first docstring paragraphs whose subject is presentation. Narrower than PRESENTATION: a topic that
+# merely "names" or "says" something may still test what the model does.
+TOPIC_PRESENTATION = re.compile(
+    r"wording|worded|\btext\b|messag|render|display|layout|format|\bunits?\b|rounding|label|\bmenu\b|pretty|"
+    r"screens?\b|readout|\bhelp\b|noise|repeated|explain|disclosure|defects|guidance|prose|legend|"
+    r"\bcli\b|quotes",
     re.I)
 
 
@@ -134,51 +152,65 @@ def _reads_text(condition, text, names):
     return False
 
 
+def _basis(marked, from_renderer, topic_is_presentation, check_name):
+    """Why a text-matching check counts as presentation, or None when it is a behaviour check."""
+    if marked:
+        return "marker"
+    if from_renderer:
+        return "renderer"
+    if topic_is_presentation:
+        return "topic"
+    if PRESENTATION.search(check_name):
+        return "name"
+    return None
+
+
 def scan_topic(topic):
-    """(is_presentation_topic, [(line, check_name, is_presentation_check, condition)]) for one topic."""
+    """[(line, check_name, basis, condition)] for the text-matching checks of one topic; basis is None for behaviour."""
     path = os.path.join(TESTS_DIR, "test_%s.py" % topic)
     with open(path, encoding="utf-8") as handle:
         text = handle.read()
     tree = ast.parse(text, filename=path)
     docstring = ast.get_docstring(tree) or ""
-    names = {name for name in _textual_names(tree, text)}
-    names = {name for name in names if name not in ("_reply", "reply")} | set()
+    names = _textual_names(tree, text) - {"_reply", "reply"}
     rendered = _rendered_names(tree, text)
     source_lines = text.split("\n")
-    topic_is_presentation = bool(PRESENTATION.search(docstring.split("\n\n")[0] + " " + topic.replace("_", " ")))
+    topic_is_presentation = bool(TOPIC_PRESENTATION.search(docstring.split("\n\n")[0] + " " + topic.replace("_", " ")))
     found = []
     for node in ast.walk(tree):
         if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "check"):
             continue
-        if len(node.args) < 2:
+        if len(node.args) < 2 or not _reads_text(node.args[1], text, names):
             continue
-        if not _reads_text(node.args[1], text, names):
-            continue
-        name_node = node.args[0]
-        check_name = " ".join(_source(name_node, text).replace('"', " ").split())
+        check_name = " ".join(_source(node.args[0], text).replace('"', " ").split())
         condition_source = _source(node.args[1], text)
-        marked = any(PRESENTATION_MARK in source_lines[number - 1]
-                     for number in range(max(1, node.lineno - 1), (node.end_lineno or node.lineno) + 1))
+        marker_lines = [source_lines[number - 1]
+                        for number in range(max(1, node.lineno - 1), (node.end_lineno or node.lineno) + 1)]
+        if any(NOT_TEXT_MARK in line for line in marker_lines):
+            continue
+        marked = any(PRESENTATION_MARK in line for line in marker_lines)
         from_renderer = bool(re.search(r"\brender\w*\(", condition_source)) or any(
             isinstance(inner, ast.Name) and inner.id in rendered for inner in ast.walk(node.args[1]))
-        found.append((node.lineno, check_name, marked or from_renderer or bool(PRESENTATION.search(check_name)),
+        found.append((node.lineno, check_name, _basis(marked, from_renderer, topic_is_presentation, check_name),
                       " ".join(condition_source.split())))
-    return topic_is_presentation, found
+    return found
 
 
 def report(show_presentation=False, show_conditions=False):
     behaviour, presentation = [], []
     for topic in discover_topics():
-        topic_is_presentation, found = scan_topic(topic)
-        for line, check_name, check_is_presentation, condition in found:
-            row = (topic, line, check_name, condition)
-            (presentation if topic_is_presentation or check_is_presentation else behaviour).append(row)
-    for label, rows in (("presentation", presentation if show_presentation else []), ("behaviour", behaviour)):
-        for topic, line, check_name, condition in rows:
-            print("%-12s  %s:%d  %s" % (label, topic, line, check_name))
+        for line, check_name, basis, condition in scan_topic(topic):
+            (behaviour if basis is None else presentation).append((topic, line, check_name, basis, condition))
+    for rows in (presentation if show_presentation else [], behaviour):
+        for topic, line, check_name, basis, condition in rows:
+            print("%-22s %s:%d  %s" % ("presentation[%s]" % basis if basis else "behaviour", topic, line, check_name))
             if show_conditions:
                 print("      " + condition[:240])
     topics = sorted({row[0] for row in behaviour})
+    by_basis = {}
+    for row in presentation:
+        by_basis[row[3]] = by_basis.get(row[3], 0) + 1
     print("\nbehaviour checks reading text: %d in %d topics" % (len(behaviour), len(topics)))
-    print("presentation checks reading text: %d" % len(presentation))
+    print("presentation checks reading text: %d (%s)" % (
+        len(presentation), ", ".join("%s %d" % (basis, count) for basis, count in sorted(by_basis.items()))))
     return len(behaviour)

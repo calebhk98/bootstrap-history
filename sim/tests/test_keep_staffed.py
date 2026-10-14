@@ -1,5 +1,6 @@
 """keep_staffed: complaint 126 (name the concerns that must stay staffed through attrition)."""
 from .harness import *  # noqa: F401,F403
+from sim.refusal import facts_of
 from sim.ui.proto.typed import parse_typed
 
 CONCERN = "mirror_amalgam"   # needs a glassblower foreman
@@ -56,7 +57,7 @@ check("flagged concern stays open through the loss of its foreman",
 check("...because a glassblower was hired",
       flagged.employees.get("glassblower", 0.0) >= 0.5, dict(flagged.employees))
 check("...and the log says why",
-      any("keep_staffed" in message for _year, message in flagged.log), flagged.log[-6:])
+      any(facts_of(message).get("policy") == "keep_staffed" for _year, message in flagged.log), flagged.log[-6:])
 
 # The flag survives a save/load round trip (loaded into the spent control game).
 from sim.engine.saveload import save_state, load_state

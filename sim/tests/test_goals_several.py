@@ -79,6 +79,7 @@ game.WIN_CONDITION_ANATOMY["mod_metric"] = lambda sim_, condition: [("grain stoc
 try:
     check("a mod registers its own anatomy", game.win_condition_anatomy({"metric": "mod_metric"}) == [("grain stock", 3.0, "tonnes")])
     reply = anatomy.anatomy_for(game, {"metric": "mod_metric", "op": ">=", "value": 1.0})
+    # presentation: the label of an anatomy row
     check("the anatomy command uses the hook for a metric it has no rule for",
           reply["generic"] is False and reply["rows"][0]["label"] == "grain stock", reply)
 finally:

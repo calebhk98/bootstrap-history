@@ -4,6 +4,8 @@ A work declares `mechanics.transfer` (see data/branches/MECHANICS.md) and pays w
 command pays by hand. Both go through `pay_state`, so the state's purse, its debt and the claims it funds from
 that purse are the ordinary ones: a smaller debt costs less interest, a funded claim is not raised from taxpayers.
 """
+from sim.refusal import LogLine
+
 from .units_prose import money_text
 
 # what a transfer can be sized by, besides a stated sum
@@ -60,5 +62,6 @@ class TransfersMixin:
             return
         paid = self.pay_state_sum(self.transfer_size(spec), spec.get("purpose", "transfer"))
         household = self.state.household
-        household.log.append((self.state.scenario.year, "%s: paid the state %s" % (
-            self.nodes[node_id]["name"], money_text(paid, self, grouped=True))))
+        household.log.append((self.state.scenario.year, LogLine(
+            "state_paid", "%s: paid the state %s" % (self.nodes[node_id]["name"], money_text(paid, self, grouped=True)),
+            work=node_id, paid=paid)))

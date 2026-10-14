@@ -193,6 +193,12 @@ Tooling: `python3 -m pylint sim/ | grep C0103` (worklist). Plan:
   guessing.
 - **Every bug becomes a regression test** with the smallest reproducing
   scenario. Resolved complaints move to `Complaints/closed/`.
+- **Behaviour tests read values, not wording.** A test of what the model does asserts on structured
+  values: the engine's numbers, the reply's fields, a refusal's `cause`, a log line's `kind` and `facts`
+  (`sim/refusal.py`). Only a test whose subject is presentation (units, wording, rounding, layout) asserts on
+  text, and it says so with a `# presentation: <reason>` comment. When the fact exists only as prose, add the
+  field to the reply and render the text from it. `python3 -m sim.tests --text-checks` lists the checks that
+  read text and are not marked presentation; the list should stay empty.
 - **Measure, don't remember.** Claims about the codebase are measured. Every
   number in prose was computed by the simulator, and carries the command that
   produced it.

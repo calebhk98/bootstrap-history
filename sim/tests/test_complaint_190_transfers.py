@@ -1,6 +1,7 @@
 """Complaint 190: a one-off transfer to the state (its debt, the claims it owes interest groups, relief), usable by
 a work that declares `transfer` and by the `pay` command, and a state's share of one concern's takings."""
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of
 
 from sim.agents.api import ledger
 from sim.agents.api import ActorRecord
@@ -69,7 +70,7 @@ check("finishing the redemption pays the state's whole debt",
       "ben_state_debt_redemption" in redeem.done and redeem.state_debt() == 0.0, redeem.state_debt())
 check("the household is poorer by the debt (and the work's own cost)",
       capital_before - redeem.state.household.capital >= 8000.0 - 1e-6, (capital_before, redeem.state.household.capital))
-check("the log says what was paid", any("paid the state" in text for _year, text in redeem.state.household.log),
+check("the log says what was paid", any(cause_of(text) == "state_paid" for _year, text in redeem.state.household.log),
       redeem.state.household.log[-3:])
 
 relief = unopened_sim(capital=1.0e12)

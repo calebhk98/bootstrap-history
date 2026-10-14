@@ -35,6 +35,7 @@ check("a long note is cut and says so", "cut" in ask(cmd="note", text="x" * (MAX
 check("an empty note is refused", ask(cmd="note", text="  ")["ok"] is False)
 
 attached = ask(cmd="note", text="%s because grain is short" % visible)
+# not text: a stored note round-trips
 check("a leading project id attaches the note",
       attached["added"]["project"] == visible and attached["added"]["text"] == "because grain is short", attached)
 check("a leading project name attaches too",

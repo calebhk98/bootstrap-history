@@ -28,8 +28,9 @@ check("a name copied verbatim off another screen resolves the same way",
 
 full_reply = ask(game, cmd="why", id="loom")
 check("an ambiguous name is refused with the real ids to choose between",
-      not full_reply.get("ok") and full_reply.get("error", "").count("(") >= 2
-      and "tex_horizontal_loom" in full_reply["error"], full_reply.get("error"))
+      not full_reply.get("ok") and full_reply.get("cause") == "ambiguous_name"
+      and len(full_reply.get("choices", ())) >= 2 and "tex_horizontal_loom" in full_reply["choices"],
+      full_reply.get("error"))
 
 # --- `available` can be sorted and paged all the way through.
 sorted_reply = ask(game, cmd="available", limit=10, sort="risk", reverse=True)
@@ -69,23 +70,21 @@ guess = ask(fogged, cmd="why", id="transistor")
 check("why on the goal's exact printed name is the one thing fog answers",
       goal_why.get("ok") and goal_why.get("id") == GOAL, goal_why.get("error"))
 check("...but the exception does not widen to other commands on the same name",
-      not goal_start.get("ok") and "never heard of" in goal_start.get("error", ""), goal_start.get("error"))
+      not goal_start.get("ok") and goal_start.get("cause") == "never_heard_of", goal_start.get("error"))
 check("...and a vague guess does not silently resolve to the goal",
-      not guess.get("ok") and GOAL not in guess.get("error", "") and "aiming at" not in guess.get("error", ""),
+      not guess.get("ok") and guess.get("cause") == "never_heard_of" and GOAL not in guess.get("choices", ()),
       guess.get("error"))
 
 # Fog leak: did-you-mean suggestions under fog must all be things the player has heard of.
 unknown_reply = ask(fogged, cmd="why", id="aqueduct_survey")
-suggestion_text = re.split(r"did you mean:", unknown_reply.get("error", ""), flags=re.IGNORECASE)[-1] \
-    if re.search(r"did you mean:", unknown_reply.get("error", ""), re.IGNORECASE) else ""
-suggestions = [suggestion.strip() for suggestion in suggestion_text.split(",") if suggestion.strip()]
+suggestions = list(unknown_reply.get("choices") or [])
 check("a near miss under fog still gets a did-you-mean list to check",
       suggestions, unknown_reply.get("error"))
 verified = [ask(fogged, cmd="why", id=suggestion) for suggestion in suggestions]
 check("the did-you-mean list under fog only ever suggests things the player has heard of",
-      all("never heard of" not in reply.get("error", "") for reply in verified),
+      all(reply.get("cause") != "never_heard_of" for reply in verified),
       [(suggestion, reply.get("error")) for suggestion, reply in zip(suggestions, verified)
-       if "never heard of" in reply.get("error", "")])
+       if reply.get("cause") == "never_heard_of"])
 
 # --- Fog leak: `available`'s heard-of block must respect `find`. Reveal
 # something, then search for nonsense.

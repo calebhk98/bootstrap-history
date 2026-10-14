@@ -56,7 +56,11 @@ Two fixes, usable separately or together:
       may change; a refusal that has a stable code also carries "cause" (for
       example "literacy_wall", "household_room", "unknown_node"), and
       "choices" when it lists the answers it would have accepted. Read those,
-      not the text.
+      not the text. The same holds for prose that reports what happened: a
+      step's events may carry "event_kind" and "facts" (the figures the
+      sentence states); "stopped_early" has "stopped_kind"; a project's
+      "waiting_on" has "waiting_on_kind"; the score's "why" has "why_kind";
+      an automation row may carry "reason_kind" and its figures.
 
       {"cmd":"state"}                              current situation, in full
       {"cmd":"available"}                          every node that can legally start now,

@@ -14,6 +14,7 @@ from sim.engine.identity_cache import IdentityCache
 _cache = IdentityCache()
 _first = {"tree": 1}
 _cache.put(_first, "first result")
+# not text: the cache's stored value
 check("a cache returns the entry stored for the same object", _cache.get(_first) == "first result")
 check("a different object is a miss", _cache.get({"tree": 1}) is None)
 check("a miss returns the caller's default", _cache.get({}, "none") == "none")

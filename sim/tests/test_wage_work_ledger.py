@@ -31,7 +31,7 @@ check("`money` itemises wage income and the practice income it displaces",
       and abs(_wage["net"] - (_wage["wage_income"] - _wage["practice_income_displaced"])) < 0.2,
       _wage)
 check("`log` has a line for the wage work",
-      "wage work" in str(_log).lower(), str(_log)[:400])
+      any(entry.get("event_kind") == "wage_work_sold" for entry in _log.get("entries", [])), str(_log)[:400])
 
 # --- complaint 144: the standing order, and the text screen -----------------
 _game = sim()

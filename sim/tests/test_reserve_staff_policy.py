@@ -36,7 +36,7 @@ scholars_free, craftsmen_free = kept.venture_staff_free()
 check("after a year the free craftsmen cover the reserve", craftsmen_free >= 5 - 0.01, craftsmen_free)
 check("...and the free scholars do", scholars_free >= 1 - 0.01, scholars_free)
 check("...and the log says who was hired",
-      any("reserve_staff" in message for _year, message in kept.log), kept.log[-6:])
+      any(facts_of(message).get("policy") == "reserve_staff" for _year, message in kept.log), kept.log[-6:])
 
 # Housing is bought when the reserve does not fit.
 big = sim(capital=5_000_000)

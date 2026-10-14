@@ -31,7 +31,7 @@ check("...so the geography no longer counts the shut pumping station among the t
 ask_agent(game, cmd="step", years=2)
 check("two years on, the tower is still shut while the pumping station is",
       not any(game.running(work) for work in CHAIN), [game.running(work) for work in CHAIN])
-check("...and the log says why", any("has stopped" in line for _year, line in game.state.household.log), None)
+check("...and the log says why", any(cause_of(line) == "work_closed_gate_lapsed" for _year, line in game.state.household.log), None)
 
 reopened, message = game.open_venture(PUMPING)
 check("the pumping station can be reopened", reopened or cause_of(message) == "cash_short", message)

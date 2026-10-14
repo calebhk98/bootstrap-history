@@ -31,6 +31,7 @@ check("`score` answers through the command dispatcher with its components",
 # --- THE GATE: no goal, no score, not a number. ---
 _score_game.year = _score_horizon_year
 _rep_nogoal = _SCORE(_score_game, NODES)
+# not text: an enumerated flag value
 check("a run that ends without the goal still gets its total, flagged "
       "goal not reached",
       _rep_nogoal["total"] is not None and _rep_nogoal["points"] is not None

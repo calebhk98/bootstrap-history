@@ -206,6 +206,7 @@ _succession = _agent_state_founder(_deputy_sim).get("succession") or {}
 check("256: state shows the deputy count, their hours and whether they carry the work",
       _succession.get("deputies") == 0.2 and _succession.get("deputy_hours_a_year")
       and _succession.get("deputies_carry_the_work") is False, _succession)
+# presentation: the succession objective's wording
 check("256: ...and a named objective with the gap and where deputies come from",
       "train a successor" in str(_succession.get("objective", "")).lower()
       and "more" in str(_succession.get("objective", "")), _succession)

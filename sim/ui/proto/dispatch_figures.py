@@ -4,6 +4,7 @@ themselves in sim/ui/figures_headline.py; this only reads the registry."""
 import sim.engine.ui_port as ui_port
 from sim.ui import figures_headline, figures_world  # noqa: F401  (register the figures)
 from sim.ui.figures import FIGURES, explain_figure
+from sim.refusal import Refusal
 from .command_registry import command
 
 
@@ -18,7 +19,8 @@ def figure_reply(sim, name):
     """The explanation of one figure, or the refusal naming the ones that exist."""
     if name not in FIGURES:
         return {"ok": False,
-                "error": "no figure called %r. Figures: %s" % (name, ", ".join(sorted(FIGURES)))}
+                "error": Refusal("unknown_figure", "no figure called %r. Figures: %s" % (name, ", ".join(sorted(FIGURES))),
+                                 choices=sorted(FIGURES))}
     return explain_figure(sim, name, ui_port.dashboard_history(sim))
 
 

@@ -106,7 +106,8 @@ check("the founder's age at death survives a save and a fresh process loading it
 for _ in range(2):  # the countdown is logged in the second year after the death
     mortal.step()
 check("the founder's death says what it means for the run, not only that it happened",
-      any("THE FOUNDER DIES" in message and "no deputy" in message for _, message in mortal.log),
+      any(cause_of(message) == "founder_dies" and not facts_of(message)["deputies_carry_the_work"]
+          for _, message in mortal.log),
       [message for _, message in mortal.log if "FOUNDER DIES" in message][:1])
 check("...and the programme dissolving is counted down where a player sees it",
       any(cause_of(message) == "programme_dissolving"

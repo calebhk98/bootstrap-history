@@ -53,7 +53,8 @@ for _dl_year in range(1):
     s_dl._run_seat_work()    # the year's project work, without the economy around it
     if _dl_year == 0:
         check("a project that cannot go on says so the first year, not the fourth",
-              any(_need_eng in message and "before it is abandoned" in message for _, message in s_dl.log),
+              any(cause_of(message) == "project_cannot_go_on" and facts_of(message)["project"] == _need_eng
+          for _, message in s_dl.log),
               [message for _, message in s_dl.log][:2])
         _st_hl = S._agent_state(s_dl, NODES)["active"][_need_eng]
         check("...and state carries the countdown and the trade that would save it",

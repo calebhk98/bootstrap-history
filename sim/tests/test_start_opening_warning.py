@@ -23,7 +23,7 @@ staffed_sim.venture_staff_free = lambda: (50.0, 50.0)
 staffed_sim.venture_hands = lambda node_id: (5.0, 5.0)
 staffed_reply = S._agent_dispatch(staffed_sim, NODES, {"cmd": "start", "id": "school_founded"})
 check("...and stays quiet when the staff are free",
-      "could not open it" not in staffed_reply.get("today_you_could_not_open_this_when_it_is_done", ""),
+      "today_you_could_not_open_this_when_it_is_done" not in staffed_reply,
       staffed_reply.get("today_you_could_not_open_this_when_it_is_done"))
 
 # Non-concern technology has no warning.

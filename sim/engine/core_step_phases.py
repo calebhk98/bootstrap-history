@@ -576,8 +576,10 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
             if self.state.founder.life_left <= 0:
                 self.state.founder.founder_alive = False
                 self.state.household.log.append(
-                    (self.state.scenario.year, "THE FOUNDER DIES, aged about %d. %s"
-                     % (self.founder_age(), self._deputy_consequence())))
+                    (self.state.scenario.year, LogLine(
+                        "founder_dies", "THE FOUNDER DIES, aged about %d. %s"
+                        % (self.founder_age(), self._deputy_consequence()),
+                        aged=self.founder_age(), deputies_carry_the_work=bool(self.deputies_carry_the_work()))))
         # a programme with no director is not paused, it is dissolving
         if not self.state.founder.founder_alive and not self.deputies_carry_the_work():
             self.state.projects.stalled += 1

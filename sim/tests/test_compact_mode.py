@@ -213,6 +213,7 @@ _fake_state = {
 }
 _compact_state_out = _compact_state(_fake_state)
 _by_id = {row["id"]: row for row in _compact_state_out["projects"]}
+# presentation: the one-line blocker is the compact mode's wording
 check("compact_state lists every active project with its one-line blocker",
       sorted(_by_id) == ["proj_a", "proj_b", "proj_c", "proj_d"]
       and _by_id["proj_a"]["blocker"] == "short of smith-hours"

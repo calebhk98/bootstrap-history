@@ -18,7 +18,7 @@ from .nodes import NODE_NAME_NORM, _did_you_mean, _norm_name, _resolve_by_name
 from sim.ui.memory import load_state, save_state
 from .score import victory_report
 from .why_material import material_story
-from sim.refusal import cause_of, facts_of
+from sim.refusal import Refusal, cause_of, facts_of
 from .refusal_cause import add_cause, event_codes
 from .seat_address import run_as_seat
 from .state_waiting import _agent_end_reason
@@ -499,12 +499,13 @@ def _agent_dispatch_inner(sim, nodes, cmd):
         elif len(_name_cands) > 1:
             _name_cands = sorted(_name_cands, key=lambda k: (nodes[k]["name"], k))
             return {"ok": False,
-                    "error": ("more than one thing is called that; say which "
-                              "by id: %s%s"
-                              % (", ".join("%s (%s)" % (node_id, nodes[node_id]["name"])
-                                           for node_id in _name_cands[:10]),
-                                 " and %d more" % (len(_name_cands) - 10)
-                                 if len(_name_cands) > 10 else ""))}
+                    "error": Refusal("ambiguous_name", "more than one thing is called that; say which "
+                                     "by id: %s%s"
+                                     % (", ".join("%s (%s)" % (node_id, nodes[node_id]["name"])
+                                                  for node_id in _name_cands[:10]),
+                                        " and %d more" % (len(_name_cands) - 10)
+                                        if len(_name_cands) > 10 else ""),
+                                     choices=_name_cands)}
         # Otherwise: no match by name either. Fall through with cmd["id"]
         # untouched, so the ordinary unknown-id handling further down - and
         # the fog guard immediately below it - answer it exactly as they
@@ -548,10 +549,10 @@ def _agent_dispatch_inner(sim, nodes, cmd):
                 # then guessing you meant fin_contract_law, is absurd on its
                 # face. Saying nothing MORE than "not yet" leaks nothing.
                 return {"ok": False,
-                        "error": "that is what you are aiming at, and you cannot "
-                                 "act on it yet: everything it rests on is still "
-                                 "beyond what you have heard of. 'why %s' is all "
-                                 "of it you can see from here." % _node_id}
+                        "error": Refusal("goal_not_yet_actionable", "that is what you are aiming at, and you cannot "
+                                         "act on it yet: everything it rests on is still "
+                                         "beyond what you have heard of. 'why %s' is all "
+                                         "of it you can see from here." % _node_id)}
             near = _did_you_mean(_node_id, nodes, sim=sim)
             # SAY WHERE THE SUGGESTIONS COME FROM: the suggestions are
             # already filtered through is_visible, so nothing hidden is
@@ -561,11 +562,11 @@ def _agent_dispatch_inner(sim, nodes, cmd):
             # sentence has to say which of the two the suggestions are:
             # things already known.
             return {"ok": False,
-                    "error": "you have never heard of any such thing. You know "
-                             "what you have built and what you could begin next; "
-                             "nothing tells you what lies beyond that.%s"
-                             % ((" Among the things you DO know, did you mean: "
-                                 + ", ".join(near)) if near else "")}
+                    "error": Refusal("never_heard_of", "you have never heard of any such thing. You know "
+                                     "what you have built and what you could begin next; "
+                                     "nothing tells you what lies beyond that.%s"
+                                     % ((" Among the things you DO know, did you mean: "
+                                         + ", ".join(near)) if near else ""), choices=near)}
     command = cmd.get("cmd")
     ended = _agent_end_reason(sim)
 

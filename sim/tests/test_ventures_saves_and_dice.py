@@ -402,7 +402,7 @@ check("a concern nobody is left to watch stops trading",
       "revenue %.0f -> %.0f, still running %d"
       % (_rev_staffed, s.revenue(), len(s.operating)))
 check("...and the game says which ones closed and why",
-      any("nobody left to keep an eye on" in message for _year, message in s.log),
+      any(cause_of(message) == "concerns_closed_unstaffed" for _year, message in s.log),
       [message for _year, message in s.log][-2:])
 
 # effective_scholars() has always counted the founder as one of the scholars;

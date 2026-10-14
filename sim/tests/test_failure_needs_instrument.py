@@ -56,6 +56,7 @@ check("the blind failure states the figure the work needed",
       SPEC["needed_words"] in _blind_text, _blind_text)
 check("the blind failure says it cannot be diagnosed", "cannot" in _blind_text, _blind_text)
 _equipped_text = _last_failure_text(_equipped)
+# presentation: the failure line's wording
 check("the equipped failure reports what was reached against what was needed",
       SPEC["needed_words"] in _equipped_text and "reached" in _equipped_text, _equipped_text)
 _other = next(node_id for node_id in ORDER
