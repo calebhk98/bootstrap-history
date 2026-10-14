@@ -254,6 +254,7 @@ check("it cannot take more than the treasury holds", group_servants.mutiny(0.0, 
 for _year in range(6):
     government.record.loyalty = group_servants.step_loyalty(government.record.loyalty, 0.5)
 government.money = 50000.0
+government.record.arrears = {"army": 90000.0}   # the unpaid half of the army's pay is owed
 before_army = government.record.army
 acted = group_servants.run_army_year(government, world)
 check("a year of mutiny cuts the army and empties the treasury of the arrears taken",
