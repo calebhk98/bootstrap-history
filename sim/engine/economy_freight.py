@@ -662,6 +662,6 @@ class FreightMixin:
                 "commands": ["quote mine %s %d" % (binding, tonnes_short),
                              "buy mine %s %d" % (binding, tonnes_short)]}
         return {"text": (
-            "Nothing you own supplies %s and the market is out of it; the "
-            "work waits until something upstream of it is built."
-            % binding), "commands": []}
+            self.material_unsupplied_sentence(binding)
+            or "Nothing you own supplies %s and the market is out of it; the work waits until something "
+               "upstream of it is built." % binding), "commands": []}

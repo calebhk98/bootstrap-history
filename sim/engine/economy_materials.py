@@ -588,7 +588,8 @@ class MaterialSupplyMixin:
                 and self.running(node_id))
         for _route in range(routes):
             market += self.SALTPETRE_TRADE_ROUTE_TONNES_PER_YR
-        return market
+        # What a trading partner brings, as the quote already counts it.
+        return market + self._material_import_tonnes(emp_key)
 
     MARKET_STANDING_SHARE_CEILING = declare(
         "MARKET_STANDING_SHARE_CEILING", 0.60, kind="temporary_heuristic",

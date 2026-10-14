@@ -9,6 +9,7 @@ from . import money_units
 
 from .economy_goods import GoodsMixin
 from .economy_materials import MaterialSupplyMixin
+from .material_reach import MaterialReachMixin
 from .economy_electricity import ElectricityMixin
 from .economy_freight import FreightMixin
 from .economy_mining import MiningMixin
@@ -75,7 +76,7 @@ REPUTATION_EASE_SCALE = declare(
         "shared multiplier standing in for all of them at once.")
 
 
-class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMixin,
+class EconomyMixin(GoodsMixin, MaterialSupplyMixin, MaterialReachMixin, ElectricityMixin, FreightMixin,
                     MiningMixin, CreditMixin, DebtServiceMixin, CapitalMarketMixin, InterestMixin, MarketAbsorptionMixin, ProjectCostTailMixin, ProductionMixin, ProjectMaterialsMixin, ViewShareMixin):
     """Composition point for the economy sub-mixins, plus what is left over.
 
