@@ -361,4 +361,8 @@ players keep working, the id is a product.
    owner's purse with per-business books?
 6. Is it intended that a firm pays node upkeep (which includes crew pay) and crew wages? Stage 3c settles it either way; a
    decision now avoids a baseline shift being blamed on the move.
+   Measured and fixed on the agents path (`test_firm_crew_paid_once.py`): a firm paid both, so `economy_port.concern_upkeep`
+   now excludes the staff part of a derived upkeep (`node_upkeep.non_labour_share`). Still double on the founder's path:
+   `economy_production.institution_upkeep` plus the payroll in `living_cost`. Authored, programme and defaulted upkeep
+   figures state no staff split and are charged whole.
 7. Keep `auto_open_ventures` as a founder policy, or retire it now that other actors open businesses by their own deciders?
