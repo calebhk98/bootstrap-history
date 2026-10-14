@@ -250,8 +250,8 @@ _step_wn = S._agent_dispatch(s_wn, NODES, {"cmd": "step", "years": 50})
 check("a multi-year step stops the moment it is CLOSE TO THE LIMIT too, not "
       "only once credit is fully exhausted",
       bool(_step_wn.get("stopped_early"))
-      and any("CLOSE TO THE LIMIT" in event["message"] for event in _step_wn["events"])
-      and not any("CREDIT EXHAUSTED" in event["message"] for event in _step_wn["events"]),
+      and any(event.get("event_kind") == "credit_near_limit" for event in _step_wn["events"])
+      and not any(event.get("event_kind") == "credit_exhausted" for event in _step_wn["events"]),
       (_step_wn.get("stopped_early"),
        [event["message"] for event in _step_wn["events"]]))
 check("...leaving most of the requested years unspent, not run through",

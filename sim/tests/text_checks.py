@@ -84,8 +84,13 @@ def _is_structured(node, text):
 
 def _named_as_text(node):
     """True when the expression is a bare name (or an attribute) that is named for text: `line`, `reply.text`."""
-    if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
-        node = node.func.value
+    if isinstance(node, ast.BoolOp):
+        return any(_named_as_text(value) for value in node.values)
+    if isinstance(node, ast.Call):
+        function = node.func
+        if isinstance(function, ast.Attribute) and function.attr in ("get", "lower", "strip"):
+            function = function.value
+        node = function
     word = node.id if isinstance(node, ast.Name) else node.attr if isinstance(node, ast.Attribute) else ""
     return bool(TEXT_WORDS & set(word.lower().strip("_").split("_")))
 

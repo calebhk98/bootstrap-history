@@ -361,14 +361,16 @@ class CreditMixin:
         if household._said_near_limit:
             return
         household._said_near_limit = True
-        household.log.append((year, "CLOSE TO THE LIMIT: you owe %s of the %s anyone "
-                             "here will advance you (%d%%). Past it every "
-                             "project in hand is halted unfinished and nobody "
-                             "funds new work for some years. 'stop' a project, "
-                             "'mothball' a loss-maker or 'fire' somebody while "
-                             "it is still your choice"
-                         % (money_text(-household.capital, self, grouped=True),
-                            money_text(limit, self, grouped=True), used * 100)))
+        household.log.append((year, LogLine(
+            "credit_near_limit", "CLOSE TO THE LIMIT: you owe %s of the %s anyone "
+            "here will advance you (%d%%). Past it every "
+            "project in hand is halted unfinished and nobody "
+            "funds new work for some years. 'stop' a project, "
+            "'mothball' a loss-maker or 'fire' somebody while "
+            "it is still your choice"
+            % (money_text(-household.capital, self, grouped=True),
+               money_text(limit, self, grouped=True), used * 100),
+            share_of_limit=used)))
 
     CREDIT_FREEZE_YEARS_AFTER_HALT = declare(
         "CREDIT_FREEZE_YEARS_AFTER_HALT", 5, kind="temporary_heuristic",
@@ -472,15 +474,17 @@ class CreditMixin:
                     _kept += max(0.0, spent_val)
                 projects.bountied.discard(node_id)
             household.credit_frozen_until = year + self.CREDIT_FREEZE_YEARS_AFTER_HALT
-            household.log.append((year, "CREDIT EXHAUSTED: %d project%s stopped, "
-                                 "unfinished: %s. The %s already paid "
-                                 "stands to your credit and comes off the "
-                                 "bill if you begin again. Nobody will fund new "
-                                 "work here until %d"
-                             % (len(dropped), "" if len(dropped) == 1 else "s",
-                                ", ".join(dropped[:4])
-                                + (" and others" if len(dropped) > 4 else ""),
-                                money_text(_kept, self, grouped=True), year + self.CREDIT_FREEZE_YEARS_AFTER_HALT)))
+            household.log.append((year, LogLine(
+                "credit_exhausted", "CREDIT EXHAUSTED: %d project%s stopped, "
+                "unfinished: %s. The %s already paid "
+                "stands to your credit and comes off the "
+                "bill if you begin again. Nobody will fund new "
+                "work here until %d"
+                % (len(dropped), "" if len(dropped) == 1 else "s",
+                   ", ".join(dropped[:4])
+                   + (" and others" if len(dropped) > 4 else ""),
+                   money_text(_kept, self, grouped=True), year + self.CREDIT_FREEZE_YEARS_AFTER_HALT),
+                stopped=list(dropped), frozen_until=year + self.CREDIT_FREEZE_YEARS_AFTER_HALT)))
         # let go of what you cannot maintain
         if household.capital < -limit:
             self.mothball_mines()

@@ -18,6 +18,7 @@ from .nodes import NODE_NAME_NORM, _did_you_mean, _norm_name, _resolve_by_name
 from sim.ui.memory import load_state, save_state
 from .score import victory_report
 from .why_material import material_story
+from sim.refusal import cause_of
 from .refusal_cause import add_cause, event_codes
 from .seat_address import run_as_seat
 from .state_waiting import _agent_end_reason
@@ -223,7 +224,7 @@ def _cmd_step(sim, nodes, cmd, ended):
     completed, lost, events = [], [], []
     disasters = []
     founder_died_this_step = None
-    stopped_early = None
+    stopped_early = stopped_kind = None
     end_year = sim.end_year
     ran = 0
     goal_before = sim.goal_snapshot()
@@ -323,6 +324,7 @@ def _cmd_step(sim, nodes, cmd, ended):
                              "for: you reached it. Step again when you "
                              "have had a look around."
                              % (ran, years))
+            stopped_kind = "goal_reached"
             break
         if ran < years and any(marker.lower() in message.lower() for _, message in _this_year
                                for marker in _STEP_STOP_MARKERS):
@@ -331,6 +333,7 @@ def _cmd_step(sim, nodes, cmd, ended):
                              "yourself about and should see before more "
                              "time passes. Step again when you are ready."
                              % (ran, years))
+            stopped_kind = "warned_event"
             break
         severe_reason = severe_stop_reason(
             [{"message": message} for _, message in _this_year],
@@ -341,6 +344,7 @@ def _cmd_step(sim, nodes, cmd, ended):
         if ran < years and severe_reason:
             stopped_early = ("stopped after %d of the %d years you asked for: %s. "
                              "Step again when you have had a look." % (ran, years, severe_reason))
+            stopped_kind = cause_of(severe_reason)
             break
     out = dict(ok=True, completed=completed, lost=lost, events=events)
     if programme_log:
@@ -375,6 +379,7 @@ def _cmd_step(sim, nodes, cmd, ended):
         out["the_founder_died_this_step"] = founder_died_this_step
     if stopped_early:
         out["stopped_early"] = stopped_early
+        out["stopped_kind"] = stopped_kind
     if multi_year_hours_warning:
         out["multi_year_hours_warning"] = multi_year_hours_warning
     out.update(_agent_state(sim, nodes))

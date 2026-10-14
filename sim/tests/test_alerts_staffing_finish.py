@@ -1,5 +1,6 @@
 """Complaints 79, 125, 201, 229, 231, 237: blocker kinds declared, luckless nodes, alert tiers and stop reasons."""
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of
 from sim.ui.proto.step_alerts import step_alerts, alert_severity
 from sim.ui.proto.step_stops import severe_stop_reason
 
@@ -33,15 +34,15 @@ check("the alerts block carries the staffing line and orders by severity",
 # --- 81: extra reasons for a step to stop early
 check("a quiet year gives no stop reason", severe_stop_reason([], [], [], []) is None)
 check("a newly unlocked objective stops the step",
-      "objective" in (severe_stop_reason([], [], [], ["Reach the goal"]) or ""))
+      cause_of(severe_stop_reason([], [], [], ["Reach the goal"])) == "new_objective")
 check("a severe failure stops the step",
-      "failed" in (severe_stop_reason([{"year": 1, "message": "FAILED at Grid: it did not work."}], [], [], []) or ""))
+      cause_of(severe_stop_reason([{"year": 1, "message": "FAILED at Grid: it did not work."}], [], [], [])) == "project_failed")
 check("a minor failure does not stop the step",
       severe_stop_reason([{"year": 1, "message": "FAILED at Grid (minor): lost 3"}], [], [], []) is None)
 check("a concern closed for want of staff stops the step",
-      "staff" in (severe_stop_reason([], ["Smithy"], [], []) or ""))
+      cause_of(severe_stop_reason([], ["Smithy"], [], [])) == "staff_closure")
 check("a newly blocked project stops the step",
-      "blocked" in (severe_stop_reason([], [], ["Loom"], []) or ""))
+      cause_of(severe_stop_reason([], [], ["Loom"], [])) == "project_blocked")
 
 # --- 235: the lettered-trades label says each trade has its own ceiling
 from sim.ui.protocol import _agent_dispatch
