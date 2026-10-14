@@ -26,7 +26,7 @@ RUNNING_CONSTRAINT_KIND = {
 BLOCKER_MEANING = {
     "specialists": "a trade is short or already booked: hire or train it, or pause a project that shares it",
     "supply": "a material is throttling the whole economy: buy or sink the source",
-    "money": "the bill outruns what you can raise: wait, sell, or pause a draw",
+    "money": "the bill outruns what you can raise, or the yearly draw rate is what holds it: wait, sell, or pause a draw",
     "calendar": "only the calendar floor is left: it cannot be bought, so spend the hours elsewhere",
     "hours": "your own directed hours are fully committed: reprioritise or raise the pool",
     "idle": "no single cause is named: 'why <id>' for the project"}

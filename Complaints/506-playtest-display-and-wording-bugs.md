@@ -1,6 +1,6 @@
 # Display and wording bugs found in a Rome playtest
 
-**Status:** open
+**Status:** partly - fixed in `fix-playtest-display-bugs`; still open: `market <material>` filter, quote preview for `sell concern`, the alum `why` item, the 'still on offer to you' units
 
 Each of these is small, and each misled or confused a player in a Rome game started from `menu`
 (`play --civ rome_100ad --kit merchant --seed real25` reproduces the game).
@@ -37,3 +37,12 @@ Each of these is small, and each misled or confused a player in a Rome game star
   with no project running, and `why alum_kg` answers "unknown node". The throttling itself is 480.
 
 What it would take: one fix each, and a protocol test per item where the output is asserted.
+
+## Fixed
+
+Blame line only when the founder's share is material; the doubled article in stratum group names; `leverage` and
+`quit` render as text; the `path` hint names a real node and a bare `path` is the route to the goal; MATERIALS
+rows count a non-mass material in its own unit and say a material nobody produces is not produced; the civ menu
+writes the year as AD or BC (once); the supervision note's fraction; the portfolio money blocker names the
+yearly draw rate as well as the bill (the blocker kind cannot tell which held the project). Tests:
+`sim/tests/test_complaint_506_display_bugs.py`.

@@ -17,7 +17,7 @@ _VENTURE_SUPERVISION_NOTE = (
     "headcount: venture_hands (what 'open' actually checks) is a "
     "continuous SHARE of a person's YEAR that watching it claims, scaled "
     "by how much it takes in - 2.13 craftsmen means the year-round "
-    "attention of two of them plus a little over a third of a third "
-    "one's, not that a person is divided. staff_needed, the crew that "
+    "attention of two of them plus about an eighth of a third "
+    "one's year, not that a person is divided. staff_needed, the crew that "
     "BUILDS it, is the one figure on these screens that really is whole "
     "people.")

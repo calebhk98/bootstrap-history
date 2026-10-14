@@ -11,6 +11,7 @@ from .nodes import _downstream_of, _unlocked_by
 from .state_waiting import _waiting_on
 from .why_benefit import benefit_block
 from .ventures import _VENTURE_SUPERVISION_NOTE
+from .material_dimension import NEVER_PRODUCED_YEARS, own_unit_quantities
 # DEFAULT_AVAILABLE_LIMIT is NOT imported here: cli.py patches
 # ui.protocol.DEFAULT_AVAILABLE_LIMIT directly at runtime, so
 # _agent_available reads it through the protocol module itself, live -
@@ -854,7 +855,12 @@ def _material_row(row, sim):
             "price_per_tonne": round(row["price_per_tonne"], 2),
             "cost_of_missing": round(row["cost_of_missing"], 1),
             **({"years_of_supply_it_takes": round(row["years_of_supply_it_takes"], 1)}
-               if row["years_of_supply_it_takes"] else {}),
+               if row["years_of_supply_it_takes"] and row["years_of_supply_it_takes"] < NEVER_PRODUCED_YEARS else {}),
+            **({"not_produced": True}
+               if (row["years_of_supply_it_takes"] or 0.0) >= NEVER_PRODUCED_YEARS else {}),
+            **({"own_unit": own_unit}
+               if (own_unit := own_unit_quantities(row["material"], row["needed_tonnes"], row["held_tonnes"],
+                                                   row["missing_tonnes"])) else {}),
             "own_supply_tonnes_per_year": round(row["own_supply_tonnes_per_year"], 3),
             **({"scarcity_note": "your own output of %s of %s counts as supply against the demand "
                                  "on it, which lowers the premium on anything you still buy"
