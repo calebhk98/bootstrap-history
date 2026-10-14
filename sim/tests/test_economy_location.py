@@ -45,6 +45,42 @@ class CostTests(unittest.TestCase):
         self.assertTrue(math.isinf(location.cost_per_run(self.recipe, {}, {}, 0.0, 0.0, 1.0)))
 
 
+class InputCarriageTests(unittest.TestCase):
+    """A run's inputs must reach the tile: a smelter sited where no ore is made pays to carry the ore, or cannot run."""
+
+    smelt = Recipe("smelt", {fixture.METAL: 1.0}, {fixture.ORE: 1000.0}, {"smith": 10.0})
+    specs = fixture.specs()
+    tonnes_of_ore_per_run = 1000.0 * specs[fixture.ORE].unit_mass_kg / 1000.0
+
+    class Carriage:
+        def __init__(self, cost_by_pair):
+            self.cost_by_pair = cost_by_pair
+
+        def cost_per_tonne(self, from_tile, to_tile):
+            return 0.0 if from_tile == to_tile else self.cost_by_pair.get((from_tile, to_tile), math.inf)
+
+    def carried(self, tile, suppliers, cost_by_pair):
+        return location.input_carriage_per_run(self.smelt, self.specs, tile, suppliers, self.Carriage(cost_by_pair))
+
+    def test_a_tile_that_makes_the_input_pays_no_carriage_for_it(self):
+        self.assertEqual(self.carried("mine", {fixture.ORE: {"mine"}}, {}), 0.0)
+
+    def test_a_tile_away_from_the_input_pays_the_runs_input_mass_over_the_cheapest_haul(self):
+        cost = self.carried("town", {fixture.ORE: {"near", "far"}}, {("near", "town"): 3.0, ("far", "town"): 9.0})
+        self.assertAlmostEqual(cost, 3.0 * self.tonnes_of_ore_per_run)
+
+    def test_an_input_nobody_makes_adds_nothing_because_its_own_market_will_draw_a_maker(self):
+        self.assertEqual(self.carried("town", {}, {}), 0.0)
+
+    def test_a_tile_no_haul_reaches_from_any_maker_is_infinitely_dear(self):
+        self.assertTrue(math.isinf(self.carried("island", {fixture.ORE: {"mine"}}, {})))
+
+    def test_the_carriage_adds_to_a_tiles_cost_per_run(self):
+        base = location.cost_per_run(self.smelt, {"smith": 1.0}, {fixture.ORE: 0.0}, 0.0, 0.0, 1.0)
+        carried = location.cost_per_run(self.smelt, {"smith": 1.0}, {fixture.ORE: 0.0}, 0.0, 0.0, 1.0, input_carriage=7.0)
+        self.assertEqual(carried - base, 7.0)
+
+
 class ChooseTests(unittest.TestCase):
     def candidate(self, tile, cost, staffable=math.inf, headroom=math.inf):
         return location.Candidate(tile, cost, staffable, headroom)

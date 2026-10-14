@@ -58,12 +58,30 @@ def output_tonnes(recipe: Recipe, specs: Mapping[str, GoodSpec]) -> float:
 
 
 def cost_per_run(recipe: Recipe, wages: Mapping[str, float], input_prices: Mapping[str, float], rent: float,
-                 carriage_per_tonne: float, yield_factor: float, tonnes: float = 0.0) -> float:
-    """Variable cost and carriage of a run's output (`tonnes`) to the anchor, over the yield."""
+                 carriage_per_tonne: float, yield_factor: float, tonnes: float = 0.0,
+                 input_carriage: float = 0.0) -> float:
+    """Variable cost, carriage of a run's output (`tonnes`) to the anchor and of its inputs to the tile
+    (`input_carriage`), over the yield."""
     if yield_factor <= 0.0:
         return math.inf
     carriage = carriage_per_tonne * tonnes if tonnes > 0.0 else 0.0
-    return (unit_cost.variable_cost_per_run(recipe, input_prices, wages, rent) + carriage) / yield_factor
+    return (unit_cost.variable_cost_per_run(recipe, input_prices, wages, rent) + carriage + input_carriage) / yield_factor
+
+
+def input_carriage_per_run(recipe: Recipe, specs: Mapping[str, GoodSpec], tile: TileId,
+                           suppliers: Mapping[str, "set"], carriage) -> float:
+    """Money to carry a run's inputs to `tile` from the nearest tile that makes each (`suppliers`: good ->
+    tiles whose producers make it). A tile that makes it pays nothing; an input nobody makes adds nothing
+    (its own market draws a maker); a tile no haul reaches from any maker is infinitely dear."""
+    total = 0.0
+    for good, quantity in recipe.inputs.items():
+        sources = suppliers.get(good)
+        spec = specs.get(good)
+        if not sources or spec is None or not spec.portable or tile in sources:
+            continue
+        tonnes = quantity * spec.unit_mass_kg / KILOGRAMS_PER_TONNE
+        total += tonnes * min(carriage.cost_per_tonne(source, tile) for source in sources)
+    return total
 
 
 def spare_hours(workforce: Mapping[str, float], working_hours_per_worker: float, committed_hours: float) -> float:
@@ -123,8 +141,12 @@ def entry_siting(setup, record, view, area_map, carriage) -> Siting:
     by_recipe = sites.limits_by_recipe(setup.site_limits)
     capacity: Dict[Tuple[str, TileId], float] = {}
     committed: Dict[TileId, float] = {}
+    suppliers: Dict[str, set] = {}
     for producer in sites.in_id_order(record.producers):
         key = (producer.recipe_id, producer.tile)
+        if producer.capacity_runs > 0.0:
+            for good in setup.recipes[producer.recipe_id].outputs:
+                suppliers.setdefault(good, set()).add(producer.tile)
         capacity[key] = capacity.get(key, 0.0) + producer.capacity_runs + record.expansion_runs.get(producer.agent_id, 0.0)
         recipe = setup.recipes[producer.recipe_id]
         working = producer.capacity_runs if producer.last_runs < 0.0 else producer.last_runs
@@ -147,7 +169,8 @@ def entry_siting(setup, record, view, area_map, carriage) -> Siting:
                 recipe_id + "@" + tile, 1.0))
             cost = cost_per_run(recipe, wages, live_input_prices(probe, recipe, view),
                                 record.land_rent.get(tile, 0.0) * setup.land_per_run.get(recipe_id, 0.0),
-                                carriage.cost_per_tonne(tile, demand.anchor_tile), factor, tonnes)
+                                carriage.cost_per_tonne(tile, demand.anchor_tile), factor, tonnes,
+                                input_carriage_per_run(recipe, setup.specs, tile, suppliers, carriage))
             spare = spare_hours(labour_state.people_by_trade(record.workforce, labour_area(tile)), setup.working_hours_per_year,
                                 committed.get(tile, 0.0))
             candidates.append(Candidate(tile, cost, staffable_runs(recipe, spare),

@@ -1421,6 +1421,10 @@ def main():
                                "in openings/, so a player's new game skips it; slow (minutes per civilisation)")
     subparser.add_argument("--civs", default="", help="comma-separated civilisation ids (default: all)")
     subparser.add_argument("--prune", action="store_true", help="also remove shipped entries the named civilisations did not use")
+    subparser = sub.add_parser("spin-up-trace", help="run a civilisation's hidden spin-up for many years and print the "
+                               "price level, the money stock and the mint's strikes by year; slow (minutes)")
+    subparser.add_argument("--civ", default="", help="civilisation id (default: the default one)")
+    subparser.add_argument("--years", type=int, default=60, help="years to run (default 60)")
     sub.add_parser("goals", help="list the selectable goals and their critical-path floors")
     subparser = sub.add_parser("path", help="the critical path to a goal"); subparser.add_argument("goal", nargs="?")
     subparser = sub.add_parser("costs", help="the resource costs of every node"); subparser.add_argument("--top", type=int, default=20)
@@ -1714,7 +1718,8 @@ def main():
             "sensitivity": cmd_sensitivity, "plan": cmd_plan,
             "search": cmd_search, "economy-check": cmd_economy_check,
             "mod-allow": cli_mods.cmd_mod_allow,
-            "baseline-ensemble": cmd_baseline_ensemble, "openings": cmd_openings}[args.cmd](args)
+            "baseline-ensemble": cmd_baseline_ensemble, "openings": cmd_openings,
+            "spin-up-trace": cmd_spin_up_trace}[args.cmd](args)
 
 
 # ----------------------------------------------------------------------------
@@ -1734,3 +1739,4 @@ from .cli_analysis import cmd_plan, cmd_search, cmd_why
 from .cli_economy_check import cmd_economy_check
 from .cli_baseline import cmd_baseline_ensemble
 from .cli_openings import cmd_openings
+from .cli_spin_up_trace import cmd_spin_up_trace

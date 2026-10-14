@@ -20,7 +20,8 @@ from .protocols import AgentOrders, YearInputs
 from .recipes import recipes_from_production_data
 from .record import EconomyRecord
 from .setup import EconomySetup, TradeSpec, goods_specs
-from .types import EDGE_CARGO, EDGE_CONSUMPTION, EDGE_EXCHANGE, EDGE_EXTERNAL, EDGE_LEGACY, Bid, GoodsMove, Offer, SiteLimit, Transfer, external_edge
+from .types import (EDGE_CARGO, EDGE_CONSUMPTION, EDGE_EXCHANGE, EDGE_EXTERNAL, EDGE_LEGACY, EDGE_MINT, EDGE_WEAR, Bid,
+                    GoodsMove, Offer, SiteLimit, Transfer, external_edge)
 from .unit_cost import variable_cost_per_run
 from .year_close import rebase_basket_price_level
 from .year_labour import trade_premium
@@ -35,7 +36,7 @@ __all__ = [
     "variable_cost_per_run", "rebase_basket_price_level", "trade_premium",
     "traded_volumes", "opening_quantities", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
-    "credit_room", "economy_from_record", "blank_economy", "export_record", "economy_book", "finish_spin_up", "note_spin_up_result", "shown_prices_of",
+    "credit_room", "economy_from_record", "blank_economy", "export_record", "economy_book", "finish_spin_up", "note_spin_up_result", "money_year_figures","shown_prices_of",
     "settle_agent_takings", "admit_recipes", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
     "land_rent_paid_by_tile", "land_rent_at_tile", "country_figures", "idle_hours_by_trade",
 ]
@@ -279,6 +280,18 @@ def finish_spin_up(economy):
     rebase_basket_price_level(economy.setup, economy.record)
     economy.record.settling = False
     economy.record.memory.year = 0
+
+
+def money_year_figures(economy, outcome):
+    """The year's coin sink and source from its money audit (`YearOutcome.money_audit`), in the economy's unit:
+    "wear" (coin worn away, positive), "struck" (coin the mint paid out net of what it took back: struck less
+    melted) and "metal_held" (the metal the mint holds)."""
+    spec = economy.record.currency
+    edges = outcome.money_audit.edge_net
+    held = account_holdings(economy, EDGE_MINT)["goods"].get(spec.backing_good, {}) if spec.backing_good else {}
+    return {"wear": -edges.get(EDGE_WEAR, {}).get(spec.currency_id, 0.0),
+            "struck": edges.get(EDGE_MINT, {}).get(spec.currency_id, 0.0),
+            "metal_held": sum(quantity for quantity in held.values() if quantity > 0.0)}
 
 
 def note_spin_up_result(economy, result):
