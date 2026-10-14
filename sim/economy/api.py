@@ -285,12 +285,13 @@ def finish_spin_up(economy):
 def money_year_figures(economy, outcome):
     """The year's coin sink and source from its money audit (`YearOutcome.money_audit`), in the economy's unit:
     "wear" (coin worn away, positive), "struck" (coin the mint paid out net of what it took back: struck less
-    melted) and "metal_held" (the metal the mint holds)."""
+    melted), "change" (the year's change in the money stock) and "metal_held" (the metal the mint holds)."""
     spec = economy.record.currency
     edges = outcome.money_audit.edge_net
     held = account_holdings(economy, EDGE_MINT)["goods"].get(spec.backing_good, {}) if spec.backing_good else {}
     return {"wear": -edges.get(EDGE_WEAR, {}).get(spec.currency_id, 0.0),
             "struck": edges.get(EDGE_MINT, {}).get(spec.currency_id, 0.0),
+            "change": outcome.money_audit.supply_change.get(spec.currency_id, 0.0),
             "metal_held": sum(quantity for quantity in held.values() if quantity > 0.0)}
 
 

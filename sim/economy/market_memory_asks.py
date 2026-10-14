@@ -11,7 +11,7 @@ from typing import Optional, Sequence
 from sim.constants import declare
 
 from .goods_market import quantity_at
-from .types import EDGE_EXTERNAL, EDGE_MINT, Bid, Offer
+from .types import EDGE_EXTERNAL, Bid, Offer
 
 NO_BID_MEMORY_SHARE = declare(
     "NO_BID_MEMORY_SHARE", 0.3, kind="temporary_heuristic",
@@ -97,8 +97,7 @@ def price_after_resumed_trade(old: Optional[float], volume_rule_price: float, ye
 def wanted_at(bids: Sequence[Bid], price: Optional[float]) -> float:
     """What the market's own buyers would have taken at a price (budgets and ceilings applied); zero
     without a price. A foreign partner's order is sized by the partner, not by what the market usually
-    trades, so it does not count: left in, it makes any home trade a sliver and freezes the memory. The mint's
-    bid is likewise a standing price sized to its capacity, not what the market's own buyers wanted."""
+    trades, so it does not count: left in, it makes any home trade a sliver and freezes the memory."""
     if not price or price <= 0.0:
         return 0.0
-    return math.fsum([quantity_at(bid, price) for bid in bids if bid.buyer not in (EDGE_EXTERNAL, EDGE_MINT)])
+    return math.fsum([quantity_at(bid, price) for bid in bids if bid.buyer != EDGE_EXTERNAL])

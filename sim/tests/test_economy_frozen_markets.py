@@ -7,7 +7,7 @@ import unittest
 
 from sim.economy import market_memory_asks as asks
 from sim.economy.market_memory import MarketMemory
-from sim.economy.types import EDGE_MINT, Bid, Offer
+from sim.economy.types import Bid, Offer
 
 
 def offer(ask):
@@ -62,21 +62,6 @@ class ResumedTradeTests(unittest.TestCase):
 
     def test_the_count_is_saved_with_the_memory(self):
         self.assertIn("years_without_bids", MarketMemory().__dict__)
-
-
-class StandingQuoteTests(unittest.TestCase):
-    """The mint's bid for the coin metal is a standing price, not what the market's buyers wanted; counted as
-    wanted volume it made every trade a sliver and froze the metal's remembered price far below what sellers got."""
-
-    def test_the_mints_standing_bid_is_not_what_the_market_wanted(self):
-        households = Bid("household:a", "silver_kg", "area", "tile", 5.0, 0.0, 1.0, 0.0, 1000.0)
-        mint = Bid(EDGE_MINT, "silver_kg", "area", "tile", 0.0, 1e9, 1.0, 0.0, float("inf"))
-        self.assertEqual(asks.wanted_at([households, mint], 1.0), asks.wanted_at([households], 1.0))
-
-    def test_a_trade_against_a_market_with_only_the_mint_bidding_moves_the_price_most_of_the_way(self):
-        mint = Bid(EDGE_MINT, "silver_kg", "area", "tile", 0.0, 1e9, 1.0, 0.0, float("inf"))
-        reference = asks.memory_reference_volume(10.0, asks.wanted_at([mint], 300.0))
-        self.assertEqual(reference, 10.0)
 
 
 if __name__ == "__main__":

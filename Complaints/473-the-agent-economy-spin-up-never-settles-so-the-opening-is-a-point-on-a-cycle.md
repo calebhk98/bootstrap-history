@@ -1,6 +1,6 @@
 # The agent economy's spin-up never settles, so the opening is a point on a cycle
 
-**Status:** open
+**Status:** partly - the opening's capacity/income mismatch (waits on 507) and the coin metal's supply chain, which stops supplying the mint within three years; see Update
 
 Found while tracing why the opening money wage moved several-fold between builds of the same branch (the
 fix for that is in `Complaints/closed/470`). The price level in the hidden spin-up cycles with a period of
@@ -55,3 +55,57 @@ fell to about a quarter of its year-104 figure. Funds lenders hold is built most
 small to move it. A founder who had borrowed at a normal rate to hire staff paid well over half the debt in
 interest each year and went insolvent. Wages (and with them the workshop's revenue, which is a markup on
 wages) fell through the same years. Reproduce by stepping a year at a time and reading `money`.
+
+## Update (coin wear and the spin-up report)
+
+Done:
+
+- **A measurement exists.** `python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60` prints the price
+  level, money stock, rate, coin worn, coin struck net and metal at the mint by year (`sim/engine/economy_port_trace.py`,
+  `economy_api.money_year_figures`, from each year's `YearOutcome.money_audit`). It runs the first stage on the
+  opening the game saved, without stopping at the tolerance. `sim/tests/test_spin_up_money_supply.py` (slow) reads
+  the same trace.
+- **The spin-up now says whether it settled.** The first stage returns `{settled, years, gap}`; it is saved in the
+  record (`EconomyRecord.spin_up_result`), read through `game.economy.spin_up_result()`, and `simulator.py openings`
+  prints "NOT SETTLED" for an opening that ran out of years with the cycle still moving.
+- **The drain is measured, and it is the wear sink with nothing replacing it.** Rome, 60 years (command above, the
+  harness game): the money stock goes 45.5 to 25.2 billion units (a fall of 45 per cent, still falling), decade means 43.4,
+  39.0, 35.5, 31.9, 28.6, 26.4; the mint's strikes over each decade are between minus 12 and plus 21 per cent of the
+  coin worn. The audit identity holds (stock change equals struck less worn, other edges about one per cent of wear), so
+  wear is the only steady sink and the mint is not a steady source.
+
+Cause, found by tracing the silver market and the chain behind it (not the mint's rule):
+
+1. The mint quotes both ways at one price (Rome's coin standard has no mint charge), so the coin metal's price is
+   pinned at the minted value and the mint buys every kilogram offered. Nothing in the mint's decision starves it. The
+   price of the metal in goods still follows coin scarcity through the price level; what fails is the supply that
+   should answer.
+2. Metal reaches the mint only from the producers of silver and from households selling bullion. Households' flows
+   are large both ways (hundreds of thousands of units a year bought from and sold to the mint, net melt about an eighth
+   of wear) and cancel. Producers supply almost nothing after the first two years: the opening's silver comes from
+   lead smelting (a joint product, 1.6 kg a tonne), about 15 per cent of the year's wear in year zero and next to nothing by year three.
+3. Lead smelting stops because its galena is never bought. The opening sizes lead capacity to the silver demand
+   households' store-of-wealth bids put into final demand (about a year of wear), but the galena deposits' declared
+   capacity can feed only about a quarter of that, and the smelters are placed by population, not beside the galena
+   (`opening._place_producers` places a sited input's users first). From year three smelters bid in tiles with no
+   galena offered, and mines in tiles with no smelter hold unsold stock (seven hundred million kilograms offered, none
+   traded, each market area being one tile). Galena, then lead, then the by-product silver stop.
+4. The dedicated silver chain (ore, jarosite, smelting) is a newcomer chain: entry builds the smelters (hundreds of runs
+   of capacity) before any ore is mined and at tiles with no ore, so by year twenty the smelters work a few runs of their
+   capacity and the ore mines about a seventh of theirs.
+
+Tried and not merged (each measured on the same 60-year trace, same opening): leaving the mint's standing bid out of the
+volume the remembered price is weighed against (`market_memory_asks.wanted_at`); charging a newcomer's tile for carrying
+its inputs from the nearest tile that makes them (`location.entry_siting`); placing processors beside where their
+heaviest input is made at the opening (`opening._place_producers`, sited recipes first). None moved the stock or the
+mint's strikes by more than a few per cent over 60 years; the first only matters if the metal's price memory is frozen,
+which it is not on the real opening. They are described here so the next attempt does not repeat them.
+
+What remains (in `test_spin_up_money_supply.test_the_money_stock_keeps_up_with_wear`, which fails on purpose: after
+forty years the stock is 0.74 of its first decade's, against the 0.90 that one decade of unreplaced wear leaves):
+
+- The silver chain has to be supplied from the opening: capacity that agrees with the deposits' limits (not a year of store
+  building), processors beside their sited inputs, and a smelter chain that does not outbuild its ore. That is the
+  opening's capacity/income mismatch above and waits on the owner decision in 507.
+- Do not weaken the test. Regenerate `openings/` (`simulator.py openings`) when this lands; the shipped entries are keyed
+  on the source and every source change leaves them unread.
