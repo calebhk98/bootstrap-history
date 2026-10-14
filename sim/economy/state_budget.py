@@ -128,7 +128,7 @@ def goods_bids(setup, record, view, area_map, order_book, kept=None) -> None:
             budget.need_wanted[good] = budget.need_wanted.get(good, 0.0) + wanted
             area = view.area_of(good, tile)
             order_book.setdefault((good, area), ([], []))[0].append(
-                Bid(state, good, area, tile, 0.0, wanted, price, 1.0, wanted * price))   # a fixed sum to spend: unit elastic
+                Bid(state, good, area, tile, 0.0, wanted, price, basket.substitution, wanted * price))   # the need's share, as a household's
     record.book.move_many(moves)
 
 

@@ -9,7 +9,7 @@ from sim.economy.protocols import YearInputs
 from sim.economy.national_prices import national_prices
 
 GOOD = "bronze_kg"
-YEARS_PLAYED = 26
+YEARS_PLAYED = 18
 MARKUP_BOUND = 3.0      # a melt's fuel and skilled hours are already in its recipe cost; a markup beyond this is a thin market
 
 
