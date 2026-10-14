@@ -134,13 +134,15 @@ dearest_useful = (world_dear.expansion_gain("zz_grow", incumbent.record.opened_y
                                             incumbent.capacity_of("zz_grow"), step, 1.0)
                   / world_dear.plant_cost("zz_grow", incumbent, step))
 capacity_before_dear = {firm.actor_id: dict(firm.record.capacity) for firm in dear.actors.active_firms()}
+check("firms exist to be refused", len(capacity_before_dear) > 0)
 # the dear rate is the firms' own (the price solver re-solves every price at any other rate, which is not under test)
 with mock.patch.object(SimWorld, "market_rate", lambda self: 2.0 * dearest_useful):
 	for _ in range(5):
 		next_year(dear)
-check("firms exist to be refused", len(dear.actors.active_firms()) > 0)
+# (a firm that borrowed at that rate may close, its interest outrunning its margin: the claim is about those that stay)
 check("a cost of capital above the added margin stops expansion",
-      all(firm.record.capacity == capacity_before_dear.get(firm.actor_id, {}) for firm in dear.actors.active_firms()),
+      all(firm.record.capacity == capacity_before_dear[firm.actor_id] for firm in dear.actors.active_firms()
+          if firm.actor_id in capacity_before_dear),
       [(firm.record.capacity, capacity_before_dear.get(firm.actor_id)) for firm in dear.actors.active_firms()])
 
 # a firm that loses money does not expand

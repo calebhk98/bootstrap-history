@@ -45,7 +45,7 @@ class Firm(ExpansionMixin, RecordedActor):
 		self.concerns.add(node_id)
 		self.record.opened_year[node_id] = world.year
 
-	def operate(self, world: Any) -> None:
+	def operate(self, world: Any, interest: float = 0.0) -> None:
 		for node_id in sorted(self.concerns):
 			rivals = self.rivals_of(node_id, self.actor_id) if self.rivals_of else 0.0
 			margin = (concern_ops.operate_concern(self, node_id, world, rivals)
@@ -55,6 +55,8 @@ class Firm(ExpansionMixin, RecordedActor):
 		if self.record.loss_years == 0 and self.concerns:
 			weak = firm_exit.earns_less_than_plant_would_lend_for(self, world)
 			self.record.weak_years = self.record.weak_years + 1 if weak else 0
+			insolvent = firm_exit.interest_outruns_margin(self, interest, world)
+			self.record.insolvent_years = self.record.insolvent_years + 1 if insolvent else 0
 
 	def credit_earning(self, world: Any) -> float:
 		return max(0.0, self.record.last_margin)
@@ -66,10 +68,10 @@ class Firm(ExpansionMixin, RecordedActor):
 		return min(1.0, max(0.0, world.year - self.record.founded_year) / TRACK_RECORD_YEARS)
 
 	def act(self, world: Any) -> None:
-		self.pay_interest(world)
+		interest = self.pay_interest(world)
 		super().act(world)
-		self.operate(world)
-		if self.record.loss_years >= EXIT_LOSS_YEARS or self.record.weak_years >= EXIT_LOSS_YEARS:
+		self.operate(world, interest)
+		if EXIT_LOSS_YEARS <= max(self.record.loss_years, self.record.weak_years, self.record.insolvent_years):
 			firm_exit.close_firm(self, world)
 		else:
 			self.expand(world)

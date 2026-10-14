@@ -251,8 +251,7 @@ def concern_needing_craftsmen_to_supervise():
 
 def ready_for_entry(game, money=None):
     """Ready a game for firm entry: the home strata hold savings (a game whose agent economy has not run has
-    empty purses, and a firm is founded from a stratum's savings) and the home government sits where the
-    founder works, so a founder's concern is in an entrant's sight. The opening cast (strata and governments)
+    empty purses, and a firm is founded from a stratum's savings). The opening cast (strata and governments)
     is seeded first when it has not been. `money` is the savings of each free home stratum; by default the
     entrepreneurial share of a year's output between them. Returns the game."""
     if not game.actors.state.home_country:
@@ -266,9 +265,6 @@ def ready_for_entry(game, money=None):
         money = SimWorld(game).society_output() * ENTREPRENEURIAL_CAPITAL_SHARE / max(1, len(free))
     for stratum in free:
         stratum.money = money
-    home = game.actors.actors.get("government:" + (game.actors.state.home_country or ""))
-    if home is not None:
-        home.record.location = game.seat_place(game.state.acting_seat)
     return game
 
 

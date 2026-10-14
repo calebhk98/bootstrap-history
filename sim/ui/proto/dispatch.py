@@ -17,6 +17,7 @@ from .help import _agent_help
 from .nodes import NODE_NAME_NORM, _did_you_mean, _norm_name, _resolve_by_name
 from sim.ui.memory import load_state, save_state
 from .score import victory_report
+from .why_material import material_story
 from .seat_address import run_as_seat
 from .state_waiting import _agent_end_reason
 from .state import _agent_state
@@ -526,7 +527,10 @@ def _agent_dispatch_inner(sim, nodes, cmd):
         # already says only "this needs N other things you have not heard
         # of yet", which is the honest answer.
         _goal_why = (_op == "why" and _node_id == sim.goal)
-        if _op in id_commands() and isinstance(_node_id, str) and not _goal_why and (
+        # a material id is not a tree node: `why` explains it from what the player already sees in `market`
+        _material_why = (_op == "why" and isinstance(_node_id, str) and _node_id not in nodes
+                         and material_story(sim, _node_id) is not None)
+        if _op in id_commands() and isinstance(_node_id, str) and not _goal_why and not _material_why and (
                 _node_id not in nodes or not sim.is_visible(_node_id)):
             if _node_id == sim.goal:
                 # You know its name; you were handed it on arrival. Telling you

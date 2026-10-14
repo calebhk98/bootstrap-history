@@ -1,6 +1,6 @@
 # A price solve stalls when a Norse game reopens a venture
 
-**Status:** open
+**Status:** closed - the solve was slow, not stuck; the clearing speed-ups of 2026-10-12 fixed it, and sim/tests/test_need_demand_clearing_bounded.py pins that the root search is bounded
 
 `sim/tests/test_arrears_hours.py` plays Norse for twelve years in `_portfolio_run`. In the fourth year's step,
 `reopen_restaffed_ventures` -> `open_venture` -> `node_output_market_factor` -> `solved_prices` asks for a node

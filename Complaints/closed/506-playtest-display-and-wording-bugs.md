@@ -1,6 +1,6 @@
 # Display and wording bugs found in a Rome playtest
 
-**Status:** partly - fixed in `fix-playtest-display-bugs`; still open: `market <material>` filter, quote preview for `sell concern`, the alum `why` item (the 'still on offer to you' units are fixed in `fix-unhired-trade-wage`, see closed 503)
+**Status:** closed - fixed in `fix-playtest-display-bugs` and `fix-506-remaining-display-bugs` (the 'still on offer to you' units are in closed 503; the throttling behind the alum shortage is 480)
 
 Each of these is small, and each misled or confused a player in a Rome game started from `menu`
 (`play --civ rome_100ad --kit merchant --seed real25` reproduces the game).
@@ -44,5 +44,9 @@ Blame line only when the founder's share is material; the doubled article in str
 `quit` render as text; the `path` hint names a real node and a bare `path` is the route to the goal; MATERIALS
 rows count a non-mass material in its own unit and say a material nobody produces is not produced; the civ menu
 writes the year as AD or BC (once); the supervision note's fraction; the portfolio money blocker names the
-yearly draw rate as well as the bill (the blocker kind cannot tell which held the project). Tests:
+yearly draw rate as well as the bill (the blocker kind cannot tell which held the project); `market <material>` shows that one
+material (an unknown one is refused with suggestions); `quote sell concern <id>` previews a sale from the same
+function the sale uses (`exchange_sale.sale_terms`); `why <material>` explains a material, and the "SHORT OF" line
+is logged only while a running project draws the short material, naming it in words and naming the slowed work.
+Tests:
 `sim/tests/test_complaint_506_display_bugs.py`.
