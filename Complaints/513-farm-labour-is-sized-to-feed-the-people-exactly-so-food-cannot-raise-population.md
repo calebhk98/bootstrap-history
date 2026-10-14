@@ -1,6 +1,6 @@
 # Farm labour is sized to feed the people exactly, so a food technology cannot raise population while land is spare
 
-**Status:** open - owner decision asked (see the end)
+**Status:** open - owner decision (2026-10-14): a surplus may raise intake up to a biological satiation level, not without limit
 
 Found closing 480. `LabourAllocationMixin._allocate_farm_workforce` puts just enough people on the land to meet
 the population's food need (`farm_workers_needed`): a better technique frees hands, a shortfall calls for hands
@@ -19,3 +19,11 @@ elsewhere (the agent economy already prices both), so a cheaper calorie raises c
 and the demography reads the outcome. Owner decision: should a food surplus be able to raise intake above need
 (and so fertility and survival), or is freeing labour for other work the intended response while land is
 spare?
+
+## Owner decision (2026-10-14)
+
+Food beyond need can raise intake, up to a satiation level (on the order of what well-fed modern people eat, not
+several times need); beyond that, extra food is stored, sold, fed to animals or wasted. The satiation level is a
+biological limit and should be declared as one, with a source. The needs kernel already has `limit_satiation`
+(`sim/world/need_basket.py`); farming effort should follow the food price against the wage elsewhere, so farmers
+leave farming when food is cheap and the price recovers.
