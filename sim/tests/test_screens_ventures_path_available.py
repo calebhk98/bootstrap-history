@@ -99,8 +99,24 @@ check("payback is slower than cost/net because revenue ramps up",
       earner["payback_years"] is not None and earner["payback_years"] > flat_years, (earner["payback_years"], flat_years))
 check("payback is no worse than the flat figure plus the ramp's whole shortfall",
       earner["payback_years"] < flat_years + ramp_years, earner["payback_years"])
-loser = next(row for row in listing["available"]
-             if row["earns_per_year"] > 0 and row["net_per_year"] < 0)
+# no concern loses money at the opening once the crew is paid once (through the payroll), so make one lose: a
+# running cost above its takings
+_real_quote = rows_sim.venture_upkeep_quote
+_LOSER = next(row["id"] for row in listing["available"] if row["earns_per_year"] > 0 and row["id"] != _EARNER)
+
+
+def _quote_with_a_loss(node_id, units=None):
+    quote = _real_quote(node_id, units)
+    if node_id != _LOSER:
+        return quote
+    loss = 2.0 * rows_sim.venture_real_earnings(node_id) + 1.0
+    return {"now": loss, "at_full_staffing": loss}
+
+
+rows_sim.venture_upkeep_quote = _quote_with_a_loss
+loser = next(row for row in S._agent_dispatch(rows_sim, NODES, {"cmd": "available", "all": True, "limit": 5000})["available"]
+             if row["id"] == _LOSER)
+rows_sim.venture_upkeep_quote = _real_quote
 check("a loss-maker has no payback", "payback_years" not in loser, loser)
 check("a knowledge node has zero net and no payback",
       "payback_years" not in by_id["units_standards"])
