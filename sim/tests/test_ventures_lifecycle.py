@@ -254,12 +254,14 @@ check("restoring a shop the staffing rule shut costs the tenth it promised",
 s_hy = sim(capital=500000.0)
 s_hy.done.update(NODES); s_hy._done_changed()
 s_hy.artisans = s_hy.scholars = 6.0
-_vh = max((node_id for node_id in sorted(NODES)
-           if s_hy.is_venture(node_id) and NODES[node_id]["rev"] > 500
-           and s_hy.STAFFING_CLOSURE_SLACK < s_hy.venture_hands(node_id)[1] <= 5.0
-           and s_hy.venture_hands(node_id)[0] <= 5.0),
-          key=lambda k: s_hy.venture_hands(k)[1])
-_ok_hy, _ = s_hy.open_venture(_vh)
+_vh_candidates = sorted((node_id for node_id in sorted(NODES)
+                         if s_hy.is_venture(node_id) and NODES[node_id]["rev"] > 500
+                         and s_hy.STAFFING_CLOSURE_SLACK < s_hy.venture_hands(node_id)[1] <= 5.0
+                         and s_hy.venture_hands(node_id)[0] <= 5.0),
+                        key=lambda k: -s_hy.venture_hands(k)[1])
+# the largest of them that can be opened at all (a concern may also wait on a power grid or a material)
+_vh = next((node_id for node_id in _vh_candidates if s_hy.open_venture(node_id)[0]), _vh_candidates[0])
+_ok_hy = _vh in s_hy.operating
 check("(a shop to test the staffing rule on is open)",
       _vh in s_hy.operating, (_vh, _ok_hy, s_hy.venture_hands(_vh)))
 _need_s, _need_a = s_hy.venture_staff_used()
@@ -324,7 +326,8 @@ s_ln = s_misc
 # the loss is judged on what the concern really earns and costs, as the opening message is
 _ln_k = next((node_id for node_id in OPENABLE
               if s_ln.venture_real_upkeep(node_id) > s_ln.venture_real_earnings(node_id, fully_ramped=True)
-              and node_id not in s_ln.CAPABILITY_INSTITUTIONS), None)
+              and node_id not in s_ln.CAPABILITY_INSTITUTIONS
+              and all(need <= free for need, free in zip(s_ln.venture_hands(node_id), s_ln.venture_staff_free()))), None)
 check("a real, non-capability net-loss-making node exists in the tree to "
       "test against",
       _ln_k is not None, _ln_k)

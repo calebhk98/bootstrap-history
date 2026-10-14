@@ -26,7 +26,6 @@ from .agents_port_trade import TradeView
 from . import seat_builds, visibility as visibility_of
 from .data import TRADES_ABSENT
 from .economy_port_setup import unit_mass_kg
-from .plant_crew import plant_crew
 from .industry_depth import RAMP_SHARE_AT_FULL_DEPTH
 
 
@@ -141,10 +140,9 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, StakeView, Disclosu
 		return self._sim.HOURS_PER_PERSON_YEAR
 
 	def concern_staff(self, node_id: str) -> Dict[str, float]:
-		"""People of each trade one plant of this concern needs: its crew from the plant's own data (plant_crew.py)."""
+		"""People of each trade one plant of this concern needs: the founder's own rule, which reads the plant's data (plant_crew.py)."""
 		sim = self._sim
-		scholars, founder_craftsmen = sim.venture_hands(node_id)
-		craftsmen = plant_crew(self.nodes[node_id], self.hours_per_person_year, founder_craftsmen)
+		scholars, craftsmen = sim.venture_hands(node_id)
 		foreman_trade, foreman_fte = sim.venture_foreman(node_id)
 		staff = {"scholar": scholars, "artisan": craftsmen}
 		if foreman_trade:

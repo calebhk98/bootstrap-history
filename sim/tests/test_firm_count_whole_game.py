@@ -56,10 +56,10 @@ def firms_after(revenue, years):
 
 # a firm's crew is the plant's own (what one plant needs to run), not a share of what the market pays, so the
 # firms of every market size are the same size and the count follows the market
-MARKET_REVENUES = (6.0e4, 1.2e5, 1.6e5)
-runs = {revenue: firms_after(revenue, 20) for revenue in MARKET_REVENUES}
-small_game, small_counts = runs[6.0e4]
-big_game, big_counts = runs[1.2e5]
+MARKET_REVENUES = (6.0e4, 1.2e5, 1.6e5, 2.0e5, 4.0e5)
+runs = {revenue: firms_after(revenue, 30) for revenue in MARKET_REVENUES}
+small_game, small_counts = runs[2.0e5]
+big_game, big_counts = runs[4.0e5]
 world = SimWorld(big_game)
 
 check("while the economy opens a concern still pays rent, at the engine's land price",
@@ -74,10 +74,13 @@ check("the count settles: the last years add no more than the first",
 
 crews = {revenue: SimWorld(game).concern_staff("zz_count") for revenue, (game, _counts) in runs.items()}
 check("a firm's crew does not grow with the market", len({tuple(sorted(crew.items())) for crew in crews.values()}) == 1, crews)
-final_counts = [runs[revenue][1][-1] for revenue in MARKET_REVENUES]
-check("firm count never falls as the market grows across several sizes",
-      all(later >= earlier for earlier, later in zip(final_counts, final_counts[1:])), final_counts)
-check("the largest market holds more firms than the smallest", final_counts[-1] > final_counts[0], final_counts)
+final_counts = {revenue: runs[revenue][1][-1] for revenue in MARKET_REVENUES}
+# a firm enters at a higher hurdle than the one under which it stays, so a count can sit anywhere in that band
+# and two nearby sizes may differ by a firm either way; a market twice the size never holds fewer
+check("a market at least twice the size never holds fewer firms",
+      all(final_counts[large] >= final_counts[small] for small in MARKET_REVENUES for large in MARKET_REVENUES
+          if large >= 2.0 * small), final_counts)
+check("the largest market holds more firms than the smallest", final_counts[MARKET_REVENUES[-1]] > final_counts[MARKET_REVENUES[0]], final_counts)
 
 # a concern whose data states a plant is crewed by what its lines ask of staff, whatever its takings
 derived_id = next(node_id for node_id in sorted(big_game.nodes)
@@ -89,3 +92,10 @@ expected_crew = sum(big_game.nodes[derived_id]["_labour_hours_per_year"].values(
 big_game.nodes[derived_id]["rev"] *= 3.0
 check("a derived concern's crew is its plant's hours over a person-year", abs(crew_before - expected_crew) < 1e-9, (crew_before, expected_crew))
 check("...and does not move with its takings", derived_world.concern_staff(derived_id).get("artisan", 0.0) == crew_before)
+
+# entrants act on what the market pays now, not on a stale expectation that ignores the firms already
+# in: the count rises to what the market holds and stays near it, rather than overshooting and collapsing
+for revenue, (_game, counts) in sorted(runs.items()):
+	settled_count = sorted(counts[-5:])[2]
+	check("entry does not overshoot what the market holds (market %g)" % revenue,
+	      max(counts) <= 3 * max(1, settled_count) + 2, counts)
