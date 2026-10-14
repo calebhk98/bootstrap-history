@@ -36,6 +36,10 @@ class ActorRecord:
 	# a state's standing need by line last year, and the part it could not pay
 	need: Dict[str, float] = field(default_factory=dict)
 	unfunded: Dict[str, float] = field(default_factory=dict)
+	# pay a state owes its army and officials from earlier years, by line; paid first from later revenue
+	arrears: Dict[str, float] = field(default_factory=dict)
+	# what the state paid of those arrears this year, by line
+	arrears_paid: Dict[str, float] = field(default_factory=dict)
 	# what the state seeks of the people it can see: share of income at full notice by kind of
 	# claim, and the visible income those shares are spread over
 	levy_requisition_rate: float = 0.0

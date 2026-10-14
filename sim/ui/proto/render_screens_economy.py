@@ -454,6 +454,8 @@ def _money_credit_lines(out):
         lines.append("Market rate: %s     funds lenders hold: %s     the credit market could still lend: %s     the state owes: %s"
                      % (_pct(market.get("market_rate")), _fmt_num(market.get("funds_lenders_hold")),
                         _fmt_num(market.get("lenders_will_still_advance_you")), _fmt_num(market.get("the_state_owes"))))
+    elif market.get("the_state_owes"):
+        lines.append("The state owes: %s" % _fmt_num(market.get("the_state_owes")))
     if out.get("sustainable_debt") is not None:
         lines.append("Sustainable debt at this surplus: %s   (%s)"
                      % (_fmt_num(out["sustainable_debt"]),

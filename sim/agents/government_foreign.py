@@ -61,6 +61,14 @@ class ForeignGovernment(RecordedActor):
 		self.record.need = need
 		self.record.unfunded = {name: money * (1.0 - share) for name, money in need.items()}
 
+	def arrears_owed(self) -> float:
+		"""A foreign state keeps no arrears: what it cannot pay in a year is dropped, as its docstring says."""
+		return 0.0
+
+	def cannot_meet_own_need(self) -> bool:
+		"""Whether last year's standing need went partly unpaid."""
+		return sum(self.record.unfunded.values()) > 1e-9
+
 	def collect(self, payer: Any, taxable: float, world: Any) -> float:
 		"""Levy an actor of its own country (a firm, a player) at the share it takes of every taxpayer;
 		the amount taken."""

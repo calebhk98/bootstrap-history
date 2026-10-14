@@ -12,7 +12,7 @@ weight (military, infrastructure, prestige, ...), through its policy.
 """
 from typing import Any, Dict, List, Tuple
 
-from . import budget, demand_answer, ledger, state_works
+from . import arrears, budget, demand_answer, ledger, state_works
 from .base import Actor, RecordedActor
 from .government_coinage import CoinageMixin
 from .government_granary import GranaryMixin
@@ -89,12 +89,21 @@ class Government(CoinageMixin, GranaryMixin, StoresMixin, SurplusMixin, Recorded
 		own = world.notice_over(scale) * max(0.0, taxable)
 		return min(budget.LEVY_RATE_CEILING * max(0.0, taxable), unfunded * own / self.record.levy_base)
 
+	def arrears_owed(self) -> float:
+		"""Pay the state owes its army and officials from earlier years."""
+		return arrears.total(self.record)
+
+	def cannot_meet_own_need(self) -> bool:
+		"""Whether last year's standing need went partly unpaid, or pay is still owed: such a state lends nothing."""
+		return sum(self.record.unfunded.values()) > 1e-9 or arrears.total(self.record) > 1e-9
+
 	# ---- what it keeps up ---------------------------------------------------
 	def pay_standing_need(self, world: Any) -> Tuple[List[budget.Line], float]:
-		"""Take the year's revenue, pay what the purse covers of the standing need, and book the rest
+		"""Take the year's revenue, pay the arrears it owes, then what the purse covers of the standing need, and book the rest
 		as unfunded. The goods it bought are this year's demand on the market."""
 		self.pay_interest(world)
 		self.receive_revenue(world)
+		arrears.settle(self, world)
 		wanted = world.army_wanted()
 		soldiers = self.record.army if self.record.army > 0.0 else wanted
 		standing = budget.standing_lines(world, soldiers) + budget.concession_lines(world.group_claims())
@@ -104,6 +113,7 @@ class Government(CoinageMixin, GranaryMixin, StoresMixin, SurplusMixin, Recorded
 		self.record.army = budget.army_next_year(soldiers, wanted, share)
 		self.record.need = {line.name: line.money for line in lines}
 		self.record.unfunded = {line.name: line.money * (1.0 - share) for line in lines}
+		arrears.owe(self.record, lines, share)
 		state_works.wear(state_works.held(world), share, PUBLIC_BUILDING_LIFE_YEARS)
 		if any(line.name == "donative" for line in lines):
 			self.record.accession_due = False
