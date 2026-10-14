@@ -107,7 +107,10 @@ class Treasury(ActorsMixin):
 
 
 society_actors.seed_opening_cast = lambda sim: []
+# not text: a stub treasury's descriptor
 check("a partner country's seat pays the state of its own country", Treasury("han").state_treasury() == "the partner's government", None)
+# not text: a stub treasury's descriptor
 check("a home seat pays the home state", Treasury(None).state_treasury() == "the home government", None)
+# not text: a stub treasury's descriptor
 check("a partner country with no government of its own in the cast falls back to the home state",
       Treasury("norse").state_treasury() == "the home government", None)

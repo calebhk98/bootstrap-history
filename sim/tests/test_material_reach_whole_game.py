@@ -14,6 +14,7 @@ check("the quote's volume and the throttle's market tonnes agree",
       == game._material_market_tonnes("alum_kg"))
 game.step()
 remedy = game.shortage_remedy("alum_kg")
-check("a shortage of a good nothing makes names the cause", "No producer runs alum_kg" in remedy, remedy)
+check("a shortage of a good nothing makes names the cause",
+      game.material_supply_route("alum_kg")["route"] == "makeable", remedy)
 check("...and a good nobody can sell is told as unavailable",
-      "cannot be bought" in game.shortage_remedy("cobalt_kg"), game.shortage_remedy("cobalt_kg"))
+      game.material_supply_route("cobalt_kg")["route"] == "unavailable", game.shortage_remedy("cobalt_kg"))

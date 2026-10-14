@@ -18,6 +18,7 @@ of Sim; they are a mixin only so that they can live in a file of their own
 import collections
 
 from sim.constants import declare
+from sim.refusal import Refusal
 from . import cause_book, money_units
 from .plant_crew import plant_crew
 from .units_prose import money_text
@@ -232,11 +233,11 @@ class VenturesMixin:
             if self._practisable(node_id):
                 # Society skill already in your practice: it's where your income
                 # comes from. Cannot open it again.
-                return False, ("you are already doing that - it is your practice, "
-                               "and it is where most of your income comes from. "
-                               "It is a skill this society has, not a concern "
-                               "you opened, so there is nothing to open and "
-                               "nothing to close")
+                return False, Refusal("already_your_practice", "you are already doing that - it is your practice, "
+                                      "and it is where most of your income comes from. "
+                                      "It is a skill this society has, not a concern "
+                                      "you opened, so there is nothing to open and "
+                                      "nothing to close")
             return False, ("that is something the society has, not a concern of "
                            "yours to run")
         if not self.is_venture(node_id):
@@ -329,11 +330,13 @@ class VenturesMixin:
         need_sch, need_art = self.venture_hands(node_id)
         need_sch, need_art = need_sch * add_units, need_art * add_units
         if need_sch > sch_free + 0.01 or need_art > art_free + 0.01:
-            return False, ("nobody free to keep an eye on the extra %.2f units "
-                           "of it: it needs %.2f more scholars and %.2f more "
-                           "craftsmen to supervise, and you have %.2f and %.2f "
-                           "not already watching something else"
-                           % (add_units, need_sch, need_art, sch_free, art_free))
+            return False, Refusal("supervisors_missing", "nobody free to keep an eye on the extra %.2f units "
+                                  "of it: it needs %.2f more scholars and %.2f more "
+                                  "craftsmen to supervise, and you have %.2f and %.2f "
+                                  "not already watching something else"
+                                  % (add_units, need_sch, need_art, sch_free, art_free),
+                                  scholars_needed=need_sch, craftsmen_needed=need_art,
+                                  scholars_free=sch_free, craftsmen_free=art_free)
         fee = self.institution_unit_cost(node_id, have, add_units)
         if pay:
             if fee > self.spending_power("buy"):

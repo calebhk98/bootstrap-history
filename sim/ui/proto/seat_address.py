@@ -18,8 +18,9 @@ def addressed_seat(seat_ids: Iterable[str], cmd: Mapping[str, Any], session_seat
         return None, {"ok": False, "error": "as must be a seat id in quotes, not %s. Nothing was changed."
                                             % type(requested).__name__}
     if requested not in known:
-        return None, {"ok": False, "error": "there is no seat %r. The seats are: %s. Nothing was changed."
-                                            % (requested, ", ".join(known))}
+        return None, {"ok": False, "cause": "unknown_seat", "choices": known,
+                      "error": "there is no seat %r. The seats are: %s. Nothing was changed."
+                               % (requested, ", ".join(known))}
     return requested, None
 
 

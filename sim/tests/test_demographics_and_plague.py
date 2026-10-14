@@ -8,6 +8,7 @@ note. Checks moved verbatim; each one's own comment explains the break it
 guards.
 """
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of, facts_of
 
 
 # --- JOB 2: A PLAGUE MOVES THE WHOLE SOCIETY, NOT JUST YOUR OWN HOUSEHOLD. A
@@ -67,7 +68,8 @@ check("wages remain elevated the year after a mortality shock",
       s.wage_index > _normal_wage * 1.2, (_normal_wage, s.wage_index))
 check("the wage cascade is LOGGED, so a player can see why their wage bill "
       "jumped instead of having to notice it in the accounts",
-      any("running" in message and "above normal" in message for _year, message in s.log),
+      any(cause_of(message) == "wage_cascade" and facts_of(message)["wage_premium_percent"] > 0
+          for _year, message in s.log),
       [message for _year, message in s.log if "wage" in message.lower()])
 
 # --- recovery is now EMERGENT from self.population's own vital rates
@@ -194,6 +196,7 @@ _line_heavy = _plague_line(_HEAVY)
 _line_some = _plague_line(["sanitation_antisepsis", "med_quarantine_sanitation"])
 check("an unmitigated plague states its own historical rate plainly",
       "staff -28%" in _line_none, _line_none)
+# presentation: the plague line's clauses
 check("a heavily mitigated plague's OWN clause never re-quotes the "
       "historical -28% as if it were the outcome - only the near-zero "
       "figure the mechanic actually applied",
@@ -201,9 +204,11 @@ check("a heavily mitigated plague's OWN clause never re-quotes the "
       and "would have been" not in _line_heavy
       and "staff -28%" not in _line_heavy.split(".")[0],
       _line_heavy)
+# presentation: the plague line's clauses
 check("a partially mitigated plague is 'softened', not 'held off almost "
       "entirely' and not silent about the hedge either",
       "softened by" in _line_some, _line_some)
+# presentation: the plague line's clauses
 check("the empire-wide toll is still told, in every case, as a separate "
       "fact explicitly not the household's own experience",
       all("Empire-wide, population -28%" in line and "either way" in line

@@ -4,6 +4,7 @@ import json
 
 from . import available_args, command_registry
 from sim.engine.ui_port import units
+from sim.refusal import Refusal
 from .buy_targets import canonical_target
 from .dispatch import KNOWN_COMMANDS
 from .nodes import NODE_IDS, NODE_IDS_LOWER
@@ -340,11 +341,11 @@ def _parse_rush(command, rest, words, nums, want_json):
                     # shrug. Falling through to no limit at all means the
                     # one typo a player can make while trying to be
                     # careful is the typo that starts everything.
-                    return None, ("'%s' is not a number of things to "
-                                  "start. 'rush limit:3' begins the three "
-                                  "highest-leverage things you could "
-                                  "begin today; 'rush' alone begins every "
-                                  "one of them." % token_text[len(pre):])
+                    return None, Refusal("cap_not_a_number", "'%s' is not a number of things to "
+                                         "start. 'rush limit:3' begins the three "
+                                         "highest-leverage things you could "
+                                         "begin today; 'rush' alone begins every "
+                                         "one of them." % token_text[len(pre):])
                 _lim = value
                 break
     # fiscal caps take key:value or key=value; a cap that will not parse is refused

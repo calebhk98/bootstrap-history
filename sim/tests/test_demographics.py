@@ -96,6 +96,7 @@ check("every trade in the wage table gets a row, fog or no fog - this is "
       "demography, not the tech tree",
       {trade_row["trade"] for trade_row in _pop_out.get("trades", [])} == set(WAGES),
       sorted(set(WAGES) - {trade_row["trade"] for trade_row in _pop_out.get("trades", [])}))
+# presentation: the population note's framing
 check("the one-town framing is actually said, not only computed",
       "one household" in (_pop_out.get("what_this_means") or "").lower()
       or "ONE household" in (_pop_out.get("what_this_means") or ""),

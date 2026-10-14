@@ -3,6 +3,7 @@ practice lost for it, and a dry run before committing.
 
 Methods of Labour, split from labour_wages.py, which prices the trade.
 """
+from sim.refusal import LogLine
 
 
 class WageLedgerMixin:
@@ -40,12 +41,13 @@ class WageLedgerMixin:
         """One log line saying what the sale earned and what it cost."""
         self._world.state.household.log.append((
             self._world.state.scenario.year,
-            "wage work: sold %s hours as a %s for %s; your practice will "
-            "earn %s less this year, so the net is %s"
-            % (self._world.plain_number(hours), trade, self._world.money_text(pay, grouped=True, short=True),
-               self._world.money_text(displaced, grouped=True, short=True),
-               ("+" if round(pay) >= round(displaced) else "-")
-               + self._world.money_text(abs(round(pay) - round(displaced)), grouped=True, short=True))))
+            LogLine("wage_work_sold", "wage work: sold %s hours as a %s for %s; your practice will "
+                    "earn %s less this year, so the net is %s"
+                    % (self._world.plain_number(hours), trade, self._world.money_text(pay, grouped=True, short=True),
+                       self._world.money_text(displaced, grouped=True, short=True),
+                       ("+" if round(pay) >= round(displaced) else "-")
+                       + self._world.money_text(abs(round(pay) - round(displaced)), grouped=True, short=True)),
+                    trade=trade, hours=hours, pay=pay, displaced=displaced)))
 
     def work_for_wages_dry_run(self, trade, hours):
         """(pay, message, practice income given up) for work_for_wages, with

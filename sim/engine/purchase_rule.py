@@ -7,6 +7,8 @@ against a purchase. Any actor with a household and a credit line uses it.
 """
 import math
 
+from sim.refusal import Refusal
+
 from sim.engine import cash_remedies
 from sim.engine.units_prose import money_text
 
@@ -49,12 +51,13 @@ def refusal_text(actor, what, cost):
     budget = purchase_budget(actor)
     short = max(0.0, cost - budget)
     share = actor.SPENDING_DRAW_SHARE_ORDINARY
-    return ("cannot afford %s: it costs %s and you could raise %s, "
-            "so you are %s short. The rule: %s (cash %s, %d%% of your credit "
-            "line of %s, net of any debt). Earning or paying down %s "
-            "would allow it.%s Nothing was changed."
-            % (what, money_text(cost, actor, grouped=True), money_text(budget, actor, grouped=True),
-               money_text(short, actor, grouped=True), afford_means(),
-               money_text(actor.capital, actor, grouped=True), round(share * 100),
-               money_text(actor.credit_limit(), actor, grouped=True), money_text(short, actor, grouped=True),
-               remedies_text(actor)))
+    return Refusal("cash_short", "cannot afford %s: it costs %s and you could raise %s, "
+                   "so you are %s short. The rule: %s (cash %s, %d%% of your credit "
+                   "line of %s, net of any debt). Earning or paying down %s "
+                   "would allow it.%s Nothing was changed."
+                   % (what, money_text(cost, actor, grouped=True), money_text(budget, actor, grouped=True),
+                      money_text(short, actor, grouped=True), afford_means(),
+                      money_text(actor.capital, actor, grouped=True), round(share * 100),
+                      money_text(actor.credit_limit(), actor, grouped=True), money_text(short, actor, grouped=True),
+                      remedies_text(actor)),
+                   cost=cost, budget=budget, short=short)

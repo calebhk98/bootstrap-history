@@ -2,6 +2,7 @@
 
 import sim.engine.ui_port as ui_port
 import math, re
+from sim.refusal import Refusal
 from sim.engine.ui_port import closure, money_text, plain_number
 
 
@@ -36,20 +37,20 @@ def _agent_end_reason(sim):
             _goal_name = (sim.nodes[sim.goal]["name"].lower() if sim.goal in sim.nodes
                          else "the goal")
             if sim.goal_year:
-                return ("the horizon at %d AD is reached. You reached %s in "
-                        "%d AD and kept building for %d years after it."
-                        % (end_year, _goal_name, sim.goal_year,
-                           end_year - sim.goal_year))
-            return ("the horizon at %d AD is reached. You built %d things of your "
-                    "own and did not reach %s."
-                    % (end_year, len(sim.done - sim.granted), _goal_name))
+                return Refusal("horizon_goal_reached", "the horizon at %d AD is reached. You reached %s in "
+                               "%d AD and kept building for %d years after it."
+                               % (end_year, _goal_name, sim.goal_year,
+                                  end_year - sim.goal_year))
+            return Refusal("horizon_goal_missed", "the horizon at %d AD is reached. You built %d things of your "
+                           "own and did not reach %s."
+                           % (end_year, len(sim.done - sim.granted), _goal_name))
         if sim.goal_year:
-            return ("the horizon at %d AD is reached. You reached %s in %d AD "
-                    "and kept building for %d years after it."
-                    % (end_year,
-                       sim.nodes[sim.goal]["name"].lower() if sim.goal in sim.nodes
-                       else "the goal", sim.goal_year, end_year - sim.goal_year))
-        return "ran out of horizon (%d AD) without reaching the goal" % end_year
+            return Refusal("horizon_goal_reached", "the horizon at %d AD is reached. You reached %s in %d AD "
+                           "and kept building for %d years after it."
+                           % (end_year,
+                              sim.nodes[sim.goal]["name"].lower() if sim.goal in sim.nodes
+                              else "the goal", sim.goal_year, end_year - sim.goal_year))
+        return Refusal("horizon_goal_missed", "ran out of horizon (%d AD) without reaching the goal" % end_year)
     return None
 
 
@@ -155,20 +156,20 @@ def _waiting_on(sim, nodes, node_id, progress, bill):
     # its leading words, so the merged sentence keeps "nobody to do the
     # work" first and unchanged.
     if staffing_short and booked_short:
-        return ("nobody to do the work: " + "; ".join(sorted(staffing_short)[:3])
-                + ". Also short, but only because your own other work has it "
-                  "booked: " + "; ".join(sorted(booked_short)[:3])
-                + ". " + _STAFFING_HINT)
+        return Refusal("staffing", "nobody to do the work: " + "; ".join(sorted(staffing_short)[:3])
+                       + ". Also short, but only because your own other work has it "
+                         "booked: " + "; ".join(sorted(booked_short)[:3])
+                       + ". " + _STAFFING_HINT)
     if staffing_short:
-        return "nobody to do the work: " + "; ".join(sorted(staffing_short)[:3]) + ". " + _STAFFING_HINT
+        return Refusal("staffing", "nobody to do the work: " + "; ".join(sorted(staffing_short)[:3]) + ". " + _STAFFING_HINT)
     if booked_short:
         # A DIFFERENT SENTENCE FOR A DIFFERENT REMEDY. The society CAN field
         # this trade; it is your own other active work that has it booked.
         # Teaching or hiring more does nothing here - 'portfolio' (the
         # aggregate demand-vs-supply view) or stopping something else does.
-        return ("trade hours already booked: " + "; ".join(sorted(booked_short)[:3])
-                + ". 'portfolio' shows the competing demand; 'priority <id> first' or "
-                  "'allocate <id> <hours>' decides who gets the hours")
+        return Refusal("trade_hours", "trade hours already booked: " + "; ".join(sorted(booked_short)[:3])
+                       + ". 'portfolio' shows the competing demand; 'priority <id> first' or "
+                         "'allocate <id> <hours>' decides who gets the hours")
     if progress["ph_left"] <= 0 and bill > 0.5:
         # MONEY YOU HAVE IS NOT MONEY YOU ARE SHORT OF: step() pays at most
         # one year's instalment - the cost divided by the node's calendar
@@ -179,26 +180,26 @@ def _waiting_on(sim, nodes, node_id, progress, bill):
         # pace, and that has to be said.
         per_year = sim.project_cost(node_id) * frac
         if per_year > 0.5 and sim.spending_power("buy") >= per_year:
-            return ("the pace it can absorb money: at most %s a year goes into "
-                    "this (%s still owed, about %.0f more year%s at that rate). "
-                    "Money in hand cannot buy it down faster"
-                    % (money_text(per_year, sim, grouped=True), money_text(bill, sim, grouped=True),
-                       math.ceil(bill / per_year),
-                       "" if math.ceil(bill / per_year) == 1 else "s"))
+            return Refusal("money_pace", "the pace it can absorb money: at most %s a year goes into "
+                           "this (%s still owed, about %.0f more year%s at that rate). "
+                           "Money in hand cannot buy it down faster"
+                           % (money_text(per_year, sim, grouped=True), money_text(bill, sim, grouped=True),
+                              math.ceil(bill / per_year),
+                              "" if math.ceil(bill / per_year) == 1 else "s"))
         if sim.spending_power("buy") <= 0.5:
-            return ("money: fully blocked until funding is available; %s is "
-                    "still owed and you cannot raise any of the next %s "
-                    "instalment now"
-                    % (money_text(bill, sim, grouped=True), money_text(per_year, sim, grouped=True)))
-        return ("money: unfunded now; will fund opportunistically as revenue "
-                "arrives this year: %s still owed and the next instalment of "
-                "%s is more than you can raise at this moment"
-                % (money_text(bill, sim, grouped=True), money_text(per_year, sim, grouped=True)))
+            return Refusal("money_blocked", "money: fully blocked until funding is available; %s is "
+                           "still owed and you cannot raise any of the next %s "
+                           "instalment now"
+                           % (money_text(bill, sim, grouped=True), money_text(per_year, sim, grouped=True)))
+        return Refusal("money_unfunded", "money: unfunded now; will fund opportunistically as revenue "
+                       "arrives this year: %s still owed and the next instalment of "
+                       "%s is more than you can raise at this moment"
+                       % (money_text(bill, sim, grouped=True), money_text(per_year, sim, grouped=True)))
     if progress["ph_left"] <= 0:
         years_left = max(1, math.ceil(node["yrs"] - progress.get("yrs", 0.0) - 1e-9))
-        return ("the calendar: the work and the money are done, and the least "
-                "time it takes (%g years) has about %d more year%s to run"
-                % (node["yrs"], years_left, "" if years_left == 1 else "s"))
+        return Refusal("calendar", "the calendar: the work and the money are done, and the least "
+                       "time it takes (%g years) has about %d more year%s to run"
+                       % (node["yrs"], years_left, "" if years_left == 1 else "s"))
     # MATERIALS. A shortage scales only projects consuming its supply pool -
     # see core.py step() 5 - so a project with
     # founder-hours still to spend and nobody short on trade or money can
@@ -208,21 +209,21 @@ def _waiting_on(sim, nodes, node_id, progress, bill):
     # one place that number is computed, read here rather than re-derived.
     _thr = sim.project_resource_throttle(node_id)
     if _thr < 0.98 and sim.binding:
-        return ("materials: this project consumes %s, whose shortage has it "
-                "running at %d%% of the pace its hours alone "
-                "would allow; 'capacity' shows the shortfall"
-                % (sim.binding, round(_thr * 100)))
+        return Refusal("materials", "materials: this project consumes %s, whose shortage has it "
+                       "running at %d%% of the pace its hours alone "
+                       "would allow; 'capacity' shows the shortfall"
+                       % (sim.binding, round(_thr * 100)))
     # Rank, count and pool come from the live queue the allocator also uses.
     _rank, _count, _total = sim.hour_standing(node_id) or (None, None, None)
     if _rank and _count and _count > 1:
-        return ("your hours: priority #%d of %d active projects sharing "
-                "this year's %s directed hours; 'portfolio' shows what "
-                "each one is getting and why"
-                % (_rank, _count, plain_number(_total or 0.0)))
+        return Refusal("founder_hours", "your hours: priority #%d of %d active projects sharing "
+                       "this year's %s directed hours; 'portfolio' shows what "
+                       "each one is getting and why"
+                       % (_rank, _count, plain_number(_total or 0.0)))
     free_hours = max(0.0, sim.labour.director_pool() - sim.labour.director_hours_committed())
-    return ("your hours: %s of your own hours of work are still to do, and "
-            "you have %s uncommitted this year"
-            % (plain_number(progress["ph_left"]), plain_number(free_hours)))
+    return Refusal("founder_hours", "your hours: %s of your own hours of work are still to do, and "
+                   "you have %s uncommitted this year"
+                   % (plain_number(progress["ph_left"]), plain_number(free_hours)))
 
 
 def _goal_progress_count(sim, nodes):

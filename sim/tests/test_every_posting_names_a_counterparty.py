@@ -84,5 +84,6 @@ check("an edge keeps the volume that crossed it", state.edge("edge:test").volume
 strata = [record for record in rich_game.state.actors.records.values() if record.stratum and record.country is None]
 received = {label for record in strata for label in record.income if label != "edge:economy"}
 check("the home country has strata", bool(strata), len(strata))
+# not text: ledger posting reasons are recorded labels
 check("the founder's payroll and the state's pay reach the people's purses",
       "living costs" in received and ("army" in received or "administration" in received), sorted(received))

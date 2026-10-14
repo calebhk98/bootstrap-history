@@ -18,11 +18,14 @@ if os.path.exists(session_path):
 
 _play(["step 2", "quit"], ["--session", session_path, "--fog"], civ="england_1300")
 resumed_text, _ = _play(["state", "quit"], ["--session", session_path])
+# presentation: the play command's printed resume banner
 check("a save resumes without being told again which game it is",
       "Resumed from" in resumed_text and "1302" in resumed_text, resumed_text[:400])
+# presentation: the play command's printed resume banner
 check("fog survives a save and reload, rather than opening the whole tree",
       "Fog of war is on" in resumed_text,
       [line for line in resumed_text.splitlines() if "og of war" in line])
 refused_text, refused_code = _play(["quit"], ["--session", session_path], civ="rome_100ad")
+# presentation: the play command's printed refusal
 check("a --civ that contradicts the save is refused, not started over the top",
       "that save is a" in refused_text and refused_code != 0, (refused_code, refused_text[:300]))

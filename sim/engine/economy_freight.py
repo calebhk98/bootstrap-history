@@ -660,7 +660,9 @@ class FreightMixin:
                    else "you have no working of it yet, so sink one",
                    binding, tonnes_short, binding, tonnes_short)),
                 "commands": ["quote mine %s %d" % (binding, tonnes_short),
-                             "buy mine %s %d" % (binding, tonnes_short)]}
+                             "buy mine %s %d" % (binding, tonnes_short)],
+                "kind": "dig_mine", "has_working": self.mine_capacity.get(binding, 0.0) > 0.0,
+                "short_tonnes": shortfall_t}
         return {"text": (
             self.material_unsupplied_sentence(binding)
             or "Nothing you own supplies %s and the market is out of it; the work waits until something "

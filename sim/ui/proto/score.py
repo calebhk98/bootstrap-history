@@ -3,6 +3,7 @@
 import sim.engine.ui_port as ui_port
 import math
 
+from sim.refusal import cause_of
 from sim.engine.ui_port import closure, critical_path, topo_order
 
 from .state_waiting import _agent_end_reason
@@ -21,7 +22,8 @@ def final_report(sim, nodes):
     nodes = sim.nodes   # the tree in this civilisation's coin
     goal = sim.goal
     earned = sorted(sim.done - sim.granted)
-    out = {"ended_in": sim.year, "why": _agent_end_reason(sim),
+    ending = _agent_end_reason(sim)
+    out = {"ended_in": sim.year, "why": ending, "why_kind": cause_of(ending),
            "you_built": len(earned),
            "this_society_already_had": len(sim.granted),
            "money": round(sim.capital, 1),

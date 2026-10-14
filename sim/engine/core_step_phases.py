@@ -21,6 +21,7 @@ import math
 import random
 from dataclasses import dataclass
 
+from sim.refusal import LogLine
 from sim.unit_conversions import PERCENT_SCALE
 from . import automation_audit
 from .units_prose import money_text, plain_number
@@ -316,18 +317,20 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
                 if _wd - (_already + _got) <= 1.0:
                     self.clear_unused_hours_report("work")
                 elif self.unused_hours_is_news("work", [round(_wd), _work_reason]):
-                    self.state.household.log.append((self.state.scenario.year, "DIRECTED HOURS UNUSED: your standing "
-                                         "order to sell %s hours a year as a "
-                                         "%s only managed %s this year - %s. "
-                                         "'allocate' changes or clears it"
-                                     % (plain_number(_wd), self.state.household.work_trade,
-                                        plain_number(_already + _got),
-                                        "no more of your own hours were left "
-                                        "to sell once your projects and "
-                                        "training had theirs"
-                                        if _room < _want else
-                                        "nobody here will pay for that trade "
-                                        "any longer" )))
+                    self.state.household.log.append((self.state.scenario.year, LogLine(
+                        "directed_hours_unused", "DIRECTED HOURS UNUSED: your standing "
+                        "order to sell %s hours a year as a "
+                        "%s only managed %s this year - %s. "
+                        "'allocate' changes or clears it"
+                        % (plain_number(_wd), self.state.household.work_trade,
+                           plain_number(_already + _got),
+                           "no more of your own hours were left "
+                           "to sell once your projects and "
+                           "training had theirs"
+                           if _room < _want else
+                           "nobody here will pay for that trade "
+                           "any longer"),
+                        trade=self.state.household.work_trade, reason="no_hours_left" if _room < _want else "nobody_pays")))
 
     def _step_wage_fallback(self, remaining):
         # 5b. IF THERE IS NO WORK AND NO MONEY, TAKE A JOB. A man who arrives
@@ -573,8 +576,10 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
             if self.state.founder.life_left <= 0:
                 self.state.founder.founder_alive = False
                 self.state.household.log.append(
-                    (self.state.scenario.year, "THE FOUNDER DIES, aged about %d. %s"
-                     % (self.founder_age(), self._deputy_consequence())))
+                    (self.state.scenario.year, LogLine(
+                        "founder_dies", "THE FOUNDER DIES, aged about %d. %s"
+                        % (self.founder_age(), self._deputy_consequence()),
+                        aged=self.founder_age(), deputies_carry_the_work=bool(self.deputies_carry_the_work()))))
         # a programme with no director is not paused, it is dissolving
         if not self.state.founder.founder_alive and not self.deputies_carry_the_work():
             self.state.projects.stalled += 1
@@ -591,10 +596,12 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
                         self.state.projects.done.discard(node_id)
                         self._done_changed()
             if self.state.projects.stalled in (3, 6, 9, 11):
-                self.state.household.log.append((self.state.scenario.year, "THE PROGRAMME IS DISSOLVING: %d year(s) "
-                                     "since the founder died. %s What you built is being "
-                                     "forgotten. The run ends at twelve."
-                                 % (self.state.projects.stalled, self._deputy_hours_sentence())))
+                self.state.household.log.append((self.state.scenario.year, LogLine(
+                    "programme_dissolving", "THE PROGRAMME IS DISSOLVING: %d year(s) "
+                    "since the founder died. %s What you built is being "
+                    "forgotten. The run ends at twelve."
+                    % (self.state.projects.stalled, self._deputy_hours_sentence()),
+                    years_since_death=self.state.projects.stalled, run_ends_after_years=self.DISSOLUTION_YEARS_UNTIL_END)))
             if self.state.projects.stalled >= self.DISSOLUTION_YEARS_UNTIL_END:
                 self._catastrophe("the founder died without training successors; "
                                   + self._what_survived_the_dissolution())

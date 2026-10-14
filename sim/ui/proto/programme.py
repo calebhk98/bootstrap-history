@@ -26,30 +26,43 @@ def target_text(sim, target):
     return "category %s" % target["value"]
 
 
-def pause_reason(sim, programme):
-    """Why the programme must not act this year, or None. Updates the pause when a set condition holds or clears."""
+def pause(sim, programme):
+    """(kind, material, text) for why the programme must not act this year, or None.
+
+    Updates the pause when a set condition holds or clears. `kind` is the stable code a reader tests
+    (the text is for the player); `material` names the short material for a shortage pause.
+    """
     pauses = programme.get("pauses", {})
     condition = tripped(sim, pauses)
+    suffix = "" if programme.get("auto_resume") else " (stays paused until you resume)"
     if programme.get("paused"):
         held = programme.get("paused_by")
         if not held:
-            return "paused by the player"
+            return "paused_by_player", None, "paused by the player"
         if condition is None and programme.get("auto_resume"):
-            programme["paused"], programme["paused_by"] = False, None
+            programme["paused"], programme["paused_by"], programme["paused_kind"] = False, None, None
         else:
-            return "paused: %s%s" % (condition or held, "" if programme.get("auto_resume")
-                                     else " (stays paused until you resume)")
+            kind, material, text = condition or (programme.get("paused_kind"), programme.get("paused_material"), held)
+            return kind, material, "paused: %s%s" % (text, suffix)
     if condition:
-        programme["paused"], programme["paused_by"] = True, condition
-        return "paused: %s%s" % (condition, "" if programme.get("auto_resume") else " (stays paused until you resume)")
+        kind, material, text = condition
+        programme["paused"], programme["paused_by"] = True, text
+        programme["paused_kind"], programme["paused_material"] = kind, material
+        return kind, material, "paused: %s%s" % (text, suffix)
     if sim.capital < 0 and "pause_debt" not in pauses:
-        return "in debt (capital below zero)"
+        return "in_debt", None, "in debt (capital below zero)"
     floor = programme.get("caps", {}).get("reserve_cash")
     if floor is not None and sim.capital < floor:
-        return "cash is below the reserve floor"
+        return "below_reserve_floor", None, "cash is below the reserve floor"
     if floor is not None and sim.capital - standing_draw(sim, programme) < floor:
-        return "cash after this year's standing draw would fall below the reserve floor"
+        return "draw_would_breach_reserve_floor", None, "cash after this year's standing draw would fall below the reserve floor"
     return None
+
+
+def pause_reason(sim, programme):
+    """The text of `pause`, or None."""
+    held = pause(sim, programme)
+    return held[2] if held else None
 
 
 def hours_started_this_year(sim, programme):
@@ -64,17 +77,17 @@ def _hours_room(sim, programme):
     if caps.get("max_total_hours") is not None:
         room = caps["max_total_hours"] - programme.get("hours", 0.0)
         if room <= 1e-9:
-            return room, "founder hour cap reached (total)"
+            return room, ("hour_cap_total", "founder hour cap reached (total)")
     if caps.get(ANNUAL_HOURS_KEY) is not None:
         yearly = caps[ANNUAL_HOURS_KEY] - hours_started_this_year(sim, programme)
         if yearly <= 1e-9:
-            return yearly, "founder hour cap reached (this year)"
+            return yearly, ("hour_cap_this_year", "founder hour cap reached (this year)")
         room = yearly if room is None else min(room, yearly)
     return room, None
 
 
 def _year_rush(sim, programme):
-    """(rush command, why not) for this year's start under the programme's caps."""
+    """(rush command, (kind, text) why not) for this year's start under the programme's caps."""
     caps = dict(programme.get("caps", {}))
     caps.pop(ANNUAL_HOURS_KEY, None)
     hours_room, hours_why = _hours_room(sim, programme)
@@ -86,20 +99,20 @@ def _year_rush(sim, programme):
     if total is not None:
         left = total - programme.get("committed", 0.0)
         if left <= 1e-9:
-            return None, "total cap reached"
+            return None, ("total_cap_reached", "total cap reached")
         caps["max_total_cost"] = left
     if caps.get("max_annual_draw") is not None:
         room = caps["max_annual_draw"] - standing_draw(sim, programme)
         if room <= 1e-9:
-            return None, "annual draw cap used up by projects it already started"
+            return None, ("annual_draw_cap_used", "annual draw cap used up by projects it already started")
         caps["max_annual_draw"] = room
     target = programme["target"]
     if target["kind"] == "goal":
         if target["value"] in sim.done:
-            return None, "goal reached"
+            return None, ("goal_reached", "goal reached")
         ids = route_order(sim, target["value"])
         if not ids:
-            return None, "nothing on the route is startable this year"
+            return None, ("nothing_startable", "nothing on the route is startable this year")
         return rush_command(ids, caps=caps, limit=programme.get("limit")), None
     return rush_command(category=target["value"], caps=caps, limit=programme.get("limit")), None
 
@@ -111,14 +124,20 @@ def programme_before_year(sim, nodes):
         return []
     row = {"year": sim.year, "what": "programme for " + target_text(sim, programme["target"]),
            "started": [], "skipped": [], "spent": 0.0}
-    reason = pause_reason(sim, programme)
-    command, reason = (None, reason) if reason else _year_rush(sim, programme)
+    held = pause(sim, programme)
+    if held:
+        kind, material, text = held
+        command, why = None, (kind, text)
+        if material:
+            row["did_nothing_material"] = material
+    else:
+        command, why = _year_rush(sim, programme)
     if command is None:
-        row["did_nothing_because"] = reason
+        row["did_nothing_kind"], row["did_nothing_because"] = why
         return [row]
     result = _cmd_rush(sim, nodes, command, None)
     if not result.get("ok"):
-        row["did_nothing_because"] = result.get("error", "refused")
+        row["did_nothing_kind"], row["did_nothing_because"] = "refused", result.get("error", "refused")
         return [row]
     row["started"] = [{"id": item["id"], "name": item["name"], "cost": item["cost"]}
                       for item in result["started"]]
@@ -131,7 +150,7 @@ def programme_before_year(sim, nodes):
     programme["hours"] = programme.get("hours", 0.0) + row["hours"]
     programme["hours_year"] = [sim.year, hours_started_this_year(sim, programme) + row["hours"]]
     if not row["started"]:
-        row["did_nothing_because"] = "nothing fit the caps or exclusions"
+        row["did_nothing_kind"], row["did_nothing_because"] = "nothing_fit", "nothing fit the caps or exclusions"
     return [row]
 
 

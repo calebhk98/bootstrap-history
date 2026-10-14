@@ -62,20 +62,20 @@ class HazardReliefMixin:
                     "factor": 1.0 - share * strength,
                     "lapsed_node": lapsed_node if closed else None,
                     "short_of": short_of,
-                    "partly_adopted_nationally": adopted_nationally > 0.0})
+                    "partly_adopted_nationally": adopted_nationally > 0.0, "source": "counter"})
         if kind == "output_factor":
             war_relief, reason = self._military_war_relief()
             if reason:
-                entries.append({"node": None, "label": reason, "factor": war_relief})
+                entries.append({"node": None, "label": reason, "factor": war_relief, "source": "own_military_strength"})
             state_relief, state_reason = self._state_military_diffusion_relief(
                 self.STATE_MIL_RELIEF_PER_WEAPON_OUTPUT)
             if state_reason:
-                entries.append({"node": None, "label": state_reason, "factor": state_relief})
+                entries.append({"node": None, "label": state_reason, "factor": state_relief, "source": "state_weapons"})
         elif kind == "sack_chance":
             state_relief, state_reason = self._state_military_diffusion_relief(
                 self.STATE_MIL_RELIEF_PER_WEAPON_SACK)
             if state_reason:
-                entries.append({"node": None, "label": state_reason, "factor": state_relief})
+                entries.append({"node": None, "label": state_reason, "factor": state_relief, "source": "state_weapons"})
         return entries
 
     def _entry_words(self, entry):

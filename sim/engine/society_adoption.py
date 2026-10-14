@@ -15,6 +15,7 @@ their own. Behaviour is unchanged and verified byte-identical.
 """
 
 from sim.constants import declare
+from sim.refusal import LogLine
 from .data import (TECH_EFFECTS, TRADES_ABSENT)
 
 
@@ -100,7 +101,7 @@ class AdoptionMixin:
         eff = TECH_EFFECTS.get(node_id)
         if not eff:
             return
-        changed = []
+        changed, changed_fields, changes = [], [], {}
         for field, delta in eff.items():
             if field.startswith("_") or not isinstance(delta, (int, float)):
                 continue
@@ -111,6 +112,8 @@ class AdoptionMixin:
                     min(self.VALUE_WEIGHT_CEILING, before + delta))
                 changed.append("%s %.2f -> %.2f" % (
                     field, before, self.value_weights[field]))
+                changed_fields.append(field)
+                changes[field] = (before, self.value_weights[field])
             elif field in ("literacy_general", "literacy_elite", "state_capacity"):
                 before = float(self.civ.get(field, 0.0))
                 ceiling = {"literacy_elite": self.literacy_ceiling_elite,
@@ -122,6 +125,8 @@ class AdoptionMixin:
                 changed.append("%s %.1f%% -> %.1f%% (%+.1f points, one step)" % (
                     field, before * 100, self.civ[field] * 100,
                     (self.civ[field] - before) * 100))
+                changed_fields.append(field)
+                changes[field] = (before, self.civ[field])
             elif field == "population" and node_id not in self.coverage_nodes():
                 # Only the disease technologies carry this weight; the
                 # disease burden reads it live from the tree.
@@ -134,10 +139,13 @@ class AdoptionMixin:
                                "pre-industrial level, which slows deaths and "
                                "raises survival from the next year)"
                                % (burden_before, burden))
+                changed_fields.append(field)
+                changes[field] = (burden_before, burden)
         if changed:
-            self.state.household.log.append((self.state.scenario.year,
-                "%s changes the society, the whole of it at once rather than one "
-                "site: %s" % (self.nodes[node_id]["name"], "; ".join(sorted(changed)))))
+            self.state.household.log.append((self.state.scenario.year, LogLine(
+                "society_changed", "%s changes the society, the whole of it at once rather than one "
+                "site: %s" % (self.nodes[node_id]["name"], "; ".join(sorted(changed))),
+                project=node_id, fields=sorted(changed_fields), changes=changes)))
 
     # ---- EDUCATING A WHOLE SOCIETY, NOT JUST A HOUSEHOLD -------------------
     # A school teaches a little more every year it stays open. What limits

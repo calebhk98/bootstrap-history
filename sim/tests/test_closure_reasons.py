@@ -53,6 +53,7 @@ check("a manual mothball records a manual closure with its own year",
       s_stale.closure_of(NODE_ID) == {"reason": "manual", "year": s_stale.year},
       s_stale.closure_of(NODE_ID))
 ok_again, message_again, _ = restore_price(s_stale)
+# presentation: the restore message must not blame an old closure
 check("restoring a manual mothball does not blame an old staffing closure",
       ok_again and "staffing" not in message_again and "years" not in message_again,
       message_again)

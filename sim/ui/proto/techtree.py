@@ -1,6 +1,7 @@
 """The tech tree itself, viewed through the protocol: why/available and node-explain, and the subject grouping they share."""
 
 import sim.engine.ui_port as ui_port
+from sim.refusal import Refusal, cause_of
 import hashlib
 
 from sim.engine.ui_port import closure, critical_path, downstream_count, is_downstream
@@ -767,8 +768,8 @@ def _agent_available(sim, nodes, cmd=None):
      _sort_fn, reverse, heard_offset) = _available_params(cmd)
     if sort_by and _sort_fn is None:
         return {"ok": False,
-                "error": "cannot sort by %r; sort by one of: %s. Nothing was changed."
-                         % (sort_by, ", ".join(_SORT_KEY_NAMES))}
+                "error": Refusal("unknown_sort_key", "cannot sort by %r; sort by one of: %s. Nothing was changed."
+                                 % (sort_by, ", ".join(_SORT_KEY_NAMES)), choices=_SORT_KEY_NAMES)}
 
     state, filter_error = tree_filters.parse_state(cmd)
     tag, category, topic_error = tree_filters.parse_topic(cmd, nodes)
@@ -1406,7 +1407,7 @@ def _blocker_fields(sim, node_id, started):
     """The kind-classified blockers: the same list the `start` gate reads."""
     if started:
         return {"blocked_kind": None, "blockers": []}
-    blockers = [{"kind": blocker["kind"], "text": sim.fog_scrub(blocker["text"]), "ids": blocker["ids"]}
+    blockers = [{"kind": blocker["kind"], "cause": blocker["cause"], "text": sim.fog_scrub(blocker["text"]), "ids": blocker["ids"]}
                 for blocker in sim.start_blockers(node_id)]
     return {"blocked_kind": blockers[0]["kind"] if blockers else None, "blockers": blockers}
 
@@ -1449,6 +1450,7 @@ def _explain_active_wait(sim, nodes, node_id):
         if _bill is None:
             _bill = max(0.0, sim.project_cost(node_id) - _st["spent"])
         out["waiting_on"] = _waiting_on(sim, nodes, node_id, _st, _bill)
+        out["waiting_on_kind"] = cause_of(out["waiting_on"])
         # SAME FIELD `state` ALREADY PRINTS PER PROJECT, HERE TOO. Arrears
         # gives unspendable founder hours back (core.py's underfunded path),
         # so ph_left never sits at 0 and waiting_on's money branch above can

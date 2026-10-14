@@ -55,7 +55,7 @@ check("why <figure> falls through to the figure inspector",
 
 unknown = ask(played, cmd="figures", id="nonsense")
 check("an unknown figure is refused with the list",
-      not unknown.get("ok") and "upkeep" in str(unknown), unknown)
+      not unknown.get("ok") and unknown.get("cause") == "unknown_figure" and "upkeep" in unknown.get("choices", ()), unknown)
 
 fresh = sim(capital=1_000_000.0)
 before_any_year = ask(fresh, cmd="figures", id="upkeep")

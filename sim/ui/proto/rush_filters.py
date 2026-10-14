@@ -1,4 +1,5 @@
 """Filters a player puts on a bulk start: by subject, per-project cost and founder hours."""
+from sim.refusal import Refusal
 
 
 def parse_rush_filters(cmd, nodes):
@@ -10,7 +11,7 @@ def parse_rush_filters(cmd, nodes):
         wanted = [node_id.strip() for node_id in listed if str(node_id).strip()]
         unknown = [node_id for node_id in wanted if node_id not in nodes]
         if unknown:
-            return None, "unknown node id(s) in ids: %s" % ", ".join(unknown)
+            return None, Refusal("unknown_node_ids", "unknown node id(s) in ids: %s" % ", ".join(unknown))
         filters["ids"] = wanted
     category = cmd.get("category", cmd.get("filter"))
     if category not in (None, ""):

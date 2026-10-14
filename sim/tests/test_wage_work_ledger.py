@@ -31,7 +31,7 @@ check("`money` itemises wage income and the practice income it displaces",
       and abs(_wage["net"] - (_wage["wage_income"] - _wage["practice_income_displaced"])) < 0.2,
       _wage)
 check("`log` has a line for the wage work",
-      "wage work" in str(_log).lower(), str(_log)[:400])
+      any(entry.get("event_kind") == "wage_work_sold" for entry in _log.get("entries", [])), str(_log)[:400])
 
 # --- complaint 144: the standing order, and the text screen -----------------
 _game = sim()
@@ -54,11 +54,11 @@ check("the money text shows the wage rows and no longer claims the rows "
 _s = _game
 
 _s.annual_material_demand = lambda: {"gold_kg": 0.0}
-_none = _s.shortage_remedy("gold")
+_none = _s.shortage_remedy_plan("gold")
 check("no workings and no shortfall: the remedy says to sink one, not that "
       "your workings cover demand",
-      "already cover" not in _none and "sink" in _none.lower(), _none)
+      _none["kind"] == "dig_mine" and not _none["has_working"] and "buy mine gold 1" in _none["commands"], _none)
 _s.household.mines.append({"material": "gold", "capacity": 5.0})
-_covered = _s.shortage_remedy("gold")
+_covered = _s.shortage_remedy_plan("gold")
 check("workings that do cover demand still say so",
-      "already cover" in _covered, _covered)
+      _covered["kind"] == "dig_mine" and _covered["has_working"] and _covered["short_tonnes"] < 1.0, _covered)

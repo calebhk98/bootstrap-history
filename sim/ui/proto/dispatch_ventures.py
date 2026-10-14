@@ -19,6 +19,7 @@ from sim.engine.ui_port import TRADE_FAMILY, downstream_count
 from sim.engine.ui_port import purchase_budget
 from .nodes import _did_you_mean
 from .quantity_units import read_quantity
+from .start_refusal import refusal_fields
 from sim.engine.ui_port import money_text, plain_number
 from sim.ui.memory import load_state, save_state
 from .util import _flag
@@ -131,7 +132,7 @@ def _cmd_start(sim, nodes, cmd, ended):
                    plain_number(_plan["desired"])))
     started, why = sim.start_project(node_id, precaution=bool(cmd.get("precaution")))
     if not started:
-        return {"ok": False, "error": why}
+        return {"ok": False, "error": why, **refusal_fields(sim, node_id)}
     node = nodes[node_id]
     # SAY SO, FOR THE PLAYER'S OWN RECORD: start_project itself only logs
     # the RESTART case (see its own self.log.append for "begun again"), so

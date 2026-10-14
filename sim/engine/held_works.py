@@ -4,6 +4,8 @@ A node done is held; a venture that is shut is not (`running`); an action's decl
 (sim/engine/action_results.py) stand while the action is held. Every reader of "which technologies do
 these people hold" calls `held_and_running` rather than building a set from `done`.
 """
+from sim.refusal import Refusal
+
 from . import action_results
 
 
@@ -38,4 +40,4 @@ class HeldWorksMixin:
             return None
         if action_results.token("partner", civilization_id) in self.held_and_running():
             return None
-        return "you have not yet reached %s" % civilization_id
+        return Refusal("partner_not_reached", "you have not yet reached %s" % civilization_id)

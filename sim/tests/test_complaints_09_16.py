@@ -1,5 +1,6 @@
 """Focused regressions for the second group of playtest complaints."""
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of
 from sim.ui.protocol import _waiting_on as _waiting_on
 
 
@@ -16,7 +17,7 @@ _blocked.active[_money_node] = dict(_money_state)
 _blocked_message = _waiting_on(_blocked, NODES, _money_node,
                                _blocked.active[_money_node], 9000.0)
 check("a project with no spending power is labelled fully blocked",
-      _blocked_message.startswith("money: fully blocked"), _blocked_message)
+      cause_of(_blocked_message) == "money_blocked", _blocked_message)
 
 _opportunistic = sim(capital=hours_money(20.2))
 _opportunistic.project_cost = lambda k: hours_money(181000)
@@ -24,8 +25,7 @@ _opportunistic.active[_money_node] = dict(_money_state)
 _opportunistic_message = _waiting_on(
     _opportunistic, NODES, _money_node, _opportunistic.active[_money_node], hours_money(181000))
 check("a project with some funding access is labelled opportunistic",
-      _opportunistic_message.startswith(
-          "money: unfunded now; will fund opportunistically"),
+      cause_of(_opportunistic_message) == "money_unfunded",
       _opportunistic_message)
 
 
@@ -87,8 +87,8 @@ check("the misleading old interest-per-year field is gone",
 s = sim()
 s.annual_material_demand = lambda: {"saltpetre_kg": 1100.0}
 s._material_market_tonnes = lambda material: 0.0
-msg = s.shortage_remedy("saltpetre")
+plan = s.shortage_remedy_plan("saltpetre")
 check("nitre advice is sized from the current deficit plus its stated buffer",
-      "buy nitre 1700" in msg and "20% safety buffer" in msg, msg)
+      plan["commands"] == ["buy nitre 1700"], plan)
 check("nitre advice no longer recommends a fixed twenty-thousand-square-metre bed",
-      "buy nitre 20000" not in msg, msg)
+      "buy nitre 20000" not in plan["commands"], plan)

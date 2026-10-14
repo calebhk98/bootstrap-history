@@ -1,6 +1,7 @@
 """Money and industry: the portfolio, capacity, mines, and the economy/changes reports read off the running Sim."""
 
 import sim.engine.ui_port as ui_port
+from sim.refusal import Refusal, cause_of
 from sim.engine.ui_port import WAGES, trade_family
 from sim.ui import figures_headline  # noqa: F401  (registers the headline figures)
 from sim.engine.ui_port import cash_book, cause_book, plain_number
@@ -420,6 +421,12 @@ def _agent_mines(sim):
                     "shut just one of several workings in the same seam."}
 
 
+# The code `_waiting_on` attaches to its sentence, and the constraint it stands for.
+WAITING_CONSTRAINT = {"staffing": "staffing", "trade_hours": "trade_hours", "materials": "materials",
+                      "money_pace": "money", "money_blocked": "money", "money_unfunded": "money",
+                      "calendar": "calendar", "founder_hours": "founder_hours"}
+
+
 def _portfolio_constraint(waiting):
     """Which of the SIX things a project could be waiting on, from the
     exact sentence _waiting_on already builds for `state` - a second
@@ -436,6 +443,8 @@ def _portfolio_constraint(waiting):
     """
     if not isinstance(waiting, str):
         return "unclear"
+    if cause_of(waiting):
+        return WAITING_CONSTRAINT.get(cause_of(waiting), "unclear")
     if waiting.startswith("nobody to do the work"):
         return "staffing"
     if waiting.startswith("trade hours already booked"):
@@ -816,10 +825,10 @@ def _changes_baseline(hist, cutoff, current_year):
             break
     if baseline is None:
         earliest = hist[0]["year"]
-        return None, None, {"ok": False,
-                "error": ("this run's own record only goes back to %d AD, %d "
-                          "years ago; ask for %d or fewer"
-                          % (earliest, current_year - earliest, current_year - earliest))}
+        return None, None, {"ok": False, "earliest_year": earliest, "years_of_record": current_year - earliest,
+                "error": Refusal("window_beyond_record", "this run's own record only goes back to %d AD, %d "
+                                 "years ago; ask for %d or fewer"
+                                 % (earliest, current_year - earliest, current_year - earliest))}
     return now, baseline, None
 
 

@@ -19,7 +19,7 @@ proto([{"cmd": "save", "file": _sv}])                       # written unfogged
 _r8, _out8, _rc8 = proto([{"cmd": "load", "file": _sv}, {"cmd": "state"}],
                          fog=True)
 check("a save played without fog cannot be loaded into a fogged game",
-      any("fog" in json.dumps(x).lower() and x.get("ok") is False for x in _r8),
+      any(x.get("cause") == "save_fog_mismatch" and x.get("ok") is False for x in _r8),
       _out8[:200])
 check("...and refusing it does not kill the session", _rc8 == 0)
 if os.path.exists(_svp):

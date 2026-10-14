@@ -62,6 +62,7 @@ alerts = step_alerts(events=events, lost=[{"name": "Aqueduct", "year": 102}],
                      closed_concerns=["Sand filter"], founder_died=None,
                      goal_year=None, stopped_early=None, population_change=-0.4)
 joined = " | ".join(alerts)
+# presentation: what the alert lines name
 check("alerts name credit, sacking, loss, closure and population collapse, not harmless events",
       "CREDIT EXHAUSTED" in joined and "sacked" in joined and "Aqueduct" in joined
       and "Sand filter" in joined and "population" in joined.lower() and "harmless" not in joined, alerts)

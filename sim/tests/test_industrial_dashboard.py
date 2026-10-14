@@ -133,7 +133,8 @@ check("a window narrower than the run's own history is answered directly",
 _chg_far = S._agent_dispatch(_s_chg, NODES, {"cmd": "changes", "years": 50})
 check("a window wider than the run's own recorded history is refused by "
       "name, saying how far back the record actually goes",
-      _chg_far.get("ok") is False and "only goes back to" in _chg_far["error"],
+      _chg_far.get("ok") is False and _chg_far.get("cause") == "window_beyond_record"
+      and 0 < _chg_far.get("years_of_record") < 50,
       _chg_far)
 
 # --- the typed front end reaches all three, the same way it reaches

@@ -5,7 +5,7 @@ class Sector:
 	"""One body of people hurt by the same cause: what it lost, what it lives on, who it is."""
 
 	def __init__(self, kind: str, subject: str, name: str, cause: str, lost_income: float,
-				 income_base: float, members: float, scope: float, technique: str = "") -> None:
+				 income_base: float, members: float, scope: float, technique: str = "", forms: tuple = (), facts: dict = None) -> None:
 		self.kind = kind
 		self.subject = subject
 		self.name = name
@@ -17,6 +17,10 @@ class Sector:
 		self.scope = scope
 		# the technique said to have taken the members' living, when one can be told
 		self.technique = technique
+		# the forms of income that fell (wages, property, or a foundation's lines such as patronage)
+		self.forms = tuple(forms)
+		# the figures the cause states (a trade, a number of firms, each fallen income's share)
+		self.facts = dict(facts or {})
 		# the share of this loss for which the founder is blamed
 		self.blame_share = 1.0
 

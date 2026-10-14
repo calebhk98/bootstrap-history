@@ -2,6 +2,7 @@
 quoted figure, from the bill the player actually bears), 248 (a failed bounty
 is not orphaned) and 249 (selling stock faces the market's limits)."""
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of, facts_of
 from sim.ui.proto.techtree import _explain_timing_and_risk
 
 
@@ -128,7 +129,7 @@ check("it is still the claimant's work: no hours land on the poster",
 check("the attempt is counted and part of the calendar is banked",
       _bounty_sim.failed_attempts[_bounty_id] == 1)
 check("the log says the claimant failed and the prize holds",
-      any("claimant" in text and "prize" in text
+      any(cause_of(text) == "project_failed" and facts_of(text)["severity"] == "claimed"
           for _year, text in _bounty_sim.state.household.log[-3:]),
       _bounty_sim.state.household.log[-3:])
 _bounty_sim.rng = _ForcedDraw(0.999999)

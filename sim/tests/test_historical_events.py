@@ -1,5 +1,6 @@
 """historical_events: regression checks, run individually with `--only historical_events`."""
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of, facts_of
 
 # =============================================================================
 # HISTORICAL EVENTS ANSWER TO WHAT WAS ACTUALLY BUILT: a dated hazard whose
@@ -19,7 +20,8 @@ _h_unmet = _s_unmet._resolve_hazard_condition(dict(_rome_crossing), 406, 406)
 check("Rome, dependent on the African grain fleet: the grain crisis of 439 "
       "fires exactly as written",
       _h_unmet.get("output_factor") == _rome_crossing["output_factor"]
-      and "grain fleet, so when Geiseric" in _s_unmet.log[0][1],
+      and cause_of(_s_unmet.log[0][1]) == "hazard_condition_unmet"
+      and facts_of(_s_unmet.log[0][1])["hazard"] == _rome_crossing["name"],
       _s_unmet.log)
 _s_met = sim(civ="rome_100ad")
 run_it(_s_met, "endowment_land", "crop_rotation")
@@ -29,7 +31,8 @@ check("...but a household that already feeds itself has its output_factor "
       "sack risk and staff loss left alone",
       "output_factor" not in _h_met
       and "sack_chance" in _h_met and "staff_loss" in _h_met
-      and "never ate off that fleet" in _s_met.log[0][1],
+      and cause_of(_s_met.log[0][1]) == "hazard_condition_met"
+      and facts_of(_s_met.log[0][1])["hazard"] == _rome_crossing["name"],
       _h_met)
 
 _rome_arab = _hazard("rome_100ad", "The Arab conquests close the Mediterranean")

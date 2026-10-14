@@ -40,6 +40,7 @@ check("the groups screen says so",
 big = grievance_game()
 a_year(big)
 group = dict(the_group(big))
+# not text: the group's name is its identity here, beside its kind
 check("selling into a market organises the producers it displaces",
       group is not None and group["name"] == "producers of iron" and group["kind"] == "displaced_producers", group)
 check("the group's size and loss come from the market's displaced sales",
@@ -138,7 +139,7 @@ reachable = [node_id for node_id in making if quiet.start_reason(node_id)[0]]
 if reachable:
     ok, why = banner.start_reason(reachable[0])
     check("a forbidden technique the founder could otherwise start is refused by start_reason, naming the group",
-          not ok and "producers of iron" in (why or ""), (reachable[0], why))
+          not ok and banner.start_blockers(reachable[0])[0]["cause"] == "group_prohibition", (reachable[0], why))
 check("without a group nothing is forbidden", quiet.group_prohibition_of(making[0]) is None)
 banner.state.household.protection = 0.9
 check("protection above the state-opposition line lets the founder build regardless",
@@ -158,7 +159,7 @@ squeezed.state_treasury().money = 1.0e12
 world = SimWorld(squeezed)
 sectors = {sector.subject: sector for sector in world.squeezed_employers()}
 check("hiring that raises a trade's price squeezes the employers of that trade",
-      "artisan" in sectors and sectors["artisan"].lost_income > 0.0 and "raised the going price" in sectors["artisan"].cause,
+      "artisan" in sectors and sectors["artisan"].lost_income > 0.0 and sectors["artisan"].kind == "squeezed_employers",
       sectors)
 check("a trade nobody pressed squeezes no one", "labourer" not in sectors)
 

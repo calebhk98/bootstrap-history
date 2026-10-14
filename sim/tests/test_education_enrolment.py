@@ -9,6 +9,7 @@ def _education(game):
 
 none_running = sim()
 reply = _education(none_running)
+# not text: an enumerated field value
 check("with no school running, literacy is limited by the missing schools",
       reply["literacy_limited_by"] == "no school running", reply.get("literacy_limited_by"))
 

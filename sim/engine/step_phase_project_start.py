@@ -109,7 +109,8 @@ class ProjectStartPhaseMixin:
                 if _non_bountied_active >= max_active:
                     automation_audit.record_skip(
                         self, "auto_start", "further projects",
-                        "%d projects already active; the cap is %d" % (_non_bountied_active, max_active))
+                        "%d projects already active; the cap is %d" % (_non_bountied_active, max_active),
+                        reason_kind="active_project_cap", active=_non_bountied_active, cap=max_active)
                     break
                 if not self.can_start(node_id):
                     # one row a year, for the highest-priority candidate; the rest would flood the trail
@@ -166,7 +167,8 @@ class ProjectStartPhaseMixin:
                 automation_audit.record_skip(
                     self, "auto_start", self.nodes[first]["name"],
                     "costs %.0f and the room left to commit is %.0f; %d candidates in all cost more than the room"
-                    % (self.project_cost(first), room, len(_too_dear)))
+                    % (self.project_cost(first), room, len(_too_dear)),
+                    reason_kind="cost_over_room", cost=self.project_cost(first), room=room, candidates=len(_too_dear))
         return pool, hired_left
 
     def _step_materials(self):
@@ -259,7 +261,9 @@ class ProjectStartPhaseMixin:
                         % (mass_rate_text(short, self),
                            mass_rate_text(self.mine_capacity.get(self.state.holdings.binding, 0.0), self),
                            mass_rate_text(_pending, self)),
-                        _before, order=_order)
+                        _before, order=_order, reason_kind="mine_ordered", demand=short,
+                        active_capacity=self.mine_capacity.get(self.state.holdings.binding, 0.0),
+                        pending_capacity=_pending, ordered=_ordered)
                 else:
                     automation_audit.record_skip(
                         self, "auto_mine", "mine for %s" % self.state.holdings.binding,

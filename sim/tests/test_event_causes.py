@@ -7,6 +7,7 @@ import os
 from types import SimpleNamespace
 
 from .harness import check
+from sim.refusal import cause_of
 
 from sim.engine import event_causes
 from sim.engine.tree_source import load_base_tree
@@ -91,7 +92,7 @@ check("an event without causes stays unchecked", rows["Plain"]["causes_checked"]
 nodes = {"fixture_weapon"}
 check("a well formed cause list has no problems", event_causes.cause_problems(hazard, nodes) == [])
 check("an unknown quantity is rejected",
-      any("unknown quantity" in problem for problem in
+      any(cause_of(problem) == "unknown_quantity" for problem in
           event_causes.cause_problems({"name": "x", "causes": [cause("moon_phase", ">", 1)]}, nodes)))
 check("an unknown operator is rejected",
       any("operator" in problem for problem in

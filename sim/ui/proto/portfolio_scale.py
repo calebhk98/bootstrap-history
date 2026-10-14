@@ -2,6 +2,7 @@
 
 import math
 
+from sim.refusal import Refusal
 from .portfolio_bottlenecks import KIND_ORDER
 
 DEFAULT_ROWS = 8
@@ -68,7 +69,7 @@ def page_rows(rows, trade_rows, cmd):
         offset = max(0, int(cmd.get("offset") or 0))
         limit = max(1, int(cmd.get("limit") or DEFAULT_ROWS))
     except (TypeError, ValueError):
-        return [], {}, "offset and limit must be whole numbers"
+        return [], {}, Refusal("paging_not_whole_numbers", "offset and limit must be whole numbers")
     pool = rows
     if group:
         pool = group_members(rows, trade_rows, group)

@@ -44,5 +44,5 @@ waiting.active[target]["cost_left"] = 0.0
 waiting.active[target]["lab_left"] = {}
 stepped = ask(waiting, cmd="step", years=2)
 warning = stepped.get("multi_year_hours_warning") or ""
-check("a multi-year step with idle hours names what the running projects wait on", "calendar" in warning,
+check("a multi-year step with idle hours names what the running projects wait on", "calendar" in (stepped.get("multi_year_hours_waiting_on") or ()),
       stepped.get("multi_year_hours_warning") or sorted(stepped))

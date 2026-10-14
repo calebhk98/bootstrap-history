@@ -11,6 +11,8 @@ they are shown on the divergence screen and judged by nothing. A quantity not ye
 event. The engine knows quantity names only, never an event or technology id.
 """
 import operator
+
+from sim.refusal import Refusal
 from typing import Any, Callable, Dict, List, NamedTuple, Optional, Tuple
 
 from . import event_cause_state
@@ -179,8 +181,8 @@ def cause_problems(hazard: Dict[str, Any], node_ids: Any) -> List[str]:
     for cause in hazard.get("causes") or []:
         quantity = QUANTITIES.get(cause.get("quantity"))
         if quantity is None:
-            problems.append("%s: unknown quantity %r (known: %s)"
-                            % (name, cause.get("quantity"), ", ".join(sorted(QUANTITIES))))
+            problems.append(Refusal("unknown_quantity", "%s: unknown quantity %r (known: %s)"
+                                    % (name, cause.get("quantity"), ", ".join(sorted(QUANTITIES)))))
             continue
         label = "%s / %s" % (name, cause["quantity"])
         if cause.get("op") not in OPERATORS:
