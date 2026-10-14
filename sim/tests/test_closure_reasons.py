@@ -12,7 +12,8 @@ def staffed_sim():
 	test_sim._done_changed()
 	test_sim.employees["artisan"] = 6.0
 	test_sim.labour._resync_pools()
-	test_sim.open_venture(NODE_ID)
+	opened, reason = test_sim.open_venture(NODE_ID)
+	check("set-up: the fixture's founder can afford to open the concern", opened, reason)
 	return test_sim
 
 

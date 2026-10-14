@@ -236,17 +236,21 @@ def found_deposits_of(game, material):
 def concern_needing_craftsmen_to_supervise():
     """A concern the founder's own scholar can cover, that needs more craftsmen than the founder and
     the closure slack can cover alone (and no more than the six hired in the fixtures), so losing every
-    hired craftsman shuts it."""
+    hired craftsman shuts it. Of those, the cheapest to open: a fixture's founder holds little, and what
+    the opening prices a heavy build's materials at is not what these tests are about."""
     probe = sim()
     cover = probe.FOUNDER_IS_WORTH + probe.STAFFING_CLOSURE_SLACK
+    fits = []
     for candidate_id in sorted(NODES):
         node = NODES[candidate_id]
         if probe.is_venture(candidate_id) and node["art"] > 0 and not (node.get("lab") or {}).get("artisan"):
             scholars, craftsmen = probe.venture_hands(candidate_id)
             if (scholars <= probe.labour.effective_scholars() and cover < craftsmen <= 5.5
                     and probe.venture_foreman(candidate_id)[0] is None):
-                return candidate_id
-    raise AssertionError("no concern needs craftsmen to supervise")
+                fits.append((probe.venture_capex(candidate_id), candidate_id))
+    if not fits:
+        raise AssertionError("no concern needs craftsmen to supervise")
+    return min(fits)[1]
 
 
 def ready_for_entry(game, money=None):
