@@ -80,6 +80,7 @@ NOT_NUMERIC_KEYS = {
 # temperature. A new rounded field not in a field rule, not tagged by its producer (units.tagged) and not here fails.
 ROUND_NOT_A_UNIT_QUANTITY = {
     "arrives_units", "chance_caught", "covered", "delivered_units",  # stock in its own unit, a chance, a share covered
+    "held", "missing", "needed",  # a non-mass material in its own unit, printed beside the unit word
     "artisan_capacity", "artisans", "births", "calendar_floor_years", "calendar_years_left",
     "chance_of_being_denounced_this_year", "change_share", "children", "civ_domain_factor", "committed_hours",
     "corpus_kept", "craftsmen", "craftsmen_on_your_staff", "days_on_the_road", "deaths", "deaths_children",
