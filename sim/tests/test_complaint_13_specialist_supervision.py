@@ -1,5 +1,6 @@
 """Regression coverage for Complaint 13: specialist venture supervision."""
 from .harness import *
+from sim.refusal import cause_of, facts_of
 from sim.ui.proto.render import render_pretty
 
 
@@ -15,13 +16,13 @@ def prepared(node_id):
 s = prepared("mirror_amalgam")
 ok, why = s.open_venture("mirror_amalgam", pay=False)
 check("generic artisans alone cannot supervise an advanced mirror concern",
-      not ok and "glassblower" in why and "Generic artisans cannot substitute" in why,
+      not ok and cause_of(why) == "foreman_missing" and facts_of(why)["trade"] == "glassblower",
       why)
 
 s.employees["smith"] = 1
 ok, why = s.open_venture("mirror_amalgam", pay=False)
 check("an unrelated specialist cannot supervise plate-mirror work",
-      not ok and "glassblower" in why, why)
+      not ok and cause_of(why) == "foreman_missing" and facts_of(why)["trade"] == "glassblower", why)
 
 s.employees["glassblower"] = 1
 ok, why = s.open_venture("mirror_amalgam", pay=False)

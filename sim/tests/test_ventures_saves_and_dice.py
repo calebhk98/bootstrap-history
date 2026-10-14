@@ -1,5 +1,6 @@
 """Running concerns, hiring and staffing gates, save and resume (including the dice), and the identity_cover prerequisite."""
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of
 from .agent_command_helpers import ask_agent, with_end_year, pristine_game
 
 # --- `load` validates the file before touching the running game. `save` and `load` both refuse an
@@ -39,7 +40,7 @@ for _i, (_label, _content) in enumerate(_bad_saves.items()):
 ask_agent(pristine_game("norse_900ad"), cmd="save", file=_rel("norse.json"))
 _r2 = ask_agent(_load_game, cmd="load", file=_rel("norse.json"))
 check("load refuses a save from a different civilisation",
-      _r2.get("ok") is False and "civilisation" in _r2.get("error", ""), _r2)
+      _r2.get("ok") is False and _r2.get("cause") == "save_wrong_civilisation", _r2)
 
 # a save that refers to a node id the current tree does not have
 _blob = json.load(open(os.path.join(_loadtest_abs, "sess.json")))
@@ -49,7 +50,8 @@ json.dump(_blob, open(os.path.join(_loadtest_abs, "unknown_node.json"), "w"))
 _before = ask_agent(_load_game, cmd="state")
 _r3 = ask_agent(_load_game, cmd="load", file=_rel("unknown_node.json"))
 check("load refuses a save that refers to a node the tree no longer has",
-      _r3.get("ok") is False and "this_node_does_not_exist_anymore" in _r3.get("error", ""), _r3)
+      _r3.get("ok") is False and _r3.get("cause") == "save_unknown_nodes"
+      and "this_node_does_not_exist_anymore" in _r3["facts"]["nodes"], _r3)
 check("that refusal leaves the running game untouched too",
       _before.get("year") == ask_agent(_load_game, cmd="state").get("year"))
 
@@ -67,8 +69,7 @@ _base = unopened_sim()
 _mn_game = _base
 _mn = [ask_agent(_mn_game, cmd="buy", what="mine", material="copper", n=500), ask_agent(_mn_game, cmd="state")]
 check("a mine you cannot pay for is refused, not part-bought with all your money",
-      _mn[0].get("ok") is False and "Nothing was changed" in (_mn[0].get("error") or "")
-      and _mn[1]["capital"] > 300,
+      _mn[0].get("ok") is False and _mn[1]["capital"] > 300,
       (_mn[0].get("error", "")[:80], _mn[1].get("capital")))
 
 # 6. A quote read years ago is not what you pay: project_cost moves with
@@ -273,7 +274,7 @@ check("every way of turning knowledge into income is in the command list",
       all(command in json.dumps(_hc[0]) for command in ("open", "ventures")),
       sorted((_hc[0].get("commands") or {}).keys())[:6])
 check("the game does not deny that your own practice is yours",
-      "already doing that" in (_hc[1].get("error") or ""), _hc[1].get("error"))
+      _hc[1].get("cause") == "already_your_practice", _hc[1].get("error"))
 
 # --- round 5, the Han testers --------------------------------------------
 # 1. THE WORST: resuming a save re-rolled the dice. Nothing saved the random
@@ -303,10 +304,11 @@ check("hours spent teaching are not still available to sell",
 
 # 3. A bribe that buys nothing said so and charged 5,000 anyway.
 _bb_game = _v_game
-_bb = [ask_agent(_bb_game, cmd="bribe", amount=5000), ask_agent(_bb_game, cmd="bribe", amount=5000), ask_agent(_bb_game, cmd="state")]
+_bb = [ask_agent(_bb_game, cmd="bribe", amount=5000), ask_agent(_bb_game, cmd="state"),
+       ask_agent(_bb_game, cmd="bribe", amount=5000), ask_agent(_bb_game, cmd="state")]
 check("a bribe that would buy nothing is refused, not charged",
-      _bb[1].get("ok") is False and "Nothing was changed" in (_bb[1].get("error") or ""),
-      _bb[1].get("error"))
+      _bb[2].get("ok") is False and _bb[3]["capital"] == _bb[1]["capital"],
+      (_bb[2].get("error"), _bb[1]["capital"], _bb[3]["capital"]))
 
 # 7. A project blamed the wrong resource for 275 years. `logarithms` sat at
 #    "waiting on your hours" from 325 AD to the horizon with 1,900 idle founder
@@ -487,4 +489,4 @@ if _heavy:
     s3.artisans = 0.0
     _okh, _whyh = s3.open_venture(_heavy[0])
     check("a concern nobody is free to run cannot be opened",
-          _okh is False and "nobody free" in (_whyh or ""), _whyh)
+          _okh is False and cause_of(_whyh) == "supervisors_missing", _whyh)

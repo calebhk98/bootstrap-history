@@ -18,7 +18,7 @@ from .nodes import NODE_NAME_NORM, _did_you_mean, _norm_name, _resolve_by_name
 from sim.ui.memory import load_state, save_state
 from .score import victory_report
 from .why_material import material_story
-from sim.refusal import cause_of
+from sim.refusal import cause_of, facts_of
 from .refusal_cause import add_cause, event_codes
 from .seat_address import run_as_seat
 from .state_waiting import _agent_end_reason
@@ -94,7 +94,11 @@ def _cmd_save(sim, nodes, cmd, ended):
         load_state(sim, path)
         return {"ok": True, "loaded": path, "year": sim.year}
     except Exception as error:
-        return {"ok": False, "error": "could not %s %r: %s" % (command, path, error)}
+        reply = {"ok": False, "error": "could not %s %r: %s" % (command, path, error)}
+        if error.args and cause_of(error.args[0]):
+            reply["cause"] = cause_of(error.args[0])
+            reply["facts"] = facts_of(error.args[0])
+        return reply
 
 
 
