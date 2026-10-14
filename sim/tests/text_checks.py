@@ -23,13 +23,16 @@ TEXT_SOURCE = re.compile(
     r"""\bformat_|_text\b|\btext\b|\bscreen_text|\bmessage|\bmsg\b|\bblurb|\bprose|\bwording|\boutput\b|"""
     r"""\bcaptured|\bprinted|\bpretty|\.get\(["'](error|reason|cause|note|why)["']""")
 # A bare name is textual when one of its underscore-separated words is one of these.
-TEXT_WORDS = {"text", "line", "lines", "said", "reason", "cause", "error", "advice", "why", "label", "msg",
-              "message", "note", "out", "output", "stdout", "blurb", "prose", "words", "received", "screen",
+TEXT_WORDS = {"text", "line", "lines", "said", "reason", "cause", "error", "advice", "why", "msg",
+              "message", "note", "output", "stdout", "blurb", "prose", "words", "received", "screen",
               "rendered", "printed", "warning", "announcement", "refusal", "story"}
+
+# A check whose subject is presentation says so on its own line or the line above, with the reason.
+PRESENTATION_MARK = "# presentation:"
 
 # Topic or check names whose subject is presentation (units, wording, rounding, layout).
 PRESENTATION = re.compile(
-    r"wording|worded|\btext\b|render|display|layout|format|\bunits?\b|rounding|rounded|label|phrase|"
+    r"wording|worded|\btext\b|messag|render|display|layout|format|\bunits?\b|rounding|rounded|label|phrase|"
     r"\bprints?\b|printed|column|width|pretty|\bmenu\b|prose|legend|heading|screen|"
     r"readout|\bsays?\b|\bnames\b|\bmention|banner|headline|abbrev|plural|spell|\bshows?\b|"
     r"\bread(s|ing)? (as|back)\b|\bwords?\b|\bpointer\b|footer|\bhelp\b|\bexplains?\b|\bcarries\b|"
@@ -71,9 +74,17 @@ def _reads_source(node, text):
     return bool(re.search(r"source|\.read\(\)|getsource", source))
 
 
+def _is_structured(node, text):
+    """True for a structured value: a code or fact read off a refusal or log line, or a collection."""
+    if isinstance(node, (ast.SetComp, ast.ListComp, ast.GeneratorExp, ast.DictComp, ast.Dict, ast.Set,
+                         ast.List, ast.Tuple)):
+        return True
+    return bool(re.search(r"\b(facts_of|cause_of|choices_of)\(", _source(node, text)))
+
+
 def _is_textual(node, text, names):
     source = _source(node, text)
-    if _reads_source(node, text):
+    if _reads_source(node, text) or _is_structured(node, text):
         return False
     if any(isinstance(inner, ast.Name) and TEXT_WORDS & set(inner.id.lower().strip("_").split("_"))
            for inner in ast.walk(node)):
@@ -93,7 +104,7 @@ def _reads_text(condition, text, names):
                     if left_is_string and _is_textual(right, text, names):
                         return True
                     if left_is_string and re.search(r"\s", node.left.value.strip()) \
-                            and not _reads_source(right, text):
+                            and not _reads_source(right, text) and not _is_structured(right, text):
                         return True
         elif isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
             if node.func.attr in ("startswith", "endswith", "count", "search", "match", "findall", "find"):
@@ -114,6 +125,7 @@ def scan_topic(topic):
     names = {name for name in _textual_names(tree, text)}
     names = {name for name in names if name not in ("_reply", "reply")} | set()
     rendered = _rendered_names(tree, text)
+    source_lines = text.split("\n")
     topic_is_presentation = bool(PRESENTATION.search(docstring.split("\n\n")[0] + " " + topic.replace("_", " ")))
     found = []
     for node in ast.walk(tree):
@@ -126,9 +138,11 @@ def scan_topic(topic):
         name_node = node.args[0]
         check_name = " ".join(_source(name_node, text).replace('"', " ").split())
         condition_source = _source(node.args[1], text)
+        marked = any(PRESENTATION_MARK in source_lines[number - 1]
+                     for number in range(max(1, node.lineno - 1), (node.end_lineno or node.lineno) + 1))
         from_renderer = bool(re.search(r"\brender\w*\(", condition_source)) or any(
             isinstance(inner, ast.Name) and inner.id in rendered for inner in ast.walk(node.args[1]))
-        found.append((node.lineno, check_name, from_renderer or bool(PRESENTATION.search(check_name)),
+        found.append((node.lineno, check_name, marked or from_renderer or bool(PRESENTATION.search(check_name)),
                       " ".join(condition_source.split())))
     return topic_is_presentation, found
 
