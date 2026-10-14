@@ -1,6 +1,7 @@
 """The audit trail of what automation did: one row per action, kept for the last few years (Complaints/91).
 
-Each row is {"year", "policy", "action", "what", "reason", "cost"}, plus "ids" when it names concerns. `cost` is the
+Each row is {"year", "policy", "action", "what", "reason", "cost"}, plus "ids" when it names concerns and, where the
+reason has a stable code, "reason_kind" with the figures it states beside it. `cost` is the
 change in capital across the action, measured where the action ran, so it
 is the same money the books moved. The `automation` command and the
 yearly log read the same rows.
@@ -31,9 +32,9 @@ def rows(sim, years=1):
     return [row for row in sim.state.household.automation_audit if row["year"] >= first_year]
 
 
-def record_skip(sim, policy, what, reason):
+def record_skip(sim, policy, what, reason, **extra):
     """Append a row for something automation looked at and did not do, with the refusal reason."""
-    return record(sim, policy, "skipped", what, reason, sim.state.household.capital)
+    return record(sim, policy, "skipped", what, reason, sim.state.household.capital, **extra)
 
 
 def order_id(policy, subject, year):
