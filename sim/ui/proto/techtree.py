@@ -1002,7 +1002,7 @@ def _explain_revenue(sim, nodes, node_id, node):
         # revenue alone is fogged; see _fog_revenue_estimate.
         "upkeep": sim.venture_upkeep_quote(node_id)["now"],
         "upkeep_at_full_staffing": sim.venture_upkeep_quote(node_id)["at_full_staffing"],
-        "revenue": (sim.venture_real_earnings(node_id) if (not sim.fog
+        "revenue": (round(sim.venture_real_earnings(node_id), 1) if (not sim.fog
                                  or _revenue_known_exactly(sim, node_id))
                    else (_fog_revenue_estimate(sim, node_id) or 0.0)),
         "revenue_forecast_scope": (
