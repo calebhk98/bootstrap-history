@@ -101,7 +101,12 @@ idle capacity could have added, a recipe the society knows that pays at the pric
 the tile's producer of it (`entry.py`, `entry_year.py`), its owner staking cash and borrowing plant
 only up to that stake. A market with buyers and no maker in its area draws a trial newcomer judged at
 its own full cost plus a margin, since its remembered price is stale (`entry_trial.py`). A good with no
-known recipe gets no maker. Every recipe that pays draws a newcomer, best first, each for a share of
+known recipe gets no maker. The recipes the society knows are not fixed at the opening: each year the port
+matches them to the techniques some producer in the society runs (the founder's, any firm's concerns), and a
+newly allowed recipe, with a market for any good that had none, is handed to the economy through its api
+(`economy_port_late.py`, `sim/economy/late_recipes.py`); the saved opening carries them, so a resumed game
+rebuilds the same set. Real output follows the economy's cleared quantity only for goods such a recipe makes
+(Complaint 478); for every other good it still reads the opening's reference. Every recipe that pays draws a newcomer, best first, each for a share of
 what the better ones leave: no cap on newcomers per market a year. Where makers exist and sellers have
 raised asks until buyers are no longer turned away, a market whose usual (smoothed) price stays above
 its cheapest recipe's entry price for as many years as a loser waits to exit draws newcomers sized to

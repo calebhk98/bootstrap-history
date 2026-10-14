@@ -11,8 +11,5 @@ produced what they claimed. Each may be a modelling gap rather than a stale test
   is negative again around year five; the check now plays three.
 - `test_economy_money_regimes_norse.py`: more mined metal raises the price level only weakly at four
   years, so the check plays five.
-- `test_complaint_467_trades_open_to_the_jobs.py` still fails: the opening workforce holds many times the
-  hours producers bid for furnace, glass, plumbing and mining trades, probably since heat-grade gating
-  removed those lines' bids.
 - A fresh opened game throttles projects that use goods with no deposit and no producer capacity (alum,
   papyrus) to the floor, because their market tonnage is zero (`_material_market_tonnes`).

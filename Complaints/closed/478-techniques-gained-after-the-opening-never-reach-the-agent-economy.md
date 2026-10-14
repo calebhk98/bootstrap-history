@@ -1,6 +1,6 @@
 # Techniques and goods gained after the opening never reach the agent economy
 
-**Status:** open
+**Status:** closed - the port matches the economy's recipes to the techniques in use each year (`sim/engine/economy_port_late.py`, `sim/economy/late_recipes.py`); a good with no market gets one; real output follows the economy's cleared quantity for the goods such a recipe makes. Real output for every other good still reads the opening's reference, since the economy's quantities are not yet in the engine's basket units (not fixed here).
 
 The agent economy's recipe set is fixed when it opens (`opening_values` and `allowed_entries` in
 `sim/engine/economy_port_setup.py`). A technique the society gains later reaches no agent-economy

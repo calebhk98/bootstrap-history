@@ -8,7 +8,7 @@ WALL = "two-way"  # nothing here reaches sim/engine/; the engine hands it what i
 
 import math
 
-from . import country_figures, diagnostics, households, labour_state, land_rents, market_curves, taxes, tile_costs, workforce_settle
+from . import country_figures, diagnostics, late_recipes, households, labour_state, land_rents, market_curves, taxes, tile_costs, workforce_settle
 from .currency import currency_from_coin_standard
 from .economy import Economy
 from .foreign import external_orders
@@ -36,7 +36,7 @@ __all__ = [
     "traded_volumes", "opening_quantities", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
     "credit_room", "economy_from_record", "blank_economy", "export_record", "economy_book", "finish_spin_up", "shown_prices_of",
-    "settle_agent_takings", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
+    "settle_agent_takings", "admit_recipes", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
     "land_rent_paid_by_tile", "land_rent_at_tile", "country_figures", "idle_hours_by_trade",
 ]
 
@@ -245,6 +245,12 @@ def economy_from_record(setup, saved):
 def blank_economy(setup):
     """An Economy at its opening, before any year has run."""
     return Economy(setup)
+
+
+def admit_recipes(economy, source_setup):
+    """Give the economy the recipes, goods and opening prices a fresh setup (built from the society's present
+    techniques) has and it lacks; a good with no market before gets one. False when nothing was missing."""
+    return late_recipes.admit_recipes(economy, source_setup)
 
 
 def set_improvements(economy, improvements):

@@ -48,7 +48,7 @@ class CapitalMarketMixin:
         """Funds lenders hold, by source."""
         gov = self.state_treasury()
         firms = sum(max(0.0, firm.money) for firm in self.actors.active_firms())
-        spare = max(0.0, gov.money - sum(gov.record.need.values()))
+        spare = 0.0 if gov.cannot_meet_own_need() else max(0.0, gov.money - sum(gov.record.need.values()))
         funds = {
             "households": LENDING_HORIZON_YEARS * world.household_saving(),
             "firms": firms,
@@ -87,20 +87,25 @@ class CapitalMarketMixin:
         demanded = capital_market.utilisation(background + purses.lent(), supply)
         return min(1.0 - capital_market.LENDER_RESERVE_SHARE, demanded)
 
+    def state_owes(self):
+        """What the state owes: its claims in the actors' book and the pay it has not paid its army and officials."""
+        treasury = self.state_treasury()
+        return round(self.actors.state.purses.debt(treasury.actor_id) + treasury.arrears_owed(), 1)
+
     def capital_market_report(self):
         """The market as a player sees it: the rate, what lenders hold and will still advance the founder,
         and what the state owes."""
         purses = self.actors.state.purses
         supply = sum(purses.offers.values())
         if supply <= 0.0:
-            return {"market_rate": round(self.market_rate(), 4), "met": False}
+            return {"market_rate": round(self.market_rate(), 4), "met": False, "the_state_owes": self.state_owes()}
         room = self.market_credit_room(self.state.acting_seat)
         return {
             "met": True,
             "market_rate": round(self.market_rate(), 4),
             "funds_lenders_hold": round(supply, 1),
             "lenders_will_still_advance_you": None if room is None else round(room, 1),
-            "the_state_owes": round(purses.debt(self.state_treasury().actor_id), 1),
+            "the_state_owes": self.state_owes(),
             "the_state_has_lent": round(self.state_lending()[0], 1),
             "means": "the yearly rate on loans in your civilisation, set by the funds its households, "
                      "firms and state save against what everyone borrows; your own rate is this plus "

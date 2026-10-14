@@ -81,7 +81,6 @@ check("a state with no spare reserve lends nothing and earns no interest on lend
 # ---- a surplus no work wants is kept and lent, not spent on unnamed works --------------------------
 stable = sim()
 stable_treasury = stable.state_treasury()
-stable_treasury.money = 1.0e12   # collection and the standing need take all of the opening revenue, so the surplus is given
 for _year in range(4):
     one_year(stable)
 check("what the surplus did not spend on named works stays the treasury, which the loanable market is offered, not swept away",

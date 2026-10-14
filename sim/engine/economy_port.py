@@ -160,6 +160,16 @@ class EconomyPort:
         """An actor's tonnes of a commodity it bids for in the agent economy's market this year, with its budget in coin."""
         self.agent.note_purchase(buyer, commodity, tonnes, budget)
 
+    def agent_cleared_ratio(self, materials):
+        """What the agent economy cleared last year of these materials, over its first year's; None while it
+        opens or when they had not cleared before."""
+        agent = self._answering_agent()
+        return None if agent is None else agent.cleared_ratio(materials)
+
+    def producers_stamp(self):
+        """Changes whenever the agent economy's producers might (each year it runs, and when it gains recipes)."""
+        return 0 if self._agent is None else self._agent.producers_stamp()
+
     def agent_trades_good(self, material):
         """Whether the agent economy has a market for the material (False while it opens)."""
         agent = self._answering_agent()
