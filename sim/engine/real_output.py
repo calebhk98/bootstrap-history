@@ -62,6 +62,14 @@ class RealOutputMixin:
             return None
         return entry.get("traded_tonnes", entry["reference_tonnes"]) / entry["reference_tonnes"]
 
+    def _follow_cleared_volumes(self):
+        """Each commodity's tonnes sold follow what the agent economy cleared of its materials, against the
+        first year it cleared them: a technique that makes a good cheaper or more plentiful shows here."""
+        for commodity, entry in sorted(self.state.economy.market_book.items()):
+            ratio = self.economy.agent_cleared_ratio(self._commodity_materials(commodity))
+            if ratio is not None:
+                entry["traded_tonnes"] = entry["reference_tonnes"] * ratio
+
     def real_output_lines(self, ratios=None):
         """[(material, units a year sold now, opening price in labour hours)] for every good in the
         opening basket whose commodity has a market. `ratios` is a {commodity: traded ratio} the caller

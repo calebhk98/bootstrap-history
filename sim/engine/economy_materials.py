@@ -200,10 +200,11 @@ class MaterialSupplyMixin:
         return cached
 
     def _done_memo(self, name, key, compute):
-        """`compute()` remembered per (name, key) while the done set and the techniques in use are
-        unchanged; for answers that depend only on what is built and run."""
+        """`compute()` remembered per (name, key) while the done set, the techniques in use and the economy's
+        producers (they change as its year closes) are unchanged; for answers that depend only on what is
+        built and run."""
         projects = self.state.projects
-        stamp = (self.price_epoch(), len(projects.done))
+        stamp = (self.price_epoch(), len(projects.done), self.economy.producers_stamp())
         memo = getattr(self, "_done_memo_store", None)
         if memo is None or memo[0] != stamp or memo[1] is not projects.done:
             memo = self._done_memo_store = (stamp, projects.done, {})

@@ -102,6 +102,11 @@ class Economy:
         self.area_map = area_map
         return True
 
+    def rebuild_market_areas(self) -> None:
+        """Partition the market areas again over the setup's goods (goods the setup gained are new markets)."""
+        self.__dict__.pop("_port_shares", None)
+        self._rebuild_carriage()
+
     def follow_flows(self) -> bool:
         """Price the carriage by last year's flows: where the opposite flow fills more of the carriers'
         return trips, a tonne costs less. False when the (stepped) emptiness of the returns is unchanged."""
