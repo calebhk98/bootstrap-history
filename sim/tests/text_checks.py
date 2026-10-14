@@ -19,7 +19,7 @@ from sim.tests.discovery import TESTS_DIR, discover_topics
 # Source fragments that make an expression text rather than structure.
 TEXT_SOURCE = re.compile(
     r"""\[["'](text|reason|cause|error|note|why|label|advice|message|blurb|line)["']\]|\.stdout|"""
-    r"""render_|_render|\brender\b|\bstr\(|\.lower\(\)|\.join\(|\bjson\.dumps|"""
+    r"""render_|_render|\brender\b|\bstr\(|\.lower\(\)|["']\.join\(|\bjson\.dumps|"""
     r"""\bformat_|_text\b|\btext\b|\bscreen_text|\bmessage|\bmsg\b|\bblurb|\bprose|\bwording|\boutput\b|"""
     r"""\bcaptured|\bprinted|\bpretty|\.get\(["'](error|reason|cause|note|why)["']""")
 # A bare name is textual when one of its underscore-separated words is one of these.

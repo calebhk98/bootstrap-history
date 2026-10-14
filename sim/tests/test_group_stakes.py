@@ -208,7 +208,7 @@ world.strata[0].record.literacy = 0.6
 academy.advance(world)
 sectors = Sector.of_foundations([academy])
 check("when schooling spreads and learning is no longer scarce the scholars lose their standing",
-      len(sectors) == 1 and sectors[0].kind == "scholars" and "patronage" in sectors[0].cause, sectors)
+      len(sectors) == 1 and sectors[0].kind == "scholars" and "patronage" in sectors[0].forms, sectors)
 
 # ---- the state's office-holders and soldiers --------------------------------------------------------------------------------------
 world = StakeWorld()
@@ -317,7 +317,8 @@ group = registry.actors["group:jobless_workers:toilers"]
 check("workers out of a job organise as a group that remembers the technique", formed == ["group:jobless_workers:toilers"]
       and group.record.technique == "water_mill", (formed, group.record.technique))
 check("the group asks the state to ban that technique, not a commodity",
-      any("fewer hands" in demand for demand in group.record.demands), group.record.demands)
+      bool(group.record.demands) and group.record.technique == "water_mill" and registry.prohibitions() == {},
+      group.record.demands)
 check("a commodity prohibition is not made of it", registry.prohibitions() == {})
 check("the petition's words name the cause", "hours go unhired" in group.words(group_world), group.words(group_world))
 

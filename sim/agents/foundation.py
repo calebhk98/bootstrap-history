@@ -125,5 +125,5 @@ def foundation_sectors(foundations: List[Any]) -> List[Sector]:
 						  for line, fall in falls.items())
 		sectors.append(Sector(foundation.group_kind, foundation.actor_id, record.name or foundation.actor_id,
 							  "what %s collects has fallen: %s" % (record.name or foundation.actor_id, words),
-							  lost, expected, record.members, 1.0))
+							  lost, expected, record.members, 1.0, forms=tuple(falls)))
 	return sectors

@@ -73,7 +73,7 @@ check("the group speaks for the stratum's own people", abs(fallen["toilers"].mem
 stratum(registry, "owners").record.welfare = 0.5
 rents = {sector.subject: sector for sector in Sector.of_strata(strata, world)}
 check("a propertied stratum whose property income falls speaks of its rents",
-	  "owners" in rents and "rents" in rents["owners"].cause, rents.get("owners") and rents["owners"].cause)
+	  "owners" in rents and "property" in rents["owners"].forms, rents.get("owners") and rents["owners"].cause)
 for _year in range(60):
 	Sector.remember_welfare(strata)
 settled = Sector.of_strata(strata, world)

@@ -4,6 +4,7 @@ the ledger, an AI actor answers offers by worth, and the commands write the jour
 QUICK_TOPIC = True
 
 from .harness import check
+from sim.refusal import cause_of
 
 from sim.agents.api import ActorRecord, ActorRegistry, ActorsState
 from sim.agents import exchange, exchange_commands, player  # noqa: F401  (player registers its kind)
@@ -43,6 +44,15 @@ def raises(call):
 		call()
 	except CommandRejected as reason:
 		return str(reason)
+	return None
+
+
+def rejection(call):
+	"""The reason a command was refused as the refusal object it was raised with (its `cause`), or None."""
+	try:
+		call()
+	except CommandRejected as reason:
+		return reason.args[0]
 	return None
 
 
@@ -89,7 +99,7 @@ a.record.capacity["forge"] = 2.5
 a.record.margins["forge"] = 12.0
 offer = exchange.make_offer(a, b, {"concern": "forge"}, {"money": 50.0}, world)
 check("a buyer who cannot know the concern is refused",
-	  "cannot make forge" in (raises(lambda: exchange.accept(b, offer["id"], registry.get, world)) or "")
+	  cause_of(rejection(lambda: exchange.accept(b, offer["id"], registry.get, world))) == "taker_cannot_make"
 	  and "forge" in a.concerns and b.money == 100.0)
 b.record.offers.clear()
 offer = exchange.make_offer(a, b, {"concern": "forge", "knowledge": ["forge"]}, {"money": 50.0}, world)

@@ -76,12 +76,12 @@ def _fallen_incomes(stratum: Any, holders: List[Any], world: Any) -> List[Sector
 			sectors.append(Sector(
 				DISPLACED_WORKERS, record.stratum, "%s (%s work)" % (definite(record.name), trade),
 				"the pay of %s work has fallen %d%% below what they had come to expect" % (trade, percent),
-				fall, reference, record.members * working, 1.0))
+				fall, reference, record.members * working, 1.0, forms=("wages",)))
 		else:
 			sectors.append(Sector(
 				LANDHOLDERS, record.stratum, "%s as landholders" % definite(record.name),
 				"their rents and property income have fallen %d%% below what they had come to expect" % percent,
-				fall, reference, record.members, 1.0))
+				fall, reference, record.members, 1.0, forms=("property",)))
 	return sectors
 
 
@@ -114,5 +114,6 @@ def stratum_sectors(strata: List[Any], world: Any) -> List[Sector]:
 			FALLING_INCOMES, record.stratum, definite(record.name),
 			"their %s have fallen %d%% below what they had come to expect" % (
 				income_word, round(100.0 * fall / record.welfare_reference)),
-			unexplained, record.welfare_reference * food_bill, record.members, 1.0))
+			unexplained, record.welfare_reference * food_bill, record.members, 1.0,
+			forms=("property",) if owns_property else ("wages",)))
 	return sectors
