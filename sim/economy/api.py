@@ -35,7 +35,7 @@ __all__ = [
     "variable_cost_per_run", "rebase_basket_price_level", "trade_premium",
     "traded_volumes", "opening_quantities", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
-    "credit_room", "economy_from_record", "blank_economy", "export_record", "economy_book", "finish_spin_up", "shown_prices_of",
+    "credit_room", "economy_from_record", "blank_economy", "export_record", "economy_book", "finish_spin_up", "note_spin_up_result", "shown_prices_of",
     "settle_agent_takings", "admit_recipes", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
     "land_rent_paid_by_tile", "land_rent_at_tile", "country_figures", "idle_hours_by_trade",
 ]
@@ -279,6 +279,11 @@ def finish_spin_up(economy):
     rebase_basket_price_level(economy.setup, economy.record)
     economy.record.settling = False
     economy.record.memory.year = 0
+
+
+def note_spin_up_result(economy, result):
+    """Records how the hidden first stage ended ({"settled", "years", "gap"}); it is saved with the opening."""
+    economy.record.spin_up_result = dict(result)
 
 
 def trim_workforce_to_expected_hours(economy):
