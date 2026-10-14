@@ -440,6 +440,8 @@ if _loser:
     s.done.add(_loser[0]); s._done_changed(); s.open_venture(_loser[0])
 s.capital = -900.0
 s.insolvent_years = 12
+# wage work is advised only when it pays more than the practice those hours run, so this founder has none to lose
+s.revenue = s.revenue_capacity = lambda: 0.0
 _diag = s.stall_diagnosis()
 check("a run that has effectively stopped says so, and says what would restart it",
       _diag and _diag["what_would_change_it"]
