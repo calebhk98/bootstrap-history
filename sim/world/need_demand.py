@@ -3,18 +3,14 @@
 Households spend on needs (food, shelter, health, ...). A good declares which
 needs it satisfies and how well per unit. Inside a need, goods compete on
 effectiveness per unit cost. Everything a wanted good consumes is demanded in
-turn through the recipes that make it, and so is what technologies under
-development consume. Where supply is limited, the price that clears the
-market is the scarcity price.
+turn through the recipes that make it.
 
 Needs and goods come from data/world/needs.json and mods (see
 sim/engine/need_data.py); recipes from data/production/. This module takes
 them as arguments.
 """
 import collections
-import math
-import sys
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Set
 
 from sim.constants import declare
 from sim.world import demand, need_basket, need_final_demand
@@ -25,32 +21,6 @@ def load_needs(root: str) -> Dict[str, Any]:
     from sim.engine import need_data
     return need_data.load_needs(root)
 
-
-DERIVED_DEMAND_PRICE_ELASTICITY = declare(
-    "DERIVED_DEMAND_PRICE_ELASTICITY", 1.0,
-    kind="temporary_heuristic",
-    unit="dimensionless (elasticity of an input's derived demand to its own price)",
-    source=None,
-    confidence="D",
-    why="A recipe's input demand falls as the input gets dearer, because "
-        "producers switch technique or cut output. The recipe graph here "
-        "has fixed coefficients, so this stands in for the substitution "
-        "that choice of technique would do; without it an input whose "
-        "derived demand exceeds its supply has no finite clearing price.")
-
-TECHNOLOGY_LOOKAHEAD_DEPTH = declare(
-    "TECHNOLOGY_LOOKAHEAD_DEPTH", 1,
-    kind="temporary_heuristic",
-    unit="technology nodes (unreached prerequisite steps still counted as pursued)",
-    source=None,
-    confidence="D",
-    why="A technology's build materials are demanded while it is being "
-        "pursued, and only a technology whose prerequisites are held can "
-        "be pursued now. One counts exactly those; a larger depth also "
-        "counts what is one prerequisite further, on the view that "
-        "people stockpile ahead of an obvious next step. Every pursued "
-        "technology is assumed to be pursued at once, which overstates "
-        "demand for materials many nodes share.")
 
 DERIVED_DEMAND_MAX_SWEEPS = declare(
     "DERIVED_DEMAND_MAX_SWEEPS", 200,
@@ -64,57 +34,6 @@ DERIVED_DEMAND_MAX_SWEEPS = declare(
         "only stops a data error from spinning.")
 
 DEMAND_CONVERGENCE_TOLERANCE = 1e-12
-CLEARING_BISECTION_STEPS = 8
-CLEARING_PASSES = 2
-REUSE_RELATIVE_TOLERANCE = 1e-12
-POLISH_MAX_STEPS = 60
-POLISH_LOG_TOLERANCE = 1e-14
-CLEARING_SEARCH_SPAN_DECADES = 9
-
-
-def technology_material_demand(nodes: Iterable[Mapping[str, Any]], held: Set[str],
-                               lookahead_depth: Optional[int] = None) -> Dict[str, float]:
-    """{material: per-year quantity} consumed by technologies being pursued.
-
-    A node is pursued when it is not held and every prerequisite is held, or,
-    with a larger `lookahead_depth`, when at most that many unheld steps stand
-    between it and what is held. Its build materials are spread over its
-    build years.
-    """
-    depth_limit = TECHNOLOGY_LOOKAHEAD_DEPTH if lookahead_depth is None else lookahead_depth
-    by_id = {node["id"]: node for node in nodes}
-    depth: Dict[str, float] = {}
-
-    def steps_needed(node_id: str) -> float:
-        if node_id in held:
-            return 0
-        if node_id in depth:
-            return depth[node_id]
-        depth[node_id] = float("inf")   # a prerequisite cycle stays unreachable
-        node = by_id.get(node_id)
-        if node is not None:
-            depth[node_id] = 1 + max(
-                (steps_needed(prerequisite) for prerequisite in node.get("pre") or ()),
-                default=0)
-        return depth[node_id]
-
-    totals: Dict[str, float] = collections.defaultdict(float)
-    for node_id in sorted(by_id):
-        if steps_needed(node_id) > depth_limit or node_id in held:
-            continue
-        node = by_id[node_id]
-        years = node.get("build_yrs") or 1.0
-        for material, quantity in (node.get("mat") or {}).items():
-            totals[material] += quantity / years
-    return dict(totals)
-
-
-def declared_supply(need_data: Mapping[str, Any],
-                    production: Mapping[str, Any]) -> Dict[str, float]:
-    """{material: annual supply in its own unit} for goods that declare one."""
-    return {material: attributes["supply_per_year"]
-            for material, attributes in goods_attributes(need_data, production).items()
-            if attributes.get("supply_per_year")}
 
 
 def budget_weights_by_good(need_data: Mapping[str, Any], production: Mapping[str, Any],
@@ -160,66 +79,23 @@ def _mix_inside_need(need_id: str, materials: List[str], attributes: Mapping[str
     return {material: weight / total for material, weight in filled.items()}
 
 
-def _polish_root(function, low: float, high: float) -> float:
-    """Root of a decreasing function in [low, high] to full precision (Illinois
-    false position on log price), so anchors vary smoothly with prices."""
-    log_low, log_high = math.log(low), math.log(high)
-    value_low, value_high = function(low), function(high)
-    side = 0
-    for _step in range(POLISH_MAX_STEPS):
-        if value_low == value_high:
-            break
-        log_mid = (log_low * value_high - log_high * value_low) / (value_high - value_low)
-        if not math.isfinite(log_mid):
-            log_mid = 0.5 * (log_low + log_high)    # a non-finite demand value: bisect instead
-        log_mid = min(max(log_mid, min(log_low, log_high)), max(log_low, log_high))
-        value_mid = function(math.exp(log_mid))
-        if value_mid > 0.0:
-            log_low, value_low = log_mid, value_mid
-            if side == 1:
-                value_high *= 0.5
-            side = 1
-        else:
-            log_high, value_high = log_mid, value_mid
-            if side == -1:
-                value_low *= 0.5
-            side = -1
-        if abs(log_high - log_low) < POLISH_LOG_TOLERANCE:
-            break
-    return math.exp(0.5 * (log_low + log_high))
-
-
 class NeedDemandModel:
     """Household final demand by need, plus the demand recipes derive from it."""
 
     def __init__(self, need_data: Mapping[str, Any], production: Mapping[str, Any],
-                 bins: Sequence[Any], technology_demand: Optional[Mapping[str, float]] = None,
-                 substitution_elasticity: Optional[float] = None,
-                 derived_price_elasticity: Optional[float] = None,
+                 bins: Sequence[Any], substitution_elasticity: Optional[float] = None,
                  satiate: bool = False):
-        # `satiate` limits a need that declares a per-head limit to it. The price solver leaves it
-        # off (a limit would make the clearing price of a glutted metal collapse); the quantities
-        # households actually buy turn it on.
+        # `satiate` limits a need that declares a per-head limit to it; the quantities households
+        # actually buy turn it on.
         self.satiate = satiate
         self.needs = dict(need_data["needs"])
         self.production = production
         self.bins = list(bins)
-        self.technology_demand = dict(technology_demand or {})
         self.substitution = (NEED_SUBSTITUTION_ELASTICITY if substitution_elasticity is None
                              else substitution_elasticity)
-        self.derived_elasticity = (DERIVED_DEMAND_PRICE_ELASTICITY
-                                   if derived_price_elasticity is None
-                                   else derived_price_elasticity)
-        self.effectiveness: Dict[str, Dict[str, float]] = collections.defaultdict(dict)
-        for material, attributes in goods_attributes(need_data, production).items():
-            for need_id, effect in attributes["satisfies"].items():
-                self.effectiveness[need_id][material] = effect
-        self._need_goods = {need_id: sorted(self.effectiveness.get(need_id, ()))
-                            for need_id in sorted(self.needs)}
         self.basket = need_basket.make_basket(need_data, production, self.substitution)
         self.subsistence = {need.need_id: need.subsistence_per_person for need in self.basket.needs}
         self._input_per_unit_output = self._recipe_coefficients()
-        self._influence_cache: Dict[str, Dict[str, float]] = {}
 
     def _recipe_coefficients(self) -> Dict[str, Dict[str, float]]:
         """{output: {input: quantity per unit output}}, averaged over the recipes
@@ -271,231 +147,6 @@ class NeedDemandModel:
                 break
         return totals
 
-    def _sources(self, prices: Mapping[str, float]) -> Dict[str, float]:
-        sources = dict(self.final_demand(prices))
-        for material, quantity in self.technology_demand.items():
-            sources[material] = sources.get(material, 0.0) + quantity
-        return sources
-
     def total_demand(self, prices: Mapping[str, float]) -> Dict[str, float]:
-        """{material: units demanded per year}: households, recipes, technologies."""
-        return self._demand_from(self._sources(prices))
-
-    def _influence(self, target: str) -> Dict[str, float]:
-        """{source: units of `target` demanded per unit of that source}."""
-        if target not in self._influence_cache:
-            weights = {target: 1.0}
-            materials = sorted(self._input_per_unit_output)
-            for _sweep in range(DERIVED_DEMAND_MAX_SWEEPS):
-                change = 0.0
-                for material in materials:
-                    value = (1.0 if material == target else 0.0) + sum(
-                        coefficient * weights.get(input_material, 0.0)
-                        for input_material, coefficient
-                        in self._input_per_unit_output[material].items())
-                    change = max(change, abs(value - weights.get(material, 0.0)))
-                    weights[material] = value
-                if change <= DEMAND_CONVERGENCE_TOLERANCE:
-                    break
-            self._influence_cache[target] = weights
-        return self._influence_cache[target]
-
-    def demand_for(self, material: str, prices: Mapping[str, float],
-                   sources: Optional[Mapping[str, float]] = None) -> float:
-        """Total demand for one material without sweeping the whole graph. `sources` is
-        `_sources(prices)` when the caller already holds it."""
-        weights = self._influence(material)
-        if sources is None:
-            sources = self._sources(prices)
-        return sum(weights.get(source, 0.0) * quantity for source, quantity in sources.items())
-
-    def byproduct_supply(self, prices: Mapping[str, float]) -> Dict[str, float]:
-        """{material: units per year} a joint by-product is made in, fixed by
-        how much of its recipe's dominant output is being made to meet demand."""
-        # TEMPORARY HEURISTIC: the dominant output is made to exactly meet its demand.
-        supply: Dict[str, float] = collections.defaultdict(float)
-        sources = None
-        for recipe_key in sorted(self.production):
-            entry = self.production[recipe_key]
-            outputs = entry.get("outputs") or {}
-            if len(outputs) < 2:
-                continue
-            dominant = demand._dominant_output_key(entry)
-            if sources is None:
-                sources = self._sources(prices)
-            batches = self.demand_for(dominant, prices, sources) / outputs[dominant]
-            for material, quantity in outputs.items():
-                if material != dominant:
-                    supply[material] += batches * quantity
-        return dict(supply)
-
-    def clearing_prices(self, prices: Mapping[str, float],
-                        supply_by_material: Mapping[str, float],
-                        report: Optional[Iterable[str]] = None) -> Dict[str, float]:
-        """{material: price at which demand equals its supply}, other prices held.
-
-        Materials nobody demands at all are left out.
-        """
-        return self.clearing_with_glut(prices, supply_by_material, report)[0]
-
-    def clearing_with_glut(self, prices: Mapping[str, float],
-                           supply_by_material: Mapping[str, float],
-                           report: Optional[Iterable[str]] = None):
-        """(clearing prices, materials in glut): the glut is where the first pass of the search found supply
-        above demand at every price down to the span's floor, so no price clears the market."""
-        wanted = set(supply_by_material if report is None else report)
-        # Only goods sharing a need with a reported good can move its price.
-        rival_needs = {need_id for need_id, goods in self._need_goods.items()
-                       if wanted & set(goods)}
-        rivals = {material for need_id in rival_needs for material in self._need_goods[need_id]}
-        targets = []
-        sources = None
-        for material in sorted(supply_by_material):
-            current = prices.get(material)
-            if (material in wanted or material in rivals) and supply_by_material[material] \
-                    and current and current > 0.0:
-                if sources is None:
-                    sources = self._sources(prices)
-                if self.demand_for(material, prices, sources) > 0.0:
-                    targets.append(material)
-        # Supply-limited goods compete inside a need at their clearing prices,
-        # not their costs, so each is re-cleared against the others' latest.
-        working = dict(prices)
-        clearing: Dict[str, float] = {}
-        glutted: Set[str] = set()
-        for _pass in range(CLEARING_PASSES):
-            for material in targets:
-                clearing[material], is_glut = self._clear(
-                    material, supply_by_material[material], working, prices[material])
-                working[material] = clearing[material]
-                # Only the first pass searches the full span below the good's own price.
-                if is_glut and _pass == 0:
-                    glutted.add(material)
-        return ({material: price for material, price in clearing.items() if material in wanted},
-                {material for material in glutted if material in wanted})
-
-    def _clear(self, material: str, supply: float, prices: Dict[str, float],
-               reference: float):
-        """(clearing price, whether supply exceeds demand at every price searched)."""
-        current = reference
-        weights = self._influence(material)
-
-        technology_weighted = sum(weights.get(source, 0.0) * quantity
-                                  for source, quantity in self.technology_demand.items())
-
-        trial_demand = need_final_demand.SingleMaterialTrial(self, prices, material, weights)
-
-        evaluated: Dict[float, float] = {}
-
-        def excess_demand(price: float) -> float:
-            price = max(price, sys.float_info.min)
-            known = evaluated.get(price)
-            if known is None:
-                known = evaluated[price] = excess_demand_at(price)
-            return known
-
-        def excess_demand_at(price: float) -> float:
-            own_final, weighted = trial_demand.weighted_final(price)
-            total = technology_weighted + weighted
-            derived = total - own_final
-            elastic_derived = derived * (price / current) ** (-self.derived_elasticity)
-            return own_final + elastic_derived - supply
-
-        centre = prices[material]
-        if not centre > 0.0:
-            return centre, False
-        low = max(centre * 10.0 ** (-CLEARING_SEARCH_SPAN_DECADES), sys.float_info.min)
-        high = centre * 10.0 ** CLEARING_SEARCH_SPAN_DECADES
-        if excess_demand(high) > 0.0:
-            return high, False
-        if excess_demand(low) < 0.0:
-            return low, True
-        for _step in range(CLEARING_BISECTION_STEPS):
-            # Geometric midpoint in log space, so tiny prices cannot underflow to zero.
-            middle = math.exp((math.log(low) + math.log(high)) / 2.0)
-            if excess_demand(middle) > 0.0:
-                low = middle
-            else:
-                high = middle
-        return _polish_root(excess_demand, low, high), False
-
-
-class NeedDemandAnchors:
-    """Clearing prices from need-derived demand, for the price solver.
-
-    `prices` gives the anchors joint allocation splits a shared cost by.
-    `scarcity_floor_prices` gives a price floor for goods whose limited supply
-    is declared with the good; a good whose supply comes from a resource
-    table (`table_supply_materials`) already carries deposit rent, so it is
-    anchored but not floored.
-    """
-
-    def __init__(self, model: NeedDemandModel, supply_by_material: Mapping[str, float],
-                 table_supply_materials: Iterable[str] = ()):
-        self.model = model
-        self.supply_by_material = dict(supply_by_material)
-        table = set(table_supply_materials)
-        self.table_supply_materials = table
-        self.scarcity_materials = sorted(set(self.supply_by_material) - table)
-        joint_outputs = {material for entry in model.production.values()
-                         if len(entry.get("outputs") or {}) > 1 for material in entry["outputs"]}
-        self._last: Dict[Any, Any] = {}
-        self._relevant_materials = sorted(
-            {material for goods in model.effectiveness.values() for material in goods}
-            | set(self.supply_by_material))
-        self.anchor_materials = sorted(
-            (set(self.supply_by_material) | joint_outputs) | set(self.scarcity_materials))
-
-    def _clearing(self, current_prices: Mapping[str, float], materials: Sequence[str]):
-        inputs = [current_prices.get(material, 0.0) for material in self._relevant_materials]
-        key = tuple(materials)
-        cached = self._last.get(key)
-        # Prices that moved less than the solver can see reuse the last answer.
-        if cached is not None and all(
-                abs(new - old) <= REUSE_RELATIVE_TOLERANCE * abs(old)
-                for new, old in zip(inputs, cached[0])):
-            return cached[1]
-        supply = self.model.byproduct_supply(current_prices)
-        supply.update(self.supply_by_material)
-        result = self.model.clearing_with_glut(current_prices, supply, report=materials)
-        self._last[key] = (inputs, result)
-        return result
-
-    def prices(self, current_prices: Mapping[str, float]) -> Dict[str, float]:
-        """{material: clearing price} for anchorable goods at this round's prices.
-
-        A good supplied from a resource table whose demand falls short of
-        that supply is left unanchored (valued by cost), since the recipe
-        graph and final needs do not yet cover every use of such a good.
-        """
-        # TEMPORARY HEURISTIC: an anchor below the current price is dropped, not used as a glut.
-        clearing = self._clearing(current_prices, self.anchor_materials)[0]
-        return {material: price for material, price in clearing.items()
-                if material not in self.table_supply_materials
-                or price >= current_prices[material]}
-
-    def scarcity_floor_prices(self, current_prices: Mapping[str, float]) -> Dict[str, float]:
-        """{material: lowest price its limited supply allows}."""
-        if not self.scarcity_materials:
-            return {}
-        return self._clearing(current_prices, self.scarcity_materials)[0]
-
-    def glutted_materials(self, current_prices: Mapping[str, float],
-                          disposal_cost_by_material: Optional[Mapping[str, float]] = None) -> Set[str]:
-        """Materials nobody pays for: supply exceeds demand at every price the clearing search tried, or the
-        market clears below what it costs to dispose of a unit (buyers then take it for less than dumping it
-        costs, so it is a waste, not a product).
-
-        The search for a waste is centred at no less than its disposal cost, so a price that has decayed
-        towards zero cannot hide a market that clears well above it. A good supplied from a resource table
-        is left out: the recipe graph does not yet cover every use of it, so a shortfall of demand there is
-        not a glut."""
-        costs = {material: cost for material, cost in (disposal_cost_by_material or {}).items()
-                 if cost > 0.0 and material in self.anchor_materials}
-        centred = dict(current_prices)
-        for material, cost in costs.items():
-            centred[material] = max(centred.get(material, 0.0), cost)
-        clearing, glut = self._clearing(centred, self.anchor_materials)
-        glut = set(glut) | {material for material, cost in costs.items()
-                            if material in clearing and clearing[material] < cost}
-        return {material for material in glut if material not in self.table_supply_materials}
+        """{material: units demanded per year}: households and the recipes that supply them."""
+        return self._demand_from(self.final_demand(prices))

@@ -29,7 +29,7 @@ docstring first line.
 | Step phases (what one year does, in order) | `core_step_phases`, `step_phase_*`, `year_run`, `shock_year` |
 | Projects (start, progress, finish, staffing) | `projects*`, `project_materials`, `blockers`, `failure_*`, `planner`, `path_search` |
 | Seats and the founder | `core_seats`, `seat_*`, `state_seat`, `state_holdings`, `state_demand`, `founder_sales`, `cash_*`, `goals`, `fog` |
-| Markets and prices | `prices`, `solve_prices*`, `solve_cache`, `goods_market_*`, `market_*`, `incumbent_prices`, `producer_costs`, `entry_cost`, `wage_*`, `money_units`, `real_*` |
+| Markets and prices | `prices`, `solve_prices*`, `making_cost`, `long_run_costs`, `rent_standin`, `solve_cache`, `goods_market_*`, `market_*`, `incumbent_prices`, `producer_costs`, `entry_cost`, `wage_*`, `money_units`, `real_*` |
 | Node money (revenue, upkeep, capital) | `node_*`, `industry_*`, `concern_*` |
 | Foreign trade, freight, coin | `foreign_*`, `economy_freight`, `domestic_haul`, `trader_cargo`, `coin_*`, `theft_*` |
 | Economy port | `economy_port*`; older money, credit, mining and goods code is `economy_*` |

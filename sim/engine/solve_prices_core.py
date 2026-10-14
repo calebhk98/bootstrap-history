@@ -25,12 +25,8 @@ REPO_ROOT = os.path.dirname(os.path.dirname(HERE))
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 from sim.engine import disposal_cost  # noqa: E402
-from sim.engine.disposal_cost import Disposal  # noqa: E402,F401
-from sim.engine.joint_allocation import allocate_joint_cost, cap_anchors  # noqa: E402
-from sim.engine.price_change import reference_prices_for_demand, relative_price_change  # noqa: E402
-from sim.engine.default_civilisation import default_civilisation_id  # noqa: E402
-from sim.world import deposits                  # noqa: E402  (RENT ON EXTRACTED MATERIALS)
-from sim.world import land                      # noqa: E402  (RENT ON ARABLE LAND)
+from sim.engine.joint_allocation import allocate_joint_cost, outputs_split_by_mass  # noqa: E402
+from sim.engine.price_change import relative_price_change  # noqa: E402
 from sim.world.capital_market import capital_recovery_factor  # noqa: E402  (CAPITAL)
 # DAMPING_FACTOR, MAXIMUM_ITERATIONS, CONVERGENCE_TOLERANCE, INITIAL_PRICE_
 # GUESS_HOURS and GROWTH_BOUND_HOURS live in sim/algorithm_parameters.py and
@@ -865,25 +861,18 @@ def _energy_cost_hours(entry, current_prices, capability_band_price_by_carrier):
 
 
 def _allocate_output_prices(outputs, current_prices, total_process_cost_hours,
-                            demand_anchor_price_by_material=None,
-                            disposal_value_by_material=None, interest_rate=0.0, disposal=None):
-    # Missing prices fall back to the initial guess, as for any unsolved material.
-    priced = {material: current_prices.get(material, INITIAL_PRICE_GUESS_HOURS)
-              for material in outputs}
-    if len(outputs) > 1 and disposal is None:
-        disposal = Disposal(disposal_cost.disposal_cost_by_material(outputs, current_prices, interest_rate))
-    return allocate_joint_cost(outputs, priced, total_process_cost_hours,
-                               demand_anchor_price_by_material,
-                               disposal_value_by_material,
-                               disposal.costs if disposal else None,
-                               disposal.glutted if disposal else frozenset())
+                            reference_price_by_material=None, interest_rate=0.0, disposal_costs=None):
+    if len(outputs) > 1 and disposal_costs is None:
+        disposal_costs = disposal_cost.disposal_cost_by_material(outputs, current_prices, interest_rate)
+    return allocate_joint_cost(outputs, total_process_cost_hours, reference_price_by_material, disposal_costs,
+                               disposal_cost.waste_materials())
 
 
 def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
                                rent_hours_per_kg_by_material=None,
                                capability_band_price_by_carrier=None,
-                               demand_anchor_price_by_material=None,
-                               interest_rate=0.0, include_capital=True, disposal=None):
+                               reference_price_by_material=None,
+                               interest_rate=0.0, include_capital=True, disposal_costs=None):
     """Cost one recipe's whole batch, then split it across its outputs.
 
     Returns (total_process_cost_hours, {output_material: price_per_unit}),
@@ -913,13 +902,11 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
     productiveness test and any other caller that has no opinion about rent
     is not forced to pass an empty dict everywhere.
 
-    The split is value allocation (see sim/engine/joint_allocation.py): outputs in
-    `demand_anchor_price_by_material` are valued at their demand-clearing
-    price, the rest at current price (or standalone unit cost when mixed
-    with anchored ones). This is the standard answer
-    to "how much of a joint process's cost belongs to this one output" and it
-    is why a single-output recipe needs no special case - its one output
-    simply holds a 100% share.
+    The split is value allocation (see sim/engine/joint_allocation.py): an output
+    in `reference_price_by_material` is valued at that price, the rest by mass.
+    This is the standard answer to "how much of a joint process's cost belongs
+    to this one output" and it is why a single-output recipe needs no special
+    case - its one output simply holds a 100% share.
 
     CAPITAL (see the module docstring): each item in `entry["capital"]` adds
     (cost of its build_materials + cost of its build_labour_hours) * the yearly share that repays it
@@ -947,7 +934,7 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
     # germanium is always the tiny quantity, never the one a furnace's
     # annual output is quoted against).
     batch_output_quantity = max(outputs.values()) if outputs else 1.0
-    waste_input_costs = disposal.costs if disposal else None
+    waste_input_costs = disposal_costs
     if waste_input_costs is None and any(
             current_prices.get(material, 0.0) < 0.0 for material in inputs):
         waste_input_costs = disposal_cost.disposal_cost_by_material(inputs, current_prices, interest_rate)
@@ -983,216 +970,17 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
         + capital_cost_hours * batch_output_quantity + energy_cost_hours + inventory_cost_hours)
 
     output_prices = _allocate_output_prices(
-        outputs, current_prices, total_process_cost_hours,
-        demand_anchor_price_by_material, entry.get("disposal_value_hours"), interest_rate, disposal)
+        outputs, current_prices, total_process_cost_hours, reference_price_by_material, interest_rate,
+        disposal_costs)
 
     return total_process_cost_hours, output_prices
 
 
-# The ore-to-metal links come from the catalogue (deposits.rent_bearing_ore_materials). Where an ore has several
-# smelting recipes (iron: blast furnace, bloomery) the first one present in this solve's gated entries is the
-# dominant one, so a gated era falls back to a recipe it can run.
-
-
-def rent_hours_per_kg_by_ore_material(production_entries, wage_by_trade):
-    """{ore_material_key: hours of rent per kg of that ore's own output},
-    for every ore the catalogue's `ore_goods` names whose ore and dominant
-    smelting recipe both survive this era's gate - see RENT ON EXTRACTED
-    MATERIALS in the module docstring for the mechanism this implements and
-    why it is only approximate for a metal with more than one ore-consuming
-    recipe.
-
-    THE ALGEBRA. `sim/world/deposits.py`'s `find_marginal_deposit` gives
-    `price_at_margin_labour_hours_per_kg` - the Ricardian, rent-inclusive
-    price of one kilogram of CONTAINED METAL, at the fixed quantity demanded
-    this function reads from `data/world/resources.json`'s own
-    `empire_output_100ad` (see the module docstring's own TEMPORARY
-    HEURISTIC paragraph on why that quantity is fixed rather than derived
-    from price). Call that `metal_price`.
-
-    The dominant recipe's own `inputs[ore] / outputs[metal]` ratio
-    (`ore_per_metal`, kg of ore per kg of metal) is what turns a kilogram of
-    metal into a kilogram of ore in `data/production/`'s own accounting.
-    The ore's own recipe carries no inputs, so its RENT-FREE price
-    (`ore_base_price`, labour only) is fixed and does not depend on the
-    solve's iteration at all - this function is therefore called once,
-    before the iteration starts, not once per round.
-
-    Setting `existing_extraction_proxy = ore_base_price * ore_per_metal`
-    (what the dominant recipe already implies a kilogram of metal's
-    extraction costs, with no rent), the rent this function attributes to
-    the metal is `max(0, metal_price - existing_extraction_proxy)` - the
-    Ricardian gap between the marginal deposit's true price and what the
-    zero-rent recipe already charges - and dividing that back by
-    `ore_per_metal` gives `rent_per_kg_ore`, the number this function
-    returns for that ore. Added onto `ore_base_price` inside
-    `recipe_cost_and_allocation` and multiplied back through the dominant
-    recipe's own `ore_per_metal`, it reproduces `metal_price` on that
-    recipe's output EXACTLY (the division and the later multiplication use
-    the same ratio); every OTHER recipe that consumes the same ore at a
-    DIFFERENT ratio gets an approximation instead, by design - see the
-    module docstring.
-
-    A metal whose marginal deposit is cheap enough that the existing
-    zero-rent recipe already prices above it (which can happen: the two
-    numbers come from unrelated sources, `data/production/`'s own generic
-    grade assumption and `sim/world/deposits.py`'s specific named
-    deposits) gets exactly 0.0 rent here, not a negative one - rent is a
-    surplus over cost of production, never a discount below it.
-    """
-    with open(deposits.RESOURCES_FILE) as handle:
-        resources_json = json.load(handle)
-
-    rent_by_ore_material = {}
-    for ore_material, (metal, candidate_recipe_ids) in deposits.rent_bearing_ore_materials().items():
-        ore_entry = production_entries.get(ore_material)
-        if ore_entry is None:
-            # Gated out of this era (--civ), or (should not happen for a
-            # base material the tree already validates) simply absent -
-            # either way there is nothing to attach a rent to, so this ore
-            # keeps the RENT_IS_ZERO default rather than a guess.
-            continue
-        dominant_entry = next(
-            (production_entries[recipe_id] for recipe_id in candidate_recipe_ids
-             if recipe_id in production_entries),
-            None)
-        if dominant_entry is None:
-            # Every candidate recipe is gated out of this era too - iron
-            # under an ungated future-tech solve missing BOTH blast furnace
-            # and bloomery would land here, which should not happen for
-            # this project's own civilizations but is handled the same way
-            # as any other missing recipe: zero rent, not a guess.
-            continue
-        dominant_inputs = dominant_entry.get("inputs") or {}
-        dominant_outputs = dominant_entry.get("outputs") or {}
-        if ore_material not in dominant_inputs or not dominant_outputs:
-            continue
-        ore_per_metal = dominant_inputs[ore_material] / max(dominant_outputs.values())
-        if ore_per_metal <= 0:
-            continue
-
-        ore_outputs = ore_entry.get("outputs") or {}
-        if ore_material not in ore_outputs:
-            continue
-        ore_output_quantity = ore_outputs[ore_material]
-        base_cost = recipe_cost_and_allocation(ore_material, ore_entry, {}, wage_by_trade)
-        if base_cost is None:
-            continue
-        ore_base_total_hours, _ = base_cost
-        ore_base_price_per_kg = ore_base_total_hours / ore_output_quantity
-        existing_extraction_proxy_per_kg_metal = ore_base_price_per_kg * ore_per_metal
-
-        deposits_for_metal = deposits.load_deposits(metal)
-        quantity_demanded_tonnes_per_year = (
-            deposits.empire_output_net_of_byproducts_tonnes_per_year(
-                metal, resources_json))
-        outcome = deposits.find_marginal_deposit(
-            deposits_for_metal, quantity_demanded_tonnes_per_year)
-        metal_price_per_kg = outcome.price_at_margin_labour_hours_per_kg
-
-        rent_per_kg_metal = max(
-            0.0, metal_price_per_kg - existing_extraction_proxy_per_kg_metal)
-        rent_by_ore_material[ore_material] = rent_per_kg_metal / ore_per_metal
-
-    return rent_by_ore_material
-
-
-# See sim/world/land.py's own module docstring for the mechanism (the
-# margin of cultivation over a civilization's own regions, not an ore
-# deposit's grade) and for why this defaults to Rome's own territory when
-# no --civ is given: mirroring rent_hours_per_kg_by_ore_material's own
-# Rome-anchored default (data/world/resources.json's empire_output_100ad
-# has no per-civilization breakdown either), even though land's OWN
-# mechanism, unlike ore's, is genuinely per-civilization the moment --civ
-# names one.
-DEFAULT_LAND_CIVILIZATION = default_civilisation_id()
-
-
-def land_rent_hours_per_hectare(production_entries, wage_by_trade,
-                                civilization_id=None, civilizations=None, farmed_hectares=None):
-    """{"hectare_land": hours of rent per hectare}, or {} if there is no
-    reference crop price or no priceable land to convert into one this
-    round - see sim/world/land.py's own module docstring for the mechanism
-    (the Ricardian margin of cultivation over a civilization's own held
-    regions) and for why a civilization holding only one region prices
-    land at exactly zero (a real finding, not a bug: no differential rent
-    without at least two regions of different quality to compare).
-
-    THE ALGEBRA. sim/world/land.py's own `margin_outcome_for_civilization`
-    returns a supply-weighted average rent in kilograms of grain-equivalent
-    per hectare - a PHYSICAL quantity, not a price (see that module's own
-    WHY THE HOURS CONVERSION LIVES IN sim/engine/solve_prices.py, NOT HERE
-    section for why the conversion happens here rather than there).
-    Multiplying by wheat_kg's own ZERO-LAND-RENT price (labour only, exactly
-    like rent_hours_per_kg_by_ore_material's own `ore_base_price_per_kg`)
-    turns that physical surplus into the labour-hour unit this file prices
-    everything else in. `hectare_land` itself has no `inputs` and no
-    `labour_hours` of its own (data/production/40_organics.json's own
-    entry says so directly), so this rent figure becomes its WHOLE solved
-    price with nothing else added - see recipe_cost_and_allocation's own
-    rent_hours term.
-
-    THE ZERO-LAND-RENT REFERENCE PRICE, AND WHY IT STAYS ZERO-RENT EVEN NOW
-    THAT wheat_kg CONSUMES LAND (Complaints/48). Before this round wheat_kg
-    truly had no `inputs` at all, so calling `recipe_cost_and_allocation`
-    with an empty price dict gave its labour-only price by construction.
-    wheat_kg now also states a `land_hectare_years` (see RENT ON GROWN AND
-    LAND-LIMITED MATERIALS above), so the SAME call would otherwise return
-    None the moment it tries to look up a price for `hectare_land` that this
-    empty dict does not have. The fix is to seed exactly that one price at
-    0.0 rather than leave it absent - `{"hectare_land": 0.0}` - which
-    reproduces the pre-Complaints/48 answer exactly (0.0 hours/hectare times
-    any `land_hectare_years` is 0.0, so the land term drops out and only
-    labour remains) rather than changing what this reference price MEANS.
-    This is deliberately NOT circular: the reference price answers "what
-    would wheat cost if land were free", which this function needs as a
-    pure UNIT CONVERSION for land.py's physical rent, and it is computed
-    once, outside the main iteration, the same way it always was - wheat's
-    ACTUAL solved price (what every other recipe that consumes wheat_kg
-    pays, and what bread is costed from) is computed by the ordinary
-    Jacobi iteration in `solve()` below, WITH land_hectare_years priced in,
-    using `hectare_land`'s price that THIS function's own return value
-    fixes beforehand. See WHY NO NEW CYCLE in the module docstring.
-    """
-    civilization_id = civilization_id or DEFAULT_LAND_CIVILIZATION
-    wheat_entry = production_entries.get("wheat_kg")
-    if wheat_entry is None:
-        # Gated out of this era, or (should not happen - wheat_kg carries
-        # requires_node: null, admitted to every era) simply absent. Either
-        # way there is no reference crop price to convert the physical rent
-        # into hours with, so land keeps the old RENT_IS_ZERO answer.
-        return {}
-    # the reference is wheat's labour alone: the plough team's capital is priced by the main solve, and
-    # needs the land rent this function is still to fix
-    labour_only = {key: value for key, value in wheat_entry.items() if key != "capital"}
-    wheat_cost = recipe_cost_and_allocation(
-        "wheat_kg", labour_only, {"hectare_land": 0.0}, wage_by_trade)
-    if wheat_cost is None:
-        return {}
-    _wheat_total_hours, wheat_output_prices = wheat_cost
-    wheat_price_per_kg = wheat_output_prices.get("wheat_kg")
-    if not wheat_price_per_kg:
-        return {}
-
-    try:
-        outcome = land.margin_outcome_for_civilization(
-            civilization_id, civilizations=civilizations, farmed_hectares=farmed_hectares)
-    except (FileNotFoundError, KeyError):
-        # An unknown civilization id, or one missing a population field -
-        # should not happen for this project's own data/civilizations/
-        # files, handled the same way a missing ore recipe is: no rent
-        # guessed, the old zero-rent answer stands.
-        return {}
-    rent_kg_per_hectare = outcome.price_kg_grain_equivalent_per_hectare
-    if rent_kg_per_hectare <= 0.0:
-        return {}
-    rent_hours = rent_kg_per_hectare * wheat_price_per_kg
-    return {"hectare_land": rent_hours}
 
 
 def _solve_round_update_prices(resolvable_materials, prices, candidates_by_material,
                                damping, chosen_recipe_by_material,
-                               production_entries=None, scarcity_floor=None, disposal_floor=None):
+                               disposal_floor=None):
     new_prices = {}
     max_relative_change = 0.0
     disposal_costs_floor = disposal_floor or {}
@@ -1209,11 +997,6 @@ def _solve_round_update_prices(resolvable_materials, prices, candidates_by_mater
             if best_price is None or bounded_price < best_price:
                 best_price, best_recipe = bounded_price, recipe
         chosen_recipe_by_material[material] = best_recipe
-        # A sole-output good cannot recover a scarcity rent through a joint split,
-        # so its price is held at or above what its limited supply clears at.
-        if (scarcity_floor and material in scarcity_floor
-                and len(production_entries[best_recipe]["outputs"]) == 1):
-            best_price = max(best_price, scarcity_floor[material])
         damped_price = (1.0 - damping) * prices[material] + damping * best_price
         new_prices[material] = damped_price
         max_relative_change = max(
@@ -1224,7 +1007,7 @@ def _solve_round_update_prices(resolvable_materials, prices, candidates_by_mater
 def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
          damping=DAMPING_FACTOR, max_iterations=MAXIMUM_ITERATIONS,
          tolerance=CONVERGENCE_TOLERANCE, rent_hours_per_kg_by_material=None,
-         demand_anchors=None, interest_rate=0.0, dump_minimum_distance_kilometres=0.0,
+         reference_price_by_material=None, interest_rate=0.0, dump_minimum_distance_kilometres=0.0,
          initial_prices=None):
     """Damped Jacobi fixed-point iteration over every resolvable material.
 
@@ -1289,23 +1072,16 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
             required_grades_by_carrier, suppliers_by_carrier, prices, wage_by_trade,
             rent_hours_per_kg_by_material, interest_rate)
 
-        # What waste costs to dispose of this round, and which joint outputs the demand search found in glut.
+        # What waste costs to dispose of this round: no output is priced below minus it.
         disposal_costs = disposal_cost.disposal_cost_by_material(
             joint_materials, prices, interest_rate, dump_minimum_distance_kilometres)
-        glut_source = getattr(demand_anchors, "glutted_materials", None)
-        disposal = Disposal(disposal_costs, frozenset(
-            glut_source(reference_prices_for_demand(prices), disposal_costs) if glut_source else ()))
 
         candidates_by_material = solve_prices_round.round_candidates(
-            plans, prices, wage_by_trade, band_price_by_carrier,
-            demand_anchors.prices(reference_prices_for_demand(prices)) if demand_anchors else None,
-            interest_rate, disposal)
+            plans, prices, wage_by_trade, band_price_by_carrier, interest_rate, disposal_costs,
+            reference_price_by_material)
 
-        floor_source = getattr(demand_anchors, "scarcity_floor_prices", None)
         prices, final_residual = _solve_round_update_prices(
-            resolvable_materials, prices, candidates_by_material, damping,
-            chosen_recipe_by_material, production_entries,
-            floor_source(reference_prices_for_demand(prices)) if floor_source else None,
+            resolvable_materials, prices, candidates_by_material, damping, chosen_recipe_by_material,
             {material: -cost for material, cost in disposal_costs.items()})
         if final_residual < tolerance:
             break
@@ -1313,27 +1089,27 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
     return prices, iterations_run, final_residual, chosen_recipe_by_material
 
 
-def minor_joint_byproducts_are_unanchored(production_entries, chosen_recipe_by_material,
-                                          prices, wage_by_trade, share_threshold=0.5,
-                                          rent_hours_per_kg_by_material=None,
-                                          demand_anchors=None, interest_rate=0.0):
+def minor_joint_byproducts_split_by_mass(production_entries, chosen_recipe_by_material,
+                                         prices, wage_by_trade, share_threshold=0.5,
+                                         rent_hours_per_kg_by_material=None, interest_rate=0.0,
+                                         reference_price_by_material=None):
     """{material: value_share} for every material whose CONVERGED, CHOSEN
     recipe is a joint-production recipe in which this material holds under
-    `share_threshold` of the batch's value.
+    `share_threshold` of the batch's value and was split by mass.
 
-    See JOINT BYPRODUCTS WITHOUT A DEMAND ANCHOR in the module
-    docstring for why this matters: these are not ordinary low-value
-    materials, they are materials whose printed price is a mass-split
-    artifact rather than an independently derived number, and every caller
-    that prints a price must be able to say so next to it. A recipe with a
-    demand-anchored output (`demand_anchors`) is split by value and not reported.
+    A joint output is valued at a reference price when the caller gave one or when a sole-output route
+    makes it (what making it alone costs); a recorded waste with neither is worth nothing; any other is
+    valued by mass (the labelled fallback of sim/engine/joint_allocation.py). Those prices are a real lower bound on cost, not a real relative
+    price, and every caller that prints one must be able to say so next to it.
     """
-    unanchored = {}
-    anchored = set(demand_anchors.prices(reference_prices_for_demand(prices))) if demand_anchors else set()
+    direct = {material for entry in production_entries.values()
+              if len(entry.get("outputs") or {}) == 1 for material in entry["outputs"]}
+    references = set(reference_price_by_material or ()) | direct
+    flagged = {}
     for material, recipe_id in chosen_recipe_by_material.items():
         entry = production_entries[recipe_id]
         outputs = entry.get("outputs") or {}
-        if len(outputs) <= 1 or anchored & set(outputs):
+        if material not in outputs_split_by_mass(outputs, references, disposal_cost.waste_materials()):
             continue
         result = recipe_cost_and_allocation(
             recipe_id, entry, prices, wage_by_trade,
@@ -1345,8 +1121,8 @@ def minor_joint_byproducts_are_unanchored(production_entries, chosen_recipe_by_m
             continue
         value_share = (outputs[material] * prices[material]) / total_process_cost
         if value_share < share_threshold:
-            unanchored[material] = value_share
-    if unanchored:
-        warnings.warn("joint byproducts priced without a demand anchor: %s"
-                      % ", ".join(sorted(unanchored)))
-    return unanchored
+            flagged[material] = value_share
+    if flagged:
+        warnings.warn("joint byproducts priced by mass, with no reference price: %s"
+                      % ", ".join(sorted(flagged)))
+    return flagged

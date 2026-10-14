@@ -1,118 +1,90 @@
-"""Splits one joint process's cost across its outputs using demand.
+"""Splits one joint process's cost across its outputs by their value at reference prices.
 
-A joint recipe (one smelt, several products) has one cost and several
-prices, so cost alone cannot separate them. Outputs with a demand anchor
-(a market-clearing price from `sim/world/demand.py`) take a share of the
-cost proportional to anchor price times quantity. Outputs without one are
-valued at the batch's standalone unit cost, which does not depend on any
-solved output price, so the split cannot feed back into itself.
+A joint recipe (one smelt, several products) has one cost and several prices, so cost alone cannot separate
+them. Each output takes a share of the batch proportional to its reference price times its quantity. The
+caller supplies reference prices (what each output is worth, or costs to make another way); an output with
+none is valued by its mass, unless it is a waste (tipped when nobody takes it), which is worth nothing until
+someone bids. The split reads no demand.
 """
-import json
-import os
 import warnings
 
 from sim.constants import declare
-from sim.engine.default_civilisation import default_civilisation_id
-from sim.engine.joint_floor import bound_to_disposal_cost
-from sim.world import demand, deposits
+from sim.world import demand
 
-DEFAULT_CIVILIZATION = default_civilisation_id()
-_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-MEAN_INCOME_LABOUR_HOURS_PER_CAPITA_PER_YEAR = declare(
-    "MEAN_INCOME_LABOUR_HOURS_PER_CAPITA_PER_YEAR", 550.0,
-    kind="temporary_heuristic",
-    unit="labour-hours/person/year",
-    source=None,
-    confidence="D",
-    why="Household income scale for the demand anchors: hours worked per "
-        "worker-year times a working share of the whole population. Should "
-        "come from the labour market once it is wired; until then it is one "
-        "number for every civilisation.")
+UNPRICED_OUTPUT_VALUE_PER_KILOGRAM_SHARE = declare(
+    "UNPRICED_OUTPUT_VALUE_PER_KILOGRAM_SHARE", 1.0, kind="temporary_heuristic",
+    unit="value of a kilogram of an output with no reference price, over the batch's mean cost per kilogram",
+    source=None, confidence="D", retire="Complaints/507 stage 2: reference prices from the economy",
+    why="Where no reference price is given a kilogram of any such output is worth the same as a kilogram of "
+        "any other, so the batch splits by mass. Physical, and unit-consistent (a gram is not priced like a "
+        "kilogram), but it ignores what the output is worth, which only a price can say.")
 
 
-def allocate_joint_cost(outputs, current_prices, total_cost,
-                        anchor_price_by_material=None,
-                        disposal_value_by_material=None,
-                        disposal_cost_by_material=None,
-                        glutted_materials=frozenset()):
+UNPRICED_WASTE_VALUE = declare(
+    "UNPRICED_WASTE_VALUE", 0.0, kind="temporary_heuristic",
+    unit="value of a waste with no reference price, per unit",
+    source=None, confidence="D", retire="Complaints/507 stage 3 and 7: the economy's bid for waste",
+    why="A material the data records a waste heap for is tipped when nobody takes it. With no reference price "
+        "to say someone does, it carries no share of the batch that made it, as it did while a demand search "
+        "judged it in glut; the other outputs carry the batch. A co-product that is a waste is the economy's "
+        "to price (a seller offers it below zero), not a cost to spread over the product it comes with.")
+
+
+def allocate_joint_cost(outputs, total_cost, reference_price_by_material=None, disposal_cost_by_material=None,
+                        waste_materials=frozenset()):
     """{material: price per unit} splitting `total_cost` over `outputs`.
 
-    Outputs only have to recover the batch together; a bulk waste may carry
-    far less than its mass share. Without an anchor an output is valued by
-    its mass in kg. An output whose unit is not a mass is warned about,
-    left out of the split and priced at zero.
-
-    An anchored output whose demand-clearing price is at or below its
-    disposal value (default zero) is in surplus: it prices at the disposal
-    value and the other outputs carry the rest of the batch.
-
-    An output in glut (`glutted_materials`: the demand search found supply above demand at every price) prices
-    at minus its disposal cost per unit, `disposal_cost_by_material`, and the other outputs carry the batch
-    plus that cost.
-    No output is priced below minus its disposal cost.
+    The outputs together recover the batch exactly. An output is valued at its reference price when the
+    caller gives one, otherwise by its mass in kilograms; an output with neither is warned about, left out
+    of the split and priced at zero. An output in `waste_materials` with no reference is valued at
+    UNPRICED_WASTE_VALUE. An output the caller values below zero is a waste nobody will take: it
+    is priced at that value but no lower than minus its disposal cost (`disposal_cost_by_material`, per
+    unit), and the others carry the batch and what it costs to be rid of the waste.
     """
     if len(outputs) == 1:
         (name, quantity), = outputs.items()
         return {name: total_cost / quantity}
-    anchors = anchor_price_by_material or {}
-    disposal = disposal_value_by_material or {}
+    references = dict(reference_price_by_material or {})
+    for name in outputs:
+        if name in waste_materials and name not in references:
+            references[name] = UNPRICED_WASTE_VALUE
     disposal_costs = disposal_cost_by_material or {}
-    surplus = {name: disposal.get(name, 0.0) for name in outputs
-               if name in anchors and anchors[name] <= disposal.get(name, 0.0)}
-    surplus.update({name: -disposal_costs[name] for name in outputs
-                    if name not in surplus and name in glutted_materials and name in disposal_costs})
-    if surplus and len(surplus) < len(outputs):
-        # Disposal revenue cannot exceed the batch, so the rest never goes negative; a disposal cost
-        # (negative value) is added to what the rest carry.
-        surplus_total = sum(outputs[name] * value for name, value in surplus.items())
-        surplus_revenue = min(total_cost, surplus_total)
-        scale = surplus_revenue / (surplus_total or 1.0)
-        prices = {name: value * scale for name, value in surplus.items()}
-        remaining = {name: quantity for name, quantity in outputs.items()
-                     if name not in surplus}
+    wastes = {name: max(references[name], -disposal_costs.get(name, 0.0))
+              for name in outputs if references.get(name, 0.0) < 0.0}
+    if wastes and len(wastes) < len(outputs):
+        carried = total_cost - sum(price * outputs[name] for name, price in wastes.items())
+        prices = dict(wastes)
         prices.update(allocate_joint_cost(
-            remaining, current_prices, total_cost - surplus_revenue,
-            {name: price for name, price in anchors.items() if name in remaining},
-            disposal_cost_by_material={name: cost for name, cost in disposal_costs.items()
-                                       if name in remaining}))
+            {name: quantity for name, quantity in outputs.items() if name not in wastes}, carried,
+            {name: price for name, price in references.items() if name not in wastes}))
         return prices
-    mass = {name: demand.mass_in_kg_or_none(name, quantity)
-            for name, quantity in outputs.items()}
-    unconvertible = sorted(name for name, kilograms in mass.items() if kilograms is None)
-    if unconvertible:
-        warnings.warn("joint outputs with no mass unit are left out of the cost split: %s"
-                      % ", ".join(unconvertible))
-    split_outputs = {name: quantity for name, quantity in outputs.items()
-                     if mass[name] is not None}
-    prices = dict.fromkeys(unconvertible, 0.0)
+    mass = {name: demand.mass_in_kg_or_none(name, quantity) for name, quantity in outputs.items()}
+    unvalued = sorted(name for name in outputs if name not in references and mass[name] is None)
+    if unvalued:
+        warnings.warn("joint outputs with no reference price and no mass unit are left out of the cost split: %s"
+                      % ", ".join(unvalued))
+    split_outputs = {name: quantity for name, quantity in outputs.items() if name not in unvalued}
+    prices = dict.fromkeys(unvalued, 0.0)
     if not split_outputs:
         return prices
-    anchored = {name for name in split_outputs if name in anchors}
-    kilograms_per_unit = {name: mass[name] / quantity for name, quantity in split_outputs.items()}
-    # TEMPORARY HEURISTIC: an unanchored output is valued at the batch's
-    # standalone cost per kg, which does not depend on any solved output price.
-    standalone_cost_per_kg = total_cost / (sum(mass[name] for name in split_outputs) or 1.0)
+    # TEMPORARY HEURISTIC (UNPRICED_OUTPUT_VALUE_PER_KILOGRAM_SHARE): an output with no reference price is
+    # valued by mass at the batch's mean cost per kilogram, which depends on no solved output price.
+    standalone_cost_per_kg = total_cost / (sum(mass[name] for name in split_outputs if mass[name] is not None)
+                                           or 1.0)
     reference_prices = {
-        name: anchors[name] if name in anchored
-        else standalone_cost_per_kg * kilograms_per_unit[name]
+        name: references[name] if name in references
+        else (UNPRICED_OUTPUT_VALUE_PER_KILOGRAM_SHARE * standalone_cost_per_kg * mass[name] / split_outputs[name])
         for name in split_outputs}
-    split = _split_by_value(split_outputs, reference_prices, total_cost)
-    prices.update(bound_to_disposal_cost(split, split_outputs, disposal_costs))
+    prices.update(_split_by_value(split_outputs, reference_prices, total_cost))
     return prices
 
 
-def cap_anchors(anchor_price_by_material, direct_price_by_material):
-    """Anchors, each held at or below the cheapest sole-output route's price.
-
-    A joint recipe cannot value a byproduct above what making it directly
-    costs. Sole-output routes never depend on an anchor, so the cap cannot
-    feed back into the price it is capped by.
-    """
-    if anchor_price_by_material is None:
-        return None
-    return {name: min(price, direct_price_by_material.get(name, price))
-            for name, price in anchor_price_by_material.items()}
+def outputs_split_by_mass(outputs, reference_price_by_material, waste_materials=frozenset()):
+    """The outputs of a joint batch that were valued by mass, because no reference price was given."""
+    references = reference_price_by_material or {}
+    return sorted(name for name in outputs
+                  if len(outputs) > 1 and name not in references and name not in waste_materials
+                  and demand.mass_in_kg_or_none(name, 1.0) is not None)
 
 
 def _split_by_value(outputs, reference_prices, total_cost):
@@ -125,74 +97,3 @@ def _split_by_value(outputs, reference_prices, total_cost):
         total_value = sum(values.values())
     return {name: total_cost * values[name] / total_value / quantity
             for name, quantity in outputs.items()}
-
-
-def _annual_supply(material, resources):
-    """Annual supply in the material's own unit, from the first table naming it."""
-    for table in resources:
-        output = table.get(material.rsplit("_", 1)[0])
-        if output:
-            kilograms = output["t_per_yr"] * 1000.0
-            per_unit = demand.mass_in_kg_or_none(material, 1.0)
-            return kilograms / per_unit if per_unit else None
-    return None
-
-
-def _civilisation(civilization_id):
-    path = os.path.join(_ROOT, "data", "civilizations", "%s.json" % civilization_id)
-    if not civilization_id or not os.path.exists(path):
-        path = os.path.join(
-            _ROOT, "data", "civilizations", "%s.json" % DEFAULT_CIVILIZATION)
-    with open(path) as handle:
-        return json.load(handle)
-
-
-def _climate_basket(basket, civilisation):
-    """The basket with the warmth, clothing and shelter floors the climate of the civilisation's tiles sets,
-    as households face them (the installed mods' map)."""
-    from sim.engine import market_demand
-    from sim.engine.mods import get_ordered_mods
-    from sim.geography.api import open_map
-    from sim.world import need_basket
-    world_map = open_map([(manifest.id, manifest.directory)
-                          for manifest in get_ordered_mods(os.path.join(_ROOT, "mods"))])
-    return need_basket.mean_climate_basket(basket, market_demand.climate_records(civilisation, world_map))
-
-
-def build_demand_anchors(civilization_id=None, supply_by_material=None, civilization=None):
-    """NeedDemandAnchors for a civilisation, or None when nothing is anchorable.
-
-    Demand comes from the needs data (data/world/needs.json and mods), the
-    recipe graph, and the technologies the civilisation could pursue next.
-    Supply, in each good's own unit, comes from a good's declared
-    `supply_per_year`, else from the resource tables.
-    """
-    from sim.engine import catalog, need_data
-    from sim.world import need_demand
-    production = demand.production_data()
-    needs = need_data.load_needs(_ROOT)
-    declared = need_demand.declared_supply(needs, production)
-    if supply_by_material is None:
-        with open(deposits.RESOURCES_FILE) as handle:
-            resources = json.load(handle)
-        tables = [resources["empire_output_100ad"],
-                  resources.get("placer_metal_output_reference", {})]
-        outputs = {material for entry in production.values() for material in entry["outputs"]}
-        supply_by_material = {}
-        for material in sorted(outputs):
-            supply = _annual_supply(material, tables)
-            if supply:
-                supply_by_material[material] = supply
-    table_supply = set(supply_by_material) - set(declared)
-    supply_by_material = dict(supply_by_material, **declared)
-    if not supply_by_material:
-        return None
-    civilisation = civilization if civilization is not None else _civilisation(civilization_id)
-    bins = demand.income_bins(
-        float(civilisation["population"]), MEAN_INCOME_LABOUR_HOURS_PER_CAPITA_PER_YEAR)
-    technology_demand = need_demand.technology_material_demand(
-        catalog.load_mod_tree_nodes(_ROOT), set(civilisation.get("starting_techs") or ()))
-    model = need_demand.NeedDemandModel(needs, production, bins, technology_demand)
-    model.basket = _climate_basket(model.basket, civilisation)
-    model.subsistence = {need.need_id: need.subsistence_per_person for need in model.basket.needs}
-    return need_demand.NeedDemandAnchors(model, supply_by_material, table_supply)

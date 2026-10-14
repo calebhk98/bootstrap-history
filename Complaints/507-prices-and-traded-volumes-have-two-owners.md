@@ -1,6 +1,6 @@
 # Prices and traded volumes have two owners: the engine's price solver and the agent economy
 
-**Status:** open - owner decision (2026-10-14): the agent economy is the only owner of prices and volumes; the solver becomes a cost-of-making calculator only
+**Status:** open - owner decision (2026-10-14): the agent economy is the only owner of prices and volumes; the solver becomes a cost-of-making calculator only; stage 1 of `docs/architecture/ONE_PRICE_OWNER_PLAN.md` is built (the solver has no demand model), stages 2 to 8 are open
 
 Closed 115 made the agent economy the only economy, but the engine still runs a second equilibrium model of
 its own. `prices.solved_prices` (`sim/engine/prices.py`, `solve_prices*.py`) builds a demand model

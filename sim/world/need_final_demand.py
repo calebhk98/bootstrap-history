@@ -1,16 +1,12 @@
-"""Household final demand from priced needs, and the same demand re-evaluated while one price moves.
+"""Household final demand from priced needs.
 
 `quantities_from_priced` is the whole of `NeedDemandModel.final_demand` once the needs are priced.
-`SingleMaterialTrial` answers "what would final demand be if only this material's price changed?" many
-times over: every need that does not sell the material keeps the priced result of the base prices, so a
-trial reprices only the needs that do. The arithmetic is the same operations on the same values as a
-full evaluation, so the answers are identical to it.
 """
 import collections
 import math
-from typing import Dict, List, Mapping, Optional, Sequence, Tuple
+from typing import Dict, Optional, Sequence
 
-from sim.world import demand, need_basket, need_trial_fast
+from sim.world import demand, need_basket
 from sim.world.need_basket import PricedNeed
 
 
@@ -80,99 +76,3 @@ def quantities_from_priced(model, priced: Sequence[PricedNeed],
         for material, price, _effect, share in need.goods:
             quantities[material] += spending * share / price
     return dict(quantities)
-
-
-class _TrialLayout(_Layout):
-    """A `_Layout` that also numbers the materials in the order final demand first meets them."""
-
-    def __init__(self, priced: Sequence[PricedNeed], weight_of_material: Mapping[str, float]):
-        super().__init__(priced)
-        order: Dict[str, int] = {}
-        self.indexes = tuple(tuple(order.setdefault(good[0], len(order)) for good in need.goods)
-                             for need in priced)
-        self.order = order
-        self.weights = [weight_of_material.get(material, 0.0) for material in order]
-
-
-class SingleMaterialTrial:
-    """Final demand at `prices` with one material's price replaced, repeatedly.
-
-    Needs that do not list the material are priced once from `prices`; each call reprices only those that
-    do. `prices` must not change while the trial is in use. The material's price is positive in every
-    trial, so which needs are priced, and which goods each lists, is the same in every call."""
-
-    def __init__(self, model, prices: Mapping[str, float], material: str,
-                 weight_of_material: Optional[Mapping[str, float]] = None):
-        self.model = model
-        self.material = material
-        self.prices = prices
-        self._weight_of_material = weight_of_material or {}
-        self._exponent = 1.0 - model.basket.substitution
-        self._layouts: Dict[Tuple[bool, ...], _TrialLayout] = {}
-        self._fast = None             # built on the first weighted_final call
-        self._built_slots: Optional[List] = None
-
-    @property
-    def _slots(self) -> List:
-        """Per basket need: a PricedNeed, None (unpriced), or the spec to reprice."""
-        if self._built_slots is None:
-            self._built_slots = []
-            for spec in self.model.basket.needs:
-                if any(good == self.material for good, _effect in spec.goods):
-                    self._built_slots.append(spec)
-                else:
-                    self._built_slots.append(need_basket.priced_need(spec, self._exponent, self.prices.get, False))
-        return self._built_slots
-
-    def _priced(self, price: float):
-        """(the priced needs, which of the repriced needs are priced)."""
-        material = self.material
-        base_get = self.prices.get
-
-        def price_of(good: str) -> Optional[float]:
-            return price if good == material else base_get(good)
-
-        priced = []
-        present = []
-        for slot in self._slots:
-            if isinstance(slot, need_basket.NeedSpec):
-                slot = need_basket.priced_need(slot, self._exponent, price_of, False)
-                present.append(slot is not None)
-            if slot is not None:
-                priced.append(slot)
-        return priced, tuple(present)
-
-    def _build_fast(self):
-        """The precomputed evaluator of `need_trial_fast`, or False where the general path must be used."""
-        if self.model.satiate:
-            return False
-        fast = need_trial_fast.FastWeighted(self)
-        return fast if fast.ok else False
-
-    def final_demand(self, price: float) -> Dict[str, float]:
-        """Final demand with the material at `price`."""
-        return quantities_from_priced(self.model, self._priced(price)[0])
-
-    def weighted_final(self, price: float):
-        """(units of the material households want, sum over materials of weight times units households want)
-        with the material at `price`, summed in the order `final_demand` lists the materials. The weights
-        are those given at construction."""
-        if self._fast is None:
-            self._fast = self._build_fast()
-        if self._fast and price > 0.0:
-            return self._fast(price)
-        priced, present = self._priced(price)
-        if not priced:
-            return 0.0, 0
-        layout = self._layouts.get(present)
-        if layout is None:
-            layout = self._layouts[present] = _TrialLayout(priced, self._weight_of_material)
-        need_units = _units_per_need(self.model, priced, layout)
-        quantity = [0.0] * len(layout.order)
-        for need, indexes in zip(priced, layout.indexes):
-            spending = need.price_index * need_units[need.spec.need_id]
-            for index, (_material, good_price, _effect, share) in zip(indexes, need.goods):
-                quantity[index] += spending * share / good_price
-        own = layout.order.get(self.material)
-        return (0.0 if own is None else quantity[own]), sum(
-            [weight * units for weight, units in zip(layout.weights, quantity)])

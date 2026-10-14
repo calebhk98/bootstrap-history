@@ -1,5 +1,5 @@
 {
- "_internal": "`subsistence_from_climate` names the floor per person sim/world/climate_needs.py calculates for each tile from its climate. TRANSITIONAL: surplus_budget_share is a labelled heuristic weight per need (water's is small because its floor is most of what a household spends on it) (normalised over the needs that have a priced good). A good's effectiveness is per unit of its own production unit, in the need's unit. Mods add needs (ids namespaced by mod id) and add or extend goods; a production entry may also carry `satisfies` and `supply_per_year` for its dominant output. `supply_per_year` states a limited supply with no deposit model behind it, and floors the price at what that supply clears.",
+ "_internal": "`subsistence_from_climate` names the floor per person sim/world/climate_needs.py calculates for each tile from its climate. TRANSITIONAL: surplus_budget_share is a labelled heuristic weight per need (water's is small because its floor is most of what a household spends on it) (normalised over the needs that have a priced good). A good's effectiveness is per unit of its own production unit, in the need's unit. Mods add needs (ids namespaced by mod id) and add or extend goods; a production entry may also carry `satisfies` for its dominant output.",
  "needs": {
   "food": {
    "surplus_budget_share": 0.30,

@@ -213,6 +213,40 @@ class PricedGoodsTableTests(unittest.TestCase):
         self.assertAlmostEqual(mature["cloth_kg"], 4.0)
 
 
+class OneRecipeCostsItsBillTests(unittest.TestCase):
+    """A good made one way costs exactly that recipe's bill, whatever else is in the economy (Complaints/507)."""
+
+    def setUp(self):
+        engine_prices.reset_caches_for_tests()
+        self.addCleanup(engine_prices.reset_caches_for_tests)
+        self.entries = {
+            "seed": _entry({"seed_kg": 4.0}, labour_hours={"labourer": 2.0}, requires_node=None),
+            "meal": _entry({"meal_kg": 5.0}, inputs={"seed_kg": 10.0},
+                           labour_hours={"labourer": 1.0, "smith": 3.0}, requires_node=None),
+            "bystander": _entry({"other_kg": 1.0}, labour_hours={"labourer": 50.0}, requires_node=None)}
+
+    def prices(self, labourer_rate=2.0, smith_rate=4.0, entries=None):
+        solved = engine_prices.solved_prices(
+            set(), _prices_json(labourer_rate, smith_rate), production_entries=entries or self.entries,
+            rent_hours_per_kg_by_material={})
+        return solved.prices_in_labour_hours
+
+    def test_the_price_is_the_inputs_plus_the_labour_over_the_batch(self):
+        prices = self.prices()
+        seed = 2.0 / 4.0
+        self.assertAlmostEqual(prices["seed_kg"], seed)
+        # smith_rate / labourer_rate = 2 labour hours an hour
+        self.assertAlmostEqual(prices["meal_kg"], (10.0 * seed + 1.0 * 1.0 + 3.0 * 2.0) / 5.0)
+
+    def test_another_recipe_in_the_economy_does_not_move_it(self):
+        crowded = dict(self.entries, extra=_entry({"extra_kg": 1.0}, inputs={"meal_kg": 1.0}, requires_node=None))
+        self.assertAlmostEqual(self.prices(entries=crowded)["meal_kg"], self.prices()["meal_kg"])
+
+    def test_a_dearer_wage_for_a_trade_dears_what_hires_it(self):
+        self.assertGreater(self.prices(smith_rate=8.0)["meal_kg"], self.prices(smith_rate=4.0)["meal_kg"])
+        self.assertAlmostEqual(self.prices(smith_rate=8.0)["seed_kg"], self.prices(smith_rate=4.0)["seed_kg"])
+
+
 class EngineDefaultIsSolvedTests(unittest.TestCase):
     """`load()` with no arguments prices goods from the solver alone."""
 

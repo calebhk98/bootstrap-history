@@ -57,7 +57,7 @@ class PricedNeed:
 
 def goods_attributes(need_data: Mapping[str, Any],
                      production: Mapping[str, Any]) -> Dict[str, Dict[str, Any]]:
-    """Per good: `satisfies` {need: effectiveness per unit} and `supply_per_year`.
+    """Per good: `satisfies` {need: effectiveness per unit} and whether households buy it.
 
     Read from the needs file's goods table and from production entries, where
     an entry's attributes belong to its dominant output.
@@ -65,16 +65,13 @@ def goods_attributes(need_data: Mapping[str, Any],
     merged: Dict[str, Dict[str, Any]] = {}
     for material, attributes in (need_data.get("goods") or {}).items():
         merged[material] = {"satisfies": dict(attributes.get("satisfies") or {}),
-                            "supply_per_year": attributes.get("supply_per_year"),
                             "bought_by_households": attributes.get("bought_by_households", True)}
     for entry in production.values():
-        if not entry.get("outputs") or not (entry.get("satisfies") or entry.get("supply_per_year")):
+        if not entry.get("outputs") or not entry.get("satisfies"):
             continue
         material = demand._dominant_output_key(entry)
-        record = merged.setdefault(material, {"satisfies": {}, "supply_per_year": None})
+        record = merged.setdefault(material, {"satisfies": {}})
         record["satisfies"].update(entry.get("satisfies") or {})
-        if entry.get("supply_per_year"):
-            record["supply_per_year"] = entry["supply_per_year"]
     return merged
 
 
