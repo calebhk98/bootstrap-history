@@ -209,8 +209,9 @@ class CreditMixin:
         surplus = max(0.0, rev - fixed)
         return {
             "cash_on_hand": max(0.0, household.capital),
-            "credit_available_now": (self.credit_limit(_rev=rev, _upkeep=upkeep_amount)
-                                     * self.SPENDING_DRAW_SHARE_ORDINARY),
+            # the drawable share of the line, less what is already drawn: arrears use up the room
+            "credit_available_now": max(0.0, self.credit_limit(_rev=rev, _upkeep=upkeep_amount)
+                                        * self.SPENDING_DRAW_SHARE_ORDINARY - max(0.0, -household.capital)),
             "sustainable_annual_surplus": surplus,
             "surplus_allowance_over_years": surplus * self.CREDIT_SURPLUS_YEARS_MULTIPLE,
             "surplus_years_counted": self.CREDIT_SURPLUS_YEARS_MULTIPLE,

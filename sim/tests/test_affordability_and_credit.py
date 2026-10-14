@@ -162,7 +162,10 @@ check("the arrears banner quotes the same loss the ledger does",
 check("...and names the part of it that is interest on the arrears themselves",
       any("interest on the arrears" in reason for reason in diagnosis["what_would_change_it"]),
       diagnosis["what_would_change_it"])
-wage_game = sim(civ="norse_900ad", capital=-40000.0)  # own practice pays less than wage work, and the debt is deep enough that its interest outruns it
+# A founder with no practice to lose: wage work is advised only when it pays more than the practice those hours run
+# (the wage is the labour market's clearing rate, so a founder with a practice worth more is rightly not advised it).
+wage_game = sim(civ="norse_900ad", capital=-40000.0)
+wage_game.revenue = wage_game.revenue_capacity = lambda: 0.0
 wage_game.insolvent_years = 20
 wage_advice = [reason for reason in (wage_game.stall_diagnosis() or {}).get("what_would_change_it", [])
                if reason.startswith("work as a ")]
@@ -345,10 +348,14 @@ check("...and says plainly when there was nothing left to take",
       insolvent.log[-1:])
 
 # --- a household deep in arrears does not commit to new work.
-bleeding = sim(capital=-74600.0 * pristine_game().labour.money_per_labour_hour(), manual=False)
+bleeding = sim(manual=False)
+into_arrears(bleeding)
 bleeding.insolvent_years = 20
 active_before = len(bleeding.active)
 bleeding.step()
+check("the room a household can fund shrinks by the arrears it already owes",
+      bleeding.funding_breakdown()["credit_available_now"] == 0.0 and bleeding.funding_capacity() == 0.0,
+      bleeding.funding_breakdown())
 check("a household deep in arrears does not commit to new work",
       len(bleeding.active) <= active_before + 1, (len(bleeding.active), active_before))
 
