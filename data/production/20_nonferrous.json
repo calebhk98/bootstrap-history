@@ -132,13 +132,12 @@
    },
    "inputs": {},
    "labour_hours": {
-    "miner": 12.0,
-    "labourer": 8.0
+    "labourer": 1.5
    },
    "extracted_from": "ore deposit",
    "unit_dimension": "mass",
-   "basis": "per tonne of dressed tin concentrate (~60% SnO2 by mass)",
-   "yield_basis": "EXTRACTED, but tin ore is a special case worth spelling out: cassiterite (SnO2) has a specific gravity of ~7, against ~2.7 for typical gangue, so simple gravity washing/jigging concentrates it very effectively even starting from lean alluvial or lode material - this is a real, well-known reason ancient tin (Cornwall, Iberia, Malaya) was cheap to produce relative to its rarity in the crust. Labour is correspondingly lower than copper_ore_kg's hard-rock figure: much historical tin came from alluvial 'stream tin', dug and washed rather than blasted from rock.",
+   "basis": "per tonne of tin-bearing alluvial gravel dug and washed at the stream works",
+   "yield_basis": "DERIVED FROM THE DEPOSITS: the tin entries of data/world/geography/deposits/ancient.json (cornish_tin_streaming 4 kg of tin per tonne of gravel, hispania_tin_generic 2, gaul_germania_tin_generic 1.5; the Cornish and Hispanic grades are conf C and D respectively, the Gaulish one a placeholder). This is the gravel raised from a located deposit, as copper_ore_kg is the rock, so a site draws on the deposit's stock tonne for tonne and the recipe runs only on a tile that holds a deposit (geography declares the sites; Complaints/511). Labour is ALLUVIAL_HAND_PROCESSING_HOURS_PER_TONNE in sim/world/deposits.py (digging loose gravel and washing it across a riffle, conf C, needing no rock breaking). The grade is not in this number: it belongs to tin_kg, which consumes the gravel. No rent is charged here beyond the catalogue's: scarcity comes from how few tiles hold a deposit and how far their output must travel.",
    "requires_node": null,
    "conf": "C"
   },
@@ -147,7 +146,7 @@
     "tin_kg": 1000.0
    },
    "inputs": {
-    "cassiterite_kg": 1812.0,
+    "cassiterite_kg": 643000.0,
     "charcoal_kg": 620.0
    },
    "labour_hours": {
@@ -156,10 +155,10 @@
    },
    "energy_mj": 0.0,
    "unit_dimension": "mass",
-   "basis": "per tonne of smelted metallic tin",
-   "yield_basis": "SMELTED. SnO2 + 2C -> Sn + 2CO. SnO2 is 78.8% tin by mass (118.7/150.7); a 60% SnO2 concentrate is therefore ~47.3% contained tin, and smelting recovers on the order of 92% of it (tin reduction is one of the easiest in this file - it starts around 600-800 C, well below copper's ~1200 C, and tin melts at only 232 C), giving 1812 kg of concentrate per tonne of metal. Stoichiometric carbon is 0.20 kg per kg Sn (24/118.7); charcoal is ~60-65% carbon and a real furnace needs roughly double the stoichiometric amount for heat and incomplete contact, giving ~0.62 kg charcoal per kg tin. Both furnace time and labour are markedly lower than copper's because of the lower working temperature - this is the physical reason tin and bronze were within reach of Bronze Age metallurgy long before iron.",
+   "basis": "per tonne of smelted metallic tin from stream gravel, washed to a concentrate and smelted",
+   "yield_basis": "WASHED, THEN SMELTED. Gravel per tonne of metal is 1000 kg of tin over (grade x washing recovery x smelting recovery). Grade 2.6 kg of tin per tonne of gravel is the harmonic mean of the three tin entries of data/world/geography/deposits/ancient.json weighted by their share of empire output (0.55 at 4.0, 0.35 at 2.0, 0.1 at 1.5), i.e. the gravel an average tonne of Roman tin came out of; conf C at best because two of the three are generic entries. Washing recovery 0.65 of the tin in the gravel reaching the concentrate (LABELLED HEURISTIC, conf D: hand jigging, buddling and riffles recover well under all of it, but no source for the figure was opened). Smelting: SnO2 + 2C -> Sn + 2CO. SnO2 is 78.8% tin by mass (118.7/150.7) and smelting recovers on the order of 92% of the tin in a ~60% SnO2 concentrate (tin reduction is one of the easiest in this file - it starts around 600-800 C, well below copper's ~1200 C, and tin melts at only 232 C), so a tonne of metal is 1812 kg of concentrate. Stoichiometric carbon is 0.20 kg per kg Sn (24/118.7); charcoal is ~60-65% carbon and a real furnace needs roughly double the stoichiometric amount for heat and incomplete contact, giving ~0.62 kg charcoal per kg tin. Furnace labour is the smelt of the concentrate only; digging and washing the gravel is cassiterite_kg's labour. Furnace time and labour are markedly lower than copper's because of the lower working temperature - this is the physical reason tin and bronze were within reach of Bronze Age metallurgy long before iron.",
    "requires_node": "mat_tin",
-   "conf": "C"
+   "conf": "D"
   },
   "bronze_kg": {
    "outputs": {
