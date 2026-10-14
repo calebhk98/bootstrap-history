@@ -10,6 +10,7 @@ these live in a separate file).
 """
 
 from sim.geography.api import tile_names
+from sim.refusal import Refusal
 from .command_registry import command
 from sim.engine.ui_port import TRADES_ABSENT, TRADE_NOTES, WAGES, trade_family
 from .state_waiting import _staff_fraction_note
@@ -152,13 +153,13 @@ def _cmd_allocate(sim, nodes, cmd, ended):
                         "projects see what is left. 'allocate' with "
                         "hours 0 clears it" % trade}
     if target_id not in nodes:
-        return {"ok": False, "error": "unknown node id %r. 'state' lists "
-                                      "what is active" % target_id}
+        return {"ok": False, "error": Refusal("unknown_node", "unknown node id %r. 'state' lists "
+                                              "what is active" % target_id)}
     if target_id not in sim.active:
         return {"ok": False,
-                "error": "%s is not active, so there is nothing for a "
-                         "directive to apply to yet. 'start' it first, "
-                         "then 'allocate' it hours" % target_id}
+                "error": Refusal("project_not_active", "%s is not active, so there is nothing for a "
+                                 "directive to apply to yet. 'start' it first, "
+                                 "then 'allocate' it hours" % target_id)}
     if hours <= 0:
         had = sim.hour_allocations.pop(target_id, None)
         return ({"ok": True, "cleared": target_id, "had_been_a_year": had}

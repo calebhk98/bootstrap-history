@@ -66,7 +66,7 @@ check("state:done lists exactly the completed ones",
 
 bad_state = _ask(plain, state="sideways")
 check("an unknown state is refused with the valid ones named",
-      bad_state.get("ok") is False and "blocked" in bad_state.get("error", ""),
+      bad_state.get("ok") is False and bad_state.get("cause") == "unknown_state" and "blocked" in bad_state.get("choices", []),
       bad_state)
 
 # --- tag and category filters
@@ -86,7 +86,8 @@ check("the tag filter narrows the startable list too",
       start_tag.get("error"))
 bad_tag = _ask(plain, tag="no_such_tag")
 check("an unknown tag is refused and the real tags are listed",
-      bad_tag.get("ok") is False and "mechanical_power" in bad_tag.get("error", ""), bad_tag)
+      bad_tag.get("ok") is False and bad_tag.get("cause") == "unknown_tag"
+      and "mechanical_power" in bad_tag.get("choices", []), bad_tag)
 
 # --- typed parsing
 parsed, _err = _parse_typed_line("available blocked")

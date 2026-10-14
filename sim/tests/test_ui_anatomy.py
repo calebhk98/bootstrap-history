@@ -77,6 +77,6 @@ game.goal = _measured[0]
 game.fog = True
 _fogged = _ask()
 check("under fog, a goal that is not in view is refused politely",
-      _fogged.get("ok") is False and "not yet in view" in _fogged["error"], _fogged)
+      _fogged.get("ok") is False and _fogged.get("cause") == "goal_out_of_view", _fogged)
 check("under fog, a named metric is still answered", _ask(what="literacy_elite").get("ok") is True)
 game.fog = False

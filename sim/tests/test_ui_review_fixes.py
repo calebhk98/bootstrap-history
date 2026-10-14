@@ -8,6 +8,7 @@ import weakref
 from types import SimpleNamespace as _Namespace
 
 from sim.engine import ui_port
+from sim.refusal import cause_of
 from sim.ui import cli_agent, memory, replay
 from sim.ui.proto import goals_watch, programme, programme_draw, stuck_advice
 from sim.ui.proto.dispatch_programme import _cmd_programme
@@ -17,6 +18,7 @@ from sim.ui.proto.portfolio_scale import page_rows
 from sim.ui.proto.state_log import _agent_log_filter_rows, _is_failure_line, _log_scrub
 
 from .harness import check
+from sim.refusal import cause_of
 
 
 class Stub(_Namespace):
@@ -84,8 +86,10 @@ check("carried routes accumulate", memory.remembered(fogged, "replay")["carried"
 # 5. portfolio input
 rows = [{"id": "p", "blocker_kind": "calendar", "constraint": "calendar", "pool_rank_this_year": 1}]
 trades = [{"trade": "Stone Mason", "projects_drawing_on_it": ["p"]}]
-check("non-numeric offset is a clean error", "whole numbers" in (page_rows(rows, [], {"offset": "x"})[2] or ""))
-check("non-numeric limit is a clean error", "whole numbers" in (page_rows(rows, [], {"limit": "many"})[2] or ""))
+check("non-numeric offset is a clean error",
+      cause_of(page_rows(rows, [], {"offset": "x"})[2]) == "paging_not_whole_numbers")
+check("non-numeric limit is a clean error",
+      cause_of(page_rows(rows, [], {"limit": "many"})[2]) == "paging_not_whole_numbers")
 check("a JSON group is case-insensitive", page_rows(rows, [], {"group": "CALENDAR"})[1]["total"] == 1)
 group = _parse_portfolio("portfolio", ["stone", "mason"], [], [], False)[0]["group"]
 check("a multi-word trade name matches", page_rows(rows, trades, {"group": group})[1]["total"] == 1, group)

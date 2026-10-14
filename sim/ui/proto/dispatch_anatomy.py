@@ -4,12 +4,14 @@ import difflib
 
 from .anatomy import anatomy_for, conditions_for_metric, goal_condition, known_metrics, METRIC_ROWS
 from .command_registry import command
+from sim.refusal import Refusal
 
 
 def _goal_form(sim):
     if sim.fog and sim.goal in sim.nodes and not sim.is_visible(sim.goal):
-        return {"ok": False, "error": "your goal is not yet in view, so its anatomy is not shown. "
-                "Name a metric instead, e.g. 'anatomy <metric>'; 'anatomy list' names them."}
+        return {"ok": False, "error": Refusal(
+            "goal_out_of_view", "your goal is not yet in view, so its anatomy is not shown. "
+            "Name a metric instead, e.g. 'anatomy <metric>'; 'anatomy list' names them.")}
     condition, description = goal_condition(sim)
     if condition is None:
         return {"ok": True, "research_goal": True,

@@ -1,6 +1,7 @@
 """Money and industry: the portfolio, capacity, mines, and the economy/changes reports read off the running Sim."""
 
 import sim.engine.ui_port as ui_port
+from sim.refusal import Refusal
 from sim.engine.ui_port import WAGES, trade_family
 from sim.ui import figures_headline  # noqa: F401  (registers the headline figures)
 from sim.engine.ui_port import cash_book, cause_book, plain_number
@@ -816,10 +817,10 @@ def _changes_baseline(hist, cutoff, current_year):
             break
     if baseline is None:
         earliest = hist[0]["year"]
-        return None, None, {"ok": False,
-                "error": ("this run's own record only goes back to %d AD, %d "
-                          "years ago; ask for %d or fewer"
-                          % (earliest, current_year - earliest, current_year - earliest))}
+        return None, None, {"ok": False, "earliest_year": earliest, "years_of_record": current_year - earliest,
+                "error": Refusal("window_beyond_record", "this run's own record only goes back to %d AD, %d "
+                                 "years ago; ask for %d or fewer"
+                                 % (earliest, current_year - earliest, current_year - earliest))}
     return now, baseline, None
 
 

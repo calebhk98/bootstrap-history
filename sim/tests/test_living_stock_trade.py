@@ -34,13 +34,13 @@ check("the quote is built from the partner price, merchants' terms and freight",
 # --- refusals say why.
 refused = S._agent_dispatch(buyer, NODES, {"cmd": "buy", "what": "living_stock", "material": EGGS, "n": 0.1})
 check("a partner that will not sell eggs is refused, with the reason",
-      not refused.get("ok") and "will not sell" in refused.get("error", ""), refused)
+      not refused.get("ok") and refused.get("cause") == "partner_export_held_back", refused)
 check("a refusal delivers nothing", buyer.stock_held(EGGS) == 0.0, buyer.stock_held(EGGS))
 refused_quote = S._agent_dispatch(buyer, NODES, {"cmd": "quote", "what": "living_stock", "material": EGGS, "n": 0.1})
 check("the quote refuses with the same reason",
-      not refused_quote.get("ok") and "will not sell" in refused_quote.get("error", ""), refused_quote)
+      not refused_quote.get("ok") and refused_quote.get("cause") == "partner_export_held_back", refused_quote)
 more = S._agent_dispatch(buyer, NODES, {"cmd": "buy", "what": "living_stock", "material": RAMIE, "n": 1e9})
-check("a partner cannot sell more than it holds", not more.get("ok") and "holds" in more.get("error", ""), more)
+check("a partner cannot sell more than it holds", not more.get("ok") and more.get("cause") == "partner_holds_less", more)
 poor = sim(civ=HOME, capital=1.0)
 poor.goods_market.acting.can_pay = lambda money: False
 broke = S._agent_dispatch(poor, NODES, {"cmd": "buy", "what": "living_stock", "material": RAMIE, "n": 1000})

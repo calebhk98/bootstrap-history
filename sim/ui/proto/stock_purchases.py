@@ -14,7 +14,7 @@ def _stock_request(sim, cmd, quantity):
     partner = str(cmd.get("partner") or "").strip().lower() or None
     quote = sim.stock_purchase_quote(material, quantity, partner)
     if not quote["ok"]:
-        return None, {"ok": False, "error": quote["error"] + ". Nothing was changed."}
+        return None, {"ok": False, "cause": quote["cause"], "error": quote["error"] + ". Nothing was changed."}
     return quote, None
 
 
@@ -54,7 +54,7 @@ def _smuggle_request(sim, cmd, quantity):
     partner = str(cmd.get("partner") or "").strip().lower() or None
     terms = sim.stock_smuggle_quote(material, quantity, partner)
     if not terms["ok"]:
-        return None, {"ok": False, "error": terms["error"] + ". Nothing was changed."}
+        return None, {"ok": False, "cause": terms["cause"], "error": terms["error"] + ". Nothing was changed."}
     return terms, None
 
 

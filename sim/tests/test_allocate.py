@@ -127,12 +127,11 @@ _r = S._agent_dispatch(s, NODES, {"cmd": "allocate", "id": "academy_network",
                                   "hours": 300})
 check("allocate refuses a directive on a project that has not been "
       "started - there is nothing active for it to apply to yet",
-      not _r["ok"] and "academy_network" in _r["error"]
-      and "not active" in _r["error"], _r)
+      not _r["ok"] and _r.get("cause") == "project_not_active", _r)
 _r = S._agent_dispatch(s, NODES, {"cmd": "allocate", "id": "not_a_real_node",
                                   "hours": 300})
 check("allocate refuses an id that does not exist at all",
-      not _r["ok"] and "unknown node id" in _r["error"], _r)
+      not _r["ok"] and _r.get("cause") == "unknown_node", _r)
 s.active["academy_network"] = dict(ph_left=2500.0, yrs=0.0, spent=0.0,
                                    cost_left=0.0, lab_left={})
 _r = S._agent_dispatch(s, NODES, {"cmd": "allocate", "id": "academy_network",

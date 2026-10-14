@@ -52,7 +52,11 @@ Two fixes, usable separately or together:
       same command objects from a file and plays them in order). Every
       response is exactly one line of valid JSON; a failed command comes back
       as {"ok": false, "error": "..."} explaining what to do instead, never a
-      stack trace or a bare False.
+      stack trace or a bare False. The text is for a reader and its wording
+      may change; a refusal that has a stable code also carries "cause" (for
+      example "literacy_wall", "household_room", "unknown_node"), and
+      "choices" when it lists the answers it would have accepted. Read those,
+      not the text.
 
       {"cmd":"state"}                              current situation, in full
       {"cmd":"available"}                          every node that can legally start now,
