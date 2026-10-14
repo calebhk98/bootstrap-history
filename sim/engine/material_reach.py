@@ -58,7 +58,8 @@ class MaterialReachMixin:
     def material_unsupplied_sentence(self, material):
         """One sentence on why nothing of `material` reaches the founder, or "" when something does."""
         reach = self.material_supply_route(material)
-        route, makers = reach["route"], reach["makers"]
+        route = reach["route"]
+        makers = [node_id for node_id in reach["makers"] if self.is_visible(node_id)]  # fog: name only known concerns
         if route == ROUTE_MAKEABLE:
             held = [node_id for node_id in makers if node_id in self.state.projects.done]
             if held:

@@ -275,9 +275,11 @@ check("...and `state` advertises it every turn",
 # closed prerequisite chain, no multi-century run required.
 s_shut = sim(capital=10_000_000.0)
 _free_hands = s_shut.venture_staff_free()[1]
-# the concern with the smallest chain behind it that is profitable but needs more supervising craftsmen than are free
-SHUT_ID = min((node_id for node_id, node in s_shut.nodes.items()
-               if node["rev"] > node["up"] and s_shut.is_venture(node_id)
+# the concern with the smallest chain behind it that is profitable (real takings against real upkeep, the
+# figures `stuck` reads) but needs more supervising craftsmen than are free
+SHUT_ID = min((node_id for node_id in s_shut.nodes
+               if s_shut.is_venture(node_id)
+               and s_shut.venture_real_earnings(node_id) > s_shut.venture_real_upkeep(node_id)
                and s_shut.venture_hands(node_id)[1] > _free_hands + 0.5),
               key=lambda node_id: (len(S.closure(NODES, node_id)), node_id))
 for _p in S.closure(NODES, SHUT_ID):
@@ -288,7 +290,7 @@ check("the shut concern is done, not operating, and genuinely profitable - the "
       "exact shape 'stuck' looks for",
       s_shut.is_venture(SHUT_ID)
       and SHUT_ID not in s_shut.operating
-      and s_shut.nodes[SHUT_ID]["rev"] > s_shut.nodes[SHUT_ID]["up"],
+      and s_shut.venture_real_earnings(SHUT_ID) > s_shut.venture_real_upkeep(SHUT_ID),
       (s_shut.is_venture(SHUT_ID), SHUT_ID in s_shut.operating))
 _sch_free_sg, _art_free_sg = s_shut.venture_staff_free()
 _need_sch_sg, _need_art_sg = s_shut.venture_hands(SHUT_ID)

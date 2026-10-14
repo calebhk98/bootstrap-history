@@ -97,7 +97,8 @@ _inputs = _transport.draught_freight_physical_inputs(
     _transport.CART, _transport.DIRT_TRACK)
 _feed_price = s_mexica._material_price_per_kg(s_mexica.FREIGHT_FEED_PRICE_MATERIAL)
 _wage = s_mexica.labour.wage_per_hour(s_mexica.FREIGHT_DRIVER_WAGE_TRADE)
-_expected_denarii_per_tonne_km = s_mexica.land_freight_money_per_tonne_km()
+# the return trip follows last year's domestic flow ledger (domestic_haul.py); the opening economy already carries goods
+_expected_denarii_per_tonne_km = s_mexica.land_freight_money_per_tonne_km(s_mexica._domestic_flow_imbalance())
 _running_denarii_per_tonne_km = (_inputs.feed_kg_per_tonne_km * _feed_price
                                  + _inputs.driver_hours_per_tonne_km * _wage)
 check("a cart haul costs more than its feed and driver: the carrier's capital and empty return are in",

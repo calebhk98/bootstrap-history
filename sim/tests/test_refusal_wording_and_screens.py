@@ -105,9 +105,11 @@ check("...with every switch still listed exactly once between the two "
 
 # AND THE THING THEY THOUGHT WAS BROKEN IS NOT BROKEN.
 _s_pol2 = _s_pol
-# the concerns that clear the most a year for the money to open them; their takings come from what they make
+# the concerns the household's free hands can staff (the gate `open` applies) that clear the most a year for
+# the money to open them; their takings come from what they make
 _pays_best = sorted((node_id for node_id, node in _s_pol2.nodes.items()
-                     if node["rev"] > node["up"] and _s_pol2.is_venture(node_id)),
+                     if node["rev"] > node["up"] and _s_pol2.is_venture(node_id)
+                     and _s_pol2.staffing_open_refusal(node_id) is None),
                     key=lambda node_id: -(_s_pol2.nodes[node_id]["rev"] - _s_pol2.nodes[node_id]["up"])
                     / max(1.0, _s_pol2.venture_capex(node_id)))[:5]
 _s_pol2.done.update(_pays_best)
