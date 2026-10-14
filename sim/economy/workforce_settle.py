@@ -34,17 +34,36 @@ def expected_hours(setup, record, view) -> Dict[Tuple[str, str], float]:
 def trim_to_expected_hours(setup, record, view) -> None:
     """Cut every non-fallback trade holding more people than the hours wanted need; the rest join the
     fallback trade in the same ability bands."""
-    state = record.workforce
     fallback = fallback_trade(core_trades(setup))
-    wanted = expected_hours(setup, record, view)
+    trim_people(record.workforce, expected_hours(setup, record, view), fallback, setup.working_hours_per_year)
+
+
+def trim_people(state, wanted: Dict[Tuple[str, str], float], fallback: str, working_hours_per_year: float) -> None:
+    """Cut workers, then trainees (who would graduate into the trade and refill it), until each trade holds
+    no more people than its wanted hours need."""
     for area, by_trade in state.workers.items():
         for trade, bands in by_trade.items():
             people = sum(bands)
-            keep = wanted.get((area, trade), 0.0) / setup.working_hours_per_year
+            keep = wanted.get((area, trade), 0.0) / working_hours_per_year
             if trade == fallback or people <= keep:
                 continue
             factor = keep / people
             freed = [count * (1.0 - factor) for count in bands]
             bands[:] = [count * factor for count in bands]
-            home = by_trade.setdefault(fallback, [0.0] * len(bands))
-            home[:] = [count + back for count, back in zip(home, freed)]
+            _give_to_fallback(by_trade, fallback, freed)
+    for area, by_trade in state.trainees.items():
+        workers = state.workers.setdefault(area, {})
+        for trade, cohorts in by_trade.items():
+            enrolled = sum(sum(cohort[1]) for cohort in cohorts)
+            room = max(0.0, wanted.get((area, trade), 0.0) / working_hours_per_year - sum(workers.get(trade, [])))
+            if trade == fallback or enrolled <= room:
+                continue
+            factor = room / enrolled
+            for cohort in cohorts:
+                _give_to_fallback(workers, fallback, [count * (1.0 - factor) for count in cohort[1]])
+                cohort[1] = [count * factor for count in cohort[1]]
+
+
+def _give_to_fallback(by_trade, fallback: str, freed) -> None:
+    home = by_trade.setdefault(fallback, [0.0] * len(freed))
+    home[:] = [count + back for count, back in zip(home, freed)]
