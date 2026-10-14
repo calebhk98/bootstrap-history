@@ -274,6 +274,8 @@ def _parse_market(command, rest, words, nums, want_json):
     while i < len(low):
         i, matched = _log_consume_limit_or_offset(out, low, i)
         if not matched:
+            if low[i] != "json" and not low[i].lstrip("-").isdigit():
+                out["material"] = low[i]
             i += 1
     return out, None
 
@@ -690,6 +692,13 @@ def _parse_spending_quote(words, nums):
     # 'quote hire smith 2', 'quote commission smith 200', 'quote open <id>',
     # 'quote bounty <id>': the same arguments the command itself takes.
     what = words[0].lower()
+    if what == "sell":
+        # 'quote sell concern <id>'; 'quote sell <id>' means the same
+        rest = words[1:]
+        target = rest.pop(0).lower() if rest and rest[0].lower() == "concern" else "concern"
+        if not rest:
+            return None, "quote sell needs a concern id: 'quote sell concern <id>'."
+        return {"cmd": "quote", "what": "sell", "target": target, "id": rest[0]}, None
     if len(words) < 2:
         return None, "quote %s needs %s." % (
             what, "a trade" if what in ("hire", "commission", "train") else "an id")

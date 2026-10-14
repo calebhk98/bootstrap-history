@@ -25,10 +25,9 @@ def eligible_buyers(seller: Any, node_id: str, price: float, candidates: Iterabl
 	return sorted(able, key=lambda buyer: (-(buyer.money - price), buyer.actor_id))
 
 
-def sell_concern(seller: Any, node_id: str, candidates: Iterable[Any], find_actor: Callable[[str], Any],
-				 world: Any) -> Dict[str, Any]:
-	"""Sell `node_id` to the preferred buyer among `candidates`; raises `CommandRejected` with the reason
-	when it cannot be sold. Returns the buyer's id and the price paid."""
+def sale_terms(seller: Any, node_id: str, candidates: Iterable[Any], world: Any) -> Dict[str, Any]:
+	"""Who would take `node_id` and at what price: the one place both the sale and its quote read. Raises
+	`CommandRejected` with the reason when it cannot be sold. Returns the buyer (an actor) and the price."""
 	if node_id not in seller.concerns:
 		raise CommandRejected("you do not run " + node_id)
 	price = sale_price(seller, node_id)
@@ -37,7 +36,15 @@ def sell_concern(seller: Any, node_id: str, candidates: Iterable[Any], find_acto
 	buyers = eligible_buyers(seller, node_id, price, candidates, world)
 	if not buyers:
 		raise CommandRejected("no actor can both make %s and pay %.0f for it" % (node_id, price))
-	buyer = buyers[0]
+	return {"buyer": buyers[0], "price": price}
+
+
+def sell_concern(seller: Any, node_id: str, candidates: Iterable[Any], find_actor: Callable[[str], Any],
+				 world: Any) -> Dict[str, Any]:
+	"""Sell `node_id` to the preferred buyer among `candidates`; raises `CommandRejected` with the reason
+	when it cannot be sold. Returns the buyer's id and the price paid."""
+	terms = sale_terms(seller, node_id, candidates, world)
+	buyer, price = terms["buyer"], terms["price"]
 	offer = exchange.make_offer(seller, buyer, {"concern": node_id}, {"money": price}, world)
 	exchange.accept(buyer, offer["id"], find_actor, world)
 	return {"buyer": buyer.actor_id, "price": price}

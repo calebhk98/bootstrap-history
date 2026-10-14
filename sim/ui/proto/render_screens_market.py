@@ -24,6 +24,8 @@ def render_market(out):
                          PRICE_BASIS_NOTE.get(row.get("price_basis"), ""))).rstrip())
     if materials.get("offset", 0) + len(rows) < materials.get("total", 0):
         lines.append("  more: market offset %d" % (materials["offset"] + len(rows)))
+    if not out.get("wages"):
+        return "\n".join(lines)
     lines += ["", "WAGES  (a year of one person; 'labour <trade>' for detail)",
               "  %-18s %10s %6s %9s" % ("TRADE", "PER YEAR", "HERE", "YOU HIRE")]
     for row in out.get("wages") or []:

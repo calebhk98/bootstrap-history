@@ -145,7 +145,24 @@ def _quote_open(sim, nodes, cmd):
     return reply
 
 
+def _quote_sell(sim, nodes, cmd):
+    """`quote sell concern <id>`: the buyer and price `sell concern <id>` would settle at, from the same function."""
+    if str(cmd.get("target") or "concern").lower() != "concern":
+        return {"ok": False, "error": "only a concern can be priced before selling: 'quote sell concern <id>'"}
+    node_id = str(cmd.get("id") or "")
+    if not node_id:
+        return {"ok": False, "error": "which concern? 'quote sell concern <id>'; 'ventures' lists the ones you run"}
+    reply = sim.quote_concern_sale(node_id)
+    if not reply.get("ok"):
+        return reply
+    return {"ok": True, "what": "sell", "concern": node_id, "price": reply["price"], "buyer": reply["buyer"],
+            "you_have": reply["capital"],
+            "note": "This is what 'sell concern %s' would settle at now; nothing is sold or paid. "
+                    "The know-how stays yours." % node_id}
+
+
 SPENDING_QUOTERS = {
+    "sell": _quote_sell,
     "hire": _quote_hire,
     "commission": _quote_commission,
     "train": _quote_train,
