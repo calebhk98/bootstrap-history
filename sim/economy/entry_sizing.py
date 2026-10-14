@@ -44,9 +44,9 @@ def _runs_supported(volume: Optional[float], per_run: float, trial_runs: float) 
 
 
 def sized_runs(recipe: Recipe, good: GoodId, runs_by_gap: float, whole_gap_runs: float, tile: TileId,
-               traded: Optional[Traded]) -> float:
-    """Yearly runs to build: the share of the gap, held to what the good's market traded and to what the
-    markets of the recipe's inputs and plant goods carried."""
+               traded: Optional[Traded], works_at: Optional[TileId] = None) -> float:
+    """Yearly runs to build: the share of the gap, held to what the good's market (at `tile`) traded and to
+    what the markets of the recipe's inputs and plant goods carried where it is worked (`works_at`, else `tile`)."""
     if traded is None:
         return runs_by_gap
     trial_runs = ENTRY_SHARE_OF_UNTRADED_DEMAND * whole_gap_runs
@@ -57,7 +57,7 @@ def sized_runs(recipe: Recipe, good: GoodId, runs_by_gap: float, whole_gap_runs:
         market_runs = ENTRY_SHARE_OF_TRADED_VOLUME * volume / recipe.outputs[good]
     else:
         market_runs = trial_runs
-    supply_runs = min((_runs_supported(traded(input_good, tile), per_run, trial_runs)
+    supply_runs = min((_runs_supported(traded(input_good, tile if works_at is None else works_at), per_run, trial_runs)
                        for needs in (recipe.inputs, recipe.plant_goods) for input_good, per_run in needs.items()),
                       default=math.inf)
     return min(runs_by_gap, market_runs, supply_runs)

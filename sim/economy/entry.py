@@ -144,7 +144,8 @@ def entry_plans(recipes: Mapping[str, Recipe], view: MarketView,
                 picked = siting(recipe_id, UnmetDemand(demand.good, demand.area, demand.anchor_tile, remaining), runs)
                 if picked is None:
                     continue
-                tile, runs = picked
+                runs = sized_runs(recipe, demand.good, picked[1], whole_gap_runs, demand.anchor_tile, traded, picked[0])
+                tile = picked[0]
             if runs > 0.0 and math.isfinite(runs):
                 plans.append(EntryPlan(recipe_id, tile, demand.good, runs, -negative_return))
                 remaining -= runs * recipe.outputs[demand.good]
