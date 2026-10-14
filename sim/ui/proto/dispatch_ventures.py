@@ -146,7 +146,7 @@ def _cmd_start(sim, nodes, cmd, ended):
     # moment you start; this must state plainly what it was fixed AT.
     record = sim.active.get(node_id, {})
     instalments = round(record.get("cost_left", sim.project_cost(node_id)), 1)
-    materials_paid_now = round(record.get("materials_paid_at_start", 0.0), 1)
+    materials_paid_now = round(getattr(sim, "materials_paid_at_last_start", 0.0), 1)
     bill = round(instalments + materials_paid_now, 1)
     _warn_staff = ("started, but this society cannot supply the labour it "
                    "wants and it will crawl until you can: %s"

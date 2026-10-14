@@ -30,8 +30,7 @@ from sim.agents.api import edges
 
 class StartingMixin:
     def initialize_project(self, node_id, *, ph_left=None, spent=0.0,
-                           cost_left=None, include_labor=True, bill=None,
-                           materials_paid_now=0.0):
+                           cost_left=None, include_labor=True, bill=None):
         """Create and register one consistently-shaped active project."""
         if node_id not in self.nodes:
             raise ValueError("unknown project %s" % node_id)
@@ -41,7 +40,7 @@ class StartingMixin:
         own_output_claim = None
         if cost_left is None:
             own_output_claim = self.project_own_output_claim(node_id)
-            bill, materials_paid_now = self.settle_project_materials(node_id)
+            bill, _materials_paid_now = self.settle_project_materials(node_id)
             cost_left = bill
         rebuild_factor = self.rebuild_work_factor(node_id)
         record = dict(
@@ -53,8 +52,6 @@ class StartingMixin:
             record["rebuild_factor"] = rebuild_factor
         if bill is not None:
             record["bill"] = float(bill)
-        if materials_paid_now > 0:
-            record["materials_paid_at_start"] = float(materials_paid_now)
         if own_output_claim:
             record["own_output_claim"] = own_output_claim
         if include_labor:
@@ -995,8 +992,8 @@ class StartingMixin:
         # founder-hours and (wrongly) concludes the hired-labour total must be
         # nearly done too. Setting the real total here, before any of that
         # runs, is what fixed it.
-        self.initialize_project(node_id, spent=_already, cost_left=price, bill=bill,
-                                materials_paid_now=materials_paid_now)
+        self.initialize_project(node_id, spent=_already, cost_left=price, bill=bill)
+        self.materials_paid_at_last_start = materials_paid_now
         if precaution:
             record = projects.active[node_id]
             record["precaution"] = True
