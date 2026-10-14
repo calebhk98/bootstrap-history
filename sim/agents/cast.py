@@ -9,7 +9,7 @@ import copy
 import dataclasses
 from typing import Any, Dict, List, Mapping, Optional, Tuple
 
-from sim.geography.api import tile_facts, tiles_held
+from sim.geography.api import settlement, tiles_held
 
 from . import ledger
 from .edges import EDGE_OPENING
@@ -34,16 +34,6 @@ def _number(value: Any, default: float) -> float:
 		return default
 
 
-def _central_tile(tile_ids: List[str]) -> Optional[str]:
-	"""The held tile nearest the mean position of the held tiles (where a country is placed); None for none."""
-	if not tile_ids:
-		return None
-	facts = [tile_facts(tile_id) for tile_id in tile_ids]
-	mean_lat = sum(fact["lat"] for fact in facts) / len(facts)
-	mean_lon = sum(fact["lon"] for fact in facts) / len(facts)
-	return min(facts, key=lambda fact: ((fact["lat"] - mean_lat) ** 2 + (fact["lon"] - mean_lon) ** 2, fact["id"]))["id"]
-
-
 def profile_from_civilisation(civ: Mapping[str, Any]) -> CountryProfile:
 	"""What a country starts with, read from its civilisation dict; missing keys take neutral values."""
 	cast = civ.get("cast") or {}
@@ -57,7 +47,7 @@ def profile_from_civilisation(civ: Mapping[str, Any]) -> CountryProfile:
 		state_capacity=_number(civ.get("state_capacity"), 0.0), tax_share=_number(civ.get("starting_tax_share"), 0.0),
 		wage_index=_number(civ.get("wage_index"), 1.0), price_index=_number(civ.get("price_index"), 1.0),
 		literacy_general=_number(civ.get("literacy_general"), 0.0), literacy_elite=_number(civ.get("literacy_elite"), 0.0),
-		home_tiles=held, location=cast.get("location") or _central_tile(held),
+		home_tiles=held, location=cast.get("location") or settlement.default_base_tile(held),
 		starting_techs={str(node_id) for node_id in civ.get("starting_techs") or ()},
 		strata=[dict(stratum) for stratum in cast.get("strata") or ()], extra=extra)
 
