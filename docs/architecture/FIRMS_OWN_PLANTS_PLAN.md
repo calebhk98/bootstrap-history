@@ -346,19 +346,19 @@ players keep working, the id is a product.
 - **Content-id sets in the engine** (`CAPABILITY_INSTITUTIONS`, `SCALABLE_INSTITUTIONS`: `grep -rn "CAPABILITY_INSTITUTIONS\|SCALABLE_INSTITUTIONS" sim --include=*.py`)
   become a flag on the entry's plant kind in stage 3a.
 
-## 7. Open questions for the owner
+## 7. Owner decisions (2026-10-14)
 
-1. Schools, laws, benefactions and other institutions make no good. Are they plants of a `service` kind (a production entry
-   whose output is a capability), or a separate kind of owned thing?
-2. The founder's practice (skills the society has, `granted`, paid as `practice_income`) is a labour income, not a business.
-   Confirm it stays out of this plan.
-3. Where the two paths differ, which wins? Proposed: hiring and wages (firm), market share and book sales (firm), exit by
-   consecutive losing years (firm, as advice for a seat whose `auto_shed` is off), mothball and restore (founder, extended to
-   every owner), opening fee from the entry's `capital` (neither current formula).
-4. The founder as manager: today scholars "drop out" of a concern's supervision once its staff hold a year's running. Keep a
-   manager seat per business that an owner fills with its own hours or by hiring?
-5. Should a business have its own purse and limited liability (a creditor takes the business, never the owner), or stay in the
-   owner's purse with per-business books?
-6. Is it intended that a firm pays node upkeep (which includes crew pay) and crew wages? Stage 3c settles it either way; a
-   decision now avoids a baseline shift being blamed on the move.
-7. Keep `auto_open_ventures` as a founder policy, or retire it now that other actors open businesses by their own deciders?
+1. Institutions (schools, laws, benefactions) are plants of a `service` kind: a production entry whose output is a
+   capability. This may move to a separate kind of owned thing later.
+2. The founder's practice is the founder working a normal job: the founder offers hours in the labour market in a
+   trade they hold and is paid that trade's wage, like any worker. `practice_income` and the `_your_own_practice`
+   revenue line go; tracked by Complaint 518, outside this plan's stages.
+3. Where the paths differ: the firm path wins for hiring and wages, market share and book sales, and exit; mothball and
+   restore come from the founder path and become available to every owner; the opening fee comes from the entry's
+   `capital`.
+4. Each business has a manager seat, filled by the owner's own hours or by hiring.
+5. A business gets its own purse and limited liability, after this plan's stages (it depends on Complaint 106's
+   capital markets).
+6. A firm paying both node upkeep (which includes crew pay) and crew wages is not intended; it is measured and fixed
+   ahead of stage 3c on branch `514-stage-0-business-wall`.
+7. `auto_open_ventures` stays, as a policy any owner can switch on.
