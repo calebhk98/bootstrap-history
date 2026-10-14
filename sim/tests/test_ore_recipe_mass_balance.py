@@ -11,9 +11,6 @@ from sim.engine.validate_production import load_production
 from sim.geography import api as geography_api
 
 KILOGRAMS_PER_TONNE = 1000.0
-# Ores whose recipe still counts dressed concentrate against whole-deposit grades (the same defect, not yet
-# restated per tonne of ore): a migration queue, to shrink.
-CONCENTRATE_NOT_YET_RESTATED = {"galena_kg", "cinnabar_kg"}
 
 
 def richest_grade_kg_per_tonne(resource_id):
@@ -28,8 +25,6 @@ class OreRecipeMassBalanceTests(unittest.TestCase):
         for resource_id, by_ore in geography_api.ore_goods().items():
             grade = richest_grade_kg_per_tonne(resource_id)
             for ore, smelting_recipes in by_ore.items():
-                if ore in CONCENTRATE_NOT_YET_RESTATED:
-                    continue
                 for recipe_id in smelting_recipes:
                     entry = production.get(recipe_id)
                     if entry is None or entry["outputs"].get(recipe_id, 0.0) <= 0.0:

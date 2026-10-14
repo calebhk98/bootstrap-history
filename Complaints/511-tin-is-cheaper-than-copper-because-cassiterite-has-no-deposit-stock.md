@@ -1,6 +1,6 @@
 # Tin is cheaper than copper because cassiterite has no deposit stock
 
-**Status:** closed
+**Status:** partly - recipe mass balance fixed; aged-game price falls below the labour that digs it, tracked by 507 stage 7 (unsold asks)
 
 Split from 502. The recipe `cassiterite_kg` (`data/production/20_nonferrous.json`) costs a few miner and
 labourer hours a tonne and carries nothing for the scarcity of the deposit, while copper's ore recipe carries a
@@ -30,6 +30,20 @@ asks for ore holding its metal at the richest located grade; lead and mercury ar
 `sim/tests/test_economy_tin_dearer_than_copper.py` (opening-year shown tin over copper is not below the ratio of
 the labour their recipes embody).
 
+Lead (`galena_kg`) and mercury (`cinnabar_kg`) had the same defect and are restated the same way: the ore good is
+the rock raised at the deposits' output-weighted grade, mining hours from `vein_hours_per_tonne_ore`, and the
+smelting recipe asks for the rock its grade and recovery imply. `test_ore_recipe_mass_balance.py` now covers
+every smelting recipe.
+
 Measure: the `YearInputs` stepping loop of `test_economy_tin_dearer_than_copper.py` over `rome_100ad`. Opening
-year shown tin over copper went from 0.015 to 0.74. Later years still show tin far below copper; that is not
-the recipe but copper ore's scarcity price and unsold-seller drift, filed as 516.
+year shown tin over copper went from 0.015 to 0.74. Later years still show tin far below copper, falling from
+about 0.7 in year one to under 0.1 and staying there (eight years). Two causes, neither in the recipes:
+- The remembered ask of idle gravel sellers (`cassiterite_kg|united_kingdom_01`, `|spain_03`) decays to a fraction
+  of the labour that digs a tonne, and tin trades a few tonnes a year at a price below the labour in its gravel.
+  This is an idle seller's ask decaying below its making cost, plan stage 7 of
+  `docs/architecture/ONE_PRICE_OWNER_PLAN.md` (Complaints/507); the aged-game relation (tin not below copper)
+  waits on it, and is not asserted until then.
+- Copper ore shows tens of times the labour of raising it (a scarcity price from capped sites against demand),
+  while tin's sites have room far above its demand, so tin never meets a binding site limit. Whether tin should
+  bind depends on the working rate of the tin deposits (`geography.working_rate_tonnes_per_year`) against the
+  demand for bronze; re-measure both before acting.
