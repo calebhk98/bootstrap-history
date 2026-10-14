@@ -1,5 +1,6 @@
 """Policies, creditors and hazard value shifts: knowledge is kept while plant is shed, the automatic hiring and training policies, staff trimming against credit, work in hand, and a hazard's gradual values delta."""
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of, facts_of
 from .agent_command_helpers import ask_agent, pristine_game
 
 
@@ -370,7 +371,7 @@ _b2 = sum(s.employees.values())
 s._step_staff()
 check("losing staff you cannot pay is written in the log, never silent",
       sum(s.employees.values()) < _b2
-      and any("cannot pay everyone" in message for _year, message in s.log),
+      and any(cause_of(message) == "staff_left_unpaid" for _year, message in s.log),
       "%.2f -> %.2f, log %r" % (_b2, sum(s.employees.values()), s.log[-3:]))
 
 # 4. auto_shed discards technologies you built - under fog the only score there

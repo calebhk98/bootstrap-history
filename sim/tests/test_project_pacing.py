@@ -6,6 +6,7 @@ test_round12_naive15.py - see CLAUDE.md's test-file reorganisation note.
 Checks moved verbatim; each one's own comment explains the break it guards.
 """
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of, facts_of
 
 
 # --- BREAK: "waiting on money" while holding 73,234,107 denarii against
@@ -234,7 +235,7 @@ _s_eng.step()
 check("a project that has already drawn everything it needed from a trade "
       "is not killed just because that trade later vanishes from the market",
       _eng_id in _s_eng.active
-      and not any(_eng_id in message and "cannot go on" in message
+      and not any(cause_of(message) == "project_cannot_go_on" and facts_of(message)["project"] == _eng_id
                   for _, message in _s_eng.log[_eng_log_before:]),
       _s_eng.log[_eng_log_before:])
 # The other half: a project that genuinely still owes a trade something is
@@ -246,8 +247,8 @@ _eng2_log_before = len(_s_eng2.log)
 _s_eng2.step()
 check("...while a project that genuinely still owes a trade something is "
       "still caught the first year it has nobody to do that work",
-      any(_eng_id in message and "cannot go on" in message
-          and "no engineer" in message
+      any(cause_of(message) == "project_cannot_go_on" and facts_of(message)["project"] == _eng_id
+          and "engineer" in facts_of(message)["trades"]
           for _, message in _s_eng2.log[_eng2_log_before:]),
       _s_eng2.log[_eng2_log_before:])
 

@@ -21,6 +21,7 @@ import math
 import random
 from dataclasses import dataclass
 
+from sim.refusal import LogLine
 from sim.unit_conversions import PERCENT_SCALE
 from . import automation_audit
 from .units_prose import money_text, plain_number
@@ -316,18 +317,20 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
                 if _wd - (_already + _got) <= 1.0:
                     self.clear_unused_hours_report("work")
                 elif self.unused_hours_is_news("work", [round(_wd), _work_reason]):
-                    self.state.household.log.append((self.state.scenario.year, "DIRECTED HOURS UNUSED: your standing "
-                                         "order to sell %s hours a year as a "
-                                         "%s only managed %s this year - %s. "
-                                         "'allocate' changes or clears it"
-                                     % (plain_number(_wd), self.state.household.work_trade,
-                                        plain_number(_already + _got),
-                                        "no more of your own hours were left "
-                                        "to sell once your projects and "
-                                        "training had theirs"
-                                        if _room < _want else
-                                        "nobody here will pay for that trade "
-                                        "any longer" )))
+                    self.state.household.log.append((self.state.scenario.year, LogLine(
+                        "directed_hours_unused", "DIRECTED HOURS UNUSED: your standing "
+                        "order to sell %s hours a year as a "
+                        "%s only managed %s this year - %s. "
+                        "'allocate' changes or clears it"
+                        % (plain_number(_wd), self.state.household.work_trade,
+                           plain_number(_already + _got),
+                           "no more of your own hours were left "
+                           "to sell once your projects and "
+                           "training had theirs"
+                           if _room < _want else
+                           "nobody here will pay for that trade "
+                           "any longer"),
+                        trade=self.state.household.work_trade, reason="no_hours_left" if _room < _want else "nobody_pays")))
 
     def _step_wage_fallback(self, remaining):
         # 5b. IF THERE IS NO WORK AND NO MONEY, TAKE A JOB. A man who arrives

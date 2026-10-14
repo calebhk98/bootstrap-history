@@ -19,6 +19,7 @@ grouping evidence.
 """
 from .data import WAGES
 from sim.constants import declare
+from sim.refusal import LogLine
 from . import money_units
 from .units_prose import money_text
 from sim.world import capital_market
@@ -595,19 +596,22 @@ class CreditMixin:
             # Say what actually happened and if the freeze date moved (not on first settlement).
             _moved = (_frozen_before > year
                      and household.credit_frozen_until > _frozen_before)
-            household.log.append((year, "INSOLVENCY SETTLED: most of the debt is written "
-                                 "off and you still owe about %s. Your "
-                                 "name is worth less for it (reputation %s), and "
-                                 "you keep your knowledge and your practice%s"
-                                 % (money_text(limit * self.SETTLEMENT_CAPITAL_RETAINED_FRACTION, self, grouped=True),
-                                    "-%.1f" % _rep_hit if _rep_hit > 0.05
-                                    else "already at nothing, so no further",
-                                    (". Settling again while still frozen out "
-                                     "pushes the date nobody will fund you "
-                                     "again until from %d out to %d - it moves "
-                                     "with every settlement, not just the first"
-                                     % (_frozen_before, household.credit_frozen_until))
-                                    if _moved else "")))
+            household.log.append((year, LogLine(
+                "insolvency_settled",
+                "INSOLVENCY SETTLED: most of the debt is written "
+                "off and you still owe about %s. Your "
+                "name is worth less for it (reputation %s), and "
+                "you keep your knowledge and your practice%s"
+                % (money_text(limit * self.SETTLEMENT_CAPITAL_RETAINED_FRACTION, self, grouped=True),
+                   "-%.1f" % _rep_hit if _rep_hit > 0.05
+                   else "already at nothing, so no further",
+                   (". Settling again while still frozen out "
+                    "pushes the date nobody will fund you "
+                    "again until from %d out to %d - it moves "
+                    "with every settlement, not just the first"
+                    % (_frozen_before, household.credit_frozen_until))
+                   if _moved else ""),
+                reputation_hit=_rep_hit, credit_frozen_until=household.credit_frozen_until)))
 
     def stall_diagnosis(self):
         """None if the run is going somewhere; otherwise what is wrong and what

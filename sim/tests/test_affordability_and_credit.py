@@ -5,6 +5,7 @@ A few games are built once and reused; checks that only read a figure reset the 
 overrides they installed (credit_limit, spending_power, project_cost) before the next check.
 """
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of, facts_of
 from .agent_command_helpers import pristine_game
 
 
@@ -339,7 +340,8 @@ insolvent.reputation = 4.9
 insolvent.insolvent_years = 30
 insolvent.enforce_credit_limit(150)
 check("a reputation penalty announces what it actually took",
-      "-4.9" in [message for _, message in insolvent.log if "INSOLVENCY" in message][-1], insolvent.log[-1:])
+      [facts_of(message)["reputation_hit"] for _, message in insolvent.log
+       if cause_of(message) == "insolvency_settled"][-1] == 4.9, insolvent.log[-1:])
 insolvent.capital = -99999.0
 insolvent.insolvent_years = 30
 insolvent.enforce_credit_limit(200)
@@ -366,7 +368,9 @@ replies = [S._agent_dispatch(worker, NODES, command) for command in (
     {"cmd": "start", "id": "arithmetic_positional"}, {"cmd": "step", "years": 1},
     {"cmd": "work", "trade": "scholar", "hours": 2000}, {"cmd": "step", "years": 1}, {"cmd": "state"})]
 check("clearing your debt by working does not make you insolvent",
-      not any("INSOLVENCY" in json.dumps(reply) for reply in replies),
+      not any(cause_of(message) == "insolvency_settled" for _, message in worker.log)
+      and not any(event.get("event_kind") == "insolvency_settled"
+                  for reply in replies for event in (reply.get("events") or [])),
       [event for reply in replies for event in (reply.get("events") or []) if "INSOLVENCY" in str(event)])
 check("...and does not take your whole reputation with it",
       replies[-1].get("reputation", 0) > 1.0, replies[-1].get("reputation"))

@@ -1,5 +1,6 @@
 """reserve_staff: the keep-N-spare part of complaint 176."""
 from .harness import *  # noqa: F401,F403
+from sim.refusal import facts_of
 from sim.ui.proto.typed import parse_typed
 
 
@@ -15,7 +16,7 @@ check("reserve_staff is listed by policy and off by default",
       idle.policy.get("reserve_staff") is False, sorted(idle.policy))
 idle._step_staff()
 check("with the policy off no reserve hire is logged",
-      not any("reserve_staff" in message for _year, message in idle.log), idle.log[-4:])
+      not any(facts_of(message).get("policy") == "reserve_staff" for _year, message in idle.log), idle.log[-4:])
 
 # The size of the reserve is set with `reserve`, the switch with `policy`.
 kept = sim(capital=5_000_000)
@@ -56,7 +57,7 @@ _dispatch(poor, "policy reserve_staff on")
 places_before = poor.state.household.worker_housing_places or 0.0
 poor._step_staff()
 check("no cash, no reserve hire and no housing",
-      not any("reserve_staff" in message for _year, message in poor.log)
+      not any(facts_of(message).get("policy") == "reserve_staff" for _year, message in poor.log)
       and (poor.state.household.worker_housing_places or 0.0) == places_before, poor.log[-4:])
 
 # The setting survives a save and a load.

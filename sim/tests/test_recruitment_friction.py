@@ -6,6 +6,7 @@ QUICK_TOPIC = True
 from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403
+from sim.refusal import facts_of
 
 from sim.labour.labour_market_api import LabourMarket
 from sim.labour.labour_staff_ledger import StaffLedgerMixin
@@ -84,4 +85,4 @@ class CoverLabour(StaffLedgerMixin):
 cover = CoverLabour(found=3)
 check("a policy hire reports the people found, not the people asked for",
       cover.hire_to_cover("carver", 10, "auto-hire") == 3
-      and "hire 3 carvers" in cover._world.state.household.log[-1][1])
+      and facts_of(cover._world.state.household.log[-1][1]) == {"policy": "auto-hire", "trade": "carver", "count": 3})

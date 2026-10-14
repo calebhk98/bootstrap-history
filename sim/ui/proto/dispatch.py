@@ -18,7 +18,7 @@ from .nodes import NODE_NAME_NORM, _did_you_mean, _norm_name, _resolve_by_name
 from sim.ui.memory import load_state, save_state
 from .score import victory_report
 from .why_material import material_story
-from .refusal_cause import add_cause
+from .refusal_cause import add_cause, event_codes
 from .seat_address import run_as_seat
 from .state_waiting import _agent_end_reason
 from .state import _agent_state
@@ -305,7 +305,7 @@ def _cmd_step(sim, nodes, cmd, ended):
         if getattr(sim, "disaster_this_year", None):
             disasters.append(sim.disaster_this_year)
         for year, message in _this_year:
-            events.append({"year": year, "message": message})
+            events.append({"year": year, "message": message, **event_codes(message)})
             if "founder dies" in message.lower():
                 _age = re.search(r"aged about (\d+)", message)
                 _age_n = int(_age.group(1)) if _age else None

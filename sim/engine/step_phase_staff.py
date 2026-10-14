@@ -4,6 +4,7 @@ A part of the year's phases (core_step_phases.py); Sim inherits it through StepP
 import math
 import random
 
+from sim.refusal import LogLine
 from sim.world.demography import BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE
 from . import automation_audit
 from .units_prose import plain_number
@@ -140,8 +141,9 @@ class StaffPhaseMixin:
             # logged, and a player who is not told has to notice their own wage
             # bill hit zero to find out.
             if gone > 0.005:
-                self.state.household.log.append((self.state.scenario.year, "you cannot pay everyone: %.1f of your staff "
-                                     "leave for work that pays" % gone))
+                self.state.household.log.append((self.state.scenario.year, LogLine(
+                    "staff_left_unpaid", "you cannot pay everyone: %.1f of your staff "
+                    "leave for work that pays" % gone, staff_gone=gone)))
         # NOT `capital > 0`: gating hiring on a strictly positive balance
         # creates a catch-22, where a household in arrears could never take
         # on the people whose work is the only way out of arrears. A run

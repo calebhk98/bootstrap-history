@@ -1,5 +1,5 @@
 """Copies a refusal's cause code (sim/refusal.py) into the reply that carries its text."""
-from sim.refusal import cause_of, choices_of
+from sim.refusal import cause_of, choices_of, facts_of
 
 
 def add_cause(reply):
@@ -11,3 +11,11 @@ def add_cause(reply):
         if choices_of(reply.get("error")) is not None:
             reply["choices"] = choices_of(reply.get("error"))
     return reply
+
+
+def event_codes(message):
+    """{"event_kind", "facts"} for a log line that carries a kind (sim/refusal.py LogLine), else {}."""
+    kind = cause_of(message)
+    if not kind:
+        return {}
+    return {"event_kind": kind, "facts": facts_of(message)}
