@@ -7,6 +7,7 @@ from sim.engine.ui_port import units
 from .buy_targets import canonical_target
 from .dispatch import KNOWN_COMMANDS
 from .nodes import NODE_IDS, NODE_IDS_LOWER
+from .help import example_node_id
 from .render_screen_state_views import SECTIONS
 from .quote_spending import SPENDING_QUOTERS
 
@@ -552,10 +553,12 @@ def _parse_open_or_named_tech(command, rest, words, nums, want_json):
         # 'start all ...' is the bulk start; unbounded it only previews
         return _parse_rush("rush", rest[1:], words[1:], nums, want_json)
 
+    if not rest and command in ("path", "route", "plan"):
+        return {"cmd": "path"}, None    # the route to the current goal
     if not rest:
         return None, ("%s needs the name of a technology, e.g. '%s "
-                      "fud_wheelbarrow'. 'available' lists what you can "
-                      "begin now." % (command, command))
+                      "%s'. 'available' lists what you can "
+                      "begin now." % (command, command, example_node_id()))
     # MATCHED CASE-INSENSITIVELY, NOT LOWERCASED: flattening the case would
     # break ids that genuinely carry capitals, among them the whole
     # cap_pure_2N/4N/6N/9N purity ladder, which sits on the critical path

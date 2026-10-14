@@ -135,6 +135,25 @@ def _why_staff_keep_open(out):
     return lines
 
 
+def _material_row_text(row):
+    """One MATERIALS line, the quantities in the material's own unit and the supply note only where something supplies it."""
+    own = row.get("own_unit")
+    if own:
+        quantities = "need %s %s, hold %s, missing %s" % (
+            _fmt_num(own["needed"]), own["unit"], _fmt_num(own["held"]), _fmt_num(own["missing"]))
+    else:
+        quantities = "need %s, hold %s, missing %s" % (
+            _fmt_num(row["needed_tonnes"]), _fmt_num(row["held_tonnes"]), _fmt_num(row["missing_tonnes"]))
+    years = row.get("years_of_supply_it_takes")
+    if row.get("not_produced"):
+        note = "  (nothing produces this: neither the market nor your own output supplies it)"
+    elif years and years > 1.0:
+        note = "  (market and your own output supply this in about %s years)" % _fmt_num(years)
+    else:
+        note = ""
+    return "  %-22s %s -> %s den%s" % (row["material"], quantities, _fmt_num(row["cost_of_missing"]), note)
+
+
 def _why_labour_materials(out):
     lines = []
     lab = out.get("hired_labour") or {}
@@ -148,13 +167,7 @@ def _why_labour_materials(out):
     if rows:
         lines.append("MATERIALS (%s; missing part priced at today's market):" % units_text.text_label("mass", "tonnes"))
         for row in rows:
-            years = row.get("years_of_supply_it_takes")
-            lines.append("  %-22s need %s, hold %s, missing %s -> %s den%s"
-                         % (row["material"], _fmt_num(row["needed_tonnes"]),
-                            _fmt_num(row["held_tonnes"]), _fmt_num(row["missing_tonnes"]),
-                            _fmt_num(row["cost_of_missing"]),
-                            "  (market and your own output supply this in about %s years)"
-                            % _fmt_num(years) if years and years > 1.0 else ""))
+            lines.append(_material_row_text(row))
     elif out.get("materials"):
         lines.append("MATERIALS: " + ", ".join("%s %s" % (material, _fmt_num(quantity)) for material, quantity in out["materials"].items()))
     return lines

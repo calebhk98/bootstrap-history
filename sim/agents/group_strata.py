@@ -13,6 +13,18 @@ DISPLACED_WORKERS = "displaced_workers"
 LANDHOLDERS = "landholders"
 
 
+ARTICLES = ("the", "a", "an")
+
+
+def definite(name: str) -> str:
+	"""A stratum's name as the subject of a phrase: a name that already opens with an article or is a
+	proper name (capitalised, as a country's name is) keeps its own opening; a common noun gets "the"."""
+	first_word = name.split(" ", 1)[0]
+	if first_word.lower() in ARTICLES:
+		return first_word.lower() + name[len(first_word):]
+	return name if first_word[:1].isupper() else "the " + name
+
+
 def organisable(stratum: Any) -> bool:
 	"""A free stratum of the home country with people in it; the bonded and foreign cannot act on this state."""
 	record = stratum.record
@@ -62,12 +74,12 @@ def _fallen_incomes(stratum: Any, holders: List[Any], world: Any) -> List[Sector
 			trade = record.plan.get("trade")
 			working = float(record.plan.get("work_share", STRATUM_WORKING_SHARE))
 			sectors.append(Sector(
-				DISPLACED_WORKERS, record.stratum, "the %s (%s work)" % (record.name, trade),
+				DISPLACED_WORKERS, record.stratum, "%s (%s work)" % (definite(record.name), trade),
 				"the pay of %s work has fallen %d%% below what they had come to expect" % (trade, percent),
 				fall, reference, record.members * working, 1.0))
 		else:
 			sectors.append(Sector(
-				LANDHOLDERS, record.stratum, "the %s as landholders" % record.name,
+				LANDHOLDERS, record.stratum, "%s as landholders" % definite(record.name),
 				"their rents and property income have fallen %d%% below what they had come to expect" % percent,
 				fall, reference, record.members, 1.0))
 	return sectors
@@ -99,7 +111,7 @@ def stratum_sectors(strata: List[Any], world: Any) -> List[Sector]:
 		owns_property = float(record.plan.get("property_share") or 0.0) > 0.0
 		income_word = "rents and property income" if owns_property else "earnings"
 		sectors.append(Sector(
-			FALLING_INCOMES, record.stratum, "the " + record.name,
+			FALLING_INCOMES, record.stratum, definite(record.name),
 			"their %s have fallen %d%% below what they had come to expect" % (
 				income_word, round(100.0 * fall / record.welfare_reference)),
 			unexplained, record.welfare_reference * food_bill, record.members, 1.0))

@@ -391,6 +391,11 @@ class CapacityMixin:
     # household room staff_capacity() already credits them with) still gets
     # the room; this function just never tells them to go build one.
 
+    def _places_text(self, places):
+        """The places a node adds at the current income, as a short number."""
+        added = self.room_added_by(places)
+        return "%.1f" % added if added < 10 else "%d" % round(added)
+
     def _room_advice(self):
         """What raises the CEILING on people, which is not what buys people.
 
@@ -427,7 +432,7 @@ class CapacityMixin:
         _reopen_bit = (
             ("you already have %s, shut: reopening %s is cheaper than "
              "building anything else. "
-             % (" and ".join("%s (+%d)" % (node_id, places) for node_id, places in reopen[:2]),
+             % (" and ".join("%s (+%s)" % (node_id, self._places_text(places)) for node_id, places in reopen[:2]),
                 "it" if len(reopen) == 1 else "them"))
             if reopen else "")
         _housing_bit = ("Housing is bought: 'buy housing N' adds N places at %s each. "
@@ -442,10 +447,11 @@ class CapacityMixin:
                     "offers; what is left grows on its own as they run."
                     % _housing_bit)
         _now = [(node_id, places) for node_id, places in want if self._world.start_reason(node_id, _why=False)[0]]
-        return ("%sMore room is built: %s%s. Each is somewhere for "
+        return ("%sMore room is built: %s%s at your present income (the places grow "
+                "with surplus, since each needs people you can pay). Each is somewhere for "
                 "people to work and somebody to oversee them.%s"
                 % (_housing_bit, _reopen_bit,
-                   "; ".join("%s (+%d places)" % (node_id, places) for node_id, places in want[:3]),
+                   "; ".join("%s (+%s places)" % (node_id, self._places_text(places)) for node_id, places in want[:3]),
                    "" if _now else " None is startable today; they are listed "
                                    "nearest first, so the first is what to work "
                                    "towards."))
@@ -569,7 +575,6 @@ class CapacityMixin:
         # is a thing you do rather than a staff of four you are handed on
         # arrival and never asked for.
         base_sc, base_ar = 0.0, 0.0
-        scholars = artisans = directors = 0.0
         # A SECOND SCHOOL TRAINS A SECOND SCHOOL'S WORTH OF SCHOLARS. Linear in
         # institution_units, which is 1.0 for a run that never founds more than
         # the original single unit - exactly the constants below, unchanged -
@@ -586,6 +591,47 @@ class CapacityMixin:
         # until the horizon runs out, unless the planner can read the same
         # table this function reads rather than an if-chain only this
         # function could see.
+        scholars, artisans, directors = self._institutional_load(with_directors=True)
+        # you cannot keep staff you cannot pay
+        # a famous school attracts students and patrons it did not have to pay for
+        # WAGES ARE A REAL CHARGE (see wage_bill), so this ceiling must be
+        # more than "what you could pay for": it must leave room WITHOUT
+        # eating the surplus needed to build anything, or hiring to the
+        # edge of affordability could let payroll consume the entire
+        # surplus, leaving nothing to spend on the work itself. A
+        # programme whose payroll is its whole income is not a programme.
+        #
+        # SPARE MUST SUBTRACT living_cost() TOO, not just revenue() minus
+        # upkeep() (the upkeep of BUILT WORKS alone): living_cost also
+        # covers rent, appearances, tax and (via wage_bill) the staff
+        # already carried. Subtracting living_cost here is what "what you
+        # can pay for" has to mean if it is to mean anything: money already
+        # going to rent and to people already employed is not there to
+        # hire more people with.
+        afford, pop = self._staffing_affordability()
+        # EXTRA is supervision_room(), the headroom auto_hire adds on top of
+        # this institutional ceiling (see step(), section 1). It must be
+        # folded into the SAME denominator this ceiling is scaled against,
+        # not added with no affordability check of its own: sc/ar are BOTH
+        # ZERO before a workshop or a school is built, so an unconditional
+        # extra would let the headroom hiring go through at full strength
+        # regardless of income. Folding it in is what makes "grow the staff
+        # toward what you can house and pay" true of the headroom hiring
+        # and not just the institutional kind.
+        extra = self.supervision_room()
+        # NO FLOOR: a household with no surplus at all must be able to hire
+        # nobody. A floor such as max(0.10, ...) would still hire a tenth
+        # of the headroom regardless of affordability, undoing the whole
+        # calculation above - "grow the staff toward what you can house and
+        # pay" has to be able to mean nobody.
+        scale = self._staff_scale_for(afford, scholars + artisans, extra)
+        self._world.household._staff_scale = scale     # step() applies this to `extra` too
+        return (base_sc + scholars * scale * pop, base_ar + artisans * scale * pop,
+                directors * min(1.0, scale * self.DIRECTOR_SCALE_HEADROOM) * pop)
+
+    def _institutional_load(self, with_directors=False):
+        """Scholars and artisans (and directors) the running institutions train outright, before affordability."""
+        scholars = artisans = directors = 0.0
         for key, _sc, _ar, _di, scaled, must_run in self._world.STAFF_CAPACITY_SOURCES:
             if not (self._world.running(key) if must_run else self._world.has(key)):
                 continue
@@ -603,45 +649,17 @@ class CapacityMixin:
         # (apply_tech_effects, society.py) and widen it again as a run goes
         # on, which is the entire point of building them.
         scholars *= self.literacy_factor(trade_data.scholar_trade())
-        # you cannot keep staff you cannot pay
-        # a famous school attracts students and patrons it did not have to pay for
-        # WAGES ARE A REAL CHARGE (see wage_bill), so this ceiling must be
-        # more than "what you could pay for": it must leave room WITHOUT
-        # eating the surplus needed to build anything, or hiring to the
-        # edge of affordability could let payroll consume the entire
-        # surplus, leaving nothing to spend on the work itself. A
-        # programme whose payroll is its whole income is not a programme.
-        #
-        # SPARE MUST SUBTRACT living_cost() TOO, not just revenue() minus
-        # upkeep() (the upkeep of BUILT WORKS alone): living_cost also
-        # covers rent, appearances, tax and (via wage_bill) the staff
-        # already carried. Subtracting living_cost here is what "what you
-        # can pay for" has to mean if it is to mean anything: money already
-        # going to rent and to people already employed is not there to
-        # hire more people with.
+        if with_directors:
+            return scholars, artisans, directors
+        return scholars, artisans
+
+    def _staffing_affordability(self):
+        """(people the spare income can pay, population scale on institutional ceilings)."""
         spare = max(0.0, (self._world.revenue() - self._world.upkeep() - self._world.living_cost())
                     * self._world.rep_factor()
                     + max(0.0, self._world.state.household.capital) * self.STAFF_CAPITAL_INCOME_RATE)
         budget = spare * self.STAFF_BUDGET_SHARE_OF_SPARE
         afford = budget / self.staff_wage_reference()
-        # EXTRA is supervision_room(), the headroom auto_hire adds on top of
-        # this institutional ceiling (see step(), section 1). It must be
-        # folded into the SAME denominator this ceiling is scaled against,
-        # not added with no affordability check of its own: sc/ar are BOTH
-        # ZERO before a workshop or a school is built, so an unconditional
-        # extra would let the headroom hiring go through at full strength
-        # regardless of income. Folding it in is what makes "grow the staff
-        # toward what you can house and pay" true of the headroom hiring
-        # and not just the institutional kind.
-        extra = self.supervision_room()
-        # NO FLOOR: a household with no surplus at all must be able to hire
-        # nobody. A floor such as max(0.10, ...) would still hire a tenth
-        # of the headroom regardless of affordability, undoing the whole
-        # calculation above - "grow the staff toward what you can house and
-        # pay" has to be able to mean nobody.
-        scale = min(1.0, afford / max(1.0, scholars + artisans
-                                      + extra * self.STAFF_EXTRA_HEADROOM_WEIGHT))
-        self._world.household._staff_scale = scale     # step() applies this to `extra` too
         # A civilization of 1.5 million simply cannot field the trained people a
         # civilization of 65 million can, however rich you are. This is the single
         # biggest structural difference between playing Rome and playing Norway.
@@ -650,8 +668,25 @@ class CapacityMixin:
         # would be a modelling error, not a finding.
         pop = (self.STAFF_POP_SCALE_FLOOR
                + self.STAFF_POP_SCALE_VARIABLE * min(1.0, self._world.pop_scale ** self.STAFF_POP_SCALE_EXPONENT))
-        return (base_sc + scholars * scale * pop, base_ar + artisans * scale * pop,
-                directors * min(1.0, scale * self.DIRECTOR_SCALE_HEADROOM) * pop)
+        return afford, pop
+
+    def _staff_scale_for(self, afford, institutional_people, extra):
+        """Fraction of an institutional ceiling the spare income can pay for (no floor: no surplus hires nobody)."""
+        return min(1.0, afford / max(1.0, institutional_people + extra * self.STAFF_EXTRA_HEADROOM_WEIGHT))
+
+    def room_added_by(self, places):
+        """Household places a node worth `places` would add at the current income.
+
+        The node joins the same institutional load staff_capacity scales by
+        affordability, so it adds less than its flat figure when the spare
+        income cannot pay for the people, and more as the surplus grows.
+        """
+        scholars, artisans = self._institutional_load()
+        afford, pop = self._staffing_affordability()
+        extra = self.supervision_room()
+        before = artisans * self._staff_scale_for(afford, scholars + artisans, extra)
+        after = (artisans + places) * self._staff_scale_for(afford, scholars + artisans + places, extra)
+        return (after - before) * pop
 
     _SUPERVISION_ROOM_WHY = (
         "Household headroom (people a founder may oversee, distinct from "

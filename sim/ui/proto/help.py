@@ -11,10 +11,16 @@ import json
 from sim.engine.ui_port import money_unit_note
 from sim.engine.ui_port import Sim
 from . import command_registry
+from .nodes import NODE_IDS
 from .help_commands import JSON_MODE_NOTE, _command_text, commands_page, full_listing
 
 TOPICS = {}          # topic name -> builder(sim) returning the page dict
 TOPIC_ALIASES = {}   # other word -> topic name
+
+
+def example_node_id():
+    """A real node id to show in usage examples."""
+    return min(NODE_IDS) if NODE_IDS else "<id>"
 
 
 def help_topic(name, aliases=()):
@@ -89,7 +95,7 @@ def _front_page(sim, typed_hints):
         "when you cannot see why you are not getting on": '{"cmd":"stuck"}',
         "how to send a command": (
             'One command per line, in plain words: "available", '
-            '"step 5", "hire smith 2", "why fud_wheelbarrow".'
+            '"step 5", "hire smith 2", "why %s".' % example_node_id()
             if typed_hints else
             'One JSON object per line on standard input, for example '
             '{"cmd":"available"} or {"cmd":"step","years":5}. Each reply is '
