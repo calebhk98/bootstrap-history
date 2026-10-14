@@ -75,12 +75,15 @@ def _cmd_path(sim, nodes, cmd, ended):
     # asks "could I begin this, today, on its own", which is a different
     # and smaller question than "could I finish several of these
     # together".
-    if _startable and all(nodes[node_id]["rev"] <= 0 for node_id in _startable):
+    if _startable and not any(
+            sim.venture_real_earnings(node_id) > sim.venture_upkeep_quote(node_id)["now"]
+            for node_id in _startable):
         _combined = sum(sim.project_cost(node_id) for node_id in _startable)
         _raise = sim.spending_power("start")
         out["this_route_pays_for_nothing"] = (
-            "every one of the %d things above is knowledge or "
-            "infrastructure - none earns a denarius by itself. This "
+            "none of the %d things above earns more than it costs to "
+            "keep running - they are knowledge or infrastructure, or "
+            "trades that do not yet pay their way. This "
             "route will not cover your costs; something off it has to. "
             "{\"cmd\":\"available\",\"sort\":\"earns\",\"reverse\":true} "
             "finds what actually pays today - building one of those "
