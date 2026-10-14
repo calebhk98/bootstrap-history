@@ -162,3 +162,17 @@ old figure) and the mint still strikes about nothing over the run: `last/first` 
   fixed-site inputs so that fixture is untouched.
 
 Not done: opening capacity/income sizing (507), the joint-recipe stock gate, regenerating `openings/`.
+
+## Update 3 (joint recipes gated on value)
+
+`producers.runs_for_stock` judged a joint recipe on the stock of its heaviest output (`main_output`), so unsold lead stopped
+a smelter whose silver sold. It now takes the run's cost and the outputs' prices (`plan` passes them): an output that is
+piling up is ignored while what a run makes of the others, at those prices, covers the run's cost; otherwise the largest
+pile limits the runs as before (a single-output recipe is unchanged). Readers: `producers.plan` (the one caller that passes
+the cost), `test_economy_producer_stale_ask` (no cost, old behaviour). `main_output` is untouched; its other readers are
+`year_close` (output worked, a producer's own figures) and the opening's placement.
+
+Effect on the Rome trace (`simulator.py spin-up-trace --civ rome_100ad --years 40`): the mint's strikes over wear by decade went
+from about nil to 0.17, 0.22, 0.34 after the first decade, and the stock ratio last/first from 0.73 to 0.78. The test still
+fails: the first years are not rescued, because the smelters' own bids push the ore price up until the silver alone does not
+cover a run (the chain is sized to silver demand, 507), and the deposits' ceiling above still applies.
