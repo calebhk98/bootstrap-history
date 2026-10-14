@@ -464,7 +464,8 @@ class HazardsMixin:
                 said.add(key)
                 msg = cond.get("met_message" if met else "unmet_message")
                 if msg:
-                    self.state.household.log.append((year, msg))
+                    self.state.household.log.append((year, LogLine(
+                        "hazard_condition_met" if met else "hazard_condition_unmet", msg, hazard=key)))
         if not met or field not in hazard:
             return hazard
         adjusted = dict(hazard)
