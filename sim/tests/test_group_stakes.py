@@ -7,6 +7,7 @@ QUICK_TOPIC = True
 from types import SimpleNamespace
 
 from .harness import check
+from sim.refusal import cause_of
 
 from sim.agents import group_servants
 from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, CountryProfile, Government, Sector
@@ -259,7 +260,7 @@ before_army = government.record.army
 acted = group_servants.run_army_year(government, world)
 check("a year of mutiny cuts the army and empties the treasury of the arrears taken",
       government.record.army < before_army and acted["seized"] > 0.0 and government.money < 50000.0
-      and any("MUTINY" in line for line in world.said), (government.record.army, government.money, world.said))
+      and any(cause_of(line) == "army_mutiny" for line in world.said), (government.record.army, government.money, world.said))
 
 # ---- a prohibition reaches a technique through substitutes ----------------------------------------------------------------------
 tree = {"steel_plant": {"cat": "metal", "pre": []}, "bronze_foundry": {"cat": "metal", "pre": []}}

@@ -1,5 +1,6 @@
 """Training lag and people you buy, the revenue ledger, projects short of a trade or money, and how hazards, sackings and failures are reported."""
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of, facts_of
 from .agent_command_helpers import ask_agent, with_end_year, starved_game, pristine_game
 from sim.ui.proto.render_typed import render_pretty as _render_pretty
 
@@ -199,7 +200,8 @@ for _i in range(120):
         _fails += 1
         del s.active[_risky]
 check("a failed attempt is announced, not silently absorbed",
-      _fails > 0 and any("FAILED at" in message for _year, message in s.log),
+      _fails > 0 and any(cause_of(message) == "project_failed" and facts_of(message)["project"] == _risky
+                                for _year, message in s.log),
       "%d failures in 120 at risk %.2f, logged %d"
       % (_fails, NODES[_risky]["risk"],
          sum(1 for _year, message in s.log if "FAILED at" in message)))

@@ -1,5 +1,6 @@
 """sort_nearest: regression checks, run individually with `--only sort_nearest`."""
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of, facts_of
 
 # `available sort nearest` measured distance to becoming startable, never distance to a goal;
 # it is now fewest_missing, with the old spelling kept working.
@@ -108,7 +109,9 @@ check("the founder's death says what it means for the run, not only that it happ
       any("THE FOUNDER DIES" in message and "no deputy" in message for _, message in mortal.log),
       [message for _, message in mortal.log if "FOUNDER DIES" in message][:1])
 check("...and the programme dissolving is counted down where a player sees it",
-      any("DISSOLVING" in message and "ends at twelve" in message for _, message in mortal.log),
+      any(cause_of(message) == "programme_dissolving"
+          and facts_of(message)["run_ends_after_years"] == mortal.DISSOLUTION_YEARS_UNTIL_END
+          for _, message in mortal.log),
       [message for _, message in mortal.log if "DISSOLVING" in message][:1])
 
 # Losing people to death and better offers is announced, not silent.
@@ -117,10 +120,11 @@ run_it(attrition, "workshop_first", "school_founded", "freedman_staff")
 attrition.labour.hire("scholar", 8)
 for _ in range(12):
     attrition.step()
-    if any("lose" in message and "scholar" in message for _, message in attrition.log):
+    if any(cause_of(message) == "staff_lost" and "scholar" in facts_of(message)["trades"] for _, message in attrition.log):
         break
 check("losing people to death and better offers is announced, not silent",
-      any("lose" in message and "scholar" in message for _, message in attrition.log),
+      any(cause_of(message) == "staff_lost" and "scholar" in facts_of(message)["trades"]
+          for _, message in attrition.log),
       [message for _, message in attrition.log if "lose" in message][:2])
 
 # --- BREAK, round 12: a developer's own change-log marker was shipped in the

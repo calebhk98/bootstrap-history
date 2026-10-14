@@ -64,7 +64,9 @@ class StaffPhaseMixin:
                 people = ", ".join("%d %s%s" % (count, trade_id, "" if count == 1 else "s")
                                    for trade_id, count in sorted(counts.items()) if count)
                 if people:
-                    self.state.household.log.append((self.state.scenario.year, "you lose %s to %s" % (people, cause)))
+                    self.state.household.log.append((self.state.scenario.year, LogLine(
+                        "staff_lost", "you lose %s to %s" % (people, cause),
+                        reason=cause.replace(" ", "_"), trades={trade_id: count for trade_id, count in counts.items() if count})))
         # Rehire a specialist foreman an open concern just lost, before the
         # staffing rule closes the concern.
         if self.state.founder.policy.get("auto_replace_foreman", False):

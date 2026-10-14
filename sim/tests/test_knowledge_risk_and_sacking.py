@@ -4,6 +4,7 @@ the KNOWLEDGE LOST announcement, and the sack's effect on the whole
 household's headcount.
 """
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of, facts_of
 
 
 class _AlwaysSackRNG:
@@ -159,12 +160,13 @@ check("corpus_dispersed is never among what the sack forgets, while ordinary nod
       "corpus_dispersed" not in _forgotten_dispersed and _lost_dispersed > 0, _forgotten_dispersed)
 
 # The KNOWLEDGE LOST text is built from how things stood before the loss.
-_lost_messages = [message for _, message in household_dispersed.log[_log_start:] if "KNOWLEDGE LOST" in message]
+_lost_messages = [message for _, message in household_dispersed.log[_log_start:]
+                  if cause_of(message) == "knowledge_lost"]
 check("a sack that cannot touch corpus_dispersed never claims the corpus was "
       "never dispersed, nor that the corpus itself went",
       bool(_lost_messages)
-      and "never printed and dispersed" not in _lost_messages[0]
-      and "CORPUS ITSELF WENT" not in _lost_messages[0], _lost_messages)
+      and not facts_of(_lost_messages[0])["corpus_never_dispersed"]
+      and not facts_of(_lost_messages[0])["corpus_went"], _lost_messages)
 
 # --- A sack says what it did to the road to the goal.
 household_goal = sim(capital=1_000_000.0)
@@ -177,8 +179,8 @@ household_goal._done_changed()
 _force_sack(household_goal, "TEST CRISIS")
 _log_start = len(household_goal.log)
 household_goal._shocks(household_goal.year)
-_goal_messages = [message for _, message in household_goal.log[_log_start:] if "KNOWLEDGE LOST" in message]
+_goal_messages = [message for _, message in household_goal.log[_log_start:] if cause_of(message) == "knowledge_lost"]
 check("the KNOWLEDGE LOST event names how many forgotten technologies stood on the road to the goal",
-      bool(_goal_messages) and "road to your goal" in _goal_messages[0], _goal_messages)
-check("...and points at 'path' as where to see the route's new shape",
+      bool(_goal_messages) and facts_of(_goal_messages[0])["on_road"] > 0, _goal_messages)
+check("...and the text points at 'path' as where to see the route's new shape",
       bool(_goal_messages) and "'path'" in _goal_messages[0], _goal_messages)

@@ -7,6 +7,7 @@ of their pay they have come to get: an army paid less of it than it expected los
 loyalty acts on the state: soldiers desert and the rest take their back pay from the treasury (`mutiny`). A state
 that has always paid part of its army is not mutinied against for it; the fall is the grievance.
 """
+from sim.refusal import LogLine
 from typing import Any, Dict, List, Optional
 
 from . import budget, ledger
@@ -129,8 +130,9 @@ def run_army_year(government: Any, world: Any) -> Dict[str, float]:
 		if acted["seized"] > 0.0:
 			ledger.transfer(government, world.edge(EDGE_STATE_SPENDING), acted["seized"], "mutineers take their arrears")
 			record.arrears[ARMY_LINE] = max(0.0, arrears - acted["seized"])
-		world.say("MUTINY: the army, unpaid, has lost its loyalty; %s soldiers desert and the rest take %s from the treasury"
-				  % (world.plain_number(acted["deserters"]), world.money_text(acted["seized"], grouped=True)))
+		world.say(LogLine("army_mutiny", "MUTINY: the army, unpaid, has lost its loyalty; %s soldiers desert and the rest take %s from the treasury"
+						  % (world.plain_number(acted["deserters"]), world.money_text(acted["seized"], grouped=True)),
+						  deserters=acted["deserters"], seized=acted["seized"]))
 	return acted
 
 

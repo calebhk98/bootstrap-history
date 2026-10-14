@@ -1,5 +1,6 @@
 """state_notices: regression checks, run individually with `--only state_notices`."""
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of
 from sim.ui import protocol as _PROTO
 
 # --- the state notices you: requisition, office, military demand, ----------
@@ -187,8 +188,8 @@ check("with events off, the probabilistic confiscation/military rolls never "
       "that one is APPROACHING is allowed through regardless, the same way "
       "eminence's own conspicuousness warning in core.py's step() is not "
       "gated on events either, only its dice roll is",
-      not any("handed over" in message or "the state takes what it judges" in message
-             for _year, message in _det_off.log[-5:]),
+      not any(cause_of(message) in ("state_military_demand", "state_confiscation")
+              for _year, message in _det_off.log[-5:]),
       [message for _year, message in _det_off.log[-5:]])
 check("...but the deterministic requisition/office tax still applies - it "
       "is not a roll of the dice, and a dice-free trial must still feel it",
@@ -200,5 +201,5 @@ _det_on.rng = _AlwaysFires(1)
 _det_on._state_pressure(_det_on.year)
 check("...and with events on, the same always-fires rng DOES produce the "
       "confiscation tail event this time",
-      any("the state takes what it judges" in message for _year, message in _det_on.log),
+      any(cause_of(message) == "state_confiscation" for _year, message in _det_on.log),
       [message for _year, message in _det_on.log[-5:]])

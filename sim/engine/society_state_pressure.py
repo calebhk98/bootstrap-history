@@ -19,6 +19,7 @@ Behaviour is unchanged and verified byte-identical.
 import math
 
 from sim.constants import declare
+from sim.refusal import LogLine
 from sim.engine import money_units
 from sim.engine.units_prose import mass_text, money_text
 from sim.agents.api import demand_answer
@@ -1318,7 +1319,9 @@ class StatePressureMixin:
                 else:
                     said = ("%s asked for %s of your output, you refused and it could not enforce: nothing taken"
                             % (name, money_text(asked, self, grouped=True)))
-                self.state.household.log.append((year, said))
+                self.state.household.log.append((year, LogLine(
+                    "state_military_demand", said, asked=asked, taken=take,
+                    stance=self.state.household.demand_stance)))
 
         probability, conf_why = self.confiscation_risk()
         if probability > 0.0:
@@ -1342,11 +1345,13 @@ class StatePressureMixin:
                 name = state_pressure_cfg.get("confiscation_name", "confiscation")
                 if lost > 0.5:
                     self.state.household.reputation = max(0.0, self.state.household.reputation - self.CONFISCATION_REPUTATION_LOSS)
-                    self.state.household.log.append((year, "%s: the state takes what it judges a "
-                                         "fortune too large to go on merely taxing - %s gone%s"
-                                     % (name, money_text(lost, self, grouped=True),
-                                        " (you negotiated it down from %s)" % money_text(demanded, self, grouped=True)
-                                        if answer["negotiated"] else "")))
+                    self.state.household.log.append((year, LogLine(
+                        "state_confiscation", "%s: the state takes what it judges a "
+                        "fortune too large to go on merely taxing - %s gone%s"
+                        % (name, money_text(lost, self, grouped=True),
+                           " (you negotiated it down from %s)" % money_text(demanded, self, grouped=True)
+                           if answer["negotiated"] else ""),
+                        demanded=demanded, lost=lost, negotiated=bool(answer["negotiated"]))))
                 elif answer["withheld"] > 0.5:
                     self.state.household.log.append((year, "%s: the state demanded %s of your fortune, you refused "
                                          "and it could not enforce: nothing taken" % (name, money_text(demanded, self, grouped=True))))

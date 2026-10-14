@@ -594,10 +594,12 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
                         self.state.projects.done.discard(node_id)
                         self._done_changed()
             if self.state.projects.stalled in (3, 6, 9, 11):
-                self.state.household.log.append((self.state.scenario.year, "THE PROGRAMME IS DISSOLVING: %d year(s) "
-                                     "since the founder died. %s What you built is being "
-                                     "forgotten. The run ends at twelve."
-                                 % (self.state.projects.stalled, self._deputy_hours_sentence())))
+                self.state.household.log.append((self.state.scenario.year, LogLine(
+                    "programme_dissolving", "THE PROGRAMME IS DISSOLVING: %d year(s) "
+                    "since the founder died. %s What you built is being "
+                    "forgotten. The run ends at twelve."
+                    % (self.state.projects.stalled, self._deputy_hours_sentence()),
+                    years_since_death=self.state.projects.stalled, run_ends_after_years=self.DISSOLUTION_YEARS_UNTIL_END)))
             if self.state.projects.stalled >= self.DISSOLUTION_YEARS_UNTIL_END:
                 self._catastrophe("the founder died without training successors; "
                                   + self._what_survived_the_dissolution())

@@ -2,6 +2,7 @@
 import collections, copy, math, os, random, sys
 
 from sim.constants import declare
+from sim.refusal import LogLine
 from . import money_units
 from . import automation_audit
 from sim.engine.state import SimulationState, ActiveProjectState
@@ -1577,11 +1578,13 @@ class Sim(RealPriceRatiosMixin, CoinRevaluationMixin, WageMarketRatiosMixin, Mec
         shortfall = (premium / PERCENT_SCALE) / self.WAGE_SCARCITY_ELASTICITY if self.WAGE_SCARCITY_ELASTICITY else 0.0
         if premium > 0.5 and year - self.state.scenario._said_wage_cascade >= 15:
             self.state.scenario._said_wage_cascade = year
-            self.state.household.log.append((year, "population still %d%% below trend: wages "
-                                 "(and anything billed in them) are running "
-                                 "%d%% above normal for here, and will ease "
-                                 "as the population does"
-                             % (round(shortfall * PERCENT_SCALE), round(premium))))
+            self.state.household.log.append((year, LogLine(
+                "wage_cascade", "population still %d%% below trend: wages "
+                "(and anything billed in them) are running "
+                "%d%% above normal for here, and will ease "
+                "as the population does"
+                % (round(shortfall * PERCENT_SCALE), round(premium)),
+                population_below_trend_percent=round(shortfall * PERCENT_SCALE), wage_premium_percent=round(premium))))
 
     # -- helpers ------------------------------------------------------------
 

@@ -5,6 +5,7 @@ confiscation) work on the real household. Builds whole games, so it is not in th
 import random
 
 from .harness import check, unopened_sim
+from sim.refusal import cause_of
 
 from sim.agents import group_servants
 from sim.agents.api import Sector
@@ -57,7 +58,7 @@ sectors = {sector.kind for sector in Sector.of_servants(treasury, SimWorld(game)
 check("soldiers in arrears are a sector in the real game's budget", "soldiers" in sectors, sectors)
 check("their loyalty fell and the army shrank", treasury.record.loyalty < 1.0 and army_shrank_in_a_year,
       (treasury.record.loyalty, treasury.record.army, army_shrank_in_a_year))
-check("the mutiny is in the founder's log", any("MUTINY" in text for _year, text in game.state.household.log), game.state.household.log[-5:])
+check("the mutiny is in the founder's log", any(cause_of(text) == "army_mutiny" for _year, text in game.state.household.log), game.state.household.log[-5:])
 
 # ---- the founder's answers to a demand, on the real household ------------------------------------------------------
 household = game.state.household

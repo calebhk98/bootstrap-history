@@ -8,6 +8,7 @@ note. Checks moved verbatim; each one's own comment explains the break it
 guards.
 """
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of, facts_of
 
 
 # --- JOB 2: A PLAGUE MOVES THE WHOLE SOCIETY, NOT JUST YOUR OWN HOUSEHOLD. A
@@ -67,7 +68,8 @@ check("wages remain elevated the year after a mortality shock",
       s.wage_index > _normal_wage * 1.2, (_normal_wage, s.wage_index))
 check("the wage cascade is LOGGED, so a player can see why their wage bill "
       "jumped instead of having to notice it in the accounts",
-      any("running" in message and "above normal" in message for _year, message in s.log),
+      any(cause_of(message) == "wage_cascade" and facts_of(message)["wage_premium_percent"] > 0
+          for _year, message in s.log),
       [message for _year, message in s.log if "wage" in message.lower()])
 
 # --- recovery is now EMERGENT from self.population's own vital rates
