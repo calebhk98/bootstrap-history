@@ -1,6 +1,7 @@
 """The tech tree itself, viewed through the protocol: why/available and node-explain, and the subject grouping they share."""
 
 import sim.engine.ui_port as ui_port
+from sim.refusal import cause_of
 import hashlib
 
 from sim.engine.ui_port import closure, critical_path, downstream_count, is_downstream
@@ -1449,6 +1450,7 @@ def _explain_active_wait(sim, nodes, node_id):
         if _bill is None:
             _bill = max(0.0, sim.project_cost(node_id) - _st["spent"])
         out["waiting_on"] = _waiting_on(sim, nodes, node_id, _st, _bill)
+        out["waiting_on_kind"] = cause_of(out["waiting_on"])
         # SAME FIELD `state` ALREADY PRINTS PER PROJECT, HERE TOO. Arrears
         # gives unspendable founder hours back (core.py's underfunded path),
         # so ph_left never sits at 0 and waiting_on's money branch above can

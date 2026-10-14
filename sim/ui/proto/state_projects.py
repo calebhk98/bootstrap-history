@@ -1,6 +1,7 @@
 """State-reply builders for active projects, money, operations, spending and training hours."""
 
 from sim.engine.ui_port import plain_number
+from sim.refusal import cause_of
 from .state_waiting import _agent_end_reason, _waiting_on, _worth_knowing_early
 from .state_shut_staffing import shut_for_want_of_staff
 
@@ -20,6 +21,7 @@ def _agent_state_active_projects(sim, nodes):
         _at_risk = progress.get("stalled_years", 0)
         if bill is None:
             bill = max(0.0, sim.project_cost(node_id) - progress["spent"])
+        waiting = _waiting_on(sim, nodes, node_id, progress, bill)
         active[node_id] = {"name": node["name"], "founder_hours_left": round(progress["ph_left"], 1),
                      "founder_hours_total": node["ph"], "years_in_progress": progress["yrs"],
                      "spent": round(progress["spent"], 1), "still_to_pay": round(bill, 1),
@@ -37,7 +39,7 @@ def _agent_state_active_projects(sim, nodes):
                      # founder's hours sit idle, when the real cause is a
                      # trade shortage. Telling somebody to spend hours they
                      # cannot spend is worse than saying nothing.
-                     "waiting_on": _waiting_on(sim, nodes, node_id, progress, bill),
+                     "waiting_on": waiting, "waiting_on_kind": cause_of(waiting),
                      # WHERE THIS YEAR'S HOURS WENT, for this project specifically.
                      # offered is what step() gave it a shot at; effective is
                      # how much of that actually came off founder_hours_left.

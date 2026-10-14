@@ -269,9 +269,10 @@ def waiting_message(capital, credit_limit):
 
 
 check("_waiting_on reads the pace as the blocker when there is real room",
-      "pace" in waiting_message(50000.0, 2000.0), waiting_message(50000.0, 2000.0))
+      cause_of(waiting_message(50000.0, 2000.0)) == "money_pace", waiting_message(50000.0, 2000.0))
 check("a household 50,000 past a 2,000 line is told MONEY is what holds the project up",
-      "money" in waiting_message(-50000.0, 2000.0), waiting_message(-50000.0, 2000.0))
+      cause_of(waiting_message(-50000.0, 2000.0)) in ("money_blocked", "money_unfunded"),
+      waiting_message(-50000.0, 2000.0))
 
 # The quote screen's figure is the number hire enforces.
 set_position(-50000.0)

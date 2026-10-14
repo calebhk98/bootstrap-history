@@ -82,12 +82,19 @@ def _is_structured(node, text):
     return bool(re.search(r"\b(facts_of|cause_of|choices_of)\(", _source(node, text)))
 
 
+def _named_as_text(node):
+    """True when the expression is a bare name (or an attribute) that is named for text: `line`, `reply.text`."""
+    if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+        node = node.func.value
+    word = node.id if isinstance(node, ast.Name) else node.attr if isinstance(node, ast.Attribute) else ""
+    return bool(TEXT_WORDS & set(word.lower().strip("_").split("_")))
+
+
 def _is_textual(node, text, names):
     source = _source(node, text)
     if _reads_source(node, text) or _is_structured(node, text):
         return False
-    if any(isinstance(inner, ast.Name) and TEXT_WORDS & set(inner.id.lower().strip("_").split("_"))
-           for inner in ast.walk(node)):
+    if _named_as_text(node):
         return True
     if any(isinstance(inner, ast.Name) and (inner.id in names) for inner in ast.walk(node)):
         return True

@@ -21,7 +21,7 @@ s_pace.active[_slow] = dict(ph_left=0.0, yrs=1.0, spent=0.0,
 _msg_rich = _WO(s_pace, NODES, _slow, s_pace.active[_slow],
                 s_pace.active[_slow]["cost_left"])
 check("a rich player is told the pace, not that they are short of money",
-      "pace" in _msg_rich and "a year" in _msg_rich, _msg_rich)
+      cause_of(_msg_rich) == "money_pace", _msg_rich)
 s_broke = unopened_sim(capital=1.0)
 s_broke.credit_limit = lambda: 0.0
 s_broke.active[_slow] = dict(ph_left=0.0, yrs=1.0, spent=0.0,
@@ -29,7 +29,7 @@ s_broke.active[_slow] = dict(ph_left=0.0, yrs=1.0, spent=0.0,
 _msg_poor = _WO(s_broke, NODES, _slow, s_broke.active[_slow],
                 s_broke.active[_slow]["cost_left"])
 check("...and a player who really cannot raise the instalment is told that",
-      _msg_poor.startswith("money"), _msg_poor)
+      cause_of(_msg_poor) in ("money_blocked", "money_unfunded"), _msg_poor)
 
 # --- BREAK: six projects wiped in one year. The countdown to abandonment ran
 # silently for three years and then took everything spent.
