@@ -39,7 +39,8 @@ check("without the eggs the first silk node is refused, naming the eggs",
       not _ok and EGGS in (_why or ""), _why)
 check("...and the refusal is a supply blocker naming no route",
       any(entry["kind"] == "supply" for entry in home.start_blockers("tx2_silk_fibre"))
-      and "sea_monsoon_route" not in (_why or ""), home.start_blockers("tx2_silk_fibre"))
+      and not any("sea_monsoon_route" in entry["ids"] for entry in home.start_blockers("tx2_silk_fibre")),
+      home.start_blockers("tx2_silk_fibre"))
 
 # --- a grant opens the node and nothing else changes.
 check("holding eggs is not itself a known technology", EGGS not in home.state.projects.done, None)

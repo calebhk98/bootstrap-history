@@ -35,7 +35,7 @@ graph = {"goal": {"pre": ["on_route"]}, "on_route": {"pre": []}, "side": {"pre":
 stuck_advice.saving_plan = lambda game: None
 clear = Stub(fog=False, goal="goal", done=set())
 check("a start on the route is not called filler", stuck_advice.filler_note(clear, "on_route", graph) is None)
-check("a start off the route is filler", "filler" in (stuck_advice.filler_note(clear, "side", graph) or ""))
+check("a start off the route is filler", stuck_advice.filler_note(clear, "side", graph) is not None)
 check("no filler claim under fog",
       stuck_advice.filler_note(Stub(fog=True, goal="goal", done=set()), "side", graph) is None)
 
@@ -48,7 +48,7 @@ state = {"target": {"kind": "category", "value": "farming"},
 check("standing draw is cost left over years, finished ids forgotten",
       programme_draw.standing_draw(running, state) == 200.0 and state["started_ids"] == ["a"], state)
 check("capital minus standing draw below the reserve pauses",
-      "reserve" in (programme.pause_reason(running, state) or ""))
+      (programme.pause(running, state) or ("",))[0] == "draw_would_breach_reserve_floor")
 running.capital = 1200.0
 check("enough capital after the standing draw does not pause", programme.pause_reason(running, state) is None)
 command, why = programme._year_rush(running, state)

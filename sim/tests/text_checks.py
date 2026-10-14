@@ -79,7 +79,8 @@ def _is_structured(node, text):
     if isinstance(node, (ast.SetComp, ast.ListComp, ast.GeneratorExp, ast.DictComp, ast.Dict, ast.Set,
                          ast.List, ast.Tuple)):
         return True
-    return bool(re.search(r"\b(facts_of|cause_of|choices_of)\(", _source(node, text)))
+    return bool(re.search(r"\b(facts_of|cause_of|choices_of)\(|\[[\"'](commands|remedies|choices|ids|trades|fields)[\"']\]",
+                          _source(node, text)))
 
 
 def _named_as_text(node):

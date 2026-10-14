@@ -13,6 +13,9 @@ from . import event_causes
 from .hazard_window import hazards_not_yet_past
 from .hazard_hedge_timing import add_timing_to_steps
 
+# What a node id the player has not heard of is replaced with.
+HIDDEN_ID_PLACEHOLDER = "something you have not heard of"
+
 # Removes sentences where a node grades itself against the rest of the tree.
 # Matches exact phrases like "pivot", "highest-value", "costs more than any
 # single technology", or meta-ranking patterns (mentioning "game"/"tree" + ranking
@@ -229,7 +232,7 @@ class FogMixin:
             if not self.is_visible(node_id):
                 # Whole ids only; ':' joins a namespaced id, so it is not a boundary either
                 pattern = r'(?<![\w:])' + re.escape(node_id) + r'(?![\w:])'
-                scrubbed = re.sub(pattern, "something you have not heard of", scrubbed)
+                scrubbed = re.sub(pattern, HIDDEN_ID_PLACEHOLDER, scrubbed)
         return scrubbed
 
     def fog_summary(self, node_id: str) -> str:

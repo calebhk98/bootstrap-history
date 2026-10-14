@@ -1,5 +1,6 @@
 """fog_scrub_prefix: substring replace corrupts ids with shared prefixes."""
 from .harness import *  # noqa: F401,F403
+from sim.engine.fog import HIDDEN_ID_PLACEHOLDER
 
 # =============================================================================
 # FOG SCRUB PREFIX BUG: fog_scrub() uses plain substring replace, so a hidden
@@ -25,7 +26,8 @@ check("shorter id hidden, longer id visible: longer id stays intact",
       "cap_measure_temp_hi" in _result_case1,
       _result_case1)
 check("shorter id hidden, longer id visible: shorter id replaced",
-      "something you have not heard of" in _result_case1,
+      HIDDEN_ID_PLACEHOLDER in _result_case1 and "cap_measure_temp_hi" in _result_case1
+      and _result_case1.replace(HIDDEN_ID_PLACEHOLDER, "").count("cap_measure_temp") == 1,
       _result_case1)
 
 # --- Case 2: Only the longer id (cap_measure_temp_hi) is hidden.
