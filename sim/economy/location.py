@@ -3,14 +3,15 @@
 Each tile is its own labour market, so a producer only hires the people of its own tile. At the opening
 wages are the same everywhere and a recipe's capacity is spread over the area's tiles by working hours
 (by the declared limits for a sited recipe). A newcomer goes to the tile where a run costs least: the
-tile's wages, its land rent and the carriage of the run's output to the area's anchor, over the site's
-yield; among tiles with a site and idle hands to staff the run.
+tile's wages, its land rent, the carriage of the run's inputs in from the fixed sites that make them and of
+its output to the area's anchor (location_inputs.py), over the site's yield; among the area's tiles and the
+tiles holding those fixed sites, with a site and idle hands to staff the run.
 """
 import math
 from dataclasses import dataclass
 from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
-from . import labour_state, sites, unit_cost
+from . import labour_state, location_inputs, sites, unit_cost
 from .market_areas import MarketArea
 from .producers import Producer, live_input_prices
 from .setup import labour_area
@@ -58,12 +59,13 @@ def output_tonnes(recipe: Recipe, specs: Mapping[str, GoodSpec]) -> float:
 
 
 def cost_per_run(recipe: Recipe, wages: Mapping[str, float], input_prices: Mapping[str, float], rent: float,
-                 carriage_per_tonne: float, yield_factor: float, tonnes: float = 0.0) -> float:
-    """Variable cost and carriage of a run's output (`tonnes`) to the anchor, over the yield."""
+                 carriage_per_tonne: float, yield_factor: float, tonnes: float = 0.0, input_haul: float = 0.0) -> float:
+    """Variable cost, carriage of a run's output (`tonnes`) to the anchor and of its inputs in (`input_haul`,
+    money per run), over the yield."""
     if yield_factor <= 0.0:
         return math.inf
     carriage = carriage_per_tonne * tonnes if tonnes > 0.0 else 0.0
-    return (unit_cost.variable_cost_per_run(recipe, input_prices, wages, rent) + carriage) / yield_factor
+    return (unit_cost.variable_cost_per_run(recipe, input_prices, wages, rent) + carriage + input_haul) / yield_factor
 
 
 def spare_hours(workforce: Mapping[str, float], working_hours_per_worker: float, committed_hours: float) -> float:
@@ -123,6 +125,8 @@ def entry_siting(setup, record, view, area_map, carriage) -> Siting:
     by_recipe = sites.limits_by_recipe(setup.site_limits)
     capacity: Dict[Tuple[str, TileId], float] = {}
     committed: Dict[TileId, float] = {}
+    supplies: Dict[str, Mapping] = {}
+    fixed_goods = location_inputs.fixed_site_goods(setup.recipes, by_recipe)
     for producer in sites.in_id_order(record.producers):
         key = (producer.recipe_id, producer.tile)
         capacity[key] = capacity.get(key, 0.0) + producer.capacity_runs + record.expansion_runs.get(producer.agent_id, 0.0)
@@ -137,17 +141,21 @@ def entry_siting(setup, record, view, area_map, carriage) -> Siting:
                 recipe, setup.tiles.get(demand.anchor_tile)) and setup.recipe_allowed(recipe_id, demand.anchor_tile):
             return demand.anchor_tile, runs
         tonnes = output_tonnes(recipe, setup.specs)
+        if recipe_id not in supplies:
+            supplies[recipe_id] = location_inputs.input_supplies(record, setup, recipe, fixed_goods)
         candidates: List[Candidate] = []
-        for tile in sites.suited_tiles(recipe, setup.tiles, sites.allowed_tiles(
-                recipe, by_recipe, area.tiles if not sites.is_sited(recipe, by_recipe) else tuple(setup.tiles)),
-                setup.recipe_allowed):
+        reachable = tuple(setup.tiles) if sites.is_sited(recipe, by_recipe) else tuple(sorted(
+            set(area.tiles) | {tile for supply in supplies[recipe_id].values() for tile in supply}))
+        for tile in sites.suited_tiles(recipe, setup.tiles, sites.allowed_tiles(recipe, by_recipe, reachable),
+                                       setup.recipe_allowed):
             probe = Producer("probe", "probe", recipe_id, tile, 1.0)
             wages = {trade: _wage(setup, view, trade, tile) for trade in recipe.labour_hours}
             factor = sites.yield_at(recipe, tile, by_recipe, setup.yield_factor_by_recipe_tile.get(
                 recipe_id + "@" + tile, 1.0))
             cost = cost_per_run(recipe, wages, live_input_prices(probe, recipe, view),
                                 record.land_rent.get(tile, 0.0) * setup.land_per_run.get(recipe_id, 0.0),
-                                carriage.cost_per_tonne(tile, demand.anchor_tile), factor, tonnes)
+                                carriage.cost_per_tonne(tile, demand.anchor_tile), factor, tonnes,
+                                location_inputs.input_haul_cost(recipe, setup.specs, carriage, supplies[recipe_id], tile))
             spare = spare_hours(labour_state.people_by_trade(record.workforce, labour_area(tile)), setup.working_hours_per_year,
                                 committed.get(tile, 0.0))
             candidates.append(Candidate(tile, cost, staffable_runs(recipe, spare),
