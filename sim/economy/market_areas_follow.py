@@ -20,9 +20,10 @@ _RECORD_MARKETS = ("volumes", "margin_years", "curves")
 
 
 def old_areas_by_new(old: AreaMap, new: AreaMap) -> Dict[str, Dict[str, str]]:
-    """{good: {new area id: id of the old area holding its anchor tile}}."""
+    """{good: {new area id: id of the old area holding its anchor tile}}, for the goods that had a market before."""
+    had_market = frozenset(old.goods())
     return {good: {area.area_id: old.area_of(good, area.anchor_tile) for area in new.areas(good)}
-            for good in new.goods()}
+            for good in new.goods() if good in had_market}
 
 
 def _moved(markets: Mapping[str, object], follows: Mapping[str, Mapping[str, str]],

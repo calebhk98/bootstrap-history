@@ -17,11 +17,12 @@ from sim.economy.api import (EDGE_EXTERNAL, EDGE_LEGACY, AgentOrders, Economy, G
                              YearInputs, expected_output_prices, external_orders, live_input_prices, live_wages,
                              trade_premium, variable_cost_per_run)
 
-from . import economy_port_actors, economy_port_cargo, economy_port_sites, material_capacity, solve_cache
+from . import economy_port_actors, economy_port_cargo, economy_port_late, economy_port_sites, material_capacity, solve_cache
 from .data import load_civ
 from .economy_port_key import spin_up_key
 from .economy_port_setup import build_setup, opening_values
 from .material_units import tonnes_per_unit
+from .prices import default_production_entries
 
 OUTCOMES_KEPT = 100   # yearly outcomes held in memory for the health figures
 SPIN_UP_CACHE_DIRECTORY = os.path.join(os.path.dirname(solve_cache.DEFAULT_CACHE_DIRECTORY), "agent_economy")
@@ -90,6 +91,8 @@ class AgentEconomy:
         self._floor_costs_of = None      # the economy object they were read from
         self.outcomes = collections.deque(maxlen=OUTCOMES_KEPT)   # recent yearly outcomes, for health figures; not saved
         self._built_from = None          # the stored dict the live economy belongs to; a load replaces it
+        self._years_run = 0              # years this object has run: the producers change when one closes
+        self._techniques_admitted = None   # the held nodes the economy's recipes were last matched to; not saved
         self._record_stale = False       # the live economy has moved on since `stored["record"]` was exported
 
     @property
@@ -126,6 +129,54 @@ class AgentEconomy:
         if self._economy is not None:
             economy_api.set_improvements(self._economy, self._sim.state.economy.improvements)
 
+    def admit_techniques(self):
+        """Give the economy the entries the society's techniques now allow, when its held nodes changed since
+        it last looked: they enter the saved opening (so a resumed game rebuilds them) and the live economy."""
+        held = economy_port_late.techniques_held(self._sim)
+        if held == self._techniques_admitted:
+            return
+        self._techniques_admitted = held
+        production = default_production_entries()
+        grown = economy_port_late.opening_with_techniques(self._sim, self.stored["opening"], held, production)
+        if grown is None:
+            return
+        added = set(grown["recipes"]) - set(self.stored["opening"]["recipes"])
+        late_goods = set(self.stored.get("late_goods", ()))
+        for entry_id in added:
+            late_goods.update(production[entry_id].get("outputs") or {})
+        self.stored["late_goods"] = sorted(late_goods)
+        self.stored["opening"] = grown
+        economy_api.admit_recipes(self._economy, build_setup(self._sim, grown, production))
+        self._floor_costs = {}
+        self._answers = None
+        self._country_answers = {}
+        self._record_stale = True
+
+    def _note_volume_baseline(self):
+        """The first year a good that a late technique allows clears any quantity is the quantity later years
+        are measured against."""
+        baseline = self.stored.setdefault("volume_baseline", {})
+        late_goods = self.stored.get("late_goods", ())
+        volumes = economy_api.traded_volumes(self._economy)
+        for good in late_goods:
+            if volumes.get(good, 0.0) > 0.0 and good not in baseline:
+                baseline[good] = volumes[good]
+
+    def cleared_ratio(self, materials):
+        """Tonnes the economy cleared last year of these materials over what it cleared in the first year it
+        cleared them after a technique gained since the opening allowed their making; None when none of them is
+        such a good, or none had cleared before."""
+        baseline = self.stored.get("volume_baseline", {})
+        if not baseline:
+            return None
+        volumes = economy_api.traded_volumes(self.economy())
+        then = sum(baseline[good] * tonnes_per_unit(good) for good in materials if good in baseline)
+        now = sum(volumes.get(good, 0.0) * tonnes_per_unit(good) for good in materials if good in baseline)
+        return now / then if then > 0.0 else None
+
+    def producers_stamp(self):
+        return self._years_run
+
     def _spun_up(self, setup):
         """The record after the hidden years; the same opening always gives the same one, so it is cached
         on disk with the price solver's results (keyed on the data files and the source)."""
@@ -156,6 +207,7 @@ class AgentEconomy:
     def run_year(self):
         economy = self.economy()
         self.sync_ways()
+        self.admit_techniques()
         orders = self._seat_orders()
         orders.update(self._external_orders())
         from .material_units import tonnes_per_unit
@@ -178,6 +230,8 @@ class AgentEconomy:
         self._country_answers = {}
         self._floor_costs = {}
         self._record_stale = True        # exported when the game is saved (flush_record)
+        self._years_run += 1
+        self._note_volume_baseline()
         return outcome
 
     # ---- firms', states' and traders' sales and purchases (economy_port_actors.py) ------------------

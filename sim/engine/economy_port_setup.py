@@ -150,9 +150,10 @@ def _counted(value):
     return float("%.12g" % value)
 
 
-def build_setup(sim, opening=None):
+def build_setup(sim, opening=None, production=None):
     """The economy's setup from the opening values (`opening_values(sim)` when none are given), with
-    money counted in the economy's unit (`coin_per_unit`)."""
+    money counted in the economy's unit (`coin_per_unit`). `production` is the catalogue the recipes are
+    read from (the shared production data when none is given)."""
     opening = opening or opening_values(sim)
     unit = coin_per_unit(opening)
     opening = in_units(opening)
@@ -167,7 +168,7 @@ def build_setup(sim, opening=None):
     population_by_tile = {tile: float(opening["population_by_tile"].get(tile, 0.0)) for tile in tile_ids}
     for opened in partners.values():
         population_by_tile.update({tile: float(people) for tile, people in opened["population_by_tile"].items()})
-    production = demand.production_data()
+    production = production or demand.production_data()
     every_recipe = sorted(set(opening["recipes"]).union(*(opened["recipes"] for opened in partners.values())))
     recipes = recipes_from_production_data(production, every_recipe)
     mint_recipe = (recipes_from_production_data(production, [opening["mint_recipe"]])[opening["mint_recipe"]]
