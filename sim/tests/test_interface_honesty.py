@@ -99,6 +99,7 @@ for _spid, _banned in (
 # and what the node actually does about it - a consequence the player
 # cannot see coming, not a ranking claim, and it must stay.
 _pp = S._node_explain(_plain, NODES, "plague_preparedness")
+# presentation: the hazard warning's wording
 check("...but the actual hazard warning underneath it is untouched",
       "165 AD" in (_pp.get("note") or "")
       and "decides whether your institute survives" in (_pp.get("note") or ""),
@@ -116,6 +117,7 @@ check("school_founded's note still says it is optional",
 # used to open with exactly the self-play line this exists to cut.
 s_fp = s_fe
 s_fp.revealed = {"school_founded"}
+# presentation: the fogged summary's wording
 check("the fogged one-line summary of school_founded is not its own "
       "self-rating either",
       "pivot" not in s_fp.fog_summary("school_founded").lower(),

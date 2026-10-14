@@ -70,6 +70,7 @@ check("a mine can be priced before it is bought",
 _play = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"), "play", "--manual",
                         "--civ", "norse_900ad"],
                        input="n\nq\n", capture_output=True, text=True, timeout=120, cwd=ROOT)
+# presentation: the printed header of the interactive play command
 check("play runs a civilisation that does not start in 100 AD",
       "900 AD" in _play.stdout and "Ended 900 AD" not in _play.stdout, _play.stdout[-120:])
 
@@ -366,6 +367,7 @@ for _command in S.KNOWN_COMMANDS:
         _dead.append(_command)
 check("every advertised command is one the game answers to", not _dead, str(_dead))
 _missing_id = S._agent_dispatch(answers, NODES, {"cmd": "why"}).get("error", "")
+# presentation: the wording of a missing-id refusal
 check("a missing id asks for one rather than naming a Python type",
       "NoneType" not in _missing_id and "available" in _missing_id, _missing_id[:90])
 

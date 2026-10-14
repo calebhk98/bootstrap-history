@@ -318,10 +318,12 @@ check("with every listed prerequisite met and nothing else missing, "
 # opening to satisfy a prerequisite (start_reason tests `p not in self.done`).
 _s_fp = sim()          # thermometer NOT done, so cap_measure_temp is blocked
 _, _fp_why2 = _s_fp.start_reason("chm_crystallisation")
+# presentation: the wording of a prerequisite hint
 check("a free node that is itself blocked is not offered as the next step, "
       "which would be a second refusal wearing the first one's clothes",
       "costs nothing" not in (_fp_why2 or ""), _fp_why2)
 _, _fp_why3 = _s_fp.start_reason("junction_transistor")
+# presentation: the wording of a prerequisite hint
 check("an ordinary expensive prerequisite gets no such hint",
       "costs nothing" not in (_fp_why3 or ""), _fp_why3)
 _s_fp.done.add("thermometer"); _s_fp._done_changed()

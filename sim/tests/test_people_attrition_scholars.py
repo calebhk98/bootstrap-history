@@ -150,6 +150,7 @@ ok_sch, _ = s.labour.hire("scholar", 2)
 check("...but hiring an actual scholar still does",
       ok_sch and s.labour.effective_scholars() >= _before_sch + 2 - 1e-6,
       s.labour.effective_scholars())
+# presentation: the authored wording of the scholar advice
 check("the advice on how to get scholars never points at a different trade "
       "family's trade, which would not even count",
       all("scribe" not in why and "chemist" not in why and "merchant" not in why

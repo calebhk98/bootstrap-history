@@ -222,16 +222,19 @@ hire_ok, hire_message = debtor.labour.hire("smith", 3)
 check("a cash-short hire is still refused (the asymmetry itself is kept)", hire_ok is False, (hire_ok, hire_message))
 check("...but the refusal says WHICH rule this is: half the credit line, not all of it",
       "50%" in hire_message and "credit line" in hire_message, hire_message)
+# presentation: the refusal's explanation of the lending rule
 check("...and WHY: a lender funds work under way, not a payroll or a one-off fee",
       "lender advances against a purchase" in hire_message, hire_message)
 hire_fee = debtor.labour.hire_fee("smith", 3)
 check("...and states the exact cost hire() computed",
       "{:,.0f}".format(round(hire_fee)) in hire_message, (hire_fee, hire_message))
 train_ok, train_message = debtor.labour.train("machinist", 3, None)
+# presentation: the refusal's explanation of the lending rule
 check("train's cash-short refusal uses the identical reasoning as hire's",
       train_ok is False and "50%" in train_message and "lender advances against a purchase" in train_message,
       train_message)
 commission_ok, commission_message = debtor.labour.commission("smith", 3500.0)
+# presentation: the refusal's explanation of the lending rule
 check("commission's cash-short refusal uses the same reasoning too",
       commission_ok is False and "50%" in commission_message
       and "lender advances against a purchase" in commission_message, commission_message)

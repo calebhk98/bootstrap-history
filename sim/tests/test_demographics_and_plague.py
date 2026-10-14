@@ -196,6 +196,7 @@ _line_heavy = _plague_line(_HEAVY)
 _line_some = _plague_line(["sanitation_antisepsis", "med_quarantine_sanitation"])
 check("an unmitigated plague states its own historical rate plainly",
       "staff -28%" in _line_none, _line_none)
+# presentation: the plague line's clauses
 check("a heavily mitigated plague's OWN clause never re-quotes the "
       "historical -28% as if it were the outcome - only the near-zero "
       "figure the mechanic actually applied",
@@ -203,9 +204,11 @@ check("a heavily mitigated plague's OWN clause never re-quotes the "
       and "would have been" not in _line_heavy
       and "staff -28%" not in _line_heavy.split(".")[0],
       _line_heavy)
+# presentation: the plague line's clauses
 check("a partially mitigated plague is 'softened', not 'held off almost "
       "entirely' and not silent about the hedge either",
       "softened by" in _line_some, _line_some)
+# presentation: the plague line's clauses
 check("the empire-wide toll is still told, in every case, as a separate "
       "fact explicitly not the household's own experience",
       all("Empire-wide, population -28%" in line and "either way" in line

@@ -33,6 +33,7 @@ check("the year affordable is today's year plus whole years of income needed",
 
 after = ask(saver, cmd="stuck")
 text = str(after["what_is_holding_you_up"])
+# presentation: the wording of the stuck advice
 check("stuck no longer recommends starting the cheapest thing while saving",
       "would begin the cheapest" not in text, text)
 saving_rows = [row for row in after["what_is_holding_you_up"] if row.get("kind") == "saving"]

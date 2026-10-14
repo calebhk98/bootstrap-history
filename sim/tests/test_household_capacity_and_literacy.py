@@ -8,7 +8,7 @@ test-file reorganisation note. Checks moved verbatim; each one's own comment
 explains the break it guards.
 """
 from .harness import *  # noqa: F401,F403
-from sim.refusal import cause_of
+from sim.refusal import cause_of, facts_of
 
 
 # --- the ceiling on lettered trades and the household-room refusals, on one rich game; checks that
@@ -82,7 +82,10 @@ _ok_t3, _why_t3 = core.labour.train("machinist", 1)
 check("teaching past what you can feed and house is refused",
       not _ok_t3 and cause_of(_why_t3) == "household_room", _why_t3)
 check("...and it says there is no room for even one", core.labour.household_room() < 1.0, core.labour.household_room())
-check("...and what makes room, which is not what buys people", "built" in _why_t3, _why_t3)
+check("...and what makes room, which is not what buys people",
+      facts_of(_why_t3)["remedies"]
+      and all(remedy["action"] in ("buy_housing", "reopen", "build") for remedy in facts_of(_why_t3)["remedies"]),
+      facts_of(_why_t3))
 check("hire, buy and train are all bounded by the same one number",
       core.labour.hire("smith", 1)[0] is False and core.labour.train("machinist", 1)[0] is False
       and core.labour.buy_slaves(1) <= 0, (_room0, core.labour.household_room()))
@@ -95,22 +98,23 @@ check("giving staff advice does not recurse into itself",
 advice.done.add("patron_local"); advice._done_changed()
 _adv = advice.labour._staff_advice("artisans")
 check("advice never points at a remedy waiting on the thing it supplies",
-      "workshop_first" not in _adv or "waiting on artisans" in _adv, _adv)
+      {"action": "build", "node": "workshop_first"} not in facts_of(_adv)["remedies"], _adv)
 advice.artisans = 20.0
 check("...and names it plainly once it is actually reachable",
-      "waiting on artisans" not in advice.labour._staff_advice("artisans"), advice.labour._staff_advice("artisans"))
+      {"action": "build_after_hiring", "node": "workshop_first"} not in facts_of(advice.labour._staff_advice("artisans"))["remedies"],
+      advice.labour._staff_advice("artisans"))
 run_it(advice, "workshop_first", "school_founded")
 _advice_open = advice.labour._room_advice()
 advice.operating.discard("school_founded")
 _advice_shut = advice.labour._room_advice()
 check("a shut room-source is offered back as the cheap fix, not silently dropped from the advice",
-      "school_founded" in _advice_shut and "reopen" in _advice_shut.lower(), _advice_shut)
+      {"action": "reopen", "node": "school_founded"} in facts_of(_advice_shut)["remedies"], _advice_shut)
 check("...and it is not also still claimed as an open place in the same breath",
-      "school_founded" not in _advice_open or "reopen" not in _advice_open.lower(),
+      {"action": "reopen", "node": "school_founded"} not in facts_of(_advice_open)["remedies"],
       (_advice_open, _advice_shut))
 _staff_shut = advice.labour._staff_advice("scholars")
 check("the scholar-pool advice offers to reopen a shut school rather than treating it as covered",
-      "school_founded" in _staff_shut and "reopen" in _staff_shut.lower(), _staff_shut)
+      {"action": "reopen", "node": "school_founded"} in facts_of(_staff_shut)["remedies"], _staff_shut)
 check("ROOM_SOURCES names real node ids only - no stale reference silently filtered out",
       all(node_id in NODES for node_id, _ in advice.ROOM_SOURCES),
       [node_id for node_id, _ in advice.ROOM_SOURCES if node_id not in NODES])

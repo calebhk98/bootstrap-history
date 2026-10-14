@@ -277,12 +277,13 @@ class TrainingMixin:
             # rounded in the direction that overstates it.
             room = max(0.0, room)
             whole = int(room)
+            advice = self._room_advice()
             return None, None, Refusal("household_room", "you can supervise, house and teach %.2f more people, "
                                        "not %g%s. %s"
                                        % (math.floor(room * 100) / 100.0, count,
                                           " - %d is the most whole people you can take" % whole
                                           if whole else " - you have no room for even one",
-                                          self._room_advice()))
+                                          advice), room=room, remedies=advice.facts["remedies"])
         return count, fee, None
 
     def hire(self, trade, count, pay_premium=0.0):
@@ -444,12 +445,13 @@ class TrainingMixin:
         room = self.household_room()
         if count > room:
             whole = int(max(0.0, room))
+            advice = self._room_advice()
             return None, Refusal("household_room", "you can feed, house and oversee %.2f more people, "
                                  "and teaching %g would make %g. %s %s"
                                  % (math.floor(max(0.0, room) * 100) / 100.0, count, count,
                                     "Teach %d instead." % whole if whole >= 1
                                     else "There is no room for even one.",
-                                    self._room_advice()))
+                                    advice), room=max(0.0, room), remedies=advice.facts["remedies"])
         # Teaching pulls the SOURCE trade's people off their own bench for the
         # duration, which is exactly what market_pressure prices for buying
         # slaves and labour market price_factor now prices for hiring: the more of

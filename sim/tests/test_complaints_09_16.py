@@ -87,8 +87,8 @@ check("the misleading old interest-per-year field is gone",
 s = sim()
 s.annual_material_demand = lambda: {"saltpetre_kg": 1100.0}
 s._material_market_tonnes = lambda material: 0.0
-msg = s.shortage_remedy("saltpetre")
+plan = s.shortage_remedy_plan("saltpetre")
 check("nitre advice is sized from the current deficit plus its stated buffer",
-      "buy nitre 1700" in msg and "20% safety buffer" in msg, msg)
+      plan["commands"] == ["buy nitre 1700"], plan)
 check("nitre advice no longer recommends a fixed twenty-thousand-square-metre bed",
-      "buy nitre 20000" not in msg, msg)
+      "buy nitre 20000" not in plan["commands"], plan)
