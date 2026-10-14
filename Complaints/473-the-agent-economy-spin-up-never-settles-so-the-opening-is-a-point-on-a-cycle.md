@@ -1,6 +1,6 @@
 # The agent economy's spin-up never settles, so the opening is a point on a cycle
 
-**Status:** partly - the opening's capacity/income mismatch (waits on 507) and the coin metal's supply chain, which stops supplying the mint within three years; see Update
+**Status:** partly - the opening's capacity/income mismatch (waits on 507); the coin metal's supply chain is sited beside its ore now, but the deposits cannot replace the wear of the opening's money stock whatever the chain does; see the second Update
 
 Found while tracing why the opening money wage moved several-fold between builds of the same branch (the
 fix for that is in `Complaints/closed/470`). The price level in the hidden spin-up cycles with a period of
@@ -109,3 +109,56 @@ forty years the stock is 0.74 of its first decade's, against the 0.90 that one d
   opening's capacity/income mismatch above and waits on the owner decision in 507.
 - Do not weaken the test. Regenerate `openings/` (`simulator.py openings`) when this lands; the shipped entries are keyed
   on the source and every source change leaves them unread.
+
+## Update 2 (material orientation; why the chain still cannot feed the mint)
+
+Answers to the three questions, each measured on the Rome opening (`harness.sim()`; no committed command prints these,
+they were read from the opening record and from each year's `YearOutcome.output` of an `Economy` stepped as
+`economy_port_trace.spin_up_trace` does):
+
+1. **Why ore did not reach a smelter in another area.** Nothing is broken in the merchants: they carry any good whose price
+   gap beats carriage, interest, spoilage and margin. The galena smelters were 104 tiles wide, 6 per cent of their capacity
+   on a galena tile and the rest a mean of thousands of money units a tonne from the nearest ore (the carriage of a tonne of
+   ore across the map is many times its value, so no gap can pay for it; the nearest pairs of tiles were marginal).
+   Galena's market areas are about a tile each. So the fault was siting, not trade: `opening._place_producers` put a
+   processor where its output is demanded and `location.entry_siting` priced only the carriage of the output.
+2. **Why entry built more than its input supply.** `entry_sizing.sized_runs` already holds a newcomer to the traded volume of
+   its inputs, but read it at the tile where the output is wanted, then `location.entry_siting` moved the newcomer to another
+   tile. It now reads the inputs at the tile where it is built (`works_at`).
+3. **Why the opening sized lead to silver demand.** Households' store-of-wealth demand for the coin metal is about one year
+   of wear, lead has no final demand, and the lead recipe makes silver as a by-product, so lead capacity is whatever makes
+   that silver. That sizing is the 507 question; it is left as it was.
+
+Built (general, no content ids): `sim/economy/location_inputs.py`. A processor whose input comes from a site-bound recipe with
+declared limits (the opening's `incumbents` name it) is placed only in market areas of that input that hold supply, on the
+tiles where the carriage of the run's inputs in plus its output out is least (each by the recipe's own masses, so a
+weight-losing run settles at its inputs and a weight-gaining one at its market), within each tile's spare hands; what the
+supply cannot feed is still built in proportion, so the shortage shows as the input's price (a cap at the supply removed the
+scarcity premium that `mine_supply_enters_clearing` asserts). Sited recipes are placed first in `_placement_order`.
+`location.entry_siting` adds the same input carriage for fixed-site inputs and considers the tiles holding them. Result at
+the opening: lead smelting on a galena tile went from 6 to 71 per cent of its capacity and the mean carriage from the nearest
+ore from thousands to single digits a tonne; the processors of countries with no ore in reach are no longer built.
+
+The earlier "input carriage in siting" try changed entry only, so the opening placement (smelters by demand, ore out of reach)
+still held; and a smelter placed beside ore alone does not help either, as below.
+
+**The finding that stops the test.** With the chain sited beside the ore the first year makes more silver (about 1.6 times the
+old figure) and the mint still strikes about nothing over the run: `last/first` of the money stock over 60 years is about 0.59
+(the earlier 40-year figure was 0.74, the new one 0.73; not a gain). The reasons, in order:
+
+- The declared deposits cap the silver the economy can ever make at roughly 0.3 of the first year's wear (galena capacity over
+  the ore a run takes, times the silver a run makes, plus the silver-only deposits; `SiteLimit`s of `galena_kg` and
+  `silver_ore_kg`). Wear is 1 per cent of a stock the opening derived from households' balances at the opening wage, which
+  falls several-fold in the first year (the 507 mismatch). Even a perfect chain therefore settles the stock near 0.3 of its
+  start: no supply-chain change can make `test_the_money_stock_keeps_up_with_wear` pass; that needs the opening stock and the
+  deposits to agree (507) or the data to change.
+- Within that cap the chain still dies in three years, now beside its ore: the lead each smelting run makes has no buyer
+  (no final demand), the unsold lead trips `producers.runs_for_stock`, which gates a joint recipe on its main output by
+  quantity (`producers.main_output`), and the silver that sells to the mint at its minted value stops with it. A joint recipe
+  whose by-product pays should be gated on the value of what is left unsold, not on the heaviest output. Not changed here;
+  worth a regression test of its own, and worth ~0.3 of wear at most.
+- `economy_no_offer_memory`'s final-year price check sits at its threshold on the old code (0.00402 against 0.004, swinging
+  between 0.00398 and 0.00456 in the preceding years) and flips with any change to siting; the haul term is restricted to
+  fixed-site inputs so that fixture is untouched.
+
+Not done: opening capacity/income sizing (507), the joint-recipe stock gate, regenerating `openings/`.
