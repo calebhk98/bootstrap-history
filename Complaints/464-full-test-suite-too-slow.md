@@ -38,11 +38,18 @@ quick topics batched with it.
    source to what `sim.economy.api` imports, as `prices.py` now does with `source_modules`.
    Until then, the first full run after any edit pays one spin-up per civilisation and
    configuration the tests open.
-2. **CLI tests start a process per call.** `proto()` and the `_play`/`_run_agent`/
-   `_agent_session` helpers each pay Python start-up, imports and a new `Sim`; a `--session`
-   resume builds a `Sim` and then loads over it. Most `proto()` callers only send JSON
-   commands, which `_agent_dispatch` (`sim/ui/proto/dispatch.py`) can answer in-process. Keep
-   a handful of real-process tests for argv, exit codes and stderr.
+2. **CLI tests start a process per call.** Done for every caller that only sends commands: `proto()`
+   and the topics that drive `simulator.py` call `sim/tests/cli_in_process.py`, which runs the real
+   `sim.ui.cli.main` on the same argv, swaps stdin, stdout, stderr, argv, the environment and the working
+   directory for the call, and gives each call a fresh process's module globals (display units, unit labels,
+   the per-year step hook, pushed-back lines), so `--session` still does its save then load, in memory.
+   `test_cli_in_process.py` runs a sequence (two civilisations, save then load, the first game again) both
+   ways and compares replies; it caught a leaked display-unit setting. Calls that must stay real processes:
+   the main-menu run in `cli_menu_options_and_pretty` (true entry point), `--version` in `mod_versions`,
+   the closed-pipe save in `people_attrition_scholars`, the hash-seed and reproducibility topics (they
+   pin `PYTHONHASHSEED`, which an in-process call cannot), `package_identity` and the `-c` scripts that
+   check a clean interpreter. Measure what is left with the last line of `python3 -m sim.tests --slow --timing`
+   (spawn calls and seconds waiting on children); only calls through `subprocess.run` are counted.
 3. **Integration tests for unit-level facts.** Many topics build one or more full games to
    check a reply string or a single function, and the two playtest grab-bags
    (`round2_policy_hazards_options`, `scanners_and_scheduling`) step many years. Move such

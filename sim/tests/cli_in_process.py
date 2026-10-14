@@ -19,6 +19,41 @@ class ReExecRequested(Exception):
     """The command asked to replace the process; it has to run as a real subprocess."""
 
 
+class _ProcessState:
+    """The module globals a command writes (display units, step hook, unit labels, pushed-back lines).
+
+    A real process starts with them empty and takes them to its grave; here a call starts with them
+    empty and the caller's values come back after it.
+    """
+
+    def __init__(self):
+        from sim.engine import units
+        from sim.ui import cli_interactive, units_text
+        from sim.ui.proto import step_progress
+        self._dictionaries = [units.PREFERENCES, units.CIV_DEFAULTS, units_text.TEXT_LABELS]
+        self._lists = [cli_interactive.LINES_PUSHED_BACK]
+        self._units, self._step_progress = units, step_progress
+        self._saved_dictionaries = [dict(each) for each in self._dictionaries]
+        self._saved_lists = [list(each) for each in self._lists]
+        self._saved_override = units._registry_override
+        self._saved_hook = step_progress._after_year[0]
+
+    def start_fresh(self):
+        for each in self._dictionaries + self._lists:
+            each.clear()
+        self._units._registry_override = None
+        self._step_progress._after_year[0] = None
+
+    def restore(self):
+        for each, saved in zip(self._dictionaries, self._saved_dictionaries):
+            each.clear()
+            each.update(saved)
+        for each, saved in zip(self._lists, self._saved_lists):
+            each[:] = saved
+        self._units._registry_override = self._saved_override
+        self._step_progress._after_year[0] = self._saved_hook
+
+
 @contextlib.contextmanager
 def _swapped(argv, input_text, environment, cwd):
     saved_streams = sys.stdin, sys.stdout, sys.stderr
@@ -27,6 +62,7 @@ def _swapped(argv, input_text, environment, cwd):
     # Display preferences a command applies are module globals; a process would take them to its grave.
     from sim.ui import cli, protocol
     saved_display = (cli._DISPLAY_WIDTH, protocol.DISPLAY_WIDTH, protocol.DEFAULT_AVAILABLE_LIMIT)
+    process_state = _ProcessState()
 
     def refuse_exec(*_arguments, **_keywords):
         raise ReExecRequested()
@@ -41,8 +77,10 @@ def _swapped(argv, input_text, environment, cwd):
         os.environ.setdefault("LINES", "24")
         os.execvpe = refuse_exec
         os.chdir(cwd)
+        process_state.start_fresh()
         yield
     finally:
+        process_state.restore()
         cli._DISPLAY_WIDTH, protocol.DISPLAY_WIDTH, protocol.DEFAULT_AVAILABLE_LIMIT = saved_display
         os.execvpe = saved_exec
         os.chdir(saved_cwd)
