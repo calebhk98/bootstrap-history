@@ -170,6 +170,8 @@ def _polish_root(function, low: float, high: float) -> float:
         if value_low == value_high:
             break
         log_mid = (log_low * value_high - log_high * value_low) / (value_high - value_low)
+        if not math.isfinite(log_mid):
+            log_mid = 0.5 * (log_low + log_high)    # a non-finite demand value: bisect instead
         log_mid = min(max(log_mid, min(log_low, log_high)), max(log_low, log_high))
         value_mid = function(math.exp(log_mid))
         if value_mid > 0.0:
