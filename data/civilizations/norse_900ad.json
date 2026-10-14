@@ -458,6 +458,11 @@
     "w_religious_rigidity": 0.1
   },
   "wage_index": 0.6,
+  "imported_ores": {
+    "tin": "Scandinavia has no workable cassiterite; Norse bronze and pewter used tin that came from Cornwall and Devon through English and Frankish trade; recalled, not a figure from a source read for this entry",
+    "gold": "no native gold lies in the Norse lands; their gold arrived as Byzantine and Arab coin, Frankish and English tribute and plunder, not from a mine they worked",
+    "mercury": "no cinnabar lies in Scandinavia; any mercury came by Frankish trade from the Iberian and Alpine deposits, not from a Norse working"
+  },
   "unsupplied_basket_goods": {
     "cacao_kg": "an American crop; no partner grows it and the cultivation node is not held, so household demand for it has no supply until a founder brings the stock",
     "camphor_kg": "camphor came from East Asian and Indonesian trade; the distillation node it is gated on is not held and no partner supplies it",
