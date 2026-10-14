@@ -361,6 +361,6 @@ players keep working, the id is a product.
    capital markets).
 6. A firm paying both node upkeep (which includes crew pay) and crew wages is not intended. Fixed on the agents path
    (`test_firm_crew_paid_once.py`: `economy_port.concern_upkeep` excludes the staff part of a derived upkeep,
-   `node_upkeep.non_labour_share`). Still double on the founder's path (`economy_production.institution_upkeep` plus
-   the payroll in `living_cost`). Authored, programme and defaulted upkeep state no staff split and are charged whole.
+   `node_upkeep.non_labour_share`). Fixed on the founder's path too (`test_founder_crew_paid_once.py`: `economy_production.institution_upkeep` charges
+   the same non-crew share, the payroll in `living_cost` carries the crew). Authored, programme and defaulted upkeep state no staff split and are charged whole.
 7. `auto_open_ventures` stays, as a policy any owner can switch on.

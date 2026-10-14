@@ -21,7 +21,7 @@ grouping evidence, and for why this lives in a separate file.
 """
 from .data import trade_family
 from sim.constants import declare
-from . import category_traits, money_units, node_revenue_market
+from . import category_traits, money_units, node_revenue_market, node_upkeep
 from .readable import readable
 from .industry_depth import RAMP_SHARE_AT_FULL_DEPTH
 
@@ -713,7 +713,8 @@ class ProductionMixin:
             if node_id in self.SCALABLE_INSTITUTIONS else 1.0
         if units is not None and node_id in self.SCALABLE_INSTITUTIONS:
             _units = float(units)
-        upkeep_amount = node["up"] * _units
+        # The crew's pay is in the payroll (`living_cost` through `wage_bill`), so only the non-crew part is charged here.
+        upkeep_amount = node["up"] * node_upkeep.non_labour_share(node) * _units
         if (fully_staffed or node_id not in self.CAPABILITY_INSTITUTIONS or upkeep_amount <= 0
                 or self.mechanic(node_id, "upkeep_full")):
             return upkeep_amount
