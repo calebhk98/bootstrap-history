@@ -1,0 +1,141 @@
+"""Lists the checks that match on reply or screen text, split into presentation and behaviour.
+
+`python3 -m sim.tests --text-checks` prints one line per text-matching check of a behaviour topic, then
+the counts. `--text-checks --all` also lists the presentation ones. Complaint 515's rule: a test of model
+behaviour asserts on structured values (the engine's numbers, the JSON reply's fields); only a test whose
+subject is presentation (units, wording, rounding, layout) asserts on text. This reads the syntax tree and
+runs nothing, so it is a heuristic; a miss shows up as a behaviour line that is really a key check, or a
+check that reads text through a helper this does not recognise.
+
+A check "reads text" when its condition tests a string against a name or expression that holds text:
+a reply's `text`, a rendered screen, captured output, a message list joined to a string.
+"""
+import ast
+import os
+import re
+
+from sim.tests.discovery import TESTS_DIR, discover_topics
+
+# Source fragments that make an expression text rather than structure.
+TEXT_SOURCE = re.compile(
+    r"""\[["'](text|reason|cause|error|note|why|label|advice|message|blurb|line)["']\]|\.stdout|"""
+    r"""render_|_render|\brender\b|\bstr\(|\.lower\(\)|\.join\(|\bjson\.dumps|"""
+    r"""\bformat_|_text\b|\btext\b|\bscreen_text|\bmessage|\bmsg\b|\bblurb|\bprose|\bwording|\boutput\b|"""
+    r"""\bcaptured|\bprinted|\bpretty|\.get\(["'](error|reason|cause|note|why)["']""")
+# A bare name is textual when one of its underscore-separated words is one of these.
+TEXT_WORDS = {"text", "line", "lines", "said", "reason", "cause", "error", "advice", "why", "label", "msg",
+              "message", "note", "out", "output", "stdout", "blurb", "prose", "words", "received", "screen",
+              "rendered", "printed", "warning", "announcement", "refusal", "story"}
+
+# Topic or check names whose subject is presentation (units, wording, rounding, layout).
+PRESENTATION = re.compile(
+    r"wording|worded|\btext\b|render|display|layout|format|\bunits?\b|rounding|rounded|label|phrase|"
+    r"\bprints?\b|printed|column|width|pretty|\bmenu\b|prose|legend|heading|screen|"
+    r"readout|\bsays?\b|\bnames\b|\bmention|banner|headline|abbrev|plural|spell|\bshows?\b|"
+    r"\bread(s|ing)? (as|back)\b|\bwords?\b|\bpointer\b|footer|\bhelp\b|\bexplains?\b|\bcarries\b|"
+    r"wording|\blists?\b the|\bwarns?\b|\bstates\b|\bleads\b|\bfirst lines?\b",
+    re.I)
+
+
+def _source(node, text):
+    return ast.get_source_segment(text, node) or ""
+
+
+def _textual_names(tree, text):
+    """Names assigned from an expression that produces text."""
+    names = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            value_source = _source(node.value, text)
+            if TEXT_SOURCE.search(value_source) and not isinstance(node.value, (ast.Dict, ast.List)):
+                for target in node.targets:
+                    for name in ast.walk(target):
+                        if isinstance(name, ast.Name):
+                            names.add(name.id)
+    return names
+
+
+def _rendered_names(tree, text):
+    """Names assigned from a renderer's output: a check on them has presentation as its subject."""
+    names = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign) and re.search(r"\brender\w*\(|\bscreen\w*\(", _source(node.value, text)):
+            names.update(name.id for target in node.targets for name in ast.walk(target)
+                         if isinstance(name, ast.Name))
+    return names
+
+
+def _is_textual(node, text, names):
+    source = _source(node, text)
+    if any(isinstance(inner, ast.Name) and TEXT_WORDS & set(inner.id.lower().strip("_").split("_"))
+           for inner in ast.walk(node)):
+        return True
+    if any(isinstance(inner, ast.Name) and (inner.id in names) for inner in ast.walk(node)):
+        return True
+    return bool(TEXT_SOURCE.search(source))
+
+
+def _reads_text(condition, text, names):
+    """True if the condition tests a string constant or regex against text."""
+    for node in ast.walk(condition):
+        if isinstance(node, ast.Compare):
+            for operator, right in zip(node.ops, node.comparators):
+                if isinstance(operator, (ast.In, ast.NotIn)):
+                    left_is_string = isinstance(node.left, ast.Constant) and isinstance(node.left.value, str)
+                    if left_is_string and _is_textual(right, text, names):
+                        return True
+                    if left_is_string and not re.fullmatch(r"[a-z_0-9]+", node.left.value):
+                        return True
+        elif isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+            if node.func.attr in ("startswith", "endswith", "count", "search", "match", "findall", "find"):
+                if _is_textual(node.func.value, text, names) and node.args and any(
+                        isinstance(argument, ast.Constant) and isinstance(argument.value, str)
+                        for argument in node.args):
+                    return True
+    return False
+
+
+def scan_topic(topic):
+    """(is_presentation_topic, [(line, check_name, is_presentation_check)]) for one topic."""
+    path = os.path.join(TESTS_DIR, "test_%s.py" % topic)
+    with open(path, encoding="utf-8") as handle:
+        text = handle.read()
+    tree = ast.parse(text, filename=path)
+    docstring = ast.get_docstring(tree) or ""
+    names = {name for name in _textual_names(tree, text)}
+    names = {name for name in names if name not in ("_reply", "reply")} | set()
+    rendered = _rendered_names(tree, text)
+    topic_is_presentation = bool(PRESENTATION.search(docstring.split("\n\n")[0] + " " + topic.replace("_", " ")))
+    found = []
+    for node in ast.walk(tree):
+        if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "check"):
+            continue
+        if len(node.args) < 2:
+            continue
+        if not _reads_text(node.args[1], text, names):
+            continue
+        name_node = node.args[0]
+        check_name = " ".join(_source(name_node, text).replace('"', " ").split())
+        condition_source = _source(node.args[1], text)
+        from_renderer = bool(re.search(r"\brender\w*\(", condition_source)) or any(
+            isinstance(inner, ast.Name) and inner.id in rendered for inner in ast.walk(node.args[1]))
+        found.append((node.lineno, check_name, from_renderer or bool(PRESENTATION.search(check_name))))
+    return topic_is_presentation, found
+
+
+def report(show_presentation=False):
+    behaviour, presentation = [], []
+    for topic in discover_topics():
+        topic_is_presentation, found = scan_topic(topic)
+        for line, check_name, check_is_presentation in found:
+            row = (topic, line, check_name)
+            (presentation if topic_is_presentation or check_is_presentation else behaviour).append(row)
+    if show_presentation:
+        for topic, line, check_name in presentation:
+            print("presentation  %s:%d  %s" % (topic, line, check_name))
+    for topic, line, check_name in behaviour:
+        print("behaviour     %s:%d  %s" % (topic, line, check_name))
+    topics = sorted({row[0] for row in behaviour})
+    print("\nbehaviour checks reading text: %d in %d topics" % (len(behaviour), len(topics)))
+    print("presentation checks reading text: %d" % len(presentation))
+    return len(behaviour)
