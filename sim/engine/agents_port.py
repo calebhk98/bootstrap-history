@@ -140,7 +140,7 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, StakeView, Disclosu
 		return self._sim.HOURS_PER_PERSON_YEAR
 
 	def concern_staff(self, node_id: str) -> Dict[str, float]:
-		"""People of each trade running this concern ties up, by the founder's own rule."""
+		"""People of each trade one plant of this concern needs: the founder's own rule, which reads the plant's data (plant_crew.py)."""
 		sim = self._sim
 		scholars, craftsmen = sim.venture_hands(node_id)
 		foreman_trade, foreman_fte = sim.venture_foreman(node_id)

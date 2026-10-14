@@ -33,7 +33,7 @@ def make_node(node_id, category, revenue, upkeep, hours):
 
 def actor_sim():
 	nodes = copy.deepcopy(NODES)
-	nodes["zz_borrow"] = make_node("zz_borrow", sorted(S.Sim.GOODS_CATEGORIES)[0], 2.0e5, 5000.0, 50.0)
+	nodes["zz_borrow"] = make_node("zz_borrow", sorted(S.Sim.GOODS_CATEGORIES)[0], 8.0e5, 5000.0, 50.0)
 	game = build_unopened(lambda: S.Sim(nodes, list(ORDER), random.Random(1), events=False, manual=True,
 	             civ=S.load_civ("rome_100ad")))
 	game.goal, game.done_year = GOAL, {}
@@ -83,7 +83,7 @@ whole_stake = max(funded_stakes)
 check("a founder who can put up the whole stake founds firms beyond the opening ones",
       max(funded_counts) > funded_counts[0] and whole_stake > 0.0, (funded_counts, whole_stake))
 
-short = 0.5 * (1.0 + ENTRY_EQUITY_SHARE) * whole_stake   # more than lenders' share of the stake, less than all of it
+short = 1.05 * ENTRY_EQUITY_SHARE * whole_stake   # more than lenders' share of the stake, so little over it that the entrant must borrow
 unfunded, short_counts, borrowed, short_stakes = run(ceiling=short)
 check("a founder short of the whole stake but putting up lenders' share still founds firms, on credit",
       max(short_counts) > short_counts[0] and bool(short_stakes) and max(short_stakes) <= short + 1e-6 < whole_stake,
