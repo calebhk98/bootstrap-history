@@ -14,7 +14,8 @@ from . import (goods_market, households, market_curves, merchants, producers, se
 from .market_memory import market_key
 from .market_memory_asks import (memory_reference_volume, note_bids, note_offers, price_after_no_bids,
                                  price_after_resumed_trade, wanted_at)
-from .market_memory_offers import price_after_no_offers
+from .market_memory_asks import REPRESENTATIVE_TRADE_SHARE
+from .market_memory_offers import price_after_no_offers, price_after_thin_trade
 from .notional import making_costs
 from .protocols import AgentOrders
 from .recipes import input_depth_order
@@ -168,8 +169,13 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
             dry_years = note_offers(record.memory, key, bids, offers)
             if result.quantity > 0.0:
                 usual = record.memory.volume_weights.get(key, 0.0)
-                signal = remembered_price(old, result.price, result.quantity, memory_reference_volume(usual, wanted_at(bids, old)))
+                reference = memory_reference_volume(usual, wanted_at(bids, old))
+                signal = remembered_price(old, result.price, result.quantity, reference)
                 signal = price_after_resumed_trade(old, signal, quiet_years + dry_years)
+                if result.quantity < REPRESENTATIVE_TRADE_SHARE * usual:
+                    if costs is None:
+                        costs = making_costs(setup, record)
+                    signal = price_after_thin_trade(signal, costs.get(good), result.quantity, usual)
             else:
                 signal = _unsold_signal(bids, offers)
                 if signal is None:
@@ -178,6 +184,12 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
                     if costs is None:
                         costs = making_costs(setup, record)
                     signal = price_after_no_offers(old, costs.get(good))
+                if signal is None and bids and offers and old is not None:
+                    # both sides present and nothing traded: the remembered price relaxes toward the making cost
+                    if costs is None:
+                        costs = making_costs(setup, record)
+                    relaxed = price_after_thin_trade(old, costs.get(good), 0.0, record.memory.volume_weights.get(key, 0.0))
+                    signal = relaxed if relaxed != old else None
             if signal is not None and signal > 0.0:
                 floor = setup.opening_prices.get(good, signal) * PRICE_MEMORY_FLOOR_SHARE
                 record.memory.prices[key] = max(signal, floor)

@@ -10,13 +10,30 @@ A seller that moves the price may also raise its ask above the price-taking one,
 already marks its ask down in a year (UNSOLD_ASK_MARKDOWN_SHARE), so an ask moves over the years as the
 book changes and never jumps in one; an ask raised past what buyers pay goes unsold and is marked down
 again by the producer's own rule.
+
+A seller's ask is also held to what a unit costs it times the markup a seller can charge when buyers can
+substitute toward other goods meeting the same need (substitution_markup). Against buyers who spend a fixed
+budget and name no maximum price, profit rises with the ask without limit, so without the hold the ask
+ratchets up each year; and a seller that sells next to nothing at an ask above the hold comes down to it
+at once, since a market in which it is idle tells it nothing about a price above what undercutting rivals
+could ask.
 """
 import dataclasses
+import math
 from typing import List, Optional, Sequence
+
+from sim.constants import declare
 
 from . import entry_trial, goods_market, market_curves, seller_pricing
 from .producers import UNSOLD_ASK_MARKDOWN_SHARE, expected_output_prices, live_input_prices, live_wages
 from .types import EDGE_EXTERNAL, Bid, Offer
+
+IDLE_SALE_SHARE = declare(
+    "IDLE_SALE_SHARE", 0.01, kind="temporary_heuristic", unit="share of its offer a seller sells at its ask",
+    source=None, confidence="D",
+    why="A seller that sells less than this share of what it offers at its ask is idle: its ask is above what "
+        "any real buyer pays, so it comes down to cost times the substitution markup at once instead of "
+        "marking down a share a year. Where idle begins has no measured basis.")
 
 
 def merged_bids(bids: Sequence[Bid], good: str) -> List[Bid]:
@@ -26,17 +43,29 @@ def merged_bids(bids: Sequence[Bid], good: str) -> List[Bid]:
     return market_curves.bids_of(market_curves.summarize(bids, []), good) + outside
 
 
-def unit_value(setup, record, view, offer: Offer) -> Optional[float]:
-    """What one more unit of the offer's good is worth to its producer unsold; None for a seller that is
-    not a producer."""
+def unit_cost(setup, record, view, offer: Offer) -> Optional[float]:
+    """What one unit of the offer's good costs its producer to make at today's prices (infinite when that
+    cannot be priced); None for a seller that is not a producer."""
     producer = record.producers.get(offer.seller)
     if producer is None:
         return None
     recipe = setup.recipes[producer.recipe_id]
-    cost = entry_trial.full_cost_per_unit(
+    return entry_trial.full_cost_per_unit(
         recipe, offer.good, expected_output_prices(producer, recipe, view), live_input_prices(producer, recipe, view),
         live_wages(producer, recipe, view), 0.0, producer.land_rent_per_run, producer.yield_factor)
+
+
+def unit_value(offer: Offer, cost: float) -> float:
+    """What one more unit of the offer's good is worth to its producer unsold."""
     return min(cost, max(offer.reservation_price, 0.0))
+
+
+def substitution_markup(setup, offer: Offer) -> float:
+    """The ratio of price to cost a seller can charge when buyers substitute toward other goods meeting the
+    same need at the basket's elasticity of substitution (the constant-elasticity monopolist's markup);
+    unbounded when buyers do not substitute more than one for one."""
+    elasticity = setup.basket_for(offer.tile).substitution
+    return elasticity / (elasticity - 1.0) if elasticity > 1.0 else math.inf
 
 
 def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[Offer],
@@ -52,15 +81,23 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
         offer = offers[index]
         if offer.quantity <= 0.0:
             continue
-        value = unit_value(setup, record, view, offer)
-        if value is None:
+        cost = unit_cost(setup, record, view, offer)
+        if cost is None:
             continue
+        value = unit_value(offer, cost)
         rivals = offers[:index] + offers[index + 1:]
         ask = max(offer.reservation_price, 0.0)
+        limit = cost * substitution_markup(setup, offer)
+        if ask > limit and math.isfinite(limit):
+            sold, _price = seller_pricing.sold_and_price(book, rivals, offer, ask, last_price)
+            if sold < IDLE_SALE_SHARE * offer.quantity:
+                offers[index] = dataclasses.replace(offer, reservation_price=limit)
+                continue
         step = UNSOLD_ASK_MARKDOWN_SHARE * (ask if ask > 0.0 else max(last_price or 0.0, 0.0))
+        floor = ask * (1.0 - UNSOLD_ASK_MARKDOWN_SHARE)
         choice = seller_pricing.best_reservation(
-            book, rivals, offer, value, last_price, ceiling=ask + step,
-            floor=ask * (1.0 - UNSOLD_ASK_MARKDOWN_SHARE), current=ask, buyers=buyers)
+            book, rivals, offer, value, last_price, ceiling=min(ask + step, max(limit, floor)), floor=floor,
+            current=ask, buyers=buyers)
         if choice is not None:
             offers[index] = dataclasses.replace(offer, reservation_price=choice)
     return offers
