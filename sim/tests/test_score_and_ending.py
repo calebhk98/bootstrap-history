@@ -1,5 +1,6 @@
 """score_and_ending: regression checks, run individually with `--only score_and_ending`."""
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of
 from sim.ui import protocol as _PROTO
 
 # =============================================================================
@@ -75,12 +76,12 @@ _score_game.goal_year = _score_start_year + 5
 _end_wonfog = S._agent_end_reason(_score_game)
 check("BREAK: under fog, a player who reached the goal and kept building "
       "to the horizon is told they reached it, not that they did not",
-      "did not reach" not in _end_wonfog and "reached" in _end_wonfog,
+      cause_of(_end_wonfog) == "horizon_goal_reached",
       _end_wonfog)
 _score_game.goal_year = _score_goal_year
 check("...while a player who never reached it under fog still reads the "
       "honest 'did not reach' message, unchanged",
-      "did not reach" in S._agent_end_reason(_score_game), None)
+      cause_of(S._agent_end_reason(_score_game)) == "horizon_goal_missed", None)
 _score_game.fog = False
 _score_game.year = _score_start_year
 check("off fog, technology coverage is visible immediately, mid-run - fog "

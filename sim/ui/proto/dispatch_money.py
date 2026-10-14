@@ -8,6 +8,7 @@ these handlers back from here (see dispatch.py's own docstring for why
 these live in a separate file).
 """
 
+from sim.refusal import Refusal
 import sim.engine.ui_port as ui_port
 from sim.engine.ui_port import area_text, mass_per_area_text, mass_rate_text, money_text
 from .command_registry import command
@@ -126,8 +127,8 @@ def _buy_mine(sim, cmd, quantity):
     # asks a node to buy). The membership check lives in economy.py's
     # mineable(); this file calls it rather than keeping its own list.
     if not sim.mineable(mat):
-        return {"ok": False, "error": "material must be one of: "
-                                      + sim.mine_catalog_hint()}
+        return {"ok": False, "error": Refusal("unknown_material", "material must be one of: " + sim.mine_catalog_hint(),
+                                              choices=sorted(sim.MINE_OPEX_MATERIALS))}
     # partial=False: a mine you ask for by name must be bought in full or
     # not at all, never spend every denarius you have and hand back a
     # fraction without asking.

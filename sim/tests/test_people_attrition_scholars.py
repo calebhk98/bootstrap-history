@@ -424,7 +424,7 @@ check("a cap that does not parse is refused, not shrugged off into "
       "starting everything - the one typo a careful player can make must "
       "not be the typo that begins the whole tree",
       _PT("rush limit:abc")[0] is None
-      and "not a number" in (_PT("rush limit:abc")[1] or ""),
+      and cause_of(_PT("rush limit:abc")[1]) == "cap_not_a_number",
       _PT("rush limit:abc"))
 check("platinum is reachable the way its own note and the geography file "
       "both say it is, overland, without rounding the Cape",

@@ -174,4 +174,5 @@ government.knowledge.update(military)
 check("holding all of it is full adoption", abs(game.state_military_diffusion() - 1.0) < 1e-9)
 relief, why = game.hazard_relief("sack_chance")
 check("war relief follows what the state holds",
-      relief < 1.0 and any("state's own armies" in line for line in why), (relief, why))
+      relief < 1.0 and any(entry["source"] == "state_weapons" for entry in game.hazard_relief_entries("sack_chance")),
+      (relief, why))

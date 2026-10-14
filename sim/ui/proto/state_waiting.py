@@ -37,20 +37,20 @@ def _agent_end_reason(sim):
             _goal_name = (sim.nodes[sim.goal]["name"].lower() if sim.goal in sim.nodes
                          else "the goal")
             if sim.goal_year:
-                return ("the horizon at %d AD is reached. You reached %s in "
-                        "%d AD and kept building for %d years after it."
-                        % (end_year, _goal_name, sim.goal_year,
-                           end_year - sim.goal_year))
-            return ("the horizon at %d AD is reached. You built %d things of your "
-                    "own and did not reach %s."
-                    % (end_year, len(sim.done - sim.granted), _goal_name))
+                return Refusal("horizon_goal_reached", "the horizon at %d AD is reached. You reached %s in "
+                               "%d AD and kept building for %d years after it."
+                               % (end_year, _goal_name, sim.goal_year,
+                                  end_year - sim.goal_year))
+            return Refusal("horizon_goal_missed", "the horizon at %d AD is reached. You built %d things of your "
+                           "own and did not reach %s."
+                           % (end_year, len(sim.done - sim.granted), _goal_name))
         if sim.goal_year:
-            return ("the horizon at %d AD is reached. You reached %s in %d AD "
-                    "and kept building for %d years after it."
-                    % (end_year,
-                       sim.nodes[sim.goal]["name"].lower() if sim.goal in sim.nodes
-                       else "the goal", sim.goal_year, end_year - sim.goal_year))
-        return "ran out of horizon (%d AD) without reaching the goal" % end_year
+            return Refusal("horizon_goal_reached", "the horizon at %d AD is reached. You reached %s in %d AD "
+                           "and kept building for %d years after it."
+                           % (end_year,
+                              sim.nodes[sim.goal]["name"].lower() if sim.goal in sim.nodes
+                              else "the goal", sim.goal_year, end_year - sim.goal_year))
+        return Refusal("horizon_goal_missed", "ran out of horizon (%d AD) without reaching the goal" % end_year)
     return None
 
 

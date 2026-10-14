@@ -258,7 +258,7 @@ output_armed, output_why = armed.hazard_relief("output_factor")
 check("a war costs an armed empire's trade less than an unarmed one's - "
       "every output_factor hazard in these civilization files is a war or "
       "its administrative aftermath, and this is the branch's answer to it",
-      output_armed < output_unarmed and any("military strength" in reason for reason in output_why),
+      output_armed < output_unarmed and any(entry["source"] == "own_military_strength" for entry in armed.hazard_relief_entries("output_factor")),
       (output_unarmed, output_armed, output_why))
 staff_unarmed, _ = unarmed.hazard_relief("staff_loss")
 staff_armed, _ = armed.hazard_relief("staff_loss")

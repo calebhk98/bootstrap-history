@@ -111,6 +111,12 @@ def _reads_text(condition, text, names):
     """True if the condition tests a string constant or regex against text."""
     for node in ast.walk(condition):
         if isinstance(node, ast.Compare):
+            if any(isinstance(operator, (ast.Eq, ast.NotEq)) for operator in node.ops):
+                for side, other in ((node.left, node.comparators[0]), (node.comparators[0], node.left)):
+                    if (isinstance(side, ast.Constant) and isinstance(side.value, str)
+                            and len(side.value.split()) >= 2 and not _is_structured(other, text)
+                            and not _reads_source(other, text)):
+                        return True
             for operator, right in zip(node.ops, node.comparators):
                 if isinstance(operator, (ast.In, ast.NotIn)):
                     left_is_string = isinstance(node.left, ast.Constant) and isinstance(node.left.value, str)

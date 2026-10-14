@@ -251,7 +251,7 @@ _r_bad = S._agent_dispatch(_command_sim, NODES, {"cmd": "buy", "what": "mine",
                                                  "material": "not_a_real_material_xyz", "n": 10})
 check("...but still refuses a genuinely unpriced name, with a hint rather "
       "than a bare closed list",
-      _r_bad.get("ok") is False and "aluminium_kg" in _r_bad.get("error", ""),
+      _r_bad.get("ok") is False and _r_bad.get("cause") == "unknown_material" and bool(_r_bad.get("choices")),
       _r_bad)
 
 # --- COMMODITY FRAMEWORK (data/world/COMMODITIES.md,
