@@ -1,6 +1,6 @@
 # Display and wording bugs found in a Rome playtest
 
-**Status:** partly - fixed in `fix-playtest-display-bugs`; still open: `market <material>` filter, quote preview for `sell concern`, the alum `why` item, the 'still on offer to you' units
+**Status:** partly - fixed in `fix-playtest-display-bugs`; still open: `market <material>` filter, quote preview for `sell concern`, the alum `why` item (the 'still on offer to you' units are fixed in `fix-unhired-trade-wage`, see closed 503)
 
 Each of these is small, and each misled or confused a player in a Rome game started from `menu`
 (`play --civ rome_100ad --kit merchant --seed real25` reproduces the game).

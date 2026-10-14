@@ -31,7 +31,7 @@ BLAME_MATERIAL_SHARE = declare(
 	"BLAME_MATERIAL_SHARE", 0.25, kind="temporary_heuristic",
 	unit="share of the cause", source=None, confidence="D",
 	why="The founder's share of a loss below which a petition's log line does not say the blame lands on "
-		"him: the cause is mostly somebody else's and naming him would mislead.")
+		"the founder: the cause is mostly somebody else's and naming the founder would mislead.")
 
 
 def pull_of(lost_income: float, territory_revenue: float) -> float:
@@ -52,7 +52,7 @@ def state_response(pull: float, capacity: float, in_deficit: bool, kind: str,
 
 
 def blame_after_protection(blame: float, protection: float, blame_share: float) -> float:
-	"""The blame that lands on the founder: his share of the loss, less what his protection turns aside."""
+	"""The blame that lands on the founder: their share of the loss, less what their protection turns aside."""
 	return blame * blame_share * max(BLAME_PROTECTION_FLOOR, 1.0 - protection)
 
 
@@ -125,7 +125,7 @@ class InterestGroup(RecordedActor):
 
 	@staticmethod
 	def blame_words(blame_share: float) -> str:
-		"""The closing clause of a petition: that the blame lands on the founder, and how much of the cause is his."""
+		"""The closing clause of a petition: that the blame lands on the founder, and how much of the cause is theirs."""
 		if blame_share < BLAME_MATERIAL_SHARE:
 			return ""
 		return ". The blame lands on you (about %d%% of the cause is yours)" % round(100.0 * blame_share)
