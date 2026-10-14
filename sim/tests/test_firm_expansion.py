@@ -128,11 +128,16 @@ for _ in range(10):
 	next_year(dear)
 market_grows(dear, 10.0)
 world_dear = SimWorld(dear)
-incumbent = dear.actors.active_firms()[0]
-step = incumbent.capacity_of("zz_grow") * 0.1
-dearest_useful = (world_dear.expansion_gain("zz_grow", incumbent.record.opened_year["zz_grow"],
-                                            incumbent.capacity_of("zz_grow"), step, 1.0)
-                  / world_dear.plant_cost("zz_grow", incumbent, step))
+
+
+def _return_on_a_step(firm):
+	step = firm.capacity_of("zz_grow") * 0.1
+	return (world_dear.expansion_gain("zz_grow", firm.record.opened_year["zz_grow"], firm.capacity_of("zz_grow"), step, 1.0)
+	        / world_dear.plant_cost("zz_grow", firm, step))
+
+
+# the best return any incumbent could get on a step (a smaller firm gains more per step than a larger one)
+dearest_useful = max(_return_on_a_step(firm) for firm in dear.actors.active_firms() if "zz_grow" in firm.concerns)
 capacity_before_dear = {firm.actor_id: dict(firm.record.capacity) for firm in dear.actors.active_firms()}
 check("firms exist to be refused", len(capacity_before_dear) > 0)
 # the dear rate is the firms' own (the price solver re-solves every price at any other rate, which is not under test)
