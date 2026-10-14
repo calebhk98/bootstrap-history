@@ -81,7 +81,7 @@ ENTRY_STAKE_BUFFER = declare(
 EXIT_LOSS_YEARS = declare(
 	"EXIT_LOSS_YEARS", 3, kind="temporary_heuristic",
 	unit="years", source=None, confidence="D",
-	why="Consecutive loss-making years after which a firm closes.")
+	why="Consecutive years of loss, of a margin below what its plant would earn lent out, or of interest's outrunning its margin, after which a firm closes.")
 ATTENTION_SPAN = declare(
 	"ATTENTION_SPAN", 12, kind="temporary_heuristic",
 	unit="inventions per actor per year", source=None, confidence="D",
