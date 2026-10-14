@@ -1,6 +1,6 @@
 # One price owner: the agent economy
 
-**Status:** plan, nothing built (2026-10-14). Answers `Complaints/507-prices-and-traded-volumes-have-two-owners.md`
+**Status:** plan; stage 1 built on branch `507-stage-1-solver-is-cost-only` (2026-10-14), the rest not built. Answers `Complaints/507-prices-and-traded-volumes-have-two-owners.md`
 (owner decision: the agent economy is the only owner of prices and traded volumes; the engine's price solver
 becomes a cost-of-making calculator). Sequel to `ONE_DEMAND_MODEL_PLAN.md` (one household demand kernel) and
 Complaint 115 (one economy). Folds in the price-search half of Complaint 513 (stage 8) and the unsold-stock rule
@@ -118,6 +118,22 @@ Relationship tests named below exist today unless marked (new). Run all with
 `test_baseline_ensemble.py` for the harness; a real run is slow and manual).
 
 ### Stage 1: the solver loses its demand model
+
+**Done** (branch `507-stage-1-solver-is-cost-only`): the demand model, clearing, glut handling and the fixed-quantity
+rent are out of the solver; `making_cost.cost_of_making` and `long_run_costs.long_run_costs` are exposed; readers
+untouched. Learned, for later stages: (1) a joint run's default split values an output at its sole-output route's price this round, else at
+nothing if it is a recorded waste (`UNPRICED_WASTE_VALUE`, `retire` stages 3 and 7), else by mass
+(`UNPRICED_OUTPUT_VALUE_PER_KILOGRAM_SHARE`, `retire` stage 2); mass for tar made the retort undercut the sole
+charcoal route and emptied the charcoal nodes' lines, so the data's waste list stands in for the glut verdict; a
+caller's `reference_price_of` wins, and one below zero marks a waste priced at no less than minus its disposal
+cost, so the waste rule and sink services reach a price only once the economy hands in such a reference
+(stages 3 and 7); the Rome, Han and Mexica tables equal the old ones to four figures bar the tar, the England and
+Norse silver rises to its mining cost because population no longer sizes its demand (stage 2 sees it in the coin); (2) rent is an argument; the stand-in
+is `rent_standin.py` (`STAND_IN_ORE_DEMAND_SHARE_OF_OPENING_OUTPUT`, `retire` stage 5), and `farmed_hectares` stays
+an input of that stand-in only; (3) `DERIVED_DEMAND_MAX_SWEEPS` stays: `NeedDemandModel.total_demand` still serves the
+static book and `base_basket`, so it goes with them in stage 4 or 6; (4) `supply_per_year` left the needs schema with
+the scarcity floors; (5) `joint_floor.py` and `need_trial_fast.py` are deleted; (6) every engine source change stales
+the price-solve and agent-economy caches and `openings/`, which stage 2 regenerates.
 
 Moves: job 2 deleted; the table becomes pure cost; the calculator functions of section 2 are exposed. Readers are
 untouched (they still read a table, now of cost), so the stage merges alone.
