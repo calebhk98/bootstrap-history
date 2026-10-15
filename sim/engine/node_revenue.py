@@ -17,6 +17,8 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
 from sim.constants import declare
 
+from sim.world import plant_figures
+
 from . import energy_prices, node_capital, node_output, node_upkeep
 
 # fields `apply_revenue` sets on a node: what a civilisation's derivation replaces
@@ -82,22 +84,15 @@ def _apply_unlisted_upkeep(node: dict, goods: Mapping[str, float], wages: Mappin
 def _apply_output(node: dict, baskets: node_output.Baskets, goods: Mapping[str, float],
                   wages: Mapping[str, float], money_per_labour_hour: float) -> float:
     """Derive the node's revenue and upkeep from its baskets; returns the build hours of its plant."""
-    sold = sum(quantity * goods[material] for material, quantity in baskets.outputs.items())
-    sold += sum(basket["value"] for basket in baskets.energy_sold.values())
-    bought = sum(quantity * goods.get(material, 0.0) for material, quantity in baskets.purchases.items())
-    bought += sum(basket["value"] for basket in baskets.energy_bought.values())
     node["_output_per_year"], node["_purchases_per_year"] = baskets.outputs, baskets.purchases
     node["_energy_sold_per_year"], node["_energy_bought_per_year"] = baskets.energy_sold, baskets.energy_bought
     node["_labour_hours_per_year"] = baskets.labour_hours
-    node["rev_hours"] = max(0.0, sold - bought) / money_per_labour_hour
+    node["rev_hours"] = plant_figures.takings(baskets, goods) / money_per_labour_hour
     node["_revenue_basis"] = "output"
-    staff = node_upkeep.staff_hours_cost(baskets.labour_hours, wages, money_per_labour_hour)
-    build_hours = node_upkeep.plant_build_hours(baskets.plant, goods, wages, money_per_labour_hour)
-    wear_hours = node_upkeep.plant_wear_hours(baskets.plant, goods, wages, money_per_labour_hour)
-    plant = node_upkeep.maintenance_hours(node, build_hours, wear_hours)
-    node["_upkeep_hours_parts"] = {"staff": staff, "plant": plant, "plant_build_hours": build_hours,
-                                 "plant_wear_hours": wear_hours}
-    node["up_hours"] = staff + plant
+    parts = plant_figures.upkeep_parts(node.get("kind"), baskets, goods, wages, money_per_labour_hour)
+    build_hours = parts["plant_build_hours"]
+    node["_upkeep_hours_parts"] = parts
+    node["up_hours"] = parts["staff"] + parts["plant"]
     node["_upkeep_basis"] = "derived"
     return build_hours
 

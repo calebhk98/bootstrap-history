@@ -39,7 +39,6 @@ sim/engine/node_revenue.py::_apply_unlisted_upkeep
 sim/engine/node_revenue.py::_what_nodes_state
 sim/engine/node_revenue.py::apply_revenue
 sim/engine/planner.py::pick_side_branches
-sim/engine/plant_crew.py::plant_crew
 sim/engine/producer_costs.py::_founder_concern_offers
 sim/engine/projects_capability.py::is_concern_node
 sim/engine/projects_completion.py::opening_shortfall

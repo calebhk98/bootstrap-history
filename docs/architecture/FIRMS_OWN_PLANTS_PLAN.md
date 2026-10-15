@@ -248,6 +248,14 @@ plant capacity and crew hours; upkeep rises with plant capital and falls to cons
 in output prices; no node dict is read), plus `test_concern_supply_derived.py`, `test_concern_volume.py`,
 `test_twin_nodes_earn.py`.
 
+*Stage 2 done (branch `514-stage-2-plant-kernel`).* The kernel is `sim/world/plant_figures.py` (crew, takings, upkeep, ramp,
+non-crew share) over `sim/world/plant_baskets.py` (entry baskets and line capacities); `node_output.output_baskets`,
+`node_upkeep.maintenance_hours`/`non_labour_share` and `node_revenue._apply_output` are adapters over it; `plant_crew.py` is
+deleted; `venture_ramp` and `agents_port.ramp` call the one `plant_figures.ramp`. Fingerprint unchanged. Left for later
+stages: the adapter names `venture_ramp` and `venture_hands` (still on the wall's name list), the node money-field writers in
+`node_revenue`/`node_capital`, `energy_prices.py` (still in the engine; the kernel takes any object with `can_run`, `bought`
+and `sold`, so it needs no move yet). Test: `sim/tests/test_plant_figures.py`.
+
 **Stage 3a: the founder's businesses move onto the object (state and verbs).** Seats hold `businesses`; `open_venture`,
 `close_venture`, `mothball_work`, `restore_work`, `reopen_fee`, `_expand_institution` call the business; `operating`,
 `mothballed`, `closures`, `opened_year`, `inst_units` are deleted. Behaviour changes where paths differed; the winner for

@@ -12,7 +12,7 @@ from unittest import mock
 
 from sim.engine import solve_prices
 from sim.engine import data, energy_prices, incumbent_prices, node_output, node_revenue, prices
-from sim.world import capital_market
+from sim.world import capital_market, plant_figures
 from sim.labour.labour_market import production_data
 
 # Entries that state a plant and gate a node, whose inputs at solved prices cost more than what they
@@ -119,7 +119,7 @@ class MakersWithAStatedPlant(unittest.TestCase):
             if any(material not in goods for material in entry["outputs"]):
                 continue
             staff = sum(wages.get(trade, 0.0) * hours for trade, hours in (entry.get("labour_hours") or {}).items())
-            if node_output._net_per_batch(entry, goods, energy) < staff * (1 - 1e-9):
+            if plant_figures.net_per_batch(entry, goods, energy) < staff * (1 - 1e-9):
                 short.add(key)
         self.assertLessEqual(short, INPUTS_DEARER_THAN_PRODUCT, "adds less than its staff: %s" % sorted(short))
         self.assertFalse(INPUTS_DEARER_THAN_PRODUCT - short,
