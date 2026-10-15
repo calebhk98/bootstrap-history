@@ -213,9 +213,8 @@ check("the founder's own concerns and purse are untouched by the firm's existenc
 game = actor_sim([losing])
 founder_completes(game, "test_loss", operating=True, opened_ago=6)
 loser = game.actors.add("firm:loser", ActorRecord(kind="firm", money=1000.0, target="test_loss"))
-loser.concerns.add("test_loss")
+loser.business.open_plant("test_loss", game.state.scenario.year - 6)
 loser.knowledge.add("test_loss")
-loser.record.opened_year["test_loss"] = game.state.scenario.year - 6
 for _ in range(4):
     next_year(game)
 check("a firm that keeps losing money closes", loser.record.exited_year is not None and not loser.concerns,

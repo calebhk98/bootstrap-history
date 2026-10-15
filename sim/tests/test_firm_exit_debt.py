@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 
 from .harness import check
 
-from sim.agents.api import ActorRecord, ActorRegistry, ActorsState
+from sim.agents.api import ActorRecord, Business, ActorRegistry, ActorsState
 from sim.agents import firm_exit
 from sim.agents.purses import COIN, EDGE_OUTSIDE, EDGE_SAVERS
 from sim.agents.stratum import Stratum  # noqa: F401  (registers the kind)
@@ -29,7 +29,7 @@ def indebted_firm(debt, revenue):
 	world.nodes["shop"] = make_node("shop", hours=100.0, revenue=revenue, upkeep=1000.0)
 	world.demonstrated_nodes = {"shop"}
 	registry = ActorRegistry(ActorsState(home_country="home"))
-	firm = registry.add("firm:1", ActorRecord(kind="firm", founded_year=0, concerns={"shop"}, opened_year={"shop": 0}))
+	firm = registry.add("firm:1", ActorRecord(kind="firm", founded_year=0, business=Business.running(["shop"], opened_year=0)))
 	firm.money = -debt
 	return world, registry, firm
 
@@ -68,7 +68,7 @@ def closing_with(cash, owed):
 	world = NoGrowthWorld(year=50)
 	registry = ActorRegistry(ActorsState(home_country="home"))
 	backer = registry.add("stratum:home:merchants", ActorRecord(kind="stratum", stratum="merchants", members=1.0, money=0.0))
-	firm = registry.add("firm:2", ActorRecord(kind="firm", founded_year=0, concerns={"shop"}, plan={"backer": backer.actor_id}))
+	firm = registry.add("firm:2", ActorRecord(kind="firm", founded_year=0, business=Business.running(["shop"]), plan={"backer": backer.actor_id}))
 	firm.find_actor = registry.actors.get
 	purses = registry.state.purses
 	if cash > 0.0:

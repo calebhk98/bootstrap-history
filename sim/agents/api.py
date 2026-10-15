@@ -3,6 +3,8 @@
 WALL = "two-way"  # nothing here reaches sim/engine/; the engine hands it what it needs (sim/engine/agents_port*.py)
 
 from .base import Actor, RecordedActor
+from .business import Business
+from .business_plant import Plant
 from .firm import Firm
 from .government import Government
 from .household import Household
@@ -38,7 +40,7 @@ from . import demand_answer, demand_commands, demand_year  # noqa: F401  (regist
 from .trader import Trader
 from .trader_entry import trader_entry
 
-__all__ = ["PURSE_CURRENCY", "EDGE_EXCHANGE", "EDGE_OUTSIDE", "EDGE_SAVERS", "Purses", "demand_answer", "Actor", "RecordedActor", "Household", "HouseholdParty", "exchange_sale", "Firm", "Government",
+__all__ = ["PURSE_CURRENCY", "EDGE_EXCHANGE", "EDGE_OUTSIDE", "EDGE_SAVERS", "Purses", "demand_answer", "Actor", "RecordedActor", "Business", "Plant", "Household", "HouseholdParty", "exchange_sale", "Firm", "Government",
            "Policy", "ValuePolicy", "ExportPolicy", "exports_allowed", "GOVERNMENT_PREFIX", "CallbackPolicy", "IdlePolicy", "Option",
            "Decision", "register_policy", "ActorRegistry", "ActorRecord", "ActorsState",
            "CastEntry", "CountryProfile", "register_actor_kind",

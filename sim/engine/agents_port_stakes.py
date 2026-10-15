@@ -24,8 +24,8 @@ class StakeView:
 		for node_id in projects.operating:
 			running[node_id] = int(projects.opened_year.get(node_id, 0))
 		for actor in sim.actors.of_kind("firm"):
-			for node_id in actor.record.concerns:
-				running[node_id] = max(running.get(node_id, 0), int(actor.record.opened_year.get(node_id, 0)))
+			for node_id in actor.concerns:
+				running[node_id] = max(running.get(node_id, 0), int(actor.opened_year_of(node_id, 0)))
 		return running
 
 	def displacing_technique(self, trade: str) -> Any:
