@@ -225,6 +225,13 @@ What it showed (the hypothesis that seeding from costs stops the cycling is only
 4. The opening costs about twice what it did to build (several openings of one economy; `python3 -m sim.tests --slow
    --only shipped_opening_game`), not a year's step.
 
+Acceptance measure (`python3 sim/simulator.py opening-checks`, before and after on the full-length openings): the money
+against wear passes for Rome and England now, the English wage over floor passes, and the sited ores of Mexica and the Norse pass.
+The coin metal over making cost is worse everywhere it fails, the Roman wage over floor and the English sited ores newly
+fail, and no spin-up settles. The coin metal's price is fixed by the coin standard while its cost follows a wage that
+keeps falling, so that check waits on the wage settling, not on the seed. `test_full_length_opening_checks.py` lists
+what is still expected to fail and why.
+
 Later stages: stage 3 and 7 should hand the calculator reference prices (a joint run's split used mass or the sole
 route's price; the opening now uses demand); stage 5's rent replaces the stand-in; stage 7's unsold-stock search meets the
 input stocks the opening now seeds. The 519 ratios: full-length openings put every sited ore within an order of magnitude

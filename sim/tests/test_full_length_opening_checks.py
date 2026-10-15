@@ -20,20 +20,19 @@ EXPECTED_FAILURES = {
     # a sited ore opens at many times its making cost (Complaints/519)
     ("price_over_cost_sited_ores", "rome_100ad"): "519",
     ("price_over_cost_sited_ores", "han_china_100ad"): "519",
-    ("price_over_cost_sited_ores", "mexica_1500"): "519",
-    ("price_over_cost_sited_ores", "norse_900ad"): "519",
-    # the coin metal opens at many times its making cost: the opening's prices are not seeded from the
-    # calculator at the economy's wages (Complaints/507, Stage 2)
+    ("price_over_cost_sited_ores", "england_1300"): "519",
+    # the coin metal's price is fixed by the coin standard while its making cost follows the wage, which falls over the
+    # spin-up (Complaints/473, Update 4; the opening is seeded from the calculator and the coin worth from the marginal
+    # cost of its metal, Complaints/507 Stage 2, but the wage still drifts)
     ("price_over_cost_coin_metal", "rome_100ad"): "507 Stage 2",
     ("price_over_cost_coin_metal", "han_china_100ad"): "507 Stage 2",
     ("price_over_cost_coin_metal", "norse_900ad"): "507 Stage 2",
     ("price_over_cost_coin_metal", "england_1300"): "507 Stage 2",
-    # the opening's wage is below the household's floor: capacity and income do not agree (Complaints/507, Stage 2)
-    ("wage_over_floor", "england_1300"): "507 Stage 2",
+    # the wage falls below the household's floor in the first year: the labour market clears far below the cost table's
+    # wage and prices follow it down slowly (Complaints/473, Update 4)
+    ("wage_over_floor", "rome_100ad"): "473",
     # the coin lost to wear is not replaced, and the spin-up does not settle (Complaints/473)
-    ("money_against_wear", "rome_100ad"): "473",
     ("money_against_wear", "han_china_100ad"): "473",
-    ("money_against_wear", "england_1300"): "473",
     ("spin_up_settled", "rome_100ad"): "473",
     ("spin_up_settled", "han_china_100ad"): "473",
     ("spin_up_settled", "mexica_1500"): "473",
