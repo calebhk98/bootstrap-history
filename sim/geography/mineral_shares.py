@@ -26,7 +26,8 @@ def _declare_reference_share(row: Dict[str, Any]) -> None:
             source=row.get("source"), confidence=row.get("conf", "D"),
             why="No district-level production series is read for %s, so the share is the rough relative "
                 "abundance the former region table gave, sited at this named district; replace with the "
-                "district's production or reserves relative to the reference output." % row["name"])
+                "district's production or reserves relative to the reference output." % row["name"],
+            retire="each district's production series or reserves, read from the deposit data")
 
 
 def share_rows(rows: Optional[Rows] = None) -> Rows:

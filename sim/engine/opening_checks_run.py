@@ -10,7 +10,7 @@ from typing import Dict, List, Tuple
 
 from sim import cache_root
 from sim.economy import api as economy_api
-from sim.geography import api as geography
+import sim.geography.api as geography
 
 from . import economy_port_trace, opening_checks, solve_cache
 from .data import load, load_civ
