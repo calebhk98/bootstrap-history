@@ -9,8 +9,9 @@ a row sized by the older output model keeps that model's output for the site ove
 A deposit already worked before the game began has yielded its share of the size
 (`mined_before`, drawn down at the rate it was worked); every tonne the seat's workings, or the agent economy's firms on the tile, raise since is
 drawn from it (`state.holdings.deposit_drawn`). The most a deposit yields in a year is a share of its size
-(`resources_working_share_per_year`), less what other workings named on it already rate, so a working's
-output is bounded by its deposit and a worked-out deposit closes it.
+(`resources_working_share_per_year`), or the rate the data say it was worked at when that is larger
+(`deposit_history.py`, the rate `mined_before` draws it down by), less what other workings named on it already
+rate, so a working's output is bounded by its deposit and a worked-out deposit closes it.
 
 Methods of Sim, a mixin only so they live in a file of their own.
 """
@@ -77,10 +78,12 @@ class MineDepositsMixin:
         if resource_id is None:
             return []
         drawn = self.state.holdings.deposit_drawn
+        history = historical_rates(self.world_map, resource_id)
         rows = []
         for row, size, before in self._deposit_base(resource_id):
             remaining = max(0.0, size * (1.0 - before) - drawn.get(row["id"], 0.0))
-            rate = min(geography.working_rate_tonnes_per_year(size, self.world_map), remaining)
+            rate = min(max(geography.working_rate_tonnes_per_year(size, self.world_map), history.get(row["id"], 0.0)),
+                       remaining)
             rows.append(dict(row, size_tonnes=size, remaining_tonnes=remaining, rate_tonnes_per_year=rate,
                              room_tonnes_per_year=max(0.0, rate - self._capacity_naming(row["id"]))))
         return rows

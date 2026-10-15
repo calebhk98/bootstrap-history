@@ -31,3 +31,28 @@ the same way. So a site's yearly room (a share of the deposit's endowment per ye
 district can actually raise, and the scarcity shows as price. Check the site-room rule (`resources_working_share_per_year`,
 how a site's room per year is derived from its endowment) against the historical output rates the deposit data
 gives (`sim/engine/deposit_history.py`), for every civilisation, before changing the opening.
+
+## Measured (fix-519-sited-ore-prices)
+
+Measure: `economy.agent_prices()` over `_material_prices()` after one step, per ore
+(`sim.tests.test_sited_ore_price_over_cost.sited_traded_ore_ratios`; the table is the same for a full-length
+opening, the suite's harness shortens the spin-up and moves which ores spike).
+
+- Room was a cause, in two ways, both fixed. (1) A deposit with no stated ore grade (every unsized district: Han,
+  Mexica, Norse, Timna, Rammelsberg) counted its ore as pure metal, one tonne of ore per tonne of metal, so a
+  copper site allowed a hundredth of the ore its metal needs (the 511 mass-balance error again). It now takes the
+  type's expected grade (`resources_district.district_grade`). (2) A deposit's yearly room was a flat share of its
+  endowment even where the data give the rate it was worked at (the rate `mined_before` already draws it down
+  by); the larger of the two now stands (`mine_deposits.found_deposits`).
+- Not the cause now: Rome's iron sites hold several times the ore its smelters ran, yet the ore stays dear. The
+  producers sit on large unsold opening stocks and the price falls only by the unsold markdown a year, so a price
+  that overshot in the opening's spin-up (the opening prices ore far above its cost, then the sited supply was
+  short for some years) decays slowly. Room cannot fix that; it is the opening's remembered prices and stocks
+  (507 Stage 2, `economy_port_*`, `opening_stores`) and the seller markdown (`sim/economy/producers.py`).
+- Smelting capacity at the opening is several times the sited ore room for Rome's iron (check with the balance of
+  the sites' room against the smelters' capacity in ore), which is the other half of 507 Stage 2.
+- Sizing a named district at the size-weighted mean (a worked deposit is a draw weighted by its size) was tried and
+  dropped: it lifts iron districts to the banded-formation tonnage nobody worked in antiquity.
+
+What it would take now: the opening's ore stocks and prices agree with the sited supply (507 Stage 2), and
+sellers' markdown reaches the cost within a few years. The test marked expected-failure turns green then.

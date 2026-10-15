@@ -91,6 +91,21 @@ def expected_contained_per_deposit(world_map: WorldMap, resource_entry: Dict[str
     return mean
 
 
+def expected_ore_grade(world_map: WorldMap, resource_entry: Dict[str, Any], type_shares) -> float:
+    """Mean grade (resource unit per tonne of ore) of the ore of a deposit drawn from [(deposit type, share of
+    the deposits)]: the expected contained quantity over the expected ore tonnage."""
+    limit = parameters.parameter(world_map, "resources_tonnage_truncation_sigmas")
+    key = grade_key(resource_entry)
+    contained = ore = 0.0
+    for deposit_type, share in type_shares:
+        tonnage = deposit_type["tonnage_lognormal"]
+        grade = deposit_type["grade_lognormal"]
+        mean_tonnage = truncated_lognormal_mean(tonnage["median_tonnes"], tonnage["sigma"], limit)
+        ore += share * mean_tonnage
+        contained += share * mean_tonnage * truncated_lognormal_mean(grade[key], grade["sigma"], limit)
+    return contained / ore
+
+
 def crustal_ceiling(world_map: WorldMap, tile_id: str, resource_entry: Dict[str, Any]) -> Any:
     """Most of an element that can be in ore in the tile (kg), or None when no abundance is given."""
     abundance_ppm = resource_entry.get("crustal_abundance_ppm")

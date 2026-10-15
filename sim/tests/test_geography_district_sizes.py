@@ -47,6 +47,28 @@ class DistrictSizeTests(unittest.TestCase):
         self.assertAlmostEqual(row["size_tonnes"], expected_kg / 1000.0)
         self.assertEqual(row["size_basis"], "expected_across_types_of:gold")
 
+    def test_an_unsized_district_with_no_stated_grade_takes_the_types_expected_ore_grade(self):
+        # ore is raised by the tonne of rock, not of metal: a row with no grade would count its ore as pure metal
+        world_map = map_with(self.base, DISTRICT)
+        vein = next(deposit_type for deposit_type in self.entry["deposit_types"] if deposit_type["id"] == "vein")
+        expected = resources_endowment.expected_ore_grade(world_map, self.entry, [(vein, 1.0)])
+        grade = site(world_map)["grade_kg_per_tonne"]
+        self.assertAlmostEqual(grade, expected)
+        self.assertLess(grade, 1000.0)
+        self.assertGreater(grade, 0.0)
+
+    def test_a_district_across_a_minerals_types_takes_the_grade_of_their_ore_by_tonnage(self):
+        types = self.entry["deposit_types"]
+        weight = sum(deposit_type["deposits_per_million_km2"] for deposit_type in types)
+        shares = [(deposit_type, deposit_type["deposits_per_million_km2"] / weight) for deposit_type in types]
+        world_map = map_with(self.base, dict(DISTRICT, deposit_type="no_such_type"))
+        self.assertAlmostEqual(site(world_map)["grade_kg_per_tonne"],
+                               resources_endowment.expected_ore_grade(world_map, self.entry, shares))
+
+    def test_a_stated_grade_is_kept_over_the_expectation(self):
+        row = site(map_with(self.base, dict(DISTRICT, ore_grade_kg_per_tonne=3.0)))
+        self.assertAlmostEqual(row["grade_kg_per_tonne"], 3.0)
+
     def test_a_stated_endowment_is_kept_over_the_expectation(self):
         row = site(map_with(self.base, dict(DISTRICT, endowment=7.0, endowment_unit="tonnes_contained")))
         self.assertAlmostEqual(row["size_tonnes"], 7.0)
