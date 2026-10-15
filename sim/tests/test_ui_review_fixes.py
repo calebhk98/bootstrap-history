@@ -8,7 +8,7 @@ import weakref
 from types import SimpleNamespace as _Namespace
 
 from sim.engine import ui_port
-from sim.refusal import cause_of
+from sim.refusal import LogLine, cause_of
 from sim.ui import cli_agent, memory, replay
 from sim.ui.proto import goals_watch, programme, programme_draw, stuck_advice
 from sim.ui.proto.dispatch_programme import _cmd_programme
@@ -18,7 +18,7 @@ from sim.ui.proto.portfolio_scale import page_rows
 from sim.ui.proto.state_log import _agent_log_filter_rows, _is_failure_line, _log_scrub
 
 from .harness import check
-from sim.refusal import cause_of
+from sim.refusal import LogLine, cause_of
 
 
 class Stub(_Namespace):
@@ -67,10 +67,11 @@ check("a changed cap resets what it committed", memory.remembered(owner, "progra
 
 # 3. a note is never a failure line and is never fog-scrubbed
 note = NoteLine("note: the mill was destroyed")
-check("a note saying destroyed is not a failure", not _is_failure_line(note) and _is_failure_line(str(note)))
+destroyed_line = LogLine("prominence_patron_destroyed", "mill destroyed")
+check("a note is not a failure line and a failure kind is", not _is_failure_line(note) and _is_failure_line(destroyed_line))
 check("the failure filter keeps real failures only",
-      [row[1][1] for row in _agent_log_filter_rows([(1, "mill destroyed"), (1, note)], None, None, True)]
-      == ["mill destroyed"])
+      [row[1][1] for row in _agent_log_filter_rows([(1, destroyed_line), (1, note)], None, None, True)]
+      == [destroyed_line])
 check("under fog a note is left as the player wrote it",
       _log_scrub(Stub(fog=True, fog_scrub=lambda text: "X"), note) is note)
 

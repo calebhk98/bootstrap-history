@@ -97,11 +97,18 @@ class HazardReliefMixin:
         share of what is LEFT, so five partial answers are strong and none of
         them is a switch that turns history off.
         """
-        mult, why = 1.0, []
+        mult, why, _lapsed = self.hazard_relief_detail(kind, beyond_national, assume_running)
+        return mult, why
+
+    def hazard_relief_detail(self, kind, beyond_national=False, assume_running=()):
+        """hazard_relief's (multiplier, [what did it]) and the names of the closed concerns whose relief lapsed."""
+        mult, why, lapsed = 1.0, [], []
         for entry in self.hazard_relief_entries(kind, beyond_national, assume_running):
             mult *= entry["factor"]
             why.append(self._entry_words(entry))
-        return mult, why
+            if entry.get("lapsed_node"):
+                lapsed.append(self.nodes[entry["lapsed_node"]]["name"])
+        return mult, why, lapsed
 
     def mitigation_table(self, kind, base, beyond_national=False):
         """Each defence in force against `kind`, with what it takes off `base`.
@@ -156,10 +163,10 @@ class HazardReliefMixin:
         """
         national_relief = self.medical_diffusion_relief()
         before_defences = historical * (1.0 - national_relief)
-        relief, why = self.hazard_relief("staff_loss", beyond_national=True,
-                                         assume_running=assume_running)
+        relief, why, lapsed = self.hazard_relief_detail("staff_loss", beyond_national=True,
+                                                        assume_running=assume_running)
         return {"national_relief": national_relief, "before_defences": before_defences,
-                "relief": relief, "why": why, "loss": before_defences * relief}
+                "relief": relief, "why": why, "lapsed_hedges": lapsed, "loss": before_defences * relief}
 
     def output_floor(self, hazard_factor, relief):
         """The lowest the output factor falls in a hazard year; relief moves

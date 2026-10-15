@@ -1,33 +1,13 @@
 """The event log reply: failure markers, filters, paging and _agent_log."""
 from .notes_store import NoteLine, note_log_rows
+from .event_kinds import is_failure
 from .refusal_cause import event_codes
 
 
 
-# A LOG LINE A PLAYER WOULD CALL BAD NEWS: self.log already records every
-# failure, in the founder's own words, with no field anywhere marking
-# which lines are the bad ones. Matched on the actual wording every
-# append site already uses (self.log.append across core.py, projects.py,
-# economy.py and society.py), not reinvented here.
-_FAILURE_MARKERS = (
-    "FAILED", "HALTED", "ABANDONED", "CREDIT EXHAUSTED", "CLOSE TO THE LIMIT",
-    "IN ARREARS", "in arrears", "INSOLVENCY", "BONDAGE", "cannot go on",
-    "cannot pay everyone", "SHORT OF", "nobody left to keep an eye",
-    "disperses", "sacked", "KNOWLEDGE LOST", "destroyed", "confiscated",
-    "founder dies", "RUN ENDS", "MOTHBALLED",
-)
-
-
 def _is_failure_line(msg):
-    # CASE-INSENSITIVELY, because these markers are prose and prose gets
-    # rewritten. The founder's death line was recapitalised to say what the
-    # death MEANS rather than only that it happened, and silently stopped
-    # being a failure line here, in `log failures`, which is the one screen a
-    # player checks to find out what went wrong.
-    if isinstance(msg, NoteLine):
-        return False
-    _low = msg.lower()
-    return any(marker.lower() in _low for marker in _FAILURE_MARKERS)
+    """Whether a log line is bad news for `log failures`, by its kind (event_kinds.py). A note is never one."""
+    return not isinstance(msg, NoteLine) and is_failure(msg)
 
 
 def _log_scrub(sim, text):

@@ -57,8 +57,9 @@ Two fixes, usable separately or together:
       example "literacy_wall", "household_room", "unknown_node"), and
       "choices" when it lists the answers it would have accepted. Read those,
       not the text. The same holds for prose that reports what happened: a
-      step's events may carry "event_kind" and "facts" (the figures the
-      sentence states); "stopped_early" has "stopped_kind"; a project's
+      step's events and the `log` entries may carry "event_kind" and "facts"
+      (the figures the sentence states), the same after a save and load as
+      before it; "stopped_early" has "stopped_kind"; a project's
       "waiting_on" has "waiting_on_kind"; the score's "why" has "why_kind";
       an automation row may carry "reason_kind" and its figures.
 

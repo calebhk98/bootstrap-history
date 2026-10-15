@@ -55,8 +55,8 @@ load_state(reloaded, save_path)
 check("an interrupted multi-year step keeps the completed years on disk",
       reloaded.year == start_year + 2, (reloaded.year, start_year))
 
-events = [{"year": 101, "message": "CREDIT EXHAUSTED: 3 projects stopped"},
-          {"year": 102, "message": "a site is sacked: the library scrolls burn"},
+events = [{"year": 101, "message": "CREDIT EXHAUSTED: 3 projects stopped", "event_kind": "credit_exhausted"},
+          {"year": 102, "message": "a site is sacked: the library scrolls burn", "event_kind": "site_sacked"},
           {"year": 102, "message": "something harmless happened"}]
 alerts = step_alerts(events=events, lost=[{"name": "Aqueduct", "year": 102}],
                      closed_concerns=["Sand filter"], founder_died=None,
@@ -67,7 +67,7 @@ check("alerts name credit, sacking, loss, closure and population collapse, not h
       "CREDIT EXHAUSTED" in joined and "sacked" in joined and "Aqueduct" in joined
       and "Sand filter" in joined and "population" in joined.lower() and "harmless" not in joined, alerts)
 check("alerts are capped and short",
-      len(step_alerts(events=[{"year": year, "message": "CREDIT EXHAUSTED %d" % year} for year in range(40)],
+      len(step_alerts(events=[{"year": year, "message": "CREDIT EXHAUSTED %d" % year, "event_kind": "credit_exhausted"} for year in range(40)],
                       lost=[], closed_concerns=[], founder_died=None, goal_year=None,
                       stopped_early=None, population_change=0.0)) <= 8)
 shown = _render_big.render_step(dict(ok=True, completed=[], events=[], lost=[], year=103, alerts=alerts))

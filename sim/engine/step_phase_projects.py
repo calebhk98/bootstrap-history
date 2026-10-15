@@ -103,9 +103,9 @@ class ProjectProgressPhaseMixin:
             project_state["stalled_years"] = project_state.get("stalled_years", 0) + 1
             project_state["blocked_on_trades"] = blocked
             if project_state["stalled_years"] >= 4:
-                self.state.household.log.append((self.state.scenario.year, "HALTED %s: there is nobody here who can "
+                self.state.household.log.append((self.state.scenario.year, LogLine("project_halted_no_labour", "HALTED %s: there is nobody here who can "
                                      "do this work (%s). What you spent is lost"
-                                 % (node_id, ", ".join(blocked[:2]))))
+                                 % (node_id, ", ".join(blocked[:2])))))
                 self.state.projects.active.pop(node_id, None)
                 self.state.projects.bountied.discard(node_id)
             else:
@@ -252,7 +252,7 @@ class ProjectProgressPhaseMixin:
         # call site only has to act on what it returns.
         hired_hours, worst, frac, _abandon = self.lab_year_draw(node_id, project_state, frac, hired_left)
         if _abandon:
-            self.state.household.log.append((self.state.scenario.year, "ABANDONED %s: %s" % (node_id, _abandon)))
+            self.state.household.log.append((self.state.scenario.year, LogLine("project_abandoned", "ABANDONED %s: %s" % (node_id, _abandon))))
             self.state.projects.active.pop(node_id, None)
             self.state.projects.bountied.discard(node_id)
             return None

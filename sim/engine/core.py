@@ -2178,7 +2178,7 @@ class Sim(RealPriceRatiosMixin, CoinRevaluationMixin, WageMarketRatiosMixin, Mec
             self.state.projects.done.add(node_id)
             self._done_changed()
             self.state.projects.done_year[node_id] = year
-            self.state.household.log.append((year, "achieved: " + self.nodes[node_id]["name"]))
+            self.state.household.log.append((year, LogLine("goal_achieved", "achieved: " + self.nodes[node_id]["name"])))
             self.record_goal_reached(node_id, year)
 
     def run(self, goal, horizon=None):

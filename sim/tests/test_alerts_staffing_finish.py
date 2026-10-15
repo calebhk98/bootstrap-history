@@ -24,7 +24,7 @@ check("a node with materials or trades keeps its chance of failing",
 check("alert severity ranks a death above credit trouble above an early stop",
       alert_severity("FOUNDER DIED, aged about 60") < alert_severity("CREDIT EXHAUSTED 100: x")
       < alert_severity("STOPPED EARLY: x"))
-alerts = step_alerts(events=[{"year": 100, "message": "CREDIT EXHAUSTED: x"}], lost=[], closed_concerns=[],
+alerts = step_alerts(events=[{"year": 100, "message": "CREDIT EXHAUSTED: x", "event_kind": "credit_exhausted"}], lost=[], closed_concerns=[],
                      founder_died={"aged_about": 60, "year": 100}, goal_year=None, stopped_early="stopped",
                      population_change=0.0, staffing_line="Staffing this year: closed 2")
 check("the alerts block carries the staffing line and orders by severity",
@@ -36,9 +36,9 @@ check("a quiet year gives no stop reason", severe_stop_reason([], [], [], []) is
 check("a newly unlocked objective stops the step",
       cause_of(severe_stop_reason([], [], [], ["Reach the goal"])) == "new_objective")
 check("a severe failure stops the step",
-      cause_of(severe_stop_reason([{"year": 1, "message": "FAILED at Grid: it did not work."}], [], [], [])) == "project_failed")
+      cause_of(severe_stop_reason([{"year": 1, "message": "FAILED at Grid: it did not work.", "event_kind": "project_failed", "facts": {"severity": "major"}}], [], [], [])) == "project_failed")
 check("a minor failure does not stop the step",
-      severe_stop_reason([{"year": 1, "message": "FAILED at Grid (minor): lost 3"}], [], [], []) is None)
+      severe_stop_reason([{"year": 1, "message": "FAILED at Grid (minor): lost 3", "event_kind": "project_failed", "facts": {"severity": "minor"}}], [], [], []) is None)
 check("a concern closed for want of staff stops the step",
       cause_of(severe_stop_reason([], ["Smithy"], [], [])) == "staff_closure")
 check("a newly blocked project stops the step",

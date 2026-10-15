@@ -27,7 +27,7 @@ grouping evidence.
 import functools
 
 from sim.constants import declare
-from sim.refusal import Refusal
+from sim.refusal import Refusal, LogLine
 from . import money_units
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import deposits as deposit_model, mine_technique
@@ -823,8 +823,8 @@ class MiningMixin(MineDepositsMixin):
                     kept.append(working)
             holdings.mines = [working for working in (holdings.mines or [])
                              if working.get("material") != material] + kept
-            household.log.append((scenario.year, "MOTHBALLED half the %s workings; you could "
-                                        "not pay to keep them running" % material))
+            household.log.append((scenario.year, LogLine("mines_mothballed", "MOTHBALLED half the %s workings; you could "
+                                        "not pay to keep them running" % material)))
         # DEBT IS WHATEVER THE ARITHMETIC SAYS IT IS: capital must not be
         # clamped to minus one year's revenue after mothballing, or that
         # would forgive debt the mothballing has not actually paid off.

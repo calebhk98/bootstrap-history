@@ -1,21 +1,20 @@
 """What went wrong across a multi-year step, read off the events and yearly snapshots the step already made."""
 from sim.engine.ui_port import closure
 
-# (lowercase marker in an event message, key) - first match wins per event.
-_EVENT_KINDS = (
-    ("credit exhausted", "credit_exhausted"),
-    ("close to the limit", "near_limit"),
-    ("of arrears", "arrears"),
-    ("in arrears, so closed", "arrears_closure"),
-    ("creditors took", "arrears_closure"),
-    ("nobody left to keep an eye", "unstaffed_closure"),
-    ("treasury is looking at your fortune", "confiscation_warning"),
-    ("the state has noticed you", "state_notice"),
-    ("a site is sacked", "sacking"),
-    ("knowledge lost", "sacking"),
-    ("bondage", "credit_exhausted"),
-)
-_LAPSED_MARK = "(lapsed: "
+# Event kind (sim/refusal.py LogLine) to the problem it counts toward.
+_PROBLEM_OF_KIND = {
+    "credit_exhausted": "credit_exhausted",
+    "credit_near_limit": "near_limit",
+    "arrears_interest": "arrears",
+    "arrears_closed_concerns": "arrears_closure",
+    "creditors_took": "arrears_closure",
+    "concerns_closed_unstaffed": "unstaffed_closure",
+    "treasury_watching": "confiscation_warning",
+    "state_noticed": "state_notice",
+    "site_sacked": "sacking",
+    "knowledge_lost": "sacking",
+    "debt_bondage": "credit_exhausted",
+}
 
 
 def route_nodes(sim):
@@ -48,19 +47,12 @@ def _years(years):
 
 
 def _lapsed_hedges(events):
-    """Closed concerns named in 'lapsed' hedge notes, in first-seen order."""
+    """Closed concerns named in the `lapsed_hedges` fact of the events, in first-seen order."""
     names = []
     for event in events:
-        message = event["message"]
-        start = message.find(_LAPSED_MARK)
-        while start >= 0:
-            end = message.find(" is closed)", start)
-            if end < 0:
-                break
-            name = message[start + len(_LAPSED_MARK):end]
+        for name in (event.get("facts") or {}).get("lapsed_hedges") or ():
             if name not in names:
                 names.append(name)
-            start = message.find(_LAPSED_MARK, end)
     return names
 
 
@@ -71,11 +63,9 @@ def step_problems(years_ran, snapshots, events, stalled):
         return []
     by_kind = {}
     for event in events:
-        lowered = event["message"].lower()
-        for marker, kind in _EVENT_KINDS:
-            if marker in lowered:
-                by_kind.setdefault(kind, []).append(event["year"])
-                break
+        problem = _PROBLEM_OF_KIND.get(event.get("event_kind"))
+        if problem:
+            by_kind.setdefault(problem, []).append(event["year"])
     problems = []
     stuck_years = [snap["year"] for snap in snapshots if snap.get("route_startable") is False]
     if stuck_years:
