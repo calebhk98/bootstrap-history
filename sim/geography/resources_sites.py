@@ -43,7 +43,7 @@ def worked_deposits(world_map: WorldMap, tile_ids: Iterable[str], resource_id: s
         quantity, basis = resources_district.district_quantity(world_map, deposit)
         worked.append({"id": deposit["id"], "name": deposit["name"], "tile_id": deposit["tile_id"],
                        "resource": resource_id, "size_tonnes": size_in_tonnes(quantity, unit), "size_basis": basis,
-                       "grade_kg_per_tonne": rows[deposit["id"]].get("ore_grade_kg_per_tonne"),
+                       "grade_kg_per_tonne": resources_district.district_grade(world_map, deposit),
                        "found_by": "catalogue"})
     for deposit in found:
         if deposit["resource"] == resource_id and deposit["tile_id"] in tiles:
