@@ -53,7 +53,7 @@ whatever is pending and a replay reproduces it.
 | `government` | `government.py` | cast (home country) | budget, levy, `ValuePolicy` copies |
 | `foreign_government` | `government_foreign.py` | cast (each partner) | revenue from its profile, army and officials, copies under fog |
 | `player` | `player.py`, `player_commands.py` | cast `"actors"` (a join command is Complaint 401) | queued orders; `controller == "ai"` adds a simple research-and-open rule |
-| `firm` | `firm.py`, `concern_ops.py` | spawner `firm_entry` after any player's proven concern | entry value, exit on losses |
+| `firm` | `firm.py`, `business*.py` | spawner `firm_entry` after any player's proven concern | entry value, exit on losses |
 | `trader` | `trader.py`, `trader_entry.py` | spawner `trader_entry` when a route's gap pays | best margin within capital, sized to a share of depth |
 | `stratum` | `stratum.py`, `stratum_year.py`, `strata_seed.py` | spawner `strata` for every country | income against needs in tiers; growth, schooling and mobility follow |
 | `interest_group` | `group.py` | spawner `interest_groups` | presses the state |

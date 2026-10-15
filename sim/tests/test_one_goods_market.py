@@ -69,9 +69,8 @@ furnace_game = sim(civ="rome_100ad", capital=1e9)
 no_firm = sim(civ="rome_100ad", capital=1e9)
 year = furnace_game.state.scenario.year
 firm = furnace_game.actors.add("firm:iron1", ActorRecord(kind="firm", money=1.0e9))
-firm.concerns.add("blast_furnace")
+firm.business.open_plant("blast_furnace", year - 10)
 firm.knowledge.add("blast_furnace")
-firm.record.opened_year["blast_furnace"] = year - 10
 furnace_game.advance_actors(year)
 no_firm.advance_actors(year)
 sold_by_firm = noted_sale_tonnes(furnace_game, FURNACE_MATERIAL, "firm:iron1")

@@ -227,6 +227,18 @@ Proof: fingerprint unchanged; `test_firm_*`, `test_actor_*`, `test_complaint_462
 `test_business_owner_kinds.py`: one business, same capacity and year, run by a firm, a player and a state, gives equal crew,
 upkeep, takings and ledger identity (purse = opening + income - outlays, per business and per owner).
 
+**Stage 1 done** (branch `514-stage-1-business-object`). `Business` (`sim/agents/business.py`) holds a list of `Plant`
+(`business_plant.py`: entry key, size, opened year, crew found, last margin) and is the `ActorRecord.business` field of
+every record, so a firm, a player and a state keep their plants the same way; `concerns`, `capacity`, `opened_year`,
+`staffing` and `margins` on the record are gone, and `owner.concerns` is a set view that opens and closes plants. The
+agents-path rules are `business_crew.staff`, `business_books.operate`/`carry`/`ramp`/`yearly_costs` and
+`business_closing.release_plant`; `concern_ops.py` is deleted; spin-off, entry, firm exit, expansion and exchange sale go
+through them. Not yet on the object: `state`/`since_year`/`reason` and `margin_history` on the plant (the founder's path,
+stage 3, brings mothballing), the `books` of a business, the kernel (stage 2), and the seat's own plants (a seat is only
+a party to an exchange, through `HouseholdParty.release_plant`/`receive_plant`). Allowlist: the four agents entries that
+moved behind the object are pruned (`python3 -m sim.tests --only business_wall`); `protocols.py` and `engine/agents_port*`
+still name the world-view methods, which stage 3c replaces. Proof: `test_business_owner_kinds.py`, fingerprint unchanged.
+
 **Stage 2: the plant kernel in `sim/world/`.** Move `node_output` baskets, `node_upkeep` plant wear, `plant_crew` and the
 capital arithmetic into `sim/world/plant_figures.py`, taking prices and wages as arguments. `node_revenue` becomes a caller,
 so node figures are unchanged. Owns: `sim/world/plant_figures.py`, `sim/engine/node_output.py`, `node_upkeep.py`,

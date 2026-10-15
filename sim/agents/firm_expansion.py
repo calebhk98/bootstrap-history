@@ -15,14 +15,14 @@ class ExpansionMixin:
 		if self.record.last_margin <= 0.0:  # type: ignore[attr-defined]
 			return
 		for node_id in sorted(self.concerns):  # type: ignore[attr-defined]
-			if self.record.staffing.get(node_id, 1.0) < 1.0:  # type: ignore[attr-defined]
+			if self.staffed_share(node_id) < 1.0:  # type: ignore[attr-defined]
 				continue
 			capacity = self.capacity_of(node_id)  # type: ignore[attr-defined]
 			if capacity >= world.scale_ceiling(node_id):
 				continue
 			step = capacity * EXPANSION_RATE
 			rivals = self.rivals_of(node_id, self.actor_id) if self.rivals_of else 0.0  # type: ignore[attr-defined]
-			gain = world.expansion_gain(node_id, self.record.opened_year[node_id], capacity, step, rivals)  # type: ignore[attr-defined]
+			gain = world.expansion_gain(node_id, self.opened_year_of(node_id, world.year), capacity, step, rivals)  # type: ignore[attr-defined]
 			cost = world.plant_cost(node_id, self, step)
 			if gain <= 0.0:
 				continue
@@ -37,6 +37,6 @@ class ExpansionMixin:
 			if gain <= cost * rate:
 				continue
 			ledger.transfer(self, world.edge(EDGE_BUILDERS), cost, "expansion")
-			self.record.capacity[node_id] = capacity + step  # type: ignore[attr-defined]
+			self.business.set_size(node_id, capacity + step)  # type: ignore[attr-defined]
 			if self.on_capacity_change is not None:  # type: ignore[attr-defined]
 				self.on_capacity_change(self.actor_id)  # type: ignore[attr-defined]

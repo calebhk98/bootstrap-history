@@ -85,6 +85,7 @@ check("an actor with no concern making the material asks about none",
 
 # --- the registry's supply sum.
 from sim.agents.registry import ActorRegistry as _Registry
+from sim.agents.api import Business as _Business
 from sim.engine.state import ActorRecord as _Record, ActorsState as _ActorsState
 
 
@@ -120,7 +121,7 @@ def _registry_of_firms(count):
     state = _ActorsState()
     for number in range(count):
         state.records["firm:%03d" % number] = _Record(
-            kind="firm", concerns={"plain_%03d" % number},
+            kind="firm", business=_Business.running(["plain_%03d" % number]),
             workforce={"smith": 1.5})
     registry = _Registry(state)
     for number in [n for n in (17, 42) if n < count]:
@@ -248,7 +249,7 @@ _mismatch = []
 for _year in range(6):
     _registry.advance(_TonnesWorld([]))
     for _number in range(3):
-        _added = _Record(kind="firm", concerns=set(), workforce={_dice.choice(_trades): _dice.random() * 2.9})
+        _added = _Record(kind="firm", workforce={_dice.choice(_trades): _dice.random() * 2.9})
         _new_id = "firm:%03d" % _dice.randrange(1000)
         if _new_id not in _registry.actors:
             _registry.add(_new_id, _added)
@@ -263,13 +264,13 @@ check("the kept per-trade staff sums equal a fresh sum bit for bit after turns t
 # --- counting concerns by category walks the operators once until a concern changes.
 _registry = _registry_of_firms(20)
 for _identifier, _actor in _registry.actors.items():
-    _actor.record.concerns.clear()
-    _actor.record.concerns.add("loom")
+    _actor.concerns.clear()
+    _actor.concerns.add("loom")
 _loom_nodes = {"loom": {"cat": "cloth"}, "forge": {"cat": "metal"}}
 _walked = _count_calls(_registry, "market_operators", lambda: [_registry.concerns_in("cloth", _loom_nodes) for _ in range(50)])
 check("concerns of a category are counted without walking the firms", _walked == 0, _walked)
 check("...and the count is right", _registry.concerns_in("cloth", _loom_nodes) == 20 and _registry.concerns_in("metal", _loom_nodes) == 0)
-_registry.actors["firm:003"].record.concerns.add("forge")
+_registry.actors["firm:003"].concerns.add("forge")
 check("...and a firm taking on a concern is counted at once",
       _registry.concerns_in("metal", _loom_nodes) == 1 and _registry.concerns_in("cloth", _loom_nodes) == 20)
 

@@ -8,7 +8,7 @@ the concern needs (the parent keeps all it knew), is funded as any entrant is (a
 """
 from typing import Any, List, Optional
 
-from . import concern_ops, enforcement, firm_entry, ledger
+from . import business_books, enforcement, firm_entry, ledger
 from .edges import EDGE_POOLED_CAPITAL
 from .records import ActorRecord
 from .registry import register_spawner
@@ -107,8 +107,9 @@ def _found_rival(registry: Any, world: Any, parent: Any, node_id: str, pool: Lis
 	"""A rival of the parent founded into its concern, or None when an entrant would not earn enough."""
 	rivals = registry.rivals_of(node_id, "")
 	tile = firm_entry.firm_tile(registry, parent)
+	upkeep, wages = business_books.yearly_costs(world, node_id)
 	expected = (firm_entry.expected_entry_gross(registry, world, node_id, rivals, 1.0)
-				- world.upkeep(node_id) - world.concern_wage_bill(node_id)
+				- upkeep - wages
 				- firm_entry.carrying_cost(world, node_id, tile=tile))
 	expected -= enforcement.expected_damages(world, "", node_id, expected)
 	if expected <= 0.0:
@@ -133,7 +134,7 @@ def _found_rival(registry: Any, world: Any, parent: Any, node_id: str, pool: Lis
 	else:
 		pool[0] -= own
 		ledger.transfer(registry.state.edge(EDGE_POOLED_CAPITAL), firm, own, EDGE_POOLED_CAPITAL)
-	concern_ops.open_concern(firm, node_id, world)
+	firm.business.open_plant(node_id, world.year)
 	return firm_id
 
 

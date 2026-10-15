@@ -1,7 +1,7 @@
 """One entrant into a niche: the test every new firm passes, whatever the niche or the year."""
 from typing import Any, List, Optional
 
-from . import enforcement, entry_ramp, firm_entry, imitation, ledger
+from . import business_books, enforcement, entry_ramp, firm_entry, imitation, ledger
 from .edges import EDGE_POOLED_CAPITAL
 from .firm import Firm
 from .records import ActorRecord
@@ -19,7 +19,8 @@ class NicheEntry:
 		self.pool, self.strata_exist = pool, strata_exist
 		self.tile = firm_entry.firm_tile(registry, None)
 		self.carried = firm_entry.carrying_cost(world, node_id, tile=self.tile)
-		self.costs = world.upkeep(node_id) + world.concern_wage_bill(node_id) + self.carried
+		upkeep, wages = business_books.yearly_costs(world, node_id)
+		self.costs = upkeep + wages + self.carried
 		probe = Firm("probe", ActorRecord(kind="firm", founded_year=world.year))
 		self.seen = imitation.in_sight(self.tile, node_id, world)
 		self.chain = imitation.missing_chain(node_id, world, probe) if self.seen else None

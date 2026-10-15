@@ -7,6 +7,9 @@ and what they value. Decisions go through the actor's `decision_policy`.
 """
 from typing import Any, Dict, List, Optional, Set, Tuple
 
+from .business import Business, PlantKeys
+from .business_closing import release_plant
+from .business_plant import Plant
 from .records import ActorRecord
 
 from . import imitation, ledger
@@ -88,6 +91,21 @@ class Actor(Borrower):
 	def capacity_of(self, node_id: str) -> float:
 		"""How many times its founding size the actor runs a concern at."""
 		return 1.0
+
+	def margin_of(self, node_id: str) -> Optional[float]:
+		"""What a concern made last year, or None when the actor does not track it singly."""
+		return None
+
+	def concern_count(self) -> int:
+		return len(self.concerns)
+
+	def release_plant(self, node_id: str, world: Any) -> Plant:
+		"""Stop running a concern and hand over its plant, to be taken up by another actor."""
+		raise NotImplementedError
+
+	def receive_plant(self, plant: Plant, world: Any) -> None:
+		"""Take up a plant another actor handed over."""
+		raise NotImplementedError
 
 	def output_by_concern(self, material: str, world: Any) -> List[Tuple[str, float]]:
 		"""[(node id, tonnes a year)] of `material` each of the actor's concerns puts on the market."""
@@ -255,6 +273,8 @@ class RecordedActor(Actor):
 		super().__init__(policy)
 		self.actor_id = actor_id
 		self.record = record
+		if not record.business.owner_id:
+			record.business.business_id = record.business.owner_id = actor_id
 		self._purses: Optional[Purses] = None
 
 	def attach(self, purses: Purses) -> None:
@@ -300,8 +320,12 @@ class RecordedActor(Actor):
 		return self.record.knowledge
 
 	@property
+	def business(self) -> Business:
+		return self.record.business
+
+	@property
 	def concerns(self) -> Set[str]:
-		return self.record.concerns
+		return PlantKeys(self.record.business)
 
 	@property
 	def works(self) -> Dict[str, Dict[str, Any]]:
@@ -332,13 +356,22 @@ class RecordedActor(Actor):
 		self.record.defiance = level
 
 	def opened_year_of(self, node_id: str, default: int) -> int:
-		return self.record.opened_year.get(node_id, default)
+		return self.record.business.opened_year_of(node_id, default)
 
 	def staffed_share(self, node_id: str) -> float:
-		return self.record.staffing.get(node_id, 1.0)
+		return self.record.business.crew_found_of(node_id)
 
 	def capacity_of(self, node_id: str) -> float:
-		return self.record.capacity.get(node_id, 1.0)
+		return self.record.business.size_of(node_id)
+
+	def margin_of(self, node_id: str) -> Optional[float]:
+		return self.record.business.margin_of(node_id)
+
+	def release_plant(self, node_id: str, world: Any) -> Plant:
+		return release_plant(self.record.business, node_id, world)
+
+	def receive_plant(self, plant: Plant, world: Any) -> None:
+		self.record.business.adopt(plant)
 
 	def note_income(self, purpose: Purpose, amount: float) -> None:
 		for label, part in ledger.parts(purpose, amount).items():

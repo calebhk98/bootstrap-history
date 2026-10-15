@@ -89,8 +89,7 @@ world, registry, holder, infringer, licensed = setup(0.0)
 world.output = 1.0e9
 parent = registry.add("firm:7", ActorRecord(kind="firm", money=1000.0, founded_year=50))
 parent.knowledge.update({"mill"})
-parent.concerns.add("mill")
-parent.record.opened_year["mill"] = 80
+parent.business.open_plant("mill", 80)
 parent.workforce["labourer"] = 500.0
 original = spinoff.SPINOFF_CHANCE_PER_STAFF_YEAR
 spinoff.SPINOFF_CHANCE_PER_STAFF_YEAR = 1.0

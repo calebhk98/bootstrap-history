@@ -47,8 +47,8 @@ def register_world_scope(scope: Callable[[Any, Any, "ActorRegistry"], Any]) -> N
 
 class _ConcernWatch:
 	"""Keeps one firm's entries in the registry's `node -> firm ids` index
-	current whenever its concern set changes. Holds only plain data, so a
-	state holding watched sets still copies."""
+	current whenever its business opens or closes a plant. Holds only plain data,
+	so a state holding a watched business still copies."""
 
 	def __init__(self, firm_id: str, holders: Dict[str, Set[str]], version: List[int],
 				 totals: ConcernTotals, record: Any) -> None:
@@ -58,10 +58,9 @@ class _ConcernWatch:
 		self.totals = totals
 		self.record = record
 		self.known: Set[str] = set()
-		self.target: Any = None
 
 	def __call__(self) -> None:
-		current = set(self.target)
+		current = set(self.record.business.entry_keys())
 		if current != self.known:
 			self.version[0] += 1
 		for node_id in self.known - current:
@@ -104,9 +103,9 @@ class ActorRegistry:
 		record = self.state.records[actor_id]
 		previous = self.actors.get(actor_id)
 		if previous is not None:
-			watch = getattr(previous.record.concerns, "_on_change", None)
+			watch = previous.record.business.watch
 			if isinstance(watch, _ConcernWatch):
-				watch.known, watch.target = set(), ()
+				watch.known = set()
 				self._totals.forget(actor_id)
 				for holding in self._holders.values():
 					holding.discard(actor_id)
@@ -124,10 +123,8 @@ class ActorRegistry:
 				actor.on_capacity_change = self.note_capacity_change
 			if hasattr(type(actor), "find_actor"):
 				actor.find_actor = self.get
-			from sim.invalidating import _InvalidatingSet
 			watch = _ConcernWatch(actor_id, self._holders, self.version, self._totals, record)
-			record.concerns = _InvalidatingSet(record.concerns, on_change=watch)
-			watch.target = record.concerns
+			record.business.watch = watch
 			watch()
 		self.actors[actor_id] = actor
 		prior_order = self._ordered_ids
@@ -323,7 +320,7 @@ class ActorRegistry:
 		operators = self._holders.get(node_id, ())
 		count = self.capacity_in(node_id)
 		if asking_id in operators:
-			count -= self.actors[asking_id].record.capacity.get(node_id, 1.0)
+			count -= self.actors[asking_id].capacity_of(node_id)
 		founder_operates = self.world is not None and self.world.is_public(node_id)
 		return count + (1 if founder_operates else 0)
 

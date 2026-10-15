@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 
 from .harness import check
 
-from sim.agents.api import ActorRecord, ActorRegistry, ActorsState
+from sim.agents.api import ActorRecord, Business, ActorRegistry, ActorsState
 from sim.agents import firm_entry, firm_exit
 from sim.agents.stratum import Stratum  # noqa: F401  (registers the kind)
 
@@ -73,7 +73,7 @@ if founded:
 def entrants_into(existing):
 	registry = make_registry(savings=1.0e9)
 	for number in range(existing):
-		registry.add("firm:%d" % (number + 100), ActorRecord(kind="firm", concerns={"shop"}, founded_year=0))
+		registry.add("firm:%d" % (number + 100), ActorRecord(kind="firm", business=Business.running(["shop"]), founded_year=0))
 	return len(registry.consider_entry(make_world()))
 
 
@@ -92,8 +92,8 @@ world.year = 50
 world.rate = 0.05
 registry = make_registry(savings=0.0)
 founder = registry.actors["stratum:home:merchants"]
-weak = registry.add("firm:9", ActorRecord(kind="firm", money=500.0, founded_year=0, concerns={"shop"},
-	opened_year={"shop": 0}, last_margin=10.0, plan={"backer": founder.actor_id}))
+weak = registry.add("firm:9", ActorRecord(kind="firm", money=500.0, founded_year=0,
+	business=Business.running(["shop"], opened_year=0), last_margin=10.0, plan={"backer": founder.actor_id}))
 before = total_money(registry.actors.values())
 check("a thin margin on a costly plant counts as weak", firm_exit.earns_less_than_plant_would_lend_for(weak, world))
 weak.record.last_margin = 1.0e6

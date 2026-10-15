@@ -12,7 +12,7 @@ from typing import Any, Callable, Dict, List
 
 from sim.refusal import Refusal, cause_of
 
-from . import concern_ops, joint_stock, ledger, patent
+from . import joint_stock, ledger, patent
 from .player_commands import CommandRejected
 from .tuning_exchange import OFFER_LIFETIME_YEARS
 
@@ -148,16 +148,7 @@ def find_offer(receiver: Any, offer_id: Any) -> Dict[str, Any]:
 
 
 def move_concern(source: Any, target: Any, node_id: str, world: Any) -> None:
-	opened = source.opened_year_of(node_id, world.year)
-	capacity = source.record.capacity.get(node_id)
-	concern_ops.close_concern(source, node_id)
-	concern_ops.open_concern(target, node_id, world)
-	target.record.opened_year[node_id] = opened
-	if capacity is not None:
-		target.record.capacity[node_id] = capacity
-		notify = getattr(target, "on_capacity_change", None)
-		if notify is not None:
-			notify(target.actor_id)
+	target.receive_plant(source.release_plant(node_id, world), world)
 
 
 def hand_over(source: Any, target: Any, side: Dict[str, Any], world: Any) -> None:

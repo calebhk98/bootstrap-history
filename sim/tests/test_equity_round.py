@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 
 from .harness import check
 
-from sim.agents.api import ActorRecord, ActorRegistry, ActorsState
+from sim.agents.api import ActorRecord, Business, ActorRegistry, ActorsState
 from sim.agents import equity_need, equity_round, joint_stock
 from sim.agents.stratum import Stratum  # noqa: F401  (registers the kind)
 
@@ -33,8 +33,8 @@ def make_world():
 def make_registry(savings=1.0e9):
 	registry = ActorRegistry(ActorsState(home_country="home"))
 	registry.add("stratum:home:merchants", ActorRecord(kind="stratum", stratum="merchants", members=1000.0, money=savings))
-	firm = registry.add("firm:1", ActorRecord(kind="firm", money=0.0, founded_year=0, concerns={"shop"},
-											  opened_year={"shop": 0}, last_margin=100000.0))
+	firm = registry.add("firm:1", ActorRecord(kind="firm", money=0.0, founded_year=0,
+											  business=Business.running(["shop"], opened_year=0), last_margin=100000.0))
 	return registry, firm
 
 

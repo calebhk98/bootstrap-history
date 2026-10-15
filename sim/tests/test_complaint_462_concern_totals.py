@@ -6,24 +6,28 @@ import random
 
 from .harness import check
 
+from sim.agents.business import Business
 from sim.agents.registry import ActorRegistry
 from sim.engine.state import ActorRecord, ActorsState
 
 NODES = {"node_%d" % number: {"cat": "cat_%d" % (number % 3)} for number in range(8)}
 
 
-class CountingCapacity(dict):
+class CountingSizes:
+	"""Counts how often a business's plant sizes are read."""
 	reads = 0
+	real = Business.sizes
 
-	def get(self, key, default=None):
-		CountingCapacity.reads += 1
-		return dict.get(self, key, default)
+	@staticmethod
+	def counted(business):
+		CountingSizes.reads += 1
+		return CountingSizes.real(business)
 
 
 def registry_of(count):
 	state = ActorsState()
 	for number in range(count):
-		state.records["firm:%03d" % number] = ActorRecord(kind="firm", concerns={"node_0"}, workforce={})
+		state.records["firm:%03d" % number] = ActorRecord(kind="firm", business=Business.running(["node_0"]), workforce={})
 	return ActorRegistry(state)
 
 
@@ -31,7 +35,7 @@ def full_totals(registry):
 	totals, categories = {}, {}
 	for operator in registry.market_operators():
 		for held in operator.concerns:
-			size = operator.record.capacity.get(held, 1.0)
+			size = operator.capacity_of(held)
 			totals[held] = totals.get(held, 0.0) + size
 			category = NODES[held]["cat"]
 			categories[category] = categories.get(category, 0.0) + size
@@ -56,16 +60,14 @@ for step in range(400):
 		firm.concerns.add(node)
 	elif action == "close":
 		firm.concerns.discard(node)
-		firm.record.capacity.pop(node, None)
 	elif action == "grow" and node in firm.concerns:
-		firm.record.capacity[node] = firm.record.capacity.get(node, 1.0) * dice.uniform(1.0, 2.0)
+		firm.business.set_size(node, firm.capacity_of(node) * dice.uniform(1.0, 2.0))
 		registry.note_capacity_change(firm.actor_id)
 	elif action == "exit":
 		firm.concerns.clear()
-		firm.record.capacity.clear()
 		firm.record.exited_year = 1
 	elif action == "enter":
-		registry.add("firm:new%03d" % step, ActorRecord(kind="firm", concerns={node}, workforce={}))
+		registry.add("firm:new%03d" % step, ActorRecord(kind="firm", business=Business.running([node]), workforce={}))
 	if not agrees(registry):
 		failures.append((step, action))
 		break
@@ -74,14 +76,16 @@ check("totals equal a full recomputation after random entries, exits and capacit
 
 def reads_for_one_change(count):
 	registry = registry_of(count)
-	for firm in registry.actors.values():
-		firm.record.capacity = CountingCapacity(firm.record.capacity)
-	CountingCapacity.reads = 0
-	registry.actors["firm:000"].record.capacity["node_0"] = 3.0
-	registry.note_capacity_change("firm:000")
-	registry.capacity_in("node_0")
-	registry.concerns_in("cat_0", NODES)
-	return CountingCapacity.reads
+	Business.sizes = CountingSizes.counted
+	try:
+		CountingSizes.reads = 0
+		registry.actors["firm:000"].business.set_size("node_0", 3.0)
+		registry.note_capacity_change("firm:000")
+		registry.capacity_in("node_0")
+		registry.concerns_in("cat_0", NODES)
+		return CountingSizes.reads
+	finally:
+		Business.sizes = CountingSizes.real
 
 
 small, large = reads_for_one_change(10), reads_for_one_change(400)

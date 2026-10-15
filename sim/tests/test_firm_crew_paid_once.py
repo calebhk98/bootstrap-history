@@ -33,9 +33,8 @@ def firm_running(game, node_id):
     projects.opened_year[node_id] = year - 5
     game._done_changed()
     firm = game.actors.add("firm:crew_paid_once", ActorRecord(kind="firm", money=1.0e9, target=node_id))
-    firm.concerns.add(node_id)
+    firm.business.open_plant(node_id, year - 5)
     firm.knowledge.add(node_id)
-    firm.record.opened_year[node_id] = year - 5
     return firm
 
 

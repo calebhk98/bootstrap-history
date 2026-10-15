@@ -177,7 +177,7 @@ class IndustryDepthMixin:
         if self.state.actors is not None and self.state.actors.records:
             for firm in self.actors.active_firms():
                 for node_id in firm.concerns:
-                    staffed = firm.record.staffing.get(node_id, 1.0)
+                    staffed = firm.staffed_share(node_id)
                     years[node_id] = (years.get(node_id, 0.0)
                                       + self.founding_worker_years(node_id) * firm.capacity_of(node_id) * staffed)
         return years

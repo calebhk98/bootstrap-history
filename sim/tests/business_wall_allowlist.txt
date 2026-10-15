@@ -1,9 +1,5 @@
-sim/agents/concern_ops.py::operate_concern
-sim/agents/entry_round.py::__init__
-sim/agents/player.py::expected_margin
 sim/agents/protocols.py::concern_takings
 sim/agents/protocols.py::concern_wage_bill
-sim/agents/spinoff.py::_found_rival
 sim/engine/agents_port.py::concern_staff
 sim/engine/agents_port.py::concern_takings
 sim/engine/agents_port.py::concern_wage_bill
