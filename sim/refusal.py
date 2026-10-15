@@ -6,7 +6,9 @@ reader tests. These classes are plain strings everywhere a string is expected, s
 unchanged; code that builds the reply or the test reads `.cause` (or `.kind`), `.facts` for the figures the
 sentence states, and `.choices` when a refusal lists the answers it would have accepted. Any string
 operation (`+`, `%`, slicing) returns an ordinary string, so wrap the final text last. The code does not
-survive a save: a log line read back from a save is plain text.
+survive a save as a plain string, but as a record: `as_record` writes a coded value as text, code, choices and
+facts, `from_record` rebuilds the same object, so a save and load keeps every code. Facts are kept as JSON
+values (numbers, strings, booleans, lists, dicts of those); a tuple comes back as a list.
 """
 
 
@@ -30,6 +32,31 @@ class LogLine(Refusal):
     @property
     def kind(self):
         return self.cause
+
+
+RECORD_KEYS = ("__log_line__", "__refusal__")
+
+
+def as_record(text):
+    """A Refusal or LogLine as a plain dict (the code under `__log_line__` or `__refusal__`, then text, choices, facts)."""
+    record = {"__log_line__" if isinstance(text, LogLine) else "__refusal__": text.cause, "text": str(text)}
+    if text.choices is not None:
+        record["choices"] = list(text.choices)
+    if text.facts:
+        record["facts"] = dict(text.facts)
+    return record
+
+
+def is_record(value):
+    """Whether a loaded value is a record written by `as_record`."""
+    return isinstance(value, dict) and any(key in value for key in RECORD_KEYS)
+
+
+def from_record(record):
+    """The Refusal or LogLine a record written by `as_record` stood for."""
+    kind = LogLine if "__log_line__" in record else Refusal
+    code = record["__log_line__" if kind is LogLine else "__refusal__"]
+    return kind(code, record["text"], record.get("choices"), **record.get("facts", {}))
 
 
 def _rebuild(cls, cause, text, choices, facts):

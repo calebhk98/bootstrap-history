@@ -10,6 +10,7 @@ here. Behaviour is unchanged and moved verbatim.
 """
 
 import sim.engine.ui_port as ui_port
+from sim.refusal import LogLine
 from .command_registry import command
 from .explain_once import already_explained
 import os
@@ -613,8 +614,8 @@ def _cmd_mothball(sim, nodes, cmd, ended):
     # differently from one the creditors forced on you (see economy.py's
     # own, separate log lines for THAT case) unless the player's own
     # choice gets a line of its own too.
-    sim.log.append((sim.year, "mothballed: %s (%s)"
-                 % (nodes[_mb_id]["name"] if _mb_id in nodes else _mb_id, msg)))
+    sim.log.append((sim.year, LogLine("work_mothballed", "mothballed: %s (%s)"
+                 % (nodes[_mb_id]["name"] if _mb_id in nodes else _mb_id, msg))))
     out = {"ok": True, "mothballed": msg, "upkeep": round(sim.upkeep(), 1)}
     # SAY WHAT ELSE CLOSES WITH IT. A Mexica player shut capability
     # institutions for the capital back and lost two multi-year

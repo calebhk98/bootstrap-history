@@ -1,8 +1,8 @@
 """What ended the run, what a project is waiting on, and the founder death and goal progress helpers behind the state screen."""
 
 import sim.engine.ui_port as ui_port
-import math, re
-from sim.refusal import Refusal
+import math
+from sim.refusal import Refusal, cause_of, facts_of
 from sim.engine.ui_port import closure, money_text, plain_number
 
 
@@ -248,20 +248,9 @@ def _goal_progress_count(sim, nodes):
 def _founder_death_info(sim):
     """When and how old the founder was when they died, or None if not.
 
-    core.py logs "the founder dies, aged about %d" the one time it
-    happens; leaving the age there alone means it can be buried as one
-    line among sixty in a long `step`'s events, with no field anywhere a
-    script would check first.
-
-    THE ATTRIBUTES, NOT ONLY THE LOG. `log` is not itself a saved field -
-    see SAVE_FIELDS - so a save taken after the founder's death and resumed
-    in a new process starts that process's `s.log` empty, and scanning it
-    would silently un-report an age that had already been shown once. The
-    step handler sets _founder_death_aged/_founder_death_year the moment it
-    sees the line, and those two ARE saved fields, so this is the fast path
-    and the one that survives a resume. Scanning the log is the fallback,
-    for a Sim driven straight off the engine (as the test suite does) or a
-    save written before this existed.
+    The death line is a log line of kind `founder_dies` carrying the age as the fact `aged`. The step handler also
+    saves the age and year (_founder_death_aged/_founder_death_year) the moment it sees the line, so this answers
+    from those first and scans the log (saved with its kinds) only for a Sim driven straight off the engine.
     """
     if sim.founder_alive:
         return None
@@ -272,9 +261,8 @@ def _founder_death_info(sim):
     if cache is not None:
         return cache
     for year, msg in sim.log:
-        if "founder dies" in msg.lower():
-            match = re.search(r"aged about (\d+)", msg)
-            cache = {"year": year, "aged_about": int(match.group(1)) if match else None}
+        if cause_of(msg) == "founder_dies":
+            cache = {"year": year, "aged_about": facts_of(msg).get("aged")}
             ui_port.set_founder_death_cache(sim, cache)
             return cache
     return None

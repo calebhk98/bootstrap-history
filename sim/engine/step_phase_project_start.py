@@ -1,6 +1,7 @@
 """The yearly phases that start projects and supply their materials.
 
 A part of the year's phases (core_step_phases.py); Sim inherits it through StepPhasesMixin."""
+from sim.refusal import LogLine
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from . import automation_audit, shortage_conditions
 from sim.agents.api import edges
@@ -314,8 +315,8 @@ class ProjectStartPhaseMixin:
             # Only said while a running project draws the material: a shortage nothing running needs slows nothing.
             if shortage_conditions.note_shortage(self, self.state.holdings.binding, thr):
                 names = ", ".join(self.nodes[node_id]["name"] for node_id in slowed[:3])
-                self.state.household.log.append((self.state.scenario.year, "SHORT OF %s: %s running at %d%% of plan. %s"
+                self.state.household.log.append((self.state.scenario.year, LogLine("material_shortage", "SHORT OF %s: %s running at %d%% of plan. %s"
                                  % (shortage_conditions.material_words(self.state.holdings.binding).upper(), names,
-                                    thr * 100, self.shortage_remedy(self.state.holdings.binding))))
+                                    thr * 100, self.shortage_remedy(self.state.holdings.binding)))))
         else:
             shortage_conditions.clear_shortage(self)

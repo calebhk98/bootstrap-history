@@ -1274,7 +1274,7 @@ class StatePressureMixin:
                     bits.append("%s costs %s more, and is not something you "
                                 "get to decline cheaply"
                                 % (off_name, money_text(off_share * rev, self, grouped=True)))
-                self.state.household.log.append((year, "THE STATE HAS NOTICED YOU: " + "; ".join(bits)))
+                self.state.household.log.append((year, LogLine("state_noticed", "THE STATE HAS NOTICED YOU: " + "; ".join(bits))))
         elif notice > self.STATE_NOTICE_THRESHOLD * 0.7:
             # APPROACHING, NOT YET BITING. The same fairness standard as
             # eminence's own "YOU ARE BECOMING CONSPICUOUS" warning in
@@ -1329,7 +1329,7 @@ class StatePressureMixin:
             last_band = self.state.household._said_confiscation_band
             if band > last_band:
                 self.state.household._said_confiscation_band = band
-                self.state.household.log.append((year, "THE TREASURY IS LOOKING AT YOUR FORTUNE: "
+                self.state.household.log.append((year, LogLine("treasury_watching", "THE TREASURY IS LOOKING AT YOUR FORTUNE: "
                                      "a %d%% chance this year of outright "
                                      "confiscation, against a scale that "
                                      "only keeps climbing while this "
@@ -1338,7 +1338,7 @@ class StatePressureMixin:
                                     ("Held off by: " + "; ".join(conf_why))
                                     if conf_why else
                                     "Nothing you have built is holding it "
-                                    "off yet")))
+                                    "off yet"))))
             if self.events and self.rng.random() < probability:
                 # the state demands a share of the fortune it can see; the household answers like any demand
                 answer, demanded, lost = answer_confiscation(self, self.CONFISCATION_CAPITAL_LOSS, "confiscation by the state")

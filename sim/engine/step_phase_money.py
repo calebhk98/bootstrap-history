@@ -1,6 +1,7 @@
 """The yearly money phase: the founder's takings and costs, credit, insolvency, then society and the actors' year.
 
 A part of the year's phases (core_step_phases.py); Sim inherits it through StepPhasesMixin."""
+from sim.refusal import LogLine
 from . import automation_audit
 from sim.constants import declare
 from sim.agents.api import edges
@@ -133,8 +134,8 @@ class MoneyPhaseMixin:
                 self.state.household.artisans = max(self.INSOLVENCY_ARTISAN_FLOOR, self.state.household.artisans * (1.0 - bleed))
                 self.state.household.scholars = max(self.INSOLVENCY_SCHOLAR_FLOOR, self.state.household.scholars * (1.0 - bleed * self.INSOLVENCY_SCHOLAR_BLEED_DISCOUNT))
                 if self.state.household.insolvent_years in (3, 6, 12, 25):
-                    self.state.household.log.append((self.state.scenario.year, "IN ARREARS for %d years: staff are leaving "
-                                         "because you cannot pay them" % self.state.household.insolvent_years))
+                    self.state.household.log.append((self.state.scenario.year, LogLine("arrears_staff_leaving", "IN ARREARS for %d years: staff are leaving "
+                                         "because you cannot pay them" % self.state.household.insolvent_years)))
                 # ABANDONMENT, and this is what makes insolvency survivable: a
                 # permanently underwater household must not simply sit
                 # floored, simulating centuries of nothing and reporting it
@@ -180,9 +181,9 @@ class MoneyPhaseMixin:
                         # the creditors' seizure below: a bare count does not
                         # tell a player what they lost or why it later
                         # reappeared mothballed rather than gone for good.
-                        self.state.household.log.append((self.state.scenario.year, "ABANDONED %d works you could no longer "
+                        self.state.household.log.append((self.state.scenario.year, LogLine("works_abandoned_arrears", "ABANDONED %d works you could no longer "
                                              "maintain; they have fallen into disrepair: %s"
-                                             % (len(shed), ", ".join(shed))))
+                                             % (len(shed), ", ".join(shed)))))
         else:
             self.state.household.insolvent_years = 0
         # A standing workforce policy, and ONLY when the optimizer is playing:

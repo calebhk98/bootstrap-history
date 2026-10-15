@@ -429,13 +429,13 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
             _band = int(self.state.household.eminence / max(1.0, _danger * 0.15))
             if _band > _said:
                 self.state.household._said_eminence = _band
-                self.state.household.log.append((self.state.scenario.year, "YOU ARE BECOMING CONSPICUOUS: eminence %.0f "
+                self.state.household.log.append((self.state.scenario.year, LogLine("eminence_warning", "YOU ARE BECOMING CONSPICUOUS: eminence %.0f "
                                      "against a danger line of %.0f. This is the "
                                      "one thing no patron and no bribe protects "
                                      "you from, and it grows with reputation and "
                                      "visible wealth. A wide, dispersed "
                                      "institution is what survives you"
-                                 % (self.state.household.eminence, _danger)))
+                                 % (self.state.household.eminence, _danger))))
         self.update_protection()
         # THE STATE NOTICES YOU. Requisition, the pressed office, a demand
         # for military supply, and the tail confiscation risk at the top of
@@ -477,14 +477,14 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
             _band = int(self.state.household.scandal / max(1.0, _sd * 0.15))
             if _band > self.state.seat_progress._said_scandal:
                 self.state.seat_progress._said_scandal = _band
-                self.state.household.log.append((self.state.scenario.year, "YOU ARE BEING TALKED ABOUT: scandal %.0f "
+                self.state.household.log.append((self.state.scenario.year, LogLine("scandal_warning", "YOU ARE BEING TALKED ABOUT: scandal %.0f "
                                      "against a line of %.0f. Past it you may be "
                                      "denounced, and that ends the run - about "
                                      "%.0f%% a year at this level. 'bribe' buys "
                                      "advocacy and piety; it falls a tenth a "
                                      "year on its own"
                                  % (self.state.household.scandal, _sd,
-                                    PERCENT_SCALE * max(0.0, (self.state.household.scandal - _sd) / self.SCANDAL_HAZARD_SCALE))))
+                                    PERCENT_SCALE * max(0.0, (self.state.household.scandal - _sd) / self.SCANDAL_HAZARD_SCALE)))))
         elif self.state.household.scandal < _sd * 0.5:
             self.state.seat_progress._said_scandal = 0
         if self.events and self.state.household.scandal > self.cfg["suspicion_danger"]:
@@ -506,20 +506,20 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
                                                                    "confiscation by the state")
                     if take > 0.0:
                         self.state.household.reputation = max(0.0, self.state.household.reputation - self.EMINENCE_CONFISCATION_REPUTATION_LOSS)
-                        self.state.household.log.append((self.state.scenario.year, "PROMINENCE: property confiscated, %s lost, "
+                        self.state.household.log.append((self.state.scenario.year, LogLine("prominence_confiscated", "PROMINENCE: property confiscated, %s lost, "
                                              "and you withdraw from public life for a while"
-                                             % money_text(take, self, short=True)))
+                                             % money_text(take, self, short=True))))
                     else:
-                        self.state.household.log.append((self.state.scenario.year, "PROMINENCE: the court demanded your "
-                                             "property and you kept it, but you withdraw from public life for a while"))
+                        self.state.household.log.append((self.state.scenario.year, LogLine("prominence_demand_kept", "PROMINENCE: the court demanded your "
+                                             "property and you kept it, but you withdraw from public life for a while")))
                     self.state.household.eminence *= self.EMINENCE_CONFISCATION_RETENTION
                 elif roll < (self.EMINENCE_OUTCOME_CONFISCATION_SHARE + self.EMINENCE_OUTCOME_PATRON_LOST_SHARE):
                     for pat in self.patrons_lost_to_eminence():
                         if pat in self.state.projects.done:
                             self.state.projects.done.discard(pat)
                             self._done_changed()
-                            self.state.household.log.append((self.state.scenario.year, "PROMINENCE: your patron is destroyed in "
-                                                 "someone else's quarrel and you lose %s" % pat))
+                            self.state.household.log.append((self.state.scenario.year, LogLine("prominence_patron_destroyed", "PROMINENCE: your patron is destroyed in "
+                                                 "someone else's quarrel and you lose %s" % pat)))
                             break
                     self.state.household.eminence *= self.EMINENCE_PATRON_LOSS_RETENTION
                     self.state.household.reputation = max(0.0, self.state.household.reputation - self.EMINENCE_PATRON_LOSS_REPUTATION_LOSS)

@@ -325,12 +325,12 @@ class CompletionMixin:
             benefit = self.NOT_OPERATING_BENEFIT.get(node_id)
             held = permanent_parts(node, self._tech_effects.get(node_id) or {})
             household.log.append((scenario.year,
-                "completed: %s. STATUS: CLOSED / NOT OPERATING. %s%s Open it "
+                LogLine("project_completed", "completed: %s. STATUS: CLOSED / NOT OPERATING. %s%s Open it "
                 "('open %s') to begin and to start paying upkeep."
                 % (node["name"],
                    ("In force already, open or not: %s. " % "; ".join(held)) if held else "",
                    ("Not in effect until open: %s." % benefit) if benefit
-                   else "Nothing is earning yet.", node_id)))
+                   else "Nothing is earning yet.", node_id))))
             shortfall = self.opening_shortfall(node_id)
             if shortfall:
                 household.log.append((scenario.year,
@@ -338,7 +338,7 @@ class CompletionMixin:
                     "scholars and %.1f craftsmen to supervise, and %.1f and %.1f "
                     "are free." % shortfall))
         else:
-            household.log.append((scenario.year, "completed: " + node["name"]))
+            household.log.append((scenario.year, LogLine("project_completed", "completed: " + node["name"])))
         for line in self.goal_effect_lines(node_id, goal_before):
             household.log.append((scenario.year, line))
         self.record_goal_reached(node_id, scenario.year)

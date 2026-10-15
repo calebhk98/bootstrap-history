@@ -4,7 +4,6 @@ import sim.engine.ui_port as ui_port
 import importlib
 import os
 import pkgutil
-import re
 
 from sim.engine.ui_port import money_word, plain_number
 from sim.engine.ui_port import fuzzy_estimates, units
@@ -28,6 +27,7 @@ from .wave_summary import wave_summary
 from . import step_progress
 from .guidance import delay_kinds, delay_phrase
 from .event_groups import group_disaster_events
+from .event_kinds import stops_a_step
 from .event_severity import tag_events
 from .step_alerts import step_alerts
 from .step_stops import newly_startable_goal, severe_stop_reason
@@ -214,19 +214,8 @@ def _cmd_step(sim, nodes, cmd, ended):
     # own death: a `step 60` that lands on it must not run on past it far
     # enough to also trip the no-successor catastrophe before the player
     # gets a turn to react.
-    # MATCHED CASE-INSENSITIVELY BELOW, because this is prose and prose
-    # gets rewritten: a case-sensitive match against one exact
-    # capitalisation would silently stop matching the moment that prose is
-    # edited, costing the step its stop and the reply its death field.
-    # CLOSE TO THE LIMIT BELONGS IN THE STOP-MARKER TUPLE TOO: it is the
-    # one event that still leaves a player options, so it is the one this
-    # most needs to interrupt for - the fatal events need it least, since
-    # there is nothing left to choose by the time they fire. Leaving it
-    # out would let a batched step run straight past "stop a project...
-    # while it is still your choice" and only break years later on the
-    # fatal CREDIT EXHAUSTED that warning exists to prevent.
-    _STEP_STOP_MARKERS = ("CREDIT EXHAUSTED", "FOUNDER DIES",
-                          "CLOSE TO THE LIMIT")
+    # Which kinds of line stop a step is listed in event_kinds.py: the warning that still leaves options (close
+    # to the limit) is among them, since the fatal ones leave nothing to choose.
     completed, lost, events = [], [], []
     disasters = []
     founder_died_this_step = None
@@ -313,9 +302,8 @@ def _cmd_step(sim, nodes, cmd, ended):
             disasters.append(sim.disaster_this_year)
         for year, message in _this_year:
             events.append({"year": year, "message": message, **event_codes(message)})
-            if "founder dies" in message.lower():
-                _age = re.search(r"aged about (\d+)", message)
-                _age_n = int(_age.group(1)) if _age else None
+            if cause_of(message) == "founder_dies":
+                _age_n = facts_of(message).get("aged")
                 founder_died_this_step = {"year": year, "aged_about": _age_n}
                 # SAVED, NOT ONLY LOGGED - see _founder_death_info's own
                 # comment on why the log alone cannot be trusted to
@@ -332,8 +320,7 @@ def _cmd_step(sim, nodes, cmd, ended):
                              % (ran, years))
             stopped_kind = "goal_reached"
             break
-        if ran < years and any(marker.lower() in message.lower() for _, message in _this_year
-                               for marker in _STEP_STOP_MARKERS):
+        if ran < years and any(stops_a_step(message) for _, message in _this_year):
             stopped_early = ("stopped after %d of the %d years you asked "
                              "for: something happened that you warned "
                              "yourself about and should see before more "
@@ -342,7 +329,7 @@ def _cmd_step(sim, nodes, cmd, ended):
             stopped_kind = "warned_event"
             break
         severe_reason = severe_stop_reason(
-            [{"message": message} for _, message in _this_year],
+            [{"message": message, **event_codes(message)} for _, message in _this_year],
             [nodes[node_id]["name"] for node_id in _snap["concerns_closed"]
              if sim.staff_closure_age(node_id) is not None],
             sorted(set(stalled_projects(sim)) - stalled_before),
