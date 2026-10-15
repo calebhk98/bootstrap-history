@@ -46,6 +46,7 @@ class EconomyRecord:
     lent_by_borrower: Dict[AgentId, float] = field(default_factory=dict)  # what each borrower was lent at the last lending
     curves: Dict[str, Any] = field(default_factory=dict)                 # market_key -> the book of the last clearing at the port (market_curves.py)
     ways: Dict[str, Dict[str, Any]] = field(default_factory=dict)        # the built ways the market areas are partitioned for
+    area_imbalance: float = 1.0                                          # the return-trip emptiness the market areas were partitioned for (its memory is keyed by those areas)
     settling: bool = False                                               # in the hidden spin-up: households' spending rises as far as their wealth allows
     spin_up_result: Dict[str, Any] = field(default_factory=dict)         # how the hidden first stage ended: settled, years run, last gap (empty: no spin-up ran)
     carried: Dict[str, Dict[str, float]] = field(default_factory=dict)   # tonnes the merchants carried last year: origin tile -> destination tile (sim.geography.flow_ledger)
@@ -79,6 +80,7 @@ class EconomyRecord:
             "lent_by_borrower": self.lent_by_borrower,
             "curves": self.curves,
             "ways": {key: dict(built) for key, built in sorted(self.ways.items())},
+            "area_imbalance": self.area_imbalance,
             "carried": {key: dict(row) for key, row in sorted(self.carried.items())},
             "spin_up_result": dict(self.spin_up_result),
         }
@@ -112,6 +114,7 @@ class EconomyRecord:
             lent_by_borrower=dict(record["lent_by_borrower"]),
             curves=dict(record["curves"]),
             ways={key: dict(built) for key, built in record["ways"].items()},
+            area_imbalance=record["area_imbalance"],
             carried={key: dict(row) for key, row in record["carried"].items()},
             spin_up_result=dict(record["spin_up_result"]),
         )

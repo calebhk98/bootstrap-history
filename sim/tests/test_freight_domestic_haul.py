@@ -262,7 +262,7 @@ class EconomyFlows(unittest.TestCase):
         full = economy.carriage.cost_per_tonne(economy_fixture.TOWN, economy_fixture.FARMS)
         economy.record.carried = {"town": {"farms": 5.0}, "farms": {"town": 5.0}}
         self.assertTrue(economy.follow_flows())
-        self.assertEqual(economy.imbalance, 0.0)
+        self.assertEqual(economy.record.area_imbalance, 0.0)
         self.assertLess(economy.carriage.cost_per_tonne(economy_fixture.TOWN, economy_fixture.FARMS), full)
         self.assertFalse(economy.follow_flows())
 
