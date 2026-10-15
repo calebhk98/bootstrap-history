@@ -99,7 +99,10 @@ candidates = []
 for material in world.trade_materials():
     terms = route_terms(world, home, PARTNER, material)
     entry = game._foreign_entry(PARTNER, world.commodity_of(material), game._foreign_economy_facts(PARTNER))
-    if terms and entry and entry["capacity_tonnes"] > 0.0 and terms["gain"] > terms["bought"] * (rate + 0.05):
+    # a good the home economy has a book for: cargo taken from home moves its price there (a good with no book is
+    # priced at its making cost and does not answer)
+    if (terms and entry and entry["capacity_tonnes"] > 0.0 and terms["gain"] > terms["bought"] * (rate + 0.05)
+            and world.price_after_cargo(material, home, 1.0, False) is not None):
         candidates.append((terms["gain"] / terms["bought"], material))
 check("a Rome start has a gap with the partner wide enough to pay the interest on the cargo", bool(candidates), None)
 
