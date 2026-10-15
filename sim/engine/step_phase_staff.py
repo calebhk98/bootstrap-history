@@ -217,7 +217,7 @@ class StaffPhaseMixin:
                 delta = self.labour.stochastic_round(want) - have
                 if delta >= 1.0:
                     _before = self.state.household.capital
-                    _hired, _ = self.labour.hire(trade, int(delta))
+                    _hired, _ = self.labour.hire_buying_room(trade, int(delta))
                     if _hired:
                         # the people the market found, which can be fewer than sought
                         _found = round(self.state.household.employees.get(trade, 0.0) - have)
