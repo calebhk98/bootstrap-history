@@ -20,7 +20,7 @@ from sim.engine.state import ActorRecord
 def budget_sim(civ="rome_100ad", army=None, purse=None):
     """A game whose lenders advance the state nothing, so a deficit beyond the reserve is cut (borrowing
     is covered by test_capital_market)."""
-    game = sim(civ=civ)
+    game = unopened_sim(civ=civ)
     game.market_credit_room = lambda actor_id: 0.0
     # revenue in coin only, so a deficit is measured against money (in-kind revenue: test_state_revenue_forms)
     game.civ["state_revenue"] = [{key: value for key, value in form.items() if key != "paid_in"}
@@ -244,7 +244,7 @@ check("protection bargains requisition down and leaves the office alone",
       bargained.levy_shares(bargained.household_scale(), 0.85)[0] < requisition
       and abs(bargained.levy_shares(bargained.household_scale(), 0.85)[1] - office) < 1e-12,
       (bargained.levy_shares(bargained.household_scale(), 0.85), (requisition, office)))
-below = sim()
+below = unopened_sim()
 below.civ["standing_army"] = 1.0e8
 one_year(below)
 check("a household below the notice line pays nothing even when the state is short",
