@@ -18,11 +18,15 @@ def fiat_setup():
 
 
 def with_windfall(factor: float):
-    """A fiat economy whose households hold `factor` times the opening's cash, over the same goods."""
+    """A fiat economy whose money stock is `factor` times the opening's, the extra handed to the households in
+    proportion to the cash they hold, over the same goods. (Households hold a small share of the stock, the rest
+    being producers' working capital, so a windfall in proportion to their own cash alone would be small.)"""
     setup = fiat_setup()
     economy = Economy(setup)
-    for cohort_id in sorted(economy.record.cohorts):
-        extra = economy.record.book.balance(cohort_id, COIN) * (factor - 1.0)
+    cohort_cash = {cohort_id: economy.record.book.balance(cohort_id, COIN) for cohort_id in sorted(economy.record.cohorts)}
+    windfall = economy.record.book.money_supply(COIN) * (factor - 1.0)
+    for cohort_id, cash in cohort_cash.items():
+        extra = windfall * cash / sum(cohort_cash.values())
         if extra > 0.0:
             economy.record.book.transfer(Transfer(EDGE_ISSUE, cohort_id, COIN, extra, "windfall"))
     outcomes = [economy.step(fixture.quiet_year(setup)) for _ in range(YEARS)]
