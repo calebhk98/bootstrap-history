@@ -67,6 +67,7 @@ def _open(setup: EconomySetup, replacement: float) -> Tuple[EconomyRecord, AreaM
     for country in setup.countries():
         _open_country_producers(setup, record, area_map, carriage, priced_goods, final_by_tile, country)
     sites.apply_site_limits(record, setup)
+    opening_runs.fit_to_supply(setup, record)
     _stock_producers_with_inputs(setup, record)
     _open_merchants(setup, record, priced_goods, final_by_tile)
     _strike_opening_cash(setup, record)

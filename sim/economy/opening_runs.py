@@ -9,6 +9,7 @@ import math
 from typing import Dict, List, Mapping, Optional, Tuple
 
 from . import sites, unit_cost
+from .replaced import replaced
 from .types import GoodId, Recipe, TileId
 
 INPUT_OUTPUT_PASSES = 60
@@ -160,3 +161,41 @@ def choose_recipes(final_by_tile, recipes: Mapping[str, Recipe], prices: Mapping
             break
         ranked, runs = chosen, required_runs(final_by_tile, chosen, recipes, ceilings)
     return ranked, runs
+
+
+def fit_to_supply(setup, record) -> None:
+    """Hold the producers that use a good only deposits supply to the supply the placed sited producers make: where
+    their inputs (and plant wear) would take more, every user's capacity and expected sales are cut by the same
+    share, so no processor opens larger than the ore its tiles can feed. A user of the good that something
+    unsited also makes is not held."""
+    makers: Dict[GoodId, List[str]] = {}
+    for recipe_id, recipe in setup.recipes.items():
+        for good, quantity in recipe.outputs.items():
+            if quantity > 0.0:
+                makers.setdefault(good, []).append(recipe_id)
+    by_limits = sites.limits_by_recipe(setup.site_limits)
+    fixed = {good for good, makers_of in makers.items()
+             if all(sites.is_sited(setup.recipes[maker], by_limits) for maker in makers_of)}
+    for _sweep in range(CEILING_SWEEPS):
+        held = False
+        for good in sorted(fixed):
+            supply = math.fsum(producer.capacity_runs * producer.yield_factor * setup.recipes[producer.recipe_id].outputs.get(good, 0.0)
+                               for producer in record.producers.values())
+            users = []
+            for producer_id, producer in sorted(record.producers.items()):
+                recipe = setup.recipes[producer.recipe_id]
+                used = recipe.inputs.get(good, 0.0)
+                if recipe.plant_life_years > 0.0:
+                    used += recipe.plant_goods.get(good, 0.0) / recipe.plant_life_years
+                if used > 0.0 and not sites.is_sited(recipe, by_limits):
+                    users.append((producer_id, producer, used))
+            wanted = math.fsum(producer.capacity_runs * used for _id, producer, used in users)
+            if wanted > supply * (1.0 + 1e-9) and wanted > 0.0:
+                factor = supply / wanted
+                for producer_id, producer, _used in users:
+                    record.producers[producer_id] = replaced(
+                        producer, capacity_runs=producer.capacity_runs * factor,
+                        expected_sales=producer.expected_sales * factor)
+                held = True
+        if not held:
+            break
