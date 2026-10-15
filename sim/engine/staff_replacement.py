@@ -11,7 +11,7 @@ def replace_lost_staff(sim, lost):
     for trade, people in sorted(lost.items()):
         before = household.capital
         have = household.employees.get(trade, 0.0)
-        hired, refusal = sim.labour.hire(trade, int(people))
+        hired, refusal = sim.labour.hire_buying_room(trade, int(people))
         if not hired:
             automation_audit.record_skip(sim, "auto_hire", "replace %d %s" % (people, trade),
                                          "replace-only mode: " + str(refusal))

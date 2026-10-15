@@ -212,12 +212,16 @@ class StaffPhaseMixin:
             # whatever hire() says it is, for player and optimizer alike.
             # A refusal here is not an error - it is the same wall a
             # player hits - so it is simply not acted on.
-            def _grow_to(trade, want):
+            def _grow_to(trade, want, closure_need=0.0):
                 have = self.state.household.employees.get(trade, 0.0)
                 delta = self.labour.stochastic_round(want) - have
                 if delta >= 1.0:
                     _before = self.state.household.capital
-                    _hired, _ = self.labour.hire(trade, int(delta))
+                    _hired, _why = self.labour.hire_buying_room(trade, int(delta))
+                    if not _hired and closure_need >= 1.0:
+                        automation_audit.record_skip(
+                            self, "auto_hire", "hire %d %s" % (int(delta), trade),
+                            "concerns shut for want of staff need %.1f more: %s" % (closure_need, _why))
                     if _hired:
                         # the people the market found, which can be fewer than sought
                         _found = round(self.state.household.employees.get(trade, 0.0) - have)
@@ -231,9 +235,23 @@ class StaffPhaseMixin:
                     automation_audit.record(
                         self, "auto_hire", "release", "%d %s" % (int(-delta), trade),
                         "staff target %.1f is below the %.1f held" % (want, have), _before)
-            _grow_to("artisan", max(craft * 0.25, craft - specials))
-            if desired_sc > 0:
-                _grow_to("scholar", desired_sc)
+            # THE HANDS A SHUT CONCERN NEEDS, within the affordability scale the extra room uses; hire() then
+            # applies the cash, room and literacy rules, and a refusal is recorded as a skip with its reason.
+            _closed_sc, _closed_ar = self.staffing_closed_hand_shortfall()
+            _closed_unscaled = _closed_sc + _closed_ar
+            _closed_sc *= self.household._staff_scale
+            _closed_ar *= self.household._staff_scale
+            if _closed_unscaled >= 1.0 and _closed_sc + _closed_ar < 1.0:
+                automation_audit.record_skip(
+                    self, "auto_hire", "hire for shut concerns",
+                    "concerns shut for want of staff need %.1f more people, but the income that pays staff covers "
+                    "%.0f%% of them" % (_closed_unscaled, 100.0 * self.household._staff_scale))
+            _grow_to("artisan", max(craft * 0.25, craft - specials,
+                                    self.state.household.employees.get("artisan", 0.0) + _closed_ar),
+                     closure_need=_closed_ar)
+            if desired_sc > 0 or _closed_sc > 0:
+                _grow_to("scholar", max(desired_sc, self.state.household.scholars + _closed_sc),
+                         closure_need=_closed_sc)
             # REPLACE THE PEOPLE YOU LOSE, trade by trade: attrition can erode
             # a taught trade toward zero, and nothing replaces it if the
             # top-up only knows about the two generic buckets. A programme

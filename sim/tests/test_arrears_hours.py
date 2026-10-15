@@ -94,9 +94,8 @@ def _portfolio_run(auto_hire, years=12):
     sim_state.employees["scholar"] = round(need_sch) + 1
     sim_state.employees["artisan"] = round(need_art) + 2
     sim_state.labour._resync_pools()
-    # room to house and supervise the replacements, and one year's losses forced rather than left to the dice:
+    # one year's losses forced rather than left to the dice:
     # the draws of attrition no longer land a closure that room can undo
-    sim_state.state.household.worker_housing_places = 40.0
     opened = [node_id for node_id in chosen if sim_state.open_venture(node_id)[0]]
     reopenings = 0
     for year in range(years):
