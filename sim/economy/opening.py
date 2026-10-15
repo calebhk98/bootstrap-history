@@ -8,11 +8,11 @@ struck at the mint: the money stock is derived, not authored. After this the mar
 """
 import dataclasses
 import math
-from typing import Dict, List, Mapping, Tuple
+from typing import Dict, List, Mapping, Optional, Tuple
 
 from sim.constants import declare
 
-from . import currency, goods_market, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, unit_cost
+from . import currency, goods_market, opening_income, opening_metal, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, unit_cost
 from .accounts import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
@@ -31,6 +31,7 @@ OPENING_SPARE_CAPACITY_SHARE = declare(
         "or a rise in demand is met from capacity before new plant is built. Real spare capacity "
         "varies by trade and season and is not measured here.")
 INPUT_OUTPUT_PASSES = 60
+INCUMBENT_PASSES = 4     # numerical bound on choosing recipes against the demand they then meet
 MERCHANTS_PER_TILE = declare(
     "MERCHANTS_PER_TILE", 0.1, kind="temporary_heuristic",
     unit="merchant agents per tile held", source=None, confidence="D",
@@ -45,6 +46,14 @@ MERCHANT_CAPITAL_SHARE_OF_OUTPUT = declare(
 
 
 def open_economy(setup: EconomySetup) -> Tuple[EconomyRecord, AreaMap, CarriageTable]:
+    """The opening in two passes: the first leaves a money stock, whose yearly loss of its metal is the demand
+    (the mint's) the second sizes the producers of the backing good to, along with everyone else's."""
+    first = _open(setup, 0.0)
+    replacement = opening_metal.yearly_replacement(setup, first[0])
+    return _open(setup, replacement) if replacement > 0.0 else first
+
+
+def _open(setup: EconomySetup, replacement: float) -> Tuple[EconomyRecord, AreaMap, CarriageTable]:
     carriage = setup.carriage_table()
     priced_goods = {good: price for good, price in setup.opening_prices.items()
                     if good in setup.specs and price > 0.0}
@@ -54,8 +63,9 @@ def open_economy(setup: EconomySetup) -> Tuple[EconomyRecord, AreaMap, CarriageT
                            ways={key: dict(built) for key, built in setup.improvements.items()})
     view = YearView(memory, record.book, area_map, setup.currency_id, labour_area)
     _open_cohorts(setup, record)
+    _settle_income(setup, record, view, priced_goods, replacement)
     _seed_durable_stocks(setup, record, view)
-    final_by_tile = _final_demand(setup, record, view)
+    final_by_tile = _final_demand(setup, record, view, replacement)
     for country in setup.countries():
         _open_country_producers(setup, record, area_map, carriage, priced_goods, final_by_tile, country)
     sites.apply_site_limits(record, setup)
@@ -77,6 +87,13 @@ def _open_country_producers(setup, record, area_map, carriage, priced_goods, fin
     final = {tile: demand for tile, demand in final_by_tile.items() if tile in tiles}
     incumbents = incumbent_recipes(recipes, priced_goods, setup.opening_wages, setup.opening_rate)
     runs = required_runs(final, incumbents, recipes)
+    for _pass in range(INCUMBENT_PASSES):
+        # a co-product nobody wants in the quantity a run makes it does not pay for the run: re-choose on that
+        chosen = incumbent_recipes(recipes, priced_goods, setup.opening_wages, setup.opening_rate,
+                                   required_quantities(final, runs, recipes))
+        if chosen == incumbents:
+            break
+        incumbents, runs = chosen, required_runs(final, chosen, recipes)
     _place_producers(setup, record, area_map, carriage, final, incumbents, runs,
                      tiles if len(setup.countries()) > 1 else None)
 
@@ -114,6 +131,19 @@ def _open_cohorts(setup, record) -> None:
             record.cohorts[cohort.agent_id] = cohort
 
 
+def _settle_income(setup, record, view, priced_goods, replacement) -> None:
+    """Households' opening income is the value of the final demand it pays for, not the full-employment ceiling
+    (opening_income.py): the producers sized to that demand then pay out the income the households received."""
+    people = math.fsum(cohort.people for cohort in record.cohorts.values())
+
+    def demand_at(per_head):
+        record.cohorts.update(opening_income.with_income_per_head(record.cohorts, per_head))
+        return opening_income.value_of(_final_demand(setup, record, view, replacement), priced_goods)
+
+    per_head = opening_income.settled_income_per_head(_opening_income_per_head(setup), people, demand_at)
+    record.cohorts.update(opening_income.with_income_per_head(record.cohorts, per_head))
+
+
 def _opening_bids(setup, record, view):
     """(cohort, bid, price) for what each cohort would buy at the opening prices with the opening income."""
     priced_by_tile = {}
@@ -146,12 +176,17 @@ def _seed_durable_stocks(setup, record, view) -> None:
         record.book.move_many(moves)
 
 
-def _final_demand(setup, record, view) -> Dict[TileId, Dict[GoodId, float]]:
-    """What each tile's households buy at the opening prices with the opening income."""
+def _final_demand(setup, record, view, replacement=0.0) -> Dict[TileId, Dict[GoodId, float]]:
+    """What each tile's households buy at the opening prices with the opening income, and the metal the mint
+    buys to replace what the money loses (at the capital)."""
     final: Dict[TileId, Dict[GoodId, float]] = {}
     for cohort, bid, price in _opening_bids(setup, record, view):
         demand = final.setdefault(cohort.tile, {})
         demand[bid.good] = demand.get(bid.good, 0.0) + goods_market.quantity_at(bid, price)
+    if replacement > 0.0:
+        demand = final.setdefault(setup.capital_tile, {})
+        metal = record.currency.backing_good
+        demand[metal] = demand.get(metal, 0.0) + replacement
     return final
 
 
@@ -164,20 +199,23 @@ def _national(by_tile: Mapping[TileId, Mapping[GoodId, float]]) -> Dict[GoodId, 
 
 
 def incumbent_recipes(recipes: Mapping[str, Recipe], prices: Mapping[GoodId, float],
-                      wages: Mapping[str, float], rate: float) -> Dict[GoodId, str]:
+                      wages: Mapping[str, float], rate: float,
+                      required: Optional[Mapping[GoodId, float]] = None) -> Dict[GoodId, str]:
     """The recipe each good is made by at the opening: the cheapest per unit of that good, a joint
-    run's cost shared among its outputs by their value."""
+    run's cost shared among its outputs by their value. With `required` (the quantity of each good the
+    opening needs), a run's co-product counts only up to what is needed once the runs for the good are made:
+    a by-product nobody wants in that quantity is no value to the run, and the good is made another way."""
     best: Dict[GoodId, Tuple[float, str]] = {}
     for recipe_id, recipe in sorted(recipes.items()):
         cost = (unit_cost.variable_cost_per_run(recipe, prices, wages)
                 + unit_cost.capital_charge_per_run(recipe, prices, wages, rate))
         if not math.isfinite(cost):
             continue
-        values = {good: quantity * prices.get(good, 0.0) for good, quantity in recipe.outputs.items()}
-        total_value = math.fsum(values.values())
         for good, quantity in recipe.outputs.items():
             if quantity <= 0.0:
                 continue
+            values = _supported_values(recipe, good, prices, required)
+            total_value = math.fsum(values.values())
             share = values[good] / total_value if total_value > 0.0 else 1.0 / len(recipe.outputs)
             per_unit = cost * share / quantity
             if good not in best or per_unit < best[good][0]:
@@ -185,21 +223,42 @@ def incumbent_recipes(recipes: Mapping[str, Recipe], prices: Mapping[GoodId, flo
     return {good: recipe_id for good, (_cost, recipe_id) in sorted(best.items())}
 
 
+def _supported_values(recipe: Recipe, good: GoodId, prices: Mapping[GoodId, float],
+                      required: Optional[Mapping[GoodId, float]]) -> Dict[GoodId, float]:
+    """Value of one run's outputs when runs are made for `good`: each output at its price, a co-product only up
+    to the quantity the opening needs of it (all of it when `required` is not given)."""
+    values = {output: quantity * prices.get(output, 0.0) for output, quantity in recipe.outputs.items()}
+    if required is None or recipe.outputs[good] <= 0.0 or len(values) == 1:
+        return values
+    runs = required.get(good, 0.0) / recipe.outputs[good]
+    if runs <= 0.0:
+        return values
+    for output, quantity in recipe.outputs.items():
+        if output != good:
+            values[output] = min(quantity, required.get(output, 0.0) / runs) * prices.get(output, 0.0)
+    return values
+
+
+def required_quantities(final_by_tile, runs: Mapping[str, float], recipes: Mapping[str, Recipe]) -> Dict[GoodId, float]:
+    """What the opening needs of each good a year: final demand, and what `runs` use up as inputs and plant wear."""
+    required = dict(_national(final_by_tile))
+    for recipe_id, count in runs.items():
+        recipe = recipes[recipe_id]
+        for good, quantity in recipe.inputs.items():
+            required[good] = required.get(good, 0.0) + count * quantity
+        if recipe.plant_life_years > 0.0:
+            for good, quantity in recipe.plant_goods.items():
+                required[good] = required.get(good, 0.0) + count * quantity / recipe.plant_life_years
+    return required
+
+
 def required_runs(final_by_tile, incumbents: Mapping[GoodId, str],
                   recipes: Mapping[str, Recipe]) -> Dict[str, float]:
     """Runs a year of each incumbent recipe that meet final demand and every incumbent's own inputs
     and plant wear (a fixed point of the input-output system)."""
-    final = _national(final_by_tile)
     runs: Dict[str, float] = {}
     for _ in range(INPUT_OUTPUT_PASSES):
-        required = dict(final)
-        for recipe_id, count in runs.items():
-            recipe = recipes[recipe_id]
-            for good, quantity in recipe.inputs.items():
-                required[good] = required.get(good, 0.0) + count * quantity
-            if recipe.plant_life_years > 0.0:
-                for good, quantity in recipe.plant_goods.items():
-                    required[good] = required.get(good, 0.0) + count * quantity / recipe.plant_life_years
+        required = required_quantities(final_by_tile, runs, recipes)
         updated: Dict[str, float] = {}
         for good, quantity in sorted(required.items()):
             recipe_id = incumbents.get(good)
@@ -298,14 +357,16 @@ def _place_producers(setup, record, area_map, carriage, final_by_tile, incumbent
 
 def _add_producers(setup, record, recipe, capacity_by_tile, input_demand, by_limits) -> None:
     """One producer of the recipe on each tile that has people and capacity; its inputs and plant wear are
-    the demand later suppliers are placed to meet."""
+    the demand later suppliers are placed to meet. `capacity_by_tile` is the runs a year to work; the plant is
+    as much larger as the share of it that works at the opening prices is smaller (opening_income.working_share)."""
+    working_share = opening_income.working_share(recipe, setup.opening_prices, setup.opening_wages)
     for tile, capacity in capacity_by_tile.items():
         producer_id = "producer:" + recipe_tile_key(recipe.recipe_id, tile)
         if capacity <= 0.0 or producer_id in record.producers or not _has_people(record, tile):
             continue
         record.producers[producer_id] = Producer(
             agent_id=producer_id, owner=households.cohort_id(tile, _richest_class(record, tile)),
-            recipe_id=recipe.recipe_id, tile=tile, capacity_runs=capacity,
+            recipe_id=recipe.recipe_id, tile=tile, capacity_runs=capacity / working_share,
             expected_sales=capacity / (1.0 + OPENING_SPARE_CAPACITY_SHARE),
             yield_factor=sites.yield_at(recipe, tile, by_limits, setup.yield_factor_by_recipe_tile.get(
                 recipe_tile_key(recipe.recipe_id, tile), 1.0)))
@@ -349,7 +410,7 @@ def _strike_opening_cash(setup, record) -> None:
         transfers.append(Transfer(EDGE_MINT, cohort.agent_id, money, target, "opening coin"))
     for producer in record.producers.values():
         recipe = setup.recipes[producer.recipe_id]
-        target = working_capital_target(recipe, producer.capacity_runs, setup.opening_prices, setup.opening_wages)
+        target = working_capital_target(recipe, producer.expected_sales, setup.opening_prices, setup.opening_wages)
         transfers.append(Transfer(EDGE_MINT, producer.agent_id, money, target, "opening coin"))
     for merchant in record.merchants.values():
         transfers.append(Transfer(EDGE_MINT, merchant.agent_id, money, merchant.capital_base, "opening coin"))

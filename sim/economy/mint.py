@@ -95,10 +95,10 @@ def yearly_monetisation(setup, record) -> float:
     wanted = (math.fsum(cohort.cash_target for cohort in getattr(record, "cohorts", {}).values())
               + math.fsum(producer.cash_target for producer in getattr(record, "producers", {}).values())
               + math.fsum(merchant.capital_base for merchant in getattr(record, "merchants", {}).values()))
-    return max(0.0, wanted - supply) + _loss_share(setup, spec) * supply
+    return max(0.0, wanted - supply) + loss_share(setup, spec) * supply
 
 
-def _loss_share(setup, spec) -> float:
+def loss_share(setup, spec) -> float:
     """Share of a commodity money lost in a year: what the good spoils."""
     backing = getattr(setup, "specs", {}).get(spec.backing_good)
     return backing.spoilage_per_year if backing is not None else 0.0
