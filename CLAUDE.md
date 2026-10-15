@@ -36,6 +36,17 @@ When spawning subagents with the `Agent` tool:
   fingerprint only under the rule in section 6.
 - Only the orchestrating session may run on a large model. It reads, decides,
   writes the hard parts and merges.
+- **Subagents do not wait.** A subagent's prompt cache lapses after about five
+  minutes idle, and every wake after that re-reads its whole context at full
+  price. A subagent runs only commands that finish in under about five minutes
+  (the quick tier, a few targeted topics with `--topic-seconds 240`), never
+  polls or sleeps on a background job, and hands every long run (the full
+  `--slow` suite, spin-up traces, `opening-checks`, `openings`, fingerprints) back
+  to the orchestrator as exact commands; the orchestrator runs those itself.
+- **Size a batch to the machine as well as the budget.** Agents that run whole
+  games compete for the same cores; run no more of them at once than the
+  machine has cores to spare (`nproc`, and watch `uptime`), whatever the budget
+  rule above allows.
 
 ---
 
@@ -211,7 +222,9 @@ Tooling: `python3 -m pylint sim/ | grep C0103` (worklist). Plan:
   outputs and messages. `python3 -m sim.tests.fingerprint` checks the
   simulation itself (it does not cover the protocol layer).
 - **Use the fingerprint only when behaviour must not change**: refactors,
-  architecture moves, speed-ups. A bug fix or gameplay change is meant to
+  architecture moves, speed-ups. Use `--quick`, and only when it finishes in
+  well under twenty minutes on the machine at hand; otherwise the refactor's
+  targeted topics are the proof, and the PR says which were run. A bug fix or gameplay change is meant to
   change the simulation, so its fingerprint tells you nothing; rely on its
   regression test. When several subagents start from one commit, record the
   baseline once before spawning them and give them its path.
