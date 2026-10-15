@@ -22,53 +22,26 @@ from .quote_spending import COMMISSION_NOTE
          summary="do an ordinary job for ordinary pay",
          usage=["work <trade> <hours>", "work <trade> <hours> preview"],
          options={"<trade>": "a trade you can practise", "<hours>": "founder hours to sell",
-                  "preview": "show the wage and the practice income it costs, selling nothing"},
+                  "preview": "show the wage, selling nothing"},
          description="Sell your own hours for wages instead of spending them on a project.")
 def _cmd_work(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}
-    # WHAT THE PRACTICE WAS EARNING BEFORE YOU TOOK THE JOB: selling your
-    # hours takes them out of your own surgery, which is where most of
-    # your income comes from at the start, so the true cost has to be
-    # measured against revenue before and after, not just the wage paid.
     _preview = bool(cmd.get("preview"))
-    _rev_before = sim.revenue()
-    _dry_cost = None
     if _preview:
-        pay, err, _dry_cost = sim.labour.work_for_wages_dry_run(cmd.get("trade"), cmd.get("hours", 0))
+        pay, err = sim.labour.work_for_wages_dry_run(cmd.get("trade"), cmd.get("hours", 0))
     else:
         pay, err = sim.labour.work_for_wages(cmd.get("trade"), cmd.get("hours", 0))
-    # A message WITH pay is a warning about a bad trade, not a refusal:
-    # the work happened and the player should be told what it cost them.
+    # A message WITH pay is a warning (the hours would starve a project), not a refusal: the work happened.
     if err and pay <= 0:
         return {"ok": False, "error": err}
-    _rev_after = sim.revenue()
-    _cost = _rev_before - _rev_after
-    if _preview:
-        _cost = _dry_cost
     out = {"ok": True, "trade": cmd.get("trade"), "hours": cmd.get("hours"),
            "earned": round(pay, 1), "capital": round(sim.capital, 1),
            "your_hours_left_this_year": round(
-               max(0.0, sim.labour.director_pool() - sim.wage_hours_this_year), 1)}
-    if _cost > 0.5:
-        # Same rule: round the parts, then take the difference from the
-        # rounded parts, so the three figures on the screen subtract.
-        out["earned"] = round(pay, 1)
-        out["it_cost_your_own_practice"] = round(_cost, 1)
-        out["so_you_are_up"] = round(round(pay, 1) - round(_cost, 1), 1)
-        # "THE PRACTICE" THROUGHOUT, not "the surgery" halfway through.
-        # A Roman founder selling a year of smith's work does not have a
-        # surgery, and the sentence named the same thing two ways inside
-        # fourteen words.
-        out["why"] = ("You cannot be in two places. Hours sold for wages "
-                      "come out of your own practice, so what you really "
-                      "made this year is the wage less what the practice "
-                      "did not earn while you were gone. Hours you put "
-                      "into your OWN projects do not cost you this.")
-    out["lands_at_next_step"] = (
-        "Capital above already includes the wage. The practice income given "
-        "up is not deducted: it is simply not collected when the year is "
-        "stepped, so the year ends that much lower than it would have.")
+               max(0.0, sim.labour.director_pool() - sim.labour.director_hours_committed()), 1),
+           "lands_at_next_step": "Capital above already includes the wage. Hours sold here are hours your "
+                                 "standing job does not sell, so its pay at the year's end is lower by "
+                                 "the wage of the trade it sells."}
     if _preview:
         out.update({"preview": True, "nothing_changed": True,
                     "how_to_confirm": "Repeat the same work without 'preview' to sell the hours."})

@@ -12,7 +12,6 @@ from sim.refusal import Refusal
 import sim.engine.ui_port as ui_port
 from sim.engine.ui_port import area_text, mass_per_area_text, mass_rate_text, money_text
 from .command_registry import command
-from .explain_once import already_explained
 from .util import _qty
 from .quantity_units import read_quantity, read_target_quantity
 from .buy_targets import canonical_target, target_names, usage_lines
@@ -295,9 +294,7 @@ def _cmd_money(sim, nodes, cmd, ended):
     _prepaid = min(sim.living_cost(), sim.wages_prepaid)
     fixed = (sim.upkeep() + sim.living_cost() - _prepaid
              + sim.mine_operating_cost())
-    _ramp, _prac = sim.still_ramping(), sim.practice_note()
-    if _prac and already_explained(sim, "practice", cmd):
-        _prac = sim.practice_note(brief=True)
+    _ramp = sim.still_ramping()
     # A PLAYER MUST SEE IT (data/review/COMMODITY_DYNAMISM.md):
     # material_price_factor() responds for every material a node
     # buys, not just the 9 curated commodities, so what it
@@ -319,7 +316,6 @@ def _cmd_money(sim, nodes, cmd, ended):
             **({"wage_work_last_year": sim.state.household.wage_work_last_year}
                if sim.state.household.wage_work_last_year else {}),
             **({"still_building_up_custom": _ramp} if _ramp else {}),
-            **({"about_your_own_practice": _prac} if _prac else {}),
             **({"materials_costing_you_a_premium": _mat_mkt} if _mat_mkt else {}),
             "what_it_costs_you": {
                 "upkeep_of_what_you_built": round(sim.upkeep(), 1),

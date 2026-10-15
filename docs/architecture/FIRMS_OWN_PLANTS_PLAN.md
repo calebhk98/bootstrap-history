@@ -352,7 +352,8 @@ players keep working, the id is a product.
    capability. This may move to a separate kind of owned thing later.
 2. The founder's practice is the founder working a normal job: the founder offers hours in the labour market in a
    trade they hold and is paid that trade's wage, like any worker. `practice_income` and the `_your_own_practice`
-   revenue line go; tracked by Complaint 518, outside this plan's stages.
+   revenue line go (done: Complaint 518, closed); supervising hours reduce hours sold through
+   `household.supervision_hours_this_year`, which the manager seat fills.
 3. Where the paths differ: the firm path wins for hiring and wages, market share and book sales, and exit; mothball and
    restore come from the founder path and become available to every owner; the opening fee comes from the entry's
    `capital`.

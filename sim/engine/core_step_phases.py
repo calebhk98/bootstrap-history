@@ -345,23 +345,17 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
                      or not self.state.projects.active)):
             trade = ("scholar" if self.labour.effective_scholars() >= 1 else "scribe")
             hours = min(remaining, self.WAGE_FALLBACK_MAX_HOURS)
-            # ONLY IF IT PAYS BETTER THAN THE PRACTICE IT DISPLACES. Wage hours
-            # now cost you the share of your practice they were sold out of
-            # (see practice_attention), and without this check the optimizer
-            # went on taking a scribe's wage at the price of a physician's fee
-            # and lost Rome a sixth of its runs. A man with a practice does not
-            # go and copy documents for less than the practice earns; that is
-            # the whole reason `work` is the thing you do BEFORE you have one.
+            # ONLY IF IT PAYS BETTER THAN THE STANDING JOB IT TAKES THE HOURS FROM: a founder who already
+            # sells these hours in a trade does not move them to a worse-paid one.
             # NOT `pool`: that name already holds the year's project budget,
             # computed at 4b. Reusing it here would overwrite it, so
             # hours_this_year would then report "offered_to_projects"
             # against the WHOLE year instead of against the project budget,
             # letting a year's hours add up to more than what was actually
             # available.
-            year_hours = max(1.0, self.labour.director_pool())
-            practice_lost = self.revenue() * (hours / year_hours) * (
-                1.0 if self.practice_attention() > 0 else 0.0)
-            if self.labour.wage_for_hours(trade, hours) > practice_lost:
+            held_trade = self.held_trade()
+            standing_pay = (self.labour.wage_for_hours(held_trade, hours) if held_trade else 0.0)
+            if self.labour.wage_for_hours(trade, hours) > standing_pay:
                 _, err = self.labour.work_for_wages(trade, hours)
                 # Kept in step with `remaining` so hours_this_year (below) does
                 # not count hours sold for wages here as still unused.
@@ -397,6 +391,7 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
             "wage_work": round(self.state.household.wage_hours_this_year, 1),
             "teaching": round(self.state.household.teaching_hours_this_year, 1),
             "moving": round(self.state.household.relocation_hours_this_year or 0.0, 1),
+            "supervising": round(self.state.household.supervision_hours_this_year, 1),
             "offered_to_projects": round(max(0.0, pool - remaining_after_projects), 1),
             # OFFERED is what projects were given a shot at; EFFECTIVE is what
             # actually reduced their founder_hours_left. The gap between the
@@ -415,6 +410,7 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
         self.state.household.contract_hours = {}
         self.state.household.teaching_hours_this_year = 0.0
         self.state.household.relocation_hours_this_year = 0.0
+        self.state.household.supervision_hours_this_year = 0.0
         self.state.household.spend_last_year = getattr(self, "_spend_this_year", 0.0)
         self._spend_this_year = 0.0
         # Sellers restock, so the pressure your buying put on the market fades.
