@@ -19,7 +19,7 @@ from .harness import *  # noqa: F401,F403
 # non-farm need x HOURS_PER_PERSON_YEAR) rather than to a
 # bare "> 11.25", so a future recalibration of the constants moves this
 # check's expectation with it instead of silently drifting out of sync.
-s_dm = sim(capital=1e9)
+s_dm = unopened_sim(capital=1e9)
 _expect_common = (s_dm.labour.home_town_population_estimate()
                   * s_dm.population.working_age / s_dm.population.total
                   * s_dm.labour._non_farm_need_shares()["smith"] * s_dm.HOURS_PER_PERSON_YEAR)
@@ -39,12 +39,12 @@ check("...which is at least two orders of magnitude above the pre-fix "
 # scarcest useful trade you can hire", deliberately left alone - still
 # spikes hard, and a literacy-bound trade (scribe) still hits ITS ceiling
 # (literate_capacity, not market depth) rather than being waved through.
-s_rip = sim(capital=1e9)
+s_rip = unopened_sim(capital=1e9)
 s_rip.labour.market.press("smith", 10 * s_rip.HOURS_PER_PERSON_YEAR)
 check("ten more smiths barely moves the going wage in a city this size",
       s_rip.labour.market.price_factor("smith") < 1.03,
       s_rip.labour.market.price_factor("smith"))
-s_spike = sim(capital=1e9)
+s_spike = unopened_sim(capital=1e9)
 s_spike.labour.market.press("millwright", 10 * s_spike.HOURS_PER_PERSON_YEAR)
 check("...while the same ten against a genuinely scarce trade still spikes",
       s_spike.labour.market.price_factor("millwright") > 2.0,
@@ -54,7 +54,7 @@ check("...while the same ten against a genuinely scarce trade still spikes",
 # numbers 'population' shows side by side. Reach well above the old
 # 11.25-person figure, and the country's own total bigger again than one
 # household's reach into it (a trade is not entirely HELD by one town).
-s_pop = sim(capital=1e9)
+s_pop = unopened_sim(capital=1e9)
 _reach_smith = s_pop.labour.reachable_trade_population("smith")
 _nat_smith = s_pop.labour.national_trade_population("smith")
 check("reachable_trade_population reads market_supply as people, not hours",
@@ -75,7 +75,7 @@ check("a trade that does not exist here at all has no national population "
 # while hire() will in fact grant one, which is the false "nobody's there"
 # literate_capacity's own floor exists to prevent (see that function's
 # docstring).
-s_lit_pop = sim(civ="norse_900ad", capital=1e9)
+s_lit_pop = unopened_sim(civ="norse_900ad", capital=1e9)
 check("a literate trade's reachable figure matches the real hiring wall, "
       "not the unfloored market-share number beneath it",
       s_lit_pop.labour.reachable_trade_population("scribe")
@@ -108,7 +108,7 @@ check("'population' is in KNOWN_COMMANDS and survives the fog/pointer "
 # --- the hire refusal says WHOSE market this is, at the moment a player
 # actually feels a price premium bite (not only in the literate-wall text,
 # which already said this before this fix existed).
-s_fr = sim(capital=50.0)
+s_fr = unopened_sim(capital=50.0)
 s_fr.labour.market.press("millwright", 10 * s_fr.HOURS_PER_PERSON_YEAR)
 # Nothing left to spend: a squeezed market now finds only some of a big hire (Complaint 271), and the
 # one it finds would otherwise be affordable, so the refusal this check reads needs an empty purse.
@@ -126,7 +126,7 @@ check("a cash refusal driven by a real price premium says this is one "
 # defensible - a specialist does not practise in every town - but a player
 # who is not told will file it as a bug, and the whole point of this screen is
 # to stop players inferring absurdities from numbers nobody explained.
-_s_pop = sim(civ="rome_100ad")
+_s_pop = unopened_sim(civ="rome_100ad")
 _pop = S._agent_dispatch(_s_pop, NODES, {"cmd": "population"})
 _pop_note = (_pop.get("what_this_means") or "")
 check("the population screen warns that a specialised trade's reachable "

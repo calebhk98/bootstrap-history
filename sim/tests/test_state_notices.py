@@ -14,7 +14,7 @@ from sim.ui import protocol as _PROTO
 _ALL_CIVS = ("rome_100ad", "han_china_100ad", "england_1300", "norse_900ad",
              "mexica_1500")
 
-_s0 = sim(civ="rome_100ad")
+_s0 = unopened_sim(civ="rome_100ad")
 check("a fresh household is below the line - the state has not noticed it yet",
       _s0.state_notice() < 0.02, _s0.state_notice())
 check("...and state_pressure_report() says so with nothing to show, "
@@ -38,7 +38,7 @@ def _grown(civ, employees=300.0, capital=3000000.0, eminence=20.0):
     civilisation whose state_capacity is not Norse's - built once here
     rather than copied into every check below.
     """
-    grown_sim = sim(civ=civ, events=True)
+    grown_sim = unopened_sim(civ=civ, events=True)
     grown_sim.employees["artisan"] = employees
     grown_sim.labour._resync_pools()
     grown_sim.capital = capital
@@ -73,7 +73,7 @@ check("...but the office is NOT bargained down the same way - it is the "
       "version you do not get to decline cheaply",
       abs(_rich_office - _poor_office) < 1e-9, (_rich_office, _poor_office))
 
-_prot_before = sim(civ="rome_100ad")
+_prot_before = unopened_sim(civ="rome_100ad")
 _prot_before.update_protection()
 _small_protection = _prot_before.protection
 check("being pressed into office is also a shield: crossing the notice line "
@@ -94,7 +94,7 @@ check("...but the FIRST working gun (one military-branch node, not a "
       and _mil_done.military_demand_eligible(),
       _mil_done.military_leverage())
 
-_tiny_notice = sim(civ="rome_100ad")
+_tiny_notice = unopened_sim(civ="rome_100ad")
 _tiny_notice.employees["artisan"] = 2.0
 _tiny_notice.labour._resync_pools()
 check("military demand still needs SOME visible scale - a founder who has "
@@ -106,7 +106,7 @@ check("military demand still needs SOME visible scale - a founder who has "
 
 # 60 million coin at the old coin value, stated in labour hours so it does not
 # move with what the coin metal costs
-HUGE_CAPITAL_ROME = 2.24e8 * sim(civ="rome_100ad").labour.money_per_labour_hour()
+HUGE_CAPITAL_ROME = 2.24e8 * unopened_sim(civ="rome_100ad").labour.money_per_labour_hour()
 _huge = _grown("rome_100ad", employees=2000.0, capital=HUGE_CAPITAL_ROME, eminence=25.0)
 check("confiscation is a TAIL risk: it stays at zero until well past the "
       "general notice line, not the moment requisition starts",
@@ -129,7 +129,7 @@ check("confiscation is mitigable, by exactly the things that mitigated it "
       _huge_shielded.confiscation_risk()[0] < _huge_bare_risk,
       (_huge_shielded.confiscation_risk()[0], _huge_bare_risk))
 
-_norse_extreme = sim(civ="norse_900ad")
+_norse_extreme = unopened_sim(civ="norse_900ad")
 _norse_extreme.employees["artisan"] = 2000.0
 _norse_extreme.labour._resync_pools()
 _norse_extreme.capital = 60000000.0
@@ -141,7 +141,7 @@ check("Norse state_capacity (0.15) caps notice so low that even an "
       _norse_extreme.state_notice() < _norse_extreme.STATE_NOTICE_THRESHOLD
       and _norse_extreme.requisition_report()[0] == 0.0,
       _norse_extreme.state_notice())
-_norse_built = state_seeking(sim(civ="norse_900ad"))
+_norse_built = state_seeking(unopened_sim(civ="norse_900ad"))
 _norse_built.civ["state_capacity"] = 0.9          # as if centuries of kings,
 _norse_built.state_capacity = 0.9                 # bishops and taxes arrived
 _norse_built.employees["artisan"] = 2000.0

@@ -17,7 +17,7 @@ class FixedDraws:
 
 
 def england():
-    return sim(civ="england_1300", capital=1e6)
+    return unopened_sim(civ="england_1300", capital=1e6)
 
 
 def risk_reply(test_sim):
@@ -38,7 +38,7 @@ def counter_nodes(test_sim, kind):
 
 
 # --- 198: why says what finishing a thing does to scandal, from the function that applies it
-scandal_sim = sim()
+scandal_sim = unopened_sim()
 alarming = next(node_id for node_id in sorted(NODES) if scandal_sim.alarm_of(NODES[node_id]) > 0.01)
 alarming_why = S._agent_dispatch(scandal_sim, NODES, {"cmd": "why", "id": alarming})
 check("why reports the scandal finishing the work would add",
@@ -54,7 +54,7 @@ check("the scandal that why quoted is the scandal completion added",
       (scandal_sim.scandal - scandal_before, alarming_why.get("standing_effect")))
 
 # --- 199: score names what each component counts, and which institutions are finished but closed
-score_sim = sim()
+score_sim = unopened_sim()
 closed_institution = next(node_id for node_id in sorted(score_sim.CAPABILITY_INSTITUTIONS)
                           if node_id not in score_sim.SCALABLE_INSTITUTIONS and node_id in NODES)
 score_sim.done.add(closed_institution)
@@ -73,7 +73,7 @@ check("the score screen prints the institution waiting to be opened",
       closed_institution in score_text and "resilience" in score_text and "counts" in score_text.lower(), score_text)
 
 # --- 200: completing the corpus says what is already in force and what waits for opening
-corpus_sim = sim()
+corpus_sim = unopened_sim()
 corpus_sim.effective_risk = lambda _node_id: 0.0
 corpus_sim.initialize_project("corpus_written", ph_left=0.0)
 corpus_before = len(corpus_sim.log)
@@ -86,7 +86,7 @@ check("risk agrees with the completion message about the hedge",
       corpus_sim.corpus_hedge()[2] == "corpus_written")
 
 # --- 201: the cash line names the money and says what it is
-cash_sim = sim()
+cash_sim = unopened_sim()
 cash_sim.state.household.capital = 50_000.0
 cash_sim.state.household.employees = {"clerk": 10.0}
 cash_sim.labour._resync_pools()
@@ -122,7 +122,7 @@ check("a lapsed mitigation's smaller share is marked residual",
       bool(in_force) and closed_entry.get("points", 9.0) < in_force[0]["points"] and "residual" in closed_text,
       closed_text)
 
-national_sim = sim()
+national_sim = unopened_sim()
 built_medical = sorted(node_id for node_id in NODES if node_id in national_sim._diffusible_ids("medical"))[0]
 national_sim.done.add(built_medical)
 national_sim.done_year[built_medical] = national_sim.year - 400
@@ -156,7 +156,7 @@ check("risk gives staff loss as a share of your staff", "of your staff" in wordi
 check("risk gives the output factor as output against normal", "of normal" in wording_text, wording_text)
 
 # --- 223: closing a concern for want of staff costs the achievement for good, even after it reopens
-staff_sim = sim()
+staff_sim = unopened_sim()
 staff_sim.goal_year = staff_sim.year
 check("with no staffing closure the achievement is held",
       _score_achievements(staff_sim, NODES)["never_understaffed"]["won"])
@@ -164,7 +164,7 @@ staff_sim.close_work("school_founded", staff_sim.CLOSED_FOR_STAFF)
 staff_sim.clear_closure("school_founded")
 check("a concern that closed for staff and reopened still costs the achievement",
       not _score_achievements(staff_sim, NODES)["never_understaffed"]["won"])
-manual_sim = sim()
+manual_sim = unopened_sim()
 manual_sim.goal_year = manual_sim.year
 manual_sim.close_work("school_founded", manual_sim.CLOSED_BY_CHOICE)
 check("a closure by choice does not cost it",

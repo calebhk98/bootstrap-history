@@ -10,7 +10,7 @@ from sim.engine.industry_depth import RISK_SHARE_AT_FULL_DEPTH
 # (counted since before this round, never spent) buys BOTH a smaller chance of
 # failing the same way twice and a banked share of the calendar clock - see
 # projects.py's own section comment on _complete for the full reasoning.
-_s_rl = sim(capital=10 ** 9)
+_s_rl = unopened_sim(capital=10 ** 9)
 _rl_k = [node_id for node_id in NODES if NODES[node_id]["risk"] >= 0.15][0]
 # A diagnosed failure adds its attempt's worker-years to the industry's tenure stock, which
 # is all the risk reads; walk the sequence forward by adding them rather than rolling dice.
@@ -72,7 +72,7 @@ check("...capped well short of the whole floor - RETRY_CALENDAR_CAP's own "
 # lost a third of their progress the year the hazard landed anyway; the fix
 # is that the SAME hazard's own words change as the gap between "when it
 # lands" and "how long the hedge takes" closes.
-_s_tl = sim(civ="rome_100ad")
+_s_tl = unopened_sim(civ="rome_100ad")
 _s_tl.year = 150
 _tl_far = next((entry for entry in _s_tl.hazard_timeline()
                if entry["name"] == "Adrianople and the Gothic settlement"), None)
@@ -110,7 +110,7 @@ import collections as _coll
 from sim.ui import protocol as _PROTO
 
 _fa_path = os.path.join(HERE, "_fa_roundtrip.json")
-_s_fa = sim()
+_s_fa = unopened_sim()
 _s_fa.failed_attempts["zone_refining"] = 3
 for _ in range(3):
     _s_fa.learn_from_failed_attempt("zone_refining")
@@ -118,7 +118,7 @@ _s_fa.shortages["iron"] = 7
 _risk_before = _s_fa.effective_risk("zone_refining")
 _cal_before = _s_fa._retry_calendar_retain("zone_refining")
 _PROTO.save_state(_s_fa, _fa_path)
-_s_fa2 = sim()
+_s_fa2 = unopened_sim()
 _PROTO.load_state(_s_fa2, _fa_path)
 check("three failures on zone_refining still stand after a save and a "
       "resume, so the next attempt is the risk the learning bought and not "
@@ -156,7 +156,7 @@ except OSError:
 # remembering the save contract. Any future one has to be saved or
 # deliberately named here, rather than silently resetting every resume.
 #
-# BOTH `vars(sim())` AND `vars(sim().household)`, since the household
+# BOTH `vars(unopened_sim())` AND `vars(unopened_sim().household)`, since the household
 # extraction (see docs/architecture/HOUSEHOLD_EXTRACTION.md) moved both of
 # the accumulators this check was written for - failed_attempts and
 # shortages - off `Sim` itself and onto `Sim.household`. Scanning `Sim`
@@ -186,7 +186,7 @@ check("every accumulator a fresh Sim carries is either in SAVE_FIELDS or "
 # those numbers; what is pinned here is the cheap, deterministic shape of
 # the guarantee, not a re-run of the simulation on every gate pass.
 # ======================================================================
-_s_ey = sim(civ="rome_100ad")
+_s_ey = unopened_sim(civ="rome_100ad")
 _riskfree = next(node_id for node_id in NODES if NODES[node_id].get("risk", 1) == 0)
 check("risk-free node: expected calendar years is exactly the earliest completion - "
       "there is nothing to retry",
@@ -267,7 +267,7 @@ check("`why` shows the expected total calendar years including retries, "
 # ROUND 10: the first-timer tip about `help commands` and `log` is said ONCE
 # early in a run, not every turn and not to a player deep into a run.
 # ======================================================================
-_s_wk = sim(civ="rome_100ad")
+_s_wk = unopened_sim(civ="rome_100ad")
 _st1 = S._agent_dispatch(_s_wk, NODES, {"cmd": "state"})
 check("a fresh game's very first `state` points at `help commands` and "
       "`log` directly, in the reply itself",
@@ -293,7 +293,7 @@ check("resuming deep into an existing run (year far past the opening) never "
 # ROUND 11: point_contact_transistor no longer waits on single_crystal or
 # silicon_path in the live engine (the tree data is pinned in round8g_display).
 # ======================================================================
-_s_pct = sim(civ="rome_100ad", capital=10_000_000.0)
+_s_pct = unopened_sim(civ="rome_100ad", capital=10_000_000.0)
 for _p in NODES["point_contact_transistor"]["pre"]:
     _s_pct.done.add(_p)
 _s_pct._done_changed()
@@ -316,7 +316,7 @@ check("with every listed prerequisite met and nothing else missing, "
 # are not auto-granted, because each carries 20 a year of upkeep if it is ever
 # opened and that is the player's decision to make, and they never need
 # opening to satisfy a prerequisite (start_reason tests `p not in self.done`).
-_s_fp = sim()          # thermometer NOT done, so cap_measure_temp is blocked
+_s_fp = unopened_sim()          # thermometer NOT done, so cap_measure_temp is blocked
 _, _fp_why2 = _s_fp.start_reason("chm_crystallisation")
 # presentation: the wording of a prerequisite hint
 check("a free node that is itself blocked is not offered as the next step, "
@@ -362,7 +362,7 @@ check("the free capability nodes the hint exists for are still free: no "
 # effective_risk is the one true answer (projects.py's own docstring, and
 # the reason this must live nowhere else): exercise it directly rather than
 # rolling dice, the same style as the retry-learning check just above it.
-_s_ctl = sim(capital=10 ** 9)
+_s_ctl = unopened_sim(capital=10 ** 9)
 _bare = NODES["zone_refining"]["risk"]
 check("with no process controller built, a process_control node's "
       "effective_risk is untouched - relief is earned, not ambient",

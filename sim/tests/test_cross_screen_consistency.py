@@ -16,7 +16,7 @@ from .harness import *  # noqa: F401,F403
 # --- BREAK: "(these add up to the revenue above)" - 166.7 + 66.7 = 233.4
 # under a stated 233.5. A claim of exact addition, checkable in one line.
 for _civ_name in ("rome_100ad", "han_china_100ad"):
-    _s = sim(civ=_civ_name, capital=200000.0)
+    _s = unopened_sim(civ=_civ_name, capital=200000.0)
     for _i, _k in enumerate(node_id for node_id in NODES if NODES[node_id]["rev"] > 0):
         if _i >= 6:
             break
@@ -29,7 +29,7 @@ for _civ_name in ("rome_100ad", "han_china_100ad"):
 
 # --- BREAK: "market can supply 22,500 hours", then 24,500 after hiring one
 # smith. market_supply is hours available TO YOU, your own staff included.
-s_ms = sim(capital=200000.0)
+s_ms = unopened_sim(capital=200000.0)
 _town0, _mine0 = s_ms.labour.market_supply_split("smith")
 s_ms.labour.hire("smith", 1)
 _town1, _mine1 = s_ms.labour.market_supply_split("smith")
@@ -45,7 +45,7 @@ def _ask(game, **command):
     return S._agent_dispatch(game, NODES, command)
 
 
-_game_a = sim()
+_game_a = unopened_sim()
 _ask(_game_a, cmd="hire", trade="smith", n=1)
 _rl = _ask(_game_a, cmd="labour")
 check("a trade you employ is still listed as one you could hire",
@@ -54,7 +54,7 @@ check("a trade you employ is still listed as one you could hire",
 
 # --- BREAK: F34, "numbers that do not reconcile, collected". Every one of
 # these was a subtraction a break tester did on figures printed together.
-_game_b = sim(capital=5.0e7)
+_game_b = unopened_sim(capital=5.0e7)
 _game_b.end_year = _game_b.cfg["start_year"] + _game_b.cfg["horizon_years"]
 _game_b._step_market = lambda: None   # these figures are read off one ledger; the market close adds none of them
 _ask(_game_b, cmd="hire", trade="smith", n=2)
@@ -81,7 +81,7 @@ check("...and the after figure is the one `state` prints, to the decimal",
 
 # --- BREAK: `why med_cataract_couching` printed the trade's quoted revenue beside a ledger crediting
 # the founder's job another figure. A held skill's line is the founder's one wage, the ledger's own row.
-_game_c = sim()
+_game_c = unopened_sim()
 _rwy = [_ask(_game_c, cmd="why", id="med_cataract_couching")]
 check("why says what a held-skill node pays YOU",
       _rwy[0].get("but_it_pays_YOU") is not None and _rwy[0]["but_it_pays_YOU"] > 0.0,
@@ -108,7 +108,7 @@ check("the free-hands count says that one of them is you",
 # the `money` ledger, and its NEEDS column printed the BUILD crew where the
 # engine charges supervision - a quarter of it, and never the number the
 # refusal quotes.
-s_vv = sim(capital=5000000.0)
+s_vv = unopened_sim(capital=5000000.0)
 s_vv.done.update(NODES); s_vv._done_changed()
 s_vv.artisans = s_vv.scholars = 40.0
 _opened = 0
@@ -134,7 +134,7 @@ check("...and its NEEDS column is the supervision the engine charges",
 # actually gated on craft_hands_available() - which counts the founder AND
 # hours already bought. A play tester read two of the three on one turn and
 # reported the game as having lost count of their household.
-s_cn = sim(capital=20000.0)
+s_cn = unopened_sim(capital=20000.0)
 _kn = next(node_id for node_id in sorted(NODES) if NODES[node_id]["art"] >= 2 and NODES[node_id]["sch"] == 0)
 s_cn.labour.commission("mason", 4000.0)
 _why_cn = S._node_explain(s_cn, NODES, _kn)

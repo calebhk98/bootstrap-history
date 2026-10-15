@@ -12,7 +12,7 @@ def _ask(test_sim, **command):
 
 # --- 265: the available AFFORD column and row marks use the start rule ------
 for debt in (0, -3000, -6000):
-    debtor = sim(civ="rome_100ad", capital=5000)
+    debtor = unopened_sim(civ="rome_100ad", capital=5000)
     debtor.state.household.capital = debt
     startable = [node_id for node_id in NODES if node_id not in debtor.done
                  and node_id not in debtor.active and debtor.start_reason(node_id)[0]]
@@ -29,7 +29,7 @@ for debt in (0, -3000, -6000):
           (len(marked), len(startable) - len(payable)))
 
 # --- 220: quote train previews what train then charges and the wage bill ----
-train_sim = sim(capital=1e8)
+train_sim = unopened_sim(capital=1e8)
 train_quote = _ask(train_sim, cmd="quote", what="train", trade="machinist", n=1)
 check("quote train answers", train_quote.get("ok"), train_quote)
 check("quote train states the wage bill the trainee adds",
@@ -43,7 +43,7 @@ check("the training charge equals the quote",
 check("the train reply repeats the wage bill to come",
       abs(train_reply.get("wage_bill_added_per_year", -1)
           - train_quote.get("wage_bill_added_per_year", -2)) < 0.06, train_reply)
-too_many = _ask(sim(capital=1e8), cmd="quote", what="train", trade="machinist", n=500)
+too_many = _ask(unopened_sim(capital=1e8), cmd="quote", what="train", trade="machinist", n=500)
 check("quote train refuses more than the household can take and changes nothing",
       too_many.get("ok") is False and too_many.get("error"), too_many)
 from sim.ui.proto.typed import parse_typed
@@ -52,7 +52,7 @@ check("typed 'quote train machinist 2' parses as a train quote",
       parse_typed("quote train machinist 2"))
 
 # --- 240: waiting_on names what is short ------------------------------------
-waiting_sim = sim(capital=1e9)
+waiting_sim = unopened_sim(capital=1e9)
 calendar_id = next(node_id for node_id in ORDER if NODES[node_id]["yrs"] >= 3
                    and not NODES[node_id]["lab"])
 calendar_text = _waiting_on(waiting_sim, NODES, calendar_id,
@@ -66,7 +66,7 @@ check("waiting_on on hours says how many are still needed",
       "1,234" in hours_text, hours_text)
 
 # --- 214: state carries the sustainable debt --------------------------------
-debt_sim = sim(capital=1e6)
+debt_sim = unopened_sim(capital=1e6)
 debt_sim.state.household.capital = -50000
 state_reply = _ask(debt_sim, cmd="state")
 check("state carries the sustainable debt, the same figure money shows",
@@ -77,7 +77,7 @@ check("the state screen prints a sustainable debt line when in arrears",
       "ustainable debt" in render_state(state_reply), "")
 
 # --- 244: a mine quote prices the running cost the new working will be charged
-mine_sim = sim(civ="han_china_100ad", capital=1e12)
+mine_sim = unopened_sim(civ="han_china_100ad", capital=1e12)
 mine_sim.state.holdings.mines = [{"material": "coal", "capacity": 500.0, "opened_year": 100,
                                  "capex_paid": 0.0,
                                  "intensity_yrs": mine_sim.DEPLETION_HALF_LIFE_YRS * 0.5}]
@@ -89,7 +89,7 @@ check("the mine quote's yearly cost is what the new working is charged",
       < 0.06, (mine_quote["every_year_it_stands"], mine_sim.mine_operating_cost_for(new_working)))
 
 # --- 216: the market deduction is itemised by category ----------------------
-absorb_sim = sim(civ="rome_100ad", capital=1e9)
+absorb_sim = unopened_sim(civ="rome_100ad", capital=1e9)
 earners = [node_id for node_id in ORDER if absorb_sim.is_venture(node_id)
            and NODES[node_id]["rev"] > 0][:12]
 run_it(absorb_sim, *earners)

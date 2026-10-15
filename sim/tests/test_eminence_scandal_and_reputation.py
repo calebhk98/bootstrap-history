@@ -9,7 +9,7 @@ from .harness import *  # noqa: F401,F403
 
 
 def _big(rep=98.0, eminence=39.0, year=250, cap=5000000.0):
-    big_sim = sim(capital=cap)
+    big_sim = unopened_sim(capital=cap)
     big_sim.done.update(list(NODES)[:1400]); big_sim._done_changed()
     big_sim.reputation, big_sim.eminence, big_sim.year = rep, eminence, year
     return big_sim
@@ -61,7 +61,7 @@ check("...but never stops being alarmed altogether",
 # do not and you sit well over it.
 _em_shape = {}
 for _acad in (False, True):
-    _s = sim(capital=50000000.0)
+    _s = unopened_sim(capital=50000000.0)
     _s.done.update(list(NODES)[:1400])
     run_it(_s, "patron_imperial", "academy_network")
     if not _acad:
@@ -71,9 +71,9 @@ for _acad in (False, True):
     _s.reputation, _s.year, _s.familiarity = 98.0, 400, 0.9
     _em_shape[_acad] = _s.eminence_report()["settles_at_if_nothing_changes"]
 check("a great man near the throne who built no academies is over the line",
-      _em_shape[False] > sim().cfg["eminence_danger"], _em_shape)
+      _em_shape[False] > unopened_sim().cfg["eminence_danger"], _em_shape)
 check("...and the same man who built them is under it",
-      _em_shape[True] < sim().cfg["eminence_danger"], _em_shape)
+      _em_shape[True] < unopened_sim().cfg["eminence_danger"], _em_shape)
 
 # "7% chance of ruin" was the chance SOMETHING landed; four fifths of those
 # are survivable. A play tester survived two and was ended by the third.
@@ -102,7 +102,7 @@ if os.path.exists(_wsvp):
 # --- BREAK: "RUN ENDS: denounced: as a sorcerer" after eleven quiet years,
 # with `state` showing "scandal 33.55" and no threshold and no probability -
 # on the same screen where eminence explains itself in full.
-s_sc = sim(events=True)
+s_sc = unopened_sim(events=True)
 s_sc.scandal = 30.0
 s_sc.year = 150
 s_sc._said_scandal = 0
@@ -121,7 +121,7 @@ check("...and the page prints both, next to the eminence line that already did",
 from sim.constants import REGISTRY as _REGISTRY
 _wealth_sims = {}
 for _civ_name in ("rome_100ad", "han_china_100ad"):
-    _w = sim(civ=_civ_name)
+    _w = unopened_sim(civ=_civ_name)
     _w.reputation, _w.familiarity = 0.0, 0.0
     _wealth_sims[_civ_name] = _w
 _rome_sim, _han_sim = _wealth_sims["rome_100ad"], _wealth_sims["han_china_100ad"]
