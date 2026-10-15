@@ -19,8 +19,8 @@ import collections
 
 from sim.constants import declare
 from sim.refusal import Refusal
+from sim.world import plant_figures
 from . import cause_book, money_units
-from .plant_crew import plant_crew
 from .units_prose import money_text
 from sim.agents.api import edges
 
@@ -97,9 +97,11 @@ class VenturesMixin:
             return 0.0, 0.0
         supervision_share = self.VENTURE_SUPERVISION
         by_size = max(0.0, node["rev"]) / self.VENTURE_HANDS_PER_REVENUE
-        # the crew is the plant's own (plant_crew.py) for every actor running the concern; the takings-based
-        # rule is only its fallback where the data states no plant
-        crew = plant_crew(node, self.HOURS_PER_PERSON_YEAR, max(node["art"] * supervision_share, by_size))
+        # the crew is the plant's own (plant_figures.crew_people) for every actor running the concern; the
+        # takings-based rule is only its fallback where the data states no plant
+        derived_hours = plant_figures.derived_crew_hours(node.get("_revenue_basis"), node.get("_labour_hours_per_year"))
+        crew = plant_figures.crew_people(derived_hours, self.HOURS_PER_PERSON_YEAR, node.get("plant_crew_people"),
+                                         max(node["art"] * supervision_share, by_size))
         return node["sch"] * supervision_share, crew
 
     VENTURE_FOREMAN_SHARE = declare(

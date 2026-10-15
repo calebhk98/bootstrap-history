@@ -23,6 +23,7 @@ from .data import trade_family
 from sim.constants import declare
 from . import category_traits, money_units, node_revenue_market, node_upkeep
 from .readable import readable
+from sim.world import plant_figures
 from .industry_depth import RAMP_SHARE_AT_FULL_DEPTH
 
 
@@ -91,9 +92,8 @@ class ProductionMixin:
             started = projects.done_year.get(node_id, scenario.year)
         age = scenario.year - started
         # An established industry (anyone's worker-years running it) finds its custom sooner.
-        ramp_years = self.cfg["revenue_ramp_years"] * (
-            1.0 - (1.0 - RAMP_SHARE_AT_FULL_DEPTH) * self.industry_depth(node_id))
-        return min(1.0, (age + 1) / ramp_years)
+        return plant_figures.ramp(age, self.cfg["revenue_ramp_years"], self.industry_depth(node_id),
+                                  RAMP_SHARE_AT_FULL_DEPTH)
 
     def revenue_capacity(self):
         """What you would earn in an ordinary year, with your own hands on your
