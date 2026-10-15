@@ -1011,15 +1011,15 @@ def _explain_revenue(sim, nodes, node_id, node):
             "indirect income; those variable effects are not included here. "
             "Compare 'money' before and after opening."
             if node_id in sim.CAPABILITY_INSTITUTIONS else None),
-        # WHAT IT PAYS YOU: for a skill in your own practice, the practice's one income (your own
-        # hours worked as a tradesman, shared by every skill you practise), not a figure of its own.
+        # WHAT IT PAYS YOU: for a skill you hold, the founder's one wage (your own hours sold in the
+        # trade it gives you, shared by every skill you hold), not a figure of its own.
         "but_it_pays_YOU": (
             # the ledger's own row, which carries the market ceiling's share, so the two screens agree
-            sim.revenue_sources().get("_your_own_practice", round(sim.practice_income(), 1))
+            sim.revenue_sources().get("_wages_for_your_own_work", round(sim.founder_wage_income(), 1))
             if node_id in ui_port.practice_set(sim) else None),
-        "because": ("this is your own practice, not a concern: it pays your own hours at the going wage "
-                    "of a %s, once for all the skills you practise, and selling your hours for wages "
-                    "takes them out of it" % sim.practice_trade()
+        "because": ("this is a skill you hold, not a concern: it earns through your own hours, sold as a %s "
+                    "at that trade's going wage, once for all the skills you hold, and hours you spend "
+                    "elsewhere are hours not sold" % sim.held_trade()
                     if node_id in ui_port.practice_set(sim) else None),
     }
 

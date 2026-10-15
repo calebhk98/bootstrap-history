@@ -189,7 +189,7 @@ check("a whole-number staff carries no fraction footnote",
 ratios = []
 # a project the society can staff, with the purse far short of its instalment, so the very first year shows a refund
 s.start_project("scientific_method")
-s.capital = -s.credit_limit() * 0.8
+s.capital = -s.credit_limit() * 0.1
 s._step_market = lambda: None   # the hours and the refund come from the work phases; the market close adds nothing to them
 for _ in range(3):
     s.step()
@@ -440,8 +440,10 @@ if _loser:
     s.done.add(_loser[0]); s._done_changed(); s.open_venture(_loser[0])
 s.capital = -900.0
 s.insolvent_years = 12
-# wage work is advised only when it pays more than the practice those hours run, so this founder has none to lose
+# wage work is advised only when it pays more than the standing job already sells those hours for, so this
+# founder holds no trade to beat
 s.revenue = s.revenue_capacity = lambda: 0.0
+s.held_trade = lambda: None
 _diag = s.stall_diagnosis()
 check("a run that has effectively stopped says so, and says what would restart it",
       _diag and _diag["what_would_change_it"]

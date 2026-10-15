@@ -29,17 +29,15 @@ check("the craftsmen staffing refusal still refuses for the same reason, "
       "unchanged arithmetic",
       not _ok_cc and "craftsmen" in _why_cc, _why_cc)
 
-# ONE NAME FOR THE FOUNDER'S OWN WORK. The wage-work explanation called it
-# "the practice" and then "the surgery" fourteen words later; a Roman founder
-# selling a year of a smith's labour has neither a surgery nor two of them.
+# ONE NAME FOR THE FOUNDER'S OWN WORK. The wage-work reply once called it
+# "the practice" and then "the surgery"; a Roman founder selling a year of a
+# smith's labour has neither. It is a job and the reply says wage, not practice.
 _s_wg = sim()
 _wg = S._agent_dispatch(_s_wg, NODES, {"cmd": "work", "trade": "labourer",
                                        "hours": 2000})
-check("wage work states what selling a year of labourer's time cost, in figures that subtract",
-      abs((_wg.get("earned") or 0) - (_wg.get("it_cost_your_own_practice") or 0)
-          - (_wg.get("so_you_are_up") or 0)) < 0.051,
-      (_wg.get("earned"), _wg.get("it_cost_your_own_practice"),
-       _wg.get("so_you_are_up")))
+check("wage work states what a year of labourer's time paid, with no practice or surgery in the reply",
+      (_wg.get("earned") or 0) > 0 and "practice" not in str(_wg).lower() and "surgery" not in str(_wg).lower(),
+      _wg)
 
 # =============================================================================
 # THE COUNTRY CHANGES TOO, NOT ONLY THE FOUNDER'S OWN EXPOSURE TO IT. A

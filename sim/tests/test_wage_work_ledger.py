@@ -15,20 +15,18 @@ _money_before_work = _ask(cmd="money")
 _work = _ask(cmd="work", trade="scholar", hours=1500)
 _money = _ask(cmd="money")
 _log = _ask(cmd="log")
-check("`work ... preview` changes nothing and states the net",
+check("`work ... preview` changes nothing and states the wage",
       _preview.get("preview") and _preview.get("nothing_changed")
-      and "so_you_are_up" in _preview
+      and _preview.get("earned", 0) > 0
       and not _money_before_work.get("wage_work_this_year"),
       _preview)
 check("the preview matches what the real work then reports",
-      _preview.get("earned") == _work.get("earned")
-      and _preview.get("it_cost_your_own_practice") == _work.get("it_cost_your_own_practice"),
+      _preview.get("earned") == _work.get("earned"),
       (_preview, _work))
 _wage = _money.get("wage_work_this_year") or {}
-check("`money` itemises wage income and the practice income it displaces",
+check("`money` itemises the hours sold and the wage income, and no displaced practice",
       _wage.get("hours") == 1500 and _wage.get("wage_income") == _work["earned"]
-      and _wage.get("practice_income_displaced", 0) > 0
-      and abs(_wage["net"] - (_wage["wage_income"] - _wage["practice_income_displaced"])) < 0.2,
+      and "practice_income_displaced" not in _wage and "net" not in _wage,
       _wage)
 check("`log` has a line for the wage work",
       "wage work" in str(_log).lower(), str(_log)[:400])
