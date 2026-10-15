@@ -1,6 +1,7 @@
 """Complaint 190: settled colonies (owned territory with a people of its own on the tile map) and the light and
 amusement needs that the late-game works lean on."""
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of
 
 from sim.engine.need_data import load_needs
 from sim.geography.api import settlement, tiles_held
@@ -88,7 +89,7 @@ colony = dying.state.holdings.colonies[0]
 colony.update(children=0.2, working_age=0.2, elderly=0.2)
 dying.advance_colonies(dying.state.scenario.year)
 check("a colony whose people die out is lost and the log says so",
-      dying.state.holdings.colonies == [] and any("died out" in line for _year, line in dying.state.household.log))
+      dying.state.holdings.colonies == [] and any(cause_of(line) == "colony_died_out" for _year, line in dying.state.household.log))
 
 # a colony that is saved and loaded is the same colony
 from sim.engine.saveload import load_state, save_state

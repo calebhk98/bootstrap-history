@@ -17,6 +17,7 @@ import functools
 from types import SimpleNamespace
 
 from sim.agents.api import GOVERNMENT_PREFIX, exports_allowed
+from sim.refusal import Refusal
 
 from .data import calculated_goods_prices, goods_provenance, load_civ, starting_schedule
 from .foreign_economy_data import foreign_economy_document
@@ -102,9 +103,9 @@ class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPay
         else:
             reopens = government.markets_closed_until(self.goods_market.acting_party_id, self.state.scenario.year)
             if reopens:
-                return "%s has shut its markets to you until %d" % (name, reopens)
+                return Refusal("partner_market_shut", "%s has shut its markets to you until %d" % (name, reopens))
         if material not in exports_allowed(government, [material]):
-            return "%s will not sell %s" % (name, material)
+            return Refusal("partner_export_held_back", "%s will not sell %s" % (name, material))
         return None
 
     def _foreign_economy_facts(self, civilization_id):

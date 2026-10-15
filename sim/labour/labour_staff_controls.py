@@ -6,6 +6,8 @@ Both run in the yearly staff step, ahead of the closure rule, and hire through
 `hire` so its cash, room and literacy limits apply unchanged.
 """
 import math
+
+from sim.refusal import LogLine
 from collections import defaultdict
 
 from . import trade_data
@@ -71,5 +73,6 @@ class StaffControlsMixin:
         if cost + count * self.labour_market.quote_annual(trade) > self._world.spending_power("buy"):
             return
         if self._world.build_worker_housing(places):
-            self._world.state.household.log.append((self._world.state.scenario.year,
-                                             "reserve_staff: you build housing for %d more people" % places))
+            self._world.state.household.log.append((self._world.state.scenario.year, LogLine(
+                "policy_housing", "reserve_staff: you build housing for %d more people" % places,
+                policy="reserve_staff", places=places)))

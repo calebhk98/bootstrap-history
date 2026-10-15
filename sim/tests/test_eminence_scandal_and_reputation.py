@@ -142,5 +142,6 @@ check("the two civilisations' coins differ, so the test means something",
 check("the wealth term of the prominence hazard is the same at the same capital in labour hours",
       abs(_rome_fixed - _han_fixed) <= 1e-9 * max(_rome_fixed, _han_fixed, 1e-12)
       and _rome_fixed > 0.0, (_rome_fixed, _han_fixed))
+# presentation: a declared unit string
 check("the visibly-rich threshold is declared in labour hours",
       "labour hour" in _REGISTRY["EMINENCE_WEALTH_VISIBLE_THRESHOLD_LABOUR_HOURS"]["unit"])

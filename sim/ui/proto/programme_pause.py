@@ -23,20 +23,20 @@ def shortage_loss(sim):
 
 
 def tripped(sim, pauses):
-    """Why a player-set pause condition holds now, or None."""
+    """(kind, material, text) for the player-set pause condition that holds now, or None."""
     limit = pauses.get("pause_debt")
     if limit is not None and -sim.capital > limit:
-        return "debt over the %s you allowed" % money_text(limit, sim, grouped=True)
+        return "debt_over_limit", None, "debt over the %s you allowed" % money_text(limit, sim, grouped=True)
     limit = pauses.get("pause_war_risk")
     risk = war_risk(sim) if limit is not None else 0.0
     if limit is not None and risk > limit:
-        return "war risk (%.0f%% a year of a site being sacked) is over the %.0f%% you allowed" % (
+        return "war_risk_over_limit", None, "war risk (%.0f%% a year of a site being sacked) is over the %.0f%% you allowed" % (
             100 * risk, 100 * limit)
     limit = pauses.get("pause_shortage")
     if limit is not None:
         loss, material = shortage_loss(sim)
         if material and loss > limit:
-            return "%s shortage (%.0f%% of planned work lost) is over the %.0f%% you allowed" % (
+            return "shortage_over_limit", material, "%s shortage (%.0f%% of planned work lost) is over the %.0f%% you allowed" % (
                 material, 100 * loss, 100 * limit)
     return None
 

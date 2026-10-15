@@ -26,8 +26,9 @@ dear.project_cost = lambda node_id: 1e18
 dear._step_start_projects()
 rows = skip_rows(dear)
 check("a candidate dearer than the room left is recorded with the cost and the room",
-      rows and "room" in rows[0]["reason"] and rows[0]["policy"] == "auto_start", rows[:1])
-check("the too-dear candidates make one row a year, not one each", len(rows) == 1 and "candidates in all" in rows[0]["reason"], len(rows))
+      rows and rows[0].get("reason_kind") == "cost_over_room" and rows[0]["room"] < rows[0]["cost"]
+      and rows[0]["policy"] == "auto_start", rows[:1])
+check("the too-dear candidates make one row a year, not one each", len(rows) == 1 and rows[0]["candidates"] > 1, len(rows))
 
 capped = fresh()
 capped.can_start = lambda node_id, _memo=None: True
@@ -35,7 +36,7 @@ capped.initialize_project = lambda node_id: None
 capped.MAX_ACTIVE_PROJECTS_BASE = -10_000
 capped._step_start_projects()
 rows = skip_rows(capped)
-check("hitting the active-project cap is recorded once", len(rows) == 1 and "active" in rows[0]["reason"], rows)
+check("hitting the active-project cap is recorded once", len(rows) == 1 and rows[0].get("reason_kind") == "active_project_cap", rows)
 
 poor = sim(capital=0.0, manual=False)
 poor.state.household.automation_audit = []

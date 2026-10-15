@@ -148,6 +148,7 @@ player.record.orders.extend([{"command": "levitate"}, "research", {"node": "tech
 year_on(player, world)
 check("unknown, malformed and incomplete commands are rejected, never raised",
 	  [entry["ok"] for entry in player.record.journal] == [False] * 4, player.record.journal)
+# presentation: the journal's reason wording
 check("an unknown command's reason is given", player.record.journal[0]["detail"] == "unknown command")
 
 player = make_player()
@@ -162,6 +163,7 @@ register_command("shout", lambda actor, order, seen: "heard " + order["word"])
 player = make_player()
 player.record.orders.append({"command": "shout", "word": "hello"})
 year_on(player, world)
+# not text: echoes what the test's own handler returned
 check("a registered command runs", last_entry(player)["ok"] and last_entry(player)["detail"] == "heard hello", last_entry(player))
 
 # ---- who drives the player -----------------------------------------------------------------

@@ -1,5 +1,6 @@
 """allocate: regression checks, run individually with `--only allocate`."""
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of, facts_of
 
 
 # ===========================================================================
@@ -74,8 +75,8 @@ _new = [message for _, message in s.log[_before:]]
 check("...and the player is told BY NAME that the directive could not be "
       "fully honoured, and that the reason is a pace/calendar floor, not "
       "a refusal to give it hours",
-      any("DIRECTED HOURS UNUSED" in message and _nC["name"] in message
-          and "calendar floor" in message for message in _new),
+      any(cause_of(message) == "directed_hours_unused" and facts_of(message)["project"] == _kC
+          and facts_of(message)["reason"] == "own_pace" for message in _new),
       _new)
 
 # --- two standing orders together asking for more than the whole pool: the
@@ -99,8 +100,8 @@ check("the first of two over-committed standing orders gets its directive "
       s.active[_kE]["hours_offered_this_year"])
 check("...and the second gets only what the pool had left, named as the "
       "pool running out, not as anything wrong with that project",
-      any("DIRECTED HOURS UNUSED" in message and "before this one's turn came" in message
-          for _, message in s.log[_before:]),
+      any(cause_of(message) == "directed_hours_unused" and facts_of(message)["reason"] == "pool_claimed"
+          and facts_of(message)["project"] == _kF for _, message in s.log[_before:]),
       [message for _, message in s.log[_before:]])
 
 # --- a player who never calls `allocate` sees the ordinary priority order
@@ -127,12 +128,11 @@ _r = S._agent_dispatch(s, NODES, {"cmd": "allocate", "id": "academy_network",
                                   "hours": 300})
 check("allocate refuses a directive on a project that has not been "
       "started - there is nothing active for it to apply to yet",
-      not _r["ok"] and "academy_network" in _r["error"]
-      and "not active" in _r["error"], _r)
+      not _r["ok"] and _r.get("cause") == "project_not_active", _r)
 _r = S._agent_dispatch(s, NODES, {"cmd": "allocate", "id": "not_a_real_node",
                                   "hours": 300})
 check("allocate refuses an id that does not exist at all",
-      not _r["ok"] and "unknown node id" in _r["error"], _r)
+      not _r["ok"] and _r.get("cause") == "unknown_node", _r)
 s.active["academy_network"] = dict(ph_left=2500.0, yrs=0.0, spent=0.0,
                                    cost_left=0.0, lab_left={})
 _r = S._agent_dispatch(s, NODES, {"cmd": "allocate", "id": "academy_network",

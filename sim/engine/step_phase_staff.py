@@ -4,6 +4,7 @@ A part of the year's phases (core_step_phases.py); Sim inherits it through StepP
 import math
 import random
 
+from sim.refusal import LogLine
 from sim.world.demography import BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE
 from . import automation_audit
 from .units_prose import plain_number
@@ -63,7 +64,9 @@ class StaffPhaseMixin:
                 people = ", ".join("%d %s%s" % (count, trade_id, "" if count == 1 else "s")
                                    for trade_id, count in sorted(counts.items()) if count)
                 if people:
-                    self.state.household.log.append((self.state.scenario.year, "you lose %s to %s" % (people, cause)))
+                    self.state.household.log.append((self.state.scenario.year, LogLine(
+                        "staff_lost", "you lose %s to %s" % (people, cause),
+                        reason=cause.replace(" ", "_"), trades={trade_id: count for trade_id, count in counts.items() if count})))
         # Rehire a specialist foreman an open concern just lost, before the
         # staffing rule closes the concern.
         if self.state.founder.policy.get("auto_replace_foreman", False):
@@ -140,8 +143,9 @@ class StaffPhaseMixin:
             # logged, and a player who is not told has to notice their own wage
             # bill hit zero to find out.
             if gone > 0.005:
-                self.state.household.log.append((self.state.scenario.year, "you cannot pay everyone: %.1f of your staff "
-                                     "leave for work that pays" % gone))
+                self.state.household.log.append((self.state.scenario.year, LogLine(
+                    "staff_left_unpaid", "you cannot pay everyone: %.1f of your staff "
+                    "leave for work that pays" % gone, staff_gone=gone)))
         # NOT `capital > 0`: gating hiring on a strictly positive balance
         # creates a catch-22, where a household in arrears could never take
         # on the people whose work is the only way out of arrears. A run

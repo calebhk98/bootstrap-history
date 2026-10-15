@@ -5,6 +5,7 @@ A few games are built once and reused; checks that only read a figure reset the 
 overrides they installed (credit_limit, spending_power, project_cost) before the next check.
 """
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of, facts_of
 from .agent_command_helpers import pristine_game
 
 
@@ -111,7 +112,7 @@ starting_capital = fresh.capital
 fresh.capital = -fresh.credit_limit() * 0.75
 fresh.warn_near_the_limit(105)
 check("the credit limit warns you BEFORE you cross it",
-      any("CLOSE TO THE LIMIT" in message for _, message in fresh.log), [message for _, message in fresh.log])
+      any(cause_of(message) == "credit_near_limit" for _, message in fresh.log), [message for _, message in fresh.log])
 check("...and names what you could still do about it",
       any("stop" in message and "mothball" in message for _, message in fresh.log), [message for _, message in fresh.log][:1])
 log_length = len(fresh.log)
@@ -162,24 +163,22 @@ check("the arrears banner quotes the same loss the ledger does",
 check("...and names the part of it that is interest on the arrears themselves",
       any("interest on the arrears" in reason for reason in diagnosis["what_would_change_it"]),
       diagnosis["what_would_change_it"])
-# A founder with no practice to lose: wage work is advised only when it pays more than the practice those hours run
-# (the wage is the labour market's clearing rate, so a founder with a practice worth more is rightly not advised it).
+# A founder whose standing job pays nothing: wage work is advised when it pays more than the standing job already
+# sells those hours for (a founder holding no trade has no standing job to beat).
 wage_game = sim(civ="norse_900ad", capital=-40000.0)
 wage_game.revenue = wage_game.revenue_capacity = lambda: 0.0
+wage_game.held_trade = lambda: None
 wage_game.insolvent_years = 20
 wage_advice = [reason for reason in (wage_game.stall_diagnosis() or {}).get("what_would_change_it", [])
                if reason.startswith("work as a ")]
 # The advice's quote is what work_for_wages pays for the trade and hours it names.
-quote_match = re.match(r"work as a (\w+): (\d+) of your own hours .* bring in about ([\d,]+)(?: in \w+)? against the ([\d,]+)(?: in \w+)? of practice",
+quote_match = re.match(r"work as a (\w+): (\d+) of your own hours .* bring in about ([\d,]+)",
                        wage_advice[0]) if wage_advice else None
 check("a stalled household in debt is offered wage work, with trade, hours and earning",
       quote_match, wage_advice)
 if quote_match:
     quoted_trade, quoted_hours = quote_match.group(1), int(quote_match.group(2))
-    quoted_earning, quoted_practice = (int(quote_match.group(index).replace(",", "")) for index in (3, 4))
-    _, _, practice_given_up = wage_game.labour.work_for_wages_dry_run(quoted_trade, quoted_hours)
-    check("the practice the banner says is given up is what the sale costs",
-          abs(practice_given_up - quoted_practice) <= 1, (quoted_practice, practice_given_up))
+    quoted_earning = int(quote_match.group(3).replace(",", ""))
     capital_before = wage_game.capital
     paid, refusal = wage_game.labour.work_for_wages(quoted_trade, quoted_hours)
     check("the advised work is accepted", refusal is None, refusal)
@@ -188,6 +187,18 @@ if quote_match:
           (quoted_earning, paid, wage_game.capital - capital_before))
     check("the banner names the trade that pays most an hour",
           quoted_trade == wage_game.labour.best_wage_trade(), (quoted_trade, wage_game.labour.best_wage_trade()))
+
+# A founder whose standing job already sells the hours is advised wage work only for the gain over that job, and
+# the banner names what the job pays for them.
+job_game = sim(civ="norse_900ad", capital=-40000.0)
+job_game.revenue = job_game.revenue_capacity = lambda: 0.0
+job_game.held_trade = lambda: "labourer"
+job_game.insolvent_years = 20
+job_advice = [reason for reason in (job_game.stall_diagnosis() or {}).get("what_would_change_it", [])
+              if reason.startswith("work as a ")]
+standing_pay = job_game.labour.standing_job_pay("labourer")
+check("wage work that beats the standing job names what that job pays for the same hours",
+      job_advice and "{:,.0f}".format(standing_pay) in job_advice[0], (job_advice, standing_pay))
 
 # --- an idle fortune bleeds living costs, and the ledger names the part that is wealth.
 rich_ledger = S._agent_dispatch(sim(capital=hours_money(20200000)), NODES, {"cmd": "money"})
@@ -221,16 +232,19 @@ hire_ok, hire_message = debtor.labour.hire("smith", 3)
 check("a cash-short hire is still refused (the asymmetry itself is kept)", hire_ok is False, (hire_ok, hire_message))
 check("...but the refusal says WHICH rule this is: half the credit line, not all of it",
       "50%" in hire_message and "credit line" in hire_message, hire_message)
+# presentation: the refusal's explanation of the lending rule
 check("...and WHY: a lender funds work under way, not a payroll or a one-off fee",
       "lender advances against a purchase" in hire_message, hire_message)
 hire_fee = debtor.labour.hire_fee("smith", 3)
 check("...and states the exact cost hire() computed",
       "{:,.0f}".format(round(hire_fee)) in hire_message, (hire_fee, hire_message))
 train_ok, train_message = debtor.labour.train("machinist", 3, None)
+# presentation: the refusal's explanation of the lending rule
 check("train's cash-short refusal uses the identical reasoning as hire's",
       train_ok is False and "50%" in train_message and "lender advances against a purchase" in train_message,
       train_message)
 commission_ok, commission_message = debtor.labour.commission("smith", 3500.0)
+# presentation: the refusal's explanation of the lending rule
 check("commission's cash-short refusal uses the same reasoning too",
       commission_ok is False and "50%" in commission_message
       and "lender advances against a purchase" in commission_message, commission_message)
@@ -268,9 +282,10 @@ def waiting_message(capital, credit_limit):
 
 
 check("_waiting_on reads the pace as the blocker when there is real room",
-      "pace" in waiting_message(50000.0, 2000.0), waiting_message(50000.0, 2000.0))
+      cause_of(waiting_message(50000.0, 2000.0)) == "money_pace", waiting_message(50000.0, 2000.0))
 check("a household 50,000 past a 2,000 line is told MONEY is what holds the project up",
-      "money" in waiting_message(-50000.0, 2000.0), waiting_message(-50000.0, 2000.0))
+      cause_of(waiting_message(-50000.0, 2000.0)) in ("money_blocked", "money_unfunded"),
+      waiting_message(-50000.0, 2000.0))
 
 # The quote screen's figure is the number hire enforces.
 set_position(-50000.0)
@@ -339,12 +354,14 @@ insolvent.reputation = 4.9
 insolvent.insolvent_years = 30
 insolvent.enforce_credit_limit(150)
 check("a reputation penalty announces what it actually took",
-      "-4.9" in [message for _, message in insolvent.log if "INSOLVENCY" in message][-1], insolvent.log[-1:])
+      [facts_of(message)["reputation_hit"] for _, message in insolvent.log
+       if cause_of(message) == "insolvency_settled"][-1] == 4.9, insolvent.log[-1:])
 insolvent.capital = -99999.0
 insolvent.insolvent_years = 30
 insolvent.enforce_credit_limit(200)
 check("...and says plainly when there was nothing left to take",
-      "already at nothing" in [message for _, message in insolvent.log if "INSOLVENCY" in message][-1],
+      [facts_of(message)["reputation_hit"] for _, message in insolvent.log
+       if cause_of(message) == "insolvency_settled"][-1] == 0.0,
       insolvent.log[-1:])
 
 # --- a household deep in arrears does not commit to new work.
@@ -366,7 +383,9 @@ replies = [S._agent_dispatch(worker, NODES, command) for command in (
     {"cmd": "start", "id": "arithmetic_positional"}, {"cmd": "step", "years": 1},
     {"cmd": "work", "trade": "scholar", "hours": 2000}, {"cmd": "step", "years": 1}, {"cmd": "state"})]
 check("clearing your debt by working does not make you insolvent",
-      not any("INSOLVENCY" in json.dumps(reply) for reply in replies),
+      not any(cause_of(message) == "insolvency_settled" for _, message in worker.log)
+      and not any(event.get("event_kind") == "insolvency_settled"
+                  for reply in replies for event in (reply.get("events") or [])),
       [event for reply in replies for event in (reply.get("events") or []) if "INSOLVENCY" in str(event)])
 check("...and does not take your whole reputation with it",
       replies[-1].get("reputation", 0) > 1.0, replies[-1].get("reputation"))

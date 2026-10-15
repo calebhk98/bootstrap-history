@@ -1,5 +1,6 @@
 """labour_productivity: regression checks, run individually with `--only labour_productivity`."""
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of, facts_of
 from sim.labour.api import Labour
 
 # =============================================================================
@@ -340,7 +341,8 @@ check("set-up: the closure is recorded as staffing-caused",
 _ok_in_grace, _msg_in_grace = s_staff.restore_work(_SUPERVISED)
 check("restoring within the grace window names that it is the discounted "
       "price, not a bare number",
-      _ok_in_grace and "discounted tenth" in _msg_in_grace, _msg_in_grace)
+      _ok_in_grace and facts_of(_msg_in_grace)["discounted"] and facts_of(_msg_in_grace)["closure_age"] is not None,
+      _msg_in_grace)
 s_staff.employees["artisan"] = 0.0
 s_staff.labour._resync_pools()
 s_staff.close_unstaffed_ventures(s_staff.year)
@@ -348,10 +350,10 @@ s_staff.year += s_staff.STAFF_CLOSURE_GRACE + 1
 _ok_lapsed, _msg_lapsed = s_staff.restore_work(_SUPERVISED)
 check("...and restoring after the window has lapsed says outright that the "
       "discount window is gone and this is the full price",
-      _ok_lapsed and "too long for the tenth" in _msg_lapsed, _msg_lapsed)
+      _ok_lapsed and not facts_of(_msg_lapsed)["discounted"] and facts_of(_msg_lapsed)["closure_age"] is not None,
+      _msg_lapsed)
 check("...and the lapsed-window fee really is about ten times the in-grace one",
-      float(_msg_lapsed.split("for ")[1].split(" denarii")[0].replace(",", ""))
-      > 5 * float(_msg_in_grace.split("for ")[1].split(" denarii")[0].replace(",", "")),
+      facts_of(_msg_lapsed)["fee"] > 5 * facts_of(_msg_in_grace)["fee"],
       (_msg_in_grace, _msg_lapsed))
 
 # --- One game for the credit freeze, the standing-figure regression and the stall diagnosis.
@@ -362,9 +364,9 @@ s_money.capital = -(s_money.credit_limit() * 1.5)
 s_money.last_settlement = -999
 _log_start = len(s_money.log)
 s_money.enforce_credit_limit(105)
-_first_messages = [message for _, message in s_money.log[_log_start:] if "INSOLVENCY SETTLED" in message]
+_first_messages = [message for _, message in s_money.log[_log_start:] if cause_of(message) == "insolvency_settled"]
 check("a first-ever settlement, with nothing to extend, says nothing about a moved date",
-      bool(_first_messages) and "moves with every settlement" not in _first_messages[0], _first_messages)
+      bool(_first_messages) and not facts_of(_first_messages[0])["freeze_moved"], _first_messages)
 # A second settlement while an earlier freeze is in force moves the date, and says so.
 s_money.capital = -(s_money.credit_limit() * 1.5)
 s_money.last_settlement = -999
@@ -373,9 +375,10 @@ _log_start = len(s_money.log)
 s_money.enforce_credit_limit(105)
 check("settling again while an earlier freeze is still in force extends the unlock date...",
       s_money.credit_frozen_until == 117, s_money.credit_frozen_until)
-_freeze_messages = [message for _, message in s_money.log[_log_start:] if "INSOLVENCY SETTLED" in message]
+_freeze_messages = [message for _, message in s_money.log[_log_start:] if cause_of(message) == "insolvency_settled"]
 check("...and says so in the same event, naming both the old and the new date",
-      bool(_freeze_messages) and "110" in _freeze_messages[0] and "117" in _freeze_messages[0],
+      bool(_freeze_messages) and facts_of(_freeze_messages[0])["freeze_moved"]
+      and facts_of(_freeze_messages[0])["frozen_before"] == 110 and facts_of(_freeze_messages[0])["credit_frozen_until"] == 117,
       _freeze_messages)
 
 # `state`'s and `money`'s recurring net_per_year is the STANDING figure: selling

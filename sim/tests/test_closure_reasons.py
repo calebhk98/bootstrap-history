@@ -12,7 +12,8 @@ def staffed_sim():
 	test_sim._done_changed()
 	test_sim.employees["artisan"] = 6.0
 	test_sim.labour._resync_pools()
-	test_sim.open_venture(NODE_ID)
+	opened, reason = test_sim.open_venture(NODE_ID)
+	check("set-up: the fixture's founder can afford to open the concern", opened, reason)
 	return test_sim
 
 
@@ -52,6 +53,7 @@ check("a manual mothball records a manual closure with its own year",
       s_stale.closure_of(NODE_ID) == {"reason": "manual", "year": s_stale.year},
       s_stale.closure_of(NODE_ID))
 ok_again, message_again, _ = restore_price(s_stale)
+# presentation: the restore message must not blame an old closure
 check("restoring a manual mothball does not blame an old staffing closure",
       ok_again and "staffing" not in message_again and "years" not in message_again,
       message_again)

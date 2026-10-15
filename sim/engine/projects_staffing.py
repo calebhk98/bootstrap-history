@@ -15,6 +15,7 @@ and switched back on.
 These are methods of Sim; they are a mixin only so that they can live in a
 file of their own. Behaviour is unchanged and verified byte-identical.
 """
+from sim.refusal import LogLine
 from sim.constants import declare
 from . import cause_book, category_traits
 from .units_prose import money_text, per_year
@@ -99,17 +100,19 @@ class StaffingMixin:
             self.close_work(node_id, self.CLOSED_FOR_STAFF, year)
         if closed:
             self.record_staffing_closures(len(closed), shortfalls)
-            household.log.append((year, "nobody left to keep an eye on %d concern%s (short of %s), so "
-                                 "%s closed; %d now shut for want of staff after this "
-                                 "year's reopenings. You still know how; reopen with "
-                                 "'open' once you have the people. The premises "
-                                 "and the stock stand for a few years yet, so "
-                                 "reopening soon costs a tenth of what opening did. %s"
-                             % (len(closed), "" if len(closed) == 1 else "s",
-                                self.staffing_shortfall_words(shortfalls),
-                                ", ".join(sorted(closed)[:4])
-                                + (" and others" if len(closed) > 4 else ""),
-                                self.staffing_shut_count(), self.STAFFING_REMEDIES)))
+            household.log.append((year, LogLine(
+                "concerns_closed_unstaffed", "nobody left to keep an eye on %d concern%s (short of %s), so "
+                "%s closed; %d now shut for want of staff after this "
+                "year's reopenings. You still know how; reopen with "
+                "'open' once you have the people. The premises "
+                "and the stock stand for a few years yet, so "
+                "reopening soon costs a tenth of what opening did. %s"
+                % (len(closed), "" if len(closed) == 1 else "s",
+                   self.staffing_shortfall_words(shortfalls),
+                   ", ".join(sorted(closed)[:4])
+                   + (" and others" if len(closed) > 4 else ""),
+                   self.staffing_shut_count(), self.STAFFING_REMEDIES),
+                concerns=sorted(closed))))
         return closed
 
     def reopen_restaffed_ventures(self, year):
@@ -874,7 +877,8 @@ class StaffingMixin:
         if self.is_venture(node_id):
             projects.operating.add(node_id)
             cause_book.record_concern(self, "opening", node_id, "restored")
-        return True, ("%s back in service for %s%s"
-                      % (node_id, money_text(fee, self, grouped=True),
-                         (" (%s)" % _grace_note) if _grace_note else ""))
+        return True, LogLine("restored", "%s back in service for %s%s"
+                             % (node_id, money_text(fee, self, grouped=True),
+                                (" (%s)" % _grace_note) if _grace_note else ""),
+                             work=node_id, fee=fee, closure_age=_age, discounted=bool(_in_grace))
 

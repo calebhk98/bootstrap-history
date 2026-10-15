@@ -69,9 +69,8 @@ if "smith" in _rows:
           abs(_rows["smith"]["a_year_of_one"] * _rows["smith"]["you_employ"]
               - _lab["annual_wage_bill"]) < 1.0,
           (_rows["smith"], _lab["annual_wage_bill"]))
-check("work's three figures subtract to each other",
-      abs((_wk["earned"] - _wk["it_cost_your_own_practice"])
-          - _wk["so_you_are_up"]) < 0.051, _wk)
+check("work reports the wage and no separate practice cost",
+      _wk["earned"] > 0 and "it_cost_your_own_practice" not in _wk and "so_you_are_up" not in _wk, _wk)
 check("money's net before and after the work in hand differ by exactly that",
       abs((_mn["net_per_year"] - _mn["spent_on_projects_last_year"])
           - _mn["net_after_project_spend"]) < 0.11, _mn)
@@ -80,19 +79,19 @@ check("...and the after figure is the one `state` prints, to the decimal",
       "net_after_project_spend" in _st2, list(_st2)[:5])
 
 # --- BREAK: `why med_cataract_couching` printed the trade's quoted revenue beside a ledger crediting
-# the practice another figure. A practised skill's line is the practice's one income, the ledger's own row.
+# the founder's job another figure. A held skill's line is the founder's one wage, the ledger's own row.
 _game_c = sim()
 _rwy = [_ask(_game_c, cmd="why", id="med_cataract_couching")]
-check("why says what a practice node pays YOU",
+check("why says what a held-skill node pays YOU",
       _rwy[0].get("but_it_pays_YOU") is not None and _rwy[0]["but_it_pays_YOU"] > 0.0,
       (_rwy[0].get("revenue"), _rwy[0].get("but_it_pays_YOU")))
 _st_r = [_ask(_game_c, cmd="money")]
 _led = _st_r[0].get("where_the_money_comes_from") or {}
-check("...and that figure is the ledger's practice row, to the decimal",
-      abs(_rwy[0]["but_it_pays_YOU"] - _led.get("_your_own_practice", -1)) < 0.06,
+check("...and that figure is the ledger's wages row, to the decimal",
+      abs(_rwy[0]["but_it_pays_YOU"] - _led.get("_wages_for_your_own_work", -1)) < 0.06,
       (_rwy[0].get("but_it_pays_YOU"), sorted(_led)[:4]))
 _rwy2 = [_ask(_game_c, cmd="why", id="horse_collar")]
-check("...and a node that is NOT your practice carries no such line",
+check("...and a node that is NOT a held skill carries no such line",
       _rwy2[0].get("but_it_pays_YOU") is None, _rwy2[0].get("but_it_pays_YOU"))
 
 # --- BREAK: `ventures` "1 scholars, 1 craftsmen" on the same screen as

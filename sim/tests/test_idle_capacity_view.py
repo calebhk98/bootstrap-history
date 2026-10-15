@@ -24,7 +24,7 @@ check("potential uses count what is startable today", uses.get("startable_today"
       (uses, len(startable)))
 check("potential uses count the free ones", uses.get("startable_at_no_cash_cost")
       == sum(1 for node_id in startable if test_sim.project_cost(node_id) <= 0), uses)
-check("it offers selling hours for wages as a use", "work" in str(uses.get("wage_work", "")), uses)
+check("it offers selling hours for wages as a use", uses.get("wage_work") is not None, uses)
 check("it never spends hours itself", test_sim.labour.director_hours_committed() == idle["committed_hours"])
 
 target = next((node_id for node_id in test_sim.order

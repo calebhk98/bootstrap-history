@@ -386,9 +386,6 @@ def _money_from_block(out):
     if out.get("still_building_up_custom"):
         lines.append(_wrap("STILL BUILDING UP: " + out["still_building_up_custom"],
                        indent="    "))
-    if out.get("about_your_own_practice"):
-        lines.append(_wrap("YOUR PRACTICE: " + out["about_your_own_practice"],
-                       indent="    "))
     if out.get("the_market_you_sell_into"):
         lines.append(_wrap("THE MARKET: " + out["the_market_you_sell_into"],
                        indent="    "))
@@ -402,12 +399,11 @@ def _money_wage_work_lines(out):
         wage = out.get(key)
         if not wage:
             continue
-        lines.append("  wage work %s: %s hours sold, wage %s, practice income given up %s, net %s"
-                 % (label, _fmt_num(wage.get("hours")), _fmt_num(wage.get("wage_income")),
-                    _fmt_num(wage.get("practice_income_displaced")), _fmt_num(wage.get("net"))))
+        lines.append("  wage work %s: %s hours sold, wage %s"
+                 % (label, _fmt_num(wage.get("hours")), _fmt_num(wage.get("wage_income"))))
     if lines:
         lines.append("    (the wage is paid into capital when the hours are sold and is not in the "
-                     "revenue above; the practice income given up is already out of it)")
+                     "revenue above; the hours are already out of your standing job)")
     return lines
 
 
@@ -907,10 +903,6 @@ def _ventures_capabilities_block(out):
 
 def _ventures_practice_block(out):
     lines = []
-    if out.get("your_practice_is_not_a_venture"):
-        lines.append("")
-        lines.append(_wrap("YOUR PRACTICE (not a concern, and not listed above): "
-                       + out["your_practice_is_not_a_venture"]))
     if out.get("note"):
         lines.append("")
         lines.append(_wrap(out["note"]))

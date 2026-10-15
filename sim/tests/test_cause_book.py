@@ -69,6 +69,7 @@ check("the rows and marks survive a save and load",
       and bool(revived.state.household.cause_rows))
 
 wages_figure = ask(pressure, cmd="figures", id="wages")
+# not text: the stored cause label echoes what the test recorded
 check("the wages figure lists its recorded causes",
       wages_figure.get("ok") and any(cause["cause"] == "a plague" for cause in wages_figure["causes"]), wages_figure)
 notice_figure = ask(pressure, cmd="figures", id="state_notice")

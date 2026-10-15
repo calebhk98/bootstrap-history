@@ -1,6 +1,8 @@
-"""Every gold and silver deposit states its working: a date and a size, or why they are unknown.
+"""Every gold and silver deposit states its working: a date, or why it is unknown.
 
-Nothing is guessed to fill a gap (CLAUDE.md 4.1); a deposit with neither is a hole in the data."""
+A size is not required: a deposit with a date and no endowment is sized by the geological model of the map
+(sim/geography/resources_district.py), so an unsized but dated district still names a site.
+Nothing is guessed to fill a gap (CLAUDE.md 4.1); a deposit with no date and no stated reason is a hole in the data."""
 
 QUICK_TOPIC = True
 
@@ -21,10 +23,9 @@ def precious_deposits():
 
 
 class DepositWorkingsTests(unittest.TestCase):
-    def test_each_deposit_has_a_working_date_and_size_or_says_it_is_unknown(self):
+    def test_each_deposit_has_a_working_date_or_says_it_is_unknown(self):
         bare = [row["id"] for row in precious_deposits()
-                if not (row.get("first_worked") is not None and row.get("endowment"))
-                and not row.get("working_unknown")]
+                if row.get("first_worked") is None and not row.get("working_unknown")]
         self.assertEqual(bare, [])
 
     def test_a_stated_unknown_gives_no_invented_date_or_size(self):

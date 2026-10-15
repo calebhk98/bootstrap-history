@@ -56,7 +56,7 @@ check("rush ids starts only the named projects and accounts for each",
       _started_ids and _started_ids <= set(_pick) and _started_ids | _refused_ids == set(_pick)
       and not _started_ids & _refused_ids, (_result["started"], _result["not_started"]))
 _unknown = _rush(sim(capital=_CAPITAL), ids="no_such_node", preview=True)
-check("rush ids rejects an unknown id", _unknown["ok"] is False and "no_such_node" in _unknown["error"], _unknown)
+check("rush ids rejects an unknown id", _unknown["ok"] is False and _unknown.get("cause") == "unknown_node_ids", _unknown)
 
 # preview shows bottlenecks and risk
 _preview = _rush(sim(capital=_CAPITAL), preview=True, limit=30)

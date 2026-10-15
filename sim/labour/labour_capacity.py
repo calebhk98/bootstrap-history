@@ -25,6 +25,7 @@ onto a whole person without biasing which way growth heads.
 import math
 
 from sim.constants import declare
+from sim.refusal import Refusal
 from . import legacy_trade_defaults, trade_data
 from .wage_provider import reference_civilisation
 
@@ -341,15 +342,15 @@ class CapacityMixin:
             "Printing, paper, schools and academies widen the pool - they "
             "raise how many people here can read, and this ceiling rises "
             "with it.")
-        return ("this household's reach into the labour market for %ss "
-                "will not stretch past %.1f in total, hired and taught "
-                "together - not \"this society's literacy\" alone, which "
-                "only narrows an already-limited reach further - and you "
-                "have %.1f already (hired and still being taught). %s %s"
-                % (trade, cap, have,
-                   ("%d more is the most you can take right now." % _whole)
-                   if _whole >= 1 else "There is no room for even one more.",
-                   lever))
+        return Refusal("literacy_wall", "this household's reach into the labour market for %ss "
+                       "will not stretch past %.1f in total, hired and taught "
+                       "together - not \"this society's literacy\" alone, which "
+                       "only narrows an already-limited reach further - and you "
+                       "have %.1f already (hired and still being taught). %s %s"
+                       % (trade, cap, have,
+                          ("%d more is the most you can take right now." % _whole)
+                          if _whole >= 1 else "There is no room for even one more.",
+                          lever))
 
     def _trade_headcount_pending(self, trade):
         """People already on the books in this trade, plus people already
@@ -437,24 +438,27 @@ class CapacityMixin:
             if reopen else "")
         _housing_bit = ("Housing is bought: 'buy housing N' adds N places at %s each. "
                         % self._world.money_text(self._world.housing_price_per_place(), grouped=True))
+        _housing = [{"action": "buy_housing", "node": None}]
+        _reopens = [{"action": "reopen", "node": node_id} for node_id, _places in reopen[:2]]
         if not want:
             if reopen:
-                return ("%sThe rest is built - or in this case, "
-                        "reopened: %s'open %s'."
-                        % (_housing_bit, _reopen_bit, reopen[0][0]))
-            return ("%sBeyond that, room comes from institutions and heavy "
-                    "industry, and you have every one of them this society "
-                    "offers; what is left grows on its own as they run."
-                    % _housing_bit)
+                return Refusal("room_advice", "%sThe rest is built - or in this case, "
+                               "reopened: %s'open %s'."
+                               % (_housing_bit, _reopen_bit, reopen[0][0]), remedies=_housing + _reopens)
+            return Refusal("room_advice", "%sBeyond that, room comes from institutions and heavy "
+                           "industry, and you have every one of them this society "
+                           "offers; what is left grows on its own as they run."
+                           % _housing_bit, remedies=_housing)
         _now = [(node_id, places) for node_id, places in want if self._world.start_reason(node_id, _why=False)[0]]
-        return ("%sMore room is built: %s%s at your present income (the places grow "
-                "with surplus, since each needs people you can pay). Each is somewhere for "
-                "people to work and somebody to oversee them.%s"
-                % (_housing_bit, _reopen_bit,
-                   "; ".join("%s (+%s places)" % (node_id, self._places_text(places)) for node_id, places in want[:3]),
-                   "" if _now else " None is startable today; they are listed "
-                                   "nearest first, so the first is what to work "
-                                   "towards."))
+        return Refusal("room_advice", "%sMore room is built: %s%s at your present income (the places grow "
+                       "with surplus, since each needs people you can pay). Each is somewhere for "
+                       "people to work and somebody to oversee them.%s"
+                       % (_housing_bit, _reopen_bit,
+                          "; ".join("%s (+%s places)" % (node_id, self._places_text(places)) for node_id, places in want[:3]),
+                          "" if _now else " None is startable today; they are listed "
+                                          "nearest first, so the first is what to work "
+                                          "towards."),
+                       remedies=_housing + _reopens + [{"action": "build", "node": node_id} for node_id, _places in want[:3]])
 
     # WHO TRAINS PEOPLE, AND HOW MANY OF THEM.
     #
@@ -874,12 +878,14 @@ class CapacityMixin:
         `deficit` is how many more people the caller is short; the hire
         advice is sized to it.
         """
-        bits = []
+        bits, remedies = [], []
         for node, why in self._world.STAFF_SOURCES.get(kind, []):
             if node == "HIRE" and deficit:
                 bits.append(self._world.staff_hire_advice(kind, math.ceil(deficit - 1e-9)))
+                remedies.append({"action": "hire", "node": None})
             elif node in ("BUY", "HIRE"):
                 bits.append(why)
+                remedies.append({"action": node.lower(), "node": None})
             # CLOSED IS NOT MISSING. market_supply() only applies a source's
             # multiplier via running(node), so a school built and then shut
             # for want of a supervisor stops widening the hiring pool exactly
@@ -890,6 +896,7 @@ class CapacityMixin:
             elif node in self._world.state.projects.done and node not in self._world.state.projects.operating and self._world.is_venture(node):
                 bits.append("reopen %s ('open %s') - you already built this; "
                             "it is only shut" % (node, node))
+                remedies.append({"action": "reopen", "node": node})
             elif node not in self._world.state.projects.done and self._world.is_visible(node):
                 # NOT A CIRCLE. `why workshop_first` says it is blocked for want
                 # of artisans, and the advice on how to get artisans said "build
@@ -908,11 +915,13 @@ class CapacityMixin:
                     bits.append("build %s eventually (%s) - but it is itself "
                                 "waiting on %s, so hire or commission first"
                                 % (node, why, kind))
+                    remedies.append({"action": "build_after_hiring", "node": node})
                 else:
                     bits.append("build %s (%s)" % (node, why))
+                    remedies.append({"action": "build", "node": node})
         if not bits:
-            return "wait: your existing institutions add %s each year." % kind
-        return "To get more %s: %s." % (kind, "; ".join(bits[:3]))
+            return Refusal("staff_advice", "wait: your existing institutions add %s each year." % kind, remedies=[])
+        return Refusal("staff_advice", "To get more %s: %s." % (kind, "; ".join(bits[:3])), remedies=remedies[:3])
 
     def headcount(self):
         household = self._world.state.household
@@ -929,6 +938,7 @@ class CapacityMixin:
         """
         return (getattr(self._world.household, "teaching_hours_this_year", 0.0)
                 + (getattr(self._world.household, "relocation_hours_this_year", 0.0) or 0.0)
+                + (getattr(self._world.household, "supervision_hours_this_year", 0.0) or 0.0)
                 + self._world.household.wage_hours_this_year)
 
     def household_room(self):

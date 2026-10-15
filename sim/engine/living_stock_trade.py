@@ -5,6 +5,8 @@ terms and the route's freight (`partner_quote_per_tonne`), unless its own policy
 (`partner_refusal`). The payment and the delivery go through the one goods market
 (`GoodsMarket.settle_import`); the quote a player reads is built by the function the charge uses.
 """
+from sim.refusal import Refusal, cause_of
+
 from .data import load_civ
 from .material_units import tonnes_per_unit
 
@@ -23,10 +25,11 @@ class LivingStockTradeMixin:
         sells it: {"ok": True, partner, units, tonnes, per_tonne, cost}, else {"ok": False, "error"}."""
         units = float(units)
         if units <= 0.0:
-            return {"ok": False, "error": "buy a positive amount of %s" % material}
+            return {"ok": False, "cause": "amount_not_positive", "error": "buy a positive amount of %s" % material}
         trading = self.partner_countries()
         if partner and partner not in trading:
-            return {"ok": False, "error": "%s is not trading with you this year; those that are: %s"
+            return {"ok": False, "cause": "partner_not_trading",
+                    "error": "%s is not trading with you this year; those that are: %s"
                     % (partner, ", ".join(trading) or "none")}
         refusals, offers, holdings = [], [], []
         for candidate in ([partner] if partner else trading):
@@ -36,13 +39,14 @@ class LivingStockTradeMixin:
                 refusals.append(refusal)
             elif per_tonne is not None and self._partner_holding(candidate, material) > 0.0:
                 if units > self._partner_holding(candidate, material) + 1e-9:
-                    holdings.append("%s holds only %.6g %s" % (
-                        candidate, self._partner_holding(candidate, material), material))
+                    holdings.append(Refusal("partner_holds_less", "%s holds only %.6g %s" % (
+                        candidate, self._partner_holding(candidate, material), material)))
                 else:
                     offers.append((per_tonne, candidate))
         if not offers:
-            reason = (refusals or holdings or ["no partner you trade with sells %s" % material])[0]
-            return {"ok": False, "error": reason}
+            reason = (refusals or holdings
+                      or [Refusal("no_partner_sells", "no partner you trade with sells %s" % material)])[0]
+            return {"ok": False, "cause": cause_of(reason), "error": reason}
         per_tonne, seller = min(offers)
         tonnes = units * tonnes_per_unit(material)
         return {"ok": True, "material": material, "units": units, "partner": seller,

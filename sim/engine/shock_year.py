@@ -4,6 +4,8 @@ Per hazard: every seat resolves its causes and condition; seats lose staff, cash
 exposure (own dice, own log); population, output, the coin and the society's values change once, at the
 mildest figure any seat's works leave (sim/engine/hazard_merge.py). One seat runs the same draws in the same
 order as a game with no other seat."""
+from sim.refusal import LogLine
+
 from . import cause_book
 from .units_prose import money_text
 from .hazard_merge import mildest_hazard
@@ -103,6 +105,7 @@ class ShockYearMixin:
         if report["cash"] > 0.5:
             hit.append("%s of takings lost while the trade stood idle"
                        % money_text(report["cash"], self, grouped=True))
+        took_nothing = not hit
         if not hit:
             hit.append("you had nothing it could take")
         message = "%s: %s" % (hazard.get("name", "hazard"), ", ".join(hit))
@@ -120,7 +123,7 @@ class ShockYearMixin:
             message += (". Empire-wide: the country's own public health (medical work you built: %s) has spread far "
                         "enough that this, historically a %d%% loss, barely registers"
                         % (self._national_sources_words(), round(historical * 100)))
-        return message
+        return LogLine("hazard_hit", message, hazard=hazard.get("name", "hazard"), took_nothing=took_nothing)
 
     # ---- output_factor: war and its aftermath, the world's output floor ------------------
 

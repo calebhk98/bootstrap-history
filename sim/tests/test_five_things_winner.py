@@ -80,6 +80,7 @@ check("'saves', typed bare mid-game, lists the save directory with the civilisat
 _milestones = [filename for filename in os.listdir(_session_saves)
                if "_saved_" in filename and filename.endswith(".json")
                and not filename.endswith(".meta.json")]
+# presentation: the interactive play prompts and screens are text
 check("bare 'save' writes a new milestone file distinct from the ongoing session file",
       "saved a copy of" in _first.stdout and len(_milestones) == 1
       and os.path.exists(_session_path), (_first.stdout[-600:], os.listdir(_session_saves)))
@@ -106,13 +107,16 @@ check("...and the played years went to a separate file, not the checkpoint or th
 # Backing out of the load picker changes nothing, and declining a restart leaves the game.
 _backed_out = _play(["play", "--civ", "rome_100ad", "--session", _session_path],
                     "load\nb\nrestart\nn\nquit\n", _session_env)
+# presentation: the interactive play prompts and screens are text
 check("bare 'load' offers a picker over the save directory, and backing out ('b') changes nothing",
       "LOAD A DIFFERENT SAVE" in _backed_out.stdout and "switched to" not in _backed_out.stdout,
       _backed_out.stdout[-1500:])
+# presentation: the interactive play prompts and screens are text
 check("'restart' asks for confirmation, and declining leaves the game as it was",
       "Start a different game?" in _backed_out.stdout
       and "MAIN MENU" not in _backed_out.stdout.split("Start a different game?")[-1],
       _backed_out.stdout[-800:])
 _picked = _play(["play", "--session", _session_path], "load\n1\nstate\nquit\n", _session_env)
+# presentation: the interactive play prompts and screens are text
 check("picking an entry in the load picker switches this session to it",
       "switched to" in _picked.stdout and "AD." in _picked.stdout, _picked.stdout[-800:])

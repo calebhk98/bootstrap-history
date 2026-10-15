@@ -6,6 +6,7 @@ import collections
 import os
 
 from .harness import NODES, ROOT, check
+from sim.refusal import cause_of
 
 from sim.agents import government_foreign  # noqa: F401  (registers the foreign government)
 from sim.agents.api import ActorRegistry, ActorsState, cast_from_civilisations, seed_cast
@@ -187,13 +188,13 @@ check("stock that does not breed buys no labour", not eggs.purse.paid and eggs.s
 # ---- the partner sells what it holds and does not hold back -----------------------------------------
 buyer = Game()
 check("the partner's state holds the eggs back, from its own record",
-      "will not sell" in (buyer.partner_refusal(PARTNER, EGGS) or ""), buyer.partner_refusal(PARTNER, EGGS))
+      cause_of(buyer.partner_refusal(PARTNER, EGGS)) == "partner_export_held_back", buyer.partner_refusal(PARTNER, EGGS))
 check("...and does not hold back tea", buyer.partner_refusal(PARTNER, TEA) is None, buyer.partner_refusal(PARTNER, TEA))
 check("the partner holds tea stock and cane setts at its date, as data",
       load_civ(PARTNER)["opening_stock"].get(TEA, 0) > 0 and load_civ(PARTNER)["opening_stock"].get(SUGAR, 0) > 0)
 quote = buyer.stock_smuggle_quote(TEA, 1.0, PARTNER)
 check("a partner that sells is not robbed: the quote says to buy",
-      not quote["ok"] and "buy it" in quote["error"], quote)
+      not quote["ok"] and quote["cause"] == "partner_sells", quote)
 
 # ---- smuggling what it will not sell ----------------------------------------------------------------
 terms = buyer.stock_smuggle_quote(EGGS, 0.1, PARTNER)
@@ -237,7 +238,7 @@ check("...has the partner's state shut its markets to him for years",
       caught.partner_government(PARTNER).markets_closed_until("founder", 100) == outcome["closed_until"]
       and outcome["closed_until"] > 100, outcome)
 check("...so the partner refuses him, naming the year",
-      "shut its markets" in (caught.partner_refusal(PARTNER, TEA) or ""), caught.partner_refusal(PARTNER, TEA))
+      cause_of(caught.partner_refusal(PARTNER, TEA)) == "partner_market_shut", caught.partner_refusal(PARTNER, TEA))
 check("...and the partner still holds all its eggs",
       abs(caught._partner_holding(PARTNER, EGGS) - load_civ(PARTNER)["opening_stock"][EGGS]) < 1e-12)
 check("...and his scandal at home rises", caught.scandal > 0.0 and caught.scandal_last_year > 0.0, caught.scandal)
@@ -253,7 +254,7 @@ check("a taker who cannot pay the carrying is refused and nothing happens",
 # before the roster is seeded the same policy answers from the country's data
 unseeded = Game(governed=False)
 check("before the roster is seeded the policy answers from the country's data",
-      "will not sell" in (unseeded.partner_refusal(PARTNER, EGGS) or "") and unseeded.partner_refusal(PARTNER, TEA) is None)
+      cause_of(unseeded.partner_refusal(PARTNER, EGGS)) == "partner_export_held_back" and unseeded.partner_refusal(PARTNER, TEA) is None)
 
 LivingStockSmugglingMixin._smuggling_draw = _shipped_draw
 

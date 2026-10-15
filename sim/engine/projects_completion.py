@@ -15,6 +15,7 @@ These are methods of Sim; they are a mixin only so that they can live in a
 file of their own.
 """
 from sim.constants import declare
+from sim.refusal import LogLine
 from .data import closure
 from .failure_cause import failure_cause
 from .failure_diagnosis import failure_teaches, note_failure
@@ -225,25 +226,29 @@ class CompletionMixin:
             _next_risk = self.effective_risk(node_id)
             _banked = projects.active[node_id]["yrs"]
             if claimed:
-                household.log.append((scenario.year,
+                household.log.append((scenario.year, LogLine(
+                    "project_failed",
                     "%s %s: the claimant's attempt failed. The prize you posted holds "
                     "and they try again (attempt %d, chance of failing %d%%); nothing "
                     "more falls on you."
                     % (FAILED_PREFIX, node["name"],
-                       projects.failed_attempts[node_id] + 1, round(_next_risk * 100))))
+                       projects.failed_attempts[node_id] + 1, round(_next_risk * 100)),
+                    project=node_id, severity="claimed", lost=0.0)))
                 return
             if _severity == "minor":
-                household.log.append((scenario.year,
+                household.log.append((scenario.year, LogLine(
+                    "project_failed",
                     "%s %s %s: lost %s, %d%% of the hours to redo; "
                     "attempt %d, next attempt's live chance of failing %d%%."
                     % (FAILED_PREFIX, node["name"], MINOR_MARK,
                        money_text(max(0.0, _lost), self, grouped=True),
                        round(self.FAILURE_RESET_SHARE * 100),
                        projects.failed_attempts[node_id] + 1,
-                       round(_next_risk * 100)) + (" " + _diagnosis if _diagnosis else "")))
+                       round(_next_risk * 100)) + (" " + _diagnosis if _diagnosis else ""),
+                    project=node_id, severity="minor", lost=max(0.0, _lost))))
                 return
-            household.log.append((scenario.year,
-                             FAILED_PREFIX + " %s: it did not work. What failed: %s. "
+            household.log.append((scenario.year, LogLine(
+                             "project_failed", FAILED_PREFIX + " %s: it did not work. What failed: %s. "
                              "%d%% of the hours "
                              "are to do again (%s of your own) and %s is gone. "
                              "Attempt %d. %s the next attempt's live chance of failing "
@@ -260,7 +265,8 @@ class CompletionMixin:
                                 if failure_teaches(self, node_id) else "Nothing was learned, so",
                                 round(_next_risk * 100),
                                 round(_risk_this_attempt * 100),
-                                _banked, _yrs_before, _diagnosis)))
+                                _banked, _yrs_before, _diagnosis),
+                             project=node_id, severity="major", lost=max(0.0, _lost))))
             return
         goal_before = self.goal_snapshot()
         del projects.active[node_id]

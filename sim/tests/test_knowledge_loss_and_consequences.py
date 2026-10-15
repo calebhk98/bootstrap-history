@@ -4,6 +4,7 @@ survives), 237 (failures say what failed, and which risk is live), 238
 (patron death recovery and the scandal trend) and 252 (a visible successor
 objective)."""
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of, facts_of
 from sim.engine.data import closure as _closure_of
 from sim.ui.proto.techtree import _node_explain
 from sim.ui.proto.state import _agent_state_founder
@@ -121,13 +122,12 @@ _effect_sim = sim()
 _effect_before = float(_effect_sim.civ["literacy_general"])
 _effect_sim.done.add(_effect_node)
 _effect_sim.apply_tech_effects(_effect_node)
-_effect_text = " ".join(message for _year, message in _effect_sim.log
-                        if "changes the society" in message)
+_effect_lines = [message for _year, message in _effect_sim.log if cause_of(message) == "society_changed"]
 _effect_after = float(_effect_sim.civ["literacy_general"])
 check("242: a literacy effect names the old and new value",
-      "literacy_general" in _effect_text
-      and "%.1f%%" % (_effect_before * 100) in _effect_text
-      and "%.1f%%" % (_effect_after * 100) in _effect_text, _effect_text)
+      any(abs(facts_of(line)["changes"]["literacy_general"][0] - _effect_before) < 1e-9
+          and abs(facts_of(line)["changes"]["literacy_general"][1] - _effect_after) < 1e-9
+          for line in _effect_lines if "literacy_general" in facts_of(line)["changes"]), _effect_lines)
 _disease_node = next(node_id for node_id in _plain.DISEASE_BURDEN_TECH_IDS
                      if node_id not in _plain.done and node_id not in _plain.coverage_nodes())
 _disease_sim = sim()
@@ -136,11 +136,11 @@ _disease_sim.done.add(_disease_node)
 _disease_sim._done_changed()
 _disease_sim.apply_tech_effects(_disease_node)
 _burden_after = _disease_sim._disease_burden()
-_disease_text = " ".join(message for _year, message in _disease_sim.log
-                         if "changes the society" in message)
+_disease_lines = [message for _year, message in _disease_sim.log if cause_of(message) == "society_changed"]
 check("242: a population effect names the disease burden before and after",
-      "population" in _disease_text and "%.2f" % _burden_before in _disease_text
-      and "%.2f" % _burden_after in _disease_text, _disease_text)
+      any(abs(facts_of(line)["changes"]["population"][0] - _burden_before) < 0.005
+          and abs(facts_of(line)["changes"]["population"][1] - _burden_after) < 0.005
+          for line in _disease_lines if "population" in facts_of(line)["changes"]), _disease_lines)
 
 # --- 245: a BENEFIT block in `why` ----------------------------------------
 _school = _node_explain(_plain, NODES, "school_founded")
@@ -206,6 +206,7 @@ _succession = _agent_state_founder(_deputy_sim).get("succession") or {}
 check("256: state shows the deputy count, their hours and whether they carry the work",
       _succession.get("deputies") == 0.2 and _succession.get("deputy_hours_a_year")
       and _succession.get("deputies_carry_the_work") is False, _succession)
+# presentation: the succession objective's wording
 check("256: ...and a named objective with the gap and where deputies come from",
       "train a successor" in str(_succession.get("objective", "")).lower()
       and "more" in str(_succession.get("objective", "")), _succession)

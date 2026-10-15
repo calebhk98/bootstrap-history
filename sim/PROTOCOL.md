@@ -52,7 +52,15 @@ Two fixes, usable separately or together:
       same command objects from a file and plays them in order). Every
       response is exactly one line of valid JSON; a failed command comes back
       as {"ok": false, "error": "..."} explaining what to do instead, never a
-      stack trace or a bare False.
+      stack trace or a bare False. The text is for a reader and its wording
+      may change; a refusal that has a stable code also carries "cause" (for
+      example "literacy_wall", "household_room", "unknown_node"), and
+      "choices" when it lists the answers it would have accepted. Read those,
+      not the text. The same holds for prose that reports what happened: a
+      step's events may carry "event_kind" and "facts" (the figures the
+      sentence states); "stopped_early" has "stopped_kind"; a project's
+      "waiting_on" has "waiting_on_kind"; the score's "why" has "why_kind";
+      an automation row may carry "reason_kind" and its figures.
 
       {"cmd":"state"}                              current situation, in full
       {"cmd":"available"}                          every node that can legally start now,
@@ -84,8 +92,9 @@ Two fixes, usable separately or together:
                                                     cost, staff, risk, chain, what it
                                                     unlocks, why it is or isn't startable.
                                                     A blocked node carries blocked_kind and
-                                                    blockers, a list of {kind, text, ids}
-                                                    (kinds: knowledge, power, supply,
+                                                    blockers, a list of {kind, cause, text, ids}
+                                                    (cause names the refusing check, e.g.
+                                                    absent_trades, craft_staff; kinds: knowledge, power, supply,
                                                     specialists, money, politics, closed);
                                                     the start refusal is the first entry.
                                                     standing_effect gives the reputation and
@@ -112,7 +121,9 @@ Two fixes, usable separately or together:
                                                     (pay_to_lower_the_risk), for a lower chance
                                                     of failing
       {"cmd":"start","id":"zinc_metal"}            begin a project (error explains
-                                                    exactly what is missing if you can't;
+                                                    exactly what is missing if you can't,
+                                                    and blocked_kind / blocked_cause give
+                                                    the first blocker as codes;
                                                     if it would oversubscribe a hired
                                                     trade your other active work already
                                                     draws on, says so right here, in
@@ -129,7 +140,10 @@ Two fixes, usable separately or together:
       {"cmd":"programme","action":                   risk shows) and pause_shortage (share of
         "pause"|"resume"|"clear"}                    planned work lost) pause it; the step reply's
                                                     "programme" rows say why in
-                                                    did_nothing_because. It stays paused until
+                                                    did_nothing_because (text) and
+                                                    did_nothing_kind (a stable code; plus
+                                                    did_nothing_material for a shortage).
+                                                    It stays paused until
                                                     resume, or resumes itself with auto_resume.
       {"cmd":"exclude","what":"freedman_staff"}    never let rush, rush preview, auto_open or
       {"cmd":"exclude","what":"trait:buys_people"}  auto_commission begin this id; also

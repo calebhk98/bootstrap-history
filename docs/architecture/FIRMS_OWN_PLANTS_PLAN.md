@@ -352,7 +352,8 @@ players keep working, the id is a product.
    capability. This may move to a separate kind of owned thing later.
 2. The founder's practice is the founder working a normal job: the founder offers hours in the labour market in a
    trade they hold and is paid that trade's wage, like any worker. `practice_income` and the `_your_own_practice`
-   revenue line go; tracked by Complaint 518, outside this plan's stages.
+   revenue line go (done: Complaint 518, closed); supervising hours reduce hours sold through
+   `household.supervision_hours_this_year`, which the manager seat fills.
 3. Where the paths differ: the firm path wins for hiring and wages, market share and book sales, and exit; mothball and
    restore come from the founder path and become available to every owner; the opening fee comes from the entry's
    `capital`.
@@ -361,6 +362,6 @@ players keep working, the id is a product.
    capital markets).
 6. A firm paying both node upkeep (which includes crew pay) and crew wages is not intended. Fixed on the agents path
    (`test_firm_crew_paid_once.py`: `economy_port.concern_upkeep` excludes the staff part of a derived upkeep,
-   `node_upkeep.non_labour_share`). Still double on the founder's path (`economy_production.institution_upkeep` plus
-   the payroll in `living_cost`). Authored, programme and defaulted upkeep state no staff split and are charged whole.
+   `node_upkeep.non_labour_share`). Fixed on the founder's path too (`test_founder_crew_paid_once.py`: `economy_production.institution_upkeep` charges
+   the same non-crew share, the payroll in `living_cost` carries the crew). Authored, programme and defaulted upkeep state no staff split and are charged whole.
 7. `auto_open_ventures` stays, as a policy any owner can switch on.

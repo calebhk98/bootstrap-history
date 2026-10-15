@@ -19,6 +19,7 @@ grouping evidence.
 """
 from .data import WAGES
 from sim.constants import declare
+from sim.refusal import LogLine
 from . import money_units
 from .units_prose import money_text
 from sim.world import capital_market
@@ -128,7 +129,8 @@ class CreditMixin:
         # Floor of one year's running costs: everyone can run a tab for a season.
         # One upkeep() call; if already provided, reuse it to avoid silent duplication.
         upkeep_amount = self.upkeep() if _upkeep is None else _upkeep
-        floor = self.living_cost(_rev=_rev, _upkeep=upkeep_amount) + upkeep_amount * self.CREDIT_LINE_FLOOR_UPKEEP_BUFFER_SHARE
+        # The standing income prices the floor too: a year's job does not shrink what a lender thinks you live on.
+        floor = self.living_cost(_rev=earning if _rev is None else _rev, _upkeep=upkeep_amount) + upkeep_amount * self.CREDIT_LINE_FLOOR_UPKEEP_BUFFER_SHARE
         # Bounded by what can be serviced: no lender advances more than income
         # can carry, even with a grand patron. Five years of turnover stops a
         # patron-name from creating an unpayable debt trap. [temporary_heuristic]
@@ -360,14 +362,16 @@ class CreditMixin:
         if household._said_near_limit:
             return
         household._said_near_limit = True
-        household.log.append((year, "CLOSE TO THE LIMIT: you owe %s of the %s anyone "
-                             "here will advance you (%d%%). Past it every "
-                             "project in hand is halted unfinished and nobody "
-                             "funds new work for some years. 'stop' a project, "
-                             "'mothball' a loss-maker or 'fire' somebody while "
-                             "it is still your choice"
-                         % (money_text(-household.capital, self, grouped=True),
-                            money_text(limit, self, grouped=True), used * 100)))
+        household.log.append((year, LogLine(
+            "credit_near_limit", "CLOSE TO THE LIMIT: you owe %s of the %s anyone "
+            "here will advance you (%d%%). Past it every "
+            "project in hand is halted unfinished and nobody "
+            "funds new work for some years. 'stop' a project, "
+            "'mothball' a loss-maker or 'fire' somebody while "
+            "it is still your choice"
+            % (money_text(-household.capital, self, grouped=True),
+               money_text(limit, self, grouped=True), used * 100),
+            share_of_limit=used)))
 
     CREDIT_FREEZE_YEARS_AFTER_HALT = declare(
         "CREDIT_FREEZE_YEARS_AFTER_HALT", 5, kind="temporary_heuristic",
@@ -471,15 +475,17 @@ class CreditMixin:
                     _kept += max(0.0, spent_val)
                 projects.bountied.discard(node_id)
             household.credit_frozen_until = year + self.CREDIT_FREEZE_YEARS_AFTER_HALT
-            household.log.append((year, "CREDIT EXHAUSTED: %d project%s stopped, "
-                                 "unfinished: %s. The %s already paid "
-                                 "stands to your credit and comes off the "
-                                 "bill if you begin again. Nobody will fund new "
-                                 "work here until %d"
-                             % (len(dropped), "" if len(dropped) == 1 else "s",
-                                ", ".join(dropped[:4])
-                                + (" and others" if len(dropped) > 4 else ""),
-                                money_text(_kept, self, grouped=True), year + self.CREDIT_FREEZE_YEARS_AFTER_HALT)))
+            household.log.append((year, LogLine(
+                "credit_exhausted", "CREDIT EXHAUSTED: %d project%s stopped, "
+                "unfinished: %s. The %s already paid "
+                "stands to your credit and comes off the "
+                "bill if you begin again. Nobody will fund new "
+                "work here until %d"
+                % (len(dropped), "" if len(dropped) == 1 else "s",
+                   ", ".join(dropped[:4])
+                   + (" and others" if len(dropped) > 4 else ""),
+                   money_text(_kept, self, grouped=True), year + self.CREDIT_FREEZE_YEARS_AFTER_HALT),
+                stopped=list(dropped), frozen_until=year + self.CREDIT_FREEZE_YEARS_AFTER_HALT)))
         # let go of what you cannot maintain
         if household.capital < -limit:
             self.mothball_mines()
@@ -595,19 +601,23 @@ class CreditMixin:
             # Say what actually happened and if the freeze date moved (not on first settlement).
             _moved = (_frozen_before > year
                      and household.credit_frozen_until > _frozen_before)
-            household.log.append((year, "INSOLVENCY SETTLED: most of the debt is written "
-                                 "off and you still owe about %s. Your "
-                                 "name is worth less for it (reputation %s), and "
-                                 "you keep your knowledge and your practice%s"
-                                 % (money_text(limit * self.SETTLEMENT_CAPITAL_RETAINED_FRACTION, self, grouped=True),
-                                    "-%.1f" % _rep_hit if _rep_hit > 0.05
-                                    else "already at nothing, so no further",
-                                    (". Settling again while still frozen out "
-                                     "pushes the date nobody will fund you "
-                                     "again until from %d out to %d - it moves "
-                                     "with every settlement, not just the first"
-                                     % (_frozen_before, household.credit_frozen_until))
-                                    if _moved else "")))
+            household.log.append((year, LogLine(
+                "insolvency_settled",
+                "INSOLVENCY SETTLED: most of the debt is written "
+                "off and you still owe about %s. Your "
+                "name is worth less for it (reputation %s), and "
+                "you keep your knowledge and your practice%s"
+                % (money_text(limit * self.SETTLEMENT_CAPITAL_RETAINED_FRACTION, self, grouped=True),
+                   "-%.1f" % _rep_hit if _rep_hit > 0.05
+                   else "already at nothing, so no further",
+                   (". Settling again while still frozen out "
+                    "pushes the date nobody will fund you "
+                    "again until from %d out to %d - it moves "
+                    "with every settlement, not just the first"
+                    % (_frozen_before, household.credit_frozen_until))
+                   if _moved else ""),
+                reputation_hit=_rep_hit, credit_frozen_until=household.credit_frozen_until,
+                freeze_moved=bool(_moved), frozen_before=_frozen_before)))
 
     def stall_diagnosis(self):
         """None if the run is going somewhere; otherwise what is wrong and what
@@ -641,22 +651,24 @@ class CreditMixin:
         if net >= 0:
             return None
         ways = []
-        hours = self.labour.director_pool() - self.labour.director_hours_committed()
+        hours = self.labour.hours_for_sale()
         if hours > 100:
-            # Only suggest work if it gains (selling hours pulls from practice):
-            # the best-paying open trade, quoted by running the sale itself.
+            # Only suggest work that pays more than the standing job already sells these hours for: the
+            # best-paying open trade, quoted by running the sale itself.
             best_trade = self.labour.best_wage_trade()
             if best_trade:
-                would_earn, _refusal, would_cost = self.labour.work_for_wages_dry_run(best_trade, hours)
-                if would_earn > would_cost:
+                would_earn, _refusal = self.labour.work_for_wages_dry_run(best_trade, hours)
+                standing = self.labour.standing_job_pay(self.held_trade())
+                if would_earn > standing:
                     ways.append("work as a %s: %.0f of your own hours are left "
-                                "this year and would bring in about %s against "
-                                "the %s of practice they come out of, so you are "
-                                "up %s. Nobody has to lend you anything for that"
+                                "this year and would bring in about %s%s. "
+                                "Nobody has to lend you anything for that"
                                 % (best_trade, hours,
                                    money_text(would_earn, self, grouped=True),
-                                   money_text(would_cost, self, grouped=True),
-                                   money_text(would_earn - would_cost, self, grouped=True)))
+                                   (" against the %s your standing job pays for them, so you are up %s"
+                                    % (money_text(standing, self, grouped=True),
+                                       money_text(would_earn - standing, self, grouped=True)))
+                                   if standing > 0.5 else ""))
         losers = sorted((node_id for node_id in projects.operating
                          if self.nodes[node_id]["up"] > self.nodes[node_id]["rev"]),
                         key=lambda node_id: self.nodes[node_id]["rev"] - self.nodes[node_id]["up"])

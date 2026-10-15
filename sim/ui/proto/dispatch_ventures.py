@@ -19,6 +19,7 @@ from sim.engine.ui_port import TRADE_FAMILY, downstream_count
 from sim.engine.ui_port import purchase_budget
 from .nodes import _did_you_mean
 from .quantity_units import read_quantity
+from .start_refusal import refusal_fields
 from sim.engine.ui_port import money_text, plain_number
 from sim.ui.memory import load_state, save_state
 from .util import _flag
@@ -131,7 +132,7 @@ def _cmd_start(sim, nodes, cmd, ended):
                    plain_number(_plan["desired"])))
     started, why = sim.start_project(node_id, precaution=bool(cmd.get("precaution")))
     if not started:
-        return {"ok": False, "error": why}
+        return {"ok": False, "error": why, **refusal_fields(sim, node_id)}
     node = nodes[node_id]
     # SAY SO, FOR THE PLAYER'S OWN RECORD: start_project itself only logs
     # the RESTART case (see its own self.log.append for "begun again"), so
@@ -820,22 +821,10 @@ def _cmd_ventures(sim, nodes, cmd, ended):
                    "not judged on money the way the ordinary one is - see "
                    "each one's own 'why' before deciding whether to open "
                    "or close it."}
-    # THE PRACTICE IS NOT A VENTURE, AND IT IS WHERE YOUR MONEY COMES FROM:
-    # "RUNNING: nothing" next to a ledger paying real practice income reads
-    # as the two screens flatly contradicting each other unless this says
-    # which side the practice falls on.
-    _prac_note = sim.practice_note()
-    if _prac_note and already_explained(sim, "practice", cmd):
-        _prac_note = sim.practice_note(brief=True)
     if already_explained(sim, "staffing_share", cmd):
         out["these_are_a_share_of_their_year_not_a_headcount"] = (
             "Staff figures here are a share of a person's year, not a "
             "headcount ('ventures full' explains it again).")
-    if _prac_note:
-        out["your_practice_is_not_a_venture"] = (
-            "%s You did not open it and you cannot close it; it is not "
-            "listed here, and it is most of your income until you build "
-            "something. See 'money'." % _prac_note)
     out["shut_concerns_in_all"] = len(_idle_ordinary)
     out["showing_from"] = offset
     if len(_idle_ordinary) > offset + limit:

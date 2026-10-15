@@ -6,6 +6,7 @@ times that, over the people who can use it (all of the nation's, or the share `e
 children), is the share covered. A rollout is more units of the same work (they are the places it is repeated
 in) until the share asked for is reached or the nation can fill no more.
 """
+from sim.refusal import Refusal
 
 
 class CoverageMixin:
@@ -62,8 +63,8 @@ class CoverageMixin:
         wanted = self.units_for_coverage(node_id, share)
         have = self.institution_units(node_id)
         if wanted - have < 0.02:
-            return False, "%s already covers %d%% of the people" % (
-                self.nodes[node_id]["name"], round(100 * self.coverage_share(node_id)))
+            return False, Refusal("already_covered", "%s already covers %d%% of the people" % (
+                self.nodes[node_id]["name"], round(100 * self.coverage_share(node_id))))
         ok, text = self.open_venture(node_id, units=wanted - have if have > 0.0 else wanted)
         if not ok:
             return False, text

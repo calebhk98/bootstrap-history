@@ -39,4 +39,5 @@ def firm_owner_sectors(firms: List[Any]) -> List[Sector]:
 		return []
 	return [Sector(FIRM_OWNERS, "firms", "owners of firms",
 				   "the profit of %d firms has fallen %d%% below what their owners had come to expect"
-				   % (losing, round(100.0 * lost / expected)), lost, expected, float(losing), 1.0)]
+				   % (losing, round(100.0 * lost / expected)), lost, expected, float(losing), 1.0,
+				   facts={"firms": losing, "fall_share": lost / expected})]

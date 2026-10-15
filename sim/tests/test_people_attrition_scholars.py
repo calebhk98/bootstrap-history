@@ -1,5 +1,6 @@
 """people_attrition_scholars: regression checks, run individually with `--only people_attrition_scholars`."""
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of
 
 # =============================================================================
 # PEOPLE ARE WHOLE. The user's objection, and it was right: "how can you have
@@ -63,10 +64,10 @@ check("the refusal names the household's market reach, not literacy alone",
       not ok2 and "reach" in why2 and "literacy" in why2, why2)
 ok_frac_h, why_frac_h = s.labour.hire("smith", 2.5)
 check("hire refuses a fractional number of people",
-      not ok_frac_h and "whole" in why_frac_h, why_frac_h)
+      not ok_frac_h and cause_of(why_frac_h) == "count_not_whole", why_frac_h)
 ok_frac_t, why_frac_t = s.labour.train("machinist", 1.5)
 check("...and so does train",
-      not ok_frac_t and "whole" in why_frac_t, why_frac_t)
+      not ok_frac_t and cause_of(why_frac_t) == "count_not_whole", why_frac_t)
 ok_whole_h, _ = s.labour.hire("smith", 2)
 check("...but a whole number still goes through, and lands exactly that many",
       ok_whole_h and s.employees.get("smith") == 2.0, s.employees.get("smith"))
@@ -149,6 +150,7 @@ ok_sch, _ = s.labour.hire("scholar", 2)
 check("...but hiring an actual scholar still does",
       ok_sch and s.labour.effective_scholars() >= _before_sch + 2 - 1e-6,
       s.labour.effective_scholars())
+# presentation: the authored wording of the scholar advice
 check("the advice on how to get scholars never points at a different trade "
       "family's trade, which would not even count",
       all("scribe" not in why and "chemist" not in why and "merchant" not in why
@@ -422,7 +424,7 @@ check("a cap that does not parse is refused, not shrugged off into "
       "starting everything - the one typo a careful player can make must "
       "not be the typo that begins the whole tree",
       _PT("rush limit:abc")[0] is None
-      and "not a number" in (_PT("rush limit:abc")[1] or ""),
+      and cause_of(_PT("rush limit:abc")[1]) == "cap_not_a_number",
       _PT("rush limit:abc"))
 check("platinum is reachable the way its own note and the geography file "
       "both say it is, overland, without rounding the Cape",

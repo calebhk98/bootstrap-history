@@ -458,8 +458,20 @@ def _validate_civilisation_starts(nodes, production):
         for message in gap_warnings:
             print("WARNING: " + message)
     errors += _validate_basket_supply(civ_start_check, civilisations, production)
+    errors += _validate_ore_reach(civilisations, production)
     for message in errors:
         print("ERROR: " + message)
+    return errors
+
+
+def _validate_ore_reach(civilisations, production):
+    """Complaints/516: metals a civilisation demands that no deposit within its reach supplies."""
+    from sim.engine import validate_ore_reach
+    from sim.engine.need_data import load_needs
+    errors, warnings = validate_ore_reach.ore_reach_findings(
+        civilisations, production, load_needs(ROOT, MODDIR)["goods"])
+    for message in warnings:
+        print("WARNING: " + message)
     return errors
 
 

@@ -40,6 +40,7 @@ def _describe(sim):
         "paused": bool(programme.get("paused")), "committed_so_far": round(programme.get("committed", 0.0), 1),
         "hours_committed_so_far": round(programme.get("hours", 0.0), 1),
         "pauses": pauses_text(programme), "paused_because": programme.get("paused_by"),
+        "paused_kind": programme.get("paused_kind"),
         "runs": "each year inside step, before time passes, through rush (exclusions and caps apply)"}}
 
 
@@ -109,6 +110,6 @@ def _cmd_programme(sim, nodes, cmd, ended):
         if not is_set(sim):
             return {"ok": False, "error": "no programme is set"}
         state(sim)["paused"] = action == "pause"
-        state(sim)["paused_by"] = None
+        state(sim)["paused_by"] = state(sim)["paused_kind"] = state(sim)["paused_material"] = None
         return _describe(sim)
     return {"ok": False, "error": "say set, show, pause, resume or clear"}

@@ -79,7 +79,7 @@ working = toilers.members * STRATUM_WORKING_SHARE
 check("the group is the working people of the stratum", abs(workers.members - working) < 1e-6 * working, workers.members)
 check("their loss is the fall in pay times the people paid",
 	  abs(workers.lost_income - working * 50.0) < 1e-6 * working * 50.0, workers.lost_income)
-check("the grievance names the trade and the fall", "labourer" in workers.cause and "33%" in workers.cause, workers.cause)
+check("the grievance names the trade and the fall", workers.facts["trade"] == "labourer" and round(100 * workers.facts["fall_share"]) == 33, workers.facts)
 check("other trades' workers whose pay held are not organised", ("displaced_workers", "weavers") not in found)
 check("a fall the pay explains is not counted a second time as a general fall of the stratum's incomes",
 	  ("falling_incomes", "toilers") not in found, list(found))
@@ -100,7 +100,7 @@ lost = before * 0.3 * 0.5
 check("the loss is the fall in the property income", abs(landholders.lost_income - lost) < 1e-6 * lost, landholders.lost_income)
 check("the landholders are the stratum's own people",
 	  abs(landholders.members - stratum(registry, "owners").record.members) < 1e-9)
-check("the grievance says rents fell", "rents" in landholders.cause, landholders.cause)
+check("the grievance says rents fell", "property" in landholders.forms, landholders.forms)
 
 # ---- what the pay of a trade and rents do not explain stays a general fall ------------------------
 stratum(registry, "toilers").record.welfare *= 0.5
@@ -133,7 +133,7 @@ check("their loss is the profit that fell away, firm by firm",
 check("a firm that earns more than it expected does not set off another's loss", sectors[0].members == 2, sectors[0].members)
 check("the owners' income base is what they expected", abs(sectors[0].income_base - 160.0) < 1e-9, sectors[0].income_base)
 check("the grievance names how many firms and by how much",
-	  "2 firms" in sectors[0].cause and "62%" in sectors[0].cause, sectors[0].cause)
+	  sectors[0].facts["firms"] == 2 and round(100 * sectors[0].facts["fall_share"]) == 62, sectors[0].facts)
 for _year in range(80):
 	Sector.remember_margins(firms)
 check("firm owners forget a fall that lasts", Sector.of_firms(firms, IncomeWorld()) == [])

@@ -2,6 +2,7 @@
 import collections
 
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of
 
 # =============================================================================
 # FINDINGS_ROUND2 section Q: literacy bounds who you can hire.
@@ -21,7 +22,7 @@ ok_hi, why_hi = s_hi.labour.hire("scribe", 3)
 ok_lo, why_lo = s_lo.labour.hire("scribe", 3)
 check("money alone cannot hire scribes a low-literacy society has nobody to "
       "supply, at any price",
-      ok_hi and not ok_lo and "literacy" in why_lo,
+      ok_hi and not ok_lo and cause_of(why_lo) == "literacy_wall",
       "rome ok=%s / norse ok=%s (%s)" % (ok_hi, ok_lo, why_lo))
 
 # --- Q: the same wall applies to TEACHING a trade into existence, the only
@@ -30,7 +31,7 @@ check("money alone cannot hire scribes a low-literacy society has nobody to "
 ok_lo, why_lo = s_lo.labour.train("machinist", 2)
 check("a society that cannot read cannot be taught machinists into "
       "existence either",
-      not ok_lo and "literacy" in why_lo, why_lo)
+      not ok_lo and cause_of(why_lo) == "literacy_wall", why_lo)
 ok_hi, why_hi = s_hi.labour.train("machinist", 2)
 check("the same teaching succeeds where enough people can read",
       ok_hi, why_hi)
@@ -250,7 +251,7 @@ _r_bad = S._agent_dispatch(_command_sim, NODES, {"cmd": "buy", "what": "mine",
                                                  "material": "not_a_real_material_xyz", "n": 10})
 check("...but still refuses a genuinely unpriced name, with a hint rather "
       "than a bare closed list",
-      _r_bad.get("ok") is False and "aluminium_kg" in _r_bad.get("error", ""),
+      _r_bad.get("ok") is False and _r_bad.get("cause") == "unknown_material" and bool(_r_bad.get("choices")),
       _r_bad)
 
 # --- COMMODITY FRAMEWORK (data/world/COMMODITIES.md,

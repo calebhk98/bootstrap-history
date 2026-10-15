@@ -1,5 +1,6 @@
 """Policies, creditors and hazard value shifts: knowledge is kept while plant is shed, the automatic hiring and training policies, staff trimming against credit, work in hand, and a hazard's gradual values delta."""
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of, facts_of
 from .agent_command_helpers import ask_agent, pristine_game
 
 
@@ -98,7 +99,7 @@ s.done.add(_LOSS); s._done_changed()      # you BUILT it; that is what mothballi
 s.mothballed.add(_LOSS)
 ok, why = s.start_reason(_LOSS)
 check("a mothballed work refuses to be started as if it were new research",
-      not ok and "restore" in why, why)
+      not ok and s.start_blockers(_LOSS)[0]["cause"] == "mothballed", s.start_blockers(_LOSS))
 avail = S._agent_available(s, NODES, {"all": True})
 check("a mothballed work does not appear in available looking like new research",
       not any(entry["id"] == _LOSS for entry in avail["available"]), avail["count"])
@@ -156,12 +157,15 @@ ok_ig, why_ig = s.start_reason("ag2_hydrometer", ignore_trade=True)
 check("ignore_trade accepts a node that is startable but for the trade alone",
       ok_ig, why_ig)
 ok_norm, why_norm = s.start_reason("ag2_hydrometer")
+_blocker_norm = s.start_blockers("ag2_hydrometer")[0]
 check("without ignore_trade the same node is refused specifically for the trade",
-      not ok_norm and "optician" in why_norm, why_norm)
+      not ok_norm and _blocker_norm["cause"] == "absent_trades"
+      and "optician" in [trade for trade in NODES["ag2_hydrometer"]["lab"] if not s.labour.trade_available(trade)],
+      _blocker_norm)
 s.done.update(NODES["ag2_cold_store"]["pre"])  # prerequisites held, so only staffing can refuse
 ok_staff, why_staff = s.start_reason("ag2_cold_store", ignore_trade=True)
 check("ignore_trade still refuses a node blocked by missing STAFF, not just the trade",
-      not ok_staff and "craftsmen" in why_staff, why_staff)
+      not ok_staff and s.start_blockers("ag2_cold_store")[0]["cause"] == "craft_staff", why_staff)
 
 node = "ag2_cold_store"
 for p in NODES[node]["pre"]:
@@ -169,7 +173,8 @@ for p in NODES[node]["pre"]:
 s.artisans, s.scholars = 10.0, 10.0
 r0 = S._agent_dispatch(s, NODES, {"cmd": "start", "id": node})
 check("start refuses outright when a needed trade has never been taught",
-      not r0["ok"] and "engineer" in r0.get("error", ""), r0)
+      not r0["ok"] and r0.get("blocked_cause") == "absent_trades"
+      and "engineer" in [trade for trade in NODES[node]["lab"] if not s.labour.trade_available(trade)], r0)
 s.labour.train("engineer", 2)          # training begun; nobody is ready for two years
 r1 = S._agent_dispatch(s, NODES, {"cmd": "start", "id": node})
 check("start accepts work nobody can do yet only WITH a warning naming the trade",
@@ -189,7 +194,7 @@ check("a whole-number staff carries no fraction footnote",
 ratios = []
 # a project the society can staff, with the purse far short of its instalment, so the very first year shows a refund
 s.start_project("scientific_method")
-s.capital = -s.credit_limit() * 0.8
+s.capital = -s.credit_limit() * 0.1
 s._step_market = lambda: None   # the hours and the refund come from the work phases; the market close adds nothing to them
 for _ in range(3):
     s.step()
@@ -366,7 +371,7 @@ _b2 = sum(s.employees.values())
 s._step_staff()
 check("losing staff you cannot pay is written in the log, never silent",
       sum(s.employees.values()) < _b2
-      and any("cannot pay everyone" in message for _year, message in s.log),
+      and any(cause_of(message) == "staff_left_unpaid" for _year, message in s.log),
       "%.2f -> %.2f, log %r" % (_b2, sum(s.employees.values()), s.log[-3:]))
 
 # 4. auto_shed discards technologies you built - under fog the only score there
@@ -440,8 +445,10 @@ if _loser:
     s.done.add(_loser[0]); s._done_changed(); s.open_venture(_loser[0])
 s.capital = -900.0
 s.insolvent_years = 12
-# wage work is advised only when it pays more than the practice those hours run, so this founder has none to lose
+# wage work is advised only when it pays more than the standing job already sells those hours for, so this
+# founder holds no trade to beat
 s.revenue = s.revenue_capacity = lambda: 0.0
+s.held_trade = lambda: None
 _diag = s.stall_diagnosis()
 check("a run that has effectively stopped says so, and says what would restart it",
       _diag and _diag["what_would_change_it"]

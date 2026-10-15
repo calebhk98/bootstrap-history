@@ -305,8 +305,9 @@ check("with every listed prerequisite met and nothing else missing, "
       "start_reason actually allows it - the live engine, not just the "
       "tree data, agrees single_crystal/silicon_path are not required "
       "(a refusal over a material nobody supplies is a different gate)",
-      _ok_pct or ("single_crystal" not in _why_pct2 and "silicon_path" not in _why_pct2
-                  and "prerequisite" not in _why_pct2), _why_pct2)
+      _ok_pct or all(blocker["cause"] != "missing_prereqs"
+                     and not {"single_crystal", "silicon_path"} & set(blocker["ids"])
+                     for blocker in _s_pct.start_blockers("point_contact_transistor")), _why_pct2)
 # A FREE PREREQUISITE SHOULD SAY IT IS FREE. Eight cap_* nodes cost nothing,
 # take no time and cannot fail, and a player still has to start each by hand.
 # The player who won this game called the refusal that names one of them
@@ -317,10 +318,12 @@ check("with every listed prerequisite met and nothing else missing, "
 # opening to satisfy a prerequisite (start_reason tests `p not in self.done`).
 _s_fp = sim()          # thermometer NOT done, so cap_measure_temp is blocked
 _, _fp_why2 = _s_fp.start_reason("chm_crystallisation")
+# presentation: the wording of a prerequisite hint
 check("a free node that is itself blocked is not offered as the next step, "
       "which would be a second refusal wearing the first one's clothes",
       "costs nothing" not in (_fp_why2 or ""), _fp_why2)
 _, _fp_why3 = _s_fp.start_reason("junction_transistor")
+# presentation: the wording of a prerequisite hint
 check("an ordinary expensive prerequisite gets no such hint",
       "costs nothing" not in (_fp_why3 or ""), _fp_why3)
 _s_fp.done.add("thermometer"); _s_fp._done_changed()
