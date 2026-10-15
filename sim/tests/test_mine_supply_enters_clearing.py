@@ -15,6 +15,13 @@ from sim.world import market
 from sim.world.producer_market import Offer
 
 
+def runs_the_opening_asks_of_mines():
+    """The runs of ore digging a year the fixture's opening is sized to need (its smelters' demand)."""
+    from sim.economy import opening
+    record, _areas, _carriage = opening.open_economy(fixture.small_setup())
+    return sum(producer.expected_sales for producer in record.producers.values() if producer.recipe_id == fixture.MINE)
+
+
 def ore_after_two_years(runs_allowed):
     recipes = fixture.recipes()
     recipes[fixture.MINE] = replace(recipes[fixture.MINE], site_bound=True)
@@ -26,13 +33,15 @@ def ore_after_two_years(runs_allowed):
 
 class AgentEconomyMineTests(unittest.TestCase):
     def test_a_mines_capacity_is_the_ore_supplied(self):
-        small, _price = ore_after_two_years(20.0)
-        large, _price = ore_after_two_years(200.0)
+        need = runs_the_opening_asks_of_mines()
+        small, _price = ore_after_two_years(0.1 * need)
+        large, _price = ore_after_two_years(2.0 * need)
         self.assertGreater(large, 5.0 * small)
 
     def test_a_glut_from_mines_lowers_the_ore_price(self):
-        _output, scarce_price = ore_after_two_years(800.0)
-        _output, glut_price = ore_after_two_years(3000.0)
+        need = runs_the_opening_asks_of_mines()
+        _output, scarce_price = ore_after_two_years(0.1 * need)
+        _output, glut_price = ore_after_two_years(5.0 * need)
         self.assertLess(glut_price, scarce_price)
 
 

@@ -71,6 +71,10 @@ class ExportTests(unittest.TestCase):
 
 
 class ImportTests(unittest.TestCase):
+    def setUp(self):
+        from sim.tests import economy_fixture
+        economy_fixture.households_with_a_surplus(self)
+
     def test_paying_for_imports_lowers_the_coin_stock_and_is_a_net_outflow(self):
         _economy, _outcome, control = first_year()
         economy, outcome, change = first_year(imports={fixture.GRAIN: (0.05, GRAIN_OUTPUT_SCALE)})

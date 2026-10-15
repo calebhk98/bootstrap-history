@@ -72,11 +72,11 @@ def with_income(cohorts: Mapping[str, Cohort], per_head: float, labour_share: fl
 def working_share(recipe, prices: Mapping[GoodId, float], wages: Mapping[str, float]) -> float:
     """Share of a producer's plant that works at the opening prices: only the workplaces whose own cost the
     revenue covers do (producers.share_working), so a producer sized to the runs households' demand needs
-    has that much more plant than it works. A recipe the prices make unprofitable counts as working in full
-    (the opening sizes it to the demand, and the first year's plan finds out)."""
+    has that much more plant than it works. A recipe whose revenue does not cover its variable cost at these
+    prices counts as working in full (the opening sizes it to the demand, and the first year's plan finds out)."""
     from . import producers, unit_cost
     variable = unit_cost.variable_cost_per_run(recipe, prices, wages)
-    if not math.isfinite(variable) or variable <= 0.0:
+    revenue = unit_cost.revenue_per_run(recipe, prices)
+    if not math.isfinite(variable) or variable <= 0.0 or revenue < variable:
         return 1.0
-    share = producers.share_working(unit_cost.revenue_per_run(recipe, prices), variable)
-    return share if share > 0.0 else 1.0
+    return producers.share_working(revenue, variable)

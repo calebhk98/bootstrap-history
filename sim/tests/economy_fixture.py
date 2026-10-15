@@ -7,7 +7,9 @@ and steps it, returning the economy and each year's outcome. Nothing is read fro
 states every figure it depends on.
 """
 import dataclasses
+from unittest import mock
 
+from sim.economy import opening_income
 from sim.economy.economy import Economy
 from sim.world.need_demand import NEED_SUBSTITUTION_ELASTICITY
 from sim.economy.households_basket import Basket, NeedSpec
@@ -114,3 +116,16 @@ def two_country_setup(**changes) -> EconomySetup:
         base, tiles=the_tiles, world_map=world_map_of(the_tiles), opening_population_by_tile=people,
         recipes_by_country={base.civ_id: tuple(sorted(base.recipes)), NORTH: (FARM,)})
     return dataclasses.replace(setup, **changes) if changes else setup
+
+
+def households_with_a_surplus(test_case):
+    """For the length of `test_case`, open economies with households' income at the full-employment ceiling
+    (split by what each class owns) instead of the income the opening's demand pays (opening_income.py). That
+    income leaves a household its floors and no surplus, because it is the income at which a household with a
+    propensity to spend below one spends no more than it is paid. A test about what a household does with a
+    surplus (ornaments, durables, imports it can afford) or about something that does not depend on how well off
+    it is (where producers sit) states that it wants one."""
+    patch = mock.patch.object(opening_income, "settled_income_per_head",
+                              lambda ceiling, _people, _demand_at: (ceiling, 0.0))
+    patch.start()
+    test_case.addCleanup(patch.stop)

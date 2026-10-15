@@ -51,6 +51,10 @@ def price_path(good=VESSEL):
 
 
 class VesselPriceTests(unittest.TestCase):
+    def setUp(self):
+        from sim.tests import economy_fixture
+        economy_fixture.households_with_a_surplus(self)
+
     def test_the_vessel_price_after_decades_stays_within_a_small_multiple_of_the_opening_price(self):
         late = [price for price, _cost in price_path()[-LATE_YEARS:]]
         self.assertLess(sum(late) / len(late), LATE_PRICE_OVER_OPENING * OPENING_PRICE)
