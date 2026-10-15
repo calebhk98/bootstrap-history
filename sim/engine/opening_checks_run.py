@@ -14,7 +14,6 @@ from sim.geography import api as geography
 
 from . import economy_port_trace, opening_checks, solve_cache
 from .data import load, load_civ
-from .economy_port_health import staple_good
 from .economy_port_key import SPIN_UP_SOURCE_MODULES, spin_up_key
 from .economy_port_setup import build_setup
 from .economy_port_year import SPIN_UP_MAXIMUM_YEARS, SPIN_UP_TOLERANCE, SPIN_UP_YEARS_ENV
@@ -55,15 +54,27 @@ def sited_ore_ratios(game, prices, costs, stale) -> Dict[str, float]:
             for ore in ores if prices.get(ore) and costs.get(ore) and ore not in stale}
 
 
+def traded_staple(agent, stale):
+    """The good of the hunger need with the largest opening basket quantity among those whose markets cleared
+    lately (a good nobody trades shows what it would cost to make, not a price); None when none did."""
+    economy = agent.economy()
+    setup = economy.setup
+    need = next((spec for spec in setup.basket.needs if spec.need_id == setup.hunger_need), None)
+    opening = economy_api.opening_quantities(economy)
+    goods = [good for good, _effect in need.goods if good not in stale] if need is not None else []
+    return max(goods, key=lambda good: opening.get(good, 0.0), default=None)
+
+
 def price_ratios(game) -> Dict[str, Dict[str, float]]:
-    """{group: {good: price over making cost}} for the sited ores, the staple and the coin metal, after one step."""
+    """{group: {good: price over making cost}} for the sited ores, the staple and the coin metal, after one step;
+    only goods whose markets cleared lately (a stale good's shown price is its cost, not a trade)."""
     agent = game.economy.agent
     setup = agent.economy().setup
     prices, costs, stale = game.economy.agent_prices(), game._material_prices(), agent.stale_goods()
-    named = {"staple": staple_good(agent), "coin_metal": setup.currency.backing_good}
+    named = {"staple": traded_staple(agent, stale), "coin_metal": setup.currency.backing_good}
     ratios = {"sited_ores": sited_ore_ratios(game, prices, costs, stale)}
     for group, good in named.items():
-        usable = good and prices.get(good) and costs.get(good)
+        usable = good and good not in stale and prices.get(good) and costs.get(good)
         ratios[group] = {good: prices[good] / costs[good]} if usable else {}
     return ratios
 

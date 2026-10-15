@@ -8,3 +8,6 @@ economy or engine source they go stale and the game computes its own as before.
 Regenerate before handing a build to players, and drop the stale ones:
 
     python3 sim/simulator.py openings --prune
+
+The `openings` command first runs the opening checks (`sim/engine/opening_checks.py`) and refuses to write an
+opening that fails them unless given `--allow-failing REASON`; `opening-checks` prints the table without writing.
