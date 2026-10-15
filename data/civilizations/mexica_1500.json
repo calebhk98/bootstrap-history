@@ -609,6 +609,9 @@
     "w_religious_rigidity": 0.9
   },
   "wage_index": 0.5,
+  "imported_ores": {
+    "silver": "the Taxco silver mines are dated by their catalogue entry to the 1530s, after this start, so no silver deposit in the catalogue was being worked; silver in Mexica hands came by tribute and trade as worked objects from West Mexican and Oaxacan metalworkers; recalled, not a figure from a source read for this entry"
+  },
   "unsupplied_basket_goods": {
     "brass_kg": "no zinc working and no calamine brass; copper and bronze meet the need",
     "camphor_kg": "camphor came from East Asian and Indonesian trade; the distillation node it is gated on is not held and no partner supplies it",
