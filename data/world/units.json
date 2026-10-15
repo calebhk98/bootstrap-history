@@ -45,6 +45,6 @@
     {"pattern": "^square_metres$", "dimension": "area", "native": "square_metre"},
     {"pattern": "^wage_per_hour$", "dimension": "money", "native": "civ_coin", "per": "hr"},
     {"pattern": "^per_hectare$", "dimension": "money", "native": "civ_coin", "per_dimension": "area", "per_native": "hectare"},
-    {"pattern": "^(buy_per_tonne|sell_per_tonne|per_tonne|price_per_tonne|sells_back_per_tonne|average_per_tonne_for_this_order)$", "dimension": "money", "native": "civ_coin", "per_dimension": "mass", "per_native": "tonne"}
+    {"pattern": "^(buy_per_tonne|sell_per_tonne|per_tonne|price_per_tonne|sells_back_per_tonne|average_per_tonne_for_this_order|price_at_tile_per_tonne|carriage_per_tonne|making_cost_per_tonne)$", "dimension": "money", "native": "civ_coin", "per_dimension": "mass", "per_native": "tonne"}
   ]
 }
