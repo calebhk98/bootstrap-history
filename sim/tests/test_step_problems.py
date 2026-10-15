@@ -4,10 +4,11 @@ from sim.ui.proto import render_screen_step as _render_big
 from sim.ui.proto.render_screens_status import render_risk
 from sim.ui.proto.step_problems import step_problems, problems_lines, route_nodes, route_startable
 
-events = [{"year": 101, "message": "interest on 330 denarii of arrears at 10.9% a year"},
-          {"year": 102, "message": "CREDIT EXHAUSTED: 3 projects stopped"},
-          {"year": 103, "message": "THE TREASURY IS LOOKING AT YOUR FORTUNE: a 5% chance"},
-          {"year": 103, "message": "Antonine plague: staff -10% (softened by clean water (lapsed: Sand filter is closed))"}]
+events = [{"year": 101, "message": "interest on 330 denarii of arrears at 10.9% a year", "event_kind": "arrears_interest"},
+          {"year": 102, "message": "CREDIT EXHAUSTED: 3 projects stopped", "event_kind": "credit_exhausted"},
+          {"year": 103, "message": "THE TREASURY IS LOOKING AT YOUR FORTUNE: a 5% chance", "event_kind": "treasury_watching"},
+          {"year": 103, "message": "Antonine plague: staff -10%", "event_kind": "hazard_hit",
+           "facts": {"lapsed_hedges": ["Sand filter"]}}]
 snapshots = [{"year": 101, "route_startable": False, "concerns_closed": ["a"]},
              {"year": 102, "route_startable": False, "concerns_closed": ["b", "c"]},
              {"year": 103, "route_startable": True, "concerns_closed": []}]
@@ -31,10 +32,9 @@ check("the goal route is found and startability is a boolean",
 hedge_sim = sim()
 hedge_sim.done.add("sanitation_antisepsis")
 hedge_sim._done_changed()
-_multiplier, why = hedge_sim.hazard_relief("staff_loss")
+_multiplier, _why, lapsed_names = hedge_sim.hazard_relief_detail("staff_loss")
 check("a lapsed hedge names the concern whose closure lapsed it",
-      any("lapsed: " in text and "is closed" in text
-          and hedge_sim.nodes["sanitation_antisepsis"]["name"] in text for text in why), why)
+      hedge_sim.nodes["sanitation_antisepsis"]["name"] in lapsed_names, lapsed_names)
 
 risk_replies, _, _ = proto([{"cmd": "risk"}])
 check("risk reply carries the confiscation block",

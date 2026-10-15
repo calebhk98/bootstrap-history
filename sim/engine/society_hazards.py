@@ -489,9 +489,9 @@ class HazardsMixin:
             key = "causes:" + hazard.get("name", "hazard")
             if key not in said:
                 said.add(key)
-                self.state.household.log.append((year, "%s: %s, so it %s" % (
+                self.state.household.log.append((year, LogLine("hazard_condition_failed", "%s: %s, so it %s" % (
                     hazard.get("name", "hazard"), event_causes.failed_words(report),
-                    "does not come" if kept is None else "comes weaker")))
+                    "does not come" if kept is None else "comes weaker"))))
         return kept
 
     STAFF_LOSS_HAZARD_ANNUAL_CHANCE = declare(
@@ -563,11 +563,13 @@ class HazardsMixin:
         """
         rng = self.rng
         if "sack_chance" in hazard:
-            relief, why = self.hazard_relief("sack_chance")
+            relief, why, lapsed = self.hazard_relief_detail("sack_chance")
             probability = hazard["sack_chance"] * relief
             if why and rng.random() < hazard["sack_chance"] - probability:
-                self.state.household.log.append((year, "%s: an attack comes to nothing (%s)"
-                                 % (hazard.get("name", "crisis"), "; ".join(why[:3]))))
+                self.state.household.log.append((year, LogLine(
+                    "hazard_attack_averted", "%s: an attack comes to nothing (%s)"
+                    % (hazard.get("name", "crisis"), "; ".join(why[:3])),
+                    hazard=hazard.get("name", "crisis"), lapsed_hedges=lapsed)))
             if rng.random() < probability:
                 self._sack_site(hazard, year)
 
@@ -793,18 +795,18 @@ class HazardsMixin:
                        "auto_court_heir is off; protection falls from %d%% "
                        "to %d%% and scandal rises by %d"
                        % (was * 100, household.protection * 100, self.PATRON_DEATH_SCANDAL))
-            household.log.append((year, msg + self.PATRON_DEATH_RECOVERY_NOTE))
+            household.log.append((year, LogLine("patron_dies", msg + self.PATRON_DEATH_RECOVERY_NOTE)))
         if rng.random() < self.FIRE_ANNUAL_CHANCE:
             had = max(0.0, household.capital)
             self.lose_capital(self.FIRE_CAPITAL_LOSS, "fire")
-            household.log.append((year, "fire in the %s: it destroyed %s"
+            household.log.append((year, LogLine("fire", "fire in the %s: it destroyed %s"
                              % (self.civ.get("fire_quarter", "crowded quarter"),
-                                self._loss_words(had))))
+                                self._loss_words(had)))))
         if rng.random() < self.BANDITRY_ANNUAL_CHANCE:
             had = max(0.0, household.capital)
             self.plunder_founder(self.BANDITRY_TAKE_STRENGTH, "banditry", order_holds=True)
-            household.log.append((year, "banditry or a frontier war disrupts supply: "
-                                 "it cost you %s" % self._loss_words(had)))
+            household.log.append((year, LogLine("banditry", "banditry or a frontier war disrupts supply: "
+                                 "it cost you %s" % self._loss_words(had))))
 
     def _loss_words(self, had_before):
         """"1,240 denarii" or "nothing, you were holding none".
@@ -820,4 +822,4 @@ class HazardsMixin:
 
     def _catastrophe(self, why):
         self.state.founder.dead_reason = why
-        self.state.household.log.append((self.state.scenario.year, "RUN ENDS: " + why))
+        self.state.household.log.append((self.state.scenario.year, LogLine("run_ends", "RUN ENDS: " + why)))

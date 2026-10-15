@@ -1,6 +1,7 @@
 """The yearly phases that start projects and supply their materials.
 
 A part of the year's phases (core_step_phases.py); Sim inherits it through StepPhasesMixin."""
+from sim.refusal import LogLine
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from . import automation_audit, shortage_conditions
 from sim.agents.api import edges
@@ -301,10 +302,10 @@ class ProjectStartPhaseMixin:
                     self, "auto_mine", "nitre", "%s of nitre bed" % area_text(spend / self.NITRE_COST_PER_M2, self, unit="square_metre"),
                     "saltpetre is the binding shortage; the yearly spend is capped, not sized to the gap",
                     self.state.household.capital + spend)
-                self.state.household.log.append((self.state.scenario.year, "laid down %s of nitre bed "
+                self.state.household.log.append((self.state.scenario.year, LogLine("nitre_bed_laid", "laid down %s of nitre bed "
                                      "for %s (auto_mine)"
                                  % (area_text(spend / self.NITRE_COST_PER_M2, self, unit="square_metre"),
-                                    money_text(spend, self))))
+                                    money_text(spend, self)))))
         slowed = shortage_conditions.slowed_projects(self) if thr < 0.6 and self.state.holdings.binding else []
         if slowed:
             # SAY WHAT TO DO ABOUT IT: a bare "SHORT OF SALTPETRE: work at
@@ -314,8 +315,8 @@ class ProjectStartPhaseMixin:
             # Only said while a running project draws the material: a shortage nothing running needs slows nothing.
             if shortage_conditions.note_shortage(self, self.state.holdings.binding, thr):
                 names = ", ".join(self.nodes[node_id]["name"] for node_id in slowed[:3])
-                self.state.household.log.append((self.state.scenario.year, "SHORT OF %s: %s running at %d%% of plan. %s"
+                self.state.household.log.append((self.state.scenario.year, LogLine("material_shortage", "SHORT OF %s: %s running at %d%% of plan. %s"
                                  % (shortage_conditions.material_words(self.state.holdings.binding).upper(), names,
-                                    thr * 100, self.shortage_remedy(self.state.holdings.binding))))
+                                    thr * 100, self.shortage_remedy(self.state.holdings.binding)))))
         else:
             shortage_conditions.clear_shortage(self)

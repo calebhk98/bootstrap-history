@@ -290,9 +290,9 @@ class StaffPhaseMixin:
         _whole = int(self.state.household.directors_extra)
         if _whole > self.state.household._said_deputies:
             self.state.household._said_deputies = _whole
-            self.state.household.log.append((self.state.scenario.year, "you now have %d deput%s directing work in "
+            self.state.household.log.append((self.state.scenario.year, LogLine("deputies_directing", "you now have %d deput%s directing work in "
                                  "your name: your year is %s hours instead of "
                                  "%s. They came with the institutions you built"
                              % (_whole, "y" if _whole == 1 else "ies",
                                 plain_number(self.labour.director_pool()),
-                                plain_number(self.cfg["founder_hours_per_year"]))))
+                                plain_number(self.cfg["founder_hours_per_year"])))))

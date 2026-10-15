@@ -319,7 +319,7 @@ class AdoptionMixin:
             school_started = self.done_year.get(self.school_node())
             if school_started is not None and year - school_started >= self.GENERATION_YEARS:
                 school_phrase = "a generation of schooling shows in the census"
-            self.state.household.log.append((year, "%s: %s" % (school_phrase, "; ".join(bits))))
+            self.state.household.log.append((year, LogLine("school_progress", "%s: %s" % (school_phrase, "; ".join(bits)))))
 
     # ---- A TRADE THE FOUNDER INTRODUCED BECOMES A TRADE THE SOCIETY HAS ----
     # "If I invent electricity, you can't say that after 100 years I still
@@ -414,11 +414,11 @@ class AdoptionMixin:
                 # way every other log line in this file narrates an event
                 # the founder would actually observe, never a note about the
                 # code that produced it.
-                household.log.append((year, "%s is no longer only your trade: "
+                household.log.append((year, LogLine("trade_no_longer_only_yours", "%s is no longer only your trade: "
                                  "enough schooling has passed through enough "
                                  "hands that this society simply has its own "
                                  "%ss now, the way it always had smiths"
-                                 % (trade, trade)))
+                                 % (trade, trade))))
 
     def _grow_endemic_trade(self, trade):
         """Let a naturalised trade's own headcount drift toward the same

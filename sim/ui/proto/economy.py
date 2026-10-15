@@ -8,6 +8,8 @@ from sim.engine.ui_port import cash_book, cause_book, plain_number
 from sim.ui.figures import figure_snapshot
 
 from .state import _agent_state
+from .event_kinds import is_notable
+from .refusal_cause import event_codes
 from .capacity_remedies import capacity_remedies
 from .portfolio_bottlenecks import blocker_kind_of, bottleneck_groups
 from .portfolio_waiting import waiting_to_start
@@ -903,17 +905,10 @@ def _changes_tech_events(hist, cutoff):
 
 
 def _changes_notable_events(sim, cutoff):
-    """A HANDFUL OF WORDS, NOT THE WHOLE LOG. Anything the engine already
-    logged as happening TO this player over the window, filtered to the
-    kind of thing a player would call a political event rather than
-    ordinary bookkeeping ("hired a smith"). The log itself is already
-    player-facing prose (see `log`); this only picks out a slice of it.
-    """
-    _MARKERS = ("sack", "denounced", "founder dies", "plague", "crisis",
-               "scandal", "credit exhausted", "insolvency", "war", "revolt",
-               "famine", "fire", "died", "denunciation")
-    return [{"year": year, "message": message} for year, message in sim.log
-            if cutoff < year <= sim.year and any(marker in message.lower() for marker in _MARKERS)]
+    """The log lines of the window whose kind is listed as notable (event_kinds.py): what happened TO this
+    player, a political event rather than ordinary bookkeeping."""
+    return [{"year": year, "message": message, **event_codes(message)} for year, message in sim.log
+            if cutoff < year <= sim.year and is_notable(message)]
 
 
 def _agent_changes(sim, nodes, cmd=None):

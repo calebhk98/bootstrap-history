@@ -277,11 +277,11 @@ class CreditMixin:
         if shed:
             # NAME THEM: "stopped maintaining 1 works" tells a player
             # nothing - not which one, not how to get it back.
-            household.log.append((year, "in arrears, so closed %d concern%s that cost more "
+            household.log.append((year, LogLine("arrears_closed_concerns", "in arrears, so closed %d concern%s that cost more "
                                  "than they returned: %s. You still know how; "
                                  "'restore' reopens one when you can pay for it"
                              % (len(shed), "" if len(shed) == 1 else "s",
-                                ", ".join(shed))))
+                                ", ".join(shed)))))
 
     DEBT_RATE_REPUTATION_DISCOUNT_CAP = declare(
         "DEBT_RATE_REPUTATION_DISCOUNT_CAP", 0.03, kind="temporary_heuristic",
@@ -327,8 +327,9 @@ class CreditMixin:
         self.pay_interest(self.household, owed, "interest on arrears")
         household.interest_paid = (household.interest_paid or 0.0) + owed
         if owed > 0 and (household.insolvent_years in (1, 5, 15)):
-            household.log.append((year, "interest on %s of arrears at %.1f%% a year"
-                                 % (money_text(-household.capital, self), rate * 100)))
+            household.log.append((year, LogLine(
+                "arrears_interest", "interest on %s of arrears at %.1f%% a year"
+                % (money_text(-household.capital, self), rate * 100), rate=rate)))
         return owed
 
     def warn_near_the_limit(self, year):
@@ -524,11 +525,11 @@ class CreditMixin:
             # player cannot understand what they lost, or why it reappeared
             # mothballed rather than gone, from a bare count.
             if taken:
-                household.log.append((year, "creditors took what they could: %d concerns "
+                household.log.append((year, LogLine("creditors_took", "creditors took what they could: %d concerns "
                                      "closed and sold up: %s. You keep the "
                                      "knowledge; reopening means paying for the "
                                      "premises again"
-                                     % (len(taken), ", ".join(taken))))
+                                     % (len(taken), ", ".join(taken)))))
         # AND THE HOUSEHOLD GOES: nobody keeps four hundred dependants they
         # cannot feed. Without shedding them, the upkeep of a household a
         # civilisation can no longer feed would consume every denarius of
@@ -542,8 +543,8 @@ class CreditMixin:
             household.freedmen = 0
             household.artisans = max(self.HOUSEHOLD_DISPERSAL_ARTISANS_FLOOR,
                                           household.artisans * self.HOUSEHOLD_DISPERSAL_ARTISANS_RETENTION)
-            household.log.append((year, "the household disperses: %d people leave, because "
-                                 "you can no longer feed them" % freed))
+            household.log.append((year, LogLine("household_disperses", "the household disperses: %d people leave, because "
+                                 "you can no longer feed them" % freed)))
 
         # DEBT BONDAGE, where the society had it, modelled as a TERM OF
         # SERVICE that is worked off, because that is what it mostly was:
@@ -562,10 +563,10 @@ class CreditMixin:
             household.bondage_years_left = term
             household.bondage_debt = -household.capital
             ledger.settle(self.household, self.edge(edges.EDGE_CREDITORS), 0.0, "debt taken into bondage")
-            household.log.append((year, "BONDAGE: you cannot pay, and you enter service for "
+            household.log.append((year, LogLine("debt_bondage", "BONDAGE: you cannot pay, and you enter service for "
                                  "your debt. For about %d years most of your hours "
                                  "belong to someone else. It is not the end: it is "
-                                 "worked off, and then you are free again" % term))
+                                 "worked off, and then you are free again" % term)))
             return
 
         # and the rest is written off. You keep your standing, your knowledge and

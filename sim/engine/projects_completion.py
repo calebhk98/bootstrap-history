@@ -220,7 +220,7 @@ class CompletionMixin:
             self.pay_edge(edges.EDGE_DESTROYED, _borne, "failure losses")
             if not claimed:
                 for _loss_line in self.lose_what_was_risked(node_id):
-                    household.log.append((scenario.year, "%s: %s" % (node["name"], _loss_line)))
+                    household.log.append((scenario.year, LogLine("failure_loss", "%s: %s" % (node["name"], _loss_line))))
             projects.active[node_id]["cost_left"] = (projects.active[node_id].get("cost_left") or 0.0) + (_lost - _borne)
             # A failure always announces itself; its size sets how loudly.
             _next_risk = self.effective_risk(node_id)
@@ -325,22 +325,22 @@ class CompletionMixin:
             benefit = self.NOT_OPERATING_BENEFIT.get(node_id)
             held = permanent_parts(node, self._tech_effects.get(node_id) or {})
             household.log.append((scenario.year,
-                "completed: %s. STATUS: CLOSED / NOT OPERATING. %s%s Open it "
+                LogLine("project_completed", "completed: %s. STATUS: CLOSED / NOT OPERATING. %s%s Open it "
                 "('open %s') to begin and to start paying upkeep."
                 % (node["name"],
                    ("In force already, open or not: %s. " % "; ".join(held)) if held else "",
                    ("Not in effect until open: %s." % benefit) if benefit
-                   else "Nothing is earning yet.", node_id)))
+                   else "Nothing is earning yet.", node_id))))
             shortfall = self.opening_shortfall(node_id)
             if shortfall:
                 household.log.append((scenario.year,
-                    "with today's staff you could not open it: it needs %.1f "
+                    LogLine("opening_shortfall", "with today's staff you could not open it: it needs %.1f "
                     "scholars and %.1f craftsmen to supervise, and %.1f and %.1f "
-                    "are free." % shortfall))
+                    "are free." % shortfall)))
         else:
-            household.log.append((scenario.year, "completed: " + node["name"]))
+            household.log.append((scenario.year, LogLine("project_completed", "completed: " + node["name"])))
         for line in self.goal_effect_lines(node_id, goal_before):
-            household.log.append((scenario.year, line))
+            household.log.append((scenario.year, LogLine("goal_effect", line)))
         self.record_goal_reached(node_id, scenario.year)
 
     # -- shocks -------------------------------------------------------------

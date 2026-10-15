@@ -17,6 +17,7 @@ from sim.agents.api import ActorRecord, ActorsState  # noqa: F401
 from sim.engine import cash_book
 from sim.engine.state_holdings import HoldingsState, SeatProgressState
 from sim.invalidating import ActiveProjectState, _InvalidatingDict
+from sim.refusal import Refusal, as_record, from_record, is_record
 
 if TYPE_CHECKING:
 	from sim.engine.state_seat import SeatState  # set on this module at import by state_seat
@@ -477,6 +478,9 @@ def serialize_state(obj: Any) -> Any:
 		return {str(k): serialize_state(v) for k, v in obj.items() if not str(k).startswith("_on_change")}
 	if kind is list or kind is tuple:
 		return [serialize_state(x) for x in obj]
+	if isinstance(obj, Refusal):   # a coded line keeps its code, choices and facts across a save
+		record = as_record(obj)
+		return {key: serialize_state(value) for key, value in record.items()}
 	if isinstance(obj, (int, float, str, bool)):
 		return obj
 	if hasattr(obj, "to_canon_dict"):
@@ -504,6 +508,8 @@ def serialize_state(obj: Any) -> Any:
 
 def _deserialize_typed(val: Any, target_type: Any) -> Any:
 	"""Recursively reconstruct typed values from JSON-compatible data according to target_type."""
+	if is_record(val):
+		return from_record(val)
 	if val is None or target_type is Any:
 		return val
 

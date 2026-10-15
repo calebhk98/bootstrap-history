@@ -525,7 +525,7 @@ class StatePressureMixin:
                "is the floor under your standing (%.1f). It costs you credit, "
                "protection and cheap labour until it grows back."
                % (rep_before, self.state.household.reputation, em_before, self.state.household.eminence, floor))
-        self.state.household.log.append((self.state.scenario.year, msg))
+        self.state.household.log.append((self.state.scenario.year, LogLine("withdrew_from_public_life", msg)))
         return True, msg
 
     EMINENCE_HAZARD_SCALE = declare(
@@ -1248,17 +1248,17 @@ class StatePressureMixin:
             office_paid = off_share * rev
             answer = answer_state_demand(self, took - office_paid)
             if answer["penalty"] > 0.0:
-                self.state.household.log.append((year, "You refused the requisition and the state enforced it: "
-                                     "the demand and a penalty of %s on top" % money_text(answer["penalty"], self, grouped=True)))
+                self.state.household.log.append((year, LogLine("requisition_enforced", "You refused the requisition and the state enforced it: "
+                                     "the demand and a penalty of %s on top" % money_text(answer["penalty"], self, grouped=True))))
             elif answer["withheld"] > 0.5:
-                self.state.household.log.append((year, "You refused the requisition and the state did not "
-                                     "enforce it this year: %s withheld" % money_text(answer["withheld"], self, grouped=True)))
+                self.state.household.log.append((year, LogLine("requisition_unenforced", "You refused the requisition and the state did not "
+                                     "enforce it this year: %s withheld" % money_text(answer["withheld"], self, grouped=True))))
             elif answer["negotiated"]:
-                self.state.household.log.append((year, "You negotiated the requisition and the state took your offer: "
+                self.state.household.log.append((year, LogLine("requisition_negotiated", "You negotiated the requisition and the state took your offer: "
                                      "%s paid of %s asked%s" % (
                                          money_text(answer["paid"], self, grouped=True), money_text(took - office_paid, self, grouped=True),
                                          (", with %s of service" % money_text(answer["service"], self, grouped=True))
-                                         if answer["service"] > 0.5 else "")))
+                                         if answer["service"] > 0.5 else ""))))
             took = office_paid + answer["paid"]
             self.pay_state(took, {"office": office_paid, "requisition": answer["paid"] - answer["penalty"],
                                   "penalty": answer["penalty"]})
@@ -1274,7 +1274,7 @@ class StatePressureMixin:
                     bits.append("%s costs %s more, and is not something you "
                                 "get to decline cheaply"
                                 % (off_name, money_text(off_share * rev, self, grouped=True)))
-                self.state.household.log.append((year, "THE STATE HAS NOTICED YOU: " + "; ".join(bits)))
+                self.state.household.log.append((year, LogLine("state_noticed", "THE STATE HAS NOTICED YOU: " + "; ".join(bits))))
         elif notice > self.STATE_NOTICE_THRESHOLD * 0.7:
             # APPROACHING, NOT YET BITING. The same fairness standard as
             # eminence's own "YOU ARE BECOMING CONSPICUOUS" warning in
@@ -1284,13 +1284,13 @@ class StatePressureMixin:
             band = int(notice / max(0.01, self.STATE_NOTICE_THRESHOLD * 0.1))
             if band > self.state.household._said_notice_approach:
                 self.state.household._said_notice_approach = band
-                self.state.household.log.append((year, "this household is becoming large enough "
+                self.state.household.log.append((year, LogLine("state_notice_approaching", "this household is becoming large enough "
                                      "for the state to take an interest: "
                                      "notice %.2f against a line of %.2f. A "
                                      "patron or standing, and holdings that "
                                      "are not all in one place, are what "
                                      "blunt it when it arrives"
-                                     % (notice, self.STATE_NOTICE_THRESHOLD)))
+                                     % (notice, self.STATE_NOTICE_THRESHOLD))))
 
         if self.events and self.military_demand_eligible():
             last = self.state.household.last_military_demand
@@ -1329,7 +1329,7 @@ class StatePressureMixin:
             last_band = self.state.household._said_confiscation_band
             if band > last_band:
                 self.state.household._said_confiscation_band = band
-                self.state.household.log.append((year, "THE TREASURY IS LOOKING AT YOUR FORTUNE: "
+                self.state.household.log.append((year, LogLine("treasury_watching", "THE TREASURY IS LOOKING AT YOUR FORTUNE: "
                                      "a %d%% chance this year of outright "
                                      "confiscation, against a scale that "
                                      "only keeps climbing while this "
@@ -1338,7 +1338,7 @@ class StatePressureMixin:
                                     ("Held off by: " + "; ".join(conf_why))
                                     if conf_why else
                                     "Nothing you have built is holding it "
-                                    "off yet")))
+                                    "off yet"))))
             if self.events and self.rng.random() < probability:
                 # the state demands a share of the fortune it can see; the household answers like any demand
                 answer, demanded, lost = answer_confiscation(self, self.CONFISCATION_CAPITAL_LOSS, "confiscation by the state")
@@ -1353,10 +1353,10 @@ class StatePressureMixin:
                            if answer["negotiated"] else ""),
                         demanded=demanded, lost=lost, negotiated=bool(answer["negotiated"]))))
                 elif answer["withheld"] > 0.5:
-                    self.state.household.log.append((year, "%s: the state demanded %s of your fortune, you refused "
-                                         "and it could not enforce: nothing taken" % (name, money_text(demanded, self, grouped=True))))
+                    self.state.household.log.append((year, LogLine("confiscation_refused", "%s: the state demanded %s of your fortune, you refused "
+                                         "and it could not enforce: nothing taken" % (name, money_text(demanded, self, grouped=True)))))
                 else:
-                    self.state.household.log.append((year, "%s: the state demands a fortune too large to go on merely "
-                                         "taxing, and finds nothing it can see to take" % name))
+                    self.state.household.log.append((year, LogLine("confiscation_too_large", "%s: the state demands a fortune too large to go on merely "
+                                         "taxing, and finds nothing it can see to take" % name)))
         else:
             self.state.household._said_confiscation_band = -1
