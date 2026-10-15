@@ -3,6 +3,7 @@
 A node declares `mechanics.state_levy = {"share": s}`; while it is open, the state is paid `s` of its revenue each
 year, on top of what the state takes from the household's income as a whole.
 """
+from sim.refusal import LogLine
 from .units_prose import money_text
 
 
@@ -29,5 +30,5 @@ class ConcernLevyMixin:
             self.pay_state(owed, "levy on " + node_id)
             if "levy:" + node_id not in said:
                 said.add("levy:" + node_id)
-                self.state.household.log.append((year, "the state takes its share of %s: %s this year, and so on each year it is open"
-                                                 % (self.nodes[node_id]["name"], money_text(owed, self, grouped=True))))
+                self.state.household.log.append((year, LogLine("concern_levy", "the state takes its share of %s: %s this year, and so on each year it is open"
+                                                 % (self.nodes[node_id]["name"], money_text(owed, self, grouped=True)))))

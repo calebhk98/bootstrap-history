@@ -10,7 +10,7 @@ these live in a separate file).
 """
 
 from sim.geography.api import tile_names
-from sim.refusal import Refusal
+from sim.refusal import Refusal, LogLine
 from .command_registry import command
 from sim.engine.ui_port import TRADES_ABSENT, TRADE_NOTES, WAGES, trade_family
 from .state_waiting import _staff_fraction_note
@@ -420,7 +420,7 @@ def _cmd_hire(sim, nodes, cmd, ended):
     # precise sentence for this ("2 smiths taken on for 750 denarii...");
     # using it here rather than rebuilding one from cmd["n"] keeps the log
     # honest about what actually happened, not just what was asked for.
-    sim.log.append((sim.year, err or ("hired %s %s" % (cmd.get("n"), cmd.get("trade")))))
+    sim.log.append((sim.year, LogLine("hire_ordered", err or ("hired %s %s" % (cmd.get("n"), cmd.get("trade"))))))
     return {"ok": True, "hired": cmd.get("trade"), "n": round(sim.employees.get(trade_id, 0.0) - headcount_before),
             "asked": quantity,
             "you_now_employ": round(sim.employees.get(trade_id, 0.0), 2),
@@ -447,7 +447,7 @@ def _cmd_fire(sim, nodes, cmd, ended):
     # Same reasoning as `hire` above: `err` here is fire()'s own success
     # message, which says exactly what happened - staff let go, an
     # apprenticeship cancelled, or both - and cmd["n"] alone would not.
-    sim.log.append((sim.year, err or ("let go %s %s" % (cmd.get("n"), cmd.get("trade")))))
+    sim.log.append((sim.year, LogLine("let_go_ordered", err or ("let go %s %s" % (cmd.get("n"), cmd.get("trade"))))))
     out = {"ok": True, "let_go": cmd.get("trade"),
            "annual_wage_bill": round(sim.labour.wage_bill(), 1)}
     if err:

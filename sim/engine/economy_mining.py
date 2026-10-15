@@ -431,8 +431,8 @@ class MiningMixin(MineDepositsMixin):
         for working in holdings.mines or ():
             deposit_id = working.get("deposit")
             if deposit_id and self.deposit_remaining_tonnes(working["material"], deposit_id) <= 0.0:
-                self.state.household.log.append((self.state.scenario.year, "the %s workings at %s are worked out and close"
-                                                 % (working["material"], deposit_id)))
+                self.state.household.log.append((self.state.scenario.year, LogLine("workings_exhausted", "the %s workings at %s are worked out and close"
+                                                 % (working["material"], deposit_id))))
             else:
                 kept.append(working)
         holdings.mines = kept
@@ -650,7 +650,7 @@ class MiningMixin(MineDepositsMixin):
                          if working.get("material") != mat]
         holdings.mine_tranches = [tranche for tranche in (holdings.mine_tranches or [])
                                  if tranche[0] != mat]
-        household.log.append((scenario.year, "you close the %s workings" % mat))
+        household.log.append((scenario.year, LogLine("workings_closed", "you close the %s workings" % mat)))
         return True, ("the %s workings are closed. You stop paying %.0f a year. "
                       "What you spent sinking them is gone, and reopening means "
                       "sinking them again." % (mat, saved))
@@ -939,9 +939,9 @@ class MiningMixin(MineDepositsMixin):
             # and a log line, which the player DOES see, is the honest way
             # to say why the hectares bought were fewer than asked.
             household.log.append((scenario.year,
-                             "you can hold at most %s of coppice here; "
+                             LogLine("coppice_limit", "you can hold at most %s of coppice here; "
                              "bought %s, not %s" % (area_text(self.forest_land_ceiling(), self),
-                                                    area_text(room, self), area_text(hectares, self))))
+                                                    area_text(room, self), area_text(hectares, self)))))
             hectares = room
         if hectares <= 0:
             return 0.0

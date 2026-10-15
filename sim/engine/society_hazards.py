@@ -795,7 +795,7 @@ class HazardsMixin:
                        "auto_court_heir is off; protection falls from %d%% "
                        "to %d%% and scandal rises by %d"
                        % (was * 100, household.protection * 100, self.PATRON_DEATH_SCANDAL))
-            household.log.append((year, msg + self.PATRON_DEATH_RECOVERY_NOTE))
+            household.log.append((year, LogLine("patron_dies", msg + self.PATRON_DEATH_RECOVERY_NOTE)))
         if rng.random() < self.FIRE_ANNUAL_CHANCE:
             had = max(0.0, household.capital)
             self.lose_capital(self.FIRE_CAPITAL_LOSS, "fire")

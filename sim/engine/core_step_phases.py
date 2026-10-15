@@ -70,8 +70,8 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
                         # A trade you taught. They are now yours to pay, and
                         # they are that trade and no other.
                         self.state.household.employees[trade] = self.state.household.employees.get(trade, 0.0) + count
-                        self.state.household.log.append((self.state.scenario.year, "%g %s%s finish their training"
-                                         % (count, trade, "s" if count != 1 else "")))
+                        self.state.household.log.append((self.state.scenario.year, LogLine("training_finished", "%g %s%s finish their training"
+                                         % (count, trade, "s" if count != 1 else ""))))
                         self.labour.resync_pools()
                     else:
                         # They are trained now, so _resync_pools counts them
@@ -79,8 +79,8 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
                         # there about why adding to self.state.household.artisans directly was
                         # thrown away at the next call.
                         self.state.household.log.append((self.state.scenario.year,
-                                         "%g of the people you bought finish "
-                                         "learning the work" % round(cap / 0.55, 1)))
+                                         LogLine("bought_people_trained", "%g of the people you bought finish "
+                                         "learning the work" % round(cap / 0.55, 1))))
                 else:
                     still.append(row)
             # BEFORE the resync, not after: _resync_pools counts who is still
@@ -272,10 +272,10 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
                 # never asked again.
                 if taught:
                     _taught[trade_id] = self.state.scenario.year
-                    self.state.household.log.append((self.state.scenario.year, "you begin teaching the first %ss this "
+                    self.state.household.log.append((self.state.scenario.year, LogLine("teaching_begun", "you begin teaching the first %ss this "
                                          "world has ever had" % trade_id if _first else
                                      "the last %ss are gone; you begin teaching "
-                                     "more" % trade_id))
+                                     "more" % trade_id)))
 
     def _step_standing_work_directive(self):
         # 4a(ii). THE STANDING "WORK" DIRECTIVE. `work` (protocol.py) sells
@@ -537,8 +537,8 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
             if self.state.household.bondage_years_left <= 0:
                 self.state.household.bondage_years_left = 0.0
                 self.state.household.bondage_debt = 0.0
-                self.state.household.log.append((self.state.scenario.year, "your term is served and the debt is discharged; "
-                                     "you are your own man again"))
+                self.state.household.log.append((self.state.scenario.year, LogLine("bondage_served", "your term is served and the debt is discharged; "
+                                     "you are your own man again")))
 
     def _deputy_hours_sentence(self):
         if self.state.household.directors_extra <= 0:

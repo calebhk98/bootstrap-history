@@ -11,6 +11,9 @@ read of a reply's `message` or `error` key. A decision is a comparison (`in`, `=
 method call or a `re` call whose operand is such text. Code whose subject is presentation (a renderer, fog
 redaction) says so with `# presentation: <reason>` on the line or the line above, as in text_checks.py; files named
 `render*` are presentation as a whole.
+
+It also lists every append to a log (and every `say`) whose line is not a `LogLine(...)`, so a line cannot arrive without a
+kind; a pass-through of an existing LogLine says `# plain line: <why>`. `unlisted_kinds` finds kinds the severity table lacks.
 """
 import ast
 import os
@@ -18,6 +21,8 @@ import re
 
 from sim.tests.text_checks import PRESENTATION_MARK
 
+# A log append that is not a LogLine says why on its own line or the line above.
+PLAIN_MARK = "# plain line:"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEXT_KEYS = ("message", "error")
 WRAPPERS = ("lower", "upper", "strip", "casefold")
@@ -95,8 +100,8 @@ def _is_literal_text(node):
     return any(isinstance(part, ast.Constant) and isinstance(part.value, str) for part in ast.walk(node))
 
 
-def _marked(lines, lineno):
-    return any(PRESENTATION_MARK in lines[index] for index in (lineno - 1, lineno - 2) if 0 <= index < len(lines))
+def _marked(lines, lineno, mark=PRESENTATION_MARK):
+    return any(mark in lines[index] for index in (lineno - 1, lineno - 2) if 0 <= index < len(lines))
 
 
 def scan_source(text, path="<source>"):
@@ -118,6 +123,33 @@ def scan_source(text, path="<source>"):
             elif node.func.attr in REGEX_CALLS and isinstance(node.func.value, ast.Name) and node.func.value.id == "re":
                 decided = any(_is_text(argument, names) for argument in node.args[1:])
         if decided and not _marked(lines, node.lineno):
+            found.append((path, node.lineno, ast.get_source_segment(text, node) or ""))
+    return found
+
+
+def _is_log_line(node):
+    """Whether an appended value is a LogLine(...) construction, or a name/call that builds one by a `_line`-style helper."""
+    return isinstance(node, ast.Call) and ((isinstance(node.func, ast.Name) and node.func.id == "LogLine")
+                                           or (isinstance(node.func, ast.Attribute) and node.func.attr == "LogLine"))
+
+
+def scan_plain_appends(text, path="<source>"):
+    """[(path, line, source)] for each append to a log or `say` whose line is not a LogLine(...) with a kind."""
+    tree = ast.parse(text)
+    lines = text.split("\n")
+    found = []
+    for node in ast.walk(tree):
+        if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.args):
+            continue
+        target = node.func.value
+        is_log = (isinstance(target, ast.Attribute) and target.attr == "log") or (isinstance(target, ast.Name) and target.id == "log")
+        if node.func.attr == "say":
+            line = node.args[0]
+        elif is_log and node.func.attr == "append" and isinstance(node.args[0], ast.Tuple) and len(node.args[0].elts) == 2:
+            line = node.args[0].elts[1]
+        else:
+            continue
+        if not _is_log_line(line) and not _marked(lines, node.lineno, PLAIN_MARK):
             found.append((path, node.lineno, ast.get_source_segment(text, node) or ""))
     return found
 
@@ -144,9 +176,39 @@ def scan():
     return found
 
 
+def scan_appends():
+    """Every log append or `say` under sim/ whose line carries no kind."""
+    found = []
+    for path in sources():
+        with open(path, encoding="utf-8") as handle:
+            text = handle.read()
+        try:
+            found.extend(scan_plain_appends(text, os.path.relpath(path, os.path.dirname(ROOT))))
+        except SyntaxError:
+            continue
+    return found
+
+
+def unlisted_kinds():
+    """Kinds given to a LogLine under sim/ (a literal first argument) that sim/ui/proto/event_kinds.py does not list."""
+    from sim.ui.proto.event_kinds import EVENT_KINDS
+    found = set()
+    for path in sources():
+        with open(path, encoding="utf-8") as handle:
+            text = handle.read()
+        try:
+            tree = ast.parse(text)
+        except SyntaxError:
+            continue
+        for node in ast.walk(tree):
+            if _is_log_line(node) and node.args and isinstance(node.args[0], ast.Constant):
+                found.add(node.args[0].value)
+    return sorted(found - set(EVENT_KINDS))
+
+
 def report():
     """Prints the decisions and the count; returns how many there are."""
-    found = scan()
+    found = scan() + scan_appends()
     for path, lineno, source in found:
         print("%s:%d  %s" % (path, lineno, " ".join(source.split())[:110]))
     print("%d decisions on a log line's or refusal's text" % len(found))

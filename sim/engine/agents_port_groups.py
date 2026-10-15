@@ -1,5 +1,6 @@
 """What interest groups can see of who is hurt: producers the founder's sales displace and
 employers whose hands the founder's hiring bids up. Mixed into `SimWorld`."""
+from sim.refusal import LogLine
 from typing import Any, Dict, List
 
 from sim.agents.api import CONCESSION_PREFIX, Sector, sector_key
@@ -140,7 +141,7 @@ class GroupView:
 		last = group_record.last_logged_year
 		if last is None or self.year - last >= year_gap:  # type: ignore[attr-defined]
 			group_record.last_logged_year = self.year  # type: ignore[attr-defined]
-			household.log.append((self.year, text))  # type: ignore[attr-defined]
+			household.log.append((self.year, LogLine("group_petition", text)))  # type: ignore[attr-defined]
 
 	def money_text(self, amount: float, grouped: bool = False, short: bool = False) -> str:
 		return money_text(amount, self._sim, grouped=grouped, short=short)
@@ -150,7 +151,7 @@ class GroupView:
 
 	def say(self, text: str) -> None:
 		"""A line in the founder's log, for a change in who is organised against him."""
-		self._sim.state.household.log.append((self.year, text))  # type: ignore[attr-defined]
+		self._sim.state.household.log.append((self.year, text))  # plain line: the caller passes a LogLine  # type: ignore[attr-defined]
 
 	def state_in_deficit(self) -> bool:
 		"""Whether the state could pay all it set out to last year."""
