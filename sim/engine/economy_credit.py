@@ -95,6 +95,19 @@ class CreditMixin:
             "game's own opening decision unaffected, not fitted to any "
             "lending data.")
 
+    def bearable_part_of(self, amount):
+        """How much of `amount` the purse and the credit line can take without capital ending below the
+        negative of the limit. The limit is read at the capital left after paying, because the floor
+        (living_cost) carries a status term that shrinks as positive capital goes."""
+        household = self.state.household
+        held = household.capital
+        household.capital = held - amount
+        try:
+            limit_after = self.credit_limit()
+        finally:
+            household.capital = held
+        return min(amount, max(0.0, held + limit_after))
+
     def credit_limit(self, _rev=None, _upkeep=None):
         """How far into arrears anyone will actually let you go.
 

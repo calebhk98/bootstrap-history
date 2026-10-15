@@ -130,7 +130,8 @@ check("a persistent deficit lowers the home price level",
       r.home_price_level() < 1.0 < r.partner_price_level(PARTNER), None)
 r._settle_flow(PARTNER, 5.0, 100.0 * home_opening, home_per_coin)
 check("an import beyond the coin held is paid only as far as the stock goes",
-      r.home_coin_stock_units() >= -1e-6 and r.home_coin_stock_units() < 1e-6 * home_opening, None)
+      r.home_coin_stock_units() >= -1e-12 * home_opening and r.home_coin_stock_units() < 1e-6 * home_opening,
+      r.home_coin_stock_units() / home_opening)   # floating-point dust is relative to a stock of this size
 r._settle_flow(PARTNER, -5.0, 0.2 * home_opening, home_per_coin)
 check("an export brings coin back in",
       r.home_coin_stock_units() > 0.1 * home_opening, r.home_coin_stock_units() / home_opening)

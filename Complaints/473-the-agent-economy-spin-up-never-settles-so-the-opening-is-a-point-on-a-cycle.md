@@ -194,3 +194,11 @@ is a small share of the opening figure. The cause is the wage: the labour market
 from the first year, and prices follow it down slowly. Seeding the wage at that level does not help because prices and the
 outside option scale together. What it needs is a settled model of how a labour glut passes into prices (the economy's rent
 and price search, stages 5 and 7), then a spin-up that runs until its tolerance is met.
+
+## Note (2026-10-15)
+
+`MONEY_LAG_YEARS` for England in `sim/tests/money_regimes_play.py` moved from three years to four in merge
+fix-round-regressions-3, because after the ore districts merge (520) extra metal overtakes the base series a year
+later while both series' price levels climb steeply. That loosens the check; restore it when the opening's money stock
+is fixed (507 Stage 2) and the price level stops climbing. Stage 2 (Update 4) moved it to five years: the price level still climbs.
+

@@ -64,3 +64,10 @@ from one final demand. Measured on full-length openings (`real` measurement: bui
 economy's price over the opening cost of each sited good): every civilisation's sited ores are within an order of magnitude of
 cost after the spin-up. The suite's short spin-up (523) still shows a few above the bound (the English and Norse ores),
 so `test_sited_ore_price_over_cost` keeps its marker.
+
+Also red because of it: `economy_tin_dearer_than_copper` (Complaint 511). The bisect over this round's merges puts the
+break at the 473 merge that sited weight-losing processors beside their supply (the 511 merge added the check and failed
+on the combined main from its first commit). In the opening year copper ore shows far above its embodied labour while tin's
+gravel does not, so tin shows at a small fraction of copper's price against a labour ratio several times larger
+(`python3 -m sim.tests --slow --only economy_tin_dearer_than_copper` prints both). The check says not to weaken it;
+it turns green with the opening-price work above.

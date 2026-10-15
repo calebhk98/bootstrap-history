@@ -116,6 +116,7 @@ class WagesMixin(WageLedgerMixin):
         # either direction" claim becomes false.
         household = self._world.state.household
         pay = self.wage_for_hours(trade, hours)
+        revenue_before = self._world.revenue()
         self._world.receive_from_edge(self._world.EDGE_EMPLOYERS, pay, "wages for your own work")
         household.wage_hours_this_year = household.wage_hours_this_year + hours
         household.wages_earned = (household.wages_earned or 0.0) + pay
@@ -149,6 +150,17 @@ class WagesMixin(WageLedgerMixin):
                        "; ".join(_bits),
                        (", and %d more" % _more) if _more else ""))
         self.log_wage_work(trade, hours, pay)
+        # SAY WHEN IT IS A BAD TRADE: hours sold here are hours the standing job does not sell, and when
+        # that job pays more than this trade the sale loses money. The sale still happens.
+        job_pay_given_up = revenue_before - self._world.revenue()
+        if job_pay_given_up > pay:
+            earned, given_up = round(pay), round(job_pay_given_up)
+            message = ("you earned %s, and the standing job those hours were selling was paying %s a year - "
+                       "so this cost you %s. Selling hours in a lower-paid trade is for when you need the "
+                       "cash more than the job."
+                       % (self._world.money_text(earned, grouped=True), self._world.money_text(given_up, grouped=True),
+                          self._world.money_text(given_up - earned, grouped=True)))
+            return pay, message + (" Also: " + _starve if _starve else "")
         return pay, _starve
 
     def wage_bill(self):

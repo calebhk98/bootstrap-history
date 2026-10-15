@@ -115,6 +115,23 @@ class StaffingMixin:
                 concerns=sorted(closed))))
         return closed
 
+    def staffing_closed_hand_shortfall(self):
+        """(scholars, craftsmen) the household lacks to reopen every concern shut for want of staff.
+
+        The same need `staffing_open_refusal` reads (a concern's hands against `venture_staff_free`),
+        summed over the staffing closures; hires aimed at it are what `reopen_restaffed_ventures` then uses."""
+        projects = self.state.projects
+        needed_scholars, needed_craftsmen = 0.0, 0.0
+        for node_id in sorted(projects.closures):
+            if (self.staff_closure_age(node_id) is None or node_id not in projects.done
+                    or node_id not in self.nodes):
+                continue
+            held = self._staffing_draw_of(node_id, self.reopen_units(node_id))
+            needed_scholars += held.get("scholars", 0.0)
+            needed_craftsmen += held.get("craftsmen", 0.0)
+        free_scholars, free_craftsmen = self.venture_staff_free()
+        return max(0.0, needed_scholars - free_scholars), max(0.0, needed_craftsmen - free_craftsmen)
+
     def reopen_restaffed_ventures(self, year):
         """Bring back what the staffing rule shut, the moment you have the
         people to watch it again - not a policy, the other half of one.
