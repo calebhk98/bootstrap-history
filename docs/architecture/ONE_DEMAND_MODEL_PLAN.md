@@ -15,8 +15,8 @@ and warmth carry demand in the opt-out game. Stage 4: strata pay the floor of ea
 (`SimWorld.need_floor_costs_per_person_year`, `stratum_year.run_year`); `STRATUM_OTHER_NEED_FOOD_MULTIPLE`,
 `housing_cost_per_person_year` and `HOUSING_FLOOR_AREA_PER_PERSON_M2` are gone; `record.shortfall` is keyed by need id.
 
-What stage 3 and 4 left for later. The price solver's anchors (`joint_allocation.build_demand_anchors`) still build the
-model without climate floors, because no map reaches that function. The strata cost comes from the engine's goods-market
+What stage 3 and 4 left for later. (The price solver's demand anchors, which built the model without climate floors, are gone: ONE_PRICE_OWNER_PLAN.md
+stage 1.) The strata cost comes from the engine's goods-market
 prices in both modes; with the agent economy on, asking the economy's own tile prices through `sim/economy/api.py` is
 not done. `household_saving` (`agents_port_capital.py`) still uses `income_bins` and belongs to stage 5.
 `agents_port_budget.py`, `wage_schedule.py` and `foreign_capacity.py` still read the food-floor constant or the model
@@ -59,7 +59,6 @@ whose floor is declared `subsistence_from_climate` gets zero here (see the table
 Readers. Find them with `grep -rnE "NeedDemandModel|household_demand_by_material|income_bins|household_quantity_demanded|market_clearing_price" sim --include=*.py | grep -v tests`:
 
 - `sim/engine/market_demand.py` (`household_demand_by_material`): the year's demand ratio against the opening, which moves the engine's market price when the agent economy is off, and builds `base_basket` (`sim/engine/real_output.py`).
-- `sim/engine/joint_allocation.py`: demand anchors that split a joint process's cost.
 - `sim/engine/agents_port_capital.py` (`household_saving`): income bins to a savings flow, which supplies the engine's loanable funds.
 - `sim/economy/households_cohort.py`: only `income_bins`, to cut a tile into income classes.
 - `sim/labour/workforce_spinup.py`: `budget_weights_by_good`, `input_coefficients_per_unit_output`.

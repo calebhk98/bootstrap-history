@@ -36,6 +36,17 @@ When spawning subagents with the `Agent` tool:
   fingerprint only under the rule in section 6.
 - Only the orchestrating session may run on a large model. It reads, decides,
   writes the hard parts and merges.
+- **Subagents do not wait.** A subagent's prompt cache lapses after about five
+  minutes idle, and every wake after that re-reads its whole context at full
+  price. A subagent runs only commands that finish in under about five minutes
+  (the quick tier, a few targeted topics with `--topic-seconds 240`), never
+  polls or sleeps on a background job, and hands every long run (the full
+  `--slow` suite, spin-up traces, `opening-checks`, `openings`, fingerprints) back
+  to the orchestrator as exact commands; the orchestrator runs those itself.
+- **Size a batch to the machine as well as the budget.** Agents that run whole
+  games compete for the same cores; run no more of them at once than the
+  machine has cores to spare (`nproc`, and watch `uptime`), whatever the budget
+  rule above allows.
 
 ---
 
@@ -119,6 +130,7 @@ maintenance. Dragons are agents with calorie needs. None get a bespoke branch.
 **4.4 Label every heuristic you cannot yet derive.** Transitional shortcuts
 are allowed while the deeper mechanism does not exist; unlabelled ones are
 not. Tag them so the migration queue is measurable.
+A new temporary heuristic names its retirement (a complaint or mechanism) in `retire`; a test enforces it.
 
 **4.5 Prices are calculated, not looked up.** There is no price table (the
 old `data/prices.json` is deleted); do not add one back. A production yield is
@@ -192,6 +204,12 @@ Tooling: `python3 -m pylint sim/ | grep C0103` (worklist). Plan:
   guessing.
 - **Every bug becomes a regression test** with the smallest reproducing
   scenario. Resolved complaints move to `Complaints/closed/`.
+- **Behaviour tests read values, not wording.** A test of what the model does asserts on structured
+  values: the engine's numbers, the reply's fields, a refusal's `cause`, a log line's `kind` and `facts`
+  (`sim/refusal.py`). Only a test whose subject is presentation (units, wording, rounding, layout) asserts on
+  text, and it says so with a `# presentation: <reason>` comment. When the fact exists only as prose, add the
+  field to the reply and render the text from it. `python3 -m sim.tests --text-checks` lists the checks that
+  read text and are not marked presentation; the list should stay empty.
 - **Measure, don't remember.** Claims about the codebase are measured. Every
   number in prose was computed by the simulator, and carries the command that
   produced it.
@@ -204,7 +222,9 @@ Tooling: `python3 -m pylint sim/ | grep C0103` (worklist). Plan:
   outputs and messages. `python3 -m sim.tests.fingerprint` checks the
   simulation itself (it does not cover the protocol layer).
 - **Use the fingerprint only when behaviour must not change**: refactors,
-  architecture moves, speed-ups. A bug fix or gameplay change is meant to
+  architecture moves, speed-ups. Use `--quick`, and only when it finishes in
+  well under twenty minutes on the machine at hand; otherwise the refactor's
+  targeted topics are the proof, and the PR says which were run. A bug fix or gameplay change is meant to
   change the simulation, so its fingerprint tells you nothing; rely on its
   regression test. When several subagents start from one commit, record the
   baseline once before spawning them and give them its path.
@@ -225,4 +245,5 @@ python3 -m sim.tests                       # quick tier (topics with QUICK_TOPIC
 python3 -m sim.tests --slow                # full suite: every topic and slow check (--jobs 1 sequential, --list, --only a,b)
 python3 -m sim.tests.fingerprint record before.json   # then `check before.json` to prove behaviour unchanged
 python3 sim/constants.py --burndown        # declared numbers and temporary heuristics still to derive
+python3 sim/constants.py --compare origin/main   # heuristic count before/after: state it in the PR
 ```

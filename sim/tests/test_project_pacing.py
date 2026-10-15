@@ -6,6 +6,7 @@ test_round12_naive15.py - see CLAUDE.md's test-file reorganisation note.
 Checks moved verbatim; each one's own comment explains the break it guards.
 """
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of, facts_of
 
 
 # --- BREAK: "waiting on money" while holding 73,234,107 denarii against
@@ -20,7 +21,7 @@ s_pace.active[_slow] = dict(ph_left=0.0, yrs=1.0, spent=0.0,
 _msg_rich = _WO(s_pace, NODES, _slow, s_pace.active[_slow],
                 s_pace.active[_slow]["cost_left"])
 check("a rich player is told the pace, not that they are short of money",
-      "pace" in _msg_rich and "a year" in _msg_rich, _msg_rich)
+      cause_of(_msg_rich) == "money_pace", _msg_rich)
 s_broke = unopened_sim(capital=1.0)
 s_broke.credit_limit = lambda: 0.0
 s_broke.active[_slow] = dict(ph_left=0.0, yrs=1.0, spent=0.0,
@@ -28,7 +29,7 @@ s_broke.active[_slow] = dict(ph_left=0.0, yrs=1.0, spent=0.0,
 _msg_poor = _WO(s_broke, NODES, _slow, s_broke.active[_slow],
                 s_broke.active[_slow]["cost_left"])
 check("...and a player who really cannot raise the instalment is told that",
-      _msg_poor.startswith("money"), _msg_poor)
+      cause_of(_msg_poor) in ("money_blocked", "money_unfunded"), _msg_poor)
 
 # --- BREAK: six projects wiped in one year. The countdown to abandonment ran
 # silently for three years and then took everything spent.
@@ -52,7 +53,8 @@ for _dl_year in range(1):
     s_dl._run_seat_work()    # the year's project work, without the economy around it
     if _dl_year == 0:
         check("a project that cannot go on says so the first year, not the fourth",
-              any(_need_eng in message and "before it is abandoned" in message for _, message in s_dl.log),
+              any(cause_of(message) == "project_cannot_go_on" and facts_of(message)["project"] == _need_eng
+          for _, message in s_dl.log),
               [message for _, message in s_dl.log][:2])
         _st_hl = S._agent_state(s_dl, NODES)["active"][_need_eng]
         check("...and state carries the countdown and the trade that would save it",
@@ -180,7 +182,7 @@ check("...but it warns, naming the project and the hours it still wants",
 _s_wk2 = unopened_sim(capital=500000.0)
 _wk2_pay, _wk2_err = _s_wk2.labour.work_for_wages("scholar", 2000)
 check("...and says nothing about starving work when nothing is active",
-      "for the rest of the year" not in (_wk2_err or ""), _wk2_err)
+      not _wk2_err, _wk2_err)
 # Selling only a few hours, leaving plenty for a SMALL-paced project, warns
 # of nothing - this must not fire just because something, anything, is active.
 _s_wk3 = unopened_sim(capital=500000.0)
@@ -193,7 +195,7 @@ _s_wk3.active[_wk3_id] = dict(ph_left=float(_wk3_n["ph"]), yrs=0.0, spent=0.0,
                               cost_left=100.0)
 _wk3_pay, _wk3_err = _s_wk3.labour.work_for_wages("scholar", 10)
 check("...and selling only a few idle hours does not warn either",
-      "for the rest of the year" not in (_wk3_err or ""), _wk3_err)
+      not _wk3_err, _wk3_err)
 
 # --- BREAK 2b (Han): "waiting on: your hours" reported to persist after a
 # project's hours were 100% spent and 0 still owed - a stale label, if the
@@ -234,7 +236,7 @@ _s_eng.step()
 check("a project that has already drawn everything it needed from a trade "
       "is not killed just because that trade later vanishes from the market",
       _eng_id in _s_eng.active
-      and not any(_eng_id in message and "cannot go on" in message
+      and not any(cause_of(message) == "project_cannot_go_on" and facts_of(message)["project"] == _eng_id
                   for _, message in _s_eng.log[_eng_log_before:]),
       _s_eng.log[_eng_log_before:])
 # The other half: a project that genuinely still owes a trade something is
@@ -246,8 +248,8 @@ _eng2_log_before = len(_s_eng2.log)
 _s_eng2.step()
 check("...while a project that genuinely still owes a trade something is "
       "still caught the first year it has nobody to do that work",
-      any(_eng_id in message and "cannot go on" in message
-          and "no engineer" in message
+      any(cause_of(message) == "project_cannot_go_on" and facts_of(message)["project"] == _eng_id
+          and "engineer" in facts_of(message)["trades"]
           for _, message in _s_eng2.log[_eng2_log_before:]),
       _s_eng2.log[_eng2_log_before:])
 

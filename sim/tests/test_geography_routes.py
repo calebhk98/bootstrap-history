@@ -194,10 +194,15 @@ class EarthTests(unittest.TestCase):
     def test_a_search_over_every_tile_is_quick(self):
         modes = set(routes_modes.modes(self.world_map))
         routes_search.route(self.world_map, ["italy_03"], [self.luoyang], modes)  # builds the graph
-        started = time.time()
-        reached = routes_search.reach(self.world_map, ["spain_03"], modes, 1.0e6,
-                                      improvements={"x|y": {"road": True}})
-        self.assertLess(time.time() - started, 0.5)
+        # CPU time of the quickest of three runs: wall time and one unlucky run both carry machine load, a real slowdown
+        # raises every run
+        cpu_seconds = []
+        for _attempt in range(3):
+            started = time.process_time()
+            reached = routes_search.reach(self.world_map, ["spain_03"], modes, 1.0e6,
+                                          improvements={"x|y": {"road": True}})
+            cpu_seconds.append(time.process_time() - started)
+        self.assertLess(min(cpu_seconds), 0.5, cpu_seconds)
         self.assertGreater(len(reached), len(self.world_map.tiles) // 2)
 
 

@@ -74,13 +74,13 @@ class Economy:
         if record is None:
             record, area_map, carriage = open_economy(setup)
         else:
-            carriage = setup.carriage_table(record.ways, flow_imbalance(record))
+            carriage = setup.carriage_table(record.ways, record.area_imbalance)
             area_map = setup.area_map(carriage)
         self.record = record
-        self.imbalance = flow_imbalance(record)   # the return-trip emptiness `carriage` was built with
         self.area_map = area_map
         self.carriage = carriage
         self.improvements: Dict[str, Dict[str, Any]] = dict(record.ways)   # the ways `carriage` and the areas were built with
+        self.watched_tiles: Tuple[str, ...] = ()   # tiles whose market books are kept beside the port's and the capital's; not saved
         self._own_options = None
         self._own_hectares: Dict[str, float] = {}   # land households' own plots took this year, by tile
 
@@ -96,19 +96,24 @@ class Economy:
     def _rebuild_carriage(self) -> bool:
         """Carriage over the current ways and return trips, the market areas partitioned again over it, the
         markets' memory carried to the new areas."""
-        self.carriage = self.setup.carriage_table(self.improvements, self.imbalance)
+        self.carriage = self.setup.carriage_table(self.improvements, self.record.area_imbalance)
         area_map = self.setup.area_map(self.carriage)
         follow(self.record, self.area_map, area_map)
         self.area_map = area_map
         return True
 
+    def rebuild_market_areas(self) -> None:
+        """Partition the market areas again over the setup's goods (goods the setup gained are new markets)."""
+        self.__dict__.pop("_port_shares", None)
+        self._rebuild_carriage()
+
     def follow_flows(self) -> bool:
         """Price the carriage by last year's flows: where the opposite flow fills more of the carriers'
         return trips, a tonne costs less. False when the (stepped) emptiness of the returns is unchanged."""
         imbalance = flow_imbalance(self.record)
-        if imbalance == self.imbalance:
+        if imbalance == self.record.area_imbalance:
             return False
-        self.imbalance = imbalance
+        self.record.area_imbalance = imbalance
         return self._rebuild_carriage()
 
     def view(self) -> YearView:
@@ -162,7 +167,7 @@ class Economy:
         merchant_orders(setup, record, view, self.area_map, self.carriage, order_book)
         for producer_id, runs in self._rebuild_worn_plant(view, order_book).items():
             plant_runs[producer_id] = plant_runs.get(producer_id, 0.0) + runs
-        clear_goods(setup, record, view, self.area_map, order_book, plans, ledger)
+        clear_goods(setup, record, view, self.area_map, order_book, plans, ledger, self.watched_tiles)
         settle_mint(record, mint_held)
         close_mint_year(setup, record)
         rent = land_market.settle_year(setup, record, view,

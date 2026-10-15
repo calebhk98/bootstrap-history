@@ -17,7 +17,7 @@ from sim.engine.units_prose import money_text
 
 # Concerns that earn, tie up more craftsmen than the closure slack and need no foreman, and that a
 # funded, staffed game can really open (a concern whose gate work is shut refuses, so is no use here).
-_probe = sim(capital=500000.0)
+_probe = unopened_sim(capital=500000.0)
 _probe.done.update(NODES); _probe._done_changed()
 _probe.artisans = _probe.scholars = 5.0
 OPENABLE = []
@@ -33,7 +33,7 @@ for _id in sorted(NODES):
 # needed the MOST hands, which is very nearly the same as picking the most
 # profitable one. A tester watched a 600-a-year wagon shop close twice while a
 # concern earning nothing and staffed identically stayed open.
-s_cl = sim(capital=200000.0)
+s_cl = unopened_sim(capital=200000.0)
 _pair = [node_id for node_id in NODES
          if NODES[node_id]["rev"] > 0 and NODES[node_id]["up"] >= 0 and not NODES[node_id]["pre"]]
 s_cl.done.update(NODES)                 # know everything, so `open` is free
@@ -61,7 +61,7 @@ check("...and what it closed is still KNOWN, only stopped",
 # --- BREAK: staff attrition runs at 3.5% a year, so a household near the
 # supervision line loses a concern most years and paid the full stock and
 # premises to reopen it. A play tester watched four close at once, every year.
-s_ch = sim(capital=500000.0)
+s_ch = unopened_sim(capital=500000.0)
 s_ch.done.update(NODES); s_ch._done_changed()
 s_ch.artisans = s_ch.scholars = 5.0
 # a concern that earns, costs something to open and ties up more hands than the closure slack
@@ -80,7 +80,7 @@ s_ch.open_venture(_v)
 check("...and reopening it soon costs the difference, not the whole shop",
       (_cap - s_ch.capital) < _full * 0.2, (_cap - s_ch.capital, _full))
 # Past the grace it really has been given up.
-s_ch2 = sim(capital=500000.0)
+s_ch2 = unopened_sim(capital=500000.0)
 s_ch2.done.update(NODES); s_ch2._done_changed()
 s_ch2.artisans = s_ch2.scholars = 5.0
 s_ch2.open_venture(_v)
@@ -95,7 +95,7 @@ s_ch2.open_venture(_v)
 check("...but a shop left shut for years is opened again in full",
       (_cap2 - s_ch2.capital) > _full * 0.8, (_cap2 - s_ch2.capital, _full))
 # A shop you closed BY CHOICE was never cheap, and must not become cheap.
-s_ch3 = sim(capital=500000.0)
+s_ch3 = unopened_sim(capital=500000.0)
 s_ch3.done.update(NODES); s_ch3._done_changed()
 s_ch3.artisans = s_ch3.scholars = 5.0
 s_ch3.open_venture(_v)
@@ -107,11 +107,11 @@ check("a concern you shut on purpose still costs the full price to reopen",
 
 # --- BREAK: twenty concerns, twenty-five years, income flat, because nothing
 # said on the main screen what leaving them shut was costing.
-s_sh = sim(capital=50000.0)
+s_sh = unopened_sim(capital=50000.0)
 for _k in [node_id for node_id in NODES if s_sh.is_venture(node_id) and NODES[node_id]["rev"] > 0]:
     s_sh.done.add(_k)
 s_sh._done_changed()
-_plain = sim()
+_plain = unopened_sim()
 _stsh = S._agent_state(s_sh, NODES)
 check("state says in money what your shut concerns would earn",
       _stsh.get("shut_concerns_would_earn_a_year", 0) > 0,
@@ -129,7 +129,7 @@ check("...and a player running everything is not nagged about it",
 # state funding, status - update_protection and credit_limit in society.py
 # and economy.py) silently went to zero, and nothing on any screen said so
 # until this.
-s_cg = sim(capital=50000.0)
+s_cg = unopened_sim(capital=50000.0)
 # a capability institution that costs something to keep open (one that costs nothing never closes)
 _patron = next(node_id for node_id in sorted(s_cg.NOT_OPERATING_BENEFIT)
                if node_id not in ("corpus_dispersed", "fin_university") and s_cg.is_venture(node_id)
@@ -187,7 +187,7 @@ check("fin_university's sole benefit is shared (an `or`) with "
 
 # --- BREAK: auto_mine took 353,039 a year against 467,227 of revenue and
 # there was no command that named what you owned or what it cost.
-s_mn = sim(capital=2000000.0)
+s_mn = unopened_sim(capital=2000000.0)
 s_mn.open_mine("coal", 400, partial=False)
 _rmn_new = S._agent_dispatch(s_mn, NODES, {"cmd": "mines"})
 check("a shaft you have just sunk is listed while it is still being sunk",
@@ -205,7 +205,7 @@ check("there is a command that lists the mines you own and their cost",
 # concern built in 100 and opened in 130 was at full takings the day its doors
 # opened, because the ramp read the year you worked it OUT. Delaying `open`
 # was strictly better than opening promptly.
-s_rp = sim(capital=500000.0)
+s_rp = unopened_sim(capital=500000.0)
 _vr = OPENABLE[0]
 s_rp.done.update(NODES); s_rp.done_year[_vr] = 100; s_rp._done_changed()
 s_rp.artisans = s_rp.scholars = 20.0
@@ -229,7 +229,7 @@ check("...and reopening a shop the town already knows does not start it over",
 
 # --- BREAK: `restore` charged the full price for a concern the staffing rule
 # had shut, while the closing message promises a tenth.
-s_rs = sim(capital=500000.0)
+s_rs = unopened_sim(capital=500000.0)
 s_rs.done.update(NODES); s_rs._done_changed()
 s_rs.artisans = s_rs.scholars = 5.0
 _vv = max(OPENABLE, key=s_rs.project_cost)
@@ -251,15 +251,17 @@ check("restoring a shop the staffing rule shut costs the tenth it promised",
 # the payroll by fractions of a man every single year. A play tester watched
 # the same concern close and reopen "every single turn for four centuries" and
 # called it endless busywork. Nobody shuts a shop over a fortieth of a man.
-s_hy = sim(capital=500000.0)
+s_hy = unopened_sim(capital=500000.0)
 s_hy.done.update(NODES); s_hy._done_changed()
 s_hy.artisans = s_hy.scholars = 6.0
-_vh = max((node_id for node_id in sorted(NODES)
-           if s_hy.is_venture(node_id) and NODES[node_id]["rev"] > 500
-           and s_hy.STAFFING_CLOSURE_SLACK < s_hy.venture_hands(node_id)[1] <= 5.0
-           and s_hy.venture_hands(node_id)[0] <= 5.0),
-          key=lambda k: s_hy.venture_hands(k)[1])
-_ok_hy, _ = s_hy.open_venture(_vh)
+_vh_candidates = sorted((node_id for node_id in sorted(NODES)
+                         if s_hy.is_venture(node_id) and NODES[node_id]["rev"] > 500
+                         and s_hy.STAFFING_CLOSURE_SLACK < s_hy.venture_hands(node_id)[1] <= 5.0
+                         and s_hy.venture_hands(node_id)[0] <= 5.0),
+                        key=lambda k: -s_hy.venture_hands(k)[1])
+# the largest of them that can be opened at all (a concern may also wait on a power grid or a material)
+_vh = next((node_id for node_id in _vh_candidates if s_hy.open_venture(node_id)[0]), _vh_candidates[0])
+_ok_hy = _vh in s_hy.operating
 check("(a shop to test the staffing rule on is open)",
       _vh in s_hy.operating, (_vh, _ok_hy, s_hy.venture_hands(_vh)))
 _need_s, _need_a = s_hy.venture_staff_used()
@@ -276,7 +278,7 @@ s_hy.close_unstaffed_ventures(111)
 check("...but a whole hand short still does",
       _vh not in s_hy.operating, (s_hy.artisans, _need_a))
 
-s_misc = sim(capital=1_000_000.0)
+s_misc = unopened_sim(capital=1_000_000.0)
 
 # --- BREAK 1: a fully-built concern worth ~1,500/yr that could never be
 # opened because the founder was short 0.01 of a craftsman's supervision
@@ -324,7 +326,8 @@ s_ln = s_misc
 # the loss is judged on what the concern really earns and costs, as the opening message is
 _ln_k = next((node_id for node_id in OPENABLE
               if s_ln.venture_real_upkeep(node_id) > s_ln.venture_real_earnings(node_id, fully_ramped=True)
-              and node_id not in s_ln.CAPABILITY_INSTITUTIONS), None)
+              and node_id not in s_ln.CAPABILITY_INSTITUTIONS
+              and all(need <= free for need, free in zip(s_ln.venture_hands(node_id), s_ln.venture_staff_free()))), None)
 check("a real, non-capability net-loss-making node exists in the tree to "
       "test against",
       _ln_k is not None, _ln_k)

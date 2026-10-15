@@ -4,6 +4,8 @@ Per hazard: every seat resolves its causes and condition; seats lose staff, cash
 exposure (own dice, own log); population, output, the coin and the society's values change once, at the
 mildest figure any seat's works leave (sim/engine/hazard_merge.py). One seat runs the same draws in the same
 order as a game with no other seat."""
+from sim.refusal import LogLine
+
 from . import cause_book
 from .units_prose import money_text
 from .hazard_merge import mildest_hazard
@@ -67,7 +69,7 @@ class ShockYearMixin:
         # Refresh population and wage screens now, not at year end.
         self._refresh_demographic_indexes(year)
         for seat_id, report in reports.items():
-            self.state.seats[seat_id].household.log.append((year, self._staff_loss_message(met[seat_id], report, raw)))
+            self.state.seats[seat_id].household.log.append((year, self._staff_loss_message(met[seat_id], report, raw)))  # plain line: already a LogLine
 
     def _staff_loss_of_seat(self, hazard):
         """What one wave takes from the acting seat's people and cash; returns the figures its message needs."""
@@ -85,7 +87,7 @@ class ShockYearMixin:
         # Cash goes with the trade that stopped.
         cash = self.lose_capital(loss * self.PLAGUE_CASH_LOSS_SHARE, "plague losses")
         return {"historical": historical, "raw": exposure["before_defences"], "med_relief": exposure["national_relief"],
-                "relief": exposure["relief"], "why": exposure["why"], "loss": loss, "cash": cash,
+                "relief": exposure["relief"], "why": exposure["why"], "lapsed_hedges": exposure["lapsed_hedges"], "loss": loss, "cash": cash,
                 "people_before": people_before}
 
     def _staff_loss_message(self, hazard, report, raw):
@@ -103,6 +105,7 @@ class ShockYearMixin:
         if report["cash"] > 0.5:
             hit.append("%s of takings lost while the trade stood idle"
                        % money_text(report["cash"], self, grouped=True))
+        took_nothing = not hit
         if not hit:
             hit.append("you had nothing it could take")
         message = "%s: %s" % (hazard.get("name", "hazard"), ", ".join(hit))
@@ -120,7 +123,7 @@ class ShockYearMixin:
             message += (". Empire-wide: the country's own public health (medical work you built: %s) has spread far "
                         "enough that this, historically a %d%% loss, barely registers"
                         % (self._national_sources_words(), round(historical * 100)))
-        return message
+        return LogLine("hazard_hit", message, hazard=hazard.get("name", "hazard"), took_nothing=took_nothing, lapsed_hedges=report["lapsed_hedges"])
 
     # ---- output_factor: war and its aftermath, the world's output floor ------------------
 
@@ -133,9 +136,9 @@ class ShockYearMixin:
         for seat_id, hazard in met.items():
             if "output_factor" in hazard:
                 with self.act_as(seat_id):
-                    relief, why = self.hazard_relief("output_factor")
+                    relief, why, lapsed = self.hazard_relief_detail("output_factor")
                 floors[seat_id] = self.output_floor(hazard["output_factor"], relief)
-                reasons[seat_id] = why
+                reasons[seat_id] = (why, lapsed)
         if not floors:
             return
         economy, scenario = self.state.economy, self.state.scenario
@@ -147,10 +150,12 @@ class ShockYearMixin:
         if before > economy.output_factor and year - said.get(name, -99) >= 20:
             said[name] = year
             scenario._said_output = said
-            for seat_id, why in reasons.items():
-                self.state.seats[seat_id].household.log.append((year, "%s: trade and output fall to %d%% of normal%s" % (
-                    name, economy.output_factor * 100,
-                    " (your own strength holds off worse: %s)" % "; ".join(why[:3]) if why else "")))
+            for seat_id, (why, lapsed) in reasons.items():
+                self.state.seats[seat_id].household.log.append((year, LogLine(
+                    "hazard_output_fall", "%s: trade and output fall to %d%% of normal%s" % (
+                        name, economy.output_factor * 100,
+                        " (your own strength holds off worse: %s)" % "; ".join(why[:3]) if why else ""),
+                    hazard=name, lapsed_hedges=lapsed)))
 
     # ---- real_erosion: debasement, the coin once, each seat's held cash --------------------
 
@@ -168,22 +173,24 @@ class ShockYearMixin:
         lines = {}
         for seat_id, hazard in holders.items():
             with self.act_as(seat_id):
-                relief, why = self.hazard_relief("real_erosion")
+                relief, why, lapsed = self.hazard_relief_detail("real_erosion")
                 household = self.state.household
                 bite = hazard["real_erosion"] * self.REAL_EROSION_CASH_LOSS_SHARE * relief
                 had = max(0.0, household.capital)
                 self.lose_capital(bite, "debasement and real erosion")
-                lines[seat_id] = (hazard, why, had - max(0.0, household.capital))
+                lines[seat_id] = (hazard, why, had - max(0.0, household.capital), lapsed)
         if not scenario._said_debasement or year - scenario._said_debasement >= 15:
             scenario._said_debasement = year
-            for seat_id, (hazard, why, lost) in lines.items():
+            for seat_id, (hazard, why, lost, lapsed) in lines.items():
                 # Report the money lost held, not quoted costs (which reflect reality).
-                self.state.seats[seat_id].household.log.append((year, "%s: the coin is worth %d%% less than it "
+                self.state.seats[seat_id].household.log.append((year, LogLine(
+                    "hazard_coin_debased", "%s: the coin is worth %d%% less than it "
                     "was%s. Quoted costs are what a thing really takes to make, so they do not move; what debases "
                     "is the money in your chest, and this year it took %s"
                     % (hazard.get("name", "debasement"), (1 - economy.money_real) * 100,
                        "; you feel less of it (%s)" % "; ".join(why) if why else "",
-                       money_text(lost, self, grouped=True) if lost > 0.5 else "nothing, because you were holding none")))
+                       money_text(lost, self, grouped=True) if lost > 0.5 else "nothing, because you were holding none"),
+                    hazard=hazard.get("name", "debasement"), lapsed_hedges=lapsed)))
 
     # ---- values: the society's beliefs shift once -------------------------------------------
 
@@ -212,4 +219,4 @@ class ShockYearMixin:
             line = "%s: the society's values are shifting (%s)" % (
                 hazard.get("name", "hazard"), ", ".join("%s now %.2f" % (field, value) for field, value in sorted(changed.items())))
             for seat_id in met:
-                self.state.seats[seat_id].household.log.append((year, line))
+                self.state.seats[seat_id].household.log.append((year, LogLine("hazard_values_shift", line)))

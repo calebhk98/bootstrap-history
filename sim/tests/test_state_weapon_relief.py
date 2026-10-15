@@ -19,14 +19,14 @@ def relief():
 	"""The state's own armies' part of each kind of harm's multiplier (the founder's private
 	defences are a separate entry and change as the founder builds)."""
 	return {kind: next((entry["factor"] for entry in game.hazard_relief_entries(kind)
-	                    if "state's own armies" in entry["label"]), 1.0)
+	                    if entry["source"] == "state_weapons"), 1.0)
 	        for kind in ("output_factor", "sack_chance")}
 
 
 invent(military[0])
 check("holding nothing gives no state relief of its own",
-      all("state's own armies" not in line for kind in ("output_factor", "sack_chance")
-          for line in game.hazard_relief(kind)[1]))
+      all(entry["source"] != "state_weapons" for kind in ("output_factor", "sack_chance")
+          for entry in game.hazard_relief_entries(kind)))
 government.knowledge.add(military[0])
 one_held = relief()
 check("one weapon held removes some harm of each kind", all(value < 1.0 for value in one_held.values()), one_held)

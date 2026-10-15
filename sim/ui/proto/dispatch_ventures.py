@@ -10,6 +10,7 @@ here. Behaviour is unchanged and moved verbatim.
 """
 
 import sim.engine.ui_port as ui_port
+from sim.refusal import LogLine
 from .command_registry import command
 from .explain_once import already_explained
 import os
@@ -19,6 +20,7 @@ from sim.engine.ui_port import TRADE_FAMILY, downstream_count
 from sim.engine.ui_port import purchase_budget
 from .nodes import _did_you_mean
 from .quantity_units import read_quantity
+from .start_refusal import refusal_fields
 from sim.engine.ui_port import money_text, plain_number
 from sim.ui.memory import load_state, save_state
 from .util import _flag
@@ -131,7 +133,7 @@ def _cmd_start(sim, nodes, cmd, ended):
                    plain_number(_plan["desired"])))
     started, why = sim.start_project(node_id, precaution=bool(cmd.get("precaution")))
     if not started:
-        return {"ok": False, "error": why}
+        return {"ok": False, "error": why, **refusal_fields(sim, node_id)}
     node = nodes[node_id]
     # SAY SO, FOR THE PLAYER'S OWN RECORD: start_project itself only logs
     # the RESTART case (see its own self.log.append for "begun again"), so
@@ -139,7 +141,7 @@ def _cmd_start(sim, nodes, cmd, ended):
     # back sees completions and failures appear out of nowhere with no
     # record of having chosen to begin them.
     if sim.active.get(node_id, {}).get("spent", 0.0) <= 0.5:
-        sim.log.append((sim.year, "started: %s" % node["name"]))
+        sim.log.append((sim.year, LogLine("project_started", "started: %s" % node["name"])))
     # THE PRICE YOU ACTUALLY COMMITTED TO: project_cost moves with prices,
     # the coinage, material scarcity and what has been built since, so an
     # earlier `why` figure is only a snapshot. The bill IS fixed at the
@@ -357,7 +359,7 @@ def _cmd_stop(sim, nodes, cmd, ended):
     # which is entirely about what the hours and money do, not about
     # recording the decision. A deliberate abandonment is exactly the
     # kind of thing a player asked `log` to be able to find again.
-    sim.log.append((sim.year, "stopped: %s (%s)" % (nodes[node_id]["name"], why)))
+    sim.log.append((sim.year, LogLine("project_stopped", "stopped: %s (%s)" % (nodes[node_id]["name"], why))))
     return {"ok": True, "stopped": node_id, "what_happened": why}
 
 
@@ -560,7 +562,7 @@ def _cmd_rush(sim, nodes, cmd, ended):
             # player reading `log` back should see every begun-work as a
             # choice they made, not a completion that appeared unasked.
             if sim.active.get(node_id, {}).get("spent", 0.0) <= 0.5:
-                sim.log.append((sim.year, "started: %s" % node["name"]))
+                sim.log.append((sim.year, LogLine("project_started", "started: %s" % node["name"])))
             started.append({"id": node_id, "name": node["name"],
                             "cost": round(sim.active.get(node_id, {}).get(
                                 "cost_left", sim.project_cost(node_id)), 1),
@@ -612,8 +614,8 @@ def _cmd_mothball(sim, nodes, cmd, ended):
     # differently from one the creditors forced on you (see economy.py's
     # own, separate log lines for THAT case) unless the player's own
     # choice gets a line of its own too.
-    sim.log.append((sim.year, "mothballed: %s (%s)"
-                 % (nodes[_mb_id]["name"] if _mb_id in nodes else _mb_id, msg)))
+    sim.log.append((sim.year, LogLine("work_mothballed", "mothballed: %s (%s)"
+                 % (nodes[_mb_id]["name"] if _mb_id in nodes else _mb_id, msg))))
     out = {"ok": True, "mothballed": msg, "upkeep": round(sim.upkeep(), 1)}
     # SAY WHAT ELSE CLOSES WITH IT. A Mexica player shut capability
     # institutions for the capital back and lost two multi-year
@@ -641,8 +643,8 @@ def _cmd_restore(sim, nodes, cmd, ended):
     restored, msg = sim.restore_work(_rs_id)
     if not restored:
         return {"ok": False, "error": msg}
-    sim.log.append((sim.year, "restored: %s (%s)"
-                 % (nodes[_rs_id]["name"] if _rs_id in nodes else _rs_id, msg)))
+    sim.log.append((sim.year, LogLine("work_restored", "restored: %s (%s)"
+                 % (nodes[_rs_id]["name"] if _rs_id in nodes else _rs_id, msg))))
     return {"ok": True, "restored": msg, "capital": round(sim.capital, 1)}
 
 
@@ -681,7 +683,7 @@ def _cmd_open(sim, nodes, cmd, ended):
     # finishing something earns nothing until you open it - deserves a
     # line in the player's own history, not just in the reply to this one
     # command. open_venture itself stays silent; see its docstring.
-    sim.log.append((sim.year, "opened: %s (%s)" % (nodes[node_id]["name"], msg)))
+    sim.log.append((sim.year, LogLine("work_opened", "opened: %s (%s)" % (nodes[node_id]["name"], msg))))
     return {"ok": True, "opened": msg, "opening_charge": round(charge, 1),
             "paid_now": round(charge, 1), "capital": round(sim.capital, 1),
             "revenue": round(sim.revenue(), 1), "upkeep": round(sim.upkeep(), 1)}
@@ -820,22 +822,10 @@ def _cmd_ventures(sim, nodes, cmd, ended):
                    "not judged on money the way the ordinary one is - see "
                    "each one's own 'why' before deciding whether to open "
                    "or close it."}
-    # THE PRACTICE IS NOT A VENTURE, AND IT IS WHERE YOUR MONEY COMES FROM:
-    # "RUNNING: nothing" next to a ledger paying real practice income reads
-    # as the two screens flatly contradicting each other unless this says
-    # which side the practice falls on.
-    _prac_note = sim.practice_note()
-    if _prac_note and already_explained(sim, "practice", cmd):
-        _prac_note = sim.practice_note(brief=True)
     if already_explained(sim, "staffing_share", cmd):
         out["these_are_a_share_of_their_year_not_a_headcount"] = (
             "Staff figures here are a share of a person's year, not a "
             "headcount ('ventures full' explains it again).")
-    if _prac_note:
-        out["your_practice_is_not_a_venture"] = (
-            "%s You did not open it and you cannot close it; it is not "
-            "listed here, and it is most of your income until you build "
-            "something. See 'money'." % _prac_note)
     out["shut_concerns_in_all"] = len(_idle_ordinary)
     out["showing_from"] = offset
     if len(_idle_ordinary) > offset + limit:

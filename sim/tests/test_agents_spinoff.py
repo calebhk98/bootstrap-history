@@ -43,8 +43,7 @@ def make_parent(kind="firm", staff=500.0):
 	registry = ActorRegistry(ActorsState(home_country="home"))
 	parent = registry.add("firm:1" if kind == "firm" else "player:p", ActorRecord(kind=kind, money=1000.0, founded_year=50))
 	parent.knowledge.update({"gear", "mill"})
-	parent.concerns.add("mill")
-	parent.record.opened_year["mill"] = 80
+	parent.business.open_plant("mill", 80)
 	parent.workforce["labourer"] = staff
 	return registry, parent
 
@@ -58,7 +57,7 @@ few = spinoff.leavers_expected(make_parent(staff=10.0)[1], "mill", world)
 many = spinoff.leavers_expected(make_parent(staff=100.0)[1], "mill", world)
 check("more staff, more leavers", many > few > 0.0, (few, many))
 young = make_parent()[1]
-young.record.opened_year["mill"] = 99
+young.business.open_plant("mill", 99)
 check("a concern too young spawns nothing", spinoff.leavers_expected(young, "mill", world) == 0.0)
 check("no ceiling is declared: how many leave is not capped", not hasattr(spinoff, "SPINOFF_CHANCE_CAP"))
 
@@ -115,14 +114,15 @@ class SeatParent:
 	actor_id = "seat:first"
 
 	def __init__(self):
-		self.record = ActorRecord(kind="household", opened_year={"mill": 80})
+		self.record = ActorRecord(kind="household")
+		self.opened_years = {"mill": 80}
 		self.workforce = {"labourer": 40.0}
 		self.concerns = {"mill"}
 		self.knowledge = {"gear", "mill"}
 		self.money = 1000.0
 
 	def opened_year_of(self, node_id, default):
-		return self.record.opened_year.get(node_id, default)
+		return self.opened_years.get(node_id, default)
 
 
 class SeatWorld(SpinWorld):

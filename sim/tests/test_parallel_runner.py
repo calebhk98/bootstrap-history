@@ -70,6 +70,7 @@ try:
     _failing = _run_suite("--only", "actor_borrowing,zz_fake_fail,mod_overrides", "--jobs", "4")
     _failing_sequential = _run_suite("--only", "actor_borrowing,zz_fake_fail,mod_overrides",
                                      "--jobs", "1")
+    # presentation: the test runner's printed report
     check("a failing check in one parallel topic is reported by name, in order, with exit 1",
           _failing.returncode == 1
           and "FAILED: fake topic failing check because" in _failing.stdout
@@ -77,12 +78,14 @@ try:
           (_failing.returncode, _failing.stdout[-400:]))
 
     _crashing = _run_suite("--only", "agents_coinage,zz_fake_crash", "--jobs", "4")
+    # presentation: the test runner's printed report
     check("a topic that crashes on import is reported as a failure naming it, exit 1",
           _crashing.returncode == 1 and "zz_fake_crash: worker crashed" in _crashing.stdout
           and "boom at import" in _crashing.stdout,
           (_crashing.returncode, _crashing.stdout[-400:]))
 
     _listing = _run_suite("--list", "--jobs", "4")
+    # presentation: the test runner's printed list
     check("--list is unaffected by --jobs",
           _listing.returncode == 0 and "zz_fake_fail" in _listing.stdout.split(),
           _listing.stdout[-200:])

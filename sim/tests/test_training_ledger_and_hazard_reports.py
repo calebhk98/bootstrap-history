@@ -1,5 +1,6 @@
 """Training lag and people you buy, the revenue ledger, projects short of a trade or money, and how hazards, sackings and failures are reported."""
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of, facts_of
 from .agent_command_helpers import ask_agent, with_end_year, starved_game, pristine_game
 from sim.ui.proto.render_typed import render_pretty as _render_pretty
 
@@ -179,10 +180,9 @@ s.employees = {}
 s.capital = 0.0
 s.year = 1348
 s._shocks(1348)
-_plague = [message for _year, message in s.log if "Black Death" in message]
+_plague = [message for _year, message in s.log if cause_of(message) == "hazard_hit" and facts_of(message)["hazard"] == "Black Death"]
 check("a hazard that took nothing from you says so",
-      not _plague or all("-45%" not in message or "nothing it could take" in message
-                         for message in _plague),
+      not _plague or all(facts_of(message)["took_nothing"] for message in _plague),
       _plague)
 
 # 2. Failure risk fired correctly and announced nothing, so a tester watched
@@ -199,7 +199,8 @@ for _i in range(120):
         _fails += 1
         del s.active[_risky]
 check("a failed attempt is announced, not silently absorbed",
-      _fails > 0 and any("FAILED at" in message for _year, message in s.log),
+      _fails > 0 and any(cause_of(message) == "project_failed" and facts_of(message)["project"] == _risky
+                                for _year, message in s.log),
       "%d failures in 120 at risk %.2f, logged %d"
       % (_fails, NODES[_risky]["risk"],
          sum(1 for _year, message in s.log if "FAILED at" in message)))
@@ -330,9 +331,9 @@ _dice_before_sacks = s.rng.getstate()
 for _ in range(6):
     s._shocks(s.year)
     s.year += 1
-_sacks = [message for _year, message in s.log if "sacked" in message]
+_sacks = [message for _year, message in s.log if cause_of(message) == "site_sacked"]
 check("a sacking says what it took from you",
-      _sacks and ("taken" in _sacks[0] or "nothing it could take" in _sacks[0]),
+      bool(_sacks) and isinstance(facts_of(_sacks[0])["took_nothing"], bool),
       _sacks[:1])
 # The same dice again on the same game, now with nothing to take.
 s.rng.setstate(_dice_before_sacks)
@@ -342,9 +343,9 @@ _log_before_second_run = len(s.log)
 for _ in range(6):
     s._shocks(s.year)
     s.year += 1
-_sacks2 = [message for _year, message in s.log[_log_before_second_run:] if "sacked" in message]
+_sacks2 = [message for _year, message in s.log[_log_before_second_run:] if cause_of(message) == "site_sacked"]
 check("...and says so plainly when it took nothing",
-      _sacks2 and "nothing it could take" in _sacks2[0], _sacks2[:1])
+      bool(_sacks2) and facts_of(_sacks2[0])["took_nothing"], _sacks2[:1])
 
 # 6. `bribe` sells protection, protection decides whether strange work reads as
 #    learning or as sorcery, and it appeared on no screen and in no help topic.

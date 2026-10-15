@@ -7,7 +7,8 @@ import types
 
 from .harness import check
 
-from sim.agents import concern_ops
+from sim.agents import business_crew
+from sim.agents.business import Business
 from sim.engine.agents_port import SimWorld
 from sim.engine.data import TRADES_ABSENT
 
@@ -70,6 +71,6 @@ class StaffWorld:
 
 
 firm = Firm()
-check("a firm with no taught people to draw on finds none of its staff", concern_ops.staff_concern(firm, "mill", StaffWorld(0.0)) == 0.0)
+check("a firm with no taught people to draw on finds none of its staff", business_crew.staff(Business(), firm, "mill", StaffWorld(0.0)) == 0.0)
 firm = Firm()
-check("a firm takes the share the pool covers", concern_ops.staff_concern(firm, "mill", StaffWorld(3.0)) == 0.75 and firm.workforce[TAUGHT] == 3.0)
+check("a firm takes the share the pool covers", business_crew.staff(Business(), firm, "mill", StaffWorld(3.0)) == 0.75 and firm.workforce[TAUGHT] == 3.0)

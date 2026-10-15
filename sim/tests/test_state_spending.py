@@ -34,7 +34,7 @@ check("a state's road is the links between its own tiles, so an empty territory 
       and alone.road_km < held.road_km, alone)
 
 # ---- the standing need names every line a state cannot skip -------------------------------------
-game = sim()
+game = unopened_sim()
 lines = lines_of(game)
 check("a coastal state with cities keeps an army, officials, roads, public buildings, a court, a dole and a navy",
       {"army", "administration", "roads", "public_buildings", "court", "dole", "navy"} <= set(lines), sorted(lines))
@@ -83,7 +83,7 @@ check("in the opening year the state wants the civilisation's opening force",
       (army_in_calm, game.civ["standing_army"]))
 check("while the civilisation's own hazards threaten a sack the state wants a bigger army",
       army_in_crisis > 1.2 * army_in_calm, (army_in_crisis, army_in_calm))
-norse = sim(civ="norse_900ad")
+norse = unopened_sim(civ="norse_900ad")
 check("a hazard that does not threaten a sack leaves the army alone",
       abs(SimWorld(norse).army_wanted() - norse.civ["standing_army"]) < 1e-6)
 
@@ -103,7 +103,7 @@ check("a failed harvest cuts what the state can take", revenue_in_slump < revenu
       (revenue_in_slump, revenue_when_steady))
 
 # ---- patron funding is a payment out of the treasury --------------------------------------------
-patron = sim()
+patron = unopened_sim()
 patron.running_with_mechanic = lambda name: [name]
 check("before the treasury has paid anything the founder has no patron funding", patron.state_funding() == 0.0)
 ask = patron.patron_funding_ask()
@@ -117,7 +117,7 @@ check("a state with a purse pays the founder what the patron asks, out of its re
       abs(rich.state_funding() - rich.patron_funding_ask()) < 1e-6 * ask
       and abs(rich_treasury.record.outlays.get("patronage", 0.0) - rich.state_funding()) < 1e-6 * ask,
       (rich.state_funding(), rich_treasury.record.outlays))
-poor = sim()
+poor = unopened_sim()
 poor.running_with_mechanic = lambda name: [name]
 poor.civ["standing_army"] = 1.0e8
 poor.state_treasury().money = 0.0
@@ -129,7 +129,7 @@ check("the founder's revenue includes only what the treasury paid",
       poor.revenue() <= rich.revenue() and rich.revenue() > 0.0, (poor.revenue(), rich.revenue()))
 
 # ---- a surplus is not hoarded for ever, so a later collapse is felt -----------------------------
-hoard = sim()
+hoard = unopened_sim()
 hoard_treasury = hoard.state_treasury()
 hoard_treasury.money = 1.0e18
 one_year(hoard)
@@ -142,7 +142,7 @@ check("reserve beyond what the state holds against risk buys named works it lack
 check("the purse still equals income less outlays after the works",
       abs(hoard_treasury.money - (1.0e18 + sum(hoard_treasury.record.income.values())
                                   - sum(hoard_treasury.record.outlays.values()))) < 1e-6 * 1.0e18, hoard_treasury.money)
-collapse = sim()
+collapse = unopened_sim()
 collapse.civ["state_revenue"] = [form for form in collapse.civ["state_revenue"] if form["basis"] == "harvest"]
 collapse.state.holdings.farm_last_harvest_kg = 1.0  # what the farms yield all but stops
 for _year in range(8):

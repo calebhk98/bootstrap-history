@@ -6,7 +6,7 @@ the market with every other operator.
 """
 from typing import Any, Callable, List, Optional
 
-from . import concern_ops, firm_exit
+from . import business_books, firm_exit
 from .base import RecordedActor
 from .firm_expansion import ExpansionMixin
 from .borrowing import TRACK_RECORD_YEARS
@@ -36,25 +36,25 @@ class Firm(ExpansionMixin, RecordedActor):
 
 	def on_copied(self, node_id: str, world: Any) -> None:
 		if node_id == self.record.target:
-			self.concerns.add(node_id)
-			self.record.opened_year[node_id] = world.year
+			self.business.open_plant(node_id, world.year)
 
 	def accept_licence(self, node_id: str, chain: List[str], world: Any) -> None:
 		"""A licensed concern becomes the firm's own business."""
 		self.learn(chain, world)
-		self.concerns.add(node_id)
-		self.record.opened_year[node_id] = world.year
+		self.business.open_plant(node_id, world.year)
 
-	def operate(self, world: Any) -> None:
+	def operate(self, world: Any, interest: float = 0.0) -> None:
 		for node_id in sorted(self.concerns):
 			rivals = self.rivals_of(node_id, self.actor_id) if self.rivals_of else 0.0
-			margin = (concern_ops.operate_concern(self, node_id, world, rivals)
-					  - concern_ops.carry_concern(self, node_id, world))
+			margin = (business_books.operate(self.business, self, node_id, world, rivals)
+					  - business_books.carry(self.business, self, node_id, world))
 			self.record.last_margin = margin
 			self.record.loss_years = self.record.loss_years + 1 if margin < 0 else 0
 		if self.record.loss_years == 0 and self.concerns:
 			weak = firm_exit.earns_less_than_plant_would_lend_for(self, world)
 			self.record.weak_years = self.record.weak_years + 1 if weak else 0
+			insolvent = firm_exit.interest_outruns_margin(self, interest, world)
+			self.record.insolvent_years = self.record.insolvent_years + 1 if insolvent else 0
 
 	def credit_earning(self, world: Any) -> float:
 		return max(0.0, self.record.last_margin)
@@ -66,10 +66,10 @@ class Firm(ExpansionMixin, RecordedActor):
 		return min(1.0, max(0.0, world.year - self.record.founded_year) / TRACK_RECORD_YEARS)
 
 	def act(self, world: Any) -> None:
-		self.pay_interest(world)
+		interest = self.pay_interest(world)
 		super().act(world)
-		self.operate(world)
-		if self.record.loss_years >= EXIT_LOSS_YEARS or self.record.weak_years >= EXIT_LOSS_YEARS:
+		self.operate(world, interest)
+		if EXIT_LOSS_YEARS <= max(self.record.loss_years, self.record.weak_years, self.record.insolvent_years):
 			firm_exit.close_firm(self, world)
 		else:
 			self.expand(world)

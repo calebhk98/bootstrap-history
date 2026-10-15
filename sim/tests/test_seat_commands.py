@@ -22,7 +22,7 @@ check("no `as` is the session's seat when it has one", addressed_seat(ids, {"cmd
 check("`as` beats the session's seat", addressed_seat(ids, {"cmd": "state", "as": FIRST_SEAT_ID}, "second") == (FIRST_SEAT_ID, None), None)
 seat, refusal = addressed_seat(ids, {"cmd": "state", "as": "nobody"})
 check("an unknown seat is a refusal that lists the seats and changes nothing",
-      seat is None and refusal["ok"] is False and "second" in refusal["error"] and "Nothing was changed" in refusal["error"], refusal)
+      seat is None and refusal["ok"] is False and refusal["cause"] == "unknown_seat" and "second" in refusal["choices"], refusal)
 seat, refusal = addressed_seat(ids, {"cmd": "state", "as": 3})
 check("a seat id that is not a string is a refusal", seat is None and refusal["ok"] is False, refusal)
 check("the addressing key is not an argument of the handler", without_seat({"cmd": "step", "as": "second", "years": 2}) == {"cmd": "step", "years": 2}, None)

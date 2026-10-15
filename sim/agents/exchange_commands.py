@@ -30,8 +30,9 @@ register_command("decline", decline)
 # ---- the AI's answer ----------------------------------------------------------------------
 def concern_worth(holder: Any, node_id: str) -> float:
 	"""A concern's last margin over the valuation horizon; a share of the whole when not tracked singly."""
-	record = holder.record
-	margin = record.margins.get(node_id, record.last_margin / max(1, len(record.concerns)))
+	margin = holder.margin_of(node_id)
+	if margin is None:
+		margin = holder.record.last_margin / max(1, holder.concern_count())
 	return max(0.0, margin) * VALUE_HORIZON_YEARS
 
 

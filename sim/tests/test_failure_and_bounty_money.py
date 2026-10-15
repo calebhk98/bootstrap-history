@@ -2,6 +2,7 @@
 quoted figure, from the bill the player actually bears), 248 (a failed bounty
 is not orphaned) and 249 (selling stock faces the market's limits)."""
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of, facts_of
 from sim.ui.proto.techtree import _explain_timing_and_risk
 
 
@@ -82,12 +83,15 @@ _capped.capital = -_capped.credit_limit() + 0.1 * _loss
 _room_before = _capped.capital + _capped.credit_limit()
 _owed_before = _capped.active["blast_furnace"]["cost_left"]
 check("set-up: the failure is larger than the room left", 0 <= _room_before < _loss, (_room_before, _loss))
+_capital_before = _capped.capital
 _capped._complete("blast_furnace")
+_borne = _capital_before - _capped.capital   # the line is read at the capital left, so the room is a little under _room_before
 check("a failure never takes capital past the credit limit",
       _capped.capital >= -_capped.credit_limit() - 1e-6, (_capped.capital, _capped.credit_limit()))
 check("the part of a failure the purse could not bear is added to what the project still costs",
-      abs((_capped.active["blast_furnace"]["cost_left"] - _owed_before) - (_loss - _room_before)) <= 1e-6 * _loss,
-      (_capped.active["blast_furnace"]["cost_left"] - _owed_before, _loss - _room_before))
+      abs((_capped.active["blast_furnace"]["cost_left"] - _owed_before) - (_loss - _borne)) <= 1e-6 * _loss
+      and _borne <= _room_before + 1e-6,
+      (_capped.active["blast_furnace"]["cost_left"] - _owed_before, _loss - _borne))
 
 # 438: the yearly charge for guarding coin is paid from the room under the credit limit, not past it
 _guarded = sim(capital=1e6)
@@ -128,7 +132,7 @@ check("it is still the claimant's work: no hours land on the poster",
 check("the attempt is counted and part of the calendar is banked",
       _bounty_sim.failed_attempts[_bounty_id] == 1)
 check("the log says the claimant failed and the prize holds",
-      any("claimant" in text and "prize" in text
+      any(cause_of(text) == "project_failed" and facts_of(text)["severity"] == "claimed"
           for _year, text in _bounty_sim.state.household.log[-3:]),
       _bounty_sim.state.household.log[-3:])
 _bounty_sim.rng = _ForcedDraw(0.999999)
@@ -156,8 +160,13 @@ _sold_big = _sell.sell_material_stock("coal", 40 * _absorbed)
 check("a sale is cut to what the market absorbs in a year", _sold_big <= _absorbed + 1e-6,
       (_sold_big, _absorbed))
 _big_average = (_sell.capital - _cash) / max(_sold_big, 1e-9)
+# the fall is the economy's own: its book cleared again with the tonnes sold as one more offer (stage 3 of Complaint 507);
+# how deep that is follows how many tonnes the engine's year of market is until stage 4 reads the offered quantity there
+_fall = _sell.economy.agent_price_response(_sell.goods_market._economy_good("coal"), _sold_big, 0.0, _sell.economy.acting_tile())
 check("selling a year's market at once pays less per tonne than one tonne",
-      _big_average < 0.9 * _small_price, (_big_average, _small_price))
+      _big_average < _small_price, (_big_average, _small_price))
+check("...and no less than the economy's price after all of it is on offer",
+      _fall is not None and _big_average >= _small_price * _fall * (1.0 - 1e-3), (_big_average, _small_price, _fall))
 _cash = _sell.capital
 _sold_more = _sell.sell_material_stock("coal", _absorbed)
 check("selling more in the same year is cut to nothing or to a lower price",

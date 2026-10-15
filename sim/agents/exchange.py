@@ -10,7 +10,9 @@ share of a licensed concern's takings the licensee pays the holder every year, o
 import math
 from typing import Any, Callable, Dict, List
 
-from . import concern_ops, joint_stock, ledger, patent
+from sim.refusal import Refusal, cause_of
+
+from . import joint_stock, ledger, patent
 from .player_commands import CommandRejected
 from .tuning_exchange import OFFER_LIFETIME_YEARS
 
@@ -96,7 +98,7 @@ def receives_problem(taker: Any, incoming: Dict[str, Any], world: Any) -> str:
 		if node_id in taker.concerns:
 			return "already runs " + node_id
 		if not taker.knows(node_id, world) and node_id not in incoming.get("knowledge", ()):
-			return "cannot make " + node_id
+			return Refusal("taker_cannot_make", "cannot make " + node_id, concern=node_id)
 		if node_id not in incoming.get("patent", ()) and node_id not in incoming.get("licence", ()):
 			reason = patent.blocked_reason(world, taker, node_id)
 			if reason:
@@ -115,7 +117,8 @@ def problem(giver: Any, receiver: Any, give: Dict[str, Any], take: Dict[str, Any
 	for taker, incoming in ((receiver, give), (giver, take)):
 		reason = receives_problem(taker, incoming, world)
 		if reason:
-			return "%s %s" % (taker.actor_id, reason)
+			return Refusal(cause_of(reason) or "deal_problem", "%s %s" % (taker.actor_id, reason),
+						   taker=taker.actor_id, **getattr(reason, "facts", {}))
 	return ""
 
 
@@ -145,16 +148,7 @@ def find_offer(receiver: Any, offer_id: Any) -> Dict[str, Any]:
 
 
 def move_concern(source: Any, target: Any, node_id: str, world: Any) -> None:
-	opened = source.opened_year_of(node_id, world.year)
-	capacity = source.record.capacity.get(node_id)
-	concern_ops.close_concern(source, node_id)
-	concern_ops.open_concern(target, node_id, world)
-	target.record.opened_year[node_id] = opened
-	if capacity is not None:
-		target.record.capacity[node_id] = capacity
-		notify = getattr(target, "on_capacity_change", None)
-		if notify is not None:
-			notify(target.actor_id)
+	target.receive_plant(source.release_plant(node_id, world), world)
 
 
 def hand_over(source: Any, target: Any, side: Dict[str, Any], world: Any) -> None:

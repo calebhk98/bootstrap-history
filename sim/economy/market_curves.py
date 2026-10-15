@@ -32,6 +32,14 @@ def port_area(area_map, port_tile: str, good: str) -> Optional[str]:
         return None
 
 
+def kept_areas(area_map, port_tile: str, tiles, good: str) -> set:
+    """The market areas of a good whose book is kept after a clearing: the port's, and those holding `tiles`
+    (where the game's buyers and sellers act, so their orders can be priced against the book)."""
+    found = {port_area(area_map, tile, good) for tile in (port_tile, *tiles)}
+    found.discard(None)
+    return found
+
+
 def summarize(bids: Sequence[Bid], offers: Sequence[Offer]) -> Dict[str, List[List[float]]]:
     """The market's own book as plain rows: bids [floor, flexible, reference, elasticity, budget, ceiling]
     and offers [reservation, quantity]."""

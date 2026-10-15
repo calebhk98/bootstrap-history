@@ -1,7 +1,7 @@
 """One entrant into a niche: the test every new firm passes, whatever the niche or the year."""
 from typing import Any, List, Optional
 
-from . import enforcement, firm_entry, imitation, ledger
+from . import business_books, enforcement, entry_ramp, firm_entry, imitation, ledger
 from .edges import EDGE_POOLED_CAPITAL
 from .firm import Firm
 from .records import ActorRecord
@@ -19,7 +19,8 @@ class NicheEntry:
 		self.pool, self.strata_exist = pool, strata_exist
 		self.tile = firm_entry.firm_tile(registry, None)
 		self.carried = firm_entry.carrying_cost(world, node_id, tile=self.tile)
-		self.costs = world.upkeep(node_id) + world.concern_wage_bill(node_id) + self.carried
+		upkeep, wages = business_books.yearly_costs(world, node_id)
+		self.costs = upkeep + wages + self.carried
 		probe = Firm("probe", ActorRecord(kind="firm", founded_year=world.year))
 		self.seen = imitation.in_sight(self.tile, node_id, world)
 		self.chain = imitation.missing_chain(node_id, world, probe) if self.seen else None
@@ -30,7 +31,8 @@ class NicheEntry:
 		registry, world, node_id = self.registry, self.world, self.node_id
 		if self.plan is None:
 			return None
-		expected = firm_entry.expected_entry_gross(registry, world, node_id, rivals, waiting + 1) - self.costs
+		gross = firm_entry.expected_entry_gross(registry, world, node_id, rivals, waiting + 1)
+		expected = gross - self.costs
 		expected -= enforcement.expected_damages(world, "", node_id, expected)
 		if expected <= 0:
 			return None
@@ -38,7 +40,8 @@ class NicheEntry:
 		founders = firm_entry.founder_candidates(registry) if self.strata_exist else []
 		founder = founders[0] if founders else None
 		chance = imitation.copy_chance(self.chain, world) * firm_entry.copy_ease(founder)
-		stake = self.plan["total"] * ENTRY_STAKE_BUFFER
+		foregone, deepest_loss = entry_ramp.ramp_shortfall(world, node_id, gross, self.costs)
+		stake = self.plan["total"] * ENTRY_STAKE_BUFFER + deepest_loss  # the early years' losses are carried, not borrowed
 		pooled, borrowed = firm_entry.stake_split(stake, founder, self.strata_exist, self.pool[0])
 		if founder is None and pooled < stake * ENTRY_EQUITY_SHARE:
 			return None  # the pooled savings are spent: lenders back no entrant who puts up too little
@@ -46,7 +49,7 @@ class NicheEntry:
 			return None
 		capital_cost = pooled * world.market_rate() + (
 			borrowed * probe.rate_on_loan(world, borrowed) if borrowed > 0.0 else 0.0)
-		if expected * VALUE_HORIZON_YEARS * chance <= self.plan["total"] or expected * chance <= capital_cost:
+		if (expected * VALUE_HORIZON_YEARS - foregone) * chance <= self.plan["total"] or expected * chance <= capital_cost:
 			return None
 		serial = len(registry.state.records) + 1
 		while "firm:%d" % serial in registry.state.records:

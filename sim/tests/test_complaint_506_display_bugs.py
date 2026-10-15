@@ -56,3 +56,90 @@ check("the supervision note does not claim 0.13 is a third of a third",
       "third of a third" not in _VENTURE_SUPERVISION_NOTE, _VENTURE_SUPERVISION_NOTE)
 check("the money blocker covers the yearly draw rate as well as the bill", "draw rate" in BLOCKER_MEANING["money"],
       BLOCKER_MEANING["money"])
+
+# --- market <material> ---------------------------------------------------------------------------------------
+from sim.ui.market_report import priceable_materials
+
+_priced = priceable_materials(_game)
+_one = _priced[0]
+check("'market <material>' parses the material", _parse_typed("market %s" % _one)[0] == {"cmd": "market", "material": _one},
+      _parse_typed("market %s" % _one))
+check("'market offset 5' is still paging", _parse_typed("market offset 5")[0] == {"cmd": "market", "offset": 5},
+      _parse_typed("market offset 5"))
+_filtered = S._agent_dispatch(_game, NODES, {"cmd": "market", "material": _one})
+check("'market <material>' lists that one material only",
+      _filtered.get("ok") and [row["material"] for row in _filtered["materials"]["rows"]] == [_one], _filtered)
+check("...and the wages table is left out", _filtered["wages"] == [] and "WAGES" not in _render_pretty("market", _filtered),
+      _render_pretty("market", _filtered))
+_unknown = S._agent_dispatch(_game, NODES, {"cmd": "market", "material": "zzzz_nothing"})
+check("an unknown material is refused and points back to the full table",
+      _unknown.get("ok") is False and "'market' lists them all" in _unknown["error"], _unknown)
+_typo = S._agent_dispatch(_game, NODES, {"cmd": "market", "material": _one[:-1] + "x"})
+check("a near miss suggests the real name", _typo.get("ok") is False and _one in _typo["error"], _typo)
+
+# --- quote sell concern ---------------------------------------------------------------------------------------
+import copy as _copy
+import random as _random
+from sim.agents.api import ActorRecord
+
+
+def _sale_game():
+    template = next(node_id for node_id, node in NODES.items() if not node["pre"] and node["cap"] >= 0)
+    node = _copy.deepcopy(NODES[template])
+    node.update(id="zz_quoted", name="zz_quoted", traits=["commerce"], pre=[], lab={"labourer": 100.0}, mat={},
+                rev=5000.0, up=100.0, yrs=1.0, risk=0.0, ph=0.0, dev_years=None, dev_people=None, cap=0.0, art=0.2, sch=0.0)
+    node.pop("gains", None)
+    nodes = _copy.deepcopy(NODES)
+    nodes["zz_quoted"] = node
+    game = build_unopened(lambda: S.Sim(nodes, list(ORDER), _random.Random(1), events=False, manual=True,
+                                        civ=S.load_civ("rome_100ad")))
+    game.goal, game.done_year = GOAL, {}
+    year = game.state.scenario.year
+    projects = game.state.projects
+    projects.done.add("zz_quoted")
+    projects.done_year["zz_quoted"] = year - 5
+    projects.operating.add("zz_quoted")
+    projects.opened_year["zz_quoted"] = year - 5
+    game._done_changed()
+    game.actors.add("firm:rich", ActorRecord(kind="firm", money=1.0e9, knowledge={"zz_quoted"}))
+    return game, nodes
+
+
+_sale, _sale_nodes = _sale_game()
+check("'quote sell concern <id>' parses", _parse_typed("quote sell concern zz_quoted")[0]
+      == {"cmd": "quote", "what": "sell", "target": "concern", "id": "zz_quoted"}, _parse_typed("quote sell concern zz_quoted"))
+_capital_before = _sale.household.capital
+_preview = S._agent_dispatch(_sale, _sale_nodes, {"cmd": "quote", "what": "sell", "target": "concern", "id": "zz_quoted"})
+check("the quote names the buyer and a price", _preview.get("ok") and _preview["buyer"] == "firm:rich" and _preview["price"] > 0,
+      _preview)
+check("a quote sells nothing", "zz_quoted" in _sale.state.projects.operating and _sale.household.capital == _capital_before)
+_actual = S._agent_dispatch(_sale, _sale_nodes, {"cmd": "sell", "what": "concern", "id": "zz_quoted"})
+check("the sale settles at exactly the quoted buyer and price",
+      _actual.get("ok") and _actual["price"] == _preview["price"] and _actual["buyer"] == _preview["buyer"], (_preview, _actual))
+_gone = S._agent_dispatch(_sale, _sale_nodes, {"cmd": "quote", "what": "sell", "target": "concern", "id": "zz_quoted"})
+check("a concern no longer run cannot be quoted", _gone.get("ok") is False, _gone)
+
+# --- why <material> and the shortage line ---------------------------------------------------------------------
+from sim.engine.shortage_conditions import material_words, slowed_projects
+
+check("a material key reads in player words", material_words("alum_kg") == "alum" and material_words("hectare_land") == "hectare land",
+      (material_words("alum_kg"), material_words("hectare_land")))
+_materials_with_price = [key for key in _priced if key.endswith("_kg")]
+_why_material = S._agent_dispatch(_game, NODES, {"cmd": "why", "id": _materials_with_price[0]})
+check("'why <material>' explains the material instead of calling it an unknown node",
+      _why_material.get("ok") and _why_material.get("material_story") == _materials_with_price[0], _why_material)
+check("...and reads as text naming the material in words",
+      material_words(_materials_with_price[0]) in _render_pretty("why", _why_material),
+      _render_pretty("why", _why_material))
+_nothing = S._agent_dispatch(_game, NODES, {"cmd": "why", "id": "zzzz_nothing"})
+check("'why' on a name that is neither still says it is unknown", _nothing.get("ok") is False and "unknown" in _nothing["error"], _nothing)
+check("with no project running nothing is slowed by a shortage", slowed_projects(_game) == [], slowed_projects(_game))
+
+_shortage_game = unopened_sim()
+_shortage_game.resource_throttle = lambda: 0.2
+_shortage_game.state.holdings.binding = "alum_kg"
+_shortage_game.state.household.log.clear()
+_shortage_game._step_materials()
+check("no 'SHORT OF' line is logged when no running project draws the short material",
+      not any("SHORT OF" in str(entry[1]) for entry in _shortage_game.state.household.log),
+      [entry for entry in _shortage_game.state.household.log if "SHORT OF" in str(entry[1])])

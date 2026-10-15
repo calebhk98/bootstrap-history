@@ -7,9 +7,7 @@ import json
 import os
 import tempfile
 import unittest
-import warnings
 
-from sim.engine import solve_prices
 from sim.engine import need_data
 from sim.engine.mods import ModError
 from sim.world import demand, need_demand
@@ -55,10 +53,8 @@ def make_bins():
     return demand.income_bins(POPULATION, MEAN_INCOME)
 
 
-def build(production=None, needs=None, technology_demand=None):
-    return need_demand.NeedDemandModel(
-        needs or BASE_NEEDS, production or BASE_PRODUCTION, make_bins(),
-        technology_demand=technology_demand)
+def build(production=None, needs=None):
+    return need_demand.NeedDemandModel(needs or BASE_NEEDS, production or BASE_PRODUCTION, make_bins())
 
 
 def with_mithril(production=None, needs=None):
@@ -68,25 +64,8 @@ def with_mithril(production=None, needs=None):
     production["mithril_kg"] = {
         "outputs": {"mithril_kg": 1.0}, "inputs": {"ore_kg": 5.0},
         "labour_hours": {"labourer": 200.0}}
-    needs["goods"]["mithril_kg"] = {"satisfies": {"protection": 6.0},
-                                    "supply_per_year": 300.0}
+    needs["goods"]["mithril_kg"] = {"satisfies": {"protection": 6.0}}
     return production, needs
-
-
-def solve_with(production, needs, technology_demand=None, use_demand=True):
-    """Solved prices for a small fixture world, labour as numeraire."""
-    producers = solve_prices.build_producers_index(production)
-    resolvable = {material for entry in production.values() for material in entry["outputs"]}
-    anchors = None
-    if use_demand:
-        anchors = need_demand.NeedDemandAnchors(
-            build(production, needs, technology_demand),
-            supply_by_material=need_demand.declared_supply(needs, production))
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        prices, _iterations, _residual, _chosen = solve_prices.solve(
-            production, producers, resolvable, {"labourer": 1.0}, demand_anchors=anchors)
-    return prices
 
 
 class FinalDemandTests(unittest.TestCase):
@@ -215,59 +194,7 @@ class DerivedDemandTests(unittest.TestCase):
         final = model.final_demand(self.PRICES)
         self.assertGreater(total["iron_kg"], final["iron_kg"])
 
-    def test_technology_being_pursued_demands_its_build_materials(self):
-        nodes = [
-            {"id": "open", "pre": ["held"], "mat": {"idle_kg": 100.0}, "build_yrs": 2.0},
-            {"id": "far", "pre": ["open"], "mat": {"herb_kg": 900.0}, "build_yrs": 1.0},
-            {"id": "held", "pre": [], "mat": {"bronze_kg": 900.0}, "build_yrs": 1.0}]
-        pursued = need_demand.technology_material_demand(nodes, {"held"})
-        self.assertEqual(pursued, {"idle_kg": 50.0})
-        model = build(technology_demand=pursued)
-        self.assertGreater(model.total_demand(self.PRICES)["idle_kg"], 0.0)
-
-    def test_technology_lookahead_can_reach_further_down_the_tree(self):
-        nodes = [
-            {"id": "open", "pre": ["held"], "mat": {}, "build_yrs": 1.0},
-            {"id": "far", "pre": ["open"], "mat": {"herb_kg": 900.0}, "build_yrs": 1.0}]
-        self.assertEqual(need_demand.technology_material_demand(nodes, {"held"}), {})
-        deep = need_demand.technology_material_demand(nodes, {"held"}, lookahead_depth=2)
-        self.assertEqual(deep, {"herb_kg": 900.0})
-
-
-class ScarcityPricingTests(unittest.TestCase):
-
-    def test_a_far_rarer_better_metal_prices_above_the_metals_it_beats(self):
-        production, needs = with_mithril()
-        prices = solve_with(production, needs)
-        self.assertGreater(prices["mithril_kg"], prices["iron_kg"])
-        self.assertGreater(prices["mithril_kg"], prices["bronze_kg"])
-
-    def test_mithril_costs_more_than_its_own_process_because_supply_is_short(self):
-        production, needs = with_mithril()
-        cost_only = solve_with(production, needs, use_demand=False)
-        priced = solve_with(production, needs)
-        self.assertGreater(priced["mithril_kg"], 2.0 * cost_only["mithril_kg"])
-
-    def test_a_less_rare_supply_clears_lower(self):
-        production, needs = with_mithril()
-        scarce = solve_with(production, needs)["mithril_kg"]
-        needs["goods"]["mithril_kg"]["supply_per_year"] = 30000.0
-        plentiful = solve_with(production, needs)["mithril_kg"]
-        self.assertLess(plentiful, scarce)
-
-    def test_ample_supply_leaves_the_price_at_cost(self):
-        production, needs = with_mithril()
-        needs["goods"]["mithril_kg"]["supply_per_year"] = 1e15
-        cost_only = solve_with(production, needs, use_demand=False)
-        self.assertAlmostEqual(solve_with(production, needs)["mithril_kg"],
-                               cost_only["mithril_kg"], places=6)
-
-    def test_a_good_with_no_demand_is_priced_at_its_cost(self):
-        production, needs = with_mithril()
-        needs["goods"]["idle_kg"] = {"supply_per_year": 10.0}
-        cost_only = solve_with(production, needs, use_demand=False)
-        self.assertAlmostEqual(solve_with(production, needs)["idle_kg"],
-                               cost_only["idle_kg"], places=6)
+class ModMetalDisplacementTests(unittest.TestCase):
 
     def test_the_metals_a_better_one_displaces_lose_demand(self):
         production, needs = with_mithril()
@@ -276,16 +203,6 @@ class ScarcityPricingTests(unittest.TestCase):
         with_mod = build(production, needs).final_demand(prices)
         without = build().final_demand({k: v for k, v in prices.items() if k != "mithril_kg"})
         self.assertLess(with_mod["iron_kg"], without["iron_kg"])
-
-    def test_a_supply_limited_good_reports_the_price_that_clears_it(self):
-        production, needs = with_mithril()
-        model = build(production, needs)
-        prices = {"wheat_kg": 1.0, "bronze_kg": 2.0, "iron_kg": 1.5, "herb_kg": 2.0,
-                  "widget_unit": 5.0, "ore_kg": 1.0, "mithril_kg": 3.0}
-        clearing = model.clearing_prices(prices, {"mithril_kg": 300.0})["mithril_kg"]
-        probe = dict(prices, mithril_kg=clearing)
-        quantity = model.total_demand(probe)["mithril_kg"]
-        self.assertAlmostEqual(quantity, 300.0, delta=300.0 * 1e-3)
 
 
 class NeedDataFileTests(unittest.TestCase):
@@ -349,32 +266,6 @@ class RealDataTests(unittest.TestCase):
     def test_no_basket_entry_exists_for_any_good(self):
         self.assertFalse(hasattr(demand, "DEFAULT_BASKET"))
         self.assertFalse(hasattr(demand, "PLATINUM"))
-
-    def test_platinum_is_wanted_because_it_satisfies_ornament_and_has_a_supply(self):
-        from sim.engine import joint_allocation
-        anchors = joint_allocation.build_demand_anchors()
-        self.assertIn("platinum_g", anchors.supply_by_material)
-
-    def test_germanium_gets_demand_once_a_technology_using_it_can_be_pursued(self):
-        from sim.engine import catalog
-        root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        nodes = list(catalog.load_mod_tree_nodes(root))
-        held = {node["id"] for node in nodes} - {"com_semiconductor_diode"}
-        pursued = need_demand.technology_material_demand(nodes, held)
-        self.assertGreater(pursued["germanium_g"], 0.0)
-        production = demand.production_data()
-        model = need_demand.NeedDemandModel(
-            need_data.load_needs(root), production, make_bins(), pursued)
-        prices = {material: 1.0 for entry in production.values() for material in entry["outputs"]}
-        self.assertGreater(model.demand_for("germanium_g", prices), 0.0)
-        self.assertGreater(model.byproduct_supply(prices)["germanium_g"], 0.0)
-
-    def test_germanium_has_no_demand_for_a_civilisation_far_from_semiconductors(self):
-        from sim.engine import joint_allocation
-        anchors = joint_allocation.build_demand_anchors()
-        production = demand.production_data()
-        prices = {material: 1.0 for entry in production.values() for material in entry["outputs"]}
-        self.assertEqual(anchors.model.demand_for("germanium_g", prices), 0.0)
 
 
 if __name__ == "__main__":

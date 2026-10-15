@@ -204,6 +204,7 @@ try:
           _run.returncode == 0,
           (_run.returncode, _run.stdout[-400:], _run.stderr[-400:]))
 
+    # presentation: the test runner's printed summary
     check("...and it really ran checks there rather than exiting early with "
           "nothing to do",
           "0 failures" in _run.stdout and " 0 checks," not in _run.stdout,

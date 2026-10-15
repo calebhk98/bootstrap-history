@@ -49,7 +49,7 @@ def next_year(game):
 	game.advance_actors(game.state.scenario.year)
 
 CATEGORY = sorted(S.Sim.GOODS_CATEGORIES)[0]
-NODE = make_node("zz_entry", CATEGORY, revenue=2.0e5, upkeep=5000.0, hours=50.0)
+NODE = make_node("zz_entry", CATEGORY, revenue=2.2e5, upkeep=5000.0, hours=50.0)
 
 
 def run_entry(years, rate_scale=1.0):

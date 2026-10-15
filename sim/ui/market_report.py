@@ -4,6 +4,8 @@ Everything here is read from figures the engine already computes
 (material_trade_quote, annual_wage); nothing is new economics.
 """
 
+import difflib
+
 import sim.engine.ui_port as ui_port
 from sim.engine.ui_port import WAGES
 
@@ -19,9 +21,11 @@ def priceable_materials(sim):
 
 
 
-def material_rows(sim, offset, limit):
-    """Buy price and own-supply flag for one page of the priceable materials."""
-    materials = priceable_materials(sim)
+def material_rows(sim, offset, limit, only=None):
+    """Buy price and own-supply flag for one page of the priceable materials, or for the one named."""
+    materials = [only] if only else priceable_materials(sim)
+    if only:
+        offset, limit = 0, 1
     own_keys = {emp for emp, tag in ui_port.own_production_tags(sim)
                 if ui_port.own_material_supply(sim, tag) > 0}
     own = own_keys | {key for key, (emp, _tag) in sim.MATERIAL_CHECKS.items()
@@ -32,7 +36,9 @@ def material_rows(sim, offset, limit):
         rows.append({"material": material,
                      "buy_per_tonne": round(quote["buy_per_tonne"], 2),
                      "sell_per_tonne": round(quote["sell_per_tonne"], 2),
-                     "price_over_long_run_cost": round(quote["market_price_ratio"], 3),
+                     "price_over_long_run_cost": (
+                         None if not quote["making_cost_per_tonne"]
+                         else round(quote["price_at_tile_per_tonne"] / quote["making_cost_per_tonne"], 3)),
                      "market_available_tonnes_per_year":
                          round(quote["market_available_tonnes_per_year"], 2),
                      "own_supply": material in own,
@@ -48,7 +54,16 @@ def wage_rows(sim):
             for trade in sorted(WAGES)]
 
 
-def market_report(sim, offset=0, limit=DEFAULT_MATERIAL_PAGE):
+def market_report(sim, offset=0, limit=DEFAULT_MATERIAL_PAGE, material=None):
+    """The market screen; `material` narrows the table to that one (and drops the wages), or is refused with suggestions."""
+    if material:
+        known = priceable_materials(sim)
+        wanted = str(material).strip().lower()
+        if wanted not in known:
+            near = difflib.get_close_matches(wanted, known, n=5, cutoff=0.5) or [key for key in known if wanted in key][:5]
+            return {"ok": False, "error": "no material called %r has a price here%s. 'market' lists them all."
+                    % (material, "; did you mean: " + ", ".join(near) if near else "")}
+        return {"ok": True, "materials": material_rows(sim, 0, 1, only=wanted), "wages": []}
     return {"ok": True,
             "materials": material_rows(sim, max(0, offset), max(1, limit)),
             "wages": wage_rows(sim)}

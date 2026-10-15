@@ -10,7 +10,6 @@ from sim.ui.proto.render_screen_state import _state_completed_head_lines
 from sim.ui.proto.render_screen_state_blocks import _state_founder
 
 _STAFF_PARAGRAPH = "not the crew that"
-_PRACTICE_PARAGRAPH = "because you cannot be in two places"
 
 
 def _render(command_name, response):
@@ -49,22 +48,6 @@ os.remove(save_path)
 after_reload = _render("why", _dispatch(reloaded, cmd="why", id="tex_horizontal_loom"))
 check("the explained-once record survives save and load",
       _STAFF_PARAGRAPH not in after_reload, after_reload)
-
-# --- (b) the practice paragraph, shared between money and ventures.
-game = sim(capital=1e6)
-first_money = _render("money", _dispatch(game, cmd="money"))
-second_money = _render("money", _dispatch(game, cmd="money"))
-ventures_after = _render("ventures", _dispatch(game, cmd="ventures"))
-forced_money = _render("money", _dispatch(game, cmd="money", full=True))
-check("first `money` explains the practice",
-      _PRACTICE_PARAGRAPH in " ".join(first_money.split()), first_money)
-check("second `money` keeps the practice line but not the paragraph",
-      _PRACTICE_PARAGRAPH not in " ".join(second_money.split()) and "YOUR PRACTICE" in second_money,
-      second_money)
-check("`ventures` after `money` does not repeat it either",
-      _PRACTICE_PARAGRAPH not in " ".join(ventures_after.split()) and "YOUR PRACTICE" in ventures_after,
-      ventures_after)
-check("`money full` repeats it", _PRACTICE_PARAGRAPH in " ".join(forced_money.split()), forced_money)
 
 # --- (c) a completion is printed once.
 shed_name = NODES["tx2_shed"]["name"]

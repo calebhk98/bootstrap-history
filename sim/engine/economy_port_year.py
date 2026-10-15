@@ -17,11 +17,14 @@ from sim.economy.api import (EDGE_EXTERNAL, EDGE_LEGACY, AgentOrders, Economy, G
                              YearInputs, expected_output_prices, external_orders, live_input_prices, live_wages,
                              trade_premium, variable_cost_per_run)
 
-from . import economy_port_actors, economy_port_cargo, economy_port_sites, material_capacity, solve_cache
+from . import economy_port_actors, economy_port_cargo, economy_port_late, economy_port_sites, material_capacity, solve_cache
 from .data import load_civ
 from .economy_port_key import spin_up_key
+from .economy_port_coin import priced_at_the_margin
 from .economy_port_setup import build_setup, opening_values
+from .economy_port_tiles import TilePricesMixin
 from .material_units import tonnes_per_unit
+from .prices import default_production_entries
 
 OUTCOMES_KEPT = 100   # yearly outcomes held in memory for the health figures
 SPIN_UP_CACHE_DIRECTORY = os.path.join(os.path.dirname(solve_cache.DEFAULT_CACHE_DIRECTORY), "agent_economy")
@@ -76,7 +79,7 @@ PARTNER_SPEND_SHARE_PER_YEAR = declare(
         "partner as a full economy (Complaint 382) would decide it.")
 
 
-class AgentEconomy:
+class AgentEconomy(TilePricesMixin):
     """One game's agent economy. Not saved itself: it rebuilds from `state.economy.agent_economy`."""
 
     def __init__(self, sim):
@@ -90,11 +93,17 @@ class AgentEconomy:
         self._floor_costs_of = None      # the economy object they were read from
         self.outcomes = collections.deque(maxlen=OUTCOMES_KEPT)   # recent yearly outcomes, for health figures; not saved
         self._built_from = None          # the stored dict the live economy belongs to; a load replaces it
+        self._years_run = 0              # years this object has run: the producers change when one closes
+        self._techniques_admitted = None   # the held nodes the economy's recipes were last matched to; not saved
         self._record_stale = False       # the live economy has moved on since `stored["record"]` was exported
 
     @property
     def stored(self):
         return self._sim.state.economy.agent_economy
+
+    def spin_up_result(self):
+        """The saved opening's first-stage result (see `_settle`); empty before the opening is saved."""
+        return dict((self.stored.get("record") or {}).get("spin_up_result") or {})
 
     def opened(self) -> bool:
         return self._economy is not None or "record" in self.stored
@@ -107,7 +116,7 @@ class AgentEconomy:
                 setup = build_setup(self._sim, self.stored["opening"])
                 self._economy = economy_api.economy_from_record(setup, self.stored["record"])
             else:
-                opening = opening_values(self._sim)
+                opening = priced_at_the_margin(self._sim, opening_values(self._sim))
                 setup = build_setup(self._sim, opening)
                 record = solve_cache.cached_json(
                     _spin_up_cache_key(setup),
@@ -125,6 +134,54 @@ class AgentEconomy:
         self._floor_costs = {}
         if self._economy is not None:
             economy_api.set_improvements(self._economy, self._sim.state.economy.improvements)
+
+    def admit_techniques(self):
+        """Give the economy the entries the society's techniques now allow, when its held nodes changed since
+        it last looked: they enter the saved opening (so a resumed game rebuilds them) and the live economy."""
+        held = economy_port_late.techniques_held(self._sim)
+        if held == self._techniques_admitted:
+            return
+        self._techniques_admitted = held
+        production = default_production_entries()
+        grown = economy_port_late.opening_with_techniques(self._sim, self.stored["opening"], held, production)
+        if grown is None:
+            return
+        added = set(grown["recipes"]) - set(self.stored["opening"]["recipes"])
+        late_goods = set(self.stored.get("late_goods", ()))
+        for entry_id in added:
+            late_goods.update(production[entry_id].get("outputs") or {})
+        self.stored["late_goods"] = sorted(late_goods)
+        self.stored["opening"] = grown
+        economy_api.admit_recipes(self._economy, build_setup(self._sim, grown, production))
+        self._floor_costs = {}
+        self._answers = None
+        self._country_answers = {}
+        self._record_stale = True
+
+    def _note_volume_baseline(self):
+        """The first year a good that a late technique allows clears any quantity is the quantity later years
+        are measured against."""
+        baseline = self.stored.setdefault("volume_baseline", {})
+        late_goods = self.stored.get("late_goods", ())
+        volumes = economy_api.traded_volumes(self._economy)
+        for good in late_goods:
+            if volumes.get(good, 0.0) > 0.0 and good not in baseline:
+                baseline[good] = volumes[good]
+
+    def cleared_ratio(self, materials):
+        """Tonnes the economy cleared last year of these materials over what it cleared in the first year it
+        cleared them after a technique gained since the opening allowed their making; None when none of them is
+        such a good, or none had cleared before."""
+        baseline = self.stored.get("volume_baseline", {})
+        if not baseline:
+            return None
+        volumes = economy_api.traded_volumes(self.economy())
+        then = sum(baseline[good] * tonnes_per_unit(good) for good in materials if good in baseline)
+        now = sum(volumes.get(good, 0.0) * tonnes_per_unit(good) for good in materials if good in baseline)
+        return now / then if then > 0.0 else None
+
+    def producers_stamp(self):
+        return self._years_run
 
     def _spun_up(self, setup):
         """The record after the hidden years; the same opening always gives the same one, so it is cached
@@ -144,18 +201,11 @@ class AgentEconomy:
         coin = self._economy.setup.coin_per_unit
         return [(people, rent * coin) for people, rent in economy_api.cohort_land_rents(self.economy(), tiles)]
 
-    def goods_level_over_opening(self):
-        """How dear the economy's goods are against the opening's solver prices (both counted in the economy's
-        unit); None when no good has traded lately."""
-        economy = self.economy()
-        unit = economy.setup.coin_per_unit
-        opening = {good: price / unit for good, price in self.stored["opening"]["prices"].items()}
-        return economy_api.goods_level_over_opening(economy, opening)
-
     # ---- the year -----------------------------------------------------------------------------
     def run_year(self):
         economy = self.economy()
         self.sync_ways()
+        self.admit_techniques()
         orders = self._seat_orders()
         orders.update(self._external_orders())
         from .material_units import tonnes_per_unit
@@ -166,6 +216,7 @@ class AgentEconomy:
         orders.update(cargo_orders)
         self._strike_state_coin(economy)
         sales, purchases = self._actor_trade_orders(orders)
+        economy_api.watch_tiles(economy, self._seat_tiles())
         outcome = economy.step(self._inputs(orders, economy_port_cargo.border_accounts(economy, legs)))
         self._floor_costs = {}
         economy_port_sites.deplete(self._sim, outcome.extraction, self._recipe_outputs())
@@ -178,6 +229,8 @@ class AgentEconomy:
         self._country_answers = {}
         self._floor_costs = {}
         self._record_stale = True        # exported when the game is saved (flush_record)
+        self._years_run += 1
+        self._note_volume_baseline()
         return outcome
 
     # ---- firms', states' and traders' sales and purchases (economy_port_actors.py) ------------------
@@ -345,14 +398,16 @@ class AgentEconomy:
                                    export_budget=self._partner_spending(partners) / coin)
         return {EDGE_EXTERNAL: stand_in}
 
-    def price_response(self, material, landed_tonnes, taken_tonnes):
-        """Factor on a material's price at the port once more tonnes land there or are taken out, from the book the
-        market last cleared; None when the market has none."""
+    def price_response(self, material, landed_tonnes, taken_tonnes, tile=None):
+        """Factor on a material's price once more tonnes land in its market or are taken out, from the book the
+        market last cleared: at the port when no tile is named (the price the economy shows nationally), else on the
+        tile's own area. None when the market has none."""
         from .material_units import tonnes_per_unit
         per_unit = tonnes_per_unit(material)
         if not per_unit or per_unit <= 0.0 or material not in self.economy().area_map.goods():
             return None
-        return economy_api.price_response(self.economy(), material, landed_tonnes / per_unit, taken_tonnes / per_unit)
+        return economy_api.price_response(self.economy(), material, landed_tonnes / per_unit, taken_tonnes / per_unit,
+                                          tile=None if tile is None else self._tile_in_economy(tile))
 
     def _partner_spending(self, partners) -> float:
         """What the partners can spend on this society's goods this year, in home money: a share of the
@@ -361,7 +416,7 @@ class AgentEconomy:
         total = 0.0
         for partner in partners:
             standard = load_civ(partner)["coin_standard"]
-            metal_price = sim._coin_metal_price(standard["material"])
+            metal_price = sim._material_prices().get(standard["material"])   # the metal at its cost: its market price (Complaint 519) would size a partner's spending by the opening's mispriced metals
             if not metal_price:
                 continue
             held = (sim._partner_coin_opening_units(partner)
@@ -384,7 +439,7 @@ class AgentEconomy:
         imports, exports = (volume - paid_in) / 2.0 * coin, (volume + paid_in) / 2.0 * coin
         for partner in partners:
             standard = load_civ(partner)["coin_standard"]
-            metal_price = sim._coin_metal_price(standard["material"])
+            metal_price = sim.goods_market.home_unit_price(standard["material"])
             if not metal_price:
                 continue
             per_partner_coin = standard["kg_per_unit"] * metal_price
@@ -416,6 +471,15 @@ class AgentEconomy:
                           import_accounts=border_accounts[0], export_accounts=border_accounts[1],
                           site_limits=tuple(economy_port_sites.site_limits(sim, self._recipe_outputs())))
 
+    def _seat_tiles(self):
+        """The tiles the playing seats buy and sell on, whose markets' books the economy keeps."""
+        sim = self._sim
+        tiles = set()
+        for seat_id in sim.playing_seats() or sim.state.seats:
+            with sim.act_as(seat_id):
+                tiles.add(self._tile_in_economy(sim.labour.base_tile()))
+        return tiles
+
     def _recipe_outputs(self):
         """{recipe id: {good: quantity a run}} of the recipes the economy runs."""
         return {recipe_id: recipe.outputs for recipe_id, recipe in self._economy.setup.recipes.items()}
@@ -429,23 +493,33 @@ class AgentEconomy:
         watched = sorted(basket, key=lambda good: -basket[good] * prices.get(good, 0.0))[:SPIN_UP_WATCHED_GOODS]
         inputs = YearInputs(year=0, population_by_tile={}, working_age_share=economy.setup.working_share,
                             yield_factor_by_producer={}, engine_orders={})
-        self._settle(economy, inputs, watched)
+        result = self._settle(economy, inputs, watched)
         economy_api.trim_workforce_to_expected_hours(economy)
         self._settle_trimmed(economy, inputs)
         economy_api.finish_spin_up(economy)
+        economy_api.note_spin_up_result(economy, result)
 
     @staticmethod
     def _settle(economy, inputs, watched):
-        """Hidden years until the price level, the rate and the main prices move less than the tolerance a year."""
+        """Hidden years until the price level, the rate and the main prices move less than the tolerance a year.
+        Returns {"settled": whether the tolerance was met, "years": years run, "gap": the largest relative
+        change in the last year measured (none measured: infinity is not stored, so one)}."""
         before = None
+        gap = 1.0
+        years = 0
+        settled = False
         for _year in range(spin_up_years()[0]):
             outcome = economy.step(inputs)
+            years += 1
             now = ([outcome.basket_price_level, economy_api.interest_rate(economy) or 0.0]
                    + [outcome.prices.get(good, 0.0) for good in watched])
-            if before is not None and max(
-                    abs(new / old - 1.0) for new, old in zip(now, before) if old > 0.0) < SPIN_UP_TOLERANCE:
-                break
+            if before is not None:
+                gap = max(abs(new / old - 1.0) for new, old in zip(now, before) if old > 0.0)
+                if gap < SPIN_UP_TOLERANCE:
+                    settled = True
+                    break
             before = now
+        return {"settled": settled, "years": years, "gap": gap}
 
     @staticmethod
     def _settle_trimmed(economy, inputs):
@@ -501,16 +575,6 @@ class AgentEconomy:
         """Goods whose shown price is not a market's: not cleared within notional.RECENT_TRADE_YEARS."""
         self.answers()
         return set(self._stale)
-
-    def price_ratio(self, materials, old_prices, country=None):
-        """The new price over the engine's own cost, for the first of `materials` both price; None if none."""
-        prices = self.answers(country)[0]
-        for material in materials:
-            old = old_prices.get(material, 0.0)
-            new = prices.get(material)
-            if new is not None and old > 0.0:
-                return new / old
-        return None
 
     def people_by_trade(self):
         """The labour core's people by trade, or None before the economy has been opened."""

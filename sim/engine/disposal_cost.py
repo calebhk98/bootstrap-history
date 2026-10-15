@@ -11,8 +11,7 @@ Figures behind the design: Complaints/reports/negative-byproduct-value-research.
 import functools
 import json
 import os
-from dataclasses import dataclass, field
-from typing import Dict, FrozenSet, Iterable
+from typing import Dict, Iterable
 
 from sim.constants import declare
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
@@ -48,13 +47,6 @@ DISPOSAL_HEAP_OCCUPATION_YEARS_AT_ZERO_INTEREST = declare(
         "interest rate the capitalised rent is unbounded, so this many years of rent stand in.")
 
 
-@dataclass(frozen=True)
-class Disposal:
-    """What a solve round knows about waste: cost per unit by material, and the materials in glut."""
-    costs: Dict[str, float] = field(default_factory=dict)
-    glutted: FrozenSet[str] = frozenset()
-
-
 def default_heap():
     return (DISPOSAL_HEAP_BULK_DENSITY_KILOGRAMS_PER_CUBIC_METRE, DISPOSAL_HEAP_HEIGHT_METRES)
 
@@ -63,6 +55,11 @@ def default_heap():
 def _heap_table():
     with open(WASTE_HEAPS_FILE) as handle:
         return json.load(handle)["materials"]
+
+
+def waste_materials():
+    """Materials the data records a heap for: the ones tipped when nobody takes them."""
+    return frozenset(_heap_table())
 
 
 def heap_of(material):

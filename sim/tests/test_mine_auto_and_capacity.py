@@ -13,7 +13,7 @@ from sim.ui.proto.dispatch_money import _cmd_buy
 
 
 def _auto_mine_sim(pending_tonnes):
-    test_sim = sim(capital=5_000_000_000_000.0, manual=False)
+    test_sim = unopened_sim(capital=5_000_000_000_000.0, manual=False)
     test_sim.state.founder.policy["auto_mine"] = True
     test_sim.annual_material_demand = lambda: {"coal_kg": 1_000_000.0}
     test_sim.resource_throttle = lambda: 0.3
@@ -38,7 +38,7 @@ check("auto-mine orders less when a tranche is already sinking",
       (_partial_orders, _bare_orders))
 
 # 66: the reported year is the year whose resolution commissions the mine.
-_lead_sim = sim(capital=5_000_000.0)
+_lead_sim = unopened_sim(capital=5_000_000.0)
 _reply = _cmd_buy(_lead_sim, NODES, {"what": "mine", "material": "coal", "n": 10}, None)
 _commission_year = _reply.get("commissions_during_year")
 check("mine purchase names the year that commissions it",
@@ -52,7 +52,7 @@ if _commission_year is not None:
     _lead_sim.commission_mines()
     check("resolving the named year commissions the capacity",
           _lead_sim.mine_capacity.get("coal", 0.0) > 0.0)
-_screen_sim = sim(capital=5_000_000.0)
+_screen_sim = unopened_sim(capital=5_000_000.0)
 _screen_sim.open_mine("coal", 10.0)
 _mines_screen = _agent_mines(_screen_sim)
 check("the mines screen reports commissioning, not readiness",
@@ -62,7 +62,7 @@ check("the mines screen reports commissioning, not readiness",
 
 # 67: charcoal and firewood share one forest and one capacity row.
 def _charcoal_demand(demand):
-    forest_sim = sim(capital=1_000_000.0)
+    forest_sim = unopened_sim(capital=1_000_000.0)
     forest_sim.annual_material_demand = lambda: demand
     rows = _material_capacity_rows(forest_sim)
     row_list = rows if isinstance(rows, list) else list(rows.values())
@@ -86,7 +86,7 @@ check("and the other way round",
                        )["surplus_t_per_yr"] < 0)
 
 # 56 guard: a shaft that costs nothing to sink.
-_free_sim = sim(capital=1000.0)
+_free_sim = unopened_sim(capital=1000.0)
 _free_sim._mine_capex_opex = lambda mat: (0.0, 1.0)
 _free_sim.state.household.capital = -1_000_000.0
 try:

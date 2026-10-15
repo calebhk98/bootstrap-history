@@ -8,19 +8,20 @@ WALL = "two-way"  # nothing here reaches sim/engine/; the engine hands it what i
 
 import math
 
-from . import country_figures, diagnostics, households, labour_state, land_rents, market_curves, taxes, tile_costs, workforce_settle
+from . import country_figures, diagnostics, late_recipes, opening_metal, households, labour_state, land_rents, market_curves, prices_at as tile_prices, taxes, tile_costs, workforce_settle
 from .currency import currency_from_coin_standard
 from .economy import Economy
 from .foreign import external_orders
 from .market_memory import market_key
+from .metal_stock import COIN_WEAR_PER_YEAR
 from .notional import shown_prices
-from .price_level import goods_level_over_opening
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
 from .protocols import AgentOrders, YearInputs
 from .recipes import recipes_from_production_data
 from .record import EconomyRecord
 from .setup import EconomySetup, TradeSpec, goods_specs
-from .types import EDGE_CARGO, EDGE_CONSUMPTION, EDGE_EXCHANGE, EDGE_EXTERNAL, EDGE_LEGACY, Bid, GoodsMove, Offer, SiteLimit, Transfer, external_edge
+from .types import (EDGE_CARGO, EDGE_CONSUMPTION, EDGE_EXCHANGE, EDGE_EXTERNAL, EDGE_LEGACY, EDGE_MINT, EDGE_WEAR, Bid,
+                    GoodsMove, Offer, SiteLimit, Transfer, external_edge)
 from .unit_cost import variable_cost_per_run
 from .year_close import rebase_basket_price_level
 from .year_labour import trade_premium
@@ -28,15 +29,15 @@ from sim.world import capital_market
 
 __all__ = [
     "diagnostics", "households", "taxes", "tile_costs", "currency_from_coin_standard", "Economy", "external_orders",
-    "price_response",
-    "shown_prices", "goods_level_over_opening", "Producer", "expected_output_prices", "live_input_prices", "live_wages", "AgentOrders",
+    "price_response", "prices_at", "offered_units", "watch_tiles",
+    "shown_prices", "Producer", "expected_output_prices", "live_input_prices", "live_wages", "AgentOrders",
     "YearInputs", "recipes_from_production_data", "EconomyRecord", "EconomySetup", "TradeSpec", "SiteLimit",
     "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "EDGE_CARGO", "EDGE_CONSUMPTION", "EDGE_EXCHANGE", "external_edge", "Bid", "GoodsMove", "Offer", "Transfer",
     "variable_cost_per_run", "rebase_basket_price_level", "trade_premium",
     "traded_volumes", "opening_quantities", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
-    "credit_room", "economy_from_record", "blank_economy", "export_record", "economy_book", "finish_spin_up", "shown_prices_of",
-    "settle_agent_takings", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
+    "credit_room", "economy_from_record", "blank_economy", "export_record", "economy_book", "finish_spin_up", "note_spin_up_result", "money_year_figures","shown_prices_of",
+    "settle_agent_takings", "admit_recipes", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
     "land_rent_paid_by_tile", "land_rent_at_tile", "country_figures", "idle_hours_by_trade",
 ]
 
@@ -190,11 +191,34 @@ def cohort_land_rents(economy, tiles=None, country=None):
     return [(cohort.people, received.get(cohort.agent_id, 0.0)) for cohort in _ranked_cohorts(economy, country)]
 
 
-def price_response(economy, good, landed_units, taken_units):
-    """Factor on a good's national price once `landed_units` more are offered and `taken_units` more are bought at
-    the port, from the book the port's market last cleared (the economy's own demand and supply). The national price
-    weighs each market area by what it usually trades, so a move at the port shows in it by the port's share of that
-    value. None when the port's market has no book or traded nothing."""
+def watch_tiles(economy, tiles):
+    """Keep the markets' books of the areas holding these tiles, beside the port's and the capital's, from the next
+    clearing: where the game's buyers and sellers act. `offered_units` and `price_response(tile=...)` answer on a tile
+    whose book is kept; elsewhere they have no book to read."""
+    economy.watched_tiles = tuple(sorted(set(tiles)))
+
+
+def prices_at(economy, tile):
+    """(price of each good on one tile, goods whose shown price is not a market's), in the economy's unit: what a
+    buyer or seller there faces. The price of the market area that holds the tile where it cleared lately, else
+    the price the game is shown. A good the economy has no market for is absent."""
+    return tile_prices.prices_at(economy, tile)
+
+
+def offered_units(economy, good, tile):
+    """Units the sellers in the tile's market area for a good held at its last clearing; None when the area has no
+    book for the good."""
+    return tile_prices.offered_units(economy, good, tile)
+
+
+def price_response(economy, good, landed_units, taken_units, tile=None):
+    """Factor on a good's price once `landed_units` more are offered and `taken_units` more are bought, from the
+    book its market last cleared (the economy's own demand and supply). With a `tile`, that tile's market area and
+    its own price. Without one, the port's market and the national price, which weighs each market area by what it
+    usually trades, so a move at the port shows in it by the port's share of that value. None when the market has
+    no book or traded nothing, infinite when more is taken than the sellers hold."""
+    if tile is not None:
+        return tile_prices.price_response_at(economy, good, tile, landed_units, taken_units)
     area = market_curves.port_area(economy.area_map, economy.setup.port_tile, good)
     curve = economy.record.curves.get(market_key(good, area)) if area is not None else None
     if curve is None:
@@ -247,6 +271,20 @@ def blank_economy(setup):
     return Economy(setup)
 
 
+def backing_marginal_cost(economy):
+    """(what the last unit of the money's backing good the opening needs costs to make, the opening's price for it),
+    in the economy's units; None for money with no good behind it or when nothing makes the good."""
+    cost = opening_metal.marginal_cost(economy.setup, economy.record)
+    price = economy.setup.opening_prices.get(economy.record.currency.backing_good)
+    return None if cost is None or not price else (cost, price)
+
+
+def admit_recipes(economy, source_setup):
+    """Give the economy the recipes, goods and opening prices a fresh setup (built from the society's present
+    techniques) has and it lacks; a good with no market before gets one. False when nothing was missing."""
+    return late_recipes.admit_recipes(economy, source_setup)
+
+
 def set_improvements(economy, improvements):
     """Give the economy's hauls the built ways `{edge_key: {"road": true}}`; False when nothing changed."""
     return economy.set_improvements(improvements)
@@ -273,6 +311,24 @@ def finish_spin_up(economy):
     rebase_basket_price_level(economy.setup, economy.record)
     economy.record.settling = False
     economy.record.memory.year = 0
+
+
+def money_year_figures(economy, outcome):
+    """The year's coin sink and source from its money audit (`YearOutcome.money_audit`), in the economy's unit:
+    "wear" (coin worn away, positive), "struck" (coin the mint paid out net of what it took back: struck less
+    melted), "change" (the year's change in the money stock) and "metal_held" (the metal the mint holds)."""
+    spec = economy.record.currency
+    edges = outcome.money_audit.edge_net
+    held = account_holdings(economy, EDGE_MINT)["goods"].get(spec.backing_good, {}) if spec.backing_good else {}
+    return {"wear": -edges.get(EDGE_WEAR, {}).get(spec.currency_id, 0.0),
+            "struck": edges.get(EDGE_MINT, {}).get(spec.currency_id, 0.0),
+            "change": outcome.money_audit.supply_change.get(spec.currency_id, 0.0),
+            "metal_held": sum(quantity for quantity in held.values() if quantity > 0.0)}
+
+
+def note_spin_up_result(economy, result):
+    """Records how the hidden first stage ended ({"settled", "years", "gap"}); it is saved with the opening."""
+    economy.record.spin_up_result = dict(result)
 
 
 def trim_workforce_to_expected_hours(economy):

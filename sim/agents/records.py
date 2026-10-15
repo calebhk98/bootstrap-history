@@ -2,6 +2,7 @@
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Set
 
+from .business import Business
 from .edges import Edge
 from .purses import Purses
 
@@ -15,27 +16,27 @@ class ActorRecord:
 	money: float = 0.0
 	workforce: Dict[str, float] = field(default_factory=dict)
 	knowledge: Set[str] = field(default_factory=set)
-	concerns: Set[str] = field(default_factory=set)
+	# the plants the actor runs, with their sizes, opening years, crews and margins
+	business: Business = field(default_factory=Business)
 	# node id -> copy work in progress (hours_left, money_left, years, ...)
 	works: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 	failed_copies: Dict[str, int] = field(default_factory=dict)
-	opened_year: Dict[str, int] = field(default_factory=dict)
-	# node id -> how many times the concern's founding size the firm runs it at (absent = one)
-	capacity: Dict[str, float] = field(default_factory=dict)
 	target: Optional[str] = None
 	location: Optional[str] = None
 	exited_year: Optional[int] = None
 	loss_years: int = 0
 	founded_year: Optional[int] = None
 	last_margin: float = 0.0
-	# node id -> share of the concern's staff found in the labour pool last year
-	staffing: Dict[str, float] = field(default_factory=dict)
 	# purpose -> money in and out over the actor's life; money = income - outlays
 	income: Dict[str, float] = field(default_factory=dict)
 	outlays: Dict[str, float] = field(default_factory=dict)
 	# a state's standing need by line last year, and the part it could not pay
 	need: Dict[str, float] = field(default_factory=dict)
 	unfunded: Dict[str, float] = field(default_factory=dict)
+	# pay a state owes its army and officials from earlier years, by line; paid first from later revenue
+	arrears: Dict[str, float] = field(default_factory=dict)
+	# what the state paid of those arrears this year, by line
+	arrears_paid: Dict[str, float] = field(default_factory=dict)
 	# what the state seeks of the people it can see: share of income at full notice by kind of
 	# claim, and the visible income those shares are spread over
 	levy_requisition_rate: float = 0.0
@@ -105,8 +106,6 @@ class ActorRecord:
 	# ---- a player: commands waiting for its next turn, and what happened to the ones it gave
 	orders: List[Dict[str, Any]] = field(default_factory=list)
 	journal: List[Dict[str, Any]] = field(default_factory=list)
-	# node id -> what each concern a player runs made last year, after levy and royalty
-	margins: Dict[str, float] = field(default_factory=dict)
 
 	# ---- a trader: route key -> what it has committed there (cargo, capital, last margin, ...)
 	routes: Dict[str, Dict[str, Any]] = field(default_factory=dict)
@@ -154,6 +153,8 @@ class ActorRecord:
 
 	# ---- firm entry and exit: consecutive years a firm earned less than its plant would lend for
 	weak_years: int = 0
+	# consecutive years the interest on a firm's debt outran its margin
+	insolvent_years: int = 0
 
 	# ---- an interest group of strata: the share of its loss the founder is blamed for; and a stratum's
 	# remembered welfare (what it has come to expect)

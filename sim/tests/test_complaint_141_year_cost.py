@@ -2,7 +2,7 @@
 built nodes and firms through repeated whole-set scans. Counted work, not seconds."""
 from .harness import *  # noqa: F401,F403
 import sim.engine.data as engine_data
-from sim.agents.api import Firm
+from sim.agents.api import Business, Firm
 from sim.engine.agents_port import SimWorld
 from sim.engine.state import ActorRecord
 
@@ -18,7 +18,7 @@ def _crowded_sim():
     shared = sorted(game.state.projects.done)[:3]
     for firm_number in range(FIRM_COUNT):
         record = ActorRecord(kind="firm", money=1e6, target=shared[firm_number % 3])
-        record.concerns = {shared[firm_number % 3]}
+        record.business = Business.running([shared[firm_number % 3]])
         game.actors.add("firm:%d" % (firm_number + 1), record)
     return game, shared
 

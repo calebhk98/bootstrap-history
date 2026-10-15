@@ -19,8 +19,7 @@ site, and its grade, come from outside as a `SiteLimit`. `grown_in_climate_class
 Not mapped, and why: `land_hectare_years` (a site's fertility is the producer's yield factor, so rent
 appears as profit); `energy_mj` (the uncosted
 residual); `requires_node`, `temperature_*` (gates the caller applies);
-`disposal_value_hours` (a surplus by-product's value is whatever its market clears at); the prose
-fields. `unmapped_field_counts` measures this.
+the prose fields. `unmapped_field_counts` measures this.
 
 `input_depth_order` puts each good after the goods its recipes consume, for the year loop.
 """

@@ -1,7 +1,8 @@
 """What ended the run, what a project is waiting on, and the founder death and goal progress helpers behind the state screen."""
 
 import sim.engine.ui_port as ui_port
-import math, re
+import math
+from sim.refusal import Refusal, cause_of, facts_of
 from sim.engine.ui_port import closure, money_text, plain_number
 
 
@@ -36,20 +37,20 @@ def _agent_end_reason(sim):
             _goal_name = (sim.nodes[sim.goal]["name"].lower() if sim.goal in sim.nodes
                          else "the goal")
             if sim.goal_year:
-                return ("the horizon at %d AD is reached. You reached %s in "
-                        "%d AD and kept building for %d years after it."
-                        % (end_year, _goal_name, sim.goal_year,
-                           end_year - sim.goal_year))
-            return ("the horizon at %d AD is reached. You built %d things of your "
-                    "own and did not reach %s."
-                    % (end_year, len(sim.done - sim.granted), _goal_name))
+                return Refusal("horizon_goal_reached", "the horizon at %d AD is reached. You reached %s in "
+                               "%d AD and kept building for %d years after it."
+                               % (end_year, _goal_name, sim.goal_year,
+                                  end_year - sim.goal_year))
+            return Refusal("horizon_goal_missed", "the horizon at %d AD is reached. You built %d things of your "
+                           "own and did not reach %s."
+                           % (end_year, len(sim.done - sim.granted), _goal_name))
         if sim.goal_year:
-            return ("the horizon at %d AD is reached. You reached %s in %d AD "
-                    "and kept building for %d years after it."
-                    % (end_year,
-                       sim.nodes[sim.goal]["name"].lower() if sim.goal in sim.nodes
-                       else "the goal", sim.goal_year, end_year - sim.goal_year))
-        return "ran out of horizon (%d AD) without reaching the goal" % end_year
+            return Refusal("horizon_goal_reached", "the horizon at %d AD is reached. You reached %s in %d AD "
+                           "and kept building for %d years after it."
+                           % (end_year,
+                              sim.nodes[sim.goal]["name"].lower() if sim.goal in sim.nodes
+                              else "the goal", sim.goal_year, end_year - sim.goal_year))
+        return Refusal("horizon_goal_missed", "ran out of horizon (%d AD) without reaching the goal" % end_year)
     return None
 
 
@@ -155,20 +156,20 @@ def _waiting_on(sim, nodes, node_id, progress, bill):
     # its leading words, so the merged sentence keeps "nobody to do the
     # work" first and unchanged.
     if staffing_short and booked_short:
-        return ("nobody to do the work: " + "; ".join(sorted(staffing_short)[:3])
-                + ". Also short, but only because your own other work has it "
-                  "booked: " + "; ".join(sorted(booked_short)[:3])
-                + ". " + _STAFFING_HINT)
+        return Refusal("staffing", "nobody to do the work: " + "; ".join(sorted(staffing_short)[:3])
+                       + ". Also short, but only because your own other work has it "
+                         "booked: " + "; ".join(sorted(booked_short)[:3])
+                       + ". " + _STAFFING_HINT)
     if staffing_short:
-        return "nobody to do the work: " + "; ".join(sorted(staffing_short)[:3]) + ". " + _STAFFING_HINT
+        return Refusal("staffing", "nobody to do the work: " + "; ".join(sorted(staffing_short)[:3]) + ". " + _STAFFING_HINT)
     if booked_short:
         # A DIFFERENT SENTENCE FOR A DIFFERENT REMEDY. The society CAN field
         # this trade; it is your own other active work that has it booked.
         # Teaching or hiring more does nothing here - 'portfolio' (the
         # aggregate demand-vs-supply view) or stopping something else does.
-        return ("trade hours already booked: " + "; ".join(sorted(booked_short)[:3])
-                + ". 'portfolio' shows the competing demand; 'priority <id> first' or "
-                  "'allocate <id> <hours>' decides who gets the hours")
+        return Refusal("trade_hours", "trade hours already booked: " + "; ".join(sorted(booked_short)[:3])
+                       + ". 'portfolio' shows the competing demand; 'priority <id> first' or "
+                         "'allocate <id> <hours>' decides who gets the hours")
     if progress["ph_left"] <= 0 and bill > 0.5:
         # MONEY YOU HAVE IS NOT MONEY YOU ARE SHORT OF: step() pays at most
         # one year's instalment - the cost divided by the node's calendar
@@ -179,26 +180,26 @@ def _waiting_on(sim, nodes, node_id, progress, bill):
         # pace, and that has to be said.
         per_year = sim.project_cost(node_id) * frac
         if per_year > 0.5 and sim.spending_power("buy") >= per_year:
-            return ("the pace it can absorb money: at most %s a year goes into "
-                    "this (%s still owed, about %.0f more year%s at that rate). "
-                    "Money in hand cannot buy it down faster"
-                    % (money_text(per_year, sim, grouped=True), money_text(bill, sim, grouped=True),
-                       math.ceil(bill / per_year),
-                       "" if math.ceil(bill / per_year) == 1 else "s"))
+            return Refusal("money_pace", "the pace it can absorb money: at most %s a year goes into "
+                           "this (%s still owed, about %.0f more year%s at that rate). "
+                           "Money in hand cannot buy it down faster"
+                           % (money_text(per_year, sim, grouped=True), money_text(bill, sim, grouped=True),
+                              math.ceil(bill / per_year),
+                              "" if math.ceil(bill / per_year) == 1 else "s"))
         if sim.spending_power("buy") <= 0.5:
-            return ("money: fully blocked until funding is available; %s is "
-                    "still owed and you cannot raise any of the next %s "
-                    "instalment now"
-                    % (money_text(bill, sim, grouped=True), money_text(per_year, sim, grouped=True)))
-        return ("money: unfunded now; will fund opportunistically as revenue "
-                "arrives this year: %s still owed and the next instalment of "
-                "%s is more than you can raise at this moment"
-                % (money_text(bill, sim, grouped=True), money_text(per_year, sim, grouped=True)))
+            return Refusal("money_blocked", "money: fully blocked until funding is available; %s is "
+                           "still owed and you cannot raise any of the next %s "
+                           "instalment now"
+                           % (money_text(bill, sim, grouped=True), money_text(per_year, sim, grouped=True)))
+        return Refusal("money_unfunded", "money: unfunded now; will fund opportunistically as revenue "
+                       "arrives this year: %s still owed and the next instalment of "
+                       "%s is more than you can raise at this moment"
+                       % (money_text(bill, sim, grouped=True), money_text(per_year, sim, grouped=True)))
     if progress["ph_left"] <= 0:
         years_left = max(1, math.ceil(node["yrs"] - progress.get("yrs", 0.0) - 1e-9))
-        return ("the calendar: the work and the money are done, and the least "
-                "time it takes (%g years) has about %d more year%s to run"
-                % (node["yrs"], years_left, "" if years_left == 1 else "s"))
+        return Refusal("calendar", "the calendar: the work and the money are done, and the least "
+                       "time it takes (%g years) has about %d more year%s to run"
+                       % (node["yrs"], years_left, "" if years_left == 1 else "s"))
     # MATERIALS. A shortage scales only projects consuming its supply pool -
     # see core.py step() 5 - so a project with
     # founder-hours still to spend and nobody short on trade or money can
@@ -206,23 +207,24 @@ def _waiting_on(sim, nodes, node_id, progress, bill):
     # reason that is neither staffing, money nor the calendar. Only said when
     # it is genuinely biting (2% is noise); resource_throttle() itself is the
     # one place that number is computed, read here rather than re-derived.
-    _thr = sim.project_resource_throttle(node_id)
-    if _thr < 0.98 and sim.binding:
-        return ("materials: this project consumes %s, whose shortage has it "
-                "running at %d%% of the pace its hours alone "
-                "would allow; 'capacity' shows the shortfall"
-                % (sim.binding, round(_thr * 100)))
+    # a question, not a step: the stock and draws the throttle works out are not kept
+    _thr, _binding = sim.peek_project_resource_throttle(node_id)
+    if _thr < 0.98 and _binding:
+        return Refusal("materials", "materials: this project consumes %s, whose shortage has it "
+                       "running at %d%% of the pace its hours alone "
+                       "would allow; 'capacity' shows the shortfall"
+                       % (_binding, round(_thr * 100)))
     # Rank, count and pool come from the live queue the allocator also uses.
     _rank, _count, _total = sim.hour_standing(node_id) or (None, None, None)
     if _rank and _count and _count > 1:
-        return ("your hours: priority #%d of %d active projects sharing "
-                "this year's %s directed hours; 'portfolio' shows what "
-                "each one is getting and why"
-                % (_rank, _count, plain_number(_total or 0.0)))
+        return Refusal("founder_hours", "your hours: priority #%d of %d active projects sharing "
+                       "this year's %s directed hours; 'portfolio' shows what "
+                       "each one is getting and why"
+                       % (_rank, _count, plain_number(_total or 0.0)))
     free_hours = max(0.0, sim.labour.director_pool() - sim.labour.director_hours_committed())
-    return ("your hours: %s of your own hours of work are still to do, and "
-            "you have %s uncommitted this year"
-            % (plain_number(progress["ph_left"]), plain_number(free_hours)))
+    return Refusal("founder_hours", "your hours: %s of your own hours of work are still to do, and "
+                   "you have %s uncommitted this year"
+                   % (plain_number(progress["ph_left"]), plain_number(free_hours)))
 
 
 def _goal_progress_count(sim, nodes):
@@ -247,20 +249,9 @@ def _goal_progress_count(sim, nodes):
 def _founder_death_info(sim):
     """When and how old the founder was when they died, or None if not.
 
-    core.py logs "the founder dies, aged about %d" the one time it
-    happens; leaving the age there alone means it can be buried as one
-    line among sixty in a long `step`'s events, with no field anywhere a
-    script would check first.
-
-    THE ATTRIBUTES, NOT ONLY THE LOG. `log` is not itself a saved field -
-    see SAVE_FIELDS - so a save taken after the founder's death and resumed
-    in a new process starts that process's `s.log` empty, and scanning it
-    would silently un-report an age that had already been shown once. The
-    step handler sets _founder_death_aged/_founder_death_year the moment it
-    sees the line, and those two ARE saved fields, so this is the fast path
-    and the one that survives a resume. Scanning the log is the fallback,
-    for a Sim driven straight off the engine (as the test suite does) or a
-    save written before this existed.
+    The death line is a log line of kind `founder_dies` carrying the age as the fact `aged`. The step handler also
+    saves the age and year (_founder_death_aged/_founder_death_year) the moment it sees the line, so this answers
+    from those first and scans the log (saved with its kinds) only for a Sim driven straight off the engine.
     """
     if sim.founder_alive:
         return None
@@ -271,9 +262,8 @@ def _founder_death_info(sim):
     if cache is not None:
         return cache
     for year, msg in sim.log:
-        if "founder dies" in msg.lower():
-            match = re.search(r"aged about (\d+)", msg)
-            cache = {"year": year, "aged_about": int(match.group(1)) if match else None}
+        if cause_of(msg) == "founder_dies":
+            cache = {"year": year, "aged_about": facts_of(msg).get("aged")}
             ui_port.set_founder_death_cache(sim, cache)
             return cache
     return None

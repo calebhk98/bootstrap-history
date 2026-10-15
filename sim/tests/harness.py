@@ -236,23 +236,26 @@ def found_deposits_of(game, material):
 def concern_needing_craftsmen_to_supervise():
     """A concern the founder's own scholar can cover, that needs more craftsmen than the founder and
     the closure slack can cover alone (and no more than the six hired in the fixtures), so losing every
-    hired craftsman shuts it."""
+    hired craftsman shuts it. Of those, the cheapest to open: a fixture's founder holds little, and what
+    the opening prices a heavy build's materials at is not what these tests are about."""
     probe = sim()
     cover = probe.FOUNDER_IS_WORTH + probe.STAFFING_CLOSURE_SLACK
+    fits = []
     for candidate_id in sorted(NODES):
         node = NODES[candidate_id]
         if probe.is_venture(candidate_id) and node["art"] > 0 and not (node.get("lab") or {}).get("artisan"):
             scholars, craftsmen = probe.venture_hands(candidate_id)
             if (scholars <= probe.labour.effective_scholars() and cover < craftsmen <= 5.5
                     and probe.venture_foreman(candidate_id)[0] is None):
-                return candidate_id
-    raise AssertionError("no concern needs craftsmen to supervise")
+                fits.append((probe.venture_capex(candidate_id), candidate_id))
+    if not fits:
+        raise AssertionError("no concern needs craftsmen to supervise")
+    return min(fits)[1]
 
 
 def ready_for_entry(game, money=None):
     """Ready a game for firm entry: the home strata hold savings (a game whose agent economy has not run has
-    empty purses, and a firm is founded from a stratum's savings) and the home government sits where the
-    founder works, so a founder's concern is in an entrant's sight. The opening cast (strata and governments)
+    empty purses, and a firm is founded from a stratum's savings). The opening cast (strata and governments)
     is seeded first when it has not been. `money` is the savings of each free home stratum; by default the
     entrepreneurial share of a year's output between them. Returns the game."""
     if not game.actors.state.home_country:
@@ -266,9 +269,6 @@ def ready_for_entry(game, money=None):
         money = SimWorld(game).society_output() * ENTREPRENEURIAL_CAPITAL_SHARE / max(1, len(free))
     for stratum in free:
         stratum.money = money
-    home = game.actors.actors.get("government:" + (game.actors.state.home_country or ""))
-    if home is not None:
-        home.record.location = game.seat_place(game.state.acting_seat)
     return game
 
 

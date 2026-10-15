@@ -10,6 +10,7 @@ read the seat's own state when another seat is acting.
 import contextlib
 from typing import Any, Callable, Dict, Optional
 
+from .business_plant import Plant
 from .records import ActorRecord
 
 
@@ -61,8 +62,9 @@ class HouseholdParty:
 		if seat.projects.opened_year is None:
 			seat.projects.opened_year = {}
 		# the seat's own dictionaries, so opening, closing, patenting and trading shares write through
-		self.record = SeatRecord(kind="household", opened_year=seat.projects.opened_year, margins=dict(margins or {}),
-								patents=seat.holdings.patents, holdings=seat.holdings.shares_held)
+		self._opened_years = seat.projects.opened_year
+		self._margins = dict(margins or {})
+		self.record = SeatRecord(kind="household", patents=seat.holdings.patents, holdings=seat.holdings.shares_held)
 		self.record.seat_holdings = seat.holdings
 
 	def _acting(self) -> Any:
@@ -142,3 +144,21 @@ class HouseholdParty:
 
 	def capacity_of(self, node_id: str) -> float:
 		return 1.0
+
+	def margin_of(self, node_id: str) -> Any:
+		return self._margins.get(node_id)
+
+	def concern_count(self) -> int:
+		return 0  # a seat's record keeps no concerns of its own: the household's operating set is the founder's
+
+	def release_plant(self, node_id: str, world: Any) -> Plant:
+		with self._acting():
+			opened = self.household.opened_year_of(node_id, world.year)
+			self.household.operating.discard(node_id)
+		self._opened_years.pop(node_id, None)
+		return Plant(entry_key=node_id, opened_year=opened)
+
+	def receive_plant(self, plant: Plant, world: Any) -> None:
+		with self._acting():
+			self.household.operating.add(plant.entry_key)
+		self._opened_years[plant.entry_key] = plant.opened_year

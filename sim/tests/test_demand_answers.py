@@ -218,4 +218,5 @@ check("the household's visible wealth falls by what it hides",
 note = set_household_stance(founder_game(), "negotiate", 30.0)
 check("the founder's reply names the odds of the offer", "chance" in note and "service" in note, note)
 note = set_household_stance(founder_game(), "conceal")
+# presentation: the answer note's wording
 check("and of hiding wealth", "conceal" in note and "penalty" in note, note)

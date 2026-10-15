@@ -52,23 +52,15 @@ of its own (see WHAT THIS DOES NOT REACH below), so it is left at zero
 rent, unchanged, rather than forced into a mechanism the data does not
 carry for it.
 
-THE DEMAND-DETERMINES-THE-MARGIN LOOP, AND HOW IT WAS ACTUALLY CLOSED.
-Ricardian rent is circular by construction: which deposit is marginal
-depends on how much is demanded, and (in a fully closed model) how much is
-demanded depends on the price that same margin sets. This project has no
-demand system yet (`sim/world/demand.py` prices HOUSEHOLD demand, not a
-metal market's quantity response to its own price), so the loop is NOT
-closed here - it is cut, deliberately and visibly, at the same place
-`sim/world/deposits.py`'s own docstring already cuts it: quantity demanded
-is fixed at `data/world/resources.json`'s `empire_output_100ad` figure for
-each metal, a real historical OUTPUT level (an initial condition, per
-CLAUDE.md 3.1) rather than a quantity derived from the price this file
-computes. TAG: TEMPORARY HEURISTIC (CLAUDE.md 3.4) - the day a real supply-
-and-demand system exists for these metals, `rent_hours_per_kg_by_ore_
-material` is the one function that changes, and everything downstream of
-it (the rent term in `recipe_cost_and_allocation`, choice of technique
-between the ore-route and byproduct-route for silver, and so on) is
-already wired to take whatever number it produces.
+THE SOLVER CHARGES THE RENT IT IS HANDED (Complaints/507). Ricardian rent is
+circular by construction: which deposit is marginal depends on how much is
+demanded, and how much is demanded depends on the price. The solver has no
+demand, so it takes rent as an argument (`rent_hours_per_kg_by_material`).
+`sim/engine/rent_standin.py` holds the stand-in a caller uses when it has none:
+quantity demanded fixed at `data/world/resources.json`'s `empire_output_100ad`
+figure for each metal, and the margin of cultivation sized to the population or
+the farmed area. TAG: TEMPORARY HEURISTIC (CLAUDE.md 4.4), declared there with
+its retirement; the economy's land rent and a mine's own marginal cost replace it.
 
 HOW THE PER-KG-OF-METAL RENT BECOMES A PER-KG-OF-ORE PRICE, AND THE
 APPROXIMATION THIS INTRODUCES. `sim/world/deposits.py` prices a metal per
@@ -604,27 +596,26 @@ than one material (smelting galena yields lead AND silver; roasting coal
 yields carbon AND coal tar). Both are the same underlying question - how much
 of a process's cost belongs to a given unit of a given output - and this
 script answers both with one mechanism: cost the whole process, then split
-that cost across its outputs in proportion to each output's value (price times
-quantity). An output with a household demand curve is valued at its
-market-clearing price (sim/engine/joint_allocation.py, sim/world/demand.py); the rest
-at their current price, or at the batch's standalone unit cost when mixed with
-anchored ones. A single-output recipe is just the case
+that cost across its outputs in proportion to each output's value (reference price
+times quantity). The reference price of an output is the caller's, else the cheapest
+sole-output route's price this round (what making it alone costs), else nothing if the
+data records a waste heap for it (it is tipped when nobody takes it), else its mass at
+the batch's mean cost per kilogram (sim/engine/joint_allocation.py). No demand is read.
+A single-output recipe is just the case
 where one output holds 100% of the value share. Where a material has several
 candidate recipes, its price is the CHEAPEST of what each recipe implies for
 it - the solver picks the technique a rational producer would pick at current
 prices, and because prices move as the solve iterates, technique choice
 iterates alongside it exactly as the design doc's Part 2.1 says it must.
 
-JOINT BYPRODUCTS WITHOUT A DEMAND ANCHOR ARE NOT REALLY PRICED, AND THIS
-SCRIPT SAYS SO. With no anchor, a minor co-product converges to the same price
-per unit as its dominant co-product (a mass split): one process and two goods
-is one equation short. Demand closes the gap for goods in the household basket
-with a known supply (silver). The rest (platinum, germanium, indium, coal tar)
-have no demand curve yet. `minor_joint_byproducts_are_unanchored` finds them
-by checking, on the converged recipe for each material, whether it is a joint
-recipe with no anchored output where this material holds under half the
-batch's value. Flagged materials print with a `(*)`: a real lower bound on
-cost, not a real relative price.
+JOINT BYPRODUCTS WITH NO REFERENCE PRICE ARE NOT REALLY PRICED, AND THIS
+SCRIPT SAYS SO. An output the caller gave no reference price for and no
+sole-output route makes (platinum, germanium, indium, coal tar) is split by mass:
+one process and two goods is one equation short. `minor_joint_byproducts_split_by_mass`
+finds them by checking, on the converged recipe for each material, whether it is a
+joint recipe where this material holds under half the batch's value and was split
+by mass. Flagged materials print with a `(*)`: a real lower bound on cost, not a
+real relative price.
 
 CYCLES ARE EXPECTED BY THE ITERATION, AND NOW ACCEPTED BY THE PASS IN FRONT
 OF IT TOO (Complaints/31, fixed). Iron needs charcoal; charcoal needs timber
@@ -742,7 +733,6 @@ from sim.engine.solve_prices_core import (                  # noqa: E402
     CAPABILITY_CAP_FIELDS,
     CONVERGENCE_TOLERANCE,
     DAMPING_FACTOR,
-    DEFAULT_LAND_CIVILIZATION,
     ENERGY_CARRIER_FIELDS,
     GROWTH_BOUND_HOURS,
     INITIAL_PRICE_GUESS_HOURS,
@@ -764,14 +754,19 @@ from sim.engine.solve_prices_core import (                  # noqa: E402
     capability_price_for_requirement,
     capability_required_grades,
     compute_resolvable_materials,
-    land_rent_hours_per_hectare,
     load_starting_interest_rate,
     load_starting_technologies,
-    minor_joint_byproducts_are_unanchored,
+    minor_joint_byproducts_split_by_mass,
     recipe_cost_and_allocation,
-    rent_hours_per_kg_by_ore_material,
     solve,
     techniques_available_to,
     wage_ratios_by_trade,
 )
 
+# The rent the opening carries when a caller supplies none (a temporary stand-in, Complaints/507); the solver
+# itself charges only the rent it is handed.
+from sim.engine.rent_standin import (                       # noqa: E402,F401
+    DEFAULT_LAND_CIVILIZATION,
+    land_rent_hours_per_hectare,
+    rent_hours_per_kg_by_ore_material,
+)

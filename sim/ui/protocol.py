@@ -32,7 +32,7 @@ from sim.ui.proto.state_waiting import (
     _worth_knowing_early,
 )
 from sim.ui.proto.state import _agent_state
-from sim.ui.proto.state_log import _FAILURE_MARKERS, _is_failure_line, _log_scrub, _agent_log
+from sim.ui.proto.state_log import _is_failure_line, _log_scrub, _agent_log
 from sim.ui.proto.score import (
     final_report, SCORE_WEIGHTS, _score_goal_floor_years, _score_components,
     _score_achievements, score_report, _SCORE_COMPONENT_ORDER, _score_lines

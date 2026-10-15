@@ -26,6 +26,7 @@ from .agents_port_trade import TradeView
 from . import seat_builds, visibility as visibility_of
 from .data import TRADES_ABSENT
 from .economy_port_setup import unit_mass_kg
+from sim.world import plant_figures
 from .industry_depth import RAMP_SHARE_AT_FULL_DEPTH
 
 
@@ -140,7 +141,7 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, StakeView, Disclosu
 		return self._sim.HOURS_PER_PERSON_YEAR
 
 	def concern_staff(self, node_id: str) -> Dict[str, float]:
-		"""People of each trade running this concern ties up, by the founder's own rule."""
+		"""People of each trade one plant of this concern needs: the founder's own rule, which reads the plant's data (plant_figures.crew_people)."""
 		sim = self._sim
 		scholars, craftsmen = sim.venture_hands(node_id)
 		foreman_trade, foreman_fte = sim.venture_foreman(node_id)
@@ -221,10 +222,9 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, StakeView, Disclosu
 		return proven
 
 	def ramp(self, opened_year: int, node_id: Optional[str] = None) -> float:
-		ramp_years = self._sim.cfg["revenue_ramp_years"]
-		if node_id is not None:
-			ramp_years *= 1.0 - (1.0 - RAMP_SHARE_AT_FULL_DEPTH) * self._sim.industry_depth(node_id)
-		return min(1.0, (self.year - opened_year + 1) / ramp_years)
+		depth = 0.0 if node_id is None else self._sim.industry_depth(node_id)
+		return plant_figures.ramp(self.year - opened_year, self._sim.cfg["revenue_ramp_years"], depth,
+								  RAMP_SHARE_AT_FULL_DEPTH)
 
 	def scale_ceiling(self, node_id: str) -> float:
 		"""The most founding sizes one concern of this kind can be run at, from the industry's experience."""

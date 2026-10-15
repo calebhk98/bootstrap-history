@@ -8,7 +8,7 @@ an AI player also decides for itself.
 import math
 from typing import Any, Callable, Dict, List, Optional
 
-from . import concern_ops, imitation, ledger
+from . import business_books, imitation, ledger
 from .base import RecordedActor
 from .player_commands import CommandRejected, run_orders
 from .policy import Decision, Option
@@ -92,26 +92,26 @@ class Player(RecordedActor):
 			raise CommandRejected("not known")
 		if node_id in self.concerns:
 			raise CommandRejected("already open")
-		concern_ops.open_concern(self, node_id, world)
+		self.business.open_plant(node_id, world.year)
 		return "opened"
 
 	def end_concern(self, node_id: str, world: Any) -> str:
 		if node_id not in self.concerns:
 			raise CommandRejected("not open")
-		concern_ops.close_concern(self, node_id)
+		self.business.close_plant(node_id)
 		return "closed"
 
 	def operate(self, world: Any) -> None:
 		for node_id in sorted(self.concerns):
 			rivals = self.rivals_of(node_id, self.actor_id) if self.rivals_of else 0.0
-			self.record.margins[node_id] = concern_ops.operate_concern(self, node_id, world, rivals)
-		self.record.last_margin = sum(self.record.margins.values())
+			self.business.note_margin(node_id, business_books.operate(self.business, self, node_id, world, rivals))
+		self.record.last_margin = sum(plant.margin for plant in self.business.plants if plant.margin is not None)
 
 	def proven_concerns(self, world: Any) -> List[str]:
 		"""Concerns it runs at a profit where others could see them, for competitors to enter after."""
 		proven = []
 		for node_id in sorted(self.concerns):
-			if self.record.margins.get(node_id, 0.0) <= 0.0:
+			if (self.margin_of(node_id) or 0.0) <= 0.0:
 				continue
 			if world.year - self.opened_year_of(node_id, world.year) < world.proof_years(node_id):
 				continue
@@ -135,7 +135,8 @@ class Player(RecordedActor):
 	def expected_margin(self, node_id: str, world: Any) -> float:
 		"""Yearly margin a new operator expects from a concern at full ramp."""
 		rivals = self.rivals_of(node_id, self.actor_id) if self.rivals_of else 0.0
-		return world.entry_gross(node_id, rivals, 1.0) - world.upkeep(node_id) - world.concern_wage_bill(node_id)
+		upkeep, wages = business_books.yearly_costs(world, node_id)
+		return world.entry_gross(node_id, rivals, 1.0) - upkeep - wages
 
 	def research_options(self, world: Any) -> List[Option]:
 		candidates = []
@@ -153,11 +154,11 @@ class Player(RecordedActor):
 	def decide(self, world: Any) -> None:
 		"""An AI player: shut what it expects to lose on, open what it knows pays, research what is worth it."""
 		for node_id in sorted(self.concerns):
-			if self.record.margins.get(node_id, 0.0) < 0 and self.expected_margin(node_id, world) <= 0:
-				concern_ops.close_concern(self, node_id)
+			if (self.margin_of(node_id) or 0.0) < 0 and self.expected_margin(node_id, world) <= 0:
+				self.business.close_plant(node_id)
 		for node_id in sorted(self.knowledge - self.concerns):
 			if node_id in world.nodes and self.expected_margin(node_id, world) > 0:
-				concern_ops.open_concern(self, node_id, world)
+				self.business.open_plant(node_id, world.year)
 		options = self.research_options(world)
 		for option in self.decision_policy.choose(self, Decision("research", options, self.copy_budget(world))):
 			try:

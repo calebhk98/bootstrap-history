@@ -40,7 +40,7 @@ def cash_for_one_start():
     rich = sim(capital=1.0e9)
     before = rich.capital
     reply = _run(rich, "start " + FIRST_START)
-    return before - rich.capital + reply["the_bill_you_have_taken_on"] + 1.0
+    return before - rich.capital + reply["of_which_instalments_still_owed"] + 1.0
 
 
 CASH_FOR_ONE_START = cash_for_one_start()

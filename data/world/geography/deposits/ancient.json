@@ -714,6 +714,58 @@
    "surveyed_lon": 33.3,
    "surveyed_source": "Wadi Allaqi, between the two Wikidata Q2575777 positions (22.97 N 32.90 E and 22.5 N 34.0 E)",
    "order": 35
+  },
+  {
+   "id": "han_poyang_placer_gold",
+   "name": "Poyang Placer Gold (Han Jiangxi)",
+   "resource": "gold",
+   "lat": 29.0,
+   "lon": 116.67,
+   "deposit_type": "placer_gold",
+   "status": "historic",
+   "conf": "D",
+   "source": "The Han geography chapter (Hanshu, Dili zhi) notes gold collected in the hills of Poyang county, Yuzhang commandery (Jiangxi); recalled from the text, not re-read for this entry. Placer working in the Yangtze basin is the usual reading. Position is the county seat's modern coordinate, so a representative point, not a mine. No endowment and no grade: no source read gives either, so the entry is a known location of unknown size (working_unknown) and moves no modelled output.",
+   "working_unknown": "UNKNOWN (D): the sources named give the place, not a working date or a total endowment; not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores.",
+   "order": 36
+  },
+  {
+   "id": "han_wanshan_cinnabar",
+   "name": "Wanshan Cinnabar (Qin-Han Ba and Qianzhong)",
+   "resource": "mercury",
+   "lat": 27.52,
+   "lon": 109.21,
+   "deposit_type": "strata_bound_cinnabar",
+   "status": "historic",
+   "conf": "D",
+   "source": "Sima Qian, Shiji ch. 129 (Huozhi liezhuan), tells of Qing, a widow of Ba commandery whose family worked a cinnabar mine for generations and who was honoured by the First Emperor: cinnabar mining in the Ba-Qianzhong (Chongqing-Guizhou) region is attested for the Qin-Han period. Wanshan (Guizhou) is that region's mercury district and stands here as the representative position; where Qing's own mine lay is not pinned down in what was read. No endowment and no grade: no source read gives either, so the entry is a known location of unknown size (working_unknown) and moves no modelled output.",
+   "working_unknown": "UNKNOWN (D): the sources named give the place, not a working date or a total endowment; not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores.",
+   "order": 37
+  },
+  {
+   "id": "mexica_tlapa_placer_gold",
+   "name": "Tlapa and Mixteca Placer Gold",
+   "resource": "gold",
+   "lat": 17.55,
+   "lon": -98.57,
+   "deposit_type": "placer_gold",
+   "status": "historic",
+   "conf": "D",
+   "source": "The Codex Mendoza tribute lists record gold paid to Tenochtitlan by the provinces of Tlapa and of the Oaxaca highlands and coast (Berdan and Anawalt, The Essential Codex Mendoza, 1997), washed from river gravels; recalled, not re-read for this entry. Position is Tlapa (Guerrero), a representative point for the placer districts. No endowment and no grade: no source read gives either, so the entry is a known location of unknown size (working_unknown) and moves no modelled output.",
+   "working_unknown": "UNKNOWN (D): the sources named give the place, not a working date or a total endowment; not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores.",
+   "order": 38
+  },
+  {
+   "id": "mexica_sierra_gorda_cinnabar",
+   "name": "Sierra Gorda Cinnabar",
+   "resource": "mercury",
+   "lat": 21.2,
+   "lon": -99.6,
+   "deposit_type": "strata_bound_cinnabar",
+   "status": "historic",
+   "conf": "D",
+   "source": "Cinnabar used as a red pigment in Mesoamerica (elite burials, painted objects) is traced in the archaeological literature to prehispanic workings in the Sierra Gorda of Queretaro; recalled, not verified, and whether the Mexica drew on them directly or through tribute is not established here. Position is the range's rough centre, not a mine. No endowment and no grade: no source read gives either, so the entry is a known location of unknown size (working_unknown) and moves no modelled output.",
+   "working_unknown": "UNKNOWN (D): the sources named give the place, not a working date or a total endowment; not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores.",
+   "order": 39
   }
  ]
 }

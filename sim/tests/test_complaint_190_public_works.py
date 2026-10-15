@@ -2,6 +2,7 @@
 district clinics against the disease burden, grain handed out to a hungry nation, a free press wearing away the
 state's authority, schools that teach one group, and light that lengthens the working day."""
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of, facts_of
 
 from sim.engine.core import TECH_EFFECTS, demography
 from sim.engine.agents_port import SimWorld
@@ -98,7 +99,8 @@ finished = unopened_sim()
 finished.done.add(CLINICS)
 finished.apply_tech_effects(CLINICS)
 check("finishing the clinics does not announce a lower disease burden before any clinic is open",
-      not any("disease burden" in line for _year, line in finished.state.household.log), finished.state.household.log[-2:])
+      not any("population" in facts_of(line).get("fields", ()) for _year, line in finished.state.household.log),
+      finished.state.household.log[-2:])
 
 # ---- the rollout opens the units a share needs -------------------------------------------------------------
 asked = []
@@ -125,7 +127,7 @@ check("rolling out an open work adds only the units still wanted",
       ok and abs(asked[0][1] - (partway.units_for_coverage(CLINICS, 0.1) - 3.0)) < 1e-9, (ok, asked))
 asked.clear()
 ok, text = partway.roll_out(CLINICS, 0.0001)
-check("a share already covered asks for nothing", not ok and asked == [] and "already covers" in text, (ok, text, asked))
+check("a share already covered asks for nothing", not ok and asked == [] and cause_of(text) == "already_covered", (ok, text, asked))
 check("a work that cannot be rolled out is refused", not unopened_sim().roll_out("blast_furnace", 0.5)[0])
 check("a work not yet known is refused without naming it", unopened_sim().roll_out(CLINICS, 0.5) == (
     False, "you have not worked out how to do that yet"))

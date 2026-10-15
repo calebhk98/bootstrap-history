@@ -4,6 +4,7 @@ from .render_screen_state import _render_sections
 from .util import _factor, _fmt_num, _fmt_range, _pct, _wrap
 from sim.ui import units_text
 from .hazard_words import why_hazard_lines, why_standing_lines
+from .render_material_story import render_material_story
 
 
 def _why_header(out):
@@ -347,6 +348,8 @@ def render_why(out):
     """A page about one thing: what it needs, what it costs, what depends
     on it, and whether you could start it today.
     """
+    if out.get("material_story"):
+        return render_material_story(out)
     return "\n".join(_render_sections(out, (
         _why_header, _why_cost, _why_hours_risk, _why_staff_needed,
         _why_staff_keep_open, _why_labour_materials, _why_upkeep_revenue,

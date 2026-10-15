@@ -11,14 +11,22 @@ from .economy_port_year import SPIN_UP_YEARS_ENV
 
 
 def build(civ_id: str) -> List[Tuple[str, str]]:
+    """`build_reporting` without the spin-up's result."""
+    return build_reporting(civ_id)[0]
+
+
+def build_reporting(civ_id: str, before_writing=None):
     """Open a game of `civ_id` (computing what the disk cache lacks) and ship each cache entry it used;
-    returns their (namespace, key). The opening does not depend on the seed, kit or player, so one game
-    stands for all."""
+    returns their (namespace, key) and how the opening's first stage ended (`spin_up_result`). The opening
+    does not depend on the seed, kit or player, so one game stands for all. `before_writing(game)` is called on
+    the opened game before anything is written; it may raise to refuse the opening (opening_checks_gate)."""
     if os.environ.get(SPIN_UP_YEARS_ENV):
         raise SystemExit("%s shortens the spin-up; a shipped opening must be the full one" % SPIN_UP_YEARS_ENV)
     _tree, _prices, nodes, _wages, _goods = load()
     with solve_cache.recording() as touched:
-        Sim(nodes, [], random.Random(1), events=False, manual=True, civ=load_civ(civ_id))
+        game = Sim(nodes, [], random.Random(1), events=False, manual=True, civ=load_civ(civ_id))
+    if before_writing is not None:
+        before_writing(game)
     shipped = []
     for directory, key in dict.fromkeys(touched):
         try:
@@ -28,7 +36,7 @@ def build(civ_id: str) -> List[Tuple[str, str]]:
             continue    # an entry the disk cache could not keep is computed by the player
         shipped_openings.write(os.path.basename(directory), key, value)
         shipped.append((os.path.basename(directory), key))
-    return shipped
+    return shipped, game.economy.spin_up_result()
 
 
 def prune(kept: List[Tuple[str, str]]) -> List[Tuple[str, str]]:

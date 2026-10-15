@@ -26,21 +26,24 @@ def _play_year(game):
 # One game serves the practice, training, hiring, commissioning and death checks.
 household = sim(capital=5000000.0)
 
-# --- The practice paid a third of the quoted figure with nothing saying so.
+# --- The founder's job pays the unspoken-for hours at the market wage of the held trade.
 _practice = sorted(household._practice_set())
-_expected_revenue = household.labour.director_pool() * household.labour.wage_per_hour(household.practice_trade())
-check("the practice pays the founder's own hours at the wage of the trade it is worked as",
+_expected_revenue = household.labour.wage_for_hours(household.held_trade(), household.labour.hours_for_sale())
+check("the founder's job pays the hours not spoken for at the market wage of the trade held",
       _expected_revenue > 0.0 and abs(household.revenue() - _expected_revenue) < 1e-3 * _expected_revenue,
       (household.revenue(), _expected_revenue))
 check("a concern you opened is NOT described as your practice",
       all(node_id in household.granted for node_id in _practice), _practice[:3])
 
-# --- `work` silently took the hours out of the practice.
+# --- `work` takes the hours out of the standing job and pays the trade's wage.
+_revenue_before_work = household.revenue()
 _work = _ask(household, "work", trade="scribe", hours=500)
-check("selling your hours says what it cost your own practice",
-      _work.get("it_cost_your_own_practice", 0) > 0.5, _work)
-check("...and says what you are actually up on the trade",
-      abs((_work["earned"] - _work["it_cost_your_own_practice"]) - _work["so_you_are_up"]) < 0.11, _work)
+check("selling your hours pays the market wage of the trade sold",
+      abs(_work["earned"] - round(household.labour.wage_for_hours("scribe", 500), 1)) < 0.11, _work)
+check("...and the hours leave the standing job, so revenue falls by the wage of the trade it sells",
+      abs((_revenue_before_work - household.revenue())
+          - household.labour.wage_for_hours(household.held_trade(), 500) * household.state.economy.output_factor) < 0.5,
+      (_revenue_before_work, household.revenue()))
 
 # --- Dismissing a trade you are teaching must cancel the apprenticeship.
 _trained, _ = household.labour.train("machinist", 3)
@@ -124,8 +127,8 @@ for _ in range(3):
 check("trained apprentices are really on the books, unprompted, by the year named",
       _trained and household_training.employees.get("machinist", 0.0) >= 1.999,
       (_train_message, household_training.employees.get("machinist")))
-_practice_expected = household_training.practice_income()
-check("...and the practice does not grow into the full figure over the ramp years",
+_practice_expected = household_training.founder_wage_income()
+check("...and the founder's job does not grow into the full figure over the ramp years",
       _practice_expected > 0.0 and abs(household_training.revenue() - _practice_expected) < 1e-3 * _practice_expected,
       (household_training.revenue(), _practice_expected))
 

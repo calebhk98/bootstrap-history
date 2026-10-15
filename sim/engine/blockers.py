@@ -2,7 +2,9 @@
 
 `why`, `why ... compact`, `stuck`, `available` and the `start` refusal all
 read `start_blockers`, so a readout cannot disagree with the gate: the gate
-is the same list. Each entry is {"kind", "text", "ids"}.
+is the same list. Each entry is {"kind", "cause", "text", "ids"}; `cause` names the exact check that
+refused (for example absent_trades, craft_staff, mothballed), so a reader tells two refusals of one kind apart
+without reading the text.
 
 Kinds: knowledge (prerequisites missing), power (a power capability missing),
 supply (a material or vessel group with no option in hand), specialists
@@ -11,7 +13,7 @@ politics (the state or a patron), closed (built once but shut),
 calendar (a floor of years still to serve, shown by `stuck`), hours (running
 work waiting on the founder's own directed hours), idle (nothing in hand) and the terminal ones (done, active, goal, unavailable) where nothing is left to fix.
 """
-
+import re
 
 BLOCKER_KINDS = frozenset((
     "knowledge", "power", "supply", "specialists", "money", "politics", "closed",
@@ -70,10 +72,10 @@ class BlockersMixin:
         hidden_missing = any(prereq_id not in self.state.projects.done
                              and not self._visible_to_player(prereq_id) for prereq_id in node["pre"])
         if plain_ids or hidden_missing or not power_ids:
-            entries.append({"kind": "knowledge", "ids": plain_ids,
+            entries.append({"kind": "knowledge", "cause": "missing_prereqs", "ids": plain_ids,
                             "text": text if not power_ids else self.missing_prereq_message(plain_ids)})
         if power_ids:
-            entries.append({"kind": "power", "ids": power_ids, "text": self._power_gate_text(power_ids)})
+            entries.append({"kind": "power", "cause": "power_gate", "ids": power_ids, "text": self._power_gate_text(power_ids)})
         return entries
 
     def _classify_check(self, check, node_id, node, text):
@@ -88,9 +90,12 @@ class BlockersMixin:
         if kind == "done" and self.is_venture(node_id) and not self.running(node_id):
             kind = "closed"
             text = ("you have built it already but it is shut: 'open %s' to run it" % node_id)
+        cause = re.sub(r"^_?check_", "", check_name)
         if check_name == "_check_already_done" and node_id in self.state.projects.mothballed:
-            kind = "closed"
-        return [{"kind": kind, "ids": ids, "text": text}]
+            kind, cause = "closed", "mothballed"
+        elif kind == "closed" and cause == "already_done":
+            cause = "built_but_shut"
+        return [{"kind": kind, "cause": cause, "ids": ids, "text": text}]
 
     def start_blockers(self, node_id, extra_owed=0.0):
         """Every reason the project cannot begin now, in the order the gate
@@ -98,7 +103,7 @@ class BlockersMixin:
         already committed by starts not yet applied (a preview's earlier picks).
         """
         if node_id not in self.nodes:
-            return [{"kind": "unavailable", "ids": [], "text": "no such node"}]
+            return [{"kind": "unavailable", "cause": "no_such_node", "ids": [], "text": "no such node"}]
         node = self.nodes[node_id]
         blockers = []
         for check in self._START_REASON_CHECKS:
@@ -111,5 +116,5 @@ class BlockersMixin:
                 return blockers
         money = self._money_refusal(node_id, extra_owed)
         if money:
-            blockers.append({"kind": "money", "ids": [], "text": money})
+            blockers.append({"kind": "money", "cause": "money_refusal", "ids": [], "text": money})
         return blockers

@@ -1,12 +1,13 @@
 """Complaint 416 (415), whole-game checks: a mine names a deposit the seat has found, the agent economy's ore firms
 are sited on the found deposits, and what they raise is drawn from them. Builds games, so it is not a quick topic."""
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of
 
 from sim.engine import economy_port_setup
 
 bare = sim(surveyed=())
 check("a game that has found no coal deposit opens no coal mine, and says to prospect",
-      bare.open_mine("coal", 10.0) == 0.0 and "prospect" in (bare.mine_refusal or ""), bare.mine_refusal)
+      bare.open_mine("coal", 10.0) == 0.0 and cause_of(bare.mine_refusal) == "no_deposit_found", bare.mine_refusal)
 check("the known mines of the held tiles are already found",
       bool(bare.found_deposits("iron")), bare.found_deposits("iron"))
 

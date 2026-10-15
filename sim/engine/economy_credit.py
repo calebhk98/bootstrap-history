@@ -19,6 +19,7 @@ grouping evidence.
 """
 from .data import WAGES
 from sim.constants import declare
+from sim.refusal import LogLine
 from . import money_units
 from .units_prose import money_text
 from sim.world import capital_market
@@ -94,7 +95,15 @@ class CreditMixin:
             "game's own opening decision unaffected, not fitted to any "
             "lending data.")
 
-    def credit_limit(self, _rev=None, _upkeep=None):
+    def bearable_part_of(self, amount):
+        """How much of `amount` the purse and the credit line can take without capital ending below the
+        negative of the limit. The limit is read at the capital left after paying, because the floor
+        (living_cost) carries a status term that shrinks as positive capital goes."""
+        held = self.state.household.capital
+        limit_after = self.credit_limit(_capital=held - amount)
+        return min(amount, max(0.0, held + limit_after))
+
+    def credit_limit(self, _rev=None, _upkeep=None, _capital=None):
         """How far into arrears anyone will actually let you go.
 
         Unbounded debt is an accounting fiction: a household could sit
@@ -116,6 +125,7 @@ class CreditMixin:
         that is a genuinely different figure (this year's actual
         wage-selling zeroed out - see revenue_capacity's own docstring),
         never the same call `_rev` would have been computed with.
+        `_capital`: the household's capital to read the floor at, instead of what it holds now.
         """
         # Strangers borrow almost nothing. Credit based on standing income (not
         # this year's actual revenue, which can be zeroed out by temporary work).
@@ -128,7 +138,9 @@ class CreditMixin:
         # Floor of one year's running costs: everyone can run a tab for a season.
         # One upkeep() call; if already provided, reuse it to avoid silent duplication.
         upkeep_amount = self.upkeep() if _upkeep is None else _upkeep
-        floor = self.living_cost(_rev=_rev, _upkeep=upkeep_amount) + upkeep_amount * self.CREDIT_LINE_FLOOR_UPKEEP_BUFFER_SHARE
+        # The standing income prices the floor too: a year's job does not shrink what a lender thinks you live on.
+        at_capital = {} if _capital is None else {"_capital": _capital}
+        floor = self.living_cost(_rev=earning if _rev is None else _rev, _upkeep=upkeep_amount, **at_capital) + upkeep_amount * self.CREDIT_LINE_FLOOR_UPKEEP_BUFFER_SHARE
         # Bounded by what can be serviced: no lender advances more than income
         # can carry, even with a grand patron. Five years of turnover stops a
         # patron-name from creating an unpayable debt trap. [temporary_heuristic]
@@ -209,8 +221,9 @@ class CreditMixin:
         surplus = max(0.0, rev - fixed)
         return {
             "cash_on_hand": max(0.0, household.capital),
-            "credit_available_now": (self.credit_limit(_rev=rev, _upkeep=upkeep_amount)
-                                     * self.SPENDING_DRAW_SHARE_ORDINARY),
+            # the drawable share of the line, less what is already drawn: arrears use up the room
+            "credit_available_now": max(0.0, self.credit_limit(_rev=rev, _upkeep=upkeep_amount)
+                                        * self.SPENDING_DRAW_SHARE_ORDINARY - max(0.0, -household.capital)),
             "sustainable_annual_surplus": surplus,
             "surplus_allowance_over_years": surplus * self.CREDIT_SURPLUS_YEARS_MULTIPLE,
             "surplus_years_counted": self.CREDIT_SURPLUS_YEARS_MULTIPLE,
@@ -274,11 +287,11 @@ class CreditMixin:
         if shed:
             # NAME THEM: "stopped maintaining 1 works" tells a player
             # nothing - not which one, not how to get it back.
-            household.log.append((year, "in arrears, so closed %d concern%s that cost more "
+            household.log.append((year, LogLine("arrears_closed_concerns", "in arrears, so closed %d concern%s that cost more "
                                  "than they returned: %s. You still know how; "
                                  "'restore' reopens one when you can pay for it"
                              % (len(shed), "" if len(shed) == 1 else "s",
-                                ", ".join(shed))))
+                                ", ".join(shed)))))
 
     DEBT_RATE_REPUTATION_DISCOUNT_CAP = declare(
         "DEBT_RATE_REPUTATION_DISCOUNT_CAP", 0.03, kind="temporary_heuristic",
@@ -324,8 +337,9 @@ class CreditMixin:
         self.pay_interest(self.household, owed, "interest on arrears")
         household.interest_paid = (household.interest_paid or 0.0) + owed
         if owed > 0 and (household.insolvent_years in (1, 5, 15)):
-            household.log.append((year, "interest on %s of arrears at %.1f%% a year"
-                                 % (money_text(-household.capital, self), rate * 100)))
+            household.log.append((year, LogLine(
+                "arrears_interest", "interest on %s of arrears at %.1f%% a year"
+                % (money_text(-household.capital, self), rate * 100), rate=rate)))
         return owed
 
     def warn_near_the_limit(self, year):
@@ -359,14 +373,16 @@ class CreditMixin:
         if household._said_near_limit:
             return
         household._said_near_limit = True
-        household.log.append((year, "CLOSE TO THE LIMIT: you owe %s of the %s anyone "
-                             "here will advance you (%d%%). Past it every "
-                             "project in hand is halted unfinished and nobody "
-                             "funds new work for some years. 'stop' a project, "
-                             "'mothball' a loss-maker or 'fire' somebody while "
-                             "it is still your choice"
-                         % (money_text(-household.capital, self, grouped=True),
-                            money_text(limit, self, grouped=True), used * 100)))
+        household.log.append((year, LogLine(
+            "credit_near_limit", "CLOSE TO THE LIMIT: you owe %s of the %s anyone "
+            "here will advance you (%d%%). Past it every "
+            "project in hand is halted unfinished and nobody "
+            "funds new work for some years. 'stop' a project, "
+            "'mothball' a loss-maker or 'fire' somebody while "
+            "it is still your choice"
+            % (money_text(-household.capital, self, grouped=True),
+               money_text(limit, self, grouped=True), used * 100),
+            share_of_limit=used)))
 
     CREDIT_FREEZE_YEARS_AFTER_HALT = declare(
         "CREDIT_FREEZE_YEARS_AFTER_HALT", 5, kind="temporary_heuristic",
@@ -470,15 +486,17 @@ class CreditMixin:
                     _kept += max(0.0, spent_val)
                 projects.bountied.discard(node_id)
             household.credit_frozen_until = year + self.CREDIT_FREEZE_YEARS_AFTER_HALT
-            household.log.append((year, "CREDIT EXHAUSTED: %d project%s stopped, "
-                                 "unfinished: %s. The %s already paid "
-                                 "stands to your credit and comes off the "
-                                 "bill if you begin again. Nobody will fund new "
-                                 "work here until %d"
-                             % (len(dropped), "" if len(dropped) == 1 else "s",
-                                ", ".join(dropped[:4])
-                                + (" and others" if len(dropped) > 4 else ""),
-                                money_text(_kept, self, grouped=True), year + self.CREDIT_FREEZE_YEARS_AFTER_HALT)))
+            household.log.append((year, LogLine(
+                "credit_exhausted", "CREDIT EXHAUSTED: %d project%s stopped, "
+                "unfinished: %s. The %s already paid "
+                "stands to your credit and comes off the "
+                "bill if you begin again. Nobody will fund new "
+                "work here until %d"
+                % (len(dropped), "" if len(dropped) == 1 else "s",
+                   ", ".join(dropped[:4])
+                   + (" and others" if len(dropped) > 4 else ""),
+                   money_text(_kept, self, grouped=True), year + self.CREDIT_FREEZE_YEARS_AFTER_HALT),
+                stopped=list(dropped), frozen_until=year + self.CREDIT_FREEZE_YEARS_AFTER_HALT)))
         # let go of what you cannot maintain
         if household.capital < -limit:
             self.mothball_mines()
@@ -517,11 +535,11 @@ class CreditMixin:
             # player cannot understand what they lost, or why it reappeared
             # mothballed rather than gone, from a bare count.
             if taken:
-                household.log.append((year, "creditors took what they could: %d concerns "
+                household.log.append((year, LogLine("creditors_took", "creditors took what they could: %d concerns "
                                      "closed and sold up: %s. You keep the "
                                      "knowledge; reopening means paying for the "
                                      "premises again"
-                                     % (len(taken), ", ".join(taken))))
+                                     % (len(taken), ", ".join(taken)))))
         # AND THE HOUSEHOLD GOES: nobody keeps four hundred dependants they
         # cannot feed. Without shedding them, the upkeep of a household a
         # civilisation can no longer feed would consume every denarius of
@@ -535,8 +553,8 @@ class CreditMixin:
             household.freedmen = 0
             household.artisans = max(self.HOUSEHOLD_DISPERSAL_ARTISANS_FLOOR,
                                           household.artisans * self.HOUSEHOLD_DISPERSAL_ARTISANS_RETENTION)
-            household.log.append((year, "the household disperses: %d people leave, because "
-                                 "you can no longer feed them" % freed))
+            household.log.append((year, LogLine("household_disperses", "the household disperses: %d people leave, because "
+                                 "you can no longer feed them" % freed)))
 
         # DEBT BONDAGE, where the society had it, modelled as a TERM OF
         # SERVICE that is worked off, because that is what it mostly was:
@@ -555,10 +573,10 @@ class CreditMixin:
             household.bondage_years_left = term
             household.bondage_debt = -household.capital
             ledger.settle(self.household, self.edge(edges.EDGE_CREDITORS), 0.0, "debt taken into bondage")
-            household.log.append((year, "BONDAGE: you cannot pay, and you enter service for "
+            household.log.append((year, LogLine("debt_bondage", "BONDAGE: you cannot pay, and you enter service for "
                                  "your debt. For about %d years most of your hours "
                                  "belong to someone else. It is not the end: it is "
-                                 "worked off, and then you are free again" % term))
+                                 "worked off, and then you are free again" % term)))
             return
 
         # and the rest is written off. You keep your standing, your knowledge and
@@ -594,19 +612,23 @@ class CreditMixin:
             # Say what actually happened and if the freeze date moved (not on first settlement).
             _moved = (_frozen_before > year
                      and household.credit_frozen_until > _frozen_before)
-            household.log.append((year, "INSOLVENCY SETTLED: most of the debt is written "
-                                 "off and you still owe about %s. Your "
-                                 "name is worth less for it (reputation %s), and "
-                                 "you keep your knowledge and your practice%s"
-                                 % (money_text(limit * self.SETTLEMENT_CAPITAL_RETAINED_FRACTION, self, grouped=True),
-                                    "-%.1f" % _rep_hit if _rep_hit > 0.05
-                                    else "already at nothing, so no further",
-                                    (". Settling again while still frozen out "
-                                     "pushes the date nobody will fund you "
-                                     "again until from %d out to %d - it moves "
-                                     "with every settlement, not just the first"
-                                     % (_frozen_before, household.credit_frozen_until))
-                                    if _moved else "")))
+            household.log.append((year, LogLine(
+                "insolvency_settled",
+                "INSOLVENCY SETTLED: most of the debt is written "
+                "off and you still owe about %s. Your "
+                "name is worth less for it (reputation %s), and "
+                "you keep your knowledge and your practice%s"
+                % (money_text(limit * self.SETTLEMENT_CAPITAL_RETAINED_FRACTION, self, grouped=True),
+                   "-%.1f" % _rep_hit if _rep_hit > 0.05
+                   else "already at nothing, so no further",
+                   (". Settling again while still frozen out "
+                    "pushes the date nobody will fund you "
+                    "again until from %d out to %d - it moves "
+                    "with every settlement, not just the first"
+                    % (_frozen_before, household.credit_frozen_until))
+                   if _moved else ""),
+                reputation_hit=_rep_hit, credit_frozen_until=household.credit_frozen_until,
+                freeze_moved=bool(_moved), frozen_before=_frozen_before)))
 
     def stall_diagnosis(self):
         """None if the run is going somewhere; otherwise what is wrong and what
@@ -640,22 +662,24 @@ class CreditMixin:
         if net >= 0:
             return None
         ways = []
-        hours = self.labour.director_pool() - self.labour.director_hours_committed()
+        hours = self.labour.hours_for_sale()
         if hours > 100:
-            # Only suggest work if it gains (selling hours pulls from practice):
-            # the best-paying open trade, quoted by running the sale itself.
+            # Only suggest work that pays more than the standing job already sells these hours for: the
+            # best-paying open trade, quoted by running the sale itself.
             best_trade = self.labour.best_wage_trade()
             if best_trade:
-                would_earn, _refusal, would_cost = self.labour.work_for_wages_dry_run(best_trade, hours)
-                if would_earn > would_cost:
+                would_earn, _refusal = self.labour.work_for_wages_dry_run(best_trade, hours)
+                standing = self.labour.standing_job_pay(self.held_trade())
+                if would_earn > standing:
                     ways.append("work as a %s: %.0f of your own hours are left "
-                                "this year and would bring in about %s against "
-                                "the %s of practice they come out of, so you are "
-                                "up %s. Nobody has to lend you anything for that"
+                                "this year and would bring in about %s%s. "
+                                "Nobody has to lend you anything for that"
                                 % (best_trade, hours,
                                    money_text(would_earn, self, grouped=True),
-                                   money_text(would_cost, self, grouped=True),
-                                   money_text(would_earn - would_cost, self, grouped=True)))
+                                   (" against the %s your standing job pays for them, so you are up %s"
+                                    % (money_text(standing, self, grouped=True),
+                                       money_text(would_earn - standing, self, grouped=True)))
+                                   if standing > 0.5 else ""))
         losers = sorted((node_id for node_id in projects.operating
                          if self.nodes[node_id]["up"] > self.nodes[node_id]["rev"]),
                         key=lambda node_id: self.nodes[node_id]["rev"] - self.nodes[node_id]["up"])
@@ -754,7 +778,7 @@ class CreditMixin:
         return calculate_affordability(
             self.state.household.capital, self.credit_limit(), share)
 
-    def living_cost(self, _rev=None, _upkeep=None):
+    def living_cost(self, _rev=None, _upkeep=None, _capital=None):
         """You have to eat, sleep somewhere, pay tax, and look the part.
 
         The last one is not a joke. In a patronage society a man who is visibly
@@ -776,6 +800,7 @@ class CreditMixin:
         core.py/projects.py/labour.py/society.py/protocol.py, none of which
         this file may edit) says plain `self.living_cost()`, gets both
         arguments' None default, and computes exactly what it always did.
+        `_capital`: the capital the status spending is read at, instead of the household's own.
         """
         # AT THIS SOCIETY'S PRICES: project costs scale with price_index,
         # and so do wages, the workshop's output and state funding, so
@@ -796,6 +821,7 @@ class CreditMixin:
         rev = self.revenue() if _rev is None else _rev
         wages = self.labour.wage_bill()
         household_state = self.state.household
+        capital = household_state.capital if _capital is None else _capital
         base = self.LIVING_COST_BASE_SUBSISTENCE * price_index         # bare subsistence, one person
         household = (self.LIVING_COST_HOUSEHOLD_BASE * price_index
                      * (1 + household_state.freedmen * self.LIVING_COST_FREEDMAN_SHARE
@@ -804,7 +830,7 @@ class CreditMixin:
         status = 0.0
         for _node_id, upkeep_of_status in self.effect_values("living_cost_status"):
             status += upkeep_of_status * price_index
-        status += max(0.0, household_state.capital) * self.LIVING_COST_STATUS_PER_CAPITAL      # you cannot look poor and rich
+        status += max(0.0, capital) * self.LIVING_COST_STATUS_PER_CAPITAL      # you cannot look poor and rich
         # A RUINED MAN STOPS KEEPING UP APPEARANCES: status spending must be
         # capped by what is actually left after eating (`room` below), not
         # carried as a fixed, unconditional cost - an uncapped citizenship
@@ -820,7 +846,7 @@ class CreditMixin:
         upkeep_amount = self.upkeep() if _upkeep is None else _upkeep
         room = max(0.0, rev - base - household - tax - upkeep_amount - wages)
         status = min(status, room * self.LIVING_COST_APPEARANCES_SHARE_OF_ROOM
-                     + max(0.0, household_state.capital) * self.LIVING_COST_STATUS_PER_CAPITAL)
+                     + max(0.0, capital) * self.LIVING_COST_STATUS_PER_CAPITAL)
         return base + household + tax + status + wages
 
     LIVING_COST_BASE_SUBSISTENCE_LABOUR_HOURS = declare(

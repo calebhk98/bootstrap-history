@@ -104,12 +104,12 @@ player.record.orders.append({"command": "open", "node": "shop"})
 year_on(player, world)
 check("open runs a concern and yields takings less upkeep and wages",
 	  "shop" in player.concerns and abs(player.money - (1000.0 + 500.0 - 50.0 - 100.0)) < 1e-6, player.money)
-check("the concern's margin is on the record", abs(player.record.margins["shop"] - 350.0) < 1e-6, player.record.margins)
+check("the concern's margin is on the record", abs(player.business.margin_of("shop") - 350.0) < 1e-6, player.business.plants)
 player.record.orders.append({"command": "close", "node": "shop"})
 before = player.money
 year_on(player, world)
 check("close stops the concern", "shop" not in player.concerns and abs(player.money - before) < 1e-6, player.money)
-check("close forgets the concern's margin", "shop" not in player.record.margins)
+check("close forgets the concern's margin", player.business.plant_of("shop") is None)
 
 player = make_player()
 player.record.orders.append({"command": "open", "node": "deep"})
@@ -148,6 +148,7 @@ player.record.orders.extend([{"command": "levitate"}, "research", {"node": "tech
 year_on(player, world)
 check("unknown, malformed and incomplete commands are rejected, never raised",
 	  [entry["ok"] for entry in player.record.journal] == [False] * 4, player.record.journal)
+# presentation: the journal's reason wording
 check("an unknown command's reason is given", player.record.journal[0]["detail"] == "unknown command")
 
 player = make_player()
@@ -162,6 +163,7 @@ register_command("shout", lambda actor, order, seen: "heard " + order["word"])
 player = make_player()
 player.record.orders.append({"command": "shout", "word": "hello"})
 year_on(player, world)
+# not text: echoes what the test's own handler returned
 check("a registered command runs", last_entry(player)["ok"] and last_entry(player)["detail"] == "heard hello", last_entry(player))
 
 # ---- who drives the player -----------------------------------------------------------------
@@ -192,25 +194,24 @@ world.public_nodes.clear()
 world.exposures["shop"] = 0.0
 check("a profitable concern nobody can see is not", operator.proven_concerns(world) == [])
 world.exposures["shop"] = 1.0
-operator.record.margins["shop"] = -1.0
+operator.business.note_margin("shop", -1.0)
 check("a concern running at a loss is not", operator.proven_concerns(world) == [])
 
 # ---- the firm runs through the same rule ----------------------------------------------------
 world = make_world()
 firm = Firm("firm:1", ActorRecord(kind="firm", money=1000.0, founded_year=90))
-firm.concerns.add("shop")
-firm.record.opened_year["shop"] = 95
+firm.business.open_plant("shop", 95)
 firm.rivals_of = lambda node_id, asking_id: 1.0
 firm.operate(world)
 managing = firm_entry.management_cost(world, "shop")
 check("a firm's year through the shared rule: takings less upkeep, wages and management",
 	  managing > 0.0 and abs(firm.money - (1000.0 + 250.0 - 50.0 - 100.0 - managing)) < 1e-6
 	  and abs(firm.record.last_margin - (100.0 - managing)) < 1e-6, firm.money)
-check("a firm's staffing and loss years are kept", firm.record.staffing["shop"] == 1.0 and firm.record.loss_years == 0)
+check("a firm's staffing and loss years are kept", firm.staffed_share("shop") == 1.0 and firm.record.loss_years == 0)
 world.free_people["labourer"] = 0.0
 firm.operate(world)
 check("a firm that finds no staff makes nothing and loses its upkeep",
-	  firm.record.staffing["shop"] == 0.0 and firm.record.loss_years == 1 and abs(firm.record.last_margin + 50.0 + managing) < 1e-6, firm.record.last_margin)
+	  firm.staffed_share("shop") == 0.0 and firm.record.loss_years == 1 and abs(firm.record.last_margin + 50.0 + managing) < 1e-6, firm.record.last_margin)
 
 # ---- deterministic with the same seed -------------------------------------------------------
 def run(seed):

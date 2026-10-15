@@ -17,6 +17,7 @@ import functools
 from types import SimpleNamespace
 
 from sim.agents.api import GOVERNMENT_PREFIX, exports_allowed
+from sim.refusal import Refusal
 
 from .data import calculated_goods_prices, goods_provenance, load_civ, starting_schedule
 from .foreign_economy_data import foreign_economy_document
@@ -102,9 +103,9 @@ class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPay
         else:
             reopens = government.markets_closed_until(self.goods_market.acting_party_id, self.state.scenario.year)
             if reopens:
-                return "%s has shut its markets to you until %d" % (name, reopens)
+                return Refusal("partner_market_shut", "%s has shut its markets to you until %d" % (name, reopens))
         if material not in exports_allowed(government, [material]):
-            return "%s will not sell %s" % (name, material)
+            return Refusal("partner_export_held_back", "%s will not sell %s" % (name, material))
         return None
 
     def _foreign_economy_facts(self, civilization_id):
@@ -119,11 +120,11 @@ class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPay
             cache = self.household._foreign_facts_cache = {}
         cached = cache.get(civilization_id)
         known_techs = (len(self.state.projects.done), self.state.scenario.year)
-        if cached is not None and cached[0] is prices and cached[2] == known_techs:
-            return cached[1]
         civilization = load_civ(civilization_id)
         coin = civilization["coin_standard"]
-        coin_price = self._coin_metal_price(coin["material"])
+        coin_price = self.goods_market.home_unit_price(coin["material"])
+        if cached is not None and cached[0] is prices and cached[2] == known_techs and cached[3] == coin_price:
+            return cached[1]
         foreign_prices = {}
         if coin_price:
             home_money_per_coin = coin["kg_per_unit"] * coin_price
@@ -135,7 +136,7 @@ class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPay
                  "prices_in_home_money": foreign_prices,
                  "route": route,
                  "freight_per_tonne": self._route_freight_per_tonne(civilization)}
-        cache[civilization_id] = (prices, facts, known_techs)
+        cache[civilization_id] = (prices, facts, known_techs, coin_price)
         return facts
 
     def _commodity_materials(self, commodity):

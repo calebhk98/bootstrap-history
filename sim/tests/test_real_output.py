@@ -6,12 +6,14 @@ from .harness import *  # noqa: F401,F403
 import copy
 
 from sim.engine import market_demand
+from sim.tests import economy_fixture
 from sim.engine.agents_port import SimWorld
 from sim.engine import prices as price_solver
 from sim.engine.data import calculated_goods_prices
 
 GOOD = "fat_kg"
 YEARS_CLOSED = 1   # the market is one agent-economy year to close, so the fewest years that show each property
+YEARS_TO_ENTER = 5   # producers build plant to run a technique over some years before its goods reach the market
 
 
 def plain_node(game):
@@ -58,9 +60,9 @@ check("...and does not raise real output",
 check("...nor output per head", control.real_output_per_head() == twin.real_output_per_head(),
       (control.real_output_per_head(), twin.real_output_per_head()))
 
-# --- a technique that halves a good's labour: it reaches a price only through a producer that runs it.
-# The agent economy's producers run the recipes it opened with, so a technique gained later makes the good cheaper to
-# make by that entry (its solved cost) and moves no price and no quantity until a producer sells by it.
+# --- a technique that halves a good's labour reaches a price and a quantity only through producers that run it.
+# The economy's producers gain the entries a technique in use allows (Complaint 478), so producers enter to make the
+# good by it and, some years on, the market clears a larger quantity of it at a lower price than the same society's twin.
 original = price_solver._default_production_entries()
 patched = dict(original)
 source_key = next(key for key, entry in original.items() if GOOD in (entry.get("outputs") or {}))
@@ -70,6 +72,9 @@ improved["requires_node"] = plain
 patched[GOOD + "_with_the_technique"] = improved
 price_solver.reset_caches_for_tests()
 price_solver._DEFAULT_PRODUCTION_ENTRIES = patched
+# households buy a cheaper good in larger quantity out of a surplus, which the settled opening does not leave them
+surplus = economy_fixture.surplus_game_openings()
+surplus.__enter__()
 try:
     game = sim(civ="rome_100ad", capital=1e9)   # the twin above (nothing completed, same years closed) is its baseline
     price_before = game.goods_market.household_prices()[GOOD]
@@ -86,14 +91,29 @@ try:
     check("...and no good that does not use it changes price",
           all(game.goods_market.household_prices()[material] == price
               for material, price in other_before.items()), other_before)
-    close_years(game, YEARS_CLOSED)
-    check("...and until a producer sells by it the market clears the same quantity of the good as the same society without it",
-          abs(book_of_good(game)["traded_tonnes"] - book_of_good(twin)["traded_tonnes"])
-          <= 0.02 * book_of_good(twin)["traded_tonnes"],    # the in-game solve starts from nearby prices, so it differs a little
-          (book_of_good(game)["traded_tonnes"], book_of_good(twin)["traded_tonnes"]))
-    check("...so real output is the same", abs(game.real_output_hours() - twin.real_output_hours()) <= 1e-5 * twin.real_output_hours(),
-          (twin.real_output_hours(), game.real_output_hours()))
+    twin_years = sim(civ="rome_100ad", capital=1e9)
+    close_years(game, YEARS_TO_ENTER)
+    close_years(twin_years, YEARS_TO_ENTER)
+    check("a producer that makes the good by that entry and sells it lowers the price the market posts",
+          game.goods_market.household_prices()[GOOD] < twin_years.goods_market.household_prices()[GOOD],
+          (game.goods_market.household_prices()[GOOD], twin_years.goods_market.household_prices()[GOOD]))
+    check("...and what the founder pays for a tonne of it falls with the price the market posts",
+          game.goods_market.quote(GOOD)["buy_per_tonne"] < twin_years.goods_market.quote(GOOD)["buy_per_tonne"],
+          (game.goods_market.quote(GOOD)["buy_per_tonne"], twin_years.goods_market.quote(GOOD)["buy_per_tonne"]))
+    check("...and the bill for a larger order of it is smaller by the same technique",
+          game.goods_market.purchase_cost(GOOD, 5.0)[0] < twin_years.goods_market.purchase_cost(GOOD, 5.0)[0],
+          (game.goods_market.purchase_cost(GOOD, 5.0)[0], twin_years.goods_market.purchase_cost(GOOD, 5.0)[0]))
+    check("...and the market clears a larger quantity of it than the same society without it",
+          book_of_good(game)["traded_tonnes"] > 1.05 * book_of_good(twin_years)["traded_tonnes"],
+          (book_of_good(game)["traded_tonnes"], book_of_good(twin_years)["traded_tonnes"]))
+    check("...so real output rises, through that good",
+          game.real_output_hours() > twin_years.real_output_hours() * 1.0001,
+          (twin_years.real_output_hours(), game.real_output_hours()))
+    check("...and output per head with it",
+          game.real_output_per_head() > twin_years.real_output_per_head(),
+          (twin_years.real_output_per_head(), game.real_output_per_head()))
 finally:
+    surplus.__exit__(None, None, None)
     price_solver.reset_caches_for_tests()
 
 # --- society output is the sum of quantities times opening prices, in this civilisation's money.

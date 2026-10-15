@@ -6,7 +6,7 @@ re-solved cheapest route). The market receives the result as a reservation price
 """
 from typing import Any, Dict, FrozenSet, Mapping, Optional
 
-from sim.engine import joint_allocation, solve_prices, solve_prices_core
+from sim.engine import rent_standin, solve_prices, solve_prices_core
 
 from . import prices as price_solver
 
@@ -23,16 +23,15 @@ def _context(production: Mapping[str, Any], gates: FrozenSet[str], civilization:
         return cached[1], cached[2]
     available, _unreached, _unclassified = solve_prices.techniques_available_to(production, gates)
     wage_by_trade = price_solver.solver_wage_ratios(production, document_ratios)
-    rent = solve_prices.rent_hours_per_kg_by_ore_material(available, wage_by_trade)
-    rent.update(solve_prices.land_rent_hours_per_hectare(
+    rent = rent_standin.stand_in_rent(
         available, wage_by_trade, civilization_id=civilization["id"],
-        civilizations={civilization["id"]: civilization}))
+        civilizations={civilization["id"]: civilization})
     _CONTEXTS[key] = (production, wage_by_trade, rent)
     return wage_by_trade, rent
 
 
 class CostBook:
-    """The wages, rent and demand anchors one price table is costed against, worked out once."""
+    """The wages and rent one price table is costed against, worked out once."""
 
     def __init__(self, prices_in_hours: Mapping[str, float], wage_document: Mapping[str, Any],
                  civilization: Mapping[str, Any], held: FrozenSet[str],
@@ -43,8 +42,6 @@ class CostBook:
         gates = frozenset(price_solver.all_gate_nodes(self.production) & held)
         self.wages, self.rent = _context(self.production, gates, civilization,
                                          solve_prices.wage_ratios_by_trade(wage_document))
-        anchors = joint_allocation.build_demand_anchors(civilization["id"], civilization=civilization)
-        self.anchors = anchors.prices(prices_in_hours) if anchors else None
         self.interest = float(civilization["starting_interest_rate"])
 
     def unit_cost_hours(self, entry_key: str, material: str, include_capital: bool = True) -> Optional[float]:
@@ -56,8 +53,8 @@ class CostBook:
             return None
         result = solve_prices_core.recipe_cost_and_allocation(
             entry_key, entry, self.prices, self.wages, rent_hours_per_kg_by_material=self.rent,
-            demand_anchor_price_by_material=self.anchors, interest_rate=self.interest,
-            include_capital=include_capital)
+            reference_price_by_material=self.prices,    # a joint run is split by the outputs' worth in the table
+            interest_rate=self.interest, include_capital=include_capital)
         return None if result is None else result[1].get(material)
 
     def running_unit_cost_hours(self, entry_key: str, material: str) -> Optional[float]:

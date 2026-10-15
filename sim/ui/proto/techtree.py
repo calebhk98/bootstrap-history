@@ -1,6 +1,7 @@
 """The tech tree itself, viewed through the protocol: why/available and node-explain, and the subject grouping they share."""
 
 import sim.engine.ui_port as ui_port
+from sim.refusal import Refusal, cause_of
 import hashlib
 
 from sim.engine.ui_port import closure, critical_path, downstream_count, is_downstream
@@ -767,8 +768,8 @@ def _agent_available(sim, nodes, cmd=None):
      _sort_fn, reverse, heard_offset) = _available_params(cmd)
     if sort_by and _sort_fn is None:
         return {"ok": False,
-                "error": "cannot sort by %r; sort by one of: %s. Nothing was changed."
-                         % (sort_by, ", ".join(_SORT_KEY_NAMES))}
+                "error": Refusal("unknown_sort_key", "cannot sort by %r; sort by one of: %s. Nothing was changed."
+                                 % (sort_by, ", ".join(_SORT_KEY_NAMES)), choices=_SORT_KEY_NAMES)}
 
     state, filter_error = tree_filters.parse_state(cmd)
     tag, category, topic_error = tree_filters.parse_topic(cmd, nodes)
@@ -1002,7 +1003,7 @@ def _explain_revenue(sim, nodes, node_id, node):
         # revenue alone is fogged; see _fog_revenue_estimate.
         "upkeep": sim.venture_upkeep_quote(node_id)["now"],
         "upkeep_at_full_staffing": sim.venture_upkeep_quote(node_id)["at_full_staffing"],
-        "revenue": (sim.venture_real_earnings(node_id) if (not sim.fog
+        "revenue": (round(sim.venture_real_earnings(node_id), 1) if (not sim.fog
                                  or _revenue_known_exactly(sim, node_id))
                    else (_fog_revenue_estimate(sim, node_id) or 0.0)),
         "revenue_forecast_scope": (
@@ -1011,15 +1012,15 @@ def _explain_revenue(sim, nodes, node_id, node):
             "indirect income; those variable effects are not included here. "
             "Compare 'money' before and after opening."
             if node_id in sim.CAPABILITY_INSTITUTIONS else None),
-        # WHAT IT PAYS YOU: for a skill in your own practice, the practice's one income (your own
-        # hours worked as a tradesman, shared by every skill you practise), not a figure of its own.
+        # WHAT IT PAYS YOU: for a skill you hold, the founder's one wage (your own hours sold in the
+        # trade it gives you, shared by every skill you hold), not a figure of its own.
         "but_it_pays_YOU": (
             # the ledger's own row, which carries the market ceiling's share, so the two screens agree
-            sim.revenue_sources().get("_your_own_practice", round(sim.practice_income(), 1))
+            sim.revenue_sources().get("_wages_for_your_own_work", round(sim.founder_wage_income(), 1))
             if node_id in ui_port.practice_set(sim) else None),
-        "because": ("this is your own practice, not a concern: it pays your own hours at the going wage "
-                    "of a %s, once for all the skills you practise, and selling your hours for wages "
-                    "takes them out of it" % sim.practice_trade()
+        "because": ("this is a skill you hold, not a concern: it earns through your own hours, sold as a %s "
+                    "at that trade's going wage, once for all the skills you hold, and hours you spend "
+                    "elsewhere are hours not sold" % sim.held_trade()
                     if node_id in ui_port.practice_set(sim) else None),
     }
 
@@ -1406,7 +1407,7 @@ def _blocker_fields(sim, node_id, started):
     """The kind-classified blockers: the same list the `start` gate reads."""
     if started:
         return {"blocked_kind": None, "blockers": []}
-    blockers = [{"kind": blocker["kind"], "text": sim.fog_scrub(blocker["text"]), "ids": blocker["ids"]}
+    blockers = [{"kind": blocker["kind"], "cause": blocker["cause"], "text": sim.fog_scrub(blocker["text"]), "ids": blocker["ids"]}
                 for blocker in sim.start_blockers(node_id)]
     return {"blocked_kind": blockers[0]["kind"] if blockers else None, "blockers": blockers}
 
@@ -1449,6 +1450,7 @@ def _explain_active_wait(sim, nodes, node_id):
         if _bill is None:
             _bill = max(0.0, sim.project_cost(node_id) - _st["spent"])
         out["waiting_on"] = _waiting_on(sim, nodes, node_id, _st, _bill)
+        out["waiting_on_kind"] = cause_of(out["waiting_on"])
         # SAME FIELD `state` ALREADY PRINTS PER PROJECT, HERE TOO. Arrears
         # gives unspendable founder hours back (core.py's underfunded path),
         # so ph_left never sits at 0 and waiting_on's money branch above can

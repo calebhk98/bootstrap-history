@@ -31,9 +31,6 @@ class AgentCoinage(RealPriceRatiosMixin, CoinRevaluationMixin, WageMarketRatiosM
     def foreign_economies(self):
         return []
 
-    def market_price_ratio(self, material):
-        raise AssertionError("the agent economy's price over a cost that follows the price level is never read")
-
 
 class RunawayTests(unittest.TestCase):
     def years(self, game, count):

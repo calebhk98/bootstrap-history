@@ -30,7 +30,7 @@ def the_group(game):
 
 
 # ---- nobody is organised until someone has lost something ------------------------------------
-quiet = sim()
+quiet = unopened_sim()
 a_year(quiet)
 check("a founder who has hurt nobody has no interest groups", quiet.interest_groups() == [], quiet.interest_groups())
 check("the groups screen says so",
@@ -40,6 +40,7 @@ check("the groups screen says so",
 big = grievance_game()
 a_year(big)
 group = dict(the_group(big))
+# not text: the group's name is its identity here, beside its kind
 check("selling into a market organises the producers it displaces",
       group is not None and group["name"] == "producers of iron" and group["kind"] == "displaced_producers", group)
 check("the group's size and loss come from the market's displaced sales",
@@ -53,7 +54,11 @@ check("a petition puts blame on the founder", big.state.household.scandal > 0.0,
 
 small = grievance_game(share=0.003)
 a_year(small)
-check("a loss too small to organise over forms no group", small.interest_groups() == [], small.interest_groups())
+# the sale is the loss under test: the state's own hiring squeezes the masons' employers in the same year, a group of
+# another kind and cause that organises once the state's revenue (what a loss is a share of) falls, as it did with
+# Merge 507-stage-3-prices-to-pay
+check("a loss too small to organise over forms no group", the_group(small) is None,
+      [row for row in small.interest_groups() if row["kind"] == "displaced_producers"])
 middling = grievance_game(share=0.2)
 a_year(middling)
 check("a bigger loss organises more people with a stronger pull",
@@ -90,7 +95,7 @@ check("a purse that covers it pays the group and the founder is not levied for i
 check("what the state paid arrives in the group's purse",
       flush.actors.get("group:displaced_producers:iron").money > 0.0)
 
-broke = sim()
+broke = unopened_sim()
 broke.civ["standing_army"] = 1.0e8
 broke._open_market_book()
 broke.goods_market.note_sale(broke.goods_market.acting_party_id, "iron", broke._market_entry("iron")["reference_tonnes"] * 0.6)
@@ -101,7 +106,7 @@ record = broke.state_treasury().record
 check("a state that cannot pay leaves the group's claim unfunded",
       record.unfunded.get(name, 0.0) > 0.0, (record.need, record.unfunded))
 rates_with = broke.state_levy_rates()
-calm = sim()
+calm = unopened_sim()
 calm.civ["standing_army"] = 1.0e8
 calm.state_treasury().money = 0.0
 a_year(calm)
@@ -138,7 +143,7 @@ reachable = [node_id for node_id in making if quiet.start_reason(node_id)[0]]
 if reachable:
     ok, why = banner.start_reason(reachable[0])
     check("a forbidden technique the founder could otherwise start is refused by start_reason, naming the group",
-          not ok and "producers of iron" in (why or ""), (reachable[0], why))
+          not ok and banner.start_blockers(reachable[0])[0]["cause"] == "group_prohibition", (reachable[0], why))
 check("without a group nothing is forbidden", quiet.group_prohibition_of(making[0]) is None)
 banner.state.household.protection = 0.9
 check("protection above the state-opposition line lets the founder build regardless",
@@ -152,13 +157,13 @@ for civ_id in ("han_china_100ad",):
           the_group(other) is not None and the_group(other)["kind"] == "displaced_producers", other.interest_groups())
 
 # ---- employers squeezed by the founder's hiring ----------------------------------------------
-squeezed = sim()
+squeezed = unopened_sim()
 squeezed.labour.market.press("artisan", squeezed.labour.market_supply("artisan") * 3.0)
 squeezed.state_treasury().money = 1.0e12
 world = SimWorld(squeezed)
 sectors = {sector.subject: sector for sector in world.squeezed_employers()}
 check("hiring that raises a trade's price squeezes the employers of that trade",
-      "artisan" in sectors and sectors["artisan"].lost_income > 0.0 and "raised the going price" in sectors["artisan"].cause,
+      "artisan" in sectors and sectors["artisan"].lost_income > 0.0 and sectors["artisan"].kind == "squeezed_employers",
       sectors)
 check("a trade nobody pressed squeezes no one", "labourer" not in sectors)
 
@@ -167,7 +172,7 @@ saved = big
 before = saved.interest_groups()
 path = _rel("interest_groups_roundtrip.json")
 save_state(saved, path)
-loaded = sim()
+loaded = unopened_sim()
 load_state(loaded, path)
 check("organised groups survive a save and load", loaded.interest_groups() == before, (before, loaded.interest_groups()))
 

@@ -33,7 +33,7 @@ def make_node(node_id, category, revenue, upkeep, hours):
 
 def actor_sim():
 	nodes = copy.deepcopy(NODES)
-	nodes["zz_borrow"] = make_node("zz_borrow", sorted(S.Sim.GOODS_CATEGORIES)[0], 2.0e5, 5000.0, 50.0)
+	nodes["zz_borrow"] = make_node("zz_borrow", sorted(S.Sim.GOODS_CATEGORIES)[0], 8.0e5, 5000.0, 50.0)
 	game = build_unopened(lambda: S.Sim(nodes, list(ORDER), random.Random(1), events=False, manual=True,
 	             civ=S.load_civ("rome_100ad")))
 	game.goal, game.done_year = GOAL, {}
@@ -49,6 +49,13 @@ def actor_sim():
 
 
 _PUT_UP = firm_entry.personal_capital
+_STAKE_SPLIT = firm_entry.stake_split
+faced = []   # every stake an entrant weighed, in the order weighed
+
+
+def _recording_stake_split(stake, *args):
+	faced.append(stake)
+	return _STAKE_SPLIT(stake, *args)
 
 
 def run(ceiling=None, credit_rate=None, years=6):
@@ -56,7 +63,7 @@ def run(ceiling=None, credit_rate=None, years=6):
 	`credit_rate` (the firms' own: re-solving every price at another rate is not under test).
 	Returns (game, firms each year, the deepest debt of any firm, the stakes founders put up)."""
 	game = actor_sim()
-	patches = []
+	patches = [mock.patch.object(firm_entry, "stake_split", _recording_stake_split)]
 	if ceiling is not None:
 		patches.append(mock.patch.object(firm_entry, "personal_capital", lambda stratum: min(_PUT_UP(stratum), ceiling)))
 	if credit_rate is not None:
@@ -83,14 +90,16 @@ whole_stake = max(funded_stakes)
 check("a founder who can put up the whole stake founds firms beyond the opening ones",
       max(funded_counts) > funded_counts[0] and whole_stake > 0.0, (funded_counts, whole_stake))
 
-short = 0.5 * (1.0 + ENTRY_EQUITY_SHARE) * whole_stake   # more than lenders' share of the stake, less than all of it
+short = 1.05 * ENTRY_EQUITY_SHARE * whole_stake   # more than lenders' share of the stake, so little over it that the entrant must borrow
 unfunded, short_counts, borrowed, short_stakes = run(ceiling=short)
 check("a founder short of the whole stake but putting up lenders' share still founds firms, on credit",
       max(short_counts) > short_counts[0] and bool(short_stakes) and max(short_stakes) <= short + 1e-6 < whole_stake,
       (short_counts, short_stakes, short, whole_stake))
 check("an entrant that borrowed owes the market", borrowed > 0.0, borrowed)
 
-thin = 0.5 * ENTRY_EQUITY_SHARE * whole_stake   # under lenders' share of the stake: no one backs the entrant
+# Under lenders' share of the stake: no one backs the entrant. The stake an entrant weighs falls as the concern
+# ages (the early years' losses it must carry shrink), so "the stake" is the smallest one weighed in the funded run.
+thin = 0.5 * ENTRY_EQUITY_SHARE * min(faced)
 _thin_game, thin_counts, _thin_debt, thin_stakes = run(ceiling=thin)
 check("a founder putting up less than lenders' share founds no firm from savings (only the opening ones stand)",
       max(thin_counts) == thin_counts[0] and not thin_stakes, (thin_counts, thin_stakes))

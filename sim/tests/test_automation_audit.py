@@ -124,8 +124,8 @@ def _material_step(binding, demand_key, policy):
 mine_rows = [row for row in _material_step("coal", "coal_kg", "auto_mine") if row["action"] == "mine"]
 check("auto-mine records what it ordered, the demand and the capacity it considered",
       len(mine_rows) == 1 and mine_rows[0]["policy"] == "auto_mine"
-      and "demand 1000000" in mine_rows[0]["reason"]
-      and "pending capacity considered" in mine_rows[0]["reason"], mine_rows)
+      and mine_rows[0].get("reason_kind") == "mine_ordered" and mine_rows[0]["demand"] == 1_000_000.0
+      and "active_capacity" in mine_rows[0] and "pending_capacity" in mine_rows[0], mine_rows)
 
 forest_rows = [row for row in _material_step("charcoal", "charcoal_kg", "auto_forest") if row["action"] == "forest"]
 check("auto-forest records the hectares it bought and its cost",

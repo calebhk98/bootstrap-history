@@ -83,4 +83,4 @@ class NoEconomy:
 check("a shared world that cannot answer for countries raises, it does not answer with the home figure",
       raises(lambda: CountryWorld(NoEconomy(), beta, Holder()).pay_per_person_year("labourer")), None)
 check("the error is a LookupError naming the country",
-      issubclass(NoCountryEconomy, LookupError) and "beta" in str(NoCountryEconomy("beta")), None)
+      issubclass(NoCountryEconomy, LookupError) and NoCountryEconomy("beta").country == "beta", None)

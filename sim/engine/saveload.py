@@ -3,6 +3,7 @@
 import gzip, json, os, random
 
 from sim.game_version import GAME_VERSION
+from sim.refusal import Refusal, cause_of
 
 from .data import WAGES
 from sim.engine.state import (
@@ -196,9 +197,9 @@ def _check_save_scalars(blob, sim):
     civ_id = blob.get("_civ")
     have_civ = sim.civ.get("id")
     if civ_id != have_civ:
-        return ("this save is from a different civilisation (%r); this game "
-                "is running %r. Start the agent with --civ %s to load it."
-                % (civ_id, have_civ, civ_id))
+        return Refusal("save_wrong_civilisation", "this save is from a different civilisation (%r); this game "
+                       "is running %r. Start the agent with --civ %s to load it."
+                       % (civ_id, have_civ, civ_id), saved_civilisation=civ_id, running_civilisation=have_civ)
     return None
 
 
@@ -282,10 +283,10 @@ def _validate_save(blob, sim):
 	if unknown:
 		sample = ", ".join(sorted(unknown)[:6])
 		more = "" if len(unknown) <= 6 else " and %d more" % (len(unknown) - 6)
-		return ("this save refers to node(s) the current tech tree does not "
-				"have: %s%s. The tree has changed since this was saved; it "
-				"cannot be loaded against this version of the game."
-				% (sample, more))
+		return Refusal("save_unknown_nodes", "this save refers to node(s) the current tech tree does not "
+					   "have: %s%s. The tree has changed since this was saved; it "
+					   "cannot be loaded against this version of the game."
+					   % (sample, more), nodes=sorted(unknown))
 	return None
 
 
@@ -333,13 +334,13 @@ def load_state(sim, path):
 	_ON_DISK[os.path.abspath(path)] = (text, _stamp(os.path.abspath(path)))
 	bad = _validate_save(blob, sim)
 	if bad:
-		raise ValueError(bad)
+		raise ValueError(bad if cause_of(bad) else Refusal("save_invalid", bad))
 
 	if sim.fog and blob.get("_fog") is False:
-		raise ValueError("that save was played without fog of war and this "
-						 "game is being played with it. A save cannot turn the "
-						 "fog off; start a new game without it if that is what "
-						 "you want.")
+		raise ValueError(Refusal("save_fog_mismatch", "that save was played without fog of war and this "
+								 "game is being played with it. A save cannot turn the "
+								 "fog off; start a new game without it if that is what "
+								 "you want."))
 
 	old_revealed = set(sim.state.projects.revealed) if getattr(sim, "state", None) and getattr(sim.state, "projects", None) and sim.state.projects.revealed else set()
 	asked_fuzzy, asked_salt = sim.fuzzy_estimates, sim.state._fuzzy_salt

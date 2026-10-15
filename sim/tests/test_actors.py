@@ -81,10 +81,17 @@ check("a recorded actor keeps its money as an account in the purses book, the re
 check("the household never chooses through a policy of its own", isinstance(household.decision_policy, IdlePolicy))
 
 # ---- government imitation is derived from values, not ids ------------------
-gun = make_node("test_gun", traits=["military"])
+def cheaper(node, share=0.5):
+    """The node costing `share` of the template's bill. What the state would pay for a gain is a share of its
+    revenue, which fell with Merge 507-stage-3-prices-to-pay (the economy's prices), and the template's bill did not."""
+    node["_total_cost"] *= share
+    return node
+
+
+gun = cheaper(make_node("test_gun", traits=["military"]))
 cartoons = make_node("test_cartoons", traits=["information"])
-faint = make_node("test_faint", gains={"military": 1e-12})
-modded = make_node("test_mod:cannon", gains={"military": 0.9})
+faint = cheaper(make_node("test_faint", gains={"military": 1e-12}))
+modded = cheaper(make_node("test_mod:cannon", gains={"military": 0.9}))
 game = actor_sim([gun, cartoons, faint, modded])
 for node_id in ("test_gun", "test_cartoons", "test_faint", "test_mod:cannon"):
     founder_completes(game, node_id, operating=True)
@@ -213,9 +220,8 @@ check("the founder's own concerns and purse are untouched by the firm's existenc
 game = actor_sim([losing])
 founder_completes(game, "test_loss", operating=True, opened_ago=6)
 loser = game.actors.add("firm:loser", ActorRecord(kind="firm", money=1000.0, target="test_loss"))
-loser.concerns.add("test_loss")
+loser.business.open_plant("test_loss", game.state.scenario.year - 6)
 loser.knowledge.add("test_loss")
-loser.record.opened_year["test_loss"] = game.state.scenario.year - 6
 for _ in range(4):
     next_year(game)
 check("a firm that keeps losing money closes", loser.record.exited_year is not None and not loser.concerns,

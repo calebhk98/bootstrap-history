@@ -127,15 +127,36 @@ check("...and every one of those is genuinely on `available` too - the "
 # its own, with the COMBINED bill of everything listed, which individual
 # affordability checks never show.
 _s_pay = _s_pth2
-_rp_pay_ok = S._agent_dispatch(_s_pay, NODES, {"cmd": "path", "id": GOAL})
-check("set-up: on a fresh turn-one Rome game every startable node on the "
-      "route to the goal earns nothing by itself - this is the real "
-      "opening, not an invented fixture",
-      bool(_rp_pay_ok.get("startable_today_toward_this"))
-      and all(entry.get("earns_per_year", 0) <= 0
+
+
+def _knowledge_only_goal(game):
+    """The goal whose route has the dearest startable nodes (at least two) among routes where none of them earns
+    more than it costs to keep running. The founder's businesses pay their crew once (Complaint 514), so the route
+    to GOAL now holds a zinc works that pays its way at the opening; the all-knowledge case is a route that really
+    has none, and the dearest is the one whose combined bill can pass what a poor household can raise."""
+    startable_of = {}
+    best, best_bill = None, 0.0
+    for candidate in sorted(NODES):
+        startable = [node_id for node_id in S.closure(NODES, candidate) if node_id not in game.done
+                     and startable_of.setdefault(node_id, game.can_start(node_id))]
+        if len(startable) >= 2 and not any(
+                game.venture_real_earnings(node_id) > game.venture_upkeep_quote(node_id)["now"]
+                for node_id in startable):
+            bill = sum(game.project_cost(node_id) for node_id in startable)
+            if bill > best_bill:
+                best, best_bill = candidate, bill
+    return best
+
+
+_KNOWLEDGE_ONLY_GOAL = _knowledge_only_goal(_s_pay)
+_rp_pay_ok = S._agent_dispatch(_s_pay, NODES, {"cmd": "path", "id": _KNOWLEDGE_ONLY_GOAL})
+check("set-up: on a fresh turn-one Rome game some goal's startable route nodes earn no more than they cost to "
+      "keep running - this is the real opening, not an invented fixture",
+      _KNOWLEDGE_ONLY_GOAL is not None and bool(_rp_pay_ok.get("startable_today_toward_this"))
+      and all(entry.get("earns_per_year", 0) <= entry.get("costs_per_year_after", 0)
               for entry in _rp_pay_ok["startable_today_toward_this"]
               if isinstance(entry, dict)),
-      [(entry.get("id"), entry.get("earns_per_year"))
+      [(entry.get("id"), entry.get("earns_per_year"), entry.get("costs_per_year_after"))
        for entry in _rp_pay_ok.get("startable_today_toward_this") or []])
 check("`path` says outright, from turn one, that an all-knowledge route "
       "will not cover costs and names a command that finds what actually "
@@ -144,20 +165,25 @@ check("`path` says outright, from turn one, that an all-knowledge route "
       "earns" in (_rp_pay_ok.get("this_route_pays_for_nothing") or "")
       and '"sort":"earns"' in (_rp_pay_ok.get("this_route_pays_for_nothing") or ""),
       _rp_pay_ok.get("this_route_pays_for_nothing"))
-# A route with at least one real earner among today's startable nodes must
-# NOT get the all-knowledge warning: the condition is "nothing on this list
-# pays", not "you are poor" - found by scanning the tree for a goal whose
-# critical path has a revenue-positive node startable right now, rather
-# than assuming one exists.
-_s_scan = _s_pth2
+# A route with a node that earns more than it costs to keep must NOT get the
+# all-knowledge warning: the condition is "nothing on this list pays its way",
+# not "you are poor" - the goal is found by scanning the tree for a route that
+# holds a revenue-bearing node startable right now, rather than assuming one.
+_s_scan = sim(civ="rome_100ad")
+_earning_node = next((node_id for node_id in NODES if NODES[node_id]["rev"] > 0 and _s_scan.can_start(node_id)), None)
 _earning_goal = next((goal_candidate for goal_candidate in NODES
-                     if any(NODES[node_id]["rev"] > 0 and _s_scan.can_start(node_id)
-                            for node_id in S.closure(NODES, goal_candidate))), None)
-check("a goal with a real earner on its startable-today route exists to "
+                     if _earning_node in S.closure(NODES, goal_candidate)), None)
+check("a goal with a revenue-bearing startable node on its route exists to "
       "test the negative case against",
-      _earning_goal is not None, _earning_goal)
+      _earning_goal is not None, (_earning_node, _earning_goal))
 if _earning_goal:
-    _rp_eg = S._agent_dispatch(_s_pth2, NODES,
+    # At the real opening no startable node yet pays its way (ventures start
+    # small and ramp), so the earner is made by fixing this one node's
+    # earnings above its upkeep on a fresh game.
+    _upkeep_of_earner = _s_scan.venture_upkeep_quote(_earning_node)["now"]
+    _s_scan.venture_real_earnings = lambda node_id: (
+        _upkeep_of_earner * 2 + 1.0 if node_id == _earning_node else 0.0)
+    _rp_eg = S._agent_dispatch(_s_scan, NODES,
                                {"cmd": "path", "id": _earning_goal})
     check("...and that route gets no 'pays for nothing' warning",
           "this_route_pays_for_nothing" not in _rp_eg,
@@ -168,7 +194,7 @@ if _earning_goal:
 # exact number the England playtester needed and never had before losing
 # 24 years to debt over it.
 _s_comb = sim(civ="rome_100ad", capital=1.0)
-_rp_comb = S._agent_dispatch(_s_comb, NODES, {"cmd": "path", "id": GOAL})
+_rp_comb = S._agent_dispatch(_s_comb, NODES, {"cmd": "path", "id": _KNOWLEDGE_ONLY_GOAL})
 check("set-up: a household with almost nothing to spend, tested against "
       "the same all-knowledge opening route",
       bool(_rp_comb.get("startable_today_toward_this")), _rp_comb)

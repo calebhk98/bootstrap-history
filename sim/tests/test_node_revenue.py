@@ -99,12 +99,21 @@ class NodeRevenue(unittest.TestCase):
         node_revenue.apply_revenue([copy_of], self.goods, self.wages, self.rate)
         self.assertEqual(copy_of["rev_hours"], 0.0)
 
-    def test_market_factor_follows_the_output_and_input_price_ratios(self):
+    def test_market_factor_follows_the_output_and_input_prices_over_their_long_run_costs(self):
         node = {"_output_per_year": {"a": 10.0}, "_purchases_per_year": {"b": 5.0}}
         goods = {"a": 2.0, "b": 2.0}
-        # net at long-run prices: 20 - 10 = 10; at a=2x, b=1x: 40 - 10 = 30
-        factor = node_revenue_market.market_factor(node, goods, {"a": 2.0}.get)
+        # net at long-run costs: 20 - 10 = 10; at prices a=4, b=2: 40 - 10 = 30
+        factor = node_revenue_market.market_factor(node, goods, {"a": 4.0, "b": 2.0}.get)
         self.assertAlmostEqual(factor, 3.0)
+
+    def test_a_material_nothing_prices_is_valued_at_its_long_run_cost(self):
+        node = {"_output_per_year": {"a": 10.0}, "_purchases_per_year": {"b": 5.0}}
+        goods = {"a": 2.0, "b": 2.0}
+        self.assertAlmostEqual(node_revenue_market.market_factor(node, goods, {"a": 4.0}.get), 3.0)
+
+    def test_a_material_with_no_long_run_cost_adds_nothing_either_year(self):
+        node = {"_output_per_year": {"a": 10.0, "free": 99.0}, "_purchases_per_year": {}}
+        self.assertAlmostEqual(node_revenue_market.market_factor(node, {"a": 2.0}, {"a": 4.0, "free": 50.0}.get), 2.0)
 
     def test_market_factor_is_one_for_authored_nodes_and_flat_markets(self):
         self.assertEqual(node_revenue_market.market_factor({}, {}, lambda material: 2.0), 1.0)

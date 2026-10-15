@@ -8,10 +8,10 @@ these handlers back from here (see dispatch.py's own docstring for why
 these live in a separate file).
 """
 
+from sim.refusal import Refusal
 import sim.engine.ui_port as ui_port
 from sim.engine.ui_port import area_text, mass_per_area_text, mass_rate_text, money_text
 from .command_registry import command
-from .explain_once import already_explained
 from .util import _qty
 from .quantity_units import read_quantity, read_target_quantity
 from .buy_targets import canonical_target, target_names, usage_lines
@@ -126,8 +126,8 @@ def _buy_mine(sim, cmd, quantity):
     # asks a node to buy). The membership check lives in economy.py's
     # mineable(); this file calls it rather than keeping its own list.
     if not sim.mineable(mat):
-        return {"ok": False, "error": "material must be one of: "
-                                      + sim.mine_catalog_hint()}
+        return {"ok": False, "error": Refusal("unknown_material", "material must be one of: " + sim.mine_catalog_hint(),
+                                              choices=sorted(sim.MINE_OPEX_MATERIALS))}
     # partial=False: a mine you ask for by name must be bought in full or
     # not at all, never spend every denarius you have and hand back a
     # fraction without asking.
@@ -294,9 +294,7 @@ def _cmd_money(sim, nodes, cmd, ended):
     _prepaid = min(sim.living_cost(), sim.wages_prepaid)
     fixed = (sim.upkeep() + sim.living_cost() - _prepaid
              + sim.mine_operating_cost())
-    _ramp, _prac = sim.still_ramping(), sim.practice_note()
-    if _prac and already_explained(sim, "practice", cmd):
-        _prac = sim.practice_note(brief=True)
+    _ramp = sim.still_ramping()
     # A PLAYER MUST SEE IT (data/review/COMMODITY_DYNAMISM.md):
     # material_price_factor() responds for every material a node
     # buys, not just the 9 curated commodities, so what it
@@ -318,7 +316,6 @@ def _cmd_money(sim, nodes, cmd, ended):
             **({"wage_work_last_year": sim.state.household.wage_work_last_year}
                if sim.state.household.wage_work_last_year else {}),
             **({"still_building_up_custom": _ramp} if _ramp else {}),
-            **({"about_your_own_practice": _prac} if _prac else {}),
             **({"materials_costing_you_a_premium": _mat_mkt} if _mat_mkt else {}),
             "what_it_costs_you": {
                 "upkeep_of_what_you_built": round(sim.upkeep(), 1),

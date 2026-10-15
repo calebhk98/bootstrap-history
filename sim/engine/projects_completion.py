@@ -15,6 +15,7 @@ These are methods of Sim; they are a mixin only so that they can live in a
 file of their own.
 """
 from sim.constants import declare
+from sim.refusal import LogLine
 from .data import closure
 from .failure_cause import failure_cause
 from .failure_diagnosis import failure_teaches, note_failure
@@ -215,35 +216,39 @@ class CompletionMixin:
             _lost = 0.0 if claimed else self.failure_loss(node_id)
             _severity = self.failure_severity(node_id, max(0.0, _lost), self.funding_capacity())
             # What the purse and the credit line left cannot bear is not forgiven: it is added to what the project still costs, paid through the gated instalments.
-            _borne = min(_lost, max(0.0, household.capital + self.credit_limit()))
+            _borne = self.bearable_part_of(_lost)
             self.pay_edge(edges.EDGE_DESTROYED, _borne, "failure losses")
             if not claimed:
                 for _loss_line in self.lose_what_was_risked(node_id):
-                    household.log.append((scenario.year, "%s: %s" % (node["name"], _loss_line)))
+                    household.log.append((scenario.year, LogLine("failure_loss", "%s: %s" % (node["name"], _loss_line))))
             projects.active[node_id]["cost_left"] = (projects.active[node_id].get("cost_left") or 0.0) + (_lost - _borne)
             # A failure always announces itself; its size sets how loudly.
             _next_risk = self.effective_risk(node_id)
             _banked = projects.active[node_id]["yrs"]
             if claimed:
-                household.log.append((scenario.year,
+                household.log.append((scenario.year, LogLine(
+                    "project_failed",
                     "%s %s: the claimant's attempt failed. The prize you posted holds "
                     "and they try again (attempt %d, chance of failing %d%%); nothing "
                     "more falls on you."
                     % (FAILED_PREFIX, node["name"],
-                       projects.failed_attempts[node_id] + 1, round(_next_risk * 100))))
+                       projects.failed_attempts[node_id] + 1, round(_next_risk * 100)),
+                    project=node_id, severity="claimed", lost=0.0)))
                 return
             if _severity == "minor":
-                household.log.append((scenario.year,
+                household.log.append((scenario.year, LogLine(
+                    "project_failed",
                     "%s %s %s: lost %s, %d%% of the hours to redo; "
                     "attempt %d, next attempt's live chance of failing %d%%."
                     % (FAILED_PREFIX, node["name"], MINOR_MARK,
                        money_text(max(0.0, _lost), self, grouped=True),
                        round(self.FAILURE_RESET_SHARE * 100),
                        projects.failed_attempts[node_id] + 1,
-                       round(_next_risk * 100)) + (" " + _diagnosis if _diagnosis else "")))
+                       round(_next_risk * 100)) + (" " + _diagnosis if _diagnosis else ""),
+                    project=node_id, severity="minor", lost=max(0.0, _lost))))
                 return
-            household.log.append((scenario.year,
-                             FAILED_PREFIX + " %s: it did not work. What failed: %s. "
+            household.log.append((scenario.year, LogLine(
+                             "project_failed", FAILED_PREFIX + " %s: it did not work. What failed: %s. "
                              "%d%% of the hours "
                              "are to do again (%s of your own) and %s is gone. "
                              "Attempt %d. %s the next attempt's live chance of failing "
@@ -260,7 +265,8 @@ class CompletionMixin:
                                 if failure_teaches(self, node_id) else "Nothing was learned, so",
                                 round(_next_risk * 100),
                                 round(_risk_this_attempt * 100),
-                                _banked, _yrs_before, _diagnosis)))
+                                _banked, _yrs_before, _diagnosis),
+                             project=node_id, severity="major", lost=max(0.0, _lost))))
             return
         goal_before = self.goal_snapshot()
         del projects.active[node_id]
@@ -319,22 +325,22 @@ class CompletionMixin:
             benefit = self.NOT_OPERATING_BENEFIT.get(node_id)
             held = permanent_parts(node, self._tech_effects.get(node_id) or {})
             household.log.append((scenario.year,
-                "completed: %s. STATUS: CLOSED / NOT OPERATING. %s%s Open it "
+                LogLine("project_completed", "completed: %s. STATUS: CLOSED / NOT OPERATING. %s%s Open it "
                 "('open %s') to begin and to start paying upkeep."
                 % (node["name"],
                    ("In force already, open or not: %s. " % "; ".join(held)) if held else "",
                    ("Not in effect until open: %s." % benefit) if benefit
-                   else "Nothing is earning yet.", node_id)))
+                   else "Nothing is earning yet.", node_id))))
             shortfall = self.opening_shortfall(node_id)
             if shortfall:
                 household.log.append((scenario.year,
-                    "with today's staff you could not open it: it needs %.1f "
+                    LogLine("opening_shortfall", "with today's staff you could not open it: it needs %.1f "
                     "scholars and %.1f craftsmen to supervise, and %.1f and %.1f "
-                    "are free." % shortfall))
+                    "are free." % shortfall)))
         else:
-            household.log.append((scenario.year, "completed: " + node["name"]))
+            household.log.append((scenario.year, LogLine("project_completed", "completed: " + node["name"])))
         for line in self.goal_effect_lines(node_id, goal_before):
-            household.log.append((scenario.year, line))
+            household.log.append((scenario.year, LogLine("goal_effect", line)))
         self.record_goal_reached(node_id, scenario.year)
 
     # -- shocks -------------------------------------------------------------

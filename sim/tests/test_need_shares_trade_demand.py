@@ -199,6 +199,10 @@ class TradesWithoutANamedNeedTests(unittest.TestCase):
 class OpeningDurablesTests(unittest.TestCase):
     """Households open holding the durables they keep in use, so the opening demand for a durable is its
     replacement, not the whole stock built at once (which staffed the opening with millions of masons)."""
+    def setUp(self):
+        from sim.tests import economy_fixture
+        economy_fixture.households_with_a_surplus(self)
+
 
     def _opening_demand(self, service_life):
         from sim.economy import opening

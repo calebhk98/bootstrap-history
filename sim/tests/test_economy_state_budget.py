@@ -5,8 +5,10 @@ One England economy is opened once (the opening spins it up); each scenario resu
 saved record, which is also the save round trip."""
 import dataclasses
 import math
+import os
 import random
 import unittest
+from unittest import mock
 
 from sim import simulator
 from sim.economy.economy import Economy
@@ -17,19 +19,23 @@ from sim.economy.state_policy import StatePolicy
 OPENED = {}
 
 
-def opened():
-    if not OPENED:
+def opened(full_length=False):
+    """The opened England economy: on the suite's short spin-up, or on the declared-length one a player's game opens."""
+    if full_length not in OPENED:
         tree, _prices, nodes, _wages, _goods = simulator.load()
         goal = tree["meta"]["goal_node"]
         _levels, order, _blocked = simulator.load_strategy("recommended", nodes, goal)
-        game = simulator.Sim(nodes, order, random.Random(1), events=True, manual=False,
-                             civ=simulator.load_civ("england_1300"))
-        OPENED["economy"] = game.economy.agent.economy()
-    return OPENED["economy"]
+        with mock.patch.dict(os.environ):
+            if full_length:
+                os.environ.pop("ROME_SPIN_UP_YEARS", None)
+            game = simulator.Sim(nodes, order, random.Random(1), events=True, manual=False,
+                                 civ=simulator.load_civ("england_1300"))
+        OPENED[full_length] = game.economy.agent.economy()
+    return OPENED[full_length]
 
 
-def resumed(policy=None, fiat=False) -> Economy:
-    base = opened()
+def resumed(policy=None, fiat=False, full_length=False) -> Economy:
+    base = opened(full_length)
     setup = dataclasses.replace(base.setup, state_policy=policy or base.setup.state_policy)
     record = EconomyRecord.from_record(base.record.to_record())
     if fiat:
@@ -55,7 +61,9 @@ def run(economy: Economy, years: int):
 
 class StateBudgetTests(unittest.TestCase):
     def test_a_balanced_budget_leaves_the_states_share_of_the_coin_steady(self):
-        economy = resumed()
+        # on the declared-length opening: the suite's short spin-up leaves the money supply still draining and the
+        # state's holdings still rising against it (Complaint 526), so a share measured there moves for the opening's sake
+        economy = resumed(full_length=True)
         before = economy.record.book.balance(economy.setup.state_agent, economy.setup.currency_id) \
             / economy.record.book.money_supply(economy.setup.currency_id)
         rows = run(economy, 8)

@@ -7,6 +7,7 @@ are three age cohorts stepped each year by the same demography as the home count
 fed by the tile's land in the share its working-age people can hold, as many hectares each as a farm worker holds at
 home. A colony whose people die out is lost.
 """
+from sim.refusal import LogLine
 from sim.agents.api import edges
 from sim.geography.api import settlement, tiles_held
 
@@ -66,8 +67,8 @@ class ColoniesMixin:
         self.state.holdings.colonies.append({
             "tile": tile_id, "founded_year": self.state.scenario.year, "by": node_id,
             "children": 0.0, "working_age": settlers, "elderly": 0.0})
-        household.log.append((self.state.scenario.year, "a colony of %s settlers is founded on %s, outfitted for %s"
-                              % (plain_number(settlers), tile_id, money_text(cost, self, grouped=True))))
+        household.log.append((self.state.scenario.year, LogLine("colony_founded", "a colony of %s settlers is founded on %s, outfitted for %s"
+                              % (plain_number(settlers), tile_id, money_text(cost, self, grouped=True)))))
         return True, "founded a colony on %s with %s settlers for %s" % (
             tile_id, plain_number(settlers), money_text(cost, self, grouped=True))
 
@@ -93,4 +94,5 @@ class ColoniesMixin:
                 if people.total < 1.0:
                     seat.holdings.colonies.remove(colony)
                     if seat_id == self.state.acting_seat:
-                        self.state.household.log.append((year, "the colony on %s has died out" % colony["tile"]))
+                        self.state.household.log.append((year, LogLine(
+                            "colony_died_out", "the colony on %s has died out" % colony["tile"], tile=colony["tile"])))

@@ -4,7 +4,6 @@ import sim.engine.ui_port as ui_port
 import importlib
 import os
 import pkgutil
-import re
 
 from sim.engine.ui_port import money_word, plain_number
 from sim.engine.ui_port import fuzzy_estimates, units
@@ -17,6 +16,9 @@ from .help import _agent_help
 from .nodes import NODE_NAME_NORM, _did_you_mean, _norm_name, _resolve_by_name
 from sim.ui.memory import load_state, save_state
 from .score import victory_report
+from .why_material import material_story
+from sim.refusal import Refusal, cause_of, facts_of
+from .refusal_cause import add_cause, event_codes
 from .seat_address import run_as_seat
 from .state_waiting import _agent_end_reason
 from .state import _agent_state
@@ -25,6 +27,7 @@ from .wave_summary import wave_summary
 from . import step_progress
 from .guidance import delay_kinds, delay_phrase
 from .event_groups import group_disaster_events
+from .event_kinds import stops_a_step
 from .event_severity import tag_events
 from .step_alerts import step_alerts
 from .step_stops import newly_startable_goal, severe_stop_reason
@@ -91,7 +94,11 @@ def _cmd_save(sim, nodes, cmd, ended):
         load_state(sim, path)
         return {"ok": True, "loaded": path, "year": sim.year}
     except Exception as error:
-        return {"ok": False, "error": "could not %s %r: %s" % (command, path, error)}
+        reply = {"ok": False, "error": "could not %s %r: %s" % (command, path, error)}
+        if error.args and cause_of(error.args[0]):
+            reply["cause"] = cause_of(error.args[0])
+            reply["facts"] = facts_of(error.args[0])
+        return reply
 
 
 
@@ -150,6 +157,7 @@ def _cmd_step(sim, nodes, cmd, ended):
     # warning and that field can never disagree about what "idle" means.
     # Non-blocking: it says so and proceeds, it does not refuse the step.
     multi_year_hours_warning = None
+    multi_year_hours_waiting_on = None
     lone_dependencies = sim.labour.sole_supervisors() if years > 1 else []
     if years > 1 and ui_port.settings.load_config().get("multi_year_step_warning", True):
         _pre_state = _agent_state_training_and_hours(sim, _agent_state_active_projects(sim, nodes), False)
@@ -188,6 +196,7 @@ def _cmd_step(sim, nodes, cmd, ended):
                            _pre_state.get("founder_hours_available") or 0.0),
                        nodes[_could_start]["name"], years, years,
                        delay_phrase(delay_kinds(sim, nodes))))
+                multi_year_hours_waiting_on = delay_kinds(sim, nodes)
     # LOST, not only completed: a game whose only score is what you have
     # built has to report subtraction at least as loudly as addition, so
     # anything that drops out of `done` during a multi-year step has to be
@@ -205,23 +214,12 @@ def _cmd_step(sim, nodes, cmd, ended):
     # own death: a `step 60` that lands on it must not run on past it far
     # enough to also trip the no-successor catastrophe before the player
     # gets a turn to react.
-    # MATCHED CASE-INSENSITIVELY BELOW, because this is prose and prose
-    # gets rewritten: a case-sensitive match against one exact
-    # capitalisation would silently stop matching the moment that prose is
-    # edited, costing the step its stop and the reply its death field.
-    # CLOSE TO THE LIMIT BELONGS IN THE STOP-MARKER TUPLE TOO: it is the
-    # one event that still leaves a player options, so it is the one this
-    # most needs to interrupt for - the fatal events need it least, since
-    # there is nothing left to choose by the time they fire. Leaving it
-    # out would let a batched step run straight past "stop a project...
-    # while it is still your choice" and only break years later on the
-    # fatal CREDIT EXHAUSTED that warning exists to prevent.
-    _STEP_STOP_MARKERS = ("CREDIT EXHAUSTED", "FOUNDER DIES",
-                          "CLOSE TO THE LIMIT")
+    # Which kinds of line stop a step is listed in event_kinds.py: the warning that still leaves options (close
+    # to the limit) is among them, since the fatal ones leave nothing to choose.
     completed, lost, events = [], [], []
     disasters = []
     founder_died_this_step = None
-    stopped_early = None
+    stopped_early = stopped_kind = None
     end_year = sim.end_year
     ran = 0
     goal_before = sim.goal_snapshot()
@@ -303,10 +301,9 @@ def _cmd_step(sim, nodes, cmd, ended):
         if getattr(sim, "disaster_this_year", None):
             disasters.append(sim.disaster_this_year)
         for year, message in _this_year:
-            events.append({"year": year, "message": message})
-            if "founder dies" in message.lower():
-                _age = re.search(r"aged about (\d+)", message)
-                _age_n = int(_age.group(1)) if _age else None
+            events.append({"year": year, "message": message, **event_codes(message)})
+            if cause_of(message) == "founder_dies":
+                _age_n = facts_of(message).get("aged")
                 founder_died_this_step = {"year": year, "aged_about": _age_n}
                 # SAVED, NOT ONLY LOGGED - see _founder_death_info's own
                 # comment on why the log alone cannot be trusted to
@@ -321,17 +318,18 @@ def _cmd_step(sim, nodes, cmd, ended):
                              "for: you reached it. Step again when you "
                              "have had a look around."
                              % (ran, years))
+            stopped_kind = "goal_reached"
             break
-        if ran < years and any(marker.lower() in message.lower() for _, message in _this_year
-                               for marker in _STEP_STOP_MARKERS):
+        if ran < years and any(stops_a_step(message) for _, message in _this_year):
             stopped_early = ("stopped after %d of the %d years you asked "
                              "for: something happened that you warned "
                              "yourself about and should see before more "
                              "time passes. Step again when you are ready."
                              % (ran, years))
+            stopped_kind = "warned_event"
             break
         severe_reason = severe_stop_reason(
-            [{"message": message} for _, message in _this_year],
+            [{"message": message, **event_codes(message)} for _, message in _this_year],
             [nodes[node_id]["name"] for node_id in _snap["concerns_closed"]
              if sim.staff_closure_age(node_id) is not None],
             sorted(set(stalled_projects(sim)) - stalled_before),
@@ -339,6 +337,7 @@ def _cmd_step(sim, nodes, cmd, ended):
         if ran < years and severe_reason:
             stopped_early = ("stopped after %d of the %d years you asked for: %s. "
                              "Step again when you have had a look." % (ran, years, severe_reason))
+            stopped_kind = cause_of(severe_reason)
             break
     out = dict(ok=True, completed=completed, lost=lost, events=events)
     if programme_log:
@@ -373,8 +372,10 @@ def _cmd_step(sim, nodes, cmd, ended):
         out["the_founder_died_this_step"] = founder_died_this_step
     if stopped_early:
         out["stopped_early"] = stopped_early
+        out["stopped_kind"] = stopped_kind
     if multi_year_hours_warning:
         out["multi_year_hours_warning"] = multi_year_hours_warning
+        out["multi_year_hours_waiting_on"] = multi_year_hours_waiting_on
     out.update(_agent_state(sim, nodes))
     out["state_view"] = "short"
     return out
@@ -428,7 +429,7 @@ def _agent_dispatch(sim, nodes, cmd):
 
 
 def _agent_reply(sim, nodes, cmd):
-    _out = _agent_dispatch_inner(sim, nodes, cmd)
+    _out = add_cause(_agent_dispatch_inner(sim, nodes, cmd))
     if sim.fuzzy_estimates and isinstance(cmd, dict):
         _entry = command_registry.resolve(cmd.get("cmd") if isinstance(cmd.get("cmd"), str) else "")
         _out = fuzzy_estimates.fuzz_reply(sim, _entry["name"] if _entry else None, cmd, _out)
@@ -488,12 +489,13 @@ def _agent_dispatch_inner(sim, nodes, cmd):
         elif len(_name_cands) > 1:
             _name_cands = sorted(_name_cands, key=lambda k: (nodes[k]["name"], k))
             return {"ok": False,
-                    "error": ("more than one thing is called that; say which "
-                              "by id: %s%s"
-                              % (", ".join("%s (%s)" % (node_id, nodes[node_id]["name"])
-                                           for node_id in _name_cands[:10]),
-                                 " and %d more" % (len(_name_cands) - 10)
-                                 if len(_name_cands) > 10 else ""))}
+                    "error": Refusal("ambiguous_name", "more than one thing is called that; say which "
+                                     "by id: %s%s"
+                                     % (", ".join("%s (%s)" % (node_id, nodes[node_id]["name"])
+                                                  for node_id in _name_cands[:10]),
+                                        " and %d more" % (len(_name_cands) - 10)
+                                        if len(_name_cands) > 10 else ""),
+                                     choices=_name_cands)}
         # Otherwise: no match by name either. Fall through with cmd["id"]
         # untouched, so the ordinary unknown-id handling further down - and
         # the fog guard immediately below it - answer it exactly as they
@@ -526,7 +528,10 @@ def _agent_dispatch_inner(sim, nodes, cmd):
         # already says only "this needs N other things you have not heard
         # of yet", which is the honest answer.
         _goal_why = (_op == "why" and _node_id == sim.goal)
-        if _op in id_commands() and isinstance(_node_id, str) and not _goal_why and (
+        # a material id is not a tree node: `why` explains it from what the player already sees in `market`
+        _material_why = (_op == "why" and isinstance(_node_id, str) and _node_id not in nodes
+                         and material_story(sim, _node_id) is not None)
+        if _op in id_commands() and isinstance(_node_id, str) and not _goal_why and not _material_why and (
                 _node_id not in nodes or not sim.is_visible(_node_id)):
             if _node_id == sim.goal:
                 # You know its name; you were handed it on arrival. Telling you
@@ -534,10 +539,10 @@ def _agent_dispatch_inner(sim, nodes, cmd):
                 # then guessing you meant fin_contract_law, is absurd on its
                 # face. Saying nothing MORE than "not yet" leaks nothing.
                 return {"ok": False,
-                        "error": "that is what you are aiming at, and you cannot "
-                                 "act on it yet: everything it rests on is still "
-                                 "beyond what you have heard of. 'why %s' is all "
-                                 "of it you can see from here." % _node_id}
+                        "error": Refusal("goal_not_yet_actionable", "that is what you are aiming at, and you cannot "
+                                         "act on it yet: everything it rests on is still "
+                                         "beyond what you have heard of. 'why %s' is all "
+                                         "of it you can see from here." % _node_id)}
             near = _did_you_mean(_node_id, nodes, sim=sim)
             # SAY WHERE THE SUGGESTIONS COME FROM: the suggestions are
             # already filtered through is_visible, so nothing hidden is
@@ -547,11 +552,11 @@ def _agent_dispatch_inner(sim, nodes, cmd):
             # sentence has to say which of the two the suggestions are:
             # things already known.
             return {"ok": False,
-                    "error": "you have never heard of any such thing. You know "
-                             "what you have built and what you could begin next; "
-                             "nothing tells you what lies beyond that.%s"
-                             % ((" Among the things you DO know, did you mean: "
-                                 + ", ".join(near)) if near else "")}
+                    "error": Refusal("never_heard_of", "you have never heard of any such thing. You know "
+                                     "what you have built and what you could begin next; "
+                                     "nothing tells you what lies beyond that.%s"
+                                     % ((" Among the things you DO know, did you mean: "
+                                         + ", ".join(near)) if near else ""), choices=near)}
     command = cmd.get("cmd")
     ended = _agent_end_reason(sim)
 

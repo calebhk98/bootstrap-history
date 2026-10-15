@@ -8,6 +8,7 @@ import weakref
 from types import SimpleNamespace as _Namespace
 
 from sim.engine import ui_port
+from sim.refusal import LogLine, cause_of
 from sim.ui import cli_agent, memory, replay
 from sim.ui.proto import goals_watch, programme, programme_draw, stuck_advice
 from sim.ui.proto.dispatch_programme import _cmd_programme
@@ -17,6 +18,7 @@ from sim.ui.proto.portfolio_scale import page_rows
 from sim.ui.proto.state_log import _agent_log_filter_rows, _is_failure_line, _log_scrub
 
 from .harness import check
+from sim.refusal import LogLine, cause_of
 
 
 class Stub(_Namespace):
@@ -33,7 +35,7 @@ graph = {"goal": {"pre": ["on_route"]}, "on_route": {"pre": []}, "side": {"pre":
 stuck_advice.saving_plan = lambda game: None
 clear = Stub(fog=False, goal="goal", done=set())
 check("a start on the route is not called filler", stuck_advice.filler_note(clear, "on_route", graph) is None)
-check("a start off the route is filler", "filler" in (stuck_advice.filler_note(clear, "side", graph) or ""))
+check("a start off the route is filler", stuck_advice.filler_note(clear, "side", graph) is not None)
 check("no filler claim under fog",
       stuck_advice.filler_note(Stub(fog=True, goal="goal", done=set()), "side", graph) is None)
 
@@ -46,7 +48,7 @@ state = {"target": {"kind": "category", "value": "farming"},
 check("standing draw is cost left over years, finished ids forgotten",
       programme_draw.standing_draw(running, state) == 200.0 and state["started_ids"] == ["a"], state)
 check("capital minus standing draw below the reserve pauses",
-      "reserve" in (programme.pause_reason(running, state) or ""))
+      (programme.pause(running, state) or ("",))[0] == "draw_would_breach_reserve_floor")
 running.capital = 1200.0
 check("enough capital after the standing draw does not pause", programme.pause_reason(running, state) is None)
 command, why = programme._year_rush(running, state)
@@ -65,10 +67,11 @@ check("a changed cap resets what it committed", memory.remembered(owner, "progra
 
 # 3. a note is never a failure line and is never fog-scrubbed
 note = NoteLine("note: the mill was destroyed")
-check("a note saying destroyed is not a failure", not _is_failure_line(note) and _is_failure_line(str(note)))
+destroyed_line = LogLine("prominence_patron_destroyed", "mill destroyed")
+check("a note is not a failure line and a failure kind is", not _is_failure_line(note) and _is_failure_line(destroyed_line))
 check("the failure filter keeps real failures only",
-      [row[1][1] for row in _agent_log_filter_rows([(1, "mill destroyed"), (1, note)], None, None, True)]
-      == ["mill destroyed"])
+      [row[1][1] for row in _agent_log_filter_rows([(1, destroyed_line), (1, note)], None, None, True)]
+      == [destroyed_line])
 check("under fog a note is left as the player wrote it",
       _log_scrub(Stub(fog=True, fog_scrub=lambda text: "X"), note) is note)
 
@@ -84,8 +87,10 @@ check("carried routes accumulate", memory.remembered(fogged, "replay")["carried"
 # 5. portfolio input
 rows = [{"id": "p", "blocker_kind": "calendar", "constraint": "calendar", "pool_rank_this_year": 1}]
 trades = [{"trade": "Stone Mason", "projects_drawing_on_it": ["p"]}]
-check("non-numeric offset is a clean error", "whole numbers" in (page_rows(rows, [], {"offset": "x"})[2] or ""))
-check("non-numeric limit is a clean error", "whole numbers" in (page_rows(rows, [], {"limit": "many"})[2] or ""))
+check("non-numeric offset is a clean error",
+      cause_of(page_rows(rows, [], {"offset": "x"})[2]) == "paging_not_whole_numbers")
+check("non-numeric limit is a clean error",
+      cause_of(page_rows(rows, [], {"limit": "many"})[2]) == "paging_not_whole_numbers")
 check("a JSON group is case-insensitive", page_rows(rows, [], {"group": "CALENDAR"})[1]["total"] == 1)
 group = _parse_portfolio("portfolio", ["stone", "mason"], [], [], False)[0]["group"]
 check("a multi-word trade name matches", page_rows(rows, trades, {"group": group})[1]["total"] == 1, group)

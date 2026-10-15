@@ -16,6 +16,7 @@ check("the audit flags a missing note and a note below the minimum",
           "empty": {"note": ""}, "absent": {}, "brief": {"note": "x" * (_MINIMUM - 1)},
           "long": {"note": "x" * _MINIMUM}}) == ["absent", "brief", "empty"])
 
+# presentation: a line of the audit report
 check("the audit report counts the flagged notes",
       validate_note_quality.report_lines({"a": {"note": "short"}, "b": {"note": "y" * 200}})[0]
       == "NODE NOTES below the teaching minimum: 1 of 2")

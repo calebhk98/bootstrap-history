@@ -5,20 +5,22 @@ DEMOGRAPHIC_EMERGENCY_DROP = 0.10
 MAX_ALERTS = 6
 MAX_ALERT_WIDTH = 110
 
-# (lowercase marker in an event message, label); first match wins per event.
-_ALERT_EVENTS = (
-    ("credit exhausted", "CREDIT EXHAUSTED"),
-    ("close to the limit", "CLOSE TO THE CREDIT LIMIT"),
-    ("in arrears, so closed", "CLOSED FOR ARREARS"),
-    ("creditors took", "CREDITORS TOOK ASSETS"),
-    ("nobody left to keep an eye", "CONCERN UNSTAFFED"),
-    ("treasury is looking at your fortune", "TREASURY WATCHING YOUR FORTUNE"),
-    ("the state has noticed you", "STATE HAS NOTICED YOU"),
-    ("sacked", "SACKED"),
-    ("knowledge lost", "KNOWLEDGE LOST"),
-    ("abandoned", "ABANDONED"),
-    ("bondage", "BONDAGE"),
-)
+# Event kind (sim/refusal.py LogLine) to the label of the alert it raises.
+_ALERT_OF_KIND = {
+    "credit_exhausted": "CREDIT EXHAUSTED",
+    "credit_near_limit": "CLOSE TO THE CREDIT LIMIT",
+    "arrears_closed_concerns": "CLOSED FOR ARREARS",
+    "creditors_took": "CREDITORS TOOK ASSETS",
+    "concerns_closed_unstaffed": "CONCERN UNSTAFFED",
+    "treasury_watching": "TREASURY WATCHING YOUR FORTUNE",
+    "state_noticed": "STATE HAS NOTICED YOU",
+    "site_sacked": "SACKED",
+    "knowledge_lost": "KNOWLEDGE LOST",
+    "project_abandoned": "ABANDONED",
+    "works_abandoned_arrears": "ABANDONED",
+    "project_cannot_go_on": "ABANDONED",
+    "debt_bondage": "BONDAGE",
+}
 
 
 # (alert prefix, severity tier); a lower tier is shown first. Run-ending, sack or regime,
@@ -64,11 +66,9 @@ def step_alerts(events, lost, closed_concerns, founder_died, goal_year, stopped_
         alerts.append("POPULATION %+.0f%% in the last year" % (100 * population_change))
     seen = {}
     for event in events:
-        lowered = event["message"].lower()
-        for marker, label in _ALERT_EVENTS:
-            if marker in lowered:
-                seen.setdefault(label, []).append(event)
-                break
+        label = _ALERT_OF_KIND.get(event.get("event_kind"))
+        if label:
+            seen.setdefault(label, []).append(event)
     for label, matches in seen.items():
         years = sorted({match["year"] for match in matches})
         extra = " (%d times, %s to %s)" % (len(matches), years[0], years[-1]) if len(matches) > 1 else ""

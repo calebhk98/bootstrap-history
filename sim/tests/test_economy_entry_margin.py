@@ -60,6 +60,10 @@ def variety_setup():
 
 
 class MarketTests(unittest.TestCase):
+    def setUp(self):
+        from sim.tests import economy_fixture
+        economy_fixture.households_with_a_surplus(self)
+
     def _shrunk(self, setup, recipe_id, share):
         economy = Economy(setup)
         for producer_id, producer in list(economy.record.producers.items()):

@@ -15,6 +15,7 @@ and switched back on.
 These are methods of Sim; they are a mixin only so that they can live in a
 file of their own. Behaviour is unchanged and verified byte-identical.
 """
+from sim.refusal import LogLine
 from sim.constants import declare
 from . import cause_book, category_traits
 from .units_prose import money_text, per_year
@@ -99,18 +100,37 @@ class StaffingMixin:
             self.close_work(node_id, self.CLOSED_FOR_STAFF, year)
         if closed:
             self.record_staffing_closures(len(closed), shortfalls)
-            household.log.append((year, "nobody left to keep an eye on %d concern%s (short of %s), so "
-                                 "%s closed; %d now shut for want of staff after this "
-                                 "year's reopenings. You still know how; reopen with "
-                                 "'open' once you have the people. The premises "
-                                 "and the stock stand for a few years yet, so "
-                                 "reopening soon costs a tenth of what opening did. %s"
-                             % (len(closed), "" if len(closed) == 1 else "s",
-                                self.staffing_shortfall_words(shortfalls),
-                                ", ".join(sorted(closed)[:4])
-                                + (" and others" if len(closed) > 4 else ""),
-                                self.staffing_shut_count(), self.STAFFING_REMEDIES)))
+            household.log.append((year, LogLine(
+                "concerns_closed_unstaffed", "nobody left to keep an eye on %d concern%s (short of %s), so "
+                "%s closed; %d now shut for want of staff after this "
+                "year's reopenings. You still know how; reopen with "
+                "'open' once you have the people. The premises "
+                "and the stock stand for a few years yet, so "
+                "reopening soon costs a tenth of what opening did. %s"
+                % (len(closed), "" if len(closed) == 1 else "s",
+                   self.staffing_shortfall_words(shortfalls),
+                   ", ".join(sorted(closed)[:4])
+                   + (" and others" if len(closed) > 4 else ""),
+                   self.staffing_shut_count(), self.STAFFING_REMEDIES),
+                concerns=sorted(closed))))
         return closed
+
+    def staffing_closed_hand_shortfall(self):
+        """(scholars, craftsmen) the household lacks to reopen every concern shut for want of staff.
+
+        The same need `staffing_open_refusal` reads (a concern's hands against `venture_staff_free`),
+        summed over the staffing closures; hires aimed at it are what `reopen_restaffed_ventures` then uses."""
+        projects = self.state.projects
+        needed_scholars, needed_craftsmen = 0.0, 0.0
+        for node_id in sorted(projects.closures):
+            if (self.staff_closure_age(node_id) is None or node_id not in projects.done
+                    or node_id not in self.nodes):
+                continue
+            held = self._staffing_draw_of(node_id, self.reopen_units(node_id))
+            needed_scholars += held.get("scholars", 0.0)
+            needed_craftsmen += held.get("craftsmen", 0.0)
+        free_scholars, free_craftsmen = self.venture_staff_free()
+        return max(0.0, needed_scholars - free_scholars), max(0.0, needed_craftsmen - free_craftsmen)
 
     def reopen_restaffed_ventures(self, year):
         """Bring back what the staffing rule shut, the moment you have the
@@ -155,14 +175,14 @@ class StaffingMixin:
                 reopened.append(node_id)
         if reopened:
             self.record_staffing_reopenings(len(reopened))
-            household.log.append((year, "you have the people again: %s reopen%s on "
+            household.log.append((year, LogLine("concerns_reopened", "you have the people again: %s reopen%s on "
                                  "their own, now that somebody is free to "
                                  "watch %s; %d still shut for want of staff"
                              % (", ".join(sorted(reopened)[:4])
                                 + (" and others" if len(reopened) > 4 else ""),
                                 "" if len(reopened) == 1 else "s",
                                 "it" if len(reopened) == 1 else "them",
-                                self.staffing_shut_count())))
+                                self.staffing_shut_count()))))
         return reopened
 
     # ---- A WARNING BEFORE THE DOOR SHUTS, NOT AN AUTOMATION THAT OPENS IT --
@@ -717,11 +737,11 @@ class StaffingMixin:
                 said[node_id] = scenario_year
                 household._said_autoopen = said
                 household.log.append((scenario_year,
-                                 "%s would earn %s a year against %s of upkeep and "
+                                 LogLine("concern_unprofitable", "%s would earn %s a year against %s of upkeep and "
                                  "is still shut: %s"
                                  % (node_id, money_text(self.nodes[node_id]["rev"], self, grouped=True),
                                     money_text(self.nodes[node_id]["up"], self, grouped=True),
-                                    why or "something is in the way")))
+                                    why or "something is in the way"))))
 
     def mothball_work(self, node_id):
         """Shut a completed work down to stop paying its upkeep.
@@ -874,7 +894,8 @@ class StaffingMixin:
         if self.is_venture(node_id):
             projects.operating.add(node_id)
             cause_book.record_concern(self, "opening", node_id, "restored")
-        return True, ("%s back in service for %s%s"
-                      % (node_id, money_text(fee, self, grouped=True),
-                         (" (%s)" % _grace_note) if _grace_note else ""))
+        return True, LogLine("restored", "%s back in service for %s%s"
+                             % (node_id, money_text(fee, self, grouped=True),
+                                (" (%s)" % _grace_note) if _grace_note else ""),
+                             work=node_id, fee=fee, closure_age=_age, discounted=bool(_in_grace))
 

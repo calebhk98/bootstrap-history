@@ -11,6 +11,7 @@ scandal rises. Not caught, the stock is delivered and the partner has that much 
 import hashlib
 
 from sim.constants import declare
+from sim.refusal import Refusal, cause_of
 from sim.world import stock_dynamics
 
 from .data import load_civ
@@ -47,10 +48,11 @@ class LivingStockSmugglingMixin:
         {"ok": True, partner, units, tonnes, cost, chance_caught, arrives_units}, else {"ok": False, "error"}."""
         units = float(units)
         if units <= 0.0:
-            return {"ok": False, "error": "take a positive amount of %s" % material}
+            return {"ok": False, "cause": "amount_not_positive", "error": "take a positive amount of %s" % material}
         trading = self.partner_countries()
         if partner and partner not in trading:
-            return {"ok": False, "error": "%s is not trading with you this year; those that are: %s"
+            return {"ok": False, "cause": "partner_not_trading",
+                    "error": "%s is not trading with you this year; those that are: %s"
                     % (partner, ", ".join(trading) or "none")}
         reasons = []
         for candidate in ([partner] if partner else trading):
@@ -60,12 +62,13 @@ class LivingStockSmugglingMixin:
             if reached:
                 reasons.append(reached)
             elif refusal is None:
-                reasons.append("%s sells %s; buy it" % (candidate, material))
+                reasons.append(Refusal("partner_sells", "%s sells %s; buy it" % (candidate, material)))
             elif holding <= 0.0 or units > holding + 1e-9:
-                reasons.append("%s holds only %.6g %s" % (candidate, holding, material))
+                reasons.append(Refusal("partner_holds_less", "%s holds only %.6g %s" % (candidate, holding, material)))
             else:
                 return self._smuggle_terms(material, units, candidate)
-        return {"ok": False, "error": (reasons or ["no partner you trade with holds %s" % material])[0]}
+        reason = (reasons or [Refusal("no_partner_holds", "no partner you trade with holds %s" % material)])[0]
+        return {"ok": False, "cause": cause_of(reason), "error": reason}
 
     def _smuggle_terms(self, material, units, civilization_id):
         facts = self._foreign_economy_facts(civilization_id)

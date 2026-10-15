@@ -1,15 +1,15 @@
-"""Revenue, practices, workshops and the institutions that run them.
+"""Revenue, the founder's job, workshops and the institutions that run them.
 
 Every method here answers "what does the household actually take in this
 year, and what does it cost to keep that running", as opposed to
 economy_goods.py's question of what a unit of output sells for once
 made. Covers: state_funding() (an imperial patron's direct funding) and
 venture_ramp() (how a concern's takings ramp up after it opens);
-practice_attention(), revenue_capacity(), revenue() and
+revenue_capacity(), revenue() and
 revenue_sources() (what a household earns, itemised);
 workshop_output()/capability_factor() (what a staffed workshop makes,
-and how accumulated method multiplies it); still_ramping(),
-practice_note() and the practice/candidate-set caches
+and how accumulated method multiplies it); still_ramping(), held_trade(),
+founder_wage_income() and the held-skill/candidate-set caches
 (_practisable/_practice_set/_revenue_upkeep_candidates) revenue() and
 upkeep() both share; and upkeep()/institution_upkeep()/
 institution_places() (what it costs to keep a concern or institution
@@ -21,8 +21,9 @@ grouping evidence, and for why this lives in a separate file.
 """
 from .data import trade_family
 from sim.constants import declare
-from . import category_traits, money_units, node_revenue_market
+from . import category_traits, money_units, node_revenue_market, node_upkeep
 from .readable import readable
+from sim.world import plant_figures
 from .industry_depth import RAMP_SHARE_AT_FULL_DEPTH
 
 
@@ -91,39 +92,12 @@ class ProductionMixin:
             started = projects.done_year.get(node_id, scenario.year)
         age = scenario.year - started
         # An established industry (anyone's worker-years running it) finds its custom sooner.
-        ramp_years = self.cfg["revenue_ramp_years"] * (
-            1.0 - (1.0 - RAMP_SHARE_AT_FULL_DEPTH) * self.industry_depth(node_id))
-        return min(1.0, (age + 1) / ramp_years)
-
-    def practice_attention(self):
-        """How much of your practice you are actually there to run.
-
-        The income from practising medicine is your own two hands: it is the
-        cover identity the guide tells you to adopt, and selling those same
-        hours as a labourer while still collecting the full fee from a
-        surgery you are not attending would count the same hours twice.
-        That is an accounting error, not a balance choice.
-
-        Only hours sold for WAGES count against it. Hours that go into your own
-        projects do not: a physician who spends his evenings grinding lenses is
-        still a physician in the morning, and the whole model assumes you build
-        while your practice runs. Whether THAT should compete too is a real
-        question and a much larger one; this is the half that is simply wrong.
-        """
-        # A DEAD PHYSICIAN HAS NO PRACTICE: this is your own two hands, so it
-        # must go to zero the moment the founder is gone. What you built
-        # outlives you; what you personally did does not.
-        if not self.state.founder.founder_alive:
-            return 0.0
-        pool = self.labour.director_pool()
-        if pool <= 0:
-            return 1.0
-        sold = min(pool, self.state.household.wage_hours_this_year)
-        return max(0.0, 1.0 - sold / pool)
+        return plant_figures.ramp(age, self.cfg["revenue_ramp_years"], self.industry_depth(node_id),
+                                  RAMP_SHARE_AT_FULL_DEPTH)
 
     def revenue_capacity(self):
         """What you would earn in an ordinary year, with your own hands on your
-        own work. Used where a swing in ONE year should not count - a lender
+        own work, none of this year's hours sold on request. Used where a swing in ONE year should not count - a lender
         does not cut your line because you took a job this year."""
         household = self.state.household
         _sold = household.wage_hours_this_year
@@ -146,14 +120,16 @@ class ProductionMixin:
           - self.household._done_ver: changes whenever self.household.done or granted is mutated
           - self.household._workforce_ver: changes whenever self.household.employees is mutated
           - self.household.freedmen, self.household.slaves: workforce headcount
-          - self.household.wage_hours_this_year: practice attention (e.g. temporary 0.0 in revenue_capacity)
-          - self.household.directors_extra, bondage_years_left: the own hours the practice is paid for
+          - self.household.wage_hours_this_year: hours sold on request (e.g. temporary 0.0 in revenue_capacity)
+          - director_hours_committed(): teaching, moving and supervising hours the standing job does not sell
+          - labour.wage_signature(): recent hiring that moves the market wage the standing job is paid
+          - self.household.directors_extra, bondage_years_left: the own hours the standing job sells
           - self.household.farm_hectares: household farmland staples affecting food price ratio
           - self.household.gov: governance quality affecting state funding
           - self.household._inst_units_ver: scalable institution units
           - self.output_factor: hazard/war output scaling
           - self.reputation: standing affecting state funding
-          - self.founder_alive: boolean for physician practice attention
+          - self.founder_alive: a dead founder sells no hours
         Invalidated by: Any change to any element in the composite version key tuple.
         Nested mutation concerns: household.employees wrapped in _InvalidatingDict (flat dict); workforce counts tracked in key.
         Serialized: no
@@ -174,6 +150,8 @@ class ProductionMixin:
             self.household.workforce_version,
             self.household.institution_units_version,
             household.wage_hours_this_year,
+            self.labour.director_hours_committed(),
+            self.labour.wage_signature(),
             household.directors_extra,
             household.bondage_years_left,
             getattr(holdings, "farm_hectares", 0.0) or 0.0,
@@ -225,7 +203,7 @@ class ProductionMixin:
             if not practice and node_id not in operating:
                 continue
             node = self.nodes[node_id]
-            # a practised skill earns through the founder's own hours (practice_income), not through the node
+            # a held skill earns through the founder's own hours (founder_wage_income), not through the node
             if node["rev"] and not practice:
                 total_revenue += self.concern_revenue(node_id)
         # THERE IS ONLY SO MUCH MARKET. Uncapped, this compounds: every venture
@@ -241,7 +219,7 @@ class ProductionMixin:
         # to work: a staff with no workshop is an expense, which is exactly why
         # workshop_first matters and why it is cheap.
         total_revenue += self.workshop_output()
-        total_revenue += self.practice_income()
+        total_revenue += self.founder_wage_income()
         economy = self.state.economy
         gross = total_revenue
         ceiling = self.REVENUE_CEILING_PER_POP_SCALE * self.pop_scale \
@@ -396,7 +374,7 @@ class ProductionMixin:
             return 1.0
         return node_revenue_market.market_factor(
             {"_output_per_year": baskets.outputs, "_purchases_per_year": baskets.purchases},
-            self._material_prices(), self.market_price_ratio)
+            self._material_prices(), self.goods_market.home_unit_price)
 
     def concern_takings(self, node_id, ramp):
         """Yearly takings of one concern at a given ramp, before market saturation: its loaded figure
@@ -422,31 +400,28 @@ class ProductionMixin:
                 rows[node_id] = round(amount, 1)
         return rows
 
-    def practice_trade(self):
-        """The trade the founder's own practice is paid as: scholar when a practised skill asks for
-        scholars, else artisan; None when no skill is practised."""
-        practice = self._practice_set()
-        if not practice:
+    def held_trade(self):
+        """The trade the founder sells hours in: scholar when a skill the founder holds asks for
+        scholars, else artisan; None when the founder holds no skill."""
+        held = self._practice_set()
+        if not held:
             return None
-        return "scholar" if any(self.nodes[node_id]["sch"] > 0 for node_id in practice) else "artisan"
+        return "scholar" if any(self.nodes[node_id]["sch"] > 0 for node_id in held) else "artisan"
 
-    def practice_income(self):
-        """Yearly fees of the founder's own practice: the own hours not sold for wages, at the wage of
-        the trade the practice is worked as. One person's hours earn once however many skills the
-        practice covers, and a dead founder has none (practice_attention)."""
-        trade = self.practice_trade()
-        if trade is None:
-            return 0.0
-        return self.labour.director_pool() * self.practice_attention() * self.labour.wage_per_hour(trade)
+    def founder_wage_income(self):
+        """Yearly pay of the founder's standing job: the hours not spoken for, sold in the held trade at
+        that trade's market wage (labour_job.py). One person's hours sell once however many skills the
+        founder holds, and a dead founder sells none."""
+        return self.labour.standing_job_pay(self.held_trade())
 
     @readable
     def revenue_sources(self):
         """Where the money actually comes from, itemised.
 
         A player who never issues a single start can still get richer
-        every year, from practising medicine - the cover identity the game
-        tells you to adopt - which is otherwise invisible anywhere else in
-        the interface.
+        every year, from the wages of their own work - the founder is
+        employed in a trade they hold - which is otherwise invisible
+        anywhere else in the interface.
         """
         economy = self.state.economy
         rows = self.ledger_concern_rows()
@@ -464,9 +439,9 @@ class ProductionMixin:
         workshop_total = self.workshop_output() * economy.output_factor
         if workshop_total > 0.5:
             out["_what_your_own_workshop_sells"] = round(workshop_total, 1)
-        practice_total = self.practice_income() * economy.output_factor
-        if practice_total > 0.5:
-            out["_your_own_practice"] = round(practice_total, 1)
+        wage_total = self.founder_wage_income() * economy.output_factor
+        if wage_total > 0.5:
+            out["_wages_for_your_own_work"] = round(wage_total, 1)
         if self.state_funding() > 0.5:
             out["_state_funding"] = round(self.state_funding() * economy.output_factor, 1)
         # And the difference between the parts and the whole, which is the
@@ -491,18 +466,11 @@ class ProductionMixin:
                 out[big] = round(out[big] + resid, 1)
         return out
 
-    # Of the auto-granted nodes that carry revenue, seven are medicine and
-    # two are shipping, and the difference decides who gets paid. Cataract
-    # couching is a skill a single trained person practises with their own
-    # hands, and practising it is exactly the cover the guide tells you to
-    # adopt: categories flagged practisable credit it. A fleet of large merchant ships is
-    # owned by other people and you are not entitled to its freight, so
-    # shipping stays excluded. Removing the revenue from both is too blunt:
-    # without practice income, a poorer civilisation paying a higher price
-    # index has no way to accumulate enough for identity_cover, the first
-    # node in the game.
+    # A granted node whose category is flagged practisable is a skill the founder holds and works with their own
+    # hands; the held skills choose the trade the founder's hours are sold in (held_trade). A granted fleet of
+    # merchant ships is owned by other people, so shipping is not one.
     def _practisable(self, node_id):
-        """Is this granted node a skill YOU can practise for a fee?"""
+        """Is this granted node a skill the founder holds and works with their own hands?"""
         return category_traits.has_trait(self.nodes[node_id].get("cat"), "practisable")
 
     def still_ramping(self):
@@ -532,23 +500,6 @@ class ProductionMixin:
                 % (", ".join(node_id for node_id, _ramp in young[:6]),
                    " and %d more" % (len(young) - 6) if len(young) > 6 else "",
                    young[0][1] * 100, self.cfg["revenue_ramp_years"]))
-
-    def practice_note(self, brief=False):
-        """What the practice is and what it pays, said once, plainly. `brief` is the one-line form for
-        screens that already explained it."""
-        income = self.practice_income() * self.state.economy.output_factor
-        trade = self.practice_trade()
-        if trade is None or income <= 0.5:
-            return None
-        prac = sorted(self._practice_set())
-        names = ", ".join(prac[:4])
-        if brief:
-            return ("%s %s your own practice, paid as a %s for the hours you do not sell ('money full' says why)."
-                    % (names, "is" if len(prac) == 1 else "are", trade))
-        return ("%s %s your own practice: your own hours, worked as a %s at the going wage, so what it pays is "
-                "the hours you have not sold for wages. Selling your hours for wages takes them out of it, "
-                "because you cannot be in two places."
-                % (names, "is" if len(prac) == 1 else "are", trade))
 
     def _practice_set(self):
         """The granted skills you actually practise, as a set, computed once.
@@ -713,7 +664,8 @@ class ProductionMixin:
             if node_id in self.SCALABLE_INSTITUTIONS else 1.0
         if units is not None and node_id in self.SCALABLE_INSTITUTIONS:
             _units = float(units)
-        upkeep_amount = node["up"] * _units
+        # The crew's pay is in the payroll (`living_cost` through `wage_bill`), so only the non-crew part is charged here.
+        upkeep_amount = node["up"] * node_upkeep.non_labour_share(node) * _units
         if (fully_staffed or node_id not in self.CAPABILITY_INSTITUTIONS or upkeep_amount <= 0
                 or self.mechanic(node_id, "upkeep_full")):
             return upkeep_amount

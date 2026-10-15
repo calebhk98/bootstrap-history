@@ -458,8 +458,20 @@ def _validate_civilisation_starts(nodes, production):
         for message in gap_warnings:
             print("WARNING: " + message)
     errors += _validate_basket_supply(civ_start_check, civilisations, production)
+    errors += _validate_ore_reach(civilisations, production)
     for message in errors:
         print("ERROR: " + message)
+    return errors
+
+
+def _validate_ore_reach(civilisations, production):
+    """Complaints/516: metals a civilisation demands that no deposit within its reach supplies."""
+    from sim.engine import validate_ore_reach
+    from sim.engine.need_data import load_needs
+    errors, warnings = validate_ore_reach.ore_reach_findings(
+        civilisations, production, load_needs(ROOT, MODDIR)["goods"])
+    for message in warnings:
+        print("WARNING: " + message)
     return errors
 
 
@@ -1421,6 +1433,16 @@ def main():
                                "in openings/, so a player's new game skips it; slow (minutes per civilisation)")
     subparser.add_argument("--civs", default="", help="comma-separated civilisation ids (default: all)")
     subparser.add_argument("--prune", action="store_true", help="also remove shipped entries the named civilisations did not use")
+    subparser.add_argument("--allow-failing", default=None, metavar="REASON",
+                           help="ship an opening that fails the opening checks anyway; the reason is printed")
+    subparser = sub.add_parser("opening-checks", help="print the relationship checks (prices over making cost, money "
+                               "against coin wear, wage over floor, spin-up settled) for each civilisation's "
+                               "full-length opening; reads the shipped openings when current, else computes (minutes)")
+    subparser.add_argument("--civs", default="", help="comma-separated civilisation ids (default: all)")
+    subparser = sub.add_parser("spin-up-trace", help="run a civilisation's hidden spin-up for many years and print the "
+                               "price level, the money stock and the mint's strikes by year; slow (minutes)")
+    subparser.add_argument("--civ", default="", help="civilisation id (default: the default one)")
+    subparser.add_argument("--years", type=int, default=60, help="years to run (default 60)")
     sub.add_parser("goals", help="list the selectable goals and their critical-path floors")
     subparser = sub.add_parser("path", help="the critical path to a goal"); subparser.add_argument("goal", nargs="?")
     subparser = sub.add_parser("costs", help="the resource costs of every node"); subparser.add_argument("--top", type=int, default=20)
@@ -1714,7 +1736,8 @@ def main():
             "sensitivity": cmd_sensitivity, "plan": cmd_plan,
             "search": cmd_search, "economy-check": cmd_economy_check,
             "mod-allow": cli_mods.cmd_mod_allow,
-            "baseline-ensemble": cmd_baseline_ensemble, "openings": cmd_openings}[args.cmd](args)
+            "baseline-ensemble": cmd_baseline_ensemble, "openings": cmd_openings, "opening-checks": cmd_opening_checks,
+            "spin-up-trace": cmd_spin_up_trace}[args.cmd](args)
 
 
 # ----------------------------------------------------------------------------
@@ -1734,3 +1757,5 @@ from .cli_analysis import cmd_plan, cmd_search, cmd_why
 from .cli_economy_check import cmd_economy_check
 from .cli_baseline import cmd_baseline_ensemble
 from .cli_openings import cmd_openings
+from .cli_opening_checks import cmd_opening_checks
+from .cli_spin_up_trace import cmd_spin_up_trace

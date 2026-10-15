@@ -69,11 +69,10 @@ A mod may provide:
 
 * `data/world/needs.json`: `needs` (household spending categories, ids
   `<mod_id>:<name>`, each with a `surplus_budget_share` weight) and `goods`
-  (`satisfies`: {need: effectiveness per unit}, optional `supply_per_year`).
-  A recipe entry may carry `satisfies` and `supply_per_year` for its main
-  output instead. Demand for the good, the demand it derives for its inputs
-  through recipes, and a scarcity price where its supply is limited follow
-  from these; no basket entry is needed. See `sim/world/need_demand.py`.
+  (`satisfies`: {need: effectiveness per unit}).
+  A recipe entry may carry `satisfies` for its main output instead. Demand
+  for the good and the demand it derives for its inputs through recipes
+  follow from these; no basket entry is needed. See `sim/world/need_demand.py`.
 
 * `data/world/units.json`: `units` (display units, ids `<mod_id>:<name>`, each with
   `name`, `symbol`, `dimension` of `area`, `mass`, `temperature` or `money`, and a

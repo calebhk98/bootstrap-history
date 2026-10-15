@@ -69,9 +69,8 @@ furnace_game = sim(civ="rome_100ad", capital=1e9)
 no_firm = sim(civ="rome_100ad", capital=1e9)
 year = furnace_game.state.scenario.year
 firm = furnace_game.actors.add("firm:iron1", ActorRecord(kind="firm", money=1.0e9))
-firm.concerns.add("blast_furnace")
+firm.business.open_plant("blast_furnace", year - 10)
 firm.knowledge.add("blast_furnace")
-firm.record.opened_year["blast_furnace"] = year - 10
 furnace_game.advance_actors(year)
 no_firm.advance_actors(year)
 sold_by_firm = noted_sale_tonnes(furnace_game, FURNACE_MATERIAL, "firm:iron1")
@@ -80,8 +79,9 @@ check("a firm running a furnace notes the pig iron it makes as its sale for the 
 check("...and no firm means no such sale",
       noted_sale_tonnes(no_firm, FURNACE_MATERIAL) == 0.0, noted_sale_tonnes(no_firm, FURNACE_MATERIAL))
 check("...so the firm's output, offered at what it costs the firm, does not raise the price the market posts",
-      furnace_game.market_price_ratio(FURNACE_MATERIAL) <= no_firm.market_price_ratio(FURNACE_MATERIAL) * (1.0 + 1e-4),    # prices settle to the in-game solve's tolerance
-      (furnace_game.market_price_ratio(FURNACE_MATERIAL), no_firm.market_price_ratio(FURNACE_MATERIAL)))
+      furnace_game.goods_market.home_unit_price(FURNACE_MATERIAL)
+      <= no_firm.goods_market.home_unit_price(FURNACE_MATERIAL) * (1.0 + 1e-4),    # prices settle to the in-game solve's tolerance
+      (furnace_game.goods_market.home_unit_price(FURNACE_MATERIAL), no_firm.goods_market.home_unit_price(FURNACE_MATERIAL)))
 furnace_game._step_market()
 no_firm._step_market()
 furnace_book = furnace_game.state.economy.market_book.get(furnace_game._material_tag(FURNACE_MATERIAL)[0], {})

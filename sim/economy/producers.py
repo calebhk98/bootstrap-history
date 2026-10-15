@@ -269,7 +269,7 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
     paid_now = variable - rent                  # rent falls due at the year's end, out of the sales
     affordable = (max(cash, 0.0) + held_value) / paid_now if paid_now > 0.0 else producer.capacity_runs
     runs = max(0.0, min(producer.capacity_runs * share_working(revenue, variable), affordable,
-                        runs_for_stock(producer, recipe, view)))
+                        runs_for_stock(producer, recipe, view, variable, outputs)))
     runs = within_a_years_change(producer, runs)
     wanted = runs
     if producer.land_run_cap >= 0.0:
@@ -373,21 +373,29 @@ def main_output(recipe: Recipe) -> GoodId:
     return kept[1]
 
 
-def runs_for_stock(producer: Producer, recipe: Recipe, view: MarketView) -> float:
-    """Runs a producer holding more than its target stock limits itself to: what it expects to sell less
-    the excess, so unsold output is worked off. Below its target, the price decides alone (a cap tied to
-    past sales would follow output down, since nothing sells that is not made). Unlimited while it has
-    no record of sales."""
+def runs_for_stock(producer: Producer, recipe: Recipe, view: MarketView, run_cost: Optional[float] = None,
+                   output_prices: Optional[Mapping[GoodId, float]] = None) -> float:
+    """Runs a producer holding more than its target stock of an output limits itself to: what it expects to
+    sell less the excess, so unsold output is worked off. Below its target, the price decides alone (a cap tied
+    to past sales would follow output down, since nothing sells that is not made). Unlimited while it has no
+    record of sales. With the run's cost and the outputs' prices, outputs that are piling up do not count while
+    what a run makes of the others, at those prices, covers the cost: a joint recipe runs for the output that pays."""
     if producer.expected_sales <= 0.0:
         return math.inf
-    good = main_output(recipe)
-    held = view.stock(producer.agent_id, good, producer.tile) / recipe.outputs[good]
     # sales recorded at an ask above every bid do not bound what a lower ask sells: keep a probe
     sales = max(producer.expected_sales, UNSOLD_PROBE_SHARE_OF_CAPACITY * producer.capacity_runs)
     target = inventory.target_stock(sales)
-    if held <= target:
+    excess = {good: view.stock(producer.agent_id, good, producer.tile) / made - target
+              for good, made in recipe.outputs.items() if made > 0.0}
+    piling = [good for good, over in excess.items() if over > 0.0]
+    if not piling:
         return math.inf
-    return max(0.0, sales - (held - target))
+    if run_cost is not None and output_prices is not None:
+        sells = math.fsum(made * output_prices.get(good, 0.0) for good, made in recipe.outputs.items()
+                          if good not in piling) * producer.yield_factor
+        if sells >= run_cost:
+            return math.inf
+    return max(0.0, sales - max(excess[good] for good in piling))
 
 
 def _labour_bids(producer, recipe, view, runs, revenue, input_cost, wages) -> List[LabourBid]:

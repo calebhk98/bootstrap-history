@@ -2,6 +2,7 @@
 import collections
 
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of
 
 # =============================================================================
 # FINDINGS_ROUND2 section Q: literacy bounds who you can hire.
@@ -10,8 +11,8 @@ from .harness import *  # noqa: F401,F403
 # --- Q: a low-literacy society genuinely cannot hire scribes a high-literacy
 # one can, at any price. This is the exact case the finding asked for: "if
 # only 0.001% of the population can read... you can only hire 0.001%".
-s_hi = sim(civ="rome_100ad", capital=1e9)
-s_lo = sim(civ="norse_900ad", capital=1e9)
+s_hi = unopened_sim(civ="rome_100ad", capital=1e9)
+s_lo = unopened_sim(civ="norse_900ad", capital=1e9)
 check("a low-literacy society's literate-trade pool is smaller than a "
       "high-literacy one's",
       s_lo.labour.literate_capacity("scribe") < s_hi.labour.literate_capacity("scribe"),
@@ -21,7 +22,7 @@ ok_hi, why_hi = s_hi.labour.hire("scribe", 3)
 ok_lo, why_lo = s_lo.labour.hire("scribe", 3)
 check("money alone cannot hire scribes a low-literacy society has nobody to "
       "supply, at any price",
-      ok_hi and not ok_lo and "literacy" in why_lo,
+      ok_hi and not ok_lo and cause_of(why_lo) == "literacy_wall",
       "rome ok=%s / norse ok=%s (%s)" % (ok_hi, ok_lo, why_lo))
 
 # --- Q: the same wall applies to TEACHING a trade into existence, the only
@@ -30,7 +31,7 @@ check("money alone cannot hire scribes a low-literacy society has nobody to "
 ok_lo, why_lo = s_lo.labour.train("machinist", 2)
 check("a society that cannot read cannot be taught machinists into "
       "existence either",
-      not ok_lo and "literacy" in why_lo, why_lo)
+      not ok_lo and cause_of(why_lo) == "literacy_wall", why_lo)
 ok_hi, why_hi = s_hi.labour.train("machinist", 2)
 check("the same teaching succeeds where enough people can read",
       ok_hi, why_hi)
@@ -49,7 +50,7 @@ check("a school trains fewer scholars where fewer of the propertied class "
 # rather than raising a number nothing reads. Played out on Norse, where
 # there is room for it to move; Rome starts at this file's own reference
 # literacy and is not expected to move much.
-s = sim(civ="norse_900ad", capital=1e9)
+s = unopened_sim(civ="norse_900ad", capital=1e9)
 cap0 = s.labour.literate_capacity("scribe")
 s.apply_tech_effects("rag_paper")
 s.apply_tech_effects("printing_press")
@@ -77,7 +78,7 @@ check("a literate person can always be found, even before any teaching",
 # --- R: taking a large share of a trade's local supply raises what it costs
 # (labour_price_factor), the same principle market_pressure already applies
 # to slaves -- and it decays, the same way.
-s = sim(civ="rome_100ad", capital=1e9)
+s = unopened_sim(civ="rome_100ad", capital=1e9)
 f0 = s.labour.market.price_factor("millwright")
 s.labour.market.press("millwright", 6 * s.HOURS_PER_PERSON_YEAR)
 f1 = s.labour.market.price_factor("millwright")
@@ -92,8 +93,8 @@ check("recent demand pressure decays: the same trade is not dearer forever",
 # bigger -- this is "teaching fifty machinists is what makes hiring the
 # fifty-first one cheap again", tested directly against pressure rather than
 # waiting on a training run to mature.
-thin = sim(civ="rome_100ad", capital=1e9)
-thick = sim(civ="rome_100ad", capital=1e9)
+thin = unopened_sim(civ="rome_100ad", capital=1e9)
+thick = unopened_sim(civ="rome_100ad", capital=1e9)
 thick.employees["millwright"] = 20.0
 pressure_hours = 6 * thin.HOURS_PER_PERSON_YEAR
 thin.labour.market.press("millwright", pressure_hours)
@@ -106,7 +107,7 @@ check("a bigger trained workforce in a trade makes the same recent demand "
 
 # --- R, end to end: hiring the same trade repeatedly through `hire` really
 # does cost more each time, not only in the internal factor.
-s = sim(civ="rome_100ad", capital=1e9)
+s = unopened_sim(civ="rome_100ad", capital=1e9)
 run_it(s, "workshop_first", "school_founded", "academy_network", "patron_imperial")
 fees = []
 for _ in range(3):
@@ -123,7 +124,7 @@ check("hire's own fee rises the more of a trade you have taken on recently",
 # per tonne as buying one kilogram. Saltpetre (MARKET_SHARE 0.0: no open
 # market for it at all without a trade route) makes the effect dramatic;
 # gunpowder is the cheapest node that needs it.
-s = sim(civ="rome_100ad", capital=1e9)
+s = unopened_sim(civ="rome_100ad", capital=1e9)
 s.active["gunpowder"] = {}
 # only gunpowder's inputs press on the market here, so what binds is its own; the rest of a fresh Rome's demand
 # (alum, say, which nothing in reach makes) would otherwise be what the throttle names
@@ -175,7 +176,7 @@ check("...and `money` itself carries the same line",
 # =============================================================================
 
 for _mat in ("aluminium_kg", "silk_kg"):
-    s = sim(civ="rome_100ad", capital=1e9)
+    s = unopened_sim(civ="rome_100ad", capital=1e9)
     # Demand is pinned at the market's own reachable tonnage, so the test
     # holds whatever level the solved price puts the fitted market at.
     # (a material nothing in reach makes has no market tonnage, so demand is pinned at a stated tonnage)
@@ -208,7 +209,7 @@ for _mat in ("aluminium_kg", "silk_kg"):
 # --- the effect actually reaches project_cost(), the number the game
 # charges, not only an internal factor nothing reads - the same standard
 # COMMODITY_DYNAMISM.md held the original 9 commodities to.
-s = sim(civ="rome_100ad", capital=1e9)
+s = unopened_sim(civ="rome_100ad", capital=1e9)
 check("mt2_duralumin_alloy is a real node that buys real aluminium_kg - "
       "not a synthetic example",
       NODES["mt2_duralumin_alloy"]["mat"].get("aluminium_kg", 0) > 0,
@@ -241,7 +242,7 @@ check("...and mineable() agrees",
 
 # --- the command surface itself accepts a generalised material name, not
 # only the seven it used to: "buy mine aluminium_kg" must actually work.
-_command_sim = sim()
+_command_sim = unopened_sim()
 _r_al = S._agent_dispatch(_command_sim, NODES, {"cmd": "buy", "what": "mine", "material": "aluminium_kg", "n": 0.1})
 check("the command surface itself (not just the engine underneath it) "
       "accepts a material outside the original seven",
@@ -250,7 +251,7 @@ _r_bad = S._agent_dispatch(_command_sim, NODES, {"cmd": "buy", "what": "mine",
                                                  "material": "not_a_real_material_xyz", "n": 10})
 check("...but still refuses a genuinely unpriced name, with a hint rather "
       "than a bare closed list",
-      _r_bad.get("ok") is False and "aluminium_kg" in _r_bad.get("error", ""),
+      _r_bad.get("ok") is False and _r_bad.get("cause") == "unknown_material" and bool(_r_bad.get("choices")),
       _r_bad)
 
 # --- COMMODITY FRAMEWORK (data/world/COMMODITIES.md,

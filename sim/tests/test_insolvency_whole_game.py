@@ -7,7 +7,7 @@ recovery reads the founder's money, which follows the market close, so its years
 from .harness import *  # noqa: F401,F403
 from sim.engine.data import closure as data_closure
 
-RUIN_YEARS = 3   # full market years after the ruin: the founder's money has turned round within them
+RUIN_YEARS = 5   # full market years after the ruin: the founder's money climbs back within them
 
 
 def without_market(game):

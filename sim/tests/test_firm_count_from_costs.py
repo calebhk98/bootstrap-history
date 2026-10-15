@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 
 from .harness import check
 
-from sim.agents.api import ActorRecord, ActorRegistry, ActorsState
+from sim.agents.api import ActorRecord, Business, ActorRegistry, ActorsState
 from sim.agents import firm_entry
 
 from .agents_fake_world import FakeWorld, make_node
@@ -40,7 +40,7 @@ class SharedMarketWorld(FakeWorld):
 def firms_in_one_year(takings=MARKET_TAKINGS, rent=0.0, wage=1.0, existing=0):
 	registry = ActorRegistry(ActorsState(home_country="home"))
 	for number in range(existing):
-		registry.add("firm:%d" % (number + 100), ActorRecord(kind="firm", concerns={"shop"}, founded_year=0))
+		registry.add("firm:%d" % (number + 100), ActorRecord(kind="firm", business=Business.running(["shop"]), founded_year=0))
 	return len(registry.consider_entry(SharedMarketWorld(takings, rent, wage)))
 
 
@@ -138,7 +138,7 @@ Economy.on = True
 registry = ActorRegistry(ActorsState(home_country="home"))
 registry.add("government:home", ActorRecord(kind="government", location="coast"))
 check("a firm with no tile of its own stands on the home country's tile", firm_entry.firm_tile(registry, None) == "coast")
-firm = registry.add("firm:7", ActorRecord(kind="firm", concerns={"shop"}, location="hills"))
+firm = registry.add("firm:7", ActorRecord(kind="firm", business=Business.running(["shop"]), location="hills"))
 check("a firm stands where it was placed", firm_entry.firm_tile(registry, firm) == "hills")
 check("no home government, no tile", firm_entry.firm_tile(ActorRegistry(ActorsState(home_country="home")), None) is None)
 

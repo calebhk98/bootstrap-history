@@ -50,12 +50,14 @@ def expected_takings(registry: Any, world: Any, node_id: str) -> float:
 
 def expected_entry_gross(registry: Any, world: Any, node_id: str, rivals: float, entrants: float) -> float:
 	"""Yearly takings one more operator expects once `entrants` (itself included) join the `rivals`: the
-	market's sharing as it stands, at the takings level entrants expect."""
+	market's sharing as it stands. Entrants discount a rise in what a lone operator takes (a one-year
+	spike) toward last year's expectation, but never lean on an expectation above today's takings: the
+	firms already in are seen at once, so a stale high expectation cannot draw a crowd past what the market holds."""
 	spot = world.entry_gross(node_id, rivals, entrants)
 	spot_alone = world.entry_gross(node_id, 0.0, 1.0)
 	if spot_alone <= 0.0:
 		return spot
-	return spot * expected_takings(registry, world, node_id) / spot_alone
+	return spot * min(1.0, expected_takings(registry, world, node_id) / spot_alone)
 
 
 def personal_capital(stratum: Any) -> float:

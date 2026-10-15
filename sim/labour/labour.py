@@ -39,10 +39,11 @@ from .labour_bondage import BondageMixin
 from .labour_staff_ledger import StaffLedgerMixin
 from .labour_staff_controls import StaffControlsMixin
 from .labour_allocation import LabourAllocationMixin
+from .labour_job import StandingJobMixin
 
 
 class Labour(CapacityMixin, PopulationMixin, SettlementMixin, WagesMixin, TrainingMixin, BondageMixin,
-             StaffLedgerMixin, StaffControlsMixin, LabourAllocationMixin):
+             StaffLedgerMixin, StaffControlsMixin, LabourAllocationMixin, StandingJobMixin):
     """Questions and transactions about labour, for one simulation. `world` is what labour reads of it."""
 
     def __init__(self, world):

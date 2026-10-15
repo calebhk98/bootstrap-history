@@ -52,20 +52,50 @@ def notional_prices(setup, record, market=None) -> Dict[str, float]:
     prices of its inputs, the live wages and interest rate; a joint run's cost is shared among its
     outputs by value. A good is priced after the goods it is made from, so a chain of untraded goods
     follows its inputs. A good whose cheapest maker cannot be priced is left out."""
+    market = national_prices(record) if market is None else market
+    return _estimated_prices(setup, record, market, untraded=True, thin=False)
+
+
+def _estimated_prices(setup, record, market, untraded: bool, thin: bool) -> Dict[str, float]:
+    """Each good's estimate where the market's own price does not stand for it, goods taken in input-depth
+    order so a good costed from its inputs sees their estimates: `untraded` goods at what they cost to make,
+    and (`thin`) recently traded goods the opening wanted in bulk and the markets trade a sliver of, blended
+    toward their making cost by how much of THIN_MARKET_SHARE_OF_OPENING_DEMAND they trade."""
     memory = record.memory
     recent = recently_traded_goods(memory)
-    market = national_prices(record) if market is None else market
+    traded = _traded_volumes(record) if thin else {}
     wages = mean_wages(memory)
     rate = memory.rates.get(setup.currency_id, 0.0)
     live = dict(market)
-    notional: Dict[str, float] = {}
+    estimated: Dict[str, float] = {}
     for good in input_depth_order(setup.recipes):
-        if good in recent:
+        if good not in recent:
+            if not untraded:
+                continue
+            cost = cheapest_cost(setup, good, live, wages, rate)
+            if cost is not None:
+                estimated[good] = live[good] = cost
             continue
-        best = cheapest_cost(setup, good, live, wages, rate)
-        if best is not None:
-            notional[good] = live[good] = best
-    return notional
+        wanted = record.opening_basket.get(good, 0.0)
+        if not thin or wanted <= 0.0:
+            continue
+        depth = min(1.0, traded.get(good, 0.0) / (THIN_MARKET_SHARE_OF_OPENING_DEMAND * wanted))
+        if depth >= 1.0:
+            continue
+        cost = cheapest_cost(setup, good, live, wages, rate)
+        if cost is not None:
+            estimated[good] = live[good] = depth * live[good] + (1.0 - depth) * cost
+    return estimated
+
+
+def _traded_volumes(record) -> Dict[str, float]:
+    """What each good's markets trade, a market counting for the smaller of what it usually trades and what
+    it traded last year, so a market that has dried up does not stand for the good on its remembered volume."""
+    traded: Dict[str, float] = {}
+    for key, usual in (record.memory.volume_weights or record.volumes).items():
+        good = key.split(KEY_SEPARATOR, 1)[0]
+        traded[good] = traded.get(good, 0.0) + min(usual, record.volumes.get(key, usual))
+    return traded
 
 
 def making_costs(setup, record) -> Dict[str, float]:
@@ -102,13 +132,13 @@ def cheapest_cost(setup, good, live, wages, rate):
 
 
 def shown_prices(setup, record, market=None) -> Tuple[Dict[str, float], Set[str]]:
-    """(prices, stale goods) the game is shown. A recently traded good shows its market price. An
-    untraded good somebody can make shows what it costs to make; one nobody can make keeps its last
+    """(prices, stale goods) the game is shown. A recently traded good shows its market price, except one
+    the markets trade only a sliver of, which shows near what it costs to make (see `_estimated_prices`).
+    An untraded good somebody can make shows what it costs to make; one nobody can make keeps its last
     price. Both kinds are listed as stale: not a price a market has set lately."""
     prices = dict(national_prices(record) if market is None else market)
     stale = set(prices) - recently_traded_goods(record.memory)
-    prices.update(thin_market_prices(setup, record, prices))
-    prices.update(notional_prices(setup, record, prices))
+    prices.update(_estimated_prices(setup, record, prices, untraded=True, thin=True))
     return prices, stale
 
 
@@ -117,24 +147,4 @@ def thin_market_prices(setup, record, market) -> Dict[str, float]:
     together trade only a sliver of it: the market price blended toward the cost of making it, in the
     share the trade falls short of THIN_MARKET_SHARE_OF_OPENING_DEMAND. A good nobody can make, or the
     opening did not want, keeps its market price."""
-    memory = record.memory
-    traded: Dict[str, float] = {}
-    for key, volume in (memory.volume_weights or record.volumes).items():
-        good = key.split(KEY_SEPARATOR, 1)[0]
-        traded[good] = traded.get(good, 0.0) + volume
-    recent = recently_traded_goods(memory)
-    wages = mean_wages(memory)
-    rate = memory.rates.get(setup.currency_id, 0.0)
-    live = dict(market)
-    blended: Dict[str, float] = {}
-    for good in input_depth_order(setup.recipes):
-        wanted = record.opening_basket.get(good, 0.0)
-        if good not in recent or wanted <= 0.0:
-            continue
-        depth = min(1.0, traded.get(good, 0.0) / (THIN_MARKET_SHARE_OF_OPENING_DEMAND * wanted))
-        if depth >= 1.0:
-            continue
-        cost = cheapest_cost(setup, good, live, wages, rate)
-        if cost is not None:
-            blended[good] = live[good] = depth * live[good] + (1.0 - depth) * cost
-    return blended
+    return _estimated_prices(setup, record, market, untraded=False, thin=True)

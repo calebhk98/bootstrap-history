@@ -25,6 +25,8 @@ is now. None of this is an approved plan yet.
 | `sim/agents/MULTIPLAYER.md` | Players, countries, traders and strata as actors: how a game's roster is seeded from the civilisation, the foreign economies and the `cast` key. | Ours |
 | `CODE_ANALYSIS_TOOLING.md` | What checks the code's maintainability (pylint and the naming plan), which parts are hand-written and which library sits under each. | Ours |
 | `PACKAGE_WALLS.md` | The walled packages (economy, agents, labour, geography, ui): the rule, each package's surface and port, and how to extend one. | Ours |
+| `ONE_PRICE_OWNER_PLAN.md` | Staged plan for Complaint 507: the agent economy owns prices and traded volumes; the solver becomes a cost-of-making calculator. Every reader of the solver, the calculator's signature, eight stages with proofs and files, risks. | Ours |
+| `FIRMS_OWN_PLANTS_PLAN.md` | Staged plan for Complaints 510 and 514: a tech node is knowledge only; a business is a firm, owned by any actor, that runs plants with their own crew and upkeep, through one object in `sim/agents/`. Every reader of node upkeep, revenue and staff, every business rule with its founder and agents implementations, the target object, staged work with proofs and files, order against 507. | Ours |
 
 Read them in that order. `ENDOGENOUS_COSTS_AND_DOMAINS.md` is the live plan and
 `Complaints/119-delete-prices-json.md` is its concrete exit checklist for the

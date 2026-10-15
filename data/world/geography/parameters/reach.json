@@ -9,6 +9,15 @@
    "conf": "C",
    "source": "The located materials' cost_multiplier figures were written for Rome (located_materials.json note).",
    "why": "Their cost multipliers are what a kilogramme costs the civilisation they were authored for at its start; other civilisations pay more or less as their own reach differs."
+  },
+  {
+   "id": "ore_supply_reach_level",
+   "value": 2,
+   "unit": "reach level (data/world/geography/reach_levels/)",
+   "kind": "heuristic",
+   "conf": "D",
+   "source": "none; level 2 is the farthest level whose description names established trade routes the civilisation already uses.",
+   "why": "How far from its tiles a deposit can be and still count as supplying the civilisation's ore, for the validate check that a metal in demand has a deposit in reach; replace with the haul cost at which a mine's ore still sells."
   }
  ]
 }

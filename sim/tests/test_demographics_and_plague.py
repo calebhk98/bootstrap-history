@@ -8,6 +8,7 @@ note. Checks moved verbatim; each one's own comment explains the break it
 guards.
 """
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of, facts_of
 
 
 # --- JOB 2: A PLAGUE MOVES THE WHOLE SOCIETY, NOT JUST YOUR OWN HOUSEHOLD. A
@@ -30,7 +31,7 @@ from .harness import *  # noqa: F401,F403
 # reproduce. self.population (a demography.Population) is the cohort model
 # that can - see core.py's own comment above pop_scale for the full
 # account of what changed and why.
-s = sim(civ="england_1300")
+s = unopened_sim(civ="england_1300")
 _normal_wage = s.wage_index
 _pop_before = s.population.total
 s.year = 1348
@@ -44,7 +45,7 @@ check("the Black Death costs the whole society people, not only your own "
 # - that is what hazard_relief already does to the personal staff_loss above
 # - and must NOT also soften the society-wide figure: the rest of the world
 # never built your hedge.
-s2 = sim(civ="england_1300")
+s2 = unopened_sim(civ="england_1300")
 s2.done.add("plague_preparedness"); s2.operating.add("plague_preparedness")
 s2._done_changed()
 _pop2_before = s2.population.total
@@ -67,7 +68,8 @@ check("wages remain elevated the year after a mortality shock",
       s.wage_index > _normal_wage * 1.2, (_normal_wage, s.wage_index))
 check("the wage cascade is LOGGED, so a player can see why their wage bill "
       "jumped instead of having to notice it in the accounts",
-      any("running" in message and "above normal" in message for _year, message in s.log),
+      any(cause_of(message) == "wage_cascade" and facts_of(message)["wage_premium_percent"] > 0
+          for _year, message in s.log),
       [message for _year, message in s.log if "wage" in message.lower()])
 
 # --- recovery is now EMERGENT from self.population's own vital rates
@@ -82,7 +84,7 @@ check("the wage cascade is LOGGED, so a player can see why their wage bill "
 # brief asked for: the premium stays substantial for a long time (decades),
 # it does not evaporate in a handful of years, and it never grows without
 # bound either.
-s4 = sim(civ="england_1300")
+s4 = unopened_sim(civ="england_1300")
 s4.year = 1348
 s4._shocks(1348)
 for _yr in range(1349, 1349 + 50):
@@ -105,7 +107,7 @@ check("...and it has not grown without bound a century later either - this "
 # clock asserted via its own recovery horizon, now checked directly on the
 # population loss itself, which is the number that actually drives
 # wage_index under the new model.
-s5 = sim(civ="rome_100ad")
+s5 = unopened_sim(civ="rome_100ad")
 _pop5_before = s5.population.total
 for _yr in range(165, 181):
     s5.year = _yr
@@ -130,7 +132,7 @@ check("the Antonine plague (28% of staff) costs the society a smaller "
 # a hazard through the REAL save/reload cycle cli.py actually uses, the one
 # gap every existing demography-adjacent test left open (none of them
 # drove a hazard through save_state/load_state in the same process).
-s7 = sim(civ="england_1300")
+s7 = unopened_sim(civ="england_1300")
 _pop7_before = s7.population.total
 s7.year = 1348
 s7._shocks(1348)
@@ -171,7 +173,7 @@ check("...and the wage premium that cohort state drives is therefore ALSO "
 # still read "(would have been -28%: ...)" glued onto the same sentence and
 # reasonably called it a catastrophe.
 def _plague_line(mitigated_nodes):
-    household = sim(civ="rome_100ad", capital=1000000.0)
+    household = unopened_sim(civ="rome_100ad", capital=1000000.0)
     if mitigated_nodes:
         run_it(household, *mitigated_nodes)
     household.scholars, household.artisans = 50.0, 200.0
@@ -194,6 +196,7 @@ _line_heavy = _plague_line(_HEAVY)
 _line_some = _plague_line(["sanitation_antisepsis", "med_quarantine_sanitation"])
 check("an unmitigated plague states its own historical rate plainly",
       "staff -28%" in _line_none, _line_none)
+# presentation: the plague line's clauses
 check("a heavily mitigated plague's OWN clause never re-quotes the "
       "historical -28% as if it were the outcome - only the near-zero "
       "figure the mechanic actually applied",
@@ -201,9 +204,11 @@ check("a heavily mitigated plague's OWN clause never re-quotes the "
       and "would have been" not in _line_heavy
       and "staff -28%" not in _line_heavy.split(".")[0],
       _line_heavy)
+# presentation: the plague line's clauses
 check("a partially mitigated plague is 'softened', not 'held off almost "
       "entirely' and not silent about the hedge either",
       "softened by" in _line_some, _line_some)
+# presentation: the plague line's clauses
 check("the empire-wide toll is still told, in every case, as a separate "
       "fact explicitly not the household's own experience",
       all("Empire-wide, population -28%" in line and "either way" in line

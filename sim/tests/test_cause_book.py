@@ -20,7 +20,9 @@ def fresh():
 
 
 game = fresh()
-node_id = next(node for node in game.order if NODES[node]["rev"] > 0 and game.is_venture(node))
+# a concern the founder's free hands can staff under the plant-derived crew (the same gate `open` applies)
+node_id = next(node for node in game.order if NODES[node]["rev"] > 0 and game.is_venture(node)
+               and game.staffing_open_refusal(node) is None)
 game.state.projects.done.add(node_id)
 opened = game.open_venture(node_id, pay=False)
 check("opening a concern leaves an opening row with its revenue and upkeep",
@@ -67,6 +69,7 @@ check("the rows and marks survive a save and load",
       and bool(revived.state.household.cause_rows))
 
 wages_figure = ask(pressure, cmd="figures", id="wages")
+# not text: the stored cause label echoes what the test recorded
 check("the wages figure lists its recorded causes",
       wages_figure.get("ok") and any(cause["cause"] == "a plague" for cause in wages_figure["causes"]), wages_figure)
 notice_figure = ask(pressure, cmd="figures", id="state_notice")

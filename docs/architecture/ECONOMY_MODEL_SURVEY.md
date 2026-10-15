@@ -10,8 +10,9 @@ commands in `CLAUDE.md` §5.
 Prices are solved as a damped fixed point over the recipes in
 `data/production/` (`sim/engine/solve_prices_core.py`), in labour-hours with the
 `labourer` trade as numeraire, plus two rent mechanisms (ore deposits, arable
-land). Joint outputs split the shared cost using demand anchors
-(`sim/engine/joint_allocation.py`, `sim/world/demand.py`). Labour moves between trades
+land). Joint outputs split the shared cost by value at reference prices (the
+caller's, else the sole-output route's, else mass: `sim/engine/joint_allocation.py`); the survey below
+was written when demand anchors set the split. Labour moves between trades
 through a gap-driven, skill-distance-weighted flow (`sim/labour/labour_market.py`,
 `sim/labour/labour_allocation.py`): NEED comes from planned output, HAVE from a
 workforce that drifts toward the gap. There is no wage bargaining, no

@@ -1,12 +1,15 @@
 """Money and industry: the portfolio, capacity, mines, and the economy/changes reports read off the running Sim."""
 
 import sim.engine.ui_port as ui_port
+from sim.refusal import Refusal, cause_of
 from sim.engine.ui_port import WAGES, trade_family
 from sim.ui import figures_headline  # noqa: F401  (registers the headline figures)
 from sim.engine.ui_port import cash_book, cause_book, plain_number
 from sim.ui.figures import figure_snapshot
 
 from .state import _agent_state
+from .event_kinds import is_notable
+from .refusal_cause import event_codes
 from .capacity_remedies import capacity_remedies
 from .portfolio_bottlenecks import blocker_kind_of, bottleneck_groups
 from .portfolio_waiting import waiting_to_start
@@ -420,6 +423,12 @@ def _agent_mines(sim):
                     "shut just one of several workings in the same seam."}
 
 
+# The code `_waiting_on` attaches to its sentence, and the constraint it stands for.
+WAITING_CONSTRAINT = {"staffing": "staffing", "trade_hours": "trade_hours", "materials": "materials",
+                      "money_pace": "money", "money_blocked": "money", "money_unfunded": "money",
+                      "calendar": "calendar", "founder_hours": "founder_hours"}
+
+
 def _portfolio_constraint(waiting):
     """Which of the SIX things a project could be waiting on, from the
     exact sentence _waiting_on already builds for `state` - a second
@@ -436,6 +445,8 @@ def _portfolio_constraint(waiting):
     """
     if not isinstance(waiting, str):
         return "unclear"
+    if cause_of(waiting):
+        return WAITING_CONSTRAINT.get(cause_of(waiting), "unclear")
     if waiting.startswith("nobody to do the work"):
         return "staffing"
     if waiting.startswith("trade hours already booked"):
@@ -816,10 +827,10 @@ def _changes_baseline(hist, cutoff, current_year):
             break
     if baseline is None:
         earliest = hist[0]["year"]
-        return None, None, {"ok": False,
-                "error": ("this run's own record only goes back to %d AD, %d "
-                          "years ago; ask for %d or fewer"
-                          % (earliest, current_year - earliest, current_year - earliest))}
+        return None, None, {"ok": False, "earliest_year": earliest, "years_of_record": current_year - earliest,
+                "error": Refusal("window_beyond_record", "this run's own record only goes back to %d AD, %d "
+                                 "years ago; ask for %d or fewer"
+                                 % (earliest, current_year - earliest, current_year - earliest))}
     return now, baseline, None
 
 
@@ -894,17 +905,10 @@ def _changes_tech_events(hist, cutoff):
 
 
 def _changes_notable_events(sim, cutoff):
-    """A HANDFUL OF WORDS, NOT THE WHOLE LOG. Anything the engine already
-    logged as happening TO this player over the window, filtered to the
-    kind of thing a player would call a political event rather than
-    ordinary bookkeeping ("hired a smith"). The log itself is already
-    player-facing prose (see `log`); this only picks out a slice of it.
-    """
-    _MARKERS = ("sack", "denounced", "founder dies", "plague", "crisis",
-               "scandal", "credit exhausted", "insolvency", "war", "revolt",
-               "famine", "fire", "died", "denunciation")
-    return [{"year": year, "message": message} for year, message in sim.log
-            if cutoff < year <= sim.year and any(marker in message.lower() for marker in _MARKERS)]
+    """The log lines of the window whose kind is listed as notable (event_kinds.py): what happened TO this
+    player, a political event rather than ordinary bookkeeping."""
+    return [{"year": year, "message": message, **event_codes(message)} for year, message in sim.log
+            if cutoff < year <= sim.year and is_notable(message)]
 
 
 def _agent_changes(sim, nodes, cmd=None):

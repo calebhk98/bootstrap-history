@@ -25,8 +25,7 @@ MEAN_INCOME_HOURS_PER_CAPITA = declare(
     "MEAN_INCOME_HOURS_PER_CAPITA", 550.0, kind="temporary_heuristic",
     unit="labour-hours/person/year at the opening economy", source=None,
     confidence="D",
-    why="Household income scale, the same figure the price solver's demand "
-        "anchors use (sim/engine/joint_allocation.py); income then moves with the "
+    why="Household income scale at the opening; income then moves with the "
         "wage the labour market pays (household_income_hours_per_capita). Returns to land and capital "
         "are not yet in it.")
 
@@ -108,7 +107,7 @@ class MarketDemandMixin:
         """What a person's income buys of the opening basket now over what it bought at the opening:
         income in hours over the opening's, over the basket's cost at today's prices against its cost then."""
         basket = self.base_basket()
-        prices = self.goods_market.household_prices()
+        prices = self.goods_market.household_cost_prices()
         per_hour = self.labour.money_per_labour_hour()
         opening_cost = now_cost = 0.0
         for material, units in basket["units"].items():
@@ -130,7 +129,7 @@ class MarketDemandMixin:
         return self._household_demand_now()[1]
 
     def _household_demand_now(self):
-        prices = self.goods_market.household_prices()
+        prices = self.goods_market.household_cost_prices()
         key = (round(float(self.population.total) / self._opening_population(), 3),
                round(self.household_income_hours_per_capita(), 3))
         cache = getattr(self.household, "_household_demand_cache", None)

@@ -156,8 +156,12 @@ class CreditRoomTests(unittest.TestCase):
 
 class RateAgainstMoneyStockTests(unittest.TestCase):
     def test_a_larger_money_stock_does_not_raise_the_rate_before_prices_have_moved(self):
-        control = [outcome.rate for outcome in money.with_windfall(1.0)[1][:2]]
-        flush = [outcome.rate for outcome in money.with_windfall(3.0)[1][:2]]
+        # households' and merchants' own requests are silent, as in lend_once: a windfall changes how much a
+        # household borrows for its floors, and this test is about what the money itself does to the rate
+        with mock.patch.object(economy_module.lending, "household_requests", return_value=[]), \
+                mock.patch.object(economy_module.lending, "merchant_requests", return_value=[]):
+            control = [outcome.rate for outcome in money.with_windfall(1.0)[1][:2]]
+            flush = [outcome.rate for outcome in money.with_windfall(3.0)[1][:2]]
         for rate_with_more, rate_control in zip(flush, control):
             self.assertLessEqual(rate_with_more, rate_control + 1e-9)
 

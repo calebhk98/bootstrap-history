@@ -1,5 +1,6 @@
 """early_playtest: regression checks from the first playtests, run with `--only early_playtest`."""
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of
 
 def without_market(game):
     """`game` with the year's market close left out of its steps: nearly all of a step's cost. Only for checks on
@@ -66,9 +67,9 @@ check("a mine can be priced before it is bought",
       and reply["quote_mine"].get("every_year_it_stands", 0) > 0, str(reply["quote_mine"])[:90])
 
 # --- play must run a civilisation that does not start in 100 AD (its loop used to end at 100 + horizon)
-_play = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"), "play", "--manual",
-                        "--civ", "norse_900ad"],
-                       input="n\nq\n", capture_output=True, text=True, timeout=120, cwd=ROOT)
+from . import cli_in_process
+_play = cli_in_process.run(["play", "--manual", "--civ", "norse_900ad"], "n\nq\n", cwd=ROOT)
+# presentation: the printed header of the interactive play command
 check("play runs a civilisation that does not start in 100 AD",
       "900 AD" in _play.stdout and "Ended 900 AD" not in _play.stdout, _play.stdout[-120:])
 
@@ -88,7 +89,7 @@ check("no anachronistic weapon or doctrine is startable turn one",
 
 ok_hire, hire_error = rome.labour.hire("engineer", 1)
 check("a trade this society does not have cannot be hired",
-      not ok_hire and "no engineer" in (hire_error or "").lower(),
+      not ok_hire and cause_of(hire_error) == "trade_absent",
       "hire engineer -> %s / %s" % (ok_hire, hire_error))
 rome.capital = 20000.0
 ok_train, _ = rome.labour.train("machinist", 2)
@@ -256,7 +257,7 @@ output_armed, output_why = armed.hazard_relief("output_factor")
 check("a war costs an armed empire's trade less than an unarmed one's - "
       "every output_factor hazard in these civilization files is a war or "
       "its administrative aftermath, and this is the branch's answer to it",
-      output_armed < output_unarmed and any("military strength" in reason for reason in output_why),
+      output_armed < output_unarmed and any(entry["source"] == "own_military_strength" for entry in armed.hazard_relief_entries("output_factor")),
       (output_unarmed, output_armed, output_why))
 staff_unarmed, _ = unarmed.hazard_relief("staff_loss")
 staff_armed, _ = armed.hazard_relief("staff_loss")
@@ -320,7 +321,7 @@ for _ in range(3):
 paid = unfunded.active.get(too_dear, None)
 paid = paid.spent if paid else 0.0
 check("an unfunded project never completes",
-      not ok_start and "afford" in str(start_why) and too_dear not in unfunded.done and paid == 0.0,
+      not ok_start and unfunded.start_blockers(too_dear)[0]["kind"] == "money" and too_dear not in unfunded.done and paid == 0.0,
       "started=%s (%s) done=%s paid=%.0f" % (ok_start, start_why, too_dear in unfunded.done, paid))
 check("manual play never buys people for you", unfunded.slaves == 0 and unfunded.freedmen == 0,
       "slaves %d freedmen %d" % (unfunded.slaves, unfunded.freedmen))
@@ -365,6 +366,7 @@ for _command in S.KNOWN_COMMANDS:
         _dead.append(_command)
 check("every advertised command is one the game answers to", not _dead, str(_dead))
 _missing_id = S._agent_dispatch(answers, NODES, {"cmd": "why"}).get("error", "")
+# presentation: the wording of a missing-id refusal
 check("a missing id asks for one rather than naming a Python type",
       "NoneType" not in _missing_id and "available" in _missing_id, _missing_id[:90])
 

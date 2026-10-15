@@ -6,6 +6,7 @@ or a search can never reveal what fog hides.
 
 import difflib
 
+from sim.refusal import Refusal
 from sim.engine.ui_port import topic_tags
 
 STATES = ("startable", "blocked", "active", "done")
@@ -77,7 +78,8 @@ def parse_state(cmd):
         return None, None
     state = _STATE_ALIASES.get(raw, raw)
     if state not in STATES:
-        return None, ("unknown state %r; the states are %s." % (raw, ", ".join(STATES)))
+        return None, Refusal("unknown_state", "unknown state %r; the states are %s." % (raw, ", ".join(STATES)),
+                               choices=STATES)
     return state, None
 
 
@@ -94,10 +96,11 @@ def parse_topic(cmd, nodes):
     category = category.replace(" ", "_")
     if tag and tag not in topic_tags.current():
         near = difflib.get_close_matches(tag, list(topic_tags.current()), n=3)
-        return "", "", ("unknown tag %r%s. The tags are: %s. Tags and subjects are different lists; "
-                        "to look for a word or a subject type 'available %s' (subjects: %s)." % (
+        return "", "", Refusal("unknown_tag", "unknown tag %r%s. The tags are: %s. Tags and subjects are different lists; "
+                               "to look for a word or a subject type 'available %s' (subjects: %s)." % (
             tag, (" (did you mean %s?)" % ", ".join(near)) if near else "",
-            ", ".join(topic_tags.current()), tag.replace("_", " "), ", ".join(subject_names())))
+            ", ".join(topic_tags.current()), tag.replace("_", " "), ", ".join(subject_names())),
+            choices=topic_tags.current())
     if category:
         cats = {node["cat"] for node in nodes.values()}
         if category not in cats:

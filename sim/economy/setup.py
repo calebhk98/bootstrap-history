@@ -71,6 +71,7 @@ class EconomySetup:
     opening_store_output: Dict[GoodId, Tuple[Tuple[float, float, float], ...]] = field(default_factory=dict)
     # per durable good, its past workings (kg a year, years worked, years since the last output) from the deposits
     opening_store_gaps: Dict[GoodId, str] = field(default_factory=dict)   # why a good has no workings, for audit
+    opening_income_per_head: Optional[float] = None   # income a head a year the scenario states; None: the demand it pays for
     # country -> the recipes its producers can run (what its society's techniques allow); empty: every recipe anywhere
     recipes_by_country: Dict[str, Tuple[str, ...]] = field(default_factory=dict)
 

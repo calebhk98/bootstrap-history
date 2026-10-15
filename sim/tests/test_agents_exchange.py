@@ -4,6 +4,7 @@ the ledger, an AI actor answers offers by worth, and the commands write the jour
 QUICK_TOPIC = True
 
 from .harness import check
+from sim.refusal import cause_of
 
 from sim.agents.api import ActorRecord, ActorRegistry, ActorsState
 from sim.agents import exchange, exchange_commands, player  # noqa: F401  (player registers its kind)
@@ -46,6 +47,15 @@ def raises(call):
 	return None
 
 
+def rejection(call):
+	"""The reason a command was refused as the refusal object it was raised with (its `cause`), or None."""
+	try:
+		call()
+	except CommandRejected as reason:
+		return reason.args[0]
+	return None
+
+
 world = make_world()
 registry = make_registry(a=1000.0, b=500.0)
 a, b = registry.get("player:a"), registry.get("player:b")
@@ -84,21 +94,20 @@ check("a node the giver does not know cannot be offered",
 # ---- a concern moves with its opened year and size ----------------------------------------
 a.concerns.add("forge")
 a.knowledge.add("forge")
-a.record.opened_year["forge"] = 60
-a.record.capacity["forge"] = 2.5
-a.record.margins["forge"] = 12.0
+a.business.open_plant("forge", 60)
+a.business.set_size("forge", 2.5)
+a.business.note_margin("forge", 12.0)
 offer = exchange.make_offer(a, b, {"concern": "forge"}, {"money": 50.0}, world)
 check("a buyer who cannot know the concern is refused",
-	  "cannot make forge" in (raises(lambda: exchange.accept(b, offer["id"], registry.get, world)) or "")
+	  cause_of(rejection(lambda: exchange.accept(b, offer["id"], registry.get, world))) == "taker_cannot_make"
 	  and "forge" in a.concerns and b.money == 100.0)
 b.record.offers.clear()
 offer = exchange.make_offer(a, b, {"concern": "forge", "knowledge": ["forge"]}, {"money": 50.0}, world)
 exchange.accept(b, offer["id"], registry.get, world)
 check("a concern arrives with the knowledge to run it", "forge" in b.concerns and "forge" not in a.concerns)
 check("the concern keeps its opened year and size",
-	  b.record.opened_year["forge"] == 60 and b.record.capacity["forge"] == 2.5
-	  and "forge" not in a.record.opened_year and "forge" not in a.record.capacity)
-check("the seller's margin record goes with it", "forge" not in a.record.margins)
+	  b.opened_year_of("forge", 0) == 60 and b.capacity_of("forge") == 2.5 and a.business.plant_of("forge") is None)
+check("the seller's margin record goes with it", a.business.margin_of("forge") is None)
 a.knowledge.discard("forge")
 b.concerns.discard("mill")
 a.concerns.add("mill")
@@ -156,9 +165,9 @@ check("a human receiver is not answered for", len(robot.record.offers) == 1)
 
 robot.record.controller = "ai"
 robot.record.offers.clear()
-robot.record.concerns.add("forge")
-robot.record.margins["forge"] = 10.0
-human.record.concerns.add("mill")
+robot.concerns.add("forge")
+robot.business.note_margin("forge", 10.0)
+human.concerns.add("mill")
 human.knowledge.update({"mill"})
 robot.knowledge.add("mill")
 exchange.make_offer(human, robot, {"concern": "mill"}, {"concern": "forge"}, world)

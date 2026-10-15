@@ -36,7 +36,7 @@ class TraderCargoMixin:
 
     def _money_per_partner_coin(self, partner):
         standard = load_civ(partner)["coin_standard"]
-        metal_price = self._coin_metal_price(standard["material"])
+        metal_price = self.goods_market.home_unit_price(standard["material"])
         return standard["kg_per_unit"] * metal_price if metal_price else None
 
     def _pay_partner(self, partner, tonnes_signed, value):

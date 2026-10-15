@@ -4,6 +4,7 @@ never meet."""
 QUICK_TOPIC = True
 
 import os
+import types
 import unittest
 from unittest import mock
 
@@ -30,6 +31,59 @@ class TrimmedStageTests(unittest.TestCase):
     def test_the_stage_is_shorter_than_the_first_stage_can_be(self):
         self.assertLess(economy_port_year.SPIN_UP_TRIMMED_YEARS, economy_port_year.SPIN_UP_MAXIMUM_YEARS)
 
+
+
+def _economy_whose_price_level_follows(levels):
+    """An economy whose yearly price level is the next of `levels` (the last one repeats); nothing else moves."""
+    economy = types.SimpleNamespace(setup=types.SimpleNamespace(currency_id="coin"),
+                                    record=types.SimpleNamespace(memory=types.SimpleNamespace(rates={"coin": 0.05})),
+                                    years=0)
+
+    def step(inputs):
+        level = levels[min(economy.years, len(levels) - 1)]
+        economy.years += 1
+        return types.SimpleNamespace(basket_price_level=level, prices={"wheat_kg": 1.0})
+    economy.step = step
+    return economy
+
+
+class SettledReportTests(unittest.TestCase):
+    """The first stage says whether it met its tolerance, so a game or `openings` can tell a settled opening from
+    one that opened wherever the cycle stood."""
+
+    def test_a_stage_that_meets_the_tolerance_reports_settled_with_the_years_it_took(self):
+        economy = _economy_whose_price_level_follows([1.0, 1.5, 1.2, 1.2])
+        with mock.patch.dict(os.environ, FULL_GAME, clear=True):
+            result = economy_port_year.AgentEconomy._settle(economy, object(), ["wheat_kg"])
+        self.assertTrue(result["settled"])
+        self.assertEqual(result["years"], 4)
+        self.assertLess(result["gap"], economy_port_year.SPIN_UP_TOLERANCE)
+
+    def test_a_stage_that_runs_out_of_years_first_reports_not_settled_and_how_far_it_was(self):
+        economy = _economy_whose_price_level_follows([1.0 * 1.5 ** year for year in range(100)])
+        with mock.patch.dict(os.environ, FULL_GAME, clear=True):
+            result = economy_port_year.AgentEconomy._settle(economy, object(), ["wheat_kg"])
+        self.assertFalse(result["settled"])
+        self.assertEqual(result["years"], int(economy_port_year.SPIN_UP_MAXIMUM_YEARS))
+        self.assertAlmostEqual(result["gap"], 0.5)
+
+    def test_the_result_is_kept_in_the_record_and_survives_a_save(self):
+        from sim.economy import api
+        from sim.economy.record import EconomyRecord
+        economy = types.SimpleNamespace(record=types.SimpleNamespace(spin_up_result={}))
+        api.note_spin_up_result(economy, {"settled": False, "years": 30, "gap": 0.3})
+        self.assertEqual(economy.record.spin_up_result, {"settled": False, "years": 30, "gap": 0.3})
+        self.assertIn("spin_up_result", EconomyRecord.__dataclass_fields__)
+
+
+class OpeningsReportTests(unittest.TestCase):
+    def test_openings_says_plainly_when_the_opening_did_not_settle(self):
+        from sim.ui import cli_openings
+        unsettled = cli_openings.spin_up_line({"settled": False, "years": 30, "gap": 0.3})
+        settled = cli_openings.spin_up_line({"settled": True, "years": 12, "gap": 0.01})
+        self.assertIn("NOT SETTLED", unsettled)
+        self.assertNotIn("NOT SETTLED", settled)
+        self.assertIn("no result", cli_openings.spin_up_line({}))
 
 
 class ShortenedSpinUpTests(unittest.TestCase):

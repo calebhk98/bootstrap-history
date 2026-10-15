@@ -2,6 +2,7 @@
 
 A part of the year's phases (core_step_phases.py); Sim inherits it through StepPhasesMixin."""
 
+from sim.refusal import LogLine, Refusal
 from sim.agents.api import edges
 from .units_prose import plain_number
 
@@ -102,9 +103,9 @@ class ProjectProgressPhaseMixin:
             project_state["stalled_years"] = project_state.get("stalled_years", 0) + 1
             project_state["blocked_on_trades"] = blocked
             if project_state["stalled_years"] >= 4:
-                self.state.household.log.append((self.state.scenario.year, "HALTED %s: there is nobody here who can "
+                self.state.household.log.append((self.state.scenario.year, LogLine("project_halted_no_labour", "HALTED %s: there is nobody here who can "
                                      "do this work (%s). What you spent is lost"
-                                 % (node_id, ", ".join(blocked[:2]))))
+                                 % (node_id, ", ".join(blocked[:2])))))
                 self.state.projects.active.pop(node_id, None)
                 self.state.projects.bountied.discard(node_id)
             else:
@@ -114,13 +115,15 @@ class ProjectProgressPhaseMixin:
                 # each year, with the number of years left and what would
                 # fix it.
                 _left = 4 - project_state["stalled_years"]
-                self.state.household.log.append((self.state.scenario.year, "%s cannot go on: no %s here. It has "
-                                     "%d year%s before it is abandoned and "
-                                     "what you spent on it is lost. Teach "
-                                     "the trade, or 'stop %s' now and keep "
-                                     "your hours"
-                                 % (node_id, " or ".join(blocked[:2]), _left,
-                                    "" if _left == 1 else "s", node_id)))
+                self.state.household.log.append((self.state.scenario.year, LogLine(
+                    "project_cannot_go_on", "%s cannot go on: no %s here. It has "
+                    "%d year%s before it is abandoned and "
+                    "what you spent on it is lost. Teach "
+                    "the trade, or 'stop %s' now and keep "
+                    "your hours"
+                    % (node_id, " or ".join(blocked[:2]), _left,
+                       "" if _left == 1 else "s", node_id),
+                    project=node_id, trades=list(blocked), years_left=_left)))
                 # Nothing happened here this year - say so, rather than
                 # leaving last year's hours_offered/effective sitting on
                 # the entry looking like they still applied.
@@ -203,24 +206,24 @@ class ProjectProgressPhaseMixin:
             if (_project_throttle < 0.98 and self.state.holdings.binding
                     and _pace_cap >= _dir_hours - 0.5):
                 _directed_hours_unused.append((node_id, round(_dir_hours - per, 0),
-                    "a shortage of %s has every project (this one "
-                    "included) running at %d%% of the pace its "
-                    "hours alone would allow"
-                    % (self.state.holdings.binding, round(_project_throttle * 100))))
+                    Refusal("shortage_throttle", "a shortage of %s has every project (this one "
+                            "included) running at %d%% of the pace its "
+                            "hours alone would allow"
+                            % (self.state.holdings.binding, round(_project_throttle * 100)))))
             elif _pace_cap * _project_throttle < _dir_hours - 0.5:
                 _directed_hours_unused.append((node_id, round(_dir_hours - per, 0),
-                    "its own pace this year - at most %s hours, set "
-                    "by how much of it is left to do or its "
-                    "calendar floor, not by your hours - could not "
-                    "use the rest" % plain_number(
-                        _pace_cap * _project_throttle)))
+                    Refusal("own_pace", "its own pace this year - at most %s hours, set "
+                            "by how much of it is left to do or its "
+                            "calendar floor, not by your hours - could not "
+                            "use the rest" % plain_number(
+                                _pace_cap * _project_throttle))))
             else:
                 _directed_hours_unused.append((node_id, round(_dir_hours - per, 0),
-                    "your other standing allocations and active "
-                    "work already claimed the rest of this year's "
-                    "%s hours before this one's turn came ('priority "
-                    "<id> first' moves a project up the queue)"
-                    % plain_number(_pool_total_this_year)))
+                    Refusal("pool_claimed", "your other standing allocations and active "
+                            "work already claimed the rest of this year's "
+                            "%s hours before this one's turn came ('priority "
+                            "<id> first' moves a project up the queue)"
+                            % plain_number(_pool_total_this_year))))
         return remaining, per, spent_hours, _dir_hours
 
     def _project_progress_labour_and_bill(self, node_id, project_state, node,
@@ -249,7 +252,7 @@ class ProjectProgressPhaseMixin:
         # call site only has to act on what it returns.
         hired_hours, worst, frac, _abandon = self.lab_year_draw(node_id, project_state, frac, hired_left)
         if _abandon:
-            self.state.household.log.append((self.state.scenario.year, "ABANDONED %s: %s" % (node_id, _abandon)))
+            self.state.household.log.append((self.state.scenario.year, LogLine("project_abandoned", "ABANDONED %s: %s" % (node_id, _abandon))))
             self.state.projects.active.pop(node_id, None)
             self.state.projects.bountied.discard(node_id)
             return None
@@ -545,13 +548,15 @@ class ProjectProgressPhaseMixin:
             _total_lost = sum(hours for _, hours in _arrears_hours_lost)
             _names = ", ".join("%s (%s hr)" % (node_id, plain_number(hours))
                                 for node_id, hours in _arrears_hours_lost)
-            self.state.household.log.append((self.state.scenario.year, "IN ARREARS: %s founder-hours meant for %s did "
-                                 "almost nothing this year, on top of the money "
-                                 "- that time does not come back, arrears or not. "
-                                 "'work' sells idle hours for wages instead of "
-                                 "losing them here; clearing the arrears is what "
-                                 "stops it happening again"
-                             % (plain_number(_total_lost), _names)))
+            self.state.household.log.append((self.state.scenario.year, LogLine(
+                "arrears_hours_lost", "IN ARREARS: %s founder-hours meant for %s did "
+                "almost nothing this year, on top of the money "
+                "- that time does not come back, arrears or not. "
+                "'work' sells idle hours for wages instead of "
+                "losing them here; clearing the arrears is what "
+                "stops it happening again"
+                % (plain_number(_total_lost), _names),
+                hours=_total_lost, projects=[node_id for node_id, _hours in _arrears_hours_lost])))
 
         # A STANDING ALLOCATION THE PLAYER GAVE, AND DID NOT GET - SAID, NOT
         # LEFT FOR THEM TO NOTICE. `allocate` is a promise about the one

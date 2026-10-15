@@ -106,6 +106,7 @@ ramp.open_venture(first, pay=False)
 check("reopening keeps the original opening year for the ramp",
       ramp.venture_ramp(first) == before_ramp, (before_ramp, ramp.venture_ramp(first)))
 _, reopen_message = (ramp.close_work(first, ramp.CLOSED_FOR_STAFF), ramp.open_venture(first, pay=False))[1]
+# presentation: the wording of a reopen reply
 check("a reopen reply does not promise a ramp it will not get",
       "over the first" not in reopen_message, reopen_message)
 

@@ -10,6 +10,7 @@ these live in a separate file).
 """
 
 from sim.geography.api import tile_names
+from sim.refusal import Refusal, LogLine
 from .command_registry import command
 from sim.engine.ui_port import TRADES_ABSENT, TRADE_NOTES, WAGES, trade_family
 from .state_waiting import _staff_fraction_note
@@ -21,53 +22,26 @@ from .quote_spending import COMMISSION_NOTE
          summary="do an ordinary job for ordinary pay",
          usage=["work <trade> <hours>", "work <trade> <hours> preview"],
          options={"<trade>": "a trade you can practise", "<hours>": "founder hours to sell",
-                  "preview": "show the wage and the practice income it costs, selling nothing"},
+                  "preview": "show the wage, selling nothing"},
          description="Sell your own hours for wages instead of spending them on a project.")
 def _cmd_work(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}
-    # WHAT THE PRACTICE WAS EARNING BEFORE YOU TOOK THE JOB: selling your
-    # hours takes them out of your own surgery, which is where most of
-    # your income comes from at the start, so the true cost has to be
-    # measured against revenue before and after, not just the wage paid.
     _preview = bool(cmd.get("preview"))
-    _rev_before = sim.revenue()
-    _dry_cost = None
     if _preview:
-        pay, err, _dry_cost = sim.labour.work_for_wages_dry_run(cmd.get("trade"), cmd.get("hours", 0))
+        pay, err = sim.labour.work_for_wages_dry_run(cmd.get("trade"), cmd.get("hours", 0))
     else:
         pay, err = sim.labour.work_for_wages(cmd.get("trade"), cmd.get("hours", 0))
-    # A message WITH pay is a warning about a bad trade, not a refusal:
-    # the work happened and the player should be told what it cost them.
+    # A message WITH pay is a warning (the hours would starve a project), not a refusal: the work happened.
     if err and pay <= 0:
         return {"ok": False, "error": err}
-    _rev_after = sim.revenue()
-    _cost = _rev_before - _rev_after
-    if _preview:
-        _cost = _dry_cost
     out = {"ok": True, "trade": cmd.get("trade"), "hours": cmd.get("hours"),
            "earned": round(pay, 1), "capital": round(sim.capital, 1),
            "your_hours_left_this_year": round(
-               max(0.0, sim.labour.director_pool() - sim.wage_hours_this_year), 1)}
-    if _cost > 0.5:
-        # Same rule: round the parts, then take the difference from the
-        # rounded parts, so the three figures on the screen subtract.
-        out["earned"] = round(pay, 1)
-        out["it_cost_your_own_practice"] = round(_cost, 1)
-        out["so_you_are_up"] = round(round(pay, 1) - round(_cost, 1), 1)
-        # "THE PRACTICE" THROUGHOUT, not "the surgery" halfway through.
-        # A Roman founder selling a year of smith's work does not have a
-        # surgery, and the sentence named the same thing two ways inside
-        # fourteen words.
-        out["why"] = ("You cannot be in two places. Hours sold for wages "
-                      "come out of your own practice, so what you really "
-                      "made this year is the wage less what the practice "
-                      "did not earn while you were gone. Hours you put "
-                      "into your OWN projects do not cost you this.")
-    out["lands_at_next_step"] = (
-        "Capital above already includes the wage. The practice income given "
-        "up is not deducted: it is simply not collected when the year is "
-        "stepped, so the year ends that much lower than it would have.")
+               max(0.0, sim.labour.director_pool() - sim.labour.director_hours_committed()), 1),
+           "lands_at_next_step": "Capital above already includes the wage. Hours sold here are hours your "
+                                 "standing job does not sell, so its pay at the year's end is lower by "
+                                 "the wage of the trade it sells."}
     if _preview:
         out.update({"preview": True, "nothing_changed": True,
                     "how_to_confirm": "Repeat the same work without 'preview' to sell the hours."})
@@ -152,13 +126,13 @@ def _cmd_allocate(sim, nodes, cmd, ended):
                         "projects see what is left. 'allocate' with "
                         "hours 0 clears it" % trade}
     if target_id not in nodes:
-        return {"ok": False, "error": "unknown node id %r. 'state' lists "
-                                      "what is active" % target_id}
+        return {"ok": False, "error": Refusal("unknown_node", "unknown node id %r. 'state' lists "
+                                              "what is active" % target_id)}
     if target_id not in sim.active:
         return {"ok": False,
-                "error": "%s is not active, so there is nothing for a "
-                         "directive to apply to yet. 'start' it first, "
-                         "then 'allocate' it hours" % target_id}
+                "error": Refusal("project_not_active", "%s is not active, so there is nothing for a "
+                                 "directive to apply to yet. 'start' it first, "
+                                 "then 'allocate' it hours" % target_id)}
     if hours <= 0:
         had = sim.hour_allocations.pop(target_id, None)
         return ({"ok": True, "cleared": target_id, "had_been_a_year": had}
@@ -446,7 +420,7 @@ def _cmd_hire(sim, nodes, cmd, ended):
     # precise sentence for this ("2 smiths taken on for 750 denarii...");
     # using it here rather than rebuilding one from cmd["n"] keeps the log
     # honest about what actually happened, not just what was asked for.
-    sim.log.append((sim.year, err or ("hired %s %s" % (cmd.get("n"), cmd.get("trade")))))
+    sim.log.append((sim.year, LogLine("hire_ordered", err or ("hired %s %s" % (cmd.get("n"), cmd.get("trade"))))))
     return {"ok": True, "hired": cmd.get("trade"), "n": round(sim.employees.get(trade_id, 0.0) - headcount_before),
             "asked": quantity,
             "you_now_employ": round(sim.employees.get(trade_id, 0.0), 2),
@@ -473,7 +447,7 @@ def _cmd_fire(sim, nodes, cmd, ended):
     # Same reasoning as `hire` above: `err` here is fire()'s own success
     # message, which says exactly what happened - staff let go, an
     # apprenticeship cancelled, or both - and cmd["n"] alone would not.
-    sim.log.append((sim.year, err or ("let go %s %s" % (cmd.get("n"), cmd.get("trade")))))
+    sim.log.append((sim.year, LogLine("let_go_ordered", err or ("let go %s %s" % (cmd.get("n"), cmd.get("trade"))))))
     out = {"ok": True, "let_go": cmd.get("trade"),
            "annual_wage_bill": round(sim.labour.wage_bill(), 1)}
     if err:

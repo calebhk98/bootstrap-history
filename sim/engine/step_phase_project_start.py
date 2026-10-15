@@ -1,6 +1,7 @@
 """The yearly phases that start projects and supply their materials.
 
 A part of the year's phases (core_step_phases.py); Sim inherits it through StepPhasesMixin."""
+from sim.refusal import LogLine
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from . import automation_audit, shortage_conditions
 from sim.agents.api import edges
@@ -109,7 +110,8 @@ class ProjectStartPhaseMixin:
                 if _non_bountied_active >= max_active:
                     automation_audit.record_skip(
                         self, "auto_start", "further projects",
-                        "%d projects already active; the cap is %d" % (_non_bountied_active, max_active))
+                        "%d projects already active; the cap is %d" % (_non_bountied_active, max_active),
+                        reason_kind="active_project_cap", active=_non_bountied_active, cap=max_active)
                     break
                 if not self.can_start(node_id):
                     # one row a year, for the highest-priority candidate; the rest would flood the trail
@@ -166,7 +168,8 @@ class ProjectStartPhaseMixin:
                 automation_audit.record_skip(
                     self, "auto_start", self.nodes[first]["name"],
                     "costs %.0f and the room left to commit is %.0f; %d candidates in all cost more than the room"
-                    % (self.project_cost(first), room, len(_too_dear)))
+                    % (self.project_cost(first), room, len(_too_dear)),
+                    reason_kind="cost_over_room", cost=self.project_cost(first), room=room, candidates=len(_too_dear))
         return pool, hired_left
 
     def _step_materials(self):
@@ -259,7 +262,9 @@ class ProjectStartPhaseMixin:
                         % (mass_rate_text(short, self),
                            mass_rate_text(self.mine_capacity.get(self.state.holdings.binding, 0.0), self),
                            mass_rate_text(_pending, self)),
-                        _before, order=_order)
+                        _before, order=_order, reason_kind="mine_ordered", demand=short,
+                        active_capacity=self.mine_capacity.get(self.state.holdings.binding, 0.0),
+                        pending_capacity=_pending, ordered=_ordered)
                 else:
                     automation_audit.record_skip(
                         self, "auto_mine", "mine for %s" % self.state.holdings.binding,
@@ -297,18 +302,21 @@ class ProjectStartPhaseMixin:
                     self, "auto_mine", "nitre", "%s of nitre bed" % area_text(spend / self.NITRE_COST_PER_M2, self, unit="square_metre"),
                     "saltpetre is the binding shortage; the yearly spend is capped, not sized to the gap",
                     self.state.household.capital + spend)
-                self.state.household.log.append((self.state.scenario.year, "laid down %s of nitre bed "
+                self.state.household.log.append((self.state.scenario.year, LogLine("nitre_bed_laid", "laid down %s of nitre bed "
                                      "for %s (auto_mine)"
                                  % (area_text(spend / self.NITRE_COST_PER_M2, self, unit="square_metre"),
-                                    money_text(spend, self))))
-        if thr < 0.6 and self.state.holdings.binding:
+                                    money_text(spend, self)))))
+        slowed = shortage_conditions.slowed_projects(self) if thr < 0.6 and self.state.holdings.binding else []
+        if slowed:
             # SAY WHAT TO DO ABOUT IT: a bare "SHORT OF SALTPETRE: work at
             # 5% of plan" with no remedy attached reads as the game being
             # stuck rather than as something actionable.
             # One standing condition; the full message only when it is new or has moved materially.
+            # Only said while a running project draws the material: a shortage nothing running needs slows nothing.
             if shortage_conditions.note_shortage(self, self.state.holdings.binding, thr):
-                self.state.household.log.append((self.state.scenario.year, "SHORT OF %s: work running at %d%% of plan. %s"
-                                 % (self.state.holdings.binding.upper(), thr * 100,
-                                    self.shortage_remedy(self.state.holdings.binding))))
+                names = ", ".join(self.nodes[node_id]["name"] for node_id in slowed[:3])
+                self.state.household.log.append((self.state.scenario.year, LogLine("material_shortage", "SHORT OF %s: %s running at %d%% of plan. %s"
+                                 % (shortage_conditions.material_words(self.state.holdings.binding).upper(), names,
+                                    thr * 100, self.shortage_remedy(self.state.holdings.binding)))))
         else:
             shortage_conditions.clear_shortage(self)

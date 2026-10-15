@@ -1,6 +1,7 @@
 """The player's own `log`, the policy screen's switches, and the ledger of what a concern earns."""
 from .harness import *  # noqa: F401,F403
 from sim.ui.protocol import _agent_log as _AL, parse_typed as _PT
+from sim.refusal import LogLine
 
 
 def ask(game, **command):
@@ -30,7 +31,7 @@ check("...and defaults to a short recent window with no limit given at all",
       len(_AL(game, {})["entries"]) <= 25)
 
 # --- Filtering to failures.
-game.log = [(100, "started: Foo"), (101, "FAILED at Foo: it did not work."), (102, "hired 1 smith")]
+game.log = [(100, "started: Foo"), (101, LogLine("project_failed", "FAILED at Foo: it did not work.", severity="major")), (102, "hired 1 smith")]
 _fails = _AL(game, {"failures": True})
 check("'failures' filters the log to only the bad news",
       len(_fails["entries"]) == 1 and "FAILED" in _fails["entries"][0]["what"], _fails["entries"])

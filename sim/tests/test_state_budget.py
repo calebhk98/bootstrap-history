@@ -20,7 +20,7 @@ from sim.engine.state import ActorRecord
 def budget_sim(civ="rome_100ad", army=None, purse=None):
     """A game whose lenders advance the state nothing, so a deficit beyond the reserve is cut (borrowing
     is covered by test_capital_market)."""
-    game = sim(civ=civ)
+    game = unopened_sim(civ=civ)
     game.market_credit_room = lambda actor_id: 0.0
     # revenue in coin only, so a deficit is measured against money (in-kind revenue: test_state_revenue_forms)
     game.civ["state_revenue"] = [{key: value for key, value in form.items() if key != "paid_in"}
@@ -88,7 +88,9 @@ game.civ["standing_army"] = opening_army
 # ---- revenue is the economy's yield, spending is the standing need ----------------------------
 # (this one year also serves the labour-pool and goods-market sections below, which read the same year's result)
 revenue = SimWorld(game).state_revenue()
-need = sum(line.money for line in budget.standing_lines(SimWorld(game)))
+standing = budget.standing_lines(SimWorld(game))
+need = sum(line.money for line in standing)
+standing_purposes = {line.name for line in standing}
 soldiers_free_before = game.labour.market_supply("soldier")
 scribes_before = game.actor_staff_fte("scribe")
 iron_demand_before_buying = sum(1 for bid in game.bids if bid[1] == "iron")
@@ -100,7 +102,9 @@ check("the state's revenue is booked as income from taxation, less what it took 
 bid_money = sum(money for buyer, _commodity, _tonnes, money in game.bids if buyer == treasury.actor_id)
 check("the state spends its standing need, by purpose: outlays now, and bids for the goods it buys",
       outlays.get("army", 0.0) > 0.0 and outlays.get("administration", 0.0) > 0.0
-      and abs(sum(outlays.values()) + bid_money - need) < 0.02 * need, (outlays, bid_money, need))
+      # a surplus also raises named works (building ...), and thieves and coin guards take their cut: none is a standing need
+      and abs(sum(money for purpose, money in outlays.items() if purpose in standing_purposes) + bid_money - need) < 0.02 * need,
+      (outlays, bid_money, need))
 check("a state in surplus keeps the difference as reserve and the ledger balances",
       abs(treasury.money - (sum(income.values()) - sum(outlays.values()))) < 1e-6 * revenue
       and treasury.money > 0.0, (treasury.money, income, outlays))
@@ -240,7 +244,7 @@ check("protection bargains requisition down and leaves the office alone",
       bargained.levy_shares(bargained.household_scale(), 0.85)[0] < requisition
       and abs(bargained.levy_shares(bargained.household_scale(), 0.85)[1] - office) < 1e-12,
       (bargained.levy_shares(bargained.household_scale(), 0.85), (requisition, office)))
-below = sim()
+below = unopened_sim()
 below.civ["standing_army"] = 1.0e8
 one_year(below)
 check("a household below the notice line pays nothing even when the state is short",

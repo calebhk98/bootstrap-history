@@ -78,6 +78,8 @@ def _fake_sim(home_prices, partner_makes, partner_prices, gated=(), supply=None,
         _trader_cycle_years=lambda route, partner: 0.1,
         _agent_cost_per_tonne=lambda partner, route: 0.0,
         _material_price_per_kg=lambda material: home_prices.get(material),
+        _priced_key=lambda tag, prices: tag if tag in prices else None,
+        economy=types.SimpleNamespace(agent_prices_at=lambda tile=None: None),      # the economy is still opening
     )
 
 

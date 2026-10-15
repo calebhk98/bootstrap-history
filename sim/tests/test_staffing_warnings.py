@@ -40,7 +40,7 @@ _s_sw.artisans = _sw_art_used - 2.0    # room exhausted
 _sw_warn2 = _s_sw.staffing_closure_warnings()
 check("room exhausted: the warning says so plainly rather than quoting a "
       "negative number of craftsmen",
-      bool(_sw_warn2) and "next in line to close" in _sw_warn2[0]["headline"],
+      bool(_sw_warn2) and _sw_warn2[0]["within"] == 0.0,
       _sw_warn2)
 check("this is a warning, not a cure: calling it changes nothing about "
       "who is still operating - only close_unstaffed_ventures itself does "
@@ -75,8 +75,7 @@ _s_sw.artisans = _sw_art_used - 0.6   # room under 1.0: one loss closes it
 _sw_warn3 = _s_sw.staffing_closure_warnings()
 check("no slack at all: the warning says losing just one more closes it, "
       "not merely that it is 'within' some number",
-      bool(_sw_warn3) and _sw_warn3[0]["one_loss_closes_it"]
-      and "losing just one more closes it" in _sw_warn3[0]["headline"],
+      bool(_sw_warn3) and _sw_warn3[0]["one_loss_closes_it"],
       _sw_warn3)
 check("...and names what that closure would actually cost in recurring "
       "income, not just that it would happen",

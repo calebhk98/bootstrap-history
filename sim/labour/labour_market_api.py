@@ -94,6 +94,11 @@ class LabourMarket:
         """Recent pressure plus what the standing army takes from the unskilled pool."""
         return self.recent_pressure(trade) + self.standing_draw(trade)
 
+    def pressure_signature(self):
+        """A cheap fingerprint of the pressure on every trade, for callers that cache a figure which
+        depends on the market's wages."""
+        return tuple(sorted(self._records().items()))
+
     def pressured_trades(self):
         """Trades anyone has leaned on, in a stable order."""
         return sorted(self._records())

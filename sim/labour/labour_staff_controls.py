@@ -6,6 +6,8 @@ Both run in the yearly staff step, ahead of the closure rule, and hire through
 `hire` so its cash, room and literacy limits apply unchanged.
 """
 import math
+
+from sim.refusal import LogLine
 from collections import defaultdict
 
 from . import trade_data
@@ -64,12 +66,30 @@ class StaffControlsMixin:
 
     def _house_for_reserve(self, trade, count):
         """Buy worker housing for `count` more people if room is short and cash covers both."""
+        self.buy_room_for(count, count * self.labour_market.quote_annual(trade), "reserve_staff")
+
+    def buy_room_for(self, count, hiring_outlay, label):
+        """Buy worker housing for `count` more people when room is short and the purchase budget covers
+        the housing and the `hiring_outlay` together. The price and the budget are those of `buy housing`."""
         places = math.ceil(count - max(0.0, self.household_room()) - 1e-9)
         if places <= 0:
-            return
+            return False
         cost = places * self._world.housing_price_per_place()
-        if cost + count * self.labour_market.quote_annual(trade) > self._world.spending_power("buy"):
-            return
-        if self._world.build_worker_housing(places):
-            self._world.state.household.log.append((self._world.state.scenario.year,
-                                             "reserve_staff: you build housing for %d more people" % places))
+        if cost + hiring_outlay > self._world.spending_power("buy"):
+            return False
+        if not self._world.build_worker_housing(places):
+            return False
+        self._world.state.household.log.append((self._world.state.scenario.year, LogLine(
+            "policy_housing", "%s: you build housing for %d more people" % (label, places),
+            policy=label, places=places)))
+        return True
+
+    def hire_buying_room(self, trade, count, label="auto_hire"):
+        """`hire`, and when it is refused only for want of room, buy the room (see buy_room_for) and hire again."""
+        hired, reply = self.hire(trade, count)
+        if hired or getattr(reply, "cause", None) != "household_room":
+            return hired, reply
+        found = float(self.labour_market.whole_recruits(trade, count, 0.0))
+        if not self.buy_room_for(found, self.labour_market.hire_cost(trade, found, 0.0), label):
+            return hired, reply
+        return self.hire(trade, count)

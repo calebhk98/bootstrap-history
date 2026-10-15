@@ -4,6 +4,7 @@ import json
 
 from . import available_args, command_registry
 from sim.engine.ui_port import units
+from sim.refusal import Refusal
 from .buy_targets import canonical_target
 from .dispatch import KNOWN_COMMANDS
 from .nodes import NODE_IDS, NODE_IDS_LOWER
@@ -274,6 +275,8 @@ def _parse_market(command, rest, words, nums, want_json):
     while i < len(low):
         i, matched = _log_consume_limit_or_offset(out, low, i)
         if not matched:
+            if low[i] != "json" and not low[i].lstrip("-").isdigit():
+                out["material"] = low[i]
             i += 1
     return out, None
 
@@ -338,11 +341,11 @@ def _parse_rush(command, rest, words, nums, want_json):
                     # shrug. Falling through to no limit at all means the
                     # one typo a player can make while trying to be
                     # careful is the typo that starts everything.
-                    return None, ("'%s' is not a number of things to "
-                                  "start. 'rush limit:3' begins the three "
-                                  "highest-leverage things you could "
-                                  "begin today; 'rush' alone begins every "
-                                  "one of them." % token_text[len(pre):])
+                    return None, Refusal("cap_not_a_number", "'%s' is not a number of things to "
+                                         "start. 'rush limit:3' begins the three "
+                                         "highest-leverage things you could "
+                                         "begin today; 'rush' alone begins every "
+                                         "one of them." % token_text[len(pre):])
                 _lim = value
                 break
     # fiscal caps take key:value or key=value; a cap that will not parse is refused
@@ -690,6 +693,13 @@ def _parse_spending_quote(words, nums):
     # 'quote hire smith 2', 'quote commission smith 200', 'quote open <id>',
     # 'quote bounty <id>': the same arguments the command itself takes.
     what = words[0].lower()
+    if what == "sell":
+        # 'quote sell concern <id>'; 'quote sell <id>' means the same
+        rest = words[1:]
+        target = rest.pop(0).lower() if rest and rest[0].lower() == "concern" else "concern"
+        if not rest:
+            return None, "quote sell needs a concern id: 'quote sell concern <id>'."
+        return {"cmd": "quote", "what": "sell", "target": target, "id": rest[0]}, None
     if len(words) < 2:
         return None, "quote %s needs %s." % (
             what, "a trade" if what in ("hire", "commission", "train") else "an id")

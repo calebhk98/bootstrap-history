@@ -1,5 +1,7 @@
 """One-line summary of what a step completed and failed, shown before the detail."""
-from sim.engine.ui_port import FAILED_PREFIX, MINOR_MARK, goal_movement
+from sim.engine.ui_port import goal_movement
+
+from .event_kinds import is_minor_failure
 
 # Waves at least this long lead with the summary line.
 SUMMARY_MIN_ITEMS = 5
@@ -8,7 +10,7 @@ SUMMARY_MIN_ITEMS = 5
 def wave_summary(completed, events, goal_before, goal_after):
     """Counts by kind, failures by severity, and how far the goal moved;
     None when nothing was completed or failed."""
-    failures = [event for event in events if event["message"].startswith(FAILED_PREFIX)]
+    failures = [event for event in events if event.get("event_kind") == "project_failed"]
     if not completed and not failures:
         return None
     by_kind = {}
@@ -18,7 +20,7 @@ def wave_summary(completed, events, goal_before, goal_after):
     moved, road_gained = goal_movement(goal_before, goal_after)
     summary = {"completed": len(completed), "by_kind": by_kind,
                "failed": len(failures),
-               "minor_failures": sum(MINOR_MARK in event["message"] for event in failures)}
+               "minor_failures": sum(is_minor_failure(event) for event in failures)}
     if moved or road_gained:
         summary["goal"] = {"measures": [{"label": label, "before": old, "after": new}
                                         for label, old, new in moved],

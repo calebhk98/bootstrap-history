@@ -5,6 +5,7 @@ merging, not on a small fixture; the quick tiers cover the same rules with fakes
 (test_running_gates, test_held_and_running, test_works_register, test_failed_voyage_loses_what_it_risked).
 """
 from .harness import *  # noqa: F401,F403
+from sim.refusal import cause_of
 from .harness import _LOADTEST_DIR
 from .agent_command_helpers import ask_agent, with_end_year
 
@@ -30,10 +31,10 @@ check("...so the geography no longer counts the shut pumping station among the t
 ask_agent(game, cmd="step", years=2)
 check("two years on, the tower is still shut while the pumping station is",
       not any(game.running(work) for work in CHAIN), [game.running(work) for work in CHAIN])
-check("...and the log says why", any("has stopped" in line for _year, line in game.state.household.log), None)
+check("...and the log says why", any(cause_of(line) == "work_closed_gate_lapsed" for _year, line in game.state.household.log), None)
 
 reopened, message = game.open_venture(PUMPING)
-check("the pumping station can be reopened", reopened or "cash" in message or "afford" in message, message)
+check("the pumping station can be reopened", reopened or cause_of(message) == "cash_short", message)
 if reopened:
     again, why = game.open_venture(TOWER)
     check("with the pumping station back, the tower can be opened again", again, why)

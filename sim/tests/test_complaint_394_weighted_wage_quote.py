@@ -14,6 +14,7 @@ busy_market, empty_market = trade + "|" + labour_area(busy_tile), trade + "|" + 
 record.memory.wages[busy_market] = 10.0
 record.memory.wages[empty_market] = 1000.0
 record.hours_hired[busy_market] = 100.0
+record.hours_idle[busy_market] = 0.0   # the market cleared: its hours were offered and all hired, so the trade is quoted
 agent._answers = None
 coin = economy.setup.coin_per_unit
 quoted = agent.answers()[1][trade]

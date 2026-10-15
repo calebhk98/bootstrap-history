@@ -6,7 +6,7 @@ import math
 import unittest
 
 from sim.economy import producers, producers_close
-from sim.tests import economy_innovator_scenario as scenario
+from sim.tests import economy_fixture, economy_innovator_scenario as scenario
 
 BOOK_MERGE_TOLERANCE = 1.25     # the summarised book merges buyers, so its ceiling is approximate
 YEAR_TO_YEAR_RISE_LIMIT = 1.2   # a year's price against the year before, in the years after entry
@@ -15,7 +15,8 @@ _ROWS = []
 
 def rows():
     if not _ROWS:
-        _ROWS.extend(scenario.run_scenario())
+        with economy_fixture.surplus_households():     # coffee is bought out of a surplus
+            _ROWS.extend(scenario.run_scenario())
     return _ROWS
 
 

@@ -4,12 +4,11 @@
 every round against new prices, so `RecipePlan` holds what depends only on the recipe (labour bill, rent,
 capital charge per build, output quantities, capability floor test) and `plan_cost` does the same arithmetic
 in the same order using only the price lookups that move. The results are identical to
-`recipe_cost_and_allocation` called with a `Disposal`.
+`recipe_cost_and_allocation` called with the round's disposal costs.
 """
 import collections
 
 from sim.engine import solve_prices_core as core
-from sim.engine.joint_allocation import cap_anchors
 from sim.world.capital_market import capital_recovery_factor
 
 
@@ -17,7 +16,7 @@ class RecipePlan:
     """The round-independent part of costing one recipe."""
     __slots__ = ("recipe_id", "entry", "inputs", "outputs", "single_output", "single_quantity",
                  "batch_output_quantity", "labour_cost_hours", "rent_hours", "land_hectare_years",
-                 "capital_goods", "energy", "holding_years", "disposal_value_hours", "output_meets_floor")
+                 "capital_goods", "energy", "holding_years", "output_meets_floor")
 
     def __init__(self, recipe_id, entry, wage_by_trade, rent_by_kg, interest_rate, floor_by_carrier):
         self.recipe_id = recipe_id
@@ -42,14 +41,15 @@ class RecipePlan:
             (energy_key, entry.get(energy_key)) for energy_key in core.ENERGY_CARRIER_FIELDS
             if entry.get(energy_key) or 0.0)
         self.holding_years = float(entry.get("holding_years") or 0.0)
-        self.disposal_value_hours = entry.get("disposal_value_hours")
         self.output_meets_floor = {
             material: core._meets_capability_floor(material, entry, floor_by_carrier) for material in outputs}
 
 
-def plan_cost(plan, prices, wage_by_trade, band_price_by_carrier, anchors, interest_rate, disposal):
-    """(total_process_cost_hours, {output: price}) or None, as `recipe_cost_and_allocation` with a disposal."""
-    waste_input_costs = disposal.costs
+def plan_cost(plan, prices, wage_by_trade, band_price_by_carrier, interest_rate, disposal_costs,
+              reference_price_by_material=None):
+    """(total_process_cost_hours, {output: price}) or None, as `recipe_cost_and_allocation` with the round's
+    disposal costs."""
+    waste_input_costs = disposal_costs
     material_cost_hours = 0.0
     for input_material, quantity_per_batch in plan.inputs:
         input_price = prices.get(input_material)
@@ -95,8 +95,8 @@ def plan_cost(plan, prices, wage_by_trade, band_price_by_carrier, anchors, inter
     if plan.single_output is not None:
         return total_process_cost_hours, {plan.single_output: total_process_cost_hours / plan.single_quantity}
     output_prices = core._allocate_output_prices(
-        plan.outputs, prices, total_process_cost_hours, anchors, plan.disposal_value_hours,
-        interest_rate, disposal)
+        plan.outputs, prices, total_process_cost_hours, reference_price_by_material, interest_rate,
+        disposal_costs)
     return total_process_cost_hours, output_prices
 
 
@@ -110,15 +110,17 @@ def build_plans(production_entries, recipe_ids_in_order, resolvable_materials, w
             and all(material in resolvable_materials for material in production_entries[recipe_id]["outputs"])]
 
 
-def round_candidates(plans, prices, wage_by_trade, band_price_by_carrier, anchors, interest_rate, disposal):
+def round_candidates(plans, prices, wage_by_trade, band_price_by_carrier, interest_rate, disposal_costs,
+                     reference_price_by_material=None):
     """{material: [(price, recipe_id)]} for this round: sole-output recipes first, whose cheapest price per
-    material caps the anchors the joint recipes split by."""
+    material is what a joint recipe's output is worth when made alone, and so its reference price for the
+    split unless the caller gave one."""
     result_by_recipe = {}
     direct_price_by_material = {}
     for plan in plans:
         if plan.single_output is None:
             continue
-        result = plan_cost(plan, prices, wage_by_trade, band_price_by_carrier, anchors, interest_rate, disposal)
+        result = plan_cost(plan, prices, wage_by_trade, band_price_by_carrier, interest_rate, disposal_costs)
         result_by_recipe[plan.recipe_id] = result
         if result is None:
             continue
@@ -126,11 +128,11 @@ def round_candidates(plans, prices, wage_by_trade, band_price_by_carrier, anchor
             if plan.output_meets_floor[material]:
                 direct_price_by_material[material] = min(
                     price, direct_price_by_material.get(material, price))
-    capped_anchors = cap_anchors(anchors, direct_price_by_material)
+    references = dict(direct_price_by_material, **(reference_price_by_material or {}))
     for plan in plans:
         if plan.recipe_id not in result_by_recipe:
             result_by_recipe[plan.recipe_id] = plan_cost(
-                plan, prices, wage_by_trade, band_price_by_carrier, capped_anchors, interest_rate, disposal)
+                plan, prices, wage_by_trade, band_price_by_carrier, interest_rate, disposal_costs, references)
 
     candidates_by_material = collections.defaultdict(list)
     for plan in plans:

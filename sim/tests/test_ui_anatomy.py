@@ -51,6 +51,7 @@ check("a literacy goal gives an anatomy with a target, current value and gap",
       reply.get("ok") and reply["metric"] == "literacy_general" and reply["target"]["gap"] is not None
       and reply["current"] is not None and not reply["generic"], reply)
 _labels = [row["label"] for row in reply["rows"]]
+# presentation: the labels of the anatomy rows
 check("the literacy rows cover ceiling, schooling flow and farm share",
       "ceiling" in _labels and "schooling flow" in _labels and "farm share of working hours" in _labels, _labels)
 check("the literacy rows are the education screen's numbers",
@@ -59,17 +60,20 @@ check("the named form for elite literacy answers with its own rows",
       _ask(what="literacy_elite")["metric"] == "literacy_elite")
 if _other_metric:
     relief = _ask(what="epidemic_relief")
+    # presentation: the label of an anatomy row
     check("epidemic relief lists its total", relief.get("ok") and relief["rows"][-1]["label"] == "total relief", relief)
 check("an unknown metric is refused with a pointer to the list",
       _ask(what="no_such_metric")["ok"] is False)
 game.nodes["mod_probe_goal"] = {"name": "Probe", "win_condition": {"metric": "mod_probe", "op": ">=", "value": 0.5}}
 _generic_reply = _ask(what="mod_probe")
+# presentation: the wording of the anatomy note
 check("a metric with no entry reports target and the missing breakdown",
       _generic_reply.get("generic") is True and _generic_reply["target"]["value"] == 0.5
       and "no breakdown" in _generic_reply["note"], _generic_reply)
 check("the listing names the metrics", "literacy_general" in _ask(what="list")["metrics"])
 
 game.goal = GOAL
+# presentation: the wording of the anatomy note
 check("a research goal is pointed to path and leverage",
       "leverage" in _ask().get("note", ""), _ask())
 
@@ -77,6 +81,6 @@ game.goal = _measured[0]
 game.fog = True
 _fogged = _ask()
 check("under fog, a goal that is not in view is refused politely",
-      _fogged.get("ok") is False and "not yet in view" in _fogged["error"], _fogged)
+      _fogged.get("ok") is False and _fogged.get("cause") == "goal_out_of_view", _fogged)
 check("under fog, a named metric is still answered", _ask(what="literacy_elite").get("ok") is True)
 game.fog = False

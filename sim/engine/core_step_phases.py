@@ -21,6 +21,7 @@ import math
 import random
 from dataclasses import dataclass
 
+from sim.refusal import LogLine
 from sim.unit_conversions import PERCENT_SCALE
 from . import automation_audit
 from .units_prose import money_text, plain_number
@@ -69,8 +70,8 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
                         # A trade you taught. They are now yours to pay, and
                         # they are that trade and no other.
                         self.state.household.employees[trade] = self.state.household.employees.get(trade, 0.0) + count
-                        self.state.household.log.append((self.state.scenario.year, "%g %s%s finish their training"
-                                         % (count, trade, "s" if count != 1 else "")))
+                        self.state.household.log.append((self.state.scenario.year, LogLine("training_finished", "%g %s%s finish their training"
+                                         % (count, trade, "s" if count != 1 else ""))))
                         self.labour.resync_pools()
                     else:
                         # They are trained now, so _resync_pools counts them
@@ -78,8 +79,8 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
                         # there about why adding to self.state.household.artisans directly was
                         # thrown away at the next call.
                         self.state.household.log.append((self.state.scenario.year,
-                                         "%g of the people you bought finish "
-                                         "learning the work" % round(cap / 0.55, 1)))
+                                         LogLine("bought_people_trained", "%g of the people you bought finish "
+                                         "learning the work" % round(cap / 0.55, 1))))
                 else:
                     still.append(row)
             # BEFORE the resync, not after: _resync_pools counts who is still
@@ -271,10 +272,10 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
                 # never asked again.
                 if taught:
                     _taught[trade_id] = self.state.scenario.year
-                    self.state.household.log.append((self.state.scenario.year, "you begin teaching the first %ss this "
+                    self.state.household.log.append((self.state.scenario.year, LogLine("teaching_begun", "you begin teaching the first %ss this "
                                          "world has ever had" % trade_id if _first else
                                      "the last %ss are gone; you begin teaching "
-                                     "more" % trade_id))
+                                     "more" % trade_id)))
 
     def _step_standing_work_directive(self):
         # 4a(ii). THE STANDING "WORK" DIRECTIVE. `work` (protocol.py) sells
@@ -316,18 +317,20 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
                 if _wd - (_already + _got) <= 1.0:
                     self.clear_unused_hours_report("work")
                 elif self.unused_hours_is_news("work", [round(_wd), _work_reason]):
-                    self.state.household.log.append((self.state.scenario.year, "DIRECTED HOURS UNUSED: your standing "
-                                         "order to sell %s hours a year as a "
-                                         "%s only managed %s this year - %s. "
-                                         "'allocate' changes or clears it"
-                                     % (plain_number(_wd), self.state.household.work_trade,
-                                        plain_number(_already + _got),
-                                        "no more of your own hours were left "
-                                        "to sell once your projects and "
-                                        "training had theirs"
-                                        if _room < _want else
-                                        "nobody here will pay for that trade "
-                                        "any longer" )))
+                    self.state.household.log.append((self.state.scenario.year, LogLine(
+                        "directed_hours_unused", "DIRECTED HOURS UNUSED: your standing "
+                        "order to sell %s hours a year as a "
+                        "%s only managed %s this year - %s. "
+                        "'allocate' changes or clears it"
+                        % (plain_number(_wd), self.state.household.work_trade,
+                           plain_number(_already + _got),
+                           "no more of your own hours were left "
+                           "to sell once your projects and "
+                           "training had theirs"
+                           if _room < _want else
+                           "nobody here will pay for that trade "
+                           "any longer"),
+                        trade=self.state.household.work_trade, reason="no_hours_left" if _room < _want else "nobody_pays")))
 
     def _step_wage_fallback(self, remaining):
         # 5b. IF THERE IS NO WORK AND NO MONEY, TAKE A JOB. A man who arrives
@@ -342,23 +345,17 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
                      or not self.state.projects.active)):
             trade = ("scholar" if self.labour.effective_scholars() >= 1 else "scribe")
             hours = min(remaining, self.WAGE_FALLBACK_MAX_HOURS)
-            # ONLY IF IT PAYS BETTER THAN THE PRACTICE IT DISPLACES. Wage hours
-            # now cost you the share of your practice they were sold out of
-            # (see practice_attention), and without this check the optimizer
-            # went on taking a scribe's wage at the price of a physician's fee
-            # and lost Rome a sixth of its runs. A man with a practice does not
-            # go and copy documents for less than the practice earns; that is
-            # the whole reason `work` is the thing you do BEFORE you have one.
+            # ONLY IF IT PAYS BETTER THAN THE STANDING JOB IT TAKES THE HOURS FROM: a founder who already
+            # sells these hours in a trade does not move them to a worse-paid one.
             # NOT `pool`: that name already holds the year's project budget,
             # computed at 4b. Reusing it here would overwrite it, so
             # hours_this_year would then report "offered_to_projects"
             # against the WHOLE year instead of against the project budget,
             # letting a year's hours add up to more than what was actually
             # available.
-            year_hours = max(1.0, self.labour.director_pool())
-            practice_lost = self.revenue() * (hours / year_hours) * (
-                1.0 if self.practice_attention() > 0 else 0.0)
-            if self.labour.wage_for_hours(trade, hours) > practice_lost:
+            held_trade = self.held_trade()
+            standing_pay = (self.labour.wage_for_hours(held_trade, hours) if held_trade else 0.0)
+            if self.labour.wage_for_hours(trade, hours) > standing_pay:
                 _, err = self.labour.work_for_wages(trade, hours)
                 # Kept in step with `remaining` so hours_this_year (below) does
                 # not count hours sold for wages here as still unused.
@@ -394,6 +391,7 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
             "wage_work": round(self.state.household.wage_hours_this_year, 1),
             "teaching": round(self.state.household.teaching_hours_this_year, 1),
             "moving": round(self.state.household.relocation_hours_this_year or 0.0, 1),
+            "supervising": round(self.state.household.supervision_hours_this_year, 1),
             "offered_to_projects": round(max(0.0, pool - remaining_after_projects), 1),
             # OFFERED is what projects were given a shot at; EFFECTIVE is what
             # actually reduced their founder_hours_left. The gap between the
@@ -412,6 +410,7 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
         self.state.household.contract_hours = {}
         self.state.household.teaching_hours_this_year = 0.0
         self.state.household.relocation_hours_this_year = 0.0
+        self.state.household.supervision_hours_this_year = 0.0
         self.state.household.spend_last_year = getattr(self, "_spend_this_year", 0.0)
         self._spend_this_year = 0.0
         # Sellers restock, so the pressure your buying put on the market fades.
@@ -426,13 +425,13 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
             _band = int(self.state.household.eminence / max(1.0, _danger * 0.15))
             if _band > _said:
                 self.state.household._said_eminence = _band
-                self.state.household.log.append((self.state.scenario.year, "YOU ARE BECOMING CONSPICUOUS: eminence %.0f "
+                self.state.household.log.append((self.state.scenario.year, LogLine("eminence_warning", "YOU ARE BECOMING CONSPICUOUS: eminence %.0f "
                                      "against a danger line of %.0f. This is the "
                                      "one thing no patron and no bribe protects "
                                      "you from, and it grows with reputation and "
                                      "visible wealth. A wide, dispersed "
                                      "institution is what survives you"
-                                 % (self.state.household.eminence, _danger)))
+                                 % (self.state.household.eminence, _danger))))
         self.update_protection()
         # THE STATE NOTICES YOU. Requisition, the pressed office, a demand
         # for military supply, and the tail confiscation risk at the top of
@@ -474,14 +473,14 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
             _band = int(self.state.household.scandal / max(1.0, _sd * 0.15))
             if _band > self.state.seat_progress._said_scandal:
                 self.state.seat_progress._said_scandal = _band
-                self.state.household.log.append((self.state.scenario.year, "YOU ARE BEING TALKED ABOUT: scandal %.0f "
+                self.state.household.log.append((self.state.scenario.year, LogLine("scandal_warning", "YOU ARE BEING TALKED ABOUT: scandal %.0f "
                                      "against a line of %.0f. Past it you may be "
                                      "denounced, and that ends the run - about "
                                      "%.0f%% a year at this level. 'bribe' buys "
                                      "advocacy and piety; it falls a tenth a "
                                      "year on its own"
                                  % (self.state.household.scandal, _sd,
-                                    PERCENT_SCALE * max(0.0, (self.state.household.scandal - _sd) / self.SCANDAL_HAZARD_SCALE))))
+                                    PERCENT_SCALE * max(0.0, (self.state.household.scandal - _sd) / self.SCANDAL_HAZARD_SCALE)))))
         elif self.state.household.scandal < _sd * 0.5:
             self.state.seat_progress._said_scandal = 0
         if self.events and self.state.household.scandal > self.cfg["suspicion_danger"]:
@@ -503,20 +502,20 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
                                                                    "confiscation by the state")
                     if take > 0.0:
                         self.state.household.reputation = max(0.0, self.state.household.reputation - self.EMINENCE_CONFISCATION_REPUTATION_LOSS)
-                        self.state.household.log.append((self.state.scenario.year, "PROMINENCE: property confiscated, %s lost, "
+                        self.state.household.log.append((self.state.scenario.year, LogLine("prominence_confiscated", "PROMINENCE: property confiscated, %s lost, "
                                              "and you withdraw from public life for a while"
-                                             % money_text(take, self, short=True)))
+                                             % money_text(take, self, short=True))))
                     else:
-                        self.state.household.log.append((self.state.scenario.year, "PROMINENCE: the court demanded your "
-                                             "property and you kept it, but you withdraw from public life for a while"))
+                        self.state.household.log.append((self.state.scenario.year, LogLine("prominence_demand_kept", "PROMINENCE: the court demanded your "
+                                             "property and you kept it, but you withdraw from public life for a while")))
                     self.state.household.eminence *= self.EMINENCE_CONFISCATION_RETENTION
                 elif roll < (self.EMINENCE_OUTCOME_CONFISCATION_SHARE + self.EMINENCE_OUTCOME_PATRON_LOST_SHARE):
                     for pat in self.patrons_lost_to_eminence():
                         if pat in self.state.projects.done:
                             self.state.projects.done.discard(pat)
                             self._done_changed()
-                            self.state.household.log.append((self.state.scenario.year, "PROMINENCE: your patron is destroyed in "
-                                                 "someone else's quarrel and you lose %s" % pat))
+                            self.state.household.log.append((self.state.scenario.year, LogLine("prominence_patron_destroyed", "PROMINENCE: your patron is destroyed in "
+                                                 "someone else's quarrel and you lose %s" % pat)))
                             break
                     self.state.household.eminence *= self.EMINENCE_PATRON_LOSS_RETENTION
                     self.state.household.reputation = max(0.0, self.state.household.reputation - self.EMINENCE_PATRON_LOSS_REPUTATION_LOSS)
@@ -538,8 +537,8 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
             if self.state.household.bondage_years_left <= 0:
                 self.state.household.bondage_years_left = 0.0
                 self.state.household.bondage_debt = 0.0
-                self.state.household.log.append((self.state.scenario.year, "your term is served and the debt is discharged; "
-                                     "you are your own man again"))
+                self.state.household.log.append((self.state.scenario.year, LogLine("bondage_served", "your term is served and the debt is discharged; "
+                                     "you are your own man again")))
 
     def _deputy_hours_sentence(self):
         if self.state.household.directors_extra <= 0:
@@ -573,8 +572,10 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
             if self.state.founder.life_left <= 0:
                 self.state.founder.founder_alive = False
                 self.state.household.log.append(
-                    (self.state.scenario.year, "THE FOUNDER DIES, aged about %d. %s"
-                     % (self.founder_age(), self._deputy_consequence())))
+                    (self.state.scenario.year, LogLine(
+                        "founder_dies", "THE FOUNDER DIES, aged about %d. %s"
+                        % (self.founder_age(), self._deputy_consequence()),
+                        aged=self.founder_age(), deputies_carry_the_work=bool(self.deputies_carry_the_work()))))
         # a programme with no director is not paused, it is dissolving
         if not self.state.founder.founder_alive and not self.deputies_carry_the_work():
             self.state.projects.stalled += 1
@@ -591,10 +592,12 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
                         self.state.projects.done.discard(node_id)
                         self._done_changed()
             if self.state.projects.stalled in (3, 6, 9, 11):
-                self.state.household.log.append((self.state.scenario.year, "THE PROGRAMME IS DISSOLVING: %d year(s) "
-                                     "since the founder died. %s What you built is being "
-                                     "forgotten. The run ends at twelve."
-                                 % (self.state.projects.stalled, self._deputy_hours_sentence())))
+                self.state.household.log.append((self.state.scenario.year, LogLine(
+                    "programme_dissolving", "THE PROGRAMME IS DISSOLVING: %d year(s) "
+                    "since the founder died. %s What you built is being "
+                    "forgotten. The run ends at twelve."
+                    % (self.state.projects.stalled, self._deputy_hours_sentence()),
+                    years_since_death=self.state.projects.stalled, run_ends_after_years=self.DISSOLUTION_YEARS_UNTIL_END)))
             if self.state.projects.stalled >= self.DISSOLUTION_YEARS_UNTIL_END:
                 self._catastrophe("the founder died without training successors; "
                                   + self._what_survived_the_dissolution())

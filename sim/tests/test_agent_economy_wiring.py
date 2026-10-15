@@ -81,8 +81,10 @@ for civ in ("han_china_100ad", "norse_900ad"):
 # One owner for credit: the founder's room and the rate both come from the agent economy's market.
 credit_game = rome
 agent_market = credit_game.economy.agent.economy()
-check("on the agent economy the credit room is the agent market's, as the rate is",
-      credit_game.market_credit_room(credit_game.state.acting_seat) == economy_api.credit_room(agent_market, credit_game.state.acting_seat)
+check("on the agent economy the credit room is the agent market's, in coin, as the rate is",
+      abs(credit_game.market_credit_room(credit_game.state.acting_seat)
+          - economy_api.credit_room(agent_market, credit_game.state.acting_seat) * agent_market.setup.coin_per_unit)
+      <= 1e-9 * abs(credit_game.market_credit_room(credit_game.state.acting_seat))
       and credit_game.market_rate() == economy_api.interest_rate(agent_market),
       (credit_game.market_credit_room(credit_game.state.acting_seat), economy_api.credit_room(agent_market, credit_game.state.acting_seat)))
 

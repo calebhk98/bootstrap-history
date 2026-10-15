@@ -166,15 +166,15 @@ def _topic_population(sim):
 @help_topic('money')
 def _topic_money(sim):
     return {"where it comes from": (
-        "Your practice - the trade this society already had, which you can "
-        "do from the first day - plus every concern you have OPENED, plus "
+        "Your wages - your own hours sold in a trade you hold, at that "
+        "trade's going wage - plus every concern you have OPENED, plus "
         'what your own workshop sells. {"cmd":"money"} itemises all of it '
         "and the rows sum to the revenue above them."),
-        "your practice pays less than the tree quotes": (
-            "About a third: one person in a rented room is not an organised "
-            "concern, and that gap does not close with time. Selling your "
-            "hours for wages takes another bite, because you cannot be in "
-            "two places."),
+        "your wages are the market's": (
+            "One person's hours sell once, at what the trade pays. Hours "
+            "you sell with 'work', teach, move or spend supervising are "
+            "hours your standing job does not sell, because you cannot be "
+            "in two places."),
         "a concern you open starts small": (
             "It reaches its full figure over about three years."),
         "where it goes": (

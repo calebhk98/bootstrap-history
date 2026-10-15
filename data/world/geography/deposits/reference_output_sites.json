@@ -11,6 +11,8 @@
    "deposit_type": "bituminous_coal_basin",
    "status": "historic",
    "conf": "C",
+   "first_worked": 1770,
+   "first_worked_source": "This entry's own source: worked from the late eighteenth century. Entered as the start of that late part (1770); no size is given (the geological model sizes the district).",
    "source": "Skane (Sweden) coal measures around Hoganas and Bjuv, the Nordic region's small coalfield, worked from the late eighteenth century; location from the Geological Survey of Sweden's description of the Rhaetian-Jurassic coal-bearing beds."
   },
   {
@@ -35,6 +37,8 @@
    "deposit_type": "carbonate_hosted_galena",
    "status": "historic",
    "conf": "C",
+   "first_worked": 1400,
+   "first_worked_source": "This entry's own source: worked from the fifteenth century at the latest. Entered as the start of that century; no earlier working is attested in the source, and no size is given (the geological model sizes the district).",
    "source": "Sala silver-lead mine, Vastmanland, worked from the fifteenth century at the latest; the galena carries the silver. Position from the Swedish national heritage listing of the mine."
   },
   {
@@ -48,7 +52,8 @@
    "status": "historic",
    "conf": "C",
    "source": "Sala silver mine, Vastmanland, Sweden's chief silver producer from the late Middle Ages; the same working as the lead entry, listed once per metal.",
-   "working_unknown": "UNKNOWN (D): this entry's source note gives the place and a share of reference output, not a working date or a total endowment. Not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores."
+   "first_worked": 1400,
+   "first_worked_source": "The same working as sala_lead, whose source dates it to the fifteenth century at the latest; entered as the start of that century. No size is given (the geological model sizes the district)."
   },
   {
    "id": "magan_copper_oman",
@@ -439,7 +444,8 @@
    "status": "historic",
    "conf": "B",
    "source": "Taxco, Guerrero, early Spanish silver mines of the 1530s (Encyclopedia.com, Taxco; Wikipedia, Taxco gives about 1532) and part of the Mexican silver belt with Zacatecas; Bakewell, Silver Mining and Society in Colonial Mexico: Zacatecas 1546-1700 (Cambridge University Press, 1971) covers Zacatecas, not Taxco.",
-   "working_unknown": "UNKNOWN (D): this entry's source note gives the place and a share of reference output, not a working date or a total endowment. Not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores. The source dates the early Spanish mines to about the 1530s but gives no size, so no date is entered either."
+   "first_worked": 1532,
+   "first_worked_source": "This entry's own source: Wikipedia, Taxco, gives about 1532 for the early Spanish silver mines. No size is given (the geological model sizes the district)."
   },
   {
    "id": "oruro_tin",

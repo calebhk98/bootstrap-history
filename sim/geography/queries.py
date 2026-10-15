@@ -11,7 +11,7 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 from sim.geography.json_copy import copied
 from sim.geography import (droving, food_capacity, food_land, food_pasture, food_wild_harvest, map_source, mechanisms, parameters, resource_links, resources_biotic, rail_freight,
                            resources_catalogue, resources_endowment, resources_mined, resources_prospecting, resources_sites,
-                           resources_summary, routes_carriage, routes_graph, routes_modes, routes_search, tile_holdings, tile_layers,
+                           reach_bands, resources_summary, routes_carriage, routes_graph, routes_modes, routes_search, tile_holdings, tile_layers,
                            ways_build, ways_works)
 
 WorldMap = map_source.WorldMap
@@ -182,6 +182,12 @@ def reach(origin_tiles: Iterable[str], modes: Iterable[str], days_budget: float,
                                held_nodes=held_nodes)
 
 
+def tile_reach_levels(held_tiles: Iterable[str], held_nodes: Iterable[str], world_map: Optional[WorldMap] = None) -> Dict[str, int]:
+    """{tile_id: reach level} for every tile of the map, from the tiles held, over the modes the nodes held
+    open: 0 for a held tile, the map's farthest level where no route joins."""
+    return reach_bands.tile_levels(_map(world_map), held_tiles, held_nodes)
+
+
 def freight_links(mode_ids: Iterable[str], world_map: Optional[WorldMap] = None) -> List[Tuple[str, str, str, float]]:
     """(tile_a, tile_b, mode, km) for every edge these modes use without anything built."""
     return routes_graph.links(_map(world_map), tuple(mode_ids))
@@ -271,11 +277,12 @@ def parameter_value(parameter_id: str, world_map: Optional[WorldMap] = None) -> 
 
 
 def mined_before(tile_ids: Iterable[str], resource_id: str, year: int,
-                 world_map: Optional[WorldMap] = None) -> Dict[str, Any]:
+                 world_map: Optional[WorldMap] = None, rates: Optional[Mapping[str, float]] = None) -> Dict[str, Any]:
     """What the known deposits of a resource in these tiles had yielded by `year`: {workings, unworked,
-    deposits_in_tiles, unit}, a working being {id, tile_id, output_per_year, years_worked, years_since_last_output}
-    in the resource's unit. Deposits with no working date are listed in `unworked`, never guessed."""
-    return resources_mined.mined_before(_map(world_map), tile_ids, resource_id, year)
+    deposits_in_tiles, unit}, a working being {id, tile_id, output_per_year, years_worked, years_since_last_output,
+    mined_share} in the resource's unit. `rates` ({deposit id: tonnes a year}) is the historical extraction rate
+    where the data gives one. Deposits with no working date are listed in `unworked`, never guessed."""
+    return resources_mined.mined_before(_map(world_map), tile_ids, resource_id, year, rates)
 
 
 def worked_deposits(tile_ids: Iterable[str], resource_id: str, year: int, found: Iterable[Mapping[str, Any]] = (),

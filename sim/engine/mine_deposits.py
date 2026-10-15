@@ -3,13 +3,15 @@
 A working names one deposit of the resource it raises. The deposits a seat can name are those geography
 lists for its held tiles (the catalogue's known mines, first worked by now, and any hidden deposit its
 prospecting found: `state.holdings.deposits_found`). A deposit's size is the catalogue's endowment; where
-the catalogue gives none, the older deposit model's output for the site over a working life stands in for
-it [temporary_heuristic: DEPOSIT_ASSUMED_WORKING_LIFE_YEARS], and a deposit of unknown size cannot be named.
-A deposit already worked before the game began has yielded its share of the endowment
-(`mined_before`); every tonne the seat's workings, or the agent economy's firms on the tile, raise since is
+the catalogue gives none, geography's expected size for the district stands in for it (the geological model);
+a row sized by the older output model keeps that model's output for the site over a working life
+[temporary_heuristic: DEPOSIT_ASSUMED_WORKING_LIFE_YEARS]; a deposit of unknown size cannot be named.
+A deposit already worked before the game began has yielded its share of the size
+(`mined_before`, drawn down at the rate it was worked); every tonne the seat's workings, or the agent economy's firms on the tile, raise since is
 drawn from it (`state.holdings.deposit_drawn`). The most a deposit yields in a year is a share of its size
-(`resources_working_share_per_year`), less what other workings named on it already rate, so a working's
-output is bounded by its deposit and a worked-out deposit closes it.
+(`resources_working_share_per_year`), or the rate the data say it was worked at when that is larger
+(`deposit_history.py`, the rate `mined_before` draws it down by), less what other workings named on it already
+rate, so a working's output is bounded by its deposit and a worked-out deposit closes it.
 
 Methods of Sim, a mixin only so they live in a file of their own.
 """
@@ -17,6 +19,7 @@ from sim.constants import declare
 from .units_prose import mass_text, money_text
 import sim.geography.api as geography
 from sim.world import deposits as deposit_model
+from .deposit_history import historical_rates
 
 NO_DEPOSIT_TEXT = ("you know of no deposit of %s with room on the tiles you hold; prospect for one "
                    "('prospect <tile> %s <person_days>')")
@@ -44,9 +47,9 @@ class MineDepositsMixin:
 
     def _worked_before_start(self, resource_id, tiles):
         """{deposit id: share of its endowment worked out before the game began}."""
-        share = float(geography.parameter_value("resources_working_share_per_year", self.world_map))
-        mined = geography.mined_before(tiles, resource_id, int(self.cfg["start_year"]), self.world_map)
-        return {working["id"]: min(1.0, working["years_worked"] * share) for working in mined["workings"]}
+        mined = geography.mined_before(tiles, resource_id, int(self.cfg["start_year"]), self.world_map,
+                                       historical_rates(self.world_map, resource_id))
+        return {working["id"]: working["mined_share"] for working in mined["workings"]}
 
     def _deposit_base(self, resource_id):
         """[(row, size in tonnes, share worked out before the game)] of the deposits this seat can name, kept
@@ -75,10 +78,12 @@ class MineDepositsMixin:
         if resource_id is None:
             return []
         drawn = self.state.holdings.deposit_drawn
+        history = historical_rates(self.world_map, resource_id)
         rows = []
         for row, size, before in self._deposit_base(resource_id):
             remaining = max(0.0, size * (1.0 - before) - drawn.get(row["id"], 0.0))
-            rate = min(geography.working_rate_tonnes_per_year(size, self.world_map), remaining)
+            rate = min(max(geography.working_rate_tonnes_per_year(size, self.world_map), history.get(row["id"], 0.0)),
+                       remaining)
             rows.append(dict(row, size_tonnes=size, remaining_tonnes=remaining, rate_tonnes_per_year=rate,
                              room_tonnes_per_year=max(0.0, rate - self._capacity_naming(row["id"]))))
         return rows

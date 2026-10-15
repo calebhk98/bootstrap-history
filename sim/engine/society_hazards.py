@@ -18,6 +18,7 @@ byte-for-byte if draw order is preserved. These are methods of Sim; they
 are a mixin only so that they can live in a file of their own.
 """
 from sim.constants import declare
+from sim.refusal import LogLine
 from . import money_units
 from .units_prose import money_text
 from .data import closure, critical_path
@@ -463,7 +464,8 @@ class HazardsMixin:
                 said.add(key)
                 msg = cond.get("met_message" if met else "unmet_message")
                 if msg:
-                    self.state.household.log.append((year, msg))
+                    self.state.household.log.append((year, LogLine(
+                        "hazard_condition_met" if met else "hazard_condition_unmet", msg, hazard=key)))
         if not met or field not in hazard:
             return hazard
         adjusted = dict(hazard)
@@ -487,9 +489,9 @@ class HazardsMixin:
             key = "causes:" + hazard.get("name", "hazard")
             if key not in said:
                 said.add(key)
-                self.state.household.log.append((year, "%s: %s, so it %s" % (
+                self.state.household.log.append((year, LogLine("hazard_condition_failed", "%s: %s, so it %s" % (
                     hazard.get("name", "hazard"), event_causes.failed_words(report),
-                    "does not come" if kept is None else "comes weaker")))
+                    "does not come" if kept is None else "comes weaker"))))
         return kept
 
     STAFF_LOSS_HAZARD_ANNUAL_CHANCE = declare(
@@ -561,11 +563,13 @@ class HazardsMixin:
         """
         rng = self.rng
         if "sack_chance" in hazard:
-            relief, why = self.hazard_relief("sack_chance")
+            relief, why, lapsed = self.hazard_relief_detail("sack_chance")
             probability = hazard["sack_chance"] * relief
             if why and rng.random() < hazard["sack_chance"] - probability:
-                self.state.household.log.append((year, "%s: an attack comes to nothing (%s)"
-                                 % (hazard.get("name", "crisis"), "; ".join(why[:3]))))
+                self.state.household.log.append((year, LogLine(
+                    "hazard_attack_averted", "%s: an attack comes to nothing (%s)"
+                    % (hazard.get("name", "crisis"), "; ".join(why[:3])),
+                    hazard=hazard.get("name", "crisis"), lapsed_hedges=lapsed)))
             if rng.random() < probability:
                 self._sack_site(hazard, year)
 
@@ -605,10 +609,10 @@ class HazardsMixin:
         if _act0:
             _took.append("%d project%s back to the beginning"
                          % (_act0, "" if _act0 == 1 else "s"))
-        household.log.append((year, "%s: a site is sacked - %s"
-                         % (hazard.get("name", "crisis"),
-                            ", ".join(_took)
-                            or "you had nothing it could take")))
+        household.log.append((year, LogLine(
+            "site_sacked", "%s: a site is sacked - %s"
+            % (hazard.get("name", "crisis"), ", ".join(_took) or "you had nothing it could take"),
+            hazard=hazard.get("name", "crisis"), took_nothing=not _took)))
         # corpus_hedge (core.py) computes both the roll and the defense state.
         corpus_loss_probability, frac, _hedge_before = self.corpus_hedge()
         if rng.random() < corpus_loss_probability:
@@ -663,8 +667,9 @@ class HazardsMixin:
                 _on_road = sum(1 for tech_id in drop if tech_id in _gc)
             except Exception:
                 _on_road = 0
-        self.state.household.log.append((year, "KNOWLEDGE LOST: %d technolog%s "
-                             "forgotten - %s%s%s%s"
+        self.state.household.log.append((year, LogLine(
+            "knowledge_lost", "KNOWLEDGE LOST: %d technolog%s "
+            "forgotten - %s%s%s%s"
             % (len(drop), "y" if len(drop) == 1 else "ies",
                ", ".join(_named[:8])
                + (" and %d more" % (len(_named) - 8)
@@ -680,7 +685,9 @@ class HazardsMixin:
                 "goal: the route is longer than it was a "
                 "moment ago - 'path' will show the rebuilt "
                 "shape of it" % _on_road)
-               if _on_road else "")))
+               if _on_road else ""),
+            forgotten=_named, corpus_never_dispersed=_hedge_before != self.best_corpus_node(),
+            corpus_went=bool(_corpus), on_road=_on_road)))
 
     PATRON_DEATH_ANNUAL_CHANCE = declare(
         "PATRON_DEATH_ANNUAL_CHANCE", 0.05, kind="temporary_heuristic",
@@ -788,18 +795,18 @@ class HazardsMixin:
                        "auto_court_heir is off; protection falls from %d%% "
                        "to %d%% and scandal rises by %d"
                        % (was * 100, household.protection * 100, self.PATRON_DEATH_SCANDAL))
-            household.log.append((year, msg + self.PATRON_DEATH_RECOVERY_NOTE))
+            household.log.append((year, LogLine("patron_dies", msg + self.PATRON_DEATH_RECOVERY_NOTE)))
         if rng.random() < self.FIRE_ANNUAL_CHANCE:
             had = max(0.0, household.capital)
             self.lose_capital(self.FIRE_CAPITAL_LOSS, "fire")
-            household.log.append((year, "fire in the %s: it destroyed %s"
+            household.log.append((year, LogLine("fire", "fire in the %s: it destroyed %s"
                              % (self.civ.get("fire_quarter", "crowded quarter"),
-                                self._loss_words(had))))
+                                self._loss_words(had)))))
         if rng.random() < self.BANDITRY_ANNUAL_CHANCE:
             had = max(0.0, household.capital)
             self.plunder_founder(self.BANDITRY_TAKE_STRENGTH, "banditry", order_holds=True)
-            household.log.append((year, "banditry or a frontier war disrupts supply: "
-                                 "it cost you %s" % self._loss_words(had)))
+            household.log.append((year, LogLine("banditry", "banditry or a frontier war disrupts supply: "
+                                 "it cost you %s" % self._loss_words(had))))
 
     def _loss_words(self, had_before):
         """"1,240 denarii" or "nothing, you were holding none".
@@ -815,4 +822,4 @@ class HazardsMixin:
 
     def _catastrophe(self, why):
         self.state.founder.dead_reason = why
-        self.state.household.log.append((self.state.scenario.year, "RUN ENDS: " + why))
+        self.state.household.log.append((self.state.scenario.year, LogLine("run_ends", "RUN ENDS: " + why)))

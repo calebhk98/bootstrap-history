@@ -16,6 +16,8 @@ MECHANISATION_NODES = ("horse_collar", "fud_heavy_mouldboard_plough_coulter",
                        "fud_mechanical_reaper", "ag2_reaper")
 # Long enough for adoption of a new technique to show in population and in the farm share.
 YEARS = 30
+# Long enough for a land-bound society's food to bind its people.
+LAND_BOUND_YEARS = 60
 
 
 def _complete(test_sim, node_ids):
@@ -100,6 +102,19 @@ class FoodTechnologyReachesPopulationTests(unittest.TestCase):
         control = _control()[YEARS]
         self.assertGreaterEqual(improved["population"], control["population"])
         self.assertLess(improved["farm_workers"], control["farm_workers"])
+
+    def test_a_food_technology_raises_population_once_the_land_is_all_cleared(self):
+        # Rome's territory holds several times the farmland it has cleared, so clearing and farm hands meet its food
+        # and nutrition stays at need: only the demographic rates move its people. With the arable ground all
+        # cleared, land is the limit, and a technique that yields more per hectare feeds more people.
+        def land_bound_population(node_ids):
+            game = _rome()
+            _complete(game, node_ids)
+            game._farm_arable_ceiling = game.farm_land.hectares
+            _run_years(game, LAND_BOUND_YEARS)
+            return game.population.total
+        self.assertGreater(
+            land_bound_population(("crop_rotation", "fud_three_field_rotation")), land_bound_population(()))
 
     def test_it_does_not_move_population_on_the_day_it_completes(self):
         improved = _rome()

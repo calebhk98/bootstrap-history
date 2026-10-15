@@ -6,6 +6,8 @@ against the household actor's `employees`, so a firm or state can use them.
 """
 import math
 
+from sim.refusal import LogLine
+
 from . import trade_data
 
 
@@ -30,7 +32,7 @@ class StaffLedgerMixin:
             parts.append("%s %s%s" % (count, trade, "" if count == "1" else "s"))
         if parts:
             self._world.state.household.log.append(
-                (self._world.state.scenario.year, "you lose %s to %s" % (", ".join(parts), cause)))
+                (self._world.state.scenario.year, LogLine("staff_lost", "you lose %s to %s" % (", ".join(parts), cause))))
 
     def trades_drawn_on(self):
         """Specialist trades some active project or open concern needs, with why."""
@@ -106,9 +108,9 @@ class StaffLedgerMixin:
         found = int(round(household.employees.get(trade, 0.0) - before))
         if not hired or found <= 0:
             return 0
-        household.log.append((self._world.state.scenario.year,
-                              "%s: you hire %d %s%s to keep your concerns supervised"
-                              % (label, found, trade, "" if found == 1 else "s")))
+        household.log.append((self._world.state.scenario.year, LogLine(
+            "policy_hire", "%s: you hire %d %s%s to keep your concerns supervised"
+            % (label, found, trade, "" if found == 1 else "s"), policy=label, trade=trade, count=found)))
         return found
 
     def replace_lost_foremen(self):

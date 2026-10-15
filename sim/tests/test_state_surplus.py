@@ -21,7 +21,7 @@ def purchases(treasury):
 
 
 # ---- no outlay without a recipient --------------------------------------------------------------
-rich = sim()
+rich = unopened_sim()
 rich_treasury = rich.state_treasury()
 rich_treasury.money = 1.0e12
 for _year in range(4):
@@ -36,7 +36,7 @@ check("the purse still equals what it held plus income less outlays",
                                  - sum(rich_treasury.record.outlays.values()))) < 1e-6 * 1.0e12, rich_treasury.money)
 
 # ---- the state is a saver on the loanable market ------------------------------------------------
-saver = sim()
+saver = unopened_sim()
 saver_treasury = saver.state_treasury()
 saver_treasury.money = 1.0e12
 one_year(saver)
@@ -45,7 +45,7 @@ check("a state with a reserve beyond its need is a source of funds on the market
 one_year(saver)
 # a borrower in the market: firms and the founder owe and pay interest, and the lenders are paid exactly that
 from sim.engine.state import ActorRecord
-borrowed = sim()
+borrowed = unopened_sim()
 borrowed_treasury = borrowed.state_treasury()
 borrowed_treasury.money = 1.0e12
 for number in range(3):
@@ -70,7 +70,7 @@ every_receipt = (borrowed_treasury.record.income.get("interest_on_lending", 0.0)
                  + borrowed.state.household.cash_flow.get("interest_on_lending", 0.0))
 check("no lender's interest income exceeds what was paid",
       every_receipt <= paid * (1.0 + 1e-9), (every_receipt, paid))
-bare = sim()
+bare = unopened_sim()
 bare.civ["standing_army"] = 1.0e8  # a need no revenue covers
 bare.state_treasury().money = 0.0
 one_year(bare)
@@ -79,9 +79,8 @@ check("a state with no spare reserve lends nothing and earns no interest on lend
       bare.state_treasury().record.income.get("interest_on_lending", 0.0) == 0.0, bare.state_treasury().record.income)
 
 # ---- a surplus no work wants is kept and lent, not spent on unnamed works --------------------------
-stable = sim()
+stable = unopened_sim()
 stable_treasury = stable.state_treasury()
-stable_treasury.money = 1.0e12   # collection and the standing need take all of the opening revenue, so the surplus is given
 for _year in range(4):
     one_year(stable)
 check("what the surplus did not spend on named works stays the treasury, which the loanable market is offered, not swept away",

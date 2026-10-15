@@ -98,8 +98,8 @@ class GradedEnergy(unittest.TestCase):
                 "_energy_bought_per_year": {"thermal_mj": {"quantity": 5.0, "value": 10.0}},
                 "_energy_sold_per_year": {"electrical_mj": {"quantity": 2.0, "value": 20.0}}}
         goods = {"a": 4.0}      # 40 sold goods + 20 sold energy - 10 bought energy = 50 at long-run prices
-        ratios = {"a": 1.0, "thermal_mj": 3.0, "electrical_mj": 2.0}
-        factor = node_revenue_market.market_factor(node, goods, ratios.get)
+        prices = {"a": 4.0, "thermal_mj": 9.0, "electrical_mj": 4.0}
+        factor = node_revenue_market.market_factor(node, goods, prices.get)
         self.assertAlmostEqual(factor, (40.0 + 40.0 - 30.0) / 50.0)
 
     def test_without_solver_tables_every_consumer_pays_the_pool(self):

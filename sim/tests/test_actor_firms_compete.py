@@ -47,9 +47,8 @@ def founder_runs(game, node_id, opened_ago=0):
 
 def firm_runs(game, firm_id, node_id, money=1.0e6, opened_ago=5):
     firm = game.actors.add(firm_id, ActorRecord(kind="firm", money=money, target=node_id))
-    firm.concerns.add(node_id)
+    firm.business.open_plant(node_id, game.state.scenario.year - opened_ago)
     firm.knowledge.add(node_id)
-    firm.record.opened_year[node_id] = game.state.scenario.year - opened_ago
     return firm
 
 
@@ -175,15 +174,13 @@ game = actor_sim([])
 firm_world = SimWorld(game)
 check("with no actors operating, nothing is supplied by actors", noted_sale_tonnes(game, "pig_iron_kg") == 0.0)
 one = game.actors.add("firm:iron1", ActorRecord(kind="firm", money=1.0e6))
-one.concerns.add(furnace_node)
-one.record.opened_year[furnace_node] = game.state.scenario.year - 10
+one.business.open_plant(furnace_node, game.state.scenario.year - 10)
 one.sell_output(firm_world)
 supply_one = noted_sale_tonnes(game, "pig_iron_kg")
 check("a firm running a furnace notes the material the furnace makes for the year's market (it enters the book as an order when the year clears)",
       supply_one > 0.0, supply_one)
 two = game.actors.add("firm:iron2", ActorRecord(kind="firm", money=1.0e6))
-two.concerns.add(furnace_node)
-two.record.opened_year[furnace_node] = game.state.scenario.year - 10
+two.business.open_plant(furnace_node, game.state.scenario.year - 10)
 two.sell_output(firm_world)
 check("noted supply sums every actor's output", abs(noted_sale_tonnes(game, "pig_iron_kg") - 2.0 * supply_one) < 1e-9,
       (noted_sale_tonnes(game, "pig_iron_kg"), supply_one))

@@ -12,12 +12,12 @@ from .harness import *  # noqa: F401,F403
 # --- (a) LAND: the ceiling differs by material and by civilization, because
 # geology is not standing. Reuses mineral_scale(), already used for the
 # MARKET half of supply, for the OWN-MINE half too.
-s_land = sim(capital=1.0)
+s_land = unopened_sim(capital=1.0)
 check("a civilization with little tin under its home regions has a lower "
       "tin ceiling than one with plenty of the same standing",
       s_land.mine_land_ceiling("tin") != s_land.mine_land_ceiling("coal"),
       (s_land.mine_land_ceiling("tin"), s_land.mine_land_ceiling("coal")))
-s_mex = sim(civ="mexica_1500", capital=1.0)
+s_mex = unopened_sim(civ="mexica_1500", capital=1.0)
 check("Mesoamerica, which worked copper but not iron or coal, has a lower "
       "land ceiling for iron than for copper",
       s_mex.mine_land_ceiling("iron") < s_mex.mine_land_ceiling("copper"),
@@ -26,7 +26,7 @@ check("Mesoamerica, which worked copper but not iron or coal, has a lower "
 # --- open_mine() actually respects the land ceiling: sinking far more than
 # the ground can support delivers only what the ground can support, not
 # whatever standing alone would have allowed.
-s_dig = sim(capital=1e12)
+s_dig = unopened_sim(capital=1e12)
 ceiling_before = s_dig.mine_land_ceiling("tin")
 got_tin = s_dig.open_mine("tin", ceiling_before * 50.0, partial=False)
 check("sinking far more of a scarce material than the land ceiling allows "
@@ -35,7 +35,7 @@ check("sinking far more of a scarce material than the land ceiling allows "
       (got_tin, ceiling_before))
 
 # --- woodland is bounded too, the tester's other named case ("mines/woods").
-s_wood = sim(civ="norse_900ad", capital=1e12)
+s_wood = unopened_sim(civ="norse_900ad", capital=1e12)
 wood_ceiling = s_wood.forest_land_ceiling()
 got_ha = s_wood.buy_forest(wood_ceiling * 100.0)
 check("buying far more coppice than the land can support delivers only up "
@@ -47,7 +47,7 @@ check("...and the ceiling itself is nowhere near the WHOLE EMPIRE's own "
 
 # --- (b) DEPLETION: yield falls as a working is worked hard relative to
 # what the ground can support, and never below the stated floor.
-s_dep = sim(capital=1e9)
+s_dep = unopened_sim(capital=1e9)
 s_dep.open_mine("coal", s_dep.mine_land_ceiling("coal") * 0.9, partial=False)
 for _ in range(int(s_dep.MINE_LEAD_YEARS) + 1):
     s_dep.year += 1
@@ -75,7 +75,7 @@ check("...and depletion saturates at the floor rather than continuing to "
 
 # --- a working driven gently (a small fraction of what the ground could
 # support) depletes far slower than one driven hard, for the same years.
-s_gentle = sim(capital=1e9)
+s_gentle = unopened_sim(capital=1e9)
 s_gentle.open_mine("coal", s_gentle.mine_land_ceiling("coal") * 0.1, partial=False)
 for _ in range(int(s_gentle.MINE_LEAD_YEARS) + 1 + 150):
     s_gentle.year += 1
@@ -111,7 +111,7 @@ check("mine pumping and the Newcomen engine lower a depleted working's running c
 # --- the interaction the brief asked for: a real decision, not an
 # exponential. Cost is bounded on both ends even at maximum depletion with
 # every relevant technology built.
-s_bound = sim(capital=1.0)
+s_bound = unopened_sim(capital=1.0)
 for _t in s_bound.nodes_with_mechanic("mine_works"):
     s_bound.done.add(_t); s_bound.operating.add(_t)
 s_bound._done_changed()
@@ -124,7 +124,7 @@ check("even fully depleted with every relevant technology built, a tonne "
       "still costs something (not free) and not a runaway multiple of book",
       0.4 <= s_bound.mining_cost_scale("coal") <= 2.5,
       s_bound.mining_cost_scale("coal"))
-s_bound2 = sim(capital=1.0)
+s_bound2 = unopened_sim(capital=1.0)
 s_bound2.mines.append({"material": "coal", "capacity": 1.0, "opened_year": 1,
                        "capex_paid": 0.0, "intensity_yrs": 1e9})
 # the scale is depletion alone; what the techniques do to the works is in the running cost itself
@@ -157,7 +157,7 @@ check("...and the current yield fraction, so a player can see a working "
 # opened later must end up LESS worked-out than one opened earlier and
 # driven the same way for longer - "a shaft opened in year 400 is not
 # three centuries into its seam because an earlier one was."
-s_two = sim(capital=1e9)
+s_two = unopened_sim(capital=1e9)
 s_two.open_mine("coal", s_two.mine_land_ceiling("coal") * 0.4, partial=False)
 for _ in range(50):
     s_two.year += 1
@@ -231,14 +231,14 @@ check("several workings across several materials give byte-identical "
 # --- SAVES: a working survives a save and resume, with its own material,
 # capacity, commissioning year and depletion clock intact - not merely
 # the aggregate mine_capacity total.
-s_sv = sim(capital=1e9)
+s_sv = unopened_sim(capital=1e9)
 s_sv.open_mine("coal", s_sv.mine_land_ceiling("coal") * 0.4, partial=False)
 for _ in range(6):
     s_sv.year += 1
     s_sv.commission_mines()
 _sv_path = os.path.join(HERE, "_test_mines_save.json")
 S.save_state(s_sv, _sv_path)
-s_sv2 = sim(capital=1.0)
+s_sv2 = unopened_sim(capital=1.0)
 S.load_state(s_sv2, _sv_path)
 os.remove(_sv_path)
 check("a save/resume round-trip keeps the SAME working - material, rated "
