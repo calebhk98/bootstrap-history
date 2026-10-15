@@ -30,7 +30,7 @@ class TradeView:
 		def compute() -> Dict[str, float]:
 			sim = self._sim  # type: ignore[attr-defined]
 			if place == self._home_place():
-				per_unit = sim.economy.agent_prices_at(sim.economy.agent_port_tile()) or sim.economy.material_prices()
+				per_unit = sim.economy.material_prices()
 			else:
 				per_unit = {material: sim.partner_price_per_unit(place, material)
 							for material in sim._foreign_economy_facts(place)["prices_in_home_money"]}
@@ -108,8 +108,7 @@ class TradeView:
 		if place == self._home_place():
 			landed, taken = self._sim.actor_home_trade(material)  # type: ignore[attr-defined]
 			factor = self._sim.economy.agent_price_response(  # type: ignore[attr-defined]
-				material, landed + (tonnes if landing else 0.0), taken + (0.0 if landing else tonnes),
-				self._sim.economy.agent_port_tile())
+				material, landed + (tonnes if landing else 0.0), taken + (0.0 if landing else tonnes))
 			return None if factor is None else price * factor
 		return price * self._sim.partner_price_response(place, material, tonnes, landing)  # type: ignore[attr-defined,no-any-return]
 

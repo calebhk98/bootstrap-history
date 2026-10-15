@@ -15,10 +15,6 @@ class TilePricesMixin:
         setup = self.economy().setup
         return tile if tile in setup.tiles else setup.capital_tile
 
-    def port_tile(self):
-        """The tile where cargo enters and leaves the economy."""
-        return self.economy().setup.port_tile
-
     def prices_at(self, tile):
         """{good: money per unit} on the tile in coin; the same dict while the year's answers stand."""
         answers = self.answers()

@@ -51,11 +51,6 @@ class EconomyPort:
         agent = self._answering_agent()
         return None if agent is None else agent.offered_tonnes(material, self.acting_tile() if tile is None else tile)
 
-    def agent_port_tile(self):
-        """The tile where cargo enters and leaves the agent economy, or None while it opens."""
-        agent = self._answering_agent()
-        return None if agent is None else agent.port_tile()
-
     def agent_prices(self):
         """The agent economy's prices by good in coin, or None to use the engine's."""
         agent = self._answering_agent()

@@ -280,6 +280,10 @@ the sell price becomes the economy's bid (decide in the stage; it is a `temporar
   this year. A sale fetches the price less the fall its own supply causes. Quote fields: `price_at_tile_per_tonne`,
   `carriage_per_tonne`, `making_cost_per_tonne`; `market_price_ratio` is gone, the market screen divides price by cost.
   `household_prices` is the same price. `price_index` no longer scales a price paid (the economy's level holds it).
+- Left for later: trader cargo still prices home goods at the cost table with the economy's response as a factor
+  (`agents_port_trade`); pricing them at the economy's port price made home-bound cargo stop after a year
+  (`home_cargo_price`). The static book's household demand (`market_demand`) reads `household_cost_prices`, the cost table,
+  until stage 4 retires it.
 - Coin metal. `GoodsMarket.home_unit_price(metal)` is the one number the held coin (`coin_stock_value`), cargo, partner
   payments and the partners' prices in home money use.
 - Deleted: `goods_price_over_wage`, `agent_price_ratio`, `AgentEconomy.price_ratio`, `market_price_ratio`,
