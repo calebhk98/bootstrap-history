@@ -50,8 +50,10 @@ check("the estimate is not a tight symmetric band centred on the truth - "
 _k_up = next((row["id"] for row in _est_rows if s_fe.nodes[row["id"]]["up"] > 0), None)
 if _k_up:
     _wu = S._agent_dispatch(s_fe, NODES, {"cmd": "why", "id": _k_up})
+    # the crew's pay is in the payroll (Complaint 514), so a concern's upkeep is its non-crew share: the exact figure
+    # is the one a game without fog quotes
     check("upkeep is exact under fog even for a thing you have never run",
-          _wu["upkeep"] == s_fe.nodes[_k_up]["up"], (_wu["upkeep"], s_fe.nodes[_k_up]["up"]))
+          _wu["upkeep"] == _plain.venture_upkeep_quote(_k_up)["now"], (_wu["upkeep"], _plain.venture_upkeep_quote(_k_up)["now"]))
 
 # NARROWS TO THE EXACT FIGURE ONCE YOU HAVE ACTUALLY RUN IT A FEW YEARS.
 s_ry = s_fe

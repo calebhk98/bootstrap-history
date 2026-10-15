@@ -66,8 +66,9 @@ _mn = _ask(_game_b, cmd="money")
 _rows = {record["trade"]: record for record in (_lab.get("on_your_staff") or [])}
 if "smith" in _rows:
     check("the wage bill is the quoted wage times the number of people",
+          # each wage is rounded to a whole coin on its own and so is the bill: half a coin per person, and half for the bill
           abs(_rows["smith"]["a_year_of_one"] * _rows["smith"]["you_employ"]
-              - _lab["annual_wage_bill"]) < 1.0,
+              - _lab["annual_wage_bill"]) <= 0.5 * _rows["smith"]["you_employ"] + 0.5,
           (_rows["smith"], _lab["annual_wage_bill"]))
 check("work reports the wage and no separate practice cost",
       _wk["earned"] > 0 and "it_cost_your_own_practice" not in _wk and "so_you_are_up" not in _wk, _wk)

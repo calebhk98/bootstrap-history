@@ -127,11 +127,32 @@ check("...and every one of those is genuinely on `available` too - the "
 # its own, with the COMBINED bill of everything listed, which individual
 # affordability checks never show.
 _s_pay = _s_pth2
-_rp_pay_ok = S._agent_dispatch(_s_pay, NODES, {"cmd": "path", "id": GOAL})
-check("set-up: on a fresh turn-one Rome game no startable node on the "
-      "route to the goal earns more than it costs to keep running - this "
-      "is the real opening, not an invented fixture",
-      bool(_rp_pay_ok.get("startable_today_toward_this"))
+
+
+def _knowledge_only_goal(game):
+    """The goal whose route has the dearest startable nodes (at least two) among routes where none of them earns
+    more than it costs to keep running. The founder's businesses pay their crew once (Complaint 514), so the route
+    to GOAL now holds a zinc works that pays its way at the opening; the all-knowledge case is a route that really
+    has none, and the dearest is the one whose combined bill can pass what a poor household can raise."""
+    startable_of = {}
+    best, best_bill = None, 0.0
+    for candidate in sorted(NODES):
+        startable = [node_id for node_id in S.closure(NODES, candidate) if node_id not in game.done
+                     and startable_of.setdefault(node_id, game.can_start(node_id))]
+        if len(startable) >= 2 and not any(
+                game.venture_real_earnings(node_id) > game.venture_upkeep_quote(node_id)["now"]
+                for node_id in startable):
+            bill = sum(game.project_cost(node_id) for node_id in startable)
+            if bill > best_bill:
+                best, best_bill = candidate, bill
+    return best
+
+
+_KNOWLEDGE_ONLY_GOAL = _knowledge_only_goal(_s_pay)
+_rp_pay_ok = S._agent_dispatch(_s_pay, NODES, {"cmd": "path", "id": _KNOWLEDGE_ONLY_GOAL})
+check("set-up: on a fresh turn-one Rome game some goal's startable route nodes earn no more than they cost to "
+      "keep running - this is the real opening, not an invented fixture",
+      _KNOWLEDGE_ONLY_GOAL is not None and bool(_rp_pay_ok.get("startable_today_toward_this"))
       and all(entry.get("earns_per_year", 0) <= entry.get("costs_per_year_after", 0)
               for entry in _rp_pay_ok["startable_today_toward_this"]
               if isinstance(entry, dict)),
@@ -173,7 +194,7 @@ if _earning_goal:
 # exact number the England playtester needed and never had before losing
 # 24 years to debt over it.
 _s_comb = sim(civ="rome_100ad", capital=1.0)
-_rp_comb = S._agent_dispatch(_s_comb, NODES, {"cmd": "path", "id": GOAL})
+_rp_comb = S._agent_dispatch(_s_comb, NODES, {"cmd": "path", "id": _KNOWLEDGE_ONLY_GOAL})
 check("set-up: a household with almost nothing to spend, tested against "
       "the same all-knowledge opening route",
       bool(_rp_comb.get("startable_today_toward_this")), _rp_comb)
