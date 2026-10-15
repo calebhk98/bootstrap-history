@@ -19,7 +19,7 @@ def _snapshot(sim_state):
 
 
 # --- a total cost cap is never exceeded
-capped = sim(capital=_START_CAPITAL)
+capped = unopened_sim(capital=_START_CAPITAL)
 _cap_costs = {node_id: capped.project_cost(node_id) for node_id in capped.order
               if capped.can_start(node_id)}
 _total_cap = 1000.0
@@ -34,7 +34,7 @@ check("rush max_total_cost explains what the cap skipped",
       _result["not_started"][:3])
 
 # --- an annual draw cap is never exceeded
-drawn = sim(capital=_START_CAPITAL)
+drawn = unopened_sim(capital=_START_CAPITAL)
 _draw_cap = 300.0
 _result = _rush(drawn, limit=50, max_annual_draw=_draw_cap)
 _draw = sum(_annual_draw(drawn, row["id"]) for row in _result["started"])
@@ -43,7 +43,7 @@ check("rush max_annual_draw never commits a bigger yearly draw than the cap",
       _draw <= _draw_cap + 1e-6, (_draw, _draw_cap))
 
 # --- a cash reserve is left uncommitted
-reserved = sim(capital=_START_CAPITAL)
+reserved = unopened_sim(capital=_START_CAPITAL)
 _reserve = _purchase_budget(reserved) - 800.0
 _result = _rush(reserved, limit=50, reserve_cash=_reserve)
 _spent = sum(row["cost"] for row in _result["started"])
@@ -51,7 +51,7 @@ check("rush reserve_cash keeps the reserve out of the purchase budget",
       _spent <= 800.0 + 1e-6, _spent)
 
 # --- preview changes no state and matches the real run
-previewed = sim(capital=_START_CAPITAL)
+previewed = unopened_sim(capital=_START_CAPITAL)
 _before = _snapshot(previewed)
 _preview = _rush(previewed, limit=50, max_total_cost=1000.0, preview=True)
 check("rush preview changes no state", _snapshot(previewed) == _before,
@@ -67,7 +67,7 @@ check("rush preview lists exactly what the real run starts",
       (_preview["would_start"][:3], _capped_run["started"][:3]))
 
 # --- bad option values are refused, not ignored
-refused = sim(capital=_START_CAPITAL)
+refused = unopened_sim(capital=_START_CAPITAL)
 for _option in ("max_total_cost", "max_annual_draw", "reserve_cash"):
     _result = _rush(refused, limit=3, **{_option: "lots"})
     check("rush refuses a non-numeric %s and starts nothing" % _option,
@@ -76,7 +76,7 @@ _result = _rush(refused, limit=3, max_total_cost=-5)
 check("rush refuses a negative cap", _result.get("ok") is False and not refused.active, _result)
 
 # --- with no options, behaviour is unchanged
-plain = sim(capital=_START_CAPITAL)
+plain = unopened_sim(capital=_START_CAPITAL)
 _result = _rush(plain, limit=5)
 check("plain rush limit still starts exactly that many",
       _result["count_started"] == 5 and "preview" not in _result, _result)
@@ -101,7 +101,7 @@ check("'start <id>' is unchanged", (_parsed or {}).get("cmd") == "start", (_pars
 
 # --- preview and a real run agree near the credit margin
 for _margin_capital in (150.0, 400.0, 900.0, 2500.0):
-    _margin_sim = sim(capital=_margin_capital)
+    _margin_sim = unopened_sim(capital=_margin_capital)
     if _margin_capital == 400.0:
         check("start_refusal is None for a startable, affordable project and changes nothing",
               _margin_sim.start_refusal("units_standards") is None and not _margin_sim.active)
