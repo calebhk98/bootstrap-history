@@ -9,7 +9,7 @@ households receive is the income that pays for the demand producers are sized to
 demand and prices, found by iterating from the full-employment ceiling.
 """
 import math
-from typing import Callable, Dict, Mapping
+from typing import Callable, Dict, Mapping, Tuple
 
 from .households_cohort import Cohort
 from .types import GoodId, TileId
@@ -24,31 +24,49 @@ def value_of(final_by_tile: Mapping[TileId, Mapping[GoodId, float]], prices: Map
                      for demand in final_by_tile.values() for good, quantity in demand.items())
 
 
-def settled_income_per_head(ceiling: float, people: float, demand_at: Callable[[float], float]) -> float:
-    """Income per head at which the value of final demand (`demand_at(income per head)`) equals the income
-    paid, found from the `ceiling` (full employment at the opening wage) downward."""
+def settled_income_per_head(ceiling: float, people: float, demand_at: Callable[[float], Tuple[float, float]]
+                            ) -> Tuple[float, float]:
+    """(income per head, labour share of it) at which the value of final demand equals the income paid, found
+    from the `ceiling` (full employment at the opening wage) downward. `demand_at(income per head)` gives the
+    value of the demand that income buys and the share of that value which pays labour."""
     if people <= 0.0:
-        return 0.0
+        return 0.0, 0.0
     income = ceiling
+    labour_share = 0.0
     for _pass in range(OPENING_INCOME_PASSES):
-        paid = min(ceiling, demand_at(income) / people)
+        value, labour_share = demand_at(income)
+        paid = min(ceiling, value / people)
         if abs(paid - income) <= OPENING_INCOME_TOLERANCE * max(paid, 1e-300):
-            return paid
+            return paid, labour_share
         income = paid
-    return income
+    return income, labour_share
 
 
-def with_income_per_head(cohorts: Mapping[str, Cohort], per_head: float) -> Dict[str, Cohort]:
-    """The cohorts with each class's last year's income at its ownership share of `per_head` over the people."""
-    by_tile: Dict[TileId, float] = {}
+def labour_share_of(runs: Mapping[str, float], recipes: Mapping[str, object], wages: Mapping[str, float],
+                    value: float) -> float:
+    """Share of an output of `value` that the producers of `runs` pay their workers (the rest is rent and the
+    plant's charge, which their owners receive); at most one."""
+    from . import unit_cost
+    bill = math.fsum(count * unit_cost.labour_cost_per_run(recipes[recipe_id], wages) for recipe_id, count in runs.items())
+    return min(1.0, bill / value) if value > 0.0 else 0.0
+
+
+def with_income(cohorts: Mapping[str, Cohort], per_head: float, labour_share: float) -> Dict[str, Cohort]:
+    """The cohorts with each class's last year's income: the labour share of the total divided by working people
+    (every worker is paid alike), the rest by what each class owns."""
+    working: Dict[TileId, float] = {}
+    people: Dict[TileId, float] = {}
     for cohort in cohorts.values():
-        by_tile[cohort.tile] = by_tile.get(cohort.tile, 0.0) + cohort.people
-    return {agent_id: _with_income(cohort, per_head, by_tile[cohort.tile]) for agent_id, cohort in cohorts.items()}
-
-
-def _with_income(cohort: Cohort, per_head: float, tile_people: float) -> Cohort:
+        working[cohort.tile] = working.get(cohort.tile, 0.0) + cohort.working_people
+        people[cohort.tile] = people.get(cohort.tile, 0.0) + cohort.people
     from .replaced import replaced
-    return replaced(cohort, last_year_income=cohort.ownership_share * tile_people * per_head)
+    paid = {}
+    for agent_id, cohort in cohorts.items():
+        tile_total = per_head * people[cohort.tile]
+        worked = cohort.working_people / working[cohort.tile] if working[cohort.tile] > 0.0 else 0.0
+        paid[agent_id] = replaced(cohort, last_year_income=tile_total * (
+            labour_share * worked + (1.0 - labour_share) * cohort.ownership_share))
+    return paid
 
 
 def working_share(recipe, prices: Mapping[GoodId, float], wages: Mapping[str, float]) -> float:

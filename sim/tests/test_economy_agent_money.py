@@ -17,16 +17,17 @@ def fiat_setup():
     return fixture.small_setup(currency=CurrencySpec(COIN, "fiat", None, 0.0, "state:fixture", 0.0))
 
 
-def with_windfall(factor: float):
-    """A fiat economy whose money stock is `factor` times the opening's, the extra handed to the households in
-    proportion to the cash they hold, over the same goods. (Households hold a small share of the stock, the rest
-    being producers' working capital, so a windfall in proportion to their own cash alone would be small.)"""
+def with_windfall(factor: float, of_the_stock: bool = False):
+    """A fiat economy whose households hold `factor` times the opening's cash, over the same goods. With
+    `of_the_stock` the windfall is `factor - 1` times the whole money stock, handed to the households in proportion
+    to the cash they hold (they hold a small share of the stock, the rest being producers' working capital, so a
+    windfall in proportion to their own cash alone moves the price level less than a year's noise)."""
     setup = fiat_setup()
     economy = Economy(setup)
-    cohort_cash = {cohort_id: economy.record.book.balance(cohort_id, COIN) for cohort_id in sorted(economy.record.cohorts)}
-    windfall = economy.record.book.money_supply(COIN) * (factor - 1.0)
-    for cohort_id, cash in cohort_cash.items():
-        extra = windfall * cash / sum(cohort_cash.values())
+    cash = {cohort_id: economy.record.book.balance(cohort_id, COIN) for cohort_id in sorted(economy.record.cohorts)}
+    base = economy.record.book.money_supply(COIN) if of_the_stock else sum(cash.values())
+    for cohort_id, held in cash.items():
+        extra = base * (factor - 1.0) * held / sum(cash.values())
         if extra > 0.0:
             economy.record.book.transfer(Transfer(EDGE_ISSUE, cohort_id, COIN, extra, "windfall"))
     outcomes = [economy.step(fixture.quiet_year(setup)) for _ in range(YEARS)]
@@ -39,9 +40,9 @@ def mean_price_level(outcomes):
 
 class MoreMoneyTests(unittest.TestCase):
     def test_more_money_with_the_same_goods_raises_the_price_level(self):
-        _economy, control = with_windfall(1.0)
-        _economy, doubled = with_windfall(2.0)
-        _economy, tripled = with_windfall(3.0)
+        _economy, control = with_windfall(1.0, of_the_stock=True)
+        _economy, doubled = with_windfall(2.0, of_the_stock=True)
+        _economy, tripled = with_windfall(3.0, of_the_stock=True)
         self.assertGreater(mean_price_level(doubled), mean_price_level(control))
         self.assertGreater(mean_price_level(tripled), mean_price_level(doubled))
 

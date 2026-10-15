@@ -133,15 +133,24 @@ def _open_cohorts(setup, record) -> None:
 
 def _settle_income(setup, record, view, priced_goods, replacement) -> None:
     """Households' opening income is the value of the final demand it pays for, not the full-employment ceiling
-    (opening_income.py): the producers sized to that demand then pay out the income the households received."""
+    (opening_income.py): the producers sized to that demand then pay out the income the households received.
+    Workers are paid alike out of the labour share of it; owners receive the rest by what they own."""
     people = math.fsum(cohort.people for cohort in record.cohorts.values())
+    recipes = setup.recipes
+    ceilings = opening_runs.run_ceilings(recipes, sites.limits_by_recipe(setup.site_limits))
+    ranked = opening_runs.ranked_recipes(recipes, priced_goods, setup.opening_wages, setup.opening_rate)
+    share = {"labour": 0.0}
 
     def demand_at(per_head):
-        record.cohorts.update(opening_income.with_income_per_head(record.cohorts, per_head))
-        return opening_income.value_of(_final_demand(setup, record, view, replacement), priced_goods)
+        record.cohorts.update(opening_income.with_income(record.cohorts, per_head, share["labour"]))
+        final = _final_demand(setup, record, view, replacement)
+        value = opening_income.value_of(final, priced_goods)
+        runs = opening_runs.required_runs(final, ranked, recipes, ceilings)
+        share["labour"] = opening_income.labour_share_of(runs, recipes, setup.opening_wages, value)
+        return value, share["labour"]
 
-    per_head = opening_income.settled_income_per_head(_opening_income_per_head(setup), people, demand_at)
-    record.cohorts.update(opening_income.with_income_per_head(record.cohorts, per_head))
+    per_head, labour_share = opening_income.settled_income_per_head(_opening_income_per_head(setup), people, demand_at)
+    record.cohorts.update(opening_income.with_income(record.cohorts, per_head, labour_share))
 
 
 def _opening_bids(setup, record, view):
