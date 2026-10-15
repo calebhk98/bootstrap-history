@@ -49,6 +49,13 @@ def actor_sim():
 
 
 _PUT_UP = firm_entry.personal_capital
+_STAKE_SPLIT = firm_entry.stake_split
+faced = []   # every stake an entrant weighed, in the order weighed
+
+
+def _recording_stake_split(stake, *args):
+	faced.append(stake)
+	return _STAKE_SPLIT(stake, *args)
 
 
 def run(ceiling=None, credit_rate=None, years=6):
@@ -56,7 +63,7 @@ def run(ceiling=None, credit_rate=None, years=6):
 	`credit_rate` (the firms' own: re-solving every price at another rate is not under test).
 	Returns (game, firms each year, the deepest debt of any firm, the stakes founders put up)."""
 	game = actor_sim()
-	patches = []
+	patches = [mock.patch.object(firm_entry, "stake_split", _recording_stake_split)]
 	if ceiling is not None:
 		patches.append(mock.patch.object(firm_entry, "personal_capital", lambda stratum: min(_PUT_UP(stratum), ceiling)))
 	if credit_rate is not None:
@@ -90,7 +97,9 @@ check("a founder short of the whole stake but putting up lenders' share still fo
       (short_counts, short_stakes, short, whole_stake))
 check("an entrant that borrowed owes the market", borrowed > 0.0, borrowed)
 
-thin = 0.5 * ENTRY_EQUITY_SHARE * whole_stake   # under lenders' share of the stake: no one backs the entrant
+# Under lenders' share of the stake: no one backs the entrant. The stake an entrant weighs falls as the concern
+# ages (the early years' losses it must carry shrink), so "the stake" is the smallest one weighed in the funded run.
+thin = 0.5 * ENTRY_EQUITY_SHARE * min(faced)
 _thin_game, thin_counts, _thin_debt, thin_stakes = run(ceiling=thin)
 check("a founder putting up less than lenders' share founds no firm from savings (only the opening ones stand)",
       max(thin_counts) == thin_counts[0] and not thin_stakes, (thin_counts, thin_stakes))
