@@ -11,7 +11,7 @@ REGIME_OF = {"england_1300": "struck_coin", "han_china_100ad": "struck_coin", "r
 
 # Years for freshly mined metal to pass from mine owners and savers into prices: the fewest each civilisation's
 # price level needs to rise clear of its unmined twin.
-MONEY_LAG_YEARS = {"england_1300": 4, "norse_900ad": 4}
+MONEY_LAG_YEARS = {"england_1300": 5, "norse_900ad": 4}
 # The price level still cycles in the first decades (Complaint 473), so it is compared as a mean over these years
 # from the lag on, not at one year that may sit in a trough of the cycle.
 PRICE_LEVEL_YEARS = 4

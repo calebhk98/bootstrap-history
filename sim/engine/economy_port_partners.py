@@ -14,6 +14,7 @@ from .economy_port_setup import allowed_entries
 SPREAD_BY_FOOD_CAPACITY = declare(
     "PARTNER_POPULATION_SPREAD_BY_FOOD_CAPACITY", 1.0, kind="temporary_heuristic",
     unit="share of a census-less partner's population placed by food capacity", source=None, confidence="D",
+    retire="a sourced census per partner (data/world/census)",
     why="A partner with no census has its civilisation's population spread over the tiles it holds in "
         "proportion to their food capacity, all of it; real settlement also follows rivers, cities and "
         "ports. Replaced per country by a sourced census (data/world/census) as one is found.")

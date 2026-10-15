@@ -15,7 +15,7 @@ from sim.world import demand, need_basket
 from sim.geography.api import layer_value, sea_freight, settlement, tiles_held
 from sim.labour import api as labour_api
 
-from . import economy_port_sites
+from . import economy_port_costs, economy_port_sites
 from .economy_port_stores import opening_store_values
 from .foreign_routes import SEA_MODE
 
@@ -93,7 +93,7 @@ def opening_values(sim):
                            | {unskilled})
     modes = sim._freight_mode_costs(cargo="goods")
     prices = dict(partner_prices)
-    prices.update({good: price for good, price in sim.economy.material_prices().items() if price > 0.0})
+    prices.update(economy_port_costs.opening_costs(sim))
     return {
         "partners": partners,
         "population_by_tile": {tile: people * settlement.population_share(tile_ids, tile) for tile in tile_ids},
@@ -209,6 +209,7 @@ def build_setup(sim, opening=None, production=None):
         land_per_run={recipe_id: float(production[recipe_id].get("land_hectare_years") or 0.0)
                       for recipe_id in recipes if production[recipe_id].get("land_hectare_years")},
         basket_by_tile=baskets_by_tile(basket, need_data, world_map, all_tile_ids), coin_per_unit=unit,
+        opening_income_per_head=opening.get("opening_income_per_head"),
         recipes_by_country=recipes_by_country(str(civ["id"]), opening["recipes"], partners),
         world_map=world_map, improvements=dict(opening["ways"]),
         site_limits=tuple(SiteLimit(*limit) for limit in opening["site_limits"]),

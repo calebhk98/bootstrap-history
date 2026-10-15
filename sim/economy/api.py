@@ -8,7 +8,7 @@ WALL = "two-way"  # nothing here reaches sim/engine/; the engine hands it what i
 
 import math
 
-from . import country_figures, diagnostics, late_recipes, households, labour_state, land_rents, market_curves, taxes, tile_costs, workforce_settle
+from . import country_figures, diagnostics, late_recipes, opening_metal, households, labour_state, land_rents, market_curves, taxes, tile_costs, workforce_settle
 from .currency import currency_from_coin_standard
 from .economy import Economy
 from .foreign import external_orders
@@ -246,6 +246,14 @@ def economy_from_record(setup, saved):
 def blank_economy(setup):
     """An Economy at its opening, before any year has run."""
     return Economy(setup)
+
+
+def backing_marginal_cost(economy):
+    """(what the last unit of the money's backing good the opening needs costs to make, the opening's price for it),
+    in the economy's units; None for money with no good behind it or when nothing makes the good."""
+    cost = opening_metal.marginal_cost(economy.setup, economy.record)
+    price = economy.setup.opening_prices.get(economy.record.currency.backing_good)
+    return None if cost is None or not price else (cost, price)
 
 
 def admit_recipes(economy, source_setup):

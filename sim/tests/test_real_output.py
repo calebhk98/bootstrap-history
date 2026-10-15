@@ -6,6 +6,7 @@ from .harness import *  # noqa: F401,F403
 import copy
 
 from sim.engine import market_demand
+from sim.tests import economy_fixture
 from sim.engine.agents_port import SimWorld
 from sim.engine import prices as price_solver
 from sim.engine.data import calculated_goods_prices
@@ -71,6 +72,9 @@ improved["requires_node"] = plain
 patched[GOOD + "_with_the_technique"] = improved
 price_solver.reset_caches_for_tests()
 price_solver._DEFAULT_PRODUCTION_ENTRIES = patched
+# households buy a cheaper good in larger quantity out of a surplus, which the settled opening does not leave them
+surplus = economy_fixture.surplus_game_openings()
+surplus.__enter__()
 try:
     game = sim(civ="rome_100ad", capital=1e9)   # the twin above (nothing completed, same years closed) is its baseline
     price_before = game.goods_market.household_prices()[GOOD]
@@ -103,6 +107,7 @@ try:
           game.real_output_per_head() > twin_years.real_output_per_head(),
           (twin_years.real_output_per_head(), game.real_output_per_head()))
 finally:
+    surplus.__exit__(None, None, None)
     price_solver.reset_caches_for_tests()
 
 # --- society output is the sum of quantities times opening prices, in this civilisation's money.

@@ -8,12 +8,13 @@ from sim.engine.ui_port import Sim, default_civilisation_id, load, load_civ
 
 def format_trace(rows):
     """The trace as text: a header, then one line per year."""
-    lines = ["%5s %12s %16s %8s %16s %16s %16s" % ("year", "price level", "money supply", "rate", "coin worn",
-                                                     "coin struck net", "metal at mint")]
+    lines = ["%5s %12s %16s %8s %16s %16s %16s %10s %10s" % (
+        "year", "price level", "money supply", "rate", "coin worn", "coin struck net", "metal at mint", "wage",
+        "hired")]
     for row in rows:
-        lines.append("%5d %12.4g %16.6g %8.4f %16.6g %16.6g %16.6g" % (
+        lines.append("%5d %12.4g %16.6g %8.4f %16.6g %16.6g %16.6g %10.4f %10.3g" % (
             row["year"], row["price_level"], row["money_supply"], row["rate"], row["wear"], row["struck"],
-            row["metal_held"]))
+            row["metal_held"], row["wage"], row["hired_hours"]))
     return "\n".join(lines)
 
 

@@ -94,6 +94,10 @@ class EntrySitingTests(unittest.TestCase):
 
 
 class FixtureScenarioTests(unittest.TestCase):
+    def setUp(self):
+        from sim.tests import economy_fixture
+        economy_fixture.households_with_a_surplus(self)
+
     def test_the_opening_spreads_producers_over_the_tiles(self):
         economy, _outcomes = fixture.run(years=0)
         tiles = {producer.tile for producer in economy.record.producers.values() if producer.recipe_id == fixture.FARM}
