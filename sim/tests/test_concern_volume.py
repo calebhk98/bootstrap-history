@@ -114,10 +114,11 @@ finally:
 game = sim(civ="rome_100ad", capital=1e9)
 material = "iron_bar_kg"
 commodity = game._material_tag(material)[0]
-price_before = game.market_price_ratio(material)
+# this module's games are unopened (the engine's yearly material market answers), so the book's own ratio is read
+price_before = game.market_state(material)["price_ratio"]
 # a seller whose output meets the demand at the incumbents' cost leaves the price at it; more than that pushes it below
 game.goods_market.note_sale("another_operator", commodity, 2.0 * game._market_entry(commodity)["reference_tonnes"])
-price_after = game.market_price_ratio(material)
+price_after = game.market_state(material)["price_ratio"]
 check("more operators selling a good lower the price it clears at", price_after < price_before,
       (price_before, price_after))
 

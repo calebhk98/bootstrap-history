@@ -35,10 +35,21 @@ class EconomyPort:
         self.open_agent()
         return agent
 
-    def agent_price_ratio(self, materials):
-        """The agent economy's price over the engine's own cost for a market, or None to use the engine's."""
+    def acting_tile(self):
+        """The tile the acting seat buys and sells on: where its household operates from."""
+        return self._sim.labour.base_tile()
+
+    def agent_prices_at(self, tile=None):
+        """The agent economy's price of each good on a tile (the acting one by default) in coin, or None while it
+        opens: what a buyer or seller there faces. A good the economy has no market for is absent."""
         agent = self._answering_agent()
-        return None if agent is None else agent.price_ratio(materials, self._sim._material_prices(), self._sim.acting_country())
+        return None if agent is None else agent.prices_at(self.acting_tile() if tile is None else tile)
+
+    def agent_offered_tonnes(self, material, tile=None):
+        """Tonnes the sellers of a material in the tile's market area held at the last clearing; None while the
+        economy opens or when the area has no book for it."""
+        agent = self._answering_agent()
+        return None if agent is None else agent.offered_tonnes(material, self.acting_tile() if tile is None else tile)
 
     def agent_prices(self):
         """The agent economy's prices by good in coin, or None to use the engine's."""
@@ -57,20 +68,6 @@ class EconomyPort:
             return None
         agent = self._answering_agent()
         return None if agent is None else agent.unskilled_wage_per_hour()
-
-    def goods_price_over_wage(self):
-        """How much further the economy's goods have risen against the opening's solver prices than the unskilled
-        wage has (1.0 until the game's money is priced at the economy). The engine's own price table is the solver's
-        hours times the wage, so it follows the wage; a partner's coin is worth what it buys at home, which follows
-        the goods."""
-        if not self._sim.state.economy.money_from_economy or self._opening:
-            return 1.0
-        agent = self._answering_agent()
-        level = None if agent is None else agent.goods_level_over_opening()
-        if level is None:
-            return 1.0
-        labour = self._sim.labour
-        return level / (labour.money_per_labour_hour() / labour.wage_schedule().opening_money_per_labour_hour)
 
     def agent_country(self, country):
         """What the agent economy answers for a partner country in it, or None (not in it, or no wage yet)."""
@@ -118,11 +115,13 @@ class EconomyPort:
         agent = self._answering_agent()
         return (False, None) if agent is None else (True, agent.credit_room(borrower_id))
 
-    def agent_price_response(self, material, landed_tonnes, taken_tonnes):
+    def agent_price_response(self, material, landed_tonnes, taken_tonnes, tile=None):
         """Factor on a material's home price once `landed_tonnes` more come to market and `taken_tonnes` more are
-        bought, by the agent economy's own demand and supply; None while it opens or has no book for the good."""
+        bought, by the agent economy's own demand and supply: at the port's market when no tile is named, else on
+        that tile's own market area. None while it opens or has no book for the good; infinite when more is taken
+        than the sellers hold."""
         agent = self._answering_agent()
-        return None if agent is None else agent.price_response(material, landed_tonnes, taken_tonnes)
+        return None if agent is None else agent.price_response(material, landed_tonnes, taken_tonnes, tile)
 
     def agent_producers_by_good(self):
         """{good: [(tile, recipe id)]} of the producers the agent economy runs; None while it opens."""
@@ -280,9 +279,10 @@ class EconomyPort:
         return self._sim.home_coin_stock_units()
 
     def coin_stock_value(self):
-        """Money's worth of the metal in the coin this society holds, from its coin standard."""
+        """Money's worth of the metal in the coin this society holds, from its coin standard, at the metal's price
+        (the same one cargo and the partners' coin are counted at)."""
         coin = self._sim.civ["coin_standard"]
-        return self.coin_stock_units() * coin["kg_per_unit"] * self.material_prices().get(coin["material"], 0.0)
+        return self.coin_stock_units() * coin["kg_per_unit"] * (self._sim.goods_market.home_unit_price(coin["material"]) or 0.0)
 
     # ---- credit -------------------------------------------------------------------------------
     def base_rate(self):

@@ -125,8 +125,10 @@ def _held_stock(book, agent) -> Dict[Tuple[str, str], float]:
     return held
 
 
-def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, ledger: YearLedger) -> None:
-    """Produce and clear every good in input-depth order."""
+def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, ledger: YearLedger,
+                watched_tiles=()) -> None:
+    """Produce and clear every good in input-depth order. The book of each market area that holds the port, the
+    capital or a watched tile is kept (market_curves.py)."""
     by_output: Dict[str, List[str]] = {}
     for producer_id, producer in sorted(record.producers.items()):
         for good in setup.recipes[producer.recipe_id].outputs:
@@ -146,6 +148,7 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
                 _produce_and_offer(setup, record, view, producer_id, plans.get(producer_id), in_kind,
                                    order_book, ledger)
         areas = sorted(area for item, area in order_book if item == good)
+        kept = market_curves.kept_areas(area_map, setup.port_tile, (setup.capital_tile, *watched_tiles), good)
         for area in areas:
             bids, offers = order_book.pop((good, area))
             key = market_key(good, area)
@@ -159,7 +162,7 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
                     ledger.unpaid[shortfall.agent] = ledger.unpaid.get(shortfall.agent, 0.0) + shortfall.unpaid_amount
             ledger.note_clearing(result)
             ledger.bids_by_market[(good, area)] = bids
-            if area == market_curves.port_area(area_map, setup.port_tile, good):
+            if area in kept:
                 record.curves[key] = market_curves.summarize(bids, offers)
             unmet = unmet_quantity(bids, result.price, result.quantity)
             if unmet > 0.0:

@@ -68,8 +68,9 @@ _capital_before = _price_sim.capital
 _got = _price_sim.buy_material_stock("coal", 2000.0)
 _average_paid = (_capital_before - _price_sim.capital) / max(_got, 1e-9)
 check("price: a 2000 t purchase was delivered", _got > 1900.0, _got)
+# the climb is the economy's own (its coal book cleared again with the order), not the old heuristic's fixed 5%
 check("price: the large purchase paid more per tonne than the one-tonne quote",
-      _average_paid > 1.05 * _one_tonne, (_average_paid, _one_tonne))
+      _average_paid > _one_tonne, (_average_paid, _one_tonne))
 _small_sim = sim(capital=5e7)
 _capital_before = _small_sim.capital
 _small_sim.buy_material_stock("coal", 200.0)

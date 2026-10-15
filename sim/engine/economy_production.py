@@ -374,7 +374,7 @@ class ProductionMixin:
             return 1.0
         return node_revenue_market.market_factor(
             {"_output_per_year": baskets.outputs, "_purchases_per_year": baskets.purchases},
-            self._material_prices(), self.market_price_ratio)
+            self._material_prices(), self.goods_market.home_unit_price)
 
     def concern_takings(self, node_id, ramp):
         """Yearly takings of one concern at a given ramp, before market saturation: its loaded figure

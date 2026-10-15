@@ -34,8 +34,7 @@ class Stub(TraderCargoMixin):
     def edge(self, name):
         return self.state.actors.edge(name)
 
-    def _coin_metal_price(self, _material):
-        return 2.0
+    goods_market = type("GoodsMarket", (), {"home_unit_price": staticmethod(lambda _material: 2.0)})()
 
     def _foreign_economy_facts(self, _partner):
         return {"route": "route"}

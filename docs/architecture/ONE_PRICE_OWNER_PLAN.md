@@ -265,6 +265,38 @@ Files: `sim/engine/goods_market_api.py`, `goods_market_offers.py`, `project_mate
 Deletes: bridge `goods_price_over_wage`, `price_ratio`/`market_price_ratio`, `MATERIAL_TRADE_SELL_SHARE_OF_BUY` if
 the sell price becomes the economy's bid (decide in the stage; it is a `temporary_heuristic`).
 
+**Done** (branch `507-stage-3-prices-to-pay`, 2026-10-15). What was built, and what it showed:
+
+- Reads. `economy.api.prices_at(economy, tile)` (the price shown for each good, moved by how far the tile's market area
+  clears from the national price; a tile whose area has not cleared lately pays the shown price), `offered_units`,
+  `price_response(..., tile=)` and `watch_tiles`. The economy kept the book of the port's market area only, so a climb
+  at the founder's tile had nothing to clear again: it now also keeps the books of the areas holding the capital and the
+  playing seats' base tiles (`market_curves.kept_areas`; the engine hands the tiles in before each year,
+  `AgentEconomy._seat_tiles`). Touches in `sim/economy` beyond `api.py`: `year_goods.py`, `economy.py`,
+  `market_curves.py`, and the new `prices_at.py`.
+- Pay. `goods_market_pricing.py`: a buyer pays the economy's price on its tile (the cost table while the economy opens or
+  has no market for a good a technique makes; a partner's landed price for a good only a partner makes), carriage
+  (`material_carriage_per_tonne`) and the climb the economy's book gives the order, counting what the seat bought
+  this year. A sale fetches the price less the fall its own supply causes. Quote fields: `price_at_tile_per_tonne`,
+  `carriage_per_tonne`, `making_cost_per_tonne`; `market_price_ratio` is gone, the market screen divides price by cost.
+  `household_prices` is the same price. `price_index` no longer scales a price paid (the economy's level holds it).
+- Left for later: trader cargo still prices home goods at the cost table with the economy's response as a factor
+  (`agents_port_trade`); pricing them at the economy's port price made home-bound cargo stop after a year
+  (`home_cargo_price`). The static book's household demand (`market_demand`) reads `household_cost_prices`, the cost table,
+  until stage 4 retires it.
+- Coin metal. `GoodsMarket.home_unit_price(metal)` is the one number the held coin (`coin_stock_value`), cargo, partner
+  payments and the partners' prices in home money use.
+- Deleted: `goods_price_over_wage`, `agent_price_ratio`, `AgentEconomy.price_ratio`, `market_price_ratio`,
+  `_coin_metal_price`, `_price_factor_across_purchase`, `MATERIAL_TRADE_SELL_SHARE_OF_BUY` (a sale clears against the same
+  book a purchase does, and the spread a buyer pays is carriage), `goods_level_over_opening` and `price_level.py`.
+  `node_revenue_market.market_factor` takes the price now and the long-run cost.
+- Order past what the sellers hold: priced at the last tonne they hold (the engine's cut to `market_available_tonnes_per_year`
+  stays until stage 4). Carriage is only the haul geography can place (the tracked minerals); the economy's area prices
+  may already carry some of it, to be settled when stage 4 reads the offered quantity.
+- Not done: Complaint 512 stays open for stage 4 (see its note). Long runs not made under the owner's time rule:
+  `opening-checks`, the whole-game topics `concern_volume`, `one_goods_market`, `real_output`, `home_cargo_price`,
+  `material_reach_whole_game`, `whole_game_no_seller_no_price`.
+
 ### Stage 4: traded volumes come from the economy
 
 Moves: `real_output` measures every commodity as the economy's `traded_volumes` over `opening_quantities`, weighted

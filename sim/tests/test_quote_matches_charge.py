@@ -6,7 +6,7 @@ action then runs on, so the rows share one game and run in turn.
 """
 from .harness import *  # noqa: F401,F403
 
-_CAPITAL = 400000.0
+_CAPITAL = 4000000.0
 
 
 def _fresh():

@@ -8,14 +8,13 @@ WALL = "two-way"  # nothing here reaches sim/engine/; the engine hands it what i
 
 import math
 
-from . import country_figures, diagnostics, late_recipes, opening_metal, households, labour_state, land_rents, market_curves, taxes, tile_costs, workforce_settle
+from . import country_figures, diagnostics, late_recipes, opening_metal, households, labour_state, land_rents, market_curves, prices_at as tile_prices, taxes, tile_costs, workforce_settle
 from .currency import currency_from_coin_standard
 from .economy import Economy
 from .foreign import external_orders
 from .market_memory import market_key
 from .metal_stock import COIN_WEAR_PER_YEAR
 from .notional import shown_prices
-from .price_level import goods_level_over_opening
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
 from .protocols import AgentOrders, YearInputs
 from .recipes import recipes_from_production_data
@@ -30,8 +29,8 @@ from sim.world import capital_market
 
 __all__ = [
     "diagnostics", "households", "taxes", "tile_costs", "currency_from_coin_standard", "Economy", "external_orders",
-    "price_response",
-    "shown_prices", "goods_level_over_opening", "Producer", "expected_output_prices", "live_input_prices", "live_wages", "AgentOrders",
+    "price_response", "prices_at", "offered_units", "watch_tiles",
+    "shown_prices", "Producer", "expected_output_prices", "live_input_prices", "live_wages", "AgentOrders",
     "YearInputs", "recipes_from_production_data", "EconomyRecord", "EconomySetup", "TradeSpec", "SiteLimit",
     "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "EDGE_CARGO", "EDGE_CONSUMPTION", "EDGE_EXCHANGE", "external_edge", "Bid", "GoodsMove", "Offer", "Transfer",
     "variable_cost_per_run", "rebase_basket_price_level", "trade_premium",
@@ -192,11 +191,34 @@ def cohort_land_rents(economy, tiles=None, country=None):
     return [(cohort.people, received.get(cohort.agent_id, 0.0)) for cohort in _ranked_cohorts(economy, country)]
 
 
-def price_response(economy, good, landed_units, taken_units):
-    """Factor on a good's national price once `landed_units` more are offered and `taken_units` more are bought at
-    the port, from the book the port's market last cleared (the economy's own demand and supply). The national price
-    weighs each market area by what it usually trades, so a move at the port shows in it by the port's share of that
-    value. None when the port's market has no book or traded nothing."""
+def watch_tiles(economy, tiles):
+    """Keep the markets' books of the areas holding these tiles, beside the port's and the capital's, from the next
+    clearing: where the game's buyers and sellers act. `offered_units` and `price_response(tile=...)` answer on a tile
+    whose book is kept; elsewhere they have no book to read."""
+    economy.watched_tiles = tuple(sorted(set(tiles)))
+
+
+def prices_at(economy, tile):
+    """(price of each good on one tile, goods whose shown price is not a market's), in the economy's unit: what a
+    buyer or seller there faces. The price of the market area that holds the tile where it cleared lately, else
+    the price the game is shown. A good the economy has no market for is absent."""
+    return tile_prices.prices_at(economy, tile)
+
+
+def offered_units(economy, good, tile):
+    """Units the sellers in the tile's market area for a good held at its last clearing; None when the area has no
+    book for the good."""
+    return tile_prices.offered_units(economy, good, tile)
+
+
+def price_response(economy, good, landed_units, taken_units, tile=None):
+    """Factor on a good's price once `landed_units` more are offered and `taken_units` more are bought, from the
+    book its market last cleared (the economy's own demand and supply). With a `tile`, that tile's market area and
+    its own price. Without one, the port's market and the national price, which weighs each market area by what it
+    usually trades, so a move at the port shows in it by the port's share of that value. None when the market has
+    no book or traded nothing, infinite when more is taken than the sellers hold."""
+    if tile is not None:
+        return tile_prices.price_response_at(economy, good, tile, landed_units, taken_units)
     area = market_curves.port_area(economy.area_map, economy.setup.port_tile, good)
     curve = economy.record.curves.get(market_key(good, area)) if area is not None else None
     if curve is None:

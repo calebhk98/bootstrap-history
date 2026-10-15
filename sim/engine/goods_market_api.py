@@ -2,11 +2,13 @@
 
 The founder, a firm, the state and the foreign traders deal with `Sim.goods_market`:
 
-    quote_buy / quote_sell     what an order would cost or fetch, from the posted price
+    quote_buy / quote_sell     what an order would cost or fetch: the economy's price on the acting tile,
+                               carriage, and the climb the economy's own book gives the order
+                               (goods_market_pricing.py)
     buy / sell                 an order from a party (anything with money and goods; a seat
                                is a `SeatParty`), priced along the curve the order climbs
     note_purchase / note_sale  tonnes a party bought or sold this year, counted in the same book
-    price / price_ratio / state  what screens read
+    price / state              what screens read
 
 A party is identified by a string. A seat is its seat id (`state.acting_seat` for the asking seat);
 a firm or the state is its actor id. A sale by a seat and by a firm are the same entry in the year's
@@ -18,7 +20,7 @@ from sim.world.producer_market import Offer
 
 from . import purchase_rule
 from .goods_market_offers import GoodsOffers
-from .material_units import tonnes_per_unit
+from .goods_market_pricing import GoodsPricing
 from sim.agents.api import edges
 
 class SeatParty:
@@ -59,7 +61,7 @@ class SeatParty:
             sim.state.household._stock_throttle_sig = None
 
 
-class GoodsMarket(GoodsOffers):
+class GoodsMarket(GoodsPricing, GoodsOffers):
 
     def __init__(self, sim):
         self._sim = sim
@@ -187,10 +189,6 @@ class GoodsMarket(GoodsOffers):
         return sorted(commodity for commodity, sold in self._sim._market_flows()["sold"].items()
                       if sold.get(seller_id, 0.0) > 0.0)
 
-    def price_ratio(self, material):
-        """This year's posted spot price over the long-run cost; one where no market exists."""
-        return self._sim.market_price_ratio(material)
-
     def state(self, material):
         """The market for one material as of now."""
         return self._sim.market_state(material)
@@ -198,20 +196,23 @@ class GoodsMarket(GoodsOffers):
     # ---- quotes -----------------------------------------------------------------------
 
     def quote(self, material):
-        """Current buy and sell quote for a tonne of a material; None when it has no price."""
+        """Current buy and sell quote for a tonne of a material; None when it has no price. The buy price is the
+        economy's price on the acting tile plus carriage, after what the seat has bought this year; the sell
+        price is the same price less the fall a sale into that market causes. `making_cost_per_tonne` is what a
+        held technique makes it for, None when none does."""
         sim = self._sim
         material = str(material or "").strip().lower()
-        per_kg = self.unit_price(material)
-        if per_kg is None:
+        price = self.price_at_tile_per_tonne(material)
+        if price is None:
             return None
         emp_key = sim._material_tag(material)[0]
-        ratio = sim.market_price_ratio(material)
         brought = self.import_tonnes_available(material)      # a partner's good: its supply and the carriers' lift
-        buy = (per_kg / tonnes_per_unit(material) * sim.price_index
-               * sim.material_price_factor(emp_key) * ratio)
-        return {"material": material, "stock_key": emp_key, "buy_per_tonne": buy,
-                "market_price_ratio": ratio,
-                "sell_per_tonne": buy * sim.MATERIAL_TRADE_SELL_SHARE_OF_BUY,
+        carriage = self._carriage_per_tonne(material, price)
+        return {"material": material, "stock_key": emp_key,
+                "buy_per_tonne": self.purchase_cost(material, 0.0)[1],
+                "sell_per_tonne": self.sale_proceeds(material, 0.0, self.sold_tonnes(emp_key, self.acting_party_id))[1],
+                "price_at_tile_per_tonne": price, "carriage_per_tonne": carriage,
+                "making_cost_per_tonne": self.making_cost_per_tonne(material),
                 "market_available_tonnes_per_year": (
                     sim._material_market_tonnes(emp_key) if brought is None else brought)}
 
@@ -219,37 +220,6 @@ class GoodsMarket(GoodsOffers):
         """Money to buy one tonne now, or None when the material has no price."""
         quote = self.quote(material)
         return None if quote is None else quote["buy_per_tonne"]
-
-    def purchase_cost(self, material, tonnes, already=0.0):
-        """(money, mean money per tonne) to buy `tonnes` of a material now, the price rising as
-        the order is filled. None when it has no price."""
-        sim = self._sim
-        unit_price = self.unit_price(material)
-        if unit_price is None:
-            return None
-        emp_key, tag = sim._material_tag(material)
-        per_tonne = (unit_price / tonnes_per_unit(material) * sim.price_index
-                     * sim.market_price_ratio(material))
-        factor = sim._price_factor_across_purchase(emp_key, tag, already, max(0.0, tonnes))
-        return per_tonne * factor * max(0.0, tonnes), per_tonne * factor
-
-    def quote_buy(self, material, tonnes, already=0.0):
-        """What an order of `tonnes` costs: (money, mean money per tonne), or None."""
-        return self.purchase_cost(material, tonnes, already)
-
-    def sale_proceeds(self, material, tonnes, already=0.0):
-        """(money, mean money per tonne) for selling `tonnes` more after `already` tonnes sold this
-        year. TEMPORARY HEURISTIC: the sell price is the quoted one divided by the same
-        demand-pressure factor buying climbs, so a bigger sale fetches a lower mean price."""
-        sim = self._sim
-        quote = self.quote(material)
-        if not quote or tonnes <= 0:
-            return 0.0, 0.0
-        emp_key, tag = sim._material_tag(quote["material"])
-        baseline = sim._price_factor_across_purchase(emp_key, tag, 0.0, 0.0)
-        across = sim._price_factor_across_purchase(emp_key, tag, already, tonnes)
-        mean_price = quote["sell_per_tonne"] * baseline / max(across, baseline)
-        return mean_price * tonnes, mean_price
 
     def quote_sell(self, material, tonnes, seller=None):
         """(stock key, tonnes the market takes now, money for them): the one figure `sell` pays

@@ -22,7 +22,8 @@ class InstalmentTests(unittest.TestCase):
         self.assertAlmostEqual(row["cost_of_missing"] - row["cost_of_deliverable"], beyond * spot,
                                delta=1e-6 * row["cost_of_missing"])
         whole_order = game.material_purchase_cost(row["material"], row["missing_tonnes"])[0]
-        self.assertLess(row["cost_of_missing"], whole_order)
+        # the whole order climbs the economy's book when it has one for the good (a good with no sellers has none)
+        self.assertLessEqual(row["cost_of_missing"], whole_order * (1.0 + 1e-9))
 
     def test_up_front_money_is_the_deliverable_part_only(self):
         game = sim(capital=5e7)

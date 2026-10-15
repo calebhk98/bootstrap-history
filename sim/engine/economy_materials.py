@@ -214,20 +214,24 @@ class MaterialSupplyMixin:
             table[entry] = compute()
         return table[entry]
 
-    def _material_price_per_kg(self, tag):
-        """Money per kg in this civilisation's coin for a raw material key (for
-        example aluminium_kg) from the calculator-backed table, or for a curated
-        commodity id the price of the material its `price_material` names. None
-        if this file cannot price it at all, which should not happen for
-        any material key the tech tree actually uses (see the class
-        comment above)."""
-        prices = self._material_prices()
+    def _priced_key(self, tag, prices):
+        """The key of `prices` that prices a raw material key (for example aluminium_kg) or a curated commodity id
+        (the material its `price_material` names). None if `prices` cannot price it."""
         if tag in prices:
-            return prices[tag]
+            return tag
         commodity = self._commodity_ledger().commodities.get(tag)
-        if commodity:
-            return prices.get(commodity.get("price_material")) or None
+        if commodity and prices.get(commodity.get("price_material")):
+            return commodity["price_material"]
         return None
+
+    def _material_price_per_kg(self, tag):
+        """Money per kg in this civilisation's coin that it costs to make a raw material key or a curated
+        commodity id, from the calculator-backed table. None if this file cannot price it at all, which should
+        not happen for any material key the tech tree actually uses (see the class comment above). This is a
+        cost; what a buyer pays is `GoodsMarket.unit_price`."""
+        prices = self._material_prices()
+        key = self._priced_key(tag, prices)
+        return None if key is None else prices[key]
 
     def _material_tag(self, mat_key):
         """Which (commodity id, supply-pool tag) a raw material key draws
@@ -773,15 +777,6 @@ class MaterialSupplyMixin:
         throttle all read this same ledger.
         """
         return self._material_stock().get(emp_key, 0.0)
-
-    MATERIAL_TRADE_SELL_SHARE_OF_BUY = declare(
-        "MATERIAL_TRADE_SELL_SHARE_OF_BUY", 0.80, kind="temporary_heuristic",
-        unit="fraction of the buy price (dimensionless)", source=None,
-        confidence="D",
-        why="The bid-ask spread on trading a raw material back to the "
-            "market - a merchant's margin, real in kind (nobody buys and "
-            "sells at the identical price) but not sized against any "
-            "attested pre-industrial commodity spread.")
 
     def material_trade_quote(self, material):
         """Current buy/sell quote for one tonne of a material commodity."""

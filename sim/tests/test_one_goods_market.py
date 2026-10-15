@@ -79,8 +79,9 @@ check("a firm running a furnace notes the pig iron it makes as its sale for the 
 check("...and no firm means no such sale",
       noted_sale_tonnes(no_firm, FURNACE_MATERIAL) == 0.0, noted_sale_tonnes(no_firm, FURNACE_MATERIAL))
 check("...so the firm's output, offered at what it costs the firm, does not raise the price the market posts",
-      furnace_game.market_price_ratio(FURNACE_MATERIAL) <= no_firm.market_price_ratio(FURNACE_MATERIAL) * (1.0 + 1e-4),    # prices settle to the in-game solve's tolerance
-      (furnace_game.market_price_ratio(FURNACE_MATERIAL), no_firm.market_price_ratio(FURNACE_MATERIAL)))
+      furnace_game.goods_market.home_unit_price(FURNACE_MATERIAL)
+      <= no_firm.goods_market.home_unit_price(FURNACE_MATERIAL) * (1.0 + 1e-4),    # prices settle to the in-game solve's tolerance
+      (furnace_game.goods_market.home_unit_price(FURNACE_MATERIAL), no_firm.goods_market.home_unit_price(FURNACE_MATERIAL)))
 furnace_game._step_market()
 no_firm._step_market()
 furnace_book = furnace_game.state.economy.market_book.get(furnace_game._material_tag(FURNACE_MATERIAL)[0], {})

@@ -1,18 +1,15 @@
 """What a project pays for materials: quantities in, current market price out.
 
-A node declares only physical quantities. This module asks the material
-market what the part you do not already hold would cost today, through the
-same price pressure `quote material` and `buy material` use, and lets the
-project pay that money at the start so the tonnes arrive in stock.
+A node declares only physical quantities. This module asks the goods market
+what the part you do not already hold would cost today, at the economy's price
+on the founder's tile plus carriage, the price climbing over the order, as
+`quote material` and `buy material` do, and lets the project pay that money at
+the start so the tonnes arrive in stock.
 """
 import collections
 
 from . import purchase_rule
 from .material_units import tonnes_per_unit
-
-# Integration points across a purchase, so a large order is priced along the
-# whole price curve instead of at its first tonne.
-_PRICE_SLICES = 24
 
 
 
@@ -28,33 +25,6 @@ class ProjectMaterialsMixin:
             else:
                 needs[material] += float(quantity)
         return needs
-
-    def _price_factor_across_purchase(self, emp_key, tag, already, tonnes):
-        """Mean material_price_factor while buying `tonnes` more of a tag's
-        commodity, after `already` tonnes bought in the same bill. Demand
-        from the purchase is added to the tag's yearly demand, so it climbs
-        the same capped quadratic curve as any other demand."""
-        market = self._material_market_tonnes(emp_key)
-        demand, worst_other = 0.0, 1.0
-        for other_tag, need in self._demand_by_emp_key().get(emp_key, ()):
-            if need <= 0:
-                continue
-            if other_tag == tag:
-                demand += need
-                continue
-            supply = max(1e-9, self._own_material_supply(other_tag) + market)
-            share = min(self.MATERIAL_PRICE_DEMAND_SHARE_CAP, need / supply)
-            worst_other = max(worst_other, 1.0 + self.MATERIAL_PRICE_PRESSURE_SCALE * share * share)
-        supply = max(1e-9, self._own_material_supply(tag) + market)
-        cap = self.MATERIAL_PRICE_DEMAND_SHARE_CAP
-        slices = _PRICE_SLICES if tonnes > 0 else 1
-        total = 0.0
-        for i in range(slices):
-            bought = already + (tonnes * (i + 0.5) / slices if tonnes > 0 else 0.0)
-            share = min(cap, (demand + bought) / supply) if demand + bought > 0 else 0.0
-            total += 1.0 + self.MATERIAL_PRICE_PRESSURE_SCALE * share * share
-        own_factor = total / slices
-        return max(worst_other, own_factor) * self.material_freight_factor(emp_key)
 
     def material_purchase_cost(self, material, tonnes, already=0.0):
         """(money, mean money per tonne) to buy `tonnes` of a material now, the price rising as
