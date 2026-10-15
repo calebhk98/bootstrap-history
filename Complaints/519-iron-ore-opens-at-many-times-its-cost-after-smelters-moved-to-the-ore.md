@@ -71,3 +71,11 @@ on the combined main from its first commit). In the opening year copper ore show
 gravel does not, so tin shows at a small fraction of copper's price against a labour ratio several times larger
 (`python3 -m sim.tests --slow --only economy_tin_dearer_than_copper` prints both). The check says not to weaken it;
 it turns green with the opening-price work above.
+
+## Note (2026-10-15, 507 Stage 3)
+
+Until this is fixed, a partner's export budget (`_partner_spending` in `sim/engine/economy_port_year.py`) is sized
+by the cost table's price for the coin metal, not the economy's: at the economy's price the metal's opening premium
+swamped the port market and left it with no bids. Every other coin-metal use reads the economy's price
+(`GoodsMarket.home_unit_price`). Move this one onto it when the metal's price is near its cost.
+
