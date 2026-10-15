@@ -139,7 +139,8 @@ class CreditMixin:
         # One upkeep() call; if already provided, reuse it to avoid silent duplication.
         upkeep_amount = self.upkeep() if _upkeep is None else _upkeep
         # The standing income prices the floor too: a year's job does not shrink what a lender thinks you live on.
-        floor = self.living_cost(_rev=earning if _rev is None else _rev, _upkeep=upkeep_amount, _capital=_capital) + upkeep_amount * self.CREDIT_LINE_FLOOR_UPKEEP_BUFFER_SHARE
+        at_capital = {} if _capital is None else {"_capital": _capital}
+        floor = self.living_cost(_rev=earning if _rev is None else _rev, _upkeep=upkeep_amount, **at_capital) + upkeep_amount * self.CREDIT_LINE_FLOOR_UPKEEP_BUFFER_SHARE
         # Bounded by what can be serviced: no lender advances more than income
         # can carry, even with a grand patron. Five years of turnover stops a
         # patron-name from creating an unpayable debt trap. [temporary_heuristic]
