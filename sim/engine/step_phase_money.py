@@ -196,12 +196,12 @@ class MoneyPhaseMixin:
             if self.state.household.capital > self.AUTO_BUY_PEOPLE_CAPITAL_FLOOR_IN_PRICES * self.labour.SLAVE_BASE_PRICE and self.state.household.artisans < 12 and self.running_with_mechanic("hosts_bought_people"):
                 got = self.labour.buy_slaves(min(6, int(self.state.household.capital // (self.AUTO_BUY_PEOPLE_CAPITAL_PER_PERSON_IN_PRICES * self.labour.SLAVE_BASE_PRICE))))
                 if got:
-                    self.state.household.log.append((self.state.scenario.year, "bought %d people for the workshop" % got))
+                    self.state.household.log.append((self.state.scenario.year, LogLine("people_bought", "bought %d people for the workshop" % got)))
         if self.state.founder.policy.get("auto_manumit", not self.manual) and self.state.household.slaves:
             if self.rng.random() < self.AUTO_MANUMIT_ANNUAL_CHANCE:
                 freed = self.labour.manumit(max(1, self.state.household.slaves // self.AUTO_MANUMIT_SHARE_DIVISOR))
                 if freed:
-                    self.state.household.log.append((self.state.scenario.year, "freed %d people" % freed))
+                    self.state.household.log.append((self.state.scenario.year, LogLine("people_freed", "freed %d people" % freed)))
 
     def _step_money_world(self):
         """The society's own year: output recovery, population, literacy and trades, the actors. Once a year."""

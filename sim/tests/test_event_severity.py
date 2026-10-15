@@ -4,6 +4,7 @@ import unittest
 from .harness import *  # noqa: F401,F403
 from sim.refusal import LogLine
 from sim.ui.proto import event_severity
+from sim.ui.proto.refusal_cause import event_codes
 from sim.ui.proto.render_screen_step import render_step
 
 
@@ -64,6 +65,19 @@ class StepScreenStyling(unittest.TestCase):
         self.assertLess(text.index(sacked), text.index(fair))
         self.assertIn("***", sacked)
         self.assertNotIn("***", fair)
+
+
+class DisasterGroups(unittest.TestCase):
+
+    def test_a_group_takes_the_highest_tier_of_its_members_whatever_its_name(self):
+        from sim.ui.proto.event_groups import group_disaster_events
+        members = [LogLine("people_freed", "freed some people"), SACKED, LogLine("people_bought", "bought some people")]
+        events = [{"year": 5, "message": message, **event_codes(message)} for message in members]
+        grouped = group_disaster_events(events, "A quiet name", members)
+        self.assertEqual(len(grouped), 1)
+        tagged = event_severity.tag_events(grouped)
+        self.assertEqual(tagged[0]["severity"], "regime_war_or_sack")
+        self.assertEqual(event_severity.order_events(tagged + [{"year": 6, "message": QUIET}])[0]["year"], 5)
 
 
 if __name__ == "__main__":

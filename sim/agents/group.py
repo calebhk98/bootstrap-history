@@ -7,6 +7,7 @@ purse, forbid the technique if it can afford to forgo the gains, and let the bla
 founder either way. Nothing here names a trade, a commodity or a civilisation.
 """
 import math
+from sim.refusal import LogLine
 from typing import Any, Dict, List
 
 from sim.constants import declare
@@ -99,7 +100,7 @@ class InterestGroup(RecordedActor):
 			record.exited_year = world.year
 			record.strength = record.claim = 0.0
 			record.demands = []
-			world.say("%s: no longer organised, the loss has eased (%s)" % (record.name, record.cause))
+			world.say(LogLine("group_eased", "%s: no longer organised, the loss has eased (%s)" % (record.name, record.cause)))
 			return
 		record.strength = pull_of(record.lost_income, revenue)
 		record.peak_strength = max(record.peak_strength, record.strength)

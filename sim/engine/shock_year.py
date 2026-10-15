@@ -69,7 +69,7 @@ class ShockYearMixin:
         # Refresh population and wage screens now, not at year end.
         self._refresh_demographic_indexes(year)
         for seat_id, report in reports.items():
-            self.state.seats[seat_id].household.log.append((year, self._staff_loss_message(met[seat_id], report, raw)))
+            self.state.seats[seat_id].household.log.append((year, self._staff_loss_message(met[seat_id], report, raw)))  # plain line: already a LogLine
 
     def _staff_loss_of_seat(self, hazard):
         """What one wave takes from the acting seat's people and cash; returns the figures its message needs."""
@@ -219,4 +219,4 @@ class ShockYearMixin:
             line = "%s: the society's values are shifting (%s)" % (
                 hazard.get("name", "hazard"), ", ".join("%s now %.2f" % (field, value) for field, value in sorted(changed.items())))
             for seat_id in met:
-                self.state.seats[seat_id].household.log.append((year, line))
+                self.state.seats[seat_id].household.log.append((year, LogLine("hazard_values_shift", line)))

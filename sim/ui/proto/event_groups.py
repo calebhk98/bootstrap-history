@@ -1,5 +1,7 @@
 """One historical disaster is one event, its consequences listed inside it."""
 
+from .event_kinds import worst_kind
+
 # Fewest consequences worth folding into a single event.
 MIN_GROUPED_CONSEQUENCES = 2
 
@@ -19,4 +21,7 @@ def group_disaster_events(events, disaster_name, disaster_messages):
     grouped = {"year": members[0]["year"],
                "message": "%s: %d consequences" % (disaster_name, len(members)),
                "details": [member["message"] for member in members]}
+    worst = worst_kind(members)   # the group weighs what its worst member weighs, never what its name says
+    if worst:
+        grouped["event_kind"] = worst
     return events[:start] + [grouped] + events[start + len(wanted):]

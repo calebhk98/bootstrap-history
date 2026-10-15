@@ -158,14 +158,14 @@ class StaffingMixin:
                 reopened.append(node_id)
         if reopened:
             self.record_staffing_reopenings(len(reopened))
-            household.log.append((year, "you have the people again: %s reopen%s on "
+            household.log.append((year, LogLine("concerns_reopened", "you have the people again: %s reopen%s on "
                                  "their own, now that somebody is free to "
                                  "watch %s; %d still shut for want of staff"
                              % (", ".join(sorted(reopened)[:4])
                                 + (" and others" if len(reopened) > 4 else ""),
                                 "" if len(reopened) == 1 else "s",
                                 "it" if len(reopened) == 1 else "them",
-                                self.staffing_shut_count())))
+                                self.staffing_shut_count()))))
         return reopened
 
     # ---- A WARNING BEFORE THE DOOR SHUTS, NOT AN AUTOMATION THAT OPENS IT --
@@ -720,11 +720,11 @@ class StaffingMixin:
                 said[node_id] = scenario_year
                 household._said_autoopen = said
                 household.log.append((scenario_year,
-                                 "%s would earn %s a year against %s of upkeep and "
+                                 LogLine("concern_unprofitable", "%s would earn %s a year against %s of upkeep and "
                                  "is still shut: %s"
                                  % (node_id, money_text(self.nodes[node_id]["rev"], self, grouped=True),
                                     money_text(self.nodes[node_id]["up"], self, grouped=True),
-                                    why or "something is in the way")))
+                                    why or "something is in the way"))))
 
     def mothball_work(self, node_id):
         """Shut a completed work down to stop paying its upkeep.

@@ -67,8 +67,8 @@ class ColoniesMixin:
         self.state.holdings.colonies.append({
             "tile": tile_id, "founded_year": self.state.scenario.year, "by": node_id,
             "children": 0.0, "working_age": settlers, "elderly": 0.0})
-        household.log.append((self.state.scenario.year, "a colony of %s settlers is founded on %s, outfitted for %s"
-                              % (plain_number(settlers), tile_id, money_text(cost, self, grouped=True))))
+        household.log.append((self.state.scenario.year, LogLine("colony_founded", "a colony of %s settlers is founded on %s, outfitted for %s"
+                              % (plain_number(settlers), tile_id, money_text(cost, self, grouped=True)))))
         return True, "founded a colony on %s with %s settlers for %s" % (
             tile_id, plain_number(settlers), money_text(cost, self, grouped=True))
 

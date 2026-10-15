@@ -14,6 +14,7 @@ a passed (or overridden) legality test leads to.
 These are methods of Sim; they are a mixin only so that they can live in a
 file of their own. Behaviour is unchanged and verified byte-identical.
 """
+from sim.refusal import LogLine
 from . import money_units, purchase_rule
 from .blockers import blocker_kind
 from .interest_groups import check_group_prohibition
@@ -242,8 +243,8 @@ class StartingMixin:
         projects.bountied.add(node_id)
         # A public prize makes you conspicuous - and that is what `scandal`
         # and `eminence` measure; see core.py's note on scandal.
-        household.log.append((self.state.scenario.year, "posted a public bounty for %s (%s)"
-                         % (node["name"], money_text(price, self, grouped=True, short=True))))
+        household.log.append((self.state.scenario.year, LogLine("bounty_posted", "posted a public bounty for %s (%s)"
+                         % (node["name"], money_text(price, self, grouped=True, short=True)))))
         return True
 
     PURCHASABLE_SUBSTITUTE_QUALITY_DISCOUNT = declare(
@@ -1008,9 +1009,9 @@ class StartingMixin:
             self._complete(node_id)
             return True, None
         if _already > 0.5:
-            household.log.append((scenario_year, "%s begun again; the %s already "
+            household.log.append((scenario_year, LogLine("project_restarted", "%s begun again; the %s already "
                                         "paid on it before comes off the bill"
-                             % (node_id, money_text(_already, self, grouped=True))))
+                             % (node_id, money_text(_already, self, grouped=True)))))
         # Director hours in step() 5 are handed out by priority in `order`.
         # A thing you just chose to work on should get first call on your own
         # hours, exactly as the old (cosmetic) reprioritisation implied it did.

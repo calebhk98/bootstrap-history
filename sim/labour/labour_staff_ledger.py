@@ -32,7 +32,7 @@ class StaffLedgerMixin:
             parts.append("%s %s%s" % (count, trade, "" if count == "1" else "s"))
         if parts:
             self._world.state.household.log.append(
-                (self._world.state.scenario.year, "you lose %s to %s" % (", ".join(parts), cause)))
+                (self._world.state.scenario.year, LogLine("staff_lost", "you lose %s to %s" % (", ".join(parts), cause))))
 
     def trades_drawn_on(self):
         """Specialist trades some active project or open concern needs, with why."""

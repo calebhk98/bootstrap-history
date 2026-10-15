@@ -141,7 +141,7 @@ def _cmd_start(sim, nodes, cmd, ended):
     # back sees completions and failures appear out of nowhere with no
     # record of having chosen to begin them.
     if sim.active.get(node_id, {}).get("spent", 0.0) <= 0.5:
-        sim.log.append((sim.year, "started: %s" % node["name"]))
+        sim.log.append((sim.year, LogLine("project_started", "started: %s" % node["name"])))
     # THE PRICE YOU ACTUALLY COMMITTED TO: project_cost moves with prices,
     # the coinage, material scarcity and what has been built since, so an
     # earlier `why` figure is only a snapshot. The bill IS fixed at the
@@ -359,7 +359,7 @@ def _cmd_stop(sim, nodes, cmd, ended):
     # which is entirely about what the hours and money do, not about
     # recording the decision. A deliberate abandonment is exactly the
     # kind of thing a player asked `log` to be able to find again.
-    sim.log.append((sim.year, "stopped: %s (%s)" % (nodes[node_id]["name"], why)))
+    sim.log.append((sim.year, LogLine("project_stopped", "stopped: %s (%s)" % (nodes[node_id]["name"], why))))
     return {"ok": True, "stopped": node_id, "what_happened": why}
 
 
@@ -562,7 +562,7 @@ def _cmd_rush(sim, nodes, cmd, ended):
             # player reading `log` back should see every begun-work as a
             # choice they made, not a completion that appeared unasked.
             if sim.active.get(node_id, {}).get("spent", 0.0) <= 0.5:
-                sim.log.append((sim.year, "started: %s" % node["name"]))
+                sim.log.append((sim.year, LogLine("project_started", "started: %s" % node["name"])))
             started.append({"id": node_id, "name": node["name"],
                             "cost": round(sim.active.get(node_id, {}).get(
                                 "cost_left", sim.project_cost(node_id)), 1),
@@ -643,8 +643,8 @@ def _cmd_restore(sim, nodes, cmd, ended):
     restored, msg = sim.restore_work(_rs_id)
     if not restored:
         return {"ok": False, "error": msg}
-    sim.log.append((sim.year, "restored: %s (%s)"
-                 % (nodes[_rs_id]["name"] if _rs_id in nodes else _rs_id, msg)))
+    sim.log.append((sim.year, LogLine("work_restored", "restored: %s (%s)"
+                 % (nodes[_rs_id]["name"] if _rs_id in nodes else _rs_id, msg))))
     return {"ok": True, "restored": msg, "capital": round(sim.capital, 1)}
 
 
@@ -683,7 +683,7 @@ def _cmd_open(sim, nodes, cmd, ended):
     # finishing something earns nothing until you open it - deserves a
     # line in the player's own history, not just in the reply to this one
     # command. open_venture itself stays silent; see its docstring.
-    sim.log.append((sim.year, "opened: %s (%s)" % (nodes[node_id]["name"], msg)))
+    sim.log.append((sim.year, LogLine("work_opened", "opened: %s (%s)" % (nodes[node_id]["name"], msg))))
     return {"ok": True, "opened": msg, "opening_charge": round(charge, 1),
             "paid_now": round(charge, 1), "capital": round(sim.capital, 1),
             "revenue": round(sim.revenue(), 1), "upkeep": round(sim.upkeep(), 1)}

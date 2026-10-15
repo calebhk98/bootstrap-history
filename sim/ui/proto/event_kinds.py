@@ -57,6 +57,64 @@ EVENT_KINDS = {
     "prominence_patron_destroyed": _entry(MINOR, failure=True),
     "hazard_condition_failed": _entry(MINOR),
     "banditry": _entry(MINOR, notable=True),
+    # informational: reported, but no tier above the quietest and none of the flags
+    "army_mutiny": _entry(),
+    "arrears_interest": _entry(),
+    "bondage_served": _entry(),
+    "bought_people_trained": _entry(),
+    "bounty_posted": _entry(),
+    "colony_founded": _entry(),
+    "concern_levy": _entry(),
+    "concern_unprofitable": _entry(),
+    "concerns_reopened": _entry(),
+    "confiscation_refused": _entry(),
+    "confiscation_too_large": _entry(),
+    "coppice_limit": _entry(),
+    "deputies_directing": _entry(),
+    "failure_loss": _entry(),
+    "goal_effect": _entry(),
+    "group_eased": _entry(),
+    "group_petition": _entry(),
+    "hazard_attack_averted": _entry(),
+    "hazard_coin_debased": _entry(),
+    "hazard_output_fall": _entry(),
+    "hazard_values_shift": _entry(),
+    "hidden_wealth_found": _entry(),
+    "hire_ordered": _entry(),
+    "let_go_ordered": _entry(),
+    "nitre_bed_laid": _entry(),
+    "opening_shortfall": _entry(),
+    "patron_dies": _entry(),
+    "people_bought": _entry(),
+    "people_freed": _entry(),
+    "policy_hire": _entry(),
+    "policy_housing": _entry(),
+    "project_restarted": _entry(),
+    "project_started": _entry(),
+    "project_stopped": _entry(),
+    "requisition_enforced": _entry(),
+    "requisition_negotiated": _entry(),
+    "requisition_unenforced": _entry(),
+    "restored": _entry(),
+    "school_progress": _entry(),
+    "society_changed": _entry(),
+    "staff_lost": _entry(),
+    "state_confiscation": _entry(),
+    "state_military_demand": _entry(),
+    "state_notice_approaching": _entry(),
+    "state_paid": _entry(),
+    "teaching_begun": _entry(),
+    "trade_no_longer_only_yours": _entry(),
+    "training_finished": _entry(),
+    "wage_work_sold": _entry(),
+    "withdrew_from_public_life": _entry(),
+    "work_closed_gate_lapsed": _entry(),
+    "work_opened": _entry(),
+    "work_restored": _entry(),
+    "workings_closed": _entry(),
+    "workings_exhausted": _entry(),
+    "hazard_condition_met": _entry(),
+    "hazard_condition_unmet": _entry(),
 }
 TIER_NAMES = (RUN_ENDING, SACK, DEMOGRAPHIC, ECONOMIC, MAJOR_FAILURE, MINOR, COMPLETION, INFORMATIONAL)
 
@@ -102,3 +160,9 @@ def is_minor_failure(message):
 def is_severe_failure(message):
     """Whether a log line reports a project failure that is not minor."""
     return kind_of(message) == "project_failed" and not is_minor_failure(message)
+
+
+def worst_kind(events):
+    """The kind of the worst-tier event among `events` (the first on a tie), or None when none has a kind."""
+    kinds = [kind_of(event) for event in events if kind_of(event) in EVENT_KINDS]
+    return min(kinds, key=lambda kind: TIER_NAMES.index(EVENT_KINDS[kind]["tier"]), default=None)

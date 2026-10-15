@@ -302,10 +302,10 @@ class ProjectStartPhaseMixin:
                     self, "auto_mine", "nitre", "%s of nitre bed" % area_text(spend / self.NITRE_COST_PER_M2, self, unit="square_metre"),
                     "saltpetre is the binding shortage; the yearly spend is capped, not sized to the gap",
                     self.state.household.capital + spend)
-                self.state.household.log.append((self.state.scenario.year, "laid down %s of nitre bed "
+                self.state.household.log.append((self.state.scenario.year, LogLine("nitre_bed_laid", "laid down %s of nitre bed "
                                      "for %s (auto_mine)"
                                  % (area_text(spend / self.NITRE_COST_PER_M2, self, unit="square_metre"),
-                                    money_text(spend, self))))
+                                    money_text(spend, self)))))
         slowed = shortage_conditions.slowed_projects(self) if thr < 0.6 and self.state.holdings.binding else []
         if slowed:
             # SAY WHAT TO DO ABOUT IT: a bare "SHORT OF SALTPETRE: work at
