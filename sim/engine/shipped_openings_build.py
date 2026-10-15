@@ -15,15 +15,18 @@ def build(civ_id: str) -> List[Tuple[str, str]]:
     return build_reporting(civ_id)[0]
 
 
-def build_reporting(civ_id: str):
+def build_reporting(civ_id: str, before_writing=None):
     """Open a game of `civ_id` (computing what the disk cache lacks) and ship each cache entry it used;
     returns their (namespace, key) and how the opening's first stage ended (`spin_up_result`). The opening
-    does not depend on the seed, kit or player, so one game stands for all."""
+    does not depend on the seed, kit or player, so one game stands for all. `before_writing(game)` is called on
+    the opened game before anything is written; it may raise to refuse the opening (opening_checks_gate)."""
     if os.environ.get(SPIN_UP_YEARS_ENV):
         raise SystemExit("%s shortens the spin-up; a shipped opening must be the full one" % SPIN_UP_YEARS_ENV)
     _tree, _prices, nodes, _wages, _goods = load()
     with solve_cache.recording() as touched:
         game = Sim(nodes, [], random.Random(1), events=False, manual=True, civ=load_civ(civ_id))
+    if before_writing is not None:
+        before_writing(game)
     shipped = []
     for directory, key in dict.fromkeys(touched):
         try:
