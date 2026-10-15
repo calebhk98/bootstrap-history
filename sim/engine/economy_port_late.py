@@ -7,6 +7,7 @@ economy is then given what it lacks from a setup built from them (`AgentEconomy.
 same setup a resumed game builds from its saved opening.
 """
 from .economy_port_setup import allowed_entries
+from .making_cost import cost_of_making
 
 
 def techniques_held(sim):
@@ -15,9 +16,36 @@ def techniques_held(sim):
     return frozenset(sim.state.projects.granted) | frozenset(sim.techniques_in_use())
 
 
+def late_goods_costs(sim, prices, goods, held_nodes, production):
+    """{good: money per unit} the cost of making each good that has no price yet, at the economy's live input
+    prices (the opening's where the economy has none) and live wages, the cheapest way the held techniques allow."""
+    live = sim.economy.agent_prices() or {}
+    wages = {}
+
+    def input_price_of(material):
+        price = live.get(material) or prices.get(material)
+        return price if price and price > 0.0 else None
+
+    def wage_of(trade):
+        if trade not in wages:
+            wages[trade] = sim.economy.labour.quote(trade)
+        return wages[trade]
+
+    rate = float(sim.economy.base_rate())
+    found = {}
+    for good in goods:
+        if good in prices:
+            continue
+        made = cost_of_making(good, held_nodes, input_price_of, wage_of, rate, production=production,
+                              civilization=sim.civ)
+        if made is not None and made.unit_cost > 0.0:
+            found[good] = made.unit_cost
+    return found
+
+
 def opening_with_techniques(sim, opening, held_nodes, production):
-    """`opening` with the entries `held_nodes` allow that it lacks, their trades' wages and the engine's
-    prices of the goods they touch that it had none for; None when they add nothing."""
+    """`opening` with the entries `held_nodes` allow that it lacks, their trades' wages and the
+    cost of making the goods they touch that it had no price for; None when they add nothing."""
     known = set(opening["recipes"])
     added = [entry_id for entry_id in allowed_entries(production, held_nodes) if entry_id not in known]
     if not added:
@@ -28,10 +56,8 @@ def opening_with_techniques(sim, opening, held_nodes, production):
         entry = production[entry_id]
         touched.update(entry.get("outputs") or {}, entry.get("inputs") or {})
         trades.update(entry.get("labour_hours") or {})
-    engine_prices = sim._material_prices()
     prices = dict(opening["prices"])
-    prices.update({good: engine_prices[good] for good in sorted(touched)
-                   if good not in prices and engine_prices.get(good, 0.0) > 0.0})
+    prices.update(late_goods_costs(sim, prices, sorted(touched), held_nodes, production))
     wages = dict(opening["wages"])
     for trade in sorted(trades - set(wages)):
         wage = sim.economy.labour.quote(trade)

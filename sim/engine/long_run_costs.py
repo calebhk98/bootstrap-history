@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import Any, Callable, Dict, Iterable, Mapping, Optional
 
 from sim.engine import prices as price_engine
-from sim.engine import solve_prices
+from sim.engine import rent_standin, solve_prices
 from sim.engine.making_cost import LAND_MATERIAL
 
 
@@ -59,3 +59,21 @@ def long_run_costs(techniques: Iterable[str],
         techniques, ratios, production_entries=production, interest_rate=rate, civilization=civilization,
         civilization_id=None if civilization is None else civilization["id"], rent_hours_per_kg_by_material=rent_hours)
     return {good: LongRunCost(cost * numeraire, recipe[good], provenance[good]) for good, cost in hours.items()}
+
+
+def opening_rent_of(techniques: Iterable[str], wage_of: Callable[[str], float],
+                    civilization: Optional[Mapping[str, Any]] = None,
+                    production: Optional[Mapping[str, Any]] = None) -> Callable[[str], float]:
+    """`rent_of` for `long_run_costs` at the opening: the labelled stand-in (`rent_standin.py`), money an hour of
+    the numeraire trade buys times the hours of rent per unit. Ore and land rent are Ricardian margins that need a
+    quantity demanded; until the economy's own rent replaces them (ONE_PRICE_OWNER_PLAN.md stage 5) the opening
+    fixes it from physical figures and no price."""
+    production = production if production is not None else price_engine.default_production_entries()
+    numeraire = wage_of(solve_prices.NUMERAIRE_TRADE)
+    ratios = price_engine.solver_wage_ratios(
+        production, {trade: wage_of(trade) / numeraire for trade in _trades(production)})
+    available, _unreached, _unclassified = solve_prices.techniques_available_to(production, frozenset(techniques))
+    hours = rent_standin.stand_in_rent(
+        available, ratios, civilization_id=None if civilization is None else civilization["id"],
+        civilizations=None if civilization is None else {civilization["id"]: civilization})
+    return lambda key: hours.get(key, 0.0) * numeraire
