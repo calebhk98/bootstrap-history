@@ -25,7 +25,7 @@ from sim.world import military_logistics as logistics
 # module so a change to IRON_KG_PER_EQUIPPED_SOLDIER or ANNUAL_EQUIPMENT_
 # REPLACEMENT_FRACTION is still traceable through this test rather than past
 # it.
-_zero_lev = sim(civ="rome_100ad")
+_zero_lev = unopened_sim(civ="rome_100ad")
 check("at zero military leverage, the founder is out entirely",
       _zero_lev.military_leverage() == 0.0, _zero_lev.military_leverage())
 check("...so the reported per-soldier burden is military_logistics.py's own "
@@ -39,7 +39,7 @@ check("...so the reported per-soldier burden is military_logistics.py's own "
 # node done), the reported burden is exactly military_logistics.py's
 # MODERN_SERVICE_RIFLE figure at society.py's own declared campaign tempo -
 # again read from the module's functions, not a number typed into this test.
-_full_lev = sim(civ="rome_100ad")
+_full_lev = unopened_sim(civ="rome_100ad")
 _all_military = [node_id for node_id in NODES if "military" in NODES[node_id].get("traits", ())]
 _full_lev.done.update(_all_military)
 _full_lev._done_changed()
@@ -58,7 +58,7 @@ check("...so the reported per-soldier burden is military_logistics.py's own "
 # branch reports a heavier per-soldier physical claim, never a lighter one,
 # and never one outside [melee, rifle].
 _melee_kg = logistics.annual_iron_and_ammunition_burden_kg_per_soldier()
-_partial = sim(civ="rome_100ad")
+_partial = unopened_sim(civ="rome_100ad")
 _partial.done.update(_all_military[:5])
 _partial._done_changed()
 _partial_burden = _partial.military_equipment_burden_kg_per_soldier_per_year()
@@ -82,7 +82,7 @@ def _grown(civ, employees=300.0, capital=3000000.0, eminence=20.0):
     a household large enough to be past the general state-notice line, built
     fresh here rather than imported so this file has no dependency on
     another topic's private helper."""
-    grown_sim = sim(civ=civ, events=True)
+    grown_sim = unopened_sim(civ=civ, events=True)
     grown_sim.employees["artisan"] = employees
     grown_sim.labour._resync_pools()
     grown_sim.capital = capital
@@ -128,7 +128,7 @@ check("the crossing's kilograms never become money on their own: a state that ha
 # returns None (not a dict with only "what_helps") when nothing else is
 # live and there is no military tech either - the crossing must not turn a
 # quiet household noisy.
-_dormant = sim(civ="rome_100ad")
+_dormant = unopened_sim(civ="rome_100ad")
 check("a fresh, dormant household still gets no state-pressure report at "
       "all - this crossing does not add a floor sentence of its own",
       _dormant.state_pressure_report() is None, _dormant.state_pressure_report())

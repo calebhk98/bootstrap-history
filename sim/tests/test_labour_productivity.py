@@ -22,10 +22,10 @@ _orig_supervision_room = Labour.supervision_room
 Labour.household_room = lambda self: 10_000.0
 Labour.supervision_room = lambda self: 10_000.0
 try:
-    small = sim(capital=1e9)
+    small = unopened_sim(capital=1e9)
     small.labour.hire("smith", 5)
     small.year += 10                 # let the hiring-day pressure fully decay
-    big = sim(capital=1e9)
+    big = unopened_sim(capital=1e9)
     big.labour.hire("smith", 50)            # TEN TIMES as many smiths
     big.year += 10                   # same decay, same settling time
     cost_small = (S.ANNUAL_WAGE["smith"] * small.wage_index * small.price_index
@@ -64,7 +64,7 @@ finally:
     Labour.supervision_room = _orig_supervision_room
 
 # --- Q2: technology that raises output per worker without replacing them.
-s = sim(capital=1e9)
+s = unopened_sim(capital=1e9)
 check("with nothing built, an hour of a trade's time is worth exactly an "
       "hour - labour_productivity changes nothing until a real technology "
       "earns it",
@@ -112,7 +112,7 @@ check("every trade named in LABOUR_PRODUCTIVITY_SOURCES is a real trade in "
 # See SocietyMixin.advance_society (society.py).
 from sim.labour.labour_allocation import FARM_TRADE as _FARM_TRADE
 
-s_noschool = sim(capital=2000000.0, manual=False)
+s_noschool = unopened_sim(capital=2000000.0, manual=False)
 s_noschool.trades_created.add("electrician")
 _gen0 = s_noschool.civ["literacy_general"]
 for i in range(1, 401):
@@ -126,7 +126,7 @@ check("a taught trade never naturalises without a single school ever "
       and s_noschool.employees.get("electrician", 0.0) == 0.0,
       (sorted(s_noschool.trades_endemic), s_noschool.employees.get("electrician")))
 
-s_school = run_it(sim(capital=2000000.0, manual=False), "school_founded")
+s_school = run_it(unopened_sim(capital=2000000.0, manual=False), "school_founded")
 _gen0b = s_school.civ["literacy_general"]
 _ceil_farming = s_school.literacy_ceiling_general()
 for i in range(1, 401):
@@ -137,7 +137,7 @@ check("a single running school in a farming society raises literacy over "
       and _ceil_farming < 0.9,
       (round(s_school.civ["literacy_general"], 3), round(_ceil_farming, 3)))
 
-s_max = run_it(sim(capital=2000000.0, manual=False),
+s_max = run_it(unopened_sim(capital=2000000.0, manual=False),
                "school_founded", "academy_network")
 s_max.inst_units = {"school_founded": 9.0, "academy_network": 9.0}
 # A society with almost nobody left on the farms.
@@ -158,7 +158,7 @@ check("the lettered/propertied class closes most of its own gap too, on "
 # sharpest question: "if I invent electricity, you can't say that after 100
 # years I still can't find anyone who can make or research generators." See
 # SocietyMixin._advance_trade_absorption/_grow_endemic_trade (society.py).
-s_teach = run_it(sim(capital=5000000.0, manual=False),
+s_teach = run_it(unopened_sim(capital=5000000.0, manual=False),
                  "school_founded", "academy_network")
 s_teach.inst_units = {"school_founded": 9.0, "academy_network": 9.0}
 s_teach.trades_created.add("electrician")
@@ -222,7 +222,7 @@ check("...and which taught trades the society has absorbed on its own",
 _rev_node = next(node_id for node_id in sorted(NODES) if NODES[node_id].get("rev", 0) > 0)
 _no_rev_node = next(node_id for node_id in sorted(NODES) if NODES[node_id].get("rev", 0) <= 0)
 
-s_dif = sim(capital=1000000.0)
+s_dif = unopened_sim(capital=1000000.0)
 check("diffusion_index is 0 with nothing operating",
       s_dif.diffusion_index() == 0.0, s_dif.diffusion_index())
 check("a technology nobody has opened for business has nothing to leak",
@@ -284,7 +284,7 @@ check("the gating rule flags a consumer with no producer and accepts a declared 
 
 # --- Staffing: one game for `why`'s supervision figure, the staffing closure, the
 # automatic reopen, and the price `restore` quotes inside and after the grace window.
-s_staff = sim(capital=1_000_000.0)
+s_staff = unopened_sim(capital=1_000_000.0)
 _SUPERVISED = concern_needing_craftsmen_to_supervise()
 
 # `why` quoted the BUILD crew as the staff requirement, while `open` enforces
@@ -357,7 +357,7 @@ check("...and the lapsed-window fee really is about ten times the in-grace one",
       (_msg_in_grace, _msg_lapsed))
 
 # --- One game for the credit freeze, the standing-figure regression and the stall diagnosis.
-s_money = sim(capital=100000.0)
+s_money = unopened_sim(capital=100000.0)
 
 # A first-ever settlement says nothing about a moved date.
 s_money.capital = -(s_money.credit_limit() * 1.5)
@@ -403,7 +403,7 @@ check("`money`'s net_per_year is insulated from the same one-year swing, matchin
 
 # stall_diagnosis's own net must be computed the same standing way: reproduce the
 # swing test against it on a household that is actually stalled.
-s_money = sim(capital=-40000.0)     # deep enough that the interest outruns the income
+s_money = unopened_sim(capital=-40000.0)     # deep enough that the interest outruns the income
 s_money.insolvent_years = 20
 s_money.wage_hours_this_year = 0
 _diag_before = s_money.stall_diagnosis()

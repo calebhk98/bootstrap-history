@@ -16,7 +16,7 @@ general_goal = "goal_literacy_common"
 elite_goal = "goal_literate_nation"
 
 # A goal change drops every cache keyed on the old goal.
-game = sim()
+game = unopened_sim()
 game.goal = general_goal
 road = {node_id for node_id in NODES if game.on_road_to_goal(node_id)}
 check("the goal road is cached for the first goal", road == S.closure(NODES, general_goal))
@@ -28,7 +28,7 @@ game.goal = general_goal
 check("changing the goal drops the cached critical floor", getattr(game, "_goal_critical_floor", None) is None)
 
 # Each goal keeps its own reach year.
-game = sim()
+game = unopened_sim()
 game.goal = general_goal
 game.civ["literacy_general"] = 0.5
 game._check_win_conditions(1000)
@@ -53,7 +53,7 @@ with tempfile.TemporaryDirectory() as folder:
           game.state.seat_progress.goal_years)
 
 # A watched goal is promoted once the formal goal is reached.
-game = sim()
+game = unopened_sim()
 game.goal = general_goal
 game.civ["literacy_general"] = 0.0
 other = next(row["id"] for row in ask(game, cmd="goals")["choices"]
@@ -71,7 +71,7 @@ check("the new formal goal has no year yet, the old one keeps its", game.goal_ye
 check("only a watched goal can be promoted", ask(game, cmd="goals", action="promote", goal=general_goal)["ok"] is False)
 
 # The anatomy hook.
-game = sim()
+game = unopened_sim()
 rows = game.win_condition_anatomy({"metric": "literacy_general", "op": ">=", "value": 0.2})
 check("the hook returns (label, value, unit) rows", rows and all(len(row) == 3 for row in rows), rows)
 check("the hook reports the live metric", any(row[0] == "current" and row[1] == game.civ.get("literacy_general") for row in rows), rows)

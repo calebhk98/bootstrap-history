@@ -6,7 +6,7 @@ NODE_ID = concern_needing_craftsmen_to_supervise()
 
 def staffed_sim():
 	# A running concern that needs a craftsman to supervise it.
-	test_sim = sim(capital=1_000_000.0)
+	test_sim = unopened_sim(capital=1_000_000.0)
 	test_sim.done.update(NODES[NODE_ID]["pre"])
 	test_sim.done.add(NODE_ID)
 	test_sim._done_changed()
@@ -117,7 +117,7 @@ check("a closure's reason and year survive save and load",
 
 # --- loss-making shedding from economy_credit.shed_loss_makers (easier to test)
 # shed_loss_makers sheds loss-makers when capital < 0
-s_auto_shed = sim(capital=hours_money(202000), manual=False)  # Start with money to open
+s_auto_shed = unopened_sim(capital=hours_money(202000), manual=False)  # Start with money to open
 _loss_id = "academy_network"  # loss-making institution: earns nothing, costs upkeep
 s_auto_shed.done.update(NODES[_loss_id]["pre"])
 s_auto_shed.done.add(_loss_id)
@@ -132,7 +132,7 @@ check("shed_loss_makers closes loss-making works with loss_making reason",
 
 # --- creditor seizure from economy_credit.enforce_credit_limit
 # Need a loss-making node to be seized
-s_seiz = sim(capital=hours_money(202000))
+s_seiz = unopened_sim(capital=hours_money(202000))
 _seiz_id = "academy_network"  # loss-making institution: earns nothing, costs upkeep
 s_seiz.done.update(NODES[_seiz_id]["pre"])
 s_seiz.done.add(_seiz_id)

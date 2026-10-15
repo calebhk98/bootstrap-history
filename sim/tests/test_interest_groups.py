@@ -30,7 +30,7 @@ def the_group(game):
 
 
 # ---- nobody is organised until someone has lost something ------------------------------------
-quiet = sim()
+quiet = unopened_sim()
 a_year(quiet)
 check("a founder who has hurt nobody has no interest groups", quiet.interest_groups() == [], quiet.interest_groups())
 check("the groups screen says so",
@@ -91,7 +91,7 @@ check("a purse that covers it pays the group and the founder is not levied for i
 check("what the state paid arrives in the group's purse",
       flush.actors.get("group:displaced_producers:iron").money > 0.0)
 
-broke = sim()
+broke = unopened_sim()
 broke.civ["standing_army"] = 1.0e8
 broke._open_market_book()
 broke.goods_market.note_sale(broke.goods_market.acting_party_id, "iron", broke._market_entry("iron")["reference_tonnes"] * 0.6)
@@ -102,7 +102,7 @@ record = broke.state_treasury().record
 check("a state that cannot pay leaves the group's claim unfunded",
       record.unfunded.get(name, 0.0) > 0.0, (record.need, record.unfunded))
 rates_with = broke.state_levy_rates()
-calm = sim()
+calm = unopened_sim()
 calm.civ["standing_army"] = 1.0e8
 calm.state_treasury().money = 0.0
 a_year(calm)
@@ -153,7 +153,7 @@ for civ_id in ("han_china_100ad",):
           the_group(other) is not None and the_group(other)["kind"] == "displaced_producers", other.interest_groups())
 
 # ---- employers squeezed by the founder's hiring ----------------------------------------------
-squeezed = sim()
+squeezed = unopened_sim()
 squeezed.labour.market.press("artisan", squeezed.labour.market_supply("artisan") * 3.0)
 squeezed.state_treasury().money = 1.0e12
 world = SimWorld(squeezed)
@@ -168,7 +168,7 @@ saved = big
 before = saved.interest_groups()
 path = _rel("interest_groups_roundtrip.json")
 save_state(saved, path)
-loaded = sim()
+loaded = unopened_sim()
 load_state(loaded, path)
 check("organised groups survive a save and load", loaded.interest_groups() == before, (before, loaded.interest_groups()))
 

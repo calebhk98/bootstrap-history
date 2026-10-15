@@ -19,6 +19,9 @@ No topic computes a spin-up of its own that a variant of a default game could sh
 coin out (`economy_port_key.py`), variants that only vary a rate or read the farm or prices are built unopened,
 and the money-regime runs are one topic per civilisation so the runner can place them side by side. The one
 setup that still needs its own spin-up is the in-memory civilisation's run of every screen.
+Topics that read only a function, a formula or a reply field build their game with `unopened_sim` (item 3); the topics that
+do this are listed by `grep -l unopened_sim sim/tests/test_*.py`. A cold full run on a loaded machine also times out
+the topics `python3 -m sim.tests --slow --timing` names with `timed out`; re-measure before trusting the three named above.
 
 A cold run is the one that matters: any engine edit invalidates the price solves and spin-ups. Measure it with an
 empty cache directory that keeps only the runner's remembered topic times:
@@ -50,12 +53,22 @@ quick topics batched with it.
    pin `PYTHONHASHSEED`, which an in-process call cannot), `package_identity` and the `-c` scripts that
    check a clean interpreter. Measure what is left with the last line of `python3 -m sim.tests --slow --timing`
    (spawn calls and seconds waiting on children); only calls through `subprocess.run` are counted.
-3. **Integration tests for unit-level facts.** Many topics build one or more full games to
-   check a reply string or a single function, and the two playtest grab-bags
-   (`round2_policy_hazards_options`, `scanners_and_scheduling`) step many years. Move such
-   checks onto the existing small fixtures (`economy_fixture`, `agents_fake_world`,
-   `geography_fixtures`), assert after one year where one is enough, and mark the topics that
-   become fast `QUICK_TOPIC = True`.
+3. **Integration tests for unit-level facts.** Partly done. The two playtest grab-bags
+   (`round2_policy_hazards_options`, `scanners_and_scheduling`) are already split by subject, one topic each,
+   so the runner places them side by side. Topics that build a game only to read a function, a formula or one
+   reply field now build it with `unopened_sim` (the agent economy not opened: no hidden spin-up years, a
+   fraction of a full game's build), as a good share of the slowest multi-check topics do (the diffusion,
+   hazard-relief and staffing formulas, the rush caps and filters, the state's budget lines and levy, mine
+   depletion, the labour productivity and literacy formulas, blockers, closure records, interest groups). A
+   topic stays on a full game when its subject needs the opened economy: partners that sell stock, materials
+   bought for a project, the founder's failure and bounty money, gated works closing in play, and the
+   structure of a live game. Check a candidate by swapping `sim(` for `unopened_sim(` in its file and
+   comparing `python3 -m sim.tests --slow --only <topic>` before and after: it must pass and be faster, and
+   breaking its subject (temporarily) must still fail it. Still to look at: the slowest multi-check topics that
+   step market years (`project_pacing`, `round8g_display`, `fog_leaks_and_typed_wording`, `names_and_fog` were
+   no faster unopened), and the opening-adjacent and staffing topics, which other work owns. None of the
+   moved topics is quick-tier: each still builds a game and runs more than a second, so none is marked
+   `QUICK_TOPIC`. The per-topic cost to chase next is the table at the end of `--slow --timing`.
 4. **Each simulated year is a full agent-economy year.** A topic that steps a game pays for its market close
    every year; most whole-game topics now step the fewest years their checks need, share stepped games, or run
    one phase of the year where the check is about that phase. Cutting the economy year itself cuts all of them.

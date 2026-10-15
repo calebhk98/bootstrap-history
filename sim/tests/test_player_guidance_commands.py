@@ -13,7 +13,7 @@ from .harness import *  # noqa: F401,F403
 
 # --- BREAK: `available` carried nine numbers and not one of them was the
 # staff, so six projects picked on cost and hours all waited on people.
-_game = sim()
+_game = unopened_sim()
 
 
 def _ask(game, **command):
@@ -50,7 +50,7 @@ check("a search that matches nothing says so instead of printing '1-0'",
 # --- BREAK: the run ended with one sentence and then a queue of identical
 # refusals. A play tester started a whole second game with the fog off just to
 # learn how far along the road they had died.
-s_fin = sim()
+s_fin = unopened_sim()
 s_fin.year = 600
 from sim.ui.protocol import final_report as _FRPT
 _fr = _FRPT(s_fin, NODES)
@@ -71,7 +71,7 @@ check("a quoted subject means the same as an unquoted one",
 
 # --- BREAK: HEARD OF was a silent slice at 25 in a game with a thousand nodes
 # in play: no note that it was cut, and no way to see the rest.
-s_h = sim()
+s_h = unopened_sim()
 s_h.fog = True
 s_h.done.update(list(NODES)[:200]); s_h._done_changed()
 for _k in list(NODES)[:200]:
@@ -88,7 +88,7 @@ check("...and can be paged through",
 
 # --- BREAK: at the horizon the banner still said "it is escapable ... work for
 # wages", and every action it named was refused with "the run has ended".
-s_end = sim()
+s_end = unopened_sim()
 s_end.year = 9999
 check("a finished run is not given advice it will refuse to act on",
       S._agent_state(s_end, NODES).get("stuck") is None,
@@ -112,7 +112,7 @@ check("...and an ordinary quantity still goes through the same reader",
 
 # --- BREAK: `path` after a sack never mentioned the one verb that would move
 # the player on, and a run driven mechanically from it sat stuck for 140 years.
-s_pth = sim()
+s_pth = unopened_sim()
 s_pth.done.add("lead_chamber"); s_pth._done_changed()
 s_pth.mothballed.add("lead_chamber")
 _rp = S._agent_dispatch(s_pth, NODES, {"cmd": "path", "id": GOAL})
@@ -155,7 +155,7 @@ _game.fog = False
 
 # --- BREAK: "unknown_source" reached a player-facing refusal, which is data,
 # not English.
-s_sl = sim()
+s_sl = unopened_sim()
 s_sl.done.update(NODES)
 s_sl.done.discard("el2_potentiometer_method_measurement")
 s_sl.done.discard("dynamo")
@@ -168,7 +168,7 @@ check("a substitution group reads as English, not as a data slug",
 # applied none of the multipliers the same page prints. The eight
 # prerequisites of a telescope came out at 24,175 in all five civilisations.
 _chain_cids = ("rome_100ad", "han_china_100ad", "norse_900ad")
-_chain_games = {cid: _game if cid == "rome_100ad" else sim(civ=cid) for cid in _chain_cids}
+_chain_games = {cid: _game if cid == "rome_100ad" else unopened_sim(civ=cid) for cid in _chain_cids}
 _chains = {cid: _ask(_chain_games[cid], cmd="why", id="telescope").get("chain_cost") for cid in _chain_cids}
 _chain_years = {cid: cost / S.starting_schedule(cid).annual_wage("labourer")
                 for cid, cost in _chains.items()}
@@ -192,13 +192,13 @@ check("...and it is the sum of what each of those nodes would actually cost",
 
 # --- BREAK: `bribe 1` refused at 0% protection as "already as protected as
 # money can make you".
-_rb = _ask(sim(), cmd="bribe", amount=1)
+_rb = _ask(unopened_sim(), cmd="bribe", amount=1)
 check("a bribe too small to matter says so, not that you are already covered",
       "too little" in (_rb.get("error") or ""), _rb.get("error"))
 
 # --- BREAK: "FULL CHAIN BEHIND IT" printed identical figures in year 436
 # after 227 technologies as in year 100 with nothing built.
-s_cn = sim()
+s_cn = unopened_sim()
 _r_before = S._agent_dispatch(s_cn, NODES, {"cmd": "why", "id": "telescope"})
 for _p in ("patron_local", "workshop_first", "identity_cover"):
     s_cn.done.add(_p)
@@ -238,7 +238,7 @@ check("...and names something you could start instead",
       _rs[0]["what_is_holding_you_up"])
 # ...and once something IS running and nothing is wrong, it says so plainly
 # without claiming work in hand that is not there.
-_s_ok = sim(capital=500000.0)
+_s_ok = unopened_sim(capital=500000.0)
 _s_ok.start_project("identity_cover")
 _rs_ok = S._agent_dispatch(_s_ok, NODES, {"cmd": "stuck"})
 check("...and with work in hand and money it says nothing is holding you up",
@@ -249,7 +249,7 @@ check("...and with work in hand and money it says nothing is holding you up",
 check("...and names the cheapest thing you could actually begin",
       _rs[0].get("and_the_cheapest_thing_you_could_start_now") in NODES,
       _rs[0].get("and_the_cheapest_thing_you_could_start_now"))
-_s_red = sim(capital=round(0.3 * _game.project_cost("identity_cover")))   # thin purse at any wage scale
+_s_red = unopened_sim(capital=round(0.3 * _game.project_cost("identity_cover")))   # thin purse at any wage scale
 _s_red.start_project("identity_cover")
 _s_red.state.household.capital = -100.0   # in the red with the work still in hand
 _rs2 = [S._agent_dispatch(_s_red, NODES, {"cmd": "stuck"})]
@@ -273,7 +273,7 @@ check("...and `state` advertises it every turn",
 # needs more supervising craftsmen than are free and refuses outright. A concern
 # needing more than a fresh household has free reproduces it with nothing but a
 # closed prerequisite chain, no multi-century run required.
-s_shut = sim(capital=10_000_000.0)
+s_shut = unopened_sim(capital=10_000_000.0)
 _free_hands = s_shut.venture_staff_free()[1]
 # the concern with the smallest chain behind it that is profitable (real takings against real upkeep, the
 # figures `stuck` reads) but needs more supervising craftsmen than are free

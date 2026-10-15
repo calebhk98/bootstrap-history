@@ -35,14 +35,14 @@ check("freedman_staff is marked as buying people", "buys_people" in NODES["freed
 check("the school is reachable in the goal-independent closure without freedman_staff",
       "freedman_staff" not in closure(NODES, "school_founded"))
 
-paid_route = sim(capital=2_000_000)
+paid_route = unopened_sim(capital=2_000_000)
 for prereq in school["pre"] + alternatives[:1]:
     paid_route.done.add(prereq)
 paid_route._done_changed()
 check("school_founded can start with the paid alternative and without freedman_staff",
       "freedman_staff" not in paid_route.done and paid_route.can_start("school_founded"),
       paid_route.start_reason("school_founded"))
-no_route = sim(capital=2_000_000)
+no_route = unopened_sim(capital=2_000_000)
 for prereq in school["pre"]:
     no_route.done.add(prereq)
 no_route._done_changed()
@@ -61,7 +61,7 @@ check("patron_local's note does not name a gift that sits behind the patron",
       not (lens_is_behind_patron and "lenses" in patron_note and "bought" not in patron_note), patron_note)
 
 # --- 230: exclusions
-excluding = sim(capital=2_000_000)
+excluding = unopened_sim(capital=2_000_000)
 startable = [node_id for node_id in excluding.order if excluding.can_start(node_id)]
 check("set-up: something is startable", len(startable) >= 2)
 victim = startable[0]
@@ -80,13 +80,13 @@ forced = _dispatch(excluding, "rush limit:50")
 check("rush does not start the excluded node",
       victim not in excluding.active and victim not in [row["id"] for row in forced.get("started", [])])
 
-by_category = sim(capital=2_000_000)
+by_category = unopened_sim(capital=2_000_000)
 _dispatch(by_category, "exclude category:%s" % victim_category)
 check("excluding a category blocks every node in it from rush",
       not any(NODES[row["id"]]["cat"] == victim_category
               for row in _dispatch(by_category, "rush preview").get("would_start", [])))
 
-by_trait = sim(capital=2_000_000)
+by_trait = unopened_sim(capital=2_000_000)
 _dispatch(by_trait, "exclude trait:buys_people")
 check("a trait exclusion is recorded", "trait:buys_people" in by_trait.state.projects.excluded)
 check("freedman_staff reports an exclusion reason under that trait",
@@ -94,14 +94,14 @@ check("freedman_staff reports an exclusion reason under that trait",
 
 cleared = _dispatch(excluding, "include %s" % victim)
 check("include removes it", cleared.get("ok") is True and victim not in excluding.state.projects.excluded, cleared)
-check("an unknown name is refused", _dispatch(sim(), "exclude no_such_node_anywhere").get("ok") is False)
+check("an unknown name is refused", _dispatch(unopened_sim(), "exclude no_such_node_anywhere").get("ok") is False)
 
-round_trip = sim(capital=2_000_000)
+round_trip = unopened_sim(capital=2_000_000)
 _dispatch(round_trip, "exclude %s" % victim)
 saved = os.path.join(ROOT, "_loadtest_tmp_exclusions.json")
 try:
     save_state(round_trip, saved)
-    restored = sim(capital=2_000_000)
+    restored = unopened_sim(capital=2_000_000)
     load_state(restored, saved)
     check("the exclusion list is saved with the game", victim in restored.state.projects.excluded)
 finally:
@@ -109,7 +109,7 @@ finally:
         os.remove(saved)
 
 # automatic policies honour it
-open_sim = sim(capital=2_000_000)
+open_sim = unopened_sim(capital=2_000_000)
 venture = next((node_id for node_id in NODES if open_sim.is_venture(node_id)
                 and NODES[node_id]["rev"] > NODES[node_id]["up"]), None)
 open_sim.done.add(venture)

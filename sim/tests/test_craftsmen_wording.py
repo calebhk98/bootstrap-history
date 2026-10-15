@@ -7,7 +7,7 @@ from .harness import *  # noqa: F401,F403
 # ===========================================================================
 
 # --- a concern's staff_to_keep_it_open is venture_hands's own number.
-s_shut = sim(capital=10_000_000.0)
+s_shut = unopened_sim(capital=10_000_000.0)
 for _p in S.closure(NODES, "lens_grinding"):
     s_shut.done.add(_p)
 s_shut.done.add("lens_grinding")
@@ -22,7 +22,7 @@ check("`why`'s staff_to_keep_it_open is exactly venture_hands's own number",
 # hours already bought under contract) still refuses for the same reason
 # and still says "craftsmen" (an existing regression checks this), and now
 # explains the mixed count inline instead of implying a body count alone.
-s_cc = sim(civ="rome_100ad", capital=1e6, manual=True, events=False)
+s_cc = unopened_sim(civ="rome_100ad", capital=1e6, manual=True, events=False)
 s_cc.done.update(NODES["ag2_cold_store"]["pre"])  # prerequisites held, so only staffing can refuse
 _ok_cc, _why_cc = s_cc.start_reason("ag2_cold_store", ignore_trade=True)
 check("the craftsmen staffing refusal still refuses for the same reason, "
@@ -32,7 +32,7 @@ check("the craftsmen staffing refusal still refuses for the same reason, "
 # ONE NAME FOR THE FOUNDER'S OWN WORK. The wage-work reply once called it
 # "the practice" and then "the surgery"; a Roman founder selling a year of a
 # smith's labour has neither. It is a job and the reply says wage, not practice.
-_s_wg = sim()
+_s_wg = unopened_sim()
 _wg = S._agent_dispatch(_s_wg, NODES, {"cmd": "work", "trade": "labourer",
                                        "hours": 2000})
 check("wage work states what a year of labourer's time paid, with no practice or surgery in the reply",
@@ -68,7 +68,7 @@ check("the four diffusion categories this section reads are real nodes with "
 
 # --- civ_diffusion itself: zero until done, zero the instant it is done,
 # grows with age, bounded at 1.0, deterministic over a sorted sum.
-s = sim(civ="rome_100ad")
+s = unopened_sim(civ="rome_100ad")
 check("civ_diffusion is zero for a technology nobody has built",
       s.civ_diffusion(_FOOD_NODE) == 0.0, s.civ_diffusion(_FOOD_NODE))
 s.done.add(_FOOD_NODE); s.done_year[_FOOD_NODE] = s.year
@@ -92,11 +92,11 @@ check("a node with none of the four diffusible traits never diffuses at "
 
 # --- military is the one category read from the state's own holdings: the
 # government actor's know-how, not a curve over time (Complaint 287).
-s_nopatron = sim(civ="rome_100ad")
+s_nopatron = unopened_sim(civ="rome_100ad")
 for k in _MIL_NODES2:
     s_nopatron.done.add(k); s_nopatron.done_year[k] = s_nopatron.year
 s_nopatron.year += 200
-s_patron = sim(civ="rome_100ad")
+s_patron = unopened_sim(civ="rome_100ad")
 run_it(s_patron, "patron_imperial")
 for k in _MIL_NODES2:
     s_patron.done.add(k); s_patron.done_year[k] = s_patron.year
@@ -116,7 +116,7 @@ check("...but once the government actor holds it, it genuinely has - the "
 # in _shocks, unchanged by any of this). The user's own example: invent the
 # cure or vaccine for a pandemic and it becomes a minor sickness.
 def _plague_line2(civ, hazard_substr, med_nodes, years_before, capital=1e9):
-    household = sim(civ=civ, capital=capital)
+    household = unopened_sim(civ=civ, capital=capital)
     for node_id in med_nodes:
         household.done.add(node_id)
     household.scholars, household.artisans = 50.0, 200.0
@@ -156,13 +156,13 @@ check("medical diffusion relief has no fixed ceiling: full coverage with a "
       "capable state can remove the epidemic entirely",
       (lambda nation: (setattr(nation, "state_capacity", 1.0),
                        setattr(nation, "medical_diffusion_index", lambda: 1.0),
-                       nation.medical_diffusion_relief())[-1])(sim(civ="rome_100ad")) >= 1.0,
+                       nation.medical_diffusion_relief())[-1])(unopened_sim(civ="rome_100ad")) >= 1.0,
       "relief at full coverage")
 
 # --- and this never touches the founder's own, personal figure (`loss`),
 # nor sack_chance/output_factor, which are a different category entirely.
-s_bare_h = sim(civ="rome_100ad")   # never changed: only read below, then shared with later read-only checks
-s_med_mil = sim(civ="rome_100ad")
+s_bare_h = unopened_sim(civ="rome_100ad")   # never changed: only read below, then shared with later read-only checks
+s_med_mil = unopened_sim(civ="rome_100ad")
 for k in _MED_NODES:
     s_med_mil.done.add(k); s_med_mil.done_year[k] = s_med_mil.year - 300
 _out_nomed = s_bare_h.hazard_relief("output_factor")[0]
@@ -182,7 +182,7 @@ check("diffused medicine gives no relief against output_factor or "
 # line the brief draws around it: the Gothic wars cost the country less -
 # they do not stop happening, and nothing here ever deletes a hazard or
 # moves its calendar.
-s_armed_h = sim(civ="rome_100ad")
+s_armed_h = unopened_sim(civ="rome_100ad")
 run_it(s_armed_h, "patron_imperial")
 for k in _MIL_NODES2:
     s_armed_h.done.add(k); s_armed_h.done_year[k] = s_armed_h.year - 200
@@ -220,7 +220,7 @@ check("the Gothic settlement hazard itself still has no `condition` and no "
 # (literacy is already a real ceiling on trades), not a new, separate
 # effect invented from nothing.
 def _literacy_after(info_done, years=60):
-    household = run_it(sim(civ="norse_900ad", capital=2000000.0), "school_founded")
+    household = run_it(unopened_sim(civ="norse_900ad", capital=2000000.0), "school_founded")
     if info_done:
         household.done.add(_INFO_NODE); household.done_year[_INFO_NODE] = household.year - 150
     for i in range(1, years + 1):
@@ -243,7 +243,7 @@ check("a diffused printing press measurably speeds up how fast a running "
 # within a few bytes of its own "stays readable" budget at the very start
 # of a run (see that check elsewhere in this file) and a field present on
 # every single call, even as null, would break it outright.
-_wd_fresh = sim(civ="rome_100ad")
+_wd_fresh = unopened_sim(civ="rome_100ad")
 _wd_fresh.fog = True
 _wd_start = S._agent_dispatch(_wd_fresh, NODES, {"cmd": "state", "full": True})
 check("'world_diffusion' is not merely null but genuinely ABSENT from "
@@ -251,7 +251,7 @@ check("'world_diffusion' is not merely null but genuinely ABSENT from "
       "already nearly-full byte budget",
       "world_diffusion" not in _wd_start, sorted(_wd_start))
 
-s_cli = sim(civ="rome_100ad")
+s_cli = unopened_sim(civ="rome_100ad")
 s_cli.done.add(_FOOD_NODE); s_cli.done_year[_FOOD_NODE] = s_cli.year
 for i in range(1, 31):
     s_cli.year += 1
@@ -319,7 +319,7 @@ _soc_room = {}
 _soc_sims = {}
 for _civ in ("rome_100ad", "han_china_100ad", "norse_900ad", "england_1300",
              "mexica_1500"):
-    _s_soc = _soc_sims[_civ] = s_bare_h if _civ == "rome_100ad" else sim(civ=_civ)
+    _s_soc = _soc_sims[_civ] = s_bare_h if _civ == "rome_100ad" else unopened_sim(civ=_civ)
     _soc_room[_civ] = (_s_soc.has("fin_societas"), _s_soc.labour.supervision_room())
 check("Rome alone starts with a partnership, and so oversees more people in "
       "its first year than the four civilisations that must build one",
