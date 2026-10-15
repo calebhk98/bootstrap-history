@@ -97,6 +97,12 @@ try:
     check("a producer that makes the good by that entry and sells it lowers the price the market posts",
           game.goods_market.household_prices()[GOOD] < twin_years.goods_market.household_prices()[GOOD],
           (game.goods_market.household_prices()[GOOD], twin_years.goods_market.household_prices()[GOOD]))
+    check("...and what the founder pays for a tonne of it falls with the price the market posts",
+          game.goods_market.quote(GOOD)["buy_per_tonne"] < twin_years.goods_market.quote(GOOD)["buy_per_tonne"],
+          (game.goods_market.quote(GOOD)["buy_per_tonne"], twin_years.goods_market.quote(GOOD)["buy_per_tonne"]))
+    check("...and the bill for a larger order of it is smaller by the same technique",
+          game.goods_market.purchase_cost(GOOD, 5.0)[0] < twin_years.goods_market.purchase_cost(GOOD, 5.0)[0],
+          (game.goods_market.purchase_cost(GOOD, 5.0)[0], twin_years.goods_market.purchase_cost(GOOD, 5.0)[0]))
     check("...and the market clears a larger quantity of it than the same society without it",
           book_of_good(game)["traded_tonnes"] > 1.05 * book_of_good(twin_years)["traded_tonnes"],
           (book_of_good(game)["traded_tonnes"], book_of_good(twin_years)["traded_tonnes"]))

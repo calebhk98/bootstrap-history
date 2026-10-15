@@ -10,7 +10,6 @@ import unittest
 from sim.engine.coin_revaluation import CoinRevaluationMixin
 from sim.engine.foreign_actor_trade import ForeignActorTradeMixin
 from sim.engine.foreign_payments import ForeignPaymentsMixin
-from sim.engine.incumbent_prices import IncumbentPricesMixin
 from sim.engine.wage_market_ratios import WageMarketRatiosMixin
 from sim.labour.labour_wages import WagesMixin
 from sim.tests.test_capital_charge import works_entry
@@ -22,13 +21,12 @@ CONDITIONS = dict(
     actor_supply_tonnes=0.0, founder_sales_tonnes=0.0, stock_tonnes=0.0, floor_ratio=0.6, ceiling_ratio=6.0)
 
 
-class Coinage(CoinRevaluationMixin, ForeignPaymentsMixin, IncumbentPricesMixin):
-    """The price level and the coin metal's price, with the coin stock and the incumbents' cost stubbed."""
+class Coinage(CoinRevaluationMixin, ForeignPaymentsMixin):
+    """The price level, with the coin stock stubbed."""
     def __init__(self):
         self.state = types.SimpleNamespace(economy=types.SimpleNamespace(coin_metal_ratios={}, foreign_ledger={}))
         self.civ = {"coin_standard": {"material": "silver_kg"}}
         self.stock_level = 1.0
-        self.economy = types.SimpleNamespace(goods_price_over_wage=lambda: 1.0)
 
     def _home_opening_coin_units(self):
         return 100.0
@@ -44,9 +42,6 @@ class Coinage(CoinRevaluationMixin, ForeignPaymentsMixin, IncumbentPricesMixin):
 
     def partner_coin_metal(self, civilization_id):
         return "gold_kg"
-
-    def _material_prices(self):
-        return {"silver_kg": 50.0 * self.home_price_level()}
 
     def real_price_ratio(self, material):
         return self.market_price_ratio(material)
@@ -70,12 +65,6 @@ class RevaluationTests(unittest.TestCase):
         game = Coinage()
         game.state.economy.coin_metal_ratios["gold_kg"] = 0.5
         self.assertAlmostEqual(game.home_price_level(), 1.0)
-
-    def test_the_metals_price_follows_its_market_price_once(self):
-        game = Coinage()
-        flat = game._coin_metal_price("silver_kg")
-        game.state.economy.coin_metal_ratios["silver_kg"] = 0.5
-        self.assertAlmostEqual(game._coin_metal_price("silver_kg"), flat * 0.5)
 
     def test_a_partners_price_level_follows_its_coin_metal(self):
         game = Coinage()

@@ -61,10 +61,34 @@ class GoodsOffers(GoodsImports):
                 + (route.cost_per_tonne + self._sim._agent_cost_per_tonne(civilization_id, route))
                 * tonnes_per_unit(material))
 
+    def _home_prices(self):
+        """{material: money per unit} the home society's sellers ask at the acting tile: the economy's price
+        where it has a market for the good, the cost of making it (the cost table) where it has none or while
+        it opens. The same object while neither has changed."""
+        sim = self._sim
+        table = sim._material_prices()
+        paid = sim.economy.agent_prices_at()
+        if paid is None:
+            return table
+        held = getattr(sim.household, "_home_prices_cache", None)
+        if held is not None and held[0] is table and held[1] is paid:
+            return held[2]
+        merged = {material: paid.get(material, cost) for material, cost in table.items()}
+        sim.household._home_prices_cache = (table, paid, merged)
+        return merged
+
+    def home_unit_price(self, material):
+        """Money per unit the home society's sellers ask for a material (or a curated commodity, by the material
+        it is priced as) at the acting tile; None when no home seller offers it. The one price of the coin metal
+        in the mint and in cargo."""
+        prices = self._home_prices()
+        key = self._sim._priced_key(material, prices)
+        return None if key is None else prices[key]
+
     def _worked_out_offers(self):
         """(household prices, seller of each material) as of the key they were worked out for."""
         sim = self._sim
-        prices = sim._material_prices()
+        prices = self._home_prices()
         partners = tuple(sim.foreign_economies())
         key = (partners, len(sim.state.projects.done), sim.state.scenario.year,
                round(sim.market_rate(), RATE_DECIMALS),
@@ -100,17 +124,18 @@ class GoodsOffers(GoodsImports):
         return made
 
     def household_prices(self):
-        """{material: money per unit} households are asked to pay: the solver's price where the
-        home society makes it, the landed price where only a partner offers it, nothing where no
-        one does. The same object while nothing it reads has changed."""
+        """{material: money per unit} households are asked to pay: the economy's price on the acting tile where the
+        home society makes it (its cost of making while the economy opens or has no market for the good), the
+        landed price where only a partner offers it, nothing where no one does. The same object while nothing it
+        reads has changed."""
         return self._worked_out_offers()[0]
 
     def unit_price(self, material):
-        """Money per unit to buy a material from the cheapest seller in reach (the home price
-        table, else a partner's landed price), or None when no one in reach sells it."""
+        """Money per unit to buy a material from the cheapest seller in reach (the home sellers' price on the
+        acting tile, else a partner's landed price), or None when no one in reach sells it."""
         if self.offered_by(material) not in (None, HOME_SELLER):
             return self.household_prices()[material]
-        price = self._sim._material_price_per_kg(material)
+        price = self.home_unit_price(material)
         return price if price is not None else self.household_prices().get(material)
 
     def can_be_bought(self, material):

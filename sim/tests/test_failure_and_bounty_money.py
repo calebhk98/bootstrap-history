@@ -160,8 +160,13 @@ _sold_big = _sell.sell_material_stock("coal", 40 * _absorbed)
 check("a sale is cut to what the market absorbs in a year", _sold_big <= _absorbed + 1e-6,
       (_sold_big, _absorbed))
 _big_average = (_sell.capital - _cash) / max(_sold_big, 1e-9)
+# the fall is the economy's own: its book cleared again with the tonnes sold as one more offer (stage 3 of Complaint 507);
+# how deep that is follows how many tonnes the engine's year of market is until stage 4 reads the offered quantity there
+_fall = _sell.economy.agent_price_response(_sell.goods_market._economy_good("coal"), _sold_big, 0.0, _sell.economy.acting_tile())
 check("selling a year's market at once pays less per tonne than one tonne",
-      _big_average < 0.9 * _small_price, (_big_average, _small_price))
+      _big_average < _small_price, (_big_average, _small_price))
+check("...and no less than the economy's price after all of it is on offer",
+      _fall is not None and _big_average >= _small_price * _fall * (1.0 - 1e-3), (_big_average, _small_price, _fall))
 _cash = _sell.capital
 _sold_more = _sell.sell_material_stock("coal", _absorbed)
 check("selling more in the same year is cut to nothing or to a lower price",

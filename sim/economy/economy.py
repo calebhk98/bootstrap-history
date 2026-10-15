@@ -80,6 +80,7 @@ class Economy:
         self.area_map = area_map
         self.carriage = carriage
         self.improvements: Dict[str, Dict[str, Any]] = dict(record.ways)   # the ways `carriage` and the areas were built with
+        self.watched_tiles: Tuple[str, ...] = ()   # tiles whose market books are kept beside the port's and the capital's; not saved
         self._own_options = None
         self._own_hectares: Dict[str, float] = {}   # land households' own plots took this year, by tile
 
@@ -166,7 +167,7 @@ class Economy:
         merchant_orders(setup, record, view, self.area_map, self.carriage, order_book)
         for producer_id, runs in self._rebuild_worn_plant(view, order_book).items():
             plant_runs[producer_id] = plant_runs.get(producer_id, 0.0) + runs
-        clear_goods(setup, record, view, self.area_map, order_book, plans, ledger)
+        clear_goods(setup, record, view, self.area_map, order_book, plans, ledger, self.watched_tiles)
         settle_mint(record, mint_held)
         close_mint_year(setup, record)
         rent = land_market.settle_year(setup, record, view,

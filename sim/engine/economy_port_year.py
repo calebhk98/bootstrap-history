@@ -22,6 +22,7 @@ from .data import load_civ
 from .economy_port_key import spin_up_key
 from .economy_port_coin import priced_at_the_margin
 from .economy_port_setup import build_setup, opening_values
+from .economy_port_tiles import TilePricesMixin
 from .material_units import tonnes_per_unit
 from .prices import default_production_entries
 
@@ -78,7 +79,7 @@ PARTNER_SPEND_SHARE_PER_YEAR = declare(
         "partner as a full economy (Complaint 382) would decide it.")
 
 
-class AgentEconomy:
+class AgentEconomy(TilePricesMixin):
     """One game's agent economy. Not saved itself: it rebuilds from `state.economy.agent_economy`."""
 
     def __init__(self, sim):
@@ -200,14 +201,6 @@ class AgentEconomy:
         coin = self._economy.setup.coin_per_unit
         return [(people, rent * coin) for people, rent in economy_api.cohort_land_rents(self.economy(), tiles)]
 
-    def goods_level_over_opening(self):
-        """How dear the economy's goods are against the opening's solver prices (both counted in the economy's
-        unit); None when no good has traded lately."""
-        economy = self.economy()
-        unit = economy.setup.coin_per_unit
-        opening = {good: price / unit for good, price in self.stored["opening"]["prices"].items()}
-        return economy_api.goods_level_over_opening(economy, opening)
-
     # ---- the year -----------------------------------------------------------------------------
     def run_year(self):
         economy = self.economy()
@@ -223,6 +216,7 @@ class AgentEconomy:
         orders.update(cargo_orders)
         self._strike_state_coin(economy)
         sales, purchases = self._actor_trade_orders(orders)
+        economy_api.watch_tiles(economy, self._seat_tiles())
         outcome = economy.step(self._inputs(orders, economy_port_cargo.border_accounts(economy, legs)))
         self._floor_costs = {}
         economy_port_sites.deplete(self._sim, outcome.extraction, self._recipe_outputs())
@@ -404,14 +398,16 @@ class AgentEconomy:
                                    export_budget=self._partner_spending(partners) / coin)
         return {EDGE_EXTERNAL: stand_in}
 
-    def price_response(self, material, landed_tonnes, taken_tonnes):
-        """Factor on a material's price at the port once more tonnes land there or are taken out, from the book the
-        market last cleared; None when the market has none."""
+    def price_response(self, material, landed_tonnes, taken_tonnes, tile=None):
+        """Factor on a material's price once more tonnes land in its market or are taken out, from the book the
+        market last cleared: at the port when no tile is named (the price the economy shows nationally), else on the
+        tile's own area. None when the market has none."""
         from .material_units import tonnes_per_unit
         per_unit = tonnes_per_unit(material)
         if not per_unit or per_unit <= 0.0 or material not in self.economy().area_map.goods():
             return None
-        return economy_api.price_response(self.economy(), material, landed_tonnes / per_unit, taken_tonnes / per_unit)
+        return economy_api.price_response(self.economy(), material, landed_tonnes / per_unit, taken_tonnes / per_unit,
+                                          tile=None if tile is None else self._tile_in_economy(tile))
 
     def _partner_spending(self, partners) -> float:
         """What the partners can spend on this society's goods this year, in home money: a share of the
@@ -420,7 +416,7 @@ class AgentEconomy:
         total = 0.0
         for partner in partners:
             standard = load_civ(partner)["coin_standard"]
-            metal_price = sim._coin_metal_price(standard["material"])
+            metal_price = sim.goods_market.home_unit_price(standard["material"])
             if not metal_price:
                 continue
             held = (sim._partner_coin_opening_units(partner)
@@ -443,7 +439,7 @@ class AgentEconomy:
         imports, exports = (volume - paid_in) / 2.0 * coin, (volume + paid_in) / 2.0 * coin
         for partner in partners:
             standard = load_civ(partner)["coin_standard"]
-            metal_price = sim._coin_metal_price(standard["material"])
+            metal_price = sim.goods_market.home_unit_price(standard["material"])
             if not metal_price:
                 continue
             per_partner_coin = standard["kg_per_unit"] * metal_price
@@ -474,6 +470,15 @@ class AgentEconomy:
                           yield_factor_by_producer=yields, engine_orders=engine_orders, harvest_factor=weather,
                           import_accounts=border_accounts[0], export_accounts=border_accounts[1],
                           site_limits=tuple(economy_port_sites.site_limits(sim, self._recipe_outputs())))
+
+    def _seat_tiles(self):
+        """The tiles the playing seats buy and sell on, whose markets' books the economy keeps."""
+        sim = self._sim
+        tiles = set()
+        for seat_id in sim.playing_seats() or sim.state.seats:
+            with sim.act_as(seat_id):
+                tiles.add(self._tile_in_economy(sim.labour.base_tile()))
+        return tiles
 
     def _recipe_outputs(self):
         """{recipe id: {good: quantity a run}} of the recipes the economy runs."""
@@ -570,16 +575,6 @@ class AgentEconomy:
         """Goods whose shown price is not a market's: not cleared within notional.RECENT_TRADE_YEARS."""
         self.answers()
         return set(self._stale)
-
-    def price_ratio(self, materials, old_prices, country=None):
-        """The new price over the engine's own cost, for the first of `materials` both price; None if none."""
-        prices = self.answers(country)[0]
-        for material in materials:
-            old = old_prices.get(material, 0.0)
-            new = prices.get(material)
-            if new is not None and old > 0.0:
-                return new / old
-        return None
 
     def people_by_trade(self):
         """The labour core's people by trade, or None before the economy has been opened."""

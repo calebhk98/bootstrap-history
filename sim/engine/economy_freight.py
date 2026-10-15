@@ -323,6 +323,17 @@ class FreightMixin:
             emp_key, self.material_freight_distance_km(emp_key))
         return 1.0 + freight_per_kg / book_price_per_kg + cargo_share
 
+    def material_carriage_per_tonne(self, emp_key, price_per_tonne):
+        """Money per tonne to carry a material to the household from the nearest place it comes from, on top of
+        its price where it is sold: the haul over the ways held (material_freight_distance_km) and the cargo's
+        own interest and spoilage as a share of that price. Zero for a material the geography cannot place or
+        that is made where the household holds ground."""
+        distance_km = self.material_freight_distance_km(emp_key)
+        if not distance_km:
+            return 0.0
+        return (self.domestic_haul_money_per_tonne(emp_key, distance_km)
+                + self.domestic_cargo_cost_share(emp_key, distance_km) * price_per_tonne)
+
     def material_price_factor(self, emp_key):
         """What buying MORE of this tracked commodity costs beyond the flat
         catalogue price, from how hard current demand leans on the empire's

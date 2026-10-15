@@ -66,8 +66,8 @@ class IncumbentPricesMixin:
         return tables
 
     def _material_prices(self):
-        """{material: money per unit}: the incumbents' cost in this coin. The market's price is this
-        times `market_price_ratio`."""
+        """{material: money per unit}: the incumbents' cost of making in this coin. What a buyer pays is the
+        economy's price (`GoodsMarket.unit_price`)."""
         hours = self._price_tables()[0]
         per_hour = self.labour.money_per_labour_hour()
         cached = getattr(self, "_material_prices_cache", None)
@@ -85,16 +85,3 @@ class IncumbentPricesMixin:
         if seller is not None and (basis is None or seller != HOME_SELLER):
             return "imported"
         return basis
-
-    def _coin_metal_price(self, material):
-        """Money per unit of the coin metal at the mint's standard: a unit of coin is a fixed weight of
-        metal, so the metal's price in coin does not follow the stock of coin, but does follow the metal's
-        market price. The price level already carries the home coin metal's revaluation, so dividing by
-        it and multiplying by the ratio counts the market's price once. The price table follows the wage, so
-        the metal's price is carried to the goods' level (economy.goods_price_over_wage): a partner's coin is
-        worth what it buys here."""
-        price = self._material_prices().get(material)
-        if price is None:
-            return None
-        return (price / self.home_price_level() * self.coin_metal_ratio(material)
-                * self.economy.goods_price_over_wage())

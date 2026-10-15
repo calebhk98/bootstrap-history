@@ -114,12 +114,10 @@ finally:
 game = sim(civ="rome_100ad", capital=1e9)
 material = "iron_bar_kg"
 commodity = game._material_tag(material)[0]
-price_before = game.market_price_ratio(material)
-# a seller whose output meets the demand at the incumbents' cost leaves the price at it; more than that pushes it below
-game.goods_market.note_sale("another_operator", commodity, 2.0 * game._market_entry(commodity)["reference_tonnes"])
-price_after = game.market_price_ratio(material)
-check("more operators selling a good lower the price it clears at", price_after < price_before,
-      (price_before, price_after))
+# sellers whose output is twice the opening's demand, landing in the founder's market, push the price it clears at below
+tile = game.economy.acting_tile()
+response = game.economy.agent_price_response(material, 2.0 * game._market_entry(commodity)["reference_tonnes"], 0.0, tile)
+check("more operators selling a good lower the price it clears at", response is not None and response < 1.0, response)
 
 # --- household income follows productivity and the wage; they buy more.
 original = price_solver.default_production_entries()
