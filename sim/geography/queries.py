@@ -277,11 +277,12 @@ def parameter_value(parameter_id: str, world_map: Optional[WorldMap] = None) -> 
 
 
 def mined_before(tile_ids: Iterable[str], resource_id: str, year: int,
-                 world_map: Optional[WorldMap] = None) -> Dict[str, Any]:
+                 world_map: Optional[WorldMap] = None, rates: Optional[Mapping[str, float]] = None) -> Dict[str, Any]:
     """What the known deposits of a resource in these tiles had yielded by `year`: {workings, unworked,
-    deposits_in_tiles, unit}, a working being {id, tile_id, output_per_year, years_worked, years_since_last_output}
-    in the resource's unit. Deposits with no working date are listed in `unworked`, never guessed."""
-    return resources_mined.mined_before(_map(world_map), tile_ids, resource_id, year)
+    deposits_in_tiles, unit}, a working being {id, tile_id, output_per_year, years_worked, years_since_last_output,
+    mined_share} in the resource's unit. `rates` ({deposit id: tonnes a year}) is the historical extraction rate
+    where the data gives one. Deposits with no working date are listed in `unworked`, never guessed."""
+    return resources_mined.mined_before(_map(world_map), tile_ids, resource_id, year, rates)
 
 
 def worked_deposits(tile_ids: Iterable[str], resource_id: str, year: int, found: Iterable[Mapping[str, Any]] = (),
