@@ -209,6 +209,7 @@ def build_setup(sim, opening=None, production=None):
         land_per_run={recipe_id: float(production[recipe_id].get("land_hectare_years") or 0.0)
                       for recipe_id in recipes if production[recipe_id].get("land_hectare_years")},
         basket_by_tile=baskets_by_tile(basket, need_data, world_map, all_tile_ids), coin_per_unit=unit,
+        opening_income_per_head=opening.get("opening_income_per_head"),
         recipes_by_country=recipes_by_country(str(civ["id"]), opening["recipes"], partners),
         world_map=world_map, improvements=dict(opening["ways"]),
         site_limits=tuple(SiteLimit(*limit) for limit in opening["site_limits"]),

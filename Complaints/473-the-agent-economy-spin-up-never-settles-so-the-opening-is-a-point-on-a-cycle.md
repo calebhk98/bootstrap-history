@@ -1,6 +1,6 @@
 # The agent economy's spin-up never settles, so the opening is a point on a cycle
 
-**Status:** partly - the opening's capacity/income mismatch (waits on 507); the coin metal's supply chain is sited beside its ore now, but the deposits cannot replace the wear of the opening's money stock whatever the chain does; see the second Update
+**Status:** partly - the money stock is sustained (Update 4, `spin_up_money_supply` passes); the spin-up still does not settle: the price level and wage drift for decades because the labour market clears far below the cost table's wage (Update 4)
 
 Found while tracing why the opening money wage moved several-fold between builds of the same branch (the
 fix for that is in `Complaints/closed/470`). The price level in the hidden spin-up cycles with a period of
@@ -176,3 +176,21 @@ Effect on the Rome trace (`simulator.py spin-up-trace --civ rome_100ad --years 4
 from about nil to 0.17, 0.22, 0.34 after the first decade, and the stock ratio last/first from 0.73 to 0.78. The test still
 fails: the first years are not rescued, because the smelters' own bids push the ore price up until the silver alone does not
 cover a run (the chain is sized to silver demand, 507), and the deposits' ceiling above still applies.
+
+## Update 4 (stage 2 of 507: the opening seeded from costs)
+
+Built on `507-stage-2-opening-from-costs` (ONE_PRICE_OWNER_PLAN.md, Stage 2 "Done"): household income settled with the demand it pays for,
+plant sized to the share that works, workforce placed for the runs producers expect to sell, producers opening with their
+inputs, recipes ranked with deposit ceilings and demand-limited co-products, the metal the money loses a year as the mint's
+final demand, and the coin priced at the marginal cost of its metal.
+
+Fixed: the money stock follows from the transactions and the metal's cost, the chain behind the coin metal exists at the
+opening, and `test_the_money_stock_keeps_up_with_wear` passes unchanged (the mint's strikes are about wear over the
+last decades; `python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60`).
+
+Not fixed (so this complaint stays open): the spin-up still reports not settled for every civilisation. The price level no
+longer cycles but falls for decades with the wage, while employment grows into the gap; realised income in the first year
+is a small share of the opening figure. The cause is the wage: the labour market clears at the households' outside option
+from the first year, and prices follow it down slowly. Seeding the wage at that level does not help because prices and the
+outside option scale together. What it needs is a settled model of how a labour glut passes into prices (the economy's rent
+and price search, stages 5 and 7), then a spin-up that runs until its tolerance is met.

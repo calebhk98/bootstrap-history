@@ -114,12 +114,12 @@ def _opening_memory(setup, area_map, priced_goods) -> MarketMemory:
     return memory
 
 
-def _opening_income_per_head(setup) -> float:
+def _full_employment_income_per_head(setup) -> float:
     return setup.opening_wages.get(setup.unskilled_trade, 0.0) * setup.working_hours_per_year * setup.working_share
 
 
 def _open_cohorts(setup, record) -> None:
-    income = _opening_income_per_head(setup)
+    income = _full_employment_income_per_head(setup)
     for tile, people in sorted(setup.opening_population_by_tile.items()):
         for cohort in households.cohorts_for_tile(tile, people, setup.working_share, setup.gini,
                                                   opening_income_per_capita=income):
@@ -130,6 +130,9 @@ def _settle_income(setup, record, view, priced_goods, replacement) -> None:
     """Households' opening income is the value of the final demand it pays for, not the full-employment ceiling
     (opening_income.py): the producers sized to that demand then pay out the income the households received.
     Workers are paid alike out of the labour share of it; owners receive the rest by what they own."""
+    if setup.opening_income_per_head is not None:      # the scenario states its households' income
+        record.cohorts.update(opening_income.with_income(record.cohorts, setup.opening_income_per_head, 0.0))
+        return
     people = math.fsum(cohort.people for cohort in record.cohorts.values())
     recipes = setup.recipes
     ceilings = opening_runs.run_ceilings(recipes, sites.limits_by_recipe(setup.site_limits))
@@ -144,7 +147,7 @@ def _settle_income(setup, record, view, priced_goods, replacement) -> None:
         share["labour"] = opening_income.labour_share_of(runs, recipes, setup.opening_wages, value)
         return value, share["labour"]
 
-    per_head, labour_share = opening_income.settled_income_per_head(_opening_income_per_head(setup), people, demand_at)
+    per_head, labour_share = opening_income.settled_income_per_head(_full_employment_income_per_head(setup), people, demand_at)
     record.cohorts.update(opening_income.with_income(record.cohorts, per_head, labour_share))
 
 

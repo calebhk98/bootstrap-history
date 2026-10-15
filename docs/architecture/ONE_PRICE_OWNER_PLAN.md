@@ -186,6 +186,50 @@ Proof:
 Files: `sim/engine/economy_port_setup.py`, `economy_port_late.py`, `economy_port_partners.py`, `wage_schedule.py`,
 `opening_money.py`, `data.py`, `labour_port.py` (schedule call), `node_rederive.py`, `shipped_openings_build.py`.
 
+**Done** (branch `507-stage-2-opening-from-costs`, 2026-10-15). What was built, and what it showed:
+
+- Seeds. `economy_port_costs.opening_costs` takes the opening prices from `long_run_costs` at the opening wages, the
+  market rate and the labelled rent stand-in (`long_run_costs.opening_rent_of`); a late good is seeded by
+  `making_cost.cost_of_making` at the economy's live prices and wages (`economy_port_late.late_goods_costs`). Both agree
+  with the old engine table to a few per cent (the rate band and the farmed-area band differ). `wage_schedule`, `data.py`
+  and `opening_money` are untouched: the schedule's money per hour is still the coin metal's table cost, and the game's
+  money is still repriced to the economy's wage when the economy opens.
+- One final demand sizes the opening (`sim/economy/opening_income.py`, `opening_runs.py`, `opening_metal.py`): household
+  income is the fixed point of income and the demand it pays for (workers paid alike out of the labour share, owners
+  by what they own); each producer's plant is the runs it is to work divided by the share of plant that works at the
+  opening prices; the workforce is placed for the runs producers expect to sell, not for full plant; producers open holding
+  the inputs of their planned runs; processors are held to the supply of a good only deposits make; each good is made by
+  its cheapest recipe up to what deposits allow, then the next; a joint run's co-product counts only up to the demand
+  for it; the metal the money loses a year is a final demand (the mint's).
+- Coin worth. `economy_port_coin.priced_at_the_margin`: the coin standard fixes the metal's price in coin, and the metal
+  the money needs is made at the margin, so the other prices and wages are scaled by the marginal over the table cost
+  (`coin_worth_scale` in the saved opening). The money stock is what the transactions it carries need, in a coin worth
+  what that metal costs.
+- `spin_up_money_supply` passes without being loosened. The chain behind the coin metal exists from the opening and
+  the mint replaces what wear takes. Measure: `python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60`.
+
+What it showed (the hypothesis that seeding from costs stops the cycling is only partly borne out):
+
+1. The price level no longer cycles with a period of decades, but it does not settle either: over sixty years it falls by a
+   large multiple, the unskilled wage falls with it and the hired share of hours climbs. `game.economy.spin_up_result()`
+   says not settled for every civilisation and the openings command prints it.
+2. Cause: the labour market clears at the households' outside option, a small share of the wage the cost table
+   assumes, from the first year. Prices follow wages down slowly and employment grows into the gap. Realised income in
+   year zero is therefore a small share of the opening figure whatever the opening income is. Seeding the wage at the
+   outside option does not remove it: prices and the outside option both scale with the wage, so only the money stock
+   fixes the level. This needs a model of that adjustment (stage 5 rent, stage 7 price search), not a different seed.
+3. The income fixed point lands at subsistence for a household that saves part of any surplus: with a propensity to
+   spend below one the only income at which a household spends all it is paid is the cost of its floors. The opening
+   is therefore a stationary subsistence economy and the surplus the old opening gave (and the growth it started) is gone.
+   Fixtures that need a household with a surplus say so (`economy_fixture.households_with_a_surplus`).
+4. The opening costs about twice what it did to build (several openings of one economy; `python3 -m sim.tests --slow
+   --only shipped_opening_game`), not a year's step.
+
+Later stages: stage 3 and 7 should hand the calculator reference prices (a joint run's split used mass or the sole
+route's price; the opening now uses demand); stage 5's rent replaces the stand-in; stage 7's unsold-stock search meets the
+input stocks the opening now seeds. The 519 ratios: full-length openings put every sited ore within an order of magnitude
+of its cost; the suite's short spin-up still shows some above it (523).
+
 ### Stage 3: prices to pay come from the economy
 
 Moves: the buyer-side rows of 1.1. `goods_market_api.quote/purchase_cost/sale_proceeds` read the economy's price at the

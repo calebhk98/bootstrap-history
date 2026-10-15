@@ -56,3 +56,11 @@ opening, the suite's harness shortens the spin-up and moves which ores spike).
 
 What it would take now: the opening's ore stocks and prices agree with the sited supply (507 Stage 2), and
 sellers' markdown reaches the cost within a few years. The test marked expected-failure turns green then.
+
+## Update (stage 2 of 507)
+
+The opening now holds processors to the supply of a good only deposits make (`opening_runs.fit_to_supply`) and sizes producers
+from one final demand. Measured on full-length openings (`real` measurement: build the game as `play` does, read the
+economy's price over the opening cost of each sited good): every civilisation's sited ores are within an order of magnitude of
+cost after the spin-up. The suite's short spin-up (523) still shows a few above the bound (the English and Norse ores),
+so `test_sited_ore_price_over_cost` keeps its marker.

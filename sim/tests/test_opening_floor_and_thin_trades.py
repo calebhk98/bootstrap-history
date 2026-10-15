@@ -11,7 +11,7 @@ from sim.labour import wages
 
 FLOOR_OVER_FOOD_FLOOR = 8.0      # a small multiple: clothing, shelter, fuel, water and vessels together cost a few foods
 SUBSTITUTE_SLACK = 1.5           # room for the one-year lag of the unskilled wage the ceiling reads
-MASON_SHARE_OF_WORKERS = 0.03       # the opening had a tenth
+MASON_SHARE_OF_WORKERS = 0.05       # the opening had a tenth; a society paid what its demand is worth spends more of its work on shelter
 GOOD_PRICE_DRIFT = 20.0          # times the good's price against wheat at the opening
 
 

@@ -6,6 +6,7 @@ and an ornament. `small_setup()` returns an `EconomySetup`; `run(setup, years)` 
 and steps it, returning the economy and each year's outcome. Nothing is read from data/, so a test
 states every figure it depends on.
 """
+import contextlib
 import dataclasses
 from unittest import mock
 
@@ -118,14 +119,37 @@ def two_country_setup(**changes) -> EconomySetup:
     return dataclasses.replace(setup, **changes) if changes else setup
 
 
+@contextlib.contextmanager
+def surplus_households():
+    """Within the block, open economies with households' income at the full-employment ceiling (split by what each
+    class owns) instead of the income the opening's demand pays (opening_income.py). That income leaves a household
+    its floors and no surplus, because it is the income at which a household with a propensity to spend below one
+    spends no more than it is paid. A test about what a household does with a surplus (ornaments, durables, imports
+    it can afford, a new drink) or about something that does not depend on how well off it is (where producers sit)
+    states that it wants one."""
+    with mock.patch.object(opening_income, "settled_income_per_head",
+                           lambda ceiling, _people, _demand_at: (ceiling, 0.0)):
+        yield
+
+
 def households_with_a_surplus(test_case):
-    """For the length of `test_case`, open economies with households' income at the full-employment ceiling
-    (split by what each class owns) instead of the income the opening's demand pays (opening_income.py). That
-    income leaves a household its floors and no surplus, because it is the income at which a household with a
-    propensity to spend below one spends no more than it is paid. A test about what a household does with a
-    surplus (ornaments, durables, imports it can afford) or about something that does not depend on how well off
-    it is (where producers sit) states that it wants one."""
+    """`surplus_households` for the length of `test_case`."""
     patch = mock.patch.object(opening_income, "settled_income_per_head",
                               lambda ceiling, _people, _demand_at: (ceiling, 0.0))
     patch.start()
     test_case.addCleanup(patch.stop)
+
+
+@contextlib.contextmanager
+def surplus_game_openings():
+    """Within the block, a game's agent economy opens with households' income at the full-employment ceiling,
+    stated in the setup (so the spin-up cache keeps it apart from the settled opening). See `surplus_households`."""
+    from sim.engine import economy_port_year
+
+    def with_ceiling(sim):
+        opening = real_opening_values(sim)
+        opening["opening_income_per_head"] = float(sim.HOURS_PER_PERSON_YEAR) * opening["working_share"]
+        return opening
+    real_opening_values = economy_port_year.opening_values
+    with mock.patch.object(economy_port_year, "opening_values", with_ceiling):
+        yield
