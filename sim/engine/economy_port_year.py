@@ -416,7 +416,7 @@ class AgentEconomy(TilePricesMixin):
         total = 0.0
         for partner in partners:
             standard = load_civ(partner)["coin_standard"]
-            metal_price = sim.goods_market.home_unit_price(standard["material"])
+            metal_price = sim._material_prices().get(standard["material"])   # the metal at its cost: its market price (Complaint 519) would size a partner's spending by the opening's mispriced metals
             if not metal_price:
                 continue
             held = (sim._partner_coin_opening_units(partner)
