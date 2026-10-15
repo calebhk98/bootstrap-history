@@ -5,7 +5,8 @@ module-level `QUICK_TOPIC = True`. `--slow` runs every topic (the full suite) an
 slow_check. Topics are discovered from disk (nothing is registered) and run in sorted order.
 `--only economy,labour` (comma-separated topic names, as `--list` prints them) runs just those
 modules whatever their tier. `--list` prints the topic names and exits. `--text-checks` lists the checks
-that read player text (`sim/tests/text_checks.py`).
+that read player text (`sim/tests/text_checks.py`); `--text-decisions` lists the code under sim/ that decides on a
+log line's or refusal's text (`sim/tests/text_decisions.py`).
 
 A topic belongs in the quick tier when it runs in well under a second inside an already
 started process: it tests functions or small fixtures, not a whole game over years. New topics
@@ -540,6 +541,10 @@ def main(argv=None):
     if "--text-checks" in argv:
         from sim.tests import text_checks
         return 1 if text_checks.report("--all" in argv, "--conditions" in argv) else 0
+
+    if "--text-decisions" in argv:
+        from sim.tests import text_decisions
+        return 1 if text_decisions.report() else 0
 
     if "--worker" in argv:
         position = argv.index("--worker")
