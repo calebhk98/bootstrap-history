@@ -50,8 +50,10 @@ check("the estimate is not a tight symmetric band centred on the truth - "
 _k_up = next((row["id"] for row in _est_rows if s_fe.nodes[row["id"]]["up"] > 0), None)
 if _k_up:
     _wu = S._agent_dispatch(s_fe, NODES, {"cmd": "why", "id": _k_up})
+    # the crew's pay is in the payroll (Complaint 514), so a concern's upkeep is its non-crew share: the exact figure
+    # is the one a game without fog quotes
     check("upkeep is exact under fog even for a thing you have never run",
-          _wu["upkeep"] == s_fe.nodes[_k_up]["up"], (_wu["upkeep"], s_fe.nodes[_k_up]["up"]))
+          _wu["upkeep"] == _plain.venture_upkeep_quote(_k_up)["now"], (_wu["upkeep"], _plain.venture_upkeep_quote(_k_up)["now"]))
 
 # NARROWS TO THE EXACT FIGURE ONCE YOU HAVE ACTUALLY RUN IT A FEW YEARS.
 s_ry = s_fe
@@ -245,7 +247,7 @@ _lim_wn = s_wn.credit_limit()
 # that would also trip CREDIT EXHAUSTED in the same year - the two markers
 # have to be tested apart, or a step that stops for the wrong reason would
 # still pass.
-s_wn.capital = -(0.85 * _lim_wn)
+s_wn.capital = -(0.75 * _lim_wn)   # a year of interest and the founder's deficit (Complaint 524) must not cross the line first
 _step_wn = S._agent_dispatch(s_wn, NODES, {"cmd": "step", "years": 50})
 check("a multi-year step stops the moment it is CLOSE TO THE LIMIT too, not "
       "only once credit is fully exhausted",

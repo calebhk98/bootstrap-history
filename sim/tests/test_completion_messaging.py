@@ -118,8 +118,11 @@ check("under fog the road line never reveals the total",
 wave = [{"id": "a%d" % index, "name": "Thing %d" % index, "year": 200,
          "granted": False, "kind": "technology"} for index in range(12)]
 wave.append({"id": "c1", "name": "Shop", "year": 200, "granted": False, "kind": "concern"})
-events = [{"year": 200, "message": "FAILED at X (minor): lost 3."},
-          {"year": 200, "message": "FAILED at Y: it did not work."}]
+# reply events carry the log line's kind and facts (Complaint 521); the summary reads those, not the wording
+events = [{"year": 200, "message": "FAILED at X (minor): lost 3.", "event_kind": "project_failed",
+           "facts": {"severity": "minor"}},
+          {"year": 200, "message": "FAILED at Y: it did not work.", "event_kind": "project_failed",
+           "facts": {"severity": "major"}}]
 summary = wave_summary(wave, events, goal_before=None, goal_after=None)
 check("summary counts completions by kind and failures by severity",
       summary["completed"] == 13 and summary["by_kind"] == {"technology": 12, "concern": 1}

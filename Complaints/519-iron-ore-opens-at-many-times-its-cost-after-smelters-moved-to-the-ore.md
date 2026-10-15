@@ -56,3 +56,10 @@ opening, the suite's harness shortens the spin-up and moves which ores spike).
 
 What it would take now: the opening's ore stocks and prices agree with the sited supply (507 Stage 2), and
 sellers' markdown reaches the cost within a few years. The test marked expected-failure turns green then.
+
+Also red because of it: `economy_tin_dearer_than_copper` (Complaint 511). The bisect over this round's merges puts the
+break at the 473 merge that sited weight-losing processors beside their supply (the 511 merge added the check and failed
+on the combined main from its first commit). In the opening year copper ore shows far above its embodied labour while tin's
+gravel does not, so tin shows at a small fraction of copper's price against a labour ratio several times larger
+(`python3 -m sim.tests --slow --only economy_tin_dearer_than_copper` prints both). The check says not to weaken it;
+it turns green with the opening-price work above.
