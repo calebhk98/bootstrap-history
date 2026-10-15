@@ -176,3 +176,11 @@ Effect on the Rome trace (`simulator.py spin-up-trace --civ rome_100ad --years 4
 from about nil to 0.17, 0.22, 0.34 after the first decade, and the stock ratio last/first from 0.73 to 0.78. The test still
 fails: the first years are not rescued, because the smelters' own bids push the ore price up until the silver alone does not
 cover a run (the chain is sized to silver demand, 507), and the deposits' ceiling above still applies.
+
+## Note (2026-10-15)
+
+`MONEY_LAG_YEARS` for England in `sim/tests/money_regimes_play.py` moved from three years to four in merge
+fix-round-regressions-3, because after the ore districts merge (520) extra metal overtakes the base series a year
+later while both series' price levels climb steeply. That loosens the check; restore it when the opening's money stock
+is fixed (507 Stage 2) and the price level stops climbing.
+
