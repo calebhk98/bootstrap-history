@@ -216,7 +216,7 @@ class CompletionMixin:
             _lost = 0.0 if claimed else self.failure_loss(node_id)
             _severity = self.failure_severity(node_id, max(0.0, _lost), self.funding_capacity())
             # What the purse and the credit line left cannot bear is not forgiven: it is added to what the project still costs, paid through the gated instalments.
-            _borne = min(_lost, max(0.0, household.capital + self.credit_limit()))
+            _borne = self.bearable_part_of(_lost)
             self.pay_edge(edges.EDGE_DESTROYED, _borne, "failure losses")
             if not claimed:
                 for _loss_line in self.lose_what_was_risked(node_id):

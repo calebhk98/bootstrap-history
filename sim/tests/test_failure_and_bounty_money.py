@@ -83,12 +83,15 @@ _capped.capital = -_capped.credit_limit() + 0.1 * _loss
 _room_before = _capped.capital + _capped.credit_limit()
 _owed_before = _capped.active["blast_furnace"]["cost_left"]
 check("set-up: the failure is larger than the room left", 0 <= _room_before < _loss, (_room_before, _loss))
+_capital_before = _capped.capital
 _capped._complete("blast_furnace")
+_borne = _capital_before - _capped.capital   # the line is read at the capital left, so the room is a little under _room_before
 check("a failure never takes capital past the credit limit",
       _capped.capital >= -_capped.credit_limit() - 1e-6, (_capped.capital, _capped.credit_limit()))
 check("the part of a failure the purse could not bear is added to what the project still costs",
-      abs((_capped.active["blast_furnace"]["cost_left"] - _owed_before) - (_loss - _room_before)) <= 1e-6 * _loss,
-      (_capped.active["blast_furnace"]["cost_left"] - _owed_before, _loss - _room_before))
+      abs((_capped.active["blast_furnace"]["cost_left"] - _owed_before) - (_loss - _borne)) <= 1e-6 * _loss
+      and _borne <= _room_before + 1e-6,
+      (_capped.active["blast_furnace"]["cost_left"] - _owed_before, _loss - _borne))
 
 # 438: the yearly charge for guarding coin is paid from the room under the credit limit, not past it
 _guarded = sim(capital=1e6)
