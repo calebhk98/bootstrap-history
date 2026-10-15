@@ -437,3 +437,9 @@ Heuristics each stage deletes are under each stage. Count what is left after eac
 - `notional.thin_market_prices`: measured, it is not a solver reader. It blends toward the economy's own cost
   (`unit_cost`, `cheapest_cost`) and the economy's `opening_basket`. Complaint 507 lists it as a bridge; it is a
   patch for slow markdown, deleted by stage 7, not by moving a reader.
+
+Stage 7 status (2026-10-15): branch `507-stage-7-unsold-stock-price-search` is parked, not merged. On top of Stage 2
+it turns three quick-tier checks red (the quantity-theory price response, a durable-stock bound, credit room in coin)
+and bronze's traded price over cost rises far above its bound; it does not shrink the spin-up gaps, most of which are
+the interest rate's jump (Complaint 527). Revisit after 526 (opening income and wage) merges.
+
