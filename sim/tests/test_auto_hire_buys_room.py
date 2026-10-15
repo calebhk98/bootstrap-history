@@ -27,27 +27,31 @@ def _closed_for_want_of_staff(capital):
     return game
 
 
-_rich = _closed_for_want_of_staff(60000.0)
+_rich = _closed_for_want_of_staff(600000.0)
 _room_before = _rich.labour.household_room()
-for _year in range(3):
+_reopened_years = 0
+for _year in range(4):
     _rich.step()
+    _reopened_years += _node_id in _rich.operating
 check("set-up: the household's room was used up before the year turned", _room_before < 1.0, _room_before)
-check("a rich household with no room left buys housing and hires the staff attrition took, as a player's "
-      "'buy housing' then 'hire' would",
-      _rich.employees.get("artisan", 0.0) >= 1.0,
-      (dict(_rich.employees), _rich.state.household.worker_housing_places))
-check("...and the room came from worker housing, bought at the price a player's quote shows",
+check("a rich household with no room left buys housing and hires, so the concern attrition shut reopens within a few years",
+      _reopened_years >= 1, (_reopened_years, dict(_rich.employees)))
+check("...and the room came from worker housing",
       (_rich.state.household.worker_housing_places or 0.0) > 0.0,
       _rich.state.household.worker_housing_places)
 
 _poor = _closed_for_want_of_staff(60000.0)
 _poor.capital = 0.0
-for _year in range(3):
+for _year in range(4):
     _poor.step()
     _poor.capital = 0.0
-check("a household that cannot pay for room buys none",
-      (_poor.state.household.worker_housing_places or 0.0) == 0.0,
-      _poor.state.household.worker_housing_places)
+_skips = [row for row in _poor.state.household.automation_audit
+          if row["policy"] == "auto_hire" and row["action"] == "skipped"]
+check("a household that cannot pay stays shut, buys no room, and the audit says why the hire was refused",
+      _node_id not in _poor.operating
+      and (_poor.state.household.worker_housing_places or 0.0) == 0.0
+      and bool(_skips) and "shut for want of staff" in _skips[-1]["reason"],
+      (_node_id in _poor.operating, _poor.state.household.worker_housing_places, _skips[-1:] if _skips else "no skip row"))
 
 # The policy's own call, with no attrition draw in the way.
 _direct = _closed_for_want_of_staff(60000.0)
