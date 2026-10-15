@@ -87,4 +87,5 @@ owner.business.note_crew_found("shop", 0.5)
 revived = _deserialize_typed(json.loads(json.dumps(serialize_state(owner.record))), ActorRecord)
 check("a business round-trips through save and load with its plants", revived.business == owner.business and isinstance(revived.business, Business)
 	  and revived.business.plant_of("shop").margin == 12.5, revived.business)
-check("...and the revived business finds its plants by entry", revived.business.size_of("shop") == SIZE and "shop" in revived.business.entry_keys())
+check("...and the revived business finds its plants by entry", revived.business.size_of("shop") == SIZE and revived.business.plant_of("shop") is not None
+      and list(revived.business.entry_keys()) == list(owner.business.entry_keys()))

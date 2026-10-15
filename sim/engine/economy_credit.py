@@ -99,16 +99,11 @@ class CreditMixin:
         """How much of `amount` the purse and the credit line can take without capital ending below the
         negative of the limit. The limit is read at the capital left after paying, because the floor
         (living_cost) carries a status term that shrinks as positive capital goes."""
-        household = self.state.household
-        held = household.capital
-        household.capital = held - amount
-        try:
-            limit_after = self.credit_limit()
-        finally:
-            household.capital = held
+        held = self.state.household.capital
+        limit_after = self.credit_limit(_capital=held - amount)
         return min(amount, max(0.0, held + limit_after))
 
-    def credit_limit(self, _rev=None, _upkeep=None):
+    def credit_limit(self, _rev=None, _upkeep=None, _capital=None):
         """How far into arrears anyone will actually let you go.
 
         Unbounded debt is an accounting fiction: a household could sit
@@ -130,6 +125,7 @@ class CreditMixin:
         that is a genuinely different figure (this year's actual
         wage-selling zeroed out - see revenue_capacity's own docstring),
         never the same call `_rev` would have been computed with.
+        `_capital`: the household's capital to read the floor at, instead of what it holds now.
         """
         # Strangers borrow almost nothing. Credit based on standing income (not
         # this year's actual revenue, which can be zeroed out by temporary work).
@@ -143,7 +139,8 @@ class CreditMixin:
         # One upkeep() call; if already provided, reuse it to avoid silent duplication.
         upkeep_amount = self.upkeep() if _upkeep is None else _upkeep
         # The standing income prices the floor too: a year's job does not shrink what a lender thinks you live on.
-        floor = self.living_cost(_rev=earning if _rev is None else _rev, _upkeep=upkeep_amount) + upkeep_amount * self.CREDIT_LINE_FLOOR_UPKEEP_BUFFER_SHARE
+        at_capital = {} if _capital is None else {"_capital": _capital}
+        floor = self.living_cost(_rev=earning if _rev is None else _rev, _upkeep=upkeep_amount, **at_capital) + upkeep_amount * self.CREDIT_LINE_FLOOR_UPKEEP_BUFFER_SHARE
         # Bounded by what can be serviced: no lender advances more than income
         # can carry, even with a grand patron. Five years of turnover stops a
         # patron-name from creating an unpayable debt trap. [temporary_heuristic]
@@ -781,7 +778,7 @@ class CreditMixin:
         return calculate_affordability(
             self.state.household.capital, self.credit_limit(), share)
 
-    def living_cost(self, _rev=None, _upkeep=None):
+    def living_cost(self, _rev=None, _upkeep=None, _capital=None):
         """You have to eat, sleep somewhere, pay tax, and look the part.
 
         The last one is not a joke. In a patronage society a man who is visibly
@@ -803,6 +800,7 @@ class CreditMixin:
         core.py/projects.py/labour.py/society.py/protocol.py, none of which
         this file may edit) says plain `self.living_cost()`, gets both
         arguments' None default, and computes exactly what it always did.
+        `_capital`: the capital the status spending is read at, instead of the household's own.
         """
         # AT THIS SOCIETY'S PRICES: project costs scale with price_index,
         # and so do wages, the workshop's output and state funding, so
@@ -823,6 +821,7 @@ class CreditMixin:
         rev = self.revenue() if _rev is None else _rev
         wages = self.labour.wage_bill()
         household_state = self.state.household
+        capital = household_state.capital if _capital is None else _capital
         base = self.LIVING_COST_BASE_SUBSISTENCE * price_index         # bare subsistence, one person
         household = (self.LIVING_COST_HOUSEHOLD_BASE * price_index
                      * (1 + household_state.freedmen * self.LIVING_COST_FREEDMAN_SHARE
@@ -831,7 +830,7 @@ class CreditMixin:
         status = 0.0
         for _node_id, upkeep_of_status in self.effect_values("living_cost_status"):
             status += upkeep_of_status * price_index
-        status += max(0.0, household_state.capital) * self.LIVING_COST_STATUS_PER_CAPITAL      # you cannot look poor and rich
+        status += max(0.0, capital) * self.LIVING_COST_STATUS_PER_CAPITAL      # you cannot look poor and rich
         # A RUINED MAN STOPS KEEPING UP APPEARANCES: status spending must be
         # capped by what is actually left after eating (`room` below), not
         # carried as a fixed, unconditional cost - an uncapped citizenship
@@ -847,7 +846,7 @@ class CreditMixin:
         upkeep_amount = self.upkeep() if _upkeep is None else _upkeep
         room = max(0.0, rev - base - household - tax - upkeep_amount - wages)
         status = min(status, room * self.LIVING_COST_APPEARANCES_SHARE_OF_ROOM
-                     + max(0.0, household_state.capital) * self.LIVING_COST_STATUS_PER_CAPITAL)
+                     + max(0.0, capital) * self.LIVING_COST_STATUS_PER_CAPITAL)
         return base + household + tax + status + wages
 
     LIVING_COST_BASE_SUBSISTENCE_LABOUR_HOURS = declare(

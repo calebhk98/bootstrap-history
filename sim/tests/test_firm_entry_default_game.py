@@ -9,8 +9,10 @@ from sim.agents.api import PLAYER_VISIBLE_EXPOSURE
 from sim.engine.agents_port import SimWorld
 from sim.geography.api import settlement, tiles_held
 
-# a real concern that pays in the opening economy (re-measure: scan the nodes for `SimWorld.concern_margin` above zero)
-CONCERN = "pwr_coking"
+# a real concern an entrant earns by after its wages and site rent at the economy's price on the founder's tile, and
+# that an entrant can copy (re-measure: for each node, `SimWorld.entry_gross` less the `business_books.yearly_costs`
+# and `firm_entry.carrying_cost`, above zero, then found a firm here)
+CONCERN = "fin_lottery"
 
 
 def default_game_with_founder_concern():

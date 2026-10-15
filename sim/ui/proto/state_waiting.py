@@ -207,12 +207,13 @@ def _waiting_on(sim, nodes, node_id, progress, bill):
     # reason that is neither staffing, money nor the calendar. Only said when
     # it is genuinely biting (2% is noise); resource_throttle() itself is the
     # one place that number is computed, read here rather than re-derived.
-    _thr = sim.project_resource_throttle(node_id)
-    if _thr < 0.98 and sim.binding:
+    # a question, not a step: the stock and draws the throttle works out are not kept
+    _thr, _binding = sim.peek_project_resource_throttle(node_id)
+    if _thr < 0.98 and _binding:
         return Refusal("materials", "materials: this project consumes %s, whose shortage has it "
                        "running at %d%% of the pace its hours alone "
                        "would allow; 'capacity' shows the shortfall"
-                       % (sim.binding, round(_thr * 100)))
+                       % (_binding, round(_thr * 100)))
     # Rank, count and pool come from the live queue the allocator also uses.
     _rank, _count, _total = sim.hour_standing(node_id) or (None, None, None)
     if _rank and _count and _count > 1:

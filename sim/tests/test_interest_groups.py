@@ -54,7 +54,11 @@ check("a petition puts blame on the founder", big.state.household.scandal > 0.0,
 
 small = grievance_game(share=0.003)
 a_year(small)
-check("a loss too small to organise over forms no group", small.interest_groups() == [], small.interest_groups())
+# the sale is the loss under test: the state's own hiring squeezes the masons' employers in the same year, a group of
+# another kind and cause that organises once the state's revenue (what a loss is a share of) falls, as it did with
+# Merge 507-stage-3-prices-to-pay
+check("a loss too small to organise over forms no group", the_group(small) is None,
+      [row for row in small.interest_groups() if row["kind"] == "displaced_producers"])
 middling = grievance_game(share=0.2)
 a_year(middling)
 check("a bigger loss organises more people with a stronger pull",

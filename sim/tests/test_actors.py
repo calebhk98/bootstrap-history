@@ -81,10 +81,17 @@ check("a recorded actor keeps its money as an account in the purses book, the re
 check("the household never chooses through a policy of its own", isinstance(household.decision_policy, IdlePolicy))
 
 # ---- government imitation is derived from values, not ids ------------------
-gun = make_node("test_gun", traits=["military"])
+def cheaper(node, share=0.5):
+    """The node costing `share` of the template's bill. What the state would pay for a gain is a share of its
+    revenue, which fell with Merge 507-stage-3-prices-to-pay (the economy's prices), and the template's bill did not."""
+    node["_total_cost"] *= share
+    return node
+
+
+gun = cheaper(make_node("test_gun", traits=["military"]))
 cartoons = make_node("test_cartoons", traits=["information"])
-faint = make_node("test_faint", gains={"military": 1e-12})
-modded = make_node("test_mod:cannon", gains={"military": 0.9})
+faint = cheaper(make_node("test_faint", gains={"military": 1e-12}))
+modded = cheaper(make_node("test_mod:cannon", gains={"military": 0.9}))
 game = actor_sim([gun, cartoons, faint, modded])
 for node_id in ("test_gun", "test_cartoons", "test_faint", "test_mod:cannon"):
     founder_completes(game, node_id, operating=True)
