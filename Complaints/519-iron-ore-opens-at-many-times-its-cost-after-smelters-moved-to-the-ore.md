@@ -17,3 +17,8 @@ ore mass balance fixed in 511), and size a processor's capacity at the opening t
 reach rather than keeping the excess as a price. Test: a common ore's opening price stays within a bounded multiple
 of its making cost in every civilisation (a relationship, CLAUDE.md 4.2). Overlaps 507 Stage 2 (the opening);
 check after it merges.
+
+Checked in 520: sizing the unsized districts (and drawing deposits down by their rate) leaves Rome's iron sites
+as they were (all six already sized); Rome's iron ore price over its making cost falls somewhat but stays far above
+1, so it is not a deposit-size problem on the Roman rows. For the other civilisations the new sites move some ore
+ratios up and some down (measure with `economy.agent_prices()` against `_material_prices()` after a first step).
