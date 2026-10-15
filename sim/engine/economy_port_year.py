@@ -20,6 +20,7 @@ from sim.economy.api import (EDGE_EXTERNAL, EDGE_LEGACY, AgentOrders, Economy, G
 from . import economy_port_actors, economy_port_cargo, economy_port_late, economy_port_sites, material_capacity, solve_cache
 from .data import load_civ
 from .economy_port_key import spin_up_key
+from .economy_port_coin import priced_at_the_margin
 from .economy_port_setup import build_setup, opening_values
 from .material_units import tonnes_per_unit
 from .prices import default_production_entries
@@ -114,7 +115,7 @@ class AgentEconomy:
                 setup = build_setup(self._sim, self.stored["opening"])
                 self._economy = economy_api.economy_from_record(setup, self.stored["record"])
             else:
-                opening = opening_values(self._sim)
+                opening = priced_at_the_margin(self._sim, opening_values(self._sim))
                 setup = build_setup(self._sim, opening)
                 record = solve_cache.cached_json(
                     _spin_up_cache_key(setup),

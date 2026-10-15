@@ -67,6 +67,7 @@ def _open(setup: EconomySetup, replacement: float) -> Tuple[EconomyRecord, AreaM
     for country in setup.countries():
         _open_country_producers(setup, record, area_map, carriage, priced_goods, final_by_tile, country)
     sites.apply_site_limits(record, setup)
+    _stock_producers_with_inputs(setup, record)
     _open_merchants(setup, record, priced_goods, final_by_tile)
     _strike_opening_cash(setup, record)
     record.workforce = labour_state.opening_workforce(setup, record)   # the mint's capacity follows the money struck
@@ -84,15 +85,8 @@ def _open_country_producers(setup, record, area_map, carriage, priced_goods, fin
                if not setup.recipes_by_country or recipe_id in setup.recipes_by_country.get(country, ())}
     final = {tile: demand for tile, demand in final_by_tile.items() if tile in tiles}
     ceilings = opening_runs.run_ceilings(recipes, sites.limits_by_recipe(setup.site_limits))
-    ranked = opening_runs.ranked_recipes(recipes, priced_goods, setup.opening_wages, setup.opening_rate)
-    runs = opening_runs.required_runs(final, ranked, recipes, ceilings)
-    for _pass in range(opening_runs.INCUMBENT_PASSES):
-        # a co-product nobody wants in the quantity a run makes it does not pay for the run: re-choose on that
-        chosen = opening_runs.ranked_recipes(recipes, priced_goods, setup.opening_wages, setup.opening_rate,
-                                             opening_runs.required_quantities(final, runs, recipes))
-        if chosen == ranked:
-            break
-        ranked, runs = chosen, opening_runs.required_runs(final, chosen, recipes, ceilings)
+    ranked, runs = opening_runs.choose_recipes(final, recipes, priced_goods, setup.opening_wages, setup.opening_rate,
+                                               ceilings)
     incumbents = opening_runs.first_choices(ranked)
     _place_producers(setup, record, area_map, carriage, final, incumbents, runs,
                      tiles if len(setup.countries()) > 1 else None)
@@ -301,6 +295,21 @@ def _add_producers(setup, record, recipe, capacity_by_tile, input_demand, by_lim
         if recipe.plant_life_years > 0.0:
             for good, quantity in recipe.plant_goods.items():
                 wanted[good] = wanted.get(good, 0.0) + capacity * quantity / recipe.plant_life_years
+
+
+def _stock_producers_with_inputs(setup, record) -> None:
+    """Each producer opens holding the inputs of the runs it plans for the year. Inputs bought in a year are used in
+    the next, so a chain of producers (ore, smelter, fuel) with nothing in store works one stage in its first year
+    and fills its pipeline over several, while the opening's demand is met from the first."""
+    moves = []
+    for producer in record.producers.values():
+        recipe = setup.recipes[producer.recipe_id]
+        runs = producer.expected_sales * (1.0 + OPENING_SPARE_CAPACITY_SHARE)
+        moves.extend(GoodsMove(EDGE_PRODUCTION, producer.agent_id, good, producer.tile, runs * per_run,
+                               "opening stock of inputs")
+                     for good, per_run in sorted(recipe.inputs.items()) if per_run > 0.0 and runs > 0.0)
+    if moves:
+        record.book.move_many(moves)
 
 
 def _has_people(record, tile) -> bool:

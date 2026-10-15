@@ -24,10 +24,10 @@ def national_totals(by_tile: Mapping[TileId, Mapping[GoodId, float]]) -> Dict[Go
     return dict(sorted(total.items()))
 
 
-def ranked_recipes(recipes: Mapping[str, Recipe], prices: Mapping[GoodId, float], wages: Mapping[str, float],
-                   rate: float, required: Optional[Mapping[GoodId, float]] = None) -> Dict[GoodId, List[str]]:
-    """The recipes that make each good, cheapest per unit of that good first: a joint run's cost shared among
-    its outputs by their value. With `required` (the quantity of each good the opening needs), a run's
+def unit_costs(recipes: Mapping[str, Recipe], prices: Mapping[GoodId, float], wages: Mapping[str, float],
+               rate: float, required: Optional[Mapping[GoodId, float]] = None) -> Dict[GoodId, List[Tuple[float, str]]]:
+    """(cost of one unit, recipe) for every recipe that makes each good, cheapest first: a joint run's cost shared
+    among its outputs by their value. With `required` (the quantity of each good the opening needs), a run's
     co-product counts only up to what is needed once the runs for the good are made: a by-product nobody wants
     in that quantity is no value to the run, and the good is made another way."""
     costed: Dict[GoodId, List[Tuple[float, str]]] = {}
@@ -43,7 +43,14 @@ def ranked_recipes(recipes: Mapping[str, Recipe], prices: Mapping[GoodId, float]
             total_value = math.fsum(values.values())
             share = values[good] / total_value if total_value > 0.0 else 1.0 / len(recipe.outputs)
             costed.setdefault(good, []).append((cost * share / quantity, recipe_id))
-    return {good: [recipe_id for _cost, recipe_id in sorted(rows)] for good, rows in sorted(costed.items())}
+    return {good: sorted(rows) for good, rows in sorted(costed.items())}
+
+
+def ranked_recipes(recipes: Mapping[str, Recipe], prices: Mapping[GoodId, float], wages: Mapping[str, float],
+                   rate: float, required: Optional[Mapping[GoodId, float]] = None) -> Dict[GoodId, List[str]]:
+    """The recipes that make each good, cheapest per unit of that good first (`unit_costs`)."""
+    return {good: [recipe_id for _cost, recipe_id in rows]
+            for good, rows in unit_costs(recipes, prices, wages, rate, required).items()}
 
 
 def first_choices(ranked: Mapping[GoodId, List[str]]) -> Dict[GoodId, str]:
@@ -138,3 +145,18 @@ def required_runs(final_by_tile, ranked: Mapping[GoodId, List[str]], recipes: Ma
             return updated
         runs = updated
     return runs
+
+
+def choose_recipes(final_by_tile, recipes: Mapping[str, Recipe], prices: Mapping[GoodId, float],
+                   wages: Mapping[str, float], rate: float, ceilings: Optional[Mapping[str, float]] = None
+                   ) -> Tuple[Dict[GoodId, List[str]], Dict[str, float]]:
+    """(recipes ranked for each good, runs a year of each) for a final demand: the cheapest recipes up to their
+    ceilings, chosen again against the demand that choice leaves for a co-product until the choice stops moving."""
+    ranked = ranked_recipes(recipes, prices, wages, rate)
+    runs = required_runs(final_by_tile, ranked, recipes, ceilings)
+    for _pass in range(INCUMBENT_PASSES):
+        chosen = ranked_recipes(recipes, prices, wages, rate, required_quantities(final_by_tile, runs, recipes))
+        if chosen == ranked:
+            break
+        ranked, runs = chosen, required_runs(final_by_tile, chosen, recipes, ceilings)
+    return ranked, runs

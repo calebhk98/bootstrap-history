@@ -22,14 +22,29 @@ def national_value(record, prices):
 class OpeningIncomeTests(unittest.TestCase):
     def test_income_per_head_is_the_fixed_point_of_income_and_the_demand_it_pays_for(self):
         # demand saturates: it never exceeds 5 a head, and is what income buys below that
-        per_head = opening_income.settled_income_per_head(100.0, 10.0, lambda income: 10.0 * min(income, 5.0))
+        per_head, labour = opening_income.settled_income_per_head(
+            100.0, 10.0, lambda income: (10.0 * min(income, 5.0), 0.5))
         self.assertAlmostEqual(per_head, 5.0, places=6)
-        per_head = opening_income.settled_income_per_head(100.0, 10.0, lambda income: 10.0 * (0.5 * income + 1.0))
+        self.assertEqual(labour, 0.5)
+        per_head, _labour = opening_income.settled_income_per_head(
+            100.0, 10.0, lambda income: (10.0 * (0.5 * income + 1.0), 0.5))
         self.assertAlmostEqual(per_head, 2.0, places=6)
 
     def test_income_never_exceeds_the_full_employment_ceiling(self):
-        per_head = opening_income.settled_income_per_head(3.0, 10.0, lambda income: 10.0 * (income + 5.0))
+        per_head, _labour = opening_income.settled_income_per_head(
+            3.0, 10.0, lambda income: (10.0 * (income + 5.0), 0.5))
         self.assertEqual(per_head, 3.0)
+
+    def test_workers_are_paid_alike_and_owners_by_what_they_own(self):
+        setup = fixture.small_setup()
+        record, _areas, _carriage = opening.open_economy(setup)
+        paid = opening_income.with_income(record.cohorts, 100.0, 1.0)
+        per_head = {cohort_id: cohort.last_year_income / cohort.people for cohort_id, cohort in paid.items()}
+        self.assertAlmostEqual(max(per_head.values()), min(per_head.values()), places=6)
+        owned = opening_income.with_income(record.cohorts, 100.0, 0.0)
+        richest = max(owned.values(), key=lambda cohort: cohort.ownership_share)
+        poorest = min(owned.values(), key=lambda cohort: cohort.ownership_share)
+        self.assertGreater(richest.last_year_income / richest.people, poorest.last_year_income / poorest.people)
 
     def test_the_opening_pays_households_the_value_of_the_demand_producers_are_sized_to(self):
         setup = fixture.small_setup()
@@ -85,6 +100,35 @@ class OpeningMetalTests(unittest.TestCase):
                                                                  backing_good=None, backing_per_unit=0.0))
         record, _areas, _carriage = opening.open_economy(setup)
         self.assertEqual(opening_metal.yearly_replacement(setup, record), 0.0)
+
+
+class CoinWorthTests(unittest.TestCase):
+    """The metal a coin holds is worth what the last of the runs that make it costs (Complaint 473)."""
+
+    def _setup(self, mine_runs):
+        recipes = fixture.recipes()
+        recipes[fixture.MINE] = dataclasses.replace(recipes[fixture.MINE], site_bound=True)
+        recipes["scrap_metal"] = Recipe("scrap_metal", {fixture.METAL: 1.0}, {fixture.GRAIN: 1000.0}, {fixture.SMITH: 120.0})
+        return fixture.small_setup(recipes=recipes, site_limits=(SiteLimit(fixture.MINE, fixture.HILLS, mine_runs, 1.0),))
+
+    def _marginal(self, setup):
+        from sim.economy import unit_cost
+        record, _areas, _carriage = opening.open_economy(setup)
+        smelt = setup.recipes[fixture.SMELT]
+        cost_of = lambda recipe: (unit_cost.variable_cost_per_run(recipe, setup.opening_prices, setup.opening_wages)
+                                  + unit_cost.capital_charge_per_run(recipe, setup.opening_prices, setup.opening_wages,
+                                                                     setup.opening_rate)) / recipe.outputs[fixture.METAL]
+        return opening_metal.marginal_cost(setup, record), cost_of(smelt), cost_of(setup.recipes["scrap_metal"])
+
+    def test_where_the_cheap_way_supplies_all_the_metal_it_sets_the_cost(self):
+        marginal, cheap, dear = self._marginal(self._setup(mine_runs=1.0e6))
+        self.assertGreater(dear, cheap)
+        self.assertAlmostEqual(marginal, cheap, delta=1e-6 * cheap)
+
+    def test_where_a_deposit_cannot_feed_it_the_dearer_way_sets_the_cost(self):
+        marginal, cheap, dear = self._marginal(self._setup(mine_runs=0.5))
+        self.assertAlmostEqual(marginal, dear, delta=1e-6 * dear)
+        self.assertGreater(marginal, cheap)
 
 
 def two_ways_to_make_alloy(cheap_limit=None):
