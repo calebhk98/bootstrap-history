@@ -73,9 +73,8 @@ class WagesMixin(WageLedgerMixin):
         It is paid at the ordinary rate for that trade, which is the same table
         the game charges you when you hire someone, so there is no arbitrage in
         either direction. The cost is your own hours, which are the one resource
-        nothing else can buy, so this is always a trade of time for money and
-        usually a bad one once you have anything better to do. That is the
-        honest shape of wage labour.
+        nothing else can buy: hours sold here are hours the standing job
+        (labour_job.py) does not sell and your own projects cannot have.
         """
         if not self._world.state.founder.founder_alive:
             return 0.0, ("there is nobody left to do the work: these are YOUR "
@@ -117,17 +116,10 @@ class WagesMixin(WageLedgerMixin):
         # either direction" claim becomes false.
         household = self._world.state.household
         pay = self.wage_for_hours(trade, hours)
-        before_practice = self._world.revenue()
         self._world.receive_from_edge(self._world.EDGE_EMPLOYERS, pay, "wages for your own work")
         household.wage_hours_this_year = household.wage_hours_this_year + hours
         household.wages_earned = (household.wages_earned or 0.0) + pay
         household.wage_income_this_year = household.wage_income_this_year + pay
-        # SAY WHEN IT IS A BAD TRADE: selling your hours costs you the
-        # practice those same hours were running (see practice_attention),
-        # and for a trained person it is usually a net loss. That is
-        # realistic - a trained man does not dig ditches for preference -
-        # but it has to be said explicitly, not charged silently and left
-        # for the player to work out from the ledger.
         # DO NOT BLOCK IT - WARN ABOUT IT: selling hours is a legitimate
         # way to dig out of debt, so this must never refuse the sale, only
         # warn when it would starve an active project of the hours it
@@ -156,22 +148,7 @@ class WagesMixin(WageLedgerMixin):
                        else "these still want more than that",
                        "; ".join(_bits),
                        (", and %d more" % _more) if _more else ""))
-        lost = before_practice - self._world.revenue()
-        self.log_wage_work(trade, hours, pay, lost)
-        if lost > pay:
-            # THE THREE NUMBERS HAVE TO SUBTRACT: rounding each separately
-            # can give "you earned 128 ... was worth 234 ... so this cost
-            # you 105" - numbers that do not actually subtract when a
-            # reader checks by hand. Round first, then subtract.
-            _paid, _lost = round(pay), round(lost)
-            _msg = ("you earned %s, and the practice those hours were "
-                    "running was worth %s a year - so this cost you %s. "
-                    "Wage work is for when you have no practice to lose."
-                    % (self._world.money_text(_paid, grouped=True), self._world.money_text(_lost, grouped=True),
-                       self._world.money_text(_lost - _paid, grouped=True)))
-            if _starve:
-                _msg += " Also: " + _starve
-            return pay, _msg
+        self.log_wage_work(trade, hours, pay)
         return pay, _starve
 
     def wage_bill(self):

@@ -78,6 +78,7 @@ class HouseholdState:
 	commissioned: Dict[str, float] = field(default_factory=dict)
 	teaching_hours_this_year: float = 0.0
 	relocation_hours_this_year: float = 0.0
+	supervision_hours_this_year: float = 0.0
 	base_tile: Optional[str] = None
 	hour_allocations: Dict[str, float] = field(default_factory=dict)
 	# standing order id -> [hours ordered, shortfall kind] last reported as unused, so repeats stay quiet

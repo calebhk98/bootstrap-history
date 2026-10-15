@@ -128,7 +128,8 @@ class CreditMixin:
         # Floor of one year's running costs: everyone can run a tab for a season.
         # One upkeep() call; if already provided, reuse it to avoid silent duplication.
         upkeep_amount = self.upkeep() if _upkeep is None else _upkeep
-        floor = self.living_cost(_rev=_rev, _upkeep=upkeep_amount) + upkeep_amount * self.CREDIT_LINE_FLOOR_UPKEEP_BUFFER_SHARE
+        # The standing income prices the floor too: a year's job does not shrink what a lender thinks you live on.
+        floor = self.living_cost(_rev=earning if _rev is None else _rev, _upkeep=upkeep_amount) + upkeep_amount * self.CREDIT_LINE_FLOOR_UPKEEP_BUFFER_SHARE
         # Bounded by what can be serviced: no lender advances more than income
         # can carry, even with a grand patron. Five years of turnover stops a
         # patron-name from creating an unpayable debt trap. [temporary_heuristic]
@@ -641,22 +642,24 @@ class CreditMixin:
         if net >= 0:
             return None
         ways = []
-        hours = self.labour.director_pool() - self.labour.director_hours_committed()
+        hours = self.labour.hours_for_sale()
         if hours > 100:
-            # Only suggest work if it gains (selling hours pulls from practice):
-            # the best-paying open trade, quoted by running the sale itself.
+            # Only suggest work that pays more than the standing job already sells these hours for: the
+            # best-paying open trade, quoted by running the sale itself.
             best_trade = self.labour.best_wage_trade()
             if best_trade:
-                would_earn, _refusal, would_cost = self.labour.work_for_wages_dry_run(best_trade, hours)
-                if would_earn > would_cost:
+                would_earn, _refusal = self.labour.work_for_wages_dry_run(best_trade, hours)
+                standing = self.labour.standing_job_pay(self.held_trade())
+                if would_earn > standing:
                     ways.append("work as a %s: %.0f of your own hours are left "
-                                "this year and would bring in about %s against "
-                                "the %s of practice they come out of, so you are "
-                                "up %s. Nobody has to lend you anything for that"
+                                "this year and would bring in about %s%s. "
+                                "Nobody has to lend you anything for that"
                                 % (best_trade, hours,
                                    money_text(would_earn, self, grouped=True),
-                                   money_text(would_cost, self, grouped=True),
-                                   money_text(would_earn - would_cost, self, grouped=True)))
+                                   (" against the %s your standing job pays for them, so you are up %s"
+                                    % (money_text(standing, self, grouped=True),
+                                       money_text(would_earn - standing, self, grouped=True)))
+                                   if standing > 0.5 else ""))
         losers = sorted((node_id for node_id in projects.operating
                          if self.nodes[node_id]["up"] > self.nodes[node_id]["rev"]),
                         key=lambda node_id: self.nodes[node_id]["rev"] - self.nodes[node_id]["up"])
