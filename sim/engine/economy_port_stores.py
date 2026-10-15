@@ -5,6 +5,7 @@ Part of the port with economy_port_setup.py. Which good a resource yields is the
 has no single good to hold and is reported as a gap rather than guessed.
 """
 from sim.geography.api import mine_demand_goods, mined_before
+from .deposit_history import historical_rates
 
 
 def opening_store_values(world_map, tile_ids, start_year):
@@ -16,7 +17,7 @@ def opening_store_values(world_map, tile_ids, start_year):
             for good in goods:
                 stores[good] = {"workings": [], "gap": "%s yields several goods; none is chosen to hold its stock" % resource_id}
             continue
-        mined = mined_before(tile_ids, resource_id, start_year, world_map)
+        mined = mined_before(tile_ids, resource_id, start_year, world_map, historical_rates(world_map, resource_id))
         workings = [[each["output_per_year"], each["years_worked"], each["years_since_last_output"]] for each in mined["workings"]]
         if mined["unit"] != "kg":
             workings, gap = [], "%s is counted in %s, not kilograms" % (resource_id, mined["unit"])

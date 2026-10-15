@@ -117,10 +117,11 @@ class MineNamesADepositTests(unittest.TestCase):
         self.assertNotIn("neves_corvo_copper", ids)
 
     def test_a_deposit_worked_out_before_the_game_has_no_room(self):
-        laurion = next(row for row in self.host.found_deposits("silver") if row["id"] == "laurion_silver")
-        self.assertEqual(laurion["remaining_tonnes"], 0.0)
-        self.assertEqual(laurion["room_tonnes_per_year"], 0.0)
-        self.assertEqual(self.host.open_mine("silver", 1e12, deposit="laurion_silver"), 0.0)
+        # Cyprus copper: 3000 years at the rate the output model gives it, against 200 kt held (the data close it)
+        cyprus = next(row for row in self.host.found_deposits("copper") if row["id"] == "cyprus_copper")
+        self.assertAlmostEqual(cyprus["remaining_tonnes"], 0.0, delta=1e-6)
+        self.assertAlmostEqual(cyprus["room_tonnes_per_year"], 0.0, delta=1e-6)
+        self.assertAlmostEqual(self.host.open_mine("copper", 1e12, deposit="cyprus_copper"), 0.0, delta=1e-6)
 
     def test_a_deposit_of_unknown_size_is_not_listed(self):
         self.assertTrue(all(row["size_tonnes"] > 0.0 for row in self.host.found_deposits("lead")))
