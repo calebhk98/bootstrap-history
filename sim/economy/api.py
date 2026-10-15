@@ -13,6 +13,7 @@ from .currency import currency_from_coin_standard
 from .economy import Economy
 from .foreign import external_orders
 from .market_memory import market_key
+from .metal_stock import COIN_WEAR_PER_YEAR
 from .notional import shown_prices
 from .price_level import goods_level_over_opening
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
