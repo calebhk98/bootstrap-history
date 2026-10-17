@@ -12,7 +12,7 @@ from typing import Dict, List, Optional, Tuple
 
 from sim.constants import declare
 
-from .market_memory import market_key
+from .market_memory import KEY_SEPARATOR as MARKET_KEY_SEPARATOR, market_key
 from .merchants import Merchant
 from .producers_close import WORKING_CAPITAL_PURPOSE
 from .setup import labour_area
@@ -34,15 +34,45 @@ class Crew:
     hours_per_money: float                    # crew hours inside one unit of carriage money
 
 
-def crew_of(setup) -> Optional[Crew]:
-    """The crew the setup's carriage hires, or None when its modes name no crew hours."""
-    usable = [(setup.carriage_rates[mode], mode) for mode in setup.carriage_crew
-              if setup.carriage_rates.get(mode, 0.0) > 0.0]
-    if not usable:
+def _cheapest_mode(setup, imbalance: float):
+    rates = setup.carriage_rates_at(imbalance)
+    usable = [(rates[mode], mode) for mode in setup.carriage_crew if rates.get(mode, 0.0) > 0.0]
+    return min(usable) if usable else None
+
+
+def wage_scale(setup, record) -> float:
+    """The multiplier on the carriage table for the year: the rates were priced at `carriage_wage`, and their
+    labour part (the cheapest mode's crew hours, both legs of the round trip the emptiness of the returns
+    leaves, at that wage) follows the unskilled market wage of the year instead, averaged over the hours
+    hired last year. The rest of a fee (feed, carts, animals) keeps its price. 1 where the wage is the one
+    priced, or nothing is known of either."""
+    found = _cheapest_mode(setup, record.area_imbalance)
+    if found is None or setup.carriage_wage <= 0.0:
+        return 1.0
+    rate, mode = found
+    hours = 0.0
+    paid = 0.0
+    for key, wage in record.memory.wages.items():
+        if key.startswith(setup.unskilled_trade + MARKET_KEY_SEPARATOR) and wage > 0.0:
+            worked = record.hours_hired.get(key, 0.0)
+            hours += worked
+            paid += worked * wage
+    if hours <= 0.0:
+        return 1.0
+    labour_share = setup.carriage_crew[mode][1] * (1.0 + record.area_imbalance) * setup.carriage_wage / rate
+    return 1.0 + labour_share * (paid / hours / setup.carriage_wage - 1.0)
+
+
+def crew_of(setup, scale: float = 1.0, imbalance: float = 1.0) -> Optional[Crew]:
+    """The crew the setup's carriage hires, or None when its modes name no crew hours. `scale` is the
+    carriage table's multiplier (wage_scale): a fee holds the same hours whatever the wage, so the hours
+    in a unit of money fall as the money rises."""
+    found = _cheapest_mode(setup, imbalance)
+    if found is None:
         return None
-    rate, mode = min(usable)
+    rate, mode = found
     trade, hours_per_tonne_km = setup.carriage_crew[mode]
-    if hours_per_tonne_km <= 0.0:
+    if hours_per_tonne_km <= 0.0 or scale <= 0.0:
         return None
     unskilled = min(1.0, max(0.0, CARRIAGE_CREW_UNSKILLED_SHARE))
     shares = ((setup.unskilled_trade, unskilled), (trade, 1.0 - unskilled))
@@ -50,7 +80,12 @@ def crew_of(setup) -> Optional[Crew]:
     for each, share in shares:
         merged[each] = merged.get(each, 0.0) + share
     return Crew(tuple((each, share) for each, share in sorted(merged.items()) if share > 0.0),
-                hours_per_tonne_km / rate)
+                hours_per_tonne_km * (1.0 + imbalance) / (rate * scale))
+
+
+def crew_for(setup, record) -> Optional[Crew]:
+    """The year's crew: `crew_of` at the wage scale and return-trip emptiness the carriage is priced at."""
+    return crew_of(setup, wage_scale(setup, record), record.area_imbalance)
 
 
 def planned(merchant: Merchant) -> bool:
@@ -63,7 +98,7 @@ def bids(setup, record) -> List[LabourBid]:
     year's shipments (what they wanted to carry, before any cut), because this year's purchases are not
     known until the goods markets clear, after the labour market. The most a hour of crew can be worth to
     a merchant is all of the carriage money its hours stand for."""
-    crew = crew_of(setup)
+    crew = crew_for(setup, record)
     if crew is None:
         return []
     populated = {cohort.tile for cohort in record.cohorts.values()}
