@@ -53,8 +53,14 @@ def poor_household():
     return household
 
 
+def spend_remaining_cash(household):
+    """Leave no cash after the first start, so every later start's materials must be borrowed."""
+    household.state.household.capital = 0.0
+
+
 borrower = poor_household()
 first = _run(borrower, "start " + FIRST_START)
+spend_remaining_cash(borrower)
 second = _run(borrower, "start " + SECOND_START)
 third = _run(borrower, "start " + THIRD_START)
 check("set-up: the second and third starts draw on credit",
@@ -75,6 +81,7 @@ check("...and prints only a one-line summary of the block on screen",
 
 forced = poor_household()
 _run(forced, "start " + FIRST_START)
+spend_remaining_cash(forced)
 _run(forced, "start " + SECOND_START)
 again = S._agent_dispatch(forced, NODES, {"cmd": "start", "id": THIRD_START, "full": True})
 check("'full' asks for the whole block again",
@@ -82,6 +89,7 @@ check("'full' asks for the whole block again",
 
 next_year = poor_household()
 _run(next_year, "start " + FIRST_START)
+spend_remaining_cash(next_year)
 _run(next_year, "start " + SECOND_START)
 next_year.year += 1
 later = _run(next_year, "start " + THIRD_START)

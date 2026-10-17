@@ -66,3 +66,19 @@ with the test kept honest.
   so it reached the climb on `origin/main` but stopped short of it on the branch, where the opening's sellers hold
   a little more. Fix in `sim/tests/test_purchase_reads_economy_price.py`: the largest order is 0.99 of the book,
   which walks up the schedule. The assertion is unchanged (means sorted and the last above the first). Closed.
+- `arrears_hours` (and the three below) crashed with `KeyError: ('fulminate_kg', 'sweden_01@b4')` in
+  `year_close.close_agents`: the merchants' price news is keyed by the area a clearing used, but the area map had
+  been rebuilt at the year's prices and the good now sat in another value bucket, so the area (and its anchor)
+  was gone. Fix: `merchants.close_year`'s `lag_years` may return None for a market whose area is no longer in the
+  map and that news is skipped (nothing reads an expected price of a vanished area); `year_close` returns None
+  when the anchor is missing. Regression: `test_merchant_travel_time.py`. `arrears_hours` still has its auto_hire
+  check failing (not this item).
+- `port_unskilled_trade`: its opening fixture lacked `carriage_wage`, which `in_units` now counts; fixture gains
+  it and asserts it is counted in the trade's hour. No engine change.
+- `whole_game_gold_silver_ratio`: the test read `area_of` for silver, which has no market (no price, no area).
+  The test's reader now treats a good outside `area_map.goods()` as unpriced. Assertions unchanged.
+- `complaint_173_credit_forecast_once`: the fixture's cash left after the first start now covers the third
+  start's materials, so it never borrowed. Cash is set to nothing after the first start so later starts must
+  borrow; assertions unchanged.
+- `economy_imports`: `sim/engine/living_stock_opening.py` imported `sim.economy`; it now asks
+  `EconomyPort.producer_capacities()` (new, via `AgentEconomy.producer_capacities` in `economy_port_year.py`).

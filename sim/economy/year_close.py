@@ -154,8 +154,9 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
         transfers = merchants.close_year(merchant, prices, volumes, record.book.balance(merchant.agent_id, money),
                                          _held_stock(record.book, merchant.agent_id), area_map.area_of, money,
                                          interest_rate, ordered,
-                                         lambda good, area, home=merchant.home_tile: merchants_transit.news_lag(
-                                             carriage, home, anchors[(good, area)]))
+                                         lambda good, area, home=merchant.home_tile: (
+                                             merchants_transit.news_lag(carriage, home, anchors[(good, area)])
+                                             if (good, area) in anchors else None))
         paid = ownership.spread(record, transfers, cohorts_by_tile)
         record.book.transfer_many(paid)
         for transfer in paid:
