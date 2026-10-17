@@ -3,6 +3,7 @@ import json
 import os
 
 from .harness import *  # noqa: F401,F403
+from .harness import unopened_sim
 
 from sim.economy import api as economy_api
 from sim.engine.data import ROOT
@@ -35,6 +36,16 @@ for material in HERD_STOCKS:
           (rome.stock_held(material), wanted))
 check("the opening herds stand within the pasture the held tiles carry",
       sum(rome.stock_held(material) for material in HERD_STOCKS) <= capacity, capacity)
+
+# the sheep the economy's opening sizes supply the wool its textile producers take
+from sim.economy import opening
+from sim.engine.economy_port_setup import build_setup
+_record, _areas, _carriage = opening.open_economy(build_setup(unopened_sim(civ="rome_100ad")))
+producers = list(_record.producers.values())
+wool_made = sum(p.capacity_runs * production[p.recipe_id]["outputs"].get("wool_kg", 0.0) for p in producers)
+wool_used = sum(p.capacity_runs * (production[p.recipe_id].get("inputs") or {}).get("wool_kg", 0.0) for p in producers)
+check("Rome's opening flock supplies its opening wool demand within a tenth",
+      wool_used > 0.0 and abs(wool_made / wool_used - 1.0) <= 0.1, (wool_made, wool_used))
 
 mexica = sim(civ="mexica_1500", capital=1e6)
 for material in HERD_STOCKS:
