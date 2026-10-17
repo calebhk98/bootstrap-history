@@ -88,6 +88,19 @@ def cmd_play(args):
     count. `run --trace` is still the way to watch the optimizer work.
     """
     LINES_PUSHED_BACK.clear()
+    # building the game, loading it and running the first command allocate a heap that all lives on: the
+    # cyclic collector stays off until that command is done
+    collecting = gc.isenabled()
+    gc.disable()
+    try:
+        return _play_sitting(args, collecting)
+    finally:
+        if collecting:
+            gc.enable()
+
+
+def _play_sitting(args, collecting):
+    """The body of `cmd_play`; `collecting` is whether cyclic collection was on before the sitting began."""
     result = _play_init(args)
     if result == 1:
         return 1
@@ -106,7 +119,11 @@ def cmd_play(args):
     if fresh and app_cfg.get("show_welcome", True):
         _play_print_welcome(sim, kit)
 
+    commands_read = 0
     while True:
+        if commands_read == 1 and collecting:
+            gc.enable()
+        commands_read += 1
         prompt = _play_prompt(sim)
         try:
             line = LINES_PUSHED_BACK.pop(0) if LINES_PUSHED_BACK else input(prompt)
