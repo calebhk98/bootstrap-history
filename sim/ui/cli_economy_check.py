@@ -35,6 +35,9 @@ def check_one(nodes, civ_id, seed, years, metals, staple=None):
 
 
 def cmd_economy_check(args):
+    if getattr(args, "accounts", False):
+        from .cli_economy_accounts import cmd_economy_accounts
+        return cmd_economy_accounts(args)
     _tree, _prices, nodes, _wages, _goods = load()
     civs = _split(args.civs) or [default_civilisation_id()]
     if civs == ["all"]:

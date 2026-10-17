@@ -22,6 +22,7 @@ from .record import EconomyRecord
 from .setup import EconomySetup, TradeSpec, goods_specs
 from .types import (EDGE_CARGO, EDGE_CONSUMPTION, EDGE_EXCHANGE, EDGE_EXTERNAL, EDGE_LEGACY, EDGE_MINT, EDGE_WEAR, Bid,
                     GoodsMove, Offer, SiteLimit, Transfer, external_edge)
+from .year_accounts import YearAccounts
 from .unit_cost import variable_cost_per_run
 from .spin_up_state import spin_up_state as year_spin_up_state
 from .year_close import rebase_basket_price_level
@@ -29,6 +30,7 @@ from .year_labour import trade_premium
 from sim.world import capital_market
 
 __all__ = [
+    "YearAccounts",
     "diagnostics", "households", "taxes", "tile_costs", "currency_from_coin_standard", "Economy", "external_orders",
     "price_response", "prices_at", "offered_units", "watch_tiles",
     "shown_prices", "Producer", "expected_output_prices", "live_input_prices", "live_wages", "AgentOrders",
