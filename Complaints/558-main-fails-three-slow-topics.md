@@ -25,3 +25,14 @@ with the test kept honest.
   finishes in the second step, on origin/main it was still active (late with arrears). Both are legitimate. The test
   now steps once, so a two-year floor leaves it active, and checks it is part-paid with cost still left.
 - `economy_bronze_market_price`: the 502 check on bronze's shown price over its cost fails (worst about 2.4).
+  Measured (stepping `rome_100ad` 18 years as the test does; shown bronze over `notional.cheapest_cost` at the shown
+  input prices): it PASSES on `origin/main` (worst 1.81 in year 12, `python3 -m sim.tests --slow --only
+  economy_bronze_market_price`, 133 s) and fails on this branch (the test's own 18-year run shows the worst
+  years 15 to 17 at 4.1, 4.5, 5.6). It is not copper alone: bronze's cost is 90 percent copper at the shown price,
+  but on the branch copper falls to 5.4 to 7.5 in years 15 to 17 while bronze stays 22 to 31, so the ask lags a
+  falling input (a markdown share a year) and a thin market holds it. With the 550 change (`seller_offers.stands_for_many`,
+  aggregate producers keep the price-taking reservation) disabled the late spike goes (years 15 to 17 about 0.96)
+  but year 5 still shows 3.07 against the 3.0 bound, from copper halving over years 1 to 4 (12.8 to 6.8) faster than
+  bronze's ask follows. So two things: the 550 aggregate pricing makes the late bronze price ratchet (not yet
+  explained: why a price-taking reservation reaches 4 to 5 times cost), and any fast fall of copper shows as a
+  ratio above 1 because the cost is read at the same year's inputs. Not fixed; the diagnosis is a lead for 550 and 511.
