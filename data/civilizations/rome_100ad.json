@@ -560,6 +560,9 @@
   "standing_army": 380000,
   "price_index": 1.0,
   "starting_techs": [
+    "fud_cattle_herd",
+    "fud_goat_herd",
+    "fud_sheep_flock",
     "ag2_composting",
     "ag2_liming",
     "ag2_malting",

@@ -434,7 +434,9 @@ def check_mass_conservation(where, entry):
     kilogram_inputs = sum(quantity for key, quantity in inputs.items()
                           if key.endswith("_kg")
                           and isinstance(quantity, (int, float)))
-    if outputs and all(key.endswith("_kg") for key in outputs) and inputs:
+    # An entry that occupies pasture or fields takes most of its mass from what grows there (a herd's
+    # forage, not an input row), so only entries with no land are held to the input mass.
+    if outputs and all(key.endswith("_kg") for key in outputs) and inputs and not entry.get("land_hectare_years"):
         kilogram_outputs = sum(quantity for quantity in outputs.values()
                                if isinstance(quantity, (int, float)))
         if kilogram_inputs > 0:

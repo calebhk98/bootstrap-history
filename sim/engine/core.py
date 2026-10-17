@@ -44,6 +44,7 @@ from .market_clearing import MarketClearingMixin
 from .foreign_economies import ForeignEconomiesMixin
 from .food_supply import FoodSupplyMixin
 from .living_stock import LivingStockMixin
+from .living_stock_opening import LivingStockOpeningMixin
 from .coin_hoard import CoinHoardMixin
 from .theft_charge import TheftChargeMixin
 from .coin_carriage import CoinCarriageMixin
@@ -244,7 +245,7 @@ YEARLY_RECORD_LIMIT = 300
 
 class Sim(RealPriceRatiosMixin, CoinRevaluationMixin, PartnerCivsMixin, WageMarketRatiosMixin, MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IndustryDepthMixin, IndustryConcernMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, DiseasePortMixin, LabourPortMixin,
           ProjectsMixin, SeatMixin, SeatRunMixin, SeatBuildsMixin, SeatSightMixin, ShockYearMixin, WaysMixin, WorksMixin, HeldWorksMixin, ActionLossMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, SeatDealingsMixin, InterestGroupsMixin, BenefactionsMixin, ForwardingPropertiesMixin, GoalsMixin,
-          StepPhasesMixin, LivingStockMixin, CoinHoardMixin, CoinCarriageMixin, TheftChargeMixin,
+          StepPhasesMixin, LivingStockMixin, LivingStockOpeningMixin, CoinHoardMixin, CoinCarriageMixin, TheftChargeMixin,
           LivingStockTradeMixin, LivingStockSmugglingMixin, LivingStockYearlyMixin, FoodSupplyMixin, DefenceStoresMixin, EconomyPortMixin, NodeRederiveMixin):
     STATE_CAPACITY_DEFAULT = declare(
         "STATE_CAPACITY_DEFAULT", 0.7, kind="temporary_heuristic",
@@ -581,6 +582,7 @@ class Sim(RealPriceRatiosMixin, CoinRevaluationMixin, PartnerCivsMixin, WageMark
         self._economy_deferred = bool(defer_economy)
         if not defer_economy:
             self.economy.open_agent()
+            self.grant_opening_herds()
             self._done_changed()
             self.join_cast_seats()
 

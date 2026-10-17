@@ -253,8 +253,9 @@ class NeedDataFileTests(unittest.TestCase):
         root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         loaded = need_data.load_needs(root)
         production = demand.production_data()
+        made = set(production) | {good for entry in production.values() for good in entry["outputs"]}
         for material, attributes in loaded["goods"].items():
-            self.assertIn(material, production, material)
+            self.assertIn(material, made, material)
             for need in attributes.get("satisfies", {}):
                 self.assertIn(need, loaded["needs"], material)
         shares = [need["surplus_budget_share"] for need in loaded["needs"].values()]

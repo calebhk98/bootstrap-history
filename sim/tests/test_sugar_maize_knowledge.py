@@ -57,11 +57,9 @@ class SugarAndMaizeTests(unittest.TestCase):
                  for good, attributes in needs.items() if "food" in attributes["satisfies"]}
         self.assertEqual(units["mat_sugar"], 0.0)
         self.assertEqual(units["maize_kg"], 0.0)
-        # Bound: fat_kg is priced from a fixed labour figure with no herd behind it (Complaint 532) and takes most
-        # units whatever else changes, so the grains are asked to be most of the rest of the food units.
-        rest = sum(value for good, value in units.items() if good != "fat_kg")
+        total = sum(units.values())
         grains = sum(units.get(good, 0.0) for good in GRAINS)
-        self.assertGreater(grains / rest, 0.5)
+        self.assertGreater(grains / total, 0.5, {good: round(value / total, 3) for good, value in units.items() if value})
 
 
 if __name__ == "__main__":

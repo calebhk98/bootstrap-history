@@ -21,6 +21,9 @@ import sim.geography.api as geography
 from sim.world import deposits as deposit_model
 from .deposit_history import historical_rates
 
+# Catalogue mechanisms that describe something dug out of the ground; a herd animal, a stand or a fishery
+# sharing a good's name (cattle, cattle_kg) is no deposit.
+DEPOSIT_MECHANISMS = ("mineral_deposit", "point_occurrence", "surface_stock")
 NO_DEPOSIT_TEXT = ("you know of no deposit of %s with room on the tiles you hold; prospect for one "
                    "('prospect <tile> %s <person_days>')")
 
@@ -32,7 +35,7 @@ class MineDepositsMixin:
         for a material no deposit data describes."""
         ids = geography.resource_ids(self.world_map)
         for name in (mat, str(mat)[:-3] if str(mat).endswith("_kg") else None):
-            if name in ids and self.world_map.catalogue("resources")[name].get("mechanism") != "biotic_stand":
+            if name in ids and self.world_map.catalogue("resources")[name].get("mechanism") in DEPOSIT_MECHANISMS:
                 return name
         return None
 

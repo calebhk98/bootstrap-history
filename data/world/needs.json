@@ -115,7 +115,8 @@
   "maize_kg": {"satisfies": {"food": 1.08}},
   "milk_kg": {"satisfies": {"food": 0.2}},
   "olive_oil_kg": {"satisfies": {"food": 2.7}},
-  "fat_kg": {"satisfies": {"food": 2.4}},
+  "fat_kg": {"satisfies": {},
+             "basis": "Not a food here: rendered tallow from sheep and cattle served lighting and soap, and the edible animal fat of the period was lard from pigs, which are not modelled (Complaints/532). A good that does serve a need may declare max_share_of_need, the largest share of that need's units it can meet."},
   "mat_sugar": {"satisfies": {"food": 1.2}},
   "cacao_kg": {"satisfies": {"food": 1.6}},
   "starch_kg": {"satisfies": {"food": 1.05}},
@@ -168,6 +169,7 @@
 
   "salt_kg": {"satisfies": {"salt": 1.0}},
   "cheese_kg": {"satisfies": {"food": 1.2}},
+  "meat_kg": {"satisfies": {"food": 0.4}},
 
   "water_kg": {"satisfies": {"water": 1.0}},
   "water_well_kg": {"satisfies": {"water": 1.0}},

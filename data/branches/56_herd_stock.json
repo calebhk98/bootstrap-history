@@ -1,0 +1,74 @@
+[
+ {
+  "id": "fud_sheep_flock",
+  "name": "A flock of sheep",
+  "cat": "livestock",
+  "kind": "RESOURCE",
+  "pre": [],
+  "holds": {
+   "sheep_kg": 3500
+  },
+  "traits": [
+   "food"
+  ],
+  "kb": "75_agriculture_food.md",
+  "ph": 10,
+  "lab": {
+   "labourer": 100
+  },
+  "mat": {},
+  "build_yrs": 0,
+  "adopt_yrs": 0,
+  "up_hours": 0,
+  "note": "A flock of about a hundred sheep on pasture: wool, mutton, skins and tallow from the same animals. It cannot be researched; the sheep have to be held.",
+  "unheld_reason": "the society had no sheep, goats or cattle to start with; the founder brings them by trade or an expedition"
+ },
+ {
+  "id": "fud_goat_herd",
+  "name": "A herd of goats",
+  "cat": "livestock",
+  "kind": "RESOURCE",
+  "pre": [],
+  "holds": {
+   "goat_kg": 2500
+  },
+  "traits": [
+   "food"
+  ],
+  "kb": "75_agriculture_food.md",
+  "ph": 10,
+  "lab": {
+   "labourer": 100
+  },
+  "mat": {},
+  "build_yrs": 0,
+  "adopt_yrs": 0,
+  "up_hours": 0,
+  "note": "A herd of about a hundred goats: milk, kid meat, skins, tallow and horn from the same animals. It cannot be researched; the goats have to be held.",
+  "unheld_reason": "the society had no sheep, goats or cattle to start with; the founder brings them by trade or an expedition"
+ },
+ {
+  "id": "fud_cattle_herd",
+  "name": "A herd of cattle",
+  "cat": "livestock",
+  "kind": "RESOURCE",
+  "pre": [],
+  "holds": {
+   "cattle_kg": 12500
+  },
+  "traits": [
+   "food"
+  ],
+  "kb": "75_agriculture_food.md",
+  "ph": 10,
+  "lab": {
+   "labourer": 100
+  },
+  "mat": {},
+  "build_yrs": 0,
+  "adopt_yrs": 0,
+  "up_hours": 0,
+  "note": "A herd of about fifty cattle: beef, milk, hides, tallow and horn from the same animals. It cannot be researched; the cattle have to be held.",
+  "unheld_reason": "the society had no sheep, goats or cattle to start with; the founder brings them by trade or an expedition"
+ }
+]
