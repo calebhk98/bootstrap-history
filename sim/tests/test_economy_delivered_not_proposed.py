@@ -27,6 +27,19 @@ class SmoothingKeepsAffordabilityTests(unittest.TestCase):
         self.assertGreater(producers.plan(producer, FARM, farm_view(2.0), 1000.0).runs, 5.0)
 
 
+class CashPaysAtMarketPricesTests(unittest.TestCase):
+    def test_cash_that_pays_for_every_run_at_market_prices_is_not_cut_by_a_dearer_lagging_expectation(self):
+        # Inputs fell from the expected 2.0 to 1.0 a unit: a run costs 7 now, and the cash target is struck at that.
+        producer = farmer(expected_prices={"seed": 2.0})
+        plan = producers.plan(producer, FARM, farm_view(2.0), 7.0 * producer.capacity_runs)
+        self.assertGreater(plan.runs, 9.9)         # the expected price would stop it at under 8 runs
+
+    def test_cash_short_of_the_market_cost_still_limits_the_runs(self):
+        producer = farmer(expected_prices={"seed": 0.5})
+        plan = producers.plan(producer, FARM, farm_view(2.0), 21.0)         # a run costs 7 at the market price
+        self.assertAlmostEqual(plan.runs, 3.0)
+
+
 class UnpaidHoursTests(unittest.TestCase):
     @staticmethod
     def result():
