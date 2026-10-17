@@ -5,7 +5,8 @@ if its own offer moves the clearing price (seller_pricing.py), asks the reservat
 profit; a producer that does not move the price keeps the reservation `producers.offers` gave it. What a
 unit is worth to the seller unsold is the cheaper of replacing it (its variable cost per unit) and holding
 it (its price-taking reservation), so a seller never prices below what a unit costs it to make or keep.
-A seller that moves the price may also raise its ask above the price-taking one, which holds units back
+A producer that stands for several workshops (Producer.workshops above one) is not a seller but a crowd of
+price takers: it keeps the price-taking reservation and neither searches nor raises. A seller that moves the price may also raise its ask above the price-taking one, which holds units back
 (restraint) when the dearer, smaller sale earns more. A change either way is bounded by the share a seller
 already marks its ask down in a year (UNSOLD_ASK_MARKDOWN_SHARE), so an ask moves over the years as the
 book changes and never jumps in one; an ask raised past what buyers pay goes unsold and is marked down
@@ -68,6 +69,14 @@ def substitution_markup(setup, offer: Offer) -> float:
     return elasticity / (elasticity - 1.0) if elasticity > 1.0 else math.inf
 
 
+def stands_for_many(record, offer: Offer) -> bool:
+    """True for a producer that stands for several independent workshops (entry.py joins each newcomer to
+    the tile's producer): each workshop takes the price, so the aggregate offers its units at their
+    price-taking reservations and does not withhold supply against its residual demand."""
+    producer = record.producers.get(offer.seller)
+    return producer is not None and producer.workshops > 1
+
+
 def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[Offer],
                      last_price: Optional[float]) -> List[Offer]:
     """`offers` with each moving producer's reservation re-chosen, in agent order."""
@@ -83,6 +92,8 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
             continue
         cost = unit_cost(setup, record, view, offer)
         if cost is None:
+            continue
+        if stands_for_many(record, offer):
             continue
         value = unit_value(offer, cost)
         rivals = offers[:index] + offers[index + 1:]
