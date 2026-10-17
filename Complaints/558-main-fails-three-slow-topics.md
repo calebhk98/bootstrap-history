@@ -20,7 +20,8 @@ Measured on `origin/main` at f0ff751d with `python3 -m sim.tests --slow --only m
 A red slow suite on the default branch means every branch's slow run starts red and its own regressions are
 read against noise. Each failure needs a fix or, where the subject is an open design issue, a pinned status
 with the test kept honest.
-- `affordability_and_credit` crashes with `KeyError: 'fud_grain_storage_silos'` at `stopped.active[PACED]` in its
-  last section: the project is no longer active after two steps (found measuring 557; predates this branch's work
-  per that agent, not confirmed on main).
+- `affordability_and_credit`: fixed (test, not engine). The last section stepped twice and then read a project whose
+  calendar floor is two years; on this branch the project (the dearest the founder can start on 30% of its bill) now
+  finishes in the second step, on origin/main it was still active (late with arrears). Both are legitimate. The test
+  now steps once, so a two-year floor leaves it active, and checks it is part-paid with cost still left.
 - `economy_bronze_market_price`: the 502 check on bronze's shown price over its cost fails (worst about 2.4).
