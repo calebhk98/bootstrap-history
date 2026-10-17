@@ -110,3 +110,16 @@ with the test kept honest.
   engine shows no runaway on a settled opening: money printed is not reaching prices proportionally (suspect the
   546 cash-limited producers or the per-year ask adjustment). The assertions need that mechanism, not a looser
   bound. Open.
+- `auto_hire_buys_room`, `auto_hire_rich_founder`, `round8g_display` (its train/why checks), `arrears_hours` ("no closed
+  concern stays shut") pass on `origin/main` and failed on `economy-accounting-and-speed`; one cause. Bisected
+  (first-parent merges, the topics together with `--only`): first fails at the merge of `data-532-herd-joint-products`
+  (`40877b9a` passes). The opening herds (532) are credited to the held-stock ledger, which has one holder (the
+  founder), and each year's growth of that ledger is billed to the founder as "stock raised" labour: about 11 million
+  cash on a first step, so the founder went to -20973, could not pay staff and bonded. Fix: the herd the society's
+  producers keep is recorded (`society_herds`, set at the grant) and moves with the herd's own growth and loss; only
+  growth of head beyond it is billed (`living_stock_yearly.py`). Regression: `opening_herd_growth_unbilled`.
+- `foreign_actor_trade`: "no longer swings from year to year" passes on `origin/main` and fails from the same 532
+  merge. The engine is not wrong; the fixture was. The widest-paying cargo is now millet, a glut of which the partner
+  holds as stock for about five years and then gives way in price once before the cycle repeats (the test's own
+  comment says the glut is held in stock first). Fix in the test: the cargo is the widest-paying good whose eight
+  years of glut stay within what the partner's market takes up. The assertion is unchanged.

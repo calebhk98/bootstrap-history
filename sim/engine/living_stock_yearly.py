@@ -30,6 +30,7 @@ class LivingStockYearlyMixin(LivingStockGrowthMixin):
         pastured = [material for material, rates in sorted(rates_by_material.items())
                     if rates.get("grows_on") == GROWS_ON_PASTURE]
         pasture_room = self.pasture_room_kg(place, pastured)
+        society_herds = self.society_herds
         for material, rates in sorted(rates_by_material.items()):
             held = self.stock_held(material)
             if held <= 0.0:
@@ -42,11 +43,16 @@ class LivingStockYearlyMixin(LivingStockGrowthMixin):
             grown = stock_dynamics.next_units(
                 held, rates["natural_increase"], 0.0, rates["breeding_minimum_units"], room) - held
             if grown > 0.0:
-                grown *= self.pay_growth_labour(material, grown)
+                # the society's herd is raised by its producers' recipes; only the founder's own head is billed here
+                society = min(held, society_herds.get(material, 0.0))
+                billed = grown * (held - society) / held
+                grown -= billed * (1.0 - self.pay_growth_labour(material, billed))
             after = stock_dynamics.next_units(
                 held, rates["natural_increase"], rates["annual_loss"], rates["breeding_minimum_units"], grown)
             if rates.get("grows_on") == GROWS_ON_PASTURE and pasture_room is not None:
                 pasture_room = max(0.0, pasture_room - grown * kilograms_per_unit(material))
+            if material in society_herds:
+                society_herds[material] = min(held, society_herds[material]) * after / held
             self.change_stock(material, after - held)
 
     def held_living_stock(self):
