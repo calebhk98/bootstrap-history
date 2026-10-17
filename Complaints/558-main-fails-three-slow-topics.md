@@ -46,4 +46,15 @@ with the test kept honest.
   also runs over the time limit. Open; not loosened.
 - `real_output` passes on `origin/main` and fails on `economy-accounting-and-speed`: the checks that a new
   entry's producer lowers the posted price, the founder's bill and raises cleared quantity and real output.
-  Being bisected.
+  Bisected (first-parent merges, `python3 -m sim.tests --slow --only real_output --topic-seconds 290`, one at a
+  time): it first fails at the merge of `fix-550-aggregate-ask-2` (the aggregate producer marks its ask down by
+  the share left unsold); `4379d546` and earlier pass. The engine is not wrong; the fixture was. (1) The cleared
+  volume of a good is measured against the first year a late entry clears it, and the twin (no entry admitted)
+  was pinned to its reference, so the check compared the game's year-0-to-year-5 drift of the whole world
+  against 1.05; the 550 change moved the opening and the drift, so the game's ratio fell below the pinned twin
+  though it still cleared more than a twin measured the same way. (2) With the herd joint products (532) `fat_kg`
+  is a by-product of flock and herd entries, so halving the first entry that outputs it was not the incumbents'
+  entry and its cost ratio was far above the bound, and a staple or by-product answers a price fall by less than
+  the drift. Fix in `sim/tests/test_real_output.py`: the twin is baselined on its own first year, the source
+  entry is the incumbents' (`_reference_entry`), and the good is `copper_ore_kg`, whose cleared volume answers a
+  cheaper entry by far more than the drift. Every assertion and bound is unchanged. Closed.
