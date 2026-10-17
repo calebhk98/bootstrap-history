@@ -37,6 +37,7 @@ class MoneyPhaseMixin:
         # advance off here, a smith at 281 a year would cost 566 in his
         # first year - the advance, then the identical year again at the
         # next step.
+        living_cost -= self.dependants_beyond_means(living_cost, self.revenue(), self.upkeep(), self.mine_operating_cost())
         prepaid = min(living_cost, self.state.household.wages_prepaid)
         living_cost -= prepaid
         self.state.household.wages_prepaid = 0.0
